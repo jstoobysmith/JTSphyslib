@@ -79,6 +79,26 @@ lemma dropPairEmb_eq_succAbove_succAbove (i : Fin (n + 1 + 1)) (j : Fin (n + 1))
       simp_all
       try omega
 
+lemma dropPairEmb_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
+    dropPairEmb i j = fun x => (i.succAbove (((Fin.predAbove 0 i).predAbove j).succAbove x)) := by
+  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
+  · ext x
+    grind
+  · ext x
+    simp [dropPairEmb_eq_succAbove_succAbove]
+    congr
+    refine Fin.eq_of_val_eq ?_
+    by_cases hi : i = 0
+    · subst hi
+      simp
+    simp [hi]
+    simp [Fin.predAbove, Fin.lt_def, Fin.succAbove, Fin.val_castSucc]
+    split_ifs
+    · grind
+    · simp
+    · simp
+    · grind
+
 lemma dropPairEmb_injective {n : ℕ}
     (i j : Fin (n + 1 + 1)) : Function.Injective (dropPairEmb i j) := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩

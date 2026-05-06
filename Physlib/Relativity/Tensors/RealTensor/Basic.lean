@@ -263,26 +263,46 @@ lemma contrPCoeff_basis {d : ℕ} {c : Fin n → realLorentzTensor.Color} (i j :
   subst hc
   exact contr_basis _ _
 
-attribute [-simp] Nat.reduceAdd Fin.isValue Fin.succAbove_zero in
-lemma contrT_toField {d} (c : Fin 2 → Color)
-    (h : 0 ≠ 1 ∧ (realLorentzTensor d).τ (c 0) = c 1) (t : ℝT(d, c)) :
-    (contrT 0 0 1 h t).toField = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toField := by
+lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n + 1 + 1))
+    (h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j) (t : ℝT(d, c)) :
+    contrT n i j h t =  ∑ (μ : Fin 1 ⊕ Fin d), permT id (by
+      simp [Pure.dropPairEmb_eq_predAbove h.1])
+     (evalT ((Fin.predAbove 0 i).predAbove j) μ (evalT i μ t)) := by
   induction' t using Tensor.induction_on_basis with b r t h t1 t2 h1 h2
   · rw [contrT_basis]
-    simp only [ contrPCoeff_basis, ite_smul, one_smul, zero_smul,
-       Tensorial.self_toTensor_apply]
+    simp only [ contrPCoeff_basis, ite_smul, one_smul, zero_smul]
     conv_rhs =>
       enter [2, μ];
       simp only [evalT_basis, Fin.zero_succAbove, apply_ite, Fin.succ_zero_eq_one, map_zero]
     simp only [Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
+    have h0 : i.succAbove ((Fin.predAbove 0 i).predAbove j) = j := by
+      rcases i.eq_zero_or_eq_succ with rfl | ⟨k, rfl⟩
+      · exact Fin.succAbove_predAbove (Ne.symm h.1)
+      · rw [Fin.predAbove_zero_succ]
+        exact Fin.succ_succAbove_predAbove (Ne.symm h.1)
+    rw [h0]
     split_ifs
-    · rfl
+    · rw [permT_basis]
+      congr
+      ext x
+      simp [ComponentIdx.dropPair]
+      rw [Pure.dropPairEmb_eq_predAbove h.1]
     · simp_all
     · simp_all
     · rfl
-  · simp [map_zero]
-  · simp [Finset.mul_sum, h]
+  · simp
+  · simp [Finset.smul_sum, h]
   · simp [h1, h2, Finset.sum_add_distrib]
+
+lemma contrT_toField {d} (c : Fin 2 → Color)
+    (h : 0 ≠ 1 ∧ (realLorentzTensor d).τ (c 0) = c 1) (t : ℝT(d, c)) :
+    (contrT 0 0 1 h t).toField = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toField := by
+  rw [contrT_eq_sum_evalT]
+  simp only [map_sum, Tensorial.self_toTensor_apply]
+  congr
+  ext μ
+  simp only [toField_permT]
+  rfl
 
 end realLorentzTensor
 end
