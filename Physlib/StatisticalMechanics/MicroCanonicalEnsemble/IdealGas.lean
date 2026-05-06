@@ -166,7 +166,9 @@ lemma partitionZ_eq (hV : 0 < V) (hβ : 0 < β) :
         (measurableSet_Icc (a := -(V ^ (3⁻¹ : ℝ) / 2)) (b := (V ^ (3⁻¹ : ℝ) / 2)))
       simp_rw [Set.indicator] at h_indicator
       simp_rw [abs_le, ← Set.mem_Icc, h_indicator]
-      simp
+      simp only [integral_const, MeasurableSet.univ, measureReal_restrict_apply, Set.univ_inter,
+        Real.volume_real_Icc, sub_neg_eq_add, add_halves, smul_eq_mul, mul_one, sup_eq_left,
+        ge_iff_le]
       positivity
     rw [h_integral_1d]; clear h_integral_1d
     rw [← Real.rpow_mul_natCast hV.le]
@@ -187,7 +189,8 @@ lemma partitionZ_eq (hV : 0 < V) (hβ : 0 < β) :
       congr
     · field_simp
       congr
-      simp
+      simp only [finrank_euclideanSpace, Fintype.card_prod, Fintype.card_fin, Nat.cast_mul,
+        Nat.cast_ofNat]
       ring_nf
 
 /-- The Helmholtz Free Energy A for an ideal gas. -/
