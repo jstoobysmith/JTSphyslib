@@ -7,6 +7,8 @@ module
 
 public import Physlib.Relativity.Tensors.RealTensor.Metrics.Pre
 public import Physlib.Relativity.Tensors.Contraction.Basis
+public import Physlib.Relativity.Tensors.Elab
+meta import Mathlib.Tactic.Cases
 /-!
 
 ## Real Lorentz tensors
@@ -233,6 +235,54 @@ lemma contrT_basis_repr_apply_eq_fin {n d: ℕ} {c : Fin (n + 1 + 1) → realLor
     · simp only [basisIdxCongr_apply]
       exact Ne.symm hy
   · simp
+
+/-!
+
+## Contractions and to Field
+
+-/
+
+attribute [-simp] Fintype.sum_sum_type
+
+lemma contrPCoeff_basis {d : ℕ} {c : Fin n → realLorentzTensor.Color} (i j : Fin n)
+    (hij : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j)
+    (b : ComponentIdx (S := realLorentzTensor d) c) :
+    Pure.contrPCoeff i j hij (Pure.basisVector c b) = if b i = b j then 1 else 0 := by
+  simp [Pure.contrPCoeff, Pure.basisVector]
+  generalize b i = b1 at *
+  generalize b j = b2 at *
+  suffices h : ∀ c, ∀ c1,  (hc : (realLorentzTensor d).τ c = c1) →
+    (realLorentzTensor d).castToField ((ConcreteCategory.hom
+    ((realLorentzTensor d).contr.app { as :=c }))
+    (((realLorentzTensor d).basis c) b1 ⊗ₜ[ℝ]
+      (ConcreteCategory.hom ((realLorentzTensor d).FD.map (eqToHom (by simp_all))))
+      (((realLorentzTensor d).basis c1) b2))) =
+    if b1 = b2 then 1 else 0 by
+    exact h (c i) (c j) hij.2
+  intro c c1 hc
+  subst hc
+  exact contr_basis _ _
+
+attribute [-simp] Nat.reduceAdd Fin.isValue Fin.succAbove_zero in
+lemma contrT_toField {d} (c : Fin 2 → Color)
+    (h : 0 ≠ 1 ∧ (realLorentzTensor d).τ (c 0) = c 1) (t : ℝT(d, c)) :
+    (contrT 0 0 1 h t).toField = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toField := by
+  induction' t using Tensor.induction_on_basis with b r t h t1 t2 h1 h2
+  · rw [contrT_basis]
+    simp only [ contrPCoeff_basis, ite_smul, one_smul, zero_smul,
+       Tensorial.self_toTensor_apply]
+    conv_rhs =>
+      enter [2, μ];
+      simp only [evalT_basis, Fin.zero_succAbove, apply_ite, Fin.succ_zero_eq_one, map_zero]
+    simp
+    split_ifs
+    · rfl
+    · simp_all
+    · simp_all
+    · rfl
+  · simp [map_zero]
+  · simp [Finset.mul_sum, h]
+  · simp [h1, h2, Finset.sum_add_distrib]
 
 end realLorentzTensor
 end
