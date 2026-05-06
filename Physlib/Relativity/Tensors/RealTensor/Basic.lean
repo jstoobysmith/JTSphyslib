@@ -274,7 +274,7 @@ lemma contrT_toField {d} (c : Fin 2 → Color)
     conv_rhs =>
       enter [2, μ];
       simp only [evalT_basis, Fin.zero_succAbove, apply_ite, Fin.succ_zero_eq_one, map_zero]
-    simp
+    simp only [Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
     split_ifs
     · rfl
     · simp_all
