@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Physlib.Meta.TODO
+public import Physlib.Meta.TODO.Basic
 /-!
 
 # The Hilbert space of a finite target quantum mechanical system
