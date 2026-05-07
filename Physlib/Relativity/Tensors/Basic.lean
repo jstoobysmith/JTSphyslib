@@ -836,18 +836,18 @@ lemma permT_basis {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
   rw [permT_basis_repr_symm_apply]
   simp [Finsupp.single_apply]
   congr 1
-  simp
+  simp only [eq_iff_iff]
   constructor
   · intro h
     rw [h]
     ext i
-    simp
+    simp only [basisIdxCongr_apply_apply]
     refine Eq.symm (ComponentIdx.congr_right b' i (PermCond.inv σ _ (σ i)) ?_)
     simp [PermCond.apply_inv_apply]
   · intro h
     rw [← h]
     ext i
-    simp
+    simp only [basisIdxCongr_apply_apply]
     apply ComponentIdx.congr_right
     simp [PermCond.inv_apply_apply]
 
