@@ -88,7 +88,8 @@ is, aka if the Laplace transform is differentiable.
 See e.g. https://math.stackexchange.com/q/84382/127777
 For this we really want the fact that the Laplace transform is analytic wherever it's absolutely
 convergent, which is (as Wikipedia informs) an easy consequence of Fubini's theorem + Morera's
-theorem. Morera's theorem is now in Mathlib as `Complex.IsConservativeOn.isExactOn_ball` (in HasPrimitives.lean), so this would be a good task:
+theorem. Morera's theorem is now in Mathlib as `Complex.IsConservativeOn.isExactOn_ball` (in
+HasPrimitives.lean), so this would be a good task:
  - Prove the analyticity of the Laplace transform
  - Use this to show that the partition function Z here is analytic (ContDiffAt ℝ ω)
 -/
