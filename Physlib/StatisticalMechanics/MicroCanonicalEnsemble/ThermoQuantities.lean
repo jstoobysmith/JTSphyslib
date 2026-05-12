@@ -9,6 +9,7 @@ public import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 public import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 public import Physlib.StatisticalMechanics.MicroCanonicalEnsemble.Basic
+public import Physlib.Meta.TODO.Basic
 /-!
 
 ## The theormodynamical quantities of a microcanonical ensemble
@@ -93,6 +94,10 @@ HasPrimitives.lean), so this would be a good task:
  - Prove the analyticity of the Laplace transform
  - Use this to show that the partition function Z here is analytic (ContDiffAt ℝ ω)
 -/
+
+TODO "Show that the partition function for a microcanonical ensemble is analytic (ContDiffAt ℝ ω).
+  Refer to the comments above this TODO item in the code for more details. See also #1077."
+
 open scoped ContDiff in
 @[sorryful]
 lemma differentiableAt_Z_if_ZIntegrable {β : ℝ} (h : H.ZIntegrable d β) :
