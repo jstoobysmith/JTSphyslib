@@ -141,11 +141,11 @@ lemma evalT_pure {n : ℕ} {c : Fin (n + 1) → C} (i : Fin (n + 1))
   rfl
 
 lemma evalT_basis {n : ℕ} {c : Fin (n + 1) → C} (i : Fin (n + 1))
-    (b : ComponentIdx c)
-    (x : basisIdx (c i)) :
+    (b : ComponentIdx c) (x : basisIdx (c i)) :
     evalT i x (basis (S := S) c b) = if b i = x then basis (c ∘ i.succAbove)
       (fun j => b (i.succAbove j)) else 0 := by
-  simp [basis_apply, evalT_pure, Pure.evalP, Pure.evalPCoeff_basisVector]
+  simp only [basis_apply, evalT_pure, Pure.evalP, Pure.evalPCoeff_basisVector, ite_smul, one_smul,
+    zero_smul]
   rfl
 
 TODO "Add lemmas related to the interaction of evalT and permT, prodT and contrT."

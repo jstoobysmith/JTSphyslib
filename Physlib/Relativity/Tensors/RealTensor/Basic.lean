@@ -244,11 +244,12 @@ lemma contrT_basis_repr_apply_eq_fin {n d: ℕ} {c : Fin (n + 1 + 1) → realLor
 
 attribute [-simp] Fintype.sum_sum_type
 
-lemma contrPCoeff_basis {d : ℕ} {c : Fin n → realLorentzTensor.Color} (i j : Fin n)
+lemma contrPCoeff_basis {d n : ℕ} {c : Fin n → realLorentzTensor.Color} (i j : Fin n)
     (hij : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j)
     (b : ComponentIdx (S := realLorentzTensor d) c) :
     Pure.contrPCoeff i j hij (Pure.basisVector c b) = if b i = b j then 1 else 0 := by
-  simp [Pure.contrPCoeff, Pure.basisVector]
+  simp only [Pure.contrPCoeff, Monoidal.tensorUnit_obj, Rep.tensorUnit_V, Rep.tensorUnit_ρ,
+    Functor.comp_obj, Discrete.functor_obj_eq_as, Function.comp_apply, Pure.basisVector]
   generalize b i = b1 at *
   generalize b j = b2 at *
   suffices h : ∀ c, ∀ c1,  (hc : (realLorentzTensor d).τ c = c1) →
@@ -259,8 +260,7 @@ lemma contrPCoeff_basis {d : ℕ} {c : Fin n → realLorentzTensor.Color} (i j :
       (((realLorentzTensor d).basis c1) b2))) =
     if b1 = b2 then 1 else 0 by
     exact h (c i) (c j) hij.2
-  intro c c1 hc
-  subst hc
+  rintro c c1 rfl
   exact contr_basis _ _
 
 lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n + 1 + 1))
@@ -281,14 +281,15 @@ lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n 
       · rw [Fin.predAbove_zero_succ]
         exact Fin.succ_succAbove_predAbove (Ne.symm h.1)
     rw [h0]
-    split_ifs
+    split_ifs with h₁ _ h₂
     · rw [permT_basis]
       congr
       ext x
-      simp [ComponentIdx.dropPair]
+      simp only [Function.comp_apply, ComponentIdx.dropPair, id_eq, basisIdxCongr_eq_refl,
+        Equiv.refl_apply]
       rw [Pure.dropPairEmb_eq_predAbove h.1]
-    · simp_all
-    · simp_all
+    · symm at h₁; contradiction
+    · symm at h₂; contradiction
     · rfl
   · simp
   · simp [Finset.smul_sum, h]
@@ -297,8 +298,7 @@ lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n 
 lemma contrT_toField {d} (c : Fin 2 → Color)
     (h : 0 ≠ 1 ∧ (realLorentzTensor d).τ (c 0) = c 1) (t : ℝT(d, c)) :
     (contrT 0 0 1 h t).toField = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toField := by
-  rw [contrT_eq_sum_evalT]
-  simp only [map_sum, Tensorial.self_toTensor_apply]
+  rw [contrT_eq_sum_evalT, map_sum, Tensorial.self_toTensor_apply]
   congr
   ext μ
   simp only [toField_permT]
