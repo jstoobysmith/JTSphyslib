@@ -211,7 +211,6 @@ theorem MState.exp_val_pure_eq_one_iff {d : Type*} [Fintype d] [DecidableEq d]
   · rintro rfl; simpa [MState.exp_val] using hpure_inner
 
 set_option backward.isDefEq.respectTransparency false in
-@[sorryful]
 theorem mix_mEnsemble_pure_iff_pure {e : MEnsemble d α} :
     mix e = pure ψ ↔ ∀ i : α, e.distr i ≠ 0 → e.states i = MState.pure ψ := by
   have h : (mix e).exp_val ↑(MState.pure ψ) = ∑ i, ↑(e.distr i) * (e.states i).exp_val ↑(MState.pure ψ) := by
@@ -224,7 +223,6 @@ theorem mix_mEnsemble_pure_iff_pure {e : MEnsemble d α} :
     apply (e.states i).exp_val_le_one (MState.le_one _)
 
 /-- The average of `f : MState d → T` on an ensemble that mixes to a pure state `ψ` is `f (pure ψ)` -/
-@[sorryful]
 theorem mix_mEnsemble_pure_average {e : MEnsemble d α} {T : Type _} {U : Type*} [AddCommGroup U] [Module ℝ U] [inst : Mixable U T] (f : MState d → T) (hmix : mix e = pure ψ) :
   average f e = f (pure ψ) := by
   have hpure := mix_mEnsemble_pure_iff_pure.mp hmix

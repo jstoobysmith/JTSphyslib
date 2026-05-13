@@ -187,6 +187,7 @@ end AchievesRate
 section capacity
 
 /-- Quantum channel capacity is nonnegative for channels out of a nonempty space. -/
+@[sorryful]
 theorem zero_le_quantumCapacity (Λ : CPTPMap d₁ d₂) [Nonempty d₁] :
     0 ≤ Λ.quantumCapacity :=
   le_csSup (bddAbove_achievesRate Λ) (achievesRate_0 Λ)
