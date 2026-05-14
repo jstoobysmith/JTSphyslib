@@ -415,11 +415,7 @@ lemma succSuccAbove_predPredAbove (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : F
     (hm : m ≠ i ∧ m ≠ j) :
     succSuccAbove i j (predPredAbove i j hij m hm) = m := by
   dsimp [succSuccAbove, predPredAbove]
-  split_ifs
-  · rfl
-  all_goals
-    simp_all [Fin.ext_iff]
-    try omega
+  grind
 
 set_option backward.isDefEq.respectTransparency false in
 lemma predPredAbove_eq_orderIsoOfFin (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
@@ -511,8 +507,7 @@ lemma succSuccAbove_comm_apply (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n
     have hi2j2' : i2' ≠ j2' := by simp [i2', j2', hij2];
     let i1' := (predPredAbove i2' j2' hi2j2' i1 (by simp [i2', j2']));
     let j1' := (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2']));
-    succSuccAbove i2' j2'
-    (succSuccAbove i1' j1' m) =
+    succSuccAbove i2' j2' (succSuccAbove i1' j1' m) =
     succSuccAbove i1 j1 (succSuccAbove i2 j2 m) := by
   intro i2' j2' hi2j2' i1' j1'
   change _ = (succSuccAbove i1 j1 ∘ succSuccAbove i2 j2) m
