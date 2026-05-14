@@ -29,7 +29,7 @@ TODO "docs: The files on contractions of tensors are currently lacking documenta
   These should be added, mirroring good examples within Physlib."
 
 namespace Tensor
-
+open Fin
 /-!
 
 ## contrT
@@ -49,7 +49,7 @@ lemma contrT_decide {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (n + 1 + 1)
   with the `j`th index. -/
 noncomputable def contrT (n : ℕ) {c : Fin (n + 1 + 1) → C} (i j : Fin (n + 1 + 1))
       (hij : i ≠ j ∧ S.τ (c i) = c j) :
-    Tensor S c →ₗ[k] Tensor S (c ∘ dropPairEmb i j) :=
+    Tensor S c →ₗ[k] Tensor S (c ∘ succSuccAbove i j) :=
   PiTensorProduct.lift (Pure.contrPMultilinear i j hij)
 
 lemma contrT_congr {n : ℕ} {c : Fin (n + 1 + 1) → C}
@@ -95,12 +95,10 @@ lemma contrT_permT {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     (i j : Fin (n1 + 1 + 1)) (hij : i ≠ j ∧ S.τ (c1 i) = (c1 j))
     (σ : Fin (n1 + 1 + 1) → Fin (n + 1 + 1))
     (hσ : PermCond c c1 σ) (t : Tensor S c) :
-    contrT n1 i j hij (permT σ hσ t) = permT (dropPairOfMap i j hij.1 σ hσ.1)
-      (permCond_dropPairOfMap i j hij.1 σ hσ)
+    contrT n1 i j hij (permT σ hσ t) = permT _ (hσ.succSuccAbove i j hij.1 )
       (contrT n (σ i) (σ j) (by simp [hσ.2, hij, hσ.1.injective.eq_iff]) t) := by
   let P (t : Tensor S c) : Prop := contrT n1 i j hij (permT σ hσ t) =
-      permT (dropPairOfMap i j hij.1 σ hσ.1)
-        (permCond_dropPairOfMap i j hij.1 σ hσ)
+      permT _ (hσ.succSuccAbove i j hij.1 )
         (contrT n (σ i) (σ j) (by simp [hσ.2, hij, hσ.1.injective.eq_iff]) t)
   change P t
   apply induction_on_pure
@@ -134,25 +132,25 @@ lemma contrT_symm {n : ℕ} {c : Fin (n + 1 + 1) → C}
 lemma contrT_comm {n : ℕ} {c : Fin (n + 1 + 1 + 1 + 1) → C}
     (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 + 1))
     (hij1 : i1 ≠ j1 ∧ S.τ (c i1) = (c j1))
-    (hij2 : i2 ≠ j2 ∧ S.τ (c (dropPairEmb i1 j1 i2)) = (c (dropPairEmb i1 j1 j2)))
+    (hij2 : i2 ≠ j2 ∧ S.τ (c (succSuccAbove i1 j1 i2)) = (c (succSuccAbove i1 j1 j2)))
     (t : Tensor S c) :
-    let i2' := (dropPairEmb i1 j1 i2);
-    let j2' := (dropPairEmb i1 j1 j2);
+    let i2' := (succSuccAbove i1 j1 i2);
+    let j2' := (succSuccAbove i1 j1 j2);
     have hi2j2' : i2' ≠ j2' := by simp [i2', j2', hij2];
-    let i1' := (dropPairEmbPre i2' j2' hi2j2' i1 (by simp [i2', j2']));
-    let j1' := (dropPairEmbPre i2' j2' hi2j2' j1 (by simp [i2', j2']));
+    let i1' := (predPredAbove i2' j2' hi2j2' i1 (by simp [i2', j2']));
+    let j1' := (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2']));
     contrT n i2 j2 hij2 (contrT (n + 1 + 1) i1 j1 hij1 t) =
-    permT id (permCond_dropPairEmb_comm i1 j1 i2 j2 hij1.left hij2.left)
+    permT id (PermCond.succSuccAbove_comm i1 j1 i2 j2 hij1.left hij2.left)
       (contrT n i1' j1' (by simp [i1', j1', i2', j2', hij1])
       (contrT (n + 1 + 1) i2' j2' (by simp [i2', j2', hij2]) t)) := by
-  let i2' := (dropPairEmb i1 j1 i2);
-  let j2' := (dropPairEmb i1 j1 j2);
-  let i1' := (dropPairEmbPre i2' j2' (by simp [i2', j2', hij2]) i1
+  let i2' := (succSuccAbove i1 j1 i2);
+  let j2' := (succSuccAbove i1 j1 j2);
+  let i1' := (predPredAbove i2' j2' (by simp [i2', j2', hij2]) i1
     (by simp [i2', j2']));
-  let j1' := (dropPairEmbPre i2' j2' (by simp [i2', j2', hij2]) j1
+  let j1' := (predPredAbove i2' j2' (by simp [i2', j2', hij2]) j1
     (by simp [i2', j2']));
   let P (t : Tensor S c) : Prop := contrT n i2 j2 hij2 (contrT (n + 1 + 1) i1 j1 hij1 t) =
-      permT id (permCond_dropPairEmb_comm i1 j1 i2 j2 hij1.left hij2.left)
+      permT id (PermCond.succSuccAbove_comm i1 j1 i2 j2 hij1.left hij2.left)
         (contrT n i1' j1' (by simp [i1', j1', i2', j2', hij1])
         (contrT (n + 1 + 1) i2' j2' (by simp [i2', j2', hij2]) t))
   change P t

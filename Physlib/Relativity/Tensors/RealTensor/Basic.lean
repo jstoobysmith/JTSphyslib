@@ -202,8 +202,8 @@ open Tensor
 lemma contrT_basis_repr_apply_eq_dropPairSection {n d: ℕ}
     {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
     {i j : Fin (n + 1 + 1)} (h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j)
-    (t : ℝT(d, c)) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j)) :
-    (basis (c ∘ Pure.dropPairEmb i j)).repr (contrT n i j h t) b =
+    (t : ℝT(d, c)) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
+    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
     ∑ (x : b.DropPairSection),
     ((basis c).repr t x.1) *
     if (x.1 i) = (x.1 j) then 1 else 0 := by
@@ -218,8 +218,8 @@ open ComponentIdx in
 lemma contrT_basis_repr_apply_eq_fin {n d: ℕ} {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
     {i j : Fin (n + 1 + 1)}
     {h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j}
-    (t : ℝT(d,c)) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j)) :
-    (basis (c ∘ Pure.dropPairEmb i j)).repr (contrT n i j h t) b =
+    (t : ℝT(d,c)) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
+    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
     ∑ (x : Fin 1 ⊕ Fin d),
     ((basis c).repr t
     (DropPairSection.ofFinEquiv h.1 b ⟨x, x⟩)) := by
@@ -266,7 +266,7 @@ lemma contrPCoeff_basis {d n : ℕ} {c : Fin n → realLorentzTensor.Color} (i j
 lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n + 1 + 1))
     (h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j) (t : ℝT(d, c)) :
     contrT n i j h t =  ∑ (μ : Fin 1 ⊕ Fin d), permT id (by
-      simp [Pure.dropPairEmb_eq_predAbove h.1])
+      simp [Fin.succSuccAbove_eq_predAbove h.1])
      (evalT ((Fin.predAbove 0 i).predAbove j) μ (evalT i μ t)) := by
   induction' t using Tensor.induction_on_basis with b r t h t1 t2 h1 h2
   · rw [contrT_basis]
@@ -287,7 +287,7 @@ lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n 
       ext x
       simp only [Function.comp_apply, ComponentIdx.dropPair, id_eq, basisIdxCongr_eq_refl,
         Equiv.refl_apply]
-      rw [Pure.dropPairEmb_eq_predAbove h.1]
+      rw [Fin.succSuccAbove_eq_predAbove h.1]
     · symm at h₁; contradiction
     · symm at h₂; contradiction
     · rfl

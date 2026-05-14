@@ -33,26 +33,26 @@ namespace ComponentIdx
 /-- The `ComponentIdx` obtained by dropping two components. -/
 def dropPair {n : ℕ} {c : Fin (n + 1 + 1) → C}
     (i j : Fin (n + 1 + 1)) (b : ComponentIdx (S := S) c) :
-    ComponentIdx (S := S) (c ∘ Pure.dropPairEmb i j) :=
-  fun m => b (Pure.dropPairEmb i j m)
+    ComponentIdx (S := S) (c ∘ Fin.succSuccAbove i j) :=
+  fun m => b (Fin.succSuccAbove i j m)
 
 /-- Given a coordinate parameter
   `b : Π k, Fin (S.repDim ((c ∘ i.succAbove ∘ j.succAbove) k)))`, the
   coordinate parameter `Π k, Fin (S.repDim (c k))` which map down to `b`. -/
 def DropPairSection {n : ℕ} {c : Fin (n + 1 + 1) → C}
     {i : Fin (n + 1 + 1)} {j : Fin (n + 1 + 1)}
-    (b : ComponentIdx (S := S) (c ∘ Pure.dropPairEmb i j)) :
+    (b : ComponentIdx (S := S) (c ∘ Fin.succSuccAbove i j)) :
     Finset (ComponentIdx (S := S) c) :=
   {b' : ComponentIdx c | dropPair i j b' = b}
 
 namespace DropPairSection
 
-lemma mem_iff_apply_dropPairEmb_eq {n : ℕ} {c : Fin (n + 1 + 1) → C}
+lemma mem_iff_apply_succSuccAbove_eq {n : ℕ} {c : Fin (n + 1 + 1) → C}
     {i j : Fin (n + 1 + 1)}
-    (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+    (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (b' : ComponentIdx c) :
     b' ∈ DropPairSection (S := S) b ↔
-      ∀ m, b' (Pure.dropPairEmb i j m) = b m := by
+      ∀ m, b' (Fin.succSuccAbove i j m) = b m := by
   simp only [DropPairSection, Finset.mem_filter, Finset.mem_univ, true_and]
   rw [funext_iff]
   simp [dropPair]
@@ -64,42 +64,42 @@ lemma mem_self_of_dropPair {n : ℕ} {c : Fin (n + 1 + 1) → C}
     b ∈ DropPairSection (S := S) (b.dropPair i j) := by
   simp [DropPairSection]
 
-/-- Given a `b` in `ComponentIdx (c ∘ Pure.dropPairEmb i j))` and
+/-- Given a `b` in `ComponentIdx (c ∘ Fin.succSuccAbove i j))` and
   an `x` in `Fin (S.repDim (c i)) × Fin (S.repDim (c j))`, the corresponding
   coordinate parameter in `ComponentIdx c`. -/
 def ofFin {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (S := S) (c ∘ Pure.dropPairEmb i j))
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (S := S) (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     ComponentIdx (S := S) c := fun m =>
   if hi : m = i then basisIdxCongr (by subst hi; rfl) x.1
   else if hj : m = j then basisIdxCongr (by subst hj; rfl) x.2
   else
     basisIdxCongr (by simp)
-    (b (Pure.dropPairEmbPre i j hij m (by omega)))
+    (b (Fin.predPredAbove i j hij m (by omega)))
 
 @[simp]
 lemma ofFin_apply_fst {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     ofFin (S := S) hij b x i = x.1 := by
   simp [ofFin]
 
 @[simp]
 lemma ofFin_apply_snd {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     ofFin (S := S) hij b x j = x.2 := by
   simp [ofFin]
   intro h
   omega
 
-lemma ofFin_mem_dropPairEmbSection {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+lemma ofFin_mem_succSuccAboveSection {n : ℕ} {c : Fin (n + 1 + 1) → C}
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     ofFin (S := S) hij b x ∈ DropPairSection b := by
   simp only [DropPairSection, Finset.mem_filter, Finset.mem_univ, true_and]
   ext m
-  simp only [ofFin, dropPair, Pure.dropPairEmb_ne_fst, ↓reduceDIte, Pure.dropPairEmb_ne_snd,
+  simp only [ofFin, dropPair, Fin.succSuccAbove_ne_fst, ↓reduceDIte, Fin.succSuccAbove_ne_snd,
     Function.comp_apply]
   symm
   apply ComponentIdx.congr_right
@@ -109,19 +109,19 @@ lemma ofFin_mem_dropPairEmbSection {n : ℕ} {c : Fin (n + 1 + 1) → C}
   `basisIdx (c i) × basisIdx (c j)`. -/
 def ofFinEquiv {n : ℕ} {c : Fin n.succ.succ → C}
     {i j : Fin (n + 1 + 1)} (hij : i ≠ j)
-    (b : ComponentIdx (c ∘ Pure.dropPairEmb i j)) :
+    (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
     basisIdx (c i) × basisIdx (c j) ≃ DropPairSection (S := S) b where
   invFun b' := ⟨b'.1 i, b'.1 j⟩
-  toFun x := ⟨ofFin hij b x, ofFin_mem_dropPairEmbSection hij b x⟩
+  toFun x := ⟨ofFin hij b x, ofFin_mem_succSuccAboveSection hij b x⟩
   right_inv b' := by
     ext m
     simp
-    rcases Pure.eq_or_exists_dropPairEmb i j hij m with rfl | rfl | ⟨m, rfl⟩
+    rcases Fin.eq_or_exists_succSuccAbove i j hij m with rfl | rfl | ⟨m, rfl⟩
     · simp
     · simp
     · simp [ofFin]
       obtain ⟨b', hb'⟩ := b'
-      simp only [mem_iff_apply_dropPairEmb_eq] at hb'
+      simp only [mem_iff_apply_succSuccAbove_eq] at hb'
       simp [hb']
       symm
       apply ComponentIdx.congr_right
@@ -131,14 +131,14 @@ def ofFinEquiv {n : ℕ} {c : Fin n.succ.succ → C}
 
 @[simp]
 lemma ofFinEquiv_apply_fst {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     (ofFinEquiv (S := S) hij b x).1 i = x.1 := by
   simp [ofFinEquiv]
 
 @[simp]
 lemma ofFinEquiv_apply_snd {n : ℕ} {c : Fin (n + 1 + 1) → C}
-    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Pure.dropPairEmb i j))
+    {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j))
     (x : basisIdx (c i) × basisIdx (c j)) :
     (ofFinEquiv (S := S) hij b x).1 j = x.2 := by
   simp [ofFinEquiv]
@@ -152,15 +152,15 @@ set_option backward.isDefEq.respectTransparency false in
 lemma Pure.dropPair_basisVector {n : ℕ} {c : Fin (n + 1 + 1) → C}
     {i j : Fin (n + 1 + 1)} (hij : i ≠ j) (b : ComponentIdx c) :
     Pure.dropPair i j hij (basisVector c b) =
-    basisVector (S := S) (c ∘ Pure.dropPairEmb i j) fun m => b (dropPairEmb i j m) := by
+    basisVector (S := S) (c ∘ Fin.succSuccAbove i j) fun m => b (Fin.succSuccAbove i j m) := by
   funext l
   simp [dropPair, basisVector]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma contrT_basis_repr_apply {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (n + 1 + 1)}
     (h : i ≠ j ∧ S.τ (c i) = c j) (t : Tensor S c)
-    (b : ComponentIdx (c ∘ Pure.dropPairEmb i j)) :
-    (basis (c ∘ Pure.dropPairEmb i j)).repr (contrT n i j h t) b =
+    (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
+    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
     ∑ (b' : DropPairSection b), (basis c).repr t b'.1 *
     S.castToField ((S.contr.app (Discrete.mk (c i))).hom
     (S.basis (c i) (b'.1 i) ⊗ₜ[k] S.basis (S.τ (c i)) (basisIdxCongr (by rw [h.2]) (b'.1 j)))) := by
@@ -216,8 +216,8 @@ lemma contrT_basis_repr_apply {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (
 set_option backward.isDefEq.respectTransparency false in
 lemma contrT_basis_repr_apply_eq_sum_fin {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (n + 1 + 1)}
     (h : i ≠ j ∧ S.τ (c i) = c j) (t : Tensor S c)
-    (b : ComponentIdx (c ∘ Pure.dropPairEmb i j)) :
-    (basis (c ∘ Pure.dropPairEmb i j)).repr (contrT n i j h t) b =
+    (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
+    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
     ∑ (x1 : basisIdx (c i)), ∑ (x2 : basisIdx (c j)),
     (basis c).repr t (DropPairSection.ofFinEquiv h.1 b (x1, x2)).1 *
     S.castToField ((S.contr.app (Discrete.mk (c i))).hom
@@ -231,7 +231,7 @@ lemma contrT_basis {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (n + 1 + 1)}
     (h : i ≠ j ∧ S.τ (c i) = c j) (b : ComponentIdx (S := S) c):
     contrT n i j h (basis c b) =
     Pure.contrPCoeff i j h (Pure.basisVector c b) •
-      basis (c ∘ Pure.dropPairEmb i j) (b.dropPair i j) := by
+      basis (c ∘ Fin.succSuccAbove i j) (b.dropPair i j) := by
   simp only [basis_apply, contrT_pure, Pure.contrP, Pure.dropPair_basisVector]
   rfl
 

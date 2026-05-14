@@ -319,11 +319,12 @@ lemma fromSingleT_contr_fromPairT_tmul {c c2 : C}
       rw [permT_permT, permT_permT, permT_permT]
     rw [fromPairT_tmul]
     symm
-    have h1 : Pure.dropPairOfMap 1 2 (by simp) (prodSwapMap (Nat.succ 0) (0 + 1 + 1)) (by decide) ∘
-      id ∘ prodSwapMap 0 (Nat.succ 0) ∘ id = id := by
+    have h1 : Fin.funPredPredAbove 1 2 (by simp)
+        (prodSwapMap (Nat.succ 0) (0 + 1 + 1)) (by decide) ∘
+        id ∘ prodSwapMap 0 (Nat.succ 0) ∘ id = id := by
       ext i
       fin_cases i
-      dsimp [Pure.dropPairOfMap]
+      dsimp [Fin.funPredPredAbove]
       rfl
     conv_lhs =>
       enter [1, 1]
@@ -469,7 +470,7 @@ lemma fromPairT_contr_fromPairT_eq_fromPairTContr_tmul (c c1 c2 : C)
     · rfl
     · rfl
   simp only [Fin.isValue, Function.comp_id,
-    Pure.dropPairOfMap_id, Function.comp_apply, id_eq]
+    Fin.funPredPredAbove_id, Function.comp_apply, id_eq]
   rw [h1, contrT_fromSingleT_fromSingleT]
   simp only [map_smul, prodT_default_right, LinearMap.smul_apply]
   rw [prodT_permT_left, permT_permT]
