@@ -8,36 +8,7 @@ module
 public import Physlib.Relativity.Tensors.Basic
 /-!
 
-# Contractions on pure tensors
-
--/
-
-@[expose] public section
-
-open IndexNotation
-open CategoryTheory
-open MonoidalCategory
-
-namespace TensorSpecies
-open OverColor
-
-variable {k : Type} [CommRing k] {C G : Type} [Group G]
-  {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
-  {S : TensorSpecies k C G basisIdx}
-
-namespace Tensor
-
-/-!
-
-## Pure.contrPCoeff
-
--/
-
-namespace Pure
-
-/-!
-
-## Defining succSuccAbove
+# Defining succSuccAbove
 
 In Mathlib there is the `Fin.succAbove` function which gives an embedding of `Fin n` into
 `Fin (n + 1)` by leaving a hole at a specified index. We will need a version of this which
@@ -49,13 +20,28 @@ We will also need an explicit inverse of this map from
 This is similar to `Fin.predAbove` (although not exactly the same),
 for this reason we call it `predPredAbove`.
 
+## Implementation
+
+In previous versions of Physlib the function which is now called `succSuccAbove`
+was previously called `dropPairEmb` and the function which is now called `predPredAbove` was
+previously called `dropPairEmbPre`.
+
 -/
+
+@[expose] public section
+
+namespace Fin
 
 variable {n : ℕ} {c : Fin (n + 1 + 1) → C}
 
+/-!
+
+## Defining succSuccAbove
+
+-/
 /-- The embedding of `Fin n` into `Fin (n + 1 + 1)` which leaves a hole
   at `i` and `j`. -/
-def dropPairEmb (i j : Fin (n + 1 + 1)) (m : Fin n) : Fin (n + 1 + 1) :=
+def succSuccAbove (i j : Fin (n + 1 + 1)) (m : Fin n) : Fin (n + 1 + 1) :=
   if m.1 < i.1 ∧ m.1 < j.1 then
     ⟨m, by omega⟩
   else if m.1 + 1 < i.1 ∧ j.1 ≤ m.1 then
@@ -65,36 +51,36 @@ def dropPairEmb (i j : Fin (n + 1 + 1)) (m : Fin n) : Fin (n + 1 + 1) :=
   else
     ⟨m + 2, by omega⟩
 
-lemma dropPairEmb_self_apply (i : Fin (n + 1 + 1)) (m : Fin n) :
-    dropPairEmb i i m = if m.1 < i.1 then ⟨m.1, by omega⟩ else ⟨m.1 + 2, by omega⟩ := by
-  simp [dropPairEmb]
+lemma succSuccAbove_self_apply (i : Fin (n + 1 + 1)) (m : Fin n) :
+    succSuccAbove i i m = if m.1 < i.1 then ⟨m.1, by omega⟩ else ⟨m.1 + 2, by omega⟩ := by
+  simp [succSuccAbove]
   by_cases hm : m.1 < i.1
   · simp_all
   · have hn : i.1 ≤ m.1 := by omega
     have hn2 : ¬ m.1 + 1 < i.1 := by omega
     simp [hm, hn, hn2]
 
-lemma dropPairEmb_eq_succAbove_succAbove (i : Fin (n + 1 + 1)) (j : Fin (n + 1)) :
-    dropPairEmb i (i.succAbove j) = i.succAbove ∘ j.succAbove := by
+lemma succSuccAbove_eq_succAbove_succAbove (i : Fin (n + 1 + 1)) (j : Fin (n + 1)) :
+    succSuccAbove i (i.succAbove j) = i.succAbove ∘ j.succAbove := by
   ext m
   by_cases h : m.1 < i.1
-  · simp [dropPairEmb, h, Fin.succAbove, Fin.lt_def]
+  · simp [succSuccAbove, h, Fin.succAbove, Fin.lt_def]
     split_ifs
     all_goals
       simp_all
       try omega
-  · simp [dropPairEmb, Fin.succAbove, Fin.lt_def]
+  · simp [succSuccAbove, Fin.succAbove, Fin.lt_def]
     split_ifs
     all_goals
       simp_all
       try omega
 
-lemma dropPairEmb_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
-    dropPairEmb i j = fun x => (i.succAbove (((Fin.predAbove 0 i).predAbove j).succAbove x)) := by
+lemma succSuccAbove_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
+    succSuccAbove i j = fun x => (i.succAbove (((Fin.predAbove 0 i).predAbove j).succAbove x)) := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
   · contradiction
   · ext x
-    rw [dropPairEmb_eq_succAbove_succAbove, Function.comp_apply]
+    rw [succSuccAbove_eq_succAbove_succAbove, Function.comp_apply]
     congr
     rcases eq_or_ne i 0 with rfl | hi
     · rfl
@@ -873,9 +859,3 @@ noncomputable def contrPMultilinear {n : ℕ} {c : Fin (n + 1 + 1) → C}
     change (update p k (r • y)).contrP i j hij = _
     rw [Pure.contrP_update_smul]
     rfl
-
-end Pure
-
-end Tensor
-
-end TensorSpecies
