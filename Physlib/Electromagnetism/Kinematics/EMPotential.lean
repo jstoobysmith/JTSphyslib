@@ -164,7 +164,7 @@ noncomputable def ofPotentials {d} (c : SpeedOfLight) (ϕ : Time → Space d →
     ElectromagneticPotential d :=
   ofScalarPotential c ϕ + ofVectorPotential c A
 
-/-- The creation of of an electromagnetic potential from  static potentials. -/
+/-- The creation of of an electromagnetic potential from static potentials. -/
 noncomputable def ofStaticPotentials {d} (c : SpeedOfLight) (ϕ : Space d → ℝ)
     (A : Space d → EuclideanSpace ℝ (Fin d)) : ElectromagneticPotential d :=
   ofStaticScalarPotential c ϕ + ofStaticVectorPotential c A
