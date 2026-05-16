@@ -135,7 +135,7 @@ noncomputable def ofScalarPotential {d} (c : SpeedOfLight)
     (ϕ : Time → Space d → ℝ) : ElectromagneticPotential d where
   val x μ :=
     match μ with
-    | Sum.inl 0 => (timeSlice c).symm  ϕ x
+    | Sum.inl 0 => (timeSlice c).symm ϕ x
     | Sum.inr _ => 0
 
 /-- The creation of an electromagnetic potential from a static scalar potential. -/
@@ -161,8 +161,11 @@ noncomputable def ofStaticVectorPotential {d} (c : SpeedOfLight)
 /-- The creation of an electromagnetic potential from the non-relativistic potentials. -/
 noncomputable def ofPotentials {d} (c : SpeedOfLight) (ϕ : Time → Space d → ℝ)
     (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
-    ElectromagneticPotential d :=
-  ofScalarPotential c ϕ + ofVectorPotential c A
+    ElectromagneticPotential d where
+  val x μ :=
+    match μ with
+    | Sum.inl 0 => (timeSlice c).symm ϕ x
+    | Sum.inr i => (timeSlice c).symm A x i
 
 /-- The creation of of an electromagnetic potential from static potentials. -/
 noncomputable def ofStaticPotentials {d} (c : SpeedOfLight) (ϕ : Space d → ℝ)
