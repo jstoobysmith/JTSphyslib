@@ -86,7 +86,7 @@ def PhyslibCategory.emoji : PhyslibCategory → String
   | StringTheory => "🧵"
   | StatisticalMechanics => "🎲"
   | Thermodynamics => "🔥"
-  | QuantumInfo => "🧲"
+  | QuantumInfo => "💻"
   | Other => "❓"
 
 def PhyslibCategory.List :  List PhyslibCategory :=
