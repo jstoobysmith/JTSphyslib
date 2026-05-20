@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Data.Finset.Sort
 public import Mathlib.Data.Nat.SuccPred
+public import Physlib.Meta.TODO.Basic
 /-!
 
 # Defining succSuccAbove
@@ -40,6 +41,10 @@ variable {n : ℕ} {c : Fin (n + 1 + 1) → C}
 ## Defining succSuccAbove
 
 -/
+
+TODO "Determine a way to simplify the definition of `succSuccAbove` using
+  predefined functions from Mathlib, but ensuring tactics such as `decide` still
+  work."
 
 /-- The embedding of `Fin n` into `Fin (n + 1 + 1)` which leaves a hole
   at `i` and `j`. -/
@@ -471,8 +476,8 @@ lemma succSuccAbove_comm (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 +
   let fl : Fin n ↪o Fin (n + 1 + 1 + 1 + 1) :=
     ⟨⟨succSuccAbove i1 j1 ∘ succSuccAbove i2 j2, by
       apply Function.Injective.comp
-      exact succSuccAbove_injective i1 j1
-      exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
+      · exact succSuccAbove_injective i1 j1
+      · exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
         Function.comp_apply, succSuccAbove_leq_iff_leq, implies_true]⟩
   let fr : Fin n ↪o Fin (n + 1 + 1 + 1 + 1) :=
     ⟨⟨succSuccAbove i2' j2' ∘ succSuccAbove
@@ -480,8 +485,8 @@ lemma succSuccAbove_comm (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 +
       (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2'])),
       by
       apply Function.Injective.comp
-      exact succSuccAbove_injective _ _
-      exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
+      · exact succSuccAbove_injective _ _
+      · exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
         Function.comp_apply, succSuccAbove_leq_iff_leq, implies_true]⟩
   have h : fl = fr := by
     rw [← OrderEmbedding.range_inj]
@@ -489,12 +494,12 @@ lemma succSuccAbove_comm (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 +
       succSuccAbove_range hij2, fl, fr, j2', i2']
     rw [succSuccAbove_range (by simp [hij1])]
     rw [succSuccAbove_image_compl, succSuccAbove_image_compl]
-    congr 1
-    rw [Set.image_pair, Set.image_pair]
-    simp only [succSuccAbove_predPredAbove, i2', j2']
-    exact Set.union_comm {i1, j1} {(succSuccAbove i1 j1) i2, (succSuccAbove i1 j1) j2}
-    simp [hij2]
-    simp [hij1]
+    · congr 1
+      rw [Set.image_pair, Set.image_pair]
+      simp only [succSuccAbove_predPredAbove, i2', j2']
+      exact Set.union_comm {i1, j1} {(succSuccAbove i1 j1) i2, (succSuccAbove i1 j1) j2}
+    · simp [hij2]
+    · simp [hij1]
   ext1 a
   have h' := congrFun (congrArg (fun x => x.toFun) h) a
   dsimp [fl, fr] at h'

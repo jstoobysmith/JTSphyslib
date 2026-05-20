@@ -716,7 +716,8 @@ lemma PermCond.append_right_succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → 
         (finSumFinEquiv (m := n1) (Sum.inr j))))
       (Fin.append c1 (c ∘ (i.succSuccAbove j))) id := by
   apply And.intro (Function.bijective_id)
-  simp [Fin.forall_fin_add]
+  simp only [Nat.add_eq, finSumFinEquiv_apply_right, id_eq, Function.comp_apply, forall_fin_add,
+    append_left, append_right]
   apply And.intro
   · intro m
     rw [succSuccAbove_natAdd_apply_castAdd i j hij.1]
