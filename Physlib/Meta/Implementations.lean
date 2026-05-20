@@ -15,10 +15,15 @@ This provides a way to reference other implementations.
 -/
 @[expose] public section
 
-structure Implementation where
-  ref : String
-  description : String
 open Lean
+
+/-- The structure containing the information of an implementation
+  of a result from physics into an ITP elsewhere. -/
+structure Implementation where
+  /-- The reference for the implementation. -/
+  ref : String
+  /-- The description of the implementation. -/
+  description : String
 
 /-- Environment extension to store `other_implementation ...`. -/
 meta initialize implementationExtension :
@@ -41,4 +46,6 @@ meta def elabImplementation : Elab.Command.CommandElab := fun stx =>
     let description : String := s2.getString
     let impl : Implementation := { ref := ref, description := description}
     modifyEnv fun env => implementationExtension.addEntry env impl
+    Elab.Command.liftTermElabM <| Lean.Elab.Term.addTermInfo' stx
+        (Lean.mkStrLit s!"An implementation of results elsewhere.") (expectedType? := none)
   | _ => throwError "Invalid syntax for `other_implementation` command"
