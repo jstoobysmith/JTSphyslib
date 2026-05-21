@@ -138,53 +138,41 @@ lemma succSuccAbove_monotone {n : ℕ} (i j : Fin (n + 1 + 1)) :
   intro a b
   simp
 
+lemma succSuccAbove_strictMono {n : ℕ} (i j : Fin (n + 1 + 1)) :
+    StrictMono (succSuccAbove i j) := by
+  refine Monotone.strictMono_of_injective ?_ ?_
+  · exact succSuccAbove_monotone i j
+  · exact succSuccAbove_injective i j
+
+
+@[simp]
+lemma succSuccAbove_range {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
+    Set.range (succSuccAbove i j) = {i, j}ᶜ := by
+  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
+  · simp_all
+  rw [succSuccAbove_eq_succAbove_succAbove, Set.range_comp, Fin.range_succAbove]
+  ext a
+  simp only [Set.mem_compl_iff, Set.mem_singleton_iff, Set.mem_image]
+  apply Iff.intro
+  · intro h
+    obtain ⟨b, h1, rfl⟩ := h
+    simpa using h1
+  · intro h
+    simp at h
+    rcases  Fin.eq_self_or_eq_succAbove i a with rfl | ⟨a, rfl⟩
+    · simp_all
+    use a
+    simp_all
+
 lemma succSuccAbove_eq_orderEmbOfFin {n : ℕ}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j) :
     succSuccAbove i j = Finset.orderEmbOfFin {i, j}ᶜ
     (by rw [Finset.card_compl]; simp [Finset.card_pair hij]) := by
-  let succSuccAbove : Fin n ↪o Fin (n + 1 + 1) :=
-  (Finset.orderEmbOfFin {i, j}ᶜ
-  (by rw [Finset.card_compl]; simp [Finset.card_pair hij]))
-  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · simp at hij
-  rw [succSuccAbove_eq_succAbove_succAbove]
-  symm
-  let f : Fin n ↪o Fin (n + 1 + 1) :=
-    ⟨⟨i.succAboveOrderEmb ∘ j.succAboveOrderEmb,
-        Fin.succAbove_right_injective.comp Fin.succAbove_right_injective⟩, by
-      simp only [Function.Embedding.coeFn_mk, Function.comp_apply, OrderEmbedding.le_iff_le,
-        implies_true]⟩
-  have hf : succSuccAbove = f := by
-    rw [← OrderEmbedding.range_inj]
-    simp only [Finset.range_orderEmbOfFin, Finset.coe_compl,
-      RelEmbedding.coe_mk, Function.Embedding.coeFn_mk, succSuccAbove, f]
-    change _ = Set.range (i.succAbove ∘ j.succAbove)
-    rw [Set.range_comp]
-    simp only [Fin.range_succAbove]
-    ext a
-    simp only [Set.mem_compl_iff, Set.mem_singleton_iff, Set.mem_image]
-    apply Iff.intro
-    · intro h
-      have ha := Fin.eq_self_or_eq_succAbove i a
-      simp_all [false_or]
-      obtain ⟨a, rfl⟩ := ha
-      use a
-      simp_all only [and_true]
-      rw [Fin.succAbove_right_injective.eq_iff] at h
-      exact h.2
-    · intro h
-      obtain ⟨a, h1, rfl⟩ := h
-      simp only [Finset.coe_insert, Finset.coe_singleton, Set.mem_insert_iff, Set.mem_singleton_iff,
-        not_or]
-      rw [Fin.succAbove_right_injective.eq_iff]
-      simp_all only [not_false_eq_true, and_true]
-      exact Fin.succAbove_ne i a
-  ext a
-  have hf' := congrFun (congrArg (fun x => x.toFun) hf) a
-  simp only [Function.Embedding.toFun_eq_coe, RelEmbedding.coe_toEmbedding, Function.comp_apply,
-    Fin.succAboveOrderEmb_apply, f] at hf'
-  rw [hf']
-  rfl
+  apply (StrictMono.range_inj _ _).mp
+  · simp only [succSuccAbove_range hij, Finset.range_orderEmbOfFin, Finset.coe_compl,
+      Finset.coe_insert, Finset.coe_singleton]
+  · exact succSuccAbove_strictMono i j
+  · exact OrderEmbedding.strictMono _
 
 lemma succSuccAbove_symm (i j : Fin (n + 1 + 1)) :
     succSuccAbove i j = succSuccAbove j i := by
@@ -204,19 +192,6 @@ lemma succSuccAbove_apply_eq_orderIsoOfFin {i j : Fin (n + 1 + 1)} (hij : i ≠ 
     (succSuccAbove i j) m = (Finset.orderIsoOfFin {i, j}ᶜ
       (by rw [Finset.card_compl]; simp [Finset.card_pair hij])) m := by
   simp [succSuccAbove_eq_orderEmbOfFin i j hij]
-
-@[simp]
-lemma succSuccAbove_range {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
-    Set.range (succSuccAbove i j) = {i, j}ᶜ := by
-  rw [succSuccAbove_eq_orderEmbOfFin i j hij, Finset.range_orderEmbOfFin]
-  simp only [Finset.compl_insert, Finset.coe_erase, Finset.coe_compl, Finset.coe_singleton]
-  ext x : 1
-  simp only [Set.mem_diff, Set.mem_compl_iff, Set.mem_singleton_iff, Set.mem_insert_iff, not_or]
-  apply Iff.intro
-  · intro a
-    simp_all only [not_false_eq_true, and_self]
-  · intro a
-    simp_all only [not_false_eq_true, and_self]
 
 lemma succSuccAbove_image_compl {i j : Fin (n + 1 + 1)} (hij : i ≠ j)
     (X : Set (Fin n)) :
