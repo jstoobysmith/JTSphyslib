@@ -58,6 +58,14 @@ def succSuccAbove (i j : Fin (n + 1 + 1)) (m : Fin n) : Fin (n + 1 + 1) :=
   else
     ⟨m + 2, by omega⟩
 
+lemma succSuccAbove_val (i j : Fin (n + 1 + 1)) (m : Fin n) :
+    (succSuccAbove i j m).val = if m.1 < i.1 ∧ m.1 < j.1 then m.1
+    else if m.1 + 1 < i.1 ∧ j.1 ≤ m.1 then m.1 + 1
+    else if i.1 ≤ m.1 ∧ m.1 + 1 < j.1 then m.1 + 1
+    else m.1 + 2 := by
+  simp only [succSuccAbove]
+  grind
+
 lemma succSuccAbove_self_apply (i : Fin (n + 1 + 1)) (m : Fin n) :
     succSuccAbove i i m = if m.1 < i.1 then ⟨m.1, by omega⟩ else ⟨m.1 + 2, by omega⟩ := by
   simp only [succSuccAbove, and_self]
@@ -269,49 +277,33 @@ lemma eq_or_exists_succSuccAbove(i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin
       exact ⟨m', rfl⟩
 
 lemma succSuccAbove_apply_lt_lt {n : ℕ}
-    (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
-    (m : Fin n) (hi : m.val < i.val) (hj : m.val < j.val) :
+    (i j : Fin (n + 1 + 1)) (m : Fin n) (hi : m.val < i.val) (hj : m.val < j.val) :
     succSuccAbove i j m = m.castSucc.castSucc := by
-  rcases Fin.eq_self_or_eq_succAbove i j with hj' | hj'
-  · subst hj'
-    simp at hij
-  obtain ⟨j, rfl⟩ := hj'
-  rw [succSuccAbove_succAbove]
-  simp only [Function.comp_apply]
-  have hj'' : m.val < j.val := by
-    simp_all only [Fin.succAbove, Fin.lt_def, Fin.val_castSucc, ne_eq]
-    grind
-  rw [Fin.succAbove_of_succ_le, Fin.succAbove_of_succ_le]
-  · simp only [Fin.le_def, Fin.val_succ]
-    omega
-  · simp_all only [Fin.succAbove, Fin.lt_def, Fin.val_castSucc, ne_eq, ite_true, Fin.le_def,
-    Fin.val_succ]
-    omega
+  ext
+  simp [succSuccAbove, hi, hj]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma succSuccAbove_natAdd_apply_castAdd {n n1 : ℕ}
-    (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
-    (m : Fin n1) :
+    (i j : Fin (n + 1 + 1)) (m : Fin n1) :
     (succSuccAbove (n := n1 + n) (Fin.natAdd n1 i) (Fin.natAdd n1 j))
     (Fin.castAdd n m)
     = Fin.castAdd (n + 1 + 1) (m) := by
   rw [succSuccAbove_apply_lt_lt]
   · simp [Fin.ext_iff]
-  · simp_all [Fin.ne_iff_vne]
   · simp only [Fin.val_castAdd, Fin.val_natAdd]
     omega
   · simp only [Fin.val_castAdd, Fin.val_natAdd]
     omega
 
 lemma succSuccAbove_natAdd_image_range_castAdd {n n1 : ℕ}
-    (i j : Fin (n + 1 + 1)) (hij : i ≠ j) :
+    (i j : Fin (n + 1 + 1)) :
     (succSuccAbove (n := n1 + n) (Fin.natAdd n1 i) (Fin.natAdd n1 j)) ''
     (Set.range (Fin.castAdd (m := n) (n := n1))) = {i | i.1 < n1} := by
   ext a
   simp only [Set.mem_image, Set.mem_range, exists_exists_eq_and, Set.mem_setOf_eq]
   conv_lhs =>
     enter [1, b]
-    rw [succSuccAbove_natAdd_apply_castAdd i j hij]
+    rw [succSuccAbove_natAdd_apply_castAdd i j]
   apply Iff.intro
   · intro h
     obtain ⟨b, rfl⟩ := h
@@ -345,6 +337,15 @@ def predPredAbove (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
         ⟨m - 1, by fin_omega⟩
       else
         ⟨m - 2, by fin_omega⟩
+
+lemma predPredAbove_val (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
+    (hm : m ≠ i ∧ m ≠ j) :
+    (predPredAbove i j hij m hm).val = if m.1 < i.1 ∧ m.1 < j.1 then m.1
+    else if m.1 - 1 < i.1 ∧ j.1 ≤ m.1 then m.1 - 1
+    else if i.1 - 1 ≤ m.1 ∧ m.1 < j.1 then m.1 - 1
+    else m.1 - 2 := by
+  simp only [predPredAbove]
+  grind
 
 @[simp]
 lemma succSuccAbove_predPredAbove (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
@@ -401,40 +402,11 @@ lemma succSuccAbove_comm (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 +
     let i1' := (predPredAbove i2' j2' hi2j2' i1 (by simp [i2', j2']));
     let j1' := (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2']));
     succSuccAbove i1 j1 ∘ succSuccAbove i2 j2 =
-    succSuccAbove i2' j2' ∘
-    succSuccAbove i1' j1':= by
-  intro i2' j2' hi2j2'
-  let fl : Fin n ↪o Fin (n + 1 + 1 + 1 + 1) :=
-    ⟨⟨succSuccAbove i1 j1 ∘ succSuccAbove i2 j2, by
-      apply Function.Injective.comp
-      · exact succSuccAbove_injective i1 j1
-      · exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
-        Function.comp_apply, succSuccAbove_leq_iff_leq, implies_true]⟩
-  let fr : Fin n ↪o Fin (n + 1 + 1 + 1 + 1) :=
-    ⟨⟨succSuccAbove i2' j2' ∘ succSuccAbove
-      (predPredAbove i2' j2' hi2j2' i1 (by simp [i2', j2']))
-      (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2'])),
-      by
-      apply Function.Injective.comp
-      · exact succSuccAbove_injective _ _
-      · exact succSuccAbove_injective _ _⟩, by simp only [Function.Embedding.coeFn_mk,
-        Function.comp_apply, succSuccAbove_leq_iff_leq, implies_true]⟩
-  have h : fl = fr := by
-    rw [← OrderEmbedding.range_inj]
-    simp only [RelEmbedding.coe_mk, Function.Embedding.coeFn_mk, Set.range_comp,
-      succSuccAbove_range hij2, fl, fr, j2', i2']
-    rw [succSuccAbove_range (by simp [hij1])]
-    rw [succSuccAbove_image_compl, succSuccAbove_image_compl]
-    · congr 1
-      rw [Set.image_pair, Set.image_pair]
-      simp only [succSuccAbove_predPredAbove, i2', j2']
-      exact Set.union_comm {i1, j1} {(succSuccAbove i1 j1) i2, (succSuccAbove i1 j1) j2}
-    · simp [hij2]
-    · simp [hij1]
-  ext1 a
-  have h' := congrFun (congrArg (fun x => x.toFun) h) a
-  dsimp [fl, fr] at h'
-  exact h'
+    succSuccAbove i2' j2' ∘ succSuccAbove i1' j1':= by
+  ext m
+  simp only [Function.comp_apply]
+  simp only [predPredAbove_val, succSuccAbove_val]
+  grind (splits := 20)
 
 lemma succSuccAbove_comm_apply (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 + 1))
     (hij1 : i1 ≠ j1) (hij2 : i2 ≠ j2) (m : Fin n) :
