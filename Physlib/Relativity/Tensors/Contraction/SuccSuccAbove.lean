@@ -330,13 +330,13 @@ lemma succSuccAbove_comm_natAdd {n n1 : ℕ}
 def predPredAbove (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
     (hm : m ≠ i ∧ m ≠ j) : Fin n :=
   if h1 : m.1 < i.1 ∧ m.1 < j.1 then
-        ⟨m, by fin_omega⟩
+        ⟨m, by grind⟩
       else if h2 : m.1 - 1 < i.1 ∧ j.1 ≤ m.1 then
-        ⟨m - 1, by fin_omega⟩
+        ⟨m - 1, by grind⟩
       else if h3 : i.1 - 1 ≤ m.1 ∧ m.1 < j.1 then
-        ⟨m - 1, by fin_omega⟩
+        ⟨m - 1, by grind⟩
       else
-        ⟨m - 2, by fin_omega⟩
+        ⟨m - 2, by grind⟩
 
 lemma predPredAbove_val (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
     (hm : m ≠ i ∧ m ≠ j) :
@@ -372,14 +372,9 @@ lemma predPredAbove_injective (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
   simp
 
 lemma predPredAbove_surjective (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
-    (m : Fin n) :
-    ∃ m' : Fin (n + 1 + 1), ∃ (h : m' ≠ i ∧ m' ≠ j),
+    (m : Fin n) : ∃ m' : Fin (n + 1 + 1), ∃ (h : m' ≠ i ∧ m' ≠ j),
     predPredAbove i j hij m' h = m := by
-  use (succSuccAbove i j) m
-  have h : (succSuccAbove i j) m ≠ i ∧ (succSuccAbove i j) m ≠ j := by
-    simp [Ne.symm]
-  use h
-  apply (succSuccAbove_injective i j)
+  refine ⟨succSuccAbove i j m, by simp [Ne.symm], succSuccAbove_injective i j ?_⟩
   simp
 
 @[simp]
