@@ -60,13 +60,13 @@ def succSuccAbove (i j : Fin (n + 1 + 1)) (m : Fin n) : Fin (n + 1 + 1) :=
 
 lemma succSuccAbove_self_apply (i : Fin (n + 1 + 1)) (m : Fin n) :
     succSuccAbove i i m = if m.1 < i.1 then ⟨m.1, by omega⟩ else ⟨m.1 + 2, by omega⟩ := by
-  simp [succSuccAbove]
+  simp only [succSuccAbove, and_self]
   grind
 
 lemma succSuccAbove_eq_succAbove_succAbove (i : Fin (n + 1 + 1)) (j : Fin (n + 1)) :
     succSuccAbove i (i.succAbove j) = i.succAbove ∘ j.succAbove := by
   ext m
-  simp [succSuccAbove, Fin.succAbove, Fin.lt_def]
+  simp only [succSuccAbove, succAbove, lt_def, val_castSucc, Function.comp_apply]
   grind
 
 lemma succSuccAbove_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
@@ -91,7 +91,7 @@ lemma succSuccAbove_injective {n : ℕ}
     (i j : Fin (n + 1 + 1)) : Function.Injective (succSuccAbove i j) := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
   · intro a b
-    simp [succSuccAbove_self_apply]
+    simp only [succSuccAbove_self_apply]
     grind
   · rw [succSuccAbove_eq_succAbove_succAbove]
     exact Function.Injective.comp Fin.succAbove_right_injective Fin.succAbove_right_injective
@@ -107,19 +107,17 @@ lemma succSuccAbove_leq_iff_leq {n : ℕ}
     (i j : Fin (n + 1 + 1)) (m1 m2 : Fin n) :
     succSuccAbove i j m1 ≤ succSuccAbove i j m2 ↔ m1 ≤ m2 := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · simp [succSuccAbove_self_apply]
+  · simp only [succSuccAbove_self_apply]
     grind
   · rw [succSuccAbove_eq_succAbove_succAbove]
-    simp only [Function.comp_apply]
-    rw [Fin.succAbove_le_succAbove_iff]
-    rw [Fin.succAbove_le_succAbove_iff]
+    simp only [Function.comp_apply, Fin.succAbove_le_succAbove_iff]
 
 @[simp]
 lemma succSuccAbove_lt_iff_lt {n : ℕ}
     (i j : Fin (n + 1 + 1)) (m1 m2 : Fin n) :
     succSuccAbove i j m1 < succSuccAbove i j m2 ↔ m1 < m2 := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · simp [succSuccAbove_self_apply]
+  · simp only [succSuccAbove_self_apply]
     grind
   · rw [succSuccAbove_eq_succAbove_succAbove]
     simp only [Function.comp_apply]
@@ -134,8 +132,8 @@ lemma succSuccAbove_monotone {n : ℕ} (i j : Fin (n + 1 + 1)) :
 
 lemma succSuccAbove_eq_orderEmbOfFin {n : ℕ}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j) :
-    succSuccAbove i j = (Finset.orderEmbOfFin {i, j}ᶜ
-    (by rw [Finset.card_compl]; simp [Finset.card_pair hij])) := by
+    succSuccAbove i j = Finset.orderEmbOfFin {i, j}ᶜ
+    (by rw [Finset.card_compl]; simp [Finset.card_pair hij]) := by
   let succSuccAbove : Fin n ↪o Fin (n + 1 + 1) :=
   (Finset.orderEmbOfFin {i, j}ᶜ
   (by rw [Finset.card_compl]; simp [Finset.card_pair hij]))
@@ -144,10 +142,8 @@ lemma succSuccAbove_eq_orderEmbOfFin {n : ℕ}
   rw [succSuccAbove_eq_succAbove_succAbove]
   symm
   let f : Fin n ↪o Fin (n + 1 + 1) :=
-    ⟨⟨i.succAboveOrderEmb ∘ j.succAboveOrderEmb, by
-      refine Function.Injective.comp ?_ ?_
-      exact Fin.succAbove_right_injective
-      exact Fin.succAbove_right_injective⟩, by
+    ⟨⟨i.succAboveOrderEmb ∘ j.succAboveOrderEmb,
+        Fin.succAbove_right_injective.comp Fin.succAbove_right_injective⟩, by
       simp only [Function.Embedding.coeFn_mk, Function.comp_apply, OrderEmbedding.le_iff_le,
         implies_true]⟩
   have hf : succSuccAbove = f := by
@@ -226,7 +222,7 @@ lemma fst_ne_succSuccAbove_pre (i j : Fin (n + 1 + 1)) (m : Fin n) :
     ¬ i = succSuccAbove i j m := by
   by_cases hij : i = j
   · subst hij
-    simp [succSuccAbove_self_apply]
+    simp only [succSuccAbove_self_apply]
     grind
   · by_contra hn
     have hi : i ∉ Set.range (succSuccAbove i j) := by
@@ -271,7 +267,6 @@ lemma eq_or_exists_succSuccAbove(i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin
       rw [@Set.mem_range] at h''
       obtain ⟨m', rfl⟩ := h''
       exact ⟨m', rfl⟩
-
 
 lemma succSuccAbove_apply_lt_lt {n : ℕ}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
