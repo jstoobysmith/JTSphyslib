@@ -325,76 +325,12 @@ lemma succSuccAbove_natAdd_image_range_castAdd {n n1 : ℕ}
     use ⟨a, by omega⟩
     simp
 
-set_option backward.isDefEq.respectTransparency false in
 lemma succSuccAbove_comm_natAdd {n n1 : ℕ}
-    (i j : Fin (n + 1 + 1)) (hij : i ≠ j)
-    (m : Fin n) :
-    (succSuccAbove (n := n1 + n) (Fin.natAdd n1 i) (Fin.natAdd n1 j))
-    (Fin.natAdd n1 m)
+    (i j : Fin (n + 1 + 1)) (m : Fin n) :
+    succSuccAbove (n := n1 + n) (Fin.natAdd n1 i) (Fin.natAdd n1 j) (Fin.natAdd n1 m)
     = Fin.natAdd (n1) (succSuccAbove i j m) := by
-  let f : Fin n ↪o Fin (n1 + n + 1 + 1) :=
-    ⟨⟨(succSuccAbove (Fin.natAdd n1 i) (Fin.natAdd n1 j))
-    ∘ Fin.natAdd n1, by
-      intro i j
-      simp only [Function.comp_apply, succSuccAbove_eq_iff_eq]
-      simp [Fin.ext_iff]⟩, by
-      intro a b
-      simp only [Function.Embedding.coeFn_mk, Function.comp_apply, succSuccAbove_leq_iff_leq]
-      rw [Fin.le_def, Fin.le_def]
-      simp⟩
-  let g : Fin n ↪o Fin (n1 + n + 1 + 1) :=
-      ⟨⟨(Fin.natAdd (n1) ∘ succSuccAbove i j), by
-      intro a b
-      simp only [Function.comp_apply, Fin.ext_iff, Fin.val_natAdd, add_right_inj]
-      simp [← Fin.ext_iff]⟩, by
-      intro a b
-      simp only [Function.Embedding.coeFn_mk, Function.comp_apply]
-      rw [Fin.le_def, Fin.le_def]
-      simp⟩
-  have hcastRange : Set.range (Fin.castAdd (m := n) (n := n1)) = {i | i.1 < n1} := by
-    rw [@Set.range_eq_iff]
-    apply And.intro
-    · intro a
-      simp
-    · intro b hb
-      simp only [Set.mem_setOf_eq] at hb
-      use ⟨b, by omega⟩
-      simp
-  have hnatRange : Set.range (Fin.natAdd (m := n) n1) =
-    (Set.range (Fin.castAdd (m := n) (n := n1)))ᶜ := by
-    rw [hcastRange]
-    rw [@Set.range_eq_iff]
-    apply And.intro
-    · intro a
-      simp
-    · intro b hb
-      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt] at hb
-      use ⟨b - n1, by omega⟩
-      simp only [Fin.natAdd_mk, Fin.ext_iff]
-      omega
-  have hfg : f = g := by
-    rw [← OrderEmbedding.range_inj]
-    simp only [RelEmbedding.coe_mk, Function.Embedding.coeFn_mk, f, g]
-    rw [Set.range_comp, Set.range_comp]
-    simp only [succSuccAbove_range hij]
-    rw [hnatRange]
-    rw [succSuccAbove_image_compl]
-    simp only [Set.compl_union]
-    rw [succSuccAbove_natAdd_image_range_castAdd i j hij]
-    ext a
-    simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_insert_iff, Set.mem_singleton_iff,
-      not_or, Set.mem_setOf_eq, not_lt, Set.mem_image]
-    apply Iff.intro
-    · intro h
-      use ⟨a - n1, by omega⟩
-      simp only [Fin.ext_iff, Fin.val_natAdd, Fin.natAdd_mk] at h ⊢
-      omega
-    · intro h
-      obtain ⟨x, h1, rfl⟩ := h
-      simp_all [Fin.ext_iff]
-    · simp_all [Fin.ext_iff]
-  simpa using congrFun (congrArg (fun x => x.toFun) hfg) m
-
+  simp only [succSuccAbove, val_natAdd, add_lt_add_iff_left, add_le_add_iff_left, Fin.ext_iff]
+  grind
 
 /-!
 
