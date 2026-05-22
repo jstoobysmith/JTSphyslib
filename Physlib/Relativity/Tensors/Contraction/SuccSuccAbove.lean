@@ -78,7 +78,7 @@ lemma succSuccAbove_eq_succAbove_succAbove (i : Fin (n + 1 + 1)) (j : Fin (n + 1
   grind
 
 lemma succSuccAbove_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
-    succSuccAbove i j = fun x => (i.succAbove (((Fin.predAbove 0 i).predAbove j).succAbove x)) := by
+    succSuccAbove i j = fun x => i.succAbove (((Fin.predAbove 0 i).predAbove j).succAbove x) := by
   rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
   · contradiction
   · ext x
@@ -97,12 +97,9 @@ lemma succSuccAbove_eq_predAbove {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
 
 lemma succSuccAbove_injective {n : ℕ}
     (i j : Fin (n + 1 + 1)) : Function.Injective (succSuccAbove i j) := by
-  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · intro a b
-    simp only [succSuccAbove_self_apply]
-    grind
-  · rw [succSuccAbove_eq_succAbove_succAbove]
-    exact Function.Injective.comp Fin.succAbove_right_injective Fin.succAbove_right_injective
+  intro a b
+  simp only [Fin.ext_iff, succSuccAbove_val]
+  grind (splits := 20)
 
 @[simp]
 lemma succSuccAbove_eq_iff_eq {n : ℕ}
@@ -114,23 +111,15 @@ lemma succSuccAbove_eq_iff_eq {n : ℕ}
 lemma succSuccAbove_leq_iff_leq {n : ℕ}
     (i j : Fin (n + 1 + 1)) (m1 m2 : Fin n) :
     succSuccAbove i j m1 ≤ succSuccAbove i j m2 ↔ m1 ≤ m2 := by
-  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · simp only [succSuccAbove_self_apply]
-    grind
-  · rw [succSuccAbove_eq_succAbove_succAbove]
-    simp only [Function.comp_apply, Fin.succAbove_le_succAbove_iff]
+  simp only [Fin.le_def, Fin.succSuccAbove_val]
+  grind (splits := 20)
 
 @[simp]
 lemma succSuccAbove_lt_iff_lt {n : ℕ}
     (i j : Fin (n + 1 + 1)) (m1 m2 : Fin n) :
     succSuccAbove i j m1 < succSuccAbove i j m2 ↔ m1 < m2 := by
-  rcases Fin.eq_self_or_eq_succAbove i j with rfl | ⟨j, rfl⟩
-  · simp only [succSuccAbove_self_apply]
-    grind
-  · rw [succSuccAbove_eq_succAbove_succAbove]
-    simp only [Function.comp_apply]
-    rw [Fin.succAbove_lt_succAbove_iff]
-    rw [Fin.succAbove_lt_succAbove_iff]
+  simp only [Fin.lt_def, Fin.succSuccAbove_val]
+  grind (splits := 20)
 
 @[simp]
 lemma succSuccAbove_monotone {n : ℕ} (i j : Fin (n + 1 + 1)) :
@@ -139,11 +128,8 @@ lemma succSuccAbove_monotone {n : ℕ} (i j : Fin (n + 1 + 1)) :
   simp
 
 lemma succSuccAbove_strictMono {n : ℕ} (i j : Fin (n + 1 + 1)) :
-    StrictMono (succSuccAbove i j) := by
-  refine Monotone.strictMono_of_injective ?_ ?_
-  · exact succSuccAbove_monotone i j
-  · exact succSuccAbove_injective i j
-
+    StrictMono (succSuccAbove i j) :=
+  (succSuccAbove_monotone i j).strictMono_of_injective (succSuccAbove_injective i j)
 
 @[simp]
 lemma succSuccAbove_range {i j : Fin (n + 1 + 1)} (hij : i ≠ j) :
@@ -168,20 +154,15 @@ lemma succSuccAbove_eq_orderEmbOfFin {n : ℕ}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j) :
     succSuccAbove i j = Finset.orderEmbOfFin {i, j}ᶜ
     (by rw [Finset.card_compl]; simp [Finset.card_pair hij]) := by
-  apply (StrictMono.range_inj _ _).mp
-  · simp only [succSuccAbove_range hij, Finset.range_orderEmbOfFin, Finset.coe_compl,
+  apply ((succSuccAbove_strictMono i j).range_inj  (OrderEmbedding.strictMono _)).mp
+  simp only [succSuccAbove_range hij, Finset.range_orderEmbOfFin, Finset.coe_compl,
       Finset.coe_insert, Finset.coe_singleton]
-  · exact succSuccAbove_strictMono i j
-  · exact OrderEmbedding.strictMono _
 
 lemma succSuccAbove_symm (i j : Fin (n + 1 + 1)) :
     succSuccAbove i j = succSuccAbove j i := by
-  by_cases hij : i = j
-  · subst hij
-    rfl
-  rw [succSuccAbove_eq_orderEmbOfFin i j hij,
-    succSuccAbove_eq_orderEmbOfFin j i (Ne.symm hij)]
-  simp [Finset.pair_comm]
+  ext m
+  simp only [succSuccAbove_val]
+  grind (splits := 5)
 
 @[simp, nolint simpVarHead]
 lemma permCond_succSuccAbove_symm {c : Fin (n + 1 + 1) → C} (i j : Fin (n + 1 + 1))
@@ -203,21 +184,14 @@ lemma succSuccAbove_image_compl {i j : Fin (n + 1 + 1)} (hij : i ≠ j)
 @[simp]
 lemma fst_ne_succSuccAbove_pre (i j : Fin (n + 1 + 1)) (m : Fin n) :
     ¬ i = succSuccAbove i j m := by
-  by_cases hij : i = j
-  · subst hij
-    simp only [succSuccAbove_self_apply]
-    grind
-  · by_contra hn
-    have hi : i ∉ Set.range (succSuccAbove i j) := by
-      simp [succSuccAbove_eq_orderEmbOfFin i j hij]
-    nth_rewrite 2 [hn] at hi
-    simp [- succSuccAbove_range] at hi
+  simp only [Fin.ext_iff, succSuccAbove_val]
+  grind (splits := 5)
 
 @[simp]
 lemma succSuccAbove_ne_fst (i j : Fin (n + 1 + 1)) (m : Fin n) :
     ¬ succSuccAbove i j m = i := by
-  apply Ne.symm
-  simp
+  simp only [Fin.ext_iff, succSuccAbove_val]
+  grind (splits := 5)
 
 @[simp]
 lemma snd_ne_succSuccAbove_pre (i j : Fin (n + 1 + 1)) (m : Fin n) :
@@ -231,25 +205,15 @@ lemma succSuccAbove_ne_snd (i j : Fin (n + 1 + 1)) (m : Fin n) :
   apply Ne.symm
   simp
 
-lemma succSuccAbove_succAbove {n : ℕ}
-    (i : Fin (n + 1 + 1)) (j : Fin (n + 1)) :
-    succSuccAbove i (i.succAbove j) = i.succAbove ∘ j.succAbove := by
-  exact succSuccAbove_eq_succAbove_succAbove i j
-
 lemma eq_or_exists_succSuccAbove(i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1)) :
     m = i ∨ m = j ∨ ∃ m', m = succSuccAbove i j m' := by
   by_cases h : m = i
-  · subst h
-    simp
+  · simp [h]
   · by_cases h' : m = j
-    · subst h'
+    · simp [h']
+    · obtain ⟨m', rfl⟩ : ∃ y, succSuccAbove i j y = m := by
+        simp_all [← Set.mem_range, succSuccAbove_eq_orderEmbOfFin]
       simp
-    · simp_all only [false_or]
-      have h'' : m ∈ Set.range (succSuccAbove i j) := by
-        simp_all [succSuccAbove_eq_orderEmbOfFin]
-      rw [@Set.mem_range] at h''
-      obtain ⟨m', rfl⟩ := h''
-      exact ⟨m', rfl⟩
 
 lemma succSuccAbove_apply_lt_lt {n : ℕ}
     (i j : Fin (n + 1 + 1)) (m : Fin n) (hi : m.val < i.val) (hj : m.val < j.val) :
@@ -257,18 +221,12 @@ lemma succSuccAbove_apply_lt_lt {n : ℕ}
   ext
   simp [succSuccAbove, hi, hj]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma succSuccAbove_natAdd_apply_castAdd {n n1 : ℕ}
     (i j : Fin (n + 1 + 1)) (m : Fin n1) :
     (succSuccAbove (n := n1 + n) (Fin.natAdd n1 i) (Fin.natAdd n1 j))
-    (Fin.castAdd n m)
-    = Fin.castAdd (n + 1 + 1) (m) := by
-  rw [succSuccAbove_apply_lt_lt]
-  · simp [Fin.ext_iff]
-  · simp only [Fin.val_castAdd, Fin.val_natAdd]
-    omega
-  · simp only [Fin.val_castAdd, Fin.val_natAdd]
-    omega
+    (Fin.castAdd n m) = Fin.castAdd (n + 1 + 1) (m) := by
+  simp only [Fin.ext_iff, succSuccAbove_val, natAdd, castAdd]
+  grind (splits := 20)
 
 lemma succSuccAbove_natAdd_image_range_castAdd {n n1 : ℕ}
     (i j : Fin (n + 1 + 1)) :
@@ -280,12 +238,9 @@ lemma succSuccAbove_natAdd_image_range_castAdd {n n1 : ℕ}
     enter [1, b]
     rw [succSuccAbove_natAdd_apply_castAdd i j]
   apply Iff.intro
-  · intro h
-    obtain ⟨b, rfl⟩ := h
+  · rintro ⟨b, rfl⟩
     simp
-  · intro h
-    use ⟨a, by omega⟩
-    simp
+  · exact fun h ↦ ⟨⟨a, by omega⟩, by simp⟩
 
 lemma succSuccAbove_comm_natAdd {n n1 : ℕ}
     (i j : Fin (n + 1 + 1)) (m : Fin n) :
@@ -305,13 +260,13 @@ lemma succSuccAbove_comm_natAdd {n n1 : ℕ}
 def predPredAbove (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
     (hm : m ≠ i ∧ m ≠ j) : Fin n :=
   if h1 : m.1 < i.1 ∧ m.1 < j.1 then
-        ⟨m, by grind⟩
-      else if h2 : m.1 - 1 < i.1 ∧ j.1 ≤ m.1 then
-        ⟨m - 1, by grind⟩
-      else if h3 : i.1 - 1 ≤ m.1 ∧ m.1 < j.1 then
-        ⟨m - 1, by grind⟩
-      else
-        ⟨m - 2, by grind⟩
+      ⟨m, by grind⟩
+    else if h2 : m.1 - 1 < i.1 ∧ j.1 ≤ m.1 then
+      ⟨m - 1, by grind⟩
+    else if h3 : i.1 - 1 ≤ m.1 ∧ m.1 < j.1 then
+      ⟨m - 1, by grind⟩
+    else
+      ⟨m - 2, by grind⟩
 
 lemma predPredAbove_val (i j : Fin (n + 1 + 1)) (hij : i ≠ j) (m : Fin (n + 1 + 1))
     (hm : m ≠ i ∧ m ≠ j) :
@@ -374,8 +329,7 @@ lemma succSuccAbove_comm (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 +
     succSuccAbove i1 j1 ∘ succSuccAbove i2 j2 =
     succSuccAbove i2' j2' ∘ succSuccAbove i1' j1':= by
   ext m
-  simp only [Function.comp_apply]
-  simp only [predPredAbove_val, succSuccAbove_val]
+  simp only [Function.comp_apply, predPredAbove_val, succSuccAbove_val]
   grind (splits := 20)
 
 lemma succSuccAbove_comm_apply (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 + 1))

@@ -79,7 +79,7 @@ lemma Pure.prodP_dropPair {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     {c1 : Fin n1 → C}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j ∧ S.τ (c i) = c j)
     (p : Pure S c) (p1 : Pure S c1) :
-    p1.prodP (dropPair i j hij.1 p) = permP id (PermCond.append_right_succSuccAbove i j hij)
+    p1.prodP (dropPair i j hij.1 p) = permP id (PermCond.append_right_succSuccAbove i j)
     (dropPair (Fin.natAdd n1 i) (Fin.natAdd n1 j)
     (by simp_all [Fin.ext_iff]) (p1.prodP p)) := by
   ext x
@@ -91,12 +91,12 @@ lemma Pure.prodP_dropPair {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
   | Sum.inl x =>
     simp only [finSumFinEquiv_apply_left]
     rw [← congr_right (p1.prodP p) _ (Fin.castAdd (n + 1 + 1) x)
-      (by rw [Fin.succSuccAbove_natAdd_apply_castAdd i j hij.1])]
+      (by rw [Fin.succSuccAbove_natAdd_apply_castAdd i j])]
     simp [map_map_apply]
   | Sum.inr m =>
     simp only [finSumFinEquiv_apply_right]
     rw [← congr_right (p1.prodP p) _ (Fin.natAdd n1 (i.succSuccAbove j m))
-      (by rw [Fin.succSuccAbove_comm_natAdd i j hij.1])]
+      (by rw [Fin.succSuccAbove_comm_natAdd i j])]
     simp [map_map_apply]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -105,7 +105,7 @@ lemma Pure.prodP_contrP_snd {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j ∧ S.τ (c i) = c j)
     (p : Pure S c) (p1 : Pure S c1) :
     prodT p1.toTensor (contrP i j hij p) =
-    ((permT id (PermCond.append_right_succSuccAbove i j hij)) <|
+    ((permT id (PermCond.append_right_succSuccAbove i j)) <|
     contrP
       (finSumFinEquiv (m := n1) (Sum.inr i))
       (finSumFinEquiv (m := n1) (Sum.inr j))
@@ -124,7 +124,7 @@ lemma prodT_contrT_snd {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j ∧ S.τ (c i) = c j)
     (t : Tensor S c) (t1 : Tensor S c1) :
     prodT t1 (contrT n i j hij t) =
-    ((permT id (PermCond.append_right_succSuccAbove i j hij)) <|
+    ((permT id (PermCond.append_right_succSuccAbove i j)) <|
     contrT _
       (finSumFinEquiv (m := n1) (Sum.inr i))
       (finSumFinEquiv (m := n1) (Sum.inr j))
@@ -133,7 +133,7 @@ lemma prodT_contrT_snd {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
   generalize_proofs ha hb hc hd
   let P (t : Tensor S c) (t1 : Tensor S c1) : Prop :=
     prodT t1 (contrT _ i j hij t) =
-    ((permT id (PermCond.append_right_succSuccAbove i j hij)) <|
+    ((permT id (PermCond.append_right_succSuccAbove i j)) <|
     contrT _
       (finSumFinEquiv (m := n1) (Sum.inr i))
       (finSumFinEquiv (m := n1) (Sum.inr j)) hc <|
@@ -167,12 +167,9 @@ lemma contrT_prodT_snd {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     {c1 : Fin n1 → C}
     (i j : Fin (n + 1 + 1)) (hij : i ≠ j ∧ S.τ (c i) = c j)
     (t : Tensor S c) (t1 : Tensor S c1) :
-    (contrT _
-      (finSumFinEquiv (m := n1) (Sum.inr i))
-      (finSumFinEquiv (m := n1) (Sum.inr j))
-      (by simpa using hij) <|
-    prodT t1 t) =
-    ((permT id (PermCond.on_id_symm (PermCond.append_right_succSuccAbove i j hij))) <|
+    (contrT _ (finSumFinEquiv (m := n1) (Sum.inr i)) (finSumFinEquiv (m := n1) (Sum.inr j))
+      (by simpa using hij) <| prodT t1 t) =
+    ((permT id (PermCond.on_id_symm (PermCond.append_right_succSuccAbove i j))) <|
       (prodT t1 (contrT n i j hij t))) := by
   rw [prodT_contrT_snd]
   simp

@@ -711,20 +711,12 @@ lemma PermCond.succSuccAbove_comm {n : ℕ} {c : Fin (n + 1 + 1 + 1 + 1) → C}
 
 open Fin in
 lemma PermCond.append_right_succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
-    {c1 : Fin n1 → C} (i j : Fin (n + 1 + 1)) (hij : i ≠ j ∧ S.τ (c i) = c j) :
+    {c1 : Fin n1 → C} (i j : Fin (n + 1 + 1)) :
     PermCond (Fin.append c1 c ∘ (Fin.succSuccAbove (finSumFinEquiv (m := n1) (Sum.inr i))
         (finSumFinEquiv (m := n1) (Sum.inr j))))
       (Fin.append c1 (c ∘ (i.succSuccAbove j))) id := by
   apply And.intro (Function.bijective_id)
-  simp only [Nat.add_eq, finSumFinEquiv_apply_right, id_eq, Function.comp_apply, forall_fin_add,
-    append_left, append_right]
-  apply And.intro
-  · intro m
-    rw [succSuccAbove_natAdd_apply_castAdd i j hij.1]
-    simp
-  · intro m
-    rw [succSuccAbove_comm_natAdd i j hij.1]
-    simp
+  simp [forall_fin_add, succSuccAbove_comm_natAdd i j, succSuccAbove_natAdd_apply_castAdd i j]
 
 TODO "Prove that if `σ` satisfies `PermCond c c1 σ` then `PermCond.inv σ h`
   satisfies `PermCond c1 c (PermCond.inv σ h)`."
@@ -735,6 +727,7 @@ lemma fin_cast_permCond (n n1 : ℕ) {c : Fin n → C} (h : n1 = n) :
   · exact Equiv.bijective (finCongr h)
   · intro i
     rfl
+
 /-!
 
 ## Permutations
