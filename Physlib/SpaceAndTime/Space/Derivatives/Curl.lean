@@ -494,7 +494,7 @@ private lemma deriv_intervalIntegral_homotopyOperatorIntegrand_sub
 
 lemma exists_curl_of_div_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : ContDiff ℝ 1 f)
     (hdiv : ∇ ⬝ f = 0) :
-    ∃ g: Space → EuclideanSpace ℝ (Fin 3), f = curl g ∧ Differentiable ℝ g := by
+    ∃ g : Space → EuclideanSpace ℝ (Fin 3), f = curl g ∧ Differentiable ℝ g := by
   suffices hneg : ∃ g: Space → EuclideanSpace ℝ (Fin 3), f = - curl g ∧ Differentiable ℝ g by
     obtain ⟨g, hcurl, hdifferentiable⟩ := hneg
     use -g
@@ -645,6 +645,21 @@ lemma exists_grad_of_curl_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : 
   ext1 x
   specialize hg x
   simpa using (HasGradientAt.unique (hg.differentiableAt.hasGradientAt_grad x) hg).symm
+
+lemma eq_grad_integral_of_curl_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : ContDiff ℝ 1 f)
+    (hcurl : curl f = 0) :
+    f = grad (fun x => ∫ t in (0 : ℝ)..1, ⟪f (t • x), basis.repr x⟫_ℝ ∂(volume)) := by
+  obtain ⟨g, ⟨rfl, hg⟩⟩ := exists_grad_of_curl_zero f
+    (hf.differentiable (by simp)) (by simp [hcurl])
+  suffices h1 : ContDiff ℝ 1 g by
+    nth_rewrite 1 [eq_integral_grad h1]
+    simp
+  rw [contDiff_one_iff_hasFDerivAt]
+  use fun x => ((toDual ℝ Space) (basis.repr.symm (∇ g x)))
+  apply And.intro
+  · fun_prop
+  intro x
+  exact hasGradientAt_iff_hasFDerivAt.mpr (DifferentiableAt.hasGradientAt_grad x (hg x))
 
 TODO "Generalize the statement that a curl-free field is a gradient
   to time-dependent fields."
