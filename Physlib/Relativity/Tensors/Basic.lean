@@ -685,28 +685,20 @@ lemma PermCond.comp {n n1 n2 : ℕ} {c : Fin n → C} {c1 : Fin n1 → C}
 
 open Fin in
 lemma PermCond.snoc {n1} {n : ℕ} {c : Fin (n + 1) → C} {c1 : Fin n1 → C}
-    {σ : Fin n1 → Fin n} (i : Fin (n + 1))
-    (h : PermCond (c ∘ i.succAbove) c1 σ) :
+    {σ : Fin n1 → Fin n} (i : Fin (n + 1)) (h : PermCond (c ∘ i.succAbove) c1 σ) :
     PermCond c (snoc (α := fun _ ↦ C) c1 (c i))
       (snoc (α := fun _ ↦ Fin (n+1)) (i.succAbove ∘ σ ) i) := by
-  apply And.intro
-  · constructor
-    · intro x1 x2 h1
-      rcases Fin.eq_castSucc_or_eq_last x1 with (⟨x1, rfl⟩ | rfl)
-        <;> rcases Fin.eq_castSucc_or_eq_last x2 with (⟨x2, rfl⟩ | rfl)
-      · simp only [castSucc_inj]
-        apply h.injective
-        simpa using h1
-      · simp at h1
-      · simp at h1
-      · rfl
-    · intro k
-      rcases Fin.eq_self_or_eq_succAbove i k with (rfl | ⟨k, rfl⟩)
-      · use Fin.last n1
-        simp
-      · obtain ⟨j, rfl⟩ := h.surjective k
-        use Fin.castSucc j
-        simp
+  refine ⟨⟨?_, ?_⟩, ?_⟩
+  · apply Fin.snoc_injective_of_injective
+    · exact (Fin.succAbove_right_injective (p := i)).comp h.injective
+    · simp
+  · intro k
+    rcases Fin.eq_self_or_eq_succAbove i k with (rfl | ⟨k, rfl⟩)
+    · use Fin.last n1
+      simp
+    · obtain ⟨j, rfl⟩ := h.surjective k
+      use Fin.castSucc j
+      simp
   · intro j
     rcases Fin.eq_castSucc_or_eq_last j with (⟨j, rfl⟩ | rfl)
     · simp [h.preserve_color]
@@ -717,18 +709,17 @@ lemma PermCond.succAbove_of_eq_zero {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : F
     (h : PermCond c c1 σ) (hi : σ i = 0) :
     PermCond (c ∘ Fin.succ) (c1 ∘ i.succAbove)
       (fun j => (σ (i.succAbove j)).pred (by simp [← hi, h.injective.eq_iff])) := by
-  constructor
-  · constructor
-    · intro x1 x2 h1
-      simpa [h.injective.eq_iff] using h1
-    · intro k
-      suffices ha : ∃ a, σ (i.succAbove a) = k.succ by
-        obtain ⟨a, ha⟩ := ha
-        use a
-        simp [ha]
-      obtain ⟨j, hj⟩ := h.surjective k.succ
-      simp only [← hj, h.injective.eq_iff, Fin.exists_succAbove_eq_iff, ne_eq]
-      grind
+  refine ⟨⟨?_, ?_⟩, ?_⟩
+  · intro x1 x2 h1
+    simpa [h.injective.eq_iff] using h1
+  · intro k
+    suffices ha : ∃ a, σ (i.succAbove a) = k.succ by
+      obtain ⟨a, ha⟩ := ha
+      use a
+      simp [ha]
+    obtain ⟨j, hj⟩ := h.surjective k.succ
+    simp only [← hj, h.injective.eq_iff, Fin.exists_succAbove_eq_iff, ne_eq]
+    grind
   · intro x
     simp [h.preserve_color]
 
@@ -757,7 +748,7 @@ lemma PermCond.succAbove_of_neq_zero {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : 
       obtain ⟨a, h'⟩ := h'
       exact ⟨a, by rw [Fin.succ_succAbove_predAbove (hpr ▸ hne a), ← hpr]; exact h'⟩
     obtain ⟨j, hj⟩ := h.surjective ((σ i).succAbove k)
-    simp [← hj, h.injective.eq_iff]
+    simp only [← hj, h.injective.eq_iff, Fin.exists_succAbove_eq_iff, ne_eq]
     rintro rfl
     simp at hj
   · intro x
