@@ -21,28 +21,14 @@ The current density is given in terms of the charge density `ρ` and the current
 
 ## ii. Key results
 
-- `LorentzCurrentDensity` : The type of Lorentz current densities.
-- `LorentzCurrentDensity.chargeDensity` : The charge density associated with a
-  Lorentz current density.
-- `LorentzCurrentDensity.currentDensity` : The current density associated with a
-  Lorentz current density.
 - `DistLorentzCurrentDensity` : The type of Lorentz current densities
   as distributions.
 
 ## iii. Table of contents
 
-- A. The Lorentz Current Density
-- B. The underlying charge
-  - B.1. Charge density of zero Lorentz current density
-  - B.2. Differentiability of the charge density
-  - B.3. Smoothness of the charge density
-- C. The underlying current density
-  - C.1. current density of zero Lorentz current density
-  - C.2. Differentiability of the current density
-  - C.3. Smoothness of the current density
-- D. The Lorentz current density as a distribution
-  - D.1. The underlying charge density
-  - D.2. The underlying current density
+- A. The Lorentz current density as a distribution
+  - A.1. The underlying charge density
+  - A.2. The underlying current density
 
 ## iv. References
 
@@ -62,7 +48,7 @@ attribute [-simp] Nat.succ_eq_add_one
 
 /-!
 
-## D. The Lorentz current density as a distribution
+## A. The Lorentz current density as a distribution
 
 -/
 /-- The Lorentz current density, also called four-current as a distribution. -/
@@ -72,7 +58,7 @@ namespace DistLorentzCurrentDensity
 
 /-!
 
-### D.1. The underlying charge density
+### A.1. The underlying charge density
 
 -/
 
@@ -89,7 +75,7 @@ noncomputable def chargeDensity {d : ℕ} (c : SpeedOfLight) :
 
 /-!
 
-### D.2. The underlying current density
+### A.2. The underlying current density
 
 -/
 

@@ -21,30 +21,14 @@ Maxwell's equations with sources, i.e. Gauss's law and Ampère's law.
 ## ii. Key results
 
 - `IsExtrema` : The condition on an electromagnetic potential to be an extrema of the lagrangian.
-- `isExtrema_iff_gauss_ampere_magneticFieldMatrix` : The electromagnetic potential is an extrema
-  of the lagrangian if and only if Gauss's law and Ampère's law hold
-  (in terms of the magnetic field matrix).
-- `time_deriv_time_deriv_magneticFieldMatrix_of_isExtrema` : A wave-like equation for the
-  magnetic field matrix from the extrema condition.
-- `time_deriv_time_deriv_electricField_of_isExtrema` : A wave-like equation for the
-  electric field from the extrema condition.
 
 ## iii. Table of contents
 
-- A. The condition for an extrema of the Lagrangian density
-  - A.1. Extrema condition in terms of the field strength matrix
-  - A.2. Extrema condition in terms of tensors
-  - A.3. Equivariance of the extrema condition
-- B. Gauss's law and Ampère's law and the extrema condition
-- C. Time derivatives from the extrema condition
-- D. Second time derivatives from the extrema condition
-  - D.1. Second time derivatives of the magnetic field from the extrema condition
-  - D.2. Second time derivatives of the electric field from the extrema condition
-- E. Is Extema condition in the distributional case
-  - E.1. IsExtrema and Gauss's law and Ampère's law
-  - E.2. IsExtrema in terms of Vector Potentials
-  - E.3. The exterma condition in terms of tensors
-  - E.4. The invariance of the exterma condition under Lorentz transformations
+- A. Is Extema condition in the distributional case
+  - A.1. IsExtrema and Gauss's law and Ampère's law
+  - A.2. IsExtrema in terms of Vector Potentials
+  - A.3. The exterma condition in terms of tensors
+  - A.4. The invariance of the exterma condition under Lorentz transformations
 
 ## iv. References
 
@@ -59,7 +43,7 @@ open Tensor ContDiff
 
 /-!
 
-## E. Is Extema condition in the distributional case
+## A. Is Extema condition in the distributional case
 
 The above results looked at the extrema condition for electromagnetic potentials that are
 functions. We now look at the case where the electromagnetic potential is a distribution.
@@ -97,7 +81,7 @@ lemma isExtrema_iff_components {𝓕 : FreeSpace}
     | Sum.inr j => exact h.2 ε j
 /-!
 
-### E.1. IsExtrema and Gauss's law and Ampère's law
+### A.1. IsExtrema and Gauss's law and Ampère's law
 
 We show that `A` is an extrema of the lagrangian if and only if Gauss's law and Ampère's law hold.
 In other words,
@@ -169,7 +153,7 @@ lemma isExtrema_iff_space_time {𝓕 : FreeSpace}
 
 /-!
 
-### E.2. IsExtrema in terms of Vector Potentials
+### A.2. IsExtrema in terms of Vector Potentials
 
 We show that `A` is an extrema of the lagrangian if and only if Gauss's law and Ampère's law hold.
 In other words,
@@ -206,7 +190,7 @@ lemma isExtrema_iff_vectorPotential {𝓕 : FreeSpace}
 
 /-!
 
-### E.3. The exterma condition in terms of tensors
+### A.3. The exterma condition in terms of tensors
 
 We show that `A` is an extrema of the lagrangian if and only if the equation
 $$\frac{1}{\mu_0} \partial_\kappa F^{\kappa \nu'} - J^{\nu'} = 0,$$
@@ -245,7 +229,7 @@ lemma isExterma_iff_tensor {𝓕 : FreeSpace}
 
 /-!
 
-### E.4. The invariance of the exterma condition under Lorentz transformations
+### A.4. The invariance of the exterma condition under Lorentz transformations
 
 We show that the Exterma condition is invariant under Lorentz transformations.
 This implies that if an electromagnetic potential is an extrema in one inertial frame,

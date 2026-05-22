@@ -21,32 +21,19 @@ The electromagnetic potential `A^μ` is the fundamental objects in
 electromagnetism. Mathematically it is related to a connection
 on a `U(1)`-bundle.
 
-We define the electromagnetic potential as a function from
+We define the electromagnetic potential as a distribution from
 spacetime to contravariant Lorentz vectors.
 
 ## ii. Key results
 
-- `ElectromagneticPotential` : is the type of electromagnetic potentials.
-- `ElectromagneticPotential.deriv` : the derivative tensor `∂_μ A^ν`.
 - `DistElectromagneticPotential` : the type of electromagnetic potentials as distributions.
 
 ## iii. Table of contents
 
-- A. The electromagnetic potential
-  - A.1. Basic instances on the type of electromagnetic potentials
-  - A.2. Basic constructors of the electromagnetic potential
-  - A.3. The group action on the ElectromagneticPotential
-  - A.4. Differentiability
-  - A.5. The action on the space-time derivatives
-  - A.6. Variational adjoint derivative of component
-  - A.7. Variational adjoint derivative of derivatives of the potential
-- B. The derivative tensor of the electromagnetic potential
-  - B.1. Equivariance of the derivative tensor
-  - B.2. The elements of the derivative tensor in terms of the basis
-- C. The electromagnetic potential as a distribution
-  - C.1. The derivative of the electromagnetic potential as a distribution
-  - C.2. The derivative in terms of the basis
-  - C.3. Equivariance of the derivative distribution
+- A. The electromagnetic potential as a distribution
+  - A.1. The derivative of the electromagnetic potential as a distribution
+  - A.2. The derivative in terms of the basis
+  - A.3. Equivariance of the derivative distribution
 
 ## iv. References
 
@@ -65,7 +52,7 @@ open Tensor
 
 /-!
 
-## C. The electromagnetic potential as a distribution
+## A. The electromagnetic potential as a distribution
 
 -/
 
@@ -84,7 +71,7 @@ attribute [-simp] Nat.succ_eq_add_one
 
 /-!
 
-### C.1. The derivative of the electromagnetic potential as a distribution
+### A.1. The derivative of the electromagnetic potential as a distribution
 
 -/
 
@@ -109,7 +96,7 @@ lemma deriv_eq_sum_sum {d} (A : DistElectromagneticPotential d)
   rfl
 /-!
 
-### C.2. The derivative in terms of the basis
+### A.2. The derivative in terms of the basis
 
 -/
 
@@ -159,7 +146,7 @@ lemma toTensor_deriv_basis_repr_apply {d} (A : DistElectromagneticPotential d)
 
 /-!
 
-### C.3. Equivariance of the derivative distribution
+### A.3. Equivariance of the derivative distribution
 
 -/
 

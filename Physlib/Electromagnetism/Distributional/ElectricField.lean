@@ -22,21 +22,12 @@ In this module we define the electric field, and prove lemmas about it.
 
 ## ii. Key results
 
-- `electricField` : The electric field from the electromagnetic potential.
-- `electricField_eq_fieldStrengthMatrix` : The electric field expressed in terms of the
-  field strength tensor.
 - `DistElectromagneticPotential.electricField` : The electric field for
   electromagnetic potentials which are distributions.
 
 ## iii. Table of contents
 
-- A. Definition of the Electric Field
-- B. Relation to the field strength tensor
-- C. Smoothness of the electric field
-- D. Differentiability of the electric field
-- E. Time derivative of the vector potential in terms of the electric field
-- F. Derivatives of the electric field in terms of field strength tensor
-- G. Electric field for distributions
+- A. Electric field for distributions
 
 ## iv. References
 
@@ -51,7 +42,7 @@ open Tensor
 
 /-!
 
-## G. Electric field for distributions
+## A. Electric field for distributions
 
 -/
 

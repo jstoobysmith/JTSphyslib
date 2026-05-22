@@ -20,23 +20,17 @@ where `φ` is the scalar potential and `\vec A` is the vector potential.
 
 In this module we define the scalar potential, and prove lemmas about it.
 
-Since `A` is relativistic it is a function of `SpaceTime d`, whilst
-the scalar potential is non-relativistic and is therefore a function of `Time` and `Space d`.
+Since `A` is relativistic it is a distribution of `SpaceTime d`, whilst
+the scalar potential is non-relativistic and is therefore a distribution of `Time` and `Space d`.
 
 ## ii. Key results
 
-- `ElectromagneticPotential.scalarPotential` : The scalar potential from an
-  electromagnetic potential.
 - `DistElectromagneticPotential.scalarPotential` : The scalar potential from an
   electromagnetic potential which is a distribution.
 
 ## iii. Table of contents
 
-- A. Definition of the Scalar Potential
-- B. Relation to constructors
-- C. Smoothness of the Scalar Potential
-- D. Differentiability of the Scalar Potential
-- E. Scalar potential for distributions
+- A. Scalar potential for distributions
 
 ## iv. References
 
@@ -51,7 +45,7 @@ open Tensor
 
 /-!
 
-## E. Scalar potential for distributions
+## A. Scalar potential for distributions
 
 -/
 

@@ -12,41 +12,21 @@ public import Physlib.Electromagnetism.Distributional.ElectricField
 
 ## i. Overview
 
-In 3-spatial dimensions from the electromagnetic potential we can define the magnetic field
-` \vec B` as `(∇ ⨯ (A.vectorPotential t)) x`.
-In this module we define this magnetic field from the electromagnetic potential.
-
 In general dimensions we define the magnetic field matrix from the spatial components of the
-field strength matrix. This is an antisymmetric matrix.
+field strength matrix. This is an antisymmetric matrix. We define it
+in this module for distributions.
 
 ## ii. Key results
 
-- `ElectromagneticPotential.magneticField` : The magnetic field from the electromagnetic potential
-  in 3 spatial dimensions.
-- `ElectromagneticPotential.magneticFieldMatrix` : The magnetic field matrix from the
+- `DistElectromagneticPotential.magneticFieldMatrix` : The magnetic field matrix from the
   electromagnetic potential in general spatial dimensions.
-- `ElectromagneticPotential.time_deriv_magneticFieldMatrix` : The time derivative of the magnetic
-  field matrix in terms of the vector potential. (Aka Faraday's law).
 
 ## iii. Table of contents
 
-- A. The magnetic field
-  - A.1. Relation between the magnetic field and the field strength matrix
-  - A.2. Divergence of the magnetic field
-- B. The field strength matrix in terms of the electric and magnetic fields
-- C. Magnetic field matrix
-  - C.1. Antisymmetry of the magnetic field matrix
-  - C.2. Magnetic field in terms of the magnetic field matrix
-  - C.3. Magnetic field matrix in terms of vector potentials
-  - C.4. Smoothness of the magnetic field matrix
-  - C.5. Differentiablity of the magnetic field matrix
-  - C.6. Spatial derivative of the magnetic field matrix
-  - C.7. Temporal derivative of the magnetic field matrix
-  - C.8. `curl` of the magnetic field matrix
-- D. Magnetic field matrix for distributions
-  - D.1. Magnetic field matrix in terms of vector potentials
-  - D.2. The magnetic field matrix in terms of the field strength
-  - D.3. Magnetic field matrix in 1d
+- A. Magnetic field matrix for distributions
+  - A.1. Magnetic field matrix in terms of vector potentials
+  - A.2. The magnetic field matrix in terms of the field strength
+  - A.3. Magnetic field matrix in 1d
 
 ## iv. References
 
@@ -62,7 +42,7 @@ open Tensor
 
 /-!
 
-## D. Magnetic field matrix for distributions
+## A. Magnetic field matrix for distributions
 
 -/
 
@@ -93,7 +73,7 @@ noncomputable def magneticFieldMatrix {d} (c : SpeedOfLight) :
 
 /-!
 
-### D.1. Magnetic field matrix in terms of vector potentials
+### A.1. Magnetic field matrix in terms of vector potentials
 
 -/
 
@@ -137,7 +117,7 @@ lemma magneticFieldMatrix_distSpaceDeriv_basis_repr_eq_vector_potential {c : Spe
 
 /-!
 
-### D.2. The magnetic field matrix in terms of the field strength
+### A.2. The magnetic field matrix in terms of the field strength
 
 -/
 
@@ -162,7 +142,7 @@ lemma magneticFieldMatrix_basis_repr_eq_fieldStrength {c : SpeedOfLight}
 
 /-!
 
-### D.3. Magnetic field matrix in 1d
+### A.3. Magnetic field matrix in 1d
 
 -/
 

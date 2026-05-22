@@ -25,38 +25,16 @@ In this implementation we set `μ₀ = 1`. It is a TODO to introduce this consta
 
 ## ii. Key results
 
-- `freeCurrentPotential` : The potential energy from the interaction of the electromagnetic
-  potential with a free Lorentz current density.
 - `gradFreeCurrentPotential` : The variational gradient of the free current potential.
-- `lagrangian` : The lagrangian density for the electromagnetic field in presence of a
-  Lorentz current density.
 - `gradLagrangian` : The variational gradient of the lagrangian density.
-- `gradLagrangian_eq_electricField_magneticField` : The variational gradient of the lagrangian
-  density expressed in Gauss's and Ampère laws.
 
 ## iii. Table of contents
 
-- A. Free current potential
-  - A.1. Shifts in the free current potential under shifts in the potential
-  - A.2. The free current potential has a variational gradient
-  - A.3. The free current potential in terms of the scalar and vector potentials
-  - A.4. The variational gradient of the free current potential
-- B. The Lagrangian density
-  - B.1. Shifts in the lagrangian under shifts in the potential
-  - B.2. Lagrangian in terms of electric and magnetic fields
-- C. The variational gradient of the lagrangian density
-  - C.1. The lagrangian density has a variational gradient
-  - C.2. The definition of, `gradLagrangian`, the variational gradient of the lagrangian density
-  - C.3. The variational gradient in terms of the gradient of the kinetic term
-  - C.4. The lagrangian density has the variational gradient equal to `gradLagrangian`
-  - C.5. The variational gradient in terms of the field strength tensor
-  - C.6. The lagrangian gradient recovering Gauss's and Ampère laws
-  - C.7. The lagrangian gradient in tensor notation
-- D. The gradient of the lagrangian density for distributions
-  - D.1. The gradient of the free current potential
-    - D.1.1. Free current potential as a tensor
-  - D.2. The gradient of the lagrangian density
-    - D.2.1. The lagrangian gradient as a tensor
+- A. The gradient of the lagrangian density for distributions
+  - A.1. The gradient of the free current potential
+    - A.1.1. Free current potential as a tensor
+  - A.2. The gradient of the lagrangian density
+    - A.2.1. The lagrangian gradient as a tensor
 
 ## iv. References
 
@@ -75,7 +53,7 @@ open Tensor ContDiff
 
 /-!
 
-## D. The gradient of the lagrangian density for distributions
+## A. The gradient of the lagrangian density for distributions
 
 -/
 
@@ -91,7 +69,7 @@ attribute [-simp] Fintype.sum_sum_type
 attribute [-simp] Nat.succ_eq_add_one
 /-!
 
-### D.1. The gradient of the free current potential
+### A.1. The gradient of the free current potential
 
 We define this through the lemma `gradFreeCurrentPotential_eq_sum_basis`
 -/
@@ -155,7 +133,7 @@ lemma gradFreeCurrentPotential_sum_inr_i (𝓕 : FreeSpace) {d}
 
 /-!
 
-#### D.1.1. Free current potential as a tensor
+#### A.1.1. Free current potential as a tensor
 
 -/
 
@@ -208,7 +186,7 @@ lemma gradLagrangian_sum_inr_i {𝓕 : FreeSpace}
 
 /-!
 
-#### D.2.1. The lagrangian gradient as a tensor
+#### A.2.1. The lagrangian gradient as a tensor
 
 -/
 

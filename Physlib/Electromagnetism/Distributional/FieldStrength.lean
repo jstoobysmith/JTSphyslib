@@ -16,34 +16,18 @@ public import Mathlib.Data.Real.Hom
 
 In this module we define the field strength tensor in terms of the electromagnetic potential.
 
-We define a tensor version and a matrix version and prover various properties of these.
-
 ## ii. Key results
 
-- `toFieldStrength` : The field strength tensor from an electromagnetic potential.
-- `fieldStrengthMatrix` : The field strength matrix from an electromagnetic potential
-  (matrix representation of the field strength tensor in the standard basis).
 - `DistElectromagneticPotential.fieldStrength` : The field strength for
   electromagnetic potentials which are distributions.
 
 ## iii. Table of contents
 
-- A. The field strength tensor
-  - A.1. Tensor equalities
-  - A.2. Vector equalities
-  - A.3. The group action acting on the field strength tensor
-  - A.4. Differentiability and smoothness of the field strength tensor
-  - A.5. Elements of the field strength tensor in terms of basis
-  - A.6. The field strength matrix
-    - A.6.1. Differentiability of the field strength matrix
-  - A.7. The antisymmetry of the field strength tensor
-  - A.8. Equivariance of the field strength matrix
-  - A.9. Linearity of the field strength tensor
-- B. Field strength for distributions
-  - B.1. Auxiliary definition of field strength for distributions, with no linearity
-  - B.2. The definition of the field strength
-  - B.3. Field strength written in terms of a basis
-  - B.4. Equivariance of the field strength for distributions
+- A. Field strength for distributions
+  - A.1. Auxiliary definition of field strength for distributions, with no linearity
+  - A.2. The definition of the field strength
+  - A.3. Field strength written in terms of a basis
+  - A.4. Equivariance of the field strength for distributions
 
 ## iv. References
 
@@ -58,7 +42,7 @@ open Tensor
 
 /-!
 
-## B. Field strength for distributions
+## A. Field strength for distributions
 
 -/
 
@@ -73,7 +57,7 @@ attribute [-simp] Nat.succ_eq_add_one
 
 /-!
 
-### B.1. Auxiliary definition of field strength for distributions, with no linearity
+### A.1. Auxiliary definition of field strength for distributions, with no linearity
 
 -/
 
@@ -207,7 +191,7 @@ lemma fieldStrengthAux_eq_basis {d} (A : DistElectromagneticPotential d)
 
 /-!
 
-### B.2. The definition of the field strength
+### A.2. The definition of the field strength
 
 -/
 
@@ -253,7 +237,7 @@ lemma fieldStrength_eq_fieldStrengthAux {d} (A : DistElectromagneticPotential d)
     A.fieldStrength ε = A.fieldStrengthAux ε := by rfl
 /-!
 
-### B.3. Field strength written in terms of a basis
+### A.3. Field strength written in terms of a basis
 
 -/
 
@@ -299,7 +283,7 @@ lemma fieldStrength_antisymmetric_basis {d} (A : DistElectromagneticPotential d)
 
 /-!
 
-### B.4. Equivariance of the field strength for distributions
+### A.4. Equivariance of the field strength for distributions
 
 -/
 

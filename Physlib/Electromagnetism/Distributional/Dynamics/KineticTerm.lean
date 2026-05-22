@@ -25,35 +25,13 @@ In this implementation we have set `μ₀ = 1`. It is a TODO to introduce this c
 
 ## ii. Key results
 
-- `ElectromagneticPotential.kineticTerm` is the kinetic term of an electromagnetic potential.
-- `ElectromagneticPotential.kineticTerm_equivariant` shows that the kinetic term is
-  Lorentz invariant.
-- `ElectromagneticPotential.gradKineticTerm` is the variational gradient of the kinetic term.
-- `ElectromagneticPotential.gradKineticTerm_eq_electric_magnetic` gives a first expression for the
-  variational gradient in terms of the electric and magnetic fields.
 - `DistElectromagneticPotential.gradKineticTerm` is the variational gradient of the kinetic term
   for distributional electromagnetic potentials.
 
 ## iii. Table of contents
 
-- A. The kinetic term
-  - A.1. Lorentz invariance of the kinetic term
-  - A.2. Kinetic term simplified expressions
-  - A.3. The kinetic term in terms of the electric and magnetic fields
-  - A.4. The kinetic term in terms of the electric and magnetic matrix
-  - A.5. The kinetic term for constant fields
-  - A.6. Smoothness of the kinetic term
-  - A.7. The kinetic term shifted by time mul a constant
-- B. Variational gradient of the kinetic term
-  - B.1. Variational gradient in terms of fderiv
-  - B.2. Writing the variational gradient as a sums over double derivatives of the potential
-  - B.3. Variational gradient as a sums over fieldStrengthMatrix
-  - B.4. Variational gradient in terms of the Gauss's and Ampère laws
-  - B.5. Linearity properties of the variational gradient
-  - B.6. HasVarGradientAt for the variational gradient
-  - B.7. Gradient of the kinetic term in terms of the tensor derivative
-- C. The gradient of the kinetic term for distributions
-  - C.1. The gradient of the kinetic term as a tensor
+- A. The gradient of the kinetic term for distributions
+  - A.1. The gradient of the kinetic term as a tensor
 
 ## iv. References
 
@@ -71,7 +49,7 @@ open Tensor ContDiff Physlib
 
 /-!
 
-## C. The gradient of the kinetic term for distributions
+## A. The gradient of the kinetic term for distributions
 
 For distributions we define the gradient of the kinetic term directly
 using `ElectromagneticPotential.gradKineticTerm_eq_sum_sum` as the defining formula.
@@ -203,7 +181,7 @@ lemma gradKineticTerm_sum_inr_eq {d} {𝓕 : FreeSpace}
 
 /-!
 
-### C.1. The gradient of the kinetic term as a tensor
+### A.1. The gradient of the kinetic term as a tensor
 
 -/
 
