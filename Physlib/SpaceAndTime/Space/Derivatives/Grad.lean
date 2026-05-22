@@ -374,7 +374,7 @@ lemma eq_integral_grad {f : Space → ℝ} (hf : ContDiff ℝ 1 f) :
       · grind
     _ =  (f (1 • x) - f 0) + f 0 := by
       rw [intervalIntegral.integral_deriv_eq_sub (by fun_prop)]
-      simp
+      simp only [one_smul, zero_smul, sub_add_cancel]
       · apply Continuous.intervalIntegrable
         fun_prop
   simp
