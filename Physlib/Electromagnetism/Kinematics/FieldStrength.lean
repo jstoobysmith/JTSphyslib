@@ -23,8 +23,6 @@ We define a tensor version and a matrix version and prover various properties of
 - `toFieldStrength` : The field strength tensor from an electromagnetic potential.
 - `fieldStrengthMatrix` : The field strength matrix from an electromagnetic potential
   (matrix representation of the field strength tensor in the standard basis).
-- `DistElectromagneticPotential.fieldStrength` : The field strength for
-  electromagnetic potentials which are distributions.
 
 ## iii. Table of contents
 
@@ -39,11 +37,6 @@ We define a tensor version and a matrix version and prover various properties of
   - A.7. The antisymmetry of the field strength tensor
   - A.8. Equivariance of the field strength matrix
   - A.9. Linearity of the field strength tensor
-- B. Field strength for distributions
-  - B.1. Auxiliary definition of field strength for distributions, with no linearity
-  - B.2. The definition of the field strength
-  - B.3. Field strength written in terms of a basis
-  - B.4. Equivariance of the field strength for distributions
 
 ## iv. References
 

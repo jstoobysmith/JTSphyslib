@@ -27,8 +27,6 @@ the scalar potential is non-relativistic and is therefore a function of `Time` a
 
 - `ElectromagneticPotential.scalarPotential` : The scalar potential from an
   electromagnetic potential.
-- `DistElectromagneticPotential.scalarPotential` : The scalar potential from an
-  electromagnetic potential which is a distribution.
 
 ## iii. Table of contents
 
@@ -36,7 +34,6 @@ the scalar potential is non-relativistic and is therefore a function of `Time` a
 - B. Relation to constructors
 - C. Smoothness of the Scalar Potential
 - D. Differentiability of the Scalar Potential
-- E. Scalar potential for distributions
 
 ## iv. References
 

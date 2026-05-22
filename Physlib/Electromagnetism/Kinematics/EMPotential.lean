@@ -28,7 +28,6 @@ spacetime to contravariant Lorentz vectors.
 
 - `ElectromagneticPotential` : is the type of electromagnetic potentials.
 - `ElectromagneticPotential.deriv` : the derivative tensor `∂_μ A^ν`.
-- `DistElectromagneticPotential` : the type of electromagnetic potentials as distributions.
 
 ## iii. Table of contents
 
@@ -43,10 +42,6 @@ spacetime to contravariant Lorentz vectors.
 - B. The derivative tensor of the electromagnetic potential
   - B.1. Equivariance of the derivative tensor
   - B.2. The elements of the derivative tensor in terms of the basis
-- C. The electromagnetic potential as a distribution
-  - C.1. The derivative of the electromagnetic potential as a distribution
-  - C.2. The derivative in terms of the basis
-  - C.3. Equivariance of the derivative distribution
 
 ## iv. References
 

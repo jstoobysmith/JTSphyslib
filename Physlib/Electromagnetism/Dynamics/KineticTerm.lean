@@ -31,8 +31,6 @@ In this implementation we have set `μ₀ = 1`. It is a TODO to introduce this c
 - `ElectromagneticPotential.gradKineticTerm` is the variational gradient of the kinetic term.
 - `ElectromagneticPotential.gradKineticTerm_eq_electric_magnetic` gives a first expression for the
   variational gradient in terms of the electric and magnetic fields.
-- `DistElectromagneticPotential.gradKineticTerm` is the variational gradient of the kinetic term
-  for distributional electromagnetic potentials.
 
 ## iii. Table of contents
 
@@ -52,8 +50,6 @@ In this implementation we have set `μ₀ = 1`. It is a TODO to introduce this c
   - B.5. Linearity properties of the variational gradient
   - B.6. HasVarGradientAt for the variational gradient
   - B.7. Gradient of the kinetic term in terms of the tensor derivative
-- C. The gradient of the kinetic term for distributions
-  - C.1. The gradient of the kinetic term as a tensor
 
 ## iv. References
 

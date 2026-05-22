@@ -40,11 +40,6 @@ Maxwell's equations with sources, i.e. Gauss's law and Ampère's law.
 - D. Second time derivatives from the extrema condition
   - D.1. Second time derivatives of the magnetic field from the extrema condition
   - D.2. Second time derivatives of the electric field from the extrema condition
-- E. Is Extema condition in the distributional case
-  - E.1. IsExtrema and Gauss's law and Ampère's law
-  - E.2. IsExtrema in terms of Vector Potentials
-  - E.3. The exterma condition in terms of tensors
-  - E.4. The invariance of the exterma condition under Lorentz transformations
 
 ## iv. References
 

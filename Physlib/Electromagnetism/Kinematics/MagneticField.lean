@@ -43,10 +43,6 @@ field strength matrix. This is an antisymmetric matrix.
   - C.6. Spatial derivative of the magnetic field matrix
   - C.7. Temporal derivative of the magnetic field matrix
   - C.8. `curl` of the magnetic field matrix
-- D. Magnetic field matrix for distributions
-  - D.1. Magnetic field matrix in terms of vector potentials
-  - D.2. The magnetic field matrix in terms of the field strength
-  - D.3. Magnetic field matrix in 1d
 
 ## iv. References
 

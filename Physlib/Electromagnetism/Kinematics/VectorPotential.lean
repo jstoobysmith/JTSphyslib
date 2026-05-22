@@ -27,15 +27,12 @@ the vector potential is non-relativistic and is therefore a function of `Time` a
 
 - `ElectromagneticPotential.vectorPotential` : The vector potential from an
   electromagnetic potential.
-- `DistElectromagneticPotential.vectorPotential` : The vector potential from an
-  electromagnetic potential which is a distribution.
 
 ## iii. Table of contents
 
 - A. Definition of the Vector Potential
 - B. Smoothness of the vector potential
 - C. Differentiablity of the vector potential
-- D. Vector potential for distributions
 
 ## iv. References
 
