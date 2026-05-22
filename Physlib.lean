@@ -30,6 +30,16 @@ public import Physlib.Electromagnetism.Basic
 public import Physlib.Electromagnetism.Charge.ChargeUnit
 public import Physlib.Electromagnetism.Current.CircularCoil
 public import Physlib.Electromagnetism.Current.InfiniteWire
+public import Physlib.Electromagnetism.Distributional.Basic
+public import Physlib.Electromagnetism.Distributional.Dynamics.CurrentDensity
+public import Physlib.Electromagnetism.Distributional.Dynamics.IsExtrema
+public import Physlib.Electromagnetism.Distributional.Dynamics.KineticTerm
+public import Physlib.Electromagnetism.Distributional.Dynamics.Lagrangian
+public import Physlib.Electromagnetism.Distributional.ElectricField
+public import Physlib.Electromagnetism.Distributional.FieldStrength
+public import Physlib.Electromagnetism.Distributional.MagneticField
+public import Physlib.Electromagnetism.Distributional.ScalarPotential
+public import Physlib.Electromagnetism.Distributional.VectorPotential
 public import Physlib.Electromagnetism.Dynamics.Basic
 public import Physlib.Electromagnetism.Dynamics.CurrentDensity
 public import Physlib.Electromagnetism.Dynamics.Hamiltonian
