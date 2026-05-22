@@ -44,8 +44,8 @@ def Physlib.allImports : IO (Array Import) := do
   let mFile ← findOLean mods
   unless ← mFile.pathExists do
     throw <| IO.userError s!"object file '{mFile}' of module {mods} does not exist"
-  let (QIMods, _) ← readModuleData mFile
-  let QIImports := QIMods.imports.filter (fun c => c.module != `Init)
+  let (QIMod, _) ← readModuleData mFile
+  let QIImports := QIMod.imports.filter (fun c => c.module != `Init)
   return (PhysLibImports ++ QIImports)
 
 /-- Number of files within Physlib. -/
