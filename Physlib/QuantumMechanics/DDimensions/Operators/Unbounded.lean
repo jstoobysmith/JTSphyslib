@@ -44,14 +44,18 @@ these correspond to physical observables.
 
 ## iii. Table of contents
 
-- A. Definitions
-- B. Dense domain
-- C. Closability
-- D. Adjoints
-- E. Symmetric operators
-- F. Self-adjoint operators
-- G. Essentially self-adjoint operators
-- H. Unbounded operators
+- A. General
+  - A.1. DistribMulAction
+  - A.2. Finite sums
+- B. Operators on inner product/Hilbert spaces
+  - B.1. Definitions
+  - B.2. Dense domain
+  - B.3. Closability
+  - B.4. Adjoints
+  - B.5. Symmetric operators
+  - B.6. Self-adjoint operators
+  - B.7. Essentially self-adjoint operators
+  - B.8. Unbounded operators
 
 ## iv. References
 
@@ -66,6 +70,68 @@ these correspond to physical observables.
 
 namespace LinearPMap
 
+/-!
+## A. General
+
+This section contains useful general results for partial linear maps which do not rely
+on an inner product/Hilbert space structure.
+-/
+
+section General
+
+variable {R : Type*} [Ring R]
+variable {E : Type*} [AddCommGroup E] [Module R E]
+variable {F : Type*} [AddCommGroup F] [Module R F]
+
+/-!
+### A.1. DistribMulAction
+-/
+
+section
+
+variable {M : Type*} [Monoid M] [DistribMulAction M F] [SMulCommClass R M F]
+
+instance instDistribMulAction : DistribMulAction M (E →ₗ.[R] F) where
+  smul_zero _ := by ext; rfl; simp
+  smul_add _ _ _ := by ext; rfl; simp [add_apply]
+
+end
+
+/-!
+### A.2. Finite sums
+-/
+
+section
+
+open Submodule
+
+variable {α : Type*} [Fintype α] (f : α → E →ₗ.[R] F)
+
+/-- A finite sum of partial linear maps.
+
+  `sum f` and `∑ a, f a` are equal, but not by definition.
+  With `sum f` both `domain` and `toFun` are made explicit. -/
+def sum : E →ₗ.[R] F where
+  domain := ⨅ a, (f a).domain
+  toFun := ∑ a, (f a).toFun ∘ₗ inclusion (fun _ _ ↦ by simp_all only [mem_iInf])
+
+lemma sum_domain : (sum f).domain = ⨅ a, (f a).domain := rfl
+
+lemma sum_domain_le (a : α) : (sum f).domain ≤ (f a).domain := fun _ _ ↦ by simp_all [sum, mem_iInf]
+
+lemma sum_apply (ψ : (sum f).domain) : sum f ψ = ∑ a, f a ⟨ψ, sum_domain_le f a ψ.2⟩ := by
+  simp [sum, inclusion_apply]
+
+end
+
+end General
+
+/-!
+## B. Operators on inner product/Hilbert spaces
+-/
+
+section InnerProductSpaces
+
 open Submodule
 open InnerProductSpace
 open InnerProductSpaceSubmodule
@@ -74,11 +140,14 @@ open Complex ComplexConjugate
 variable
   {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
   {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H']
-  {T T₁ T₂ : H →ₗ.[ℂ] H}
-  {U U₁ U₂ : H →ₗ.[ℂ] H'}
+  {α : Type*} [Fintype α]
+  {T T₁ T₂ : H →ₗ.[ℂ] H} {S : α → H →ₗ.[ℂ] H}
+  {U U₁ U₂ : H →ₗ.[ℂ] H'} {V : α → H →ₗ.[ℂ] H'}
+
+instance : IsScalarTower ℝ ℂ H := IsScalarTower.complexToReal
 
 /-!
-## A. Definitions
+### B.1. Definitions
 
 See `LinearPMap.instStar` and `LinearPMap.isSelfAdjoint_def` for the definition of `IsSelfAdjoint`
 for `LinearPMap`s.
@@ -106,7 +175,7 @@ lemma isEssentiallySelfAdjoint_def [CompleteSpace H] :
     T.IsEssentiallySelfAdjoint ↔ IsSelfAdjoint T.closure := Iff.rfl
 
 /-!
-## B. Dense domain
+### B.2. Dense domain
 -/
 
 lemma HasDenseDomain.isUnbounded_iff_isClosable (h : U.HasDenseDomain) :
@@ -115,6 +184,22 @@ lemma HasDenseDomain.isUnbounded_iff_isClosable (h : U.HasDenseDomain) :
 
 lemma HasDenseDomain.closure (h : U.HasDenseDomain) : U.closure.HasDenseDomain :=
   h.mono U.le_closure.1
+
+lemma closure_domain_le_domain_closure (U : H →ₗ.[ℂ] H') : U.closure.domain ≤ U.domain.closure := by
+  by_cases h_cl : U.IsClosable
+  · intro ψ hψ
+    obtain ⟨φ, hψφ⟩ := h_cl.graph_closure_eq_closure_graph ▸ mem_domain_iff.mp hψ
+    obtain ⟨b, hb, hb'⟩ := mem_closure_iff_seq_limit.mp hψφ
+    apply mem_closure_iff_seq_limit.mpr
+    refine ⟨fun n ↦ (b n).1, fun n ↦ ?_, (nhds_prod_eq (x := ψ) (y := φ) ▸ hb').fst⟩
+    specialize hb n
+    simp only [coe_toAddSubmonoid, SetLike.mem_coe, mem_graph_iff, Subtype.exists,
+      exists_and_left, exists_eq_left] at hb
+    exact hb.choose
+  · simp [closure_def' h_cl, closure_le.mp]
+
+lemma hasDenseDomain_iff_closure_hasDenseDomain : U.HasDenseDomain ↔ U.closure.HasDenseDomain :=
+  ⟨HasDenseDomain.closure, fun h ↦ dense_closure.mp (h.mono U.closure_domain_le_domain_closure)⟩
 
 lemma HasDenseDomain.neg (h : U.HasDenseDomain) : (-U).HasDenseDomain := h
 
@@ -128,8 +213,13 @@ lemma HasDenseDomain.sub_of_le (h₁ : U₁.HasDenseDomain) (h_le : U₁.domain 
     (U₁ - U₂).HasDenseDomain :=
   h₁.mono (by simp [h_le, sub_domain])
 
+lemma HasDenseDomain.sum_of_le
+    {E : Submodule ℂ H} (hE : Dense (E : Set H)) (h : ∀ a, E ≤ (V a).domain) :
+    (sum V).HasDenseDomain :=
+  hE.mono (by simp [sum_domain, h])
+
 /-!
-## C. Closability
+### B.3. Closability
 -/
 
 lemma IsClosable.isClosed_iff (h : U.IsClosable) : U.IsClosed ↔ U.closure = U := by
@@ -210,7 +300,7 @@ lemma closure_smul (U : H →ₗ.[ℂ] H') {c : ℂ} (hc : c ≠ 0) : (c • U).
   · rw [closure_def' h, closure_def' <| (not_congr <| IsClosable.smul_iff hc).mpr h]
 
 /-!
-## D. Adjoints
+### B.4. Adjoints
 -/
 
 /-- The adjoint of a zero LinearPMap (any domain) is zero (domain `⊤`). -/
@@ -277,7 +367,7 @@ lemma adjoint_add_le_add_adjoint [CompleteSpace H]
       adjoint_isFormalAdjoint h₂ ⟨u, u.2.2⟩ ⟨w, w.2.2⟩]
 
 /-!
-## E. Symmetric operators
+### B.5. Symmetric operators
 -/
 
 /-- The analogue of `inner_map_polarization` for LinearPMap. -/
@@ -360,8 +450,13 @@ lemma IsSymmetric.smul (h : T.IsSymmetric) {c : ℂ} (hc : conj c = c) : (c • 
   fun x y ↦ by simp only [smul_apply, inner_smul_left, inner_smul_right, hc, h x y]
 
 @[aesop safe apply]
-lemma IsSymmetric.smul_ofReal (h : T.IsSymmetric) (r : ℝ) : (ofReal r • T).IsSymmetric :=
+lemma IsSymmetric.real_smul (h : T.IsSymmetric) (r : ℝ) : (r • T).IsSymmetric :=
   h.smul (conj_ofReal r)
+
+@[aesop safe apply]
+lemma IsSymmetric.sum (h : ∀ a, (S a).IsSymmetric) : (sum S).IsSymmetric := by
+  intro x y
+  simp [sum_apply, sum_inner, inner_sum, h _ ⟨x, sum_domain_le S _ x.2⟩ ⟨y, sum_domain_le S _ y.2⟩]
 
 lemma IsSymmetric.of_le (h₁ : T₁.IsSymmetric) (h_le : T₂ ≤ T₁) : T₂.IsSymmetric := by
   intro x y
@@ -370,7 +465,7 @@ lemma IsSymmetric.of_le (h₁ : T₁.IsSymmetric) (h_le : T₂ ≤ T₁) : T₂.
   exact hx ▸ hy ▸ h₁ ⟨x, h_le.1 x.2⟩ ⟨y, h_le.1 y.2⟩
 
 /-!
-## F. Self-adjoint operators
+### B.6. Self-adjoint operators
 -/
 
 lemma IsSelfAdjoint.isSymmetric [CompleteSpace H] (h : IsSelfAdjoint T) : T.IsSymmetric := by
@@ -404,8 +499,8 @@ lemma IsSelfAdjoint.smul [CompleteSpace H]
   rw [isSelfAdjoint_def, T.adjoint_smul hc, hc', isSelfAdjoint_def.mp h]
 
 @[aesop safe apply]
-lemma IsSelfAdjoint.smul_ofReal [CompleteSpace H] (h : IsSelfAdjoint T) {r : ℝ} (hr : r ≠ 0) :
-    IsSelfAdjoint (ofReal r • T) :=
+lemma IsSelfAdjoint.real_smul [CompleteSpace H] (h : IsSelfAdjoint T) {r : ℝ} (hr : r ≠ 0) :
+    IsSelfAdjoint (r • T) :=
   smul h (ofReal_ne_zero.mpr hr) (conj_ofReal r)
 
 @[aesop safe apply]
@@ -413,30 +508,34 @@ lemma IsSelfAdjoint.neg [CompleteSpace H] (h : IsSelfAdjoint T) : IsSelfAdjoint 
   neg_eq_neg_one_smul T ▸ smul h (by norm_num) (by norm_num)
 
 /-!
-## G. Essentially self-adjoint operators
+### B.7. Essentially self-adjoint operators
 -/
+
+lemma IsEssentiallySelfAdjoint.hasDenseDomain [CompleteSpace H] (h : T.IsEssentiallySelfAdjoint) :
+    T.HasDenseDomain :=
+  hasDenseDomain_iff_closure_hasDenseDomain.mpr h.dense_domain
 
 lemma IsEssentiallySelfAdjoint.isSymmetric [CompleteSpace H] (h : T.IsEssentiallySelfAdjoint) :
     T.IsSymmetric :=
   (IsSelfAdjoint.isSymmetric h).of_le T.le_closure
 
-lemma IsEssentiallySelfAdjoint.isClosable [CompleteSpace H]
-    (h : T.IsEssentiallySelfAdjoint) (h' : T.HasDenseDomain) : T.IsClosable :=
-  h.isSymmetric.isClosable h'
+lemma IsEssentiallySelfAdjoint.isClosable [CompleteSpace H] (h : T.IsEssentiallySelfAdjoint) :
+    T.IsClosable :=
+  h.isSymmetric.isClosable h.hasDenseDomain
 
-lemma IsEssentiallySelfAdjoint.isUnbounded [CompleteSpace H]
-    (h : T.IsEssentiallySelfAdjoint) (h' : T.HasDenseDomain) : T.IsUnbounded :=
-  h.isSymmetric.isUnbounded_iff_hasDenseDomain.mpr h'
+lemma IsEssentiallySelfAdjoint.isUnbounded [CompleteSpace H] (h : T.IsEssentiallySelfAdjoint) :
+    T.IsUnbounded :=
+  h.isSymmetric.isUnbounded_iff_hasDenseDomain.mpr h.hasDenseDomain
 
 /-- The closure is the unique self-adjoint extension of an essentially self-adjoint operator. -/
 lemma IsEssentiallySelfAdjoint.unique_self_adjoint_extension [CompleteSpace H]
-    (h : T.IsEssentiallySelfAdjoint) (h' : T.HasDenseDomain)
-    {T₂ : H →ₗ.[ℂ] H} (h_le : T ≤ T₂) (h₂ : IsSelfAdjoint T₂) :
+    (h : T.IsEssentiallySelfAdjoint) {T₂ : H →ₗ.[ℂ] H} (h_le : T ≤ T₂) (h₂ : IsSelfAdjoint T₂) :
     T₂ = T.closure := by
+  have h_dense : T.HasDenseDomain := h.hasDenseDomain
   have h_cl : T₂.IsClosed := IsSelfAdjoint.isClosed h₂
   have h_cl' : T₂.closure = T₂ := h_cl.isClosable.isClosed_iff.mp h_cl
   have h_le' : T.closure ≤ T₂ := h_cl' ▸ h_cl.isClosable.closure_mono h_le
-  exact eq_of_le_of_ge (h ▸ h₂ ▸ adjoint_antitone (Or.inl <| h'.closure) h_le') h_le'
+  exact eq_of_le_of_ge (h ▸ h₂ ▸ adjoint_antitone (Or.inl <| h_dense.closure) h_le') h_le'
 
 @[aesop safe apply]
 lemma IsEssentiallySelfAdjoint.smul [CompleteSpace H]
@@ -445,9 +544,9 @@ lemma IsEssentiallySelfAdjoint.smul [CompleteSpace H]
   simp_all [isEssentiallySelfAdjoint_def, isSelfAdjoint_def, closure_smul _ hc, adjoint_smul _ hc]
 
 @[aesop safe apply]
-lemma IsEssentiallySelfAdjoint.smul_ofReal [CompleteSpace H]
+lemma IsEssentiallySelfAdjoint.real_smul [CompleteSpace H]
     (h : T.IsEssentiallySelfAdjoint) {r : ℝ} (hr : r ≠ 0) :
-    (ofReal r • T).IsEssentiallySelfAdjoint :=
+    (r • T).IsEssentiallySelfAdjoint :=
   h.smul (ofReal_ne_zero.mpr hr) (conj_ofReal r)
 
 @[aesop safe apply]
@@ -456,7 +555,7 @@ lemma IsEssentiallySelfAdjoint.neg [CompleteSpace H] (h : T.IsEssentiallySelfAdj
   neg_eq_neg_one_smul T ▸ h.smul (by norm_num) (by norm_num)
 
 /-!
-## H. Unbounded operators
+### B.8. Unbounded operators
 -/
 
 lemma IsUnbounded.hasDenseDomain (h : U.IsUnbounded) : U.HasDenseDomain := h.1
@@ -526,5 +625,7 @@ lemma isUnbounded_of_dense_of_isSymmetric' [CompleteSpace H]
     {E : Submodule ℂ H} (hE : Dense (E : Set H)) {f : E →ₗ[ℂ] E} (h : f.IsSymmetric) :
     (mk E (E.subtype ∘ₗ f)).IsUnbounded :=
   ⟨hE, IsSymmetric.isClosable h hE⟩
+
+end InnerProductSpaces
 
 end LinearPMap
