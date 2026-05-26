@@ -186,21 +186,16 @@ lemma ofStaticPotentials_eq_ofPotentials {d} (c : SpeedOfLight) (ϕ : Space d �
   rw [ofPotentials_eq_add]
   rfl
 
-/-- The electromagnetic potential from a static electric and a static magnetic field.
-  There is no canonical choice here, so this depends on choice. -/
-noncomputable def ofStaticElectricMagneticField (c : SpeedOfLight)
-    (E : Space 3 → EuclideanSpace ℝ (Fin 3))
-    (B : Space 3 → EuclideanSpace ℝ (Fin 3))
-    (hE : Differentiable ℝ E) (hB : ContDiff ℝ 1 B)
-    (E_curl : Space.curl E = 0) (B_div : Space.div B = 0) :
+open MeasureTheory Matrix Space InnerProductSpace Time in
+/-- The electromagnetic potential from an electric and a magnetic field. -/
+noncomputable def ofElectricMagneticField (c : SpeedOfLight)
+    (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
     ElectromagneticPotential 3 :=
-  have φ : Space 3 → ℝ := - Classical.choose (Space.exists_grad_of_curl_zero E hE E_curl)
-  have A : Space 3 → EuclideanSpace ℝ (Fin 3) :=
-    Classical.choose (Space.exists_curl_of_div_zero B hB B_div)
-  ofStaticPotentials c φ A
-
-TODO "Add a constructor of the electromagnetic potential from non-static electric and
-  magnetic fields."
+  let A := fun t (x : Space) => - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
+  let φ := fun t (x : Space) =>
+    - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ A t (u • x), basis.repr x⟫_ℝ ∂(volume)
+  ofPotentials c φ A
 
 TODO "Prove differentiability conditions with respect to the constructors of
   the electromagnetic potential."
