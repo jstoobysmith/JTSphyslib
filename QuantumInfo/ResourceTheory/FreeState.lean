@@ -25,10 +25,10 @@ public import QuantumInfo.Channels.Unbundled
 
 open scoped Topology
 
-/-- A `ResourcePretheory` is a family of Hilbert spaces closed under tensor products, with an instance of
-`Fintype` and `DecidableEq` for each. It forms a pre-structure then on which to discuss resource
-theories. For instance, to talk about "two-party scenarios", we could write `ResourcePretheory (ℕ × ℕ)`,
-with `H (a,b) := (Fin a) × (Fin b)`.
+/-- A `ResourcePretheory` is a family of Hilbert spaces closed under tensor products, with an
+  instance of `Fintype` and `DecidableEq` for each. It forms a pre-structure then on which to
+  discuss resource theories. For instance, to talk about "two-party scenarios", we could write
+  `ResourcePretheory (ℕ × ℕ)`, with `H (a,b) := (Fin a) × (Fin b)`.
 
 The `Semigroup ι` structure means we have a way to take products of our labels of Hilbert spaces
 in a way that is associative (with actual equality). The `prodEquiv` lets us reinterpret between
