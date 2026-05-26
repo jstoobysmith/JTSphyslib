@@ -100,10 +100,15 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
   · erw [curl_add]
     ext1 x
     simp [faraday]
-    suffices h : ∂ₜ (B · x) = curl (fun x => ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x)) x by
+    suffices h : ∂ₜ (B · x) t = curl (fun x => ∂ₜ ((ofElectricMagneticField c E B).vectorPotential c · x) t) x by
       simp [h]
-
-    sorry
+    rw [← Space.time_deriv_curl_commute]
+    · congr
+      funext t
+      sorry
+    · sorry
+    · fun_prop
+    · sorry
 
 /-!
 
