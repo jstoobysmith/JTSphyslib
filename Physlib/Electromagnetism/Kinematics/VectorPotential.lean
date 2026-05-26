@@ -113,9 +113,9 @@ lemma ofStaticPotentials_vectorPotential {d} (c : SpeedOfLight) (φ : Space d �
 open MeasureTheory Matrix Space InnerProductSpace Time in
 lemma ofElectricMagneticField_vectorPotential (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
-    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (t :Time) (x : Space 3) :
-    (ofElectricMagneticField c E B).vectorPotential c t x =
-    - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume):= by
+    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
+    (ofElectricMagneticField c E B).vectorPotential c =
+    fun t x => - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume) := by
   simp [ofElectricMagneticField]
 
 /-!
