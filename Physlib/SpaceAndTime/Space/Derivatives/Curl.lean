@@ -646,6 +646,12 @@ lemma exists_grad_of_curl_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : 
   specialize hg x
   simpa using (HasGradientAt.unique (hg.differentiableAt.hasGradientAt_grad x) hg).symm
 
+/-- A constructive form of the statement that if the curl of a function is zero,
+  then it is equal to the grad of another function.
+
+  In the context of e.g. electromagnetism the potential given by this lemma corresponds
+  to that defined by the work done to move a unit charge from the origin to the
+  point `x` along a straight line. -/
 lemma eq_grad_integral_of_curl_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : ContDiff ℝ 1 f)
     (hcurl : curl f = 0) :
     f = grad (fun x => ∫ t in (0 : ℝ)..1, ⟪f (t • x), basis.repr x⟫_ℝ ∂(volume)) := by
