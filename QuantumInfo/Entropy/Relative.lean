@@ -6,6 +6,7 @@ Authors: Alex Meiburg
 module
 
 public import QuantumInfo.Entropy.VonNeumann
+public import Physlib.Meta.Sorry
 
 @[expose] public section
 

@@ -10,6 +10,7 @@ public import QuantumInfo.Channels.CPTP
 public import QuantumInfo.Channels.Dual
 public import QuantumInfo.Channels.MatrixMap
 public import QuantumInfo.Channels.Unbundled
+public import Physlib.Meta.Sorry
 @[expose] public section
 
 noncomputable section
