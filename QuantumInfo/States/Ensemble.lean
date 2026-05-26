@@ -5,7 +5,7 @@ Authors: Leonardo A Lessa
 -/
 module
 
-public import QuantumInfo.Finite.MState
+public import QuantumInfo.States.Mixed.MState
 public import Physlib.Meta.Sorry
 
 @[expose] public section

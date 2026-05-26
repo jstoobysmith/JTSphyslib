@@ -29,7 +29,7 @@ Exercise 2.2.1: If the average (across codewords) probability of a codeword C ge
 
 # Chapter 3 - The Noiseless Quantum Theory
 Bras, Kets
-✅ `Bra` and `Ket` in `QuantumInfo.Finite.Braket`.
+✅ `Bra` and `Ket` in `QuantumInfo.States.Pure.Braket`.
 
 Exercise 3.2.1: Determine the Bloch sphere angles for the states ∣-〉and ∣+〉.
 ❓ Eventually we'll define qubits, basic states like these, and the Bloch sphere, and can add lemmas for these.
@@ -101,7 +101,7 @@ Exercise 3.5.8: No-Deletion theorem. No unitary from |ψψA⟩ to |ψ0B⟩ for f
 ❓
 
 Definition 3.6.1: Entangled pure states.
-✅ `Ket.IsEntangled` in `QuantumInfo.Finite.Braket`
+✅ `Ket.IsEntangled` in `QuantumInfo.States.Pure.Braket`
 
 Exercise 3.6.1, 3.6.2: The Bell state = `( |++⟩ + |--⟩ )/√2`. This means shared randomness in Z or X basis.
 🤷 Too specific. _Could_ say something like "the Bell state is identical in many bases", which is Exercise 3.7.12.
@@ -150,25 +150,25 @@ Exercise 4.1.5: Computing density operators of some particular ensembles.
 🤷
 
 Exercise 4.1.6: The spectrum of a density operator forms a distribution.
-✅ `MState.spectrum` is a `Distribution`, in `QuantumInfo.Finite.MState`.
+✅ `MState.spectrum` is a `Distribution`, in `QuantumInfo.States.Mixed.MState`.
 
 Definition 4.1.3: The density operator is a PSD operator with trace 1.
-✅ `MState` in `QuantumInfo.Finite.MState`.
+✅ `MState` in `QuantumInfo.States.Mixed.MState`.
 
 Definition 4.1.4: The maximally mixed state.
-✅ `MState.uniform` in `QuantumInfo.Finite.MState`.
+✅ `MState.uniform` in `QuantumInfo.States.Mixed.MState`.
 
 Exercise 4.1.7: A uniform ensemble of {|0⟩, |1⟩, |+⟩, |-⟩} is the maximally mixed state.
 🤷
 
 Exercise 4.1.8: The set of density operators is a convex set.
-✅ `MState.instMixable` in `QuantumInfo.Finite.MState`.
+✅ `MState.instMixable` in `QuantumInfo.States.Mixed.MState`.
 
 Definition 4.1.5: Purity of a mixed state.
-✅ `MState.purity` in `QuantumInfo.Finite.MState`.
+✅ `MState.purity` in `QuantumInfo.States.Mixed.MState`.
 
 Exercise 4.1.9: Purity is equal to 1 iff the state is pure.
-✅ `MState.pure_iff_purity_one` in `QuantumInfo.Finite.MState`.
+✅ `MState.pure_iff_purity_one` in `QuantumInfo.States.Mixed.MState`.
 
 Exercise 4.1.10-4.1.13: Specific to qubits and the Bloch sphere.
 ❓
@@ -183,7 +183,7 @@ Exercise 4.1.14, 4.1.15: Some facts about embedding classical probabilities into
 🤷 Probably not useful for anything else.
 
 Definition 4.2.1: POVMs as PSD matrices that sum to the identity.
-✅ `POVM` in `QuantumInfo.Finite.POVM`.
+✅ `POVM` in `QuantumInfo.Measurements.POVM`.
 
 Exercise 4.2.1: The five "Chrysler" states on a qubit, scaled down by (2/5), form a POVM.
 🤷 Very specific.
@@ -193,7 +193,7 @@ Exercise 4.2.2(b): In a d dimensional ensemble, no more than d possible symbols 
 ❓ Seems unlikely to be used later but fine to state and prove.
 
 Definition 4.3.1: Product State (density operator).
-✅ `MState.prod` in `QuantumInfo.Finite.MState` constructs product states. No predicate form.
+✅ `MState.prod` in `QuantumInfo.States.Mixed.MState` constructs product states. No predicate form.
 
 Exercise 4.3.1(a): `ρ.purity = (U_swap * ρ ⊗ ρ).trace`.
 Exercise 4.3.1(b): For an operator function `f`, `Tr[f(ρ)] = ( f(ρ) ⊗ I(d) ).swap.trace`.
@@ -205,10 +205,10 @@ Exercise 4.3.2: Just a step of a scenario, not really a theorem.
 Exercise 4.3.3: Every separable state `Σ x, ρx ⊗ σx` is also of the form `∑ x, pure (φ x) ⊗ pure (ψ x)`.
 
 Definition 4.3.2: Separable state.
-✅ `MState.IsSeparable` in `QuantumInfo.Finite.MState`.
+✅ `MState.IsSeparable` in `QuantumInfo.States.Mixed.MState`.
 
 Definition 4.3.3: Entangled (mixed) state.
-✅ `MState.IsEntangled` in `QuantumInfo.Finite.MState`.
+✅ `MState.IsEntangled` in `QuantumInfo.States.Mixed.MState`.
 
 Exercise 4.3.4: Convexity of separable states.
 ❓ Will have to write this as `Mixable { ρ : MState (d₁ × d₂) // ρ.IsSeparable }`.

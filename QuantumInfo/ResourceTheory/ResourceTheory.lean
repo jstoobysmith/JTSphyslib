@@ -5,7 +5,7 @@ Authors: Alex Meiburg, Leonardo A. Lessa, Rodolfo R. Soldati
 -/
 module
 
-public import QuantumInfo.Finite.ResourceTheory.FreeState
+public import QuantumInfo.ResourceTheory.FreeState
 
 @[expose] public section
 

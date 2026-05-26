@@ -5,7 +5,7 @@ Authors: Alex Meiburg, Rodolfo Soldati
 -/
 module
 
-public import QuantumInfo.Finite.MState
+public import QuantumInfo.States.Mixed.MState
 
 /-! # Unitary operators on quantum state
 

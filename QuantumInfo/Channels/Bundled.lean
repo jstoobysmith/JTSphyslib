@@ -5,8 +5,8 @@ Authors: Alex Meiburg
 -/
 module
 
-public import QuantumInfo.Finite.CPTPMap.Unbundled
-public import QuantumInfo.Finite.MState
+public import QuantumInfo.Channels.Unbundled
+public import QuantumInfo.States.Mixed.MState
 
 public import Mathlib.Topology.Order.Hom.Basic
 

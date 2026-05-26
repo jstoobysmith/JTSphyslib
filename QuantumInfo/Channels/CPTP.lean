@@ -5,8 +5,8 @@ Authors: Alex Meiburg
 -/
 module
 
-public import QuantumInfo.Finite.CPTPMap.Bundled
-public import QuantumInfo.Finite.Unitary
+public import QuantumInfo.Channels.Bundled
+public import QuantumInfo.Operators.Unitary
 
 /-! # Completely Positive Trace Preserving maps
 

@@ -6,9 +6,12 @@ Authors: Alex Meiburg
 module
 
 public import QuantumInfo.ClassicalInfo.Entropy
-public import QuantumInfo.Finite.MState
-public import QuantumInfo.Finite.CPTPMap
-
+public import QuantumInfo.States.Mixed.MState
+public import QuantumInfo.Channels.Bundled
+public import QuantumInfo.Channels.CPTP
+public import QuantumInfo.Channels.Dual
+public import QuantumInfo.Channels.MatrixMap
+public import QuantumInfo.Channels.Unbundled
 /-! # Generalized quantum entropy and relative entropy
 
 Here we define a broad notion of entropy axiomatically, `Entropy`, and the Prop

@@ -10,10 +10,16 @@ public import Mathlib.Analysis.Subadditive
 public import Mathlib.CategoryTheory.Functor.FullyFaithful
 public import Mathlib.CategoryTheory.Monoidal.Braided.Basic
 public import Mathlib.Data.EReal.Basic
-
-public import QuantumInfo.Finite.CPTPMap
-public import QuantumInfo.Finite.Entropy
-public import QuantumInfo.Finite.POVM
+public import QuantumInfo.Entropy.VonNeumann
+public import QuantumInfo.Entropy.SSA
+public import QuantumInfo.Entropy.Relative
+public import QuantumInfo.Entropy.DPI
+public import QuantumInfo.Channels.Bundled
+public import QuantumInfo.Channels.CPTP
+public import QuantumInfo.Channels.Dual
+public import QuantumInfo.Channels.MatrixMap
+public import QuantumInfo.Channels.Unbundled
+public import QuantumInfo.Measurements.POVM
 
 /-!
 Defines `OptimalHypothesisRate`, the optimal rate of distinguishing an `MState` ρ from a set of other

@@ -5,7 +5,7 @@ Authors: Anand Nambakam
 -/
 module
 
-public import QuantumInfo.Finite.Braket
+public import QuantumInfo.States.Pure.Braket
 
 /-!
 # Bargmann Invariant and Geometric Phase

@@ -5,9 +5,9 @@ Authors: Alex Meiburg, Leonardo A. Lessa, Rodolfo R. Soldati
 -/
 module
 
-public import QuantumInfo.Finite.ResourceTheory.FreeState
-public import QuantumInfo.Finite.ResourceTheory.HypothesisTesting
-public import QuantumInfo.Finite.Pinching
+public import QuantumInfo.ResourceTheory.FreeState
+public import QuantumInfo.ResourceTheory.HypothesisTesting
+public import QuantumInfo.Channels.Pinching
 public import QuantumInfo.ForMathlib.Matrix
 public import QuantumInfo.ForMathlib.LimSupInf
 public import QuantumInfo.ForMathlib.HermitianMat

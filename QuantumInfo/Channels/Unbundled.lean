@@ -5,7 +5,7 @@ Authors: Alex Meiburg
 -/
 module
 
-public import QuantumInfo.Finite.CPTPMap.MatrixMap
+public import QuantumInfo.Channels.MatrixMap
 public import QuantumInfo.ForMathlib.MatrixNorm.TraceNorm
 
 /-! # Properties of Matrix Maps

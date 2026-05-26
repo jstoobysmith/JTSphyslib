@@ -5,7 +5,7 @@ Authors: Alex Meiburg
 -/
 module
 
-public import QuantumInfo.Finite.Entropy.VonNeumann
+public import QuantumInfo.Entropy.VonNeumann
 public import QuantumInfo.ForMathlib.HermitianMat.Sqrt
 
 /-!

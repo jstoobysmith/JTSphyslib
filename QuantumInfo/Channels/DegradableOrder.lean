@@ -5,7 +5,11 @@ Authors: Alex Meiburg
 -/
 module
 
-public import QuantumInfo.Finite.CPTPMap
+public import QuantumInfo.Channels.Bundled
+public import QuantumInfo.Channels.CPTP
+public import QuantumInfo.Channels.Dual
+public import QuantumInfo.Channels.MatrixMap
+public import QuantumInfo.Channels.Unbundled
 
 /-! # The Degradable Order
 
