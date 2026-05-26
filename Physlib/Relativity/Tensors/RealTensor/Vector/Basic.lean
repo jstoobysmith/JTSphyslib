@@ -654,7 +654,6 @@ def ofTemporalComponent {d : ℕ} : ℝ →L[ℝ] Vector d where
   map_add' := by simp [add_smul]
   map_smul' := by simp [smul_smul]
 
-
 /-!
 
 ## Smoothness
