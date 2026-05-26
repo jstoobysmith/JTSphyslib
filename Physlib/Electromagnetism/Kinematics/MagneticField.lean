@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Electromagnetism.Kinematics.ElectricField
+import all Physlib.SpaceAndTime.Space.Derivatives.Curl
 /-!
 
 # The Magnetic Field
@@ -162,6 +163,33 @@ lemma magneticField_div_eq_zero (A : ElectromagneticPotential)
   simp only
   rw [Space.div_of_curl_eq_zero]
   exact vectorPotential_contDiff_space A hA t
+
+/-!
+
+### A.4. The magnetic field on constructors
+
+-/
+
+@[simp]
+lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
+    (E : ElectricField) (B : MagneticField) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
+    (B_grad : ∀ t, ∇ ⬝ (B t) = 0) :
+    (ofElectricMagneticField c E B).magneticField c = B := by
+  ext1 t
+  ext1 x
+  have h1 := eq_neg_curl_of_div_zero (B t) (B_contDiff t) (B_grad t)
+  conv_rhs => rw [h1]
+  simp only [magneticField, ofElectricMagneticField_vectorPotential, WithLp.equiv_apply,
+    WithLp.ofLp_smul, map_smul, LinearMap.smul_apply]
+  erw [curl_neg]
+  simp
+  change  Differentiable ℝ fun x =>
+  ∫ (u : ℝ) in 0..1, u • WithLp.toLp 2 ((crossProduct (Space.basis.repr x).ofLp) (B t (u • x)).ofLp)
+  intro x
+  convert (hasFDerivAt_intervalIntegral_homotopyOperatorIntegrand ?_ _).differentiableAt
+  · simp [Space.homotopyOperatorIntegrand]
+    rfl
+  · fun_prop
 
 /-!
 
