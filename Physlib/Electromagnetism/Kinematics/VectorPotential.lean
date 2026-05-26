@@ -115,7 +115,7 @@ lemma ofElectricMagneticField_vectorPotential (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
     (ofElectricMagneticField c E B).vectorPotential c =
-    fun t x => - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume) := by
+    fun t x => - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂volume := by
   simp [ofElectricMagneticField]
 
 /-!

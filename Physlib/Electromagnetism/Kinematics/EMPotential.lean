@@ -194,7 +194,7 @@ noncomputable def ofElectricMagneticField (c : SpeedOfLight)
     ElectromagneticPotential 3 :=
   let A := fun t (x : Space) => - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
   let φ := fun t (x : Space) =>
-    - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ A t (u • x), basis.repr x⟫_ℝ ∂(volume)
+    - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ (A · (u • x)) t, basis.repr x⟫_ℝ ∂(volume)
   ofPotentials c φ A
 
 TODO "Prove differentiability conditions with respect to the constructors of

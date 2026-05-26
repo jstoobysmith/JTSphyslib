@@ -75,6 +75,38 @@ lemma electricField_eq {c : SpeedOfLight} (A : ElectromagneticPotential d) :
 
 /-!
 
+## B. Relation to constructors
+
+-/
+
+lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
+    (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (E_contDiff : ∀ t, ContDiff ℝ 1 (E t)) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
+    (B_grad : ∀ t, ∇ ⬝ (B t) = 0)
+    (faraday : ∀ t x, curl (E t) x = - ∂ₜ (B · x) t) :
+    (ofElectricMagneticField c E B).electricField c = E := by
+  ext1 t
+  ext1 x
+  suffices h : E t x + ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t =
+      - ∇ ((ofElectricMagneticField c E B).scalarPotential c t) x by
+    simp only [electricField]
+    grind
+  convert congrFun (eq_grad_integral_of_curl_zero (fun x => E t x +
+      ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t) ?_ ?_) x
+  · simp [ofElectricMagneticField_scalarPotential]
+    erw [grad_neg]
+    simp
+  · sorry
+  · erw [curl_add]
+    ext1 x
+    simp [faraday]
+    suffices h : ∂ₜ (B · x) = curl (fun x => ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x)) x by
+      simp [h]
+
+    sorry
+
+/-!
+
 ## B. Relation to the field strength tensor
 
 The electric field can be expressed in terms of the field strength tensor as
