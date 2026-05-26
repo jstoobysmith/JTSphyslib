@@ -10,7 +10,7 @@ public import Mathlib.Analysis.SpecialFunctions.Log.Base
 public import QuantumInfo.Finite.Entropy
 public import QuantumInfo.Finite.CPTPMap
 public import QuantumInfo.Finite.Distance
-
+public import Physlib.Meta.Sorry
 
 /-! # Quantum Capacity
 
@@ -123,8 +123,7 @@ end εApproximates
 
 section AchievesRate
 
-/-- Every quantum channel out of a nonempty space achieves a rate of zero.
-`Nonempty d₂` is derived from `Λ` via `PTPMap.nonemptyOut`. -/
+/-- Every quantum channel out of a nonempty space achieves at least a rate of zero. -/
 theorem achievesRate_0 (Λ : CPTPMap d₁ d₂) [Nonempty d₁] : Λ.AchievesRate 0 := fun ε hε => by
   have : Nonempty d₂ := Λ.toPTPMap.nonemptyOut
   refine ⟨1, one_pos, 1, default, ⟨default, default, Subsingleton.elim _ _⟩, by norm_num, ?_⟩
@@ -145,6 +144,7 @@ theorem id_achievesRate_log_dim : (id (dIn := d₁)).AchievesRate (Real.logb 2 (
   · exact εApproximates_monotone (εApproximates_self id) hε.le
 
 /-- A channel cannot achieve a rate greater than log2(D), where D is the input dimension. -/
+@[sorryful]
 theorem not_achievesRate_gt_log_dim_in (Λ : CPTPMap d₁ d₂) {R : ℝ} (hR : Real.logb 2 (Fintype.card d₁) < R) :
     ¬Λ.AchievesRate R := by
   sorry
@@ -154,6 +154,7 @@ noncomputable section AristotleLemmas
 end AristotleLemmas
 
 /-- A channel cannot achieve a rate greater than log2(D), where D is the output dimension. -/
+@[sorryful]
 theorem not_achievesRate_gt_log_dim_out (Λ : CPTPMap d₁ d₂) {R : ℝ} (hR : Real.logb 2 (Fintype.card d₂) < R): ¬Λ.AchievesRate R := by
   intro h;
   -- We show that the identity channel on the output space `d₂` emulates `Λ`. Since capacity is monotonic under emulation, `Q(Λ) ≤ Q(id_{d₂})`.
@@ -173,6 +174,7 @@ theorem not_achievesRate_gt_log_dim_out (Λ : CPTPMap d₁ d₂) {R : ℝ} (hR :
   exact not_lt_of_ge ( le_of_not_gt fun h' => not_achievesRate_gt_log_dim_in _ h' h_id_achieves ) h
 
 /-- The achievable rates are a bounded set. -/
+@[sorryful]
 theorem bddAbove_achievesRate (Λ : CPTPMap d₁ d₂) : BddAbove {R | Λ.AchievesRate R} := by
   use Real.logb 2 (Fintype.card d₁)
   intro R h
@@ -184,11 +186,13 @@ end AchievesRate
 section capacity
 
 /-- Quantum channel capacity is nonnegative for channels out of a nonempty space. -/
+@[sorryful]
 theorem zero_le_quantumCapacity (Λ : CPTPMap d₁ d₂) [Nonempty d₁] :
     0 ≤ Λ.quantumCapacity :=
   le_csSup (bddAbove_achievesRate Λ) (achievesRate_0 Λ)
 
 /-- Quantum channel capacity is at most log2(D), where D is the input dimension. -/
+@[sorryful]
 theorem quantumCapacity_ge_log_dim_in (Λ : CPTPMap d₁ d₂) : Λ.quantumCapacity ≤ Real.logb 2 (Fintype.card d₁) :=
   Real.sSup_le (by
     intro R h
@@ -203,10 +207,12 @@ theorem quantumCapacity_ge_log_dim_in (Λ : CPTPMap d₁ d₂) : Λ.quantumCapac
 information. The "coherent information" is used in literature to refer to both a function of state and
 a channel (`coherentInfo`), or a function of just a channel. In the latter case, the state is implicitly
 maximized over. Here we use the former definition and state that the lower bound is true for all states. -/
+@[sorryful]
 theorem coherentInfo_le_quantumCapacity (Λ : CPTPMap d₁ d₂) (ρ : MState d₁) : coherentInfo ρ Λ ≤ Λ.quantumCapacity := by
   sorry
 
 /-- The quantum capacity is the limit of the coherent information of n-copy uses of the channel. -/
+@[sorryful]
 theorem quantumCapacity_eq_piProd_coherentInfo (Λ : CPTPMap d₁ d₂) : Λ.quantumCapacity =
     sSup { r : ℝ | ∃ n ρ, r = coherentInfo ρ (CPTPMap.piProd (fun (_ : Fin n) ↦ Λ))} := by
   sorry

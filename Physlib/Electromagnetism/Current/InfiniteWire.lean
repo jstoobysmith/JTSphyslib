@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Electromagnetism.Dynamics.IsExtrema
+public import Physlib.Electromagnetism.Distributional.Dynamics.IsExtrema
 public import Physlib.SpaceAndTime.Space.Norm
 public import Physlib.SpaceAndTime.Space.ConstantSliceDist
 public import Physlib.SpaceAndTime.TimeAndSpace.ConstantTimeDist

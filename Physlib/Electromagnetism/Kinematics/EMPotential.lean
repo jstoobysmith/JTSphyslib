@@ -6,8 +6,11 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.SpaceAndTime.SpaceTime.Derivatives
+public import Physlib.SpaceAndTime.Space.Derivatives.Curl
 public import Physlib.Mathematics.VariationalCalculus.HasVarAdjDeriv
 public import Physlib.Relativity.Tensors.Elab
+public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
+
 /-!
 
 # The Electromagnetic Potential
@@ -25,24 +28,20 @@ spacetime to contravariant Lorentz vectors.
 
 - `ElectromagneticPotential` : is the type of electromagnetic potentials.
 - `ElectromagneticPotential.deriv` : the derivative tensor `∂_μ A^ν`.
-- `DistElectromagneticPotential` : the type of electromagnetic potentials as distributions.
 
 ## iii. Table of contents
 
 - A. The electromagnetic potential
   - A.1. Basic instances on the type of electromagnetic potentials
-  - A.2. The group action on the ElectromagneticPotential
-  - A.3. Differentiability
-  - A.4. The action on the space-time derivatives
-  - A.5. Variational adjoint derivative of component
-  - A.6. Variational adjoint derivative of derivatives of the potential
+  - A.2. Basic constructors of the electromagnetic potential
+  - A.3. The group action on the ElectromagneticPotential
+  - A.4. Differentiability
+  - A.5. The action on the space-time derivatives
+  - A.6. Variational adjoint derivative of component
+  - A.7. Variational adjoint derivative of derivatives of the potential
 - B. The derivative tensor of the electromagnetic potential
   - B.1. Equivariance of the derivative tensor
   - B.2. The elements of the derivative tensor in terms of the basis
-- C. The electromagnetic potential as a distribution
-  - C.1. The derivative of the electromagnetic potential as a distribution
-  - C.2. The derivative in terms of the basis
-  - C.3. Equivariance of the derivative distribution
 
 ## iv. References
 
@@ -121,7 +120,100 @@ lemma smul_apply {d} (r : ℝ) (A : ElectromagneticPotential d) (x : SpaceTime d
 
 /-!
 
-## A.2. The group action on the ElectromagneticPotential
+## A.2. Basic constructors of the electromagnetic potential
+
+-/
+
+/-- The electromagnetic potential from a scalar potential, where
+  the vector potential is set to zero. -/
+noncomputable def ofScalarPotential {d} (c : SpeedOfLight)
+    (ϕ : Time → Space d → ℝ) : ElectromagneticPotential d where
+  val x μ :=
+    match μ with
+    | Sum.inl 0 => ((timeSlice c).symm ϕ x) / c
+    | Sum.inr _ => 0
+
+/-- The creation of an electromagnetic potential from a static scalar potential. -/
+noncomputable def ofStaticScalarPotential {d} (c : SpeedOfLight)
+    (ϕ : Space d → ℝ) : ElectromagneticPotential d :=
+  ofScalarPotential c (fun _ => ϕ)
+
+/-- The electromagnetic potential from a vector potential, where
+  the scalar potential is set equal to zero. -/
+noncomputable def ofVectorPotential {d} (c : SpeedOfLight)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    ElectromagneticPotential d where
+  val x μ :=
+    match μ with
+    | Sum.inl 0 => 0
+    | Sum.inr i => (timeSlice c).symm A x i
+
+/-- The creation of an electromagnetic potential from a static vector potential. -/
+noncomputable def ofStaticVectorPotential {d} (c : SpeedOfLight)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) : ElectromagneticPotential d :=
+  ofVectorPotential c (fun _ => A)
+
+/-- The creation of an electromagnetic potential from the non-relativistic potentials. -/
+noncomputable def ofPotentials {d} (c : SpeedOfLight) (ϕ : Time → Space d → ℝ)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    ElectromagneticPotential d where
+  val x μ :=
+    match μ with
+    | Sum.inl 0 => ((timeSlice c).symm ϕ x) / c
+    | Sum.inr i => (timeSlice c).symm A x i
+
+lemma ofPotentials_eq_add {d} (c : SpeedOfLight) (ϕ : Time → Space d → ℝ)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    ofPotentials c ϕ A = ofScalarPotential c ϕ + ofVectorPotential c A := by
+  ext x
+  refine Lorentz.Vector.ext_of_apply (fun i => ?_)
+  match i with
+  | Sum.inl 0 =>
+    simp only [ofPotentials, Fin.isValue, add_val, Pi.add_apply, Lorentz.Vector.apply_add]
+    simp only [ofScalarPotential, Fin.isValue, ofVectorPotential, add_zero]
+  | Sum.inr i =>
+    simp only [ofPotentials, add_val, Pi.add_apply, Lorentz.Vector.apply_add]
+    simp [ofScalarPotential, ofVectorPotential]
+
+/-- The creation of of an electromagnetic potential from static potentials. -/
+noncomputable def ofStaticPotentials {d} (c : SpeedOfLight) (ϕ : Space d → ℝ)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) : ElectromagneticPotential d :=
+  ofStaticScalarPotential c ϕ + ofStaticVectorPotential c A
+
+lemma ofStaticPotentials_eq_ofPotentials {d} (c : SpeedOfLight) (ϕ : Space d → ℝ)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) :
+    ofStaticPotentials c ϕ A = ofPotentials c (fun _ => ϕ) (fun _ => A) := by
+  rw [ofPotentials_eq_add]
+  rfl
+
+/-- The electromagnetic potential from a static electric and a static magnetic field.
+  There is no canonical choice here, so this depends on choice. -/
+noncomputable def ofStaticElectricMagneticField (c : SpeedOfLight)
+    (E : Space 3 → EuclideanSpace ℝ (Fin 3))
+    (B : Space 3 → EuclideanSpace ℝ (Fin 3))
+    (hE : Differentiable ℝ E) (hB : ContDiff ℝ 1 B)
+    (E_curl : Space.curl E = 0) (B_div : Space.div B = 0) :
+    ElectromagneticPotential 3 :=
+  have φ : Space 3 → ℝ := - Classical.choose (Space.exists_grad_of_curl_zero E hE E_curl)
+  have A : Space 3 → EuclideanSpace ℝ (Fin 3) :=
+    Classical.choose (Space.exists_curl_of_div_zero B hB B_div)
+  ofStaticPotentials c φ A
+
+TODO "Add a constructor of the electromagnetic potential from non-static electric and
+  magnetic fields."
+
+TODO "Prove differentiability conditions with respect to the constructors of
+  the electromagnetic potential."
+
+TODO "Write lemmas for the various properties (e.g. the electric field) of
+  the electromagnetic potential from the various constructors."
+
+TODO "Define constructors for the distributional electromagnetic potential, similar
+  to e.g. `ofScalarPotential` and `ofVectorPotential` for `ElectromagneticPotential`."
+
+/-!
+
+## A.3. The group action on the ElectromagneticPotential
 
 -/
 
@@ -143,7 +235,7 @@ TODO "Lift the action on `ElectromagneticPotential d` to a `DistribMulAction`."
 
 /-!
 
-### A.3. Differentiability
+### A.4. Differentiability
 
 We show that the components of field strength tensor are differentiable if the potential is.
 -/
@@ -207,7 +299,7 @@ TODO "Add results related to the differentiability of the
 
 /-!
 
-### A.4. The action on the space-time derivatives
+### A.5. The action on the space-time derivatives
 
 Given a ElectromagneticPotential `A^μ`, we can consider its derivative `∂_μ A^ν`.
 Under a Lorentz transformation `Λ`, this transforms as
@@ -272,7 +364,7 @@ lemma spaceTime_deriv_action_eq_sum {d} {μ ν : Fin 1 ⊕ Fin d} {x : SpaceTime
 
 /-!
 
-### A.5. Variational adjoint derivative of component
+### A.6. Variational adjoint derivative of component
 
 We find the variational adjoint derivative of the components of the potential.
 This will be used to find e.g. the variational derivative of the kinetic term,
@@ -305,7 +397,7 @@ lemma hasVarAdjDerivAt_component {d : ℕ} (μ : Fin 1 ⊕ Fin d) (A : SpaceTime
 
 /-!
 
-### A.6. Variational adjoint derivative of derivatives of the potential
+### A.7. Variational adjoint derivative of derivatives of the potential
 
 We find the variational adjoint derivative of the derivatives of the components of the potential.
 This will again be used to find the variational derivative of the kinetic term,
@@ -457,112 +549,5 @@ lemma toTensor_deriv_basis_repr_apply {d} (A : ElectromagneticPotential d)
   rfl
 
 end ElectromagneticPotential
-
-/-!
-
-## C. The electromagnetic potential as a distribution
-
--/
-
-/-- The electromagnetic potential as a distribution and as a tensor `A^μ`. -/
-noncomputable abbrev DistElectromagneticPotential (d : ℕ := 3) :=
-  (SpaceTime d) →d[ℝ] Lorentz.Vector d
-
-namespace DistElectromagneticPotential
-open TensorSpecies
-open Tensor
-open SpaceTime
-open TensorProduct
-open minkowskiMatrix SchwartzMap
-attribute [-simp] Fintype.sum_sum_type
-attribute [-simp] Nat.succ_eq_add_one
-
-/-!
-
-### C.1. The derivative of the electromagnetic potential as a distribution
-
--/
-
-set_option backward.isDefEq.respectTransparency false in
-/-- The derivative of a electromagnetic potential, which is a distribution. -/
-noncomputable def deriv {d} : DistElectromagneticPotential d →ₗ[ℝ]
-    (SpaceTime d) →d[ℝ] Lorentz.CoVector d ⊗[ℝ] Lorentz.Vector d := distTensorDeriv
-
-set_option backward.isDefEq.respectTransparency false in
-lemma deriv_eq_sum_sum {d} (A : DistElectromagneticPotential d)
-    (ε : 𝓢(SpaceTime d, ℝ)) :
-    deriv A ε =∑ μ, ∑ ν, (SpaceTime.distDeriv μ A ε ν) •
-      Lorentz.CoVector.basis μ ⊗ₜ[ℝ] Lorentz.Vector.basis ν := by
-  simp [deriv, distTensorDeriv_apply]
-  congr
-  funext μ
-  conv_lhs => rw [← Lorentz.Vector.basis.sum_repr (SpaceTime.distDeriv μ A ε)]
-  rw [tmul_sum]
-  congr
-  funext ν
-  simp
-  rfl
-/-!
-
-### C.2. The derivative in terms of the basis
-
--/
-
-@[simp]
-lemma deriv_basis_repr_apply {d} {μν : (Fin 1 ⊕ Fin d) × (Fin 1 ⊕ Fin d)}
-    (A : DistElectromagneticPotential d)
-    (ε : 𝓢(SpaceTime d, ℝ)) :
-    (Lorentz.CoVector.basis.tensorProduct Lorentz.Vector.basis).repr (deriv A ε) μν =
-    distDeriv μν.1 A ε μν.2 := by
-  match μν with
-  | (μ, ν) =>
-  rw [deriv_eq_sum_sum]
-  simp only [map_sum, map_smul, Finsupp.coe_finset_sum, Finsupp.coe_smul, Finset.sum_apply,
-    Pi.smul_apply, Basis.tensorProduct_repr_tmul_apply, Basis.repr_self, smul_eq_mul]
-  rw [Finset.sum_eq_single μ, Finset.sum_eq_single ν]
-  · simp
-  · intro μ' _ h
-    simp [h]
-  · simp
-  · intro ν' _ h
-    simp [h]
-  · simp
-
-lemma toTensor_deriv_basis_repr_apply {d} (A : DistElectromagneticPotential d)
-    (ε : 𝓢(SpaceTime d, ℝ)) (b : ComponentIdx (S := realLorentzTensor d)
-      (Fin.append ![Color.down] ![Color.up])) :
-    (Tensor.basis _).repr (Tensorial.toTensor (deriv A ε)) b =
-    distDeriv (b 0) A ε (b 1) := by
-  rw [Tensorial.basis_toTensor_apply]
-  rw [Tensorial.basis_map_prod]
-  simp only [Nat.reduceSucc, Nat.reduceAdd, Basis.repr_reindex, Finsupp.mapDomain_equiv_apply,
-    Equiv.symm_symm, Fin.isValue]
-  rw [Lorentz.Vector.tensor_basis_map_eq_basis_reindex,
-    Lorentz.CoVector.tensor_basis_map_eq_basis_reindex]
-  have hb : (((Lorentz.CoVector.basis (d := d)).reindex
-      Lorentz.CoVector.indexEquiv.symm).tensorProduct
-      (Lorentz.Vector.basis.reindex Lorentz.Vector.indexEquiv.symm)) =
-      ((Lorentz.CoVector.basis (d := d)).tensorProduct (Lorentz.Vector.basis (d := d))).reindex
-      (Lorentz.CoVector.indexEquiv.symm.prodCongr Lorentz.Vector.indexEquiv.symm) := by
-    ext b
-    match b with
-    | ⟨i, j⟩ =>
-    simp
-  rw [hb]
-  rw [Module.Basis.repr_reindex_apply, deriv_basis_repr_apply]
-  rfl
-
-/-!
-
-### C.3. Equivariance of the derivative distribution
-
--/
-
-set_option backward.isDefEq.respectTransparency false in
-lemma deriv_equivariant {d} {A : DistElectromagneticPotential d}
-    (Λ : LorentzGroup d) : deriv (Λ • A) = Λ • deriv A := by
-  rw [deriv, distTensorDeriv_equivariant]
-
-end DistElectromagneticPotential
 
 end Electromagnetism

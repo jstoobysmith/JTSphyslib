@@ -707,17 +707,17 @@ lemma tau_colorToComplex (x : realLorentzTensor.Color) :
     (complexLorentzTensor).τ (colorToComplex x) = colorToComplex ((realLorentzTensor).τ x) := by
   cases x <;> rfl
 
-/-- `complexify` commutes with precomposition by `dropPairEmb`.
-  We use `fun k => b (Pure.dropPairEmb i j k)` and direct application
-  `(ComponentIdx.complexify b) (Pure.dropPairEmb i j m)` rather than composition so that
+/-- `complexify` commutes with precomposition by `succSuccAbove`.
+  We use `fun k => b (Fin.succSuccAbove i j k)` and direct application
+  `(ComponentIdx.complexify b) (Fin.succSuccAbove i j m)` rather than composition so that
   dependent `ComponentIdx` types unify correctly (avoiding `Function.comp` type mismatch). -/
 @[simp]
-lemma ComponentIdx.complexify_comp_dropPairEmb
+lemma ComponentIdx.complexify_comp_succSuccAbove
     {n : ℕ} {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
     {i j : Fin (n + 1 + 1)} (b : ComponentIdx (S := realLorentzTensor) c) (m : Fin n) :
-    (ComponentIdx.complexify (c := c ∘ Pure.dropPairEmb i j)
-      (fun k => b (Pure.dropPairEmb i j k))) m =
-    (ComponentIdx.complexify (c := c) b) (Pure.dropPairEmb i j m) := by
+    (ComponentIdx.complexify (c := c ∘ Fin.succSuccAbove i j)
+      (fun k => b (Fin.succSuccAbove i j k))) m =
+    (ComponentIdx.complexify (c := c) b) (Fin.succSuccAbove i j m) := by
   simp only [ComponentIdx.complexify_apply, Function.comp_apply]
 
 /-- For a real basis vector, `toComplex(contrP(basisVector c b))` equals
@@ -725,7 +725,7 @@ lemma ComponentIdx.complexify_comp_dropPairEmb
 lemma toComplex_contrP_basisVector {n : ℕ} {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
     {i j : Fin (n + 1 + 1)} (h : i ≠ j ∧ (realLorentzTensor).τ (c i) = c j)
     (b : ComponentIdx (S := realLorentzTensor) c) :
-    toComplex (c := c ∘ Pure.dropPairEmb i j)
+    toComplex (c := c ∘ Fin.succSuccAbove i j)
       (Pure.contrP (S := realLorentzTensor) i j h (Pure.basisVector c b))
       =
     Pure.contrP (S := complexLorentzTensor) i j
@@ -733,13 +733,13 @@ lemma toComplex_contrP_basisVector {n : ℕ} {c : Fin (n + 1 + 1) → realLorent
         simpa [Function.comp_apply] using And.intro h.1
           (by simpa [tau_colorToComplex] using congrArg colorToComplex h.2))
       (Pure.basisVector (colorToComplex ∘ c) (ComponentIdx.complexify b)) := by
-  let c' := c ∘ Pure.dropPairEmb i j
+  let c' := c ∘ Fin.succSuccAbove i j
   simp only [Pure.contrP]
   rw [toComplex_map_smul c' (Pure.contrPCoeff i j h (Pure.basisVector c b))
     ((Pure.dropPair i j h.1 (Pure.basisVector c b)).toTensor),
     Pure.dropPair_basisVector (c := c),
-    ← Tensor.basis_apply (S := realLorentzTensor) c' (fun k => b (Pure.dropPairEmb i j k)),
-    toComplex_basis (c := c') (i := fun k => b (Pure.dropPairEmb i j k))]
+    ← Tensor.basis_apply (S := realLorentzTensor) c' (fun k => b (Fin.succSuccAbove i j k)),
+    toComplex_basis (c := c') (i := fun k => b (Fin.succSuccAbove i j k))]
   congr 1
   · -- contrPCoeff: real and complex both equal 0 or 1 with same condition
     have h_real := realLorentzTensor.contr_basis (c := c i) (b i) (b j)
@@ -778,20 +778,20 @@ lemma toComplex_contrP_basisVector {n : ℕ} {c : Fin (n + 1 + 1) → realLorent
       ext
       exact h2
     · rfl
-  · -- complexify(fun k => b (dropPairEmb k)) = (complexify b) ∘ dropPairEmb
+  · -- complexify(fun k => b (succSuccAbove k)) = (complexify b) ∘ succSuccAbove
     conv_rhs => enter [1]; rw [Pure.dropPair_basisVector (S := complexLorentzTensor)
       (c := colorToComplex ∘ c) h.1 (b := ComponentIdx.complexify b)]
     conv_rhs => rw [← Tensor.basis_apply (S := complexLorentzTensor)
-      (c := (colorToComplex ∘ c) ∘ Pure.dropPairEmb i j)
-      (b := fun m => (ComponentIdx.complexify b) (Pure.dropPairEmb i j m))]
-    refine congr_arg _ (funext fun m => ComponentIdx.complexify_comp_dropPairEmb b m)
+      (c := (colorToComplex ∘ c) ∘ Fin.succSuccAbove i j)
+      (b := fun m => (ComponentIdx.complexify b) (Fin.succSuccAbove i j m))]
+    refine congr_arg _ (funext fun m => ComponentIdx.complexify_comp_succSuccAbove b m)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The map `toComplex` commutes with `contrT`. -/
 lemma contrT_toComplex {n : ℕ}
     {c : Fin (n + 1 + 1) → realLorentzTensor.Color} {i j : Fin (n + 1 + 1)}
     (h : i ≠ j ∧ (realLorentzTensor).τ (c i) = c j) (t : ℝT(3, c)) :
-    toComplex (c := c ∘ Pure.dropPairEmb i j) (contrT (S := realLorentzTensor) n i j h t)
+    toComplex (c := c ∘ Fin.succSuccAbove i j) (contrT (S := realLorentzTensor) n i j h t)
       =
     contrT (S := complexLorentzTensor) n i j (by
         simpa [Function.comp_apply] using
@@ -801,7 +801,7 @@ lemma contrT_toComplex {n : ℕ}
   classical
   -- We prove the statement by induction on the tensor `t` using the tensor basis.
   -- After contracting two indices, the resulting colour function lives on `Fin n`.
-  let c' : Fin n → realLorentzTensor.Color := c ∘ Pure.dropPairEmb i j
+  let c' : Fin n → realLorentzTensor.Color := c ∘ Fin.succSuccAbove i j
   have hP :
       ∀ t : ℝT(3, c),
         toComplex (c := c') (contrT (S := realLorentzTensor) n i j h t) =

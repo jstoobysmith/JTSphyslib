@@ -27,15 +27,13 @@ the scalar potential is non-relativistic and is therefore a function of `Time` a
 
 - `ElectromagneticPotential.scalarPotential` : The scalar potential from an
   electromagnetic potential.
-- `DistElectromagneticPotential.scalarPotential` : The scalar potential from an
-  electromagnetic potential which is a distribution.
 
 ## iii. Table of contents
 
 - A. Definition of the Scalar Potential
-- B. Smoothness of the Scalar Potential
-- C. Differentiability of the Scalar Potential
-- D. Scalar potential for distributions
+- B. Relation to constructors
+- C. Smoothness of the Scalar Potential
+- D. Differentiability of the Scalar Potential
 
 ## iv. References
 
@@ -71,7 +69,59 @@ noncomputable def scalarPotential {d} (c : SpeedOfLight := 1) (A : Electromagnet
 
 /-!
 
-## B. Smoothness of the Scalar Potential
+## B. Relation to constructors
+
+-/
+
+@[simp]
+lemma ofScalarPotential_scalarPotential {d} (c : SpeedOfLight)
+    (φ : Time → Space d → ℝ) : (ofScalarPotential c φ).scalarPotential c = φ := by
+  simp only [scalarPotential, ofScalarPotential, Fin.isValue]
+  field_simp
+  simp
+
+@[simp]
+lemma ofStaticScalarPotential_scalarPotential {d} (c : SpeedOfLight)
+    (φ : Space d → ℝ) : (ofStaticScalarPotential c φ).scalarPotential c = fun _ => φ := by
+  simp [ofStaticScalarPotential]
+
+@[simp]
+lemma ofVectorPotential_scalarPotential {d} (c : SpeedOfLight)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofVectorPotential c A).scalarPotential = 0 := by
+  simp only [scalarPotential, SpeedOfLight.val_one, ofVectorPotential, Fin.isValue, mul_zero]
+  rfl
+
+@[simp]
+lemma ofStaticVectorPotential_scalarPotential {d} (c : SpeedOfLight)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofStaticVectorPotential c A).scalarPotential = 0 := by
+  simp [ofStaticVectorPotential]
+
+@[simp]
+lemma ofPotentials_scalarPotential {d} (c : SpeedOfLight) (φ : Time → Space d → ℝ)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofPotentials c φ A).scalarPotential c = φ := by
+  simp only [scalarPotential, ofPotentials, Fin.isValue]
+  field_simp
+  simp
+
+@[simp]
+lemma ofStaticPotentials_scalarPotential {d} (c : SpeedOfLight) (φ : Space d → ℝ)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofStaticPotentials c φ A).scalarPotential c = fun _ => φ := by
+  simp [ofStaticPotentials_eq_ofPotentials]
+
+lemma ofStaticElectricMagneticField_scalarPotential_eq_choose (c : SpeedOfLight)
+    (E B : Space → EuclideanSpace ℝ (Fin 3)) (hE : Differentiable ℝ E)
+    (hB : ContDiff ℝ 1 B) (E_curl : Space.curl E = 0) (B_div : Space.div B = 0) :
+    (ofStaticElectricMagneticField c E B hE hB E_curl B_div).scalarPotential c =
+    fun _ => - Classical.choose (Space.exists_grad_of_curl_zero E hE E_curl):= by
+  simp [ofStaticElectricMagneticField]
+
+/-!
+
+## C. Smoothness of the Scalar Potential
 
 We prove various lemmas about the smoothness of the scalar potential.
 
@@ -115,7 +165,7 @@ lemma scalarPotential_contDiff_time {n} {d} (c : SpeedOfLight) (A : Electromagne
 
 /-!
 
-## C. Differentiability of the Scalar Potential
+## d. Differentiability of the Scalar Potential
 
 We prove various lemmas about the differentiability of the scalar potential.
 
@@ -148,36 +198,4 @@ lemma scalarPotential_differentiable_time {d} (c : SpeedOfLight) (A : Electromag
 
 end ElectromagneticPotential
 
-/-!
-
-## D. Scalar potential for distributions
-
--/
-
-namespace DistElectromagneticPotential
-open TensorSpecies
-open Tensor
-open SpaceTime
-open TensorProduct
-open minkowskiMatrix
-attribute [-simp] Fintype.sum_sum_type
-attribute [-simp] Nat.succ_eq_add_one
-
-set_option backward.isDefEq.respectTransparency false in
-/-- The scalar potential of an electromagnetic potential which is a distribution. -/
-noncomputable def scalarPotential {d} (c : SpeedOfLight) :
-    DistElectromagneticPotential d →ₗ[ℝ]
-    (Time × Space d) →d[ℝ] ℝ where
-  toFun A := Lorentz.Vector.temporalCLM d ∘L distTimeSlice c (c.val • A)
-  map_add' A₁ A₂ := by
-    ext ε
-    simp [distTimeSlice]
-  map_smul' r A := by
-    ext ε
-    simp only [distTimeSlice, map_smul, ContinuousLinearEquiv.coe_mk, LinearEquiv.coe_mk,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.coe_comp', ContinuousLinearMap.coe_smul',
-      Function.comp_apply, Pi.smul_apply, smul_eq_mul, Real.ringHom_apply]
-    ring
-
-end DistElectromagneticPotential
 end Electromagnetism

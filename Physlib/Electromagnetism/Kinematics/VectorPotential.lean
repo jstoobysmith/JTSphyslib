@@ -27,15 +27,12 @@ the vector potential is non-relativistic and is therefore a function of `Time` a
 
 - `ElectromagneticPotential.vectorPotential` : The vector potential from an
   electromagnetic potential.
-- `DistElectromagneticPotential.vectorPotential` : The vector potential from an
-  electromagnetic potential which is a distribution.
 
 ## iii. Table of contents
 
 - A. Definition of the Vector Potential
 - B. Smoothness of the vector potential
 - C. Differentiablity of the vector potential
-- D. Vector potential for distributions
 
 ## iv. References
 
@@ -162,38 +159,5 @@ lemma vectorPotential_differentiable_time {d} {c : SpeedOfLight} (A : Electromag
   · fun_prop
 
 end ElectromagneticPotential
-
-/-!
-
-## D. Vector potential for distributions
-
--/
-
-namespace DistElectromagneticPotential
-open TensorSpecies
-open Tensor
-open SpaceTime
-open TensorProduct
-open minkowskiMatrix SchwartzMap
-attribute [-simp] Fintype.sum_sum_type
-attribute [-simp] Nat.succ_eq_add_one
-
-set_option backward.isDefEq.respectTransparency false in
-/-- The vector potential of an electromagnetic potential which is a distribution. -/
-noncomputable def vectorPotential {d} (c : SpeedOfLight) :
-    DistElectromagneticPotential d →ₗ[ℝ]
-    (Time × Space d) →d[ℝ] EuclideanSpace ℝ (Fin d) where
-  toFun A := Lorentz.Vector.spatialCLM d ∘L distTimeSlice c A
-  map_add' A₁ A₂ := by
-    ext ε
-    simp [distTimeSlice]
-  map_smul' r A := by
-    ext ε i
-    simp only [distTimeSlice, map_smul, ContinuousLinearEquiv.coe_mk, LinearEquiv.coe_mk,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_comp',
-      Pi.smul_apply, Function.comp_apply,
-      Real.ringHom_apply, PiLp.smul_apply, smul_eq_mul]
-
-end DistElectromagneticPotential
 
 end Electromagnetism

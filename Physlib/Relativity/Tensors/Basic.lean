@@ -6,8 +6,10 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.TensorSpecies.Basic
+public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
 public import Mathlib.Topology.Algebra.Module.ModuleTopology
 public import Mathlib.Analysis.RCLike.Basic
+public import Mathlib.Tactic.Cases
 public import Physlib.Meta.TODO.Basic
 /-!
 
@@ -766,6 +768,43 @@ lemma PermCond.succAbove {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : Fin (n1 + 1)
   by_cases hi : σ i = 0
   · simpa [hi] using PermCond.succAbove_of_eq_zero i h hi
   · simpa [hi] using PermCond.succAbove_of_neq_zero i h hi
+lemma PermCond.succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
+    {c1 : Fin (n1 + 1 + 1) → C}
+    (i j : Fin (n1 + 1 + 1)) (hij : i ≠ j)
+    {σ : Fin (n1 + 1 + 1) → Fin (n + 1 + 1)} (hσ : PermCond c c1 σ) :
+    PermCond (c ∘ succSuccAbove (σ i) (σ j))
+      (c1 ∘ succSuccAbove i j) (funPredPredAbove i j hij σ hσ.1) := by
+  apply And.intro
+  · exact funPredPredAbove_bijective i j hij σ hσ.left
+  · intro m
+    simp [funPredPredAbove, hσ.2]
+
+open Fin in
+lemma PermCond.succSuccAbove_comm {n : ℕ} {c : Fin (n + 1 + 1 + 1 + 1) → C}
+    (i1 j1 : Fin (n + 1 + 1 + 1 + 1)) (i2 j2 : Fin (n + 1 + 1))
+    (hij1 : i1 ≠ j1) (hij2 : i2 ≠ j2) :
+    let i2' := (i1.succSuccAbove j1 i2);
+    let j2' := (i1.succSuccAbove j1 j2);
+    have hi2j2' : i2' ≠ j2' := by simp [i2', j2', hij2];
+    let i1' := (predPredAbove i2' j2' hi2j2' i1 (by simp [i2', j2']));
+    let j1' := (predPredAbove i2' j2' hi2j2' j1 (by simp [i2', j2']));
+    PermCond ((c ∘ i2'.succSuccAbove j2') ∘ i1'.succSuccAbove j1')
+      ((c ∘ i1.succSuccAbove j1) ∘ i2.succSuccAbove  j2) id := by
+  apply And.intro (Function.bijective_id)
+  simp only [id_eq, Function.comp_apply]
+  intro i
+  rw [succSuccAbove_comm_apply]
+  · simp [hij1]
+  · simp [hij2]
+
+open Fin in
+lemma PermCond.append_right_succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
+    {c1 : Fin n1 → C} (i j : Fin (n + 1 + 1)) :
+    PermCond (Fin.append c1 c ∘ (Fin.succSuccAbove (finSumFinEquiv (m := n1) (Sum.inr i))
+        (finSumFinEquiv (m := n1) (Sum.inr j))))
+      (Fin.append c1 (c ∘ (i.succSuccAbove j))) id := by
+  apply And.intro (Function.bijective_id)
+  simp [forall_fin_add, succSuccAbove_comm_natAdd i j, succSuccAbove_natAdd_apply_castAdd i j]
 
 TODO "Prove that if `σ` satisfies `PermCond c c1 σ` then `PermCond.inv σ h`
   satisfies `PermCond c1 c (PermCond.inv σ h)`."
@@ -776,6 +815,7 @@ lemma fin_cast_permCond (n n1 : ℕ) {c : Fin n → C} (h : n1 = n) :
   · exact Equiv.bijective (finCongr h)
   · intro i
     rfl
+
 /-!
 
 ## Permutations
@@ -938,6 +978,30 @@ lemma permT_basis_repr_symm_apply {n m : ℕ} {c : Fin n → C} {c1 : Fin m → 
   · intro t1 t2 h1 h2
     simp [h1, h2]
 
+lemma permT_basis {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
+    {σ : Fin m → Fin n} (h : PermCond c c1 σ)
+    (b : ComponentIdx c) :
+    (permT σ h) (basis (S := S) c b) = basis c1 (fun i =>
+      basisIdxCongr (by simp [h.2]) (b (σ i))) := by
+  apply (basis c1).repr.injective
+  ext b'
+  rw [permT_basis_repr_symm_apply]
+  simp only [Basis.repr_self, Finsupp.single_apply]
+  congr 1
+  simp only [eq_iff_iff]
+  constructor
+  · intro h
+    rw [h]
+    ext i
+    simp only [basisIdxCongr_apply_apply]
+    refine Eq.symm (ComponentIdx.congr_right b' i (PermCond.inv σ _ (σ i)) ?_)
+    simp [PermCond.apply_inv_apply]
+  · rintro rfl
+    ext i
+    simp only [basisIdxCongr_apply_apply]
+    apply ComponentIdx.congr_right
+    simp [PermCond.inv_apply_apply]
+
 lemma permT_eq_zero_iff {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     {σ : Fin m → Fin n} (h : PermCond c c1 σ) (t : S.Tensor c) :
     permT σ h t = 0 ↔ t = 0 := by
@@ -977,6 +1041,14 @@ lemma toField_pure {c : Fin 0 → C} (p : Pure S c) :
   congr
   ext i
   exact Fin.elim0 i
+
+lemma toField_permT {c c1 : Fin 0 → C} (σ : Fin 0 → Fin 0) (h : PermCond c c1 σ) (t : S.Tensor c) :
+    toField (permT σ h t) = toField t := by
+  induction' t using induction_on_basis with b r t ht t1 t2 h1 h2
+  · simp [toField_pure, basis_apply, permT_pure]
+  · simp
+  · simp [ht]
+  · simp [h1, h2]
 
 @[simp]
 lemma toField_basis_default {c : Fin 0 → C} :
