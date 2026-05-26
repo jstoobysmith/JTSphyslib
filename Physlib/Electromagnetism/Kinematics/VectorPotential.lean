@@ -69,6 +69,57 @@ noncomputable def vectorPotential {d} (c : SpeedOfLight := 1) (A : Electromagnet
 
 /-!
 
+## B. Relation to constructors
+
+-/
+
+@[simp]
+lemma ofScalarPotential_vectorPotential {d} (c : SpeedOfLight)
+    (φ : Time → Space d → ℝ) : (ofScalarPotential c φ).vectorPotential c = 0 := by
+  simp only [vectorPotential, ofScalarPotential]
+  rfl
+
+@[simp]
+lemma ofStaticScalarPotential_vectorPotential {d} (c : SpeedOfLight)
+    (φ : Space d → ℝ) : (ofStaticScalarPotential c φ).vectorPotential c = 0 := by
+  simp [ofStaticScalarPotential]
+
+@[simp]
+lemma ofVectorPotential_vectorPotential {d} (c : SpeedOfLight)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofVectorPotential c A).vectorPotential c = A := by
+  ext i
+  simp [vectorPotential, ofVectorPotential]
+
+@[simp]
+lemma ofStaticVectorPotential_vectorPotential {d} (c : SpeedOfLight)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofStaticVectorPotential c A).vectorPotential c = fun _ => A := by
+  simp [ofStaticVectorPotential]
+
+@[simp]
+lemma ofPotentials_vectorPotential {d} (c : SpeedOfLight) (φ : Time → Space d → ℝ)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofPotentials c φ A).vectorPotential c = A := by
+  ext i
+  simp [vectorPotential, ofPotentials]
+
+@[simp]
+lemma ofStaticPotentials_vectorPotential {d} (c : SpeedOfLight) (φ : Space d → ℝ)
+    (A : Space d → EuclideanSpace ℝ (Fin d)) :
+    (ofStaticPotentials c φ A).vectorPotential c = fun _ => A := by
+  simp [ofStaticPotentials_eq_ofPotentials]
+
+open MeasureTheory Matrix Space InnerProductSpace Time in
+lemma ofElectricMagneticField_vectorPotential (c : SpeedOfLight)
+    (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (t :Time) (x : Space 3) :
+    (ofElectricMagneticField c E B).vectorPotential c t x =
+    - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume):= by
+  simp [ofElectricMagneticField]
+
+/-!
+
 ## B. Smoothness of the vector potential
 
 We prove various lemmas about the smoothness of the vector potential from
