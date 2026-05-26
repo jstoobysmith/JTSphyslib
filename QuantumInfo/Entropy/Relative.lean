@@ -2119,6 +2119,7 @@ TODO:
  * Define (joint) convexity as its own thing - a `ConvexOn` for `Mixable` types.
  * Maybe, more broadly, find a way to make `ConvexOn` work with the subset of `Matrix` that corresponds to `MState`.
 -/
+@[sorryful]
 theorem qRelativeEnt_joint_convexity :
   ∀ (ρ₁ ρ₂ σ₁ σ₂ : MState d), ∀ (p : Prob),
     𝐃(p [ρ₁ ↔ ρ₂]‖p [σ₁ ↔ σ₂]) ≤ p * 𝐃(ρ₁‖σ₁) + (1 - p) * 𝐃(ρ₂‖σ₂) := by
