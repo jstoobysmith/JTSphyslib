@@ -10,7 +10,7 @@ public import Physlib.SpaceAndTime.Space.Derivatives.Curl
 public import Physlib.Mathematics.VariationalCalculus.HasVarAdjDeriv
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
-
+public import Physlib.Mathematics.Calculus.ParametricIntegration
 /-!
 
 # The Electromagnetic Potential
@@ -353,6 +353,55 @@ lemma contDiff_ofPotentials {n} {d} (c : SpeedOfLight) (φ : Time → Space d �
   match μ with
   | Sum.inl 0 => fun_prop
   | Sum.inr i => fun_prop
+
+open MeasureTheory Matrix Space InnerProductSpace Time in
+lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
+    (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (hE : ContDiff ℝ n ↿E)
+    (hB : ContDiff ℝ (n + 1) ↿B) : ContDiff ℝ n (ofElectricMagneticField c E B) := by
+  let A : Time → Space → EuclideanSpace ℝ (Fin 3) := fun t x =>
+    - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
+  have h1 : ContDiff ℝ (n + 1) ↿A := by
+    simp only [WithLp.equiv_apply, A]
+    apply ContDiff.neg
+    apply contDiff_intervalIntegral_of_contDiff
+    refine contDiff_euclidean.mpr ?_
+    intro i
+    let C : (Time × Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>
+      let (t, x) := p.1
+      let u := p.2
+      (u • basis.repr x) ⨯ₑ₃ B t (u • x)
+    change ContDiff ℝ (n + 1) (fun x => C x i)
+    fin_cases i
+    all_goals
+    · simp [C, crossProduct]
+      fun_prop
+  have hn : ContDiff ℝ n ↿A := h1.of_le (by simp)
+  rw [← SpaceTime.contDiff_vector]
+  intro μ
+  match μ with
+  | Sum.inr i =>
+    change ContDiff ℝ n (fun x => (timeSlice c).symm A x i)
+    fun_prop
+  | Sum.inl 0 =>
+    simp only [ofElectricMagneticField, ofPotentials, map_smul, WithLp.equiv_apply,
+      WithLp.ofLp_smul, LinearMap.smul_apply, WithLp.equiv_symm_apply, WithLp.toLp_smul,
+      Fin.isValue]
+    apply ContDiff.div _ (by fun_prop) (by simp)
+    apply timeSlice_symm_contDiff
+    apply ContDiff.neg
+    apply contDiff_intervalIntegral_of_contDiff
+    suffices h : ContDiff ℝ n (fun (x : (Time × Space) × ℝ) => ⟪E x.1.1 (x.2 • x.1.2) + ∂ₜ (A · (x.2 • x.1.2)) x.1.1, Space.basis.repr x.1.2⟫_ℝ) by
+      convert h using 1
+      ext x
+      rcases x with ⟨⟨t, x⟩, u⟩
+      simp [Function.HasUncurry.uncurry, A ]
+    apply ContDiff.inner
+    · apply ContDiff.add
+      · fun_prop
+      simp [Time.deriv]
+      fun_prop
+    · fun_prop
 
 /-!
 
