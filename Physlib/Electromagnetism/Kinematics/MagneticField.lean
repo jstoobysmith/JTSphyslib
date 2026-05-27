@@ -171,7 +171,7 @@ lemma magneticField_div_eq_zero (A : ElectromagneticPotential)
 -/
 
 /-- The magnetic field of the electromagnetic potential created from the electric field
-  `E` and the magnetic field `B` is `B`, as long as Gauss's law is satisified. -/
+  `E` and the magnetic field `B` is `B`, as long as Gauss's law is satisfied. -/
 lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
     (E : ElectricField) (B : MagneticField) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
     (B_grad : ∀ t, ∇ ⬝ (B t) = 0) :
