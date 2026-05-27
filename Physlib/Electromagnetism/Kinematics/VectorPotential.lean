@@ -118,6 +118,34 @@ lemma ofElectricMagneticField_vectorPotential (c : SpeedOfLight)
     fun t x => - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂volume := by
   simp [ofElectricMagneticField]
 
+open MeasureTheory Matrix Space InnerProductSpace Time in
+@[fun_prop]
+lemma contDiff_vectorPotential_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
+    (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
+    (hB : ContDiff ℝ n ↿B) : ContDiff ℝ n ↿((ofElectricMagneticField c E B).vectorPotential c) := by
+  let A : Time → Space → EuclideanSpace ℝ (Fin 3) := fun t x =>
+    - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
+  have h1 : ContDiff ℝ n ↿A := by
+    simp only [WithLp.equiv_apply, A]
+    apply ContDiff.neg
+    apply contDiff_intervalIntegral_of_contDiff
+    refine contDiff_euclidean.mpr ?_
+    intro i
+    let C : (Time × Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>
+      let (t, x) := p.1
+      let u := p.2
+      (u • basis.repr x) ⨯ₑ₃ B t (u • x)
+    change ContDiff ℝ n (fun x => C x i)
+    fin_cases i
+    all_goals
+    · simp [C, crossProduct]
+      fun_prop
+  suffices h : ContDiff ℝ n ↿A by
+    convert h
+    simp [ofElectricMagneticField_vectorPotential, A]
+  fun_prop
+
 /-!
 
 ## B. Smoothness of the vector potential
