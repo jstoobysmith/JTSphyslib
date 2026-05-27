@@ -65,7 +65,7 @@ lemma timeSlice_differentiable {d : ℕ} {M : Type} [NormedAddCommGroup M]
 @[fun_prop]
 lemma timeSlice_symm_contDiff {d : ℕ} {M : Type} [NormedAddCommGroup M] [NormedSpace ℝ M]
     {n} (c : SpeedOfLight) (f : Time → Space d → M) (h : ContDiff ℝ n ↿f) :
-    ContDiff ℝ n ↿((timeSlice c).symm f) := by
+    ContDiff ℝ n ((timeSlice c).symm f) := by
   change ContDiff ℝ n (Function.uncurry f ∘ toTimeAndSpace c)
   apply ContDiff.comp
   · exact h
