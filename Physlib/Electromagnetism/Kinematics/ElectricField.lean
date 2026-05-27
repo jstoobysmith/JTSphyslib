@@ -79,12 +79,14 @@ lemma electricField_eq {c : SpeedOfLight} (A : ElectromagneticPotential d) :
 
 -/
 
+open MeasureTheory Matrix Space InnerProductSpace Time in
 lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
-    (E_contDiff : ∀ t, ContDiff ℝ 1 (E t)) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
+    (E_contDiff : ContDiff ℝ 1 ↿E) (B_contDiff : ContDiff ℝ 2 ↿B)
     (B_grad : ∀ t, ∇ ⬝ (B t) = 0)
     (faraday : ∀ t x, curl (E t) x = - ∂ₜ (B · x) t) :
     (ofElectricMagneticField c E B).electricField c = E := by
+  have h0 := B_contDiff.of_le (m := 1) (by simp)
   ext1 t
   ext1 x
   suffices h : E t x + ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t =
@@ -96,7 +98,8 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
   · simp [ofElectricMagneticField_scalarPotential]
     erw [grad_neg]
     simp
-  · sorry
+  · simp only [Time.deriv]
+    fun_prop
   · erw [curl_add]
     ext1 x
     simp [faraday]
@@ -105,10 +108,31 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
     rw [← Space.time_deriv_curl_commute]
     · congr
       funext t
-      sorry
-    · sorry
+      have h1 := eq_neg_curl_of_div_zero (B t) (by fun_prop) (B_grad t)
+      conv_lhs => rw [h1]
+      simp only [ofElectricMagneticField_vectorPotential]
+      erw [curl_neg]
+      intro x
+      apply Differentiable.differentiableAt
+      apply ContDiff.differentiable (n := 1) _ (by simp)
+      apply contDiff_intervalIntegral_of_contDiff
+      refine contDiff_euclidean.mpr ?_
+      intro i
+      let C : (Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>
+        let x:= p.1
+        let u := p.2
+        (u • basis.repr x) ⨯ₑ₃ B t (u • x)
+      suffices h : ContDiff ℝ 1 (fun x => C x i) by
+        convert h
+        exact 1
+      fin_cases i
+      all_goals
+      · simp [C, crossProduct]
+        fun_prop
     · fun_prop
-    · sorry
+    · fun_prop
+    · simp only [Time.deriv]
+      fun_prop
 
 /-!
 
