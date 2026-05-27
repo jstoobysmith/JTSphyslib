@@ -170,7 +170,8 @@ lemma magneticField_div_eq_zero (A : ElectromagneticPotential)
 
 -/
 
-@[simp]
+/-- The magnetic field of the electromagnetic potential created from the electric field
+  `E` and the magnetic field `B` is `B`, as long as Gauss's law is satisified. -/
 lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
     (E : ElectricField) (B : MagneticField) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
     (B_grad : ∀ t, ∇ ⬝ (B t) = 0) :
@@ -182,9 +183,10 @@ lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
   simp only [magneticField, ofElectricMagneticField_vectorPotential, WithLp.equiv_apply,
     WithLp.ofLp_smul, map_smul, LinearMap.smul_apply]
   erw [curl_neg]
-  simp
+  simp only [WithLp.equiv_symm_apply, WithLp.toLp_smul]
   change  Differentiable ℝ fun x =>
-  ∫ (u : ℝ) in 0..1, u • WithLp.toLp 2 ((crossProduct (Space.basis.repr x).ofLp) (B t (u • x)).ofLp)
+    ∫ (u : ℝ) in 0..1, u • WithLp.toLp 2 ((crossProduct (Space.basis.repr x).ofLp)
+    (B t (u • x)).ofLp)
   intro x
   convert (hasFDerivAt_intervalIntegral_homotopyOperatorIntegrand ?_ _).differentiableAt
   · simp [Space.homotopyOperatorIntegrand]

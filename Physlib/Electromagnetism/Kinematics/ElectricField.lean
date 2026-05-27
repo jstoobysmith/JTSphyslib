@@ -80,11 +80,13 @@ lemma electricField_eq {c : SpeedOfLight} (A : ElectromagneticPotential d) :
 -/
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
+/-- The electric field of the electromagnetic potential created from the electric field
+  `E` and the magnetic field `B` is `E`, as long as Gauss's law for magnetism and
+  Faraday's law are satisfied. -/
 lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (E_contDiff : ContDiff ℝ 1 ↿E) (B_contDiff : ContDiff ℝ 2 ↿B)
-    (B_grad : ∀ t, ∇ ⬝ (B t) = 0)
-    (faraday : ∀ t x, curl (E t) x = - ∂ₜ (B · x) t) :
+    (B_grad : ∀ t, ∇ ⬝ (B t) = 0) (faraday : ∀ t x, curl (E t) x = - ∂ₜ (B · x) t) :
     (ofElectricMagneticField c E B).electricField c = E := by
   have h0 := B_contDiff.of_le (m := 1) (by simp)
   ext1 t
