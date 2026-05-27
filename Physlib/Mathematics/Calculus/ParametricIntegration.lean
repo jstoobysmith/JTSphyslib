@@ -5,14 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Mathlib.LinearAlgebra.Trace
-public import Physlib.Mathematics.Calculus.AdjFDeriv
-public import Physlib.SpaceAndTime.Space.Derivatives.Div
-public import Physlib.SpaceAndTime.Space.Derivatives.Laplacian
-public import Mathlib.MeasureTheory.Integral.CurveIntegral.Poincare
-public import Physlib.SpaceAndTime.Space.CrossProduct
-public import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
 public import Mathlib.Analysis.Calculus.ContDiff.FiniteDimension
+public import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
+public import Mathlib.Tactic.Cases
 
 /-!
 
@@ -32,7 +27,7 @@ variable  {M N : Type}
       [NormedAddCommGroup M] [NormedSpace ℝ M] [ProperSpace M]
        [NormedAddCommGroup N] [NormedSpace ℝ N]
 open MeasureTheory
-lemma hasFDerivAt_intervalIntegral_of_contDiff
+lemma hasFDerivAt_parametric_intervalIntegral_of_contDiff
     {F : M → ℝ → N} (hf : ContDiff ℝ 1 ↿F) (x₀ : M) :
     HasFDerivAt (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume))
       (∫ (t : ℝ) in 0..1, fderiv ℝ (F · t) x₀ ∂(volume)) x₀ := by
@@ -82,7 +77,7 @@ lemma fderiv_apply_parameteric_intervalIntegral
     {F : M → ℝ → N} (hf : ContDiff ℝ 1 ↿F) (x₀ : M) (v : M) :
     fderiv ℝ (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume)) x₀ v =
       ∫ (t : ℝ) in 0..1, fderiv ℝ (F · t) x₀ v ∂(volume) := by
-  have h := hasFDerivAt_intervalIntegral_of_contDiff hf x₀
+  have h := hasFDerivAt_parametric_intervalIntegral_of_contDiff hf x₀
   rw [h.fderiv]
   refine ContinuousLinearMap.intervalIntegral_apply ?_ v
   apply Continuous.intervalIntegrable
@@ -92,7 +87,7 @@ lemma fderiv_parameteric_intervalIntegral
     {F : M → ℝ → N} (hf : ContDiff ℝ 1 ↿F) (x₀ : M) :
     fderiv ℝ (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume))  =
       fun x => ∫ (t : ℝ) in 0..1, fderiv ℝ (F · t) x ∂(volume) := by
-  have h := hasFDerivAt_intervalIntegral_of_contDiff hf x₀
+  have h := hasFDerivAt_parametric_intervalIntegral_of_contDiff hf x₀
   ext1 x
   ext1 v
   rw [fderiv_apply_parameteric_intervalIntegral]
@@ -102,7 +97,7 @@ lemma fderiv_parameteric_intervalIntegral
   fun_prop
   fun_prop
 
-lemma contDiff_one_intervalIntegral_of_contDiff
+lemma contDiff_one_parametric_intervalIntegral_of_contDiff
     {F : M → ℝ → N} (hf : ContDiff ℝ 1 ↿F) :
     ContDiff ℝ 1 (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume)) := by
   rw [contDiff_one_iff_hasFDerivAt]
@@ -110,18 +105,18 @@ lemma contDiff_one_intervalIntegral_of_contDiff
   apply And.intro
   · fun_prop
   · intro x
-    exact hasFDerivAt_intervalIntegral_of_contDiff hf x
+    exact hasFDerivAt_parametric_intervalIntegral_of_contDiff hf x
 
-lemma contDiff_succ_intervalIntegral_of_contDiff {n : ℕ} [FiniteDimensional ℝ M]
+lemma contDiff_succ_parametric_intervalIntegral_of_contDiff {n : ℕ} [FiniteDimensional ℝ M]
     {F : M → ℝ → N} (hf : ContDiff ℝ (n + 1) ↿F) :
     ContDiff ℝ (n + 1) (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume)) := by
   induction' n with n ih generalizing F
-  · apply contDiff_one_intervalIntegral_of_contDiff
+  · apply contDiff_one_parametric_intervalIntegral_of_contDiff
     exact hf
   · rw [contDiff_succ_iff_fderiv]
     constructor
     · apply ContDiff.differentiable (n := 1)
-      · apply contDiff_one_intervalIntegral_of_contDiff
+      · apply contDiff_one_parametric_intervalIntegral_of_contDiff
         exact hf.of_le (by simp)
       · simp
     simp
@@ -133,11 +128,11 @@ lemma contDiff_succ_intervalIntegral_of_contDiff {n : ℕ} [FiniteDimensional �
     apply ih
     fun_prop
 
-lemma contDiff_intervalIntegral_of_contDiff {n : ℕ} {M : Type}
+lemma contDiff_parametric_intervalIntegral_of_contDiff {n : ℕ} {M : Type}
     [NormedAddCommGroup M] [NormedSpace ℝ M] [ProperSpace M] [FiniteDimensional ℝ M]
     {F : M → ℝ → N} (hf : ContDiff ℝ n ↿F) :
     ContDiff ℝ n (fun (x : M) => ∫ (t : ℝ) in 0..1, F x t ∂(volume)) := by
   induction' n with n ih generalizing F
   · simp
     fun_prop
-  · exact contDiff_succ_intervalIntegral_of_contDiff (hf.of_le (by simp))
+  · exact contDiff_succ_parametric_intervalIntegral_of_contDiff (hf.of_le (by simp))

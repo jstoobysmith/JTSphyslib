@@ -129,7 +129,7 @@ lemma contDiff_vectorPotential_ofElectricMagneticField {n : ℕ} (c : SpeedOfLig
   have h1 : ContDiff ℝ n ↿A := by
     simp only [WithLp.equiv_apply, A]
     apply ContDiff.neg
-    apply contDiff_intervalIntegral_of_contDiff
+    apply contDiff_parametric_intervalIntegral_of_contDiff
     refine contDiff_euclidean.mpr ?_
     intro i
     let C : (Time × Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>

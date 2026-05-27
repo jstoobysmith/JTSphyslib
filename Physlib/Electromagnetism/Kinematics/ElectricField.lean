@@ -117,7 +117,7 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
       intro x
       apply Differentiable.differentiableAt
       apply ContDiff.differentiable (n := 1) _ (by simp)
-      apply contDiff_intervalIntegral_of_contDiff
+      apply contDiff_parametric_intervalIntegral_of_contDiff
       refine contDiff_euclidean.mpr ?_
       intro i
       let C : (Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>

@@ -364,7 +364,7 @@ lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
   have h1 : ContDiff ℝ (n + 1) ↿A := by
     simp only [WithLp.equiv_apply, A]
     apply ContDiff.neg
-    apply contDiff_intervalIntegral_of_contDiff
+    apply contDiff_parametric_intervalIntegral_of_contDiff
     refine contDiff_euclidean.mpr ?_
     intro i
     let C : (Time × Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>
@@ -390,7 +390,7 @@ lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
     apply ContDiff.div _ (by fun_prop) (by simp)
     apply timeSlice_symm_contDiff
     apply ContDiff.neg
-    apply contDiff_intervalIntegral_of_contDiff
+    apply contDiff_parametric_intervalIntegral_of_contDiff
     suffices h : ContDiff ℝ n (fun (x : (Time × Space) × ℝ) => ⟪E x.1.1 (x.2 • x.1.2) + ∂ₜ (A · (x.2 • x.1.2)) x.1.1, Space.basis.repr x.1.2⟫_ℝ) by
       convert h using 1
       ext x
