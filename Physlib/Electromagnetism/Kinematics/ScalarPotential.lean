@@ -118,7 +118,8 @@ lemma ofElectricMagneticField_scalarPotential (c : SpeedOfLight)
     (B : Time → Space → EuclideanSpace ℝ (Fin 3)) :
     (ofElectricMagneticField c E B).scalarPotential c = fun t x =>
     - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) +
-    ∂ₜ ((ofElectricMagneticField c E B).vectorPotential c · (u • x)) t, basis.repr x⟫_ℝ ∂(volume) := by
+    ∂ₜ ((ofElectricMagneticField c E B).vectorPotential c ·
+      (u • x)) t, basis.repr x⟫_ℝ ∂(volume) := by
   simp [ofElectricMagneticField]
 
 /-!

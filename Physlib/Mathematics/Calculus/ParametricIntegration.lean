@@ -119,7 +119,8 @@ lemma contDiff_succ_parametric_intervalIntegral_of_contDiff {n : ℕ} [FiniteDim
       · apply contDiff_one_parametric_intervalIntegral_of_contDiff
         exact hf.of_le (by simp)
       · simp
-    simp
+    simp only [Nat.cast_add, Nat.cast_one, WithTop.add_eq_top, WithTop.natCast_ne_top,
+      WithTop.one_ne_top, or_self, IsEmpty.forall_iff, true_and]
     rw [contDiff_clm_apply_iff]
     intro y
     conv =>

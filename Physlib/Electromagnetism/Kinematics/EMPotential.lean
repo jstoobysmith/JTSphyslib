@@ -316,7 +316,8 @@ lemma contDiff_ofScalarPotential {n} {d} (c : SpeedOfLight) (φ : Time → Space
   | Sum.inl 0 => fun_prop
   | Sum.inr _ => fun_prop
 
-lemma differentiable_ofVectorPotential {d} (c : SpeedOfLight) (A : Time → Space d → EuclideanSpace ℝ (Fin d))
+lemma differentiable_ofVectorPotential {d} (c : SpeedOfLight)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d))
     (hA : Differentiable ℝ ↿A) : Differentiable ℝ (ofVectorPotential c A) := by
   simp [ofVectorPotential]
   rw [← SpaceTime.differentiable_vector]
@@ -325,7 +326,8 @@ lemma differentiable_ofVectorPotential {d} (c : SpeedOfLight) (A : Time → Spac
   | Sum.inl 0 => fun_prop
   | Sum.inr i => fun_prop
 
-lemma contDiff_ofVectorPotential {n} {d} (c : SpeedOfLight) (A : Time → Space d → EuclideanSpace ℝ (Fin d))
+lemma contDiff_ofVectorPotential {n} {d} (c : SpeedOfLight)
+    (A : Time → Space d → EuclideanSpace ℝ (Fin d))
     (hA : ContDiff ℝ n ↿A) : ContDiff ℝ n (ofVectorPotential c A) := by
   simp [ofVectorPotential]
   rw [← SpaceTime.contDiff_vector]
@@ -391,7 +393,8 @@ lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
     apply timeSlice_symm_contDiff
     apply ContDiff.neg
     apply contDiff_parametric_intervalIntegral_of_contDiff
-    suffices h : ContDiff ℝ n (fun (x : (Time × Space) × ℝ) => ⟪E x.1.1 (x.2 • x.1.2) + ∂ₜ (A · (x.2 • x.1.2)) x.1.1, Space.basis.repr x.1.2⟫_ℝ) by
+    suffices h : ContDiff ℝ n (fun (x : (Time × Space) × ℝ) => ⟪E x.1.1 (x.2 • x.1.2) +
+        ∂ₜ (A · (x.2 • x.1.2)) x.1.1, Space.basis.repr x.1.2⟫_ℝ) by
       convert h using 1
       ext x
       rcases x with ⟨⟨t, x⟩, u⟩
