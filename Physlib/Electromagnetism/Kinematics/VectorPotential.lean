@@ -111,19 +111,19 @@ lemma ofStaticPotentials_vectorPotential {d} (c : SpeedOfLight) (φ : Space d �
   simp [ofStaticPotentials_eq_ofPotentials]
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
-lemma ofElectricMagneticField_vectorPotential (c : SpeedOfLight)
+lemma ofElectromagneticField_vectorPotential (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
-    (ofElectricMagneticField c E B).vectorPotential c =
+    (ofElectromagneticField c E B).vectorPotential c =
     fun t x => - ∫ u in 0..(1 : ℝ), (u • Space.basis.repr x) ⨯ₑ₃ B t (u • x) ∂volume := by
-  simp [ofElectricMagneticField]
+  simp [ofElectromagneticField]
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
 @[fun_prop]
-lemma contDiff_vectorPotential_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
+lemma contDiff_vectorPotential_ofElectromagneticField {n : ℕ} (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
-    (hB : ContDiff ℝ n ↿B) : ContDiff ℝ n ↿((ofElectricMagneticField c E B).vectorPotential c) := by
+    (hB : ContDiff ℝ n ↿B) : ContDiff ℝ n ↿((ofElectromagneticField c E B).vectorPotential c) := by
   let A : Time → Space → EuclideanSpace ℝ (Fin 3) := fun t x =>
     - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
   have h1 : ContDiff ℝ n ↿A := by
@@ -143,7 +143,7 @@ lemma contDiff_vectorPotential_ofElectricMagneticField {n : ℕ} (c : SpeedOfLig
       fun_prop
   suffices h : ContDiff ℝ n ↿A by
     convert h
-    simp [ofElectricMagneticField_vectorPotential, A]
+    simp [ofElectromagneticField_vectorPotential, A]
   fun_prop
 
 /-!

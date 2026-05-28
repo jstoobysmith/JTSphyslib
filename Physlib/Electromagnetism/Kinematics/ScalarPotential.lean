@@ -113,14 +113,14 @@ lemma ofStaticPotentials_scalarPotential {d} (c : SpeedOfLight) (φ : Space d �
   simp [ofStaticPotentials_eq_ofPotentials]
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
-lemma ofElectricMagneticField_scalarPotential (c : SpeedOfLight)
+lemma ofElectromagneticField_scalarPotential (c : SpeedOfLight)
     (E : Time → Space → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space → EuclideanSpace ℝ (Fin 3)) :
-    (ofElectricMagneticField c E B).scalarPotential c = fun t x =>
+    (ofElectromagneticField c E B).scalarPotential c = fun t x =>
     - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) +
-    ∂ₜ ((ofElectricMagneticField c E B).vectorPotential c ·
+    ∂ₜ ((ofElectromagneticField c E B).vectorPotential c ·
       (u • x)) t, basis.repr x⟫_ℝ ∂(volume) := by
-  simp [ofElectricMagneticField]
+  simp [ofElectromagneticField]
 
 /-!
 

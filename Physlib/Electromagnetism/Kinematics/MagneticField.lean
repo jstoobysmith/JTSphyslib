@@ -172,15 +172,15 @@ lemma magneticField_div_eq_zero (A : ElectromagneticPotential)
 open Matrix in
 /-- The magnetic field of the electromagnetic potential created from the electric field
   `E` and the magnetic field `B` is `B`, as long as Gauss's law is satisfied. -/
-lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
+lemma ofElectromagneticField_magneticField {c : SpeedOfLight}
     (E : ElectricField) (B : MagneticField) (B_contDiff : ∀ t, ContDiff ℝ 1 (B t))
     (B_grad : ∀ t, ∇ ⬝ (B t) = 0) :
-    (ofElectricMagneticField c E B).magneticField c = B := by
+    (ofElectromagneticField c E B).magneticField c = B := by
   ext1 t
   ext1 x
   have h1 := eq_neg_curl_of_div_zero (B t) (B_contDiff t) (B_grad t)
   conv_rhs => rw [h1]
-  simp only [magneticField, ofElectricMagneticField_vectorPotential, WithLp.equiv_apply,
+  simp only [magneticField, ofElectromagneticField_vectorPotential, WithLp.equiv_apply,
     WithLp.ofLp_smul, map_smul, LinearMap.smul_apply]
   rw [fun_curl_neg]
   simp only [WithLp.equiv_symm_apply, WithLp.toLp_smul, Pi.neg_apply]

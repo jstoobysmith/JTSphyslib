@@ -83,21 +83,21 @@ open MeasureTheory Matrix Space InnerProductSpace Time in
 /-- The electric field of the electromagnetic potential created from the electric field
   `E` and the magnetic field `B` is `E`, as long as Gauss's law for magnetism and
   Faraday's law are satisfied. -/
-lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
+lemma ofElectromagneticField_electricField {c : SpeedOfLight}
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (E_contDiff : ContDiff ℝ 1 ↿E) (B_contDiff : ContDiff ℝ 2 ↿B)
     (B_grad : ∀ t, ∇ ⬝ (B t) = 0) (faraday : ∀ t x, curl (E t) x = - ∂ₜ (B · x) t) :
-    (ofElectricMagneticField c E B).electricField c = E := by
+    (ofElectromagneticField c E B).electricField c = E := by
   have h0 := B_contDiff.of_le (m := 1) (by simp)
   ext1 t
   ext1 x
-  suffices h : E t x + ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t =
-      - ∇ ((ofElectricMagneticField c E B).scalarPotential c t) x by
+  suffices h : E t x + ∂ₜ (fun t => (ofElectromagneticField c E B).vectorPotential c t x) t =
+      - ∇ ((ofElectromagneticField c E B).scalarPotential c t) x by
     simp only [electricField]
     grind
   convert congrFun (eq_grad_integral_of_curl_zero (fun x => E t x +
-      ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t) ?_ ?_) x
-  · simp [ofElectricMagneticField_scalarPotential]
+      ∂ₜ (fun t => (ofElectromagneticField c E B).vectorPotential c t x) t) ?_ ?_) x
+  · simp [ofElectromagneticField_scalarPotential]
     rw [fun_grad_neg]
     simp
   · simp only [Time.deriv]
@@ -106,14 +106,14 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
     ext1 x
     simp [faraday]
     suffices h : ∂ₜ (B · x) t = curl (fun x =>
-        ∂ₜ ((ofElectricMagneticField c E B).vectorPotential c · x) t) x by
+        ∂ₜ ((ofElectromagneticField c E B).vectorPotential c · x) t) x by
       simp [h]
     rw [← Space.time_deriv_curl_commute]
     · congr
       funext t
       have h1 := eq_neg_curl_of_div_zero (B t) (by fun_prop) (B_grad t)
       conv_lhs => rw [h1]
-      simp only [ofElectricMagneticField_vectorPotential]
+      simp only [ofElectromagneticField_vectorPotential]
       rw [fun_curl_neg]
       simp only [WithLp.equiv_apply, WithLp.ofLp_smul, map_smul, LinearMap.smul_apply,
         WithLp.equiv_symm_apply, WithLp.toLp_smul, Pi.neg_apply]

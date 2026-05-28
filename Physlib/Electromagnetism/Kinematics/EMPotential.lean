@@ -189,7 +189,7 @@ lemma ofStaticPotentials_eq_ofPotentials {d} (c : SpeedOfLight) (ϕ : Space d �
 open MeasureTheory Matrix Space InnerProductSpace Time in
 /-- The electromagnetic potential from an electric and a magnetic field.
   This defines the electromagnetic potential in the Poincare gauge. -/
-noncomputable def ofElectricMagneticField (c : SpeedOfLight)
+noncomputable def ofElectromagneticField (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
     ElectromagneticPotential 3 :=
@@ -198,7 +198,7 @@ noncomputable def ofElectricMagneticField (c : SpeedOfLight)
     - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ (A · (u • x)) t, basis.repr x⟫_ℝ ∂(volume)
   ofPotentials c φ A
 
-TODO "The scalar potential of `ofElectricMagneticField` can be defined as
+TODO "The scalar potential of `ofElectromagneticField` can be defined as
   `- ∫ u in (0 : ℝ)..1, ⟪E t (u • x), basis.repr x⟫_ℝ ∂(volume)`. This change should be made.
   it works because the vector potential is zero when dotted with the position vector."
 
@@ -359,10 +359,10 @@ lemma contDiff_ofPotentials {n} {d} (c : SpeedOfLight) (φ : Time → Space d �
   | Sum.inr i => fun_prop
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
-lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
+lemma contDiff_ofElectromagneticField {n : ℕ} (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (hE : ContDiff ℝ n ↿E)
-    (hB : ContDiff ℝ (n + 1) ↿B) : ContDiff ℝ n (ofElectricMagneticField c E B) := by
+    (hB : ContDiff ℝ (n + 1) ↿B) : ContDiff ℝ n (ofElectromagneticField c E B) := by
   let A : Time → Space → EuclideanSpace ℝ (Fin 3) := fun t x =>
     - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
   have h1 : ContDiff ℝ (n + 1) ↿A := by
@@ -388,7 +388,7 @@ lemma contDiff_ofElectricMagneticField {n : ℕ} (c : SpeedOfLight)
     change ContDiff ℝ n (fun x => (timeSlice c).symm A x i)
     fun_prop
   | Sum.inl 0 =>
-    simp only [ofElectricMagneticField, ofPotentials, map_smul, WithLp.equiv_apply,
+    simp only [ofElectromagneticField, ofPotentials, map_smul, WithLp.equiv_apply,
       WithLp.ofLp_smul, LinearMap.smul_apply, WithLp.equiv_symm_apply, WithLp.toLp_smul,
       Fin.isValue]
     apply ContDiff.div _ (by fun_prop) (by simp)
