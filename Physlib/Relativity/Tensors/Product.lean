@@ -80,11 +80,14 @@ namespace TensorSpecies
 open OverColor
 
 namespace Tensor
+open Module
 
-variable {k C G : Type} [CommRing k] [Group G]
-  {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
-  {S : TensorSpecies k C G basisIdx} {n n' n2 : ℕ} {c : Fin n → C} {c' : Fin n' → C}
-  {c2 : Fin n2 → C}
+variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
+    {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
+    {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
+    {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Basis (basisIdx c) k (V c)}
+    {S : TensorSpecies k C G V basisIdx rep b} {n n' n2 : ℕ} {c : Fin n → C} {c' : Fin n' → C}
+    {c2 : Fin n2 → C}
 
 /-!
 
@@ -102,7 +105,7 @@ variable {k C G : Type} [CommRing k] [Group G]
   `ComponentIdx c × ComponentIdx c1` formed by products. -/
 def ComponentIdx.prod {n1 n2 : ℕ} {c : Fin n1 → C} {c1 : Fin n2 → C} :
     ComponentIdx (S := S) (Fin.append c c1) ≃
-      ComponentIdx (S := S) c × ComponentIdx (S := S) c1 where
+    ComponentIdx (S := S) c × ComponentIdx (S := S) c1 where
   toFun p := (fun i => basisIdxCongr (by simp) (p (Fin.castAdd n2 i)),
     fun i => basisIdxCongr (by simp) (p (Fin.natAdd n1 i)))
   invFun p := Fin.addCases (fun i => basisIdxCongr (by simp) (p.1 i))
@@ -125,15 +128,6 @@ def ComponentIdx.prod {n1 n2 : ℕ} {c : Fin n1 → C} {c1 : Fin n2 → C} :
 
 -/
 
-/-- The equivalence between pure tensors based on a product of lists of indices, and
-  the type `Π (i : Fin n1 ⊕ Fin n2), S.FD.obj (Discrete.mk ((Sum.elim c c1) i))`. -/
-def Pure.prodIndexEquiv {n1 n2 : ℕ} {c : Fin n1 → C} {c1 : Fin n2 → C} :
-    Pure S (Fin.append c c1) ≃
-    Π (i : Fin n1 ⊕ Fin n2), S.FD.obj (Discrete.mk ((Sum.elim c c1) i)) :=
-  (Equiv.piCongr finSumFinEquiv
-  (fun x => (Representation.equivOfIso
-    (S.FD.mapIso (Discrete.eqToIso (by cases x <;> simp)))).toLinearEquiv.toEquiv)).symm
-
 /-!
 
 ### B.2. The product of two pure tensors
@@ -145,7 +139,8 @@ def Pure.prodIndexEquiv {n1 n2 : ℕ} {c : Fin n1 → C} {c1 : Fin n2 → C} :
   `Pure S (Sum.elim c c1 ∘ ⇑finSumFinEquiv.symm)`. -/
 def Pure.prodP {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
     (p1 : Pure S c) (p2 : Pure S c1) : Pure S (Fin.append c c1) :=
-  Pure.prodIndexEquiv.symm fun | Sum.inl i => p1 i | Sum.inr i => p2 i
+  Fin.addCases (fun i => LinearEquiv.cast (R := k) (by simp) (p1 i))
+  (fun i => LinearEquiv.cast (R := k)  (by simp) (p2 i))
 
 /-!
 
@@ -153,43 +148,22 @@ def Pure.prodP {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
 
 -/
 
-lemma Pure.prodP_apply_finSumFinEquiv {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
-    (p1 : Pure S c) (p2 : Pure S c1) (i : Fin n1 ⊕ Fin n2) :
-    Pure.prodP p1 p2 (finSumFinEquiv i) =
-    match i with
-    | Sum.inl i => S.FD.map (eqToHom (by simp)) (p1 i)
-    | Sum.inr i => S.FD.map (eqToHom (by simp)) (p2 i) := by
-  rw [Pure.prodP]
-  rw [Pure.prodIndexEquiv]
-  simp only [Equiv.symm_symm]
-  rw [Equiv.piCongr_apply_apply]
-  match i with
-  | Sum.inl i =>
-    rfl
-  | Sum.inr i =>
-    rfl
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma Pure.prodP_apply_castAdd {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
     (p1 : Pure S c) (p2 : Pure S c1) (i : Fin n1) :
     Pure.prodP p1 p2 (Fin.castAdd n2 i) =
-    S.FD.map (eqToHom (by simp)) (p1 i) := by
-  trans Pure.prodP p1 p2 (finSumFinEquiv (Sum.inl i))
-  · rfl
-  rw [Pure.prodP_apply_finSumFinEquiv]
-  simp
+    LinearEquiv.cast (R := k) (by simp) (p1 i) := by
+  simp [Pure.prodP]
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma Pure.prodP_apply_natAdd {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
     (p1 : Pure S c) (p2 : Pure S c1) (i : Fin n2) :
     Pure.prodP p1 p2 (Fin.natAdd n1 i) =
-    S.FD.map (eqToHom (by simp)) (p2 i) := by
-  trans Pure.prodP p1 p2 (finSumFinEquiv (Sum.inr i))
-  · rfl
-  rw [Pure.prodP_apply_finSumFinEquiv]
-  simp
+    LinearEquiv.cast (R := k) (by simp) (p2 i) := by
+  simp [Pure.prodP]
 
 /-!
 
@@ -198,20 +172,26 @@ lemma Pure.prodP_apply_natAdd {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
 -/
 
 lemma Pure.prodP_basisVector {n n1 : ℕ} {c : Fin n → C} {c1 : Fin n1 → C}
-    (b : ComponentIdx c) (b1 : ComponentIdx (S := S) c1) :
-    Pure.prodP (Pure.basisVector c b) (Pure.basisVector c1 b1) =
-    Pure.basisVector _ (ComponentIdx.prod.symm (b, b1)) := by
+    (φ : ComponentIdx c) (φ1 : ComponentIdx (S := S) c1) :
+    Pure.prodP (Pure.basisVector c φ) (Pure.basisVector c1 φ1) =
+    Pure.basisVector _ (ComponentIdx.prod.symm (φ, φ1)) := by
   ext i
-  obtain ⟨i, rfl⟩ := finSumFinEquiv.surjective i
-  rw [Pure.prodP_apply_finSumFinEquiv]
-  cases i
-  all_goals
-    simp only [basisVector]
-    apply basis_congr
-    · simp [ComponentIdx.prod]
-      rfl
-    · simp
-
+  revert i
+  rw [Fin.forall_fin_add]
+  simp only [prodP_apply_castAdd, prodP_apply_natAdd]
+  constructor
+  · intro i
+    symm
+    simp only [basisVector, ComponentIdx.prod, Equiv.coe_fn_symm_mk, Fin.addCases_left,
+      LinearEquiv.cast_apply]
+    rw [basis_congr (c1 := (c i)) (by simp)]
+    simp
+  · intro i
+    symm
+    simp only [basisVector, ComponentIdx.prod, Equiv.coe_fn_symm_mk, Fin.addCases_right,
+      LinearEquiv.cast_apply]
+    rw [basis_congr (c1 := (c1 i)) (by simp)]
+    simp
 /-!
 
 ### B.5. The basis components of the product of two pure tensors
@@ -220,24 +200,29 @@ lemma Pure.prodP_basisVector {n n1 : ℕ} {c : Fin n → C} {c1 : Fin n1 → C}
 
 lemma Pure.prodP_component {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     (p : Pure S c) (p1 : Pure S c1)
-    (b : ComponentIdx (Fin.append c c1)) :
-    (p.prodP p1).component b = p.component (ComponentIdx.prod b).1 *
-    p1.component (ComponentIdx.prod b).2 := by
-  simp only [component]
+    (φ : ComponentIdx (Fin.append c c1)) :
+    (p.prodP p1).component φ = p.component (ComponentIdx.prod φ).1 *
+    p1.component (ComponentIdx.prod φ).2 := by
+  simp [component]
   rw [← finSumFinEquiv.prod_comp]
-  conv_lhs =>
-    enter [2, x]
-    rw [prodP_apply_finSumFinEquiv]
   simp only [finSumFinEquiv_apply_left, finSumFinEquiv_apply_right,
     Fintype.prod_sum_type]
   congr
-  all_goals
   · funext x
-    generalize_proofs h1 h2
-    simp only [Discrete.mk.injEq] at h2
-    rw [S.basis_congr_repr h2]
-    congr
-    simp [ComponentIdx.prod]
+    simp only [prodP_apply_castAdd, LinearEquiv.cast_apply, ComponentIdx.prod, Equiv.coe_fn_mk]
+    generalize_proofs h1 h2 h3
+    generalize p x = p'
+    generalize c x = c' at *
+    subst h3
+    rfl
+  · funext x
+    simp only [prodP_apply_natAdd, LinearEquiv.cast_apply, ComponentIdx.prod, Equiv.coe_fn_mk]
+    generalize_proofs h1 h2 h3
+    generalize p1 x = p1'
+    generalize c1 x = c1' at *
+    subst h3
+    rfl
+
 
 /-!
 
@@ -250,19 +235,22 @@ lemma Pure.prodP_equivariant {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
     (g : G) (p : Pure S c) (p1 : Pure S c1) :
     prodP (g • p) (g • p1) = g • prodP p p1 := by
   ext i
-  obtain ⟨i, rfl⟩ := finSumFinEquiv.surjective i
-  conv_rhs =>
-    rw [actionP_eq]
-    simp only
-  match i with
-  | Sum.inl i =>
-    simp only [finSumFinEquiv_apply_left, prodP_apply_castAdd]
-    generalize_proofs h
-    exact LinearMap.congr_fun ((S.FD.map (eqToHom h)).hom.isIntertwining' g) (p i)
-  | Sum.inr i =>
-    simp only [finSumFinEquiv_apply_right, prodP_apply_natAdd]
-    generalize_proofs h
-    exact LinearMap.congr_fun ((S.FD.map (eqToHom h)).hom.isIntertwining' g) (p1 i)
+  revert i
+  rw [Fin.forall_fin_add]
+  simp only [actionP_eq, prodP_apply_castAdd, prodP_apply_natAdd]
+  constructor
+  · intro j
+    generalize_proofs h1 h2
+    generalize p j = p'
+    generalize c j = c' at *
+    subst h2
+    rfl
+  · intro j
+    generalize_proofs h1 h2
+    generalize p1 j = p1'
+    generalize c1 j = c1' at *
+    subst h2
+    rfl
 
 /-!
 
