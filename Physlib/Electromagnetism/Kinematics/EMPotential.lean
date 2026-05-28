@@ -198,8 +198,9 @@ noncomputable def ofElectricMagneticField (c : SpeedOfLight)
     - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ (A · (u • x)) t, basis.repr x⟫_ℝ ∂(volume)
   ofPotentials c φ A
 
-TODO "Prove differentiability conditions with respect to the constructors of
-  the electromagnetic potential."
+TODO "The scalar potential of `ofElectricMagneticField` can be defined as
+  `- ∫ u in (0 : ℝ)..1, ⟪E t (u • x), basis.repr x⟫_ℝ ∂(volume)`. This change should be made.
+  it works because the vector potential is zero when dotted with the position vector."
 
 TODO "Write lemmas for the various properties (e.g. the electric field) of
   the electromagnetic potential from the various constructors."
