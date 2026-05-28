@@ -6,7 +6,6 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Electromagnetism.Kinematics.ElectricField
-import all Physlib.SpaceAndTime.Space.Derivatives.Curl
 /-!
 
 # The Magnetic Field
@@ -170,6 +169,7 @@ lemma magneticField_div_eq_zero (A : ElectromagneticPotential)
 
 -/
 
+open Matrix in
 /-- The magnetic field of the electromagnetic potential created from the electric field
   `E` and the magnetic field `B` is `B`, as long as Gauss's law is satisfied. -/
 lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
@@ -187,11 +187,22 @@ lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
   change  Differentiable ℝ fun x =>
     ∫ (u : ℝ) in 0..1, u • WithLp.toLp 2 ((crossProduct (Space.basis.repr x).ofLp)
     (B t (u • x)).ofLp)
-  intro x
-  convert (hasFDerivAt_intervalIntegral_homotopyOperatorIntegrand ?_ _).differentiableAt
-  · simp [Space.homotopyOperatorIntegrand]
+  apply ContDiff.differentiable (n := 1) _ (by simp)
+  apply contDiff_parametric_intervalIntegral_of_contDiff
+  refine contDiff_euclidean.mpr ?_
+  intro i
+  let C : ( Space) × ℝ → EuclideanSpace ℝ (Fin 3) := fun p =>
+      let x := p.1
+      let u := p.2
+      (u • basis.repr x) ⨯ₑ₃ B t (u • x)
+  suffices h : ContDiff ℝ 1 (fun x => C x i) by
+    convert h using 1
+    simp [C]
     rfl
-  · fun_prop
+  fin_cases i
+  all_goals
+  · simp [C, crossProduct]
+    fun_prop
 
 /-!
 
