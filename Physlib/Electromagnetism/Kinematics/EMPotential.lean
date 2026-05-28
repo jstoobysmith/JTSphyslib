@@ -194,13 +194,8 @@ noncomputable def ofElectromagneticField (c : SpeedOfLight)
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
     ElectromagneticPotential 3 :=
   let A := fun t (x : Space) => - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
-  let φ := fun t (x : Space) =>
-    - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) + ∂ₜ (A · (u • x)) t, basis.repr x⟫_ℝ ∂(volume)
+  let φ := fun t (x : Space) => - ∫ u in (0 : ℝ)..1, ⟪E t (u • x), basis.repr x⟫_ℝ ∂(volume)
   ofPotentials c φ A
-
-TODO "The scalar potential of `ofElectromagneticField` can be defined as
-  `- ∫ u in (0 : ℝ)..1, ⟪E t (u • x), basis.repr x⟫_ℝ ∂(volume)`. This change should be made.
-  it works because the vector potential is zero when dotted with the position vector."
 
 TODO "Write lemmas for the various properties (e.g. the electric field) of
   the electromagnetic potential from the various constructors."
@@ -362,10 +357,10 @@ open MeasureTheory Matrix Space InnerProductSpace Time in
 lemma contDiff_ofElectromagneticField {n : ℕ} (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) (hE : ContDiff ℝ n ↿E)
-    (hB : ContDiff ℝ (n + 1) ↿B) : ContDiff ℝ n (ofElectromagneticField c E B) := by
+    (hB : ContDiff ℝ n ↿B) : ContDiff ℝ n (ofElectromagneticField c E B) := by
   let A : Time → Space → EuclideanSpace ℝ (Fin 3) := fun t x =>
     - ∫ u in 0..(1 : ℝ), (u • basis.repr x) ⨯ₑ₃ B t (u • x) ∂(volume)
-  have h1 : ContDiff ℝ (n + 1) ↿A := by
+  have h1 : ContDiff ℝ n ↿A := by
     simp only [WithLp.equiv_apply, A]
     apply ContDiff.neg
     apply contDiff_parametric_intervalIntegral_of_contDiff
@@ -375,7 +370,7 @@ lemma contDiff_ofElectromagneticField {n : ℕ} (c : SpeedOfLight)
       let (t, x) := p.1
       let u := p.2
       (u • basis.repr x) ⨯ₑ₃ B t (u • x)
-    change ContDiff ℝ (n + 1) (fun x => C x i)
+    change ContDiff ℝ n (fun x => C x i)
     fin_cases i
     all_goals
     · simp [C, crossProduct]
@@ -395,18 +390,7 @@ lemma contDiff_ofElectromagneticField {n : ℕ} (c : SpeedOfLight)
     apply timeSlice_symm_contDiff
     apply ContDiff.neg
     apply contDiff_parametric_intervalIntegral_of_contDiff
-    suffices h : ContDiff ℝ n (fun (x : (Time × Space) × ℝ) => ⟪E x.1.1 (x.2 • x.1.2) +
-        ∂ₜ (A · (x.2 • x.1.2)) x.1.1, Space.basis.repr x.1.2⟫_ℝ) by
-      convert h using 1
-      ext x
-      rcases x with ⟨⟨t, x⟩, u⟩
-      simp [Function.HasUncurry.uncurry, A ]
-    apply ContDiff.inner
-    · apply ContDiff.add
-      · fun_prop
-      simp [Time.deriv]
-      fun_prop
-    · fun_prop
+    fun_prop
 
 /-!
 

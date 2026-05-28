@@ -117,10 +117,23 @@ lemma ofElectromagneticField_scalarPotential (c : SpeedOfLight)
     (E : Time → Space → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space → EuclideanSpace ℝ (Fin 3)) :
     (ofElectromagneticField c E B).scalarPotential c = fun t x =>
+    - ∫ u in (0 : ℝ)..1, ⟪E t (u • x), basis.repr x⟫_ℝ ∂(volume) := by
+  simp [ofElectromagneticField]
+
+open MeasureTheory Matrix Space InnerProductSpace Time in
+lemma ofElectromagneticField_scalarPotential_eq_add_vectorPotential (c : SpeedOfLight)
+    (E : Time → Space → EuclideanSpace ℝ (Fin 3))
+    (B : Time → Space → EuclideanSpace ℝ (Fin 3)) (hb : ContDiff ℝ 1 ↿B) :
+    (ofElectromagneticField c E B).scalarPotential c = fun t x =>
     - ∫ u in (0 : ℝ)..1, ⟪E t (u • x) +
     ∂ₜ ((ofElectromagneticField c E B).vectorPotential c ·
       (u • x)) t, basis.repr x⟫_ℝ ∂(volume) := by
-  simp [ofElectromagneticField]
+  simp [ofElectromagneticField_scalarPotential, inner_add_left]
+  ext t x
+  simp only [neg_inj]
+  congr
+  ext u
+  simp [time_deriv_vectorPotential_inner_radial_eq_zero_ofElectromagneticField (B := B) hb]
 
 /-!
 

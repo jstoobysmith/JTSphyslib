@@ -97,7 +97,7 @@ lemma ofElectromagneticField_electricField {c : SpeedOfLight}
     grind
   convert congrFun (eq_grad_integral_of_curl_zero (fun x => E t x +
       ∂ₜ (fun t => (ofElectromagneticField c E B).vectorPotential c t x) t) ?_ ?_) x
-  · simp [ofElectromagneticField_scalarPotential]
+  · simp [ofElectromagneticField_scalarPotential_eq_add_vectorPotential _ _ B (by fun_prop)]
     rw [fun_grad_neg]
     simp
   · simp only [Time.deriv]
