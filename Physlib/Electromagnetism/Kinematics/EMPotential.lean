@@ -187,7 +187,8 @@ lemma ofStaticPotentials_eq_ofPotentials {d} (c : SpeedOfLight) (ϕ : Space d �
   rfl
 
 open MeasureTheory Matrix Space InnerProductSpace Time in
-/-- The electromagnetic potential from an electric and a magnetic field. -/
+/-- The electromagnetic potential from an electric and a magnetic field.
+  This defines the electromagnetic potential in the Poincare gauge. -/
 noncomputable def ofElectricMagneticField (c : SpeedOfLight)
     (E : Time → Space 3 → EuclideanSpace ℝ (Fin 3))
     (B : Time → Space 3 → EuclideanSpace ℝ (Fin 3)) :
