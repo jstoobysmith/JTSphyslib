@@ -824,7 +824,7 @@ lemma permT_equivariant {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     rw [actionT_smul, map_smul]
     simp [ht]
   · intro t1 t2 h1 h2
-    simp [actionT_add, h1, h2]
+    simp [h1, h2]
 
 @[congr]
 lemma Pure.permP_congr {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}

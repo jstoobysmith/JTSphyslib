@@ -21,9 +21,11 @@ open MonoidalCategory
 namespace TensorSpecies
 open OverColor
 
-variable {k : Type} [CommRing k] {C G : Type} [Group G]
-  {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
-  (S : TensorSpecies k C G basisIdx)
+variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
+    {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
+    {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
+    {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Basis (basisIdx c) k (V c)}
+    (S : TensorSpecies k C G V basisIdx rep b)
 
 namespace Tensor
 
@@ -32,7 +34,7 @@ abbrev TensorInt {n : ℕ} (c : Fin n → C) := (ComponentIdx (S := S) c) → �
 
 namespace TensorInt
 
-variable {S : TensorSpecies k C G basisIdx}
+variable {S : TensorSpecies k C G V basisIdx rep b}
 
 /-- The element of `S.Tensor c` created from a tensor `TensorInt S c`. -/
 noncomputable def toTensor {n : ℕ} {c : Fin n → C} (f : TensorInt S c) :
