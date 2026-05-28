@@ -98,11 +98,11 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
   convert congrFun (eq_grad_integral_of_curl_zero (fun x => E t x +
       ∂ₜ (fun t => (ofElectricMagneticField c E B).vectorPotential c t x) t) ?_ ?_) x
   · simp [ofElectricMagneticField_scalarPotential]
-    erw [grad_neg]
+    rw [fun_grad_neg]
     simp
   · simp only [Time.deriv]
     fun_prop
-  · erw [curl_add]
+  · rw [fun_curl_add]
     ext1 x
     simp [faraday]
     suffices h : ∂ₜ (B · x) t = curl (fun x =>
@@ -114,7 +114,9 @@ lemma ofElectricMagneticField_electricField {c : SpeedOfLight}
       have h1 := eq_neg_curl_of_div_zero (B t) (by fun_prop) (B_grad t)
       conv_lhs => rw [h1]
       simp only [ofElectricMagneticField_vectorPotential]
-      erw [curl_neg]
+      rw [fun_curl_neg]
+      simp only [WithLp.equiv_apply, WithLp.ofLp_smul, map_smul, LinearMap.smul_apply,
+        WithLp.equiv_symm_apply, WithLp.toLp_smul, Pi.neg_apply]
       intro x
       apply Differentiable.differentiableAt
       apply ContDiff.differentiable (n := 1) _ (by simp)

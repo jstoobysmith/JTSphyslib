@@ -182,8 +182,8 @@ lemma ofElectricMagneticField_magneticField {c : SpeedOfLight}
   conv_rhs => rw [h1]
   simp only [magneticField, ofElectricMagneticField_vectorPotential, WithLp.equiv_apply,
     WithLp.ofLp_smul, map_smul, LinearMap.smul_apply]
-  erw [curl_neg]
-  simp only [WithLp.equiv_symm_apply, WithLp.toLp_smul]
+  rw [fun_curl_neg]
+  simp only [WithLp.equiv_symm_apply, WithLp.toLp_smul, Pi.neg_apply]
   change  Differentiable ℝ fun x =>
     ∫ (u : ℝ) in 0..1, u • WithLp.toLp 2 ((crossProduct (Space.basis.repr x).ofLp)
     (B t (u • x)).ofLp)

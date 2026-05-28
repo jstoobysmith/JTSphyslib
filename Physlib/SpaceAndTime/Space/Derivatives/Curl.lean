@@ -115,6 +115,7 @@ lemma curl_const : ∇ ⨯ (fun _ : Space => v₃) = 0 := by
 
 -/
 
+@[to_fun]
 lemma curl_add (f1 f2 : Space → EuclideanSpace ℝ (Fin 3))
     (hf1 : Differentiable ℝ f1) (hf2 : Differentiable ℝ f2) :
     ∇ ⨯ (f1 + f2) = ∇ ⨯ f1 + ∇ ⨯ f2 := by
@@ -127,6 +128,7 @@ lemma curl_add (f1 f2 : Space → EuclideanSpace ℝ (Fin 3))
     ring
     repeat assumption
 
+@[to_fun]
 lemma curl_smul (f : Space → EuclideanSpace ℝ (Fin 3)) (k : ℝ)
     (hf : Differentiable ℝ f) :
     ∇ ⨯ (k • f) = k • ∇ ⨯ f := by
@@ -137,11 +139,13 @@ lemma curl_smul (f : Space → EuclideanSpace ℝ (Fin 3)) (k : ℝ)
     rw [deriv_coord_smul, deriv_coord_smul, mul_sub]
     repeat fun_prop
 
+@[to_fun]
 lemma curl_neg (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : Differentiable ℝ f) :
     ∇ ⨯ (-f) = -∇ ⨯ f := by
   rw [← neg_one_smul ℝ, curl_smul, neg_one_smul]
   · exact hf
 
+@[to_fun]
 lemma curl_sub (f1 f2 : Space → EuclideanSpace ℝ (Fin 3))
     (hf1 : Differentiable ℝ f1) (hf2 : Differentiable ℝ f2) :
     ∇ ⨯ (f1 - f2) = ∇ ⨯ f1 - ∇ ⨯ f2 := by
