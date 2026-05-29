@@ -36,6 +36,7 @@ inductive Color
   | up : Color
   /-- The color associated with covariant Lorentz vectors. -/
   | down : Color
+deriving Fintype
 
 /-- Color for complex Lorentz tensors is decidable. -/
 instance : DecidableEq Color := fun x y =>
@@ -65,7 +66,7 @@ open realLorentzTensor in
 /-- The tensor structure for complex Lorentz tensors. -/
 def realLorentzTensor (d : ℕ := 3) : TensorSpecies
     ℝ realLorentzTensor.Color (LorentzGroup d)
-    (realLorentzTensor.modules d)
+    (fun | Color.up  => Lorentz.ContrMod d | Color.down => Lorentz.CoMod d)
     (fun _ => Fin 1 ⊕ Fin d)
     (fun | Color.up  => Lorentz.ContrMod.rep | Color.down => Lorentz.CoMod.rep)
     (fun | Color.up  => Lorentz.contrBasis d | Color.down => Lorentz.coBasis d)  where
@@ -80,15 +81,15 @@ def realLorentzTensor (d : ℕ := 3) : TensorSpecies
   contr := fun c =>
     match c with
     | Color.up => Lorentz.contrCoContract
-    |  Color.down => Lorentz.coContrContract
-  metric := Discrete.natTrans fun c =>
+    | Color.down => Lorentz.coContrContract
+  metric := fun c =>
     match c with
-    | Discrete.mk Color.up => Lorentz.preContrMetric d
-    | Discrete.mk Color.down => Lorentz.preCoMetric d
-  unit := Discrete.natTrans fun c =>
+    | Color.up => Lorentz.preContrMetric d
+    | Color.down => Lorentz.preCoMetric d
+  unit := fun c =>
     match c with
-    | Discrete.mk Color.up => Lorentz.preCoContrUnit d
-    | Discrete.mk Color.down => Lorentz.preContrCoUnit d
+    | Color.up => Lorentz.preCoContrUnit d
+    | Color.down => Lorentz.preContrCoUnit d
   contr_tmul_symm := fun c =>
     match c with
     | Color.up => Lorentz.contrCoContract_tmul_symm
@@ -145,18 +146,6 @@ lemma basisIdxCongr_apply {d : ℕ} {c1 c2 : realLorentzTensor.Color} (h : c1 = 
     TensorSpecies.basisIdxCongr (basisIdx := fun _ => Fin 1 ⊕ Fin d) h i = i := by
   simp
 
-lemma basis_eq_contrBasis {d : ℕ} :
-    (realLorentzTensor d).basis Color.up = Lorentz.contrBasis (d := d) := rfl
-
-lemma basis_eq_coBasis {d : ℕ} :
-    (realLorentzTensor d).basis Color.down = Lorentz.coBasis (d := d) := rfl
-
-lemma FD_obj_up {d : ℕ} :
-    (realLorentzTensor d).FD.obj { as := Color.up } = Lorentz.Contr d := rfl
-
-lemma FD_obj_down {d : ℕ} :
-    (realLorentzTensor d).FD.obj { as := Color.down } = Lorentz.Co d := rfl
-
 /-!
 
 ## Simplifying τ
@@ -171,105 +160,33 @@ lemma τ_down_eq_up {d : ℕ} : (realLorentzTensor d).τ Color.down = Color.up :
 
 /-!
 
-## Simplification of contractions with respect to basis
-
--/
-
-open TensorSpecies
-
-set_option backward.isDefEq.respectTransparency false in
-lemma contr_basis {d : ℕ} {c : realLorentzTensor.Color}
-    (i : Fin 1 ⊕ Fin d)
-    (j : Fin 1 ⊕ Fin d) :
-    (realLorentzTensor d).castToField
-      (((realLorentzTensor d).contr.app (Discrete.mk c)).hom
-      ((realLorentzTensor d).basis c i ⊗ₜ
-      (realLorentzTensor d).basis ((realLorentzTensor d).τ c) j))
-      = (if i = j then 1 else 0) := by
-  match c with
-  | .up =>
-    change Lorentz.contrCoContract.hom
-      (Lorentz.contrBasis d i ⊗ₜ Lorentz.coBasis d j) = _
-    rw [Lorentz.contrCoContract_hom_tmul]
-    simp only [Rep.tensorUnit_V, Lorentz.contrBasis_toFin1dℝ, Lorentz.coBasis_toFin1dℝ,
-      dotProduct_single, mul_one]
-    rw [Pi.single_apply]
-    refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
-    simp only [eq_comm]
-  | .down =>
-    change Lorentz.coContrContract.hom
-      (Lorentz.coBasis d i ⊗ₜ Lorentz.contrBasis d j) = _
-    rw [Lorentz.coContrContract_hom_tmul]
-    simp only [Rep.tensorUnit_V, Lorentz.coBasis_toFin1dℝ, Lorentz.contrBasis_toFin1dℝ,
-      dotProduct_single, mul_one]
-    rw [Pi.single_apply]
-    refine ite_congr ?_ (congrFun rfl) (congrFun rfl)
-    simp only [eq_comm]
-
-open Tensor
-lemma contrT_basis_repr_apply_eq_dropPairSection {n d: ℕ}
-    {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
-    {i j : Fin (n + 1 + 1)} (h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j)
-    (t : ℝT(d, c)) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
-    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
-    ∑ (x : b.DropPairSection),
-    ((basis c).repr t x.1) *
-    if (x.1 i) = (x.1 j) then 1 else 0 := by
-  rw [contrT_basis_repr_apply]
-  congr
-  funext x
-  congr 1
-  rw [contr_basis]
-  rfl
-
-open ComponentIdx in
-lemma contrT_basis_repr_apply_eq_fin {n d: ℕ} {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
-    {i j : Fin (n + 1 + 1)}
-    {h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j}
-    (t : ℝT(d,c)) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
-    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
-    ∑ (x : Fin 1 ⊕ Fin d),
-    ((basis c).repr t
-    (DropPairSection.ofFinEquiv h.1 b ⟨x, x⟩)) := by
-  rw [contrT_basis_repr_apply_eq_sum_fin]
-  congr
-  funext x
-  rw [Finset.sum_eq_single (x)]
-  · rw [contr_basis]
-    simp
-  · intro y _ hy
-    rw [contr_basis, if_neg]
-    · simp_all
-    · simp only [basisIdxCongr_apply]
-      exact Ne.symm hy
-  · simp
-
-/-!
-
 ## Contractions and to Field
 
 -/
 
 attribute [-simp] Fintype.sum_sum_type
+open TensorSpecies Tensor
 
 lemma contrPCoeff_basis {d n : ℕ} {c : Fin n → realLorentzTensor.Color} (i j : Fin n)
     (hij : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j)
     (b : ComponentIdx (S := realLorentzTensor d) c) :
     Pure.contrPCoeff i j hij (Pure.basisVector c b) = if b i = b j then 1 else 0 := by
-  simp only [Pure.contrPCoeff, Monoidal.tensorUnit_obj, Rep.tensorUnit_V, Rep.tensorUnit_ρ,
-    Functor.comp_obj, Discrete.functor_obj_eq_as, Function.comp_apply, Pure.basisVector]
+  simp only [Pure.contrPCoeff, Pure.basisVector]
+  generalize_proofs h1 h2
   generalize b i = b1 at *
   generalize b j = b2 at *
-  suffices h : ∀ c, ∀ c1,  (hc : (realLorentzTensor d).τ c = c1) →
-    (realLorentzTensor d).castToField ((ConcreteCategory.hom
-    ((realLorentzTensor d).contr.app { as :=c }))
-    (((realLorentzTensor d).basis c) b1 ⊗ₜ[ℝ]
-      (ConcreteCategory.hom ((realLorentzTensor d).FD.map (eqToHom (by simp_all))))
-      (((realLorentzTensor d).basis c1) b2))) =
-    if b1 = b2 then 1 else 0 by
-    exact h (c i) (c j) hij.2
-  rintro c c1 rfl
-  exact contr_basis _ _
+  generalize c i = ci at *
+  generalize c j = cj at *
+  subst h2
+  fin_cases ci
+  · simp [realLorentzTensor]
+    erw [LinearEquiv.cast_apply]
+    simp
+    erw [Lorentz.contrCoContract_basis]
+  · simp [realLorentzTensor]
+    erw [LinearEquiv.cast_apply]
+    simp
+    erw [Lorentz.coContrContract_basis]
 
 lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n + 1 + 1))
     (h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j) (t : ℝT(d, c)) :

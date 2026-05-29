@@ -214,16 +214,9 @@ set_option backward.isDefEq.respectTransparency false in
 lemma toTensor_symm_basis {d : ℕ} (μ : Fin 1 ⊕ Fin d) :
     (toTensor (self := tensorial)).symm (Tensor.basis ![Color.down] (indexEquiv.symm μ)) =
     basis μ := by
-  rw [Tensor.basis_apply]
   funext i
-  rw [toTensor_symm_pure]
-  simp [Pure.basisVector]
-  conv_lhs =>
-    enter [1, 2]
-    change (coBasis d) (indexEquiv.symm μ 0)
-  simp [coBasis, indexEquiv, Pi.single_apply]
-  congr 1
-  exact Eq.propIntro (fun a => id (Eq.symm a)) fun a => id (Eq.symm a)
+  simp [Tensor.basis_apply, toTensor_symm_pure, Pure.basisVector, Finsupp.single_apply,
+    indexEquiv]
 
 lemma toTensor_basis_eq_tensor_basis {d : ℕ} (μ : Fin 1 ⊕ Fin d) :
     toTensor (basis μ) = Tensor.basis ![Color.down] (indexEquiv.symm μ) := by
