@@ -491,6 +491,11 @@ noncomputable instance actionP : MulAction G (Pure S c) where
 
 lemma actionP_eq {g : G} {p : Pure S c} : g • p = fun i => rep (c i) g (p i) := rfl
 
+lemma rep_cast {g : G} {c c1 : C} (p : V c) (h : c = c1) :
+     LinearEquiv.cast (R := k) h (rep c g p) = rep c1 g (LinearEquiv.cast (R := k) h p):= by
+  subst h
+  rfl
+
 lemma actionP_cast {g : G} {p : Pure S c} (h : c = c1):
     LinearEquiv.cast (R := k) h (g • p) = g • LinearEquiv.cast (R := k) h p := by
   subst h
