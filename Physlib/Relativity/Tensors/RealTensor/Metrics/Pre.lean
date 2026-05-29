@@ -18,12 +18,12 @@ noncomputable section
 open Module Matrix MatrixGroups Complex TensorProduct CategoryTheory.MonoidalCategory
 
 namespace Lorentz
+open scoped TensorProduct
 
 /-- The metric `ηᵃᵃ` as an element of `(Contr d ⊗ Contr d).V`. -/
-def preContrMetricVal (d : ℕ := 3) : (Contr d ⊗ Contr d).V :=
+def preContrMetricVal (d : ℕ := 3) : ContrMod d ⊗[ℝ] ContrMod d :=
   contrContrToMatrixRe.symm ((@minkowskiMatrix d))
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `preContrMetricVal` into basis. -/
 lemma preContrMetricVal_expand_tmul {d : ℕ} : preContrMetricVal d =
     contrBasis d (Sum.inl 0) ⊗ₜ[ℝ] contrBasis d (Sum.inl 0) -
@@ -33,11 +33,10 @@ lemma preContrMetricVal_expand_tmul {d : ℕ} : preContrMetricVal d =
   simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero,
     Fin.isValue, Finset.sum_singleton, ne_eq, reduceCtorEq, not_false_eq_true,
     minkowskiMatrix.off_diag_zero, zero_smul, Finset.sum_const_zero, add_zero,
-    minkowskiMatrix.inl_0_inl_0, one_smul, zero_add]
-  rw [sub_eq_add_neg, ← Finset.sum_neg_distrib]
+    minkowskiMatrix.inl_0_inl_0, one_smul, zero_add, sub_eq_add_neg, ← Finset.sum_neg_distrib]
   congr
   funext x
-  rw [Finset.sum_eq_single x]
+  rw [Finset.sum_eq_single x,]
   · simp [minkowskiMatrix.inr_i_inr_i]
   · simp only [Finset.mem_univ, ne_eq, smul_eq_zero, forall_const]
     intro b hb
@@ -47,7 +46,6 @@ lemma preContrMetricVal_expand_tmul {d : ℕ} : preContrMetricVal d =
     exact fun a => hb (id (Eq.symm a))
   · simp
 
-set_option backward.isDefEq.respectTransparency false in
 lemma preContrMetricVal_expand_tmul_minkowskiMatrix {d : ℕ} : preContrMetricVal d =
     ∑ i, (minkowskiMatrix i i) • (contrBasis d i ⊗ₜ[ℝ] contrBasis d i) := by
   rw [preContrMetricVal_expand_tmul]

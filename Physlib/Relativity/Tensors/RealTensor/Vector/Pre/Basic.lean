@@ -28,7 +28,7 @@ open minkowskiMatrix
 def Contr (d : ℕ) : Rep ℝ (LorentzGroup d) := Rep.of ContrMod.rep
 
 /-- The standard basis of contravariant Lorentz vectors. -/
-def contrBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (Contr d) :=
+def contrBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (ContrMod d) :=
   Basis.ofEquivFun ContrMod.toFin1dℝEquiv
 
 @[simp]
@@ -52,7 +52,7 @@ lemma contrBasis_repr_apply {d : ℕ} (p : Contr d) (i : Fin 1 ⊕ Fin d) :
   rfl
 
 /-- The standard basis of contravariant Lorentz vectors indexed by `Fin (1 + d)`. -/
-def contrBasisFin (d : ℕ := 3) : Basis (Fin (1 + d)) ℝ (Contr d) :=
+def contrBasisFin (d : ℕ := 3) : Basis (Fin (1 + d)) ℝ (ContrMod d) :=
   Basis.reindex (contrBasis d) finSumFinEquiv
 
 @[simp]
@@ -60,7 +60,7 @@ lemma contrBasisFin_toFin1dℝ {d : ℕ} (i : Fin (1 + d)) :
     (contrBasisFin d i).toFin1dℝ = Pi.single (finSumFinEquiv.symm i) 1 := by
   simp only [contrBasisFin, Basis.reindex_apply, contrBasis_toFin1dℝ]
 
-lemma contrBasisFin_repr_apply {d : ℕ} (p : Contr d) (i : Fin (1 + d)) :
+lemma contrBasisFin_repr_apply {d : ℕ} (p : ContrMod d) (i : Fin (1 + d)) :
     (contrBasisFin d).repr p i = p.val (finSumFinEquiv.symm i) := by rfl
 
 /-- The representation of contravariant Lorentz vectors forms a topological space, induced
@@ -85,7 +85,7 @@ lemma contr_continuous {T : Type} [TopologicalSpace T] (f : Contr d → T)
 def Co (d : ℕ) : Rep ℝ (LorentzGroup d) := Rep.of CoMod.rep
 
 /-- The standard basis of contravariant Lorentz vectors. -/
-def coBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (Co d) :=
+def coBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (CoMod d) :=
   Basis.ofEquivFun CoMod.toFin1dℝEquiv
 
 @[simp]
@@ -109,7 +109,7 @@ lemma coBasis_toFin1dℝ {d : ℕ} (i : Fin 1 ⊕ Fin d) :
   rfl
 
 /-- The standard basis of covariant Lorentz vectors indexed by `Fin (1 + d)`. -/
-def coBasisFin (d : ℕ := 3) : Basis (Fin (1 + d)) ℝ (Co d) :=
+def coBasisFin (d : ℕ := 3) : Basis (Fin (1 + d)) ℝ (CoMod d) :=
   Basis.reindex (coBasis d) finSumFinEquiv
 
 @[simp]
