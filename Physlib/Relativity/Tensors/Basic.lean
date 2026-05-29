@@ -158,10 +158,18 @@ lemma toTensor_apply {n : ℕ} (c : Fin n → C) (p : Pure S c) :
 def update {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i : Fin n)
     (x : V (c i)) : Pure S c := Function.update p i x
 
+lemma update_eq_function_update {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i : Fin n)
+    (x : V (c i)) : update p i x = Function.update p i x := rfl
+
 @[simp]
 lemma update_same {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i : Fin n)
     (x : V (c i)) : (update p i x) i = x := by
   simp [update]
+
+lemma update_diff {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i j : Fin n)
+    (x : V (c i)) (hij : i ≠ j) : (update p i x) j = p j := by
+  simp_all [update, Function.update]
+  grind
 
 @[simp]
 lemma update_succAbove_apply {n : ℕ} {c : Fin (n + 1) → C} [inst : DecidableEq (Fin (n + 1))]
