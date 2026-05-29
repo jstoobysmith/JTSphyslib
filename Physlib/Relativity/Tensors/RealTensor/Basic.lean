@@ -46,17 +46,29 @@ instance : DecidableEq Color := fun x y =>
   | Color.up, Color.down => isFalse fun h => Color.noConfusion h
   | Color.down, Color.up => isFalse fun h => Color.noConfusion h
 
+abbrev modules (d : ℕ) : Color → Type
+  | Color.up => Lorentz.ContrMod d
+  | Color.down => Lorentz.CoMod d
+
+instance modulesAddCommGroup (d : ℕ) : ∀ c, AddCommGroup (modules d c)
+  | Color.up => inferInstance
+  | Color.down => inferInstance
+
+instance modulesModule (d : ℕ) : ∀ c, Module ℝ (modules d c)
+  | Color.up => inferInstance
+  | Color.down => inferInstance
+
 end realLorentzTensor
 
 noncomputable section
 open realLorentzTensor in
 /-- The tensor structure for complex Lorentz tensors. -/
-def realLorentzTensor (d : ℕ := 3) : TensorSpecies ℝ realLorentzTensor.Color
-    (LorentzGroup d) (fun _ => Fin 1 ⊕ Fin d) where
-  FD := Discrete.functor fun c =>
-    match c with
-    | Color.up => Lorentz.Contr d
-    | Color.down => Lorentz.Co d
+def realLorentzTensor (d : ℕ := 3) : TensorSpecies
+    ℝ realLorentzTensor.Color (LorentzGroup d)
+    (realLorentzTensor.modules d)
+    (fun _ => Fin 1 ⊕ Fin d)
+    (fun | Color.up  => Lorentz.ContrMod.rep | Color.down => Lorentz.CoMod.rep)
+    (fun | Color.up  => Lorentz.contrBasis d | Color.down => Lorentz.coBasis d)  where
   τ := fun c =>
     match c with
     | Color.up => Color.down
@@ -65,10 +77,10 @@ def realLorentzTensor (d : ℕ := 3) : TensorSpecies ℝ realLorentzTensor.Color
     match c with
     | Color.up => rfl
     | Color.down => rfl
-  contr := Discrete.natTrans fun c =>
+  contr := fun c =>
     match c with
-    | Discrete.mk Color.up => Lorentz.contrCoContract
-    | Discrete.mk Color.down => Lorentz.coContrContract
+    | Color.up => Lorentz.contrCoContract
+    |  Color.down => Lorentz.coContrContract
   metric := Discrete.natTrans fun c =>
     match c with
     | Discrete.mk Color.up => Lorentz.preContrMetric d
@@ -77,10 +89,6 @@ def realLorentzTensor (d : ℕ := 3) : TensorSpecies ℝ realLorentzTensor.Color
     match c with
     | Discrete.mk Color.up => Lorentz.preCoContrUnit d
     | Discrete.mk Color.down => Lorentz.preContrCoUnit d
-  basis := fun c =>
-    match c with
-    | Color.up => Lorentz.contrBasis d
-    | Color.down => Lorentz.coBasis d
   contr_tmul_symm := fun c =>
     match c with
     | Color.up => Lorentz.contrCoContract_tmul_symm
