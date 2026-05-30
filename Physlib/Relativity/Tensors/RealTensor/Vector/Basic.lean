@@ -647,6 +647,13 @@ lemma temporalCLM_basis_sum_inl {d : ℕ} :
     temporalCLM d (basis (Sum.inl 0)) = 1 := by
   simp [temporalCLM_apply_eq_timeComponent, basis_apply]
 
+/-- The continuous linear map corresponding to the creation of a
+  Lorentz Vector with only a non-zero temporal component. -/
+def ofTemporalComponent {d : ℕ} : ℝ →L[ℝ] Vector d where
+  toFun xt := xt • basis (Sum.inl 0)
+  map_add' := by simp [add_smul]
+  map_smul' := by simp [smul_smul]
+
 /-!
 
 ## Smoothness

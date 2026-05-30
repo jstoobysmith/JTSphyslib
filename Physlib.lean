@@ -60,8 +60,13 @@ public import Physlib.Electromagnetism.ThreeDimension.MaxwellEquations
 public import Physlib.Electromagnetism.Vacuum.Constant
 public import Physlib.Electromagnetism.Vacuum.HarmonicWave
 public import Physlib.Electromagnetism.Vacuum.IsPlaneWave
+public import Physlib.FluidDynamics.FluidState
+public import Physlib.FluidDynamics.NavierStokes.Basic
+public import Physlib.FluidDynamics.NavierStokes.Continuity
+public import Physlib.FluidDynamics.NavierStokes.Momentum
 public import Physlib.Mathematics.Calculus.AdjFDeriv
 public import Physlib.Mathematics.Calculus.Divergence
+public import Physlib.Mathematics.Calculus.ParametricIntegration
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
@@ -370,10 +375,12 @@ public import Physlib.SpaceAndTime.Space.ConstantSliceDist
 public import Physlib.SpaceAndTime.Space.CrossProduct
 public import Physlib.SpaceAndTime.Space.Derivatives.Basic
 public import Physlib.SpaceAndTime.Space.Derivatives.Curl
+public import Physlib.SpaceAndTime.Space.Derivatives.DerivativeIndex
 public import Physlib.SpaceAndTime.Space.Derivatives.Div
 public import Physlib.SpaceAndTime.Space.Derivatives.Grad
 public import Physlib.SpaceAndTime.Space.Derivatives.Iterated
 public import Physlib.SpaceAndTime.Space.Derivatives.Laplacian
+public import Physlib.SpaceAndTime.Space.Derivatives.MatrixDiv
 public import Physlib.SpaceAndTime.Space.Derivatives.MultiIndex
 public import Physlib.SpaceAndTime.Space.DistConst
 public import Physlib.SpaceAndTime.Space.DistOfFunction

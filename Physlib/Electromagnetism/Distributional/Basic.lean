@@ -7,6 +7,7 @@ module
 
 public import Physlib.SpaceAndTime.SpaceTime.Derivatives
 public import Physlib.SpaceAndTime.Space.Derivatives.Curl
+public import Physlib.SpaceAndTime.TimeAndSpace.ConstantTimeDist
 public import Physlib.Mathematics.VariationalCalculus.HasVarAdjDeriv
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
@@ -31,9 +32,10 @@ spacetime to contravariant Lorentz vectors.
 ## iii. Table of contents
 
 - A. The electromagnetic potential as a distribution
-  - A.1. The derivative of the electromagnetic potential as a distribution
-  - A.2. The derivative in terms of the basis
-  - A.3. Equivariance of the derivative distribution
+  - A.1. Constructors
+  - A.2. The derivative of the electromagnetic potential as a distribution
+  - A.3. The derivative in terms of the basis
+  - A.4. Equivariance of the derivative distribution
 
 ## iv. References
 
@@ -71,7 +73,40 @@ attribute [-simp] Nat.succ_eq_add_one
 
 /-!
 
-### A.1. The derivative of the electromagnetic potential as a distribution
+### A.1. Constructors
+
+-/
+
+/-- The creation of an electromagnetic potential from a scalar potential. -/
+noncomputable def ofScalarPotential {d} (c : SpeedOfLight) :
+    ((Time × Space d) →d[ℝ] ℝ) →ₗ[ℝ] DistElectromagneticPotential d where
+  toFun φ := Lorentz.Vector.ofTemporalComponent ∘L (distTimeSlice c).symm (((1 : ℝ) / c.val) • φ)
+  map_add' φ₁ φ₂ := by
+    ext ε
+    simp
+  map_smul' r φ := by
+    ext ε
+    simp only [one_div, map_smul, ContinuousLinearMap.comp_smulₛₗ, map_inv₀, RingHom.id_apply,
+      ContinuousLinearMap.coe_smul', ContinuousLinearMap.coe_comp', Pi.smul_apply,
+      Function.comp_apply]
+    rw [smul_comm]
+
+/-- The creation of an electromagnetic potential from a static scalar potential. -/
+noncomputable def ofStaticScalarPotential {d} (c : SpeedOfLight) :
+    ((Space d) →d[ℝ] ℝ) →ₗ[ℝ] DistElectromagneticPotential d :=
+  ofScalarPotential c ∘ₗ Space.constantTime
+
+TODO "Add a constructor for DistElectromagneticPotential from a scalar
+  potential which is a function using an if...then...else... based on IsDistBounded."
+
+TODO "Add a constructor for DistElectromagneticPotential from vector potentials."
+
+TODO "Add a constructor for DistElectromagneticPotential from electric and
+  magnetic fields."
+
+/-!
+
+### A.2. The derivative of the electromagnetic potential as a distribution
 
 -/
 
@@ -79,6 +114,9 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The derivative of a electromagnetic potential, which is a distribution. -/
 noncomputable def deriv {d} : DistElectromagneticPotential d →ₗ[ℝ]
     (SpaceTime d) →d[ℝ] Lorentz.CoVector d ⊗[ℝ] Lorentz.Vector d := distTensorDeriv
+
+TODO "Remove the definition `deriv` in distributional electromagnetism and replace it with
+  `distTensorDeriv` everywhere."
 
 set_option backward.isDefEq.respectTransparency false in
 lemma deriv_eq_sum_sum {d} (A : DistElectromagneticPotential d)
@@ -94,9 +132,10 @@ lemma deriv_eq_sum_sum {d} (A : DistElectromagneticPotential d)
   funext ν
   simp
   rfl
+
 /-!
 
-### A.2. The derivative in terms of the basis
+### A.3. The derivative in terms of the basis
 
 -/
 
@@ -146,7 +185,7 @@ lemma toTensor_deriv_basis_repr_apply {d} (A : DistElectromagneticPotential d)
 
 /-!
 
-### A.3. Equivariance of the derivative distribution
+### A.4. Equivariance of the derivative distribution
 
 -/
 
