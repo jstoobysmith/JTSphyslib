@@ -960,7 +960,6 @@ lemma permT_eq_zero_iff {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
 ## field
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The linear map between tensors with zero indices and the underlying field
   `k`. -/
 noncomputable def toField {c : Fin 0 → C} : S.Tensor c →ₗ[k] k :=
