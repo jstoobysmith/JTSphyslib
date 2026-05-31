@@ -229,5 +229,34 @@ lemma contrT_toField {d} (c : Fin 2 → Color)
   simp only [toField_permT]
   rfl
 
+open ComponentIdx in
+lemma contrT_basis_repr_apply_eq_fin {n d: ℕ} {c : Fin (n + 1 + 1) → realLorentzTensor.Color}
+    {i j : Fin (n + 1 + 1)}
+    {h : i ≠ j ∧ (realLorentzTensor d).τ (c i) = c j}
+    (t : ℝT(d,c)) (b : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
+    (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) b =
+    ∑ (x : Fin 1 ⊕ Fin d), ((basis c).repr t
+    (DropPairSection.ofFinEquiv h.1 b ⟨x, x⟩)) := by
+  rw [contrT_basis_repr_apply_eq_sum_fin]
+  generalize_proofs h h2 h3
+  generalize c j = cj at *
+  generalize c i = ci at *
+  subst h3
+  fin_cases ci
+  · simp [realLorentzTensor]
+    congr
+    funext x
+    conv_lhs =>
+      enter [2, x];
+      erw [Lorentz.contrCoContract_basis]
+    simp
+  · simp [realLorentzTensor]
+    congr
+    funext x
+    conv_lhs =>
+      enter [2, x];
+      erw [Lorentz.coContrContract_basis]
+    simp
+
 end realLorentzTensor
 end
