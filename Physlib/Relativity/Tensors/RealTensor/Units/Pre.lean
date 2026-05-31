@@ -214,7 +214,7 @@ open CategoryTheory
 
 set_option backward.isDefEq.respectTransparency false in
 lemma preContrCoUnit_symm {d : ℕ} :
-    (preContrCoUnit d) (1 : ℝ) = LinearMap.lTensor _ (LinearEquiv.cast (by simp)).toLinearMap
+    (preContrCoUnit d) (1 : ℝ) = LinearMap.lTensor _ (LinearEquiv.cast (by rfl)).toLinearMap
       (TensorProduct.comm ℝ _ _ ((preCoContrUnit d) (1 : ℝ))) := by
   rw [preContrCoUnit_apply_one, preContrCoUnitVal_expand_tmul]
   rw [preCoContrUnit_apply_one, preCoContrUnitVal_expand_tmul]

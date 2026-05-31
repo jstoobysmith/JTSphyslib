@@ -162,35 +162,27 @@ lemma toTensor_eq_asConsTensor :
   rw [show complexContrBasis (Sum.inr 2) = complexContrBasisFin4 3 by {simp}]
   conv_lhs =>
     enter [1, 1, 1, 1, 1, 1, 1]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 1, 1, 1, 1, 1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 1, 1, 1, 1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 1, 1, 1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 1, 1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [1, 2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   conv_lhs =>
     enter [2]
-    rw [← basis_up_eq, ← basis_upL_eq, ← basis_upR_eq]
     rw [fromTripleT_apply_basis]
   rfl
 

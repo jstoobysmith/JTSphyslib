@@ -146,6 +146,7 @@ lemma basisIdxCongr_apply {d : ℕ} {c1 c2 : realLorentzTensor.Color} (h : c1 = 
     TensorSpecies.basisIdxCongr (basisIdx := fun _ => Fin 1 ⊕ Fin d) h i = i := by
   simp
 
+
 /-!
 
 ## Simplifying τ
