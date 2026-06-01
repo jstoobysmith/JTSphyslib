@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith, Nikolai Kashcheev
 module
 
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
+public import Physlib.Meta.Sorry
 /-!
 
 # Complex Lorentz tensors from real Lorentz tensors
@@ -298,6 +299,7 @@ open Lorentz.SL2C
 ## pure
 -/
 
+/-- For a given color, the map turning a real Lorentz vector into a complex one. -/
 noncomputable def toComplexVector (c : realLorentzTensor.Color) :
   realLorentzTensor.modules 3 c  →ₛₗ[Complex.ofRealHom] complexLorentzTensor.modules (colorToComplex c) where
   toFun v := match c with
@@ -326,24 +328,23 @@ noncomputable def toComplexVector (c : realLorentzTensor.Color) :
   map_smul' r v := by
     match c with
     | Color.up =>
-      simp  [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.smul_sum,
-      -Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-      Finset.sum_singleton]
+      simp only [map_smul, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, Nat.reduceAdd,
+        Complex.ofRealHom_eq_coe, Complex.coe_smul]
       rw [Finset.smul_sum]
       congr
       funext x
       rw [← smul_smul]
       rfl
     | Color.down =>
-      simp  [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.smul_sum,
-      -Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-      Finset.sum_singleton]
+      simp only [map_smul, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, Nat.reduceAdd,
+        Complex.ofRealHom_eq_coe, Complex.coe_smul]
       rw [Finset.smul_sum]
       congr
       funext x
       rw [← smul_smul]
       rfl
 
+/-- The function which turns a real pure tensor into a complex one. -/
 noncomputable def toComplexPure {c : Fin n → Color} (p : Pure realLorentzTensor c) :
     Pure complexLorentzTensor (colorToComplex ∘ c) := fun i =>
   toComplexVector (c i) (p i)
@@ -404,6 +405,7 @@ lemma toComplexPure_component {c : Fin n → Color} (p : Pure realLorentzTensor 
       rfl
     simp [- Fintype.sum_sum_type, Finsupp.single_apply]
 
+@[sorryful]
 lemma actionP_toComplexPure {n : ℕ } (c : Fin n → Color) (p : Pure realLorentzTensor c)
     (Λ : SL(2, ℂ))  :
     Λ • toComplexPure p = toComplexPure (toLorentzGroup Λ • p) := by
@@ -440,15 +442,11 @@ lemma actionP_toComplexPure {n : ℕ } (c : Fin n → Color) (p : Pure realLoren
            congr
            funext x
            rw [map_smul]
-
-
-
-
-
     sorry
   · simp_all [P, b, b', colorToComplex]
     sorry
 
+@[sorryful]
 lemma toComplex_pure  {n : ℕ } (c : Fin n → Color) (p : Pure realLorentzTensor c) :
     toComplex p.toTensor = (toComplexPure p).toTensor := by
   apply (Tensor.basis _).repr.injective

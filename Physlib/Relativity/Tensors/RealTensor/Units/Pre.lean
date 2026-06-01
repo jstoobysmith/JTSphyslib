@@ -31,7 +31,7 @@ lemma preContrCoUnitVal_expand_tmul {d : ℕ} : preContrCoUnitVal d =
   rw [contrCoToMatrixRe_symm_expand_tmul]
   simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
     Finset.sum_singleton, ne_eq, reduceCtorEq, not_false_eq_true, one_apply_ne, zero_smul,
-    Finset.sum_const_zero, add_zero, one_apply_eq, one_smul, zero_add, add_right_inj]
+    Finset.sum_const_zero, add_zero, one_apply_eq, one_smul, zero_add]
   congr
   funext x
   rw [Finset.sum_eq_single x]

@@ -180,7 +180,7 @@ noncomputable instance (priority := high) distribMulAction [Tensorial S c M] :
     DistribMulAction G M where
   smul_add g m m' := by
     apply toTensor.injective
-    simp [toTensor_smul, map_add, Tensor.actionT_add]
+    simp [toTensor_smul, map_add]
   smul_zero g := by
     apply toTensor.injective
     simp only [toTensor_smul, map_zero, Tensor.actionT_zero]

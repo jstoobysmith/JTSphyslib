@@ -94,8 +94,6 @@ lemma asTensor_expand : asTensor =
   simp only [Fin.isValue, tmul_add, tmul_neg, tmul_smul, tmul_sub]
   rfl
 
-example {M} [AddCommGroup M] [Module ℂ M] (a : ℝ) (m : M) :
-  a • m = (a : ℂ) • m := by exact?
 set_option backward.isDefEq.respectTransparency false in
 /-- The tensor `σ^μ^a^{dot a}` based on the Pauli-matrices as a morphism,
   `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ complexContr ⊗ leftHanded ⊗ rightHanded` manifesting

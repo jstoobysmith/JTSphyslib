@@ -112,6 +112,7 @@ lemma map_basis_eq {c c1 : C} (h : c = c1) (i : basisIdx c) :
   subst h
   simp
 
+set_option linter.unusedVariables false in
 /-- The number of indices `n` from a tensor. -/
 @[nolint unusedArguments]
 def numIndices {S : TensorSpecies k C G V basisIdx rep basis} {n : ℕ} {c : Fin n → C}

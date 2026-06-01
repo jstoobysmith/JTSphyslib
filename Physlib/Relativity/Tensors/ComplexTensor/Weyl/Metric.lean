@@ -290,7 +290,7 @@ lemma leftAltContraction_apply_metric :
   simp only [Fin.isValue, tmul_sub, sub_tmul, map_sub, assoc_tmul, LinearMap.lTensor_tmul,
     LinearEquiv.coe_coe, assoc_symm_tmul, LinearMap.rTensor_tmul,
     Representation.IntertwiningMap.coe_toLinearMap, LinearEquiv.lTensor_tmul, lid_tmul, tmul_smul,
-    map_smul, comm_tmul, ofReal_one]
+    map_smul, comm_tmul]
   simp only [← Representation.IntertwiningMap.toLinearMap_apply]
   repeat erw [leftAltContraction_basis]
   simp only [Fin.isValue, Fin.val_one, Fin.val_zero, one_ne_zero, ↓reduceIte, one_smul, zero_ne_one]
@@ -309,10 +309,15 @@ lemma altLeftContraction_apply_metric :
       (altLeftMetric 1) ⊗ₜ[ℂ] (leftMetric 1)) = leftAltLeftUnit (1 : ℂ) := by
   rw [leftMetric_apply_one, altLeftMetric_apply_one]
   rw [leftMetricVal_expand_tmul', altLeftMetricVal_expand_tmul]
-  simp  [Fin.isValue, tmul_sub, tmul_neg, sub_tmul, map_add, map_neg, map_sub]
+  simp only [Fin.isValue, tmul_sub, sub_tmul, map_sub, assoc_tmul, LinearMap.lTensor_tmul,
+    LinearEquiv.coe_coe, assoc_symm_tmul, LinearMap.rTensor_tmul,
+    Representation.IntertwiningMap.coe_toLinearMap, LinearEquiv.lTensor_tmul, lid_tmul, tmul_smul,
+    map_smul, comm_tmul]
   simp only [← Representation.IntertwiningMap.toLinearMap_apply]
   repeat erw [altLeftContraction_basis]
-  simp  [Fin.isValue, Fin.val_zero, ↓reduceIte, one_smul, Fin.val_one, one_ne_zero, zero_ne_one]
+  simp only [Fin.isValue, Fin.coe_ofNat_eq_mod, Nat.mod_succ, ↓reduceIte, one_smul, Nat.zero_mod,
+    zero_ne_one, zero_smul, sub_zero, one_ne_zero, zero_sub, sub_neg_eq_add,
+    Representation.IntertwiningMap.coe_toLinearMap]
   erw [leftAltLeftUnit_apply_one, leftAltLeftUnitVal_expand_tmul]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -325,7 +330,10 @@ lemma rightAltContraction_apply_metric :
       (rightMetric 1) ⊗ₜ[ℂ] (altRightMetric 1)) = altRightRightUnit (1 : ℂ) := by
   rw [rightMetric_apply_one, altRightMetric_apply_one]
   rw [rightMetricVal_expand_tmul', altRightMetricVal_expand_tmul]
-  simp [Fin.isValue, tmul_sub, add_tmul, sub_tmul, map_sub, map_add, map_neg]
+  simp only [Fin.isValue, tmul_sub, sub_tmul, map_sub, assoc_tmul, LinearMap.lTensor_tmul,
+    LinearEquiv.coe_coe, assoc_symm_tmul, LinearMap.rTensor_tmul,
+    Representation.IntertwiningMap.coe_toLinearMap, LinearEquiv.lTensor_tmul, lid_tmul, tmul_smul,
+    map_smul, comm_tmul]
   simp only [← Representation.IntertwiningMap.toLinearMap_apply]
   repeat erw [rightAltContraction_basis]
   simp only [Fin.isValue, Fin.coe_ofNat_eq_mod, Nat.mod_succ, Nat.zero_mod, one_ne_zero, ↓reduceIte,

@@ -60,6 +60,7 @@ variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
     {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Basis (basisIdx c) k (V c)}
     (S : TensorSpecies k C G V basisIdx rep b)
 
+set_option linter.unusedVariables false in
 /-- The tensors associated with a list of indices of a given color
   `c : Fin n → C`. -/
 noncomputable abbrev Tensor {n : ℕ} (S : TensorSpecies k C G V basisIdx rep b)
@@ -110,6 +111,7 @@ TODO "Define the equivalence between `ComponentIdx ![c]` and `basisIdx c`.
 
 -/
 
+set_option linter.unusedVariables false in
 /-- The type of pure tensors associated to a list of indices `c : OverColor C`.
   A pure tensor is a tensor which can be written in the form `v1 ⊗ₜ v2 ⊗ₜ v3 …`. -/
 abbrev Pure (S : TensorSpecies k C G V basisIdx rep b) (c : Fin n → C) : Type :=

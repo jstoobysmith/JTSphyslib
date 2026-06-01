@@ -36,10 +36,10 @@ lemma contrMetricVal_expand_tmul : contrMetricVal =
     - complexContrBasis (Sum.inr 2) ⊗ₜ[ℂ] complexContrBasis (Sum.inr 2) := by
   simp only [contrMetricVal, Fin.isValue]
   rw [contrContrToMatrix_symm_expand_tmul]
-  simp only [map_apply, ofRealHom_eq_coe, coe_smul, Fintype.sum_sum_type, Finset.univ_unique,
+  simp only [map_apply, ofRealHom_eq_coe, Fintype.sum_sum_type, Finset.univ_unique,
     Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton, Fin.sum_univ_three, ne_eq, reduceCtorEq,
-    not_false_eq_true, minkowskiMatrix.off_diag_zero, zero_smul, add_zero, zero_add, Sum.inr.injEq,
-    zero_ne_one, Fin.reduceEq, one_ne_zero]
+    not_false_eq_true, minkowskiMatrix.off_diag_zero, Sum.inr.injEq, zero_ne_one, Fin.reduceEq,
+    one_ne_zero]
   rw [minkowskiMatrix.inl_0_inl_0, minkowskiMatrix.inr_i_inr_i,
     minkowskiMatrix.inr_i_inr_i, minkowskiMatrix.inr_i_inr_i]
   simp only [ofReal_one, Fin.isValue, one_smul, ofReal_zero, zero_smul, add_zero, ofReal_neg,
@@ -87,10 +87,10 @@ lemma coMetricVal_expand_tmul : coMetricVal =
     - complexCoBasis (Sum.inr 2) ⊗ₜ[ℂ] complexCoBasis (Sum.inr 2) := by
   simp only [coMetricVal, Fin.isValue]
   rw [coCoToMatrix_symm_expand_tmul]
-  simp only [map_apply, ofRealHom_eq_coe, coe_smul, Fintype.sum_sum_type, Finset.univ_unique,
+  simp only [map_apply, ofRealHom_eq_coe, Fintype.sum_sum_type, Finset.univ_unique,
     Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton, Fin.sum_univ_three, ne_eq, reduceCtorEq,
-    not_false_eq_true, minkowskiMatrix.off_diag_zero, zero_smul, add_zero, zero_add, Sum.inr.injEq,
-    zero_ne_one, Fin.reduceEq, one_ne_zero]
+    not_false_eq_true, minkowskiMatrix.off_diag_zero, Sum.inr.injEq, zero_ne_one, Fin.reduceEq,
+    one_ne_zero]
   rw [minkowskiMatrix.inl_0_inl_0, minkowskiMatrix.inr_i_inr_i,
     minkowskiMatrix.inr_i_inr_i, minkowskiMatrix.inr_i_inr_i]
   simp only [ofReal_one, Fin.isValue, one_smul, ofReal_zero, zero_smul, add_zero, ofReal_neg,
