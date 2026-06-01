@@ -22,7 +22,6 @@ open MatrixGroups
 open Complex
 open TensorProduct
 open IndexNotation
-open CategoryTheory
 open OverColor.Discrete
 noncomputable section
 
