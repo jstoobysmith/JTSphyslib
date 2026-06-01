@@ -310,17 +310,13 @@ noncomputable def toComplexVector (c : realLorentzTensor.Color) :
   map_add' v1 v2 := by
     match c with
     | Color.up =>
-      simp  [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.sum_add_distrib,
-      -Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-      Finset.sum_singleton]
+      simp only [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.sum_add_distrib]
       congr
       funext x
       rw [add_smul]
       rfl
     | Color.down =>
-      simp  [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.sum_add_distrib,
-      -Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-      Finset.sum_singleton]
+      simp only [map_add, Finsupp.coe_add, Pi.add_apply, Nat.reduceAdd, ← Finset.sum_add_distrib]
       congr
       funext x
       rw [add_smul]

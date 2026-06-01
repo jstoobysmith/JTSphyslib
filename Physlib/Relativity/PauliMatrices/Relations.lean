@@ -22,11 +22,9 @@ There is likely a more direct path to this result.
 @[expose] public section
 
 open IndexNotation
-open CategoryTheory
 open MonoidalCategory
 open Matrix
 open TensorProduct
-open CategoryTheory
 
 namespace PauliMatrix
 open Fermion

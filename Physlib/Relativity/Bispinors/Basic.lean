@@ -15,14 +15,11 @@ public import Physlib.Relativity.PauliMatrices.ToTensor
 @[expose] public section
 
 open IndexNotation
-open CategoryTheory
-open MonoidalCategory
 open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
 open IndexNotation
-open CategoryTheory
 open OverColor.Discrete
 open Fermion
 noncomputable section

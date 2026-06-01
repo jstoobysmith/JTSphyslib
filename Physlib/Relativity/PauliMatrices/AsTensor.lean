@@ -24,7 +24,6 @@ open Complex
 open Lorentz
 open Fermion
 open TensorProduct
-open CategoryTheory.MonoidalCategory
 
 noncomputable section
 

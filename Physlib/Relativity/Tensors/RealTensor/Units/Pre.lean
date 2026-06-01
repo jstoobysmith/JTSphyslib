@@ -210,8 +210,6 @@ lemma contr_preCoContrUnit {d : ℕ} (x : ContrMod d) :
 
 -/
 
-open CategoryTheory
-
 set_option backward.isDefEq.respectTransparency false in
 lemma preContrCoUnit_symm {d : ℕ} :
     (preContrCoUnit d) (1 : ℝ) = LinearMap.lTensor _ (LinearEquiv.cast (by rfl)).toLinearMap
