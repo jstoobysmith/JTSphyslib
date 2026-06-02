@@ -167,7 +167,6 @@ def Co.toContr (d : ℕ) : IntertwiningMap (CoMod.rep (d := d)) (ContrMod.rep (d
         rw [mulVec_mulVec, ← LorentzGroup.comm_minkowskiMatrix, ← mulVec_mulVec]
       rfl
 
-
 /-- The isomorphism between `Contr d` and `Co d` induced by multiplication with the
   Minkowski metric. -/
 def contrIsoCo (d : ℕ) : Representation.Equiv (ContrMod.rep (d := d)) (CoMod.rep (d := d)) := by

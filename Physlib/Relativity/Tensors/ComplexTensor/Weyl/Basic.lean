@@ -214,7 +214,6 @@ def leftHandedToAlt : leftHandedRep.IntertwiningMap altLeftHandedRep where
       Matrix.mul_fin_two, eta_fin_two !![M.1 1 1, -M.1 0 1; -M.1 1 0, M.1 0 0]ᵀ]
     simp
 
-
 lemma leftHandedToAlt_hom_apply (ψ : LeftHandedModule) :
     leftHandedToAlt ψ =
     AltLeftHandedModule.toFin2ℂEquiv.symm (!![0, 1; -1, 0] *ᵥ ψ.toFin2ℂ) := rfl

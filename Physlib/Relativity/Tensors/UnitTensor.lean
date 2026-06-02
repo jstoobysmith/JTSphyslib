@@ -14,7 +14,6 @@ public import Physlib.Relativity.Tensors.Constructors
 
 @[expose] public section
 
-
 namespace TensorSpecies
 
 variable {k : Type} [RCLike k] {C : Type} {G : Type} [Group G]
@@ -63,7 +62,6 @@ lemma unitTensor_eq_permT_dual (c : C) :
     · simp_all
     · simp_all
   · simp_all
-
 
 lemma dual_unitTensor_eq_permT_unitTensor (c : C) :
     S.unitTensor (S.τ c) = permT ![1, 0] (And.intro (by decide) (fun i => by fin_cases i <;> simp))

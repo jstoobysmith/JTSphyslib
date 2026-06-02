@@ -522,7 +522,6 @@ lemma actionT_fromConstPair {c1 c2 : C}
   rw [fromConstPair, actionT_fromPairT]
   exact congrArg _ (LinearMap.congr_fun (v.isIntertwining' g) 1).symm
 
-
 /-!
 
 ## fromTripleT

@@ -142,7 +142,6 @@ def leftAltContraction : (leftHandedRep.tprod altLeftHandedRep).IntertwiningMap
     rw [dotProduct_mulVec, vecMul_transpose, mulVec_mulVec]
     simp
 
-
 lemma leftAltContraction_hom_tmul (ψ : LeftHandedModule)
     (φ : AltLeftHandedModule) :
     leftAltContraction (ψ ⊗ₜ φ) = ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ := by
@@ -169,7 +168,6 @@ def altLeftContraction : (altLeftHandedRep.tprod leftHandedRep).IntertwiningMap
     change (M.1⁻¹ᵀ *ᵥ φ.toFin2ℂ) ⬝ᵥ (M.1 *ᵥ ψ.toFin2ℂ) = φ.toFin2ℂ ⬝ᵥ ψ.toFin2ℂ
     rw [dotProduct_mulVec, mulVec_transpose, vecMul_vecMul]
     simp
-
 
 lemma altLeftContraction_hom_tmul (φ : AltLeftHandedModule) (ψ : LeftHandedModule) :
     altLeftContraction (φ ⊗ₜ ψ) = φ.toFin2ℂ ⬝ᵥ ψ.toFin2ℂ := by

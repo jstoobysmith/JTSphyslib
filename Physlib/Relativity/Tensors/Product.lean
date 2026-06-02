@@ -72,7 +72,6 @@ The following results exist for both `prodP` and `prodT` :
 
 @[expose] public section
 
-
 namespace TensorSpecies
 
 namespace Tensor
@@ -233,7 +232,6 @@ lemma Pure.prodP_component {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     generalize c1 x = c1' at *
     subst h3
     rfl
-
 
 /-!
 
@@ -748,7 +746,6 @@ noncomputable def tensorEquivProd {n n2 : ℕ} {c : Fin n → C} {c1 : Fin n2 �
     congr 1
     simp only [prodT_basis, Prod.mk.eta, Equiv.symm_apply_apply]
     exact (basis_apply (Fin.append c c1) φ).symm
-
 
 /-!
 

@@ -212,7 +212,6 @@ def rightMetric : (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
       simp
     · rw [← rightRightToMatrix_ρ_symm metricRaw M]
 
-
 lemma rightMetric_apply_one : rightMetric (1 : ℂ) = rightMetricVal := by
   change (1 : ℂ) • rightMetricVal = rightMetricVal
   simp only [one_smul]
@@ -297,7 +296,6 @@ lemma leftAltContraction_apply_metric :
   erw [altLeftLeftUnit_apply_one, altLeftLeftUnitVal_expand_tmul]
   rw [add_comm]
   module
-
 
 set_option backward.isDefEq.respectTransparency false in
 lemma altLeftContraction_apply_metric :

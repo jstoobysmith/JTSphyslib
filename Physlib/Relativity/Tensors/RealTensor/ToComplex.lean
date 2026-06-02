@@ -442,11 +442,11 @@ lemma actionP_toComplexPure {n : ℕ } (c : Fin n → Color) (p : Pure realLoren
         _ =  (∑ i, (Lorentz.ContrℂModule.SL2CRep Λ) (((Lorentz.contrBasis 3).repr p i : ℂ) •
           (Lorentz.complexContrBasisFin4 (finSumFinEquiv i)))) := by rfl
         _ =  (∑ i, (((Lorentz.contrBasis 3).repr p i : ℂ) •
-           (Lorentz.ContrℂModule.SL2CRep Λ)
+            (Lorentz.ContrℂModule.SL2CRep Λ)
             (Lorentz.complexContrBasisFin4 (finSumFinEquiv i)))) := by
-           congr
-           funext x
-           rw [map_smul]
+          congr
+          funext x
+          rw [map_smul]
     sorry
   · simp_all [P, b, b', colorToComplex]
     sorry
@@ -459,7 +459,6 @@ lemma toComplex_pure  {n : ℕ } (c : Fin n → Color) (p : Pure realLorentzTens
   obtain ⟨φ, rfl⟩ := TensorSpecies.Tensor.ComponentIdx.complexify.surjective φ
   rw [basis_repr_pure, toComplex_repr, toComplexPure_component]
   simp
-
 
 /-!
 

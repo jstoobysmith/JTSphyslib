@@ -156,7 +156,6 @@ def rightAltRightUnit : (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningM
     rw [@conjTranspose_nonsing_inv]
     simp
 
-
 lemma rightAltRightUnit_apply_one : rightAltRightUnit (1 : ℂ) = rightAltRightUnitVal := by
   change (1 : ℂ) • rightAltRightUnitVal = rightAltRightUnitVal
   simp only [one_smul]

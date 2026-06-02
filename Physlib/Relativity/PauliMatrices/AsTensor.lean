@@ -67,7 +67,6 @@ lemma leftRightToMatrix_σSA_inr_1_expand : leftRightToMatrix.symm (pauliBasis (
   simp [pauliBasis, pauliSelfAdjoint, pauliMatrix]
   module
 
-
 set_option backward.isDefEq.respectTransparency false in
 /-- The expansion of the pauli matrix `σ₃` in terms of a basis of tensor product vectors. -/
 lemma leftRightToMatrix_σSA_inr_2_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) =

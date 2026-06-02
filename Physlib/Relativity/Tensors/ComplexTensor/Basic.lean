@@ -20,7 +20,6 @@ open MatrixGroups
 open Complex
 open TensorProduct
 
-
 namespace complexLorentzTensor
 
 /-- The colors associated with complex representations of SL(2, ℂ) of interest to physics. -/
@@ -105,7 +104,6 @@ instance modulesAddCommGroup : ∀ c, AddCommGroup (modules c)
   | Color.downR => inferInstance
   | Color.up => inferInstance
   | Color.down => inferInstance
-
 
 noncomputable instance modulesModule : ∀ c, Module ℂ (modules c)
   | Color.upL => inferInstance
@@ -258,7 +256,6 @@ scoped[complexLorentzTensor] notation "ℂT(" c ")" => complexLorentzTensor.Tens
 
 open TensorSpecies Tensor
 
-
 lemma basisIdxCongr_eq_cast {c1 c2 : complexLorentzTensor.Color}
     (h : c1 = c2) (i : Fin (repDim c1)) :
     TensorSpecies.basisIdxCongr (basisIdx := fun c => Fin (repDim c)) h i =
@@ -269,7 +266,6 @@ lemma basisIdxCongr_eq_cast {c1 c2 : complexLorentzTensor.Color}
 lemma repDim_tau {c : complexLorentzTensor.Color} :
     repDim (complexLorentzTensor.τ c) = repDim c := by
   cases c <;> simp [repDim] <;> rfl
-
 
 lemma contrPCoeff_basis {n : ℕ} {c : Fin n → complexLorentzTensor.Color} (i j : Fin n)
     (hij : i ≠ j ∧ (complexLorentzTensor.τ (c i) = c j))

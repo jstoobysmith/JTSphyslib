@@ -14,7 +14,6 @@ public import Physlib.Relativity.Tensors.Basic
 
 @[expose] public section
 
-
 namespace TensorSpecies
 open Module
 variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]

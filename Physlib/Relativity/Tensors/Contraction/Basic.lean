@@ -14,7 +14,6 @@ public import Physlib.Relativity.Tensors.Contraction.Pure
 
 @[expose] public section
 
-
 namespace TensorSpecies
 open Module
 

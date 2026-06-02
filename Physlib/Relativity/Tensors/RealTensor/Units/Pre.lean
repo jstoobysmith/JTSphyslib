@@ -68,7 +68,6 @@ def preContrCoUnit (d : ℕ := 3) :
     apply congrArg
     simp
 
-
 lemma preContrCoUnit_apply_one {d : ℕ} : (preContrCoUnit d) (1 : ℝ) = preContrCoUnitVal d := by
   change (1 : ℝ) • preContrCoUnitVal d = preContrCoUnitVal d
   rw [one_smul]

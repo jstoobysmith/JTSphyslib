@@ -14,8 +14,6 @@ public import Physlib.Relativity.Tensors.MetricTensor
 
 @[expose] public section
 
-
-
 namespace TensorSpecies
 
 variable {k : Type} [RCLike k] {C : Type} {G : Type} [Group G]

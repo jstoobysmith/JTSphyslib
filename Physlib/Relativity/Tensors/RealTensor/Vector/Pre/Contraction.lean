@@ -116,7 +116,6 @@ def coContrContract : ((CoMod.rep (d := d)).tprod (ContrMod.rep (d := d))).Inter
     simp only [vecMul_one]
     rfl
 
-
 /-- Notation for `coContrContract` acting on a tmul. -/
 local notation "⟪" φ "," ψ "⟫ₘ" => coContrContract (φ ⊗ₜ ψ)
 

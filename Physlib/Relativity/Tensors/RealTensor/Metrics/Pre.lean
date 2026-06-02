@@ -140,8 +140,6 @@ def preCoMetric (d : ℕ := 3) : (Representation.trivial ℝ (LorentzGroup d) �
     apply congrArg
     rw [← LorentzGroup.coe_inv, LorentzGroup.transpose_mul_minkowskiMatrix_mul_self]
 
-
-
 lemma preCoMetric_apply_one {d : ℕ} : (preCoMetric d) (1 : ℝ) = preCoMetricVal d := by
   change (1 : ℝ) • preCoMetricVal d = preCoMetricVal d
   rw [one_smul]
