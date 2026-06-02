@@ -62,6 +62,7 @@ variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
 set_option linter.unusedVariables false in
 /-- The tensors associated with a list of indices of a given color
   `c : Fin n → C`. -/
+@[nolint unusedArguments]
 noncomputable abbrev Tensor {n : ℕ} (S : TensorSpecies k C G V basisIdx rep b)
   (c : Fin n → C) : Type := PiTensorProduct k (fun i => V (c i))
 
@@ -113,12 +114,12 @@ TODO "Define the equivalence between `ComponentIdx ![c]` and `basisIdx c`.
 set_option linter.unusedVariables false in
 /-- The type of pure tensors associated to a list of indices `c : OverColor C`.
   A pure tensor is a tensor which can be written in the form `v1 ⊗ₜ v2 ⊗ₜ v3 …`. -/
+@[nolint unusedArguments]
 abbrev Pure (S : TensorSpecies k C G V basisIdx rep b) (c : Fin n → C) : Type :=
     (i : Fin n) → V (c i)
 
 namespace Pure
 
-@[simp]
 lemma congr_right {n : ℕ} {c : Fin n → C} (p : Pure S c)
     (i j : Fin n) (h : i = j) : LinearEquiv.cast (R := k) (by rw [h]) (p j) = p i := by
   subst h
@@ -642,7 +643,7 @@ lemma PermCond.inv_perserve_color {n m : ℕ} {c : Fin n → C} {c1 : Fin m → 
   rw [h.preserve_color]
   rfl
 
-@[simp]
+@[simp, nolint simpVarHead]
 lemma PermCond.toEquiv_symm_perserve_color {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     {σ : Fin m → Fin n} (h : PermCond c c1 σ) (x : Fin m) :
     c (h.toEquiv.symm x) = c1 x := by

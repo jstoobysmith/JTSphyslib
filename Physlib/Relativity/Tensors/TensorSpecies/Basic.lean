@@ -37,26 +37,26 @@ structure TensorSpecies (k : Type) [CommRing k] (C : Type) (G : Type) [Group G]
   τ : C → C
   /-- The condition that `τ` is an involution. -/
   τ_involution : Function.Involutive τ
-  /- The contraction of vectors with dual colors. -/
+  /-- The contraction of vectors with dual colors. -/
   contr : (c : C) → ((rep c).tprod (rep (τ c))).IntertwiningMap (Representation.trivial k G k)
-  /- The invariant unit tensor for a given color. -/
+  /-- The invariant unit tensor for a given color. -/
   unit : (c : C) → ((Representation.trivial k G k)).IntertwiningMap ((rep (τ c)).tprod (rep c))
-  /- The invariant metric tensor for a given color. -/
+  /-- The invariant metric tensor for a given color. -/
   metric : (c : C) → ((Representation.trivial k G k)).IntertwiningMap ((rep c).tprod (rep c))
-  /- Contraction is symmetric with respect to duals. -/
+  /-- Contraction is symmetric with respect to duals. -/
   contr_tmul_symm : ∀ c (x : V c) (y : V (τ c)),
       contr c (x ⊗ₜ[k] y) = contr (τ c) (y ⊗ₜ Equiv.cast (congrArg V (τ_involution c).symm) x)
-  /- The unit is symmetric. -/
+  /-- The unit is symmetric. -/
   unit_symm : ∀ c, unit c (1 : k) =
       LinearMap.lTensor _ (LinearEquiv.cast (τ_involution c)).toLinearMap
       (TensorProduct.comm k _ _ (unit (τ c) (1 : k)))
-  /- Contraction with unit leaves invariant. -/
+  /-- Contraction with unit leaves invariant. -/
   contr_unit : ∀ c (x : V c),
     (TensorProduct.lid k _ <|
     (contr c).toLinearMap.rTensor _ <|
     (TensorProduct.assoc k (V c) (V (τ c)) (V c)).symm <|
     x ⊗ₜ[k] (unit c (1 : k))) = x
-  /- On contracting metrics we get the unit. -/
+  /-- On contracting metrics we get the unit. -/
   contr_metric : ∀ c,
     (TensorProduct.comm k _ _ <|
       (TensorProduct.lid k _).lTensor _ <|

@@ -89,6 +89,7 @@ abbrev repDim (c : Color) : ℕ :=
   | Color.up => 4
   | Color.down => 4
 
+/-- The modules associated with each of the different types of complex Lorentz vector space. -/
 abbrev modules : Color → Type
   | Color.upL => Fermion.LeftHandedModule
   | Color.downL => Fermion.AltLeftHandedModule
@@ -227,6 +228,7 @@ namespace complexLorentzTensor
 /-- Complex Lorentz tensor. -/
 syntax (name := complexLorentzTensorSyntax) "ℂT[" term,* "]" : term
 
+/-- The basis associated with each of the different types of complex Lorentz vector space. -/
 abbrev basis (c : Color) : Module.Basis (Fin (repDim c)) ℂ (modules c) :=
   match c with
   | Color.upL => Fermion.leftBasis
@@ -236,6 +238,7 @@ abbrev basis (c : Color) : Module.Basis (Fin (repDim c)) ℂ (modules c) :=
   | Color.up => Lorentz.complexContrBasisFin4
   | Color.down => Lorentz.complexCoBasisFin4
 
+/-- The reps associated with each of the different types of complex Lorentz vector space. -/
 abbrev rep (c : Color) : Representation ℂ  SL(2, ℂ) (modules c) :=
   match c with
   | Color.upL => Fermion.leftHandedRep
