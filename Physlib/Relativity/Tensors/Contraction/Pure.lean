@@ -14,12 +14,8 @@ public import Physlib.Relativity.Tensors.Basic
 
 @[expose] public section
 
-open IndexNotation
-open CategoryTheory
-open MonoidalCategory
 
 namespace TensorSpecies
-open OverColor
 open Module
 variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
     {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]

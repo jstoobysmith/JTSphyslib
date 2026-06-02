@@ -15,16 +15,11 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Units.Basic
 
 @[expose] public section
 
-open IndexNotation
-open CategoryTheory
-open MonoidalCategory
+
 open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
-open IndexNotation
-open CategoryTheory
-open OverColor.Discrete
 noncomputable section
 
 namespace complexLorentzTensor

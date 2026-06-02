@@ -16,12 +16,11 @@ public import Physlib.Relativity.Tensors.Dual
 
 @[expose] public section
 
-open Module IndexNotation
+open Module
 open CategoryTheory
 open MonoidalCategory
 
 namespace complexLorentzTensor
-open OverColor
 open Physlib.RatComplexNum
 open Physlib
 

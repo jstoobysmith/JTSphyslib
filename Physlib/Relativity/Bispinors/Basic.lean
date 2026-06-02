@@ -14,13 +14,10 @@ public import Physlib.Relativity.PauliMatrices.ToTensor
 
 @[expose] public section
 
-open IndexNotation
 open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
-open IndexNotation
-open OverColor.Discrete
 open Fermion
 noncomputable section
 namespace complexLorentzTensor

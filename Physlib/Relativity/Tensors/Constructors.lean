@@ -15,12 +15,9 @@ There are a number of ways to construct explicit tensors.
 
 @[expose] public section
 
-open Module IndexNotation
-open CategoryTheory
-open MonoidalCategory
+open Module
 
 namespace TensorSpecies
-open OverColor
 
 variable {k : Type} [RCLike k] {C : Type} {G : Type} [Group G]
     {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]

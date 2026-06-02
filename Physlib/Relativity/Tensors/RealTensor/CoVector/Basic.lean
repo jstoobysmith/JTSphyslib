@@ -26,15 +26,12 @@ TODO "Split this module on Lorentz co-vectors into two: `Basic.lean` and `Tensor
   depend on the `Tensorial` imports. A similar TODO item exists
   for Lorentz vectors."
 
-open Module IndexNotation
-open CategoryTheory
-open MonoidalCategory
+open Module
 open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
-open IndexNotation
-open CategoryTheory
+
 noncomputable section
 
 namespace Lorentz

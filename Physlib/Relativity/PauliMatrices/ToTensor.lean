@@ -16,13 +16,11 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Metrics.Basic
 
 @[expose] public section
 
-open Module IndexNotation
+open Module
 open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
-open IndexNotation
-open OverColor.Discrete
 noncomputable section
 
 namespace PauliMatrix

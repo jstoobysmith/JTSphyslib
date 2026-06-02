@@ -24,9 +24,7 @@ open Matrix
 open MatrixGroups
 open Complex
 open TensorProduct
-open IndexNotation
-open CategoryTheory
-open MonoidalCategory
+
 
 namespace realLorentzTensor
 

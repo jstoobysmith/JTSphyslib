@@ -7,6 +7,7 @@ module
 
 public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Modules
 public import Physlib.Relativity.SL2C.Basic
+public import Physlib.Meta.Informal.Basic
 /-!
 
 # Weyl fermions

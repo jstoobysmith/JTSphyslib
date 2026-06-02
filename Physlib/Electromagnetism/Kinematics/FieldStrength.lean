@@ -45,7 +45,6 @@ We define a tensor version and a matrix version and prover various properties of
 @[expose] public section
 namespace Electromagnetism
 open Module realLorentzTensor
-open IndexNotation
 open TensorSpecies
 open Tensor
 

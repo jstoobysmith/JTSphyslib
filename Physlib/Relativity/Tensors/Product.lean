@@ -72,12 +72,8 @@ The following results exist for both `prodP` and `prodT` :
 
 @[expose] public section
 
-open IndexNotation
-open CategoryTheory
-open MonoidalCategory
 
 namespace TensorSpecies
-open OverColor
 
 namespace Tensor
 open Module
@@ -487,12 +483,12 @@ lemma Pure.prodP_assoc {n n1 n2} {c : Fin n → C}
     | Sum.inl i =>
       simp only [finSumFinEquiv_apply_left, prodP_apply_castAdd, permP]
       rw [← congr_right (p.prodP (p1.prodP p2)) _ _ (prodAssocMap_castAdd_castAdd i)]
-      simp [- eqToHom_refl, - Discrete.functor_map_id]
+      simp
     | Sum.inr i =>
       simp only [finSumFinEquiv_apply_right, finSumFinEquiv_apply_left, prodP_apply_castAdd,
         prodP_apply_natAdd, permP]
       rw [← congr_right (p.prodP (p1.prodP p2)) _ _ (prodAssocMap_castAdd_natAdd i)]
-      simp [- eqToHom_refl, - Discrete.functor_map_id]
+      simp
   | Sum.inr i =>
     simp only [finSumFinEquiv_apply_right, prodP_apply_natAdd, permP]
     rw [← congr_right (p.prodP (p1.prodP p2)) _ _ (prodAssocMap_natAdd i)]
@@ -551,7 +547,7 @@ lemma Pure.prodP_assoc' {n n1 n2} {c : Fin n → C}
   | Sum.inl i =>
     simp only [finSumFinEquiv_apply_left, prodP_apply_castAdd, permP]
     rw [← congr_right ((p.prodP p1).prodP p2) _ _ (prodAssocMap'_castAdd i)]
-    simp [- eqToHom_refl, - Discrete.functor_map_id]
+    simp
   | Sum.inr i =>
     obtain ⟨i, rfl⟩ := finSumFinEquiv.surjective i
     match i with
@@ -559,7 +555,7 @@ lemma Pure.prodP_assoc' {n n1 n2} {c : Fin n → C}
       simp only [finSumFinEquiv_apply_left, finSumFinEquiv_apply_right, prodP_apply_natAdd,
         prodP_apply_castAdd, permP]
       rw [← congr_right ((p.prodP p1).prodP p2) _ _ (prodAssocMap'_natAdd_castAdd i)]
-      simp [- eqToHom_refl, - Discrete.functor_map_id]
+      simp
     | Sum.inr i =>
       simp only [finSumFinEquiv_apply_right, prodP_apply_natAdd, permP]
       rw [← congr_right ((p.prodP p1).prodP p2) _ _ (prodAssocMap'_natAdd_natAdd i)]

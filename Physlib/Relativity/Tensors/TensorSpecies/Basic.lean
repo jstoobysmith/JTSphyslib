@@ -5,9 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.Tensors.Color.Discrete
-public import Physlib.Relativity.Tensors.Color.Lift
-public import Physlib.Meta.TODO.Basic
+public import Mathlib.RepresentationTheory.Rep.Basic
+public import Physlib.Mathematics.PiTensorProduct
+public import Mathlib.Algebra.Lie.OfAssociative
 
 /-!
 
@@ -23,7 +23,7 @@ public import Physlib.Meta.TODO.Basic
 
 @[expose] public section
 
-open IndexNotation CategoryTheory Module MonoidalCategory
+open Module
 open scoped TensorProduct
 
 /-- The structure `TensorSpecies` contains the necessary structure needed to define
@@ -68,7 +68,6 @@ structure TensorSpecies (k : Type) [CommRing k] (C : Type) (G : Type) [Group G]
 noncomputable section
 
 namespace TensorSpecies
-open OverColor
 
 variable {k : Type} [CommRing k] {C : Type} [Group G]
   {basisIdx : C → Type}

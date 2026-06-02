@@ -49,10 +49,9 @@ TODO "In this file (Physlib/Relativity/Tensors/Basic.lean), write an overview of
 
 @[expose] public section
 
-open Module IndexNotation CategoryTheory MonoidalCategory
+open Module
 
 namespace TensorSpecies
-open OverColor
 
 variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
     {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
@@ -663,22 +662,6 @@ lemma PermCond.symm {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
       simp [apply_inv_apply]
   · intro x
     rw [h.inv_perserve_color]
-/-- For a map `σ : Fin m → Fin n` satisfying `PermCond c c1 σ`,
-  that map lifted to a morphism in the `OverColor C` category. -/
-def PermCond.toHom {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
-    {σ : Fin m → Fin n} (h : PermCond c c1 σ) :
-    OverColor.mk c ⟶ OverColor.mk c1 :=
-  equivToHomEq (h.toEquiv) (h.preserve_color)
-
-/-- Given a morphism in the `OverColor C` between `c` and `c1` category the corresponding morphism
-  `(Hom.toEquiv σ).symm` satisfies the `PermCond`. -/
-lemma PermCond.ofHom {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
-    (σ : OverColor.mk c ⟶ OverColor.mk c1) :
-    PermCond c c1 (Hom.toEquiv σ).symm := by
-  apply And.intro
-  · exact Equiv.bijective (Hom.toEquiv σ).symm
-  · intro x
-    simpa [OverColor.mk_hom] using Hom.toEquiv_symm_apply σ x
 
 /-- The composition of two maps satisfying `PermCond` also satisfies the `PermCond`. -/
 lemma PermCond.comp {n n1 n2 : ℕ} {c : Fin n → C} {c1 : Fin n1 → C}
