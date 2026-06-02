@@ -27,6 +27,9 @@ open minkowskiMatrix
   Lorentz vectors. In index notation these have an up index `ψⁱ`. -/
 def Contr (d : ℕ) : Rep ℝ (LorentzGroup d) := Rep.of ContrMod.rep
 
+TODO "The definition of `Contr` can be removed and everywhere replaced with `ContrMod.rep`.
+  Similar for `Co` and `CoMod.rep`."
+
 /-- The standard basis of contravariant Lorentz vectors. -/
 def contrBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (ContrMod d) :=
   Basis.ofEquivFun ContrMod.toFin1dℝEquiv
