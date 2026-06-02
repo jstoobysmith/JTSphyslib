@@ -44,6 +44,7 @@ instance : DecidableEq Color := fun x y =>
   | Color.up, Color.down => isFalse fun h => Color.noConfusion h
   | Color.down, Color.up => isFalse fun h => Color.noConfusion h
 
+/-- The modules associated with each of the different types of real Lorentz vector space. -/
 abbrev modules (d : ℕ) : Color → Type
   | Color.up => Lorentz.ContrMod d
   | Color.down => Lorentz.CoMod d

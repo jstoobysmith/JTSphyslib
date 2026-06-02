@@ -451,7 +451,6 @@ lemma actionP_toComplexPure {n : ℕ } (c : Fin n → Color) (p : Pure realLoren
   · simp_all [P, b, b', colorToComplex]
     sorry
 
-@[sorryful]
 lemma toComplex_pure  {n : ℕ } (c : Fin n → Color) (p : Pure realLorentzTensor c) :
     toComplex p.toTensor = (toComplexPure p).toTensor := by
   apply (Tensor.basis _).repr.injective
@@ -471,6 +470,7 @@ Finally we record that `toComplex` is equivariant for the natural action of
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The map `toComplex` is equivariant. -/
+@[sorryful]
 lemma toComplex_equivariant {n} {c : Fin n → realLorentzTensor.Color}
     (v : ℝT(3, c)) (Λ : SL(2, ℂ)) :
     Λ • (toComplex v) = toComplex (Lorentz.SL2C.toLorentzGroup Λ • v) := by
