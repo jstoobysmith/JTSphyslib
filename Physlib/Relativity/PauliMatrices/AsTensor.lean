@@ -156,7 +156,8 @@ def asConsTensor :
         _ = ∑ i, ∑ j, ∑ x, ((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j)
             • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) :=
               Finset.sum_congr rfl (fun x _ => Finset.sum_comm)
-        _ = ∑ i, ∑ j, ∑ x, (((SL2C.toLorentzGroup M).1 i x * (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ) : ℂ)
+        _ = ∑ i, ∑ j, ∑ x, (((SL2C.toLorentzGroup M).1 i x *
+            (SL2C.toLorentzGroup M⁻¹).1 x j : ℝ) : ℂ)
             • ((complexContrBasis i)) ⊗ₜ[ℂ] leftRightToMatrix.symm ((pauliBasis j)) := by
             refine Finset.sum_congr rfl (fun i _ => (Finset.sum_congr rfl (fun j _ => ?_)))
             rfl

@@ -164,7 +164,8 @@ lemma contrT_basis_repr_apply {n : ℕ} {c : Fin (n + 1 + 1) → C} {i j : Fin (
     (φ : ComponentIdx (c ∘ Fin.succSuccAbove i j)) :
     (basis (c ∘ Fin.succSuccAbove i j)).repr (contrT n i j h t) φ =
     ∑ (b' : DropPairSection φ), (basis c).repr t b'.1 *
-     (S.contr (c i) (b (c i) (b'.1 i) ⊗ₜ[k] b (S.τ (c i)) (basisIdxCongr (by rw [h.2]) (b'.1 j)))) := by
+     (S.contr (c i) (b (c i) (b'.1 i) ⊗ₜ[k] b (S.τ (c i))
+      (basisIdxCongr (by rw [h.2]) (b'.1 j)))) := by
   apply induction_on_basis _ _ _ _ t
   · intro b'
     conv_lhs =>

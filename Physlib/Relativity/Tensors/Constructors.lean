@@ -114,7 +114,7 @@ open TensorProduct
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The construction of a tensor with two indices from the tensor product
-  `(S.FD.obj (Discrete.mk c1)).V ⊗[k] (S.FD.obj (Discrete.mk c2)).V ` defined
+  `V c1 ⊗[k] V c2 ` defined
   categorically. -/
 noncomputable def fromPairT {c1 c2 : C} :
     V c1 ⊗[k] V c2 →ₗ[k] S.Tensor ![c1, c2] where
@@ -153,10 +153,12 @@ lemma actionT_fromPairT {c1 c2 : C}
 
 lemma fromPairT_map_right {c1 c2 c2' : C} (h :c2 = c2')
     (x : V c1 ⊗[k] V c2) :
-    fromPairT (TensorProduct.map LinearMap.id (LinearEquiv.cast (R := k) (M := V) h) x : _ ⊗[k] V c2') =
+    fromPairT (TensorProduct.map LinearMap.id
+      (LinearEquiv.cast (R := k) (M := V) h) x : _ ⊗[k] V c2') =
     permT id (by simp [h]) (fromPairT (S := S) x) := by
   let P (x : V c1 ⊗[k] V c2) : Prop :=
-    fromPairT (TensorProduct.map LinearMap.id (LinearEquiv.cast (R := k) (M := V) h).toLinearMap x) =
+    fromPairT (TensorProduct.map LinearMap.id (LinearEquiv.cast
+      (R := k) (M := V) h).toLinearMap x) =
     permT id (by simp [h])
     (fromPairT (S := S) x)
   change P x
@@ -210,9 +212,6 @@ lemma fromPairT_comm {c1 c2 : C}
 /-- The contraction of tensors with one index with one with two indices defined categorically. -/
 noncomputable def fromSingleTContrFromPairT {c c2 : C}
     (x : V c) (y : V (S.τ c) ⊗[k] V c2) :  S.Tensor ![c2] :=
-  --let V2 := (S.FD.obj (Discrete.mk c))
-  --let V2' := (S.FD.obj (Discrete.mk (S.τ c)))
-  -- let V3 := (S.FD.obj (Discrete.mk c2))
   let T1 : V c ⊗[k] (V (S.τ c) ⊗[k] (V c2)) := x ⊗ₜ[k] y
   let T3 : (V c ⊗[k] V (S.τ c) ) ⊗[k] V c2 := (TensorProduct.assoc _ _ _ _).symm T1
   let T4 : k ⊗[k] V c2 := (S.contr c).toLinearMap.rTensor (V c2) T3
@@ -532,7 +531,7 @@ lemma actionT_fromConstPair {c1 c2 : C}
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The construction of a tensor with two indices from the tensor product
-  `(S.FD.obj (Discrete.mk c1)).V ⊗[k] (S.FD.obj (Discrete.mk c2)).V ` defined
+  `V c1 ⊗[k] V c2 ` defined
   categorically. -/
 noncomputable def fromTripleT {c1 c2 c3 : C} :
     V c1 ⊗[k] (V c2 ⊗[k] V c3) →ₗ[k] S.Tensor ![c1, c2, c3] where
@@ -659,7 +658,8 @@ lemma fromTripleT_apply_basis {c c1 c2 : C}
 
 /-- A constant three tensor (e.g. the Pauli matrices). -/
 noncomputable def fromConstTriple {c1 c2 c3 : C}
-    (v : (Representation.trivial k G k).IntertwiningMap ((rep c1).tprod ((rep c2).tprod (rep c3)))) :
+    (v : (Representation.trivial k G k).IntertwiningMap
+      ((rep c1).tprod ((rep c2).tprod (rep c3)))) :
   S.Tensor ![c1, c2, c3] := fromTripleT (v (1 : k))
 
 set_option backward.isDefEq.respectTransparency false in

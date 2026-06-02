@@ -84,7 +84,8 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The alt-left-left unit `δₐᵃ` as a morphism `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ altLeftHanded ⊗ leftHanded `,
   manifesting the invariance under the `SL(2,ℂ)` action. -/
 def altLeftLeftUnit :
-    (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap (altLeftHandedRep.tprod leftHandedRep) where
+    (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
+      (altLeftHandedRep.tprod leftHandedRep) where
   toFun := fun a =>
       let a' : ℂ := a
       a' • altLeftLeftUnitVal

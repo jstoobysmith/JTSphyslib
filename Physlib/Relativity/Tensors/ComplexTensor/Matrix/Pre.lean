@@ -136,7 +136,8 @@ lemma contrContrToMatrix_ρ (v : (ContrℂModule ⊗[ℂ] ContrℂModule)) (M : 
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
         ((LinearMap.toMatrix complexContrBasis complexContrBasis) (ContrℂModule.SL2CRep M))
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis) (ContrℂModule.SL2CRep M)) (i, j) k)
+        ((LinearMap.toMatrix complexContrBasis complexContrBasis)
+          (ContrℂModule.SL2CRep M)) (i, j) k)
         * contrContrToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
   simp_rw [kroneckerMap_apply, Matrix.mul_apply, Matrix.transpose_apply]
@@ -265,7 +266,8 @@ lemma coContrToMatrix_ρ (v : (CoℂModule ⊗[ℂ] ContrℂModule)) (M : SL(2,�
   funext i j
   change ∑ k, ((kroneckerMap (fun x1 x2 => x1 * x2)
         ((LinearMap.toMatrix complexCoBasis complexCoBasis) (CoℂModule.SL2CRep M))
-        ((LinearMap.toMatrix complexContrBasis complexContrBasis) (ContrℂModule.SL2CRep M)) (i, j) k)
+        ((LinearMap.toMatrix complexContrBasis complexContrBasis)
+          (ContrℂModule.SL2CRep M)) (i, j) k)
         * coContrToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
   simp_rw [kroneckerMap_apply, Matrix.mul_apply, Matrix.transpose_apply]
@@ -293,7 +295,8 @@ lemma coContrToMatrix_ρ (v : (CoℂModule ⊗[ℂ] ContrℂModule)) (M : SL(2,�
 
 set_option backward.isDefEq.respectTransparency false in
 lemma contrContrToMatrix_ρ_symm (v : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℂ) (M : SL(2,ℂ)) :
-    TensorProduct.map (ContrℂModule.SL2CRep M) (ContrℂModule.SL2CRep M) (contrContrToMatrix.symm v) =
+    TensorProduct.map (ContrℂModule.SL2CRep M) (ContrℂModule.SL2CRep M)
+      (contrContrToMatrix.symm v) =
     contrContrToMatrix.symm ((LorentzGroup.toComplex (SL2C.toLorentzGroup M)) * v *
     (LorentzGroup.toComplex (SL2C.toLorentzGroup M))ᵀ) := by
   have h1 := contrContrToMatrix_ρ (contrContrToMatrix.symm v) M

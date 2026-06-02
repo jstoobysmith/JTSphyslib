@@ -152,14 +152,15 @@ lemma toTensor_apply {n : ℕ} (c : Fin n → C) (p : Pure S c) :
     toTensor p = PiTensorProduct.tprod k p := rfl
 
 /-- Given a list of indices `c` of `n` indices, a pure tensor `p`, an element `i : Fin n` and
-  a `x` in `S.FD.obj (Discrete.mk (c i))` then `update p i x` corresponds to `p` where
+  a `x` in `V (c i)` then `update p i x` corresponds to `p` where
   the `i`th part of `p` is replaced with `x`.
 
   E.g. if `n = 2` and `p = v₀ ⊗ₜ v₁` then `update p 0 x = x ⊗ₜ v₁`. -/
 def update {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i : Fin n)
     (x : V (c i)) : Pure S c := Function.update p i x
 
-lemma update_eq_function_update {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)] (p : Pure S c) (i : Fin n)
+lemma update_eq_function_update {n : ℕ} {c : Fin n → C} [inst : DecidableEq (Fin n)]
+    (p : Pure S c) (i : Fin n)
     (x : V (c i)) : update p i x = Function.update p i x := rfl
 
 @[simp]
@@ -493,7 +494,7 @@ noncomputable instance actionP : MulAction G (Pure S c) where
 lemma actionP_eq {g : G} {p : Pure S c} : g • p = fun i => rep (c i) g (p i) := rfl
 
 lemma rep_cast {g : G} {c c1 : C} (p : V c) (h : c = c1) :
-     LinearEquiv.cast (R := k) h (rep c g p) = rep c1 g (LinearEquiv.cast (R := k) h p):= by
+    LinearEquiv.cast (R := k) h (rep c g p) = rep c1 g (LinearEquiv.cast (R := k) h p):= by
   subst h
   rfl
 
@@ -522,7 +523,7 @@ noncomputable instance : SMul G (S.Tensor c) where
   smul g t := PiTensorProduct.map (fun i => rep (c i) g) t
 
 lemma actionT_eq {g : G} {t : S.Tensor c} : g • t =
-  PiTensorProduct.map (fun i => rep (c i) g) t := rfl
+    PiTensorProduct.map (fun i => rep (c i) g) t := rfl
 
 noncomputable instance actionT : MulAction G (S.Tensor c) where
   one_smul t := by

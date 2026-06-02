@@ -274,7 +274,8 @@ lemma repDim_tau {c : complexLorentzTensor.Color} :
 lemma contrPCoeff_basis {n : ℕ} {c : Fin n → complexLorentzTensor.Color} (i j : Fin n)
     (hij : i ≠ j ∧ (complexLorentzTensor.τ (c i) = c j))
     (b : ComponentIdx (S := complexLorentzTensor) c) :
-    Pure.contrPCoeff i j hij (Pure.basisVector c b) = if b i = Fin.cast (by simp [← hij.2, repDim_tau]) (b j)
+    Pure.contrPCoeff i j hij (Pure.basisVector c b) = if b i =
+      Fin.cast (by simp [← hij.2, repDim_tau]) (b j)
     then 1 else 0 := by
   simp only [Pure.contrPCoeff, Pure.basisVector]
   generalize_proofs h1 h2
@@ -286,32 +287,32 @@ lemma contrPCoeff_basis {n : ℕ} {c : Fin n → complexLorentzTensor.Color} (i 
   fin_cases ci
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Fermion.leftAltContraction_basis]
     grind
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Fermion.altLeftContraction_basis]
     grind
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Fermion.altRightContraction_basis]
     grind
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Fermion.altLeftContraction_basis]
     grind
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Lorentz.coContrContraction_basis]
     grind
   · simp [complexLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Lorentz.contrCoContraction_basis]
     grind
 

@@ -158,14 +158,16 @@ lemma contrCoContract_apply_metric {d : ℕ} :
     (TensorProduct.comm ℝ _ _ <|
       (TensorProduct.lid ℝ _).lTensor _ <|
       (contrCoContract.toLinearMap.rTensor (CoMod d)).lTensor (ContrMod d) <|
-      (TensorProduct.assoc ℝ (ContrMod d) (CoMod d) (CoMod d)).symm.toLinearMap.lTensor (ContrMod d) <|
+      (TensorProduct.assoc ℝ (ContrMod d) (CoMod d) (CoMod d)).symm.toLinearMap.lTensor
+        (ContrMod d) <|
       TensorProduct.assoc ℝ (ContrMod d) (ContrMod d) ((CoMod d) ⊗[ℝ] (CoMod d)) <|
       (preContrMetric d 1) ⊗ₜ[ℝ] (preCoMetric d 1)) = preCoContrUnit d (1 : ℝ) := by
   calc _
     _ = (TensorProduct.comm ℝ _ _ <|
       (TensorProduct.lid ℝ _).lTensor _ <|
       (contrCoContract.toLinearMap.rTensor (CoMod d)).lTensor (ContrMod d) <|
-      (TensorProduct.assoc ℝ (ContrMod d) (CoMod d) (CoMod d)).symm.toLinearMap.lTensor (ContrMod d) <|
+      (TensorProduct.assoc ℝ (ContrMod d) (CoMod d) (CoMod d)).symm.toLinearMap.lTensor
+        (ContrMod d) <|
       TensorProduct.assoc ℝ (ContrMod d) (ContrMod d) ((CoMod d) ⊗[ℝ] (CoMod d)) <|
       ∑ i, ∑ j, ((η i i * η j j) •
       ((contrBasis d i ⊗ₜ[ℝ] contrBasis d i) ⊗ₜ[ℝ] (coBasis d j ⊗ₜ[ℝ] coBasis d j)))) := by
@@ -211,22 +213,25 @@ lemma contrCoContract_apply_metric {d : ℕ} :
 open minkowskiMatrix in
 set_option backward.isDefEq.respectTransparency false in
 lemma coContrContract_apply_metric {d : ℕ} :
-     (TensorProduct.comm ℝ _ _ <|
-      (TensorProduct.lid ℝ _).lTensor _ <|
-      (coContrContract.toLinearMap.rTensor (ContrMod d)).lTensor (CoMod d) <|
-      (TensorProduct.assoc ℝ (CoMod d) (ContrMod d) (ContrMod d)).symm.toLinearMap.lTensor (CoMod d) <|
-      TensorProduct.assoc ℝ (CoMod d) (CoMod d) ((ContrMod d) ⊗[ℝ] (ContrMod d)) <|
-      (preCoMetric d 1) ⊗ₜ[ℝ] (preContrMetric d 1)) = preContrCoUnit d (1 : ℝ) := by
+    (TensorProduct.comm ℝ _ _ <|
+    (TensorProduct.lid ℝ _).lTensor _ <|
+    (coContrContract.toLinearMap.rTensor (ContrMod d)).lTensor (CoMod d) <|
+    (TensorProduct.assoc ℝ (CoMod d) (ContrMod d) (ContrMod d)).symm.toLinearMap.lTensor
+      (CoMod d) <|
+    TensorProduct.assoc ℝ (CoMod d) (CoMod d) ((ContrMod d) ⊗[ℝ] (ContrMod d)) <|
+    (preCoMetric d 1) ⊗ₜ[ℝ] (preContrMetric d 1)) = preContrCoUnit d (1 : ℝ) := by
   calc _
     _ = (TensorProduct.comm ℝ _ _ <| (TensorProduct.lid ℝ _).lTensor _ <|
       (coContrContract.toLinearMap.rTensor (ContrMod d)).lTensor (CoMod d) <|
-      (TensorProduct.assoc ℝ (CoMod d) (ContrMod d) (ContrMod d)).symm.toLinearMap.lTensor (CoMod d) <|
+      (TensorProduct.assoc ℝ (CoMod d) (ContrMod d) (ContrMod d)).symm.toLinearMap.lTensor
+        (CoMod d) <|
       TensorProduct.assoc ℝ (CoMod d) (CoMod d) ((ContrMod d) ⊗[ℝ] (ContrMod d)) <|
       ∑ i, ∑ j, ((η i i * η j j) •
       ((coBasis d i ⊗ₜ[ℝ] coBasis d i) ⊗ₜ[ℝ] (contrBasis d j ⊗ₜ[ℝ] contrBasis d j)))) := by
         congr
         rw [preCoMetric_apply_one, preContrMetric_apply_one,
-          preCoMetricVal_expand_tmul_minkowskiMatrix, preContrMetricVal_expand_tmul_minkowskiMatrix]
+          preCoMetricVal_expand_tmul_minkowskiMatrix,
+          preContrMetricVal_expand_tmul_minkowskiMatrix]
         simp [tmul_sum, sum_tmul, - Fintype.sum_sum_type, Finset.smul_sum]
         rw [Finset.sum_comm]
         congr 1

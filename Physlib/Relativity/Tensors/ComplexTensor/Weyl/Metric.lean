@@ -301,12 +301,12 @@ lemma leftAltContraction_apply_metric :
 
 set_option backward.isDefEq.respectTransparency false in
 lemma altLeftContraction_apply_metric :
-  (TensorProduct.comm ℂ _ _ <|
-      (TensorProduct.lid ℂ _).lTensor _ <|
-      (altLeftContraction.toLinearMap.rTensor _).lTensor _ <|
-      (TensorProduct.assoc ℂ _ _ _).symm.toLinearMap.lTensor _<|
-      TensorProduct.assoc ℂ _ _ (_ ⊗[ℂ] _) <|
-      (altLeftMetric 1) ⊗ₜ[ℂ] (leftMetric 1)) = leftAltLeftUnit (1 : ℂ) := by
+    (TensorProduct.comm ℂ _ _ <|
+    (TensorProduct.lid ℂ _).lTensor _ <|
+    (altLeftContraction.toLinearMap.rTensor _).lTensor _ <|
+    (TensorProduct.assoc ℂ _ _ _).symm.toLinearMap.lTensor _<|
+    TensorProduct.assoc ℂ _ _ (_ ⊗[ℂ] _) <|
+    (altLeftMetric 1) ⊗ₜ[ℂ] (leftMetric 1)) = leftAltLeftUnit (1 : ℂ) := by
   rw [leftMetric_apply_one, altLeftMetric_apply_one]
   rw [leftMetricVal_expand_tmul', altLeftMetricVal_expand_tmul]
   simp only [Fin.isValue, tmul_sub, sub_tmul, map_sub, assoc_tmul, LinearMap.lTensor_tmul,
@@ -322,12 +322,12 @@ lemma altLeftContraction_apply_metric :
 
 set_option backward.isDefEq.respectTransparency false in
 lemma rightAltContraction_apply_metric :
-  (TensorProduct.comm ℂ _ _ <|
-      (TensorProduct.lid ℂ _).lTensor _ <|
-      (rightAltContraction.toLinearMap.rTensor _).lTensor _ <|
-      (TensorProduct.assoc ℂ _ _ _).symm.toLinearMap.lTensor _<|
-      TensorProduct.assoc ℂ _ _ (_ ⊗[ℂ] _) <|
-      (rightMetric 1) ⊗ₜ[ℂ] (altRightMetric 1)) = altRightRightUnit (1 : ℂ) := by
+    (TensorProduct.comm ℂ _ _ <|
+    (TensorProduct.lid ℂ _).lTensor _ <|
+    (rightAltContraction.toLinearMap.rTensor _).lTensor _ <|
+    (TensorProduct.assoc ℂ _ _ _).symm.toLinearMap.lTensor _<|
+    TensorProduct.assoc ℂ _ _ (_ ⊗[ℂ] _) <|
+    (rightMetric 1) ⊗ₜ[ℂ] (altRightMetric 1)) = altRightRightUnit (1 : ℂ) := by
   rw [rightMetric_apply_one, altRightMetric_apply_one]
   rw [rightMetricVal_expand_tmul', altRightMetricVal_expand_tmul]
   simp only [Fin.isValue, tmul_sub, sub_tmul, map_sub, assoc_tmul, LinearMap.lTensor_tmul,

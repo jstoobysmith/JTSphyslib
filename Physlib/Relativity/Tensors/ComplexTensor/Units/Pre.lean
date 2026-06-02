@@ -172,8 +172,8 @@ lemma contr_coContrUnit (x : ContrℂModule) :
 open CategoryTheory
 
 lemma contrCoUnit_symm  :
-      contrCoUnit (1 : ℂ) = LinearMap.lTensor _ (LinearEquiv.refl _ _).toLinearMap
-        (TensorProduct.comm ℂ _ _ (coContrUnit (1 : ℂ))) := by
+    contrCoUnit (1 : ℂ) = LinearMap.lTensor _ (LinearEquiv.refl _ _).toLinearMap
+      (TensorProduct.comm ℂ _ _ (coContrUnit (1 : ℂ))) := by
   rw [contrCoUnit_apply_one, contrCoUnitVal_expand_tmul]
   rw [coContrUnit_apply_one, coContrUnitVal_expand_tmul]
   rfl

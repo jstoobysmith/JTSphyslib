@@ -180,11 +180,11 @@ lemma contrPCoeff_basis {d n : ℕ} {c : Fin n → realLorentzTensor.Color} (i j
   fin_cases ci
   · simp [realLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Lorentz.contrCoContract_basis]
   · simp [realLorentzTensor]
     erw [LinearEquiv.cast_apply]
-    simp
+    simp only [cast_eq]
     erw [Lorentz.coContrContract_basis]
 
 lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n + 1 + 1))
