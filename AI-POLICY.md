@@ -2,7 +2,7 @@
 
 We welcome AI-generated contributions to this repository. However, we have expectations for their use, which are detailed in this file. Please read this carefully; if you are using an AI agent, ensure it also reads this policy.
 
-We apply one-look triage to AI-generated PRs. This means that if we suspect a PR is AI-generated, we will look it once, and if it clearly does not meet our standards, we will close it without comment. It it does meet our standards, we will proceed with the normal review process.
+We apply one-look triage to AI-generated PRs. This means that if we suspect a PR is AI-generated, we will look it once, and if it clearly does not meet our standards, we will close it without comment. If it does meet our standards, we will proceed with the normal review process.
 
 ## Types of PRs
 
