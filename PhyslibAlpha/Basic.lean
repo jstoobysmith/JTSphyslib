@@ -4,12 +4,13 @@ Copyright (c) 2026 Joseph Tooby-Smith. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
-import Physlib.Meta.TODO.Basic
+public import Physlib.Meta.TODO.Basic
 /-!
 
 ## Overview
 
-PhyslibAlpha is an extension of Physlib with a ligher review process.
+PhyslibAlpha is an extension of Physlib with a lighter review process.
+We expect the file structure to match where possible that of Physlib.
 
 The idea is that it sits between the high review standards of Physlib and
 just allowing anything in the project.
