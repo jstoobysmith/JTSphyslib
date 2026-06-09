@@ -731,16 +731,17 @@ lemma PermCond.succAbove {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : Fin (n1 + 1)
   by_cases hi : σ i = 0
   · simpa [hi] using PermCond.succAbove_of_eq_zero i h hi
   · simpa [hi] using PermCond.succAbove_of_neq_zero i h hi
+
 lemma PermCond.succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     {c1 : Fin (n1 + 1 + 1) → C}
     (i j : Fin (n1 + 1 + 1)) (hij : i ≠ j)
     {σ : Fin (n1 + 1 + 1) → Fin (n + 1 + 1)} (hσ : PermCond c c1 σ) :
-    PermCond (c ∘ succSuccAbove (σ i) (σ j))
-      (c1 ∘ succSuccAbove i j) (funPredPredAbove i j hij σ hσ.1) := by
+    PermCond (c ∘  (σ i).succSuccAbove (σ j))
+      (c1 ∘ i.succSuccAbove j) (i.funPredPredAbove j hij σ hσ.1) := by
   apply And.intro
-  · exact funPredPredAbove_bijective i j hij σ hσ.left
+  · exact Fin.funPredPredAbove_bijective i j hij σ hσ.left
   · intro m
-    simp [funPredPredAbove, hσ.2]
+    simp [Fin.funPredPredAbove, hσ.2]
 
 open Fin in
 lemma PermCond.succSuccAbove_comm {n : ℕ} {c : Fin (n + 1 + 1 + 1 + 1) → C}
