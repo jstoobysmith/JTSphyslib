@@ -88,7 +88,8 @@ lemma integrable_ringMeasure_of_continuous (f : Space → ℝ) (hf : Continuous 
     exact BoundedContinuousFunction.integrable _ f'
   · exact ring_measurableEmbedding
 
-lemma integrable_ringMeasure_of_continuous_euclid (f : Space → EuclideanSpace ℝ (Fin n)) (hf : Continuous (f ∘ ring)) :
+lemma integrable_ringMeasure_of_continuous_euclid (f : Space → EuclideanSpace ℝ (Fin n))
+    (hf : Continuous (f ∘ ring)) :
     Integrable f ringMeasure := by
   rw [ringMeasure]
   rw [MeasurableEmbedding.integrable_map_iff]
@@ -109,7 +110,8 @@ lemma ringMeasure_prod_volume_map :
 @[simp]
 lemma ringMeasure_univ : ringMeasure Set.univ = ENNReal.ofReal ((2 : ℝ) * π) := by
   rw [ringMeasure, Measure.map_apply]
-  simp
+  simp only [Set.preimage_univ, Measure.toSphere_apply_univ, finrank_eq_dim, Nat.cast_ofNat,
+    volume_metricBall_two, Nat.ofNat_nonneg, ENNReal.ofReal_mul, ENNReal.ofReal_ofNat]
   · fun_prop
   · exact MeasurableSet.univ
 
