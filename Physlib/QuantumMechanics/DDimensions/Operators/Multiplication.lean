@@ -23,6 +23,9 @@ In this module we introduce unbounded operators defined by multiplication by a f
   (with maximal domain) with notation `𝓜 f`.
 - `mulOperator_adjoint_eq_conj` : For a.e. strongly measurable `f`, `(𝓜 f)† = 𝓜 (conj ∘ f)`
 - `mulOperator_isUnbounded` : For a.e. strongly measurable `f`, `𝓜 f` is an unbounded operator.
+- `mulOperator_compRestricted_le` : The composition `𝓜 f ∘ᵣ 𝓜 g` is contained in `𝓜 (f • g)`.
+- `mulOperator_compRestricted_eq` : The composition `𝓜 f ∘ᵣ 𝓜 g` is equal to `𝓜 (f • g)` when
+    `(𝓜 g).domain = ⊤`.
 
 ## iii. Table of contents
 
@@ -31,6 +34,7 @@ In this module we introduce unbounded operators defined by multiplication by a f
 - C. Adjoint
   - C.1. Self-adjoint
 - D. Closable & unbounded
+- E. Composition
 
 ## iv. References
 
@@ -192,7 +196,7 @@ private lemma exists_monotone_sets_hasFiniteIntegral
     fun n ↦ Metric.closedBall 0 n ∩ (w₁ ⁻¹' Metric.closedBall 0 n ∩ w₂ ⁻¹' Metric.closedBall 0 n)
   refine ⟨s, ?_, ?_, by measurability, ?_⟩
   · exact fun _ _ hmn _ hx ↦
-      ⟨ Metric.closedBall_subset_closedBall (Nat.cast_le.mpr hmn) hx.1,
+      ⟨Metric.closedBall_subset_closedBall (Nat.cast_le.mpr hmn) hx.1,
         Metric.closedBall_subset_closedBall (Nat.cast_le.mpr hmn) hx.2.1,
         Metric.closedBall_subset_closedBall (Nat.cast_le.mpr hmn) hx.2.2⟩
   · ext x
@@ -335,6 +339,37 @@ lemma mulOperator_isClosable {f : Space d → ℂ} (hf : AEStronglyMeasurable f)
 lemma mulOperator_isUnbounded {f : Space d → ℂ} (hf : AEStronglyMeasurable f) :
     (𝓜 f).IsUnbounded :=
   ⟨mulOperator_hasDenseDomain hf, mulOperator_isClosable hf⟩
+
+/-!
+## E. Composition
+-/
+
+lemma mulOperator_compRestricted_le (f g : Space d → ℂ) : 𝓜 f ∘ᵣ 𝓜 g ≤ 𝓜 (f • g) := by
+  constructor
+  · intro ψ hψ
+    obtain ⟨hψ, hgψ⟩ := mem_compRestricted_domain_iff.mp hψ
+    apply mem_mulOperator_domain_iff.mpr
+    refine memHS_of_ae _ (mem_mulOperator_domain_iff.mp hgψ) ?_
+    filter_upwards [mulOperator_apply_ae ⟨ψ, hψ⟩]
+    simp_all [mul_assoc]
+  · intro ψ φ hψφ
+    apply ext_iff.mpr
+    obtain ⟨hψ, hgψ⟩ := mem_compRestricted_domain_iff.mp ψ.2
+    filter_upwards [mulOperator_apply_ae φ, mulOperator_apply_ae ⟨ψ, hψ⟩,
+      mulOperator_apply_ae ⟨𝓜 g ⟨ψ, hψ⟩, hgψ⟩]
+    simp_all [mul_assoc]
+
+lemma mulOperator_compRestricted_eq (f : Space d → ℂ) {g : Space d → ℂ} (h : (𝓜 g).domain = ⊤) :
+    𝓜 f ∘ᵣ 𝓜 g = 𝓜 (f • g) := by
+  have hle := mulOperator_compRestricted_le f g
+  refine eq_of_le_of_domain_eq hle ?_
+  refine eq_of_le_of_ge hle.1 fun ψ hψ ↦ ?_
+  apply mem_compRestricted_domain_iff.mpr
+  use h ▸ Submodule.mem_top
+  apply mem_mulOperator_domain_iff.mpr
+  refine memHS_of_ae _ (mem_mulOperator_domain_iff.mp hψ) ?_
+  filter_upwards [mulOperator_apply_ae ⟨ψ, h ▸ Submodule.mem_top⟩]
+  simp_all [mul_assoc]
 
 end
 end SpaceDHilbertSpace

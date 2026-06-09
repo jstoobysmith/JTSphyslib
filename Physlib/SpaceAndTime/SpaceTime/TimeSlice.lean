@@ -42,6 +42,7 @@ def timeSlice {d : ℕ} {M : Type} (c : SpeedOfLight := 1) :
     funext x t
     simp
 
+@[fun_prop]
 lemma timeSlice_contDiff {d : ℕ} {M : Type} [NormedAddCommGroup M]
     [NormedSpace ℝ M]
     {n} (c : SpeedOfLight) (f : SpaceTime d → M) (h : ContDiff ℝ n f) :
@@ -51,6 +52,7 @@ lemma timeSlice_contDiff {d : ℕ} {M : Type} [NormedAddCommGroup M]
   · exact h
   · exact ContinuousLinearEquiv.contDiff (toTimeAndSpace c).symm
 
+@[fun_prop]
 lemma timeSlice_differentiable {d : ℕ} {M : Type} [NormedAddCommGroup M]
     [NormedSpace ℝ M] (c : SpeedOfLight)
     (f : SpaceTime d → M) (h : Differentiable ℝ f) :
@@ -59,6 +61,25 @@ lemma timeSlice_differentiable {d : ℕ} {M : Type} [NormedAddCommGroup M]
   apply Differentiable.comp
   · exact h
   · exact ContinuousLinearEquiv.differentiable (toTimeAndSpace c).symm
+
+@[fun_prop]
+lemma timeSlice_symm_contDiff {d : ℕ} {M : Type} [NormedAddCommGroup M] [NormedSpace ℝ M]
+    {n} (c : SpeedOfLight) (f : Time → Space d → M) (h : ContDiff ℝ n ↿f) :
+    ContDiff ℝ n ((timeSlice c).symm f) := by
+  change ContDiff ℝ n (Function.uncurry f ∘ toTimeAndSpace c)
+  apply ContDiff.comp
+  · exact h
+  · exact ContinuousLinearEquiv.contDiff (toTimeAndSpace c)
+
+@[fun_prop]
+lemma timeSlice_symm_differentiable {d : ℕ} {M : Type} [NormedAddCommGroup M] [NormedSpace ℝ M]
+    (c : SpeedOfLight)
+    (f : Time → Space d → M) (h : Differentiable ℝ ↿f) :
+    Differentiable ℝ ↿((timeSlice c).symm f) := by
+  change Differentiable ℝ (Function.uncurry f ∘ toTimeAndSpace c)
+  apply Differentiable.comp
+  · exact h
+  · exact ContinuousLinearEquiv.differentiable (toTimeAndSpace c)
 
 /-- The timeslice of a function `SpaceTime d → M` forming a function
   `Time → Space d → M`, as a linear equivalence. -/
@@ -93,7 +114,6 @@ lemma timeSliceLinearEquiv_symm_apply {d : ℕ} {M : Type} [AddCommGroup M] [Mod
 -/
 open Distribution SchwartzMap
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The time slice of a distribution on `SpaceTime d` to form a distribution
   on `Time × Space d`. -/
 noncomputable def distTimeSlice {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
@@ -138,7 +158,6 @@ lemma distTimeSlice_symm_apply {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 lemma distTimeSlice_distDeriv_inl {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
     {c : SpeedOfLight}
     (f : (SpaceTime d) →d[ℝ] M) :
@@ -184,7 +203,6 @@ lemma distTimeSlice_symm_distTimeDeriv_eq {M d} [NormedAddCommGroup M] [NormedSp
   rw [distDeriv_inl_distTimeSlice_symm]
   simp
 
-set_option backward.isDefEq.respectTransparency false in
 lemma distTimeSlice_distDeriv_inr {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
     {c : SpeedOfLight}
     (i : Fin d) (f : (SpaceTime d) →d[ℝ] M) :

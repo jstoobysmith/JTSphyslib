@@ -8,7 +8,6 @@ module
 public import Physlib.Electromagnetism.Distributional.Dynamics.IsExtrema
 public import Physlib.SpaceAndTime.Space.Norm
 public import Physlib.SpaceAndTime.Space.Translations
-public import Physlib.SpaceAndTime.TimeAndSpace.ConstantTimeDist
 /-!
 
 # Electrostatics of a stationary point particle in 3d
@@ -93,7 +92,6 @@ where $q$ is the charge of the particle and $r₀$ is the position of the partic
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma threeDimPointParticleCurrentDensity_chargeDensity (c : SpeedOfLight) (q : ℝ) (r₀ : Space 3) :
     (threeDimPointParticleCurrentDensity c q r₀).chargeDensity c =
@@ -118,7 +116,6 @@ In other words, there is no current flow for a point particle at rest.
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma threeDimPointParticleCurrentDensity_currentDensity (c : SpeedOfLight) (q : ℝ) (r₀ : Space 3) :
     (threeDimPointParticleCurrentDensity c q r₀).currentDensity c = 0 := by
@@ -177,7 +174,6 @@ $$V(r) = \frac{q}{4 π \epsilon_0 |r - r_0|}.$$
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 lemma threeDimPointParticle_scalarPotential (𝓕 : FreeSpace) (q : ℝ) (r₀ : Space 3) :
     (threeDimPointParticle 𝓕 q r₀).scalarPotential 𝓕.c =
     Space.constantTime (distOfFunction (fun x => (q/ (4 * π * 𝓕.ε₀))• ‖x - r₀‖⁻¹)
@@ -209,7 +205,6 @@ $$\vec A(r) = 0.$$
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma threeDimPointParticle_vectorPotential (𝓕 : FreeSpace) (q : ℝ) (r₀ : Space 3) :
     (threeDimPointParticle 𝓕 q r₀).vectorPotential 𝓕.c = 0 := by
@@ -281,13 +276,12 @@ satisfies Maxwell's equations for a point particle at rest.
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 lemma threeDimPointParticle_div_electricField {𝓕} (q : ℝ) (r₀ : Space 3) :
     distSpaceDiv ((threeDimPointParticle 𝓕 q r₀).electricField 𝓕.c) =
     (1/𝓕.ε₀) • constantTime (q • diracDelta ℝ r₀) := by
   rw [threeDimPointParticle_electricField]
   simp only [Int.reduceNeg, zpow_neg, map_smul, smul_smul]
-  have h1 := Space.distDiv_inv_pow_eq_dim (d := 2)
+  have h1 := Space.distDiv_inv_pow_eq_dim (d := 3)
   simp at h1
   trans (q / (4 * π * 𝓕.ε₀)) •
     distSpaceDiv (constantTime <|
@@ -305,7 +299,6 @@ lemma threeDimPointParticle_div_electricField {𝓕} (q : ℝ) (r₀ : Space 3) 
   ring_nf
   field_simp
 
-set_option backward.isDefEq.respectTransparency false in
 lemma threeDimPointParticle_isExterma (𝓕 : FreeSpace) (q : ℝ) (r₀ : Space 3) :
     (threeDimPointParticle 𝓕 q r₀).IsExtrema 𝓕 (threeDimPointParticleCurrentDensity 𝓕.c q r₀) := by
   rw [isExtrema_iff_components]

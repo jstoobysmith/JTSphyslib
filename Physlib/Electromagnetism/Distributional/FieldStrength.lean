@@ -36,7 +36,6 @@ In this module we define the field strength tensor in terms of the electromagnet
 @[expose] public section
 namespace Electromagnetism
 open Module realLorentzTensor
-open IndexNotation
 open TensorSpecies
 open Tensor
 
@@ -67,15 +66,15 @@ attribute [-simp] Nat.succ_eq_add_one
 noncomputable def fieldStrengthAux {d} (A : DistElectromagneticPotential d)
     (ε : 𝓢(SpaceTime d, ℝ)) : Lorentz.Vector d ⊗[ℝ] Lorentz.Vector d :=
   Tensorial.toTensor.symm
-      (permT id (PermCond.auto) {(η d | μ μ' ⊗ A.deriv ε | μ' ν) + -
-      (η d | ν ν' ⊗ A.deriv ε | ν' μ)}ᵀ)
+      (permT id (PermCond.auto) {(η d | μ μ' ⊗ distTensorDeriv A ε | μ' ν) + -
+      (η d | ν ν' ⊗ distTensorDeriv A ε | ν' μ)}ᵀ)
 
-set_option backward.isDefEq.respectTransparency false in
 lemma fieldStrengthAux_eq_add {d} (A : DistElectromagneticPotential d) (ε : 𝓢(SpaceTime d, ℝ)) :
     fieldStrengthAux A ε =
-    Tensorial.toTensor.symm (permT id (PermCond.auto) {(η d | μ μ' ⊗ A.deriv ε | μ' ν)}ᵀ)
+    Tensorial.toTensor.symm
+      (permT id (PermCond.auto) {(η d | μ μ' ⊗ distTensorDeriv A ε | μ' ν)}ᵀ)
     - Tensorial.toTensor.symm (permT ![1, 0] (PermCond.auto)
-      {(η d | μ μ' ⊗ A.deriv ε | μ' ν)}ᵀ) := by
+      {(η d | μ μ' ⊗ distTensorDeriv A ε | μ' ν)}ᵀ) := by
   rw [fieldStrengthAux]
   simp only [map_add, map_neg]
   rw [sub_eq_add_neg]
@@ -87,8 +86,9 @@ lemma fieldStrengthAux_eq_add {d} (A : DistElectromagneticPotential d) (ε : �
 lemma toTensor_fieldStrengthAux {d} (A : DistElectromagneticPotential d)
     (ε : 𝓢(SpaceTime d, ℝ)) :
     Tensorial.toTensor (fieldStrengthAux A ε) =
-    (permT id (PermCond.auto) {(η d | μ μ' ⊗ A.deriv ε | μ' ν)}ᵀ)
-    - (permT ![1, 0] (PermCond.auto) {(η d | μ μ' ⊗ A.deriv ε | μ' ν)}ᵀ) := by
+    (permT id (PermCond.auto) {(η d | μ μ' ⊗ distTensorDeriv A ε | μ' ν)}ᵀ)
+    - (permT ![1, 0] (PermCond.auto)
+      {(η d | μ μ' ⊗ distTensorDeriv A ε | μ' ν)}ᵀ) := by
   rw [fieldStrengthAux_eq_add]
   simp
 
@@ -109,7 +109,7 @@ lemma toTensor_fieldStrengthAux_basis_repr {d} (A : DistElectromagneticPotential
     change η (b 0) n
   conv_lhs =>
     enter [1, 2, n, 2]
-    rw [toTensor_deriv_basis_repr_apply]
+    rw [toTensor_distTensorDeriv_basis_repr_apply]
     change distDeriv n A ε (b 1)
   rw [Tensor.permT_basis_repr_symm_apply, contrT_basis_repr_apply_eq_fin]
   conv_lhs =>
@@ -119,7 +119,7 @@ lemma toTensor_fieldStrengthAux_basis_repr {d} (A : DistElectromagneticPotential
     change η (b 1) n
   conv_lhs =>
     enter [2, 2, n, 2]
-    rw [toTensor_deriv_basis_repr_apply]
+    rw [toTensor_distTensorDeriv_basis_repr_apply]
     change distDeriv n A ε (b 0)
   rw [← Finset.sum_sub_distrib]
 
@@ -184,7 +184,7 @@ lemma fieldStrengthAux_eq_basis {d} (A : DistElectromagneticPotential d)
   ext b
   match b with
   | (μ, ν) =>
-  simp [map_sum, map_smul, Finsupp.coe_finset_sum, Finsupp.coe_smul, Finset.sum_apply,
+  simp [map_sum, map_smul, Finsupp.coe_finsetSum, Finsupp.coe_smul, Finset.sum_apply,
     Pi.smul_apply, Basis.tensorProduct_repr_tmul_apply, Basis.repr_self, smul_eq_mul]
   simp [Finsupp.single_apply]
   rw [fieldStrengthAux_basis_repr_apply_eq_single]
@@ -195,7 +195,6 @@ lemma fieldStrengthAux_eq_basis {d} (A : DistElectromagneticPotential d)
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The field strength of an electromagnetic potential which is a distribution. -/
 noncomputable def fieldStrength {d} :
     DistElectromagneticPotential d →ₗ[ℝ]
@@ -264,7 +263,6 @@ lemma fieldStrength_diag_zero {d} (A : DistElectromagneticPotential d)
   rw [fieldStrength_basis_repr_eq_single]
   simp
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma distDeriv_fieldStrength_diag_zero {d} (A : DistElectromagneticPotential d)
     (ε : 𝓢(SpaceTime d, ℝ)) (μ ν : Fin 1 ⊕ Fin d) :
@@ -293,7 +291,7 @@ lemma fieldStrength_equivariant {d} (A : DistElectromagneticPotential d)
     (Λ • A).fieldStrength = Λ • A.fieldStrength := by
   ext ε
   rw [fieldStrength_eq_fieldStrengthAux, lorentzGroup_smul_dist_apply]
-  rw [fieldStrengthAux_eq_add, deriv_equivariant, lorentzGroup_smul_dist_apply,
+  rw [fieldStrengthAux_eq_add, distTensorDeriv_equivariant, lorentzGroup_smul_dist_apply,
     ← actionT_contrMetric Λ]
   generalize ((schwartzAction Λ⁻¹) ε) = ε'
   rw [fieldStrength_eq_fieldStrengthAux, fieldStrengthAux_eq_add]

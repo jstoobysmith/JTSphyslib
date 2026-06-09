@@ -33,8 +33,14 @@ these correspond to physical observables.
 
 ## ii. Key results
 
+- `LinearPMap.compRestricted` : For two partial linear maps `g : F →ₗ[R] G` and `f : E →ₗ[R] F`,
+    the composition of `g` with `f` with natural domain `{x : f.domain | f x ∈ g.domain}`.
+- `LinearPMap.instMonoid` : Partial linear maps `E →ₗ.[R] E` with `compRestricted`
+    for multiplication and the identity map for `1` comprise a monoid.
 - `adjoint_add_le_add_adjoint` : The inequality `U₁† + U₂† ≤ (U₁ + U₂)†` when `U₁ + U₂` has
     dense domain.
+- `adjoint_compRestricted_le_compRestricted_adjoint` : The inequality `U† ∘ᵣ V† ≤ (V ∘ᵣ U)†`
+    when `V` and `V ∘ᵣ U` have dense domain.
 - `IsEssentiallySelfAdjoint.unique_self_adjoint_extension` : The closure of an essentially
     self-adjoint unbounded operator is its unique self-adjoint extension.
 - `IsUnbounded.adjoint` : The adjoint of an unbounded operator is also unbounded.
@@ -47,15 +53,21 @@ these correspond to physical observables.
 - A. General
   - A.1. DistribMulAction
   - A.2. Finite sums
+  - A.3. Restricted composition
+  - A.4. Monoid
+  - A.5. Inequalities
 - B. Operators on inner product/Hilbert spaces
   - B.1. Definitions
-  - B.2. Dense domain
-  - B.3. Closability
-  - B.4. Adjoints
-  - B.5. Symmetric operators
-  - B.6. Self-adjoint operators
-  - B.7. Essentially self-adjoint operators
-  - B.8. Unbounded operators
+  - B.2. Basic properties
+    - B.2.1. Dense domain
+    - B.2.2. Closability
+    - B.2.3. Adjoints
+    - B.2.4. Continuity / boundedness
+  - B.3. Classes of operators
+    - B.3.1. Symmetric operators
+    - B.3.2. Self-adjoint operators
+    - B.3.3. Essentially self-adjoint operators
+    - B.3.4. Unbounded operators
 
 ## iv. References
 
@@ -78,6 +90,8 @@ on an inner product/Hilbert space structure.
 -/
 
 section General
+
+open Submodule
 
 variable {R : Type*} [Ring R]
 variable {E : Type*} [AddCommGroup E] [Module R E]
@@ -103,8 +117,6 @@ end
 
 section
 
-open Submodule
-
 variable {α : Type*} [Fintype α] (f : α → E →ₗ.[R] F)
 
 /-- A finite sum of partial linear maps.
@@ -119,8 +131,196 @@ lemma sum_domain : (sum f).domain = ⨅ a, (f a).domain := rfl
 
 lemma sum_domain_le (a : α) : (sum f).domain ≤ (f a).domain := fun _ _ ↦ by simp_all [sum, mem_iInf]
 
+@[simp]
 lemma sum_apply (ψ : (sum f).domain) : sum f ψ = ∑ a, f a ⟨ψ, sum_domain_le f a ψ.2⟩ := by
   simp [sum, inclusion_apply]
+
+end
+
+/-!
+### A.3. Restricted composition
+
+The composition of two partial linear maps `g : F →ₗ.[R] G` and `f : E →ₗ.[R] F` is defined
+only if the range of `f` is contained in the domain of `g` (c.f. `LinearPMap.comp`).
+`g.compRestricted f` (`g ∘ᵣ f`) is defined to be the composition of `g` with the restriction of `f`
+to exactly those `x : f.domain` for which `f x ∈ g.domain`. This allows one to work with the
+composition of partial linear maps while having the domain implicitly accounted for.
+-/
+
+section
+
+variable {G : Type*} [AddCommGroup G] [Module R G]
+
+/-- `g ∘ᵣ f` is the composition of `g` with `f` restricted to a domain consisting of exactly those
+  `x : f.domain` for which `f x ∈ g.domain`. -/
+def compRestricted (g : F →ₗ.[R] G) (f : E →ₗ.[R] F) : E →ₗ.[R] G :=
+  g.comp (f.domRestrict <| (g.domain.comap f.toFun).map f.domain.subtype) (by
+    intro ⟨x, h, _⟩
+    simp only [map_coe, subtype_apply, comap_coe, Set.mem_image, Set.mem_preimage,
+      toFun_eq_coe, SetLike.mem_coe] at h
+    obtain ⟨y, hy, hy'⟩ := h
+    rw [domRestrict_apply hy'.symm]
+    exact hy)
+
+@[inherit_doc compRestricted]
+infixr:80 " ∘ᵣ " => compRestricted
+
+lemma compRestricted_domain_le (g : F →ₗ.[R] G) (f : E →ₗ.[R] F) : (g ∘ᵣ f).domain ≤ f.domain :=
+  fun _ h ↦ h.2
+
+lemma mem_compRestricted_domain_iff {g : F →ₗ.[R] G} {f : E →ₗ.[R] F} {x : E} :
+    x ∈ (g ∘ᵣ f).domain ↔ ∃ h : x ∈ f.domain, f ⟨x, h⟩ ∈ g.domain := by
+  change x ∈ (g.domain.comap f.toFun).map f.domain.subtype ⊓ f.domain ↔ _
+  simp
+
+lemma mem_domain_of_mem_compRestricted_domain
+    {g : F →ₗ.[R] G} {f : E →ₗ.[R] F} (x : (g ∘ᵣ f).domain) : f ⟨x, x.2.2⟩ ∈ g.domain := by
+  obtain ⟨_, h⟩ := mem_compRestricted_domain_iff.mp x.2
+  exact h
+
+@[simp]
+lemma compRestricted_apply {g : F →ₗ.[R] G} {f : E →ₗ.[R] F} (x : (g ∘ᵣ f).domain) :
+    (g ∘ᵣ f) x = g ⟨f ⟨x, x.2.2⟩, mem_domain_of_mem_compRestricted_domain x⟩ :=
+  rfl
+
+/-- The zero map is right-absorbing. -/
+@[simp]
+lemma compRestricted_zero (g : F →ₗ.[R] G) : g ∘ᵣ (0 : E →ₗ.[R] F) = 0 := by
+  ext
+  · simp [mem_compRestricted_domain_iff]
+  · exact g.map_zero
+
+lemma compRestricted_assoc {H : Type*} [AddCommGroup H] [Module R H]
+    (f₁ : G →ₗ.[R] H) (f₂ : F →ₗ.[R] G) (f₃ : E →ₗ.[R] F) :
+    (f₁ ∘ᵣ f₂) ∘ᵣ f₃ = f₁ ∘ᵣ f₂ ∘ᵣ f₃ := by
+  ext
+  · simp only [mem_compRestricted_domain_iff]
+    tauto
+  · rfl
+
+/-- `compRestricted` is the same as `comp` when the range of `f` is contained in `g.domain`. -/
+lemma compRestricted_eq_comp
+    {g : F →ₗ.[R] G} {f : E →ₗ.[R] F} (h : ∀ x : f.domain, f x ∈ g.domain) :
+    g ∘ᵣ f = g.comp f h := by
+  ext x
+  · change _ ↔ x ∈ f.domain
+    simp [mem_compRestricted_domain_iff, h]
+  · rfl
+
+/-- `compRestricted` is maximal amongst compositions of `g` with domain restrictions of `f`. -/
+lemma comp_le_compRestricted {g : F →ₗ.[R] G} {f : E →ₗ.[R] F} {S : Submodule R E}
+    (h : ∀ x : (f.domRestrict S).domain, f ⟨x, x.2.2⟩ ∈ g.domain) :
+    g.comp (f.domRestrict S) h ≤ g ∘ᵣ f :=
+  ⟨fun x hx ↦ mem_compRestricted_domain_iff.mpr ⟨hx.2, h ⟨x, hx⟩⟩, by aesop⟩
+
+lemma compRestricted_mono_left {g g' : F →ₗ.[R] G} (h : g ≤ g') (f : E →ₗ.[R] F) :
+    g ∘ᵣ f ≤ g' ∘ᵣ f := by
+  constructor
+  · intro x hx
+    obtain ⟨hx', hfx⟩ := mem_compRestricted_domain_iff.mp hx
+    exact mem_compRestricted_domain_iff.mpr ⟨hx', h.1 hfx⟩
+  · intro x y hxy
+    exact @h.2 ⟨f ⟨x, x.2.2⟩, mem_domain_of_mem_compRestricted_domain x⟩
+      ⟨f ⟨y, y.2.2⟩, mem_domain_of_mem_compRestricted_domain y⟩ (by simp [hxy])
+
+lemma compRestricted_mono_right (g : F →ₗ.[R] G) {f f' : E →ₗ.[R] F} (h : f ≤ f') :
+    g ∘ᵣ f ≤ g ∘ᵣ f' := by
+  constructor
+  · intro x hx
+    obtain ⟨hx', hfx⟩ := mem_compRestricted_domain_iff.mp hx
+    exact mem_compRestricted_domain_iff.mpr ⟨h.1 hx', (@h.2 ⟨x, hx'⟩ ⟨x, h.1 hx'⟩ rfl) ▸ hfx⟩
+  · intro x y hxy
+    simp only [compRestricted_apply, @h.2 ⟨x, x.2.2⟩ ⟨y, y.2.2⟩ hxy]
+
+end
+
+/-!
+### A.4. Monoid
+
+Partial linear maps `E →ₗ.[R] E` with `compRestricted` for multiplication and
+the identity map (domain `⊤`) for `1` comprise a monoid.
+-/
+
+instance instMonoid : Monoid (E →ₗ.[R] E) where
+  mul := compRestricted
+  mul_assoc := compRestricted_assoc
+  one := ⟨⊤, topEquiv.toLinearMap⟩
+  one_mul f := by
+    change ⟨⊤, topEquiv.toLinearMap⟩ ∘ᵣ f = f
+    ext
+    · simp [mem_compRestricted_domain_iff]
+    · rfl
+  mul_one f := by
+    change f ∘ᵣ ⟨⊤, topEquiv.toLinearMap⟩ = f
+    ext
+    · simp [mem_compRestricted_domain_iff]
+    · rfl
+
+lemma mul_def (f₁ f₂ : E →ₗ.[R] E) : f₁ * f₂ = f₁ ∘ᵣ f₂ := rfl
+
+@[simp]
+lemma one_domain : (1 : E →ₗ.[R] E).domain = ⊤ := rfl
+
+@[simp]
+lemma one_toFun : (1 : E →ₗ.[R] E).toFun = topEquiv.toLinearMap := rfl
+
+@[simp]
+lemma one_coe : (1 : E →ₗ.[R] E).toFun' = ⇑topEquiv.toLinearMap := rfl
+
+/-!
+### A.5. Inequalities
+-/
+
+section
+
+variable (f f₁ f₂ f₃ : E →ₗ.[R] F) {g g₁ g₂ : E →ₗ.[R] F}
+
+lemma sub_le_zero : f - f ≤ 0 := ⟨le_top, by simp [sub_apply]⟩
+
+lemma neg_add_le_zero : -f + f ≤ 0 := ⟨le_top, by simp [add_apply]⟩
+
+lemma le_iff_neg_le_neg : g₁ ≤ g₂ ↔ -g₁ ≤ -g₂ :=
+  ⟨fun ⟨h, h'⟩ ↦ ⟨h, fun _ _ h'' ↦ by simp [h' h'']⟩, fun ⟨h, _⟩ ↦ ⟨h, fun _ _ _ ↦ by aesop⟩⟩
+
+lemma le_neg_iff_neg_le : g₁ ≤ -g₂ ↔ -g₁ ≤ g₂ := by rw [le_iff_neg_le_neg, neg_neg]
+
+lemma add_sub_le_cancel : f₁ + (f₂ - f₁) ≤ f₂ :=
+  ⟨by simp [add_domain, sub_domain], fun _ _ h ↦ by simp [add_apply, sub_apply, h]⟩
+
+lemma add_sub_le_cancel_left : f₁ + f₂ - f₁ ≤ f₂ := add_sub_assoc f₁ f₂ f₁ ▸ add_sub_le_cancel f₁ f₂
+
+lemma add_sub_le_cancel_right : f₁ + f₂ - f₂ ≤ f₁ := add_comm f₁ f₂ ▸ add_sub_le_cancel_left f₂ f₁
+
+lemma add_add_sub_le_cancel : f₁ + f₂ + (f₃ - f₂) ≤ f₁ + f₃ :=
+  ⟨fun _ _ ↦ by simp_all [add_domain, sub_domain], fun _ _ h ↦ by simp [add_apply, sub_apply, h]⟩
+
+lemma add_sub_sub_le_cancel : f₁ + f₂ - (f₁ - f₃) ≤ f₂ + f₃ :=
+  ⟨fun _ _ ↦ by simp_all [add_domain, sub_domain], fun _ _ h ↦ by simp [add_apply, sub_apply, h]⟩
+
+lemma sub_le_of_le_add (h : g ≤ g₁ + g₂) : g - g₂ ≤ g₁ := by
+  constructor
+  · exact (inf_le_of_left_le le_rfl).trans (le_inf_iff.mp <| add_domain g₁ g₂ ▸ h.1).1
+  · intro ⟨x, hx⟩ ⟨y, hy⟩ rfl
+    simp [sub_apply, @h.2 ⟨x, hx.1⟩ ⟨x, ⟨hy, hx.2⟩⟩ rfl, add_apply]
+
+lemma add_le_of_le_sub (h : g ≤ g₁ - g₂) : g + g₂ ≤ g₁ :=
+  sub_neg_eq_add g g₂ ▸ sub_le_of_le_add (sub_eq_add_neg g₁ g₂ ▸ h)
+
+lemma add_left_le_of_le (h : g₁ ≤ g₂) : f + g₁ ≤ f + g₂ := by
+  constructor
+  · simp only [add_domain, le_inf_iff, inf_le_left, true_and]
+    exact (inf_le_of_right_le le_rfl).trans h.1
+  · intro x y hxy
+    simp_rw [add_apply, @h.2 ⟨x, x.2.2⟩ ⟨y, y.2.2⟩ hxy, hxy]
+
+lemma add_right_le_of_le (h : g₁ ≤ g₂) : g₁ + f ≤ g₂ + f :=
+  add_comm f g₁ ▸ add_comm f g₂ ▸ add_left_le_of_le f h
+
+lemma sub_right_le_of_le (h : g₁ ≤ g₂) : g₁ - f ≤ g₂ - f :=
+  sub_eq_add_neg g₁ f ▸ sub_eq_add_neg g₂ f ▸ add_right_le_of_le (-f) h
+
+lemma sub_left_le_of_le (h : g₁ ≤ g₂) : f - g₁ ≤ f - g₂ :=
+  neg_sub g₁ f ▸ neg_sub g₂ f ▸ le_iff_neg_le_neg.mp (sub_right_le_of_le f h)
 
 end
 
@@ -140,9 +340,11 @@ open Complex ComplexConjugate
 variable
   {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
   {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H']
+  {H'' : Type*} [NormedAddCommGroup H''] [InnerProductSpace ℂ H'']
   {α : Type*} [Fintype α]
   {T T₁ T₂ : H →ₗ.[ℂ] H} {S : α → H →ₗ.[ℂ] H}
-  {U U₁ U₂ : H →ₗ.[ℂ] H'} {V : α → H →ₗ.[ℂ] H'}
+  {U U₁ U₂ : H →ₗ.[ℂ] H'} {W : α → H →ₗ.[ℂ] H'}
+  {V V₁ V₂ : H' →ₗ.[ℂ] H''}
 
 instance : IsScalarTower ℝ ℂ H := IsScalarTower.complexToReal
 
@@ -163,7 +365,7 @@ def IsUnbounded (U : H →ₗ.[ℂ] H') : Prop := U.HasDenseDomain ∧ U.IsClosa
 
 lemma isUnbounded_def : U.IsUnbounded ↔ U.HasDenseDomain ∧ U.IsClosable := Iff.rfl
 
-/-- A LinearPMap `U` is symmetric iff `⟪U x, y⟫_ℂ = ⟪x, U y⟫_ℂ` for all `x y : U.domain`. -/
+/-- A LinearPMap `T` is symmetric iff `⟪T x, y⟫_ℂ = ⟪x, T y⟫_ℂ` for all `x y : T.domain`. -/
 def IsSymmetric (T : H →ₗ.[ℂ] H) : Prop := T.IsFormalAdjoint T
 
 lemma isSymmetric_def : T.IsSymmetric ↔ T.IsFormalAdjoint T := Iff.rfl
@@ -175,7 +377,11 @@ lemma isEssentiallySelfAdjoint_def [CompleteSpace H] :
     T.IsEssentiallySelfAdjoint ↔ IsSelfAdjoint T.closure := Iff.rfl
 
 /-!
-### B.2. Dense domain
+### B.2. Basic properties
+-/
+
+/-!
+#### B.2.1. Dense domain
 -/
 
 lemma HasDenseDomain.isUnbounded_iff_isClosable (h : U.HasDenseDomain) :
@@ -214,12 +420,24 @@ lemma HasDenseDomain.sub_of_le (h₁ : U₁.HasDenseDomain) (h_le : U₁.domain 
   h₁.mono (by simp [h_le, sub_domain])
 
 lemma HasDenseDomain.sum_of_le
-    {E : Submodule ℂ H} (hE : Dense (E : Set H)) (h : ∀ a, E ≤ (V a).domain) :
-    (sum V).HasDenseDomain :=
+    {E : Submodule ℂ H} (hE : Dense (E : Set H)) (h : ∀ a, E ≤ (W a).domain) :
+    (sum W).HasDenseDomain :=
   hE.mono (by simp [sum_domain, h])
 
+lemma HasDenseDomain.pow
+    (h : T.HasDenseDomain) (h_range : ∀ x : T.domain, T x ∈ T.domain) (n : ℕ) :
+    (T ^ n).HasDenseDomain := by
+  apply h.mono
+  induction n with
+  | zero => simp
+  | succ n ih => exact fun x hx ↦ mem_compRestricted_domain_iff.mpr ⟨hx, ih (h_range ⟨x, hx⟩)⟩
+
+lemma pow_hasDenseDomain_of_le
+    {n : ℕ} (h : (T ^ n).HasDenseDomain) {k : ℕ} (hle : k ≤ n) : (T ^ k).HasDenseDomain :=
+  h.mono <| pow_sub_mul_pow T hle ▸ compRestricted_domain_le _ _
+
 /-!
-### B.3. Closability
+#### B.2.2. Closability
 -/
 
 lemma IsClosable.isClosed_iff (h : U.IsClosable) : U.IsClosed ↔ U.closure = U := by
@@ -300,8 +518,15 @@ lemma closure_smul (U : H →ₗ.[ℂ] H') {c : ℂ} (hc : c ≠ 0) : (c • U).
   · rw [closure_def' h, closure_def' <| (not_congr <| IsClosable.smul_iff hc).mpr h]
 
 /-!
-### B.4. Adjoints
+#### B.2.3. Adjoints
 -/
+
+@[simp]
+lemma adjoint_one [CompleteSpace H] : (1 : H →ₗ.[ℂ] H)† = 1 := by
+  ext x
+  · simp only [one_domain, mem_top, iff_true]
+    exact mem_adjoint_domain_of_exists _ ⟨x, fun _ ↦ rfl⟩
+  · exact adjoint_apply_eq dense_univ _ fun _ ↦ rfl
 
 /-- The adjoint of a zero LinearPMap (any domain) is zero (domain `⊤`). -/
 lemma adjoint_of_zero [CompleteSpace H] (h_zero : ⇑U = 0) : U† = 0 := by
@@ -366,8 +591,192 @@ lemma adjoint_add_le_add_adjoint [CompleteSpace H]
       adjoint_isFormalAdjoint h₁ ⟨u, u.2.1⟩ ⟨w, w.2.1⟩,
       adjoint_isFormalAdjoint h₂ ⟨u, u.2.2⟩ ⟨w, w.2.2⟩]
 
+lemma adjoint_compRestricted_le_compRestricted_adjoint [CompleteSpace H] [CompleteSpace H']
+    (hV : V.HasDenseDomain) (hVU : (V ∘ᵣ U).HasDenseDomain) : U† ∘ᵣ V† ≤ (V ∘ᵣ U)† := by
+  have hU : U.HasDenseDomain := hVU.mono (compRestricted_domain_le V U)
+  have h : (U† ∘ᵣ V†).IsFormalAdjoint (V ∘ᵣ U) := by
+    intro x y
+    have hx := mem_domain_of_mem_compRestricted_domain x
+    have hy := mem_domain_of_mem_compRestricted_domain y
+    trans ⟪V† ⟨x, x.2.2⟩, U ⟨y, y.2.2⟩⟫_ℂ
+    · exact adjoint_isFormalAdjoint hU ⟨V† ⟨x, x.2.2⟩, hx⟩ ⟨y, y.2.2⟩
+    exact adjoint_isFormalAdjoint hV ⟨x, x.2.2⟩ ⟨U ⟨y, y.2.2⟩, hy⟩
+  constructor
+  · exact fun x hx ↦ mem_adjoint_domain_of_exists _ ⟨(U† ∘ᵣ V†) ⟨x, hx⟩, h ⟨x, hx⟩⟩
+  · exact fun x y hxy ↦ (adjoint_apply_eq hVU y <| hxy ▸ h x).symm
+
+lemma adjoint_pow_le_pow_adjoint [CompleteSpace H] {n : ℕ} (h : (T ^ n).HasDenseDomain) :
+    T† ^ n ≤ (T ^ n)† := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    have hTn : (T ^ n).HasDenseDomain := pow_hasDenseDomain_of_le h n.le_succ
+    refine le_trans ?_ (adjoint_compRestricted_le_compRestricted_adjoint hTn h)
+    exact pow_succ' T† n ▸ compRestricted_mono_right T† (ih hTn)
+
 /-!
-### B.5. Symmetric operators
+#### B.2.4. Continuity / boundedness
+-/
+
+/-- `f : E →ₗ[𝕜] F` is continuous iff there exists `M > 0` s.t. `‖f x‖ ≤ M * ‖x‖` for all `x : E`.
+
+  This is a (convenient) immediate consequence of
+  `IsBoundedLinearMap.isLinearMap_and_continuous_iff_isBoundedLinearMap`. -/
+lemma _root_.LinearMap.continuous_iff_bounded {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+    [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [SeminormedAddCommGroup F] [NormedSpace 𝕜 F]
+    {f : E →ₗ[𝕜] F} : Continuous f ↔ ∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖ := by
+  refine (and_congr_right_iff (a := IsLinearMap 𝕜 f)).mp ?_ f.isLinear
+  rw [← isBoundedLinearMap_iff]
+  exact IsBoundedLinearMap.isLinearMap_and_continuous_iff_isBoundedLinearMap f
+
+/-- Continuous operators are closable. -/
+lemma isClosable_of_continuous (h : Continuous U) : U.IsClosable := by
+  use U.graph.topologicalClosure.toLinearPMap
+  refine (toLinearPMap_graph_eq _ fun x hx hx₁ ↦ ?_).symm
+  obtain ⟨b, hb, hbx⟩ := mem_closure_iff_seq_limit.mp hx
+  rw [nhds_prod_eq] at hbx
+  apply norm_eq_zero.mp
+  apply tendsto_nhds_unique hbx.snd.norm
+  obtain ⟨M, hM, h_bound⟩ := LinearMap.continuous_iff_bounded.mp h
+  refine squeeze_zero (g := fun n ↦ M * ‖(b n).1‖) (fun _ ↦ norm_nonneg _) (fun n ↦ ?_) ?_
+  · obtain ⟨y, hy₁, hy₂⟩ := (mem_graph_iff _).mp (hb n)
+    simp only [← hy₁, ← hy₂]
+    exact h_bound y
+  · exact mul_zero M ▸ (norm_eq_zero.mpr hx₁) ▸ hbx.fst.norm.const_mul M
+
+/-- A strengthening of `closure_domain_le_domain_closure` for continuous operators. -/
+lemma closure_domain_eq_domain_closure_of_continuous [CompleteSpace H'] (h : Continuous U) :
+    U.closure.domain = U.domain.closure := by
+  refine eq_of_le_of_ge U.closure_domain_le_domain_closure fun x hx ↦ ?_
+  obtain ⟨M, hM, h_bound⟩ := LinearMap.continuous_iff_bounded.mp h
+  obtain ⟨b, hb, hb'⟩ := mem_closure_iff_seq_limit.mp hx
+  simp only [coe_toAddSubmonoid, SetLike.mem_coe] at hb
+  let Ub : ℕ → H' := fun n ↦ U ⟨b n, hb n⟩
+  have hCS : CauchySeq Ub := by
+    refine Metric.cauchySeq_iff'.mpr fun ε hε ↦ ?_
+    obtain ⟨N, hN⟩ := Metric.cauchySeq_iff'.mp hb'.cauchySeq (M⁻¹ * ε) (by positivity)
+    refine ⟨N, fun n hn ↦ ?_⟩
+    refine lt_of_le_of_lt ?_ ((lt_inv_mul_iff₀ hM).mp (hN n hn))
+    calc
+      _ = ‖Ub n - Ub N‖ := dist_eq_norm _ _
+      _ = ‖U (⟨b n, hb n⟩ - ⟨b N, hb N⟩)‖ := by simp [Ub, map_sub]
+      _ ≤ M * ‖b n - b N‖ := h_bound _
+      _ = M * dist (b n) (b N) := by rw [dist_eq_norm]
+  obtain ⟨y, hy⟩ := CompleteSpace.complete hCS
+  apply mem_domain_iff.mpr
+  rw [← (isClosable_of_continuous h).graph_closure_eq_closure_graph]
+  use y
+  apply mem_closure_iff_seq_limit.mpr
+  refine ⟨fun n ↦ (b n, Ub n), fun n ↦ ?_, ?_⟩
+  · simp [hb n, Ub]
+  · rw [nhds_prod_eq]
+    exact Filter.Tendsto.prodMk hb' hy
+
+/-- A continuous operator is closed iff its domain is closed. -/
+lemma isClosed_iff_isClosed_domain_of_continuous [CompleteSpace H'] (h : Continuous U) :
+    U.IsClosed ↔ _root_.IsClosed (U.domain : Set H) := by
+  rw [(isClosable_of_continuous h).isClosed_iff]
+  have h_domain := closure_domain_eq_domain_closure_of_continuous h
+  constructor <;> intro hcl
+  · exact hcl ▸ h_domain ▸ isClosed_closure
+  · refine (eq_of_le_of_domain_eq U.le_closure ?_).symm
+    exact h_domain ▸ hcl.submodule_topologicalClosure_eq.symm
+
+lemma IsClosed.isClosed_toFun_graph (hU : U.IsClosed) :
+    _root_.IsClosed (U.toFun.graph : Set (U.domain × H')) := by
+  refine isClosed_of_closure_subset fun ⟨x₁, x₂⟩ hx ↦ ?_
+  simp only [SetLike.mem_coe, LinearMap.mem_graph_iff, toFun_eq_coe]
+  suffices (↑x₁, x₂) ∈ U.graph.topologicalClosure by
+    simp_all [hU.isClosable.graph_closure_eq_closure_graph, hU.isClosable.isClosed_iff.mp hU]
+  obtain ⟨b, hb, hbx⟩ := mem_closure_iff_seq_limit.mp hx
+  apply mem_closure_iff_seq_limit.mpr
+  rw [nhds_prod_eq] at *
+  refine ⟨fun n ↦ (↑(b n).1, (b n).2), by simp_all, ?_⟩
+  exact Filter.Tendsto.prodMk (tendsto_subtype_rng.mp hbx.fst) hbx.snd
+
+/-- The **closed graph theorem** for partial linear maps:
+  a closed operator with closed domain is continuous.
+
+  This follows immediately from `LinearMap.continuous_of_isClosed_graph`
+  and the completeness of `H` and `H'`. -/
+lemma IsClosed.continuous_of_isClosed_domain [CompleteSpace H] [CompleteSpace H']
+    (hU : U.IsClosed) (h : _root_.IsClosed (U.domain : Set H)) :
+    Continuous U := by
+  have hCS : CompleteSpace U.domain := instCompleteSpaceSubtypeMemSubmoduleOfIsClosedCoe U.domain
+  refine @LinearMap.continuous_of_isClosed_graph _ _ _ _ _ hCS _ _ _ _ U.toFun ?_
+  exact hU.isClosed_toFun_graph
+
+/-- Closability is preserved upon adding a continuous operator. -/
+lemma IsClosable.add_continuous
+    (h₁ : U₁.IsClosable) (h₂ : Continuous U₂) (h : U₁.domain ≤ U₂.domain) :
+    (U₁ + U₂).IsClosable := by
+  use (U₁ + U₂).graph.topologicalClosure.toLinearPMap
+  refine (toLinearPMap_graph_eq _ fun ⟨x₁, x₂⟩ hx hx₁ ↦ ?_).symm
+  subst hx₁
+  refine graph_fst_eq_zero_snd U₁.closure ?_ rfl
+  rw [← h₁.graph_closure_eq_closure_graph]
+  apply mem_closure_iff_seq_limit.mpr
+  obtain ⟨b, hb, hbx⟩ := mem_closure_iff_seq_limit.mp hx
+  simp only [coe_toAddSubmonoid, SetLike.mem_coe, mem_graph_iff, add_domain, add_apply,
+    Subtype.exists, exists_and_left, exists_eq_left, nhds_prod_eq] at *
+  refine ⟨fun n ↦ ((b n).1, (b n).2 - U₂ ⟨(b n).1, h (hb n).choose.1⟩), fun n ↦ ?_, ?_⟩
+  · exact ⟨(hb n).choose.1, eq_sub_of_add_eq (hb n).choose_spec⟩
+  · refine Filter.Tendsto.prodMk hbx.fst ?_
+    refine sub_zero x₂ ▸ hbx.snd.sub ?_
+    exact map_zero U₂ ▸ (h₂.tendsto 0).comp (tendsto_subtype_rng.mpr hbx.fst)
+
+/-- Closability is preserved upon subtracting a continuous operator. -/
+lemma IsClosable.sub_continuous
+    (h₁ : U₁.IsClosable) (h₂ : Continuous U₂) (h : U₁.domain ≤ U₂.domain) : (U₁ - U₂).IsClosable :=
+  sub_eq_add_neg U₁ U₂ ▸ h₁.add_continuous h₂.neg h
+
+/-- Closedness is preserved upon adding a continuous operator. -/
+lemma IsClosed.add_continuous [CompleteSpace H']
+    (h₁ : U₁.IsClosed) (h₂ : Continuous U₂) (h : U₁.domain ≤ U₂.domain) : (U₁ + U₂).IsClosed := by
+  have hcl : (U₁ + U₂).IsClosable := h₁.isClosable.add_continuous h₂ h
+  apply hcl.isClosed_iff.mpr
+  refine eq_of_le_of_ge (le_of_le_graph ?_) (U₁ + U₂).le_closure
+  rw [← hcl.graph_closure_eq_closure_graph]
+  intro ⟨x₁, x₂⟩ hx
+  obtain ⟨b, hb, hbx⟩ := mem_closure_iff_seq_limit.mp hx
+  simp only [coe_toAddSubmonoid, SetLike.mem_coe, mem_graph_iff, Subtype.exists, exists_and_left,
+    exists_eq_left, add_domain, inf_of_le_left h] at hb
+  rw [nhds_prod_eq] at hbx
+  have hb₁U₂ : ∀ n, (b n).1 ∈ U₂.domain := fun n ↦ h (hb n).choose
+  have hCS : CauchySeq fun n ↦ U₂ ⟨(b n).1, hb₁U₂ n⟩ := by
+    obtain ⟨M, hM, h_bound⟩ := LinearMap.continuous_iff_bounded.mp h₂
+    refine Metric.cauchySeq_iff'.mpr fun ε hε ↦ ?_
+    obtain ⟨N, hN⟩ := Metric.cauchySeq_iff'.mp hbx.fst.cauchySeq (M⁻¹ * ε) (by positivity)
+    refine ⟨N, fun n hn ↦ ?_⟩
+    calc
+      _ = ‖U₂ (⟨(b n).1, hb₁U₂ n⟩ - ⟨(b N).1, hb₁U₂ N⟩)‖ := by rw [map_sub, dist_eq_norm]
+      _ ≤ M * ‖(b n).1 - (b N).1‖ := h_bound _
+      _ < ε := dist_eq_norm (b n).1 (b N).1 ▸ (lt_inv_mul_iff₀ hM).mp (hN n hn)
+  obtain ⟨y, hy⟩ := CompleteSpace.complete hCS
+  have hU₁ : (x₁, x₂ - y) ∈ U₁.graph := by
+    rw [← h₁.isClosable.isClosed_iff.mp h₁, ← h₁.isClosable.graph_closure_eq_closure_graph]
+    apply mem_closure_iff_seq_limit.mpr
+    refine ⟨fun n ↦ ((b n).1, (b n).2 - U₂ ⟨(b n).1, hb₁U₂ n⟩), fun n ↦ ?_, ?_⟩
+    · simp_all [add_apply, eq_sub_iff_add_eq]
+    · rw [nhds_prod_eq]
+      exact hbx.fst.prodMk (hbx.snd.sub hy)
+  have hx₁ : x₁ ∈ U₁.domain := mem_domain_of_mem_graph hU₁
+  have hU₂y : U₂ ⟨x₁, h hx₁⟩ = y := by
+    refine tendsto_nhds_unique ((h₂.tendsto ⟨x₁, h hx₁⟩).comp ?_) (Filter.tendsto_map'_iff.mp hy)
+    exact tendsto_subtype_rng.mpr hbx.fst
+  simp_all [add_domain, add_apply]
+
+/-- Closedness is preserved upon subtracting a continuous operator. -/
+lemma IsClosed.sub_continuous [CompleteSpace H']
+    (h₁ : U₁.IsClosed) (h₂ : Continuous U₂) (h : U₁.domain ≤ U₂.domain) : (U₁ - U₂).IsClosed :=
+  sub_eq_add_neg U₁ U₂ ▸ h₁.add_continuous h₂.neg h
+
+/-!
+### B.3. Classes of operators
+-/
+
+/-!
+#### B.3.1. Symmetric operators
 -/
 
 /-- The analogue of `inner_map_polarization` for LinearPMap. -/
@@ -432,6 +841,22 @@ lemma add_adjoint_isSymmetric [CompleteSpace H] (h : T.HasDenseDomain) :
   exact add_comm _ _
 
 @[aesop safe apply]
+lemma IsSymmetric.pow (h : T.IsSymmetric) (n : ℕ) : (T ^ n).IsSymmetric := by
+  induction n with
+  | zero => exact fun _ _ ↦ rfl
+  | succ n ih =>
+    intro x y
+    let y' : (T * T ^ n).domain := ⟨y, pow_succ' T n ▸ y.2⟩
+    let Tx : (T ^ n).domain := ⟨T ⟨x, x.2.2⟩, mem_domain_of_mem_compRestricted_domain x⟩
+    let Tny : T.domain := ⟨(T ^ n) ⟨y', y'.2.2⟩, mem_domain_of_mem_compRestricted_domain y'⟩
+    have h_eq : T Tny = (T ^ (n + 1)) y := by
+      change (T * T ^ n) y' = (T ^ (n + 1)) y
+      congr 1
+      · exact (pow_succ' T n).symm
+      · exact (Subtype.heq_iff_coe_eq <| by simp [pow_succ']).mpr rfl
+    exact (ih Tx ⟨y', y'.2.2⟩).trans (h_eq ▸ h ⟨x, x.2.2⟩ Tny)
+
+@[aesop safe apply]
 lemma IsSymmetric.neg (h : T.IsSymmetric) : (-T).IsSymmetric := fun x y ↦ by simp [h x y]
 
 @[aesop safe apply]
@@ -465,7 +890,7 @@ lemma IsSymmetric.of_le (h₁ : T₁.IsSymmetric) (h_le : T₂ ≤ T₁) : T₂.
   exact hx ▸ hy ▸ h₁ ⟨x, h_le.1 x.2⟩ ⟨y, h_le.1 y.2⟩
 
 /-!
-### B.6. Self-adjoint operators
+#### B.3.2. Self-adjoint operators
 -/
 
 lemma IsSelfAdjoint.isSymmetric [CompleteSpace H] (h : IsSelfAdjoint T) : T.IsSymmetric := by
@@ -508,7 +933,7 @@ lemma IsSelfAdjoint.neg [CompleteSpace H] (h : IsSelfAdjoint T) : IsSelfAdjoint 
   neg_eq_neg_one_smul T ▸ smul h (by norm_num) (by norm_num)
 
 /-!
-### B.7. Essentially self-adjoint operators
+#### B.3.3. Essentially self-adjoint operators
 -/
 
 lemma IsEssentiallySelfAdjoint.hasDenseDomain [CompleteSpace H] (h : T.IsEssentiallySelfAdjoint) :
@@ -555,7 +980,7 @@ lemma IsEssentiallySelfAdjoint.neg [CompleteSpace H] (h : T.IsEssentiallySelfAdj
   neg_eq_neg_one_smul T ▸ h.smul (by norm_num) (by norm_num)
 
 /-!
-### B.8. Unbounded operators
+#### B.3.4. Unbounded operators
 -/
 
 lemma IsUnbounded.hasDenseDomain (h : U.IsUnbounded) : U.HasDenseDomain := h.1

@@ -60,8 +60,13 @@ public import Physlib.Electromagnetism.ThreeDimension.MaxwellEquations
 public import Physlib.Electromagnetism.Vacuum.Constant
 public import Physlib.Electromagnetism.Vacuum.HarmonicWave
 public import Physlib.Electromagnetism.Vacuum.IsPlaneWave
+public import Physlib.FluidDynamics.FluidState
+public import Physlib.FluidDynamics.NavierStokes.Basic
+public import Physlib.FluidDynamics.NavierStokes.Continuity
+public import Physlib.FluidDynamics.NavierStokes.Momentum
 public import Physlib.Mathematics.Calculus.AdjFDeriv
 public import Physlib.Mathematics.Calculus.Divergence
+public import Physlib.Mathematics.Calculus.ParametricIntegration
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
@@ -159,6 +164,7 @@ public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.OrthogY
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.OrthogY3B3.ToSols
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Permutations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Y3
+public import Physlib.Particles.SuperSymmetry.N1.Basic
 public import Physlib.Particles.SuperSymmetry.SU5.ChargeSpectrum.AllowsTerm
 public import Physlib.Particles.SuperSymmetry.SU5.ChargeSpectrum.Basic
 public import Physlib.Particles.SuperSymmetry.SU5.ChargeSpectrum.Completions
@@ -256,6 +262,7 @@ public import Physlib.QuantumMechanics.DDimensions.Operators.Covariance
 public import Physlib.QuantumMechanics.DDimensions.Operators.Momentum
 public import Physlib.QuantumMechanics.DDimensions.Operators.Multiplication
 public import Physlib.QuantumMechanics.DDimensions.Operators.Position
+public import Physlib.QuantumMechanics.DDimensions.Operators.SpectralTheory.Basic
 public import Physlib.QuantumMechanics.DDimensions.Operators.StateObservables.ExpectedValue
 public import Physlib.QuantumMechanics.DDimensions.Operators.StateObservables.IsEigenvector
 public import Physlib.QuantumMechanics.DDimensions.Operators.StateObservables.Variance
@@ -312,9 +319,6 @@ public import Physlib.Relativity.Special.ProperTime
 public import Physlib.Relativity.Special.TwinParadox.Basic
 public import Physlib.Relativity.SpeedOfLight
 public import Physlib.Relativity.Tensors.Basic
-public import Physlib.Relativity.Tensors.Color.Basic
-public import Physlib.Relativity.Tensors.Color.Discrete
-public import Physlib.Relativity.Tensors.Color.Lift
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Lemmas
 public import Physlib.Relativity.Tensors.ComplexTensor.Matrix.Pre
@@ -334,6 +338,10 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Metric
 public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Modules
 public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Two
 public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Unit
+public import Physlib.Relativity.Tensors.ComponentIdx.Basic
+public import Physlib.Relativity.Tensors.ComponentIdx.Contraction
+public import Physlib.Relativity.Tensors.ComponentIdx.Product
+public import Physlib.Relativity.Tensors.ComponentIdx.Single
 public import Physlib.Relativity.Tensors.Constructors
 public import Physlib.Relativity.Tensors.Contraction.Basic
 public import Physlib.Relativity.Tensors.Contraction.Basis
@@ -370,10 +378,12 @@ public import Physlib.SpaceAndTime.Space.ConstantSliceDist
 public import Physlib.SpaceAndTime.Space.CrossProduct
 public import Physlib.SpaceAndTime.Space.Derivatives.Basic
 public import Physlib.SpaceAndTime.Space.Derivatives.Curl
+public import Physlib.SpaceAndTime.Space.Derivatives.DerivativeIndex
 public import Physlib.SpaceAndTime.Space.Derivatives.Div
 public import Physlib.SpaceAndTime.Space.Derivatives.Grad
 public import Physlib.SpaceAndTime.Space.Derivatives.Iterated
 public import Physlib.SpaceAndTime.Space.Derivatives.Laplacian
+public import Physlib.SpaceAndTime.Space.Derivatives.MatrixDiv
 public import Physlib.SpaceAndTime.Space.Derivatives.MultiIndex
 public import Physlib.SpaceAndTime.Space.DistConst
 public import Physlib.SpaceAndTime.Space.DistOfFunction
