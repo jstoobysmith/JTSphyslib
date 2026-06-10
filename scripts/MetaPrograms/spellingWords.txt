@@ -110,9 +110,9 @@ also
 alternative
 although
 altlefthanded
-altlefthandedweyl
+DualLeftHandedWeyl
 altrighthanded
-altrighthandedweyl
+DualRightHandedWeyl
 always
 ambiguities
 among

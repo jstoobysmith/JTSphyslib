@@ -70,7 +70,7 @@ lemma metricRaw_comm_star (M : SL(2,ℂ)) : metricRaw * M.1.map star = ((M.1)⁻
   simp
 
 /-- The metric `εᵃᵃ` as an element of `(leftHanded ⊗ leftHanded).V`. -/
-def leftMetricVal : LeftHandedModule ⊗[ℂ] LeftHandedModule :=
+def leftMetricVal : LeftHandedWeyl ⊗[ℂ] LeftHandedWeyl :=
   leftLeftToMatrix.symm (- metricRaw)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -117,7 +117,7 @@ lemma leftMetric_apply_one : leftMetric (1 : ℂ) = leftMetricVal := by
   simp only [one_smul]
 
 /-- The metric `εₐₐ` as an element of `(altLeftHanded ⊗ altLeftHanded).V`. -/
-def altLeftMetricVal : (AltLeftHandedModule ⊗[ℂ] AltLeftHandedModule) :=
+def altLeftMetricVal : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) :=
   altLeftaltLeftToMatrix.symm metricRaw
 
 set_option backward.isDefEq.respectTransparency false in
@@ -160,7 +160,7 @@ lemma altLeftMetric_apply_one : altLeftMetric (1 : ℂ) = altLeftMetricVal := by
   simp only [one_smul]
 
 /-- The metric `ε^{dot a}^{dot a}` as an element of `(rightHanded ⊗ rightHanded).V`. -/
-def rightMetricVal : (RightHandedModule ⊗[ℂ] RightHandedModule) :=
+def rightMetricVal : (RightHandedWeyl ⊗[ℂ] RightHandedWeyl) :=
   rightRightToMatrix.symm (- metricRaw)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -214,7 +214,7 @@ lemma rightMetric_apply_one : rightMetric (1 : ℂ) = rightMetricVal := by
   simp only [one_smul]
 
 /-- The metric `ε_{dot a}_{dot a}` as an element of `(altRightHanded ⊗ altRightHanded).V`. -/
-def altRightMetricVal : AltRightHandedModule ⊗[ℂ] AltRightHandedModule :=
+def altRightMetricVal : DualRightHandedWeyl ⊗[ℂ] DualRightHandedWeyl :=
   altRightAltRightToMatrix.symm (metricRaw)
 
 set_option backward.isDefEq.respectTransparency false in

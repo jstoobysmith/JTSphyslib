@@ -33,7 +33,7 @@ open CategoryTheory.MonoidalCategory
 
 /-- The bi-linear map corresponding to contraction of a left-handed Weyl fermion with a
   alt-left-handed Weyl fermion. -/
-def leftAltBi : LeftHandedModule →ₗ[ℂ] AltLeftHandedModule →ₗ[ℂ] ℂ where
+def leftAltBi : LeftHandedWeyl →ₗ[ℂ] DualLeftHandedWeyl →ₗ[ℂ] ℂ where
   toFun ψ := {
     toFun := fun φ => ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ,
     map_add' := by
@@ -57,7 +57,7 @@ def leftAltBi : LeftHandedModule →ₗ[ℂ] AltLeftHandedModule →ₗ[ℂ] ℂ
 
 /-- The bi-linear map corresponding to contraction of a alt-left-handed Weyl fermion with a
   left-handed Weyl fermion. -/
-def altLeftBi : AltLeftHandedModule →ₗ[ℂ] LeftHandedModule →ₗ[ℂ] ℂ where
+def altLeftBi : DualLeftHandedWeyl →ₗ[ℂ] LeftHandedWeyl →ₗ[ℂ] ℂ where
   toFun ψ := {
     toFun := fun φ => ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ,
     map_add' := by
@@ -80,7 +80,7 @@ def altLeftBi : AltLeftHandedModule →ₗ[ℂ] LeftHandedModule →ₗ[ℂ] ℂ
 
 /-- The bi-linear map corresponding to contraction of a right-handed Weyl fermion with a
   alt-right-handed Weyl fermion. -/
-def rightAltBi : RightHandedModule →ₗ[ℂ] AltRightHandedModule →ₗ[ℂ] ℂ where
+def rightAltBi : RightHandedWeyl →ₗ[ℂ] DualRightHandedWeyl →ₗ[ℂ] ℂ where
   toFun ψ := {
     toFun := fun φ => ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ,
     map_add' := by
@@ -104,7 +104,7 @@ def rightAltBi : RightHandedModule →ₗ[ℂ] AltRightHandedModule →ₗ[ℂ] 
 
 /-- The bi-linear map corresponding to contraction of a alt-right-handed Weyl fermion with a
   right-handed Weyl fermion. -/
-def altRightBi : AltRightHandedModule →ₗ[ℂ] RightHandedModule →ₗ[ℂ] ℂ where
+def altRightBi : DualRightHandedWeyl →ₗ[ℂ] RightHandedWeyl →ₗ[ℂ] ℂ where
   toFun ψ := {
     toFun := fun φ => ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ,
     map_add' := by
@@ -125,8 +125,8 @@ def altRightBi : AltRightHandedModule →ₗ[ℂ] RightHandedModule →ₗ[ℂ] 
     simp only [_root_.map_smul, smul_dotProduct, vec2_dotProduct, Fin.isValue, smul_eq_mul,
       LinearMap.coe_mk, AddHom.coe_mk, RingHom.id_apply, LinearMap.smul_apply]
 
-/-- The linear map from leftHandedWeyl ⊗ altLeftHandedWeyl to ℂ given by
-    summing over components of leftHandedWeyl and altLeftHandedWeyl in the
+/-- The linear map from leftHandedWeyl ⊗ DualLeftHandedWeyl to ℂ given by
+    summing over components of leftHandedWeyl and DualLeftHandedWeyl in the
     standard basis (i.e. the dot product).
     Physically, the contraction of a left-handed Weyl fermion with a alt-left-handed Weyl fermion.
     In index notation this is ψ^a φ_a. -/
@@ -138,8 +138,8 @@ def leftAltContraction : (leftHandedRep.tprod altLeftHandedRep).IntertwiningMap
     rw [dotProduct_mulVec, vecMul_transpose, mulVec_mulVec]
     simp
 
-lemma leftAltContraction_hom_tmul (ψ : LeftHandedModule)
-    (φ : AltLeftHandedModule) :
+lemma leftAltContraction_hom_tmul (ψ : LeftHandedWeyl)
+    (φ : DualLeftHandedWeyl) :
     leftAltContraction (ψ ⊗ₜ φ) = ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ := by
   rfl
 
@@ -152,8 +152,8 @@ lemma leftAltContraction_basis (i j : Fin 2) :
   refine ite_congr ?h₁ (congrFun rfl) (congrFun rfl)
   exact Eq.propIntro (fun a => id (Eq.symm a)) fun a => id (Eq.symm a)
 
-/-- The linear map from altLeftHandedWeyl ⊗ leftHandedWeyl to ℂ given by
-    summing over components of altLeftHandedWeyl and leftHandedWeyl in the
+/-- The linear map from DualLeftHandedWeyl ⊗ leftHandedWeyl to ℂ given by
+    summing over components of DualLeftHandedWeyl and leftHandedWeyl in the
     standard basis (i.e. the dot product).
     Physically, the contraction of a alt-left-handed Weyl fermion with a left-handed Weyl fermion.
     In index notation this is φ_a ψ^a. -/
@@ -165,7 +165,7 @@ def altLeftContraction : (altLeftHandedRep.tprod leftHandedRep).IntertwiningMap
     rw [dotProduct_mulVec, mulVec_transpose, vecMul_vecMul]
     simp
 
-lemma altLeftContraction_hom_tmul (φ : AltLeftHandedModule) (ψ : LeftHandedModule) :
+lemma altLeftContraction_hom_tmul (φ : DualLeftHandedWeyl) (ψ : LeftHandedWeyl) :
     altLeftContraction (φ ⊗ₜ ψ) = φ.toFin2ℂ ⬝ᵥ ψ.toFin2ℂ := by
   rfl
 
@@ -179,8 +179,8 @@ lemma altLeftContraction_basis (i j : Fin 2) :
   exact Eq.propIntro (fun a => id (Eq.symm a)) fun a => id (Eq.symm a)
 
 /--
-The linear map from `rightHandedWeyl ⊗ altRightHandedWeyl` to `ℂ` given by
-  summing over components of `rightHandedWeyl` and `altRightHandedWeyl` in the
+The linear map from `rightHandedWeyl ⊗ DualRightHandedWeyl` to `ℂ` given by
+  summing over components of `rightHandedWeyl` and `DualRightHandedWeyl` in the
   standard basis (i.e. the dot product).
   The contraction of a right-handed Weyl fermion with a left-handed Weyl fermion.
   In index notation this is `ψ^{dot a} φ_{dot a}`.
@@ -201,11 +201,11 @@ def rightAltContraction : (rightHandedRep.tprod altRightHandedRep).IntertwiningM
       simp only [SpecialLinearGroup.det_coe, isUnit_iff_ne_zero, ne_eq, one_ne_zero,
         not_false_eq_true, nonsing_inv_mul, conjTranspose_one, transpose_one]
     rw [h2]
-    simp only [one_mulVec, vec2_dotProduct, Fin.isValue, RightHandedModule.toFin2ℂEquiv_apply,
-      AltRightHandedModule.toFin2ℂEquiv_apply]
+    simp only [one_mulVec, vec2_dotProduct, Fin.isValue, RightHandedWeyl.toFin2ℂEquiv_apply,
+      DualRightHandedWeyl.toFin2ℂEquiv_apply]
 
-lemma rightAltContraction_hom_tmul (ψ : RightHandedModule)
-    (φ : AltRightHandedModule) :
+lemma rightAltContraction_hom_tmul (ψ : RightHandedWeyl)
+    (φ : DualRightHandedWeyl) :
     rightAltContraction (ψ ⊗ₜ φ) = ψ.toFin2ℂ ⬝ᵥ φ.toFin2ℂ := by
   rfl
 
@@ -220,8 +220,8 @@ lemma rightAltContraction_basis (i j : Fin 2) :
   exact Eq.propIntro (fun a => id (Eq.symm a)) fun a => id (Eq.symm a)
 
 /--
-  The linear map from altRightHandedWeyl ⊗ rightHandedWeyl to ℂ given by
-    summing over components of altRightHandedWeyl and rightHandedWeyl in the
+  The linear map from DualRightHandedWeyl ⊗ rightHandedWeyl to ℂ given by
+    summing over components of DualRightHandedWeyl and rightHandedWeyl in the
     standard basis (i.e. the dot product).
   The contraction of a right-handed Weyl fermion with a left-handed Weyl fermion.
     In index notation this is φ_{dot a} ψ^{dot a}.
@@ -242,11 +242,11 @@ def altRightContraction : (altRightHandedRep.tprod rightHandedRep).IntertwiningM
       simp only [SpecialLinearGroup.det_coe, isUnit_iff_ne_zero, ne_eq, one_ne_zero,
         not_false_eq_true, nonsing_inv_mul, conjTranspose_one, transpose_one]
     rw [h2]
-    simp only [vecMul_one, vec2_dotProduct, Fin.isValue, AltRightHandedModule.toFin2ℂEquiv_apply,
-      RightHandedModule.toFin2ℂEquiv_apply]
+    simp only [vecMul_one, vec2_dotProduct, Fin.isValue, DualRightHandedWeyl.toFin2ℂEquiv_apply,
+      RightHandedWeyl.toFin2ℂEquiv_apply]
 
-lemma altRightContraction_hom_tmul (φ : AltRightHandedModule)
-    (ψ : RightHandedModule) :
+lemma altRightContraction_hom_tmul (φ : DualRightHandedWeyl)
+    (ψ : RightHandedWeyl) :
     altRightContraction (φ ⊗ₜ ψ) = φ.toFin2ℂ ⬝ᵥ ψ.toFin2ℂ := by
   rfl
 
@@ -266,19 +266,19 @@ lemma altRightContraction_basis (i j : Fin 2) :
 
 -/
 
-lemma leftAltContraction_tmul_symm (ψ : LeftHandedModule) (φ : AltLeftHandedModule) :
+lemma leftAltContraction_tmul_symm (ψ : LeftHandedWeyl) (φ : DualLeftHandedWeyl) :
     leftAltContraction (ψ ⊗ₜ[ℂ] φ) = altLeftContraction (φ ⊗ₜ[ℂ] ψ) := by
   rw [leftAltContraction_hom_tmul, altLeftContraction_hom_tmul, dotProduct_comm]
 
-lemma altLeftContraction_tmul_symm (φ : AltLeftHandedModule) (ψ : LeftHandedModule) :
+lemma altLeftContraction_tmul_symm (φ : DualLeftHandedWeyl) (ψ : LeftHandedWeyl) :
     altLeftContraction (φ ⊗ₜ[ℂ] ψ) = leftAltContraction (ψ ⊗ₜ[ℂ] φ) := by
   rw [leftAltContraction_tmul_symm]
 
-lemma rightAltContraction_tmul_symm (ψ : RightHandedModule) (φ : AltRightHandedModule) :
+lemma rightAltContraction_tmul_symm (ψ : RightHandedWeyl) (φ : DualRightHandedWeyl) :
     rightAltContraction (ψ ⊗ₜ[ℂ] φ) = altRightContraction (φ ⊗ₜ[ℂ] ψ) := by
   rw [rightAltContraction_hom_tmul, altRightContraction_hom_tmul, dotProduct_comm]
 
-lemma altRightContraction_tmul_symm (φ : AltRightHandedModule) (ψ : RightHandedModule) :
+lemma altRightContraction_tmul_symm (φ : DualRightHandedWeyl) (ψ : RightHandedWeyl) :
     altRightContraction (φ ⊗ₜ[ℂ] ψ) = rightAltContraction (ψ ⊗ₜ[ℂ] φ) := by
   rw [rightAltContraction_tmul_symm]
 

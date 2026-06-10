@@ -27,7 +27,7 @@ open TensorProduct
 open CategoryTheory.MonoidalCategory
 
 /-- The left-alt-left unit `δᵃₐ` as an element of `(leftHanded ⊗ altLeftHanded).V`. -/
-def leftAltLeftUnitVal : (LeftHandedModule ⊗[ℂ] AltLeftHandedModule) :=
+def leftAltLeftUnitVal : (LeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) :=
   leftAltLeftToMatrix.symm 1
 
 /-- Expansion of `leftAltLeftUnitVal` into the basis. -/
@@ -66,7 +66,7 @@ lemma leftAltLeftUnit_apply_one : leftAltLeftUnit (1 : ℂ) = leftAltLeftUnitVal
   simp only [one_smul]
 
 /-- The alt-left-left unit `δₐᵃ` as an element of `(altLeftHanded ⊗ leftHanded).V`. -/
-def altLeftLeftUnitVal : (AltLeftHandedModule ⊗[ℂ] LeftHandedModule) :=
+def altLeftLeftUnitVal : (DualLeftHandedWeyl ⊗[ℂ] LeftHandedWeyl) :=
   altLeftLeftToMatrix.symm 1
 
 /-- Expansion of `altLeftLeftUnitVal` into the basis. -/
@@ -109,7 +109,7 @@ lemma altLeftLeftUnit_apply_one : altLeftLeftUnit (1 : ℂ) = altLeftLeftUnitVal
 
 /-- The right-alt-right unit `δ^{dot a}_{dot a}` as an element of
   `(rightHanded ⊗ altRightHanded).V`. -/
-def rightAltRightUnitVal : RightHandedModule ⊗[ℂ] AltRightHandedModule :=
+def rightAltRightUnitVal : RightHandedWeyl ⊗[ℂ] DualRightHandedWeyl :=
   rightAltRightToMatrix.symm 1
 
 /-- Expansion of `rightAltRightUnitVal` into the basis. -/
@@ -156,7 +156,7 @@ lemma rightAltRightUnit_apply_one : rightAltRightUnit (1 : ℂ) = rightAltRightU
 
 /-- The alt-right-right unit `δ_{dot a}^{dot a}` as an element of
   `(rightHanded ⊗ altRightHanded).V`. -/
-def altRightRightUnitVal : (AltRightHandedModule ⊗[ℂ] RightHandedModule) :=
+def altRightRightUnitVal : (DualRightHandedWeyl ⊗[ℂ] RightHandedWeyl) :=
   altRightRightToMatrix.symm 1
 
 /-- Expansion of `altRightRightUnitVal` into the basis. -/
@@ -206,7 +206,7 @@ lemma altRightRightUnit_apply_one : altRightRightUnit (1 : ℂ) = altRightRightU
 -/
 
 /-- Contraction on the right with `altLeftLeftUnit` does nothing. -/
-lemma contr_altLeftLeftUnit (x : LeftHandedModule) :
+lemma contr_altLeftLeftUnit (x : LeftHandedWeyl) :
     (TensorProduct.lid ℂ _ <|
     leftAltContraction.toLinearMap.rTensor _ <|
     (TensorProduct.assoc ℂ _ _ _).symm <|
@@ -217,7 +217,7 @@ lemma contr_altLeftLeftUnit (x : LeftHandedModule) :
     altLeftLeftUnit_apply_one, altLeftLeftUnitVal_expand_tmul, add_tmul, tmul_add]
 
 /-- Contraction on the right with `leftAltLeftUnit` does nothing. -/
-lemma contr_leftAltLeftUnit (x : AltLeftHandedModule) :
+lemma contr_leftAltLeftUnit (x : DualLeftHandedWeyl) :
     (TensorProduct.lid ℂ _ <|
     altLeftContraction.toLinearMap.rTensor _ <|
     (TensorProduct.assoc ℂ _ _ _).symm <|
@@ -228,7 +228,7 @@ lemma contr_leftAltLeftUnit (x : AltLeftHandedModule) :
     leftAltLeftUnit_apply_one, leftAltLeftUnitVal_expand_tmul, add_tmul, tmul_add]
 
 /-- Contraction on the right with `altRightRightUnit` does nothing. -/
-lemma contr_altRightRightUnit (x : RightHandedModule) :
+lemma contr_altRightRightUnit (x : RightHandedWeyl) :
     (TensorProduct.lid ℂ _ <|
     rightAltContraction.toLinearMap.rTensor _ <|
     (TensorProduct.assoc ℂ _ _ _).symm <|
@@ -239,7 +239,7 @@ lemma contr_altRightRightUnit (x : RightHandedModule) :
     altRightRightUnit_apply_one, altRightRightUnitVal_expand_tmul, add_tmul, tmul_add]
 
 /-- Contraction on the right with `rightAltRightUnit` does nothing. -/
-lemma contr_rightAltRightUnit (x : AltRightHandedModule) :
+lemma contr_rightAltRightUnit (x : DualRightHandedWeyl) :
     (TensorProduct.lid ℂ _ <|
     altRightContraction.toLinearMap.rTensor _ <|
     (TensorProduct.assoc ℂ _ _ _).symm <|

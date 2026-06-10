@@ -91,10 +91,10 @@ abbrev repDim (c : Color) : ℕ :=
 
 /-- The modules associated with each of the different types of complex Lorentz vector space. -/
 abbrev modules : Color → Type
-  | Color.upL => Fermion.LeftHandedModule
-  | Color.downL => Fermion.AltLeftHandedModule
-  | Color.upR => Fermion.RightHandedModule
-  | Color.downR => Fermion.AltRightHandedModule
+  | Color.upL => LeftHandedWeyl
+  | Color.downL => Fermion.DualLeftHandedWeyl
+  | Color.upR => Fermion.RightHandedWeyl
+  | Color.downR => Fermion.DualRightHandedWeyl
   | Color.up => Lorentz.ContrℂModule
   | Color.down => Lorentz.CoℂModule
 
@@ -122,10 +122,10 @@ set_option maxHeartbeats 0 in
 /-- The tensor structure for complex Lorentz tensors. -/
 def complexLorentzTensor : TensorSpecies ℂ complexLorentzTensor.Color SL(2, ℂ)
     (fun c => match c with
-      | Color.upL => Fermion.LeftHandedModule
-      | Color.downL => Fermion.AltLeftHandedModule
-      | Color.upR => Fermion.RightHandedModule
-      | Color.downR => Fermion.AltRightHandedModule
+      | Color.upL => LeftHandedWeyl
+      | Color.downL => Fermion.DualLeftHandedWeyl
+      | Color.upR => Fermion.RightHandedWeyl
+      | Color.downR => Fermion.DualRightHandedWeyl
       | Color.up => Lorentz.ContrℂModule
       | Color.down => Lorentz.CoℂModule)
     (fun c => Fin (repDim c))

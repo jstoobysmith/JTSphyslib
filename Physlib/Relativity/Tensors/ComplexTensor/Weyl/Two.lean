@@ -30,7 +30,7 @@ open CategoryTheory.MonoidalCategory
 -/
 
 /-- Equivalence of `leftHanded ⊗ leftHanded` to `2 x 2` complex matrices. -/
-def leftLeftToMatrix : (LeftHandedModule ⊗[ℂ] LeftHandedModule) ≃ₗ[ℂ] Matrix (Fin 2) (Fin 2) ℂ :=
+def leftLeftToMatrix : (LeftHandedWeyl ⊗[ℂ] LeftHandedWeyl) ≃ₗ[ℂ] Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct leftBasis leftBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 2) (Fin 2)
@@ -47,7 +47,7 @@ lemma leftLeftToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `altLeftHanded ⊗ altLeftHanded` to `2 x 2` complex matrices. -/
-def altLeftaltLeftToMatrix : (AltLeftHandedModule ⊗[ℂ] AltLeftHandedModule) ≃ₗ[ℂ]
+def altLeftaltLeftToMatrix : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct altLeftBasis altLeftBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -65,7 +65,7 @@ lemma altLeftaltLeftToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `leftHanded ⊗ altLeftHanded` to `2 x 2` complex matrices. -/
-def leftAltLeftToMatrix : (LeftHandedModule ⊗[ℂ] AltLeftHandedModule) ≃ₗ[ℂ]
+def leftAltLeftToMatrix : (LeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct leftBasis altLeftBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -83,7 +83,7 @@ lemma leftAltLeftToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `altLeftHanded ⊗ leftHanded` to `2 x 2` complex matrices. -/
-def altLeftLeftToMatrix : (AltLeftHandedModule ⊗[ℂ] LeftHandedModule) ≃ₗ[ℂ]
+def altLeftLeftToMatrix : (DualLeftHandedWeyl ⊗[ℂ] LeftHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct altLeftBasis leftBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -101,7 +101,7 @@ lemma altLeftLeftToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `rightHanded ⊗ rightHanded` to `2 x 2` complex matrices. -/
-def rightRightToMatrix : (RightHandedModule ⊗[ℂ] RightHandedModule) ≃ₗ[ℂ]
+def rightRightToMatrix : (RightHandedWeyl ⊗[ℂ] RightHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct rightBasis rightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -119,7 +119,7 @@ lemma rightRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `altRightHanded ⊗ altRightHanded` to `2 x 2` complex matrices. -/
-def altRightAltRightToMatrix : (AltRightHandedModule ⊗[ℂ] AltRightHandedModule) ≃ₗ[ℂ]
+def altRightAltRightToMatrix : (DualRightHandedWeyl ⊗[ℂ] DualRightHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct altRightBasis altRightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -138,7 +138,7 @@ lemma altRightAltRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ)
   · simp
 
 /-- Equivalence of `rightHanded ⊗ altRightHanded` to `2 x 2` complex matrices. -/
-def rightAltRightToMatrix : (RightHandedModule ⊗[ℂ] AltRightHandedModule) ≃ₗ[ℂ]
+def rightAltRightToMatrix : (RightHandedWeyl ⊗[ℂ] DualRightHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct rightBasis altRightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -156,7 +156,7 @@ lemma rightAltRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `altRightHanded ⊗ rightHanded` to `2 x 2` complex matrices. -/
-def altRightRightToMatrix : (AltRightHandedModule ⊗[ℂ] RightHandedModule) ≃ₗ[ℂ]
+def altRightRightToMatrix : (DualRightHandedWeyl ⊗[ℂ] RightHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct altRightBasis rightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -174,7 +174,7 @@ lemma altRightRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
   · simp
 
 /-- Equivalence of `altLeftHanded ⊗ altRightHanded` to `2 x 2` complex matrices. -/
-def altLeftAltRightToMatrix : (AltLeftHandedModule ⊗[ℂ] AltRightHandedModule) ≃ₗ[ℂ]
+def altLeftAltRightToMatrix : (DualLeftHandedWeyl ⊗[ℂ] DualRightHandedWeyl) ≃ₗ[ℂ]
     Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct altLeftBasis altRightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
@@ -192,7 +192,7 @@ lemma altLeftAltRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) 
   · simp
 
 /-- Equivalence of `leftHanded ⊗ rightHanded` to `2 x 2` complex matrices. -/
-def leftRightToMatrix : (LeftHandedModule ⊗[ℂ] RightHandedModule) ≃ₗ[ℂ] Matrix (Fin 2) (Fin 2) ℂ :=
+def leftRightToMatrix : (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl) ≃ₗ[ℂ] Matrix (Fin 2) (Fin 2) ℂ :=
   (Basis.tensorProduct leftBasis rightBasis).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℂ ℂ (Fin 2 × Fin 2) ≪≫ₗ
   LinearEquiv.curry ℂ ℂ (Fin 2) (Fin 2)
@@ -217,7 +217,7 @@ lemma leftRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `leftHanded ⊗ leftHanded` is equivalent to
   `M.1 * leftLeftToMatrix v * (M.1)ᵀ`. -/
-lemma leftLeftToMatrix_ρ (v : (LeftHandedModule ⊗[ℂ] LeftHandedModule)) (M : SL(2,ℂ)) :
+lemma leftLeftToMatrix_ρ (v : (LeftHandedWeyl ⊗[ℂ] LeftHandedWeyl)) (M : SL(2,ℂ)) :
     leftLeftToMatrix (TensorProduct.map (leftHandedRep M) (leftHandedRep M) v) =
     M.1 * leftLeftToMatrix v * (M.1)ᵀ := by
   nth_rewrite 1 [leftLeftToMatrix]
@@ -259,7 +259,7 @@ lemma leftLeftToMatrix_ρ (v : (LeftHandedModule ⊗[ℂ] LeftHandedModule)) (M 
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `altLeftHanded ⊗ altLeftHanded` is equivalent to
   `(M.1⁻¹)ᵀ * leftLeftToMatrix v * (M.1⁻¹)`. -/
-lemma altLeftaltLeftToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] AltLeftHandedModule)) (M : SL(2,ℂ)) :
+lemma altLeftaltLeftToMatrix_ρ (v : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl)) (M : SL(2,ℂ)) :
     altLeftaltLeftToMatrix (TensorProduct.map (altLeftHandedRep M) (altLeftHandedRep M) v) =
     (M.1⁻¹)ᵀ * altLeftaltLeftToMatrix v * (M.1⁻¹) := by
   nth_rewrite 1 [altLeftaltLeftToMatrix]
@@ -300,7 +300,7 @@ lemma altLeftaltLeftToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] AltLeftHanded
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `leftHanded ⊗ altLeftHanded` is equivalent to
   `M.1 * leftAltLeftToMatrix v * (M.1⁻¹)`. -/
-lemma leftAltLeftToMatrix_ρ (v : (LeftHandedModule ⊗[ℂ] AltLeftHandedModule)) (M : SL(2,ℂ)) :
+lemma leftAltLeftToMatrix_ρ (v : (LeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl)) (M : SL(2,ℂ)) :
     leftAltLeftToMatrix (TensorProduct.map (leftHandedRep M) (altLeftHandedRep M) v) =
     M.1 * leftAltLeftToMatrix v * (M.1⁻¹) := by
   nth_rewrite 1 [leftAltLeftToMatrix]
@@ -341,7 +341,7 @@ lemma leftAltLeftToMatrix_ρ (v : (LeftHandedModule ⊗[ℂ] AltLeftHandedModule
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `altLeftHanded ⊗ leftHanded` is equivalent to
   `(M.1⁻¹)ᵀ * leftAltLeftToMatrix v * (M.1)ᵀ`. -/
-lemma altLeftLeftToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] LeftHandedModule)) (M : SL(2,ℂ)) :
+lemma altLeftLeftToMatrix_ρ (v : (DualLeftHandedWeyl ⊗[ℂ] LeftHandedWeyl)) (M : SL(2,ℂ)) :
     altLeftLeftToMatrix (TensorProduct.map (altLeftHandedRep M) (leftHandedRep M) v) =
     (M.1⁻¹)ᵀ * altLeftLeftToMatrix v * (M.1)ᵀ := by
   nth_rewrite 1 [altLeftLeftToMatrix]
@@ -382,7 +382,7 @@ lemma altLeftLeftToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] LeftHandedModule
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `rightHanded ⊗ rightHanded` is equivalent to
   `(M.1.map star) * rightRightToMatrix v * ((M.1.map star))ᵀ`. -/
-lemma rightRightToMatrix_ρ (v : (RightHandedModule ⊗[ℂ] RightHandedModule)) (M : SL(2,ℂ)) :
+lemma rightRightToMatrix_ρ (v : (RightHandedWeyl ⊗[ℂ] RightHandedWeyl)) (M : SL(2,ℂ)) :
     rightRightToMatrix (TensorProduct.map (rightHandedRep M) (rightHandedRep M) v) =
     (M.1.map star) * rightRightToMatrix v * ((M.1.map star))ᵀ := by
   nth_rewrite 1 [rightRightToMatrix]
@@ -424,7 +424,7 @@ lemma rightRightToMatrix_ρ (v : (RightHandedModule ⊗[ℂ] RightHandedModule))
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `altRightHanded ⊗ altRightHanded` is equivalent to
   `((M.1⁻¹).conjTranspose * rightRightToMatrix v * (((M.1⁻¹).conjTranspose)ᵀ`. -/
-lemma altRightAltRightToMatrix_ρ (v : (AltRightHandedModule ⊗[ℂ] AltRightHandedModule))
+lemma altRightAltRightToMatrix_ρ (v : (DualRightHandedWeyl ⊗[ℂ] DualRightHandedWeyl))
     (M : SL(2,ℂ)) :
     altRightAltRightToMatrix (TensorProduct.map (altRightHandedRep M) (altRightHandedRep M) v) =
     ((M.1⁻¹).conjTranspose) * altRightAltRightToMatrix v * (((M.1⁻¹).conjTranspose)ᵀ) := by
@@ -467,7 +467,7 @@ lemma altRightAltRightToMatrix_ρ (v : (AltRightHandedModule ⊗[ℂ] AltRightHa
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `rightHanded ⊗ altRightHanded` is equivalent to
   `(M.1.map star) * rightAltRightToMatrix v * (((M.1⁻¹).conjTranspose)ᵀ`. -/
-lemma rightAltRightToMatrix_ρ (v : (RightHandedModule ⊗[ℂ] AltRightHandedModule)) (M : SL(2,ℂ)) :
+lemma rightAltRightToMatrix_ρ (v : (RightHandedWeyl ⊗[ℂ] DualRightHandedWeyl)) (M : SL(2,ℂ)) :
     rightAltRightToMatrix (TensorProduct.map (rightHandedRep M) (altRightHandedRep M) v) =
     (M.1.map star) * rightAltRightToMatrix v * (((M.1⁻¹).conjTranspose)ᵀ) := by
   nth_rewrite 1 [rightAltRightToMatrix]
@@ -509,7 +509,7 @@ lemma rightAltRightToMatrix_ρ (v : (RightHandedModule ⊗[ℂ] AltRightHandedMo
 set_option backward.isDefEq.respectTransparency false in
 /-- The group action of `SL(2,ℂ)` on `altRightHanded ⊗ rightHanded` is equivalent to
   `((M.1⁻¹).conjTranspose * rightAltRightToMatrix v * ((M.1.map star)).ᵀ`. -/
-lemma altRightRightToMatrix_ρ (v : (AltRightHandedModule ⊗[ℂ] RightHandedModule)) (M : SL(2,ℂ)) :
+lemma altRightRightToMatrix_ρ (v : (DualRightHandedWeyl ⊗[ℂ] RightHandedWeyl)) (M : SL(2,ℂ)) :
     altRightRightToMatrix (TensorProduct.map (altRightHandedRep M) (rightHandedRep M) v) =
     ((M.1⁻¹).conjTranspose) * altRightRightToMatrix v * (M.1.map star)ᵀ := by
   nth_rewrite 1 [altRightRightToMatrix]
@@ -550,7 +550,7 @@ lemma altRightRightToMatrix_ρ (v : (AltRightHandedModule ⊗[ℂ] RightHandedMo
   ring
 
 set_option backward.isDefEq.respectTransparency false in
-lemma altLeftAltRightToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] AltRightHandedModule))
+lemma altLeftAltRightToMatrix_ρ (v : (DualLeftHandedWeyl ⊗[ℂ] DualRightHandedWeyl))
     (M : SL(2,ℂ)) :
     altLeftAltRightToMatrix (TensorProduct.map (altLeftHandedRep M) (altRightHandedRep M) v) =
     (M.1⁻¹)ᵀ * altLeftAltRightToMatrix v * ((M.1⁻¹).conjTranspose)ᵀ := by
@@ -591,7 +591,7 @@ lemma altLeftAltRightToMatrix_ρ (v : (AltLeftHandedModule ⊗[ℂ] AltRightHand
   ring
 
 set_option backward.isDefEq.respectTransparency false in
-lemma leftRightToMatrix_ρ (v : (LeftHandedModule ⊗[ℂ] RightHandedModule)) (M : SL(2,ℂ)) :
+lemma leftRightToMatrix_ρ (v : (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl)) (M : SL(2,ℂ)) :
     leftRightToMatrix (TensorProduct.map (leftHandedRep M) (rightHandedRep M) v) =
     M.1 * leftRightToMatrix v * (M.1)ᴴ := by
   nth_rewrite 1 [leftRightToMatrix]
