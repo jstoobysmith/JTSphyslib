@@ -369,6 +369,7 @@ public import Physlib.Relativity.Tensors.RealTensor.Vector.MinkowskiProduct
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Pre.Contraction
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Pre.Modules
+public import Physlib.Relativity.Tensors.RealTensor.Vector.Tensorial
 public import Physlib.Relativity.Tensors.RealTensor.Velocity.Basic
 public import Physlib.Relativity.Tensors.TensorSpecies.Basic
 public import Physlib.Relativity.Tensors.Tensorial
