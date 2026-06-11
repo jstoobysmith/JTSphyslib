@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Mathlib.Analysis.Complex.Basic
+public import Physlib.Meta.TODO.Basic
 /-!
 
 ## Modules associated with Fermions
@@ -24,6 +25,10 @@ types of fermions.
 
 namespace Fermion
 noncomputable section
+
+TODO "Make a directory in ./Physlib/Relativity called Fermions for these files.
+  Make this file (currently ..../Modules.lean) the Basic file, and include the basic module
+  definitions for the different types of Weyl fermions."
 
 section LeftHanded
 
