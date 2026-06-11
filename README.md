@@ -55,6 +55,12 @@
 🎯 The project shall be for **mainstream** physics only.
 
 
+## PhyslibAlpha
+
+PhyslibAlpha sits downstream of `./Physlib` (within the same repository) and has a lower review standard, similar to arXiv's one-look review.
+
+We welcome larger PRs and results that may not be 'perfect'. However, we cannot promise to maintain contributions when they break — we will simply record when this happens.
+
 ## Contributing to Physlib
 
 Physlib is open-source and community run, and we welcome contributions from anyone.
