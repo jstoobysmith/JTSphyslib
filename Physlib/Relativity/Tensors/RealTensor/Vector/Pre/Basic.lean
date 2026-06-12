@@ -94,7 +94,7 @@ lemma coBasis_ρ_apply {d : ℕ} (M : LorentzGroup d) (i j : Fin 1 ⊕ Fin d) :
   change (_ *ᵥ (Pi.single j 1)) i = _
   simp [LorentzGroup.transpose, ← LorentzGroup.coe_inv]
 
-lemma coBasis_repr_apply {d : ℕ} (p : Co d) (i : Fin 1 ⊕ Fin d) :
+lemma coBasis_repr_apply {d : ℕ} (p : CoMod d) (i : Fin 1 ⊕ Fin d) :
     (coBasis d).repr p i = p.val i := by
   simp only [coBasis, Basis.ofEquivFun_repr_apply]
   rfl
@@ -114,7 +114,7 @@ lemma coBasisFin_toFin1dℝ {d : ℕ} (i : Fin (1 + d)) :
     (coBasisFin d i).toFin1dℝ = Pi.single (finSumFinEquiv.symm i) 1 := by
   simp only [coBasisFin, Basis.reindex_apply, coBasis_toFin1dℝ]
 
-lemma coBasisFin_repr_apply {d : ℕ} (p : Co d) (i : Fin (1 + d)) :
+lemma coBasisFin_repr_apply {d : ℕ} (p : CoMod d) (i : Fin (1 + d)) :
     (coBasisFin d).repr p i = p.val (finSumFinEquiv.symm i) := by rfl
 
 open CategoryTheory.MonoidalCategory
@@ -126,7 +126,7 @@ open CategoryTheory.MonoidalCategory
 -/
 
 open Representation
-/-- The morphism of representations from `Contr d` to `Co d` defined by multiplication
+/-- The morphism of representations from `ContrMod d` to `CoMod d` defined by multiplication
   with the metric. -/
 def Contr.toCo (d : ℕ) : IntertwiningMap (ContrMod.rep (d := d)) (CoMod.rep (d := d)) where
   toFun := fun ψ => CoMod.toFin1dℝEquiv.symm (η *ᵥ ψ.toFin1dℝ)
@@ -143,7 +143,7 @@ def Contr.toCo (d : ℕ) : IntertwiningMap (ContrMod.rep (d := d)) (CoMod.rep (d
       rw [mulVec_mulVec, LorentzGroup.minkowskiMatrix_comm, ← mulVec_mulVec]
     rfl
 
-/-- The morphism of representations from `Co d` to `Contr d` defined by multiplication
+/-- The morphism of representations from `CoMod d` to `ContrMod d` defined by multiplication
   with the metric. -/
 def Co.toContr (d : ℕ) : IntertwiningMap (CoMod.rep (d := d)) (ContrMod.rep (d := d)) where
     toFun := fun ψ => ContrMod.toFin1dℝEquiv.symm (η *ᵥ ψ.toFin1dℝ)
@@ -160,7 +160,7 @@ def Co.toContr (d : ℕ) : IntertwiningMap (CoMod.rep (d := d)) (ContrMod.rep (d
         rw [mulVec_mulVec, ← LorentzGroup.comm_minkowskiMatrix, ← mulVec_mulVec]
       rfl
 
-/-- The isomorphism between `Contr d` and `Co d` induced by multiplication with the
+/-- The isomorphism between `ContrMod d` and `CoMod d` induced by multiplication with the
   Minkowski metric. -/
 def contrIsoCo (d : ℕ) : Representation.Equiv (ContrMod.rep (d := d)) (CoMod.rep (d := d)) := by
   refine Representation.Equiv.mk' (Contr.toCo d) (Co.toContr d) ?_ ?_

@@ -20,7 +20,7 @@ open Module Matrix MatrixGroups Complex TensorProduct CategoryTheory.MonoidalCat
 namespace Lorentz
 open scoped TensorProduct
 
-/-- The metric `ηᵃᵃ` as an element of `(Contr d ⊗ Contr d).V`. -/
+/-- The metric `ηᵃᵃ` as an element of `(ContrMod d ⊗ ContrMod d).V`. -/
 def preContrMetricVal (d : ℕ := 3) : ContrMod d ⊗[ℝ] ContrMod d :=
   contrContrToMatrixRe.symm ((@minkowskiMatrix d))
 
@@ -55,7 +55,7 @@ lemma preContrMetricVal_expand_tmul_minkowskiMatrix {d : ℕ} : preContrMetricVa
   abel
 
 set_option backward.isDefEq.respectTransparency false in
-/-- The metric `ηᵃᵃ` as a morphism `𝟙_ (Rep ℝ (LorentzGroup d)) ⟶ Contr d ⊗ Contr d`,
+/-- The metric `ηᵃᵃ` as a morphism `𝟙_ (Rep ℝ (LorentzGroup d)) ⟶ ContrMod d ⊗ ContrMod d`,
   making its invariance under the action of `LorentzGroup d`. -/
 def preContrMetric (d : ℕ := 3) :
     (Representation.trivial ℝ (LorentzGroup d) ℝ).IntertwiningMap
@@ -83,8 +83,8 @@ lemma preContrMetric_apply_one {d : ℕ} : (preContrMetric d) (1 : ℝ) = preCon
   change (1 : ℝ) • preContrMetricVal d = preContrMetricVal d
   rw [one_smul]
 
-/-- The metric `ηᵢᵢ` as an element of `(Co d ⊗ Co d).V`. -/
-def preCoMetricVal (d : ℕ := 3) : (Co d ⊗ Co d).V :=
+/-- The metric `ηᵢᵢ` as an element of `(CoMod d ⊗ CoMod d).V`. -/
+def preCoMetricVal (d : ℕ := 3) : (CoMod d ⊗ CoMod d).V :=
   coCoToMatrixRe.symm ((@minkowskiMatrix d))
 
 /-- Expansion of `preContrMetricVal` into basis. -/
@@ -116,7 +116,7 @@ lemma preCoMetricVal_expand_tmul_minkowskiMatrix {d : ℕ} : preCoMetricVal d =
   abel
 
 set_option backward.isDefEq.respectTransparency false in
-/-- The metric `ηᵢᵢ` as a morphism `𝟙_ (Rep ℂ (LorentzGroup d))) ⟶ Co d ⊗ Co d`,
+/-- The metric `ηᵢᵢ` as a morphism `𝟙_ (Rep ℂ (LorentzGroup d))) ⟶ CoMod d ⊗ CoMod d`,
   making its invariance under the action of `LorentzGroup d`. -/
 def preCoMetric (d : ℕ := 3) : (Representation.trivial ℝ (LorentzGroup d) ℝ).IntertwiningMap
     ((CoMod.rep).tprod (CoMod.rep)) where

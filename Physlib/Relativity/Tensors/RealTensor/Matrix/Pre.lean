@@ -40,7 +40,7 @@ lemma contrContrToMatrixRe_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin d) (Fin 1
   · simp
 
 /-- Equivalence of `Co ⊗ Co` to `(1 + d) x (1 + d)` real matrices. -/
-def coCoToMatrixRe {d : ℕ} : (Co d ⊗ Co d).V ≃ₗ[ℝ]
+def coCoToMatrixRe {d : ℕ} : (CoMod d ⊗ CoMod d).V ≃ₗ[ℝ]
     Matrix (Fin 1 ⊕ Fin d) (Fin 1 ⊕ Fin d) ℝ :=
   (Basis.tensorProduct (coBasis d) (coBasis d)).repr ≪≫ₗ
   Finsupp.linearEquivFunOnFinite ℝ ℝ ((Fin 1 ⊕ Fin d) × (Fin 1 ⊕ Fin d)) ≪≫ₗ
@@ -57,7 +57,7 @@ lemma coCoToMatrixRe_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin d) (Fin 1 ⊕ F
     rfl
   · simp
 
-/-- Equivalence of `Contr d ⊗ Co d` to `(1 + d) x (1 + d)` real matrices. -/
+/-- Equivalence of `ContrMod d ⊗ CoMod d` to `(1 + d) x (1 + d)` real matrices. -/
 def contrCoToMatrixRe {d : ℕ} : (ContrMod d ⊗[ℝ] CoMod d) ≃ₗ[ℝ]
     Matrix (Fin 1 ⊕ Fin d) (Fin 1 ⊕ Fin d) ℝ :=
   (Basis.tensorProduct (contrBasis d) (coBasis d)).repr ≪≫ₗ
@@ -76,7 +76,7 @@ lemma contrCoToMatrixRe_symm_expand_tmul (M : Matrix (Fin 1 ⊕ Fin d) (Fin 1 �
     rfl
   · simp
 
-/-- Equivalence of `Co d ⊗ Contr d` to `(1 + d) x (1 + d)` real matrices. -/
+/-- Equivalence of `CoMod d ⊗ ContrMod d` to `(1 + d) x (1 + d)` real matrices. -/
 def coContrToMatrixRe : (CoMod d ⊗[ℝ] ContrMod d) ≃ₗ[ℝ]
     Matrix (Fin 1 ⊕ Fin d) (Fin 1 ⊕ Fin d) ℝ :=
   (Basis.tensorProduct (coBasis d) (contrBasis d)).repr ≪≫ₗ
@@ -213,7 +213,7 @@ lemma contrCoToMatrixRe_ρ {d : ℕ} (v : (ContrMod d) ⊗[ℝ] (CoMod d)) (M : 
   ring
 
 set_option backward.isDefEq.respectTransparency false in
-lemma coContrToMatrixRe_ρ {d : ℕ} (v : ((Co d) ⊗ (Contr d)).V) (M : LorentzGroup d) :
+lemma coContrToMatrixRe_ρ {d : ℕ} (v : ((CoMod d) ⊗[ℝ] (ContrMod d))) (M : LorentzGroup d) :
     coContrToMatrixRe (TensorProduct.map (CoMod.rep M) (ContrMod.rep M) v) =
     M.1⁻¹ᵀ * coContrToMatrixRe v * M.1ᵀ := by
   nth_rewrite 1 [coContrToMatrixRe]

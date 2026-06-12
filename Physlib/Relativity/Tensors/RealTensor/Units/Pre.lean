@@ -21,7 +21,7 @@ open Module Matrix MatrixGroups Complex TensorProduct CategoryTheory.MonoidalCat
 namespace Lorentz
 
 /-- The contra-co unit for complex lorentz vectors. Usually denoted `δⁱᵢ`. -/
-def preContrCoUnitVal (d : ℕ := 3) : (Contr d ⊗ Co d).V :=
+def preContrCoUnitVal (d : ℕ := 3) : (ContrMod d ⊗ CoMod d).V :=
   contrCoToMatrixRe.symm 1
 
 /-- Expansion of `preContrCoUnitVal` into basis. -/
@@ -73,7 +73,7 @@ lemma preContrCoUnit_apply_one {d : ℕ} : (preContrCoUnit d) (1 : ℝ) = preCon
   rw [one_smul]
 
 /-- The co-contra unit for complex lorentz vectors. Usually denoted `δᵢⁱ`. -/
-def preCoContrUnitVal (d : ℕ := 3) : (Co d ⊗ Contr d).V :=
+def preCoContrUnitVal (d : ℕ := 3) : (CoMod d ⊗ ContrMod d).V :=
   coContrToMatrixRe.symm 1
 
 /-- Expansion of `preCoContrUnitVal` into basis. -/
@@ -97,7 +97,7 @@ lemma preCoContrUnitVal_expand_tmul {d : ℕ} : preCoContrUnitVal d =
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The co-contra unit for complex lorentz vectors as a morphism
-  `𝟙_ (Rep ℝ (LorentzGroup d)) ⟶ Co d ⊗ Contr d`, manifesting the invariance under
+  `𝟙_ (Rep ℝ (LorentzGroup d)) ⟶ CoMod d ⊗ ContrMod d`, manifesting the invariance under
   the `LorentzGroup d` action. -/
 def preCoContrUnit (d : ℕ) : (Representation.trivial ℝ (LorentzGroup d) ℝ).IntertwiningMap
     ((CoMod.rep).tprod (ContrMod.rep)) where
