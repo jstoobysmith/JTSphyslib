@@ -531,7 +531,7 @@ lemma exists_potential_of_gauge_invariant_polynomial (V : HiggsVec → ℝ)
     congr
     funext i
     fin_cases i <;> simp [toRealScalars]
-  /- We now simplify the expression for p' by showing it satifies a number of relations. -/
+  /- We now simplify the expression for p' by showing it satisfies a number of relations. -/
   have p'_degree : p'.natDegree ≤ 4 := by
     simpa using  MvPolynomial.aeval_natDegree_le (n := 1) p p_degree
       (fun i : Fin 4 => if i = 0 then Polynomial.X else (0 : Polynomial ℝ))
