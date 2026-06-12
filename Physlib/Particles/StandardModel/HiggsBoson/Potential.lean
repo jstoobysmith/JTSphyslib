@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
+public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 /-!
 # The potential of the Higgs field
 
@@ -486,14 +487,88 @@ lemma isMaxOn_iff_field_of_𝓵_neg (h𝓵 : P.𝓵 < 0) (φ : HiggsField) (x : 
 
 -/
 
+open HiggsVec
+
 /-- The Higgs potential as defined is the most general gauge invariant
   polynomial of the Higgs fields up to order 4. -/
-@[sorryful]
 lemma exists_potential_of_gauge_invariant_polynomial (V : HiggsVec → ℝ)
     (V_invariant : ∀ g : GaugeGroupI, ∀ φ : HiggsVec, V (g • φ) = V φ)
-    (V_polynomial : ∃ p : MvPolynomial (Fin 4) ℝ, ∀ φ : HiggsVec,
-    V φ = p.eval φ.toRealScalars ∧ p.totalDegree ≤ 4) :
-    ∃ P : Potential, ∀ φ, ∀ x, V (φ x) = P.toFun φ x := by sorry
+    (V_polynomial : ∃ p : MvPolynomial (Fin 4) ℝ, (∀ φ : HiggsVec, V φ = p.eval φ.toRealScalars) ∧
+      p.totalDegree ≤ 4) :
+    ∃ P : Potential, ∃ c, ∀ φ, ∀ x, V (φ x) = c + P.toFun φ x := by
+  /- Obtaining the polynomial. -/
+  obtain ⟨p, hp, p_degree⟩ := V_polynomial
+  /- Defining the map V' and the polynomial p' through which V and p factor.. -/
+  let V' : ℝ → ℝ := fun a => V !₂[a, 0]
+  let p' : Polynomial ℝ := MvPolynomial.aeval
+    (fun i : Fin 4 => if i = 0 then Polynomial.X else (0 : Polynomial ℝ)) p
+  /- Proving V factors through V'-/
+  have V_factors_V' : V = V' ∘ fun φ => ‖φ‖ := by
+    funext φ
+    simp [V', ← V_invariant (HiggsVec.toRealGroupElem φ) φ, toRealGroupElem_smul_self]
+    congr
+    ext i
+    fin_cases i <;> simp [HiggsVec.ofReal]
+  /- Proving p factors through p'. -/
+  have p'_eval : ∀ a : ℝ, p'.eval a = p.aeval !₄[a, 0, 0, 0] := by
+    intro a
+    change ((Polynomial.aeval a).comp (MvPolynomial.aeval
+        (fun i : Fin 4 => if i = 0 then Polynomial.X else (0 : Polynomial ℝ)))) p = _
+    congr
+    apply MvPolynomial.algHom_ext
+    intro i
+    fin_cases i <;> simp
+  have p_factors_p' : ∀ φ : HiggsVec, p.eval φ.toRealScalars = p'.eval ‖φ‖ := by
+    intro φ
+    rw [p'_eval, ← hp, ← V_invariant (HiggsVec.toRealGroupElem φ) φ, hp, toRealGroupElem_smul_self,
+      ofReal_toRealScalars_norm]
+    rfl
+  /- Relating V' and p'. -/
+  have V'_eq_p' : ∀ a : ℝ, V' a = p'.eval a := by
+    intro a
+    rw [p'_eval]
+    simp only [hp, MvPolynomial.aeval_eq_eval, V']
+    congr
+    funext i
+    fin_cases i <;> simp [toRealScalars]
+  /- We now simplify the expression for p' by showing it satifies a number of relations. -/
+  have p'_degree : p'.natDegree ≤ 4 := by
+    simpa using  MvPolynomial.aeval_natDegree_le (n := 1) p p_degree
+      (fun i : Fin 4 => if i = 0 then Polynomial.X else (0 : Polynomial ℝ))
+      (fun i => by fin_cases i <;> simp)
+  have V'_symm : ∀ a : ℝ, V' (- a) = V' a := by
+    intro a
+    dsimp [V']
+    rw [← V_invariant (HiggsVec.toRealGroupElem !₂[a, 0]) !₂[a, 0], toRealGroupElem_smul_self]
+    rw [← V_invariant (HiggsVec.toRealGroupElem !₂[(-a : ℝ), 0]) !₂[(-a : ℝ), 0],
+      toRealGroupElem_smul_self]
+    simp [PiLp.norm_sq_eq_of_L2]
+  have p'_symm : ∀ a : ℝ, p'.eval (- a) = p'.eval a := by
+    intro a
+    rw [← V'_eq_p', V'_symm, V'_eq_p']
+  have p'_eval_eq_sum : ∀ a : ℝ, p'.eval a = p'.coeff 0 + p'.coeff 1 * a + p'.coeff 2 * a ^ 2 +
+      p'.coeff 3 * a ^ 3 + p'.coeff 4 * a ^ 4 := by
+    intro a
+    rw [Polynomial.eval_eq_sum_range' (n := 5) (by grind)]
+    simp [Finset.sum_range_succ]
+  have p'_even : ∀ a : ℝ, p'.eval a = p'.coeff 0 + p'.coeff 2 * a ^ 2 + p'.coeff 4 * a ^ 4 := by
+    intro a
+    rw [p'_eval_eq_sum]
+    have h1 := p'_eval_eq_sum (1)
+    rw [← p'_symm, p'_eval_eq_sum] at h1
+    simp only [mul_neg, mul_one, even_two, Even.neg_pow, one_pow] at h1
+    have h2 := p'_eval_eq_sum 2
+    rw [← p'_symm, p'_eval_eq_sum] at h2
+    simp only [mul_neg, even_two, Even.neg_pow] at h2
+    have coeff_1_zero : p'.coeff 1 = 0 := by grind
+    have coeff_3_zero : p'.coeff 3 = 0 := by grind
+    simp_all
+  refine ⟨⟨-p'.coeff 2, p'.coeff 4⟩, ⟨p'.coeff 0, ?_⟩⟩
+  intro φ x
+  simp only [toFun, neg_neg, normSq]
+  rw [V_factors_V']
+  simp [V'_eq_p', p'_even]
+  grind
 
 end Potential
 

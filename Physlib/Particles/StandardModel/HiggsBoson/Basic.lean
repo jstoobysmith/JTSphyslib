@@ -29,7 +29,6 @@ In this module we define the Higgs field and prove some basic properties.
 - A. The Higgs vector space
   - A.1. Definition of the Higgs vector space
   - A.2. Relation to `(Fin 2 → ℂ)`
-      - A.2.1. To real scalars
   - A.3. Orthonormal basis
   - A.4. Generating Higgs vectors from real numbers
   - A.5. Action of the gauge group on `HiggsVec`
@@ -39,6 +38,8 @@ In this module we define the Higgs field and prove some basic properties.
     - A.6.1. The rotation matrix to ofReal
     - A.6.2. Members of orbits
   - A.7. The stability group of a Higgs vector
+  - A.8. Gauge action removing phase from second component
+  - A.9. To real scalars
 - B. The Higgs bundle
   - B.1. Definition of the Higgs bundle
   - B.2. Instance of a vector bundle
@@ -118,27 +119,6 @@ def toFin2ℂ : HiggsVec →L[ℝ] (Fin 2 → ℂ) where
 /-- The map `toFin2ℂ` is smooth. -/
 lemma smooth_toFin2ℂ : ContMDiff 𝓘(ℝ, HiggsVec) 𝓘(ℝ, Fin 2 → ℂ) ⊤ toFin2ℂ :=
   ContinuousLinearMap.contMDiff toFin2ℂ
-
-/-!
-
-### A.2.1. To real scalars
-
--/
-
-/-- The underlying real values of the Higgs vector. -/
-def toRealScalars : HiggsVec →ₗ[ℝ] (Fin 4 → ℝ) where
-  toFun x := fun
-    | 0 => (x 0).re
-    | 1 => (x 0).im
-    | 2 => (x 1).re
-    | 3 => (x 1).im
-  map_add' x y := by
-    ext i
-    fin_cases i <;> simp
-  map_smul' a x := by
-    ext i
-    fin_cases i <;> simp
-
 
 /-!
 
@@ -458,6 +438,39 @@ lemma gaugeGroupI_smul_phase_snd (φ : HiggsVec) :
     simp [ofU1Subgroup_smul_eq_smul]
     ext i
     fin_cases i <;> simp
+
+
+/-!
+
+### A.9 To real scalars
+
+-/
+
+/-- The underlying real values of the Higgs vector. -/
+def toRealScalars : HiggsVec →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun x := fun
+    | 0 => (x 0).re
+    | 1 => (x 0).im
+    | 2 => (x 1).re
+    | 3 => (x 1).im
+  map_add' x y := by
+    ext i
+    fin_cases i <;> simp
+  map_smul' a x := by
+    ext i
+    fin_cases i <;> simp
+
+lemma ofReal_toRealScalars (a : ℝ) :
+    toRealScalars (ofReal a) = !₄[Real.sqrt a, 0, 0, 0] := by
+  simp [ofReal, toRealScalars]
+  funext i
+  fin_cases i <;> simp
+
+lemma ofReal_toRealScalars_norm (φ : HiggsVec) :
+    toRealScalars (ofReal (‖φ‖ ^ 2)) = !₄[‖φ‖, 0, 0, 0] := by
+  simp [ofReal, toRealScalars]
+  funext i
+  fin_cases i <;> simp
 
 end HiggsVec
 
