@@ -48,6 +48,9 @@ namespace Potential
 
 variable (P : Potential)
 
+TODO "Define a CoeFun instance for the Higgs Potential (or similar), instead of relying on
+  `P.toFun`."
+
 /-- Given a element `P` of `Potential`, `P.toFun` is Higgs potential.
   It is defined for a Higgs field `φ` and a spacetime point `x` as
 
@@ -476,6 +479,21 @@ lemma isMaxOn_iff_field_of_𝓵_neg (h𝓵 : P.𝓵 < 0) (φ : HiggsField) (x : 
   rw [P.isMaxOn_iff_isMinOn_neg,
     P.neg.isMinOn_iff_field_of_𝓵_pos (by simpa using h𝓵)]
   simp
+
+/-!
+
+## Invariances of the potential
+
+-/
+
+/-- The Higgs potential as defined is the most general gauge invariant
+  polynomial of the Higgs fields up to order 4. -/
+@[sorryful]
+lemma exists_potential_of_gauge_invariant_polynomial (V : HiggsVec → ℝ)
+    (V_invariant : ∀ g : GaugeGroupI, ∀ φ : HiggsVec, V (g • φ) = V φ)
+    (V_polynomial : ∃ p : MvPolynomial (Fin 4) ℝ, ∀ φ : HiggsVec,
+    V φ = p.eval φ.toRealScalars ∧ p.totalDegree ≤ 4) :
+    ∃ P : Potential, ∀ φ, ∀ x, V (φ x) = P.toFun φ x := by sorry
 
 end Potential
 

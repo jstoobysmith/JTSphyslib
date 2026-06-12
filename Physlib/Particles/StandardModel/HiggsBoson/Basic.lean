@@ -29,6 +29,7 @@ In this module we define the Higgs field and prove some basic properties.
 - A. The Higgs vector space
   - A.1. Definition of the Higgs vector space
   - A.2. Relation to `(Fin 2 → ℂ)`
+      - A.2.1. To real scalars
   - A.3. Orthonormal basis
   - A.4. Generating Higgs vectors from real numbers
   - A.5. Action of the gauge group on `HiggsVec`
@@ -117,6 +118,27 @@ def toFin2ℂ : HiggsVec →L[ℝ] (Fin 2 → ℂ) where
 /-- The map `toFin2ℂ` is smooth. -/
 lemma smooth_toFin2ℂ : ContMDiff 𝓘(ℝ, HiggsVec) 𝓘(ℝ, Fin 2 → ℂ) ⊤ toFin2ℂ :=
   ContinuousLinearMap.contMDiff toFin2ℂ
+
+/-!
+
+### A.2.1. To real scalars
+
+-/
+
+/-- The underlying real values of the Higgs vector. -/
+def toRealScalars : HiggsVec →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun x := fun
+    | 0 => (x 0).re
+    | 1 => (x 0).im
+    | 2 => (x 1).re
+    | 3 => (x 1).im
+  map_add' x y := by
+    ext i
+    fin_cases i <;> simp
+  map_smul' a x := by
+    ext i
+    fin_cases i <;> simp
+
 
 /-!
 
