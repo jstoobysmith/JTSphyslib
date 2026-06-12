@@ -23,12 +23,6 @@ open Matrix Module MatrixGroups Complex TensorProduct
 
 namespace Lorentz
 open minkowskiMatrix
-/-- The representation of `LorentzGroup d` on real vectors corresponding to contravariant
-  Lorentz vectors. In index notation these have an up index `ψⁱ`. -/
-def Contr (d : ℕ) : Rep ℝ (LorentzGroup d) := Rep.of ContrMod.rep
-
-TODO "The definition of `Contr` can be removed and everywhere replaced with `ContrMod.rep`.
-  Similar for `Co` and `CoMod.rep`."
 
 /-- The standard basis of contravariant Lorentz vectors. -/
 def contrBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (ContrMod d) :=
@@ -36,7 +30,7 @@ def contrBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (ContrMod d) :=
 
 @[simp]
 lemma contrBasis_ρ_apply {d : ℕ} (M : LorentzGroup d) (i j : Fin 1 ⊕ Fin d) :
-    (LinearMap.toMatrix (contrBasis d) (contrBasis d)) ((Contr d).ρ M) i j =
+    (LinearMap.toMatrix (contrBasis d) (contrBasis d)) (ContrMod.rep M) i j =
     M.1 i j := by
   rw [LinearMap.toMatrix_apply]
   simp only [contrBasis, Basis.coe_ofEquivFun, Basis.ofEquivFun_repr_apply]
@@ -49,7 +43,7 @@ lemma contrBasis_toFin1dℝ {d : ℕ} (i : Fin 1 ⊕ Fin d) :
   simp only [ContrMod.toFin1dℝ, contrBasis, Basis.coe_ofEquivFun]
   rfl
 
-lemma contrBasis_repr_apply {d : ℕ} (p : Contr d) (i : Fin 1 ⊕ Fin d) :
+lemma contrBasis_repr_apply {d : ℕ} (p : ContrMod d) (i : Fin 1 ⊕ Fin d) :
     (contrBasis d).repr p i = p.val i := by
   simp only [contrBasis, Basis.ofEquivFun_repr_apply]
   rfl
@@ -68,15 +62,15 @@ lemma contrBasisFin_repr_apply {d : ℕ} (p : ContrMod d) (i : Fin (1 + d)) :
 
 /-- The representation of contravariant Lorentz vectors forms a topological space, induced
   by its equivalence to `Fin 1 ⊕ Fin d → ℝ`. -/
-instance : TopologicalSpace (Contr d) := TopologicalSpace.induced
+instance : TopologicalSpace (ContrMod d) := TopologicalSpace.induced
   ContrMod.toFin1dℝEquiv (Pi.topologicalSpace)
 
-lemma continuous_contr {T : Type} [TopologicalSpace T] (f : T → Contr d)
+lemma continuous_contr {T : Type} [TopologicalSpace T] (f : T → ContrMod d)
     (h : Continuous (fun i => (f i).toFin1dℝ)) : Continuous f := by
   exact continuous_induced_rng.mpr h
 
 set_option backward.isDefEq.respectTransparency false in
-lemma contr_continuous {T : Type} [TopologicalSpace T] (f : Contr d → T)
+lemma contr_continuous {T : Type} [TopologicalSpace T] (f : ContrMod d → T)
     (h : Continuous (f ∘ (@ContrMod.toFin1dℝEquiv d).symm)) : Continuous f := by
   let x := Equiv.toHomeomorphOfIsInducing (@ContrMod.toFin1dℝEquiv d).toEquiv
     ContrMod.toFin1dℝEquiv_isInducing
@@ -93,7 +87,7 @@ def coBasis (d : ℕ := 3) : Basis (Fin 1 ⊕ Fin d) ℝ (CoMod d) :=
 
 @[simp]
 lemma coBasis_ρ_apply {d : ℕ} (M : LorentzGroup d) (i j : Fin 1 ⊕ Fin d) :
-    (LinearMap.toMatrix (coBasis d) (coBasis d)) ((Co d).ρ M) i j =
+    (LinearMap.toMatrix (coBasis d) (coBasis d)) (CoMod.rep M) i j =
     M⁻¹ᵀ i j := by
   rw [LinearMap.toMatrix_apply]
   simp only [coBasis, Basis.coe_ofEquivFun, Basis.ofEquivFun_repr_apply, transpose_apply]
@@ -184,7 +178,7 @@ namespace Contr
 
 open Lorentz
 lemma ρ_stdBasis (μ : Fin 1 ⊕ Fin 3) (Λ : LorentzGroup 3) :
-    (Contr 3).ρ Λ (ContrMod.stdBasis μ) = ∑ j, Λ.1 j μ • ContrMod.stdBasis j := by
+    ContrMod.rep Λ (ContrMod.stdBasis μ) = ∑ j, Λ.1 j μ • ContrMod.stdBasis j := by
   change Λ *ᵥ ContrMod.stdBasis μ = ∑ j, Λ.1 j μ • ContrMod.stdBasis j
   apply ContrMod.ext
   simp only [toLinAlgEquiv_self, Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero,

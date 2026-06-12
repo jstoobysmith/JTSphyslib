@@ -70,7 +70,7 @@ def preContrMetric (d : ℕ := 3) :
     refine LinearMap.ext fun x : ℝ => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply]
     change x • (preContrMetricVal d) =
-      (TensorProduct.map ((Contr d).ρ M) ((Contr d).ρ M)) (x • (preContrMetricVal d))
+      (TensorProduct.map (ContrMod.rep M) (ContrMod.rep M)) (x • (preContrMetricVal d))
     simp only [map_smul]
     apply congrArg
     simp only [preContrMetricVal]
@@ -130,7 +130,7 @@ def preCoMetric (d : ℕ := 3) : (Representation.trivial ℝ (LorentzGroup d) �
     refine LinearMap.ext fun x : ℝ => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply]
     change x • preCoMetricVal d =
-      (TensorProduct.map ((Co d).ρ M) ((Co d).ρ M)) (x • preCoMetricVal d)
+      (TensorProduct.map (CoMod.rep M) (CoMod.rep M)) (x • preCoMetricVal d)
     simp only [_root_.map_smul]
     apply congrArg
     simp only [preCoMetricVal]

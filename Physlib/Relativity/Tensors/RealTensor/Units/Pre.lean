@@ -60,7 +60,7 @@ def preContrCoUnit (d : ℕ := 3) :
     refine LinearMap.ext fun x : ℝ => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply]
     change x • preContrCoUnitVal d =
-      (TensorProduct.map ((Contr d).ρ M) ((Co d).ρ M)) (x • preContrCoUnitVal d)
+      (TensorProduct.map (ContrMod.rep M) (CoMod.rep M)) (x • preContrCoUnitVal d)
     simp only [map_smul]
     apply congrArg
     simp only [preContrCoUnitVal]
@@ -111,7 +111,7 @@ def preCoContrUnit (d : ℕ) : (Representation.trivial ℝ (LorentzGroup d) ℝ)
     refine LinearMap.ext fun x : ℝ => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply]
     change x • preCoContrUnitVal d =
-      (TensorProduct.map ((Co d).ρ M) ((Contr d).ρ M)) (x • preCoContrUnitVal d)
+      (TensorProduct.map (CoMod.rep M) (ContrMod.rep M)) (x • preCoContrUnitVal d)
     simp only [map_smul]
     apply congrArg
     simp only [preCoContrUnitVal]

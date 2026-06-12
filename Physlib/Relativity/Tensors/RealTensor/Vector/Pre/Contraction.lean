@@ -186,7 +186,7 @@ namespace contrContrContractField
 variable (x y : Contr d)
 
 @[simp]
-lemma action_tmul (g : LorentzGroup d) : ⟪(Contr d).ρ g x, (Contr d).ρ g y⟫ₘ = ⟪x, y⟫ₘ :=
+lemma action_tmul (g : LorentzGroup d) : ⟪ContrMod.rep g x, ContrMod.rep g y⟫ₘ = ⟪x, y⟫ₘ :=
   LinearMap.congr_fun (contrContrContract.isIntertwining' g) (x ⊗ₜ[ℝ] y)
 
 lemma as_sum : ⟪x, y⟫ₘ = x.val (Sum.inl 0) * y.val (Sum.inl 0) -
@@ -236,12 +236,12 @@ lemma dual_mulVec_right : ⟪x, dual Λ *ᵥ y⟫ₘ = ⟪Λ *ᵥ x, y⟫ₘ := 
 lemma dual_mulVec_left : ⟪dual Λ *ᵥ x, y⟫ₘ = ⟪x, Λ *ᵥ y⟫ₘ := by
   rw [symm, dual_mulVec_right, symm]
 
-lemma right_parity : ⟪x, (Contr d).ρ LorentzGroup.parity y⟫ₘ = ∑ i, x.val i * y.val i := by
+lemma right_parity : ⟪x, ContrMod.rep LorentzGroup.parity y⟫ₘ = ∑ i, x.val i * y.val i := by
   rw [as_sum]
   simp only [Fin.isValue, Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero,
     Finset.sum_singleton]
-  trans x.val (Sum.inl 0) * (((Contr d).ρ LorentzGroup.parity) y).val (Sum.inl 0) +
-    ∑ i : Fin d, - (x.val (Sum.inr i) * (((Contr d).ρ LorentzGroup.parity) y).val (Sum.inr i))
+  trans x.val (Sum.inl 0) * ((ContrMod.rep LorentzGroup.parity) y).val (Sum.inl 0) +
+    ∑ i : Fin d, - (x.val (Sum.inr i) * ((ContrMod.rep LorentzGroup.parity) y).val (Sum.inr i))
   · simp only [Fin.isValue, Finset.sum_neg_distrib]
     rfl
   congr 1
@@ -254,7 +254,7 @@ lemma right_parity : ⟪x, (Contr d).ρ LorentzGroup.parity y⟫ₘ = ∑ i, x.v
     simp only [mulVec_inr_i, mul_neg, neg_neg, mul_eq_mul_left_iff]
     exact mul_eq_mul_left_iff.mp rfl
 
-lemma self_parity_eq_zero_iff : ⟪y, (Contr d).ρ LorentzGroup.parity y⟫ₘ = 0 ↔ y = 0 := by
+lemma self_parity_eq_zero_iff : ⟪y, ContrMod.rep LorentzGroup.parity y⟫ₘ = 0 ↔ y = 0 := by
   refine Iff.intro (fun h => ?_) (fun h => ?_)
   · rw [right_parity] at h
     have hn := Fintype.sum_eq_zero_iff_of_nonneg (f := fun i => y.val i * y.val i) (fun i => by
