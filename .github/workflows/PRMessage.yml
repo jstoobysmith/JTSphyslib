@@ -20,8 +20,7 @@ jobs:
               with:
                 message:  |
                   Thank you for this PR, which will now be reviewed.
-                  If submitting to ./Physlib
-                  or ./QuantumInfo,please
+                  If submitting to ./Physlib or ./QuantumInfo, please
                   see our [review guidelines](https://github.com/leanprover-community/physlib/blob/master/docs/ReviewGuidelines.md)
                   if you are not familiar with the process. You should expect a back and forth
                   with a reviewer before your PR is merged. See also that link for how to
