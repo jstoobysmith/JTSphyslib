@@ -1,38 +1,65 @@
-# AI Policy for Physlib
+# AI policy
 
-We welcome AI-generated contributions to this repository. However, we have expectations for their use, which are detailed in this file. Please read this carefully; if you are using an AI agent, ensure it also reads this policy.
+## 1. Introduction
 
-We apply one-look triage to AI-generated PRs. This means that if we suspect a PR is AI-generated, we will look it once, and if it clearly does not meet our standards, we will close it without comment. If it does meet our standards, we will proceed with the normal review process.
+1.1. Physlib generally welcomes AI-assisted contributions.
 
-## Types of PRs
+1.2. If you use an AI tool to help author a pull request to Physlib, you must follow the guidelines in this file.
 
-Within Physlib there are two types of PRs:
+1.3. Failure to follow these guidelines may result in your PR being closed without comment after a brief triage. Repeated failures may result in being banned from contributing to the project. This is to protect the project and the time of the maintainers.
 
-- *Type 1*: PRs where being wrong is short-lived and low cost. Examples include: improving formatting, adding infrastructure for interacting with the library, golfing a proof, adding a TODO item, adding informal lemmas or definitions, and adding files for organization.
+1.4. Throughout this document, "must" denotes a hard requirement and "should" denotes a strong expectation that is not strictly enforced.
 
-- *Type 2*: PRs where being wrong is long-lived and high cost. This primarily includes PRs that add new lemmas, definitions, or proofs — since these add maintenance burden and can affect downstream results. It also includes PRs that add critical meta-programs or scripts.
+1.5. You must also follow any explicit instructions in [docs/ReviewGuidelines.md](docs/ReviewGuidelines.md).
 
-We accept AI-generated content of both types. However, for Type 2 PRs we expect the author to take full responsibility for the content; in particular, they must be a domain expert.
+1.6. These guidelines apply to any contribution where an AI tool produced more than trivial assistance.
 
-## Standards for AI-generated pull-requests
+1.7. The human author is fully responsible for every line of the PR.
 
-Because AI agents make it easy to produce content quickly, we hold AI-generated PRs to a higher standard then human PRs. In practice, AI-generated PRs often impose more of a review burden on maintainers than human-authored ones, and we expect authors to compensate for this upfront.
+## 2. Rules for the content of PRs
 
-In the following, "must" denotes a hard requirement, while "should" denotes a strong expectation that we are not strict about.
+2.1. `theorem` must only be used for well-known results in the physics literature; otherwise `lemma` must be used.
 
-- You must follow any explicit instructions given in [./docs/ReviewGuidelines.md](./docs/ReviewGuidelines.md).
-- Added code must follow the style conventions of Mathlib.
-- The PR must be split into small commits. Commits should build, and must have descriptive titles.
-- Added results (Type 2 PR) must be placed in the appropriate file with library structure in mind.
-- Added results (Type 2 PR) must not duplicate any lemma already in Physlib or Mathlib, nor should be a trivial restatement of an existing one.
-- Documentation must follow the example in [./Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean](./Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean).
-- The PR description must list all lemmas and definitions added or removed, the file they appear in, and a brief explanation of each.
-- The PR description must disclose that an AI was used and describe the extent of its involvement.
-- For Type 2 PRs, the description should include a statement of the author's expertise in the relevant domain.
-- Long proofs should be decomposed into smaller lemmas.
-- The review process involves back-and-forth with reviewers. All communication with humans must be conducted by humans, not by an AI agent.
-- If an AI agent is used to implement reviewer feedback, the author must verify that the feedback has been addressed correctly. This must not be left to the reviewer to check.
-- PRs should be kept to a manageable size. If a PR is too large, it should be split into multiple smaller ones.
-- Any references included in the PR must be verified by a human for correctness, and this verification must be declared in the PR description.
-- Authors should include a reviewer map in the PR description: a brief guide indicating the order in which the reviewer should look at the changes.
-- The PR must pass the linters described in [./scripts/README.md](./scripts/README.md).
+2.2. Added results must be placed in sections with appropriate titles. Sections must be numbered using the scheme `# A. ...`, `## A.1. ...`, etc. See [Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean](Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean) for an example.
+
+2.3. Results must be placed in the appropriate file, with the existing library structure in mind. Do not introduce new files without good reason.
+
+2.4. Long proofs (over 50 LoC) should, where sensible, be split into smaller lemmas of general applicability.
+
+2.5. New lemmas must not be trivial rewrites of existing lemmas in Mathlib or Physlib, unless they add new or different physics context.
+
+2.6. All content must pass the linters described in [scripts/README.md](scripts/README.md).
+
+2.7. Contributions must not contain `axiom` declarations. ch.
+
+2.8. Any bibliographic references included must be verified by a human for correctness (existence of the work, accuracy of the cited statement, page numbers, etc.).
+
+## 3. Rules for the structure of the PR
+
+3.1. A pull request that adds new content (as opposed to refactoring existing content) should contain less than 250 lines of diff. Split larger contributions into multiple PRs.
+
+3.2. PRs should be split into atomic commits where it makes sense.
+
+3.3. Commit titles must describe the lemmas or definitions added or changed.
+
+3.4. PRs must be focused and have well-defined scope.
+
+## 4. Rules for the PR description
+
+4.1. The PR description must list all lemmas and definitions added or removed, the file in which each appears, and a brief explanation of each.
+
+4.2. The PR description should include a reviewer map: a brief guide indicating the order in which the reviewer should look at the changes.
+
+4.3. The PR description should state the author's expertise in the area of the PR.
+
+4.4. The PR description must disclose that an AI was used and describe the extent of its involvement.
+
+4.5. The PR description must state whether a human has checked the correctness of any included references.
+
+4.6. The PR must be concise.
+
+## 5. Rules for the review process
+
+5.1. All communication with human reviewers must be conducted by humans, not by an AI agent.
+
+5.2. If an AI agent is used to implement reviewer feedback, the author must independently verify that the feedback has been addressed correctly before requesting re-review. This must not be left to the reviewer to check.
