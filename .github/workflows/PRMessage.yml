@@ -29,7 +29,7 @@ jobs:
                   of automated checks. You can learn more about these [here](https://github.com/leanprover-community/physlib/blob/master/scripts/README.md),
                   including how to run them locally.
 
-                  If you are submitting to ./PhyslibAlpha, there will be a lighter review process,
+                  If you are submitting to ./PhyslibAlpha there will be a lighter review process,
                   though your PR must still pass the automated checks.
 
                   If you want to bring attention to this PR, please write a message on this
