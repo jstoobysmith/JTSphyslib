@@ -77,4 +77,13 @@ noncomputable instance : MulAction StandardModel.GaugeGroupI TwoHiggsDoublet whe
   mul_smul g1 g2 H := by
     ext <;> simp [mul_smul]
 
+/-!
+
+## C. Underlying real scalars
+
+-/
+
+def toRealScalars (H : TwoHiggsDoublet) : Fin 8 → ℝ :=
+  Fin.append H.Φ1.toRealScalars H.Φ2.toRealScalars
+
 end TwoHiggsDoublet
