@@ -155,6 +155,7 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lin
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
+public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
