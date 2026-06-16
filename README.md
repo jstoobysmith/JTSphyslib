@@ -57,9 +57,9 @@
 
 ## PhyslibAlpha
 
-PhyslibAlpha sits downstream of `./Physlib` (within the same repository) and has a lower review standard, similar to arXiv's one-look review.
+PhyslibAlpha sits downstream of `./Physlib` (within the same repository). The core idea is that PhyslibAlpha has a lower review-standards then Physlib making it easier to get large PRs, AI-generated content, or formalizations which are not-quite-perfect in. PRs for PhyslibAlpha must pass basic linter checks, described [here](https://github.com/leanprover-community/physlib/blob/master/scripts/PhyslibAlpha/README.md). PRs must also undergo a light 'one-look' review checking 1) Whether the content is main-stream physics, 2) Whether it looks reasonable (no axioms, easy to read etc.), 3) Whether it is within the right place within PhyslibAlpha (mirroring its place in Physlib). 
 
-We welcome larger PRs and results that may not be 'perfect'. However, we cannot promise to maintain contributions when they break — we will simply record when this happens.
+Because of the lower-review bar for PhyslibAlpha we cannot promise to maintain contributions when they break — we will simply record when this happens.
 
 ## Contributing to Physlib
 
