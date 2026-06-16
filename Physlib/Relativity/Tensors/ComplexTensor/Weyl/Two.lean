@@ -55,7 +55,8 @@ def dualLeftdualLeftToMatrix : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) 
 
 /-- Expanding `dualLeftdualLeftToMatrix` in terms of the standard basis. -/
 lemma dualLeftdualLeftToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
-    dualLeftdualLeftToMatrix.symm M = ∑ i, ∑ j, M i j • (dualLeftBasis i ⊗ₜ[ℂ] dualLeftBasis j) := by
+    dualLeftdualLeftToMatrix.symm M = ∑ i, ∑ j, M i j •
+      (dualLeftBasis i ⊗ₜ[ℂ] dualLeftBasis j) := by
   simp only [dualLeftdualLeftToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply,
     Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
@@ -182,7 +183,8 @@ def dualLeftDualRightToMatrix : (DualLeftHandedWeyl ⊗[ℂ] DualRightHandedWeyl
 
 /-- Expanding `dualLeftDualRightToMatrix` in terms of the standard basis. -/
 lemma dualLeftDualRightToMatrix_symm_expand_tmul (M : Matrix (Fin 2) (Fin 2) ℂ) :
-    dualLeftDualRightToMatrix.symm M = ∑ i, ∑ j, M i j • (dualLeftBasis i ⊗ₜ[ℂ] dualRightBasis j) := by
+    dualLeftDualRightToMatrix.symm M = ∑ i, ∑ j, M i j •
+      (dualLeftBasis i ⊗ₜ[ℂ] dualRightBasis j) := by
   simp only [dualLeftDualRightToMatrix, LinearEquiv.trans_symm, LinearEquiv.trans_apply,
     Basis.repr_symm_apply]
   rw [Finsupp.linearCombination_apply_of_mem_supported ℂ (s := Finset.univ)]
@@ -283,8 +285,10 @@ lemma dualLeftdualLeftToMatrix_ρ (v : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHand
         * dualLeftdualLeftToMatrix v k.1 k.2) = _
   rw [Fintype.sum_prod_type]
   simp_rw [kroneckerMap_apply, Matrix.mul_apply, Matrix.transpose_apply]
-  have h1 : ∑ x : Fin 2, (∑ x1 : Fin 2, (M.1)⁻¹ x1 i * dualLeftdualLeftToMatrix v x1 x) * (M.1)⁻¹ x j
-    = ∑ x : Fin 2, ∑ x1 : Fin 2, ((M.1)⁻¹ x1 i * dualLeftdualLeftToMatrix v x1 x) * (M.1)⁻¹ x j := by
+  have h1 : ∑ x : Fin 2, (∑ x1 : Fin 2, (M.1)⁻¹ x1 i *
+    dualLeftdualLeftToMatrix v x1 x) * (M.1)⁻¹ x j
+    = ∑ x : Fin 2, ∑ x1 : Fin 2, ((M.1)⁻¹ x1 i *
+    dualLeftdualLeftToMatrix v x1 x) * (M.1)⁻¹ x j := by
     congr
     funext x
     rw [Finset.sum_mul]
@@ -646,7 +650,8 @@ lemma leftLeftToMatrix_ρ_symm (v : Matrix (Fin 2) (Fin 2) ℂ) (M : SL(2,ℂ)) 
   simp
 
 lemma dualLeftdualLeftToMatrix_ρ_symm (v : Matrix (Fin 2) (Fin 2) ℂ) (M : SL(2,ℂ)) :
-    TensorProduct.map (dualLeftHandedRep M) (dualLeftHandedRep M) (dualLeftdualLeftToMatrix.symm v) =
+    TensorProduct.map (dualLeftHandedRep M) (dualLeftHandedRep M)
+      (dualLeftdualLeftToMatrix.symm v) =
     dualLeftdualLeftToMatrix.symm ((M.1⁻¹)ᵀ * v * (M.1⁻¹)) := by
   have h1 := dualLeftdualLeftToMatrix_ρ (dualLeftdualLeftToMatrix.symm v) M
   simp only [LinearEquiv.apply_symm_apply] at h1
@@ -703,7 +708,8 @@ lemma dualRightRightToMatrix_ρ_symm (v : Matrix (Fin 2) (Fin 2) ℂ) (M : SL(2,
   simp
 
 lemma dualLeftDualRightToMatrix_ρ_symm (v : Matrix (Fin 2) (Fin 2) ℂ) (M : SL(2,ℂ)) :
-    TensorProduct.map (dualLeftHandedRep M) (dualRightHandedRep M) (dualLeftDualRightToMatrix.symm v) =
+    TensorProduct.map (dualLeftHandedRep M) (dualRightHandedRep M)
+      (dualLeftDualRightToMatrix.symm v) =
     dualLeftDualRightToMatrix.symm ((M.1⁻¹)ᵀ * v * ((M.1⁻¹).conjTranspose)ᵀ) := by
   have h1 := dualLeftDualRightToMatrix_ρ (dualLeftDualRightToMatrix.symm v) M
   simp only [LinearEquiv.apply_symm_apply] at h1
@@ -722,7 +728,8 @@ open Lorentz
 
 lemma dualLeftDualRightToMatrix_ρ_symm_selfAdjoint (v : Matrix (Fin 2) (Fin 2) ℂ)
     (hv : IsSelfAdjoint v) (M : SL(2,ℂ)) :
-    TensorProduct.map (dualLeftHandedRep M) (dualRightHandedRep M) (dualLeftDualRightToMatrix.symm v) =
+    TensorProduct.map (dualLeftHandedRep M) (dualRightHandedRep M)
+      (dualLeftDualRightToMatrix.symm v) =
     dualLeftDualRightToMatrix.symm (SL2C.toSelfAdjointMap (M.transpose⁻¹) ⟨v, hv⟩) := by
   rw [dualLeftDualRightToMatrix_ρ_symm]
   apply congrArg
