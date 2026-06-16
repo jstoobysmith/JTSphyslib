@@ -200,6 +200,17 @@ instance : DistribMulAction StandardModel.GaugeGroupI HiggsVec where
     rw [gaugeGroupI_smul_eq_U1_smul_SU2]
     simp [mulVec_add]
     simp [← gaugeGroupI_smul_eq_U1_smul_SU2]
+
+instance : SMulCommClass ℂ GaugeGroupI HiggsVec where
+  smul_comm r g φ := by
+    simp [gaugeGroupI_smul_eq, mulVec_smul]
+    rw [smul_comm]
+
+instance : SMulCommClass ℝ GaugeGroupI HiggsVec where
+  smul_comm r g φ := by
+    simp [gaugeGroupI_smul_eq, mulVec_smul]
+    rw [smul_comm]
+
 /-!
 
 #### A.5.2. Unitary nature of the action
@@ -459,6 +470,10 @@ def toRealScalars : HiggsVec →ₗ[ℝ] (Fin 4 → ℝ) where
   map_smul' a x := by
     ext i
     fin_cases i <;> simp
+
+lemma toRealScalars_smul_real (a : ℝ) (φ : HiggsVec) :
+    toRealScalars (a • φ) = a • toRealScalars φ := by
+  simp [toRealScalars]
 
 lemma ofReal_toRealScalars (a : ℝ) :
     toRealScalars (ofReal a) = !₄[Real.sqrt a, 0, 0, 0] := by
