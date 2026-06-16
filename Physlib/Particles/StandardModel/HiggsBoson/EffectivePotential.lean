@@ -86,14 +86,14 @@ def HasMaxMassDimLE (V : EffectivePotential) (n : ℕ) : Prop :=
 
 /-- The polynomial associated to a potential `V` with a maximum mass dimension
   less than or equal to `n`. -/
-def polynomial (V : EffectivePotential) {n : ℕ} (h : HasMaxMassDimLE V n) : MvPolynomial (Fin 4) ℝ :=
-  Classical.choose h
+def polynomial (V : EffectivePotential) {n : ℕ} (h : HasMaxMassDimLE V n) :
+    MvPolynomial (Fin 4) ℝ := Classical.choose h
 
 lemma polynomial_totalDegree {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) :
     (polynomial V h).totalDegree ≤ n := (Classical.choose_spec h).2
 
-lemma apply_eq_polynomial {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) (φ : HiggsVec) :
-    V φ = (polynomial V h).eval φ.toRealScalars := (Classical.choose_spec h).1 φ
+lemma apply_eq_polynomial {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n)
+    (φ : HiggsVec) : V φ = (polynomial V h).eval φ.toRealScalars := (Classical.choose_spec h).1 φ
 
 /-!
 
@@ -235,7 +235,8 @@ lemma termOfMassDim_zero_of_odd {V : EffectivePotential} {n : ℕ} (h : HasMaxMa
 lemma apply_eq_sum_even_termOfMassDim {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n)
     (hV : IsInvariant V) (φ : HiggsVec) :
     V φ = ∑ m ∈ Finset.range (n / 2 + 1), termOfMassDim V h (2 * m) φ := by
-  rw [apply_eq_sum_termOfMassDim h, ← Finset.sum_filter_add_sum_filter_not (Finset.range (n + 1)) Even]
+  rw [apply_eq_sum_termOfMassDim h, ← Finset.sum_filter_add_sum_filter_not
+    (Finset.range (n + 1)) Even]
   have hodd : ∑ m ∈ (Finset.range (n + 1)).filter (fun m => ¬ Even m),
       termOfMassDim V h m φ = 0 := by
     apply Finset.sum_eq_zero
