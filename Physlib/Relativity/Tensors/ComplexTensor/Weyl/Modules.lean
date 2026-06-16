@@ -76,7 +76,7 @@ end LeftHandedWeyl
 
 end LeftHanded
 
-/-- The module in which alt-left handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
+/-- The module in which dual-left handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
 structure DualLeftHandedWeyl where
   /-- The underlying value in `Fin 2 → ℂ`. -/
   val : Fin 2 → ℂ
@@ -165,9 +165,9 @@ end RightHandedWeyl
 
 end RightHanded
 
-section AltRightHanded
+section DualRightHanded
 
-/-- The module in which alt-right handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
+/-- The module in which dual-right handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
 structure DualRightHandedWeyl where
   /-- The underlying value in `Fin 2 → ℂ`. -/
   val : Fin 2 → ℂ
@@ -209,7 +209,7 @@ abbrev toFin2ℂ (ψ : DualRightHandedWeyl) := toFin2ℂEquiv ψ
 
 end DualRightHandedWeyl
 
-end AltRightHanded
+end DualRightHanded
 
 end
 end Fermion
