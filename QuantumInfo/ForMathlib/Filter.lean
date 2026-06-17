@@ -34,8 +34,8 @@ theorem Filter.Tendsto_inv_nat_mul_div_real (m : ℕ)
       · intro x a
         simp_all only [ne_eq, gt_iff_lt, one_div, ge_iff_le, tsub_le_iff_right]
         apply And.intro
-        · rw [ inv_eq_one_div, div_add', div_le_div_iff₀ ] <;> first | positivity | nlinarith
-            [ Nat.lt_floor_add_one ( ( x : ℝ ) / m ),
+        · rw [ inv_eq_one_div, div_add', div_le_div_iff₀ ] <;> first | positivity |
+            nlinarith [Nat.lt_floor_add_one ( ( x : ℝ ) / m ),
               show ( x : ℝ ) ≥ 1 by exact Nat.one_le_cast.mpr a,
               mul_div_cancel₀ ( x : ℝ ) ( show ( m : ℝ ) ≠ 0 by positivity ),
               inv_mul_cancel₀ ( show ( x : ℝ ) ≠ 0 by positivity ) ] ;

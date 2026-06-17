@@ -196,8 +196,9 @@ lemma Real.integral_inv_sub_inv_finite (x T : ℝ) (hx : 0 < x) (hT : 0 < T) :
   · rw [ ← Real.log_mul, intervalIntegral.integral_deriv_eq_sub' ];
     field_simp;
     rw [ intervalIntegral.integral_deriv_eq_sub' ];
-    any_goals intro t ht;
-      exact Real.differentiableAt_log ( by cases Set.mem_uIcc.mp ht <;> linarith );
+    any_goals
+      intro t ht
+      exact Real.differentiableAt_log ( by cases Set.mem_uIcc.mp ht <;> linarith )
     any_goals positivity;
     · rw [ Real.log_div ( by positivity ) ( by positivity ),
         Real.log_mul ( by positivity ) ( by positivity ) ] ; norm_num;

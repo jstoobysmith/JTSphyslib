@@ -538,9 +538,9 @@ lemma dist_lt_of_continuous' {X : Type*} [TopologicalSpace X]
       ⟨ ht'_t, ht ⟩;
     have := hUV t' ( ht_fin.1 t' ht'_fin ) x₀
       ⟨ mem_of_mem_nhds ( hU t' ( ht_fin.1 t' ht'_fin ) ), hx₀ ⟩ t ⟨ ht'_t, ht ⟩;
-    exact abs_lt.mpr ⟨ by linarith [ abs_lt.mp ‹‖f x t - f x₀ t'‖ < ε / 2›,
-      abs_lt.mp ‹‖f x₀ t - f x₀ t'‖ < ε / 2› ], by linarith [ abs_lt.mp ‹‖f x t - f x₀ t'‖ < ε / 2›,
-      abs_lt.mp ‹‖f x₀ t - f x₀ t'‖ < ε / 2› ] ⟩
+    exact abs_lt.mpr ⟨by linarith [ abs_lt.mp ‹‖f x t - f x₀ t'‖ < ε / 2›,
+      (abs_lt.mp ‹‖f x₀ t - f x₀ t'‖ < ε / 2›)], by linarith [abs_lt.mp ‹‖f x t - f x₀ t'‖ < ε / 2›,
+      (abs_lt.mp ‹‖f x₀ t - f x₀ t'‖ < ε / 2›)] ⟩
 
 /--
 The functional calculus is continuous on matrices with spectrum in a compact set.
@@ -566,8 +566,9 @@ lemma continuousOn_cfc_of_compact {K : Set ℝ} {g : ℝ → ℝ} (hK : IsCompac
             exact continuousOn_iff_continuous_restrict.mp hg );
         exact ⟨ _, this.choose.continuous.continuousOn,
           fun x hx => by simpa using congr_arg ( fun f => f ⟨ x, hx ⟩ ) this.choose_spec ⟩;
-      exact fun ε εpos => by rcases this a b f hf.1 ε εpos with ⟨ p, hp ⟩ ;
-        exact ⟨ p, fun x hx => by simpa only [ hf.2 x hx ] using hp x ( hab hx ) ⟩ ;
+      exact fun ε εpos => by
+        rcases this a b f hf.1 ε εpos with ⟨ p, hp ⟩
+        exact ⟨ p, fun x hx => by simpa only [ hf.2 x hx ] using hp x ( hab hx ) ⟩
     exact ⟨ fun n => Classical.choose ( h_stone_weierstrass ( 1 / ( n + 1 ) ) ( by positivity ) ),
       fun n x hx => le_of_lt ( Classical.choose_spec
         ( h_stone_weierstrass ( 1 / ( n + 1 ) ) ( by positivity ) ) x hx ) ⟩;
@@ -623,7 +624,8 @@ lemma continuousOn_cfc_of_compact {K : Set ℝ} {g : ℝ → ℝ} (hK : IsCompac
           A.cfc ( fun x => Polynomial.eval x ( p_n N ) ) ) +
         ( A.cfc ( fun x => Polynomial.eval x ( p_n N ) ) - A.cfc g ) by abel1 ];
     exact lt_of_le_of_lt ( norm_add₃_le .. )
-      ( by linarith [ norm_sub_rev ( a.cfc g ) ( a.cfc fun x => Polynomial.eval x ( p_n N ) ),
+      (by
+      linarith [ norm_sub_rev ( a.cfc g ) ( a.cfc fun x => Polynomial.eval x ( p_n N ) ),
         norm_sub_rev ( A.cfc fun x => Polynomial.eval x ( p_n N ) ) ( A.cfc g ),
         hδ a ha ha' ] );
   contradiction
@@ -783,7 +785,8 @@ lemma spectrum_subset_of_isOpen (A₀ : HermitianMat d ℂ) (U : Set ℝ)
     obtain ⟨δ_min, hδ_min_pos, hδ_min⟩ : ∃ δ_min > 0, ∀ i ∈ t, δ_min ≤ δ i := by
       by_cases ht : t.Nonempty <;> simp_all [ Finset.Nonempty ];
       · exact ⟨ Finset.min' ( t.image δ ) ⟨ _, Finset.mem_image_of_mem δ ht.choose_spec ⟩,
-          by have := Finset.min'_mem ( t.image δ )
+          by
+          have := Finset.min'_mem ( t.image δ )
             ⟨ _, Finset.mem_image_of_mem δ ht.choose_spec ⟩ ; aesop,
           fun i hi => Finset.min'_le _ _ ( Finset.mem_image_of_mem δ hi ) ⟩;
       · exact ⟨ 1, zero_lt_one ⟩
@@ -920,8 +923,9 @@ lemma continuousWithinAt_cfc_of_continuousOn {T : Set ℝ} {g : ℝ → ℝ}
         have := spectrum_subset_of_isOpen A₀ ( Metric.thickening δ ( spectrum ℝ A₀.mat ) ) h_open
           ( Metric.self_subset_thickening δ_pos _ ) ; aesop;
       generalize_proofs at *; (
-      exact ⟨ _, h_spectrum_subset, fun B hB => fun x hx => by simpa [ dist_eq_norm ] using
-        Metric.mem_thickening_iff.mp ( hB hx ) ⟩)
+      exact ⟨ _, h_spectrum_subset, fun B hB => fun x hx => by
+        simpa [ dist_eq_norm ] using
+          Metric.mem_thickening_iff.mp ( hB hx ) ⟩)
     generalize_proofs at *; (
     refine' ⟨ U, hU.1, fun B hB => _ ⟩
     have h_diff_small : ∀ x ∈ spectrum ℝ B.mat,
@@ -936,7 +940,8 @@ lemma continuousWithinAt_cfc_of_continuousOn {T : Set ℝ} {g : ℝ → ℝ}
       · positivity;
       · exact fun x hx => hx
     generalize_proofs at *; (
-    exact h_diff_small.trans_lt ( by rw [ mul_div, div_lt_iff₀ ] <;>
+    exact h_diff_small.trans_lt ( by
+      rw [ mul_div, div_lt_iff₀ ] <;>
       nlinarith [ Real.sqrt_nonneg ( Fintype.card d : ℝ ),
         Real.sq_sqrt ( Nat.cast_nonneg ( Fintype.card d ) ) ] ))));
   rw [ Metric.continuousWithinAt_iff ] at *;

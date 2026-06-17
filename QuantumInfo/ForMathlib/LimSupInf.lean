@@ -140,7 +140,7 @@ lemma exists_liminf_zero_of_forall_liminf_le (y : ℝ≥0) (f : ℝ≥0 → ℕ 
     intro a' a
     exact Filter.eventually_atTop.mp ( h_find_greatest_inf.eventually_gt_atTop ⌈ ( a' : ℝ≥0 ) ⁻¹⌉₊ )
       |> fun ⟨ M, hM ⟩ ↦ ⟨ M, fun m hm ↦ by simpa using inv_lt_of_inv_lt₀ a <|
-        by exact lt_of_lt_of_le ( Nat.lt_of_ceil_lt <| hM m hm ) <| mod_cast Nat.le_succ _ ⟩;
+        (by exact lt_of_lt_of_le ( Nat.lt_of_ceil_lt <| hM m hm ) <| mod_cast Nat.le_succ _) ⟩;
   have hg_le : ∀ k, f (g (n k)) (n k) ≤ (y : ℝ≥0∞) + ((k : ℝ≥0) + 1)⁻¹ := by
     intro k
     specialize hn_le k
@@ -328,8 +328,9 @@ lemma exists_increasing_sequence_with_property (M : ℕ → ℕ) (P : ℕ → �
       simp_all only [ge_iff_le, le_sup_iff, add_le_add_iff_right, or_true, sup_of_le_right,
         Set.mem_Ico, lt_sup_iff, Nat.rec_zero, zero_add]
       refine ⟨?_, ?_, ?_, ?_⟩
-      · exact strictMono_nat_of_lt_succ fun k => by cases max_cases ( M ( k + 1 ) )
-          ( n k ( Nat.rec ( M 0 ) ( fun k ih => Max.max ( M ( k + 1 ) ) ( n k ih + 1 ) ) k ) + 1 )
+      · exact strictMono_nat_of_lt_succ fun k => by
+          cases max_cases ( M ( k + 1 ) )
+            ( n k ( Nat.rec ( M 0 ) ( fun k ih => Max.max ( M ( k + 1 ) ) ( n k ih + 1 ) ) k ) + 1 )
           <;> linarith
           [ hn k ( Nat.rec ( M 0 ) ( fun k ih => Max.max ( M ( k + 1 ) ) ( n k ih + 1 ) ) k ) ] ;
       · intro k
@@ -444,8 +445,9 @@ lemma exists_liminf_zero_of_forall_liminf_limsup_le_with_UB (y₁ y₂ : ℝ≥0
       add_pos_iff, Nat.cast_pos, zero_lt_one, or_true, and_self, implies_true, inf_le_left,
       inf_le_right, true_and]
     rw [ Filter.tendsto_congr' ];
-    any_goals filter_upwards [ Filter.eventually_gt_atTop ⌈ ( z / 2 ) ⁻¹⌉₊ ] with k hk;
-      rw [ min_eq_right ];
+    any_goals
+      filter_upwards [ Filter.eventually_gt_atTop ⌈ ( z / 2 ) ⁻¹⌉₊ ] with k hk
+      rw [ min_eq_right ]
     · refine' tendsto_order.2 ⟨ fun x => _, fun x hx => _ ⟩
       · aesop
       · simp_all only [gt_iff_lt, Filter.eventually_atTop, ge_iff_le]

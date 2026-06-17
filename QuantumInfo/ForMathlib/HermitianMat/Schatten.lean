@@ -24,8 +24,8 @@ noncomputable section
 The Schatten p-norm of a matrix A is (Tr[(A*A)^(p/2)])^(1/p).
 -/
 noncomputable def schattenNorm (A : Matrix d d ℂ) (p : ℝ) : ℝ :=
-  RCLike.re ((Matrix.isHermitian_mul_conjTranspose_self A.conjTranspose).cfc (· ^ (p/2))).trace ^
-    (1/p)
+  RCLike.re ((Matrix.isHermitian_mul_conjTranspose_self A.conjTranspose).cfc
+    (· ^ (p/2))).trace ^ (1/p)
 
 /-
 For a positive Hermitian matrix A, ||A||_p = (Tr(A^p))^(1/p).
@@ -117,7 +117,8 @@ lemma schattenNorm_rpow_eq_sum_singularValues (A : Matrix d d ℂ) {p : ℝ} (hp
 lemma schattenNorm_eq_sum_singularValues_rpow (A : Matrix d d ℂ) {p : ℝ} (hp : 0 < p) :
     schattenNorm A p = (∑ i : d, singularValues A i ^ p) ^ (1/p) := by
   rw [ ←schattenNorm_rpow_eq_sum_singularValues A hp ];
-  rw [ ← Real.rpow_mul ( by exact Real.rpow_nonneg ( by
+  rw [ ← Real.rpow_mul , mul_one_div_cancel hp.ne', Real.rpow_one ]
+  exact Real.rpow_nonneg ( by
     simp [ Matrix.trace ];
     refine' Finset.sum_nonneg fun i _ => _;
     rw [ Matrix.IsHermitian.cfc ];
@@ -125,7 +126,7 @@ lemma schattenNorm_eq_sum_singularValues_rpow (A : Matrix d d ℂ) {p : ℝ} (hp
     field_simp;
     exact Finset.sum_nonneg fun _ _ => mul_nonneg ( Real.rpow_nonneg ( by
       exact Matrix.eigenvalues_conjTranspose_mul_self_nonneg A _ ) _ ) ( add_nonneg ( sq_nonneg _ )
-        ( sq_nonneg _ ) ) ) _ ), mul_one_div_cancel hp.ne', Real.rpow_one ]
+        ( sq_nonneg _ ) ) ) _
 
 /-- `‖A‖_p^p` equals the same sum over sorted singular values. -/
 lemma schattenNorm_rpow_eq_sum_sorted (A : Matrix d d ℂ) {p : ℝ} (hp : 0 < p) :

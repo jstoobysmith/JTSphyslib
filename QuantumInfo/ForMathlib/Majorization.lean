@@ -1147,8 +1147,8 @@ lemma sum_mul_log_nonneg_of_weak_log_maj {n : ℕ}
             (Nat.le_refl _)⟩
     simp +zetaDelta at *
     rw [← Real.log_prod fun i hi => ne_of_gt (div_pos (hy_pos i) (hx_pos i))];
-      exact Real.log_nonneg (by rw [Finset.prod_div_distrib]; exact by
-        rw [le_div_iff₀ (Finset.prod_pos fun i hi => hx_pos i)]; linarith)
+      exact Real.log_nonneg (by rw [Finset.prod_div_distrib]; exact
+        (by rw [le_div_iff₀ (Finset.prod_pos fun i hi => hx_pos i)]; linarith))
   exact h_neg <| h_abel.symm ▸ add_nonneg
     (mul_nonneg (le_of_lt (hx_pos _)) (h_nonneg _))
     (Finset.sum_nonneg fun i hi =>

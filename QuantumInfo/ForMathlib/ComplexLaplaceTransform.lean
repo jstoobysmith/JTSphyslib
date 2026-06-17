@@ -303,19 +303,19 @@ private theorem wedgeIntegral_complexLaplaceTransform_eq_integral
   rw [← MeasureTheory.integral_smul, ← MeasureTheory.integral_add]
   · rcases le_total a.re b.re with hab | hba
     · simpa [intervalIntegral.integral_of_le hab, Function.uncurry, Set.uIoc_of_le hab]
-        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner)
-          .integral_prod_right
+        using (integrable_uncurry_complexLaplaceIntegrand_horizontal
+         hE ha hcorner).integral_prod_right
     · simpa [intervalIntegral.integral_of_ge hba, Function.uncurry, Set.uIoc_of_ge hba]
-        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner)
-          .integral_prod_right.neg
+        using (integrable_uncurry_complexLaplaceIntegrand_horizontal
+         hE ha hcorner).integral_prod_right.neg
   · refine (?_ : MeasureTheory.Integrable _ MeasureTheory.volume).smul Complex.I
     rcases le_total a.im b.im with hab | hba
     · simpa [intervalIntegral.integral_of_le hab, Function.uncurry, Set.uIoc_of_le hab]
-        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner)
-          .integral_prod_right
+        using (integrable_uncurry_complexLaplaceIntegrand_vertical
+          hE hb hcorner).integral_prod_right
     · simpa [intervalIntegral.integral_of_ge hba, Function.uncurry, Set.uIoc_of_ge hba]
-        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner)
-          .integral_prod_right.neg
+        using (integrable_uncurry_complexLaplaceIntegrand_vertical
+          hE hb hcorner).integral_prod_right.neg
 
 /-- A complex Laplace transform is analytic on the interior of its convergence domain. -/
 theorem analyticAt_complexLaplaceTransform_of_mem_interior_convergenceDomain

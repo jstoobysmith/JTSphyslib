@@ -205,8 +205,9 @@ lemma HermitianMat.trace_rpow_le_trace_of_le_one
   · rw [ Real.zero_rpow ( by positivity ) ];
   · conv_rhs => rw [← (A.H.eigenvalues i).rpow_one]
     apply Real.rpow_le_rpow_of_exponent_ge
-    · exact lt_of_le_of_ne' (le_of_not_gt fun hi => hi0 <| by linarith
-        [ show 0 ≤ A.H.eigenvalues i by simpa using hA.eigenvalues_nonneg i ] ) hi0
+    · exact lt_of_le_of_ne' (le_of_not_gt fun hi => hi0 <| by
+        linarith
+          [ show 0 ≤ A.H.eigenvalues i by simpa using hA.eigenvalues_nonneg i ] ) hi0
     · exact A.eigenvalues_le_one_of_le_one hA1 i
     · exact hp
 
@@ -774,8 +775,9 @@ private lemma scalar_rpow_cross_term_of_continuous {b : ℝ → ℝ} {c : ℝ}
         (nhds (Real.log c)) := by
       have h_log : Filter.Tendsto (fun t => (Real.log (b (1 + t)) * t) / t) (nhdsWithin 0 {0}ᶜ)
           (nhds (Real.log c)) := by
-        exact Filter.Tendsto.congr' ( by filter_upwards [ self_mem_nhdsWithin ] with t ht using by
-          rw [ mul_div_cancel_right₀ _ ht ] ) ( Filter.Tendsto.log h_b hc_pos.ne' )
+        exact Filter.Tendsto.congr' ( by
+          filter_upwards [ self_mem_nhdsWithin ] with t ht using by
+            rw [ mul_div_cancel_right₀ _ ht ] ) ( Filter.Tendsto.log h_b hc_pos.ne' )
       have h_exp : Filter.Tendsto (fun t => (Real.exp (Real.log (b (1 + t)) * t) - 1) / t)
           (nhdsWithin 0 {0}ᶜ) (nhds (Real.log c)) := by
         have h_exp : HasDerivAt (fun t => Real.exp (Real.log (b (1 + t)) * t)) (Real.log c) 0 := by
@@ -874,9 +876,10 @@ private lemma scalar_rpow_cross_term_of_continuous_zero {b : ℝ → ℝ}
             generalize_proofs at *; (
             exact h_subst.congr' ( Filter.eventuallyEq_of_mem self_mem_nhdsWithin fun x hx => by
               rw [ Real.log_sqrt hx.out.le ] ; ring ) |> fun h => h.trans ( by norm_num ) ;);
-          exact tendsto_nhdsWithin_of_tendsto_nhds ( by simpa [ mul_assoc ] using
-            Filter.Tendsto.const_mul 2 ( Real.continuous_mul_log.tendsto 0 ) ) |>
-            fun h => h.trans ( by norm_num ) ;
+          exact tendsto_nhdsWithin_of_tendsto_nhds ( by
+            simpa [ mul_assoc ] using
+              Filter.Tendsto.const_mul 2 ( Real.continuous_mul_log.tendsto 0 ) ) |>
+              fun h => h.trans ( by norm_num ) ;
         exact tendsto_zero_iff_norm_tendsto_zero.mpr ( by simpa using h_sqrt_log.norm );
       have h_sqrt_log : Filter.Tendsto (fun α => Real.sqrt (|b α|) * |Real.log (|b α|)|)
           (nhdsWithin 1 {α | 0 < |b α|}) (nhds 0) := by
@@ -974,7 +977,8 @@ private lemma conj_rpow_continuousAt_zero
     · convert conj_supportProj_eq_of_ker_le A ρM hker |> Eq.symm;
     · fun_prop;
   rw [ Metric.tendsto_nhdsWithin_nhds ] at *;
-  exact Metric.tendsto_nhds_nhds.mpr fun ε hε => by rcases h_conj ε hε with ⟨ δ, hδ, H ⟩ ;
+  exact Metric.tendsto_nhds_nhds.mpr fun ε hε => by
+    rcases h_conj ε hε with ⟨ δ, hδ, H ⟩ ;
     exact ⟨ δ, hδ, by intro x hx; by_cases hx' : x = 0 <;> aesop ⟩ ;
 
 /-
@@ -1049,8 +1053,9 @@ private lemma rpow_slope_tendsto_uniformly (K : ℝ) :
         exact tendsto_nhdsWithin_of_tendsto_nhds
           ( by simpa using Real.continuous_mul_log.tendsto 0 );
       have := Metric.tendsto_nhdsWithin_nhds.mp h_cont ( ε / 4 ) ( by linarith );
-      exact ⟨ this.choose, this.choose_spec.1, fun x hx₁ hx₂ hx₃ => by simpa [ abs_mul ] using
-        this.choose_spec.2 hx₂ ( by simpa [ abs_of_pos hx₂ ] using hx₃ ) ⟩;
+      exact ⟨ this.choose, this.choose_spec.1, fun x hx₁ hx₂ hx₃ => by
+        simpa [ abs_mul ] using
+          this.choose_spec.2 hx₂ ( by simpa [ abs_of_pos hx₂ ] using hx₃ ) ⟩;
     have h_bound : ∃ δ₁ > 0, ∀ x ∈ Set.Icc 0 K, 0 < x → x < δ₁ → ∀ h, 0 < |h| → |h| < 1 / 2 →
         |x ^ (1 + h) - x| ≤ |h| * x * (|Real.log x| + 1) * Real.exp (|h| * (|Real.log x| + 1)) := by
       have h_bound : ∀ x ∈ Set.Icc 0 K, 0 < x → ∀ h : ℝ, 0 < |h| → |h| < 1 / 2 →
@@ -1197,7 +1202,8 @@ private lemma rpow_slope_tendsto_uniformly (K : ℝ) :
           ( CompactIccSpace.isCompact_Icc ) h_cont;
         norm_num +zetaDelta at *;
         exact ⟨ Max.max M 1, by positivity, fun x hx₁ hx₂ h hh₁ hh₂ => le_trans
-          ( by rw [ abs_of_nonneg ( by linarith : 0 ≤ x ) ] ;
+          ( by
+            rw [ abs_of_nonneg ( by linarith : 0 ≤ x ) ] ;
             exact mul_le_mul_of_nonneg_left
               ( Real.exp_le_exp.mpr <| by nlinarith [ abs_nonneg ( Real.log x ) ] ) <|
               by nlinarith [ abs_nonneg ( Real.log x ) ] )
@@ -1322,7 +1328,8 @@ private lemma cross_term_slope_tendsto_zero
         rw [ ← Finset.sum_sub_distrib ];
         exact lt_of_le_of_lt ( Finset.abs_sum_le_sum_abs _ _ ) ( lt_of_le_of_lt
           ( Finset.sum_le_sum fun i _ => le_of_lt ( by simpa [ hx ] using hδ x hx hx' i ) )
-          ( by norm_num;
+          ( by
+            norm_num;
             nlinarith [ mul_div_cancel₀ ε ( by positivity : ( Fintype.card d + 1 : ℝ ) ≠ 0 ) ] ) );
       · rw [ Metric.tendsto_nhdsWithin_nhds ];
         intro ε ε_pos;
@@ -2009,7 +2016,8 @@ private theorem sandwichedRelRentropy.continuousOn_Ioi_1_aux (ρ σ : MState d) 
             ( by linarith [ hx.out ] )
         have h_cont : ContinuousOn (fun α : ℝ => (σ.M ^ α)) (Set.Iio 0) := by
           apply_rules [ HermitianMat.continuousOn_rpow_neg ];
-        exact h_cont.comp ‹_› fun x hx => by rw [ Set.mem_Iio ] ;
+        exact h_cont.comp ‹_› fun x hx => by
+          rw [ Set.mem_Iio ] ;
           rw [ div_lt_iff₀ ] <;> linarith [ hx.out ] ;
       exact Continuous.comp_continuousOn ( by continuity ) h_cont;
     fun_prop;
@@ -2061,7 +2069,8 @@ private theorem sandwichedRelRentropy.continuousOn_Ioo_0_1_aux (ρ σ : MState d
             ( by linarith [ hx.1 ] )
         have h_rpow_cont : ContinuousOn (fun α : ℝ => (σ.M ^ α)) (Set.Ioi 0) := by
           apply_rules [ HermitianMat.continuousOn_rpow_pos ]
-        exact h_rpow_cont.comp h_exp_cont fun x hx => by rw [ Set.mem_Ioi ] ;
+        exact h_rpow_cont.comp h_exp_cont fun x hx => by
+          rw [ Set.mem_Ioi ] ;
           apply div_pos <;> linarith [ hx.1, hx.2 ]
       exact Continuous.comp_continuousOn ( by continuity ) h_cont
     fun_prop
@@ -2253,7 +2262,8 @@ private lemma approxLog_tendsto_at_pos {t : ℝ} (ht : 0 < t) :
   refine' Filter.Tendsto.congr' _ tendsto_const_nhds
   filter_upwards [Filter.eventually_gt_atTop ⌈-Real.log t⌉₊] with N hN
   unfold approxLog
-  rw [max_eq_left (by rw [← Real.log_le_log_iff (by positivity) (by positivity)];
+  rw [max_eq_left (by
+    rw [← Real.log_le_log_iff (by positivity) (by positivity)];
     linarith [Nat.le_ceil (-Real.log t),
       show (N : ℝ) ≥ ⌈-Real.log t⌉₊ + 1 by exact_mod_cast hN, Real.log_exp (-N)])]
 
@@ -2406,9 +2416,10 @@ private lemma neg_ker_exists_eigenWeight_pos (ρ x : MState d) (hx : ¬(x.M.ker 
   -- By `ker_le_iff_eigenWeight_zero`, ¬(x.M.ker ≤ ρ.M.ker) iff ∃ i, eigenvalue_i = 0 ∧
   -- eigenWeight ≠ 0. Use this fact.
   have h_eigenWeight_ne_zero : ∃ i, x.M.H.eigenvalues i = 0 ∧ eigenWeight ρ x i ≠ 0 := by
-    exact Classical.not_forall_not.1 fun h => hx <| by simpa using
-      ker_le_iff_eigenWeight_zero ρ x |>.2 fun i hi =>
-      Classical.not_not.1 fun hi' => h i ⟨ hi, hi' ⟩ ;
+    exact Classical.not_forall_not.1 fun h => hx <| by
+      simpa using
+        ker_le_iff_eigenWeight_zero ρ x |>.2 fun i hi =>
+        Classical.not_not.1 fun hi' => h i ⟨ hi, hi' ⟩
   exact h_eigenWeight_ne_zero.imp fun i hi =>
     ⟨ hi.1, lt_of_le_of_ne ( eigenWeight_nonneg ρ x i ) hi.2.symm ⟩
 

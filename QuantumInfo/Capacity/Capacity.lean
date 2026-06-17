@@ -163,8 +163,8 @@ theorem id_achievesRate_log_dim :
   constructor
   · --piProd of id's is id, then use emulates_self up to equivalence
     rw [show (fun (_ : Fin 1) ↦ id (dIn := d₁)) = (fun _ ↦ id) from rfl, piProd_id]
-    exact let σ := Fintype.equivFinOfCardEq
-        (by simp +decide : Fintype.card (Fin 1 → d₁) = Fintype.card d₁)
+    exact let σ := Fintype.equivFinOfCardEq (by simp +decide :
+        Fintype.card (Fin 1 → d₁) = Fintype.card d₁)
       ⟨ofEquiv σ.symm, ofEquiv σ, by ext1; simp⟩
   constructor
   · norm_num
