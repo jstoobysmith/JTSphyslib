@@ -16,6 +16,7 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.JetPointRegularity
 public import PhyslibAlpha.ClassicalFieldTheory.Local.Lagrangian
 public import PhyslibAlpha.ClassicalFieldTheory.Local.TotalDerivative
 public import PhyslibAlpha.ClassicalFieldTheory.Local.Variation
+public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Line
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Ring
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalShell
 public import PhyslibAlpha.QuantumMechanics.QuantumHarmonicOscillator
