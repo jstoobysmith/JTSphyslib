@@ -84,7 +84,18 @@ lemma zero_fst : (0 : TwoHiggsDoublet).Φ1 = 0 := rfl
 @[simp]
 lemma zero_snd : (0 : TwoHiggsDoublet).Φ2 = 0 := rfl
 
-instance : AddCommMonoid TwoHiggsDoublet where
+instance : Neg TwoHiggsDoublet where
+  neg H :=
+    { Φ1 := -H.Φ1
+      Φ2 := -H.Φ2 }
+
+@[simp]
+lemma neg_fst (H : TwoHiggsDoublet) : (-H).Φ1 = -H.Φ1 := rfl
+
+@[simp]
+lemma neg_snd (H : TwoHiggsDoublet) : (-H).Φ2 = -H.Φ2 := rfl
+
+instance : AddCommGroup TwoHiggsDoublet where
   zero := { Φ1 := 0, Φ2 := 0 }
   add_assoc H1 H2 H3 := by
     ext <;> simp <;> ring
@@ -95,6 +106,9 @@ instance : AddCommMonoid TwoHiggsDoublet where
   nsmul := nsmulRec
   add_comm H1 H2 := by
     ext <;> simp <;> ring
+  zsmul := zsmulRec
+  neg_add_cancel H := by
+    ext <;> simp
 
 instance : Module ℂ TwoHiggsDoublet where
   one_smul H := by
@@ -110,6 +124,11 @@ instance : Module ℂ TwoHiggsDoublet where
   zero_smul H := by
     ext <;> simp [zero_smul]
 
+@[simp]
+lemma smul_real_fst (c : ℝ) (H : TwoHiggsDoublet) : (c • H).Φ1 = c • H.Φ1 := rfl
+
+@[simp]
+lemma smul_real_snd (c : ℝ) (H : TwoHiggsDoublet) : (c • H).Φ2 = c • H.Φ2 := rfl
 /-!
 
 ## B. Gauge group actions
@@ -147,10 +166,9 @@ noncomputable def toRealScalars (H : TwoHiggsDoublet) : Fin 8 → ℝ :=
   Fin.append H.Φ1.toRealScalars H.Φ2.toRealScalars
 
 lemma toRealScalars_smul (c : ℝ) (H : TwoHiggsDoublet) :
-    ((c : ℂ) • H).toRealScalars = c • H.toRealScalars := by
+    (c • H).toRealScalars = c • H.toRealScalars := by
   ext i
-  simp only [toRealScalars, smul_fst, Complex.coe_smul, map_smul, smul_snd, Pi.smul_apply,
-    smul_eq_mul]
+  simp only [toRealScalars, smul_real_fst, map_smul, smul_real_snd, Pi.smul_apply, smul_eq_mul]
   refine Fin.addCases (m := 4) (n := 4) (fun j => ?_) (fun j => ?_) i <;>
     simp only [Fin.append_left, Fin.append_right, Pi.smul_apply, smul_eq_mul]
 

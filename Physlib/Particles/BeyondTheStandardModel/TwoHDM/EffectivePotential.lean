@@ -85,7 +85,7 @@ lemma termOfMassDim_eq_zero_of_max_lt {V : EffectivePotential} {n : ℕ} (h : Ha
   grind
 
 lemma termOfMassDim_homogeneity {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) (m : ℕ)
-    (φ : TwoHiggsDoublet) (t : ℝ) : termOfMassDim V h m ((t : ℂ) • φ) = t ^ m *
+    (φ : TwoHiggsDoublet) (t : ℝ) : termOfMassDim V h m (t • φ) = t ^ m *
       termOfMassDim V h m φ := by
   rw [termOfMassDim, termOfMassDim, MvPolynomial.eval_eq', MvPolynomial.eval_eq',
     Finset.mul_sum, toRealScalars_smul]
@@ -98,9 +98,24 @@ lemma termOfMassDim_homogeneity {V : EffectivePotential} {n : ℕ} (h : HasMaxMa
     Finset.prod_pow_eq_pow_sum, hdeg]
   ring
 
-lemma new_theorem (n : ℕ) (hn : 3 ≤ n) :
-    ∀ a b c : ℤ, a ≠ 0 → b ≠ 0 → c ≠ 0 → a ^ n + b ^ n ≠ c ^ n := by
-  sorry
+
+
+
+open MvPolynomial in
+noncomputable def partialGramTermOfMassDim (V : EffectivePotential) {n : ℕ}
+    (h : HasMaxMassDimLE V n) (m : ℕ) :
+    MvPolynomial (Fin 4) ℝ :=
+  let p' := (polynomial V h).homogeneousComponent m
+  let t : MvPolynomial (Fin 4) ℝ :=
+    MvPolynomial.bind₁ ![X 0, 0, 0, 0, X 1, X 2, X 3, 0] p'
+  ∑ d ∈ t.support.filter (fun d => Even (d 3)),
+      MvPolynomial.monomial (Finsupp.update d 3 (d 3 / 2)) (t.coeff d)
+
+/-!
+
+The idea is now show that
+- partialGramTermOfMassDim
+-/
 end EffectivePotential
 
 end TwoHiggsDoublet
