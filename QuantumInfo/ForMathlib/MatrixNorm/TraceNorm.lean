@@ -89,7 +89,9 @@ theorem traceNorm_unitary_conj {A : Matrix n n R} {U : Matrix.unitaryGroup n R} 
 This is Proposition 9.1.1 in Wilde. -/
 theorem traceNorm_Hermitian_eq_sum_abs_eigenvalues {A : Matrix n n R} (hA : A.IsHermitian) :
     A.traceNorm = ∑ i, abs (hA.eigenvalues i) := by
-  obtain ⟨U, D, hD, hA_eq, h_eig⟩ : ∃ U : Matrix.unitaryGroup n R, ∃ D : Matrix n n R, D.IsDiag ∧ A = U.val * D * U.valᴴ ∧ ∀ i, D i i = hA.eigenvalues i := by
+  obtain ⟨U, D, hD, hA_eq, h_eig⟩ :
+      ∃ U : Matrix.unitaryGroup n R, ∃ D : Matrix n n R,
+        D.IsDiag ∧ A = U.val * D * U.valᴴ ∧ ∀ i, D i i = hA.eigenvalues i := by
     refine' ⟨hA.eigenvectorUnitary, _, isDiag_diagonal _, hA.spectral_theorem, _⟩
     simp [diagonal]
   nth_rw 1 [hA_eq, traceNorm_unitary_conj]
@@ -142,7 +144,8 @@ theorem traceNorm_zero_iff (A : Matrix m n R) : A.traceNorm = 0 ↔ A = 0 := by
     simp
 
 /-- The trace norm is homogeneous under scalar multiplication. Property 9.1.2 in Wilde. -/
-theorem traceNorm_smul (A : Matrix m n R) (c : R) : (c • A).traceNorm = ‖c‖ * A.traceNorm := by
+theorem traceNorm_smul (A : Matrix m n R) (c : R) :
+    (c • A).traceNorm = ‖c‖ * A.traceNorm := by
   have h : (c • A)ᴴ * (c • A) = (‖c‖^2:R) • (Aᴴ * A) := by
     rw [conjTranspose_smul, RCLike.star_def, Matrix.mul_smul, smul_mul, smul_smul]
     rw [RCLike.mul_conj c]
@@ -164,7 +167,8 @@ theorem traceNorm_smul (A : Matrix m n R) (c : R) : (c • A).traceNorm = ‖c�
     apply CFC.sqrt_unique;
     · simp; rw [CFC.sqrt_mul_sqrt_self M hM_pd.nonneg]
     · exact le_trans ( by norm_num ) (
-        smul_le_smul_of_nonneg_left ( show 0 ≤ CFC.sqrt M from by exact (CFC.sqrt_nonneg M) ) ( norm_nonneg c ) );
+        smul_le_smul_of_nonneg_left
+          ( show 0 ≤ CFC.sqrt M from by exact (CFC.sqrt_nonneg M) ) ( norm_nonneg c ) );
 
 section complexTraceNorm
 
@@ -219,12 +223,14 @@ theorem exists_svd_sqrt_eigenvalues (A : Matrix n n ℂ) :
   let V : Matrix.unitaryGroup n ℂ := ⟨Matrix.of (fun i j ↦ b j i), by
     simp only [Matrix.mem_unitaryGroup_iff]
     ext i j
-    simpa [inner] using b.sum_inner_mul_inner (EuclideanSpace.single i 1) (EuclideanSpace.single j 1)⟩
+    simpa [inner] using
+      b.sum_inner_mul_inner (EuclideanSpace.single i 1) (EuclideanSpace.single j 1)⟩
   let W : Matrix.unitaryGroup n ℂ := hH.eigenvectorUnitary
   have hAW : A * W.val = V.val * Matrix.diagonal s := by
     ext i j
     have hleft : (A * W.val) i j = A.mulVec (hH.eigenvectorBasis j).ofLp i := by
-      simp [Matrix.mul_apply, Matrix.mulVec, dotProduct, W, Matrix.IsHermitian.eigenvectorUnitary_apply]
+      simp [Matrix.mul_apply, Matrix.mulVec, dotProduct, W,
+        Matrix.IsHermitian.eigenvectorUnitary_apply]
     by_cases hj : hH.eigenvalues j = 0
     · have hzero : A.mulVec (hH.eigenvectorBasis j).ofLp = 0 := by
         apply (WithLp.toLp_injective (p := 2))
@@ -410,7 +416,8 @@ end complexTraceNorm
 /-- For square complex matrices, the trace norm is the maximum of `re (Tr[U * A])`
 over unitaries `U`. -/
 theorem traceNorm_eq_max_re_tr_U (A : Matrix n n ℂ) :
-    IsGreatest {x : ℝ | ∃ U : unitaryGroup n ℂ, Complex.re ((U.val * A).trace) = x} A.traceNorm := by
+    IsGreatest {x : ℝ | ∃ U : unitaryGroup n ℂ, Complex.re ((U.val * A).trace) = x}
+      A.traceNorm := by
   classical
   let hH : (Aᴴ * A).IsHermitian := by
     simpa using (Matrix.isHermitian_mul_conjTranspose_self A.conjTranspose)
@@ -455,7 +462,8 @@ theorem traceNorm_eq_max_re_tr_U (A : Matrix n n ℂ) :
       nlinarith [hdiag_le i, Real.sqrt_nonneg (hH.eigenvalues i)]
 
 /-- The trace norm satisfies the triangle inequality for square complex matrices. -/
-theorem traceNorm_add_le (A B : Matrix n n ℂ) : (A + B).traceNorm ≤ A.traceNorm + B.traceNorm := by
+theorem traceNorm_add_le (A B : Matrix n n ℂ) :
+    (A + B).traceNorm ≤ A.traceNorm + B.traceNorm := by
   obtain ⟨Uab, h₁⟩ := (traceNorm_eq_max_re_tr_U (A + B)).left
   rw [Matrix.mul_add, Matrix.trace_add, Complex.add_re] at h₁
   obtain h₂ := (traceNorm_eq_max_re_tr_U A).right

@@ -37,7 +37,9 @@ variable {fn : ℕ → T} {_lb _ub : T} {hl : ∀ n, _lb ≤ fn n} {hu : ∀ n, 
 /-- The `InfRegularized` value is also lower bounded. -/
 theorem lb : _lb ≤ InfRegularized fn hl hu := by
   convert le_csSup ?_ ?_;
-  · exact ⟨ _ub, fun a ha => by rcases Filter.eventually_atTop.mp ha with ⟨ n, hn ⟩ ; exact le_trans ( hn _ le_rfl ) ( hu _ ) ⟩;
+  · exact ⟨ _ub, fun a ha => by
+      rcases Filter.eventually_atTop.mp ha with ⟨ n, hn ⟩ ;
+      exact le_trans ( hn _ le_rfl ) ( hu _ ) ⟩;
   · aesop
 
 /-- The `InfRegularized` value is also upper bounded. -/
@@ -55,8 +57,12 @@ theorem anti_inf (h : Antitone fn) :
   rw [ @csSup_eq_of_forall_le_of_forall_lt_exists_gt ];
   · exact ⟨ _, ⟨ 0, fun n _ => hl n ⟩ ⟩;
   · rintro a ⟨ n, hn ⟩;
-    exact le_csInf ⟨ _, Set.mem_range_self n ⟩ fun x hx => by rcases hx with ⟨ m, rfl ⟩ ; exact hn _ ( le_max_left _ _ ) |> le_trans <| h <| le_max_right _ _;
-  · exact fun w hw => ⟨ _, ⟨ 0, fun n _ => csInf_le ⟨ _lb, Set.forall_mem_range.2 hl ⟩ ⟨ n, rfl ⟩ ⟩, hw ⟩
+    exact le_csInf ⟨ _, Set.mem_range_self n ⟩ fun x hx => by
+      rcases hx with ⟨ m, rfl ⟩ ;
+      exact hn _ ( le_max_left _ _ ) |> le_trans <| h <| le_max_right _ _;
+  · exact fun w hw =>
+      ⟨ _,
+        ⟨ 0, fun n _ => csInf_le ⟨ _lb, Set.forall_mem_range.2 hl ⟩ ⟨ n, rfl ⟩ ⟩, hw ⟩
 
 /-- For `Antitone` functions, the `InfRegularized` is lower bounded by
   any particular value. -/
@@ -66,7 +72,8 @@ theorem anti_ub (h : Antitone fn) : ∀ n, InfRegularized fn hl hu ≤ fn n := b
     convert csSup_le _ _;
     · exact ⟨ _lb, Filter.eventually_atTop.2 ⟨ 0, fun n hn => hl n ⟩ ⟩;
     · simp +zetaDelta at *;
-      exact fun b x hx => le_trans ( hx ( Max.max x n ) ( le_max_left _ _ ) ) ( h ( le_max_right _ _ ) )
+      exact fun b x hx =>
+        le_trans ( hx ( Max.max x n ) ( le_max_left _ _ ) ) ( h ( le_max_right _ _ ) )
   exact h_inf_le
 
 end InfRegularized
@@ -77,9 +84,11 @@ variable {fn : ℕ → T} {_lb _ub : T} {hl : ∀ n, _lb ≤ fn n} {hu : ∀ n, 
 
 /-- The `SupRegularized` value is also lower bounded. -/
 theorem lb : _lb ≤ SupRegularized fn hl hu := by
-  -- Suppose, for contradiction, that $\mathrm{InfRegularized} \; fn < \mathrm{SupRegularized} \; fn$.
+  -- Suppose, for contradiction, that
+  -- $\mathrm{InfRegularized} \; fn < \mathrm{SupRegularized} \; fn$.
   by_contra h_contra;
-  -- By definition of `SupRegularized`, we have that $\mathrm{SupRegularized} \; fn \geq \mathrm{InfRegularized} \; fn$.
+  -- By definition of `SupRegularized`, we have that
+  -- $\mathrm{SupRegularized} \; fn \geq \mathrm{InfRegularized} \; fn$.
   have h_sup_ge_inf : SupRegularized fn hl hu ≥ InfRegularized fn hl hu := by
     apply_rules [ Filter.liminf_le_limsup ];
     · exact ⟨ _ub, Filter.eventually_atTop.2 ⟨ 0, fun n hn => hu n ⟩ ⟩;
@@ -88,7 +97,8 @@ theorem lb : _lb ≤ SupRegularized fn hl hu := by
 
 /-- The `SupRegularized` value is also upper bounded. -/
 theorem ub : SupRegularized fn hl hu ≤ _ub := by
-  -- By definition of `limsup`, we know that for any `ε > 0`, there exists an `N` such that for all `n ≥ N`, `fn n ≤ _ub + ε`.
+  -- By definition of `limsup`, we know that for any `ε > 0`, there exists an `N` such that
+  -- for all `n ≥ N`, `fn n ≤ _ub + ε`.
   apply csInf_le;
   · exact ⟨ _, fun x hx => hx.exists.choose_spec.trans' ( hl _ ) ⟩;
   · aesop
@@ -101,11 +111,14 @@ theorem mono_sup (h : Monotone fn) :
   refine' le_antisymm _ _;
   · refine' csInf_le _ _;
     · exact ⟨ _lb, by rintro x ⟨ n, hn ⟩ ; exact le_trans ( hl n ) ( hn n le_rfl ) ⟩;
-    · exact ⟨ 0, fun n _ => le_csSup ⟨ _ub, by rintro x ⟨ m, rfl ⟩ ; exact hu m ⟩ ⟨ n, rfl ⟩ ⟩;
+    · exact ⟨ 0, fun n _ => le_csSup ⟨ _ub, by
+        rintro x ⟨ m, rfl ⟩ ; exact hu m ⟩ ⟨ n, rfl ⟩ ⟩;
   · refine' csSup_le _ _;
     · exact ⟨ _, ⟨ 0, rfl ⟩ ⟩;
     · norm_num +zetaDelta at *;
-      exact fun n => le_csInf ⟨ _ub, ⟨ n, fun m hm => hu m ⟩ ⟩ fun x hx => by rcases hx with ⟨ m, hm ⟩ ; exact hm _ ( le_max_left _ _ ) |> le_trans ( h ( le_max_right _ _ ) ) ;
+      exact fun n => le_csInf ⟨ _ub, ⟨ n, fun m hm => hu m ⟩ ⟩ fun x hx => by
+        rcases hx with ⟨ m, hm ⟩ ;
+        exact hm _ ( le_max_left _ _ ) |> le_trans ( h ( le_max_right _ _ ) ) ;
 
 /-- For `Monotone` functions, the `SupRegularized` is lower bounded by
   any particular value. -/
@@ -128,7 +141,8 @@ private def realNegOrderIso : ℝ ≃o ℝᵒᵈ where
     change (-b : ℝ) ≤ -a ↔ a ≤ b
     simpa using neg_le_neg_iff
 
-private theorem limsup_eq_neg_liminf_neg {fn : ℕ → ℝ} {_lb _ub : ℝ}Expand commentComment on line R131Resolved
+private theorem limsup_eq_neg_liminf_neg {fn : ℕ → ℝ}
+    {_lb _ub : ℝ}Expand commentComment on line R131Resolved
     (hl : ∀ n, _lb ≤ fn n) (hu : ∀ n, fn n ≤ _ub) :
     Filter.atTop.limsup fn = -Filter.atTop.liminf (fun n => -fn n) := by
   have hneg : -Filter.atTop.limsup fn = Filter.atTop.liminf (fun n => -fn n) := by
@@ -137,7 +151,8 @@ private theorem limsup_eq_neg_liminf_neg {fn : ℕ → ℝ} {_lb _ub : ℝ}Expan
         (Filter.Eventually.of_forall hu))
       (hu_co := Filter.isCoboundedUnder_le_of_le Filter.atTop hl)
       (hgu := Filter.isBoundedUnder_of_eventually_le (α := ℝᵒᵈ) (f := Filter.atTop)
-        (u := fun n => (-fn n : ℝᵒᵈ)) (Filter.Eventually.of_forall fun n => neg_le_neg (hu n)))
+        (u := fun n => (-fn n : ℝᵒᵈ))
+        (Filter.Eventually.of_forall fun n => neg_le_neg (hu n)))
       (hgu_co := Filter.isCoboundedUnder_le_of_le (α := ℝᵒᵈ) Filter.atTop
         (f := fun n => (-fn n : ℝᵒᵈ)) (x := (-_lb : ℝᵒᵈ)) fun n => neg_le_neg (hl n))
     simpa [Filter.limsup, Filter.liminf, Filter.limsSup, Filter.limsInf, realNegOrderIso] using

@@ -52,7 +52,8 @@ universe u
 open scoped NNReal
 open scoped ENNReal
 
-variable (f : ∀ {d : Type u} [Fintype d] [DecidableEq d], MState d → HermitianMat d ℂ → ℝ≥0∞)
+variable (f : ∀ {d : Type u} [Fintype d] [DecidableEq d],
+  MState d → HermitianMat d ℂ → ℝ≥0∞)
 
 /-- The axioms to be a well-behaved quantum relative entropy, as given by
 [Tomamichel](https://www.marcotom.info/files/entropy-masterclass2022.pdf).
@@ -65,7 +66,8 @@ class RelEntropy : Prop where
     (ρ σ : MState d₁) (Λ : CPTPMap d₁ d₂) : f (Λ ρ) (Λ σ) ≤ f ρ σ
   /-- Entropy is additive under tensor products -/
   of_kron {d₁ d₂ : Type u} [Fintype d₁] [Fintype d₂] [DecidableEq d₁] [DecidableEq d₂] :
-    ∀ (ρ₁ σ₁ : MState d₁) (ρ₂ σ₂ : MState d₂), f (ρ₁ ⊗ ρ₂) (σ₁ ⊗ σ₂) = f ρ₁ σ₁ + f ρ₂ σ₂
+    ∀ (ρ₁ σ₁ : MState d₁) (ρ₂ σ₂ : MState d₂),
+      f (ρ₁ ⊗ ρ₂) (σ₁ ⊗ σ₂) = f ρ₁ σ₁ + f ρ₂ σ₂
   /-- Normalization of entropy to be `ln N` for a pure state vs. uniform on `N` many states. -/
   normalized {d : Type u} [fin : Fintype d] [DecidableEq d] [Nonempty d] (i : d) :
     f (.ofClassical (.constant i)) MState.uniform.M =
@@ -110,7 +112,8 @@ theorem of_equiv_eq (e : d ≃ d₂) (ρ σ : MState d) :
     f (CPTPMap.of_equiv e ρ) (CPTPMap.of_equiv e σ) = f ρ σ := by
   apply le_antisymm
   · apply DPI
-  · convert DPI (f := f) ((CPTPMap.of_equiv e) ρ) ((CPTPMap.of_equiv e) σ) (CPTPMap.of_equiv e.symm)
+  · convert DPI (f := f) ((CPTPMap.of_equiv e) ρ) ((CPTPMap.of_equiv e) σ)
+      (CPTPMap.of_equiv e.symm)
     · symm
       exact congrFun (CPTPMap.equiv_inverse e.symm) ρ
     · symm
@@ -164,7 +167,8 @@ theorem min_eq_top_iff (ρ : MState d) (σ : HermitianMat d ℂ) :
   open scoped HermitianMat in
   have h₂ : {0 ≤ₚ σ}.ker = σ.ker := by
     sorry --missing simp lemma
-  simp [min, Prob.negLog_eq_top_iff, MState.exp_val_eq_zero_iff, Subtype.ext_iff, proj_le_nonneg, h₂]
+  simp [min, Prob.negLog_eq_top_iff, MState.exp_val_eq_zero_iff, Subtype.ext_iff, proj_le_nonneg,
+    h₂]
 
 open scoped HermitianMat in
 protected theorem toReal_min (ρ : MState d) (σ : HermitianMat d ℂ) :

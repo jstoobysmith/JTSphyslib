@@ -9,15 +9,18 @@ public import QuantumInfo.ResourceTheory.FreeState
 
 @[expose] public section
 
-/-- A quantum resource theory extends a `FreeStateTheory` with a collection of free operations. It is
-required that any state we can always prepare for free must be free, and this is all then the resource
-theory is "minimal", but we can have a more restricted set of operations. -/
+/-- A quantum resource theory extends a `FreeStateTheory` with a collection of free operations. It
+is required that any state we can always prepare for free must be free, and this is all then the
+resource theory is "minimal", but we can have a more restricted set of operations. -/
 class ResourceTheory (ι : Type*) extends FreeStateTheory ι where
   freeOps i j : Set (CPTPMap (H i) (H j))
-  /-- Free operations in a ResourceTheory are nongenerating: they only create a free states from a free state. -/
+  /-- Free operations in a ResourceTheory are nongenerating: they only create a free states from a
+  free state. -/
   nongenerating {i j : ι} {f} (h : f ∈ freeOps i j) : ∀ ρ, IsFree ρ → IsFree (f ρ)
-  --We might need to require some more closure properties on `freeOps`, like closure under tensor product...?
-  --For now we just require that they include the identity and composition, so that we have at least a category.
+  --We might need to require some more closure properties on `freeOps`, like closure under tensor
+  --product...?
+  --For now we just require that they include the identity and composition, so that we have at least
+  --a category.
   /-- The identity operation is free -/
   free_id i : CPTPMap.id ∈ freeOps i i
   /-- Free operations are closed under composition -/
@@ -29,8 +32,8 @@ open FreeStateTheory
 
 variable {ι : Type*}
 
-/-- Given a `FreeStateTheory`, there is a maximal set of free operations compatible with the free states.
-That is the set of all operations that don't generate non-free states from free states. We
+/-- Given a `FreeStateTheory`, there is a maximal set of free operations compatible with the free
+states. That is the set of all operations that don't generate non-free states from free states. We
 call this the maximal resource theory. -/
 def maximal [FreeStateTheory ι] : ResourceTheory ι where
   freeOps i j := { f | ∀ ρ, IsFree ρ → IsFree (f ρ)}
@@ -45,7 +48,8 @@ def IsMaximal (r : ResourceTheory ι) : Prop :=
 /-- A resource theory `IsTensorial` if it includes tensor products of operations, creating
 free states, and discarding. This implies that includes a unit object. -/
 structure IsTensorial [UnitalPretheory ι] : Prop where
-  prod :  ∀ {i j k l : ι} {f g}, f ∈ freeOps i k → g ∈ freeOps j l → (f ⊗ᶜᵖᵣ g) ∈ freeOps (prod i j) (prod k l)
+  prod :  ∀ {i j k l : ι} {f g}, f ∈ freeOps i k → g ∈ freeOps j l →
+    (f ⊗ᶜᵖᵣ g) ∈ freeOps (prod i j) (prod k l)
   create : ∀ {i : ι} (ρ), IsFree ρ → CPTPMap.replacement ρ ∈ freeOps Unital.unit i
   destroy : ∀ (i : ι), CPTPMap.destroy ∈ freeOps i Unital.unit
 
@@ -54,7 +58,8 @@ theorem maximal_IsMaximal [FreeStateTheory ι] : IsMaximal (maximal (ι := ι)) 
   fun _ _ ↦ rfl
 
 -- --Helper theorem for ResourceTheory.mk_of_ops
--- private lemma convex_states_of_convex_ops [ResourcePretheory ι] (O : ∀ (i j : ι), Set (CPTPMap (H i) (H j)))
+-- private lemma convex_states_of_convex_ops [ResourcePretheory ι]
+--   (O : ∀ (i j : ι), Set (CPTPMap (H i) (H j)))
 --   (h_convex : ∀ {i j}, Convex ℝ (CPTPMap.choi '' O i j)) (i : ι) :
 --     Convex ℝ (MState.M '' fun ρ ↦ ∀ {j} σ, ∃ f, O j i f ∧ f σ = ρ) := by
 --   intro _ hx _ hy a b ha hb hab
@@ -93,15 +98,19 @@ theorem maximal_IsMaximal [FreeStateTheory ι] : IsMaximal (maximal (ι := ι)) 
 --   · rw [Mixable.mix_ab, Mixable.mkT, MState.instMixable, ← hx2, ← hy2]
 --     rfl
 
--- /-- A `ResourceTheory` can be constructed from a set of operations (satisfying appropriate axioms of closure),
--- and then the free states are taken to be the set of states that can be prepared from any initial state.
+-- /-- A `ResourceTheory` can be constructed from a set of operations (satisfying appropriate axioms
+-- of closure), and then the free states are taken to be the set of states that can be prepared from
+-- any initial state.
 -- -/
 -- def mk_of_ops [ResourcePretheory ι] (O : ∀ (i j : ι), Set (CPTPMap (H i) (H j)))
 --     (h_id : ∀ i, CPTPMap.id ∈ O i i) --Operations include identity
---     (h_comp : ∀ {i j k} (Y : O j k) (X : O i j), Y.1.compose X.1 ∈ O i k) --Operations include compositions
+--     (h_comp : ∀ {i j k} (Y : O j k) (X : O i j), Y.1.compose X.1 ∈ O i k)
+--     --Operations include compositions
 --     (h_closed : ∀ {i j}, IsClosed (O i j)) -- Operations are topologically closed
---     (h_convex : ∀ {i j}, Convex ℝ (CPTPMap.choi '' O i j)) -- (The choi matrices of) operations are convex
---     (h_prod : ∀ {i j k l f g} (hf : f ∈ O i k) (hg : g ∈ O j l), (f ⊗ᶜᵖᵣ g) ∈ O (prod i j) (prod k l)) --Closed under products
+--     (h_convex : ∀ {i j}, Convex ℝ (CPTPMap.choi '' O i j))
+--     -- (The choi matrices of) operations are convex
+--     (h_prod : ∀ {i j k l f g} (hf : f ∈ O i k) (hg : g ∈ O j l),
+--       (f ⊗ᶜᵖᵣ g) ∈ O (prod i j) (prod k l)) --Closed under products
 --     (h_fullRank : ∀ {i : ι}, sorry) --Some statement about having full rank states as output
 --     (h_appendFree : ∀ {i j k : ι}, sorry) --Some statement that appending free states is free
 --     : ResourceTheory ι where
@@ -136,15 +145,16 @@ theorem maximal_IsMaximal [FreeStateTheory ι] : IsMaximal (maximal (ι := ι)) 
 --   assoc := fun f g h ↦ by simpa using CPTPMap.compose_assoc h.1 g.1 f.1
 
 -- open ComplexOrder in
--- /-- The 'fully free' quantum resource theory: the category is all finite Hilbert spaces, all maps are
--- free and all states are free. Marked noncomputable because we use `Fintype.ofFinite`. -/
+-- /-- The 'fully free' quantum resource theory: the category is all finite Hilbert spaces, all maps
+-- are free and all states are free. Marked noncomputable because we use `Fintype.ofFinite`. -/
 -- noncomputable def fullyFreeQRT : ResourceTheory { ι : Type // Finite ι ∧ Nonempty ι} where
 --     H := Subtype.val
 --     FinH := fun i ↦ have := i.prop.left; Fintype.ofFinite i
 --     DecEqH := fun i a b ↦ Classical.propDecidable (a = b)
 --     NonemptyH := fun i ↦ i.prop.right
 
---     prod := fun ⟨i,⟨hi,hi2⟩⟩ ⟨j,⟨hj,hj2⟩⟩ ↦ ⟨i × j, ⟨Finite.instProd, instNonemptyProd⟩⟩
+--     prod := fun ⟨i,⟨hi,hi2⟩⟩ ⟨j,⟨hj,hj2⟩⟩ ↦
+--       ⟨i × j, ⟨Finite.instProd, instNonemptyProd⟩⟩
 --     prodEquiv := fun ⟨_,⟨_,_⟩⟩ ⟨_,⟨_,_⟩⟩ ↦ Equiv.refl _
 
 --     IsFree := Set.univ

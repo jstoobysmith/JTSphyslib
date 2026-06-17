@@ -190,7 +190,8 @@ instance : OrderTopology Prob :=
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp, norm_cast]
-theorem coe_iInf {ι : Type*} [Nonempty ι] (f : ι → Prob) : ↑(⨅ t, f t) = (⨅ t, f t : ℝ) := by
+theorem coe_iInf {ι : Type*} [Nonempty ι] (f : ι → Prob) :
+    ↑(⨅ t, f t) = (⨅ t, f t : ℝ) := by
   apply Monotone.map_ciInf_of_continuousAt
   · fun_prop
   · exact fun _ _ ↦ id
@@ -235,7 +236,8 @@ end Prob
   PSD matrices of trace 1, `U` is the underlying matrix.
 
   Why not just stick with existing notions of `Convex`? `Convex` requires that
-  the type already forms an `AddCommMonoid` and `Module ℝ`. But many types, such as `Distribution`,
+  the type already forms an `AddCommMonoid` and `Module ℝ`. But many types, such as
+  `Distribution`,
   are not: there is no good notion of "multiplying a probability distribution by 0.3" to get another
   distribution. We can coerce the distribution nto, say, a vector or a function, but then we are not
   doing arithmetic with distributions. Accordingly, the expression `0.3 * distA + 0.7 * distB`
@@ -255,7 +257,8 @@ namespace Mixable
 variable {T U : Type*} [AddCommMonoid U] [Module ℝ U]
 
 @[reducible]
-def mix_ab [inst : Mixable U T] {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) (x₁ x₂ : T) : T :=
+def mix_ab [inst : Mixable U T] {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1)
+    (x₁ x₂ : T) : T :=
   inst.mkT <| inst.convex
     (x := to_U x₁) (exists_apply_eq_apply _ _)
     (y := to_U x₂) (exists_apply_eq_apply _ _)
@@ -276,11 +279,13 @@ notation p "[" x₁:80 "↔" x₂ "]" => mix p x₁ x₂
 notation p "[" x₁:80 "↔" x₂ ":" M "]" => mix (inst := M) p x₁ x₂
 
 @[simp]
-theorem mix_zero [inst : Mixable U T] (x₁ x₂ : T) : (0 : Prob) [ x₁ ↔ x₂ : inst] = x₂ := by
+theorem mix_zero [inst : Mixable U T] (x₁ x₂ : T) :
+    (0 : Prob) [ x₁ ↔ x₂ : inst] = x₂ := by
   apply inst.to_U_inj
   simp [mix, mix_ab]
 
-/--When T is the whole space, and T is a suitable vector space over ℝ, we get a Mixable instance.-/
+/--When T is the whole space, and T is a suitable vector space over ℝ, we get a Mixable
+instance.-/
 instance instUniv [AddCommMonoid T] [Module ℝ T] : Mixable T T where
   to_U := id
   to_U_inj := id
@@ -300,7 +305,8 @@ theorem to_U_instUniv [AddCommMonoid T] [Module ℝ T] {t : T} : instUniv.to_U t
 
 section pi
 
-theorem instPi.lem_1 {D : Type*} {T U : D → Type*} [∀i, AddCommMonoid (U i)] [∀ i, Module ℝ (U i)]
+theorem instPi.lem_1 {D : Type*} {T U : D → Type*} [∀i, AddCommMonoid (U i)]
+    [∀ i, Module ℝ (U i)]
     [inst : ∀i, Mixable (U i) (T i)]
     {u : (i : D) → U i} (h : ∃ (t : (i : D) → T i), (fun d => to_U (t d)) = u) (d : D) :
     ∃ (t : T d), to_U t = u d := by
@@ -445,7 +451,8 @@ theorem negLog_pos_Real {p : Prob} : (—log p).toReal = -Real.log p := by
   · simp [hp]
   · simp; rfl
 
-theorem le_negLog_of_le_exp {p : Prob} {x : ℝ} (h : p ≤ Real.exp (-x)) : ENNReal.ofReal x ≤ —log p := by
+theorem le_negLog_of_le_exp {p : Prob} {x : ℝ} (h : p ≤ Real.exp (-x)) :
+    ENNReal.ofReal x ≤ —log p := by
   by_cases hx : 0 ≤ x
   · rw [negLog]
     split_ifs with hp

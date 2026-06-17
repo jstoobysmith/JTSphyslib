@@ -111,7 +111,8 @@ theorem funext_hermitian (h : ∀ M : HermitianMat dIn ℂ, CΛ₁.map M = CΛ�
   <;> rfl
 
 /-- Two maps are equal if they agree on all positive inputs. -/
-theorem funext_pos [Fintype dIn] (h : ∀ M : HermitianMat dIn ℂ, 0 ≤ M → CΛ₁.map M = CΛ₂.map M) :
+theorem funext_pos [Fintype dIn]
+    (h : ∀ M : HermitianMat dIn ℂ, 0 ≤ M → CΛ₁.map M = CΛ₂.map M) :
     CΛ₁ = CΛ₂ := by
   classical
   open scoped HermitianMat in
@@ -148,7 +149,8 @@ theorem funext_mstate [Fintype dIn] [DecidableEq dIn] {Λ₁ Λ₂ : HPMap dIn d
   funext_pos_trace fun M hM_pos hM_tr ↦ h ⟨M, hM_pos, hM_tr⟩
 
 /-- Hermitian-preserving maps are functions from `HermitianMat`s to `HermitianMat`s. -/
-noncomputable instance instFunLike : FunLike (HPMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+noncomputable instance instFunLike :
+    FunLike (HPMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe Λ ρ := ⟨Λ.map ρ.1, Λ.HP ρ.2⟩
   coe_injective' x y h := funext_hermitian fun M ↦
     by simpa using congrFun h M
@@ -184,7 +186,8 @@ theorem injective_toHPMap : (PMap.toHPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
   fun _ _ ↦ (mk.injEq _ _ _ _).mpr
 
 /-- Positive maps are functions from `HermitianMat`s to `HermitianMat`s. -/
-noncomputable instance instFunLike : FunLike (PMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+noncomputable instance instFunLike :
+    FunLike (PMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe := DFunLike.coe ∘ toHPMap
   coe_injective' := DFunLike.coe_injective'.comp injective_toHPMap
 
@@ -192,7 +195,8 @@ lemma apply_hermitianMat_eq (Λ : PMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ)
     Λ ρ = ⟨Λ.map ρ.1, Λ.HP ρ.2⟩ := rfl
 
 set_option synthInstance.maxHeartbeats 40000 in
-instance instLinearMapClass : LinearMapClass (PMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+instance instLinearMapClass :
+    LinearMapClass (PMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   map_add f x y := HermitianMat.ext <| LinearMap.map_add f.toLinearMap x y
   map_smulₛₗ f c x := HermitianMat.ext <| by simp [apply_hermitianMat_eq]
 
@@ -204,14 +208,16 @@ instance instContinuousOrderHomClass : ContinuousOrderHomClass (PMap dIn dOut �
 
 /-- Positive-presering maps also preserve positivity on, specifically, Hermitian matrices. -/
 @[simp]
-theorem pos_Hermitian (M : PMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) : 0 ≤ M x := by
+theorem pos_Hermitian (M : PMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) :
+    0 ≤ M x := by
   simpa only [map_zero] using ContinuousOrderHomClass.map_monotone M h
 
 end PMap
 
 namespace CPMap
 
-def of_kraus_CPMap {κ : Type*} [Fintype κ] [DecidableEq dIn] (M : κ → Matrix dOut dIn 𝕜) : CPMap dIn dOut 𝕜 where
+def of_kraus_CPMap {κ : Type*} [Fintype κ] [DecidableEq dIn] (M : κ → Matrix dOut dIn 𝕜) :
+    CPMap dIn dOut 𝕜 where
   toLinearMap := MatrixMap.of_kraus M M
   cp := MatrixMap.of_kraus_isCompletelyPositive M
 
@@ -236,14 +242,16 @@ theorem injective_toPMap : (PTPMap.toPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
   fun _ _ ↦ (mk.injEq _ _ _ _).mpr
 
 /-- Positive trace-preserving maps are functions from `HermitianMat`s to `HermitianMat`s. -/
-noncomputable instance instFunLike : FunLike (PTPMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+noncomputable instance instFunLike :
+    FunLike (PTPMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe := DFunLike.coe ∘ toPMap
   coe_injective' := DFunLike.coe_injective'.comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : PTPMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl
 
-instance instLinearMapClass : LinearMapClass (PTPMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+instance instLinearMapClass :
+    LinearMapClass (PTPMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   map_add f x y := by simp [apply_hermitianMat_eq_toPMap]
   map_smulₛₗ f c x := by simp [apply_hermitianMat_eq_toPMap]
 
@@ -255,7 +263,8 @@ instance instHContinuousOrderHomClass : ContinuousOrderHomClass (PTPMap dIn dOut
 
 /-- PTP maps also preserve positivity on Hermitian matrices. -/
 @[simp]
-theorem pos_Hermitian (M : PTPMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) : 0 ≤ M x := by
+theorem pos_Hermitian (M : PTPMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) :
+    0 ≤ M x := by
   simpa only [map_zero] using ContinuousOrderHomClass.map_monotone M h
 
 /-- `PTPMap`s are functions from `MState`s to `MState`s. -/
@@ -270,7 +279,8 @@ noncomputable instance instMFunLike [DecidableEq dIn] [DecidableEq dOut] :
       have := congr($h ρ);
       rwa [MState.ext_iff, HermitianMat.ext_iff] at this
 
-lemma apply_mstate_eq [DecidableEq dIn] [DecidableEq dOut] (Λ : PTPMap dIn dOut ℂ) (ρ : MState dIn) :
+lemma apply_mstate_eq [DecidableEq dIn] [DecidableEq dOut] (Λ : PTPMap dIn dOut ℂ)
+    (ρ : MState dIn) :
     Λ ρ = MState.mk
       (Λ.toHPMap ρ.M) (HermitianMat.zero_le_iff.mpr (Λ.pos ρ.psd)) (by
         rw [HermitianMat.trace_eq_one_iff, ← ρ.tr']
@@ -290,7 +300,8 @@ theorem val_apply_MState [DecidableEq dIn] (M : PTPMap dIn dOut) (ρ : MState dI
 --If we have a PTPMap, the input and output dimensions are always both nonempty (otherwise
 --we can't preserve trace) - or they're both empty. So `[Nonempty dIn]` will always suffice.
 -- This would be nice as an `instance` but that would leave `dIn` as a metavariable.
-theorem nonemptyOut (Λ : PTPMap dIn dOut) [hIn : Nonempty dIn] [DecidableEq dIn] : Nonempty dOut := by
+theorem nonemptyOut (Λ : PTPMap dIn dOut) [hIn : Nonempty dIn] [DecidableEq dIn] :
+    Nonempty dOut := by
   by_contra h
   simp only [not_nonempty_iff] at h
   let M := (1 : Matrix dIn dIn ℂ)
@@ -317,16 +328,19 @@ theorem ext {Λ₁ Λ₂ : CPTPMap dIn dOut 𝕜} (h : Λ₁.map = Λ₂.map) : 
   rw [CPTPMap.mk.injEq]
   exact PTPMap.ext h
 
-theorem injective_toPTPMap : (CPTPMap.toPTPMap (dIn := dIn) (dOut := dOut) (𝕜 := 𝕜)).Injective :=
+theorem injective_toPTPMap :
+    (CPTPMap.toPTPMap (dIn := dIn) (dOut := dOut) (𝕜 := 𝕜)).Injective :=
   fun _ _ ↦ (mk.injEq _ _ _ _).mpr
 
 -- /-- Positive trace-preserving maps are functions from `HermitianMat`s to `HermitianMat`s. -/
--- instance instFunLike : FunLike (CPTPMap dIn dOut 𝕜) (HermitianMat dIn 𝕜) (HermitianMat dOut 𝕜) where
+-- instance instFunLike : FunLike (CPTPMap dIn dOut 𝕜) (HermitianMat dIn 𝕜)
+-- (HermitianMat dOut 𝕜) where
 --   coe :=  DFunLike.coe ∘ toPTPMap
 --   coe_injective' := DFunLike.coe_injective'.comp injective_toPTPMap
 
 -- set_option synthInstance.maxHeartbeats 40000 in
--- instance instLinearMapClass : LinearMapClass (CPTPMap dIn dOut 𝕜) ℝ (HermitianMat dIn 𝕜) (HermitianMat dOut 𝕜) where
+-- instance instLinearMapClass : LinearMapClass (CPTPMap dIn dOut 𝕜) ℝ (HermitianMat dIn 𝕜)
+-- (HermitianMat dOut 𝕜) where
 --   map_add f x y := by simp [instFunLike]
 --   map_smulₛₗ f c x := by simp [instFunLike]
 
@@ -338,11 +352,13 @@ theorem injective_toPTPMap : (CPTPMap.toPTPMap (dIn := dIn) (dOut := dOut) (𝕜
 
 -- /-- PTP maps also preserve positivity on Hermitian matrices. -/
 -- @[simp]
--- theorem pos_Hermitian (M : CPTPMap dIn dOut 𝕜) {x : HermitianMat dIn 𝕜} (h : 0 ≤ x) : 0 ≤ M x := by
+-- theorem pos_Hermitian (M : CPTPMap dIn dOut 𝕜) {x : HermitianMat dIn 𝕜} (h : 0 ≤ x) :
+-- 0 ≤ M x := by
 --   simpa only [map_zero] using ContinuousOrderHomClass.map_monotone M h
 
 /-- `CPTPMap`s are functions from `MState`s to `MState`s. -/
-noncomputable instance instMFunLike [DecidableEq dOut] : FunLike (CPTPMap dIn dOut) (MState dIn) (MState dOut) where
+noncomputable instance instMFunLike [DecidableEq dOut] :
+    FunLike (CPTPMap dIn dOut) (MState dIn) (MState dOut) where
   coe := DFunLike.coe ∘ toPTPMap
   coe_injective' := DFunLike.coe_injective'.comp injective_toPTPMap
 
@@ -380,14 +396,16 @@ theorem injective_toPMap : (PUMap.toPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
   rwa [PUMap.mk.injEq]
 
 /-- `PUMap`s are functions from `HermitianMat`s to `HermitianMat`s. -/
-noncomputable instance instFunLike : FunLike (PUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+noncomputable instance instFunLike :
+    FunLike (PUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe Λ := Λ.toPMap
   coe_injective' := (DFunLike.coe_injective' (F := PMap dIn dOut ℂ)).comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : PUMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl
 
-instance instLinearMapClass : LinearMapClass (PUMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+instance instLinearMapClass :
+    LinearMapClass (PUMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   map_add f x y := HermitianMat.ext <| LinearMap.map_add f.toLinearMap x y
   map_smulₛₗ f c x := HermitianMat.ext <| by simp [apply_hermitianMat_eq_toPMap]
 
@@ -403,7 +421,8 @@ instance instOneHomClass : OneHomClass (PUMap dIn dOut ℂ)
 
 /-- CPTP maps also preserve positivity on Hermitian matrices. -/
 @[simp]
-theorem pos_Hermitian (M : PUMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) : 0 ≤ M x := by
+theorem pos_Hermitian (M : PUMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) :
+    0 ≤ M x := by
   simpa only [map_zero] using ContinuousOrderHomClass.map_monotone M h
 
 end PUMap
@@ -416,19 +435,22 @@ theorem ext {Λ₁ Λ₂ : CPUMap dIn dOut 𝕜} (h : Λ₁.map = Λ₂.map) : �
   rw [CPUMap.mk.injEq, CPMap.mk.injEq]
   exact PMap.ext h
 
-theorem injective_toPMap : (CPMap.toPMap ∘ CPUMap.toCPMap (dIn := dIn) (dOut := dOut) (𝕜 := 𝕜)).Injective := by
+theorem injective_toPMap :
+    (CPMap.toPMap ∘ CPUMap.toCPMap (dIn := dIn) (dOut := dOut) (𝕜 := 𝕜)).Injective := by
   intro _ _ _
   rwa [CPUMap.mk.injEq, CPMap.mk.injEq]
 
 /-- `CPUMap`s are functions from `HermitianMat`s to `HermitianMat`s. -/
-noncomputable instance instFunLike : FunLike (CPUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+noncomputable instance instFunLike :
+    FunLike (CPUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe Λ := Λ.toPMap
   coe_injective' := (DFunLike.coe_injective' (F := PMap dIn dOut ℂ)).comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : CPUMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl
 
-instance instLinearMapClass : LinearMapClass (CPUMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
+instance instLinearMapClass :
+    LinearMapClass (CPUMap dIn dOut ℂ) ℝ (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   map_add f x y := HermitianMat.ext <| LinearMap.map_add f.toLinearMap x y
   map_smulₛₗ f c x := HermitianMat.ext <| by simp [apply_hermitianMat_eq_toPMap]
 
@@ -444,7 +466,8 @@ instance instOneHomClass : OneHomClass (CPUMap dIn dOut ℂ)
 
 /-- CPTP maps also preserve positivity on Hermitian matrices. -/
 @[simp]
-theorem pos_Hermitian (M : CPUMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) : 0 ≤ M x := by
+theorem pos_Hermitian (M : CPUMap dIn dOut ℂ) {x : HermitianMat dIn ℂ} (h : 0 ≤ x) :
+    0 ≤ M x := by
   simpa only [map_zero] using ContinuousOrderHomClass.map_monotone M h
 
 end CPUMap
@@ -461,9 +484,11 @@ example (M : HPMap dIn dOut ℂ) : (M (Real.pi • 1)) = Real.pi • M 1 := by s
 example (M : PTPMap dIn dOut ℂ) : (M.toHPMap (Real.pi • 1)) = Real.pi • M.toHPMap 1 := by simp
 
 #guard_msgs in
-example (M : CPTPMap dIn dOut 𝕜) (ρ : Matrix dIn dIn 𝕜) : (M.map ρ).trace = ρ.trace := by simp
+example (M : CPTPMap dIn dOut 𝕜) (ρ : Matrix dIn dIn 𝕜) : (M.map ρ).trace = ρ.trace := by
+  simp
 
 #guard_msgs in
-example (M : CPUMap dIn dOut ℂ) (T : HermitianMat dIn ℂ) : M (1 + 2 • T) = 1 + 2 • M T := by simp
+example (M : CPUMap dIn dOut ℂ) (T : HermitianMat dIn ℂ) : M (1 + 2 • T) = 1 + 2 • M T := by
+  simp
 
 end test

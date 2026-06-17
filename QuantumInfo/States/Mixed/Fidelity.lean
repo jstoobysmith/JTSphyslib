@@ -130,7 +130,8 @@ theorem fidelity_symm : fidelity ρ σ = fidelity σ ρ := by
 
 /-- The fidelity cannot decrease under the application of a channel. -/
 @[sorryful]
-theorem fidelity_channel_nondecreasing [DecidableEq d₂] (Λ : CPTPMap d d₂) : fidelity (Λ ρ) (Λ σ) ≥ fidelity ρ σ :=
+theorem fidelity_channel_nondecreasing [DecidableEq d₂] (Λ : CPTPMap d d₂) :
+    fidelity (Λ ρ) (Λ σ) ≥ fidelity ρ σ :=
   sorry
 
 --TODO: Real.arccos ∘ fidelity forms a metric (triangle inequality), the Fubini–Study metric.

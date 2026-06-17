@@ -34,7 +34,8 @@ Peierls inequality: for a convex function g, the sum of g applied to the
 diagonal entries of a Hermitian matrix is at most the trace of g(A).
 This follows from Jensen's inequality applied to the spectral decomposition.
 -/
-theorem peierls_inequality (A : HermitianMat d ℂ) (g : ℝ → ℝ) (hg : ConvexOn ℝ Set.univ g) :
+theorem peierls_inequality (A : HermitianMat d ℂ) (g : ℝ → ℝ)
+    (hg : ConvexOn ℝ Set.univ g) :
     ∑ i, g ((A.mat i i).re) ≤ (A.cfc g).trace := by
   -- By the properties of the trace and the convexity of $g$, we have:
   have h_trace_le : ∑ i, g ((A.mat i i).re) ≤ ∑ j, g (A.H.eigenvalues j) *
@@ -66,7 +67,8 @@ theorem peierls_inequality (A : HermitianMat d ℂ) (g : ℝ → ℝ) (hg : Conv
     exact fun j => Matrix.unitaryGroup_row_norm (H A).eigenvectorUnitary j
   simp_all [trace_cfc_eq]
 
-theorem peierls_inequality_ici (A : HermitianMat d ℂ) (g : ℝ → ℝ) (hg : ConvexOn ℝ (Set.Ici 0) g)
+theorem peierls_inequality_ici (A : HermitianMat d ℂ) (g : ℝ → ℝ)
+  (hg : ConvexOn ℝ (Set.Ici 0) g)
   (hA : 0 ≤ A) :
     ∑ i, g ((A.mat i i).re) ≤ (A.cfc g).trace := by
   -- By the properties of the trace and the convexity of $g$, we have:
@@ -146,13 +148,15 @@ theorem trace_function_convex_univ (g : ℝ → ℝ) (hg : ConvexOn ℝ Set.univ
       rw [h_eigenvalue]
       exact hg.2 trivial trivial ha hb hab
     simpa only [Finset.mul_sum, Finset.sum_add_distrib] using Finset.sum_le_sum fun i _ => h_sum i
-  have hAtr : ∑ i, g ((A.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤ (A.cfc g).trace := by
+  have hAtr : ∑ i, g ((A.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤
+      (A.cfc g).trace := by
     convert peierls_inequality _ _ hg using 1
     convert trace_cfc_conj_unitary _ _ _ using 1
     rotate_right
     exact C.H.eigenvectorUnitary
     simp [conj_conj]
-  have hBtr : ∑ i, g ((B.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤ (B.cfc g).trace := by
+  have hBtr : ∑ i, g ((B.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤
+      (B.cfc g).trace := by
     convert peierls_inequality _ _ hg using 1
     convert trace_cfc_conj_unitary _ _ _
     rotate_right
@@ -208,7 +212,8 @@ theorem trace_function_convex_ici {g : ℝ → ℝ} (hg : ConvexOn ℝ (Set.Ici 
         exact (Complex.le_def.mp (((zero_le_iff.mp (conj_nonneg _ hB)).diag_nonneg (i := i)))).1
     simpa only [Finset.mul_sum, Finset.sum_add_distrib] using Finset.sum_le_sum fun i _ => h_sum i
   -- With convexity of g, we have ∑_i g(A_ii) ≤ Tr(g(A)) and ∑_i g(B_ii) ≤ Tr(g(B))
-  have hAtr : ∑ i, g ((A.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤ (A.cfc g).trace := by
+  have hAtr : ∑ i, g ((A.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤
+      (A.cfc g).trace := by
     have hA' : 0 ≤ A.conj (star C.H.eigenvectorUnitary.val) := A.conj_nonneg _ hA
     calc ∑ i, g ((A.conj (star C.H.eigenvectorUnitary.val)).mat i i |> Complex.re)
         ≤ ((A.conj (star C.H.eigenvectorUnitary.val)).cfc g).trace :=
@@ -216,7 +221,8 @@ theorem trace_function_convex_ici {g : ℝ → ℝ} (hg : ConvexOn ℝ (Set.Ici 
       _ = (A.cfc g).trace :=
           trace_cfc_conj_unitary A g ⟨star C.H.eigenvectorUnitary.val, by
             rw [Matrix.mem_unitaryGroup_iff, star_star]; exact C.H.eigenvectorUnitary.prop.1⟩
-  have hBtr : ∑ i, g ((B.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤ (B.cfc g).trace := by
+  have hBtr : ∑ i, g ((B.conj (star C.H.eigenvectorUnitary.val)).mat i i).re ≤
+      (B.cfc g).trace := by
     have hB' : 0 ≤ B.conj (star C.H.eigenvectorUnitary.val) := B.conj_nonneg _ hB
     calc ∑ i, g ((B.conj (star C.H.eigenvectorUnitary.val)).mat i i |> Complex.re)
         ≤ ((B.conj (star C.H.eigenvectorUnitary.val)).cfc g).trace :=

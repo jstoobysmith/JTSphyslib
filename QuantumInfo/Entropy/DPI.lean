@@ -35,7 +35,8 @@ as a consequence, the quantum relative entropy.
 
 Following Leditzky–Rouzé–Datta (arXiv:1306.5920), the proof proceeds as follows:
 
-1. Define the **trace functional** `Q̃_α(ρ‖σ) = Tr[(σ^γ ρ σ^γ)^α]` where `γ = (1 - α) / (2α)`.
+1. Define the **trace functional** `Q̃_α(ρ‖σ) = Tr[(σ^γ ρ σ^γ)^α]` where
+   `γ = (1 - α) / (2α)`.
    The sandwiched Rényi divergence satisfies `D̃_α(ρ‖σ) = log(Q̃_α(ρ‖σ)) / (α - 1)`.
 
 2. The DPI for `D̃_α` reduces to **monotonicity of `Q̃_α` under partial trace**:
@@ -57,7 +58,8 @@ open BigOperators
 
 /-! ## The Sandwiched Trace Functional -/
 
-/-- The sandwiched trace functional `Q̃_α(ρ‖σ) = Tr[(σ^γ ρ σ^γ)^α]` where `γ = (1-α)/(2α)`.
+/-- The sandwiched trace functional `Q̃_α(ρ‖σ) = Tr[(σ^γ ρ σ^γ)^α]` where
+`γ = (1-α)/(2α)`.
 This is the quantity underlying the sandwiched Rényi divergence:
 `D̃_α(ρ‖σ) = log(Q̃_α(ρ‖σ)) / (α - 1)`.
 
@@ -168,7 +170,8 @@ Key facts (each stated as a lemma below):
 5. The supremum of jointly convex functions is jointly convex.
 -/
 
-/-- The variational function `f_α(H, ρ, σ) = α · ⟪ρ, H⟫ − (α−1) · Tr[(σ^{−γ} H σ^{−γ})^{α/(α−1)}]`
+/-- The variational function
+`f_α(H, ρ, σ) = α · ⟪ρ, H⟫ − (α−1) · Tr[(σ^{−γ} H σ^{−γ})^{α/(α−1)}]`
 where `γ = (1−α)/(2α)`. For fixed `H ≥ 0`, this is linear in `ρ` and convex in `σ`.
 Frank–Lieb show that `Q̃_α(ρ‖σ) = sup_{H ≥ 0} f_α(H, ρ, σ)` for `α > 1`. -/
 noncomputable def f_alpha (α : ℝ) (H : HermitianMat d ℂ) (ρ σ : MState d) : ℝ :=
@@ -207,7 +210,8 @@ private lemma conj_supportProj_eq_of_ker_le (A B : HermitianMat d ℂ) (hker : A
 /--
 The kernel of σ is contained in the kernel of (ρ.conj (σ^γ))^{α-1} when γ ≠ 0 and α > 1.
 -/
-private lemma ker_sigma_le_ker_conj_rpow (ρ σ : MState d) {γ : ℝ} (hγ : γ ≠ 0) (hα1 : α - 1 ≠ 0) :
+private lemma ker_sigma_le_ker_conj_rpow (ρ σ : MState d) {γ : ℝ} (hγ : γ ≠ 0)
+    (hα1 : α - 1 ≠ 0) :
     σ.M.ker ≤ ((ρ.M.conj (σ.M ^ γ).mat) ^ (α - 1)).ker := by
   rw [ker_rpow_eq_of_nonneg (by positivity) hα1]
   intro x hx
@@ -215,7 +219,8 @@ private lemma ker_sigma_le_ker_conj_rpow (ρ σ : MState d) {γ : ℝ} (hγ : γ
     rwa [ker_rpow_eq_of_nonneg σ.nonneg hγ]
   simp_all [ker, lin]
 
-/-- Sub-lemma for Step 1b: the conj of H_hat by σ^{−γ} simplifies to (ρ.M.conj (σ^γ).mat)^{α−1}.
+/-- Sub-lemma for Step 1b: the conj of H_hat by σ^{−γ} simplifies to
+(ρ.M.conj (σ^γ).mat)^{α−1}.
 This uses σ^{−γ} · σ^γ = identity (on support) to cancel the outer σ^γ factors. -/
 theorem H_hat_conj_sigma (hα : 1 < α) (ρ σ : MState d) :
     let γ := (1 - α) / (2 * α)
@@ -233,7 +238,8 @@ theorem H_hat_conj_sigma (hα : 1 < α) (ρ σ : MState d) :
 
 /-
 Sub-lemma for Step 1b: the inner product ⟪ρ.M, H_hat⟫ equals Tr[(σ^γ ρ σ^γ)^α].
-By cyclicity of trace: Tr[ρ · σ^γ · (σ^γ ρ σ^γ)^{α−1} · σ^γ] = Tr[(σ^γ ρ σ^γ)^α].
+By cyclicity of trace:
+Tr[ρ · σ^γ · (σ^γ ρ σ^γ)^{α−1} · σ^γ] = Tr[(σ^γ ρ σ^γ)^α].
 -/
 theorem inner_rho_H_hat (hα : 1 < α) (ρ σ : MState d) :
     let γ := (1 - α) / (2 * α)
@@ -263,11 +269,13 @@ theorem inner_rho_H_hat (hα : 1 < α) (ρ σ : MState d) :
 /-
 **Step 1b**: Evaluating `f_α` at the optimizer `H_hat` gives `Q̃_α(ρ‖σ)`.
 This is the key computation that verifies the variational formula at the optimizer.
-Proof: f_α(H_hat, ρ, σ) = α · Tr[(σ^γ ρ σ^γ)^α] - (α-1) · Tr[(σ^γ ρ σ^γ)^α] = Tr[(σ^γ ρ σ^γ)^α] = Q̃.
+Proof: f_α(H_hat, ρ, σ) = α · Tr[(σ^γ ρ σ^γ)^α] - (α-1) · Tr[(σ^γ ρ σ^γ)^α]
+= Tr[(σ^γ ρ σ^γ)^α] = Q̃.
 -/
 theorem f_alpha_at_optimizer (hα : 1 < α) (ρ σ : MState d) :
     f_alpha α (H_hat α ρ σ) ρ σ = Q̃_ α(ρ‖σ) := by
-  have h_inner : ⟪ρ.M, H_hat α ρ σ⟫_ℝ = ((ρ.M.conj (σ.M ^ ((1 - α) / (2 * α))).mat) ^ α).trace := by
+  have h_inner : ⟪ρ.M, H_hat α ρ σ⟫_ℝ =
+      ((ρ.M.conj (σ.M ^ ((1 - α) / (2 * α))).mat) ^ α).trace := by
     exact inner_rho_H_hat hα ρ σ
   have h_conj : (H_hat α ρ σ).conj (σ.M ^ ((α - 1) / (2 * α))).mat =
       (ρ.M.conj (σ.M ^ ((1 - α) / (2 * α))).mat) ^ (α - 1) := by
@@ -310,7 +318,8 @@ lemma supportProj_mul_of_ker_le {A B : HermitianMat d ℂ}
   -- Since $B$ is not in the kernel of $A$, there exists some $x \in \ker(A)$ such that $Bx \neq 0$.
   obtain ⟨x, hx⟩ : ∃ x : EuclideanSpace ℂ d, A.mat *ᵥ x = 0 ∧ B.mat *ᵥ x ≠ 0 := by
     contrapose! hker
-    have h_support : ∀ x : EuclideanSpace ℂ d, B.mat *ᵥ x = B.mat *ᵥ (A.supportProj.mat *ᵥ x) := by
+    have h_support : ∀ x : EuclideanSpace ℂ d,
+        B.mat *ᵥ x = B.mat *ᵥ (A.supportProj.mat *ᵥ x) := by
       intro x
       have h_support : x.ofLp = A.supportProj.mat *ᵥ x.ofLp + A.kerProj.mat *ᵥ x.ofLp := by
         have h_support : A.supportProj.mat + A.kerProj.mat = 1 := by
@@ -419,7 +428,8 @@ theorem f_alpha_le_at_optimizer (hα : 1 < α) (ρ σ : MState d)
         (A ^ α).trace + (α - 1) * (B ^ (α / (α - 1))).trace := by
       field_simp
     linarith
-  -- Goal is definitionally: α * ⟪ρ.M, H⟫ - (α-1) * (B ^ (α/(α-1))).trace ≤ (A ^ α).trace
+  -- Goal is definitionally:
+  -- α * ⟪ρ.M, H⟫ - (α-1) * (B ^ (α/(α-1))).trace ≤ (A ^ α).trace
   -- which follows from h_scaled and h_inner
   change α * ⟪ρ.M, H⟫_ℝ - (α - 1) * (B ^ (α / (α - 1))).trace ≤ (A ^ α).trace
   have h_inner_scaled : α * ⟪ρ.M, H⟫_ℝ = α * ⟪A, B⟫_ℝ := by rw [h_inner]
@@ -431,23 +441,27 @@ supremum of `f_α` over all PSD `H`:
   `Q̃_α(ρ‖σ) = ⨆ (H : HermitianMat d ℂ) (_ : 0 ≤ H), f_alpha α H ρ σ`.
 The optimizer is `H_hat = σ^γ (σ^γ ρ σ^γ)^{α−1} σ^γ`.
 -/
-theorem traceFunctional_eq_iSup_f_alpha (hα : 1 < α) (ρ σ : MState d) (hker : σ.M.ker ≤ ρ.M.ker) :
+theorem traceFunctional_eq_iSup_f_alpha (hα : 1 < α) (ρ σ : MState d)
+    (hker : σ.M.ker ≤ ρ.M.ker) :
     Q̃_ α(ρ‖σ) = ⨆ (H : {H : HermitianMat d ℂ // 0 ≤ H}), f_alpha α H.1 ρ σ := by
   rw [@ciSup_eq_of_forall_le_of_forall_lt_exists_gt]
   · intro i
     rw [← f_alpha_at_optimizer hα ρ σ]
     exact f_alpha_le_at_optimizer hα ρ σ i i.2 hker
   · intro w hw
-    exact ⟨⟨H_hat α ρ σ, H_hat_nonneg ρ σ⟩, hw.trans_le (f_alpha_at_optimizer hα ρ σ ▸ le_rfl)⟩
+    exact ⟨⟨H_hat α ρ σ, H_hat_nonneg ρ σ⟩,
+      hw.trans_le (f_alpha_at_optimizer hα ρ σ ▸ le_rfl)⟩
 
 /-- (Convexity in σ): For fixed `H ≥ 0` and `ρ`, and `α > 1`, the map
 `σ ↦ f_alpha α H ρ σ` is convex. The key is that for `p = α/(α−1) > 1`:
 • `A ↦ Tr[A^p]` is convex on PSD matrices (trace function convexity, Theorem 2.10 of Carlen),
-• `σ ↦ σ^{−γ} H σ^{−γ}` is *concave* in `σ` by Lieb concavity (since `−γ = (α−1)/(2α) ∈ (0,½)`),
+• `σ ↦ σ^{−γ} H σ^{−γ}` is *concave* in `σ` by Lieb concavity
+  (since `−γ = (α−1)/(2α) ∈ (0,½)`),
 • The composition of a convex non-decreasing function with a concave function is convex,
   but we actually need the sign: the second term has a factor `−(α−1) < 0` which
   flips concave → convex.
-More precisely: `σ ↦ Tr[(σ^{−γ} H σ^{−γ})^p]` is concave (by Lieb + trace function convexity),
+More precisely: `σ ↦ Tr[(σ^{−γ} H σ^{−γ})^p]` is concave
+(by Lieb + trace function convexity),
 so `σ ↦ −(α−1) · Tr[(σ^{−γ} H σ^{−γ})^p]` is convex. -/
 theorem f_alpha_convex_in_sigma (hα : 1 < α) (H : HermitianMat d ℂ) (hH : 0 ≤ H)
     (ρ : MState d) {ι : Type*} [Fintype ι]
@@ -462,7 +476,8 @@ theorem f_alpha_convex_in_sigma (hα : 1 < α) (H : HermitianMat d ℂ) (hH : 0 
   let F : HermitianMat d ℂ → ℝ := fun σ => ((H.conj (σ ^ s).mat) ^ p).trace
   -- f_alpha relates to F via: f_alpha α H ρ σ = α * ⟪ρ.M, H⟫ - (α-1) * F(σ.M)
   -- because -γ = -((1-α)/(2α)) = (α-1)/(2α) = s
-  have hf_eq : ∀ σ : MState d, f_alpha α H ρ σ = α * ⟪ρ.M, H⟫_ℝ - (α - 1) * F σ.M := by
+  have hf_eq : ∀ σ : MState d,
+      f_alpha α H ρ σ = α * ⟪ρ.M, H⟫_ℝ - (α - 1) * F σ.M := by
     intro σ
     show _ = α * ⟪ρ.M, H⟫_ℝ - (α - 1) *
       ((H.conj (σ.M ^ ((α - 1) / (2 * α))).mat) ^ (α / (α - 1))).trace
@@ -521,7 +536,8 @@ theorem f_alpha_bddAbove (hα : 1 < α) (ρ σ : MState d) (hker : σ.M.ker ≤ 
 /-
 **Step 5 (Sup preserves convexity)**: The supremum over `H ≥ 0` of the jointly
 convex `f_alpha α H` is jointly convex. This is a standard fact: for each `H`,
-`f_alpha α H (ρ_mix) (σ_mix) ≤ ∑ wᵢ f_alpha α H (ρᵢ) (σᵢ) ≤ ∑ wᵢ sup_H f_alpha ...`,
+`f_alpha α H (ρ_mix) (σ_mix) ≤ ∑ wᵢ f_alpha α H (ρᵢ) (σᵢ)
+  ≤ ∑ wᵢ sup_H f_alpha ...`,
 so taking sup on the left gives the result.
 -/
 theorem iSup_f_alpha_jointly_convex (hα : 1 < α)
@@ -532,11 +548,13 @@ theorem iSup_f_alpha_jointly_convex (hα : 1 < α)
     (hσ_mix : σ_mix.M = ∑ i, w i • (σs i).M)
     (hker : ∀ i, (σs i).M.ker ≤ (ρs i).M.ker) :
     (⨆ (H : {H : HermitianMat d ℂ // 0 ≤ H}), f_alpha α H.1 ρ_mix σ_mix) ≤
-      ∑ i, w i * (⨆ (H : {H : HermitianMat d ℂ // 0 ≤ H}), f_alpha α H.1 (ρs i) (σs i)) := by
+      ∑ i, w i *
+        (⨆ (H : {H : HermitianMat d ℂ // 0 ≤ H}), f_alpha α H.1 (ρs i) (σs i)) := by
   apply ciSup_le
   intro H
   have h_sum : f_alpha α H.1 ρ_mix σ_mix ≤ ∑ i, w i * (f_alpha α H.1 (ρs i) (σs i)) := by
-    apply f_alpha_jointly_convex hα H.1 H.2 w hw_nonneg hw_sum ρs σs ρ_mix σ_mix hρ_mix hσ_mix
+    apply f_alpha_jointly_convex hα H.1 H.2 w hw_nonneg hw_sum ρs σs ρ_mix σ_mix
+      hρ_mix hσ_mix
   exact h_sum.trans (Finset.sum_le_sum fun i _ => mul_le_mul_of_nonneg_left
     (le_ciSup (f_alpha_bddAbove hα (ρs i) (σs i) (hker i)) H) (hw_nonneg i))
 
@@ -574,11 +592,14 @@ theorem sandwichedTraceFunctional_jointly_convex (hα : 1 < α) {ι : Type*} [Fi
     Q̃_ α(ρ_mix‖σ_mix) ≤ ∑ i, w i * Q̃_ α(ρs i‖σs i) := by
   have hker' : σ_mix.M.ker ≤ ρ_mix.M.ker := by
     rw [hρ_mix, hσ_mix]
-    exact ker_weighted_sum_le w hw_nonneg _ _ (fun i => (ρs i).nonneg) (fun i => (σs i).nonneg) hker
+    exact ker_weighted_sum_le w hw_nonneg _ _ (fun i => (ρs i).nonneg)
+      (fun i => (σs i).nonneg) hker
   rw [traceFunctional_eq_iSup_f_alpha hα ρ_mix σ_mix hker']
   calc ⨆ H : {H : HermitianMat d ℂ // 0 ≤ H}, f_alpha α H.1 ρ_mix σ_mix
-      ≤ ∑ i, w i * (⨆ H : {H : HermitianMat d ℂ // 0 ≤ H}, f_alpha α H.1 (ρs i) (σs i)) :=
-        iSup_f_alpha_jointly_convex hα w hw_nonneg hw_sum ρs σs ρ_mix σ_mix hρ_mix hσ_mix hker
+      ≤ ∑ i, w i *
+          (⨆ H : {H : HermitianMat d ℂ // 0 ≤ H}, f_alpha α H.1 (ρs i) (σs i)) :=
+        iSup_f_alpha_jointly_convex hα w hw_nonneg hw_sum ρs σs ρ_mix σ_mix hρ_mix
+          hσ_mix hker
     _ = ∑ i, w i * Q̃_ α(ρs i‖σs i) := by
         congr 1; ext i
         rw [traceFunctional_eq_iSup_f_alpha hα (ρs i) (σs i) (hker i)]
@@ -596,7 +617,8 @@ The averaging property follows from:
 A diagonal matrix with ±1 entries (determined by a Bool function) is unitary.
 -/
 private lemma signDiag_mem_unitaryGroup (f : dB → Bool) :
-    Matrix.diagonal (fun i : dB => (if f i then (-1 : ℂ) else 1)) ∈ Matrix.unitaryGroup dB ℂ := by
+    Matrix.diagonal (fun i : dB => (if f i then (-1 : ℂ) else 1)) ∈
+      Matrix.unitaryGroup dB ℂ := by
   constructor
   · ext i j; by_cases hi : i = j <;> simp [hi]
     · split_ifs <;> simp [*, Matrix.one_apply]
@@ -660,7 +682,8 @@ private lemma sum_sign_prod (p q : dB) :
   -- By pairing each function with its p-flip, we can see that the sum of each pair is zero.
   have h_pair :
       ∑ f : dB → Bool, (if f q then -if f p then -1 else 1 else if f p then -1 else 1 : ℂ) =
-      ∑ f : dB → Bool, - (if f q then -if f p then -1 else 1 else if f p then -1 else 1 : ℂ) := by
+      ∑ f : dB → Bool,
+        - (if f q then -if f p then -1 else 1 else if f p then -1 else 1 : ℂ) := by
     apply Finset.sum_bij (fun f _ => Function.update f p (¬f p)) (by simp)
     · intro a₁ _ a₂ _ h; ext x; by_cases hx : x = p
       · replace h := congr_fun h x
@@ -707,7 +730,8 @@ private lemma sum_perm_diag_entry (X : HermitianMat dB ℂ) (p : dB) :
     rcases n : Fintype.card dB with (_ | _ | n) <;> simp_all [Nat.factorial_succ, Fintype.card_perm]
     exact absurd n (Nat.ne_of_gt (Fintype.card_pos_iff.mpr ⟨p⟩))
   -- By Fubini's theorem, we can interchange the order of summation.
-  have h_fubini : ∑ σ : Equiv.Perm dB, X (σ p) (σ p) = ∑ k : dB, ∑ σ ∈ Finset.univ.filter
+  have h_fubini : ∑ σ : Equiv.Perm dB, X (σ p) (σ p) =
+      ∑ k : dB, ∑ σ ∈ Finset.univ.filter
       (fun σ : Equiv.Perm dB => σ p = k), X k k := by
     simp only [Finset.sum_filter]
     rw [Finset.sum_comm, Finset.sum_congr rfl]
@@ -752,7 +776,8 @@ private lemma twirling_identity [Nonempty dB] (X : HermitianMat dB ℂ) :
   ext p q
   simp [Fintype.card_prod, Fintype.card_perm, Fintype.card_pi]
   ring_nf
-  convert congr_arg ((2⁻¹ ^ Fintype.card dB * (Fintype.card dB |> Nat.factorial : ℂ)⁻¹) * ·)
+  convert congr_arg
+      ((2⁻¹ ^ Fintype.card dB * (Fintype.card dB |> Nat.factorial : ℂ)⁻¹) * ·)
       (twirling_sum_eq X p q) using 1
   · norm_num [Matrix.one_apply]
     convert Or.inl rfl
@@ -826,7 +851,8 @@ The trace functional is multiplicative over tensor products:
 -/
 theorem sandwichedTraceFunctional_mul
     (ρ₁ σ₁ : MState dA) (ρ₂ σ₂ : MState dB) :
-    Q̃_ α(ρ₁ ⊗ᴹ ρ₂‖σ₁ ⊗ᴹ σ₂) = Q̃_ α(ρ₁‖σ₁) * Q̃_ α(ρ₂‖σ₂) := by
+    Q̃_ α(ρ₁ ⊗ᴹ ρ₂‖σ₁ ⊗ᴹ σ₂) =
+      Q̃_ α(ρ₁‖σ₁) * Q̃_ α(ρ₂‖σ₂) := by
   exact sandwiched_term_product ρ₁ σ₁ ρ₂ σ₂ α ((1 - α) / (2 * α))
 
 /-
@@ -899,8 +925,10 @@ omit [DecidableEq dB] in
 lemma conj_kron_one_entry (M : Matrix (dA × dB) (dA × dB) ℂ)
     (V : Matrix dB dB ℂ) (a₁ a₂ : dA) (b₁ b₂ : dB) :
     (Matrix.kroneckerMap (· * ·) (1 : Matrix dA dA ℂ) V * M *
-     (Matrix.kroneckerMap (· * ·) (1 : Matrix dA dA ℂ) V).conjTranspose) (a₁, b₁) (a₂, b₂) =
-    (V * (Matrix.of fun b₁' b₂' => M (a₁, b₁') (a₂, b₂')) * V.conjTranspose) b₁ b₂ := by
+     (Matrix.kroneckerMap (· * ·) (1 : Matrix dA dA ℂ) V).conjTranspose)
+       (a₁, b₁) (a₂, b₂) =
+    (V * (Matrix.of fun b₁' b₂' => M (a₁, b₁') (a₂, b₂')) * V.conjTranspose)
+      b₁ b₂ := by
   norm_num [Matrix.mul_apply, Matrix.adjugate_apply, Matrix.det_apply', Matrix.trace]
   simp [Matrix.one_apply, Finset.sum_ite]
   apply Finset.sum_bij (fun x _ => x.2)
@@ -967,7 +995,8 @@ lemma twirling_general_matrix
     simp +zetaDelta at *
     ext i j; simp [Matrix.conjTranspose_apply]; ring
   have h_tw_a : ∑ i : κ, ((V i).val * X_anti_herm * (V i).val.conjTranspose) b₁ b₂ =
-      (X_anti_herm.trace / (Fintype.card dB)) * (Fintype.card κ) * (if b₁ = b₂ then 1 else 0) := by
+      (X_anti_herm.trace / (Fintype.card dB)) * (Fintype.card κ) *
+        (if b₁ = b₂ then 1 else 0) := by
     convert twirling_hermitian_entry κ V hV ⟨X_anti_herm, ?_⟩ b₁ b₂ using 1
     ext i j; simp [X_anti_herm, Matrix.conjTranspose_apply]; ring
   rw [h_decomp]
@@ -993,7 +1022,8 @@ lemma conjTensorUnitary'_entry (ρ : MState (dA × dB)) (V : Matrix.unitaryGroup
 lemma prod_traceRight_uniform_entry [Nonempty dB] (ρ : MState (dA × dB))
     (a₁ a₂ : dA) (b₁ b₂ : dB) :
     (ρ.traceRight ⊗ᴹ MState.uniform).M.val (a₁, b₁) (a₂, b₂) =
-    ρ.M.val.traceRight a₁ a₂ * ((Fintype.card dB : ℂ)⁻¹ * if b₁ = b₂ then 1 else 0) := by
+    ρ.M.val.traceRight a₁ a₂ *
+      ((Fintype.card dB : ℂ)⁻¹ * if b₁ = b₂ then 1 else 0) := by
   unfold MState.traceRight MState.uniform
   unfold MState.ofClassical
   unfold diagonal
@@ -1014,7 +1044,8 @@ theorem twirling_average_eq [Nonempty dB]
   -- Apply the twirling hypothesis to each term in the sum.
   have h_sum : ∀ a₁ a₂ : dA, ∀ b₁ b₂ : dB, (∑ i, (1 / (Fintype.card κ : ℂ)) •
       (ρ.conjTensorUnitary' (V i)).M.val (a₁, b₁) (a₂, b₂)) =
-      (ρ.M.val.traceRight a₁ a₂) * (1 / (Fintype.card dB : ℂ)) * (if b₁ = b₂ then 1 else 0) := by
+      (ρ.M.val.traceRight a₁ a₂) * (1 / (Fintype.card dB : ℂ)) *
+        (if b₁ = b₂ then 1 else 0) := by
     intro a₁ a₂ b₁ b₂
     have h_sum : ∑ i : κ, ((V i : Matrix dB dB ℂ) * (Matrix.of fun b₁' b₂' =>
         ρ.M.val (a₁, b₁') (a₂, b₂')) * (V i : Matrix dB dB ℂ).conjTranspose) b₁ b₂ =
@@ -1053,9 +1084,11 @@ under partial trace:
 `Q̃_α(ρ_AB ‖ σ_AB) ≥ Q̃_α(ρ_A ‖ σ_A)`.
 
 The proof uses the twirling argument:
-1. By unitary invariance, `Q̃_α(ρ_AB‖σ_AB) = Q̃_α(V_i ρ_AB V_i†‖V_i σ_AB V_i†)` for each `i`.
+1. By unitary invariance, `Q̃_α(ρ_AB‖σ_AB) = Q̃_α(V_i ρ_AB V_i†‖V_i σ_AB V_i†)`
+   for each `i`.
 2. Averaging: `Q̃_α(ρ_AB‖σ_AB) = (1/|κ|) Σ_i Q̃_α(V_i ρ_AB V_i†‖V_i σ_AB V_i†)`.
-3. By joint convexity (α > 1): `≥ Q̃_α((1/|κ|) Σ_i V_i ρ_AB V_i†‖(1/|κ|) Σ_i V_i σ_AB V_i†)`.
+3. By joint convexity (α > 1):
+   `≥ Q̃_α((1/|κ|) Σ_i V_i ρ_AB V_i†‖(1/|κ|) Σ_i V_i σ_AB V_i†)`.
 4. By twirling: `= Q̃_α(ρ_A ⊗ π_B ‖ σ_A ⊗ π_B)`.
 5. By tensor invariance: `= Q̃_α(ρ_A ‖ σ_A)`. -/
 
@@ -1069,7 +1102,8 @@ lemma ker_conj_le_of_ker_le {n : Type*} [Fintype n] [DecidableEq n]
   exact Submodule.comap_mono h
 
 /-- Unitary conjugation preserves the kernel ordering between MStates.
-If `σ.M.ker ≤ ρ.M.ker`, then `(σ.conjTensorUnitary V).M.ker ≤ (ρ.conjTensorUnitary V).M.ker`. -/
+If `σ.M.ker ≤ ρ.M.ker`, then
+`(σ.conjTensorUnitary V).M.ker ≤ (ρ.conjTensorUnitary V).M.ker`. -/
 lemma MState.ker_conjTensorUnitary_le {dA dB : Type*} [Fintype dA] [Fintype dB]
     [DecidableEq dA] [DecidableEq dB]
     (ρ σ : MState (dA × dB)) (V : Matrix.unitaryGroup dB ℂ)
@@ -1088,7 +1122,8 @@ theorem sandwichedTraceFunctional_mono_traceRight [Nonempty dB]
   letI : Fintype κ := hκ_fin
   letI : Nonempty κ := hκ_ne
   -- By unitary invariance, Q̃_α(ρ‖σ) = Q̃_α(V_i ρ V_i†‖V_i σ V_i†) for each i
-  have h_inv (i) : Q̃_ α(ρ.conjTensorUnitary (V i)‖σ.conjTensorUnitary (V i)) = Q̃_ α(ρ‖σ) :=
+  have h_inv (i) :
+      Q̃_ α(ρ.conjTensorUnitary (V i)‖σ.conjTensorUnitary (V i)) = Q̃_ α(ρ‖σ) :=
     sandwichedTraceFunctional_conj_tensorUnitary ρ σ (V i)
   -- Step 2: Q̃_α(ρ‖σ) = Σ_i (1/|κ|) * Q̃_α(V_i ρ V_i†‖V_i σ V_i†)
   have hcard_ne : (Fintype.card κ : ℝ) ≠ 0 :=
@@ -1103,9 +1138,11 @@ theorem sandwichedTraceFunctional_mono_traceRight [Nonempty dB]
     exact mul_inv_cancel₀ hcard_ne
   set ρ_mix := ρ.traceRight ⊗ᴹ MState.uniform (d := dB)
   set σ_mix := σ.traceRight ⊗ᴹ MState.uniform (d := dB)
-  have hρ_mix : ρ_mix.M = ∑ i : κ, (Fintype.card κ : ℝ)⁻¹ • (ρ.conjTensorUnitary (V i)).M :=
+  have hρ_mix : ρ_mix.M =
+      ∑ i : κ, (Fintype.card κ : ℝ)⁻¹ • (ρ.conjTensorUnitary (V i)).M :=
     (twirling_average_eq κ V hV ρ).symm
-  have hσ_mix : σ_mix.M = ∑ i : κ, (Fintype.card κ : ℝ)⁻¹ • (σ.conjTensorUnitary (V i)).M :=
+  have hσ_mix : σ_mix.M =
+      ∑ i : κ, (Fintype.card κ : ℝ)⁻¹ • (σ.conjTensorUnitary (V i)).M :=
     (twirling_average_eq κ V hV σ).symm
   have h_convex := sandwichedTraceFunctional_jointly_convex hα
     (fun (_ : κ) => (Fintype.card κ : ℝ)⁻¹) (by intro; positivity) hw_sum
@@ -1173,7 +1210,8 @@ private lemma traceRight_mulVec_zero_of_vecTensorBasis_zero
 /-- The kernel condition `σ.M.ker ≤ ρ.M.ker` is preserved under partial trace.
 This follows because `supp(ρ) ⊆ supp(σ)` implies `supp(Tr_B ρ) ⊆ supp(Tr_B σ)`:
 if `v ∈ supp(Tr_B ρ)`, then `⟨v, (Tr_B ρ) v⟩ > 0`, so for some basis vector `e_b`
-we have `v ⊗ e_b ∈ supp(ρ) ⊆ supp(σ)`, hence `⟨v, (Tr_B σ) v⟩ ≥ ⟨v ⊗ e_b, σ (v ⊗ e_b)⟩ > 0`. -/
+we have `v ⊗ e_b ∈ supp(ρ) ⊆ supp(σ)`, hence
+`⟨v, (Tr_B σ) v⟩ ≥ ⟨v ⊗ e_b, σ (v ⊗ e_b)⟩ > 0`. -/
 theorem ker_le_traceRight {ρ σ : MState (dA × dB)}
     (hker : σ.M.ker ≤ ρ.M.ker) :
     σ.traceRight.M.ker ≤ ρ.traceRight.M.ker := by
@@ -1197,7 +1235,8 @@ theorem ker_le_traceRight {ρ σ : MState (dA × dB)}
     fun b => (hσ_psd.dotProduct_mulVec_zero_iff _).mp (h_each_zero b)
   have h_ρ_zero : ∀ b : dB, ρ.M.mat *ᵥ (vecTensorBasis v.ofLp b) = 0 := by
     intro b
-    have hmem_σ : (WithLp.toLp 2 (vecTensorBasis v.ofLp b) : EuclideanSpace ℂ _) ∈ σ.M.ker := by
+    have hmem_σ :
+        (WithLp.toLp 2 (vecTensorBasis v.ofLp b) : EuclideanSpace ℂ _) ∈ σ.M.ker := by
       rw [mem_ker_iff_mulVec_zero]; exact h_σ_zero b
     have hmem_ρ := hker hmem_σ
     rwa [mem_ker_iff_mulVec_zero] at hmem_ρ
@@ -1345,7 +1384,8 @@ every CPTP map can be written as ancilla preparation + unitary conjugation + par
 Since the sandwiched Rényi divergence is invariant under the first two operations
 (by additivity and relabel invariance) and monotone under partial trace
 (by `sandwichedRenyiEntropy_mono_traceRight`), the DPI follows. -/
-theorem sandwichedRenyiEntropy_DPI_gt_one (hα : 1 < α) (ρ σ : MState d₁) (Φ : CPTPMap d₁ d₂) :
+theorem sandwichedRenyiEntropy_DPI_gt_one (hα : 1 < α) (ρ σ : MState d₁)
+    (Φ : CPTPMap d₁ d₂) :
     D̃_ α(Φ ρ‖Φ σ) ≤ D̃_ α(ρ‖σ) := by
   have _ : Nonempty d₁ := ρ.nonempty
   have _ : Nonempty d₂ := (Φ ρ).nonempty
@@ -1385,10 +1425,12 @@ theorem sandwichedRenyiEntropy_DPI_eq_one (ρ σ : MState d₁) (Φ : CPTPMap d�
     D̃_ 1(Φ ρ‖Φ σ) ≤ D̃_ 1(ρ‖σ) := by
   -- Since α → D_α(ρ‖σ) is continuous on (0, ∞), we can take the limit as α → 1.
   have h_cont :
-      Filter.Tendsto (fun α : ℝ => D̃_ α(Φ ρ‖Φ σ)) (𝓝[>] 1) (𝓝 (D̃_ 1(Φ ρ‖Φ σ))) ∧
+      Filter.Tendsto (fun α : ℝ => D̃_ α(Φ ρ‖Φ σ)) (𝓝[>] 1)
+          (𝓝 (D̃_ 1(Φ ρ‖Φ σ))) ∧
       Filter.Tendsto (fun α : ℝ => D̃_ α(ρ‖σ)) (𝓝[>] 1) (𝓝 (D̃_ 1(ρ‖σ))) := by
     constructor
-    · exact tendsto_nhdsWithin_of_tendsto_nhds (sandwichedRelRentropy.continuousOn (Φ ρ) (Φ σ) |>
+    · exact tendsto_nhdsWithin_of_tendsto_nhds
+        (sandwichedRelRentropy.continuousOn (Φ ρ) (Φ σ) |>
         ContinuousOn.continuousAt <| Ioi_mem_nhds zero_lt_one)
     · exact tendsto_nhdsWithin_of_tendsto_nhds (sandwichedRelRentropy.continuousOn ρ σ |>
         ContinuousOn.continuousAt <| Ioi_mem_nhds zero_lt_one)
