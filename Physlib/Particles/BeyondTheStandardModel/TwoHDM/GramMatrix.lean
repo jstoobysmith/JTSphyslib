@@ -6,6 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.Basic
+public import Mathlib.RingTheory.AlgebraicIndependent.Basic
+public import Mathlib.Algebra.MvPolynomial.Funext
 /-!
 
 # The gram matrix for the two Higgs doublet model
@@ -529,5 +531,53 @@ lemma mem_orbit_gaugeGroupI_iff_gramVector (H1 H2 : TwoHiggsDoublet) :
   · intro h
     rw [gramMatrix_eq_gramVector_sum_pauliMatrix,
       gramMatrix_eq_gramVector_sum_pauliMatrix, h]
+
+/-!
+
+### Algebraic independence of the Gram vector
+
+-/
+
+open MvPolynomial in
+/-- The components of the Gram vector, viewed as functions of the two Higgs doublet, are
+  algebraically independent over `ℝ`. This is the statement that there are no polynomial
+  relations between the entries of the Gram matrix. -/
+lemma gramVector_algIndependent :
+    AlgebraicIndependent ℝ (Function.swap gramVector) := by
+  rw [algebraicIndependent_iff]
+  intro p hp
+  /- `p` evaluated at every actual Gram vector is zero. -/
+  have hp' : ∀ H : TwoHiggsDoublet, eval H.gramVector p = 0 := by
+    intro H
+    have h := congrArg (Pi.evalAlgHom ℝ (fun _ : TwoHiggsDoublet => ℝ) H) hp
+    rw [map_zero, ← AlgHom.comp_apply, comp_aeval] at h
+    simpa [Function.swap, aeval_eq_eval] using h
+  /- A polynomial vanishing on the (full-dimensional) image of `gramVector` is zero. -/
+  set s : Fin 1 ⊕ Fin 3 → Set ℝ :=
+    Sum.elim (fun _ => Set.Ici 2) (fun _ => Set.Icc (-1) 1) with hs_def
+  have hs : ∀ i, (s i).Infinite := by
+    rintro (i | i)
+    · simpa [s] using Set.Ici_infinite (2 : ℝ)
+    · simpa [s] using Set.Icc_infinite (show (-1 : ℝ) < 1 by norm_num)
+  apply MvPolynomial.funext_set s hs
+  intro x hx
+  rw [map_zero]
+  simp only [Set.mem_pi, Set.mem_univ, forall_const] at hx
+  have hx0 : 2 ≤ x (Sum.inl 0) := by have := hx (Sum.inl 0); simpa [s] using this
+  have hxj : ∀ μ : Fin 3, x (Sum.inr μ) ^ 2 ≤ 1 := by
+    intro μ
+    have := hx (Sum.inr μ)
+    simp only [s, Sum.elim_inr, Set.mem_Icc] at this
+    nlinarith [this.1, this.2]
+  have h1 : 0 ≤ x (Sum.inl 0) := by linarith
+  have h2 : ∑ μ : Fin 3, x (Sum.inr μ) ^ 2 ≤ x (Sum.inl 0) ^ 2 := by
+    have hsum : ∑ μ : Fin 3, x (Sum.inr μ) ^ 2 ≤ 3 := by
+      calc ∑ μ : Fin 3, x (Sum.inr μ) ^ 2
+          ≤ ∑ _μ : Fin 3, (1 : ℝ) := Finset.sum_le_sum (fun μ _ => hxj μ)
+        _ = 3 := by simp
+    nlinarith [hx0, hsum]
+  obtain ⟨H, hH⟩ := gramVector_surjective x h1 h2
+  rw [← hH]
+  exact hp' H
 
 end TwoHiggsDoublet

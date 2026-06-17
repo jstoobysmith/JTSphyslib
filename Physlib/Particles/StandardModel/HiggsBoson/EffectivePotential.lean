@@ -180,41 +180,10 @@ lemma termOfMassDim_isInvariant {V : EffectivePotential} {n : ℕ} (h : HasMaxMa
 lemma termOfMassDim_eq_mul_norm {V : EffectivePotential} {n : ℕ}
     (h : HasMaxMassDimLE V n) (m : ℕ) (hV : IsInvariant V) (φ : HiggsVec) :
     ∃ c, termOfMassDim V h m φ = c * ‖φ‖ ^ m := by
-  by_cases hm : m = 0
-  · subst hm
-    simp
-  let d : Fin 4 →₀ ℕ := ⟨{0}, fun | 0 => m | 1 => 0 | 2 => 0 | 3 => 0, by
-    intro a; fin_cases a <;> simp; grind⟩
-  use MvPolynomial.coeff d ((MvPolynomial.homogeneousComponent m) (V.polynomial h))
-  rw [(termOfMassDim_isInvariant h m hV).eq_of_norm_eq (φ2 := !₂[‖φ‖, 0])
-    (by simp [PiLp.norm_eq_of_L2])]
-  simp [termOfMassDim, MvPolynomial.eval_eq']
-  rw [Finset.sum_eq_single d]
-  · congr
-    simp [Fin.prod_univ_succ, HiggsVec.toRealScalars, d]
-  · intro d' d'_mem d'_neq_d
-    simp only [mul_eq_zero]
-    right
-    rw [MvPolynomial.support_homogeneousComponent] at d'_mem
-    simp at d'_mem
-    have h1 := d'_mem.2
-    rw [Finsupp.degree_eq_sum] at h1
-    have hsum4 : d' 0 + d' 1 + d' 2 + d' 3 = m := by rw [← Fin.sum_univ_four]; exact h1
-    have hd0 : d' 0 ≠ m := by
-      intro h0
-      apply d'_neq_d
-      apply Finsupp.ext
-      intro a
-      fin_cases a <;> simp [d] <;> omega
-    have htail : ∑ i : Fin 3, d' i.succ ≠ 0 := by
-      have h2 := h1; rw [Fin.sum_univ_succ] at h2; omega
-    obtain ⟨j, -, hj⟩ := Finset.exists_ne_zero_of_sum_ne_zero htail
-    refine Finset.prod_eq_zero (Finset.mem_univ j.succ) ?_
-    have hzero : HiggsVec.toRealScalars !₂[↑‖φ‖, 0] j.succ = 0 := by
-      fin_cases j <;> simp [HiggsVec.toRealScalars]
-    rw [hzero, zero_pow hj]
-  · simp only [MvPolynomial.mem_support_iff, ne_eq, Decidable.not_not, mul_eq_zero]
-    grind
+  use termOfMassDim V h m !₂[1, 0]
+  rw [(termOfMassDim_isInvariant h m hV).eq_of_norm_eq (φ2 := ‖φ‖ • !₂[1, 0])
+    (by simp [PiLp.norm_eq_of_L2]), termOfMassDim_homogeneity h m !₂[1, 0] ‖φ‖]
+  ring
 
 lemma termOfMassDim_zero_of_odd {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) (m : ℕ)
     (hV : IsInvariant V) (φ : HiggsVec) (hodd : Odd m)  :

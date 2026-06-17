@@ -52,6 +52,64 @@ lemma ext_of_fst_snd {H1 H2 : TwoHiggsDoublet}
   cases H1
   cases H2
   congr
+
+instance : SMul ℂ TwoHiggsDoublet where
+  smul c H :=
+    { Φ1 := c • H.Φ1
+      Φ2 := c • H.Φ2 }
+
+@[simp]
+lemma smul_fst (c : ℂ) (H : TwoHiggsDoublet) : (c • H).Φ1 = c • H.Φ1 := rfl
+
+@[simp]
+lemma smul_snd (c : ℂ) (H : TwoHiggsDoublet) : (c • H).Φ2 = c • H.Φ2 := rfl
+
+instance : Add TwoHiggsDoublet where
+  add H1 H2 :=
+    { Φ1 := H1.Φ1 + H2.Φ1
+      Φ2 := H1.Φ2 + H2.Φ2 }
+
+@[simp]
+lemma add_fst (H1 H2 : TwoHiggsDoublet) : (H1 + H2).Φ1 = H1.Φ1 + H2.Φ1 := rfl
+
+@[simp]
+lemma add_snd (H1 H2 : TwoHiggsDoublet) : (H1 + H2).Φ2 = H1.Φ2 + H2.Φ2 := rfl
+
+instance : Zero TwoHiggsDoublet where
+  zero := { Φ1 := 0, Φ2 := 0 }
+
+@[simp]
+lemma zero_fst : (0 : TwoHiggsDoublet).Φ1 = 0 := rfl
+
+@[simp]
+lemma zero_snd : (0 : TwoHiggsDoublet).Φ2 = 0 := rfl
+
+instance : AddCommMonoid TwoHiggsDoublet where
+  zero := { Φ1 := 0, Φ2 := 0 }
+  add_assoc H1 H2 H3 := by
+    ext <;> simp <;> ring
+  zero_add H := by
+    ext1 <;> simp
+  add_zero H := by
+    ext <;> simp
+  nsmul := nsmulRec
+  add_comm H1 H2 := by
+    ext <;> simp <;> ring
+
+instance : Module ℂ TwoHiggsDoublet where
+  one_smul H := by
+    ext <;> simp
+  mul_smul c1 c2 H := by
+    ext <;> simp [mul_smul]
+  smul_add c H1 H2 := by
+    ext <;> simp [smul_add]
+  add_smul c1 c2 H := by
+    ext <;> simp [add_smul]
+  smul_zero c := by
+    ext <;> simp [smul_zero]
+  zero_smul H := by
+    ext <;> simp [zero_smul]
+
 /-!
 
 ## B. Gauge group actions
@@ -83,7 +141,17 @@ noncomputable instance : MulAction StandardModel.GaugeGroupI TwoHiggsDoublet whe
 
 -/
 
-def toRealScalars (H : TwoHiggsDoublet) : Fin 8 → ℝ :=
+open Complex
+/-- The underlying real values of the two Higgs doublets. -/
+noncomputable def toRealScalars (H : TwoHiggsDoublet) : Fin 8 → ℝ :=
   Fin.append H.Φ1.toRealScalars H.Φ2.toRealScalars
+
+lemma toRealScalars_smul (c : ℝ) (H : TwoHiggsDoublet) :
+    ((c : ℂ) • H).toRealScalars = c • H.toRealScalars := by
+  ext i
+  simp only [toRealScalars, smul_fst, Complex.coe_smul, map_smul, smul_snd, Pi.smul_apply,
+    smul_eq_mul]
+  refine Fin.addCases (m := 4) (n := 4) (fun j => ?_) (fun j => ?_) i <;>
+    simp only [Fin.append_left, Fin.append_right, Pi.smul_apply, smul_eq_mul]
 
 end TwoHiggsDoublet
