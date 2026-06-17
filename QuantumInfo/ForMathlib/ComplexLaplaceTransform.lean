@@ -24,7 +24,8 @@ def ComplexLaplaceTransform {α : Type*} [MeasurableSpace α] [MeasureTheory.Mea
   ∫ x, ComplexLaplaceIntegrand E z x
 
 /-- The complex convergence domain of a Laplace transform. -/
-def ComplexLaplaceConvergenceDomain {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α]
+def ComplexLaplaceConvergenceDomain {α : Type*} [MeasurableSpace α]
+    [MeasureTheory.MeasureSpace α]
     (E : α → WithTop ℝ) : Set ℂ :=
   {z | MeasureTheory.Integrable (μ := MeasureTheory.volume) (ComplexLaplaceIntegrand E z)}
 
@@ -75,7 +76,8 @@ private theorem norm_complexLaplaceIntegrand_horizontal_le_endpointEnvelope
   · simp only [h, dite_false]
     set e : ℝ := (E x).untop h
     rw [Complex.norm_exp, Complex.norm_exp, Complex.norm_exp]
-    rcases Set.mem_uIcc.mp ht with ⟨hat, htb⟩ | ⟨hbt, hta⟩ <;> rcases le_total 0 e with he | he
+    rcases Set.mem_uIcc.mp ht with ⟨hat, htb⟩ | ⟨hbt, hta⟩ <;>
+      rcases le_total 0 e with he | he
     · refine le_add_of_le_of_nonneg ?_ (Real.exp_pos _).le
       exact Real.exp_le_exp.mpr (by
         simp only [neg_mul, Complex.mul_re, Complex.neg_re, Complex.ofReal_re, Complex.ofReal_im,
@@ -149,14 +151,16 @@ theorem measurable_complexLaplaceIntegrand
 
 /-- Interior convergence gives integrability throughout a neighborhood of the parameter. -/
 theorem eventually_integrable_complexLaplaceIntegrand_of_mem_interior_convergenceDomain
-    {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α] {E : α → WithTop ℝ} {z : ℂ}
+    {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α] {E : α → WithTop ℝ}
+    {z : ℂ}
     (hz : z ∈ interior (ComplexLaplaceConvergenceDomain E)) :
     ∀ᶠ w in nhds z,
       MeasureTheory.Integrable (μ := MeasureTheory.volume) (ComplexLaplaceIntegrand E w) :=
   Filter.mem_of_superset (IsOpen.mem_nhds isOpen_interior hz) _root_.interior_subset
 
 theorem continuousAt_complexLaplaceTransform_of_mem_interior_convergenceDomain
-    {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α] {E : α → WithTop ℝ} {z : ℂ}
+    {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α] {E : α → WithTop ℝ}
+    {z : ℂ}
     (hz : z ∈ interior (ComplexLaplaceConvergenceDomain E)) :
     ContinuousAt (ComplexLaplaceTransform E) z := by
   rcases Metric.isOpen_iff.mp isOpen_interior z hz with ⟨ε, hε_pos, hε⟩
@@ -177,23 +181,27 @@ theorem continuousAt_complexLaplaceTransform_of_mem_interior_convergenceDomain
       (F := fun w x => ComplexLaplaceIntegrand E w x)
       (f := fun x => ComplexLaplaceIntegrand E z x)
       (ComplexLaplaceEnvelope E z (ε / 2))
-      ((eventually_integrable_complexLaplaceIntegrand_of_mem_interior_convergenceDomain (E := E) hz).mono
+      ((eventually_integrable_complexLaplaceIntegrand_of_mem_interior_convergenceDomain
+          (E := E) hz).mono
         fun _ hw => hw.aestronglyMeasurable)
       (Filter.Eventually.mono (Metric.ball_mem_nhds z (by positivity : 0 < ε / 2)) fun w hw =>
         Filter.Eventually.of_forall fun x => norm_complexLaplaceIntegrand_le_envelope
           (Metric.mem_closedBall.mpr (le_of_lt (Metric.mem_ball.mp hw))) x)
       hbound_int
-      (Filter.Eventually.of_forall fun x => (analyticAt_complexLaplaceIntegrand E x z).continuousAt)
+      (Filter.Eventually.of_forall fun x =>
+        (analyticAt_complexLaplaceIntegrand E x z).continuousAt)
 
 theorem continuousOn_complexLaplaceTransform_interior_convergenceDomain
     {α : Type*} [MeasurableSpace α] [MeasureTheory.MeasureSpace α] {E : α → WithTop ℝ} :
     ContinuousOn (ComplexLaplaceTransform E) (interior (ComplexLaplaceConvergenceDomain E)) := by
   intro z hz
-  exact (continuousAt_complexLaplaceTransform_of_mem_interior_convergenceDomain hz).continuousWithinAt
+  exact
+    (continuousAt_complexLaplaceTransform_of_mem_interior_convergenceDomain hz).continuousWithinAt
 
 private theorem integrable_uncurry_complexLaplaceIntegrand_horizontal
     {α : Type*} [MeasureTheory.MeasureSpace α]
-    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)] {E : α → WithTop ℝ}
+    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)]
+    {E : α → WithTop ℝ}
     {a b : ℂ}
     (hE : Measurable E)
     (ha : MeasureTheory.Integrable (μ := MeasureTheory.volume) (ComplexLaplaceIntegrand E a))
@@ -227,14 +235,16 @@ private theorem integrable_uncurry_complexLaplaceIntegrand_horizontal
     (show Measurable fun p : ℝ × α =>
       ComplexLaplaceEndpointEnvelope E a (b.re + a.im * Complex.I) p.2 from
         ((measurable_complexLaplaceIntegrand hE a).norm.add
-          (measurable_complexLaplaceIntegrand hE (b.re + a.im * Complex.I)).norm).comp measurable_snd))]
+          (measurable_complexLaplaceIntegrand hE (b.re + a.im * Complex.I)).norm).comp
+            measurable_snd))]
   filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_uIoc] with t ht
   exact Filter.Eventually.of_forall fun x =>
     norm_complexLaplaceIntegrand_horizontal_le_endpointEnvelope (Set.uIoc_subset_uIcc ht) x
 
 private theorem integrable_uncurry_complexLaplaceIntegrand_vertical
     {α : Type*} [MeasureTheory.MeasureSpace α]
-    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)] {E : α → WithTop ℝ}
+    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)]
+    {E : α → WithTop ℝ}
     {a b : ℂ}
     (hE : Measurable E)
     (hb : MeasureTheory.Integrable (μ := MeasureTheory.volume) (ComplexLaplaceIntegrand E b))
@@ -263,7 +273,8 @@ private theorem integrable_uncurry_complexLaplaceIntegrand_vertical
 
 private theorem wedgeIntegral_complexLaplaceTransform_eq_integral
     {α : Type*} [MeasureTheory.MeasureSpace α]
-    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)] {E : α → WithTop ℝ}
+    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)]
+    {E : α → WithTop ℝ}
     {a b : ℂ}
     (hE : Measurable E)
     (hab : Complex.Rectangle a b ⊆ interior (ComplexLaplaceConvergenceDomain E)) :
@@ -292,20 +303,25 @@ private theorem wedgeIntegral_complexLaplaceTransform_eq_integral
   rw [← MeasureTheory.integral_smul, ← MeasureTheory.integral_add]
   · rcases le_total a.re b.re with hab | hba
     · simpa [intervalIntegral.integral_of_le hab, Function.uncurry, Set.uIoc_of_le hab]
-        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner).integral_prod_right
+        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner)
+          .integral_prod_right
     · simpa [intervalIntegral.integral_of_ge hba, Function.uncurry, Set.uIoc_of_ge hba]
-        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner).integral_prod_right.neg
+        using (integrable_uncurry_complexLaplaceIntegrand_horizontal hE ha hcorner)
+          .integral_prod_right.neg
   · refine (?_ : MeasureTheory.Integrable _ MeasureTheory.volume).smul Complex.I
     rcases le_total a.im b.im with hab | hba
     · simpa [intervalIntegral.integral_of_le hab, Function.uncurry, Set.uIoc_of_le hab]
-        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner).integral_prod_right
+        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner)
+          .integral_prod_right
     · simpa [intervalIntegral.integral_of_ge hba, Function.uncurry, Set.uIoc_of_ge hba]
-        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner).integral_prod_right.neg
+        using (integrable_uncurry_complexLaplaceIntegrand_vertical hE hb hcorner)
+          .integral_prod_right.neg
 
 /-- A complex Laplace transform is analytic on the interior of its convergence domain. -/
 theorem analyticAt_complexLaplaceTransform_of_mem_interior_convergenceDomain
     {α : Type*} [MeasureTheory.MeasureSpace α]
-    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)] {E : α → WithTop ℝ} {z : ℂ}
+    [MeasureTheory.SFinite (MeasureTheory.volume : MeasureTheory.Measure α)]
+    {E : α → WithTop ℝ} {z : ℂ}
     (hE : Measurable E)
     (hz : z ∈ interior (ComplexLaplaceConvergenceDomain E)) :
     AnalyticAt ℂ (ComplexLaplaceTransform E) z := by
@@ -319,7 +335,8 @@ theorem analyticAt_complexLaplaceTransform_of_mem_interior_convergenceDomain
       apply MeasureTheory.integral_congr_ae
       filter_upwards with x
       exact (DifferentiableOn.isConservativeOn
-        (fun y _hy => (analyticAt_complexLaplaceIntegrand E x y).differentiableAt.differentiableWithinAt))
+        (fun y _hy =>
+          (analyticAt_complexLaplaceIntegrand E x y).differentiableAt.differentiableWithinAt))
         a b (Set.subset_univ _)
   exact ((Complex.isConservativeOn_and_continuousOn_iff_isDifferentiableOn Metric.isOpen_ball).1
     ⟨hcons, continuousOn_complexLaplaceTransform_interior_convergenceDomain.mono hr⟩).analyticAt

@@ -26,7 +26,8 @@ theorem neg_unitary_val (u : 𝐔[α]) : (-u).val = -u := by
 omit [DecidableEq α] [Fintype α] [DecidableEq β] [Fintype β] in
 open Kronecker in
 @[simp]
-theorem star_kron (a : Matrix α α ℂ) (b : Matrix β β ℂ) : star (a ⊗ₖ b) = (star a) ⊗ₖ (star b) := by
+theorem star_kron (a : Matrix α α ℂ) (b : Matrix β β ℂ) :
+    star (a ⊗ₖ b) = (star a) ⊗ₖ (star b) := by
   ext _ _
   simp
 

@@ -100,7 +100,8 @@ theorem Sᵥₙ_nonneg (ρ : MState d) : 0 ≤ Sᵥₙ ρ :=
   Hₛ_nonneg _
 
 /-- von Neumman entropy is at most log d. -/
-theorem Sᵥₙ_le_log_d (ρ : MState d) : Sᵥₙ ρ ≤ Real.log (Finset.card Finset.univ (α := d)):=
+theorem Sᵥₙ_le_log_d (ρ : MState d) :
+    Sᵥₙ ρ ≤ Real.log (Finset.card Finset.univ (α := d)):=
   Hₛ_le_log_d _
 
 /-- von Neumman entropy of pure states is zero. -/
@@ -126,7 +127,8 @@ theorem Sᵥₙ_eq_trace_cfc_negMulLog (ρ : MState d) :
     Sᵥₙ ρ = (ρ.M.cfc Real.negMulLog).trace := by
   open HermitianMat in
   unfold Real.negMulLog
-  rw [Sᵥₙ_eq_neg_trace_log, trace, log, inner_eq_re_trace, IsMaximalSelfAdjoint.RCLike_selfadjMap]
+  rw [Sᵥₙ_eq_neg_trace_log, trace, log, inner_eq_re_trace,
+    IsMaximalSelfAdjoint.RCLike_selfadjMap]
   nth_rw 2 [← cfc_id ρ.M]
   rw [← mat_cfc_mul, RCLike.re_to_complex, ← Complex.neg_re, ← Matrix.trace_neg]
   rw [← mat_neg, ← ρ.M.cfc_neg]
@@ -152,13 +154,15 @@ theorem Sᵥₙ_of_SWAP_eq (ρ : MState (d₁ × d₂)) : Sᵥₙ ρ.SWAP = Sᵥ
 
 /-- Von Neumann entropy is unchanged under assoc. -/
 @[simp]
-theorem Sᵥₙ_of_assoc_eq (ρ : MState ((d₁ × d₂) × d₃)) : Sᵥₙ ρ.assoc = Sᵥₙ ρ := by
+theorem Sᵥₙ_of_assoc_eq (ρ : MState ((d₁ × d₂) × d₃)) :
+    Sᵥₙ ρ.assoc = Sᵥₙ ρ := by
   apply Hₛ_eq_of_multiset_map_eq
   apply ρ.multiset_spectrum_relabel_eq
 
 /-- Von Neumann entropy is unchanged under assoc'. -/
 @[simp]
-theorem Sᵥₙ_of_assoc'_eq (ρ : MState (d₁ × (d₂ × d₃))) : Sᵥₙ ρ.assoc' = Sᵥₙ ρ := by
+theorem Sᵥₙ_of_assoc'_eq (ρ : MState (d₁ × (d₂ × d₃))) :
+    Sᵥₙ ρ.assoc' = Sᵥₙ ρ := by
   rw [← Sᵥₙ_of_assoc_eq, ρ.assoc_assoc']
 
 @[fun_prop]
@@ -184,7 +188,8 @@ section partial_trace_pure
 /--
 Convert a vector on a product space to a matrix.
 -/
-def vecToMat {d₁ d₂ : Type*} [Fintype d₁] [Fintype d₂] (v : d₁ × d₂ → ℂ) : Matrix d₁ d₂ ℂ :=
+def vecToMat {d₁ d₂ : Type*} [Fintype d₁] [Fintype d₂] (v : d₁ × d₂ → ℂ) :
+    Matrix d₁ d₂ ℂ :=
   Matrix.of (fun i j => v (i, j))
 
 /--
@@ -200,7 +205,8 @@ The left partial trace of a pure state is the product of the transpose of the
 matrix representation and its conjugate.
 -/
 lemma traceLeft_eq_transpose_mul_conj (ψ : Ket (d₁ × d₂)) :
-    (MState.pure ψ).traceLeft.M.val = (vecToMat ψ.vec).transpose * (vecToMat ψ.vec).map star := by
+    (MState.pure ψ).traceLeft.M.val =
+      (vecToMat ψ.vec).transpose * (vecToMat ψ.vec).map star := by
   unfold vecToMat; aesop;
 
 /--
@@ -217,12 +223,14 @@ Shannon entropy is determined by the multiset of non-zero probabilities.
 -/
 private lemma Hₛ_eq_of_nonzero_multiset_eq {α β : Type*} [Fintype α] [Fintype β]
   (d₁ : ProbDistribution α) (d₂ : ProbDistribution β)
-  (h : (Finset.univ.val.map d₁.prob).filter (· ≠ 0) = (Finset.univ.val.map d₂.prob ).filter (· ≠ 0)) :
+  (h : (Finset.univ.val.map d₁.prob).filter (· ≠ 0) =
+    (Finset.univ.val.map d₂.prob ).filter (· ≠ 0)) :
     Hₛ d₁ = Hₛ d₂ := by
   -- By reindexing the sums, we can show that the Shannon entropies are equal.
   simp [Hₛ]
   -- Since the multisets of non-zero probabilities are equal, their sums are equal.
-  have h_sum_eq : ∑ x ∈ Finset.univ.filter (fun x => d₁.prob x ≠ 0), H₁ (d₁.prob x) = ∑ x ∈ Finset.univ.filter (fun x => d₂.prob x ≠ 0), H₁ (d₂.prob x) := by
+  have h_sum_eq : ∑ x ∈ Finset.univ.filter (fun x => d₁.prob x ≠ 0), H₁ (d₁.prob x) =
+      ∑ x ∈ Finset.univ.filter (fun x => d₂.prob x ≠ 0), H₁ (d₂.prob x) := by
     convert congr_arg ( fun m => m.map ( fun x => H₁ x ) |> Multiset.sum ) h using 1;
     · simp [ Finset.sum, Multiset.filter_map ];
     · simp [ Finset.sum, Multiset.filter_map ];
@@ -244,7 +252,9 @@ The non-zero eigenvalues of AB and BA are the same.
 private lemma nonzero_eigenvalues_eq_of_mul_comm {n m : Type*} [Fintype n] [Fintype m]
   [DecidableEq n] [DecidableEq m] (A : Matrix n m ℂ) (B : Matrix m n ℂ) :
     (A * B).charpoly.roots.filter (· ≠ 0) = (B * A).charpoly.roots.filter (· ≠ 0) := by
-  have h_roots : (Polynomial.X ^ Fintype.card m * (Matrix.charpoly (A * B))).roots.filter (· ≠ 0) = (Polynomial.X ^ Fintype.card n * (Matrix.charpoly (B * A))).roots.filter (· ≠ 0) := by
+  have h_roots :
+      (Polynomial.X ^ Fintype.card m * (Matrix.charpoly (A * B))).roots.filter (· ≠ 0) =
+      (Polynomial.X ^ Fintype.card n * (Matrix.charpoly (B * A))).roots.filter (· ≠ 0) := by
     rw [A.charpoly_mul_comm' B]
   convert h_roots using 1
   · simp [Polynomial.roots_mul, Matrix.charpoly_monic, Polynomial.Monic.ne_zero]
@@ -264,19 +274,25 @@ private lemma Sᵥₙ_eq_of_nonzero_eigenvalues_eq (ρ₁ : MState d₁) (ρ₂ 
 Filtering non-zero elements commutes with mapping `RCLike.ofReal` for multisets.
 -/
 private lemma multiset_filter_map_ofReal_eq {R : Type*} [RCLike R] (M : Multiset ℝ) :
-    (M.map (RCLike.ofReal : ℝ → R)).filter (· ≠ 0) = (M.filter (· ≠ 0)).map RCLike.ofReal := by
+    (M.map (RCLike.ofReal : ℝ → R)).filter (· ≠ 0) =
+      (M.filter (· ≠ 0)).map RCLike.ofReal := by
   simp [Multiset.filter_map]
 
 /-
 The non-zero roots of the characteristic polynomial are the non-zero eigenvalues mapped
 to complex numbers.
 -/
-private lemma charpoly_roots_filter_ne_zero_eq_eigenvalues_filter_ne_zero {d : Type*} [Fintype d] [DecidableEq d] (A : Matrix d d ℂ) (hA : A.IsHermitian) :
-    A.charpoly.roots.filter (· ≠ 0) = ((Finset.univ.val.map hA.eigenvalues).filter (· ≠ 0)).map RCLike.ofReal := by
+private lemma charpoly_roots_filter_ne_zero_eq_eigenvalues_filter_ne_zero {d : Type*} [Fintype d]
+    [DecidableEq d] (A : Matrix d d ℂ) (hA : A.IsHermitian) :
+    A.charpoly.roots.filter (· ≠ 0) =
+      ((Finset.univ.val.map hA.eigenvalues).filter (· ≠ 0)).map RCLike.ofReal := by
   convert congr_arg _ ?_;
   rw [ multiset_filter_map_ofReal_eq ];
-  -- Since A is Hermitian, its characteristic polynomial is equal to the product of (X - eigenvalue) over all eigenvalues.
-  have h_charpoly : A.charpoly = Multiset.prod (Multiset.map (fun i => Polynomial.X - Polynomial.C (RCLike.ofReal (hA.eigenvalues i))) (Finset.univ.val)) := by
+  -- Since A is Hermitian, its characteristic polynomial is equal to the product of
+  -- (X - eigenvalue) over all eigenvalues.
+  have h_charpoly : A.charpoly = Multiset.prod (Multiset.map
+      (fun i => Polynomial.X - Polynomial.C (RCLike.ofReal (hA.eigenvalues i)))
+      (Finset.univ.val)) := by
     convert Matrix.IsHermitian.charpoly_eq hA using 1;
   rw [ h_charpoly, Polynomial.roots_multiset_prod ];
   · simp [ Multiset.bind_map ];
@@ -294,17 +310,22 @@ If the non-zero roots of the characteristic polynomials of two states are equal,
 their von Neumann entropies are equal.
 -/
 private lemma Sᵥₙ_eq_of_charpoly_roots_eq (ρ₁ : MState d₁) (ρ₂ : MState d₂)
-    (h : (ρ₁.M.1.charpoly.roots.filter (· ≠ 0)) = (ρ₂.M.1.charpoly.roots.filter (· ≠ 0))) :
+    (h : (ρ₁.M.1.charpoly.roots.filter (· ≠ 0)) =
+      (ρ₂.M.1.charpoly.roots.filter (· ≠ 0))) :
     Sᵥₙ ρ₁ = Sᵥₙ ρ₂ := by
   convert Sᵥₙ_eq_of_nonzero_eigenvalues_eq ρ₁ ρ₂ _;
-  have h_spectrum_eq_aux : (Matrix.charpoly (ρ₁.M.1)).roots.filter (· ≠ 0) = (Multiset.map (fun i => ρ₁.spectrum.prob i) Finset.univ.val).filter (· ≠ 0) ∧ (Matrix.charpoly (ρ₂.M.1)).roots.filter (· ≠ 0) = (Multiset.map (fun i => ρ₂.spectrum.prob i) Finset.univ.val).filter (· ≠ 0) := by
+  have h_spectrum_eq_aux : (Matrix.charpoly (ρ₁.M.1)).roots.filter (· ≠ 0) =
+        (Multiset.map (fun i => ρ₁.spectrum.prob i) Finset.univ.val).filter (· ≠ 0) ∧
+      (Matrix.charpoly (ρ₂.M.1)).roots.filter (· ≠ 0) =
+        (Multiset.map (fun i => ρ₂.spectrum.prob i) Finset.univ.val).filter (· ≠ 0) := by
     constructor;
     · convert charpoly_roots_filter_ne_zero_eq_eigenvalues_filter_ne_zero _ _;
       any_goals exact ρ₁.M.isSelfAdjoint;
       simp [ ProbDistribution.prob, MState.spectrum ];
       simp [ Multiset.filter_map, ProbDistribution.mk' ];
       simp [ Subtype.ext_iff ];
-    · convert charpoly_roots_filter_ne_zero_eq_eigenvalues_filter_ne_zero ρ₂.M.1 (HermitianMat.H ρ₂.M) using 1;
+    · convert charpoly_roots_filter_ne_zero_eq_eigenvalues_filter_ne_zero ρ₂.M.1
+        (HermitianMat.H ρ₂.M) using 1;
       simp [ ProbDistribution.prob, MState.spectrum ];
       simp [ Multiset.filter_map, ProbDistribution.mk' ];
       simp [ Subtype.ext_iff ];
@@ -338,7 +359,8 @@ theorem qMutualInfo_symm (ρ : MState (d₁ × d₂)) :
 even after relabeling. -/
 @[simp]
 theorem Sᵥₙ_pure_complement (ψ : Ket d₁) (e : d₂ × d₃ ≃ d₁) :
-    Sᵥₙ ((MState.pure ψ).relabel e).traceLeft = Sᵥₙ ((MState.pure ψ).relabel e).traceRight := by
+    Sᵥₙ ((MState.pure ψ).relabel e).traceLeft =
+      Sᵥₙ ((MState.pure ψ).relabel e).traceRight := by
   obtain ⟨ψ', hψ'⟩ := MState.relabel_pure_exists ψ e
   simp only [hψ', Sᵥₙ_of_partial_eq]
 

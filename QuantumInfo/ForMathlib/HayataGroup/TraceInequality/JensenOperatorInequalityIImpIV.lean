@@ -297,7 +297,8 @@ private theorem nontrivial_hsumL [Nontrivial ℋ] : Nontrivial (L (HSum ℋ)) :=
   exact ⟨0, blockDiagonal (ℋ := ℋ) (1 : L ℋ) 0, hdiag_ne_zero.symm⟩
 
 set_option synthInstance.maxHeartbeats 100000 in
--- `CFC.sqrt` on block-diagonal operators triggers expensive instance search through the product map.
+-- `CFC.sqrt` on block-diagonal operators triggers expensive instance search through the product
+-- map.
 set_option linter.unusedSectionVars false in
 set_option maxHeartbeats 400000 in
 private lemma sqrt_blockDiagonal_of_nonneg
@@ -689,8 +690,10 @@ theorem theorem_2_5_2_i_ici_all_imp_iv {f : ℝ → ℝ} (hf : CondIciAll.{u} f)
       cfcR (ℋ := HSum ℋ) f
           ((1 / 2 : ℝ) • ((star U : L (HSum ℋ)) * Atilde * (U : L (HSum ℋ))) +
             (1 / 2 : ℝ) • ((star V : L (HSum ℋ)) * Atilde * (V : L (HSum ℋ)))) ≤
-        ((1 / 2 : ℝ) • cfcR (ℋ := HSum ℋ) f ((star U : L (HSum ℋ)) * Atilde * (U : L (HSum ℋ))) +
-          (1 / 2 : ℝ) • cfcR (ℋ := HSum ℋ) f ((star V : L (HSum ℋ)) * Atilde * (V : L (HSum ℋ)))) := by
+        ((1 / 2 : ℝ) •
+              cfcR (ℋ := HSum ℋ) f ((star U : L (HSum ℋ)) * Atilde * (U : L (HSum ℋ))) +
+          (1 / 2 : ℝ) •
+              cfcR (ℋ := HSum ℋ) f ((star V : L (HSum ℋ)) * Atilde * (V : L (HSum ℋ)))) := by
     have hhalf : (1 - (2⁻¹ : ℝ)) = (2⁻¹ : ℝ) := by norm_num
     simpa [hhalf] using
       (hconv₂

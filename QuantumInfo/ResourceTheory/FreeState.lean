@@ -45,7 +45,8 @@ class ResourcePretheory (ι : Type*) extends Semigroup ι where
   [NonemptyH : ∀ i, Nonempty (H i)]
   /-- The product structure induces an isomorphism of Hilbert spaces -/
   prodEquiv i j : H (i * j) ≃ (H i) × (H j)
-  --Possible we want some fact like the associativity of `prod` or the existence of an identity space,
+  --Possible we want some fact like the associativity of `prod` or the existence of an identity
+  -- space,
   -- which would then imply MonoidalCategory structure later (instead of just Category). For now we
   -- take the (logically equivalent, in the appropriate model) assumption that the associator is
   -- actually an equality. This is captured in the `Semigroup ι` assumption. If we wanted to turn
@@ -93,8 +94,8 @@ theorem prodRelabel_assoc (ρ₁ : MState (H i)) (ρ₂ : MState (H j)) (ρ₃ :
   rw [MState.relabel_comp, MState.relabel_comp, MState.relabel_comp]
   rfl
 
-/-- A `MState.relabel` can be distributed across a `prodRelabel`, if you have proofs that the factors
-correspond correctly. -/
+/-- A `MState.relabel` can be distributed across a `prodRelabel`, if you have proofs that the
+factors correspond correctly. -/
 theorem prodRelabel_relabel_cast_prod
     (ρ₁ : MState (H i)) (ρ₂ : MState (H j))
     (h : H (k * l) = H (i * j)) (hik : k = i) (hlj : l = j) :
@@ -104,11 +105,12 @@ theorem prodRelabel_relabel_cast_prod
   subst hlj
   rfl
 
-/-- The `prod` operation of `ResourcePretheory` gives the natural product operation on `CPTPMap`s. Accessible
-by the notation `M₁ ⊗ᶜᵖᵣ M₂`. -/
+/-- The `prod` operation of `ResourcePretheory` gives the natural product operation on `CPTPMap`s.
+Accessible by the notation `M₁ ⊗ᶜᵖᵣ M₂`. -/
 noncomputable def prodCPTPMap (M₁ : CPTPMap (H i) (H j)) (M₂ : CPTPMap (H k) (H l)) :
     CPTPMap (H (i * k)) (H (j * l)) :=
-  (CPTPMap.ofEquiv (prodEquiv j l).symm).compose ((M₁ ⊗ᶜᵖ M₂).compose (CPTPMap.ofEquiv (prodEquiv i k)))
+  (CPTPMap.ofEquiv (prodEquiv j l).symm).compose
+    ((M₁ ⊗ᶜᵖ M₂).compose (CPTPMap.ofEquiv (prodEquiv i k)))
 
 @[inherit_doc]
 scoped notation M₁ " ⊗ᶜᵖᵣ " M₂ => prodCPTPMap M₁ M₂
@@ -343,10 +345,11 @@ theorem sandwichedRelRentropy_statePow {α : ℝ} (ρ σ : MState (H i)) (n : �
 
 end UnitalPretheory
 
-/- FreeStateTheories: theories defining some sets of "free states" within a collection of Hilbert spaces. -/
+/- FreeStateTheories: theories defining some sets of "free states" within a collection of Hilbert
+spaces. -/
 
-/-- A `FreeStateTheory` is a collection of mixed states (`MState`s) in a `ResourcePretheory` that obeys
-some necessary axioms:
+/-- A `FreeStateTheory` is a collection of mixed states (`MState`s) in a `ResourcePretheory` that
+obeys some necessary axioms:
  * For each Hilbert space `H i`, the free states are a closed, convex set
  * For each Hilbert space `H i`, there is a free state of full rank
  * If `ρᵢ ∈ H i` and `ρⱼ ∈ H j` are free, then `ρᵢ ⊗ ρⱼ` is free in `H (prod i j)`.
@@ -359,8 +362,10 @@ class FreeStateTheory (ι : Type*) extends ResourcePretheory ι where
   /-- The set F(H) of free states is convex (more precisely, their matrices are) -/
   free_convex : Convex ℝ (MState.M '' (@IsFree i))
   /-- The set of free states is closed under tensor product -/
-  free_prod {ρ₁ : MState (H i)} {ρ₂ : MState (H j)} (h₁ : IsFree ρ₁) (h₂ : IsFree ρ₂) : IsFree (ρ₁ ⊗ᵣ ρ₂)
-  /-- The set F(H) of free states contains a full-rank state `ρfull`, equivalently `ρfull` is positive definite. -/
+  free_prod {ρ₁ : MState (H i)} {ρ₂ : MState (H j)} (h₁ : IsFree ρ₁) (h₂ : IsFree ρ₂) :
+    IsFree (ρ₁ ⊗ᵣ ρ₂)
+  /-- The set F(H) of free states contains a full-rank state `ρfull`, equivalently `ρfull` is
+  positive definite. -/
   free_fullRank (i : ι) : open ComplexOrder in ∃ (ρ : MState (H i)), ρ.m.PosDef ∧ IsFree ρ
 
 namespace FreeStateTheory
@@ -384,7 +389,8 @@ theorem IsCompact_IsFree : IsCompact (IsFree (i := i)) :=
 -- is one, the only relevant property here is `free_convex`.
 theorem IsFree.mix {ι : Type*} [FreeStateTheory ι] {i : ι} {σ₁ σ₂ : MState (H i)}
     (hσ₁ : IsFree σ₁) (hσ₂ : IsFree σ₂) (p : Prob) : IsFree (p [σ₁ ↔ σ₂]) := by
-  obtain ⟨m, hm₁, hm₂⟩ := free_convex (i := i) ⟨σ₁, hσ₁, rfl⟩ ⟨σ₂, hσ₂, rfl⟩ p.zero_le (1 - p).zero_le (by simp)
+  obtain ⟨m, hm₁, hm₂⟩ :=
+    free_convex (i := i) ⟨σ₁, hσ₁, rfl⟩ ⟨σ₂, hσ₂, rfl⟩ p.zero_le (1 - p).zero_le (by simp)
   simp [Mixable.mix, Mixable.mix_ab, MState.instMixable]
   simp at hm₂
   convert ← hm₁
@@ -503,11 +509,12 @@ theorem RelativeEntResource.tendsto_ennreal (ρ : MState (H i)) :
 noncomputable def GlobalRobustness {i : ι} : MState (H i) → ℝ≥0 :=
   fun ρ ↦ sInf {s | ∃ σ, (⟨1 / (1+s), by bound⟩ [ρ ↔ σ]) ∈ IsFree}
 
-/-- A sequence of operations `f_n` is asymptotically nongenerating if `lim_{n→∞} RG(f_n(ρ_n)) = 0`, where
-RG is `GlobalRobustness` and `ρ_n` is any sequence of free states. Equivalently, we can take the `max` (
-over operations and states) on the left-hand side inside the limit.
+/-- A sequence of operations `f_n` is asymptotically nongenerating if `lim_{n→∞} RG(f_n(ρ_n)) = 0`,
+where RG is `GlobalRobustness` and `ρ_n` is any sequence of free states. Equivalently, we can take
+the `max` (over operations and states) on the left-hand side inside the limit.
 -/
-def IsAsymptoticallyNongenerating (dI dO : ι) (f : (n : ℕ) → CPTPMap (H (dI⊗^H[n])) (H (dO⊗^H[n]))) : Prop :=
+def IsAsymptoticallyNongenerating (dI dO : ι)
+    (f : (n : ℕ) → CPTPMap (H (dI⊗^H[n])) (H (dO⊗^H[n]))) : Prop :=
   ∀ (ρs : (n : ℕ) → MState (H (dI⊗^H[n]))), (∀ n, IsFree (ρs n)) →
   Filter.atTop.Tendsto (fun n ↦ GlobalRobustness ((f n) (ρs n))) (𝓝 0)
 

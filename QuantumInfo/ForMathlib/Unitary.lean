@@ -35,7 +35,9 @@ theorem unitary_apply_star_eq (U : unitary (E →ₗ[𝕜] E)) (v : E) :
 
 /-- Conjugating a linear map by a unitary operator gives a map whose μ-eigenspace is
   isomorphic (same dimension) as those of the original linear map. -/
-noncomputable def conj_unitary_eigenspace_equiv (T : E →ₗ[𝕜] E) (U : unitary (E →ₗ[𝕜] E)) (μ : 𝕜) :
+noncomputable def conj_unitary_eigenspace_equiv (T : E →ₗ[𝕜] E)
+    (U : unitary (E →ₗ[𝕜] E))
+    (μ : 𝕜) :
     eigenspace T μ ≃ₗ[𝕜] eigenspace (U.val * T * star (U.val)) μ where
   toFun v := ⟨U.val v.val, by
     have hv := v.2

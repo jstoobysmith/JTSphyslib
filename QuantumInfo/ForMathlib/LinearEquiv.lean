@@ -25,7 +25,8 @@ variable (e : d ≃ d₂)
 
 variable (𝕜) in
 @[simps!]
-def euclidean_of_relabel (e : d ≃ d₂) : EuclideanSpace 𝕜 d₂ ≃ₗ[𝕜] EuclideanSpace 𝕜 d :=
+def euclidean_of_relabel (e : d ≃ d₂) :
+    EuclideanSpace 𝕜 d₂ ≃ₗ[𝕜] EuclideanSpace 𝕜 d :=
   (WithLp.linearEquiv 2 𝕜 _).trans ((of_relabel _ e).trans (WithLp.linearEquiv 2 𝕜 _).symm)
 
 @[simp]

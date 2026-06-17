@@ -19,20 +19,25 @@ instance ULift.instStar {𝕜 : Type u} [Star 𝕜] : Star (ULift.{v,u} 𝕜) wh
   star x := .up (star x.down)
 
 @[simp]
-theorem ULift.star_eq {𝕜 : Type u} [Star 𝕜] (x : ULift.{v,u} 𝕜) : star x = .up (star x.down) := by
+theorem ULift.star_eq {𝕜 : Type u} [Star 𝕜] (x : ULift.{v,u} 𝕜) :
+    star x = .up (star x.down) := by
   rfl
 
-instance ULift.instInvolutiveStar {𝕜 : Type u} [InvolutiveStar 𝕜] : InvolutiveStar (ULift.{v,u} 𝕜) where
+instance ULift.instInvolutiveStar {𝕜 : Type u} [InvolutiveStar 𝕜] :
+    InvolutiveStar (ULift.{v,u} 𝕜) where
   star_involutive x := by simp
 
-instance ULift.instStarMul {𝕜 : Type u} [Mul 𝕜] [StarMul 𝕜] : StarMul (ULift.{v,u} 𝕜) where
+instance ULift.instStarMul {𝕜 : Type u} [Mul 𝕜] [StarMul 𝕜] :
+    StarMul (ULift.{v,u} 𝕜) where
   star_mul x y := by simp; rfl
 
-instance {𝕜 : Type u} [NonUnitalNonAssocSemiring 𝕜] [StarRing 𝕜] : StarRing (ULift.{v,u} 𝕜) where
+instance {𝕜 : Type u} [NonUnitalNonAssocSemiring 𝕜] [StarRing 𝕜] :
+    StarRing (ULift.{v,u} 𝕜) where
   star_add x y := by simp; rfl
 
 @[simp]
-theorem ULift.starRingEnd_down {𝕜 : Type u} (x : ULift.{v,u} 𝕜) [CommSemiring 𝕜] [StarRing 𝕜] :
+theorem ULift.starRingEnd_down {𝕜 : Type u} (x : ULift.{v,u} 𝕜) [CommSemiring 𝕜]
+    [StarRing 𝕜] :
     ((starRingEnd (ULift.{v, u} 𝕜)) x).down = star x.down := by
   rfl
 

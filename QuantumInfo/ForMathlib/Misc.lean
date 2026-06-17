@@ -13,7 +13,8 @@ public import Mathlib.Order.CompletePartialOrder
 --Can this be rewritten more generally? For `finiteness` to work, I don't know how.
 --PR'ed in #33105
 @[aesop (rule_sets := [finiteness]) unsafe apply]
-theorem ite_eq_top {α : Type*} [Top α] (h : Prop) [Decidable h] {x y : α} (hx : x ≠ ⊤) (hy : y ≠ ⊤) :
+theorem ite_eq_top {α : Type*} [Top α] (h : Prop) [Decidable h] {x y : α}
+    (hx : x ≠ ⊤) (hy : y ≠ ⊤) :
     (if h then x else y) ≠ ⊤ := by
   split <;> assumption
 
@@ -24,18 +25,20 @@ When
 https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/diamond.20in.20ConditionallyCompleteLattice/near/538053239
 is fixed, the declarations below should be changed to
 ```
-theorem subtype_val_iSup {ι α : Type*} [ConditionallyCompleteLattice α] {s : Set α} {f : ι → α}
+theorem subtype_val_iSup {ι α : Type*} [ConditionallyCompleteLattice α] {s : Set α}
+    {f : ι → α}
     [Inhabited ↑s] [s.OrdConnected] (h : ∀ i, f i ∈ s) :
     (⨆ i, (⟨f i, h i⟩ : ↑s)).val = ⨆ i, f i := by
   sorry
 
-theorem subtype_val_iSup' {ι α : Type*} [ConditionallyCompleteLattice α] {s : Set α} {f : ι → α}
+theorem subtype_val_iSup' {ι α : Type*} [ConditionallyCompleteLattice α] {s : Set α}
+    {f : ι → α}
     [Inhabited ↑s] [s.OrdConnected] (h : ∀ i, f i ∈ s) :
     ⨆ i, (⟨f i, h i⟩ : ↑s) = ⟨⨆ i, f i, by sorry⟩ := by
   rw [Subtype.eq_iff, subtype_val_iSup]
 ```
-Sadly, though, there's a "diamond" and we need it with the other data (the one we specify more narrowly
-below).
+Sadly, though, there's a "diamond" and we need it with the other data (the one we specify
+more narrowly below).
 -/
 variable {ι α : Type*} [i : Nonempty ι] [ConditionallyCompleteLattice α]
   {f : ι → α} {a b : α} [Fact (a ≤ b)]
@@ -50,7 +53,8 @@ theorem subtype_val_iSup (h : ∀ i, f i ∈ Set.Icc a b) :
 
 theorem subtype_val_iSup' (h : ∀ i, f i ∈ Set.Icc a b) :
     ⨆ i, (⟨f i, h i⟩ : ↑(Set.Icc a b)) =
-      ⟨⨆ i, f i, ⟨(h i.some).1.trans (le_ciSup ⟨b, by intro; grind⟩ _), ciSup_le (h ·|>.2)⟩⟩ := by
+      ⟨⨆ i, f i, ⟨(h i.some).1.trans (le_ciSup ⟨b, by intro; grind⟩ _),
+        ciSup_le (h ·|>.2)⟩⟩ := by
   rw [Subtype.ext_iff, subtype_val_iSup]
 
 /- This isn't marked as `simp` because rewriting from a sup over a `CompleteLattice` into a
@@ -63,7 +67,8 @@ theorem subtype_val_iInf (h : ∀ i, f i ∈ Set.Icc a b) :
 
 theorem subtype_val_iInf' (h : ∀ i, f i ∈ Set.Icc a b) :
     ⨅ i, (⟨f i, h i⟩ : ↑(Set.Icc a b)) =
-      ⟨⨅ i, f i, ⟨le_ciInf (h ·|>.1), (ciInf_le ⟨a, by intro; grind⟩ _).trans (h i.some).2⟩⟩ := by
+      ⟨⨅ i, f i, ⟨le_ciInf (h ·|>.1),
+        (ciInf_le ⟨a, by intro; grind⟩ _).trans (h i.some).2⟩⟩ := by
   rw [Subtype.ext_iff, subtype_val_iInf]
 
 end subtype_val_iSup
@@ -88,7 +93,8 @@ protected lemma ENNReal.bdd_le_mul_tendsto_zero
 -- (after appropriately generalizing to MulPosMono)
 open scoped Pointwise in
 theorem csInf_mul_nonneg {s t : Set ℝ}
-  (hs₀ : s.Nonempty) (hs₁ : ∀ x ∈ s, 0 ≤ x) (ht₀ : t.Nonempty) (ht₁ : ∀ x ∈ t, 0 ≤ x) :
+  (hs₀ : s.Nonempty) (hs₁ : ∀ x ∈ s, 0 ≤ x) (ht₀ : t.Nonempty)
+  (ht₁ : ∀ x ∈ t, 0 ≤ x) :
     sInf (s * t) = sInf s * sInf t := by
   apply le_antisymm
   · set a := sInf s
@@ -102,8 +108,10 @@ theorem csInf_mul_nonneg {s t : Set ℝ}
       intro ε hε
       obtain ⟨x, hx₁, hx₂, y, hy₁, hy₂⟩ := h_eps ε hε
       exact ⟨x, hx₁, y, hy₁, by nlinarith [hs₁ x hx₁, ht₁ y hy₁]⟩
-    have h_lim : Filter.Tendsto (fun ε => (a + ε) * (b + ε)) (nhdsWithin 0 (Set.Ioi 0)) (nhds (a * b)) := by
-      exact tendsto_nhdsWithin_of_tendsto_nhds (Continuous.tendsto' (by continuity) _ _ (by norm_num))
+    have h_lim : Filter.Tendsto (fun ε => (a + ε) * (b + ε)) (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (a * b)) := by
+      exact tendsto_nhdsWithin_of_tendsto_nhds
+        (Continuous.tendsto' (by continuity) _ _ (by norm_num))
     apply le_of_tendsto_of_tendsto tendsto_const_nhds h_lim
     filter_upwards [self_mem_nhdsWithin] with ε hε
     specialize h_prod_eps ε hε
@@ -122,16 +130,19 @@ theorem csInf_mul_nonneg {s t : Set ℝ}
     · exact hs₁ x hx
 
 /--
-If two functions from finite types have the same multiset of values, there exists a bijection between the domains that commutes with the functions.
+If two functions from finite types have the same multiset of values, there exists a
+bijection between the domains that commutes with the functions.
 -/
 lemma Multiset.map_univ_eq_iff {α β : Type*} [Fintype α] (f g : α → β) :
-    Multiset.map f Finset.univ.val = Multiset.map g Finset.univ.val ↔ ∃ (e : α ≃ α), f = g ∘ e := by
+    Multiset.map f Finset.univ.val = Multiset.map g Finset.univ.val
+      ↔ ∃ (e : α ≃ α), f = g ∘ e := by
   apply Iff.intro
   · intro a
     classical
     -- Since these two multisets are equal, their elements must be equal up to permutation.
     have h_perm : ∃ e : α ≃ α, ∀ x, f x = g (e x) := by
-      have h_count_eq : ∀ y : β, Finset.card (Finset.filter (fun x => f x = y) Finset.univ) = Finset.card (Finset.filter (fun x => g x = y) Finset.univ) := by
+      have h_count_eq : ∀ y : β, Finset.card (Finset.filter (fun x => f x = y) Finset.univ)
+          = Finset.card (Finset.filter (fun x => g x = y) Finset.univ) := by
         intro y;
         replace a := congr_arg ( fun m => m.count y ) a;
         simp_all ( config := { decide := Bool.true } ) [ Multiset.count_map ];
@@ -142,7 +153,8 @@ lemma Multiset.map_univ_eq_iff {α β : Type*} [Fintype α] (f g : α → β) :
         exact ⟨ Fintype.equivOfCardEq <| by simpa [ Fintype.card_subtype ] using h_count_eq y ⟩;
       choose e he using h_perm;
       refine' ⟨ _, _ ⟩;
-      exact ( Equiv.sigmaFiberEquiv f ).symm.trans ( Equiv.sigmaCongrRight e ) |> Equiv.trans <| Equiv.sigmaFiberEquiv g;
+      exact ( Equiv.sigmaFiberEquiv f ).symm.trans ( Equiv.sigmaCongrRight e )
+        |> Equiv.trans <| Equiv.sigmaFiberEquiv g;
       intro x
       specialize e ( f x )
       rename_i e_1
@@ -154,25 +166,33 @@ lemma Multiset.map_univ_eq_iff {α β : Type*} [Fintype α] (f g : α → β) :
     obtain ⟨w, h⟩ := a
     subst h
     simp_all only [Function.comp_apply, Finset.univ]
-    -- Since $w$ is a bijection, the multiset of $w(x)$ for $x$ in the original multiset is just a permutation of the original multiset.
-    have h_perm : Multiset.map (fun x => w x) (Finset.val Fintype.elems) = Finset.val Fintype.elems := by
+    -- Since $w$ is a bijection, the multiset of $w(x)$ for $x$ in the original multiset is
+    -- just a permutation of the original multiset.
+    have h_perm : Multiset.map (fun x => w x) (Finset.val Fintype.elems)
+        = Finset.val Fintype.elems := by
       exact Multiset.map_univ_val_equiv w;
     conv_rhs => rw [ ← h_perm ];
     simp +zetaDelta at *
 
 /--
-If two functions from finite types have the same multiset of values, there exists a bijection between the domains that commutes with the functions.
+If two functions from finite types have the same multiset of values, there exists a
+bijection between the domains that commutes with the functions.
 -/
 lemma exists_equiv_of_multiset_map_eq {α β γ : Type*} [Fintype α] [Fintype β] [DecidableEq γ]
-    (f : α → γ) (g : β → γ) (h : Multiset.map f Finset.univ.val = Multiset.map g Finset.univ.val) :
+    (f : α → γ) (g : β → γ)
+    (h : Multiset.map f Finset.univ.val = Multiset.map g Finset.univ.val) :
     ∃ e : α ≃ β, f = g ∘ e := by
-  -- Since the multisets of values are equal, the cardinalities of the domains must be equal (as the multiset size is the cardinality of the domain). Thus there exists a bijection `σ : α ≃ β`.
-  obtain ⟨σ, hσ⟩ : ∃ σ : α ≃ β, Multiset.map f Finset.univ.val = Multiset.map (g ∘ σ) Finset.univ.val := by
+  -- Since the multisets of values are equal, the cardinalities of the domains must be equal
+  -- (as the multiset size is the cardinality of the domain). Thus there exists a bijection
+  -- `σ : α ≃ β`.
+  obtain ⟨σ, hσ⟩ : ∃ σ : α ≃ β, Multiset.map f Finset.univ.val
+      = Multiset.map (g ∘ σ) Finset.univ.val := by
     have h_card : Fintype.card α = Fintype.card β := by
       simpa using congr_arg Multiset.card h;
     obtain σ := Fintype.equivOfCardEq h_card
     use σ
-    have h_multiset_eq : Multiset.map g Finset.univ.val = Multiset.map (g ∘ σ) Finset.univ.val := by
+    have h_multiset_eq : Multiset.map g Finset.univ.val
+        = Multiset.map (g ∘ σ) Finset.univ.val := by
       rw [ ← Multiset.map_univ_val_equiv σ ] ;
       rw [ Multiset.map_map ]
     exact h.trans h_multiset_eq;

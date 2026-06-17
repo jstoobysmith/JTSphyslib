@@ -127,7 +127,8 @@ def uniform [n : Nonempty α] : ProbDistribution α :=
     bound⟩, by simp⟩
 
 @[simp]
-theorem uniform_def [Nonempty α] (y : α) : ((uniform y) : ℝ) = 1 / (Finset.univ.card (α := α)) :=
+theorem uniform_def [Nonempty α] (y : α) :
+    ((uniform y) : ℝ) = 1 / (Finset.univ.card (α := α)) :=
   rfl
 
 /-- Make a distribution on a product of two Fintypes. -/
@@ -181,7 +182,8 @@ def congr (σ : α ≃ β) : ProbDistribution α ≃ ProbDistribution β := by
     simp only [← fun_eq_val, Equiv.apply_symm_apply, Subtype.coe_eta]
 
 @[simp]
-theorem congr_apply (σ : α ≃ β) (d : ProbDistribution α) (j : β): (congr σ d) j = d (σ.symm j) := by
+theorem congr_apply (σ : α ≃ β) (d : ProbDistribution α) (j : β):
+    (congr σ d) j = d (σ.symm j) := by
   rfl
 
 /-- The inverse and congruence operations for distributions commute -/
@@ -262,7 +264,8 @@ theorem expect_val_eq_mixable_mix (d : ProbDistribution (Fin 2)) (x₁ x₂ : T)
     ∑ i : Fin (Nat.succ 0).succ, (d i : ℝ) • Mixable.to_U (![x₁, x₂] i) =
         ∑ i, (d i : ℝ) • Mixable.to_U (![x₁, x₂] i) := by
       simp
-    _ = (d 0 : ℝ) • Mixable.to_U (![x₁, x₂] 0) + (d 1 : ℝ) • Mixable.to_U (![x₁, x₂] 1) := by
+    _ = (d 0 : ℝ) • Mixable.to_U (![x₁, x₂] 0)
+        + (d 1 : ℝ) • Mixable.to_U (![x₁, x₂] 1) := by
       simp
     _ = (d 0 : ℝ) • Mixable.to_U x₁ + (1 - d 0).val • Mixable.to_U x₂ := by
       congr
@@ -288,8 +291,10 @@ theorem zero_le_expect_val (d : ProbDistribution α) (f : α → ℝ) (hpos : 0 
 /-- `T`-valued random variables on `α` and `β` are equivalent if `α ≃ β` -/
 def congrRandVar (σ : α ≃ β) : RandVar α T ≃ RandVar β T := by
   constructor
-  case toFun => exact fun X ↦ { var := X.var ∘ σ.symm, distr := ProbDistribution.congr σ X.distr }
-  case invFun => exact fun X ↦ { var := X.var ∘ σ, distr := ProbDistribution.congr σ.symm X.distr }
+  case toFun =>
+    exact fun X ↦ { var := X.var ∘ σ.symm, distr := ProbDistribution.congr σ X.distr }
+  case invFun =>
+    exact fun X ↦ { var := X.var ∘ σ, distr := ProbDistribution.congr σ.symm X.distr }
   case left_inv =>
     intro e
     dsimp
@@ -305,7 +310,8 @@ def congrRandVar (σ : α ≃ β) : RandVar α T ≃ RandVar β T := by
 
 /-- Given a `T`-valued random variable `X` over `α`, mapping over `T` commutes
   with the equivalence over `α` -/
-def map_congr_eq_congr_map {S : Type _} [Mixable U S] (f : T → S) (σ : α ≃ β) (X : RandVar α T) :
+def map_congr_eq_congr_map {S : Type _} [Mixable U S] (f : T → S) (σ : α ≃ β)
+    (X : RandVar α T) :
   f <$> congrRandVar σ X = congrRandVar σ (f <$> X) := by rfl
 
 /-- The expectation value is invariant under equivalence of random variables -/

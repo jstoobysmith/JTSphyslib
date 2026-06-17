@@ -214,17 +214,22 @@ private lemma spectrum_convexCombo_Ioi {A B : 𝓐} {t : ℝ}
     · have ht' : t = 1 := by simpa [sub_eq_zero] using (sub_eq_zero.mp h1t).symm
       subst ht'
       simpa [rC, h1t] using hrB
-    · simpa [rC] using add_pos_of_pos_of_nonneg (mul_pos (lt_of_le_of_ne' (sub_nonneg.mpr ht1) (by simpa using h1t)) hrA) (mul_nonneg ht0 (le_of_lt hrB))
+    · simpa [rC] using add_pos_of_pos_of_nonneg
+        (mul_pos (lt_of_le_of_ne' (sub_nonneg.mpr ht1) (by simpa using h1t)) hrA)
+        (mul_nonneg ht0 (le_of_lt hrB))
   have hrC_le : algebraMap ℝ (𝓐) rC ≤ C := by
     have hsum : (1 - t) • algebraMap ℝ (𝓐) rA + t • algebraMap ℝ (𝓐) rB ≤ C := by
-      simpa [C] using add_le_add (smul_le_smul_of_nonneg_left hrA_le (sub_nonneg.mpr ht1)) (smul_le_smul_of_nonneg_left hrB_le ht0)
+      simpa [C] using add_le_add
+        (smul_le_smul_of_nonneg_left hrA_le (sub_nonneg.mpr ht1))
+        (smul_le_smul_of_nonneg_left hrB_le ht0)
     have hLHS :
         (1 - t) • algebraMap ℝ (𝓐) rA + t • algebraMap ℝ (𝓐) rB =
           algebraMap ℝ (𝓐) rC := by
       simp [rC, Algebra.smul_def]
     simpa [hLHS] using hsum
   intro x hx
-  simpa [C] using (CFC.exists_pos_algebraMap_le_iff (A := 𝓐) (a := C) (ha := hC)).1 ⟨rC, hrC, hrC_le⟩ x hx
+  simpa [C] using
+    (CFC.exists_pos_algebraMap_le_iff (A := 𝓐) (a := C) (ha := hC)).1 ⟨rC, hrC, hrC_le⟩ x hx
 
 omit [Nontrivial (𝓐)] in
 omit [NonnegSpectrumClass ℝ 𝓐] in
@@ -261,7 +266,8 @@ private lemma posSemidef_block_one_inv {A : 𝓐} (hA : IsSelfAdjoint A)
     apply cfc_congr
     intro x hx
     dsimp only
-    rw [← Real.rpow_add (As hx), show ((-1 : ℝ) / 2 + (1 : ℝ) / 2 : ℝ) = 0 from by ring, Real.rpow_zero]
+    rw [← Real.rpow_add (As hx), show ((-1 : ℝ) / 2 + (1 : ℝ) / 2 : ℝ) = 0 from by ring,
+      Real.rpow_zero]
   have invSqrtA_mul_invSqrtA : invSqrtA * invSqrtA = cfcR (fun x : ℝ ↦ x ^ (-1 : ℝ)) A := by
     dsimp [invSqrtA, cfcR]
     rw [← cfc_mul _ _ A hcont_invSqrt hcont_invSqrt]
@@ -278,7 +284,8 @@ private lemma posSemidef_block_one_inv {A : 𝓐} (hA : IsSelfAdjoint A)
             apply cfc_congr
             intro x hx
             dsimp only
-            rw [← Real.rpow_add (As hx), show ((1 : ℝ) / 2 + (1 : ℝ) / 2 : ℝ) = 1 from by ring, Real.rpow_one]
+            rw [← Real.rpow_add (As hx), show ((1 : ℝ) / 2 + (1 : ℝ) / 2 : ℝ) = 1 from by ring,
+              Real.rpow_one]
       _ = A := cfc_id' (R := ℝ) (a := A) (ha := hA)
   have invA_eq : cfcR (fun x : ℝ ↦ x ^ (-1 : ℝ)) A = cfcR (fun x : ℝ ↦ x⁻¹) A := by
     dsimp [cfcR]
@@ -479,7 +486,8 @@ theorem one_div_add_t_operatorAntitoneOn_Ici : ∀ (t : ℝ), 0 < t →
       simpa [Set.Ici] using (Bs hx)
     exact le_of_lt (add_pos_of_nonneg_of_pos hx0 ht)
   have hub_le_hua : (uB : 𝓐) ≤ (uA : 𝓐) := by
-    simpa [huA_val, huB_val, add_assoc, add_left_comm, add_comm] using add_le_add_right BA (algebraMap ℝ (𝓐) t)
+    simpa [huA_val, huB_val, add_assoc, add_left_comm, add_comm] using
+      add_le_add_right BA (algebraMap ℝ (𝓐) t)
   have hinv : (↑uA⁻¹ : 𝓐) ≤ (↑uB⁻¹ : 𝓐) := by
     simpa using
       (CStarAlgebra.inv_le_inv (A := 𝓐) (a := uB) (b := uA) huB_nonneg hub_le_hua)
@@ -521,7 +529,8 @@ theorem one_div_add_t_operatorConvexOn_Ici : ∀ (t : ℝ), 0 < t →
       simpa [Set.Ici] using (Bs hx)
     simpa [cfcR, cfc_id' (R := ℝ) (a := B) (ha := hB)] using h0
   have C_nonneg : 0 ≤ C := by
-    simpa [C] using add_nonneg (smul_nonneg (sub_nonneg.mpr hθ1) A_nonneg) (smul_nonneg hθ0 B_nonneg)
+    simpa [C] using
+      add_nonneg (smul_nonneg (sub_nonneg.mpr hθ1) A_nonneg) (smul_nonneg hθ0 B_nonneg)
   have hA_shift : cfcR shift A = A + T := by
     dsimp [cfcR, shift, T]
     simpa [cfc_id' (R := ℝ) (a := A) (ha := hA)] using
@@ -592,7 +601,9 @@ theorem one_div_add_t_operatorConvexOn_Ici : ∀ (t : ℝ), 0 < t →
       simpa [Set.Ici] using (Bs hx)
     exact ne_of_gt (by simpa [shift] using (add_pos_of_nonneg_of_pos hx0 ht))
   have hshift_ne0_C : ∀ x ∈ spectrum ℝ C, shift x ≠ 0 :=
-    fun x hx ↦ ne_of_gt (by simpa [shift] using (add_pos_of_nonneg_of_pos (spectrum_nonneg_of_nonneg C_nonneg hx) ht))
+    fun x hx ↦ ne_of_gt
+      (by simpa [shift] using
+        (add_pos_of_nonneg_of_pos (spectrum_nonneg_of_nonneg C_nonneg hx) ht))
   have hA_inv : cfcR (fun x : ℝ ↦ (x + t)⁻¹) A = Ring.inverse A1 := by
     have h' : cfc (fun x : ℝ ↦ (shift x)⁻¹) A = Ring.inverse (cfc shift A) := by
       simpa [shift] using (cfc_inv (R := ℝ) (A := 𝓐) (p := IsSelfAdjoint)
@@ -946,11 +957,13 @@ private lemma cfcₙ_rpowIntegrand₀₁_eq_smul_cfcR_ratio {q : NNReal} (hq : q
     {t : ℝ} (htpos : 0 < t) (X : 𝓐) (hX0 : 0 ≤ X) :
     cfcₙ (Real.rpowIntegrand₀₁ (q : ℝ) t) X =
       (t ^ ((q : ℝ) - 1)) • cfcR (fun x : ℝ => x / (x + t)) X := by
-  have hq_real : ((q : ℝ) : ℝ) ∈ Set.Ioo (0 : ℝ) 1 := ⟨(NNReal.coe_pos).2 hq.1, (NNReal.coe_lt_coe).2 hq.2⟩
+  have hq_real : ((q : ℝ) : ℝ) ∈ Set.Ioo (0 : ℝ) 1 :=
+    ⟨(NNReal.coe_pos).2 hq.1, (NNReal.coe_lt_coe).2 hq.2⟩
   let ratio : ℝ → ℝ := fun x => x / (x + t)
   let r : ℝ := t ^ ((q : ℝ) - 1)
   have hcont_ratio : ContinuousOn ratio (spectrum ℝ X) :=
-    continuousOn_id.div (continuousOn_id.add continuousOn_const) (fun x hx ↦ ne_of_gt (add_pos_of_nonneg_of_pos (spectrum_nonneg_of_nonneg hX0 hx) htpos))
+    continuousOn_id.div (continuousOn_id.add continuousOn_const)
+      (fun x hx ↦ ne_of_gt (add_pos_of_nonneg_of_pos (spectrum_nonneg_of_nonneg hX0 hx) htpos))
   have hcfcₙ : cfcₙ (Real.rpowIntegrand₀₁ (q : ℝ) t) X =
       cfcR (Real.rpowIntegrand₀₁ (q : ℝ) t) X := by
     have hqs : quasispectrum ℝ X ⊆ Set.Ici (0 : ℝ) := by
@@ -965,7 +978,9 @@ private lemma cfcₙ_rpowIntegrand₀₁_eq_smul_cfcR_ratio {q : NNReal} (hq : q
   have hEq :
       (spectrum ℝ X).EqOn (Real.rpowIntegrand₀₁ (q : ℝ) t) (fun x : ℝ ↦ r * ratio x) := by
     intro x hx
-    simp [r, ratio, Real.rpowIntegrand₀₁_eq_pow_div hq_real (le_of_lt htpos) (spectrum_nonneg_of_nonneg hX0 hx),
+    simp [r, ratio,
+      Real.rpowIntegrand₀₁_eq_pow_div hq_real (le_of_lt htpos)
+        (spectrum_nonneg_of_nonneg hX0 hx),
       add_comm, mul_div_assoc]
   have hcfc_congr :
       cfcR (Real.rpowIntegrand₀₁ (q : ℝ) t) X =
@@ -1002,7 +1017,8 @@ private lemma cfcR_ratio_weighted_le {t : ℝ} (htpos : 0 < t) {A B : 𝓐} (hA0
   have hneg :=
     (by
       dsimp [OperatorConcaveOn, OperatorConvexOn] at hOp
-      have := hOp (A := A) (B := B) (t := b) (IsSelfAdjoint.of_nonneg hA0) (IsSelfAdjoint.of_nonneg hB0)
+      have := hOp (A := A) (B := B) (t := b) (IsSelfAdjoint.of_nonneg hA0)
+        (IsSelfAdjoint.of_nonneg hB0)
         hb hb1 (hspec A hA0) (hspec B hB0)
       exact this)
   have hneg' :
@@ -1011,10 +1027,12 @@ private lemma cfcR_ratio_weighted_le {t : ℝ} (htpos : 0 < t) {A B : 𝓐} (hA0
           + b • cfcR (fun x : ℝ ↦ - (x / (x + t))) B := hneg
   have hneg'' :
       -cfcR (fun x : ℝ => x / (x + t)) ((1 - b) • A + b • B)
-        ≤ -((1 - b) • cfcR (fun x : ℝ => x / (x + t)) A + b • cfcR (fun x : ℝ => x / (x + t)) B) := by
+        ≤ -((1 - b) • cfcR (fun x : ℝ => x / (x + t)) A
+            + b • cfcR (fun x : ℝ => x / (x + t)) B) := by
     have h' :
         -cfcR (fun x : ℝ => x / (x + t)) ((1 - b) • A + b • B)
-          ≤ -(b • cfcR (fun x : ℝ => x / (x + t)) B + (1 - b) • cfcR (fun x : ℝ => x / (x + t)) A) := by
+          ≤ -(b • cfcR (fun x : ℝ => x / (x + t)) B
+              + (1 - b) • cfcR (fun x : ℝ => x / (x + t)) A) := by
       simpa [cfcR, cfc_neg, smul_neg, neg_add] using hneg'
     simpa [add_comm, add_left_comm, add_assoc] using h'
   simpa [ha1, add_comm, add_left_comm, add_assoc] using neg_le_neg_iff.mp hneg''
@@ -1185,7 +1203,8 @@ theorem power_Icc_zero_one_operatorConcaveOn_Ici : ∀ p ∈ Set.Icc (0 : ℝ) 1
         ≤ cfcR (fun x : ℝ ↦ x ^ p) C := by
     simpa [hcalc A hA0, hcalc B hB0, hcalc C hC0, C] using hconcC
   -- convert concavity into convexity of `x ↦ -x^p`
-  simpa [cfcR, cfc_neg, smul_neg, neg_add, add_assoc, add_left_comm, add_comm] using neg_le_neg hconcC'
+  simpa [cfcR, cfc_neg, smul_neg, neg_add, add_assoc, add_left_comm, add_comm] using
+    neg_le_neg hconcC'
 
 private lemma sq_mul_div_add (x t : ℝ) (hxt : x + t ≠ 0) :
     (x * x) / (x + t) = x - t + (t * t) / (x + t) := by
@@ -1208,7 +1227,8 @@ private lemma convexOn_cfcR_one_div_add_t (t : ℝ) (htpos : 0 < t) :
   have hOp := one_div_add_t_operatorConvexOn_Ici (𝓐 := 𝓐) t htpos
   dsimp [OperatorConvexOn] at hOp
   simpa [one_div, ha1] using
-    hOp (A := A) (B := B) (t := b) (IsSelfAdjoint.of_nonneg hA0) (IsSelfAdjoint.of_nonneg hB0) hb hb1 (hspec A hA0) (hspec B hB0)
+    hOp (A := A) (B := B) (t := b) (IsSelfAdjoint.of_nonneg hA0) (IsSelfAdjoint.of_nonneg hB0)
+      hb hb1 (hspec A hA0) (hspec B hB0)
 
 omit [Nontrivial (𝓐)] in
 private lemma G_eqOn_rpowIntegrand₀₁_mul {q : NNReal} (hq_real : (q : ℝ) ∈ Set.Ioo (0 : ℝ) 1)
@@ -1393,7 +1413,8 @@ private lemma convexOn_G_rpowIntegrand₀₁_mul {q : NNReal} (hq_real : (q : �
   simpa using this.symm
 
 omit [Nontrivial (𝓐)] in
-private lemma ae_cfcₙ_mul_id_rpowIntegrand₀₁_restrict_Ioi {q : NNReal} (hq_real : (q : ℝ) ∈ Set.Ioo (0 : ℝ) 1)
+private lemma ae_cfcₙ_mul_id_rpowIntegrand₀₁_restrict_Ioi {q : NNReal}
+    (hq_real : (q : ℝ) ∈ Set.Ioo (0 : ℝ) 1)
     (μ : MeasureTheory.Measure ℝ) (A : 𝓐) (hA0 : 0 ≤ A) :
     ∀ᵐ t ∂(μ.restrict (Set.Ioi (0 : ℝ))),
       cfcₙ (fun x : ℝ ↦ x * Real.rpowIntegrand₀₁ (q : ℝ) t x) A =
@@ -1450,7 +1471,8 @@ private lemma convexOn_nnrpow_Ioo_one_add {q : NNReal} (hq : q ∈ Set.Ioo (0 : 
       ∀ᵐ t ∂ν, ConvexOn ℝ (Set.Ici (0 : 𝓐)) (fun A : 𝓐 => G t A) := by
     filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Ioi] with t ht
     have hconv :
-        ConvexOn ℝ (Set.Ici (0 : 𝓐)) (fun X : 𝓐 ↦ cfcₙ (fun x : ℝ ↦ x * Real.rpowIntegrand₀₁ (q : ℝ) t x) X) :=
+        ConvexOn ℝ (Set.Ici (0 : 𝓐))
+          (fun X : 𝓐 ↦ cfcₙ (fun x : ℝ ↦ x * Real.rpowIntegrand₀₁ (q : ℝ) t x) X) :=
       convexOn_G_rpowIntegrand₀₁_mul  hq_real t ht
     simpa [G] using hconv
   have hconv_int :
@@ -1854,7 +1876,8 @@ theorem power_Icc_neg_one_zero_neg_operatorMonotoneOn_Ioi : ∀ p ∈ Set.Icc (-
       intro x hx
       have hx0 : (0 : ℝ) < x := by simpa [Set.Ioi] using hspB hx
       simpa [Set.Ici] using (le_of_lt hx0)
-    exact (power_Icc_zero_one_operatorMonotoneOn_Ici  q hq (A := A) (B := B) hA0 hB0 hBA hspA' hspB')
+    exact (power_Icc_zero_one_operatorMonotoneOn_Ici  q hq (A := A) (B := B) hA0 hB0 hBA hspA'
+      hspB')
   let Aq : 𝓐 := cfcR  (fun x : ℝ ↦ x ^ q) A
   let Bq : 𝓐 := cfcR  (fun x : ℝ ↦ x ^ q) B
   have hAq0 : 0 ≤ Aq := by

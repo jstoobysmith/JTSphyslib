@@ -58,9 +58,11 @@ theorem H₁_le_1 (p : Prob) : H₁ p < 1 := by
 theorem H₁_le_exp_m1 (p : Prob) : H₁ p ≤ Real.exp (-1) :=
   Real.negMulLog_le_rexp_neg_one p.zero_le_coe
 
-theorem H₁_concave : ∀ (x y : Prob), ∀ (p : Prob), p[H₁ x ↔ H₁ y] ≤ H₁ (p[x ↔ y]) := by
+theorem H₁_concave : ∀ (x y : Prob), ∀ (p : Prob),
+    p[H₁ x ↔ H₁ y] ≤ H₁ (p[x ↔ y]) := by
   intros x y p
-  simp only [H₁, smul_eq_mul, Prob.coe_one_minus, Mixable.mix, Mixable.mix_ab, Mixable.mkT_instUniv,
+  simp only [H₁, smul_eq_mul, Prob.coe_one_minus, Mixable.mix, Mixable.mix_ab,
+    Mixable.mkT_instUniv,
     Prob.mkT_mixable, Prob.to_U_mixable, Mixable.to_U_instUniv, Prob.to_U_mixable]
   by_cases hxy : x = y
   · subst hxy
@@ -99,7 +101,8 @@ theorem Hₛ_le_log_d (d : ProbDistribution α) : Hₛ d ≤ Real.log (Fintype.c
     -- convex function -x log x.
   have h_jensen {p : α → ℝ} (hsum : ∑ i, p i = 1) (hp : ∀ i, 0 ≤ p i ∧ p i ≤ 1) :
       -∑ i, p i * (p i).log ≤ Real.log (Fintype.card α) := by
-    have h_jensen : (∑ i, (Fintype.card α : ℝ)⁻¹ * p i) * (∑ i, (Fintype.card α : ℝ)⁻¹ * p i).log ≤
+    have h_jensen : (∑ i, (Fintype.card α : ℝ)⁻¹ * p i)
+          * (∑ i, (Fintype.card α : ℝ)⁻¹ * p i).log ≤
           (∑ i, (Fintype.card α : ℝ)⁻¹ * (p i * (p i).log)) := by
       have h_convex : ConvexOn ℝ (Set.Icc 0 1) (fun x ↦ x * Real.log x) :=
         Real.convexOn_mul_log.subset Set.Icc_subset_Ici_self (convex_Icc 0 1)

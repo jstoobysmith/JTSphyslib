@@ -27,7 +27,8 @@ namespace ContinuousLinearMap
 variable {n 𝕜 : Type*} [Fintype n] [RCLike 𝕜]
 
 /-- The support of a Hermitian matrix is the sum of its nonzero eigenspaces. -/
-theorem support_eq_sup_eigenspace_nonzero (A : EuclideanSpace 𝕜 n →L[𝕜] EuclideanSpace 𝕜 n)
+theorem support_eq_sup_eigenspace_nonzero
+    (A : EuclideanSpace 𝕜 n →L[𝕜] EuclideanSpace 𝕜 n)
     (hA : A.IsSymmetric) : A.range = ⨆ μ ≠ 0, Module.End.eigenspace A μ := by
   apply le_antisymm
   · rintro x ⟨y, hy⟩

@@ -280,7 +280,8 @@ theorem theorem_2_5_2_iv_imp_v {f : ℝ → ℝ} (hiv : CondIVAll.{u} f)
     rw [show star Xtilde = blockOp (ℋ := ℋ) (star X) (star Y) 0 0 by
       simp [Xtilde]]
     rw [show Xtilde = blockOp (ℋ := ℋ) X 0 Y 0 by rfl]
-    rw [blockDiagonal_eq_blockOp_wrap, blockOp_mul_wrap, blockOp_mul_wrap, blockDiagonal_eq_blockOp_wrap]
+    rw [blockDiagonal_eq_blockOp_wrap, blockOp_mul_wrap, blockOp_mul_wrap,
+      blockDiagonal_eq_blockOp_wrap]
     congr 1 <;> simp [mul_assoc]
   have hleft_block :
       cfcR (ℋ := HSum ℋ) f (star Xtilde * Atilde * Xtilde) =

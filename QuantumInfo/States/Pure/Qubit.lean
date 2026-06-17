@@ -31,7 +31,8 @@ abbrev Qubit := Fin 2
 open Lean.Parser.Tactic in
 open Lean in
 /--
-Proves goals equating small matrices by expanding out products and simpliying standard Real arithmetic.
+Proves goals equating small matrices by expanding out products and simpliying standard Real
+arithmetic.
 -/
 syntax (name := matrix_expand) "matrix_expand"
   (" [" ((simpStar <|> simpErase <|> simpLemma),*,?) "]")?
@@ -110,7 +111,8 @@ theorem S_sq : S * S = Z := by
 theorem T_sq : T * T = S := by
   matrix_expand [T, S]
 
-/-- The anticommutator `{X,Y}` is zero. Marked simp as to put Pauli products in a canonical Y-X-Z order. -/
+/-- The anticommutator `{X,Y}` is zero. Marked simp as to put Pauli products in a canonical
+Y-X-Z order. -/
 @[simp]
 theorem X_Y_anticomm : X * Y = -Y * X := by
   matrix_expand [X, Y]
@@ -143,8 +145,8 @@ theorem T_Z_comm : Z * T = T * Z := by
 theorem S_T_comm : S * T = T * S := by
   simp [← T_sq, mul_assoc]
 
-/-- Given a unitary `U` on some Hilbert space `k`, we have the controllized version that acts on `Fin 2 ⊗ k`
-where `U` is conditionally applied if the first qubit is `1`. -/
+/-- Given a unitary `U` on some Hilbert space `k`, we have the controllized version that acts on
+`Fin 2 ⊗ k` where `U` is conditionally applied if the first qubit is `1`. -/
 def controllize (g : 𝐔[k]) : 𝐔[Qubit × k] :=
   ⟨Matrix.of fun (q₁,t₁) (q₂,t₂) ↦
     if (q₁,q₂) = (0,0) then

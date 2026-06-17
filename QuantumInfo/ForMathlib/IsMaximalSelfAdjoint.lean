@@ -9,8 +9,9 @@ public import Mathlib.Analysis.Matrix.Normed
 
 @[expose] public section
 
-/- We want to have `HermitianMat.trace` give 𝕜 when 𝕜 is already a TrivialStar field, but give the "clean" type
-otherwise -- for instance, ℝ when the input field is ℂ. This typeclass lets us do so. -/
+/- We want to have `HermitianMat.trace` give 𝕜 when 𝕜 is already a TrivialStar field, but give the
+"clean" type otherwise -- for instance, ℝ when the input field is ℂ. This typeclass lets us do
+so. -/
 class IsMaximalSelfAdjoint (R : outParam Type*) (α : Type*) [Star α] [Star R] [CommSemiring R]
     [Semiring α] [TrivialStar R] [Algebra R α] where
   selfadjMap : α →+ R
@@ -18,7 +19,8 @@ class IsMaximalSelfAdjoint (R : outParam Type*) (α : Type*) [Star α] [Star R] 
   selfadj_algebra : ∀ {a : α}, IsSelfAdjoint a → algebraMap _ _ (selfadjMap a) = a
 
 /-- Every `TrivialStar` `CommSemiring` is its own maximal self adjoints. -/
-instance instTrivialStar_IsMaximalSelfAdjoint {R} [Star R] [TrivialStar R] [CommSemiring R] : IsMaximalSelfAdjoint R R where
+instance instTrivialStar_IsMaximalSelfAdjoint {R} [Star R] [TrivialStar R] [CommSemiring R] :
+    IsMaximalSelfAdjoint R R where
   selfadjMap := AddMonoidHom.id R
   selfadj_smul _ __ := rfl
   selfadj_algebra {_} _ := rfl
@@ -36,7 +38,8 @@ namespace IsMaximalSelfAdjoint
 -- take care of proving that anyway.
 
 @[simp]
-theorem trivial_selfadjMap {R} [Star R] [TrivialStar R] [CommSemiring R] : (selfadjMap : R →+ R) = .id R := by
+theorem trivial_selfadjMap {R} [Star R] [TrivialStar R] [CommSemiring R] :
+    (selfadjMap : R →+ R) = .id R := by
   rfl
 
 @[simp]
