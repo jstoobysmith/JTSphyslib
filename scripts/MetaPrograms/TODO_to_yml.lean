@@ -50,6 +50,7 @@ inductive PhyslibCategory
   | StatisticalMechanics
   | Thermodynamics
   | QuantumInfo
+  | PhyslibAlpha
   | Other
 deriving BEq, DecidableEq
 
@@ -69,6 +70,7 @@ def PhyslibCategory.string :  PhyslibCategory → String
   | StatisticalMechanics => "Statistical Mechanics"
   | Thermodynamics => "Thermodynamics"
   | QuantumInfo => "Quantum Information"
+  | PhyslibAlpha => "Physlib Alpha"
   | Other => "Other"
 
 def PhyslibCategory.emoji : PhyslibCategory → String
@@ -87,6 +89,7 @@ def PhyslibCategory.emoji : PhyslibCategory → String
   | StatisticalMechanics => "🎲"
   | Thermodynamics => "🔥"
   | QuantumInfo => "💻"
+  | PhyslibAlpha => "🧪"
   | Other => "❓"
 
 def PhyslibCategory.List :  List PhyslibCategory :=
@@ -105,16 +108,14 @@ def PhyslibCategory.List :  List PhyslibCategory :=
     PhyslibCategory.StatisticalMechanics,
     PhyslibCategory.Thermodynamics,
     PhyslibCategory.QuantumInfo,
+    PhyslibCategory.PhyslibAlpha,
     PhyslibCategory.Other]
 
 instance : ToString PhyslibCategory where
   toString := PhyslibCategory.string
 
 def PhyslibCategory.ofFileName (n : Name) : PhyslibCategory :=
-  /- `PhyslibAlpha` mirrors the directory structure of `Physlib`, so we
-    normalise the `PhyslibAlpha.` prefix to `Physlib.` and categorise by
-    physics topic in the same way. -/
-  let s : String := n.toString.replace "PhyslibAlpha." "Physlib."
+  let s : String := n.toString
   if s.startsWith "Physlib.ClassicalMechanics"  then
     PhyslibCategory.ClassicalMechanics
   else if s.startsWith "Physlib.CondensedMatter" then
@@ -143,6 +144,8 @@ def PhyslibCategory.ofFileName (n : Name) : PhyslibCategory :=
     PhyslibCategory.Thermodynamics
   else if s.startsWith "Physlib.QuantumInfo" then
     PhyslibCategory.QuantumInfo
+  else if s.startsWith "PhyslibAlpha" then
+    PhyslibCategory.PhyslibAlpha
   else
     PhyslibCategory.Other
 
