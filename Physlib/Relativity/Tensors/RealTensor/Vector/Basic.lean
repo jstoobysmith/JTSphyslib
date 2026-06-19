@@ -54,6 +54,12 @@ def equivEuclid (d : ℕ) :
 lemma equivEuclid_apply (d : ℕ) (v : Vector d) (i : Fin 1 ⊕ Fin d) :
     equivEuclid d v i = v i := rfl
 
+@[ext]
+lemma eq_of_apply_eq {d : ℕ} {v w : Vector d} (h : ∀ i, v i = w i) : v = w := by
+  apply (equivEuclid d).injective
+  ext i
+  simpa using h i
+
 instance (d : ℕ) : Norm (Vector d) where
   norm := fun v => ‖equivEuclid d v‖
 
