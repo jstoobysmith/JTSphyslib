@@ -540,6 +540,10 @@ And their interactions with
 - actions
 -/
 
+TODO "Rename `PermCond` to `IsReindexing` (or similar)
+  and move it to it's own file system. Move the results from
+  ./Product related to `PermCond` to that file as well."
+
 /-- Given two lists of indices `c : Fin n → C` and `c1 : Fin m → C` a map
   `σ : Fin m → Fin n` satisfies the condition `PermCond c c1 σ` if it is:
 - A bijection
