@@ -213,10 +213,10 @@ def noLintArray : IO (Array FilePath) := do
   let lines ← IO.FS.lines path
   return lines.map (fun l ↦ mkFilePath [l])
 
-/-- The array of modules exempt from all linters, read from `scripts/LinterExcemption.txt`.
+/-- The array of modules exempt from all linters, read from `scripts/LinterExemption.txt`.
   This is used to lint `QuantumInfo` file-by-file. -/
 def linterExemptions : IO (Array FilePath) := do
-  let path := (mkFilePath ["scripts", "LinterExcemption"]).addExtension "txt"
+  let path := (mkFilePath ["scripts", "LinterExemption"]).addExtension "txt"
   unless (← path.pathExists) do return #[]
   let lines ← IO.FS.lines path
   return lines.filterMap (fun l ↦ if l.trim == "" then none else some (mkFilePath [l.trim]))
