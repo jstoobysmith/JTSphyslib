@@ -21,11 +21,7 @@ by its tensor structure.
 @[expose] public section
 
 
-open Module
-open Matrix
-open MatrixGroups
-open Complex
-open TensorProduct
+open Module Matrix MatrixGroups Complex TensorProduct
 
 noncomputable section
 
