@@ -44,15 +44,20 @@ open ComplexConjugate
   The `I` in the Name is an indication of the statement that this has no discrete quotients. -/
 def GaugeGroupI : Type :=
   specialUnitaryGroup (Fin 3) ℂ × specialUnitaryGroup (Fin 2) ℂ × unitary ℂ
-deriving Group
 
 namespace GaugeGroupI
+
+instance : Group GaugeGroupI :=
+  inferInstanceAs (Group (specialUnitaryGroup (Fin 3) ℂ × specialUnitaryGroup (Fin 2) ℂ ×
+    unitary ℂ))
 
 /-- The underlying element of `SU(2)` of an element in `GaugeGroupI`. -/
 def toSU2 : GaugeGroupI →* specialUnitaryGroup (Fin 2) ℂ where
   toFun g := g.2.1
   map_one' := rfl
   map_mul' _ _ := rfl
+
+-- example (g : specialUnitaryGroup (Fin 2) ℂ) : toSU2 g = g := by sorry
 
 /-- The underlying element of `U(1)` of an element in `GaugeGroupI`. -/
 def toU1 : GaugeGroupI →* unitary ℂ where
@@ -170,6 +175,7 @@ lemma gaugeGroupI_smul_inner (g : GaugeGroupI) (φ ψ : HiggsVec) :
     -- Express the Hermitian inner product as a dot product with the conjugated first argument:
     -- `⟪a, b⟫ = b ⬝ᵥ star a`.
     _ = WithLp.ofLp (g • ψ) ⬝ᵥ star (WithLp.ofLp (g • φ)) := by
+      -- rw [one_mul]
       rw [EuclideanSpace.inner_eq_star_dotProduct]
     -- Unfold the action on both vectors: `g • x = S *ᵥ (U³ • x)`.
     _ = (g.toSU2.1 *ᵥ (g.toU1 ^ 3 • ψ)) ⬝ᵥ star (g.toSU2.1 *ᵥ (g.toU1 ^ 3 • φ)) := by
