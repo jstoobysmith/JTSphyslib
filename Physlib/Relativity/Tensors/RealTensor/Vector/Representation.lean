@@ -54,7 +54,7 @@ lemma rep_apply_basis {d} (μ : Fin 1 ⊕ Fin d) (Λ : LorentzGroup d) :
   simp [rep_apply_eq_sum, apply_sum]
 
 lemma rep_toMatrix (d : ℕ) (Λ : LorentzGroup d) :
-    LinearMap.toMatrix basis basis (rep d Λ) = Λ.1 := by
+    LinearMap.toMatrix basis basis (rep Λ) = Λ.1 := by
   simp only [rep, MonoidHom.coe_mk, OneHom.coe_mk]
   exact (LinearEquiv.eq_symm_apply (LinearMap.toMatrix basis basis)).mp rfl
 
