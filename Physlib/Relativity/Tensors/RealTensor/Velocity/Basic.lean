@@ -160,7 +160,7 @@ noncomputable def pathFromZero (u : Velocity d) : Path zero u where
   source' := by
     simp
   target' := by
-    ext
+    ext1
     simp only [Set.Icc.coe_one,
       one_pow, one_mul, Fin.isValue, mul_one, one_smul, add_eq_right, smul_eq_zero]
     left
