@@ -38,6 +38,17 @@ open ComplexConjugate
 
 ## A. The gauge group of the Standard Model
 
+**Talk step 1 — What is a type?**
+
+In Lean every expression has a *type*, and a type is itself a term of the universe `Type`. Think
+of a type as the collection of mathematical objects of a given kind: `ℕ` is the type of natural
+numbers, `ℝ` the type of real numbers, and the `GaugeGroupI` defined below is the type whose terms
+are elements of the Standard Model gauge group `SU(3) × SU(2) × U(1)`.
+
+Writing `def GaugeGroupI : Type := ...` introduces a brand-new named object and tells the kernel
+exactly what its elements are. At this stage that is *all* Lean knows about it — a collection of
+elements, with no further structure attached yet.
+
 -/
 
 /-- The global gauge group of the Standard Model with no discrete quotients.
@@ -47,9 +58,21 @@ def GaugeGroupI : Type :=
 
 namespace GaugeGroupI
 
+/-!
+
+**Talk step 2 — What is an instance?**
+
+-/
+
 instance : Group GaugeGroupI :=
   inferInstanceAs (Group (specialUnitaryGroup (Fin 3) ℂ × specialUnitaryGroup (Fin 2) ℂ ×
     unitary ℂ))
+
+/-!
+
+**Talk step 3 — How do definitions work?**
+
+-/
 
 /-- The underlying element of `SU(2)` of an element in `GaugeGroupI`. -/
 def toSU2 : GaugeGroupI →* specialUnitaryGroup (Fin 2) ℂ where
@@ -57,7 +80,15 @@ def toSU2 : GaugeGroupI →* specialUnitaryGroup (Fin 2) ℂ where
   map_one' := rfl
   map_mul' _ _ := rfl
 
+/-!
+
+**Talk step 4 — How the type system rules out nonsense.**
+
+-/
+
 -- example (g : specialUnitaryGroup (Fin 2) ℂ) : toSU2 g = g := by sorry
+
+example (g : specialUnitaryGroup (Fin 2) ℂ) : toSU2 ⟨1, g, 1⟩ = g := by rfl
 
 /-- The underlying element of `U(1)` of an element in `GaugeGroupI`. -/
 def toU1 : GaugeGroupI →* unitary ℂ where
@@ -80,9 +111,6 @@ later.
 /-- The vector space `HiggsVec` is defined to be the complex Euclidean space of dimension 2.
   For a given spacetime point a Higgs field gives a value in `HiggsVec`. -/
 abbrev HiggsVec := EuclideanSpace ℂ (Fin 2)
-
--- An example of Lean catching something which is mathematically inconsistent.
--- example (g : GaugeGroupI) (φ : HiggsVec) : g = φ := by sorry
 
 namespace HiggsVec
 
@@ -160,6 +188,8 @@ instance : SMulCommClass ℂ GaugeGroupI HiggsVec where
 
 The action of `StandardModel.GaugeGroupI` on `HiggsVec` is unitary.
 
+**Talk step 5 — Lemmas, tactics and `calc`.**
+
 -/
 open InnerProductSpace
 
@@ -175,7 +205,6 @@ lemma gaugeGroupI_smul_inner (g : GaugeGroupI) (φ ψ : HiggsVec) :
     -- Express the Hermitian inner product as a dot product with the conjugated first argument:
     -- `⟪a, b⟫ = b ⬝ᵥ star a`.
     _ = WithLp.ofLp (g • ψ) ⬝ᵥ star (WithLp.ofLp (g • φ)) := by
-      -- rw [one_mul]
       rw [EuclideanSpace.inner_eq_star_dotProduct]
     -- Unfold the action on both vectors: `g • x = S *ᵥ (U³ • x)`.
     _ = (g.toSU2.1 *ᵥ (g.toU1 ^ 3 • ψ)) ⬝ᵥ star (g.toSU2.1 *ᵥ (g.toU1 ^ 3 • φ)) := by
