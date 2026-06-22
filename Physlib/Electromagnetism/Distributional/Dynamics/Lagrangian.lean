@@ -88,10 +88,10 @@ noncomputable def gradFreeCurrentPotential {d} :
     cont := by fun_prop
   }
   map_add' J₁ J₂ := by
-    ext ε
+    ext1 ε
     simp [Finset.sum_add_distrib, add_smul]
   map_smul' r J := by
-    ext ε
+    ext1 ε
     simp [Finset.smul_sum, smul_smul]
     congr
     funext i

@@ -73,7 +73,7 @@ lemma isExtrema_iff_components {𝓕 : FreeSpace}
     simp [h]
   · intro h
     rw [isExtrema_iff_gradLagrangian]
-    ext ε
+    ext1 ε
     funext i
     match i with
     | Sum.inl 0 => exact h.1 ε
@@ -219,7 +219,7 @@ lemma isExterma_iff_tensor {𝓕 : FreeSpace}
     exact h1
   · intro h
     simp only [IsExtrema]
-    ext x
+    ext1 x
     funext ν
     rw [gradLagrangian_eq_tensor A J, h]
     simp

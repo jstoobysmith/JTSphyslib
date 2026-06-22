@@ -161,7 +161,8 @@ noncomputable def ofPotentials {d} (c : SpeedOfLight) (ϕ : Time → Space d →
 lemma ofPotentials_eq_add {d} (c : SpeedOfLight) (ϕ : Time → Space d → ℝ)
     (A : Time → Space d → EuclideanSpace ℝ (Fin d)) :
     ofPotentials c ϕ A = ofScalarPotential c ϕ + ofVectorPotential c A := by
-  ext x
+  ext1
+  ext1 x
   refine Lorentz.Vector.ext_of_apply (fun i => ?_)
   match i with
   | Sum.inl 0 =>
