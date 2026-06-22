@@ -21,11 +21,7 @@ by its tensor structure.
 @[expose] public section
 
 
-open Module
-open Matrix
-open MatrixGroups
-open Complex
-open TensorProduct
+open Module Matrix MatrixGroups Complex TensorProduct
 
 noncomputable section
 
@@ -35,8 +31,8 @@ namespace Vector
 attribute [-simp] Fintype.sum_sum_type
 
 /-- The representation of the Lorentz group on Lorentz vectors. -/
-def rep (d : ℕ) : Representation ℝ (LorentzGroup d) (Vector d) where
-  toFun g := Matrix.toLinAlgEquiv basis g
+def rep {d : ℕ} : Representation ℝ (LorentzGroup d) (Vector d) where
+  toFun Λ := Matrix.toLinAlgEquiv basis Λ
   map_one' := EmbeddingLike.map_eq_one_iff.mpr rfl
   map_mul' x y := by simp only [lorentzGroupIsGroup_mul_coe, _root_.map_mul]
 
@@ -47,13 +43,13 @@ def rep (d : ℕ) : Representation ℝ (LorentzGroup d) (Vector d) where
 -/
 
 lemma rep_apply_eq_mulVec (d : ℕ) (Λ : LorentzGroup d) (v : Vector d) :
-    rep d Λ v = Λ *ᵥ v := by rfl
+    rep Λ v = Λ *ᵥ v := by rfl
 
 lemma rep_apply_eq_sum (d : ℕ) (Λ : LorentzGroup d) (v : Vector d) (k : Fin 1 ⊕ Fin d) :
-    rep d Λ v k = ∑ j, Λ.1 k j • v j := rfl
+    rep Λ v k = ∑ j, Λ.1 k j • v j := rfl
 
 lemma rep_apply_basis {d} (μ : Fin 1 ⊕ Fin d) (Λ : LorentzGroup d) :
-    rep d Λ (basis μ) = ∑ j, Λ.1 j μ • basis j := by
+    rep Λ (basis μ) = ∑ j, Λ.1 j μ • basis j := by
   ext k
   simp [rep_apply_eq_sum, apply_sum]
 
@@ -62,28 +58,28 @@ lemma rep_toMatrix (d : ℕ) (Λ : LorentzGroup d) :
   simp only [rep, MonoidHom.coe_mk, OneHom.coe_mk]
   exact (LinearEquiv.eq_symm_apply (LinearMap.toMatrix basis basis)).mp rfl
 
-lemma rep_injective (d : ℕ) (Λ : LorentzGroup d) : Function.Injective (rep d Λ) := by
+lemma rep_injective (d : ℕ) (Λ : LorentzGroup d) : Function.Injective (rep Λ) := by
   intro v1 v2 h
   rw [rep_apply_eq_mulVec, rep_apply_eq_mulVec] at h
   exact Matrix.mulVec_injective_of_isUnit (isUnit_of_invertible Λ.1) h
 
-lemma rep_surjective (d : ℕ) (Λ : LorentzGroup d) : Function.Surjective (rep d Λ) := by
+lemma rep_surjective (d : ℕ) (Λ : LorentzGroup d) : Function.Surjective (rep Λ) := by
   intro v
   use Λ⁻¹ *ᵥ v
   rw [rep_apply_eq_mulVec]
   simp
 
-lemma rep_bijective (d : ℕ) (Λ : LorentzGroup d) : Function.Bijective (rep d Λ) :=
+lemma rep_bijective (d : ℕ) (Λ : LorentzGroup d) : Function.Bijective (rep Λ) :=
   ⟨rep_injective d Λ, rep_surjective d Λ⟩
 
 @[fun_prop]
-lemma rep_contDiff (d : ℕ) {n} (Λ : LorentzGroup d) : ContDiff ℝ n (rep d Λ) := by
-  refine (contDiff_apply ⇑((rep d) Λ)).mp ?_
+lemma rep_contDiff (d : ℕ) {n} (Λ : LorentzGroup d) : ContDiff ℝ n (rep Λ) := by
+  refine (contDiff_apply ⇑(rep Λ)).mp ?_
   intro μ
   simp only [rep_apply_eq_sum, smul_eq_mul]
   fun_prop
 
-lemma rep_left_injective (d : ℕ) : Function.Injective (rep d) := by
+lemma rep_left_injective (d : ℕ) : Function.Injective (rep (d := d)) := by
   intro Λ Λ' h
   apply LorentzGroup.eq_of_mulVec_eq
   intro v
