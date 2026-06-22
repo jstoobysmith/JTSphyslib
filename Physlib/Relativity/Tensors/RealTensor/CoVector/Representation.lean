@@ -32,7 +32,7 @@ attribute [-simp] Fintype.sum_sum_type
 
 /-- The representation of the Lorentz group on Lorentz vectors. -/
 def rep (d : ℕ) : Representation ℝ (LorentzGroup d) (CoVector d) where
-  toFun g := Matrix.toLinAlgEquiv basis (LorentzGroup.transpose g⁻¹)
+  toFun Λ := Matrix.toLinAlgEquiv basis (LorentzGroup.transpose Λ⁻¹)
   map_one' := by
     simp only [inv_one, LorentzGroup.transpose_one, lorentzGroupIsGroup_one_coe, _root_.map_one]
   map_mul' x y := by
