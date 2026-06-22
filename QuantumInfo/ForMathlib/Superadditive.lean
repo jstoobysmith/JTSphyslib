@@ -7,8 +7,18 @@ module
 
 public import Mathlib.Analysis.Subadditive
 
+/-! # Superadditive sequences
+
+This file develops the basic theory of superadditive sequences `u : ℕ → ℝ`, mirroring
+Mathlib's `Subadditive`. A sequence is `Superadditive` when `u (m + n) ≥ u m + u n` for all
+`m n`, equivalently when `-u` is `Subadditive`. The main result is `Superadditive.tendsto_lim`,
+a version of Fekete's lemma: a superadditive sequence which is bounded above has `u n / n`
+converging to its supremum `Superadditive.lim`.
+-/
+
 @[expose] public section
 
+/-- A sequence `u : ℕ → ℝ` is superadditive if `u (m + n) ≥ u m + u n` for all `m n`. -/
 def Superadditive (u : ℕ → ℝ) : Prop :=
   ∀ m n, u (m + n) ≥ u m + u n
 
@@ -20,6 +30,8 @@ include h in
 theorem to_Subadditive : Subadditive (-u ·) :=
   (by dsimp; linarith [h · ·])
 
+/-- The limit of a superadditive sequence `u`, defined as the supremum of `u n / n` over `n ≥ 1`.
+By `Superadditive.tendsto_lim`, when `u` is bounded above this is the limit of `u n / n`. -/
 noncomputable def lim (_h : Superadditive u) :=
   sSup ((fun n : ℕ => u n / n) '' .Ici 1)
 
@@ -33,7 +45,7 @@ theorem tendsto_lim (hbdd : BddAbove (Set.range fun n => u n / n)) :
   )
   convert this.neg using 1
   · ext; rw [neg_div', neg_neg]
-  · simp only [lim, Subadditive.lim, Real.sInf_def, neg_neg, nhds_eq_nhds_iff,
+  · simp only [lim, Subadditive.lim, Real.sInf_def, neg_neg,
       ← Set.image_neg_eq_neg, Set.image_image, neg_div', neg_neg]
 
 end Superadditive

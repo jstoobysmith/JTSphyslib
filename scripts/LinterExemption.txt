@@ -61,7 +61,6 @@ QuantumInfo/ForMathlib/MatrixNorm/TraceNorm.lean
 QuantumInfo/ForMathlib/Minimax.lean
 QuantumInfo/ForMathlib/Misc.lean
 QuantumInfo/ForMathlib/SionMinimax.lean
-QuantumInfo/ForMathlib/Superadditive.lean
 QuantumInfo/ForMathlib/Tactic/Commutes.lean
 QuantumInfo/ForMathlib/Tactic/Commutes/Attribute.lean
 QuantumInfo/ForMathlib/ULift.lean
