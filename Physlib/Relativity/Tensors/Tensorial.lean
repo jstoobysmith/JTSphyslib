@@ -329,7 +329,8 @@ open Tensor in
   `toField (evalT 0 j (evalT 0 i (toTensor x)))` times `b i ⊗ₜ b2 j`. -/
 lemma prod_eq_sum_eval {c c2 : C} {M₂ : Type}
     [Tensorial S ![c] M] [AddCommMonoid M₂] [Module k M₂]
-    [Tensorial S ![c2] M₂] {b : Module.Basis (basisIdx c) k M} {b2 : Module.Basis (basisIdx c2) k M₂}
+    [Tensorial S ![c2] M₂] {b : Module.Basis (basisIdx c) k M}
+    {b2 : Module.Basis (basisIdx c2) k M₂}
     (h : b = ((Tensor.basis (S := S) ![c]).map toTensor.symm).reindex ComponentIdx.single)
     (h2 : b2 = ((Tensor.basis (S := S) ![c2]).map toTensor.symm).reindex ComponentIdx.single)
     (x : M ⊗[k] M₂) : x = ∑ i : (basisIdx c), ∑ j : (basisIdx c2),
