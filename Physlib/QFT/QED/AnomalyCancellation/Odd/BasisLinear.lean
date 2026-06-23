@@ -299,6 +299,7 @@ def basisAsCharges (j : Fin n) : (PureU1 (2 * n + 1)).Charges :=
 lemma basis_on_oddFst_self (j : Fin n) : basisAsCharges j (oddFst j) = 1 := by
   simp [basisAsCharges]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_oddFst_other {k j : Fin n} (h : k ≠ j) :
     basisAsCharges k (oddFst j) = 0 := by
   simp only [basisAsCharges, PureU1_numberCharges]
@@ -317,11 +318,13 @@ lemma basis_on_oddFst_other {k j : Fin n} (h : k ≠ j) :
       omega
     · rfl
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_other {k : Fin n} {j : Fin (2 * n + 1)} (h1 : j ≠ oddFst k) (h2 : j ≠ oddSnd k) :
     basisAsCharges k j = 0 := by
   simp only [basisAsCharges, PureU1_numberCharges]
   simp_all only [ne_eq, ↓reduceIte]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis_oddSnd_eq_minus_oddFst (j i : Fin n) :
     basisAsCharges j (oddSnd i) = - basisAsCharges j (oddFst i) := by
   simp only [basisAsCharges, PureU1_numberCharges, oddSnd, oddFst]
@@ -349,6 +352,7 @@ lemma basis_on_oddSnd_other {k j : Fin n} (h : k ≠ j) : basisAsCharges k (oddS
   rw [basis_oddSnd_eq_minus_oddFst, basis_on_oddFst_other h]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_oddMid (j : Fin n) : basisAsCharges j oddMid = 0 := by
   simp only [basisAsCharges, PureU1_numberCharges]
   split <;> rename_i h
@@ -386,10 +390,8 @@ lemma basis_linearACC (j : Fin n) : (accGrav (2 * n + 1)) (basisAsCharges j) = 0
 def basis (j : Fin n) : (PureU1 (2 * n + 1)).LinSols :=
   ⟨basisAsCharges j, by
     intro i
-    simp only [PureU1_numberLinear] at i
     match i with
-    | 0 =>
-    exact basis_linearACC j⟩
+    | ⟨0, _⟩ => exact basis_linearACC j⟩
 
 /-!
 
@@ -522,6 +524,7 @@ def basis!AsCharges (j : Fin n) : (PureU1 (2 * n + 1)).Charges :=
 lemma basis!_on_oddShiftFst_self (j : Fin n) : basis!AsCharges j (oddShiftFst j) = 1 := by
   simp [basis!AsCharges]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_oddShiftFst_other {k j : Fin n} (h : k ≠ j) :
     basis!AsCharges k (oddShiftFst j) = 0 := by
   simp only [basis!AsCharges, PureU1_numberCharges]
@@ -540,12 +543,14 @@ lemma basis!_on_oddShiftFst_other {k j : Fin n} (h : k ≠ j) :
       omega
     rfl
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_other {k : Fin n} {j : Fin (2 * n + 1)}
     (h1 : j ≠ oddShiftFst k) (h2 : j ≠ oddShiftSnd k) :
     basis!AsCharges k j = 0 := by
   simp only [basis!AsCharges, PureU1_numberCharges]
   simp_all only [ne_eq, ↓reduceIte]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis!_oddShiftSnd_eq_minus_oddShiftFst (j i : Fin n) :
     basis!AsCharges j (oddShiftSnd i) = - basis!AsCharges j (oddShiftFst i) := by
   simp only [basis!AsCharges, PureU1_numberCharges, oddShiftSnd, oddShiftFst]
@@ -571,6 +576,7 @@ lemma basis!_on_oddShiftSnd_other {k j : Fin n} (h : k ≠ j) :
   rw [basis!_oddShiftSnd_eq_minus_oddShiftFst, basis!_on_oddShiftFst_other h]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_oddShiftZero (j : Fin n) : basis!AsCharges j oddShiftZero = 0 := by
   simp only [basis!AsCharges, PureU1_numberCharges]
   split <;> rename_i h
@@ -608,10 +614,8 @@ lemma basis!_linearACC (j : Fin n) : (accGrav (2 * n + 1)) (basis!AsCharges j) =
 def basis! (j : Fin n) : (PureU1 (2 * n + 1)).LinSols :=
   ⟨basis!AsCharges j, by
     intro i
-    simp only [PureU1_numberLinear] at i
     match i with
-    | 0 =>
-    exact basis!_linearACC j⟩
+    | ⟨0, _⟩ => exact basis!_linearACC j⟩
 
 /-!
 
@@ -754,7 +758,7 @@ lemma P_P_P!_accCube (g : Fin n → ℚ) (j : Fin n) :
     accCubeTriLinSymm (P g) (P g) (basis!AsCharges j)
     = (P g (oddShiftFst j))^2 - (g j)^2 := by
   simp only [accCubeTriLinSymm, PureU1Charges_numberCharges, TriLinearSymm.mk₃_toFun_apply_apply]
-  rw [sum_oddShift, basis!_on_oddShiftZero]
+  erw [sum_oddShift, basis!_on_oddShiftZero]
   simp only [mul_zero, Function.comp_apply, zero_add]
   rw [Finset.sum_eq_single j, basis!_on_oddShiftFst_self, basis!_on_oddShiftSnd_self]
   · rw [← oddSnd_eq_oddShiftSnd, P_oddSnd]

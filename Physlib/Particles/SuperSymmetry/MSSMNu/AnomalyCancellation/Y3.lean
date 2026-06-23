@@ -69,7 +69,7 @@ lemma doublePoint_Y₃_Y₃ (R : MSSMACC.LinSols) :
     cubeTriLin Y₃.val Y₃.val R.val = 0 := by
   simp only [cubeTriLin, TriLinearSymm.mk₃_toFun_apply_apply, cubeTriLinToFun,
     MSSMSpecies_numberCharges]
-  rw [Fin.sum_univ_three]
+  erw [Fin.sum_univ_three]
   rw [Y₃_val]
   rw [Y₃AsCharge]
   repeat rw [toSMSpecies_toSpecies_inv]
@@ -79,7 +79,7 @@ lemma doublePoint_Y₃_Y₃ (R : MSSMACC.LinSols) :
   have hLin := R.linearSol
   simp only [MSSMACC_numberLinear, MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue,
     Fin.reduceFinMk] at hLin
-  have h3 := hLin 3
+  have h3 := hLin ⟨3, by simp⟩
   simp only [Fin.isValue, Fin.sum_univ_three, Prod.mk_zero_zero, Prod.mk_one_one, LinearMap.coe_mk,
     AddHom.coe_mk] at h3
   linear_combination (norm := ring_nf) 6 * h3

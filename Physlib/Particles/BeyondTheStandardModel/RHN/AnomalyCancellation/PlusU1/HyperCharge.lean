@@ -35,17 +35,15 @@ def Y₁ : (PlusU1 1).Sols where
     | (5 : Fin 6) => 0
   linearSol := by
     intro i
-    simp only [PlusU1_numberLinear] at i
     match i with
-    | 0 => with_unfolding_all rfl
-    | 1 => with_unfolding_all rfl
-    | 2 => with_unfolding_all rfl
-    | 3 => with_unfolding_all rfl
+    | ⟨0, _⟩ => with_unfolding_all rfl
+    | ⟨1, _⟩ => with_unfolding_all rfl
+    | ⟨2, _⟩ => with_unfolding_all rfl
+    | ⟨3, _⟩ => with_unfolding_all rfl
   quadSol := by
     intro i
-    simp only [PlusU1_numberQuadratic] at i
     match i with
-    | 0 => with_unfolding_all rfl
+    | ⟨0, _⟩ => with_unfolding_all rfl
   cubicSol := by with_unfolding_all rfl
 
 /-- The hypercharge for `n` family. -/
