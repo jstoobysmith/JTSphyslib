@@ -83,7 +83,7 @@ scoped[Space] notation "∇" => grad
 @[simp]
 lemma grad_zero : ∇ (0 : Space d → ℝ) = 0 := by
   unfold grad Space.deriv
-  simp only [fderiv_zero, Pi.zero_apply, ContinuousLinearMap.zero_apply]
+  simp only [fderiv_zero, Pi.zero_apply, _root_.zero_apply]
   rfl
 
 /-!
@@ -119,7 +119,7 @@ lemma grad_fun_add_const (f : Space d → ℝ) (c : ℝ) :
 @[simp]
 lemma grad_const : ∇ (fun _ : Space d => c) = 0 := by
   unfold grad Space.deriv
-  simp only [fderiv_fun_const, Pi.ofNat_apply, ContinuousLinearMap.zero_apply]
+  simp only [fderiv_fun_const, Pi.ofNat_apply, _root_.zero_apply]
   rfl
 
 /-!
@@ -407,7 +407,7 @@ lemma grad_inner {d : ℕ} :
   ext z i
   simp [Space.grad]
   rw [deriv]
-  simp only [fderiv_norm_sq_apply, ContinuousLinearMap.coe_smul', coe_innerSL_apply, Pi.smul_apply,
+  simp only [fderiv_norm_sq_apply, FunLike.coe_smul, coe_innerSL_apply, Pi.smul_apply,
     nsmul_eq_mul, Nat.cast_ofNat, mul_eq_mul_left_iff, OfNat.ofNat_ne_zero, or_false]
   simp
 
@@ -533,7 +533,7 @@ lemma distGrad_inner_eq {d} (f : (Space d) →d[ℝ] ℝ) (η : 𝓢(Space d, �
     (y : EuclideanSpace ℝ (Fin d)) : ⟪∇ᵈ f η, y⟫_ℝ = fderivD ℝ f η (basis.repr.symm y) := by
   rw [distGrad]
   simp only [LinearIsometryEquiv.toLinearEquiv_symm, LinearMap.coe_mk, AddHom.coe_mk,
-    ContinuousLinearMap.coe_comp', LinearMap.coe_toContinuousLinearMap', LinearEquiv.coe_coe,
+    ContinuousLinearMap.coe_comp, LinearMap.coe_toContinuousLinearMap', LinearEquiv.coe_coe,
     LinearIsometryEquiv.coe_toLinearEquiv, LinearIsometryEquiv.coe_symm_toLinearEquiv,
     Function.comp_apply, basis_repr_inner_eq, toDual_symm_apply]
 

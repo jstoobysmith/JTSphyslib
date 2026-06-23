@@ -160,7 +160,7 @@ lemma deriv_normPowerSeries {d} (n : ℕ) (x : Space d) (i : Fin d) :
   rw [deriv_eq_fderiv_basis]
   rw [normPowerSeries_eq]
   rw [fderiv_sqrt]
-  simp only [one_div, mul_inv_rev, fderiv_add_const, ContinuousLinearMap.coe_smul', Pi.smul_apply,
+  simp only [one_div, mul_inv_rev, fderiv_add_const, FunLike.coe_smul, Pi.smul_apply,
     smul_eq_mul]
   rw [← deriv_eq_fderiv_basis]
   rw [deriv_norm_sq]
@@ -441,7 +441,7 @@ lemma deriv_normPowerSeries_zpow {d : ℕ} {n : ℕ} (m : ℤ) (x : Space d) (i 
   rw [deriv_eq_fderiv_basis]
   change (fderiv ℝ ((fun x => x ^ m) ∘ normPowerSeries n) x) (basis i) = _
   rw [fderiv_comp]
-  simp only [ContinuousLinearMap.coe_comp', Function.comp_apply, fderiv_eq_smul_deriv, deriv_zpow',
+  simp only [ContinuousLinearMap.coe_comp, Function.comp_apply, fderiv_eq_smul_deriv, deriv_zpow',
     smul_eq_mul]
   rw [fderiv_normPowerSeries]
   simp only [basis_inner]
@@ -474,7 +474,7 @@ lemma deriv_log_normPowerSeries {d : ℕ} {n : ℕ} (x : Space d) (i : Fin d) :
   rw [deriv_eq_fderiv_basis]
   change (fderiv ℝ (Real.log ∘ normPowerSeries n) x) (basis i) = _
   rw [fderiv_comp,]
-  simp only [ContinuousLinearMap.coe_comp', Function.comp_apply, fderiv_eq_smul_deriv,
+  simp only [ContinuousLinearMap.coe_comp, Function.comp_apply, fderiv_eq_smul_deriv,
     Real.deriv_log', smul_eq_mul, Int.reduceNeg, zpow_neg]
   rw [fderiv_normPowerSeries]
   simp [zpow_ofNat, sq]
@@ -1401,7 +1401,7 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
         simp only [Nat.succ_eq_add_one, integral_const, Measure.toSphere_real_apply_univ,
           finrank_eq_dim, Nat.cast_add, Nat.cast_one, smul_eq_mul, mul_neg, neg_neg]
         ring
-  simp only [Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one, ContinuousLinearMap.coe_smul',
+  simp only [Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one, FunLike.coe_smul,
     Pi.smul_apply, diracDelta_apply, smul_eq_mul]
   ring
 

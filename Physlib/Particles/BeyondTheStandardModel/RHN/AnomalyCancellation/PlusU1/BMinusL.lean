@@ -61,7 +61,7 @@ lemma on_quadBiLin (S : (PlusU1 n).Charges) :
     quadBiLin (BL n).val S = 1/2 * accYY S + 3/2 * accSU2 S - 2 * accSU3 S := by
   erw [familyUniversal_quadBiLin]
   rw [accYY_decomp, accSU2_decomp, accSU3_decomp]
-  simp only [Fin.isValue, BL₁_val, SMνSpecies_numberCharges, toSpecies_apply, one_mul, mul_neg,
+  simp only [Fin.isValue, BL₁_val, toSpecies_apply, one_mul, mul_neg,
     mul_one, neg_mul, sub_neg_eq_add]
   ring
 
@@ -94,7 +94,7 @@ lemma on_cubeTriLin (S : (PlusU1 n).Charges) :
     cubeTriLin (BL n).val (BL n).val S = 9 * accGrav S - 24 * accSU3 S := by
   erw [familyUniversal_cubeTriLin']
   rw [accGrav_decomp, accSU3_decomp]
-  simp only [Fin.isValue, BL₁_val, mul_one, SMνSpecies_numberCharges, toSpecies_apply, mul_neg,
+  simp only [Fin.isValue, BL₁_val, mul_one, toSpecies_apply, mul_neg,
     neg_neg, neg_mul]
   ring
 

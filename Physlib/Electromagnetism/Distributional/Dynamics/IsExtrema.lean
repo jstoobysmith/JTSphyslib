@@ -261,7 +261,7 @@ lemma isExterma_equivariant {𝓕 : FreeSpace}
     simp only [one_div, map_smul, map_neg,
       _root_.smul_add, actionT_smul, _root_.smul_neg, _root_.smul_zero]
     simpa only [Fin.isValue, schwartzAction_mul_apply, inv_mul_cancel, map_one,
-      ContinuousLinearMap.one_apply, smul_add, actionT_smul, smul_neg] using h (schwartzAction Λ x)
+      one_apply_eq_self, smul_add, actionT_smul, smul_neg] using h (schwartzAction Λ x)
   · intro h x
     rw [isExterma_iff_tensor A J] at h
     specialize h (schwartzAction Λ⁻¹ x)

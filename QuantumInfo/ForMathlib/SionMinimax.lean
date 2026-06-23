@@ -56,7 +56,7 @@ theorem ciInf_eq_min_cInf_inter_diff (S T : Set ι)
     constructor
     <;> (
       apply le_ciInf
-      simp only [Subtype.forall, Set.mem_diff, Set.mem_inter_iff, and_imp]
+      simp only [Subtype.forall, Set.mem_sdiff, Set.mem_inter_iff, and_imp]
       refine fun a ha hb ↦ ciInf_le ?_ (⟨a, ha⟩ : S)
       simp_all [Set.range]
       exact hf

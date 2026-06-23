@@ -115,7 +115,7 @@ theorem linesInPlane_constAbs {S : (PureU1 (n.succ.succ.succ.succ.succ)).LinSols
   intro i j
   by_cases hij : i ≠ j
   · exact linesInPlane_eq_sq hS i j hij
-  · simp only [Nat.succ_eq_add_one, PureU1_numberCharges, ne_eq, Decidable.not_not] at hij
+  · simp only [Nat.succ_eq_add_one, ne_eq, Decidable.not_not] at hij
     rw [hij]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -174,7 +174,7 @@ lemma linesInPlane_constAbs_four (S : (PureU1 4).Sols)
   intro i j
   by_cases hij : i ≠ j
   · exact linesInPlane_eq_sq_four hS i j hij
-  · simp only [PureU1_numberCharges, ne_eq, Decidable.not_not] at hij
+  · simp only [ne_eq, Decidable.not_not] at hij
     rw [hij]
 
 theorem linesInPlane_constAbs_AF (S : (PureU1 (n.succ.succ.succ.succ)).Sols)

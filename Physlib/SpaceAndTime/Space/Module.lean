@@ -598,7 +598,7 @@ lemma fderiv_space_components {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
     fderiv ℝ f m dm μ = fderiv ℝ (fun m' => f m' μ) m dm := by
   trans fderiv ℝ (Space.coordCLM μ ∘ fun m' => f m') m dm
   · rw [fderiv_comp _ (by fun_prop) (by fun_prop), ContinuousLinearMap.fderiv,
-      ContinuousLinearMap.coe_comp', Function.comp_apply]
+      ContinuousLinearMap.coe_comp, Function.comp_apply]
     simp [coordCLM, coord_apply]
   · congr
     ext i
@@ -784,7 +784,6 @@ lemma differentiable_vadd {d} (v : EuclideanSpace ℝ (Fin d)) :
 lemma fderiv_vadd {d} (v : EuclideanSpace ℝ (Fin d)) :
     fderiv ℝ (fun s => v +ᵥ s) = fun (_ : Space d) => ContinuousLinearMap.id ℝ _ := by
   ext s ds i
-  change fderiv ℝ (fun s => v +ᵥ s) s ds i = _
   rw [fderiv_space_components]
   simp only [vadd_apply, fderiv_const_add, ContinuousLinearMap.coe_id', id_eq]
   trans fderiv ℝ (coordCLM i) s ds

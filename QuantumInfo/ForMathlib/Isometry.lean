@@ -573,7 +573,7 @@ theorem star_shared_mul_B_mul_IsDiag : IsDiag
   simp_all [ Matrix.mul_apply, dotProduct ];
   by_cases hij : i = j
   · simp [ hij ];
-    simp [ hij, Pi.single_apply, Matrix.mulVec, dotProduct ];
+    simp [Matrix.mulVec, dotProduct ];
     simp only [Finset.mul_sum, mul_left_comm];
     rw [ Finset.sum_comm ]
     simp [ mul_comm, mul_left_comm, Finset.mul_sum]

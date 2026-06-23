@@ -67,8 +67,7 @@ lemma Y₃_val : Y₃.val = Y₃AsCharge := by
 set_option backward.isDefEq.respectTransparency false in
 lemma doublePoint_Y₃_Y₃ (R : MSSMACC.LinSols) :
     cubeTriLin Y₃.val Y₃.val R.val = 0 := by
-  simp only [cubeTriLin, TriLinearSymm.mk₃_toFun_apply_apply, cubeTriLinToFun,
-    MSSMSpecies_numberCharges]
+  simp only [cubeTriLin, TriLinearSymm.mk₃_toFun_apply_apply, cubeTriLinToFun]
   erw [Fin.sum_univ_three]
   rw [Y₃_val]
   rw [Y₃AsCharge]
@@ -77,8 +76,7 @@ lemma doublePoint_Y₃_Y₃ (R : MSSMACC.LinSols) :
   simp only [mul_one, Fin.isValue, toSMSpecies_apply, one_mul, mul_neg, neg_mul, neg_neg, mul_zero,
     zero_mul, add_zero, Hd_apply, Fin.reduceFinMk, Hu_apply]
   have hLin := R.linearSol
-  simp only [MSSMACC_numberLinear, MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue,
-    Fin.reduceFinMk] at hLin
+  simp only [MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue, Fin.reduceFinMk] at hLin
   have h3 := hLin ⟨3, by simp⟩
   simp only [Fin.isValue, Fin.sum_univ_three, Prod.mk_zero_zero, Prod.mk_one_one, LinearMap.coe_mk,
     AddHom.coe_mk] at h3

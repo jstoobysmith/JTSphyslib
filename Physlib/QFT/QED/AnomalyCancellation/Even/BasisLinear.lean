@@ -253,7 +253,7 @@ lemma basis_on_evenFst_self (j : Fin n.succ) : basisAsCharges j (evenFst j) = 1 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_evenFst_other {k j : Fin n.succ} (h : k ≠ j) :
     basisAsCharges k (evenFst j) = 0 := by
-  simp only [basisAsCharges, succ_eq_add_one, PureU1_numberCharges, evenFst, evenSnd]
+  simp only [basisAsCharges, succ_eq_add_one, evenFst, evenSnd]
   split
   · rename_i h1
     rw [Fin.ext_iff] at h1
@@ -272,13 +272,13 @@ lemma basis_on_evenFst_other {k j : Fin n.succ} (h : k ≠ j) :
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_other {k : Fin n.succ} {j : Fin (2 * n.succ)} (h1 : j ≠ evenFst k)
     (h2 : j ≠ evenSnd k) : basisAsCharges k j = 0 := by
-  simp only [basisAsCharges, succ_eq_add_one, PureU1_numberCharges]
+  simp only [basisAsCharges, succ_eq_add_one]
   simp_all only [ne_eq, ↓reduceIte]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_evenSnd_eq_neg_evenFst (j i : Fin n.succ) :
     basisAsCharges j (evenSnd i) = - basisAsCharges j (evenFst i) := by
-  simp only [basisAsCharges, succ_eq_add_one, PureU1_numberCharges, evenSnd, evenFst]
+  simp only [basisAsCharges, succ_eq_add_one, evenSnd, evenFst]
   split <;> split
   any_goals split
   any_goals rfl
@@ -376,7 +376,7 @@ lemma P_evenSnd (f : Fin n.succ → ℚ) (j : Fin n.succ) : P f (evenSnd j) = - 
 
 lemma P_evenSnd_evenFst (f : Fin n.succ → ℚ) : P f ∘ evenSnd = - P f ∘ evenFst := by
   funext j
-  simp only [PureU1_numberCharges, Function.comp_apply, Pi.neg_apply]
+  simp only [Function.comp_apply, Pi.neg_apply]
   rw [P_evenFst, P_evenSnd]
 
 /-!
@@ -501,13 +501,13 @@ lemma basis!_on_evenShiftFst_self (j : Fin n) : basis!AsCharges j (evenShiftFst 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_other {k : Fin n} {j : Fin (2 * n.succ)} (h1 : j ≠ evenShiftFst k)
     (h2 : j ≠ evenShiftSnd k) : basis!AsCharges k j = 0 := by
-  simp only [basis!AsCharges, succ_eq_add_one, PureU1_numberCharges]
+  simp only [basis!AsCharges, succ_eq_add_one]
   simp_all only [ne_eq, ↓reduceIte]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_evenShiftFst_other {k j : Fin n} (h : k ≠ j) :
     basis!AsCharges k (evenShiftFst j) = 0 := by
-  simp only [basis!AsCharges, succ_eq_add_one, PureU1_numberCharges]
+  simp only [basis!AsCharges, succ_eq_add_one]
   simp only [evenShiftFst, succ_eq_add_one, evenShiftSnd]
   split
   · rename_i h1
@@ -526,7 +526,7 @@ lemma basis!_on_evenShiftFst_other {k j : Fin n} (h : k ≠ j) :
 set_option backward.isDefEq.respectTransparency false in
 lemma basis!_evenShftSnd_eq_neg_evenShiftFst (j i : Fin n) :
     basis!AsCharges j (evenShiftSnd i) = - basis!AsCharges j (evenShiftFst i) := by
-  simp only [basis!AsCharges, succ_eq_add_one, PureU1_numberCharges, evenShiftSnd, evenShiftFst]
+  simp only [basis!AsCharges, succ_eq_add_one, evenShiftSnd, evenShiftFst]
   split <;> split
   any_goals split
   any_goals split
@@ -555,7 +555,7 @@ lemma basis!_on_evenShiftSnd_other {k j : Fin n} (h : k ≠ j) :
 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_evenShiftZero (j : Fin n) : basis!AsCharges j evenShiftZero = 0 := by
-  simp only [basis!AsCharges, succ_eq_add_one, PureU1_numberCharges]
+  simp only [basis!AsCharges, succ_eq_add_one]
   split<;> rename_i h
   · simp only [evenShiftZero, succ_eq_add_one, Fin.isValue, evenShiftFst, Fin.ext_iff,
     Fin.val_cast, Fin.val_castAdd, Fin.val_eq_zero, Fin.val_natAdd] at h
@@ -568,7 +568,7 @@ lemma basis!_on_evenShiftZero (j : Fin n) : basis!AsCharges j evenShiftZero = 0 
 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis!_on_evenShiftLast (j : Fin n) : basis!AsCharges j evenShiftLast = 0 := by
-  simp only [basis!AsCharges, succ_eq_add_one, PureU1_numberCharges]
+  simp only [basis!AsCharges, succ_eq_add_one]
   split <;> rename_i h
   · rw [Fin.ext_iff] at h
     simp only [succ_eq_add_one, evenShiftLast, Fin.isValue, Fin.val_cast, Fin.val_natAdd,
@@ -786,7 +786,7 @@ set_option backward.isDefEq.respectTransparency false in
 lemma P_P_P!_accCube (g : Fin n.succ → ℚ) (j : Fin n) :
     accCubeTriLinSymm (P g) (P g) (basis!AsCharges j)
     = g (j.succ) ^ 2 - g (j.castSucc) ^ 2 := by
-  simp only [succ_eq_add_one, accCubeTriLinSymm, PureU1Charges_numberCharges,
+  simp only [succ_eq_add_one, accCubeTriLinSymm,
     TriLinearSymm.mk₃_toFun_apply_apply]
   erw [sum_evenShift, basis!_on_evenShiftZero, basis!_on_evenShiftLast]
   simp only [mul_zero, add_zero, Function.comp_apply, zero_add]
@@ -803,7 +803,7 @@ set_option backward.isDefEq.respectTransparency false in
 lemma P_P!_P!_accCube (g : Fin n → ℚ) (j : Fin n.succ) :
     accCubeTriLinSymm (P! g) (P! g) (basisAsCharges j)
     = (P! g (evenFst j))^2 - (P! g (evenSnd j))^2 := by
-  simp only [succ_eq_add_one, accCubeTriLinSymm, PureU1Charges_numberCharges,
+  simp only [succ_eq_add_one, accCubeTriLinSymm,
     TriLinearSymm.mk₃_toFun_apply_apply]
   erw [sum_even]
   simp only [Function.comp_apply]

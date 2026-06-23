@@ -33,7 +33,7 @@ open scoped InnerProductSpace RealInnerProductSpace Kronecker Matrix
 The operator norm of a matrix is the operator norm of the linear map it represents, with respect to the Euclidean norm.
 -/
 /-- The operator norm of a matrix, with respect to the Euclidean norm (l2 norm) on the domain and codomain. -/
-noncomputable def Matrix.opNorm [RCLike 𝕜] (A : Matrix m n 𝕜) : ℝ :=
+noncomputable def Matrix.opNorm (A : Matrix m n 𝕜) : ℝ :=
   ‖LinearMap.toContinuousLinearMap (Matrix.toEuclideanLin A)‖
 
 /-

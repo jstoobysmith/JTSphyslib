@@ -94,13 +94,13 @@ def accGrav : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (6 * Q S i + 3 * U S i + 3 * D S i + 2 * L S i + E S i)
   map_add' S T := by
     repeat rw [map_add]
-    simp only [SMSpecies_numberCharges, ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
+    simp only [ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
       Fin.isValue, mul_add]
     repeat rw [Finset.sum_add_distrib]
     ring
   map_smul' a S := by
     repeat rw [map_smul]
-    simp only [SMSpecies_numberCharges, HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
+    simp only [HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
       eq_ratCast, Rat.cast_eq_id, id_eq]
     repeat rw [Finset.sum_add_distrib]
     repeat rw [← Finset.mul_sum]
@@ -111,7 +111,7 @@ def accGrav : (SMCharges n).Charges →ₗ[ℚ] ℚ where
 lemma accGrav_ext {S T : (SMCharges n).Charges}
     (hj : ∀ (j : Fin 5), ∑ i, (toSpecies j) S i = ∑ i, (toSpecies j) T i) :
     accGrav S = accGrav T := by
-  simp only [accGrav, SMSpecies_numberCharges, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
+  simp only [accGrav, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
     AddHom.coe_mk]
   repeat rw [Finset.sum_add_distrib]
   repeat rw [← Finset.mul_sum]
@@ -123,13 +123,13 @@ def accSU2 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (3 * Q S i + L S i)
   map_add' S T := by
     repeat rw [map_add]
-    simp only [SMSpecies_numberCharges, ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
+    simp only [ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
       Fin.isValue, mul_add]
     repeat rw [Finset.sum_add_distrib]
     ring
   map_smul' a S := by
     repeat rw [map_smul]
-    simp only [SMSpecies_numberCharges, HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
+    simp only [ HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
       eq_ratCast, Rat.cast_eq_id, id_eq]
     repeat rw [Finset.sum_add_distrib]
     repeat rw [← Finset.mul_sum]
@@ -140,7 +140,7 @@ def accSU2 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
 lemma accSU2_ext {S T : (SMCharges n).Charges}
     (hj : ∀ (j : Fin 5), ∑ i, (toSpecies j) S i = ∑ i, (toSpecies j) T i) :
     accSU2 S = accSU2 T := by
-  simp only [accSU2, SMSpecies_numberCharges, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
+  simp only [accSU2, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
     AddHom.coe_mk]
   repeat rw [Finset.sum_add_distrib]
   repeat rw [← Finset.mul_sum]
@@ -152,13 +152,13 @@ def accSU3 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (2 * Q S i + U S i + D S i)
   map_add' S T := by
     repeat rw [map_add]
-    simp only [SMSpecies_numberCharges, ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
+    simp only [ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
       Fin.isValue, mul_add]
     repeat rw [Finset.sum_add_distrib]
     ring
   map_smul' a S := by
     repeat rw [map_smul]
-    simp only [SMSpecies_numberCharges, HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
+    simp only [HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
       eq_ratCast, Rat.cast_eq_id, id_eq]
     repeat rw [Finset.sum_add_distrib]
     repeat rw [← Finset.mul_sum]
@@ -169,7 +169,7 @@ def accSU3 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
 lemma accSU3_ext {S T : (SMCharges n).Charges}
     (hj : ∀ (j : Fin 5), ∑ i, (toSpecies j) S i = ∑ i, (toSpecies j) T i) :
     accSU3 S = accSU3 T := by
-  simp only [accSU3, SMSpecies_numberCharges, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
+  simp only [accSU3, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
     AddHom.coe_mk]
   repeat rw [Finset.sum_add_distrib]
   repeat rw [← Finset.mul_sum]
@@ -182,13 +182,13 @@ def accYY : (SMCharges n).Charges →ₗ[ℚ] ℚ where
     + 6 * E S i)
   map_add' S T := by
     repeat rw [map_add]
-    simp only [SMSpecies_numberCharges, ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
+    simp only [ACCSystemCharges.chargesAddCommMonoid_add, toSpecies_apply,
       Fin.isValue, mul_add]
     repeat rw [Finset.sum_add_distrib]
     ring
   map_smul' a S := by
     repeat rw [map_smul]
-    simp only [SMSpecies_numberCharges, HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
+    simp only [HSMul.hSMul, SMul.smul, toSpecies_apply, Fin.isValue,
       eq_ratCast, Rat.cast_eq_id, id_eq]
     repeat rw [Finset.sum_add_distrib]
     repeat rw [← Finset.mul_sum]
@@ -198,7 +198,7 @@ def accYY : (SMCharges n).Charges →ₗ[ℚ] ℚ where
 lemma accYY_ext {S T : (SMCharges n).Charges}
     (hj : ∀ (j : Fin 5), ∑ i, (toSpecies j) S i = ∑ i, (toSpecies j) T i) :
     accYY S = accYY T := by
-  simp only [accYY, SMSpecies_numberCharges, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
+  simp only [accYY, toSpecies_apply, Fin.isValue, LinearMap.coe_mk,
     AddHom.coe_mk]
   repeat rw [Finset.sum_add_distrib]
   repeat rw [← Finset.mul_sum]
@@ -233,7 +233,7 @@ def quadBiLin : BiLinearSymm (SMCharges n).Charges := BiLinearSymm.mk₂
     ring)
   (by
     intro S T
-    simp only [SMSpecies_numberCharges, toSpecies_apply, Fin.isValue, neg_mul, one_mul]
+    simp only [toSpecies_apply, Fin.isValue, neg_mul, one_mul]
     apply Fintype.sum_congr
     intro i
     ring)
@@ -284,13 +284,13 @@ def cubeTriLin : TriLinearSymm (SMCharges n).Charges := TriLinearSymm.mk₃
     ring)
   (by
     intro S T L
-    simp only [SMSpecies_numberCharges, toSpecies_apply, Fin.isValue]
+    simp only [toSpecies_apply, Fin.isValue]
     apply Fintype.sum_congr
     intro i
     ring)
   (by
     intro S T L
-    simp only [SMSpecies_numberCharges, toSpecies_apply, Fin.isValue]
+    simp only [toSpecies_apply, Fin.isValue]
     apply Fintype.sum_congr
     intro i
     ring)

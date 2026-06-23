@@ -29,10 +29,10 @@ abbrev PEnsemble (d : Type*) (α : Type*) [Fintype d] [Fintype α] := ProbDistri
 variable {α β d : Type*} [Fintype α] [Fintype β] [Fintype d] [DecidableEq d]
 
 /-- Alias for `ProbDistribution.var` for mixed-state ensembles. -/
-abbrev MEnsemble.states [Fintype α] : MEnsemble d α → (α → MState d) := ProbDistribution.RandVar.var
+abbrev MEnsemble.states : MEnsemble d α → (α → MState d) := ProbDistribution.RandVar.var
 
 /-- Alias for `ProbDistribution.var` for pure-state ensembles. -/
-abbrev PEnsemble.states [Fintype α] : PEnsemble d α → (α → Ket d) := ProbDistribution.RandVar.var
+abbrev PEnsemble.states : PEnsemble d α → (α → Ket d) := ProbDistribution.RandVar.var
 
 namespace Ensemble
 

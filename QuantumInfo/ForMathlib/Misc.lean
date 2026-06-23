@@ -148,7 +148,7 @@ lemma Multiset.map_univ_eq_iff {α β : Type*} [Fintype α] (f g : α → β) :
       specialize e ( f x )
       rename_i e_1
       simp_all only [implies_true, Equiv.trans_apply, Equiv.sigmaCongrRight_apply,
-        Equiv.sigmaFiberEquiv_symm_apply_fst, Equiv.sigmaFiberEquiv_apply]
+        Equiv.sigmaFiberEquiv_apply]
       exact Eq.symm ( e_1 ( f x ) ⟨ x, rfl ⟩ |>.2 );
     exact ⟨ h_perm.choose, funext h_perm.choose_spec ⟩;
   · intro a

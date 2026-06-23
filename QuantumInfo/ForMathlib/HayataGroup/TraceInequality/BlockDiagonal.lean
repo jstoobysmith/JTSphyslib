@@ -120,7 +120,7 @@ noncomputable def blockDiagonalHom : (L ℋ × L ℋ) →⋆ₐ[ℝ] L (HSum ℋ
     intro p q
     ext z i
     fin_cases i <;>
-      simp [blockDiagonal, hsumProj, hsumIncl, hsumEquiv, ContinuousLinearMap.add_apply]
+      simp [blockDiagonal, hsumProj, hsumIncl, hsumEquiv, add_apply]
   commutes' := by
     intro r
     ext z i

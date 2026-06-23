@@ -651,7 +651,7 @@ private lemma c'_bounded {mineig : ℝ} {ε2 : ℕ → ℝ≥0}
       exact le_trans ( Filter.Tendsto.add ( tendsto_const_nhds.add <| Filter.Tendsto.mul tendsto_const_nhds <| Filter.Tendsto.inv_tendsto_atTop <| Filter.tendsto_atTop_atTop.mpr fun x => ⟨ x + 1, fun y hy => le_max_of_le_left <| by linarith ⟩ ) <| Filter.Tendsto.mul ( tendsto_const_nhds.add <| Filter.Tendsto.mul tendsto_const_nhds <| Filter.Tendsto.inv_tendsto_atTop <| Filter.tendsto_atTop_atTop.mpr fun x => ⟨ x + 1, fun y hy => le_max_of_le_left <| by linarith ⟩ ) <| tendsto_inv_atTop_zero ) <| by norm_num;
     exact ⟨ _, h_bound.eventually ( ge_mem_nhds <| lt_add_one _ ) ⟩;
   intro c c' a
-  simp_all only [one_div, Real.log_inv, Filter.eventually_atTop, ge_iff_le, Nat.cast_max, Nat.cast_one,
+  simp_all only [one_div, Real.log_inv, Filter.eventually_atTop, Nat.cast_max, Nat.cast_one,
     lt_neg_add_iff_add_lt, add_zero, sup_le_iff, c, c']
   obtain ⟨w, ⟨w_1, h⟩⟩ := h_bound
   use ⌈w⌉₊ + ⌈o⌉₊ + 1, ⌈w_1⌉₊

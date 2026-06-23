@@ -73,16 +73,14 @@ lemma lineY₃B₃_val (a b : ℚ) : (lineY₃B₃ a b).val = a • Y₃.val + b
 set_option backward.isDefEq.respectTransparency false in
 lemma doublePoint_Y₃_B₃ (R : MSSMACC.LinSols) :
     cubeTriLin Y₃.val B₃.val R.val = 0 := by
-  simp only [cubeTriLin, TriLinearSymm.mk₃_toFun_apply_apply, cubeTriLinToFun,
-    MSSMSpecies_numberCharges]
+  simp only [cubeTriLin, TriLinearSymm.mk₃_toFun_apply_apply, cubeTriLinToFun]
   erw [Fin.sum_univ_three, B₃_val, Y₃_val, B₃AsCharge, Y₃AsCharge]
   repeat rw [toSMSpecies_toSpecies_inv]
   rw [Hd_toSpecies_inv, Hu_toSpecies_inv, Hd_toSpecies_inv, Hu_toSpecies_inv]
   simp only [mul_one, Fin.isValue, toSMSpecies_apply, one_mul, mul_neg, neg_neg, neg_mul, zero_mul,
     add_zero, neg_zero, Hd_apply, Fin.reduceFinMk, Hu_apply]
   have hLin := R.linearSol
-  simp only [MSSMACC_numberLinear, MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue,
-    Fin.reduceFinMk] at hLin
+  simp only [MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue, Fin.reduceFinMk] at hLin
   have h1 := hLin ⟨1, by decide⟩
   have h2 := hLin ⟨2, by decide⟩
   have h3 := hLin ⟨3, by decide⟩

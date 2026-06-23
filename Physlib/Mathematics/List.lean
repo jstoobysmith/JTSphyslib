@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 public import Physlib.Mathematics.Fin
-public import Mathlib.Data.Nat.Lattice
+public import Mathlib.Order.Lattice.Nat
 public import Mathlib.Data.List.TakeWhile
 import all Mathlib.Data.List.Sort
 /-!
@@ -167,7 +167,7 @@ lemma orderedInsertPos_cons {I : Type} (le1 : I → I → Prop) [DecidableRel le
     (r : List I) (r0 r1 : I) :
     (orderedInsertPos le1 (r1 ::r) r0).val =
     if le1 r0 r1 then ⟨0, by simp⟩ else (Fin.succ (orderedInsertPos le1 r r0)) := by
-  simp only [List.orderedInsert.eq_2, orderedInsertPos, List.takeWhile, decide_not, Fin.zero_eta,
+  simp only [orderedInsertPos, List.takeWhile, decide_not, Fin.zero_eta,
     Fin.succ_mk]
   by_cases h : le1 r0 r1
   · simp [h]

@@ -186,7 +186,7 @@ theorem injective_toHPMap : (PMap.toHPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
 /-- Positive maps are functions from `HermitianMat`s to `HermitianMat`s. -/
 noncomputable instance instFunLike : FunLike (PMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe := DFunLike.coe ∘ toHPMap
-  coe_injective := DFunLike.coe_injective'.comp injective_toHPMap
+  coe_injective := DFunLike.coe_injective.comp injective_toHPMap
 
 lemma apply_hermitianMat_eq (Λ : PMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = ⟨Λ.map ρ.1, Λ.HP ρ.2⟩ := rfl
@@ -240,7 +240,7 @@ theorem injective_toPMap : (PTPMap.toPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
 /-- Positive trace-preserving maps are functions from `HermitianMat`s to `HermitianMat`s. -/
 noncomputable instance instFunLike : FunLike (PTPMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe := DFunLike.coe ∘ toPMap
-  coe_injective := DFunLike.coe_injective'.comp injective_toPMap
+  coe_injective := DFunLike.coe_injective.comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : PTPMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl
@@ -348,7 +348,7 @@ theorem injective_toPTPMap : (CPTPMap.toPTPMap (dIn := dIn) (dOut := dOut) (𝕜
 /-- `CPTPMap`s are functions from `MState`s to `MState`s. -/
 noncomputable instance instMFunLike [DecidableEq dOut] : FunLike (CPTPMap dIn dOut) (MState dIn) (MState dOut) where
   coe := DFunLike.coe ∘ toPTPMap
-  coe_injective := DFunLike.coe_injective'.comp injective_toPTPMap
+  coe_injective := DFunLike.coe_injective.comp injective_toPTPMap
 
 lemma apply_mState_eq_toPTPMap [DecidableEq dOut] (Λ : CPTPMap dIn dOut) (ρ : MState dIn) :
     Λ ρ = Λ.toPTPMap ρ := rfl
@@ -362,7 +362,7 @@ lemma apply_mState_eq_toPTPMap [DecidableEq dOut] (Λ : CPTPMap dIn dOut) (ρ : 
 theorem IsTracePreserving (Λ : CPTPMap dIn dOut 𝕜) : Λ.map.IsTracePreserving :=
   Λ.TP
 
-def of_kraus_CPTPMap {κ : Type*} [Fintype κ] [DecidableEq dIn]
+def of_kraus_CPTPMap {κ : Type*} [Fintype κ]
   (M : κ → Matrix dOut dIn 𝕜)
   (hTP : (∑ k, (M k).conjTranspose * (M k)) = 1) : CPTPMap dIn dOut 𝕜 where
   toLinearMap := MatrixMap.of_kraus M M
@@ -386,7 +386,7 @@ theorem injective_toPMap : (PUMap.toPMap (dIn := dIn) (dOut := dOut) (𝕜 := �
 /-- `PUMap`s are functions from `HermitianMat`s to `HermitianMat`s. -/
 noncomputable instance instFunLike : FunLike (PUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe Λ := Λ.toPMap
-  coe_injective := (DFunLike.coe_injective' (F := PMap dIn dOut ℂ)).comp injective_toPMap
+  coe_injective := (DFunLike.coe_injective (F := PMap dIn dOut ℂ)).comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : PUMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl
@@ -429,7 +429,7 @@ theorem injective_toPMap : (CPMap.toPMap ∘ CPUMap.toCPMap (dIn := dIn) (dOut :
 /-- `CPUMap`s are functions from `HermitianMat`s to `HermitianMat`s. -/
 noncomputable instance instFunLike : FunLike (CPUMap dIn dOut ℂ) (HermitianMat dIn ℂ) (HermitianMat dOut ℂ) where
   coe Λ := Λ.toPMap
-  coe_injective := (DFunLike.coe_injective' (F := PMap dIn dOut ℂ)).comp injective_toPMap
+  coe_injective := (DFunLike.coe_injective (F := PMap dIn dOut ℂ)).comp injective_toPMap
 
 lemma apply_hermitianMat_eq_toPMap (Λ : CPUMap dIn dOut ℂ) (ρ : HermitianMat dIn ℂ) :
     Λ ρ = Λ.toPMap ρ := rfl

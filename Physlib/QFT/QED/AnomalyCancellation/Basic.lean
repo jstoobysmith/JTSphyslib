@@ -90,7 +90,7 @@ lemma accCube_explicit (n : ℕ) (S : (PureU1Charges n).Charges) :
   rw [accCube, TriLinearSymm.toCubic]
   change accCubeTriLinSymm S S S = _
   rw [accCubeTriLinSymm]
-  simp only [PureU1Charges_numberCharges, TriLinearSymm.mk₃_toFun_apply_apply]
+  simp only [TriLinearSymm.mk₃_toFun_apply_apply]
   exact Finset.sum_congr rfl fun x _ => Eq.symm (pow_three' (S x))
 
 end PureU1

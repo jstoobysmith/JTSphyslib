@@ -146,11 +146,10 @@ def bijection : linearParameters ≃ (SMNoGrav 1).LinSols where
     subst hj
     rw [toSpecies_apply_asCharges]
     have h1 := SU3Sol S
-    simp only [accSU3, SMSpecies_numberCharges, Finset.univ_unique, Fin.default_eq_zero,
-      Fin.isValue, toSpecies_apply_eq, Finset.sum_singleton, sum_SMSpecies_numberCharges_one,
+    simp only [accSU3, toSpecies_apply_eq, Fin.isValue, sum_SMSpecies_numberCharges_one,
       LinearMap.coe_mk, AddHom.coe_mk] at h1
     have h2 := SU2Sol S
-    simp only [accSU2, SMSpecies_numberCharges, Finset.univ_unique, Fin.default_eq_zero,
+    simp only [accSU2,
       Fin.isValue, toSpecies_apply_eq, sum_SMSpecies_numberCharges_one,
       LinearMap.coe_mk, AddHom.coe_mk] at h2
     match i with
@@ -187,9 +186,8 @@ def bijectionQEZero : {S : linearParameters // S.Q' ≠ 0 ∧ S.E' ≠ 0} ≃
 lemma grav (S : linearParameters) :
     accGrav S.asCharges = 0 ↔ S.E' = 6 * S.Q' := by
   rw [accGrav]
-  simp only [SMSpecies_numberCharges, Finset.univ_unique, Fin.default_eq_zero, Fin.isValue,
-    Finset.sum_singleton, LinearMap.coe_mk, AddHom.coe_mk, sum_SMSpecies_numberCharges_one,
-    toSpecies_apply_eq]
+  simp only [toSpecies_apply_eq, Fin.isValue, sum_SMSpecies_numberCharges_one, LinearMap.coe_mk,
+    AddHom.coe_mk]
   repeat rw [speciesVal]
   simp only [asCharges, neg_add_rev, neg_mul, mul_neg]
   ring_nf

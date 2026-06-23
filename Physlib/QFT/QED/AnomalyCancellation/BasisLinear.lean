@@ -79,29 +79,27 @@ def coordinateMap : (PureU1 n.succ).LinSols ≃ₗ[ℚ] Fin n →₀ ℚ where
   map_smul' a S := Finsupp.ext (congrFun rfl)
   invFun f := ∑ i : Fin n, f i • asLinSols i
   left_inv S := by
-    simp only [Nat.succ_eq_add_one, PureU1_numberCharges, Equiv.invFun_as_coe,
+    simp only [Nat.succ_eq_add_one, Equiv.invFun_as_coe,
       Finsupp.equivFunOnFinite_symm_apply_apply, Function.comp_apply]
     apply pureU1_anomalyFree_ext
     intro j
     rw [sum_of_vectors]
-    simp only [HSMul.hSMul, SMul.smul, PureU1_numberCharges,
-      asLinSols_val]
+    simp only [HSMul.hSMul, SMul.smul, asLinSols_val]
     rw [Finset.sum_eq_single j]
-    · simp only [asCharges, PureU1_numberCharges, ↓reduceIte, mul_one]
+    · simp only [asCharges, ↓reduceIte, mul_one]
     · intro k _ hkj
       erw [asCharges_ne_castSucc hkj]
       exact Rat.mul_zero (S.val k.castSucc)
     · simp
   right_inv f := by
-    simp only [PureU1_numberCharges, Equiv.invFun_as_coe]
+    simp only [Equiv.invFun_as_coe]
     ext
     rename_i j
     simp only [Nat.succ_eq_add_one, Finsupp.equivFunOnFinite_symm_apply_apply, Function.comp_apply]
     rw [sum_of_vectors]
-    simp only [HSMul.hSMul, SMul.smul, PureU1_numberCharges,
-      asLinSols_val]
+    simp only [HSMul.hSMul, SMul.smul,asLinSols_val]
     rw [Finset.sum_eq_single j]
-    · simp only [asCharges, PureU1_numberCharges, ↓reduceIte, mul_one]
+    · simp only [asCharges, ↓reduceIte, mul_one]
     · intro k _ hkj
       erw [asCharges_ne_castSucc hkj]
       exact Rat.mul_zero (f k)

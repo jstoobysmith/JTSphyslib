@@ -279,11 +279,11 @@ lemma HermitianMat.supportProj_mul_self (A : HermitianMat d ℂ) :
       exact ⟨ _, rfl ⟩
     have h_supportProj_mul_A : ∀ (v : EuclideanSpace ℂ d), v ∈ LinearMap.range A.val.toEuclideanLin → (A.supportProj.val.toEuclideanLin v) = v := by
       intro v hv
-      have h_supportProj_mul_A : (A.supportProj.val.toEuclideanLin v) = (Submodule.orthogonalProjection (LinearMap.range A.val.toEuclideanLin) v) := by
-        simp only [val_eq_coe, Submodule.coe_orthogonalProjection_apply]
+      have h_supportProj_mul_A : (A.supportProj.val.toEuclideanLin v) = (Submodule.orthogonalProjectionOnto (LinearMap.range A.val.toEuclideanLin) v) := by
+        simp only [val_eq_coe, Submodule.coe_orthogonalProjectionOnto_apply]
         simp [supportProj, projector]
         simp only [Submodule.starProjection]
-        simp [-Submodule.coe_orthogonalProjection_apply]
+        simp
         have key : ∀ (f : EuclideanSpace ℂ d →ₗ[ℂ] EuclideanSpace ℂ d),
             Matrix.toEuclideanLin
               ((LinearMap.toMatrix (EuclideanSpace.basisFun d ℂ).toBasis (EuclideanSpace.basisFun d ℂ).toBasis) f) = f := by

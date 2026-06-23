@@ -39,7 +39,7 @@ lemma exists_strictMono_seq_le (y : ℝ≥0) (f : ℝ≥0 → ℕ → ℝ≥0∞
   have h_freq (k n : ℕ) : ∃ m > n, f ((k + 1 : ℝ≥0)⁻¹) m ≤ y + (k + 1 : ℝ≥0)⁻¹ := by
     specialize hf ((k + 1 : ℝ≥0)⁻¹) (by positivity)
     rw [Filter.liminf_eq] at hf
-    simp only [Filter.eventually_atTop, ge_iff_le, sSup_le_iff, Set.mem_setOf_eq, forall_exists_index] at hf
+    simp only [Filter.eventually_atTop, sSup_le_iff, Set.mem_setOf_eq, forall_exists_index] at hf
     contrapose! hf
     refine ⟨_, n + 1, fun m hm ↦ (hf m hm).le, ENNReal.lt_add_right (by norm_num) (by norm_num)⟩
   refine ⟨fun k ↦ k.recOn (Classical.choose (h_freq 0 0))
@@ -215,7 +215,7 @@ lemma exists_limsup_zero_of_forall_limsup_le (y : ℝ≥0) (f : ℝ≥0 → ℕ 
     intro a' a
     obtain ⟨left, right⟩ := hM
     have := h_find_greatest.eventually_gt_atTop ⌈a'⁻¹⌉₊
-    simp_all only [Filter.eventually_atTop, ge_iff_le]
+    simp_all only [Filter.eventually_atTop]
     obtain ⟨w, h⟩ := this
     exact ⟨ w, fun n hn => inv_lt_of_inv_lt₀ a <| by exact lt_of_lt_of_le ( Nat.lt_of_ceil_lt <| h n hn ) <| mod_cast Nat.le_succ _ ⟩;
   · -- For any ε > 0, choose K such that 1/(K+1) < ε. For n ≥ M K, we have g n = 1/(k+1) with k ≥ K. Also n ≥ M k (since k is the smallest such that n < M (k+1)). Thus f (g n) n ≤ y + 1/(k+1) < y + ε.
@@ -313,7 +313,7 @@ lemma liminf_le_of_block_sequence_witnesses {α : Type*} (y : ℝ≥0) (f : α �
   rw [ Filter.liminf_eq ];
   simp_all only [Set.mem_Ico, and_imp, ne_eq, add_eq_zero, Nat.cast_eq_zero, one_ne_zero, and_false,
     not_false_eq_true, ENNReal.coe_inv, ENNReal.coe_add, ENNReal.coe_natCast, ENNReal.coe_one,
-    Filter.eventually_atTop, ge_iff_le, sSup_le_iff, Set.mem_setOf_eq, forall_exists_index]
+    Filter.eventually_atTop, sSup_le_iff, Set.mem_setOf_eq, forall_exists_index]
   intro b x_1 h
   -- Fix an arbitrary $k \geq x_1$.
   suffices h_suff : ∀ k ≥ x_1, ∃ n ≥ k, f (g n) n ≤ y + 1 / (k + 1) by
@@ -322,7 +322,7 @@ lemma liminf_le_of_block_sequence_witnesses {α : Type*} (y : ℝ≥0) (f : α �
       have h_lim : Filter.Tendsto (fun k : ℕ => (k + 1 : ℝ≥0∞)⁻¹) Filter.atTop (𝓝 0) := by
         rw [ ENNReal.tendsto_nhds_zero ]
         intro ε a
-        simp_all only [ge_iff_le, one_div, gt_iff_lt, Filter.eventually_atTop]
+        simp_all only [one_div, gt_iff_lt, Filter.eventually_atTop]
         rcases ENNReal.exists_inv_nat_lt a.ne' with ⟨ N, hN ⟩;
         exact ⟨ N, fun n hn => le_trans ( by gcongr ; norm_cast ; linarith ) hN.le ⟩;
       simpa using tendsto_const_nhds.add h_lim;
@@ -345,7 +345,7 @@ lemma limsup_le_of_block_sequence_bound {α : Type*} (y : ℝ≥0) (f : α → �
     · aesop
     simp_all only [Set.mem_Ico, and_imp, ne_eq, add_eq_zero, Nat.cast_eq_zero, one_ne_zero, and_false,
       not_false_eq_true, ENNReal.coe_inv, ENNReal.coe_add, ENNReal.coe_natCast, ENNReal.coe_one,
-      Filter.eventually_map, Filter.eventually_atTop, ge_iff_le, Set.mem_setOf_eq]
+      Filter.eventually_map, Filter.eventually_atTop, Set.mem_setOf_eq]
     -- Choose $K$ such that for all $k \ge K$, we have $1/(k+1) \le \epsilon$.
     obtain ⟨K, hK⟩ : ∃ K : ℕ, ∀ k ≥ K, (k + 1 : ℝ≥0)⁻¹ ≤ ε := by
       rcases ENNReal.lt_iff_exists_nnreal_btwn.mp hε with ⟨ δ, hδ, hδε ⟩
@@ -391,7 +391,7 @@ lemma exists_liminf_zero_of_forall_liminf_limsup_le_with_UB (y₁ y₂ : ℝ≥0
     any_goals filter_upwards [ Filter.eventually_gt_atTop ⌈ ( z / 2 ) ⁻¹⌉₊ ] with k hk; rw [ min_eq_right ];
     · refine' tendsto_order.2 ⟨ fun x => _, fun x hx => _ ⟩
       · aesop
-      · simp_all only [gt_iff_lt, Filter.eventually_atTop, ge_iff_le]
+      · simp_all only [gt_iff_lt, Filter.eventually_atTop]
         exact ⟨ ⌈x⁻¹⌉₊, fun n hn => inv_lt_of_inv_lt₀ hx <| lt_of_le_of_lt ( Nat.le_ceil _ ) <| mod_cast Nat.lt_succ_of_le hn ⟩;
     · rw [ inv_le_comm₀ ] <;> norm_cast
       · simp_all only [inv_div, Nat.cast_add, Nat.cast_one]
