@@ -448,7 +448,7 @@ lemma integrable_isDistBounded_inner_grad_schwartzMap {dm1 : ℕ}
         ((fderivCLM ℝ (Space dm1.succ) ℝ) η)) x • f x) j) volume := by
     simp only [PiLp.smul_apply]
     exact (hf.pi_comp j).integrable_space _
-  convert integrable_lemma i i using 2
+  convert! integrable_lemma i i using 2
   rename_i x
   simp only [EuclideanSpace.inner_single_right, Nat.succ_eq_add_one, conj_trivial, one_mul,
     PiLp.smul_apply, smul_eq_mul, mul_eq_mul_right_iff]

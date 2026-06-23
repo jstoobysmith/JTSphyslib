@@ -31,11 +31,18 @@ namespace SMCharges
 
 variable {n : ℕ}
 
+lemma sum_SMSpecies_numberCharges_one {M} [AddCommMonoid M]
+    (f : Fin (SMSpecies 1).numberCharges → M) :
+    ∑ i, f i = f ⟨0, by simp⟩ := by
+  change ∑ (i : Fin 1), f i = _
+  simp only [Finset.univ_unique, Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton]
+  rfl
+
 /-- An equivalence between the set `(SMCharges n).charges` and the set
   `(Fin 5 → Fin n → ℚ)`. -/
 @[simps!]
-def toSpeciesEquiv : (SMCharges n).Charges ≃ (Fin 5 → Fin n → ℚ) :=
-  ((Equiv.curry _ _ _).symm.trans ((@finProdFinEquiv 5 n).arrowCongr (Equiv.refl ℚ))).symm
+def toSpeciesEquiv : (SMCharges n).Charges ≃ (Fin 5 → Fin (SMSpecies n).numberCharges → ℚ) :=
+  ((Equiv.curry _ _ _).symm.trans ((@finProdFinEquiv 5 (SMSpecies n).numberCharges).arrowCongr (Equiv.refl ℚ))).symm
 
 /-- For a given `i ∈ Fin 5`, the projection of a charge onto that species. -/
 @[simps!]
@@ -43,6 +50,9 @@ def toSpecies (i : Fin 5) : (SMCharges n).Charges →ₗ[ℚ] (SMSpecies n).Char
   toFun S := toSpeciesEquiv S i
   map_add' _ _ := by rfl
   map_smul' _ _ := by rfl
+
+lemma toSpecies_apply_eq (i : Fin 5) (S : (SMCharges n).Charges) :
+    toSpecies i S = fun j => toSpeciesEquiv S i j := by rfl
 
 lemma charges_eq_toSpecies_eq (S T : (SMCharges n).Charges) :
     S = T ↔ ∀ i, toSpecies i S = toSpecies i T := by
