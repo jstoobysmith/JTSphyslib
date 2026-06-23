@@ -166,12 +166,12 @@ theorem continuousAt_complexLaplaceTransform_of_mem_interior_convergenceDomain
   have hbound_int : MeasureTheory.Integrable (μ := MeasureTheory.volume)
       (ComplexLaplaceEnvelope E z (ε / 2)) := by
     unfold ComplexLaplaceEnvelope
-    simpa [Pi.add_apply] using (hint (by
+    exact (hint (by
       rw [Metric.mem_ball, dist_eq_norm]
       simpa [abs_of_pos hε_pos] using show ε / 2 < ε by linarith)).norm.add (hint (by
         rw [Metric.mem_ball, dist_eq_norm]
         simpa [abs_of_pos hε_pos] using show ε / 2 < ε by linarith)).norm
-  simpa [ComplexLaplaceTransform] using
+  exact
     MeasureTheory.tendsto_integral_filter_of_dominated_convergence
       (μ := MeasureTheory.volume) (l := nhds z)
       (F := fun w x => ComplexLaplaceIntegrand E w x)

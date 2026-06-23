@@ -58,7 +58,6 @@ variable {μ : Measure X}
 lemma apply_smooth_of_smooth {F : (X → U) → (X → V)} {F' : (X → V) → (X → U)} {u v : X → U}
     (h : HasVarAdjDerivAt F F' u) (hv : ContDiff ℝ ∞ v) : ContDiff ℝ ∞ (F v) := by
   have h1 := h.diff (fun _ => v) (by fun_prop)
-  simp at h1
   have hf : F v = (fun (sx : ℝ × X) => F v sx.2) ∘ fun x => (0, x) := by
     funext x
     simp

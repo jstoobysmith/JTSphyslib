@@ -135,7 +135,7 @@ theorem trace_diagonal {T : Type*} [Fintype T] [DecidableEq T] (f : T → ℝ) :
 
 theorem sum_eigenvalues_eq_trace [DecidableEq n] (A : HermitianMat n 𝕜) :
     ∑ i, A.H.eigenvalues i = A.trace := by
-  convert congrArg RCLike.re A.H.sum_eigenvalues_eq_trace
+  convert! congrArg RCLike.re A.H.sum_eigenvalues_eq_trace
   rw [RCLike.ofReal_re]
 
 --Proving that traces are 0 or 1 is common enough that we have a convenience lemma here for turning

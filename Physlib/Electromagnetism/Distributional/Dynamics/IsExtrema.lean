@@ -123,7 +123,7 @@ lemma isExtrema_iff_space_time {𝓕 : FreeSpace}
         ext x
         simp
     · intro h ε
-      convert h (SchwartzMap.compCLMOfContinuousLinearEquiv (F := ℝ) ℝ
+      convert! h (SchwartzMap.compCLMOfContinuousLinearEquiv (F := ℝ) ℝ
         (SpaceTime.toTimeAndSpace 𝓕.c (d := d)).symm ε) using 1
       · simp [SpaceTime.distTimeSlice_symm_apply]
         ring_nf

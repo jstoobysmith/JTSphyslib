@@ -154,7 +154,7 @@ lemma ofElectromagneticField_magneticField {c : SpeedOfLight}
       let u := p.2
       (u • basis.repr x) ⨯ₑ₃ B t (u • x)
   suffices h : ContDiff ℝ 1 (fun x => C x i) by
-    convert h using 1
+    convert! h using 1
     simp [C]
     rfl
   fin_cases i

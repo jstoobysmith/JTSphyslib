@@ -1078,7 +1078,9 @@ private lemma radial_power_deriv_integral_by_parts
         fun_prop
       have hlim := tendsto_nhdsWithin_of_tendsto_nhds
         (s := Set.Ioi (0 : ℝ)) hcont.tendsto
-      simpa [Pi.mul_apply, hη'_apply, hp.ne'] using hlim
+      simp_all only [Nat.succ_eq_add_one, ne_eq, hp.ne', not_false_eq_true, zero_pow, zero_smul,
+        zero_mul]
+      exact hlim
     · have hzero :
           Filter.Tendsto (fun x : ℝ => x ^ p * η' x) Filter.atTop (𝓝 (0 : ℝ)) := by
         have hsch :
@@ -1089,7 +1091,8 @@ private lemma radial_power_deriv_integral_by_parts
             atTop_le_cocompact
         exact hsch.congr' (Filter.Eventually.of_forall (fun x => by
           rw [hmul_iter_apply p x]))
-      simpa [hη'_apply, Pi.mul_apply] using hzero
+      simp_all only [Nat.succ_eq_add_one]
+      exact hzero
   calc
     -∫ (x : ℝ) in Set.Ioi (0 : ℝ),
         x ^ p * _root_.deriv (fun a => η (a • n.1)) x
@@ -1129,8 +1132,8 @@ private lemma distDiv_norm_zpow_smul_repr_self_apply_eq_radial_deriv
         ∂(Measure.volumeIoiPow (Module.finrank ℝ (Space d.succ) - 1)))
         ∂(volume (α := Space d.succ).toSphere) := by
           rw [MeasureTheory.integral_prod]
-          convert integrable_isDistBounded_inner_grad_schwartzMap_spherical
-            (IsDistBounded.zpow_smul_repr_self q (by omega)) η using 1
+          exact integrable_isDistBounded_inner_grad_schwartzMap_spherical
+            (IsDistBounded.zpow_smul_repr_self q (by omega)) η
     _ = - ∫ n, (∫ (r : Set.Ioi (0 : ℝ)),
         r.1 ^ p * (_root_.deriv (fun a => η (a • n.1)) r.1)
         ∂(.comap Subtype.val volume))
@@ -1459,7 +1462,7 @@ lemma distLaplacian_fundamentalSolution_norm_zpow {d : ℕ} :
         (IsDistBounded.zpow_smul_repr_self ((- (d.succ : ℤ)) - 2) (by omega))) =
         (d.succ.succ.succ * (volume (α := Space d.succ.succ.succ)).real
           (Metric.ball 0 1)) • diracDelta ℝ 0 := by
-    convert distDiv_inv_pow_eq_dim (d := d.succ.succ.succ) using 1
+    exact distDiv_inv_pow_eq_dim (d := d.succ.succ.succ)
   rw [hdiv]
   rw [smul_smul]
   ring_nf
@@ -1475,9 +1478,9 @@ lemma distLaplacian_fundamentalSolution_norm_zpow_of_three_le {d : ℕ} (hd : 3 
   · omega
   · omega
   · omega
-  · convert distLaplacian_fundamentalSolution_norm_zpow (d := d) using 1
+  · convert! distLaplacian_fundamentalSolution_norm_zpow (d := d) using 1
     ext x
-    simp only [ContinuousLinearMap.coe_smul', Pi.smul_apply, smul_eq_mul]
+    simp only [FunLike.coe_smul, Pi.smul_apply, smul_eq_mul]
     simp only [Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one]
     ring_nf
 

@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Order.Ring.Star
 public import Mathlib.Analysis.Normed.Ring.Lemmas
 public import Mathlib.Data.Finset.Attr
 public import Mathlib.Data.Int.Star
-public import Mathlib.Data.Real.StarOrdered
+public import Mathlib.Algebra.Order.Star.Real
 public import Mathlib.Tactic.Bound
 public import Mathlib.Tactic.Peel
 public import Mathlib.Tactic.Common
@@ -155,7 +155,7 @@ lemma exists_liminf_zero_of_forall_liminf_le (y : ℝ≥0) (f : ℝ≥0 → ℕ 
         use k
         norm_num at *;
         refine' lt_of_le_of_lt _ right;
-        convert add_le_add_left ( ENNReal.ofReal_le_ofReal hk.le ) ( y : ℝ≥0∞ ) using 1 ; norm_num [ ENNReal.ofReal ];
+        convert! add_le_add_left ( ENNReal.ofReal_le_ofReal hk.le ) ( y : ℝ≥0∞ ) using 1 ; norm_num [ ENNReal.ofReal ];
         · norm_num [ Real.toNNReal_inv ];
           rw [add_comm]
         · rw [ENNReal.ofReal_sub _ (by positivity)]
@@ -485,8 +485,8 @@ lemma exists_liminf_zero_of_forall_liminf_limsup_le_with_UB (y₁ y₂ : ℝ≥0
 theorem extracted_limsup_inequality (z : ℝ≥0∞) (hz : z ≠ ⊤) (y x : ℕ → ℝ≥0∞) (h_lem5 : ∀ (n : ℕ), x n ≤ y n + z)
     : Filter.atTop.limsup (fun n ↦ x n / n) ≤ Filter.atTop.limsup (fun n ↦ y n / n) := by
   --Thanks Aristotle!
-  simp? [Filter.limsup_eq] says simp only [Filter.limsup_eq, Filter.eventually_atTop,
-    ge_iff_le, le_sInf_iff, Set.mem_setOf_eq, forall_exists_index]
+  simp only [Filter.limsup_eq, Filter.eventually_atTop, le_sInf_iff, Set.mem_setOf_eq,
+    forall_exists_index]
   -- Taking the limit superior of both sides of the inequality x n / n ≤ y_n / n + z / n, we
   -- get limsup x n / n ≤ limsup (y n / n + z / n).
   intro b n h_bn

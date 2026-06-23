@@ -120,7 +120,7 @@ lemma continuous_time_integral {d} (η : 𝓢(Time × Space d, ℝ)) :
       · subst rt
         simp
       positivity
-    convert h0' using 1
+    convert! h0' using 1
     rw [mul_comm]
     congr
     simp only [Prod.norm_mk, norm_pow, Real.norm_eq_abs]
@@ -198,7 +198,7 @@ lemma time_integral_hasFDerivAt {d : ℕ} (η : 𝓢(Time × Space d, ℝ)) (x�
       · subst rt
         simp
       positivity
-    convert h0' using 1
+    convert! h0' using 1
     rw [mul_comm]
     simp only [Prod.norm_mk, norm_pow, Real.norm_eq_abs, norm_iteratedFDeriv_one,
       mul_eq_mul_right_iff, norm_eq_zero]
@@ -284,7 +284,7 @@ lemma time_integral_hasFDerivAt {d : ℕ} (η : 𝓢(Time × Space d, ℝ)) (x�
           sup_of_le_right]
         ring
       refine mul_le_mul_of_nonneg ?_ ?_ (by positivity) (by positivity)
-      · convert h1 x t
+      · convert! h1 x t
         simp
       · rfl
       fun_prop
@@ -357,7 +357,7 @@ lemma integrable_fderiv_space {d : ℕ} (η : 𝓢(Time × Space d, ℝ)) (x : S
       · subst rt
         simp
       positivity
-    convert h0' using 1
+    convert! h0' using 1
     rw [mul_comm]
     simp only [Prod.norm_mk, norm_pow, Real.norm_eq_abs, norm_iteratedFDeriv_one,
       mul_eq_mul_right_iff, norm_eq_zero]
@@ -392,7 +392,7 @@ lemma integrable_fderiv_space {d : ℕ} (η : 𝓢(Time × Space d, ℝ)) (x : S
       · apply le_of_eq
         ring
       refine mul_le_mul_of_nonneg ?_ ?_ (by positivity) (by positivity)
-      · convert h1 x t
+      · convert! h1 x t
         simp
       · rfl
   have h2 : ∀ x : Space d, ∀ t : Time, ‖fderiv ℝ (fun x => η (t, x)) x‖ ≤
@@ -891,7 +891,7 @@ lemma time_integral_mul_pow_iteratedFDeriv_norm_le {d : ℕ} (n m : ℕ) :
           exact hrt
         · refine Pi.le_def.mpr ?_
           intro t
-          convert hbound t using 1
+          convert! hbound t using 1
           simp
   apply le_of_eq
   rw [MeasureTheory.integral_const_mul]

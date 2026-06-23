@@ -35,6 +35,8 @@ open ContinuousLinearMap SchwartzMap
 
 variable (H : HydrogenAtom)
 
+attribute [local instance 100] LieRing.ofAssociativeRing
+
 /-- The (regularized) Laplace-Runge-Lenz vector operator for the `d`-dimensional hydrogen atom,
   `𝐀(ε)ᵢ ≔ ½(𝐩ⱼ𝐋ᵢⱼ + 𝐋ᵢⱼ𝐩ⱼ) - mk·𝐫(ε)⁻¹𝐱ᵢ`. -/
 def lrlOperator (ε : ℝˣ) (i : Fin H.d) : 𝓢(Space H.d, ℂ) →L[ℂ] 𝓢(Space H.d, ℂ) :=

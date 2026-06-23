@@ -505,7 +505,6 @@ lemma deriv_hasVarAdjDerivAt {d} (μ ν : Fin 1 ⊕ Fin d) (A : SpaceTime d → 
     Lorentz.Vector d) x => ∂_ μ A x ν)) h0' ?_
   intro φ hφ
   funext x
-  simp only
   rw [deriv_apply_eq μ ν φ]
   exact hφ.differentiable (by simp)
 

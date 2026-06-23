@@ -720,7 +720,7 @@ lemma grad {d} : HasVarAdjoint (fun (φ : Space d → ℝ) x => Space.grad φ x)
     rw [real_inner_comm, ← Space.basis_repr_inner_eq, real_inner_comm]
   simp [hx] at h1
   have h2 := HasVarAdjoint.comp h1 (HasVarAdjoint.gradient (d := d))
-  convert h2 using 1
+  convert! h2 using 1
   · funext x t
     rw [Space.grad_eq_gradient]
     simp

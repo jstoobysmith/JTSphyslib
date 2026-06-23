@@ -386,7 +386,7 @@ private lemma continuous_uncurry_fderiv_homotopyOperatorIntegrand
   suffices h1 : Continuous ((PiLp.continuousLinearEquiv 2 ℝ _).symm ∘
     (PiLp.continuousLinearEquiv 2 ℝ _) ∘
     (fun p : Space × ℝ => fderiv ℝ (homotopyOperatorIntegrand f · p.2) p.1 y)) by
-    simpa using h1
+    exact h1
   apply Continuous.comp (by fun_prop) ?_
   apply continuous_pi
   intro i
@@ -633,7 +633,7 @@ lemma exists_grad_of_curl_zero (f : Space → EuclideanSpace ℝ (Fin 3)) (hf : 
     calc _
       _ = (fderiv ℝ (InnerProductSpace.toDual ℝ _ ∘
         fun a => (basis.repr.symm (f a))) a x) y := by rfl
-    rw [fderiv_comp _ (by simpa using
+    rw [fderiv_comp _ (by exact
       (InnerProductSpace.toDual ℝ (Space)).differentiable.differentiableAt) (by fun_prop)]
     erw [(InnerProductSpace.toDual ℝ (Space)).fderiv]
     simp only [ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,

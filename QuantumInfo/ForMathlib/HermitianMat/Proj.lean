@@ -49,8 +49,9 @@ noncomputable def projector (S : Submodule 𝕜 (EuclideanSpace 𝕜 n)) : Hermi
   let P := S.subtypeL.comp S.orthogonalProjection
   ⟨P.toMatrix (EuclideanSpace.basisFun n 𝕜).toBasis (EuclideanSpace.basisFun n 𝕜).toBasis, by
     ext i j
-    simpa [EuclideanSpace.inner_single_right, EuclideanSpace.inner_single_left] using
-      S.inner_starProjection_left_eq_right (EuclideanSpace.single i 1) (EuclideanSpace.single j 1)⟩
+    have h1 := S.inner_starProjection_left_eq_right (EuclideanSpace.single i 1) (EuclideanSpace.single j 1)
+    simp_all [EuclideanSpace.inner_single_right, EuclideanSpace.inner_single_left]
+    exact h1⟩
 
 theorem projector_add_orthogonal : projector S + projector Sᗮ = 1 := by
   unfold projector;
@@ -134,9 +135,9 @@ theorem projector_eq_sum_rankOne (b : OrthonormalBasis ι 𝕜 S) :
     have h_proj : S.orthogonalProjection (EuclideanSpace.single j 1) = ∑ k, (inner 𝕜 (b k |>.1) (EuclideanSpace.single j 1)) • (b k |>.1) := by
       convert b.sum_repr ( S.orthogonalProjection ( EuclideanSpace.single j 1 ) ) using 1;
       constructor <;> intro h <;> simp_all [ Subtype.ext_iff, b.repr_apply_apply ];
-    convert h_proj using 3
+    convert! h_proj using 3
     simp [ inner];
-  convert congr_arg ( fun x : EuclideanSpace ( _ ) n => x i ) ( h_proj j ) using 1
+  convert! congr_arg ( fun x : EuclideanSpace ( _ ) n => x i ) ( h_proj j ) using 1
   simp [ Matrix.sum_apply, mul_comm ]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -187,7 +188,7 @@ lemma projector_support_eq_sum : A.supportProj.mat =
       exact hx fun i hi => ⟨ _, hp i hi, rfl ⟩;
   obtain ⟨ b, hb ⟩ := h_orthonormal_basis
   have h_sum_rankOne : (projector A.support).mat = ∑ i, Matrix.vecMulVec (b i) (star (b i)) := by
-    convert projector_eq_sum_rankOne _ b using 1
+    convert! projector_eq_sum_rankOne _ b using 1
     simp [h_support] at *
   simp_all [ Finset.sum_ite ];
   convert h_sum_rankOne using 1;

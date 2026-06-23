@@ -591,7 +591,7 @@ lemma gradLagrangian_eq_force (xₜ : Time → EuclideanSpace ℝ (Fin 1)) (hx :
       ∂ₜ (fun t' => S.m • ∂ₜ xₜ t') t
           = fderiv ℝ (fun t' => S.m • ∂ₜ xₜ t') t 1 := rfl
       _ = S.m • (fderiv ℝ (∂ₜ xₜ) t 1) := by
-          simpa using congrArg (fun L => L 1) (fderiv_const_smul (c := S.m) (f := ∂ₜ xₜ) hd)
+          exact congrArg (fun L => L 1) (fderiv_const_smul (c := S.m) (f := ∂ₜ xₜ) hd)
       _ = S.m • ∂ₜ (∂ₜ xₜ) t := rfl
 
 /-!
@@ -878,7 +878,7 @@ lemma equationOfMotion_iff_hamiltonEqOp_eq_zero (xₜ : Time → EuclideanSpace 
       ∂ₜ (fun t' => S.m • ∂ₜ xₜ t') t
           = fderiv ℝ (fun t' => S.m • ∂ₜ xₜ t') t 1 := rfl
       _ = S.m • (fderiv ℝ (∂ₜ xₜ) t 1) := by
-          simpa using congrArg (fun L => L 1) (fderiv_const_smul (c := S.m) (f := ∂ₜ xₜ) hd)
+          exact congrArg (fun L => L 1) (fderiv_const_smul (c := S.m) (f := ∂ₜ xₜ) hd)
       _ = S.m • ∂ₜ (∂ₜ xₜ) t := rfl
   simp [hderiv_smul, force_eq_linear]
 

@@ -24,8 +24,10 @@ We define
 open Matrix
 open TensorProduct
 
+attribute [local instance 100] LieRing.ofAssociativeRing
+
 /-- The Lorentz algebra as a subalgebra of `Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ`. -/
-def lorentzAlgebra :=
+def lorentzAlgebra : LieSubalgebra ℝ (Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) :=
   (LieAlgebra.Orthogonal.so' (Fin 1) (Fin 3) ℝ)
 
 namespace lorentzAlgebra

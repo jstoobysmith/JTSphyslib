@@ -245,7 +245,9 @@ theorem mix_mEnsemble_pure_average {e : MEnsemble d α} {T : Type _} {U : Type*}
     rw [←ite_zero_smul]
   have hpure' : ∀ i ∈ Finset.univ, (↑(e.distr i) : ℝ) ≠ 0 → e.var i = pure ψ := fun i hi hne0 ↦ by
     apply hpure i
-    simpa using hne0
+    simp_all only [ne_eq, Finset.mem_univ, smul_eq_zero, Set.Icc.coe_eq_zero, not_or, and_imp,
+      forall_const]
+    exact hne0
   classical rw [← Finset.sum_smul, ← Finset.sum_filter, Finset.sum_filter_of_ne hpure', ProbDistribution.normalized, one_smul]
 
 /-- The trivial mixed-state ensemble of `ρ` consists of copies of `rho`, with the `i`-th one having
@@ -327,6 +329,6 @@ theorem spectral_ensemble_mix {ρ : MState d} : mix (↑(spectral_ensemble ρ) :
   convert rfl;
   apply MState.ext_m;
   convert Ensemble.mix_of _
-  convert (spectral_decomposition_sum ρ.Hermitian) using 1
+  convert! (spectral_decomposition_sum ρ.Hermitian) using 1
 
 end Ensemble
