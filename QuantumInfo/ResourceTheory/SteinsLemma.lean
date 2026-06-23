@@ -62,14 +62,14 @@ private theorem Lemma6 {m : ℕ} (hm : 0 < m) (ρ σf : MState (H i)) (σₘ : M
     rw [← sandwichedRelRentropy_statePow]
     rw [← sandwichedRelRentropy_prodRelabel]
 
-    gcongr
-    · rw [MState.eq_relabel_iff]
-      simp only [MState.relabel_relabel, ← Equiv.cast_symm, ← Equiv.cast_trans]
-      rw [prodRelabel_relabel_cast_prod _ _ _ ((pow_mul ..).symm) rfl]
-      congr
-      rw [statePow_mul_relabel]
-      simp [← Equiv.cast_trans]
-    · simp
+    refine sandwichedRelRentropy_heq_congr h_Hn_eq ?_ ?_
+    · rw [MState.relabel_cast]
+      refine (cast_heq _ _).trans ?_
+      congr 1
+      · exact pow_mul i m (n / m)
+      · exact statePow_mul ρ m (n / m)
+    · rw [MState.relabel_cast]
+      exact cast_heq _ _
 
   --This will probably need 1 < α actually
   have h_α : ∀ α, (1 < α) → Filter.atTop.limsup (fun n ↦ —log β_ ε(ρ ⊗ᵣ^[n]‖{σn n}) / n) ≤
@@ -169,6 +169,7 @@ private theorem Lemma6 {m : ℕ} (hm : 0 < m) (ρ σf : MState (H i)) (σₘ : M
     refine ge_of_tendsto (x :=  (𝓝[>] 1)) ?_ (eventually_nhdsWithin_of_forall h_α)
     apply tendsto_nhdsWithin_of_tendsto_nhds
     convert ContinuousAt.tendsto ?_ using 3
+    · rfl
     have _ := ENNReal.continuous_div_const m (by positivity)
     have _ := (sandwichedRelRentropy.continuousOn (ρ ⊗ᵣ^[m]) σₘ).continuousAt (Ioi_mem_nhds zero_lt_one)
     fun_prop
@@ -798,11 +799,11 @@ private theorem f_le_log (n : ℕ) (lam : ℝ) : f_map i n lam < Real.log lam + 
     rfl
 
 private theorem le_exp_f (n : ℕ) (x : ℝ) (hx : 0 < x) : x ≤ Real.exp (f_map i n x) := by
-  convert Real.exp_monotone (log_le_f i n x)
+  convert! Real.exp_monotone (log_le_f i n x)
   rw [Real.exp_log hx]
 
 private theorem exp_f_le (n : ℕ) (x : ℝ) (hx : 0 < x) : Real.exp (f_map i n x) < Real.exp (σ₁_c i n) * x := by
-  convert Real.exp_strictMono (f_le_log i n x) using 1
+  convert! Real.exp_strictMono (f_le_log i n x) using 1
   rw [Real.exp_add (Real.log x), Real.exp_log hx, mul_comm]
 
 end σ₁_c_and_f
@@ -872,7 +873,7 @@ private theorem σ''_tr_bounds : 1 ≤ (σ''_unnormalized ρ ε m σ n).trace �
     rw [he]
     simp only [Function.comp_apply]
     rw [Equiv.sum_comp e (fun k ↦ Real.exp (f_map i n (Matrix.IsHermitian.eigenvalues _ k)))]
-    gcongr
+    gcongr with k
     apply le_exp_f i n _
     exact (σ'_posdef ρ ε m σ n).eigenvalues_pos _
   · rw [← HermitianMat.sum_eigenvalues_eq_trace] at hσ' ⊢
@@ -881,7 +882,7 @@ private theorem σ''_tr_bounds : 1 ≤ (σ''_unnormalized ρ ε m σ n).trace �
     rw [he]; clear he
     dsimp
     rw [Equiv.sum_comp e (fun k ↦ Real.exp (f_map i n (Matrix.IsHermitian.eigenvalues _ k)))]
-    gcongr
+    gcongr with k
     · exact Finset.univ_nonempty
     · apply exp_f_le i n _
       exact (σ'_posdef ρ ε m σ n).eigenvalues_pos _
@@ -1076,7 +1077,7 @@ private theorem EquationS88 (ρ : MState (H i)) (σ : (n : ℕ) → ↑IsFree) {
   rw [ENNReal.toReal_sub_of_le ?_ (by finiteness)]; swap
   · dsimp [c']
     rw [ENNReal.ofReal_max]
-    convert le_max_right _ _
+    convert! le_max_right _ _
     rw [ENNReal.ofReal_add (by positivity) (by positivity),
       ENNReal.ofReal_add (by positivity) (by positivity)]
     rw [ENNReal.ofReal_toReal (by finiteness)]
@@ -1574,8 +1575,7 @@ private theorem EquationS62
       intro x hx
       specialize hliminfP1 ⟨x, hx.le⟩ hx
       apply ENNReal.ofReal_mono at hliminfP1
-      convert ← hliminfP1 using 1
-      dsimp
+      convert! ← hliminfP1 using 1
       conv =>
         enter [2, 1, n]
         exact (ENNReal.ofReal_eq_coe_nnreal _).symm
@@ -1612,7 +1612,7 @@ private theorem EquationS62
             LemmaS2limsup hε2 (fun n ↦ ℰ n (ρ ⊗ᵣ^[n])) (σ'' ρ ε m σ) (hlimsup_le ε1 hε1)
           specialize hlimsupP2 ⟨ε2, hε2.le⟩ hε2 ⟨ε1, ⟨hε1.1.le, hε1.2.le⟩⟩ hε1
           trans ε1
-          · convert hlimsupP2
+          · convert! hlimsupP2
             simp only [Prob.coe_one_minus, sub_sub_cancel]
           · simp only [one_div, zero_add, inf_le_left, ε1]
         · apply Filter.le_limsup_of_frequently_le ?_ ?_
@@ -1632,10 +1632,9 @@ private theorem EquationS62
       specialize hlimsupP2' x hx
       apply le_of_eq at hlimsupP2'
       apply ENNReal.ofReal_mono at hlimsupP2'
-      convert ← hlimsupP2' using 1
+      convert! ← hlimsupP2' using 1
       swap
       · simp
-      dsimp
       conv =>
         enter [2, 1, n]
         exact (ENNReal.ofReal_eq_coe_nnreal _).symm
@@ -1663,7 +1662,7 @@ private theorem EquationS62
         (.ofReal (c' (ε2 n) n) - (R2 ρ σ + .ofReal ε₀ + .ofReal (ε2 n)))) (𝓝 0) := by
       have hf : Filter.atTop.Tendsto (fun n ↦ .ofReal ⟪P2 (ε2 n) n, ℰ n (ρ ⊗ᵣ^[n])⟫) (𝓝 (0 : ℝ≥0∞)) := by
         refine tendsto_of_le_liminf_of_limsup_le bot_le ?_
-        convert hliminf_g₂
+        convert! hliminf_g₂
         apply ENNReal.ofReal_eq_coe_nnreal
       obtain ⟨C, hC⟩ := hc' ε2 hg₂
       refine ENNReal.bdd_le_mul_tendsto_zero (b := C) (by finiteness) hf ?_
@@ -1697,7 +1696,7 @@ private theorem EquationS62
           --this is stated above as exists_liminf_zero_of_forall_liminf_le.
           -- ... but then this needs to match up with the ε2 ...
           --Ahh, no, so actually this `g` is how we want to pick our `ε2` above!
-          convert hliminf_g₁ using 3 with n
+          convert! hliminf_g₁ using 3 with n
           apply ENNReal.ofReal_eq_coe_nnreal
         · conv =>
             enter [1, 1, n]
@@ -2021,7 +2020,7 @@ theorem GeneralizedQSteinsLemma {i : ι} (ρ : MState (H i)) {ε : Prob} (hε : 
           simp [hε'.1]
         · right; exact ENNReal.sub_ne_top hσ₁_top
       suffices h : ∀ (m k : ℕ), R2 ρ (σₖ (m + k)) - R1 ρ ε ≤ (1 - ε')^k * (R2 ρ (σₖ m) - R1 ρ ε) by
-        convert h 0; simp
+        convert! h 0; simp
       intro m k; induction k generalizing m
       · simp [σₖ]
       rename_i k ih

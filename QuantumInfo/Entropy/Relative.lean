@@ -2151,26 +2151,22 @@ private lemma inner_one_kron_eq_inner_traceLeft
 private lemma fixed_support_kron_right (ρ : MState (dA × dB))
     {x : EuclideanSpace ℂ (dA × dB)} (hx : x ∈ ρ.M.support) :
     (ρ.traceRight.M.supportProj ⊗ₖ (1 : HermitianMat dB ℂ)).lin x = x := by
-  let K : HermitianMat (dA × dB) ℂ := ρ.traceRight.M.kerProj ⊗ₖ (1 : HermitianMat dB ℂ)
-  simpa [Matrix.toEuclideanLin,
-    show K.mat.toEuclideanLin x = 0 by
-      simpa [HermitianMat.lin] using
-        ((HermitianMat.inner_zero_iff ρ.nonneg (by
-          simpa [K] using HermitianMat.kronecker_nonneg
-            (by simpa [HermitianMat.kerProj] using
-              (HermitianMat.projector_nonneg (S := ρ.traceRight.M.ker)))
-            (by rw [HermitianMat.zero_le_iff]; exact Matrix.PosSemidef.one))).1 (by
-          rw [HermitianMat.inner_comm, inner_kron_one_eq_inner_traceRight,
-            HermitianMat.inner_comm]
-          simpa [K, MState.exp_val] using
-            (ρ.traceRight.exp_val_eq_zero_iff
-              (by simpa [HermitianMat.kerProj] using
-                (HermitianMat.projector_nonneg (S := ρ.traceRight.M.ker)))).2
-              (by simp)) hx)] using
-    congrArg (fun T : HermitianMat (dA × dB) ℂ => T.mat.toEuclideanLin x)
-      (show K + ρ.traceRight.M.supportProj ⊗ₖ (1 : HermitianMat dB ℂ) = 1 by
-        simp only [K, ← HermitianMat.add_kronecker,
-          ρ.traceRight.M.kerProj_add_supportProj, HermitianMat.kronecker_one_one])
+  set K : HermitianMat (dA × dB) ℂ := ρ.traceRight.M.kerProj ⊗ₖ (1 : HermitianMat dB ℂ) with hKdef
+  have hKx : x ∈ K.ker := by
+    refine (HermitianMat.inner_zero_iff ρ.nonneg (HermitianMat.kronecker_nonneg
+      (by simpa [HermitianMat.kerProj] using
+        (HermitianMat.projector_nonneg (S := ρ.traceRight.M.ker)))
+      (by rw [HermitianMat.zero_le_iff]; exact Matrix.PosSemidef.one))).1 ?_ hx
+    rw [HermitianMat.inner_comm, inner_kron_one_eq_inner_traceRight, HermitianMat.inner_comm]
+    simpa [hKdef, MState.exp_val] using
+      (ρ.traceRight.exp_val_eq_zero_iff (by simpa [HermitianMat.kerProj] using
+        (HermitianMat.projector_nonneg (S := ρ.traceRight.M.ker)))).2 (by simp)
+  have hsum : K + ρ.traceRight.M.supportProj ⊗ₖ (1 : HermitianMat dB ℂ) = 1 := by
+    rw [hKdef, ← HermitianMat.add_kronecker, ρ.traceRight.M.kerProj_add_supportProj,
+      HermitianMat.kronecker_one_one]
+  have key := congrArg (fun T : HermitianMat (dA × dB) ℂ => T.lin x) hsum
+  simpa [HermitianMat.lin, HermitianMat.mat_add, map_add, LinearMap.add_apply,
+    Matrix.toLpLin_apply, (K.mem_ker_iff_mulVec_zero x).1 hKx] using key
 
 private lemma fixed_support_kron_left (ρ : MState (dA × dB))
     {x : EuclideanSpace ℂ (dA × dB)} (hx : x ∈ ρ.M.support) :
@@ -2184,20 +2180,17 @@ private lemma fixed_support_kron_left (ρ : MState (dA × dB))
       (by simpa [HermitianMat.kerProj] using
         (HermitianMat.projector_nonneg (S := ρ.traceLeft.M.ker)))
   have hsum : K + P = 1 := by
-    show K + P = 1
     simp only [K, P, ← HermitianMat.kronecker_add, ρ.traceLeft.M.kerProj_add_supportProj,
       HermitianMat.kronecker_one_one]
-  simpa [P, Matrix.toEuclideanLin,
-    show K.mat.toEuclideanLin x = 0 by
-      simpa [HermitianMat.lin] using ((HermitianMat.inner_zero_iff ρ.nonneg hK_nonneg).1 (by
-      rw [HermitianMat.inner_comm, inner_one_kron_eq_inner_traceLeft]
-      rw [HermitianMat.inner_comm]
-      simpa [K, MState.exp_val] using
-        (ρ.traceLeft.exp_val_eq_zero_iff
-          (by simpa [HermitianMat.kerProj] using
-            (HermitianMat.projector_nonneg (S := ρ.traceLeft.M.ker)))).2
-          (by simp)) hx)] using
-    congrArg (fun T : HermitianMat (dA × dB) ℂ => T.mat.toEuclideanLin x) hsum
+  have hKx : x ∈ K.ker := by
+    refine (HermitianMat.inner_zero_iff ρ.nonneg hK_nonneg).1 ?_ hx
+    rw [HermitianMat.inner_comm, inner_one_kron_eq_inner_traceLeft, HermitianMat.inner_comm]
+    simpa [K, MState.exp_val] using
+      (ρ.traceLeft.exp_val_eq_zero_iff (by simpa [HermitianMat.kerProj] using
+        (HermitianMat.projector_nonneg (S := ρ.traceLeft.M.ker)))).2 (by simp)
+  have key := congrArg (fun T : HermitianMat (dA × dB) ℂ => T.lin x) hsum
+  simpa [P, HermitianMat.lin, HermitianMat.mat_add, map_add, LinearMap.add_apply,
+    Matrix.toLpLin_apply, (K.mem_ker_iff_mulVec_zero x).1 hKx] using key
 
 /-- `I(A:B) = 𝐃(ρᴬᴮ‖ρᴬ ⊗ ρᴮ)` -/
 theorem qMutualInfo_as_qRelativeEnt (ρ : MState (dA × dB)) :

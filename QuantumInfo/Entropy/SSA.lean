@@ -208,8 +208,10 @@ V_sigma is an isometry.
 -/
 theorem V_sigma_isometry [Nonempty dB] (σBC : HermitianMat (dB × dC) ℂ) (hσ : σBC.mat.PosDef) :
     (V_sigma σBC).conjTranspose * (V_sigma σBC) = 1 := by
-  simp [V_sigma]
-  exact V_rho_isometry _ (hσ.reindex _)
+  rw [V_sigma, Matrix.reindex_apply, Matrix.conjTranspose_submatrix, Matrix.submatrix_mul_equiv,
+    V_rho_isometry (σBC.reindex (Equiv.prodComm dB dC))
+      (by rw [HermitianMat.mat_reindex]; exact hσ.reindex _)]
+  simp
 
 /-
 Definition of W_mat with correct reindexing.
@@ -242,14 +244,11 @@ theorem Matrix.opNorm_mul_le {l m n 𝕜 : Type*} [Fintype l] [Fintype m] [Finty
     [DecidableEq l] [DecidableEq m] [DecidableEq n] [RCLike 𝕜]
     (A : Matrix l m 𝕜) (B : Matrix m n 𝕜) :
     Matrix.opNorm (A * B) ≤ Matrix.opNorm A * Matrix.opNorm B := by
-  have h_opNorm_mul_le : ∀ (A : Matrix l m 𝕜) (B : Matrix m n 𝕜), Matrix.opNorm (A * B) ≤ Matrix.opNorm A * Matrix.opNorm B := by
-    intro A B
-    have h_comp : Matrix.toEuclideanLin (A * B) = Matrix.toEuclideanLin A ∘ₗ Matrix.toEuclideanLin B := by
-      ext; simp [toEuclideanLin]
-    convert ContinuousLinearMap.opNorm_comp_le ( Matrix.toEuclideanLin A |> LinearMap.toContinuousLinearMap ) ( Matrix.toEuclideanLin B |> LinearMap.toContinuousLinearMap ) using 1;
-    unfold Matrix.opNorm;
-    exact congr_arg _ ( by aesop );
-  exact h_opNorm_mul_le A B
+  have h_comp : Matrix.toEuclideanLin (A * B) = Matrix.toEuclideanLin A ∘ₗ Matrix.toEuclideanLin B := by
+    ext; simp [toEuclideanLin]
+  simp only [Matrix.opNorm, h_comp]
+  exact ContinuousLinearMap.opNorm_comp_le (LinearMap.toContinuousLinearMap (Matrix.toEuclideanLin A))
+    (LinearMap.toContinuousLinearMap (Matrix.toEuclideanLin B))
 
 theorem Matrix.opNorm_reindex_proven {l m n p : Type*} [Fintype l] [Fintype m] [Fintype n] [Fintype p]
     [DecidableEq l] [DecidableEq m] [DecidableEq n] [DecidableEq p]
@@ -540,10 +539,8 @@ private lemma T₁_isometry [Nonempty dB]
     · ext i j
       simp [Matrix.one_apply]
       aesop
-  convert congr_arg (Matrix.reindex (Equiv.prodAssoc dA dB dC).symm (Equiv.prodAssoc dA dB dC).symm) h_kron using 1
-  ext i j
-  simp [Matrix.one_apply]
-  aesop
+  rw [T₁_mat, Matrix.reindex_apply, Matrix.conjTranspose_submatrix, Matrix.submatrix_mul_equiv,
+    h_kron, Matrix.submatrix_one_equiv]
 
 set_option maxHeartbeats 400000 in
 private lemma T₂_sq_le_one [Nonempty dB]
@@ -846,7 +843,7 @@ theorem operator_ineq_SSA [Nonempty dA] [Nonempty dB] [Nonempty dC]
     rw [h_inv_symm];
   have h_inv_symm : (ρAB.traceRight⁻¹ ⊗ₖ σBC).reindex (Equiv.prodAssoc dA dB dC).symm ≤ ρAB⁻¹ ⊗ₖ σBC.traceLeft := by
     aesop;
-  convert HermitianMat.reindex_le_reindex_iff ( Equiv.prodAssoc dA dB dC ) _ _ |>.2 h_inv_symm using 1
+  convert! HermitianMat.reindex_le_reindex_iff ( Equiv.prodAssoc dA dB dC ) _ _ |>.2 h_inv_symm using 1
 
 open scoped InnerProductSpace RealInnerProductSpace
 
@@ -865,7 +862,8 @@ private lemma inner_kron_one_eq_inner_traceRight
     simp [ Matrix.traceRight, Matrix.one_apply, mul_comm ];
     simp only [Finset.sum_sigma', Finset.mul_sum _ _ _];
     rw [ ← Finset.sum_filter ];
-    refine' Finset.sum_bij ( fun x _ => ⟨ x.snd.1, x.fst.1, x.fst.2 ⟩ ) _ _ _ _ <;> aesop_cat;
+    refine' Finset.sum_bij ( fun x _ => ⟨ x.snd.1, x.fst.1, x.fst.2 ⟩ ) _ _ _ _ <;>
+      aesop (add simp [Finset.mem_filter, Sigma.ext_iff, Prod.ext_iff]);
   exact congr_arg Complex.re h_partial_trace
 
 omit [DecidableEq d₂] in
