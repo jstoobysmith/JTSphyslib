@@ -1291,14 +1291,7 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
           change f x.1
         rw [MeasureTheory.integral_subtype_comap (by simp), ← setIntegral_univ]
         change ∫ x in Set.univ, f x = ∫ (x : Space d.succ) in _, f x
-        refine (setIntegral_congr_set ?_)
-        rw [← MeasureTheory.ae_eq_set_compl]
-        trans (∅ : Set (Space d.succ))
-        · apply Filter.EventuallyEq.of_eq
-          rw [← Set.compl_empty]
-          exact compl_compl _
-        · symm
-          simp
+        exact setIntegral_congr_set (MeasureTheory.ae_eq_univ.mpr (by simp)).symm
       _ = - ∫ n, (∫ r, ‖r.1‖⁻¹ ^ d *
         (_root_.deriv (fun a => η (a • n)) ‖r.1‖)
         ∂((Measure.volumeIoiPow (Module.finrank ℝ (Space d.succ) - 1))))

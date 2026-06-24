@@ -139,7 +139,8 @@ lemma genBoostAux₁_basis_genBoostAux₂_minkowskiProduct (u v : Velocity d) (�
     simp only [map_add, Velocity.minkowskiProduct_self_eq_one]
     rw [minkowskiProduct_symm]
     ring
-  simp
+  simp only [smul_apply, map_add, Velocity.minkowskiProduct_self_eq_one, smul_eq_mul, neg_mul,
+    neg_inj]
   have h2 : (1 + ⟪u.1, v.1⟫ₘ) ≠ 0 := by
     exact Velocity.one_add_minkowskiProduct_ne_zero u v
   field_simp [h2]

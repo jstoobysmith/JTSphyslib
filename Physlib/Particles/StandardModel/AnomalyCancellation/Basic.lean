@@ -42,7 +42,8 @@ lemma sum_SMSpecies_numberCharges_one {M} [AddCommMonoid M]
   `(Fin 5 → Fin n → ℚ)`. -/
 @[simps!]
 def toSpeciesEquiv : (SMCharges n).Charges ≃ (Fin 5 → Fin (SMSpecies n).numberCharges → ℚ) :=
-  ((Equiv.curry _ _ _).symm.trans ((@finProdFinEquiv 5 (SMSpecies n).numberCharges).arrowCongr (Equiv.refl ℚ))).symm
+  ((Equiv.curry _ _ _).symm.trans ((@finProdFinEquiv 5
+    (SMSpecies n).numberCharges).arrowCongr (Equiv.refl ℚ))).symm
 
 /-- For a given `i ∈ Fin 5`, the projection of a charge onto that species. -/
 @[simps!]
