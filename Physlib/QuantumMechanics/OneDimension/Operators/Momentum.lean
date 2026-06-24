@@ -58,7 +58,9 @@ lemma momentumOperator_smul {ψ : ℝ → ℂ} (hψ : Differentiable ℝ ψ) (c 
   simp only [neg_mul, Pi.smul_apply]
   rw [smul_comm]
   congr
-  rw [deriv_const_smul]
+  erw [deriv_smul]
+  simp only [smul_eq_mul, deriv_const', zero_mul, add_zero]
+  fun_prop
   fun_prop
 
 lemma momentumOperator_add {ψ1 ψ2 : ℝ → ℂ}

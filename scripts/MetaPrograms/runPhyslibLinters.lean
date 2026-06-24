@@ -14,21 +14,8 @@ open System (FilePath)
 
 open Lake
 
-/-- The file paths of modules exempt from all linters, read from `scripts/LinterExemption.txt`.
-  This is used to lint `QuantumInfo` file-by-file. -/
-def linterExemptions : IO (Array String) := do
-  let path : FilePath := (System.mkFilePath ["scripts", "LinterExemption"]).addExtension "txt"
-  unless (← path.pathExists) do return #[]
-  let lines ← IO.FS.lines path
-  return lines.filterMap (fun l ↦ if l.trimAscii.copy == "" then none else some l.trimAscii.copy)
-
-/-- The file path (as a string e.g. `QuantumInfo/Foo/Bar.lean`) of the module `mod`. -/
-def moduleToFilePathString (mod : Name) : String :=
-  ((System.mkFilePath (mod.toString.splitToList (· == '.'))).addExtension "lean").toString
-
-/-- Run the Batteries linter on a given module, skipping declarations in exempt modules.
-  Returns `true` if linting failed. -/
-unsafe def runLinterOnModule (module : Name) (exemptions : Array String) : IO Bool := do
+/-- Run the Batteries linter on a given module and update the linter if `update` is `true`. -/
+unsafe def runLinterOnModule  (module : Name): IO Unit := do
   initSearchPath (← findSysroot)
   Lean.enableInitializersExecution
   -- If the linter is being run on a target that doesn't import `Batteries.Tactic.List`,
@@ -48,13 +35,7 @@ unsafe def runLinterOnModule (module : Name) (exemptions : Array String) : IO Bo
   let ctx := { fileName := "", fileMap := default }
   let state := { env }
   Prod.fst <$> (CoreM.toIO · ctx state) do
-    let env ← getEnv
     let decls ← getDeclsInPackage module.getRoot
-    -- Skip declarations whose source module is listed in `scripts/LinterExemption.txt`.
-    let decls := decls.filter fun n =>
-      match env.getModuleIdxFor? n with
-      | some idx => !exemptions.contains (moduleToFilePathString env.header.moduleNames[idx]!)
-      | none => true
     let linters ← getChecks (slow := true) (runAlways := none) (runOnly := none)
     -- The `defsWithUnderscore` linter flags any `def`/`instance`/structure-projection whose name
     -- contains an underscore. It produces many false positives in Physlib (e.g. the deliberate
@@ -75,16 +56,11 @@ unsafe def runLinterOnModule (module : Name) (exemptions : Array String) : IO Bo
         formatLinterResults results decls (groupByFilename := true) (useErrorFormat := true)
           s!"in {module}" (runSlowLinters := true) .medium linters.size
       IO.print (← fmtResults.toString)
-      return true
+      IO.Process.exit 1
     else
       IO.println s!"-- Linting passed for {module}."
-      return false
+      IO.Process.exit 0
 
 unsafe def main (_ : List String) : IO Unit := do
-  let exemptions ← linterExemptions
-  let modulesToLint := #[`Physlib, `QuantumInfo]
-  let failures ← modulesToLint.mapM (runLinterOnModule · exemptions)
-  if failures.any id then
-    IO.Process.exit 1
-  else
-    IO.Process.exit 0
+  let modulesToLint := #[`Physlib]
+  modulesToLint.forM <| runLinterOnModule

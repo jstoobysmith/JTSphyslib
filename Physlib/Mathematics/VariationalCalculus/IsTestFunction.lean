@@ -287,20 +287,25 @@ lemma IsTestFunction.divergence {f : X → X} [FiniteDimensional ℝ X] (hf : Is
     rw [divergence_eq_sum_fderiv' bX]
   apply IsTestFunction.sum
   intro i
-  let reprMap : X →ₗ[ℝ] ℝ := {
+  let f : X →ₗ[ℝ] ℝ := {
       toFun := (bX.repr · i)
       map_add' := by simp
       map_smul' := by simp
 
     }
-  let f' : X →L[ℝ] ℝ := reprMap.toContinuousLinearMap
-  have h_trace_contDiff : ContDiff ℝ ∞ f' := f'.contDiff
-  change IsTestFunction (fun x => f' ((fderiv ℝ f x) (bX i)))
+  let f' : X →L[ℝ] ℝ := (f).toContinuousLinearMap
+  change IsTestFunction (fun x => f' _)
   apply IsTestFunction.comp_left
-    (f:=fun x : X => (fderiv ℝ f x) (bX i)) (g:=f')
+  fun_prop
+  simp only [map_zero]
+  fun_prop
+  /-unfold _root_.divergence
+  apply IsTestFunction.comp_left
+    (f:=fun x : X => (fderiv ℝ f x)) (g:=fun f : X →L[ℝ] X => LinearMap.trace _ _ f.toLinearMap)
   · fun_prop
-  · simp [f']
-  · exact h_trace_contDiff
+  · simp
+  · sorry -- missing mathlib API-/
+
 @[fun_prop]
 lemma IsTestFunction.gradient {d : ℕ} (φ : Space d → ℝ)
     (hφ : IsTestFunction φ) :

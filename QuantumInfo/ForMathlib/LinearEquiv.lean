@@ -7,31 +7,6 @@ module
 
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 
-/-!
-# Relabelling linear equivalences
-
-## i. Overview
-
-This module provides linear equivalences obtained by relabelling the index type of a finite
-function space `d → R` or of `EuclideanSpace 𝕜 d` along an index equivalence `e : d ≃ d₂`,
-together with lemmas relating them to `Matrix.reindex`.
-
-## ii. Key results
-
-- `LinearEquiv.of_relabel` : the `R`-linear equivalence `(d₂ → R) ≃ₗ[R] (d → R)` induced by an
-  index equivalence `e : d ≃ d₂`.
-- `LinearEquiv.euclidean_of_relabel` : the `EuclideanSpace` analogue of `of_relabel`.
-- `Matrix.reindex_toLin'` and `Matrix.reindex_toEuclideanLin` : reindexing a matrix conjugates
-  its associated linear map by these relabelling equivalences.
-
-## iii. Table of contents
-
-This can be filled in later.
-
-## iv. References
-
--/
-
 @[expose] public section
 
 variable {d d₁ d₂ d₃ R 𝕜 : Type*} [RCLike 𝕜]
@@ -41,9 +16,6 @@ namespace LinearEquiv
 variable {R : Type*} [Semiring R]
 
 variable (R) in
-/-- The `R`-linear equivalence `(d₂ → R) ≃ₗ[R] (d → R)` that relabels the coordinates of a
-function along an index equivalence `e : d ≃ d₂`. This is the linear-equivalence packaging of
-`Equiv.piCongrLeft`. -/
 @[simps]
 def of_relabel (e : d ≃ d₂) : (d₂ → R) ≃ₗ[R] (d → R) := by
   refine' { e.symm.piCongrLeft (fun _ ↦ R) with .. }
@@ -52,10 +24,6 @@ def of_relabel (e : d ≃ d₂) : (d₂ → R) ≃ₗ[R] (d → R) := by
 variable (e : d ≃ d₂)
 
 variable (𝕜) in
-/-- The `𝕜`-linear equivalence `EuclideanSpace 𝕜 d₂ ≃ₗ[𝕜] EuclideanSpace 𝕜 d` that relabels the
-coordinates of a vector along an index equivalence `e : d ≃ d₂`. This is the `EuclideanSpace`
-analogue of `LinearEquiv.of_relabel`, obtained by transporting it across the `WithLp`
-identifications. -/
 @[simps!]
 def euclidean_of_relabel (e : d ≃ d₂) : EuclideanSpace 𝕜 d₂ ≃ₗ[𝕜] EuclideanSpace 𝕜 d :=
   (WithLp.linearEquiv 2 𝕜 _).trans ((of_relabel _ e).trans (WithLp.linearEquiv 2 𝕜 _).symm)

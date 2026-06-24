@@ -67,7 +67,6 @@ srcDir = "scripts/MetaPrograms"
 [[lean_exe]]
 name = "spelling"
 srcDir = "scripts/MetaPrograms"
-supportInterpreter = true
 
 [[lean_exe]]
 name = "check_rfl"
