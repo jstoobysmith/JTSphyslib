@@ -20,7 +20,10 @@ public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.HalfPlane
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Line
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Ring
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalCylinder
+public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidCylinder
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidSphere
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalShell
 public import PhyslibAlpha.QuantumMechanics.QuantumHarmonicOscillator
 public import PhyslibAlpha.QuantumMechanics.StinespringDilation
+public import PhyslibAlpha.Mathematics.PartialDerivativeTest
+public import PhyslibAlpha.ClassicalMechanics.CoupledSpringPotential
