@@ -68,18 +68,20 @@ lemma sum_of_vectors {n : ℕ} (f : Fin k → (PureU1 n).LinSols) (j : Fin n) :
     (∑ i : Fin k, (f i)).1 j = (∑ i : Fin k, (f i).1 j) :=
   sum_of_anomaly_free_linear (fun i => f i) j
 
-TODO "The definition of `coordinateMap` here may be improved by replacing
-  `Finsupp.equivFunOnFinite` with `Finsupp.linearEquivFunOnFinite`. Investigate this."
 /-- The coordinate map for the basis. -/
 noncomputable
 def coordinateMap : (PureU1 n.succ).LinSols ≃ₗ[ℚ] Fin n →₀ ℚ where
-  toFun S := Finsupp.equivFunOnFinite.invFun (S.1 ∘ Fin.castSucc)
-  map_add' S T := Finsupp.ext (congrFun rfl)
-  map_smul' a S := Finsupp.ext (congrFun rfl)
+  toFun S := (Finsupp.linearEquivFunOnFinite ℚ ℚ (Fin n)).symm (S.1 ∘ Fin.castSucc)
+  map_add' S T := by
+    rw [← map_add]
+    rfl
+  map_smul' a S := by
+    rw [← map_smul]
+    rfl
   invFun f := ∑ i : Fin n, f i • asLinSols i
   left_inv S := by
-    simp only [Nat.succ_eq_add_one, Equiv.invFun_as_coe,
-      Finsupp.equivFunOnFinite_symm_apply_apply, Function.comp_apply]
+    simp only [Nat.succ_eq_add_one,
+      Finsupp.linearEquivFunOnFinite_symm_apply, Function.comp_apply]
     apply pureU1_anomalyFree_ext
     intro j
     rw [sum_of_vectors]
@@ -91,10 +93,11 @@ def coordinateMap : (PureU1 n.succ).LinSols ≃ₗ[ℚ] Fin n →₀ ℚ where
       exact Rat.mul_zero (S.val k.castSucc)
     · simp
   right_inv f := by
-    simp only [Equiv.invFun_as_coe]
+    simp only
     ext
     rename_i j
-    simp only [Nat.succ_eq_add_one, Finsupp.equivFunOnFinite_symm_apply_apply, Function.comp_apply]
+    simp only [Nat.succ_eq_add_one, Finsupp.linearEquivFunOnFinite_symm_apply,
+      Function.comp_apply]
     rw [sum_of_vectors]
     simp only [HSMul.hSMul, SMul.smul,asLinSols_val]
     rw [Finset.sum_eq_single j]
