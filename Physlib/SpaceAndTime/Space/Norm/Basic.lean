@@ -1306,7 +1306,6 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
         let x : Space d.succ := r.2.1 • r.1.1
         have hr := r.2.2
         simp [-Subtype.coe_prop] at hr
-        have hr2 : r.2.1 ≠ 0 := by exact Ne.symm (ne_of_lt hr)
         rw [abs_of_nonneg (le_of_lt hr)]
         trans (r.2.1 ^ d)⁻¹ * _root_.deriv (fun a => η (a • ‖↑x‖⁻¹ • ↑x)) ‖x‖
         · simp [x, norm_smul]
@@ -1319,8 +1318,7 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
           field_simp
           simp only [one_smul]
           rw [abs_of_nonneg (le_of_lt hr)]
-        rw [← grad_inner_space_unit_vector]
-        rw [real_inner_comm]
+        rw [← grad_inner_space_unit_vector, real_inner_comm]
         simp [inner_smul_left, x, norm_smul, abs_of_nonneg (le_of_lt hr)]
         field_simp
         ring
@@ -1336,23 +1334,8 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
         funext r
         have hr := r.2
         simp [-Subtype.coe_prop] at hr
-        trans ((r.1 ^ d).toNNReal : ℝ) • ((r.1 ^ d)⁻¹ * _root_.deriv (fun a => η (a • ↑n)) |r.1|)
-        · rw [NNReal.smul_def]
-          simp only [Real.coe_toNNReal', smul_eq_mul, Nat.succ_eq_add_one, mul_eq_mul_left_iff,
-            mul_eq_mul_right_iff, inv_inj, sup_eq_right]
-          rw [abs_of_nonneg (le_of_lt hr)]
-          simp
-        trans ((r.1 ^ d) : ℝ) • ((r.1 ^ d)⁻¹ * _root_.deriv (fun a => η (a • ↑n)) |r.1|)
-        · congr
-          rw [Real.coe_toNNReal']
-          rw [max_eq_left]
-          apply pow_nonneg
-          grind
-        have h1 : r.1 ≠ 0 := by exact ne_of_gt r.2
-        simp only [smul_eq_mul]
-        field_simp
-        congr
-        rw [abs_of_nonneg (le_of_lt hr)]
+        rw [abs_of_nonneg hr.le, NNReal.smul_def, Real.coe_toNNReal _ (by positivity),
+          smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ (pow_ne_zero d hr.ne'), one_mul]
         fun_prop
       _ = - ∫ n, (-η 0) ∂(volume (α := Space d.succ).toSphere) := by
         congr
@@ -1379,8 +1362,8 @@ private lemma distDiv_inv_pow_eq_dim' {d : ℕ} :
                 simp [fderiv_smul_const]
               rw [iteratedFDeriv_succ_const]
               rfl) (by use 1, 1; simp [norm_smul]) η
-        rw [MeasureTheory.integral_subtype_comap (by simp)]
-        rw [MeasureTheory.integral_Ioi_of_hasDerivAt_of_tendsto (f := fun a => η (a • n)) (m := 0)]
+        rw [MeasureTheory.integral_subtype_comap (by simp),
+          MeasureTheory.integral_Ioi_of_hasDerivAt_of_tendsto (f := fun a => η (a • n)) (m := 0)]
         · simp
         · refine ContinuousAt.continuousWithinAt ?_
           fun_prop
