@@ -90,7 +90,6 @@ open SMCharges
 variable {n : ℕ}
 
 /-- The gravitational anomaly equation. -/
-@[simp]
 def accGrav : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (6 * Q S i + 3 * U S i + 3 * D S i + 2 * L S i + E S i)
   map_add' S T := by
@@ -119,7 +118,6 @@ lemma accGrav_ext {S T : (SMCharges n).Charges}
   simp_all
 
 /-- The `SU(2)` anomaly equation. -/
-@[simp]
 def accSU2 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (3 * Q S i + L S i)
   map_add' S T := by
@@ -148,7 +146,6 @@ lemma accSU2_ext {S T : (SMCharges n).Charges}
   exact Mathlib.Tactic.LinearCombination.add_eq_eq (congrArg (HMul.hMul 3) (hj 0)) (hj 3)
 
 /-- The `SU(3)` anomaly equations. -/
-@[simp]
 def accSU3 : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (2 * Q S i + U S i + D S i)
   map_add' S T := by
@@ -177,7 +174,6 @@ lemma accSU3_ext {S T : (SMCharges n).Charges}
   simp_all
 
 /-- The `Y²` anomaly equation. -/
-@[simp]
 def accYY : (SMCharges n).Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (Q S i + 8 * U S i + 2 * D S i + 3 * L S i
     + 6 * E S i)

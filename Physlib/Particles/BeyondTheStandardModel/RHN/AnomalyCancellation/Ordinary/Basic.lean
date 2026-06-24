@@ -40,17 +40,17 @@ variable {n : ℕ}
 
 lemma gravSol (S : (SM n).LinSols) : accGrav S.val = 0 := by
   have hS := S.linearSol
-  simp only [SM_linearACCs, Fin.isValue] at hS
+  simp only [SM_linearACCs] at hS
   exact hS ⟨0, by simp⟩
 
 lemma SU2Sol (S : (SM n).LinSols) : accSU2 S.val = 0 := by
   have hS := S.linearSol
-  simp only [SM_linearACCs, Fin.isValue] at hS
+  simp only [SM_linearACCs] at hS
   exact hS ⟨1, by simp⟩
 
 lemma SU3Sol (S : (SM n).LinSols) : accSU3 S.val = 0 := by
   have hS := S.linearSol
-  simp only [SM_linearACCs, Fin.isValue] at hS
+  simp only [SM_linearACCs] at hS
   exact hS ⟨2, by simp⟩
 
 lemma cubeSol (S : (SM n).Sols) : accCube S.val = 0 := S.cubicSol

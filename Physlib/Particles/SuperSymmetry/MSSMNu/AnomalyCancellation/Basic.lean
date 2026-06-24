@@ -139,7 +139,6 @@ namespace MSSMACCs
 open MSSMCharges
 
 /-- The gravitational anomaly equation. -/
-@[simp]
 def accGrav : MSSMCharges.Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (6 * Q S i + 3 * U S i + 3 * D S i
     + 2 * L S i + E S i + N S i) + 2 * (Hd S + Hu S)
@@ -169,7 +168,6 @@ lemma accGrav_ext {S T : MSSMCharges.Charges}
   simp_all
 
 /-- The anomaly cancellation condition for SU(2) anomaly. -/
-@[simp]
 def accSU2 : MSSMCharges.Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (3 * Q S i + L S i) + Hd S + Hu S
   map_add' S T := by
@@ -199,7 +197,6 @@ lemma accSU2_ext {S T : MSSMCharges.Charges}
   simp_all
 
 /-- The anomaly cancellation condition for SU(3) anomaly. -/
-@[simp]
 def accSU3 : MSSMCharges.Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, (2 * (Q S i) + (U S i) + (D S i))
   map_add' S T := by
@@ -227,7 +224,6 @@ lemma accSU3_ext {S T : MSSMCharges.Charges}
   simp_all
 
 /-- The ACC for `Y²`. -/
-@[simp]
 def accYY : MSSMCharges.Charges →ₗ[ℚ] ℚ where
   toFun S := ∑ i, ((Q S) i + 8 * (U S) i + 2 * (D S) i + 3 * (L S) i
     + 6 * (E S) i) + 3 * (Hd S + Hu S)
@@ -325,7 +321,6 @@ lemma accQuad_ext {S T : (MSSMCharges).Charges}
   rw [hd, hu]
 
 /-- The function underlying the symmetric trilinear form used to define the cubic ACC. -/
-@[simp]
 def cubeTriLinToFun
     (S : MSSMCharges.Charges × MSSMCharges.Charges × MSSMCharges.Charges) : ℚ :=
   ∑ i, (6 * (Q S.1 i * Q S.2.1 i * Q S.2.2 i)

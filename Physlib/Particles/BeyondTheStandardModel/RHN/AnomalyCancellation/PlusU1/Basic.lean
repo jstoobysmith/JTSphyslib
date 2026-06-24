@@ -43,22 +43,22 @@ variable {n : ℕ}
 
 lemma gravSol (S : (PlusU1 n).LinSols) : accGrav S.val = 0 := by
   have hS := S.linearSol
-  simp only [PlusU1_linearACCs, Fin.isValue] at hS
+  simp only [PlusU1_linearACCs] at hS
   exact hS ⟨0, by simp⟩
 
 lemma SU2Sol (S : (PlusU1 n).LinSols) : accSU2 S.val = 0 := by
   have hS := S.linearSol
-  simp only [PlusU1_linearACCs, Fin.isValue] at hS
+  simp only [PlusU1_linearACCs] at hS
   exact hS ⟨1, by simp⟩
 
 lemma SU3Sol (S : (PlusU1 n).LinSols) : accSU3 S.val = 0 := by
   have hS := S.linearSol
-  simp only [PlusU1_linearACCs, Fin.isValue] at hS
+  simp only [PlusU1_linearACCs] at hS
   exact hS ⟨2, by simp⟩
 
 lemma YYsol (S : (PlusU1 n).LinSols) : accYY S.val = 0 := by
   have hS := S.linearSol
-  simp only [PlusU1_linearACCs, Fin.isValue] at hS
+  simp only [PlusU1_linearACCs] at hS
   exact hS ⟨3, by simp⟩
 
 lemma quadSol (S : (PlusU1 n).QuadSols) : accQuad S.val = 0 := by

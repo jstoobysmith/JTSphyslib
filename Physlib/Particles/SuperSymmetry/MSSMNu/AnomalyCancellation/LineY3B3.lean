@@ -80,15 +80,15 @@ lemma doublePoint_Y₃_B₃ (R : MSSMACC.LinSols) :
   simp only [mul_one, Fin.isValue, toSMSpecies_apply, one_mul, mul_neg, neg_neg, neg_mul, zero_mul,
     add_zero, neg_zero, Hd_apply, Fin.reduceFinMk, Hu_apply]
   have hLin := R.linearSol
-  simp only [MSSMACC_linearACCs, Nat.reduceMul, Fin.isValue, Fin.reduceFinMk] at hLin
+  simp only [MSSMACC_linearACCs] at hLin
   have h1 := hLin ⟨1, by decide⟩
   have h2 := hLin ⟨2, by decide⟩
   have h3 := hLin ⟨3, by decide⟩
-  simp only [Fin.isValue, Fin.sum_univ_three, Prod.mk_zero_zero, LinearMap.coe_mk, AddHom.coe_mk,
-    Prod.mk_one_one] at h1 h2 h3
+  simp only [accSU2, LinearMap.coe_mk, AddHom.coe_mk, accSU3, accYY] at h1 h2 h3
+  erw [Fin.sum_univ_three] at h1 h2 h3
+  simp only [Fin.isValue, toSMSpecies_apply, Nat.reduceMul, Hd_apply, Fin.reduceFinMk,
+    Hu_apply] at h1 h2 h3
   linear_combination (norm := ring_nf) -(12 * h2) + 9 * h1 + 3 * h3
-  simp only [Nat.reduceMul, Fin.isValue, Prod.mk_zero_zero, Prod.mk_one_one, add_sub_cancel_left,
-    sub_self]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma lineY₃B₃_doublePoint (R : MSSMACC.LinSols) (a b : ℚ) :

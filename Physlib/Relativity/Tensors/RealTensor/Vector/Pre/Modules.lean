@@ -80,7 +80,6 @@ lemma toFin1dℝ_eq_val (ψ : ContrMod d) : ψ.toFin1dℝ = ψ.val := by rfl
 -/
 
 /-- The standard basis of `ContrℝModule` indexed by `Fin 1 ⊕ Fin d`. -/
-@[simps!]
 def stdBasis : Basis (Fin 1 ⊕ Fin d) ℝ (ContrMod d) := Basis.ofEquivFun toFin1dℝEquiv
 
 @[simp]
