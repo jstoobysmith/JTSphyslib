@@ -346,7 +346,6 @@ abbrev toFin1dℝ (ψ : CoMod d) := toFin1dℝEquiv ψ
 -/
 
 /-- The standard basis of `CoℝModule` indexed by `Fin 1 ⊕ Fin d`. -/
-@[simps!]
 def stdBasis : Basis (Fin 1 ⊕ Fin d) ℝ (CoMod d) := Basis.ofEquivFun toFin1dℝEquiv
 
 @[simp]
