@@ -660,16 +660,16 @@ lemma permT_congr {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma Pure.permP_permP {n m1 m2 : ℕ} {c : Fin n → C} {c1 : Fin m1 → C} {c2 : Fin m2 → C}
-    {σ : Fin m1 → Fin n} {σ2 : Fin m2 → Fin m1} (h : IsReindexing c c1 σ) (h2 : IsReindexing c1 c2 σ2)
-    (p : Pure S c) :
+    {σ : Fin m1 → Fin n} {σ2 : Fin m2 → Fin m1} (h : IsReindexing c c1 σ)
+    (h2 : IsReindexing c1 c2 σ2) (p : Pure S c) :
     Pure.permP σ2 h2 (Pure.permP σ h p) = Pure.permP (σ ∘ σ2) (h.comp h2) p := by
   ext i
   simp [permP, Pure.permP, Function.comp_apply]
 
 @[simp]
 lemma permT_permT {n m1 m2 : ℕ} {c : Fin n → C} {c1 : Fin m1 → C} {c2 : Fin m2 → C}
-    {σ : Fin m1 → Fin n} {σ2 : Fin m2 → Fin m1} (h : IsReindexing c c1 σ) (h2 : IsReindexing c1 c2 σ2)
-    (t : S.Tensor c) :
+    {σ : Fin m1 → Fin n} {σ2 : Fin m2 → Fin m1} (h : IsReindexing c c1 σ)
+    (h2 : IsReindexing c1 c2 σ2) (t : S.Tensor c) :
     permT σ2 h2 (permT σ h t) = permT (σ ∘ σ2) (h.comp h2) t := by
   let P (t : S.Tensor c) := permT σ2 h2 (permT σ h t) = permT (σ ∘ σ2) (h.comp h2) t
   change P t

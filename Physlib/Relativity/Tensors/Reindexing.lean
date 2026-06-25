@@ -225,7 +225,8 @@ lemma append_assoc_left {n1 n2 n3 : ℕ} {c : Fin n1 → C} {c2 : Fin n2 → C} 
       (Fin.cast (by grind)) :=
   ⟨(finCongr (by grind)).bijective, fun i => congrFun (Fin.append_assoc c c2 c3) _⟩
 
-lemma append_succAbove_natAdd {n n1 : ℕ} {c : Fin n → C} {c1 : Fin (n1 + 1) → C} (i : Fin (n1 + 1)) :
+lemma append_succAbove_natAdd {n n1 : ℕ} {c : Fin n → C} {c1 : Fin (n1 + 1) → C}
+    (i : Fin (n1 + 1)) :
     IsReindexing (Fin.append c c1 ∘ (Fin.natAdd n i).succAbove)
       (Fin.append c (c1 ∘ i.succAbove)) id := by
   refine ⟨Function.bijective_id, fun x => ?_⟩
@@ -255,8 +256,8 @@ lemma append_succAbove_castAdd {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : Fin (n
   refine Fin.addCases (fun a => ?_) (fun a => ?_) y
   · have hidx : (Fin.castAdd (n1 + 1) i).succAbove (Fin.cast (by grind) (Fin.castAdd (n1 + 1) a))
         = Fin.castAdd (n1 + 1) (i.succAbove a) := by
-      have hcond : ((Fin.cast (by grind) (Fin.castAdd (n1 + 1) a)).castSucc < Fin.castAdd (n1 + 1) i)
-          ↔ (a.castSucc < i) := by
+      have hcond : ((Fin.cast (by grind) (Fin.castAdd (n1 + 1) a)).castSucc <
+          Fin.castAdd (n1 + 1) i) ↔ (a.castSucc < i) := by
         simp only [Fin.lt_def, Fin.val_castSucc, Fin.val_cast, Fin.val_castAdd]
       simp only [Fin.succAbove, hcond]
       split_ifs <;> ext <;> simp

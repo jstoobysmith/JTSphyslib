@@ -80,7 +80,8 @@ under Lorentz transformations.
 noncomputable def toFieldStrength {d} (A : ElectromagneticPotential d) :
     SpaceTime d → Lorentz.Vector d ⊗[ℝ] Lorentz.Vector d := fun x =>
   Tensorial.toTensor.symm
-  (permT id (IsReindexing.auto) {(η d | μ μ' ⊗ A.deriv x | μ' ν) + - (η d | ν ν' ⊗ A.deriv x | ν' μ)}ᵀ)
+  (permT id (IsReindexing.auto)
+    {(η d | μ μ' ⊗ A.deriv x | μ' ν) + - (η d | ν ν' ⊗ A.deriv x | ν' μ)}ᵀ)
 
 /-!
 
