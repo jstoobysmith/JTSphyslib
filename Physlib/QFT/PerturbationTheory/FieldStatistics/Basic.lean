@@ -282,7 +282,7 @@ lemma ofList_take_succ_cons (n : ℕ) (φ1 : 𝓕) (φs : List 𝓕) :
 
 lemma ofList_take_insertIdx_gt (n m : ℕ) (φ1 : 𝓕) (φs : List 𝓕) (hn : n < m) :
     ofList q ((List.insertIdx φs m φ1).take n) = ofList q (φs.take n) := by
-  rw [take_insert_gt φ1 n m hn φs]
+  rw [take_insert_gt φ1 n m hn.le φs]
 
 lemma ofList_insert_lt_eq (n m : ℕ) (φ1 : 𝓕) (φs : List 𝓕) (hn : m ≤ n)
     (hm : m ≤ φs.length) :

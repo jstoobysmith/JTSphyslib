@@ -169,14 +169,14 @@ lemma drop_eraseIdx_succ {I : Type} :
     refine drop_eraseIdx_succ n as _
 
 lemma take_insert_gt {I : Type} (i : I) :
-    (n m : ℕ) → (h : n < m) → (r : List I) →
+    (n m : ℕ) → (h : n ≤ m) → (r : List I) →
     List.take n (List.insertIdx r m i) = List.take n r
   | 0, 0, _, _ => by simp
   | 0, m + 1, _, _ => by simp
   | n+1, m + 1, _, [] => by simp
   | n+1, m + 1, h, a::as => by
     simp only [List.insertIdx_succ_cons, List.take_succ_cons, List.cons.injEq, true_and]
-    refine take_insert_gt i n m (Nat.succ_lt_succ_iff.mp h) as
+    refine take_insert_gt i n m (Nat.succ_le_succ_iff.mp h) as
 
 lemma take_insert_let {I : Type} (i : I) :
     (n m : ℕ) → (h : m ≤ n) → (r : List I) → (hm : m ≤ r.length) →
