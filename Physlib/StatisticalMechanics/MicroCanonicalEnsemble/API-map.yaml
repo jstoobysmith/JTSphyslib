@@ -1,0 +1,89 @@
+version: v0.1
+
+Title: Microcanonical ensemble
+
+Overview: |
+    The microcanonical ensemble API is built around `MicroHamiltonian`, a Hamiltonian
+    written as a measurable energy function (valued in `WithTop ℝ`, with `⊤` excluding a
+    configuration) on a phase space of finitely many continuous degrees of freedom,
+    parameterized by extrinsic data `D`; the `NVEHamiltonian` specialization fixes that
+    data to the particle number `N` and volume `V`. The API defines the partition
+    function and the thermodynamic quantities derived from it (internal energy, Helmholtz
+    free energy, entropy, pressure), and instantiates the ideal gas, computing its
+    partition function and proving the ideal gas law `PV = nRT`.
+
+ParentAPIs: []
+
+References: []
+
+Requirements:
+
+  - description: >
+      The key input data structure `MicroHamiltonian` (a measurable, `WithTop ℝ`-valued
+      energy function on a finite-dimensional phase space parameterized by extrinsic data
+      `D`) is defined.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/Basic.lean (MicroHamiltonian)
+
+  - description: >
+      The standard particle-number/volume specialization of the Hamiltonian is defined,
+      with accessors for the particle number `N` and volume `V`.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/Basic.lean (NVEHamiltonian, NVEHamiltonian.N, NVEHamiltonian.V)
+
+  - description: >
+      The partition function `Z` is defined as an integral of the Boltzmann weight over
+      phase space, both as a function of the thermodynamic `β` and of the temperature `T`.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (partitionZ, partitionZT)
+
+  - description: >
+      The partition function is complexified as a Laplace transform with its convergence
+      domain, and is shown to be smooth on the interior of that domain.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (PartitionZComplex, ZComplexConvergenceDomain, contDiffAt_partitionZ_of_mem_interior_convergenceDomain)
+
+  - description: >
+      The thermodynamic quantities derived from the partition function are defined:
+      internal energy, Helmholtz free energy, and the entropy expressed both as a function
+      of `T` and of `β`.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (internalU, helmholtzA, entropyS, entropySβ)
+
+  - description: >
+      The two definitions of the entropy (via `T` from the Helmholtz free energy, and via
+      `β` as `ln Z + β U`) are proved equivalent.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (entropy_A_eq_entropy_Z)
+
+  - description: >
+      The thermodynamic definition of temperature `1/T = ∂S/∂U` (at constant extrinsic
+      data) is proved.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (β_eq_deriv_S_U)
+
+  - description: >
+      Integrability conditions for the partition function are defined: `ZIntegrable` at a
+      given `β`, and `PositiveβIntegrable` for integrability at all positive `β`.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (ZIntegrable, PositiveβIntegrable)
+
+  - description: The pressure is defined as the variable conjugate to the volume.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/ThermoQuantities.lean (pressure)
+
+  - description: >
+      The ideal gas is instantiated as an `NVEHamiltonian` and its partition function is
+      computed in closed form.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/IdealGas.lean (IdealGas, partitionZ_eq)
+
+  - description: >
+      The Helmholtz free energy of the ideal gas is computed in closed form, and the ideal
+      gas is shown to be `ZIntegrable` at positive `β`.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/IdealGas.lean (helmholtzA_eq, ZIntegrable)
+
+  - description: The ideal gas law `PV = nRT` (with `R = 1` in the unitless system) is proved.
+    done: true
+    location: Physlib/StatisticalMechanics/MicroCanonicalEnsemble/IdealGas.lean (ideal_gas_law)
