@@ -7,6 +7,7 @@ module
 
 public import Physlib.Relativity.Tensors.Product
 public import Physlib.Relativity.Tensors.Contraction.Basis
+public import Physlib.Meta.Sorry
 /-!
 
 # Evaluation of tensor indices
@@ -119,6 +120,9 @@ noncomputable def evalPMultilinear {n : ℕ} {c : Fin (n + 1)→ C}
 
 end Pure
 
+TODO "Choose a more descriptive name for `evalT` and `evalP`, taking into consideration
+  the namespaces they live in."
+
 /-- Given a `i : Fin (n + 1)`, a `φ : Fin (S.repDim (c i))` and a tensor
   `t : Tensor S c`, `evalT i φ t` is the tensor formed by evaluating the `i`th index
   of `t` at `φ`. -/
@@ -226,6 +230,7 @@ lemma contrT_evalT {n : ℕ} {c : Fin (n + 1 + 1 + 1) → C}
   · simp only [map_add, hb1, hb2]
 
 attribute [-simp] Matrix.cons_val_zero Matrix.cons_val Fin.succAbove_zero
+
 /-- Evaluating the single-index basis tensor `basis ![c] (single.symm b)` at the index `x`
   yields the field element `1` if `b = x` (transported across `![c] 0 = c`) and `0` otherwise:
   evaluation of a one-index basis tensor is the Kronecker delta. -/
@@ -326,6 +331,21 @@ lemma eq_sum_evalT_zero {n : ℕ} {c : Fin (n + 1) → C} (t : Tensor S c) :
     simp [Finset.smul_sum]
   · simp [Finset.sum_add_distrib]
     grind
+
+lemma ext_of_evalT {n : ℕ} {c : Fin (n + 1) → C} (t1 t2 : Tensor S c)
+    (h : ∀ i φ, evalT i φ t1 = evalT i φ t2) :
+    t1 = t2 := by
+  rw [eq_sum_evalT t1, eq_sum_evalT t2]
+  congr
+  funext i
+  rw [h]
+
+@[sorryful]
+lemma ext_of_evalT_index {n : ℕ} {c : Fin (n + 1) → C} {t1 t2 : Tensor S c}
+    (i : Fin (n + 1)) (h : ∀ φ, evalT i φ t1 = evalT i φ t2) :
+    t1 = t2 := by
+  sorry
+
 
 end Tensor
 end TensorSpecies
