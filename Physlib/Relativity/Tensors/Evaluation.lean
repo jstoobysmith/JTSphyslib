@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.Product
+public import Physlib.Relativity.Tensors.Contraction.Basis
 /-!
 
 # Evaluation of tensor indices
@@ -173,6 +174,56 @@ lemma evalT_permT {n m : ℕ} {c : Fin (n + 1) → C} {c' : Fin (m + 1) → C}
   · simp
   · simp only [map_smul, h]
   · simp only [map_add, h1, h2]
+
+/-- Commuting evaluation with contraction. Evaluating index `k` and then contracting the
+  pair `i j` equals contracting the corresponding pair `k.succAbove i`, `k.succAbove j` and
+  then evaluating the residual index, up to the identity reindexing
+  `IsReindexing.succAbove_succSuccAbove_comm`. -/
+lemma contrT_evalT {n : ℕ} {c : Fin (n + 1 + 1 + 1) → C}
+    (k : Fin (n + 1 + 1 + 1)) (i j : Fin (n + 1 + 1)) (φ : basisIdx (c k))
+    (hij : i ≠ j ∧ S.τ ((c ∘ k.succAbove) i) = (c ∘ k.succAbove) j) (t : Tensor S c) :
+    contrT n i j hij (evalT k φ t) =
+    permT id (IsReindexing.succAbove_succSuccAbove_comm k i j hij.1)
+      (evalT (Fin.predPredAbove (k.succAbove i) (k.succAbove j) (by simp [hij.1]) k (by simp))
+        (basisIdxCongr (by simp) φ)
+        (contrT (n + 1) (k.succAbove i) (k.succAbove j) ⟨by simp [hij.1], hij.2⟩ t)) := by
+  induction' t using Tensor.induction_on_basis with b a t hb t1 t2 hb1 hb2
+  · have hs : Pure.contrPCoeff i j hij
+          (Pure.basisVector (c ∘ k.succAbove) (fun m => b (k.succAbove m))) =
+        Pure.contrPCoeff (k.succAbove i) (k.succAbove j) ⟨by simp [hij.1], hij.2⟩
+          (Pure.basisVector c b) := rfl
+    conv_lhs => rw [evalT_basis]
+    conv_rhs => rw [contrT_basis, map_smul, evalT_basis]
+    rw [apply_ite (contrT n i j hij), map_zero, contrT_basis, hs, map_smul,
+      apply_ite (permT id (IsReindexing.succAbove_succSuccAbove_comm k i j hij.1)), map_zero,
+      permT_basis, smul_ite, smul_zero]
+    have hidx : ∀ m, (k.succAbove i).succSuccAbove (k.succAbove j)
+        (((k.succAbove i).predPredAbove (k.succAbove j) (by simp [hij.1]) k (by simp)).succAbove m)
+        = k.succAbove (i.succSuccAbove j m) := by
+      intro m
+      apply Fin.val_injective
+      simp only [Fin.succSuccAbove, Fin.succAbove, Fin.predPredAbove, Fin.lt_def,
+        Fin.val_castSucc, Fin.val_succ, apply_ite Fin.val, apply_dite Fin.val]
+      grind (splits := 60)
+    have hk : (k.succAbove i).succSuccAbove (k.succAbove j)
+        ((k.succAbove i).predPredAbove (k.succAbove j) (by simp [hij.1]) k (by simp)) = k := by simp
+    have hcond : (ComponentIdx.dropPair (k.succAbove i) (k.succAbove j) b
+          ((k.succAbove i).predPredAbove (k.succAbove j) (by simp [hij.1]) k (by simp)) =
+          basisIdxCongr (by simp) φ) = (b k = φ) := by
+      simp only [ComponentIdx.dropPair]
+      rw [ComponentIdx.congr_right b _ k hk, eq_iff_iff]
+      exact (basisIdxCongr _).apply_eq_iff_eq
+    simp only [hcond]
+    split_ifs with hbk
+    · congr 1
+      congr 1
+      funext m
+      simp only [ComponentIdx.dropPair, id_eq]
+      exact ComponentIdx.congr_right b _ _ (hidx m).symm
+    · rfl
+  · simp
+  · simp only [map_smul, hb]
+  · simp only [map_add, hb1, hb2]
 
 attribute [-simp] Matrix.cons_val_zero Matrix.cons_val Fin.succAbove_zero
 /-- Evaluating the single-index basis tensor `basis ![c] (single.symm b)` at the index `x`
