@@ -346,6 +346,5 @@ lemma ext_of_evalT_index {n : ℕ} {c : Fin (n + 1) → C} {t1 t2 : Tensor S c}
     t1 = t2 := by
   sorry
 
-
 end Tensor
 end TensorSpecies
