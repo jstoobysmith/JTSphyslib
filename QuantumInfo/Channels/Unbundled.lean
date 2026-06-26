@@ -609,58 +609,9 @@ theorem conj_eq_mulRightLinearMap_comp_mulRightLinearMap (y : Matrix B A R) :
 set_option backward.isDefEq.respectTransparency false in
 /-- The act of conjugating (not necessarily by a unitary, just by any matrix at all) is completely positive. -/
 theorem conj_isCompletelyPositive (M : Matrix B A R) : (conj M).IsCompletelyPositive := by
-  --TODO: This is identical to congruence_CP
-  intro n m h
+  -- This is `congruence_CP`, which only additionally needs `DecidableEq` on the codomain.
   classical
-  open ComplexOrder in
-  open Kronecker in
-  suffices ((M ⊗ₖ 1 : Matrix (B × Fin n) (A × Fin n) R) * m * (M.conjTranspose ⊗ₖ 1)).PosSemidef by
-    convert this
-    --TODO cleanup. Thanks Aristotle
-    ext ⟨ b₁, c₁ ⟩ ⟨ b₂, c₂ ⟩
-    rw [ MatrixMap.kron_def ];
-    simp [Matrix.mul_apply, Matrix.single];
-    have h_split : ∑ x, ∑ x_1, ∑ x_2, ∑ x_3, (if x_2 = c₁ ∧ x_3 = c₂ then (∑ x_4, (∑ x_5, if x = x_5 ∧ x_1 = x_4 then M b₁ x_5 else 0) * (starRingEnd R) (M b₂ x_4)) * m (x, x_2) (x_1, x_3) else 0) = ∑ x, ∑ x_1, (∑ x_4, (∑ x_5, if x = x_5 ∧ x_1 = x_4 then M b₁ x_5 else 0) * (starRingEnd R) (M b₂ x_4)) * m (x, c₁) (x_1, c₂) := by
-      refine Finset.sum_congr rfl fun _ _ => Finset.sum_congr rfl fun _ _ => ?_
-      rw [ Finset.sum_eq_single c₁ ]
-      · simp_all only [Finset.mem_univ, true_and, Finset.sum_ite_eq', ↓reduceIte]
-      · intro b a a_1
-        simp_all only [Finset.mem_univ, ne_eq, false_and, ↓reduceIte, Finset.sum_const_zero]
-      · intro a
-        simp_all only [Finset.mem_univ, not_true_eq_false]
-    convert h_split using 1;
-    rw [ Matrix.mul_assoc ];
-    simp only [Matrix.mul_apply, Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply,
-      RCLike.star_def, Finset.mul_sum _ _ _, Finset.sum_mul, ite_mul, zero_mul];
-    simp [ Matrix.one_apply, Finset.sum_ite, Finset.filter_eq, Finset.filter_and ];
-    have h_reindex : ∑ x ∈ {x | c₁ = x.2}, ∑ x_1 ∈ {x | x.2 = c₂}, M b₁ x.1 * (m x x_1 * (starRingEnd R) (M b₂ x_1.1)) = ∑ x ∈ Finset.univ, ∑ x_1 ∈ Finset.univ, M b₁ x * (m (x, c₁) (x_1, c₂) * (starRingEnd R) (M b₂ x_1)) := by
-      rw [ show ( Finset.univ.filter fun x : A × Fin n => c₁ = x.2 ) = Finset.image ( fun x : A => ( x, c₁ ) ) Finset.univ from ?_, show ( Finset.univ.filter fun x : A × Fin n => x.2 = c₂ ) = Finset.image ( fun x : A => ( x, c₂ ) ) Finset.univ from ?_ ];
-      · simp [Finset.sum_image, Set.InjOn]
-      · ext ⟨ x, y ⟩
-        simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_image, Prod.mk.injEq,
-          exists_eq_left]
-        exact eq_comm;
-      · ext ⟨ x, y ⟩
-        simp [ eq_comm ];
-    have h_inner : ∀ x x_1, ∑ x_2, ∑ x_3 ∈ {x} ∩ if x_1 = x_2 then Finset.univ else ∅, M b₁ x_3 * (starRingEnd R) (M b₂ x_2) * m (x, c₁) (x_1, c₂) = M b₁ x * (starRingEnd R) (M b₂ x_1) * m (x, c₁) (x_1, c₂) := by
-      intro x x_1
-      rw [ Finset.sum_eq_single x_1 ] <;> simp +contextual;
-      simp +contextual [ eq_comm ];
-    simp only [ h_inner ];
-    simpa only [ mul_assoc, mul_comm, mul_left_comm ] using h_reindex
-  obtain ⟨m', rfl⟩ : ∃ B, m = B.conjTranspose * B := by
-    classical
-    apply CStarAlgebra.nonneg_iff_eq_star_mul_self.mp
-    exact Matrix.nonneg_iff_posSemidef.mpr h
-  convert Matrix.posSemidef_conjTranspose_mul_self (m' * (M ⊗ₖ 1 : Matrix (B × Fin n) (A × Fin n) R).conjTranspose) using 1
-  simp only [Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose, Matrix.mul_assoc]
-  rw [Matrix.mul_assoc, Matrix.mul_assoc]
-  congr
-  ext
-  simp +contextual only [Matrix.kroneckerMap_apply, Matrix.conjTranspose_apply, RCLike.star_def,
-    Matrix.one_apply, apply_ite, mul_one, mul_zero, star_zero, ↓reduceIte, ite_eq_right_iff,
-    map_eq_zero, if_true_left]
-  tauto
+  exact congruence_CP M
 
 /-- `MatrixMap.submatrix` is completely positive -/
 theorem IsCompletelyPositive.submatrix (f : B → A) : (MatrixMap.submatrix R f).IsCompletelyPositive := by
