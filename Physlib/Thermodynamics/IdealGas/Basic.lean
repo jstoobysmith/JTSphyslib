@@ -72,7 +72,7 @@ theorem adiabatic_relation_log
     then (Ua/Ub)^c * (Va/Vb) = 1.
 -/
 
-theorem adiabatic_relation_UaUbVaVb
+theorem adiabatic_relation_prod
     {s0 U0 V0 N0 c R : ℝ}
     {Ua Ub Va Vb N : ℝ}
     (hUa : 0 < Ua) (hUb : 0 < Ub)
