@@ -145,6 +145,34 @@ lemma evalT_basis {n : ℕ} {c : Fin (n + 1) → C} (i : Fin (n + 1))
 
 TODO "Add lemmas related to the interaction of evalT and permT, prodT and contrT."
 
+/-- Commuting evaluation with permutations.-/
+lemma evalT_permT {n m : ℕ} {c : Fin (n + 1) → C} {c' : Fin (m + 1) → C}
+    {σ : Fin (n + 1) → Fin (m + 1)}
+    (h : IsReindexing c' c  σ) (i : Fin (n + 1)) (x : basisIdx (c i)) (t : Tensor S c') :
+    evalT i x (permT _ h t) = permT _ (h.succAbove i)
+      (evalT (σ i) (basisIdxCongr (by simp [h.2]) x) t) := by
+  induction' t using Tensor.induction_on_basis with b a t h t1 t2 h1 h2
+  · simp only [evalT_basis, permT_basis]
+    by_cases h1 : (basisIdxCongr (by simp [h.2])) (b (σ i)) = x
+    · have h1' : basisIdxCongr (by simp [h.2]) x = b (σ i) := by subst h1; simp
+      simp only [h1, ↓reduceIte, h1', permT_basis]
+      congr
+      funext j
+      refine (Equiv.eq_symm_apply (basisIdxCongr _)).mp ?_
+      simp only [basisIdxCongr_symm]
+      erw [basisIdxCongr_apply_apply]
+      apply ComponentIdx.congr_right
+      split_ifs with h2
+      · simp [h2]
+      · have hne : σ (i.succAbove j) ≠ ((σ i).pred h2).succ := by
+          rw [Fin.succ_pred]; exact fun heq => Fin.succAbove_ne i j (h.1.injective heq)
+        rw [show (σ i).succAbove = (((σ i).pred h2).succ).succAbove from by rw [Fin.succ_pred]]
+        exact (Fin.succ_succAbove_predAbove hne).symm
+    · have h1' : b (σ i) ≠ basisIdxCongr (by simp [h.2]) x := by by_contra h2; simp [h2] at h1
+      simp [h1, h1']
+  · simp
+  · simp only [map_smul, h]
+  · simp only [map_add, h1, h2]
 
 attribute [-simp] Matrix.cons_val_zero Matrix.cons_val Fin.succAbove_zero
 /-- Evaluating the single-index basis tensor `basis ![c] (single.symm b)` at the index `x`
