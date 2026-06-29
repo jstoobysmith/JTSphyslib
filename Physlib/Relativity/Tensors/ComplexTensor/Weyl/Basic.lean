@@ -34,6 +34,12 @@ TODO "Rename the Weyl fermion representations `leftHandedRep`, `dualLeftHandedRe
   respectively, so that each representation lives in the namespace of the module it
   acts on, and update all references accordingly."
 
+TODO "Define the Dirac and dual-Dirac fermion representations `Fermion.dirac` and
+  `Fermion.dualDirac` (built from the left- and right-handed Weyl representations
+  `leftHandedRep`/`rightHandedRep` and their duals), and incorporate them into
+  `complexLorentzTensor` by adding the corresponding `complexLorentzTensor.Color`
+  constructors."
+
 /-- The vector space ℂ^2 carrying the fundamental representation of SL(2,C).
   In index notation corresponds to a Weyl fermion with indices ψ^a. -/
 def leftHandedRep : Representation ℂ SL(2,ℂ) LeftHandedWeyl where
