@@ -211,5 +211,11 @@ end DualRightHandedWeyl
 
 end DualRightHanded
 
+TODO "Define the module in which Dirac fermions live, in the same style as `LeftHandedWeyl`
+  and `RightHandedWeyl`: a structure wrapping `Fin 4 → ℂ` (equivalently a pair of a
+  left-handed and a right-handed Weyl spinor) carrying `AddCommMonoid`, `AddCommGroup` and
+  `Module ℂ` instances and a linear equivalence to `Fin 4 → ℂ`, so that Dirac fermions cannot
+  be cast to or from the Weyl modules."
+
 end
 end Fermion
