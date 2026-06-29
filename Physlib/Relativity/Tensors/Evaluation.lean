@@ -145,6 +145,7 @@ lemma evalT_basis {n : ℕ} {c : Fin (n + 1) → C} (i : Fin (n + 1))
     zero_smul]
   rfl
 
+attribute [-simp] Matrix.cons_val_zero Matrix.cons_val Fin.succAbove_zero
 
 TODO "Add lemmas related to the interaction of evalT and permT, prodT and contrT."
 
@@ -249,7 +250,7 @@ lemma contrT_evalT {n : ℕ} {c : Fin (n + 1 + 1 + 1) → C}
   · simp only [map_add, hb1, hb2]
 
 TODO "Add a lemma similar to `contrT_evalT` except with the contraction and
-  evaulation the other way around."
+  evaluation the other way around."
 
 /-!
 
@@ -261,7 +262,7 @@ TODO "Add a lemmas related to the commutation of evaluation with contraction."
 
 /-!
 
-## Other properties of evaulation
+## Other properties of evaluation
 
 -/
 /-- Evaluating the single-index basis tensor `basis ![c] (single.symm b)` at the index `x`
