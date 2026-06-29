@@ -453,6 +453,12 @@ lemma potential_eq_gramVector (P : PotentialParameters) (H : TwoHiggsDoublet) :
     ∑ a, ∑ b, H.gramVector a * H.gramVector b * P.η a b := by
   rw [potential, massTerm_eq_gramVector, quarticTerm_eq_gramVector]
 
+TODO "Define a general effective potential for the two Higgs doublet model, mirroring
+  `StandardModel.HiggsField.EffectivePotential`: characterise the potentials `TwoHiggsDoublet → ℝ`
+  that are invariant under the gauge group `StandardModel.GaugeGroupI` and have a bounded maximum
+  mass dimension, and express such potentials in terms of the gauge-invariant `gramVector`. The
+  `potential` defined here should arise as the special case of maximum mass dimension four."
+
 /-!
 
 ## E. Stability of the potential
