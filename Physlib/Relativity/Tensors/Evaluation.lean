@@ -123,9 +123,7 @@ end Pure
 TODO "Choose a more descriptive name for `evalT` and `evalP`, taking into consideration
   the namespaces they live in."
 
-/-- Given a `i : Fin (n + 1)`, a `φ : Fin (S.repDim (c i))` and a tensor
-  `t : Tensor S c`, `evalT i φ t` is the tensor formed by evaluating the `i`th index
-  of `t` at `φ`. -/
+/-- Evaluation of a tensor at a given index and basis element. -/
 noncomputable def evalT {n : ℕ} {c : Fin (n + 1) → C} (i : Fin (n + 1))
       (φ : basisIdx (c i)) :
     Tensor S c →ₗ[k] Tensor S (c ∘ i.succAbove) :=
