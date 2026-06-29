@@ -628,7 +628,8 @@ variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
 -- Contraction of both index pairs of a product.
 /--
 info: (contrT 0 0 1 ⋯) ((contrT 2 1 3 ⋯) ((prodT u) td)) :
-  S.Tensor ((Fin.append ![c1, c2] ![S.τ c1, S.τ c2] ∘ Fin.succSuccAbove 1 3) ∘ Fin.succSuccAbove 0 1)
+  S.Tensor ((Fin.append ![c1, c2] ![S.τ c1, S.τ c2] ∘ Fin.succSuccAbove 1 3) ∘
+  Fin.succSuccAbove 0 1)
 -/
 #guard_msgs (whitespace := lax) in
 #check {u | α β ⊗ td | α β}ᵀ
