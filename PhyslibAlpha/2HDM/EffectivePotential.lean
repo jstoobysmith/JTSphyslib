@@ -9,6 +9,8 @@ public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
+public import PhyslibAlpha.«2HDM».GaugeSlice
+public import PhyslibAlpha.«2HDM».ChargeBalance
 /-!
 # The effective potential of the two Higgs doublet model
 
@@ -70,6 +72,32 @@ end IsInvariant
 def HasMaxMassDimLE (V : EffectivePotential) (n : ℕ) : Prop :=
   ∃ p : MvPolynomial (Module.Dual ℝ TwoHiggsDoublet) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval
    (fun i => i φ) ) ∧ p.totalDegree ≤ n
+
+/-- A polynomial potential, restricted along any real-linear parametrisation `L` of field
+  configurations, is a genuine polynomial in the parameters. This is the bookkeeping that lets the
+  potential be evaluated on the field components of a gauge slice. -/
+lemma HasMaxMassDimLE.exists_comp_linear_poly {V : EffectivePotential} {n : ℕ}
+    (h : HasMaxMassDimLE V n) {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (L : (ι → ℝ) →ₗ[ℝ] TwoHiggsDoublet) :
+    ∃ P : MvPolynomial ι ℝ, ∀ a : ι → ℝ, V (L a) = P.eval a := by
+  obtain ⟨p, hp, -⟩ := h
+  refine ⟨MvPolynomial.aeval
+    (fun i => ∑ k : ι, MvPolynomial.C (i (L (Pi.single k 1))) * MvPolynomial.X k) p, fun a => ?_⟩
+  have key : (fun i : Module.Dual ℝ TwoHiggsDoublet => i (L a))
+      = fun i => MvPolynomial.eval a
+        (∑ k : ι, MvPolynomial.C (i (L (Pi.single k 1))) * MvPolynomial.X k) := by
+    funext i
+    have ha : a = ∑ k : ι, a k • (Pi.single k 1 : ι → ℝ) := by
+      funext j
+      simp [Finset.sum_apply, Pi.single_apply, Finset.sum_ite_eq]
+    rw [map_sum]
+    conv_lhs => rw [ha, map_sum, map_sum]
+    apply Finset.sum_congr rfl
+    intro k _
+    rw [map_smul, map_smul, MvPolynomial.eval_mul, MvPolynomial.eval_C, MvPolynomial.eval_X,
+      smul_eq_mul, mul_comm]
+  rw [hp, key, MvPolynomial.aeval_def, MvPolynomial.algebraMap_eq, ← MvPolynomial.eval_assoc]
+  rfl
 
 /-!
 

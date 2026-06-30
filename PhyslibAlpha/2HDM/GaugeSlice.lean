@@ -41,6 +41,27 @@ def sliceHiggs (z w0 w1 : ℂ) : TwoHiggsDoublet where
 @[simp] lemma sliceHiggs_Φ1 (z w0 w1 : ℂ) : (sliceHiggs z w0 w1).Φ1 = !₂[z, 0] := rfl
 @[simp] lemma sliceHiggs_Φ2 (z w0 w1 : ℂ) : (sliceHiggs z w0 w1).Φ2 = !₂[w0, w1] := rfl
 
+@[simp] lemma real_smul_fst (c : ℝ) (H : TwoHiggsDoublet) : (c • H).Φ1 = c • H.Φ1 := rfl
+@[simp] lemma real_smul_snd (c : ℝ) (H : TwoHiggsDoublet) : (c • H).Φ2 = c • H.Φ2 := rfl
+
+/-- The slice as a real-linear map from the six real field parameters
+  `(Re Φ1₀, Im Φ1₀, Re Φ2₀, Im Φ2₀, Re Φ2₁, Im Φ2₁)`. -/
+def sliceR : (Fin 6 → ℝ) →ₗ[ℝ] TwoHiggsDoublet where
+  toFun a := sliceHiggs (↑(a 0) + Complex.I * ↑(a 1)) (↑(a 2) + Complex.I * ↑(a 3))
+    (↑(a 4) + Complex.I * ↑(a 5))
+  map_add' a b := by
+    apply ext_of_fst_snd
+    · ext i; fin_cases i <;> simp [sliceHiggs] <;> ring
+    · ext i; fin_cases i <;> simp [sliceHiggs] <;> ring
+  map_smul' c a := by
+    apply ext_of_fst_snd
+    · ext i; fin_cases i <;> simp [sliceHiggs, Complex.real_smul] <;> ring
+    · ext i; fin_cases i <;> simp [sliceHiggs, Complex.real_smul] <;> ring
+
+@[simp] lemma sliceR_apply (a : Fin 6 → ℝ) :
+    sliceR a = sliceHiggs (↑(a 0) + Complex.I * ↑(a 1)) (↑(a 2) + Complex.I * ↑(a 3))
+      (↑(a 4) + Complex.I * ↑(a 5)) := rfl
+
 /-- The representative family is the real slice. -/
 lemma repHiggs_eq_sliceHiggs (X : Fin 4 → ℝ) :
     repHiggs X = sliceHiggs (X 0) ((X 1 : ℂ) + Complex.I * (X 2 : ℂ)) (X 3) := rfl
