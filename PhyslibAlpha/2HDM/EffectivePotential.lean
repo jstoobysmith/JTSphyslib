@@ -9,6 +9,7 @@ public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Algebra.MvPolynomial.Funext
 public import Mathlib.Algebra.MvPolynomial.Monad
+public import Mathlib.RingTheory.MvPolynomial.Tower
 public import Mathlib.Analysis.Real.Pi.Irrational
 public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
@@ -315,6 +316,247 @@ lemma coeff_Qslice_eq_zero {V : EffectivePotential} (hI : IsInvariant V)
     refine coeff_eq_zero_of_charge_ne_zero chargeB ((ω : ℂ) ^ 6) hω6 hroot6 ?_ hmB
     have h := bind₁_diagRes_Qslice hI hP ω
     rwa [diagRes_eq] at h
+
+/-!
+
+## C'. Generation of neutral monomials by the bilinears
+
+The hypercharge-neutral monomials of `Qslice P` are exactly the products of the five neutral
+quadratic bilinears `z z̄, w₀ w̄₀, z w̄₀, z̄ w₀, w₁ w̄₁`. This is the (abelian) generation step:
+combined Cartan- and residual-neutrality of a monomial forces it to be a product of these five,
+because every charged variable carries a unit Cartan charge and the residual charges come in an
+exact `±1` pair.
+
+-/
+
+open MvPolynomial in
+/-- The five hypercharge-neutral quadratic bilinears in eigen-coordinates:
+  `z z̄`, `w₀ w̄₀`, `z w̄₀`, `z̄ w₀`, `w₁ w̄₁`. -/
+noncomputable def bilin : Fin 5 → MvPolynomial (Fin 6) ℂ :=
+  ![X 0 * X 1, X 2 * X 3, X 0 * X 3, X 1 * X 2, X 4 * X 5]
+
+/-- The charge of a monomial, summed over the whole index set, equals the sum over its support. -/
+lemma charge_univ_eq_support (w : Fin 6 → ℤ) (m : Fin 6 →₀ ℕ) :
+    ∑ i, (m i : ℤ) * w i = ∑ i ∈ m.support, (m i : ℤ) * w i := by
+  symm
+  apply Finset.sum_subset (Finset.subset_univ _)
+  intro i _ hi
+  rw [Finsupp.notMem_support_iff.mp hi]; simp
+
+/-- A charge sum is additive in the monomial. -/
+lemma chargeSum_add (w : Fin 6 → ℤ) (a b : Fin 6 →₀ ℕ) :
+    ∑ k, ((a + b) k : ℤ) * w k = (∑ k, (a k : ℤ) * w k) + ∑ k, (b k : ℤ) * w k := by
+  rw [← Finset.sum_add_distrib]
+  apply Finset.sum_congr rfl
+  intro k _
+  rw [Finsupp.add_apply]; push_cast; ring
+
+/-- The charge sum of a single generator is the charge of that variable. -/
+lemma chargeSum_single (w : Fin 6 → ℤ) (i : Fin 6) :
+    ∑ k, ((Finsupp.single i (1 : ℕ)) k : ℤ) * w k = w i := by
+  simp [Finsupp.single_apply, ite_mul, Finset.sum_ite_eq]
+
+open MvPolynomial in
+/-- **Generation.** Every hypercharge-neutral monomial is a product of the five bilinears. -/
+lemma monomial_mem_adjoin_bilin (m : Fin 6 →₀ ℕ)
+    (hA : ∑ i, (m i : ℤ) * chargeA i = 0) (hB : ∑ i, (m i : ℤ) * chargeB i = 0) :
+    monomial m (1 : ℂ) ∈ Algebra.adjoin ℂ (Set.range bilin) := by
+  suffices H : ∀ n : ℕ, ∀ m : Fin 6 →₀ ℕ, (∑ i, m i) = n →
+      (∑ i, (m i : ℤ) * chargeA i = 0) → (∑ i, (m i : ℤ) * chargeB i = 0) →
+      monomial m (1 : ℂ) ∈ Algebra.adjoin ℂ (Set.range bilin) by
+    exact H (∑ i, m i) m rfl hA hB
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    intro m hsum hA hB
+    -- The reduction step: pair up two variables whose bilinear is a generator.
+    have reduce : ∀ i j : Fin 6, i ≠ j → m i ≠ 0 → m j ≠ 0 →
+        X i * X j ∈ Algebra.adjoin ℂ (Set.range bilin) →
+        chargeA i + chargeA j = 0 → chargeB i + chargeB j = 0 →
+        monomial m (1 : ℂ) ∈ Algebra.adjoin ℂ (Set.range bilin) := by
+      intro i j hij hmi hmj hgen hcA hcB
+      have hle : Finsupp.single i 1 + Finsupp.single j 1 ≤ m := by
+        intro k
+        rw [Finsupp.add_apply, Finsupp.single_apply, Finsupp.single_apply]
+        by_cases h1 : i = k
+        · by_cases h2 : j = k
+          · exact absurd (h1.trans h2.symm) hij
+          · rw [if_pos h1, if_neg h2]; subst h1; simpa using Nat.one_le_iff_ne_zero.mpr hmi
+        · by_cases h2 : j = k
+          · rw [if_neg h1, if_pos h2]; subst h2; simpa using Nat.one_le_iff_ne_zero.mpr hmj
+          · rw [if_neg h1, if_neg h2]; simp
+      set m' := m - (Finsupp.single i 1 + Finsupp.single j 1) with hm'def
+      have hdecomp : m = (Finsupp.single i 1 + Finsupp.single j 1) + m' := by
+        rw [hm'def, add_tsub_cancel_of_le hle]
+      -- m' is still neutral
+      have hA' : ∑ k, (m' k : ℤ) * chargeA k = 0 := by
+        have h := hA
+        rw [hdecomp, chargeSum_add, chargeSum_add, chargeSum_single, chargeSum_single] at h
+        omega
+      have hB' : ∑ k, (m' k : ℤ) * chargeB k = 0 := by
+        have h := hB
+        rw [hdecomp, chargeSum_add, chargeSum_add, chargeSum_single, chargeSum_single] at h
+        omega
+      -- the degree drops by 2
+      have hsum' : ∑ k, m' k < n := by
+        have e : (∑ k, m k) = (∑ k, (Finsupp.single i 1) k) + (∑ k, (Finsupp.single j 1) k)
+            + ∑ k, m' k := by
+          rw [← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+          apply Finset.sum_congr rfl
+          intro k _
+          rw [← Finsupp.add_apply, ← Finsupp.add_apply, ← hdecomp]
+        have e1 : ∑ k, (Finsupp.single i 1) k = 1 := by
+          simp [Finsupp.single_apply, Finset.sum_ite_eq]
+        have e2 : ∑ k, (Finsupp.single j 1) k = 1 := by
+          simp [Finsupp.single_apply, Finset.sum_ite_eq]
+        rw [hsum, e1, e2] at e
+        omega
+      -- factor and recurse
+      have hfact : monomial m (1 : ℂ) = (X i * X j) * monomial m' 1 := by
+        rw [hdecomp,
+          show (X i : MvPolynomial (Fin 6) ℂ) = monomial (Finsupp.single i 1) 1 from
+            by rw [← X_pow_eq_monomial, pow_one],
+          show (X j : MvPolynomial (Fin 6) ℂ) = monomial (Finsupp.single j 1) 1 from
+            by rw [← X_pow_eq_monomial, pow_one],
+          monomial_mul, monomial_mul, one_mul, one_mul, add_assoc]
+      rw [hfact]
+      exact Subalgebra.mul_mem _ hgen (ih (∑ k, m' k) hsum' m' rfl hA' hB')
+    -- main case split
+    rcases eq_or_ne n 0 with hn0 | hn0
+    · -- degree zero: m = 0, monomial is 1
+      have hm0 : m = 0 := by
+        ext k
+        have hk : m k ≤ ∑ i, m i := Finset.single_le_sum (fun _ _ => Nat.zero_le _) (Finset.mem_univ k)
+        rw [hsum, hn0] at hk
+        simpa using Nat.le_zero.mp hk
+      rw [hm0]
+      have h1 : monomial (0 : Fin 6 →₀ ℕ) (1 : ℂ) = 1 := by simp
+      rw [h1]; exact Subalgebra.one_mem _
+    · -- positive degree: find a neutral pair
+      rcases eq_or_ne (m 4) 0 with h4 | h4
+      · -- m 4 = 0; then m 5 = 0 by residual neutrality
+        have h5 : m 5 = 0 := by
+          have h := hB
+          simp [chargeB, Fin.sum_univ_six] at h
+          omega
+        -- Cartan neutrality on {0,1,2,3}: m0 + m2 = m1 + m3
+        have hcart : (m 0 : ℤ) + (m 2 : ℤ) = (m 1 : ℤ) + (m 3 : ℤ) := by
+          have h := hA
+          simp [chargeA, Fin.sum_univ_six] at h
+          omega
+        -- total degree on {0,1,2,3} is n > 0
+        have hposL : 0 < m 0 + m 2 := by
+          rcases Nat.eq_zero_or_pos (m 0 + m 2) with hc | hc
+          · exfalso
+            have h02 : m 0 = 0 ∧ m 2 = 0 := by omega
+            have h13 : m 1 = 0 ∧ m 3 = 0 := by omega
+            have hz : ∑ i, m i = 0 := by
+              simp [Fin.sum_univ_six, h02.1, h02.2, h13.1, h13.2, h4, h5]
+            rw [hsum] at hz; exact hn0 hz
+          · exact hc
+        have hposR : 0 < m 1 + m 3 := by omega
+        -- choose a positive index in {0,2} and one in {1,3}
+        rcases Nat.eq_zero_or_pos (m 0) with hm0 | hm0
+        · -- m 0 = 0, so m 2 > 0
+          have hm2 : m 2 ≠ 0 := by omega
+          rcases Nat.eq_zero_or_pos (m 1) with hm1 | hm1
+          · -- m 1 = 0, so m 3 > 0 : pair (2,3) -> bilin 1
+            have hm3 : m 3 ≠ 0 := by omega
+            refine reduce 2 3 (by decide) hm2 hm3 ?_ (by decide) (by decide)
+            exact Algebra.subset_adjoin ⟨1, rfl⟩
+          · -- m 1 > 0 : pair (1,2) -> bilin 3
+            refine reduce 1 2 (by decide) (by omega) hm2 ?_ (by decide) (by decide)
+            exact Algebra.subset_adjoin ⟨3, rfl⟩
+        · -- m 0 > 0
+          rcases Nat.eq_zero_or_pos (m 1) with hm1 | hm1
+          · -- m 1 = 0, so m 3 > 0 : pair (0,3) -> bilin 2
+            have hm3 : m 3 ≠ 0 := by omega
+            refine reduce 0 3 (by decide) (by omega) hm3 ?_ (by decide) (by decide)
+            exact Algebra.subset_adjoin ⟨2, rfl⟩
+          · -- m 1 > 0 : pair (0,1) -> bilin 0
+            refine reduce 0 1 (by decide) (by omega) (by omega) ?_ (by decide) (by decide)
+            exact Algebra.subset_adjoin ⟨0, rfl⟩
+      · -- m 4 > 0; then m 5 > 0 : pair (4,5) -> bilin 4
+        have h5 : m 5 ≠ 0 := by
+          have h := hB
+          simp [chargeB, Fin.sum_univ_six] at h
+          omega
+        refine reduce 4 5 (by decide) h4 h5 ?_ (by decide) (by decide)
+        exact Algebra.subset_adjoin ⟨4, rfl⟩
+
+open MvPolynomial in
+/-- The slice potential lies in the subalgebra generated by the five bilinears: every monomial that
+  survives is hypercharge-neutral, hence a product of the bilinears. -/
+lemma Qslice_mem_adjoin_bilin {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) :
+    Qslice P ∈ Algebra.adjoin ℂ (Set.range bilin) := by
+  rw [(Qslice P).as_sum]
+  apply Subalgebra.sum_mem
+  intro m hm
+  have hcoeff : coeff m (Qslice P) ≠ 0 := MvPolynomial.mem_support_iff.mp hm
+  have hsuppA : ∑ i ∈ m.support, (m i : ℤ) * chargeA i = 0 := by
+    by_contra h0
+    exact hcoeff (coeff_Qslice_eq_zero hI hP m (Or.inl h0))
+  have hsuppB : ∑ i ∈ m.support, (m i : ℤ) * chargeB i = 0 := by
+    by_contra h0
+    exact hcoeff (coeff_Qslice_eq_zero hI hP m (Or.inr h0))
+  have hmono : monomial m (1 : ℂ) ∈ Algebra.adjoin ℂ (Set.range bilin) :=
+    monomial_mem_adjoin_bilin m
+      ((charge_univ_eq_support chargeA m).trans hsuppA)
+      ((charge_univ_eq_support chargeB m).trans hsuppB)
+  have hrw : monomial m (coeff m (Qslice P)) = C (coeff m (Qslice P)) * monomial m 1 := by
+    rw [C_mul_monomial, mul_one]
+  rw [hrw]
+  exact Subalgebra.mul_mem _
+    (by rw [← MvPolynomial.algebraMap_eq]; exact Subalgebra.algebraMap_mem _ _) hmono
+
+open MvPolynomial in
+/-- Consequently the complexified slice potential is `aeval bilin G` for some polynomial `G` in the
+  five bilinears. -/
+lemma exists_aeval_bilin {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) :
+    ∃ G : MvPolynomial (Fin 5) ℂ, aeval bilin G = Qslice P := by
+  have h := Qslice_mem_adjoin_bilin hI hP
+  rw [Algebra.adjoin_range_eq_range_aeval ℂ bilin] at h
+  obtain ⟨G, hG⟩ := h
+  exact ⟨G, hG⟩
+
+/-! ### Evaluating at the eigen-point of a representative -/
+
+/-- The slice parameters realising `repHiggs X` as a point of the slice family. -/
+def aRep (X : Fin 4 → ℝ) : Fin 6 → ℝ := ![X 0, 0, X 1, X 2, X 3, 0]
+
+lemma repHiggs_eq_sliceR (X : Fin 4 → ℝ) : repHiggs X = sliceR (aRep X) := by
+  rw [repHiggs_eq_sliceHiggs, sliceR_apply]
+  simp [aRep]
+
+/-- The hypercharge eigen-point `(z, z̄, w₀, w̄₀, w₁, w̄₁)` of `repHiggs X`: here `z = X₀` is real,
+  `w₀ = X₁ + i X₂` and `w₁ = X₃` is real. -/
+noncomputable def eigenPt (X : Fin 4 → ℝ) : Fin 6 → ℂ :=
+  ![(X 0 : ℂ), (X 0 : ℂ), (X 1 : ℂ) + Complex.I * (X 2 : ℂ), (X 1 : ℂ) - Complex.I * (X 2 : ℂ),
+    (X 3 : ℂ), (X 3 : ℂ)]
+
+open MvPolynomial in
+/-- The eigen-coordinate change sends the eigen-point of `repHiggs X` back to its slice parameters. -/
+lemma aeval_cplxEigen_eigenPt (X : Fin 4 → ℝ) (k : Fin 6) :
+    aeval (eigenPt X) (cplxEigen k) = algebraMap ℝ ℂ (aRep X k) := by
+  fin_cases k <;>
+    simp only [cplxEigen, eigenPt, aRep, Matrix.cons_val, Fin.isValue, map_add, map_sub, map_mul,
+      aeval_X, aeval_C, MvPolynomial.algebraMap_eq] <;>
+    (apply Complex.ext <;>
+      simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im] <;> ring)
+
+open MvPolynomial in
+/-- The complexified slice potential, evaluated at the eigen-point of `repHiggs X`, returns the real
+  value `V (repHiggs X)`. -/
+lemma eval_Qslice_eigenPt (P : MvPolynomial (Fin 6) ℝ) (X : Fin 4 → ℝ) :
+    eval (eigenPt X) (Qslice P) = algebraMap ℝ ℂ (P.eval (aRep X)) := by
+  rw [Qslice, ← aeval_eq_eval, aeval_bind₁,
+    show (fun i => aeval (eigenPt X) (cplxEigen i)) = (fun i => (Algebra.ofId ℝ ℂ) (aRep X i)) from
+      funext (fun i => (aeval_cplxEigen_eigenPt X i).trans (Algebra.ofId_apply ℂ (aRep X i)).symm),
+    MvPolynomial.aeval_map_algebraMap ℂ, ← MvPolynomial.comp_aeval]
+  simp [aeval_eq_eval, Algebra.ofId_apply]
 
 /-!
 
