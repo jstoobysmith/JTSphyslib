@@ -755,6 +755,107 @@ lemma exists_gram_clearing (p : MvPolynomial (Fin 5) ℝ) :
     rw [map_mul, map_pow, eval_X, eval_aeval_comp]; simp only [realGenP_eval]
   rw [← hR, ← hL, hA]
 
+open MvPolynomial in
+/-- **`‖Φ1‖²`-clearing, on all configurations.** A power of `‖Φ1‖²` times a gauge-invariant
+  polynomial potential is, everywhere, a polynomial in the Gram vector. -/
+lemma exists_clearing_all {V : EffectivePotential} {n : ℕ}
+    (hI : IsInvariant V) (h : HasMaxMassDimLE V n) :
+    ∃ (A : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) (N : ℕ), ∀ φ : TwoHiggsDoublet,
+      (‖φ.Φ1‖ ^ 2) ^ N * V φ = A.eval φ.gramVector := by
+  obtain ⟨p5, hp5⟩ := exists_polynomial_repHiggs_realGen hI h
+  obtain ⟨A, N, hAN⟩ := exists_gram_clearing p5
+  refine ⟨A, N, fun φ => ?_⟩
+  obtain ⟨X, g, hg⟩ := exists_smul_eq_repHiggs φ
+  have hV : V φ = V (repHiggs X) := by rw [← hg]; exact (hI g φ).symm
+  have hgram : φ.gramVector = (repHiggs X).gramVector := by
+    rw [← hg]; funext μ; exact (gaugeGroupI_smul_fst_gramVector g φ μ).symm
+  have hΦ1 : ‖φ.Φ1‖ ^ 2 = (X 0) ^ 2 := by
+    rw [normSq_Φ1_eq_gramVector, hgram, ← normSq_Φ1_eq_gramVector, normSq_repHiggs_Φ1]
+  rw [hΦ1, hV, hgram, ← pow_mul, hp5]
+  exact hAN X
+
+/-! ### Swapping the two doublets (to clear the `‖Φ2‖²` denominator) -/
+
+/-- Swapping the two doublets, as an `ℝ`-linear map. It commutes with the gauge action, so it sends
+  gauge-invariant polynomial potentials to gauge-invariant polynomial potentials, but turns the
+  alignment of `Φ1` into the alignment of `Φ2`. -/
+def swapDoublet : TwoHiggsDoublet →ₗ[ℝ] TwoHiggsDoublet where
+  toFun φ := { Φ1 := φ.Φ2, Φ2 := φ.Φ1 }
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+@[simp] lemma swapDoublet_Φ1 (φ : TwoHiggsDoublet) : (swapDoublet φ).Φ1 = φ.Φ2 := rfl
+@[simp] lemma swapDoublet_Φ2 (φ : TwoHiggsDoublet) : (swapDoublet φ).Φ2 = φ.Φ1 := rfl
+
+@[simp] lemma swapDoublet_swapDoublet (φ : TwoHiggsDoublet) : swapDoublet (swapDoublet φ) = φ := by
+  apply ext_of_fst_snd <;> rfl
+
+lemma swapDoublet_smul (g : StandardModel.GaugeGroupI) (φ : TwoHiggsDoublet) :
+    swapDoublet (g • φ) = g • swapDoublet φ := by
+  apply ext_of_fst_snd <;> simp
+
+/-- Swapping the doublets sends the gram vector through the sign flip of the imaginary and
+  difference components. -/
+lemma gramVector_swapDoublet_inl (φ : TwoHiggsDoublet) :
+    (swapDoublet φ).gramVector (Sum.inl 0) = φ.gramVector (Sum.inl 0) := by
+  rw [gramVector_inl_zero_eq, gramVector_inl_zero_eq, swapDoublet_Φ1, swapDoublet_Φ2]; ring
+
+lemma gramVector_swapDoublet_inr0 (φ : TwoHiggsDoublet) :
+    (swapDoublet φ).gramVector (Sum.inr 0) = φ.gramVector (Sum.inr 0) := by
+  rw [gramVector_inr_zero_eq, gramVector_inr_zero_eq, swapDoublet_Φ1, swapDoublet_Φ2,
+    ← inner_conj_symm, Complex.conj_re]
+
+lemma gramVector_swapDoublet_inr1 (φ : TwoHiggsDoublet) :
+    (swapDoublet φ).gramVector (Sum.inr 1) = -φ.gramVector (Sum.inr 1) := by
+  rw [gramVector_inr_one_eq, gramVector_inr_one_eq, swapDoublet_Φ1, swapDoublet_Φ2,
+    ← inner_conj_symm, Complex.conj_im]; ring
+
+lemma gramVector_swapDoublet_inr2 (φ : TwoHiggsDoublet) :
+    (swapDoublet φ).gramVector (Sum.inr 2) = -φ.gramVector (Sum.inr 2) := by
+  rw [gramVector_inr_two_eq, gramVector_inr_two_eq, swapDoublet_Φ1, swapDoublet_Φ2]; ring
+
+lemma HasMaxMassDimLE.comp_swapDoublet {V : EffectivePotential} {n : ℕ}
+    (h : HasMaxMassDimLE V n) : HasMaxMassDimLE (fun φ => V (swapDoublet φ)) n := by
+  obtain ⟨p, hp, hdeg⟩ := h
+  refine ⟨MvPolynomial.rename
+    (fun i : Module.Dual ℝ TwoHiggsDoublet => i.comp swapDoublet) p, fun φ => ?_, ?_⟩
+  · change V (swapDoublet φ) = _
+    rw [MvPolynomial.eval_rename, hp (swapDoublet φ)]; rfl
+  · exact le_trans (MvPolynomial.totalDegree_rename_le _ _) hdeg
+
+lemma IsInvariant.comp_swapDoublet {V : EffectivePotential} (hI : IsInvariant V) :
+    IsInvariant (fun φ => V (swapDoublet φ)) := by
+  intro g φ
+  show V (swapDoublet (g • φ)) = V (swapDoublet φ)
+  rw [swapDoublet_smul, hI g]
+
+open MvPolynomial in
+/-- The Gram-vector substitution induced by swapping the doublets (sign flip on the imaginary and
+  difference components). -/
+noncomputable def swapSubst : (Fin 1 ⊕ Fin 3) → MvPolynomial (Fin 1 ⊕ Fin 3) ℝ :=
+  Sum.elim (fun _ => X (Sum.inl 0)) ![X (Sum.inr 0), -X (Sum.inr 1), -X (Sum.inr 2)]
+
+open MvPolynomial in
+/-- **`‖Φ2‖²`-clearing, on all configurations.** A power of `‖Φ2‖²` times a gauge-invariant
+  polynomial potential is, everywhere, a polynomial in the Gram vector. Obtained from
+  `exists_clearing_all` for the doublet-swapped potential. -/
+lemma exists_clearing_all_snd {V : EffectivePotential} {n : ℕ}
+    (hI : IsInvariant V) (h : HasMaxMassDimLE V n) :
+    ∃ (B : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) (M : ℕ), ∀ φ : TwoHiggsDoublet,
+      (‖φ.Φ2‖ ^ 2) ^ M * V φ = B.eval φ.gramVector := by
+  obtain ⟨B0, M, hB0⟩ := exists_clearing_all hI.comp_swapDoublet h.comp_swapDoublet
+  refine ⟨aeval swapSubst B0, M, fun φ => ?_⟩
+  have hb := hB0 (swapDoublet φ)
+  simp only [swapDoublet_Φ1, swapDoublet_swapDoublet] at hb
+  have hpt : (swapDoublet φ).gramVector = fun μ => eval φ.gramVector (swapSubst μ) := by
+    funext μ
+    match μ with
+    | Sum.inl 0 => simp [swapSubst, gramVector_swapDoublet_inl]
+    | Sum.inr 0 => simp [swapSubst, gramVector_swapDoublet_inr0]
+    | Sum.inr 1 => simp [swapSubst, gramVector_swapDoublet_inr1]
+    | Sum.inr 2 => simp [swapSubst, gramVector_swapDoublet_inr2]
+  rw [hb, eval_aeval_comp, hpt]
+
 /-!
 
 ## C. Reduction to the polynomial family of orbit representatives
