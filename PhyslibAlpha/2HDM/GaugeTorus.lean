@@ -51,6 +51,11 @@ lemma gaugeCartan_toU1 (a : unitary ℂ) : (gaugeCartan a).toU1 = 1 := rfl
 lemma gaugeCartan_toSU2_coe (a : unitary ℂ) :
     ((gaugeCartan a).toSU2 : Matrix (Fin 2) (Fin 2) ℂ) = !![(a : ℂ), 0; 0, (star a : ℂ)] := rfl
 
+/-- The Cartan element acts as the diagonal matrix `diag(a, ā)`. -/
+lemma gaugeCartan_smul_eq (a : unitary ℂ) (φ : HiggsVec) :
+    gaugeCartan a • φ = WithLp.toLp 2 (!![(a : ℂ), 0; 0, (star a : ℂ)] *ᵥ φ.ofLp) := by
+  rw [HiggsVec.gaugeGroupI_smul_eq, gaugeCartan_toU1, one_pow, one_smul, gaugeCartan_toSU2_coe]
+
 /-- The Cartan element phases the two components of a Higgs vector by `a` and `ā`. -/
 lemma gaugeCartan_smul_apply_zero (a : unitary ℂ) (φ : HiggsVec) :
     (gaugeCartan a • φ) 0 = (a : ℂ) * φ 0 := by
