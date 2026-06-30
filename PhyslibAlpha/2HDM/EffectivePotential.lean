@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
+public import Mathlib.Algebra.MvPolynomial.Funext
 public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
 public import PhyslibAlpha.«2HDM».GaugeSlice
@@ -98,6 +99,61 @@ lemma HasMaxMassDimLE.exists_comp_linear_poly {V : EffectivePotential} {n : ℕ}
       smul_eq_mul, mul_comm]
   rw [hp, key, MvPolynomial.aeval_def, MvPolynomial.algebraMap_eq, ← MvPolynomial.eval_assoc]
   rfl
+
+open MvPolynomial in
+/-- The Cartan hypercharge rotation of the slice parameters, as a substitution of the polynomial
+  variables. -/
+noncomputable def rotSubst (u : unitary ℂ) : Fin 6 → MvPolynomial (Fin 6) ℝ :=
+  ![C (u : ℂ).re * X 0 - C (u : ℂ).im * X 1, C (u : ℂ).im * X 0 + C (u : ℂ).re * X 1,
+    C (u : ℂ).re * X 2 - C (u : ℂ).im * X 3, C (u : ℂ).im * X 2 + C (u : ℂ).re * X 3,
+    C (u : ℂ).re * X 4 + C (u : ℂ).im * X 5, C (u : ℂ).re * X 5 - C (u : ℂ).im * X 4]
+
+open MvPolynomial in
+lemma eval_rotSubst (u : unitary ℂ) (a : Fin 6 → ℝ) :
+    (fun k => MvPolynomial.eval a (rotSubst u k)) = cartanRotParam u a := by
+  funext k
+  fin_cases k <;>
+    simp [rotSubst, cartanRotParam, Complex.mul_re, Complex.mul_im] <;> ring
+
+open MvPolynomial in
+/-- Gauge (Cartan) invariance of the potential forces the slice polynomial to be invariant under the
+  hypercharge rotation of its variables. -/
+lemma aeval_rotSubst_eq {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) (u : unitary ℂ) :
+    aeval (rotSubst u) P = P := by
+  apply MvPolynomial.funext
+  intro a
+  have hcomp : eval a (aeval (rotSubst u) P) = P.eval (fun k => eval a (rotSubst u k)) := by
+    rw [aeval_def, algebraMap_eq, ← MvPolynomial.eval_assoc]
+    rfl
+  rw [hcomp, eval_rotSubst, ← hP (cartanRotParam u a), ← gaugeCartan_smul_sliceR,
+    hI (StandardModel.GaugeGroupI.gaugeCartan u), hP a]
+
+open MvPolynomial in
+/-- The residual `U(1)` rotation of the perpendicular parameter, as a substitution. -/
+noncomputable def resSubst (c : unitary ℂ) : Fin 6 → MvPolynomial (Fin 6) ℝ :=
+  ![X 0, X 1, X 2, X 3,
+    C (((c : ℂ) ^ 6).re) * X 4 - C (((c : ℂ) ^ 6).im) * X 5,
+    C (((c : ℂ) ^ 6).im) * X 4 + C (((c : ℂ) ^ 6).re) * X 5]
+
+open MvPolynomial in
+lemma eval_resSubst (c : unitary ℂ) (a : Fin 6 → ℝ) :
+    (fun k => MvPolynomial.eval a (resSubst c k)) = resRotParam c a := by
+  funext k
+  fin_cases k <;> simp [resSubst, resRotParam, Complex.mul_re, Complex.mul_im] <;> ring
+
+open MvPolynomial in
+/-- Gauge (residual `U(1)`) invariance forces the slice polynomial to be invariant under the
+  perpendicular rotation of its variables. -/
+lemma aeval_resSubst_eq {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) (c : unitary ℂ) :
+    aeval (resSubst c) P = P := by
+  apply MvPolynomial.funext
+  intro a
+  have hcomp : eval a (aeval (resSubst c) P) = P.eval (fun k => eval a (resSubst c k)) := by
+    rw [aeval_def, algebraMap_eq, ← MvPolynomial.eval_assoc]; rfl
+  rw [hcomp, eval_resSubst, ← hP (resRotParam c a), ← ofU1Subgroup_smul_sliceR,
+    hI (StandardModel.GaugeGroupI.ofU1Subgroup c), hP a]
 
 /-!
 

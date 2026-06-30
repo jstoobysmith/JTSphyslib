@@ -106,4 +106,36 @@ lemma ofU1Subgroup_smul_sliceHiggs (c : unitary ℂ) (z w0 w1 : ℂ) :
     ext i
     fin_cases i <;> simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two]
 
+open Complex in
+/-- The Cartan hypercharge phase `u`, transported to a rotation of the six real field parameters:
+  it phases the first-component pairs by `u` and the perpendicular pair by `ū`. -/
+def cartanRotParam (u : unitary ℂ) (a : Fin 6 → ℝ) : Fin 6 → ℝ :=
+  ![((u : ℂ) * (↑(a 0) + I * ↑(a 1))).re, ((u : ℂ) * (↑(a 0) + I * ↑(a 1))).im,
+    ((u : ℂ) * (↑(a 2) + I * ↑(a 3))).re, ((u : ℂ) * (↑(a 2) + I * ↑(a 3))).im,
+    ((star u : ℂ) * (↑(a 4) + I * ↑(a 5))).re, ((star u : ℂ) * (↑(a 4) + I * ↑(a 5))).im]
+
+/-- Acting by the Cartan phase on a slice configuration is the same as rotating its parameters. -/
+lemma gaugeCartan_smul_sliceR (u : unitary ℂ) (a : Fin 6 → ℝ) :
+    GaugeGroupI.gaugeCartan u • sliceR a = sliceR (cartanRotParam u a) := by
+  have h : ∀ z : ℂ, (↑z.re + Complex.I * ↑z.im) = z := fun z => by
+    rw [mul_comm]; exact Complex.re_add_im z
+  rw [sliceR_apply, gaugeCartan_smul_sliceHiggs, sliceR_apply]
+  congr 1 <;> simp only [cartanRotParam, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val, Fin.isValue] <;> rw [h]
+
+open Complex in
+/-- The residual `U(1)` phase `c`, transported to a rotation of the perpendicular parameter pair. -/
+def resRotParam (c : unitary ℂ) (a : Fin 6 → ℝ) : Fin 6 → ℝ :=
+  ![a 0, a 1, a 2, a 3, (((c : ℂ) ^ 6) * ((a 4 : ℂ) + I * (a 5 : ℂ))).re,
+    (((c : ℂ) ^ 6) * ((a 4 : ℂ) + I * (a 5 : ℂ))).im]
+
+/-- Acting by the residual `U(1)` on a slice configuration rotates only the perpendicular pair. -/
+lemma ofU1Subgroup_smul_sliceR (c : unitary ℂ) (a : Fin 6 → ℝ) :
+    GaugeGroupI.ofU1Subgroup c • sliceR a = sliceR (resRotParam c a) := by
+  have h : ∀ z : ℂ, (↑z.re + Complex.I * ↑z.im) = z := fun z => by
+    rw [mul_comm]; exact Complex.re_add_im z
+  rw [sliceR_apply, ofU1Subgroup_smul_sliceHiggs, sliceR_apply]
+  congr 1 <;> simp only [resRotParam, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val, Fin.isValue] <;> first | rfl | rw [h]
+
 end TwoHiggsDoublet
