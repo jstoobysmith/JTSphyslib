@@ -61,4 +61,65 @@ lemma exists_fullR (φ : TwoHiggsDoublet) : ∃ a : Fin 8 → ℝ, fullR a = φ 
   · ext i; fin_cases i <;>
       simp [Matrix.cons_val_zero, Matrix.cons_val_one, mul_comm Complex.I, Complex.re_add_im]
 
+/-! ### The standard diagonal gauge torus on the full space -/
+
+open Complex in
+/-- The Cartan phase `u = diag(a, ā)`, transported to a rotation of the eight real parameters: it
+  phases the *first*-component pairs `(0,1),(4,5)` by `a` and the *second*-component pairs
+  `(2,3),(6,7)` by `ā`. -/
+def cartanParam8 (u : unitary ℂ) (a : Fin 8 → ℝ) : Fin 8 → ℝ :=
+  ![((u : ℂ) * (↑(a 0) + I * ↑(a 1))).re, ((u : ℂ) * (↑(a 0) + I * ↑(a 1))).im,
+    ((star u : ℂ) * (↑(a 2) + I * ↑(a 3))).re, ((star u : ℂ) * (↑(a 2) + I * ↑(a 3))).im,
+    ((u : ℂ) * (↑(a 4) + I * ↑(a 5))).re, ((u : ℂ) * (↑(a 4) + I * ↑(a 5))).im,
+    ((star u : ℂ) * (↑(a 6) + I * ↑(a 7))).re, ((star u : ℂ) * (↑(a 6) + I * ↑(a 7))).im]
+
+/-- Acting by the Cartan phase on a full configuration is the same as rotating its parameters. -/
+lemma gaugeCartan_smul_fullR (u : unitary ℂ) (a : Fin 8 → ℝ) :
+    GaugeGroupI.gaugeCartan u • fullR a = fullR (cartanParam8 u a) := by
+  apply ext_of_fst_snd
+  · rw [gaugeGroupI_smul_fst, GaugeGroupI.gaugeCartan_smul_eq, fullR_Φ1]
+    ext i
+    fin_cases i <;>
+      (apply Complex.ext <;>
+        simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, cartanParam8, fullR, Complex.mul_re,
+          Complex.mul_im, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im, Complex.star_def,
+          Complex.conj_re, Complex.conj_im] <;> ring)
+  · rw [gaugeGroupI_smul_snd, GaugeGroupI.gaugeCartan_smul_eq, fullR_Φ2]
+    ext i
+    fin_cases i <;>
+      (apply Complex.ext <;>
+        simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, cartanParam8, fullR, Complex.mul_re,
+          Complex.mul_im, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im, Complex.star_def,
+          Complex.conj_re, Complex.conj_im] <;> ring)
+
+open Complex in
+/-- The residual `U(1)` phase `c`, transported to a rotation of the eight real parameters: it
+  phases the *second*-component pairs `(2,3),(6,7)` by `c⁶` and fixes the first-component pairs. -/
+def resParam8 (c : unitary ℂ) (a : Fin 8 → ℝ) : Fin 8 → ℝ :=
+  ![a 0, a 1, ((c : ℂ) ^ 6 * (↑(a 2) + I * ↑(a 3) : ℂ)).re,
+    ((c : ℂ) ^ 6 * (↑(a 2) + I * ↑(a 3) : ℂ)).im,
+    a 4, a 5, ((c : ℂ) ^ 6 * (↑(a 6) + I * ↑(a 7) : ℂ)).re,
+    ((c : ℂ) ^ 6 * (↑(a 6) + I * ↑(a 7) : ℂ)).im]
+
+/-- Acting by the residual `U(1)` on a full configuration is the same as rotating its parameters. -/
+lemma ofU1Subgroup_smul_fullR (c : unitary ℂ) (a : Fin 8 → ℝ) :
+    GaugeGroupI.ofU1Subgroup c • fullR a = fullR (resParam8 c a) := by
+  apply ext_of_fst_snd
+  · rw [gaugeGroupI_smul_fst, HiggsVec.ofU1Subgroup_smul_eq_smul, fullR_Φ1]
+    ext i
+    fin_cases i <;>
+      (apply Complex.ext <;>
+        simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, resParam8, fullR, Complex.mul_re,
+          Complex.mul_im, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im])
+  · rw [gaugeGroupI_smul_snd, HiggsVec.ofU1Subgroup_smul_eq_smul, fullR_Φ2]
+    ext i
+    fin_cases i <;>
+      (apply Complex.ext <;>
+        simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, resParam8, fullR, Complex.mul_re,
+          Complex.mul_im, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im])
+
 end TwoHiggsDoublet
