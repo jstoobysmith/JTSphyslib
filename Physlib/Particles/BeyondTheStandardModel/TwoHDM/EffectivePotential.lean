@@ -66,21 +66,15 @@ end IsInvariant
 /-- The proposition that the potential `V` has a maximum mass dimension
   less then or equal to `n` - also implying it is a polynomial. -/
 def HasMaxMassDimLE (V : EffectivePotential) (n : ℕ) : Prop :=
-  ∃ p : MvPolynomial (Module.dual ℝ TwoHiggsDoublet) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval
-   (fun i => φ.|)
-  ) ∧
-    p.totalDegree ≤ n
+  ∃ p : MvPolynomial (Module.Dual ℝ TwoHiggsDoublet) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval
+   (fun i => i φ) ) ∧ p.totalDegree ≤ n
 
-/-- The polynomial associated to a potential `V` with a maximum mass dimension
-  less than or equal to `n`. -/
-def polynomial (V : EffectivePotential) {n : ℕ} (h : HasMaxMassDimLE V n) :
-    MvPolynomial (Fin 4) ℝ := Classical.choose h
-
-lemma polynomial_totalDegree {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) :
-    (polynomial V h).totalDegree ≤ n := (Classical.choose_spec h).2
-
-lemma apply_eq_polynomial {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n)
-    (φ : TwoHiggsDoublet) : V φ = (polynomial V h).eval φ.toRealScalars := (Classical.choose_spec h).1 φ
+/-- An invariant effective potential with maximum mass dimension n can be written as a
+  polynomial in the entries of the Gram vector. -/
+lemma effectivePotential_is_polynomial_gramVector {V : EffectivePotential} {n : ℕ}
+    (hI: IsInvariant V) (h : HasMaxMassDimLE V n) :
+    ∃ p : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval φ.gramVector) := by
+  sorry
 
 end EffectivePotential
 

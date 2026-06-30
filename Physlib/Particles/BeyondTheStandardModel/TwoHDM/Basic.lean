@@ -110,7 +110,16 @@ lemma smul_fst (c : ℂ) (H : TwoHiggsDoublet) : (c • H).Φ1 = c • H.Φ1 := 
 @[simp]
 lemma smul_snd (c : ℂ) (H : TwoHiggsDoublet) : (c • H).Φ2 = c • H.Φ2 := rfl
 
-instance : AddCommMonoid TwoHiggsDoublet where
+instance : Neg TwoHiggsDoublet where
+  neg H := { Φ1 := -H.Φ1, Φ2 := -H.Φ2 }
+
+@[simp]
+lemma neg_fst (H : TwoHiggsDoublet) : (-H).Φ1 = -H.Φ1 := rfl
+
+@[simp]
+lemma neg_snd (H : TwoHiggsDoublet) : (-H).Φ2 = -H.Φ2 := rfl
+
+instance : AddCommGroup TwoHiggsDoublet where
   add_assoc H1 H2 H3 := by
     ext <;> simp [add_assoc]
   zero_add H := by
@@ -120,6 +129,9 @@ instance : AddCommMonoid TwoHiggsDoublet where
   nsmul := nsmulRec
   add_comm H1 H2 := by
     ext <;> simp [add_comm]
+  zsmul := zsmulRec
+  neg_add_cancel H := by
+    ext <;> simp [neg_add_cancel]
 
 instance : Module ℂ TwoHiggsDoublet where
   smul_add c H1 H2 := by
