@@ -8,6 +8,8 @@ module
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Algebra.MvPolynomial.Funext
+public import Mathlib.Algebra.MvPolynomial.Monad
+public import Mathlib.Analysis.Real.Pi.Irrational
 public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
 public import PhyslibAlpha.«2HDM».GaugeSlice
@@ -154,6 +156,165 @@ lemma aeval_resSubst_eq {V : EffectivePotential} (hI : IsInvariant V)
     rw [aeval_def, algebraMap_eq, ← MvPolynomial.eval_assoc]; rfl
   rw [hcomp, eval_resSubst, ← hP (resRotParam c a), ← ofU1Subgroup_smul_sliceR,
     hI (StandardModel.GaugeGroupI.ofU1Subgroup c), hP a]
+
+open MvPolynomial in
+/-- Change to hypercharge eigen-coordinates: `aₖ` in terms of `z, z̄, w₀, w̄₀, w₁, w̄₁`
+  (indices `0..5`). This diagonalises the gauge-torus rotation into a scaling. -/
+noncomputable def cplxEigen : Fin 6 → MvPolynomial (Fin 6) ℂ :=
+  ![(X 0 + X 1) * C (1 / 2), (X 0 - X 1) * C (-Complex.I / 2),
+    (X 2 + X 3) * C (1 / 2), (X 2 - X 3) * C (-Complex.I / 2),
+    (X 4 + X 5) * C (1 / 2), (X 4 - X 5) * C (-Complex.I / 2)]
+
+open MvPolynomial in
+/-- The Cartan hypercharge, diagonal in eigen-coordinates: charges `(1,-1,1,-1,-1,1)`. -/
+noncomputable def diagCartan (u : unitary ℂ) : Fin 6 → MvPolynomial (Fin 6) ℂ :=
+  ![C (u : ℂ) * X 0, C (star (u : ℂ)) * X 1, C (u : ℂ) * X 2, C (star (u : ℂ)) * X 3,
+    C (star (u : ℂ)) * X 4, C (u : ℂ) * X 5]
+
+open MvPolynomial in
+/-- The residual `U(1)`, diagonal in eigen-coordinates: only the perpendicular pair is charged. -/
+noncomputable def diagRes (c : unitary ℂ) : Fin 6 → MvPolynomial (Fin 6) ℂ :=
+  ![X 0, X 1, X 2, X 3, C ((c : ℂ) ^ 6) * X 4, C (star ((c : ℂ) ^ 6)) * X 5]
+
+open MvPolynomial in
+/-- Conjugation identity: the diagonal Cartan scaling, pulled back through the eigen-coordinate
+  change, is the (complexified) Cartan rotation substitution. -/
+lemma bind₁_diagCartan_cplxEigen (u : unitary ℂ) (k : Fin 6) :
+    bind₁ (diagCartan u) (cplxEigen k)
+      = bind₁ cplxEigen (map (algebraMap ℝ ℂ) (rotSubst u k)) := by
+  apply MvPolynomial.funext
+  intro x
+  fin_cases k <;>
+    simp only [cplxEigen, diagCartan, rotSubst, Matrix.cons_val, Fin.isValue,
+      map_add, map_sub, map_mul, MvPolynomial.bind₁_X_right,
+      MvPolynomial.bind₁_C_right, MvPolynomial.map_C, MvPolynomial.map_X, MvPolynomial.algebraMap_eq,
+      MvPolynomial.eval_X, MvPolynomial.eval_C] <;>
+    (apply Complex.ext <;>
+      simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
+        Complex.star_def, Complex.conj_re, Complex.conj_im] <;> ring)
+
+open MvPolynomial in
+/-- Conjugation identity for the residual `U(1)`. -/
+lemma bind₁_diagRes_cplxEigen (c : unitary ℂ) (k : Fin 6) :
+    bind₁ (diagRes c) (cplxEigen k)
+      = bind₁ cplxEigen (map (algebraMap ℝ ℂ) (resSubst c k)) := by
+  apply MvPolynomial.funext
+  intro x
+  simp only [diagRes, resSubst]
+  generalize (c : ℂ) ^ 6 = μ
+  fin_cases k <;>
+    simp only [cplxEigen, Matrix.cons_val, Fin.isValue,
+      map_add, map_sub, map_mul, MvPolynomial.bind₁_X_right,
+      MvPolynomial.bind₁_C_right, MvPolynomial.map_C, MvPolynomial.map_X, MvPolynomial.algebraMap_eq,
+      MvPolynomial.eval_X, MvPolynomial.eval_C] <;>
+    (apply Complex.ext <;>
+      simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
+        Complex.star_def, Complex.conj_re, Complex.conj_im] <;> ring)
+
+/-- The Cartan hypercharges of `z, z̄, w₀, w̄₀, w₁, w̄₁`. -/
+def chargeA : Fin 6 → ℤ := ![1, -1, 1, -1, -1, 1]
+
+/-- The residual-`U(1)` hypercharges (only the perpendicular pair is charged). -/
+def chargeB : Fin 6 → ℤ := ![0, 0, 0, 0, 1, -1]
+
+open MvPolynomial in
+/-- The slice potential, complexified and written in hypercharge eigen-coordinates. -/
+noncomputable def Qslice (P : MvPolynomial (Fin 6) ℝ) : MvPolynomial (Fin 6) ℂ :=
+  bind₁ cplxEigen (map (algebraMap ℝ ℂ) P)
+
+open MvPolynomial in
+/-- The Cartan diagonal in the charge form consumed by the charge-balancing engine. -/
+lemma diagCartan_eq (u : unitary ℂ) :
+    diagCartan u = fun i => C ((u : ℂ) ^ (chargeA i)) * X i := by
+  have hinv : star (u : ℂ) = (u : ℂ) ^ (-1 : ℤ) := by
+    rw [zpow_neg_one]; exact (inv_eq_of_mul_eq_one_right u.2.2).symm
+  funext i
+  fin_cases i <;> simp [diagCartan, chargeA, hinv]
+
+open MvPolynomial in
+/-- The residual diagonal in the charge form consumed by the engine. -/
+lemma diagRes_eq (c : unitary ℂ) :
+    diagRes c = fun i => C (((c : ℂ) ^ 6) ^ (chargeB i)) * X i := by
+  have hinv : star ((c : ℂ) ^ 6) = ((c : ℂ) ^ 6) ^ (-1 : ℤ) := by
+    rw [zpow_neg_one]
+    refine (inv_eq_of_mul_eq_one_right ?_).symm
+    rw [star_pow, ← mul_pow, c.2.2, one_pow]
+  funext i
+  fin_cases i <;> simp [diagRes, chargeB, hinv]
+
+open MvPolynomial in
+/-- In eigen-coordinates, the Cartan hypercharge acts by the diagonal scaling, and the slice
+  potential is invariant under it. -/
+lemma bind₁_diagCartan_Qslice {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) (u : unitary ℂ) :
+    bind₁ (diagCartan u) (Qslice P) = Qslice P := by
+  simp only [Qslice]
+  rw [bind₁_bind₁]
+  simp only [bind₁_diagCartan_cplxEigen]
+  rw [← bind₁_bind₁, ← map_bind₁]
+  congr 2
+  exact aeval_rotSubst_eq hI hP u
+
+open MvPolynomial in
+/-- Likewise for the residual `U(1)`. -/
+lemma bind₁_diagRes_Qslice {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) (c : unitary ℂ) :
+    bind₁ (diagRes c) (Qslice P) = Qslice P := by
+  simp only [Qslice]
+  rw [bind₁_bind₁]
+  simp only [bind₁_diagRes_cplxEigen]
+  rw [← bind₁_bind₁, ← map_bind₁]
+  congr 2
+  exact aeval_resSubst_eq hI hP c
+
+/-- There is a gauge phase of infinite order (`exp i`), needed to run charge balancing. -/
+lemma exists_infiniteOrder_unitary :
+    ∃ ω : unitary ℂ, ∀ n : ℤ, (ω : ℂ) ^ n = 1 → n = 0 := by
+  have key : star (Complex.exp Complex.I) * Complex.exp Complex.I = 1 := by
+    rw [Complex.star_def, ← Complex.exp_conj, Complex.conj_I, ← Complex.exp_add]; simp
+  have key2 : Complex.exp Complex.I * star (Complex.exp Complex.I) = 1 := by
+    rw [Complex.star_def, ← Complex.exp_conj, Complex.conj_I, ← Complex.exp_add]; simp
+  refine ⟨⟨Complex.exp Complex.I, key, key2⟩, fun n hn => ?_⟩
+  simp only at hn
+  rw [← Complex.exp_int_mul, Complex.exp_eq_one_iff] at hn
+  obtain ⟨k, hk⟩ := hn
+  have hc : (n : ℂ) = (k : ℂ) * (2 * Real.pi) := by
+    have hI : (Complex.I) ≠ 0 := Complex.I_ne_zero
+    apply mul_right_cancel₀ hI
+    rw [hk]; ring
+  have hr : (n : ℝ) = (k : ℝ) * (2 * Real.pi) := by exact_mod_cast hc
+  rcases eq_or_ne k 0 with hk0 | hk0
+  · simp [hk0] at hr; exact_mod_cast hr
+  · exfalso
+    have h2k : (2 * (k : ℝ)) ≠ 0 := by
+      simp only [mul_ne_zero_iff]; exact ⟨two_ne_zero, by exact_mod_cast hk0⟩
+    have hpi : Real.pi = (n : ℝ) / (2 * (k : ℝ)) := by rw [eq_div_iff h2k, hr]; ring
+    exact irrational_pi.ne_rat ((n : ℚ) / (2 * (k : ℚ))) (by rw [hpi]; push_cast; ring)
+
+open MvPolynomial in
+/-- **Hypercharge balancing.** Every monomial of the slice potential `Qslice P` (in eigen-
+  coordinates) that carries nonzero Cartan or residual hypercharge has vanishing coefficient. -/
+lemma coeff_Qslice_eq_zero {V : EffectivePotential} (hI : IsInvariant V)
+    {P : MvPolynomial (Fin 6) ℝ} (hP : ∀ a, V (sliceR a) = P.eval a) (m : Fin 6 →₀ ℕ)
+    (hm : (∑ i ∈ m.support, (m i : ℤ) * chargeA i ≠ 0) ∨
+          (∑ i ∈ m.support, (m i : ℤ) * chargeB i ≠ 0)) :
+    coeff m (Qslice P) = 0 := by
+  obtain ⟨ω, hω⟩ := exists_infiniteOrder_unitary
+  have hω0 : (ω : ℂ) ≠ 0 := by intro h; have := ω.2.1; rw [h] at this; simp at this
+  rcases hm with hmA | hmB
+  · refine coeff_eq_zero_of_charge_ne_zero chargeA (ω : ℂ) hω0 hω ?_ hmA
+    have h := bind₁_diagCartan_Qslice hI hP ω
+    rwa [diagCartan_eq] at h
+  · have hω6 : ((ω : ℂ) ^ 6) ≠ 0 := pow_ne_zero 6 hω0
+    have hroot6 : ∀ n : ℤ, ((ω : ℂ) ^ 6) ^ n = 1 → n = 0 := by
+      intro n hn
+      rw [← zpow_natCast (ω : ℂ) 6, ← zpow_mul] at hn
+      have := hω _ hn; omega
+    refine coeff_eq_zero_of_charge_ne_zero chargeB ((ω : ℂ) ^ 6) hω6 hroot6 ?_ hmB
+    have h := bind₁_diagRes_Qslice hI hP ω
+    rwa [diagRes_eq] at h
 
 /-!
 
