@@ -1,17 +1,47 @@
 /-
 Copyright (c) 2026 Nicola Bernini. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Nicola Bernini
+Authors: Nicola Bernini, Nathaneal Sajan
 -/
 module
 
 public import Physlib.SpaceAndTime.Space.Basic
-public import Mathlib.Analysis.InnerProductSpace.Calculus
 /-!
 # Configuration space of the harmonic oscillator
 
-The configuration space is defined as a one-dimensional smooth manifold,
-modeled on `ℝ`, with a chosen coordinate.
+## i. Overview
+
+The configuration space `Q` of the one-dimensional harmonic oscillator is the space of
+possible positions of the oscillator, formalised here as a one-dimensional smooth manifold.
+
+`Q` carries a single chosen global coordinate, modeled by `EuclideanSpace ℝ (Fin 1)`. This
+coordinate supplies the topology and the smooth-manifold structure through a single global
+chart.
+
+## ii. Key results
+
+- `ConfigurationSpace` : the configuration manifold `Q` of the harmonic oscillator, wrapping
+  the chosen `EuclideanSpace ℝ (Fin 1)` coordinate.
+- `ConfigurationSpace.valEquiv` : the coordinate equivalence identifying `Q` with its
+  `EuclideanSpace ℝ (Fin 1)` model.
+- `ConfigurationSpace.valHomeomorphism` : the global coordinate homeomorphism underlying the
+  manifold chart.
+- the `ChartedSpace` and `IsManifold` instances, exhibiting `Q` as a one-dimensional analytic
+  manifold modeled on `EuclideanSpace ℝ (Fin 1)`.
+- `ConfigurationSpace.toSpace` : the point of physical `Space 1` determined by a
+  configuration.
+
+## iii. Table of contents
+
+- A. The configuration space type
+- B. Topology and coordinate homeomorphism
+- C. Smooth manifold structure
+- D. Map to physical space
+
+## iv. References
+
+- Ivo Terek, Introductory Variational Calculus on Manifolds, page 1 (Section 1, Basic
+  definitions and examples).
 -/
 
 @[expose] public section
@@ -20,17 +50,25 @@ namespace ClassicalMechanics
 
 namespace HarmonicOscillator
 
-TODO "Configuration Space should be refactored to take `EuclideanSpace ℝ (Fin 1)`
-    as its value."
-
 TODO "The API around the configuration space
     should be improved to allow further development of a proper
     geometric model of the Harmonic Oscillator."
 
-/-- The configuration space of the harmonic oscillator. -/
+/-!
+## A. The configuration space type
+
+`ConfigurationSpace` wraps a single chosen global coordinate valued in
+`EuclideanSpace ℝ (Fin 1)`. We record extensionality in this coordinate together with a
+function-like coordinate access mirroring that of `EuclideanSpace ℝ (Fin 1)`.
+-/
+
+/-- The one-dimensional configuration space `Q` of the harmonic oscillator: the space of
+possible positions of the oscillator, equipped with a single chosen global coordinate
+modeled by `EuclideanSpace ℝ (Fin 1)`. -/
 structure ConfigurationSpace where
-  /-- The underlying real coordinate. -/
-  val : ℝ
+  /-- The chosen global coordinate of the configuration, valued in
+  `EuclideanSpace ℝ (Fin 1)`. -/
+  val : EuclideanSpace ℝ (Fin 1)
 
 namespace ConfigurationSpace
 
@@ -38,205 +76,72 @@ namespace ConfigurationSpace
 lemma ext {x y : ConfigurationSpace} (h : x.val = y.val) : x = y := by
   cases x
   cases y
-  simp at h
-  simp [h]
+  subst h
+  rfl
+
+/-- A configuration may be applied like a function `Fin 1 → ℝ`, evaluating its
+underlying coordinate. This mirrors the function-like use of `EuclideanSpace ℝ (Fin 1)`. -/
+instance : CoeFun ConfigurationSpace (fun _ => Fin 1 → ℝ) where
+  coe x := fun i => x.val i
+
+lemma coe_apply (x : ConfigurationSpace) (i : Fin 1) : x i = x.val i := rfl
 
 /-!
-## Algebraic and analytical structure
+## B. Topology and coordinate homeomorphism
+
+`ConfigurationSpace` carries the topology induced by its chosen coordinate
+`ConfigurationSpace.val`: a set of configurations is open exactly when it is the preimage of
+an open set under `val`. The wrapper/unwrapper pair is the coordinate equivalence `valEquiv`,
+which is a homeomorphism `valHomeomorphism` for this induced topology — its continuity in
+both directions is just the universal property of the induced topology. We transport Hausdorffness
+and second countability across it from the model space, so `Q` is a well-behaved topological
+manifold.
 -/
 
-instance : Zero ConfigurationSpace := { zero := ⟨0⟩ }
+/-- The topology on configuration space, induced by the chosen coordinate
+`ConfigurationSpace.val` into `EuclideanSpace ℝ (Fin 1)`. -/
+instance : TopologicalSpace ConfigurationSpace :=
+  TopologicalSpace.induced ConfigurationSpace.val inferInstance
 
-instance : OfNat ConfigurationSpace 0 := { ofNat := ⟨0⟩ }
-
-@[simp]
-lemma zero_val : (0 : ConfigurationSpace).val = 0 := rfl
-
-instance : Add ConfigurationSpace where
-  add x y := ⟨x.val + y.val⟩
-
-@[simp]
-lemma add_val (x y : ConfigurationSpace) : (x + y).val = x.val + y.val := rfl
-
-instance : Neg ConfigurationSpace where
-  neg x := ⟨-x.val⟩
-
-@[simp]
-lemma neg_val (x : ConfigurationSpace) : (-x).val = -x.val := rfl
-
-instance : Sub ConfigurationSpace where
-  sub x y := ⟨x.val - y.val⟩
-
-@[simp]
-lemma sub_val (x y : ConfigurationSpace) : (x - y).val = x.val - y.val := rfl
-
-instance : SMul ℝ ConfigurationSpace where
-  smul r x := ⟨r * x.val⟩
-
-@[simp]
-lemma smul_val (r : ℝ) (x : ConfigurationSpace) : (r • x).val = r * x.val := rfl
-
-instance : CoeFun ConfigurationSpace (fun _ => Fin 1 → ℝ) where
-  coe x := fun _ => x.val
-
-@[simp]
-lemma apply_zero (x : ConfigurationSpace) : x 0 = x.val := rfl
-
-@[simp]
-lemma apply_eq_val (x : ConfigurationSpace) (i : Fin 1) : x i = x.val := rfl
-
-instance : AddGroup ConfigurationSpace where
-  add_assoc x y z := by ext; simp [add_assoc]
-  zero_add x := by ext; simp [zero_add]
-  add_zero x := by ext; simp [add_zero]
-  neg_add_cancel x := by ext; simp [neg_add_cancel]
-  nsmul := nsmulRec
-  zsmul := zsmulRec
-
-instance : AddCommGroup ConfigurationSpace where
-  add_comm x y := by ext; simp [add_comm]
-
-instance : Module ℝ ConfigurationSpace where
-  one_smul x := by ext; simp
-  smul_add r x y := by ext; simp [mul_add]
-  smul_zero r := by ext; simp [mul_zero]
-  add_smul r s x := by ext; simp [add_mul]
-  mul_smul r s x := by ext; simp [mul_assoc]
-  zero_smul x := by ext; simp
-
-instance : Norm ConfigurationSpace where
-  norm x := ‖x.val‖
-
-instance : Dist ConfigurationSpace where
-  dist x y := ‖x - y‖
-
-lemma dist_eq_val (x y : ConfigurationSpace) :
-    dist x y = ‖x.val - y.val‖ := rfl
-
-instance : SeminormedAddCommGroup ConfigurationSpace where
-  dist_self x := by simp [dist_eq_val]
-  dist_comm x y := by
-    simpa [dist_eq_val, Real.dist_eq] using (dist_comm x.val y.val)
-  dist_triangle x y z := by
-    simpa [dist_eq_val, Real.dist_eq] using (dist_triangle x.val y.val z.val)
-  dist_eq x y := by
-    simp [dist_eq_val, norm]
-    refine abs_eq_abs.mpr ?_
-    ring_nf
-    simp
-
-instance : NormedAddCommGroup ConfigurationSpace where
-  eq_of_dist_eq_zero := by
-    intro a b h
-    ext
-    have h' : dist a.val b.val = 0 := by
-      simpa [dist_eq_val, Real.dist_eq] using h
-    exact dist_eq_zero.mp h'
-  dist_eq x y := by
-    simp [dist_eq_val, norm]
-    refine abs_eq_abs.mpr ?_
-    ring_nf
-    simp
-
-instance : NormedSpace ℝ ConfigurationSpace where
-  norm_smul_le r x := by
-    simp [norm, smul_val, abs_mul]
-
-open InnerProductSpace
-
-instance : Inner ℝ ConfigurationSpace where
-  inner x y := x.val * y.val
-
-@[simp]
-lemma inner_def (x y : ConfigurationSpace) : ⟪x, y⟫_ℝ = x.val * y.val := rfl
-
-noncomputable instance : InnerProductSpace ℝ ConfigurationSpace where
-  norm_sq_eq_re_inner := by
-    intro x
-    have hx : ‖x‖ ^ 2 = x.val ^ 2 := by
-      simp [norm, sq_abs]
-    simpa [inner_def, pow_two] using hx
-  conj_inner_symm := by
-    intro x y
-    simp [inner_def]
-    ring
-  add_left := by
-    intro x y z
-    simp [inner_def, add_mul]
-  smul_left := by
-    intro x y r
-    simp [inner_def]
-    ring
-
-@[fun_prop]
-lemma differentiable_inner_self :
-    Differentiable ℝ (fun x : ConfigurationSpace => ⟪x, x⟫_ℝ) := by
-  have h_id : Differentiable ℝ (fun x : ConfigurationSpace => x) := differentiable_id
-  simpa using (Differentiable.inner (𝕜:=ℝ) (f:=fun x : ConfigurationSpace => x)
-    (g:=fun x : ConfigurationSpace => x) h_id h_id)
-
-@[fun_prop]
-lemma differentiableAt_inner_self (x : ConfigurationSpace) :
-    DifferentiableAt ℝ (fun y : ConfigurationSpace => ⟪y, y⟫_ℝ) x := by
-  have h_id : DifferentiableAt ℝ (fun y : ConfigurationSpace => y) x := differentiableAt_id
-  simpa using (DifferentiableAt.inner (𝕜:=ℝ) (f:=fun y : ConfigurationSpace => y)
-    (g:=fun y : ConfigurationSpace => y) h_id h_id)
-
-@[fun_prop]
-lemma contDiff_inner_self (n : WithTop ℕ∞) :
-    ContDiff ℝ n (fun x : ConfigurationSpace => ⟪x, x⟫_ℝ) := by
-  have h_id : ContDiff ℝ n (fun x : ConfigurationSpace => x) := contDiff_id
-  simpa using (ContDiff.inner (𝕜:=ℝ) (f:=fun x : ConfigurationSpace => x)
-    (g:=fun x : ConfigurationSpace => x) h_id h_id)
-
-/-- Linear map sending a configuration space element to its underlying real value. -/
-noncomputable def toRealLM : ConfigurationSpace →ₗ[ℝ] ℝ :=
-  { toFun := ConfigurationSpace.val
-    map_add' := by simp
-    map_smul' := by simp }
-
-/-- Linear map embedding a real value into the configuration space. -/
-noncomputable def fromRealLM : ℝ →ₗ[ℝ] ConfigurationSpace :=
-  { toFun := fun x => ⟨x⟩
-    map_add' := by
-      intro x y
-      ext
-      simp
-    map_smul' := by
-      intro r x
-      ext
-      simp }
-
-/-- Continuous linear map sending a configuration space element to its underlying real value. -/
-noncomputable def toRealCLM : ConfigurationSpace →L[ℝ] ℝ :=
-  toRealLM.mkContinuous 1 (by
-    intro x
-    simp [toRealLM, norm])
-
-/-- Continuous linear map embedding a real value into the configuration space. -/
-noncomputable def fromRealCLM : ℝ →L[ℝ] ConfigurationSpace :=
-  fromRealLM.mkContinuous 1 (by
-    intro x
-    simp [fromRealLM, norm])
-
-/-- Homeomorphism between configuration space and `ℝ` given by `ConfigurationSpace.val`. -/
-noncomputable def valHomeomorphism : ConfigurationSpace ≃ₜ ℝ where
+/-- The coordinate equivalence between configuration space and its `EuclideanSpace ℝ (Fin 1)`
+model, given by `ConfigurationSpace.val` with its wrapper inverse. -/
+def valEquiv : ConfigurationSpace ≃ EuclideanSpace ℝ (Fin 1) where
   toFun := ConfigurationSpace.val
-  invFun := fun t => ⟨t⟩
-  left_inv := by
-    intro t
-    cases t
-    rfl
-  right_inv := by
-    intro t
-    rfl
-  continuous_toFun := by
-    simpa [toRealCLM, toRealLM] using toRealCLM.continuous
-  continuous_invFun := by
-    simpa [fromRealCLM, fromRealLM] using fromRealCLM.continuous
+  invFun v := ⟨v⟩
+  left_inv x := by cases x; rfl
+  right_inv v := rfl
 
-/-- The structure of a charted space on `ConfigurationSpace`. -/
-noncomputable instance : ChartedSpace ℝ ConfigurationSpace where
+/-- The global coordinate homeomorphism between configuration space and its
+`EuclideanSpace ℝ (Fin 1)` model. Continuity in both directions is exactly the universal
+property of the induced topology, so no norm or isometry structure is involved. This
+homeomorphism underlies the single global chart used for the smooth-manifold structure. -/
+def valHomeomorphism : ConfigurationSpace ≃ₜ EuclideanSpace ℝ (Fin 1) where
+  toEquiv := valEquiv
+  continuous_toFun := continuous_induced_dom
+  continuous_invFun := by
+    apply continuous_induced_rng.mpr
+    exact continuous_id
+
+/-- Configuration space is Hausdorff, transported from `EuclideanSpace ℝ (Fin 1)` across the
+coordinate homeomorphism. -/
+instance : T2Space ConfigurationSpace := valHomeomorphism.symm.t2Space
+
+/-- Configuration space is second countable, transported from `EuclideanSpace ℝ (Fin 1)`
+across the coordinate homeomorphism. -/
+instance : SecondCountableTopology ConfigurationSpace :=
+  valHomeomorphism.secondCountableTopology
+
+/-!
+## C. Smooth manifold structure
+
+`ConfigurationSpace` is an analytic manifold modeled on `EuclideanSpace ℝ (Fin 1)`, via the
+single global chart `valHomeomorphism`. With one chart the only coordinate change is the
+chart's self-transition, which is analytic, so chart compatibility is immediate.
+-/
+
+/-- The structure of a charted space on `ConfigurationSpace`, modeled on its
+`EuclideanSpace ℝ (Fin 1)` coordinate via the single global chart `valHomeomorphism`. -/
+instance : ChartedSpace (EuclideanSpace ℝ (Fin 1)) ConfigurationSpace where
   atlas := { valHomeomorphism.toOpenPartialHomeomorph }
   chartAt _ := valHomeomorphism.toOpenPartialHomeomorph
   mem_chart_source := by
@@ -247,34 +152,28 @@ noncomputable instance : ChartedSpace ℝ ConfigurationSpace where
 
 open Manifold ContDiff
 
-/-- The structure of a smooth manifold on `ConfigurationSpace`. -/
-noncomputable instance : IsManifold 𝓘(ℝ, ℝ) ω ConfigurationSpace where
+/-- The structure of a smooth (indeed analytic) manifold on `ConfigurationSpace`. With a
+single global chart, the only coordinate change is the chart's self-transition, which is
+analytic. -/
+instance : IsManifold 𝓘(ℝ, EuclideanSpace ℝ (Fin 1)) ω ConfigurationSpace where
   compatible := by
     intro e1 e2 h1 h2
     simp [atlas, ChartedSpace.atlas] at h1 h2
     subst h1 h2
     exact symm_trans_mem_contDiffGroupoid valHomeomorphism.toOpenPartialHomeomorph
 
-instance : FiniteDimensional ℝ ConfigurationSpace := by
-  classical
-  refine FiniteDimensional.of_injective toRealLM ?_
-  intro x y h
-  ext
-  simpa using h
-
-instance : CompleteSpace ConfigurationSpace := by
-  classical
-  simpa using (FiniteDimensional.complete ℝ ConfigurationSpace)
-
 /-!
-## Map to space
+## D. Map to physical space
+
+The point of one-dimensional physical `Space 1` determined by a configuration, obtained by
+reading off the underlying coordinate. This links the abstract configuration manifold to the
+concrete coordinate model.
 -/
 
 /-- The position in one-dimensional space associated to the configuration. -/
-def toSpace (q : ConfigurationSpace) : Space 1 := ⟨fun _ => q.val⟩
+def toSpace (q : ConfigurationSpace) : Space 1 := ⟨fun i => q.val i⟩
 
-@[simp]
-lemma toSpace_apply (q : ConfigurationSpace) (i : Fin 1) : q.toSpace i = q.val := rfl
+lemma toSpace_apply (q : ConfigurationSpace) (i : Fin 1) : q.toSpace i = q.val i := rfl
 
 end ConfigurationSpace
 

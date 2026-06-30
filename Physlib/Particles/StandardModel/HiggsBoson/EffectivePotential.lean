@@ -158,7 +158,10 @@ lemma termOfMassDim_isInvariant {V : EffectivePotential} {n : ℕ} (h : HasMaxMa
       termOfMassDim V h m φ) = 0 := by
     simp [mul_sub, ← apply_smul_eq_sum_termOfMassDim]
     rw [smul_comm, hV, sub_eq_zero]
+<<<<<<< HEAD
   -- Proof produced using Claude from here.
+=======
+>>>>>>> upstream/master
   by_cases hmn : m ≤ n
   · have hp : (∑ k ∈ Finset.range (n + 1),
         Polynomial.C (termOfMassDim V h k (g • φ) - termOfMassDim V h k φ) * Polynomial.X ^ k)

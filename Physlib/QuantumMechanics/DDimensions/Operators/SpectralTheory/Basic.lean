@@ -38,7 +38,7 @@ Definitions (corresponding to an operator `T : H →ₗ.[ℂ] H`)
     is orthogonal to the range of `T - z • 1`.
 - `LinearPMap.defectNumber` : Given a complex number `z`, the rank of the corresponding
     deficiency subspace as a (possibly infinite) cardinal.
-- `LinearPMap.numericalRange` : The set of complex numbers `⟪x, T x⟫_ℂ` as `x` ranges over
+- `LinearPMap.numericalRange` (`Θ`) : The set of complex numbers `⟪x, T x⟫_ℂ` as `x` ranges over
     the unit sphere in `T.domain`.
 - `LinearPMap.resolventSet` (`ρ`) : The set of complex numbers `z` for which `T - z • 1`
     has a continuous (equivalently, bounded) inverse with domain all of `H`.
@@ -97,13 +97,15 @@ open Submodule
 open Metric
 open InnerProductSpace
 open Complex
+open ComplexConjugate
 open Set
+open Pointwise
 
 /-- The resolvent, `(T - z • 1)⁻¹`. -/
 abbrev resolvent (T : H →ₗ.[ℂ] H) (z : ℂ) : H →ₗ.[ℂ] H := (T - z • 1).inverse
 
 @[inherit_doc resolvent]
-local notation "𝑅" => resolvent
+scoped notation "𝑅" => resolvent
 
 /-!
 ## A. Regularity domain
@@ -111,6 +113,11 @@ local notation "𝑅" => resolvent
 
 /-- `IsLowerBound T z c` is the property that `c * ‖x‖ ≤ ‖T x - z • x‖` for all `x : T.domain`. -/
 def IsLowerBound (T : H →ₗ.[ℂ] H) (z : ℂ) (c : ℝ) : Prop := ∀ x : T.domain, c * ‖x‖ ≤ ‖T x - z • x‖
+
+lemma isLowerBound_neg {T : H →ₗ.[ℂ] H} {z : ℂ} {c : ℝ} (h : IsLowerBound T z c) :
+    IsLowerBound (-T) (-z) c := by
+  intro x
+  simp only [neg_apply, neg_smul, sub_neg_eq_add, norm_neg_add, h x]
 
 lemma isLowerBound_of_right_le
     {T : H →ₗ.[ℂ] H} {z : ℂ} {c₁ c₂ : ℝ} (hle : c₁ ≤ c₂) (h : IsLowerBound T z c₂) :
@@ -141,6 +148,33 @@ lemma isLowerBound_closure
   `z : ℂ` is a regular point for `T` iff there exists a constant `c > 0` such that
   `c * ‖x‖ ≤ ‖(T - z • 1) x‖` for all `x ∈ T.domain`. -/
 def regularityDomain (T : H →ₗ.[ℂ] H) : Set ℂ := {z : ℂ | ∃ c > 0, IsLowerBound T z c}
+
+@[simp]
+lemma regularityDomain_neg (T : H →ₗ.[ℂ] H) : (-T).regularityDomain = -T.regularityDomain := by
+  ext z
+  constructor
+  · exact fun ⟨c, hc, h_bound⟩ ↦ ⟨c, hc, neg_neg T ▸ isLowerBound_neg h_bound⟩
+  · exact fun ⟨c, hc, h_bound⟩ ↦ ⟨c, hc, neg_neg z ▸ isLowerBound_neg h_bound⟩
+
+@[simp]
+lemma regularityDomain_smul (T : H →ₗ.[ℂ] H) {w : ℂ} (hw : w ≠ 0) :
+    (w • T).regularityDomain = w • T.regularityDomain := by
+  ext z
+  constructor
+  · intro ⟨c, hc, h_bound⟩
+    refine ⟨w⁻¹ * z, ?_, ?_⟩
+    · refine ⟨‖w‖⁻¹ * c, by positivity, fun x ↦ ?_⟩
+      rw [mul_assoc]
+      apply (inv_mul_le_iff₀ <| norm_pos_iff.mpr hw).mpr
+      rw [← norm_smul, smul_sub, smul_smul, mul_inv_cancel_left₀ hw]
+      exact h_bound x
+    · simp [hw]
+  · intro ⟨u, ⟨c, hc, h_bound⟩, huz⟩
+    refine ⟨‖w‖ * c, by positivity, fun x ↦ ?_⟩
+    rw [mul_assoc]
+    apply (le_inv_mul_iff₀ <| norm_pos_iff.mpr hw).mp
+    refine le_of_le_of_eq (h_bound x) ?_
+    simp [← norm_inv, ← norm_smul, smul_sub, smul_smul, ← huz, hw]
 
 /-- `T ≤ T'` implies `T'.regularityDomain ⊆ T.regularityDomain`. -/
 lemma regularityDomain_antitone : Antitone (regularityDomain (H := H)) :=
@@ -243,6 +277,50 @@ lemma IsClosed.sub_range_isClosed [CompleteSpace H]
   have hT' : T.closure = T := hT.isClosable.isClosed_iff.mp hT
   exact (hT' ▸ hT.isClosable.closure_range_sub_eq_range_closure_sub hz) ▸ isClosed_closure
 
+/-- `(T.closure - z • 1).rangeᗮ = (T† - conj z • 1).ker` -/
+lemma IsUnbounded.orthogonal_closure_sub_range [CompleteSpace H]
+    {T : H →ₗ.[ℂ] H} (hT : T.IsUnbounded) (z : ℂ) :
+    (T.closure - z • 1).toFun.rangeᗮ
+      = (T† - conj z • 1).toFun.ker.map (T† - conj z • 1).domain.subtype := by
+  let S := T.closure - z • 1
+  have hS_domain : S.domain = T.closure.domain := by simp [S, sub_domain]
+  have hS_dense : S.HasDenseDomain := hT.hasDenseDomain.mono (by simp [hS_domain, T.le_closure.1])
+  have hS_adjoint : S† = T† - conj z • 1 := by
+    rw [← hT.adjoint_closure_eq_adjoint]
+    refine (eq_of_le_of_domain_eq ?_ ?_).symm
+    · refine le_of_eq_of_le ?_ (adjoint_sub_le_sub_adjoint T.closure (z • 1) hS_dense)
+      rcases eq_zero_or_neZero z with rfl | hz₀
+      · simp
+      · simp [adjoint_smul _ hz₀.ne]
+    · ext x
+      simp only [sub_domain, smul_domain, one_domain, le_top, inf_of_le_left]
+      constructor <;> intro h
+      · apply mem_adjoint_domain_of_exists
+        use T.closure† ⟨x, h⟩ - conj z • x
+        intro y
+        have h_inner : ⟪T.closure† ⟨x, h⟩, y⟫_ℂ = ⟪x, T.closure ⟨y, hS_domain ▸ y.2⟩⟫_ℂ :=
+          adjoint_isFormalAdjoint hT.hasDenseDomain.closure ⟨x, h⟩ ⟨y, hS_domain ▸ y.2⟩
+        simp [inner_sub_left, h_inner, S, sub_apply, inner_sub_right, inner_smul_left,
+          inner_smul_right]
+      · apply mem_adjoint_domain_of_exists
+        use S† ⟨x, h⟩ + conj z • x
+        intro y
+        have h_inner : ⟪S† ⟨x, h⟩, y⟫_ℂ = ⟪x, S ⟨y, by simp [hS_domain]⟩⟫_ℂ :=
+          adjoint_isFormalAdjoint hS_dense ⟨x, h⟩ ⟨y, by simp [hS_domain]⟩
+        simp [inner_add_left, h_inner, S, sub_apply, inner_sub_right, inner_smul_left,
+          inner_smul_right]
+  exact hS_adjoint ▸ hS_dense.orthogonal_range
+
+/-- `(T† - conj z • 1).kerᗮ = (T.closure - z • 1).range` -/
+lemma IsUnbounded.orthogonal_adjoint_sub_ker [CompleteSpace H]
+    {T : H →ₗ.[ℂ] H} (hT : T.IsUnbounded) {z : ℂ} (hz : z ∈ T.regularityDomain) :
+    ((T† - conj z • 1).toFun.ker.map (T† - conj z • 1).domain.subtype)ᗮ
+      = (T.closure - z • 1).toFun.range := by
+  have hT' : IsClosable T.closure := hT.isClosable.closureIsClosable
+  have hTcl : T.closure.closure = T.closure := hT'.isClosed_iff.mp hT.isClosable.closure_isClosed
+  rw [← hTcl, ← hT.orthogonal_closure_sub_range, orthogonal_orthogonal_eq_closure]
+  exact hT'.closure_range_sub_eq_range_closure_sub (T.regularityDomain_closure ▸ hz)
+
 /-!
 ## B. Deficiency subspace & defect number
 -/
@@ -283,13 +361,14 @@ lemma defectNumber_closure [CompleteSpace H]
 lemma _root_.Submodule.inf_ne_bot_of_rank_lt
     {E F : Submodule ℂ H} [E.HasOrthogonalProjection] (h_rank : Module.rank ℂ E < Module.rank ℂ F) :
     Eᗮ ⊓ F ≠ ⊥ := by
-  let Φ : F →L[ℂ] E := E.orthogonalProjection ∘L F.subtypeL
+  let Φ : F →L[ℂ] E := E.orthogonalProjectionOnto ∘L F.subtypeL
   have hΦ : ¬(⇑Φ).Injective := fun h' ↦ not_le_of_gt h_rank (Φ.rank_le_of_injective h')
   obtain ⟨x₁, x₂, h, hx⟩ := Function.not_injective_iff.mp hΦ
   let y : H := x₁ - x₂
   have hy : y ≠ 0 := fun h' ↦ hx (SetLike.coe_eq_coe.mp <| sub_eq_zero.mp h')
   have hF : y ∈ F := sub_mem (coe_mem x₁) (coe_mem x₂)
-  have hE : y ∈ Eᗮ := orthogonalProjection_eq_zero_iff.mp (_root_.map_sub Φ _ _ ▸ sub_eq_zero.mpr h)
+  have hE : y ∈ Eᗮ := orthogonalProjectionOnto_eq_zero_iff.mp
+    (_root_.map_sub Φ _ _ ▸ sub_eq_zero.mpr h)
   exact fun hEF ↦ hy ((mem_bot ℂ).mp <| hEF ▸ ⟨hE, hF⟩)
 
 lemma IsClosed.exists_inner_eq_zero_of_defectNumber_lt [CompleteSpace H]
@@ -399,30 +478,36 @@ lemma IsClosable.defectNumber_const [CompleteSpace H]
 ## C. Numerical range
 -/
 
-section
-
-open Pointwise
-
 /-- The set `{⟪x, T x⟫_ℂ | x ∈ T.domain ∧ ‖x‖ = 1} ⊆ ℂ`. -/
 def numericalRange (T : H →ₗ.[ℂ] H) : Set ℂ := (fun x ↦ ⟪↑x, T x⟫_ℂ) '' {x : T.domain | ‖x‖ = 1}
 
-lemma numericalRange_eq (T : H →ₗ.[ℂ] H) :
-    T.numericalRange = (fun x ↦ ⟪↑x, T x⟫_ℂ) '' {x | ‖x‖ = 1} := rfl
+@[inherit_doc numericalRange]
+scoped notation "Θ" => numericalRange
 
-lemma numericalRange_nonempty {T : H →ₗ.[ℂ] H} (hT : T.domain ≠ ⊥) : T.numericalRange.Nonempty := by
+lemma numericalRange_eq (T : H →ₗ.[ℂ] H) : Θ T = (fun x ↦ ⟪↑x, T x⟫_ℂ) '' {x | ‖x‖ = 1} := rfl
+
+lemma mem_numericalRange {T : H →ₗ.[ℂ] H} {x : T.domain} (hx : x ≠ 0) :
+    (‖x‖ ^ 2)⁻¹ * ⟪↑x, T x⟫_ℂ ∈ Θ T := by
+  refine ⟨ofReal ‖x‖⁻¹ • x, ?_, ?_⟩
+  · simp [norm_smul, inv_mul_cancel₀, hx]
+  · simp [map_smul, inner_smul_left, inner_smul_right, ← mul_assoc, pow_two]
+
+lemma numericalRange_nonempty {T : H →ₗ.[ℂ] H} (hT : T.domain ≠ ⊥) : (Θ T).Nonempty := by
   obtain ⟨x, hx, hx'⟩ := exists_mem_ne_zero_of_ne_bot hT
-  refine ⟨(‖x‖ ^ 2)⁻¹ * ⟪x, T ⟨x, hx⟩⟫_ℂ, ofReal ‖x‖⁻¹ • ⟨x, hx⟩, ?_, ?_⟩
-  · simp [norm_smul, inv_mul_cancel₀ (norm_ne_zero_iff.mpr hx')]
-  · simp_rw [map_smul]
-    simp [inner_smul_left, inner_smul_right, ← mul_assoc, pow_two]
+  use (‖x‖ ^ 2)⁻¹ * ⟪x, T ⟨x, hx⟩⟫_ℂ
+  exact mem_numericalRange (x := ⟨x, hx⟩) (Subtype.coe_ne_coe.mp hx')
 
-lemma numericalRange_smul (T : H →ₗ.[ℂ] H) (c : ℂ) :
-    (c • T).numericalRange = c • T.numericalRange := by
+@[simp]
+lemma numericalRange_neg (T : H →ₗ.[ℂ] H) : Θ (-T) = -Θ T := by
+  ext
+  simp [numericalRange_eq, neg_eq_iff_eq_neg]
+
+@[simp]
+lemma numericalRange_smul (T : H →ₗ.[ℂ] H) (c : ℂ) : Θ (c • T) = c • Θ T := by
   ext
   simp [numericalRange_eq, inner_smul_right, mem_smul_set]
 
-lemma numericalRange_sub_const (T : H →ₗ.[ℂ] H) (c : ℂ) :
-    (T - c • 1).numericalRange = T.numericalRange - {c} := by
+lemma numericalRange_sub_const (T : H →ₗ.[ℂ] H) (c : ℂ) : Θ (T - c • 1) = Θ T - {c} := by
   ext z
   constructor
   · intro ⟨x, hx, hxz⟩
@@ -435,22 +520,20 @@ lemma numericalRange_sub_const (T : H →ₗ.[ℂ] H) (c : ℂ) :
 
 /-- The regularity domain contains the exterior of the numerical range. -/
 lemma compl_closure_numericalRange_subset_regularityDomain (T : H →ₗ.[ℂ] H) :
-    (_root_.closure T.numericalRange)ᶜ ⊆ T.regularityDomain := by
+    (_root_.closure (Θ T))ᶜ ⊆ T.regularityDomain := by
   intro z hz
   by_cases hT : T.domain = ⊥
   · refine ⟨1, zero_lt_one, fun ⟨x, hx⟩ ↦ ?_⟩
     rw [hT] at hx
     simp_all
-  · use infDist z T.numericalRange
+  · use infDist z (Θ T)
     constructor
     · exact (infDist_pos_iff_notMem_closure <| numericalRange_nonempty hT).mp hz
     · intro x
       rcases eq_or_ne x 0 with rfl | hx
       · simp
       · let y : T.domain := ofReal ‖x‖⁻¹ • x
-        have hy : ‖y‖ = 1 := by
-          simp only [y, norm_smul, ofReal_inv, norm_inv, norm_real, norm_norm]
-          exact inv_mul_cancel₀ (norm_ne_zero_iff.mpr hx)
+        have hy : ‖y‖ = 1 := by simp [y, norm_smul, inv_mul_cancel₀, hx]
         have hy' : ‖x‖ ^ 2 * ⟪↑y, T y⟫_ℂ = ⟪↑x, T x⟫_ℂ := by
           simp_rw [y, map_smul, SetLike.val_smul, inner_smul_left, inner_smul_right, conj_ofReal,
             ← mul_assoc, pow_two, ← ofReal_mul]
@@ -473,18 +556,16 @@ lemma compl_closure_numericalRange_subset_regularityDomain (T : H →ₗ.[ℂ] H
 private lemma exists_phase_add_im_eq_zero (z₁ z₂ : ℂ) :
     ∃ θ : ℝ, (exp (I * θ) * z₁ + exp (-I * θ) * z₂).im = 0 := by
   let g : ℝ → ℝ := fun θ ↦ (exp (I * θ) * z₁ + exp (-I * θ) * z₂).im
-  suffices ∃ θ ∈ Icc 0 Real.pi, g θ = 0 by exact ⟨this.choose, this.choose_spec.2⟩
   have hg : g Real.pi = -g 0 := by simp [g, mul_comm I, exp_neg, add_comm]
-  have hg' : Continuous g := by fun_prop
-  rcases le_or_gt (g 0) 0 with hle | hlt
-  · have hIVT := hg ▸ intermediate_value_Icc Real.pi_nonneg hg'.continuousOn
-    exact (mem_image _ _ _).mp (hIVT ⟨by linarith, by linarith⟩)
-  · simp_rw [← neg_eq_zero (a := g _)]
-    have hIVT := neg_neg (g 0) ▸ hg ▸ intermediate_value_Icc Real.pi_nonneg hg'.neg.continuousOn
-    exact (mem_image _ _ _).mp (hIVT ⟨by linarith, by linarith⟩)
+  have hmem : (0 : ℝ) ∈ Set.uIcc (g 0) (g Real.pi) := by
+    rw [hg]
+    rcases le_total (g 0) 0 with h | h
+    exacts [Set.mem_uIcc.mpr (.inl ⟨h, by linarith⟩), Set.mem_uIcc.mpr (.inr ⟨by linarith, h⟩)]
+  obtain ⟨θ, -, hθ⟩ := intermediate_value_uIcc (by fun_prop : Continuous g).continuousOn hmem
+  exact ⟨θ, hθ⟩
 
 /-- The Toeplitz-Hausdorff theorem. -/
-theorem numericalRange_convex (T : H →ₗ.[ℂ] H) : Convex ℝ T.numericalRange := by
+theorem numericalRange_convex (T : H →ₗ.[ℂ] H) : Convex ℝ (Θ T) := by
   intro z₀ hz₀ z₁ hz₁ a b ha hb hab
   rcases eq_or_ne z₁ z₀ with rfl | hz
   · simp [← add_mul, eq_sub_iff_add_eq.mpr hab, hz₁]
@@ -499,12 +580,10 @@ theorem numericalRange_convex (T : H →ₗ.[ℂ] H) : Convex ℝ T.numericalRan
     have hy₁ : ‖y₁‖ = 1 := hx₁
     have h₀ : ⟪↑y₀, S y₀⟫_ℂ = 0 := by simp_all [S, y₀, sub_apply, inner_smul_right, inner_sub_right]
     have h₁ : ⟪↑y₁, S y₁⟫_ℂ = 1 := by simp_all [S, y₁, sub_apply, inner_smul_right, inner_sub_right]
-    suffices ofReal '' unitInterval ⊆ S.numericalRange by
+    suffices ofReal '' unitInterval ⊆ Θ S by
       have hba : a = 1 - b := by linarith
       rw [numericalRange_smul, numericalRange_sub_const] at this
-      obtain ⟨c, hc, hca⟩ := (image_subset_iff.mp this) ⟨hb, by linarith⟩
-      obtain ⟨d, hd, hdc⟩ := hc
-      obtain ⟨x, hx, hxd⟩ := hd
+      obtain ⟨c, ⟨d, ⟨x, hx, hxd⟩, hdc⟩, hca⟩ := (image_subset_iff.mp this) ⟨hb, by linarith⟩
       simp only [mem_singleton_iff, exists_eq_left] at hca hdc hxd
       simp only [real_smul, smul_eq_mul] at *
       use x, hx
@@ -535,8 +614,8 @@ theorem numericalRange_convex (T : H →ₗ.[ℂ] H) : Convex ℝ T.numericalRan
             simp [map_smul, inner_smul_left, inner_smul_right, ← mul_assoc, pow_two]
           _ = ⟪↑(-(r • y₂)), S (-(r • y₂))⟫_ℂ := by simp [eq_neg_iff_add_eq_zero.mpr hr]
         simp [map_neg, ← Complex.coe_smul, map_smul, inner_smul_left, inner_smul_right, pow_two, h₂]
-    -- `g r = ⟪f r, S (f r)⟫_ℂ / ‖f r‖²` is real (by def of `θ`) and clearly in `S.numericalRange`.
-    -- `g 0 = 0`, `g 1 = 1` and continuity ensure that all of `[0,1]` is also in `S.numericalRange`.
+    -- `g r = ⟪f r, S (f r)⟫_ℂ / ‖f r‖²` is real (by def of `θ`) and clearly in `Θ S`.
+    -- `g 0 = 0`, `g 1 = 1` and continuity ensure that all of `[0,1]` is also in `Θ S`.
     let g : ℝ → ℝ := fun t ↦ (t ^ 2 + (1 - t) * t * (⟪↑y₀, S y₂⟫_ℂ + ⟪↑y₂, S y₀⟫_ℂ).re) / ‖f t‖ ^ 2
     have hg₀ : g 0 = 0 := by simp [g]
     have hg₁ : g 1 = 1 := by simp [g, f, coe_norm y₂ ▸ hy₂]
@@ -554,14 +633,11 @@ theorem numericalRange_convex (T : H →ₗ.[ℂ] H) : Convex ℝ T.numericalRan
       simp_rw [g, ofReal_div, mul_div_cancel₀ _ hf_sq, add_comm (r ^ 2)]
       simp only [f, map_add, map_smul, coe_add, inner_add_left, inner_add_right,
         SetLike.val_smul, inner_smul_left, inner_smul_right, h₀, h₂]
-      nth_rw 1 [← re_add_im ⟪↑y₀, S y₂⟫_ℂ]
-      nth_rw 1 [← re_add_im ⟪↑y₂, S y₀⟫_ℂ]
+      nth_rw 1 [← re_add_im ⟪↑y₀, S y₂⟫_ℂ, ← re_add_im ⟪↑y₂, S y₀⟫_ℂ]
       simp only [hy_im, mul_add, RingHom.map_sub, RingHom.map_one, conj_ofReal, mul_zero,
         zero_add, ofReal_neg, neg_mul, mul_neg, mul_one, add_re, ofReal_add, ofReal_mul,
         ofReal_sub, ofReal_one, ofReal_pow]
       ring
-
-end
 
 /-!
 ## D. Spectrum of a closed operator
@@ -579,7 +655,7 @@ def resolventSet (T : H →ₗ.[ℂ] H) : Set ℂ :=
   {z : ℂ | (T - z • 1).toFun.ker = ⊥ ∧ (T - z • 1).toFun.range = ⊤ ∧ Continuous (𝑅 T z)}
 
 @[inherit_doc resolventSet]
-local notation "ρ" => resolventSet
+scoped notation "ρ" => resolventSet
 
 lemma resolventSet_eq (T : H →ₗ.[ℂ] H) :
     ρ T = {z | (T - z • 1).toFun.ker = ⊥ ∧ (T - z • 1).toFun.range = ⊤ ∧ Continuous (𝑅 T z)} :=
@@ -655,7 +731,7 @@ lemma resolventSet_isOpen [CompleteSpace H] (T : H →ₗ.[ℂ] H) : IsOpen (ρ 
 def spectrum (T : H →ₗ.[ℂ] H) : Set ℂ := (ρ T)ᶜ
 
 @[inherit_doc spectrum]
-local notation "σ" => spectrum
+scoped notation "σ" => spectrum
 
 lemma spectrum_eq (T : H →ₗ.[ℂ] H) : σ T = (ρ T)ᶜ := rfl
 
@@ -682,7 +758,7 @@ lemma spectrum_isClosed [CompleteSpace H] (T : H →ₗ.[ℂ] H) : _root_.IsClos
 def pointSpectrum (T : H →ₗ.[ℂ] H) : Set ℂ := {z : ℂ | (T - z • 1).toFun.ker ≠ ⊥}
 
 @[inherit_doc pointSpectrum]
-local notation "σᵖ" => pointSpectrum
+scoped notation "σᵖ" => pointSpectrum
 
 lemma pointSpectrum_eq (T : H →ₗ.[ℂ] H) : σᵖ T = {z | (T - z • 1).toFun.ker ≠ ⊥} := rfl
 
@@ -704,7 +780,7 @@ def residualSpectrum (T : H →ₗ.[ℂ] H) : Set ℂ :=
   {z : ℂ | (T - z • 1).toFun.ker = ⊥ ∧ (T - z • 1).toFun.range ≠ ⊤ ∧ Continuous (𝑅 T z)}
 
 @[inherit_doc residualSpectrum]
-local notation "σʳ" => residualSpectrum
+scoped notation "σʳ" => residualSpectrum
 
 lemma residualSpectrum_eq (T : H →ₗ.[ℂ] H) :
     σʳ T = {z | (T - z • 1).toFun.ker = ⊥ ∧ (T - z • 1).toFun.range ≠ ⊤ ∧ Continuous (𝑅 T z)} :=
@@ -717,6 +793,9 @@ lemma mem_residualSpectrum_iff {T : H →ₗ.[ℂ] H} {z : ℂ} :
 lemma residualSpectrum_subset_spectrum (T : H →ₗ.[ℂ] H) : σʳ T ⊆ σ T :=
   fun _ ⟨_, h, _⟩ ↦ mem_spectrum_iff.mpr (Or.inr <| Or.inl h)
 
+lemma residualSpectrum_subset_regularityDomain (T : H →ₗ.[ℂ] H) : σʳ T ⊆ T.regularityDomain :=
+  fun _ hz ↦ mem_regularityDomain_iff.mpr ⟨hz.1, hz.2.2⟩
+
 /-!
 #### D.2.3. Continuous spectrum
 -/
@@ -728,7 +807,7 @@ def continuousSpectrum (T : H →ₗ.[ℂ] H) : Set ℂ :=
   {z : ℂ | ¬_root_.IsClosed ((T - z • 1).toFun.range : Set H)}
 
 @[inherit_doc continuousSpectrum]
-local notation "σᶜ" => continuousSpectrum
+scoped notation "σᶜ" => continuousSpectrum
 
 lemma continuousSpectrum_eq (T : H →ₗ.[ℂ] H) :
     σᶜ T = {z | ¬_root_.IsClosed ((T - z • 1).toFun.range : Set H)} := rfl
