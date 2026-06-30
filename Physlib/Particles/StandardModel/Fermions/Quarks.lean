@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
-public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Basic/-!
+public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Basic
+/-!
 # The type of quarks
 
 In this module we define the type corresponding to
@@ -129,4 +130,5 @@ noncomputable def repGaugeGroup : Representation ℂ GaugeGroupI Quark where
     simp [smul_smul, mul_comm, TensorProduct.map_map, ← TensorProduct.map_comp]
 
 end Quark
+
 end StandardModel
