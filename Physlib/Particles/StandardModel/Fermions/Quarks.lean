@@ -80,6 +80,7 @@ instance : Module ℂ Quark where
   smul_zero := by intros; ext; simp [smul_zero]
   zero_smul := by intros; ext; simp [zero_smul]
 
+/-- The linear equivalence between `Quark` and its underlying tensor product space. -/
 def valLinEquiv : Quark ≃ₗ[ℂ]
     Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 3) ⊗[ℂ] EuclideanSpace ℂ (Fin 2) where
   toFun := val
