@@ -7,6 +7,8 @@ module
 
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
+public import PhyslibAlpha.«2HDM».Determinant
+public import PhyslibAlpha.«2HDM».OrbitRepresentative
 /-!
 # The effective potential of the two Higgs doublet model
 
@@ -69,12 +71,59 @@ def HasMaxMassDimLE (V : EffectivePotential) (n : ℕ) : Prop :=
   ∃ p : MvPolynomial (Module.Dual ℝ TwoHiggsDoublet) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval
    (fun i => i φ) ) ∧ p.totalDegree ≤ n
 
+/-!
+
+## C. Reduction to the polynomial family of orbit representatives
+
+The two structural ingredients of the proof live elsewhere:
+
+* `TwoHiggsDoublet.exists_smul_eq_repHiggs` shows every configuration is gauge equivalent to a
+  representative `repHiggs X` from the *polynomial* family of orbit representatives, and
+* `TwoHiggsDoublet.gramVector_repHiggs_*` show the Gram vector of a representative is a polynomial
+  in the four real parameters `X` (with no square roots).
+
+Because the potential is gauge invariant, its value on any configuration equals its value on a
+representative, and the Gram vector is likewise unchanged. Hence the whole statement reduces to the
+question of whether `V ∘ repHiggs` is a polynomial in the (polynomial) Gram components of the
+representative family — see `exists_polynomial_on_repHiggs`.
+
+-/
+
+/-- **The two Higgs doublet model first fundamental theorem (representative form).**
+
+This is the irreducible invariant–theoretic core of the theorem: a gauge invariant polynomial
+potential, restricted to the polynomial family of orbit representatives `repHiggs X`, is a
+polynomial in the Gram components of that family.
+
+This statement is square-root free (in contrast to the normalised representatives, whose
+coordinates contain `√‖Φ1‖²`). It cannot follow from the parities of `V ∘ repHiggs` alone — e.g.
+`X₁²` is parity invariant yet is `(Re ⟪Φ1,Φ2⟫)²/‖Φ1‖²`, which is not polynomial; it is excluded
+precisely because it does not extend to a *global* polynomial invariant. The content is therefore
+the non-abelian `SU(2)` first fundamental theorem specialised to two doublets in `ℂ²`, established
+by the unipotent (shear group) reduction together with the Lagrange identity `norm_doubletDet_sq`
+which folds the `SU(2)` determinant invariant back into the Gram data. -/
+lemma exists_polynomial_on_repHiggs {V : EffectivePotential} {n : ℕ}
+    (hI : IsInvariant V) (h : HasMaxMassDimLE V n) :
+    ∃ p : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ,
+      ∀ X : Fin 4 → ℝ, V (repHiggs X) = p.eval (repHiggs X).gramVector := by
+  sorry
+
 /-- An invariant effective potential with maximum mass dimension n can be written as a
   polynomial in the entries of the Gram vector. -/
 lemma effectivePotential_is_polynomial_gramVector {V : EffectivePotential} {n : ℕ}
     (hI: IsInvariant V) (h : HasMaxMassDimLE V n) :
     ∃ p : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ, (∀ φ : TwoHiggsDoublet, V φ = p.eval φ.gramVector) := by
-  sorry
+  obtain ⟨p, hp⟩ := exists_polynomial_on_repHiggs hI h
+  refine ⟨p, fun φ => ?_⟩
+  obtain ⟨X, g, hg⟩ := exists_smul_eq_repHiggs φ
+  have hgram : φ.gramVector = (repHiggs X).gramVector := by
+    rw [← hg]
+    funext μ
+    exact (gaugeGroupI_smul_fst_gramVector g φ μ).symm
+  have hV : V φ = V (repHiggs X) := by
+    rw [← hg]
+    exact (hI g φ).symm
+  rw [hV, hp X, hgram]
 
 end EffectivePotential
 
