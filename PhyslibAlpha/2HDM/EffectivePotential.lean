@@ -623,8 +623,8 @@ lemma bilin_eval_eigenPt (X : Fin 4 → ℝ) (i : Fin 5) :
 
 open MvPolynomial in
 /-- Pushing an evaluation through an `aeval` substitution. -/
-lemma eval_aeval_comp {κ ι : Type*} (x : ι → ℂ) (f : κ → MvPolynomial ι ℂ)
-    (G : MvPolynomial κ ℂ) :
+lemma eval_aeval_comp {R : Type*} [CommRing R] {κ ι : Type*} (x : ι → R)
+    (f : κ → MvPolynomial ι R) (G : MvPolynomial κ R) :
     eval x (aeval f G) = eval (fun i => eval x (f i)) G := by
   rw [show (aeval f) G = bind₁ f G from rfl, ← aeval_eq_eval x, aeval_bind₁]
   simp [aeval_eq_eval]
@@ -648,6 +648,112 @@ lemma exists_polynomial_repHiggs_realGen {V : EffectivePotential} {n : ℕ}
   have hre : V (repHiggs X) = (eval (fun j => (↑(realGen X j) : ℂ)) (aeval transf G)).re := by
     rw [← hval]; simp
   rw [hre, realPart_eval]
+
+/-! ### Clearing the `‖Φ1‖²` denominator: Condition A value times `‖Φ1‖²ᴺ` is a Gram polynomial -/
+
+open MvPolynomial in
+/-- The five bilinear generators, as polynomials in the four representative parameters. -/
+noncomputable def realGenP : Fin 5 → MvPolynomial (Fin 4) ℝ :=
+  ![X 0 ^ 2, X 0 * X 1, X 0 * X 2, X 1 ^ 2 + X 2 ^ 2, X 3 ^ 2]
+
+open MvPolynomial in
+/-- The four Gram components, as polynomials in the four representative parameters. -/
+noncomputable def gramP : Fin 1 ⊕ Fin 3 → MvPolynomial (Fin 4) ℝ :=
+  Sum.elim (fun _ => X 0 ^ 2 + (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2))
+    ![2 * (X 0 * X 1), 2 * (X 0 * X 2), X 0 ^ 2 - (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2)]
+
+open MvPolynomial in
+@[simp] lemma realGenP_eval (X : Fin 4 → ℝ) (i : Fin 5) : (realGenP i).eval X = realGen X i := by
+  fin_cases i <;> simp [realGenP, realGen]
+
+open MvPolynomial in
+@[simp] lemma gramP_eval (X : Fin 4 → ℝ) (μ : Fin 1 ⊕ Fin 3) :
+    (gramP μ).eval X = (repHiggs X).gramVector μ := by
+  match μ with
+  | Sum.inl 0 => simp [gramP]
+  | Sum.inr 0 => simp [gramP]; ring
+  | Sum.inr 1 => simp [gramP]; ring
+  | Sum.inr 2 => simp [gramP]
+
+open MvPolynomial in
+/-- Some power of `‖Φ1‖² = X₀²` times the Condition-A value polynomial lies in the Gram
+  subalgebra: multiplying by `X₀²` pairs each `X₁²+X₂²` into `(X₀X₁)²+(X₀X₂)²` and each `X₃²` into
+  the determinant `X₀²X₃²`, both of which are Gram polynomials. -/
+lemma exists_clearing_mem (p : MvPolynomial (Fin 5) ℝ) :
+    ∃ N : ℕ, (X 0) ^ (2 * N) * aeval realGenP p ∈ Algebra.adjoin ℝ (Set.range gramP) := by
+  set S := Algebra.adjoin ℝ (Set.range gramP) with hS
+  have hgmem : ∀ μ, gramP μ ∈ S := fun μ => Algebra.subset_adjoin ⟨μ, rfl⟩
+  have hC : ∀ r : ℝ, (C r : MvPolynomial (Fin 4) ℝ) ∈ S := fun r => by
+    rw [← MvPolynomial.algebraMap_eq]; exact Subalgebra.algebraMap_mem _ _
+  have hX0sq : (X 0 ^ 2 : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 0 ^ 2 : MvPolynomial (Fin 4) ℝ)
+        = C (1 / 2) * (gramP (Sum.inl 0) + gramP (Sum.inr 2)) := by
+      apply MvPolynomial.funext; intro x; simp [gramP]; ring
+    rw [e]; exact Subalgebra.mul_mem _ (hC _) (Subalgebra.add_mem _ (hgmem _) (hgmem _))
+  have hX0X1 : (X 0 * X 1 : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 0 * X 1 : MvPolynomial (Fin 4) ℝ) = C (1 / 2) * gramP (Sum.inr 0) := by
+      apply MvPolynomial.funext; intro x; simp [gramP]
+    rw [e]; exact Subalgebra.mul_mem _ (hC _) (hgmem _)
+  have hX0X2 : (X 0 * X 2 : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 0 * X 2 : MvPolynomial (Fin 4) ℝ) = C (1 / 2) * gramP (Sum.inr 1) := by
+      apply MvPolynomial.funext; intro x; simp [gramP]
+    rw [e]; exact Subalgebra.mul_mem _ (hC _) (hgmem _)
+  have hmm : (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2 : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2 : MvPolynomial (Fin 4) ℝ)
+        = C (1 / 2) * (gramP (Sum.inl 0) - gramP (Sum.inr 2)) := by
+      apply MvPolynomial.funext; intro x; simp [gramP]; ring
+    rw [e]; exact Subalgebra.mul_mem _ (hC _) (Subalgebra.sub_mem _ (hgmem _) (hgmem _))
+  have her : (X 0 ^ 2 * (X 1 ^ 2 + X 2 ^ 2) : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 0 ^ 2 * (X 1 ^ 2 + X 2 ^ 2) : MvPolynomial (Fin 4) ℝ)
+        = (X 0 * X 1) ^ 2 + (X 0 * X 2) ^ 2 := by ring
+    rw [e]; exact Subalgebra.add_mem _ (pow_mem hX0X1 2) (pow_mem hX0X2 2)
+  have hes : (X 0 ^ 2 * X 3 ^ 2 : MvPolynomial (Fin 4) ℝ) ∈ S := by
+    have e : (X 0 ^ 2 * X 3 ^ 2 : MvPolynomial (Fin 4) ℝ)
+        = X 0 ^ 2 * (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2) - X 0 ^ 2 * (X 1 ^ 2 + X 2 ^ 2) := by ring
+    rw [e]; exact Subalgebra.sub_mem _ (Subalgebra.mul_mem _ hX0sq hmm) her
+  induction p using MvPolynomial.induction_on' with
+  | monomial m c =>
+    refine ⟨m 3 + m 4, ?_⟩
+    have hmemRHS : C c * ((X 0 ^ 2) ^ m 0 * (X 0 * X 1) ^ m 1 * (X 0 * X 2) ^ m 2 *
+        (X 0 ^ 2 * (X 1 ^ 2 + X 2 ^ 2)) ^ m 3 * (X 0 ^ 2 * X 3 ^ 2) ^ m 4) ∈ S :=
+      Subalgebra.mul_mem _ (hC _) (Subalgebra.mul_mem _ (Subalgebra.mul_mem _
+        (Subalgebra.mul_mem _ (Subalgebra.mul_mem _ (pow_mem hX0sq _) (pow_mem hX0X1 _))
+          (pow_mem hX0X2 _)) (pow_mem her _)) (pow_mem hes _))
+    rw [aeval_monomial, Finsupp.prod_fintype _ _ (fun i => by simp), Fin.prod_univ_five]
+    simp only [realGenP, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Fin.isValue,
+      MvPolynomial.algebraMap_eq]
+    convert hmemRHS using 1
+    rw [pow_mul, pow_add]
+    simp only [mul_pow]
+    ring
+  | add p q hp hq =>
+    obtain ⟨Np, hp'⟩ := hp
+    obtain ⟨Nq, hq'⟩ := hq
+    refine ⟨max Np Nq, ?_⟩
+    rw [map_add, mul_add]
+    apply Subalgebra.add_mem
+    · rw [show 2 * max Np Nq = 2 * (max Np Nq - Np) + 2 * Np from by omega, pow_add, mul_assoc]
+      exact Subalgebra.mul_mem _ (by rw [pow_mul]; exact pow_mem hX0sq _) hp'
+    · rw [show 2 * max Np Nq = 2 * (max Np Nq - Nq) + 2 * Nq from by omega, pow_add, mul_assoc]
+      exact Subalgebra.mul_mem _ (by rw [pow_mul]; exact pow_mem hX0sq _) hq'
+
+open MvPolynomial in
+/-- **Denominator clearing.** For the Condition-A value polynomial `p`, some power of `‖Φ1‖² = X₀²`
+  times `p ∘ realGen` is a polynomial in the Gram vector. -/
+lemma exists_gram_clearing (p : MvPolynomial (Fin 5) ℝ) :
+    ∃ (A : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) (N : ℕ), ∀ X : Fin 4 → ℝ,
+      (X 0) ^ (2 * N) * p.eval (realGen X) = A.eval ((repHiggs X).gramVector) := by
+  obtain ⟨N, hmem⟩ := exists_clearing_mem p
+  rw [Algebra.adjoin_range_eq_range_aeval ℝ gramP] at hmem
+  obtain ⟨A, hA⟩ := hmem
+  change aeval gramP A = _ at hA
+  refine ⟨A, N, fun X => ?_⟩
+  have hL : eval X (aeval gramP A) = A.eval ((repHiggs X).gramVector) := by
+    rw [eval_aeval_comp]; simp only [gramP_eval]
+  have hR : eval X (MvPolynomial.X 0 ^ (2 * N) * aeval realGenP p)
+      = (X 0) ^ (2 * N) * p.eval (realGen X) := by
+    rw [map_mul, map_pow, eval_X, eval_aeval_comp]; simp only [realGenP_eval]
+  rw [← hR, ← hL, hA]
 
 /-!
 
