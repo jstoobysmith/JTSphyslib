@@ -558,6 +558,97 @@ lemma eval_Qslice_eigenPt (P : MvPolynomial (Fin 6) ℝ) (X : Fin 4 → ℝ) :
     MvPolynomial.aeval_map_algebraMap ℂ, ← MvPolynomial.comp_aeval]
   simp [aeval_eq_eval, Algebra.ofId_apply]
 
+/-! ### Real-part descent: from a complex value back to a real polynomial -/
+
+open MvPolynomial in
+/-- The real part of a complex polynomial, taken coefficient-wise. -/
+noncomputable def realPart (H : MvPolynomial (Fin 5) ℂ) : MvPolynomial (Fin 5) ℝ :=
+  Finsupp.mapRange Complex.re Complex.zero_re H
+
+open MvPolynomial in
+@[simp] lemma realPart_coeff (H : MvPolynomial (Fin 5) ℂ) (m : Fin 5 →₀ ℕ) :
+    coeff m (realPart H) = (coeff m H).re := Finsupp.mapRange_apply
+
+open MvPolynomial in
+lemma realPart_C (a : ℂ) : realPart (C a) = C a.re := by
+  ext m; rw [realPart_coeff, coeff_C, coeff_C]; split_ifs <;> simp
+
+open MvPolynomial in
+lemma realPart_add (p q : MvPolynomial (Fin 5) ℂ) :
+    realPart (p + q) = realPart p + realPart q := by
+  ext m; simp [Complex.add_re]
+
+open MvPolynomial in
+lemma realPart_mul_X (p : MvPolynomial (Fin 5) ℂ) (i : Fin 5) :
+    realPart (p * X i) = realPart p * X i := by
+  ext m
+  rw [realPart_coeff, coeff_mul_X', coeff_mul_X', realPart_coeff]
+  split_ifs <;> simp
+
+open MvPolynomial in
+/-- Evaluating a complex polynomial at a real point and taking the real part is the same as
+  evaluating its real part. -/
+lemma realPart_eval (H : MvPolynomial (Fin 5) ℂ) (y : Fin 5 → ℝ) :
+    (eval (fun j => (↑(y j) : ℂ)) H).re = (realPart H).eval y := by
+  induction H using MvPolynomial.induction_on with
+  | C a => rw [realPart_C]; simp
+  | add p q hp hq => rw [realPart_add, map_add, map_add, Complex.add_re, hp, hq]
+  | mul_X p i hp =>
+    rw [realPart_mul_X, map_mul, map_mul, eval_X, eval_X, Complex.mul_re, Complex.ofReal_re,
+      Complex.ofReal_im, mul_zero, sub_zero, hp]
+
+/-! ### Condition A: the value is a polynomial in the five bilinear generators -/
+
+/-- The five real bilinear generators of `T'`, evaluated at `repHiggs X`:
+  `‖Φ1‖², Re⟪⟫, Im⟪⟫, |Φ2₀|², |Φ2₁|²`. -/
+def realGen (X : Fin 4 → ℝ) : Fin 5 → ℝ :=
+  ![X 0 ^ 2, X 0 * X 1, X 0 * X 2, X 1 ^ 2 + X 2 ^ 2, X 3 ^ 2]
+
+open MvPolynomial in
+/-- The complex substitution expressing each bilinear, at the eigen-point, through the real
+  generators (the off-diagonal pair `z w̄₀, z̄ w₀` mix `Re⟪⟫` and `Im⟪⟫`). -/
+noncomputable def transf : Fin 5 → MvPolynomial (Fin 5) ℂ :=
+  ![X 0, X 3, X 1 - C Complex.I * X 2, X 1 + C Complex.I * X 2, X 4]
+
+open MvPolynomial in
+/-- The bilinears at the eigen-point of `repHiggs X` are the real generators, read through `transf`. -/
+lemma bilin_eval_eigenPt (X : Fin 4 → ℝ) (i : Fin 5) :
+    eval (eigenPt X) (bilin i) = eval (fun j => (↑(realGen X j) : ℂ)) (transf i) := by
+  fin_cases i <;>
+    simp only [bilin, transf, eigenPt, realGen, Matrix.cons_val, Fin.isValue, map_mul, map_sub,
+      map_add, eval_X, eval_C] <;>
+    (apply Complex.ext <;>
+      simp [pow_two, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im] <;> ring)
+
+open MvPolynomial in
+/-- Pushing an evaluation through an `aeval` substitution. -/
+lemma eval_aeval_comp {κ ι : Type*} (x : ι → ℂ) (f : κ → MvPolynomial ι ℂ)
+    (G : MvPolynomial κ ℂ) :
+    eval x (aeval f G) = eval (fun i => eval x (f i)) G := by
+  rw [show (aeval f) G = bind₁ f G from rfl, ← aeval_eq_eval x, aeval_bind₁]
+  simp [aeval_eq_eval]
+
+open MvPolynomial in
+/-- **Condition A.** A gauge-invariant polynomial potential, on the representative family, is a
+  polynomial in the five real bilinear generators `‖Φ1‖², Re⟪⟫, Im⟪⟫, |Φ2₀|², |Φ2₁|²`. -/
+lemma exists_polynomial_repHiggs_realGen {V : EffectivePotential} {n : ℕ}
+    (hI : IsInvariant V) (h : HasMaxMassDimLE V n) :
+    ∃ p : MvPolynomial (Fin 5) ℝ, ∀ X : Fin 4 → ℝ, V (repHiggs X) = p.eval (realGen X) := by
+  obtain ⟨P, hP⟩ := h.exists_comp_linear_poly sliceR
+  obtain ⟨G, hG⟩ := exists_aeval_bilin hI hP
+  refine ⟨realPart (aeval transf G), fun X => ?_⟩
+  have hval : (algebraMap ℝ ℂ) (V (repHiggs X))
+      = eval (fun j => (↑(realGen X j) : ℂ)) (aeval transf G) := by
+    rw [repHiggs_eq_sliceR, hP, ← eval_Qslice_eigenPt, ← hG]
+    simp only [eval_aeval_comp]
+    rw [show (fun i => eval (eigenPt X) (bilin i))
+          = (fun i => eval (fun j => (↑(realGen X j) : ℂ)) (transf i)) from
+        funext (bilin_eval_eigenPt X)]
+  have hre : V (repHiggs X) = (eval (fun j => (↑(realGen X j) : ℂ)) (aeval transf G)).re := by
+    rw [← hval]; simp
+  rw [hre, realPart_eval]
+
 /-!
 
 ## C. Reduction to the polynomial family of orbit representatives
