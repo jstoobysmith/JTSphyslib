@@ -62,6 +62,20 @@ def sliceR : (Fin 6 → ℝ) →ₗ[ℝ] TwoHiggsDoublet where
     sliceR a = sliceHiggs (↑(a 0) + Complex.I * ↑(a 1)) (↑(a 2) + Complex.I * ↑(a 3))
       (↑(a 4) + Complex.I * ↑(a 5)) := rfl
 
+/-- The representative family as a real-linear map of its four real parameters. -/
+def repHiggsLin : (Fin 4 → ℝ) →ₗ[ℝ] TwoHiggsDoublet where
+  toFun X := repHiggs X
+  map_add' a b := by
+    apply ext_of_fst_snd
+    · ext i; fin_cases i <;> simp [repHiggs] <;> ring
+    · ext i; fin_cases i <;> simp [repHiggs] <;> ring
+  map_smul' c a := by
+    apply ext_of_fst_snd
+    · ext i; fin_cases i <;> simp [repHiggs, Complex.real_smul] <;> ring
+    · ext i; fin_cases i <;> simp [repHiggs, Complex.real_smul] <;> ring
+
+@[simp] lemma repHiggsLin_apply (X : Fin 4 → ℝ) : repHiggsLin X = repHiggs X := rfl
+
 /-- The representative family is the real slice. -/
 lemma repHiggs_eq_sliceHiggs (X : Fin 4 → ℝ) :
     repHiggs X = sliceHiggs (X 0) ((X 1 : ℂ) + Complex.I * (X 2 : ℂ)) (X 3) := rfl
