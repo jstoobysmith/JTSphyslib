@@ -24,11 +24,7 @@ Note: This file will eventually replace `./Pre/Contraction.lean` when we move
 
 noncomputable section
 
-open Matrix
-open MatrixGroups
-open Complex
-open TensorProduct
-open minkowskiMatrix
+open Matrix MatrixGroups Complex TensorProduct minkowskiMatrix
 
 namespace Lorentz
 attribute [-simp] Fintype.sum_sum_type
