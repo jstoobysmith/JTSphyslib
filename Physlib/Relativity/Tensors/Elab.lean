@@ -88,6 +88,7 @@ def indexExprIsNum (stx : Syntax) : Bool :=
   | `(indexExpr|$_:num) => true
   | _ => false
 
+/-- Bool which is true if an index is a jiggle `τ(i)`. -/
 def indexExprIsJiggle (stx : Syntax) : Bool :=
   match stx with
   | `(indexExpr|τ($_)) => true
