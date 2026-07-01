@@ -110,11 +110,11 @@ lemma Vector.contract_eq_coVector_contract (φ : Vector d) (ψ : CoVector d) :
 
 lemma Vector.contract_rep (Λ : LorentzGroup d) (φ : Vector d) (ψ : CoVector d) :
     Vector.contract ((Vector.rep Λ φ) ⊗ₜ (CoVector.rep Λ ψ)) = Vector.contract (φ ⊗ₜ ψ) := by
-  convert Vector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
+  convert! Vector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
 
 lemma CoVector.contract_rep (Λ : LorentzGroup d) (φ : CoVector d) (ψ : Vector d) :
     CoVector.contract ((CoVector.rep Λ φ) ⊗ₜ (Vector.rep Λ ψ)) = CoVector.contract (φ ⊗ₜ ψ) := by
-  convert CoVector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
+  convert! CoVector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
 
 end Lorentz
 end
