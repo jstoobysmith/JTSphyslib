@@ -161,7 +161,7 @@ def evalAdjustPos (l : List ℕ) : List ℕ :=
 
 
 /-- Returns the positions of indices which are "jiggled", i.e., of the form `τ(μ)`,
-  these are the indicies which are to be raised or lowered. -/
+  these are the indices which are to be raised or lowered. -/
 def getJigglePos (ind : List (TSyntax `indexExpr)) : TermElabM (List ℕ) := do
   let indEnum := ind.zipIdx
   let evals := indEnum.filter (fun x => indexExprIsJiggle x.1)
@@ -227,7 +227,7 @@ def getContrPos (ind : List (TSyntax `indexExpr)) : TermElabM (List (ℕ × ℕ)
 
 /-- The list of indices after contraction or evaluation. -/
 def withoutContrEval (ind : List (TSyntax `indexExpr)) : TermElabM (List (TSyntax `indexExpr)) := do
-  -- Removing the evaulated indices.
+  -- Removing the evaluated indices.
   let indFilt : List (TSyntax `indexExpr) := ind.filter (fun x => ¬ indexExprIsNum x)
   -- Removing the contracted indices: an index is contracted when its name, ignoring any `τ`,
   -- appears more than once.

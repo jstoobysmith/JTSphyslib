@@ -500,7 +500,8 @@ lemma contr_two_rotate  {c : Fin n → C}  (i : Fin n) : IsReindexing
         have hval' : ((Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i) j).val
             = n + 1 := by rw [hval]; split_ifs <;> omega
         rw [Fin.cycleIcc_of_last (Fin.le_def.mpr (by rw [hj]; omega)), Function.update_self,
-          show (Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i) j = Fin.natAdd n (1 : Fin 2)
+          show (Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i) j =
+            Fin.natAdd n (1 : Fin 2)
             from Fin.ext (by rw [hval']; simp [Fin.val_natAdd]), Fin.append_right]
         simp
       · -- i ≤ y < j
