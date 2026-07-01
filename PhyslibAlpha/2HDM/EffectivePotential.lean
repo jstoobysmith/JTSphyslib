@@ -6,13 +6,11 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
-public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Algebra.MvPolynomial.Funext
 public import Mathlib.Algebra.MvPolynomial.Monad
 public import Mathlib.RingTheory.MvPolynomial.Tower
 public import Mathlib.Algebra.MvPolynomial.Division
 public import Mathlib.Analysis.Real.Pi.Irrational
-public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
 public import PhyslibAlpha.«2HDM».GaugeSlice
 public import PhyslibAlpha.«2HDM».ChargeBalance
@@ -48,23 +46,6 @@ namespace EffectivePotential
   the global action of the gauge group. -/
 def IsInvariant (V : EffectivePotential) : Prop :=
   ∀ (g : GaugeGroupI), ∀ (φ : TwoHiggsDoublet), V (g • φ) = V φ
-
-namespace IsInvariant
-
-/-- An invariant potential is equal on gauge orbits. -/
-lemma eq_on_orbits {φ1 φ2 : TwoHiggsDoublet} {V : EffectivePotential} (h : IsInvariant V)
-    (hφ : φ1 ∈ MulAction.orbit GaugeGroupI  φ2) :
-    V φ1 = V φ2 := by
-  obtain ⟨g, hg⟩ := hφ
-  rw [← hg]
-  exact h g φ2
-
-/-- An invariant potential is equal on Higgs vectors with identical Gram vectors. -/
-lemma eq_of_gramVector_eq {φ1 φ2 : TwoHiggsDoublet} {V : EffectivePotential} (h : IsInvariant V)
-    (hφ : φ1.gramVector = φ2.gramVector) :
-    V φ1 = V φ2 := h.eq_on_orbits <| (mem_orbit_gaugeGroupI_iff_gramVector φ1 φ2).mpr hφ
-
-end IsInvariant
 
 /-!
 

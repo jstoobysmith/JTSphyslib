@@ -56,17 +56,5 @@ lemma gaugeCartan_smul_eq (a : unitary ℂ) (φ : HiggsVec) :
     gaugeCartan a • φ = WithLp.toLp 2 (!![(a : ℂ), 0; 0, (star a : ℂ)] *ᵥ φ.ofLp) := by
   rw [HiggsVec.gaugeGroupI_smul_eq, gaugeCartan_toU1, one_pow, one_smul, gaugeCartan_toSU2_coe]
 
-/-- The Cartan element phases the two components of a Higgs vector by `a` and `ā`. -/
-lemma gaugeCartan_smul_apply_zero (a : unitary ℂ) (φ : HiggsVec) :
-    (gaugeCartan a • φ) 0 = (a : ℂ) * φ 0 := by
-  rw [HiggsVec.gaugeGroupI_smul_eq, gaugeCartan_toU1, one_pow, one_smul]
-  simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, gaugeCartan_toSU2_coe]
-
-/-- The Cartan element phases the two components of a Higgs vector by `a` and `ā`. -/
-lemma gaugeCartan_smul_apply_one (a : unitary ℂ) (φ : HiggsVec) :
-    (gaugeCartan a • φ) 1 = (star a : ℂ) * φ 1 := by
-  rw [HiggsVec.gaugeGroupI_smul_eq, gaugeCartan_toU1, one_pow, one_smul]
-  simp [Matrix.mulVec, dotProduct, Fin.sum_univ_two, gaugeCartan_toSU2_coe]
-
 end GaugeGroupI
 end StandardModel
