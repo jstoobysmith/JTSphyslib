@@ -14,7 +14,7 @@ public import Mathlib.RingTheory.MvPolynomial.Tower
 
 An *effective potential* of the two Higgs doublet model is a real-valued function
 `V : TwoHiggsDoublet → ℝ` of the field configuration. This file introduces the two physical
-properties of such a potential that the First Fundamental Theorem depends on:
+properties of such a potential used when expressing it through the gauge-invariant bilinears:
 
 * `IsInvariant V` — invariance under the global gauge group, and
 * `HasMaxMassDimLE V n` — being a polynomial in the field components of mass dimension `≤ n`.

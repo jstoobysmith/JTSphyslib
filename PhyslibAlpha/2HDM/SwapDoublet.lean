@@ -16,7 +16,8 @@ public import Mathlib.Algebra.MvPolynomial.Degrees
 Exchanging the two doublets `Φ1 ↔ Φ2` is an `ℝ`-linear map `swapDoublet` that commutes with the
 gauge action. It therefore preserves gauge invariance and the maximum mass dimension, while turning
 the alignment of `Φ1` into the alignment of `Φ2`. This is precisely the symmetry used to clear the
-`‖Φ2‖²` denominator in the First Fundamental Theorem, mirroring the `‖Φ1‖²` clearing.
+`‖Φ2‖²` factor when writing the potential through the gauge invariants, mirroring the `‖Φ1‖²`
+clearing.
 
 ## ii. Key results
 
