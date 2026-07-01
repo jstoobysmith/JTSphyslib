@@ -16,9 +16,6 @@ This file is currently a stub.
 
 @[expose] public section
 
-TODO "Prove that every member of the restricted Lorentz group is
-  combination of a boost and a rotation."
-
 namespace LorentzGroup
 
 open Matrix
