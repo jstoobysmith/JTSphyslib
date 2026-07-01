@@ -144,7 +144,8 @@ open MvPolynomial in
 lemma eval_resSubst (c : unitary ℂ) (a : Fin 6 → ℝ) :
     (fun k => MvPolynomial.eval a (resSubst c k)) = resRotParam c a := by
   funext k
-  fin_cases k <;> simp [resSubst, resRotParam, Complex.mul_re, Complex.mul_im] <;> ring
+  fin_cases k <;> simp [resSubst, resRotParam, Complex.mul_re, Complex.mul_im]
+  ring
 
 open MvPolynomial in
 /-- Gauge (residual `U(1)`) invariance forces the slice polynomial to be invariant under the
@@ -187,14 +188,11 @@ lemma bind₁_diagCartan_cplxEigen (u : unitary ℂ) (k : Fin 6) :
   apply MvPolynomial.funext
   intro x
   fin_cases k <;>
-    simp only [cplxEigen, diagCartan, rotSubst, Matrix.cons_val, Fin.isValue,
-      map_add, map_sub, map_mul, MvPolynomial.bind₁_X_right,
-      MvPolynomial.bind₁_C_right, MvPolynomial.map_C, MvPolynomial.map_X, MvPolynomial.algebraMap_eq,
-      MvPolynomial.eval_X, MvPolynomial.eval_C] <;>
+    simp only [cplxEigen, diagCartan, rotSubst, Fin.isValue] <;>
     (apply Complex.ext <;>
       simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
         Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-        Complex.star_def, Complex.conj_re, Complex.conj_im] <;> ring)
+        Complex.conj_re, Complex.conj_im] <;> ring)
 
 open MvPolynomial in
 /-- Conjugation identity for the residual `U(1)`. -/
@@ -206,14 +204,11 @@ lemma bind₁_diagRes_cplxEigen (c : unitary ℂ) (k : Fin 6) :
   simp only [diagRes, resSubst]
   generalize (c : ℂ) ^ 6 = μ
   fin_cases k <;>
-    simp only [cplxEigen, Matrix.cons_val, Fin.isValue,
-      map_add, map_sub, map_mul, MvPolynomial.bind₁_X_right,
-      MvPolynomial.bind₁_C_right, MvPolynomial.map_C, MvPolynomial.map_X, MvPolynomial.algebraMap_eq,
-      MvPolynomial.eval_X, MvPolynomial.eval_C] <;>
+    simp only [cplxEigen, Fin.isValue] <;>
     (apply Complex.ext <;>
       simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
         Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-        Complex.star_def, Complex.conj_re, Complex.conj_im] <;> ring)
+        Complex.conj_re, Complex.conj_im] <;> ring)
 
 /-- The Cartan hypercharges of `z, z̄, w₀, w̄₀, w₁, w̄₁`. -/
 def chargeA : Fin 6 → ℤ := ![1, -1, 1, -1, -1, 1]
@@ -542,10 +537,9 @@ open MvPolynomial in
 lemma aeval_cplxEigen_eigenPt (X : Fin 4 → ℝ) (k : Fin 6) :
     aeval (eigenPt X) (cplxEigen k) = algebraMap ℝ ℂ (aRep X k) := by
   fin_cases k <;>
-    simp only [cplxEigen, eigenPt, aRep, Matrix.cons_val, Fin.isValue, map_add, map_sub, map_mul,
-      aeval_X, aeval_C, MvPolynomial.algebraMap_eq] <;>
+    simp only [cplxEigen, eigenPt, aRep, Fin.isValue] <;>
     (apply Complex.ext <;>
-      simp [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+      simp [Complex.add_re, Complex.add_im, Complex.mul_re,
         Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im] <;> ring)
 
 open MvPolynomial in
@@ -616,8 +610,7 @@ open MvPolynomial in
 lemma bilin_eval_eigenPt (X : Fin 4 → ℝ) (i : Fin 5) :
     eval (eigenPt X) (bilin i) = eval (fun j => (↑(realGen X j) : ℂ)) (transf i) := by
   fin_cases i <;>
-    simp only [bilin, transf, eigenPt, realGen, Matrix.cons_val, Fin.isValue, map_mul, map_sub,
-      map_add, eval_X, eval_C] <;>
+    simp only [bilin, transf, eigenPt, realGen, Fin.isValue] <;>
     (apply Complex.ext <;>
       simp [pow_two, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im, Complex.mul_re,
         Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im] <;> ring)
@@ -937,22 +930,19 @@ lemma gramP_injective :
       match μ with
       | Sum.inl 0 =>
         rw [gramVector_repHiggs_inl]
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
-          Fin.isValue]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Fin.isValue]
         rw [hy0sq, hy3sq]; ring
       | Sum.inr 0 =>
         rw [gramVector_repHiggs_inr0]
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
         rw [hy1def]; field_simp
       | Sum.inr 1 =>
         rw [gramVector_repHiggs_inr1]
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
-          Fin.isValue]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val, Fin.isValue]
         rw [hy2def]; field_simp
       | Sum.inr 2 =>
         rw [gramVector_repHiggs_inr2]
-        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
-          Fin.isValue]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Fin.isValue]
         rw [hy0sq, hy3sq]; ring
     rw [map_zero, ← hgram]
     exact hvanish ![y0, y1, y2, y3]
