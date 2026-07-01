@@ -46,27 +46,19 @@ def Vector.contract : (Vector.rep.tprod CoVector.rep).IntertwiningMap
     (Representation.trivial ℝ (LorentzGroup d) ℝ) where
   toLinearMap := by
     refine TensorProduct.lift (LinearMap.mk₂ ℝ (fun φ ψ => ∑ i, φ i * ψ i) ?_ ?_ ?_ ?_)
-    · intro m1 m2 n
-      simp [add_mul, Finset.sum_add_distrib]
-    · intro r m n
-      simp only [apply_smul, smul_eq_mul, Finset.mul_sum]
-      grind
-    · intro m n1 n2
-      simp [mul_add, Finset.sum_add_distrib]
-    · intro r m n
-      simp only [CoVector.apply_smul, smul_eq_mul, Finset.mul_sum]
-      grind
+    · simp [add_mul, Finset.sum_add_distrib]
+    · simp [Finset.mul_sum, mul_assoc]
+    · simp [mul_add, Finset.sum_add_distrib]
+    · intros
+      simp_rw [CoVector.apply_smul, smul_eq_mul, Finset.mul_sum]
+      exact Finset.sum_congr rfl (fun _ _ ↦ by ring)
   isIntertwining' Λ := by
     ext φ ψ
-    simp only [Representation.tprod_apply, AlgebraTensorModule.curry_apply,
-      LinearMap.restrictScalars_self, curry_apply, LinearMap.coe_comp, Function.comp_apply,
-      map_tmul, lift.tmul, LinearMap.mk₂_apply, Representation.isTrivial_def, LinearMap.id_comp]
-    trans (Λ.1 *ᵥ φ) ⬝ᵥ ((LorentzGroup.transpose Λ⁻¹).1 *ᵥ ψ); swap
-    · rw [dotProduct_mulVec, LorentzGroup.transpose_val,
-        vecMul_transpose, mulVec_mulVec, LorentzGroup.coe_inv, inv_mul_of_invertible Λ.1]
-      simp only [one_mulVec]
-      rfl
+    trans (Λ.1 *ᵥ φ) ⬝ᵥ ((LorentzGroup.transpose Λ⁻¹).1 *ᵥ ψ)
     · simp [dotProduct, Vector.rep_apply_eq_mulVec, CoVector.rep_apply_eq_mulVec]
+    · simp [dotProduct_mulVec, LorentzGroup.transpose_val,
+        vecMul_transpose, mulVec_mulVec, LorentzGroup.coe_inv, inv_mul_of_invertible Λ.1]
+      rfl
 
 /-- The intertwining map defining the contraction of a covariant Lorentz vector with a
   contravariant Lorentz vector. -/
@@ -74,27 +66,19 @@ def CoVector.contract : (CoVector.rep.tprod Vector.rep).IntertwiningMap
     (Representation.trivial ℝ (LorentzGroup d) ℝ) where
   toLinearMap := by
     refine TensorProduct.lift (LinearMap.mk₂ ℝ (fun φ ψ => ∑ i, φ i * ψ i) ?_ ?_ ?_ ?_)
-    · intro m1 m2 n
-      simp [add_mul, Finset.sum_add_distrib]
-    · intro r m n
-      simp only [apply_smul, smul_eq_mul, Finset.mul_sum]
-      grind
-    · intro m n1 n2
-      simp [mul_add, Finset.sum_add_distrib]
-    · intro r m n
-      simp only [Vector.apply_smul, smul_eq_mul, Finset.mul_sum]
-      grind
+    · simp [add_mul, Finset.sum_add_distrib]
+    · simp [Finset.mul_sum, mul_assoc]
+    · simp [mul_add, Finset.sum_add_distrib]
+    · intros
+      simp_rw [Vector.apply_smul, smul_eq_mul, Finset.mul_sum]
+      exact Finset.sum_congr rfl (fun _ _ ↦ by ring)
   isIntertwining' Λ := by
     ext φ ψ
-    simp only [Representation.tprod_apply, AlgebraTensorModule.curry_apply,
-      LinearMap.restrictScalars_self, curry_apply, LinearMap.coe_comp, Function.comp_apply,
-      map_tmul, lift.tmul, LinearMap.mk₂_apply, Representation.isTrivial_def, LinearMap.id_comp]
-    trans ((LorentzGroup.transpose Λ⁻¹).1 *ᵥ φ) ⬝ᵥ (Λ.1 *ᵥ ψ); swap
-    · rw [dotProduct_mulVec, LorentzGroup.transpose_val,
-        mulVec_transpose, vecMul_vecMul, LorentzGroup.coe_inv, inv_mul_of_invertible Λ.1]
-      simp only [vecMul_one]
-      rfl
+    trans ((LorentzGroup.transpose Λ⁻¹).1 *ᵥ φ) ⬝ᵥ (Λ.1 *ᵥ ψ)
     · simp [dotProduct, Vector.rep_apply_eq_mulVec, CoVector.rep_apply_eq_mulVec]
+    · simp [dotProduct_mulVec, LorentzGroup.transpose_val,
+        mulVec_transpose, vecMul_vecMul, LorentzGroup.coe_inv, inv_mul_of_invertible Λ.1]
+      rfl
 
 /-!
 
@@ -122,20 +106,15 @@ lemma CoVector.contract_basis_right (ψ : CoVector d) (μ : Fin 1 ⊕ Fin d) :
 
 lemma Vector.contract_eq_coVector_contract (φ : Vector d) (ψ : CoVector d) :
     Vector.contract (φ ⊗ₜ ψ) = CoVector.contract (ψ ⊗ₜ φ) := by
-  simp only [Vector.contract_tmul, CoVector.contract_tmul]
-  grind
+  simp_rw [Vector.contract_tmul, CoVector.contract_tmul, mul_comm]
 
 lemma Vector.contract_rep (Λ : LorentzGroup d) (φ : Vector d) (ψ : CoVector d) :
     Vector.contract ((Vector.rep Λ φ) ⊗ₜ (CoVector.rep Λ ψ)) = Vector.contract (φ ⊗ₜ ψ) := by
-  change Vector.contract ((Vector.rep.tprod CoVector.rep) Λ (φ ⊗ₜ ψ)) = _
-  rw [Vector.contract.isIntertwining]
-  simp
+  convert Vector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
 
 lemma CoVector.contract_rep (Λ : LorentzGroup d) (φ : CoVector d) (ψ : Vector d) :
     CoVector.contract ((CoVector.rep Λ φ) ⊗ₜ (Vector.rep Λ ψ)) = CoVector.contract (φ ⊗ₜ ψ) := by
-  change CoVector.contract ((CoVector.rep.tprod Vector.rep) Λ (φ ⊗ₜ ψ)) = _
-  rw [CoVector.contract.isIntertwining]
-  simp
+  convert CoVector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
 
 end Lorentz
 end
