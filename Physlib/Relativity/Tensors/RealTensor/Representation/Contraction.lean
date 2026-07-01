@@ -116,5 +116,6 @@ lemma CoVector.contract_rep (Λ : LorentzGroup d) (φ : CoVector d) (ψ : Vector
     CoVector.contract ((CoVector.rep Λ φ) ⊗ₜ (Vector.rep Λ ψ)) = CoVector.contract (φ ⊗ₜ ψ) := by
   convert! CoVector.contract.isIntertwining _ _ Λ (φ ⊗ₜ ψ)
 
+-- test of stacked PRs
 end Lorentz
 end
