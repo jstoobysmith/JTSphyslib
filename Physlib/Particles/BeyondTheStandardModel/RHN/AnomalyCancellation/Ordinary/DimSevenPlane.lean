@@ -26,17 +26,50 @@ open BigOperators
 
 namespace PlaneSeven
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₀ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 0, 0 => 1
-  | 0, 1 => - 1
-  | _, _ => 0)
+/-- The charge assignments forming a basis of the plane. -/
+@[simp]
+abbrev B : Fin 7 → (SM 3).Charges := fun i =>
+  match i with
+  | 0 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 0, 0 => 1
+      | 0, 1 => - 1
+      | _, _ => 0)
+  | 1 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 1, 0 => 1
+      | 1, 1 => - 1
+      | _, _ => 0)
+  | 2 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 2, 0 => 1
+      | 2, 1 => - 1
+      | _, _ => 0)
+  | 3 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 3, 0 => 1
+      | 3, 1 => - 1
+      | _, _ => 0)
+  | 4 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 4, 0 => 1
+      | 4, 1 => - 1
+      | _, _ => 0)
+  | 5 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 5, 0 => 1
+      | 5, 1 => - 1
+      | _, _ => 0)
+  | 6 => toSpeciesEquiv.invFun (fun s => fun i =>
+      match s, i with
+      | 1, 2 => 1
+      | 2, 2 => -1
+      | _, _ => 0)
 
 set_option backward.isDefEq.respectTransparency false in
-lemma B₀_cubic (S T : (SM 3).Charges) : cubeTriLin B₀ S T =
+lemma B₀_cubic (S T : (SM 3).Charges) : cubeTriLin (B 0) S T =
     6 * (S (0 : Fin 18) * T (0 : Fin 18) - S (1 : Fin 18) * T (1 : Fin 18)) := by
-  simp only [B₀, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, zero_mul, Nat.reduceMod,
@@ -46,17 +79,10 @@ lemma B₀_cubic (S T : (SM 3).Charges) : cubeTriLin B₀ S T =
     mul_neg, Fin.reduceFinMk]
   ring
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₁ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 1, 0 => 1
-  | 1, 1 => - 1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₁_cubic (S T : (SM 3).Charges) : cubeTriLin B₁ S T =
+lemma B₁_cubic (S T : (SM 3).Charges) : cubeTriLin (B 1) S T =
     3 * (S (3 : Fin 18) * T (3 : Fin 18) - S (4 : Fin 18) * T (4 : Fin 18)) := by
-  simp only [B₁, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -64,17 +90,10 @@ lemma B₁_cubic (S T : (SM 3).Charges) : cubeTriLin B₁ S T =
     one_mul, Nat.reduceDiv, Nat.reduceAdd, neg_mul, mul_neg]
   ring
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₂ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 2, 0 => 1
-  | 2, 1 => - 1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₂_cubic (S T : (SM 3).Charges) : cubeTriLin B₂ S T =
+lemma B₂_cubic (S T : (SM 3).Charges) : cubeTriLin (B 2) S T =
     3 * (S (6 : Fin 18) * T (6 : Fin 18) - S (7 : Fin 18) * T (7 : Fin 18)) := by
-  simp only [B₂, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -82,17 +101,10 @@ lemma B₂_cubic (S T : (SM 3).Charges) : cubeTriLin B₂ S T =
     Nat.reduceDiv, one_mul, Nat.reduceAdd, neg_mul, mul_neg]
   ring
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₃ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 3, 0 => 1
-  | 3, 1 => - 1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₃_cubic (S T : (SM 3).Charges) : cubeTriLin B₃ S T =
+lemma B₃_cubic (S T : (SM 3).Charges) : cubeTriLin (B 3) S T =
     2 * (S (9 : Fin 18) * T (9 : Fin 18) - S (10 : Fin 18) * T (10 : Fin 18)) := by
-  simp only [B₃, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -100,17 +112,10 @@ lemma B₃_cubic (S T : (SM 3).Charges) : cubeTriLin B₃ S T =
     Nat.reduceDiv, one_mul, Nat.reduceAdd, neg_mul, mul_neg]
   ring_nf
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₄ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 4, 0 => 1
-  | 4, 1 => - 1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₄_cubic (S T : (SM 3).Charges) : cubeTriLin B₄ S T =
+lemma B₄_cubic (S T : (SM 3).Charges) : cubeTriLin (B 4) S T =
     (S (12 : Fin 18) * T (12 : Fin 18) - S (13 : Fin 18) * T (13 : Fin 18)) := by
-  simp only [B₄, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -118,17 +123,10 @@ lemma B₄_cubic (S T : (SM 3).Charges) : cubeTriLin B₄ S T =
     Nat.reduceDiv, one_mul, Nat.reduceAdd, neg_mul]
   ring_nf
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₅ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 5, 0 => 1
-  | 5, 1 => - 1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₅_cubic (S T : (SM 3).Charges) : cubeTriLin B₅ S T =
+lemma B₅_cubic (S T : (SM 3).Charges) : cubeTriLin (B 5) S T =
     (S (15 : Fin 18) * T (15 : Fin 18) - S (16 : Fin 18) * T (16 : Fin 18)) := by
-  simp only [B₅, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -136,17 +134,10 @@ lemma B₅_cubic (S T : (SM 3).Charges) : cubeTriLin B₅ S T =
     Nat.reduceDiv, one_mul, Nat.reduceAdd, neg_mul]
   ring_nf
 
-/-- A charge assignment forming one of the basis elements of the plane. -/
-def B₆ : (SM 3).Charges := toSpeciesEquiv.invFun (fun s => fun i =>
-  match s, i with
-  | 1, 2 => 1
-  | 2, 2 => -1
-  | _, _ => 0)
-
 set_option backward.isDefEq.respectTransparency false in
-lemma B₆_cubic (S T : (SM 3).Charges) : cubeTriLin B₆ S T =
+lemma B₆_cubic (S T : (SM 3).Charges) : cubeTriLin (B 6) S T =
     3 * (S (5 : Fin 18) * T (5 : Fin 18) - S (8 : Fin 18) * T (8 : Fin 18)) := by
-  simp only [B₆, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
+  simp only [B, Equiv.invFun_as_coe, cubeTriLin_toFun_apply_apply, Fin.isValue,
     toSpeciesEquiv_apply, Nat.reduceMul, finProdFinEquiv, Fin.divNat, Fin.modNat, Equiv.coe_fn_mk,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, mul_zero, add_zero, toSpeciesEquiv_symm_apply, Nat.one_mod,
     mul_one, Nat.ofNat_pos, Nat.add_div_right, Nat.add_mod_right, Nat.reduceMod, Nat.mod_succ,
@@ -154,83 +145,62 @@ lemma B₆_cubic (S T : (SM 3).Charges) : cubeTriLin B₆ S T =
     Nat.reduceDiv, Nat.reduceAdd, one_mul, neg_mul, mul_neg]
   ring_nf
 
-TODO "Remove the definitions of elements `(SM 3).Charges` B₀, B₁ etc, here are
-  use only `B : Fin 7 → (SM 3).Charges`. "
-/-- The charge assignments forming a basis of the plane. -/
-@[simp]
-abbrev B : Fin 7 → (SM 3).Charges := fun i =>
-  match i with
-  | 0 => B₀
-  | 1 => B₁
-  | 2 => B₂
-  | 3 => B₃
-  | 4 => B₄
-  | 5 => B₅
-  | 6 => B₆
-
 lemma B₀_Bi_cubic {i : Fin 7} (hi : 0 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 0) (B i) S = 0 := by
-  change cubeTriLin B₀ (B i) S = 0
   rw [B₀_cubic]
   norm_num
   fin_cases i <;>
     simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
       Fin.reduceFinMk, not_true_eq_false] at hi <;>
-    simp [B₁, B₂, B₃, B₄, B₅, B₆, Fin.divNat, Fin.modNat]
+    simp [Fin.divNat, Fin.modNat]
 
 lemma B₁_Bi_cubic {i : Fin 7} (hi : 1 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 1) (B i) S = 0 := by
-  change cubeTriLin B₁ (B i) S = 0
   rw [B₁_cubic]
   fin_cases i <;>
     simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
       Fin.reduceFinMk, not_true_eq_false] at hi <;>
-    simp [B₀, B₂, B₃, B₄, B₅, B₆, Fin.divNat, Fin.modNat]
+    simp [B, Fin.divNat, Fin.modNat]
 
 lemma B₂_Bi_cubic {i : Fin 7} (hi : 2 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 2) (B i) S = 0 := by
-  change cubeTriLin B₂ (B i) S = 0
   rw [B₂_cubic]
   fin_cases i <;>
     simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
       Fin.reduceFinMk, not_true_eq_false] at hi <;>
-    simp [B₀, B₁, B₃, B₄, B₅, B₆, Fin.divNat, Fin.modNat]
+    simp [B, Fin.divNat, Fin.modNat]
 
 lemma B₃_Bi_cubic {i : Fin 7} (hi : 3 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 3) (B i) S = 0 := by
-  change cubeTriLin (B₃) (B i) S = 0
   rw [B₃_cubic]
   fin_cases i <;>
   simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
     Fin.reduceFinMk, not_true_eq_false] at hi <;>
-  simp [B₀, B₁, B₂, B₄, B₅, B₆, Fin.divNat, Fin.modNat]
+  simp [B, Fin.divNat, Fin.modNat]
 
 lemma B₄_Bi_cubic {i : Fin 7} (hi : 4 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 4) (B i) S = 0 := by
-  change cubeTriLin (B₄) (B i) S = 0
   rw [B₄_cubic]
   fin_cases i <;>
   simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
     Fin.reduceFinMk, not_true_eq_false] at hi <;>
-  simp [B₀, B₁, B₂, B₃, B₅, B₆, Fin.divNat, Fin.modNat]
+  simp [B, Fin.divNat, Fin.modNat]
 
 lemma B₅_Bi_cubic {i : Fin 7} (hi : 5 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 5) (B i) S = 0 := by
-  change cubeTriLin (B₅) (B i) S = 0
   rw [B₅_cubic]
   fin_cases i <;>
   simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
     Fin.reduceFinMk, not_true_eq_false] at hi <;>
-  simp [B₀, B₁, B₂, B₃, B₄, B₆, Fin.divNat, Fin.modNat]
+  simp [B, Fin.divNat, Fin.modNat]
 
 lemma B₆_Bi_cubic {i : Fin 7} (hi : 6 ≠ i) (S : (SM 3).Charges) :
     cubeTriLin (B 6) (B i) S = 0 := by
-  change cubeTriLin (B₆) (B i) S = 0
   rw [B₆_cubic]
   fin_cases i <;>
   simp only [Fin.isValue, Fin.zero_eta, ne_eq, Fin.reduceEq, not_false_eq_true, Fin.mk_one,
     Fin.reduceFinMk, not_true_eq_false] at hi <;>
-  simp [B₀, B₁, B₂, B₃, B₄, B₅, Fin.divNat, Fin.modNat]
+  simp [B, Fin.divNat, Fin.modNat]
 
 lemma Bi_Bj_ne_cubic {i j : Fin 7} (h : i ≠ j) (S : (SM 3).Charges) :
     cubeTriLin (B i) (B j) S = 0 := by
@@ -300,7 +270,6 @@ theorem basis_linear_independent : LinearIndependent ℚ B := by
   rw [@Fin.sum_univ_seven] at h0 h1 h2 h3 h4 h5 h6
   simp only [HSMul.hSMul, Fin.isValue, B, ACCSystemCharges.chargesAddCommMonoid_add,
     ACCSystemCharges.chargesModule_smul] at h0 h1 h2 h3 h4 h5 h6
-  rw [B₀, B₁, B₂, B₃, B₄, B₅, B₆] at h0 h1 h2 h3 h4 h5 h6
   simp only [Fin.isValue, Equiv.invFun_as_coe, toSpeciesEquiv_symm_apply, Fin.divNat, Nat.reduceMul,
     Fin.coe_ofNat_eq_mod, Nat.zero_mod, Nat.zero_div, Fin.zero_eta, Fin.modNat, mul_one, mul_zero,
     add_zero, Nat.reduceMod, Nat.ofNat_pos, Nat.div_self, Fin.mk_one, Nat.mod_self, zero_add,
