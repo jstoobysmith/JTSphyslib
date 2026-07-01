@@ -68,6 +68,15 @@ References for the classical harmonic oscillator include:
 
 -/
 
+TODO "Split this file into smaller modules, keeping `Solution.lean` as an umbrella import.
+The intended organization is:
+- `Solution.Basic` for trajectory construction and equation-of-motion facts;
+- `Solution.Energy` for energy-related lemmas;
+- `Solution.InitialData` for alternative initial-condition parametrizations;
+- `Solution.AmplitudePhase` for the amplitude-phase normal form;
+- `Solution.SpecialTimes` for velocity-zero times, turning points, and zero crossings;
+- `Solution.Periodicity` for period and recurrence facts."
+
 @[expose] public section
 
 namespace ClassicalMechanics

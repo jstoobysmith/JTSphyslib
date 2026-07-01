@@ -77,6 +77,7 @@ public import Physlib.Mathematics.Calculus.ParametricIntegration
 public import Physlib.Mathematics.Calculus.Wirtinger.Basic
 public import Physlib.Mathematics.Calculus.Wirtinger.Coordinate
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.CrossProductMatrix
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
@@ -367,6 +368,7 @@ public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
 public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.Relativity.Tensors.Evaluation
+public import Physlib.Relativity.Tensors.LeviCivita.Basic
 public import Physlib.Relativity.Tensors.MetricTensor
 public import Physlib.Relativity.Tensors.OfInt
 public import Physlib.Relativity.Tensors.Product
