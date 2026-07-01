@@ -26,6 +26,7 @@ functions from `E` to `F`. We give a more precise definition of distributions be
 - `E →d[𝕜] F` is the type of distributions from `E` to `F`.
 - `Distribution.derivative` and `Distribution.fourierTransform` allow us to make sense of these
   operations that might not make sense a priori on general functions.
+- `Distribution.ofFiniteMeasure` is the scalar distribution associated to a finite measure.
 
 ## iii. Table of Content
 
@@ -121,7 +122,6 @@ on the size of `u` applied to `η`.
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The construction of a distribution from the following data:
 1. We take a finite set `s` of pairs `(k, n) ∈ ℕ × ℕ` that will be explained later.
 2. We take a linear map `u` that evaluates the given Schwartz function `η`. At this stage we don't
@@ -142,7 +142,7 @@ def ofLinear (s : Finset (ℕ × ℕ)) (u : 𝓢(E, 𝕜) →ₗ[𝕜] F)
     refine hη.trans <| mul_le_mul_of_nonneg_left ((le_seminorm 𝕜 k n η x).trans ?_) hC
     rw [Seminorm.finset_sup_apply]
     refine (NNReal.coe_le_coe (r₁ := ⟨SchwartzMap.seminorm 𝕜 k n η, apply_nonneg _ _⟩)).2 ?_
-    convert s.le_sup hkn
+    exact s.le_sup hkn
       (f := fun kn : ℕ × ℕ ↦ (⟨SchwartzMap.seminorm 𝕜 kn.1 kn.2 η, apply_nonneg _ _⟩ : ℝ≥0))
 
 @[simp] lemma ofLinear_apply (s : Finset (ℕ × ℕ)) (u : 𝓢(E, 𝕜) →ₗ[𝕜] F)
@@ -217,7 +217,7 @@ def fderivD [FiniteDimensional ℝ E] : (E →d[𝕜] F) →ₗ[𝕜] (E →d[�
       ext x
       simp only [map_add, ContinuousLinearEquiv.neg_apply,
         LinearMap.coe_toContinuousLinearMap', LinearMap.coe_mk, AddHom.coe_mk,
-        ContinuousLinearMap.add_apply]
+        add_apply]
     map_smul' a η := by
       ext x
       simp
@@ -230,7 +230,7 @@ def fderivD [FiniteDimensional ℝ E] : (E →d[𝕜] F) →ₗ[𝕜] (E →d[�
   }
   map_add' u₁ u₂ := by
     ext η
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearEquiv.neg_apply, neg_add_rev,
+    simp only [add_apply, ContinuousLinearEquiv.neg_apply, neg_add_rev,
       ContinuousLinearMap.coe_mk', LinearMap.coe_mk, AddHom.coe_mk,
       LinearMap.coe_toContinuousLinearMap']
     abel
@@ -284,6 +284,7 @@ end Complex
 
 We now define specific distributions, which are used throughout physics. In particular, we define:
 - The constant distribution.
+- Distributions associated to finite measures.
 - The dirac delta distribution.
 - The heaviside step function.
 
@@ -365,7 +366,7 @@ lemma fderivD_const [hμ : Measure.IsAddHaarMeasure (volume (α := E))]
     fderivD ℝ (const ℝ E c) = 0 := by
   ext η v
   rw [fderivD_apply, const_apply]
-  simp only [ContinuousLinearMap.zero_apply, neg_eq_zero]
+  simp only [zero_apply, neg_eq_zero]
   trans -∫ (x : E), η x • (fderiv ℝ (fun y => c) x) v ∂volume
   swap
   · simp
@@ -385,7 +386,33 @@ end constant
 
 /-!
 
-### E.2. The dirac delta distribution
+### E.2. Distributions associated to finite measures
+
+Every finite measure has temperate growth, so integrating Schwartz maps against it defines a
+scalar distribution.
+
+-/
+section finiteMeasure
+
+open MeasureTheory
+
+variable [NormedSpace ℝ E] [MeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+
+/-- The scalar distribution associated to a finite measure, acting on a Schwartz map by
+integration. -/
+def ofFiniteMeasure (μ : Measure E) [IsFiniteMeasure μ] : E →d[𝕜] 𝕜 :=
+  integralCLM 𝕜 μ
+
+@[simp]
+lemma ofFiniteMeasure_apply (μ : Measure E) [IsFiniteMeasure μ] (η : 𝓢(E, 𝕜)) :
+    ofFiniteMeasure 𝕜 μ η = ∫ x, η x ∂μ :=
+  rfl
+
+end finiteMeasure
+
+/-!
+
+### E.3. The dirac delta distribution
 
 The dirac delta distribution centered at `a : E` is the distribution which takes
 `η` to `η a`. We also define `diracDelta'` which takes in an element of `v` of `F` and
@@ -422,7 +449,7 @@ def diracDelta' (a : E) (v : F) : E →d[𝕜] F :=
 end DiracDelta
 /-!
 
-### E.3. The heviside step function
+### E.4. The heaviside step function
 
 The heaviside step function on `EuclideanSpace ℝ (Fin d.succ)` is the distribution
 from `EuclideanSpace ℝ (Fin d.succ)` to `ℝ` which takes a `η` to the integral of `η` in the

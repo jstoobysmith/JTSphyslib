@@ -138,7 +138,7 @@ lemma deriv_eq_mfderiv_manifoldStructure {M d} [NormedAddCommGroup M] [NormedSpa
     rw [mfderiv_comp (I' := 𝓘(ℝ, Space d)) _ hf.mdifferentiableAt
       (modelDiffeo.mdifferentiable WithTop.top_ne_zero).mdifferentiableAt]
     simp only [Function.comp_apply, modelDiffeo_apply, mfderiv_eq_fderiv,
-      ContinuousLinearMap.coe_comp']
+      ContinuousLinearMap.coe_comp]
     rw [basis_eq_mfderiv_modelDiffeo_single]
     rfl
   · rw [deriv_eq, fderiv_zero_of_not_differentiableAt hf,
@@ -184,7 +184,7 @@ lemma deriv_coord_add (f1 f2 : Space d → EuclideanSpace ℝ (Fin d))
   simp only
   ext x
   rw [fderiv_fun_add]
-  simp only [ContinuousLinearMap.add_apply, Pi.add_apply]
+  simp only [_root_.add_apply, Pi.add_apply]
   repeat fun_prop
 
 /-- Derivatives on space distribute over subtraction. -/
@@ -218,7 +218,7 @@ lemma deriv_const_smul [NormedAddCommGroup M] [NormedSpace ℝ M] [Semiring R]
     (h : Differentiable ℝ f) : ∂[u] (c • f) = c • ∂[u] f := by
   rw [deriv_eq_fderiv_fun, deriv_eq_fderiv_fun]
   ext x
-  rw [fderiv_const_smul, ContinuousLinearMap.coe_smul', Pi.smul_apply, Pi.smul_apply]
+  rw [fderiv_const_smul, FunLike.coe_smul, Pi.smul_apply, Pi.smul_apply]
   fun_prop
 
 /-- Coordinate-wise scalar multiplication on space derivatives. -/
@@ -226,7 +226,7 @@ lemma deriv_coord_smul (f : Space d → EuclideanSpace ℝ (Fin d)) (k : ℝ)
     (hf : Differentiable ℝ f) :
     ∂[u] (fun x => k * f x i) x = k * ∂[u] (fun x => f x i) x := by
   rw [deriv_eq_fderiv_basis, deriv_eq_fderiv_basis, fderiv_const_mul]
-  simp only [ContinuousLinearMap.coe_smul', Pi.smul_apply, smul_eq_mul]
+  simp only [FunLike.coe_smul, Pi.smul_apply, smul_eq_mul]
   fun_prop
 
 /-!
@@ -295,7 +295,7 @@ lemma deriv_component_sq {d : ℕ} {ν μ : Fin d} (x : Space d) :
   rw [deriv_eq_fderiv_basis]
   rw [fderiv_fun_pow]
   simp only [Nat.add_one_sub_one, pow_one, nsmul_eq_mul, Nat.cast_ofNat,
-    ContinuousLinearMap.coe_smul', Pi.smul_apply, smul_eq_mul]
+    FunLike.coe_smul, Pi.smul_apply, smul_eq_mul]
   rw [← deriv_eq_fderiv_basis, deriv_component]
   simp only [mul_ite, mul_one, mul_zero]
   fun_prop
@@ -356,7 +356,7 @@ lemma deriv_norm_sq (x : Space d) (i : Fin d) :
   simp [Space.norm_sq_eq]
   rw [deriv_eq_fderiv_basis]
   rw [fderiv_fun_sum]
-  simp only [ContinuousLinearMap.coe_sum', Finset.sum_apply]
+  simp only [FunLike.coe_sum, Finset.sum_apply]
   conv_lhs =>
     enter [2, j]
     rw [← deriv_eq_fderiv_basis]
@@ -397,9 +397,7 @@ lemma inner_apply_differentiableAt {d : ℕ} [NormedAddCommGroup M]
     {f : M → Space d} {g : M → Space d} (x : M)
     (hf : DifferentiableAt ℝ f x) (hg : DifferentiableAt ℝ g x) :
     DifferentiableAt ℝ (fun y : M => ⟪f y, g y⟫_ℝ) x := by
-  apply DifferentiableAt.inner
-  · fun_prop
-  · fun_prop
+  apply DifferentiableAt.inner <;> fun_prop
 
 @[fun_prop]
 lemma inner_apply_differentiable {d : ℕ} [NormedAddCommGroup M]
@@ -407,15 +405,11 @@ lemma inner_apply_differentiable {d : ℕ} [NormedAddCommGroup M]
     {f : M → Space d} {g : M → Space d}
     (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) :
     Differentiable ℝ (fun y : M => ⟪f y, g y⟫_ℝ) := by
-  apply Differentiable.inner
-  · fun_prop
-  · fun_prop
+  apply Differentiable.inner <;> fun_prop
 @[fun_prop]
 lemma inner_contDiff {n : WithTop ℕ∞} {d : ℕ} :
     ContDiff ℝ n (fun y : Space d => ⟪y, y⟫_ℝ) := by
-  apply ContDiff.inner
-  · fun_prop
-  · fun_prop
+  apply ContDiff.inner <;> fun_prop
 
 @[fun_prop]
 lemma inner_apply_contDiff {n : WithTop ℕ∞} {d : ℕ} [NormedAddCommGroup M]
@@ -423,9 +417,7 @@ lemma inner_apply_contDiff {n : WithTop ℕ∞} {d : ℕ} [NormedAddCommGroup M]
     {f : M → Space d} {g : M → Space d}
     (hf : ContDiff ℝ n f) (hg : ContDiff ℝ n g) :
     ContDiff ℝ n (fun y : M => ⟪f y, g y⟫_ℝ) := by
-  apply ContDiff.inner
-  · fun_prop
-  · fun_prop
+  apply ContDiff.inner <;> fun_prop
 /-!
 
 #### A.10.2. Derivative of the inner product function
@@ -448,7 +440,7 @@ lemma deriv_inner_left {d} (x1 x2 : Space d) (i : Fin d) :
     deriv i (fun x => ⟪x, x2⟫_ℝ) x1 = x2 i := by
   rw [deriv_eq_fderiv_basis]
   rw [fderiv_inner_apply]
-  simp only [fderiv_fun_const, Pi.zero_apply, ContinuousLinearMap.zero_apply, inner_zero_right,
+  simp only [fderiv_fun_const, Pi.zero_apply, _root_.zero_apply, inner_zero_right,
     fderiv_fun_id, ContinuousLinearMap.coe_id', id_eq, basis_inner, zero_add]
   · fun_prop
   · fun_prop
@@ -459,7 +451,7 @@ lemma deriv_inner_right {d} (x1 x2 : Space d) (i : Fin d) :
   rw [deriv_eq_fderiv_basis]
   rw [fderiv_inner_apply]
   simp only [fderiv_fun_id, ContinuousLinearMap.coe_id', id_eq, inner_basis, fderiv_fun_const,
-    Pi.ofNat_apply, ContinuousLinearMap.zero_apply, inner_zero_left, add_zero]
+    Pi.ofNat_apply, _root_.zero_apply, inner_zero_left, add_zero]
   · fun_prop
   · fun_prop
 /-!
@@ -503,7 +495,7 @@ noncomputable def distDeriv {M d} [NormedAddCommGroup M] [NormedSpace ℝ M]
     let ev : (Space d →L[ℝ] M) →L[ℝ] M := {
       toFun v := v (basis μ)
       map_add' v1 v2 := by
-        simp only [ContinuousLinearMap.add_apply]
+        simp only [_root_.add_apply]
       map_smul' a v := by
         simp
     }

@@ -8,7 +8,8 @@ public import Physlib.ClassicalMechanics.EulerLagrange
 public import Physlib.ClassicalMechanics.FreeParticle.Basic
 public import Physlib.ClassicalMechanics.HamiltonsEquations
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Basic
-public import Physlib.ClassicalMechanics.HarmonicOscillator.ConfigurationSpace
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Basic
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Trajectory
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution
 public import Physlib.ClassicalMechanics.Lagrangian.TotalDerivativeEquivalence
 public import Physlib.ClassicalMechanics.Mass.MassUnit
@@ -76,6 +77,8 @@ public import Physlib.Mathematics.Calculus.Divergence
 public import Physlib.Mathematics.Calculus.ParametricIntegration
 public import Physlib.Mathematics.Calculus.Wirtinger.Basic
 public import Physlib.Mathematics.Calculus.Wirtinger.Coordinate
+public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.CrossProductMatrix
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
@@ -356,6 +359,7 @@ public import Physlib.Relativity.Tensors.ComponentIdx.Basic
 public import Physlib.Relativity.Tensors.ComponentIdx.Contraction
 public import Physlib.Relativity.Tensors.ComponentIdx.Product
 public import Physlib.Relativity.Tensors.ComponentIdx.Single
+public import Physlib.Relativity.Tensors.Conjugation.Basic
 public import Physlib.Relativity.Tensors.Constructors
 public import Physlib.Relativity.Tensors.Contraction.Basic
 public import Physlib.Relativity.Tensors.Contraction.Basis
@@ -365,6 +369,7 @@ public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
 public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.Relativity.Tensors.Evaluation
+public import Physlib.Relativity.Tensors.LeviCivita.Basic
 public import Physlib.Relativity.Tensors.MetricTensor
 public import Physlib.Relativity.Tensors.OfInt
 public import Physlib.Relativity.Tensors.Product
@@ -389,9 +394,11 @@ public import Physlib.Relativity.Tensors.RealTensor.Vector.Pre.Modules
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Tensorial
 public import Physlib.Relativity.Tensors.RealTensor.Velocity.Basic
+public import Physlib.Relativity.Tensors.Reindexing
 public import Physlib.Relativity.Tensors.TensorSpecies.Basic
 public import Physlib.Relativity.Tensors.Tensorial
 public import Physlib.Relativity.Tensors.UnitTensor
+public import Physlib.SpaceAndTime.GalileanGroup.Basic
 public import Physlib.SpaceAndTime.Space.Basic
 public import Physlib.SpaceAndTime.Space.ConstantSliceDist
 public import Physlib.SpaceAndTime.Space.CrossProduct
@@ -417,6 +424,7 @@ public import Physlib.SpaceAndTime.Space.LengthUnit
 public import Physlib.SpaceAndTime.Space.Module
 public import Physlib.SpaceAndTime.Space.Norm.Basic
 public import Physlib.SpaceAndTime.Space.Norm.IteratedLaplacian
+public import Physlib.SpaceAndTime.Space.Norm.Regularized
 public import Physlib.SpaceAndTime.Space.Origin
 public import Physlib.SpaceAndTime.Space.Slice
 public import Physlib.SpaceAndTime.Space.Translations
@@ -433,6 +441,7 @@ public import Physlib.SpaceAndTime.Time.TimeUnit
 public import Physlib.SpaceAndTime.TimeAndSpace.Basic
 public import Physlib.SpaceAndTime.TimeAndSpace.ConstantTimeDist
 public import Physlib.SpaceAndTime.TimeAndSpace.EuclideanGroup.Action
+public import Physlib.SpaceAndTime.TimeAndSpace.EuclideanGroup.SchwartzAction
 public import Physlib.StatisticalMechanics.BoltzmannConstant
 public import Physlib.StatisticalMechanics.CanonicalEnsemble.Basic
 public import Physlib.StatisticalMechanics.CanonicalEnsemble.Finite

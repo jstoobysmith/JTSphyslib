@@ -319,7 +319,8 @@ lemma integrable_time_space {d : ℕ} {f : Space d → F} (hf : IsDistBounded f)
     intro p hp c η
     suffices h1 : Integrable (fun (x : Time × Space d) =>
         η ((x + (0, c)) - (0, c)) * ‖(x + (0, c)).2‖ ^ p) (volume.prod volume) by
-      simpa using h1
+      simp_all only [add_sub_cancel_right, Prod.snd_add]
+      exact h1
     apply MeasureTheory.Integrable.comp_add_right (g := (0, c))
       (f := fun x => η (x - (0, c)) * ‖x.2‖ ^ p)
     apply h0 p hp (η.compCLM (𝕜 := ℝ) ?_ ?_)
@@ -349,11 +350,14 @@ lemma integrable_time_space {d : ℕ} {f : Space d → F} (hf : IsDistBounded f)
   suffices h1 : Integrable (fun x => ‖η x‖ * ‖x.2‖ ^ (p + (d - 1 : ℕ)))
       (volume.prod (radialAngularMeasure (d := d))) by
     match d with
-    | 0 => simpa using h1
+    | 0 =>
+      simp_all only [zero_tsub, CharP.cast_eq_zero, neg_zero, Real.norm_eq_abs, add_zero,
+        radialAngularMeasure_zero_eq_volume]
+      exact h1
     | d + 1 =>
     rw [radialAngularMeasure, MeasureTheory.prod_withDensity_right] at h1
     erw [integrable_withDensity_iff_integrable_smul₀ (by fun_prop)] at h1
-    convert h1 using 1
+    convert! h1 using 1
     funext x
     simp only [Real.norm_eq_abs, one_div]
     rw [Real.toNNReal_of_nonneg, NNReal.smul_def]
@@ -380,9 +384,7 @@ lemma integrable_time_space {d : ℕ} {f : Space d → F} (hf : IsDistBounded f)
     fun_prop
   filter_upwards with x
   simp only [Real.norm_eq_abs, norm_iteratedFDeriv_zero]
-  rw [mul_comm]
-  rw [← zpow_natCast]
-  rw [abs_of_nonneg (by positivity)]
+  rw [mul_comm, ← zpow_natCast, abs_of_nonneg (by positivity)]
   apply mul_le_mul _ (by rfl) (by positivity) (by positivity)
   rw [zpow_natCast]
   trans ‖x.2‖ ^ ((p + (d - 1 : ℕ)).toNat : ℤ)
@@ -515,9 +517,8 @@ lemma integrable_mul_inv_pow {d : ℕ}
     · simp
       positivity
     trans (2 ^ (q + m - 1) * (‖v‖ ^ (q + m) + 1)) * (1 + ‖x - v‖ ^ (q + m))
-    · ring_nf
-      apply le_of_eq
-      rfl
+    · apply le_of_eq
+      ring
     refine mul_le_mul_of_nonneg (by rfl) ?_ ?_ ?_
     · trans 1 ^ (q + m) + ‖x - v‖ ^ (q + m)
       · simp
@@ -570,7 +571,7 @@ lemma integral_mul_schwartzMap_bounded {d : ℕ} {f : Space d → F} (hf : IsDis
     have h0 := one_add_le_sup_seminorm_apply (𝕜 := ℝ) (m := (r, 0))
       (k := r) (n := 0) le_rfl le_rfl η x
     rw [Lean.Grind.Field.IsOrdered.le_mul_inv_iff_mul_le _ _ (by positivity)]
-    convert h0 using 1
+    convert! h0 using 1
     simp only [norm_iteratedFDeriv_zero, Real.norm_eq_abs]
     ring_nf
     congr
@@ -695,14 +696,12 @@ lemma neg {d : ℕ} [NormedSpace ℝ F] {f : Space d → F}
 
 @[fun_prop]
 lemma const_fun_smul {d : ℕ} [NormedSpace ℝ F] {f : Space d → F}
-    (hf : IsDistBounded f) (c : ℝ) : IsDistBounded (fun x => c • f x) := by
-  convert hf.const_smul c using 1
+    (hf : IsDistBounded f) (c : ℝ) : IsDistBounded (fun x => c • f x) := hf.const_smul c
 
 @[fun_prop]
 lemma const_mul_fun {d : ℕ}
     {f : Space d → ℝ}
-    (hf : IsDistBounded f) (c : ℝ) : IsDistBounded (fun x => c * f x) := by
-  convert hf.const_smul c using 1
+    (hf : IsDistBounded f) (c : ℝ) : IsDistBounded (fun x => c * f x) := hf.const_smul c
 
 @[fun_prop]
 lemma mul_const_fun {d : ℕ}
@@ -774,8 +773,7 @@ lemma comp_add_right {d : ℕ} {f : Space d → F}
 
 lemma comp_sub_right {d : ℕ} {f : Space d → F}
     (hf : IsDistBounded f) (c : Space d) :
-    IsDistBounded (fun x => f (x - c)) := by
-  convert hf.comp_add_right (- c) using 1
+    IsDistBounded (fun x => f (x - c)) := hf.comp_add_right (- c)
 
 /-!
 
@@ -1183,8 +1181,7 @@ lemma norm_smul_isDistBounded {d : ℕ} [NormedSpace ℝ F] {f : Space d → F}
 @[fun_prop]
 lemma norm_mul_isDistBounded {d : ℕ} {f : Space d → ℝ}
     (hf : IsDistBounded f) :
-    IsDistBounded (fun x => ‖x‖ * f x) := by
-  convert hf.norm_smul_isDistBounded using 1
+    IsDistBounded (fun x => ‖x‖ * f x) := hf.norm_smul_isDistBounded
 
 @[fun_prop]
 lemma component_smul_isDistBounded {d : ℕ} [NormedSpace ℝ F] {f : Space d → F}
@@ -1207,8 +1204,7 @@ lemma component_smul_isDistBounded {d : ℕ} [NormedSpace ℝ F] {f : Space d �
 @[fun_prop]
 lemma component_mul_isDistBounded {d : ℕ} {f : Space d → ℝ}
     (hf : IsDistBounded f) (i : Fin d) :
-    IsDistBounded (fun x => x i * f x) := by
-  convert hf.component_smul_isDistBounded i using 2
+    IsDistBounded (fun x => x i * f x) := hf.component_smul_isDistBounded i
 
 @[fun_prop]
 lemma isDistBounded_smul_self {d : ℕ} {f : Space d → ℝ}
@@ -1269,19 +1265,18 @@ lemma isDistBounded_smul_inner_of_smul_norm {d : ℕ} [NormedSpace ℝ F] {f : S
 
 @[fun_prop]
 lemma isDistBounded_mul_inner {d : ℕ} {f : Space d → ℝ}
-    (hf : IsDistBounded f) (y : Space d) : IsDistBounded (fun x => ⟪y, x⟫_ℝ * f x) := by
-  convert hf.isDistBounded_smul_inner y using 2
+    (hf : IsDistBounded f) (y : Space d) : IsDistBounded (fun x => ⟪y, x⟫_ℝ * f x) :=
+  hf.isDistBounded_smul_inner y
 
 lemma isDistBounded_mul_inner' {d : ℕ} {f : Space d → ℝ}
     (hf : IsDistBounded f) (y : Space d) : IsDistBounded (fun x => ⟪x, y⟫_ℝ * f x) := by
-  convert hf.isDistBounded_smul_inner y using 2
+  convert! hf.isDistBounded_smul_inner y using 2
   rw [real_inner_comm]
   simp
 
 lemma isDistBounded_mul_inner_of_smul_norm {d : ℕ} {f : Space d → ℝ}
     (hf : IsDistBounded (fun x => ‖x‖ * f x)) (hae : AEStronglyMeasurable f) (y : Space d) :
-    IsDistBounded (fun x => ⟪y, x⟫_ℝ * f x) := by
-  convert hf.isDistBounded_smul_inner_of_smul_norm hae y using 2
+    IsDistBounded (fun x => ⟪y, x⟫_ℝ * f x) := hf.isDistBounded_smul_inner_of_smul_norm hae y
 
 @[fun_prop]
 lemma mul_inner_pow_neg_two {d : ℕ} (y : Space d) (hd : 2 ≤ d := by omega) :
