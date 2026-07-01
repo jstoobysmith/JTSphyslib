@@ -8,6 +8,7 @@ module
 public import Physlib.Relativity.Tensors.Contraction.Basic
 public import Physlib.Relativity.Tensors.Evaluation
 public import Physlib.Relativity.Tensors.Tensorial
+public import Physlib.Relativity.Tensors.Dual
 /-!
 
 # Elaboration of tensor expressions
@@ -74,17 +75,30 @@ syntax ident : indexExpr
 /-- An index can be a num, which will be used to evaluate the tensor. -/
 syntax num : indexExpr
 
-/-- Notation to describe the jiggle of a tensor index. -/
-syntax "τ(" ident ")" : indexExpr
 
 /-- Notation to describe the evaluation of a tensor index. -/
 syntax "[" ident "]" : indexExpr
+
+/-- Notation to describe the jiggle of a tensor index. -/
+syntax "τ(" ident ")" : indexExpr
 
 /-- Bool which is true if an index is a num. -/
 def indexExprIsNum (stx : Syntax) : Bool :=
   match stx with
   | `(indexExpr|$_:num) => true
   | _ => false
+
+def indexExprIsJiggle (stx : Syntax) : Bool :=
+  match stx with
+  | `(indexExpr|τ($_)) => true
+  | _ => false
+
+/-- Removes a `τ(⬝)` wrapper from an index, leaving any other index unchanged. Pure, so it can be
+  used to compare indices up to `τ` (e.g. when counting contractions in `withoutContrEval`). -/
+def indexRemoveTau (stx : TSyntax `indexExpr) : TSyntax `indexExpr := Unhygienic.run do
+  match stx with
+  | `(indexExpr| τ($a:ident)) => `(indexExpr| $a:ident)
+  | _ => return stx
 
 /-- Bool which is true if an index is evaluated bracket `[μ]`. -/
 def indexExprIsBracketEval(stx : Syntax) : Bool :=
@@ -133,6 +147,8 @@ def indexToDual (stx : Syntax) : Bool :=
 
 -/
 
+
+
 /-- Adjusts a list `List ℕ` by subtracting from each natural number the number
   of elements before it in the list which are less than itself. This is used
   to form a list of pairs which can be used for evaluating indices. -/
@@ -142,6 +158,23 @@ def evalAdjustPos (l : List ℕ) : List ℕ :=
       let e := prev.countP (fun y => y < x)
       (x :: prev, x - e)) l.reverse []
   l'.2.reverse
+
+
+/-- Returns the positions of indices which are "jiggled", i.e., of the form `τ(μ)`,
+  these are the indicies which are to be raised or lowered. -/
+def getJigglePos (ind : List (TSyntax `indexExpr)) : TermElabM (List ℕ) := do
+  let indEnum := ind.zipIdx
+  let evals := indEnum.filter (fun x => indexExprIsJiggle x.1)
+  let pos := (evals.map (fun x => x.2))
+  return pos
+
+/-- info: [3, 4] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  let inds : List (TSyntax `indexExpr) := [← `(indexExpr| α), ← `(indexExpr| β),
+    ← `(indexExpr| 2), ← `(indexExpr| τ(β)), ← `(indexExpr| τ(γ)), ← `(indexExpr| γ)]
+  logInfo m!"{← getJigglePos inds}"
+
 
 /-- For list of `indexExpr` e.g. `[α, 3, β, 2, γ]`, `getEvalPos`
   returns a list of pairs `ℕ × ℕ` related to indices which are numbers.
@@ -185,10 +218,31 @@ def getContrPos (ind : List (TSyntax `indexExpr)) : TermElabM (List (ℕ × ℕ)
     throwError "To many contractions"
   return filt
 
+/-- info: [(1, 2), (3, 4)] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  let inds : List (TSyntax `indexExpr) := [← `(indexExpr| α), ← `(indexExpr| β),
+    ← `(indexExpr| 2), ← `(indexExpr| β), ← `(indexExpr| τ(γ)), ← `(indexExpr| γ)]
+  logInfo m!"{← getContrPos inds}"
+
 /-- The list of indices after contraction or evaluation. -/
 def withoutContrEval (ind : List (TSyntax `indexExpr)) : TermElabM (List (TSyntax `indexExpr)) := do
+  -- Removing the evaulated indices.
   let indFilt : List (TSyntax `indexExpr) := ind.filter (fun x => ¬ indexExprIsNum x)
-  return indFilt.filter (fun x => indFilt.count x ≤ 1)
+  -- Removing the contracted indices: an index is contracted when its name, ignoring any `τ`,
+  -- appears more than once.
+  let indFilt := indFilt.filter (fun x => (indFilt.map indexRemoveTau).count (indexRemoveTau x) ≤ 1)
+  return indFilt
+
+-- `β` is contracted (appears twice), and `τ(γ)`/`γ` contract with each other (same name up to
+-- `τ`), so only the free index `α` remains.
+/-- info: [α✝] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  let inds : List (TSyntax `indexExpr) := [← `(indexExpr| α), ← `(indexExpr| β),
+    ← `(indexExpr| 2), ← `(indexExpr| β), ← `(indexExpr| τ(γ)), ← `(indexExpr| γ)]
+  logInfo m!"{← withoutContrEval inds}"
+
 
 /-- Takes a list and puts consecutive elements into pairs.
   e.g. [0, 1, 2, 3] becomes [(0, 1), (2, 3)]. -/
@@ -291,7 +345,7 @@ def getNumIndicesExact (stx : Syntax) : TermElabM ℕ := do
     |_ => throwError s!"Could not extract number of indices from tensor
       {stx} (getNoIndicesExact). "
 
-/-- For syntax of the form `T | α β 2 β`, `getAllIndices` returns a list `[α, β, 2, β]`
+/-- For syntax of the form `T | α β 2 β `, `getAllIndices` returns a list `[α, β, 2, β]`
   of all `indexExpr`. -/
 def getAllIndices (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
   match stx with
@@ -303,24 +357,51 @@ def getAllIndices (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
   | _ =>
     throwError "Unsupported tensor expression syntax in getIndicesNode: {stx}"
 
-/-- The function `getProdIndices` is defined for the following syntax:
+-- Tests
+
+/-- info: [α✝, β✝, 2, β✝] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  logInfo m!"{← getAllIndices (← `(tensorExpr| T | α β 2 β))}"
+
+/-- info: [α✝, β✝, 2, β✝, τ(γ✝)] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  logInfo m!"{← getAllIndices (← `(tensorExpr| T | α β 2 β τ(γ)))}"
+
+/-- The function `indicesAfterProduct` is defined for the following syntax:
 1. For e.g. `T | α β 2 β`, it returns all uncontracted and unevaluated indices e.g.`[α]`
 2. For e.g. `T1 | α β 2 β ⊗ T2 | α γ δ δ` it returns all unevaluated indices which
     are not contracted in either tensor e.g. `[α, α, γ]`.
 3. For e.g. `(T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ` it does `2` recursively e.g. `[γ, γ]`
 -/
-partial def getProdIndices (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
+partial def indicesAfterProduct (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
   match stx with
   | `(tensorExpr| $_:term | $[$args]*) => do
       return (← withoutContrEval (← getAllIndices stx))
   | `(tensorExpr| $a:tensorExpr ⊗ $b:tensorExpr) => do
-      let indicesA ← withoutContrEval (← getProdIndices a)
-      let indicesB ← withoutContrEval (← getProdIndices b)
+      let indicesA ← withoutContrEval (← indicesAfterProduct a)
+      let indicesB ← withoutContrEval (← indicesAfterProduct b)
       return indicesA ++ indicesB
   | `(tensorExpr| ($a:tensorExpr)) => do
-      return (← getProdIndices a)
+      return (← indicesAfterProduct a)
   | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesProd: {stx}"
+    throwError "Unsupported tensor expression syntax in indicesAfterProduct: {stx}"
+
+/-- info: [γ✝, γ✝] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| (T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ))}"
+
+/-- info: [γ✝, γ✝, τ(κ✝)] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| (T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ τ(κ)))}"
+
+/-- info: [α✝, γ✝] -/
+#guard_msgs in
+#eval show TermElabM _ from do
+  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| T1 | α β 2 β  ⊗ T3 | γ κ τ(κ)))}"
 
 /-- Returns the remaining indices of a tensor expression after contraction and evaluation.
   Thus every index in the output of `getIndicesFull` is ident and there are no duplicates.
@@ -335,7 +416,7 @@ partial def getIndicesFull (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)
   | `(tensorExpr| $_:term | $[$args]*) => do
       return (← withoutContrEval (← getAllIndices stx))
   | `(tensorExpr| $_:tensorExpr ⊗ $_:tensorExpr) => do
-      return (← withoutContrEval (← getProdIndices stx))
+      return (← withoutContrEval (← indicesAfterProduct stx))
   | `(tensorExpr| ($a:tensorExpr)) => do
       return (← getIndicesFull a)
   | `(tensorExpr| -$a:tensorExpr) => do
@@ -390,6 +471,12 @@ open TensorSpecies
   `tensorTermToTensorTree` returns the term corresponding to the `tensorNode T` -/
 def nodeTermMap (T : Term) : Term :=
   Syntax.mkApp (mkIdent ``Tensorial.toTensor) #[T]
+
+/-- Given a list `l` of positions `ℕ`, and a term `T`, this raises or lowers the indices at
+  the specified positions. -/
+def jiggleTermMap (l : List ℕ) (T : Term) : Term :=
+  l.foldl (fun T' x => Syntax.mkApp (mkIdent ``Tensor.toDualAtIndex)
+    #[Syntax.mkNumLit (toString x), T']) T
 
 /-- Given a list `l` of pairs `ℕ × ℕ` and a term `T` corresponding to a tensor tree,
   for each `(a, b)` in `l`, `evalSyntax` applies `TensorTree.eval a b` to `T` recursively.
@@ -494,20 +581,26 @@ def equalTermMap (lPerm : List ℕ) (T1 T2 : Term) : TermElabM Term := do
   term corresponding to a tensor tree. -/
 partial def syntaxFull (stx : Syntax) : TermElabM Term := do
   match stx with
+  -- The raw underlying expression.
   | `(tensorExpr| $T:term | $[$args]*) =>
       let indices ← getAllIndices stx
       let rawIndex ← getNumIndicesExact T
       if indices.length ≠ rawIndex then
         throwError "The expected number of indices {rawIndex} does not match the tensor {T}."
+      -- The raw tensor
       let tensorNodeSyntax := nodeTermMap T
-      let evalSyntax := evalTermMap (← getEvalPos indices) tensorNodeSyntax
+      -- jiggling indices
+      let jiggleSyntax := jiggleTermMap (← getJigglePos indices) tensorNodeSyntax
+      -- evaluating indices
+      let evalSyntax := evalTermMap (← getEvalPos indices) jiggleSyntax
       let evalBracketSyntax := evalTermBracketMap (← getEvalBracketPos indices) evalSyntax
+      -- contracting indices
       let contrSyntax := contrTermMap indices.length (← getContrPos indices) evalBracketSyntax
       return contrSyntax
   | `(tensorExpr| $a:tensorExpr ⊗ $b:tensorExpr) => do
       let prodSyntax := prodTermMap (← syntaxFull a) (← syntaxFull b)
-      let contrSyntax := contrTermMap (← getProdIndices stx).length
-        (← getContrPos (← getProdIndices stx)) prodSyntax
+      let contrSyntax := contrTermMap (← indicesAfterProduct stx).length
+        (← getContrPos (← indicesAfterProduct stx)) prodSyntax
       return contrSyntax
   | `(tensorExpr| ($a:tensorExpr)) => do
       return (← syntaxFull a)
@@ -648,6 +741,28 @@ info: (contrT 0 0 1 ⋯) ((contrT 2 1 3 ⋯) ((prodT u) td)) :
 /-- info: u = (permT ![1, 0] ⋯) u' : Prop -/
 #guard_msgs in
 #check ({u | α β = u' | β α}ᵀ : Prop)
+
+variable {k : Type} [RCLike k] {C : Type} [DecidableEq C]  {G : Type} [Group G]
+    {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
+    {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
+    {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Module.Basis (basisIdx c) k (V c)}
+    {S : TensorSpecies k C G V basisIdx rep b}
+    {c : Fin 2 → C} {t t' : S.Tensor c} (a : k) (g : G) (y : basisIdx (c 0))
+    {c1 c2 c3 : C} {u : S.Tensor ![c1, c2]} {u' : S.Tensor ![c2, c1]}
+    {w : S.Tensor ![c3]} {td : S.Tensor ![S.τ c1, S.τ c2]}
+    {M : Type} [AddCommMonoid M] [Module k M] [Tensorial S c M] (m : M)
+
+/-- info: (toDualAtIndex 0) u :
+  S.Tensor (Function.update ![c1, c2] 0 (S.τ (![c1, c2] 0))) -/
+#guard_msgs (whitespace := lax) in
+#check {u | τ(α) β}ᵀ
+
+/-- info: (contrT 2 1 3 ⋯)
+  ((prodT u) ((toDualAtIndex 1) u)) :
+    S.Tensor (Fin.append ![c1, c2]
+      (Function.update ![c1, c2] 1 (S.τ (![c1, c2] 1))) ∘ Fin.succSuccAbove 1 3) -/
+#guard_msgs (whitespace := lax) in
+#check {u | γ β ⊗ u | α τ(β)}ᵀ
 
 end Tests
 
