@@ -10,6 +10,7 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Algebra.MvPolynomial.Funext
 public import Mathlib.Algebra.MvPolynomial.Monad
 public import Mathlib.RingTheory.MvPolynomial.Tower
+public import Mathlib.Algebra.MvPolynomial.Division
 public import Mathlib.Analysis.Real.Pi.Irrational
 public import PhyslibAlpha.«2HDM».Determinant
 public import PhyslibAlpha.«2HDM».OrbitRepresentative
@@ -874,24 +875,173 @@ representative family — see `exists_polynomial_on_repHiggs`.
 
 -/
 
-/-- **The two Higgs doublet model first fundamental theorem (representative form).**
+/-! **The two Higgs doublet model first fundamental theorem (representative form).**
 
-This is the irreducible invariant–theoretic core of the theorem: a gauge invariant polynomial
-potential, restricted to the polynomial family of orbit representatives `repHiggs X`, is a
-polynomial in the Gram components of that family.
+`exists_polynomial_on_repHiggs` is the irreducible invariant–theoretic core: a gauge invariant
+polynomial potential, restricted to the polynomial family of orbit representatives `repHiggs X`, is
+a polynomial in the Gram components of that family. It is the non-abelian `SU(2)` first fundamental
+theorem specialised to two doublets in `ℂ²`, proved here by the *doublet-swap* argument: clearing
+the `‖Φ1‖²` denominator (aligning `Φ1`) and the `‖Φ2‖²` denominator (aligning `Φ2`, via the
+gauge-commuting swap), then using that `‖Φ1‖²` and `‖Φ2‖²` are coprime in the Gram ring. -/
 
-This statement is square-root free (in contrast to the normalised representatives, whose
-coordinates contain `√‖Φ1‖²`). It cannot follow from the parities of `V ∘ repHiggs` alone — e.g.
-`X₁²` is parity invariant yet is `(Re ⟪Φ1,Φ2⟫)²/‖Φ1‖²`, which is not polynomial; it is excluded
-precisely because it does not extend to a *global* polynomial invariant. The content is therefore
-the non-abelian `SU(2)` first fundamental theorem specialised to two doublets in `ℂ²`, established
-by the unipotent (shear group) reduction together with the Lagrange identity `norm_doubletDet_sq`
-which folds the `SU(2)` determinant invariant back into the Gram data. -/
+open MvPolynomial in
+/-- The four Gram generators are algebraically independent: the Gram substitution is injective. -/
+lemma gramP_injective :
+    Function.Injective (aeval gramP : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ → MvPolynomial (Fin 4) ℝ) := by
+  rw [injective_iff_map_eq_zero]
+  intro P hP
+  -- `P` vanishes on every Gram vector of a representative.
+  have hvanish : ∀ y : Fin 4 → ℝ, P.eval ((repHiggs y).gramVector) = 0 := by
+    intro y
+    have h := congrArg (eval y) hP
+    rw [eval_aeval_comp, map_zero] at h
+    rwa [show (fun μ => eval y (gramP μ)) = (repHiggs y).gramVector from funext (gramP_eval y)] at h
+  -- The Gram cone contains an infinite box; `P` vanishes there, hence `P = 0`.
+  refine MvPolynomial.funext_set
+    (fun μ => Sum.elim (fun _ => Set.Ioi (2 : ℝ)) (fun _ => Set.Ioo (-1 : ℝ) 1) μ) ?_ ?_
+  · intro μ
+    rcases μ with _ | i
+    · exact Set.Ioi_infinite _
+    · exact Set.Ioo_infinite (by norm_num)
+  · intro x hx
+    rw [Set.mem_univ_pi] at hx
+    have hxl : (2 : ℝ) < x (Sum.inl 0) := hx (Sum.inl 0)
+    have hx0 : x (Sum.inr 0) ∈ Set.Ioo (-1 : ℝ) 1 := hx (Sum.inr 0)
+    have hx1 : x (Sum.inr 1) ∈ Set.Ioo (-1 : ℝ) 1 := hx (Sum.inr 1)
+    have hx2 : x (Sum.inr 2) ∈ Set.Ioo (-1 : ℝ) 1 := hx (Sum.inr 2)
+    have hdpos : 0 < (x (Sum.inl 0) + x (Sum.inr 2)) / 2 := by have := hx2.1; linarith
+    set y0 : ℝ := Real.sqrt ((x (Sum.inl 0) + x (Sum.inr 2)) / 2) with hy0def
+    have hy0pos : 0 < y0 := Real.sqrt_pos.mpr hdpos
+    have hy0sq : y0 ^ 2 = (x (Sum.inl 0) + x (Sum.inr 2)) / 2 :=
+      Real.sq_sqrt hdpos.le
+    set y1 : ℝ := x (Sum.inr 0) / (2 * y0) with hy1def
+    set y2 : ℝ := x (Sum.inr 1) / (2 * y0) with hy2def
+    -- the perpendicular component squared is nonnegative (PSD condition on the box)
+    have hbound : x (Sum.inr 0) ^ 2 + x (Sum.inr 1) ^ 2
+        ≤ x (Sum.inl 0) ^ 2 - x (Sum.inr 2) ^ 2 := by
+      nlinarith [hx0.1, hx0.2, hx1.1, hx1.2, hx2.1, hx2.2, hxl]
+    have h2y0sq : (2 * y0) ^ 2 = 2 * (x (Sum.inl 0) + x (Sum.inr 2)) := by
+      rw [mul_pow, hy0sq]; ring
+    have hsumpos : 0 < x (Sum.inl 0) + x (Sum.inr 2) := by linarith [hx2.1]
+    have hkey : 2 * (x (Sum.inl 0) + x (Sum.inr 2)) * (y1 ^ 2 + y2 ^ 2)
+        = x (Sum.inr 0) ^ 2 + x (Sum.inr 1) ^ 2 := by
+      rw [hy1def, hy2def, div_pow, div_pow, ← h2y0sq]
+      field_simp
+    have hy3arg : 0 ≤ (x (Sum.inl 0) - x (Sum.inr 2)) / 2 - y1 ^ 2 - y2 ^ 2 := by
+      nlinarith [hkey, hbound, hsumpos]
+    set y3 : ℝ := Real.sqrt ((x (Sum.inl 0) - x (Sum.inr 2)) / 2 - y1 ^ 2 - y2 ^ 2) with hy3def
+    have hy3sq : y3 ^ 2 = (x (Sum.inl 0) - x (Sum.inr 2)) / 2 - y1 ^ 2 - y2 ^ 2 :=
+      Real.sq_sqrt hy3arg
+    have hgram : (repHiggs ![y0, y1, y2, y3]).gramVector = x := by
+      funext μ
+      match μ with
+      | Sum.inl 0 =>
+        rw [gramVector_repHiggs_inl]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
+          Fin.isValue]
+        rw [hy0sq, hy3sq]; ring
+      | Sum.inr 0 =>
+        rw [gramVector_repHiggs_inr0]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+        rw [hy1def]; field_simp
+      | Sum.inr 1 =>
+        rw [gramVector_repHiggs_inr1]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
+          Fin.isValue]
+        rw [hy2def]; field_simp
+      | Sum.inr 2 =>
+        rw [gramVector_repHiggs_inr2]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val,
+          Fin.isValue]
+        rw [hy0sq, hy3sq]; ring
+    rw [map_zero, ← hgram]
+    exact hvanish ![y0, y1, y2, y3]
+
+open MvPolynomial in
+/-- `‖Φ1‖²` and `‖Φ2‖²`, as the distinct linear forms `(g₀±g₃)/2` of the Gram ring, are coprime:
+  if `‖Φ1‖²ᴺ · B = ‖Φ2‖²ᴹ · A` then `‖Φ1‖²ᴺ ∣ A`. -/
+lemma uPow_dvd {N M : ℕ} {A B : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ}
+    (hAB : (C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2))) ^ N * B
+       = (C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2))) ^ M * A) :
+    (C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2))) ^ N ∣ A := by
+  -- `X (inl 0)` does not divide `X (inr 2)` (distinct variables).
+  have hnd : ¬ ((X (Sum.inl 0) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) ∣ X (Sum.inr 2)) := by
+    rintro ⟨q, hq⟩
+    have h0 := congrArg (eval (fun μ => if μ = Sum.inr 2 then (1 : ℝ) else 0)) hq
+    simp [eval_mul, eval_X] at h0
+  -- hence `X (inl 0)` and `X (inr 2)` are relatively prime.
+  have hrelXX : IsRelPrime (X (Sum.inl 0) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) (X (Sum.inr 2)) := by
+    intro d hd1 hd2
+    obtain ⟨c, hc⟩ := hd1
+    rcases (MvPolynomial.X_prime).irreducible.isUnit_or_isUnit hc with h | h
+    · exact h
+    · exfalso
+      apply hnd
+      obtain ⟨e, he⟩ := hd2
+      exact ⟨(↑h.unit⁻¹ : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) * e, by
+        rw [he, ← mul_assoc]
+        congr 1
+        rw [hc, mul_assoc, IsUnit.mul_val_inv, mul_one]⟩
+  -- `u` and `w` are relatively prime: any common divisor divides `u ± w = X inl0, X inr2`.
+  have hsum : (X (Sum.inl 0) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)
+      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) + C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) := by
+    apply MvPolynomial.funext; intro y
+    simp only [eval_add, eval_mul, eval_sub, eval_C, eval_X]; ring
+  have hdiff : (X (Sum.inr 2) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)
+      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) - C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) := by
+    apply MvPolynomial.funext; intro y
+    simp only [eval_add, eval_mul, eval_sub, eval_C, eval_X]; ring
+  have hrel : IsRelPrime (C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)))
+      (C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ) := by
+    intro d hdu hdw
+    exact hrelXX (hsum ▸ dvd_add hdu hdw) (hdiff ▸ dvd_sub hdu hdw)
+  exact (hrel.pow).dvd_of_dvd_mul_left (hAB ▸ Dvd.intro B rfl)
+
+open MvPolynomial in
 lemma exists_polynomial_on_repHiggs {V : EffectivePotential} {n : ℕ}
     (hI : IsInvariant V) (h : HasMaxMassDimLE V n) :
     ∃ p : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ,
       ∀ X : Fin 4 → ℝ, V (repHiggs X) = p.eval (repHiggs X).gramVector := by
-  sorry
+  obtain ⟨p5, hp5⟩ := exists_polynomial_repHiggs_realGen hI h
+  obtain ⟨A, N, hA'⟩ := exists_clearing_all hI h
+  obtain ⟨B, M, hB'⟩ := exists_clearing_all_snd hI h
+  set F : MvPolynomial (Fin 4) ℝ := aeval realGenP p5 with hF_def
+  have hFeval : ∀ x : Fin 4 → ℝ, F.eval x = V (repHiggs x) := by
+    intro x; rw [hF_def, eval_aeval_comp]; simp only [realGenP_eval]; exact (hp5 x).symm
+  have hgramfun : ∀ x : Fin 4 → ℝ,
+      (fun μ => eval x (gramP μ)) = (repHiggs x).gramVector := fun x => funext (gramP_eval x)
+  have hu : aeval gramP ((C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) :
+      MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)) = X 0 ^ 2 := by
+    apply MvPolynomial.funext; intro x
+    rw [eval_aeval_comp, hgramfun, eval_mul, eval_C, eval_add, eval_X, eval_X,
+      gramVector_repHiggs_inl, gramVector_repHiggs_inr2, eval_pow, eval_X]; ring
+  have hw : aeval gramP ((C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) :
+      MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)) = X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2 := by
+    apply MvPolynomial.funext; intro x
+    rw [eval_aeval_comp, hgramfun, eval_mul, eval_C, eval_sub, eval_X, eval_X,
+      gramVector_repHiggs_inl, gramVector_repHiggs_inr2]
+    simp only [eval_add, eval_pow, eval_X]; ring
+  have hIp : aeval gramP A = (X 0 ^ 2) ^ N * F := by
+    apply MvPolynomial.funext; intro x
+    rw [eval_aeval_comp, hgramfun, ← hA' (repHiggs x), normSq_repHiggs_Φ1]
+    simp only [eval_mul, eval_pow, eval_X, hFeval]
+  have hIIp : aeval gramP B = (X 1 ^ 2 + X 2 ^ 2 + X 3 ^ 2) ^ M * F := by
+    apply MvPolynomial.funext; intro x
+    rw [eval_aeval_comp, hgramfun, ← hB' (repHiggs x), normSq_repHiggs_Φ2]
+    simp only [eval_mul, eval_pow, eval_add, eval_X, hFeval]
+  have hcross : (C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2))) ^ N * B
+      = (C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2))) ^ M * A := by
+    apply gramP_injective
+    rw [map_mul, map_mul, map_pow, map_pow, hu, hw, hIp, hIIp]; ring
+  obtain ⟨C0, hC0⟩ := uPow_dvd hcross
+  refine ⟨C0, fun X => ?_⟩
+  have key : (MvPolynomial.X 0 ^ 2) ^ N * F = (MvPolynomial.X 0 ^ 2) ^ N * aeval gramP C0 := by
+    rw [← hIp, hC0, map_mul, map_pow, hu]
+  have hFC : F = aeval gramP C0 := by
+    have hne : ((MvPolynomial.X 0 : MvPolynomial (Fin 4) ℝ) ^ 2) ^ N ≠ 0 :=
+      pow_ne_zero _ (pow_ne_zero _ (MvPolynomial.X_ne_zero 0))
+    exact mul_left_cancel₀ hne key
+  rw [← hFeval X, hFC, eval_aeval_comp, hgramfun]
 
 /-- An invariant effective potential with maximum mass dimension n can be written as a
   polynomial in the entries of the Gram vector. -/
