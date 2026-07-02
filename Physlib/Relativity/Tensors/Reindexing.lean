@@ -472,7 +472,9 @@ lemma fin_cast_isReindexing (n n1 : ℕ) {c : Fin n → C} (h : n1 = n) :
   · exact Equiv.bijective (finCongr h)
   · intro i
     rfl
-
+/-- Contracting the `i`-th index of a tensor with the first index of an appended metric tensor 
+  is, up to a cycle permutation, a reindexing to the color list where the `i`-th index is 
+  replaced by its dual. -/
 lemma contr_two_rotate  {c : Fin n → C}  (i : Fin n) : IsReindexing
     ((Fin.append c ![S.τ (c i), S.τ (c i)] ∘
       (Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i)))
