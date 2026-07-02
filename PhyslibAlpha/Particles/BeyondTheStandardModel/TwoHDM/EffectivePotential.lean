@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.Module
 public import Mathlib.RingTheory.MvPolynomial.Tower
 /-!
 # The effective potential of the two Higgs doublet model

@@ -5,8 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import PhyslibAlpha.«2HDM».GaugeTorus
-public import PhyslibAlpha.«2HDM».OrbitRepresentative
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.Module
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.GaugeTorus
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.OrbitRepresentative
 /-!
 # The gauge slice and the hypercharges of the doublet components
 
@@ -51,11 +52,13 @@ def sliceR : (Fin 6 → ℝ) →ₗ[ℝ] TwoHiggsDoublet where
     (↑(a 4) + Complex.I * ↑(a 5))
   map_add' a b := by
     apply ext_of_fst_snd
-    · ext i; fin_cases i <;> simp [sliceHiggs] <;> ring
+    · ext i; fin_cases i <;> simp [sliceHiggs]
+      ring
     · ext i; fin_cases i <;> simp [sliceHiggs] <;> ring
   map_smul' c a := by
     apply ext_of_fst_snd
-    · ext i; fin_cases i <;> simp [sliceHiggs, Complex.real_smul] <;> ring
+    · ext i; fin_cases i <;> simp [sliceHiggs, Complex.real_smul]
+      ring
     · ext i; fin_cases i <;> simp [sliceHiggs, Complex.real_smul] <;> ring
 
 @[simp] lemma sliceR_apply (a : Fin 6 → ℝ) :
@@ -121,7 +124,8 @@ lemma ofU1Subgroup_smul_sliceR (c : unitary ℂ) (a : Fin 6 → ℝ) :
   have h : ∀ z : ℂ, (↑z.re + Complex.I * ↑z.im) = z := fun z => by
     rw [mul_comm]; exact Complex.re_add_im z
   rw [sliceR_apply, ofU1Subgroup_smul_sliceHiggs, sliceR_apply]
-  congr 1 <;> simp only [resRotParam, Matrix.cons_val_zero, Matrix.cons_val_one,
-    Matrix.cons_val, Fin.isValue] <;> first | rfl | rw [h]
+  congr 1
+  simp only [resRotParam, Matrix.cons_val, Fin.isValue]
+  first | rfl | rw [h]
 
 end TwoHiggsDoublet

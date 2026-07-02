@@ -5,11 +5,11 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import PhyslibAlpha.«2HDM».EffectivePotential
-public import PhyslibAlpha.«2HDM».SwapDoublet
-public import PhyslibAlpha.«2HDM».GaugeSlice
-public import PhyslibAlpha.«2HDM».OrbitRepresentative
-public import PhyslibAlpha.«2HDM».ChargeBalance
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.EffectivePotential
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.SwapDoublet
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.GaugeSlice
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.OrbitRepresentative
+public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.ChargeBalance
 public import Mathlib.Algebra.MvPolynomial.Funext
 public import Mathlib.Algebra.MvPolynomial.Monad
 public import Mathlib.Algebra.MvPolynomial.Division

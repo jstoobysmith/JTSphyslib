@@ -81,19 +81,19 @@ end IsInvariant
 /-- The proposition that the potential `V` has a maximum mass dimension
   less then or equal to `n` - also implying it is a polynomial. -/
 def HasMaxMassDimLE (V : EffectivePotential) (n : ℕ) : Prop :=
-  ∃ p : MvPolynomial (Module.Dual ℝ HiggsVec) ℝ, (∀ φ : HiggsVec, V φ = p.eval (fun ι => ι φ)) ∧
+  ∃ p : MvPolynomial (Fin 4) ℝ, (∀ φ : HiggsVec, V φ = p.eval φ.toRealScalars) ∧
     p.totalDegree ≤ n
 
 /-- The polynomial associated to a potential `V` with a maximum mass dimension
   less than or equal to `n`. -/
 def polynomial (V : EffectivePotential) {n : ℕ} (h : HasMaxMassDimLE V n) :
-    MvPolynomial (Module.Dual ℝ HiggsVec) ℝ := Classical.choose h
+    MvPolynomial (Fin 4) ℝ := Classical.choose h
 
 lemma polynomial_totalDegree {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) :
     (polynomial V h).totalDegree ≤ n := (Classical.choose_spec h).2
 
 lemma apply_eq_polynomial {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n)
-    (φ : HiggsVec) : V φ = (polynomial V h).eval (fun ι => ι φ) := (Classical.choose_spec h).1 φ
+    (φ : HiggsVec) : V φ = (polynomial V h).eval φ.toRealScalars := (Classical.choose_spec h).1 φ
 
 /-!
 
@@ -103,7 +103,7 @@ lemma apply_eq_polynomial {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimL
 
 /-- The part of a potential at a given mass-dimension. -/
 def termOfMassDim (V : EffectivePotential) {n : ℕ} (h : HasMaxMassDimLE V n) (m : ℕ) :
-    HiggsVec → ℝ := fun φ => ((polynomial V h).homogeneousComponent m).eval (fun ι => ι φ)
+    HiggsVec → ℝ := fun φ => ((polynomial V h).homogeneousComponent m).eval φ.toRealScalars
 
 lemma termOfMassDim_eq_zero_of_max_lt {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n)
     {m : ℕ} (hm : n < m) (φ : HiggsVec) :
@@ -112,7 +112,7 @@ lemma termOfMassDim_eq_zero_of_max_lt {V : EffectivePotential} {n : ℕ} (h : Ha
   rw [MvPolynomial.homogeneousComponent_eq_zero]
   simp only [map_zero]
   have h1 := polynomial_totalDegree h
-  omega
+  grind
 
 lemma termOfMassDim_homogeneity {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) (m : ℕ)
     (φ : HiggsVec) (t : ℝ) : termOfMassDim V h m (t • φ) = t ^ m * termOfMassDim V h m φ := by
