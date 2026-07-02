@@ -370,97 +370,6 @@ def getAllIndices (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
 #eval show TermElabM _ from do
   logInfo m!"{← getAllIndices (← `(tensorExpr| T | α β 2 β τ(γ)))}"
 
-/-- The function `indicesAfterProduct` is defined for the following syntax:
-1. For e.g. `T | α β 2 β`, it returns all uncontracted and unevaluated indices e.g.`[α]`
-2. For e.g. `T1 | α β 2 β ⊗ T2 | α γ δ δ` it returns all unevaluated indices which
-    are not contracted in either tensor e.g. `[α, α, γ]`.
-3. For e.g. `(T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ` it does `2` recursively e.g. `[γ, γ]`
--/
-partial def indicesAfterProduct (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $_:term | $[$args]*) => do
-      return (← withoutContrEval (← getAllIndices stx))
-  | `(tensorExpr| $a:tensorExpr ⊗ $b:tensorExpr) => do
-      let indicesA ← withoutContrEval (← indicesAfterProduct a)
-      let indicesB ← withoutContrEval (← indicesAfterProduct b)
-      return indicesA ++ indicesB
-  | `(tensorExpr| ($a:tensorExpr)) => do
-      return (← indicesAfterProduct a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in indicesAfterProduct: {stx}"
-
-/-- info: [γ✝, γ✝] -/
-#guard_msgs in
-#eval show TermElabM _ from do
-  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| (T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ))}"
-
-/-- info: [γ✝, γ✝, τ(κ✝)] -/
-#guard_msgs in
-#eval show TermElabM _ from do
-  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| (T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ τ(κ)))}"
-
-/-- info: [α✝, γ✝] -/
-#guard_msgs in
-#eval show TermElabM _ from do
-  logInfo m!"{← indicesAfterProduct (← `(tensorExpr| T1 | α β 2 β  ⊗ T3 | γ κ τ(κ)))}"
-
-/-- Returns the remaining indices of a tensor expression after contraction and evaluation.
-  Thus every index in the output of `getIndicesFull` is ident and there are no duplicates.
-  Examples are:
-1. `T | α β 2 β` gives `[α]`
-2. `T1 | α β 2 β ⊗ T2 | α γ δ δ` gives `[γ]`
-3. `(T1 | α β 2 β ⊗ T2 | α γ δ δ) ⊗ T3 | γ` gives `[]`
-4. `T1 | α β 2 β + T2 | α 4 δ δ` gives `[α]`
--/
-partial def getIndicesFull (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $_:term | $[$args]*) => do
-      return (← withoutContrEval (← getAllIndices stx))
-  | `(tensorExpr| $_:tensorExpr ⊗ $_:tensorExpr) => do
-      return (← withoutContrEval (← indicesAfterProduct stx))
-  | `(tensorExpr| ($a:tensorExpr)) => do
-      return (← getIndicesFull a)
-  | `(tensorExpr| -$a:tensorExpr) => do
-      return (← getIndicesFull a)
-  | `(tensorExpr| $_:term •ₜ $a) => do
-      return (← getIndicesFull a)
-  | `(tensorExpr| $a:tensorExpr + $_:tensorExpr) => do
-      return (← getIndicesFull a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesFull: {stx}"
-
-/-- Gets the indices associated with the LHS of an addition. -/
-def getIndicesLeft (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $a:tensorExpr + $_:tensorExpr) => do
-      return (← getIndicesFull a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesLeft: {stx}"
-
-/-- Gets the indices associated with the RHS of an addition. -/
-def getIndicesRight (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $_:tensorExpr + $a:tensorExpr) => do
-      return (← getIndicesFull a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesRight: {stx}"
-
-/-- Gets the indices associated with the LHS of an equality. -/
-def getIndicesLeftEq (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $a:tensorExpr = $_:tensorExpr) => do
-      return (← getIndicesFull a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesLeftEq: {stx}"
-
-/-- Gets the indices associated with the RHS of an equality. -/
-def getIndicesRightEq (stx : Syntax) : TermElabM (List (TSyntax `indexExpr)) := do
-  match stx with
-  | `(tensorExpr| $_:tensorExpr = $a:tensorExpr) => do
-      return (← getIndicesFull a)
-  | _ =>
-    throwError "Unsupported tensor expression syntax in getIndicesRightEq: {stx}"
-
 /-!
 
 ## Modifying terms to tensor trees
@@ -536,11 +445,12 @@ def TensorExpressionOperator.neg : TensorExpressionOperator := fun (ind, T) => d
   let T' := Syntax.mkApp (mkIdent ``Neg.neg) #[T]
   return (ind, T')
 
-
+/-- The tensor expression operator which multiplies a tensor by a scalar. -/
 def TensorExpressionOperator.smul (c : Term) : TensorExpressionOperator := fun (ind, T) => do
   let T' := Syntax.mkApp (mkIdent ``HSMul.hSMul) #[c, T]
   return (ind, T')
 
+/-- The tensor expression operator which acts on a tensor by a group element. -/
 def TensorExpressionOperator.action (c : Term) : TensorExpressionOperator := fun (ind, T) => do
   let T' := Syntax.mkApp (mkIdent ``HSMul.hSMul) #[c, T]
   return (ind, T')
