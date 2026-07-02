@@ -317,8 +317,9 @@ lemma coeff_Qslice_eq_zero {V : EffectivePotential} (hI : IsInvariant V)
 ## C. Generation by the neutral gauge-invariant bilinears
 
 The hypercharge-neutral monomials of `Qslice P` are exactly the products of the five neutral
-quadratic bilinears `z z̄, w₀ w̄₀, z w̄₀, z̄ w₀, w₁ w̄₁` — the gauge invariants. This is the (abelian)
-generation step: combined Cartan- and residual-neutrality of a monomial forces it to be a product of
+quadratic bilinears `z z̄, w₀ w̄₀, z w̄₀, z̄ w₀, w₁ w̄₁` — the gauge invariants.
+This is the (abelian)generation step: combined Cartan- and residual-neutrality of a
+monomial forces it to be a product of
 these five, because every charged variable carries a unit Cartan charge and the residual charges
 come in an exact `±1` pair.
 -/
