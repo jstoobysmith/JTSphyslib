@@ -186,12 +186,14 @@ components in place (`componentMap_conjT`), and show it is `conj`-semilinear and
 
 /-- Reindex component labels of `bar ∘ c` back to `c`, slotwise via the cast `barIdx_eq`. -/
 def componentReindex {n : ℕ} (c : Fin n → C) :
-    ComponentIdx (S := S.toTensorSpecies) (fun i => S.bar (c i)) ≃ ComponentIdx (S := S.toTensorSpecies) c :=
+    ComponentIdx (S := S.toTensorSpecies) (fun i => S.bar (c i)) ≃
+      ComponentIdx (S := S.toTensorSpecies) c :=
   Equiv.piCongrRight fun i => Equiv.cast (S.barIdx_eq (c i))
 
 /-- Conjugation of a tensor: conjugate the components and reindex the basis to the conjugate
 colours.  -/
-def conjT {n : ℕ} {c : Fin n → C} : S.Tensor c →ₛₗ[starRingEnd k] S.Tensor (fun i => S.bar (c i)) where
+def conjT {n : ℕ} {c : Fin n → C} : S.Tensor c →ₛₗ[starRingEnd k]
+    S.Tensor (fun i => S.bar (c i)) where
   toFun t := ofComponents (fun i => S.bar (c i))
     (fun b => star (componentMap c t (S.componentReindex c b)))
   map_add' t₁ t₂ := by
