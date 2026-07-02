@@ -122,12 +122,12 @@ open TensorSpecies Tensor
 
 @[sorryful]
 lemma leviCivita_contract_three : {ε4 | μ ν ρ σ ⊗ ε4 | τ(μ) τ(ν) τ(ρ) τ(τ) =
-    unitTensor (S := realLorentzTensor) Color.down | σ τ }ᵀ := by
+    (-6) • unitTensor (S := realLorentzTensor) Color.down | σ τ }ᵀ := by
   sorry
 
 @[sorryful]
 lemma leviCivita_contract_self :
-    {ε4 | μ ν ρ σ ⊗ ε4 | τ(μ) τ(ν) τ(ρ) τ(σ)}ᵀ.toField = 24 := by
+    {ε4 | μ ν ρ σ ⊗ ε4 | τ(μ) τ(ν) τ(ρ) τ(σ)}ᵀ.toField = - 24 := by
   sorry
 
 end realLorentzTensor
