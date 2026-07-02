@@ -145,7 +145,8 @@ lemma aeval_residualSubst_eq {V : EffectivePotential} (hI : IsInvariant V)
     aeval (residualSubst c) P = P := by
   apply MvPolynomial.funext
   intro a
-  have hcomp : eval a (aeval (residualSubst c) P) = P.eval (fun k => eval a (residualSubst c k)) := by
+  have hcomp : eval a (aeval (residualSubst c) P) = P.eval
+      (fun k => eval a (residualSubst c k)) := by
     rw [aeval_def, algebraMap_eq, ← MvPolynomial.eval_assoc]; rfl
   rw [hcomp, eval_residualSubst, ← hP (resRotParam c a), ← ofU1Subgroup_smul_sliceR,
     hI (StandardModel.GaugeGroupI.ofU1Subgroup c), hP a]
@@ -419,7 +420,8 @@ lemma monomial_mem_adjoin_neutralBilinear (m : Fin 6 →₀ ℕ)
     · -- degree zero: m = 0, monomial is 1
       have hm0 : m = 0 := by
         ext k
-        have hk : m k ≤ ∑ i, m i := Finset.single_le_sum (fun _ _ => Nat.zero_le _) (Finset.mem_univ k)
+        have hk : m k ≤ ∑ i, m i := Finset.single_le_sum (fun _ _ => Nat.zero_le _)
+          (Finset.mem_univ k)
         rw [hsum, hn0] at hk
         simpa using Nat.le_zero.mp hk
       rw [hm0]
@@ -537,7 +539,8 @@ noncomputable def eigenPoint (X : Fin 4 → ℝ) : Fin 6 → ℂ :=
     (X 3 : ℂ), (X 3 : ℂ)]
 
 open MvPolynomial in
-/-- The eigen-coordinate change sends the eigen-point of `repHiggs X` back to its slice parameters. -/
+/-- The eigen-coordinate change sends the eigen-point of `repHiggs X` back to its
+  slice parameters. -/
 lemma aeval_hyperchargeEigen_eigenPoint (X : Fin 4 → ℝ) (k : Fin 6) :
     aeval (eigenPoint X) (hyperchargeEigen k) = algebraMap ℝ ℂ (aRep X k) := by
   fin_cases k <;>
@@ -608,7 +611,8 @@ noncomputable def transf : Fin 5 → MvPolynomial (Fin 5) ℂ :=
   ![X 0, X 3, X 1 - C Complex.I * X 2, X 1 + C Complex.I * X 2, X 4]
 
 open MvPolynomial in
-/-- The bilinears at the eigen-point of `repHiggs X` are the real generators, read through `transf`. -/
+/-- The bilinears at the eigen-point of `repHiggs X` are the real generators,
+  read through `transf`. -/
 lemma neutralBilinear_eval_eigenPoint (X : Fin 4 → ℝ) (i : Fin 5) :
     eval (eigenPoint X) (neutralBilinear i)
       = eval (fun j => (↑(sliceBilinear X j) : ℂ)) (transf i) := by
@@ -635,16 +639,17 @@ lemma exists_polynomial_repHiggs_sliceBilinear {V : EffectivePotential} {n : ℕ
     rw [show (fun i => eval (eigenPoint X) (neutralBilinear i))
           = (fun i => eval (fun j => (↑(sliceBilinear X j) : ℂ)) (transf i)) from
         funext (neutralBilinear_eval_eigenPoint X)]
-  have hre : V (repHiggs X) = (eval (fun j => (↑(sliceBilinear X j) : ℂ)) (aeval transf G)).re := by
-    rw [← hval]; simp
+  have hre : V (repHiggs X) = (eval (fun j => (↑(sliceBilinear X j) : ℂ)) (
+      aeval transf G)).re := by rw [← hval]; simp
   rw [hre, realPart_eval]
 
 /-!
 ## E. Clearing the `‖Φ1‖²` and `‖Φ2‖²` factors
 
-Part D expresses the value as a polynomial in the bilinears, but two of them — `|Φ2₀|²` and `|Φ2₁|²`
-— are not directly Gram polynomials. Multiplying by a power of `‖Φ1‖²` clears these; the doublet swap
-of `SwapDoublet` then gives the mirror statement with `‖Φ2‖²`.
+Part D expresses the value as a polynomial in the bilinears, but two of them — `|Φ2₀|²`
+  and `|Φ2₁|²`
+— are not directly Gram polynomials. Multiplying by a power of `‖Φ1‖²` clears these; the
+doublet swap of `SwapDoublet` then gives the mirror statement with `‖Φ2‖²`.
 -/
 
 open MvPolynomial in
@@ -677,7 +682,8 @@ open MvPolynomial in
   subalgebra: multiplying by `X₀²` pairs each `X₁²+X₂²` into `(X₀X₁)²+(X₀X₂)²` and each `X₃²` into
   the determinant `X₀²X₃²`, both of which are Gram polynomials. -/
 lemma exists_clearing_mem (p : MvPolynomial (Fin 5) ℝ) :
-    ∃ N : ℕ, (X 0) ^ (2 * N) * aeval sliceBilinearPoly p ∈ Algebra.adjoin ℝ (Set.range gramPoly) := by
+    ∃ N : ℕ, (X 0) ^ (2 * N) * aeval sliceBilinearPoly p ∈
+      Algebra.adjoin ℝ (Set.range gramPoly) := by
   set S := Algebra.adjoin ℝ (Set.range gramPoly) with hS
   have hgmem : ∀ μ, gramPoly μ ∈ S := fun μ => Algebra.subset_adjoin ⟨μ, rfl⟩
   have hC : ∀ r : ℝ, (C r : MvPolynomial (Fin 4) ℝ) ∈ S := fun r => by
@@ -905,11 +911,13 @@ lemma uPow_dvd {N M : ℕ} {A B : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ}
         rw [hc, mul_assoc, IsUnit.mul_val_inv, mul_one]⟩
   -- `u` and `w` are relatively prime: any common divisor divides `u ± w = X inl0, X inr2`.
   have hsum : (X (Sum.inl 0) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)
-      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) + C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) := by
+      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) + C (1 / 2) *
+        (X (Sum.inl 0) - X (Sum.inr 2)) := by
     apply MvPolynomial.funext; intro y
     simp only [eval_add, eval_mul, eval_sub, eval_C, eval_X]; ring
   have hdiff : (X (Sum.inr 2) : MvPolynomial (Fin 1 ⊕ Fin 3) ℝ)
-      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) - C (1 / 2) * (X (Sum.inl 0) - X (Sum.inr 2)) := by
+      = C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)) - C (1 / 2) *
+        (X (Sum.inl 0) - X (Sum.inr 2)) := by
     apply MvPolynomial.funext; intro y
     simp only [eval_add, eval_mul, eval_sub, eval_C, eval_X]; ring
   have hrel : IsRelPrime (C (1 / 2) * (X (Sum.inl 0) + X (Sum.inr 2)))
