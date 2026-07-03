@@ -31,7 +31,10 @@ when reviewing a PR.
   do they allow you to ask interesting questions about a data-structure that exists?
 - Are lemma statements and definition terms easy to read?
 - Do lemmas seem like they will be useful, and are written in a reusable way?
-Are the hypotheses of the lemma minimal and necessary? 
+- Are the hypotheses of the lemma minimal and necessary?
+- Do any of the have statements inside the proof contain general mathematical identities or
+  physical context that should be extracted into their own standalone lemmas?
+
 ## Level 4: Naming and documentation
 
 - Are the names written in Mathlib/Physlib convention?
