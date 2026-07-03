@@ -381,7 +381,7 @@ open TensorSpecies
   consisting of a list of indices and a term and outputs a list of indices and a term,
   after applying a certain operation.-/
 abbrev TensorExpressionOperator :=
-  List (TSyntax `indexExpr) × Term →  TermElabM (List (TSyntax `indexExpr) × Term)
+  List (TSyntax `indexExpr) × Term → TermElabM (List (TSyntax `indexExpr) × Term)
 
 /-- The creation of a tensor from a syntax tree. -/
 def TensorExpressionOperator.create (stx : Syntax) :
