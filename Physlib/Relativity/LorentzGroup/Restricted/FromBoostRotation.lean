@@ -107,10 +107,8 @@ def toBoostRotation {d} : LorentzGroup.restricted d ≃ₜ Lorentz.Velocity d ×
 theorem exists_boost_mul_rotation {d} (Λ : LorentzGroup.restricted d) :
     ∃ (v : Lorentz.Velocity d) (R : Rotations d),
       (Λ : LorentzGroup d) = generalizedBoost 0 v * (R : LorentzGroup d) := by
-  refine ⟨toVelocity Λ, toRotation Λ, ?_⟩
-  have h : (toRotation Λ : LorentzGroup d) =
-      (generalizedBoost 0 (toVelocity Λ))⁻¹ * (Λ : LorentzGroup d) := rfl
-  rw [h, mul_inv_cancel_left]
+  have h : toRotation Λ = (generalizedBoost 0 (toVelocity Λ))⁻¹ * Λ := rfl
+  exact ⟨toVelocity Λ, toRotation Λ, by rw [h, mul_inv_cancel_left]⟩
 
 end LorentzGroup
 
