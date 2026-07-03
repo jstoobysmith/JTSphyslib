@@ -76,7 +76,8 @@ def leftMetricVal : LeftHandedWeyl ⊗[ℂ] LeftHandedWeyl :=
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `leftMetricVal` into the left basis. -/
 lemma leftMetricVal_expand_tmul : leftMetricVal =
-    - LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] LeftHandedWeyl.basis 1 + LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] LeftHandedWeyl.basis 0 := by
+    - LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] LeftHandedWeyl.basis 1 +
+      LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] LeftHandedWeyl.basis 0 := by
   simp only [leftMetricVal, Fin.isValue]
   rw [leftLeftToMatrix_symm_expand_tmul]
   simp only [metricRaw, Matrix.neg_apply, of_apply, cons_val', empty_val', cons_val_fin_one,
@@ -84,7 +85,8 @@ lemma leftMetricVal_expand_tmul : leftMetricVal =
     neg_neg, one_smul, add_zero, add_left_inj]
   module
 
-lemma leftMetricVal_expand_tmul' : leftMetricVal = LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] LeftHandedWeyl.basis 0
+lemma leftMetricVal_expand_tmul' : leftMetricVal =
+    LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] LeftHandedWeyl.basis 0
     - LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] LeftHandedWeyl.basis 1 := by rw [leftMetricVal_expand_tmul]; abel
 
 /-- The metric `εᵃᵃ` as a morphism `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ leftHanded ⊗ leftHanded`,
@@ -123,7 +125,8 @@ def dualLeftMetricVal : (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl) :=
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `dualLeftMetricVal` into the left basis. -/
 lemma dualLeftMetricVal_expand_tmul : dualLeftMetricVal =
-    DualLeftHandedWeyl.basis 0 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 1 - DualLeftHandedWeyl.basis 1 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 0 := by
+    DualLeftHandedWeyl.basis 0 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 1 -
+      DualLeftHandedWeyl.basis 1 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 0 := by
   simp only [dualLeftMetricVal, Fin.isValue]
   rw [dualLeftdualLeftToMatrix_symm_expand_tmul]
   simp only [metricRaw, of_apply, cons_val', empty_val', cons_val_fin_one, Fin.sum_univ_two,
@@ -145,7 +148,8 @@ def dualLeftMetric : (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
     isIntertwining' M := by
       refine LinearMap.ext fun x : ℂ => ?_
       change x • dualLeftMetricVal =
-        (TensorProduct.map (DualLeftHandedWeyl.rep M) (DualLeftHandedWeyl.rep M)) (x • dualLeftMetricVal)
+        (TensorProduct.map (DualLeftHandedWeyl.rep M) (DualLeftHandedWeyl.rep M))
+          (x • dualLeftMetricVal)
       simp only [map_smul]
       apply congrArg
       simp only [dualLeftMetricVal]
@@ -166,7 +170,8 @@ def rightMetricVal : (RightHandedWeyl ⊗[ℂ] RightHandedWeyl) :=
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `rightMetricVal` into the left basis. -/
 lemma rightMetricVal_expand_tmul : rightMetricVal =
-    - RightHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1 + RightHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0 := by
+    - RightHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1 +
+      RightHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0 := by
   simp only [rightMetricVal, Fin.isValue]
   rw [rightRightToMatrix_symm_expand_tmul]
   simp only [metricRaw, Matrix.neg_apply, of_apply, cons_val', empty_val', cons_val_fin_one,
@@ -174,8 +179,11 @@ lemma rightMetricVal_expand_tmul : rightMetricVal =
     neg_neg, one_smul, add_zero, add_left_inj]
   module
 
-lemma rightMetricVal_expand_tmul' : rightMetricVal = RightHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0
-    - RightHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1 := by rw [rightMetricVal_expand_tmul]; abel
+lemma rightMetricVal_expand_tmul' : rightMetricVal =
+    RightHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0
+    - RightHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1 := by
+  rw [rightMetricVal_expand_tmul]
+  abel
 
 /-- The metric `ε^{dot a}^{dot a}` as a morphism `𝟙_ (Rep ℂ SL(2,ℂ)) ⟶ rightHanded ⊗ rightHanded`,
   making manifest its invariance under the action of `SL(2,ℂ)`. -/
@@ -220,7 +228,8 @@ def dualRightMetricVal : DualRightHandedWeyl ⊗[ℂ] DualRightHandedWeyl :=
 set_option backward.isDefEq.respectTransparency false in
 /-- Expansion of `rightMetricVal` into the left basis. -/
 lemma dualRightMetricVal_expand_tmul : dualRightMetricVal =
-    DualRightHandedWeyl.basis 0 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 1 - DualRightHandedWeyl.basis 1 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 0 := by
+    DualRightHandedWeyl.basis 0 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 1 -
+      DualRightHandedWeyl.basis 1 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 0 := by
   simp only [dualRightMetricVal, Fin.isValue]
   rw [dualRightDualRightToMatrix_symm_expand_tmul]
   simp only [metricRaw, of_apply, cons_val', empty_val', cons_val_fin_one, Fin.sum_univ_two,
@@ -243,7 +252,8 @@ def dualRightMetric : (Representation.trivial ℂ SL(2,ℂ) ℂ).IntertwiningMap
   isIntertwining' M := by
     refine LinearMap.ext fun x : ℂ => ?_
     change x • dualRightMetricVal =
-      (TensorProduct.map (DualRightHandedWeyl.rep M) (DualRightHandedWeyl.rep M)) (x • dualRightMetricVal)
+      (TensorProduct.map (DualRightHandedWeyl.rep M) (DualRightHandedWeyl.rep M))
+        (x • dualRightMetricVal)
     simp only [map_smul]
     apply congrArg
     trans dualRightDualRightToMatrix.symm

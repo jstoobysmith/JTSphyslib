@@ -47,26 +47,30 @@ lemma asTensor_expand_complexContrBasis : asTensor =
 
 /-- The expansion of the pauli matrix `σ₀` in terms of a basis of tensor product vectors. -/
 lemma leftRightToMatrix_σSA_inl_0_expand : leftRightToMatrix.symm (pauliBasis (Sum.inl 0)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 + LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
+    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 +
+      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
   rw [leftRightToMatrix_symm_expand_tmul]
   simp [pauliBasis, pauliSelfAdjoint, pauliMatrix]
 
 /-- The expansion of the pauli matrix `σ₁` in terms of a basis of tensor product vectors. -/
 lemma leftRightToMatrix_σSA_inr_0_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 0)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1 + LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0:= by
+    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 1 +
+      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 0:= by
   rw [leftRightToMatrix_symm_expand_tmul]
   simp [pauliBasis, pauliSelfAdjoint, pauliMatrix]
 
 /-- The expansion of the pauli matrix `σ₂` in terms of a basis of tensor product vectors. -/
 lemma leftRightToMatrix_σSA_inr_1_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 1)) =
-    -(I • LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1) + I • LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0 := by
+    -(I • LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1) +
+      I • LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0 := by
   simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix]
   module
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The expansion of the pauli matrix `σ₃` in terms of a basis of tensor product vectors. -/
 lemma leftRightToMatrix_σSA_inr_2_expand : leftRightToMatrix.symm (pauliBasis (Sum.inr 2)) =
-    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 - LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
+    LeftHandedWeyl.basis 0 ⊗ₜ RightHandedWeyl.basis 0 -
+      LeftHandedWeyl.basis 1 ⊗ₜ RightHandedWeyl.basis 1 := by
   simp [leftRightToMatrix_symm_expand_tmul, pauliBasis, pauliSelfAdjoint, pauliMatrix]
   module
 

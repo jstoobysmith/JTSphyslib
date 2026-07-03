@@ -144,7 +144,8 @@ lemma leftDualContraction_hom_tmul (ψ : LeftHandedWeyl)
   rfl
 
 lemma leftDualContraction_basis (i j : Fin 2) :
-    leftDualContraction (LeftHandedWeyl.basis i ⊗ₜ DualLeftHandedWeyl.basis j) = if i.1 = j.1 then (1 : ℂ) else 0 := by
+    leftDualContraction (LeftHandedWeyl.basis i ⊗ₜ DualLeftHandedWeyl.basis j) =
+      if i.1 = j.1 then (1 : ℂ) else 0 := by
   rw [leftDualContraction_hom_tmul]
   simp only [LeftHandedWeyl.toFin2ℂ_eq_val, LeftHandedWeyl.basis_val,
     DualLeftHandedWeyl.toFin2ℂ_eq_val, DualLeftHandedWeyl.basis_val, dotProduct_single, mul_one]
@@ -171,7 +172,8 @@ lemma dualLeftContraction_hom_tmul (φ : DualLeftHandedWeyl) (ψ : LeftHandedWey
   rfl
 
 lemma dualLeftContraction_basis (i j : Fin 2) :
-    dualLeftContraction (DualLeftHandedWeyl.basis i ⊗ₜ LeftHandedWeyl.basis j) = if i.1 = j.1 then (1 : ℂ) else 0 := by
+    dualLeftContraction (DualLeftHandedWeyl.basis i ⊗ₜ LeftHandedWeyl.basis j) =
+      if i.1 = j.1 then (1 : ℂ) else 0 := by
   rw [dualLeftContraction_hom_tmul]
   simp only [DualLeftHandedWeyl.toFin2ℂ_eq_val, DualLeftHandedWeyl.basis_val,
     LeftHandedWeyl.toFin2ℂ_eq_val, LeftHandedWeyl.basis_val, dotProduct_single, mul_one]
