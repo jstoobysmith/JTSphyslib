@@ -21,7 +21,7 @@ when reviewing a PR.
 - Does every definition and lemma added in the PR fit the theme of the rest of the file, or
   does it fit more appropriately elsewhere?
 - If there are new files made, can I guess the content of that file from the name?
-- Within a given file, can I understand the relevence of results which sit next to each other,
+- Within a given file, can I understand the relevance of results which sit next to each other,
   or in the same section?
 
 ## Level 3: Content
@@ -42,7 +42,7 @@ when reviewing a PR.
 - Are the namespaces correct and make sense?
 - Does the module documentation actually help either with the flow of the document or one
   understand what is in the file, or is it just padding?
-- Does documentation on declrations help one understand what that decleration does?
+- Does documentation on declarations help one understand what that declaration does?
 
 ## Level 5:
 
