@@ -27,7 +27,7 @@ with periodic boundary conditions.
 - `localizedState` : The orthonormal basis of localized states.
 - `hamiltonian` : The Hamiltonian of the tight binding chain.
 - `BrillouinZone` : The Brillouin zone of the tight binding chain.
-- `QuantaWaveNumber` : The quantized wavenumbers of the energy eigenstates.
+- `quantizedWaveNumbers` : The quantized wavenumbers of the energy eigenstates.
 - `energyEigenstate` : The energy eigenstates of the tight binding chain.
 - `energyEigenvalue` : The energy eigenvalues of the tight binding chain.
 - `hamiltonian_energyEigenstate` : The Hamiltonian acting on an energy eigenstate
@@ -326,7 +326,7 @@ def BrillouinZone : Set ℝ := Set.Ico (- Real.pi / T.a) (Real.pi / T.a)
 /-- The wavenumbers associated with the energy eigenstates.
   This corresponds to the set `2 π / (a N) * (n - ⌊N/2⌋)` for `n : Fin T.N`.
   It is defined as such so it sits in the Brillouin zone. -/
-def QuantaWaveNumber : Set ℝ := {x | (∃ n : Fin T.N,
+def quantizedWaveNumbers : Set ℝ := {x | (∃ n : Fin T.N,
     2 * Real.pi / (T.a * T.N) * ((n : ℝ) - (T.N / 2 : ℕ)) = x)}
 
 /-!
@@ -336,7 +336,7 @@ def QuantaWaveNumber : Set ℝ := {x | (∃ n : Fin T.N,
 -/
 
 /-- The quantized wavenumbers form a subset of the `BrillouinZone`. -/
-lemma quantaWaveNumber_subset_brillouinZone : T.QuantaWaveNumber ⊆ T.BrillouinZone := by
+lemma quantaWaveNumber_subset_brillouinZone : T.quantizedWaveNumbers ⊆ T.BrillouinZone := by
   rintro _ ⟨n, rfl⟩
   have hT := T.a_pos
   have hNpos : 0 < T.N := lt_of_le_of_lt (Nat.zero_le _) n.isLt
@@ -371,7 +371,7 @@ lemma quantaWaveNumber_subset_brillouinZone : T.QuantaWaveNumber ⊆ T.Brillouin
 
 -/
 
-lemma quantaWaveNumber_exp_N (n : ℕ) (k : T.QuantaWaveNumber) :
+lemma quantaWaveNumber_exp_N (n : ℕ) (k : T.quantizedWaveNumbers) :
     Complex.exp (Complex.I * k * n * T.N * T.a) = 1 := by
   refine Complex.exp_eq_one_iff.mpr ?_
   match k with
@@ -389,7 +389,7 @@ lemma quantaWaveNumber_exp_N (n : ℕ) (k : T.QuantaWaveNumber) :
   rw [mul_comm]
   rfl
 
-lemma quantaWaveNumber_exp_sub_one (n : Fin T.N) (k : T.QuantaWaveNumber) :
+lemma quantaWaveNumber_exp_sub_one (n : Fin T.N) (k : T.quantizedWaveNumbers) :
     Complex.exp (Complex.I * k * (n - 1).val * T.a) =
     Complex.exp (Complex.I * k * n * T.a) * Complex.exp (- Complex.I * k * T.a) := by
   rw [Fin.val_sub]
@@ -428,7 +428,7 @@ lemma quantaWaveNumber_exp_sub_one (n : Fin T.N) (k : T.QuantaWaveNumber) :
       Complex.I * ↑↑k * (1 : ℕ) * ↑T.N * ↑T.a + (- Complex.I * ↑↑k * ↑T.a) := by ring
     rw [hl, Complex.exp_add, quantaWaveNumber_exp_N, neg_mul, one_mul]
 
-lemma quantaWaveNumber_exp_add_one (n : Fin T.N) (k : T.QuantaWaveNumber) :
+lemma quantaWaveNumber_exp_add_one (n : Fin T.N) (k : T.quantizedWaveNumbers) :
     Complex.exp (Complex.I * k * (n + 1).val * T.a) =
     Complex.exp (Complex.I * k * n * T.a) * Complex.exp (Complex.I * k * T.a) := by
   have hn : n = (n + 1) - 1 := by exact Eq.symm (add_sub_cancel_right n 1)
@@ -450,7 +450,7 @@ lemma quantaWaveNumber_exp_add_one (n : Fin T.N) (k : T.QuantaWaveNumber) :
 
 /-- The energy eigenstates of the tight binding chain They are given by
   `∑ n, exp (I * k * n * T.a) • |n⟩`. -/
-noncomputable def energyEigenstate (k : T.QuantaWaveNumber) : T.HilbertSpace :=
+noncomputable def energyEigenstate (k : T.quantizedWaveNumbers) : T.HilbertSpace :=
   ∑ n : Fin T.N, Complex.exp (Complex.I * k * n * T.a) • |n⟩
 
 /-!
@@ -534,9 +534,9 @@ lemma energyEigenstate_orthogonal :
 
 -/
 
-/-- The energy eigenvalue of the tight binding chain for a `k` in `QuantaWaveNumber` is
+/-- The energy eigenvalue of the tight binding chain for a `k` in `quantizedWaveNumbers` is
   `E0 - 2 * t * Real.cos (k * T.a)`. -/
-noncomputable def energyEigenvalue (k : T.QuantaWaveNumber) : ℝ :=
+noncomputable def energyEigenvalue (k : T.quantizedWaveNumbers) : ℝ :=
   T.E0 - 2 * T.t * Real.cos (k * T.a)
 
 /-!
@@ -546,7 +546,7 @@ noncomputable def energyEigenvalue (k : T.QuantaWaveNumber) : ℝ :=
 -/
 
 /-- The energy eigenstates satisfy the time-independent Schrodinger equation. -/
-lemma hamiltonian_energyEigenstate (k : T.QuantaWaveNumber) :
+lemma hamiltonian_energyEigenstate (k : T.quantizedWaveNumbers) :
     T.hamiltonian (T.energyEigenstate k) = T.energyEigenvalue k• T.energyEigenstate k := by
   trans (T.energyEigenvalue k : ℂ) • T.energyEigenstate k
   swap
