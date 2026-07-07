@@ -73,10 +73,10 @@ def valLinEquiv : QuarkDoublet ≃ₗ[ℂ]
 @[simp]
 lemma valLinEquiv_apply (q : QuarkDoublet) : valLinEquiv q = q.val := rfl
 
-@[simp]
 lemma valLinEquiv_symm_apply
     (m : Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 3) ⊗[ℂ] EuclideanSpace ℂ (Fin 2)) :
     valLinEquiv.symm m = ⟨m⟩ := rfl
+
 /-!
 
 ## Lorentz group representation
@@ -106,8 +106,8 @@ noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) QuarkDoublet 
 
 -/
 
-/-- The action of the Standard Model gauge group on quark fields. -/
-noncomputable def repGaugeGroup : Representation ℂ GaugeGroupI QuarkDoublet where
+/-- The action of the full Standard Model gauge group on quark fields. -/
+noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI QuarkDoublet where
   toFun g := valLinEquiv.symm ∘ₗ
       TensorProduct.map
         (TensorProduct.map
@@ -118,10 +118,59 @@ noncomputable def repGaugeGroup : Representation ℂ GaugeGroupI QuarkDoublet wh
       ∘ₗ valLinEquiv
   map_one' := by
     ext q
-    simp
+    simp [valLinEquiv_symm_apply]
   map_mul' g1 g2 := by
     ext q
-    simp [smul_smul, mul_comm, TensorProduct.map_map, ← TensorProduct.map_comp]
+    simp [smul_smul, mul_comm, TensorProduct.map_map, ← TensorProduct.map_comp,
+      valLinEquiv_symm_apply]
+
+lemma repGaugeGroupI_tmul (g : GaugeGroupI) (ψ : Fermion.LeftHandedWeyl)
+    (v : EuclideanSpace ℂ (Fin 3)) (w : EuclideanSpace ℂ (Fin 2)) :
+    repGaugeGroupI g ⟨ψ ⊗ₜ v ⊗ₜ w⟩ = ⟨g.toU1 • ψ ⊗ₜ (g.toSU3.1.toEuclideanLin v) ⊗ₜ
+      (g.toSU2.1.toEuclideanLin w)⟩ := rfl
+
+@[simp]
+lemma repGaugeGroupI_gaugeGroupℤ₆OfRoot_apply (α : rootsOfUnity 6 ℂ) (q : QuarkDoublet) :
+    repGaugeGroupI (gaugeGroupℤ₆OfRoot α) q = q := by
+  obtain ⟨c, rfl⟩ := valLinEquiv.symm.surjective q
+  induction' c using TensorProduct.induction_on with ψ w v1 v2 h1 h2
+  · simp
+  · induction' ψ using TensorProduct.induction_on with ψ v v1 v2 h1 h2
+    · simp
+    · simp [valLinEquiv_symm_apply, repGaugeGroupI_tmul, gaugeGroupℤ₆SU2OfRoot_toEuclideanLin_apply,
+        gaugeGroupℤ₆SU3OfRoot_toEuclideanLin_apply, smul_smul, tmul_smul, smul_tmul,
+        gaugeGroupℤ₆UnitaryOfRoot,]
+      suffices h : (α.1 * ((starRingEnd ℂ) α.1 ^ 3 *  α.1 ^ 2)) = 1 by simp [h]
+      simp only [Complex.conj_rootsOfUnity α.2, Units.val_inv_eq_inv_val, inv_pow]
+      field_simp
+    · simp_all [add_tmul]
+  · simp_all
+
+/-- The action of the Standard Model gauge group, potentially quotiented by
+  a discrete factor on quark fields. -/
+noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
+    Representation ℂ (GaugeGroup Q) QuarkDoublet
+  | .I => repGaugeGroupI
+  | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI <| by
+      simp only [gaugeGroupℤ₆SubGroup, SetLike.le_def, MonoidHom.mem_range, gaugeGroupℤ₆Hom_apply,
+        Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker, forall_exists_index]
+      rintro g x hx ⟨rfl⟩
+      ext q
+      simp
+  | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI <| by
+      simp only [SetLike.le_def, gaugeGroupℤ₂SubGroup, MonoidHom.mem_range, gaugeGroupℤ₂Hom_apply,
+        gaugeGroupℤ₂OfRoot, Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker,
+        forall_exists_index]
+      rintro g x hx ⟨rfl⟩
+      ext q
+      simp
+  | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI <| by
+      simp only [SetLike.le_def, gaugeGroupℤ₃SubGroup, MonoidHom.mem_range, gaugeGroupℤ₃Hom_apply,
+        gaugeGroupℤ₃OfRoot, Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker,
+        forall_exists_index]
+      rintro g x hx ⟨rfl⟩
+      ext q
+      simp
 
 TODO "Find the subgroup of the Standard Model gauge group which acts trivially on the
   quark doublet."

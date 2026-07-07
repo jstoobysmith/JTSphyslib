@@ -159,6 +159,11 @@ noncomputable def gaugeGroupℤ₆SU3OfRoot (α : rootsOfUnity 6 ℂ) :
         z ^ 2 * z ^ 2 * z ^ 2 = z ^ 6 := by ring
         _ = 1 := hα⟩
 
+lemma gaugeGroupℤ₆SU3OfRoot_toEuclideanLin_apply (α : rootsOfUnity 6 ℂ)
+    (v : EuclideanSpace ℂ (Fin 3)) :
+    (gaugeGroupℤ₆SU3OfRoot α).1.toEuclideanLin v = ((α : ℂˣ) : ℂ) ^ 2 • v := by
+  simp [gaugeGroupℤ₆SU3OfRoot, Matrix.scalar_apply, toLpLin_apply]
+
 /-- The `SU(2)` scalar matrix associated to a sixth root of unity. -/
 noncomputable def gaugeGroupℤ₆SU2OfRoot (α : rootsOfUnity 6 ℂ) :
     specialUnitaryGroup (Fin 2) ℂ := by
@@ -188,6 +193,11 @@ noncomputable def gaugeGroupℤ₆SU2OfRoot (α : rootsOfUnity 6 ℂ) :
     simpa [Pi.star_def] using hw
   · rw [Matrix.scalar_apply, Matrix.det_diagonal, Fin.prod_univ_two]
     simpa [pow_two] using hw2
+
+lemma gaugeGroupℤ₆SU2OfRoot_toEuclideanLin_apply (α : rootsOfUnity 6 ℂ)
+    (v : EuclideanSpace ℂ (Fin 2)) :
+    (gaugeGroupℤ₆SU2OfRoot α).1.toEuclideanLin v = star ((α : ℂˣ) : ℂ) ^ 3 • v := by
+  simp [gaugeGroupℤ₆SU2OfRoot, Matrix.scalar_apply, toLpLin_apply]
 
 /-- The element of `GaugeGroupI` associated to a sixth root of unity. -/
 noncomputable def gaugeGroupℤ₆OfRoot (α : rootsOfUnity 6 ℂ) : GaugeGroupI :=
@@ -596,6 +606,7 @@ inductive GaugeGroupQuot : Type
   | ℤ₃ : GaugeGroupQuot
   /-- The element of `GaugeGroupQuot` corresponding to the full SM gauge group. -/
   | I : GaugeGroupQuot
+deriving Fintype, DecidableEq
 
 /-- The (global) gauge group of the Standard Model given a choice of quotient, i.e., the map from
 `GaugeGroupQuot` to `Type` which gives the gauge group of the Standard Model for a given choice of
@@ -608,6 +619,8 @@ def GaugeGroup : GaugeGroupQuot → Type
   | .ℤ₂ => GaugeGroupℤ₂
   | .ℤ₃ => GaugeGroupℤ₃
   | .I => GaugeGroupI
+
+TODO "Define the unbroken gauge group using the Higgs field."
 
 noncomputable instance (q : GaugeGroupQuot) : Group (GaugeGroup q) := by
   cases q <;> dsimp [GaugeGroup] <;> infer_instance
