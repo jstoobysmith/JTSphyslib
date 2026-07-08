@@ -483,7 +483,6 @@ lemma contr_two_rotate  {c : Fin n → C}  (i : Fin n) : IsReindexing
     (Fin.cycleIcc i ⟨n - 1, by have := i.prop; omega⟩).symm := by
   haveI : NeZero n := ⟨by have := i.prop; omega⟩
   set j : Fin n := ⟨n - 1, by have := i.prop; omega⟩ with hj
-  refine ⟨(Equiv.symm _).bijective, fun x => ?_⟩
   have key : ∀ y : Fin n, Fin.append c ![S.τ (c i), S.τ (c i)]
       ((Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i) y)
       = Function.update c i (S.τ (c i)) (Fin.cycleIcc i j y) := by
@@ -517,6 +516,7 @@ lemma contr_two_rotate  {c : Fin n → C}  (i : Fin n) : IsReindexing
           Function.update_of_ne (Fin.ne_of_val_ne (by omega)),
           show (Fin.natAdd n (0 : Fin 2)).succSuccAbove (Fin.castAdd 2 i) y = Fin.castAdd 2 (y + 1)
             from Fin.ext (by rw [hval', Fin.val_castAdd, hy1]), Fin.append_left]
+  refine ⟨(Equiv.symm _).bijective, fun x => ?_⟩
   rw [Function.comp_apply, key, Equiv.apply_symm_apply]
 
 end IsReindexing
