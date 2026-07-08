@@ -177,25 +177,25 @@ lemma contrCoUnit_eq_complexContrBasisFin4_complexCoBasisFin4 : δ =
   simp [complexContrBasisFin4, complexCoBasisFin4]
 
 open Fermion in
-lemma dualLeftLeftUnit_eq_DualLeftHandedWeyl.basis_LeftHandedWeyl.basis : δL' =
+lemma dualLeftLeftUnit_eq_basis : δL' =
     ∑ i, fromPairT (DualLeftHandedWeyl.basis i ⊗ₜ[ℂ] LeftHandedWeyl.basis i) := by
   rw [dualLeftLeftUnit_eq_fromPairT, dualLeftLeftUnitVal_expand_tmul]
   rfl
 
 open Fermion in
-lemma leftDualLeftUnit_eq_LeftHandedWeyl.basis_DualLeftHandedWeyl.basis : δL =
+lemma leftDualLeftUnit_eq_basis : δL =
     ∑ i, fromPairT (LeftHandedWeyl.basis i ⊗ₜ[ℂ] DualLeftHandedWeyl.basis i) := by
   rw [leftDualLeftUnit_eq_fromPairT, leftDualLeftUnitVal_expand_tmul]
   rfl
 
 open Fermion in
-lemma dualRightRightUnit_eq_DualRightHandedWeyl.basis_RightHandedWeyl.basis : δR' =
+lemma dualRightRightUnit_eq_basis : δR' =
     ∑ i, fromPairT (DualRightHandedWeyl.basis i ⊗ₜ[ℂ] RightHandedWeyl.basis i) := by
   rw [dualRightRightUnit_eq_fromPairT, dualRightRightUnitVal_expand_tmul]
   rfl
 
 open Fermion in
-lemma rightDualRightUnit_eq_RightHandedWeyl.basis_DualRightHandedWeyl.basis : δR =
+lemma rightDualRightUnit_eq_basis : δR =
     ∑ i, fromPairT (RightHandedWeyl.basis i ⊗ₜ[ℂ] DualRightHandedWeyl.basis i) := by
   rw [rightDualRightUnit_eq_fromPairT, rightDualRightUnitVal_expand_tmul]
   rfl
@@ -231,7 +231,7 @@ lemma contrCoUnit_eq_basis : δ =
 lemma dualLeftLeftUnit_eq_basis : δL' =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.downL, Color.upL] (fun | 0 => i | 1 => i) := by
-  rw [dualLeftLeftUnit_eq_DualLeftHandedWeyl.basis_LeftHandedWeyl.basis]
+  rw [dualLeftLeftUnit_eq_basis]
   conv_lhs =>
     enter [2, x]
     change fromPairT ((complexLorentzTensor.basis .downL x) ⊗ₜ[ℂ]
@@ -242,7 +242,7 @@ lemma dualLeftLeftUnit_eq_basis : δL' =
 lemma leftDualLeftUnit_eq_basis : δL =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.upL, Color.downL] (fun | 0 => i | 1 => i) := by
-  rw [leftDualLeftUnit_eq_LeftHandedWeyl.basis_DualLeftHandedWeyl.basis]
+  rw [leftDualLeftUnit_eq_basis]
   conv_lhs =>
     enter [2, x]
     change fromPairT ((complexLorentzTensor.basis .upL x) ⊗ₜ[ℂ]
@@ -253,7 +253,7 @@ lemma leftDualLeftUnit_eq_basis : δL =
 lemma dualRightRightUnit_eq_basis : δR' =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.downR, Color.upR] (fun | 0 => i | 1 => i) := by
-  rw [dualRightRightUnit_eq_DualRightHandedWeyl.basis_RightHandedWeyl.basis]
+  rw [dualRightRightUnit_eq_basis]
   conv_lhs =>
     enter [2, x]
     change fromPairT ((complexLorentzTensor.basis .downR x) ⊗ₜ[ℂ]
@@ -264,7 +264,7 @@ lemma dualRightRightUnit_eq_basis : δR' =
 lemma rightDualRightUnit_eq_basis : δR =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.upR, Color.downR] (fun | 0 => i | 1 => i) := by
-  rw [rightDualRightUnit_eq_RightHandedWeyl.basis_DualRightHandedWeyl.basis]
+  rw [rightDualRightUnit_eq_basis]
   conv_lhs =>
     enter [2, x]
     change fromPairT ((complexLorentzTensor.basis .upR x) ⊗ₜ[ℂ]
