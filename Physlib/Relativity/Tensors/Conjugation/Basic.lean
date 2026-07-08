@@ -131,7 +131,7 @@ variable {k : Type} [CommRing k] [StarRing k] {C : Type} {G : Type} [Group G]
 
 /-!
 
-## B. Conjugation on vectors
+## B. The conjugation of vectors
 
 `conjEquiv` is the conjugate-linear isomorphism `V c ≃ₛₗ[starRingEnd k] V (bar c)`: read off the
 coordinates of a vector in the species basis, conjugate them (`star`), and re-seat them as the
