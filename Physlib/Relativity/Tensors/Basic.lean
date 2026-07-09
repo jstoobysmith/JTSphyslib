@@ -58,6 +58,13 @@ variable {k : Type} [CommRing k] {C : Type} {G : Type} [Group G]
     {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Basis (basisIdx c) k (V c)}
     (S : TensorSpecies k C G V basisIdx rep b)
 
+TODO "The tensors we currently have in Physlib are bosonic, whilst we also need
+  fermionic. These should be defined by something similar to
+  `Grassmann ι ⊗[ℂ] S.Tensor c` where Grassmann is defined through
+  ExteriorAlgebra. We would then need to extend all of the maps to this
+  case, as well as update the elaborator. But this could be done in general
+  to take account of general tensor products."
+
 set_option linter.unusedVariables false in
 /-- The tensors associated with a list of indices of a given color
   `c : Fin n → C`. -/
