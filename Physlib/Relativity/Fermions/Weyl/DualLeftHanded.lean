@@ -16,7 +16,7 @@ public import Physlib.Meta.TODO.Basic
 
 
 In this file we define dual Left handed Weyl fermions.
-These sit in the dual of the fundamental repsentation of `SL(2,ℂ)`,
+These sit in the dual of the fundamental representation of `SL(2,ℂ)`,
 and we consider them to have down indices `ψ_α` with `α = 1,2`.
 
 -/
