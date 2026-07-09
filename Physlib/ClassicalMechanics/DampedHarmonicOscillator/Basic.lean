@@ -151,6 +151,21 @@ are inherited from `HarmonicOscillator`.
 noncomputable def EquationOfMotion (xₜ : Time → EuclideanSpace ℝ (Fin 1)) : Prop :=
   ∀ t : Time, S.m • ∂ₜ (∂ₜ xₜ) t + S.γ • ∂ₜ xₜ t + S.k • xₜ t = 0
 
+/-- Solving the equation of motion for the acceleration: along a solution the second derivative
+is `-(k/m) x - (γ/m) ẋ`. -/
+lemma acceleration_eq_of_equationOfMotion (z : Time → EuclideanSpace ℝ (Fin 1))
+    (hEOM : S.EquationOfMotion z) (t : Time) :
+    ∂ₜ (∂ₜ z) t = (-(S.m⁻¹ * S.k)) • z t + (-(S.m⁻¹ * S.γ)) • ∂ₜ z t := by
+  have hm : S.m ≠ 0 := S.m_ne_zero
+  have hsum : S.m • ∂ₜ (∂ₜ z) t + (S.γ • ∂ₜ z t + S.k • z t) = 0 := by
+    rw [← add_assoc]; exact hEOM t
+  have hma : S.m • ∂ₜ (∂ₜ z) t = -(S.k • z t) - S.γ • ∂ₜ z t := by
+    rw [eq_neg_of_add_eq_zero_left hsum]; module
+  have hkey : ∂ₜ (∂ₜ z) t = S.m⁻¹ • (S.m • ∂ₜ (∂ₜ z) t) := by
+    rw [smul_smul, inv_mul_cancel₀ hm, one_smul]
+  rw [hkey, hma]
+  module
+
 /-!
 
 ### B.2. Energy dissipation
@@ -255,6 +270,11 @@ def IsCriticallyDamped : Prop := S.discriminant = 0
 
 /-- The system is overdamped when 4mk < γ². -/
 def IsOverdamped : Prop := 0 < S.discriminant
+
+/-- Every damped oscillator is underdamped, critically damped, or overdamped. -/
+lemma isUnderdamped_or_isCriticallyDamped_or_isOverdamped :
+    S.IsUnderdamped ∨ S.IsCriticallyDamped ∨ S.IsOverdamped :=
+  lt_trichotomy S.discriminant 0
 
 /-- The system is undamped when γ = 0. -/
 def IsUndamped : Prop := S.γ = 0

@@ -183,30 +183,30 @@ lemma contrMetric_eq_complexContrBasisFin4 : η =
   rfl
 
 open Fermion in
-lemma leftMetric_eq_leftBasis : εL =
-    - fromPairT (leftBasis 0 ⊗ₜ[ℂ] leftBasis 1)
-    + fromPairT (leftBasis 1 ⊗ₜ[ℂ] leftBasis 0) := by
+lemma leftMetric_eq_leftHandedWeyl_basis : εL =
+    - fromPairT (LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] LeftHandedWeyl.basis 1)
+    + fromPairT (LeftHandedWeyl.basis 1 ⊗ₜ[ℂ] LeftHandedWeyl.basis 0) := by
   rw [leftMetric_eq_fromPairT, leftMetricVal_expand_tmul]
   simp
 
 open Fermion in
-lemma dualLeftMetric_eq_dualLeftBasis : εL' =
-    fromPairT (dualLeftBasis 0 ⊗ₜ[ℂ] dualLeftBasis 1)
-    - fromPairT (dualLeftBasis 1 ⊗ₜ[ℂ] dualLeftBasis 0) := by
+lemma dualLeftMetric_eq_dualLeftHandedWeyl_basis : εL' =
+    fromPairT (DualLeftHandedWeyl.basis 0 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 1)
+    - fromPairT (DualLeftHandedWeyl.basis 1 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis 0) := by
   rw [dualLeftMetric_eq_fromPairT, dualLeftMetricVal_expand_tmul]
   simp
 
 open Fermion in
-lemma rightMetric_eq_rightBasis : εR =
-    - fromPairT (rightBasis 0 ⊗ₜ[ℂ] rightBasis 1)
-    + fromPairT (rightBasis 1 ⊗ₜ[ℂ] rightBasis 0) := by
+lemma rightMetric_eq_rightHandedWeyl_basis : εR =
+    - fromPairT (RightHandedWeyl.basis 0 ⊗ₜ[ℂ] RightHandedWeyl.basis 1)
+    + fromPairT (RightHandedWeyl.basis 1 ⊗ₜ[ℂ] RightHandedWeyl.basis 0) := by
   rw [rightMetric_eq_fromPairT, rightMetricVal_expand_tmul]
   simp
 
 open Fermion in
-lemma dualRightMetric_eq_dualRightBasis : εR' =
-    fromPairT (dualRightBasis 0 ⊗ₜ[ℂ] dualRightBasis 1)
-    - fromPairT (dualRightBasis 1 ⊗ₜ[ℂ] dualRightBasis 0) := by
+lemma dualRightMetric_eq_dualRightHandedWeyl_basis : εR' =
+    fromPairT (DualRightHandedWeyl.basis 0 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 1)
+    - fromPairT (DualRightHandedWeyl.basis 1 ⊗ₜ[ℂ] DualRightHandedWeyl.basis 0) := by
   rw [dualRightMetric_eq_fromPairT, dualRightMetricVal_expand_tmul]
   simp
 
@@ -272,7 +272,7 @@ lemma leftMetric_eq_basis : εL =
       (fun | 0 => (0 : Fin 2) | 1 => (1 : Fin 2)))
     + (Tensor.basis (S := complexLorentzTensor)
       ![Color.upL, Color.upL] (fun | 0 => (1 : Fin 2) | 1 => (0 : Fin 2))) := by
-  rw [leftMetric_eq_leftBasis]
+  rw [leftMetric_eq_leftHandedWeyl_basis]
   conv_lhs =>
     enter [2]
     erw [fromPairT_apply_basis_repr]
@@ -287,7 +287,7 @@ lemma dualLeftMetric_eq_basis : εL' =
       (fun | 0 => (0 : Fin 2) | 1 => (1 : Fin 2)))
     - (Tensor.basis (S := complexLorentzTensor)
       ![Color.downL, Color.downL] (fun | 0 => (1 : Fin 2) | 1 => (0 : Fin 2))) := by
-  rw [dualLeftMetric_eq_dualLeftBasis]
+  rw [dualLeftMetric_eq_dualLeftHandedWeyl_basis]
   conv_lhs =>
     enter [2]
     erw [fromPairT_apply_basis_repr]
@@ -302,7 +302,7 @@ lemma rightMetric_eq_basis : εR =
       (fun | 0 => (0 : Fin 2) | 1 => (1 : Fin 2)))
     + (Tensor.basis (S := complexLorentzTensor)
       ![Color.upR, Color.upR] (fun | 0 => (1 : Fin 2) | 1 => (0 : Fin 2))) := by
-  rw [rightMetric_eq_rightBasis]
+  rw [rightMetric_eq_rightHandedWeyl_basis]
   conv_lhs =>
     enter [2]
     erw [fromPairT_apply_basis_repr]
@@ -317,7 +317,7 @@ lemma dualRightMetric_eq_basis : εR' =
       ![Color.downR, Color.downR] (fun | 0 => (0 : Fin 2) | 1 => (1 : Fin 2)))
     - (Tensor.basis (S := complexLorentzTensor)
       ![Color.downR, Color.downR] (fun | 0 => (1 : Fin 2) | 1 => (0 : Fin 2))) := by
-  rw [dualRightMetric_eq_dualRightBasis]
+  rw [dualRightMetric_eq_dualRightHandedWeyl_basis]
   conv_lhs =>
     enter [2]
     erw [fromPairT_apply_basis_repr]
