@@ -228,7 +228,7 @@ lemma contrCoUnit_eq_basis : δ =
     rw [fromPairT_apply_basis_repr]
   rfl
 
-lemma dualLeftLeftUnit_eq_basis : δL' =
+lemma dualLeftLeftUnit_eq_tensor_basis : δL' =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.downL, Color.upL] (fun | 0 => i | 1 => i) := by
   rw [dualLeftLeftUnit_eq_basis]
@@ -239,7 +239,7 @@ lemma dualLeftLeftUnit_eq_basis : δL' =
     rw [fromPairT_apply_basis_repr]
   rfl
 
-lemma leftDualLeftUnit_eq_basis : δL =
+lemma leftDualLeftUnit_eq_tensor_basis : δL =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.upL, Color.downL] (fun | 0 => i | 1 => i) := by
   rw [leftDualLeftUnit_eq_basis]
@@ -250,7 +250,7 @@ lemma leftDualLeftUnit_eq_basis : δL =
     rw [fromPairT_apply_basis_repr]
   rfl
 
-lemma dualRightRightUnit_eq_basis : δR' =
+lemma dualRightRightUnit_eq_tensor_basis : δR' =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.downR, Color.upR] (fun | 0 => i | 1 => i) := by
   rw [dualRightRightUnit_eq_basis]
@@ -261,7 +261,7 @@ lemma dualRightRightUnit_eq_basis : δR' =
     rw [fromPairT_apply_basis_repr]
   rfl
 
-lemma rightDualRightUnit_eq_basis : δR =
+lemma rightDualRightUnit_eq_tensor_basis : δR =
     ∑ i, Tensor.basis (S := complexLorentzTensor)
       ![Color.upR, Color.downR] (fun | 0 => i | 1 => i) := by
   rw [rightDualRightUnit_eq_basis]
@@ -300,7 +300,7 @@ lemma contrCoUnit_eq_ofRat : δ = ofRat fun f =>
 
 lemma dualLeftLeftUnit_eq_ofRat : δL' = ofRat fun f =>
     if f 0 = f 1 then 1 else 0 := by
-  rw [dualLeftLeftUnit_eq_basis]
+  rw [dualLeftLeftUnit_eq_tensor_basis]
   conv_lhs =>
     enter [2, x]
     rw [basis_eq_ofRat]
@@ -310,7 +310,7 @@ lemma dualLeftLeftUnit_eq_ofRat : δL' = ofRat fun f =>
 
 lemma leftDualLeftUnit_eq_ofRat : δL = ofRat fun f =>
     if f 0 = f 1 then 1 else 0 := by
-  rw [leftDualLeftUnit_eq_basis]
+  rw [leftDualLeftUnit_eq_tensor_basis]
   conv_lhs =>
     enter [2, x]
     rw [basis_eq_ofRat]
@@ -320,7 +320,7 @@ lemma leftDualLeftUnit_eq_ofRat : δL = ofRat fun f =>
 
 lemma dualRightRightUnit_eq_ofRat : δR' = ofRat fun f =>
     if f 0 = f 1 then 1 else 0 := by
-  rw [dualRightRightUnit_eq_basis]
+  rw [dualRightRightUnit_eq_tensor_basis]
   conv_lhs =>
     enter [2, x]
     rw [basis_eq_ofRat]
@@ -330,7 +330,7 @@ lemma dualRightRightUnit_eq_ofRat : δR' = ofRat fun f =>
 
 lemma rightDualRightUnit_eq_ofRat : δR = ofRat fun f =>
     if f 0 = f 1 then 1 else 0 := by
-  rw [rightDualRightUnit_eq_basis]
+  rw [rightDualRightUnit_eq_tensor_basis]
   conv_lhs =>
     enter [2, x]
     rw [basis_eq_ofRat]
