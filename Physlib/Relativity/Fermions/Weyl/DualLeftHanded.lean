@@ -19,6 +19,12 @@ In this file we define dual Left handed Weyl fermions.
 These sit in the dual of the fundamental representation of `SL(2,ℂ)`,
 and we consider them to have down indices `ψ_α` with `α = 1,2`.
 
+### References
+
+A good reference for the material in this file is:
+https://particle.physics.ucdavis.edu/modernsusy/slides/slideimages/spinorfeynrules.pdf
+Although a different index convention is used there.
+
 -/
 
 @[expose] public section
