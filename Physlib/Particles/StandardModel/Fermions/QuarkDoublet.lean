@@ -183,7 +183,7 @@ lemma repGaugeGroupI_eq_iff_mul_eq {g1 g2 : GaugeGroupI} :
     simp only [EuclideanSpace.basisFun_apply, Fin.sum_univ_two, Fin.isValue] at h1 h2
     simp [valLinEquiv_symm_apply, h1, h2, b, h]
 
-lemma mem_repGaugeGroupI_iff_eq {g : GaugeGroupI} :
+lemma mem_repGaugeGroupI_ker_iff_eq {g : GaugeGroupI} :
     g ∈ repGaugeGroupI.ker ↔ ∃ a b : ℂ, g.toSU2.1 = a • 1 ∧ g.toSU3.1 = b • 1 ∧
       a * b * g.toU1.1 = 1 := by
   rw [MonoidHom.mem_ker, ← MonoidHom.map_one repGaugeGroupI, repGaugeGroupI_eq_iff_mul_eq]
@@ -206,7 +206,7 @@ lemma mem_repGaugeGroupI_iff_eq {g : GaugeGroupI} :
 
 lemma gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI :
     GaugeGroupQuot.subgroup .ℤ₆ ≤ repGaugeGroupI.ker := by
-  simp only [SetLike.le_def, mem_repGaugeGroupI_iff_eq,
+  simp only [SetLike.le_def, mem_repGaugeGroupI_ker_iff_eq,
     GaugeGroupQuot.subgroup, gaugeGroupℤ₆SubGroup, MonoidHom.mem_range,
     gaugeGroupℤ₆Hom_apply, Subtype.exists, exists_and_left, forall_exists_index]
   rintro g x hx ⟨rfl⟩
@@ -230,9 +230,6 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
   | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₆)
   | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₂)
   | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₃)
-
-TODO "Find the subgroup of the Standard Model gauge group which acts trivially on the
-  quark doublet."
 
 end QuarkDoublet
 
