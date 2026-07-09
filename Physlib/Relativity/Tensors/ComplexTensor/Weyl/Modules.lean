@@ -26,53 +26,5 @@ types of fermions.
 namespace Fermion
 noncomputable section
 
-section DualRightHanded
-
-/-- The module in which dual-right handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
-structure DualRightHandedWeyl where
-  /-- The underlying value in `Fin 2 → ℂ`. -/
-  val : Fin 2 → ℂ
-
-namespace DualRightHandedWeyl
-
-/-- The equivalence between `DualRightHandedWeyl` and `Fin 2 → ℂ`. -/
-def toFin2ℂFun : DualRightHandedWeyl ≃ (Fin 2 → ℂ) where
-  toFun v := v.val
-  invFun f := ⟨f⟩
-  left_inv _ := rfl
-  right_inv _ := rfl
-
-/-- The instance of `AddCommMonoid` on `DualRightHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : AddCommMonoid DualRightHandedWeyl := Equiv.addCommMonoid toFin2ℂFun
-
-/-- The instance of `AddCommGroup` on `DualRightHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : AddCommGroup DualRightHandedWeyl := Equiv.addCommGroup toFin2ℂFun
-
-/-- The instance of `Module` on `DualRightHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : Module ℂ DualRightHandedWeyl := Equiv.module ℂ toFin2ℂFun
-
-/-- The linear equivalence between `DualRightHandedWeyl` and `(Fin 2 → ℂ)`. -/
-@[simps!]
-def toFin2ℂEquiv : DualRightHandedWeyl ≃ₗ[ℂ] (Fin 2 → ℂ) where
-  toFun := toFin2ℂFun
-  map_add' := fun _ _ => rfl
-  map_smul' := fun _ _ => rfl
-  invFun := toFin2ℂFun.symm
-  left_inv := fun _ => rfl
-  right_inv := fun _ => rfl
-
-/-- The underlying element of `Fin 2 → ℂ` of a element in `DualRightHandedWeyl` defined
-  through the linear equivalence `toFin2ℂEquiv`. -/
-abbrev toFin2ℂ (ψ : DualRightHandedWeyl) := toFin2ℂEquiv ψ
-
-lemma toFin2ℂ_eq_val (ψ : DualRightHandedWeyl) : ψ.toFin2ℂ = ψ.val := rfl
-
-end DualRightHandedWeyl
-
-end DualRightHanded
-
 end
 end Fermion
