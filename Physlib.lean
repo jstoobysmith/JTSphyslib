@@ -9,6 +9,7 @@ public import Physlib.ClassicalMechanics.FreeParticle.Basic
 public import Physlib.ClassicalMechanics.HamiltonsEquations
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Basic
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Basic
+public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.KineticEnergy
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Geometric.Trajectory
 public import Physlib.ClassicalMechanics.HarmonicOscillator.Solution
 public import Physlib.ClassicalMechanics.Lagrangian.TotalDerivativeEquivalence
@@ -17,7 +18,10 @@ public import Physlib.ClassicalMechanics.OrbitalMechanics.VisViva
 public import Physlib.ClassicalMechanics.Pendulum.CoplanarDoublePendulum
 public import Physlib.ClassicalMechanics.Pendulum.MiscellaneousPendulumPivotMotions
 public import Physlib.ClassicalMechanics.Pendulum.SlidingPendulum
+public import Physlib.ClassicalMechanics.RigidBody.AngularMomentum
+public import Physlib.ClassicalMechanics.RigidBody.AngularVelocity
 public import Physlib.ClassicalMechanics.RigidBody.Basic
+public import Physlib.ClassicalMechanics.RigidBody.KineticEnergy
 public import Physlib.ClassicalMechanics.RigidBody.Motion
 public import Physlib.ClassicalMechanics.RigidBody.SolidSphere
 public import Physlib.ClassicalMechanics.Scattering.RigidSphere
@@ -79,6 +83,7 @@ public import Physlib.Mathematics.Calculus.ParametricIntegration
 public import Physlib.Mathematics.Calculus.Wirtinger.Basic
 public import Physlib.Mathematics.Calculus.Wirtinger.Coordinate
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.CrossProduct
 public import Physlib.Mathematics.CrossProductMatrix
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
@@ -94,7 +99,8 @@ public import Physlib.Mathematics.InnerProductSpace.Adjoint
 public import Physlib.Mathematics.InnerProductSpace.Basic
 public import Physlib.Mathematics.InnerProductSpace.Calculus
 public import Physlib.Mathematics.InnerProductSpace.Submodule
-public import Physlib.Mathematics.KroneckerDelta
+public import Physlib.Mathematics.KroneckerDelta.Basic
+public import Physlib.Mathematics.KroneckerDelta.Contraction
 public import Physlib.Mathematics.LinearMaps
 public import Physlib.Mathematics.LinearPMap
 public import Physlib.Mathematics.List
@@ -166,6 +172,7 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lem
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.LinearParameterization
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
@@ -373,6 +380,7 @@ public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.Relativity.Tensors.Evaluation
 public import Physlib.Relativity.Tensors.LeviCivita.Basic
+public import Physlib.Relativity.Tensors.LeviCivita.Contractions
 public import Physlib.Relativity.Tensors.MetricTensor
 public import Physlib.Relativity.Tensors.OfInt
 public import Physlib.Relativity.Tensors.Product
@@ -437,6 +445,7 @@ public import Physlib.SpaceAndTime.SpaceTime.LorentzAction
 public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
 public import Physlib.SpaceAndTime.Time.Basic
 public import Physlib.SpaceAndTime.Time.Derivatives
+public import Physlib.SpaceAndTime.Time.MatrixDerivatives
 public import Physlib.SpaceAndTime.Time.TimeMan
 public import Physlib.SpaceAndTime.Time.TimeTransMan
 public import Physlib.SpaceAndTime.Time.TimeUnit
