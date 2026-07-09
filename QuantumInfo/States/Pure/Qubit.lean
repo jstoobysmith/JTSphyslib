@@ -154,7 +154,6 @@ def controllize (g : 𝐔[k]) : 𝐔[Qubit × k] :=
     else 0
     , by
       rw [Matrix.mem_unitaryGroup_iff]
-        exact propext eq_comm
       matrix_expand [-Complex.ext_iff, eq_comm] with ti tj;
       exact (congrFun₂ g.2.2 ti tj).symm
     ⟩
