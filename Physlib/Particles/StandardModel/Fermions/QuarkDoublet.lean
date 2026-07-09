@@ -77,6 +77,12 @@ lemma valLinEquiv_symm_apply
     (m : Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 3) ⊗[ℂ] EuclideanSpace ℂ (Fin 2)) :
     valLinEquiv.symm m = ⟨m⟩ := rfl
 
+@[simp]
+lemma val_add (q1 q2 : QuarkDoublet) : (q1 + q2).val = q1.val + q2.val := rfl
+
+@[simp]
+lemma val_smul (r : ℂ) (q : QuarkDoublet) : (r • q).val = r • q.val := rfl
+
 /-!
 
 ## Lorentz group representation
@@ -129,48 +135,101 @@ lemma repGaugeGroupI_tmul (g : GaugeGroupI) (ψ : Fermion.LeftHandedWeyl)
     repGaugeGroupI g ⟨ψ ⊗ₜ v ⊗ₜ w⟩ = ⟨g.toU1 • ψ ⊗ₜ (g.toSU3.1.toEuclideanLin v) ⊗ₜ
       (g.toSU2.1.toEuclideanLin w)⟩ := rfl
 
-@[simp]
-lemma repGaugeGroupI_gaugeGroupℤ₆OfRoot_apply (α : rootsOfUnity 6 ℂ) (q : QuarkDoublet) :
-    repGaugeGroupI (gaugeGroupℤ₆OfRoot α) q = q := by
-  obtain ⟨c, rfl⟩ := valLinEquiv.symm.surjective q
-  induction' c using TensorProduct.induction_on with ψ w v1 v2 h1 h2
-  · simp
-  · induction' ψ using TensorProduct.induction_on with ψ v v1 v2 h1 h2
-    · simp
-    · simp [valLinEquiv_symm_apply, repGaugeGroupI_tmul, gaugeGroupℤ₆SU2OfRoot_toEuclideanLin_apply,
-        gaugeGroupℤ₆SU3OfRoot_toEuclideanLin_apply, smul_smul, tmul_smul, smul_tmul,
-        gaugeGroupℤ₆UnitaryOfRoot,]
-      suffices h : (α.1 * ((starRingEnd ℂ) α.1 ^ 3 *  α.1 ^ 2)) = 1 by simp [h]
-      simp only [Complex.conj_rootsOfUnity α.2, Units.val_inv_eq_inv_val, inv_pow]
-      field_simp
-    · simp_all [add_tmul]
-  · simp_all
+/-- The action of the full gauge group on a tensor product of basis elements, expanded as a
+  sum over the columns of the `SU(3)` and `SU(2)` matrices. -/
+lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k : Fin 2) (i : Fin 3) (j : Fin 2) :
+    repGaugeGroupI g ⟨Fermion.leftBasis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
+      ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩ =
+      ∑ i' : Fin 3, ∑ j' : Fin 2, (g.toU1.1 * g.toSU3.1 i' i * g.toSU2.1 j' j)
+      • (⟨Fermion.leftBasis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i'
+          ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j'⟩ : QuarkDoublet) := by
+  apply valLinEquiv.injective
+  apply (((Fermion.leftBasis).tensorProduct
+    (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).tensorProduct
+    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis).repr.injective
+  ext ⟨⟨k, l⟩, m⟩
+  simp only [EuclideanSpace.basisFun_apply, repGaugeGroupI_tmul, Submonoid.smul_def,
+    valLinEquiv_apply, map_smul, Finsupp.coe_smul, Pi.smul_apply,
+    Module.Basis.tensorProduct_repr_tmul_apply, OrthonormalBasis.coe_toBasis_repr_apply,
+    EuclideanSpace.basisFun_repr, ofLp_toLpLin, PiLp.ofLp_single, toLin'_apply, mulVec_single,
+    MulOpposite.op_one, col_apply, one_smul, Module.Basis.repr_self, smul_eq_mul, map_sum,
+    Finsupp.coe_finsetSum, Finset.sum_apply, PiLp.single_apply, ite_mul, one_mul, zero_mul,
+    mul_ite, mul_zero, Finset.sum_ite_irrel, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte,
+    Finset.sum_const_zero]
+  ring
+
+lemma repGaugeGroupI_eq_iff_mul_eq {g1 g2 : GaugeGroupI} :
+    repGaugeGroupI g1 = repGaugeGroupI g2 ↔ ∀ i i' j j',
+    g1.toU1.1 * g1.toSU3.1 i' i * g1.toSU2.1 j' j =
+    g2.toU1.1 * g2.toSU3.1 i' i * g2.toSU2.1 j' j := by
+  let b := ((Fermion.leftBasis).tensorProduct
+      (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).tensorProduct
+      (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis
+  constructor
+  · intro h i i' j j'
+    have h' := congrFun (congrArg (fun f => f.1) h)
+      ⟨Fermion.leftBasis 0 ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
+      ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩
+    simp only [Fin.isValue, LinearMap.coe_toAddHom, repGaugeGroupI_tmul_basis_eq_sum] at h'
+    replace h' := congrArg b.repr (congrArg valLinEquiv h')
+    simpa [Module.Basis.tensorProduct_repr_tmul_apply, -Fin.sum_univ_two, b] using
+      congrArg (fun f => f ((0, i'), j')) h'
+  · intro h
+    apply (valLinEquiv.symm.eq_comp_toLinearMap_iff (repGaugeGroupI g1) (repGaugeGroupI g2)).mp
+    apply b.ext
+    rintro ⟨⟨i, j⟩, k⟩
+    have h1 := repGaugeGroupI_tmul_basis_eq_sum g1 i j k
+    have h2 := repGaugeGroupI_tmul_basis_eq_sum g2 i j k
+    simp only [EuclideanSpace.basisFun_apply, Fin.sum_univ_two, Fin.isValue] at h1 h2
+    simp [valLinEquiv_symm_apply, h1, h2, b, h]
+
+lemma mem_repGaugeGroupI_iff_eq {g : GaugeGroupI} :
+    g ∈ repGaugeGroupI.ker ↔ ∃ a b : ℂ, g.toSU2.1 = a • 1 ∧ g.toSU3.1 = b • 1 ∧
+      a * b * g.toU1.1 = 1 := by
+  rw [MonoidHom.mem_ker, ← MonoidHom.map_one repGaugeGroupI, repGaugeGroupI_eq_iff_mul_eq]
+  constructor; swap
+  · rintro ⟨a, b, h1, h2, h3⟩ i i' j j'
+    simp only [h2, Matrix.smul_apply, smul_eq_mul, h1, map_one, OneMemClass.coe_one, one_mul]
+    grind
+  · intro h
+    use g.toSU2.1 0 0, g.toSU3.1 0 0
+    simp only [map_one, OneMemClass.coe_one, one_mul, Fin.forall_fin_succ, Fin.isValue,
+      Fin.succ_zero_eq_one, IsEmpty.forall_iff, and_true, one_apply_eq, mul_one, ne_eq, one_ne_zero,
+      not_false_eq_true, one_apply_ne, mul_zero, mul_eq_zero, zero_ne_one, Fin.succ_one_eq_two,
+      Fin.reduceEq] at h
+    refine ⟨?_, ?_, ?_⟩
+    · ext i j
+      fin_cases i <;> fin_cases j <;> simp <;> grind
+    · ext i j
+      fin_cases i <;> fin_cases j <;> simp <;> grind (splits := 20)
+    · grind
+
+lemma gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI :
+    GaugeGroupQuot.subgroup .ℤ₆ ≤ repGaugeGroupI.ker := by
+  simp only [SetLike.le_def, mem_repGaugeGroupI_iff_eq,
+    GaugeGroupQuot.subgroup, gaugeGroupℤ₆SubGroup, MonoidHom.mem_range,
+    gaugeGroupℤ₆Hom_apply, Subtype.exists, exists_and_left, forall_exists_index]
+  rintro g x hx ⟨rfl⟩
+  use starRingEnd ℂ (x ^ 3)
+  simp only [gaugeGroupℤ₆OfRoot_toSU2, gaugeGroupℤ₆SU2OfRoot_eq_mul_id, RCLike.star_def,
+    Complex.conj_rootsOfUnity hx, Units.val_inv_eq_inv_val, inv_pow, map_pow,
+    gaugeGroupℤ₆OfRoot_toSU3, gaugeGroupℤ₆SU3OfRoot_eq_mul_id, ne_eq, one_ne_zero,
+    not_false_eq_true, smul_left_inj, gaugeGroupℤ₆OfRoot_toU1, gaugeGroupℤ₆UnitaryOfRoot_coe,
+    exists_eq_left', true_and]
+  field_simp
+
+lemma gaugeGroup_subgroup_le_ker_repGaugeGroupI (Q : GaugeGroupQuot) :
+    Q.subgroup ≤ repGaugeGroupI.ker := Q.subgroup_le_subgroup_ℤ₆.trans
+  gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI
 
 /-- The action of the Standard Model gauge group, potentially quotiented by
   a discrete factor on quark fields. -/
 noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
     Representation ℂ (GaugeGroup Q) QuarkDoublet
   | .I => repGaugeGroupI
-  | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI <| by
-      simp only [gaugeGroupℤ₆SubGroup, SetLike.le_def, MonoidHom.mem_range, gaugeGroupℤ₆Hom_apply,
-        Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker, forall_exists_index]
-      rintro g x hx ⟨rfl⟩
-      ext q
-      simp
-  | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI <| by
-      simp only [SetLike.le_def, gaugeGroupℤ₂SubGroup, MonoidHom.mem_range, gaugeGroupℤ₂Hom_apply,
-        gaugeGroupℤ₂OfRoot, Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker,
-        forall_exists_index]
-      rintro g x hx ⟨rfl⟩
-      ext q
-      simp
-  | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI <| by
-      simp only [SetLike.le_def, gaugeGroupℤ₃SubGroup, MonoidHom.mem_range, gaugeGroupℤ₃Hom_apply,
-        gaugeGroupℤ₃OfRoot, Subtype.exists, mem_rootsOfUnity, MonoidHom.mem_ker,
-        forall_exists_index]
-      rintro g x hx ⟨rfl⟩
-      ext q
-      simp
+  | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₆)
+  | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₂)
+  | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₃)
 
 TODO "Find the subgroup of the Standard Model gauge group which acts trivially on the
   quark doublet."

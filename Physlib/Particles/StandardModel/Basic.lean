@@ -159,6 +159,11 @@ noncomputable def gaugeGroupℤ₆SU3OfRoot (α : rootsOfUnity 6 ℂ) :
         z ^ 2 * z ^ 2 * z ^ 2 = z ^ 6 := by ring
         _ = 1 := hα⟩
 
+lemma gaugeGroupℤ₆SU3OfRoot_eq_mul_id (α : rootsOfUnity 6 ℂ) :
+    (gaugeGroupℤ₆SU3OfRoot α).1 = ((α : ℂˣ) : ℂ) ^ 2 • 1 := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [gaugeGroupℤ₆SU3OfRoot]
+
 lemma gaugeGroupℤ₆SU3OfRoot_toEuclideanLin_apply (α : rootsOfUnity 6 ℂ)
     (v : EuclideanSpace ℂ (Fin 3)) :
     (gaugeGroupℤ₆SU3OfRoot α).1.toEuclideanLin v = ((α : ℂˣ) : ℂ) ^ 2 • v := by
@@ -193,6 +198,11 @@ noncomputable def gaugeGroupℤ₆SU2OfRoot (α : rootsOfUnity 6 ℂ) :
     simpa [Pi.star_def] using hw
   · rw [Matrix.scalar_apply, Matrix.det_diagonal, Fin.prod_univ_two]
     simpa [pow_two] using hw2
+
+lemma gaugeGroupℤ₆SU2OfRoot_eq_mul_id (α : rootsOfUnity 6 ℂ) :
+    (gaugeGroupℤ₆SU2OfRoot α).1 = star ((α : ℂˣ) : ℂ) ^ 3 • 1 := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [gaugeGroupℤ₆SU2OfRoot]
 
 lemma gaugeGroupℤ₆SU2OfRoot_toEuclideanLin_apply (α : rootsOfUnity 6 ℂ)
     (v : EuclideanSpace ℂ (Fin 2)) :
@@ -654,6 +664,16 @@ instance subgroup_normal (q : GaugeGroupQuot) : (subgroup q).Normal := by
   · exact gaugeGroupℤ₃SubGroup_normal
   · change (⊥ : Subgroup GaugeGroupI).Normal
     infer_instance
+
+lemma subgroup_le_subgroup_ℤ₆ (q : GaugeGroupQuot) : subgroup q ≤ gaugeGroupℤ₆SubGroup := by
+  cases q
+  · exact le_rfl
+  · exact gaugeGroupℤ₂SubGroup_le_gaugeGroupℤ₆SubGroup
+  · exact gaugeGroupℤ₃SubGroup_le_gaugeGroupℤ₆SubGroup
+  · intro g hg
+    change g ∈ (⊥ : Subgroup GaugeGroupI) at hg
+    rw [Subgroup.mem_bot] at hg
+    simp [hg]
 
 /-- The quotient map from `GaugeGroupI` to the gauge group selected by a quotient choice. -/
 noncomputable def quotientMap (q : GaugeGroupQuot) : GaugeGroupI →* GaugeGroup q :=
