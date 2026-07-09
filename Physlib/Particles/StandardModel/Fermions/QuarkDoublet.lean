@@ -135,16 +135,17 @@ lemma repGaugeGroupI_tmul (g : GaugeGroupI) (ψ : Fermion.LeftHandedWeyl)
     repGaugeGroupI g ⟨ψ ⊗ₜ v ⊗ₜ w⟩ = ⟨g.toU1 • ψ ⊗ₜ (g.toSU3.1.toEuclideanLin v) ⊗ₜ
       (g.toSU2.1.toEuclideanLin w)⟩ := rfl
 
+open Fermion in
 /-- The action of the full gauge group on a tensor product of basis elements, expanded as a
   sum over the columns of the `SU(3)` and `SU(2)` matrices. -/
 lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k : Fin 2) (i : Fin 3) (j : Fin 2) :
-    repGaugeGroupI g ⟨Fermion.leftBasis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
+    repGaugeGroupI g ⟨LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
       ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩ =
       ∑ i' : Fin 3, ∑ j' : Fin 2, (g.toU1.1 * g.toSU3.1 i' i * g.toSU2.1 j' j)
-      • (⟨Fermion.leftBasis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i'
+      • (⟨LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i'
           ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j'⟩ : QuarkDoublet) := by
   apply valLinEquiv.injective
-  apply (((Fermion.leftBasis).tensorProduct
+  apply (((LeftHandedWeyl.basis).tensorProduct
     (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).tensorProduct
     (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis).repr.injective
   ext ⟨⟨k, l⟩, m⟩
@@ -158,17 +159,18 @@ lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k : Fin 2) (i : Fin 3)
     Finset.sum_const_zero]
   ring
 
+open Fermion in
 lemma repGaugeGroupI_eq_iff_mul_eq {g1 g2 : GaugeGroupI} :
     repGaugeGroupI g1 = repGaugeGroupI g2 ↔ ∀ i i' j j',
     g1.toU1.1 * g1.toSU3.1 i' i * g1.toSU2.1 j' j =
     g2.toU1.1 * g2.toSU3.1 i' i * g2.toSU2.1 j' j := by
-  let b := ((Fermion.leftBasis).tensorProduct
+  let b := ((LeftHandedWeyl.basis).tensorProduct
       (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).tensorProduct
       (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis
   constructor
   · intro h i i' j j'
     have h' := congrFun (congrArg (fun f => f.1) h)
-      ⟨Fermion.leftBasis 0 ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
+      ⟨LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i
       ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩
     simp only [Fin.isValue, LinearMap.coe_toAddHom, repGaugeGroupI_tmul_basis_eq_sum] at h'
     replace h' := congrArg b.repr (congrArg valLinEquiv h')
