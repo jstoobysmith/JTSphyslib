@@ -323,6 +323,7 @@ public import Physlib.Relativity.CliffordAlgebra
 public import Physlib.Relativity.Fermions.Weyl.Contraction
 public import Physlib.Relativity.Fermions.Weyl.DualLeftHanded
 public import Physlib.Relativity.Fermions.Weyl.DualRightHanded
+public import Physlib.Relativity.Fermions.Weyl.Duals
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
