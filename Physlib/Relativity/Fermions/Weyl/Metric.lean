@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Unit
+public import Physlib.Relativity.Fermions.Weyl.Unit
 /-!
 
 # Metrics of Weyl fermions

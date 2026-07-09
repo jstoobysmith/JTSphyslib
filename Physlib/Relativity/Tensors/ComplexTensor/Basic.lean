@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith, Nikolai Kashcheev
 module
 
 public import Physlib.Relativity.Tensors.ComplexTensor.Metrics.Pre
-public import Physlib.Relativity.Tensors.ComplexTensor.Weyl.Metric
+public import Physlib.Relativity.Fermions.Weyl.Metric
 /-!
 
 ## Complex Lorentz tensors
