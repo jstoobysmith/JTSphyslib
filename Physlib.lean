@@ -320,6 +320,7 @@ public import Physlib.QuantumMechanics.OneDimension.ReflectionlessPotential.Basi
 public import Physlib.QuantumMechanics.PlanckConstant
 public import Physlib.Relativity.Bispinors.Basic
 public import Physlib.Relativity.CliffordAlgebra
+public import Physlib.Relativity.Fermions.Dirac.Basic
 public import Physlib.Relativity.Fermions.Weyl.Contraction
 public import Physlib.Relativity.Fermions.Weyl.DualLeftHanded
 public import Physlib.Relativity.Fermions.Weyl.DualRightHanded
