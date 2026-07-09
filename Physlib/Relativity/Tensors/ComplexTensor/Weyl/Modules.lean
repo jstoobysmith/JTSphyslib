@@ -26,58 +26,6 @@ types of fermions.
 namespace Fermion
 noncomputable section
 
-TODO "Make a directory in ./Physlib/Relativity called Fermions for these files.
-  Make this file (currently ..../Modules.lean) the Basic file, and include the basic module
-  definitions for the different types of Weyl fermions."
-
-section LeftHanded
-
-/-- The module in which left handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
-structure LeftHandedWeyl where
-  /-- The underlying value in `Fin 2 → ℂ`. -/
-  val : Fin 2 → ℂ
-
-namespace LeftHandedWeyl
-
-/-- The equivalence between `LeftHandedWeyl` and `Fin 2 → ℂ`. -/
-def toFin2ℂFun : LeftHandedWeyl ≃ (Fin 2 → ℂ) where
-  toFun v := v.val
-  invFun f := ⟨f⟩
-  left_inv _ := rfl
-  right_inv _ := rfl
-
-/-- The instance of `AddCommMonoid` on `LeftHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : AddCommMonoid LeftHandedWeyl := Equiv.addCommMonoid toFin2ℂFun
-
-/-- The instance of `AddCommGroup` on `LeftHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : AddCommGroup LeftHandedWeyl := Equiv.addCommGroup toFin2ℂFun
-
-/-- The instance of `Module` on `LeftHandedWeyl` defined via its equivalence
-  with `Fin 2 → ℂ`. -/
-instance : Module ℂ LeftHandedWeyl := Equiv.module ℂ toFin2ℂFun
-
-/-- The linear equivalence between `LeftHandedWeyl` and `(Fin 2 → ℂ)`. -/
-@[simps!]
-def toFin2ℂEquiv : LeftHandedWeyl ≃ₗ[ℂ] (Fin 2 → ℂ) where
-  toFun := toFin2ℂFun
-  map_add' := fun _ _ => rfl
-  map_smul' := fun _ _ => rfl
-  invFun := toFin2ℂFun.symm
-  left_inv := fun _ => rfl
-  right_inv := fun _ => rfl
-
-/-- The underlying element of `Fin 2 → ℂ` of a element in `LeftHandedWeyl` defined
-  through the linear equivalence `toFin2ℂEquiv`. -/
-abbrev toFin2ℂ (ψ : LeftHandedWeyl) := toFin2ℂEquiv ψ
-
-lemma toFin2ℂ_eq_val (ψ : LeftHandedWeyl) : ψ.toFin2ℂ = ψ.val := rfl
-
-end LeftHandedWeyl
-
-end LeftHanded
-
 /-- The module in which dual-left handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
 structure DualLeftHandedWeyl where
   /-- The underlying value in `Fin 2 → ℂ`. -/
