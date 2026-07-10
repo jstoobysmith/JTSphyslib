@@ -64,6 +64,18 @@ instance : AddCommGroup Dirac := Equiv.addCommGroup decomposeEquiv
 
 instance : Module ℂ Dirac := Equiv.module ℂ decomposeEquiv
 
+@[simp]
+lemma left_add (d₁ d₂ : Dirac) : (d₁ + d₂).left = d₁.left + d₂.left := rfl
+
+@[simp]
+lemma dualRight_add (d₁ d₂ : Dirac) : (d₁ + d₂).dualRight = d₁.dualRight + d₂.dualRight := rfl
+
+@[simp]
+lemma left_smul (c : ℂ) (d : Dirac) : (c • d).left = c • d.left := rfl
+
+@[simp]
+lemma dualRight_smul (c : ℂ) (d : Dirac) : (c • d).dualRight = c • d.dualRight := rfl
+
 /-- The linear equivalence between `Dirac` and `LeftHandedWeyl × DualRightHandedWeyl`. -/
 def decomposeLinEquiv : Dirac ≃ₗ[ℂ] LeftHandedWeyl × DualRightHandedWeyl where
   toEquiv := decomposeEquiv
@@ -111,7 +123,7 @@ def rep : Representation ℂ SL(2,ℂ) Dirac where
     (((LeftHandedWeyl.rep).prod (DualRightHandedWeyl.rep)) g) ∘ₗ
     decomposeLinEquiv
   map_one' := by
-    ext i
+    ext1 i
     simp
   map_mul' := fun M N => by
     ext1 x
@@ -122,8 +134,7 @@ lemma rep_apply_mk (g : SL(2,ℂ)) (ψ : LeftHandedWeyl) (χ : DualRightHandedWe
 
 /-- The equivalence between the representation on `Dirac` and the representation
   on `LeftHandedWeyl × DualRightHandedWeyl`. -/
-def decomponseRepEquiv : Representation.Equiv
-    rep ((LeftHandedWeyl.rep).prod (DualRightHandedWeyl.rep))  where
+def decomposeRepEquiv : rep.Equiv ((LeftHandedWeyl.rep).prod (DualRightHandedWeyl.rep))  where
   toLinearEquiv := decomposeLinEquiv
   isIntertwining' g := by
     ext1 x
