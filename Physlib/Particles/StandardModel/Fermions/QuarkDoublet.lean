@@ -185,6 +185,9 @@ lemma repGaugeGroupI_eq_iff_mul_eq {g1 g2 : GaugeGroupI} :
     simp only [EuclideanSpace.basisFun_apply, Fin.sum_univ_two, Fin.isValue] at h1 h2
     simp [valLinEquiv_symm_apply, h1, h2, b, h]
 
+TODO "Improve the efficiency of `mem_repGaugeGroupI_ker_iff_eq` by removing the
+  `grind`s and replacing them with a more direct argument."
+
 lemma mem_repGaugeGroupI_ker_iff_eq {g : GaugeGroupI} :
     g ∈ repGaugeGroupI.ker ↔ ∃ a b : ℂ, g.toSU2.1 = a • 1 ∧ g.toSU3.1 = b • 1 ∧
       a * b * g.toU1.1 = 1 := by
@@ -192,7 +195,7 @@ lemma mem_repGaugeGroupI_ker_iff_eq {g : GaugeGroupI} :
   constructor; swap
   · rintro ⟨a, b, h1, h2, h3⟩ i i' j j'
     simp only [h2, Matrix.smul_apply, smul_eq_mul, h1, map_one, OneMemClass.coe_one, one_mul]
-    grind
+    linear_combination h3 * (1 : Matrix _ _ ℂ) i' i * (1 : Matrix  _ _ ℂ) j' j
   · intro h
     use g.toSU2.1 0 0, g.toSU3.1 0 0
     simp only [map_one, OneMemClass.coe_one, one_mul, Fin.forall_fin_succ, Fin.isValue,
