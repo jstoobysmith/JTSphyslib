@@ -7,11 +7,10 @@ module
 
 public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
-public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 /-!
 
-# The potential algebra of Weyl fermions
+# The effective potential of Weyl fermions
 
 ## i. Overview
 
@@ -19,7 +18,7 @@ In this file are primary objective is to look at the potential
 of a single left-handed Weyl fermion, correctly taking account
 of the anti-commuting nature of the fermion.
 
-Two facts about the potential, which we take as a given, are that:
+Two facts about the (effective) potential, which we take as a given, are that:
 1. It is written in terms of the components of the left-handed Weyl fermion and its conjugate.
 2. Within the potential the components anti-commute.
 The first of these, tells us that we should be working with the dual of the left-handed Weyl fermion
@@ -29,7 +28,7 @@ exterior algebra.
 
 Thus, the type in which the potential lives is
 `ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)`. We call this type
-`PotentialAlgebra` and define it and its properties in this file.
+`EffectivePotential` and define it and its properties in this file.
 
 On `PotentialAlgebra` we define a representation of the Lorentz group, and prove that that
 if the potential is invariant under the Lorentz group it must be of the form
@@ -57,9 +56,11 @@ open CategoryTheory.MonoidalCategory
 
 -/
 
-abbrev PotentialAlgebra : Type := ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)
+/-- The type corresponding to the effective potential of a
+  left-handed Weyl fermion. -/
+abbrev EffectivePotential : Type := ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)
 
-namespace PotentialAlgebra
+namespace EffectivePotential
 
 /-!
 
@@ -68,13 +69,13 @@ namespace PotentialAlgebra
 -/
 
 /-- The coordinate element corresponding to the i-th basis vector as a member
-  of the potential algebra. -/
-def ψ (i : Fin 2) : PotentialAlgebra :=
+  of the effective potential. -/
+def ψ (i : Fin 2) : EffectivePotential :=
   (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (DualLeftHandedWeyl.basis i))
 
 /-- The coordinate element corresponding to the conjugate i-th basis vector as a member
-  of the potential algebra. -/
-def barψ (i : Fin 2) : PotentialAlgebra :=
+  of the effective potential. -/
+def barψ (i : Fin 2) : EffectivePotential :=
   (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (DualRightHandedWeyl.basis i))
 
 @[simp] lemma ψ_mul_self (i : Fin 2) : ψ i * ψ i = 0 := ExteriorAlgebra.ι_sq_zero _
@@ -96,9 +97,8 @@ def barψ (i : Fin 2) : PotentialAlgebra :=
 
 -/
 
-
-/-- The basis of the potential algebra. -/
-def basis : Basis (Finset (Fin 4)) ℂ PotentialAlgebra :=
+/-- The basis of the effective potential. -/
+def basis : Basis (Finset (Fin 4)) ℂ EffectivePotential :=
     Module.Basis.ExteriorAlgebra ((DualLeftHandedWeyl.basis.prod DualRightHandedWeyl.basis).reindex
       finSumFinEquiv)
 
@@ -109,7 +109,7 @@ def basis : Basis (Finset (Fin 4)) ℂ PotentialAlgebra :=
 -/
 
 /-- The representation of the Lorentz group on `PotentialAlgebra`. -/
-def rep : Representation ℂ SL(2, ℂ) PotentialAlgebra where
+def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
   toFun Λ := (ExteriorAlgebra.map ((DualLeftHandedWeyl.rep Λ).prodMap
     (DualRightHandedWeyl.rep Λ))).toLinearMap
   map_one' := by
@@ -119,11 +119,11 @@ def rep : Representation ℂ SL(2, ℂ) PotentialAlgebra where
     simp only [map_mul, End.mul_eq_comp, ← LinearMap.prodMap_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
-lemma rep_apply (Λ : SL(2, ℂ)) (V : PotentialAlgebra) :
+lemma rep_apply (Λ : SL(2, ℂ)) (V : EffectivePotential) :
     rep Λ V = ExteriorAlgebra.map ((DualLeftHandedWeyl.rep Λ).prodMap
       (DualRightHandedWeyl.rep Λ)) V := rfl
 
-lemma rep_mul (Λ : SL(2, ℂ)) (V W : PotentialAlgebra) :
+lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
     rep Λ (V * W) = rep Λ V * rep Λ W:= by
   simp [rep]
 
@@ -144,22 +144,22 @@ lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
 -/
 
 
-def IsInvariant (V : PotentialAlgebra) : Prop := ∀ Λ, rep Λ V = V
+def IsInvariant (V : EffectivePotential) : Prop := ∀ Λ, rep Λ V = V
 
-lemma IsInvariant.eq_iff {V : PotentialAlgebra} :
+lemma IsInvariant.eq_iff {V : EffectivePotential} :
     IsInvariant V ↔ ∀ Λ, rep Λ V = V := by rfl
 
-lemma IsInvariant.add {V W : PotentialAlgebra} (hV : IsInvariant V) (hW : IsInvariant W) :
+lemma IsInvariant.add {V W : EffectivePotential} (hV : IsInvariant V) (hW : IsInvariant W) :
     IsInvariant (V + W) := by
   intro Λ
   simp_all [IsInvariant.eq_iff]
 
-lemma IsInvariant.smul {V : PotentialAlgebra} (hV : IsInvariant V) (c : ℂ) :
+lemma IsInvariant.smul {V : EffectivePotential} (hV : IsInvariant V) (c : ℂ) :
     IsInvariant (c • V) := by
   intro Λ
   simp_all [IsInvariant.eq_iff]
 
-lemma IsInvariant.mul {V W : PotentialAlgebra} (hV : IsInvariant V) (hW : IsInvariant W) :
+lemma IsInvariant.mul {V W : EffectivePotential} (hV : IsInvariant V) (hW : IsInvariant W) :
     IsInvariant (V * W) := by
   intro Λ
   simp_all [IsInvariant.eq_iff, rep_mul]
@@ -198,13 +198,13 @@ lemma barψ_zero_mul_barψ_one_isInvariant : IsInvariant (barψ 0 * barψ 1) := 
 
 lemma quartic_isInvariant : IsInvariant (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
   intro Λ
-  simp [rep_mul, rep_apply_barψ_eq_sum, rep_apply_barψ_eq_sum, mul_add, add_mul, adjugate_fin_two, smul_smul,
-    ← add_smul, ← neg_smul, ← map_mul, ← map_neg, ← map_add, mul_assoc]
+  simp [rep_mul, rep_apply_barψ_eq_sum, rep_apply_barψ_eq_sum, mul_add, add_mul, adjugate_fin_two,
+    smul_smul, ← add_smul, ← neg_smul, ← map_mul, ← map_neg, ← map_add, mul_assoc]
   trans (starRingEnd ℂ)  Λ.1.det • ((rep Λ) (ψ 0) * ((rep Λ) (ψ 1) * (barψ 0 * barψ 1)))
   · simp only [Matrix.det_fin_two]
     ring_nf
-  simp [rep_apply_ψ_eq_sum, mul_add, add_mul, ← mul_assoc, mul_add, add_mul, adjugate_fin_two, smul_smul,
-    ← add_smul, ← neg_smul]
+  simp [rep_apply_ψ_eq_sum, mul_add, add_mul, ← mul_assoc, mul_add, add_mul,
+    adjugate_fin_two, smul_smul, ← add_smul, ← neg_smul]
   trans Λ.1.det • (ψ 0 * ψ 1 * barψ 0 * barψ 1)
   · simp only [Matrix.det_fin_two]
     ring_nf
@@ -216,7 +216,7 @@ lemma quartic_isInvariant : IsInvariant (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
 
 -/
 /-- If `V` is invariant, then all terms with an odd number of factors vanish. -/
-lemma even_of_isInvariant {V : PotentialAlgebra} {s : Finset (Fin 4)} (h : IsInvariant V)
+lemma even_of_isInvariant {V : EffectivePotential} {s : Finset (Fin 4)} (h : IsInvariant V)
     (hs : Odd s.card) : basis.repr V s = 0 := by
   suffices h : basis.repr V s = (-1 : ℂ) ^ s.card * basis.repr V s by
     simpa [hs.neg_one_pow, CharZero.eq_neg_self_iff] using h
@@ -242,7 +242,7 @@ lemma even_of_isInvariant {V : PotentialAlgebra} {s : Finset (Fin 4)} (h : IsInv
   exact hmap _ _
 
 /-- If `V` is invariant, then the mixed terms `ψ i * barψ j` have coefficient zero. -/
-lemma zero_two_term_zero_of_isInvariant {V : PotentialAlgebra} (h : IsInvariant V) :
+lemma zero_two_term_zero_of_isInvariant {V : EffectivePotential} (h : IsInvariant V) :
     basis.repr V {0, 2} = 0 ∧ basis.repr V {0, 3} = 0
     ∧ basis.repr V {1, 2} = 0 ∧ basis.repr V {1, 3} = 0 := by
   let Λ : SL(2, ℂ):= ⟨!![2 * I, 0; 0, -(I / 2)], by
@@ -299,7 +299,7 @@ lemma zero_two_term_zero_of_isInvariant {V : PotentialAlgebra} (h : IsInvariant 
   exact Fintype.prod_equiv (t.orderIsoOfFin rfl).toEquiv _ _ fun i => by
     simp [Finset.coe_orderIsoOfFin_apply]
 
-lemma isInvariant_iff {V : PotentialAlgebra} :
+lemma isInvariant_iff {V : EffectivePotential} :
     IsInvariant V ↔ ∃ (c m1 m2 ρ : ℂ), V = c • 1 + m1 • (ψ 0 * ψ 1) + m2 • (barψ 0 * barψ 1) +
       ρ • (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
   constructor
@@ -331,7 +331,7 @@ lemma isInvariant_iff {V : PotentialAlgebra} :
     apply_rules [IsInvariant.add, IsInvariant.smul,  IsInvariant.one,
       ψ_zero_mul_ψ_one_isInvariant, barψ_zero_mul_barψ_one_isInvariant, quartic_isInvariant]
 
-end PotentialAlgebra
+end EffectivePotential
 
 end
 end Fermion
