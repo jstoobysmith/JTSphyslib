@@ -327,7 +327,6 @@ public import Physlib.Relativity.Fermions.Weyl.Duals
 public import Physlib.Relativity.Fermions.Weyl.EffectivePotential
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.Metric
-public import Physlib.Relativity.Fermions.Weyl.PotentialAlgebra
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
 public import Physlib.Relativity.Fermions.Weyl.Two
 public import Physlib.Relativity.Fermions.Weyl.Unit

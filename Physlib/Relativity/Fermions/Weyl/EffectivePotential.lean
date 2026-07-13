@@ -212,7 +212,7 @@ lemma quartic_isInvariant : IsInvariant (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
 
 /-!
 
-## B.2. Terms which must be zero fo an invariant potential
+## B.2. Terms which must be zero in an invariant potential
 
 -/
 /-- If `V` is invariant, then all terms with an odd number of factors vanish. -/
