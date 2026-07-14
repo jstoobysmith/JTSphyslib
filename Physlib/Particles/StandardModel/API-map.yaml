@@ -1,0 +1,55 @@
+version: v0.1
+
+Title: Standard model
+
+Overview: |
+    The Standard Model is our current best theory of everything, containing all of the fermions that
+    we know to exist, the Higgs boson, and the gauge bosons that contribute to the forces that we have
+    in the world. This API covers the Standard Model, the fermions, the potentials, and everything
+    else that goes into it.
+
+ParentAPIs:
+
+References: []
+
+Requirements:
+
+  - description: "The definition of Quark doublets sitting in the (3, 2)_{1} (left-handed) representation of the SM gauge group."
+    done: true
+    location: "Physlib/Particles/StandardModel/Fermions/QuarkDoublet.lean (QuarkDoublet)"
+
+  - description: "The definition of up-type singlets sitting in the (3, 1)_{4} (right-handed) representation of the SM gauge group."
+    done: false
+    location: N/A
+
+  - description: "The definition of down-type singlets sitting in the (3, 1)_{-2} (right-handed) representation of the SM gauge group."
+    done: false
+    location: N/A
+
+  - description: "The definition of lepton doublets sitting in the (1, 2)_{-3} (left-handed) representation of the SM gauge group."
+    done: false
+    location: N/A
+
+  - description: "The definition of lepton singlets sitting in the (1, 1)_{-6} (right-handed) representation of the SM gauge group."
+    done: false
+
+
+  - description: "The definition of the type corresponding to the effective potential of the Standard model including the fermions and the Higgs boson, excluding derivatives."
+    done: false
+    location: N/A
+
+  - description: "The action of the Lorentz group on the effective potential."
+    done: false
+    location: N/A
+
+  - description: "The action of the SM gauge group on the effective potential."
+    done: false
+    location: N/A
+
+  - description: "The definition of the mass dimension on the effective potential."
+    done: false
+    location: N/A
+
+  - description: "The proof that up to mass dimension 4, the effective potential gives us the Yukawa sector of the Standard Model."
+    done: false
+    location: N/A
