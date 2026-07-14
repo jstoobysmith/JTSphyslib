@@ -78,21 +78,21 @@ namespace EffectivePotential
 
 /-- The coordinate element corresponding to the i-th basis vector as a member
   of the effective potential. -/
-def ψ (i : Fin 2) : EffectivePotential :=
-  (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis i))
+def ψ (α : Fin 2) : EffectivePotential :=
+  (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α))
 
 /-- The coordinate element corresponding to the conjugate i-th basis vector as a member
   of the effective potential. -/
-def barψ (i : Fin 2) : EffectivePotential :=
-  (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis i))
+def barψ (α : Fin 2) : EffectivePotential :=
+  (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α))
 
-@[simp] lemma ψ_mul_self (i : Fin 2) : ψ i * ψ i = 0 := ExteriorAlgebra.ι_sq_zero _
+@[simp] lemma ψ_mul_self (α : Fin 2) : ψ α * ψ α = 0 := ExteriorAlgebra.ι_sq_zero _
 
 @[simp] lemma ψ_one_mul_ψ_zero_swap : ψ 1 * ψ 0 = - ψ 0 * ψ 1 := by
   rw [neg_mul, eq_neg_iff_add_eq_zero]
   exact ExteriorAlgebra.ι_add_mul_swap _ _
 
-@[simp] lemma barψ_mul_self (i : Fin 2) : barψ i * barψ i = 0 := ExteriorAlgebra.ι_sq_zero _
+@[simp] lemma barψ_mul_self (α : Fin 2) : barψ α * barψ α = 0 := ExteriorAlgebra.ι_sq_zero _
 
 @[simp] lemma barψ_one_mul_barψ_zero_swap : barψ 1 * barψ 0 = - barψ 0 * barψ 1 := by
   rw [neg_mul, eq_neg_iff_add_eq_zero]
@@ -115,14 +115,16 @@ lemma append_apply_three_eq : Fin.append ψ barψ 3 = barψ 1 := rfl
 ### A.2. Of a list
 -/
 
+/-- The term of the effective potential generated from a list
+  of `Fin 4`, which describe the components `[ψ 0, ψ 1, barψ 0, barψ 1]`. -/
 def termOfList (l : List (Fin 4)) : EffectivePotential :=
   (l.map (Fin.append ψ barψ)).prod
 
 @[simp]
 lemma termOfList_nil : termOfList [] = 1 := by simp [termOfList]
 
-lemma termOfList_cons (l : List (Fin 4)) (i : Fin 4) :
-    termOfList (i :: l) = (Fin.append ψ barψ i) * termOfList l := by
+lemma termOfList_cons (l : List (Fin 4)) (α : Fin 4) :
+    termOfList (α :: l) = (Fin.append ψ barψ α) * termOfList l := by
   simp only [termOfList, List.map_cons, List.prod_cons]
 
 /-!
@@ -154,9 +156,10 @@ lemma basis_eq_termOfList (s : Finset (Fin 4)) : basis s = termOfList (s.sort (�
   simp [Finset.orderEmbOfFin_apply]
 
 /-!
-### A.4. The representation on the potential algebra
--/
 
+### A.4. The representation on the potential algebra
+
+-/
 
 /-- The representation of the Lorentz group on `PotentialAlgebra`. -/
 def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
@@ -182,7 +185,7 @@ lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
   simp [rep]
 
 lemma rep_apply_ψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
-    rep Λ (ψ i) = ∑ j, Λ⁻¹ i j • ψ j := by
+    rep Λ (ψ i) = ∑ (j : Fin 2), Λ⁻¹ i j • ψ j := by
   simp only [ψ, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply, Representation.dual_apply,
     ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, ← map_smul, Prod.smul_mk,
     smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
@@ -192,14 +195,14 @@ lemma rep_apply_ψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
     simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
       -SpecialLinearGroup.coe_inv]
 
-lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
-    rep Λ (barψ i) = ∑ j, star (Λ⁻¹ i j) • barψ j := by
+lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
+    rep Λ (barψ α) = ∑ β, star (Λ⁻¹ α β) • barψ β := by
   simp only [barψ, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
     ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, RCLike.star_def, ← map_smul,
     Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
     ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
   refine LeftHandedWeyl.basis.conj.ext fun l => ?_
-  fin_cases i <;> fin_cases l <;>
+  fin_cases α <;> fin_cases l <;>
     simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
       -SpecialLinearGroup.coe_inv, Representation.conj_apply]
 
@@ -210,9 +213,9 @@ lemma rep_termOfList_eq_map_rep (Λ : SL(2, ℂ)) (l : List (Fin 4)) :
   | cons i l ih =>
     simp [termOfList_cons, rep_mul, ih]
 
-lemma rep_neg_apply_append (Λ : SL(2, ℂ)) (i : Fin 4) :
-    rep (- Λ) (Fin.append ψ barψ i) = (-1 : ℂ) • rep Λ (Fin.append ψ barψ i) := by
-  fin_cases i
+lemma rep_neg_apply_append (Λ : SL(2, ℂ)) (α : Fin 4) :
+    rep (- Λ) (Fin.append ψ barψ α) = (-1 : ℂ) • rep Λ (Fin.append ψ barψ α) := by
+  fin_cases α
   all_goals
     simp [rep_apply_ψ_eq_sum, rep_apply_barψ_eq_sum]
     abel
@@ -233,7 +236,6 @@ lemma rep_neg_apply_basis (s : Finset (Fin 4))  (Λ : SL(2, ℂ)) :
 ## B. Invariance under the Lorentz group
 
 -/
-
 
 /-- An effective potential is Lorentz invariant if it is stable under the
     action of the Lorentz group. -/
@@ -309,7 +311,7 @@ lemma quartic_isInvariant : IsInvariant (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
 
 -/
 /-- If `V` is invariant, then all terms with an odd number of factors vanish. -/
-lemma even_of_isInvariant {V : EffectivePotential} {s : Finset (Fin 4)} (h : IsInvariant V)
+lemma even_of_isInvariant {V : EffectivePotential} (s : Finset (Fin 4)) (h : IsInvariant V)
     (hs : Odd s.card) : basis.repr V s = 0 := by
   suffices h : basis.repr V s = (-1 : ℂ) ^ s.card * basis.repr V s by
     simpa [hs.neg_one_pow, CharZero.eq_neg_self_iff] using h
@@ -371,12 +373,10 @@ lemma isInvariant_iff {V : EffectivePotential} :
         {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}, {0, 1, 2, 3}} by decide]
     repeat rw [Finset.sum_insert (by decide)]
     rw [Finset.sum_singleton]
-    rw [even_of_isInvariant (s := {0}) h (by decide), even_of_isInvariant (s := {1}) h (by decide),
-      even_of_isInvariant (s := {2}) h (by decide), even_of_isInvariant (s := {3}) h (by decide),
-      even_of_isInvariant (s := {0, 1, 2}) h (by decide),
-      even_of_isInvariant (s := {0, 1, 3}) h (by decide),
-      even_of_isInvariant (s := {0, 2, 3}) h (by decide),
-      even_of_isInvariant (s := {1, 2, 3}) h (by decide),
+    rw [even_of_isInvariant {0} h (by decide), even_of_isInvariant {1} h (by decide),
+      even_of_isInvariant {2} h (by decide), even_of_isInvariant {3} h (by decide),
+      even_of_isInvariant {0, 1, 2} h (by decide), even_of_isInvariant {0, 1, 3} h (by decide),
+      even_of_isInvariant {0, 2, 3} h (by decide), even_of_isInvariant {1, 2, 3} h (by decide),
       (zero_two_term_zero_of_isInvariant h).1, (zero_two_term_zero_of_isInvariant h).2.1,
       (zero_two_term_zero_of_isInvariant h).2.2.1, (zero_two_term_zero_of_isInvariant h).2.2.2]
     simp [add_assoc]
