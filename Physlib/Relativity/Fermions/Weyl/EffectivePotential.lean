@@ -20,6 +20,7 @@ of the anti-commuting nature of the fermion.
 
 Two facts about the (effective) potential, which we take as a given, are that:
 1. It is written in terms of the components of the left-handed Weyl fermion and its conjugate.
+  (For this effective potential, we do not consider derivatives.)
 2. Within the potential the components anti-commute.
 The first of these, tells us that we should be working with the dual of the left-handed Weyl fermion
 and its conjugate (since the duals are the linear functionals which pick
@@ -90,7 +91,6 @@ def barψ (i : Fin 2) : EffectivePotential :=
   rw [neg_mul, eq_neg_iff_add_eq_zero]
   exact ExteriorAlgebra.ι_add_mul_swap _ _
 
-
 /-!
 
 ### A.2. Basis
@@ -144,6 +144,8 @@ lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
 -/
 
 
+/-- An effective potential is Lorentz invariant if it is stable under the
+    action of the Lorentz group. -/
 def IsInvariant (V : EffectivePotential) : Prop := ∀ Λ, rep Λ V = V
 
 lemma IsInvariant.eq_iff {V : EffectivePotential} :
