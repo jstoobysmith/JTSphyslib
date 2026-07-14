@@ -44,6 +44,11 @@ which is true to all orders.
 
 There is as of yet no reality condition on this potential. This is a TODO.
 
+## References
+
+- https://physics.stackexchange.com/questions/506709 describes the mass term of a
+  Weyl fermion.
+
 -/
 
 @[expose] public section
@@ -154,6 +159,8 @@ lemma basis_eq_termOfList (s : Finset (Fin 4)) : basis s = termOfList (s.sort (�
     ExteriorAlgebra.ιMulti_apply]
   refine congrArg List.prod (List.ext_getElem (by simp) fun i h1 h2 => ?_)
   simp [Finset.orderEmbOfFin_apply]
+
+lemma basis_empty_eq_one : basis ∅ = 1 := by simp [basis_eq_termOfList]
 
 /-!
 
@@ -390,6 +397,202 @@ lemma isInvariant_iff {V : EffectivePotential} :
   · rintro ⟨c, m1, m2, ρ, rfl⟩
     apply_rules [IsInvariant.add, IsInvariant.smul,  IsInvariant.one,
       ψ_zero_mul_ψ_one_isInvariant, barψ_zero_mul_barψ_one_isInvariant, quartic_isInvariant]
+
+/-!
+
+## C. Coefficent list
+
+-/
+
+/-- The coefficients of an effective potential relevant for invariant potentials, as a
+  linear map: the coefficients of `1`, `ψ 0 * ψ 1`, `barψ 0 * barψ 1` and
+  `ψ 0 * ψ 1 * barψ 0 * barψ 1`. -/
+def invCoeffList : EffectivePotential →ₗ[ℂ] (Fin 4 → ℂ) :=
+  LinearMap.pi ![basis.coord ∅, basis.coord {0, 1}, basis.coord {2, 3}, basis.coord {0, 1, 2, 3}]
+
+@[simp]
+lemma invCoeffList_one : invCoeffList 1 = ![1, 0, 0, 0] := by
+  rw [← basis_empty_eq_one]
+  ext i
+  fin_cases i <;> simp [invCoeffList]
+
+@[simp]
+lemma invCoeffList_ψ_zero_mul_ψ_one : invCoeffList (ψ 0 * ψ 1) = ![0, 1, 0, 0] := by
+  trans invCoeffList (basis {0, 1})
+  · congr
+    rw [basis, ExteriorAlgebra.basis_apply]
+    simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+      Finset.orderEmbOfFin_apply, Finset.sort_insert, ψ]
+    rfl
+  ext i
+  fin_cases i <;> simp [invCoeffList, Finsupp.single_apply]
+  · decide
+  · decide
+
+@[simp]
+lemma invCoeffList_barψ_zero_mul_barψ_one : invCoeffList (barψ 0 * barψ 1) = ![0, 0, 1, 0] := by
+  trans invCoeffList (basis {2, 3})
+  · congr
+    rw [basis, ExteriorAlgebra.basis_apply]
+    simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply, Finset.orderEmbOfFin_apply, Finset.sort_insert, barψ]
+    rfl
+  ext i
+  fin_cases i <;> simp [invCoeffList, Finsupp.single_apply]
+  · decide
+  · decide
+
+@[simp]
+lemma invCoeffList_quartic : invCoeffList (ψ 0 * ψ 1 * barψ 0 * barψ 1) = ![0, 0, 0, 1] := by
+  trans invCoeffList (basis {0, 1, 2, 3})
+  · congr
+    rw [basis, ExteriorAlgebra.basis_apply];
+    simp [ExteriorAlgebra.ιMulti_apply,
+      Set.powersetCard.ofFinEmbEquiv_symm_apply, Finset.orderEmbOfFin_apply, Finset.sort_insert,
+      ψ, barψ, mul_assoc];
+    rfl
+  ext i
+  fin_cases i <;> simp [invCoeffList, Finsupp.single_apply]
+  · decide
+  · decide
+
+lemma invCoeffList_injective {V1 V2 : EffectivePotential} (h1 : IsInvariant V1)
+    (h2 : IsInvariant V2) (h : invCoeffList V1 = invCoeffList V2) : V1 = V2 := by
+  obtain ⟨c1, m11, m21, ρ1, rfl⟩ := isInvariant_iff.1 h1
+  obtain ⟨c2, m12, m22, ρ2, rfl⟩ := isInvariant_iff.1 h2
+  simp at h
+  rcases h with ⟨rfl, rfl, rfl, rfl⟩
+  rfl
+
+/-!
+
+## D. Conjugation
+
+-/
+
+/-- The conjugation operator on the effective potential.
+  This takes the complex conjugate of the coefficients, swaps the generators `ψ α` and `barψ α`, and reverses the order of products. -/
+def conjugate : EffectivePotential →ₛₗ[starRingEnd ℂ] EffectivePotential :=
+  let conjSwap :
+    (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+      →ₛₗ[starRingEnd ℂ]
+      Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl) :=
+    { toFun := Prod.map conjDualEquiv.symm conjDualEquiv ∘ Prod.swap
+      map_add' p q := by simp [Prod.ext_iff]
+      map_smul' c p := by simp [Prod.ext_iff, map_smulₛₗ]}
+  CliffordAlgebra.reverse.comp <|
+  (conjEquiv (k := ℂ)).symm.comp <|
+  (ExteriorAlgebra.lift ℂ
+  ⟨(conjEquiv (k := ℂ)).comp ((ExteriorAlgebra.ι ℂ).comp conjSwap),
+    fun v =>  ExteriorAlgebra.ι_sq_zero _⟩).toLinearMap
+
+lemma conjugate_eq_comp_algebra_map : ∃ (A: EffectivePotential →ₐ[ℂ] ConjModule EffectivePotential),
+    conjugate = CliffordAlgebra.reverse.comp ((conjEquiv (k := ℂ)).symm.comp A.toLinearMap) := by
+  let conjSwap :
+    (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+      →ₛₗ[starRingEnd ℂ]
+      Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl) :=
+    { toFun := Prod.map conjDualEquiv.symm conjDualEquiv ∘ Prod.swap
+      map_add' p q := by simp [Prod.ext_iff]
+      map_smul' c p := by simp [Prod.ext_iff, map_smulₛₗ]}
+  use ExteriorAlgebra.lift ℂ
+    ⟨(conjEquiv (k := ℂ)).comp ((ExteriorAlgebra.ι ℂ).comp conjSwap),
+      fun v =>  ExteriorAlgebra.ι_sq_zero _⟩
+  rfl
+
+lemma conjugate_apply_ι (v : Dual ℂ LeftHandedWeyl × Dual ℂ (ConjModule LeftHandedWeyl)) :
+    conjugate (ExteriorAlgebra.ι ℂ v) =
+    (CliffordAlgebra.reverse <| conjEquiv (k := ℂ) <|
+    ExteriorAlgebra.ι ℂ <| Prod.map conjDualEquiv.symm conjDualEquiv ∘ Prod.swap <| v) := by
+  simp [conjugate]
+  erw [AlgHom.toLinearMap_apply]
+  rw [ExteriorAlgebra.lift_ι_apply]
+  rfl
+
+@[simp]
+lemma conjugate_one : conjugate 1 = 1 := by
+  simp [conjugate]
+  erw [AlgHom.toLinearMap_apply]
+  rw [map_one]
+  exact CliffordAlgebra.reverse.map_one
+
+@[simp]
+lemma conjugate_algebraMap (c : ℂ) : conjugate (algebraMap ℂ EffectivePotential c) =
+    algebraMap ℂ EffectivePotential (starRingEnd ℂ c) := by
+  simp [Algebra.algebraMap_eq_smul_one]
+
+lemma conjugate_mul (V W : EffectivePotential) :
+    conjugate (V * W) = conjugate W * conjugate V := by
+  obtain ⟨A, hA⟩ := conjugate_eq_comp_algebra_map
+  simp [hA]
+  erw [AlgHom.coe_toLinearMap, AlgHom.toLinearMap_apply]
+  simp [conjEquiv]
+  erw [CliffordAlgebra.reverse.map_mul]
+
+@[simp]
+lemma conjugate_conjugate (V : EffectivePotential) : conjugate (conjugate V) = V := by
+  induction' V using ExteriorAlgebra.induction with r v a b ha hb a b ha hb
+  · simp [conjugate_algebraMap]
+  · simp [conjugate_apply_ι, conjEquiv]
+    obtain ⟨fst, snd⟩ := v
+    simp_all only [Prod.swap_prod_mk, Prod.map_apply, LinearEquiv.symm_apply_apply, LinearEquiv.apply_symm_apply]
+  · simp [conjugate_mul, ha, hb]
+  · simp [ha, hb]
+
+lemma conjugate_injective : Function.Injective conjugate := by
+  intro V W h
+  have h' : conjugate (conjugate V) = conjugate (conjugate W) := by rw [h]
+  simp only [conjugate_conjugate] at h'
+  exact h'
+
+@[simp]
+lemma conjugate_ψ (α : Fin 2) : conjugate (ψ α) = barψ α := by
+  simp [ψ, conjugate_apply_ι]
+  trans CliffordAlgebra.reverse (barψ α)
+  · congr 1
+    simp only [conjEquiv, LinearEquiv.coe_mk, LinearMap.coe_mk, AddHom.coe_mk, barψ,
+      Basis.coe_dualBasis, LinearMap.coe_inr, ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
+    rfl
+  simp [barψ]
+
+@[simp]
+lemma conjugate_barψ (α : Fin 2) : conjugate (barψ α) = ψ α := by
+  apply conjugate_injective
+  simp [conjugate_ψ]
+
+/-!
+
+## E. Reality condition
+
+-/
+
+/-- The effective potential is real if it is equal to its conjugate. -/
+def IsReal (V : EffectivePotential) : Prop := conjugate V = V
+
+lemma isReal_iff {V : EffectivePotential} : IsReal V ↔ conjugate V = V := by rfl
+
+/-- The necessary and sufficent condition for a real potential to be
+  invariant under the Lorentz group. -/
+lemma isInvariant_iff_of_isReal {V : EffectivePotential} (h : IsReal V) :
+    IsInvariant V ↔ ∃ (c : ℝ), ∃ (m : ℂ), ∃ (ρ : ℝ), V =
+      c • 1 + m • ψ 0 * ψ 1 - star m • barψ 0 * barψ 1 + ρ • (ψ 0 * ψ 1 * barψ 0 * barψ 1) := by
+  rw [isInvariant_iff]
+  constructor
+  · rintro ⟨c, m1, m2, ρ, rfl⟩
+    simp [isReal_iff, conjugate_mul, ← mul_assoc] at h
+    have h1 := congrArg invCoeffList h
+    simp at h1
+    rcases h1 with ⟨h1, h2, rfl, h3⟩
+    use c.re, m1, ρ.re
+    have hc : c = (c.re : ℂ) := by rw [← propext (re_eq_ofReal_of_isSelfAdjoint h1)]
+    have hρ : ρ = (ρ.re : ℂ) := by rw [← propext (re_eq_ofReal_of_isSelfAdjoint h3)]
+    rw [hc, hρ]
+    simp only [coe_smul, Fin.isValue, neg_smul, ofReal_re, Algebra.smul_mul_assoc, RCLike.star_def,
+      add_left_inj]
+    abel
+  · rintro ⟨c, m1, ρ, rfl⟩
+    use c, m1, -star m1, ρ
+    simp
+    abel
 
 end EffectivePotential
 

@@ -53,6 +53,19 @@ conjugation ring endomorphism `starRingEnd k`. -/
 instance instModule : Module k (ConjModule M) :=
   Module.compHom M (starRingEnd k)
 
+variable {A : Type*} [Ring A]
+
+instance : Ring (ConjModule A) :=
+  let i1 : AddCommGroup (ConjModule A) := inferInstanceAs (AddCommGroup (ConjModule A))
+  let i2 : Ring A := inferInstanceAs (Ring A)
+  { i1, i2 with }
+
+/-- The conjugate module of a `k`-algebra is a `k`-algebra: the same ring, with scalars
+acting through `star`. -/
+instance instAlgebra [Algebra k A] : Algebra k (ConjModule A) :=
+  Algebra.ofModule (fun r x y => smul_mul_assoc (β := A) (star r) x y)
+    (fun r x y => mul_smul_comm (β := A) (star r) x y)
+
 end ConjModule
 
 /-- The canonical conjugate-linear equivalence `M ≃ₛₗ[starRingEnd k] ConjModule M`, the identity on
@@ -64,6 +77,26 @@ def conjEquiv : M ≃ₛₗ[starRingEnd k] ConjModule M where
   invFun v := v
   left_inv _ := rfl
   right_inv _ := rfl
+
+/-- The canonical conjugate-linear equivalence between the dual of a module `M` and
+  the dual of its conjugate. -/
+def conjDualEquiv : Module.Dual k M ≃ₛₗ[starRingEnd k] Module.Dual k (ConjModule M) where
+  toFun f := (starRingEnd k).toSemilinearMap.comp
+    (f.comp (conjEquiv (k := k) (M := M)).symm.toLinearMap)
+  invFun f := (starRingEnd k).toSemilinearMap.comp
+    (f.comp (conjEquiv (k := k) (M := M)).toLinearMap)
+  map_add' f g := by
+    ext x
+    simp
+  map_smul' r f := by
+    ext x
+    simp
+  left_inv f := by
+    ext x
+    simp
+  right_inv f := by
+    ext x
+    simp
 
 namespace ConjModule
 
