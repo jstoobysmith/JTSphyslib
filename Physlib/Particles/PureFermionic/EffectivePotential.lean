@@ -9,6 +9,7 @@ public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Mathematics.ConjModule
+public import Mathlib.RingTheory.GradedAlgebra.Basic
 /-!
 
 # The effective potential for a left-handed Weyl fermion
@@ -161,6 +162,30 @@ lemma basis_eq_termOfList (s : Finset (Fin 4)) : basis s = termOfList (s.sort (�
   simp [Finset.orderEmbOfFin_apply]
 
 lemma basis_empty_eq_one : basis ∅ = 1 := by simp [basis_eq_termOfList]
+
+lemma ψ_zero_eq_basis : ψ 0 = basis {0} := by
+  rw [basis, ExteriorAlgebra.basis_apply]
+  simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+    Finset.orderEmbOfFin_apply, ψ]
+  rfl
+
+lemma ψ_one_eq_basis : ψ 1 = basis {1} := by
+  rw [basis, ExteriorAlgebra.basis_apply]
+  simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+    Finset.orderEmbOfFin_apply, ψ]
+  rfl
+
+lemma barψ_zero_eq_basis : barψ 0 = basis {2} := by
+  rw [basis, ExteriorAlgebra.basis_apply]
+  simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+    Finset.orderEmbOfFin_apply, barψ]
+  rfl
+
+lemma barψ_one_eq_basis : barψ 1 = basis {3} := by
+  rw [basis, ExteriorAlgebra.basis_apply]
+  simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+    Finset.orderEmbOfFin_apply, barψ]
+  rfl
 
 /-!
 
@@ -434,7 +459,8 @@ lemma invCoeffList_barψ_zero_mul_barψ_one : invCoeffList (barψ 0 * barψ 1) =
   trans invCoeffList (basis {2, 3})
   · congr
     rw [basis, ExteriorAlgebra.basis_apply]
-    simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply, Finset.orderEmbOfFin_apply, Finset.sort_insert, barψ]
+    simp [ExteriorAlgebra.ιMulti_apply, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+      Finset.orderEmbOfFin_apply, Finset.sort_insert, barψ]
     rfl
   ext i
   fin_cases i <;> simp [invCoeffList, Finsupp.single_apply]
@@ -470,7 +496,8 @@ lemma invCoeffList_injective {V1 V2 : EffectivePotential} (h1 : IsInvariant V1)
 -/
 
 /-- The conjugation operator on the effective potential.
-  This takes the complex conjugate of the coefficients, swaps the generators `ψ α` and `barψ α`, and reverses the order of products. -/
+  This takes the complex conjugate of the coefficients, swaps the generators `ψ α` and `barψ α`,
+  and reverses the order of products. -/
 def conjugate : EffectivePotential →ₛₗ[starRingEnd ℂ] EffectivePotential :=
   let conjSwap :
     (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
@@ -534,7 +561,8 @@ lemma conjugate_conjugate (V : EffectivePotential) : conjugate (conjugate V) = V
   · simp [conjugate_algebraMap]
   · simp [conjugate_apply_ι, conjEquiv]
     obtain ⟨fst, snd⟩ := v
-    simp_all only [Prod.swap_prod_mk, Prod.map_apply, LinearEquiv.symm_apply_apply, LinearEquiv.apply_symm_apply]
+    simp_all only [Prod.swap_prod_mk, Prod.map_apply, LinearEquiv.symm_apply_apply,
+      LinearEquiv.apply_symm_apply]
   · simp [conjugate_mul, ha, hb]
   · simp [ha, hb]
 
