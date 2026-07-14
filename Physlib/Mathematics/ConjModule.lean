@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Module.Equiv.Defs
 public import Mathlib.Algebra.Star.Module
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.Tactic.Ring
-
+public import Mathlib.RepresentationTheory.Basic
 /-!
 
 # The conjugate module
@@ -89,22 +89,45 @@ noncomputable def starFinsupp : (ι →₀ k) ≃ₛₗ[starRingEnd k] (ι →�
 
 /-- A basis of `M` transported to a basis of `ConjModule M`: the same basis vectors, with
 coordinates conjugated (`(Basis.conj b).repr v = star ∘ b.repr v`). -/
-noncomputable def _root_.Basis.conj (b : Basis ι k M) : Basis ι k (ConjModule M) :=
+noncomputable def _root_.Module.Basis.conj (b : Basis ι k M) : Basis ι k (ConjModule M) :=
   Basis.ofRepr
     (((conjEquiv (k := k) (M := M)).symm.trans b.repr).trans starFinsupp)
 
 /-- Coordinates in `Basis.conj b` are the `star` of the coordinates in `b`. -/
-@[simp] lemma _root_.Basis.conj_repr_apply (b : Basis ι k M) (v : ConjModule M) (i : ι) :
+@[simp] lemma _root_.Module.Basis.conj_repr_apply (b : Basis ι k M) (v : ConjModule M) (i : ι) :
     (Basis.conj b).repr v i = star (b.repr ((conjEquiv (k := k) (M := M)).symm v) i) := rfl
 
 /-- The basis vectors of `Basis.conj b` are those of `b`, viewed through `conjEquiv`. -/
-@[simp] lemma _root_.Basis.conj_apply (b : Basis ι k M) (i : ι) :
+@[simp] lemma _root_.Module.Basis.conj_apply (b : Basis ι k M) (i : ι) :
     Basis.conj b i = conjEquiv (k := k) (M := M) (b i) := by
   apply (Basis.conj b).repr.injective
   ext j
   rcases eq_or_ne j i with h | h
   · subst h; simp [Basis.conj_repr_apply]
   · simp [Basis.conj_repr_apply, Finsupp.single_eq_of_ne, h]
+
+/-!
+
+## The conjugate of a representation
+
+-/
+
+/-- The conjugate of a representation `ρ` of `G` on `M`: the same maps `ρ g`, acting on
+`ConjModule M` through `conjEquiv`. -/
+def _root_.Representation.conj {G} [Group G] (ρ : Representation k G M) :
+    Representation k G (ConjModule M) where
+  toFun g := {
+    toFun := conjEquiv (k := k) (M := M) ∘ ρ g ∘ (conjEquiv (k := k) (M := M)).symm
+    map_add' x y := (ρ g).map_add x y
+    map_smul' a m := (ρ g).map_smul (star a) m }
+  map_one' := LinearMap.ext fun _ =>
+    congrArg (conjEquiv (k := k)) (LinearMap.congr_fun (map_one ρ) _)
+  map_mul' g h := LinearMap.ext fun _ =>
+    congrArg (conjEquiv (k := k)) (LinearMap.congr_fun (map_mul ρ g h) _)
+
+lemma _root_.Representation.conj_apply {G} [Group G] (ρ : Representation k G M) (g : G)
+    (m : ConjModule M) :
+    ρ.conj g m = conjEquiv (k := k) (M := M) (ρ g ((conjEquiv (k := k) (M := M)).symm m)) := rfl
 
 end ConjModule
 

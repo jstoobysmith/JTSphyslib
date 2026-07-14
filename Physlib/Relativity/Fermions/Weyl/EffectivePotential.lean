@@ -8,6 +8,7 @@ module
 public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
+public import Physlib.Mathematics.ConjModule
 /-!
 
 # The effective potential of Weyl fermions
@@ -28,8 +29,13 @@ out the components of the fermion). The second of these tells us that we should 
 exterior algebra.
 
 Thus, the type in which the potential lives is
-`ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)`. We call this type
-`EffectivePotential` and define it and its properties in this file.
+`ExteriorAlgebra ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))`.
+We call this type `EffectivePotential` and define it and its properties in this file.
+Note that  `Module.Dual ℂ LeftHandedWeyl` is equivalent to `DualLeftHandedWeyl` and
+`Module.Dual ℂ (ConjModule LeftHandedWeyl)` is equivalent to `DualRightHandedWeyl`,
+so we could equivalently define the effective potential as
+`ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)`. We have done the
+former here as it generalises to other cases.
 
 On `PotentialAlgebra` we define a representation of the Lorentz group, and prove that that
 if the potential is invariant under the Lorentz group it must be of the form
@@ -59,7 +65,8 @@ open CategoryTheory.MonoidalCategory
 
 /-- The type corresponding to the effective potential of a
   left-handed Weyl fermion. -/
-abbrev EffectivePotential : Type := ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)
+abbrev EffectivePotential : Type := ExteriorAlgebra ℂ
+  (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
 
 namespace EffectivePotential
 
@@ -72,12 +79,12 @@ namespace EffectivePotential
 /-- The coordinate element corresponding to the i-th basis vector as a member
   of the effective potential. -/
 def ψ (i : Fin 2) : EffectivePotential :=
-  (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (DualLeftHandedWeyl.basis i))
+  (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis i))
 
 /-- The coordinate element corresponding to the conjugate i-th basis vector as a member
   of the effective potential. -/
 def barψ (i : Fin 2) : EffectivePotential :=
-  (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (DualRightHandedWeyl.basis i))
+  (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis i))
 
 @[simp] lemma ψ_mul_self (i : Fin 2) : ψ i * ψ i = 0 := ExteriorAlgebra.ι_sq_zero _
 
@@ -91,27 +98,70 @@ def barψ (i : Fin 2) : EffectivePotential :=
   rw [neg_mul, eq_neg_iff_add_eq_zero]
   exact ExteriorAlgebra.ι_add_mul_swap _ _
 
+@[simp]
+lemma append_apply_zero_eq : Fin.append ψ barψ 0 = ψ 0 := rfl
+
+@[simp]
+lemma append_apply_one_eq : Fin.append ψ barψ 1 = ψ 1 := rfl
+
+@[simp]
+lemma append_apply_two_eq : Fin.append ψ barψ 2 = barψ 0 := rfl
+
+@[simp]
+lemma append_apply_three_eq : Fin.append ψ barψ 3 = barψ 1 := rfl
+
 /-!
 
-### A.2. Basis
+### A.2. Of a list
+-/
+
+def termOfList (l : List (Fin 4)) : EffectivePotential :=
+  (l.map (Fin.append ψ barψ)).prod
+
+@[simp]
+lemma termOfList_nil : termOfList [] = 1 := by simp [termOfList]
+
+lemma termOfList_cons (l : List (Fin 4)) (i : Fin 4) :
+    termOfList (i :: l) = (Fin.append ψ barψ i) * termOfList l := by
+  simp only [termOfList, List.map_cons, List.prod_cons]
+
+/-!
+
+### A.3. Basis
 
 -/
 
 /-- The basis of the effective potential. -/
 def basis : Basis (Finset (Fin 4)) ℂ EffectivePotential :=
-    Module.Basis.ExteriorAlgebra ((DualLeftHandedWeyl.basis.prod DualRightHandedWeyl.basis).reindex
-      finSumFinEquiv)
+    Module.Basis.ExteriorAlgebra ((LeftHandedWeyl.basis.dualBasis.prod
+    LeftHandedWeyl.basis.conj.dualBasis).reindex finSumFinEquiv)
+
+lemma basis_eq_termOfList (s : Finset (Fin 4)) : basis s = termOfList (s.sort (· ≤ ·)) := by
+  have happend : Fin.append ψ barψ = fun j => (ExteriorAlgebra.ι ℂ)
+      (((LeftHandedWeyl.basis.dualBasis.prod LeftHandedWeyl.basis.conj.dualBasis).reindex
+        finSumFinEquiv) j) := by
+    funext j
+    fin_cases j <;>
+      simp [ψ, barψ, Fin.append, Fin.addCases, Basis.prod_apply,
+        show (finSumFinEquiv (m := 2) (n := 2)).symm 0 = Sum.inl 0 from rfl,
+        show (finSumFinEquiv (m := 2) (n := 2)).symm 1 = Sum.inl 1 from rfl,
+        show (finSumFinEquiv (m := 2) (n := 2)).symm 2 = Sum.inr 0 from rfl,
+        show (finSumFinEquiv (m := 2) (n := 2)).symm 3 = Sum.inr 1 from rfl]
+  rw [basis, ExteriorAlgebra.basis_apply_ofCard (s_card := rfl), termOfList, happend]
+  simp only [ExteriorAlgebra.ιMulti_family, Set.powersetCard.ofFinEmbEquiv_symm_apply,
+    ExteriorAlgebra.ιMulti_apply]
+  refine congrArg List.prod (List.ext_getElem (by simp) fun i h1 h2 => ?_)
+  simp [Finset.orderEmbOfFin_apply]
 
 /-!
-
-## A.3. The representation on the potential algebra
-
+### A.4. The representation on the potential algebra
 -/
+
 
 /-- The representation of the Lorentz group on `PotentialAlgebra`. -/
 def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
-  toFun Λ := (ExteriorAlgebra.map ((DualLeftHandedWeyl.rep Λ).prodMap
-    (DualRightHandedWeyl.rep Λ))).toLinearMap
+  toFun Λ := (ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
+    (LeftHandedWeyl.rep.conj.dual Λ))).toLinearMap
   map_one' := by
     simp only [map_one, End.one_eq_id, LinearMap.prodMap_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
@@ -120,8 +170,12 @@ def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
       AlgHom.comp_toLinearMap]
 
 lemma rep_apply (Λ : SL(2, ℂ)) (V : EffectivePotential) :
-    rep Λ V = ExteriorAlgebra.map ((DualLeftHandedWeyl.rep Λ).prodMap
-      (DualRightHandedWeyl.rep Λ)) V := rfl
+    rep Λ V = ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
+      (LeftHandedWeyl.rep.conj.dual Λ)) V := rfl
+
+@[simp]
+lemma rep_apply_one (Λ : SL(2, ℂ)) : rep Λ 1 = 1 := by
+  simp [rep_apply]
 
 lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
     rep Λ (V * W) = rep Λ V * rep Λ W:= by
@@ -129,13 +183,50 @@ lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
 
 lemma rep_apply_ψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
     rep Λ (ψ i) = ∑ j, Λ⁻¹ i j • ψ j := by
-  simp [rep, ψ, DualLeftHandedWeyl.rep_apply_basis, ← map_smul, ← map_add,
-    -SpecialLinearGroup.coe_inv, Lorentz.SL2C.inverse_coe]
+  simp only [ψ, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply, Representation.dual_apply,
+    ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, ← map_smul, Prod.smul_mk,
+    smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
+    ExteriorAlgebra.ι_inj, Prod.mk.injEq, and_true]
+  refine LeftHandedWeyl.basis.ext fun l => ?_
+  fin_cases i <;> fin_cases l <;>
+    simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
+      -SpecialLinearGroup.coe_inv]
 
 lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
     rep Λ (barψ i) = ∑ j, star (Λ⁻¹ i j) • barψ j := by
-  simp [rep, barψ, DualRightHandedWeyl.rep_apply_basis, ← map_smul, ← map_add,
-    -SpecialLinearGroup.coe_inv, Lorentz.SL2C.inverse_coe]
+  simp only [barψ, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
+    ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, RCLike.star_def, ← map_smul,
+    Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
+    ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
+  refine LeftHandedWeyl.basis.conj.ext fun l => ?_
+  fin_cases i <;> fin_cases l <;>
+    simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
+      -SpecialLinearGroup.coe_inv, Representation.conj_apply]
+
+lemma rep_termOfList_eq_map_rep (Λ : SL(2, ℂ)) (l : List (Fin 4)) :
+    rep Λ (termOfList l) = ((l.map (Fin.append ψ barψ)).map (rep Λ)).prod := by
+  induction l with
+  | nil => simp
+  | cons i l ih =>
+    simp [termOfList_cons, rep_mul, ih]
+
+lemma rep_neg_apply_append (Λ : SL(2, ℂ)) (i : Fin 4) :
+    rep (- Λ) (Fin.append ψ barψ i) = (-1 : ℂ) • rep Λ (Fin.append ψ barψ i) := by
+  fin_cases i
+  all_goals
+    simp [rep_apply_ψ_eq_sum, rep_apply_barψ_eq_sum]
+    abel
+
+lemma rep_neg_apply_termOfList (Λ : SL(2, ℂ)) (l : List (Fin 4)) :
+    rep (- Λ) (termOfList l) = ((-1 : ℂ) ^ l.length) • rep Λ (termOfList l) := by
+  induction l with
+  | nil => simp
+  | cons i l ih =>
+    simp [termOfList_cons, rep_mul, ih, rep_neg_apply_append, pow_succ' (-1 : ℂ) l.length]
+
+lemma rep_neg_apply_basis (s : Finset (Fin 4))  (Λ : SL(2, ℂ)) :
+    rep (- Λ) (basis s) = (-1 : ℂ) ^ s.card • rep Λ (basis s) := by
+  simp [basis_eq_termOfList, rep_neg_apply_termOfList]
 
 /-!
 
@@ -222,26 +313,11 @@ lemma even_of_isInvariant {V : EffectivePotential} {s : Finset (Fin 4)} (h : IsI
     (hs : Odd s.card) : basis.repr V s = 0 := by
   suffices h : basis.repr V s = (-1 : ℂ) ^ s.card * basis.repr V s by
     simpa [hs.neg_one_pow, CharZero.eq_neg_self_iff] using h
-  let Λ := (-1 : SL(2, ℂ))
-  suffices Λ_basis : ∀ (t : Finset (Fin 4)), rep Λ (basis t) = (-1 : ℂ) ^ t.card • basis t by
-    conv_lhs => rw [← h Λ, ← basis.sum_repr V, map_sum]
+  suffices Λ_basis : ∀ (t : Finset (Fin 4)), rep (-1 : SL(2, ℂ)) (basis t) =
+      (-1 : ℂ) ^ t.card • basis t by
+    conv_lhs => rw [← h (-1 : SL(2, ℂ)), ← basis.sum_repr V, map_sum]
     simp [Λ_basis, Finsupp.single_apply, smul_smul, mul_comm]
-  intro t
-  have hF : (DualLeftHandedWeyl.rep Λ).prodMap (DualRightHandedWeyl.rep Λ)
-      = -LinearMap.id := by
-    have hinv : (-(1 : Matrix (Fin 2) (Fin 2) ℂ))⁻¹ = -1 := Matrix.inv_eq_left_inv (by simp)
-    refine (DualLeftHandedWeyl.basis.prod DualRightHandedWeyl.basis).ext fun i => ?_
-    rcases i with i | i <;> fin_cases i <;>
-      simp [DualLeftHandedWeyl.rep_apply_basis, DualRightHandedWeyl.rep_apply_basis, Λ, hinv]
-  have hmap (n : ℕ) (g : Fin n → DualLeftHandedWeyl × DualRightHandedWeyl) :
-      ExteriorAlgebra.ιMulti ℂ n (-g) = (-1 : ℂ) ^ n • ExteriorAlgebra.ιMulti ℂ n g := by
-    rw [show -g = fun i => (-1 : ℂ) • g i from funext fun i => by simp,
-      AlternatingMap.map_smul_univ]
-    simp
-  rw [basis, ExteriorAlgebra.basis_apply_ofCard (s_card := rfl), rep_apply]
-  simp only [ExteriorAlgebra.ιMulti_family]
-  rw [ExteriorAlgebra.map_apply_ιMulti, hF]
-  exact hmap _ _
+  simp [rep_neg_apply_basis]
 
 /-- If `V` is invariant, then the mixed terms `ψ i * barψ j` have coefficient zero. -/
 lemma zero_two_term_zero_of_isInvariant {V : EffectivePotential} (h : IsInvariant V) :
@@ -250,56 +326,38 @@ lemma zero_two_term_zero_of_isInvariant {V : EffectivePotential} (h : IsInvarian
   let Λ : SL(2, ℂ):= ⟨!![2 * I, 0; 0, -(I / 2)], by
     simp [Matrix.det_fin_two_of]; linear_combination -Complex.I_sq⟩
   let d : Fin 4 → ℂ := ![-(I / 2), 2 * I, I / 2, -(2 * I)]
+  suffices Λ_basis_two : ∀ (a b : Fin 4) (hab : a ≠ b) (hd : d a * d b ≠ 1),
+        basis.repr V {a, b} = 0 by
+    refine ⟨Λ_basis_two 0 2 (by decide) ?_, Λ_basis_two 0 3 (by decide) ?_,
+      Λ_basis_two 1 2 (by decide) ?_, Λ_basis_two 1 3 (by decide) ?_⟩
+    all_goals
+      simp [d]
+      ring_nf
+      simp
+      try grind
   suffices Λ_basis : ∀ (t : Finset (Fin 4)), rep Λ (basis t) = (∏ k ∈ t, d k) • basis t by
-    have hzero (a b : Fin 4) (hab : a ≠ b) (hd : d a * d b ≠ 1) :
-        basis.repr V {a, b} = 0 := by
-      have h1 : basis.repr V {a, b} = (d a * d b) * basis.repr V {a, b} := by
+    intro a b hab hd
+    have h1 : basis.repr V {a, b} = (d a * d b) * basis.repr V {a, b} := by
         conv_lhs => rw [← h Λ, ← basis.sum_repr V, map_sum]
         simp [Λ_basis, Finsupp.single_apply, smul_smul, mul_comm, Finset.prod_pair hab]
-      by_contra hne
-      exact hd (mul_right_cancel₀ hne (by linear_combination -h1))
-    refine ⟨hzero 0 2 (by decide) ?_, hzero 0 3 (by decide) ?_,
-      hzero 1 2 (by decide) ?_, hzero 1 3 (by decide) ?_⟩ <;>
-      simp only [d, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
-        Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
-    · rw [show -(I / 2) * (I / 2) = 1 / 4 from by linear_combination (-(1 : ℂ)/4) * Complex.I_sq]
-      norm_num
-    · rw [show -(I / 2) * -(2 * I) = -1 from by linear_combination Complex.I_sq]
-      norm_num
-    · rw [show 2 * I * (I / 2) = -1 from by linear_combination Complex.I_sq]
-      norm_num
-    · rw [show 2 * I * -(2 * I) = 4 from by linear_combination (-4 : ℂ) * Complex.I_sq]
-      norm_num
-  intro t
-  have hinv : (!![2 * I, 0; 0, -(I / 2)])⁻¹ = !![-(I / 2), 0; 0, 2 * I] :=
-    Matrix.inv_eq_left_inv (by ext i j; fin_cases i <;> fin_cases j <;>
-      simp [Matrix.mul_apply, Fin.sum_univ_two] <;> linear_combination -Complex.I_sq)
-  have hv (k : Fin 4) : ((DualLeftHandedWeyl.rep Λ).prodMap (DualRightHandedWeyl.rep Λ))
-      (((DualLeftHandedWeyl.basis.prod DualRightHandedWeyl.basis).reindex finSumFinEquiv) k)
-      = d k • ((DualLeftHandedWeyl.basis.prod DualRightHandedWeyl.basis).reindex
-        finSumFinEquiv) k := by
-    fin_cases k <;>
-      simp [DualLeftHandedWeyl.rep_apply_basis, DualRightHandedWeyl.rep_apply_basis, Λ, d, hinv,
-        Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons, Complex.conj_ofNat, neg_div,
-        show (finSumFinEquiv (m := 2) (n := 2)).symm 0 = Sum.inl 0 from rfl,
-        show (finSumFinEquiv (m := 2) (n := 2)).symm 1 = Sum.inl 1 from rfl,
-        show (finSumFinEquiv (m := 2) (n := 2)).symm 2 = Sum.inr 0 from rfl,
-        show (finSumFinEquiv (m := 2) (n := 2)).symm 3 = Sum.inr 1 from rfl]
-  have hmap (n : ℕ) (c : Fin n → ℂ) (g : Fin n → DualLeftHandedWeyl × DualRightHandedWeyl)
-      (hcg : ∀ i, ((DualLeftHandedWeyl.rep Λ).prodMap (DualRightHandedWeyl.rep Λ)) (g i)
-        = c i • g i) :
-      ExteriorAlgebra.map ((DualLeftHandedWeyl.rep Λ).prodMap (DualRightHandedWeyl.rep Λ))
-        (ExteriorAlgebra.ιMulti ℂ n g) = (∏ i, c i) • ExteriorAlgebra.ιMulti ℂ n g := by
-    rw [ExteriorAlgebra.map_apply_ιMulti, show ⇑((DualLeftHandedWeyl.rep Λ).prodMap
-        (DualRightHandedWeyl.rep Λ)) ∘ g = fun i => c i • g i from funext fun i => hcg i,
-      AlternatingMap.map_smul_univ]
-  rw [basis, ExteriorAlgebra.basis_apply_ofCard (s_card := rfl), rep_apply]
-  simp only [ExteriorAlgebra.ιMulti_family, Set.powersetCard.ofFinEmbEquiv_symm_apply]
-  refine (hmap _ _ _ fun i => hv _).trans ?_
-  congr 1
-  rw [← Finset.prod_coe_sort t d]
-  exact Fintype.prod_equiv (t.orderIsoOfFin rfl).toEquiv _ _ fun i => by
-    simp [Finset.coe_orderIsoOfFin_apply]
+    by_contra hne
+    exact hd (mul_right_cancel₀ hne (by linear_combination -h1))
+  suffices Λ_termOfList : ∀ (l : List (Fin 4)),
+      rep Λ (termOfList l) = (l.map d).prod • termOfList l by
+    intro t
+    rw [basis_eq_termOfList, Λ_termOfList, ← Finset.prod_map_toList t,
+      ((Finset.sort_perm_toList t fun x1 x2 => x1 ≤ x2).map d).prod_eq]
+  suffices Λ_append : ∀ (i : Fin 4), rep Λ (Fin.append ψ barψ i) = d i • Fin.append ψ barψ i by
+    intro l
+    induction l with
+    | nil => simp
+    | cons i l ih => simp [termOfList_cons, rep_mul, ih, Λ_append, smul_smul, mul_comm]
+  intro i
+  fin_cases i
+  all_goals
+    simp [rep_apply_ψ_eq_sum, rep_apply_barψ_eq_sum, d, adjugate_fin_two, Λ,
+      neg_smul, Complex.conj_ofNat]
+    try module
 
 lemma isInvariant_iff {V : EffectivePotential} :
     IsInvariant V ↔ ∃ (c m1 m2 ρ : ℂ), V = c • 1 + m1 • (ψ 0 * ψ 1) + m2 • (barψ 0 * barψ 1) +
