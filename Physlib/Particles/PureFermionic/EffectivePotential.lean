@@ -11,11 +11,11 @@ public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Mathematics.ConjModule
 /-!
 
-# The effective potential of Weyl fermions
+# The effective potential for a left-handed Weyl fermion
 
 ## i. Overview
 
-In this file are primary objective is to look at the potential
+In this file our primary objective is to look at the potential
 of a single left-handed Weyl fermion, correctly taking account
 of the anti-commuting nature of the fermion.
 

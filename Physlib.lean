@@ -165,6 +165,7 @@ public import Physlib.Particles.FlavorPhysics.CKMMatrix.Rows
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.Basic
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.StandardParameters
 public import Physlib.Particles.NeutrinoPhysics.Basic
+public import Physlib.Particles.PureFermionic.EffectivePotential
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Basic
 public import Physlib.Particles.StandardModel.AnomalyCancellation.FamilyMaps
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.Basic
@@ -324,7 +325,6 @@ public import Physlib.Relativity.Fermions.Weyl.Contraction
 public import Physlib.Relativity.Fermions.Weyl.DualLeftHanded
 public import Physlib.Relativity.Fermions.Weyl.DualRightHanded
 public import Physlib.Relativity.Fermions.Weyl.Duals
-public import Physlib.Relativity.Fermions.Weyl.EffectivePotential
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
