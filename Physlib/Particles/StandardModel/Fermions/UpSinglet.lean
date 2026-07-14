@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 /-!
-# The type corresponding to up-type singlets
+# Up-type singlets
 
 In this module we define the type corresponding to
 the target vector space of an up-type singlet quark field in the Standard Model.
