@@ -38,12 +38,10 @@ so we could equivalently define the effective potential as
 `ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)`. We have done the
 former here as it generalises to other cases.
 
-On `PotentialAlgebra` we define a representation of the Lorentz group, and prove that that
+On `EffectivePotential` we define a representation of the Lorentz group, and prove that that
 if the potential is invariant under the Lorentz group it must be of the form
 `c + m1 * ψ 0 * ψ 1 + m2 * barψ 0 * barψ 1 + λ * ψ 0 * ψ 1 * barψ 0 * barψ 1`,
 which is true to all orders.
-
-There is as of yet no reality condition on this potential. This is a TODO.
 
 ## References
 
@@ -65,7 +63,7 @@ open CategoryTheory.MonoidalCategory
 
 /-!
 
-## A. The Potential algebra for Weyl fermions
+## A. The effective potential for Weyl fermions
 
 -/
 
@@ -75,6 +73,110 @@ abbrev EffectivePotential : Type := ExteriorAlgebra ℂ
   (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
 
 namespace EffectivePotential
+
+/-!
+
+### A. The representation on the effective potential
+
+-/
+
+/-- The representation of the Lorentz group (here `SL(2, ℂ)`) on `EffectivePotential`. -/
+def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
+  toFun Λ := (ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
+    (LeftHandedWeyl.rep.conj.dual Λ))).toLinearMap
+  map_one' := by
+    simp only [map_one, End.one_eq_id, LinearMap.prodMap_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' Λ1 Λ2 := by
+    simp only [map_mul, End.mul_eq_comp, ← LinearMap.prodMap_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
+lemma rep_apply (Λ : SL(2, ℂ)) (V : EffectivePotential) :
+    rep Λ V = ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
+      (LeftHandedWeyl.rep.conj.dual Λ)) V := rfl
+
+@[simp]
+lemma rep_apply_one (Λ : SL(2, ℂ)) : rep Λ 1 = 1 := by
+  simp [rep_apply]
+
+lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
+    rep Λ (V * W) = rep Λ V * rep Λ W:= by
+  simp [rep]
+
+end EffectivePotential
+
+/-!
+
+### B. Field specification for the theory
+
+-/
+
+inductive FieldSpecification : Type
+  | ψ (α : Fin 2) : FieldSpecification
+  | barψ (α : Fin 2) : FieldSpecification
+deriving DecidableEq, Fintype
+
+namespace FieldSpecification
+
+open EffectivePotential
+
+def toEffectivePotential : FieldSpecification → EffectivePotential
+  | ψ (α : Fin 2) =>
+    (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α))
+  | barψ (α : Fin 2) =>
+    (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α))
+
+scoped notation "[" v "]ₑ" => toEffectivePotential v
+
+lemma toEffectivePotential_eq_ι :
+    (ψ : FieldSpecification) →  ∃ v, [ψ]ₑ = ExteriorAlgebra.ι ℂ v
+  | ψ α => ⟨(LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)), by rfl⟩
+  | barψ α => ⟨(LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)), by rfl⟩
+
+lemma toEffectivePotential_ψ_eq (α : Fin 2) : [ψ α]ₑ =
+    ExteriorAlgebra.ι ℂ (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)) := by rfl
+
+lemma toEffectivePotential_barψ_eq (α : Fin 2) : [barψ α]ₑ =
+    ExteriorAlgebra.ι ℂ (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)) := by rfl
+
+@[simp]
+lemma toEffectivePotential_mul_self (ψ : FieldSpecification) : [ψ]ₑ * [ψ]ₑ = 0 := by
+  obtain ⟨v, hv⟩ := toEffectivePotential_eq_ι ψ
+  simp [hv]
+
+lemma toEffectivePotential_mul_anti_commute (ψ χ : FieldSpecification) :
+    [ψ]ₑ * [χ]ₑ = - [χ]ₑ * [ψ]ₑ := by
+  obtain ⟨v, hv⟩ := toEffectivePotential_eq_ι ψ
+  obtain ⟨w, hw⟩ := toEffectivePotential_eq_ι χ
+  simp [hv, hw, neg_mul, eq_neg_iff_add_eq_zero]
+
+lemma rep_apply_toEffectivePotential_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
+    rep Λ [ψ α]ₑ = ∑ (β : Fin 2), Λ⁻¹ α β • [ψ β]ₑ := by
+  simp only [toEffectivePotential_ψ_eq, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply,
+    Representation.dual_apply, ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero,
+    ← map_smul, Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk,
+    add_zero, ExteriorAlgebra.ι_inj, Prod.mk.injEq, and_true]
+  refine LeftHandedWeyl.basis.ext fun l => ?_
+  fin_cases α <;> fin_cases l <;>
+    simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
+      -SpecialLinearGroup.coe_inv]
+
+lemma rep_apply_toEffectivePotential_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
+    rep Λ [barψ α]ₑ = ∑ β, star (Λ⁻¹ α β) • [barψ β]ₑ := by
+  simp only [toEffectivePotential_barψ_eq, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
+    ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, RCLike.star_def, ← map_smul,
+    Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
+    ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
+  refine LeftHandedWeyl.basis.conj.ext fun l => ?_
+  fin_cases α <;> fin_cases l <;>
+    simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
+      -SpecialLinearGroup.coe_inv, Representation.conj_apply]
+
+end FieldSpecification
+
+namespace EffectivePotential
+
+
 
 /-!
 
@@ -104,17 +206,44 @@ def barψ (α : Fin 2) : EffectivePotential :=
   rw [neg_mul, eq_neg_iff_add_eq_zero]
   exact ExteriorAlgebra.ι_add_mul_swap _ _
 
-@[simp]
-lemma append_apply_zero_eq : Fin.append ψ barψ 0 = ψ 0 := rfl
+abbrev ψbarψ : Fin 4 → EffectivePotential := Fin.append ψ barψ
 
 @[simp]
-lemma append_apply_one_eq : Fin.append ψ barψ 1 = ψ 1 := rfl
+lemma ψbarψ_zero_eq_ψ_zero : ψbarψ 0 = ψ 0 := rfl
 
 @[simp]
-lemma append_apply_two_eq : Fin.append ψ barψ 2 = barψ 0 := rfl
+lemma ψbarψ_one_eq_ψ_one : ψbarψ 1 = ψ 1 := rfl
 
 @[simp]
-lemma append_apply_three_eq : Fin.append ψ barψ 3 = barψ 1 := rfl
+lemma ψbarψ_two_eq_barψ_zero : ψbarψ 2 = barψ 0 := rfl
+
+@[simp]
+lemma ψbarψ_three_eq_barψ_one : ψbarψ 3 = barψ 1 := rfl
+
+@[simp]
+lemma ψbarψ_mul_self (α : Fin 4) : ψbarψ α * ψbarψ α = 0 := by
+  fin_cases α
+  · exact ψ_mul_self 0
+  · exact ψ_mul_self 1
+  · exact barψ_mul_self 0
+  · exact barψ_mul_self 1
+
+lemma ψbarψ_swap (α β : Fin 4) : ψbarψ α * ψbarψ β = - ψbarψ β * ψbarψ α := by
+  fin_cases α <;> fin_cases β <;>
+    simp [ψbarψ, neg_mul, eq_neg_iff_add_eq_zero]
+    <;> exact ExteriorAlgebra.ι_add_mul_swap _ _
+
+@[simp]
+lemma ψbarψ_apply_zero_eq : ψbarψ 0 = ψ 0 := rfl
+
+@[simp]
+lemma ψbarψ_apply_one_eq : ψbarψ 1 = ψ 1 := rfl
+
+@[simp]
+lemma ψbarψ_apply_two_eq : ψbarψ 2 = barψ 0 := rfl
+
+@[simp]
+lemma ψbarψ_apply_three_eq : ψbarψ 3 = barψ 1 := rfl
 
 /-!
 
@@ -124,15 +253,40 @@ lemma append_apply_three_eq : Fin.append ψ barψ 3 = barψ 1 := rfl
 /-- The term of the effective potential generated from a list
   of `Fin 4`, which describe the components `[ψ 0, ψ 1, barψ 0, barψ 1]`. -/
 def termOfList (l : List (Fin 4)) : EffectivePotential :=
-  (l.map (Fin.append ψ barψ)).prod
+  (l.map ψbarψ).prod
 
 @[simp]
 lemma termOfList_nil : termOfList [] = 1 := by simp [termOfList]
 
 lemma termOfList_cons (l : List (Fin 4)) (α : Fin 4) :
-    termOfList (α :: l) = (Fin.append ψ barψ α) * termOfList l := by
+    termOfList (α :: l) = ψbarψ α * termOfList l := by
   simp only [termOfList, List.map_cons, List.prod_cons]
 
+lemma termOfList_append (l₁ l₂ : List (Fin 4)) :
+    termOfList (l₁ ++ l₂) = termOfList l₁ * termOfList l₂ := by
+  simp [termOfList]
+
+lemma ψbarψ_mul_termOfList_mem (α : Fin 4) (l : List (Fin 4)) (h : α ∈ l) :
+    ψbarψ α * termOfList l = 0 := by
+  induction l with
+  | nil => simp at h
+  | cons β t ih =>
+    rcases List.mem_cons.mp h with rfl | ha
+    · simp [termOfList_cons, ← mul_assoc]
+    · simp [termOfList_cons, ← mul_assoc, ψbarψ_swap α β]
+      simp [mul_assoc, ih ha]
+
+lemma termOfList_zero_of_not_nodup (l : List (Fin 4)) (h : ¬ l.Nodup) :
+    termOfList l = 0 := by
+  revert h
+  induction l with
+  | nil => intro h; exact absurd List.nodup_nil h
+  | cons a t ih =>
+    intro h
+    rw [termOfList_cons]
+    by_cases hmem : a ∈ t
+    · exact ψbarψ_mul_termOfList_mem a t hmem
+    · rw [ih fun hn => h (List.nodup_cons.mpr ⟨hmem, hn⟩), mul_zero]
 /-!
 
 ### A.3. Basis
@@ -187,45 +341,7 @@ lemma barψ_one_eq_basis : barψ 1 = basis {3} := by
     Finset.orderEmbOfFin_apply, barψ]
   rfl
 
-/-!
 
-### A.4. The representation on the potential algebra
-
--/
-
-/-- The representation of the Lorentz group on `PotentialAlgebra`. -/
-def rep : Representation ℂ SL(2, ℂ) EffectivePotential where
-  toFun Λ := (ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
-    (LeftHandedWeyl.rep.conj.dual Λ))).toLinearMap
-  map_one' := by
-    simp only [map_one, End.one_eq_id, LinearMap.prodMap_id, ExteriorAlgebra.map_id,
-      AlgHom.toLinearMap_id]
-  map_mul' Λ1 Λ2 := by
-    simp only [map_mul, End.mul_eq_comp, ← LinearMap.prodMap_comp, ← ExteriorAlgebra.map_comp_map,
-      AlgHom.comp_toLinearMap]
-
-lemma rep_apply (Λ : SL(2, ℂ)) (V : EffectivePotential) :
-    rep Λ V = ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
-      (LeftHandedWeyl.rep.conj.dual Λ)) V := rfl
-
-@[simp]
-lemma rep_apply_one (Λ : SL(2, ℂ)) : rep Λ 1 = 1 := by
-  simp [rep_apply]
-
-lemma rep_mul (Λ : SL(2, ℂ)) (V W : EffectivePotential) :
-    rep Λ (V * W) = rep Λ V * rep Λ W:= by
-  simp [rep]
-
-lemma rep_apply_ψ_eq_sum (Λ : SL(2, ℂ)) (i : Fin 2) :
-    rep Λ (ψ i) = ∑ (j : Fin 2), Λ⁻¹ i j • ψ j := by
-  simp only [ψ, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply, Representation.dual_apply,
-    ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, ← map_smul, Prod.smul_mk,
-    smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
-    ExteriorAlgebra.ι_inj, Prod.mk.injEq, and_true]
-  refine LeftHandedWeyl.basis.ext fun l => ?_
-  fin_cases i <;> fin_cases l <;>
-    simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
-      -SpecialLinearGroup.coe_inv]
 
 lemma rep_apply_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     rep Λ (barψ α) = ∑ β, star (Λ⁻¹ α β) • barψ β := by
@@ -262,6 +378,139 @@ lemma rep_neg_apply_termOfList (Λ : SL(2, ℂ)) (l : List (Fin 4)) :
 lemma rep_neg_apply_basis (s : Finset (Fin 4))  (Λ : SL(2, ℂ)) :
     rep (- Λ) (basis s) = (-1 : ℂ) ^ s.card • rep Λ (basis s) := by
   simp [basis_eq_termOfList, rep_neg_apply_termOfList]
+
+lemma rep_diagonal_apply_append (α : Fin 4) (c : ℂˣ) :
+    rep ⟨diagonal ![c, c⁻¹], by simp⟩ (Fin.append ψ barψ α) =
+      (![(c⁻¹).1, c.1, starRingEnd ℂ (c⁻¹).1, starRingEnd ℂ c] α) • Fin.append ψ barψ α := by
+  fin_cases α <;> simp [rep_apply_ψ_eq_sum, rep_apply_barψ_eq_sum, Finset.univ_fin2]
+  all_goals simp [Finset.pair_comm]
+
+lemma rep_diagonal_apply_termOfList (l : List (Fin 4)) (c : ℂˣ) :
+    rep ⟨diagonal ![c, c⁻¹], by simp⟩ (termOfList l) =
+      ((l.map (![(c⁻¹).1, c.1, starRingEnd ℂ (c⁻¹).1, starRingEnd ℂ c])).prod) • termOfList l := by
+  induction l with
+  | nil => simp
+  | cons i l ih =>
+    simp [termOfList_cons, rep_mul, ih, rep_diagonal_apply_append, smul_smul, mul_comm]
+
+lemma rep_diagonal_apply_basis (s : Finset (Fin 4)) (c : ℂˣ) :
+    rep ⟨diagonal ![c, c⁻¹], by simp⟩ (basis s) =
+      (∏ i ∈ s, (![(c⁻¹).1, c.1, starRingEnd ℂ (c⁻¹).1, starRingEnd ℂ c] i)) • basis s := by
+  rw [basis_eq_termOfList, rep_diagonal_apply_termOfList, ← Finset.prod_map_toList _,
+      ((Finset.sort_perm_toList _ fun x1 x2 => x1 ≤ x2).map _).prod_eq]
+
+/-!
+
+### A.5. Multidegrees
+
+Since ψ fields rotate among themselves under the action of the Lorentz group,
+and barψ fields rotate among themselves, it is natural to decompose
+the effective potential into submodules which have a fixed number of ψ and barψ
+fields appearing in them. The submodules are closed under the action of the
+Lorentz group.
+
+-/
+
+def FieldSpecification.ofIndex : Fin 4 → FieldSpecification
+  | 0 => FieldSpecification.ψ
+  | 1 => FieldSpecification.ψ
+  | 2 => FieldSpecification.barψ
+  | 3 => FieldSpecification.barψ
+
+/-- The submodules of `EffectivePotential` which have a fixed number of
+  `ψ` and `barψ` fields appearing in them. -/
+def multiDegreeSubmodule (d : Multiset FieldSpecification) : Submodule ℂ EffectivePotential :=
+  Submodule.span ℂ {V | ∃ s : Finset (Fin 4),
+    (↑(s.val.map FieldSpecification.ofIndex) : Multiset FieldSpecification) = d ∧ basis s = V}
+
+lemma basis_mem_multiDegreeSubmodule (s : Finset (Fin 4)) :
+    basis s ∈ multiDegreeSubmodule ↑(s.val.map FieldSpecification.ofIndex) :=
+  Submodule.subset_span ⟨s, rfl, rfl⟩
+
+lemma termOfList_mem_multiDegreeSubmodule (l : List (Fin 4)) :
+    termOfList l ∈ multiDegreeSubmodule ↑(l.map FieldSpecification.ofIndex) :=
+  Submodule.subset_span ⟨l.toFinset, by simp [Multiset.coe_toFinset, Multiset.map_map], by
+    simp [basis_eq_termOfList]⟩
+lemma one_mem_multiDegreeSubmodule_zero : (1 : EffectivePotential) ∈ multiDegreeSubmodule 0 :=
+  Submodule.subset_span ⟨∅, rfl, by simp [basis_empty_eq_one]⟩
+
+lemma append_mem_multiDegreeSubmodule (α : Fin 4) :
+    Fin.append ψ barψ α ∈ multiDegreeSubmodule {FieldSpecification.ofIndex α} :=
+  Submodule.subset_span ⟨{α}, rfl, by
+    fin_cases α <;>
+      simp [ψ_zero_eq_basis, barψ_zero_eq_basis, ψ_one_eq_basis, barψ_one_eq_basis]⟩
+
+lemma ψ_mem_multiDegreeSubmodule (i : Fin 2) :
+    ψ i ∈ multiDegreeSubmodule {FieldSpecification.ψ} := by
+  fin_cases i
+  · exact append_mem_multiDegreeSubmodule 0
+  · exact append_mem_multiDegreeSubmodule 1
+
+lemma barψ_mem_multiDegreeSubmodule (i : Fin 2) :
+    barψ i ∈ multiDegreeSubmodule {FieldSpecification.barψ} := by
+  fin_cases i
+  · exact append_mem_multiDegreeSubmodule 2
+  · exact append_mem_multiDegreeSubmodule 3
+
+lemma rep_basis_mem_multiDegreeSubmodule (Λ : SL(2, ℂ)) (s : Finset (Fin 4)) :
+    rep Λ (basis s) ∈ multiDegreeSubmodule ↑(s.val.map FieldSpecification.ofIndex) := by
+  sorry
+
+/-!
+
+### A.6. Stability of multidegrees under the group action
+
+-/
+
+lemma rep_ψ_mem_multiDegreeSubmodule (Λ : SL(2, ℂ)) (i : Fin 2) :
+    rep Λ (ψ i) ∈ multiDegreeSubmodule {FieldSpecification.ψ} := by
+  rw [rep_apply_ψ_eq_sum]
+  exact Submodule.sum_mem _ fun j _ =>
+    Submodule.smul_mem _ _ (ψ_mem_multiDegreeSubmodule j)
+
+lemma rep_barψ_mem_multiDegreeSubmodule (Λ : SL(2, ℂ)) (i : Fin 2) :
+    rep Λ (barψ i) ∈ multiDegreeSubmodule {FieldSpecification.barψ} := by
+  rw [rep_apply_barψ_eq_sum]
+  exact Submodule.sum_mem _ fun j _ =>
+    Submodule.smul_mem _ _ (barψ_mem_multiDegreeSubmodule j)
+
+lemma rep_append_mem_multiDegreeSubmodule (Λ : SL(2, ℂ)) (α : Fin 4) :
+    rep Λ (Fin.append ψ barψ α) ∈ multiDegreeSubmodule {FieldSpecification.ofIndex α} :=
+  match α with
+  | 0 => rep_ψ_mem_multiDegreeSubmodule Λ 0
+  | 1 => rep_ψ_mem_multiDegreeSubmodule Λ 1
+  | 2 => rep_barψ_mem_multiDegreeSubmodule Λ 0
+  | 3 => rep_barψ_mem_multiDegreeSubmodule Λ 1
+
+lemma rep_termOfList_mem_multiDegreeSubmodule (Λ : SL(2, ℂ)) (l : List (Fin 4)) :
+    rep Λ (termOfList l) ∈ multiDegreeSubmodule ↑(l.map FieldSpecification.ofIndex) := by
+  induction l with
+  | nil => simpa using one_mem_multiDegreeSubmodule_zero
+  | cons α l ih =>
+    rw [termOfList_cons, rep_mul]
+    simpa [Multiset.singleton_add] using
+      mul_mem_multiDegreeSubmodule (rep_append_mem_multiDegreeSubmodule Λ α) ih
+
+/-- The multidegree submodules are stable under the action of the Lorentz group. -/
+lemma rep_mem_multiDegreeSubmodule {d : Multiset FieldSpecification} (Λ : SL(2, ℂ))
+    {V : EffectivePotential} (hV : V ∈ multiDegreeSubmodule d) :
+    rep Λ V ∈ multiDegreeSubmodule d := by
+  induction hV using Submodule.span_induction with
+  | mem x hx =>
+    obtain ⟨l, hl, rfl⟩ := hx
+    exact hl ▸ rep_termOfList_mem_multiDegreeSubmodule Λ l
+  | zero => simp
+  | add a b _ _ ha hb => rw [map_add]; exact add_mem ha hb
+  | smul c a _ ha => rw [map_smul]; exact Submodule.smul_mem _ _ ha
+
+/-- The multidegree submodules are sent to themselves under the action
+  of the Lorentz group. -/
+lemma multiDegreeSubmodule_map_rep (Λ : SL(2, ℂ)) (d : Multiset FieldSpecification) :
+    (multiDegreeSubmodule d).map (rep Λ) = multiDegreeSubmodule d := by
+  refine le_antisymm (Submodule.map_le_iff_le_comap.2 fun V hV =>
+    rep_mem_multiDegreeSubmodule Λ hV) fun V hV => ?_
+  refine ⟨rep Λ⁻¹ V, rep_mem_multiDegreeSubmodule Λ⁻¹ hV, ?_⟩
+  rw [← Module.End.mul_apply, ← map_mul, mul_inv_cancel, map_one, Module.End.one_apply]
 
 /-!
 
@@ -376,22 +625,8 @@ lemma zero_two_term_zero_of_isInvariant {V : EffectivePotential} (h : IsInvarian
         simp [Λ_basis, Finsupp.single_apply, smul_smul, mul_comm, Finset.prod_pair hab]
     by_contra hne
     exact hd (mul_right_cancel₀ hne (by linear_combination -h1))
-  suffices Λ_termOfList : ∀ (l : List (Fin 4)),
-      rep Λ (termOfList l) = (l.map d).prod • termOfList l by
-    intro t
-    rw [basis_eq_termOfList, Λ_termOfList, ← Finset.prod_map_toList t,
-      ((Finset.sort_perm_toList t fun x1 x2 => x1 ≤ x2).map d).prod_eq]
-  suffices Λ_append : ∀ (i : Fin 4), rep Λ (Fin.append ψ barψ i) = d i • Fin.append ψ barψ i by
-    intro l
-    induction l with
-    | nil => simp
-    | cons i l ih => simp [termOfList_cons, rep_mul, ih, Λ_append, smul_smul, mul_comm]
-  intro i
-  fin_cases i
-  all_goals
-    simp [rep_apply_ψ_eq_sum, rep_apply_barψ_eq_sum, d, adjugate_fin_two, Λ,
-      neg_smul, Complex.conj_ofNat]
-    try module
+  sorry
+
 
 lemma isInvariant_iff {V : EffectivePotential} :
     IsInvariant V ↔ ∃ (c m1 m2 ρ : ℂ), V = c • 1 + m1 • (ψ 0 * ψ 1) + m2 • (barψ 0 * barψ 1) +
