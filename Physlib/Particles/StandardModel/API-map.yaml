@@ -14,6 +14,22 @@ References: []
 
 Requirements:
 
+## Gauge group
+
+  - description: |
+      Define the Z_3 subgroup of the SM gauge group corresponding to
+      the center of SU(3). This is sometimes called the triality group.
+    done: false
+    location: N/A
+
+  - description: |
+      Define the Z_2 subgroup of the SM gauge group corresponding to
+      the center of SU(2).
+    done: false
+    location: N/A
+
+## Fermions
+
   - description: |
       The definition of Quark doublets sitting in the (3, 2)_{1} (left-handed)
       representation of the SM gauge group.
@@ -44,30 +60,50 @@ Requirements:
     done: false
     location: N/A
 
+## Higgs boson
+
   - description: |
-      Define the Z_3 subgroup of the SM gauge group corresponding to
-      the center of SU(3). This is sometimes called the triality group.
+      The definition of the Higgs boson sitting in the (1, 2)_{3} representation
+      of the SM gauge group.
     done: false
     location: N/A
 
-
   - description: |
-      Define the Z_2 subgroup of the SM gauge group corresponding to
-      the center of SU(2).
+      The trivial representation of the Lorentz group acting on the Higgs boson.
     done: false
     location: N/A
+
+  - description: |
+      The effective potential of the Higgs boson, defined as a symmetric algebra
+      over the dual of the Higgs boson and its conjugate.
+    done: false
+    location: N/A
+
+## The effective potential
 
   - description: |
       The definition of the type corresponding to the effective potential of the Standard model
-      including the fermions and the Higgs boson, excluding derivatives.
+      including the fermions and the Higgs boson, excluding derivatives. For fermions
+      they contribute via an exterior algebra, and for the Higgs boson they contribute
+      via the symmetric algebra. This should be called `EffectivePotentialExclDeriv`.
     done: false
     location: N/A
 
-  - description: "The action of the Lorentz group on the effective potential."
+  - description: |
+      The representation of the Lorentz group (really `SL(2, ℂ)` here) on the
+      effective potential.
     done: false
     location: N/A
 
-  - description: "The action of the SM gauge group on the effective potential."
+  - description: |
+      The representation of the Standard Model gauge group on the effective potential.
+    done: false
+    location: N/A
+
+  - description: |
+      The definition of an SU(3)-multi-degree on terms in the effective potential.
+      This should be defined such that every independent representation of SU(3)
+      has its own degree.
     done: false
     location: N/A
 
