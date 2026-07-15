@@ -114,41 +114,56 @@ end EffectivePotential
 inductive FieldSpecification : Type
   | ψ (α : Fin 2) : FieldSpecification
   | barψ (α : Fin 2) : FieldSpecification
-deriving DecidableEq, Fintype
+deriving DecidableEq
 
 namespace FieldSpecification
 
 open EffectivePotential
 
-def toEffectivePotential : FieldSpecification → EffectivePotential
-  | ψ (α : Fin 2) =>
-    (ExteriorAlgebra.ι ℂ) (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α))
-  | barψ (α : Fin 2) =>
-    (ExteriorAlgebra.ι ℂ) (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α))
+instance : Fintype FieldSpecification where
+  elems := {ψ 0, ψ 1, barψ 0, barψ 1}
+  complete := by
+    intro x
+    match x with
+    | ψ 0 => simp
+    | ψ 1 => simp
+    | barψ 0 => simp
+    | barψ 1 => simp
+
+def toSumFin : FieldSpecification ≃ Fin 2 ⊕ Fin 2 where
+  toFun := fun | .ψ (α : Fin 2) => Sum.inl α | .barψ α => Sum.inr α
+  invFun := fun | .inl α => ψ α | .inr α => barψ α
+  left_inv ψ := by
+    fin_cases ψ <;> simp
+  right_inv x := by fin_cases x <;> simp
+
+def moduleBasis : Basis FieldSpecification ℂ
+    (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl)) :=
+  (LeftHandedWeyl.basis.dualBasis.prod LeftHandedWeyl.basis.conj.dualBasis).reindex toSumFin.symm
+
+def toEffectivePotential (ψ : FieldSpecification) : EffectivePotential :=
+  ExteriorAlgebra.ι ℂ (moduleBasis ψ)
 
 scoped notation "[" v "]ₑ" => toEffectivePotential v
 
-lemma toEffectivePotential_eq_ι :
-    (ψ : FieldSpecification) →  ∃ v, [ψ]ₑ = ExteriorAlgebra.ι ℂ v
-  | ψ α => ⟨(LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)), by rfl⟩
-  | barψ α => ⟨(LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)), by rfl⟩
+lemma toEffectivePotential_eq (ψ : FieldSpecification) :
+    toEffectivePotential ψ = ExteriorAlgebra.ι ℂ (moduleBasis ψ) := rfl
 
 lemma toEffectivePotential_ψ_eq (α : Fin 2) : [ψ α]ₑ =
-    ExteriorAlgebra.ι ℂ (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)) := by rfl
+    ExteriorAlgebra.ι ℂ (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)) := by
+  fin_cases α  <;> simp [toEffectivePotential_eq, moduleBasis, toSumFin]
 
 lemma toEffectivePotential_barψ_eq (α : Fin 2) : [barψ α]ₑ =
-    ExteriorAlgebra.ι ℂ (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)) := by rfl
+    ExteriorAlgebra.ι ℂ (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)) := by
+  fin_cases α  <;> simp [toEffectivePotential_eq, moduleBasis, toSumFin]
 
 @[simp]
 lemma toEffectivePotential_mul_self (ψ : FieldSpecification) : [ψ]ₑ * [ψ]ₑ = 0 := by
-  obtain ⟨v, hv⟩ := toEffectivePotential_eq_ι ψ
-  simp [hv]
+  simp [toEffectivePotential_eq]
 
 lemma toEffectivePotential_mul_anti_commute (ψ χ : FieldSpecification) :
     [ψ]ₑ * [χ]ₑ = - [χ]ₑ * [ψ]ₑ := by
-  obtain ⟨v, hv⟩ := toEffectivePotential_eq_ι ψ
-  obtain ⟨w, hw⟩ := toEffectivePotential_eq_ι χ
-  simp [hv, hw, neg_mul, eq_neg_iff_add_eq_zero]
+  simp [toEffectivePotential_eq, neg_mul, eq_neg_iff_add_eq_zero]
 
 lemma rep_apply_toEffectivePotential_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     rep Λ [ψ α]ₑ = ∑ (β : Fin 2), Λ⁻¹ α β • [ψ β]ₑ := by
@@ -176,6 +191,369 @@ end FieldSpecification
 
 namespace EffectivePotential
 
+open FieldSpecification
+
+/-!
+
+## Elements from a list of FieldSpecifications
+-/
+
+def termOfList (l : List FieldSpecification) : EffectivePotential :=
+  (l.map toEffectivePotential).prod
+
+lemma termOfList_cons (ψ : FieldSpecification) (l : List FieldSpecification) :
+    termOfList (ψ :: l) = [ψ]ₑ * termOfList l := by simp [termOfList]
+
+@[simp]
+lemma termOfList_nil : termOfList [] = 1 := by simp [termOfList]
+
+lemma termOfList_singleton (ψ : FieldSpecification) : termOfList [ψ] = [ψ]ₑ := by
+  simp [termOfList_cons]
+
+lemma termOfList_append (l1 l2 : List FieldSpecification) :
+    termOfList (l1 ++ l2) = termOfList l1 * termOfList l2 := by
+  simp [termOfList]
+
+lemma mul_termOfList_of_mem (ψ : FieldSpecification) (l : List FieldSpecification)
+    (hψ : ψ ∈ l) : [ψ]ₑ * termOfList l = 0 := by
+  induction l with
+  | nil => simp at hψ
+  | cons β t ih =>
+    rcases List.mem_cons.mp hψ with rfl | ha
+    · simp [termOfList_cons, ← mul_assoc]
+    · simp [termOfList_cons, ← mul_assoc, toEffectivePotential_mul_anti_commute ψ β]
+      simp [mul_assoc, ih ha]
+
+lemma termOfList_zero_of_not_nodup (l : List FieldSpecification) (h : ¬ l.Nodup) :
+    termOfList l = 0 := by
+  revert h
+  induction l with
+  | nil => intro h; exact absurd List.nodup_nil h
+  | cons a t ih =>
+    intro h
+    rw [termOfList_cons]
+    by_cases hmem : a ∈ t
+    · exact mul_termOfList_of_mem a t hmem
+    · rw [ih fun hn => h (List.nodup_cons.mpr ⟨hmem, hn⟩), mul_zero]
+
+lemma rep_termOfList_eq_map_rep (Λ : SL(2, ℂ)) (l : List FieldSpecification) :
+    rep Λ (termOfList l) = ((l.map toEffectivePotential).map (rep Λ)).prod := by
+  induction l with
+  | nil => simp
+  | cons i l ih =>
+    simp [termOfList_cons, rep_mul, ih]
+
+lemma mem_termOfList_span (V : EffectivePotential) :
+    V ∈ Submodule.span ℂ (Set.range termOfList) := by
+  induction V using ExteriorAlgebra.induction with
+  | algebraMap r =>
+    rw [Algebra.algebraMap_eq_smul_one]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨[], termOfList_nil⟩)
+  | ι v =>
+    rw [← Basis.sum_repr moduleBasis v, map_sum]
+    refine Submodule.sum_mem _ fun f _ => ?_
+    rw [map_smul]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨[f], by simp [termOfList_singleton]; rfl⟩)
+  | mul a b ha hb =>
+    induction ha using Submodule.span_induction with
+    | mem x hx =>
+      obtain ⟨l1, rfl⟩ := hx
+      induction hb using Submodule.span_induction with
+      | mem y hy =>
+        obtain ⟨l2, rfl⟩ := hy
+        exact Submodule.subset_span ⟨l1 ++ l2, termOfList_append l1 l2⟩
+      | zero => simp
+      | add y z _ _ hy hz => rw [mul_add]; exact add_mem hy hz
+      | smul c y _ hy => rw [mul_smul_comm]; exact Submodule.smul_mem _ _ hy
+    | zero => simp
+    | add x y _ _ hx hy => rw [add_mul]; exact add_mem hx hy
+    | smul c x _ hx => rw [smul_mul_assoc]; exact Submodule.smul_mem _ _ hx
+  | add a b ha hb => exact add_mem ha hb
+
+lemma termOfList_perm {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
+    ∃ c : ℂ, termOfList l1 = c • termOfList l2 := by
+  induction h with
+  | nil => exact ⟨1, by simp⟩
+  | cons x _ ih =>
+    obtain ⟨c, hc⟩ := ih
+    exact ⟨c, by rw [termOfList_cons, termOfList_cons, hc, mul_smul_comm]⟩
+  | swap x y l =>
+    refine ⟨-1, ?_⟩
+    rw [termOfList_cons, termOfList_cons, termOfList_cons, termOfList_cons, ← mul_assoc,
+      toEffectivePotential_mul_anti_commute y x]
+    simp [mul_assoc]
+  | trans _ _ ih1 ih2 =>
+    obtain ⟨c1, hc1⟩ := ih1
+    obtain ⟨c2, hc2⟩ := ih2
+    exact ⟨c1 * c2, by rw [hc1, hc2, smul_smul]⟩
+
+lemma termOfList_eq_ιMulti (l : List FieldSpecification) :
+    termOfList l = ExteriorAlgebra.ιMulti ℂ l.length (fun i => moduleBasis (l.get i)) := by
+  induction l with
+  | nil => simp
+  | cons ψ l h =>
+    simp [termOfList_cons, h]
+    rfl
+
+lemma termOfList_ofFn {n : ℕ} (g : Fin n → FieldSpecification) :
+    termOfList (List.ofFn g) = ExteriorAlgebra.ιMulti ℂ n (fun i => moduleBasis (g i)) := by
+  rw [ExteriorAlgebra.ιMulti_apply, termOfList, List.map_ofFn]
+  rfl
+
+/-!
+
+## Construction of a term from a tuple
+
+-/
+
+def termOfTuple {n} (g : Fin n → FieldSpecification) : EffectivePotential :=
+  termOfList (List.ofFn g)
+
+lemma termOfTuple_eq_ιMulti {n} (g : Fin n → FieldSpecification) :
+    termOfTuple g = ExteriorAlgebra.ιMulti ℂ n (fun i => moduleBasis (g i)) := by
+  rw [termOfTuple, termOfList_ofFn]
+
+lemma termOfTuple_perm {n} (g : Fin n → FieldSpecification) {i j : Fin n} (hij : i ≠ j) :
+    termOfTuple (g ∘ Equiv.swap i j) = - termOfTuple g := by
+  rw [termOfTuple_eq_ιMulti, termOfTuple_eq_ιMulti]
+  exact AlternatingMap.map_swap (ExteriorAlgebra.ιMulti ℂ n) (fun k => moduleBasis (g k)) hij
+
+
+def termOfVectTuple {n} :
+    AlternatingMap ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+      EffectivePotential (Fin n) := ExteriorAlgebra.ιMulti ℂ n
+
+def coeffOfVectorTuple (s : Multiset FieldSpecification) (n : ℕ) :
+    AlternatingMap ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+      EffectivePotential (Fin n) where
+  toMultilinearMap :=
+    ∑ g : Fin n → FieldSpecification,
+      if Multiset.ofList (List.ofFn g) = s then
+        (LinearMap.toSpanSingleton ℂ EffectivePotential (termOfTuple g)).compMultilinearMap
+        ((MultilinearMap.mkPiAlgebra ℂ (Fin n) ℂ).compLinearMap fun i => moduleBasis.coord (g i))
+      else 0
+  map_eq_zero_of_eq' := by
+    sorry
+
+def coeff (s : Multiset FieldSpecification) : EffectivePotential →ₗ[ℂ] EffectivePotential :=
+  ExteriorAlgebra.liftAlternating (coeffOfVectorTuple s)
+
+/-!
+
+## Submodules
+
+Without choosing an ordering on FieldSpecification we cannot
+write down a basis of EffectivePotential. However, what we
+can do it split EffectivePotential into submodules of dimension 1.
+These submodules are determined by the set of field components which
+appear in them.
+
+We will define the projection of an element in the effective
+potential onto these submodules, and show that two elements of
+the effective potential are equal if and only if all their projections
+onto these submodules are equal.
+
+These are in general not invariant under the group action.
+-/
+
+
+def SubmoduleOfSet (s : Multiset FieldSpecification) : Submodule ℂ EffectivePotential :=
+  Submodule.span ℂ {V | ∃ (l : List FieldSpecification), Multiset.ofList l = s ∧ V = termOfList l}
+
+lemma termOfList_mem_submoduleOfSet (l : List FieldSpecification) :
+    termOfList l ∈ SubmoduleOfSet (Multiset.ofList l) :=
+  Submodule.subset_span ⟨l, rfl, rfl⟩
+
+lemma multiset_ofList_ofFn_comp_perm {n : ℕ} (g : Fin n → FieldSpecification)
+    (σ : Equiv.Perm (Fin n)) :
+    Multiset.ofList (List.ofFn (g ∘ σ)) = Multiset.ofList (List.ofFn g) := by
+  have hperm : (List.ofFn (⇑σ)).Perm (List.ofFn (id : Fin n → Fin n)) :=
+    List.perm_of_nodup_nodup_toFinset_eq
+      (List.nodup_ofFn.mpr σ.injective) (List.nodup_ofFn.mpr fun _ _ h => h)
+      (by
+        ext k
+        simp only [List.mem_toFinset, List.mem_ofFn]
+        exact ⟨fun _ => ⟨k, rfl⟩, fun _ => ⟨σ.symm k, σ.apply_symm_apply k⟩⟩)
+  calc Multiset.ofList (List.ofFn (g ∘ σ))
+      = Multiset.ofList ((List.ofFn (⇑σ)).map g) := by rw [List.map_ofFn]
+    _ = Multiset.ofList ((List.ofFn (id : Fin n → Fin n)).map g) :=
+        Multiset.coe_eq_coe.2 (hperm.map g)
+    _ = Multiset.ofList (List.ofFn g) := by rw [List.map_ofFn]; rfl
+
+/-- The value of the projection onto `SubmoduleOfSet s` on a tuple of field specifications:
+  the term of the tuple if its multiset is `s`, and zero otherwise. -/
+def SubmoduleOfSet.tupleValue (s : Multiset FieldSpecification) {n : ℕ}
+    (g : Fin n → FieldSpecification) : SubmoduleOfSet s :=
+  if h : Multiset.ofList (List.ofFn g) = s then
+    ⟨termOfList (List.ofFn g), h ▸ termOfList_mem_submoduleOfSet (List.ofFn g)⟩ else 0
+
+lemma SubmoduleOfSet.tupleValue_comp_swap (s : Multiset FieldSpecification) {n : ℕ}
+    (g : Fin n → FieldSpecification) {i j : Fin n} (hij : i ≠ j) :
+    SubmoduleOfSet.tupleValue s (g ∘ Equiv.swap i j) = - SubmoduleOfSet.tupleValue s g := by
+  rw [SubmoduleOfSet.tupleValue, SubmoduleOfSet.tupleValue]
+  by_cases h : Multiset.ofList (List.ofFn g) = s
+  · rw [dif_pos h, dif_pos (by rw [multiset_ofList_ofFn_comp_perm]; exact h)]
+    apply Subtype.ext
+    show termOfList (List.ofFn (g ∘ Equiv.swap i j)) = -termOfList (List.ofFn g)
+    rw [termOfList_ofFn, termOfList_ofFn]
+    exact AlternatingMap.map_swap (ExteriorAlgebra.ιMulti ℂ n)
+      (fun k => moduleBasis (g k)) hij
+  · rw [dif_neg h, dif_neg (by rw [multiset_ofList_ofFn_comp_perm]; exact h), neg_zero]
+
+/-- The multilinear map underlying the projection onto `SubmoduleOfSet s` in degree `n`:
+  each tuple of vectors is expanded in `moduleBasis` and the coefficients of tuples of
+  field specifications with multiset `s` are collected. -/
+def SubmoduleOfSet.projMultilinear (s : Multiset FieldSpecification) (n : ℕ) :
+    MultilinearMap ℂ
+      (fun _ : Fin n => Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+      (SubmoduleOfSet s) :=
+  ∑ g : Fin n → FieldSpecification,
+    (LinearMap.toSpanSingleton ℂ (SubmoduleOfSet s)
+      (SubmoduleOfSet.tupleValue s g)).compMultilinearMap
+      ((MultilinearMap.mkPiAlgebra ℂ (Fin n) ℂ).compLinearMap fun i => moduleBasis.coord (g i))
+
+lemma SubmoduleOfSet.projMultilinear_apply_basis (s : Multiset FieldSpecification) {n : ℕ}
+    (v : Fin n → FieldSpecification) :
+    SubmoduleOfSet.projMultilinear s n (fun i => moduleBasis (v i)) =
+      SubmoduleOfSet.tupleValue s v := by
+  rw [SubmoduleOfSet.projMultilinear, MultilinearMap.sum_apply]
+  simp only [LinearMap.compMultilinearMap_apply, MultilinearMap.compLinearMap_apply,
+    MultilinearMap.mkPiAlgebra_apply, LinearMap.toSpanSingleton_apply]
+  rw [Finset.sum_eq_single_of_mem v (Finset.mem_univ v)]
+  · have h1 : (∏ i, moduleBasis.coord (v i) (moduleBasis (v i))) = 1 := by
+      simp [Basis.coord_apply, Basis.repr_self]
+    rw [h1, one_smul]
+  · intro g _ hgv
+    obtain ⟨k, hk⟩ : ∃ k, g k ≠ v k := by
+      by_contra hcon
+      push Not at hcon
+      exact hgv (funext hcon)
+    have hzero : moduleBasis.coord (g k) (moduleBasis (v k)) = 0 := by
+      rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_apply, if_neg (Ne.symm hk)]
+    rw [Finset.prod_eq_zero (Finset.mem_univ k) hzero, zero_smul]
+
+lemma SubmoduleOfSet.projMultilinear_map_eq_zero (s : Multiset FieldSpecification) {n : ℕ}
+    (v : Fin n → Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
+    {i j : Fin n} (hv : v i = v j) (hij : i ≠ j) :
+    SubmoduleOfSet.projMultilinear s n v = 0 := by
+  have hvswap : ∀ k, v (Equiv.swap i j k) = v k := by
+    intro k
+    rcases eq_or_ne k i with rfl | hki
+    · rw [Equiv.swap_apply_left]; exact hv.symm
+    rcases eq_or_ne k j with rfl | hkj
+    · rw [Equiv.swap_apply_right]; exact hv
+    · rw [Equiv.swap_apply_of_ne_of_ne hki hkj]
+  have hinv : Function.Involutive
+      (fun g : Fin n → FieldSpecification => g ∘ ⇑(Equiv.swap i j)) := fun g => by
+    funext k
+    simp [Function.comp_apply, Equiv.swap_apply_self]
+  rw [SubmoduleOfSet.projMultilinear, MultilinearMap.sum_apply]
+  simp only [LinearMap.compMultilinearMap_apply, MultilinearMap.compLinearMap_apply,
+    MultilinearMap.mkPiAlgebra_apply, LinearMap.toSpanSingleton_apply]
+  set S := ∑ g : Fin n → FieldSpecification,
+    (∏ k, moduleBasis.coord (g k) (v k)) • SubmoduleOfSet.tupleValue s g with hS
+  have hre : S = ∑ g : Fin n → FieldSpecification,
+      (∏ k, moduleBasis.coord ((g ∘ Equiv.swap i j) k) (v k)) •
+        SubmoduleOfSet.tupleValue s (g ∘ Equiv.swap i j) := by
+    rw [hS]
+    refine Fintype.sum_equiv (Function.Involutive.toPerm _ hinv) _ _ fun g => ?_
+    rw [Function.Involutive.coe_toPerm]
+    rw [show (g ∘ ⇑(Equiv.swap i j)) ∘ ⇑(Equiv.swap i j) = g from hinv g]
+  have hpair : ∀ g : Fin n → FieldSpecification,
+      (∏ k, moduleBasis.coord (g k) (v k)) • SubmoduleOfSet.tupleValue s g +
+      (∏ k, moduleBasis.coord ((g ∘ Equiv.swap i j) k) (v k)) •
+        SubmoduleOfSet.tupleValue s (g ∘ Equiv.swap i j) = 0 := by
+    intro g
+    have hcoef : (∏ k, moduleBasis.coord ((g ∘ Equiv.swap i j) k) (v k)) =
+        ∏ k, moduleBasis.coord (g k) (v k) := by
+      calc ∏ k, moduleBasis.coord ((g ∘ Equiv.swap i j) k) (v k)
+          = ∏ k, moduleBasis.coord (g (Equiv.swap i j k)) (v (Equiv.swap i j k)) :=
+            Finset.prod_congr rfl fun k _ => by rw [Function.comp_apply, hvswap]
+        _ = ∏ k, moduleBasis.coord (g k) (v k) :=
+            Equiv.prod_comp (Equiv.swap i j) (fun k => moduleBasis.coord (g k) (v k))
+    rw [hcoef, SubmoduleOfSet.tupleValue_comp_swap s g hij, smul_neg, add_neg_cancel]
+  have hSS : S + S = 0 := by
+    nth_rewrite 2 [hre]
+    rw [hS, ← Finset.sum_add_distrib]
+    exact Finset.sum_eq_zero fun g _ => hpair g
+  have h2 : (2 : ℂ) • S = 0 := by rw [two_smul]; exact hSS
+  have h3 : ((2 : ℂ)⁻¹ * 2) • S = 0 := by rw [mul_smul, h2, smul_zero]
+  rwa [show ((2 : ℂ)⁻¹ * 2) = 1 by norm_num, one_smul] at h3
+
+/-- The alternating map underlying the projection onto `SubmoduleOfSet s` in degree `n`. -/
+def SubmoduleOfSet.projAlternating (s : Multiset FieldSpecification) (n : ℕ) :
+    (Module.Dual ℂ LeftHandedWeyl ×
+      Module.Dual ℂ (ConjModule LeftHandedWeyl)) [⋀^Fin n]→ₗ[ℂ] SubmoduleOfSet s :=
+  { SubmoduleOfSet.projMultilinear s n with
+    map_eq_zero_of_eq' := fun v _ _ hv hij =>
+      SubmoduleOfSet.projMultilinear_map_eq_zero s v hv hij }
+
+lemma SubmoduleOfSet.projAlternating_apply (s : Multiset FieldSpecification) (n : ℕ)
+    (v : Fin n → Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl)) :
+    SubmoduleOfSet.projAlternating s n v = SubmoduleOfSet.projMultilinear s n v := rfl
+
+def SubmoduleOfSet.proj (s : Multiset FieldSpecification) :
+    EffectivePotential →ₗ[ℂ] SubmoduleOfSet s :=
+  ExteriorAlgebra.liftAlternating (SubmoduleOfSet.projAlternating s)
+
+lemma SubmoduleOfSet.proj_apply_termOfList (s : Multiset FieldSpecification)
+    (l : List FieldSpecification) :
+    (SubmoduleOfSet.proj s (termOfList l) : EffectivePotential) =
+      if Multiset.ofList l = s then termOfList l else 0 := by
+  conv_lhs => rw [termOfList_eq_ιMulti]
+  rw [SubmoduleOfSet.proj, ExteriorAlgebra.liftAlternating_apply_ιMulti,
+    SubmoduleOfSet.projAlternating_apply, SubmoduleOfSet.projMultilinear_apply_basis]
+  simp only [SubmoduleOfSet.tupleValue, List.ofFn_get]
+  split_ifs with h
+  · rfl
+  · rfl
+
+
+/-!
+
+## Gradings
+
+-/
+
+variable {M : Type} [AddCommMonoid M]
+
+
+def GradedSubmodule (g : FieldSpecification → M) (a : M) : Submodule ℂ EffectivePotential :=
+  Submodule.span ℂ {V | ∃ (l : List FieldSpecification), (l.map g).sum = a ∧ V = termOfList l}
+
+lemma termOfList_mem_gradedSubmodule (g : FieldSpecification → M) (l : List FieldSpecification) :
+    termOfList l ∈ GradedSubmodule g ((l.map g).sum) :=
+  Submodule.subset_span ⟨l, rfl, rfl⟩
+
+lemma toEffectivePotential_mem_gradedSubmodule (g : FieldSpecification → M)
+    (f : FieldSpecification) : [f]ₑ ∈ GradedSubmodule g (g f) := by
+  simpa [termOfList_singleton] using termOfList_mem_gradedSubmodule g [f]
+
+
+/-!
+
+## The irrep grading
+
+-/
+
+def irrepGrading : FieldSpecification → ℤ × ℤ
+  | ψ _ => (1, 0)
+  | barψ _ => (0, 1)
+
+/-!
+
+## Mass dimension grading
+
+-/
+
+def massDimGrading : FieldSpecification → ℚ := fun _ => 3/2
+
+
+/-!
+
+## Below here is old and WIP
+
+-/
 
 
 /-!
