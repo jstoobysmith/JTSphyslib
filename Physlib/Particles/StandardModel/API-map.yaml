@@ -32,7 +32,8 @@ Requirements:
 
   - description: |
       The definition of Quark doublets sitting in the (3, 2)_{1} (left-handed)
-      representation of the SM gauge group.
+      representation of the SM gauge group. The representations used here have there hypercharge
+      scaled to be integers, so the hypercharge of the quark doublet is 1 instead of 1/6.
     done: true
     location: "Physlib/Particles/StandardModel/Fermions/QuarkDoublet.lean (QuarkDoublet)"
 
