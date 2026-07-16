@@ -130,12 +130,24 @@ instance : Fintype FieldSpecification where
     | barψ 0 => simp
     | barψ 1 => simp
 
+/-!
+
+## Ordering on FieldSpecification
+
+We define an ordering on `FieldSpecification`.
+This ordering is a choice, and nothing physical can depend on this choice.
+We however make it as it simplifies the proofs of lots of lemmas, and
+makes it easy to do more calculational aspects.
+
+-/
+
 def toSumFin : FieldSpecification ≃ Fin 2 ⊕ Fin 2 where
   toFun := fun | .ψ (α : Fin 2) => Sum.inl α | .barψ α => Sum.inr α
   invFun := fun | .inl α => ψ α | .inr α => barψ α
   left_inv ψ := by
     fin_cases ψ <;> simp
   right_inv x := by fin_cases x <;> simp
+
 
 def moduleBasis : Basis FieldSpecification ℂ
     (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl)) :=
@@ -333,10 +345,95 @@ def coeffOfVectorTuple (s : Multiset FieldSpecification) (n : ℕ) :
         ((MultilinearMap.mkPiAlgebra ℂ (Fin n) ℂ).compLinearMap fun i => moduleBasis.coord (g i))
       else 0
   map_eq_zero_of_eq' := by
-    sorry
+    intro v i j hv hij
+    have hvswap : ∀ k, v (Equiv.swap i j k) = v k := by
+      intro k
+      rcases eq_or_ne k i with rfl | hki
+      · rw [Equiv.swap_apply_left]; exact hv.symm
+      rcases eq_or_ne k j with rfl | hkj
+      · rw [Equiv.swap_apply_right]; exact hv
+      · rw [Equiv.swap_apply_of_ne_of_ne hki hkj]
+    simp only [MultilinearMap.toFun_eq_coe, MultilinearMap.sum_apply]
+    refine Finset.sum_involution (fun g _ => g ∘ Equiv.swap i j) ?_ ?_
+      (fun g _ => Finset.mem_univ _) ?_
+    · intro g _
+      have hms : Multiset.ofList (List.ofFn (g ∘ Equiv.swap i j)) =
+          Multiset.ofList (List.ofFn g) :=
+        Multiset.coe_eq_coe.mpr ((Equiv.swap i j).ofFn_comp_perm g)
+      rw [hms]
+      split_ifs with h
+      · simp only [LinearMap.compMultilinearMap_apply, MultilinearMap.compLinearMap_apply,
+          MultilinearMap.mkPiAlgebra_apply, LinearMap.toSpanSingleton_apply,
+          Function.comp_apply]
+        have hprod : ∏ k, moduleBasis.coord (g (Equiv.swap i j k)) (v k) =
+            ∏ k, moduleBasis.coord (g k) (v k) :=
+          calc ∏ k, moduleBasis.coord (g (Equiv.swap i j k)) (v k)
+              = ∏ k, moduleBasis.coord (g (Equiv.swap i j k)) (v (Equiv.swap i j k)) :=
+                Finset.prod_congr rfl fun k _ => by rw [hvswap k]
+            _ = ∏ k, moduleBasis.coord (g k) (v k) :=
+                Equiv.prod_comp (Equiv.swap i j) fun k => moduleBasis.coord (g k) (v k)
+        rw [hprod, termOfTuple_perm g hij, smul_neg, add_neg_cancel]
+      · simp
+    · intro g _ hfg hcontra
+      apply hfg
+      have hgji : g j = g i := by
+        simpa [Equiv.swap_apply_left] using congrFun hcontra i
+      have hterm : termOfTuple g = 0 := by
+        rw [termOfTuple_eq_ιMulti]
+        exact AlternatingMap.map_eq_zero_of_eq _ _ (by rw [hgji]) hij
+      split_ifs
+      · simp [hterm]
+      · simp
+    · intro g _
+      funext k
+      simp [Function.comp, Equiv.swap_apply_self]
 
 def coeff (s : Multiset FieldSpecification) : EffectivePotential →ₗ[ℂ] EffectivePotential :=
   ExteriorAlgebra.liftAlternating (coeffOfVectorTuple s)
+
+lemma coeff_apply_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification) :
+    coeff s (termOfList l) = if Multiset.ofList l = s then termOfList l else 0 := by
+  have hterm : termOfTuple l.get = termOfList l := by rw [termOfTuple, List.ofFn_get]
+  rw [coeff, termOfList_eq_ιMulti, ExteriorAlgebra.liftAlternating_apply_ιMulti]
+  simp only [coeffOfVectorTuple, AlternatingMap.coe_mk, MultilinearMap.sum_apply]
+  refine (Finset.sum_eq_single l.get ?_ ?_).trans ?_
+  · intro g _ hg
+    obtain ⟨i, hi⟩ := Function.ne_iff.mp hg
+    split_ifs with h
+    · simp only [LinearMap.compMultilinearMap_apply, MultilinearMap.compLinearMap_apply,
+        MultilinearMap.mkPiAlgebra_apply, LinearMap.toSpanSingleton_apply]
+      have hzero : ∏ k, moduleBasis.coord (g k) (moduleBasis (l.get k)) = 0 :=
+        Finset.prod_eq_zero (Finset.mem_univ i) (by
+          rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_eq_of_ne hi])
+      rw [hzero, zero_smul]
+    · simp
+  · intro h
+    exact absurd (Finset.mem_univ _) h
+  · rw [List.ofFn_get]
+    split_ifs with h
+    · simp only [LinearMap.compMultilinearMap_apply, MultilinearMap.compLinearMap_apply,
+        MultilinearMap.mkPiAlgebra_apply, LinearMap.toSpanSingleton_apply, hterm]
+      have hprod : ∏ i, moduleBasis.coord (l.get i) (moduleBasis (l.get i)) = 1 := by simp
+      rw [hprod, one_smul]
+      exact termOfList_eq_ιMulti l
+    · simp
+
+lemma coeff_eq_zero_of_dup (s : Multiset FieldSpecification) (h : ¬ s.Nodup)
+    (V : EffectivePotential) : coeff s V = 0 := by
+  have hzero : coeffOfVectorTuple s = 0 := by
+    funext n
+    ext v
+    simp only [coeffOfVectorTuple, AlternatingMap.coe_mk, MultilinearMap.sum_apply]
+    refine Finset.sum_eq_zero fun g _ => ?_
+    split_ifs with hs
+    · obtain ⟨i, j, hgij, hij⟩ := Function.not_injective_iff.mp fun hinj =>
+        h (hs ▸ Multiset.coe_nodup.mpr (List.nodup_ofFn.mpr hinj))
+      have hterm : termOfTuple g = 0 := by
+        rw [termOfTuple_eq_ιMulti]
+        exact AlternatingMap.map_eq_zero_of_eq _ _ (by rw [hgij]) hij
+      simp [hterm]
+    · simp
+  rw [coeff, hzero, map_zero, LinearMap.zero_apply]
 
 /-!
 
