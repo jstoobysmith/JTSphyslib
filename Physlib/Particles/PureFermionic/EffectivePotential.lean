@@ -313,6 +313,18 @@ lemma rep_termOfList_eq_map_rep (Λ : SL(2, ℂ)) (l : List FieldSpecification) 
   | cons i l ih =>
     simp [termOfList_cons, rep_mul, ih]
 
+lemma rep_scale_termOfList_of_rep_scale_toEffectivePotential (Λ : SL(2, ℂ))
+    (h : ∀ ψ, ∃ c : ℂ, rep Λ [ψ]ₑ = c • [ψ]ₑ) (l : List FieldSpecification) :
+    ∃ c : ℂ, rep Λ (termOfList l) = c • termOfList l := by
+  induction l with
+  | nil => exact ⟨1, by simp⟩
+  | cons ψ t ih =>
+    obtain ⟨cψ, hcψ⟩ := h ψ
+    obtain ⟨ct, hct⟩ := ih
+    refine ⟨cψ * ct, ?_⟩
+    simp [termOfList_cons, rep_mul, hcψ, hct]
+    module
+
 lemma mem_termOfList_span (V : EffectivePotential) :
     V ∈ Submodule.span ℂ (Set.range termOfList) := by
   induction V using ExteriorAlgebra.induction with
@@ -527,6 +539,13 @@ lemma coeff_eq_termOfList {s : Multiset FieldSpecification}
     use a • c1
     simp [hx, smul_smul]
 
+lemma coeff_eq_exists_termOfList (s : Multiset FieldSpecification)
+    (V : EffectivePotential)  :
+    ∃ l, ∃ c : ℂ, coeff s V = c • termOfList l := by
+  obtain ⟨c, hl⟩ := coeff_eq_termOfList V (s := s) (l := Multiset.toList s) (by simp)
+  use Multiset.toList s
+  use c
+
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
 def support (V : EffectivePotential) : Finset (Multiset FieldSpecification) :=
@@ -554,6 +573,10 @@ def support (V : EffectivePotential) : Finset (Multiset FieldSpecification) :=
     simp at hs
     grind
 
+@[simp]
+lemma support_zero_eq_empty : support (0 : EffectivePotential) = ∅ := by
+  simp [support]
+
 lemma mem_support_iff {V : EffectivePotential} {s : Multiset FieldSpecification} :
     s ∈ support V ↔ coeff s V ≠ 0 := by simp [support]
 
@@ -561,15 +584,26 @@ lemma support_add  {V W : EffectivePotential} :
     support (V + W) ⊆ support V ∪ support W := by
   sorry
 
+lemma support_smul {V : EffectivePotential} (c : ℂ) :
+    support (c • V) ⊆ support V := by
+  sorry
+
 lemma eq_sum_support_coeff (V : EffectivePotential) : V = ∑ s ∈ support V, coeff s V := by
   sorry
 
+lemma mem_support_termOfList_iff {l : List FieldSpecification} (s : Multiset FieldSpecification):
+    s ∈ support (termOfList l) ↔ s = Multiset.ofList l ∧ termOfList l ≠ 0 := by
+  simp [support, coeff_apply_termOfList]
+  grind
+
 /-- A general result related to whether a multiset of field specifications is excluded from
 the support of an effective potential due to a selection rule based on the group action. -/
-lemma support_selection_rule {V : EffectivePotential} (hV : IsInvariant v)
+lemma support_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
     {s : Multiset FieldSpecification}
-    (selection_rule : ∃ g : SL(2, ℂ), ∃ l : List FieldSpecification, ∃ c : ℂˣ,
-    rep g (termOfList l) = c • termOfList l ∧ Multiset.ofList l = s ∧ c ≠ 1) :
+    (selection_rule : ∃ g : SL(2, ℂ),
+
+    ∃ l : List FieldSpecification, ∃ c : ℂ,
+    rep g (termOfList l) = c • termOfList l ∧ Multiset.ofList l = s) :
     s ∉ support V := by
   sorry
 
@@ -580,8 +614,6 @@ lemma support_selection_rule {V : EffectivePotential} (hV : IsInvariant v)
 
 
 -/
-
-
 
 def irrepCoeff (i : Multiset Irrep) : EffectivePotential →ₗ[ℂ] EffectivePotential where
   toFun := fun V => ∑ s ∈ support V, if Multiset.map toIrrep s = i then coeff s V else 0
