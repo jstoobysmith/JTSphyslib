@@ -415,7 +415,6 @@ lemma termOfTuple_perm {n} (g : Fin n → FieldSpecification) {i j : Fin n} (hij
   rw [termOfTuple_eq_ιMulti, termOfTuple_eq_ιMulti]
   exact AlternatingMap.map_swap (ExteriorAlgebra.ιMulti ℂ n) (fun k => moduleBasis (g k)) hij
 
-
 def termOfVectTuple {n} :
     AlternatingMap ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
       EFTLagrangianExclDeriv (Fin n) := ExteriorAlgebra.ιMulti ℂ n
@@ -677,9 +676,14 @@ lemma support_zero_eq_empty : support (0 : EFTLagrangianExclDeriv) = ∅ := by
 lemma mem_support_iff {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification} :
     s ∈ support V ↔ coeff s V ≠ 0 := by simp [support]
 
+lemma coeff_eq_zero_of_not_mem_support {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification}
+    (h : s ∉ support V) : coeff s V = 0 := by
+  simpa [support, Set.Finite.mem_toFinset] using  h
+
 lemma support_add  {V W : EFTLagrangianExclDeriv} :
     support (V + W) ⊆ support V ∪ support W := by
-  sorry
+  simp [support]
+  grind
 
 lemma support_smul {V : EFTLagrangianExclDeriv} (c : ℂ) :
     support (c • V) ⊆ support V := by
@@ -689,23 +693,59 @@ lemma support_smul_neq_zero {V : EFTLagrangianExclDeriv} (c : ℂ) (hc : c ≠ 0
     support (c • V) = support V := by
   simp [support, hc]
 
-lemma eq_sum_support_coeff (V : EFTLagrangianExclDeriv) : V = ∑ s ∈ support V, coeff s V := by
-  sorry
-
 lemma mem_support_termOfList_iff {l : List FieldSpecification} (s : Multiset FieldSpecification):
     s ∈ support (termOfList l) ↔ s = Multiset.ofList l ∧ termOfList l ≠ 0 := by
   simp [support, coeff_apply_termOfList]
   grind
 
-/-- A general result related to whether a multiset of field specifications is excluded from
-the support of an effective potential due to a selection rule based on the group action. -/
-lemma support_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
-    {s : Multiset FieldSpecification}
-    (selection_rule : ∃ g : SL(2, ℂ),
-    ∃ l : List FieldSpecification, ∃ c : ℂ,
-    rep g (termOfList l) = c • termOfList l ∧ Multiset.ofList l = s) :
-    s ∉ support V := by
-  sorry
+lemma support_termOfList_subset (l : List FieldSpecification) :
+    support (termOfList l) ⊆ {Multiset.ofList l} := by
+  intro s hs
+  simp [mem_support_termOfList_iff] at hs
+  simp [hs.1]
+
+lemma eq_sum_support_coeff (V : EFTLagrangianExclDeriv) : V = ∑ s ∈ support V, coeff s V := by
+  induction' mem_termOfList_span V using Submodule.span_induction with V' hV' x y _ _ hx hy
+    a x _ hx
+  · simp only [Set.mem_range] at hV'
+    obtain ⟨l, rfl⟩ := hV'
+    trans ∑ s ∈ {Multiset.ofList l}, coeff s (termOfList l); swap
+    · symm
+      apply Finset.sum_subset (support_termOfList_subset l)
+      simp
+      intro hl
+      simp [mem_support_termOfList_iff] at hl
+      rw [hl]
+      simp
+    · simp [coeff_apply_termOfList]
+  · simp
+  · trans ∑ s ∈ x.support ∪ y.support, coeff s (x + y); swap
+    · symm
+      apply Finset.sum_subset
+      · simp [support_add]
+      · intro s hs hs'
+        exact coeff_eq_zero_of_not_mem_support hs'
+    · conv_lhs => rw [hx, hy]
+      simp [Finset.sum_add_distrib]
+      congr 1
+      · apply Finset.sum_subset
+        · simp
+        · intro s hs hs'
+          exact coeff_eq_zero_of_not_mem_support hs'
+      · apply Finset.sum_subset
+        · simp
+        · intro s hs hs'
+          exact coeff_eq_zero_of_not_mem_support hs'
+  · trans ∑ s ∈ (support x).image (fun s => s), coeff s (a • x); swap
+    · symm
+      apply Finset.sum_subset
+      · simp [support_smul]
+      · intro s hs hs'
+        exact coeff_eq_zero_of_not_mem_support hs'
+    conv_lhs => rw [hx]
+    simp [Finset.smul_sum]
+
+
 /-!
 
 ##
@@ -761,6 +801,7 @@ lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecifi
   have ht' := support_smul c ht
   rw [mem_support_termOfList_iff] at ht'
   simpa using ht'.1
+
 
 /-!
 
