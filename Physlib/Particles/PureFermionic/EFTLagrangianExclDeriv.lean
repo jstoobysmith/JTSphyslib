@@ -247,6 +247,16 @@ def toIrrep : FieldSpecification → Irrep
   | .ψ _ => .ψ
   | .barψ _ => .barψ
 
+lemma rep_apply_toEFTLagrangianExclDeriv_mem_irrep (Λ : SL(2, ℂ)) (ψ : FieldSpecification) :
+    ∃ n, ∃ F : Fin n → FieldSpecification, (∃ f : Fin n → ℂ,  rep Λ [ψ]ₑ = ∑ x, f x • [F x]ₑ) ∧
+    (∀ x, toIrrep (F x) = toIrrep ψ) := by
+  match ψ with
+  | .ψ α =>
+    exact ⟨2, .ψ, ⟨Λ⁻¹ α, rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum Λ α⟩, by simp [toIrrep]⟩
+  | .barψ α =>
+    exact ⟨2, .barψ, ⟨star (Λ⁻¹ α), rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum Λ α⟩,
+      by simp [toIrrep]⟩
+
 /-!
 
 ## Mass dimension
@@ -334,6 +344,35 @@ lemma rep_scale_termOfList_of_rep_scale_toEFTLagrangianExclDeriv (Λ : SL(2, ℂ
     refine ⟨cψ * ct, ?_⟩
     simp [termOfList_cons, rep_mul, hcψ, hct]
     module
+
+
+lemma rep_termOfList_eq_sum_of_toIrrep (Λ : SL(2, ℂ)) (l : List FieldSpecification) :
+    ∃ n, ∃ F : Fin n → List FieldSpecification,
+    (∃ f : Fin n → ℂ,  rep Λ (termOfList l) = ∑ x, f x • termOfList (F x)) ∧
+    (∀ x, (F x).map toIrrep = l.map toIrrep) := by
+  induction l with
+  | nil =>
+    refine ⟨1, fun _ => [], ⟨fun _ => 1, by simp⟩, fun _ => rfl⟩
+  | cons ψ t ih =>
+    obtain ⟨n, F, ⟨f, hf⟩, hF⟩ := ih
+    obtain ⟨nψ, Fψ, ⟨fψ, hfψ⟩, hFψ⟩ := rep_apply_toEFTLagrangianExclDeriv_mem_irrep Λ ψ
+    use nψ * n
+    let F' : Fin nψ × Fin n → List FieldSpecification := fun ⟨i, j⟩ => Fψ i :: F j
+    use F' ∘ finProdFinEquiv.symm
+    refine ⟨?_, ?_⟩
+    · use (fun ⟨i, j⟩ => fψ i * f j) ∘ finProdFinEquiv.symm
+      rw [← finProdFinEquiv.sum_comp]
+      simp [termOfList_cons, rep_mul, F', hfψ, hf]
+      rw [Fintype.sum_mul_sum, Fintype.sum_prod_type]
+      simp [smul_smul]
+      congr
+      funext x
+      congr
+      funext y
+      ring_nf
+    · intro x
+      obtain ⟨x, rfl⟩ := finProdFinEquiv.surjective x
+      simp [F', hF, hFψ]
 
 lemma mem_termOfList_span (V : EFTLagrangianExclDeriv) :
     V ∈ Submodule.span ℂ (Set.range termOfList) := by
@@ -815,6 +854,11 @@ lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecifi
 def allTermsWithIrrepContent (i : Multiset Irrep) : Finset (Multiset FieldSpecification) :=
   ((Finset.univ.sym i.card).image Sym.toMultiset).filter (fun s => Multiset.map toIrrep s = i)
 
+lemma mem_allTermsWithIrrepContent_iff (i : Multiset Irrep) (s : Multiset FieldSpecification) :
+    s ∈ allTermsWithIrrepContent i ↔ Multiset.map toIrrep s = i := by
+  simp [allTermsWithIrrepContent]
+  sorry
+
 /-- The projection of a term of `EFTLagrangianExclDeriv` onto those operators which
   have an irrep content determined by `i`. -/
 def irrepCoeff (i : Multiset Irrep) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv :=
@@ -824,6 +868,19 @@ lemma irrepCoeff_eq_sum (i : Multiset Irrep) (V : EFTLagrangianExclDeriv) :
     irrepCoeff i V = ∑ s ∈ allTermsWithIrrepContent i, coeff s V := by
   simp [irrepCoeff]
 
+lemma irrepCoeff_one (i : Multiset Irrep) : irrepCoeff i 1 = if i = ∅ then 1 else 0 := by
+  simp [irrepCoeff, coeff_one, allTermsWithIrrepContent]
+  split_ifs with hi <;> simp_all
+  rename_i h
+  subst h
+  apply hi ⟨∅, by simp⟩
+  simp
+
+lemma irrepCoeff_termOfList (i : Multiset Irrep) (l : List FieldSpecification) :
+    irrepCoeff i (termOfList l) = if Multiset.map toIrrep (Multiset.ofList l) = i then
+      termOfList l else 0 := by
+  simp [irrepCoeff, coeff_apply_termOfList, mem_allTermsWithIrrepContent_iff]
+
 def irrepSupport (V : EFTLagrangianExclDeriv) : Finset (Multiset Irrep) :=
   (support V).image (Multiset.map toIrrep)
 
@@ -831,10 +888,21 @@ lemma eq_sum_irrepCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ i ∈ irrepSupport V, irrepCoeff i V := by
   sorry
 
-lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2, ℂ)) :
-    rep g (irrepCoeff i V) = irrepCoeff i (rep g V) := by
+lemma irrepCoeff_rep_apply_fieldSpecification {i : Multiset Irrep} (g : SL(2, ℂ))
+    (ψ : FieldSpecification) :
+    rep g (irrepCoeff i [ψ]ₑ) = irrepCoeff i (rep g [ψ]ₑ) := by
   sorry
 
+lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2, ℂ)) :
+    rep g (irrepCoeff i V) = irrepCoeff i (rep g V) := by
+  induction' mem_termOfList_span V using Submodule.span_induction with V' hV' x y _ _ hx hy
+    a x _ hx
+  · simp only [Set.mem_range] at hV'
+    obtain ⟨l, rfl⟩ := hV'
+    sorry -- use rep_termOfList_eq_sum_of_toIrrep
+  · simp
+  · simp [hx, hy]
+  · simp [hx]
 
 lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInvariant V) :
     irrepCoeff {Irrep.ψ, Irrep.barψ} V = 0 := by
@@ -845,6 +913,8 @@ lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (h
 
 -/
 
+def upperBoundNumberOfFields (n : ℚ) : ℕ := by
+  let d := Fin.minimum massDimension
 def allTermsWithMassDimension (n : ℚ) : Finset (Multiset FieldSpecification) :=
   -- Since there is no mass dimension less then 1, a term with mass dimension n
   -- can have at most `n` fields
