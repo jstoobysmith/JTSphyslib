@@ -147,7 +147,7 @@ end EFTLagrangianExclDeriv
 inductive FieldSpecification : Type
   | ψ (α : Fin 2) : FieldSpecification
   | barψ (α : Fin 2) : FieldSpecification
-deriving DecidableEq
+deriving DecidableEq, Repr
 
 namespace FieldSpecification
 
@@ -253,7 +253,7 @@ def toIrrep : FieldSpecification → Irrep
 
 -/
 
-def massDimension : FieldSpecification → ℕ
+def massDimension : FieldSpecification → ℚ
   | .ψ _ => 3 / 2
   | .barψ _ => 3 / 2
 
@@ -811,17 +811,25 @@ lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecifi
 
 -/
 
-def irrepCoeff (i : Multiset Irrep) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv where
-  toFun := fun V => ∑ s ∈ support V, if Multiset.map toIrrep s = i then coeff s V else 0
-  map_add' := by
-    intro V W
-    sorry
-  map_smul' := by
-    intro c V
-    sorry
+/-- The field content of a term which corresponds to a given irrep content. -/
+def allTermsWithIrrepContent (i : Multiset Irrep) : Finset (Multiset FieldSpecification) :=
+  ((Finset.univ.sym i.card).image Sym.toMultiset).filter (fun s => Multiset.map toIrrep s = i)
+
+/-- The projection of a term of `EFTLagrangianExclDeriv` onto those operators which
+  have an irrep content determined by `i`. -/
+def irrepCoeff (i : Multiset Irrep) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv :=
+  ∑ s ∈ allTermsWithIrrepContent i, coeff s
+
+lemma irrepCoeff_eq_sum (i : Multiset Irrep) (V : EFTLagrangianExclDeriv) :
+    irrepCoeff i V = ∑ s ∈ allTermsWithIrrepContent i, coeff s V := by
+  simp [irrepCoeff]
 
 def irrepSupport (V : EFTLagrangianExclDeriv) : Finset (Multiset Irrep) :=
   (support V).image (Multiset.map toIrrep)
+
+lemma eq_sum_irrepCoeff (V : EFTLagrangianExclDeriv) :
+    V = ∑ i ∈ irrepSupport V, irrepCoeff i V := by
+  sorry
 
 lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2, ℂ)) :
     rep g (irrepCoeff i V) = irrepCoeff i (rep g V) := by
@@ -837,6 +845,12 @@ lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (h
 
 -/
 
+def allTermsWithMassDimension (n : ℚ) : Finset (Multiset FieldSpecification) :=
+  -- Since there is no mass dimension less then 1, a term with mass dimension n
+  -- can have at most `n` fields
+  let x := List.range (Rat.ceil n + 1).toNat
+
+  ((Finset.univ.sym x.card).image Sym.toMultiset).filter (fun s => (s.map massDimension).sum = n)
 def massDimCoeff (n : ℚ) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv where
   toFun := fun V => ∑ s ∈ support V, if (s.map massDimension).sum = n then coeff s V else 0
   map_add' := by
