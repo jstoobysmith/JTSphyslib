@@ -352,22 +352,27 @@ lemma mem_termOfList_span (V : EffectivePotential) :
     | smul c x _ hx => rw [smul_mul_assoc]; exact Submodule.smul_mem _ _ hx
   | add a b ha hb => exact add_mem ha hb
 
-lemma termOfList_perm {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
-    ∃ c : ℂ, termOfList l1 = c • termOfList l2 := by
+lemma termOfList_perm_neq_zero {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
+    ∃ c : ℂ, termOfList l1 = c • termOfList l2 ∧ c ≠ 0 := by
   induction h with
   | nil => exact ⟨1, by simp⟩
   | cons x _ ih =>
-    obtain ⟨c, hc⟩ := ih
-    exact ⟨c, by rw [termOfList_cons, termOfList_cons, hc, mul_smul_comm]⟩
+    obtain ⟨c, hc1, hc2⟩ := ih
+    exact ⟨c, by rw [termOfList_cons, termOfList_cons, hc1, mul_smul_comm], hc2⟩
   | swap x y l =>
     refine ⟨-1, ?_⟩
     rw [termOfList_cons, termOfList_cons, termOfList_cons, termOfList_cons, ← mul_assoc,
       toEffectivePotential_mul_anti_commute y x]
     simp [mul_assoc]
   | trans _ _ ih1 ih2 =>
-    obtain ⟨c1, hc1⟩ := ih1
-    obtain ⟨c2, hc2⟩ := ih2
-    exact ⟨c1 * c2, by rw [hc1, hc2, smul_smul]⟩
+    obtain ⟨c1, hc1, hc1'⟩ := ih1
+    obtain ⟨c2, hc2, hc2'⟩ := ih2
+    exact ⟨c1 * c2, by rw [hc1, hc2, smul_smul], by grind⟩
+
+lemma termOfList_perm {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
+    ∃ c : ℂ, termOfList l1 = c • termOfList l2 := by
+  obtain ⟨c, h1, h2⟩ := termOfList_perm_neq_zero h
+  exact ⟨c, h1⟩
 
 lemma termOfList_eq_ιMulti (l : List FieldSpecification) :
     termOfList l = ExteriorAlgebra.ιMulti ℂ l.length (fun i => moduleBasis (l.get i)) := by
@@ -546,6 +551,40 @@ lemma coeff_eq_exists_termOfList (s : Multiset FieldSpecification)
   use Multiset.toList s
   use c
 
+/-- If the action of `g` is to permute the fields,
+  then it defines a relation between the coefficients of the effective potential. -/
+lemma coeff_eq_perm (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecification)
+    (hg : ∀ ψ, rep g [ψ]ₑ = [σ ψ]ₑ) (s : Multiset FieldSpecification)
+    (V : EffectivePotential) (hV : IsInvariant V) :
+    coeff (s.map σ) V = rep g (coeff s V) := by
+  have hterm : ∀ l : List FieldSpecification,
+      rep g (termOfList l) = termOfList (l.map σ) := by
+    intro l
+    induction l with
+    | nil => simp
+    | cons a l ih =>
+      rw [termOfList_cons, rep_mul, hg, ih, List.map_cons, termOfList_cons]
+  have hcomm : ∀ W : EffectivePotential,
+      coeff (s.map σ) (rep g W) = rep g (coeff s W) := by
+    intro W
+    induction' mem_termOfList_span W using Submodule.span_induction with W' hW' x y _ _ hx hy
+      a x _ hx
+    · simp only [Set.mem_range] at hW'
+      obtain ⟨l, rfl⟩ := hW'
+      rw [hterm, coeff_apply_termOfList, coeff_apply_termOfList]
+      have hcond : Multiset.ofList (List.map σ l) = Multiset.map σ s ↔
+          Multiset.ofList l = s := by
+        rw [← Multiset.map_coe]
+        exact ⟨fun hc => Multiset.map_injective σ.injective hc, fun hc => by rw [hc]⟩
+      by_cases hc : Multiset.ofList l = s
+      · rw [if_pos (hcond.mpr hc), if_pos hc, hterm]
+      · rw [if_neg (fun hcon => hc (hcond.mp hcon)), if_neg hc, map_zero]
+    · simp
+    · simp [map_add, hx, hy]
+    · simp [map_smul, hx]
+  conv_lhs => rw [← hV g]
+  exact hcomm V
+
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
 def support (V : EffectivePotential) : Finset (Multiset FieldSpecification) :=
@@ -586,7 +625,11 @@ lemma support_add  {V W : EffectivePotential} :
 
 lemma support_smul {V : EffectivePotential} (c : ℂ) :
     support (c • V) ⊆ support V := by
-  sorry
+  simp [support]
+
+lemma support_smul_neq_zero {V : EffectivePotential} (c : ℂ) (hc : c ≠ 0) :
+    support (c • V) = support V := by
+  simp [support, hc]
 
 lemma eq_sum_support_coeff (V : EffectivePotential) : V = ∑ s ∈ support V, coeff s V := by
   sorry
@@ -601,11 +644,65 @@ the support of an effective potential due to a selection rule based on the group
 lemma support_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
     {s : Multiset FieldSpecification}
     (selection_rule : ∃ g : SL(2, ℂ),
-
     ∃ l : List FieldSpecification, ∃ c : ℂ,
     rep g (termOfList l) = c • termOfList l ∧ Multiset.ofList l = s) :
     s ∉ support V := by
   sorry
+/-!
+
+##
+
+-/
+
+/-- Under the action of `g` an operator with field content specified by `s` mixes
+  into operators with field content given by this Finset. -/
+def repSupport (s : Multiset FieldSpecification) (g : SL(2, ℂ)) :
+    Finset (Multiset FieldSpecification) :=
+  support (rep g (termOfList (Multiset.toList s)))
+
+lemma repSupport_eq_termOfList {s : Multiset FieldSpecification} (g : SL(2, ℂ))
+    (l : List FieldSpecification) (hl : Multiset.ofList l = s) :
+    repSupport s g = support (rep g (termOfList l)) := by
+  simp [repSupport]
+  obtain ⟨c, h1, hc⟩ := termOfList_perm_neq_zero (l1 := Multiset.toList s)  (l2 := l)
+    (by apply Multiset.coe_eq_coe.mp; simp [hl])
+  simp [h1]
+  apply support_smul_neq_zero
+  exact hc
+
+lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecification}
+    (g : SL(2, ℂ)) (h : ∀ ψ : FieldSpecification, repSupport {ψ} g ⊆ {{ψ}}) :
+    repSupport s g ⊆ {s} := by
+  have hsingle : ∀ ψ : FieldSpecification, ∃ c : ℂ,
+      rep g (termOfList [ψ]) = c • termOfList [ψ] := by
+    intro ψ
+    have hsup := h ψ
+    rw [repSupport_eq_termOfList g [ψ] (by simp)] at hsup
+    rcases Finset.subset_singleton_iff.mp hsup with h0 | h1
+    · refine ⟨0, ?_⟩
+      rw [eq_sum_support_coeff (rep g (termOfList [ψ])), h0]
+      simp
+    · obtain ⟨c, hc⟩ := coeff_eq_termOfList (s := {ψ}) (rep g (termOfList [ψ]))
+        (l := [ψ]) (by simp)
+      refine ⟨c, ?_⟩
+      rw [eq_sum_support_coeff (rep g (termOfList [ψ])), h1, Finset.sum_singleton, hc]
+  have hlist : ∀ l : List FieldSpecification, ∃ c : ℂ,
+      rep g (termOfList l) = c • termOfList l := by
+    intro l
+    induction l with
+    | nil => exact ⟨1, by simp⟩
+    | cons a l ih =>
+      obtain ⟨c, hc⟩ := ih
+      obtain ⟨ca, hca⟩ := hsingle a
+      refine ⟨ca * c, ?_⟩
+      rw [show a :: l = [a] ++ l from rfl, termOfList_append, rep_mul, hca, hc,
+        smul_mul_smul_comm]
+  obtain ⟨c, hc⟩ := hlist s.toList
+  intro t ht
+  rw [repSupport, hc] at ht
+  have ht' := support_smul c ht
+  rw [mem_support_termOfList_iff] at ht'
+  simpa using ht'.1
 
 /-!
 
