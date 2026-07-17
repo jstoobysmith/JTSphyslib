@@ -553,7 +553,7 @@ lemma coeff_eq_exists_termOfList (s : Multiset FieldSpecification)
 
 /-- If the action of `g` is to permute the fields,
   then it defines a relation between the coefficients of the effective potential. -/
-lemma coeff_eq_perm (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecification)
+lemma coeff_perm_selection_rule (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecification)
     (hg : ∀ ψ, rep g [ψ]ₑ = [σ ψ]ₑ) (s : Multiset FieldSpecification)
     (V : EffectivePotential) (hV : IsInvariant V) :
     coeff (s.map σ) V = rep g (coeff s V) := by
@@ -584,6 +584,59 @@ lemma coeff_eq_perm (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecification)
     · simp [map_smul, hx]
   conv_lhs => rw [← hV g]
   exact hcomm V
+
+lemma coeff_U1_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
+    (g : SL(2, ℂ)) (d : FieldSpecification → ℂ) (hg : ∀ ψ, rep g [ψ]ₑ = d ψ • [ψ]ₑ)
+    (s : Multiset FieldSpecification) (hs : (s.map d).prod ≠ 1) :
+    coeff s V = 0 := by
+  have hterm : ∀ l : List FieldSpecification,
+      rep g (termOfList l) = (l.map d).prod • termOfList l := by
+    intro l
+    induction l with
+    | nil => simp
+    | cons a l ih =>
+      rw [termOfList_cons, rep_mul, hg, ih, List.map_cons, List.prod_cons,
+        smul_mul_smul_comm]
+  have hcomm : ∀ W : EffectivePotential,
+      coeff s (rep g W) = (s.map d).prod • coeff s W := by
+    intro W
+    induction' mem_termOfList_span W using Submodule.span_induction with W' hW' x y _ _ hx hy
+      a x _ hx
+    · simp only [Set.mem_range] at hW'
+      obtain ⟨l, rfl⟩ := hW'
+      rw [hterm, map_smul, coeff_apply_termOfList]
+      by_cases hc : Multiset.ofList l = s
+      · rw [if_pos hc, ← hc, Multiset.map_coe, Multiset.prod_coe]
+      · simp [if_neg hc]
+    · simp
+    · simp [map_add, hx, hy]
+    · simp only [map_smul, hx]
+      rw [smul_comm]
+  have hfix : coeff s V = (s.map d).prod • coeff s V := by
+    conv_lhs => rw [← hV g]
+    exact hcomm V
+  have h1 : (1 - (s.map d).prod) • coeff s V = 0 := by
+    rw [sub_smul, one_smul, ← hfix, sub_self]
+  rcases smul_eq_zero.mp h1 with h | h
+  · exact absurd (sub_eq_zero.mp h).symm hs
+  · exact h
+
+/-- The selection rule on coefficients coming from the anti-symmetry of fermionic fields. -/
+lemma coeff_fermionic_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
+    (s : Multiset FieldSpecification) (hs : ¬ s.Nodup) :
+    coeff s V = 0 := by
+  sorry
+
+/-- The selection rule on coefficients saying that
+  every term with an odd number of fermions is zero. -/
+lemma coeff_odd_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
+    (s : Multiset FieldSpecification) (hs : Odd s.card) :
+    coeff s V = 0 := by
+  refine coeff_U1_selection_rule hV (g := -1) (d := fun ψ => -1) ?_ s ?_
+  · intro ψ
+    sorry
+  · simp
+    sorry
 
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
@@ -753,6 +806,13 @@ def massDimSupport (V : EffectivePotential) : Finset ℚ :=
 lemma eq_sum_massDimCoeff (V : EffectivePotential) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
   sorry
+
+/-!
+
+## Constraining the effective potential
+
+-/
+
 
 end EffectivePotential
 
