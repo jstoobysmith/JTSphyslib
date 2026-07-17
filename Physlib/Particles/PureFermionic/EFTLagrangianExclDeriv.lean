@@ -31,14 +31,14 @@ exterior algebra.
 
 Thus, the type in which the potential lives is
 `ExteriorAlgebra ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))`.
-We call this type `EffectivePotential` and define it and its properties in this file.
+We call this type `EFTLagrangianExclDeriv` and define it and its properties in this file.
 Note that  `Module.Dual ℂ LeftHandedWeyl` is equivalent to `DualLeftHandedWeyl` and
 `Module.Dual ℂ (ConjModule LeftHandedWeyl)` is equivalent to `DualRightHandedWeyl`,
 so we could equivalently define the effective potential as
 `ExteriorAlgebra ℂ (DualLeftHandedWeyl × DualRightHandedWeyl)`. We have done the
 former here as it generalises to other cases.
 
-On `EffectivePotential` we define a representation of the Lorentz group, and prove that that
+On `EFTLagrangianExclDeriv` we define a representation of the Lorentz group, and prove that that
 if the potential is invariant under the Lorentz group it must be of the form
 `c + m1 * ψ 0 * ψ 1 + m2 * barψ 0 * barψ 1 + λ * ψ 0 * ψ 1 * barψ 0 * barψ 1`,
 which is true to all orders.
@@ -80,7 +80,7 @@ namespace EFTLagrangianExclDeriv
 
 -/
 
-/-- The representation of the Lorentz group (here `SL(2, ℂ)`) on `EffectivePotential`. -/
+/-- The representation of the Lorentz group (here `SL(2, ℂ)`) on `EFTLagrangianExclDeriv`. -/
 def rep : Representation ℂ SL(2, ℂ) EFTLagrangianExclDeriv where
   toFun Λ := (ExteriorAlgebra.map ((LeftHandedWeyl.rep.dual Λ).prodMap
     (LeftHandedWeyl.rep.conj.dual Λ))).toLinearMap
@@ -186,33 +186,33 @@ def moduleBasis : Basis FieldSpecification ℂ
     (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl)) :=
   (LeftHandedWeyl.basis.dualBasis.prod LeftHandedWeyl.basis.conj.dualBasis).reindex toSumFin.symm
 
-def toEffectivePotential (ψ : FieldSpecification) : EFTLagrangianExclDeriv :=
+def toEFTLagrangianExclDeriv (ψ : FieldSpecification) : EFTLagrangianExclDeriv :=
   ExteriorAlgebra.ι ℂ (moduleBasis ψ)
 
-scoped notation "[" v "]ₑ" => toEffectivePotential v
+scoped notation "[" v "]ₑ" => toEFTLagrangianExclDeriv v
 
-lemma toEffectivePotential_eq (ψ : FieldSpecification) :
-    toEffectivePotential ψ = ExteriorAlgebra.ι ℂ (moduleBasis ψ) := rfl
+lemma toEFTLagrangianExclDeriv_eq (ψ : FieldSpecification) :
+    toEFTLagrangianExclDeriv ψ = ExteriorAlgebra.ι ℂ (moduleBasis ψ) := rfl
 
-lemma toEffectivePotential_ψ_eq (α : Fin 2) : [ψ α]ₑ =
+lemma toEFTLagrangianExclDeriv_ψ_eq (α : Fin 2) : [ψ α]ₑ =
     ExteriorAlgebra.ι ℂ (LinearMap.inl ℂ _ _ (LeftHandedWeyl.basis.dualBasis α)) := by
-  fin_cases α  <;> simp [toEffectivePotential_eq, moduleBasis, toSumFin]
+  fin_cases α  <;> simp [toEFTLagrangianExclDeriv_eq, moduleBasis, toSumFin]
 
-lemma toEffectivePotential_barψ_eq (α : Fin 2) : [barψ α]ₑ =
+lemma toEFTLagrangianExclDeriv_barψ_eq (α : Fin 2) : [barψ α]ₑ =
     ExteriorAlgebra.ι ℂ (LinearMap.inr ℂ _ _ (LeftHandedWeyl.basis.conj.dualBasis α)) := by
-  fin_cases α  <;> simp [toEffectivePotential_eq, moduleBasis, toSumFin]
+  fin_cases α  <;> simp [toEFTLagrangianExclDeriv_eq, moduleBasis, toSumFin]
 
 @[simp]
-lemma toEffectivePotential_mul_self (ψ : FieldSpecification) : [ψ]ₑ * [ψ]ₑ = 0 := by
-  simp [toEffectivePotential_eq]
+lemma toEFTLagrangianExclDeriv_mul_self (ψ : FieldSpecification) : [ψ]ₑ * [ψ]ₑ = 0 := by
+  simp [toEFTLagrangianExclDeriv_eq]
 
-lemma toEffectivePotential_mul_anti_commute (ψ χ : FieldSpecification) :
+lemma toEFTLagrangianExclDeriv_mul_anti_commute (ψ χ : FieldSpecification) :
     [ψ]ₑ * [χ]ₑ = - [χ]ₑ * [ψ]ₑ := by
-  simp [toEffectivePotential_eq, neg_mul, eq_neg_iff_add_eq_zero]
+  simp [toEFTLagrangianExclDeriv_eq, neg_mul, eq_neg_iff_add_eq_zero]
 
-lemma rep_apply_toEffectivePotential_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
+lemma rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     rep Λ [ψ α]ₑ = ∑ (β : Fin 2), Λ⁻¹ α β • [ψ β]ₑ := by
-  simp only [toEffectivePotential_ψ_eq, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply,
+  simp only [toEFTLagrangianExclDeriv_ψ_eq, Basis.coe_dualBasis, LinearMap.coe_inl, rep_apply,
     Representation.dual_apply, ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero,
     ← map_smul, Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk,
     add_zero, ExteriorAlgebra.ι_inj, Prod.mk.injEq, and_true]
@@ -221,9 +221,9 @@ lemma rep_apply_toEffectivePotential_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     simp [Module.Dual.transpose_apply, LeftHandedWeyl.rep_apply_basis,
       -SpecialLinearGroup.coe_inv]
 
-lemma rep_apply_toEffectivePotential_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
+lemma rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     rep Λ [barψ α]ₑ = ∑ β, star (Λ⁻¹ α β) • [barψ β]ₑ := by
-  simp only [toEffectivePotential_barψ_eq, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
+  simp only [toEFTLagrangianExclDeriv_barψ_eq, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
     ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, RCLike.star_def, ← map_smul,
     Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
     ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
@@ -269,7 +269,7 @@ open FieldSpecification
 -/
 
 def termOfList (l : List FieldSpecification) : EFTLagrangianExclDeriv :=
-  (l.map toEffectivePotential).prod
+  (l.map toEFTLagrangianExclDeriv).prod
 
 lemma termOfList_cons (ψ : FieldSpecification) (l : List FieldSpecification) :
     termOfList (ψ :: l) = [ψ]ₑ * termOfList l := by simp [termOfList]
@@ -291,7 +291,7 @@ lemma mul_termOfList_of_mem (ψ : FieldSpecification) (l : List FieldSpecificati
   | cons β t ih =>
     rcases List.mem_cons.mp hψ with rfl | ha
     · simp [termOfList_cons, ← mul_assoc]
-    · simp [termOfList_cons, ← mul_assoc, toEffectivePotential_mul_anti_commute ψ β]
+    · simp [termOfList_cons, ← mul_assoc, toEFTLagrangianExclDeriv_mul_anti_commute ψ β]
       simp [mul_assoc, ih ha]
 
 lemma termOfList_zero_of_not_nodup (l : List FieldSpecification) (h : ¬ l.Nodup) :
@@ -307,7 +307,7 @@ lemma termOfList_zero_of_not_nodup (l : List FieldSpecification) (h : ¬ l.Nodup
     · rw [ih fun hn => h (List.nodup_cons.mpr ⟨hmem, hn⟩), mul_zero]
 
 lemma rep_termOfList_eq_map_rep (Λ : SL(2, ℂ)) (l : List FieldSpecification) :
-    rep Λ (termOfList l) = ((l.map toEffectivePotential).map (rep Λ)).prod := by
+    rep Λ (termOfList l) = ((l.map toEFTLagrangianExclDeriv).map (rep Λ)).prod := by
   induction l with
   | nil => simp
   | cons i l ih =>
@@ -323,7 +323,7 @@ lemma rep_termOfList_of_monomial (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecific
     rw [termOfList_cons, rep_mul, hg, ih]
     simp [termOfList_cons, smul_smul, mul_comm]
 
-lemma rep_scale_termOfList_of_rep_scale_toEffectivePotential (Λ : SL(2, ℂ))
+lemma rep_scale_termOfList_of_rep_scale_toEFTLagrangianExclDeriv (Λ : SL(2, ℂ))
     (h : ∀ ψ, ∃ c : ℂ, rep Λ [ψ]ₑ = c • [ψ]ₑ) (l : List FieldSpecification) :
     ∃ c : ℂ, rep Λ (termOfList l) = c • termOfList l := by
   induction l with
@@ -372,7 +372,7 @@ lemma termOfList_perm_neq_zero {l1 l2 : List FieldSpecification} (h : l1.Perm l2
   | swap x y l =>
     refine ⟨-1, ?_⟩
     rw [termOfList_cons, termOfList_cons, termOfList_cons, termOfList_cons, ← mul_assoc,
-      toEffectivePotential_mul_anti_commute y x]
+      toEFTLagrangianExclDeriv_mul_anti_commute y x]
     simp [mul_assoc]
   | trans _ _ ih1 ih2 =>
     obtain ⟨c1, hc1, hc1'⟩ := ih1
@@ -610,35 +610,20 @@ lemma coeff_U1_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
     (g : SL(2, ℂ)) (d : FieldSpecification → ℂ) (hg : ∀ ψ, rep g [ψ]ₑ = d ψ • [ψ]ₑ)
     (s : Multiset FieldSpecification) (hs : (s.map d).prod ≠ 1) :
     coeff s V = 0 := by
-  have hterm : ∀ l : List FieldSpecification,
-      rep g (termOfList l) = (l.map d).prod • termOfList l := by
-    intro l
-    induction l with
-    | nil => simp
-    | cons a l ih =>
-      rw [termOfList_cons, rep_mul, hg, ih, List.map_cons, List.prod_cons,
-        smul_mul_smul_comm]
-  have hcomm : ∀ W : EFTLagrangianExclDeriv,
-      coeff s (rep g W) = (s.map d).prod • coeff s W := by
-    intro W
-    induction' mem_termOfList_span W using Submodule.span_induction with W' hW' x y _ _ hx hy
-      a x _ hx
-    · simp only [Set.mem_range] at hW'
-      obtain ⟨l, rfl⟩ := hW'
-      rw [hterm, map_smul, coeff_apply_termOfList]
-      by_cases hc : Multiset.ofList l = s
-      · rw [if_pos hc, ← hc, Multiset.map_coe, Multiset.prod_coe]
-      · simp [if_neg hc]
-    · simp
-    · simp [map_add, hx, hy]
-    · simp only [map_smul, hx]
-      rw [smul_comm]
-  have hfix : coeff s V = (s.map d).prod • coeff s V := by
-    conv_lhs => rw [← hV g]
-    exact hcomm V
-  have h1 : (1 - (s.map d).prod) • coeff s V = 0 := by
-    rw [sub_smul, one_smul, ← hfix, sub_self]
-  rcases smul_eq_zero.mp h1 with h | h
+  have h1 : coeff s V = rep g (coeff s V) := by
+    simpa using coeff_monomial_selection_rule g (Equiv.refl FieldSpecification) d
+      (by simpa using hg) s V hV
+  have hfix : rep g (coeff s V) = (s.map d).prod • coeff s V := by
+    obtain ⟨c, hl⟩ := coeff_eq_termOfList V (s := s) (l := Multiset.toList s) (by simp)
+    have hprod : ((Multiset.toList s).map d).prod = (s.map d).prod := by
+      rw [← Multiset.coe_toList s]
+      simp
+    rw [hl, map_smul,
+      rep_termOfList_of_monomial g (Equiv.refl FieldSpecification) d (by simpa using hg)]
+    simp [smul_smul, hprod, mul_comm]
+  have h2 : (1 - (s.map d).prod) • coeff s V = 0 := by
+    rw [sub_smul, one_smul, ← hfix, ← h1, sub_self]
+  rcases smul_eq_zero.mp h2 with h | h
   · exact absurd (sub_eq_zero.mp h).symm hs
   · exact h
 
@@ -651,8 +636,7 @@ lemma coeff_fermionic_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvari
 /-- The selection rule on coefficients saying that
   every term with an odd number of fermions is zero. -/
 lemma coeff_odd_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
-    (s : Multiset FieldSpecification) (hs : Odd s.card) :
-    coeff s V = 0 := by
+    (s : Multiset FieldSpecification) (hs : Odd s.card) : coeff s V = 0 := by
   refine coeff_U1_selection_rule hV (g := -1) (d := fun ψ => -1) ?_ s ?_
   · intro ψ
     sorry
@@ -661,7 +645,7 @@ lemma coeff_odd_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
 
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
-def support (V : EffectivePotential) : Finset (Multiset FieldSpecification) :=
+def support (V : EFTLagrangianExclDeriv) : Finset (Multiset FieldSpecification) :=
     Set.Finite.toFinset (s := {s | coeff s V ≠ 0}) <| by
   induction' mem_termOfList_span V using Submodule.span_induction with V' hV' x y _ _ hx hy
     a x _ hx
@@ -687,25 +671,25 @@ def support (V : EffectivePotential) : Finset (Multiset FieldSpecification) :=
     grind
 
 @[simp]
-lemma support_zero_eq_empty : support (0 : EffectivePotential) = ∅ := by
+lemma support_zero_eq_empty : support (0 : EFTLagrangianExclDeriv) = ∅ := by
   simp [support]
 
-lemma mem_support_iff {V : EffectivePotential} {s : Multiset FieldSpecification} :
+lemma mem_support_iff {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification} :
     s ∈ support V ↔ coeff s V ≠ 0 := by simp [support]
 
-lemma support_add  {V W : EffectivePotential} :
+lemma support_add  {V W : EFTLagrangianExclDeriv} :
     support (V + W) ⊆ support V ∪ support W := by
   sorry
 
-lemma support_smul {V : EffectivePotential} (c : ℂ) :
+lemma support_smul {V : EFTLagrangianExclDeriv} (c : ℂ) :
     support (c • V) ⊆ support V := by
   simp [support]
 
-lemma support_smul_neq_zero {V : EffectivePotential} (c : ℂ) (hc : c ≠ 0) :
+lemma support_smul_neq_zero {V : EFTLagrangianExclDeriv} (c : ℂ) (hc : c ≠ 0) :
     support (c • V) = support V := by
   simp [support, hc]
 
-lemma eq_sum_support_coeff (V : EffectivePotential) : V = ∑ s ∈ support V, coeff s V := by
+lemma eq_sum_support_coeff (V : EFTLagrangianExclDeriv) : V = ∑ s ∈ support V, coeff s V := by
   sorry
 
 lemma mem_support_termOfList_iff {l : List FieldSpecification} (s : Multiset FieldSpecification):
@@ -715,7 +699,7 @@ lemma mem_support_termOfList_iff {l : List FieldSpecification} (s : Multiset Fie
 
 /-- A general result related to whether a multiset of field specifications is excluded from
 the support of an effective potential due to a selection rule based on the group action. -/
-lemma support_selection_rule {V : EffectivePotential} (hV : IsInvariant V)
+lemma support_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
     {s : Multiset FieldSpecification}
     (selection_rule : ∃ g : SL(2, ℂ),
     ∃ l : List FieldSpecification, ∃ c : ℂ,
@@ -786,7 +770,7 @@ lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecifi
 
 -/
 
-def irrepCoeff (i : Multiset Irrep) : EffectivePotential →ₗ[ℂ] EffectivePotential where
+def irrepCoeff (i : Multiset Irrep) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv where
   toFun := fun V => ∑ s ∈ support V, if Multiset.map toIrrep s = i then coeff s V else 0
   map_add' := by
     intro V W
@@ -795,15 +779,15 @@ def irrepCoeff (i : Multiset Irrep) : EffectivePotential →ₗ[ℂ] EffectivePo
     intro c V
     sorry
 
-def irrepSupport (V : EffectivePotential) : Finset (Multiset Irrep) :=
+def irrepSupport (V : EFTLagrangianExclDeriv) : Finset (Multiset Irrep) :=
   (support V).image (Multiset.map toIrrep)
 
-lemma irrepCoeff_rep {i : Multiset Irrep} {V : EffectivePotential} (g : SL(2, ℂ)) :
+lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2, ℂ)) :
     rep g (irrepCoeff i V) = irrepCoeff i (rep g V) := by
   sorry
 
 
-lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EffectivePotential} (hV : IsInvariant V) :
+lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInvariant V) :
     irrepCoeff {Irrep.ψ, Irrep.barψ} V = 0 := by
   sorry
 /-!
@@ -812,7 +796,7 @@ lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EffectivePotential} (hV : 
 
 -/
 
-def massDimCoeff (n : ℚ) : EffectivePotential →ₗ[ℂ] EffectivePotential where
+def massDimCoeff (n : ℚ) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv where
   toFun := fun V => ∑ s ∈ support V, if (s.map massDimension).sum = n then coeff s V else 0
   map_add' := by
     intro V W
@@ -821,10 +805,10 @@ def massDimCoeff (n : ℚ) : EffectivePotential →ₗ[ℂ] EffectivePotential w
     intro c V
     sorry
 
-def massDimSupport (V : EffectivePotential) : Finset ℚ :=
+def massDimSupport (V : EFTLagrangianExclDeriv) : Finset ℚ :=
   (support V).image (fun s => (s.map massDimension).sum)
 
-lemma eq_sum_massDimCoeff (V : EffectivePotential) :
+lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
   sorry
 
