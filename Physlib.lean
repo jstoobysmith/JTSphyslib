@@ -106,6 +106,7 @@ public import Physlib.Mathematics.LinearPMap
 public import Physlib.Mathematics.List
 public import Physlib.Mathematics.List.InsertIdx
 public import Physlib.Mathematics.List.InsertionSort
+public import Physlib.Mathematics.MultisetsOfMassDim
 public import Physlib.Mathematics.PiTensorProduct
 public import Physlib.Mathematics.RatComplexNum
 public import Physlib.Mathematics.SO3.Basic
@@ -165,7 +166,7 @@ public import Physlib.Particles.FlavorPhysics.CKMMatrix.Rows
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.Basic
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.StandardParameters
 public import Physlib.Particles.NeutrinoPhysics.Basic
-public import Physlib.Particles.PureFermionic.EffectivePotential
+public import Physlib.Particles.PureFermionic.EFTLagrangianExclDeriv
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Basic
 public import Physlib.Particles.StandardModel.AnomalyCancellation.FamilyMaps
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.Basic

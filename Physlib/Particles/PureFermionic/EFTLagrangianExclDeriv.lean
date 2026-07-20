@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Joseph Tooby-Smith. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Joseph Tooby-Smith
+Authors: Joseph Tooby-Smith, Jinzheng Li, Nathaneal Sajan
 -/
 module
 
@@ -9,6 +9,7 @@ public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.MultisetsOfMassDim
 public import Mathlib.RingTheory.GradedAlgebra.Basic
 /-!
 
@@ -140,10 +141,56 @@ end EFTLagrangianExclDeriv
 
 /-!
 
+### Diagonal elements of the Lorentz group
+
+The diagonal elements `diag (z, z⁻¹)` of `SL(2, ℂ)` scale each of the fields by a
+factor, given below by `FieldSpecification.diagScale`. These elements are useful for
+deriving selection rules on the effective potential.
+
+-/
+
+TODO "Move the diagonal `SL(2, ℂ)` material `diagSL`, `diagSL_inv`, `diagSL_neg_one`
+  and `twoI` to `Physlib.Relativity.SL2C.Basic`, their canonical home, when the
+  effective-potential development is split up."
+
+/-- The diagonal element `diag (z, z⁻¹)` of `SL(2, ℂ)` associated with a unit `z : ℂˣ`. -/
+def diagSL (z : ℂˣ) : SL(2, ℂ) :=
+  ⟨!![(z : ℂ), 0; 0, ((z⁻¹ : ℂˣ) : ℂ)], by simp [Matrix.det_fin_two_of]⟩
+
+@[simp]
+lemma diagSL_inv (z : ℂˣ) : (diagSL z)⁻¹ = diagSL z⁻¹ := by
+  rw [inv_eq_iff_mul_eq_one]
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [diagSL, Matrix.mul_apply, Fin.sum_univ_two]
+
+/-- The diagonal element at `z = -1` is the central element `-1` of the Lorentz
+  group (the lift of a rotation by `2π`). -/
+@[simp]
+lemma diagSL_neg_one : diagSL (-1) = -1 := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [diagSL]
+
+/-- The unit `2 * I` of `ℂ`. The associated diagonal Lorentz transformation
+  `diagSL twoI` detects selection rules which real diagonal elements miss, since its
+  scaling factors mix in a phase under conjugation. -/
+def twoI : ℂˣ :=
+  ⟨2 * I, -I / 2, by linear_combination -Complex.I_mul_I, by linear_combination -Complex.I_mul_I⟩
+
+@[simp]
+lemma twoI_val : ((twoI : ℂˣ) : ℂ) = 2 * I := (rfl)
+
+@[simp]
+lemma twoI_inv_val : ((twoI⁻¹ : ℂˣ) : ℂ) = -I / 2 := (rfl)
+
+/-!
+
 ### B. Field specification for the theory
 
 -/
 
+/-- The specification of the field components appearing in the effective potential:
+  the two components `ψ α` of the left-handed Weyl fermion and the two components
+  `barψ α` of its conjugate. -/
 inductive FieldSpecification : Type
   | ψ (α : Fin 2) : FieldSpecification
   | barψ (α : Fin 2) : FieldSpecification
@@ -174,18 +221,24 @@ makes it easy to do more calculational aspects.
 
 -/
 
+/-- The equivalence between `FieldSpecification` and `Fin 2 ⊕ Fin 2` sending `ψ α` to
+  the left and `barψ α` to the right component. -/
 def toSumFin : FieldSpecification ≃ Fin 2 ⊕ Fin 2 where
   toFun := fun | .ψ (α : Fin 2) => Sum.inl α | .barψ α => Sum.inr α
   invFun := fun | .inl α => ψ α | .inr α => barψ α
-  left_inv ψ := by
-    fin_cases ψ <;> simp
-  right_inv x := by fin_cases x <;> simp
+  left_inv f := by cases f <;> rfl
+  right_inv x := by cases x <;> rfl
 
 
+/-- The basis of the module underlying the effective potential indexed by
+  `FieldSpecification`: `ψ α` corresponds to the dual basis of the left-handed Weyl
+  fermion and `barψ α` to the dual basis of its conjugate. -/
 def moduleBasis : Basis FieldSpecification ℂ
     (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl)) :=
   (LeftHandedWeyl.basis.dualBasis.prod LeftHandedWeyl.basis.conj.dualBasis).reindex toSumFin.symm
 
+/-- The image of a field specification in the effective potential, as the
+  exterior-algebra generator of the corresponding basis vector. Denoted `[ψ]ₑ`. -/
 def toEFTLagrangianExclDeriv (ψ : FieldSpecification) : EFTLagrangianExclDeriv :=
   ExteriorAlgebra.ι ℂ (moduleBasis ψ)
 
@@ -223,7 +276,8 @@ lemma rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2
 
 lemma rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fin 2) :
     rep Λ [barψ α]ₑ = ∑ β, star (Λ⁻¹ α β) • [barψ β]ₑ := by
-  simp only [toEFTLagrangianExclDeriv_barψ_eq, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply, Representation.dual_apply,
+  simp only [toEFTLagrangianExclDeriv_barψ_eq, Basis.coe_dualBasis, LinearMap.coe_inr, rep_apply,
+    Representation.dual_apply,
     ExteriorAlgebra.map_apply_ι, LinearMap.prodMap_apply, map_zero, RCLike.star_def, ← map_smul,
     Prod.smul_mk, smul_zero, Fin.sum_univ_two, Fin.isValue, ← map_add, Prod.mk_add_mk, add_zero,
     ExteriorAlgebra.ι_inj, Prod.mk.injEq, true_and]
@@ -234,28 +288,103 @@ lemma rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum (Λ : SL(2, ℂ)) (α : Fi
 
 /-!
 
+## Scaling of the fields under diagonal Lorentz transformations
+
+-/
+
+/-- The factor by which the field specifications scale under the action of `diagSL z`. -/
+def diagScale (z : ℂˣ) : FieldSpecification → ℂ
+  | .ψ α => if α = 0 then ((z⁻¹ : ℂˣ) : ℂ) else z
+  | .barψ α => if α = 0 then star ((z⁻¹ : ℂˣ) : ℂ) else star (z : ℂ)
+
+lemma rep_diagSL_apply (z : ℂˣ) (φ : FieldSpecification) :
+    rep (diagSL z) [φ]ₑ = diagScale z φ • [φ]ₑ := by
+  match φ with
+  | .ψ α =>
+    rw [rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum, diagSL_inv]
+    fin_cases α <;> simp [diagSL, diagScale, Fin.sum_univ_two]
+  | .barψ α =>
+    rw [rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum, diagSL_inv]
+    fin_cases α <;> simp [diagSL, diagScale, Fin.sum_univ_two]
+
+@[simp]
+lemma diagScale_neg_one (φ : FieldSpecification) : diagScale (-1) φ = -1 := by
+  cases φ <;> simp [diagScale]
+
+lemma diagScale_twoI_ψ (α : Fin 2) :
+    diagScale twoI (ψ α) = if α = 0 then -I / 2 else 2 * I := by
+  simp only [diagScale, twoI_val, twoI_inv_val]
+
+lemma diagScale_twoI_barψ (α : Fin 2) :
+    diagScale twoI (barψ α) = if α = 0 then I / 2 else -(2 * I) := by
+  simp only [diagScale, twoI_val, twoI_inv_val]
+  split_ifs <;> simp [Complex.conj_I]
+
+/-- Every field scales by `-1` under the central element `-1` of the Lorentz group
+  (fermion parity): the special case `z = -1` of `rep_diagSL_apply`. -/
+lemma rep_neg_one_apply (φ : FieldSpecification) :
+    rep (-1) [φ]ₑ = (-1 : ℂ) • [φ]ₑ := by
+  rw [← diagSL_neg_one, rep_diagSL_apply, diagScale_neg_one]
+
+/-- Under `diagSL twoI` the total scaling of a mixed pair `ψ α`, `barψ β` is never `1`:
+  the four possible products are `1 / 4`, `-1`, `-1` and `4`. This is the numerical
+  input to the selection rule `irrepCoeff_ψ_barψ_eq_zero_of_isInvariant`. -/
+lemma diagScale_twoI_ψ_mul_barψ_ne_one (α β : Fin 2) :
+    diagScale twoI (ψ α) * diagScale twoI (barψ β) ≠ 1 := by
+  fin_cases α <;> fin_cases β <;>
+    simp only [diagScale_twoI_ψ, diagScale_twoI_barψ, Fin.zero_eta, Fin.mk_one, Fin.reduceEq,
+      reduceIte]
+  -- The four cases are the four weight products `1/4`, `-1`, `-1` and `4`. Each
+  -- counterfactual is routed through `linear_combination` with `I * I = -1` to a
+  -- rational equation, since `norm_num` alone treats `I` as an opaque atom; no uniform
+  -- closer exists (the modulus argument degenerates for the two `-1` cases).
+  · intro hcontra
+    have h : (1 / 4 : ℂ) = 1 := by
+      linear_combination hcontra + (1 / 4 : ℂ) * Complex.I_mul_I
+    norm_num at h
+  · intro hcontra
+    have h : (-1 : ℂ) = 1 := by linear_combination hcontra - Complex.I_mul_I
+    norm_num at h
+  · intro hcontra
+    have h : (-1 : ℂ) = 1 := by linear_combination hcontra - Complex.I_mul_I
+    norm_num at h
+  · intro hcontra
+    have h : (4 : ℂ) = 1 := by linear_combination hcontra + 4 * Complex.I_mul_I
+    norm_num at h
+
+/-!
+
 ## The irreps
 
 -/
 
+/-- The irreducible representations of the Lorentz group present in the effective
+  potential: `ψ` for the left-handed Weyl fermion and `barψ` for its conjugate. -/
 inductive Irrep
   | ψ
   | barψ
 deriving DecidableEq, Fintype
 
+/-- The irrep in which a field specification sits. -/
 def toIrrep : FieldSpecification → Irrep
   | .ψ _ => .ψ
   | .barψ _ => .barψ
+
+@[simp]
+lemma toIrrep_ψ (α : Fin 2) : toIrrep (ψ α) = Irrep.ψ := rfl
+
+@[simp]
+lemma toIrrep_barψ (α : Fin 2) : toIrrep (barψ α) = Irrep.barψ := rfl
 
 lemma rep_apply_toEFTLagrangianExclDeriv_mem_irrep (Λ : SL(2, ℂ)) (ψ : FieldSpecification) :
     ∃ n, ∃ F : Fin n → FieldSpecification, (∃ f : Fin n → ℂ,  rep Λ [ψ]ₑ = ∑ x, f x • [F x]ₑ) ∧
     (∀ x, toIrrep (F x) = toIrrep ψ) := by
   match ψ with
   | .ψ α =>
-    exact ⟨2, .ψ, ⟨Λ⁻¹ α, rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum Λ α⟩, by simp [toIrrep]⟩
+    exact ⟨2, .ψ, ⟨Λ⁻¹ α, rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum Λ α⟩, by simp⟩
   | .barψ α =>
     exact ⟨2, .barψ, ⟨star (Λ⁻¹ α), rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum Λ α⟩,
-      by simp [toIrrep]⟩
+      by simp⟩
 
 /-!
 
@@ -263,9 +392,46 @@ lemma rep_apply_toEFTLagrangianExclDeriv_mem_irrep (Λ : SL(2, ℂ)) (ψ : Field
 
 -/
 
+/-- The mass dimension of each field specification; a Weyl fermion in four dimensions
+  has mass dimension `3 / 2`. -/
 def massDimension : FieldSpecification → ℚ
   | .ψ _ => 3 / 2
   | .barψ _ => 3 / 2
+
+@[simp]
+lemma massDimension_eq (f : FieldSpecification) : massDimension f = 3 / 2 := by
+  cases f <;> rfl
+
+lemma massDimension_pos (f : FieldSpecification) : 0 < massDimension f := by
+  rw [massDimension_eq]
+  norm_num
+
+/-- In a theory whose fields all have the same mass dimension, the overall mass
+  dimension of an operator just counts its fields. -/
+lemma sum_map_massDimension (s : Multiset FieldSpecification) :
+    (s.map massDimension).sum = 3 / 2 * (Multiset.card s : ℚ) := by
+  induction s using Multiset.induction with
+  | empty => simp
+  | cons a t ih =>
+    rw [Multiset.map_cons, Multiset.sum_cons, ih, Multiset.card_cons, massDimension_eq]
+    push_cast
+    ring
+
+/-- The mass dimension of a field specification in units of half mass dimensions,
+  so that a Weyl fermion has scaled mass dimension `3`. Unlike `massDimension` this
+  is usable with `decide`, since natural-number arithmetic reduces in the kernel. -/
+def massDimensionNat : FieldSpecification → ℕ
+  | .ψ _ => 3
+  | .barψ _ => 3
+
+@[simp]
+lemma massDimensionNat_eq (f : FieldSpecification) : massDimensionNat f = 3 := by
+  cases f <;> rfl
+
+lemma massDimensionNat_cast (f : FieldSpecification) :
+    (massDimensionNat f : ℚ) = massDimension f * 2 := by
+  rw [massDimensionNat_eq, massDimension_eq]
+  norm_num
 
 end FieldSpecification
 
@@ -278,6 +444,8 @@ open FieldSpecification
 ## Elements from a list of FieldSpecifications
 -/
 
+/-- The operator in the effective potential given by the ordered product of the
+  fields in `l`. -/
 def termOfList (l : List FieldSpecification) : EFTLagrangianExclDeriv :=
   (l.map toEFTLagrangianExclDeriv).prod
 
@@ -442,6 +610,8 @@ lemma termOfList_ofFn {n : ℕ} (g : Fin n → FieldSpecification) :
 
 -/
 
+/-- The operator in the effective potential given by the ordered product of the
+  fields in the tuple `g`. -/
 def termOfTuple {n} (g : Fin n → FieldSpecification) : EFTLagrangianExclDeriv :=
   termOfList (List.ofFn g)
 
@@ -454,10 +624,15 @@ lemma termOfTuple_perm {n} (g : Fin n → FieldSpecification) {i j : Fin n} (hij
   rw [termOfTuple_eq_ιMulti, termOfTuple_eq_ιMulti]
   exact AlternatingMap.map_swap (ExteriorAlgebra.ιMulti ℂ n) (fun k => moduleBasis (g k)) hij
 
+/-- The alternating map taking a tuple of vectors to their product in the
+  effective potential. -/
 def termOfVectTuple {n} :
     AlternatingMap ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
       EFTLagrangianExclDeriv (Fin n) := ExteriorAlgebra.ιMulti ℂ n
 
+/-- The alternating map underlying `coeff s`: a tuple of vectors is sent to
+  `termOfTuple g` weighted by the product of the `g`-coordinates of the vectors,
+  summed over the tuples `g` of fields with field content `s`. -/
 def coeffOfVectorTuple (s : Multiset FieldSpecification) (n : ℕ) :
     AlternatingMap ℂ (Module.Dual ℂ LeftHandedWeyl × Module.Dual ℂ (ConjModule LeftHandedWeyl))
       EFTLagrangianExclDeriv (Fin n) where
@@ -523,7 +698,11 @@ this is where you can think of it as a coefficient.
 
 -/
 
-def coeff (s : Multiset FieldSpecification) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv :=
+/-- The projection of an effective potential onto the span of the operators with
+  field content `s`. As described above, this plays the role of the coefficient
+  of the operator `s` in the effective potential. -/
+def coeff (s : Multiset FieldSpecification) :
+    EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv :=
   ExteriorAlgebra.liftAlternating (coeffOfVectorTuple s)
 
 lemma coeff_apply_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification) :
@@ -665,21 +844,24 @@ lemma coeff_U1_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
   · exact absurd (sub_eq_zero.mp h).symm hs
   · exact h
 
-/-- The selection rule on coefficients coming from the anti-symmetry of fermionic fields. -/
-lemma coeff_fermionic_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
+/-- The selection rule on coefficients coming from the anti-symmetry of fermionic fields.
+  Note that this holds for any effective potential, invariant or not. -/
+lemma coeff_fermionic_selection_rule {V : EFTLagrangianExclDeriv}
     (s : Multiset FieldSpecification) (hs : ¬ s.Nodup) :
     coeff s V = 0 := by
-  sorry
+  obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := s) (l := Multiset.toList s) (by simp)
+  have hl : ¬ (Multiset.toList s).Nodup := by
+    rw [← Multiset.coe_toList s] at hs
+    exact fun h => hs (Multiset.coe_nodup.mpr h)
+  rw [hc, termOfList_zero_of_not_nodup _ hl, smul_zero]
 
 /-- The selection rule on coefficients saying that
   every term with an odd number of fermions is zero. -/
 lemma coeff_odd_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
     (s : Multiset FieldSpecification) (hs : Odd s.card) : coeff s V = 0 := by
-  refine coeff_U1_selection_rule hV (g := -1) (d := fun ψ => -1) ?_ s ?_
-  · intro ψ
-    sorry
-  · simp
-    sorry
+  refine coeff_U1_selection_rule hV (-1) (fun _ => -1) rep_neg_one_apply s ?_
+  rw [Multiset.map_const', Multiset.prod_replicate, hs.neg_one_pow]
+  norm_num
 
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
@@ -715,8 +897,8 @@ lemma support_zero_eq_empty : support (0 : EFTLagrangianExclDeriv) = ∅ := by
 lemma mem_support_iff {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification} :
     s ∈ support V ↔ coeff s V ≠ 0 := by simp [support]
 
-lemma coeff_eq_zero_of_not_mem_support {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification}
-    (h : s ∉ support V) : coeff s V = 0 := by
+lemma coeff_eq_zero_of_not_mem_support {V : EFTLagrangianExclDeriv}
+    {s : Multiset FieldSpecification} (h : s ∉ support V) : coeff s V = 0 := by
   simpa [support, Set.Finite.mem_toFinset] using  h
 
 lemma support_add  {V W : EFTLagrangianExclDeriv} :
@@ -784,10 +966,28 @@ lemma eq_sum_support_coeff (V : EFTLagrangianExclDeriv) : V = ∑ s ∈ support 
     conv_lhs => rw [hx]
     simp [Finset.smul_sum]
 
+/-- Regrouping the decomposition `eq_sum_support_coeff` along a classifying map `key`
+  on field contents: if `fiber k` is the finset of field contents with `key s = k`,
+  then an effective potential is the sum of its projections onto the fibers of the
+  keys appearing in its support. Specialised to irrep content in `eq_sum_irrepCoeff`
+  and to mass dimension in `eq_sum_massDimCoeff`. -/
+lemma eq_sum_fiber_coeff {κ : Type*} [DecidableEq κ] {key : Multiset FieldSpecification → κ}
+    {fiber : κ → Finset (Multiset FieldSpecification)}
+    (hmem : ∀ k s, s ∈ fiber k ↔ key s = k) (V : EFTLagrangianExclDeriv) :
+    V = ∑ k ∈ (support V).image key, ∑ s ∈ fiber k, coeff s V := by
+  have hdisj : (((support V).image key : Finset κ) : Set κ).PairwiseDisjoint fiber := by
+    intro i _ j _ hij
+    simp only [Function.onFun, Finset.disjoint_left]
+    intro s hsi hsj
+    exact hij (((hmem i s).mp hsi).symm.trans ((hmem j s).mp hsj))
+  rw [← Finset.sum_biUnion hdisj]
+  conv_lhs => rw [eq_sum_support_coeff V]
+  refine Finset.sum_subset (fun s hs => ?_) (fun s _ hs => coeff_eq_zero_of_not_mem_support hs)
+  exact Finset.mem_biUnion.mpr ⟨key s, Finset.mem_image_of_mem _ hs, (hmem _ s).mpr rfl⟩
 
 /-!
 
-##
+## Mixing of operators under the action of the Lorentz group
 
 -/
 
@@ -852,12 +1052,14 @@ lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecifi
 
 /-- The field content of a term which corresponds to a given irrep content. -/
 def allTermsWithIrrepContent (i : Multiset Irrep) : Finset (Multiset FieldSpecification) :=
-  ((Finset.univ.sym i.card).image Sym.toMultiset).filter (fun s => Multiset.map toIrrep s = i)
+  (multisetsOfCard FieldSpecification i.card).filter (fun s => Multiset.map toIrrep s = i)
 
 lemma mem_allTermsWithIrrepContent_iff (i : Multiset Irrep) (s : Multiset FieldSpecification) :
     s ∈ allTermsWithIrrepContent i ↔ Multiset.map toIrrep s = i := by
-  simp [allTermsWithIrrepContent]
-  sorry
+  simp only [allTermsWithIrrepContent, Finset.mem_filter, mem_multisetsOfCard,
+    and_iff_right_iff_imp]
+  intro h
+  rw [← h, Multiset.card_map]
 
 /-- The projection of a term of `EFTLagrangianExclDeriv` onto those operators which
   have an irrep content determined by `i`. -/
@@ -869,29 +1071,48 @@ lemma irrepCoeff_eq_sum (i : Multiset Irrep) (V : EFTLagrangianExclDeriv) :
   simp [irrepCoeff]
 
 lemma irrepCoeff_one (i : Multiset Irrep) : irrepCoeff i 1 = if i = ∅ then 1 else 0 := by
-  simp [irrepCoeff, coeff_one, allTermsWithIrrepContent]
-  split_ifs with hi <;> simp_all
-  rename_i h
-  subst h
-  apply hi ⟨∅, by simp⟩
-  simp
+  rw [irrepCoeff_eq_sum]
+  simp only [coeff_one]
+  rw [Finset.sum_ite_eq']
+  refine if_congr ?_ rfl rfl
+  rw [mem_allTermsWithIrrepContent_iff]
+  simp [eq_comm]
 
 lemma irrepCoeff_termOfList (i : Multiset Irrep) (l : List FieldSpecification) :
     irrepCoeff i (termOfList l) = if Multiset.map toIrrep (Multiset.ofList l) = i then
       termOfList l else 0 := by
   simp [irrepCoeff, coeff_apply_termOfList, mem_allTermsWithIrrepContent_iff]
 
+/-- The irrep contents of the operators appearing in an effective potential. -/
 def irrepSupport (V : EFTLagrangianExclDeriv) : Finset (Multiset Irrep) :=
   (support V).image (Multiset.map toIrrep)
 
 lemma eq_sum_irrepCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ i ∈ irrepSupport V, irrepCoeff i V := by
-  sorry
+  simp only [irrepSupport, irrepCoeff_eq_sum]
+  exact eq_sum_fiber_coeff mem_allTermsWithIrrepContent_iff V
+
+lemma irrepCoeff_rep_termOfList (i : Multiset Irrep) (g : SL(2, ℂ))
+    (l : List FieldSpecification) :
+    rep g (irrepCoeff i (termOfList l)) = irrepCoeff i (rep g (termOfList l)) := by
+  obtain ⟨n, F, ⟨f, hf⟩, hF⟩ := rep_termOfList_eq_sum_of_toIrrep g l
+  have hcond : ∀ x, Multiset.map toIrrep (Multiset.ofList (F x)) =
+      Multiset.map toIrrep (Multiset.ofList l) := by
+    intro x
+    rw [Multiset.map_coe, Multiset.map_coe, hF x]
+  rw [irrepCoeff_termOfList, hf, map_sum]
+  -- Rewriting with `hcond` transports every summand's irrep-content condition into the
+  -- outer one, so that `split_ifs` sees a single condition and produces two goals.
+  simp only [map_smul, irrepCoeff_termOfList, hcond]
+  split_ifs with h
+  · exact hf
+  · simp
 
 lemma irrepCoeff_rep_apply_fieldSpecification {i : Multiset Irrep} (g : SL(2, ℂ))
     (ψ : FieldSpecification) :
     rep g (irrepCoeff i [ψ]ₑ) = irrepCoeff i (rep g [ψ]ₑ) := by
-  sorry
+  rw [← termOfList_singleton]
+  exact irrepCoeff_rep_termOfList i g [ψ]
 
 lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2, ℂ)) :
     rep g (irrepCoeff i V) = irrepCoeff i (rep g V) := by
@@ -899,43 +1120,95 @@ lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2
     a x _ hx
   · simp only [Set.mem_range] at hV'
     obtain ⟨l, rfl⟩ := hV'
-    sorry -- use rep_termOfList_eq_sum_of_toIrrep
+    exact irrepCoeff_rep_termOfList i g l
   · simp
   · simp [hx, hy]
   · simp [hx]
 
+/-- There is no Lorentz-invariant operator with irrep content `{ψ, barψ}`:
+  invariance under the diagonal transformation `diagSL twoI` forces every
+  coefficient of a mixed `ψ`–`barψ` pair to vanish. -/
 lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInvariant V) :
     irrepCoeff {Irrep.ψ, Irrep.barψ} V = 0 := by
-  sorry
+  rw [irrepCoeff_eq_sum]
+  refine Finset.sum_eq_zero fun s hs => ?_
+  rw [mem_allTermsWithIrrepContent_iff] at hs
+  have hcard : Multiset.card s = 2 := by simpa using congrArg Multiset.card hs
+  obtain ⟨a, b, rfl⟩ := Multiset.card_eq_two.mp hcard
+  refine coeff_U1_selection_rule hV (diagSL twoI) (diagScale twoI) (rep_diagSL_apply twoI) _ ?_
+  simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
+    Multiset.prod_cons, Multiset.prod_singleton] at hs ⊢
+  cases a with
+  | ψ α =>
+    cases b with
+    | ψ β =>
+      simp only [toIrrep_ψ] at hs
+      exact absurd hs (by decide)
+    | barψ β => exact diagScale_twoI_ψ_mul_barψ_ne_one α β
+  | barψ α =>
+    cases b with
+    | ψ β =>
+      rw [mul_comm]
+      exact diagScale_twoI_ψ_mul_barψ_ne_one β α
+    | barψ β =>
+      simp only [toIrrep_barψ] at hs
+      exact absurd hs (by decide)
 /-!
 
 ## Mass dimension
 
 -/
 
-def upperBoundNumberOfFields (n : ℚ) : ℕ := by
-  let d := Fin.minimum massDimension
+/-- The finset of all possible field contents of terms with overall mass dimension `n`.
+  Since every field has mass dimension at least `3 / 2`, a term of mass dimension `n`
+  contains a bounded number of fields, so this is a computable finset (constructed
+  through `multisetsOfMassDim`). The defining property is
+  `mem_allTermsWithMassDimension_iff`. -/
 def allTermsWithMassDimension (n : ℚ) : Finset (Multiset FieldSpecification) :=
-  -- Since there is no mass dimension less then 1, a term with mass dimension n
-  -- can have at most `n` fields
-  let x := List.range (Rat.ceil n + 1).toNat
+  multisetsOfMassDim massDimension n
 
-  ((Finset.univ.sym x.card).image Sym.toMultiset).filter (fun s => (s.map massDimension).sum = n)
-def massDimCoeff (n : ℚ) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv where
-  toFun := fun V => ∑ s ∈ support V, if (s.map massDimension).sum = n then coeff s V else 0
-  map_add' := by
-    intro V W
-    sorry
-  map_smul' := by
-    intro c V
-    sorry
+lemma mem_allTermsWithMassDimension_iff (n : ℚ) (s : Multiset FieldSpecification) :
+    s ∈ allTermsWithMassDimension n ↔ (s.map massDimension).sum = n :=
+  mem_multisetsOfMassDim_iff massDimension_pos
 
+/-- Clearing denominators: the terms of mass dimension `n` are those whose scaled
+  (`ℕ`-valued) mass dimensions sum to `2 * n`. The right-hand side reduces in the
+  kernel, so after rewriting by this lemma membership can be decided by `decide`. -/
+lemma allTermsWithMassDimension_eq_natCast {n : ℚ} {mN : ℕ} (hm : (mN : ℚ) = n * 2) :
+    allTermsWithMassDimension n = multisetsOfMassDimNat massDimensionNat mN :=
+  multisetsOfMassDim_eq_natCast massDimension_pos (by norm_num) massDimensionNat_cast hm
+
+example : ({ψ 0, ψ 1} : Multiset FieldSpecification) ∈ allTermsWithMassDimension 3 := by
+  rw [allTermsWithMassDimension_eq_natCast (mN := 6) (by norm_num)]
+  decide
+
+example : ({ψ 0, ψ 1, barψ 0, barψ 1} : Multiset FieldSpecification) ∉
+    allTermsWithMassDimension 3 := by
+  rw [allTermsWithMassDimension_eq_natCast (mN := 6) (by norm_num)]
+  decide
+
+/-- The projection of a term of `EFTLagrangianExclDeriv` onto those operators whose
+  field content has overall mass dimension `n`. -/
+def massDimCoeff (n : ℚ) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv :=
+  ∑ s ∈ allTermsWithMassDimension n, coeff s
+
+lemma massDimCoeff_eq_sum (n : ℚ) (V : EFTLagrangianExclDeriv) :
+    massDimCoeff n V = ∑ s ∈ allTermsWithMassDimension n, coeff s V := by
+  simp [massDimCoeff]
+
+lemma massDimCoeff_termOfList (n : ℚ) (l : List FieldSpecification) :
+    massDimCoeff n (termOfList l) =
+      if (Multiset.map massDimension (Multiset.ofList l)).sum = n then termOfList l else 0 := by
+  simp [massDimCoeff_eq_sum, coeff_apply_termOfList, mem_allTermsWithMassDimension_iff]
+
+/-- The mass dimensions of the operators appearing in an effective potential. -/
 def massDimSupport (V : EFTLagrangianExclDeriv) : Finset ℚ :=
   (support V).image (fun s => (s.map massDimension).sum)
 
 lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
-  sorry
+  simp only [massDimSupport, massDimCoeff_eq_sum]
+  exact eq_sum_fiber_coeff mem_allTermsWithMassDimension_iff V
 
 /-!
 
