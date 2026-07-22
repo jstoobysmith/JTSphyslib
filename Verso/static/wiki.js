@@ -89,14 +89,125 @@
       }
     }
 
-    /* ── 3b. Hide leftover scoping boxes that hide_commands cannot
-           match (attribute-prefixed commands have no leading keyword,
-           e.g. `@[expose] public section`) ─────────────────────────── */
-    document.querySelectorAll('.code-box').forEach(function (box) {
-      var text = box.textContent.replace(/\s+/g, ' ').trim();
-      if (/^@\[[^\]]*\] *(public |private |noncomputable )*section$/.test(text)) {
-        box.style.display = 'none';
+    /* ── 3b. Per-command cleanup and callouts. A .code-box contains
+           one <code> element per command (plus an injected Copy
+           button, so box-level text matching is unreliable):
+           - `@[…] … section` scoping commands are removed;
+           - TODO commands become "Open problem" cards;
+           - informal_definition / informal_lemma become "Informal"
+             cards that absorb their statement docstring. ──────────── */
+    var calloutBodies = [];
+    var pendingDepChips = [];
+
+    function makeCallout(cls, kicker, titleText) {
+      var card = document.createElement('div');
+      card.className = 'pv-callout ' + cls;
+      var head = document.createElement('div');
+      head.className = 'pv-callout-kicker';
+      head.textContent = kicker;
+      card.appendChild(head);
+      if (titleText) {
+        var title = document.createElement('div');
+        title.className = 'pv-callout-title';
+        title.textContent = titleText;
+        card.appendChild(title);
       }
+      return card;
+    }
+
+    document.querySelectorAll('.code-box').forEach(function (box) {
+      var codes = Array.prototype.slice.call(
+        box.querySelectorAll(':scope > code.hl.lean.block'));
+      var after = []; // callouts to place after the box, in order
+
+      codes.forEach(function (cb, ci) {
+        var t = cb.textContent.trim();
+
+        /* Scoping commands that hide_commands cannot match
+           (attribute-prefixed commands have no leading keyword). */
+        if (/^@\[[^\]]*\]\s*(public\s+|private\s+|noncomputable\s+)*section$/
+            .test(t.replace(/\s+/g, ' '))) {
+          cb.remove();
+          return;
+        }
+
+        /* TODO commands. */
+        if (/^TODO\s/.test(t)) {
+          var todoRe = /TODO\s+"((?:[^"\\]|\\.)*)"/g;
+          var texts = [], mm, consumed = t;
+          while ((mm = todoRe.exec(t))) {
+            texts.push(mm[1]);
+            consumed = consumed.replace(mm[0], '');
+          }
+          if (texts.length && consumed.trim() === '') {
+            texts.forEach(function (txt) {
+              var card = makeCallout('pv-callout-todo', 'Open problem', null);
+              var body = document.createElement('div');
+              body.className = 'pv-callout-body';
+              body.textContent = txt.replace(/\\"/g, '"').replace(/\s+/g, ' ');
+              card.appendChild(body);
+              calloutBodies.push(card);
+              after.push(card);
+            });
+            cb.remove();
+          }
+          return;
+        }
+
+        /* Informal definitions and lemmas. */
+        var im = t.match(/^informal_(definition|lemma)\s+([^\s]+)\s+where([\s\S]*)$/);
+        if (!im) return;
+        var fields = im[3];
+        var fieldRe = /^(\s*(deps\s*:=\s*\[[^\]]*\]|tag\s*:=\s*"(?:[^"\\]|\\.)*"|math\s*:≈\s*"(?:[^"\\]|\\.)*"|physics\s*:≈\s*"(?:[^"\\]|\\.)*"))*\s*$/;
+        if (!fieldRe.test(fields)) return;
+        var card2 = makeCallout('pv-callout-informal-' + im[1],
+          'Informal ' + im[1], im[2]);
+
+        /* The statement usually lives in the docstring just above the
+           box; absorb it when this command starts the box. */
+        var prev = box.previousElementSibling;
+        if (ci === 0 && prev &&
+            /\bmd-text\b|\bverso-text\b/.test(prev.className) &&
+            (prev.getAttribute('style') || '').indexOf('--indent') !== -1) {
+          var body2 = document.createElement('div');
+          body2.className = 'pv-callout-body';
+          while (prev.firstChild) body2.appendChild(prev.firstChild);
+          prev.remove();
+          card2.appendChild(body2);
+        }
+        var mathField = fields.match(/math\s*:≈\s*"((?:[^"\\]|\\.)*)"/);
+        if (mathField) {
+          var body3 = document.createElement('div');
+          body3.className = 'pv-callout-body';
+          body3.textContent = mathField[1].replace(/\\"/g, '"');
+          card2.appendChild(body3);
+        }
+        var depsField = fields.match(/deps\s*:=\s*\[([^\]]*)\]/);
+        if (depsField && depsField[1].trim()) {
+          var depRow = document.createElement('div');
+          depRow.className = 'pv-callout-deps';
+          var lbl = document.createElement('span');
+          lbl.textContent = 'Depends on:';
+          depRow.appendChild(lbl);
+          depsField[1].split(',').forEach(function (d) {
+            var name = d.trim().replace(/^`+/, '');
+            if (!name) return;
+            var chip = document.createElement('code');
+            chip.textContent = name;
+            depRow.appendChild(chip);
+            pendingDepChips.push({ el: chip, name: name });
+          });
+          card2.appendChild(depRow);
+        }
+        calloutBodies.push(card2);
+        after.push(card2);
+        cb.remove();
+      });
+
+      after.reverse().forEach(function (card) {
+        box.parentNode.insertBefore(card, box.nextSibling);
+      });
+      if (!box.querySelector('code.hl.lean.block')) box.remove();
     });
 
     /* ── 3c. Sidebar: paperview-style tree (colored subfield dots,
@@ -509,6 +620,49 @@
       });
     }
     proseBlocks.forEach(renderMathIn);
+    calloutBodies.forEach(renderMathIn);
+
+    /* ── 6b. Auto-link concept mentions in prose to their pages.
+           xref.json maps every constant to its page and anchor; inline
+           code chips whose text is an unambiguous (suffix of a) known
+           name become links, as do callout dependency chips. ───────── */
+    fetch('xref.json').then(function (r) { return r.json(); }).then(function (d) {
+      var contents = (d['VersoHtml.constant'] || {}).contents || {};
+      var index = {};
+      Object.keys(contents).forEach(function (userName) {
+        contents[userName].forEach(function (entry) {
+          if (entry.data && entry.data.private) return;
+          var parts = userName.split('.');
+          for (var k = 1; k <= parts.length; k++) {
+            var suffix = parts.slice(parts.length - k).join('.');
+            (index[suffix] = index[suffix] || []).push(entry);
+          }
+        });
+      });
+      var lookup = function (name) {
+        var entries = index[name];
+        return entries && entries.length === 1 ? entries[0] : null;
+      };
+      var linkify = function (codeEl, name) {
+        var entry = lookup(name);
+        if (!entry) return;
+        var a = document.createElement('a');
+        a.className = 'pv-xref';
+        a.href = entry.address.replace(/^\//, '') + '#' + entry.id;
+        codeEl.parentNode.insertBefore(a, codeEl);
+        a.appendChild(codeEl);
+      };
+      document.querySelectorAll(
+        '.code-content > .md-text code, .code-content > .verso-text code, ' +
+        '.pv-callout .pv-callout-body code'
+      ).forEach(function (codeEl) {
+        if (codeEl.closest('a') || codeEl.querySelector('*')) return;
+        linkify(codeEl, codeEl.textContent.trim());
+      });
+      pendingDepChips.forEach(function (p) {
+        if (!p.el.closest('a')) linkify(p.el, p.name);
+      });
+    }).catch(function () { /* offline / file:// — links stay plain */ });
 
     /* ── 7. Suggest-edit: diff modal → prefilled GitHub issue ────── */
     var GITHUB_REPO = 'leanprover-community/physlib';

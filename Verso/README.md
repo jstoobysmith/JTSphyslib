@@ -79,6 +79,16 @@ and open <http://localhost:8000>.
   marker, alpha cards an "Alpha" chip, and alpha pages an orange notice.
 - **Math.** `$...$`, `$$...$$`, `\(...\)`, and `\[...\]` in module
   docstrings are rendered client-side with the KaTeX bundle Verso ships.
+- **Concept links.** Inline code mentions of formalized names in prose
+  link to the page and anchor where the name is defined (resolved from
+  `xref.json`; ambiguous short names are left unlinked).
+- **Callouts.** `TODO` commands render as blue "Open problem" cards;
+  `informal_definition` / `informal_lemma` commands render as green /
+  purple "Informal" cards that absorb their statement docstring and
+  show their `deps` as linked chips.
+- **Syntax colors.** Lean code gets a light/dark token palette
+  (keywords purple, constants blue, strings green, …) on top of
+  Verso's structural highlighting.
 - **Suggest an edit.** Every prose block has a hover "✎" button that
   opens a modal with the current text; submitting opens a prefilled
   GitHub issue containing the diff between the suggestion and the

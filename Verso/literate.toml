@@ -14,8 +14,9 @@ docstrings_as_text = true
 
 # Hide structural boilerplate so pages read like articles. (Don't add
 # "set_option" here: `set_option ... in <declaration>` commands would
-# disappear along with their declaration.)
-hide_commands = ["TODO", "namespace", "end", "open", "variable", "section", "noncomputable", "public section"]
+# disappear along with their declaration. TODO commands are not hidden:
+# wiki.js renders them as "Open problem" callouts.)
+hide_commands = ["namespace", "end", "open", "variable", "section", "noncomputable", "public section"]
 
 # Extra styling and page furniture for the paperview.org wiki look:
 # header bar, sidebar tree, article typography, landing-page cards.

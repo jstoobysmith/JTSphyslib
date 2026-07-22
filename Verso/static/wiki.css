@@ -552,6 +552,44 @@ body.pv-has-banner .layout {
   line-height: 1.55;
 }
 
+/* ── Lean syntax highlighting palette ───────────────────────────── */
+
+.hl.lean .keyword.token {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.hl.lean .const.token { color: #0056b3; }
+.hl.lean .module-name.token { color: #0a7ea4; }
+.hl.lean .literal.string.token { color: #2e7d32; }
+.hl.lean .literal.number.token { color: #b45309; }
+.hl.lean .comment.token,
+.hl.lean .comment.block.token,
+.hl.lean .comment.delimiter.token {
+  color: var(--pv-text-2);
+  font-style: italic;
+}
+
+.hl.lean .var.token { color: #1a1a1a; font-style: italic; }
+.hl.lean .level-var.token { color: #b45309; font-style: italic; }
+.hl.lean .sort.token { color: #c2185b; }
+
+.hl.lean .punctuation.token,
+.hl.lean .built-in.delim.token {
+  color: var(--pv-text-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .hl.lean .keyword.token { color: #c792ea; }
+  .hl.lean .const.token { color: #82aaff; }
+  .hl.lean .module-name.token { color: #6ec6dd; }
+  .hl.lean .literal.string.token { color: #c3e88d; }
+  .hl.lean .literal.number.token { color: #f7b06c; }
+  .hl.lean .var.token { color: #e0e0e0; }
+  .hl.lean .level-var.token { color: #f7b06c; }
+  .hl.lean .sort.token { color: #f48fb1; }
+}
+
 /* ── Imports drawer ─────────────────────────────────────────────── */
 
 .imports-list summary {
@@ -720,6 +758,95 @@ body.pv-landing .layout { display: block; }
     color: #ffb74d;
     background: rgba(230, 81, 0, 0.15);
   }
+}
+
+/* ── Concept cross-reference links in prose ─────────────────────── */
+
+a.pv-xref { text-decoration: none; }
+
+a.pv-xref code {
+  color: var(--pv-accent);
+  cursor: pointer;
+}
+
+a.pv-xref:hover code { text-decoration: underline; }
+
+/* ── Callouts: open problems and informal statements ────────────── */
+
+.pv-callout {
+  border: 1px solid var(--verso-border-color);
+  border-left-width: 3px;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  max-width: 78ch;
+  font-family: var(--pv-font);
+}
+
+.pv-callout-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.pv-callout-title {
+  font-family: var(--pv-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--verso-text-color);
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.pv-callout-body {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--verso-text-color);
+}
+
+.pv-callout-body + .pv-callout-body { margin-top: 6px; }
+
+.pv-callout-deps {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--pv-text-3);
+}
+
+.pv-callout-deps code {
+  font-family: var(--pv-mono);
+  font-size: 10.5px;
+  background: var(--verso-inline-code-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* Open problems: blue, like paperview's accent panels. */
+.pv-callout-todo { border-left-color: #1565c0; background: rgba(227, 242, 253, 0.45); }
+.pv-callout-todo .pv-callout-kicker { color: #1565c0; }
+
+/* Informal definitions: green. */
+.pv-callout-informal-definition { border-left-color: #2e7d32; background: rgba(232, 245, 233, 0.45); }
+.pv-callout-informal-definition .pv-callout-kicker { color: #2e7d32; }
+
+/* Informal lemmas: purple. */
+.pv-callout-informal-lemma { border-left-color: #7c3aed; background: rgba(243, 232, 255, 0.35); }
+.pv-callout-informal-lemma .pv-callout-kicker { color: #7c3aed; }
+
+@media (prefers-color-scheme: dark) {
+  .pv-callout-todo { background: rgba(21, 101, 192, 0.12); }
+  .pv-callout-todo .pv-callout-kicker { color: #90caf9; }
+
+  .pv-callout-informal-definition { background: rgba(46, 125, 50, 0.12); }
+  .pv-callout-informal-definition .pv-callout-kicker { color: #a5d6a7; }
+
+  .pv-callout-informal-lemma { background: rgba(124, 58, 237, 0.14); }
+  .pv-callout-informal-lemma .pv-callout-kicker { color: #ce93d8; }
 }
 
 /* ── Suggest-edit buttons and modal ─────────────────────────────── */
