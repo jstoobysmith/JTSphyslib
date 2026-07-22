@@ -27,10 +27,16 @@ public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalCylinder
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidCylinder
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidSphere
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalShell
+public import PhyslibAlpha.QuantumMechanics.EntanglementEntropy.Basic
 public import PhyslibAlpha.QuantumMechanics.QuantumHarmonicOscillator
 public import PhyslibAlpha.QuantumMechanics.StinespringDilation
 public import PhyslibAlpha.Mathematics.PartialDerivativeTest
 public import PhyslibAlpha.ClassicalMechanics.CoupledSpringPotential
+public import PhyslibAlpha.QFT.BoundaryCFT.Basic
+public import PhyslibAlpha.QFT.OperatorProductExpansion.Basic
+public import PhyslibAlpha.QFT.RenormalizationGroup.Basic
+public import PhyslibAlpha.QFT.WittenIndex.Basic
+public import PhyslibAlpha.Relativity.BlackHoleThermodynamics.Basic
 public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.ChargeBalance
 public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.EffectivePotential
 public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.GaugeSlice
