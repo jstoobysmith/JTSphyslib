@@ -1130,29 +1130,33 @@ lemma irrepCoeff_rep {i : Multiset Irrep} {V : EFTLagrangianExclDeriv} (g : SL(2
   coefficient of a mixed `ψ`–`barψ` pair to vanish. -/
 lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInvariant V) :
     irrepCoeff {Irrep.ψ, Irrep.barψ} V = 0 := by
-  rw [irrepCoeff_eq_sum]
-  refine Finset.sum_eq_zero fun s hs => ?_
-  rw [mem_allTermsWithIrrepContent_iff] at hs
-  have hcard : Multiset.card s = 2 := by simpa using congrArg Multiset.card hs
-  obtain ⟨a, b, rfl⟩ := Multiset.card_eq_two.mp hcard
+  rw [irrepCoeff_eq_sum, Finset.sum_congr (g := fun s => coeff s V)
+    (s₂ := {{ψ 0, barψ 0}, {ψ 0, barψ 1}, {ψ 1, barψ 0}, {ψ 1, barψ 1}}) (by decide) (by simp)]
+  suffices h  : ∀ (a b : Fin 2), coeff {ψ a, barψ b} V = 0 by
+    repeat rw [Finset.sum_insert (by decide)]
+    simp only [h, Finset.sum_singleton, add_zero]
+  intro a b
   refine coeff_U1_selection_rule hV (diagSL twoI) (diagScale twoI) (rep_diagSL_apply twoI) _ ?_
-  simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
-    Multiset.prod_cons, Multiset.prod_singleton] at hs ⊢
-  cases a with
-  | ψ α =>
-    cases b with
-    | ψ β =>
-      simp only [toIrrep_ψ] at hs
-      exact absurd hs (by decide)
-    | barψ β => exact diagScale_twoI_ψ_mul_barψ_ne_one α β
-  | barψ α =>
-    cases b with
-    | ψ β =>
-      rw [mul_comm]
-      exact diagScale_twoI_ψ_mul_barψ_ne_one β α
-    | barψ β =>
-      simp only [toIrrep_barψ] at hs
-      exact absurd hs (by decide)
+  simp only [Multiset.insert_eq_cons, diagScale, Fin.isValue, Units.val_inv_eq_inv_val, twoI_val,
+    _root_.mul_inv_rev, inv_I, neg_mul, star_neg, star_mul', RCLike.star_def, conj_I, star_inv₀,
+    star_ofNat, neg_neg, mul_neg, Multiset.map_cons, Multiset.map_singleton, Multiset.prod_cons,
+    Multiset.prod_singleton, mul_ite, ite_mul, ne_eq]
+  field_simp
+  simp only [Fin.isValue, I_sq, neg_neg, neg_mul, one_mul]
+  grind
+
+lemma irrepCoeff_ψ_ψ_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (irrepCoeff {Irrep.ψ, Irrep.ψ} V) := by
+  sorry
+
+lemma irrepCoeff_barψ_barψ_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (irrepCoeff {Irrep.barψ, Irrep.barψ} V) := by
+  sorry
+
+lemma irrepCoeff_quadratic_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V) := by
+  sorry
+
 /-!
 
 ## Mass dimension
