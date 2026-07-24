@@ -118,6 +118,11 @@ def IsInvariant (V : EFTLagrangianExclDeriv) : Prop := ∀ Λ, rep Λ V = V
 lemma IsInvariant.eq_iff {V : EFTLagrangianExclDeriv} :
     IsInvariant V ↔ ∀ Λ, rep Λ V = V := by rfl
 
+@[simp]
+lemma IsInvariant.zero : IsInvariant 0 := by
+  intro Λ
+  simp [rep]
+
 lemma IsInvariant.add {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : IsInvariant W) :
     IsInvariant (V + W) := by
   intro Λ
@@ -136,6 +141,11 @@ lemma IsInvariant.mul {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : 
 lemma IsInvariant.one : IsInvariant 1 := by
   intro Λ
   simp [rep]
+
+lemma IsInvariant.sum {ι : Type} (s : Finset ι) {f : ι → EFTLagrangianExclDeriv}
+    (h : ∀ i ∈ s, IsInvariant (f i)) : IsInvariant (∑ i ∈ s, f i) := by
+  intro Λ
+  simp_all [IsInvariant.eq_iff]
 
 end EFTLagrangianExclDeriv
 
@@ -651,7 +661,7 @@ def coeffOfVectorTuple (s : Multiset FieldSpecification) (n : ℕ) :
       rcases eq_or_ne k j with rfl | hkj
       · rw [Equiv.swap_apply_right]; exact hv
       · rw [Equiv.swap_apply_of_ne_of_ne hki hkj]
-    simp only [MultilinearMap.toFun_eq_coe, MultilinearMap.sum_apply]
+    simp only [MultilinearMap.toFun_eq_coe, _root_.sum_apply]
     refine Finset.sum_involution (fun g _ => g ∘ Equiv.swap i j) ?_ ?_
       (fun g _ => Finset.mem_univ _) ?_
     · intro g _
@@ -709,7 +719,7 @@ lemma coeff_apply_termOfList (s : Multiset FieldSpecification) (l : List FieldSp
     coeff s (termOfList l) = if Multiset.ofList l = s then termOfList l else 0 := by
   have hterm : termOfTuple l.get = termOfList l := by rw [termOfTuple, List.ofFn_get]
   rw [coeff, termOfList_eq_ιMulti, ExteriorAlgebra.liftAlternating_apply_ιMulti]
-  simp only [coeffOfVectorTuple, AlternatingMap.coe_mk, MultilinearMap.sum_apply]
+  simp only [coeffOfVectorTuple, AlternatingMap.coe_mk, _root_.sum_apply]
   refine (Finset.sum_eq_single l.get ?_ ?_).trans ?_
   · intro g _ hg
     obtain ⟨i, hi⟩ := Function.ne_iff.mp hg
@@ -751,6 +761,33 @@ lemma coeff_coeff_self {s : Multiset FieldSpecification} (V : EFTLagrangianExclD
   · simp
   · simp [hx, hy]
   · simp [hx]
+
+lemma coeff_coeff_eq_zero_of_diff {s1 s2 : Multiset FieldSpecification} (h : s1 ≠ s2)
+    (V : EFTLagrangianExclDeriv) : coeff s1 (coeff s2 V) = 0 := by
+  induction' mem_termOfList_span V using Submodule.span_induction with V' hV' x y _ _ hx hy
+    a x _ hx
+  · simp at hV'
+    obtain ⟨l, rfl⟩ := hV'
+    simp [coeff_apply_termOfList, apply_ite]
+    grind
+  · simp
+  · simp [hx, hy]
+  · simp [hx]
+
+lemma coeff_sum_eq_zero_iff (V : EFTLagrangianExclDeriv)
+    (S : Finset (Multiset FieldSpecification)):
+    ∑ s ∈ S, coeff s V = 0 ↔ ∀ s ∈ S, coeff s V = 0 := by
+  constructor
+  · intro h s hs
+    have h1 := congrArg (coeff s) h
+    simp at h1
+    rw [Finset.sum_eq_single s] at h1
+    simpa using h1
+    · intro b hb hx
+      exact coeff_coeff_eq_zero_of_diff (id (Ne.symm hx)) V
+    · simp_all
+  · intro h
+    exact Finset.sum_eq_zero h
 
 lemma coeff_eq_termOfList {s : Multiset FieldSpecification}
     (V : EFTLagrangianExclDeriv) {l : List FieldSpecification} (hl : Multiset.ofList l = s) :
@@ -863,6 +900,105 @@ lemma coeff_odd_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
   rw [Multiset.map_const', Multiset.prod_replicate, hs.neg_one_pow]
   norm_num
 
+@[simp]
+lemma coeff_ψ_barψ_selection_rule {V : EFTLagrangianExclDeriv} (hV : IsInvariant V)
+    (a b : Fin 2) : coeff {.ψ a, .barψ b} V = 0 := by
+  refine coeff_U1_selection_rule hV (diagSL twoI) (diagScale twoI) (rep_diagSL_apply twoI) _ ?_
+  simp only [Multiset.insert_eq_cons, diagScale, Fin.isValue, Units.val_inv_eq_inv_val, twoI_val,
+    _root_.mul_inv_rev, inv_I, neg_mul, star_neg, star_mul', RCLike.star_def, conj_I, star_inv₀,
+    star_ofNat, neg_neg, mul_neg, Multiset.map_cons, Multiset.map_singleton, Multiset.prod_cons,
+    Multiset.prod_singleton, mul_ite, ite_mul, ne_eq]
+  field_simp
+  simp only [Fin.isValue, I_sq, neg_neg, neg_mul, one_mul]
+  grind
+
+lemma coeff_empty_isInvariant {V : EFTLagrangianExclDeriv} : IsInvariant (coeff 0 V) := by
+  obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := 0) (l := []) (by simp)
+  rw [hc]
+  refine IsInvariant.smul (fun Λ => ?_) _
+  simp
+
+lemma coeff_ψ_zero_ψ_one_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (coeff {.ψ 0, .ψ 1} V) := by
+  obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1}) (l := [.ψ 0, .ψ 1]) (by decide)
+  rw [hc]
+  refine IsInvariant.smul (fun Λ => ?_) _
+  simp only [termOfList, Fin.isValue, List.map_cons, List.map_nil, List.prod_cons, List.prod_nil,
+    mul_one, rep_mul, rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum, SpecialLinearGroup.coe_inv,
+    adjugate_fin_two, of_apply, cons_val', cons_val_fin_one, cons_val_zero, Fin.sum_univ_two,
+    cons_val_one, mul_add, Algebra.mul_smul_comm, add_mul, Algebra.smul_mul_assoc,
+    toEFTLagrangianExclDeriv_mul_self, smul_zero,
+    toEFTLagrangianExclDeriv_mul_anti_commute (.ψ 1) (.ψ 0), neg_mul, smul_neg, ← neg_smul, neg_neg,
+    zero_add, smul_smul, add_zero, ← add_smul]
+  trans  Λ.1.det • ([.ψ 0]ₑ * [.ψ 1]ₑ)
+  · simp only [Matrix.det_fin_two]
+    ring_nf
+  · simp
+
+@[simp]
+lemma coeff_ψ_ψ_isInvariant {V : EFTLagrangianExclDeriv} (a b : Fin 2) :
+    IsInvariant (coeff {.ψ a, .ψ b} V) := by
+  match a, b with
+  | 0, 0 => rw [coeff_fermionic_selection_rule _ (by decide)]; simp
+  | 1, 1 => rw [coeff_fermionic_selection_rule _ (by decide)]; simp
+  | 0, 1 => exact coeff_ψ_zero_ψ_one_isInvariant
+  | 1, 0 => convert coeff_ψ_zero_ψ_one_isInvariant using 3; decide
+
+lemma coeff_barψ_zero_barψ_one_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (coeff {.barψ 0, .barψ 1} V) := by
+  obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := {.barψ 0, .barψ 1}) (l := [.barψ 0, .barψ 1])
+    (by decide)
+  rw [hc]
+  refine IsInvariant.smul (fun Λ => ?_) _
+  simp only [termOfList, Fin.isValue, List.map_cons, List.map_nil, List.prod_cons, List.prod_nil,
+    mul_one, rep_mul, rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum, SpecialLinearGroup.coe_inv,
+    adjugate_fin_two, of_apply, cons_val', cons_val_fin_one, cons_val_zero, RCLike.star_def,
+    Fin.sum_univ_two, cons_val_one, mul_add, Algebra.mul_smul_comm, add_mul, Algebra.smul_mul_assoc,
+    toEFTLagrangianExclDeriv_mul_self, smul_zero,
+    toEFTLagrangianExclDeriv_mul_anti_commute (.barψ 1) (.barψ 0), neg_mul, smul_neg, ← neg_smul,
+    ← map_neg, neg_neg, zero_add, smul_smul, ← map_mul, add_zero, ← add_smul, ← map_add]
+  trans (starRingEnd ℂ)  Λ.1.det • ([.barψ 0]ₑ * [.barψ 1]ₑ)
+  · simp only [Matrix.det_fin_two]
+    ring_nf
+  · simp
+
+@[simp]
+lemma coeff_barψ_barψ_isInvariant {V : EFTLagrangianExclDeriv} (a b : Fin 2) :
+    IsInvariant (coeff {.barψ a, .barψ b} V) := by
+  match a, b with
+  | 0, 0 => rw [coeff_fermionic_selection_rule _ (by decide)]; simp
+  | 1, 1 => rw [coeff_fermionic_selection_rule _ (by decide)]; simp
+  | 0, 1 => exact coeff_barψ_zero_barψ_one_isInvariant
+  | 1, 0 => convert coeff_barψ_zero_barψ_one_isInvariant using 3; decide
+
+lemma coeff_quartic_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (coeff {.ψ 0, .ψ 1, .barψ 0, .barψ 1} V) := by
+  obtain ⟨c', hc⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1, .barψ 0, .barψ 1})
+    (l := [.ψ 0, .ψ 1, .barψ 0, .barψ 1]) (by decide)
+  rw [hc]
+  refine IsInvariant.smul (fun Λ => ?_) _
+  simp only [termOfList, Fin.isValue, List.map_cons, List.map_nil, List.prod_cons, List.prod_nil,
+    mul_one, rep_mul, rep_apply_toEFTLagrangianExclDeriv_barψ_eq_sum, SpecialLinearGroup.coe_inv,
+    adjugate_fin_two, of_apply, cons_val', cons_val_fin_one, cons_val_zero, RCLike.star_def,
+    Fin.sum_univ_two, cons_val_one, mul_add, Algebra.mul_smul_comm, add_mul, Algebra.smul_mul_assoc,
+    toEFTLagrangianExclDeriv_mul_self, smul_zero,
+    toEFTLagrangianExclDeriv_mul_anti_commute (.barψ 1) (.barψ 0), neg_mul, smul_neg, ← neg_smul,
+    ← map_neg, neg_neg, zero_add, smul_smul, ← map_mul, add_zero, ← add_smul, ← map_add]
+  trans (starRingEnd ℂ)  Λ.1.det • ((rep Λ) [ψ 0]ₑ * ((rep Λ) [ψ 1]ₑ * ([barψ 0]ₑ * [barψ 1]ₑ)))
+  · simp only [Matrix.det_fin_two]
+    ring_nf
+  simp only [SpecialLinearGroup.det_coe, map_one, Fin.isValue,
+    rep_apply_toEFTLagrangianExclDeriv_ψ_eq_sum, SpecialLinearGroup.coe_inv, adjugate_fin_two,
+    of_apply, cons_val', cons_val_fin_one, cons_val_zero, Fin.sum_univ_two, cons_val_one,
+    ← mul_assoc, add_mul, Algebra.smul_mul_assoc, mul_add, Algebra.mul_smul_comm,
+    toEFTLagrangianExclDeriv_mul_self, smul_zero,
+    toEFTLagrangianExclDeriv_mul_anti_commute (.ψ 1) (.ψ 0), neg_mul, smul_neg, ← neg_smul, neg_neg,
+    zero_add, smul_smul, add_zero, ← add_smul, mul_neg, one_mul]
+  trans Λ.1.det • ([ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ)
+  · simp only [Matrix.det_fin_two]
+    ring_nf
+  · simp
+
 /-- The support of an effective potential: the set of multisets of field specifications
   for which the corresponding coefficient is non-zero. -/
 def support (V : EFTLagrangianExclDeriv) : Finset (Multiset FieldSpecification) :=
@@ -965,6 +1101,21 @@ lemma eq_sum_support_coeff (V : EFTLagrangianExclDeriv) : V = ∑ s ∈ support 
         exact coeff_eq_zero_of_not_mem_support hs'
     conv_lhs => rw [hx]
     simp [Finset.smul_sum]
+
+lemma nodup_of_mem_support {V : EFTLagrangianExclDeriv} {s : Multiset FieldSpecification}
+    (hs : s ∈ support V) : s.Nodup := by
+  simp [support, Set.Finite.mem_toFinset] at hs
+  by_contra h
+  exact hs (coeff_fermionic_selection_rule (V := V) s h)
+
+/-- For a purely fermionic theory, no fermion can appear twice in the same term,
+  so the support is a subset of those multisets which are actually finite sets.
+  This does not hold in a bosonic theory. -/
+lemma support_subset_finset_univ {V : EFTLagrangianExclDeriv} :
+    support V ⊆ (Finset.univ : Finset (Finset FieldSpecification)).image fun V => V.val := by
+  intro s hs
+  simp only [Finset.mem_image, Finset.mem_univ, true_and]
+  exact ⟨Finset.mk s (nodup_of_mem_support hs),  rfl⟩
 
 /-- Regrouping the decomposition `eq_sum_support_coeff` along a classifying map `key`
   on field contents: if `fiber k` is the finset of field contents with `key s = k`,
@@ -1087,10 +1238,43 @@ lemma irrepCoeff_termOfList (i : Multiset Irrep) (l : List FieldSpecification) :
 def irrepSupport (V : EFTLagrangianExclDeriv) : Finset (Multiset Irrep) :=
   (support V).image (Multiset.map toIrrep)
 
+lemma mem_irrepSupport_iff (V : EFTLagrangianExclDeriv) (i : Multiset Irrep) :
+    i ∈ irrepSupport V ↔ irrepCoeff i V ≠ 0 := by
+  simp [irrepSupport, Finset.mem_image]
+  constructor
+  · rintro ⟨s, hs, hsi⟩
+    simp [irrepCoeff_eq_sum, coeff_sum_eq_zero_iff]
+    refine ⟨s, ?_⟩
+    simp [mem_allTermsWithIrrepContent_iff, hsi]
+    exact mem_support_iff.mp hs
+  · intro h
+    simp [irrepCoeff_eq_sum, coeff_sum_eq_zero_iff] at h
+    obtain ⟨s, hs, hsi⟩ := h
+    use s
+    simp [mem_allTermsWithIrrepContent_iff] at hs
+    simp [mem_support_iff, hsi, hs]
+
+lemma irrepSupport_subset (V : EFTLagrangianExclDeriv) :
+    irrepSupport V ⊆ {{}, {.ψ}, {.barψ}, {.ψ, .ψ}, {.barψ, .barψ}, {.ψ, .barψ},
+      {.ψ, .barψ, .barψ}, {.ψ, .ψ, .barψ}, {.ψ, .ψ, .barψ, .barψ}} := by
+  trans ((Finset.univ : Finset (Finset FieldSpecification)).image fun V =>
+    V.val).image (Multiset.map toIrrep)
+  · rw [irrepSupport]
+    exact Finset.image_subset_image support_subset_finset_univ
+  · apply Finset.subset_of_eq
+    decide
+
 lemma eq_sum_irrepCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ i ∈ irrepSupport V, irrepCoeff i V := by
   simp only [irrepSupport, irrepCoeff_eq_sum]
   exact eq_sum_fiber_coeff mem_allTermsWithIrrepContent_iff V
+
+lemma eq_sum_irrepCoeff_subset {V : EFTLagrangianExclDeriv} {S : Finset (Multiset Irrep)}
+    (hS : irrepSupport V ⊆ S) : V = ∑ i ∈ S, irrepCoeff i V := by
+  conv_lhs => rw [eq_sum_irrepCoeff V]
+  apply Finset.sum_subset hS
+  intro s hs hsi
+  simpa [mem_irrepSupport_iff] using hsi
 
 lemma irrepCoeff_rep_termOfList (i : Multiset Irrep) (g : SL(2, ℂ))
     (l : List FieldSpecification) :
@@ -1132,30 +1316,118 @@ lemma irrepCoeff_ψ_barψ_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv} (h
     irrepCoeff {Irrep.ψ, Irrep.barψ} V = 0 := by
   rw [irrepCoeff_eq_sum, Finset.sum_congr (g := fun s => coeff s V)
     (s₂ := {{ψ 0, barψ 0}, {ψ 0, barψ 1}, {ψ 1, barψ 0}, {ψ 1, barψ 1}}) (by decide) (by simp)]
-  suffices h  : ∀ (a b : Fin 2), coeff {ψ a, barψ b} V = 0 by
-    repeat rw [Finset.sum_insert (by decide)]
-    simp only [h, Finset.sum_singleton, add_zero]
-  intro a b
-  refine coeff_U1_selection_rule hV (diagSL twoI) (diagScale twoI) (rep_diagSL_apply twoI) _ ?_
-  simp only [Multiset.insert_eq_cons, diagScale, Fin.isValue, Units.val_inv_eq_inv_val, twoI_val,
-    _root_.mul_inv_rev, inv_I, neg_mul, star_neg, star_mul', RCLike.star_def, conj_I, star_inv₀,
-    star_ofNat, neg_neg, mul_neg, Multiset.map_cons, Multiset.map_singleton, Multiset.prod_cons,
-    Multiset.prod_singleton, mul_ite, ite_mul, ne_eq]
-  field_simp
-  simp only [Fin.isValue, I_sq, neg_neg, neg_mul, one_mul]
-  grind
+  repeat rw [Finset.sum_insert (by decide)]
+  simp only [coeff_ψ_barψ_selection_rule hV, Finset.sum_singleton, add_zero]
+
+lemma irrepCoeff_odd_eq_zero_of_isInvariant {V : EFTLagrangianExclDeriv}
+    (hV : IsInvariant V) (s : Multiset Irrep) (hs : Odd s.card) : irrepCoeff s V = 0 := by
+  simp [irrepCoeff_eq_sum]
+  refine Finset.sum_eq_zero ?_
+  intro s' hs'
+  simp [mem_allTermsWithIrrepContent_iff] at hs'
+  subst hs'
+  apply coeff_odd_selection_rule hV s'
+  simpa using hs
+
+lemma eq_sum_irrepCoeff_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInvariant V) :
+    V = irrepCoeff {} V + irrepCoeff {Irrep.ψ, Irrep.ψ} V +
+      irrepCoeff {Irrep.barψ, Irrep.barψ} V +
+      irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V := by
+  nth_rewrite 1 [eq_sum_irrepCoeff_subset (irrepSupport_subset V)]
+  repeat rw [Finset.sum_insert (by decide)]
+  rw [Finset.sum_singleton]
+  rw [irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ} (by decide),
+    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.barψ} (by decide),
+    irrepCoeff_ψ_barψ_eq_zero_of_isInvariant hV,
+    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ, Irrep.barψ, Irrep.barψ} (by decide),
+    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ, Irrep.ψ, Irrep.barψ} (by decide)]
+  abel
+
+/-- Only the terms whose field content is `Nodup` survive in `irrepCoeff i`, since a
+  repeated fermionic field forces the coefficient to vanish (`coeff_fermionic_selection_rule`).
+  Hence if exactly one such term `s` exists, `irrepCoeff i` is just `coeff s`. -/
+lemma irrepCoeff_eq_coeff_of_filter_nodup {i : Multiset Irrep} {s : Multiset FieldSpecification}
+    (h : (allTermsWithIrrepContent i).filter (·.Nodup) = {s}) (V : EFTLagrangianExclDeriv) :
+    irrepCoeff i V = coeff s V := by
+  rw [irrepCoeff_eq_sum, ← Finset.sum_filter_of_ne
+    (fun t _ ht => by by_contra hn; exact ht (coeff_fermionic_selection_rule t hn)),
+    h, Finset.sum_singleton]
+
+lemma irrepCoeff_empty_eq {V : EFTLagrangianExclDeriv} :
+    irrepCoeff 0 V = coeff 0 V :=
+  irrepCoeff_eq_coeff_of_filter_nodup (by decide) V
+
+lemma irrepCoeff_ψ_ψ_eq {V : EFTLagrangianExclDeriv} :
+    irrepCoeff {Irrep.ψ, Irrep.ψ} V = coeff {.ψ 0, .ψ 1} V :=
+  irrepCoeff_eq_coeff_of_filter_nodup (by decide) V
+
+lemma irrepCoeff_barψ_barψ_eq {V : EFTLagrangianExclDeriv} :
+    irrepCoeff {Irrep.barψ, Irrep.barψ} V = coeff {.barψ 0, .barψ 1} V :=
+  irrepCoeff_eq_coeff_of_filter_nodup (by decide) V
+
+lemma irrepCoeff_quartic_eq {V : EFTLagrangianExclDeriv} :
+    irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V =
+      coeff {.ψ 0, .ψ 1, .barψ 0, .barψ 1} V :=
+  irrepCoeff_eq_coeff_of_filter_nodup (by set_option maxRecDepth 4000 in decide) V
+
+lemma irrepCoeff_empty_isInvariant {V : EFTLagrangianExclDeriv} :
+    IsInvariant (irrepCoeff 0 V) := by
+  rw [irrepCoeff_empty_eq]
+  exact coeff_empty_isInvariant
 
 lemma irrepCoeff_ψ_ψ_isInvariant {V : EFTLagrangianExclDeriv} :
     IsInvariant (irrepCoeff {Irrep.ψ, Irrep.ψ} V) := by
-  sorry
+  rw [irrepCoeff_ψ_ψ_eq]
+  exact coeff_ψ_ψ_isInvariant _ _
 
 lemma irrepCoeff_barψ_barψ_isInvariant {V : EFTLagrangianExclDeriv} :
     IsInvariant (irrepCoeff {Irrep.barψ, Irrep.barψ} V) := by
-  sorry
+  rw [irrepCoeff_barψ_barψ_eq]
+  exact coeff_barψ_barψ_isInvariant _ _
 
 lemma irrepCoeff_quadratic_isInvariant {V : EFTLagrangianExclDeriv} :
     IsInvariant (irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V) := by
-  sorry
+  rw [irrepCoeff_quartic_eq]
+  exact coeff_quartic_isInvariant
+
+lemma isInvariant_iff_eq_sum_irrepCoeff {V : EFTLagrangianExclDeriv} :
+    IsInvariant V ↔ V = irrepCoeff 0 V + irrepCoeff {Irrep.ψ, Irrep.ψ} V +
+      irrepCoeff {Irrep.barψ, Irrep.barψ} V +
+      irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V := by
+  constructor
+  · intro hV
+    exact eq_sum_irrepCoeff_of_isInvariant hV
+  · intro h
+    rw [h]
+    apply IsInvariant.add _ irrepCoeff_quadratic_isInvariant
+    apply IsInvariant.add _ irrepCoeff_barψ_barψ_isInvariant
+    apply IsInvariant.add irrepCoeff_empty_isInvariant irrepCoeff_ψ_ψ_isInvariant
+
+lemma isInvariant_iff_eq_sum_coeff {V : EFTLagrangianExclDeriv} :
+    IsInvariant V ↔ V = coeff 0 V + coeff {.ψ 0, .ψ 1} V +
+      coeff {.barψ 0, .barψ 1} V + coeff {.ψ 0, .ψ 1, .barψ 0, .barψ 1} V := by
+  rw [isInvariant_iff_eq_sum_irrepCoeff, irrepCoeff_empty_eq, irrepCoeff_ψ_ψ_eq,
+    irrepCoeff_barψ_barψ_eq, irrepCoeff_quartic_eq]
+
+lemma isInvariant_iff_eq_exists {V : EFTLagrangianExclDeriv} :
+    IsInvariant V ↔
+      ∃ c : ℂ, ∃ m0 : ℂ, ∃ m1 : ℂ, ∃ ρ : ℂ, V = c • 1 + m0 • ([ψ 0]ₑ * [ψ 1]ₑ) +
+      m1 • ([barψ 0]ₑ * [barψ 1]ₑ) + ρ • ([ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ):= by
+  rw [isInvariant_iff_eq_sum_coeff]
+  obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := 0) (l := []) (by decide)
+  obtain ⟨m0, hm0⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1}) (l := [.ψ 0, .ψ 1]) (by decide)
+  obtain ⟨m1, hm1⟩ := coeff_eq_termOfList V (s := {.barψ 0, .barψ 1}) (l := [.barψ 0, .barψ 1]) (by decide)
+  obtain ⟨ρ, hρ⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1, .barψ 0, .barψ 1}) (l := [.ψ 0, .ψ 1, .barψ 0, .barψ 1]) (by decide)
+  rw [hc, hm0, hm1, hρ]
+  simp [termOfList]
+  constructor
+  · intro h
+    use c, m0, m1, ρ
+    rw [h]
+    grind
+  · rintro ⟨c', m0', m1', ρ', rfl⟩
+    simp_all
+    sorry
 
 /-!
 
