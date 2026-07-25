@@ -124,7 +124,7 @@ lemma repGaugeGroupI_tmul (g : GaugeGroupI) (ψ : Fermion.RightHandedWeyl)
 
 open Fermion in
 /-- The action of the full gauge group on a tensor product of basis elements, expanded as a
-  sum over the columns of the `SU(3)` and `SU(2)` matrices. -/
+  sum over the columns of the `SU(3)` matrix. -/
 lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k : Fin 2) (i : Fin 3) :
     repGaugeGroupI g ⟨RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i⟩ =
       ∑ i' : Fin 3, (g.toU1.1 ^ 4  * g.toSU3.1 i' i)
