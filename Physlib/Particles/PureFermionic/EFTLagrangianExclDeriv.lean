@@ -1513,12 +1513,9 @@ lemma isInvariant_iff_eq_exists {V : EFTLagrangianExclDeriv} :
       show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
       show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV ⊢
     rw [hV] at hm0 hρ hm1 hc
-    simp only [Fin.isValue, map_add, map_smul, coeff_one, Multiset.empty_eq_zero, smul_ite,
-      smul_zero, coeff_apply_termOfList, ↓reduceIte, Multiset.coe_eq_zero, reduceCtorEq, add_zero,
-      termOfList_nil, ne_eq, one_ne_zero, not_false_eq_true, smul_left_inj] at hm0 hρ hm1 hc
-    rw [if_neg (by decide), if_pos (by decide), if_neg (by decide), if_neg (by decide)] at hm0
-    rw [if_neg (by decide), if_neg (by decide), if_neg (by decide), if_pos (by decide)] at hρ
-    rw [if_neg (by decide), if_neg (by decide), if_pos (by decide), if_neg (by decide)] at hm1
+    simp +decide only [Fin.isValue, map_add, map_smul, coeff_one, ↓reduceIte, smul_zero,
+      coeff_apply_termOfList, add_zero, termOfList_nil, ne_eq, one_ne_zero, not_false_eq_true,
+      smul_left_inj] at hm0 hρ hm1 hc
     simp_all
 
 /-!
