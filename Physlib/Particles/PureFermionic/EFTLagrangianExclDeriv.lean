@@ -1121,6 +1121,15 @@ lemma support_add  {V W : EFTLagrangianExclDeriv} :
   simp [support]
   grind
 
+lemma support_sub {V W : EFTLagrangianExclDeriv} :
+    support (V - W) ⊆ support V ∪ support W := by
+  simp [support]
+  grind
+
+lemma support_one : support 1 = {{}} := by
+  simp [support, coeff_one]
+  rfl
+
 lemma support_smul {V : EFTLagrangianExclDeriv} (c : ℂ) :
     support (c • V) ⊆ support V := by
   simp [support]
@@ -1566,14 +1575,185 @@ lemma massDimCoeff_termOfList (n : ℚ) (l : List FieldSpecification) :
       if (Multiset.map massDimension (Multiset.ofList l)).sum = n then termOfList l else 0 := by
   simp [massDimCoeff_eq_sum, coeff_apply_termOfList, mem_allTermsWithMassDimension_iff]
 
+lemma massDimCoeff_termOfList_ofNat (n : ℕ) (l : List FieldSpecification) :
+    massDimCoeff (n) (termOfList l) =
+      if (Multiset.map massDimensionNat (Multiset.ofList l)).sum = 2 * n then termOfList l else 0 := by
+  rw [massDimCoeff_termOfList]
+  simp
+  congr 1
+  field_simp
+  simp
+  constructor
+  · intro h
+    exact_mod_cast h
+  · intro h
+    exact_mod_cast h
+
+
+lemma massDimCoeff_one (n : ℚ) : massDimCoeff n 1 = if n = 0 then 1 else 0 := by
+  rw [massDimCoeff_eq_sum]
+  simp only [coeff_one]
+  rw [Finset.sum_ite_eq']
+  refine if_congr ?_ rfl rfl
+  rw [mem_allTermsWithMassDimension_iff]
+  simp [eq_comm]
+
 /-- The mass dimensions of the operators appearing in an effective potential. -/
 def massDimSupport (V : EFTLagrangianExclDeriv) : Finset ℚ :=
   (support V).image (fun s => (s.map massDimension).sum)
+
+lemma massDimSupport_add  {V W : EFTLagrangianExclDeriv} :
+    massDimSupport (V + W) ⊆ massDimSupport V ∪ massDimSupport W := by
+  simp [massDimSupport, ← Finset.image_union]
+  apply Finset.image_subset_image
+  exact support_add
+
+lemma massDimSupport_sub  {V W : EFTLagrangianExclDeriv} :
+    massDimSupport (V - W) ⊆ massDimSupport V ∪ massDimSupport W := by
+  simp [massDimSupport, ← Finset.image_union]
+  apply Finset.image_subset_image
+  exact support_sub
+
+lemma massDimSupport_one : massDimSupport 1 = {0} := by
+  simp [support_one, massDimSupport]
+
+lemma massDimSupport_smul {c : ℂ} {V : EFTLagrangianExclDeriv} :
+    massDimSupport (c • V) ⊆ massDimSupport V := by
+  simp [massDimSupport, ]
+  apply Finset.image_subset_image
+  exact support_smul c
+
+lemma massDimSupport_termOfList (l : List FieldSpecification) :
+    massDimSupport (termOfList l) ⊆ {(Multiset.map massDimension (Multiset.ofList l)).sum} := by
+  trans ({Multiset.ofList l} : Finset (Multiset FieldSpecification)).image
+    (fun s => (s.map massDimension).sum)
+  · apply Finset.image_subset_image
+    exact support_termOfList_subset l
+  · simp
 
 lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
   simp only [massDimSupport, massDimCoeff_eq_sum]
   exact eq_sum_fiber_coeff mem_allTermsWithMassDimension_iff V
+
+def HasMassDimLE (n : ℚ) (V : EFTLagrangianExclDeriv): Prop :=
+  ∀ s ∈ massDimSupport V, s ≤ n
+
+lemma HasMassDimLE.add {n : ℚ} {V W : EFTLagrangianExclDeriv} (hV : HasMassDimLE n V)
+    (hW : HasMassDimLE n W) : HasMassDimLE n (V + W) := by
+  intro s hs
+  have h1 := massDimSupport_add hs
+  simp at h1
+  rcases h1 with h1 | h1
+  · exact hV s h1
+  · exact hW s h1
+
+lemma HasMassDimLE.sub {n : ℚ} {V W : EFTLagrangianExclDeriv} (hV : HasMassDimLE n V)
+    (hW : HasMassDimLE n W) : HasMassDimLE n (V - W) := by
+  intro s hs
+  have h1 := massDimSupport_sub hs
+  simp at h1
+  rcases h1 with h1 | h1
+  · exact hV s h1
+  · exact hW s h1
+
+lemma HasMassDimLE.smul {n : ℚ} {c : ℂ} {V : EFTLagrangianExclDeriv} (hV : HasMassDimLE n V) :
+    HasMassDimLE n (c • V) := by
+  intro s hs
+  have h1 := massDimSupport_smul hs
+  exact hV s h1
+
+lemma HasMassDimLE.one {n : ℚ} (hn : 0 ≤ n): HasMassDimLE n 1 := by
+  simp [HasMassDimLE, massDimSupport_one]
+  exact hn
+
+lemma HasMassDimLE.termOfList {n : ℚ} {l : List FieldSpecification}
+    (hl : (Multiset.map massDimension (Multiset.ofList l)).sum ≤ n) :
+    HasMassDimLE n (termOfList l) := by
+  intro s hs
+  have hs' := massDimSupport_termOfList l hs
+  simp_all
+
+/-- Off the mass-dimension support the projection vanishes: if no operator of `V` has
+  mass dimension `q`, then `massDimCoeff q V = 0`. -/
+lemma massDimCoeff_eq_zero_of_not_mem_massDimSupport {q : ℚ} {V : EFTLagrangianExclDeriv}
+    (h : q ∉ massDimSupport V) : massDimCoeff q V = 0 := by
+  rw [massDimCoeff_eq_sum]
+  refine Finset.sum_eq_zero fun s hs => ?_
+  rw [mem_allTermsWithMassDimension_iff] at hs
+  refine coeff_eq_zero_of_not_mem_support fun hsupp => h ?_
+  rw [massDimSupport]
+  exact Finset.mem_image.mpr ⟨s, hsupp, hs⟩
+
+lemma eq_sum_of_hasMassDimLE {n : ℕ} {V : EFTLagrangianExclDeriv} (h : HasMassDimLE n V) :
+    V = ∑ m ∈ Finset.range (2 * n + 1), massDimCoeff (m / (2 : ℚ)) V := by
+  have hinj : ∀ x ∈ Finset.range (2 * n + 1), ∀ y ∈ Finset.range (2 * n + 1),
+      (x / (2 : ℚ)) = (y / (2 : ℚ)) → x = y := by
+    intro x _ y _ hxy
+    exact_mod_cast (by linarith : (x : ℚ) = y)
+  have hreindex : (∑ m ∈ Finset.range (2 * n + 1), massDimCoeff (m / (2 : ℚ)) V)
+      = ∑ q ∈ (Finset.range (2 * n + 1)).image (fun m : ℕ => (m : ℚ) / 2), massDimCoeff q V :=
+    (Finset.sum_image (f := fun q => massDimCoeff q V) hinj).symm
+  rw [hreindex]
+  conv_lhs => rw [eq_sum_massDimCoeff V]
+  refine Finset.sum_subset ?_ (fun q _ hq => massDimCoeff_eq_zero_of_not_mem_massDimSupport hq)
+  rw [massDimSupport, Finset.image_subset_iff]
+  intro s hs
+  have hle : (s.map massDimension).sum ≤ (n : ℚ) :=
+    h _ (by rw [massDimSupport]; exact Finset.mem_image.mpr ⟨s, hs, rfl⟩)
+  rw [sum_map_massDimension] at hle
+  refine Finset.mem_image.mpr ⟨3 * s.card, Finset.mem_range.mpr ?_, ?_⟩
+  · have h2 : (3 * s.card : ℚ) ≤ 2 * n := by linarith
+    have : 3 * s.card ≤ 2 * n := by exact_mod_cast h2
+    omega
+  · rw [sum_map_massDimension]; push_cast; ring
+
+lemma massDimCoeff_eq_zero_of_hasMassDimLE {n : ℕ} {V : EFTLagrangianExclDeriv}
+    (h : HasMassDimLE n V) (m : ℚ) (hm : n < m) :
+    massDimCoeff m V = 0 := by
+  apply massDimCoeff_eq_zero_of_not_mem_massDimSupport
+  simp [HasMassDimLE] at h
+  by_contra hn
+  have hl := h m hn
+  grind
+
+
+/-- Applying `coeff s` to a mass-dimension projection: it returns `coeff s V` when the field
+  content `s` has mass dimension `q`, and `0` otherwise (the other coefficients are orthogonal
+  to `coeff s`). -/
+lemma coeff_massDimCoeff (q : ℚ) (s : Multiset FieldSpecification) (V : EFTLagrangianExclDeriv) :
+    coeff s (massDimCoeff q V) = if (s.map massDimension).sum = q then coeff s V else 0 := by
+  rw [massDimCoeff_eq_sum, map_sum]
+  split_ifs with h
+  · rw [Finset.sum_eq_single s (fun t _ htn => coeff_coeff_eq_zero_of_diff (Ne.symm htn) V)
+      (fun hns => absurd ((mem_allTermsWithMassDimension_iff q s).mpr h) hns)]
+    exact coeff_coeff_self V
+  · refine Finset.sum_eq_zero fun t ht => ?_
+    rw [mem_allTermsWithMassDimension_iff] at ht
+    exact coeff_coeff_eq_zero_of_diff (by rintro rfl; exact h ht) V
+
+lemma hasMassDimLE_iff_eq_sum {n : ℕ} {V : EFTLagrangianExclDeriv}  :
+    HasMassDimLE n V ↔ V = ∑ m ∈ Finset.range (2 * n + 1), massDimCoeff (m / (2 : ℚ)) V := by
+  refine ⟨eq_sum_of_hasMassDimLE, fun hV => ?_⟩
+  intro q hq
+  rw [massDimSupport, Finset.mem_image] at hq
+  obtain ⟨s, hs, rfl⟩ := hq
+  rw [mem_support_iff] at hs
+  have hcoeff : coeff s V
+      = ∑ m ∈ Finset.range (2 * n + 1),
+          if (s.map massDimension).sum = (m : ℚ) / 2 then coeff s V else 0 := by
+    conv_lhs => rw [hV]
+    rw [map_sum]
+    simp_rw [coeff_massDimCoeff]
+  have hex : ∃ m ∈ Finset.range (2 * n + 1), (s.map massDimension).sum = (m : ℚ) / 2 := by
+    by_contra hcon
+    push Not at hcon
+    exact hs (by rw [hcoeff]; exact Finset.sum_eq_zero fun m hm => if_neg (hcon m hm))
+  obtain ⟨m, hm, hqm⟩ := hex
+  rw [Finset.mem_range] at hm
+  rw [hqm]
+  have hmn : (m : ℚ) ≤ 2 * (n : ℚ) := by exact_mod_cast (show m ≤ 2 * n from by omega)
+  linarith
 
 /-!
 
@@ -1771,6 +1951,46 @@ lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
         toEFTLagrangianExclDeriv_mul_anti_commute (ψ 0) (ψ 1)]
       abel
 
+/-- The lemma expressing the form of an element of `EFTLagrangianExclDeriv`, if it is
+  invariant under the Lorentz group and is real, and has mass dimension at most `4`.
+
+  This expresses the EFT lagrangian in terms of the Majorana mass trem.  -/
+lemma isInvariant_isReal_hasMassDimLE_four_iff_eq_exists {V : EFTLagrangianExclDeriv} :
+    IsInvariant V ∧ IsReal V ∧ HasMassDimLE 4 V ↔ ∃ c : ℝ, ∃ m0 : ℂ,
+      V = (c : ℂ) • 1 + m0 • ([ψ 0]ₑ * [ψ 1]ₑ) - starRingEnd ℂ m0 • ([barψ 0]ₑ * [barψ 1]ₑ) := by
+  constructor
+  · rintro ⟨hi, hr, hm⟩
+    obtain ⟨c, m0, ρ, hV⟩ := (isInvariant_and_isReal_iff_eq_exists.mp ⟨hi, hr⟩)
+    use c, m0
+    rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
+        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
+        show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+    rw [hV]
+    simp
+    have hmass := massDimCoeff_eq_zero_of_hasMassDimLE hm (6 : ℕ) (by norm_num)
+    have h0 := massDimCoeff_termOfList_ofNat (n := 6)
+    simp only [Nat.cast_ofNat, massDimensionNat_eq, Multiset.map_coe, List.map_const',
+      Multiset.sum_coe, List.sum_replicate, smul_eq_mul, Nat.reduceMul] at h0
+    simp +decide [hV, h0, massDimCoeff_one] at hmass
+    rw [show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]]
+    rcases hmass with rfl | hmass
+    · simp
+    · simp [hmass]
+  · rintro ⟨c, m0, hV⟩
+    rw [← and_assoc]
+    constructor
+    · rw [isInvariant_and_isReal_iff_eq_exists]
+      use c, m0, 0
+      simp [hV]
+    · rw [show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+      rw [hV]
+      refine HasMassDimLE.sub
+        (HasMassDimLE.add (HasMassDimLE.smul (HasMassDimLE.one ?_))
+          (HasMassDimLE.smul (HasMassDimLE.termOfList ?_)))
+        (HasMassDimLE.smul (HasMassDimLE.termOfList ?_)) <;> norm_num
 end EFTLagrangianExclDeriv
 
 end
