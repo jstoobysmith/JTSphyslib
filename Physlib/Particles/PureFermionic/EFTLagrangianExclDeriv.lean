@@ -1584,7 +1584,6 @@ lemma massDimCoeff_termOfList_ofNat (n : ℕ) (l : List FieldSpecification) :
   · intro h
     exact_mod_cast h
 
-
 lemma massDimCoeff_one (n : ℚ) : massDimCoeff n 1 = if n = 0 then 1 else 0 := by
   rw [massDimCoeff_eq_sum]
   simp only [coeff_one]
@@ -1889,40 +1888,26 @@ lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
     simp [← termOfList_singleton, ← termOfList_append] at hV  ⊢
     simp [IsReal, hV, conjugate_termOfList] at hr
     have h0 := congr_arg (coeff 0) hr
-    have h1 := congr_arg (coeff {.ψ 0, .ψ 1}) hr
     have h2 := congr_arg (coeff {.barψ 0, .barψ 1}) hr
     have h3 := congr_arg (coeff {.ψ 0, .ψ 1, .barψ 0, .barψ 1}) hr
-    simp +decide [coeff_apply_termOfList, coeff_one] at h0 h1 h2 h3
-    have hc : c = (c.re : ℂ) := by rw [← propext (re_eq_ofReal_of_isSelfAdjoint h0)]
-    generalize c.re = c' at hc
-    use c', m0, ρ.re
-    rw [hV]
-    subst hc
-    simp
-    have hx : m1 • termOfList [barψ 0, barψ 1] = - starRingEnd ℂ m0 • termOfList [barψ 0, barψ 1] := by
+    simp +decide [coeff_apply_termOfList, coeff_one] at h0 h2 h3
+    obtain ⟨c', rfl⟩ := Complex.conj_eq_iff_real.mp h0
+    refine ⟨c', m0, ρ.re, hV.trans ?_⟩
+    have hx : m1 • termOfList [barψ 0, barψ 1] =
+        -(starRingEnd ℂ m0 • termOfList [barψ 0, barψ 1]) := by
       rw [← h2]
       simp [termOfList, FieldSpecification.conjugate,
-      toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0)]
-    rw [hx]
-    simp only [Fin.isValue, neg_smul]
-    suffices h : ρ • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] =
-        ρ.re • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] by
-      simp [h]
-      abel
-    suffices h : (ρ -  starRingEnd ℂ ρ ) • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] = 0 by
-      simp at h
-      rcases h with (h0 | h1)
-      · have hρ : ρ = (ρ.re : ℂ) := by
-          rw [← propext (re_eq_ofReal_of_isSelfAdjoint _)]
-          rw [isSelfAdjoint_iff]
-          rw [starRingEnd_apply] at h0
-          grind
-        generalize ρ.re = ρ' at hρ
-        subst hρ
+        toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0)]
+    have hρ : ρ • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] =
+        (ρ.re : ℂ) • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] := by
+      simp [FieldSpecification.conjugate, h_quartic] at h3
+      rcases smul_eq_zero.mp (show (starRingEnd ℂ ρ - ρ) •
+          termOfList [ψ 0, ψ 1, barψ 0, barψ 1] = 0 by simp [sub_smul, h3]) with h | h
+      · obtain ⟨ρ', rfl⟩ := Complex.conj_eq_iff_real.mp (sub_eq_zero.mp h)
         simp
-      · simp [h1]
-    simp [sub_smul, ← h3, FieldSpecification.conjugate]
-    simp [h_quartic]
+      · simp [h]
+    rw [hx, hρ]
+    simp [sub_eq_add_neg]
   · rintro ⟨c, m0, ρ, hV⟩
     constructor
     · rw [isInvariant_iff_eq_exists]
@@ -1950,15 +1935,14 @@ lemma isInvariant_isReal_hasMassDimLE_four_iff_eq_exists {V : EFTLagrangianExclD
   · rintro ⟨hi, hr, hm⟩
     obtain ⟨c, m0, ρ, hV⟩ := (isInvariant_and_isReal_iff_eq_exists.mp ⟨hi, hr⟩)
     use c, m0
-    simp only [← termOfList_singleton, ← termOfList_append] at hV
+    simp only [← termOfList_singleton, ← termOfList_append] at hV ⊢
     rw [hV]
-    simp
+    simp only [Fin.isValue, add_eq_left, smul_eq_zero]
     have hmass := massDimCoeff_eq_zero_of_hasMassDimLE hm (6 : ℕ) (by norm_num)
     have h0 := massDimCoeff_termOfList_ofNat (n := 6)
     simp only [Nat.cast_ofNat, massDimensionNat_eq, Multiset.map_coe, List.map_const',
       Multiset.sum_coe, List.sum_replicate, smul_eq_mul, Nat.reduceMul] at h0
     simp +decide [hV, h0, massDimCoeff_one] at hmass
-    simp only [← termOfList_singleton, ← termOfList_append]
     rcases hmass with rfl | hmass
     · simp
     · simp [hmass]
