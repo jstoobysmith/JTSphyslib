@@ -1416,8 +1416,10 @@ lemma isInvariant_iff_eq_exists {V : EFTLagrangianExclDeriv} :
   rw [isInvariant_iff_eq_sum_coeff]
   obtain ⟨c, hc⟩ := coeff_eq_termOfList V (s := 0) (l := []) (by decide)
   obtain ⟨m0, hm0⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1}) (l := [.ψ 0, .ψ 1]) (by decide)
-  obtain ⟨m1, hm1⟩ := coeff_eq_termOfList V (s := {.barψ 0, .barψ 1}) (l := [.barψ 0, .barψ 1]) (by decide)
-  obtain ⟨ρ, hρ⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1, .barψ 0, .barψ 1}) (l := [.ψ 0, .ψ 1, .barψ 0, .barψ 1]) (by decide)
+  obtain ⟨m1, hm1⟩ := coeff_eq_termOfList V (s := {.barψ 0, .barψ 1})
+    (l := [.barψ 0, .barψ 1]) (by decide)
+  obtain ⟨ρ, hρ⟩ := coeff_eq_termOfList V (s := {.ψ 0, .ψ 1, .barψ 0, .barψ 1})
+    (l := [.ψ 0, .ψ 1, .barψ 0, .barψ 1]) (by decide)
   rw [hc, hm0, hm1, hρ]
   simp [termOfList]
   constructor
@@ -1425,9 +1427,20 @@ lemma isInvariant_iff_eq_exists {V : EFTLagrangianExclDeriv} :
     use c, m0, m1, ρ
     rw [h]
     grind
-  · rintro ⟨c', m0', m1', ρ', rfl⟩
+  · rintro ⟨c', m0', m1', ρ', hV⟩
+    simp [← mul_assoc]
+    rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
+        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
+      show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+      show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV ⊢
+    rw [hV] at hm0 hρ hm1 hc
+    simp only [Fin.isValue, map_add, map_smul, coeff_one, Multiset.empty_eq_zero, smul_ite,
+      smul_zero, coeff_apply_termOfList, ↓reduceIte, Multiset.coe_eq_zero, reduceCtorEq, add_zero,
+      termOfList_nil, ne_eq, one_ne_zero, not_false_eq_true, smul_left_inj] at hm0 hρ hm1 hc
+    rw [if_neg (by decide), if_pos (by decide), if_neg (by decide), if_neg (by decide)] at hm0
+    rw [if_neg (by decide), if_neg (by decide), if_neg (by decide), if_pos (by decide)] at hρ
+    rw [if_neg (by decide), if_neg (by decide), if_pos (by decide), if_neg (by decide)] at hm1
     simp_all
-    sorry
 
 /-!
 
@@ -1485,13 +1498,6 @@ lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
   simp only [massDimSupport, massDimCoeff_eq_sum]
   exact eq_sum_fiber_coeff mem_allTermsWithMassDimension_iff V
-
-/-!
-
-## Constraining the effective potential
-
--/
-
 
 end EFTLagrangianExclDeriv
 
