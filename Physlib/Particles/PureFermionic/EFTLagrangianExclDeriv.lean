@@ -1685,15 +1685,11 @@ def conjugate : EFTLagrangianExclDeriv →ₛₗ[starRingEnd ℂ] EFTLagrangianE
 lemma conjugate_termOfList (l : List FieldSpecification) :
     conjugate (termOfList l) = termOfList (l.map .conjugate).reverse := by
   simp [conjugate, conjCoeff_termOfList, mem_support_termOfList_iff]
-  intro h
-  exact (termOfList_reverse_zero_of_zero (termOfList_conjugate_zero_of_zero h)).symm
+  exact fun h => (termOfList_reverse_zero_of_zero (termOfList_conjugate_zero_of_zero h)).symm
 
 @[simp]
 lemma conjugate_one : conjugate 1 = 1 := by
-  trans conjugate (termOfList [])
-  · simp
-  rw [conjugate_termOfList]
-  simp
+  simp [← termOfList_nil, conjugate_termOfList]
 
 /-!
 
@@ -1777,10 +1773,6 @@ lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
       simp [termOfList, toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0) (barψ 1),
         toEFTLagrangianExclDeriv_mul_anti_commute (ψ 0) (ψ 1)]
       abel
-
-
-
-
 
 end EFTLagrangianExclDeriv
 
