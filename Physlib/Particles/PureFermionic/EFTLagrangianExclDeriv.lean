@@ -443,6 +443,18 @@ lemma massDimensionNat_cast (f : FieldSpecification) :
   rw [massDimensionNat_eq, massDimension_eq]
   norm_num
 
+
+/-!
+
+## Conjugation
+
+-/
+
+def conjugate (ψ : FieldSpecification) : FieldSpecification :=
+  match ψ with
+  | .ψ α => .barψ α
+  | .barψ α => .ψ α
+
 end FieldSpecification
 
 namespace EFTLagrangianExclDeriv
@@ -481,6 +493,16 @@ lemma mul_termOfList_of_mem (ψ : FieldSpecification) (l : List FieldSpecificati
     · simp [termOfList_cons, ← mul_assoc]
     · simp [termOfList_cons, ← mul_assoc, toEFTLagrangianExclDeriv_mul_anti_commute ψ β]
       simp [mul_assoc, ih ha]
+
+lemma termOfList_comm_fieldSpecification (ψ : FieldSpecification) (l : List FieldSpecification) :
+    termOfList l * [ψ]ₑ = ((-1) ^ l.length : ℂ) • ([ψ]ₑ * termOfList l) := by
+  induction l with
+  | nil => simp
+  | cons β t ih =>
+    simp only [termOfList_cons, mul_assoc, ih, Algebra.mul_smul_comm, List.length_cons]
+    simp only [← mul_assoc, toEFTLagrangianExclDeriv_mul_anti_commute β ψ, neg_mul, smul_neg]
+    ring_nf
+    simp
 
 lemma termOfList_zero_of_not_nodup (l : List FieldSpecification) (h : ¬ l.Nodup) :
     termOfList l = 0 := by
@@ -580,7 +602,7 @@ lemma mem_termOfList_span (V : EFTLagrangianExclDeriv) :
   | add a b ha hb => exact add_mem ha hb
 
 lemma termOfList_perm_neq_zero {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
-    ∃ c : ℂ, termOfList l1 = c • termOfList l2 ∧ c ≠ 0 := by
+    ∃ c : ℂ, termOfList l1 = c • termOfList l2 ∧ (c = 1 ∨ c = -1) := by
   induction h with
   | nil => exact ⟨1, by simp⟩
   | cons x _ ih =>
@@ -600,6 +622,62 @@ lemma termOfList_perm {l1 l2 : List FieldSpecification} (h : l1.Perm l2) :
     ∃ c : ℂ, termOfList l1 = c • termOfList l2 := by
   obtain ⟨c, h1, h2⟩ := termOfList_perm_neq_zero h
   exact ⟨c, h1⟩
+
+
+lemma termOfList_reverse_eq {l : List FieldSpecification} :
+    termOfList l.reverse = ((-1) ^ (l.length.choose 2) : ℂ) • termOfList l := by
+  induction l with
+  | nil => simp
+  | cons ψ t ih =>
+    rw [List.reverse_cons, termOfList_append, termOfList_singleton, ih, smul_mul_assoc,
+      termOfList_comm_fieldSpecification, ← termOfList_cons, smul_smul, ← pow_add,
+      List.length_cons, Nat.choose_succ_succ, Nat.choose_one_right, Nat.add_comm]
+
+lemma termOfList_reverse_eq_of_eq {l1 l2 : List FieldSpecification} {c : ℂ}
+    (h : termOfList l1 = c • termOfList l2) :
+    termOfList l1.reverse = c • termOfList l2.reverse := by
+  have hf : ∀ l : List FieldSpecification,
+      CliffordAlgebra.reverse (termOfList l) = termOfList l.reverse := by
+    intro l
+    induction l with
+    | nil => simp
+    | cons ψ t ih =>
+      rw [termOfList_cons, CliffordAlgebra.reverse.map_mul, ih, List.reverse_cons,
+        termOfList_append, termOfList_singleton, toEFTLagrangianExclDeriv_eq,
+        CliffordAlgebra.reverse_ι]
+  rw [← hf, ← hf, h, map_smul]
+
+lemma termOfList_reverse_zero_of_zero {l : List FieldSpecification} (h : termOfList l = 0) :
+    termOfList l.reverse = 0 := by
+  rw [termOfList_reverse_eq, h, smul_zero]
+
+lemma termOfList_conjugate_eq_of_eq {l1 l2 : List FieldSpecification} {c : ℂ}
+    (h : termOfList l1 = c • termOfList l2) :
+    termOfList (l1.map conjugate) = c • termOfList (l2.map conjugate) := by
+  let f := ExteriorAlgebra.map (moduleBasis.constr ℂ fun ψ => moduleBasis (conjugate ψ))
+  have hf : ∀ l : List FieldSpecification, f (termOfList l) = termOfList (l.map conjugate) := by
+    intro l
+    induction l with
+    | nil => simp [f]
+    | cons ψ t ih =>
+      rw [termOfList_cons, List.map_cons, termOfList_cons, map_mul, ih]
+      congr 1
+      simp [f, toEFTLagrangianExclDeriv_eq, ExteriorAlgebra.map_apply_ι]
+  rw [← hf, ← hf, h, map_smul]
+
+lemma termOfList_conjugate_zero_of_zero {l : List FieldSpecification} (h : termOfList l = 0) :
+    termOfList (l.map conjugate) = 0 := by
+  let f := ExteriorAlgebra.map (moduleBasis.constr ℂ fun ψ => moduleBasis (conjugate ψ))
+  have hf : ∀ l : List FieldSpecification, f (termOfList l) = termOfList (l.map conjugate) := by
+    intro l
+    induction l with
+    | nil => simp [f]
+    | cons ψ t ih =>
+      rw [termOfList_cons, List.map_cons, termOfList_cons, map_mul, ih]
+      congr 1
+      simp [f, toEFTLagrangianExclDeriv_eq, ExteriorAlgebra.map_apply_ι]
+  rw [← hf, h]
+  simp
 
 lemma termOfList_eq_ιMulti (l : List FieldSpecification) :
     termOfList l = ExteriorAlgebra.ιMulti ℂ l.length (fun i => moduleBasis (l.get i)) := by
@@ -1156,7 +1234,7 @@ lemma repSupport_eq_termOfList {s : Multiset FieldSpecification} (g : SL(2, ℂ)
     (by apply Multiset.coe_eq_coe.mp; simp [hl])
   simp [h1]
   apply support_smul_neq_zero
-  exact hc
+  grind
 
 lemma repSupport_subset_self_of_singleton_subset_self {s : Multiset FieldSpecification}
     (g : SL(2, ℂ)) (h : ∀ ψ : FieldSpecification, repSupport {ψ} g ⊆ {{ψ}}) :
@@ -1498,6 +1576,45 @@ lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
     V = ∑ n ∈ massDimSupport V, massDimCoeff n V := by
   simp only [massDimSupport, massDimCoeff_eq_sum]
   exact eq_sum_fiber_coeff mem_allTermsWithMassDimension_iff V
+
+/-!
+
+## Conjugation
+
+-/
+
+/-- The conjugate of a coefficient. -/
+def conjCoeff (s : Multiset FieldSpecification) (V : EFTLagrangianExclDeriv):
+    EFTLagrangianExclDeriv :=
+  let c := Classical.choose (coeff_eq_termOfList V (s := s) (l := s.toList) (by simp))
+  starRingEnd ℂ c • termOfList (s.toList.map conjugate).reverse
+
+lemma conjCoeff_of_eq_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification)
+    (V : EFTLagrangianExclDeriv) (c : ℂ) (hl : Multiset.ofList l = s)
+    (h : coeff s V = c • termOfList l) :
+    conjCoeff s V = starRingEnd ℂ c • termOfList (l.map conjugate).reverse := by
+  obtain ⟨b, hb1, hb2⟩ := termOfList_perm_neq_zero (l1 := s.toList) (l2 := l)
+    (by subst hl; rw [← Multiset.coe_eq_coe ]; simp)
+  let c' :=  Classical.choose (coeff_eq_termOfList V (s := s) (l := s.toList) (by simp))
+  have hc' : coeff s V = c' • termOfList s.toList :=
+    Classical.choose_spec (coeff_eq_termOfList V (s := s) (l := s.toList) (by simp))
+  change starRingEnd ℂ c' • termOfList (s.toList.map conjugate).reverse = _
+  rw [h] at hc'
+  have hx1 := termOfList_reverse_eq_of_eq (termOfList_conjugate_eq_of_eq hb1)
+  rw [hx1, smul_smul]
+  rw [hb1, smul_smul] at hc'
+  have hx2 : (c - c' * b) • termOfList l = 0 := by
+    simp [sub_smul, hc']
+  simp at hx2
+  rcases hx2 with (h0 | h1)
+  · congr
+    grind
+  · rw [termOfList_reverse_zero_of_zero (termOfList_conjugate_zero_of_zero h1)]
+    simp
+
+lemma conjCoeff_add (s : Multiset FieldSpecification) (V W : EFTLagrangianExclDeriv) :
+    conjCoeff s (V + W) = conjCoeff s V + conjCoeff s W := by
+  sorry
 
 end EFTLagrangianExclDeriv
 
