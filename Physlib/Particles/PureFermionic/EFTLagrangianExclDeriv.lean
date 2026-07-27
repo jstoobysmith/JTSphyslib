@@ -895,10 +895,11 @@ lemma coeff_eq_termOfList {s : Multiset FieldSpecification}
 
 lemma coeff_eq_exists_termOfList (s : Multiset FieldSpecification)
     (V : EFTLagrangianExclDeriv)  :
-    ∃ l, ∃ c : ℂ, coeff s V = c • termOfList l := by
+    ∃ l, ∃ c : ℂ, (coeff s V = c • termOfList l) ∧ Multiset.ofList l = s := by
   obtain ⟨c, hl⟩ := coeff_eq_termOfList V (s := s) (l := Multiset.toList s) (by simp)
   use Multiset.toList s
   use c
+  simp [hl]
 
 lemma coeff_monomial_selection_rule (g : SL(2, ℂ)) (σ : Equiv.Perm FieldSpecification)
     (d : FieldSpecification → ℂ) (hg : ∀ ψ, rep g [ψ]ₑ = d ψ • [σ ψ]ₑ)
@@ -1584,15 +1585,15 @@ lemma eq_sum_massDimCoeff (V : EFTLagrangianExclDeriv) :
 -/
 
 /-- The conjugate of a coefficient. -/
-def conjCoeff (s : Multiset FieldSpecification) (V : EFTLagrangianExclDeriv):
+def conjCoeffMap (s : Multiset FieldSpecification) (V : EFTLagrangianExclDeriv) :
     EFTLagrangianExclDeriv :=
   let c := Classical.choose (coeff_eq_termOfList V (s := s) (l := s.toList) (by simp))
   starRingEnd ℂ c • termOfList (s.toList.map conjugate).reverse
 
-lemma conjCoeff_of_eq_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification)
+lemma conjCoeffMap_of_eq_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification)
     (V : EFTLagrangianExclDeriv) (c : ℂ) (hl : Multiset.ofList l = s)
     (h : coeff s V = c • termOfList l) :
-    conjCoeff s V = starRingEnd ℂ c • termOfList (l.map conjugate).reverse := by
+    conjCoeffMap s V = starRingEnd ℂ c • termOfList (l.map conjugate).reverse := by
   obtain ⟨b, hb1, hb2⟩ := termOfList_perm_neq_zero (l1 := s.toList) (l2 := l)
     (by subst hl; rw [← Multiset.coe_eq_coe ]; simp)
   let c' :=  Classical.choose (coeff_eq_termOfList V (s := s) (l := s.toList) (by simp))
@@ -1612,9 +1613,174 @@ lemma conjCoeff_of_eq_termOfList (s : Multiset FieldSpecification) (l : List Fie
   · rw [termOfList_reverse_zero_of_zero (termOfList_conjugate_zero_of_zero h1)]
     simp
 
-lemma conjCoeff_add (s : Multiset FieldSpecification) (V W : EFTLagrangianExclDeriv) :
-    conjCoeff s (V + W) = conjCoeff s V + conjCoeff s W := by
-  sorry
+@[simp]
+lemma conjCoeffMap_add (s : Multiset FieldSpecification) (V W : EFTLagrangianExclDeriv) :
+    conjCoeffMap s (V + W) = conjCoeffMap s V + conjCoeffMap s W := by
+  obtain ⟨l, c, hV, hl⟩ := coeff_eq_exists_termOfList s V
+  obtain ⟨d, hW⟩ := coeff_eq_termOfList W hl
+  have hVW : coeff s (V + W) = (c + d) • termOfList l := by
+    simp [hV, hW, add_smul]
+  rw [conjCoeffMap_of_eq_termOfList s l (V + W) (c + d) hl hVW,
+    conjCoeffMap_of_eq_termOfList s l V c hl hV, conjCoeffMap_of_eq_termOfList s l W d hl hW]
+  simp [add_smul]
+
+@[simp]
+lemma conjCoeff_smul (s : Multiset FieldSpecification) (c : ℂ) (V : EFTLagrangianExclDeriv) :
+    conjCoeffMap s (c • V) = starRingEnd ℂ c • conjCoeffMap s V := by
+  obtain ⟨l, d, hV, hl⟩ := coeff_eq_exists_termOfList s V
+  have h : coeff s (c • V) = (c * d) • termOfList l := by
+    simp [hV, smul_smul]
+  rw [conjCoeffMap_of_eq_termOfList s l (c • V) (c * d) hl h,
+    conjCoeffMap_of_eq_termOfList s l V d hl hV]
+  simp [smul_smul]
+
+def conjCoeff (s : Multiset FieldSpecification) : EFTLagrangianExclDeriv →ₛₗ[starRingEnd ℂ] EFTLagrangianExclDeriv where
+  toFun := conjCoeffMap s
+  map_add' := conjCoeffMap_add s
+  map_smul' := conjCoeff_smul s
+
+lemma conjCoeff_of_eq_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification)
+    (V : EFTLagrangianExclDeriv) (c : ℂ) (hl : Multiset.ofList l = s)
+    (h : coeff s V = c • termOfList l) :
+    conjCoeff s V = starRingEnd ℂ c • termOfList (l.map conjugate).reverse := by
+  simp [conjCoeff, conjCoeffMap_of_eq_termOfList s l V c hl h]
+
+/-- The conjugate coefficient vanishes on field contents outside the support, since there
+  the coefficient itself is zero. -/
+lemma conjCoeff_eq_zero_of_not_mem_support {s : Multiset FieldSpecification}
+    {V : EFTLagrangianExclDeriv} (h : s ∉ support V) : conjCoeff s V = 0 := by
+  rw [conjCoeff_of_eq_termOfList s s.toList V 0 (by simp)
+    (by simp [coeff_eq_zero_of_not_mem_support h])]
+  simp
+
+lemma conjCoeff_termOfList (s : Multiset FieldSpecification) (l : List FieldSpecification) :
+    conjCoeff s (termOfList l) = if Multiset.ofList l = s then
+      termOfList (l.map conjugate).reverse else 0 := by
+  split_ifs with h
+  · have h0 : coeff s (termOfList l) = (1 : ℂ) • termOfList l := by
+      simp [coeff_apply_termOfList, h]
+    rw [conjCoeff_of_eq_termOfList s l (termOfList l) 1 h h0]
+    simp
+  · apply conjCoeff_eq_zero_of_not_mem_support
+    simp [mem_support_termOfList_iff]
+    grind
+
+def conjugate : EFTLagrangianExclDeriv →ₛₗ[starRingEnd ℂ] EFTLagrangianExclDeriv where
+  toFun := fun V => ∑ s ∈ support V, conjCoeff s V
+  map_add' := by
+    intro V W
+    rw [Finset.sum_subset support_add
+        (fun s _ hs => conjCoeff_eq_zero_of_not_mem_support hs),
+      Finset.sum_subset (Finset.subset_union_left (s₂ := support W))
+        (fun s _ hs => conjCoeff_eq_zero_of_not_mem_support hs),
+      Finset.sum_subset (Finset.subset_union_right (s₁ := support V))
+        (fun s _ hs => conjCoeff_eq_zero_of_not_mem_support hs)]
+    simp [map_add, Finset.sum_add_distrib]
+  map_smul' := by
+    intro c V
+    rw [Finset.sum_subset (support_smul c)
+        (fun s _ hs => conjCoeff_eq_zero_of_not_mem_support hs)]
+    simp [map_smulₛₗ, Finset.smul_sum]
+
+lemma conjugate_termOfList (l : List FieldSpecification) :
+    conjugate (termOfList l) = termOfList (l.map .conjugate).reverse := by
+  simp [conjugate, conjCoeff_termOfList, mem_support_termOfList_iff]
+  intro h
+  exact (termOfList_reverse_zero_of_zero (termOfList_conjugate_zero_of_zero h)).symm
+
+@[simp]
+lemma conjugate_one : conjugate 1 = 1 := by
+  trans conjugate (termOfList [])
+  · simp
+  rw [conjugate_termOfList]
+  simp
+
+/-!
+
+## IsReal condition
+
+-/
+
+def IsReal (V : EFTLagrangianExclDeriv) : Prop := conjugate V = V
+
+
+/-- The lemma expressing the form of an element of `EFTLagrangianExclDeriv`, if it is both
+  invariant under the Lorentz group and is real.
+
+  This expresses the EFT lagrangian in terms of the Majorana mass trem.  -/
+lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
+    IsInvariant V ∧ IsReal V ↔ ∃ c : ℝ, ∃ m0 : ℂ, ∃ ρ : ℝ, V = (c : ℂ) • 1 + m0 • ([ψ 0]ₑ * [ψ 1]ₑ) -
+      starRingEnd ℂ m0 • ([barψ 0]ₑ * [barψ 1]ₑ) +
+      (ρ : ℂ) • ([ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ) := by
+  have h_quartic : termOfList [ψ 1, ψ 0, barψ 1, barψ 0] = termOfList [ψ 0, ψ 1, barψ 0, barψ 1] := by
+      simp [termOfList, toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0) (barψ 1)]
+      simp [← mul_assoc, toEFTLagrangianExclDeriv_mul_anti_commute (ψ 0) (ψ 1)]
+  constructor
+  · rintro ⟨hi, hr⟩
+    rw [isInvariant_iff_eq_exists] at hi
+    obtain ⟨c, m0, m1, ρ, hV⟩ := hi
+    rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
+        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
+      show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+      show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV  ⊢
+    simp [IsReal, hV, conjugate_termOfList] at hr
+    have h0 := congr_arg (coeff 0) hr
+    have h1 := congr_arg (coeff {.ψ 0, .ψ 1}) hr
+    have h2 := congr_arg (coeff {.barψ 0, .barψ 1}) hr
+    have h3 := congr_arg (coeff {.ψ 0, .ψ 1, .barψ 0, .barψ 1}) hr
+    simp +decide [coeff_apply_termOfList, coeff_one] at h0 h1 h2 h3
+    have hc : c = (c.re : ℂ) := by rw [← propext (re_eq_ofReal_of_isSelfAdjoint h0)]
+    generalize c.re = c' at hc
+    use c', m0, ρ.re
+    rw [hV]
+    subst hc
+    simp
+    have hx : m1 • termOfList [barψ 0, barψ 1] = - starRingEnd ℂ m0 • termOfList [barψ 0, barψ 1] := by
+      rw [← h2]
+      simp [termOfList, FieldSpecification.conjugate,
+      toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0)]
+    rw [hx]
+    simp only [Fin.isValue, neg_smul]
+    suffices h : ρ • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] =
+        ρ.re • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] by
+      simp [h]
+      abel
+    suffices h : (ρ -  starRingEnd ℂ ρ ) • termOfList [ψ 0, ψ 1, barψ 0, barψ 1] = 0 by
+      simp at h
+      rcases h with (h0 | h1)
+      · have hρ : ρ = (ρ.re : ℂ) := by
+          rw [← propext (re_eq_ofReal_of_isSelfAdjoint _)]
+          rw [isSelfAdjoint_iff]
+          rw [starRingEnd_apply] at h0
+          grind
+        generalize ρ.re = ρ' at hρ
+        subst hρ
+        simp
+      · simp [h1]
+    simp [sub_smul, ← h3, FieldSpecification.conjugate]
+    simp [h_quartic]
+  · rintro ⟨c, m0, ρ, hV⟩
+    constructor
+    · rw [isInvariant_iff_eq_exists]
+      use (c : ℂ), m0, - starRingEnd ℂ m0, ρ
+      rw [hV]
+      simp
+      abel
+    · rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
+        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
+        show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
+        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+      subst hV
+      simp  [IsReal, -coe_smul, Fin.isValue, map_add, map_sub, LinearMap.map_smulₛₗ,
+        RingHomCompTriple.comp_apply, RingHom.id_apply, conjugate_termOfList,
+        FieldSpecification.conjugate, h_quartic]
+      simp [termOfList, toEFTLagrangianExclDeriv_mul_anti_commute (barψ 0) (barψ 1),
+        toEFTLagrangianExclDeriv_mul_anti_commute (ψ 0) (ψ 1)]
+      abel
+
+
+
+
 
 end EFTLagrangianExclDeriv
 
