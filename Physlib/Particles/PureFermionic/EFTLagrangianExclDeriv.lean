@@ -1422,13 +1422,8 @@ lemma eq_sum_irrepCoeff_of_isInvariant {V : EFTLagrangianExclDeriv} (hV : IsInva
       irrepCoeff {Irrep.barψ, Irrep.barψ} V +
       irrepCoeff {Irrep.ψ, Irrep.ψ, Irrep.barψ, Irrep.barψ} V := by
   nth_rewrite 1 [eq_sum_irrepCoeff_subset (irrepSupport_subset V)]
-  repeat rw [Finset.sum_insert (by decide)]
-  rw [Finset.sum_singleton]
-  rw [irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ} (by decide),
-    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.barψ} (by decide),
-    irrepCoeff_ψ_barψ_eq_zero_of_isInvariant hV,
-    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ, Irrep.barψ, Irrep.barψ} (by decide),
-    irrepCoeff_odd_eq_zero_of_isInvariant hV {Irrep.ψ, Irrep.ψ, Irrep.barψ} (by decide)]
+  simp +decide [Finset.sum_insert, Finset.sum_singleton, -Multiset.insert_eq_cons,
+    irrepCoeff_odd_eq_zero_of_isInvariant hV, irrepCoeff_ψ_barψ_eq_zero_of_isInvariant hV]
   abel
 
 /-- Only the terms whose field content is `Nodup` survive in `irrepCoeff i`, since a
@@ -1876,7 +1871,6 @@ lemma conjugate_one : conjugate 1 = 1 := by
 
 def IsReal (V : EFTLagrangianExclDeriv) : Prop := conjugate V = V
 
-
 /-- The lemma expressing the form of an element of `EFTLagrangianExclDeriv`, if it is both
   invariant under the Lorentz group and is real.
 
@@ -1892,10 +1886,7 @@ lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
   · rintro ⟨hi, hr⟩
     rw [isInvariant_iff_eq_exists] at hi
     obtain ⟨c, m0, m1, ρ, hV⟩ := hi
-    rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
-        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
-      show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
-      show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV  ⊢
+    simp [← termOfList_singleton, ← termOfList_append] at hV  ⊢
     simp [IsReal, hV, conjugate_termOfList] at hr
     have h0 := congr_arg (coeff 0) hr
     have h1 := congr_arg (coeff {.ψ 0, .ψ 1}) hr
@@ -1939,10 +1930,7 @@ lemma isInvariant_and_isReal_iff_eq_exists {V : EFTLagrangianExclDeriv} :
       rw [hV]
       simp
       abel
-    · rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
-        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
-        show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
-        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+    · simp only [← termOfList_singleton, ← termOfList_append] at hV
       subst hV
       simp  [IsReal, -coe_smul, Fin.isValue, map_add, map_sub, LinearMap.map_smulₛₗ,
         RingHomCompTriple.comp_apply, RingHom.id_apply, conjugate_termOfList,
@@ -1962,10 +1950,7 @@ lemma isInvariant_isReal_hasMassDimLE_four_iff_eq_exists {V : EFTLagrangianExclD
   · rintro ⟨hi, hr, hm⟩
     obtain ⟨c, m0, ρ, hV⟩ := (isInvariant_and_isReal_iff_eq_exists.mp ⟨hi, hr⟩)
     use c, m0
-    rw [show [ψ 0]ₑ * [ψ 1]ₑ * [barψ 0]ₑ * [barψ 1]ₑ =
-        termOfList [.ψ 0, .ψ 1, .barψ 0, .barψ 1] by simp [termOfList]; grind,
-        show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
-        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+    simp only [← termOfList_singleton, ← termOfList_append] at hV
     rw [hV]
     simp
     have hmass := massDimCoeff_eq_zero_of_hasMassDimLE hm (6 : ℕ) (by norm_num)
@@ -1973,8 +1958,7 @@ lemma isInvariant_isReal_hasMassDimLE_four_iff_eq_exists {V : EFTLagrangianExclD
     simp only [Nat.cast_ofNat, massDimensionNat_eq, Multiset.map_coe, List.map_const',
       Multiset.sum_coe, List.sum_replicate, smul_eq_mul, Nat.reduceMul] at h0
     simp +decide [hV, h0, massDimCoeff_one] at hmass
-    rw [show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
-        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]]
+    simp only [← termOfList_singleton, ← termOfList_append]
     rcases hmass with rfl | hmass
     · simp
     · simp [hmass]
@@ -1984,13 +1968,13 @@ lemma isInvariant_isReal_hasMassDimLE_four_iff_eq_exists {V : EFTLagrangianExclD
     · rw [isInvariant_and_isReal_iff_eq_exists]
       use c, m0, 0
       simp [hV]
-    · rw [show [ψ 0]ₑ * [ψ 1]ₑ = termOfList [.ψ 0, .ψ 1] by simp [termOfList],
-        show [barψ 0]ₑ * [barψ 1]ₑ = termOfList [.barψ 0, .barψ 1] by simp [termOfList]] at hV
+    · simp only [← termOfList_singleton, ← termOfList_append] at hV
       rw [hV]
       refine HasMassDimLE.sub
         (HasMassDimLE.add (HasMassDimLE.smul (HasMassDimLE.one ?_))
           (HasMassDimLE.smul (HasMassDimLE.termOfList ?_)))
         (HasMassDimLE.smul (HasMassDimLE.termOfList ?_)) <;> norm_num
+
 end EFTLagrangianExclDeriv
 
 end
