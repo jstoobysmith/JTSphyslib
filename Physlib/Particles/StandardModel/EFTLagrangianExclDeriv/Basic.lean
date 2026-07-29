@@ -495,6 +495,25 @@ lemma FieldGenerators.cScalar_isBoson (ϕ : ComplexScalarGenerator) :
 lemma FieldGenerators.fermion_isBoson (ϕ : FermionicGenerator) :
      (fermion ϕ).IsBoson = False := by simp [IsBoson]
 
+
+/-!
+
+## Irreps
+
+-/
+
+inductive Irrep
+  | cScalar (_ : ComplexScalarIrrep) : Irrep
+  | barCScalar (_ : ComplexScalarIrrep) : Irrep
+  | fermion (_ : FermionIrrep) : Irrep
+  | barFermion (_ : FermionIrrep) : Irrep
+
+def FieldGenerators.toIrrep : FieldGenerators → Irrep
+  | .cScalar (.of φ _) => .cScalar φ
+  | .cScalar (.bar φ _) => .barCScalar φ
+  | .fermion (.of φ _) => .fermion φ
+  | .fermion (.bar φ _) => .barFermion φ
+
 /-!
 
 ## A. The EFT lagrangian without derivatives

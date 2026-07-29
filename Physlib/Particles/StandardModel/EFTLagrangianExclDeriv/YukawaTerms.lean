@@ -425,6 +425,15 @@ lemma yukawaTermLeH_invariant (i j : Fin 3) : IsInvariant (yukawaTermLeH i j) :=
     · linear_combination -hK01
     · linear_combination -hK11
 
+def LEHSubModule (i j : Fin 3) : Submodule ℂ EFTLagrangianExclDeriv :=
+  Submodule.span ℂ (termOfList '' {l | (Multiset.ofList l).map FieldGenerators.toIrrep =
+  [Irrep.barFermion (FermionIrrep.L i), Irrep.fermion (FermionIrrep.e j),
+  Irrep.cScalar ComplexScalarIrrep.H]})
+
+lemma yukawaTermLeH_exclusive (i j : Fin 3)
+    (V : EFTLagrangianExclDeriv) (hV : V ∈ LEHSubModule i j)
+    (hI : IsInvariant V) : ∃ (c : ℂ), V = c • yukawaTermLeH i j := by
+  sorry
 end EFTLagrangianExclDeriv
 
 end
