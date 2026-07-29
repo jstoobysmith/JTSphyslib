@@ -112,6 +112,7 @@ public import Physlib.Mathematics.Geometry.Metric.Riemannian.Defs
 public import Physlib.Mathematics.InnerProductSpace.Adjoint
 public import Physlib.Mathematics.InnerProductSpace.Basic
 public import Physlib.Mathematics.InnerProductSpace.Calculus
+public import Physlib.Mathematics.InnerProductSpace.Gaussian
 public import Physlib.Mathematics.InnerProductSpace.Submodule
 public import Physlib.Mathematics.KroneckerDelta.Basic
 public import Physlib.Mathematics.KroneckerDelta.Contraction
@@ -188,7 +189,11 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lem
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.LinearParameterization
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
@@ -400,9 +405,12 @@ public import Physlib.Relativity.Tensors.Conjugation.Basic
 public import Physlib.Relativity.Tensors.Constructors
 public import Physlib.Relativity.Tensors.Contraction.Basic
 public import Physlib.Relativity.Tensors.Contraction.Basis
+public import Physlib.Relativity.Tensors.Contraction.CrossToEnd
+public import Physlib.Relativity.Tensors.Contraction.CrossToSlot
 public import Physlib.Relativity.Tensors.Contraction.Products
 public import Physlib.Relativity.Tensors.Contraction.Pure
 public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
+public import Physlib.Relativity.Tensors.Contraction.UnitTensorContraction
 public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
 public import Physlib.Relativity.Tensors.Evaluation
