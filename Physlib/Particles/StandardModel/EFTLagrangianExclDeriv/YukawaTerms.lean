@@ -425,15 +425,391 @@ lemma yukawaTermLeH_invariant (i j : Fin 3) : IsInvariant (yukawaTermLeH i j) :=
     · linear_combination -hK01
     · linear_combination -hK11
 
+/-!
+
+## Exclusivity of the `L`, `e`, `H` Yukawa term
+
+The submodule of the EFT lagrangian spanned by the terms with irrep content
+`{bar L i, e j, H}` is spanned by the sixteen monomials
+`[bar L i (α, a)]ₑ * [e j β]ₑ * [H c]ₛ`. We construct linear functionals
+extracting the coefficient of each monomial, and use invariance under specific
+group elements to show that any invariant element of this submodule is
+proportional to `yukawaTermLeH`.
+
+-/
+
+/-- The index of a monomial in the `L`, `e`, `H` sector: the components
+  `(α, a)` of `bar L`, `β` of `e` and `c` of `H`. -/
+abbrev LEHIndex : Type := (Fin 2 × Fin 2) × Fin 2 × Fin 2
+
+/-- The monomial `[bar L i (α, a)]ₑ * [e j β]ₑ * [H c]ₛ` of the `L`, `e`, `H`
+  sector associated with an index `((α, a), β, c)`. -/
+def lehMonomial (i j : Fin 3) (m : LEHIndex) : EFTLagrangianExclDeriv :=
+  [FermionicGenerator.bar (.L i) m.1]ₑ * [FermionicGenerator.of (.e j) m.2.1]ₑ *
+    [ComplexScalarGenerator.of .H m.2.2]ₛ
+
+lemma yukawaTermLeH_eq_sum_lehMonomial (i j : Fin 3) :
+    yukawaTermLeH i j = ∑ α, ∑ β, ∑ a, metricRaw α β • lehMonomial i j ((α, a), β, a) := rfl
+
+lemma lehMonomial_eq_tmul (i j : Fin 3) (m : LEHIndex) :
+    lehMonomial i j m =
+      SymmetricAlgebra.ι ℂ _ (complexScalarComponentBasis (.of .H m.2.2)) ⊗ₜ[ℂ]
+        (ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.bar (.L i) m.1)) *
+          ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.of (.e j) m.2.1))) := by
+  simp [lehMonomial, ofFieldGenerators, Algebra.TensorProduct.tmul_mul_tmul]
+
+/-- The linear functional on the bosonic factor extracting the coefficient of
+  the degree-one monomial `SymmetricAlgebra.ι (complexScalarComponentBasis (.of .H c))`,
+  through the identification of the symmetric algebra with multivariate polynomials. -/
+def lehCoeffS (c : Fin 2) : ComplexScalarEFTExclDeriv →ₗ[ℂ] ℂ :=
+  MvPolynomial.lcoeff ℂ (Finsupp.single (ComplexScalarGenerator.of .H c) 1) ∘ₗ
+    (SymmetricAlgebra.equivMvPolynomial complexScalarComponentBasis).toLinearMap
+
+lemma lehCoeffS_apply_ι (c c' : Fin 2) :
+    lehCoeffS c (SymmetricAlgebra.ι ℂ _ (complexScalarComponentBasis (.of .H c'))) =
+      if c' = c then 1 else 0 := by
+  simp only [lehCoeffS, LinearMap.coe_comp, Function.comp_apply, AlgEquiv.toLinearMap_apply,
+    SymmetricAlgebra.equivMvPolynomial_ι_apply, MvPolynomial.lcoeff_apply, MvPolynomial.coeff_X]
+  simp only [Finsupp.single_eq_single_iff, ComplexScalarGenerator.of.injEq, one_ne_zero,
+    and_false, or_false, true_and]
+  split_ifs <;> simp_all
+
+/-- The linear functional on the fermionic factor extracting the coefficient of the
+  quadratic monomial `ι (bar L i (α, a)) * ι (e j β)`, built from the degree-two
+  alternating map given by the determinant of the pair of coordinate functionals. -/
+def lehCoeffE (i j : Fin 3) (α a β : Fin 2) : FermionicEFTExclDeriv →ₗ[ℂ] ℂ :=
+  ExteriorAlgebra.liftAlternating fun n =>
+    match n with
+    | 2 => (Matrix.detRowAlternating (n := Fin 2) (R := ℂ)).compLinearMap
+        (LinearMap.pi ![fermionicComponentBasis.coord (.bar (.L i) (α, a)),
+          fermionicComponentBasis.coord (.of (.e j) β)])
+    | _ => 0
+
+lemma lehCoeffE_apply_ι_mul_ι (i j : Fin 3) (α a β α' a' β' : Fin 2) :
+    lehCoeffE i j α a β (ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.bar (.L i) (α', a'))) *
+      ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.of (.e j) β'))) =
+      if (α', a') = (α, a) ∧ β' = β then 1 else 0 := by
+  have h2 : ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.bar (.L i) (α', a'))) *
+      ExteriorAlgebra.ι ℂ (fermionicComponentBasis (.of (.e j) β')) =
+      ExteriorAlgebra.ιMulti ℂ 2 ![fermionicComponentBasis (.bar (.L i) (α', a')),
+        fermionicComponentBasis (.of (.e j) β')] := by
+    simp [ExteriorAlgebra.ιMulti_apply]
+  rw [h2, lehCoeffE, ExteriorAlgebra.liftAlternating_apply_ιMulti]
+  simp only [AlternatingMap.compLinearMap_apply]
+  show Matrix.det _ = _
+  rw [Matrix.det_fin_two]
+  simp only [LinearMap.pi_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Basis.coord_apply,
+    Basis.repr_self, Finsupp.single_apply, Fin.isValue]
+  simp only [FermionicGenerator.bar.injEq, FermionicGenerator.of.injEq, heq_eq_eq,
+    reduceCtorEq, if_false, mul_zero, sub_zero, true_and]
+  split_ifs <;> simp_all
+
+/-- The linear functional on `EFTLagrangianExclDeriv` extracting the coefficient of
+  the monomial `lehMonomial i j m`. -/
+def lehCoeff (i j : Fin 3) (m : LEHIndex) : EFTLagrangianExclDeriv →ₗ[ℂ] ℂ :=
+  (TensorProduct.lid ℂ ℂ).toLinearMap ∘ₗ
+    TensorProduct.map (lehCoeffS m.2.2) (lehCoeffE i j m.1.1 m.1.2 m.2.1)
+
+lemma lehCoeff_apply_lehMonomial (i j : Fin 3) (m m' : LEHIndex) :
+    lehCoeff i j m (lehMonomial i j m') = if m' = m then 1 else 0 := by
+  obtain ⟨⟨α, a⟩, β, c⟩ := m
+  obtain ⟨⟨α', a'⟩, β', c'⟩ := m'
+  rw [lehMonomial_eq_tmul]
+  simp only [lehCoeff, LinearMap.coe_comp, Function.comp_apply, TensorProduct.map_tmul,
+    LinearEquiv.coe_coe, TensorProduct.lid_tmul, lehCoeffS_apply_ι, lehCoeffE_apply_ι_mul_ι,
+    smul_eq_mul, Prod.mk.injEq]
+  split_ifs <;> simp_all
+
+lemma lehCoeff_apply_sum (i j : Fin 3) (f : LEHIndex → ℂ) (m : LEHIndex) :
+    lehCoeff i j m (∑ m', f m' • lehMonomial i j m') = f m := by
+  rw [map_sum]
+  simp [lehCoeff_apply_lehMonomial, mul_ite]
+
+lemma eq_sum_lehCoeff_of_mem_span (i j : Fin 3) (V : EFTLagrangianExclDeriv)
+    (hV : V ∈ Submodule.span ℂ (Set.range (lehMonomial i j))) :
+    V = ∑ m, lehCoeff i j m V • lehMonomial i j m := by
+  induction hV using Submodule.span_induction with
+  | mem x hx =>
+    obtain ⟨m', rfl⟩ := hx
+    simp [lehCoeff_apply_lehMonomial, ite_smul, Finset.sum_ite_eq]
+  | zero => simp
+  | add x y hx hy ihx ihy =>
+    conv_lhs => rw [ihx, ihy]
+    simp [map_add, add_smul, Finset.sum_add_distrib]
+  | smul c x hx ih =>
+    conv_lhs => rw [ih]
+    simp [map_smul, smul_smul, Finset.smul_sum]
+
 def LEHSubModule (i j : Fin 3) : Submodule ℂ EFTLagrangianExclDeriv :=
   Submodule.span ℂ (termOfList '' {l | (Multiset.ofList l).map FieldGenerators.toIrrep =
   [Irrep.barFermion (FermionIrrep.L i), Irrep.fermion (FermionIrrep.e j),
   Irrep.cScalar ComplexScalarIrrep.H]})
 
+lemma toIrrep_eq_barFermion_iff (g : FieldGenerators) (φ : FermionIrrep) :
+    g.toIrrep = Irrep.barFermion φ ↔ ∃ p, g = FieldGenerators.fermion (.bar φ p) := by
+  match g with
+  | .cScalar (.of φ' p) => simp [FieldGenerators.toIrrep]
+  | .cScalar (.bar φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.of φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.bar φ' p) =>
+    simp only [FieldGenerators.toIrrep, Irrep.barFermion.injEq]
+    constructor
+    · intro h
+      subst h
+      exact ⟨p, rfl⟩
+    · rintro ⟨p', h⟩
+      simp only [FieldGenerators.fermion.injEq, FermionicGenerator.bar.injEq] at h
+      exact h.1
+
+lemma toIrrep_eq_fermion_iff (g : FieldGenerators) (φ : FermionIrrep) :
+    g.toIrrep = Irrep.fermion φ ↔ ∃ p, g = FieldGenerators.fermion (.of φ p) := by
+  match g with
+  | .cScalar (.of φ' p) => simp [FieldGenerators.toIrrep]
+  | .cScalar (.bar φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.bar φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.of φ' p) =>
+    simp only [FieldGenerators.toIrrep, Irrep.fermion.injEq]
+    constructor
+    · intro h
+      subst h
+      exact ⟨p, rfl⟩
+    · rintro ⟨p', h⟩
+      simp only [FieldGenerators.fermion.injEq, FermionicGenerator.of.injEq] at h
+      exact h.1
+
+lemma toIrrep_eq_cScalar_iff (g : FieldGenerators) (φ : ComplexScalarIrrep) :
+    g.toIrrep = Irrep.cScalar φ ↔ ∃ p, g = FieldGenerators.cScalar (.of φ p) := by
+  match g with
+  | .cScalar (.bar φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.of φ' p) => simp [FieldGenerators.toIrrep]
+  | .fermion (.bar φ' p) => simp [FieldGenerators.toIrrep]
+  | .cScalar (.of φ' p) =>
+    cases φ
+    cases φ'
+    simp only [FieldGenerators.toIrrep]
+    exact ⟨fun _ => ⟨p, rfl⟩, fun _ => trivial⟩
+
+lemma exists_perm_of_mem_LEH_set (i j : Fin 3) (l : List FieldGenerators)
+    (hl : (Multiset.ofList l).map FieldGenerators.toIrrep =
+      ([Irrep.barFermion (FermionIrrep.L i), Irrep.fermion (FermionIrrep.e j),
+        Irrep.cScalar ComplexScalarIrrep.H] : Multiset Irrep)) :
+    ∃ m : LEHIndex, l.Perm [.fermion (.bar (.L i) m.1), .fermion (.of (.e j) m.2.1),
+      .cScalar (.of .H m.2.2)] := by
+  rw [show ([Irrep.barFermion (FermionIrrep.L i), Irrep.fermion (FermionIrrep.e j),
+      Irrep.cScalar ComplexScalarIrrep.H] : Multiset Irrep) =
+    Irrep.barFermion (FermionIrrep.L i) ::ₘ Irrep.fermion (FermionIrrep.e j) ::ₘ
+      {Irrep.cScalar ComplexScalarIrrep.H} from rfl] at hl
+  obtain ⟨g1, hg1m, hg1, h2⟩ := (Multiset.map_eq_cons _ _ _ _).mpr hl
+  obtain ⟨g2, hg2m, hg2, h3⟩ := (Multiset.map_eq_cons _ _ _ _).mpr h2
+  obtain ⟨g3, h4, hg3⟩ := Multiset.map_eq_singleton.mp h3
+  obtain ⟨p, rfl⟩ := (toIrrep_eq_barFermion_iff g1 _).mp hg1
+  obtain ⟨q, rfl⟩ := (toIrrep_eq_fermion_iff g2 _).mp hg2
+  obtain ⟨r, rfl⟩ := (toIrrep_eq_cScalar_iff g3 _).mp hg3
+  refine ⟨(p, q, r), Multiset.coe_eq_coe.mp ?_⟩
+  rw [← Multiset.cons_erase hg1m, ← Multiset.cons_erase hg2m, h4]
+  rfl
+
+lemma termOfList_canonical (i j : Fin 3) (m : LEHIndex) :
+    termOfList [.fermion (.bar (.L i) m.1), .fermion (.of (.e j) m.2.1),
+      .cScalar (.of .H m.2.2)] = lehMonomial i j m := by
+  simp [termOfList, lehMonomial, mul_assoc]
+
+lemma LEHSubModule_le_span (i j : Fin 3) :
+    LEHSubModule i j ≤ Submodule.span ℂ (Set.range (lehMonomial i j)) := by
+  rw [LEHSubModule]
+  refine Submodule.span_le.mpr ?_
+  rintro x ⟨l, hl, rfl⟩
+  obtain ⟨m, hperm⟩ := exists_perm_of_mem_LEH_set i j l hl
+  obtain ⟨c, hc, _⟩ := termOfList_perm hperm
+  rw [hc, termOfList_canonical]
+  exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨m, rfl⟩)
+
+/-!
+
+### Specific group elements used to constrain the coefficients
+
+-/
+
+/-- The diagonal Lorentz transformation `diag (2, 2⁻¹)`. -/
+def lorentzDiag : SL(2,ℂ) := ⟨!![2, 0; 0, 2⁻¹], by simp [Matrix.det_fin_two_of]⟩
+
+/-- The off-diagonal Lorentz transformation `!![0, 1; -1, 0]`. -/
+def lorentzSwap : SL(2,ℂ) := ⟨!![0, 1; -1, 0], by simp [Matrix.det_fin_two_of]⟩
+
+lemma lorentzDiag_inv_coe : (lorentzDiag⁻¹).1 = !![2⁻¹, 0; 0, 2] := by
+  rw [Matrix.SpecialLinearGroup.coe_inv]
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+    simp [lorentzDiag, Matrix.adjugate_fin_two]
+
+lemma lorentzSwap_inv_coe : (lorentzSwap⁻¹).1 = !![0, -1; 1, 0] := by
+  rw [Matrix.SpecialLinearGroup.coe_inv]
+  ext a b
+  fin_cases a <;> fin_cases b <;>
+    simp [lorentzSwap, Matrix.adjugate_fin_two]
+
+/-- The gauge transformation with `SU(2)` part `diag (I, -I)`. -/
+def gaugeDiag : GaugeGroupI :=
+  (1, ⟨!![I, 0; 0, -I], by
+    rw [Matrix.mem_specialUnitaryGroup_iff]
+    constructor
+    · rw [Matrix.mem_unitaryGroup_iff]
+      ext a b
+      fin_cases a <;> fin_cases b <;>
+        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
+          Matrix.conjTranspose_apply]
+    · simp [Matrix.det_fin_two_of]⟩, 1)
+
+/-- The gauge transformation with `SU(2)` part `!![0, 1; -1, 0]`. -/
+def gaugeSwap : GaugeGroupI :=
+  (1, ⟨!![0, 1; -1, 0], by
+    rw [Matrix.mem_specialUnitaryGroup_iff]
+    constructor
+    · rw [Matrix.mem_unitaryGroup_iff]
+      ext a b
+      fin_cases a <;> fin_cases b <;>
+        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
+          Matrix.conjTranspose_apply]
+    · simp [Matrix.det_fin_two_of]⟩, 1)
+
+lemma repLorentzGroup_lorentzDiag_lehMonomial (i j : Fin 3) (m : LEHIndex) :
+    repLorentzGroup lorentzDiag (lehMonomial i j m) =
+      ((![2⁻¹, 2] : Fin 2 → ℂ) m.1.1 * ![2⁻¹, 2] m.2.1) • lehMonomial i j m := by
+  obtain ⟨⟨α, a⟩, β, c⟩ := m
+  simp only [lehMonomial, repLorentzGroup_mul, repLorentzGroup_apply_bar_L,
+    repLorentzGroup_apply_of_e, repLorentzGroup_apply_of_H, lorentzDiag_inv_coe]
+  fin_cases α <;> fin_cases β <;>
+    simp [Fin.sum_univ_two, smul_mul_assoc, mul_smul_comm,
+      smul_smul, Complex.conj_ofNat, one_smul]
+
+lemma repLorentzGroup_lorentzSwap_lehMonomial (i j : Fin 3) (m : LEHIndex) :
+    repLorentzGroup lorentzSwap (lehMonomial i j m) =
+      ((![-1, 1] : Fin 2 → ℂ) m.1.1 * ![-1, 1] m.2.1) •
+        lehMonomial i j ((![1, 0] m.1.1, m.1.2), ![1, 0] m.2.1, m.2.2) := by
+  obtain ⟨⟨α, a⟩, β, c⟩ := m
+  simp only [lehMonomial, repLorentzGroup_mul, repLorentzGroup_apply_bar_L,
+    repLorentzGroup_apply_of_e, repLorentzGroup_apply_of_H, lorentzSwap_inv_coe]
+  fin_cases α <;> fin_cases β <;>
+    simp [Fin.sum_univ_two, smul_mul_assoc, mul_smul_comm,
+      smul_smul, mul_comm, one_smul]
+
+lemma repGaugeGroupI_gaugeDiag_lehMonomial (i j : Fin 3) (m : LEHIndex) :
+    repGaugeGroupI gaugeDiag (lehMonomial i j m) =
+      ((![I, -I] : Fin 2 → ℂ) m.1.2 * ![-I, I] m.2.2) • lehMonomial i j m := by
+  obtain ⟨⟨α, a⟩, β, c⟩ := m
+  simp only [lehMonomial, repGaugeGroupI_mul, repGaugeGroupI_apply_bar_L,
+    repGaugeGroupI_apply_of_e, repGaugeGroupI_apply_of_H]
+  have hU1 : (GaugeGroupI.toU1 gaugeDiag).1 = 1 := rfl
+  have hSU2 : (GaugeGroupI.toSU2 gaugeDiag).1 = !![I, 0; 0, -I] := rfl
+  rw [hU1, hSU2]
+  fin_cases a <;> fin_cases c <;>
+    simp [Fin.sum_univ_two, smul_mul_assoc, mul_smul_comm,
+      smul_smul, mul_comm, neg_smul, one_smul] <;>
+    module
+
+lemma repGaugeGroupI_gaugeSwap_lehMonomial (i j : Fin 3) (m : LEHIndex) :
+    repGaugeGroupI gaugeSwap (lehMonomial i j m) =
+      ((![-1, 1] : Fin 2 → ℂ) m.1.2 * ![-1, 1] m.2.2) •
+        lehMonomial i j ((m.1.1, ![1, 0] m.1.2), m.2.1, ![1, 0] m.2.2) := by
+  obtain ⟨⟨α, a⟩, β, c⟩ := m
+  simp only [lehMonomial, repGaugeGroupI_mul, repGaugeGroupI_apply_bar_L,
+    repGaugeGroupI_apply_of_e, repGaugeGroupI_apply_of_H]
+  have hU1 : (GaugeGroupI.toU1 gaugeSwap).1 = 1 := rfl
+  have hSU2 : (GaugeGroupI.toSU2 gaugeSwap).1 = !![0, 1; -1, 0] := rfl
+  rw [hU1, hSU2]
+  fin_cases a <;> fin_cases c <;>
+    simp [Fin.sum_univ_two, smul_mul_assoc, mul_smul_comm,
+      smul_smul, mul_comm, one_smul]
+
 lemma yukawaTermLeH_exclusive (i j : Fin 3)
     (V : EFTLagrangianExclDeriv) (hV : V ∈ LEHSubModule i j)
     (hI : IsInvariant V) : ∃ (c : ℂ), V = c • yukawaTermLeH i j := by
-  sorry
+  have hVexp : V = ∑ m, lehCoeff i j m V • lehMonomial i j m :=
+    eq_sum_lehCoeff_of_mem_span i j V (LEHSubModule_le_span i j hV)
+  -- The diagonal Lorentz transformation scales each monomial.
+  have hLD : ∀ m : LEHIndex,
+      lehCoeff i j m V * ((![2⁻¹, 2] : Fin 2 → ℂ) m.1.1 * ![2⁻¹, 2] m.2.1) =
+        lehCoeff i j m V := by
+    intro m
+    have h := congrArg (lehCoeff i j m) (hI.1 lorentzDiag)
+    conv at h => lhs; rw [hVexp]
+    simpa only [map_sum, map_smul, repLorentzGroup_lorentzDiag_lehMonomial, smul_smul,
+      lehCoeff_apply_lehMonomial, smul_eq_mul, mul_ite, mul_one, mul_zero,
+      Finset.sum_ite_eq, Finset.sum_ite_eq', Finset.mem_univ, if_true] using h
+  -- The diagonal gauge transformation scales each monomial.
+  have hGD : ∀ m : LEHIndex,
+      lehCoeff i j m V * ((![I, -I] : Fin 2 → ℂ) m.1.2 * ![-I, I] m.2.2) =
+        lehCoeff i j m V := by
+    intro m
+    have h := congrArg (lehCoeff i j m) (hI.2 gaugeDiag)
+    conv at h => lhs; rw [hVexp]
+    simpa only [map_sum, map_smul, repGaugeGroupI_gaugeDiag_lehMonomial, smul_smul,
+      lehCoeff_apply_lehMonomial, smul_eq_mul, mul_ite, mul_one, mul_zero,
+      Finset.sum_ite_eq, Finset.sum_ite_eq', Finset.mem_univ, if_true] using h
+  -- Coefficients with equal Lorentz indices vanish.
+  have hz00 : ∀ a c : Fin 2, lehCoeff i j ((0, a), 0, c) V = 0 := by
+    intro a c
+    have h := hLD ((0, a), 0, c)
+    simp only [Matrix.cons_val_zero] at h
+    linear_combination (-(4 : ℂ)/3) * h
+  have hz11 : ∀ a c : Fin 2, lehCoeff i j ((1, a), 1, c) V = 0 := by
+    intro a c
+    have h := hLD ((1, a), 1, c)
+    simp only [Matrix.cons_val_one, Matrix.cons_val_fin_one] at h
+    linear_combination ((1 : ℂ)/3) * h
+  -- Coefficients with different weak isospin indices vanish.
+  have hza01 : ∀ α β : Fin 2, lehCoeff i j ((α, 0), β, 1) V = 0 := by
+    intro α β
+    have h := hGD ((α, 0), β, 1)
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one, Complex.I_mul_I] at h
+    linear_combination (-(1 : ℂ)/2) * h
+  have hza10 : ∀ α β : Fin 2, lehCoeff i j ((α, 1), β, 0) V = 0 := by
+    intro α β
+    have h := hGD ((α, 1), β, 0)
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one, neg_mul_neg, Complex.I_mul_I] at h
+    linear_combination (-(1 : ℂ)/2) * h
+  -- The off-diagonal Lorentz transformation relates the two `ε` components.
+  have hr1 : lehCoeff i j ((1, 0), 0, 0) V = -lehCoeff i j ((0, 0), 1, 0) V := by
+    have h := congrArg (lehCoeff i j ((1, 0), 0, 0)) (hI.1 lorentzSwap)
+    conv at h => lhs; rw [hVexp]
+    simp only [map_sum, map_smul, repLorentzGroup_lorentzSwap_lehMonomial, smul_smul,
+      lehCoeff_apply_lehMonomial, smul_eq_mul, mul_ite, mul_one, mul_zero] at h
+    simp only [Fintype.sum_prod_type, Fin.sum_univ_two, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one] at h
+    simp at h
+    linear_combination -h
+  have hr2 : lehCoeff i j ((1, 1), 0, 1) V = -lehCoeff i j ((0, 1), 1, 1) V := by
+    have h := congrArg (lehCoeff i j ((1, 1), 0, 1)) (hI.1 lorentzSwap)
+    conv at h => lhs; rw [hVexp]
+    simp only [map_sum, map_smul, repLorentzGroup_lorentzSwap_lehMonomial, smul_smul,
+      lehCoeff_apply_lehMonomial, smul_eq_mul, mul_ite, mul_one, mul_zero] at h
+    simp only [Fintype.sum_prod_type, Fin.sum_univ_two, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one] at h
+    simp at h
+    linear_combination -h
+  -- The off-diagonal gauge transformation relates the two isospin components.
+  have hr3 : lehCoeff i j ((0, 1), 1, 1) V = lehCoeff i j ((0, 0), 1, 0) V := by
+    have h := congrArg (lehCoeff i j ((0, 1), 1, 1)) (hI.2 gaugeSwap)
+    conv at h => lhs; rw [hVexp]
+    simp only [map_sum, map_smul, repGaugeGroupI_gaugeSwap_lehMonomial, smul_smul,
+      lehCoeff_apply_lehMonomial, smul_eq_mul, mul_ite, mul_one, mul_zero] at h
+    simp only [Fintype.sum_prod_type, Fin.sum_univ_two, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one] at h
+    simp at h
+    linear_combination -h
+  -- Assemble.
+  refine ⟨lehCoeff i j ((0, 0), 1, 0) V, ?_⟩
+  conv_lhs => rw [hVexp]
+  rw [yukawaTermLeH_eq_sum_lehMonomial]
+  simp only [Fintype.sum_prod_type, Fin.sum_univ_two]
+  rw [hr1, hr2, hr3]
+  simp only [hz00, hz11, hza01, hza10, zero_smul, add_zero, zero_add]
+  simp only [metricRaw, Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.empty_val', Matrix.cons_val_fin_one,
+    zero_smul, one_smul, add_zero, zero_add]
+  module
 end EFTLagrangianExclDeriv
 
 end
