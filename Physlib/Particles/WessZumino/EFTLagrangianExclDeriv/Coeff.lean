@@ -289,4 +289,4 @@ def coeff (s : Multiset FieldGenerators) : EFTLagrangianExclDeriv →ₗ[ℂ] EF
 
 end CoeffSubmodule
 
-end EFTLagrangianExclDeriv
+end
