@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith, Jinzheng Li, Nathaneal Sajan
 -/
 module
 
+public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Relativity.Fermions.Weyl.Metric
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet
@@ -289,6 +290,21 @@ def ComplexScalarIrrep.basis  : (φ : ComplexScalarIrrep) →
 
 def ComplexScalarIrrep.repLorentzGroup : (φ : ComplexScalarIrrep) → Representation ℂ SL(2,ℂ) (ComplexScalarIrrep.module φ)
   | .H => Representation.trivial ℂ SL(2,ℂ) HiggsVec
+
+
+@[reducible]
+def StandardModelLT : LagrangianTheory GaugeGroupI where
+  FermionIrreps := FermionIrrep
+  fermionComponents := FermionIrrep.components
+  fermionModule := FermionIrrep.module
+  fermionBasis := FermionIrrep.basis
+  fermionRepLorentzGroup := FermionIrrep.repLorentzGroup
+  fermionRepGaugeGroup := FermionIrrep.repGaugeGroupI
+  ComplexScalarIrreps := ComplexScalarIrrep
+  complexScalarComponents := ComplexScalarIrrep.components
+  complexScalarModule := ComplexScalarIrrep.module
+  complexScalarBasis := ComplexScalarIrrep.basis
+  complexScalarRepLorentzGroup := ComplexScalarIrrep.repLorentzGroup
 
 /-!
 
