@@ -194,8 +194,14 @@ TODO "Change the action of `GaugeGroupI` on `HiggsVec` to be a representation
 instance : SMulCommClass ℂ GaugeGroupI HiggsVec where
   smul_comm r g φ := by simp [gaugeGroupI_smul_eq, mulVec_smul, smul_comm r]
 
+instance : SMulCommClass GaugeGroupI ℂ HiggsVec :=
+  SMulCommClass.symm ℂ GaugeGroupI HiggsVec
+
 instance : SMulCommClass ℝ GaugeGroupI HiggsVec where
   smul_comm r g φ := by simp [gaugeGroupI_smul_eq, mulVec_smul, smul_comm r]
+
+def repGaugeGroupI : Representation ℂ GaugeGroupI HiggsVec :=
+  Representation.ofDistribMulAction ℂ GaugeGroupI HiggsVec
 
 /-!
 

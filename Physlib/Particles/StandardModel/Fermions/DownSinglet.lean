@@ -108,6 +108,17 @@ lemma val_smul (r : ℂ) (d : DownSinglet) : (r • d).val = r • d.val := rfl
 
 /-!
 
+## The basis of the down-singlet space
+
+-/
+
+/-- A basis on the down singlets. -/
+noncomputable def basis : Module.Basis (Fin 2 × Fin 3) ℂ DownSinglet :=
+  (Fermion.RightHandedWeyl.basis.tensorProduct
+    (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).map valLinEquiv.symm
+
+/-!
+
 ## C. Lorentz action
 
 The Lorentz group acts on the right-handed Weyl factor and leaves the colour index fixed.

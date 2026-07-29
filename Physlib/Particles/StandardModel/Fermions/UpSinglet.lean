@@ -77,6 +77,17 @@ lemma val_smul (r : ℂ) (q : UpSinglet) : (r • q).val = r • q.val := rfl
 
 /-!
 
+## The basis of the up-singlet space
+
+-/
+
+/-- A basis on the up singlets. -/
+noncomputable def basis : Module.Basis (Fin 2 × Fin 3) ℂ UpSinglet :=
+  (Fermion.RightHandedWeyl.basis.tensorProduct
+    (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).map valLinEquiv.symm
+
+/-!
+
 ## Lorentz group representation
 
 -/

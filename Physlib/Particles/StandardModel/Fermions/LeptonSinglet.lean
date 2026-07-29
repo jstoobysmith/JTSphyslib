@@ -104,6 +104,16 @@ lemma val_smul (r : ℂ) (l : LeptonSinglet) : (r • l).val = r • l.val := rf
 
 /-!
 
+## The basis of the charged-lepton-singlet space
+
+-/
+
+/-- A basis on the charged-lepton singlets. -/
+noncomputable def basis : Module.Basis (Fin 2) ℂ LeptonSinglet :=
+  Fermion.RightHandedWeyl.basis.map valLinEquiv.symm
+
+/-!
+
 ## C. Lorentz action
 
 The Lorentz group acts through the right-handed Weyl representation, transported along the

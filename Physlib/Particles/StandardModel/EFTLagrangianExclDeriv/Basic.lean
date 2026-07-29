@@ -6,6 +6,12 @@ Authors: Joseph Tooby-Smith, Jinzheng Li, Nathaneal Sajan
 module
 
 public import Physlib.Relativity.Fermions.Weyl.Metric
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet
+public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Mathematics.ConjModule
@@ -19,23 +25,15 @@ public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.Algebra.MvPolynomial.PDeriv
 /-!
 
-# The Wess-Zumino EFT Lagrangian without derivatives
+# The Standard Model EFT Lagrangian without derivatives
 
 ## i. Overview
-
-The Wess-Zumino theory is a simple field theory consisting
-of a single left-handed Weyl fermion and a single complex scalar field.
-Sometimes the complex scalar field is replaced by a pair of real scalar fields.
-
-The theory is of physical interest, because it simple example of a theory
-permitting a supersymmetry. In this file we don't consider the supersymmetric nature
-of the theory.
 
 -/
 
 @[expose] public section
 
-namespace WessZumino
+namespace StandardModel
 noncomputable section
 
 open Module Matrix
@@ -62,33 +60,81 @@ For the Wess-Zumino theory there is a single left-handed Weyl fermion.
 /-- The irreducible representations of the fermion field
   under the Lorentz group. -/
 inductive FermionIrrep
-  | ψ : FermionIrrep
+  | Q (i : Fin 3) : FermionIrrep
+  | u (i : Fin 3) : FermionIrrep
+  | d (i : Fin 3) : FermionIrrep
+  | L (i : Fin 3) : FermionIrrep
+  | e (i : Fin 3) : FermionIrrep
 deriving DecidableEq, Fintype
 
+/-- The components of each of the irreducible Fermionic representations
+  appearing in the Standard model. The components are ordered by
+  `Lorentz - SU(3) - SU(2)`. -/
 def FermionIrrep.components : FermionIrrep → Type
-  | .ψ => Fin 2
+  | .Q _ => Fin 2 × Fin 3 × Fin 2
+  | .u _ => Fin 2 × Fin 3
+  | .d _ => Fin 2 × Fin 3
+  | .L _ => Fin 2 × Fin 2
+  | .e _ => Fin 2
 
 instance : (φ : FermionIrrep) → Fintype (FermionIrrep.components φ)
-  | .ψ => inferInstanceAs (Fintype (Fin 2))
+  | .Q _ => inferInstanceAs (Fintype (Fin 2 × Fin 3 × Fin 2))
+  | .u _ => inferInstanceAs (Fintype (Fin 2 × Fin 3))
+  | .d _ => inferInstanceAs (Fintype (Fin 2 × Fin 3))
+  | .L _ => inferInstanceAs (Fintype (Fin 2 × Fin 2))
+  | .e _ => inferInstanceAs (Fintype (Fin 2))
 
 instance : (φ : FermionIrrep) → DecidableEq (FermionIrrep.components φ)
-  | .ψ => inferInstanceAs (DecidableEq (Fin 2))
+  | .Q _ => inferInstanceAs (DecidableEq (Fin 2 × Fin 3 × Fin 2))
+  | .u _ => inferInstanceAs (DecidableEq (Fin 2 × Fin 3))
+  | .d _ => inferInstanceAs (DecidableEq (Fin 2 × Fin 3))
+  | .L _ => inferInstanceAs (DecidableEq (Fin 2 × Fin 2))
+  | .e _ => inferInstanceAs (DecidableEq (Fin 2))
 
 def FermionIrrep.module : FermionIrrep → Type
-  | .ψ => LeftHandedWeyl
+  | .Q _ => QuarkDoublet
+  | .u _ => UpSinglet
+  | .d _ => DownSinglet
+  | .L _ => LeptonDoublet
+  | .e _ => LeptonSinglet
 
 instance : (φ : FermionIrrep) →  AddCommGroup (FermionIrrep.module φ)
-  | .ψ => inferInstanceAs (AddCommGroup LeftHandedWeyl)
+  | .Q _ => inferInstanceAs (AddCommGroup QuarkDoublet)
+  | .u _ => inferInstanceAs (AddCommGroup UpSinglet)
+  | .d _ => inferInstanceAs (AddCommGroup DownSinglet)
+  | .L _ => inferInstanceAs (AddCommGroup LeptonDoublet)
+  | .e _ => inferInstanceAs (AddCommGroup LeptonSinglet)
 
 instance : (φ : FermionIrrep) →  Module ℂ (FermionIrrep.module φ)
-  | .ψ => inferInstanceAs (Module ℂ LeftHandedWeyl)
+  | .Q _ => inferInstanceAs (Module ℂ QuarkDoublet)
+  | .u _ => inferInstanceAs (Module ℂ UpSinglet)
+  | .d _ => inferInstanceAs (Module ℂ DownSinglet)
+  | .L _ => inferInstanceAs (Module ℂ LeptonDoublet)
+  | .e _ => inferInstanceAs (Module ℂ LeptonSinglet)
 
 def FermionIrrep.basis  : (φ : FermionIrrep) →
     Basis (FermionIrrep.components φ) ℂ (FermionIrrep.module φ)
-  | .ψ => LeftHandedWeyl.basis
+  | .Q _ => QuarkDoublet.basis
+  | .u _ => UpSinglet.basis
+  | .d _ => DownSinglet.basis
+  | .L _ => LeptonDoublet.basis
+  | .e _ => LeptonSinglet.basis
 
-def FermionIrrep.rep : (φ : FermionIrrep) → Representation ℂ SL(2,ℂ) (FermionIrrep.module φ)
-  | .ψ => LeftHandedWeyl.rep
+def FermionIrrep.repLorentzGroup :
+    (φ : FermionIrrep) → Representation ℂ SL(2,ℂ) (FermionIrrep.module φ)
+  | .Q _ => QuarkDoublet.repLorentzGroup
+  | .u _ => UpSinglet.repLorentzGroup
+  | .d _ => DownSinglet.repLorentzGroup
+  | .L _ => LeptonDoublet.repLorentzGroup
+  | .e _ => LeptonSinglet.repLorentzGroup
+
+def FermionIrrep.repGaugeGroupI :
+    (φ : FermionIrrep) → Representation ℂ GaugeGroupI (FermionIrrep.module φ)
+  | .Q _ => QuarkDoublet.repGaugeGroupI
+  | .u _ => UpSinglet.repGaugeGroupI
+  | .d _ => DownSinglet.repGaugeGroupI
+  | .L _ => LeptonDoublet.repGaugeGroupI
+  | .e _ => LeptonSinglet.repGaugeGroupI
 
 /-!
 
@@ -127,11 +173,11 @@ def fermionicGeneratorEquiv : FermionicGenerator ≃
 abbrev FermionicTargetSpace := Π (φ : FermionIrrep), FermionIrrep.module φ
 
 def FermionicTargetSpace.rep : Representation ℂ SL(2,ℂ) FermionicTargetSpace where
-  toFun Λ := LinearMap.piMap fun φ => FermionIrrep.rep φ Λ
+  toFun Λ := LinearMap.piMap fun φ => FermionIrrep.repLorentzGroup φ Λ
   map_one' := by
     ext x i y
     simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
-      Function.comp_apply, Pi.map_apply, Pi.single_eq_same, End.one_apply]
+      Function.comp_apply, Pi.map_apply, End.one_apply]
   map_mul' Λ1 Λ2 := by
     ext x i y
     simp
@@ -158,7 +204,7 @@ def fermionicComponentBasis : Basis FermionicGenerator ℂ FermionicComponentSpa
 
 abbrev FermionicEFTExclDeriv := ExteriorAlgebra ℂ FermionicComponentSpace
 
-def FermionicEFTExclDeriv.rep : Representation ℂ SL(2,ℂ) FermionicEFTExclDeriv where
+def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) FermionicEFTExclDeriv where
   toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.rep Λ)).toLinearMap
   map_one' := by
     simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
@@ -178,33 +224,33 @@ def FermionicEFTExclDeriv.rep : Representation ℂ SL(2,ℂ) FermionicEFTExclDer
 set_option linter.constructorNameAsVariable false
 
 inductive ComplexScalarIrrep
-  | φ : ComplexScalarIrrep
+  | H : ComplexScalarIrrep
 deriving DecidableEq, Fintype
 
 def ComplexScalarIrrep.components : ComplexScalarIrrep → Type
-  | .φ => Fin 1
+  | .H => Fin 2
 
 instance : (φ : ComplexScalarIrrep) → Fintype (ComplexScalarIrrep.components φ)
-  | .φ => inferInstanceAs (Fintype (Fin 1))
+  | .H => inferInstanceAs (Fintype (Fin 2))
 
 instance : (φ : ComplexScalarIrrep) → DecidableEq (ComplexScalarIrrep.components φ)
-  | .φ => inferInstanceAs (DecidableEq (Fin 1))
+  | .H => inferInstanceAs (DecidableEq (Fin 2))
 
 def ComplexScalarIrrep.module : ComplexScalarIrrep → Type
-  | .φ => ℂ
+  | .H => HiggsVec
 
 instance : (φ : ComplexScalarIrrep) →  AddCommGroup (ComplexScalarIrrep.module φ)
-  | .φ => inferInstanceAs (AddCommGroup ℂ)
+  | .H => inferInstanceAs (AddCommGroup HiggsVec)
 
 instance : (φ : ComplexScalarIrrep) →  Module ℂ (ComplexScalarIrrep.module φ)
-  | .φ => inferInstanceAs (Module ℂ ℂ)
+  | .H => inferInstanceAs (Module ℂ HiggsVec)
 
 def ComplexScalarIrrep.basis  : (φ : ComplexScalarIrrep) →
     Basis (ComplexScalarIrrep.components φ) ℂ (ComplexScalarIrrep.module φ)
-  | .φ => Basis.singleton (Fin 1) ℂ
+  | .H => HiggsVec.orthonormBasis.toBasis
 
-def ComplexScalarIrrep.rep : (φ : ComplexScalarIrrep) → Representation ℂ SL(2,ℂ) (ComplexScalarIrrep.module φ)
-  | .φ => Representation.trivial ℂ SL(2,ℂ) ℂ
+def ComplexScalarIrrep.repLorentzGroup : (φ : ComplexScalarIrrep) → Representation ℂ SL(2,ℂ) (ComplexScalarIrrep.module φ)
+  | .H => Representation.trivial ℂ SL(2,ℂ) HiggsVec
 
 /-!
 
@@ -240,8 +286,8 @@ def complexScalarGeneratorEquiv : ComplexScalarGenerator ≃
 
 abbrev ComplexScalarTargetSpace := Π (φ : ComplexScalarIrrep), ComplexScalarIrrep.module φ
 
-def ComplexScalarTargetSpace.rep : Representation ℂ SL(2,ℂ) ComplexScalarTargetSpace where
-  toFun Λ := LinearMap.piMap fun φ => ComplexScalarIrrep.rep φ Λ
+def ComplexScalarTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) ComplexScalarTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => ComplexScalarIrrep.repLorentzGroup φ Λ
   map_one' := by
     ext1 x
     apply LinearMap.ext
@@ -262,14 +308,14 @@ abbrev ComplexScalarTargetSpaceWithComplex := ComplexScalarTargetSpace ×
 /-- The representation of the Lorentz group on the fermionic target space:
   the irreps act componentwise on the product of their modules, and by the
   conjugate action on the conjugate factor. -/
-def ComplexScalarTargetSpaceWithComplex.rep :
+def ComplexScalarTargetSpaceWithComplex.repLorentzGroup :
     Representation ℂ SL(2,ℂ) ComplexScalarTargetSpaceWithComplex :=
-  (ComplexScalarTargetSpace.rep).prod (ComplexScalarTargetSpace.rep.conj)
+  (ComplexScalarTargetSpace.repLorentzGroup).prod (ComplexScalarTargetSpace.repLorentzGroup.conj)
 
 abbrev ComplexScalarComponentSpace := Module.Dual ℂ ComplexScalarTargetSpaceWithComplex
 
 def ComplexScalarComponentSpace.rep : Representation ℂ SL(2,ℂ) ComplexScalarComponentSpace :=
-  (ComplexScalarTargetSpaceWithComplex.rep).dual
+  (ComplexScalarTargetSpaceWithComplex.repLorentzGroup).dual
 
 def complexScalarComponentBasis : Basis ComplexScalarGenerator ℂ ComplexScalarComponentSpace :=
   ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).prod
@@ -277,9 +323,7 @@ def complexScalarComponentBasis : Basis ComplexScalarGenerator ℂ ComplexScalar
 
 abbrev ComplexScalarEFTExclDeriv := SymmetricAlgebra ℂ ComplexScalarComponentSpace
 
-TODO "Define ComplexScalarEFTExclDeriv.rep"
-
-def ComplexScalarEFTExclDeriv.rep : Representation ℂ SL(2,ℂ) ComplexScalarEFTExclDeriv where
+def ComplexScalarEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) ComplexScalarEFTExclDeriv where
   toFun Λ := (SymmetricAlgebra.lift
     (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ)).toLinearMap
   map_one' := by
@@ -376,7 +420,7 @@ namespace EFTLagrangianExclDeriv
 
 /-- The representation of the Lorentz group on `EFTLagrangianExclDeriv`. -/
 def rep : Representation ℂ SL(2,ℂ) EFTLagrangianExclDeriv :=
-  (ComplexScalarEFTExclDeriv.rep).tprod (FermionicEFTExclDeriv.rep)
+  (ComplexScalarEFTExclDeriv.repLorentzGroup).tprod (FermionicEFTExclDeriv.repLorentzGroup)
 
 lemma rep_mul (Λ : SL(2,ℂ)) (V W : EFTLagrangianExclDeriv) :
     rep Λ (V * W) = rep Λ V * rep Λ W := by
@@ -465,6 +509,7 @@ lemma ofFieldGenerators_comm (ϕ₁ ϕ₂ : FieldGenerators) :
 -/
 
 open scoped IsMulCommutative in
+set_option maxRecDepth 2000 in
 /-- The algebra map `EFTLagrangianExclDeriv →ₐ[ℂ] A` determined by the images `F g` of
   the field generators: the images of the bosonic generators pairwise commute and
   commute with the images of the fermionic generators, which pairwise anticommute.

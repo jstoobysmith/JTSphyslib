@@ -109,6 +109,17 @@ lemma val_smul (r : ℂ) (l : LeptonDoublet) : (r • l).val = r • l.val := rf
 
 /-!
 
+## The basis of the lepton-doublet space
+
+-/
+
+/-- A basis on the lepton doublets. -/
+noncomputable def basis : Module.Basis (Fin 2 × Fin 2) ℂ LeptonDoublet :=
+  (Fermion.LeftHandedWeyl.basis.tensorProduct
+    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis).map valLinEquiv.symm
+
+/-!
+
 ## C. Lorentz action
 
 The Lorentz group acts on the left-handed Weyl factor and leaves the weak index fixed.

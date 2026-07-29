@@ -27,10 +27,6 @@ namespace StandardModel
 
 open TensorProduct
 
-TODO "Add other fermions similar to this file with the names:
- - UpSinglet (3, 1)_{4} (right-handed)
- - LeptonSinglet (1, 1)_{-6} (right-handed)"
-
 /-- The vector space of a quark field in the Standard Model.
   These live in the (3, 2)_{1} representation of the gauge group. -/
 @[ext]
@@ -83,6 +79,20 @@ lemma val_add (q1 q2 : QuarkDoublet) : (q1 + q2).val = q1.val + q2.val := rfl
 
 @[simp]
 lemma val_smul (r : ℂ) (q : QuarkDoublet) : (r • q).val = r • q.val := rfl
+
+
+/-!
+
+## The basis of the quark doublet space
+
+-/
+
+/-- A basis on the quark doublets. -/
+noncomputable def basis : Module.Basis (Fin 2 × Fin 3 × Fin 2) ℂ QuarkDoublet :=
+  ((((Fermion.LeftHandedWeyl.basis.tensorProduct
+    (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).tensorProduct
+    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis).map valLinEquiv.symm).reindex
+    (Equiv.prodAssoc (Fin 2) (Fin 3) (Fin 2)))
 
 /-!
 
