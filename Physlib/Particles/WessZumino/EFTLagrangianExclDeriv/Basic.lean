@@ -370,7 +370,13 @@ namespace EFTLagrangianExclDeriv
 
 /-!
 
-## The representation of the Lorentz group on the EFT lagrangian
+## B. Invariance under the group actions
+
+-/
+
+/-!
+
+### B.1. The representation of the Lorentz group
 
 -/
 
@@ -379,8 +385,48 @@ def rep : Representation ℂ SL(2,ℂ) EFTLagrangianExclDeriv :=
   (ComplexScalarEFTExclDeriv.rep).tprod (FermionicEFTExclDeriv.rep)
 
 lemma rep_mul (Λ : SL(2,ℂ)) (V W : EFTLagrangianExclDeriv) :
-    rep Λ (V * W) = rep Λ V * rep Λ W := by
-  sorry
+    rep Λ (V * W) = rep Λ V * rep Λ W :=
+  map_mul (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ))
+    (ExteriorAlgebra.map (FermionicComponentSpace.rep Λ))) V W
+
+@[simp]
+lemma rep_one (Λ : SL(2,ℂ)) :
+    rep Λ 1 = 1 :=
+  map_one (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ))
+    (ExteriorAlgebra.map (FermionicComponentSpace.rep Λ)))
+
+/-!
+
+### B.2. The condition for invariance
+
+-/
+
+def IsInvariant (V : EFTLagrangianExclDeriv) : Prop :=
+  (∀ (Λ : SL(2,ℂ)), rep Λ V = V)
+
+@[simp]
+lemma IsInvariant.zero : IsInvariant 0 := by
+  simp [IsInvariant]
+
+lemma IsInvariant.add {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : IsInvariant W) :
+    IsInvariant (V + W) := by
+  simp_all [IsInvariant]
+
+lemma IsInvariant.smul {V : EFTLagrangianExclDeriv} (c : ℂ) (hV : IsInvariant V) :
+    IsInvariant (c • V) := by
+  simp_all [IsInvariant]
+
+lemma IsInvariant.mul {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : IsInvariant W) :
+    IsInvariant (V * W) := by
+  simp_all [IsInvariant, rep_mul]
+
+@[simp]
+lemma IsInvariant.one : IsInvariant 1 := by
+  simp [IsInvariant]
 
 /-!
 

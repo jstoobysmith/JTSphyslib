@@ -51,7 +51,7 @@ open Fermion
 
 /-!
 
-## The input data for Fermions
+## Specific block: The input data for Fermions
 
 For the Wess-Zumino theory there is a single left-handed Weyl fermion.
 
@@ -138,7 +138,7 @@ def FermionIrrep.repGaugeGroupI :
 
 /-!
 
-## Derived Fermionic quantities
+## Repetable Derived Fermionic quantities
 
 This are quantities whose form is independent of the specific theory
 we are constructing.
@@ -172,7 +172,26 @@ def fermionicGeneratorEquiv : FermionicGenerator ≃
 
 abbrev FermionicTargetSpace := Π (φ : FermionIrrep), FermionIrrep.module φ
 
-def FermionicTargetSpace.rep : Representation ℂ SL(2,ℂ) FermionicTargetSpace where
+/-- The target space of the fermionic fields, including their conjugates. -/
+abbrev FermionicTargetSpaceWithComplex := FermionicTargetSpace ×
+  ConjModule FermionicTargetSpace
+
+
+abbrev FermionicComponentSpace := Module.Dual ℂ FermionicTargetSpaceWithComplex
+
+def fermionicComponentBasis : Basis FermionicGenerator ℂ FermionicComponentSpace :=
+  ((Pi.basis (fun φ => FermionIrrep.basis φ)).prod
+  ((Pi.basis (fun φ => FermionIrrep.basis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
+
+abbrev FermionicEFTExclDeriv := ExteriorAlgebra ℂ FermionicComponentSpace
+
+/-!
+
+### The representation of the Lorentz group on the fermionic part
+
+-/
+
+def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) FermionicTargetSpace where
   toFun Λ := LinearMap.piMap fun φ => FermionIrrep.repLorentzGroup φ Λ
   map_one' := by
     ext x i y
@@ -182,36 +201,55 @@ def FermionicTargetSpace.rep : Representation ℂ SL(2,ℂ) FermionicTargetSpace
     ext x i y
     simp
 
-/-- The target space of the fermionic fields, including their conjugates. -/
-abbrev FermionicTargetSpaceWithComplex := FermionicTargetSpace ×
-  ConjModule FermionicTargetSpace
-
-/-- The representation of the Lorentz group on the fermionic target space:
-  the irreps act componentwise on the product of their modules, and by the
-  conjugate action on the conjugate factor. -/
-def FermionicTargetSpaceWithComplex.rep :
+def FermionicTargetSpaceWithComplex.repLorentzGroup :
     Representation ℂ SL(2,ℂ) FermionicTargetSpaceWithComplex :=
-  (FermionicTargetSpace.rep).prod (FermionicTargetSpace.rep.conj)
+  FermionicTargetSpace.repLorentzGroup.prod (FermionicTargetSpace.repLorentzGroup.conj)
 
-abbrev FermionicComponentSpace := Module.Dual ℂ FermionicTargetSpaceWithComplex
-
-def FermionicComponentSpace.rep : Representation ℂ SL(2,ℂ) FermionicComponentSpace :=
-  (FermionicTargetSpaceWithComplex.rep).dual
-
-def fermionicComponentBasis : Basis FermionicGenerator ℂ FermionicComponentSpace :=
-  ((Pi.basis (fun φ => FermionIrrep.basis φ)).prod
-  ((Pi.basis (fun φ => FermionIrrep.basis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
-
-abbrev FermionicEFTExclDeriv := ExteriorAlgebra ℂ FermionicComponentSpace
+def FermionicComponentSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) FermionicComponentSpace :=
+  FermionicTargetSpaceWithComplex.repLorentzGroup.dual
 
 def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) FermionicEFTExclDeriv where
-  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.rep Λ)).toLinearMap
+  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)).toLinearMap
   map_one' := by
     simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
   map_mul' Λ1 Λ2 := by
     simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
+
+/-!
+
+### The representation of the Gauge group on the fermionic part
+
+-/
+
+
+def FermionicTargetSpace.repGaugeGroupI : Representation ℂ GaugeGroupI FermionicTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => FermionIrrep.repGaugeGroupI φ Λ
+  map_one' := by
+    ext x i y
+    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
+      Function.comp_apply, Pi.map_apply, End.one_apply]
+  map_mul' Λ1 Λ2 := by
+    ext x i y
+    simp
+
+def FermionicTargetSpaceWithComplex.repGaugeGroupI :
+    Representation ℂ GaugeGroupI FermionicTargetSpaceWithComplex :=
+  FermionicTargetSpace.repGaugeGroupI.prod (FermionicTargetSpace.repGaugeGroupI.conj)
+
+def FermionicComponentSpace.repGaugeGroupI : Representation ℂ GaugeGroupI FermionicComponentSpace :=
+  FermionicTargetSpaceWithComplex.repGaugeGroupI.dual
+
+def FermionicEFTExclDeriv.repGaugeGroupI : Representation ℂ GaugeGroupI FermionicEFTExclDeriv where
+  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repGaugeGroupI Λ)).toLinearMap
+  map_one' := by
+    simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' Λ1 Λ2 := by
+    simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
 
 
 /-!
@@ -286,6 +324,27 @@ def complexScalarGeneratorEquiv : ComplexScalarGenerator ≃
 
 abbrev ComplexScalarTargetSpace := Π (φ : ComplexScalarIrrep), ComplexScalarIrrep.module φ
 
+
+/-- The target space of the fermionic fields, including their conjugates. -/
+abbrev ComplexScalarTargetSpaceWithComplex := ComplexScalarTargetSpace ×
+  ConjModule ComplexScalarTargetSpace
+
+
+abbrev ComplexScalarComponentSpace := Module.Dual ℂ ComplexScalarTargetSpaceWithComplex
+
+def complexScalarComponentBasis : Basis ComplexScalarGenerator ℂ ComplexScalarComponentSpace :=
+  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).prod
+  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).conj)).dualBasis.reindex complexScalarGeneratorEquiv.symm
+
+abbrev ComplexScalarEFTExclDeriv := SymmetricAlgebra ℂ ComplexScalarComponentSpace
+
+
+/-!
+
+### The representation of the Lorentz group on the complex scalar part
+
+-/
+
 def ComplexScalarTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) ComplexScalarTargetSpace where
   toFun Λ := LinearMap.piMap fun φ => ComplexScalarIrrep.repLorentzGroup φ Λ
   map_one' := by
@@ -301,10 +360,6 @@ def ComplexScalarTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) Comp
     ext y
     simp
 
-/-- The target space of the fermionic fields, including their conjugates. -/
-abbrev ComplexScalarTargetSpaceWithComplex := ComplexScalarTargetSpace ×
-  ConjModule ComplexScalarTargetSpace
-
 /-- The representation of the Lorentz group on the fermionic target space:
   the irreps act componentwise on the product of their modules, and by the
   conjugate action on the conjugate factor. -/
@@ -312,29 +367,75 @@ def ComplexScalarTargetSpaceWithComplex.repLorentzGroup :
     Representation ℂ SL(2,ℂ) ComplexScalarTargetSpaceWithComplex :=
   (ComplexScalarTargetSpace.repLorentzGroup).prod (ComplexScalarTargetSpace.repLorentzGroup.conj)
 
-abbrev ComplexScalarComponentSpace := Module.Dual ℂ ComplexScalarTargetSpaceWithComplex
-
-def ComplexScalarComponentSpace.rep : Representation ℂ SL(2,ℂ) ComplexScalarComponentSpace :=
+def ComplexScalarComponentSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) ComplexScalarComponentSpace :=
   (ComplexScalarTargetSpaceWithComplex.repLorentzGroup).dual
-
-def complexScalarComponentBasis : Basis ComplexScalarGenerator ℂ ComplexScalarComponentSpace :=
-  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).prod
-  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).conj)).dualBasis.reindex complexScalarGeneratorEquiv.symm
-
-abbrev ComplexScalarEFTExclDeriv := SymmetricAlgebra ℂ ComplexScalarComponentSpace
 
 def ComplexScalarEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) ComplexScalarEFTExclDeriv where
   toFun Λ := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ)).toLinearMap
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ)).toLinearMap
   map_one' := by
     simp [End.one_eq_id]
   map_mul' Λ1 Λ2 := by
     suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep (Λ1 * Λ2)) =
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup (Λ1 * Λ2)) =
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ1)).comp
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ1)).comp
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.rep Λ2)) by
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp
+
+/-!
+
+## The representation of the Gauge group on the complex scalar part
+
+-/
+
+def ComplexScalarIrrep.repGaugeGroupI :
+    (φ : ComplexScalarIrrep) → Representation ℂ GaugeGroupI (ComplexScalarIrrep.module φ)
+  | .H => HiggsVec.repGaugeGroupI
+
+def ComplexScalarTargetSpace.repGaugeGroupI :
+    Representation ℂ GaugeGroupI ComplexScalarTargetSpace where
+  toFun g := LinearMap.piMap fun φ => ComplexScalarIrrep.repGaugeGroupI φ g
+  map_one' := by
+    ext1 x
+    apply LinearMap.ext
+    intro i
+    ext y
+    simp
+  map_mul' g1 g2 := by
+    ext1 x
+    apply LinearMap.ext
+    intro i
+    ext y
+    simp
+
+/-- The representation of the gauge group on the complex scalar target space:
+  the irreps act componentwise on the product of their modules, and by the
+  conjugate action on the conjugate factor. -/
+def ComplexScalarTargetSpaceWithComplex.repGaugeGroupI :
+    Representation ℂ GaugeGroupI ComplexScalarTargetSpaceWithComplex :=
+  (ComplexScalarTargetSpace.repGaugeGroupI).prod (ComplexScalarTargetSpace.repGaugeGroupI.conj)
+
+def ComplexScalarComponentSpace.repGaugeGroupI :
+    Representation ℂ GaugeGroupI ComplexScalarComponentSpace :=
+  (ComplexScalarTargetSpaceWithComplex.repGaugeGroupI).dual
+
+def ComplexScalarEFTExclDeriv.repGaugeGroupI :
+    Representation ℂ GaugeGroupI ComplexScalarEFTExclDeriv where
+  toFun g := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI g)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' g1 g2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI (g1 * g2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI g1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI g2)) by
       rw [h]; rfl
     ext v
     simp
@@ -414,17 +515,87 @@ namespace EFTLagrangianExclDeriv
 
 /-!
 
-## The representation of the Lorentz group on the EFT lagrangian
+## B. Invariance under the group actions
+
+-/
+/-!
+
+### B.1 The representation of the Lorentz group on the EFT lagrangian
 
 -/
 
 /-- The representation of the Lorentz group on `EFTLagrangianExclDeriv`. -/
-def rep : Representation ℂ SL(2,ℂ) EFTLagrangianExclDeriv :=
+def repLorentzGroup : Representation ℂ SL(2,ℂ) EFTLagrangianExclDeriv :=
   (ComplexScalarEFTExclDeriv.repLorentzGroup).tprod (FermionicEFTExclDeriv.repLorentzGroup)
 
-lemma rep_mul (Λ : SL(2,ℂ)) (V W : EFTLagrangianExclDeriv) :
-    rep Λ (V * W) = rep Λ V * rep Λ W := by
-  sorry
+lemma repLorentzGroup_mul (Λ : SL(2,ℂ)) (V W : EFTLagrangianExclDeriv) :
+    repLorentzGroup Λ (V * W) = repLorentzGroup Λ V * repLorentzGroup Λ W :=
+  map_mul (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ))
+    (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ))) V W
+
+@[simp]
+lemma repLorentzGroup_one (Λ : SL(2,ℂ)) :
+    repLorentzGroup Λ 1 = 1 :=
+  map_one (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ))
+    (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)))
+
+/-!
+
+### B.2 The representation of the gauge group on the EFT lagrangian
+
+-/
+
+/-- The representation of the gauge group on `EFTLagrangianExclDeriv`. -/
+def repGaugeGroupI : Representation ℂ GaugeGroupI EFTLagrangianExclDeriv :=
+  (ComplexScalarEFTExclDeriv.repGaugeGroupI).tprod (FermionicEFTExclDeriv.repGaugeGroupI)
+
+lemma repGaugeGroupI_mul (g : GaugeGroupI) (V W : EFTLagrangianExclDeriv) :
+    repGaugeGroupI g (V * W) = repGaugeGroupI g V * repGaugeGroupI g W :=
+  map_mul (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI g))
+    (ExteriorAlgebra.map (FermionicComponentSpace.repGaugeGroupI g))) V W
+
+@[simp]
+lemma repGaugeGroupI_one (g : GaugeGroupI) :
+    repGaugeGroupI g 1 = 1 :=
+  map_one (Algebra.TensorProduct.map
+    (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repGaugeGroupI g))
+    (ExteriorAlgebra.map (FermionicComponentSpace.repGaugeGroupI g)))
+
+/-!
+
+### B.3. The condition for invariance
+
+-/
+
+def IsInvariant (V : EFTLagrangianExclDeriv) : Prop :=
+  (∀ (Λ : SL(2,ℂ)), repLorentzGroup Λ V = V) ∧ ∀ (g : GaugeGroupI), repGaugeGroupI g V = V
+
+@[simp]
+lemma IsInvariant.zero : IsInvariant 0 := by
+  simp [IsInvariant]
+
+lemma IsInvariant.add {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : IsInvariant W) :
+    IsInvariant (V + W) := by
+  simp_all [IsInvariant]
+
+lemma IsInvariant.smul {V : EFTLagrangianExclDeriv} (c : ℂ) (hV : IsInvariant V) :
+    IsInvariant (c • V) := by
+  simp_all [IsInvariant]
+
+lemma IsInvariant.mul {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : IsInvariant W) :
+    IsInvariant (V * W) := by
+  simp_all [IsInvariant, repLorentzGroup_mul, repGaugeGroupI_mul]
+
+@[simp]
+lemma IsInvariant.one : IsInvariant 1 := by
+  simp [IsInvariant]
 
 /-!
 
