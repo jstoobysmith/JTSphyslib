@@ -295,13 +295,13 @@ def ComplexScalarIrrep.repLorentzGroup : (φ : ComplexScalarIrrep) → Represent
 @[reducible]
 def StandardModelLT : LagrangianTheory GaugeGroupI where
   FermionIrreps := FermionIrrep
-  fermionComponents := FermionIrrep.components
+  FermionComponents := FermionIrrep.components
   fermionModule := FermionIrrep.module
   fermionBasis := FermionIrrep.basis
   fermionRepLorentzGroup := FermionIrrep.repLorentzGroup
   fermionRepGaugeGroup := FermionIrrep.repGaugeGroupI
   ComplexScalarIrreps := ComplexScalarIrrep
-  complexScalarComponents := ComplexScalarIrrep.components
+  ComplexScalarComponents := ComplexScalarIrrep.components
   complexScalarModule := ComplexScalarIrrep.module
   complexScalarBasis := ComplexScalarIrrep.basis
   complexScalarRepLorentzGroup := ComplexScalarIrrep.repLorentzGroup
@@ -631,6 +631,19 @@ lemma IsInvariant.mul {V W : EFTLagrangianExclDeriv} (hV : IsInvariant V) (hW : 
 @[simp]
 lemma IsInvariant.one : IsInvariant 1 := by
   simp [IsInvariant]
+
+lemma IsInvariant.sum {ι : Type} [Fintype ι] {V : ι → EFTLagrangianExclDeriv}
+    (hV : ∀ i, IsInvariant (V i)) : IsInvariant (∑ i, V i) := by
+  simp_all [IsInvariant]
+
+lemma IsInvariant.of_mem_span {V : EFTLagrangianExclDeriv} {S : Set EFTLagrangianExclDeriv}
+    (hS : ∀ W ∈ S, IsInvariant W) (hV : V ∈ Submodule.span ℂ S)  :
+    IsInvariant V := by
+  induction' hV using Submodule.span_induction with W hW W1 W2 h1 h2 hI1 hI2 a W hW hIW
+  · exact hS W hW
+  · exact zero
+  · exact add hI1 hI2
+  · exact smul a hIW
 
 /-!
 
