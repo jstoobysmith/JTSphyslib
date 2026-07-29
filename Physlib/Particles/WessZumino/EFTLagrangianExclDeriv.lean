@@ -51,45 +51,288 @@ open Fermion
 
 -/
 
-inductive ComplexScalars
-  | φ : ComplexScalars
-  | barφ : ComplexScalars
-deriving DecidableEq
+/-!
 
-inductive Fermions
-  | ψ (α : Fin 2) : Fermions
-  | barψ (α : Fin 2) : Fermions
-deriving DecidableEq
+## The input data for Fermions
+
+For the Wess-Zumino theory there is a single left-handed Weyl fermion.
+
+-/
+
+/-- The irreducible representations of the fermion field
+  under the Lorentz group. -/
+inductive FermionIrrep
+  | ψ : FermionIrrep
+deriving DecidableEq, Fintype
+
+def FermionIrrep.components : FermionIrrep → Type
+  | .ψ => Fin 2
+
+instance : (φ : FermionIrrep) → Fintype (FermionIrrep.components φ)
+  | .ψ => inferInstanceAs (Fintype (Fin 2))
+
+instance : (φ : FermionIrrep) → DecidableEq (FermionIrrep.components φ)
+  | .ψ => inferInstanceAs (DecidableEq (Fin 2))
+
+def FermionIrrep.module : FermionIrrep → Type
+  | .ψ => LeftHandedWeyl
+
+instance : (φ : FermionIrrep) →  AddCommGroup (FermionIrrep.module φ)
+  | .ψ => inferInstanceAs (AddCommGroup LeftHandedWeyl)
+
+instance : (φ : FermionIrrep) →  Module ℂ (FermionIrrep.module φ)
+  | .ψ => inferInstanceAs (Module ℂ LeftHandedWeyl)
+
+def FermionIrrep.basis  : (φ : FermionIrrep) →
+    Basis (FermionIrrep.components φ) ℂ (FermionIrrep.module φ)
+  | .ψ => LeftHandedWeyl.basis
+
+def FermionIrrep.rep : (φ : FermionIrrep) → Representation ℂ SL(2,ℂ) (FermionIrrep.module φ)
+  | .ψ => LeftHandedWeyl.rep
+
+/-!
+
+## Derived Fermionic quantities
+
+This are quantities whose form is independent of the specific theory
+we are constructing.
+
+-/
+
+inductive FermionicGenerator
+  | of (φ : FermionIrrep) (α : FermionIrrep.components φ) : FermionicGenerator
+  | bar (φ : FermionIrrep) (α : FermionIrrep.components φ) : FermionicGenerator
+deriving DecidableEq, Fintype
+
+def FermionicGenerator.conjugate : FermionicGenerator → FermionicGenerator
+  | .of φ α => .bar φ α
+  | .bar φ α => .of φ α
+
+@[simp]
+lemma FermionicGenerator.conjugate_conjugate (g : FermionicGenerator) :
+    g.conjugate.conjugate = g := by
+  cases g <;> rfl
+
+def fermionicGeneratorEquiv : FermionicGenerator ≃
+  (Σ φ : FermionIrrep, FermionIrrep.components φ) ⊕ (Σ φ : FermionIrrep, FermionIrrep.components φ) where
+  toFun g := match g with
+    | .of φ α => Sum.inl ⟨φ, α⟩
+    | .bar φ α => Sum.inr ⟨φ, α⟩
+  invFun g := match g with
+    | Sum.inl ⟨φ, α⟩ => .of φ α
+    | Sum.inr ⟨φ, α⟩ => .bar φ α
+  left_inv g := by cases g <;> rfl
+  right_inv g := by cases g <;> rfl
+
+abbrev FermionicTargetSpace := Π (φ : FermionIrrep), FermionIrrep.module φ
+
+def FermionicTargetSpace.rep : Representation ℂ SL(2,ℂ) FermionicTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => FermionIrrep.rep φ Λ
+  map_one' := by
+    ext x i y
+    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
+      Function.comp_apply, Pi.map_apply, Pi.single_eq_same, End.one_apply]
+  map_mul' Λ1 Λ2 := by
+    ext x i y
+    simp
+
+/-- The target space of the fermionic fields, including their conjugates. -/
+abbrev FermionicTargetSpaceWithComplex := FermionicTargetSpace ×
+  ConjModule FermionicTargetSpace
+
+/-- The representation of the Lorentz group on the fermionic target space:
+  the irreps act componentwise on the product of their modules, and by the
+  conjugate action on the conjugate factor. -/
+def FermionicTargetSpaceWithComplex.rep :
+    Representation ℂ SL(2,ℂ) FermionicTargetSpaceWithComplex :=
+  (FermionicTargetSpace.rep).prod (FermionicTargetSpace.rep.conj)
+
+abbrev FermionicComponentSpace := Module.Dual ℂ FermionicTargetSpaceWithComplex
+
+def FermionicComponentSpace.rep : Representation ℂ SL(2,ℂ) FermionicComponentSpace :=
+  (FermionicTargetSpaceWithComplex.rep).dual
+
+def fermionicComponentBasis : Basis FermionicGenerator ℂ FermionicComponentSpace :=
+  ((Pi.basis (fun φ => FermionIrrep.basis φ)).prod
+  ((Pi.basis (fun φ => FermionIrrep.basis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
+
+abbrev FermionicEFTExclDeriv := ExteriorAlgebra ℂ FermionicComponentSpace
+
+def FermionicEFTExclDeriv.rep : Representation ℂ SL(2,ℂ) FermionicEFTExclDeriv where
+  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.rep Λ)).toLinearMap
+  map_one' := by
+    simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' Λ1 Λ2 := by
+    simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
+
+/-!
+
+## The input data for the complex scalar fields
+
+-/
+
+
+set_option linter.constructorNameAsVariable false
+
+inductive ComplexScalarIrrep
+  | φ : ComplexScalarIrrep
+deriving DecidableEq, Fintype
+
+def ComplexScalarIrrep.components : ComplexScalarIrrep → Type
+  | .φ => Fin 1
+
+instance : (φ : ComplexScalarIrrep) → Fintype (ComplexScalarIrrep.components φ)
+  | .φ => inferInstanceAs (Fintype (Fin 1))
+
+instance : (φ : ComplexScalarIrrep) → DecidableEq (ComplexScalarIrrep.components φ)
+  | .φ => inferInstanceAs (DecidableEq (Fin 1))
+
+def ComplexScalarIrrep.module : ComplexScalarIrrep → Type
+  | .φ => ℂ
+
+instance : (φ : ComplexScalarIrrep) →  AddCommGroup (ComplexScalarIrrep.module φ)
+  | .φ => inferInstanceAs (AddCommGroup ℂ)
+
+instance : (φ : ComplexScalarIrrep) →  Module ℂ (ComplexScalarIrrep.module φ)
+  | .φ => inferInstanceAs (Module ℂ ℂ)
+
+def ComplexScalarIrrep.basis  : (φ : ComplexScalarIrrep) →
+    Basis (ComplexScalarIrrep.components φ) ℂ (ComplexScalarIrrep.module φ)
+  | .φ => Basis.singleton (Fin 1) ℂ
+
+def ComplexScalarIrrep.rep : (φ : ComplexScalarIrrep) → Representation ℂ SL(2,ℂ) (ComplexScalarIrrep.module φ)
+  | .φ => Representation.trivial ℂ SL(2,ℂ) ℂ
+
+/-!
+
+## Derived Complex Scalar quantities
+
+-/
+
+inductive ComplexScalarGenerator
+  | of (ϕ : ComplexScalarIrrep) (α : ComplexScalarIrrep.components ϕ) : ComplexScalarGenerator
+  | bar (ϕ : ComplexScalarIrrep) (α : ComplexScalarIrrep.components ϕ) : ComplexScalarGenerator
+deriving DecidableEq, Fintype
+
+def ComplexScalarGenerator.conjugate : ComplexScalarGenerator → ComplexScalarGenerator
+  | .of φ α => .bar φ α
+  | .bar φ α => .of φ α
+
+@[simp]
+lemma ComplexScalarGenerator.conjugate_conjugate (g : ComplexScalarGenerator) :
+    g.conjugate.conjugate = g := by
+  cases g <;> rfl
+
+def complexScalarGeneratorEquiv : ComplexScalarGenerator ≃
+    (Σ φ : ComplexScalarIrrep, ComplexScalarIrrep.components φ) ⊕
+    (Σ φ : ComplexScalarIrrep, ComplexScalarIrrep.components φ) where
+  toFun g := match g with
+    | .of φ α => Sum.inl ⟨φ, α⟩
+    | .bar φ α => Sum.inr ⟨φ, α⟩
+  invFun g := match g with
+    | Sum.inl ⟨φ, α⟩ => .of φ α
+    | Sum.inr ⟨φ, α⟩ => .bar φ α
+  left_inv g := by cases g <;> rfl
+  right_inv g := by cases g <;> rfl
+
+abbrev ComplexScalarTargetSpace := Π (φ : ComplexScalarIrrep), ComplexScalarIrrep.module φ
+
+def ComplexScalarTargetSpace.rep : Representation ℂ SL(2,ℂ) ComplexScalarTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => ComplexScalarIrrep.rep φ Λ
+  map_one' := by
+    ext1 x
+    apply LinearMap.ext
+    intro i
+    ext y
+    simp
+  map_mul' Λ1 Λ2 := by
+    ext1 x
+    apply LinearMap.ext
+    intro i
+    ext y
+    simp
+
+/-- The target space of the fermionic fields, including their conjugates. -/
+abbrev ComplexScalarTargetSpaceWithComplex := ComplexScalarTargetSpace ×
+  ConjModule ComplexScalarTargetSpace
+
+/-- The representation of the Lorentz group on the fermionic target space:
+  the irreps act componentwise on the product of their modules, and by the
+  conjugate action on the conjugate factor. -/
+def ComplexScalarTargetSpaceWithComplex.rep :
+    Representation ℂ SL(2,ℂ) ComplexScalarTargetSpaceWithComplex :=
+  (ComplexScalarTargetSpace.rep).prod (ComplexScalarTargetSpace.rep.conj)
+
+abbrev ComplexScalarComponentSpace := Module.Dual ℂ ComplexScalarTargetSpaceWithComplex
+
+def ComplexScalarComponentSpace.rep : Representation ℂ SL(2,ℂ) ComplexScalarComponentSpace :=
+  (ComplexScalarTargetSpaceWithComplex.rep).dual
+
+def complexScalarComponentBasis : Basis ComplexScalarGenerator ℂ ComplexScalarComponentSpace :=
+  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).prod
+  ((Pi.basis (fun φ => ComplexScalarIrrep.basis φ)).conj)).dualBasis.reindex complexScalarGeneratorEquiv.symm
+
+abbrev ComplexScalarEFTExclDeriv := SymmetricAlgebra ℂ ComplexScalarComponentSpace
+
+TODO "Define ComplexScalarEFTExclDeriv.rep"
+
+/-!
+
+## The field generators
+
+-/
 
 inductive FieldGenerators
-  | cScalar (_ : ComplexScalars) : FieldGenerators
-  | fermion (_ : Fermions) : FieldGenerators
-deriving DecidableEq
+  | cScalar (_ : ComplexScalarGenerator) : FieldGenerators
+  | fermion (_ : FermionicGenerator) : FieldGenerators
+deriving DecidableEq, Fintype
 
 def FieldGenerators.IsFermion : FieldGenerators → Bool
   | .cScalar _ => False
   | .fermion _ => True
 
-@[simp]
-lemma FieldGenerators.cScalar_isFermion (ϕ : ComplexScalars) :
-     (cScalar ϕ).IsFermion = False := by simp [IsFermion]
-
-@[simp]
-lemma FieldGenerators.fermion_isFermion (ϕ : Fermions) :
-     (fermion ϕ).IsFermion = True := by simp [IsFermion]
-
 def FieldGenerators.IsBoson : FieldGenerators → Bool
   | .cScalar _ => True
   | .fermion _ => False
 
+def FieldGenerators.conjugate : FieldGenerators → FieldGenerators
+  | .cScalar g => .cScalar g.conjugate
+  | .fermion g => .fermion g.conjugate
+
 @[simp]
-lemma FieldGenerators.cScalar_isBoson (ϕ : ComplexScalars) :
+lemma FieldGenerators.conjugate_conjugate (ϕ : FieldGenerators) :
+    ϕ.conjugate.conjugate = ϕ := by
+  cases ϕ <;> simp [conjugate]
+
+def fieldGeneratorsEquiv : FieldGenerators ≃
+    ComplexScalarGenerator ⊕ FermionicGenerator where
+  toFun g := match g with
+    | .cScalar g => Sum.inl g
+    | .fermion g => Sum.inr g
+  invFun g := match g with
+    | Sum.inl g => .cScalar g
+    | Sum.inr g => .fermion g
+  left_inv g := by cases g <;> rfl
+  right_inv g := by cases g <;> rfl
+
+@[simp]
+lemma FieldGenerators.cScalar_isFermion (ϕ : ComplexScalarGenerator) :
+     (cScalar ϕ).IsFermion = False := by simp [IsFermion]
+
+@[simp]
+lemma FieldGenerators.fermion_isFermion (ϕ : FermionicGenerator) :
+     (fermion ϕ).IsFermion = True := by simp [IsFermion]
+
+@[simp]
+lemma FieldGenerators.cScalar_isBoson (ϕ : ComplexScalarGenerator) :
      (cScalar ϕ).IsBoson = True := by simp [IsBoson]
 
 @[simp]
-lemma FieldGenerators.fermion_isBoson (ϕ : Fermions) :
+lemma FieldGenerators.fermion_isBoson (ϕ : FermionicGenerator) :
      (fermion ϕ).IsBoson = False := by simp [IsBoson]
-
 
 /-!
 
@@ -103,9 +346,9 @@ lemma FieldGenerators.fermion_isBoson (ϕ : Fermions) :
   algebra on the bosonic duals with the exterior algebra on the fermionic duals. -/
 abbrev EFTLagrangianExclDeriv : Type :=
   -- bosonic part of the lagrangian
-  SymmetricAlgebra ℂ (Module.Dual ℂ (ℂ × ConjModule ℂ)) ⊗[ℂ]
+  ComplexScalarEFTExclDeriv ⊗[ℂ]
   -- fermionic part of the lagrangian
-  ExteriorAlgebra ℂ (Module.Dual ℂ (LeftHandedWeyl × ConjModule LeftHandedWeyl))
+  FermionicEFTExclDeriv
 
 namespace EFTLagrangianExclDeriv
 
@@ -120,25 +363,62 @@ type of EFT lagragians.
 /-- The elements of `EFTLagrangianExclDeriv` associated with
   the `FieldGenerators`. -/
 def ofFieldGenerators : FieldGenerators → EFTLagrangianExclDeriv
-  | .cScalar .φ => SymmetricAlgebra.ι ℂ _
-    (((Basis.singleton (Fin 1) ℂ).prod (Basis.singleton (Fin 1) ℂ).conj).dualBasis (Sum.inl 0))
-    ⊗ₜ 1
-  | .cScalar .barφ => SymmetricAlgebra.ι ℂ _
-    (((Basis.singleton (Fin 1) ℂ).prod (Basis.singleton (Fin 1) ℂ).conj).dualBasis (Sum.inr 0))
-    ⊗ₜ 1
-  | .fermion (.ψ α) => 1 ⊗ₜ ExteriorAlgebra.ι ℂ
-    ((LeftHandedWeyl.basis.prod LeftHandedWeyl.basis.conj).dualBasis (Sum.inl α))
-  | .fermion (.barψ α) => 1 ⊗ₜ ExteriorAlgebra.ι ℂ
-    ((LeftHandedWeyl.basis.prod LeftHandedWeyl.basis.conj).dualBasis (Sum.inr α))
+  | .cScalar φ => SymmetricAlgebra.ι ℂ _ (complexScalarComponentBasis φ) ⊗ₜ 1
+  | .fermion ψ => 1 ⊗ₜ ExteriorAlgebra.ι ℂ (fermionicComponentBasis ψ)
 
 scoped notation "[" v "]ₐ" => ofFieldGenerators v
 scoped notation "[" v "]ₛ" => ofFieldGenerators (FieldGenerators.cScalar v)
 scoped notation "[" v "]ₑ" => ofFieldGenerators (FieldGenerators.fermion v)
 
-lemma ofFieldGenerators_cScalar_exists (ϕ : ComplexScalars) :
+/-- The square-zero condition needed to lift to the exterior algebra holds for every
+  vector as soon as the images of the fermionic generators pairwise anticommute:
+  expanding in the basis, the diagonal terms vanish (over `ℂ`, `x = -x` forces `x = 0`)
+  and the off-diagonal terms cancel in swapped pairs. -/
+lemma fermionic_constr_mul_self_eq_zero {A : Type} [Ring A] [Algebra ℂ A]
+    (FF : FermionicGenerator → A)
+    (hFF : ∀ g g', FF g * FF g' = -(FF g' * FF g)) (v : FermionicComponentSpace) :
+    fermionicComponentBasis.constr ℂ FF v * fermionicComponentBasis.constr ℂ FF v = 0 := by
+  have hdiag : ∀ g, FF g * FF g = 0 := fun g => by
+    have h2 : (2 : ℂ) • (FF g * FF g) = 0 := by
+      rw [two_smul]
+      exact eq_neg_iff_add_eq_zero.mp (hFF g g)
+    calc FF g * FF g = ((2 : ℂ)⁻¹ * 2) • (FF g * FF g) := by norm_num
+      _ = (2 : ℂ)⁻¹ • ((2 : ℂ) • (FF g * FF g)) := by rw [mul_smul]
+      _ = 0 := by rw [h2, smul_zero]
+  rw [← fermionicComponentBasis.sum_repr v, map_sum]
+  simp only [map_smul, Basis.constr_basis]
+  rw [Finset.sum_mul_sum, ← Finset.sum_product']
+  refine Finset.sum_involution (fun p _ => (p.2, p.1)) ?_ ?_ (fun p _ => Finset.mem_univ _)
+    (fun p _ => rfl)
+  · intro p _
+    rw [smul_mul_smul_comm, smul_mul_smul_comm, hFF p.1 p.2]
+    module
+  · intro p _ hf hswap
+    apply hf
+    have h1 : p.2 = p.1 := (Prod.ext_iff.mp hswap).1
+    rw [h1, smul_mul_smul_comm, hdiag, smul_zero]
+
+/-- The algebra map `EFTLagrangianExclDeriv →ₐ[ℂ] A` determined by the images of the
+  field generators: the bosonic generators are sent to central elements `FB g` and the
+  fermionic generators to pairwise-anticommuting elements `FF g`. -/
+def lift {A : Type} [Ring A] [Algebra ℂ A]
+    (FB : ComplexScalarGenerator → Subalgebra.center ℂ A)
+    (FF : FermionicGenerator → A)
+    (hFF : ∀ g g', FF g * FF g' = -(FF g' * FF g)) :
+    EFTLagrangianExclDeriv →ₐ[ℂ] A :=
+  Algebra.TensorProduct.lift
+    ((Subalgebra.center ℂ A).val.comp
+      (SymmetricAlgebra.lift (complexScalarComponentBasis.constr ℂ FB)))
+    (ExteriorAlgebra.lift ℂ
+      ⟨fermionicComponentBasis.constr ℂ FF, fermionic_constr_mul_self_eq_zero FF hFF⟩)
+    (fun x y => Subalgebra.mem_center_iff.mp
+      (SymmetricAlgebra.lift (complexScalarComponentBasis.constr ℂ FB) x).2 _ |>.symm)
+
+
+lemma ofFieldGenerators_cScalar_exists (ϕ : ComplexScalarGenerator) :
     ∃ x, [ϕ]ₛ = SymmetricAlgebra.ι ℂ _ x ⊗ₜ 1 := by
   match ϕ with
-  | .φ => exact
+  | .of φ => exact
     ⟨((Basis.singleton (Fin 1) ℂ).prod (Basis.singleton (Fin 1) ℂ).conj).dualBasis (Sum.inl 0), rfl⟩
   | .barφ => exact
     ⟨((Basis.singleton (Fin 1) ℂ).prod (Basis.singleton (Fin 1) ℂ).conj).dualBasis (Sum.inr 0), rfl⟩
