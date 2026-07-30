@@ -23,6 +23,7 @@ public import Mathlib.RingTheory.TensorProduct.Maps
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Contraction
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.Algebra.MvPolynomial.PDeriv
+public import Mathlib.LinearAlgebra.TensorAlgebra.Basis
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 /-!
 
@@ -39,7 +40,7 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 ## The basic type for a lagrangian theory
 
 -/
-open Matrix MatrixGroups Module
+open Matrix MatrixGroups Module TensorProduct
 
 structure LagrangianTheory (G : Type) [Group G] where
   -- The fermions
@@ -68,6 +69,17 @@ structure LagrangianTheory (G : Type) [Group G] where
   complexScalarBasis : ∀ φ, Basis (ComplexScalarComponents φ) ℂ (complexScalarModule φ)
   complexScalarRepLorentzGroup : ∀ φ, Representation ℂ SL(2,ℂ) (complexScalarModule φ)
   complexScalarRepGaugeGroup : ∀ φ, Representation ℂ G (complexScalarModule φ)
+  -- The real bosonic fields (e.g. the field strengths of the gauge bosons)
+  RealBosonIrreps : Type
+  [realBosonIrreps_fintype : Fintype RealBosonIrreps]
+  [realBosonIrreps_decEq : DecidableEq RealBosonIrreps]
+  RealBosonComponents : RealBosonIrreps → Type
+  [realBosonComponents_fintype : ∀ φ, Fintype (RealBosonComponents φ)]
+  [realBosonComponents_decEq : ∀ φ, DecidableEq (RealBosonComponents φ)]
+  realBosonModule : ∀ (_ : RealBosonIrreps), Type
+  [realBosonModule_addCommGroup : ∀ φ, AddCommGroup (realBosonModule φ)]
+  [realBosonModule_module : ∀ φ, Module ℂ (realBosonModule φ)]
+  realBosonBasis : ∀ φ, Basis (RealBosonComponents φ) ℂ (realBosonModule φ)
 
 namespace LagrangianTheory
 
@@ -113,22 +125,97 @@ def fermionicGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicGenerator ≃
   left_inv g := by cases g <;> rfl
   right_inv g := by cases g <;> rfl
 
+/-!
+
+### A.1. The vector spaces of the fermionic fields.
+
+-/
+
+/-- The target vector space of the fermionic fields.
+  If fermions are consider in terms of an associated-bundle, this vector space
+  would be the fiber of that bundle.
+
+  This vector space includes all the fields appearing in the theory. -/
 abbrev FermionicTargetSpace (L : LagrangianTheory G) := Π (φ : L.FermionIrreps),  L.fermionModule φ
 
-/-- The target space of the fermionic fields, including their conjugates. -/
+/-- The target vector space of covariant derivatives of fermions e.g. ∇_μ ψ.
+  This is similar to the Jet space associated with fermions, however, because covariant derivatives
+  do not commute, the commutation is not taken account of here.
+
+  This vector space includes all the fields in the theory + their covariant derivatives. -/
+abbrev FermionicDerivSpace (L : LagrangianTheory G) :=
+  TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace
+
+/-- The fermionic target space linearly embeds into the fermionic target space with derivatives. -/
+def FermionicTargetSpace.toFermionicDerivSpace {L : LagrangianTheory G} :
+    L.FermionicTargetSpace →ₗ[ℂ] L.FermionicDerivSpace :=
+  TensorProduct.mk ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) L.FermionicTargetSpace 1
+
+/-- Since fermions are complex fields, we also need to consider the target space of their
+  complex conjugate. The vector space `FermionicTargetSpaceWithComplex` is defined
+  to contain both the target space of the fields, and their conjugates.
+
+  This vector space includes all the fields appearing in the theory + their conjugates.  -/
 abbrev FermionicTargetSpaceWithComplex (L : LagrangianTheory G) := L.FermionicTargetSpace ×
   ConjModule L.FermionicTargetSpace
 
+/-- Similar to `FermionicTargetSpaceWithComplex` except including derivatives.
 
+  This vector space includes all the fields present in the theory + their conjugates + all
+  their covariant derivatives. -/
+abbrev FermionicDerivSpaceWithComplex (L : LagrangianTheory G) :=
+  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace) ×
+  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpaceWithComplex)
+
+/-- The vector space dual to `FermionicTargetSpaceWithComplex` and spanned by the component
+  functions of all the fields + their conjugates in the theory. -/
 abbrev FermionicComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℂ L.FermionicTargetSpaceWithComplex
+
+/-- The vector space dual to `FermionicDerivSpaceWithComplex` and spanned by the component
+  functions of all the fields + their conjugates + all their covariant derivatives in the theory. -/
+abbrev FermionicComponentSpaceWithDeriv (L : LagrangianTheory G) :=
+  Module.Dual ℂ L.FermionicDerivSpaceWithComplex
 
 noncomputable def fermionicComponentBasis {L : LagrangianTheory G}  :
     Basis L.FermionicGenerator ℂ L.FermionicComponentSpace :=
   ((Pi.basis (fun φ => L.fermionBasis φ)).prod
   ((Pi.basis (fun φ => L.fermionBasis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
 
+/-!
+
+## A.2. The fermionic algebras
+
+-/
+
+/-- The EFT algebra spanned by the fermions in the theory + their conjugate. -/
 abbrev FermionicEFTExclDeriv (L : LagrangianTheory G) := ExteriorAlgebra ℂ L.FermionicComponentSpace
+
+/-- The EFT algebra spanned by the fermions in the theory + their conjugate + all their
+  covariant derivatives without taking account of commutation of derivatives, or
+  total derivatives or equations of motion relations. -/
+abbrev FermionicEFTFreeDeriv (L : LagrangianTheory G) :=
+  ExteriorAlgebra ℂ L.FermionicComponentSpaceWithDeriv
+
+/-!
+
+## A.1. The derivative space of the fermionic fields
+
+-/
+
+/-- The basis of `FermionicDerivSpace` indexed by pairs of a list of spacetime
+  indices `Fin 1 ⊕ Fin 3` (the derivative slots, ordered since covariant derivatives
+  do not commute) and a basis index of the fermionic target space. -/
+noncomputable def FermionicDerivSpace.basis {L : LagrangianTheory G} :
+    Basis (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) ℂ
+      L.FermionicDerivSpace :=
+  (Lorentz.complexCoBasis.tensorAlgebra).tensorProduct (Pi.basis fun φ => L.fermionBasis φ)
+
+/-- The inclusion of single covariant derivatives of the fermionic fields into
+  the space of all covariant derivatives, `v ⊗ₜ ψ ↦ TensorAlgebra.ι ℂ v ⊗ₜ ψ`. -/
+noncomputable def FermionicDerivSpace.ofSingleDeriv {L : LagrangianTheory G} :
+    Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace →ₗ[ℂ] L.FermionicDerivSpace :=
+  LinearMap.rTensor L.FermionicTargetSpace (TensorAlgebra.ι ℂ)
 
 /-!
 
@@ -147,6 +234,37 @@ def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) L.Fermio
   map_mul' Λ1 Λ2 := by
     ext x i y
     simp
+
+/-- The representation of the Lorentz group on the tensor algebra of covariant
+  derivative slots, acting through `CoℂModule.SL2CRep` on each factor. -/
+noncomputable def derivSlotsRepLorentzGroup :
+    Representation ℂ SL(2,ℂ) (TensorAlgebra ℂ Lorentz.CoℂModule) where
+  toFun Λ := (TensorAlgebra.lift ℂ
+    (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ)).toLinearMap
+  map_one' := by
+    suffices h : TensorAlgebra.lift ℂ
+        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep 1) =
+        AlgHom.id ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) by
+      rw [h]; rfl
+    ext v
+    simp
+  map_mul' Λ1 Λ2 := by
+    suffices h : TensorAlgebra.lift ℂ
+        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep (Λ1 * Λ2)) =
+        (TensorAlgebra.lift ℂ
+          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ1)).comp
+        (TensorAlgebra.lift ℂ
+          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp
+
+/-- The representation of the Lorentz group on the covariant-derivative space of the fermionic
+  fields: the tensor product of the action on the derivative slots and the action
+  on the fermionic target space. -/
+noncomputable def FermionicDerivSpace.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.FermionicDerivSpace :=
+  derivSlotsRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup
 
 noncomputable def FermionicTargetSpaceWithComplex.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.FermionicTargetSpaceWithComplex :=
