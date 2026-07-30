@@ -125,6 +125,24 @@ def fermionicGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicGenerator ≃
   left_inv g := by cases g <;> rfl
   right_inv g := by cases g <;> rfl
 
+inductive FermionicDerivGenerator (L : LagrangianTheory G)
+  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
+      L.FermionicDerivGenerator
+  | bar (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
+      L.FermionicDerivGenerator
+
+def fermionicDerivGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicDerivGenerator ≃
+  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) ⊕
+  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) where
+  toFun g := match g with
+    | .of μ φ α => Sum.inl (μ, ⟨φ, α⟩)
+    | .bar μ φ α => Sum.inr (μ, ⟨φ, α⟩)
+  invFun g := match g with
+    | Sum.inl (μ, ⟨φ, α⟩) => .of μ φ α
+    | Sum.inr (μ, ⟨φ, α⟩) => .bar μ φ α
+  left_inv g := by cases g <;> rfl
+  right_inv g := by cases g <;> rfl
+
 /-!
 
 ### A.1. The vector spaces of the fermionic fields.
@@ -165,22 +183,25 @@ abbrev FermionicTargetSpaceWithComplex (L : LagrangianTheory G) := L.FermionicTa
   their covariant derivatives. -/
 abbrev FermionicDerivSpaceWithComplex (L : LagrangianTheory G) :=
   (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace) ×
-  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpaceWithComplex)
+  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.FermionicTargetSpace)
 
 /-- The vector space dual to `FermionicTargetSpaceWithComplex` and spanned by the component
   functions of all the fields + their conjugates in the theory. -/
 abbrev FermionicComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℂ L.FermionicTargetSpaceWithComplex
 
-/-- The vector space dual to `FermionicDerivSpaceWithComplex` and spanned by the component
-  functions of all the fields + their conjugates + all their covariant derivatives in the theory. -/
-abbrev FermionicComponentSpaceWithDeriv (L : LagrangianTheory G) :=
-  Module.Dual ℂ L.FermionicDerivSpaceWithComplex
+/-- The vector space spanned by the component functions of all the fields + their
+  conjugates + all their covariant derivatives in the theory.
 
-noncomputable def fermionicComponentBasis {L : LagrangianTheory G}  :
-    Basis L.FermionicGenerator ℂ L.FermionicComponentSpace :=
-  ((Pi.basis (fun φ => L.fermionBasis φ)).prod
-  ((Pi.basis (fun φ => L.fermionBasis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
+  This is the *graded* dual of `FermionicDerivSpaceWithComplex`: the duals of the
+  finite-dimensional building blocks are dualized individually and reassembled. The full
+  `Module.Dual` of `FermionicDerivSpaceWithComplex` is strictly larger (the latter is
+  infinite dimensional) and is not spanned by the component functions. -/
+abbrev FermionicComponentSpaceWithDeriv (L : LagrangianTheory G) :=
+  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+    Module.Dual ℂ L.FermionicTargetSpace) ×
+  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+    Module.Dual ℂ (ConjModule L.FermionicTargetSpace))
 
 /-!
 
@@ -199,45 +220,52 @@ abbrev FermionicEFTFreeDeriv (L : LagrangianTheory G) :=
 
 /-!
 
-## A.1. The derivative space of the fermionic fields
+## A.3. The basis of the fermionic vector spaces
+
+The main vector spaces are `FermionicComponentSpace` and `FermionicComponentSpaceWithDeriv`.
+On these spaces we want to define a basis indexed by `FermionicGenerator` and
+`FermionicDerivGenerator` respectively.
 
 -/
 
-/-- The basis of `FermionicDerivSpace` indexed by pairs of a list of spacetime
-  indices `Fin 1 ⊕ Fin 3` (the derivative slots, ordered since covariant derivatives
-  do not commute) and a basis index of the fermionic target space. -/
-noncomputable def FermionicDerivSpace.basis {L : LagrangianTheory G} :
-    Basis (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) ℂ
-      L.FermionicDerivSpace :=
-  (Lorentz.complexCoBasis.tensorAlgebra).tensorProduct (Pi.basis fun φ => L.fermionBasis φ)
+noncomputable def FermionicComponentSpace.basis {L : LagrangianTheory G}  :
+    Basis L.FermionicGenerator ℂ L.FermionicComponentSpace :=
+  ((Pi.basis (fun φ => L.fermionBasis φ)).prod
+  ((Pi.basis (fun φ => L.fermionBasis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
 
-/-- The inclusion of single covariant derivatives of the fermionic fields into
-  the space of all covariant derivatives, `v ⊗ₜ ψ ↦ TensorAlgebra.ι ℂ v ⊗ₜ ψ`. -/
-noncomputable def FermionicDerivSpace.ofSingleDeriv {L : LagrangianTheory G} :
-    Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace →ₗ[ℂ] L.FermionicDerivSpace :=
-  LinearMap.rTensor L.FermionicTargetSpace (TensorAlgebra.ι ℂ)
+
+noncomputable def FermionicComponentSpaceWithDeriv.basis {L : LagrangianTheory G} :
+    Basis L.FermionicDerivGenerator ℂ L.FermionicComponentSpaceWithDeriv :=
+  (((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+      (Pi.basis fun φ => L.fermionBasis φ).dualBasis).prod
+    ((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+      ((Pi.basis fun φ => L.fermionBasis φ).conj.dualBasis))).reindex
+    fermionicDerivGeneratorEquiv.symm
 
 /-!
 
-### A.1 The representation of the Lorentz group on the fermionic part
+## A.4. The representation of the Lorentz group on fermionic vector spaces and algebras
+
+We now define the respresentation of the Lorentz group on the vector spaces
+and algebras associated with Fermions. Note that since we are dealing with complex
+fields we take the Lorentz group to be `SL(2,ℂ)`, rather than dealing with projective
+representations of the Lorentz group.
+
+We are particularly interested in the representations acting on
+- the vector spaces `FermionicComponentSpace` and `FermionicComponentSpaceWithDeriv`, and
+- the algebras `FermionicEFTExclDeriv` and `FermionicEFTFreeDeriv`.
+
+To define the representations on vector spaces involving derivatives,
+we first need to define the representations on the derivative algebras.
 
 -/
 
+
 variable {L : LagrangianTheory G}
 
-def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicTargetSpace where
-  toFun Λ := LinearMap.piMap fun φ => L.fermionRepLorentzGroup φ Λ
-  map_one' := by
-    ext x i y
-    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
-      Function.comp_apply, Pi.map_apply, End.one_apply]
-  map_mul' Λ1 Λ2 := by
-    ext x i y
-    simp
-
 /-- The representation of the Lorentz group on the tensor algebra of covariant
-  derivative slots, acting through `CoℂModule.SL2CRep` on each factor. -/
-noncomputable def derivSlotsRepLorentzGroup :
+  derivatives, acting through `CoℂModule.SL2CRep` on each factor. -/
+noncomputable def derivAlgebraRepLorentzGroup :
     Representation ℂ SL(2,ℂ) (TensorAlgebra ℂ Lorentz.CoℂModule) where
   toFun Λ := (TensorAlgebra.lift ℂ
     (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ)).toLinearMap
@@ -259,12 +287,39 @@ noncomputable def derivSlotsRepLorentzGroup :
     ext v
     simp
 
-/-- The representation of the Lorentz group on the covariant-derivative space of the fermionic
-  fields: the tensor product of the action on the derivative slots and the action
-  on the fermionic target space. -/
-noncomputable def FermionicDerivSpace.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) L.FermionicDerivSpace :=
-  derivSlotsRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup
+noncomputable def dualDerivAlgebraRepLorentzGroup :
+    Representation ℂ SL(2,ℂ) (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
+  toFun Λ := (TensorAlgebra.lift ℂ
+    (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).toLinearMap
+  map_one' := by
+    suffices h : TensorAlgebra.lift ℂ
+        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual 1) =
+        AlgHom.id ℂ (TensorAlgebra ℂ _) by
+      rw [h]; rfl
+    ext v
+    simp
+    rfl
+  map_mul' Λ1 Λ2 := by
+    suffices h : TensorAlgebra.lift ℂ
+        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual (Λ1 * Λ2)) =
+        (TensorAlgebra.lift ℂ
+          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ1)).comp
+        (TensorAlgebra.lift ℂ
+          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp
+    rfl
+
+def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => L.fermionRepLorentzGroup φ Λ
+  map_one' := by
+    ext x i y
+    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
+      Function.comp_apply, Pi.map_apply, End.one_apply]
+  map_mul' Λ1 Λ2 := by
+    ext x i y
+    simp
 
 noncomputable def FermionicTargetSpaceWithComplex.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.FermionicTargetSpaceWithComplex :=
@@ -273,6 +328,11 @@ noncomputable def FermionicTargetSpaceWithComplex.repLorentzGroup :
 noncomputable def FermionicComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.FermionicComponentSpace :=
   FermionicTargetSpaceWithComplex.repLorentzGroup.dual
+
+noncomputable def FermionicComponentSpaceWithDeriv.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.FermionicComponentSpaceWithDeriv :=
+  (dualDerivAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.dual).prod
+  (dualDerivAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.conj.dual)
 
 noncomputable def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicEFTExclDeriv where
   toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)).toLinearMap
@@ -283,12 +343,22 @@ noncomputable def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(
     simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
+/-- The representation of the Lorentz group on the algebra `FermionicEFTFreeDeriv`.  -/
+noncomputable def FermionicEFTFreeDeriv.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.FermionicEFTFreeDeriv where
+  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' Λ1 Λ2 := by
+    simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
 /-!
 
-### A.2. The representation of the Gauge group on the fermionic part
+### A.5. The representation of the Lorentz group on fermionic vector spaces and algebras
 
 -/
-
 
 def FermionicTargetSpace.repGaugeGroup : Representation ℂ G L.FermionicTargetSpace where
   toFun Λ := LinearMap.piMap fun φ => L.fermionRepGaugeGroup φ Λ
@@ -304,8 +374,27 @@ noncomputable def FermionicTargetSpaceWithComplex.repGaugeGroup :
     Representation ℂ G L.FermionicTargetSpaceWithComplex :=
   FermionicTargetSpace.repGaugeGroup.prod (FermionicTargetSpace.repGaugeGroup.conj)
 
+/-- The representation of the gauge group on the covariant-derivative space of the
+  fermionic fields. The gauge group acts trivially on the derivative slots: this is
+  the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ ψ`
+  transforms in the same representation of the gauge group as `ψ` itself. -/
+noncomputable def FermionicDerivSpace.repGaugeGroup :
+    Representation ℂ G L.FermionicDerivSpace :=
+  (Representation.trivial ℂ G (TensorAlgebra ℂ Lorentz.CoℂModule)).tprod
+    FermionicTargetSpace.repGaugeGroup
+
 noncomputable def FermionicComponentSpace.repGaugeGroup : Representation ℂ G L.FermionicComponentSpace :=
   FermionicTargetSpaceWithComplex.repGaugeGroup.dual
+
+/-- The representation of the gauge group on the space of component functions of the
+  fermionic fields, their conjugates, and their covariant derivatives; trivial on the
+  derivative slots. -/
+noncomputable def FermionicComponentSpaceWithDeriv.repGaugeGroup :
+    Representation ℂ G L.FermionicComponentSpaceWithDeriv :=
+  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+    FermionicTargetSpace.repGaugeGroup.dual).prod
+  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+    FermionicTargetSpace.repGaugeGroup.conj.dual)
 
 noncomputable def FermionicEFTExclDeriv.repGaugeGroup : Representation ℂ G L.FermionicEFTExclDeriv where
   toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repGaugeGroup Λ)).toLinearMap
@@ -313,6 +402,16 @@ noncomputable def FermionicEFTExclDeriv.repGaugeGroup : Representation ℂ G L.F
     simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
   map_mul' Λ1 Λ2 := by
+    simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
+noncomputable def FermionicEFTFreeDeriv.repGaugeGroup :
+    Representation ℂ G L.FermionicEFTFreeDeriv where
+  toFun g := (ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+  map_one' := by
+    simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' g1 g2 := by
     simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
