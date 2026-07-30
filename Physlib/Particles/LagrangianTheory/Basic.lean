@@ -25,6 +25,8 @@ public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.Algebra.MvPolynomial.PDeriv
 public import Mathlib.LinearAlgebra.TensorAlgebra.Basis
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
+public import Physlib.Relativity.SL2C.Basic
 /-!
 
 # The Standard Model EFT Lagrangian without derivatives
@@ -81,7 +83,7 @@ structure LagrangianTheory (G : Type) [Group G] where
   [realBosonModule_module : ∀ φ, Module ℝ (realBosonModule φ)]
   realBosonBasis : ∀ φ, Basis (RealBosonComponents φ) ℝ (realBosonModule φ)
   realBosonRepLorentzGroup : ∀ φ, Representation ℝ SL(2,ℂ) (realBosonModule φ)
-  realBosonRepGaugeGroup : ∀ φ, Representation ℝ G (complexScalarModule φ)
+  realBosonRepGaugeGroup : ∀ φ, Representation ℝ G (realBosonModule φ)
 
 namespace LagrangianTheory
 
@@ -92,6 +94,9 @@ attribute [instance] fermionIrreps_fintype fermionIrreps_decEq
   complexScalarIrreps_fintype complexScalarIrreps_decEq
   complexScalarComponents_fintype complexScalarComponents_decEq
   complexScalarModule_addCommGroup complexScalarModule_module
+  realBosonIrreps_fintype realBosonIrreps_decEq
+  realBosonComponents_fintype realBosonComponents_decEq
+  realBosonModule_addCommGroup realBosonModule_module
 
 variable {G : Type} [Group G]
 
@@ -711,7 +716,379 @@ noncomputable def ComplexScalarEFTFreeDeriv.repGaugeGroup :
 
 /-!
 
-## C. General field generators
+## C. Definitions related to real bosons
+
+The real bosonic fields (for example the field strengths of the gauge bosons) are
+genuinely real, so unlike the fermions and complex scalars there is no conjugate
+field, and every vector space and algebra below is taken over `ℝ`.
+
+-/
+
+inductive RealBosonGenerator (L : LagrangianTheory G)
+  | of (φ : L.RealBosonIrreps) (α : L.RealBosonComponents φ) : L.RealBosonGenerator
+deriving DecidableEq, Fintype
+
+def realBosonGeneratorEquiv :
+    L.RealBosonGenerator ≃ Σ φ : L.RealBosonIrreps, L.RealBosonComponents φ where
+  toFun g := match g with
+    | .of φ α => ⟨φ, α⟩
+  invFun g := match g with
+    | ⟨φ, α⟩ => .of φ α
+  left_inv g := by cases g; rfl
+  right_inv g := by cases g; rfl
+
+inductive RealBosonDerivGenerator (L : LagrangianTheory G)
+  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.RealBosonIrreps) (α : L.RealBosonComponents φ) :
+      L.RealBosonDerivGenerator
+
+def realBosonDerivGeneratorEquiv : L.RealBosonDerivGenerator ≃
+    List (Fin 1 ⊕ Fin 3) × Σ φ : L.RealBosonIrreps, L.RealBosonComponents φ where
+  toFun g := match g with
+    | .of μ φ α => (μ, ⟨φ, α⟩)
+  invFun g := match g with
+    | (μ, ⟨φ, α⟩) => .of μ φ α
+  left_inv g := by cases g; rfl
+  right_inv g := by cases g; rfl
+
+/-!
+
+### C.1. The vector spaces of the real bosonic fields.
+
+-/
+
+/-- The target vector space of the real bosonic fields.
+
+  This vector space includes all the real bosonic fields appearing in the theory. -/
+abbrev RealBosonTargetSpace (L : LagrangianTheory G) :=
+  Π (φ : L.RealBosonIrreps), L.realBosonModule φ
+
+/-- The target vector space of covariant derivatives of the real bosonic fields
+  e.g. ∇_μ B. Because covariant derivatives do not commute, the commutation is not
+  taken account of here.
+
+  This vector space includes all the real bosonic fields in the theory + their
+  covariant derivatives. -/
+abbrev RealBosonDerivSpace (L : LagrangianTheory G) :=
+  TensorAlgebra ℝ Lorentz.CoVector ⊗[ℝ] L.RealBosonTargetSpace
+
+/-- The real bosonic target space linearly embeds into the real bosonic target space
+  with derivatives. -/
+def RealBosonTargetSpace.toRealBosonDerivSpace {L : LagrangianTheory G} :
+    L.RealBosonTargetSpace →ₗ[ℝ] L.RealBosonDerivSpace :=
+  TensorProduct.mk ℝ (TensorAlgebra ℝ Lorentz.CoVector) L.RealBosonTargetSpace 1
+
+/-- The vector space dual to `RealBosonTargetSpace` and spanned by the component
+  functions of all the real bosonic fields in the theory. There is no conjugate
+  factor, since the fields are real. -/
+abbrev RealBosonComponentSpace (L : LagrangianTheory G) :=
+  Module.Dual ℝ L.RealBosonTargetSpace
+
+/-- The vector space spanned by the component functions of all the real bosonic
+  fields + all their covariant derivatives in the theory.
+
+  This is the *graded* dual of `RealBosonDerivSpace`: the duals of the
+  finite-dimensional building blocks are dualized individually and reassembled. -/
+abbrev RealBosonComponentSpaceWithDeriv (L : LagrangianTheory G) :=
+  TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ L.RealBosonTargetSpace
+
+/-!
+
+### C.2. The real bosonic algebras
+
+-/
+
+/-- The EFT algebra spanned by the real bosonic fields in the theory. -/
+abbrev RealBosonEFTExclDeriv (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℝ L.RealBosonComponentSpace
+
+/-- The EFT algebra spanned by the real bosonic fields in the theory + all their
+  covariant derivatives without taking account of commutation of derivatives, or
+  total derivatives or equations of motion relations. -/
+abbrev RealBosonEFTFreeDeriv (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℝ L.RealBosonComponentSpaceWithDeriv
+
+
+/-- The real bosonic EFT algebra with complex coefficients: the real bosonic EFT
+  algebra with scalars extended from `ℝ` to `ℂ`, so that it can be combined with the
+  complex scalar and fermionic algebras in the full EFT Lagrangian. -/
+abbrev RealBosonEFTExclDerivComplex (L : LagrangianTheory G) :=  ℂ ⊗[ℝ] L.RealBosonEFTExclDeriv
+
+/-- The real bosonic EFT algebra including covariant derivatives, with complex
+  coefficients: `RealBosonEFTFreeDeriv` with scalars extended from `ℝ` to `ℂ`, so
+  that it can be combined with the complex scalar and fermionic algebras in the full
+  EFT Lagrangian. -/
+abbrev RealBosonEFTFreeDerivComplex (L : LagrangianTheory G) := ℂ ⊗[ℝ] L.RealBosonEFTFreeDeriv
+
+
+/-!
+
+### C.3. The basis of the real bosonic vector spaces
+
+-/
+
+noncomputable def RealBosonComponentSpace.basis :
+    Basis L.RealBosonGenerator ℝ L.RealBosonComponentSpace :=
+  (Pi.basis (fun φ => L.realBosonBasis φ)).dualBasis.reindex realBosonGeneratorEquiv.symm
+
+noncomputable def RealBosonComponentSpaceWithDeriv.basis :
+    Basis L.RealBosonDerivGenerator ℝ L.RealBosonComponentSpaceWithDeriv :=
+  ((Lorentz.CoVector.basis.dualBasis.tensorAlgebra).tensorProduct
+    (Pi.basis fun φ => L.realBosonBasis φ).dualBasis).reindex
+    realBosonDerivGeneratorEquiv.symm
+
+/-!
+
+### C.4. The representation of the Lorentz group on real bosonic vector spaces and algebras
+
+-/
+
+/-- The representation of the Lorentz group on the real Lorentz-covector derivative
+  slots, obtained from the real Lorentz-vector representation through the covering
+  map `SL(2,ℂ) →* LorentzGroup 3`. -/
+noncomputable def realBosonSlotRepLorentzGroup : Representation ℝ SL(2,ℂ) Lorentz.CoVector :=
+  MonoidHom.comp Lorentz.CoVector.rep Lorentz.SL2C.toLorentzGroup
+
+/-- The representation of the Lorentz group on the tensor algebra of real covariant
+  derivative slots. -/
+noncomputable def realDerivAlgebraRepLorentzGroup :
+    Representation ℝ SL(2,ℂ) (TensorAlgebra ℝ Lorentz.CoVector) where
+  toFun Λ := (TensorAlgebra.lift ℝ
+    (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    suffices h : TensorAlgebra.lift ℝ
+        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup 1) =
+        AlgHom.id ℝ (TensorAlgebra ℝ Lorentz.CoVector) by
+      rw [h]; rfl
+    ext v
+    simp
+  map_mul' Λ1 Λ2 := by
+    suffices h : TensorAlgebra.lift ℝ
+        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup (Λ1 * Λ2)) =
+        (TensorAlgebra.lift ℝ
+          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ1)).comp
+        (TensorAlgebra.lift ℝ
+          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp [realBosonSlotRepLorentzGroup]
+
+/-- The representation of the Lorentz group on the tensor algebra of dual real
+  covariant derivative slots. -/
+noncomputable def dualRealDerivAlgebraRepLorentzGroup :
+    Representation ℝ SL(2,ℂ) (TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) where
+  toFun Λ := (TensorAlgebra.lift ℝ
+    (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ)).toLinearMap
+  map_one' := by
+    suffices h : TensorAlgebra.lift ℝ
+        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual 1) =
+        AlgHom.id ℝ (TensorAlgebra ℝ _) by
+      rw [h]; rfl
+    ext v
+    simp
+    rfl
+  map_mul' Λ1 Λ2 := by
+    suffices h : TensorAlgebra.lift ℝ
+        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual (Λ1 * Λ2)) =
+        (TensorAlgebra.lift ℝ
+          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ1)).comp
+        (TensorAlgebra.lift ℝ
+          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp
+    rfl
+
+def RealBosonTargetSpace.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonTargetSpace where
+  toFun Λ := LinearMap.piMap fun φ => L.realBosonRepLorentzGroup φ Λ
+  map_one' := by
+    ext x i y
+    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
+      Function.comp_apply, Pi.map_apply, End.one_apply]
+  map_mul' Λ1 Λ2 := by
+    ext x i y
+    simp
+
+/-- The representation of the Lorentz group on the covariant-derivative space of the
+  real bosonic fields: the tensor product of the action on the derivative slots and
+  the action on the real bosonic target space. -/
+noncomputable def RealBosonDerivSpace.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonDerivSpace :=
+  realDerivAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup
+
+noncomputable def RealBosonComponentSpace.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonComponentSpace :=
+  RealBosonTargetSpace.repLorentzGroup.dual
+
+noncomputable def RealBosonComponentSpaceWithDeriv.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonComponentSpaceWithDeriv :=
+  dualRealDerivAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup.dual
+
+noncomputable def RealBosonEFTExclDeriv.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonEFTExclDeriv where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repLorentzGroup Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repLorentzGroup Λ2)) by
+      rw [h]; rfl
+    ext v
+    simp
+
+/-- The representation of the Lorentz group on the algebra `RealBosonEFTFreeDeriv`. -/
+noncomputable def RealBosonEFTFreeDeriv.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonEFTFreeDeriv where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
+
+
+/-- The representation of the Lorentz group on the complexified real bosonic EFT
+  algebra, obtained from the real representation by extension of scalars and
+  transported to the wrapper type. -/
+noncomputable def RealBosonEFTExclDerivComplex.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) (RealBosonEFTExclDerivComplex L) where
+  toFun Λ :=
+    LinearMap.baseChange ℂ (RealBosonEFTExclDeriv.repLorentzGroup Λ)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
+
+/-- The representation of the Lorentz group on the complexified real bosonic EFT
+  algebra with derivatives, obtained from the real representation by extension of
+  scalars. -/
+noncomputable def RealBosonEFTFreeDerivComplex.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) (RealBosonEFTFreeDerivComplex L) where
+  toFun Λ :=
+    LinearMap.baseChange ℂ (RealBosonEFTFreeDeriv.repLorentzGroup Λ)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
+
+
+/-!
+
+### C.5. The representation of the Gauge group on real bosonic vector spaces and algebras
+
+-/
+
+def RealBosonTargetSpace.repGaugeGroup :
+    Representation ℝ G L.RealBosonTargetSpace where
+  toFun g := LinearMap.piMap fun φ => L.realBosonRepGaugeGroup φ g
+  map_one' := by
+    ext x i y
+    simp only [map_one, LinearMap.coe_comp, LinearMap.coe_piMap, LinearMap.coe_single,
+      Function.comp_apply, Pi.map_apply, End.one_apply]
+  map_mul' g1 g2 := by
+    ext x i y
+    simp
+
+/-- The representation of the gauge group on the covariant-derivative space of the
+  real bosonic fields. The gauge group acts trivially on the derivative slots: this
+  is the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ B`
+  transforms in the same representation of the gauge group as `B` itself. -/
+noncomputable def RealBosonDerivSpace.repGaugeGroup :
+    Representation ℝ G L.RealBosonDerivSpace :=
+  (Representation.trivial ℝ G (TensorAlgebra ℝ Lorentz.CoVector)).tprod
+    RealBosonTargetSpace.repGaugeGroup
+
+noncomputable def RealBosonComponentSpace.repGaugeGroup :
+    Representation ℝ G L.RealBosonComponentSpace :=
+  RealBosonTargetSpace.repGaugeGroup.dual
+
+/-- The representation of the gauge group on the space of component functions of the
+  real bosonic fields and their covariant derivatives; trivial on the derivative
+  slots. -/
+noncomputable def RealBosonComponentSpaceWithDeriv.repGaugeGroup :
+    Representation ℝ G L.RealBosonComponentSpaceWithDeriv :=
+  (Representation.trivial ℝ G (TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))).tprod
+    RealBosonTargetSpace.repGaugeGroup.dual
+
+noncomputable def RealBosonEFTExclDeriv.repGaugeGroup :
+    Representation ℝ G L.RealBosonEFTExclDeriv where
+  toFun g := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repGaugeGroup g)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' g1 g2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repGaugeGroup (g1 * g2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repGaugeGroup g1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpace.repGaugeGroup g2)) by
+      rw [h]; rfl
+    ext v
+    simp
+
+noncomputable def RealBosonEFTFreeDeriv.repGaugeGroup :
+    Representation ℝ G L.RealBosonEFTFreeDeriv where
+  toFun g := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' g1 g2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup (g1 * g2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
+
+noncomputable def RealBosonEFTExclDerivComplex.repGaugeGroup :
+    Representation ℂ G (RealBosonEFTExclDerivComplex L) where
+  toFun g :=
+    LinearMap.baseChange ℂ (RealBosonEFTExclDeriv.repGaugeGroup g)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' g1 g2 := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
+
+/-- The representation of the gauge group on the complexified real bosonic EFT
+  algebra with derivatives, obtained from the real representation by extension of
+  scalars. -/
+noncomputable def RealBosonEFTFreeDerivComplex.repGaugeGroup :
+    Representation ℂ G (RealBosonEFTFreeDerivComplex L) where
+  toFun g :=
+    LinearMap.baseChange ℂ (RealBosonEFTFreeDeriv.repGaugeGroup g)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' g1 g2 := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
+
+/-!
+
+## D. General field generators
 
 -/
 
@@ -719,35 +1096,28 @@ noncomputable def ComplexScalarEFTFreeDeriv.repGaugeGroup :
 inductive FieldGenerators (L : LagrangianTheory G)
   | cScalar (_ : L.ComplexScalarGenerator) : FieldGenerators L
   | fermion (_ : L.FermionicGenerator) : FieldGenerators L
+  | realBoson (_ : L.RealBosonGenerator) : FieldGenerators L
 deriving DecidableEq, Fintype
 
 def FieldGenerators.IsFermion : L.FieldGenerators → Bool
   | .cScalar _ => False
   | .fermion _ => True
+  | .realBoson _ => False
 
 def FieldGenerators.IsBoson : L.FieldGenerators → Bool
   | .cScalar _ => True
   | .fermion _ => False
+  | .realBoson _ => True
 
 def FieldGenerators.conjugate : L.FieldGenerators → L.FieldGenerators
   | .cScalar g => .cScalar g.conjugate
   | .fermion g => .fermion g.conjugate
+  | .realBoson g => .realBoson g
 
 @[simp]
 lemma FieldGenerators.conjugate_conjugate (ϕ : L.FieldGenerators) :
     ϕ.conjugate.conjugate = ϕ := by
   cases ϕ <;> simp [conjugate]
-
-def fieldGeneratorsEquiv : L.FieldGenerators ≃
-    L.ComplexScalarGenerator ⊕ L.FermionicGenerator where
-  toFun g := match g with
-    | .cScalar g => Sum.inl g
-    | .fermion g => Sum.inr g
-  invFun g := match g with
-    | Sum.inl g => .cScalar g
-    | Sum.inr g => .fermion g
-  left_inv g := by cases g <;> rfl
-  right_inv g := by cases g <;> rfl
 
 @[simp]
 lemma FieldGenerators.cScalar_isFermion (ϕ : L.ComplexScalarGenerator) :

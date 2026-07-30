@@ -23,15 +23,28 @@ open TensorProduct Matrix MatrixGroups
 variable {G : Type} [Group G]
 
 
+variable {L : LagrangianTheory G}
+
 abbrev EFTLagrangianExclDeriv (L : LagrangianTheory G)  : Type :=
-  -- bosonic part of the lagrangian
+  -- complex scalar part of the lagrangian
   L.ComplexScalarEFTExclDeriv ⊗[ℂ]
-  -- fermionic part of the lagrangian
-  L.FermionicEFTExclDeriv
+   L.RealBosonEFTExclDerivComplex ⊗[ℂ] L.FermionicEFTExclDeriv
 
 namespace EFTLagrangianExclDeriv
 
 variable {L : LagrangianTheory G}
+
+
+set_option maxSynthPendingDepth 4 in
+noncomputable instance : Ring (L.EFTLagrangianExclDeriv) := inferInstanceAs <|
+  Ring (L.ComplexScalarEFTExclDeriv ⊗[ℂ]
+   L.RealBosonEFTExclDerivComplex ⊗[ℂ] L.FermionicEFTExclDeriv)
+
+set_option maxSynthPendingDepth 4 in
+noncomputable instance : Algebra ℂ (L.EFTLagrangianExclDeriv) := inferInstanceAs <|
+  Algebra ℂ (L.ComplexScalarEFTExclDeriv ⊗[ℂ]
+   L.RealBosonEFTExclDerivComplex ⊗[ℂ] L.FermionicEFTExclDeriv)
+
 /-!
 
 ## A. The invariance conditions
@@ -44,8 +57,10 @@ variable {L : LagrangianTheory G}
 
 -/
 
-noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) L.EFTLagrangianExclDeriv :=
-  (ComplexScalarEFTExclDeriv.repLorentzGroup).tprod (FermionicEFTExclDeriv.repLorentzGroup)
+noncomputable def repLorentzGroup :  Representation ℂ SL(2,ℂ) L.EFTLagrangianExclDeriv :=
+  ((ComplexScalarEFTExclDeriv.repLorentzGroup (L := L)).tprod
+    (RealBosonEFTExclDerivComplex.repLorentzGroup (L := L))).tprod
+    (FermionicEFTExclDeriv.repLorentzGroup (L := L))
 
 
 end EFTLagrangianExclDeriv
