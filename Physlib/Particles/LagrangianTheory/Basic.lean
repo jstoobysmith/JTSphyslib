@@ -78,8 +78,10 @@ structure LagrangianTheory (G : Type) [Group G] where
   [realBosonComponents_decEq : ∀ φ, DecidableEq (RealBosonComponents φ)]
   realBosonModule : ∀ (_ : RealBosonIrreps), Type
   [realBosonModule_addCommGroup : ∀ φ, AddCommGroup (realBosonModule φ)]
-  [realBosonModule_module : ∀ φ, Module ℂ (realBosonModule φ)]
-  realBosonBasis : ∀ φ, Basis (RealBosonComponents φ) ℂ (realBosonModule φ)
+  [realBosonModule_module : ∀ φ, Module ℝ (realBosonModule φ)]
+  realBosonBasis : ∀ φ, Basis (RealBosonComponents φ) ℝ (realBosonModule φ)
+  realBosonRepLorentzGroup : ∀ φ, Representation ℝ SL(2,ℂ) (realBosonModule φ)
+  realBosonRepGaugeGroup : ∀ φ, Representation ℝ G (complexScalarModule φ)
 
 namespace LagrangianTheory
 
