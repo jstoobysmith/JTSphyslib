@@ -356,7 +356,7 @@ noncomputable def FermionicEFTFreeDeriv.repLorentzGroup :
 
 /-!
 
-### A.5. The representation of the Lorentz group on fermionic vector spaces and algebras
+### A.5. The representation of the Gauge group on fermionic vector spaces and algebras
 
 -/
 
@@ -447,28 +447,126 @@ def complexScalarGeneratorEquiv : L.ComplexScalarGenerator ≃
   left_inv g := by cases g <;> rfl
   right_inv g := by cases g <;> rfl
 
+inductive ComplexScalarDerivGenerator (L : LagrangianTheory G)
+  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
+      (α : L.ComplexScalarComponents φ) : L.ComplexScalarDerivGenerator
+  | bar (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
+      (α : L.ComplexScalarComponents φ) : L.ComplexScalarDerivGenerator
+
+def complexScalarDerivGeneratorEquiv : L.ComplexScalarDerivGenerator ≃
+  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) ⊕
+  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) where
+  toFun g := match g with
+    | .of μ φ α => Sum.inl (μ, ⟨φ, α⟩)
+    | .bar μ φ α => Sum.inr (μ, ⟨φ, α⟩)
+  invFun g := match g with
+    | Sum.inl (μ, ⟨φ, α⟩) => .of μ φ α
+    | Sum.inr (μ, ⟨φ, α⟩) => .bar μ φ α
+  left_inv g := by cases g <;> rfl
+  right_inv g := by cases g <;> rfl
+
+/-!
+
+### B.1. The vector spaces of the complex scalar fields.
+
+-/
+
+/-- The target vector space of the complex scalar fields.
+
+  This vector space includes all the complex scalar fields appearing in the theory. -/
 abbrev ComplexScalarTargetSpace (L : LagrangianTheory G) :=
   Π (φ : L.ComplexScalarIrreps), L.complexScalarModule φ
+
+/-- The target vector space of covariant derivatives of the complex scalar fields
+  e.g. ∇_μ ϕ. This is similar to the Jet space associated with the scalars, however,
+  because covariant derivatives do not commute, the commutation is not taken account
+  of here.
+
+  This vector space includes all the complex scalar fields in the theory + their
+  covariant derivatives. -/
+abbrev ComplexScalarDerivSpace (L : LagrangianTheory G) :=
+  TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace
+
+/-- The complex scalar target space linearly embeds into the complex scalar target
+  space with derivatives. -/
+def ComplexScalarTargetSpace.toComplexScalarDerivSpace {L : LagrangianTheory G} :
+    L.ComplexScalarTargetSpace →ₗ[ℂ] L.ComplexScalarDerivSpace :=
+  TensorProduct.mk ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) L.ComplexScalarTargetSpace 1
 
 /-- The target space of the complex scalar fields, including their conjugates. -/
 abbrev ComplexScalarTargetSpaceWithComplex (L : LagrangianTheory G) :=
   L.ComplexScalarTargetSpace × ConjModule L.ComplexScalarTargetSpace
 
+/-- Similar to `ComplexScalarTargetSpaceWithComplex` except including derivatives.
+
+  This vector space includes all the complex scalar fields present in the theory +
+  their conjugates + all their covariant derivatives. -/
+abbrev ComplexScalarDerivSpaceWithComplex (L : LagrangianTheory G) :=
+  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace) ×
+  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.ComplexScalarTargetSpace)
+
+/-- The vector space dual to `ComplexScalarTargetSpaceWithComplex` and spanned by the
+  component functions of all the complex scalar fields + their conjugates in the
+  theory. -/
 abbrev ComplexScalarComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℂ L.ComplexScalarTargetSpaceWithComplex
 
-noncomputable def complexScalarComponentBasis :
+/-- The vector space spanned by the component functions of all the complex scalar
+  fields + their conjugates + all their covariant derivatives in the theory.
+
+  This is the *graded* dual of `ComplexScalarDerivSpaceWithComplex`: the duals of the
+  finite-dimensional building blocks are dualized individually and reassembled. The
+  full `Module.Dual` of `ComplexScalarDerivSpaceWithComplex` is strictly larger (the
+  latter is infinite dimensional) and is not spanned by the component functions. -/
+abbrev ComplexScalarComponentSpaceWithDeriv (L : LagrangianTheory G) :=
+  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+    Module.Dual ℂ L.ComplexScalarTargetSpace) ×
+  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+    Module.Dual ℂ (ConjModule L.ComplexScalarTargetSpace))
+
+/-!
+
+### B.2. The complex scalar algebras
+
+-/
+
+/-- The EFT algebra spanned by the complex scalars in the theory + their conjugate. -/
+abbrev ComplexScalarEFTExclDeriv (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℂ L.ComplexScalarComponentSpace
+
+/-- The EFT algebra spanned by the complex scalars in the theory + their conjugate +
+  all their covariant derivatives without taking account of commutation of
+  derivatives, or total derivatives or equations of motion relations. -/
+abbrev ComplexScalarEFTFreeDeriv (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℂ L.ComplexScalarComponentSpaceWithDeriv
+
+/-!
+
+### B.3. The basis of the complex scalar vector spaces
+
+The main vector spaces are `ComplexScalarComponentSpace` and
+`ComplexScalarComponentSpaceWithDeriv`. On these spaces we want to define a basis
+indexed by `ComplexScalarGenerator` and `ComplexScalarDerivGenerator` respectively.
+
+-/
+
+noncomputable def ComplexScalarComponentSpace.basis :
     Basis L.ComplexScalarGenerator ℂ L.ComplexScalarComponentSpace :=
   ((Pi.basis (fun φ => L.complexScalarBasis φ)).prod
   ((Pi.basis (fun φ => L.complexScalarBasis φ)).conj)).dualBasis.reindex
     complexScalarGeneratorEquiv.symm
 
-abbrev ComplexScalarEFTExclDeriv (L : LagrangianTheory G) :=
-  SymmetricAlgebra ℂ L.ComplexScalarComponentSpace
+noncomputable def ComplexScalarComponentSpaceWithDeriv.basis :
+    Basis L.ComplexScalarDerivGenerator ℂ L.ComplexScalarComponentSpaceWithDeriv :=
+  (((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+      (Pi.basis fun φ => L.complexScalarBasis φ).dualBasis).prod
+    ((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+      ((Pi.basis fun φ => L.complexScalarBasis φ).conj.dualBasis))).reindex
+    complexScalarDerivGeneratorEquiv.symm
 
 /-!
 
-### B.1 The representation of the Lorentz group on the complex scalar part
+### B.4. The representation of the Lorentz group on complex scalar vector spaces and algebras
 
 -/
 
@@ -491,6 +589,11 @@ noncomputable def ComplexScalarComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarComponentSpace :=
   ComplexScalarTargetSpaceWithComplex.repLorentzGroup.dual
 
+noncomputable def ComplexScalarComponentSpaceWithDeriv.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.ComplexScalarComponentSpaceWithDeriv :=
+  (dualDerivAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.dual).prod
+  (dualDerivAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.conj.dual)
+
 noncomputable def ComplexScalarEFTExclDeriv.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarEFTExclDeriv where
   toFun Λ := (SymmetricAlgebra.lift
@@ -508,9 +611,27 @@ noncomputable def ComplexScalarEFTExclDeriv.repLorentzGroup :
     ext v
     simp
 
+/-- The representation of the Lorentz group on the algebra `ComplexScalarEFTFreeDeriv`. -/
+noncomputable def ComplexScalarEFTFreeDeriv.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.ComplexScalarEFTFreeDeriv where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
+
 /-!
 
-### B.2. The representation of the Gauge group on the complex scalar part
+### B.5. The representation of the Gauge group on complex scalar vector spaces and algebras
 
 -/
 
@@ -529,9 +650,28 @@ noncomputable def ComplexScalarTargetSpaceWithComplex.repGaugeGroup :
     Representation ℂ G L.ComplexScalarTargetSpaceWithComplex :=
   ComplexScalarTargetSpace.repGaugeGroup.prod (ComplexScalarTargetSpace.repGaugeGroup.conj)
 
+/-- The representation of the gauge group on the covariant-derivative space of the
+  complex scalar fields. The gauge group acts trivially on the derivative slots: this
+  is the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ ϕ`
+  transforms in the same representation of the gauge group as `ϕ` itself. -/
+noncomputable def ComplexScalarDerivSpace.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarDerivSpace :=
+  (Representation.trivial ℂ G (TensorAlgebra ℂ Lorentz.CoℂModule)).tprod
+    ComplexScalarTargetSpace.repGaugeGroup
+
 noncomputable def ComplexScalarComponentSpace.repGaugeGroup :
     Representation ℂ G L.ComplexScalarComponentSpace :=
   ComplexScalarTargetSpaceWithComplex.repGaugeGroup.dual
+
+/-- The representation of the gauge group on the space of component functions of the
+  complex scalar fields, their conjugates, and their covariant derivatives; trivial on
+  the derivative slots. -/
+noncomputable def ComplexScalarComponentSpaceWithDeriv.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarComponentSpaceWithDeriv :=
+  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+    ComplexScalarTargetSpace.repGaugeGroup.dual).prod
+  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+    ComplexScalarTargetSpace.repGaugeGroup.conj.dual)
 
 noncomputable def ComplexScalarEFTExclDeriv.repGaugeGroup :
     Representation ℂ G L.ComplexScalarEFTExclDeriv where
@@ -549,6 +689,23 @@ noncomputable def ComplexScalarEFTExclDeriv.repGaugeGroup :
       rw [h]; rfl
     ext v
     simp
+
+noncomputable def ComplexScalarEFTFreeDeriv.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarEFTFreeDeriv where
+  toFun g := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' g1 g2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup (g1 * g2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
 
 /-!
 
