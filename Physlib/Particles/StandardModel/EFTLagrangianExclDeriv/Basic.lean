@@ -942,4 +942,30 @@ lemma mem_termOfList_span (V : EFTLagrangianExclDeriv) :
       | add b₁ b₂ h₁ h₂ => rw [TensorProduct.tmul_add]; exact Submodule.add_mem _ h₁ h₂
     simpa using hmul_mem _ _ h1 h2
 
+/-- The linear map `EFTLagrangianExclDeriv →ₗ[ℂ] A` determined by the values `F l` on
+  the spanning terms `termOfList l`, provided `F` respects the scaling relations that
+  hold among the terms. -/
+noncomputable def liftLinear {A : Type} [Ring A] [Algebra ℂ A] (F : List FieldGenerators → A)
+    (hscale : ∀ (l1 l2 : List FieldGenerators) (c : ℂ),
+      termOfList l1 = c • termOfList l2 → F l1 = c • F l2) :
+    EFTLagrangianExclDeriv →ₗ[ℂ] A :=
+  let π : (List FieldGenerators →₀ ℂ) →ₗ[ℂ] EFTLagrangianExclDeriv :=
+    Finsupp.linearCombination ℂ termOfList
+  let φ : (List FieldGenerators →₀ ℂ) →ₗ[ℂ] A :=
+    Finsupp.linearCombination ℂ F
+  have hπ : Function.Surjective π :=
+    LinearMap.range_eq_top.mp (by
+      rw [Finsupp.range_linearCombination, eq_top_iff]
+      exact fun V _ => mem_termOfList_span V)
+  have hker : LinearMap.ker π ≤ LinearMap.ker φ := by
+
+    sorry
+  ((LinearMap.ker π).liftQ φ hker).comp (π.quotKerEquivOfSurjective hπ).symm.toLinearMap
+
+lemma liftLinear_of_eq (A : Type) [Ring A] [Algebra ℂ A] (F : List FieldGenerators → A)
+    (hscale : ∀ (l1 l2 : List FieldGenerators) (c : ℂ),
+      termOfList l1 = c • termOfList l2 → F l1 = c • F l2) (l : List FieldGenerators) :
+    liftLinear F hscale (termOfList l) = F l := by
+  simp [liftLinear]
+
 end EFTLagrangianExclDeriv
