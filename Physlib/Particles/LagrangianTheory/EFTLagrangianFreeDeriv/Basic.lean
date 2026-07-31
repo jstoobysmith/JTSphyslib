@@ -9,9 +9,14 @@ public import Physlib.Particles.LagrangianTheory.Basic
 
 /-!
 
-# The Standard Model EFT Lagrangian with derivatives
+# The EFT Lagrangian with free derivatives
 
 ## i. Overview
+
+For a Lagrangian theory, this file defines the algebra of complex-scalar, real-boson, and
+fermionic expressions with arbitrarily many derivatives. It also bundles the Lorentz action as an
+algebra homomorphism and proves that the existing tensor-product representation preserves
+multiplication and the unit.
 
 -/
 
@@ -21,69 +26,172 @@ namespace LagrangianTheory
 
 open TensorProduct Matrix MatrixGroups
 
+noncomputable section
+
 variable {G : Type} [Group G]
-
-
 variable {L : LagrangianTheory G}
 
-abbrev EFTLagrangianFreeDeriv (L : LagrangianTheory G)  : Type :=
-  -- complex scalar part of the lagrangian
+/-- The algebra of Lagrangian expressions whose derivative-decorated fields remain freely
+generated. -/
+abbrev EFTLagrangianFreeDeriv (L : LagrangianTheory G) : Type :=
   L.ComplexScalarEFTFreeDeriv ⊗[ℂ]
-   L.RealBosonEFTFreeDerivComplex ⊗[ℂ] L.FermionicEFTFreeDeriv
+    L.RealBosonEFTFreeDerivComplex ⊗[ℂ] L.FermionicEFTFreeDeriv
 
+namespace EFTLagrangianFreeDeriv
 
-#synth Ring L.EFTLagrangianFreeDeriv
-namespace EFTLagrangianExclDeriv
+set_option maxSynthPendingDepth 4 in
+noncomputable instance : Ring L.EFTLagrangianFreeDeriv := inferInstanceAs <|
+  Ring (L.ComplexScalarEFTFreeDeriv ⊗[ℂ]
+    L.RealBosonEFTFreeDerivComplex ⊗[ℂ] L.FermionicEFTFreeDeriv)
 
-variable {L : LagrangianTheory G}
+set_option maxSynthPendingDepth 4 in
+noncomputable instance : Algebra ℂ L.EFTLagrangianFreeDeriv := inferInstanceAs <|
+  Algebra ℂ (L.ComplexScalarEFTFreeDeriv ⊗[ℂ]
+    L.RealBosonEFTFreeDerivComplex ⊗[ℂ] L.FermionicEFTFreeDeriv)
+
 /-!
 
-## A. The invariance conditions
+## A. Lorentz-group action
+
+### A.1. Algebra homomorphisms
 
 -/
 
+/-- The Lorentz action on the complex-scalar factor as an algebra homomorphism. -/
+noncomputable def complexScalarLorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.ComplexScalarEFTFreeDeriv →ₐ[ℂ] L.ComplexScalarEFTFreeDeriv :=
+  SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ)
+
+/-- The Lorentz action on the fermionic factor as an algebra homomorphism. -/
+noncomputable def fermionicLorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.FermionicEFTFreeDeriv →ₐ[ℂ] L.FermionicEFTFreeDeriv :=
+  ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repLorentzGroup Λ)
+
+/-- The Lorentz action on the real-boson factor as a real algebra homomorphism. -/
+noncomputable def realBosonLorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.RealBosonEFTFreeDeriv →ₐ[ℝ] L.RealBosonEFTFreeDeriv :=
+  SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ)
+
+/-- The scalar extension of the real-boson Lorentz action as a complex algebra homomorphism. -/
+noncomputable def realBosonComplexLorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.RealBosonEFTFreeDerivComplex →ₐ[ℂ] L.RealBosonEFTFreeDerivComplex :=
+  (AlgHom.liftEquiv ℝ ℂ L.RealBosonEFTFreeDeriv L.RealBosonEFTFreeDerivComplex)
+    ((Algebra.TensorProduct.includeRight :
+      L.RealBosonEFTFreeDeriv →ₐ[ℝ] L.RealBosonEFTFreeDerivComplex).comp
+      (realBosonLorentzAlgHom Λ))
+
+/-- The Lorentz action on the bosonic factors as an algebra homomorphism. -/
+noncomputable def bosonicLorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex →ₐ[ℂ]
+      L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex :=
+  Algebra.TensorProduct.map (complexScalarLorentzAlgHom Λ) (realBosonComplexLorentzAlgHom Λ)
+
+/-- The Lorentz action on the free-derivative Lagrangian as an algebra homomorphism. -/
+noncomputable def lorentzAlgHom (Λ : SL(2,ℂ)) :
+    L.EFTLagrangianFreeDeriv →ₐ[ℂ] L.EFTLagrangianFreeDeriv :=
+  Algebra.TensorProduct.map (bosonicLorentzAlgHom Λ) (fermionicLorentzAlgHom Λ)
+
 /-!
 
-### A.1. The representation
-
-We define the representation of the Lorentz group on the full algebra.
+### A.2. Representation and compatibility
 
 -/
 
-noncomputable def repLorentzGroup :  Representation ℂ SL(2,ℂ) L.EFTLagrangianFreeDeriv :=
+/-- The representation of the Lorentz group on the free-derivative Lagrangian. -/
+noncomputable def repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.EFTLagrangianFreeDeriv :=
   ((ComplexScalarEFTFreeDeriv.repLorentzGroup (L := L)).tprod
     (RealBosonEFTFreeDerivComplex.repLorentzGroup (L := L))).tprod
     (FermionicEFTFreeDeriv.repLorentzGroup (L := L))
 
-lemma repLorentzGroup_mul (Λ : SL(2,ℂ)) (V W : L.EFTLagrangianFreeDeriv) :
-    repLorentzGroup Λ (V * W) = repLorentzGroup Λ V * repLorentzGroup Λ W :=
-  map_mul (Algebra.TensorProduct.map
-    (SymmetricAlgebra.lift
-      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ))
-    (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ))) V W
+private lemma complexScalar_repLorentzGroup_apply (Λ : SL(2,ℂ))
+    (x : L.ComplexScalarEFTFreeDeriv) :
+    ComplexScalarEFTFreeDeriv.repLorentzGroup Λ x = complexScalarLorentzAlgHom Λ x := rfl
 
+private lemma fermionic_repLorentzGroup_apply (Λ : SL(2,ℂ))
+    (x : L.FermionicEFTFreeDeriv) :
+    FermionicEFTFreeDeriv.repLorentzGroup Λ x = fermionicLorentzAlgHom Λ x := rfl
+
+private lemma realBosonComplex_repLorentzGroup_apply (Λ : SL(2,ℂ))
+    (x : L.RealBosonEFTFreeDerivComplex) :
+    RealBosonEFTFreeDerivComplex.repLorentzGroup Λ x =
+      realBosonComplexLorentzAlgHom Λ x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul c x =>
+      change c ⊗ₜ[ℝ] realBosonLorentzAlgHom Λ x =
+        c • (1 ⊗ₜ[ℝ] realBosonLorentzAlgHom Λ x)
+      exact TensorProduct.tmul_eq_smul_one_tmul c _
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+private lemma bosonic_repLorentzGroup_apply (Λ : SL(2,ℂ))
+    (x : L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex) :
+    ((ComplexScalarEFTFreeDeriv.repLorentzGroup (L := L)).tprod
+      (RealBosonEFTFreeDerivComplex.repLorentzGroup (L := L))) Λ x =
+      bosonicLorentzAlgHom Λ x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y =>
+      simp only [Representation.tprod_apply, TensorProduct.map_tmul]
+      rw [complexScalar_repLorentzGroup_apply, realBosonComplex_repLorentzGroup_apply]
+      simp [bosonicLorentzAlgHom]
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+/-- The tensor-product Lorentz representation agrees with its algebra homomorphism. -/
+lemma repLorentzGroup_apply (Λ : SL(2,ℂ)) (x : L.EFTLagrangianFreeDeriv) :
+    repLorentzGroup Λ x = lorentzAlgHom Λ x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y =>
+      simp only [repLorentzGroup, Representation.tprod_apply, TensorProduct.map_tmul]
+      have hx := bosonic_repLorentzGroup_apply (L := L) Λ x
+      simp only [Representation.tprod_apply] at hx
+      rw [hx, fermionic_repLorentzGroup_apply]
+      simp [lorentzAlgHom]
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+/-- The Lorentz representation preserves multiplication. -/
+lemma repLorentzGroup_mul (Λ : SL(2,ℂ)) (V W : L.EFTLagrangianFreeDeriv) :
+    repLorentzGroup Λ (V * W) = repLorentzGroup Λ V * repLorentzGroup Λ W := by
+  calc
+    repLorentzGroup Λ (V * W) = lorentzAlgHom Λ (V * W) := repLorentzGroup_apply Λ _
+    _ = lorentzAlgHom Λ V * lorentzAlgHom Λ W := map_mul _ _ _
+    _ = repLorentzGroup Λ V * repLorentzGroup Λ W :=
+      congrArg₂ (· * ·) (repLorentzGroup_apply Λ V).symm
+        (repLorentzGroup_apply Λ W).symm
+
+/-- The Lorentz representation preserves the unit. -/
 @[simp]
 lemma repLorentzGroup_one (Λ : SL(2,ℂ)) :
-    repLorentzGroup Λ 1 = 1 :=
-  map_one (Algebra.TensorProduct.map
-    (SymmetricAlgebra.lift
-      (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpace.repLorentzGroup Λ))
-    (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)))
+    repLorentzGroup (L := L) Λ 1 = 1 := by
+  calc
+    repLorentzGroup (L := L) Λ 1 = lorentzAlgHom Λ 1 := repLorentzGroup_apply Λ _
+    _ = 1 := map_one _
 
+/-!
 
-noncomputable def repGaugeGroup :  Representation ℂ G L.EFTLagrangianFreeDeriv :=
+## B. Gauge-group action
+
+-/
+
+/-- The representation of the gauge group on the free-derivative Lagrangian. -/
+noncomputable def repGaugeGroup : Representation ℂ G L.EFTLagrangianFreeDeriv :=
   ((ComplexScalarEFTFreeDeriv.repGaugeGroup (L := L)).tprod
     (RealBosonEFTFreeDerivComplex.repGaugeGroup (L := L))).tprod
     (FermionicEFTFreeDeriv.repGaugeGroup (L := L))
 
 /-!
 
-### A.2. The IsInvariant condition
+## C. The `IsInvariant` condition
+
+This section is reserved for the predicate expressing simultaneous Lorentz and gauge invariance.
 
 -/
 
+end EFTLagrangianFreeDeriv
 
-
-end EFTLagrangianExclDeriv
+end
 
 end LagrangianTheory
