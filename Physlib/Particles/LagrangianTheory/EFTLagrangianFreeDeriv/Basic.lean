@@ -14,9 +14,9 @@ public import Physlib.Particles.LagrangianTheory.Basic
 ## i. Overview
 
 For a Lagrangian theory, this file defines the algebra of complex-scalar, real-boson, and
-fermionic expressions with arbitrarily many derivatives. It also bundles the Lorentz action as an
-algebra homomorphism and proves that the existing tensor-product representation preserves
-multiplication and the unit.
+fermionic expressions with arbitrarily many derivatives. It also bundles the Lorentz and gauge
+actions as algebra homomorphisms and proves that the existing tensor-product representations
+preserve multiplication and the unit.
 
 -/
 
@@ -174,6 +174,50 @@ lemma repLorentzGroup_one (Λ : SL(2,ℂ)) :
 
 ## B. Gauge-group action
 
+### B.1. Algebra homomorphisms
+
+-/
+
+/-- The gauge action on the complex-scalar factor as an algebra homomorphism. -/
+noncomputable def complexScalarGaugeAlgHom (g : G) :
+    L.ComplexScalarEFTFreeDeriv →ₐ[ℂ] L.ComplexScalarEFTFreeDeriv :=
+  SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g)
+
+/-- The gauge action on the fermionic factor as an algebra homomorphism. -/
+noncomputable def fermionicGaugeAlgHom (g : G) :
+    L.FermionicEFTFreeDeriv →ₐ[ℂ] L.FermionicEFTFreeDeriv :=
+  ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repGaugeGroup g)
+
+/-- The gauge action on the real-boson factor as a real algebra homomorphism. -/
+noncomputable def realBosonGaugeAlgHom (g : G) :
+    L.RealBosonEFTFreeDeriv →ₐ[ℝ] L.RealBosonEFTFreeDeriv :=
+  SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g)
+
+/-- The scalar extension of the real-boson gauge action as a complex algebra homomorphism. -/
+noncomputable def realBosonComplexGaugeAlgHom (g : G) :
+    L.RealBosonEFTFreeDerivComplex →ₐ[ℂ] L.RealBosonEFTFreeDerivComplex :=
+  (AlgHom.liftEquiv ℝ ℂ L.RealBosonEFTFreeDeriv L.RealBosonEFTFreeDerivComplex)
+    ((Algebra.TensorProduct.includeRight :
+      L.RealBosonEFTFreeDeriv →ₐ[ℝ] L.RealBosonEFTFreeDerivComplex).comp
+      (realBosonGaugeAlgHom g))
+
+/-- The gauge action on the bosonic factors as an algebra homomorphism. -/
+noncomputable def bosonicGaugeAlgHom (g : G) :
+    L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex →ₐ[ℂ]
+      L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex :=
+  Algebra.TensorProduct.map (complexScalarGaugeAlgHom g) (realBosonComplexGaugeAlgHom g)
+
+/-- The gauge action on the free-derivative Lagrangian as an algebra homomorphism. -/
+noncomputable def gaugeAlgHom (g : G) :
+    L.EFTLagrangianFreeDeriv →ₐ[ℂ] L.EFTLagrangianFreeDeriv :=
+  Algebra.TensorProduct.map (bosonicGaugeAlgHom g) (fermionicGaugeAlgHom g)
+
+/-!
+
+### B.2. Representation and compatibility
+
 -/
 
 /-- The representation of the gauge group on the free-derivative Lagrangian. -/
@@ -181,6 +225,68 @@ noncomputable def repGaugeGroup : Representation ℂ G L.EFTLagrangianFreeDeriv 
   ((ComplexScalarEFTFreeDeriv.repGaugeGroup (L := L)).tprod
     (RealBosonEFTFreeDerivComplex.repGaugeGroup (L := L))).tprod
     (FermionicEFTFreeDeriv.repGaugeGroup (L := L))
+
+private lemma complexScalar_repGaugeGroup_apply (g : G)
+    (x : L.ComplexScalarEFTFreeDeriv) :
+    ComplexScalarEFTFreeDeriv.repGaugeGroup g x = complexScalarGaugeAlgHom g x := rfl
+
+private lemma fermionic_repGaugeGroup_apply (g : G) (x : L.FermionicEFTFreeDeriv) :
+    FermionicEFTFreeDeriv.repGaugeGroup g x = fermionicGaugeAlgHom g x := rfl
+
+private lemma realBosonComplex_repGaugeGroup_apply (g : G)
+    (x : L.RealBosonEFTFreeDerivComplex) :
+    RealBosonEFTFreeDerivComplex.repGaugeGroup g x =
+      realBosonComplexGaugeAlgHom g x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul c x =>
+      change c ⊗ₜ[ℝ] realBosonGaugeAlgHom g x =
+        c • (1 ⊗ₜ[ℝ] realBosonGaugeAlgHom g x)
+      exact TensorProduct.tmul_eq_smul_one_tmul c _
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+private lemma bosonic_repGaugeGroup_apply (g : G)
+    (x : L.ComplexScalarEFTFreeDeriv ⊗[ℂ] L.RealBosonEFTFreeDerivComplex) :
+    ((ComplexScalarEFTFreeDeriv.repGaugeGroup (L := L)).tprod
+      (RealBosonEFTFreeDerivComplex.repGaugeGroup (L := L))) g x =
+      bosonicGaugeAlgHom g x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y =>
+      simp only [Representation.tprod_apply, TensorProduct.map_tmul]
+      rw [complexScalar_repGaugeGroup_apply, realBosonComplex_repGaugeGroup_apply]
+      simp [bosonicGaugeAlgHom]
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+/-- The tensor-product gauge representation agrees with its algebra homomorphism. -/
+lemma repGaugeGroup_apply (g : G) (x : L.EFTLagrangianFreeDeriv) :
+    repGaugeGroup g x = gaugeAlgHom g x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y =>
+      simp only [repGaugeGroup, Representation.tprod_apply, TensorProduct.map_tmul]
+      have hx := bosonic_repGaugeGroup_apply (L := L) g x
+      simp only [Representation.tprod_apply] at hx
+      rw [hx, fermionic_repGaugeGroup_apply]
+      simp [gaugeAlgHom]
+  | add x y hx hy => simpa only [map_add] using congrArg₂ (· + ·) hx hy
+
+/-- The gauge representation preserves multiplication. -/
+lemma repGaugeGroup_mul (g : G) (V W : L.EFTLagrangianFreeDeriv) :
+    repGaugeGroup g (V * W) = repGaugeGroup g V * repGaugeGroup g W := by
+  calc
+    repGaugeGroup g (V * W) = gaugeAlgHom g (V * W) := repGaugeGroup_apply g _
+    _ = gaugeAlgHom g V * gaugeAlgHom g W := map_mul _ _ _
+    _ = repGaugeGroup g V * repGaugeGroup g W :=
+      congrArg₂ (· * ·) (repGaugeGroup_apply g V).symm
+        (repGaugeGroup_apply g W).symm
+
+/-- The gauge representation preserves the unit. -/
+@[simp]
+lemma repGaugeGroup_one (g : G) : repGaugeGroup (L := L) g 1 = 1 := by
+  calc
+    repGaugeGroup (L := L) g 1 = gaugeAlgHom g 1 := repGaugeGroup_apply g _
+    _ = 1 := map_one _
 
 /-!
 
