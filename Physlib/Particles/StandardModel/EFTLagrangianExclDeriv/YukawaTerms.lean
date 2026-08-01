@@ -69,7 +69,7 @@ lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (a : Fin 2) :
     repGaugeGroupI g (orthonormBasis.toBasis a) =
       ∑ b, ((g.toU1.1 : ℂ) ^ 3 * g.toSU2.1 b a) • orthonormBasis.toBasis b := by
   ext c
-  simp [repGaugeGroupI, gaugeGroupI_smul_eq, orthonormBasis, EuclideanSpace.basisFun_apply,
+  simp [repGaugeGroupI_apply, orthonormBasis, EuclideanSpace.basisFun_apply,
     PiLp.ofLp_single, Submonoid.smul_def, Fin.sum_univ_two, mul_comm]
   fin_cases c <;> simp
 

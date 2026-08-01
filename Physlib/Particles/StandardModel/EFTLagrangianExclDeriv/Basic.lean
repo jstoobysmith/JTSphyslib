@@ -291,6 +291,9 @@ def ComplexScalarIrrep.basis  : (φ : ComplexScalarIrrep) →
 def ComplexScalarIrrep.repLorentzGroup : (φ : ComplexScalarIrrep) → Representation ℂ SL(2,ℂ) (ComplexScalarIrrep.module φ)
   | .H => Representation.trivial ℂ SL(2,ℂ) HiggsVec
 
+def ComplexScalarIrrep.repGaugeGroupI :
+    (φ : ComplexScalarIrrep) → Representation ℂ GaugeGroupI (ComplexScalarIrrep.module φ)
+  | .H => HiggsVec.repGaugeGroupI
 
 @[reducible]
 def StandardModelLT : LagrangianTheory GaugeGroupI where
@@ -305,6 +308,19 @@ def StandardModelLT : LagrangianTheory GaugeGroupI where
   complexScalarModule := ComplexScalarIrrep.module
   complexScalarBasis := ComplexScalarIrrep.basis
   complexScalarRepLorentzGroup := ComplexScalarIrrep.repLorentzGroup
+  complexScalarRepGaugeGroup := ComplexScalarIrrep.repGaugeGroupI
+  -- The Standard Model has no real bosonic fields at the no-derivative level
+  -- (the field strengths only enter the free-derivative layer).
+  RealBosonIrreps := Empty
+  RealBosonComponents := fun x => x.elim
+  realBosonComponents_fintype := fun x => x.elim
+  realBosonComponents_decEq := fun x => x.elim
+  realBosonModule := fun x => x.elim
+  realBosonModule_addCommGroup := fun x => x.elim
+  realBosonModule_module := fun x => x.elim
+  realBosonBasis := fun x => x.elim
+  realBosonRepLorentzGroup := fun x => x.elim
+  realBosonRepGaugeGroup := fun x => x.elim
 
 /-!
 
@@ -407,10 +423,6 @@ def ComplexScalarEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) Com
 ## The representation of the Gauge group on the complex scalar part
 
 -/
-
-def ComplexScalarIrrep.repGaugeGroupI :
-    (φ : ComplexScalarIrrep) → Representation ℂ GaugeGroupI (ComplexScalarIrrep.module φ)
-  | .H => HiggsVec.repGaugeGroupI
 
 def ComplexScalarTargetSpace.repGaugeGroupI :
     Representation ℂ GaugeGroupI ComplexScalarTargetSpace where
@@ -966,6 +978,11 @@ lemma liftLinear_of_eq (A : Type) [Ring A] [Algebra ℂ A] (F : List FieldGenera
     (hscale : ∀ (l1 l2 : List FieldGenerators) (c : ℂ),
       termOfList l1 = c • termOfList l2 → F l1 = c • F l2) (l : List FieldGenerators) :
     liftLinear F hscale (termOfList l) = F l := by
-  simp [liftLinear]
+  have h : termOfList l =
+      Finsupp.linearCombination ℂ termOfList (Finsupp.single l 1) := by
+    simp
+  simp only [liftLinear, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
+  rw [h, LinearMap.quotKerEquivOfSurjective_symm_apply, Submodule.liftQ_apply]
+  simp
 
 end EFTLagrangianExclDeriv
