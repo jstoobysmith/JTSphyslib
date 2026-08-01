@@ -148,7 +148,7 @@ noncomputable def realBosonComplexLorentzAlgHom (Λ : SL(2,ℂ)) :
       L.RealBosonEFTFreeDeriv →ₐ[ℝ] L.RealBosonEFTFreeDerivComplex).comp
       (realBosonLorentzAlgHom Λ))
 
-/-- The complexified real-boson Lorentz representation agrees with its algebra homomorphism. -/
+/-- The complex real-boson Lorentz representation agrees with its algebra homomorphism. -/
 lemma realBosonComplex_repLorentzGroup_apply (Λ : SL(2,ℂ))
     (x : L.RealBosonEFTFreeDerivComplex) :
     RealBosonEFTFreeDerivComplex.repLorentzGroup Λ x =
