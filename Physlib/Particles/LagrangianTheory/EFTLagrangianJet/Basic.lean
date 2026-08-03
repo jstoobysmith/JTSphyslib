@@ -331,7 +331,7 @@ lemma repGaugeGroup_one (g : G) : repGaugeGroup (L := L) g 1 = 1 := by
 
 /-!
 
-## C. The `IsInvariant` condition
+## C. The `IsGlobalInvariant` condition
 
 This section is reserved for the predicate expressing simultaneous Lorentz and gauge invariance.
 
