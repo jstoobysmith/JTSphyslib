@@ -8,40 +8,20 @@ module
 public import Physlib.Particles.StandardModel.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
+public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
+public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
+public import Mathlib.RepresentationTheory.Basic
+public import Mathlib.RingTheory.TensorProduct.Basic
+public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 /-!
 
 # The jet gauge group
 
 ## i. Overview
 
-This file defines the group of formal infinite-order jets, at a spacetime point, of
-local gauge transformations of the Standard Model.
-
-A local gauge transformation is a map from spacetime into the gauge group. Its
-infinite-order jet at a point is the collection of all its Taylor coefficients
-there, which, by Borel's theorem, is exactly a formal power series in the spacetime
-coordinates. Since gauge transformations multiply pointwise, jets multiply as
-(truncated) power series, with the Leibniz rule handled automatically by the
-power-series product.
-
-This leads to a purely algebraic definition: the jet gauge group is the group of
-`R`-points of the gauge group, where `R` is the commutative ring of formal power
-series in the spacetime coordinates with complex coefficients. Concretely, an
-element of the `SU(3)` factor is a `3 × 3` matrix of power series `U` satisfying
-`U * Uᴴ = 1` and `det U = 1` as power series, which encodes the unitarity and
-determinant constraints at every jet order simultaneously.
-
-The star operation on the power-series ring is coefficientwise complex conjugation,
-so that the spacetime coordinates themselves are self-adjoint (they are real
-coordinates); this star structure is defined in section A below and is not currently
-in Mathlib.
-
-Evaluation of power series at the base point (the constant coefficient) gives a
-group homomorphism from the jet gauge group to the gauge group `GaugeGroupI`,
-projecting a jet to its zeroth-order part; conversely the constant power series give
-an embedding of `GaugeGroupI` into the jet gauge group as the jets of constant
-(global) gauge transformations.
-
+The essential idea is that at a point `x` in spacetime,
+a gauge transformation on fields at `x` and their derivatives
+is determined by the gauge transformation
 -/
 
 @[expose] public section
@@ -106,11 +86,55 @@ lemma coeff_single_one_mul [CommSemiring R] (μ : σ) (f g : MvPowerSeries σ R)
     Finsupp.single_zero, coeff_zero_eq_constantCoeff]
   ring
 
+/-- The first-order power rule: the degree-one Taylor coefficient, in the direction
+  `μ`, of a power of a power series. -/
+lemma coeff_single_one_pow [CommRing R] (μ : σ) (f : MvPowerSeries σ R) (n : ℕ) :
+    coeff (Finsupp.single μ 1) (f ^ n) =
+      (n : R) * constantCoeff f ^ (n - 1) * coeff (Finsupp.single μ 1) f := by
+  classical
+  induction n with
+  | zero =>
+      simp [coeff_one, Finsupp.single_eq_zero]
+  | succ n ih =>
+      rw [pow_succ, coeff_single_one_mul, ih, map_pow, Nat.add_sub_cancel]
+      rcases Nat.eq_zero_or_pos n with hn | hn
+      · subst hn
+        simp
+      · have hpow : constantCoeff f ^ (n - 1) * constantCoeff f = constantCoeff f ^ n := by
+          rw [← pow_succ, Nat.sub_add_cancel hn]
+        push_cast
+        linear_combination ((n : R) * coeff (Finsupp.single μ 1) f) * hpow
+
 end MvPowerSeries
+
+namespace Module.Basis
+
+variable {R M κ : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+
+/-- The basis vector of the symmetric algebra at the zero multi-index is the unit
+  of the algebra. -/
+lemma symmetricAlgebra_zero (b : Module.Basis κ R M) :
+    b.symmetricAlgebra (0 : κ →₀ ℕ) = 1 := by
+  have h : (MvPolynomial.basisMonomials κ R) (0 : κ →₀ ℕ) = 1 := by
+    rw [MvPolynomial.coe_basisMonomials]
+    simp [MvPolynomial.monomial_zero']
+  rw [symmetricAlgebra, map_apply, h]
+  simp
+
+/-- The basis vector of the symmetric algebra at a single multi-index is the
+  corresponding generator. -/
+lemma symmetricAlgebra_single (b : Module.Basis κ R M) (i : κ) :
+    b.symmetricAlgebra (Finsupp.single i 1) = SymmetricAlgebra.ι R M (b i) := by
+  have h : (MvPolynomial.basisMonomials κ R) (Finsupp.single i 1) = MvPolynomial.X i := rfl
+  rw [symmetricAlgebra, map_apply, h]
+  simp
+
+end Module.Basis
 
 namespace StandardModel
 
 open Matrix MvPowerSeries
+open scoped Nat
 
 /-!
 
@@ -256,8 +280,205 @@ lemma eval_ofConstant (g : GaugeGroupI) : eval (ofConstant g) = g := by
       RingHom.mapMatrix_apply, Matrix.map_apply]
   · simp [eval, ofConstant, evalU1, ofConstantU1]
 
-
-
 end JetGaugeGroupI
+
+/-!
+
+## F. The derivative action on the symmetric algebra
+
+The polynomial jet spaces of `LagrangianTheory` are built on the symmetric algebra
+`SymmetricAlgebra ℂ Lorentz.CoℂModule`, whose multiset monomials are the commuting
+derivative symbols `∂_m`. The jet ring pairs with this algebra by the
+divided-power duality `⟨∂_m, f⟩ = m! · coeff m f` (the constant-coefficient
+operator `∂_m` applied to `f`, evaluated at the base point).
+
+Through this pairing a jet `χ : JetRing` acts on the symmetric algebra as the
+transpose of multiplication by `χ`, which is the infinite-order
+constant-coefficient differential operator `χ(∂)`. On the derivative symbol `∂_m`
+it acts by `∂_m ↦ ∑_{k + l = m} (m.descFactorial k) · (coeff k χ) · ∂_l`: the
+Leibniz rule for how the derivatives of a field pick up derivatives of the gauge
+parameter, e.g. `∂_μ ↦ χ(0) ∂_μ + (∂_μ χ)(0) ∂_∅`. Because the jet ring is
+commutative, transposition preserves multiplicativity, so `χ ↦ χ(∂)` is
+multiplicative; this is proved via adjointness and nondegeneracy of the pairing.
+
+-/
+
+/-- The divided-power pairing between the symmetric algebra of covectors (the
+  algebra of derivative symbols) and the jet ring: on the monomial `∂_m` it is
+  `f ↦ m! · coeff m f`. -/
+noncomputable def symPairing :
+    SymmetricAlgebra ℂ Lorentz.CoℂModule →ₗ[ℂ] JetRing →ₗ[ℂ] ℂ :=
+  Lorentz.complexCoBasis.symmetricAlgebra.constr ℂ fun m =>
+    (∏ μ, (m μ)! : ℕ) • MvPowerSeries.coeff m
+
+@[simp]
+lemma symPairing_basis (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : JetRing) :
+    symPairing (Lorentz.complexCoBasis.symmetricAlgebra m) f =
+      (∏ μ, (m μ)! : ℕ) • MvPowerSeries.coeff m f := by
+  rw [symPairing, Module.Basis.constr_basis]
+  rfl
+
+/-- The pairing of an element of the symmetric algebra with a monomial extracts the
+  corresponding basis coordinate, weighted by the factorial. -/
+lemma symPairing_monomial (p : SymmetricAlgebra ℂ Lorentz.CoℂModule)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    symPairing p (MvPowerSeries.monomial m 1) =
+      ((∏ μ, (m μ)! : ℕ) : ℂ) * Lorentz.complexCoBasis.symmetricAlgebra.repr p m := by
+  classical
+  rw [symPairing, Module.Basis.constr_apply, Finsupp.sum, LinearMap.sum_apply]
+  simp only [LinearMap.smul_apply, MvPowerSeries.coeff_monomial]
+  rw [Finset.sum_eq_single m]
+  · by_cases hm : m ∈ (Lorentz.complexCoBasis.symmetricAlgebra.repr p).support
+    · simp [mul_comm]
+    · rw [Finsupp.notMem_support_iff.mp hm]
+      simp
+  · intro i _ hi
+    simp [hi]
+  · intro hm
+    rw [Finsupp.notMem_support_iff.mp hm]
+    simp
+
+/-- Two elements of the symmetric algebra pairing equally against every jet are
+  equal: the divided-power pairing is nondegenerate on the symmetric-algebra side
+  (the factorials are invertible in characteristic zero). -/
+lemma symPairing_injective {p q : SymmetricAlgebra ℂ Lorentz.CoℂModule}
+    (h : ∀ f, symPairing p f = symPairing q f) : p = q := by
+  refine Lorentz.complexCoBasis.symmetricAlgebra.ext_elem fun m => ?_
+  have hf := h (MvPowerSeries.monomial m 1)
+  rw [symPairing_monomial, symPairing_monomial] at hf
+  have hfac : ((∏ μ, (m μ)! : ℕ) : ℂ) ≠ 0 := by
+    rw [Nat.cast_ne_zero]
+    exact Finset.prod_ne_zero_iff.mpr fun μ _ => Nat.factorial_ne_zero (m μ)
+  exact mul_left_cancel₀ hfac hf
+
+/-- The action of a jet `χ` on the algebra of derivative symbols: the transpose of
+  multiplication by `χ` under the divided-power pairing, i.e. the constant
+  coefficient differential operator `χ(∂)`. On the derivative symbol `∂_m` it is
+  `∑_{k + l = m} (m.descFactorial k) · (coeff k χ) · ∂_l`, the Leibniz rule; for
+  example `∂_μ ↦ χ(0) ∂_μ + (∂_μχ)(0) ∂_∅`. -/
+noncomputable def derivAction (χ : JetRing) :
+    SymmetricAlgebra ℂ Lorentz.CoℂModule →ₗ[ℂ] SymmetricAlgebra ℂ Lorentz.CoℂModule :=
+  Lorentz.complexCoBasis.symmetricAlgebra.constr ℂ fun m =>
+    ∑ p ∈ Finset.antidiagonal m,
+      ((∏ μ, (m μ).descFactorial (p.1 μ) : ℕ) : ℂ) • MvPowerSeries.coeff p.1 χ •
+        Lorentz.complexCoBasis.symmetricAlgebra p.2
+
+/-- Adjointness: the derivative action of `χ` is the transpose of multiplication by
+  `χ` under the divided-power pairing. This is the coefficient-level statement of
+  the Leibniz rule. -/
+lemma symPairing_derivAction (χ f : JetRing) (p : SymmetricAlgebra ℂ Lorentz.CoℂModule) :
+    symPairing (derivAction χ p) f = symPairing p (χ * f) := by
+  classical
+  have h : (symPairing.flip f) ∘ₗ derivAction χ = symPairing.flip (χ * f) := by
+    refine Lorentz.complexCoBasis.symmetricAlgebra.ext fun m => ?_
+    simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.flip_apply]
+    rw [derivAction, Module.Basis.constr_basis]
+    simp only [map_sum, map_smul, LinearMap.sum_apply, LinearMap.smul_apply,
+      symPairing_basis, smul_eq_mul, nsmul_eq_mul]
+    rw [MvPowerSeries.coeff_mul, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun q hq => ?_
+    have hm : q.1 + q.2 = m := Finset.mem_antidiagonal.mp hq
+    have hfac : ((∏ μ, (m μ).descFactorial (q.1 μ) : ℕ) : ℂ) *
+        ((∏ μ, (q.2 μ)! : ℕ) : ℂ) = ((∏ μ, (m μ)! : ℕ) : ℂ) := by
+      rw [← Nat.cast_mul, ← Finset.prod_mul_distrib]
+      congr 1
+      refine Finset.prod_congr rfl fun μ _ => ?_
+      rw [mul_comm]
+      have h1 : q.1 μ ≤ m μ := by
+        rw [← hm]; simp
+      have h2 : m μ - q.1 μ = q.2 μ := by
+        rw [← hm]; simp
+      rw [← h2]
+      exact Nat.factorial_mul_descFactorial h1
+    rw [← hfac]
+    ring
+  exact LinearMap.congr_fun h p
+
+/-- Constant jets act on the derivative symbols by their value: `C c` has no
+  derivative coordinates. -/
+@[simp]
+lemma derivAction_C (c : ℂ) :
+    derivAction (MvPowerSeries.C c) = c • LinearMap.id := by
+  refine LinearMap.ext fun p => symPairing_injective fun f => ?_
+  rw [symPairing_derivAction,
+    show (MvPowerSeries.C c : JetRing) * f = c • f from
+      (algebraMap_smul JetRing c f).symm ▸ (Algebra.smul_def c f).symm]
+  simp
+
+@[simp]
+lemma derivAction_one : derivAction (1 : JetRing) = LinearMap.id := by
+  rw [show (1 : JetRing) = MvPowerSeries.C 1 from (map_one _).symm, derivAction_C, one_smul]
+
+/-- The derivative action is multiplicative: it is the transpose of multiplication
+  in the commutative jet ring. This makes `χ ↦ χ(∂)` a monoid homomorphism and
+  hence yields representations of the jet gauge group on polynomial jet spaces. -/
+lemma derivAction_mul (χ ψ : JetRing) :
+    derivAction (χ * ψ) = derivAction χ ∘ₗ derivAction ψ := by
+  refine LinearMap.ext fun p => symPairing_injective fun f => ?_
+  simp only [LinearMap.coe_comp, Function.comp_apply]
+  rw [symPairing_derivAction, symPairing_derivAction, symPairing_derivAction]
+  ring_nf
+
+@[simp]
+lemma derivAction_zero : derivAction (0 : JetRing) = 0 := by
+  refine LinearMap.ext fun p => symPairing_injective fun f => ?_
+  rw [symPairing_derivAction, zero_mul]
+  simp
+
+lemma derivAction_add (χ ψ : JetRing) :
+    derivAction (χ + ψ) = derivAction χ + derivAction ψ := by
+  refine LinearMap.ext fun p => symPairing_injective fun f => ?_
+  simp only [LinearMap.add_apply, map_add, symPairing_derivAction]
+  rw [add_mul, map_add]
+
+/-- The derivative action as a ring homomorphism from the jet ring to the
+  endomorphisms of the algebra of derivative symbols: the module structure of the
+  jet ring on its graded dual. -/
+noncomputable def derivActionHom :
+    JetRing →+* Module.End ℂ (SymmetricAlgebra ℂ Lorentz.CoℂModule) where
+  toFun := derivAction
+  map_one' := derivAction_one
+  map_mul' χ ψ := derivAction_mul χ ψ
+  map_zero' := derivAction_zero
+  map_add' := derivAction_add
+
+/-- The derivative action on the zeroth-order (field) symbol: it is scaled by the
+  value of the jet at the base point. -/
+@[simp]
+lemma derivAction_apply_one (χ : JetRing) :
+    derivAction χ (1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) =
+      MvPowerSeries.constantCoeff χ • 1 := by
+  rw [show (1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) =
+      Lorentz.complexCoBasis.symmetricAlgebra 0 from
+      (Lorentz.complexCoBasis.symmetricAlgebra_zero).symm,
+    derivAction, Module.Basis.constr_basis, Finsupp.antidiagonal_zero, Finset.sum_singleton]
+  simp
+
+/-- The derivative action on a first-order derivative symbol implements the Leibniz
+  rule: `∂_μ ↦ χ(0) ∂_μ + (∂_μχ)(0) 1`. The value of the jet multiplies the
+  first-derivative symbol, and its first derivative feeds the zeroth-order
+  symbol. -/
+lemma derivAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
+    derivAction χ (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ)) =
+      MvPowerSeries.constantCoeff χ •
+        SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) +
+        MvPowerSeries.coeff (Finsupp.single μ 1) χ • 1 := by
+  classical
+  rw [show SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) =
+      Lorentz.complexCoBasis.symmetricAlgebra (Finsupp.single μ 1) from
+      (Lorentz.complexCoBasis.symmetricAlgebra_single μ).symm,
+    derivAction, Module.Basis.constr_basis, Finsupp.antidiagonal_single,
+    show Finset.antidiagonal (1 : ℕ) = {(0, 1), (1, 0)} by decide, Finset.map_insert,
+    Finset.map_singleton, Finset.sum_insert (by simp [Finsupp.single_eq_zero]),
+    Finset.sum_singleton]
+  have h1 : (∏ ν, ((Finsupp.single μ 1) ν).descFactorial ((Finsupp.single μ 1) ν)) = 1 :=
+    Finset.prod_eq_one fun ν _ => by
+      rcases eq_or_ne μ ν with h | h
+      · subst h; simp
+      · simp [h]
+  simp only [Function.Embedding.coe_prodMap, Function.Embedding.coeFn_mk, Prod.map_apply,
+    Finsupp.single_zero, Finsupp.coe_zero, Pi.zero_apply, Nat.descFactorial_zero,
+    Finset.prod_const_one, Nat.cast_one, one_smul, coeff_zero_eq_constantCoeff, h1,
+    Lorentz.complexCoBasis.symmetricAlgebra_single, Lorentz.complexCoBasis.symmetricAlgebra_zero]
 
 end StandardModel

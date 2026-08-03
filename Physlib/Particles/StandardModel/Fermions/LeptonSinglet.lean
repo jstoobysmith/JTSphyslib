@@ -6,6 +6,9 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet
+public import Physlib.Particles.StandardModel.GaugeBosons.BBoson
+public import Mathlib.RingTheory.TensorProduct.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 /-!
 # Charged-lepton singlets
@@ -41,6 +44,7 @@ form of the Standard Model gauge group.
 - D. Gauge action
 - E. Kernel of the gauge action
 - F. Descent to quotient gauge groups
+- G. Jet gauge action
 
 -/
 
@@ -230,6 +234,122 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
   | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₆)
   | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₂)
   | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₃)
+
+/-!
+
+## G. Jet gauge action
+
+The hypercharge character extends verbatim to jets: the jet ring carries a star
+operation and powers, so `star u ^ 6` makes sense for the `U(1)` power-series
+component `u` of a jet of gauge transformations.
+
+A jet acts on the polynomial jet space
+`SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonSinglet` — the commuting
+derivative symbols of the field tensored with its target space — through the
+derivative action `derivAction` of its hypercharge power series on the symbols:
+the value of the jet multiplies each symbol, while its derivative coordinates
+lower derivative symbols by the Leibniz rule, e.g.
+`∂_μ ψ ↦ χ(0) ∂_μ ψ + (∂_μ χ)(0) ψ` with `χ = star u ^ 6`. On jets of constant
+gauge transformations the action reduces to the global gauge action, trivial on
+the derivative symbols.
+
+-/
+
+open TensorProduct
+
+/-- The `(1, 1)_{-6}` action of the jet gauge group on the polynomial jet space of
+  the charged-lepton singlet: a jet of gauge transformations acts through the
+  derivative action of its hypercharge power series `star u ^ 6` on the derivative
+  symbols. Its value multiplies each symbol, and its derivative coordinates act by
+  the Leibniz rule. -/
+noncomputable def repJetGaugeGroupI :
+    Representation ℂ JetGaugeGroupI
+      (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonSinglet) where
+  toFun U := TensorProduct.map (derivAction ((star (U.2.2 : JetRing)) ^ 6)) LinearMap.id
+  map_one' := by
+    rw [show ((star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6) =
+        (1 : JetRing) by simp, derivAction_one, TensorProduct.map_id]
+    rfl
+  map_mul' U₁ U₂ := by
+    rw [show ((star (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6) =
+        ((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6) *
+          ((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6) by
+      rw [show (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) =
+          ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
+          from rfl, star_mul', mul_pow],
+      derivAction_mul, Module.End.mul_eq_comp, ← TensorProduct.map_comp, LinearMap.id_comp]
+
+@[simp]
+lemma repJetGaugeGroupI_apply (U : JetGaugeGroupI)
+    (x : SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonSinglet) :
+    repJetGaugeGroupI U x =
+      TensorProduct.map (derivAction ((star (U.2.2 : JetRing)) ^ 6)) LinearMap.id x := rfl
+
+/-- The jet action on the zeroth-order (field) symbol: the value of the jet acts by
+  its hypercharge scalar, with no derivative contributions. -/
+lemma repJetGaugeGroupI_one_tmul (U : JetGaugeGroupI) (l : LeptonSinglet) :
+    repJetGaugeGroupI U ((1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) ⊗ₜ[ℂ] l) =
+      MvPowerSeries.constantCoeff ((star (U.2.2 : JetRing)) ^ 6) •
+        ((1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) ⊗ₜ[ℂ] l) := by
+  rw [repJetGaugeGroupI_apply, TensorProduct.map_tmul, derivAction_apply_one,
+    TensorProduct.smul_tmul']
+  rfl
+
+/-- The jet action on a first-order derivative symbol is the Leibniz rule:
+  `∂_μ ψ ↦ χ(0) • ∂_μ ψ + (∂_μ χ)(0) • ψ`, where `χ = star u ^ 6` is the
+  hypercharge power series of the jet. The value of the gauge transformation
+  multiplies the first-derivative symbol, and its first derivative feeds the field
+  symbol: this is `∂_μ(g ψ) = g ∂_μ ψ + (∂_μ g) ψ` for the `(1, 1)_{-6}`
+  character. -/
+lemma repJetGaugeGroupI_ι_tmul (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+    (l : LeptonSinglet) :
+    repJetGaugeGroupI U (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ] l) =
+      MvPowerSeries.constantCoeff ((star (U.2.2 : JetRing)) ^ 6) •
+        (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ] l) +
+        MvPowerSeries.coeff (Finsupp.single μ 1) ((star (U.2.2 : JetRing)) ^ 6) •
+          ((1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) ⊗ₜ[ℂ] l) := by
+  rw [repJetGaugeGroupI_apply, TensorProduct.map_tmul, derivAction_apply_ι,
+    TensorProduct.add_tmul, TensorProduct.smul_tmul', TensorProduct.smul_tmul']
+  rfl
+
+/-- The first-order Leibniz rule expressed through the B-boson Maurer–Cartan
+  coefficient: the inhomogeneous term of the charged-lepton-singlet jet is the
+  hypercharge `6` times the abelian connection shift `i (∂_μ u)(0) ū(0)` of the
+  `U(1)` jet, times the value of the character. This is the structure of the
+  covariant derivative: the derivative coordinates of a charged field transform
+  through the same Maurer–Cartan term that shifts the B boson. -/
+lemma repJetGaugeGroupI_ι_tmul_mcCoeff (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+    (l : LeptonSinglet) :
+    repJetGaugeGroupI U
+        (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ] l) =
+      MvPowerSeries.constantCoeff ((star (U.2.2 : JetRing)) ^ 6) •
+        (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ] l) +
+        ((6 : ℂ) * Complex.I * (BBoson.mcCoeff U.2.2 μ : ℂ) *
+          MvPowerSeries.constantCoeff ((star (U.2.2 : JetRing)) ^ 6)) •
+          ((1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) ⊗ₜ[ℂ] l) := by
+  rw [repJetGaugeGroupI_ι_tmul, BBoson.coeff_single_star_pow]
+  norm_num
+
+/-- On jets of constant gauge transformations the jet action reduces to the global
+  gauge action on the jet space: the `(1, 1)_{-6}` scalar on the target factor and
+  the trivial action on the derivative symbols. -/
+lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
+      TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
+  have hχ : ((star (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)) ^ 6) =
+      MvPowerSeries.C ((star (g.2.2 : ℂ)) ^ 6) := by
+    rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing) =
+        MvPowerSeries.C ((g.2.2 : ℂ)) from rfl, MvPowerSeries.star_C, ← map_pow]
+  show TensorProduct.map (derivAction _) LinearMap.id = _
+  rw [hχ, derivAction_C]
+  refine LinearMap.ext fun x => ?_
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul p l =>
+      simp only [TensorProduct.map_tmul, LinearMap.smul_apply, LinearMap.id_apply]
+      rw [show repGaugeGroupI g l = ((star (g.2.2 : ℂ)) ^ 6) • l from rfl,
+        TensorProduct.smul_tmul]
+  | add x y hx hy => simp only [map_add]; rw [hx, hy]
 
 end LeptonSinglet
 
