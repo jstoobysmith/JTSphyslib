@@ -48,6 +48,9 @@ The below is AI slop, but it shows a useful way od defining the coefficent.
 def CoeffSubmodule (s : Multiset FieldGenerators) : Submodule ℂ EFTLagrangianExclDeriv :=
   Submodule.span ℂ (termOfList '' {l | Multiset.ofList l = s})
 
+
+
+
 instance : SetLike.GradedMonoid CoeffSubmodule where
   one_mem := by simp [CoeffSubmodule, termOfList_nil]
   mul_mem s1 s2 V1 V2 hV1 hV2 := by
@@ -287,6 +290,47 @@ instance : GradedAlgebra CoeffSubmodule := by
 def coeff (s : Multiset FieldGenerators) : EFTLagrangianExclDeriv →ₗ[ℂ] EFTLagrangianExclDeriv:=
   GradedAlgebra.proj CoeffSubmodule s
 
+lemma coeff_mem_subModule (s : Multiset FieldGenerators) (x : EFTLagrangianExclDeriv) :
+    coeff s x ∈ CoeffSubmodule s := by
+  rw [coeff, GradedAlgebra.proj_apply]
+  exact SetLike.coe_mem _
+
 end CoeffSubmodule
+
+
+/-!
+
+## Properties of the submodules
+
+-/
+
+
+/-- A element of `EFTLagrangianExclDeriv` is an element of the `CoeffSubmodule`
+  iff it is a scalar multiple of a corresponding `termOfList l`.  -/
+lemma coeffSubmodule_mem_iff_eq_mul {s : Multiset FieldGenerators}
+    {l : List FieldGenerators} (h : Multiset.ofList l = s) (x : EFTLagrangianExclDeriv) :
+    x ∈ CoeffSubmodule s ↔ ∃ c : ℂ, x = c • termOfList l := by
+  constructor
+  · intro hx
+    have hle : CoeffSubmodule s ≤ ℂ ∙ termOfList l := by
+      rw [CoeffSubmodule, Submodule.span_le]
+      rintro _ ⟨l', hl', rfl⟩
+      obtain ⟨c, hc, -⟩ := termOfList_perm (Multiset.coe_eq_coe.mp (hl'.trans h.symm))
+      exact Submodule.mem_span_singleton.mpr ⟨c, hc.symm⟩
+    obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.mp (hle hx)
+    exact ⟨c, hc.symm⟩
+  · rintro ⟨c, rfl⟩
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨l, h, rfl⟩)
+
+lemma coeffSubmodule_eq_span  {s : Multiset FieldGenerators}
+    {l : List FieldGenerators} (h : Multiset.ofList l = s) :
+    CoeffSubmodule s = ℂ ∙ termOfList l := by
+  ext x
+  simp [coeffSubmodule_mem_iff_eq_mul h]
+  sorry
+
+/-- The map from coefficents associated with each list to the algebra. -/
+def ofListCoeff : (List FieldGenerators →₀ ℂ) →ₗ[ℂ] EFTLagrangianExclDeriv :=
+  Finsupp.linearCombination ℂ termOfList
 
 end

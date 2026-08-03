@@ -23,6 +23,7 @@ public import Mathlib.RingTheory.TensorProduct.Maps
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Contraction
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.Algebra.MvPolynomial.PDeriv
+public import Mathlib.Data.Finsupp.Multiset
 public import Mathlib.LinearAlgebra.TensorAlgebra.Basis
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
@@ -71,7 +72,7 @@ structure LagrangianTheory (G : Type) [Group G] where
   complexScalarBasis : ∀ φ, Basis (ComplexScalarComponents φ) ℂ (complexScalarModule φ)
   complexScalarRepLorentzGroup : ∀ φ, Representation ℂ SL(2,ℂ) (complexScalarModule φ)
   complexScalarRepGaugeGroup : ∀ φ, Representation ℂ G (complexScalarModule φ)
-  -- The real bosonic fields (e.g. the field strengths of the gauge bosons)
+  -- The real bosonic fields (e.g. the gauge bosons of the theory.)
   RealBosonIrreps : Type
   [realBosonIrreps_fintype : Fintype RealBosonIrreps]
   [realBosonIrreps_decEq : DecidableEq RealBosonIrreps]
@@ -132,15 +133,15 @@ def fermionicGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicGenerator ≃
   left_inv g := by cases g <;> rfl
   right_inv g := by cases g <;> rfl
 
-inductive FermionicDerivGenerator (L : LagrangianTheory G)
-  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
-      L.FermionicDerivGenerator
-  | bar (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
-      L.FermionicDerivGenerator
+inductive FermionicJetGenerator (L : LagrangianTheory G)
+  | of (μ : Multiset (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
+      L.FermionicJetGenerator
+  | bar (μ : Multiset (Fin 1 ⊕ Fin 3)) (φ : L.FermionIrreps) (α : L.FermionComponents φ) :
+      L.FermionicJetGenerator
 
-def fermionicDerivGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicDerivGenerator ≃
-  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) ⊕
-  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) where
+def fermionicJetGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicJetGenerator ≃
+  (Multiset (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) ⊕
+  (Multiset (Fin 1 ⊕ Fin 3) × Σ φ : L.FermionIrreps, L.FermionComponents φ) where
   toFun g := match g with
     | .of μ φ α => Sum.inl (μ, ⟨φ, α⟩)
     | .bar μ φ α => Sum.inr (μ, ⟨φ, α⟩)
@@ -163,18 +164,18 @@ def fermionicDerivGeneratorEquiv {L : LagrangianTheory G}  : L.FermionicDerivGen
   This vector space includes all the fields appearing in the theory. -/
 abbrev FermionicTargetSpace (L : LagrangianTheory G) := Π (φ : L.FermionIrreps),  L.fermionModule φ
 
-/-- The target vector space of covariant derivatives of fermions e.g. ∇_μ ψ.
-  This is similar to the Jet space associated with fermions, however, because covariant derivatives
-  do not commute, the commutation is not taken account of here.
+/-- The target vector space of the jet-bundle coordinates of fermions e.g. ∂_μ ψ.
+  This is the fiber of the jet bundle associated with the fermions: since partial
+  derivatives commute, the derivative slots form a symmetric algebra.
 
-  This vector space includes all the fields in the theory + their covariant derivatives. -/
-abbrev FermionicDerivSpace (L : LagrangianTheory G) :=
-  TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace
+  This vector space includes all the fields in the theory + their derivative coordinates. -/
+abbrev FermionicJetSpace (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace
 
 /-- The fermionic target space linearly embeds into the fermionic target space with derivatives. -/
-def FermionicTargetSpace.toFermionicDerivSpace {L : LagrangianTheory G} :
-    L.FermionicTargetSpace →ₗ[ℂ] L.FermionicDerivSpace :=
-  TensorProduct.mk ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) L.FermionicTargetSpace 1
+def FermionicTargetSpace.toFermionicJetSpace {L : LagrangianTheory G} :
+    L.FermionicTargetSpace →ₗ[ℂ] L.FermionicJetSpace :=
+  TensorProduct.mk ℂ (SymmetricAlgebra ℂ Lorentz.CoℂModule) L.FermionicTargetSpace 1
 
 /-- Since fermions are complex fields, we also need to consider the target space of their
   complex conjugate. The vector space `FermionicTargetSpaceWithComplex` is defined
@@ -187,10 +188,10 @@ abbrev FermionicTargetSpaceWithComplex (L : LagrangianTheory G) := L.FermionicTa
 /-- Similar to `FermionicTargetSpaceWithComplex` except including derivatives.
 
   This vector space includes all the fields present in the theory + their conjugates + all
-  their covariant derivatives. -/
-abbrev FermionicDerivSpaceWithComplex (L : LagrangianTheory G) :=
-  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace) ×
-  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.FermionicTargetSpace)
+  their jet-bundle derivative coordinates. -/
+abbrev FermionicJetSpaceWithComplex (L : LagrangianTheory G) :=
+  (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.FermionicTargetSpace) ×
+  (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.FermionicTargetSpace)
 
 /-- The vector space dual to `FermionicTargetSpaceWithComplex` and spanned by the component
   functions of all the fields + their conjugates in the theory. -/
@@ -198,16 +199,16 @@ abbrev FermionicComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℂ L.FermionicTargetSpaceWithComplex
 
 /-- The vector space spanned by the component functions of all the fields + their
-  conjugates + all their covariant derivatives in the theory.
+  conjugates + all their jet-bundle derivative coordinates in the theory.
 
-  This is the *graded* dual of `FermionicDerivSpaceWithComplex`: the duals of the
+  This is the *graded* dual of `FermionicJetSpaceWithComplex`: the duals of the
   finite-dimensional building blocks are dualized individually and reassembled. The full
-  `Module.Dual` of `FermionicDerivSpaceWithComplex` is strictly larger (the latter is
+  `Module.Dual` of `FermionicJetSpaceWithComplex` is strictly larger (the latter is
   infinite dimensional) and is not spanned by the component functions. -/
-abbrev FermionicComponentSpaceWithDeriv (L : LagrangianTheory G) :=
-  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+abbrev FermionicJetComponentSpace (L : LagrangianTheory G) :=
+  (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
     Module.Dual ℂ L.FermionicTargetSpace) ×
-  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+  (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
     Module.Dual ℂ (ConjModule L.FermionicTargetSpace))
 
 /-!
@@ -220,18 +221,18 @@ abbrev FermionicComponentSpaceWithDeriv (L : LagrangianTheory G) :=
 abbrev FermionicEFTExclDeriv (L : LagrangianTheory G) := ExteriorAlgebra ℂ L.FermionicComponentSpace
 
 /-- The EFT algebra spanned by the fermions in the theory + their conjugate + all their
-  covariant derivatives without taking account of commutation of derivatives, or
-  total derivatives or equations of motion relations. -/
-abbrev FermionicEFTFreeDeriv (L : LagrangianTheory G) :=
-  ExteriorAlgebra ℂ L.FermionicComponentSpaceWithDeriv
+  jet-bundle derivative coordinates, without taking account of total derivatives or
+  equations of motion relations. -/
+abbrev FermionicEFTJet (L : LagrangianTheory G) :=
+  ExteriorAlgebra ℂ L.FermionicJetComponentSpace
 
 /-!
 
 ## A.3. The basis of the fermionic vector spaces
 
-The main vector spaces are `FermionicComponentSpace` and `FermionicComponentSpaceWithDeriv`.
+The main vector spaces are `FermionicComponentSpace` and `FermionicJetComponentSpace`.
 On these spaces we want to define a basis indexed by `FermionicGenerator` and
-`FermionicDerivGenerator` respectively.
+`FermionicJetGenerator` respectively.
 
 -/
 
@@ -240,14 +241,20 @@ noncomputable def FermionicComponentSpace.basis {L : LagrangianTheory G}  :
   ((Pi.basis (fun φ => L.fermionBasis φ)).prod
   ((Pi.basis (fun φ => L.fermionBasis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
 
+/-- The basis of the symmetric algebra of dual jet slots, indexed by multisets of
+  spacetime indices. -/
+noncomputable def dualJetAlgebraBasis :
+    Basis (Multiset (Fin 1 ⊕ Fin 3)) ℂ (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) :=
+  Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
 
-noncomputable def FermionicComponentSpaceWithDeriv.basis {L : LagrangianTheory G} :
-    Basis L.FermionicDerivGenerator ℂ L.FermionicComponentSpaceWithDeriv :=
-  (((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+
+noncomputable def FermionicJetComponentSpace.basis {L : LagrangianTheory G} :
+    Basis L.FermionicJetGenerator ℂ L.FermionicJetComponentSpace :=
+  ((dualJetAlgebraBasis.tensorProduct
       (Pi.basis fun φ => L.fermionBasis φ).dualBasis).prod
-    ((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+    (dualJetAlgebraBasis.tensorProduct
       ((Pi.basis fun φ => L.fermionBasis φ).conj.dualBasis))).reindex
-    fermionicDerivGeneratorEquiv.symm
+    fermionicJetGeneratorEquiv.symm
 
 /-!
 
@@ -259,8 +266,8 @@ fields we take the Lorentz group to be `SL(2,ℂ)`, rather than dealing with pro
 representations of the Lorentz group.
 
 We are particularly interested in the representations acting on
-- the vector spaces `FermionicComponentSpace` and `FermionicComponentSpaceWithDeriv`, and
-- the algebras `FermionicEFTExclDeriv` and `FermionicEFTFreeDeriv`.
+- the vector spaces `FermionicComponentSpace` and `FermionicJetComponentSpace`, and
+- the algebras `FermionicEFTExclDeriv` and `FermionicEFTJet`.
 
 To define the representations on vector spaces involving derivatives,
 we first need to define the representations on the derivative algebras.
@@ -270,53 +277,47 @@ we first need to define the representations on the derivative algebras.
 
 variable {L : LagrangianTheory G}
 
-/-- The representation of the Lorentz group on the tensor algebra of covariant
-  derivatives, acting through `CoℂModule.SL2CRep` on each factor. -/
-noncomputable def derivAlgebraRepLorentzGroup :
-    Representation ℂ SL(2,ℂ) (TensorAlgebra ℂ Lorentz.CoℂModule) where
-  toFun Λ := (TensorAlgebra.lift ℂ
-    (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ)).toLinearMap
+/-- The representation of the Lorentz group on the symmetric algebra of jet
+  coordinates, acting through `CoℂModule.SL2CRep` on each factor. -/
+noncomputable def jetAlgebraRepLorentzGroup :
+    Representation ℂ SL(2,ℂ) (SymmetricAlgebra ℂ Lorentz.CoℂModule) where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ)).toLinearMap
   map_one' := by
-    suffices h : TensorAlgebra.lift ℂ
-        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep 1) =
-        AlgHom.id ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) by
-      rw [h]; rfl
-    ext v
-    simp
+    simp [End.one_eq_id]
   map_mul' Λ1 Λ2 := by
-    suffices h : TensorAlgebra.lift ℂ
-        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep (Λ1 * Λ2)) =
-        (TensorAlgebra.lift ℂ
-          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ1)).comp
-        (TensorAlgebra.lift ℂ
-          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ2)) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep Λ2)) by
       rw [h]; rfl
-    ext v
-    simp
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
 
-noncomputable def dualDerivAlgebraRepLorentzGroup :
-    Representation ℂ SL(2,ℂ) (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
-  toFun Λ := (TensorAlgebra.lift ℂ
-    (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).toLinearMap
+noncomputable def dualJetAlgebraRepLorentzGroup :
+    Representation ℂ SL(2,ℂ) (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).toLinearMap
   map_one' := by
-    suffices h : TensorAlgebra.lift ℂ
-        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual 1) =
-        AlgHom.id ℂ (TensorAlgebra ℂ _) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual 1) =
+        AlgHom.id ℂ (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) by
       rw [h]; rfl
-    ext v
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp
     rfl
   map_mul' Λ1 Λ2 := by
-    suffices h : TensorAlgebra.lift ℂ
-        (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual (Λ1 * Λ2)) =
-        (TensorAlgebra.lift ℂ
-          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ1)).comp
-        (TensorAlgebra.lift ℂ
-          (TensorAlgebra.ι ℂ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ2)) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ2)) by
       rw [h]; rfl
-    ext v
-    simp
-    rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
 
 def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicTargetSpace where
   toFun Λ := LinearMap.piMap fun φ => L.fermionRepLorentzGroup φ Λ
@@ -336,10 +337,10 @@ noncomputable def FermionicComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.FermionicComponentSpace :=
   FermionicTargetSpaceWithComplex.repLorentzGroup.dual
 
-noncomputable def FermionicComponentSpaceWithDeriv.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) L.FermionicComponentSpaceWithDeriv :=
-  (dualDerivAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.dual).prod
-  (dualDerivAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.conj.dual)
+noncomputable def FermionicJetComponentSpace.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.FermionicJetComponentSpace :=
+  (dualJetAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.dual).prod
+  (dualJetAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.conj.dual)
 
 noncomputable def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicEFTExclDeriv where
   toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)).toLinearMap
@@ -350,10 +351,10 @@ noncomputable def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(
     simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
-/-- The representation of the Lorentz group on the algebra `FermionicEFTFreeDeriv`.  -/
-noncomputable def FermionicEFTFreeDeriv.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) L.FermionicEFTFreeDeriv where
-  toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+/-- The representation of the Lorentz group on the algebra `FermionicEFTJet`.  -/
+noncomputable def FermionicEFTJet.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.FermionicEFTJet where
+  toFun Λ := (ExteriorAlgebra.map (FermionicJetComponentSpace.repLorentzGroup Λ)).toLinearMap
   map_one' := by
     simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
@@ -381,26 +382,25 @@ noncomputable def FermionicTargetSpaceWithComplex.repGaugeGroup :
     Representation ℂ G L.FermionicTargetSpaceWithComplex :=
   FermionicTargetSpace.repGaugeGroup.prod (FermionicTargetSpace.repGaugeGroup.conj)
 
-/-- The representation of the gauge group on the covariant-derivative space of the
-  fermionic fields. The gauge group acts trivially on the derivative slots: this is
-  the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ ψ`
-  transforms in the same representation of the gauge group as `ψ` itself. -/
-noncomputable def FermionicDerivSpace.repGaugeGroup :
-    Representation ℂ G L.FermionicDerivSpace :=
-  (Representation.trivial ℂ G (TensorAlgebra ℂ Lorentz.CoℂModule)).tprod
+/-- The representation of the gauge group on the jet space of the fermionic fields.
+  The gauge group acts trivially on the derivative slots, so that the jet coordinates
+  `∂ ⋯ ∂ ψ` transform in the same representation of the gauge group as `ψ` itself. -/
+noncomputable def FermionicJetSpace.repGaugeGroup :
+    Representation ℂ G L.FermionicJetSpace :=
+  (Representation.trivial ℂ G (SymmetricAlgebra ℂ Lorentz.CoℂModule)).tprod
     FermionicTargetSpace.repGaugeGroup
 
 noncomputable def FermionicComponentSpace.repGaugeGroup : Representation ℂ G L.FermionicComponentSpace :=
   FermionicTargetSpaceWithComplex.repGaugeGroup.dual
 
 /-- The representation of the gauge group on the space of component functions of the
-  fermionic fields, their conjugates, and their covariant derivatives; trivial on the
-  derivative slots. -/
-noncomputable def FermionicComponentSpaceWithDeriv.repGaugeGroup :
-    Representation ℂ G L.FermionicComponentSpaceWithDeriv :=
-  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+  fermionic fields, their conjugates, and their jet-bundle derivative coordinates;
+  trivial on the derivative slots. -/
+noncomputable def FermionicJetComponentSpace.repGaugeGroup :
+    Representation ℂ G L.FermionicJetComponentSpace :=
+  ((Representation.trivial ℂ G (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
     FermionicTargetSpace.repGaugeGroup.dual).prod
-  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+  ((Representation.trivial ℂ G (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
     FermionicTargetSpace.repGaugeGroup.conj.dual)
 
 noncomputable def FermionicEFTExclDeriv.repGaugeGroup : Representation ℂ G L.FermionicEFTExclDeriv where
@@ -412,9 +412,9 @@ noncomputable def FermionicEFTExclDeriv.repGaugeGroup : Representation ℂ G L.F
     simp only [map_mul, End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
-noncomputable def FermionicEFTFreeDeriv.repGaugeGroup :
-    Representation ℂ G L.FermionicEFTFreeDeriv where
-  toFun g := (ExteriorAlgebra.map (FermionicComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+noncomputable def FermionicEFTJet.repGaugeGroup :
+    Representation ℂ G L.FermionicEFTJet where
+  toFun g := (ExteriorAlgebra.map (FermionicJetComponentSpace.repGaugeGroup g)).toLinearMap
   map_one' := by
     simp only [map_one, End.one_eq_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
@@ -454,15 +454,15 @@ def complexScalarGeneratorEquiv : L.ComplexScalarGenerator ≃
   left_inv g := by cases g <;> rfl
   right_inv g := by cases g <;> rfl
 
-inductive ComplexScalarDerivGenerator (L : LagrangianTheory G)
-  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
-      (α : L.ComplexScalarComponents φ) : L.ComplexScalarDerivGenerator
-  | bar (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
-      (α : L.ComplexScalarComponents φ) : L.ComplexScalarDerivGenerator
+inductive ComplexScalarJetGenerator (L : LagrangianTheory G)
+  | of (μ : Multiset (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
+      (α : L.ComplexScalarComponents φ) : L.ComplexScalarJetGenerator
+  | bar (μ : Multiset (Fin 1 ⊕ Fin 3)) (φ : L.ComplexScalarIrreps)
+      (α : L.ComplexScalarComponents φ) : L.ComplexScalarJetGenerator
 
-def complexScalarDerivGeneratorEquiv : L.ComplexScalarDerivGenerator ≃
-  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) ⊕
-  (List (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) where
+def complexScalarJetGeneratorEquiv : L.ComplexScalarJetGenerator ≃
+  (Multiset (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) ⊕
+  (Multiset (Fin 1 ⊕ Fin 3) × Σ φ : L.ComplexScalarIrreps, L.ComplexScalarComponents φ) where
   toFun g := match g with
     | .of μ φ α => Sum.inl (μ, ⟨φ, α⟩)
     | .bar μ φ α => Sum.inr (μ, ⟨φ, α⟩)
@@ -484,21 +484,20 @@ def complexScalarDerivGeneratorEquiv : L.ComplexScalarDerivGenerator ≃
 abbrev ComplexScalarTargetSpace (L : LagrangianTheory G) :=
   Π (φ : L.ComplexScalarIrreps), L.complexScalarModule φ
 
-/-- The target vector space of covariant derivatives of the complex scalar fields
-  e.g. ∇_μ ϕ. This is similar to the Jet space associated with the scalars, however,
-  because covariant derivatives do not commute, the commutation is not taken account
-  of here.
+/-- The target vector space of the jet-bundle coordinates of the complex scalar
+  fields e.g. ∂_μ ϕ. This is the fiber of the jet bundle associated with the scalars:
+  since partial derivatives commute, the derivative slots form a symmetric algebra.
 
   This vector space includes all the complex scalar fields in the theory + their
-  covariant derivatives. -/
-abbrev ComplexScalarDerivSpace (L : LagrangianTheory G) :=
-  TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace
+  derivative coordinates. -/
+abbrev ComplexScalarJetSpace (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace
 
 /-- The complex scalar target space linearly embeds into the complex scalar target
   space with derivatives. -/
-def ComplexScalarTargetSpace.toComplexScalarDerivSpace {L : LagrangianTheory G} :
-    L.ComplexScalarTargetSpace →ₗ[ℂ] L.ComplexScalarDerivSpace :=
-  TensorProduct.mk ℂ (TensorAlgebra ℂ Lorentz.CoℂModule) L.ComplexScalarTargetSpace 1
+def ComplexScalarTargetSpace.toComplexScalarJetSpace {L : LagrangianTheory G} :
+    L.ComplexScalarTargetSpace →ₗ[ℂ] L.ComplexScalarJetSpace :=
+  TensorProduct.mk ℂ (SymmetricAlgebra ℂ Lorentz.CoℂModule) L.ComplexScalarTargetSpace 1
 
 /-- The target space of the complex scalar fields, including their conjugates. -/
 abbrev ComplexScalarTargetSpaceWithComplex (L : LagrangianTheory G) :=
@@ -507,10 +506,10 @@ abbrev ComplexScalarTargetSpaceWithComplex (L : LagrangianTheory G) :=
 /-- Similar to `ComplexScalarTargetSpaceWithComplex` except including derivatives.
 
   This vector space includes all the complex scalar fields present in the theory +
-  their conjugates + all their covariant derivatives. -/
-abbrev ComplexScalarDerivSpaceWithComplex (L : LagrangianTheory G) :=
-  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace) ×
-  (TensorAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.ComplexScalarTargetSpace)
+  their conjugates + all their jet-bundle derivative coordinates. -/
+abbrev ComplexScalarJetSpaceWithComplex (L : LagrangianTheory G) :=
+  (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] L.ComplexScalarTargetSpace) ×
+  (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] ConjModule L.ComplexScalarTargetSpace)
 
 /-- The vector space dual to `ComplexScalarTargetSpaceWithComplex` and spanned by the
   component functions of all the complex scalar fields + their conjugates in the
@@ -519,16 +518,17 @@ abbrev ComplexScalarComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℂ L.ComplexScalarTargetSpaceWithComplex
 
 /-- The vector space spanned by the component functions of all the complex scalar
-  fields + their conjugates + all their covariant derivatives in the theory.
+  fields + their conjugates + all their jet-bundle derivative coordinates in the
+  theory.
 
-  This is the *graded* dual of `ComplexScalarDerivSpaceWithComplex`: the duals of the
+  This is the *graded* dual of `ComplexScalarJetSpaceWithComplex`: the duals of the
   finite-dimensional building blocks are dualized individually and reassembled. The
-  full `Module.Dual` of `ComplexScalarDerivSpaceWithComplex` is strictly larger (the
+  full `Module.Dual` of `ComplexScalarJetSpaceWithComplex` is strictly larger (the
   latter is infinite dimensional) and is not spanned by the component functions. -/
-abbrev ComplexScalarComponentSpaceWithDeriv (L : LagrangianTheory G) :=
-  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+abbrev ComplexScalarJetComponentSpace (L : LagrangianTheory G) :=
+  (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
     Module.Dual ℂ L.ComplexScalarTargetSpace) ×
-  (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+  (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
     Module.Dual ℂ (ConjModule L.ComplexScalarTargetSpace))
 
 /-!
@@ -542,18 +542,18 @@ abbrev ComplexScalarEFTExclDeriv (L : LagrangianTheory G) :=
   SymmetricAlgebra ℂ L.ComplexScalarComponentSpace
 
 /-- The EFT algebra spanned by the complex scalars in the theory + their conjugate +
-  all their covariant derivatives without taking account of commutation of
-  derivatives, or total derivatives or equations of motion relations. -/
-abbrev ComplexScalarEFTFreeDeriv (L : LagrangianTheory G) :=
-  SymmetricAlgebra ℂ L.ComplexScalarComponentSpaceWithDeriv
+  all their jet-bundle derivative coordinates, without taking account of total
+  derivatives or equations of motion relations. -/
+abbrev ComplexScalarEFTJet (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℂ L.ComplexScalarJetComponentSpace
 
 /-!
 
 ### B.3. The basis of the complex scalar vector spaces
 
 The main vector spaces are `ComplexScalarComponentSpace` and
-`ComplexScalarComponentSpaceWithDeriv`. On these spaces we want to define a basis
-indexed by `ComplexScalarGenerator` and `ComplexScalarDerivGenerator` respectively.
+`ComplexScalarJetComponentSpace`. On these spaces we want to define a basis
+indexed by `ComplexScalarGenerator` and `ComplexScalarJetGenerator` respectively.
 
 -/
 
@@ -563,13 +563,13 @@ noncomputable def ComplexScalarComponentSpace.basis :
   ((Pi.basis (fun φ => L.complexScalarBasis φ)).conj)).dualBasis.reindex
     complexScalarGeneratorEquiv.symm
 
-noncomputable def ComplexScalarComponentSpaceWithDeriv.basis :
-    Basis L.ComplexScalarDerivGenerator ℂ L.ComplexScalarComponentSpaceWithDeriv :=
-  (((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+noncomputable def ComplexScalarJetComponentSpace.basis :
+    Basis L.ComplexScalarJetGenerator ℂ L.ComplexScalarJetComponentSpace :=
+  ((dualJetAlgebraBasis.tensorProduct
       (Pi.basis fun φ => L.complexScalarBasis φ).dualBasis).prod
-    ((Lorentz.complexCoBasis.dualBasis.tensorAlgebra).tensorProduct
+    (dualJetAlgebraBasis.tensorProduct
       ((Pi.basis fun φ => L.complexScalarBasis φ).conj.dualBasis))).reindex
-    complexScalarDerivGeneratorEquiv.symm
+    complexScalarJetGeneratorEquiv.symm
 
 /-!
 
@@ -596,10 +596,10 @@ noncomputable def ComplexScalarComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarComponentSpace :=
   ComplexScalarTargetSpaceWithComplex.repLorentzGroup.dual
 
-noncomputable def ComplexScalarComponentSpaceWithDeriv.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) L.ComplexScalarComponentSpaceWithDeriv :=
-  (dualDerivAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.dual).prod
-  (dualDerivAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.conj.dual)
+noncomputable def ComplexScalarJetComponentSpace.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.ComplexScalarJetComponentSpace :=
+  (dualJetAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.dual).prod
+  (dualJetAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.conj.dual)
 
 noncomputable def ComplexScalarEFTExclDeriv.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarEFTExclDeriv where
@@ -618,20 +618,20 @@ noncomputable def ComplexScalarEFTExclDeriv.repLorentzGroup :
     ext v
     simp
 
-/-- The representation of the Lorentz group on the algebra `ComplexScalarEFTFreeDeriv`. -/
-noncomputable def ComplexScalarEFTFreeDeriv.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) L.ComplexScalarEFTFreeDeriv where
+/-- The representation of the Lorentz group on the algebra `ComplexScalarEFTJet`. -/
+noncomputable def ComplexScalarEFTJet.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) L.ComplexScalarEFTJet where
   toFun Λ := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repLorentzGroup Λ)).toLinearMap
   map_one' := by
     simp [End.one_eq_id]
   map_mul' Λ1 Λ2 := by
     suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repLorentzGroup (Λ1 * Λ2)) =
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ1)).comp
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repLorentzGroup Λ1)).comp
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repLorentzGroup Λ2)) by
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repLorentzGroup Λ2)) by
       rw [h]; rfl
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
@@ -657,13 +657,13 @@ noncomputable def ComplexScalarTargetSpaceWithComplex.repGaugeGroup :
     Representation ℂ G L.ComplexScalarTargetSpaceWithComplex :=
   ComplexScalarTargetSpace.repGaugeGroup.prod (ComplexScalarTargetSpace.repGaugeGroup.conj)
 
-/-- The representation of the gauge group on the covariant-derivative space of the
-  complex scalar fields. The gauge group acts trivially on the derivative slots: this
-  is the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ ϕ`
-  transforms in the same representation of the gauge group as `ϕ` itself. -/
-noncomputable def ComplexScalarDerivSpace.repGaugeGroup :
-    Representation ℂ G L.ComplexScalarDerivSpace :=
-  (Representation.trivial ℂ G (TensorAlgebra ℂ Lorentz.CoℂModule)).tprod
+/-- The representation of the gauge group on the jet space of the complex scalar
+  fields. The gauge group acts trivially on the derivative slots, so that the jet
+  coordinates `∂ ⋯ ∂ ϕ` transform in the same representation of the gauge group as
+  `ϕ` itself. -/
+noncomputable def ComplexScalarJetSpace.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarJetSpace :=
+  (Representation.trivial ℂ G (SymmetricAlgebra ℂ Lorentz.CoℂModule)).tprod
     ComplexScalarTargetSpace.repGaugeGroup
 
 noncomputable def ComplexScalarComponentSpace.repGaugeGroup :
@@ -671,13 +671,13 @@ noncomputable def ComplexScalarComponentSpace.repGaugeGroup :
   ComplexScalarTargetSpaceWithComplex.repGaugeGroup.dual
 
 /-- The representation of the gauge group on the space of component functions of the
-  complex scalar fields, their conjugates, and their covariant derivatives; trivial on
-  the derivative slots. -/
-noncomputable def ComplexScalarComponentSpaceWithDeriv.repGaugeGroup :
-    Representation ℂ G L.ComplexScalarComponentSpaceWithDeriv :=
-  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+  complex scalar fields, their conjugates, and their jet-bundle derivative
+  coordinates; trivial on the derivative slots. -/
+noncomputable def ComplexScalarJetComponentSpace.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarJetComponentSpace :=
+  ((Representation.trivial ℂ G (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
     ComplexScalarTargetSpace.repGaugeGroup.dual).prod
-  ((Representation.trivial ℂ G (TensorAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
+  ((Representation.trivial ℂ G (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))).tprod
     ComplexScalarTargetSpace.repGaugeGroup.conj.dual)
 
 noncomputable def ComplexScalarEFTExclDeriv.repGaugeGroup :
@@ -697,19 +697,19 @@ noncomputable def ComplexScalarEFTExclDeriv.repGaugeGroup :
     ext v
     simp
 
-noncomputable def ComplexScalarEFTFreeDeriv.repGaugeGroup :
-    Representation ℂ G L.ComplexScalarEFTFreeDeriv where
+noncomputable def ComplexScalarEFTJet.repGaugeGroup :
+    Representation ℂ G L.ComplexScalarEFTJet where
   toFun g := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+    (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repGaugeGroup g)).toLinearMap
   map_one' := by
     simp [End.one_eq_id]
   map_mul' g1 g2 := by
     suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup (g1 * g2)) =
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repGaugeGroup (g1 * g2)) =
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g1)).comp
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repGaugeGroup g1)).comp
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarComponentSpaceWithDeriv.repGaugeGroup g2)) by
+          (SymmetricAlgebra.ι ℂ _ ∘ₗ ComplexScalarJetComponentSpace.repGaugeGroup g2)) by
       rw [h]; rfl
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
@@ -737,12 +737,12 @@ def realBosonGeneratorEquiv :
   left_inv g := by cases g; rfl
   right_inv g := by cases g; rfl
 
-inductive RealBosonDerivGenerator (L : LagrangianTheory G)
-  | of (μ : List (Fin 1 ⊕ Fin 3)) (φ : L.RealBosonIrreps) (α : L.RealBosonComponents φ) :
-      L.RealBosonDerivGenerator
+inductive RealBosonJetGenerator (L : LagrangianTheory G)
+  | of (μ : Multiset (Fin 1 ⊕ Fin 3)) (φ : L.RealBosonIrreps) (α : L.RealBosonComponents φ) :
+      L.RealBosonJetGenerator
 
-def realBosonDerivGeneratorEquiv : L.RealBosonDerivGenerator ≃
-    List (Fin 1 ⊕ Fin 3) × Σ φ : L.RealBosonIrreps, L.RealBosonComponents φ where
+def realBosonJetGeneratorEquiv : L.RealBosonJetGenerator ≃
+    Multiset (Fin 1 ⊕ Fin 3) × Σ φ : L.RealBosonIrreps, L.RealBosonComponents φ where
   toFun g := match g with
     | .of μ φ α => (μ, ⟨φ, α⟩)
   invFun g := match g with
@@ -762,20 +762,20 @@ def realBosonDerivGeneratorEquiv : L.RealBosonDerivGenerator ≃
 abbrev RealBosonTargetSpace (L : LagrangianTheory G) :=
   Π (φ : L.RealBosonIrreps), L.realBosonModule φ
 
-/-- The target vector space of covariant derivatives of the real bosonic fields
-  e.g. ∇_μ B. Because covariant derivatives do not commute, the commutation is not
-  taken account of here.
+/-- The target vector space of the jet-bundle coordinates of the real bosonic fields
+  e.g. ∂_μ B. Since partial derivatives commute, the derivative slots form a
+  symmetric algebra.
 
   This vector space includes all the real bosonic fields in the theory + their
-  covariant derivatives. -/
-abbrev RealBosonDerivSpace (L : LagrangianTheory G) :=
-  TensorAlgebra ℝ Lorentz.CoVector ⊗[ℝ] L.RealBosonTargetSpace
+  derivative coordinates. -/
+abbrev RealBosonJetSpace (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℝ Lorentz.CoVector ⊗[ℝ] L.RealBosonTargetSpace
 
 /-- The real bosonic target space linearly embeds into the real bosonic target space
   with derivatives. -/
-def RealBosonTargetSpace.toRealBosonDerivSpace {L : LagrangianTheory G} :
-    L.RealBosonTargetSpace →ₗ[ℝ] L.RealBosonDerivSpace :=
-  TensorProduct.mk ℝ (TensorAlgebra ℝ Lorentz.CoVector) L.RealBosonTargetSpace 1
+def RealBosonTargetSpace.toRealBosonJetSpace {L : LagrangianTheory G} :
+    L.RealBosonTargetSpace →ₗ[ℝ] L.RealBosonJetSpace :=
+  TensorProduct.mk ℝ (SymmetricAlgebra ℝ Lorentz.CoVector) L.RealBosonTargetSpace 1
 
 /-- The vector space dual to `RealBosonTargetSpace` and spanned by the component
   functions of all the real bosonic fields in the theory. There is no conjugate
@@ -784,12 +784,12 @@ abbrev RealBosonComponentSpace (L : LagrangianTheory G) :=
   Module.Dual ℝ L.RealBosonTargetSpace
 
 /-- The vector space spanned by the component functions of all the real bosonic
-  fields + all their covariant derivatives in the theory.
+  fields + all their jet-bundle derivative coordinates in the theory.
 
-  This is the *graded* dual of `RealBosonDerivSpace`: the duals of the
+  This is the *graded* dual of `RealBosonJetSpace`: the duals of the
   finite-dimensional building blocks are dualized individually and reassembled. -/
-abbrev RealBosonComponentSpaceWithDeriv (L : LagrangianTheory G) :=
-  TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ L.RealBosonTargetSpace
+abbrev RealBosonJetComponentSpace (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ L.RealBosonTargetSpace
 
 /-!
 
@@ -802,10 +802,10 @@ abbrev RealBosonEFTExclDeriv (L : LagrangianTheory G) :=
   SymmetricAlgebra ℝ L.RealBosonComponentSpace
 
 /-- The EFT algebra spanned by the real bosonic fields in the theory + all their
-  covariant derivatives without taking account of commutation of derivatives, or
-  total derivatives or equations of motion relations. -/
-abbrev RealBosonEFTFreeDeriv (L : LagrangianTheory G) :=
-  SymmetricAlgebra ℝ L.RealBosonComponentSpaceWithDeriv
+  jet-bundle derivative coordinates, without taking account of total derivatives or
+  equations of motion relations. -/
+abbrev RealBosonEFTJet (L : LagrangianTheory G) :=
+  SymmetricAlgebra ℝ L.RealBosonJetComponentSpace
 
 
 /-- The real bosonic EFT algebra with complex coefficients: the real bosonic EFT
@@ -813,11 +813,11 @@ abbrev RealBosonEFTFreeDeriv (L : LagrangianTheory G) :=
   complex scalar and fermionic algebras in the full EFT Lagrangian. -/
 abbrev RealBosonEFTExclDerivComplex (L : LagrangianTheory G) :=  ℂ ⊗[ℝ] L.RealBosonEFTExclDeriv
 
-/-- The real bosonic EFT algebra including covariant derivatives, with complex
-  coefficients: `RealBosonEFTFreeDeriv` with scalars extended from `ℝ` to `ℂ`, so
+/-- The real bosonic EFT algebra including jet-bundle derivative coordinates, with complex
+  coefficients: `RealBosonEFTJet` with scalars extended from `ℝ` to `ℂ`, so
   that it can be combined with the complex scalar and fermionic algebras in the full
   EFT Lagrangian. -/
-abbrev RealBosonEFTFreeDerivComplex (L : LagrangianTheory G) := ℂ ⊗[ℝ] L.RealBosonEFTFreeDeriv
+abbrev RealBosonEFTJetComplex (L : LagrangianTheory G) := ℂ ⊗[ℝ] L.RealBosonEFTJet
 
 
 /-!
@@ -830,11 +830,17 @@ noncomputable def RealBosonComponentSpace.basis :
     Basis L.RealBosonGenerator ℝ L.RealBosonComponentSpace :=
   (Pi.basis (fun φ => L.realBosonBasis φ)).dualBasis.reindex realBosonGeneratorEquiv.symm
 
-noncomputable def RealBosonComponentSpaceWithDeriv.basis :
-    Basis L.RealBosonDerivGenerator ℝ L.RealBosonComponentSpaceWithDeriv :=
-  ((Lorentz.CoVector.basis.dualBasis.tensorAlgebra).tensorProduct
+/-- The basis of the symmetric algebra of dual real jet slots, indexed by multisets of
+  spacetime indices. -/
+noncomputable def dualRealJetAlgebraBasis :
+    Basis (Multiset (Fin 1 ⊕ Fin 3)) ℝ (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) :=
+  Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
+
+noncomputable def RealBosonJetComponentSpace.basis :
+    Basis L.RealBosonJetGenerator ℝ L.RealBosonJetComponentSpace :=
+  (dualRealJetAlgebraBasis.tensorProduct
     (Pi.basis fun φ => L.realBosonBasis φ).dualBasis).reindex
-    realBosonDerivGeneratorEquiv.symm
+    realBosonJetGeneratorEquiv.symm
 
 /-!
 
@@ -848,55 +854,49 @@ noncomputable def RealBosonComponentSpaceWithDeriv.basis :
 noncomputable def realBosonSlotRepLorentzGroup : Representation ℝ SL(2,ℂ) Lorentz.CoVector :=
   MonoidHom.comp Lorentz.CoVector.rep Lorentz.SL2C.toLorentzGroup
 
-/-- The representation of the Lorentz group on the tensor algebra of real covariant
-  derivative slots. -/
-noncomputable def realDerivAlgebraRepLorentzGroup :
-    Representation ℝ SL(2,ℂ) (TensorAlgebra ℝ Lorentz.CoVector) where
-  toFun Λ := (TensorAlgebra.lift ℝ
-    (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ)).toLinearMap
+/-- The representation of the Lorentz group on the symmetric algebra of real jet
+  coordinate slots. -/
+noncomputable def realJetAlgebraRepLorentzGroup :
+    Representation ℝ SL(2,ℂ) (SymmetricAlgebra ℝ Lorentz.CoVector) where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup Λ)).toLinearMap
   map_one' := by
-    suffices h : TensorAlgebra.lift ℝ
-        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup 1) =
-        AlgHom.id ℝ (TensorAlgebra ℝ Lorentz.CoVector) by
-      rw [h]; rfl
-    ext v
-    simp
+    simp [End.one_eq_id]
   map_mul' Λ1 Λ2 := by
-    suffices h : TensorAlgebra.lift ℝ
-        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup (Λ1 * Λ2)) =
-        (TensorAlgebra.lift ℝ
-          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ1)).comp
-        (TensorAlgebra.lift ℝ
-          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup Λ2)) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup Λ2)) by
       rw [h]; rfl
-    ext v
-    simp [realBosonSlotRepLorentzGroup]
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
 
-/-- The representation of the Lorentz group on the tensor algebra of dual real
-  covariant derivative slots. -/
-noncomputable def dualRealDerivAlgebraRepLorentzGroup :
-    Representation ℝ SL(2,ℂ) (TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) where
-  toFun Λ := (TensorAlgebra.lift ℝ
-    (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ)).toLinearMap
+/-- The representation of the Lorentz group on the symmetric algebra of dual real
+  jet coordinate slots. -/
+noncomputable def dualRealJetAlgebraRepLorentzGroup :
+    Representation ℝ SL(2,ℂ) (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ)).toLinearMap
   map_one' := by
-    suffices h : TensorAlgebra.lift ℝ
-        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual 1) =
-        AlgHom.id ℝ (TensorAlgebra ℝ _) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup.dual 1) =
+        AlgHom.id ℝ (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) by
       rw [h]; rfl
-    ext v
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp
     rfl
   map_mul' Λ1 Λ2 := by
-    suffices h : TensorAlgebra.lift ℝ
-        (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual (Λ1 * Λ2)) =
-        (TensorAlgebra.lift ℝ
-          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ1)).comp
-        (TensorAlgebra.lift ℝ
-          (TensorAlgebra.ι ℝ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ2)) by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup.dual (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ realBosonSlotRepLorentzGroup.dual Λ2)) by
       rw [h]; rfl
-    ext v
-    simp
-    rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
 
 def RealBosonTargetSpace.repLorentzGroup :
     Representation ℝ SL(2,ℂ) L.RealBosonTargetSpace where
@@ -909,20 +909,20 @@ def RealBosonTargetSpace.repLorentzGroup :
     ext x i y
     simp
 
-/-- The representation of the Lorentz group on the covariant-derivative space of the
-  real bosonic fields: the tensor product of the action on the derivative slots and
-  the action on the real bosonic target space. -/
-noncomputable def RealBosonDerivSpace.repLorentzGroup :
-    Representation ℝ SL(2,ℂ) L.RealBosonDerivSpace :=
-  realDerivAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup
+/-- The representation of the Lorentz group on the jet space of the real bosonic
+  fields: the tensor product of the action on the derivative slots and the action on
+  the real bosonic target space. -/
+noncomputable def RealBosonJetSpace.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonJetSpace :=
+  realJetAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup
 
 noncomputable def RealBosonComponentSpace.repLorentzGroup :
     Representation ℝ SL(2,ℂ) L.RealBosonComponentSpace :=
   RealBosonTargetSpace.repLorentzGroup.dual
 
-noncomputable def RealBosonComponentSpaceWithDeriv.repLorentzGroup :
-    Representation ℝ SL(2,ℂ) L.RealBosonComponentSpaceWithDeriv :=
-  dualRealDerivAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup.dual
+noncomputable def RealBosonJetComponentSpace.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonJetComponentSpace :=
+  dualRealJetAlgebraRepLorentzGroup.tprod RealBosonTargetSpace.repLorentzGroup.dual
 
 noncomputable def RealBosonEFTExclDeriv.repLorentzGroup :
     Representation ℝ SL(2,ℂ) L.RealBosonEFTExclDeriv where
@@ -941,20 +941,20 @@ noncomputable def RealBosonEFTExclDeriv.repLorentzGroup :
     ext v
     simp
 
-/-- The representation of the Lorentz group on the algebra `RealBosonEFTFreeDeriv`. -/
-noncomputable def RealBosonEFTFreeDeriv.repLorentzGroup :
-    Representation ℝ SL(2,ℂ) L.RealBosonEFTFreeDeriv where
+/-- The representation of the Lorentz group on the algebra `RealBosonEFTJet`. -/
+noncomputable def RealBosonEFTJet.repLorentzGroup :
+    Representation ℝ SL(2,ℂ) L.RealBosonEFTJet where
   toFun Λ := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ)).toLinearMap
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repLorentzGroup Λ)).toLinearMap
   map_one' := by
     simp [End.one_eq_id]
   map_mul' Λ1 Λ2 := by
     suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repLorentzGroup (Λ1 * Λ2)) =
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ1)).comp
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repLorentzGroup Λ1)).comp
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repLorentzGroup Λ2)) by
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repLorentzGroup Λ2)) by
       rw [h]; rfl
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
@@ -977,10 +977,10 @@ noncomputable def RealBosonEFTExclDerivComplex.repLorentzGroup :
 /-- The representation of the Lorentz group on the complexified real bosonic EFT
   algebra with derivatives, obtained from the real representation by extension of
   scalars. -/
-noncomputable def RealBosonEFTFreeDerivComplex.repLorentzGroup :
-    Representation ℂ SL(2,ℂ) (RealBosonEFTFreeDerivComplex L) where
+noncomputable def RealBosonEFTJetComplex.repLorentzGroup :
+    Representation ℂ SL(2,ℂ) (RealBosonEFTJetComplex L) where
   toFun Λ :=
-    LinearMap.baseChange ℂ (RealBosonEFTFreeDeriv.repLorentzGroup Λ)
+    LinearMap.baseChange ℂ (RealBosonEFTJet.repLorentzGroup Λ)
   map_one' := by
     ext x
     simp [Module.End.one_eq_id]
@@ -1006,13 +1006,13 @@ def RealBosonTargetSpace.repGaugeGroup :
     ext x i y
     simp
 
-/-- The representation of the gauge group on the covariant-derivative space of the
-  real bosonic fields. The gauge group acts trivially on the derivative slots: this
-  is the statement that the derivatives are *covariant* derivatives, so that `∇ ⋯ ∇ B`
-  transforms in the same representation of the gauge group as `B` itself. -/
-noncomputable def RealBosonDerivSpace.repGaugeGroup :
-    Representation ℝ G L.RealBosonDerivSpace :=
-  (Representation.trivial ℝ G (TensorAlgebra ℝ Lorentz.CoVector)).tprod
+/-- The representation of the gauge group on the jet space of the real bosonic
+  fields. The gauge group acts trivially on the derivative slots, so that the jet
+  coordinates `∂ ⋯ ∂ B` transform in the same representation of the gauge group as
+  `B` itself. -/
+noncomputable def RealBosonJetSpace.repGaugeGroup :
+    Representation ℝ G L.RealBosonJetSpace :=
+  (Representation.trivial ℝ G (SymmetricAlgebra ℝ Lorentz.CoVector)).tprod
     RealBosonTargetSpace.repGaugeGroup
 
 noncomputable def RealBosonComponentSpace.repGaugeGroup :
@@ -1020,11 +1020,11 @@ noncomputable def RealBosonComponentSpace.repGaugeGroup :
   RealBosonTargetSpace.repGaugeGroup.dual
 
 /-- The representation of the gauge group on the space of component functions of the
-  real bosonic fields and their covariant derivatives; trivial on the derivative
-  slots. -/
-noncomputable def RealBosonComponentSpaceWithDeriv.repGaugeGroup :
-    Representation ℝ G L.RealBosonComponentSpaceWithDeriv :=
-  (Representation.trivial ℝ G (TensorAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))).tprod
+  real bosonic fields and their jet-bundle derivative coordinates; trivial on the
+  derivative slots. -/
+noncomputable def RealBosonJetComponentSpace.repGaugeGroup :
+    Representation ℝ G L.RealBosonJetComponentSpace :=
+  (Representation.trivial ℝ G (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))).tprod
     RealBosonTargetSpace.repGaugeGroup.dual
 
 noncomputable def RealBosonEFTExclDeriv.repGaugeGroup :
@@ -1044,19 +1044,19 @@ noncomputable def RealBosonEFTExclDeriv.repGaugeGroup :
     ext v
     simp
 
-noncomputable def RealBosonEFTFreeDeriv.repGaugeGroup :
-    Representation ℝ G L.RealBosonEFTFreeDeriv where
+noncomputable def RealBosonEFTJet.repGaugeGroup :
+    Representation ℝ G L.RealBosonEFTJet where
   toFun g := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g)).toLinearMap
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repGaugeGroup g)).toLinearMap
   map_one' := by
     simp [End.one_eq_id]
   map_mul' g1 g2 := by
     suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup (g1 * g2)) =
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repGaugeGroup (g1 * g2)) =
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g1)).comp
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repGaugeGroup g1)).comp
         (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonComponentSpaceWithDeriv.repGaugeGroup g2)) by
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ RealBosonJetComponentSpace.repGaugeGroup g2)) by
       rw [h]; rfl
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
@@ -1075,10 +1075,10 @@ noncomputable def RealBosonEFTExclDerivComplex.repGaugeGroup :
 /-- The representation of the gauge group on the complexified real bosonic EFT
   algebra with derivatives, obtained from the real representation by extension of
   scalars. -/
-noncomputable def RealBosonEFTFreeDerivComplex.repGaugeGroup :
-    Representation ℂ G (RealBosonEFTFreeDerivComplex L) where
+noncomputable def RealBosonEFTJetComplex.repGaugeGroup :
+    Representation ℂ G (RealBosonEFTJetComplex L) where
   toFun g :=
-    LinearMap.baseChange ℂ (RealBosonEFTFreeDeriv.repGaugeGroup g)
+    LinearMap.baseChange ℂ (RealBosonEFTJet.repGaugeGroup g)
   map_one' := by
     ext x
     simp [Module.End.one_eq_id]
