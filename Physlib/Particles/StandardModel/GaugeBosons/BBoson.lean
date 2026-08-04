@@ -73,7 +73,7 @@ structure BBoson where
   val : Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ
 
 namespace BBoson
-
+open Module
 /-!
 
 ## B. Linear structure
@@ -109,6 +109,13 @@ lemma val_smul (r : ℝ) (d : BBoson) : (r • d).val = r • d.val := rfl
 @[simp]
 lemma val_zero : (0 : BBoson).val = 0 := rfl
 
+/-- The basis of the B-boson field indexed by the Lorentz index: the standard
+  Lorentz-vector basis tensored with the hermitian unit of the one-dimensional
+  adjoint factor. -/
+noncomputable def basis : Basis (Fin 1 ⊕ Fin 3) ℝ BBoson :=
+  ((Lorentz.Vector.basis.tensorProduct
+      ((Module.Basis.singleton Unit ℝ).map Complex.selfAdjointEquiv.symm)).map
+    valLinEquiv.symm).reindex (Equiv.prodPUnit (Fin 1 ⊕ Fin 3))
 /-!
 
 ## C. Lorentz action
@@ -400,9 +407,34 @@ lemma mcSeriesCoeff_zero (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
 
 -/
 
+open Module
+inductive JetGenerators where
+  | dB (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3): JetGenerators
+deriving DecidableEq
+
+def JetGenerators.equiv : JetGenerators ≃ Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) where
+  toFun
+    | JetGenerators.dB s μ => (s, μ)
+  invFun
+    | (s, μ) => JetGenerators.dB s μ
+  left_inv := by
+    intro x
+    cases x
+    rfl
+  right_inv := by
+    intro x
+    cases x
+    rfl
+
 abbrev JetComponentSpace :=
   SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ BBoson
 
+/-- The basis of the B-boson jet component space indexed by the jet generators
+  `∂_s B_μ`: the multiset basis of the dual derivative symbols tensored with the
+  dual of the B-boson basis. -/
+noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponentSpace :=
+  (LagrangianTheory.dualRealJetAlgebraBasis.tensorProduct
+    BBoson.basis.dualBasis).reindex JetGenerators.equiv.symm
 /-!
 
 ## The Maurer–Cartan shift of the component functions
@@ -517,6 +549,29 @@ lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
         algebraMap ℝ JetAlgebra (mcPairing U.2.2 x) := by
   simp [repJetGaugeGroupI, SymmetricAlgebra.lift_ι_apply, AlgHom.toLinearMap_apply,
     Algebra.linearMap_apply]
+
+
+/-- The action of the jet gauge group on the complexified B-boson jet algebra,
+  obtained from the real representation by extension of scalars. -/
+noncomputable def complexRepJetGaugeGroupI :
+    Representation ℂ JetGaugeGroupI (ℂ ⊗[ℝ] BBoson.JetAlgebra) where
+  toFun U := LinearMap.baseChange ℂ (BBoson.JetAlgebra.repJetGaugeGroupI U)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' U V := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
+
+noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
+   SymmetricAlgebra.ι ℝ JetComponentSpace (BBoson.JetComponentSpace.basis x)
+
+/-!
+
+## The field strength of the B boson
+
+-/
+
 
 end JetAlgebra
 
