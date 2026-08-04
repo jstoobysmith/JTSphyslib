@@ -116,6 +116,32 @@ noncomputable def basis : Basis (Fin 1 ⊕ Fin 3) ℝ BBoson :=
   ((Lorentz.Vector.basis.tensorProduct
       ((Module.Basis.singleton Unit ℝ).map Complex.selfAdjointEquiv.symm)).map
     valLinEquiv.symm).reindex (Equiv.prodPUnit (Fin 1 ⊕ Fin 3))
+
+/-- The B-boson basis vector as an explicit tensor: the Lorentz basis vector paired
+  with the hermitian unit. -/
+lemma basis_apply (ν : Fin 1 ⊕ Fin 3) :
+    (basis ν : BBoson) =
+      ⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ := by
+  rw [basis, Module.Basis.reindex_apply, Module.Basis.map_apply,
+    Module.Basis.tensorProduct_apply', Module.Basis.map_apply,
+    Module.Basis.singleton_apply, valLinEquiv_symm_apply]
+  rfl
+
+/-- A pure tensor of a Lorentz basis vector with a hermitian value is a multiple of
+  the corresponding B-boson basis vector. -/
+lemma mk_tmul_eq_smul_basis (ν : Fin 1 ⊕ Fin 3) (x : selfAdjoint ℂ) :
+    (⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] x⟩ : BBoson) =
+      Complex.selfAdjointEquiv x • basis ν := by
+  apply BBoson.ext
+  rw [val_smul, basis_apply,
+    show ((⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ : BBoson)).val =
+      Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1 from rfl,
+    ← TensorProduct.tmul_smul]
+  congr 1
+  rw [show (Complex.selfAdjointEquiv x) • (Complex.selfAdjointEquiv.symm 1) =
+      Complex.selfAdjointEquiv.symm (Complex.selfAdjointEquiv x • 1) from
+      (map_smul _ _ _).symm, smul_eq_mul, mul_one, LinearEquiv.symm_apply_apply]
+  rfl
 /-!
 
 ## C. Lorentz action
@@ -401,6 +427,59 @@ lemma mcSeriesCoeff_zero (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
     constantCoeff_star, ← mul_assoc]
   rfl
 
+/-- The first-order Taylor coefficients of the Maurer–Cartan series are symmetric
+  in the two spacetime directions: the shift of `∂_μ B_ν` equals the shift of
+  `∂_ν B_μ`. This is the gauge invariance of the abelian field strength, and rests
+  on unitarity: the antisymmetric part `∂_νu ∂_μū - ∂_μu ∂_νū` vanishes because
+  `∂ū = -ū (∂u) ū`. -/
+lemma mcSeriesCoeff_single_symm (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3) :
+    mcSeriesCoeff u ν (Finsupp.single μ 1) = mcSeriesCoeff u μ (Finsupp.single ν 1) := by
+  rcases eq_or_ne μ ν with rfl | hμν
+  · rfl
+  apply Subtype.ext
+  show coeff (Finsupp.single μ 1) (mcSeries u ν) = coeff (Finsupp.single ν 1) (mcSeries u μ)
+  have hb : constantCoeff (u : JetRing) * star (constantCoeff (u : JetRing)) = 1 := by
+    have h := congrArg constantCoeff (Unitary.mem_iff.mp u.2).2
+    rwa [map_mul, constantCoeff_star, map_one] at h
+  have hμ := congrArg (coeff (Finsupp.single μ 1)) (Unitary.mem_iff.mp u.2).2
+  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
+    show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
+      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hμ
+  have hν := congrArg (coeff (Finsupp.single ν 1)) (Unitary.mem_iff.mp u.2).2
+  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
+    show coeff (Finsupp.single ν 1) (1 : JetRing) = 0 by
+      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hν
+  have hσμ : star (coeff (Finsupp.single μ 1) (u : JetRing)) =
+      -(coeff (Finsupp.single μ 1) (u : JetRing) * star (constantCoeff (u : JetRing)) *
+        star (constantCoeff (u : JetRing))) := by
+    linear_combination star (constantCoeff (u : JetRing)) * hμ -
+      star (coeff (Finsupp.single μ 1) (u : JetRing)) * hb
+  have hσν : star (coeff (Finsupp.single ν 1) (u : JetRing)) =
+      -(coeff (Finsupp.single ν 1) (u : JetRing) * star (constantCoeff (u : JetRing)) *
+        star (constantCoeff (u : JetRing))) := by
+    linear_combination star (constantCoeff (u : JetRing)) * hν -
+      star (coeff (Finsupp.single ν 1) (u : JetRing)) * hb
+  rw [mcSeries, mcSeries,
+    show ((C Complex.I : JetRing)) = algebraMap ℂ JetRing Complex.I from rfl,
+    ← Algebra.smul_def, ← Algebra.smul_def, map_smul, map_smul, smul_eq_mul, smul_eq_mul,
+    coeff_single_one_mul, coeff_single_one_mul, coeff_pderiv, coeff_pderiv,
+    coeff_star, coeff_star, constantCoeff_star,
+    show constantCoeff (pderiv ℂ ν (u : JetRing)) =
+      coeff (Finsupp.single ν (1 : ℕ)) (u : JetRing) from by
+      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
+      simp,
+    show constantCoeff (pderiv ℂ μ (u : JetRing)) =
+      coeff (Finsupp.single μ (1 : ℕ)) (u : JetRing) from by
+      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
+      simp,
+    show (Finsupp.single μ 1) ν = 0 from Finsupp.single_eq_of_ne hμν.symm,
+    show (Finsupp.single ν 1) μ = 0 from Finsupp.single_eq_of_ne hμν,
+    show Finsupp.single ν (1 : ℕ) + Finsupp.single μ 1 =
+      Finsupp.single μ 1 + Finsupp.single ν 1 from add_comm _ _,
+    hσμ, hσν]
+  push_cast
+  ring
+
 /-!
 
 ## The Jet component vector space
@@ -493,6 +572,65 @@ lemma mcPairing_mul (u v : unitary JetRing) :
   refine TensorProduct.ext' fun p φ => ?_
   simp [mcJet_mul]
 
+/-- The multiset basis of the dual derivative symbols at a singleton, as a basis
+  vector of the symmetric algebra at a single multi-index. -/
+lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
+    LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Finsupp.single μ 1) := by
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  congr 1
+  exact Multiset.toFinsupp_singleton μ
+
+/-- The Maurer–Cartan jet on a first-order derivative symbol: the B boson whose
+  `ν`-th component is the first-order Taylor coefficient of the Maurer–Cartan
+  series. -/
+lemma mcJet_singleton (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
+    mcJet u (LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+      ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+        (mcSeriesCoeff u ν (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ := by
+  rw [dualRealJetAlgebraBasis_singleton, mcJet, Module.Basis.constr_basis]
+  apply BBoson.ext
+  show (∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+      ((∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) •
+        mcSeriesCoeff u ν (Finsupp.single μ 1))) = _
+  rw [show (∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) = 1 from
+    Finset.prod_eq_one fun ρ _ => by
+      rcases eq_or_ne μ ρ with rfl | h
+      · simp
+      · rw [Finsupp.single_eq_of_ne h.symm]
+        rfl]
+  simp
+
+/-- The jet component basis vector at a generator, as a pure tensor. -/
+lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) :
+    JetComponentSpace.basis (.dB s ρ) =
+      LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] BBoson.basis.dualBasis ρ := by
+  rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  exact Module.Basis.tensorProduct_apply' _ _ _
+
+/-- The Maurer–Cartan pairing on first-order generators: the shift of the component
+  function `∂_μ B_ν` is the first-order Taylor coefficient of the Maurer–Cartan
+  series. -/
+lemma mcPairing_basis_dB (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3) :
+    mcPairing u (JetComponentSpace.basis (.dB {μ} ν)) =
+      Complex.selfAdjointEquiv (mcSeriesCoeff u ν (Finsupp.single μ 1)) := by
+  rw [jetComponentSpace_basis_dB, mcPairing_tmul, mcJet_singleton,
+    show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+        (mcSeriesCoeff u ν' (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ : BBoson) =
+      ∑ ν', Complex.selfAdjointEquiv (mcSeriesCoeff u ν' (Finsupp.single μ 1)) •
+        basis ν' from by
+      rw [show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+          (mcSeriesCoeff u ν' (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ : BBoson) =
+        valLinEquiv.symm (∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+          (mcSeriesCoeff u ν' (Finsupp.single μ 1) : selfAdjoint ℂ)) from rfl, map_sum]
+      exact Finset.sum_congr rfl fun ν' _ => by
+        rw [valLinEquiv_symm_apply, mk_tmul_eq_smul_basis],
+    map_sum]
+  simp only [map_smul, Module.Basis.dualBasis_apply_self, smul_eq_mul, mul_ite,
+    mul_one, mul_zero]
+  rw [Finset.sum_ite_eq' Finset.univ ν]
+  simp
+
 /-!
 
 ## The jet algebra and the jet gauge action
@@ -563,6 +701,12 @@ noncomputable def complexRepJetGaugeGroupI :
     ext x
     simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
 
+/-!
+
+## Constructing elements of the jet algebra from the generators
+
+-/
+
 noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
    SymmetricAlgebra.ι ℝ JetComponentSpace (BBoson.JetComponentSpace.basis x)
 
@@ -572,6 +716,28 @@ noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
 
 -/
 
+/-- The field strength of the B boson: the antisymmetrized derivative of the
+  component functions, which is gauge-invariant. -/
+noncomputable def fieldStrength (μ ν : Fin 1 ⊕ Fin 3) : BBoson.JetAlgebra :=
+  ofGenerator (JetGenerators.dB {μ} ν) - ofGenerator (JetGenerators.dB {ν} μ)
+
+lemma fieldStrength_antisymm (μ ν : Fin 1 ⊕ Fin 3) :
+    fieldStrength μ ν = -fieldStrength ν μ := by
+  simp [fieldStrength]
+
+lemma repJetGaugeGroupI_fieldStrength (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    repJetGaugeGroupI U (fieldStrength μ ν) = fieldStrength μ ν := by
+  simp only [fieldStrength, map_sub, ofGenerator, repJetGaugeGroupI_ι, mcPairing_basis_dB]
+  rw [mcSeriesCoeff_single_symm]
+  abel
+
+/-!
+
+## Invariance under the gauge group
+
+-/
+
+lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
 
 end JetAlgebra
 
