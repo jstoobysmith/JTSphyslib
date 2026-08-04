@@ -11,6 +11,10 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
+public import Physlib.Mathematics.ConjModule
+public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
+public import Physlib.Particles.LagrangianTheory.Basic
+public import Physlib.Mathematics.MvPowerSeriesDerivative
 /-!
 # The B boson
 
@@ -26,6 +30,30 @@ boson is the B boson formalized here.
 -/
 
 @[expose] public section
+
+/-!
+
+## Aa. The formal partial derivative and the coefficientwise star
+
+The Maurer–Cartan jet series is built from the formal partial derivative
+`MvPowerSeries.pderiv`; its hermiticity rests on the fact that the derivative
+commutes with the coefficientwise star.
+
+-/
+
+namespace MvPowerSeries
+
+variable {σ R : Type*}
+
+/-- The formal partial derivative commutes with the coefficientwise star. -/
+lemma pderiv_star [CommSemiring R] [StarRing R] (ν : σ) (f : MvPowerSeries σ R) :
+    pderiv R ν (star f) = star (pderiv R ν f) := by
+  ext s
+  rw [coeff_pderiv, coeff_star, coeff_star, coeff_pderiv, star_mul']
+  congr 1
+  simp
+
+end MvPowerSeries
 
 namespace StandardModel
 
@@ -272,6 +300,225 @@ lemma ofConstant_smul (g : GaugeGroupI) (B : BBoson) :
     apply BBoson.ext
     simp [mcBBoson, hmc]
   rw [h0, add_zero]
+
+/-!
+
+## The Maurer–Cartan jet series
+
+The local gauge transformation of the B-boson field is the translation
+`B_μ ↦ B_μ + i (∂_μ u) ū`, so a jet of gauge transformations shifts every
+derivative coordinate `∂_s B_μ` of the field by the corresponding derivative
+`∂_s (i ∂_μ u ū)(0)` of the Maurer–Cartan form at the base point. The
+Maurer–Cartan coefficient `mcCoeff` records only the zeroth of these shifts —
+enough for the action on the field itself, but not for the action on its jets.
+
+To express the shift of every derivative coordinate uniformly we define here the
+full jet of the Maurer–Cartan form of a `U(1)` jet: the formal power series
+`i (∂_ν u) ū`, whose value at the base point is `mcCoeff` and whose higher Taylor
+coefficients are the higher shifts. Its coefficients are hermitian, and it is
+additive in the jet; these two facts make the induced shift of the B-boson
+component functions a real-valued cocycle, which is what turns the substitution
+`B ↦ B + i (∂u) ū` into a representation of the jet gauge group on the jet
+algebra below.
+
+-/
+
+/-- The Maurer–Cartan power series of a jet of a `U(1)` gauge transformation in
+  the spacetime direction `ν`: the formal power series `i (∂_ν u) ū`, whose
+  constant coefficient is the Maurer–Cartan coefficient `mcCoeff`. -/
+noncomputable def mcSeries (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) : JetRing :=
+  (MvPowerSeries.C Complex.I : JetRing) * (pderiv ℂ ν (u : JetRing) * star (u : JetRing))
+
+@[simp]
+lemma mcSeries_one (ν : Fin 1 ⊕ Fin 3) : mcSeries 1 ν = 0 := by
+  simp [mcSeries]
+
+/-- The Maurer–Cartan series is additive in the jet: the abelian cocycle identity
+  at the level of full jets. -/
+lemma mcSeries_mul (u v : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
+    mcSeries (u * v) ν = mcSeries u ν + mcSeries v ν := by
+  have hu : (u : JetRing) * star (u : JetRing) = 1 := (Unitary.mem_iff.mp u.2).2
+  have hv : (v : JetRing) * star (v : JetRing) = 1 := (Unitary.mem_iff.mp v.2).2
+  simp only [mcSeries, MulMemClass.coe_mul, Derivation.leibniz, smul_eq_mul, star_mul',
+    ← mul_add]
+  congr 1
+  linear_combination (pderiv ℂ ν (u : JetRing) * star (u : JetRing)) * hv +
+    (pderiv ℂ ν (v : JetRing) * star (v : JetRing)) * hu
+
+/-- The Maurer–Cartan series is hermitian: `star (i (∂_ν u) ū) = i (∂_ν u) ū`,
+  by differentiating the unitarity relation `u ū = 1`. All its Taylor
+  coefficients are therefore real. -/
+lemma star_mcSeries (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
+    star (mcSeries u ν) = mcSeries u ν := by
+  have hu : (u : JetRing) * star (u : JetRing) = 1 := (Unitary.mem_iff.mp u.2).2
+  have h0 : pderiv ℂ ν ((u : JetRing) * star (u : JetRing)) = 0 := by
+    rw [hu, pderiv_one]
+  rw [Derivation.leibniz] at h0
+  simp only [smul_eq_mul] at h0
+  have hq : pderiv ℂ ν (star (u : JetRing)) * (u : JetRing) =
+      -(pderiv ℂ ν (u : JetRing) * star (u : JetRing)) := by
+    linear_combination h0
+  rw [mcSeries, star_mul', star_C, star_mul', star_star, ← pderiv_star, hq,
+    show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
+
+/-- The Taylor coefficients of the Maurer–Cartan series, as hermitian scalars. -/
+noncomputable def mcSeriesCoeff (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) : selfAdjoint ℂ :=
+  ⟨coeff m (mcSeries u ν), by
+    rw [selfAdjoint.mem_iff, ← coeff_star, star_mcSeries]⟩
+
+@[simp]
+lemma mcSeriesCoeff_one (ν : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    mcSeriesCoeff 1 ν m = 0 := by
+  apply Subtype.ext
+  simp [mcSeriesCoeff]
+
+/-- The Taylor coefficients of the Maurer–Cartan series are additive in the jet. -/
+lemma mcSeriesCoeff_mul (u v : unitary JetRing) (ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    mcSeriesCoeff (u * v) ν m = mcSeriesCoeff u ν m + mcSeriesCoeff v ν m := by
+  apply Subtype.ext
+  simp [mcSeriesCoeff, mcSeries_mul]
+
+/-- The zeroth Taylor coefficient of the Maurer–Cartan series is the
+  Maurer–Cartan coefficient. -/
+lemma mcSeriesCoeff_zero (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
+    mcSeriesCoeff u ν 0 = mcCoeff u ν := by
+  apply Subtype.ext
+  show coeff 0 (mcSeries u ν) = _
+  rw [mcSeries, coeff_zero_eq_constantCoeff, map_mul, map_mul, constantCoeff_C,
+    show constantCoeff (pderiv ℂ ν (u : JetRing)) =
+      coeff (Finsupp.single ν (1 : ℕ)) (u : JetRing) from by
+      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
+      simp,
+    constantCoeff_star, ← mul_assoc]
+  rfl
+
+/-!
+
+## The Jet component vector space
+
+-/
+
+abbrev JetComponentSpace :=
+  SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ BBoson
+
+/-!
+
+## The Maurer–Cartan shift of the component functions
+
+-/
+
+open LagrangianTheory
+
+/-- The Maurer–Cartan jet of a `U(1)` jet evaluated on the derivative symbols:
+  the basis monomial of dual derivative symbols at the multi-index `m` is sent to
+  the B-boson-valued `m`-th derivative of the Maurer–Cartan series at the base
+  point. This is the amount by which the corresponding derivative coordinate of
+  the B boson is shifted under the jet gauge transformation. -/
+noncomputable def mcJet (u : unitary JetRing) :
+    SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) →ₗ[ℝ] BBoson :=
+  Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
+    ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+      ((∏ μ, Nat.factorial (m μ)) • mcSeriesCoeff u ν m)⟩
+
+@[simp]
+lemma mcJet_one : mcJet 1 = 0 := by
+  refine Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.ext fun m => ?_
+  rw [mcJet, Module.Basis.constr_basis]
+  apply BBoson.ext
+  simp
+
+/-- The Maurer–Cartan jet is additive in the jet: the abelian cocycle identity
+  for the shift of the component functions. -/
+lemma mcJet_mul (u v : unitary JetRing) : mcJet (u * v) = mcJet u + mcJet v := by
+  refine Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.ext fun m => ?_
+  rw [LinearMap.add_apply, mcJet, mcJet, mcJet, Module.Basis.constr_basis,
+    Module.Basis.constr_basis, Module.Basis.constr_basis]
+  apply BBoson.ext
+  simp [mcSeriesCoeff_mul, smul_add, TensorProduct.tmul_add, Finset.sum_add_distrib]
+
+/-- The Maurer–Cartan pairing: the amount by which a component function of the
+  B-boson jet is shifted under a jet gauge transformation, i.e. the evaluation of
+  the component function against the Maurer–Cartan jet. -/
+noncomputable def mcPairing (u : unitary JetRing) : JetComponentSpace →ₗ[ℝ] ℝ :=
+  TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp (mcJet u))
+
+@[simp]
+lemma mcPairing_tmul (u : unitary JetRing)
+    (p : SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))
+    (φ : Module.Dual ℝ BBoson) :
+    mcPairing u (p ⊗ₜ[ℝ] φ) = φ (mcJet u p) := rfl
+
+@[simp]
+lemma mcPairing_one : mcPairing 1 = 0 := by
+  refine TensorProduct.ext' fun p φ => ?_
+  simp
+
+/-- The Maurer–Cartan pairing is additive in the jet. -/
+lemma mcPairing_mul (u v : unitary JetRing) :
+    mcPairing (u * v) = mcPairing u + mcPairing v := by
+  refine TensorProduct.ext' fun p φ => ?_
+  simp [mcJet_mul]
+
+/-!
+
+## The jet algebra and the jet gauge action
+
+-/
+
+/-- The jet algebra of the B boson: the commutative algebra generated by the
+  component functions of the B-boson field and its derivative coordinates. -/
+abbrev JetAlgebra : Type := SymmetricAlgebra ℝ JetComponentSpace
+
+namespace JetAlgebra
+
+/-- The action of the jet gauge group on the jet algebra of the B boson. The
+  adjoint action is trivial and the local gauge action is the Maurer–Cartan
+  translation, whose linear part is the identity; consequently no information is
+  carried by a linear action on the component space itself, and the action lives
+  on the unital algebra: a jet of gauge transformations acts as the substitution
+  automorphism sending each generator `x` to `x + ⟨mc, x⟩ 1`, the pullback of the
+  translation `B ↦ B + i (∂u) ū` on polynomial functions of the jet
+  coordinates. On jets of constant gauge transformations the shift vanishes and
+  the action is trivial, in agreement with `repGaugeGroupI`. -/
+noncomputable def repJetGaugeGroupI : Representation ℝ JetGaugeGroupI JetAlgebra where
+  toFun U := (SymmetricAlgebra.lift
+    ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)).toLinearMap
+  map_one' := by
+    rw [show mcPairing (1 : JetGaugeGroupI).2.2 = 0 from mcPairing_one]
+    suffices hs : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
+        AlgHom.id ℝ JetAlgebra by
+      rw [hs]
+      rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp
+  map_mul' U V := by
+    rw [show mcPairing (U * V : JetGaugeGroupI).2.2 =
+        mcPairing U.2.2 + mcPairing V.2.2 from mcPairing_mul U.2.2 V.2.2]
+    suffices hs : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (mcPairing U.2.2 + mcPairing V.2.2)) =
+        (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)).comp
+        (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing V.2.2)) by
+      rw [hs, AlgHom.comp_toLinearMap, Module.End.mul_eq_comp]
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [add_assoc]
+
+/-- The jet gauge action on a generator of the jet algebra: the Maurer–Cartan
+  shift by the pairing of the component function with the Maurer–Cartan jet. -/
+@[simp]
+lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
+    repJetGaugeGroupI U (SymmetricAlgebra.ι ℝ JetComponentSpace x) =
+      SymmetricAlgebra.ι ℝ JetComponentSpace x +
+        algebraMap ℝ JetAlgebra (mcPairing U.2.2 x) := by
+  simp [repJetGaugeGroupI, SymmetricAlgebra.lift_ι_apply, AlgHom.toLinearMap_apply,
+    Algebra.linearMap_apply]
+
+end JetAlgebra
 
 end BBoson
 

@@ -6,11 +6,6 @@ Authors: Joseph Tooby-Smith, Jinzheng Li, Nathaneal Sajan
 module
 
 public import Physlib.Relativity.Fermions.Weyl.Metric
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
