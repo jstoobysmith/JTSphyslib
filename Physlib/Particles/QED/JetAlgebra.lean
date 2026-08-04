@@ -57,9 +57,9 @@ namespace JetAlgebra
 noncomputable def ofGenerator (s : JetGenerators) : JetAlgebra :=
   match s with
   | JetGenerators.dB s μ =>
-      (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB s μ)) ⊗ₜ[ℂ] 1
+    (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB s μ)) ⊗ₜ[ℂ] 1
   | JetGenerators.dψ s α =>
-      (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dψ s α)
+    (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dψ s α)
   | JetGenerators.dbarψ s α =>
     (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dbarψ s α)
 
@@ -67,7 +67,10 @@ scoped notation "[" s "]ₐ" => ofGenerator s
 
 /-!
 
-## B. Representations of the group
+## B. Representation of the gauge group
+
+Gauge transformations act on the QED jet algebra
+locally via the group `JetGaugeGroupI`.
 
 -/
 
@@ -83,6 +86,118 @@ lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : BBoson.JetAlgeb
       (c ⊗ₜ[ℝ] BBoson.JetAlgebra.repJetGaugeGroupI U b) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l := rfl
 
+/-!
+
+## Jet derivatives
+
+The formal total spacetime derivative `∂_μ` on the QED jet algebra: the Leibniz
+extension of the total derivatives of the two factors. Both factor derivatives
+are even derivations, so the total derivative is an even derivation on the full
+jet algebra, with no Koszul signs.
+
+-/
+
+/-- The formal total spacetime derivative on the QED jet algebra in the
+  direction `μ`: the Leibniz extension of the total derivatives of the B-boson
+  and charged-lepton factors. -/
+noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ)) LinearMap.id +
+    TensorProduct.map LinearMap.id (LeptonSinglet.JetAlgebra.jetDeriv μ)
+
+lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (l : LeptonSinglet.JetAlgebra) :
+    jetDeriv μ (p ⊗ₜ[ℂ] l) =
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] l +
+        p ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.jetDeriv μ l := by
+  simp [jetDeriv]
+
+@[simp]
+lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv μ (1 : JetAlgebra) = 0 := by
+  rw [show (1 : JetAlgebra) = ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
+    (1 : LeptonSinglet.JetAlgebra) from rfl, jetDeriv_tmul, LinearMap.baseChange_tmul]
+  simp
+
+/-- The total derivative is an even derivation on the QED jet algebra: the
+  Leibniz rule holds with no Koszul signs. -/
+lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
+    jetDeriv μ (x * y) = jetDeriv μ x * y + x * jetDeriv μ y := by
+  have hdist₁ : ∀ a b c : JetAlgebra, (a + b) * c = a * c + b * c := by grind
+  have hdist₂ : ∀ a b c : JetAlgebra, a * (b + c) = a * b + a * c := by grind
+  have hzero₁ : ∀ a : JetAlgebra, 0 * a = 0 := fun a => zero_mul a
+  have hzero₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
+  induction x using TensorProduct.induction_on with
+  | zero => simp [hzero₁]
+  | add a b ha hb =>
+    simp only [hdist₁, map_add, ha, hb]
+    abel
+  | tmul p l =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp [hzero₂]
+    | add a' b' ha' hb' =>
+      simp only [hdist₂, map_add, ha', hb']
+      abel
+    | tmul p' l' =>
+      simp only [Algebra.TensorProduct.tmul_mul_tmul, jetDeriv_tmul,
+        BBoson.JetAlgebra.jetDeriv_baseChange_mul, LeptonSinglet.JetAlgebra.jetDeriv_mul,
+        TensorProduct.add_tmul, TensorProduct.tmul_add, hdist₁, hdist₂]
+      abel
+
+/-!
+
+## Covariant derivatives
+
+The covariant derivative `D_l ψ_α` of the charged lepton, indexed by an ordered
+list `l` of spacetime directions: covariant derivatives do not commute — their
+commutator is the field strength — so the index is a list rather than a
+multiset, with the head of the list the outermost derivative.
+
+The component functions of the lepton transform contragrediently, through the
+hypercharge power series `u ^ 6`, so the covariant step on component functions
+is `D_μ = ∂_μ + 6 i B_μ`: under a jet gauge transformation `∂_μ ψ_α` shifts by
+`- 6 i mc_μ ψ_α` while `B_μ` shifts by `+ mc_μ`, and the two contributions
+cancel. The step is defined on the whole jet algebra; applied repeatedly to the
+zeroth-order component function of `ψ` it produces the covariant derivatives.
+
+-/
+
+/-- One covariant-derivative step `D_μ = ∂_μ + 6 i B_μ` on the QED jet algebra:
+  the total spacetime derivative together with multiplication by the gauge field
+  weighted by the hypercharge coupling. -/
+noncomputable def covariantStep (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  jetDeriv μ + ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
+
+/-- The covariant derivative `D_l ψ_α` of the charged lepton along the ordered
+  list of directions `l`, with the head of the list the outermost derivative:
+  the recursion `D_{μ :: l} ψ = (∂_μ + 6 i B_μ) (D_l ψ)` starting from the
+  zeroth-order component function of `ψ`. -/
+noncomputable def Dψ (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    JetAlgebra :=
+  l.foldr (fun μ x => covariantStep μ x) [JetGenerators.dψ {} α]ₐ
+
+/-- The zeroth covariant derivative is the lepton component function itself. -/
+@[simp]
+lemma Dψ_nil (α : Fin 2) :
+    Dψ [] α = [JetGenerators.dψ {} α]ₐ := rfl
+
+@[simp]
+lemma Dψ_cons (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3))
+    (α : Fin 2) :
+    Dψ (μ :: l) α = covariantStep μ (Dψ l α) :=
+  rfl
+
+/-- The first covariant derivative: `D_μ ψ_α = ∂_μ ψ_α + 6 i B_μ ψ_α`. -/
+lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    Dψ [μ] α = [JetGenerators.dψ {μ} α]ₐ +
+      ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * [JetGenerators.dψ {} α]ₐ) := by
+  rw [Dψ_cons, Dψ_nil, covariantStep,
+    LinearMap.add_apply, LinearMap.smul_apply, LinearMap.mulLeft_apply]
+  congr 1
+  simp only [ofGenerator]
+  have h1 : BBoson.JetAlgebra.jetDeriv μ (1 : BBoson.JetAlgebra) = 0 :=
+    BBoson.JetAlgebra.jetDeriv_one μ
+  rw [jetDeriv_tmul, LinearMap.baseChange_tmul, h1,
+    LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator, LeptonSinglet.JetGenerators.shift_dψ]
+  simp [Multiset.empty_eq_zero]
 
 end JetAlgebra
 

@@ -16,6 +16,7 @@ public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Mathematics.MvPowerSeriesDerivative
 public import Physlib.Mathematics.MvPolynomialTranslation
+public import Mathlib.Algebra.MvPolynomial.Derivation
 /-!
 # The B boson
 
@@ -1191,6 +1192,14 @@ lemma canon_eq_canon_iff (g g' : JetGenerators) :
   · intro h
     rw [canon, canon, h]
 
+/-- The jet generator with one further derivative in the direction `μ`. -/
+def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
+  | dB s ν => dB (s + {μ}) ν
+
+@[simp]
+lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    shift μ (dB s ν) = dB (s + {μ}) ν := rfl
+
 end JetGenerators
 
 /-!
@@ -1284,6 +1293,70 @@ noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
 
 /-!
 
+## The formal total derivative on the jet algebra
+
+The formal total spacetime derivative `∂_μ` acts on the component functions of
+the B-boson jet by appending the derivative index, `∂_s B_ν ↦ ∂_{s + {μ}} B_ν`,
+and extends to the jet algebra as a derivation. It is constructed through the
+polynomial coordinates of the jet algebra.
+
+-/
+
+/-- The formal total spacetime derivative on the B-boson jet algebra in the
+  direction `μ`: the derivation sending each component function `∂_s B_ν` to
+  `∂_{s + {μ}} B_ν`. -/
+noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℝ] JetAlgebra :=
+  (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toLinearMap ∘ₗ
+    (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+      (MvPolynomial.X (JetGenerators.shift μ g) :
+        MvPolynomial JetGenerators ℝ)).toLinearMap ∘ₗ
+    (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toLinearMap
+
+/-- The total derivative appends the derivative index to each component
+  function. -/
+@[simp]
+lemma jetDeriv_ofGenerator (μ : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    jetDeriv μ (ofGenerator g) = ofGenerator (JetGenerators.shift μ g) := by
+  simp only [jetDeriv, ofGenerator, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, Derivation.coeFn_coe]
+  rw [SymmetricAlgebra.equivMvPolynomial_ι_apply, MvPolynomial.mkDerivation_X,
+    SymmetricAlgebra.equivMvPolynomial_symm_X]
+
+@[simp]
+lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv μ (1 : JetAlgebra) = 0 := by
+  simp [jetDeriv]
+
+/-- The total derivative is a derivation: the Leibniz rule on the jet algebra. -/
+lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
+    jetDeriv μ (x * y) = jetDeriv μ x * y + x * jetDeriv μ y := by
+  simp only [jetDeriv, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, map_mul, Derivation.coeFn_coe, Derivation.leibniz,
+    smul_eq_mul, map_add, AlgEquiv.symm_apply_apply]
+  ring
+
+/-- The Leibniz rule for the complexified total derivative on the complexified
+  jet algebra. -/
+lemma jetDeriv_baseChange_mul (μ : Fin 1 ⊕ Fin 3) (x y : ℂ ⊗[ℝ] JetAlgebra) :
+    LinearMap.baseChange ℂ (jetDeriv μ) (x * y) =
+      LinearMap.baseChange ℂ (jetDeriv μ) x * y +
+        x * LinearMap.baseChange ℂ (jetDeriv μ) y := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [add_mul, map_add, ha, hb]
+    ring
+  | tmul c b =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a' b' ha' hb' =>
+      simp only [mul_add, map_add, ha', hb']
+      ring
+    | tmul c' b' =>
+      simp only [Algebra.TensorProduct.tmul_mul_tmul, LinearMap.baseChange_tmul,
+        jetDeriv_mul, TensorProduct.tmul_add]
+
+/-!
+
 ## The field strength of the B boson
 
 -/
@@ -1317,6 +1390,13 @@ lemma repJetGaugeGroupI_fieldStrengthDeriv (U : JetGaugeGroupI) (s : Multiset (F
   simp only [fieldStrengthDeriv, map_sub, ofGenerator, repJetGaugeGroupI_ι]
   rw [mcPairing_basis_dB_symm]
   abel
+
+lemma fieldStrengthDeriv_bianchi_identity (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν ρ : Fin 1 ⊕ Fin 3) :
+    fieldStrengthDeriv (s + {μ}) ν ρ + fieldStrengthDeriv (s + {ν}) ρ μ +
+      fieldStrengthDeriv (s + {ρ}) μ ν = 0 := by
+  simp only [fieldStrengthDeriv]
+  grind
+
 /-!
 
 ## Invariance under the gauge group
@@ -1398,18 +1478,9 @@ lemma ofGenerator_sub_ofGenerator_canon_mem (g : JetGenerators) :
     rw [h2, h1]
     exact Algebra.subset_adjoin ⟨((s.erase p, p), ν), Set.mem_univ _, rfl⟩
 
-/-- An element of the jet algebra of the B boson is invariant under the jet gauge
-  group if and only if it is a polynomial in the derivatives of the field
-  strength.
-
-  The forward direction is the completeness of the field strength and its
-  derivatives as gauge invariants: conjugating by the polynomial coordinates,
-  the jet gauge group acts by translating each component function by the
-  Maurer–Cartan pairing, which depends only on the total symmetrized
-  multi-index; the exponential jets `exp(-i a X^t)` realize arbitrary
-  independent translations of each total multi-index, and a polynomial invariant
-  under all of them is a polynomial in the differences of component functions
-  with equal totals, i.e. in the derivatives of the field strength. -/
+/-- An EFT lagrangian with field content consisting only of
+  a `B` bosons is invariant under the full gauge group if and only if
+  it can be written in terms of the field strength and derivatives thereof. -/
 lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
   (∀ U, repJetGaugeGroupI U V = V) ↔ V ∈ Algebra.adjoin ℝ
     (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
