@@ -314,8 +314,8 @@ The `(1, 2)_{-3}` representation extends verbatim to jets: the hypercharge power
 series `star u ^ 3` and the `SU(2)` power-series matrix of a jet of gauge
 transformations combine into a matrix of jets, `jetGaugeMatrix`. This matrix acts
 on the polynomial jet space
-`SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonDoublet` through the entrywise
-derivative action `derivAction` on the derivative symbols, moving the weak index
+`SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ] LeptonDoublet` through the entrywise
+derivative action `DerivAlgebraComplex.jetRingAction` on the derivative symbols, moving the weak index
 and leaving the Weyl factor fixed: the value of the jet acts by the gauge matrix,
 while its derivative coordinates lower derivative symbols by the Leibniz rule. On
 jets of constant gauge transformations the action reduces to the global gauge
@@ -359,22 +359,22 @@ lemma toEuclideanLin_single_single (i j j' : Fin 2) :
   · simp [Matrix.toEuclideanLin, h]
 
 /-- The action of a matrix of jets on the jet space of the lepton doublet: each
-  entry acts through the derivative action `derivAction` on the derivative symbols
+  entry acts through the derivative action `DerivAlgebraComplex.jetRingAction` on the derivative symbols
   while moving the weak index; the Weyl factor is fixed. -/
 noncomputable def jetMatrixAction (A : Matrix (Fin 2) (Fin 2) JetRing) :
-    SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonDoublet →ₗ[ℂ]
-      SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonDoublet :=
+    SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ] LeptonDoublet →ₗ[ℂ]
+      SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ] LeptonDoublet :=
   ∑ i, ∑ j,
-    TensorProduct.map (derivAction (A i j))
+    TensorProduct.map (DerivAlgebraComplex.jetRingAction (A i j))
       (valLinEquiv.symm.toLinearMap ∘ₗ
         TensorProduct.map LinearMap.id ((Matrix.single i j (1 : ℂ)).toEuclideanLin) ∘ₗ
         valLinEquiv.toLinearMap)
 
 /-- The action of a matrix of jets on a generator of the jet space. -/
 lemma jetMatrixAction_tmul (A : Matrix (Fin 2) (Fin 2) JetRing)
-    (p : SymmetricAlgebra ℂ Lorentz.CoℂModule) (w : Fermion.LeftHandedWeyl) (j : Fin 2) :
+    (p : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) (w : Fermion.LeftHandedWeyl) (j : Fin 2) :
     jetMatrixAction A (p ⊗ₜ[ℂ] ⟨w ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩) =
-      ∑ i, derivAction (A i j) p ⊗ₜ[ℂ]
+      ∑ i, DerivAlgebraComplex.jetRingAction (A i j) p ⊗ₜ[ℂ]
         (⟨w ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ i⟩ : LeptonDoublet) := by
   rw [jetMatrixAction, LinearMap.sum_apply]
   refine Finset.sum_congr rfl fun i _ => ?_
@@ -391,14 +391,14 @@ lemma basis_apply (k j : Fin 2) :
   simp [basis, Module.Basis.tensorProduct_apply, valLinEquiv_symm_apply]
 
 lemma jetMatrixAction_one : jetMatrixAction 1 = LinearMap.id := by
-  apply (Lorentz.complexCoBasis.symmetricAlgebra.tensorProduct basis).ext
+  apply (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.tensorProduct basis).ext
   rintro ⟨m, k, j⟩
   rw [Module.Basis.tensorProduct_apply', basis_apply, jetMatrixAction_tmul]
-  fin_cases j <;> simp [Matrix.one_apply, apply_ite derivAction]
+  fin_cases j <;> simp [Matrix.one_apply, apply_ite DerivAlgebraComplex.jetRingAction]
 
 lemma jetMatrixAction_mul (A B : Matrix (Fin 2) (Fin 2) JetRing) :
     jetMatrixAction (A * B) = jetMatrixAction A ∘ₗ jetMatrixAction B := by
-  apply (Lorentz.complexCoBasis.symmetricAlgebra.tensorProduct basis).ext
+  apply (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.tensorProduct basis).ext
   rintro ⟨m, k, j⟩
   rw [Module.Basis.tensorProduct_apply', basis_apply]
   simp only [LinearMap.coe_comp, Function.comp_apply]
@@ -408,11 +408,11 @@ lemma jetMatrixAction_mul (A B : Matrix (Fin 2) (Fin 2) JetRing) :
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [← TensorProduct.sum_tmul]
   congr 1
-  have h : derivAction ((A * B) i j) = ∑ l, derivAction (A i l) * derivAction (B l j) := by
+  have h : DerivAlgebraComplex.jetRingAction ((A * B) i j) = ∑ l, DerivAlgebraComplex.jetRingAction (A i l) * DerivAlgebraComplex.jetRingAction (B l j) := by
     rw [Matrix.mul_apply,
-      show derivAction (∑ l, A i l * B l j) = derivActionHom (∑ l, A i l * B l j) from rfl,
+      show DerivAlgebraComplex.jetRingAction (∑ l, A i l * B l j) = DerivAlgebraComplex.jetRingActionHom (∑ l, A i l * B l j) from rfl,
       map_sum]
-    exact Finset.sum_congr rfl fun l _ => map_mul derivActionHom _ _
+    exact Finset.sum_congr rfl fun l _ => map_mul DerivAlgebraComplex.jetRingActionHom _ _
   rw [h, LinearMap.sum_apply]
   exact Finset.sum_congr rfl fun l _ => rfl
 
@@ -423,7 +423,7 @@ lemma jetMatrixAction_mul (A B : Matrix (Fin 2) (Fin 2) JetRing) :
   matrix, and its derivative coordinates act by the Leibniz rule. -/
 noncomputable def repJetGaugeGroupI :
     Representation ℂ JetGaugeGroupI
-      (SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonDoublet) where
+      (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ] LeptonDoublet) where
   toFun U := jetMatrixAction (jetGaugeMatrix U)
   map_one' := by
     rw [jetGaugeMatrix_one, jetMatrixAction_one]
@@ -434,7 +434,7 @@ noncomputable def repJetGaugeGroupI :
 
 @[simp]
 lemma repJetGaugeGroupI_apply (U : JetGaugeGroupI)
-    (x : SymmetricAlgebra ℂ Lorentz.CoℂModule ⊗[ℂ] LeptonDoublet) :
+    (x : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ] LeptonDoublet) :
     repJetGaugeGroupI U x = jetMatrixAction (jetGaugeMatrix U) x := rfl
 
 /-- The entries of the gauge matrix of a jet of a constant gauge transformation are
@@ -448,7 +448,7 @@ lemma jetGaugeMatrix_ofConstant (g : GaugeGroupI) (i j : Fin 2) :
     show (((JetGaugeGroupI.ofConstant g).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
         Matrix (Fin 2) (Fin 2) JetRing) i j =
       MvPowerSeries.C (g.toSU2.1 i j) from rfl,
-    MvPowerSeries.star_C, ← map_pow, smul_eq_mul, ← map_mul]
+    JetRing.star_C, ← map_pow, smul_eq_mul, ← map_mul]
 
 /-- On jets of constant gauge transformations the jet action reduces to the global
   gauge action on the jet space: the `(1, 2)_{-3}` action on the target factor and
@@ -456,13 +456,13 @@ lemma jetGaugeMatrix_ofConstant (g : GaugeGroupI) (i j : Fin 2) :
 lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
     repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
       TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
-  apply (Lorentz.complexCoBasis.symmetricAlgebra.tensorProduct basis).ext
+  apply (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.tensorProduct basis).ext
   rintro ⟨m, k, j⟩
   rw [Module.Basis.tensorProduct_apply', basis_apply, repJetGaugeGroupI_apply,
     jetMatrixAction_tmul, TensorProduct.map_tmul, LinearMap.id_apply,
     repGaugeGroupI_tmul_basis_eq_sum, TensorProduct.tmul_sum]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [jetGaugeMatrix_ofConstant, derivAction_C, LinearMap.smul_apply, LinearMap.id_apply]
+  rw [jetGaugeMatrix_ofConstant, DerivAlgebraComplex.jetRingAction_C, LinearMap.smul_apply, LinearMap.id_apply]
   exact TensorProduct.smul_tmul _ _ _
 
 /-- The jet action on a first-order derivative symbol is the Leibniz rule: the
@@ -472,18 +472,18 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
 lemma repJetGaugeGroupI_ι_tmul (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
     (w : Fermion.LeftHandedWeyl) (j : Fin 2) :
     repJetGaugeGroupI U
-        (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ]
+        (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) (Lorentz.complexCoBasis.dualBasis μ) ⊗ₜ[ℂ]
           ⟨w ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩) =
       ∑ i,
         (MvPowerSeries.constantCoeff (jetGaugeMatrix U i j) •
-          (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) ⊗ₜ[ℂ]
+          (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) (Lorentz.complexCoBasis.dualBasis μ) ⊗ₜ[ℂ]
             (⟨w ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ i⟩ : LeptonDoublet)) +
           MvPowerSeries.coeff (Finsupp.single μ 1) (jetGaugeMatrix U i j) •
-            ((1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) ⊗ₜ[ℂ]
+            ((1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) ⊗ₜ[ℂ]
               (⟨w ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ i⟩ : LeptonDoublet))) := by
   rw [repJetGaugeGroupI_apply, jetMatrixAction_tmul]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [derivAction_apply_ι, TensorProduct.add_tmul, TensorProduct.smul_tmul',
+  rw [DerivAlgebraComplex.jetRingAction_apply_ι, TensorProduct.add_tmul, TensorProduct.smul_tmul',
     TensorProduct.smul_tmul']
 
 end LeptonDoublet

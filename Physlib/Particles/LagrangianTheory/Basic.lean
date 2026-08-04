@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith, Jinzheng Li, Nathaneal Sajan
 module
 
 public import Physlib.Relativity.Fermions.Weyl.Metric
+public import Physlib.Relativity.DerivAlgebra
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
@@ -236,18 +237,11 @@ noncomputable def FermionicComponentSpace.basis {L : LagrangianTheory G}  :
   ((Pi.basis (fun φ => L.fermionBasis φ)).prod
   ((Pi.basis (fun φ => L.fermionBasis φ)).conj)).dualBasis.reindex fermionicGeneratorEquiv.symm
 
-/-- The basis of the symmetric algebra of dual jet slots, indexed by multisets of
-  spacetime indices. -/
-noncomputable def dualJetAlgebraBasis :
-    Basis (Multiset (Fin 1 ⊕ Fin 3)) ℂ (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) :=
-  Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
-
-
 noncomputable def FermionicJetComponentSpace.basis {L : LagrangianTheory G} :
     Basis L.FermionicJetGenerator ℂ L.FermionicJetComponentSpace :=
-  ((dualJetAlgebraBasis.tensorProduct
+  ((DerivAlgebraComplex.basis.tensorProduct
       (Pi.basis fun φ => L.fermionBasis φ).dualBasis).prod
-    (dualJetAlgebraBasis.tensorProduct
+    (DerivAlgebraComplex.basis.tensorProduct
       ((Pi.basis fun φ => L.fermionBasis φ).conj.dualBasis))).reindex
     fermionicJetGeneratorEquiv.symm
 
@@ -291,29 +285,6 @@ noncomputable def jetAlgebraRepLorentzGroup :
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
 
-noncomputable def dualJetAlgebraRepLorentzGroup :
-    Representation ℂ SL(2,ℂ) (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
-  toFun Λ := (SymmetricAlgebra.lift
-    (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).toLinearMap
-  map_one' := by
-    suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual 1) =
-        AlgHom.id ℂ (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) by
-      rw [h]; rfl
-    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
-    simp
-    rfl
-  map_mul' Λ1 Λ2 := by
-    suffices h : SymmetricAlgebra.lift
-        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual (Λ1 * Λ2)) =
-        (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ1)).comp
-        (SymmetricAlgebra.lift
-          (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ2)) by
-      rw [h]; rfl
-    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
-    simp [map_mul, Module.End.mul_apply]
-
 def FermionicTargetSpace.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicTargetSpace where
   toFun Λ := LinearMap.piMap fun φ => L.fermionRepLorentzGroup φ Λ
   map_one' := by
@@ -334,8 +305,8 @@ noncomputable def FermionicComponentSpace.repLorentzGroup :
 
 noncomputable def FermionicJetComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.FermionicJetComponentSpace :=
-  (dualJetAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.dual).prod
-  (dualJetAlgebraRepLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.conj.dual)
+  (DerivAlgebraComplex.repLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.dual).prod
+  (DerivAlgebraComplex.repLorentzGroup.tprod FermionicTargetSpace.repLorentzGroup.conj.dual)
 
 noncomputable def FermionicEFTExclDeriv.repLorentzGroup : Representation ℂ SL(2,ℂ) L.FermionicEFTExclDeriv where
   toFun Λ := (ExteriorAlgebra.map (FermionicComponentSpace.repLorentzGroup Λ)).toLinearMap
@@ -560,9 +531,9 @@ noncomputable def ComplexScalarComponentSpace.basis :
 
 noncomputable def ComplexScalarJetComponentSpace.basis :
     Basis L.ComplexScalarJetGenerator ℂ L.ComplexScalarJetComponentSpace :=
-  ((dualJetAlgebraBasis.tensorProduct
+  ((DerivAlgebraComplex.basis.tensorProduct
       (Pi.basis fun φ => L.complexScalarBasis φ).dualBasis).prod
-    (dualJetAlgebraBasis.tensorProduct
+    (DerivAlgebraComplex.basis.tensorProduct
       ((Pi.basis fun φ => L.complexScalarBasis φ).conj.dualBasis))).reindex
     complexScalarJetGeneratorEquiv.symm
 
@@ -593,8 +564,8 @@ noncomputable def ComplexScalarComponentSpace.repLorentzGroup :
 
 noncomputable def ComplexScalarJetComponentSpace.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarJetComponentSpace :=
-  (dualJetAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.dual).prod
-  (dualJetAlgebraRepLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.conj.dual)
+  (DerivAlgebraComplex.repLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.dual).prod
+  (DerivAlgebraComplex.repLorentzGroup.tprod ComplexScalarTargetSpace.repLorentzGroup.conj.dual)
 
 noncomputable def ComplexScalarEFTExclDeriv.repLorentzGroup :
     Representation ℂ SL(2,ℂ) L.ComplexScalarEFTExclDeriv where

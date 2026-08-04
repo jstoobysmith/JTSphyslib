@@ -142,7 +142,7 @@ noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) LeptonSinglet
 
 /-!
 
-## D. Gauge action
+## D. Global Gauge action
 
 The colour and weak factors act trivially, so the gauge group acts only through hypercharge.
 The `U(1)` action is `star z ^ 6`; since `z` is unitary, `star z = z⁻¹`, so this represents
@@ -286,26 +286,10 @@ abbrev JetComponentSpace :=
     Module.Dual ℂ (ConjModule LeptonSinglet))
 
 noncomputable def JetComponentSpace.basis : Module.Basis JetGenerators ℂ JetComponentSpace :=
-  ((dualJetAlgebraBasis.tensorProduct
+  ((DerivAlgebraComplex.basis.tensorProduct
       LeptonSinglet.basis.dualBasis).prod
-    (dualJetAlgebraBasis.tensorProduct
+    (DerivAlgebraComplex.basis.tensorProduct
       (LeptonSinglet.basis.conj.dualBasis))).reindex JetGenerators.equiv.symm
-
-/-- The dual jet algebra basis vector at a multiset of derivative indices is the
-  corresponding basis monomial of the symmetric algebra of dual symbols. -/
-lemma dualJetAlgebraBasis_apply (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    dualJetAlgebraBasis s =
-      Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
-  rw [dualJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
-  rfl
-
-/-- The dual jet algebra basis vector at the empty multiset is the unit of the
-  algebra: the zeroth-order component function carries no derivative symbols. -/
-lemma dualJetAlgebraBasis_nil :
-    dualJetAlgebraBasis ({} : Multiset (Fin 1 ⊕ Fin 3)) = 1 := by
-  rw [dualJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm,
-    show Multiset.toFinsupp.toEquiv ({} : Multiset (Fin 1 ⊕ Fin 3)) = 0 by simp]
-  exact Lorentz.complexCoBasis.dualBasis.symmetricAlgebra_zero
 
 /-- The basis vector of the jet component space at the zeroth-order singlet
   generator: the unit of the dual jet algebra tensored with the dual basis of the
@@ -318,19 +302,8 @@ lemma JetComponentSpace.basis_dψ_nil (α : Fin 2) :
     show JetGenerators.equiv.symm.symm (.dψ {} α) = Sum.inl ({}, α) from rfl]
   refine Prod.ext ?_ ?_
   · rw [Module.Basis.prod_apply_inl_fst, Module.Basis.tensorProduct_apply',
-      dualJetAlgebraBasis_nil]
+      DerivAlgebraComplex.basis_nil]
   · rw [Module.Basis.prod_apply_inl_snd]
-
-/-- The dual jet algebra basis vector at a singleton multiset is the corresponding
-  dual derivative symbol. -/
-lemma dualJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
-    dualJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
-      SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-        (Lorentz.complexCoBasis.dualBasis μ) := by
-  rw [dualJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm,
-    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
-      Finsupp.single μ 1 by simp]
-  exact Lorentz.complexCoBasis.dualBasis.symmetricAlgebra_single μ
 
 /-- The basis vector of the jet component space at a first-order singlet
   generator: the dual derivative symbol tensored with the dual basis of the
@@ -344,7 +317,7 @@ lemma JetComponentSpace.basis_dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) 
     show JetGenerators.equiv.symm.symm (.dψ {μ} α) = Sum.inl ({μ}, α) from rfl]
   refine Prod.ext ?_ ?_
   · rw [Module.Basis.prod_apply_inl_fst, Module.Basis.tensorProduct_apply',
-      dualJetAlgebraBasis_singleton]
+      DerivAlgebraComplex.basis_singleton]
   · rw [Module.Basis.prod_apply_inl_snd]
 
 /-- The basis vector of the jet component space at a general singlet generator:
@@ -353,7 +326,7 @@ lemma JetComponentSpace.basis_dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) 
   factor. -/
 lemma JetComponentSpace.basis_dψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     JetComponentSpace.basis (.dψ s α) =
-      (dualJetAlgebraBasis s ⊗ₜ[ℂ] LeptonSinglet.basis.dualBasis α, 0) := by
+      (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] LeptonSinglet.basis.dualBasis α, 0) := by
   rw [JetComponentSpace.basis, Module.Basis.reindex_apply,
     show JetGenerators.equiv.symm.symm (.dψ s α) = Sum.inl (s, α) from rfl]
   refine Prod.ext ?_ ?_
@@ -362,116 +335,8 @@ lemma JetComponentSpace.basis_dψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) 
 
 noncomputable def JetComponentSpace.repLorentzGroup :
     Representation ℂ (SL(2,ℂ)) JetComponentSpace :=
-  (dualJetAlgebraRepLorentzGroup.tprod LeptonSinglet.repLorentzGroup.dual).prod
-  (dualJetAlgebraRepLorentzGroup.tprod LeptonSinglet.repLorentzGroup.conj.dual)
-
-/-- The identification of the algebra of derivative symbols with the dual jet
-  algebra, matching the monomial basis of derivative symbols with the monomial
-  basis of dual derivative symbols. -/
-noncomputable def dualJetAlgebraEquiv :
-    SymmetricAlgebra ℂ Lorentz.CoℂModule ≃ₗ[ℂ]
-      SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) :=
-  Lorentz.complexCoBasis.symmetricAlgebra.equiv
-    Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (Equiv.refl _)
-
-/-- The derivative action of a jet `χ` on the dual jet algebra: the transport of
-  `derivAction χ` through the basis identification `dualJetAlgebraEquiv`. The
-  component functions of the derivative coordinates transform by the same Leibniz
-  rule as the derivative symbols themselves. -/
-noncomputable def dualDerivAction (χ : JetRing) :
-    SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) →ₗ[ℂ]
-      SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) :=
-  dualJetAlgebraEquiv.toLinearMap ∘ₗ derivAction χ ∘ₗ dualJetAlgebraEquiv.symm.toLinearMap
-
-@[simp]
-lemma dualDerivAction_one : dualDerivAction (1 : JetRing) = LinearMap.id := by
-  refine LinearMap.ext fun x => ?_
-  simp [dualDerivAction]
-
-lemma dualDerivAction_mul (χ ψ : JetRing) :
-    dualDerivAction (χ * ψ) = dualDerivAction χ ∘ₗ dualDerivAction ψ := by
-  refine LinearMap.ext fun x => ?_
-  simp [dualDerivAction, derivAction_mul]
-
-@[simp]
-lemma dualJetAlgebraEquiv_one : dualJetAlgebraEquiv 1 = 1 := by
-  rw [show (1 : SymmetricAlgebra ℂ Lorentz.CoℂModule) =
-      Lorentz.complexCoBasis.symmetricAlgebra 0 from
-      Lorentz.complexCoBasis.symmetricAlgebra_zero.symm,
-    dualJetAlgebraEquiv, Module.Basis.equiv_apply]
-  simpa using Lorentz.complexCoBasis.dualBasis.symmetricAlgebra_zero
-
-/-- The dual derivative action on the zeroth-order component function: it is
-  scaled by the value of the jet at the base point, with no derivative
-  contributions. -/
-@[simp]
-lemma dualDerivAction_apply_one (χ : JetRing) :
-    dualDerivAction χ (1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) =
-      MvPowerSeries.constantCoeff χ • 1 := by
-  have h1 : dualJetAlgebraEquiv.symm
-      (1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) = 1 := by
-    rw [← dualJetAlgebraEquiv_one, LinearEquiv.symm_apply_apply]
-  simp [dualDerivAction, h1]
-
-@[simp]
-lemma dualJetAlgebraEquiv_ι (μ : Fin 1 ⊕ Fin 3) :
-    dualJetAlgebraEquiv (SymmetricAlgebra.ι ℂ Lorentz.CoℂModule
-        (Lorentz.complexCoBasis μ)) =
-      SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-        (Lorentz.complexCoBasis.dualBasis μ) := by
-  rw [← Lorentz.complexCoBasis.symmetricAlgebra_single μ,
-    ← Lorentz.complexCoBasis.dualBasis.symmetricAlgebra_single μ,
-    dualJetAlgebraEquiv, Module.Basis.equiv_apply, Equiv.refl_apply]
-
-/-- The dual derivative action on a first-order dual derivative symbol implements
-  the Leibniz rule, mirroring `derivAction_apply_ι`: the value of the jet
-  multiplies the symbol, and its first derivative feeds the zeroth-order component
-  function. -/
-lemma dualDerivAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
-    dualDerivAction χ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-        (Lorentz.complexCoBasis.dualBasis μ)) =
-      MvPowerSeries.constantCoeff χ •
-        SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-          (Lorentz.complexCoBasis.dualBasis μ) +
-        MvPowerSeries.coeff (Finsupp.single μ 1) χ • 1 := by
-  have h1 : dualJetAlgebraEquiv.symm (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-      (Lorentz.complexCoBasis.dualBasis μ)) =
-      SymmetricAlgebra.ι ℂ Lorentz.CoℂModule (Lorentz.complexCoBasis μ) := by
-    rw [← dualJetAlgebraEquiv_ι, LinearEquiv.symm_apply_apply]
-  rw [show dualDerivAction χ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-      (Lorentz.complexCoBasis.dualBasis μ)) =
-      dualJetAlgebraEquiv (derivAction χ (dualJetAlgebraEquiv.symm
-        (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
-          (Lorentz.complexCoBasis.dualBasis μ)))) from rfl,
-    h1, derivAction_apply_ι, map_add, map_smul, map_smul, dualJetAlgebraEquiv_ι,
-    dualJetAlgebraEquiv_one]
-
-@[simp]
-lemma dualJetAlgebraEquiv_symmetricAlgebra (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    dualJetAlgebraEquiv (Lorentz.complexCoBasis.symmetricAlgebra m) =
-      Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m := by
-  rw [dualJetAlgebraEquiv, Module.Basis.equiv_apply, Equiv.refl_apply]
-
-/-- The dual derivative action on a general monomial of dual derivative symbols:
-  the all-orders Leibniz rule, mirroring the definition of `derivAction`. Each
-  splitting `m = p.1 + p.2` contributes the `p.1`-th Taylor coefficient of the
-  jet, with the divided-power multiplicity, times the lower monomial `p.2`. -/
-lemma dualDerivAction_apply_symmetricAlgebra (χ : JetRing) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    dualDerivAction χ (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m) =
-      ∑ p ∈ Finset.antidiagonal m,
-        ((∏ μ, (m μ).descFactorial (p.1 μ) : ℕ) : ℂ) •
-          MvPowerSeries.coeff p.1 χ •
-            Lorentz.complexCoBasis.dualBasis.symmetricAlgebra p.2 := by
-  have h1 : dualJetAlgebraEquiv.symm
-      (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m) =
-      Lorentz.complexCoBasis.symmetricAlgebra m := by
-    rw [← dualJetAlgebraEquiv_symmetricAlgebra, LinearEquiv.symm_apply_apply]
-  rw [show dualDerivAction χ (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m) =
-      dualJetAlgebraEquiv (derivAction χ (dualJetAlgebraEquiv.symm
-        (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m))) from rfl,
-    h1, derivAction, Module.Basis.constr_basis, map_sum]
-  refine Finset.sum_congr rfl fun p hp => ?_
-  rw [map_smul, map_smul, dualJetAlgebraEquiv_symmetricAlgebra]
+  (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.dual).prod
+  (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.conj.dual)
 
 /-- The action of the jet gauge group on the dual jet algebra of the
   charged-lepton singlet's component functions. Component functions transform
@@ -481,10 +346,10 @@ lemma dualDerivAction_apply_symmetricAlgebra (χ : JetRing) (m : (Fin 1 ⊕ Fin 
 noncomputable def dualJetAlgebraRepJetGaugeGroupI :
     Representation ℂ JetGaugeGroupI
       (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
-  toFun U := dualDerivAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6)
+  toFun U := DerivAlgebraComplex.jetRingAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6)
   map_one' := by
     rw [show (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) ^ 6 =
-        (1 : JetRing) by simp, dualDerivAction_one]
+        (1 : JetRing) by simp, DerivAlgebraComplex.jetRingAction_one]
     rfl
   map_mul' U₁ U₂ := by
     rw [show (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) ^ 6 =
@@ -493,7 +358,7 @@ noncomputable def dualJetAlgebraRepJetGaugeGroupI :
       rw [show (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) =
           ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
           from rfl, mul_pow],
-      dualDerivAction_mul, Module.End.mul_eq_comp]
+      DerivAlgebraComplex.jetRingAction_mul, Module.End.mul_eq_comp]
 
 /-- The action of the jet gauge group on the dual jet algebra of the conjugate
   charged-lepton singlet's component functions: the conjugate components
@@ -502,10 +367,10 @@ noncomputable def dualJetAlgebraRepJetGaugeGroupI :
 noncomputable def dualJetAlgebraRepJetGaugeGroupIConj :
     Representation ℂ JetGaugeGroupI
       (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
-  toFun U := dualDerivAction ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6)
+  toFun U := DerivAlgebraComplex.jetRingAction ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6)
   map_one' := by
     rw [show (star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6 =
-        (1 : JetRing) by simp, dualDerivAction_one]
+        (1 : JetRing) by simp, DerivAlgebraComplex.jetRingAction_one]
     rfl
   map_mul' U₁ U₂ := by
     rw [show (star (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6 =
@@ -514,17 +379,17 @@ noncomputable def dualJetAlgebraRepJetGaugeGroupIConj :
       rw [show (((U₁ * U₂ : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) =
           ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
           from rfl, star_mul', mul_pow],
-      dualDerivAction_mul, Module.End.mul_eq_comp]
+      DerivAlgebraComplex.jetRingAction_mul, Module.End.mul_eq_comp]
 
 @[simp]
 lemma dualJetAlgebraRepJetGaugeGroupI_apply (U : JetGaugeGroupI) :
     dualJetAlgebraRepJetGaugeGroupI U =
-      dualDerivAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6) := rfl
+      DerivAlgebraComplex.jetRingAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6) := rfl
 
 @[simp]
 lemma dualJetAlgebraRepJetGaugeGroupIConj_apply (U : JetGaugeGroupI) :
     dualJetAlgebraRepJetGaugeGroupIConj U =
-      dualDerivAction ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6) := rfl
+      DerivAlgebraComplex.jetRingAction ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6) := rfl
 
 /-- The `(1, 1)_{-6}` action of the jet gauge group on the space of component
   functions of the charged-lepton singlet, its conjugate, and their derivative
@@ -541,6 +406,39 @@ noncomputable def JetComponentSpace.repJetGaugeGroupI :
       (Representation.trivial ℂ JetGaugeGroupI (Module.Dual ℂ LeptonSinglet))).prod
     (dualJetAlgebraRepJetGaugeGroupIConj.tprod
       (Representation.trivial ℂ JetGaugeGroupI (Module.Dual ℂ (ConjModule LeptonSinglet))))
+
+/-- The jet gauge action preserves the unconjugated half of the component space,
+  acting there by the dual derivative action of the contragredient hypercharge
+  power series on the derivative symbols. -/
+lemma JetComponentSpace.repJetGaugeGroupI_inl (U : JetGaugeGroupI)
+    (a : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))
+    (φ : Module.Dual ℂ LeptonSinglet) :
+    JetComponentSpace.repJetGaugeGroupI U ((a ⊗ₜ[ℂ] φ, 0) : JetComponentSpace) =
+      ((DerivAlgebraComplex.jetRingAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6) a) ⊗ₜ[ℂ] φ, 0) := by
+  refine Prod.ext ?_ ?_ <;>
+    simp [JetComponentSpace.repJetGaugeGroupI, Representation.prod_apply_apply,
+      Representation.tprod_apply, dualJetAlgebraRepJetGaugeGroupI_apply]
+
+/-- The jet gauge action on a general element of the unconjugated half of the
+  component space. -/
+lemma JetComponentSpace.repJetGaugeGroupI_inl' (U : JetGaugeGroupI)
+    (y : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+      Module.Dual ℂ LeptonSinglet) :
+    JetComponentSpace.repJetGaugeGroupI U ((y, 0) : JetComponentSpace) =
+      ((TensorProduct.map (DerivAlgebraComplex.jetRingAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6))
+        LinearMap.id) y, 0) := by
+  induction y using TensorProduct.induction_on with
+  | zero =>
+    rw [show ((0, 0) : JetComponentSpace) = 0 from rfl, map_zero, map_zero]
+    rfl
+  | add a b ha hb =>
+    have hpair : ((a + b, 0) : JetComponentSpace) = (a, 0) + (b, 0) := by
+      simp
+    rw [hpair, map_add, ha, hb, map_add]
+    simp
+  | tmul a φ =>
+    rw [JetComponentSpace.repJetGaugeGroupI_inl, TensorProduct.map_tmul]
+    rfl
 
 /-- The first-order Taylor coefficient of a hypercharge power of a `U(1)` jet:
   the analogue of `BBoson.coeff_single_star_pow` for the contragredient character
@@ -601,6 +499,53 @@ lemma JetComponentSpace.jetDeriv_basis (μ : Fin 1 ⊕ Fin 3) (j : JetGenerators
       JetComponentSpace.basis (JetGenerators.shift μ j) := by
   rw [JetComponentSpace.jetDeriv, Module.Basis.constr_basis]
 
+/-- The total derivative preserves the unconjugated half of the component space,
+  acting there by the shift of dual derivative symbols. -/
+lemma JetComponentSpace.jetDeriv_inl (μ : Fin 1 ⊕ Fin 3)
+    (a : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))
+    (φ : Module.Dual ℂ LeptonSinglet) :
+    JetComponentSpace.jetDeriv μ ((a ⊗ₜ[ℂ] φ, 0) : JetComponentSpace) =
+      ((DerivAlgebraComplex.deriv μ a) ⊗ₜ[ℂ] φ, 0) := by
+  have h : (JetComponentSpace.jetDeriv μ) ∘ₗ (LinearMap.inl ℂ
+        (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+          Module.Dual ℂ LeptonSinglet)
+        (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+          Module.Dual ℂ (ConjModule LeptonSinglet))) =
+      (LinearMap.inl ℂ _ _) ∘ₗ (TensorProduct.map (DerivAlgebraComplex.deriv μ) LinearMap.id) := by
+    refine (DerivAlgebraComplex.basis.tensorProduct LeptonSinglet.basis.dualBasis).ext
+      fun p => ?_
+    obtain ⟨s, α⟩ := p
+    rw [Module.Basis.tensorProduct_apply']
+    simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.inl_apply,
+      TensorProduct.map_tmul, LinearMap.id_coe, id_eq]
+    rw [show ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] LeptonSinglet.basis.dualBasis α, 0) :
+        JetComponentSpace) = JetComponentSpace.basis (.dψ s α) from
+        (JetComponentSpace.basis_dψ s α).symm,
+      JetComponentSpace.jetDeriv_basis, JetGenerators.shift_dψ,
+      JetComponentSpace.basis_dψ, DerivAlgebraComplex.deriv_basis_multiset]
+  have h1 := LinearMap.congr_fun h (a ⊗ₜ[ℂ] φ)
+  simpa using h1
+
+/-- The total derivative on a general element of the unconjugated half of the
+  component space. -/
+lemma JetComponentSpace.jetDeriv_inl' (μ : Fin 1 ⊕ Fin 3)
+    (y : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+      Module.Dual ℂ LeptonSinglet) :
+    JetComponentSpace.jetDeriv μ ((y, 0) : JetComponentSpace) =
+      ((TensorProduct.map (DerivAlgebraComplex.deriv μ) LinearMap.id) y, 0) := by
+  induction y using TensorProduct.induction_on with
+  | zero =>
+    rw [show ((0, 0) : JetComponentSpace) = 0 from rfl, map_zero, map_zero]
+    rfl
+  | add a b ha hb =>
+    have hpair : ((a + b, 0) : JetComponentSpace) = (a, 0) + (b, 0) := by
+      simp
+    rw [hpair, map_add, ha, hb, map_add]
+    simp
+  | tmul a φ =>
+    rw [JetComponentSpace.jetDeriv_inl, TensorProduct.map_tmul]
+    rfl
+
 /-!
 
 ## The jet algebra
@@ -639,7 +584,7 @@ lemma repJetGaugeGroupI_ofGenerator_ψ_nil (g : JetGaugeGroupI) (α : Fin 2) :
   simp only [JetComponentSpace.repJetGaugeGroupI, Representation.prod_apply_apply,
     Representation.tprod_apply, dualJetAlgebraRepJetGaugeGroupI_apply,
     Representation.trivial_apply, map_zero, TensorProduct.map_tmul,
-    dualDerivAction_apply_one, map_pow, ← TensorProduct.smul_tmul',
+    DerivAlgebraComplex.jetRingAction_apply_one, map_pow, ← TensorProduct.smul_tmul',
     SubmonoidClass.coe_pow, ← map_smul, Prod.smul_mk, smul_zero]
   rfl
 
@@ -671,7 +616,7 @@ lemma repJetGaugeGroupI_ofGenerator_ψ_singleton (g : JetGaugeGroupI)
     JetComponentSpace.repJetGaugeGroupI, Representation.prod_apply_apply,
     Representation.tprod_apply, dualJetAlgebraRepJetGaugeGroupI_apply,
     Representation.trivial_apply, map_zero, TensorProduct.map_tmul,
-    dualDerivAction_apply_ι, hcoeff, TensorProduct.add_tmul,
+    DerivAlgebraComplex.jetRingAction_apply_ι, hcoeff, TensorProduct.add_tmul,
     ← TensorProduct.smul_tmul', Submonoid.smul_def, SubmonoidClass.coe_pow,
     hval, map_pow, sub_eq_add_neg, neg_smul]
   simp only [hinl, TensorProduct.neg_tmul, ← TensorProduct.smul_tmul',
@@ -698,11 +643,11 @@ lemma repJetGaugeGroupI_ofGenerator_ψ (g : JetGaugeGroupI)
         Module.Dual ℂ (ConjModule LeptonSinglet))) =
       LinearMap.inl ℂ _ _ x := fun x => rfl
   simp only [ofGenerator, repJetGaugeGroupI_apply, ExteriorAlgebra.map_apply_ι,
-    JetComponentSpace.basis_dψ, dualJetAlgebraBasis_apply, Finsupp.toMultiset_toFinsupp,
+    JetComponentSpace.basis_dψ, DerivAlgebraComplex.basis_apply, Finsupp.toMultiset_toFinsupp,
     JetComponentSpace.repJetGaugeGroupI, Representation.prod_apply_apply,
     Representation.tprod_apply, dualJetAlgebraRepJetGaugeGroupI_apply,
     Representation.trivial_apply, map_zero, TensorProduct.map_tmul,
-    dualDerivAction_apply_symmetricAlgebra]
+    DerivAlgebraComplex.jetRingAction_basis]
   simp only [hinl, TensorProduct.sum_tmul, ← TensorProduct.smul_tmul', map_sum, map_smul]
 
 /-!

@@ -163,7 +163,7 @@ the jets of constant gauge transformations recover the adjoint representation
 
 -/
 
-open MvPowerSeries
+open MvPowerSeries JetRing
 
 /-- The matrix of first-order Taylor coefficients, in the spacetime direction `μ`,
   of a matrix of jets. -/

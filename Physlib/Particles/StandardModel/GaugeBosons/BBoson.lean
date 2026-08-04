@@ -33,43 +33,9 @@ boson is the B boson formalized here.
 
 @[expose] public section
 
-/-!
-
-## Aa. The formal partial derivative and the coefficientwise star
-
-The Maurer–Cartan jet series is built from the formal partial derivative
-`MvPowerSeries.pderiv`; its hermiticity rests on the fact that the derivative
-commutes with the coefficientwise star.
-
--/
-
 namespace MvPowerSeries
 
 variable {σ R : Type*}
-
-/-- The formal partial derivative commutes with the coefficientwise star. -/
-lemma pderiv_star [CommSemiring R] [StarRing R] (ν : σ) (f : MvPowerSeries σ R) :
-    pderiv R ν (star f) = star (pderiv R ν f) := by
-  ext s
-  rw [coeff_pderiv, coeff_star, coeff_star, coeff_pderiv, star_mul']
-  congr 1
-  simp
-
-/-- Formal partial derivatives commute. -/
-lemma pderiv_comm [CommSemiring R] (μ ν : σ) (f : MvPowerSeries σ R) :
-    pderiv R μ (pderiv R ν f) = pderiv R ν (pderiv R μ f) := by
-  classical
-  ext s
-  rw [coeff_pderiv, coeff_pderiv, coeff_pderiv, coeff_pderiv,
-    show s + Finsupp.single μ 1 + Finsupp.single ν 1 =
-      s + Finsupp.single ν 1 + Finsupp.single μ 1 from by
-      rw [add_assoc, add_assoc, add_comm (Finsupp.single μ 1)]]
-  rcases eq_or_ne μ ν with rfl | h
-  · rfl
-  · rw [Finsupp.add_apply, Finsupp.add_apply, Finsupp.single_eq_of_ne h.symm,
-      Finsupp.single_eq_of_ne h]
-    push_cast
-    ring
 
 /-!
 
@@ -191,14 +157,13 @@ lemma expMonomial_mul_expMonomial (hw : w ≠ 0) (c c' : K) :
       · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h2), mul_zero]
     · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h1), zero_mul]
 
-omit [CharZero K] in
 /-- The coefficientwise star of the exponential of a monomial is the exponential at
   the starred scalar. -/
-lemma star_expMonomial [StarRing K] (hw : w ≠ 0) (c : K) :
-    star (expMonomial c w) = expMonomial (star c) w := by
+lemma star_expMonomial {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : m ≠ 0) (c : ℂ) :
+    star (expMonomial c m : JetRing) = expMonomial (star c) m := by
   ext k
-  rw [coeff_star]
-  by_cases hk : ∃ n : ℕ, k = n • w
+  rw [JetRing.coeff_star]
+  by_cases hk : ∃ n : ℕ, k = n • m
   · obtain ⟨n, rfl⟩ := hk
     rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw, star_div₀, star_pow,
       star_natCast]
@@ -463,7 +428,7 @@ since the group is abelian the cocycle identity degenerates to additivity. The
 resulting action of `JetGaugeGroupI` on `BBoson` is by translations.
 -/
 
-open MvPowerSeries
+open MvPowerSeries JetRing
 
 /-- The Maurer–Cartan coefficient of a jet of a `U(1)` gauge transformation in the
   spacetime direction `μ`: `i (∂_μ u)(0) ū(0)`, which is hermitian by unitarity. -/
@@ -660,6 +625,34 @@ lemma star_mcSeries (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) :
     linear_combination h0
   rw [mcSeries, star_mul', star_C, star_mul', star_star, ← pderiv_star, hq,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
+
+/-- The derivative of a hypercharge power of a `U(1)` jet:
+  `∂_ν (u^q) = -q i mc_ν u^q`, the all-orders form of the first-order Taylor
+  coefficient formula for the contragredient character. -/
+lemma pderiv_pow_unitary (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
+    pderiv ℂ ν ((u : JetRing) ^ q) =
+      MvPowerSeries.C (-(q : ℂ) * Complex.I) * (mcSeries u ν * (u : JetRing) ^ q) := by
+  rcases Nat.eq_zero_or_pos q with rfl | hq
+  · simp
+  · have h1 : star (u : JetRing) * (u : JetRing) = 1 := (Unitary.mem_iff.mp u.2).1
+    have hpow : (u : JetRing) ^ q = (u : JetRing) * (u : JetRing) ^ (q - 1) := by
+      conv_lhs => rw [show q = 1 + (q - 1) by omega, pow_add, pow_one]
+    have hC : (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) *
+        MvPowerSeries.C Complex.I = MvPowerSeries.C ((q : ℕ) : ℂ) := by
+      rw [← map_mul]
+      congr 1
+      ring_nf
+      rw [Complex.I_sq]
+      ring
+    have hN : (MvPowerSeries.C ((q : ℕ) : ℂ) : JetRing) = ((q : ℕ) : JetRing) :=
+      map_natCast _ _
+    rw [MvPowerSeries.pderiv_pow, mcSeries, hpow]
+    linear_combination
+      (-((u : JetRing) * (u : JetRing) ^ (q - 1) * pderiv ℂ ν (u : JetRing) *
+        star (u : JetRing))) * hC +
+      (-((u : JetRing) ^ (q - 1) * pderiv ℂ ν (u : JetRing) *
+        MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
+      (-((u : JetRing) ^ (q - 1) * pderiv ℂ ν (u : JetRing))) * hN
 
 /-- The Taylor coefficients of the Maurer–Cartan series, as hermitian scalars. -/
 noncomputable def mcSeriesCoeff (u : unitary JetRing) (ν : Fin 1 ⊕ Fin 3)
@@ -1013,6 +1006,76 @@ lemma mcPairing_basis_dB_symm (u : unitary JetRing) (s : Multiset (Fin 1 ⊕ Fin
 
 /-!
 
+## Iterated derivatives of the Maurer–Cartan series
+
+The covariance of the covariant derivatives of charged fields rests on the
+higher Maurer–Cartan anomalies: the iterated formal derivatives of the
+Maurer–Cartan series. Their constant coefficients are the Maurer–Cartan
+pairings of the corresponding B-boson component functions.
+
+-/
+
+/-- The iterated formal derivatives of the Maurer–Cartan series along an ordered
+  list of directions: `mc_{s,μ} = ∂_s mc_μ`. -/
+noncomputable def mcSeriesDeriv (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
+    List (Fin 1 ⊕ Fin 3) → JetRing
+  | [] => mcSeries u μ
+  | ν :: s => pderiv ℂ ν (mcSeriesDeriv u μ s)
+
+@[simp]
+lemma mcSeriesDeriv_nil (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
+    mcSeriesDeriv u μ [] = mcSeries u μ := rfl
+
+@[simp]
+lemma mcSeriesDeriv_cons (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3)
+    (s : List (Fin 1 ⊕ Fin 3)) :
+    mcSeriesDeriv u μ (ν :: s) = pderiv ℂ ν (mcSeriesDeriv u μ s) := rfl
+
+/-- The factorial-weighted Taylor coefficients of the iterated derivatives of the
+  Maurer–Cartan series: differentiating shifts the multi-index inside the
+  factorial weight. -/
+lemma factorial_coeff_mcSeriesDeriv (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3)
+    (s : List (Fin 1 ⊕ Fin 3)) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    ((∏ ρ, Nat.factorial (m ρ) : ℕ) : ℂ) * coeff m (mcSeriesDeriv u μ s) =
+      ((∏ ρ, Nat.factorial (((m + Multiset.toFinsupp ↑s) :
+          (Fin 1 ⊕ Fin 3) →₀ ℕ) ρ) : ℕ) : ℂ) *
+        coeff (m + Multiset.toFinsupp ↑s) (mcSeries u μ) := by
+  induction s generalizing m with
+  | nil => simp
+  | cons ν s ih =>
+    rw [mcSeriesDeriv_cons, coeff_pderiv]
+    have hT : Multiset.toFinsupp (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
+        Finsupp.single ν 1 + Multiset.toFinsupp (↑s : Multiset (Fin 1 ⊕ Fin 3)) := by
+      rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
+          rw [Multiset.singleton_add, Multiset.cons_coe],
+        map_add, Multiset.toFinsupp_singleton]
+    have hcast : ((∏ ρ, Nat.factorial (((m + Finsupp.single ν 1) :
+          (Fin 1 ⊕ Fin 3) →₀ ℕ) ρ) : ℕ) : ℂ) =
+        ((m ν + 1 : ℕ) : ℂ) * ((∏ ρ, Nat.factorial (m ρ) : ℕ) : ℂ) := by
+      rw [← Nat.cast_mul, prod_factorial_add_single]
+    rw [hT, show m + (Finsupp.single ν 1 + Multiset.toFinsupp (↑s : Multiset _)) =
+        m + Finsupp.single ν 1 + Multiset.toFinsupp (↑s : Multiset _) from
+        (add_assoc _ _ _).symm, ← ih (m + Finsupp.single ν 1), hcast]
+    push_cast
+    ring
+
+/-- The constant coefficient of the iterated derivative of the Maurer–Cartan
+  series is the Maurer–Cartan pairing of the corresponding B-boson component
+  function. -/
+lemma constantCoeff_mcSeriesDeriv (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3)
+    (s : List (Fin 1 ⊕ Fin 3)) :
+    MvPowerSeries.constantCoeff (mcSeriesDeriv u μ s) =
+      ((mcPairing u (JetComponentSpace.basis (JetGenerators.dB ↑s μ)) : ℝ) : ℂ) := by
+  have h := factorial_coeff_mcSeriesDeriv u μ s 0
+  simp only [Finsupp.coe_zero, Pi.zero_apply, Nat.factorial_zero, Finset.prod_const_one,
+    Nat.cast_one, one_mul, zero_add] at h
+  rw [← coeff_zero_eq_constantCoeff_apply, h, mcPairing_basis_dB', nsmul_eq_mul]
+  push_cast
+  rw [Complex.coe_selfAdjointEquiv]
+  rfl
+
+/-!
+
 ## Gauge realization of translations of the jet coordinates
 
 To identify the gauge invariants of the jet algebra we need not only that every
@@ -1200,6 +1263,28 @@ def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
 lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
     shift μ (dB s ν) = dB (s + {μ}) ν := rfl
 
+/-- The jet generator with further derivatives appended from a multiset. -/
+def shiftMulti (t : Multiset (Fin 1 ⊕ Fin 3)) : JetGenerators → JetGenerators
+  | dB s ν => dB (s + t) ν
+
+@[simp]
+lemma shiftMulti_dB (t s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    shiftMulti t (dB s ν) = dB (s + t) ν := rfl
+
+lemma shiftMulti_singleton (ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    shiftMulti {ν} g = shift ν g := by
+  cases g with
+  | dB s ρ => rfl
+
+lemma shiftMulti_shift (t : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3)
+    (g : JetGenerators) :
+    shiftMulti t (shift ν g) = shiftMulti (t + {ν}) g := by
+  cases g with
+  | dB s ρ =>
+    simp only [shift_dB, shiftMulti_dB]
+    congr 1
+    rw [add_comm t ({ν} : Multiset (Fin 1 ⊕ Fin 3)), ← add_assoc]
+
 end JetGenerators
 
 /-!
@@ -1357,6 +1442,123 @@ lemma jetDeriv_baseChange_mul (μ : Fin 1 ⊕ Fin 3) (x y : ℂ ⊗[ℝ] JetAlge
 
 /-!
 
+## The Maurer–Cartan correction derivations
+
+The total derivative does not commute with the jet gauge action: on the
+component functions, differentiating after substituting picks up the
+Maurer–Cartan shift of the new derivative coordinate. The failure is measured
+by the correction derivations `mcDeriv u t`, sending each component function
+`∂_s B_ν` to the constant `⟨mc, ∂_{s+t} B_ν⟩`; they satisfy a closed commutation
+algebra with the total derivative and with the gauge action, which drives the
+covariance of covariant derivatives of charged fields.
+
+-/
+
+/-- The Maurer–Cartan correction derivation of weight `t` of a `U(1)` jet: the
+  derivation of the B-boson jet algebra sending the component function `∂_s B_ν`
+  to the constant `⟨mc, ∂_{s+t} B_ν⟩`. -/
+noncomputable def mcDeriv (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    JetAlgebra →ₗ[ℝ] JetAlgebra :=
+  (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toLinearMap ∘ₗ
+    (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+      (MvPolynomial.C (mcPairing u (JetComponentSpace.basis
+        (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ)).toLinearMap ∘ₗ
+    (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toLinearMap
+
+@[simp]
+lemma mcDeriv_ofGenerator (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (g : JetGenerators) :
+    mcDeriv u t (ofGenerator g) = algebraMap ℝ JetAlgebra
+      (mcPairing u (JetComponentSpace.basis (JetGenerators.shiftMulti t g))) := by
+  simp only [mcDeriv, ofGenerator, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, Derivation.coeFn_coe]
+  rw [SymmetricAlgebra.equivMvPolynomial_ι_apply, MvPolynomial.mkDerivation_X,
+    ← MvPolynomial.algebraMap_eq]
+  exact AlgEquiv.commutes _ _
+
+@[simp]
+lemma mcDeriv_one (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    mcDeriv u t (1 : JetAlgebra) = 0 := by
+  simp [mcDeriv]
+
+/-- The correction derivations satisfy the Leibniz rule. -/
+lemma mcDeriv_mul (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (x y : JetAlgebra) :
+    mcDeriv u t (x * y) = mcDeriv u t x * y + x * mcDeriv u t y := by
+  simp only [mcDeriv, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, map_mul, Derivation.coeFn_coe, Derivation.leibniz,
+    smul_eq_mul, map_add, AlgEquiv.symm_apply_apply]
+  ring
+
+/-- The polynomial coordinates of the total derivative. -/
+lemma equivMvPolynomial_jetDeriv (ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis (jetDeriv ν x) =
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ))
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis x) := by
+  simp only [jetDeriv, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, AlgEquiv.apply_symm_apply, Derivation.coeFn_coe]
+
+/-- The polynomial coordinates of the correction derivations. -/
+lemma equivMvPolynomial_mcDeriv (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (x : JetAlgebra) :
+    SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis (mcDeriv u t x) =
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.C (mcPairing u (JetComponentSpace.basis
+          (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ))
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis x) := by
+  simp only [mcDeriv, LinearMap.coe_comp, Function.comp_apply,
+    AlgEquiv.toLinearMap_apply, AlgEquiv.apply_symm_apply, Derivation.coeFn_coe]
+
+/-- Commutation of the correction derivations with the total derivative: the
+  weight of the correction absorbs the derivative index. -/
+lemma mcDeriv_jetDeriv (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    mcDeriv u t (jetDeriv ν x) =
+      jetDeriv ν (mcDeriv u t x) + mcDeriv u (t + {ν}) x := by
+  have key : ∀ p : MvPolynomial JetGenerators ℝ,
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.C (mcPairing u (JetComponentSpace.basis
+          (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ))
+        ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+          (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ)) p) =
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ))
+        ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+          (MvPolynomial.C (mcPairing u (JetComponentSpace.basis
+            (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ)) p) +
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.C (mcPairing u (JetComponentSpace.basis
+          (JetGenerators.shiftMulti (t + {ν}) g))) : MvPolynomial JetGenerators ℝ)) p := by
+    intro p
+    induction p using MvPolynomial.induction_on with
+    | C a =>
+      simp [MvPolynomial.derivation_C]
+    | add p q hp hq =>
+      simp only [map_add, hp, hq]
+      ring
+    | mul_X p g ih =>
+      have hlam : mcPairing u (JetComponentSpace.basis
+          (JetGenerators.shiftMulti t (JetGenerators.shift ν g))) =
+          mcPairing u (JetComponentSpace.basis
+            (JetGenerators.shiftMulti (t + {ν}) g)) := by
+        rw [JetGenerators.shiftMulti_shift]
+      simp only [Derivation.leibniz, smul_eq_mul, MvPolynomial.mkDerivation_X,
+        MvPolynomial.derivation_C, map_add, mul_zero, zero_add]
+      rw [ih, hlam]
+      ring
+  rw [show mcDeriv u t (jetDeriv ν x) =
+      (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis
+          (mcDeriv u t (jetDeriv ν x))) from
+      (AlgEquiv.symm_apply_apply _ _).symm,
+    equivMvPolynomial_mcDeriv, equivMvPolynomial_jetDeriv, key, map_add,
+    ← equivMvPolynomial_mcDeriv u t x, ← equivMvPolynomial_jetDeriv ν (mcDeriv u t x),
+    AlgEquiv.symm_apply_apply, ← equivMvPolynomial_mcDeriv u (t + {ν}) x,
+    AlgEquiv.symm_apply_apply]
+
+/-!
+
 ## The field strength of the B boson
 
 -/
@@ -1443,6 +1645,181 @@ lemma equivMvPolynomial_repJetGaugeGroupI_u1 (u : unitary JetRing) (V : JetAlgeb
           MvPolynomial.C (mcPairing u (JetComponentSpace.basis g)))
         (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) :=
   equivMvPolynomial_repJetGaugeGroupI (1, 1, u) V
+
+/-- Commutation of the jet gauge action with the total derivative: the
+  substitution action commutes with `∂_ν` up to the Maurer–Cartan correction
+  derivation of weight `{ν}`. -/
+lemma repJetGaugeGroupI_jetDeriv (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (x : JetAlgebra) :
+    repJetGaugeGroupI U (jetDeriv ν x) =
+      jetDeriv ν (repJetGaugeGroupI U x) +
+        repJetGaugeGroupI U (mcDeriv U.2.2 {ν} x) := by
+  have key : ∀ p : MvPolynomial JetGenerators ℝ,
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g)))
+        ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+          (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ)) p) =
+      (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+        (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ))
+        (MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g))) p) +
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g)))
+        ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
+          (MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis
+            (JetGenerators.shiftMulti {ν} g))) : MvPolynomial JetGenerators ℝ)) p) := by
+    intro p
+    induction p using MvPolynomial.induction_on with
+    | C a =>
+      simp [MvPolynomial.derivation_C, MvPolynomial.algebraMap_eq]
+    | add p q hp hq =>
+      simp only [map_add, hp, hq]
+      ring
+    | mul_X p g ih =>
+      have hlam : mcPairing U.2.2 (JetComponentSpace.basis (JetGenerators.shift ν g)) =
+          mcPairing U.2.2 (JetComponentSpace.basis
+            (JetGenerators.shiftMulti {ν} g)) := by
+        rw [JetGenerators.shiftMulti_singleton]
+      simp only [Derivation.leibniz, smul_eq_mul, MvPolynomial.mkDerivation_X,
+        MvPolynomial.derivation_C, map_add, map_mul, add_zero,
+        MvPolynomial.aeval_X, MvPolynomial.aeval_C, MvPolynomial.algebraMap_eq]
+      rw [ih, hlam]
+      ring
+  rw [show repJetGaugeGroupI U (jetDeriv ν x) =
+      (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis
+          (repJetGaugeGroupI U (jetDeriv ν x))) from
+      (AlgEquiv.symm_apply_apply _ _).symm,
+    equivMvPolynomial_repJetGaugeGroupI, equivMvPolynomial_jetDeriv, key, map_add,
+    ← equivMvPolynomial_repJetGaugeGroupI U x,
+    ← equivMvPolynomial_jetDeriv ν (repJetGaugeGroupI U x),
+    ← equivMvPolynomial_mcDeriv U.2.2 {ν} x,
+    ← equivMvPolynomial_repJetGaugeGroupI U (mcDeriv U.2.2 {ν} x),
+    AlgEquiv.symm_apply_apply]
+  congr 1
+  exact AlgEquiv.symm_apply_apply _ _
+
+/-!
+
+## Complexified commutation relations
+
+The complexified forms, on `ℂ ⊗ JetAlgebra`, of the commutation relations
+between the gauge action, the total derivative, and the Maurer–Cartan
+correction derivations; these drive the covariance of the covariant derivatives
+of charged fields.
+
+-/
+
+lemma complexRepJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : JetAlgebra) :
+    complexRepJetGaugeGroupI U (c ⊗ₜ[ℝ] b) = c ⊗ₜ[ℝ] repJetGaugeGroupI U b := rfl
+
+/-- The complexified commutation of the gauge action with the total
+  derivative. -/
+lemma complexRepJetGaugeGroupI_baseChange_jetDeriv (U : JetGaugeGroupI)
+    (ν : Fin 1 ⊕ Fin 3) (y : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepJetGaugeGroupI U (LinearMap.baseChange ℂ (jetDeriv ν) y) =
+      LinearMap.baseChange ℂ (jetDeriv ν) (complexRepJetGaugeGroupI U y) +
+        complexRepJetGaugeGroupI U
+          (LinearMap.baseChange ℂ (mcDeriv U.2.2 {ν}) y) := by
+  induction y using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [map_add, ha, hb]
+    abel
+  | tmul c b =>
+    simp only [LinearMap.baseChange_tmul, complexRepJetGaugeGroupI_tmul,
+      repJetGaugeGroupI_jetDeriv, TensorProduct.tmul_add]
+
+/-- The complexified commutation of the correction derivations with the total
+  derivative. -/
+lemma mcDeriv_baseChange_jetDeriv (u : unitary JetRing)
+    (t : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) (y : ℂ ⊗[ℝ] JetAlgebra) :
+    LinearMap.baseChange ℂ (mcDeriv u t) (LinearMap.baseChange ℂ (jetDeriv ν) y) =
+      LinearMap.baseChange ℂ (jetDeriv ν)
+          (LinearMap.baseChange ℂ (mcDeriv u t) y) +
+        LinearMap.baseChange ℂ (mcDeriv u (t + {ν})) y := by
+  induction y using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [map_add, ha, hb]
+    abel
+  | tmul c b =>
+    simp only [LinearMap.baseChange_tmul, mcDeriv_jetDeriv, TensorProduct.tmul_add]
+
+/-- The complexified Leibniz rule for the correction derivations. -/
+lemma mcDeriv_baseChange_mul (u : unitary JetRing) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (x y : ℂ ⊗[ℝ] JetAlgebra) :
+    LinearMap.baseChange ℂ (mcDeriv u t) (x * y) =
+      LinearMap.baseChange ℂ (mcDeriv u t) x * y +
+        x * LinearMap.baseChange ℂ (mcDeriv u t) y := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [add_mul, map_add, ha, hb]
+    ring
+  | tmul c b =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a' b' ha' hb' =>
+      simp only [mul_add, map_add, ha', hb']
+      ring
+    | tmul c' b' =>
+      simp only [Algebra.TensorProduct.tmul_mul_tmul, LinearMap.baseChange_tmul,
+        mcDeriv_mul, TensorProduct.tmul_add]
+
+/-- The complexified gauge action is multiplicative. -/
+lemma complexRepJetGaugeGroupI_mul (U : JetGaugeGroupI) (x y : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepJetGaugeGroupI U (x * y) =
+      complexRepJetGaugeGroupI U x * complexRepJetGaugeGroupI U y := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [add_mul, map_add, ha, hb]
+  | tmul c b =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a' b' ha' hb' =>
+      simp only [mul_add, map_add, ha', hb']
+    | tmul c' b' =>
+      simp only [Algebra.TensorProduct.tmul_mul_tmul, complexRepJetGaugeGroupI_tmul,
+        repJetGaugeGroupI_mul]
+
+lemma repJetGaugeGroupI_one (U : JetGaugeGroupI) :
+    repJetGaugeGroupI U (1 : JetAlgebra) = 1 := by
+  have h := repJetGaugeGroupI_algebraMap U 1
+  simpa using h
+
+/-- The complexified gauge action on a jet-algebra generator: the Maurer–Cartan
+  shift of the component function. -/
+lemma complexRepJetGaugeGroupI_ofGenerator (U : JetGaugeGroupI) (g : JetGenerators) :
+    complexRepJetGaugeGroupI U ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator g) =
+      (1 : ℂ) ⊗ₜ[ℝ] ofGenerator g +
+        ((mcPairing U.2.2 (JetComponentSpace.basis g) : ℝ) : ℂ) •
+          ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) := by
+  rw [complexRepJetGaugeGroupI_tmul, ofGenerator, repJetGaugeGroupI_ι,
+    TensorProduct.tmul_add, Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul,
+    show ((mcPairing U.2.2 (JetComponentSpace.basis g) : ℝ) : ℂ) =
+      algebraMap ℝ ℂ (mcPairing U.2.2 (JetComponentSpace.basis g)) from rfl,
+    algebraMap_smul]
+
+/-- The complexified correction derivation on a jet-algebra generator. -/
+lemma mcDeriv_baseChange_ofGenerator (u : unitary JetRing)
+    (t : Multiset (Fin 1 ⊕ Fin 3)) (g : JetGenerators) :
+    LinearMap.baseChange ℂ (mcDeriv u t) ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator g) =
+      ((mcPairing u (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) •
+        ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) := by
+  rw [LinearMap.baseChange_tmul, mcDeriv_ofGenerator, Algebra.algebraMap_eq_smul_one,
+    TensorProduct.tmul_smul,
+    show ((mcPairing u (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) =
+      algebraMap ℝ ℂ (mcPairing u (JetComponentSpace.basis
+        (JetGenerators.shiftMulti t g))) from rfl,
+    algebraMap_smul]
+
+/-- The complexified total derivative on a jet-algebra generator. -/
+lemma jetDeriv_baseChange_ofGenerator (ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    LinearMap.baseChange ℂ (jetDeriv ν) ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator g) =
+      (1 : ℂ) ⊗ₜ[ℝ] ofGenerator (JetGenerators.shift ν g) := by
+  rw [LinearMap.baseChange_tmul, jetDeriv_ofGenerator]
 
 /-- The difference between a jet-algebra generator and its canonical
   representative is a derivative of the field strength, or zero. -/
