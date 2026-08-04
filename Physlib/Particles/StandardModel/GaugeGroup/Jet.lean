@@ -19,9 +19,23 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 
 ## i. Overview
 
-The essential idea is that at a point `x` in spacetime,
-a gauge transformation on fields at `x` and their derivatives
-is determined by the gauge transformation
+For the Standard Model on Minkowski spacetime,
+gauge transforms are maps from spacetime to the gauge group `G := SU(3) × SU(2) × U(1)`.
+
+If one is considering a gauge transformation `g` at a point `x`, its action
+on all the fields and their derivatives at `x` is determined by the
+value of `g` and all its derivatives at `x`.  The collection of all
+possible values of `g` and their derivatives at `x` is called the *jet* of `g` at `x`.
+These form a group, which we call `JetGaugeGroupI`.
+
+The group `JetGaugeGroupI` acts on all the fields and their derivatives at `x`,
+every gauge transformation `g` has a corresponding element of `JetGaugeGroupI`,
+and the action of `g` on the fields and their derivatives at `x` is determined by this element.
+
+Thus locally it is enough to consider the action of `JetGaugeGroupI` on the fields and
+their derivatives at a point, instead of the full set of gauge transformations on spacetime,
+which is large and unwieldy.
+
 -/
 
 @[expose] public section
