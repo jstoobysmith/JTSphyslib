@@ -15,6 +15,7 @@ public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Mathematics.MvPowerSeriesDerivative
+public import Physlib.Mathematics.MvPolynomialTranslation
 /-!
 # The B boson
 
@@ -52,6 +53,271 @@ lemma pderiv_star [CommSemiring R] [StarRing R] (ν : σ) (f : MvPowerSeries σ 
   rw [coeff_pderiv, coeff_star, coeff_star, coeff_pderiv, star_mul']
   congr 1
   simp
+
+/-- Formal partial derivatives commute. -/
+lemma pderiv_comm [CommSemiring R] (μ ν : σ) (f : MvPowerSeries σ R) :
+    pderiv R μ (pderiv R ν f) = pderiv R ν (pderiv R μ f) := by
+  classical
+  ext s
+  rw [coeff_pderiv, coeff_pderiv, coeff_pderiv, coeff_pderiv,
+    show s + Finsupp.single μ 1 + Finsupp.single ν 1 =
+      s + Finsupp.single ν 1 + Finsupp.single μ 1 from by
+      rw [add_assoc, add_assoc, add_comm (Finsupp.single μ 1)]]
+  rcases eq_or_ne μ ν with rfl | h
+  · rfl
+  · rw [Finsupp.add_apply, Finsupp.add_apply, Finsupp.single_eq_of_ne h.symm,
+      Finsupp.single_eq_of_ne h]
+    push_cast
+    ring
+
+/-!
+
+## Ab. The exponential of a monomial
+
+The gauge invariants of the B-boson jet algebra are computed below by realizing
+arbitrary translations of the jet coordinates through explicit local `U(1)` gauge
+transformations. These are the formal exponentials `exp (c X^w)` of a single
+monomial, defined here coefficientwise; the exponential property
+`exp(c X^w) exp(c' X^w) = exp((c + c') X^w)` gives unitarity for imaginary `c`,
+and the chain rule gives their Maurer–Cartan series.
+
+-/
+
+section ExpMonomial
+
+variable {K : Type*} [Field K] [CharZero K] {w : σ →₀ ℕ}
+
+open Classical in
+/-- The formal exponential of `c` times the monomial with exponent `w`: the power
+  series `∑ₙ (cⁿ/n!) X^{n w}`, defined coefficientwise. -/
+noncomputable def expMonomial (c : K) (w : σ →₀ ℕ) : MvPowerSeries σ K :=
+  fun k => if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : K) else 0
+
+/-- A nonzero exponent has a coordinate at which it is nonzero. -/
+lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 := by
+  obtain ⟨ρ, hρ⟩ := Finsupp.ne_iff.mp hw
+  exact ⟨ρ, by simpa using hρ⟩
+
+/-- Multiples of a nonzero exponent determine the multiplier. -/
+lemma nsmul_right_cancel (hw : w ≠ 0) {n m : ℕ} (h : n • w = m • w) : n = m := by
+  obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+  have h' := DFunLike.congr_fun h ρ
+  simp only [Finsupp.smul_apply, smul_eq_mul] at h'
+  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ) h'
+
+omit [CharZero K] in
+/-- The Taylor coefficient of the exponential of a monomial at a multiple of the
+  exponent. -/
+lemma coeff_expMonomial_nsmul (hw : w ≠ 0) (c : K) (n : ℕ) :
+    coeff (n • w) (expMonomial c w) = c ^ n / (n.factorial : K) := by
+  have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
+  rw [coeff_apply]
+  simp only [expMonomial]
+  rw [dif_pos h, show h.choose = n from (nsmul_right_cancel hw h.choose_spec).symm]
+
+omit [CharZero K] in
+/-- The Taylor coefficients of the exponential of a monomial vanish away from the
+  multiples of the exponent. -/
+lemma coeff_expMonomial_of_forall_ne (c : K) {k : σ →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
+    coeff k (expMonomial c w) = 0 := by
+  rw [coeff_apply]
+  simp only [expMonomial]
+  rw [dif_neg (not_exists.mpr hk)]
+
+/-- The exponential property: exponentials of the same monomial multiply by adding
+  the scalars. -/
+lemma expMonomial_mul_expMonomial (hw : w ≠ 0) (c c' : K) :
+    expMonomial c w * expMonomial c' w = expMonomial (c + c') w := by
+  classical
+  ext k
+  by_cases hk : ∃ n : ℕ, k = n • w
+  · obtain ⟨N, rfl⟩ := hk
+    rw [coeff_mul, coeff_expMonomial_nsmul hw]
+    have hsub : (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) ⊆
+        Finset.antidiagonal (N • w) := by
+      intro p hp
+      obtain ⟨n, hn, rfl⟩ := Finset.mem_image.mp hp
+      rw [Finset.mem_antidiagonal, ← add_smul,
+        Nat.add_sub_cancel' (Nat.lt_succ_iff.mp (Finset.mem_range.mp hn))]
+    have hvanish : ∀ p ∈ Finset.antidiagonal (N • w),
+        p ∉ (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) →
+        coeff p.1 (expMonomial c w) * coeff p.2 (expMonomial c' w) = 0 := by
+      intro p hp hpn
+      by_cases h1 : ∃ n : ℕ, p.1 = n • w
+      · obtain ⟨n₁, h1⟩ := h1
+        exfalso
+        apply hpn
+        have hsum : p.1 + p.2 = N • w := Finset.mem_antidiagonal.mp hp
+        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+        have hcoords : ∀ ρ', n₁ * w ρ' + p.2 ρ' = N * w ρ' := by
+          intro ρ'
+          have h' := DFunLike.congr_fun hsum ρ'
+          simpa [h1, Finsupp.smul_apply] using h'
+        have hle : n₁ ≤ N :=
+          Nat.le_of_mul_le_mul_right (by have := hcoords ρ; omega)
+            (Nat.pos_of_ne_zero hρ)
+        have h2 : p.2 = (N - n₁) • w := by
+          ext ρ'
+          rw [Finsupp.smul_apply, smul_eq_mul, Nat.sub_mul]
+          have := hcoords ρ'
+          omega
+        exact Finset.mem_image.mpr
+          ⟨n₁, Finset.mem_range.mpr (Nat.lt_succ_of_le hle), by rw [← h1, ← h2]⟩
+      · rw [coeff_expMonomial_of_forall_ne c (not_exists.mp h1), zero_mul]
+    rw [← Finset.sum_subset hsub hvanish,
+      Finset.sum_image (fun n _ m _ h => nsmul_right_cancel hw (congrArg Prod.fst h)),
+      add_pow, Finset.sum_div]
+    refine Finset.sum_congr rfl fun n hn => ?_
+    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw]
+    have hle : n ≤ N := Nat.lt_succ_iff.mp (Finset.mem_range.mp hn)
+    have hfact : ((N.choose n : K)) * (n.factorial : K) * ((N - n).factorial : K) =
+        (N.factorial : K) := by
+      exact_mod_cast congrArg (Nat.cast : ℕ → K)
+        (Nat.choose_mul_factorial_mul_factorial hle)
+    have h1 : (n.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr n.factorial_ne_zero
+    have h2 : ((N - n).factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr (N - n).factorial_ne_zero
+    have h3 : (N.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr N.factorial_ne_zero
+    rw [div_mul_div_comm, div_eq_div_iff (mul_ne_zero h1 h2) h3]
+    linear_combination (-(c ^ n * c' ^ (N - n))) * hfact
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_mul]
+    refine Finset.sum_eq_zero fun p hp => ?_
+    by_cases h1 : ∃ n : ℕ, p.1 = n • w
+    · by_cases h2 : ∃ n : ℕ, p.2 = n • w
+      · exfalso
+        obtain ⟨n₁, h1⟩ := h1
+        obtain ⟨n₂, h2⟩ := h2
+        exact hk ⟨n₁ + n₂, by rw [← Finset.mem_antidiagonal.mp hp, h1, h2, add_smul]⟩
+      · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h2), mul_zero]
+    · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h1), zero_mul]
+
+omit [CharZero K] in
+/-- The coefficientwise star of the exponential of a monomial is the exponential at
+  the starred scalar. -/
+lemma star_expMonomial [StarRing K] (hw : w ≠ 0) (c : K) :
+    star (expMonomial c w) = expMonomial (star c) w := by
+  ext k
+  rw [coeff_star]
+  by_cases hk : ∃ n : ℕ, k = n • w
+  · obtain ⟨n, rfl⟩ := hk
+    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw, star_div₀, star_pow,
+      star_natCast]
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk),
+      coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), star_zero]
+
+/-- The exponential of a monomial at scalar zero is one. -/
+lemma expMonomial_zero (hw : w ≠ 0) : expMonomial (0 : K) w = 1 := by
+  classical
+  ext k
+  by_cases hk : ∃ n : ℕ, k = n • w
+  · obtain ⟨n, rfl⟩ := hk
+    rw [coeff_expMonomial_nsmul hw, coeff_one]
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · subst hn
+      rw [if_pos (zero_smul ℕ w)]
+      simp
+    · have hne : ¬n • w = 0 := by
+        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+        intro h0
+        have h' := DFunLike.congr_fun h0 ρ
+        simp only [Finsupp.smul_apply, smul_eq_mul, Finsupp.coe_zero, Pi.zero_apply,
+          Nat.mul_eq_zero] at h'
+        omega
+      rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg hne]
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_one,
+      if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
+
+/-- The chain rule for the exponential of a monomial:
+  `∂_ν exp(c X^w) = c w_ν X^{w - e_ν} exp(c X^w)`. -/
+lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
+    pderiv K ν (expMonomial c w) =
+      (c * (w ν : K)) • (monomial (w - Finsupp.single ν 1) 1 * expMonomial c w) := by
+  classical
+  ext k
+  rw [coeff_pderiv, map_smul, smul_eq_mul, coeff_monomial_mul]
+  by_cases hA : ∃ n : ℕ, k + Finsupp.single ν 1 = n • w
+  · obtain ⟨n, hn⟩ := hA
+    have hcoords : ∀ ρ, k ρ + (Finsupp.single ν 1) ρ = n * w ρ := by
+      intro ρ
+      have h' := DFunLike.congr_fun hn ρ
+      simpa [Finsupp.smul_apply] using h'
+    have hkν : k ν + 1 = n * w ν := by
+      have := hcoords ν
+      rwa [Finsupp.single_eq_same] at this
+    have hnpos : 0 < n := by
+      rcases Nat.eq_zero_or_pos n with h0 | h0
+      · subst h0; omega
+      · exact h0
+    have hwνpos : 0 < w ν := by
+      rcases Nat.eq_zero_or_pos (w ν) with h0 | h0
+      · rw [h0, Nat.mul_zero] at hkν; omega
+      · exact h0
+    have hdk : w - Finsupp.single ν 1 ≤ k := by
+      rw [Finsupp.le_def]
+      intro ρ
+      rw [Finsupp.tsub_apply]
+      have h1 := hcoords ρ
+      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
+      by_cases hρν : ρ = ν
+      · subst hρν
+        rw [Finsupp.single_eq_same] at h1 ⊢
+        omega
+      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
+          Finsupp.single_eq_of_ne hρν
+        rw [hsρ] at h1 ⊢
+        omega
+    have hkd : k - (w - Finsupp.single ν 1) = (n - 1) • w := by
+      ext ρ
+      rw [Finsupp.tsub_apply, Finsupp.tsub_apply, Finsupp.smul_apply, smul_eq_mul,
+        Nat.sub_mul, one_mul]
+      have h1 := hcoords ρ
+      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
+      by_cases hρν : ρ = ν
+      · subst hρν
+        rw [Finsupp.single_eq_same] at h1 ⊢
+        omega
+      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
+          Finsupp.single_eq_of_ne hρν
+        rw [hsρ] at h1 ⊢
+        omega
+    rw [if_pos hdk, one_mul, hkd, hn, coeff_expMonomial_nsmul hw,
+      coeff_expMonomial_nsmul hw]
+    have hcast : ((k ν : K) + 1) = (n : K) * (w ν : K) := by exact_mod_cast hkν
+    rw [hcast]
+    have hfac : (n.factorial : K) = (n : K) * ((n - 1).factorial : K) := by
+      exact_mod_cast congrArg (Nat.cast : ℕ → K)
+        (Nat.mul_factorial_pred (Nat.pos_iff_ne_zero.mp hnpos)).symm
+    have hpow : c ^ n = c * c ^ (n - 1) := by
+      conv_lhs => rw [show n = 1 + (n - 1) by omega, pow_add, pow_one]
+    rw [hfac, hpow]
+    have h1 : ((n : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hnpos)
+    have h2 : (((n - 1).factorial : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
+    field_simp
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hA), zero_mul]
+    by_cases hwv : w ν = 0
+    · rw [hwv]
+      simp
+    · have hzero : (if w - Finsupp.single ν 1 ≤ k then
+          1 * coeff (k - (w - Finsupp.single ν 1)) (expMonomial c w) else 0) = 0 := by
+        split_ifs with hdk
+        · rw [one_mul]
+          refine coeff_expMonomial_of_forall_ne _ fun m hm => ?_
+          apply hA
+          refine ⟨m + 1, ?_⟩
+          have hle : Finsupp.single ν 1 ≤ w :=
+            Finsupp.single_le_iff.mpr (Nat.pos_of_ne_zero hwv)
+          have h1 : k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) = k :=
+            tsub_add_cancel_of_le hdk
+          have h2 : (w - Finsupp.single ν 1) + Finsupp.single ν 1 = w :=
+            tsub_add_cancel_of_le hle
+          calc k + Finsupp.single ν 1
+              = k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) +
+                Finsupp.single ν 1 := by rw [h1]
+            _ = m • w + w := by rw [hm, add_assoc, h2]
+            _ = (m + 1) • w := by rw [add_smul, one_smul]
+        · rfl
+      rw [hzero, mul_zero]
+
+end ExpMonomial
 
 end MvPowerSeries
 
@@ -480,6 +746,42 @@ lemma mcSeriesCoeff_single_symm (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3) 
   push_cast
   ring
 
+/-- The Maurer–Cartan series is closed: `∂_μ mc_ν = ∂_ν mc_μ`. The mixed second
+  derivatives of `u` are symmetric, and the cross terms cancel by unitarity,
+  through `∂ū = -ū (∂u) ū`. -/
+lemma pderiv_mcSeries_symm (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3) :
+    pderiv ℂ μ (mcSeries u ν) = pderiv ℂ ν (mcSeries u μ) := by
+  have hu : (u : JetRing) * star (u : JetRing) = 1 := (Unitary.mem_iff.mp u.2).2
+  have hu' : star (u : JetRing) * (u : JetRing) = 1 := (Unitary.mem_iff.mp u.2).1
+  have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ℂ ρ (star (u : JetRing)) =
+      -(star (u : JetRing) * pderiv ℂ ρ (u : JetRing) * star (u : JetRing)) := by
+    intro ρ
+    have h0 : pderiv ℂ ρ ((u : JetRing) * star (u : JetRing)) = 0 := by
+      rw [hu, pderiv_one]
+    rw [Derivation.leibniz] at h0
+    simp only [smul_eq_mul] at h0
+    linear_combination star (u : JetRing) * h0 -
+      (pderiv ℂ ρ (star (u : JetRing))) * hu'
+  simp only [mcSeries, Derivation.leibniz, pderiv_C, smul_eq_mul, mul_zero, add_zero]
+  rw [hstar μ, hstar ν, pderiv_comm μ ν]
+  ring
+
+/-- The weighted symmetry of the Maurer–Cartan Taylor coefficients: exchanging the
+  field index with a derivative index changes the coefficient by the ratio of the
+  corresponding multiplicities. -/
+lemma mcSeriesCoeff_succ_symm (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    (m μ + 1) • mcSeriesCoeff u ν (m + Finsupp.single μ 1) =
+      (m ν + 1) • mcSeriesCoeff u μ (m + Finsupp.single ν 1) := by
+  have h := congrArg (coeff m) (pderiv_mcSeries_symm u μ ν)
+  rw [coeff_pderiv, coeff_pderiv] at h
+  apply Subtype.ext
+  show ((m μ + 1 : ℕ)) • coeff (m + Finsupp.single μ 1) (mcSeries u ν) =
+    ((m ν + 1 : ℕ)) • coeff (m + Finsupp.single ν 1) (mcSeries u μ)
+  rw [nsmul_eq_mul, nsmul_eq_mul]
+  push_cast
+  linear_combination h
+
 /-!
 
 ## The Jet component vector space
@@ -631,6 +933,266 @@ lemma mcPairing_basis_dB (u : unitary JetRing) (μ ν : Fin 1 ⊕ Fin 3) :
   rw [Finset.sum_ite_eq' Finset.univ ν]
   simp
 
+/-- The multiset basis of the dual derivative symbols, as a basis vector of the
+  symmetric algebra at the corresponding multi-index. -/
+lemma dualRealJetAlgebraBasis_apply' (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    LagrangianTheory.dualRealJetAlgebraBasis s =
+      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  rfl
+
+/-- The Maurer–Cartan jet on a general derivative symbol. -/
+lemma mcJet_basis (u : unitary JetRing) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    mcJet u (LagrangianTheory.dualRealJetAlgebraBasis s) =
+      ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+        ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+          mcSeriesCoeff u ν (Multiset.toFinsupp s))⟩ := by
+  rw [dualRealJetAlgebraBasis_apply', mcJet, Module.Basis.constr_basis]
+
+/-- The Maurer–Cartan pairing on a general generator: the factorial-weighted
+  Taylor coefficient of the Maurer–Cartan series. -/
+lemma mcPairing_basis_dB' (u : unitary JetRing) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) :
+    mcPairing u (JetComponentSpace.basis (.dB s ν)) =
+      (∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+        Complex.selfAdjointEquiv (mcSeriesCoeff u ν (Multiset.toFinsupp s)) := by
+  rw [jetComponentSpace_basis_dB, mcPairing_tmul, mcJet_basis,
+    show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+        ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+          mcSeriesCoeff u ν' (Multiset.toFinsupp s))⟩ : BBoson) =
+      ∑ ν', ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+        Complex.selfAdjointEquiv (mcSeriesCoeff u ν' (Multiset.toFinsupp s))) • basis ν' from by
+      rw [show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+          ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+            mcSeriesCoeff u ν' (Multiset.toFinsupp s))⟩ : BBoson) =
+        valLinEquiv.symm (∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+          ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+            mcSeriesCoeff u ν' (Multiset.toFinsupp s))) from rfl, map_sum]
+      refine Finset.sum_congr rfl fun ν' _ => ?_
+      rw [valLinEquiv_symm_apply, mk_tmul_eq_smul_basis, map_nsmul],
+    map_sum]
+  simp only [map_smul, Module.Basis.dualBasis_apply_self, smul_eq_mul, mul_ite,
+    mul_one, mul_zero]
+  rw [Finset.sum_ite_eq' Finset.univ ν]
+  simp
+
+/-- The factorial weight of a multi-index augmented by one derivative: the
+  multiplicity of the new index times the original weight. -/
+lemma prod_factorial_add_single (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (κ : Fin 1 ⊕ Fin 3) :
+    (∏ ρ : Fin 1 ⊕ Fin 3, Nat.factorial (((m + Finsupp.single κ 1) : (Fin 1 ⊕ Fin 3) →₀ ℕ) ρ)) =
+      (m κ + 1) * ∏ ρ, Nat.factorial (m ρ) := by
+  rw [show (∏ ρ : Fin 1 ⊕ Fin 3, Nat.factorial (((m + Finsupp.single κ 1) : (Fin 1 ⊕ Fin 3) →₀ ℕ) ρ)) =
+      ∏ ρ, ((if ρ = κ then m κ + 1 else 1) * Nat.factorial (m ρ)) from
+    Finset.prod_congr rfl fun ρ _ => by
+      rcases eq_or_ne ρ κ with rfl | h
+      · rw [Finsupp.add_apply, Finsupp.single_eq_same, Nat.factorial_succ, if_pos rfl]
+      · rw [Finsupp.add_apply, Finsupp.single_eq_of_ne h, add_zero, if_neg h, one_mul],
+    Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ κ]
+  simp
+
+/-- Exchanging the field index with a derivative index leaves the Maurer–Cartan
+  shift of the component functions unchanged: the shift is the jet of a gradient,
+  whose Taylor coefficients depend only on the total multi-index. -/
+lemma mcPairing_basis_dB_symm (u : unitary JetRing) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) :
+    mcPairing u (JetComponentSpace.basis (.dB (s + {μ}) ν)) =
+      mcPairing u (JetComponentSpace.basis (.dB (s + {ν}) μ)) := by
+  rw [mcPairing_basis_dB', mcPairing_basis_dB',
+    show Multiset.toFinsupp (s + {μ}) = Multiset.toFinsupp s + Finsupp.single μ 1 from by
+      rw [map_add, Multiset.toFinsupp_singleton],
+    show Multiset.toFinsupp (s + {ν}) = Multiset.toFinsupp s + Finsupp.single ν 1 from by
+      rw [map_add, Multiset.toFinsupp_singleton],
+    prod_factorial_add_single, prod_factorial_add_single, mul_smul, mul_smul,
+    smul_comm (Multiset.toFinsupp s μ + 1), smul_comm (Multiset.toFinsupp s ν + 1)]
+  congr 1
+  have h := congrArg Complex.selfAdjointEquiv
+    (mcSeriesCoeff_succ_symm u μ ν (Multiset.toFinsupp s))
+  rw [map_nsmul, map_nsmul] at h
+  exact h
+
+/-!
+
+## Gauge realization of translations of the jet coordinates
+
+To identify the gauge invariants of the jet algebra we need not only that every
+jet gauge transformation shifts the component functions by the Maurer–Cartan
+pairing, but also that enough shifts are realized: for every nonzero symmetrized
+multi-index `t` and every real `r` there is a jet of a local `U(1)` gauge
+transformation shifting every component function with total multi-index `t` by
+exactly `r`, and all others by nothing. The transformation realizing this is the
+exponential `exp(-i a X^t)` with `a = r / t!`, formalized through
+`MvPowerSeries.expMonomial`.
+
+-/
+
+/-- The jet of the local `U(1)` gauge transformation `exp(-i a X^w)`: the
+  exponential of an imaginary multiple of a spacetime monomial, which is unitary
+  as a formal power series. -/
+noncomputable def expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0) :
+    unitary JetRing :=
+  ⟨expMonomial (-(a : ℂ) * Complex.I) w, by
+    have hstar : star (-(a : ℂ) * Complex.I) = -(-(a : ℂ) * Complex.I) := by
+      rw [star_mul', Complex.star_def, Complex.conj_I, map_neg, Complex.conj_ofReal]
+      ring
+    rw [Unitary.mem_iff, star_expMonomial hw, hstar, expMonomial_mul_expMonomial hw,
+      expMonomial_mul_expMonomial hw, neg_add_cancel, add_neg_cancel,
+      expMonomial_zero hw]
+    exact ⟨rfl, rfl⟩⟩
+
+/-- The Maurer–Cartan series of the exponential gauge jet: the monomial
+  `a w_ν X^{w - e_ν}`, which is the jet of the gradient `a ∂_ν X^w`. -/
+lemma mcSeries_expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0)
+    (ν : Fin 1 ⊕ Fin 3) :
+    mcSeries (expUnitary a w hw) ν =
+      monomial (w - Finsupp.single ν 1) ((a : ℂ) * ((w ν : ℕ) : ℂ)) := by
+  have hstar : star (-(a : ℂ) * Complex.I) = -(-(a : ℂ) * Complex.I) := by
+    rw [star_mul', Complex.star_def, Complex.conj_I, map_neg, Complex.conj_ofReal]
+    ring
+  rw [mcSeries,
+    show ((expUnitary a w hw : unitary JetRing) : JetRing) =
+      expMonomial (-(a : ℂ) * Complex.I) w from rfl,
+    pderiv_expMonomial hw, star_expMonomial hw, hstar, smul_mul_assoc,
+    mul_assoc (monomial (w - Finsupp.single ν 1) 1),
+    expMonomial_mul_expMonomial hw, add_neg_cancel, expMonomial_zero hw, mul_one,
+    mul_smul_comm, ← monomial_zero_eq_C_apply, monomial_mul_monomial, zero_add,
+    ← map_smul, smul_eq_mul]
+  congr 1
+  ring_nf
+  rw [Complex.I_sq]
+  ring
+
+/-- The Maurer–Cartan pairing of the exponential gauge jet `exp(-i a X^t)` with
+  `a = r / t!`: it shifts precisely the component functions whose total
+  symmetrized multi-index is `t`, and shifts them all by `r`. -/
+lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
+    (ht : Multiset.toFinsupp t ≠ 0) (r : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) :
+    mcPairing (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+        (Multiset.toFinsupp t) ht) (JetComponentSpace.basis (.dB s ν)) =
+      if s + {ν} = t then r else 0 := by
+  rw [mcPairing_basis_dB', Complex.selfAdjointEquiv_apply,
+    show ((mcSeriesCoeff (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+        (Multiset.toFinsupp t) ht) ν (Multiset.toFinsupp s) : selfAdjoint ℂ) : ℂ) =
+      coeff (Multiset.toFinsupp s) (mcSeries (expUnitary
+        (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+        (Multiset.toFinsupp t) ht) ν) from rfl,
+    mcSeries_expUnitary, coeff_monomial]
+  by_cases hcase : s + {ν} = t
+  · rw [if_pos hcase]
+    have hmw : Multiset.toFinsupp s + Finsupp.single ν 1 = Multiset.toFinsupp t := by
+      rw [← Multiset.toFinsupp_singleton, ← map_add]
+      exact congrArg _ hcase
+    have hwv : Multiset.toFinsupp t ν = Multiset.toFinsupp s ν + 1 := by
+      rw [← hmw]
+      simp
+    have hm : Multiset.toFinsupp s = Multiset.toFinsupp t - Finsupp.single ν 1 :=
+      eq_tsub_of_add_eq hmw
+    have hF : (∏ ρ, Nat.factorial ((Multiset.toFinsupp t) ρ)) =
+        ((Multiset.toFinsupp s) ν + 1) *
+          ∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ) := by
+      rw [← hmw]
+      exact prod_factorial_add_single (Multiset.toFinsupp s) ν
+    rw [if_pos hm, nsmul_eq_mul, hwv, hF]
+    have h1 : (((Multiset.toFinsupp s) ν + 1 : ℕ) : ℝ) ≠ 0 := by
+      positivity
+    have h2 : ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ) : ℕ) : ℝ) ≠ 0 := by
+      rw [Nat.cast_ne_zero]
+      exact Finset.prod_ne_zero_iff.mpr fun ρ _ => Nat.factorial_ne_zero _
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, Complex.natCast_re,
+      Complex.natCast_im, mul_zero, sub_zero]
+    push_cast
+    field_simp
+  · rw [if_neg hcase]
+    by_cases hm : Multiset.toFinsupp s = Multiset.toFinsupp t - Finsupp.single ν 1
+    · by_cases hwv : Multiset.toFinsupp t ν = 0
+      · rw [if_pos hm, hwv]
+        simp
+      · exfalso
+        apply hcase
+        have hle : Finsupp.single ν 1 ≤ Multiset.toFinsupp t :=
+          Finsupp.single_le_iff.mpr (Nat.pos_of_ne_zero hwv)
+        have hmw : Multiset.toFinsupp s + Finsupp.single ν 1 = Multiset.toFinsupp t := by
+          rw [hm, tsub_add_cancel_of_le hle]
+        refine Multiset.toFinsupp.injective ?_
+        rw [map_add, Multiset.toFinsupp_singleton]
+        exact hmw
+    · rw [if_neg hm]
+      simp
+
+/-!
+
+## Canonical representatives of the jet generators
+
+The Maurer–Cartan pairing of a jet gauge transformation with the component
+function `∂_s B_ν` depends only on the total symmetrized multi-index `s + {ν}`.
+We choose, for every jet generator, a canonical generator with the same total
+multi-index. The differences between a generator and its canonical
+representative are exactly the derivatives of the field strength, while the
+canonical generators themselves are shifted freely by the gauge transformations
+realized above; this dichotomy computes the gauge invariants of the jet algebra
+below.
+
+-/
+
+namespace JetGenerators
+
+/-- The total symmetrized multi-index of a jet generator: the derivative
+  multi-index together with the Lorentz index of the field. The Maurer–Cartan
+  shift of a component function depends only on its total multi-index. -/
+def total : JetGenerators → Multiset (Fin 1 ⊕ Fin 3)
+  | .dB s ν => s + {ν}
+
+@[simp]
+lemma total_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    total (dB s ν) = s + {ν} := rfl
+
+lemma total_ne_zero (g : JetGenerators) : total g ≠ 0 := by
+  cases g with
+  | dB s ν => simp [total]
+
+/-- A choice of element of a multiset, used to pick the canonical representative
+  of each total multi-index. -/
+noncomputable def pick (t : Multiset (Fin 1 ⊕ Fin 3)) : Fin 1 ⊕ Fin 3 :=
+  if h : ∃ ν, ν ∈ t then h.choose else Sum.inl 0
+
+lemma pick_mem {t : Multiset (Fin 1 ⊕ Fin 3)} (ht : t ≠ 0) : pick t ∈ t := by
+  have h : ∃ ν, ν ∈ t := Multiset.exists_mem_of_ne_zero ht
+  rw [pick, dif_pos h]
+  exact h.choose_spec
+
+/-- The canonical representative of a jet generator: the generator with the same
+  total multi-index whose field index is the chosen element of the total. -/
+noncomputable def canon (g : JetGenerators) : JetGenerators :=
+  .dB ((total g).erase (pick (total g))) (pick (total g))
+
+/-- The canonical representative has the same total multi-index. -/
+@[simp]
+lemma total_canon (g : JetGenerators) : total (canon g) = total g := by
+  rw [canon]
+  show ((total g).erase (pick (total g))) + {pick (total g)} = total g
+  rw [add_comm, Multiset.singleton_add]
+  exact Multiset.cons_erase (pick_mem (total_ne_zero g))
+
+/-- Taking canonical representatives is idempotent. -/
+@[simp]
+lemma canon_canon (g : JetGenerators) : canon (canon g) = canon g := by
+  rw [show canon (canon g) =
+    JetGenerators.dB ((total (canon g)).erase (pick (total (canon g))))
+      (pick (total (canon g))) from rfl, total_canon]
+  rfl
+
+/-- Two jet generators have the same canonical representative if and only if they
+  have the same total multi-index. -/
+lemma canon_eq_canon_iff (g g' : JetGenerators) :
+    canon g = canon g' ↔ total g = total g' := by
+  constructor
+  · intro h
+    rw [← total_canon g, ← total_canon g', h]
+  · intro h
+    rw [canon, canon, h]
+
+end JetGenerators
+
 /-!
 
 ## The jet algebra and the jet gauge action
@@ -689,6 +1251,16 @@ lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
     Algebra.linearMap_apply]
 
 
+lemma repJetGaugeGroupI_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
+    repJetGaugeGroupI U (x * y) = repJetGaugeGroupI U x * repJetGaugeGroupI U y :=
+  map_mul (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)) x y
+
+lemma repJetGaugeGroupI_algebraMap (U : JetGaugeGroupI) (r : ℝ) :
+    repJetGaugeGroupI U (algebraMap ℝ JetAlgebra r) = algebraMap ℝ JetAlgebra r :=
+  AlgHom.commutes (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)) r
+
 /-- The action of the jet gauge group on the complexified B-boson jet algebra,
   obtained from the real representation by extension of scalars. -/
 noncomputable def complexRepJetGaugeGroupI :
@@ -731,13 +1303,183 @@ lemma repJetGaugeGroupI_fieldStrength (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fi
   rw [mcSeriesCoeff_single_symm]
   abel
 
+noncomputable def fieldStrengthDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetAlgebra :=
+  ofGenerator (JetGenerators.dB (s + {μ}) ν) - ofGenerator (JetGenerators.dB (s + {ν}) μ)
+
+lemma fieldStrengthDeriv_antisymm (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    fieldStrengthDeriv s μ ν = -fieldStrengthDeriv s ν μ := by
+  simp [fieldStrengthDeriv]
+
+lemma repJetGaugeGroupI_fieldStrengthDeriv (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) :
+    repJetGaugeGroupI U (fieldStrengthDeriv s μ ν) = fieldStrengthDeriv s μ ν := by
+  simp only [fieldStrengthDeriv, map_sub, ofGenerator, repJetGaugeGroupI_ι]
+  rw [mcPairing_basis_dB_symm]
+  abel
 /-!
 
 ## Invariance under the gauge group
 
 -/
 
+/-- Conjugating the jet gauge action by the polynomial coordinates of the jet
+  algebra: under `SymmetricAlgebra.equivMvPolynomial` the substitution
+  automorphism `x ↦ x + ⟨mc, x⟩ 1` becomes the translation of every polynomial
+  variable by the Maurer–Cartan pairing of the corresponding component
+  function. -/
+lemma equivMvPolynomial_repJetGaugeGroupI (U : JetGaugeGroupI) (V : JetAlgebra) :
+    SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis (repJetGaugeGroupI U V) =
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g)))
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) := by
+  have h : (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toAlgHom.comp
+      (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)) =
+      (MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g)))).comp
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toAlgHom := by
+    refine SymmetricAlgebra.algHom_ext (JetComponentSpace.basis.ext fun g => ?_)
+    show (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis)
+        (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U.2.2)
+          (SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis g))) =
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing U.2.2 (JetComponentSpace.basis g)))
+        ((SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis)
+          (SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis g)))
+    rw [SymmetricAlgebra.lift_ι_apply]
+    simp only [LinearMap.add_apply, LinearMap.coe_comp, Function.comp_apply,
+      Algebra.linearMap_apply, map_add, AlgEquiv.commutes,
+      SymmetricAlgebra.equivMvPolynomial_ι_apply, MvPolynomial.aeval_X,
+      MvPolynomial.algebraMap_eq]
+  exact DFunLike.congr_fun h V
+
+/-- The conjugated action of a `U(1)` jet embedded in the jet gauge group. -/
+lemma equivMvPolynomial_repJetGaugeGroupI_u1 (u : unitary JetRing) (V : JetAlgebra) :
+    SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis
+      (repJetGaugeGroupI (1, 1, u) V) =
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (mcPairing u (JetComponentSpace.basis g)))
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) :=
+  equivMvPolynomial_repJetGaugeGroupI (1, 1, u) V
+
+/-- The difference between a jet-algebra generator and its canonical
+  representative is a derivative of the field strength, or zero. -/
+lemma ofGenerator_sub_ofGenerator_canon_mem (g : JetGenerators) :
+    ofGenerator g - ofGenerator (JetGenerators.canon g) ∈
+      Algebra.adjoin ℝ (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
+  obtain ⟨s, ν⟩ := g
+  set p := JetGenerators.pick (JetGenerators.total (JetGenerators.dB s ν)) with hp
+  by_cases hpν : p = ν
+  · have hcanon : JetGenerators.canon (JetGenerators.dB s ν) = JetGenerators.dB s ν := by
+      rw [JetGenerators.canon, ← hp, hpν]
+      congr 1
+      show (s + {ν}).erase ν = s
+      rw [add_comm, Multiset.singleton_add, Multiset.erase_cons_head]
+    rw [hcanon, sub_self]
+    exact Subalgebra.zero_mem _
+  · have hmem : p ∈ s + {ν} :=
+      JetGenerators.pick_mem (JetGenerators.total_ne_zero (JetGenerators.dB s ν))
+    have hps : p ∈ s := by
+      rcases Multiset.mem_add.mp hmem with h | h
+      · exact h
+      · exact absurd (Multiset.mem_singleton.mp h) hpν
+    have h2 : JetGenerators.canon (JetGenerators.dB s ν) =
+        JetGenerators.dB (s.erase p + {ν}) p := by
+      rw [JetGenerators.canon, ← hp]
+      congr 1
+      show (s + {ν}).erase p = s.erase p + {ν}
+      exact Multiset.erase_add_left_pos _ hps
+    have h1 : JetGenerators.dB s ν = JetGenerators.dB (s.erase p + {p}) ν := by
+      congr 1
+      rw [add_comm, Multiset.singleton_add]
+      exact (Multiset.cons_erase hps).symm
+    rw [h2, h1]
+    exact Algebra.subset_adjoin ⟨((s.erase p, p), ν), Set.mem_univ _, rfl⟩
+
+/-- An element of the jet algebra of the B boson is invariant under the jet gauge
+  group if and only if it is a polynomial in the derivatives of the field
+  strength.
+
+  The forward direction is the completeness of the field strength and its
+  derivatives as gauge invariants: conjugating by the polynomial coordinates,
+  the jet gauge group acts by translating each component function by the
+  Maurer–Cartan pairing, which depends only on the total symmetrized
+  multi-index; the exponential jets `exp(-i a X^t)` realize arbitrary
+  independent translations of each total multi-index, and a polynomial invariant
+  under all of them is a polynomial in the differences of component functions
+  with equal totals, i.e. in the derivatives of the field strength. -/
 lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
+  (∀ U, repJetGaugeGroupI U V = V) ↔ V ∈ Algebra.adjoin ℝ
+    (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
+  constructor
+  · intro hV
+    have htrans : ∀ (g₀ : JetGenerators) (r : ℝ),
+        MvPolynomial.aeval (fun g => MvPolynomial.X g +
+          MvPolynomial.C (if JetGenerators.canon g = JetGenerators.canon g₀ then r
+            else (0 : ℝ)))
+          (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) =
+          SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V := by
+      intro g₀ r
+      obtain ⟨s₀, ν₀⟩ := g₀
+      have hne : Multiset.toFinsupp (s₀ + {ν₀}) ≠ 0 := by
+        intro h
+        have h0 : s₀ + {ν₀} = 0 :=
+          Multiset.toFinsupp.injective (by rw [h, Multiset.toFinsupp_zero])
+        simp at h0
+      have hconj := equivMvPolynomial_repJetGaugeGroupI_u1
+        (expUnitary (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+          (Multiset.toFinsupp (s₀ + {ν₀})) hne) V
+      rw [hV _] at hconj
+      have hfun : (fun g => MvPolynomial.X g + MvPolynomial.C
+          (mcPairing (expUnitary
+              (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+              (Multiset.toFinsupp (s₀ + {ν₀})) hne)
+            (JetComponentSpace.basis g))) =
+          fun g => MvPolynomial.X g + MvPolynomial.C
+            (if JetGenerators.canon g = JetGenerators.canon (JetGenerators.dB s₀ ν₀)
+              then r else (0 : ℝ)) := by
+        funext g
+        obtain ⟨s, ν⟩ := g
+        rw [mcPairing_expUnitary (s₀ + {ν₀}) hne r s ν]
+        have hiff : (s + {ν} = s₀ + {ν₀}) ↔
+            (JetGenerators.canon (JetGenerators.dB s ν) =
+              JetGenerators.canon (JetGenerators.dB s₀ ν₀)) := by
+          rw [JetGenerators.canon_eq_canon_iff]
+          simp
+        rw [if_congr hiff rfl rfl]
+      rw [hfun] at hconj
+      exact hconj.symm
+    have hmem := MvPolynomial.mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq
+      JetGenerators.canon JetGenerators.canon_canon
+      (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) htrans
+    have hVmem : V ∈ (Algebra.adjoin ℝ (Set.range fun g =>
+        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g) :
+          MvPolynomial JetGenerators ℝ))).map
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom :=
+      Subalgebra.mem_map.mpr ⟨_, hmem, AlgEquiv.symm_apply_apply _ _⟩
+    rw [AlgHom.map_adjoin] at hVmem
+    refine Algebra.adjoin_le ?_ hVmem
+    rintro x ⟨_, ⟨g, rfl⟩, rfl⟩
+    have hsymm : (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom
+        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) =
+        ofGenerator g - ofGenerator (JetGenerators.canon g) := by
+      show (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm
+        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) = _
+      rw [map_sub, SymmetricAlgebra.equivMvPolynomial_symm_X,
+        SymmetricAlgebra.equivMvPolynomial_symm_X]
+      rfl
+    rw [hsymm]
+    exact ofGenerator_sub_ofGenerator_canon_mem g
+  · intro hVmem U
+    induction hVmem using Algebra.adjoin_induction with
+    | mem x hx =>
+      obtain ⟨⟨⟨s', μ⟩, ν⟩, -, rfl⟩ := hx
+      exact repJetGaugeGroupI_fieldStrengthDeriv U s' μ ν
+    | algebraMap r => exact repJetGaugeGroupI_algebraMap U r
+    | add x y hx hy ihx ihy => rw [map_add, ihx, ihy]
+    | mul x y hx hy ihx ihy => rw [repJetGaugeGroupI_mul, ihx, ihy]
 
 end JetAlgebra
 
