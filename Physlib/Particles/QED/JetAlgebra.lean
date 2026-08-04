@@ -193,11 +193,11 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
     LinearMap.add_apply, LinearMap.smul_apply, LinearMap.mulLeft_apply]
   congr 1
   simp only [ofGenerator]
-  have h1 : BBoson.JetAlgebra.jetDeriv μ (1 : BBoson.JetAlgebra) = 0 :=
-    BBoson.JetAlgebra.jetDeriv_one μ
-  rw [jetDeriv_tmul, LinearMap.baseChange_tmul, h1,
-    LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator, LeptonSinglet.JetGenerators.shift_dψ]
-  simp [Multiset.empty_eq_zero]
+  rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
+  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
+    TensorProduct.zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
+    LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
+
 
 end JetAlgebra
 
