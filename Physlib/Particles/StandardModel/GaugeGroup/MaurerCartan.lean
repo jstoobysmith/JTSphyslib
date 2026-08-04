@@ -214,7 +214,7 @@ lemma pderiv_maurerCartanSU3_symm (u : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
       rw [← Matrix.mul_add, h0, mul_zero]
     rw [show star U * (U * (star U).map (pderiv ℂ ρ)) =
         star U * U * (star U).map (pderiv ℂ ρ) from (mul_assoc _ _ _).symm, hU', one_mul] at h1
-    exact eq_neg_of_add_eq_zero_left h1
+    exact eq_neg_of_add_eq_zero_right h1
   have hCsmul : ∀ (ρ : Fin 1 ⊕ Fin 3) (A : Matrix (Fin 3) (Fin 3) JetRing),
       ((MvPowerSeries.C Complex.I : JetRing) • A).map (pderiv ℂ ρ) =
         (MvPowerSeries.C Complex.I : JetRing) • A.map (pderiv ℂ ρ) := by
@@ -278,7 +278,7 @@ lemma pderiv_maurerCartanSU2_symm (u : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
       rw [← Matrix.mul_add, h0, mul_zero]
     rw [show star U * (U * (star U).map (pderiv ℂ ρ)) =
         star U * U * (star U).map (pderiv ℂ ρ) from (mul_assoc _ _ _).symm, hU', one_mul] at h1
-    exact eq_neg_of_add_eq_zero_left h1
+    exact eq_neg_of_add_eq_zero_right h1
   have hCsmul : ∀ (ρ : Fin 1 ⊕ Fin 3) (A : Matrix (Fin 2) (Fin 2) JetRing),
       ((MvPowerSeries.C Complex.I : JetRing) • A).map (pderiv ℂ ρ) =
         (MvPowerSeries.C Complex.I : JetRing) • A.map (pderiv ℂ ρ) := by
