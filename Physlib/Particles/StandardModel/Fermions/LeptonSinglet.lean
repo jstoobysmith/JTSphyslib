@@ -516,6 +516,13 @@ lemma shift_dψ (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fi
 lemma shift_dbarψ (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     shift μ (dbarψ s α) = dbarψ (s + {μ}) α := rfl
 
+/-- Appending a derivative index raises the mass weight by two: a derivative has
+  mass dimension one. -/
+@[simp]
+lemma massWeight_shift (μ : Fin 1 ⊕ Fin 3) (j : JetGenerators) :
+    (shift μ j).massWeight = j.massWeight + 2 := by
+  cases j <;> simp [shift, massWeight] <;> omega
+
 end JetGenerators
 
 /-- The formal total spacetime derivative on the space of component functions of
@@ -546,6 +553,22 @@ lemma JetComponentSpace.massWeightScale_basis (c : ℂ) (j : JetGenerators) :
     JetComponentSpace.massWeightScale c (JetComponentSpace.basis j) =
       c ^ j.massWeight • JetComponentSpace.basis j := by
   rw [JetComponentSpace.massWeightScale, Module.Basis.constr_basis]
+
+/-- The total derivative raises the mass weight by two on the component space:
+  the scaling and the derivative commute up to `c ^ 2`. -/
+lemma JetComponentSpace.massWeightScale_jetDeriv (c : ℂ) (μ : Fin 1 ⊕ Fin 3)
+    (v : JetComponentSpace) :
+    JetComponentSpace.massWeightScale c (JetComponentSpace.jetDeriv μ v) =
+      c ^ 2 • JetComponentSpace.jetDeriv μ (JetComponentSpace.massWeightScale c v) := by
+  have h : JetComponentSpace.massWeightScale c ∘ₗ JetComponentSpace.jetDeriv μ =
+      c ^ 2 • (JetComponentSpace.jetDeriv μ ∘ₗ JetComponentSpace.massWeightScale c) := by
+    refine JetComponentSpace.basis.ext fun j => ?_
+    simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.smul_apply,
+      JetComponentSpace.jetDeriv_basis, JetComponentSpace.massWeightScale_basis,
+      map_smul, JetGenerators.massWeight_shift, smul_smul, ← pow_add]
+    congr 1
+    ring
+  exact DFunLike.congr_fun h v
 
 /-- The mass-dimension scaling commutes with the action of jets of constant
   gauge transformations on the component space: the constant action is diagonal
@@ -1039,6 +1062,31 @@ lemma massWeightScale_ofGenerator (c : ℂ) (j : JetGenerators) :
     massWeightScale c (ofGenerator j) = c ^ j.massWeight • ofGenerator j := by
   rw [ofGenerator, massWeightScale_apply, ExteriorAlgebra.map_apply_ι,
     JetComponentSpace.massWeightScale_basis, map_smul]
+
+@[simp]
+lemma massWeightScale_ι (c : ℂ) (v : JetComponentSpace) :
+    massWeightScale c (ExteriorAlgebra.ι ℂ v) =
+      ExteriorAlgebra.ι ℂ (JetComponentSpace.massWeightScale c v) := by
+  rw [massWeightScale_apply, ExteriorAlgebra.map_apply_ι]
+
+set_option maxHeartbeats 1000000 in
+/-- The total derivative raises the mass weight by two: the scaling and the
+  derivative commute up to `c ^ 2`. -/
+lemma massWeightScale_jetDeriv (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    massWeightScale c (jetDeriv μ x) = c ^ 2 • jetDeriv μ (massWeightScale c x) := by
+  induction x using ExteriorAlgebra.induction with
+  | algebraMap r =>
+    simp [Algebra.algebraMap_eq_smul_one]
+  | ι v =>
+    rw [jetDeriv_ι, massWeightScale_ι, JetComponentSpace.massWeightScale_jetDeriv,
+      map_smul, massWeightScale_ι, jetDeriv_ι]
+  | mul x y hx hy =>
+    have hm : ∀ a b : JetAlgebra, massWeightScale c (a * b) =
+        massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
+    rw [jetDeriv_mul, map_add, hm, hm, hm, hx, hy, smul_mul_assoc, mul_smul_comm,
+      jetDeriv_mul, smul_add]
+  | add x y hx hy =>
+    simp only [map_add, hx, hy, smul_add]
 
 /-- The mass-dimension scaling commutes with the gauge action of jets of
   constant gauge transformations. This fails for a general jet: the gauge action

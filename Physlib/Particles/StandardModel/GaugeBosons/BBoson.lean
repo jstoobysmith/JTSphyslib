@@ -50,7 +50,7 @@ open TensorProduct
 @[ext]
 structure BBoson where
   /-- The Lorentz index together with the adjoint (hermitian) factor. -/
-  val : Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ
+  val : Lorentz.CoVector ⊗[ℝ] selfAdjoint ℂ
 
 namespace BBoson
 open Module
@@ -59,7 +59,7 @@ open Module
 ## B. Linear structure
 -/
 
-def valEquiv : BBoson ≃ Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ where
+def valEquiv : BBoson ≃ Lorentz.CoVector ⊗[ℝ] selfAdjoint ℂ where
   toFun := val
   invFun := fun m => ⟨m⟩
 
@@ -68,7 +68,7 @@ noncomputable instance : AddCommGroup BBoson := Equiv.addCommGroup valEquiv
 noncomputable instance : Module ℝ BBoson := Equiv.module ℝ valEquiv
 
 /-- The linear identification with the underlying tensor product. -/
-def valLinEquiv : BBoson ≃ₗ[ℝ] Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ where
+def valLinEquiv : BBoson ≃ₗ[ℝ] Lorentz.CoVector ⊗[ℝ] selfAdjoint ℂ where
   toFun := val
   invFun := fun m => ⟨m⟩
   map_add' := by intros; rfl
@@ -77,7 +77,7 @@ def valLinEquiv : BBoson ≃ₗ[ℝ] Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ whe
 @[simp]
 lemma valLinEquiv_apply (d : BBoson) : valLinEquiv d = d.val := rfl
 
-lemma valLinEquiv_symm_apply (m : Lorentz.Vector ⊗[ℝ] selfAdjoint ℂ) :
+lemma valLinEquiv_symm_apply (m : Lorentz.CoVector ⊗[ℝ] selfAdjoint ℂ) :
     valLinEquiv.symm m = ⟨m⟩ := rfl
 
 @[simp]
@@ -93,7 +93,7 @@ lemma val_zero : (0 : BBoson).val = 0 := rfl
   Lorentz-vector basis tensored with the hermitian unit of the one-dimensional
   adjoint factor. -/
 noncomputable def basis : Basis (Fin 1 ⊕ Fin 3) ℝ BBoson :=
-  ((Lorentz.Vector.basis.tensorProduct
+  ((Lorentz.CoVector.basis.tensorProduct
       ((Module.Basis.singleton Unit ℝ).map Complex.selfAdjointEquiv.symm)).map
     valLinEquiv.symm).reindex (Equiv.prodPUnit (Fin 1 ⊕ Fin 3))
 
@@ -101,7 +101,7 @@ noncomputable def basis : Basis (Fin 1 ⊕ Fin 3) ℝ BBoson :=
   with the hermitian unit. -/
 lemma basis_apply (ν : Fin 1 ⊕ Fin 3) :
     (basis ν : BBoson) =
-      ⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ := by
+      ⟨Lorentz.CoVector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ := by
   rw [basis, Module.Basis.reindex_apply, Module.Basis.map_apply,
     Module.Basis.tensorProduct_apply', Module.Basis.map_apply,
     Module.Basis.singleton_apply, valLinEquiv_symm_apply]
@@ -110,12 +110,12 @@ lemma basis_apply (ν : Fin 1 ⊕ Fin 3) :
 /-- A pure tensor of a Lorentz basis vector with a hermitian value is a multiple of
   the corresponding B-boson basis vector. -/
 lemma mk_tmul_eq_smul_basis (ν : Fin 1 ⊕ Fin 3) (x : selfAdjoint ℂ) :
-    (⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] x⟩ : BBoson) =
+    (⟨Lorentz.CoVector.basis ν ⊗ₜ[ℝ] x⟩ : BBoson) =
       Complex.selfAdjointEquiv x • basis ν := by
   apply BBoson.ext
   rw [val_smul, basis_apply,
-    show ((⟨Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ : BBoson)).val =
-      Lorentz.Vector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1 from rfl,
+    show ((⟨Lorentz.CoVector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1⟩ : BBoson)).val =
+      Lorentz.CoVector.basis ν ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1 from rfl,
     ← TensorProduct.tmul_smul]
   congr 1
   rw [show (Complex.selfAdjointEquiv x) • (Complex.selfAdjointEquiv.symm 1) =
@@ -136,7 +136,7 @@ open Matrix MatrixGroups
   action on the adjoint factor. -/
 noncomputable def repLorentzGroup : Representation ℝ (SL(2,ℂ)) BBoson where
   toFun Λ := valLinEquiv.symm.toLinearMap ∘ₗ
-    TensorProduct.map (Lorentz.Vector.rep (Lorentz.SL2C.toLorentzGroup Λ))
+    TensorProduct.map (Lorentz.CoVector.rep (Lorentz.SL2C.toLorentzGroup Λ))
       (Representation.trivial ℝ (SL(2,ℂ)) (selfAdjoint ℂ) Λ) ∘ₗ
     valLinEquiv.toLinearMap
   map_one' := by
@@ -184,13 +184,13 @@ open MvPowerSeries JetRing
   is affine rather than linear, which is why it is a `MulAction` and not a
   `Representation`. -/
 noncomputable instance : SMul JetGaugeGroupI BBoson where
-  smul U B := repGaugeGroupI U.eval B + ⟨∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩
+  smul U B := repGaugeGroupI U.eval B + ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩
 
 lemma smul_eq (U : JetGaugeGroupI) (B : BBoson) : U • B = B +
-   ⟨∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩ := rfl
+   ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩ := rfl
 
 lemma smul_val (U : JetGaugeGroupI) (B : BBoson) :
-    (U • B).val = B.val + ∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0 := by
+    (U • B).val = B.val + ∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0 := by
   rfl
 
 /-- The jets of constant (global) gauge transformations act trivially on the B
@@ -307,6 +307,15 @@ def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
 lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
     shift μ (dB s ν) = dB (s + {μ}) ν := rfl
 
+/-- Appending a derivative index raises the mass weight by two: a derivative has
+  mass dimension one. -/
+@[simp]
+lemma massWeight_shift (μ : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    (shift μ g).massWeight = g.massWeight + 2 := by
+  cases g
+  simp [shift, massWeight]
+  omega
+
 /-- The jet generator with further derivatives appended from a multiset. -/
 def shiftMulti (t : Multiset (Fin 1 ⊕ Fin 3)) : JetGenerators → JetGenerators
   | dB s ν => dB (s + t) ν
@@ -385,7 +394,7 @@ open LagrangianTheory
 noncomputable def mcPairing (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
   TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp
   (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
-    ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ] ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩))
+    ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ] ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩))
 
 /-- The multiset basis of the dual derivative symbols, as a basis vector of the
   symmetric algebra at the corresponding multi-index. -/
@@ -408,7 +417,7 @@ lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 �
 lemma mcPairing_tmul_basis (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ BBoson) :
     mcPairing U (LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] φ) =
-      φ ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+      φ ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν (Multiset.toFinsupp s))⟩ := by
   rw [dualRealJetAlgebraBasis_apply', mcPairing]
@@ -424,15 +433,15 @@ lemma mcPairing_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
       (∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
         Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s)) := by
   rw [jetComponentSpace_basis_dB, mcPairing_tmul_basis,
-    show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+    show (⟨∑ ν', Lorentz.CoVector.basis ν' ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))⟩ : BBoson) =
       ∑ ν', ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
         Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))) • basis ν' from by
-      rw [show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+      rw [show (⟨∑ ν', Lorentz.CoVector.basis ν' ⊗ₜ[ℝ]
           ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
             maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))⟩ : BBoson) =
-        valLinEquiv.symm (∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
+        valLinEquiv.symm (∑ ν', Lorentz.CoVector.basis ν' ⊗ₜ[ℝ]
           ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
             maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))) from rfl, map_sum]
       refine Finset.sum_congr rfl fun ν' _ => ?_
@@ -1842,6 +1851,462 @@ lemma massWeightScale_tmul_ofGenerator (c z : ℂ) (j : JetGenerators) :
   rw [Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.tmul_mul_tmul,
     mul_one, one_mul]
   rfl
+
+set_option maxHeartbeats 1000000 in
+/-- The complexified total derivative raises the mass weight by two: the scaling
+  and the derivative commute up to `c ^ 2`. -/
+lemma massWeightScale_jetDeriv_baseChange (c : ℂ) (μ : Fin 1 ⊕ Fin 3)
+    (x : ℂ ⊗[ℝ] JetAlgebra) :
+    massWeightScale c (LinearMap.baseChange ℂ (jetDeriv μ) x) =
+      c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ) (massWeightScale c x) := by
+  have hm : ∀ a b : ℂ ⊗[ℝ] JetAlgebra, massWeightScale c (a * b) =
+      massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
+  have hone : ∀ b : JetAlgebra,
+      massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b) =
+        c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+          (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b)) := by
+    intro b
+    induction b using SymmetricAlgebra.induction with
+    | algebraMap r =>
+      have hd : jetDeriv μ (algebraMap ℝ JetAlgebra r) = 0 := by
+        rw [Algebra.algebraMap_eq_smul_one, map_smul, jetDeriv_one, smul_zero]
+      have h1 : (1 : ℂ) ⊗ₜ[ℝ] algebraMap ℝ JetAlgebra r =
+          algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) (algebraMap ℝ ℂ r) := by
+        rw [Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul,
+          ← algebraMap_smul (R := ℝ) ℂ r ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)),
+          Algebra.algebraMap_eq_smul_one (R := ℂ) (A := ℂ ⊗[ℝ] JetAlgebra)]
+        rfl
+      have hD1 : LinearMap.baseChange ℂ (jetDeriv μ)
+          ((1 : ℂ) ⊗ₜ[ℝ] algebraMap ℝ JetAlgebra r) = 0 := by
+        rw [LinearMap.baseChange_tmul, hd, TensorProduct.tmul_zero]
+      rw [hd, TensorProduct.tmul_zero, map_zero, h1, AlgHom.commutes,
+        show algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) (algebraMap ℝ ℂ r) =
+          (1 : ℂ) ⊗ₜ[ℝ] algebraMap ℝ JetAlgebra r from h1.symm, hD1, smul_zero]
+    | ι v =>
+      have h : ((massWeightScale c).toLinearMap.restrictScalars ℝ) ∘ₗ
+          (TensorProduct.mk ℝ ℂ JetAlgebra 1) ∘ₗ (jetDeriv μ) ∘ₗ
+            (SymmetricAlgebra.ι ℝ JetComponentSpace) =
+          c ^ 2 • (((LinearMap.baseChange ℂ (jetDeriv μ)).restrictScalars ℝ) ∘ₗ
+            ((massWeightScale c).toLinearMap.restrictScalars ℝ) ∘ₗ
+            (TensorProduct.mk ℝ ℂ JetAlgebra 1) ∘ₗ
+            (SymmetricAlgebra.ι ℝ JetComponentSpace)) := by
+        refine JetComponentSpace.basis.ext fun g => ?_
+        simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.smul_apply,
+          LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply,
+          TensorProduct.mk_apply]
+        rw [show SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis g) =
+            ofGenerator g from rfl, jetDeriv_ofGenerator,
+          massWeightScale_tmul_ofGenerator, massWeightScale_tmul_ofGenerator,
+          map_smul, jetDeriv_baseChange_ofGenerator, JetGenerators.massWeight_shift,
+          smul_smul, ← pow_add]
+        congr 1
+        ring
+      exact DFunLike.congr_fun h v
+    | mul a b ha hb =>
+      have h₁ : (1 : ℂ) ⊗ₜ[ℝ] (jetDeriv μ a * b) =
+          ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ a) * ((1 : ℂ) ⊗ₜ[ℝ] b) := by
+        rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]
+      have h₂ : (1 : ℂ) ⊗ₜ[ℝ] (a * jetDeriv μ b) =
+          ((1 : ℂ) ⊗ₜ[ℝ] a) * ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b) := by
+        rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]
+      have h₃ : (1 : ℂ) ⊗ₜ[ℝ] (a * b) =
+          ((1 : ℂ) ⊗ₜ[ℝ] a) * ((1 : ℂ) ⊗ₜ[ℝ] b) := by
+        rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]
+      calc massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ (a * b))
+          = massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] (jetDeriv μ a * b) +
+              (1 : ℂ) ⊗ₜ[ℝ] (a * jetDeriv μ b)) := by
+            rw [jetDeriv_mul, TensorProduct.tmul_add]
+        _ = massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ a) *
+              massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b) +
+            massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a) *
+              massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b) := by
+            rw [map_add, h₁, h₂, hm, hm]
+        _ = (c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+              (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a))) *
+              massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b) +
+            massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a) *
+              (c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+                (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b))) := by
+            rw [ha, hb]
+        _ = c ^ 2 • (LinearMap.baseChange ℂ (jetDeriv μ)
+              (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a)) *
+              massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b) +
+            massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a) *
+              LinearMap.baseChange ℂ (jetDeriv μ)
+                (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b))) := by
+            rw [smul_mul_assoc, mul_smul_comm, smul_add]
+        _ = c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+              (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] a) *
+                massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b)) := by
+            rw [jetDeriv_baseChange_mul]
+        _ = c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+              (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] (a * b))) := by
+            rw [h₃, hm]
+    | add a b ha hb =>
+      simp only [map_add, TensorProduct.tmul_add, ha, hb, smul_add]
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => simp only [map_add, ha, hb, smul_add]
+  | tmul z b =>
+    have hz₁ : z ⊗ₜ[ℝ] jetDeriv μ b = z • ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b) := by
+      rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]
+    have hz₂ : massWeightScale c (z ⊗ₜ[ℝ] b) =
+        z • massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b) := by
+      rw [show z ⊗ₜ[ℝ] b = z • ((1 : ℂ) ⊗ₜ[ℝ] b) from by
+        rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]]
+      exact map_smul (massWeightScale c) z _
+    calc massWeightScale c (LinearMap.baseChange ℂ (jetDeriv μ) (z ⊗ₜ[ℝ] b))
+        = massWeightScale c (z • ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b)) := by
+          rw [LinearMap.baseChange_tmul, hz₁]
+      _ = z • massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] jetDeriv μ b) :=
+          map_smul (massWeightScale c) z _
+      _ = z • (c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+            (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b))) := by rw [hone b]
+      _ = c ^ 2 • (z • LinearMap.baseChange ℂ (jetDeriv μ)
+            (massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b))) := smul_comm z _ _
+      _ = c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+            (z • massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] b)) := by
+          rw [(LinearMap.baseChange ℂ (jetDeriv μ)).map_smul]
+      _ = c ^ 2 • LinearMap.baseChange ℂ (jetDeriv μ)
+            (massWeightScale c (z ⊗ₜ[ℝ] b)) :=
+          congrArg (fun y => c ^ 2 •
+            LinearMap.baseChange ℂ (jetDeriv μ) y) hz₂.symm
+
+end JetAlgebra
+
+/-!
+
+## Lorentz transformation laws of the B-boson jet coordinates
+
+-/
+
+/-- The Lorentz action on the B-boson basis: the covector transformation. -/
+lemma repLorentzGroup_basis (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup Λ (basis μ) =
+      ∑ j, (Lorentz.SL2C.toLorentzGroup Λ).1⁻¹ μ j • basis j := by
+  have happ : repLorentzGroup Λ (basis μ) = valLinEquiv.symm.toLinearMap
+      (TensorProduct.map (Lorentz.CoVector.rep (Lorentz.SL2C.toLorentzGroup Λ))
+        (Representation.trivial ℝ (SL(2,ℂ)) (selfAdjoint ℂ) Λ)
+        (valLinEquiv.toLinearMap (basis μ))) := rfl
+  rw [happ, show valLinEquiv.toLinearMap (basis μ) =
+      Lorentz.CoVector.basis μ ⊗ₜ[ℝ] Complex.selfAdjointEquiv.symm 1 from by
+      rw [basis_apply]; rfl,
+    TensorProduct.map_tmul, Lorentz.CoVector.rep_apply_basis,
+    Representation.trivial_apply, TensorProduct.sum_tmul, map_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [← TensorProduct.smul_tmul', map_smul]
+  congr 1
+  rw [show valLinEquiv.symm.toLinearMap (Lorentz.CoVector.basis j ⊗ₜ[ℝ]
+      Complex.selfAdjointEquiv.symm 1) = (⟨Lorentz.CoVector.basis j ⊗ₜ[ℝ]
+      Complex.selfAdjointEquiv.symm 1⟩ : BBoson) from rfl, ← basis_apply]
+
+/-- The jet coordinates of the B boson transform contravariantly on the target
+  index, by the columns of the Lorentz matrix, matching the derivative slots. -/
+lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup.dual Λ (basis.dualBasis ν) =
+      ∑ j, (Lorentz.SL2C.toLorentzGroup Λ).1 j ν • basis.dualBasis j := by
+  refine Representation.dual_apply_dualBasis _ _ _ _
+    (Matrix.of fun l j => (Lorentz.SL2C.toLorentzGroup Λ).1 j l) (fun j => ?_)
+  rw [repLorentzGroup_basis, ← LorentzGroup.coe_inv, map_inv, inv_inv]
+  rfl
+
+/-- The multiset basis of the real dual derivative slots at a singleton index. -/
+lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
+    LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+        (Lorentz.CoVector.basis.dualBasis μ) := by
+  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (Finsupp.single μ 1) =
+      MvPolynomial.X μ := rfl
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply,
+    Equiv.symm_symm,
+    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      Finsupp.single μ 1 by simp,
+    Module.Basis.symmetricAlgebra, Module.Basis.map_apply, h]
+  simp
+
+/-- The multiset basis of the real dual derivative slots at the empty index. -/
+lemma dualRealJetAlgebraBasis_nil :
+    LagrangianTheory.dualRealJetAlgebraBasis ({} : Multiset (Fin 1 ⊕ Fin 3)) = 1 := by
+  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ)
+      ((0 : (Fin 1 ⊕ Fin 3) →₀ ℕ)) = 1 := by
+    rw [MvPolynomial.coe_basisMonomials]
+    simp [MvPolynomial.monomial_zero']
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply,
+    Equiv.symm_symm,
+    show Multiset.toFinsupp.toEquiv ({} : Multiset (Fin 1 ⊕ Fin 3)) = 0 by simp,
+    Module.Basis.symmetricAlgebra, Module.Basis.map_apply, h]
+  simp
+
+/-- The multiset basis vectors of the real dual derivative slots multiply by
+  adding the multisets. -/
+lemma dualRealJetAlgebraBasis_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    LagrangianTheory.dualRealJetAlgebraBasis s *
+      LagrangianTheory.dualRealJetAlgebraBasis t =
+      LagrangianTheory.dualRealJetAlgebraBasis (s + t) := by
+  rw [dualRealJetAlgebraBasis_apply', dualRealJetAlgebraBasis_apply',
+    dualRealJetAlgebraBasis_apply', map_add]
+  simp only [Module.Basis.symmetricAlgebra, Module.Basis.map_apply,
+    show ∀ p, (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv p =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm p
+      from fun _ => rfl,
+    ← map_mul, MvPolynomial.coe_basisMonomials]
+  simp only [MvPolynomial.monomial_mul, mul_one]
+
+/-- The degree scaling multiplies the multiset basis vector at `s` by
+  `t ^ |s|`. -/
+lemma gradeScale_dualRealJetAlgebraBasis (t : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    DerivAlgebraReal.gradeScale t (LagrangianTheory.dualRealJetAlgebraBasis s) =
+      t ^ Multiset.card s • LagrangianTheory.dualRealJetAlgebraBasis s := by
+  induction s using Multiset.induction_on with
+  | empty =>
+    rw [show LagrangianTheory.dualRealJetAlgebraBasis
+        (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 from dualRealJetAlgebraBasis_nil, map_one]
+    simp
+  | cons a s ih =>
+    rw [← Multiset.singleton_add, ← dualRealJetAlgebraBasis_mul, map_mul, ih,
+      dualRealJetAlgebraBasis_singleton, DerivAlgebraReal.gradeScale_ι,
+      smul_mul_smul_comm, ← _root_.pow_succ', ← dualRealJetAlgebraBasis_singleton,
+      dualRealJetAlgebraBasis_mul, Multiset.singleton_add, Multiset.card_cons]
+
+/-- The mass-dimension scaling commutes with the Lorentz action on the B-boson
+  component space: the Lorentz action preserves the derivative degree. -/
+lemma JetComponentSpace.massWeightScale_repLorentzGroup (c : ℝ) (Λ : SL(2,ℂ)) :
+    JetComponentSpace.massWeightScale c ∘ₗ JetComponentSpace.repLorentzGroup Λ =
+      JetComponentSpace.repLorentzGroup Λ ∘ₗ JetComponentSpace.massWeightScale c := by
+  have hfact : JetComponentSpace.massWeightScale c =
+      TensorProduct.map (DerivAlgebraReal.gradeScale (c ^ 2)).toLinearMap
+        (c ^ 2 • LinearMap.id) := by
+    refine JetComponentSpace.basis.ext fun j => ?_
+    cases j with
+    | dB s ν =>
+      have hscal : (c : ℝ) ^ (JetGenerators.dB s ν).massWeight =
+          c ^ 2 * (c ^ 2) ^ Multiset.card s := by
+        show c ^ (2 * (1 + Multiset.card s)) = _
+        rw [pow_mul]
+        ring
+      rw [JetComponentSpace.massWeightScale_basis, hscal]
+      simp only [jetComponentSpace_basis_dB, TensorProduct.map_tmul,
+        AlgHom.toLinearMap_apply, LinearMap.smul_apply, LinearMap.id_apply,
+        gradeScale_dualRealJetAlgebraBasis, TensorProduct.tmul_smul,
+        TensorProduct.smul_tmul', smul_smul]
+  have hA : (DerivAlgebraReal.gradeScale (c ^ 2)).toLinearMap ∘ₗ
+      DerivAlgebraReal.repLorentzGroup Λ =
+      (DerivAlgebraReal.repLorentzGroup Λ :
+        DerivAlgebraReal →ₗ[ℝ] DerivAlgebraReal) ∘ₗ
+        (DerivAlgebraReal.gradeScale (c ^ 2)).toLinearMap :=
+    LinearMap.ext fun a => DerivAlgebraReal.gradeScale_repLorentzGroup (c ^ 2) Λ a
+  have hB : (c ^ 2 • (LinearMap.id : Module.End ℝ (Module.Dual ℝ BBoson))) ∘ₗ
+      BBoson.repLorentzGroup.dual Λ =
+      BBoson.repLorentzGroup.dual Λ ∘ₗ (c ^ 2 • LinearMap.id) := by
+    rw [LinearMap.smul_comp, LinearMap.comp_smul, LinearMap.id_comp,
+      LinearMap.comp_id]
+  rw [hfact, show JetComponentSpace.repLorentzGroup Λ =
+      TensorProduct.map (DerivAlgebraReal.repLorentzGroup Λ)
+        (BBoson.repLorentzGroup.dual Λ) from rfl,
+    ← TensorProduct.map_comp, ← TensorProduct.map_comp, hA, hB]
+
+set_option maxHeartbeats 1000000 in
+/-- The Lorentz action on the first-order B-boson jet coordinates: both indices
+  transform contravariantly, by the columns of the Lorentz matrix. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dB_singleton (Λ : SL(2,ℂ))
+    (μ ν : Fin 1 ⊕ Fin 3) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis (.dB {μ} ν)) =
+      ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+        (Lorentz.SL2C.toLorentzGroup Λ).1 b ν) •
+        JetComponentSpace.basis (.dB {a} b) := by
+  have happ : JetComponentSpace.repLorentzGroup Λ
+      (LagrangianTheory.dualRealJetAlgebraBasis {μ} ⊗ₜ[ℝ] BBoson.basis.dualBasis ν) =
+      (DerivAlgebraReal.repLorentzGroup Λ
+        (LagrangianTheory.dualRealJetAlgebraBasis {μ})) ⊗ₜ[ℝ]
+      (BBoson.repLorentzGroup.dual Λ (BBoson.basis.dualBasis ν)) := rfl
+  rw [jetComponentSpace_basis_dB, happ, dualRealJetAlgebraBasis_singleton,
+    DerivAlgebraReal.repLorentzGroup_apply_ι, Lorentz.CoVector.sl2Rep_dual_dualBasis,
+    BBoson.repLorentzGroup_dual_dualBasis]
+  simp only [map_sum, map_smul, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
+    TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum, smul_smul,
+    jetComponentSpace_basis_dB, dualRealJetAlgebraBasis_singleton]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+  congr 2
+  ring
+
+namespace JetAlgebra
+
+/-- The Lorentz action on a jet-algebra generator. -/
+@[simp]
+lemma repLorentzGroup_apply_ι (Λ : SL(2,ℂ)) (x : JetComponentSpace) :
+    repLorentzGroup Λ (SymmetricAlgebra.ι ℝ JetComponentSpace x) =
+      SymmetricAlgebra.ι ℝ JetComponentSpace
+        (JetComponentSpace.repLorentzGroup Λ x) := by
+  simp [repLorentzGroup]
+
+set_option maxHeartbeats 1000000 in
+/-- The zeroth-order field strength transforms as an antisymmetric two-tensor:
+  the Lorentz action preserves the span of the field strengths. -/
+lemma repLorentzGroup_fieldStrengthDeriv_nil (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup Λ (fieldStrengthDeriv {} μ ν) =
+      ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+        (Lorentz.SL2C.toLorentzGroup Λ).1 b ν) • fieldStrengthDeriv {} a b := by
+  have hFS : ∀ a b : Fin 1 ⊕ Fin 3, fieldStrengthDeriv ({} : Multiset _) a b =
+      ofGenerator (JetGenerators.dB {a} b) -
+        ofGenerator (JetGenerators.dB {b} a) := by
+    intro a b
+    rw [fieldStrengthDeriv,
+      show ({} : Multiset (Fin 1 ⊕ Fin 3)) + {a} = {a} from by simp,
+      show ({} : Multiset (Fin 1 ⊕ Fin 3)) + {b} = {b} from by simp]
+  simp only [hFS]
+  rw [map_sub, ofGenerator, ofGenerator, repLorentzGroup_apply_ι,
+    repLorentzGroup_apply_ι, JetComponentSpace.repLorentzGroup_basis_dB_singleton,
+    JetComponentSpace.repLorentzGroup_basis_dB_singleton]
+  simp only [map_sum, map_smul, smul_sub, Finset.sum_sub_distrib, ofGenerator]
+  congr 1
+  conv_rhs => rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+  congr 1
+  ring
+
+/-- The Lorentz action on the B-boson jet algebra is multiplicative. -/
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : JetAlgebra) :
+    repLorentzGroup Λ (x * y) = repLorentzGroup Λ x * repLorentzGroup Λ y :=
+  map_mul (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
+    JetComponentSpace.repLorentzGroup Λ)) x y
+
+/-- The complexified Lorentz action is multiplicative. -/
+lemma complexRepLorentzGroup_mul (Λ : SL(2,ℂ)) (x y : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepLorentzGroup Λ (x * y) =
+      complexRepLorentzGroup Λ x * complexRepLorentzGroup Λ y := by
+  have happ : ∀ (c : ℂ) (b : JetAlgebra), complexRepLorentzGroup Λ (c ⊗ₜ[ℝ] b) =
+      c ⊗ₜ[ℝ] repLorentzGroup Λ b := fun c b => rfl
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [add_mul, map_add, ha, hb]
+  | tmul c b =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a' b' ha' hb' =>
+      simp only [mul_add, map_add, ha', hb']
+    | tmul c' b' =>
+      simp only [Algebra.TensorProduct.tmul_mul_tmul, happ,
+        repLorentzGroup_apply_mul]
+
+/-- The transformation of the complexified zeroth-order field strength. -/
+lemma complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_nil (Λ : SL(2,ℂ))
+    (μ ν : Fin 1 ⊕ Fin 3) :
+    complexRepLorentzGroup Λ ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv {} μ ν) =
+      ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+        (Lorentz.SL2C.toLorentzGroup Λ).1 b ν) •
+        ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv {} a b) := by
+  rw [show complexRepLorentzGroup Λ ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv {} μ ν) =
+      (1 : ℂ) ⊗ₜ[ℝ] repLorentzGroup Λ (fieldStrengthDeriv {} μ ν) from rfl,
+    repLorentzGroup_fieldStrengthDeriv_nil]
+  simp only [TensorProduct.tmul_sum, TensorProduct.tmul_smul]
+
+/-- The mass-dimension scaling commutes with the Lorentz action on the B-boson
+  jet algebra. -/
+lemma massWeightScaleReal_repLorentzGroup (c : ℝ) (Λ : SL(2,ℂ)) (x : JetAlgebra) :
+    massWeightScaleReal c (repLorentzGroup Λ x) =
+      repLorentzGroup Λ (massWeightScaleReal c x) := by
+  have h1 : ∀ w, massWeightScaleReal c (SymmetricAlgebra.ι ℝ JetComponentSpace w) =
+      SymmetricAlgebra.ι ℝ JetComponentSpace
+        (JetComponentSpace.massWeightScale c w) := fun w => by
+    rw [massWeightScaleReal, SymmetricAlgebra.lift_ι_apply]
+    rfl
+  have h2 : ∀ w, SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ JetComponentSpace ∘ₗ
+      JetComponentSpace.repLorentzGroup Λ)
+      (SymmetricAlgebra.ι ℝ JetComponentSpace w) =
+      SymmetricAlgebra.ι ℝ JetComponentSpace
+        (JetComponentSpace.repLorentzGroup Λ w) := fun w => by
+    rw [SymmetricAlgebra.lift_ι_apply]
+    rfl
+  have h : (massWeightScaleReal c).comp (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℝ JetComponentSpace ∘ₗ
+        JetComponentSpace.repLorentzGroup Λ)) =
+      (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ JetComponentSpace ∘ₗ
+        JetComponentSpace.repLorentzGroup Λ)).comp (massWeightScaleReal c) := by
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun v => ?_)
+    show massWeightScaleReal c ((SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ JetComponentSpace ∘ₗ
+          JetComponentSpace.repLorentzGroup Λ))
+        ((SymmetricAlgebra.ι ℝ JetComponentSpace) v)) =
+      (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ JetComponentSpace ∘ₗ
+        JetComponentSpace.repLorentzGroup Λ))
+        (massWeightScaleReal c ((SymmetricAlgebra.ι ℝ JetComponentSpace) v))
+    rw [h2, h1, h1, h2]
+    exact congrArg (SymmetricAlgebra.ι ℝ JetComponentSpace)
+      (DFunLike.congr_fun
+        (JetComponentSpace.massWeightScale_repLorentzGroup c Λ) v)
+  exact DFunLike.congr_fun h x
+
+/-- The Maurer–Cartan pairing of a jet of constant gauge transformations
+  vanishes. -/
+lemma mcPairing_ofConstant (g : GaugeGroupI) :
+    mcPairing (JetGaugeGroupI.ofConstant g) = 0 := by
+  refine JetComponentSpace.basis.ext fun j => ?_
+  obtain ⟨s, ν⟩ := j
+  simp [mcPairing_basis_dB']
+
+/-- Jets of constant gauge transformations act trivially on the B-boson jet
+  algebra: the Maurer–Cartan shift vanishes. -/
+lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x = x := by
+  rw [show repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x =
+      (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ
+          mcPairing (JetGaugeGroupI.ofConstant g))) x from rfl,
+    mcPairing_ofConstant]
+  have h2 : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
+      AlgHom.id ℝ JetAlgebra := by
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun v => ?_)
+    simp
+  rw [h2]
+  rfl
+
+/-- Jets of constant gauge transformations act trivially on the complexified
+  B-boson jet algebra. -/
+lemma complexRepJetGaugeGroupI_ofConstant (g : GaugeGroupI)
+    (x : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x = x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => rw [map_add, ha, hb]
+  | tmul z b => rw [complexRepJetGaugeGroupI_tmul, repJetGaugeGroupI_ofConstant]
+
+/-- For real scalars the complexified mass-dimension scaling is the base change
+  of the real scaling. -/
+lemma massWeightScale_ofReal (r : ℝ) :
+    massWeightScale (r : ℂ) =
+      Algebra.TensorProduct.map (AlgHom.id ℂ ℂ) (massWeightScaleReal r) := by
+  refine Algebra.TensorProduct.ext (Subsingleton.elim _ _) ?_
+  refine SymmetricAlgebra.algHom_ext ?_
+  refine JetComponentSpace.basis.ext fun j => ?_
+  show massWeightScale (r : ℂ) ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j) =
+    Algebra.TensorProduct.map (AlgHom.id ℂ ℂ) (massWeightScaleReal r)
+      ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j)
+  rw [massWeightScale_tmul_ofGenerator, Algebra.TensorProduct.map_tmul,
+    massWeightScaleReal_ofGenerator, TensorProduct.tmul_smul, ← Complex.ofReal_pow]
+  exact algebraMap_smul ℂ (r ^ j.massWeight) ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j)
+
+/-- The complexified scaling at a real scalar commutes with the Lorentz
+  action. -/
+lemma massWeightScale_ofReal_complexRepLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
+    (x : ℂ ⊗[ℝ] JetAlgebra) :
+    massWeightScale (r : ℂ) (complexRepLorentzGroup Λ x) =
+      complexRepLorentzGroup Λ (massWeightScale (r : ℂ) x) := by
+  rw [massWeightScale_ofReal]
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => simp only [map_add, ha, hb]
+  | tmul z b =>
+    rw [show complexRepLorentzGroup Λ (z ⊗ₜ[ℝ] b) =
+        z ⊗ₜ[ℝ] repLorentzGroup Λ b from rfl,
+      Algebra.TensorProduct.map_tmul, Algebra.TensorProduct.map_tmul,
+      show complexRepLorentzGroup Λ ((AlgHom.id ℂ ℂ) z ⊗ₜ[ℝ]
+        massWeightScaleReal r b) = (AlgHom.id ℂ ℂ) z ⊗ₜ[ℝ]
+        repLorentzGroup Λ (massWeightScaleReal r b) from rfl,
+      massWeightScaleReal_repLorentzGroup]
 
 end JetAlgebra
 

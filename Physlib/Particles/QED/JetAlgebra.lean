@@ -87,6 +87,7 @@ lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : BBoson.JetAlgeb
       (c ⊗ₜ[ℝ] BBoson.JetAlgebra.repJetGaugeGroupI U b) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l := rfl
 
+
 /-!
 
 ### B.1. The action of the Lorentz group
@@ -107,8 +108,39 @@ def IsInvariant (x : JetAlgebra) : Prop :=
   (∀ U : JetGaugeGroupI, repJetGaugeGroupI U x = x)
   ∧ (∀ Λ : SL(2,ℂ), repLorentzGroup Λ x = x)
 
+lemma IsInvariant.add {x y : JetAlgebra} (hx : IsInvariant x) (hy : IsInvariant y) :
+    IsInvariant (x + y) := by
+  constructor
+  · intro U
+    simp [hx.left, hy.left]
+  · intro Λ
+    simp [hx.right, hy.right]
+
+lemma IsInvariant.smul {x : JetAlgebra} (hx : IsInvariant x) (r : ℂ) :
+    IsInvariant (r • x) := by
+  constructor
+  · intro U
+    simp [hx.left]
+  · intro Λ
+    simp [hx.right]
+
 noncomputable def InvariantSubmodule : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ {x | IsInvariant x}
+
+lemma InvariantSubmodule.mem_iff_isInvariant (x : JetAlgebra) :
+    x ∈ InvariantSubmodule ↔ IsInvariant x := by
+  constructor
+  · intro hx
+    induction hx using Submodule.span_induction with
+    | mem y hy => exact hy
+    | zero => exact ⟨fun U => map_zero _, fun Λ => map_zero _⟩
+    | add y z hy hz ihy ihz =>
+      exact ⟨fun U => by rw [map_add, ihy.1 U, ihz.1 U],
+        fun Λ => by rw [map_add, ihy.2 Λ, ihz.2 Λ]⟩
+    | smul c y hy ihy =>
+      exact ⟨fun U => by rw [map_smul, ihy.1 U],
+        fun Λ => by rw [map_smul, ihy.2 Λ]⟩
+  · exact fun hx => Submodule.subset_span hx
 
 /-!
 
@@ -1208,6 +1240,16 @@ lemma repJetGaugeGroupI_eq_repAlgHom (U : JetGaugeGroupI) (x : JetAlgebra) :
       rw [repJetGaugeGroupI, Representation.tprod_apply, TensorProduct.map_tmul],
       repAlgHom, Algebra.TensorProduct.map_tmul, complexRepAlgHom_apply,
       LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply]
+
+/-- The gauge action is multiplicative (term-level form avoiding elaboration
+  blowups on the tensor stack). -/
+lemma repJetGaugeGroupI_mul' (U : JetGaugeGroupI) (a b : JetAlgebra) :
+    repJetGaugeGroupI U (a * b) =
+      repJetGaugeGroupI U a * repJetGaugeGroupI U b :=
+  (repJetGaugeGroupI_eq_repAlgHom U (a * b)).trans
+    ((map_mul (repAlgHom U) a b).trans
+      (congrArg₂ (· * ·) (repJetGaugeGroupI_eq_repAlgHom U a).symm
+        (repJetGaugeGroupI_eq_repAlgHom U b).symm))
 
 set_option maxHeartbeats 1000000 in
 /-- On gauge jets with trivial value at the base point, the covariant elements

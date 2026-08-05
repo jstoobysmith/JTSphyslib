@@ -627,6 +627,18 @@ end DerivAlgebraComplex
 
 -/
 
+/-- The components of a dual representation on a dual basis: if `ρ g⁻¹` has
+  matrix `M` in the basis `b` (columns indexing the argument), then `ρ.dual g`
+  acts on the dual basis by the rows of `M`. -/
+lemma _root_.Representation.dual_apply_dualBasis {k G V ι : Type*} [CommRing k]
+    [Group G] [AddCommGroup V] [Module k V] [Fintype ι] [DecidableEq ι]
+    (ρ : Representation k G V) (b : Module.Basis ι k V) (g : G) (i : ι)
+    (M : Matrix ι ι k) (hM : ∀ j, ρ g⁻¹ (b j) = ∑ l, M l j • b l) :
+    ρ.dual g (b.dualBasis i) = ∑ j, M i j • b.dualBasis j := by
+  refine b.ext fun j => ?_
+  rw [Representation.dual_apply, Module.Dual.transpose_apply, LinearMap.comp_apply, hM]
+  simp [Finsupp.single_apply, Finset.sum_ite_eq, Finset.sum_ite_eq']
+
 abbrev DerivAlgebraReal := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
 
 namespace DerivAlgebraReal
@@ -663,5 +675,51 @@ noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) DerivAlgebraRea
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [map_mul, Module.End.mul_apply]
 
+/-- The Lorentz action on a generator of the real derivative algebra. -/
+@[simp]
+lemma repLorentzGroup_apply_ι (Λ : SL(2,ℂ)) (x : Module.Dual ℝ Lorentz.CoVector) :
+    repLorentzGroup Λ (SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector) x) =
+      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+        (Lorentz.CoVector.sl2Rep.dual Λ x) := by
+  simp [repLorentzGroup]
+
+/-- The components of the dual covector action on the dual basis: the dual
+  derivative slots transform contravariantly, by the columns of the Lorentz
+  matrix. -/
+lemma _root_.Lorentz.CoVector.sl2Rep_dual_dualBasis (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
+    Lorentz.CoVector.sl2Rep.dual Λ (Lorentz.CoVector.basis.dualBasis μ) =
+      ∑ j, (Lorentz.SL2C.toLorentzGroup Λ).1 j μ •
+        Lorentz.CoVector.basis.dualBasis j := by
+  refine Representation.dual_apply_dualBasis _ _ _ _
+    (Matrix.of fun l j => (Lorentz.SL2C.toLorentzGroup Λ).1 j l) (fun j => ?_)
+  rw [show Lorentz.CoVector.sl2Rep Λ⁻¹ =
+      Lorentz.CoVector.rep (Lorentz.SL2C.toLorentzGroup Λ⁻¹) from rfl,
+    Lorentz.CoVector.rep_apply_basis, ← LorentzGroup.coe_inv, map_inv, inv_inv]
+  rfl
+
+/-- The derivative-degree scaling on the real algebra of derivative symbols:
+  the algebra map multiplying each generator by `t`. -/
+noncomputable def gradeScale (t : ℝ) : DerivAlgebraReal →ₐ[ℝ] DerivAlgebraReal :=
+  SymmetricAlgebra.lift (t • SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector))
+
+@[simp]
+lemma gradeScale_ι (t : ℝ) (x : Module.Dual ℝ Lorentz.CoVector) :
+    gradeScale t (SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector) x) =
+      t • SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector) x := by
+  rw [gradeScale, SymmetricAlgebra.lift_ι_apply]
+  rfl
+
+/-- The degree scaling commutes with the Lorentz action on the real derivative
+  symbols. -/
+lemma gradeScale_repLorentzGroup (t : ℝ) (Λ : SL(2,ℂ)) (a : DerivAlgebraReal) :
+    gradeScale t (repLorentzGroup Λ a) = repLorentzGroup Λ (gradeScale t a) := by
+  have h : (gradeScale t).comp (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) =
+      (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)).comp
+        (gradeScale t) := by
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp
+  exact DFunLike.congr_fun h a
 
 end DerivAlgebraReal
