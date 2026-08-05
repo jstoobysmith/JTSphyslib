@@ -157,6 +157,14 @@ lemma maurerCartanSU2_mul (g1 g2 : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
     congr 1
     rw [mul_assoc, ← mul_assoc (V.map (pderiv ℂ ν)), ← mul_assoc U]
 
+/-- The `U(1)` Maurer–Cartan form of the inverse jet is the negative: the
+  abelian cocycle identity applied to `g g⁻¹ = 1`. -/
+lemma maurerCartanU1_inv (g : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    maurerCartanU1 g⁻¹ ν = -maurerCartanU1 g ν := by
+  have h := maurerCartanU1_mul g g⁻¹ ν
+  rw [mul_inv_cancel, maurerCartanU1_one] at h
+  exact eq_neg_of_add_eq_zero_right h.symm
+
 /-- The Maurer–Cartan form vanishes on jets of constant gauge transformations:
   constants have vanishing derivative. -/
 @[simp]

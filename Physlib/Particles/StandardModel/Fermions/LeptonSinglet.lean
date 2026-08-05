@@ -333,6 +333,19 @@ lemma JetComponentSpace.basis_dψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) 
   · rw [Module.Basis.prod_apply_inl_fst, Module.Basis.tensorProduct_apply']
   · rw [Module.Basis.prod_apply_inl_snd]
 
+/-- The basis vector of the jet component space at a general conjugate-singlet
+  generator: the dual jet algebra basis vector at its multiset of derivative
+  indices, tensored with the conjugate dual basis of the singlet, in the second
+  (conjugated) factor. -/
+lemma JetComponentSpace.basis_dbarψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    JetComponentSpace.basis (.dbarψ s α) =
+      (0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] LeptonSinglet.basis.conj.dualBasis α) := by
+  rw [JetComponentSpace.basis, Module.Basis.reindex_apply,
+    show JetGenerators.equiv.symm.symm (.dbarψ s α) = Sum.inr (s, α) from rfl]
+  refine Prod.ext ?_ ?_
+  · rw [Module.Basis.prod_apply_inr_fst]
+  · rw [Module.Basis.prod_apply_inr_snd, Module.Basis.tensorProduct_apply']
+
 noncomputable def JetComponentSpace.repLorentzGroup :
     Representation ℂ (SL(2,ℂ)) JetComponentSpace :=
   (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.dual).prod
@@ -440,6 +453,40 @@ lemma JetComponentSpace.repJetGaugeGroupI_inl' (U : JetGaugeGroupI)
     rw [JetComponentSpace.repJetGaugeGroupI_inl, TensorProduct.map_tmul]
     rfl
 
+/-- The jet gauge action preserves the conjugated half of the component space,
+  acting there by the dual derivative action of the conjugate-contragredient
+  hypercharge power series on the derivative symbols. -/
+lemma JetComponentSpace.repJetGaugeGroupI_inr (U : JetGaugeGroupI)
+    (a : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))
+    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
+    JetComponentSpace.repJetGaugeGroupI U ((0, a ⊗ₜ[ℂ] φ) : JetComponentSpace) =
+      (0, (DerivAlgebraComplex.jetRingAction
+        ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6) a) ⊗ₜ[ℂ] φ) := by
+  refine Prod.ext ?_ ?_ <;>
+    simp [JetComponentSpace.repJetGaugeGroupI, Representation.prod_apply_apply,
+      Representation.tprod_apply, dualJetAlgebraRepJetGaugeGroupIConj_apply]
+
+/-- The jet gauge action on a general element of the conjugated half of the
+  component space. -/
+lemma JetComponentSpace.repJetGaugeGroupI_inr' (U : JetGaugeGroupI)
+    (y : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+      Module.Dual ℂ (ConjModule LeptonSinglet)) :
+    JetComponentSpace.repJetGaugeGroupI U ((0, y) : JetComponentSpace) =
+      (0, (TensorProduct.map (DerivAlgebraComplex.jetRingAction
+        ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6)) LinearMap.id) y) := by
+  induction y using TensorProduct.induction_on with
+  | zero =>
+    rw [show ((0, 0) : JetComponentSpace) = 0 from rfl, map_zero, map_zero]
+    rfl
+  | add a b ha hb =>
+    have hpair : ((0, a + b) : JetComponentSpace) = (0, a) + (0, b) := by
+      simp
+    rw [hpair, map_add, ha, hb, map_add]
+    simp
+  | tmul a φ =>
+    rw [JetComponentSpace.repJetGaugeGroupI_inr, TensorProduct.map_tmul]
+    rfl
+
 /-!
 
 ## The formal total derivative on the component functions
@@ -527,6 +574,55 @@ lemma JetComponentSpace.jetDeriv_inl' (μ : Fin 1 ⊕ Fin 3)
     simp
   | tmul a φ =>
     rw [JetComponentSpace.jetDeriv_inl, TensorProduct.map_tmul]
+    rfl
+
+/-- The total derivative preserves the conjugated half of the component space,
+  acting there by the shift of dual derivative symbols. -/
+lemma JetComponentSpace.jetDeriv_inr (μ : Fin 1 ⊕ Fin 3)
+    (a : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule))
+    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
+    JetComponentSpace.jetDeriv μ ((0, a ⊗ₜ[ℂ] φ) : JetComponentSpace) =
+      (0, (DerivAlgebraComplex.deriv μ a) ⊗ₜ[ℂ] φ) := by
+  have h : (JetComponentSpace.jetDeriv μ) ∘ₗ (LinearMap.inr ℂ
+        (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+          Module.Dual ℂ LeptonSinglet)
+        (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+          Module.Dual ℂ (ConjModule LeptonSinglet))) =
+      (LinearMap.inr ℂ _ _) ∘ₗ (TensorProduct.map (DerivAlgebraComplex.deriv μ)
+        LinearMap.id) := by
+    refine (DerivAlgebraComplex.basis.tensorProduct
+      (LeptonSinglet.basis.conj.dualBasis)).ext fun p => ?_
+    obtain ⟨s, α⟩ := p
+    rw [Module.Basis.tensorProduct_apply']
+    simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.inr_apply,
+      TensorProduct.map_tmul, LinearMap.id_coe, id_eq]
+    rw [show ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
+        LeptonSinglet.basis.conj.dualBasis α) : JetComponentSpace) =
+        JetComponentSpace.basis (.dbarψ s α) from
+        (JetComponentSpace.basis_dbarψ s α).symm,
+      JetComponentSpace.jetDeriv_basis, JetGenerators.shift_dbarψ,
+      JetComponentSpace.basis_dbarψ, DerivAlgebraComplex.deriv_basis_multiset]
+  have h1 := LinearMap.congr_fun h (a ⊗ₜ[ℂ] φ)
+  simpa using h1
+
+/-- The total derivative on a general element of the conjugated half of the
+  component space. -/
+lemma JetComponentSpace.jetDeriv_inr' (μ : Fin 1 ⊕ Fin 3)
+    (y : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+      Module.Dual ℂ (ConjModule LeptonSinglet)) :
+    JetComponentSpace.jetDeriv μ ((0, y) : JetComponentSpace) =
+      (0, (TensorProduct.map (DerivAlgebraComplex.deriv μ) LinearMap.id) y) := by
+  induction y using TensorProduct.induction_on with
+  | zero =>
+    rw [show ((0, 0) : JetComponentSpace) = 0 from rfl, map_zero, map_zero]
+    rfl
+  | add a b ha hb =>
+    have hpair : ((0, a + b) : JetComponentSpace) = (0, a) + (0, b) := by
+      simp
+    rw [hpair, map_add, ha, hb, map_add]
+    simp
+  | tmul a φ =>
+    rw [JetComponentSpace.jetDeriv_inr, TensorProduct.map_tmul]
     rfl
 
 /-!

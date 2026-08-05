@@ -602,6 +602,20 @@ lemma pderiv_pow_unitary (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
         MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
       (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing))) * hN
 
+/-- The derivative of a hypercharge power of the conjugate `U(1)` jet:
+  `∂_ν (ū^q) = q i mc_ν ū^q`, the conjugate-contragredient counterpart of
+  `pderiv_pow_unitary`. -/
+lemma pderiv_pow_unitary_star (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
+    pderiv ℂ ν (star (U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C ((q : ℂ) * Complex.I) *
+        (maurerCartanU1 U ν * star (U.2.2 : JetRing) ^ q) := by
+  have h := pderiv_pow_unitary U⁻¹ ν q
+  have hcoe : ((U⁻¹.2.2 : unitary JetRing) : JetRing) =
+      star ((U.2.2 : unitary JetRing) : JetRing) := by
+    rw [show (U⁻¹.2.2 : unitary JetRing) = (U.2.2)⁻¹ from rfl, ← Unitary.star_eq_inv,
+      Unitary.coe_star]
+  rw [hcoe, maurerCartanU1_inv, neg_mul, map_neg] at h
+  linear_combination h
 
 /-!
 
@@ -1528,6 +1542,186 @@ lemma ofGenerator_sub_ofGenerator_canon_mem (g : JetGenerators) :
     rw [h2, h1]
     exact Algebra.subset_adjoin ⟨((s.erase p, p), ν), Set.mem_univ _, rfl⟩
 
+/-- The value of a translation gauge jet at the base point is one: the
+  exponential series has constant coefficient `1`. -/
+lemma constantCoeff_expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0) :
+    MvPowerSeries.constantCoeff
+      (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) = 1 := by
+  classical
+  have hex : ∃ ρ, w ρ ≠ 0 := (Finsupp.ne_iff.mp hw).imp fun _ h => by simpa using h
+  have h₀ : ∃ n : ℕ, (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) = n • w := ⟨0, by simp⟩
+  show (if h : ∃ n : ℕ, (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) = n • w then
+      (-(a : ℂ) * Complex.I) ^ h.choose / (h.choose.factorial : ℂ) else 0) = 1
+  rw [dif_pos h₀]
+  obtain ⟨ρ, hρ⟩ := hex
+  have hch : h₀.choose = 0 := by
+    by_contra hn
+    have h := DFunLike.congr_fun h₀.choose_spec ρ
+    simp only [Finsupp.coe_zero, Pi.zero_apply, Finsupp.smul_apply, smul_eq_mul] at h
+    exact absurd h.symm (Nat.mul_ne_zero hn hρ)
+  rw [hch]
+  simp
+
+/-- The value of a translation gauge jet at the base point is the identity of the
+  gauge group. -/
+lemma eval_expUnitary_u1 (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0) :
+    (expUnitary a w hw).eval.2.2 = 1 :=
+  Subtype.ext (constantCoeff_expUnitary a w hw)
+
+/-- The invariance direction of `repJetGaugeGroupI_apply_eq_self_iff_mem` from
+  invariance under the `expUnitary` translation family alone: every element fixed
+  by all the translation gauge transformations lies in the field-strength
+  subalgebra. -/
+lemma mem_adjoin_of_forall_expUnitary (V : JetAlgebra)
+    (hV : ∀ (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0),
+      repJetGaugeGroupI (expUnitary a w hw) V = V) :
+    V ∈ Algebra.adjoin ℝ (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
+  have htrans : ∀ (g₀ : JetGenerators) (r : ℝ),
+      MvPolynomial.aeval (fun g => MvPolynomial.X g +
+        MvPolynomial.C (if JetGenerators.canon g = JetGenerators.canon g₀ then r
+          else (0 : ℝ)))
+        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) =
+        SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V := by
+    intro g₀ r
+    obtain ⟨s₀, ν₀⟩ := g₀
+    have hne : Multiset.toFinsupp (s₀ + {ν₀}) ≠ 0 := by
+      intro h
+      have h0 : s₀ + {ν₀} = 0 :=
+        Multiset.toFinsupp.injective (by rw [h, Multiset.toFinsupp_zero])
+      simp at h0
+    have hconj := equivMvPolynomial_repJetGaugeGroupI
+      (expUnitary (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+        (Multiset.toFinsupp (s₀ + {ν₀})) hne) V
+    rw [hV _ _ _] at hconj
+    have hfun : (fun g => MvPolynomial.X g + MvPolynomial.C
+        (mcPairing (expUnitary
+            (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+            (Multiset.toFinsupp (s₀ + {ν₀})) hne)
+          (JetComponentSpace.basis g))) =
+        fun g => MvPolynomial.X g + MvPolynomial.C
+          (if JetGenerators.canon g = JetGenerators.canon (JetGenerators.dB s₀ ν₀)
+            then r else (0 : ℝ)) := by
+      funext g
+      obtain ⟨s, ν⟩ := g
+      rw [mcPairing_expUnitary (s₀ + {ν₀}) hne r s ν]
+      have hiff : (s + {ν} = s₀ + {ν₀}) ↔
+          (JetGenerators.canon (JetGenerators.dB s ν) =
+            JetGenerators.canon (JetGenerators.dB s₀ ν₀)) := by
+        rw [JetGenerators.canon_eq_canon_iff]
+        simp
+      rw [if_congr hiff rfl rfl]
+    rw [hfun] at hconj
+    exact hconj.symm
+  have hmem := MvPolynomial.mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq
+    JetGenerators.canon JetGenerators.canon_canon
+    (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) htrans
+  have hVmem : V ∈ (Algebra.adjoin ℝ (Set.range fun g =>
+      (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g) :
+        MvPolynomial JetGenerators ℝ))).map
+      (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom :=
+    Subalgebra.mem_map.mpr ⟨_, hmem, AlgEquiv.symm_apply_apply _ _⟩
+  rw [AlgHom.map_adjoin] at hVmem
+  refine Algebra.adjoin_le ?_ hVmem
+  rintro x ⟨_, ⟨g, rfl⟩, rfl⟩
+  have hsymm : (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom
+      (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) =
+      ofGenerator g - ofGenerator (JetGenerators.canon g) := by
+    show (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm
+      (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) = _
+    rw [map_sub, SymmetricAlgebra.equivMvPolynomial_symm_X,
+      SymmetricAlgebra.equivMvPolynomial_symm_X]
+    rfl
+  rw [hsymm]
+  exact ofGenerator_sub_ofGenerator_canon_mem g
+
+/-- The coordinate retractions of the complexified jet algebra along the real
+  basis `{1, I}` of `ℂ`. -/
+private noncomputable def complexCoordAux (i : Fin 2) :
+    ℂ ⊗[ℝ] JetAlgebra →ₗ[ℝ] JetAlgebra :=
+  TensorProduct.lift ((LinearMap.lsmul ℝ JetAlgebra).comp (Complex.basisOneI.coord i))
+
+private lemma complexCoordAux_tmul (i : Fin 2) (z : ℂ) (b : JetAlgebra) :
+    complexCoordAux i (z ⊗ₜ[ℝ] b) = Complex.basisOneI.repr z i • b := by
+  simp [complexCoordAux, Module.Basis.coord_apply]
+
+set_option maxHeartbeats 1000000 in
+/-- The complexified invariance direction: an element of the complexified B-boson
+  jet algebra fixed by the complexified action of the `expUnitary` translation
+  family lies in the complexified field-strength subalgebra. -/
+lemma mem_adjoin_of_forall_expUnitary_complex (x : ℂ ⊗[ℝ] JetAlgebra)
+    (hx : ∀ (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0),
+      complexRepJetGaugeGroupI (expUnitary a w hw) x = x) :
+    x ∈ Algebra.adjoin ℂ (Set.range fun p :
+        Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+      ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv p.1 p.2.1 p.2.2 : ℂ ⊗[ℝ] JetAlgebra)) := by
+  classical
+  have hrtmul : ∀ (i : Fin 2) (z : ℂ) (b : JetAlgebra),
+      complexCoordAux i (z ⊗ₜ[ℝ] b) = Complex.basisOneI.repr z i • b :=
+    complexCoordAux_tmul
+  have h1 : ∀ y : ℂ ⊗[ℝ] JetAlgebra,
+      y = (1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 y + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 y := by
+    intro y
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a b ha hb =>
+      rw [map_add, map_add, TensorProduct.tmul_add, TensorProduct.tmul_add]
+      calc a + b = ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 a + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 a) +
+            ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 b + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 b) := by rw [← ha, ← hb]
+        _ = _ := by abel
+    | tmul z b =>
+      rw [hrtmul, hrtmul, TensorProduct.tmul_smul, TensorProduct.tmul_smul,
+        TensorProduct.smul_tmul', TensorProduct.smul_tmul', ← TensorProduct.add_tmul]
+      congr 1
+      have hz := Complex.re_add_im z
+      simp only [Complex.coe_basisOneI_repr, Matrix.cons_val_zero, Matrix.cons_val_one]
+      rw [show z.re • (1 : ℂ) = (z.re : ℂ) from by simp [Complex.real_smul],
+        show z.im • Complex.I = (z.im : ℂ) * Complex.I from by rw [Complex.real_smul]]
+      exact hz.symm
+  have h2 : ∀ (U : JetGaugeGroupI) (i : Fin 2) (y : ℂ ⊗[ℝ] JetAlgebra),
+      complexCoordAux i (complexRepJetGaugeGroupI U y) =
+        repJetGaugeGroupI U (complexCoordAux i y) := by
+    intro U i y
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add a b ha hb => simp only [map_add, ha, hb]
+    | tmul z b =>
+      simp only [complexRepJetGaugeGroupI_tmul]
+      rw [hrtmul, hrtmul]
+      exact ((repJetGaugeGroupI U).map_smul _ _).symm
+  have hmem : ∀ i : Fin 2, complexCoordAux i x ∈ Algebra.adjoin ℝ
+      (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
+    intro i
+    refine mem_adjoin_of_forall_expUnitary (complexCoordAux i x) fun a w hw => ?_
+    rw [← h2, hx a w hw]
+  have hinc : ∀ b ∈ Algebra.adjoin ℝ (fieldStrengthDeriv.uncurry.uncurry '' Set.univ),
+      ((1 : ℂ) ⊗ₜ[ℝ] b : ℂ ⊗[ℝ] JetAlgebra) ∈ Algebra.adjoin ℂ (Set.range fun p :
+          Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+        ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv p.1 p.2.1 p.2.2 : ℂ ⊗[ℝ] JetAlgebra)) := by
+    intro b hb
+    induction hb using Algebra.adjoin_induction with
+    | mem y hy =>
+      obtain ⟨⟨⟨s, μ⟩, ν⟩, -, rfl⟩ := hy
+      exact Algebra.subset_adjoin ⟨(s, μ, ν), rfl⟩
+    | algebraMap t =>
+      rw [Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul,
+        ← IsScalarTower.algebraMap_smul ℂ t
+          ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra) : ℂ ⊗[ℝ] JetAlgebra)]
+      exact Subalgebra.smul_mem _ (one_mem _) _
+    | add y z hy hz ihy ihz =>
+      rw [TensorProduct.tmul_add]
+      exact add_mem ihy ihz
+    | mul y z hy hz ihy ihz =>
+      rw [show ((1 : ℂ) ⊗ₜ[ℝ] (y * z) : ℂ ⊗[ℝ] JetAlgebra) =
+          ((1 : ℂ) ⊗ₜ[ℝ] y) * ((1 : ℂ) ⊗ₜ[ℝ] z) from by
+        rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]]
+      exact mul_mem ihy ihz
+  rw [h1 x]
+  refine add_mem (hinc _ (hmem 0)) ?_
+  rw [show (Complex.I ⊗ₜ[ℝ] complexCoordAux 1 x : ℂ ⊗[ℝ] JetAlgebra) =
+      Complex.I • ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 1 x) from by
+    rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]]
+  exact Subalgebra.smul_mem _ (hinc _ (hmem 1)) _
+
 /-- An EFT lagrangian with field content consisting only of
   a `B` bosons is invariant under the full gauge group if and only if
   it can be written in terms of the field strength and derivatives thereof. -/
@@ -1536,63 +1730,7 @@ lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
     (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
   constructor
   · intro hV
-    have htrans : ∀ (g₀ : JetGenerators) (r : ℝ),
-        MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (if JetGenerators.canon g = JetGenerators.canon g₀ then r
-            else (0 : ℝ)))
-          (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) =
-          SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V := by
-      intro g₀ r
-      obtain ⟨s₀, ν₀⟩ := g₀
-      have hne : Multiset.toFinsupp (s₀ + {ν₀}) ≠ 0 := by
-        intro h
-        have h0 : s₀ + {ν₀} = 0 :=
-          Multiset.toFinsupp.injective (by rw [h, Multiset.toFinsupp_zero])
-        simp at h0
-      have hconj := equivMvPolynomial_repJetGaugeGroupI
-        (expUnitary (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
-          (Multiset.toFinsupp (s₀ + {ν₀})) hne) V
-      rw [hV _] at hconj
-      have hfun : (fun g => MvPolynomial.X g + MvPolynomial.C
-          (mcPairing (expUnitary
-              (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
-              (Multiset.toFinsupp (s₀ + {ν₀})) hne)
-            (JetComponentSpace.basis g))) =
-          fun g => MvPolynomial.X g + MvPolynomial.C
-            (if JetGenerators.canon g = JetGenerators.canon (JetGenerators.dB s₀ ν₀)
-              then r else (0 : ℝ)) := by
-        funext g
-        obtain ⟨s, ν⟩ := g
-        rw [mcPairing_expUnitary (s₀ + {ν₀}) hne r s ν]
-        have hiff : (s + {ν} = s₀ + {ν₀}) ↔
-            (JetGenerators.canon (JetGenerators.dB s ν) =
-              JetGenerators.canon (JetGenerators.dB s₀ ν₀)) := by
-          rw [JetGenerators.canon_eq_canon_iff]
-          simp
-        rw [if_congr hiff rfl rfl]
-      rw [hfun] at hconj
-      exact hconj.symm
-    have hmem := MvPolynomial.mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq
-      JetGenerators.canon JetGenerators.canon_canon
-      (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) htrans
-    have hVmem : V ∈ (Algebra.adjoin ℝ (Set.range fun g =>
-        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g) :
-          MvPolynomial JetGenerators ℝ))).map
-        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom :=
-      Subalgebra.mem_map.mpr ⟨_, hmem, AlgEquiv.symm_apply_apply _ _⟩
-    rw [AlgHom.map_adjoin] at hVmem
-    refine Algebra.adjoin_le ?_ hVmem
-    rintro x ⟨_, ⟨g, rfl⟩, rfl⟩
-    have hsymm : (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toAlgHom
-        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) =
-        ofGenerator g - ofGenerator (JetGenerators.canon g) := by
-      show (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm
-        (MvPolynomial.X g - MvPolynomial.X (JetGenerators.canon g)) = _
-      rw [map_sub, SymmetricAlgebra.equivMvPolynomial_symm_X,
-        SymmetricAlgebra.equivMvPolynomial_symm_X]
-      rfl
-    rw [hsymm]
-    exact ofGenerator_sub_ofGenerator_canon_mem g
+    exact mem_adjoin_of_forall_expUnitary V fun a w hw => hV _
   · intro hVmem U
     induction hVmem using Algebra.adjoin_induction with
     | mem x hx =>
