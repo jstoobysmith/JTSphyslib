@@ -732,14 +732,6 @@ lemma equivMvPolynomial_repJetGaugeGroupI (U : JetGaugeGroupI) (V : JetAlgebra) 
       MvPolynomial.algebraMap_eq]
   exact DFunLike.congr_fun h V
 
-/-- The conjugated action of a `U(1)` jet embedded in the jet gauge group. -/
-lemma equivMvPolynomial_repJetGaugeGroupI_u1 (u : unitary JetRing) (V : JetAlgebra) :
-    SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis
-      (repJetGaugeGroupI (1, 1, u) V) =
-      MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing (1, 1, u) (JetComponentSpace.basis g)))
-        (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) :=
-  equivMvPolynomial_repJetGaugeGroupI (1, 1, u) V
 
 
 /-!
@@ -1176,150 +1168,172 @@ in the field strength and its derivatives.
 
 /-!
 
-### A.1 The exponential of a monomial
+### A.1 Gauge realization of translations of the jet coordinates
 
 The gauge invariants of the B-boson jet algebra are computed below by realizing
 arbitrary translations of the jet coordinates through explicit local `U(1)` gauge
-transformations. These are the formal exponentials `exp (c X^w)` of a single
-monomial, defined here coefficientwise; the exponential property
-`exp(c X^w) exp(c' X^w) = exp((c + c') X^w)` gives unitarity for imaginary `c`,
-and the chain rule gives their Maurer–Cartan series.
+transformations: the jets `exp(-i a X^w)` of exponentials of a single spacetime
+monomial, embedded in the jet gauge group with trivial colour and weak factors.
+The exponential property `exp(c X^w) exp(c' X^w) = exp((c + c') X^w)` of the
+underlying series gives unitarity, and the chain rule gives the Maurer–Cartan
+form: the jet of the gradient `a ∂_ν X^w`. For every nonzero symmetrized
+multi-index `t` and every real `r`, the transformation `exp(-i a X^t)` with
+`a = r / t!` shifts every component function with total multi-index `t` by
+exactly `r`, and all others by nothing.
 
 -/
 
-variable {K : Type*} [Field K] [CharZero K] {w : σ →₀ ℕ}
-
 open Classical in
-/-- The formal exponential of `c` times the monomial with exponent `w`: the power
-  series `∑ₙ (cⁿ/n!) X^{n w}`, defined coefficientwise. -/
-noncomputable def expMonomial (c : K) (w : σ →₀ ℕ) : MvPowerSeries σ K :=
-  fun k => if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : K) else 0
+/-- The jet of the local `U(1)` gauge transformation `exp(-i a X^w)`: the
+  exponential of an imaginary multiple of a spacetime monomial — the power series
+  `∑ₙ ((-i a)ⁿ/n!) X^{n w}`, defined coefficientwise, unitary by the exponential
+  property — embedded in the jet gauge group with trivial colour and weak
+  factors. -/
+noncomputable def expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0) :
+    JetGaugeGroupI :=
+  let F : ℂ → JetRing := fun c k => if h : ∃ n : ℕ, k = n • w then
+    c ^ h.choose / (h.choose.factorial : ℂ) else 0
+  (1, 1, ⟨F (-(a : ℂ) * Complex.I), by
+    classical
+    have hex : ∃ ρ, w ρ ≠ 0 := (Finsupp.ne_iff.mp hw).imp fun _ h => by simpa using h
+    have hcancel : ∀ {n m : ℕ}, n • w = m • w → n = m := by
+      intro n m h
+      obtain ⟨ρ, hρ⟩ := hex
+      exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ)
+        (by simpa using DFunLike.congr_fun h ρ)
+    have hnsmul : ∀ (c : ℂ) (n : ℕ), coeff (n • w) (F c) = c ^ n / (n.factorial : ℂ) := by
+      intro c n
+      have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
+      show (if h : ∃ m : ℕ, n • w = m • w then c ^ h.choose / (h.choose.factorial : ℂ)
+        else 0) = _
+      rw [dif_pos h, show h.choose = n from (hcancel h.choose_spec).symm]
+    have hne : ∀ (c : ℂ) {k : (Fin 1 ⊕ Fin 3) →₀ ℕ}, (∀ n : ℕ, k ≠ n • w) →
+        coeff k (F c) = 0 := by
+      intro c k hk
+      show (if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : ℂ)
+        else 0) = 0
+      rw [dif_neg (not_exists.mpr hk)]
+    have hmul : ∀ c c' : ℂ, F c * F c' = F (c + c') := by
+      intro c c'
+      ext k
+      by_cases hk : ∃ n : ℕ, k = n • w
+      · obtain ⟨N, rfl⟩ := hk
+        rw [coeff_mul, hnsmul]
+        have hsub : (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) ⊆
+            Finset.antidiagonal (N • w) := by
+          intro p hp
+          obtain ⟨n, hn, rfl⟩ := Finset.mem_image.mp hp
+          rw [Finset.mem_antidiagonal, ← add_smul,
+            Nat.add_sub_cancel' (Nat.lt_succ_iff.mp (Finset.mem_range.mp hn))]
+        have hvanish : ∀ p ∈ Finset.antidiagonal (N • w),
+            p ∉ (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) →
+            coeff p.1 (F c) * coeff p.2 (F c') = 0 := by
+          intro p hp hpn
+          by_cases h1 : ∃ n : ℕ, p.1 = n • w
+          · obtain ⟨n₁, h1⟩ := h1
+            exfalso
+            apply hpn
+            have hsum : p.1 + p.2 = N • w := Finset.mem_antidiagonal.mp hp
+            obtain ⟨ρ, hρ⟩ := hex
+            have hcoords : ∀ ρ', n₁ * w ρ' + p.2 ρ' = N * w ρ' := by
+              intro ρ'
+              have h' := DFunLike.congr_fun hsum ρ'
+              simpa [h1, Finsupp.smul_apply] using h'
+            have hle : n₁ ≤ N :=
+              Nat.le_of_mul_le_mul_right (by have := hcoords ρ; omega)
+                (Nat.pos_of_ne_zero hρ)
+            have h2 : p.2 = (N - n₁) • w := by
+              ext ρ'
+              rw [Finsupp.smul_apply, smul_eq_mul, Nat.sub_mul]
+              have := hcoords ρ'
+              omega
+            exact Finset.mem_image.mpr
+              ⟨n₁, Finset.mem_range.mpr (Nat.lt_succ_of_le hle), by rw [← h1, ← h2]⟩
+          · rw [hne c (not_exists.mp h1), zero_mul]
+        rw [← Finset.sum_subset hsub hvanish,
+          Finset.sum_image (fun n _ m _ h => hcancel (congrArg Prod.fst h)),
+          add_pow, Finset.sum_div]
+        refine Finset.sum_congr rfl fun n hn => ?_
+        rw [hnsmul, hnsmul]
+        have hle : n ≤ N := Nat.lt_succ_iff.mp (Finset.mem_range.mp hn)
+        have hfact : ((N.choose n : ℂ)) * (n.factorial : ℂ) * ((N - n).factorial : ℂ) =
+            (N.factorial : ℂ) := by
+          exact_mod_cast congrArg (Nat.cast : ℕ → ℂ)
+            (Nat.choose_mul_factorial_mul_factorial hle)
+        have h1 : (n.factorial : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr n.factorial_ne_zero
+        have h2 : ((N - n).factorial : ℂ) ≠ 0 :=
+          Nat.cast_ne_zero.mpr (N - n).factorial_ne_zero
+        have h3 : (N.factorial : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr N.factorial_ne_zero
+        rw [div_mul_div_comm, div_eq_div_iff (mul_ne_zero h1 h2) h3]
+        linear_combination (-(c ^ n * c' ^ (N - n))) * hfact
+      · rw [hne _ (not_exists.mp hk), coeff_mul]
+        refine Finset.sum_eq_zero fun p hp => ?_
+        by_cases h1 : ∃ n : ℕ, p.1 = n • w
+        · by_cases h2 : ∃ n : ℕ, p.2 = n • w
+          · exfalso
+            obtain ⟨n₁, h1⟩ := h1
+            obtain ⟨n₂, h2⟩ := h2
+            exact hk ⟨n₁ + n₂, by rw [← Finset.mem_antidiagonal.mp hp, h1, h2, add_smul]⟩
+          · rw [hne _ (not_exists.mp h2), mul_zero]
+        · rw [hne _ (not_exists.mp h1), zero_mul]
+    have hstar : ∀ c : ℂ, star (F c) = F (star c) := by
+      intro c
+      ext k
+      rw [JetRing.coeff_star]
+      by_cases hk : ∃ n : ℕ, k = n • w
+      · obtain ⟨n, rfl⟩ := hk
+        rw [hnsmul, hnsmul, star_div₀, star_pow, star_natCast]
+      · rw [hne _ (not_exists.mp hk), hne _ (not_exists.mp hk), star_zero]
+    have hzero : F 0 = 1 := by
+      ext k
+      by_cases hk : ∃ n : ℕ, k = n • w
+      · obtain ⟨n, rfl⟩ := hk
+        rw [hnsmul, coeff_one]
+        rcases Nat.eq_zero_or_pos n with rfl | hn
+        · simp
+        · rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg fun h0 =>
+            Nat.pos_iff_ne_zero.mp hn (hcancel (h0.trans (zero_smul ℕ w).symm))]
+      · rw [hne _ (not_exists.mp hk), coeff_one,
+          if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
+    have hsc : star (-(a : ℂ) * Complex.I) = -(-(a : ℂ) * Complex.I) := by
+      rw [star_mul', Complex.star_def, Complex.conj_I, map_neg, Complex.conj_ofReal]
+      ring
+    rw [Unitary.mem_iff, hstar, hsc, hmul, hmul, neg_add_cancel, add_neg_cancel, hzero]
+    exact ⟨rfl, rfl⟩⟩)
 
-/-- A nonzero exponent has a coordinate at which it is nonzero. -/
-lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 :=
-  (Finsupp.ne_iff.mp hw).imp fun _ h => by simpa using h
-
-/-- Multiples of a nonzero exponent determine the multiplier. -/
-lemma nsmul_right_cancel (hw : w ≠ 0) {n m : ℕ} (h : n • w = m • w) : n = m := by
-  obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ)
-    (by simpa using DFunLike.congr_fun h ρ)
-
-omit [CharZero K] in
-/-- The Taylor coefficient of the exponential of a monomial at a multiple of the
+/-- The Taylor coefficient of the exponential gauge jet at a multiple of the
   exponent. -/
-lemma coeff_expMonomial_nsmul (hw : w ≠ 0) (c : K) (n : ℕ) :
-    coeff (n • w) (expMonomial c w) = c ^ n / (n.factorial : K) := by
+lemma coeff_expUnitary_nsmul (a : ℝ) {w : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : w ≠ 0) (n : ℕ) :
+    coeff (n • w) (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) =
+      (-(a : ℂ) * Complex.I) ^ n / (n.factorial : ℂ) := by
+  classical
   have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
-  simp only [coeff_apply, expMonomial]
-  rw [dif_pos h, show h.choose = n from (nsmul_right_cancel hw h.choose_spec).symm]
+  have hch : h.choose = n := by
+    obtain ⟨ρ, hρ⟩ := Finsupp.ne_iff.mp hw
+    exact (Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero (by simpa using hρ))
+      (by simpa using DFunLike.congr_fun h.choose_spec ρ)).symm
+  show (if h : ∃ m : ℕ, n • w = m • w then
+      (-(a : ℂ) * Complex.I) ^ h.choose / (h.choose.factorial : ℂ) else 0) = _
+  rw [dif_pos h, hch]
 
-omit [CharZero K] in
-/-- The Taylor coefficients of the exponential of a monomial vanish away from the
+/-- The Taylor coefficients of the exponential gauge jet vanish away from the
   multiples of the exponent. -/
-lemma coeff_expMonomial_of_forall_ne (c : K) {k : σ →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
-    coeff k (expMonomial c w) = 0 := by
-  simp only [coeff_apply, expMonomial]
+lemma coeff_expUnitary_of_forall_ne (a : ℝ) {w : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : w ≠ 0)
+    {k : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
+    coeff k (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) = 0 := by
+  classical
+  show (if h : ∃ n : ℕ, k = n • w then
+      (-(a : ℂ) * Complex.I) ^ h.choose / (h.choose.factorial : ℂ) else 0) = 0
   rw [dif_neg (not_exists.mpr hk)]
 
-/-- The exponential property: exponentials of the same monomial multiply by adding
-  the scalars. -/
-lemma expMonomial_mul_expMonomial (hw : w ≠ 0) (c c' : K) :
-    expMonomial c w * expMonomial c' w = expMonomial (c + c') w := by
-  classical
-  ext k
-  by_cases hk : ∃ n : ℕ, k = n • w
-  · obtain ⟨N, rfl⟩ := hk
-    rw [coeff_mul, coeff_expMonomial_nsmul hw]
-    have hsub : (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) ⊆
-        Finset.antidiagonal (N • w) := by
-      intro p hp
-      obtain ⟨n, hn, rfl⟩ := Finset.mem_image.mp hp
-      rw [Finset.mem_antidiagonal, ← add_smul,
-        Nat.add_sub_cancel' (Nat.lt_succ_iff.mp (Finset.mem_range.mp hn))]
-    have hvanish : ∀ p ∈ Finset.antidiagonal (N • w),
-        p ∉ (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) →
-        coeff p.1 (expMonomial c w) * coeff p.2 (expMonomial c' w) = 0 := by
-      intro p hp hpn
-      by_cases h1 : ∃ n : ℕ, p.1 = n • w
-      · obtain ⟨n₁, h1⟩ := h1
-        exfalso
-        apply hpn
-        have hsum : p.1 + p.2 = N • w := Finset.mem_antidiagonal.mp hp
-        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-        have hcoords : ∀ ρ', n₁ * w ρ' + p.2 ρ' = N * w ρ' := by
-          intro ρ'
-          have h' := DFunLike.congr_fun hsum ρ'
-          simpa [h1, Finsupp.smul_apply] using h'
-        have hle : n₁ ≤ N :=
-          Nat.le_of_mul_le_mul_right (by have := hcoords ρ; omega)
-            (Nat.pos_of_ne_zero hρ)
-        have h2 : p.2 = (N - n₁) • w := by
-          ext ρ'
-          rw [Finsupp.smul_apply, smul_eq_mul, Nat.sub_mul]
-          have := hcoords ρ'
-          omega
-        exact Finset.mem_image.mpr
-          ⟨n₁, Finset.mem_range.mpr (Nat.lt_succ_of_le hle), by rw [← h1, ← h2]⟩
-      · rw [coeff_expMonomial_of_forall_ne c (not_exists.mp h1), zero_mul]
-    rw [← Finset.sum_subset hsub hvanish,
-      Finset.sum_image (fun n _ m _ h => nsmul_right_cancel hw (congrArg Prod.fst h)),
-      add_pow, Finset.sum_div]
-    refine Finset.sum_congr rfl fun n hn => ?_
-    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw]
-    have hle : n ≤ N := Nat.lt_succ_iff.mp (Finset.mem_range.mp hn)
-    have hfact : ((N.choose n : K)) * (n.factorial : K) * ((N - n).factorial : K) =
-        (N.factorial : K) := by
-      exact_mod_cast congrArg (Nat.cast : ℕ → K)
-        (Nat.choose_mul_factorial_mul_factorial hle)
-    have h1 : (n.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr n.factorial_ne_zero
-    have h2 : ((N - n).factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr (N - n).factorial_ne_zero
-    have h3 : (N.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr N.factorial_ne_zero
-    rw [div_mul_div_comm, div_eq_div_iff (mul_ne_zero h1 h2) h3]
-    linear_combination (-(c ^ n * c' ^ (N - n))) * hfact
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_mul]
-    refine Finset.sum_eq_zero fun p hp => ?_
-    by_cases h1 : ∃ n : ℕ, p.1 = n • w
-    · by_cases h2 : ∃ n : ℕ, p.2 = n • w
-      · exfalso
-        obtain ⟨n₁, h1⟩ := h1
-        obtain ⟨n₂, h2⟩ := h2
-        exact hk ⟨n₁ + n₂, by rw [← Finset.mem_antidiagonal.mp hp, h1, h2, add_smul]⟩
-      · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h2), mul_zero]
-    · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h1), zero_mul]
-
-/-- The coefficientwise star of the exponential of a monomial is the exponential at
-  the starred scalar. -/
-lemma star_expMonomial {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : m ≠ 0) (c : ℂ) :
-    star (expMonomial c m : JetRing) = expMonomial (star c) m := by
-  ext k
-  rw [JetRing.coeff_star]
-  by_cases hk : ∃ n : ℕ, k = n • m
-  · obtain ⟨n, rfl⟩ := hk
-    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw, star_div₀, star_pow,
-      star_natCast]
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk),
-      coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), star_zero]
-
-/-- The exponential of a monomial at scalar zero is one. -/
-lemma expMonomial_zero (hw : w ≠ 0) : expMonomial (0 : K) w = 1 := by
-  classical
-  ext k
-  by_cases hk : ∃ n : ℕ, k = n • w
-  · obtain ⟨n, rfl⟩ := hk
-    rw [coeff_expMonomial_nsmul hw, coeff_one]
-    rcases Nat.eq_zero_or_pos n with rfl | hn
-    · simp
-    · rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg fun h0 =>
-        Nat.pos_iff_ne_zero.mp hn (nsmul_right_cancel hw (h0.trans (zero_smul ℕ w).symm))]
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_one,
-      if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
-
-/-- The chain rule for the exponential of a monomial:
-  `∂_ν exp(c X^w) = c w_ν X^{w - e_ν} exp(c X^w)`. -/
-lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
-    pderiv K ν (expMonomial c w) =
-      (c * (w ν : K)) • (monomial (w - Finsupp.single ν 1) 1 * expMonomial c w) := by
+/-- The chain rule for the exponential gauge jet:
+  `∂_ν exp(-i a X^w) = -i a w_ν X^{w - e_ν} exp(-i a X^w)`. -/
+lemma pderiv_expUnitary (a : ℝ) {w : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : w ≠ 0)
+    (ν : Fin 1 ⊕ Fin 3) :
+    pderiv ℂ ν (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) =
+      ((-(a : ℂ) * Complex.I) * (w ν : ℂ)) •
+        (monomial (w - Finsupp.single ν 1) 1 *
+          (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing)) := by
   classical
   ext k
   rw [coeff_pderiv, map_smul, smul_eq_mul, coeff_monomial_mul]
@@ -1362,28 +1376,31 @@ lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
           Finsupp.single_eq_of_ne hρν
         rw [hsρ] at h1 ⊢
         omega
-    rw [if_pos hdk, one_mul, hkd, hn, coeff_expMonomial_nsmul hw,
-      coeff_expMonomial_nsmul hw]
-    have hcast : ((k ν : K) + 1) = (n : K) * (w ν : K) := by exact_mod_cast hkν
+    rw [if_pos hdk, one_mul, hkd, hn, coeff_expUnitary_nsmul a hw,
+      coeff_expUnitary_nsmul a hw]
+    have hcast : ((k ν : ℂ) + 1) = (n : ℂ) * (w ν : ℂ) := by exact_mod_cast hkν
     rw [hcast]
-    have hfac : (n.factorial : K) = (n : K) * ((n - 1).factorial : K) := by
-      exact_mod_cast congrArg (Nat.cast : ℕ → K)
+    have hfac : (n.factorial : ℂ) = (n : ℂ) * ((n - 1).factorial : ℂ) := by
+      exact_mod_cast congrArg (Nat.cast : ℕ → ℂ)
         (Nat.mul_factorial_pred (Nat.pos_iff_ne_zero.mp hnpos)).symm
-    have hpow : c ^ n = c * c ^ (n - 1) := by
+    have hpow : (-(a : ℂ) * Complex.I) ^ n =
+        (-(a : ℂ) * Complex.I) * (-(a : ℂ) * Complex.I) ^ (n - 1) := by
       conv_lhs => rw [show n = 1 + (n - 1) by omega, pow_add, pow_one]
     rw [hfac, hpow]
-    have h1 : ((n : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hnpos)
-    have h2 : (((n - 1).factorial : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
+    have h1 : ((n : ℂ)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hnpos)
+    have h2 : (((n - 1).factorial : ℂ)) ≠ 0 :=
+      Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
     field_simp
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hA), zero_mul]
+  · rw [coeff_expUnitary_of_forall_ne a hw (not_exists.mp hA), zero_mul]
     by_cases hwv : w ν = 0
     · rw [hwv]
       simp
     · have hzero : (if w - Finsupp.single ν 1 ≤ k then
-          1 * coeff (k - (w - Finsupp.single ν 1)) (expMonomial c w) else 0) = 0 := by
+          1 * coeff (k - (w - Finsupp.single ν 1))
+            (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) else 0) = 0 := by
         split_ifs with hdk
         · rw [one_mul]
-          refine coeff_expMonomial_of_forall_ne _ fun m hm => ?_
+          refine coeff_expUnitary_of_forall_ne a hw fun m hm => ?_
           apply hA
           refine ⟨m + 1, ?_⟩
           have hle : Finsupp.single ν 1 ≤ w :=
@@ -1400,52 +1417,20 @@ lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
         · rfl
       rw [hzero, mul_zero]
 
-/-!
-
-### A.2 Gauge realization of translations of the jet coordinates
-
-To identify the gauge invariants of the jet algebra we need not only that every
-jet gauge transformation shifts the component functions by the Maurer–Cartan
-pairing, but also that enough shifts are realized: for every nonzero symmetrized
-multi-index `t` and every real `r` there is a jet of a local `U(1)` gauge
-transformation shifting every component function with total multi-index `t` by
-exactly `r`, and all others by nothing. The transformation realizing this is the
-exponential `exp(-i a X^t)` with `a = r / t!`, formalized through
-`MvPowerSeries.expMonomial`.
-
--/
-
-/-- The jet of the local `U(1)` gauge transformation `exp(-i a X^w)`: the
-  exponential of an imaginary multiple of a spacetime monomial, which is unitary
-  as a formal power series. -/
-noncomputable def expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0) :
-    unitary JetRing :=
-  ⟨expMonomial (-(a : ℂ) * Complex.I) w, by
-    have hstar : star (-(a : ℂ) * Complex.I) = -(-(a : ℂ) * Complex.I) := by
-      rw [star_mul', Complex.star_def, Complex.conj_I, map_neg, Complex.conj_ofReal]
-      ring
-    rw [Unitary.mem_iff, star_expMonomial hw, hstar, expMonomial_mul_expMonomial hw,
-      expMonomial_mul_expMonomial hw, neg_add_cancel, add_neg_cancel,
-      expMonomial_zero hw]
-    exact ⟨rfl, rfl⟩⟩
-
 /-- The Maurer–Cartan series of the exponential gauge jet: the monomial
-  `a w_ν X^{w - e_ν}`, which is the jet of the gradient `a ∂_ν X^w`. -/
+  `a w_ν X^{w - e_ν}`, which is the jet of the gradient `a ∂_ν X^w`. The star of
+  the series is eliminated by the unitarity relation, so only the chain rule
+  enters. -/
 lemma maurerCartanU1_expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0)
     (ν : Fin 1 ⊕ Fin 3) :
-    maurerCartanU1 (1, 1, expUnitary a w hw) ν =
+    maurerCartanU1 (expUnitary a w hw) ν =
       monomial (w - Finsupp.single ν 1) ((a : ℂ) * ((w ν : ℕ) : ℂ)) := by
-  have hstar : star (-(a : ℂ) * Complex.I) = -(-(a : ℂ) * Complex.I) := by
-    rw [star_mul', Complex.star_def, Complex.conj_I, map_neg, Complex.conj_ofReal]
-    ring
-  rw [maurerCartanU1,
-    show (((1, 1, expUnitary a w hw) : JetGaugeGroupI).2.2 : JetRing) =
-      expMonomial (-(a : ℂ) * Complex.I) w from rfl,
-    pderiv_expMonomial hw, star_expMonomial hw, hstar, smul_mul_assoc,
-    mul_assoc (monomial (w - Finsupp.single ν 1) 1),
-    expMonomial_mul_expMonomial hw, add_neg_cancel, expMonomial_zero hw, mul_one,
-    mul_smul_comm, ← monomial_zero_eq_C_apply, monomial_mul_monomial, zero_add,
-    ← map_smul, smul_eq_mul]
+  have hu : (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) *
+      star (((expUnitary a w hw).2.2 : unitary JetRing) : JetRing) = 1 :=
+    (Unitary.mem_iff.mp (expUnitary a w hw).2.2.2).2
+  rw [maurerCartanU1, pderiv_expUnitary a hw ν, smul_mul_assoc,
+    mul_assoc (monomial (w - Finsupp.single ν 1) 1), hu, mul_one, mul_smul_comm,
+    ← monomial_zero_eq_C_apply, monomial_mul_monomial, zero_add, ← map_smul, smul_eq_mul]
   congr 1
   ring_nf
   rw [Complex.I_sq]
@@ -1457,13 +1442,13 @@ lemma maurerCartanU1_expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw
 lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
     (ht : Multiset.toFinsupp t ≠ 0) (r : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (ν : Fin 1 ⊕ Fin 3) :
-    mcPairing (1, 1, expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+    mcPairing (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
         (Multiset.toFinsupp t) ht) (JetComponentSpace.basis (.dB s ν)) =
       if s + {ν} = t then r else 0 := by
   rw [mcPairing_basis_dB', Complex.selfAdjointEquiv_apply,
-    show ((maurerCartanU1Coeff (1, 1, expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+    show ((maurerCartanU1Coeff (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
         (Multiset.toFinsupp t) ht) ν (Multiset.toFinsupp s) : selfAdjoint ℂ) : ℂ) =
-      coeff (Multiset.toFinsupp s) (maurerCartanU1 (1, 1, expUnitary
+      coeff (Multiset.toFinsupp s) (maurerCartanU1 (expUnitary
         (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
         (Multiset.toFinsupp t) ht) ν) from rfl,
     maurerCartanU1_expUnitary, coeff_monomial]
@@ -1508,7 +1493,6 @@ lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
         exact hmw
     · rw [if_neg hm]
       simp
-
 
 /-- The difference between a jet-algebra generator and its canonical
   representative is a derivative of the field strength, or zero. -/
@@ -1565,12 +1549,12 @@ lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
         have h0 : s₀ + {ν₀} = 0 :=
           Multiset.toFinsupp.injective (by rw [h, Multiset.toFinsupp_zero])
         simp at h0
-      have hconj := equivMvPolynomial_repJetGaugeGroupI_u1
+      have hconj := equivMvPolynomial_repJetGaugeGroupI
         (expUnitary (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
           (Multiset.toFinsupp (s₀ + {ν₀})) hne) V
       rw [hV _] at hconj
       have hfun : (fun g => MvPolynomial.X g + MvPolynomial.C
-          (mcPairing (1, 1, expUnitary
+          (mcPairing (expUnitary
               (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
               (Multiset.toFinsupp (s₀ + {ν₀})) hne)
             (JetComponentSpace.basis g))) =
