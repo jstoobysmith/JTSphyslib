@@ -34,259 +34,6 @@ boson is the B boson formalized here.
 
 @[expose] public section
 
-namespace MvPowerSeries
-
-variable {σ R : Type*}
-
-/-!
-
-## Ab. The exponential of a monomial
-
-The gauge invariants of the B-boson jet algebra are computed below by realizing
-arbitrary translations of the jet coordinates through explicit local `U(1)` gauge
-transformations. These are the formal exponentials `exp (c X^w)` of a single
-monomial, defined here coefficientwise; the exponential property
-`exp(c X^w) exp(c' X^w) = exp((c + c') X^w)` gives unitarity for imaginary `c`,
-and the chain rule gives their Maurer–Cartan series.
-
--/
-
-section ExpMonomial
-
-variable {K : Type*} [Field K] [CharZero K] {w : σ →₀ ℕ}
-
-open Classical in
-/-- The formal exponential of `c` times the monomial with exponent `w`: the power
-  series `∑ₙ (cⁿ/n!) X^{n w}`, defined coefficientwise. -/
-noncomputable def expMonomial (c : K) (w : σ →₀ ℕ) : MvPowerSeries σ K :=
-  fun k => if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : K) else 0
-
-/-- A nonzero exponent has a coordinate at which it is nonzero. -/
-lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 := by
-  obtain ⟨ρ, hρ⟩ := Finsupp.ne_iff.mp hw
-  exact ⟨ρ, by simpa using hρ⟩
-
-/-- Multiples of a nonzero exponent determine the multiplier. -/
-lemma nsmul_right_cancel (hw : w ≠ 0) {n m : ℕ} (h : n • w = m • w) : n = m := by
-  obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-  have h' := DFunLike.congr_fun h ρ
-  simp only [Finsupp.smul_apply, smul_eq_mul] at h'
-  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ) h'
-
-omit [CharZero K] in
-/-- The Taylor coefficient of the exponential of a monomial at a multiple of the
-  exponent. -/
-lemma coeff_expMonomial_nsmul (hw : w ≠ 0) (c : K) (n : ℕ) :
-    coeff (n • w) (expMonomial c w) = c ^ n / (n.factorial : K) := by
-  have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
-  rw [coeff_apply]
-  simp only [expMonomial]
-  rw [dif_pos h, show h.choose = n from (nsmul_right_cancel hw h.choose_spec).symm]
-
-omit [CharZero K] in
-/-- The Taylor coefficients of the exponential of a monomial vanish away from the
-  multiples of the exponent. -/
-lemma coeff_expMonomial_of_forall_ne (c : K) {k : σ →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
-    coeff k (expMonomial c w) = 0 := by
-  rw [coeff_apply]
-  simp only [expMonomial]
-  rw [dif_neg (not_exists.mpr hk)]
-
-/-- The exponential property: exponentials of the same monomial multiply by adding
-  the scalars. -/
-lemma expMonomial_mul_expMonomial (hw : w ≠ 0) (c c' : K) :
-    expMonomial c w * expMonomial c' w = expMonomial (c + c') w := by
-  classical
-  ext k
-  by_cases hk : ∃ n : ℕ, k = n • w
-  · obtain ⟨N, rfl⟩ := hk
-    rw [coeff_mul, coeff_expMonomial_nsmul hw]
-    have hsub : (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) ⊆
-        Finset.antidiagonal (N • w) := by
-      intro p hp
-      obtain ⟨n, hn, rfl⟩ := Finset.mem_image.mp hp
-      rw [Finset.mem_antidiagonal, ← add_smul,
-        Nat.add_sub_cancel' (Nat.lt_succ_iff.mp (Finset.mem_range.mp hn))]
-    have hvanish : ∀ p ∈ Finset.antidiagonal (N • w),
-        p ∉ (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) →
-        coeff p.1 (expMonomial c w) * coeff p.2 (expMonomial c' w) = 0 := by
-      intro p hp hpn
-      by_cases h1 : ∃ n : ℕ, p.1 = n • w
-      · obtain ⟨n₁, h1⟩ := h1
-        exfalso
-        apply hpn
-        have hsum : p.1 + p.2 = N • w := Finset.mem_antidiagonal.mp hp
-        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-        have hcoords : ∀ ρ', n₁ * w ρ' + p.2 ρ' = N * w ρ' := by
-          intro ρ'
-          have h' := DFunLike.congr_fun hsum ρ'
-          simpa [h1, Finsupp.smul_apply] using h'
-        have hle : n₁ ≤ N :=
-          Nat.le_of_mul_le_mul_right (by have := hcoords ρ; omega)
-            (Nat.pos_of_ne_zero hρ)
-        have h2 : p.2 = (N - n₁) • w := by
-          ext ρ'
-          rw [Finsupp.smul_apply, smul_eq_mul, Nat.sub_mul]
-          have := hcoords ρ'
-          omega
-        exact Finset.mem_image.mpr
-          ⟨n₁, Finset.mem_range.mpr (Nat.lt_succ_of_le hle), by rw [← h1, ← h2]⟩
-      · rw [coeff_expMonomial_of_forall_ne c (not_exists.mp h1), zero_mul]
-    rw [← Finset.sum_subset hsub hvanish,
-      Finset.sum_image (fun n _ m _ h => nsmul_right_cancel hw (congrArg Prod.fst h)),
-      add_pow, Finset.sum_div]
-    refine Finset.sum_congr rfl fun n hn => ?_
-    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw]
-    have hle : n ≤ N := Nat.lt_succ_iff.mp (Finset.mem_range.mp hn)
-    have hfact : ((N.choose n : K)) * (n.factorial : K) * ((N - n).factorial : K) =
-        (N.factorial : K) := by
-      exact_mod_cast congrArg (Nat.cast : ℕ → K)
-        (Nat.choose_mul_factorial_mul_factorial hle)
-    have h1 : (n.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr n.factorial_ne_zero
-    have h2 : ((N - n).factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr (N - n).factorial_ne_zero
-    have h3 : (N.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr N.factorial_ne_zero
-    rw [div_mul_div_comm, div_eq_div_iff (mul_ne_zero h1 h2) h3]
-    linear_combination (-(c ^ n * c' ^ (N - n))) * hfact
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_mul]
-    refine Finset.sum_eq_zero fun p hp => ?_
-    by_cases h1 : ∃ n : ℕ, p.1 = n • w
-    · by_cases h2 : ∃ n : ℕ, p.2 = n • w
-      · exfalso
-        obtain ⟨n₁, h1⟩ := h1
-        obtain ⟨n₂, h2⟩ := h2
-        exact hk ⟨n₁ + n₂, by rw [← Finset.mem_antidiagonal.mp hp, h1, h2, add_smul]⟩
-      · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h2), mul_zero]
-    · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h1), zero_mul]
-
-/-- The coefficientwise star of the exponential of a monomial is the exponential at
-  the starred scalar. -/
-lemma star_expMonomial {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : m ≠ 0) (c : ℂ) :
-    star (expMonomial c m : JetRing) = expMonomial (star c) m := by
-  ext k
-  rw [JetRing.coeff_star]
-  by_cases hk : ∃ n : ℕ, k = n • m
-  · obtain ⟨n, rfl⟩ := hk
-    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw, star_div₀, star_pow,
-      star_natCast]
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk),
-      coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), star_zero]
-
-/-- The exponential of a monomial at scalar zero is one. -/
-lemma expMonomial_zero (hw : w ≠ 0) : expMonomial (0 : K) w = 1 := by
-  classical
-  ext k
-  by_cases hk : ∃ n : ℕ, k = n • w
-  · obtain ⟨n, rfl⟩ := hk
-    rw [coeff_expMonomial_nsmul hw, coeff_one]
-    rcases Nat.eq_zero_or_pos n with hn | hn
-    · subst hn
-      rw [if_pos (zero_smul ℕ w)]
-      simp
-    · have hne : ¬n • w = 0 := by
-        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-        intro h0
-        have h' := DFunLike.congr_fun h0 ρ
-        simp only [Finsupp.smul_apply, smul_eq_mul, Finsupp.coe_zero, Pi.zero_apply,
-          Nat.mul_eq_zero] at h'
-        omega
-      rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg hne]
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_one,
-      if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
-
-/-- The chain rule for the exponential of a monomial:
-  `∂_ν exp(c X^w) = c w_ν X^{w - e_ν} exp(c X^w)`. -/
-lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
-    pderiv K ν (expMonomial c w) =
-      (c * (w ν : K)) • (monomial (w - Finsupp.single ν 1) 1 * expMonomial c w) := by
-  classical
-  ext k
-  rw [coeff_pderiv, map_smul, smul_eq_mul, coeff_monomial_mul]
-  by_cases hA : ∃ n : ℕ, k + Finsupp.single ν 1 = n • w
-  · obtain ⟨n, hn⟩ := hA
-    have hcoords : ∀ ρ, k ρ + (Finsupp.single ν 1) ρ = n * w ρ := by
-      intro ρ
-      have h' := DFunLike.congr_fun hn ρ
-      simpa [Finsupp.smul_apply] using h'
-    have hkν : k ν + 1 = n * w ν := by
-      have := hcoords ν
-      rwa [Finsupp.single_eq_same] at this
-    have hnpos : 0 < n := by
-      rcases Nat.eq_zero_or_pos n with h0 | h0
-      · subst h0; omega
-      · exact h0
-    have hwνpos : 0 < w ν := by
-      rcases Nat.eq_zero_or_pos (w ν) with h0 | h0
-      · rw [h0, Nat.mul_zero] at hkν; omega
-      · exact h0
-    have hdk : w - Finsupp.single ν 1 ≤ k := by
-      rw [Finsupp.le_def]
-      intro ρ
-      rw [Finsupp.tsub_apply]
-      have h1 := hcoords ρ
-      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
-      by_cases hρν : ρ = ν
-      · subst hρν
-        rw [Finsupp.single_eq_same] at h1 ⊢
-        omega
-      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
-          Finsupp.single_eq_of_ne hρν
-        rw [hsρ] at h1 ⊢
-        omega
-    have hkd : k - (w - Finsupp.single ν 1) = (n - 1) • w := by
-      ext ρ
-      rw [Finsupp.tsub_apply, Finsupp.tsub_apply, Finsupp.smul_apply, smul_eq_mul,
-        Nat.sub_mul, one_mul]
-      have h1 := hcoords ρ
-      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
-      by_cases hρν : ρ = ν
-      · subst hρν
-        rw [Finsupp.single_eq_same] at h1 ⊢
-        omega
-      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
-          Finsupp.single_eq_of_ne hρν
-        rw [hsρ] at h1 ⊢
-        omega
-    rw [if_pos hdk, one_mul, hkd, hn, coeff_expMonomial_nsmul hw,
-      coeff_expMonomial_nsmul hw]
-    have hcast : ((k ν : K) + 1) = (n : K) * (w ν : K) := by exact_mod_cast hkν
-    rw [hcast]
-    have hfac : (n.factorial : K) = (n : K) * ((n - 1).factorial : K) := by
-      exact_mod_cast congrArg (Nat.cast : ℕ → K)
-        (Nat.mul_factorial_pred (Nat.pos_iff_ne_zero.mp hnpos)).symm
-    have hpow : c ^ n = c * c ^ (n - 1) := by
-      conv_lhs => rw [show n = 1 + (n - 1) by omega, pow_add, pow_one]
-    rw [hfac, hpow]
-    have h1 : ((n : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hnpos)
-    have h2 : (((n - 1).factorial : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
-    field_simp
-  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hA), zero_mul]
-    by_cases hwv : w ν = 0
-    · rw [hwv]
-      simp
-    · have hzero : (if w - Finsupp.single ν 1 ≤ k then
-          1 * coeff (k - (w - Finsupp.single ν 1)) (expMonomial c w) else 0) = 0 := by
-        split_ifs with hdk
-        · rw [one_mul]
-          refine coeff_expMonomial_of_forall_ne _ fun m hm => ?_
-          apply hA
-          refine ⟨m + 1, ?_⟩
-          have hle : Finsupp.single ν 1 ≤ w :=
-            Finsupp.single_le_iff.mpr (Nat.pos_of_ne_zero hwv)
-          have h1 : k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) = k :=
-            tsub_add_cancel_of_le hdk
-          have h2 : (w - Finsupp.single ν 1) + Finsupp.single ν 1 = w :=
-            tsub_add_cancel_of_le hle
-          calc k + Finsupp.single ν 1
-              = k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) +
-                Finsupp.single ν 1 := by rw [h1]
-            _ = m • w + w := by rw [hm, add_assoc, h2]
-            _ = (m + 1) • w := by rw [add_smul, one_smul]
-        · rfl
-      rw [hzero, mul_zero]
-
-end ExpMonomial
-
-end MvPowerSeries
 
 namespace StandardModel
 
@@ -1695,7 +1442,251 @@ in the field strength and its derivatives.
 
 /-!
 
-## Gauge realization of translations of the jet coordinates
+### A.1 The exponential of a monomial
+
+The gauge invariants of the B-boson jet algebra are computed below by realizing
+arbitrary translations of the jet coordinates through explicit local `U(1)` gauge
+transformations. These are the formal exponentials `exp (c X^w)` of a single
+monomial, defined here coefficientwise; the exponential property
+`exp(c X^w) exp(c' X^w) = exp((c + c') X^w)` gives unitarity for imaginary `c`,
+and the chain rule gives their Maurer–Cartan series.
+
+-/
+
+variable {K : Type*} [Field K] [CharZero K] {w : σ →₀ ℕ}
+
+open Classical in
+/-- The formal exponential of `c` times the monomial with exponent `w`: the power
+  series `∑ₙ (cⁿ/n!) X^{n w}`, defined coefficientwise. -/
+noncomputable def expMonomial (c : K) (w : σ →₀ ℕ) : MvPowerSeries σ K :=
+  fun k => if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : K) else 0
+
+/-- A nonzero exponent has a coordinate at which it is nonzero. -/
+lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 := by
+  obtain ⟨ρ, hρ⟩ := Finsupp.ne_iff.mp hw
+  exact ⟨ρ, by simpa using hρ⟩
+
+/-- Multiples of a nonzero exponent determine the multiplier. -/
+lemma nsmul_right_cancel (hw : w ≠ 0) {n m : ℕ} (h : n • w = m • w) : n = m := by
+  obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+  have h' := DFunLike.congr_fun h ρ
+  simp only [Finsupp.smul_apply, smul_eq_mul] at h'
+  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ) h'
+
+omit [CharZero K] in
+/-- The Taylor coefficient of the exponential of a monomial at a multiple of the
+  exponent. -/
+lemma coeff_expMonomial_nsmul (hw : w ≠ 0) (c : K) (n : ℕ) :
+    coeff (n • w) (expMonomial c w) = c ^ n / (n.factorial : K) := by
+  have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
+  rw [coeff_apply]
+  simp only [expMonomial]
+  rw [dif_pos h, show h.choose = n from (nsmul_right_cancel hw h.choose_spec).symm]
+
+omit [CharZero K] in
+/-- The Taylor coefficients of the exponential of a monomial vanish away from the
+  multiples of the exponent. -/
+lemma coeff_expMonomial_of_forall_ne (c : K) {k : σ →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
+    coeff k (expMonomial c w) = 0 := by
+  rw [coeff_apply]
+  simp only [expMonomial]
+  rw [dif_neg (not_exists.mpr hk)]
+
+/-- The exponential property: exponentials of the same monomial multiply by adding
+  the scalars. -/
+lemma expMonomial_mul_expMonomial (hw : w ≠ 0) (c c' : K) :
+    expMonomial c w * expMonomial c' w = expMonomial (c + c') w := by
+  classical
+  ext k
+  by_cases hk : ∃ n : ℕ, k = n • w
+  · obtain ⟨N, rfl⟩ := hk
+    rw [coeff_mul, coeff_expMonomial_nsmul hw]
+    have hsub : (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) ⊆
+        Finset.antidiagonal (N • w) := by
+      intro p hp
+      obtain ⟨n, hn, rfl⟩ := Finset.mem_image.mp hp
+      rw [Finset.mem_antidiagonal, ← add_smul,
+        Nat.add_sub_cancel' (Nat.lt_succ_iff.mp (Finset.mem_range.mp hn))]
+    have hvanish : ∀ p ∈ Finset.antidiagonal (N • w),
+        p ∉ (Finset.range (N + 1)).image (fun n => (n • w, (N - n) • w)) →
+        coeff p.1 (expMonomial c w) * coeff p.2 (expMonomial c' w) = 0 := by
+      intro p hp hpn
+      by_cases h1 : ∃ n : ℕ, p.1 = n • w
+      · obtain ⟨n₁, h1⟩ := h1
+        exfalso
+        apply hpn
+        have hsum : p.1 + p.2 = N • w := Finset.mem_antidiagonal.mp hp
+        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+        have hcoords : ∀ ρ', n₁ * w ρ' + p.2 ρ' = N * w ρ' := by
+          intro ρ'
+          have h' := DFunLike.congr_fun hsum ρ'
+          simpa [h1, Finsupp.smul_apply] using h'
+        have hle : n₁ ≤ N :=
+          Nat.le_of_mul_le_mul_right (by have := hcoords ρ; omega)
+            (Nat.pos_of_ne_zero hρ)
+        have h2 : p.2 = (N - n₁) • w := by
+          ext ρ'
+          rw [Finsupp.smul_apply, smul_eq_mul, Nat.sub_mul]
+          have := hcoords ρ'
+          omega
+        exact Finset.mem_image.mpr
+          ⟨n₁, Finset.mem_range.mpr (Nat.lt_succ_of_le hle), by rw [← h1, ← h2]⟩
+      · rw [coeff_expMonomial_of_forall_ne c (not_exists.mp h1), zero_mul]
+    rw [← Finset.sum_subset hsub hvanish,
+      Finset.sum_image (fun n _ m _ h => nsmul_right_cancel hw (congrArg Prod.fst h)),
+      add_pow, Finset.sum_div]
+    refine Finset.sum_congr rfl fun n hn => ?_
+    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw]
+    have hle : n ≤ N := Nat.lt_succ_iff.mp (Finset.mem_range.mp hn)
+    have hfact : ((N.choose n : K)) * (n.factorial : K) * ((N - n).factorial : K) =
+        (N.factorial : K) := by
+      exact_mod_cast congrArg (Nat.cast : ℕ → K)
+        (Nat.choose_mul_factorial_mul_factorial hle)
+    have h1 : (n.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr n.factorial_ne_zero
+    have h2 : ((N - n).factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr (N - n).factorial_ne_zero
+    have h3 : (N.factorial : K) ≠ 0 := Nat.cast_ne_zero.mpr N.factorial_ne_zero
+    rw [div_mul_div_comm, div_eq_div_iff (mul_ne_zero h1 h2) h3]
+    linear_combination (-(c ^ n * c' ^ (N - n))) * hfact
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_mul]
+    refine Finset.sum_eq_zero fun p hp => ?_
+    by_cases h1 : ∃ n : ℕ, p.1 = n • w
+    · by_cases h2 : ∃ n : ℕ, p.2 = n • w
+      · exfalso
+        obtain ⟨n₁, h1⟩ := h1
+        obtain ⟨n₂, h2⟩ := h2
+        exact hk ⟨n₁ + n₂, by rw [← Finset.mem_antidiagonal.mp hp, h1, h2, add_smul]⟩
+      · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h2), mul_zero]
+    · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp h1), zero_mul]
+
+/-- The coefficientwise star of the exponential of a monomial is the exponential at
+  the starred scalar. -/
+lemma star_expMonomial {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hw : m ≠ 0) (c : ℂ) :
+    star (expMonomial c m : JetRing) = expMonomial (star c) m := by
+  ext k
+  rw [JetRing.coeff_star]
+  by_cases hk : ∃ n : ℕ, k = n • m
+  · obtain ⟨n, rfl⟩ := hk
+    rw [coeff_expMonomial_nsmul hw, coeff_expMonomial_nsmul hw, star_div₀, star_pow,
+      star_natCast]
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk),
+      coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), star_zero]
+
+/-- The exponential of a monomial at scalar zero is one. -/
+lemma expMonomial_zero (hw : w ≠ 0) : expMonomial (0 : K) w = 1 := by
+  classical
+  ext k
+  by_cases hk : ∃ n : ℕ, k = n • w
+  · obtain ⟨n, rfl⟩ := hk
+    rw [coeff_expMonomial_nsmul hw, coeff_one]
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · subst hn
+      rw [if_pos (zero_smul ℕ w)]
+      simp
+    · have hne : ¬n • w = 0 := by
+        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
+        intro h0
+        have h' := DFunLike.congr_fun h0 ρ
+        simp only [Finsupp.smul_apply, smul_eq_mul, Finsupp.coe_zero, Pi.zero_apply,
+          Nat.mul_eq_zero] at h'
+        omega
+      rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg hne]
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_one,
+      if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
+
+/-- The chain rule for the exponential of a monomial:
+  `∂_ν exp(c X^w) = c w_ν X^{w - e_ν} exp(c X^w)`. -/
+lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
+    pderiv K ν (expMonomial c w) =
+      (c * (w ν : K)) • (monomial (w - Finsupp.single ν 1) 1 * expMonomial c w) := by
+  classical
+  ext k
+  rw [coeff_pderiv, map_smul, smul_eq_mul, coeff_monomial_mul]
+  by_cases hA : ∃ n : ℕ, k + Finsupp.single ν 1 = n • w
+  · obtain ⟨n, hn⟩ := hA
+    have hcoords : ∀ ρ, k ρ + (Finsupp.single ν 1) ρ = n * w ρ := by
+      intro ρ
+      have h' := DFunLike.congr_fun hn ρ
+      simpa [Finsupp.smul_apply] using h'
+    have hkν : k ν + 1 = n * w ν := by
+      have := hcoords ν
+      rwa [Finsupp.single_eq_same] at this
+    have hnpos : 0 < n := by
+      rcases Nat.eq_zero_or_pos n with h0 | h0
+      · subst h0; omega
+      · exact h0
+    have hwνpos : 0 < w ν := by
+      rcases Nat.eq_zero_or_pos (w ν) with h0 | h0
+      · rw [h0, Nat.mul_zero] at hkν; omega
+      · exact h0
+    have hdk : w - Finsupp.single ν 1 ≤ k := by
+      rw [Finsupp.le_def]
+      intro ρ
+      rw [Finsupp.tsub_apply]
+      have h1 := hcoords ρ
+      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
+      by_cases hρν : ρ = ν
+      · subst hρν
+        rw [Finsupp.single_eq_same] at h1 ⊢
+        omega
+      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
+          Finsupp.single_eq_of_ne hρν
+        rw [hsρ] at h1 ⊢
+        omega
+    have hkd : k - (w - Finsupp.single ν 1) = (n - 1) • w := by
+      ext ρ
+      rw [Finsupp.tsub_apply, Finsupp.tsub_apply, Finsupp.smul_apply, smul_eq_mul,
+        Nat.sub_mul, one_mul]
+      have h1 := hcoords ρ
+      have h2 : w ρ ≤ n * w ρ := Nat.le_mul_of_pos_left _ hnpos
+      by_cases hρν : ρ = ν
+      · subst hρν
+        rw [Finsupp.single_eq_same] at h1 ⊢
+        omega
+      · have hsρ : (Finsupp.single ν 1) ρ = 0 :=
+          Finsupp.single_eq_of_ne hρν
+        rw [hsρ] at h1 ⊢
+        omega
+    rw [if_pos hdk, one_mul, hkd, hn, coeff_expMonomial_nsmul hw,
+      coeff_expMonomial_nsmul hw]
+    have hcast : ((k ν : K) + 1) = (n : K) * (w ν : K) := by exact_mod_cast hkν
+    rw [hcast]
+    have hfac : (n.factorial : K) = (n : K) * ((n - 1).factorial : K) := by
+      exact_mod_cast congrArg (Nat.cast : ℕ → K)
+        (Nat.mul_factorial_pred (Nat.pos_iff_ne_zero.mp hnpos)).symm
+    have hpow : c ^ n = c * c ^ (n - 1) := by
+      conv_lhs => rw [show n = 1 + (n - 1) by omega, pow_add, pow_one]
+    rw [hfac, hpow]
+    have h1 : ((n : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hnpos)
+    have h2 : (((n - 1).factorial : K)) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
+    field_simp
+  · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hA), zero_mul]
+    by_cases hwv : w ν = 0
+    · rw [hwv]
+      simp
+    · have hzero : (if w - Finsupp.single ν 1 ≤ k then
+          1 * coeff (k - (w - Finsupp.single ν 1)) (expMonomial c w) else 0) = 0 := by
+        split_ifs with hdk
+        · rw [one_mul]
+          refine coeff_expMonomial_of_forall_ne _ fun m hm => ?_
+          apply hA
+          refine ⟨m + 1, ?_⟩
+          have hle : Finsupp.single ν 1 ≤ w :=
+            Finsupp.single_le_iff.mpr (Nat.pos_of_ne_zero hwv)
+          have h1 : k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) = k :=
+            tsub_add_cancel_of_le hdk
+          have h2 : (w - Finsupp.single ν 1) + Finsupp.single ν 1 = w :=
+            tsub_add_cancel_of_le hle
+          calc k + Finsupp.single ν 1
+              = k - (w - Finsupp.single ν 1) + (w - Finsupp.single ν 1) +
+                Finsupp.single ν 1 := by rw [h1]
+            _ = m • w + w := by rw [hm, add_assoc, h2]
+            _ = (m + 1) • w := by rw [add_smul, one_smul]
+        · rfl
+      rw [hzero, mul_zero]
+
+/-!
+
+### A.2 Gauge realization of translations of the jet coordinates
 
 To identify the gauge invariants of the jet algebra we need not only that every
 jet gauge transformation shifts the component functions by the Maurer–Cartan
