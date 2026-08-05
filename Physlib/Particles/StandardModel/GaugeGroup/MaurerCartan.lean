@@ -18,16 +18,18 @@ public import Physlib.Mathematics.MvPowerSeriesDerivative
 public import Physlib.Mathematics.MvPolynomialTranslation
 public import Mathlib.Algebra.MvPolynomial.Derivation
 /-!
-# The B boson
+# The Maurer–Cartan forms of the jet gauge group
 
-The hypercharge gauge boson field `B_μ`: the gauge boson of the `U(1)` factor of
-the Standard Model gauge group, with one Lorentz index, valued in the
-one-dimensional adjoint of `U(1)`, modelled as the real vector space of hermitian
-complex numbers.
+The Maurer–Cartan forms `i (∂_ν U) U†` of a jet of gauge transformations, one for
+each factor of the Standard Model gauge group: the scalar-valued `U(1)` form and
+the matrix-valued `SU(3)` and `SU(2)` forms. These are the inhomogeneous terms in
+the local gauge transformations of the corresponding gauge bosons.
 
-The physical Z boson and photon are the electroweak-mixed combinations of this
-field with the neutral `SU(2)` boson; before mixing, the `U(1)` factor's gauge
-boson is the B boson formalized here.
+The abelian `U(1)` form is an additive cocycle; the nonabelian forms satisfy the
+twisted cocycle law `mc(UV) = mc(U) + U mc(V) U†`. Each form satisfies its
+Maurer–Cartan structure equation, relating the antisymmetrized derivative to the
+commutator; in the abelian case the derivative is symmetric, i.e. the form is
+closed.
 
 -/
 
@@ -41,6 +43,9 @@ open MvPowerSeries
 
 -/
 
+/-- The `U(1)` Maurer–Cartan form of a jet of gauge transformations in the
+  direction `ν`: the series `i (∂_ν u) ū` for `u` the hypercharge factor of the
+  jet. -/
 noncomputable def maurerCartanU1 (g : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) : JetRing :=
   (MvPowerSeries.C Complex.I : JetRing) * (pderiv ℂ ν (g.2.2 : JetRing) * star (g.2.2 : JetRing))
 
@@ -151,6 +156,80 @@ lemma maurerCartanSU2_mul (g1 g2 : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
   · rw [mul_smul_comm, smul_mul_assoc]
     congr 1
     rw [mul_assoc, ← mul_assoc (V.map (pderiv ℂ ν)), ← mul_assoc U]
+
+
+/-- The Maurer–Cartan series is hermitian: `star (i (∂_ν u) ū) = i (∂_ν u) ū`,
+  by differentiating the unitarity relation `u ū = 1`. All its Taylor
+  coefficients are therefore real. -/
+lemma star_maurerCartanU1 (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    star (maurerCartanU1 U ν) = maurerCartanU1 U ν := by
+  have hu : (U.2.2 : JetRing) * star (U.2.2 : JetRing) = 1 := (Unitary.mem_iff.mp U.2.2.2).2
+  have h0 : pderiv ℂ ν ((U.2.2 : JetRing) * star (U.2.2 : JetRing)) = 0 := by
+    rw [hu, pderiv_one]
+  rw [Derivation.leibniz] at h0
+  simp only [smul_eq_mul] at h0
+  have hq : pderiv ℂ ν (star (U.2.2 : JetRing)) * (U.2.2 : JetRing) =
+      -(pderiv ℂ ν (U.2.2 : JetRing) * star (U.2.2 : JetRing)) := by
+    linear_combination h0
+  rw [maurerCartanU1, star_mul', JetRing.star_C, star_mul', star_star, ← JetRing.pderiv_star, hq,
+    show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
+
+/-- The `SU(3)` Maurer–Cartan form is hermitian: `(i (∂_ν U) U†)† = i (∂_ν U) U†`,
+  by differentiating the unitarity relation `U U† = 1` entrywise. -/
+lemma star_maurerCartanSU3 (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    star (maurerCartanSU3 U ν) = maurerCartanSU3 U ν := by
+  rw [maurerCartanSU3]
+  set A : Matrix (Fin 3) (Fin 3) JetRing := (U.1 : Matrix (Fin 3) (Fin 3) JetRing) with hA
+  have hU : A * star A = 1 := by
+    have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1
+    rwa [Matrix.mem_unitaryGroup_iff] at h
+  have hone : (1 : Matrix (Fin 3) (Fin 3) JetRing).map (pderiv ℂ ν) = 0 := by
+    ext i j : 1
+    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ ν)]
+  have hleib : (A * star A).map (pderiv ℂ ν) =
+      A.map (pderiv ℂ ν) * star A + A * (star A).map (pderiv ℂ ν) := by
+    ext i j : 1
+    simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+      Derivation.leibniz, smul_eq_mul]
+    exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
+  have h0 : A.map (pderiv ℂ ν) * star A + A * (star A).map (pderiv ℂ ν) = 0 := by
+    rw [← hleib, hU, hone]
+  have hq : A * ((star A).map (pderiv ℂ ν)) = -(A.map (pderiv ℂ ν) * star A) :=
+    eq_neg_of_add_eq_zero_right h0
+  have hstarmap : star (A.map (pderiv ℂ ν)) = (star A).map (pderiv ℂ ν) := by
+    ext i j : 1
+    simp only [Matrix.star_apply, Matrix.map_apply]
+    exact (JetRing.pderiv_star ν (A j i)).symm
+  rw [star_smul, star_mul, star_star, hstarmap, hq, JetRing.star_C,
+    show (star Complex.I) = -Complex.I by simp, map_neg, neg_smul, smul_neg, neg_neg]
+
+/-- The `SU(2)` Maurer–Cartan form is hermitian; see `star_maurerCartanSU3`. -/
+lemma star_maurerCartanSU2 (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    star (maurerCartanSU2 U ν) = maurerCartanSU2 U ν := by
+  rw [maurerCartanSU2]
+  set A : Matrix (Fin 2) (Fin 2) JetRing := (U.2.1 : Matrix (Fin 2) (Fin 2) JetRing) with hA
+  have hU : A * star A = 1 := by
+    have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).1
+    rwa [Matrix.mem_unitaryGroup_iff] at h
+  have hone : (1 : Matrix (Fin 2) (Fin 2) JetRing).map (pderiv ℂ ν) = 0 := by
+    ext i j : 1
+    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ ν)]
+  have hleib : (A * star A).map (pderiv ℂ ν) =
+      A.map (pderiv ℂ ν) * star A + A * (star A).map (pderiv ℂ ν) := by
+    ext i j : 1
+    simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+      Derivation.leibniz, smul_eq_mul]
+    exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
+  have h0 : A.map (pderiv ℂ ν) * star A + A * (star A).map (pderiv ℂ ν) = 0 := by
+    rw [← hleib, hU, hone]
+  have hq : A * ((star A).map (pderiv ℂ ν)) = -(A.map (pderiv ℂ ν) * star A) :=
+    eq_neg_of_add_eq_zero_right h0
+  have hstarmap : star (A.map (pderiv ℂ ν)) = (star A).map (pderiv ℂ ν) := by
+    ext i j : 1
+    simp only [Matrix.star_apply, Matrix.map_apply]
+    exact (JetRing.pderiv_star ν (A j i)).symm
+  rw [star_smul, star_mul, star_star, hstarmap, hq, JetRing.star_C,
+    show (star Complex.I) = -Complex.I by simp, map_neg, neg_smul, smul_neg, neg_neg]
 
 /-!
 
