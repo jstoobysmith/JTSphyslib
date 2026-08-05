@@ -224,6 +224,9 @@ inductive JetGenerators where
   | dB (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3): JetGenerators
 deriving DecidableEq
 
+def JetGenerators.massWeight : JetGenerators → ℕ
+  | JetGenerators.dB s _ => 2 * (1 + s.card)
+
 def JetGenerators.equiv : JetGenerators ≃ Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) where
   toFun
     | JetGenerators.dB s μ => (s, μ)
@@ -343,6 +346,29 @@ abbrev JetComponentSpace :=
 noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponentSpace :=
   (LagrangianTheory.dualRealJetAlgebraBasis.tensorProduct
     BBoson.basis.dualBasis).reindex JetGenerators.equiv.symm
+
+/-- The mass-dimension scaling on the space of component functions of the
+  B boson: the diagonal map multiplying each component function `∂_s B_μ` by
+  `c ^ w`, where `w` is twice its mass dimension. -/
+noncomputable def JetComponentSpace.massWeightScale (c : ℝ) :
+    JetComponentSpace →ₗ[ℝ] JetComponentSpace :=
+  JetComponentSpace.basis.constr ℝ fun j =>
+    c ^ j.massWeight • JetComponentSpace.basis j
+
+@[simp]
+lemma JetComponentSpace.massWeightScale_basis (c : ℝ) (j : JetGenerators) :
+    JetComponentSpace.massWeightScale c (JetComponentSpace.basis j) =
+      c ^ j.massWeight • JetComponentSpace.basis j := by
+  rw [JetComponentSpace.massWeightScale, Module.Basis.constr_basis]
+
+/-- The representation of the Lorentz group on the space of component functions
+  of the B boson: the derivative symbols transform through the real dual covector
+  action and the target factor through the dual of the B-boson representation. -/
+noncomputable def JetComponentSpace.repLorentzGroup :
+    Representation ℝ (SL(2,ℂ)) JetComponentSpace :=
+  DerivAlgebraReal.repLorentzGroup.tprod BBoson.repLorentzGroup.dual
+
+
 /-!
 
 ### A.1. The action of the gauge group on the jet component space
@@ -638,6 +664,38 @@ namespace JetAlgebra
 
 noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
    SymmetricAlgebra.ι ℝ JetComponentSpace (BBoson.JetComponentSpace.basis x)
+
+/-!
+
+## A. Representation of the Lorentz group
+
+-/
+
+noncomputable def repLorentzGroup :
+    Representation ℝ SL(2,ℂ) JetAlgebra where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ JetComponentSpace.repLorentzGroup Λ)).toLinearMap
+  map_one' := by
+    simp [End.one_eq_id]
+  map_mul' Λ1 Λ2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ JetComponentSpace.repLorentzGroup (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ JetComponentSpace.repLorentzGroup Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ JetComponentSpace.repLorentzGroup Λ2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
+
+noncomputable def complexRepLorentzGroup : Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] JetAlgebra) where
+  toFun U := LinearMap.baseChange ℂ (BBoson.JetAlgebra.repLorentzGroup U)
+  map_one' := by
+    ext x
+    simp [Module.End.one_eq_id]
+  map_mul' U V := by
+    ext x
+    simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
 
 /-!
 
@@ -1739,6 +1797,51 @@ lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
     | algebraMap r => exact repJetGaugeGroupI_algebraMap U r
     | add x y hx hy ihx ihy => rw [map_add, ihx, ihy]
     | mul x y hx hy ihx ihy => rw [repJetGaugeGroupI_mul, ihx, ihy]
+
+/-!
+
+## Mass weight scaling
+
+-/
+
+
+/-- The mass-dimension scaling on the jet algebra of the B boson: the algebra
+  map multiplying each generator by `c ^ w`, where `w` is twice its mass
+  dimension. -/
+noncomputable def massWeightScaleReal (c : ℝ) : JetAlgebra →ₐ[ℝ] JetAlgebra :=
+  SymmetricAlgebra.lift
+    ((SymmetricAlgebra.ι ℝ JetComponentSpace) ∘ₗ JetComponentSpace.massWeightScale c)
+
+/-- Each generator scales by `c` to the power of its mass weight. -/
+@[simp]
+lemma massWeightScaleReal_ofGenerator (c : ℝ) (j : JetGenerators) :
+    massWeightScaleReal c (ofGenerator j) = c ^ j.massWeight • ofGenerator j := by
+  rw [ofGenerator, massWeightScaleReal, SymmetricAlgebra.lift_ι_apply]
+  simp only [LinearMap.coe_comp, Function.comp_apply,
+    JetComponentSpace.massWeightScale_basis, map_smul]
+
+/-- The mass-dimension scaling on the complexified jet algebra of the B boson:
+  the `ℂ`-algebra map multiplying each generator by `c ^ w`, where `w` is twice
+  its mass dimension. -/
+noncomputable def massWeightScale (c : ℂ) :
+    ℂ ⊗[ℝ] JetAlgebra →ₐ[ℂ] ℂ ⊗[ℝ] JetAlgebra :=
+  Algebra.TensorProduct.lift Algebra.TensorProduct.includeLeft
+    (SymmetricAlgebra.lift (JetComponentSpace.basis.constr ℝ fun j =>
+      c ^ j.massWeight • ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j)))
+    fun _ _ => Commute.all _ _
+
+/-- Each complexified generator scales by `c` to the power of its mass
+  weight. -/
+@[simp]
+lemma massWeightScale_tmul_ofGenerator (c z : ℂ) (j : JetGenerators) :
+    massWeightScale c (z ⊗ₜ[ℝ] ofGenerator j) =
+      c ^ j.massWeight • (z ⊗ₜ[ℝ] ofGenerator j) := by
+  rw [massWeightScale, Algebra.TensorProduct.lift_tmul, ofGenerator,
+    SymmetricAlgebra.lift_ι_apply, Module.Basis.constr_basis, mul_smul_comm]
+  congr 1
+  rw [Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.tmul_mul_tmul,
+    mul_one, one_mul]
+  rfl
 
 end JetAlgebra
 

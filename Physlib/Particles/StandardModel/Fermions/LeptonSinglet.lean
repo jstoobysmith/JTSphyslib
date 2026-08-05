@@ -279,6 +279,10 @@ def JetGenerators.equiv : JetGenerators ≃
     intro x
     cases x <;> rfl
 
+def JetGenerators.massWeight : JetGenerators → ℕ
+  | JetGenerators.dψ s _ => 3 + 2 * s.card
+  | JetGenerators.dbarψ s _ => 3 + 2 * s.card
+
 abbrev JetComponentSpace :=
   (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
     Module.Dual ℂ LeptonSinglet) ×
@@ -529,6 +533,136 @@ lemma JetComponentSpace.jetDeriv_basis (μ : Fin 1 ⊕ Fin 3) (j : JetGenerators
       JetComponentSpace.basis (JetGenerators.shift μ j) := by
   rw [JetComponentSpace.jetDeriv, Module.Basis.constr_basis]
 
+/-- The mass-dimension scaling on the space of component functions of the
+  charged-lepton singlet: the diagonal map multiplying each component function
+  `∂_s ψ_α` by `c ^ w`, where `w` is twice its mass dimension. -/
+noncomputable def JetComponentSpace.massWeightScale (c : ℂ) :
+    JetComponentSpace →ₗ[ℂ] JetComponentSpace :=
+  JetComponentSpace.basis.constr ℂ fun j =>
+    c ^ j.massWeight • JetComponentSpace.basis j
+
+@[simp]
+lemma JetComponentSpace.massWeightScale_basis (c : ℂ) (j : JetGenerators) :
+    JetComponentSpace.massWeightScale c (JetComponentSpace.basis j) =
+      c ^ j.massWeight • JetComponentSpace.basis j := by
+  rw [JetComponentSpace.massWeightScale, Module.Basis.constr_basis]
+
+/-- The mass-dimension scaling commutes with the action of jets of constant
+  gauge transformations on the component space: the constant action is diagonal
+  on the generator basis, with no derivative mixing. For a non-constant jet the
+  higher Taylor coefficients of `u ^ 6` strictly lower the derivative degree, so
+  the action does not commute with the scaling. -/
+lemma JetComponentSpace.massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI) :
+    JetComponentSpace.massWeightScale c ∘ₗ
+        JetComponentSpace.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
+      JetComponentSpace.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) ∘ₗ
+        JetComponentSpace.massWeightScale c := by
+  have hu : ((((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing)) : JetRing) =
+      MvPowerSeries.C ((g.2.2 : ℂ)) := rfl
+  refine JetComponentSpace.basis.ext fun j => ?_
+  cases j with
+  | dψ s α =>
+    have hrep : JetComponentSpace.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
+        (JetComponentSpace.basis (.dψ s α)) =
+          ((g.2.2 : ℂ) ^ 6) • JetComponentSpace.basis (.dψ s α) := by
+      simp only [JetComponentSpace.basis_dψ]
+      rw [JetComponentSpace.repJetGaugeGroupI_inl, hu, ← map_pow,
+        DerivAlgebraComplex.jetRingAction_C]
+      simp [TensorProduct.smul_tmul', Prod.smul_mk]
+    simp only [LinearMap.coe_comp, Function.comp_apply, hrep, map_smul,
+      JetComponentSpace.massWeightScale_basis]
+    exact smul_comm _ _ _
+  | dbarψ s α =>
+    have hrep : JetComponentSpace.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
+        (JetComponentSpace.basis (.dbarψ s α)) =
+          ((star (g.2.2 : ℂ)) ^ 6) • JetComponentSpace.basis (.dbarψ s α) := by
+      simp only [JetComponentSpace.basis_dbarψ]
+      rw [JetComponentSpace.repJetGaugeGroupI_inr, hu, JetRing.star_C, ← map_pow,
+        DerivAlgebraComplex.jetRingAction_C]
+      simp [TensorProduct.smul_tmul', Prod.smul_mk]
+    simp only [LinearMap.coe_comp, Function.comp_apply, hrep, map_smul,
+      JetComponentSpace.massWeightScale_basis]
+    exact smul_comm _ _ _
+
+/-- The mass-dimension scaling commutes with the Lorentz action on the component
+  space: the Lorentz action mixes derivative symbols and spinor components only
+  within a fixed derivative degree, on which the scaling is a scalar. -/
+lemma JetComponentSpace.massWeightScale_repLorentzGroup (c : ℂ) (g : SL(2,ℂ)) :
+    JetComponentSpace.massWeightScale c ∘ₗ JetComponentSpace.repLorentzGroup g =
+      JetComponentSpace.repLorentzGroup g ∘ₗ JetComponentSpace.massWeightScale c := by
+  have hfact : JetComponentSpace.massWeightScale c =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+          (c ^ 3 • LinearMap.id))
+        (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+          (c ^ 3 • LinearMap.id)) := by
+    refine JetComponentSpace.basis.ext fun j => ?_
+    cases j with
+    | dψ s α =>
+      have hscal : (c : ℂ) ^ (JetGenerators.dψ s α).massWeight =
+          c ^ 3 * (c ^ 2) ^ s.card := by
+        show c ^ (3 + 2 * s.card) = _
+        ring
+      rw [JetComponentSpace.massWeightScale_basis, hscal]
+      simp only [JetComponentSpace.basis_dψ, LinearMap.prodMap_apply, map_zero,
+        TensorProduct.map_tmul, AlgHom.toLinearMap_apply, LinearMap.smul_apply,
+        LinearMap.id_apply, DerivAlgebraComplex.gradeScale_basis,
+        TensorProduct.tmul_smul, TensorProduct.smul_tmul', Prod.smul_mk, smul_smul,
+        smul_zero]
+    | dbarψ s α =>
+      have hscal : (c : ℂ) ^ (JetGenerators.dbarψ s α).massWeight =
+          c ^ 3 * (c ^ 2) ^ s.card := by
+        show c ^ (3 + 2 * s.card) = _
+        ring
+      rw [JetComponentSpace.massWeightScale_basis, hscal]
+      simp only [JetComponentSpace.basis_dbarψ, LinearMap.prodMap_apply, map_zero,
+        TensorProduct.map_tmul, AlgHom.toLinearMap_apply, LinearMap.smul_apply,
+        LinearMap.id_apply, DerivAlgebraComplex.gradeScale_basis,
+        TensorProduct.tmul_smul, TensorProduct.smul_tmul', Prod.smul_mk, smul_smul,
+        smul_zero]
+  have hA : (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap ∘ₗ
+      DerivAlgebraComplex.repLorentzGroup g =
+      (DerivAlgebraComplex.repLorentzGroup g :
+        DerivAlgebraComplex →ₗ[ℂ] DerivAlgebraComplex) ∘ₗ
+        (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap :=
+    LinearMap.ext fun a => DerivAlgebraComplex.gradeScale_repLorentzGroup (c ^ 2) g a
+  have hB1 : (c ^ 3 • (LinearMap.id : Module.End ℂ (Module.Dual ℂ LeptonSinglet))) ∘ₗ
+      LeptonSinglet.repLorentzGroup.dual g =
+      LeptonSinglet.repLorentzGroup.dual g ∘ₗ (c ^ 3 • LinearMap.id) := by
+    rw [LinearMap.smul_comp, LinearMap.comp_smul, LinearMap.id_comp, LinearMap.comp_id]
+  have hB2 : (c ^ 3 • (LinearMap.id :
+      Module.End ℂ (Module.Dual ℂ (ConjModule LeptonSinglet)))) ∘ₗ
+      LeptonSinglet.repLorentzGroup.conj.dual g =
+      LeptonSinglet.repLorentzGroup.conj.dual g ∘ₗ (c ^ 3 • LinearMap.id) := by
+    rw [LinearMap.smul_comp, LinearMap.comp_smul, LinearMap.id_comp, LinearMap.comp_id]
+  have hcomp1 : TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+      (c ^ 3 • LinearMap.id) ∘ₗ
+      TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+        (LeptonSinglet.repLorentzGroup.dual g) =
+      TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+        (LeptonSinglet.repLorentzGroup.dual g) ∘ₗ
+      TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+        (c ^ 3 • LinearMap.id) := by
+    rw [← TensorProduct.map_comp, ← TensorProduct.map_comp, hA, hB1]
+  have hcomp2 : TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+      (c ^ 3 • LinearMap.id) ∘ₗ
+      TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+        (LeptonSinglet.repLorentzGroup.conj.dual g) =
+      TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+        (LeptonSinglet.repLorentzGroup.conj.dual g) ∘ₗ
+      TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+        (c ^ 3 • LinearMap.id) := by
+    rw [← TensorProduct.map_comp, ← TensorProduct.map_comp, hA, hB2]
+  rw [hfact, show JetComponentSpace.repLorentzGroup g =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+          (LeptonSinglet.repLorentzGroup.dual g))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup g)
+          (LeptonSinglet.repLorentzGroup.conj.dual g)) from rfl]
+  refine LinearMap.ext fun x => ?_
+  simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.prodMap_apply]
+  exact Prod.ext (DFunLike.congr_fun hcomp1 x.1) (DFunLike.congr_fun hcomp2 x.2)
+
 /-- The total derivative preserves the unconjugated half of the component space,
   acting there by the shift of dual derivative symbols. -/
 lemma JetComponentSpace.jetDeriv_inl (μ : Fin 1 ⊕ Fin 3)
@@ -627,7 +761,7 @@ lemma JetComponentSpace.jetDeriv_inr' (μ : Fin 1 ⊕ Fin 3)
 
 /-!
 
-## The jet algebra
+## A. The jet algebra
 
 -/
 
@@ -635,6 +769,23 @@ lemma JetComponentSpace.jetDeriv_inr' (μ : Fin 1 ⊕ Fin 3)
 abbrev JetAlgebra : Type := ExteriorAlgebra ℂ JetComponentSpace
 
 namespace JetAlgebra
+
+
+/-!
+
+### A.1. The generators of the jet algebra
+
+-/
+
+noncomputable def ofGenerator (j : JetGenerators) : JetAlgebra :=
+  ExteriorAlgebra.ι ℂ (JetComponentSpace.basis j)
+
+
+/-!
+
+### A.2. The action of the jet gauge group.
+
+-/
 
 /-- The action of the (jet) gauge group on the jet algebra of the lepton singlets. -/
 noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI JetAlgebra where
@@ -645,9 +796,6 @@ noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI JetAlgeb
   map_mul' g1 g2 := by
     simp only [map_mul, Module.End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
-
-noncomputable def ofGenerator (j : JetGenerators) : JetAlgebra :=
-  ExteriorAlgebra.ι ℂ (JetComponentSpace.basis j)
 
 lemma repJetGaugeGroupI_apply (g : JetGaugeGroupI) (x : JetAlgebra) :
     repJetGaugeGroupI g x =
@@ -739,7 +887,33 @@ lemma repJetGaugeGroupI_ofGenerator_ψ (g : JetGaugeGroupI)
 
 /-!
 
-## The formal total derivative on the jet algebra
+### A.3. The action of the Lorentz group
+
+-/
+
+noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) JetAlgebra where
+  toFun g := (ExteriorAlgebra.map (JetComponentSpace.repLorentzGroup g)).toLinearMap
+  map_one' := by
+    simp only [map_one, Module.End.one_eq_id, ExteriorAlgebra.map_id,
+      AlgHom.toLinearMap_id]
+  map_mul' g1 g2 := by
+    simp only [map_mul, Module.End.mul_eq_comp, ← ExteriorAlgebra.map_comp_map,
+      AlgHom.comp_toLinearMap]
+
+lemma repLorentzGroup_apply (g : SL(2,ℂ)) (x : JetAlgebra) :
+    repLorentzGroup g x =
+      ExteriorAlgebra.map (JetComponentSpace.repLorentzGroup g) x := rfl
+
+lemma repLorentzGroup_apply_one (g : SL(2,ℂ)) :
+    repLorentzGroup g 1 = 1 := by simp [repLorentzGroup_apply]
+
+lemma repLorentzGroup_apply_mul (g : SL(2,ℂ)) (x y : JetAlgebra) :
+    repLorentzGroup g (x * y) = repLorentzGroup g x * repLorentzGroup g y := by
+  simp [repLorentzGroup_apply]
+
+/-!
+
+### A.4. The formal total derivative on the jet algebra
 
 The formal total spacetime derivative extends from the component functions to
 the whole jet algebra as an even derivation:
@@ -843,6 +1017,60 @@ lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
   rw [jetDerivHom_fst, jetDerivHom_fst] at h
   exact h.trans (add_comm _ _)
 
+/-!
+
+### A.5. The mass-weight scaling on the jet algebra
+
+-/
+
+/-- The mass-dimension scaling on the jet algebra of the charged-lepton singlet:
+  the (linear map underlying the) algebra map multiplying each generator by
+  `c ^ w`, where `w` is twice its mass dimension. -/
+noncomputable def massWeightScale (c : ℂ) : JetAlgebra →ₐ[ℂ] JetAlgebra :=
+  (ExteriorAlgebra.map (JetComponentSpace.massWeightScale c))
+
+lemma massWeightScale_apply (c : ℂ) (x : JetAlgebra) :
+    massWeightScale c x =
+      ExteriorAlgebra.map (JetComponentSpace.massWeightScale c) x := rfl
+
+/-- Each generator scales by `c` to the power of its mass weight. -/
+@[simp]
+lemma massWeightScale_ofGenerator (c : ℂ) (j : JetGenerators) :
+    massWeightScale c (ofGenerator j) = c ^ j.massWeight • ofGenerator j := by
+  rw [ofGenerator, massWeightScale_apply, ExteriorAlgebra.map_apply_ι,
+    JetComponentSpace.massWeightScale_basis, map_smul]
+
+/-- The mass-dimension scaling commutes with the gauge action of jets of
+  constant gauge transformations. This fails for a general jet: the gauge action
+  sends `∂ψ` to `u(0)⁶ ∂ψ + (∂u⁶)(0) ψ + …`, mixing derivative degrees
+  downwards, while the scaling weights each degree differently, so the two
+  compositions already differ on first-derivative generators. -/
+lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI) :
+    massWeightScale c ∘ₗ JetAlgebra.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
+      JetAlgebra.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) ∘ₗ massWeightScale c := by
+  have h : (massWeightScale c).comp
+      (ExteriorAlgebra.map (JetComponentSpace.repJetGaugeGroupI
+        (JetGaugeGroupI.ofConstant g))) =
+      (ExteriorAlgebra.map (JetComponentSpace.repJetGaugeGroupI
+        (JetGaugeGroupI.ofConstant g))).comp (massWeightScale c) := by
+    rw [massWeightScale, ExteriorAlgebra.map_comp_map, ExteriorAlgebra.map_comp_map,
+      JetComponentSpace.massWeightScale_repJetGaugeGroupI_ofConstant]
+  have h2 := congrArg AlgHom.toLinearMap h
+  rw [AlgHom.comp_toLinearMap, AlgHom.comp_toLinearMap] at h2
+  exact h2
+
+lemma massWeightScale_repLorentzGroup (c : ℂ) (g : SL(2,ℂ)) :
+    massWeightScale c ∘ₗ JetAlgebra.repLorentzGroup g =
+      JetAlgebra.repLorentzGroup g ∘ₗ massWeightScale c := by
+  have h : (massWeightScale c).comp
+      (ExteriorAlgebra.map (JetComponentSpace.repLorentzGroup g)) =
+      (ExteriorAlgebra.map (JetComponentSpace.repLorentzGroup g)).comp
+        (massWeightScale c) := by
+    rw [massWeightScale, ExteriorAlgebra.map_comp_map, ExteriorAlgebra.map_comp_map,
+      JetComponentSpace.massWeightScale_repLorentzGroup]
+  have h2 := congrArg AlgHom.toLinearMap h
+  rw [AlgHom.comp_toLinearMap, AlgHom.comp_toLinearMap] at h2
+  exact h2
 end JetAlgebra
 
 end LeptonSinglet

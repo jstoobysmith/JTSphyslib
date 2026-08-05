@@ -20,6 +20,7 @@ public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Physlib.Mathematics.MvPowerSeriesDerivative
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
+public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
 /-!
 # Derivative algebras
 
@@ -573,4 +574,94 @@ lemma repLorentzGroup_deriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (a : DerivAl
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [mul_smul_comm, ← deriv_apply_eq_mul]
 
+/-!
+
+### B.6. The derivative-degree scaling
+
+-/
+
+/-- The derivative-degree scaling on the algebra of derivative symbols: the
+  algebra map multiplying each generator by `t`, hence each degree-`n` monomial
+  by `t ^ n`. -/
+noncomputable def gradeScale (t : ℂ) : DerivAlgebraComplex →ₐ[ℂ] DerivAlgebraComplex :=
+  SymmetricAlgebra.lift (t • SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule))
+
+@[simp]
+lemma gradeScale_ι (t : ℂ) (x : Module.Dual ℂ Lorentz.CoℂModule) :
+    gradeScale t (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) x) =
+      t • SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) x := by
+  rw [gradeScale, SymmetricAlgebra.lift_ι_apply]
+  rfl
+
+/-- The degree scaling multiplies the basis monomial at `s` by `t ^ |s|`. -/
+lemma gradeScale_basis (t : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    gradeScale t (basis s) = t ^ s.card • basis s := by
+  induction s using Multiset.induction_on with
+  | empty =>
+    rw [show basis (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 from basis_nil, map_one]
+    simp
+  | cons a s ih =>
+    rw [← Multiset.singleton_add, ← basis_mul, map_mul, ih, basis_singleton,
+      gradeScale_ι, smul_mul_smul_comm, ← _root_.pow_succ', ← basis_singleton,
+      basis_mul, Multiset.singleton_add, Multiset.card_cons]
+
+/-- The degree scaling commutes with the Lorentz action: the Lorentz action
+  preserves the derivative degree. -/
+lemma gradeScale_repLorentzGroup (t : ℂ) (Λ : SL(2,ℂ)) (a : DerivAlgebraComplex) :
+    gradeScale t (repLorentzGroup Λ a) = repLorentzGroup Λ (gradeScale t a) := by
+  have h : (gradeScale t).comp (SymmetricAlgebra.lift
+      (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)) =
+      (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).comp
+        (gradeScale t) := by
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp
+  exact DFunLike.congr_fun h a
+
 end DerivAlgebraComplex
+
+
+/-!
+
+## C. The real derivative algebra
+
+-/
+
+abbrev DerivAlgebraReal := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
+
+namespace DerivAlgebraReal
+open Matrix MatrixGroups
+
+/-- The representation of the Lorentz group on the real Lorentz-covector derivative
+  slots, obtained from the real Lorentz-vector representation through the covering
+  map `SL(2,ℂ) →* LorentzGroup 3`. -/
+noncomputable def _root_.Lorentz.CoVector.sl2Rep : Representation ℝ SL(2,ℂ) Lorentz.CoVector :=
+  MonoidHom.comp Lorentz.CoVector.rep Lorentz.SL2C.toLorentzGroup
+
+
+/-- The representation of the Lorentz group `SL(2,ℂ)` on the algebra of derivative
+  symbols, extending the dual covector representation multiplicatively. -/
+noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) DerivAlgebraReal where
+  toFun Λ := (SymmetricAlgebra.lift
+    (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)).toLinearMap
+  map_one' := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual 1) =
+        AlgHom.id ℝ (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp
+    rfl
+  map_mul' Λ1 Λ2 := by
+    suffices h : SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual (Λ1 * Λ2)) =
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ1)).comp
+        (SymmetricAlgebra.lift
+          (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ2)) by
+      rw [h]; rfl
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
+    simp [map_mul, Module.End.mul_apply]
+
+
+end DerivAlgebraReal
