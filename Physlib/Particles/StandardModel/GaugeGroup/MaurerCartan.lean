@@ -157,6 +157,45 @@ lemma maurerCartanSU2_mul (g1 g2 : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
     congr 1
     rw [mul_assoc, ← mul_assoc (V.map (pderiv ℂ ν)), ← mul_assoc U]
 
+/-- The Maurer–Cartan form vanishes on jets of constant gauge transformations:
+  constants have vanishing derivative. -/
+@[simp]
+lemma maurerCartanU1_ofConstant (g : GaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    maurerCartanU1 (JetGaugeGroupI.ofConstant g) ν = 0 := by
+  rw [maurerCartanU1,
+    show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing) =
+      MvPowerSeries.C ((g.2.2 : ℂ)) from rfl,
+    pderiv_C, zero_mul, mul_zero]
+
+/-- The `SU(3)` Maurer–Cartan form vanishes on jets of constant gauge
+  transformations: constants have vanishing derivative. -/
+@[simp]
+lemma maurerCartanSU3_ofConstant (g : GaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    maurerCartanSU3 (JetGaugeGroupI.ofConstant g) ν = 0 := by
+  have hmap : ((JetGaugeGroupI.ofConstant g).1 : Matrix (Fin 3) (Fin 3) JetRing).map
+      (pderiv ℂ ν) = 0 := by
+    ext i j
+    rw [Matrix.map_apply,
+      show ((JetGaugeGroupI.ofConstant g).1 : Matrix (Fin 3) (Fin 3) JetRing) i j =
+        MvPowerSeries.C ((g.1 : Matrix (Fin 3) (Fin 3) ℂ) i j) from rfl,
+      pderiv_C]
+    rfl
+  rw [maurerCartanSU3, hmap, zero_mul, smul_zero]
+
+/-- The `SU(2)` Maurer–Cartan form vanishes on jets of constant gauge
+  transformations: constants have vanishing derivative. -/
+@[simp]
+lemma maurerCartanSU2_ofConstant (g : GaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    maurerCartanSU2 (JetGaugeGroupI.ofConstant g) ν = 0 := by
+  have hmap : ((JetGaugeGroupI.ofConstant g).2.1 : Matrix (Fin 2) (Fin 2) JetRing).map
+      (pderiv ℂ ν) = 0 := by
+    ext i j
+    rw [Matrix.map_apply,
+      show ((JetGaugeGroupI.ofConstant g).2.1 : Matrix (Fin 2) (Fin 2) JetRing) i j =
+        MvPowerSeries.C ((g.2.1 : Matrix (Fin 2) (Fin 2) ℂ) i j) from rfl,
+      pderiv_C]
+    rfl
+  rw [maurerCartanSU2, hmap, zero_mul, smul_zero]
 
 /-- The Maurer–Cartan series is hermitian: `star (i (∂_ν u) ū) = i (∂_ν u) ū`,
   by differentiating the unitarity relation `u ū = 1`. All its Taylor
@@ -383,5 +422,109 @@ lemma pderiv_maurerCartanSU2_symm (u : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
     hleib ν (U.map (pderiv ℂ μ)) (star U), hstar μ, hstar ν, hDcomm, hprod, hprod]
   simp only [mul_neg, smul_add, smul_neg, mul_assoc]
   abel
+
+/-!
+
+## The coefficents of the Maurer–Cartan forms
+
+-/
+
+open JetRing
+
+/-- The Taylor coefficients of the Maurer–Cartan series, as hermitian scalars. -/
+noncomputable def maurerCartanU1Coeff (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) : selfAdjoint ℂ :=
+  ⟨coeff m (maurerCartanU1 U ν), by
+    rw [selfAdjoint.mem_iff, ← coeff_star, star_maurerCartanU1]⟩
+
+@[simp]
+lemma maurerCartanU1Coeff_one (ν : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    maurerCartanU1Coeff 1 ν m = 0 := by
+  apply Subtype.ext
+  simp [maurerCartanU1Coeff]
+
+@[simp]
+lemma maurerCartanU1Coeff_ofConstant (g : GaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    maurerCartanU1Coeff (JetGaugeGroupI.ofConstant g) ν m = 0 := by
+  apply Subtype.ext
+  simp [maurerCartanU1Coeff, maurerCartanU1_ofConstant]
+
+/-- The Taylor coefficients of the Maurer–Cartan series are additive in the jet. -/
+lemma maurerCartanU1Coeff_mul (U V : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    maurerCartanU1Coeff (U * V) ν m = maurerCartanU1Coeff U ν m + maurerCartanU1Coeff V ν m := by
+  apply Subtype.ext
+  simp [maurerCartanU1Coeff, maurerCartanU1_mul]
+
+/-- The first-order Taylor coefficients of the Maurer–Cartan series are symmetric
+  in the two spacetime directions: the shift of `∂_μ B_ν` equals the shift of
+  `∂_ν B_μ`. This is the gauge invariance of the abelian field strength, and rests
+  on unitarity: the antisymmetric part `∂_νu ∂_μū - ∂_μu ∂_νū` vanishes because
+  `∂ū = -ū (∂u) ū`. -/
+lemma maurerCartanU1Coeff_single_symm (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    maurerCartanU1Coeff U ν (Finsupp.single μ 1) = maurerCartanU1Coeff U μ (Finsupp.single ν 1) := by
+  rcases eq_or_ne μ ν with rfl | hμν
+  · rfl
+  apply Subtype.ext
+  show coeff (Finsupp.single μ 1) (maurerCartanU1 U ν) = coeff (Finsupp.single ν 1) (maurerCartanU1 U μ)
+  have hb : constantCoeff (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) = 1 := by
+    have h := congrArg constantCoeff (Unitary.mem_iff.mp U.2.2.2).2
+    rwa [map_mul, constantCoeff_star, map_one] at h
+  have hμ := congrArg (coeff (Finsupp.single μ 1)) (Unitary.mem_iff.mp U.2.2.2).2
+  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
+    show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
+      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hμ
+  have hν := congrArg (coeff (Finsupp.single ν 1)) (Unitary.mem_iff.mp U.2.2.2).2
+  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
+    show coeff (Finsupp.single ν 1) (1 : JetRing) = 0 by
+      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hν
+  have hσμ : star (coeff (Finsupp.single μ 1) (U.2.2 : JetRing)) =
+      -(coeff (Finsupp.single μ 1) (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) *
+        star (constantCoeff (U.2.2 : JetRing))) := by
+    linear_combination star (constantCoeff (U.2.2 : JetRing)) * hμ -
+      star (coeff (Finsupp.single μ 1) (U.2.2 : JetRing)) * hb
+  have hσν : star (coeff (Finsupp.single ν 1) (U.2.2 : JetRing)) =
+      -(coeff (Finsupp.single ν 1) (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) *
+        star (constantCoeff (U.2.2 : JetRing))) := by
+    linear_combination star (constantCoeff (U.2.2 : JetRing)) * hν -
+      star (coeff (Finsupp.single ν 1) (U.2.2 : JetRing)) * hb
+  rw [maurerCartanU1, maurerCartanU1,
+    show ((C Complex.I : JetRing)) = algebraMap ℂ JetRing Complex.I from rfl,
+    ← Algebra.smul_def, ← Algebra.smul_def, map_smul, map_smul, smul_eq_mul, smul_eq_mul,
+    coeff_single_one_mul, coeff_single_one_mul, coeff_pderiv, coeff_pderiv,
+    coeff_star, coeff_star, constantCoeff_star,
+    show constantCoeff (pderiv ℂ ν (U.2.2 : JetRing)) =
+      coeff (Finsupp.single ν (1 : ℕ)) (U.2.2 : JetRing) from by
+      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
+      simp,
+    show constantCoeff (pderiv ℂ μ (U.2.2 : JetRing)) =
+      coeff (Finsupp.single μ (1 : ℕ)) (U.2.2 : JetRing) from by
+      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
+      simp,
+    show (Finsupp.single μ 1) ν = 0 from Finsupp.single_eq_of_ne hμν.symm,
+    show (Finsupp.single ν 1) μ = 0 from Finsupp.single_eq_of_ne hμν,
+    show Finsupp.single ν (1 : ℕ) + Finsupp.single μ 1 =
+      Finsupp.single μ 1 + Finsupp.single ν 1 from add_comm _ _,
+    hσμ, hσν]
+  push_cast
+  ring
+
+/-- The weighted symmetry of the Maurer–Cartan Taylor coefficients: exchanging the
+  field index with a derivative index changes the coefficient by the ratio of the
+  corresponding multiplicities. -/
+lemma maurerCartanU1Coeff_succ_symm (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
+    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    (m μ + 1) • maurerCartanU1Coeff U ν (m + Finsupp.single μ 1) =
+      (m ν + 1) • maurerCartanU1Coeff U μ (m + Finsupp.single ν 1) := by
+  have h := congrArg (coeff m) (pderiv_maurerCartanU1_symm U μ ν)
+  rw [coeff_pderiv, coeff_pderiv] at h
+  apply Subtype.ext
+  show ((m μ + 1 : ℕ)) • coeff (m + Finsupp.single μ 1) (maurerCartanU1 U ν) =
+    ((m ν + 1 : ℕ)) • coeff (m + Finsupp.single ν 1) (maurerCartanU1 U μ)
+  rw [nsmul_eq_mul, nsmul_eq_mul]
+  push_cast
+  linear_combination h
+
 
 end StandardModel

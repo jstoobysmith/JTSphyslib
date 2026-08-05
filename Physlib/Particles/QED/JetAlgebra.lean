@@ -477,7 +477,7 @@ lemma anomalyAux_covariantStepAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 
 
 /-- The anomaly operators annihilate the zeroth-order lepton component: the
   constant coefficient of the iterated Maurer–Cartan derivative is the
-  Maurer–Cartan pairing. -/
+  Maurer–Cartan shift. -/
 lemma anomalyAux_ψAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
     anomalyAux U s μ (ψAux α) = 0 := by

@@ -178,120 +178,20 @@ resulting action of `JetGaugeGroupI` on `BBoson` is by translations.
 
 open MvPowerSeries JetRing
 
-/-- The Maurer–Cartan coefficient of a jet of a `U(1)` gauge transformation in the
-  spacetime direction `μ`: `i (∂_μ u)(0) ū(0)`, which is hermitian by unitarity. -/
-noncomputable def mcCoeff (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) : selfAdjoint ℂ :=
-  ⟨Complex.I * coeff (Finsupp.single μ 1) (u : JetRing) *
-      star (constantCoeff (u : JetRing)), by
-    have h := congrArg (coeff (Finsupp.single μ 1)) (Unitary.mem_iff.mp u.2).2
-    rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
-      show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
-        rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at h
-    have hI : (star Complex.I) = -Complex.I := by
-      simp [Complex.conj_I]
-    rw [selfAdjoint.mem_iff, star_mul', star_mul', star_star, hI]
-    linear_combination (-Complex.I) * h⟩
-
-@[simp]
-lemma mcCoeff_one (μ : Fin 1 ⊕ Fin 3) : mcCoeff 1 μ = 0 := by
-  apply Subtype.ext
-  have h : coeff (Finsupp.single μ 1) (1 : JetRing) = 0 := by
-    rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]
-  simp [mcCoeff, h]
-
-/-- The abelian cocycle identity: the Maurer–Cartan coefficient is additive. -/
-lemma mcCoeff_mul (u₁ u₂ : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
-    mcCoeff (u₁ * u₂) μ = mcCoeff u₁ μ + mcCoeff u₂ μ := by
-  have h₁ : constantCoeff (u₁ : JetRing) * star (constantCoeff (u₁ : JetRing)) = 1 := by
-    have h := congrArg constantCoeff (Unitary.mem_iff.mp u₁.2).2
-    rwa [map_mul, constantCoeff_star, map_one] at h
-  have h₂ : constantCoeff (u₂ : JetRing) * star (constantCoeff (u₂ : JetRing)) = 1 := by
-    have h := congrArg constantCoeff (Unitary.mem_iff.mp u₂.2).2
-    rwa [map_mul, constantCoeff_star, map_one] at h
-  apply Subtype.ext
-  simp only [mcCoeff, MulMemClass.coe_mul, AddSubgroup.coe_add]
-  rw [coeff_single_one_mul, map_mul, star_mul]
-  linear_combination (Complex.I * coeff (Finsupp.single μ 1) (u₁ : JetRing) *
-      star (constantCoeff (u₁ : JetRing))) * h₂ +
-    (Complex.I * coeff (Finsupp.single μ 1) (u₂ : JetRing) *
-      star (constantCoeff (u₂ : JetRing))) * h₁
-
-/-- The first-order Taylor coefficient of a hypercharge power of a `U(1)` jet is
-  the charge times the Maurer–Cartan coefficient times the value of the character:
-  `(∂_μ (ū^q))(0) = q · i (∂_μu)(0)ū(0) · (ū(0))^q`. The abelian connection shift
-  controls the first-order transformation of every charged field. -/
-lemma coeff_single_star_pow (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) (q : ℕ) :
-    coeff (Finsupp.single μ 1) ((star (u : JetRing)) ^ q) =
-      (q : ℂ) * Complex.I * (mcCoeff u μ : ℂ) *
-        constantCoeff ((star (u : JetRing)) ^ q) := by
-  rcases Nat.eq_zero_or_pos q with hq | hq
-  · subst hq
-    rw [pow_zero, show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
-      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]]
-    simp
-  · have h := congrArg (coeff (Finsupp.single μ 1)) (Unitary.mem_iff.mp u.2).2
-    rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
-      show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
-        rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at h
-    have hB : constantCoeff (u : JetRing) * star (constantCoeff (u : JetRing)) = 1 := by
-      have h' := congrArg constantCoeff (Unitary.mem_iff.mp u.2).2
-      rwa [map_mul, constantCoeff_star, map_one] at h'
-    have hσA : star (coeff (Finsupp.single μ 1) (u : JetRing)) =
-        -(coeff (Finsupp.single μ 1) (u : JetRing) *
-          star (constantCoeff (u : JetRing)) * star (constantCoeff (u : JetRing))) := by
-      linear_combination star (constantCoeff (u : JetRing)) * h -
-        star (coeff (Finsupp.single μ 1) (u : JetRing)) * hB
-    have hpow : star (constantCoeff (u : JetRing)) ^ (q - 1) *
-        star (constantCoeff (u : JetRing)) = star (constantCoeff (u : JetRing)) ^ q := by
-      rw [← pow_succ, Nat.sub_add_cancel hq]
-    rw [coeff_single_one_pow, coeff_star, constantCoeff_star, map_pow, constantCoeff_star,
-      hσA, show ((mcCoeff u μ : ℂ)) = Complex.I *
-        coeff (Finsupp.single μ 1) (u : JetRing) *
-        star (constantCoeff (u : JetRing)) from rfl,
-      show (q : ℂ) * star (constantCoeff (u : JetRing)) ^ (q - 1) *
-        -(coeff (Finsupp.single μ 1) (u : JetRing) *
-          star (constantCoeff (u : JetRing)) * star (constantCoeff (u : JetRing))) =
-        -((q : ℂ) * coeff (Finsupp.single μ 1) (u : JetRing) *
-          ((star (constantCoeff (u : JetRing)) ^ (q - 1) *
-            star (constantCoeff (u : JetRing))) * star (constantCoeff (u : JetRing))))
-        from by ring, hpow]
-    ring_nf
-    rw [Complex.I_sq]
-    ring
-
-/-- The Maurer–Cartan term of a jet of a `U(1)` gauge transformation, as a B-boson:
-  the translation part of the local gauge action, with components
-  `i (∂_μ u)(0) ū(0)`. -/
-noncomputable def mcBBoson (u : unitary JetRing) : BBoson :=
-  ⟨∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] mcCoeff u μ⟩
-
-@[simp]
-lemma mcBBoson_one : mcBBoson 1 = 0 := by
-  apply BBoson.ext
-  simp [mcBBoson]
-
-/-- The Maurer–Cartan term is additive in the jet. -/
-lemma mcBBoson_mul (u₁ u₂ : unitary JetRing) :
-    mcBBoson (u₁ * u₂) = mcBBoson u₁ + mcBBoson u₂ := by
-  apply BBoson.ext
-  simp [mcBBoson, mcCoeff_mul, TensorProduct.tmul_add, Finset.sum_add_distrib]
-
 /-- The action of the jet gauge group on the B-boson field: the adjoint action is
   trivial, so a jet of gauge transformations acts purely by the Maurer–Cartan
   translation `B_μ ↦ B_μ + i (∂_μ u)(0) ū(0)` of its `U(1)` component. The action
   is affine rather than linear, which is why it is a `MulAction` and not a
   `Representation`. -/
-noncomputable instance : MulAction JetGaugeGroupI BBoson where
-  smul U B := B + mcBBoson U.2.2
-  one_smul B := by
-    show B + mcBBoson (1 : JetGaugeGroupI).2.2 = B
-    simp
-  mul_smul U V B := by
-    show B + mcBBoson (U * V).2.2 = (B + mcBBoson V.2.2) + mcBBoson U.2.2
-    rw [show (U * V).2.2 = U.2.2 * V.2.2 from rfl, mcBBoson_mul]
-    abel
+noncomputable instance : SMul JetGaugeGroupI BBoson where
+  smul U B := repGaugeGroupI U.eval B + ⟨∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩
 
-lemma smul_def (U : JetGaugeGroupI) (B : BBoson) : U • B = B + mcBBoson U.2.2 := rfl
+lemma smul_eq (U : JetGaugeGroupI) (B : BBoson) : U • B = B +
+   ⟨∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩ := rfl
+
+lemma smul_val (U : JetGaugeGroupI) (B : BBoson) :
+    (U • B).val = B.val + ∑ μ, Lorentz.Vector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0 := by
+  rfl
 
 /-- The jets of constant (global) gauge transformations act trivially on the B
   boson, in agreement with the trivial adjoint representation `repGaugeGroupI`: the
@@ -299,176 +199,23 @@ lemma smul_def (U : JetGaugeGroupI) (B : BBoson) : U • B = B + mcBBoson U.2.2 
 @[simp]
 lemma ofConstant_smul (g : GaugeGroupI) (B : BBoson) :
     JetGaugeGroupI.ofConstant g • B = B := by
-  rw [smul_def]
-  have hmc : ∀ μ, mcCoeff (JetGaugeGroupI.ofConstant g).2.2 μ = 0 := by
-    intro μ
-    apply Subtype.ext
-    have h : coeff (Finsupp.single μ 1)
-        (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing) = 0 := by
-      rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing) =
-          MvPowerSeries.C ((g.2.2 : ℂ)) from rfl,
-        coeff_C, if_neg (by simp [Finsupp.single_eq_zero])]
-    simp [mcCoeff, h]
-  have h0 : mcBBoson (JetGaugeGroupI.ofConstant g).2.2 = 0 := by
-    apply BBoson.ext
-    simp [mcBBoson, hmc]
-  rw [h0, add_zero]
+  ext
+  simp [smul_val]
+
+attribute [-simp] Fintype.sum_sum_type
+
+noncomputable instance : MulAction JetGaugeGroupI BBoson where
+  one_smul B := by
+    simp [smul_eq, maurerCartanU1Coeff_one]
+    rfl
+  mul_smul U V B := by
+    ext
+    simp [smul_val, maurerCartanU1Coeff_mul, TensorProduct.tmul_add, Finset.sum_add_distrib]
+    abel
 
 /-!
 
-## The Maurer–Cartan jet series
-
-The local gauge transformation of the B-boson field is the translation
-`B_μ ↦ B_μ + i (∂_μ u) ū`, so a jet of gauge transformations shifts every
-derivative coordinate `∂_s B_μ` of the field by the corresponding derivative
-`∂_s (i ∂_μ u ū)(0)` of the Maurer–Cartan form at the base point. The
-Maurer–Cartan coefficient `mcCoeff` records only the zeroth of these shifts —
-enough for the action on the field itself, but not for the action on its jets.
-
-To express the shift of every derivative coordinate uniformly we use the `U(1)`
-Maurer–Cartan form `maurerCartanU1` of the jet gauge group: the formal power
-series `i (∂_ν u) ū`, whose value at the base point is `mcCoeff` and whose
-higher Taylor coefficients are the higher shifts. Its coefficients are hermitian, and it is
-additive in the jet; these two facts make the induced shift of the B-boson
-component functions a real-valued cocycle, which is what turns the substitution
-`B ↦ B + i (∂u) ū` into a representation of the jet gauge group on the jet
-algebra below.
-
--/
-
-/-- The derivative of a hypercharge power of a `U(1)` jet:
-  `∂_ν (u^q) = -q i mc_ν u^q`, the all-orders form of the first-order Taylor
-  coefficient formula for the contragredient character. -/
-lemma pderiv_pow_unitary (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
-    pderiv ℂ ν ((U.2.2 : JetRing) ^ q) =
-      MvPowerSeries.C (-(q : ℂ) * Complex.I) * (maurerCartanU1 U ν * (U.2.2 : JetRing) ^ q) := by
-  rcases Nat.eq_zero_or_pos q with rfl | hq
-  · simp
-  · have h1 : star (U.2.2 : JetRing) * (U.2.2 : JetRing) = 1 := (Unitary.mem_iff.mp U.2.2.2).1
-    have hpow : (U.2.2 : JetRing) ^ q = (U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) := by
-      conv_lhs => rw [show q = 1 + (q - 1) by omega, pow_add, pow_one]
-    have hC : (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) *
-        MvPowerSeries.C Complex.I = MvPowerSeries.C ((q : ℕ) : ℂ) := by
-      rw [← map_mul]
-      congr 1
-      ring_nf
-      rw [Complex.I_sq]
-      ring
-    have hN : (MvPowerSeries.C ((q : ℕ) : ℂ) : JetRing) = ((q : ℕ) : JetRing) :=
-      map_natCast _ _
-    rw [MvPowerSeries.pderiv_pow, maurerCartanU1, hpow]
-    linear_combination
-      (-((U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
-        star (U.2.2 : JetRing))) * hC +
-      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
-        MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
-      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing))) * hN
-
-/-- The Taylor coefficients of the Maurer–Cartan series, as hermitian scalars. -/
-noncomputable def maurerCartanU1Coeff (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
-    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) : selfAdjoint ℂ :=
-  ⟨coeff m (maurerCartanU1 U ν), by
-    rw [selfAdjoint.mem_iff, ← coeff_star, star_maurerCartanU1]⟩
-
-@[simp]
-lemma maurerCartanU1Coeff_one (ν : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    maurerCartanU1Coeff 1 ν m = 0 := by
-  apply Subtype.ext
-  simp [maurerCartanU1Coeff]
-
-/-- The Taylor coefficients of the Maurer–Cartan series are additive in the jet. -/
-lemma maurerCartanU1Coeff_mul (U V : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
-    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    maurerCartanU1Coeff (U * V) ν m = maurerCartanU1Coeff U ν m + maurerCartanU1Coeff V ν m := by
-  apply Subtype.ext
-  simp [maurerCartanU1Coeff, maurerCartanU1_mul]
-
-/-- The zeroth Taylor coefficient of the Maurer–Cartan series is the
-  Maurer–Cartan coefficient. -/
-lemma maurerCartanU1Coeff_zero (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
-    maurerCartanU1Coeff U ν 0 = mcCoeff U.2.2 ν := by
-  apply Subtype.ext
-  show coeff 0 (maurerCartanU1 U ν) = _
-  rw [maurerCartanU1, coeff_zero_eq_constantCoeff, map_mul, map_mul, constantCoeff_C,
-    show constantCoeff (pderiv ℂ ν (U.2.2 : JetRing)) =
-      coeff (Finsupp.single ν (1 : ℕ)) (U.2.2 : JetRing) from by
-      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
-      simp,
-    constantCoeff_star, ← mul_assoc]
-  rfl
-
-/-- The first-order Taylor coefficients of the Maurer–Cartan series are symmetric
-  in the two spacetime directions: the shift of `∂_μ B_ν` equals the shift of
-  `∂_ν B_μ`. This is the gauge invariance of the abelian field strength, and rests
-  on unitarity: the antisymmetric part `∂_νu ∂_μū - ∂_μu ∂_νū` vanishes because
-  `∂ū = -ū (∂u) ū`. -/
-lemma maurerCartanU1Coeff_single_symm (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
-    maurerCartanU1Coeff U ν (Finsupp.single μ 1) = maurerCartanU1Coeff U μ (Finsupp.single ν 1) := by
-  rcases eq_or_ne μ ν with rfl | hμν
-  · rfl
-  apply Subtype.ext
-  show coeff (Finsupp.single μ 1) (maurerCartanU1 U ν) = coeff (Finsupp.single ν 1) (maurerCartanU1 U μ)
-  have hb : constantCoeff (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) = 1 := by
-    have h := congrArg constantCoeff (Unitary.mem_iff.mp U.2.2.2).2
-    rwa [map_mul, constantCoeff_star, map_one] at h
-  have hμ := congrArg (coeff (Finsupp.single μ 1)) (Unitary.mem_iff.mp U.2.2.2).2
-  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
-    show coeff (Finsupp.single μ 1) (1 : JetRing) = 0 by
-      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hμ
-  have hν := congrArg (coeff (Finsupp.single ν 1)) (Unitary.mem_iff.mp U.2.2.2).2
-  rw [coeff_single_one_mul, coeff_star, constantCoeff_star,
-    show coeff (Finsupp.single ν 1) (1 : JetRing) = 0 by
-      rw [coeff_one, if_neg (by simp [Finsupp.single_eq_zero])]] at hν
-  have hσμ : star (coeff (Finsupp.single μ 1) (U.2.2 : JetRing)) =
-      -(coeff (Finsupp.single μ 1) (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) *
-        star (constantCoeff (U.2.2 : JetRing))) := by
-    linear_combination star (constantCoeff (U.2.2 : JetRing)) * hμ -
-      star (coeff (Finsupp.single μ 1) (U.2.2 : JetRing)) * hb
-  have hσν : star (coeff (Finsupp.single ν 1) (U.2.2 : JetRing)) =
-      -(coeff (Finsupp.single ν 1) (U.2.2 : JetRing) * star (constantCoeff (U.2.2 : JetRing)) *
-        star (constantCoeff (U.2.2 : JetRing))) := by
-    linear_combination star (constantCoeff (U.2.2 : JetRing)) * hν -
-      star (coeff (Finsupp.single ν 1) (U.2.2 : JetRing)) * hb
-  rw [maurerCartanU1, maurerCartanU1,
-    show ((C Complex.I : JetRing)) = algebraMap ℂ JetRing Complex.I from rfl,
-    ← Algebra.smul_def, ← Algebra.smul_def, map_smul, map_smul, smul_eq_mul, smul_eq_mul,
-    coeff_single_one_mul, coeff_single_one_mul, coeff_pderiv, coeff_pderiv,
-    coeff_star, coeff_star, constantCoeff_star,
-    show constantCoeff (pderiv ℂ ν (U.2.2 : JetRing)) =
-      coeff (Finsupp.single ν (1 : ℕ)) (U.2.2 : JetRing) from by
-      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
-      simp,
-    show constantCoeff (pderiv ℂ μ (U.2.2 : JetRing)) =
-      coeff (Finsupp.single μ (1 : ℕ)) (U.2.2 : JetRing) from by
-      rw [← coeff_zero_eq_constantCoeff, coeff_pderiv]
-      simp,
-    show (Finsupp.single μ 1) ν = 0 from Finsupp.single_eq_of_ne hμν.symm,
-    show (Finsupp.single ν 1) μ = 0 from Finsupp.single_eq_of_ne hμν,
-    show Finsupp.single ν (1 : ℕ) + Finsupp.single μ 1 =
-      Finsupp.single μ 1 + Finsupp.single ν 1 from add_comm _ _,
-    hσμ, hσν]
-  push_cast
-  ring
-
-/-- The weighted symmetry of the Maurer–Cartan Taylor coefficients: exchanging the
-  field index with a derivative index changes the coefficient by the ratio of the
-  corresponding multiplicities. -/
-lemma maurerCartanU1Coeff_succ_symm (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
-    (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    (m μ + 1) • maurerCartanU1Coeff U ν (m + Finsupp.single μ 1) =
-      (m ν + 1) • maurerCartanU1Coeff U μ (m + Finsupp.single ν 1) := by
-  have h := congrArg (coeff m) (pderiv_maurerCartanU1_symm U μ ν)
-  rw [coeff_pderiv, coeff_pderiv] at h
-  apply Subtype.ext
-  show ((m μ + 1 : ℕ)) • coeff (m + Finsupp.single μ 1) (maurerCartanU1 U ν) =
-    ((m ν + 1 : ℕ)) • coeff (m + Finsupp.single ν 1) (maurerCartanU1 U μ)
-  rw [nsmul_eq_mul, nsmul_eq_mul]
-  push_cast
-  linear_combination h
-
-/-!
-
-## The Jet component vector space
+## A. The Jet generators
 
 -/
 
@@ -491,6 +238,102 @@ def JetGenerators.equiv : JetGenerators ≃ Multiset (Fin 1 ⊕ Fin 3) × (Fin 1
     cases x
     rfl
 
+
+namespace JetGenerators
+
+/-- The total symmetrized multi-index of a jet generator: the derivative
+  multi-index together with the Lorentz index of the field. The Maurer–Cartan
+  shift of a component function depends only on its total multi-index. -/
+def total : JetGenerators → Multiset (Fin 1 ⊕ Fin 3)
+  | .dB s ν => s + {ν}
+
+@[simp]
+lemma total_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    total (dB s ν) = s + {ν} := rfl
+
+lemma total_ne_zero (g : JetGenerators) : total g ≠ 0 := by
+  cases g with
+  | dB s ν => simp [total]
+
+/-- A choice of element of a multiset, used to pick the canonical representative
+  of each total multi-index. -/
+noncomputable def pick (t : Multiset (Fin 1 ⊕ Fin 3)) : Fin 1 ⊕ Fin 3 :=
+  if h : ∃ ν, ν ∈ t then h.choose else Sum.inl 0
+
+lemma pick_mem {t : Multiset (Fin 1 ⊕ Fin 3)} (ht : t ≠ 0) : pick t ∈ t := by
+  have h : ∃ ν, ν ∈ t := Multiset.exists_mem_of_ne_zero ht
+  rw [pick, dif_pos h]
+  exact h.choose_spec
+
+/-- The canonical representative of a jet generator: the generator with the same
+  total multi-index whose field index is the chosen element of the total. -/
+noncomputable def canon (g : JetGenerators) : JetGenerators :=
+  .dB ((total g).erase (pick (total g))) (pick (total g))
+
+/-- The canonical representative has the same total multi-index. -/
+@[simp]
+lemma total_canon (g : JetGenerators) : total (canon g) = total g := by
+  rw [canon]
+  show ((total g).erase (pick (total g))) + {pick (total g)} = total g
+  rw [add_comm, Multiset.singleton_add]
+  exact Multiset.cons_erase (pick_mem (total_ne_zero g))
+
+/-- Taking canonical representatives is idempotent. -/
+@[simp]
+lemma canon_canon (g : JetGenerators) : canon (canon g) = canon g := by
+  rw [show canon (canon g) =
+    JetGenerators.dB ((total (canon g)).erase (pick (total (canon g))))
+      (pick (total (canon g))) from rfl, total_canon]
+  rfl
+
+/-- Two jet generators have the same canonical representative if and only if they
+  have the same total multi-index. -/
+lemma canon_eq_canon_iff (g g' : JetGenerators) :
+    canon g = canon g' ↔ total g = total g' := by
+  constructor
+  · intro h
+    rw [← total_canon g, ← total_canon g', h]
+  · intro h
+    rw [canon, canon, h]
+
+/-- The jet generator with one further derivative in the direction `μ`. -/
+def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
+  | dB s ν => dB (s + {μ}) ν
+
+@[simp]
+lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    shift μ (dB s ν) = dB (s + {μ}) ν := rfl
+
+/-- The jet generator with further derivatives appended from a multiset. -/
+def shiftMulti (t : Multiset (Fin 1 ⊕ Fin 3)) : JetGenerators → JetGenerators
+  | dB s ν => dB (s + t) ν
+
+@[simp]
+lemma shiftMulti_dB (t s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    shiftMulti t (dB s ν) = dB (s + t) ν := rfl
+
+lemma shiftMulti_singleton (ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    shiftMulti {ν} g = shift ν g := by
+  cases g with
+  | dB s ρ => rfl
+
+lemma shiftMulti_shift (t : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3)
+    (g : JetGenerators) :
+    shiftMulti t (shift ν g) = shiftMulti (t + {ν}) g := by
+  cases g with
+  | dB s ρ =>
+    simp only [shift_dB, shiftMulti_dB]
+    congr 1
+    rw [add_comm t ({ν} : Multiset (Fin 1 ⊕ Fin 3)), ← add_assoc]
+
+end JetGenerators
+
+/-!
+
+## A. The Jet component vector space
+
+-/
+
 abbrev JetComponentSpace :=
   SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) ⊗[ℝ] Module.Dual ℝ BBoson
 
@@ -502,120 +345,21 @@ noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponent
     BBoson.basis.dualBasis).reindex JetGenerators.equiv.symm
 /-!
 
-## The Maurer–Cartan shift of the component functions
+### A.1. The action of the gauge group on the jet component space
 
 -/
 
 open LagrangianTheory
 
-/-- The Maurer–Cartan jet of a `U(1)` jet evaluated on the derivative symbols:
-  the basis monomial of dual derivative symbols at the multi-index `m` is sent to
-  the B-boson-valued `m`-th derivative of the Maurer–Cartan series at the base
-  point. This is the amount by which the corresponding derivative coordinate of
-  the B boson is shifted under the jet gauge transformation. -/
-noncomputable def mcJet (U : JetGaugeGroupI) :
-    SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector) →ₗ[ℝ] BBoson :=
-  Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
-    ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
-      ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩
-
-@[simp]
-lemma mcJet_one : mcJet 1 = 0 := by
-  refine Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.ext fun m => ?_
-  rw [mcJet, Module.Basis.constr_basis]
-  apply BBoson.ext
-  simp
-
-/-- The Maurer–Cartan jet is additive in the jet: the abelian cocycle identity
-  for the shift of the component functions. -/
-lemma mcJet_mul (U V : JetGaugeGroupI) : mcJet (U * V) = mcJet U + mcJet V := by
-  refine Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.ext fun m => ?_
-  rw [LinearMap.add_apply, mcJet, mcJet, mcJet, Module.Basis.constr_basis,
-    Module.Basis.constr_basis, Module.Basis.constr_basis]
-  apply BBoson.ext
-  simp [maurerCartanU1Coeff_mul, smul_add, TensorProduct.tmul_add, Finset.sum_add_distrib]
-
-/-- The Maurer–Cartan pairing: the amount by which a component function of the
-  B-boson jet is shifted under a jet gauge transformation, i.e. the evaluation of
-  the component function against the Maurer–Cartan jet. -/
+/-- Under the action of the gauge group `∂_s B_ν  ↦  ∂_s B_ν + ⟨mc, ∂_s B_ν⟩ · 1`.
+  The real number `⟨mc, ∂_s B_ν⟩` is what we here call the Maurer–Cartan pairing:
+  the component function evaluated against the B-boson whose components are the
+  factorial-weighted Taylor coefficients — the `s`-th derivatives at the base
+  point — of the Maurer–Cartan series. -/
 noncomputable def mcPairing (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
-  TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp (mcJet U))
-
-@[simp]
-lemma mcPairing_tmul (U : JetGaugeGroupI)
-    (p : SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))
-    (φ : Module.Dual ℝ BBoson) :
-    mcPairing U (p ⊗ₜ[ℝ] φ) = φ (mcJet U p) := rfl
-
-@[simp]
-lemma mcPairing_one : mcPairing 1 = 0 := by
-  refine TensorProduct.ext' fun p φ => ?_
-  simp
-
-/-- The Maurer–Cartan pairing is additive in the jet. -/
-lemma mcPairing_mul (U V : JetGaugeGroupI) :
-    mcPairing (U * V) = mcPairing U + mcPairing V := by
-  refine TensorProduct.ext' fun p φ => ?_
-  simp [mcJet_mul]
-
-/-- The multiset basis of the dual derivative symbols at a singleton, as a basis
-  vector of the symmetric algebra at a single multi-index. -/
-lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
-    LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
-      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Finsupp.single μ 1) := by
-  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
-  congr 1
-  exact Multiset.toFinsupp_singleton μ
-
-/-- The Maurer–Cartan jet on a first-order derivative symbol: the B boson whose
-  `ν`-th component is the first-order Taylor coefficient of the Maurer–Cartan
-  series. -/
-lemma mcJet_singleton (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
-    mcJet U (LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
-      ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
-        (maurerCartanU1Coeff U ν (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ := by
-  rw [dualRealJetAlgebraBasis_singleton, mcJet, Module.Basis.constr_basis]
-  apply BBoson.ext
-  show (∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
-      ((∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) •
-        maurerCartanU1Coeff U ν (Finsupp.single μ 1))) = _
-  rw [show (∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) = 1 from
-    Finset.prod_eq_one fun ρ _ => by
-      rcases eq_or_ne μ ρ with rfl | h
-      · simp
-      · rw [Finsupp.single_eq_of_ne h.symm]
-        rfl]
-  simp
-
-/-- The jet component basis vector at a generator, as a pure tensor. -/
-lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) :
-    JetComponentSpace.basis (.dB s ρ) =
-      LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] BBoson.basis.dualBasis ρ := by
-  rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
-  exact Module.Basis.tensorProduct_apply' _ _ _
-
-/-- The Maurer–Cartan pairing on first-order generators: the shift of the component
-  function `∂_μ B_ν` is the first-order Taylor coefficient of the Maurer–Cartan
-  series. -/
-lemma mcPairing_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
-    mcPairing U (JetComponentSpace.basis (.dB {μ} ν)) =
-      Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
-  rw [jetComponentSpace_basis_dB, mcPairing_tmul, mcJet_singleton,
-    show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
-        (maurerCartanU1Coeff U ν' (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ : BBoson) =
-      ∑ ν', Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν' (Finsupp.single μ 1)) •
-        basis ν' from by
-      rw [show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
-          (maurerCartanU1Coeff U ν' (Finsupp.single μ 1) : selfAdjoint ℂ)⟩ : BBoson) =
-        valLinEquiv.symm (∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
-          (maurerCartanU1Coeff U ν' (Finsupp.single μ 1) : selfAdjoint ℂ)) from rfl, map_sum]
-      exact Finset.sum_congr rfl fun ν' _ => by
-        rw [valLinEquiv_symm_apply, mk_tmul_eq_smul_basis],
-    map_sum]
-  simp only [map_smul, Module.Basis.dualBasis_apply_self, smul_eq_mul, mul_ite,
-    mul_one, mul_zero]
-  rw [Finset.sum_ite_eq' Finset.univ ν]
-  simp
+  TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp
+  (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
+    ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ] ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩))
 
 /-- The multiset basis of the dual derivative symbols, as a basis vector of the
   symmetric algebra at the corresponding multi-index. -/
@@ -625,13 +369,26 @@ lemma dualRealJetAlgebraBasis_apply' (s : Multiset (Fin 1 ⊕ Fin 3)) :
   rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
   rfl
 
-/-- The Maurer–Cartan jet on a general derivative symbol. -/
-lemma mcJet_basis (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    mcJet U (LagrangianTheory.dualRealJetAlgebraBasis s) =
-      ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
+/-- The jet component basis vector at a generator, as a pure tensor. -/
+lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) :
+    JetComponentSpace.basis (.dB s ρ) =
+      LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] BBoson.basis.dualBasis ρ := by
+  rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  exact Module.Basis.tensorProduct_apply' _ _ _
+
+/-- The Maurer–Cartan pairing on a pure tensor over a derivative-symbol basis
+  vector: the component function evaluated on the B boson of factorial-weighted
+  Taylor coefficients of the Maurer–Cartan series. -/
+lemma mcPairing_tmul_basis (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℝ BBoson) :
+    mcPairing U (LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] φ) =
+      φ ⟨∑ ν, Lorentz.Vector.basis ν ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν (Multiset.toFinsupp s))⟩ := by
-  rw [dualRealJetAlgebraBasis_apply', mcJet, Module.Basis.constr_basis]
+  rw [dualRealJetAlgebraBasis_apply', mcPairing]
+  show φ ((Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ _)
+    (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s))) = _
+  rw [Module.Basis.constr_basis]
 
 /-- The Maurer–Cartan pairing on a general generator: the factorial-weighted
   Taylor coefficient of the Maurer–Cartan series. -/
@@ -640,7 +397,7 @@ lemma mcPairing_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     mcPairing U (JetComponentSpace.basis (.dB s ν)) =
       (∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
         Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s)) := by
-  rw [jetComponentSpace_basis_dB, mcPairing_tmul, mcJet_basis,
+  rw [jetComponentSpace_basis_dB, mcPairing_tmul_basis,
     show (⟨∑ ν', Lorentz.Vector.basis ν' ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))⟩ : BBoson) =
@@ -659,6 +416,34 @@ lemma mcPairing_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     mul_one, mul_zero]
   rw [Finset.sum_ite_eq' Finset.univ ν]
   simp
+
+/-- The Maurer–Cartan pairing on first-order generators: the shift of the component
+  function `∂_μ B_ν` is the first-order Taylor coefficient of the Maurer–Cartan
+  series. -/
+lemma mcPairing_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    mcPairing U (JetComponentSpace.basis (.dB {μ} ν)) =
+      Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
+  rw [mcPairing_basis_dB', Multiset.toFinsupp_singleton,
+    show (∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) = 1 from
+      Finset.prod_eq_one fun ρ _ => by
+        rcases eq_or_ne μ ρ with rfl | h
+        · simp
+        · rw [Finsupp.single_eq_of_ne h.symm]
+          rfl,
+    one_smul]
+
+@[simp]
+lemma mcPairing_one : mcPairing 1 = 0 := by
+  refine JetComponentSpace.basis.ext fun g => ?_
+  obtain ⟨s, ν⟩ := g
+  simp [mcPairing_basis_dB']
+
+/-- The Maurer–Cartan pairing is additive in the jet. -/
+lemma mcPairing_mul (U V : JetGaugeGroupI) :
+    mcPairing (U * V) = mcPairing U + mcPairing V := by
+  refine JetComponentSpace.basis.ext fun g => ?_
+  obtain ⟨s, ν⟩ := g
+  simp [mcPairing_basis_dB', maurerCartanU1Coeff_mul, smul_add]
 
 /-- The factorial weight of a multi-index augmented by one derivative: the
   multiplicity of the new index times the original weight. -/
@@ -765,109 +550,58 @@ lemma constantCoeff_maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin
   rfl
 
 
+
 /-!
 
-## Canonical representatives of the jet generators
+## The Maurer–Cartan jet series
 
-The Maurer–Cartan pairing of a jet gauge transformation with the component
-function `∂_s B_ν` depends only on the total symmetrized multi-index `s + {ν}`.
-We choose, for every jet generator, a canonical generator with the same total
-multi-index. The differences between a generator and its canonical
-representative are exactly the derivatives of the field strength, while the
-canonical generators themselves are shifted freely by the gauge transformations
-realized above; this dichotomy computes the gauge invariants of the jet algebra
-below.
+The local gauge transformation of the B-boson field is the translation
+`B_μ ↦ B_μ + i (∂_μ u) ū`, so a jet of gauge transformations shifts every
+derivative coordinate `∂_s B_μ` of the field by the corresponding derivative
+`∂_s (i ∂_μ u ū)(0)` of the Maurer–Cartan form at the base point. The zeroth
+Taylor coefficient `maurerCartanU1Coeff U μ 0` records only the zeroth of these
+shifts — enough for the action on the field itself, but not for the action on
+its jets.
+
+To express the shift of every derivative coordinate uniformly we use the `U(1)`
+Maurer–Cartan form `maurerCartanU1` of the jet gauge group: the formal power
+series `i (∂_ν u) ū`, whose Taylor coefficients `maurerCartanU1Coeff` are the
+shifts at every order. Its coefficients are hermitian, and it is
+additive in the jet; these two facts make the induced shift of the B-boson
+component functions a real-valued cocycle, which is what turns the substitution
+`B ↦ B + i (∂u) ū` into a representation of the jet gauge group on the jet
+algebra below.
 
 -/
 
-namespace JetGenerators
+/-- The derivative of a hypercharge power of a `U(1)` jet:
+  `∂_ν (u^q) = -q i mc_ν u^q`, the all-orders form of the first-order Taylor
+  coefficient formula for the contragredient character. -/
+lemma pderiv_pow_unitary (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
+    pderiv ℂ ν ((U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C (-(q : ℂ) * Complex.I) * (maurerCartanU1 U ν * (U.2.2 : JetRing) ^ q) := by
+  rcases Nat.eq_zero_or_pos q with rfl | hq
+  · simp
+  · have h1 : star (U.2.2 : JetRing) * (U.2.2 : JetRing) = 1 := (Unitary.mem_iff.mp U.2.2.2).1
+    have hpow : (U.2.2 : JetRing) ^ q = (U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) := by
+      conv_lhs => rw [show q = 1 + (q - 1) by omega, pow_add, pow_one]
+    have hC : (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) *
+        MvPowerSeries.C Complex.I = MvPowerSeries.C ((q : ℕ) : ℂ) := by
+      rw [← map_mul]
+      congr 1
+      ring_nf
+      rw [Complex.I_sq]
+      ring
+    have hN : (MvPowerSeries.C ((q : ℕ) : ℂ) : JetRing) = ((q : ℕ) : JetRing) :=
+      map_natCast _ _
+    rw [MvPowerSeries.pderiv_pow, maurerCartanU1, hpow]
+    linear_combination
+      (-((U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
+        star (U.2.2 : JetRing))) * hC +
+      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
+        MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
+      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing))) * hN
 
-/-- The total symmetrized multi-index of a jet generator: the derivative
-  multi-index together with the Lorentz index of the field. The Maurer–Cartan
-  shift of a component function depends only on its total multi-index. -/
-def total : JetGenerators → Multiset (Fin 1 ⊕ Fin 3)
-  | .dB s ν => s + {ν}
-
-@[simp]
-lemma total_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
-    total (dB s ν) = s + {ν} := rfl
-
-lemma total_ne_zero (g : JetGenerators) : total g ≠ 0 := by
-  cases g with
-  | dB s ν => simp [total]
-
-/-- A choice of element of a multiset, used to pick the canonical representative
-  of each total multi-index. -/
-noncomputable def pick (t : Multiset (Fin 1 ⊕ Fin 3)) : Fin 1 ⊕ Fin 3 :=
-  if h : ∃ ν, ν ∈ t then h.choose else Sum.inl 0
-
-lemma pick_mem {t : Multiset (Fin 1 ⊕ Fin 3)} (ht : t ≠ 0) : pick t ∈ t := by
-  have h : ∃ ν, ν ∈ t := Multiset.exists_mem_of_ne_zero ht
-  rw [pick, dif_pos h]
-  exact h.choose_spec
-
-/-- The canonical representative of a jet generator: the generator with the same
-  total multi-index whose field index is the chosen element of the total. -/
-noncomputable def canon (g : JetGenerators) : JetGenerators :=
-  .dB ((total g).erase (pick (total g))) (pick (total g))
-
-/-- The canonical representative has the same total multi-index. -/
-@[simp]
-lemma total_canon (g : JetGenerators) : total (canon g) = total g := by
-  rw [canon]
-  show ((total g).erase (pick (total g))) + {pick (total g)} = total g
-  rw [add_comm, Multiset.singleton_add]
-  exact Multiset.cons_erase (pick_mem (total_ne_zero g))
-
-/-- Taking canonical representatives is idempotent. -/
-@[simp]
-lemma canon_canon (g : JetGenerators) : canon (canon g) = canon g := by
-  rw [show canon (canon g) =
-    JetGenerators.dB ((total (canon g)).erase (pick (total (canon g))))
-      (pick (total (canon g))) from rfl, total_canon]
-  rfl
-
-/-- Two jet generators have the same canonical representative if and only if they
-  have the same total multi-index. -/
-lemma canon_eq_canon_iff (g g' : JetGenerators) :
-    canon g = canon g' ↔ total g = total g' := by
-  constructor
-  · intro h
-    rw [← total_canon g, ← total_canon g', h]
-  · intro h
-    rw [canon, canon, h]
-
-/-- The jet generator with one further derivative in the direction `μ`. -/
-def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
-  | dB s ν => dB (s + {μ}) ν
-
-@[simp]
-lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
-    shift μ (dB s ν) = dB (s + {μ}) ν := rfl
-
-/-- The jet generator with further derivatives appended from a multiset. -/
-def shiftMulti (t : Multiset (Fin 1 ⊕ Fin 3)) : JetGenerators → JetGenerators
-  | dB s ν => dB (s + t) ν
-
-@[simp]
-lemma shiftMulti_dB (t s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
-    shiftMulti t (dB s ν) = dB (s + t) ν := rfl
-
-lemma shiftMulti_singleton (ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
-    shiftMulti {ν} g = shift ν g := by
-  cases g with
-  | dB s ρ => rfl
-
-lemma shiftMulti_shift (t : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3)
-    (g : JetGenerators) :
-    shiftMulti t (shift ν g) = shiftMulti (t + {ν}) g := by
-  cases g with
-  | dB s ρ =>
-    simp only [shift_dB, shiftMulti_dB]
-    congr 1
-    rw [add_comm t ({ν} : Multiset (Fin 1 ⊕ Fin 3)), ← add_assoc]
-
-end JetGenerators
 
 /-!
 
@@ -1462,16 +1196,14 @@ noncomputable def expMonomial (c : K) (w : σ →₀ ℕ) : MvPowerSeries σ K :
   fun k => if h : ∃ n : ℕ, k = n • w then c ^ h.choose / (h.choose.factorial : K) else 0
 
 /-- A nonzero exponent has a coordinate at which it is nonzero. -/
-lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 := by
-  obtain ⟨ρ, hρ⟩ := Finsupp.ne_iff.mp hw
-  exact ⟨ρ, by simpa using hρ⟩
+lemma exists_apply_ne_zero_of_ne_zero (hw : w ≠ 0) : ∃ ρ, w ρ ≠ 0 :=
+  (Finsupp.ne_iff.mp hw).imp fun _ h => by simpa using h
 
 /-- Multiples of a nonzero exponent determine the multiplier. -/
 lemma nsmul_right_cancel (hw : w ≠ 0) {n m : ℕ} (h : n • w = m • w) : n = m := by
   obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-  have h' := DFunLike.congr_fun h ρ
-  simp only [Finsupp.smul_apply, smul_eq_mul] at h'
-  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ) h'
+  exact Nat.eq_of_mul_eq_mul_right (Nat.pos_of_ne_zero hρ)
+    (by simpa using DFunLike.congr_fun h ρ)
 
 omit [CharZero K] in
 /-- The Taylor coefficient of the exponential of a monomial at a multiple of the
@@ -1479,8 +1211,7 @@ omit [CharZero K] in
 lemma coeff_expMonomial_nsmul (hw : w ≠ 0) (c : K) (n : ℕ) :
     coeff (n • w) (expMonomial c w) = c ^ n / (n.factorial : K) := by
   have h : ∃ m : ℕ, n • w = m • w := ⟨n, rfl⟩
-  rw [coeff_apply]
-  simp only [expMonomial]
+  simp only [coeff_apply, expMonomial]
   rw [dif_pos h, show h.choose = n from (nsmul_right_cancel hw h.choose_spec).symm]
 
 omit [CharZero K] in
@@ -1488,8 +1219,7 @@ omit [CharZero K] in
   multiples of the exponent. -/
 lemma coeff_expMonomial_of_forall_ne (c : K) {k : σ →₀ ℕ} (hk : ∀ n : ℕ, k ≠ n • w) :
     coeff k (expMonomial c w) = 0 := by
-  rw [coeff_apply]
-  simp only [expMonomial]
+  simp only [coeff_apply, expMonomial]
   rw [dif_neg (not_exists.mpr hk)]
 
 /-- The exponential property: exponentials of the same monomial multiply by adding
@@ -1578,18 +1308,10 @@ lemma expMonomial_zero (hw : w ≠ 0) : expMonomial (0 : K) w = 1 := by
   by_cases hk : ∃ n : ℕ, k = n • w
   · obtain ⟨n, rfl⟩ := hk
     rw [coeff_expMonomial_nsmul hw, coeff_one]
-    rcases Nat.eq_zero_or_pos n with hn | hn
-    · subst hn
-      rw [if_pos (zero_smul ℕ w)]
-      simp
-    · have hne : ¬n • w = 0 := by
-        obtain ⟨ρ, hρ⟩ := exists_apply_ne_zero_of_ne_zero hw
-        intro h0
-        have h' := DFunLike.congr_fun h0 ρ
-        simp only [Finsupp.smul_apply, smul_eq_mul, Finsupp.coe_zero, Pi.zero_apply,
-          Nat.mul_eq_zero] at h'
-        omega
-      rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg hne]
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · simp
+    · rw [zero_pow (Nat.pos_iff_ne_zero.mp hn), zero_div, if_neg fun h0 =>
+        Nat.pos_iff_ne_zero.mp hn (nsmul_right_cancel hw (h0.trans (zero_smul ℕ w).symm))]
   · rw [coeff_expMonomial_of_forall_ne _ (not_exists.mp hk), coeff_one,
       if_neg (fun h => hk ⟨0, by rw [h, zero_smul]⟩)]
 
@@ -1610,14 +1332,8 @@ lemma pderiv_expMonomial (hw : w ≠ 0) (ν : σ) (c : K) :
     have hkν : k ν + 1 = n * w ν := by
       have := hcoords ν
       rwa [Finsupp.single_eq_same] at this
-    have hnpos : 0 < n := by
-      rcases Nat.eq_zero_or_pos n with h0 | h0
-      · subst h0; omega
-      · exact h0
-    have hwνpos : 0 < w ν := by
-      rcases Nat.eq_zero_or_pos (w ν) with h0 | h0
-      · rw [h0, Nat.mul_zero] at hkν; omega
-      · exact h0
+    have hnpos : 0 < n := Nat.pos_of_ne_zero fun h => by simp [h] at hkν
+    have hwνpos : 0 < w ν := Nat.pos_of_ne_zero fun h => by simp [h] at hkν
     have hdk : w - Finsupp.single ν 1 ≤ k := by
       rw [Finsupp.le_def]
       intro ρ

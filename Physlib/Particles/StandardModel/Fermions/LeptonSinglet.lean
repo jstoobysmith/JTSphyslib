@@ -440,23 +440,6 @@ lemma JetComponentSpace.repJetGaugeGroupI_inl' (U : JetGaugeGroupI)
     rw [JetComponentSpace.repJetGaugeGroupI_inl, TensorProduct.map_tmul]
     rfl
 
-/-- The first-order Taylor coefficient of a hypercharge power of a `U(1)` jet:
-  the analogue of `BBoson.coeff_single_star_pow` for the contragredient character
-  `u ^ q`, with the sign of the Maurer–Cartan term reversed. -/
-lemma coeff_single_pow (u : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) (q : ℕ) :
-    MvPowerSeries.coeff (Finsupp.single μ 1) ((u : JetRing) ^ q) =
-      -((q : ℂ) * Complex.I * (BBoson.mcCoeff u μ : ℂ)) *
-        MvPowerSeries.constantCoeff ((u : JetRing) ^ q) := by
-  have hmc : BBoson.mcCoeff (star u) μ = - BBoson.mcCoeff u μ := by
-    have h := BBoson.mcCoeff_mul u (star u) μ
-    rw [Unitary.star_eq_inv, mul_inv_cancel, BBoson.mcCoeff_one] at h
-    exact eq_neg_of_add_eq_zero_right h.symm
-  have h := BBoson.coeff_single_star_pow (star u) μ q
-  rw [Unitary.coe_star, star_star, hmc] at h
-  rw [h]
-  push_cast
-  ring
-
 /-!
 
 ## The formal total derivative on the component functions
@@ -590,20 +573,28 @@ lemma repJetGaugeGroupI_ofGenerator_ψ_nil (g : JetGaugeGroupI) (α : Fin 2) :
 
 
 /-- The action of the gauge group on ∂_μ ψ takes it to
-  g • (∂_μ ψ + 6 i (BBoson.mcCoeff g.2.2 μ) • ψ)-/
+  g • (∂_μ ψ + 6 i (maurerCartanU1Coeff g μ 0) • ψ)-/
 lemma repJetGaugeGroupI_ofGenerator_ψ_singleton (g : JetGaugeGroupI)
       (μ : (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     repJetGaugeGroupI g (ofGenerator (.dψ {μ} α)) =
       g.eval.2.2 ^ 6 • ofGenerator (.dψ {μ} α) -
-        ((6 : ℂ) * Complex.I * (BBoson.mcCoeff g.2.2 μ : ℂ) * (g.eval.2.2 : ℂ) ^ 6) •
+        ((6 : ℂ) * Complex.I * (maurerCartanU1Coeff g μ 0 : ℂ) * (g.eval.2.2 : ℂ) ^ 6) •
           ofGenerator (.dψ {} α) := by
   have hval : ((g.eval.2.2 : unitary ℂ) : ℂ) =
       MvPowerSeries.constantCoeff ((g.2.2 : unitary JetRing) : JetRing) := rfl
   have hcoeff : MvPowerSeries.coeff (Finsupp.single μ 1)
       (((g.2.2 : unitary JetRing) : JetRing) ^ 6) =
-      -((6 : ℂ) * Complex.I * (BBoson.mcCoeff g.2.2 μ : ℂ) *
+      -((6 : ℂ) * Complex.I * (maurerCartanU1Coeff g μ 0 : ℂ) *
         MvPowerSeries.constantCoeff ((g.2.2 : unitary JetRing) : JetRing) ^ 6) := by
-    rw [coeff_single_pow g.2.2 μ 6, map_pow]
+    have h := congrArg (MvPowerSeries.coeff (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ))
+      (BBoson.pderiv_pow_unitary g μ 6)
+    rw [MvPowerSeries.coeff_pderiv] at h
+    simp only [MvPowerSeries.coeff_zero_eq_constantCoeff_apply, map_mul, map_pow,
+      MvPowerSeries.constantCoeff_C, Finsupp.coe_zero, Pi.zero_apply, Nat.cast_zero,
+      zero_add, mul_one] at h
+    rw [show ((maurerCartanU1Coeff g μ 0 : selfAdjoint ℂ) : ℂ) =
+        MvPowerSeries.constantCoeff (maurerCartanU1 g μ) from
+      MvPowerSeries.coeff_zero_eq_constantCoeff_apply _, h]
     push_cast
     ring
   have hinl : ∀ x : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
