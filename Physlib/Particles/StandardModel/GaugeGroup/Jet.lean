@@ -37,6 +37,53 @@ Thus locally it is enough to consider the action of `JetGaugeGroupI` on the fiel
 their derivatives at a point, instead of the full set of gauge transformations on spacetime,
 which is large and unwieldy.
 
+## Start at a better overview
+
+A Lagrangian at a point x is a polynomial in the fields and
+ finitely many of their derivatives at x — that is the whole of
+ its input. Symmetries of such an expression can therefore only
+ ever see fields through that same finite window, and so a
+ symmetry given by a function g : M → G can only act through the
+ data g(x), ∂g(x), ∂²g(x), …. Two gauge transformations with the
+ same Taylor expansion at x are indistinguishable to every
+ Lagrangian at x: the honest symmetry group is not C^∞(M, G) but
+ its quotient by that equivalence, the group of jets at x.
+
+
+So we want to work with Taylor expansions rather than functions.
+The key observation is that Taylor expansions can be added and
+multiplied just like numbers: the coefficients of a product are
+given by the familiar sums of binomial coefficients times pairs
+of derivatives, which is just the Leibniz rule. This makes them a
+ring, which we call JetRing — it plays the same role that ℂ does
+for ordinary numbers, only its elements record a value together
+with all of its derivatives.
+
+Now, a group like SU(3), SU(2), or U(1) is defined by equations
+ in matrix entries — U*U = 1, det U = 1 — and nothing in those
+ equations demands that the entries be complex numbers. They make
+ sense whenever the entries can be added, multiplied, and
+ conjugated. In particular, they make sense for matrices whose
+ entries are Taylor expansions. Writing down the Standard Model
+ gauge group with entries in JetRing instead of ℂ gives
+ JetGaugeGroupI, and unwinding the definitions shows this is
+ precisely the group of Taylor expansions of gauge
+ transformations: an element is a g(x) together with all its
+ derivatives, constrained to be unitary order by order.
+
+The payoff is that the derivative bookkeeping disappears into th
+ ring multiplication. Products, inverses, and the adjoint action
+  of jets are just the group operations of JetGaugeGroupI, so
+  facts like "the jet of the inverse is the inverse of the jet"
+  hold for free instead of needing a separate check at each
+  order. We use infinite Taylor expansions rather than truncating
+  at some order k, so that a single group acts on Lagrangians of
+  every derivative order at once. The resulting group is blind to
+  everything global — topology, winding, large gauge
+  transformations — which is exactly right, since so is a
+  Lagrangian at a point.
+
+
 -/
 
 @[expose] public section

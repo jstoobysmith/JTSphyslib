@@ -74,6 +74,7 @@ the first sum collapses to `[∂_s B_μ]` and the shift is simply `-∂_s mc(g)_
 `g • [∂_s B_μ] = [∂_s B_μ] - ∂_s mc(g)_μ`
 
 This is `mcShift`, and it is the sign used by `repJetGaugeGroupI`.
+This relation is written down explicitly in `repJetGaugeGroupI_apply_ofGenerator`.
 
 -/
 
@@ -481,23 +482,40 @@ noncomputable def JetComponentSpace.repLorentzGroup :
 
 The jet gauge group does not act linearly on the B-boson fields.
 
-For a general gauge theory (potentially non-abelian),
+For a general gauge theory (potentially non-abelian), the *fields* transform by
 
 `∂_s B_μ ↦ ∂_s (g • B_μ) = ∂_s (Ad_g B_μ + mc(g)_μ) = ∂_s (Ad_g B_μ) + ∂_s mc(g)_μ`
 
 The last term in this expression is a real number.
 
+The jet algebra, however, is the algebra of polynomial *functions* of the jet
+coordinates, on which the induced left action is the pullback along `g⁻¹`,
+
+`(g · f)(B) = f (g⁻¹ • B)`,
+
+so the component functions shift contragrediently to the fields, by
+`mc(g⁻¹) = -mc(g)` rather than by `+mc(g)`:
+
+`g • [∂_s B_ν] = [∂_s B_ν] - ⟨mc(g), ∂_s B_ν⟩ · 1`.
+
+Pulling back along `g` instead would give a right action; that would still be a
+representation here, but only because the `U(1)` translations are abelian, and
+it would fail to be one for the `SU(2)` and `SU(3)` factors, whose Maurer–Cartan
+cocycle satisfies `mc(g₁g₂) = Ad_{g₁} mc(g₂) + mc(g₁)`. The shift below carries
+the contragredient sign for this reason.
+
 -/
 
 open LagrangianTheory
 
-/-- The Maurer–Cartan pairing `⟨mc, ∂_s B_ν⟩`: the component function evaluated
-  against the B-boson whose components are the factorial-weighted Taylor
-  coefficients — the `s`-th derivatives at the base point — of the Maurer–Cartan
-  series. This is the shift of the *field* `∂_s B_ν` under the gauge action; the
-  component functions shift by its negative, `mcShift`. -/
-noncomputable def mcPairing (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
-  TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp
+/-- The Maurer–Cartan shift `-⟨mc, ∂_s B_ν⟩` of the component functions: minus
+  the component function evaluated against the B-boson whose components are the
+  factorial-weighted Taylor coefficients — the `s`-th derivatives at the base
+  point — of the Maurer–Cartan series. Equivalently the pairing of the *inverse*
+  jet, `⟨mc(U⁻¹), ·⟩`. The sign is the contragredient one: the fields shift by
+  `+mc`, the functions of them by `-mc`. -/
+noncomputable def mcShift (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
+  - TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp
   (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
     ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ] ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩))
 
@@ -516,28 +534,28 @@ lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 �
   rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
   exact Module.Basis.tensorProduct_apply' _ _ _
 
-/-- The Maurer–Cartan pairing on a pure tensor over a derivative-symbol basis
-  vector: the component function evaluated on the B boson of factorial-weighted
-  Taylor coefficients of the Maurer–Cartan series. -/
-lemma mcPairing_tmul_basis (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+/-- The Maurer–Cartan shift on a pure tensor over a derivative-symbol basis
+  vector: minus the component function evaluated on the B boson of
+  factorial-weighted Taylor coefficients of the Maurer–Cartan series. -/
+lemma mcShift_tmul_basis (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ BBoson) :
-    mcPairing U (LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] φ) =
-      φ ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ]
+    mcShift U (LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] φ) =
+      - φ ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν (Multiset.toFinsupp s))⟩ := by
-  rw [dualRealJetAlgebraBasis_apply', mcPairing]
+  rw [dualRealJetAlgebraBasis_apply', mcShift, LinearMap.neg_apply, neg_inj]
   show φ ((Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ _)
     (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s))) = _
   rw [Module.Basis.constr_basis]
 
-/-- The Maurer–Cartan pairing on a general generator: the factorial-weighted
+/-- The Maurer–Cartan shift on a general generator: minus the factorial-weighted
   Taylor coefficient of the Maurer–Cartan series. -/
-lemma mcPairing_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+lemma mcShift_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (ν : Fin 1 ⊕ Fin 3) :
-    mcPairing U (JetComponentSpace.basis (.dB s ν)) =
-      (∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
-        Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s)) := by
-  rw [jetComponentSpace_basis_dB, mcPairing_tmul_basis,
+    mcShift U (JetComponentSpace.basis (.dB s ν)) =
+      - ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+        Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s))) := by
+  rw [jetComponentSpace_basis_dB, mcShift_tmul_basis, neg_inj,
     show (⟨∑ ν', Lorentz.CoVector.basis ν' ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))⟩ : BBoson) =
@@ -557,13 +575,13 @@ lemma mcPairing_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
   rw [Finset.sum_ite_eq' Finset.univ ν]
   simp
 
-/-- The Maurer–Cartan pairing on first-order generators: the shift of the component
-  function `∂_μ B_ν` is the first-order Taylor coefficient of the Maurer–Cartan
-  series. -/
-lemma mcPairing_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
-    mcPairing U (JetComponentSpace.basis (.dB {μ} ν)) =
-      Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
-  rw [mcPairing_basis_dB', Multiset.toFinsupp_singleton,
+/-- The Maurer–Cartan shift on first-order generators: the shift of the component
+  function `∂_μ B_ν` is minus the first-order Taylor coefficient of the
+  Maurer–Cartan series. -/
+lemma mcShift_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    mcShift U (JetComponentSpace.basis (.dB {μ} ν)) =
+      - Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
+  rw [mcShift_basis_dB', neg_inj, Multiset.toFinsupp_singleton,
     show (∏ ρ, Nat.factorial ((Finsupp.single μ 1) ρ)) = 1 from
       Finset.prod_eq_one fun ρ _ => by
         rcases eq_or_ne μ ρ with rfl | h
@@ -573,25 +591,26 @@ lemma mcPairing_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
     one_smul]
 
 @[simp]
-lemma mcPairing_one : mcPairing 1 = 0 := by
+lemma mcShift_one : mcShift 1 = 0 := by
   refine JetComponentSpace.basis.ext fun g => ?_
   obtain ⟨s, ν⟩ := g
-  simp [mcPairing_basis_dB']
+  simp [mcShift_basis_dB']
 
-/-- The Maurer–Cartan pairing is additive in the jet. -/
-lemma mcPairing_mul (U V : JetGaugeGroupI) :
-    mcPairing (U * V) = mcPairing U + mcPairing V := by
+/-- The Maurer–Cartan shift is additive in the jet. -/
+lemma mcShift_mul (U V : JetGaugeGroupI) :
+    mcShift (U * V) = mcShift U + mcShift V := by
   refine JetComponentSpace.basis.ext fun g => ?_
   obtain ⟨s, ν⟩ := g
-  simp [mcPairing_basis_dB', maurerCartanU1Coeff_mul, smul_add]
+  simp only [mcShift_basis_dB', maurerCartanU1Coeff_mul, map_add, smul_add,
+    LinearMap.add_apply, neg_add]
 
-/-- The Maurer–Cartan pairing of a jet of constant gauge transformations
+/-- The Maurer–Cartan shift of a jet of constant gauge transformations
   vanishes. -/
-lemma mcPairing_ofConstant (g : GaugeGroupI) :
-    mcPairing (JetGaugeGroupI.ofConstant g) = 0 := by
+lemma mcShift_ofConstant (g : GaugeGroupI) :
+    mcShift (JetGaugeGroupI.ofConstant g) = 0 := by
   refine JetComponentSpace.basis.ext fun j => ?_
   obtain ⟨s, ν⟩ := j
-  simp [mcPairing_basis_dB']
+  simp [mcShift_basis_dB']
 
 /-- The factorial weight of a multi-index augmented by one derivative: the
   multiplicity of the new index times the original weight. -/
@@ -610,11 +629,11 @@ lemma prod_factorial_add_single (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (κ : Fin 1 �
 /-- Exchanging the field index with a derivative index leaves the Maurer–Cartan
   shift of the component functions unchanged: the shift is the jet of a gradient,
   whose Taylor coefficients depend only on the total multi-index. -/
-lemma mcPairing_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+lemma mcShift_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) :
-    mcPairing U (JetComponentSpace.basis (.dB (s + {μ}) ν)) =
-      mcPairing U (JetComponentSpace.basis (.dB (s + {ν}) μ)) := by
-  rw [mcPairing_basis_dB', mcPairing_basis_dB',
+    mcShift U (JetComponentSpace.basis (.dB (s + {μ}) ν)) =
+      mcShift U (JetComponentSpace.basis (.dB (s + {ν}) μ)) := by
+  rw [mcShift_basis_dB', mcShift_basis_dB', neg_inj,
     show Multiset.toFinsupp (s + {μ}) = Multiset.toFinsupp s + Finsupp.single μ 1 from by
       rw [map_add, Multiset.toFinsupp_singleton],
     show Multiset.toFinsupp (s + {ν}) = Multiset.toFinsupp s + Finsupp.single ν 1 from by
@@ -629,44 +648,54 @@ lemma mcPairing_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 
 
 /-!
 
-## Iterated derivatives of the Maurer–Cartan series
+## The Maurer–Cartan shift series
 
 The covariance of the covariant derivatives of charged fields rests on the
 higher Maurer–Cartan anomalies: the iterated formal derivatives of the
-Maurer–Cartan series. Their constant coefficients are the Maurer–Cartan
-pairings of the corresponding B-boson component functions.
+Maurer–Cartan series.
+
+The lepton sector consumes these as a whole power series — `actionC` is the
+adjoint of multiplication and reads every Taylor coefficient — whereas the
+B-boson sector only ever needs one scalar per generator, `mcShift`. The two are
+the same data in different presentations, so the series is carried with the same
+contragredient sign as `mcShift`: `mcShiftSeries` is minus the iterated
+derivative of the Maurer–Cartan form, which makes it exactly the generating
+function of the shifts,
+
+`constantCoeff (mcShiftSeries U μ s) = mcShift U [∂_s B_μ]`
+
+with no sign correction (`constantCoeff_mcShiftSeries`).
 
 -/
 
-/-- The iterated formal derivatives of the Maurer–Cartan series along an ordered
-  list of directions: `mc_{s,μ} = ∂_s mc_μ`. -/
-noncomputable def maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+/-- The Maurer–Cartan shift series along an ordered list of directions:
+  `-∂_s mc_μ`, carrying the contragredient sign of `mcShift`. -/
+noncomputable def mcShiftSeries (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     List (Fin 1 ⊕ Fin 3) → JetRing
-  | [] => maurerCartanU1 U μ
-  | ν :: s => pderiv ℂ ν (maurerCartanU1Deriv U μ s)
+  | [] => - maurerCartanU1 U μ
+  | ν :: s => pderiv ℂ ν (mcShiftSeries U μ s)
 
 @[simp]
-lemma maurerCartanU1Deriv_nil (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
-    maurerCartanU1Deriv U μ [] = maurerCartanU1 U μ := rfl
+lemma mcShiftSeries_nil (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    mcShiftSeries U μ [] = - maurerCartanU1 U μ := rfl
 
 @[simp]
-lemma maurerCartanU1Deriv_cons (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
+lemma mcShiftSeries_cons (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3)
     (s : List (Fin 1 ⊕ Fin 3)) :
-    maurerCartanU1Deriv U μ (ν :: s) = pderiv ℂ ν (maurerCartanU1Deriv U μ s) := rfl
+    mcShiftSeries U μ (ν :: s) = pderiv ℂ ν (mcShiftSeries U μ s) := rfl
 
-/-- The factorial-weighted Taylor coefficients of the iterated derivatives of the
-  Maurer–Cartan series: differentiating shifts the multi-index inside the
-  factorial weight. -/
-lemma factorial_coeff_maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+/-- The factorial-weighted Taylor coefficients of the Maurer–Cartan shift series:
+  differentiating shifts the multi-index inside the factorial weight. -/
+lemma factorial_coeff_mcShiftSeries (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
     (s : List (Fin 1 ⊕ Fin 3)) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    ((∏ ρ, Nat.factorial (m ρ) : ℕ) : ℂ) * coeff m (maurerCartanU1Deriv U μ s) =
-      ((∏ ρ, Nat.factorial (((m + Multiset.toFinsupp ↑s) :
+    ((∏ ρ, Nat.factorial (m ρ) : ℕ) : ℂ) * coeff m (mcShiftSeries U μ s) =
+      - (((∏ ρ, Nat.factorial (((m + Multiset.toFinsupp ↑s) :
           (Fin 1 ⊕ Fin 3) →₀ ℕ) ρ) : ℕ) : ℂ) *
-        coeff (m + Multiset.toFinsupp ↑s) (maurerCartanU1 U μ) := by
+        coeff (m + Multiset.toFinsupp ↑s) (maurerCartanU1 U μ)) := by
   induction s generalizing m with
   | nil => simp
   | cons ν s ih =>
-    rw [maurerCartanU1Deriv_cons, coeff_pderiv]
+    rw [mcShiftSeries_cons, coeff_pderiv]
     have hT : Multiset.toFinsupp (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
         Finsupp.single ν 1 + Multiset.toFinsupp (↑s : Multiset (Fin 1 ⊕ Fin 3)) := by
       rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
@@ -682,102 +711,20 @@ lemma factorial_coeff_maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ F
     push_cast
     ring
 
-/-- The constant coefficient of the iterated derivative of the Maurer–Cartan
-  series is the Maurer–Cartan pairing of the corresponding B-boson component
-  function. -/
-lemma constantCoeff_maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+/-- The Maurer–Cartan shift series is the generating function of the shifts: its
+  constant coefficient is the Maurer–Cartan shift of the corresponding B-boson
+  component function, with no sign correction. -/
+lemma constantCoeff_mcShiftSeries (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
     (s : List (Fin 1 ⊕ Fin 3)) :
-    MvPowerSeries.constantCoeff (maurerCartanU1Deriv U μ s) =
-      ((mcPairing U (JetComponentSpace.basis (JetGenerators.dB ↑s μ)) : ℝ) : ℂ) := by
-  have h := factorial_coeff_maurerCartanU1Deriv U μ s 0
+    MvPowerSeries.constantCoeff (mcShiftSeries U μ s) =
+      ((mcShift U (JetComponentSpace.basis (JetGenerators.dB ↑s μ)) : ℝ) : ℂ) := by
+  have h := factorial_coeff_mcShiftSeries U μ s 0
   simp only [Finsupp.coe_zero, Pi.zero_apply, Nat.factorial_zero, Finset.prod_const_one,
     Nat.cast_one, one_mul, zero_add] at h
-  rw [← coeff_zero_eq_constantCoeff_apply, h, mcPairing_basis_dB', nsmul_eq_mul]
+  rw [← coeff_zero_eq_constantCoeff_apply, h, mcShift_basis_dB', nsmul_eq_mul]
   push_cast
   rw [Complex.coe_selfAdjointEquiv]
   rfl
-
-/-!
-
-### The Maurer–Cartan shift on component functions
-
-The jet gauge group acts on the *fields* by the translation `B_μ ↦ B_μ + mc(g)_μ`
-(`SMul JetGaugeGroupI BBoson`). The jet algebra is the algebra of polynomial
-*functions* of the jet coordinates, on which the induced left action is the
-pullback along `g⁻¹`:
-
-`(g · f)(B) = f (g⁻¹ • B)`.
-
-Component functions therefore shift contragrediently to the fields, by
-`mc(g⁻¹) = -mc(g)` rather than by `+mc(g)`:
-
-`g • [∂_s B_ν] = [∂_s B_ν] - ⟨mc(g), ∂_s B_ν⟩ · 1`.
-
-Taking the pullback along `g` instead would give a right action; it is a
-representation here only because the `U(1)` translations are abelian, and would
-fail to be one for the `SU(2)` and `SU(3)` factors, whose Maurer–Cartan cocycle
-satisfies `mc(g₁g₂) = Ad_{g₁} mc(g₂) + mc(g₁)`.
-
--/
-
-/-- The Maurer–Cartan shift of the component functions: minus the Maurer–Cartan
-  pairing, this being the pairing of the *inverse* jet, `⟨mc(U⁻¹), ·⟩`. This is
-  the shift appearing in the contragredient gauge action `repJetGaugeGroupI`. -/
-noncomputable def mcShift (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
-  - mcPairing U
-
-lemma mcShift_apply (U : JetGaugeGroupI) (x : JetComponentSpace) :
-    mcShift U x = - mcPairing U x := rfl
-
-/-- The Maurer–Cartan shift on a general generator: minus the factorial-weighted
-  Taylor coefficient of the Maurer–Cartan series. -/
-lemma mcShift_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (ν : Fin 1 ⊕ Fin 3) :
-    mcShift U (JetComponentSpace.basis (.dB s ν)) =
-      - ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
-        Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s))) := by
-  rw [mcShift_apply, mcPairing_basis_dB']
-
-/-- The Maurer–Cartan shift on first-order generators. -/
-lemma mcShift_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
-    mcShift U (JetComponentSpace.basis (.dB {μ} ν)) =
-      - Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
-  rw [mcShift_apply, mcPairing_basis_dB]
-
-@[simp]
-lemma mcShift_one : mcShift 1 = 0 := by
-  rw [mcShift, mcPairing_one, neg_zero]
-
-/-- The Maurer–Cartan shift is additive in the jet. -/
-lemma mcShift_mul (U V : JetGaugeGroupI) :
-    mcShift (U * V) = mcShift U + mcShift V := by
-  rw [mcShift, mcShift, mcShift, mcPairing_mul, neg_add]
-
-/-- The Maurer–Cartan shift of a jet of constant gauge transformations
-  vanishes. -/
-lemma mcShift_ofConstant (g : GaugeGroupI) :
-    mcShift (JetGaugeGroupI.ofConstant g) = 0 := by
-  rw [mcShift, mcPairing_ofConstant, neg_zero]
-
-/-- The Maurer–Cartan shift inherits the symmetry of the first-order
-  Maurer–Cartan coefficients: the shift of `∂_{s+μ} B_ν` equals that of
-  `∂_{s+ν} B_μ`. This is the gauge invariance of the abelian field strength. -/
-lemma mcShift_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (μ ν : Fin 1 ⊕ Fin 3) :
-    mcShift U (JetComponentSpace.basis (.dB (s + {μ}) ν)) =
-      mcShift U (JetComponentSpace.basis (.dB (s + {ν}) μ)) := by
-  rw [mcShift_apply, mcShift_apply, mcPairing_basis_dB_symm]
-
-/-- The constant coefficient of the iterated derivative of the Maurer–Cartan
-  series is minus the Maurer–Cartan shift of the corresponding B-boson component
-  function. -/
-lemma constantCoeff_maurerCartanU1Deriv_mcShift (U : JetGaugeGroupI)
-    (μ : Fin 1 ⊕ Fin 3) (s : List (Fin 1 ⊕ Fin 3)) :
-    MvPowerSeries.constantCoeff (maurerCartanU1Deriv U μ s) =
-      - ((mcShift U (JetComponentSpace.basis (JetGenerators.dB ↑s μ)) : ℝ) : ℂ) := by
-  rw [constantCoeff_maurerCartanU1Deriv, mcShift_apply]
-  push_cast
-  ring
 
 /-!
 
@@ -844,6 +791,36 @@ lemma pderiv_pow_unitary_star (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : �
       Unitary.coe_star]
   rw [hcoe, maurerCartanU1_inv, neg_mul, map_neg] at h
   linear_combination h
+
+/-- `pderiv_pow_unitary` phrased in the Maurer–Cartan *shift* series rather than
+  the Maurer–Cartan form: `∂_ν (u^q) = q i (mcShift-series)_ν u^q`. The sign of
+  the scalar absorbs the contragredient sign of `mcShiftSeries`, which lets the
+  covariance proofs treat the series as an opaque jet and never split off a
+  negation. -/
+lemma pderiv_pow_unitary_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (q : ℕ) :
+    pderiv ℂ ν ((U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C ((q : ℂ) * Complex.I) *
+        (mcShiftSeries U ν [] * (U.2.2 : JetRing) ^ q) := by
+  rw [pderiv_pow_unitary, mcShiftSeries_nil]
+  rw [show (-maurerCartanU1 U ν) * (U.2.2 : JetRing) ^ q =
+      - (maurerCartanU1 U ν * (U.2.2 : JetRing) ^ q) from by ring,
+    show (MvPowerSeries.C ((q : ℂ) * Complex.I) : JetRing) = - MvPowerSeries.C (-(q : ℂ) * Complex.I)
+      from by rw [← map_neg]; ring_nf]
+  ring
+
+/-- The conjugate counterpart of `pderiv_pow_unitary_mcShiftSeries`. -/
+lemma pderiv_pow_unitary_star_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
+    (q : ℕ) :
+    pderiv ℂ ν (star (U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C (-(q : ℂ) * Complex.I) *
+        (mcShiftSeries U ν [] * star (U.2.2 : JetRing) ^ q) := by
+  rw [pderiv_pow_unitary_star, mcShiftSeries_nil]
+  rw [show (-maurerCartanU1 U ν) * star (U.2.2 : JetRing) ^ q =
+      - (maurerCartanU1 U ν * star (U.2.2 : JetRing) ^ q) from by ring,
+    show (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) = - MvPowerSeries.C ((q : ℂ) * Complex.I)
+      from by rw [← map_neg]; ring_nf]
+  ring
 
 /-!
 
@@ -1084,8 +1061,7 @@ lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
   simp [repJetGaugeGroupI, SymmetricAlgebra.lift_ι_apply, AlgHom.toLinearMap_apply,
     Algebra.linearMap_apply]
 
-
-lemma repJetGaugeGroupI_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
+lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
     repJetGaugeGroupI U (x * y) = repJetGaugeGroupI U x * repJetGaugeGroupI U y :=
   map_mul (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
     (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)) x y
@@ -1095,10 +1071,44 @@ lemma repJetGaugeGroupI_algebraMap (U : JetGaugeGroupI) (r : ℝ) :
   AlgHom.commutes (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
     (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)) r
 
-lemma repJetGaugeGroupI_one (U : JetGaugeGroupI) :
+lemma repJetGaugeGroupI_apply_one (U : JetGaugeGroupI) :
     repJetGaugeGroupI U (1 : JetAlgebra) = 1 := by
   have h := repJetGaugeGroupI_algebraMap U 1
   simpa using h
+
+lemma repJetGaugeGroupI_apply_B (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    repJetGaugeGroupI U (ofGenerator (.dB {} μ)) = .ofGenerator (.dB {} μ) +
+         (mcShift U (.basis (.dB {} μ))) • 1 := by
+  rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repJetGaugeGroupI_ι,
+    BBoson.jetComponentSpace_basis_dB]
+  simp only [Multiset.empty_eq_zero, Basis.coe_dualBasis, add_right_inj]
+  exact Algebra.algebraMap_eq_smul_one ((mcShift U) (dualRealJetAlgebraBasis 0 ⊗ₜ[ℝ] basis.coord μ))
+
+lemma repJetGaugeGroupI_apply_ofGenerator (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) : repJetGaugeGroupI U (ofGenerator (.dB s μ)) =
+      .ofGenerator (.dB s μ) + (mcShift U (.basis (.dB s μ))) • 1 := by
+  rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repJetGaugeGroupI_ι,
+    BBoson.jetComponentSpace_basis_dB]
+  simp only [Basis.coe_dualBasis, add_right_inj]
+  exact Algebra.algebraMap_eq_smul_one ((mcShift U)
+    (dualRealJetAlgebraBasis ↑s ⊗ₜ[ℝ] basis.coord μ))
+
+/-- Jets of constant gauge transformations act trivially on the B-boson jet
+  algebra: the Maurer–Cartan shift vanishes. -/
+lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x = x := by
+  rw [show repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x =
+      (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ
+          mcShift (JetGaugeGroupI.ofConstant g))) x from rfl,
+    mcShift_ofConstant]
+  have h2 : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
+      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
+      AlgHom.id ℝ JetAlgebra := by
+    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun v => ?_)
+    simp
+  rw [h2]
+  rfl
 
 /-- Conjugating the jet gauge action by the polynomial coordinates of the jet
   algebra: under `SymmetricAlgebra.equivMvPolynomial` the substitution
@@ -1133,30 +1143,13 @@ lemma equivMvPolynomial_repJetGaugeGroupI (U : JetGaugeGroupI) (V : JetAlgebra) 
   exact DFunLike.congr_fun h V
 
 
-/-- Jets of constant gauge transformations act trivially on the B-boson jet
-  algebra: the Maurer–Cartan shift vanishes. -/
-lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
-    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x = x := by
-  rw [show repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x =
-      (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ
-          mcShift (JetGaugeGroupI.ofConstant g))) x from rfl,
-    mcShift_ofConstant]
-  have h2 : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
-      AlgHom.id ℝ JetAlgebra := by
-    refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun v => ?_)
-    simp
-  rw [h2]
-  rfl
-
 noncomputable def repJetGaugeGroupIAlgHom (U : JetGaugeGroupI) :
     AlgHom ℝ JetAlgebra JetAlgebra where
   toFun := repJetGaugeGroupI U
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
-  map_one' := repJetGaugeGroupI_one U
-  map_mul' := repJetGaugeGroupI_mul U
+  map_one' := repJetGaugeGroupI_apply_one U
+  map_mul' := repJetGaugeGroupI_apply_mul U
   commutes' r := by simp [repJetGaugeGroupI_algebraMap]
 
 lemma repJetGaugeGroupIAlgHom_apply (U : JetGaugeGroupI) (x : JetAlgebra) :
@@ -1206,7 +1199,7 @@ lemma complexRepJetGaugeGroupI_one (U : JetGaugeGroupI) :
 lemma complexRepJetGaugeGroupI_one_tmul_one (U : JetGaugeGroupI) :
     complexRepJetGaugeGroupI U ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) =
       (1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra) := by
-  rw [complexRepJetGaugeGroupI_tmul, repJetGaugeGroupI_one]
+  rw [complexRepJetGaugeGroupI_tmul, repJetGaugeGroupI_apply_one]
 
 /-- The complexified gauge action on a jet-algebra generator: the Maurer–Cartan
   shift of the component function. -/
@@ -1924,13 +1917,15 @@ lemma maurerCartanU1_expUnitary (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw
 /-- The Maurer–Cartan pairing of the exponential gauge jet `exp(-i a X^t)` with
   `a = r / t!`: it shifts precisely the component functions whose total
   symmetrized multi-index is `t`, and shifts them all by `r`. -/
-lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
+lemma mcShift_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
     (ht : Multiset.toFinsupp t ≠ 0) (r : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (ν : Fin 1 ⊕ Fin 3) :
-    mcPairing (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+    mcShift (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
         (Multiset.toFinsupp t) ht) (JetComponentSpace.basis (.dB s ν)) =
-      if s + {ν} = t then r else 0 := by
-  rw [mcPairing_basis_dB', Complex.selfAdjointEquiv_apply,
+      if s + {ν} = t then -r else 0 := by
+  rw [show (if s + {ν} = t then -r else 0) = -(if s + {ν} = t then r else 0) from by
+      split <;> simp,
+    mcShift_basis_dB', neg_inj, Complex.selfAdjointEquiv_apply,
     show ((maurerCartanU1Coeff (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
         (Multiset.toFinsupp t) ht) ν (Multiset.toFinsupp s) : selfAdjoint ℂ) : ℂ) =
       coeff (Multiset.toFinsupp s) (maurerCartanU1 (expUnitary
@@ -1978,18 +1973,6 @@ lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
         exact hmw
     · rw [if_neg hm]
       simp
-
-/-- The Maurer–Cartan shift of the exponential gauge jet `exp(-i a X^t)` with
-  `a = r / t!`: it shifts precisely the component functions whose total
-  symmetrized multi-index is `t`, and shifts them all by `-r`. -/
-lemma mcShift_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
-    (ht : Multiset.toFinsupp t ≠ 0) (r : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (ν : Fin 1 ⊕ Fin 3) :
-    mcShift (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
-        (Multiset.toFinsupp t) ht) (JetComponentSpace.basis (.dB s ν)) =
-      if s + {ν} = t then -r else 0 := by
-  rw [mcShift_apply, mcPairing_expUnitary]
-  split <;> simp
 
 /-- The difference between a jet-algebra generator and its canonical
   representative is a derivative of the field strength, or zero. -/
@@ -2221,7 +2204,7 @@ lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
       exact repJetGaugeGroupI_fieldStrengthDeriv U s' μ ν
     | algebraMap r => exact repJetGaugeGroupI_algebraMap U r
     | add x y hx hy ihx ihy => rw [map_add, ihx, ihy]
-    | mul x y hx hy ihx ihy => rw [repJetGaugeGroupI_mul, ihx, ihy]
+    | mul x y hx hy ihx ihy => rw [repJetGaugeGroupI_apply_mul, ihx, ihy]
 
 /-!
 

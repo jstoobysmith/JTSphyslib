@@ -351,140 +351,202 @@ lemma covMap_basis (g : LeptonSinglet.JetGenerators) :
   rw [covMap, Module.Basis.constr_basis]
 
 
-/-- The inclusion of B-coefficiented degree-one fermionic elements into the QED
-  jet algebra. -/
-noncomputable def oddIncl : ((ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
-    LeptonSinglet.JetComponentSpace) →ₗ[ℂ] JetAlgebra :=
-  TensorProduct.map LinearMap.id (ExteriorAlgebra.ι ℂ)
+/-!
 
-lemma oddIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+### The linear-matter submodule
+
+-/
+
+/-- The linear-matter submodule: the elements of the jet algebra in which the
+  matter coordinates appear exactly linearly, spanned by the products of a
+  gauge-sector element with a single matter component function.
+
+  The construction does not depend on the matter content. A jet algebra of this
+  shape is `G ⊗[ℂ] ExteriorAlgebra ℂ M`, with `G` the gauge-sector algebra and
+  `M` the space of matter component functions; the fermionic degree is the
+  exterior grading of the second factor, and degree one is the image of
+  `ExteriorAlgebra.ι`. For several matter species `M` is their direct sum and the
+  same definition applies verbatim.
+
+  This is the submodule the covariance argument for the covariant derivatives
+  lives on. It is closed under the gauge group
+  (`repJetGaugeGroupI_mem_LinearMatterSubmodule`), under the total derivative
+  and under the covariant steps, and it is where the Maurer–Cartan anomaly
+  operators close: in higher fermionic degree they do not, because the gauge
+  action on the exterior algebra is an algebra map and so multiplies the
+  hypercharge characters. -/
+noncomputable def LinearMatterSubmodule : Submodule ℂ JetAlgebra :=
+  Submodule.span ℂ {x : JetAlgebra | ∃ (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (m : LeptonSinglet.JetComponentSpace), x = p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m}
+
+/-- The spanning elements: a gauge-sector coefficient times a single matter
+  component function. -/
+lemma tmul_ι_mem_LinearMatterSubmodule (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
     (m : LeptonSinglet.JetComponentSpace) :
-    oddIncl (p ⊗ₜ[ℂ] m) = p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m := by
-  simp [oddIncl]
+    p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m ∈ LinearMatterSubmodule :=
+  Submodule.subset_span ⟨p, m, rfl⟩
+
+/-!
+
+The remaining results in this section are specific to *fermionic* matter: they
+express that the linear-matter elements are odd. Nothing above depends on them,
+and nothing that follows — the closure of the submodule under the derivative,
+the covariant steps, or the gauge group — does either. For bosonic matter the
+matter factor is a symmetric rather than an exterior algebra, the same
+definition of `LinearMatterSubmodule` applies with the corresponding canonical
+inclusion, and only this anticommutation block is dropped.
+
+-/
+
+/-- Right distributivity on the jet algebra, with the multiplication forced to
+  the `JetAlgebra` instance. Stating it explicitly keeps `rw` from having to
+  match through the tensor-product instance path. -/
+lemma distrib_add_mul (a b c : JetAlgebra) : (a + b) * c = a * c + b * c := by grind
+
+/-- Left distributivity on the jet algebra; see `distrib_add_mul`. -/
+lemma distrib_mul_add (a b c : JetAlgebra) : a * (b + c) = a * b + a * c := by grind
 
 set_option maxHeartbeats 1000000 in
-/-- Odd elements anticommute. -/
-lemma oddIncl_mul_add_swap (w w' : (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
-    LeptonSinglet.JetComponentSpace) :
-    oddIncl w * oddIncl w' + oddIncl w' * oddIncl w = 0 := by
-  have hd₁ : ∀ a b c : JetAlgebra, (a + b) * c = a * c + b * c := by grind
-  have hd₂ : ∀ a b c : JetAlgebra, a * (b + c) = a * b + a * c := by grind
+/-- Linear-matter elements anticommute against the spanning elements. -/
+lemma tmul_ι_mul_add_swap_of_mem (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (m : LeptonSinglet.JetComponentSpace) {y : JetAlgebra}
+    (hy : y ∈ LinearMatterSubmodule) :
+    (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) * y + y * (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) = 0 := by
+  have hd₁ := distrib_add_mul
+  have hd₂ := distrib_mul_add
   have hz₁ : ∀ a : JetAlgebra, 0 * a = 0 := fun a => zero_mul a
   have hz₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
-  induction w using TensorProduct.induction_on with
-  | zero => rw [map_zero, hz₁, hz₂, add_zero]
-  | add u v hu hv =>
-    simp only [map_add, hd₁, hd₂]
-    calc oddIncl u * oddIncl w' + oddIncl v * oddIncl w' +
-          (oddIncl w' * oddIncl u + oddIncl w' * oddIncl v) =
-        (oddIncl u * oddIncl w' + oddIncl w' * oddIncl u) +
-          (oddIncl v * oddIncl w' + oddIncl w' * oddIncl v) := by abel
+  have hs₁ : ∀ (c : ℂ) (a b : JetAlgebra), (c • a) * b = c • (a * b) :=
+    fun c a b => smul_mul_assoc c a b
+  have hs₂ : ∀ (c : ℂ) (a b : JetAlgebra), a * (c • b) = c • (a * b) :=
+    fun c a b => mul_smul_comm c a b
+  induction hy using Submodule.span_induction with
+  | mem z hz =>
+    obtain ⟨q, n, rfl⟩ := hz
+    rw [Algebra.TensorProduct.tmul_mul_tmul, Algebra.TensorProduct.tmul_mul_tmul,
+      mul_comm q p, ← TensorProduct.tmul_add, ExteriorAlgebra.ι_add_mul_swap,
+      TensorProduct.tmul_zero]
+  | zero => rw [hz₂, hz₁, add_zero]
+  | add u v _ _ hu hv =>
+    rw [hd₂, hd₁]
+    calc (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) * u + (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) * v +
+          (u * (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) + v * (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m)) =
+        ((p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) * u + u * (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m)) +
+          ((p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) * v + v * (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m)) := by
+          abel
       _ = 0 := by rw [hu, hv, add_zero]
-  | tmul p m =>
-    induction w' using TensorProduct.induction_on with
-    | zero => rw [map_zero, hz₁, hz₂, add_zero]
-    | add u v hu hv =>
-      simp only [map_add, hd₁, hd₂]
-      calc oddIncl (p ⊗ₜ[ℂ] m) * oddIncl u + oddIncl (p ⊗ₜ[ℂ] m) * oddIncl v +
-            (oddIncl u * oddIncl (p ⊗ₜ[ℂ] m) + oddIncl v * oddIncl (p ⊗ₜ[ℂ] m)) =
-          (oddIncl (p ⊗ₜ[ℂ] m) * oddIncl u + oddIncl u * oddIncl (p ⊗ₜ[ℂ] m)) +
-            (oddIncl (p ⊗ₜ[ℂ] m) * oddIncl v + oddIncl v * oddIncl (p ⊗ₜ[ℂ] m)) := by
-            abel
-      _ = 0 := by rw [hu, hv, add_zero]
-    | tmul q n =>
-      rw [oddIncl_tmul, oddIncl_tmul, Algebra.TensorProduct.tmul_mul_tmul,
-        Algebra.TensorProduct.tmul_mul_tmul, mul_comm q p, ← TensorProduct.tmul_add,
-        ExteriorAlgebra.ι_add_mul_swap, TensorProduct.tmul_zero]
+  | smul c u _ hu =>
+    rw [hs₂, hs₁, ← smul_add, hu, smul_zero]
 
-/-- Odd elements square to zero. -/
-lemma oddIncl_mul_self (w : (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
-    LeptonSinglet.JetComponentSpace) :
-    oddIncl w * oddIncl w = 0 := by
-  have h := oddIncl_mul_add_swap w w
-  have h2 : (2 : ℂ) • (oddIncl w * oddIncl w) = 0 := by
+/-- Linear-matter elements anticommute: they are odd. -/
+lemma mul_add_swap_of_mem {x y : JetAlgebra} (hx : x ∈ LinearMatterSubmodule)
+    (hy : y ∈ LinearMatterSubmodule) : x * y + y * x = 0 := by
+  have hd₁ := distrib_add_mul
+  have hd₂ := distrib_mul_add
+  have hz₁ : ∀ a : JetAlgebra, 0 * a = 0 := fun a => zero_mul a
+  have hz₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
+  have hs₁ : ∀ (c : ℂ) (a b : JetAlgebra), (c • a) * b = c • (a * b) :=
+    fun c a b => smul_mul_assoc c a b
+  have hs₂ : ∀ (c : ℂ) (a b : JetAlgebra), a * (c • b) = c • (a * b) :=
+    fun c a b => mul_smul_comm c a b
+  induction hx using Submodule.span_induction with
+  | mem z hz =>
+    obtain ⟨p, m, rfl⟩ := hz
+    exact tmul_ι_mul_add_swap_of_mem p m hy
+  | zero => rw [hz₁, hz₂, add_zero]
+  | add u v _ _ hu hv =>
+    rw [hd₁, hd₂]
+    calc u * y + v * y + (y * u + y * v) =
+        (u * y + y * u) + (v * y + y * v) := by abel
+      _ = 0 := by rw [hu, hv, add_zero]
+  | smul c u _ hu =>
+    rw [hs₁, hs₂, ← smul_add, hu, smul_zero]
+
+/-- Linear-matter elements square to zero. -/
+lemma mul_self_of_mem {x : JetAlgebra} (hx : x ∈ LinearMatterSubmodule) :
+    x * x = 0 := by
+  have h2 : (2 : ℂ) • (x * x) = 0 := by
     rw [two_smul]
-    exact h
+    exact mul_add_swap_of_mem hx hx
   exact (smul_eq_zero.mp h2).resolve_left (by norm_num)
 
-/-- The odd part is preserved by the total derivative. -/
-lemma jetDeriv_mem_range_oddIncl (μ : Fin 1 ⊕ Fin 3) {x : JetAlgebra}
-    (hx : x ∈ LinearMap.range oddIncl) : jetDeriv μ x ∈ LinearMap.range oddIncl := by
-  obtain ⟨w, rfl⟩ := hx
-  induction w using TensorProduct.induction_on with
-  | zero => simp
-  | add u v hu hv =>
-    rw [map_add, map_add]
-    exact Submodule.add_mem _ hu hv
-  | tmul p m =>
-    rw [oddIncl_tmul, jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_ι]
-    exact Submodule.add_mem _ ⟨_, oddIncl_tmul _ _⟩ ⟨_, oddIncl_tmul _ _⟩
+/-- The linear-matter submodule is preserved by the total derivative. -/
+lemma jetDeriv_mem_LinearMatterSubmodule (μ : Fin 1 ⊕ Fin 3) {x : JetAlgebra}
+    (hx : x ∈ LinearMatterSubmodule) : jetDeriv μ x ∈ LinearMatterSubmodule := by
+  induction hx using Submodule.span_induction with
+  | mem z hz =>
+    obtain ⟨p, m, rfl⟩ := hz
+    rw [jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_ι]
+    exact Submodule.add_mem _ (tmul_ι_mem_LinearMatterSubmodule _ _)
+      (tmul_ι_mem_LinearMatterSubmodule _ _)
+  | zero => rw [map_zero]; exact Submodule.zero_mem _
+  | add u v _ _ hu hv => rw [map_add]; exact Submodule.add_mem _ hu hv
+  | smul c u _ hu => rw [map_smul]; exact Submodule.smul_mem _ _ hu
 
-/-- The odd part is preserved by multiplication by a gauge-field generator,
-  which lives in the bosonic factor. -/
-lemma dB_mul_mem_range_oddIncl (μ : Fin 1 ⊕ Fin 3) {x : JetAlgebra}
-    (hx : x ∈ LinearMap.range oddIncl) :
-    [JetGenerators.dB {} μ]ₐ * x ∈ LinearMap.range oddIncl := by
-  obtain ⟨w, rfl⟩ := hx
-  refine ⟨TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
-    BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)))
-    LinearMap.id w, ?_⟩
-  have key : oddIncl ∘ₗ TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
-      BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)))
-      LinearMap.id =
-      (LinearMap.mulLeft ℂ ([JetGenerators.dB {} μ]ₐ : JetAlgebra)) ∘ₗ oddIncl := by
-    refine TensorProduct.ext' fun p m => ?_
-    simp only [LinearMap.comp_apply, TensorProduct.map_tmul, oddIncl_tmul,
-      LinearMap.mulLeft_apply, LinearMap.id_apply,
-      show ([JetGenerators.dB {} μ]ₐ : JetAlgebra) =
+/-- The linear-matter submodule is preserved by multiplication by a gauge-field
+  generator, which lives in the bosonic factor. -/
+lemma dB_mul_mem_LinearMatterSubmodule (μ : Fin 1 ⊕ Fin 3) {x : JetAlgebra}
+    (hx : x ∈ LinearMatterSubmodule) :
+    [JetGenerators.dB {} μ]ₐ * x ∈ LinearMatterSubmodule := by
+  have hd₂ := distrib_mul_add
+  have hz₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
+  have hs₂ : ∀ (c : ℂ) (a b : JetAlgebra), a * (c • b) = c • (a * b) :=
+    fun c a b => mul_smul_comm c a b
+  induction hx using Submodule.span_induction with
+  | mem z hz =>
+    obtain ⟨p, m, rfl⟩ := hz
+    rw [show ([JetGenerators.dB {} μ]ₐ : JetAlgebra) =
         ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB {} μ)) ⊗ₜ[ℂ]
           (1 : LeptonSinglet.JetAlgebra) from rfl,
       Algebra.TensorProduct.tmul_mul_tmul, one_mul]
-  exact LinearMap.congr_fun key w
+    exact tmul_ι_mem_LinearMatterSubmodule _ _
+  | zero => rw [hz₂]; exact Submodule.zero_mem _
+  | add u v _ _ hu hv => rw [hd₂]; exact Submodule.add_mem _ hu hv
+  | smul c u _ hu => rw [hs₂]; exact Submodule.smul_mem _ _ hu
 
-/-- The covariant derivatives of the lepton are odd. -/
-lemma Dψ_mem_range_oddIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dψ l α ∈ LinearMap.range oddIncl := by
+/-- The covariant derivatives of the lepton are linear in the matter fields. -/
+lemma Dψ_mem_LinearMatterSubmodule (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    Dψ l α ∈ LinearMatterSubmodule := by
   induction l with
   | nil =>
-    exact ⟨((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
-      LeptonSinglet.JetComponentSpace.basis (.dψ {} α), by
-        rw [oddIncl_tmul]; rfl⟩
+    rw [show Dψ [] α = ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
+      ExteriorAlgebra.ι ℂ (LeptonSinglet.JetComponentSpace.basis (.dψ {} α)) from rfl]
+    exact tmul_ι_mem_LinearMatterSubmodule _ _
   | cons ν l ih =>
     simp only [Dψ_cons, covariantStep_apply]
-    exact Submodule.sub_mem _ (jetDeriv_mem_range_oddIncl ν ih)
-      (Submodule.smul_mem _ _ (dB_mul_mem_range_oddIncl ν ih))
+    exact Submodule.sub_mem _ (jetDeriv_mem_LinearMatterSubmodule ν ih)
+      (Submodule.smul_mem _ _ (dB_mul_mem_LinearMatterSubmodule ν ih))
 
-/-- The covariant derivatives of the conjugate lepton are odd. -/
-lemma Dbarψ_mem_range_oddIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dbarψ l α ∈ LinearMap.range oddIncl := by
+/-- The covariant derivatives of the conjugate lepton are linear in the matter
+  fields. -/
+lemma Dbarψ_mem_LinearMatterSubmodule (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    Dbarψ l α ∈ LinearMatterSubmodule := by
   induction l with
   | nil =>
-    exact ⟨((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
-      LeptonSinglet.JetComponentSpace.basis (.dbarψ {} α), by
-        rw [oddIncl_tmul]; rfl⟩
+    rw [show Dbarψ [] α = ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
+      ExteriorAlgebra.ι ℂ (LeptonSinglet.JetComponentSpace.basis (.dbarψ {} α)) from rfl]
+    exact tmul_ι_mem_LinearMatterSubmodule _ _
   | cons ν l ih =>
     simp only [Dbarψ_cons, covariantStepBar_apply]
-    exact Submodule.add_mem _ (jetDeriv_mem_range_oddIncl ν ih)
-      (Submodule.smul_mem _ _ (dB_mul_mem_range_oddIncl ν ih))
+    exact Submodule.add_mem _ (jetDeriv_mem_LinearMatterSubmodule ν ih)
+      (Submodule.smul_mem _ _ (dB_mul_mem_LinearMatterSubmodule ν ih))
 
-lemma covGenerator_mem_range_oddIncl (g : LeptonSinglet.JetGenerators) :
-    covGenerator g ∈ LinearMap.range oddIncl := by
+lemma covGenerator_mem_LinearMatterSubmodule (g : LeptonSinglet.JetGenerators) :
+    covGenerator g ∈ LinearMatterSubmodule := by
   cases g with
-  | dψ s α => exact Dψ_mem_range_oddIncl (sortList s) α
-  | dbarψ s α => exact Dbarψ_mem_range_oddIncl (sortList s) α
+  | dψ s α => exact Dψ_mem_LinearMatterSubmodule (sortList s) α
+  | dbarψ s α => exact Dbarψ_mem_LinearMatterSubmodule (sortList s) α
 
-lemma covMap_mem_range_oddIncl (m : LeptonSinglet.JetComponentSpace) :
-    covMap m ∈ LinearMap.range oddIncl := by
+lemma covMap_mem_LinearMatterSubmodule (m : LeptonSinglet.JetComponentSpace) :
+    covMap m ∈ LinearMatterSubmodule := by
   rw [covMap, Module.Basis.constr_apply]
   exact Submodule.sum_mem _ fun g _ =>
-    Submodule.smul_mem _ _ (covGenerator_mem_range_oddIncl g)
+    Submodule.smul_mem _ _ (covGenerator_mem_LinearMatterSubmodule g)
 
 lemma covMap_mul_self (m : LeptonSinglet.JetComponentSpace) :
-    covMap m * covMap m = 0 := by
-  obtain ⟨w, hw⟩ := covMap_mem_range_oddIncl m
-  rw [← hw]
-  exact oddIncl_mul_self w
+    covMap m * covMap m = 0 :=
+  mul_self_of_mem (covMap_mem_LinearMatterSubmodule m)
 
 /-- The covariant substitution on the fermionic factor. -/
 noncomputable def covExtHom : LeptonSinglet.JetAlgebra →ₐ[ℂ] JetAlgebra :=
@@ -500,7 +562,7 @@ lemma tmul_one_mul_comm (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (y : JetAlgebra) :
     (p ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) * y =
       y * (p ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) := by
   have hd₁ : ∀ a b c : JetAlgebra, (a + b) * c = a * c + b * c := by grind
-  have hd₂ : ∀ a b c : JetAlgebra, a * (b + c) = a * b + a * c := by grind
+  have hd₂ := distrib_mul_add
   have hz₁ : ∀ a : JetAlgebra, 0 * a = 0 := fun a => zero_mul a
   have hz₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
   induction y using TensorProduct.induction_on with
@@ -581,6 +643,48 @@ lemma repJetGaugeGroupI_tmul' (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetA
         (LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l) := by
   rw [repJetGaugeGroupI, Representation.tprod_apply, TensorProduct.map_tmul]
 
+/-- The gauge action on a spanning element of the linear-matter submodule: it
+  acts on the two factors separately, leaving the matter degree at one. This is
+  the only input the closure result needs, and it holds for any matter factor
+  whose gauge action is functorial in the component space. -/
+lemma repJetGaugeGroupI_tmul_ι (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (m : LeptonSinglet.JetComponentSpace) :
+    repJetGaugeGroupI U (p ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ m) =
+      (BBoson.JetAlgebra.complexRepJetGaugeGroupI U p) ⊗ₜ[ℂ]
+        ExteriorAlgebra.ι ℂ (LeptonSinglet.JetComponentSpace.repJetGaugeGroupI U m) := by
+  rw [repJetGaugeGroupI_tmul', LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply,
+    ExteriorAlgebra.map_apply_ι]
+
+/-- The linear-matter submodule is closed under the gauge group: the gauge action
+  preserves the matter degree, because it acts on the matter factor functorially
+  in the component space and so intertwines with the canonical inclusion. -/
+lemma repJetGaugeGroupI_mem_LinearMatterSubmodule (U : JetGaugeGroupI)
+    {x : JetAlgebra} (hx : x ∈ LinearMatterSubmodule) :
+    repJetGaugeGroupI U x ∈ LinearMatterSubmodule := by
+  induction hx using Submodule.span_induction with
+  | mem z hz =>
+    obtain ⟨p, m, rfl⟩ := hz
+    rw [repJetGaugeGroupI_tmul_ι]
+    exact tmul_ι_mem_LinearMatterSubmodule _ _
+  | zero => rw [map_zero]; exact Submodule.zero_mem _
+  | add u v _ _ hu hv => rw [map_add]; exact Submodule.add_mem _ hu hv
+  | smul c u _ hu => rw [map_smul]; exact Submodule.smul_mem _ _ hu
+
+/-- The submodule form of `repJetGaugeGroupI_mem_LinearMatterSubmodule`. -/
+lemma map_repJetGaugeGroupI_LinearMatterSubmodule_le (U : JetGaugeGroupI) :
+    LinearMatterSubmodule.map (repJetGaugeGroupI U) ≤ LinearMatterSubmodule := by
+  rintro x ⟨y, hy, rfl⟩
+  exact repJetGaugeGroupI_mem_LinearMatterSubmodule U hy
+
+/-- The gauge action restricts to an automorphism of the linear-matter
+  submodule: the reverse inclusion holds by applying the bound to `U⁻¹`. -/
+lemma map_repJetGaugeGroupI_LinearMatterSubmodule (U : JetGaugeGroupI) :
+    LinearMatterSubmodule.map (repJetGaugeGroupI U) = LinearMatterSubmodule := by
+  refine le_antisymm (map_repJetGaugeGroupI_LinearMatterSubmodule_le U) fun x hx => ?_
+  exact ⟨repJetGaugeGroupI U⁻¹ x,
+    repJetGaugeGroupI_mem_LinearMatterSubmodule U⁻¹ hx,
+    repJetGaugeGroupI.self_inv_apply U x⟩
+
 /-- The zeroth-order lepton coordinate carries hypercharge `6`: a jet of gauge
   transformations acts on it through the character of its value at the base
   point alone, with no derivative contributions. This is the base case of
@@ -624,17 +728,13 @@ and covariance propagates along the covariant-derivative recursion.
 
 -/
 
-/-- The unconjugated lepton component functions. -/
-abbrev LeptonComponent : Type :=
-  SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
-    Module.Dual ℂ LeptonSinglet
-
-/-- The lepton-linear elements: B-boson polynomials tensored with a single
-  unconjugated lepton component function. The covariant derivatives of `ψ` are
-  the images of such elements in the jet algebra. -/
-abbrev LeptonLinear : Type := (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] LeptonComponent
-
 variable {W : Type*} [AddCommGroup W] [Module ℂ W]
+
+/-- The linear-matter model over a matter target `W`: B-boson polynomials
+  tensored with a single matter component function. -/
+abbrev MatterLinear (W : Type*) [AddCommGroup W] [Module ℂ W] :=
+  (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] (DerivAlgebraComplex ⊗[ℂ] W)
+
 
 /-- The derivative action of a jet on component functions valued in any target
   `W`, acting on the derivative symbols. -/
@@ -690,101 +790,23 @@ lemma actionC_C (c : ℂ) (a : DerivAlgebraComplex ⊗[ℂ] W) :
 
 /-- The embedding of a lepton component function into the lepton jet algebra. -/
 noncomputable def leptonComponentIncl :
-    LeptonComponent →ₗ[ℂ] LeptonSinglet.JetAlgebra :=
-  (ExteriorAlgebra.ι ℂ) ∘ₗ (LinearMap.inl ℂ LeptonComponent
+    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ LeptonSinglet) →ₗ[ℂ] LeptonSinglet.JetAlgebra :=
+  (ExteriorAlgebra.ι ℂ) ∘ₗ (LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ LeptonSinglet)
     (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
       Module.Dual ℂ (ConjModule LeptonSinglet)))
 
-lemma leptonComponentIncl_apply (a : LeptonComponent) :
+lemma leptonComponentIncl_apply (a : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ LeptonSinglet) :
     leptonComponentIncl a =
       ExteriorAlgebra.ι ℂ ((a, 0) : LeptonSinglet.JetComponentSpace) := rfl
 
 /-- The inclusion of the lepton-linear elements into the QED jet algebra. -/
-noncomputable def leptonLinearIncl : LeptonLinear →ₗ[ℂ] JetAlgebra :=
+noncomputable def leptonLinearIncl :
+    MatterLinear (Module.Dual ℂ LeptonSinglet) →ₗ[ℂ] JetAlgebra :=
   TensorProduct.map LinearMap.id leptonComponentIncl
 
-lemma leptonLinearIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : LeptonComponent) :
+lemma leptonLinearIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ LeptonSinglet) :
     leptonLinearIncl (p ⊗ₜ[ℂ] a) = p ⊗ₜ[ℂ] leptonComponentIncl a := by
   simp [leptonLinearIncl]
-
-/-- The covariant-derivative step `D_μ = ∂_μ - 6 i B_μ` on lepton-linear
-  elements. -/
-noncomputable def covariantStepAux (μ : Fin 1 ⊕ Fin 3) :
-    LeptonLinear →ₗ[ℂ] LeptonLinear :=
-  TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ))
-      LinearMap.id +
-    TensorProduct.map LinearMap.id (shiftC μ) -
-    ((6 : ℂ) * Complex.I) •
-      TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
-        BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ))) LinearMap.id
-
-lemma covariantStepAux_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (a : LeptonComponent) :
-    covariantStepAux μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] a +
-        p ⊗ₜ[ℂ] shiftC μ a -
-        ((6 : ℂ) * Complex.I) • ((((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
-          (BBoson.JetGenerators.dB {} μ)) * p) ⊗ₜ[ℂ] a) := by
-  simp [covariantStepAux]
-
-/-- The gauge action on lepton-linear elements. -/
-noncomputable def repAux (U : JetGaugeGroupI) : LeptonLinear →ₗ[ℂ] LeptonLinear :=
-  TensorProduct.map (BBoson.JetAlgebra.complexRepJetGaugeGroupI U)
-    (actionC (((U.2.2 : unitary JetRing) : JetRing) ^ 6))
-
-lemma repAux_tmul (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (a : LeptonComponent) :
-    repAux U (p ⊗ₜ[ℂ] a) =
-      (BBoson.JetAlgebra.complexRepJetGaugeGroupI U p) ⊗ₜ[ℂ]
-        actionC (((U.2.2 : unitary JetRing) : JetRing) ^ 6) a := by
-  simp [repAux]
-
-/-- The Maurer–Cartan anomaly operators on lepton-linear elements: the
-  obstruction to the gauge action commuting with the covariant step, indexed by
-  the derivative history of the step. -/
-noncomputable def anomalyAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) : LeptonLinear →ₗ[ℂ] LeptonLinear :=
-  TensorProduct.map (LinearMap.baseChange ℂ
-      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id -
-    ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-      (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • LinearMap.id -
-    ((6 : ℂ) * Complex.I) •
-      TensorProduct.map LinearMap.id (actionC (BBoson.maurerCartanU1Deriv U μ s))
-
-lemma anomalyAux_tmul (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : LeptonComponent) :
-    anomalyAux U s μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a -
-        ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • (p ⊗ₜ[ℂ] a) -
-        ((6 : ℂ) * Complex.I) • (p ⊗ₜ[ℂ] actionC (BBoson.maurerCartanU1Deriv U μ s) a) := by
-  simp [anomalyAux]
-
-/-- The zeroth-order lepton component as a lepton-linear element. -/
-noncomputable def ψAux (α : Fin 2) : LeptonLinear :=
-  ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
-    ((1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) ⊗ₜ[ℂ]
-      LeptonSinglet.basis.dualBasis α)
-
-/-- The covariant derivative as a lepton-linear element. -/
-noncomputable def DψAux (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) : LeptonLinear :=
-  l.foldr (fun μ x => covariantStepAux μ x) (ψAux α)
-
-/-- The derivative actions of the Maurer–Cartan series and of a hypercharge
-  power commute. -/
-lemma actionC_maurerCartanU1_pow (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (q : ℕ)
-    (a : DerivAlgebraComplex ⊗[ℂ] W) :
-    actionC (maurerCartanU1 U μ) (actionC ((U.2.2 : JetRing) ^ q) a) =
-      actionC ((U.2.2 : JetRing) ^ q) (actionC (maurerCartanU1 U μ) a) :=
-  actionC_comm _ _ a
-
-/-- The derivative actions of the Maurer–Cartan series and of a conjugate
-  hypercharge power commute. -/
-lemma actionC_maurerCartanU1_star_pow (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (q : ℕ)
-    (a : DerivAlgebraComplex ⊗[ℂ] W) :
-    actionC (maurerCartanU1 U μ) (actionC (star (U.2.2 : JetRing) ^ q) a) =
-      actionC (star (U.2.2 : JetRing) ^ q) (actionC (maurerCartanU1 U μ) a) :=
-  actionC_comm _ _ a
 
 /-- The derivative action of a jet on the zeroth-order lepton component: the
   scalar action of its value at the base point. -/
@@ -795,33 +817,122 @@ lemma actionC_one_tmul (χ : JetRing) (φ : W) :
   rw [actionC, TensorProduct.map_tmul, DerivAlgebraComplex.jetRingAction_apply_one,
     LinearMap.id_coe, id_eq, TensorProduct.smul_tmul']
 
+/-!
+
+### The linear-matter model, uniformly in the matter species
+
+The covariance argument depends on the matter species only through two
+parameters: the jet `χ` through which the gauge group acts on the matter
+component functions, and the coupling `c` in the covariant step
+`D_μ = ∂_μ + c B_μ`. They are tied together by the single hypothesis
+
+`∂_ν χ = -c · (mcShiftSeries U ν []) · χ`
+
+which is exactly what makes the anomaly cancel. Everything below is stated once,
+for a general matter target `W`, and instantiated at each species: for the
+charged lepton `χ = u^6`, `c = -6i`, and for its conjugate `χ = star u ^ 6`,
+`c = +6i`, the hypothesis in both cases being `pderiv_pow_unitary_mcShiftSeries`
+and its conjugate.
+
+-/
+
+/-- The covariant step `D_μ = ∂_μ + c B_μ` on the linear-matter model. -/
+noncomputable def covStepM (c : ℂ) (μ : Fin 1 ⊕ Fin 3) :
+    MatterLinear W →ₗ[ℂ] MatterLinear W :=
+  TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ))
+      LinearMap.id +
+    TensorProduct.map LinearMap.id (shiftC μ) +
+    c • TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
+      BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ))) LinearMap.id
+
+lemma covStepM_tmul (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (a : DerivAlgebraComplex ⊗[ℂ] W) :
+    covStepM c μ (p ⊗ₜ[ℂ] a) =
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] a +
+        p ⊗ₜ[ℂ] shiftC μ a +
+        c • ((((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
+          (BBoson.JetGenerators.dB {} μ)) * p) ⊗ₜ[ℂ] a) := by
+  simp [covStepM]
+
+/-- The gauge action on the linear-matter model, acting on the matter factor
+  through the jet `χ`. -/
+noncomputable def repM (U : JetGaugeGroupI) (χ : JetRing) :
+    MatterLinear W →ₗ[ℂ] MatterLinear W :=
+  TensorProduct.map (BBoson.JetAlgebra.complexRepJetGaugeGroupI U) (actionC χ)
+
+lemma repM_tmul (U : JetGaugeGroupI) (χ : JetRing) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (a : DerivAlgebraComplex ⊗[ℂ] W) :
+    repM U χ (p ⊗ₜ[ℂ] a) =
+      (BBoson.JetAlgebra.complexRepJetGaugeGroupI U p) ⊗ₜ[ℂ] actionC χ a := by
+  simp [repM]
+
+/-- The Maurer–Cartan anomaly operators on the linear-matter model. -/
+noncomputable def anomalyM (U : JetGaugeGroupI) (c : ℂ) (s : List (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) : MatterLinear W →ₗ[ℂ] MatterLinear W :=
+  TensorProduct.map (LinearMap.baseChange ℂ
+      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id +
+    (c * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
+      (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • LinearMap.id -
+    c • TensorProduct.map LinearMap.id (actionC (BBoson.mcShiftSeries U μ s))
+
+lemma anomalyM_tmul (U : JetGaugeGroupI) (c : ℂ) (s : List (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (a : DerivAlgebraComplex ⊗[ℂ] W) :
+    anomalyM U c s μ (p ⊗ₜ[ℂ] a) =
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a +
+        (c * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
+          (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • (p ⊗ₜ[ℂ] a) -
+        c • (p ⊗ₜ[ℂ] actionC (BBoson.mcShiftSeries U μ s) a) := by
+  simp [anomalyM]
+
+/-- The shift series commutes with any other jet action. -/
+lemma actionC_mcShiftSeries_comm (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+    (s : List (Fin 1 ⊕ Fin 3)) (χ : JetRing) (a : DerivAlgebraComplex ⊗[ℂ] W) :
+    actionC (BBoson.mcShiftSeries U μ s) (actionC χ a) =
+      actionC χ (actionC (BBoson.mcShiftSeries U μ s) a) :=
+  actionC_comm _ _ a
+
+/-- The base vector of the model: a matter component function with trivial
+  derivative history and unit B-boson coefficient. -/
+noncomputable def baseM (φ : W) : MatterLinear W :=
+  ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
+    ((1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) ⊗ₜ[ℂ] φ)
+
+/-- The covariant derivative in the model. -/
+noncomputable def DM (c : ℂ) (l : List (Fin 1 ⊕ Fin 3)) (φ : W) : MatterLinear W :=
+  l.foldr (fun μ x => covStepM c μ x) (baseM φ)
+
+lemma DM_cons (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3)) (φ : W) :
+    DM c (μ :: l) φ = covStepM c μ (DM c l φ) := rfl
+
+/-- Multiplication by the unit of the complexified B-boson jet algebra. -/
+lemma one_mul_complex (z : ℂ ⊗[ℝ] BBoson.JetAlgebra) :
+    ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) * z = z := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => simp only [mul_add, ha, hb]
+  | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
+
 /-- The gauge action commutes with the covariant step up to the gauge action of
-  the zeroth anomaly operator. -/
-lemma repAux_covariantStepAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
-    (x : LeptonLinear) :
-    repAux U (covariantStepAux μ x) =
-      covariantStepAux μ (repAux U x) + repAux U (anomalyAux U [] μ x) := by
-  have h0 : (↑([] : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) + {μ} =
-      ({μ} : Multiset (Fin 1 ⊕ Fin 3)) := by
-    rw [Multiset.coe_nil, zero_add]
-  have hone : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra,
-      ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) * z = z := by
-    intro z
-    induction z using TensorProduct.induction_on with
-    | zero => simp
-    | add a b ha hb => simp only [mul_add, ha, hb]
-    | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
-  have key : (repAux U) ∘ₗ (covariantStepAux μ) =
-      (covariantStepAux μ) ∘ₗ (repAux U) + (repAux U) ∘ₗ (anomalyAux U [] μ) := by
+  the zeroth anomaly operator. This is where the hypothesis relating `χ` and `c`
+  is used, and the only place it is needed. -/
+lemma repM_covStepM (U : JetGaugeGroupI) (χ : JetRing) (c : ℂ)
+    (hχ : ∀ ν : Fin 1 ⊕ Fin 3, MvPowerSeries.pderiv ℂ ν χ =
+      MvPowerSeries.C (-c) * (BBoson.mcShiftSeries U ν [] * χ))
+    (μ : Fin 1 ⊕ Fin 3) (x : MatterLinear W) :
+    repM U χ (covStepM c μ x) =
+      covStepM c μ (repM U χ x) + repM U χ (anomalyM U c [] μ x) := by
+  have key : (repM U χ) ∘ₗ (covStepM (W := W) c μ) =
+      (covStepM c μ) ∘ₗ (repM U χ) + (repM U χ) ∘ₗ (anomalyM U c [] μ) := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, LinearMap.add_apply, covariantStepAux_tmul,
-      anomalyAux_tmul, BBoson.maurerCartanU1Deriv_nil, map_add, map_smul, map_sub,
-      repAux_tmul, Multiset.coe_nil, Multiset.empty_eq_zero, zero_add]
+    simp only [LinearMap.comp_apply, LinearMap.add_apply, covStepM_tmul,
+      anomalyM_tmul, map_add, map_smul, map_sub,
+      repM_tmul, Multiset.coe_nil, Multiset.empty_eq_zero, zero_add]
     simp only [BBoson.JetAlgebra.complexRepJetGaugeGroupI_baseChange_jetDeriv,
-      actionC_shiftC, BBoson.pderiv_pow_unitary, actionC_mul, actionC_C,
+      actionC_shiftC, hχ, actionC_mul, actionC_C,
       BBoson.JetAlgebra.complexRepJetGaugeGroupI_mul,
       BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofGenerator,
-      actionC_maurerCartanU1_pow]
+      actionC_mcShiftSeries_comm]
     have hdist : ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB 0 μ) +
         ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
@@ -833,7 +944,7 @@ lemma repAux_covariantStepAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
         ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
           BBoson.JetAlgebra.complexRepJetGaugeGroupI U p := by
-      rw [add_mul, smul_mul_assoc, hone]
+      rw [add_mul, smul_mul_assoc, one_mul_complex]
     simp only [hdist]
     simp only [TensorProduct.tmul_add, TensorProduct.add_tmul, ← TensorProduct.smul_tmul',
       TensorProduct.tmul_smul, smul_add, smul_smul]
@@ -843,10 +954,10 @@ lemma repAux_covariantStepAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
 
 /-- The anomaly operators commute with the covariant step up to the anomaly
   operator with the derivative direction appended to its history. -/
-lemma anomalyAux_covariantStepAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ ν : Fin 1 ⊕ Fin 3) (x : LeptonLinear) :
-    anomalyAux U s μ (covariantStepAux ν x) =
-      covariantStepAux ν (anomalyAux U s μ x) + anomalyAux U (ν :: s) μ x := by
+lemma anomalyM_covStepM (U : JetGaugeGroupI) (c : ℂ) (s : List (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) (x : MatterLinear W) :
+    anomalyM U c s μ (covStepM c ν x) =
+      covStepM c ν (anomalyM U c s μ x) + anomalyM U c (ν :: s) μ x := by
   have hT : ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) + {ν} =
       (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) + {μ} := by
     rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
@@ -864,113 +975,118 @@ lemma anomalyAux_covariantStepAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 
     rw [BBoson.mcShift_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
       ↑s + {ν} from by rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
         rw [Multiset.singleton_add, Multiset.cons_coe]]; ac_rfl]
-  have key : (anomalyAux U s μ) ∘ₗ (covariantStepAux ν) =
-      (covariantStepAux ν) ∘ₗ (anomalyAux U s μ) + anomalyAux U (ν :: s) μ := by
+  have key : (anomalyM U c s μ) ∘ₗ (covStepM (W := W) c ν) =
+      (covStepM c ν) ∘ₗ (anomalyM U c s μ) + anomalyM U c (ν :: s) μ := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, LinearMap.add_apply, covariantStepAux_tmul,
-      anomalyAux_tmul, map_add, map_smul, map_sub, BBoson.maurerCartanU1Deriv_cons]
+    simp only [LinearMap.comp_apply, LinearMap.add_apply, covStepM_tmul,
+      anomalyM_tmul, map_add, map_smul, map_sub, BBoson.mcShiftSeries_cons]
     simp only [BBoson.JetAlgebra.mcDeriv_baseChange_jetDeriv, hT, actionC_shiftC,
       BBoson.JetAlgebra.mcDeriv_baseChange_mul,
       BBoson.JetAlgebra.mcDeriv_baseChange_ofGenerator, hshift, hm]
-    have hone : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra,
-        ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) * z = z := by
-      intro z
-      induction z using TensorProduct.induction_on with
-      | zero => simp
-      | add a b ha hb => simp only [mul_add, ha, hb]
-      | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
     have hdist : (((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) * p =
         ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           p := by
-      rw [smul_mul_assoc, hone]
+      rw [smul_mul_assoc, one_mul_complex]
     simp only [hdist]
     simp only [TensorProduct.tmul_add, TensorProduct.add_tmul, ← TensorProduct.smul_tmul',
       smul_add, smul_smul]
     module
   exact LinearMap.congr_fun key x
 
-/-- The anomaly operators annihilate the zeroth-order lepton component: the
-  constant coefficient of the iterated Maurer–Cartan derivative is the
-  Maurer–Cartan shift. -/
-lemma anomalyAux_ψAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
-    anomalyAux U s μ (ψAux α) = 0 := by
-  rw [ψAux, anomalyAux_tmul, LinearMap.baseChange_tmul]
+/-- The anomaly operators annihilate the base vector. -/
+lemma anomalyM_baseM (U : JetGaugeGroupI) (c : ℂ) (s : List (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) (φ : W) : anomalyM U c s μ (baseM φ) = 0 := by
+  rw [baseM, anomalyM_tmul, LinearMap.baseChange_tmul]
   simp only [BBoson.JetAlgebra.mcDeriv_one, TensorProduct.tmul_zero,
     TensorProduct.zero_tmul, actionC_one_tmul,
-    BBoson.constantCoeff_maurerCartanU1Deriv_mcShift,
-    TensorProduct.tmul_smul, smul_smul, zero_sub]
+    BBoson.constantCoeff_mcShiftSeries,
+    TensorProduct.tmul_smul, smul_smul, zero_add]
   module
 
-/-- The gauge action on the zeroth-order lepton component is the hypercharge
-  character of the value of the jet at the base point. -/
-lemma repAux_ψAux (U : JetGaugeGroupI) (α : Fin 2) :
-    repAux U (ψAux α) =
-      MvPowerSeries.constantCoeff (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
-        ψAux α := by
-  rw [ψAux, repAux_tmul, BBoson.JetAlgebra.complexRepJetGaugeGroupI_tmul]
-  simp only [BBoson.JetAlgebra.repJetGaugeGroupI_one, actionC_one_tmul,
+/-- The gauge action on the base vector is the value of `χ` at the base point. -/
+lemma repM_baseM (U : JetGaugeGroupI) (χ : JetRing) (φ : W) :
+    repM U χ (baseM φ) = MvPowerSeries.constantCoeff χ • baseM φ := by
+  rw [baseM, repM_tmul, BBoson.JetAlgebra.complexRepJetGaugeGroupI_tmul]
+  simp only [BBoson.JetAlgebra.repJetGaugeGroupI_apply_one, actionC_one_tmul,
     TensorProduct.tmul_smul]
 
-/-- Every anomaly operator annihilates every covariant derivative of the charged
-  lepton. -/
-lemma anomalyAux_DψAux (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    ∀ (s : List (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3),
-      anomalyAux U s μ (DψAux l α) = 0 := by
+/-- Every anomaly operator annihilates every covariant derivative. -/
+lemma anomalyM_DM (U : JetGaugeGroupI) (c : ℂ) (l : List (Fin 1 ⊕ Fin 3)) (φ : W) :
+    ∀ (s : List (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), anomalyM U c s μ (DM c l φ) = 0 := by
   induction l with
-  | nil => exact fun s μ => anomalyAux_ψAux U s μ α
+  | nil => exact fun s μ => anomalyM_baseM U c s μ φ
   | cons ν l ih =>
     intro s μ
-    rw [show DψAux (ν :: l) α = covariantStepAux ν (DψAux l α) from rfl,
-      anomalyAux_covariantStepAux, ih s μ, map_zero, zero_add, ih (ν :: s) μ]
+    rw [DM_cons, anomalyM_covStepM, ih s μ, map_zero, zero_add, ih (ν :: s) μ]
 
-/-- Covariance of the covariant derivatives on the lepton-linear model. -/
-lemma repAux_DψAux (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    repAux U (DψAux l α) =
-      MvPowerSeries.constantCoeff (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
-        DψAux l α := by
+/-- Covariance of the covariant derivatives on the linear-matter model. -/
+lemma repM_DM (U : JetGaugeGroupI) (χ : JetRing) (c : ℂ)
+    (hχ : ∀ ν : Fin 1 ⊕ Fin 3, MvPowerSeries.pderiv ℂ ν χ =
+      MvPowerSeries.C (-c) * (BBoson.mcShiftSeries U ν [] * χ))
+    (l : List (Fin 1 ⊕ Fin 3)) (φ : W) :
+    repM U χ (DM c l φ) = MvPowerSeries.constantCoeff χ • DM c l φ := by
   induction l with
-  | nil => exact repAux_ψAux U α
+  | nil => exact repM_baseM U χ φ
   | cons ν l ih =>
-    rw [show DψAux (ν :: l) α = covariantStepAux ν (DψAux l α) from rfl,
-      repAux_covariantStepAux, ih, map_smul, anomalyAux_DψAux U l α [] ν, map_zero,
-      add_zero]
+    rw [DM_cons, repM_covStepM U χ c hχ, ih, map_smul, anomalyM_DM U c l φ [] ν,
+      map_zero, add_zero]
+
+/-!
+
+### Instantiation at the unconjugated lepton
+
+-/
+
+/-- The unconjugated lepton acts through `χ = u ^ 6` with coupling `c = -6i`. -/
+lemma pderiv_pow_six (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    MvPowerSeries.pderiv ℂ ν (((U.2.2 : unitary JetRing) : JetRing) ^ 6) =
+      MvPowerSeries.C (-(-(6 : ℂ) * Complex.I)) *
+        (BBoson.mcShiftSeries U ν [] * ((U.2.2 : unitary JetRing) : JetRing) ^ 6) := by
+  rw [BBoson.pderiv_pow_unitary_mcShiftSeries]
+  norm_num
 
 /-- The inclusion intertwines the covariant steps. -/
-lemma covariantStep_leptonLinearIncl (μ : Fin 1 ⊕ Fin 3) (x : LeptonLinear) :
-    covariantStep μ (leptonLinearIncl x) = leptonLinearIncl (covariantStepAux μ x) := by
+lemma covariantStep_leptonLinearIncl (μ : Fin 1 ⊕ Fin 3)
+    (x : MatterLinear (Module.Dual ℂ LeptonSinglet)) :
+    covariantStep μ (leptonLinearIncl x) =
+      leptonLinearIncl (covStepM (-(6 : ℂ) * Complex.I) μ x) := by
   have key : (covariantStep μ) ∘ₗ leptonLinearIncl =
-      leptonLinearIncl ∘ₗ (covariantStepAux μ) := by
+      leptonLinearIncl ∘ₗ (covStepM (-(6 : ℂ) * Complex.I) μ) := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, leptonLinearIncl_tmul, covariantStepAux_tmul,
-      leptonComponentIncl_apply, covariantStep_apply, map_add, map_sub, map_smul,
+    simp only [LinearMap.comp_apply, leptonLinearIncl_tmul, covStepM_tmul,
+      leptonComponentIncl_apply, covariantStep_apply, map_add, map_smul,
       jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_ι,
       LeptonSinglet.JetComponentSpace.jetDeriv_inl', ofGenerator, shiftC,
       Algebra.TensorProduct.tmul_mul_tmul, one_mul]
+    module
   exact LinearMap.congr_fun key x
 
 /-- The inclusion intertwines the gauge actions. -/
-lemma repJetGaugeGroupI_leptonLinearIncl (U : JetGaugeGroupI) (x : LeptonLinear) :
-    repJetGaugeGroupI U (leptonLinearIncl x) = leptonLinearIncl (repAux U x) := by
+lemma repJetGaugeGroupI_leptonLinearIncl (U : JetGaugeGroupI)
+    (x : MatterLinear (Module.Dual ℂ LeptonSinglet)) :
+    repJetGaugeGroupI U (leptonLinearIncl x) =
+      leptonLinearIncl (repM U (((U.2.2 : unitary JetRing) : JetRing) ^ 6) x) := by
   have key : (repJetGaugeGroupI U) ∘ₗ leptonLinearIncl =
-      leptonLinearIncl ∘ₗ (repAux U) := by
+      leptonLinearIncl ∘ₗ (repM U (((U.2.2 : unitary JetRing) : JetRing) ^ 6)) := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, leptonLinearIncl_tmul, repAux_tmul,
+    simp only [LinearMap.comp_apply, leptonLinearIncl_tmul, repM_tmul,
       leptonComponentIncl_apply, repJetGaugeGroupI, Representation.tprod_apply,
       TensorProduct.map_tmul, LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply,
       ExteriorAlgebra.map_apply_ι, LeptonSinglet.JetComponentSpace.repJetGaugeGroupI_inl',
       actionC]
   exact LinearMap.congr_fun key x
 
-/-- The covariant derivatives are the images of their lepton-linear models. -/
+/-- The covariant derivatives are the images of their linear-matter models. -/
 lemma Dψ_eq_leptonLinearIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dψ l α = leptonLinearIncl (DψAux l α) := by
+    Dψ l α = leptonLinearIncl (DM (-(6 : ℂ) * Complex.I) l
+      (LeptonSinglet.basis.dualBasis α)) := by
   induction l with
   | nil =>
-    rw [Dψ_nil, show DψAux [] α = ψAux α from rfl, ψAux, leptonLinearIncl_tmul,
+    rw [Dψ_nil, show DM (-(6 : ℂ) * Complex.I) [] (LeptonSinglet.basis.dualBasis α) =
+        baseM (LeptonSinglet.basis.dualBasis α) from rfl, baseM, leptonLinearIncl_tmul,
       leptonComponentIncl_apply]
     simp only [ofGenerator, LeptonSinglet.JetAlgebra.ofGenerator,
       LeptonSinglet.JetComponentSpace.basis_dψ_nil]
@@ -987,9 +1103,9 @@ lemma repJetGaugeGroupI_Dψ (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (�
     repJetGaugeGroupI U (Dψ l α) = U.eval.2.2 ^ 6 • Dψ l α := by
   have hval : ((U.eval.2.2 : unitary ℂ) : ℂ) =
       MvPowerSeries.constantCoeff ((U.2.2 : unitary JetRing) : JetRing) := rfl
-  rw [Dψ_eq_leptonLinearIncl, repJetGaugeGroupI_leptonLinearIncl, repAux_DψAux,
-    map_smul, ← Dψ_eq_leptonLinearIncl, Submonoid.smul_def, SubmonoidClass.coe_pow,
-    hval, map_pow]
+  rw [Dψ_eq_leptonLinearIncl, repJetGaugeGroupI_leptonLinearIncl,
+    repM_DM U _ _ (pderiv_pow_six U), map_smul, ← Dψ_eq_leptonLinearIncl,
+    Submonoid.smul_def, SubmonoidClass.coe_pow, hval, map_pow]
 
 /-!
 
@@ -1005,281 +1121,76 @@ model, with the coupling `6 i` replaced by `- 6 i` throughout.
 
 -/
 
-/-- The conjugate lepton component functions. -/
-abbrev ConjLeptonComponent : Type :=
-  SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
-    Module.Dual ℂ (ConjModule LeptonSinglet)
-
-/-- The conjugate-linear elements: B-boson polynomials tensored with a single
-  conjugate lepton component function. -/
-abbrev ConjLeptonLinear : Type := (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] ConjLeptonComponent
-
 /-- The embedding of a conjugate lepton component function into the lepton jet
   algebra. -/
 noncomputable def conjLeptonComponentIncl :
-    ConjLeptonComponent →ₗ[ℂ] LeptonSinglet.JetAlgebra :=
+    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule LeptonSinglet)) →ₗ[ℂ]
+      LeptonSinglet.JetAlgebra :=
   (ExteriorAlgebra.ι ℂ) ∘ₗ (LinearMap.inr ℂ
     (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
-      Module.Dual ℂ LeptonSinglet) ConjLeptonComponent)
+      Module.Dual ℂ LeptonSinglet) (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule LeptonSinglet)))
 
-lemma conjLeptonComponentIncl_apply (a : ConjLeptonComponent) :
+lemma conjLeptonComponentIncl_apply (a : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule LeptonSinglet)) :
     conjLeptonComponentIncl a =
       ExteriorAlgebra.ι ℂ ((0, a) : LeptonSinglet.JetComponentSpace) := rfl
 
 /-- The inclusion of the conjugate-linear elements into the QED jet algebra. -/
-noncomputable def conjLeptonLinearIncl : ConjLeptonLinear →ₗ[ℂ] JetAlgebra :=
+noncomputable def conjLeptonLinearIncl :
+    MatterLinear (Module.Dual ℂ (ConjModule LeptonSinglet)) →ₗ[ℂ] JetAlgebra :=
   TensorProduct.map LinearMap.id conjLeptonComponentIncl
 
 lemma conjLeptonLinearIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (a : ConjLeptonComponent) :
+    (a : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule LeptonSinglet)) :
     conjLeptonLinearIncl (p ⊗ₜ[ℂ] a) = p ⊗ₜ[ℂ] conjLeptonComponentIncl a := by
   simp [conjLeptonLinearIncl]
 
-/-- The covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` on conjugate-linear
-  elements. -/
-noncomputable def covariantStepBarAux (μ : Fin 1 ⊕ Fin 3) :
-    ConjLeptonLinear →ₗ[ℂ] ConjLeptonLinear :=
-  TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ))
-      LinearMap.id +
-    TensorProduct.map LinearMap.id (shiftC μ) +
-    ((6 : ℂ) * Complex.I) •
-      TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
-        BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ))) LinearMap.id
-
-lemma covariantStepBarAux_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (a : ConjLeptonComponent) :
-    covariantStepBarAux μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] a +
-        p ⊗ₜ[ℂ] shiftC μ a +
-        ((6 : ℂ) * Complex.I) • ((((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
-          (BBoson.JetGenerators.dB {} μ)) * p) ⊗ₜ[ℂ] a) := by
-  simp [covariantStepBarAux]
-
-/-- The gauge action on conjugate-linear elements. -/
-noncomputable def repBarAux (U : JetGaugeGroupI) : ConjLeptonLinear →ₗ[ℂ] ConjLeptonLinear :=
-  TensorProduct.map (BBoson.JetAlgebra.complexRepJetGaugeGroupI U)
-    (actionC (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6))
-
-lemma repBarAux_tmul (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (a : ConjLeptonComponent) :
-    repBarAux U (p ⊗ₜ[ℂ] a) =
-      (BBoson.JetAlgebra.complexRepJetGaugeGroupI U p) ⊗ₜ[ℂ]
-        actionC (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) a := by
-  simp [repBarAux]
-
-/-- The Maurer–Cartan anomaly operators on conjugate-linear elements: the
-  obstruction to the gauge action commuting with the conjugate covariant step,
-  with the couplings of the unconjugated case negated. -/
-noncomputable def anomalyBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) : ConjLeptonLinear →ₗ[ℂ] ConjLeptonLinear :=
-  TensorProduct.map (LinearMap.baseChange ℂ
-      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id +
-    ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-      (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • LinearMap.id +
-    ((6 : ℂ) * Complex.I) •
-      TensorProduct.map LinearMap.id (actionC (BBoson.maurerCartanU1Deriv U μ s))
-
-lemma anomalyBarAux_tmul (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : ConjLeptonComponent) :
-    anomalyBarAux U s μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a +
-        ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • (p ⊗ₜ[ℂ] a) +
-        ((6 : ℂ) * Complex.I) • (p ⊗ₜ[ℂ] actionC (BBoson.maurerCartanU1Deriv U μ s) a) := by
-  simp [anomalyBarAux]
-
-/-- The zeroth-order conjugate-lepton component as a conjugate-linear element. -/
-noncomputable def ψBarAux (α : Fin 2) : ConjLeptonLinear :=
-  ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
-    ((1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) ⊗ₜ[ℂ]
-      LeptonSinglet.basis.conj.dualBasis α)
-
-/-- The conjugate covariant derivative as a conjugate-linear element. -/
-noncomputable def DbarψAux (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) : ConjLeptonLinear :=
-  l.foldr (fun μ x => covariantStepBarAux μ x) (ψBarAux α)
-
-set_option maxHeartbeats 1000000 in
-set_option linter.unusedSimpArgs false in
-/-- The gauge action commutes with the conjugate covariant step up to the gauge
-  action of the zeroth conjugate anomaly operator. -/
-lemma repBarAux_covariantStepBarAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
-    (x : ConjLeptonLinear) :
-    repBarAux U (covariantStepBarAux μ x) =
-      covariantStepBarAux μ (repBarAux U x) + repBarAux U (anomalyBarAux U [] μ x) := by
-  have h0 : (↑([] : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) + {μ} =
-      ({μ} : Multiset (Fin 1 ⊕ Fin 3)) := by
-    rw [Multiset.coe_nil, zero_add]
-  have hone : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra,
-      ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) * z = z := by
-    intro z
-    induction z using TensorProduct.induction_on with
-    | zero => simp
-    | add a b ha hb => simp only [mul_add, ha, hb]
-    | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
-  have key : (repBarAux U) ∘ₗ (covariantStepBarAux μ) =
-      (covariantStepBarAux μ) ∘ₗ (repBarAux U) + (repBarAux U) ∘ₗ (anomalyBarAux U [] μ) := by
-    refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, LinearMap.add_apply, covariantStepBarAux_tmul,
-      anomalyBarAux_tmul, BBoson.maurerCartanU1Deriv_nil, map_add, map_smul, map_sub,
-      repBarAux_tmul, Multiset.coe_nil, Multiset.empty_eq_zero, zero_add]
-    simp only [BBoson.JetAlgebra.complexRepJetGaugeGroupI_baseChange_jetDeriv,
-      actionC_shiftC, BBoson.pderiv_pow_unitary_star, actionC_mul, actionC_C,
-      BBoson.JetAlgebra.complexRepJetGaugeGroupI_mul,
-      BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofGenerator,
-      actionC_maurerCartanU1_star_pow]
-    have hdist : ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
-          (BBoson.JetGenerators.dB 0 μ) +
-        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
-          ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) *
-        BBoson.JetAlgebra.complexRepJetGaugeGroupI U p =
-        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB 0 μ)) *
-          BBoson.JetAlgebra.complexRepJetGaugeGroupI U p +
-        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
-          BBoson.JetAlgebra.complexRepJetGaugeGroupI U p := by
-      rw [add_mul, smul_mul_assoc, hone]
-    simp only [hdist]
-    simp only [TensorProduct.tmul_add, TensorProduct.add_tmul, TensorProduct.tmul_sub,
-      TensorProduct.sub_tmul, ← TensorProduct.smul_tmul', TensorProduct.tmul_smul,
-      smul_add, smul_sub, smul_smul, Nat.cast_ofNat]
-    module
-  exact LinearMap.congr_fun key x
-
-set_option linter.unusedSimpArgs false in
-/-- The conjugate anomaly operators commute with the conjugate covariant step up
-  to the anomaly operator with the derivative direction appended. -/
-lemma anomalyBarAux_covariantStepBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ ν : Fin 1 ⊕ Fin 3) (x : ConjLeptonLinear) :
-    anomalyBarAux U s μ (covariantStepBarAux ν x) =
-      covariantStepBarAux ν (anomalyBarAux U s μ x) + anomalyBarAux U (ν :: s) μ x := by
-  have hT : ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) + {ν} =
-      (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) + {μ} := by
-    rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
-      rw [Multiset.singleton_add, Multiset.cons_coe]]
-    ac_rfl
-  have hshift : BBoson.JetGenerators.shiftMulti ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ})
-      (BBoson.JetGenerators.dB {} ν) =
-      BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν := by
-    rw [BBoson.JetGenerators.shiftMulti_dB]
-    congr 1
-  have hm : BBoson.mcShift U (BBoson.JetComponentSpace.basis
-      (BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν)) =
-      BBoson.mcShift U (BBoson.JetComponentSpace.basis
-        (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) := by
-    rw [BBoson.mcShift_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
-      ↑s + {ν} from by rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
-        rw [Multiset.singleton_add, Multiset.cons_coe]]; ac_rfl]
-  have key : (anomalyBarAux U s μ) ∘ₗ (covariantStepBarAux ν) =
-      (covariantStepBarAux ν) ∘ₗ (anomalyBarAux U s μ) + anomalyBarAux U (ν :: s) μ := by
-    refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, LinearMap.add_apply, covariantStepBarAux_tmul,
-      anomalyBarAux_tmul, map_add, map_smul, map_sub, BBoson.maurerCartanU1Deriv_cons]
-    simp only [BBoson.JetAlgebra.mcDeriv_baseChange_jetDeriv, hT, actionC_shiftC,
-      BBoson.JetAlgebra.mcDeriv_baseChange_mul,
-      BBoson.JetAlgebra.mcDeriv_baseChange_ofGenerator, hshift, hm]
-    have hone : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra,
-        ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) * z = z := by
-      intro z
-      induction z using TensorProduct.induction_on with
-      | zero => simp
-      | add a b ha hb => simp only [mul_add, ha, hb]
-      | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
-    have hdist : (((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
-          ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) * p =
-        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
-          (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
-          p := by
-      rw [smul_mul_assoc, hone]
-    simp only [hdist]
-    simp only [TensorProduct.tmul_add, TensorProduct.add_tmul, TensorProduct.tmul_sub,
-      TensorProduct.sub_tmul, ← TensorProduct.smul_tmul', smul_add, smul_sub, smul_smul]
-    module
-  exact LinearMap.congr_fun key x
-
-/-- The conjugate anomaly operators annihilate the zeroth-order conjugate-lepton
-  component. -/
-lemma anomalyBarAux_ψBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
-    anomalyBarAux U s μ (ψBarAux α) = 0 := by
-  rw [ψBarAux, anomalyBarAux_tmul, LinearMap.baseChange_tmul]
-  simp only [BBoson.JetAlgebra.mcDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, actionC_one_tmul,
-    BBoson.constantCoeff_maurerCartanU1Deriv_mcShift,
-    TensorProduct.tmul_smul, smul_smul, zero_add]
-  module
-
-/-- The gauge action on the zeroth-order conjugate-lepton component is the
-  conjugate hypercharge character of the value of the jet at the base point. -/
-lemma repBarAux_ψBarAux (U : JetGaugeGroupI) (α : Fin 2) :
-    repBarAux U (ψBarAux α) =
-      MvPowerSeries.constantCoeff (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
-        ψBarAux α := by
-  rw [ψBarAux, repBarAux_tmul, BBoson.JetAlgebra.complexRepJetGaugeGroupI_tmul]
-  simp only [BBoson.JetAlgebra.repJetGaugeGroupI_one, actionC_one_tmul,
-    TensorProduct.tmul_smul]
-
-/-- Every conjugate anomaly operator annihilates every conjugate covariant
-  derivative. -/
-lemma anomalyBarAux_DbarψAux (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    ∀ (s : List (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3),
-      anomalyBarAux U s μ (DbarψAux l α) = 0 := by
-  induction l with
-  | nil => exact fun s μ => anomalyBarAux_ψBarAux U s μ α
-  | cons ν l ih =>
-    intro s μ
-    rw [show DbarψAux (ν :: l) α = covariantStepBarAux ν (DbarψAux l α) from rfl,
-      anomalyBarAux_covariantStepBarAux, ih s μ, map_zero, zero_add, ih (ν :: s) μ]
-
-/-- Covariance of the conjugate covariant derivatives on the conjugate-linear
-  model. -/
-lemma repBarAux_DbarψAux (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    repBarAux U (DbarψAux l α) =
-      MvPowerSeries.constantCoeff (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
-        DbarψAux l α := by
-  induction l with
-  | nil => exact repBarAux_ψBarAux U α
-  | cons ν l ih =>
-    rw [show DbarψAux (ν :: l) α = covariantStepBarAux ν (DbarψAux l α) from rfl,
-      repBarAux_covariantStepBarAux, ih, map_smul, anomalyBarAux_DbarψAux U l α [] ν,
-      map_zero, add_zero]
+/-- The conjugate lepton acts through `χ = star u ^ 6` with coupling `c = +6i`. -/
+lemma pderiv_star_pow_six (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
+    MvPowerSeries.pderiv ℂ ν (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) =
+      MvPowerSeries.C (-((6 : ℂ) * Complex.I)) *
+        (BBoson.mcShiftSeries U ν [] * star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) := by
+  rw [BBoson.pderiv_pow_unitary_star_mcShiftSeries]
+  norm_num
 
 /-- The inclusion intertwines the conjugate covariant steps. -/
-lemma covariantStepBar_conjLeptonLinearIncl (μ : Fin 1 ⊕ Fin 3) (x : ConjLeptonLinear) :
+lemma covariantStepBar_conjLeptonLinearIncl (μ : Fin 1 ⊕ Fin 3)
+    (x : MatterLinear (Module.Dual ℂ (ConjModule LeptonSinglet))) :
     covariantStepBar μ (conjLeptonLinearIncl x) =
-      conjLeptonLinearIncl (covariantStepBarAux μ x) := by
+      conjLeptonLinearIncl (covStepM ((6 : ℂ) * Complex.I) μ x) := by
   have key : (covariantStepBar μ) ∘ₗ conjLeptonLinearIncl =
-      conjLeptonLinearIncl ∘ₗ (covariantStepBarAux μ) := by
+      conjLeptonLinearIncl ∘ₗ (covStepM ((6 : ℂ) * Complex.I) μ) := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, conjLeptonLinearIncl_tmul, covariantStepBarAux_tmul,
+    simp only [LinearMap.comp_apply, conjLeptonLinearIncl_tmul, covStepM_tmul,
       conjLeptonComponentIncl_apply, covariantStepBar_apply, map_add, map_smul,
-      map_sub,
       jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_ι,
       LeptonSinglet.JetComponentSpace.jetDeriv_inr', ofGenerator, shiftC,
       Algebra.TensorProduct.tmul_mul_tmul, one_mul]
   exact LinearMap.congr_fun key x
 
 /-- The inclusion intertwines the gauge actions. -/
-lemma repJetGaugeGroupI_conjLeptonLinearIncl (U : JetGaugeGroupI) (x : ConjLeptonLinear) :
-    repJetGaugeGroupI U (conjLeptonLinearIncl x) = conjLeptonLinearIncl (repBarAux U x) := by
+lemma repJetGaugeGroupI_conjLeptonLinearIncl (U : JetGaugeGroupI)
+    (x : MatterLinear (Module.Dual ℂ (ConjModule LeptonSinglet))) :
+    repJetGaugeGroupI U (conjLeptonLinearIncl x) =
+      conjLeptonLinearIncl (repM U (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6) x) := by
   have key : (repJetGaugeGroupI U) ∘ₗ conjLeptonLinearIncl =
-      conjLeptonLinearIncl ∘ₗ (repBarAux U) := by
+      conjLeptonLinearIncl ∘ₗ (repM U (star ((U.2.2 : unitary JetRing) : JetRing) ^ 6)) := by
     refine TensorProduct.ext' fun p a => ?_
-    simp only [LinearMap.comp_apply, conjLeptonLinearIncl_tmul, repBarAux_tmul,
+    simp only [LinearMap.comp_apply, conjLeptonLinearIncl_tmul, repM_tmul,
       conjLeptonComponentIncl_apply, repJetGaugeGroupI, Representation.tprod_apply,
       TensorProduct.map_tmul, LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply,
       ExteriorAlgebra.map_apply_ι, LeptonSinglet.JetComponentSpace.repJetGaugeGroupI_inr',
       actionC]
   exact LinearMap.congr_fun key x
 
-/-- The conjugate covariant derivatives are the images of their conjugate-linear
+/-- The conjugate covariant derivatives are the images of their linear-matter
   models. -/
 lemma Dbarψ_eq_conjLeptonLinearIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dbarψ l α = conjLeptonLinearIncl (DbarψAux l α) := by
+    Dbarψ l α = conjLeptonLinearIncl (DM ((6 : ℂ) * Complex.I) l
+      (LeptonSinglet.basis.conj.dualBasis α)) := by
   induction l with
   | nil =>
-    rw [Dbarψ_nil, show DbarψAux [] α = ψBarAux α from rfl, ψBarAux,
+    rw [Dbarψ_nil, show DM ((6 : ℂ) * Complex.I) [] (LeptonSinglet.basis.conj.dualBasis α) =
+        baseM (LeptonSinglet.basis.conj.dualBasis α) from rfl, baseM,
       conjLeptonLinearIncl_tmul, conjLeptonComponentIncl_apply]
     simp only [ofGenerator, LeptonSinglet.JetAlgebra.ofGenerator,
       LeptonSinglet.JetComponentSpace.basis_dbarψ, DerivAlgebraComplex.basis_nil]
@@ -1297,8 +1208,8 @@ lemma repJetGaugeGroupI_Dbarψ (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3))
     rw [Unitary.coe_star, JetRing.constantCoeff_star]
     rfl
   rw [Dbarψ_eq_conjLeptonLinearIncl, repJetGaugeGroupI_conjLeptonLinearIncl,
-    repBarAux_DbarψAux, map_smul, ← Dbarψ_eq_conjLeptonLinearIncl, Submonoid.smul_def,
-    SubmonoidClass.coe_pow, hval, map_pow]
+    repM_DM U _ _ (pderiv_star_pow_six U), map_smul, ← Dbarψ_eq_conjLeptonLinearIncl,
+    Submonoid.smul_def, SubmonoidClass.coe_pow, hval, map_pow]
 
 /-!
 
@@ -1333,7 +1244,7 @@ noncomputable def complexRepAlgHom (U : JetGaugeGroupI) :
   AlgHom.ofLinearMap (BBoson.JetAlgebra.complexRepJetGaugeGroupI U)
     (by
       rw [Algebra.TensorProduct.one_def, BBoson.JetAlgebra.complexRepJetGaugeGroupI_tmul,
-        BBoson.JetAlgebra.repJetGaugeGroupI_one])
+        BBoson.JetAlgebra.repJetGaugeGroupI_apply_one])
     (BBoson.JetAlgebra.complexRepJetGaugeGroupI_mul U)
 
 @[simp]
