@@ -140,6 +140,41 @@ noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) LeptonSinglet
     ext1 l
     simp [Module.End.mul_eq_comp]
 
+/-- The Lorentz action on the lepton-singlet basis: the right-handed Weyl
+  action by the entrywise conjugate matrix. -/
+lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup Λ (basis α) = ∑ β, star (Λ.1 β α) • basis β := by
+  simp only [basis, Module.Basis.map_apply, repLorentzGroup, MonoidHom.coe_mk,
+    OneHom.coe_mk, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+    LinearEquiv.apply_symm_apply, Fermion.RightHandedWeyl.rep_apply_basis,
+    Matrix.map_apply, map_sum, map_smul]
+
+/-- The lepton jet coordinates transform contragrediently, by the entrywise
+  conjugate of the inverse matrix. -/
+lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup.dual Λ (basis.dualBasis α) =
+      ∑ β, star ((Λ⁻¹).1 α β) • basis.dualBasis β :=
+  Representation.dual_apply_dualBasis _ _ _ _
+    (Matrix.of fun l j => star ((Λ⁻¹).1 l j))
+    (fun j => repLorentzGroup_apply_basis Λ⁻¹ j)
+
+/-- The Lorentz action on the conjugate lepton basis: the coefficients are the
+  conjugates of those of the lepton action, that is, the matrix itself. -/
+lemma repLorentzGroup_conj_apply_basis (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup.conj Λ (basis.conj α) = ∑ β, Λ.1 β α • basis.conj β := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply,
+    LinearEquiv.symm_apply_apply, repLorentzGroup_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, star_star, Module.Basis.conj_apply]
+
+/-- The conjugate lepton jet coordinates transform by the inverse matrix. -/
+lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup.conj.dual Λ (basis.conj.dualBasis α) =
+      ∑ β, (Λ⁻¹).1 α β • basis.conj.dualBasis β :=
+  Representation.dual_apply_dualBasis _ _ _ _
+    (Matrix.of fun l j => (Λ⁻¹).1 l j)
+    (fun j => repLorentzGroup_conj_apply_basis Λ⁻¹ j)
+
 /-!
 
 ## D. Global Gauge action
@@ -354,6 +389,113 @@ noncomputable def JetComponentSpace.repLorentzGroup :
     Representation ℂ (SL(2,ℂ)) JetComponentSpace :=
   (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.dual).prod
   (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.conj.dual)
+
+/-- The Lorentz action on the zeroth-order lepton jet coordinate: the
+  contragredient conjugate spinor action. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis (.dψ {} α)) =
+      ∑ β, star ((Λ⁻¹).1 α β) • JetComponentSpace.basis (.dψ {} β) := by
+  rw [basis_dψ_nil,
+    show JetComponentSpace.repLorentzGroup Λ =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.conj.dual Λ)) from rfl,
+    LinearMap.prodMap_apply, map_zero, TensorProduct.map_tmul,
+    DerivAlgebraComplex.repLorentzGroup_apply_one,
+    LeptonSinglet.repLorentzGroup_dual_dualBasis, TensorProduct.tmul_sum]
+  have hb : ∀ β : Fin 2, JetComponentSpace.basis
+      (.dψ (0 : Multiset (Fin 1 ⊕ Fin 3)) β) =
+      ((1 : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) ⊗ₜ[ℂ]
+        LeptonSinglet.basis.dualBasis β, 0) := fun β => basis_dψ_nil β
+  refine Prod.ext ?_ ?_
+  · simp [Prod.fst_sum, hb, TensorProduct.tmul_smul]
+  · simp [Prod.snd_sum, hb]
+
+set_option maxHeartbeats 1000000 in
+/-- The Lorentz action on the first-order lepton jet coordinate: the derivative
+  slot transforms by the columns of the Lorentz matrix and the spinor slot
+  contragrediently. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dψ_singleton (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis (.dψ {μ} α)) =
+      ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+        star ((Λ⁻¹).1 α β)) • JetComponentSpace.basis (.dψ {ν} β) := by
+  rw [basis_dψ_singleton,
+    show JetComponentSpace.repLorentzGroup Λ =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.conj.dual Λ)) from rfl,
+    LinearMap.prodMap_apply, map_zero, TensorProduct.map_tmul,
+    DerivAlgebraComplex.repLorentzGroup_apply_ι,
+    Lorentz.CoℂModule.SL2CRep_dual_dualBasis,
+    LeptonSinglet.repLorentzGroup_dual_dualBasis, map_sum, TensorProduct.sum_tmul]
+  refine Prod.ext ?_ ?_
+  · simp only [Prod.fst_sum, Prod.smul_fst, basis_dψ_singleton, map_smul,
+      TensorProduct.smul_tmul', TensorProduct.tmul_sum, TensorProduct.sum_tmul,
+      Finset.smul_sum, TensorProduct.tmul_smul, smul_smul]
+    refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun β _ => ?_
+    rw [mul_comm]
+  · simp [Prod.snd_sum, basis_dψ_singleton, TensorProduct.tmul_sum,
+      TensorProduct.sum_tmul, map_smul, TensorProduct.smul_tmul']
+
+/-- The Lorentz action on the zeroth-order conjugate lepton jet coordinate. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dbarψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis (.dbarψ {} α)) =
+      ∑ β, (Λ⁻¹).1 α β • JetComponentSpace.basis (.dbarψ {} β) := by
+  rw [basis_dbarψ,
+    show JetComponentSpace.repLorentzGroup Λ =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.conj.dual Λ)) from rfl,
+    LinearMap.prodMap_apply, map_zero, TensorProduct.map_tmul,
+    show DerivAlgebraComplex.basis ({} : Multiset (Fin 1 ⊕ Fin 3)) = 1 from
+      DerivAlgebraComplex.basis_nil,
+    DerivAlgebraComplex.repLorentzGroup_apply_one,
+    LeptonSinglet.repLorentzGroup_conj_dual_dualBasis, TensorProduct.tmul_sum]
+  have hb0 : DerivAlgebraComplex.basis (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 :=
+    DerivAlgebraComplex.basis_nil
+  refine Prod.ext ?_ ?_
+  · simp [Prod.fst_sum, basis_dbarψ]
+  · simp [Prod.snd_sum, basis_dbarψ, TensorProduct.tmul_smul, hb0]
+
+set_option maxHeartbeats 1000000 in
+/-- The Lorentz action on the first-order conjugate lepton jet coordinate. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dbarψ_singleton (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis (.dbarψ {μ} α)) =
+      ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+        (Λ⁻¹).1 α β) • JetComponentSpace.basis (.dbarψ {ν} β) := by
+  rw [basis_dbarψ,
+    show JetComponentSpace.repLorentzGroup Λ =
+      LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ)
+          (LeptonSinglet.repLorentzGroup.conj.dual Λ)) from rfl,
+    LinearMap.prodMap_apply, map_zero, TensorProduct.map_tmul,
+    show DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+        SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+          (Lorentz.complexCoBasis.dualBasis μ) from
+      DerivAlgebraComplex.basis_singleton μ,
+    DerivAlgebraComplex.repLorentzGroup_apply_ι,
+    Lorentz.CoℂModule.SL2CRep_dual_dualBasis,
+    LeptonSinglet.repLorentzGroup_conj_dual_dualBasis, map_sum,
+    TensorProduct.sum_tmul]
+  refine Prod.ext ?_ ?_
+  · simp [Prod.fst_sum, basis_dbarψ, TensorProduct.tmul_sum,
+      TensorProduct.sum_tmul, map_smul, TensorProduct.smul_tmul']
+  · simp only [Prod.snd_sum, Prod.smul_snd, basis_dbarψ,
+      DerivAlgebraComplex.basis_singleton, map_smul, TensorProduct.smul_tmul',
+      TensorProduct.tmul_sum, TensorProduct.sum_tmul, Finset.smul_sum,
+      TensorProduct.tmul_smul, smul_smul]
+    refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun β _ => ?_
+    rw [mul_comm]
 
 /-- The action of the jet gauge group on the dual jet algebra of the
   charged-lepton singlet's component functions. Component functions transform
@@ -933,6 +1075,57 @@ lemma repLorentzGroup_apply_one (g : SL(2,ℂ)) :
 lemma repLorentzGroup_apply_mul (g : SL(2,ℂ)) (x y : JetAlgebra) :
     repLorentzGroup g (x * y) = repLorentzGroup g x * repLorentzGroup g y := by
   simp [repLorentzGroup_apply]
+
+/-- The Lorentz action on a jet-algebra generator. -/
+lemma repLorentzGroup_ofGenerator (Λ : SL(2,ℂ)) (j : JetGenerators) :
+    repLorentzGroup Λ (ofGenerator j) =
+      ExteriorAlgebra.ι ℂ
+        (JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.basis j)) := by
+  rw [ofGenerator, repLorentzGroup_apply, ExteriorAlgebra.map_apply_ι]
+
+/-- The Lorentz action on the zeroth-order lepton generator. -/
+lemma repLorentzGroup_ofGenerator_ψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup Λ (ofGenerator (.dψ {} α)) =
+      ∑ β, star ((Λ⁻¹).1 α β) • ofGenerator (.dψ {} β) := by
+  rw [repLorentzGroup_ofGenerator,
+    JetComponentSpace.repLorentzGroup_basis_dψ_nil, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [map_smul, ofGenerator]
+
+/-- The Lorentz action on the first-order lepton generator. -/
+lemma repLorentzGroup_ofGenerator_ψ_singleton (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    repLorentzGroup Λ (ofGenerator (.dψ {μ} α)) =
+      ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+        star ((Λ⁻¹).1 α β)) • ofGenerator (.dψ {ν} β) := by
+  rw [repLorentzGroup_ofGenerator,
+    JetComponentSpace.repLorentzGroup_basis_dψ_singleton, map_sum]
+  refine Finset.sum_congr rfl fun ν _ => ?_
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [map_smul, ofGenerator]
+
+/-- The Lorentz action on the zeroth-order conjugate lepton generator. -/
+lemma repLorentzGroup_ofGenerator_barψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
+    repLorentzGroup Λ (ofGenerator (.dbarψ {} α)) =
+      ∑ β, (Λ⁻¹).1 α β • ofGenerator (.dbarψ {} β) := by
+  rw [repLorentzGroup_ofGenerator,
+    JetComponentSpace.repLorentzGroup_basis_dbarψ_nil, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [map_smul, ofGenerator]
+
+/-- The Lorentz action on the first-order conjugate lepton generator. -/
+lemma repLorentzGroup_ofGenerator_barψ_singleton (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    repLorentzGroup Λ (ofGenerator (.dbarψ {μ} α)) =
+      ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+        (Λ⁻¹).1 α β) • ofGenerator (.dbarψ {ν} β) := by
+  rw [repLorentzGroup_ofGenerator,
+    JetComponentSpace.repLorentzGroup_basis_dbarψ_singleton, map_sum]
+  refine Finset.sum_congr rfl fun ν _ => ?_
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [map_smul, ofGenerator]
 
 /-!
 

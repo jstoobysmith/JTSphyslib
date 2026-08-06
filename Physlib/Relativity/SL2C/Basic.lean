@@ -203,6 +203,53 @@ lemma toSelfAdjointMap_pauliBasis (i : Fin 1 ⊕ Fin 3) :
   apply congrArg
   exact Eq.symm (minkowskiMatrix.dual_apply_minkowskiMatrix ((toLorentzGroup M).1) i j)
 
+set_option linter.unusedSimpArgs false in
+/-- Trace orthogonality of the covariant Pauli basis:
+  `tr (σ'_a σ'_b) = 2 δ_{a b}`. -/
+lemma trace_pauliSelfAdjoint'_mul (a b : Fin 1 ⊕ Fin 3) :
+    Matrix.trace ((PauliMatrix.pauliSelfAdjoint' a).1 *
+      (PauliMatrix.pauliSelfAdjoint' b).1) = if a = b then 2 else 0 := by
+  rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
+    simp [PauliMatrix.pauliSelfAdjoint', Matrix.neg_mul, Matrix.mul_neg,
+      PauliMatrix.σ0_σ0_trace, PauliMatrix.σ0_σ1_trace, PauliMatrix.σ0_σ2_trace,
+      PauliMatrix.σ0_σ3_trace, PauliMatrix.σ1_σ0_trace, PauliMatrix.σ1_σ1_trace,
+      PauliMatrix.σ1_σ2_trace, PauliMatrix.σ1_σ3_trace, PauliMatrix.σ2_σ0_trace,
+      PauliMatrix.σ2_σ1_trace, PauliMatrix.σ2_σ2_trace, PauliMatrix.σ2_σ3_trace,
+      PauliMatrix.σ3_σ0_trace, PauliMatrix.σ3_σ1_trace, PauliMatrix.σ3_σ2_trace,
+      PauliMatrix.σ3_σ3_trace]
+
+/-- The matrix elements of the covering map through the trace pairing:
+  `L(M)_{l i} = ½ tr (σ'_l · M σ'_i M†)`. -/
+lemma toLorentzGroup_eq_trace (M : SL(2,ℂ)) (l i : Fin 1 ⊕ Fin 3) :
+    (((toLorentzGroup M).1 l i : ℝ) : ℂ) =
+      Matrix.trace ((PauliMatrix.pauliSelfAdjoint' l).1 *
+        (M.1 * (PauliMatrix.pauliSelfAdjoint' i).1 * M.1ᴴ)) / 2 := by
+  have h := congrArg (fun A : selfAdjoint (Matrix (Fin 2) (Fin 2) ℂ) =>
+    Matrix.trace ((PauliMatrix.pauliSelfAdjoint' l).1 * A.1))
+    (toSelfAdjointMap_basis (M := M) i)
+  simp only [toSelfAdjointMap_apply_coe, PauliMatrix.pauliBasis',
+    Module.Basis.coe_mk, AddSubmonoidClass.coe_finsetSum, selfAdjoint.val_smul,
+    Matrix.mul_sum, Matrix.trace_sum, Matrix.mul_smul, Matrix.trace_smul,
+    trace_pauliSelfAdjoint'_mul, smul_ite, smul_zero, Finset.sum_ite_eq,
+    Finset.mem_univ, if_true] at h
+  rw [h, real_smul]
+  ring
+
+/-- The covering map intertwines conjugate transposition with matrix
+  transposition: `L(M†) = L(M)ᵀ`. -/
+lemma toLorentzGroup_conjTranspose {M N : SL(2,ℂ)} (hN : N.1 = M.1ᴴ) :
+    (toLorentzGroup N).1 = (toLorentzGroup M).1ᵀ := by
+  ext l i
+  refine Complex.ofReal_injective ?_
+  have h1 := toLorentzGroup_eq_trace N l i
+  have h2 := toLorentzGroup_eq_trace M i l
+  rw [hN] at h1
+  rw [Matrix.transpose_apply, h1, h2]
+  congr 1
+  rw [Matrix.conjTranspose_conjTranspose, ← Matrix.mul_assoc, ← Matrix.mul_assoc,
+    Matrix.trace_mul_cycle, ← Matrix.mul_assoc, Matrix.trace_mul_comm,
+    ← Matrix.mul_assoc]
+
 /-- The first column of the Lorentz matrix formed from an element of `SL(2, ℂ)`. -/
 lemma toLorentzGroup_fst_col (M : SL(2, ℂ)) :
     (fun μ => (toLorentzGroup M).1 μ (Sum.inl 0)) = fun μ =>

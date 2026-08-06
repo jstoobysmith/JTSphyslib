@@ -51,12 +51,6 @@ end LeptonDoublet
 
 namespace LeptonSinglet
 
-lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (α : Fin 2) :
-    repLorentzGroup Λ (basis α) = ∑ β, star (Λ.1 β α) • basis β := by
-  simp only [basis, Basis.map_apply, repLorentzGroup, MonoidHom.coe_mk, OneHom.coe_mk,
-    LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.apply_symm_apply,
-    Fermion.RightHandedWeyl.rep_apply_basis, Matrix.map_apply, map_sum, map_smul]
-
 lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (α : Fin 2) :
     repGaugeGroupI g (basis α) = (star (g.toU1.1 : ℂ) ^ 6) • basis α := by
   simpa [basis, Basis.map_apply, valLinEquiv_symm_apply] using repGaugeGroupI_basis g α

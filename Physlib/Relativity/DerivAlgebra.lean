@@ -512,6 +512,18 @@ lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : DerivAlgebr
 
 -/
 
+/-- The components of a dual representation on a dual basis: if `ρ g⁻¹` has
+  matrix `M` in the basis `b` (columns indexing the argument), then `ρ.dual g`
+  acts on the dual basis by the rows of `M`. -/
+lemma _root_.Representation.dual_apply_dualBasis {k G V ι : Type*} [CommRing k]
+    [Group G] [AddCommGroup V] [Module k V] [Fintype ι] [DecidableEq ι]
+    (ρ : Representation k G V) (b : Module.Basis ι k V) (g : G) (i : ι)
+    (M : Matrix ι ι k) (hM : ∀ j, ρ g⁻¹ (b j) = ∑ l, M l j • b l) :
+    ρ.dual g (b.dualBasis i) = ∑ j, M i j • b.dualBasis j := by
+  refine b.ext fun j => ?_
+  rw [Representation.dual_apply, Module.Dual.transpose_apply, LinearMap.comp_apply, hM]
+  simp [Finsupp.single_apply, Finset.sum_ite_eq, Finset.sum_ite_eq']
+
 open Matrix MatrixGroups
 
 /-- The representation of the Lorentz group `SL(2,ℂ)` on the algebra of derivative
@@ -574,6 +586,43 @@ lemma repLorentzGroup_deriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (a : DerivAl
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [mul_smul_comm, ← deriv_apply_eq_mul]
 
+/-- The components of the complex dual covector action on the dual basis: the
+  dual derivative slots transform contravariantly, by the columns of the
+  (complexified) Lorentz matrix. The complex analogue of
+  `Lorentz.CoVector.sl2Rep_dual_dualBasis`. -/
+lemma _root_.Lorentz.CoℂModule.SL2CRep_dual_dualBasis (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) :
+    Lorentz.CoℂModule.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ) =
+      ∑ j, (((Lorentz.SL2C.toLorentzGroup Λ).1 j μ : ℝ) : ℂ) •
+        Lorentz.complexCoBasis.dualBasis j := by
+  refine Representation.dual_apply_dualBasis _ _ _ _
+    (Matrix.of fun l j => (((Lorentz.SL2C.toLorentzGroup Λ).1 j l : ℝ) : ℂ))
+    (fun j => ?_)
+  have hexp : Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j) =
+      ∑ l, (LinearMap.toMatrix Lorentz.complexCoBasis Lorentz.complexCoBasis
+        (Lorentz.CoℂModule.SL2CRep Λ⁻¹)) l j • Lorentz.complexCoBasis l := by
+    conv_lhs => rw [← Lorentz.complexCoBasis.sum_repr
+      (Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j))]
+    refine Finset.sum_congr rfl fun l _ => ?_
+    rw [LinearMap.toMatrix_apply]
+  rw [hexp]
+  refine Finset.sum_congr rfl fun l _ => ?_
+  congr 1
+  rw [Lorentz.complexCoBasis_ρ_apply, map_inv, Matrix.transpose_apply,
+    ← LorentzGroup.toComplex_inv, Matrix.inv_inv_of_invertible]
+  rfl
+
+/-- The Lorentz action on the singleton derivative monomial: the derivative
+  slot transforms by the columns of the Lorentz matrix. -/
+lemma repLorentzGroup_basis_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup Λ (basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+      ∑ ν, (((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) •
+        basis ({ν} : Multiset (Fin 1 ⊕ Fin 3)) := by
+  rw [basis_singleton, repLorentzGroup_apply_ι,
+    Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
+  refine Finset.sum_congr rfl fun ν _ => ?_
+  rw [map_smul, basis_singleton]
+
 /-!
 
 ### B.6. The derivative-degree scaling
@@ -626,18 +675,6 @@ end DerivAlgebraComplex
 ## C. The real derivative algebra
 
 -/
-
-/-- The components of a dual representation on a dual basis: if `ρ g⁻¹` has
-  matrix `M` in the basis `b` (columns indexing the argument), then `ρ.dual g`
-  acts on the dual basis by the rows of `M`. -/
-lemma _root_.Representation.dual_apply_dualBasis {k G V ι : Type*} [CommRing k]
-    [Group G] [AddCommGroup V] [Module k V] [Fintype ι] [DecidableEq ι]
-    (ρ : Representation k G V) (b : Module.Basis ι k V) (g : G) (i : ι)
-    (M : Matrix ι ι k) (hM : ∀ j, ρ g⁻¹ (b j) = ∑ l, M l j • b l) :
-    ρ.dual g (b.dualBasis i) = ∑ j, M i j • b.dualBasis j := by
-  refine b.ext fun j => ?_
-  rw [Representation.dual_apply, Module.Dual.transpose_apply, LinearMap.comp_apply, hM]
-  simp [Finsupp.single_apply, Finset.sum_ite_eq, Finset.sum_ite_eq']
 
 abbrev DerivAlgebraReal := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
 
