@@ -16,7 +16,7 @@ public import Physlib.Relativity.PauliMatrices.Basic
 @[expose] public section
 
 namespace QED
-open TensorProduct StandardModel
+open TensorProduct StandardModel Matrix MatrixGroups
 
 /-- We define the mass weight of a term as two times its mass dimnesion. -/
 def MassWeight : JetGenerators → ℕ
@@ -38,6 +38,14 @@ namespace JetAlgebra
 noncomputable def massWeightScale (c : ℂ) : JetAlgebra →ₐ[ℂ] JetAlgebra :=
   Algebra.TensorProduct.map (BBoson.JetAlgebra.massWeightScale c)
     (LeptonSinglet.JetAlgebra.massWeightScale c)
+
+/-- The mass-dimension scaling on a pure tensor. -/
+lemma massWeightScale_tmul (c : ℂ) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (l : LeptonSinglet.JetAlgebra) :
+    massWeightScale c (p ⊗ₜ[ℂ] l) =
+      (BBoson.JetAlgebra.massWeightScale c p) ⊗ₜ[ℂ]
+        (LeptonSinglet.JetAlgebra.massWeightScale c l) :=
+  Algebra.TensorProduct.map_tmul _ _ _ _
 
 /-- Each generator scales by `c` to the power of its mass weight. -/
 @[simp]
@@ -149,14 +157,54 @@ lemma massWeightScale_fieldStrengthDeriv (c : ℂ) (s : Multiset (Fin 1 ⊕ Fin 
       simp only [MassWeight, Multiset.card_add, Multiset.card_singleton]; omega,
     smul_sub]
 
+/-- Products of homogeneous elements are homogeneous of the summed weight. -/
+lemma massWeightScale_mul_eigen {x y : JetAlgebra} {m n : ℕ}
+    (hx : ∀ c : ℂ, massWeightScale c x = c ^ m • x)
+    (hy : ∀ c : ℂ, massWeightScale c y = c ^ n • y) (c : ℂ) :
+    massWeightScale c (x * y) = c ^ (m + n) • (x * y) := by
+  simp only [map_mul, hx, hy]
+  noncomm_ring [smul_smul]
+  ring_nf
+
+
+/-- The mass-dimension scaling at a real scalar commutes with the Lorentz
+  action on the QED jet algebra. -/
+lemma massWeightScale_ofReal_repLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
+    (x : JetAlgebra) :
+    massWeightScale (r : ℂ) (repLorentzGroup Λ x) =
+      repLorentzGroup Λ (massWeightScale (r : ℂ) x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => simp only [map_add, ha, hb]
+  | tmul p l =>
+    simp only [repLorentzGroup_tmul, massWeightScale_tmul,
+      BBoson.JetAlgebra.massWeightScale_ofReal_complexRepLorentzGroup,
+      LeptonSinglet.JetAlgebra.massWeightScale_repLorentzGroup_apply]
+
+
+/-- The mass-dimension scaling commutes with the constant gauge action on the
+  QED jet algebra. -/
+lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI)
+    (x : JetAlgebra) :
+    massWeightScale c (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
+      repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (massWeightScale c x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => simp only [map_add, ha, hb]
+  | tmul p l =>
+    simp only [repJetGaugeGroupI_tmul', massWeightScale_tmul,
+      BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant,
+      LeptonSinglet.JetAlgebra.massWeightScale_repJetGaugeGroupI_ofConstant_apply]
 
 /-!
 
-##. The mass-weight submodules
+## A. The mass-weight submodules
 
 -/
 noncomputable def MassDimSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
     Submodule.span ℂ { x | ∀ c : ℂ, massWeightScale c x = c ^ n • x }
+
+instance : GradedAlgebra (R := ℂ) (A := JetAlgebra) MassDimSubmodule := sorry
 
 noncomputable def MassWeightLESubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ {x | ∃ m ≤ n, ∀ c : ℂ, massWeightScale c x = c ^ m • x}

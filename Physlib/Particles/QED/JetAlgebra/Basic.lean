@@ -87,6 +87,14 @@ lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : BBoson.JetAlgeb
       (c ⊗ₜ[ℝ] BBoson.JetAlgebra.repJetGaugeGroupI U b) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l := rfl
 
+/-- The QED gauge action on a pure tensor of the two jet-algebra factors. -/
+lemma repJetGaugeGroupI_tmul' (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (l : LeptonSinglet.JetAlgebra) :
+    repJetGaugeGroupI U (p ⊗ₜ[ℂ] l) =
+      (BBoson.JetAlgebra.complexRepJetGaugeGroupI U p) ⊗ₜ[ℂ]
+        (LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l) := by
+  rw [repJetGaugeGroupI, Representation.tprod_apply, TensorProduct.map_tmul]
+
 
 /-!
 
@@ -278,6 +286,43 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
   simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
     TensorProduct.zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
+
+
+/-- One covariant-derivative step `D̄_μ = ∂_μ - 6 i B_μ` for the conjugate
+  lepton on the QED jet algebra. -/
+noncomputable def covariantStepBar (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  jetDeriv μ - ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
+
+/-- The covariant derivative `D̄_l ψ̄_α` of the conjugate lepton along the
+  ordered list of directions `l`, with the head of the list the outermost
+  derivative. -/
+noncomputable def Dbarψ (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) : JetAlgebra :=
+  l.foldr (fun μ x => covariantStepBar μ x) [JetGenerators.dbarψ {} α]ₐ
+
+/-- The zeroth covariant derivative is the conjugate-lepton component function
+  itself. -/
+@[simp]
+lemma Dbarψ_nil (α : Fin 2) :
+    Dbarψ [] α = [JetGenerators.dbarψ {} α]ₐ := rfl
+
+@[simp]
+lemma Dbarψ_cons (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    Dbarψ (μ :: l) α = covariantStepBar μ (Dbarψ l α) := rfl
+
+/-- The first conjugate covariant derivative:
+  `D̄_μ ψ̄_α = ∂_μ ψ̄_α - 6 i B_μ ψ̄_α`. -/
+lemma Dbarψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    Dbarψ [μ] α = [JetGenerators.dbarψ {μ} α]ₐ - ((6 : ℂ) * Complex.I) •
+        ([JetGenerators.dB {} μ]ₐ * [JetGenerators.dbarψ {} α]ₐ) := by
+  rw [Dbarψ_cons, Dbarψ_nil, covariantStepBar, LinearMap.sub_apply,
+    LinearMap.smul_apply, LinearMap.mulLeft_apply]
+  congr 1
+  simp only [ofGenerator]
+  rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
+  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
+    TensorProduct.zero_tmul, zero_add,
+    LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
+    LeptonSinglet.JetGenerators.shift_dbarψ, Multiset.empty_eq_zero]
 
 /-!
 
@@ -680,27 +725,6 @@ The covariance proof mirrors the unconjugated case on the conjugate-linear
 model, with the coupling `6 i` replaced by `- 6 i` throughout.
 
 -/
-
-/-- One covariant-derivative step `D̄_μ = ∂_μ - 6 i B_μ` for the conjugate
-  lepton on the QED jet algebra. -/
-noncomputable def covariantStepBar (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
-  jetDeriv μ - ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
-
-/-- The covariant derivative `D̄_l ψ̄_α` of the conjugate lepton along the
-  ordered list of directions `l`, with the head of the list the outermost
-  derivative. -/
-noncomputable def Dbarψ (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) : JetAlgebra :=
-  l.foldr (fun μ x => covariantStepBar μ x) [JetGenerators.dbarψ {} α]ₐ
-
-/-- The zeroth covariant derivative is the conjugate-lepton component function
-  itself. -/
-@[simp]
-lemma Dbarψ_nil (α : Fin 2) :
-    Dbarψ [] α = [JetGenerators.dbarψ {} α]ₐ := rfl
-
-@[simp]
-lemma Dbarψ_cons (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dbarψ (μ :: l) α = covariantStepBar μ (Dbarψ l α) := rfl
 
 /-- The conjugate lepton component functions. -/
 abbrev ConjLeptonComponent : Type :=

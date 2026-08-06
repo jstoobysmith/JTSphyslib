@@ -1323,6 +1323,21 @@ lemma massWeightScale_repLorentzGroup (c : ℂ) (g : SL(2,ℂ)) :
   have h2 := congrArg AlgHom.toLinearMap h
   rw [AlgHom.comp_toLinearMap, AlgHom.comp_toLinearMap] at h2
   exact h2
+
+lemma massWeightScale_repJetGaugeGroupI_ofConstant_apply (c : ℂ) (g : GaugeGroupI)
+    (x : JetAlgebra) :
+    massWeightScale c
+        (JetAlgebra.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
+      JetAlgebra.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
+        (massWeightScale c x) :=
+  DFunLike.congr_fun (massWeightScale_repJetGaugeGroupI_ofConstant c g) x
+
+lemma massWeightScale_repLorentzGroup_apply (c : ℂ) (g : SL(2,ℂ)) (x : JetAlgebra) :
+    massWeightScale c (JetAlgebra.repLorentzGroup g x) =
+      JetAlgebra.repLorentzGroup g (massWeightScale c x) := by
+  have h := massWeightScale_repLorentzGroup c g
+  exact DFunLike.congr_fun h x
+
 end JetAlgebra
 
 end LeptonSinglet

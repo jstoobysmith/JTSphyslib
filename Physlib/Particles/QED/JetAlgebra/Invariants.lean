@@ -597,22 +597,6 @@ lemma repLorentzGroup_B (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
   rw [TensorProduct.tmul_smul, hconv]
   rfl
 
-/-- The first conjugate covariant derivative:
-  `D̄_μ ψ̄_α = ∂_μ ψ̄_α - 6 i B_μ ψ̄_α`. -/
-lemma Dbarψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
-    Dbarψ [μ] α = [JetGenerators.dbarψ {μ} α]ₐ -
-      ((6 : ℂ) * Complex.I) •
-        ([JetGenerators.dB {} μ]ₐ * [JetGenerators.dbarψ {} α]ₐ) := by
-  rw [Dbarψ_cons, Dbarψ_nil, covariantStepBar, LinearMap.sub_apply,
-    LinearMap.smul_apply, LinearMap.mulLeft_apply]
-  congr 1
-  simp only [ofGenerator]
-  rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
-  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, zero_add,
-    LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
-    LeptonSinglet.JetGenerators.shift_dbarψ, Multiset.empty_eq_zero]
-
 /-- Covariance of the zeroth covariant derivatives under the Lorentz group. -/
 lemma repLorentzGroup_Dψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
     repLorentzGroup Λ (Dψ [] α) = ∑ β, star ((Λ⁻¹).1 α β) • Dψ [] β := by
@@ -918,13 +902,6 @@ lemma mem_massWeightLESubmodule_of_forall_massWeightScale {x : JetAlgebra}
     (hx : ∀ c : ℂ, massWeightScale c x = c ^ m • x) :
     x ∈ MassWeightLESubmodule n :=
   Submodule.subset_span ⟨m, hmn, hx⟩
-
-/-- Products of homogeneous elements are homogeneous of the summed weight. -/
-lemma massWeightScale_mul_eigen {x y : JetAlgebra} {m n : ℕ}
-    (hx : ∀ c : ℂ, massWeightScale c x = c ^ m • x)
-    (hy : ∀ c : ℂ, massWeightScale c y = c ^ n • y) (c : ℂ) :
-    massWeightScale c (x * y) = c ^ (m + n) • (x * y) := by
-  rw [map_mul, hx, hy, smul_mul_smul_comm, ← pow_add]
 
 lemma maxwellTerm_mem_massWeightLESubmodule :
     maxwellTerm ∈ MassWeightLESubmodule 8 := by
@@ -1242,63 +1219,6 @@ invariant element are themselves invariant.
 
 -/
 
-/-- The mass-dimension scaling at a real scalar commutes with the Lorentz
-  action on the QED jet algebra. -/
-lemma massWeightScale_ofReal_repLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
-    (x : JetAlgebra) :
-    massWeightScale (r : ℂ) (repLorentzGroup Λ x) =
-      repLorentzGroup Λ (massWeightScale (r : ℂ) x) := by
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | add a b ha hb => simp only [map_add, ha, hb]
-  | tmul p l =>
-    have hLS : LeptonSinglet.JetAlgebra.massWeightScale (r : ℂ)
-        (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) =
-        LeptonSinglet.JetAlgebra.repLorentzGroup Λ
-          (LeptonSinglet.JetAlgebra.massWeightScale (r : ℂ) l) :=
-      DFunLike.congr_fun
-        (LeptonSinglet.JetAlgebra.massWeightScale_repLorentzGroup (r : ℂ) Λ) l
-    have h1 : ∀ (p' : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l' : LeptonSinglet.JetAlgebra),
-        massWeightScale (r : ℂ) (p' ⊗ₜ[ℂ] l') =
-          (BBoson.JetAlgebra.massWeightScale (r : ℂ) p') ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.massWeightScale (r : ℂ) l') :=
-      fun p' l' => rfl
-    have h2 : ∀ (p' : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l' : LeptonSinglet.JetAlgebra),
-        repLorentzGroup Λ (p' ⊗ₜ[ℂ] l') =
-          (BBoson.JetAlgebra.complexRepLorentzGroup Λ p') ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l') := fun p' l' => rfl
-    rw [h2, h1, BBoson.JetAlgebra.massWeightScale_ofReal_complexRepLorentzGroup,
-      hLS, h1, h2]
-
-/-- The mass-dimension scaling commutes with the constant gauge action on the
-  QED jet algebra. -/
-lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI)
-    (x : JetAlgebra) :
-    massWeightScale c (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
-      repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (massWeightScale c x) := by
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | add a b ha hb => simp only [map_add, ha, hb]
-  | tmul p l =>
-    have hLS : LeptonSinglet.JetAlgebra.massWeightScale c
-        (LeptonSinglet.JetAlgebra.repJetGaugeGroupI
-          (JetGaugeGroupI.ofConstant g) l) =
-        LeptonSinglet.JetAlgebra.repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
-          (LeptonSinglet.JetAlgebra.massWeightScale c l) :=
-      DFunLike.congr_fun
-        (LeptonSinglet.JetAlgebra.massWeightScale_repJetGaugeGroupI_ofConstant c g) l
-    have h1 : ∀ (p' : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l' : LeptonSinglet.JetAlgebra),
-        massWeightScale c (p' ⊗ₜ[ℂ] l') =
-          (BBoson.JetAlgebra.massWeightScale c p') ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.massWeightScale c l') := fun p' l' => rfl
-    have h2 : ∀ (p' : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l' : LeptonSinglet.JetAlgebra),
-        repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (p' ⊗ₜ[ℂ] l') =
-          (BBoson.JetAlgebra.complexRepJetGaugeGroupI
-            (JetGaugeGroupI.ofConstant g) p') ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.repJetGaugeGroupI
-              (JetGaugeGroupI.ofConstant g) l') := fun p' l' => rfl
-    rw [h2, BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant, h1, hLS, h1, h2,
-      BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant]
 
 /-- Real-scalar variant of the independence of powers. -/
 lemma eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero (s : Finset ℕ)
