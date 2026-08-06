@@ -888,7 +888,7 @@ lemma repLorentzGroup_fieldStrengthDeriv_pair (Λ : SL(2,ℂ))
     BBoson.JetAlgebra.complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_pair,
     LeptonSinglet.JetAlgebra.repLorentzGroup_apply_one]
   simp only [TensorProduct.sum_tmul, hconv, fieldStrengthDeriv]
-  module
+
 end JetAlgebra
 
 end QED

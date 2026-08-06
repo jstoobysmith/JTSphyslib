@@ -735,37 +735,12 @@ lemma fermionKineticTermBar_mem_massWeightLESubmodule :
       (fun c => massWeightScale_Dbarψ c [μ] α)
       (fun c => massWeightScale_Dψ c [] β))
 
-/-- The Lorentz action fixes the unit of the jet algebra. -/
-lemma repLorentzGroup_one (Λ : SL(2,ℂ)) :
-    repLorentzGroup Λ (1 : JetAlgebra) = 1 := by
-  have h1 : BBoson.JetAlgebra.complexRepLorentzGroup Λ
-      (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) = 1 := by
-    rw [show (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) =
-        (1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra) from rfl,
-      show BBoson.JetAlgebra.complexRepLorentzGroup Λ
-          ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) =
-        (1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.repLorentzGroup Λ (1 : BBoson.JetAlgebra)
-        from by rw [show BBoson.JetAlgebra.complexRepLorentzGroup Λ =
-            LinearMap.baseChange ℂ (BBoson.JetAlgebra.repLorentzGroup Λ) from rfl,
-          LinearMap.baseChange_tmul],
-      show BBoson.JetAlgebra.repLorentzGroup Λ (1 : BBoson.JetAlgebra) = 1 from
-        map_one (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
-          BBoson.JetComponentSpace.repLorentzGroup Λ))]
-  rw [show (1 : JetAlgebra) = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-      (1 : LeptonSinglet.JetAlgebra) from rfl,
-    show repLorentzGroup Λ ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-        (1 : LeptonSinglet.JetAlgebra)) =
-      BBoson.JetAlgebra.complexRepLorentzGroup Λ (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-        LeptonSinglet.JetAlgebra.repLorentzGroup Λ (1 : LeptonSinglet.JetAlgebra)
-      from rfl,
-    h1, LeptonSinglet.JetAlgebra.repLorentzGroup_apply_one]
-
 /-- Every element of `massDimFourInvariants` is gauge and Lorentz invariant. -/
 lemma isInvariant_of_mem_massDimFourInvariants {x : JetAlgebra}
     (hx : x ∈ massDimFourInvariants) : IsInvariant x := by
   rcases hx with rfl | rfl | rfl | rfl | rfl
   · exact ⟨fun U => (repJetGaugeGroupI_eq_repAlgHom U 1).trans (repAlgHom U).map_one,
-      repLorentzGroup_one⟩
+      repLorentzGroup_apply_one⟩
   · exact ⟨repJetGaugeGroupI_maxwellTerm, repLorentzGroup_maxwellTerm⟩
   · exact ⟨repJetGaugeGroupI_thetaTerm, repLorentzGroup_thetaTerm⟩
   · exact ⟨repJetGaugeGroupI_fermionKineticTerm, repLorentzGroup_fermionKineticTerm⟩

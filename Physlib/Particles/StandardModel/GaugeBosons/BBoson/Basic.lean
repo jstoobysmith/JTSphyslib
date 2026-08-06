@@ -30,6 +30,51 @@ The physical Z boson and photon are the electroweak-mixed combinations of this
 field with the neutral `SU(2)` boson; before mixing, the `U(1)` factor's gauge
 boson is the B boson formalized here.
 
+## A note on the general case
+
+Let us consider the general case of a gauge field which should help elcuidate the
+theory here. Let `A_μ^a` be the gauge boson field for the general gauge group `G`,
+with `a` an index in the adjoint representation of `G`. Then the gauge transformation on `A`
+takes the form `A_μ^a ↦ (Ad_g A_μ)^a + mc(g)_μ^a`, where `mc(g)` is the Maurer–Cartan form
+of the gauge transformation. In this file `BBoson` is the
+vector space of the `B` boson fields, and the transformation of the
+`B` boson is given by (`SMul JetGaugeGroupI BBoson`):
+
+`repGaugeGroupI U.eval B + ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩`
+
+where here `repGaugeGroupI U.eval` is the adjoint action and the second term is
+the Maurer–Cartan term.
+
+In general we will write `g • A_μ^a = M(g)^a_b A_μ^b + mc(g)_μ^a`, where `M(g)^a_b`
+is the adjoint action of `g` evaluated at the base point.  With this it is easy to say
+how the gauge transformation acts on the derivatives of the gauge field.  We have
+
+`∂_s A_μ^a ↦ ∂_s (g • A_μ^a) =`
+`∑ (x + y = s), C(x,y) (∂_x g₀^a_b) ∂_y A_μ^b + ∂_s mc(g)_μ^a`
+where `C(x,y)` is the usual binomial coefficient.
+
+What we actually want to work with (and what our Lagrangian is written in
+terms of is) `[∂_s A_μ^a]`. These are the component functions of the gauge fields.
+They are functions on the space of field configurations, so the induced left
+action is the pullback along `g⁻¹`, `(g • f)(A) = f (g⁻¹ • A)`: one substitutes
+`g⁻¹` — not `g` — into the field law above. Writing `M⁻¹ := M(g⁻¹) = M(g)⁻¹`,
+
+`g • [∂_s A_μ^a] = ∑ (x + y = s), C(x,y) (∂_x (M(g₀⁻¹))^a_b) [∂_y A_μ^b]`
+`  + ∂_s mc(g⁻¹)_μ^a`
+
+The inverse on `M` is essential: pulling back along `g` instead would give a
+right action, since `(f ∘ g₁) ∘ g₂ = f ∘ (g₁g₂)` composes in the wrong order.
+The Maurer–Cartan cocycle identity `mc(g₁g₂) = Ad_{g₁} mc(g₂) + mc(g₁)` gives
+`mc(g⁻¹) = -Ad_{g⁻¹} mc(g)`, so the inhomogeneous term is minus the field-level
+one, transported by `M⁻¹`.
+
+For the abelian case formalized here the adjoint action is trivial, `M ≡ 1`, so
+the first sum collapses to `[∂_s B_μ]` and the shift is simply `-∂_s mc(g)_μ`:
+
+`g • [∂_s B_μ] = [∂_s B_μ] - ∂_s mc(g)_μ`
+
+This is `mcShift`, and it is the sign used by `repJetGaugeGroupI`.
+
 -/
 
 @[expose] public section
@@ -215,7 +260,8 @@ open MvPowerSeries JetRing
   is affine rather than linear, which is why it is a `MulAction` and not a
   `Representation`. -/
 noncomputable instance : SMul JetGaugeGroupI BBoson where
-  smul U B := repGaugeGroupI U.eval B + ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩
+  smul U B := repGaugeGroupI U.eval B +
+    ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩
 
 lemma smul_eq (U : JetGaugeGroupI) (B : BBoson) : U • B = B +
    ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ] maurerCartanU1Coeff U μ 0⟩ := rfl
@@ -395,6 +441,13 @@ noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponent
   (LagrangianTheory.dualRealJetAlgebraBasis.tensorProduct
     BBoson.basis.dualBasis).reindex JetGenerators.equiv.symm
 
+
+/-!
+
+### A.1. The mass dimension on the component space
+
+-/
+
 /-- The mass-dimension scaling on the space of component functions of the
   B boson: the diagonal map multiplying each component function `∂_s B_μ` by
   `c ^ w`, where `w` is twice its mass dimension. -/
@@ -409,6 +462,11 @@ lemma JetComponentSpace.massWeightScale_basis (c : ℝ) (j : JetGenerators) :
       c ^ j.massWeight • JetComponentSpace.basis j := by
   rw [JetComponentSpace.massWeightScale, Module.Basis.constr_basis]
 
+/-!
+
+### A.2. The action of the Lorentz group
+
+-/
 /-- The representation of the Lorentz group on the space of component functions
   of the B boson: the derivative symbols transform through the real dual covector
   action and the target factor through the dual of the B-boson representation. -/
@@ -421,15 +479,23 @@ noncomputable def JetComponentSpace.repLorentzGroup :
 
 ### A.1. The action of the gauge group on the jet component space
 
+The jet gauge group does not act linearly on the B-boson fields.
+
+For a general gauge theory (potentially non-abelian),
+
+`∂_s B_μ ↦ ∂_s (g • B_μ) = ∂_s (Ad_g B_μ + mc(g)_μ) = ∂_s (Ad_g B_μ) + ∂_s mc(g)_μ`
+
+The last term in this expression is a real number.
+
 -/
 
 open LagrangianTheory
 
-/-- Under the action of the gauge group `∂_s B_ν  ↦  ∂_s B_ν + ⟨mc, ∂_s B_ν⟩ · 1`.
-  The real number `⟨mc, ∂_s B_ν⟩` is what we here call the Maurer–Cartan pairing:
-  the component function evaluated against the B-boson whose components are the
-  factorial-weighted Taylor coefficients — the `s`-th derivatives at the base
-  point — of the Maurer–Cartan series. -/
+/-- The Maurer–Cartan pairing `⟨mc, ∂_s B_ν⟩`: the component function evaluated
+  against the B-boson whose components are the factorial-weighted Taylor
+  coefficients — the `s`-th derivatives at the base point — of the Maurer–Cartan
+  series. This is the shift of the *field* `∂_s B_ν` under the gauge action; the
+  component functions shift by its negative, `mcShift`. -/
 noncomputable def mcPairing (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
   TensorProduct.lift ((Module.Dual.eval ℝ BBoson).comp
   (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
@@ -631,7 +697,87 @@ lemma constantCoeff_maurerCartanU1Deriv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin
   rw [Complex.coe_selfAdjointEquiv]
   rfl
 
+/-!
 
+### The Maurer–Cartan shift on component functions
+
+The jet gauge group acts on the *fields* by the translation `B_μ ↦ B_μ + mc(g)_μ`
+(`SMul JetGaugeGroupI BBoson`). The jet algebra is the algebra of polynomial
+*functions* of the jet coordinates, on which the induced left action is the
+pullback along `g⁻¹`:
+
+`(g · f)(B) = f (g⁻¹ • B)`.
+
+Component functions therefore shift contragrediently to the fields, by
+`mc(g⁻¹) = -mc(g)` rather than by `+mc(g)`:
+
+`g • [∂_s B_ν] = [∂_s B_ν] - ⟨mc(g), ∂_s B_ν⟩ · 1`.
+
+Taking the pullback along `g` instead would give a right action; it is a
+representation here only because the `U(1)` translations are abelian, and would
+fail to be one for the `SU(2)` and `SU(3)` factors, whose Maurer–Cartan cocycle
+satisfies `mc(g₁g₂) = Ad_{g₁} mc(g₂) + mc(g₁)`.
+
+-/
+
+/-- The Maurer–Cartan shift of the component functions: minus the Maurer–Cartan
+  pairing, this being the pairing of the *inverse* jet, `⟨mc(U⁻¹), ·⟩`. This is
+  the shift appearing in the contragredient gauge action `repJetGaugeGroupI`. -/
+noncomputable def mcShift (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] ℝ :=
+  - mcPairing U
+
+lemma mcShift_apply (U : JetGaugeGroupI) (x : JetComponentSpace) :
+    mcShift U x = - mcPairing U x := rfl
+
+/-- The Maurer–Cartan shift on a general generator: minus the factorial-weighted
+  Taylor coefficient of the Maurer–Cartan series. -/
+lemma mcShift_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) :
+    mcShift U (JetComponentSpace.basis (.dB s ν)) =
+      - ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
+        Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s))) := by
+  rw [mcShift_apply, mcPairing_basis_dB']
+
+/-- The Maurer–Cartan shift on first-order generators. -/
+lemma mcShift_basis_dB (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    mcShift U (JetComponentSpace.basis (.dB {μ} ν)) =
+      - Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Finsupp.single μ 1)) := by
+  rw [mcShift_apply, mcPairing_basis_dB]
+
+@[simp]
+lemma mcShift_one : mcShift 1 = 0 := by
+  rw [mcShift, mcPairing_one, neg_zero]
+
+/-- The Maurer–Cartan shift is additive in the jet. -/
+lemma mcShift_mul (U V : JetGaugeGroupI) :
+    mcShift (U * V) = mcShift U + mcShift V := by
+  rw [mcShift, mcShift, mcShift, mcPairing_mul, neg_add]
+
+/-- The Maurer–Cartan shift of a jet of constant gauge transformations
+  vanishes. -/
+lemma mcShift_ofConstant (g : GaugeGroupI) :
+    mcShift (JetGaugeGroupI.ofConstant g) = 0 := by
+  rw [mcShift, mcPairing_ofConstant, neg_zero]
+
+/-- The Maurer–Cartan shift inherits the symmetry of the first-order
+  Maurer–Cartan coefficients: the shift of `∂_{s+μ} B_ν` equals that of
+  `∂_{s+ν} B_μ`. This is the gauge invariance of the abelian field strength. -/
+lemma mcShift_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) :
+    mcShift U (JetComponentSpace.basis (.dB (s + {μ}) ν)) =
+      mcShift U (JetComponentSpace.basis (.dB (s + {ν}) μ)) := by
+  rw [mcShift_apply, mcShift_apply, mcPairing_basis_dB_symm]
+
+/-- The constant coefficient of the iterated derivative of the Maurer–Cartan
+  series is minus the Maurer–Cartan shift of the corresponding B-boson component
+  function. -/
+lemma constantCoeff_maurerCartanU1Deriv_mcShift (U : JetGaugeGroupI)
+    (μ : Fin 1 ⊕ Fin 3) (s : List (Fin 1 ⊕ Fin 3)) :
+    MvPowerSeries.constantCoeff (maurerCartanU1Deriv U μ s) =
+      - ((mcShift U (JetComponentSpace.basis (JetGenerators.dB ↑s μ)) : ℝ) : ℂ) := by
+  rw [constantCoeff_maurerCartanU1Deriv, mcShift_apply]
+  push_cast
+  ring
 
 /-!
 
@@ -896,16 +1042,18 @@ noncomputable def complexRepLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
   translation, whose linear part is the identity; consequently no information is
   carried by a linear action on the component space itself, and the action lives
   on the unital algebra: a jet of gauge transformations acts as the substitution
-  automorphism sending each generator `x` to `x + ⟨mc, x⟩ 1`, the pullback of the
-  translation `B ↦ B + i (∂u) ū` on polynomial functions of the jet
-  coordinates. On jets of constant gauge transformations the shift vanishes and
-  the action is trivial, in agreement with `repGaugeGroupI`. -/
+  automorphism sending each generator `x` to `x + mcShift U x • 1`, i.e. to
+  `x - ⟨mc, x⟩ 1`. This is the pullback along `U⁻¹` of the field translation
+  `B ↦ B + i (∂u) ū`, the contragredient action, which is what makes this a left
+  action rather than a right one. On jets of constant gauge transformations the
+  shift vanishes and the action is trivial, in agreement with
+  `repGaugeGroupI`. -/
 noncomputable def repJetGaugeGroupI : Representation ℝ JetGaugeGroupI JetAlgebra where
   toFun U := (SymmetricAlgebra.lift
     ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)).toLinearMap
+      (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)).toLinearMap
   map_one' := by
-    rw [show mcPairing (1 : JetGaugeGroupI) = 0 from mcPairing_one]
+    rw [show mcShift (1 : JetGaugeGroupI) = 0 from mcShift_one]
     suffices hs : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
         (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
         AlgHom.id ℝ JetAlgebra by
@@ -914,14 +1062,14 @@ noncomputable def repJetGaugeGroupI : Representation ℝ JetGaugeGroupI JetAlgeb
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp
   map_mul' U V := by
-    rw [show mcPairing (U * V : JetGaugeGroupI) =
-        mcPairing U + mcPairing V from mcPairing_mul U V]
+    rw [show mcShift (U * V : JetGaugeGroupI) =
+        mcShift U + mcShift V from mcShift_mul U V]
     suffices hs : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (mcPairing U + mcPairing V)) =
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (mcShift U + mcShift V)) =
         (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)).comp
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)).comp
         (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing V)) by
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift V)) by
       rw [hs, AlgHom.comp_toLinearMap, Module.End.mul_eq_comp]
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp [add_assoc]
@@ -932,7 +1080,7 @@ noncomputable def repJetGaugeGroupI : Representation ℝ JetGaugeGroupI JetAlgeb
 lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
     repJetGaugeGroupI U (SymmetricAlgebra.ι ℝ JetComponentSpace x) =
       SymmetricAlgebra.ι ℝ JetComponentSpace x +
-        algebraMap ℝ JetAlgebra (mcPairing U x) := by
+        algebraMap ℝ JetAlgebra (mcShift U x) := by
   simp [repJetGaugeGroupI, SymmetricAlgebra.lift_ι_apply, AlgHom.toLinearMap_apply,
     Algebra.linearMap_apply]
 
@@ -940,12 +1088,12 @@ lemma repJetGaugeGroupI_ι (U : JetGaugeGroupI) (x : JetComponentSpace) :
 lemma repJetGaugeGroupI_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
     repJetGaugeGroupI U (x * y) = repJetGaugeGroupI U x * repJetGaugeGroupI U y :=
   map_mul (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)) x y
+    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)) x y
 
 lemma repJetGaugeGroupI_algebraMap (U : JetGaugeGroupI) (r : ℝ) :
     repJetGaugeGroupI U (algebraMap ℝ JetAlgebra r) = algebraMap ℝ JetAlgebra r :=
   AlgHom.commutes (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)) r
+    (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)) r
 
 lemma repJetGaugeGroupI_one (U : JetGaugeGroupI) :
     repJetGaugeGroupI U (1 : JetAlgebra) = 1 := by
@@ -960,21 +1108,21 @@ lemma repJetGaugeGroupI_one (U : JetGaugeGroupI) :
 lemma equivMvPolynomial_repJetGaugeGroupI (U : JetGaugeGroupI) (V : JetAlgebra) :
     SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis (repJetGaugeGroupI U V) =
       MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g)))
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g)))
         (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis V) := by
   have h : (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toAlgHom.comp
       (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)) =
+        (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)) =
       (MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g)))).comp
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g)))).comp
         (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toAlgHom := by
     refine SymmetricAlgebra.algHom_ext (JetComponentSpace.basis.ext fun g => ?_)
     show (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis)
         (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
-          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcPairing U)
+          (Algebra.linearMap ℝ JetAlgebra) ∘ₗ mcShift U)
           (SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis g))) =
       MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g)))
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g)))
         ((SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis)
           (SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis g)))
     rw [SymmetricAlgebra.lift_ι_apply]
@@ -992,8 +1140,8 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
   rw [show repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x =
       (SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
         (Algebra.linearMap ℝ JetAlgebra) ∘ₗ
-          mcPairing (JetGaugeGroupI.ofConstant g))) x from rfl,
-    mcPairing_ofConstant]
+          mcShift (JetGaugeGroupI.ofConstant g))) x from rfl,
+    mcShift_ofConstant]
   have h2 : SymmetricAlgebra.lift ((SymmetricAlgebra.ι ℝ JetComponentSpace) +
       (Algebra.linearMap ℝ JetAlgebra) ∘ₗ (0 : JetComponentSpace →ₗ[ℝ] ℝ)) =
       AlgHom.id ℝ JetAlgebra := by
@@ -1065,12 +1213,12 @@ lemma complexRepJetGaugeGroupI_one_tmul_one (U : JetGaugeGroupI) :
 lemma complexRepJetGaugeGroupI_ofGenerator (U : JetGaugeGroupI) (g : JetGenerators) :
     complexRepJetGaugeGroupI U ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator g) =
       (1 : ℂ) ⊗ₜ[ℝ] ofGenerator g +
-        ((mcPairing U (JetComponentSpace.basis g) : ℝ) : ℂ) •
+        ((mcShift U (JetComponentSpace.basis g) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) := by
   rw [complexRepJetGaugeGroupI_tmul, ofGenerator, repJetGaugeGroupI_ι,
     TensorProduct.tmul_add, Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul,
-    show ((mcPairing U (JetComponentSpace.basis g) : ℝ) : ℂ) =
-      algebraMap ℝ ℂ (mcPairing U (JetComponentSpace.basis g)) from rfl,
+    show ((mcShift U (JetComponentSpace.basis g) : ℝ) : ℂ) =
+      algebraMap ℝ ℂ (mcShift U (JetComponentSpace.basis g)) from rfl,
     algebraMap_smul]
 
 /-- Jets of constant gauge transformations act trivially on the complexified
@@ -1243,7 +1391,7 @@ noncomputable def mcDeriv (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fin 3)) 
     JetAlgebra →ₗ[ℝ] JetAlgebra :=
   (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).symm.toLinearMap ∘ₗ
     (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-      (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+      (MvPolynomial.C (mcShift U (JetComponentSpace.basis
         (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ)).toLinearMap ∘ₗ
     (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis).toLinearMap
 
@@ -1251,7 +1399,7 @@ noncomputable def mcDeriv (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fin 3)) 
 lemma mcDeriv_ofGenerator (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fin 3))
     (g : JetGenerators) :
     mcDeriv U t (ofGenerator g) = algebraMap ℝ JetAlgebra
-      (mcPairing U (JetComponentSpace.basis (JetGenerators.shiftMulti t g))) := by
+      (mcShift U (JetComponentSpace.basis (JetGenerators.shiftMulti t g))) := by
   simp only [mcDeriv, ofGenerator, LinearMap.coe_comp, Function.comp_apply,
     AlgEquiv.toLinearMap_apply, Derivation.coeFn_coe]
   rw [SymmetricAlgebra.equivMvPolynomial_ι_apply, MvPolynomial.mkDerivation_X,
@@ -1298,7 +1446,7 @@ lemma equivMvPolynomial_mcDeriv (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fi
     (x : JetAlgebra) :
     SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis (mcDeriv U t x) =
       (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-        (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+        (MvPolynomial.C (mcShift U (JetComponentSpace.basis
           (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ))
         (SymmetricAlgebra.equivMvPolynomial JetComponentSpace.basis x) := by
   simp only [mcDeriv, LinearMap.coe_comp, Function.comp_apply,
@@ -1312,17 +1460,17 @@ lemma mcDeriv_jetDeriv (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fin 3))
       jetDeriv ν (mcDeriv U t x) + mcDeriv U (t + {ν}) x := by
   have key : ∀ p : MvPolynomial JetGenerators ℝ,
       (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-        (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+        (MvPolynomial.C (mcShift U (JetComponentSpace.basis
           (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ))
         ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
           (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ)) p) =
       (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
         (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ))
         ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-          (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+          (MvPolynomial.C (mcShift U (JetComponentSpace.basis
             (JetGenerators.shiftMulti t g))) : MvPolynomial JetGenerators ℝ)) p) +
       (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-        (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+        (MvPolynomial.C (mcShift U (JetComponentSpace.basis
           (JetGenerators.shiftMulti (t + {ν}) g))) : MvPolynomial JetGenerators ℝ)) p := by
     intro p
     induction p using MvPolynomial.induction_on with
@@ -1332,9 +1480,9 @@ lemma mcDeriv_jetDeriv (U : JetGaugeGroupI) (t : Multiset (Fin 1 ⊕ Fin 3))
       simp only [map_add, hp, hq]
       ring
     | mul_X p g ih =>
-      have hlam : mcPairing U (JetComponentSpace.basis
+      have hlam : mcShift U (JetComponentSpace.basis
           (JetGenerators.shiftMulti t (JetGenerators.shift ν g))) =
-          mcPairing U (JetComponentSpace.basis
+          mcShift U (JetComponentSpace.basis
             (JetGenerators.shiftMulti (t + {ν}) g)) := by
         rw [JetGenerators.shiftMulti_shift]
       simp only [Derivation.leibniz, smul_eq_mul, MvPolynomial.mkDerivation_X,
@@ -1359,17 +1507,17 @@ lemma repJetGaugeGroupI_jetDeriv (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
       jetDeriv ν (repJetGaugeGroupI U x) + repJetGaugeGroupI U (mcDeriv U {ν} x) := by
   have key : ∀ p : MvPolynomial JetGenerators ℝ,
       MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g)))
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g)))
         ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
           (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ)) p) =
       (MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
         (MvPolynomial.X (JetGenerators.shift ν g) : MvPolynomial JetGenerators ℝ))
         (MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g))) p) +
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g))) p) +
       MvPolynomial.aeval (fun g => MvPolynomial.X g +
-          MvPolynomial.C (mcPairing U (JetComponentSpace.basis g)))
+          MvPolynomial.C (mcShift U (JetComponentSpace.basis g)))
         ((MvPolynomial.mkDerivation ℝ fun g : JetGenerators =>
-          (MvPolynomial.C (mcPairing U (JetComponentSpace.basis
+          (MvPolynomial.C (mcShift U (JetComponentSpace.basis
             (JetGenerators.shiftMulti {ν} g))) : MvPolynomial JetGenerators ℝ)) p) := by
     intro p
     induction p using MvPolynomial.induction_on with
@@ -1379,8 +1527,8 @@ lemma repJetGaugeGroupI_jetDeriv (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
       simp only [map_add, hp, hq]
       ring
     | mul_X p g ih =>
-      have hlam : mcPairing U (JetComponentSpace.basis (JetGenerators.shift ν g)) =
-          mcPairing U (JetComponentSpace.basis
+      have hlam : mcShift U (JetComponentSpace.basis (JetGenerators.shift ν g)) =
+          mcShift U (JetComponentSpace.basis
             (JetGenerators.shiftMulti {ν} g)) := by
         rw [JetGenerators.shiftMulti_singleton]
       simp only [Derivation.leibniz, smul_eq_mul, MvPolynomial.mkDerivation_X,
@@ -1440,12 +1588,12 @@ lemma mcDeriv_baseChange_jetDeriv (U : JetGaugeGroupI)
 lemma mcDeriv_baseChange_ofGenerator (U : JetGaugeGroupI)
     (t : Multiset (Fin 1 ⊕ Fin 3)) (g : JetGenerators) :
     LinearMap.baseChange ℂ (mcDeriv U t) ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator g) =
-      ((mcPairing U (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) •
+      ((mcShift U (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) •
         ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) := by
   rw [LinearMap.baseChange_tmul, mcDeriv_ofGenerator, Algebra.algebraMap_eq_smul_one,
     TensorProduct.tmul_smul,
-    show ((mcPairing U (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) =
-      algebraMap ℝ ℂ (mcPairing U (JetComponentSpace.basis
+    show ((mcShift U (JetComponentSpace.basis (JetGenerators.shiftMulti t g)) : ℝ) : ℂ) =
+      algebraMap ℝ ℂ (mcShift U (JetComponentSpace.basis
         (JetGenerators.shiftMulti t g))) from rfl,
     algebraMap_smul]
 
@@ -1466,7 +1614,7 @@ lemma fieldStrength_antisymm (μ ν : Fin 1 ⊕ Fin 3) :
 
 lemma repJetGaugeGroupI_fieldStrength (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
     repJetGaugeGroupI U (fieldStrength μ ν) = fieldStrength μ ν := by
-  simp only [fieldStrength, map_sub, ofGenerator, repJetGaugeGroupI_ι, mcPairing_basis_dB]
+  simp only [fieldStrength, map_sub, ofGenerator, repJetGaugeGroupI_ι, mcShift_basis_dB]
   rw [maurerCartanU1Coeff_single_symm]
   abel
 
@@ -1482,7 +1630,7 @@ lemma repJetGaugeGroupI_fieldStrengthDeriv (U : JetGaugeGroupI) (s : Multiset (F
     (μ ν : Fin 1 ⊕ Fin 3) :
     repJetGaugeGroupI U (fieldStrengthDeriv s μ ν) = fieldStrengthDeriv s μ ν := by
   simp only [fieldStrengthDeriv, map_sub, ofGenerator, repJetGaugeGroupI_ι]
-  rw [mcPairing_basis_dB_symm]
+  rw [mcShift_basis_dB_symm]
   abel
 
 lemma fieldStrengthDeriv_bianchi_identity (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν ρ : Fin 1 ⊕ Fin 3) :
@@ -1831,6 +1979,18 @@ lemma mcPairing_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
     · rw [if_neg hm]
       simp
 
+/-- The Maurer–Cartan shift of the exponential gauge jet `exp(-i a X^t)` with
+  `a = r / t!`: it shifts precisely the component functions whose total
+  symmetrized multi-index is `t`, and shifts them all by `-r`. -/
+lemma mcShift_expUnitary (t : Multiset (Fin 1 ⊕ Fin 3))
+    (ht : Multiset.toFinsupp t ≠ 0) (r : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) :
+    mcShift (expUnitary (r / (∏ ρ, Nat.factorial (Multiset.toFinsupp t ρ)))
+        (Multiset.toFinsupp t) ht) (JetComponentSpace.basis (.dB s ν)) =
+      if s + {ν} = t then -r else 0 := by
+  rw [mcShift_apply, mcPairing_expUnitary]
+  split <;> simp
+
 /-- The difference between a jet-algebra generator and its canonical
   representative is a derivative of the field strength, or zero. -/
 lemma ofGenerator_sub_ofGenerator_canon_mem (g : JetGenerators) :
@@ -1913,12 +2073,12 @@ lemma mem_adjoin_of_forall_expUnitary (V : JetAlgebra)
         Multiset.toFinsupp.injective (by rw [h, Multiset.toFinsupp_zero])
       simp at h0
     have hconj := equivMvPolynomial_repJetGaugeGroupI
-      (expUnitary (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+      (expUnitary (-r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
         (Multiset.toFinsupp (s₀ + {ν₀})) hne) V
     rw [hV _ _ _] at hconj
     have hfun : (fun g => MvPolynomial.X g + MvPolynomial.C
-        (mcPairing (expUnitary
-            (r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
+        (mcShift (expUnitary
+            (-r / (∏ ρ, Nat.factorial ((Multiset.toFinsupp (s₀ + {ν₀})) ρ)))
             (Multiset.toFinsupp (s₀ + {ν₀})) hne)
           (JetComponentSpace.basis g))) =
         fun g => MvPolynomial.X g + MvPolynomial.C
@@ -1926,7 +2086,7 @@ lemma mem_adjoin_of_forall_expUnitary (V : JetAlgebra)
             then r else (0 : ℝ)) := by
       funext g
       obtain ⟨s, ν⟩ := g
-      rw [mcPairing_expUnitary (s₀ + {ν₀}) hne r s ν]
+      rw [mcShift_expUnitary (s₀ + {ν₀}) hne (-r) s ν, neg_neg]
       have hiff : (s + {ν} = s₀ + {ν₀}) ↔
           (JetGenerators.canon (JetGenerators.dB s ν) =
             JetGenerators.canon (JetGenerators.dB s₀ ν₀)) := by

@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet
-public import Physlib.Particles.StandardModel.GaugeBosons.BBoson
+public import Physlib.Particles.StandardModel.GaugeBosons.BBoson.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Mathlib.LinearAlgebra.DirectSum.Finsupp
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
@@ -15,7 +15,6 @@ public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
-public import Physlib.Particles.StandardModel.GaugeBosons.BBoson
 /-!
 # Jet algebra for quantum electrodynamics
 
@@ -206,24 +205,29 @@ multiset, with the head of the list the outermost derivative.
 
 The component functions of the lepton transform contragrediently, through the
 hypercharge power series `u ^ 6`, so the covariant step on component functions
-is `D_μ = ∂_μ + 6 i B_μ`: under a jet gauge transformation `∂_μ ψ_α` shifts by
-`- 6 i mc_μ ψ_α` while `B_μ` shifts by `+ mc_μ`, and the two contributions
-cancel. The step is defined on the whole jet algebra; applied repeatedly to the
-zeroth-order component function of `ψ` it produces the covariant derivatives.
+is `D_μ = ∂_μ - 6 i B_μ`: under a jet gauge transformation `∂_μ ψ_α` shifts by
+`- 6 i mc_μ ψ_α` while `B_μ`, being a component function too, shifts
+contragrediently by `- mc_μ` (`BBoson.mcShift`), and the two contributions
+cancel for the coupling `- 6 i` — and only for that coupling. The step is
+defined on the whole jet algebra; applied repeatedly to the zeroth-order
+component function of `ψ` it produces the covariant derivatives.
 
 -/
 
-/-- One covariant-derivative step `D_μ = ∂_μ + 6 i B_μ` on the QED jet algebra:
+/-- One covariant-derivative step `D_μ = ∂_μ - 6 i B_μ` on the QED jet algebra:
   the total spacetime derivative together with multiplication by the gauge field
-  weighted by the hypercharge coupling. -/
+  weighted by the hypercharge coupling. The sign is fixed by covariance: the
+  component function `ψ_α` carries hypercharge `+6`, so `∂_μ ψ_α` picks up
+  `- 6 i mc_μ ψ_α`, while `B_μ` shifts contragrediently by `- mc_μ`
+  (`BBoson.mcShift`); the two cancel only for the coupling `- 6 i`. -/
 noncomputable def covariantStep (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
-  jetDeriv μ + ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
+  jetDeriv μ - ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
 
 @[simp]
 lemma covariantStep_apply (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     covariantStep μ x =
-      jetDeriv μ x + ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * x) := by
-  rw [covariantStep, LinearMap.add_apply, LinearMap.smul_apply,
+      jetDeriv μ x - ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * x) := by
+  rw [covariantStep, LinearMap.sub_apply, LinearMap.smul_apply,
     LinearMap.mulLeft_apply]
 
 /-- The covariant derivative `D_l ψ_α` of the charged lepton along the ordered
@@ -243,9 +247,9 @@ lemma Dψ_cons (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3))
     Dψ (μ :: l) α = covariantStep μ (Dψ l α) :=
   rfl
 
-/-- The first covariant derivative: `D_μ ψ_α = ∂_μ ψ_α + 6 i B_μ ψ_α`. -/
+/-- The first covariant derivative: `D_μ ψ_α = ∂_μ ψ_α - 6 i B_μ ψ_α`. -/
 lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
-    Dψ [μ] α = [JetGenerators.dψ {μ} α]ₐ +
+    Dψ [μ] α = [JetGenerators.dψ {μ} α]ₐ -
       ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * [JetGenerators.dψ {} α]ₐ) := by
   rw [Dψ_cons, Dψ_nil, covariantStep_apply]
   congr 1
@@ -256,16 +260,18 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
     LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
 
 
-/-- One covariant-derivative step `D̄_μ = ∂_μ - 6 i B_μ` for the conjugate
-  lepton on the QED jet algebra. -/
+/-- One covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` for the conjugate
+  lepton on the QED jet algebra: the conjugate component function `ψ̄_α` carries
+  hypercharge `-6`, so its coupling is the opposite of that in
+  `covariantStep`. -/
 noncomputable def covariantStepBar (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
-  jetDeriv μ - ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
+  jetDeriv μ + ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
 
 @[simp]
 lemma covariantStepBar_apply (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     covariantStepBar μ x =
-      jetDeriv μ x - ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * x) := by
-  rw [covariantStepBar, LinearMap.sub_apply, LinearMap.smul_apply,
+      jetDeriv μ x + ((6 : ℂ) * Complex.I) • ([JetGenerators.dB {} μ]ₐ * x) := by
+  rw [covariantStepBar, LinearMap.add_apply, LinearMap.smul_apply,
     LinearMap.mulLeft_apply]
 
 /-- The covariant derivative `D̄_l ψ̄_α` of the conjugate lepton along the
@@ -285,9 +291,9 @@ lemma Dbarψ_cons (μ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 
     Dbarψ (μ :: l) α = covariantStepBar μ (Dbarψ l α) := rfl
 
 /-- The first conjugate covariant derivative:
-  `D̄_μ ψ̄_α = ∂_μ ψ̄_α - 6 i B_μ ψ̄_α`. -/
+  `D̄_μ ψ̄_α = ∂_μ ψ̄_α + 6 i B_μ ψ̄_α`. -/
 lemma Dbarψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
-    Dbarψ [μ] α = [JetGenerators.dbarψ {μ} α]ₐ - ((6 : ℂ) * Complex.I) •
+    Dbarψ [μ] α = [JetGenerators.dbarψ {μ} α]ₐ + ((6 : ℂ) * Complex.I) •
         ([JetGenerators.dB {} μ]ₐ * [JetGenerators.dbarψ {} α]ₐ) := by
   rw [Dbarψ_cons, Dbarψ_nil, covariantStepBar_apply]
   congr 1
@@ -446,7 +452,7 @@ lemma Dψ_mem_range_oddIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
         rw [oddIncl_tmul]; rfl⟩
   | cons ν l ih =>
     simp only [Dψ_cons, covariantStep_apply]
-    exact Submodule.add_mem _ (jetDeriv_mem_range_oddIncl ν ih)
+    exact Submodule.sub_mem _ (jetDeriv_mem_range_oddIncl ν ih)
       (Submodule.smul_mem _ _ (dB_mul_mem_range_oddIncl ν ih))
 
 /-- The covariant derivatives of the conjugate lepton are odd. -/
@@ -459,7 +465,7 @@ lemma Dbarψ_mem_range_oddIncl (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
         rw [oddIncl_tmul]; rfl⟩
   | cons ν l ih =>
     simp only [Dbarψ_cons, covariantStepBar_apply]
-    exact Submodule.sub_mem _ (jetDeriv_mem_range_oddIncl ν ih)
+    exact Submodule.add_mem _ (jetDeriv_mem_range_oddIncl ν ih)
       (Submodule.smul_mem _ _ (dB_mul_mem_range_oddIncl ν ih))
 
 lemma covGenerator_mem_range_oddIncl (g : LeptonSinglet.JetGenerators) :
@@ -701,13 +707,13 @@ lemma leptonLinearIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : LeptonComp
     leptonLinearIncl (p ⊗ₜ[ℂ] a) = p ⊗ₜ[ℂ] leptonComponentIncl a := by
   simp [leptonLinearIncl]
 
-/-- The covariant-derivative step `D_μ = ∂_μ + 6 i B_μ` on lepton-linear
+/-- The covariant-derivative step `D_μ = ∂_μ - 6 i B_μ` on lepton-linear
   elements. -/
 noncomputable def covariantStepAux (μ : Fin 1 ⊕ Fin 3) :
     LeptonLinear →ₗ[ℂ] LeptonLinear :=
   TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ))
       LinearMap.id +
-    TensorProduct.map LinearMap.id (shiftC μ) +
+    TensorProduct.map LinearMap.id (shiftC μ) -
     ((6 : ℂ) * Complex.I) •
       TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
         BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ))) LinearMap.id
@@ -716,7 +722,7 @@ lemma covariantStepAux_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetA
     (a : LeptonComponent) :
     covariantStepAux μ (p ⊗ₜ[ℂ] a) =
       (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] a +
-        p ⊗ₜ[ℂ] shiftC μ a +
+        p ⊗ₜ[ℂ] shiftC μ a -
         ((6 : ℂ) * Complex.I) • ((((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB {} μ)) * p) ⊗ₜ[ℂ] a) := by
   simp [covariantStepAux]
@@ -739,8 +745,8 @@ lemma repAux_tmul (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
 noncomputable def anomalyAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) : LeptonLinear →ₗ[ℂ] LeptonLinear :=
   TensorProduct.map (LinearMap.baseChange ℂ
-      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id +
-    ((6 : ℂ) * Complex.I * ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id -
+    ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
       (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • LinearMap.id -
     ((6 : ℂ) * Complex.I) •
       TensorProduct.map LinearMap.id (actionC (BBoson.maurerCartanU1Deriv U μ s))
@@ -748,8 +754,8 @@ noncomputable def anomalyAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
 lemma anomalyAux_tmul (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : LeptonComponent) :
     anomalyAux U s μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a +
-        ((6 : ℂ) * Complex.I * ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a -
+        ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • (p ⊗ₜ[ℂ] a) -
         ((6 : ℂ) * Complex.I) • (p ⊗ₜ[ℂ] actionC (BBoson.maurerCartanU1Deriv U μ s) a) := by
   simp [anomalyAux]
@@ -818,13 +824,13 @@ lemma repAux_covariantStepAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
       actionC_maurerCartanU1_pow]
     have hdist : ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB 0 μ) +
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) *
         BBoson.JetAlgebra.complexRepJetGaugeGroupI U p =
         ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB 0 μ)) *
           BBoson.JetAlgebra.complexRepJetGaugeGroupI U p +
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
           BBoson.JetAlgebra.complexRepJetGaugeGroupI U p := by
       rw [add_mul, smul_mul_assoc, hone]
@@ -851,11 +857,11 @@ lemma anomalyAux_covariantStepAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 
       BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν := by
     rw [BBoson.JetGenerators.shiftMulti_dB]
     congr 1
-  have hm : BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+  have hm : BBoson.mcShift U (BBoson.JetComponentSpace.basis
       (BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν)) =
-      BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      BBoson.mcShift U (BBoson.JetComponentSpace.basis
         (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) := by
-    rw [BBoson.mcPairing_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
+    rw [BBoson.mcShift_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
       ↑s + {ν} from by rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
         rw [Multiset.singleton_add, Multiset.cons_coe]]; ac_rfl]
   have key : (anomalyAux U s μ) ∘ₗ (covariantStepAux ν) =
@@ -873,10 +879,10 @@ lemma anomalyAux_covariantStepAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 
       | zero => simp
       | add a b ha hb => simp only [mul_add, ha, hb]
       | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
-    have hdist : (((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+    have hdist : (((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) * p =
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           p := by
       rw [smul_mul_assoc, hone]
@@ -894,8 +900,10 @@ lemma anomalyAux_ψAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     anomalyAux U s μ (ψAux α) = 0 := by
   rw [ψAux, anomalyAux_tmul, LinearMap.baseChange_tmul]
   simp only [BBoson.JetAlgebra.mcDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, actionC_one_tmul, BBoson.constantCoeff_maurerCartanU1Deriv,
-    TensorProduct.tmul_smul, smul_smul, zero_add, sub_self]
+    TensorProduct.zero_tmul, actionC_one_tmul,
+    BBoson.constantCoeff_maurerCartanU1Deriv_mcShift,
+    TensorProduct.tmul_smul, smul_smul, zero_sub]
+  module
 
 /-- The gauge action on the zeroth-order lepton component is the hypercharge
   character of the value of the jet at the base point. -/
@@ -938,7 +946,7 @@ lemma covariantStep_leptonLinearIncl (μ : Fin 1 ⊕ Fin 3) (x : LeptonLinear) :
       leptonLinearIncl ∘ₗ (covariantStepAux μ) := by
     refine TensorProduct.ext' fun p a => ?_
     simp only [LinearMap.comp_apply, leptonLinearIncl_tmul, covariantStepAux_tmul,
-      leptonComponentIncl_apply, covariantStep_apply, map_add, map_smul,
+      leptonComponentIncl_apply, covariantStep_apply, map_add, map_sub, map_smul,
       jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_ι,
       LeptonSinglet.JetComponentSpace.jetDeriv_inl', ofGenerator, shiftC,
       Algebra.TensorProduct.tmul_mul_tmul, one_mul]
@@ -1027,13 +1035,13 @@ lemma conjLeptonLinearIncl_tmul (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
     conjLeptonLinearIncl (p ⊗ₜ[ℂ] a) = p ⊗ₜ[ℂ] conjLeptonComponentIncl a := by
   simp [conjLeptonLinearIncl]
 
-/-- The covariant-derivative step `D̄_μ = ∂_μ - 6 i B_μ` on conjugate-linear
+/-- The covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` on conjugate-linear
   elements. -/
 noncomputable def covariantStepBarAux (μ : Fin 1 ⊕ Fin 3) :
     ConjLeptonLinear →ₗ[ℂ] ConjLeptonLinear :=
   TensorProduct.map (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ))
       LinearMap.id +
-    TensorProduct.map LinearMap.id (shiftC μ) -
+    TensorProduct.map LinearMap.id (shiftC μ) +
     ((6 : ℂ) * Complex.I) •
       TensorProduct.map (LinearMap.mulLeft ℂ ((1 : ℂ) ⊗ₜ[ℝ]
         BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ))) LinearMap.id
@@ -1042,7 +1050,7 @@ lemma covariantStepBarAux_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.J
     (a : ConjLeptonComponent) :
     covariantStepBarAux μ (p ⊗ₜ[ℂ] a) =
       (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] a +
-        p ⊗ₜ[ℂ] shiftC μ a -
+        p ⊗ₜ[ℂ] shiftC μ a +
         ((6 : ℂ) * Complex.I) • ((((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB {} μ)) * p) ⊗ₜ[ℂ] a) := by
   simp [covariantStepBarAux]
@@ -1065,8 +1073,8 @@ lemma repBarAux_tmul (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
 noncomputable def anomalyBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) : ConjLeptonLinear →ₗ[ℂ] ConjLeptonLinear :=
   TensorProduct.map (LinearMap.baseChange ℂ
-      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id -
-    ((6 : ℂ) * Complex.I * ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      (BBoson.JetAlgebra.mcDeriv U (↑s + {μ}))) LinearMap.id +
+    ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
       (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • LinearMap.id +
     ((6 : ℂ) * Complex.I) •
       TensorProduct.map LinearMap.id (actionC (BBoson.maurerCartanU1Deriv U μ s))
@@ -1074,8 +1082,8 @@ noncomputable def anomalyBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3)
 lemma anomalyBarAux_tmul (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (a : ConjLeptonComponent) :
     anomalyBarAux U s μ (p ⊗ₜ[ℂ] a) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a -
-        ((6 : ℂ) * Complex.I * ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.mcDeriv U (↑s + {μ})) p) ⊗ₜ[ℂ] a +
+        ((6 : ℂ) * Complex.I * ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB ↑s μ)) : ℝ) : ℂ)) • (p ⊗ₜ[ℂ] a) +
         ((6 : ℂ) * Complex.I) • (p ⊗ₜ[ℂ] actionC (BBoson.maurerCartanU1Deriv U μ s) a) := by
   simp [anomalyBarAux]
@@ -1121,13 +1129,13 @@ lemma repBarAux_covariantStepBarAux (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
       actionC_maurerCartanU1_star_pow]
     have hdist : ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
           (BBoson.JetGenerators.dB 0 μ) +
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) *
         BBoson.JetAlgebra.complexRepJetGaugeGroupI U p =
         ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB 0 μ)) *
           BBoson.JetAlgebra.complexRepJetGaugeGroupI U p +
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB 0 μ)) : ℝ) : ℂ) •
           BBoson.JetAlgebra.complexRepJetGaugeGroupI U p := by
       rw [add_mul, smul_mul_assoc, hone]
@@ -1155,11 +1163,11 @@ lemma anomalyBarAux_covariantStepBarAux (U : JetGaugeGroupI) (s : List (Fin 1 �
       BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν := by
     rw [BBoson.JetGenerators.shiftMulti_dB]
     congr 1
-  have hm : BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+  have hm : BBoson.mcShift U (BBoson.JetComponentSpace.basis
       (BBoson.JetGenerators.dB ((↑s : Multiset (Fin 1 ⊕ Fin 3)) + {μ}) ν)) =
-      BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+      BBoson.mcShift U (BBoson.JetComponentSpace.basis
         (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) := by
-    rw [BBoson.mcPairing_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
+    rw [BBoson.mcShift_basis_dB_symm, show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) =
       ↑s + {ν} from by rw [show (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) = {ν} + ↑s from by
         rw [Multiset.singleton_add, Multiset.cons_coe]]; ac_rfl]
   have key : (anomalyBarAux U s μ) ∘ₗ (covariantStepBarAux ν) =
@@ -1177,10 +1185,10 @@ lemma anomalyBarAux_covariantStepBarAux (U : JetGaugeGroupI) (s : List (Fin 1 �
       | zero => simp
       | add a b ha hb => simp only [mul_add, ha, hb]
       | tmul c b => simp [Algebra.TensorProduct.tmul_mul_tmul]
-    have hdist : (((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+    have hdist : (((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra))) * p =
-        ((BBoson.mcPairing U (BBoson.JetComponentSpace.basis
+        ((BBoson.mcShift U (BBoson.JetComponentSpace.basis
           (BBoson.JetGenerators.dB (↑(ν :: s) : Multiset (Fin 1 ⊕ Fin 3)) μ)) : ℝ) : ℂ) •
           p := by
       rw [smul_mul_assoc, hone]
@@ -1197,8 +1205,10 @@ lemma anomalyBarAux_ψBarAux (U : JetGaugeGroupI) (s : List (Fin 1 ⊕ Fin 3))
     anomalyBarAux U s μ (ψBarAux α) = 0 := by
   rw [ψBarAux, anomalyBarAux_tmul, LinearMap.baseChange_tmul]
   simp only [BBoson.JetAlgebra.mcDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, actionC_one_tmul, BBoson.constantCoeff_maurerCartanU1Deriv,
-    TensorProduct.tmul_smul, smul_smul, zero_sub, neg_add_cancel]
+    TensorProduct.zero_tmul, actionC_one_tmul,
+    BBoson.constantCoeff_maurerCartanU1Deriv_mcShift,
+    TensorProduct.tmul_smul, smul_smul, zero_add]
+  module
 
 /-- The gauge action on the zeroth-order conjugate-lepton component is the
   conjugate hypercharge character of the value of the jet at the base point. -/
@@ -1633,7 +1643,7 @@ lemma covariantStep_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgebra}
     obtain ⟨c, g, hg, rfl⟩ := hz
     rw [covariantStep_apply, jetDeriv_tmul,
       LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator]
-    refine add_mem (add_mem ?_ ?_) (Submodule.smul_mem _ _ ?_)
+    refine sub_mem (add_mem ?_ ?_) (Submodule.smul_mem _ _ ?_)
     · exact Submodule.subset_span ⟨_, g, by omega, rfl⟩
     · exact Submodule.subset_span ⟨c, _, by rw [genDeg_shift]; omega, rfl⟩
     · rw [dB_mul_tmul]
@@ -1651,7 +1661,7 @@ lemma covariantStepBar_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgeb
     obtain ⟨c, g, hg, rfl⟩ := hz
     rw [covariantStepBar_apply, jetDeriv_tmul,
       LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator]
-    refine sub_mem (add_mem ?_ ?_) (Submodule.smul_mem _ _ ?_)
+    refine add_mem (add_mem ?_ ?_) (Submodule.smul_mem _ _ ?_)
     · exact Submodule.subset_span ⟨_, g, by omega, rfl⟩
     · exact Submodule.subset_span ⟨c, _, by rw [genDeg_shift]; omega, rfl⟩
     · rw [dB_mul_tmul]
@@ -1682,7 +1692,7 @@ lemma Dψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
       rw [add_sub_cancel] at h
       rw [Dψ_cons, h]
     have hleadEq : covariantStep μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-        LeptonSinglet.JetAlgebra.ofGenerator (.dψ (↑(μ :: t)) α) +
+        LeptonSinglet.JetAlgebra.ofGenerator (.dψ (↑(μ :: t)) α) -
         ((6 : ℂ) * Complex.I) • (([JetGenerators.dB {} μ]ₐ : JetAlgebra) * L) := by
       rw [covariantStep_apply, hL, Algebra.TensorProduct.one_def, jetDeriv_tmul,
         LinearMap.baseChange_tmul, BBoson.JetAlgebra.jetDeriv_one,
@@ -1697,9 +1707,9 @@ lemma Dψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
       simp [genDeg, Multiset.coe_card]
     have hmem2 : covariantStep μ (Dψ t α - L) ∈ oddLow (t.length + 1) :=
       covariantStep_mem_oddLow μ ih
-    have habel : ∀ A X Y : JetAlgebra, A + X + Y - A = X + Y := fun A X Y => by abel
+    have habel : ∀ A X Y : JetAlgebra, A - X + Y - A = Y - X := fun A X Y => by abel
     rw [hstep, hleadEq, habel]
-    exact add_mem (Submodule.smul_mem _ _ hmem1) hmem2
+    exact sub_mem hmem2 (Submodule.smul_mem _ _ hmem1)
 
 set_option maxHeartbeats 4000000 in
 /-- The covariant derivative of the conjugate lepton is its plain derivative
@@ -1724,7 +1734,7 @@ lemma Dbarψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
       rw [add_sub_cancel] at h
       rw [Dbarψ_cons, h]
     have hleadEq : covariantStepBar μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-        LeptonSinglet.JetAlgebra.ofGenerator (.dbarψ (↑(μ :: t)) α) -
+        LeptonSinglet.JetAlgebra.ofGenerator (.dbarψ (↑(μ :: t)) α) +
         ((6 : ℂ) * Complex.I) • (([JetGenerators.dB {} μ]ₐ : JetAlgebra) * L) := by
       rw [covariantStepBar_apply, hL, Algebra.TensorProduct.one_def, jetDeriv_tmul,
         LinearMap.baseChange_tmul, BBoson.JetAlgebra.jetDeriv_one,
@@ -1739,9 +1749,9 @@ lemma Dbarψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
       simp [genDeg, Multiset.coe_card]
     have hmem2 : covariantStepBar μ (Dbarψ t α - L) ∈ oddLow (t.length + 1) :=
       covariantStepBar_mem_oddLow μ ih
-    have habel : ∀ A X Y : JetAlgebra, A - X + Y - A = Y - X := fun A X Y => by abel
+    have habel : ∀ A X Y : JetAlgebra, A + X + Y - A = X + Y := fun A X Y => by abel
     rw [hstep, hleadEq, habel]
-    exact sub_mem hmem2 (Submodule.smul_mem _ _ hmem1)
+    exact add_mem (Submodule.smul_mem _ _ hmem1) hmem2
 
 /-- The covariant generator is the plain generator up to strictly-lower-degree
   odd terms. -/

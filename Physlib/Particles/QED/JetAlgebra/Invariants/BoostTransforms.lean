@@ -43,6 +43,7 @@ fixes every Lorentz-invariant vector while acting on the weight-eight basis
 by an explicit rational matrix (the `opS_*` stage lemmas below).
 
 -/
+
 /-- Reordering the two derivative indices of a second-derivative field
   strength. -/
 lemma fieldStrengthDeriv_pair_swap (r s a b : Fin 1 ⊕ Fin 3) :

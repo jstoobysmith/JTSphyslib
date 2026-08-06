@@ -699,6 +699,7 @@ lemma opS_ubar3 :
 ### The projector polynomial and the weight-eight endgame
 
 -/
+
 /-- The quintic projector polynomial in the symmetrised boost average `opS`:
   the unique degree-five polynomial with value one at the invariant eigenvalue
   and vanishing on the remaining boost eigenvalues of the weight-eight Klein
