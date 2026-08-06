@@ -76,6 +76,28 @@ the first sum collapses to `[∂_s B_μ]` and the shift is simply `-∂_s mc(g)_
 This is `mcShift`, and it is the sign used by `repJetGaugeGroupI`.
 This relation is written down explicitly in `repJetGaugeGroupI_apply_ofGenerator`.
 
+
+
+## Layout
+
+* `A` — the B-boson field itself: its target space, and the Lorentz and gauge
+  actions on it.
+* `B` — the jet coordinates `[∂_s B_μ]`: the generators, the space they span,
+  and the Lorentz and gauge actions on that space. The gauge action is the
+  Maurer–Cartan shift `mcShift` (`B.5`).
+* `C` — the Maurer–Cartan data packaged as jets: the shift series
+  `mcShiftSeries`, and the exponential family of gauge jets that realises
+  arbitrary translations of the coordinates.
+* `D` — the jet algebra, and the Lorentz and gauge representations on it.
+* `E` — calculus on the jet algebra: the formal total derivative, and the
+  correction derivations `mcDeriv` that measure its failure to commute with the
+  gauge action.
+* `F` — the field strength, and the classification: a jet polynomial is gauge
+  invariant if and only if it is a polynomial in the derivatives of the field
+  strength (`F.2`).
+* `G` — gradings and transformation laws: mass weight, and the Lorentz laws of
+  the coordinates and of the field strength.
+
 -/
 
 @[expose] public section
@@ -87,7 +109,7 @@ open TensorProduct
 
 /-!
 
-## A. The B-boson field
+## A.1. The target vector space of the B-boson field
 -/
 
 /-- The target vector space of the B-boson field `B_μ`. It carries one Lorentz
@@ -102,7 +124,7 @@ namespace BBoson
 open Module
 /-!
 
-## B. Linear structure
+## A.2. Linear structure on the target space
 -/
 
 def valEquiv : BBoson ≃ Lorentz.CoVector ⊗[ℝ] selfAdjoint ℂ where
@@ -170,7 +192,7 @@ lemma mk_tmul_eq_smul_basis (ν : Fin 1 ⊕ Fin 3) (x : selfAdjoint ℂ) :
   rfl
 /-!
 
-## C. Lorentz action
+## A.3. The Lorentz action on the target space
 
 The Lorentz group acts on the Lorentz index and leaves the adjoint factor fixed.
 -/
@@ -225,7 +247,7 @@ lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (ν : Fin 1 ⊕ Fin 3) :
 
 /-!
 
-## D. Gauge action
+## A.4. The gauge action on the target space
 
 The B boson is neutral: the `SU(3)` and `SU(2)` components do not act on it, and
 the adjoint action of the abelian `U(1)` component is `A ↦ u * A * ū = A`, which is
@@ -243,7 +265,7 @@ lemma repGaugeGroupI_apply (g : GaugeGroupI) (B : BBoson) :
 
 /-!
 
-## E. Local gauge action through jets
+## A.5. The local gauge action, through jets of gauge transformations
 
 A local gauge transformation acts on the B-boson field through its first-order jet.
 Because the adjoint action is trivial, only the inhomogeneous Maurer–Cartan term
@@ -293,7 +315,10 @@ noncomputable instance : MulAction JetGaugeGroupI BBoson where
 
 /-!
 
-## A. The Jet generators
+## B.1. The jet generators
+
+The index set of the jet coordinates: one symbol `dB s μ` for each derivative
+multiset `s` and Lorentz index `μ`.
 
 -/
 
@@ -428,7 +453,10 @@ end JetGenerators
 
 /-!
 
-## A. The Jet component vector space
+## B.2. The jet component space
+
+The linear span of the jet coordinates. Everything downstream is built from this
+space: the jet algebra is its symmetric algebra.
 
 -/
 
@@ -445,7 +473,7 @@ noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponent
 
 /-!
 
-### A.1. The mass dimension on the component space
+### B.3. Mass dimension on the component space
 
 -/
 
@@ -465,7 +493,7 @@ lemma JetComponentSpace.massWeightScale_basis (c : ℝ) (j : JetGenerators) :
 
 /-!
 
-### A.2. The action of the Lorentz group
+### B.4. The Lorentz action on the component space
 
 -/
 /-- The representation of the Lorentz group on the space of component functions
@@ -478,7 +506,7 @@ noncomputable def JetComponentSpace.repLorentzGroup :
 
 /-!
 
-### A.1. The action of the gauge group on the jet component space
+### B.5. The gauge action on the component space: `mcShift`
 
 The jet gauge group does not act linearly on the B-boson fields.
 
@@ -612,6 +640,7 @@ lemma mcShift_ofConstant (g : GaugeGroupI) :
   obtain ⟨s, ν⟩ := j
   simp [mcShift_basis_dB']
 
+
 /-- The factorial weight of a multi-index augmented by one derivative: the
   multiplicity of the new index times the original weight. -/
 lemma prod_factorial_add_single (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (κ : Fin 1 ⊕ Fin 3) :
@@ -648,24 +677,68 @@ lemma mcShift_basis_dB_symm (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)
 
 /-!
 
-## The Maurer–Cartan shift series
+## C.1. The Maurer–Cartan shift series `mcShiftSeries`
 
-The covariance of the covariant derivatives of charged fields rests on the
-higher Maurer–Cartan anomalies: the iterated formal derivatives of the
-Maurer–Cartan series.
+A matter field `ψ` in a representation `R` of `G` transforms linearly,
+`ψ ↦ R(g) ψ`, with no inhomogeneous term, so its component functions obey
 
-The lepton sector consumes these as a whole power series — `actionC` is the
-adjoint of multiplication and reads every Taylor coefficient — whereas the
-B-boson sector only ever needs one scalar per generator, `mcShift`. The two are
-the same data in different presentations, so the series is carried with the same
-contragredient sign as `mcShift`: `mcShiftSeries` is minus the iterated
-derivative of the Maurer–Cartan form, which makes it exactly the generating
-function of the shifts,
+`g • [∂_s ψ] = ∑ (x + y = s), C(x,y) (∂_x R(g⁻¹)) [∂_y ψ]`
+
+and the same index-displacement argument gives the corrections
+
+`D_t^ψ [∂_s ψ] = ∑ (x + y = s), C(x,y) (∂_{x+t} R(g⁻¹)) [∂_y ψ]`
+
+with `D_t^ψ (∂_ν x) = ∂_ν (D_t^ψ x) + D_{t+{ν}}^ψ x` exactly as before.
+
+Here is the asymmetry with the gauge sector, and it is visible by comparing the
+two displayed formulas. There, abelian-ness made `∂_z M⁻¹` vanish and collapsed
+the sum to a single constant. Here nothing collapses even for `G = U(1)`,
+because the object being differentiated is not the adjoint action — which is
+trivial — but the character `R(g⁻¹)`, which is a nonconstant jet. Every
+coefficient `∂_x R(g⁻¹)` for `x ≤ s` acts. So the matter sector cannot be run on
+one number per coordinate; it needs `R(g⁻¹)` as an element of `JetRing`, and its
+action is implemented as the derivative action of that jet — adjoint to
+multiplication, hence reading every Taylor coefficient — rather than as a
+translation.
+
+Those coefficients are not independent. The Maurer–Cartan equation for the
+inverse jet,
+
+`∂_ν R(g⁻¹) = -i dR(mc(g⁻¹)_ν) · R(g⁻¹)`
+
+determines all of them from `mc(g⁻¹)` and its derivatives, so the object
+governing the matter corrections is again `∂_s mc(g⁻¹)_μ` — the very same jet
+that appeared in the gauge-field transformation law. That object is
+`mcShiftSeries`:
+
+`mcShiftSeries U μ []       = mc(U⁻¹)_μ = -mc(U)_μ`
+`mcShiftSeries U μ (ν :: s) = ∂_ν (mcShiftSeries U μ s)`
+
+so `mcShiftSeries U μ s = ∂_s mc(U⁻¹)_μ` (`mcShiftSeries_nil`,
+`mcShiftSeries_cons`). For nonabelian `G` the same definition applies with
+`dR(mc(g⁻¹)_ν)` in place of the scalar, matrix-valued and with the ordering of
+the display above; only the scalar case is formalised here.
+
+Carrying the inverse jet, rather than `mc(U)` with a sign attached, is what makes
+`mcShift`, `mcDeriv` and `mcShiftSeries` three readings of *one* object,
+`∂_s mc(g⁻¹)_μ`: its value at the base point, its values at displaced indices
+packaged as a derivation, and the whole series. Concretely,
 
 `constantCoeff (mcShiftSeries U μ s) = mcShift U [∂_s B_μ]`
 
-with no sign correction (`constantCoeff_mcShiftSeries`).
+(`constantCoeff_mcShiftSeries`), with no sign correction anywhere.
 
+For `U(1)` acting on matter through a character `χ = R(g⁻¹)` of charge `q`, the
+Maurer–Cartan equation reads `∂_ν χ = -i q · mc(g⁻¹)_ν · χ`, and with the
+covariant step written `D_ν = ∂_ν + c B_ν` this is
+
+`∂_ν χ = -c · (mcShiftSeries U ν []) · χ`
+
+This single identity is exactly what makes `D_ν` covariant: it is the only
+hypothesis the covariance proof consumes. For the charged lepton `χ = u^6` and
+`c = -6i`, giving `∂_ν (u^6) = 6i · (mcShiftSeries U ν []) · u^6`
+(`pderiv_pow_unitary_mcShiftSeries`); for its conjugate `χ = star u ^ 6` and
+`c = +6i`.
 -/
 
 /-- The Maurer–Cartan shift series along an ordered list of directions:
@@ -728,7 +801,7 @@ lemma constantCoeff_mcShiftSeries (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
 
 /-!
 
-## The Maurer–Cartan jet series
+## C.2. The Maurer–Cartan jet series and the exponential family
 
 The local gauge transformation of the B-boson field is the translation
 `B_μ ↦ B_μ + i (∂_μ u) ū`, so a jet of gauge transformations shifts every
@@ -749,49 +822,6 @@ algebra below.
 
 -/
 
-/-- The derivative of a hypercharge power of a `U(1)` jet:
-  `∂_ν (u^q) = -q i mc_ν u^q`, the all-orders form of the first-order Taylor
-  coefficient formula for the contragredient character. -/
-lemma pderiv_pow_unitary (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
-    pderiv ℂ ν ((U.2.2 : JetRing) ^ q) =
-      MvPowerSeries.C (-(q : ℂ) * Complex.I) * (maurerCartanU1 U ν * (U.2.2 : JetRing) ^ q) := by
-  rcases Nat.eq_zero_or_pos q with rfl | hq
-  · simp
-  · have h1 : star (U.2.2 : JetRing) * (U.2.2 : JetRing) = 1 := (Unitary.mem_iff.mp U.2.2.2).1
-    have hpow : (U.2.2 : JetRing) ^ q = (U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) := by
-      conv_lhs => rw [show q = 1 + (q - 1) by omega, pow_add, pow_one]
-    have hC : (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) *
-        MvPowerSeries.C Complex.I = MvPowerSeries.C ((q : ℕ) : ℂ) := by
-      rw [← map_mul]
-      congr 1
-      ring_nf
-      rw [Complex.I_sq]
-      ring
-    have hN : (MvPowerSeries.C ((q : ℕ) : ℂ) : JetRing) = ((q : ℕ) : JetRing) :=
-      map_natCast _ _
-    rw [MvPowerSeries.pderiv_pow, maurerCartanU1, hpow]
-    linear_combination
-      (-((U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
-        star (U.2.2 : JetRing))) * hC +
-      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
-        MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
-      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing))) * hN
-
-/-- The derivative of a hypercharge power of the conjugate `U(1)` jet:
-  `∂_ν (ū^q) = q i mc_ν ū^q`, the conjugate-contragredient counterpart of
-  `pderiv_pow_unitary`. -/
-lemma pderiv_pow_unitary_star (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
-    pderiv ℂ ν (star (U.2.2 : JetRing) ^ q) =
-      MvPowerSeries.C ((q : ℂ) * Complex.I) *
-        (maurerCartanU1 U ν * star (U.2.2 : JetRing) ^ q) := by
-  have h := pderiv_pow_unitary U⁻¹ ν q
-  have hcoe : ((U⁻¹.2.2 : unitary JetRing) : JetRing) =
-      star ((U.2.2 : unitary JetRing) : JetRing) := by
-    rw [show (U⁻¹.2.2 : unitary JetRing) = (U.2.2)⁻¹ from rfl, ← Unitary.star_eq_inv,
-      Unitary.coe_star]
-  rw [hcoe, maurerCartanU1_inv, neg_mul, map_neg] at h
-  linear_combination h
-
 /-- `pderiv_pow_unitary` phrased in the Maurer–Cartan *shift* series rather than
   the Maurer–Cartan form: `∂_ν (u^q) = q i (mcShift-series)_ν u^q`. The sign of
   the scalar absorbs the contragredient sign of `mcShiftSeries`, which lets the
@@ -810,8 +840,7 @@ lemma pderiv_pow_unitary_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 
   ring
 
 /-- The conjugate counterpart of `pderiv_pow_unitary_mcShiftSeries`. -/
-lemma pderiv_pow_unitary_star_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3)
-    (q : ℕ) :
+lemma pderiv_pow_unitary_star_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
     pderiv ℂ ν (star (U.2.2 : JetRing) ^ q) =
       MvPowerSeries.C (-(q : ℂ) * Complex.I) *
         (mcShiftSeries U ν [] * star (U.2.2 : JetRing) ^ q) := by
@@ -824,7 +853,7 @@ lemma pderiv_pow_unitary_star_mcShiftSeries (U : JetGaugeGroupI) (ν : Fin 1 ⊕
 
 /-!
 
-## The jet algebra and the jet gauge action
+## D.1. The jet algebra
 
 -/
 
@@ -837,7 +866,7 @@ namespace JetAlgebra
 
 /-!
 
-## Constructing elements of the jet algebra from the generators
+## D.2. Constructing elements from the generators
 
 -/
 
@@ -846,14 +875,16 @@ noncomputable def ofGenerator (x : JetGenerators) : BBoson.JetAlgebra :=
 
 /-!
 
-## A. Representation of the Lorentz group
+## D.3. The Lorentz representation on the jet algebra
+
+In a real and a complexified form.
 
 -/
 
 
 /-!
 
-### A.1. The real Lorentz representation
+### D.3.1. The real form
 
 -/
 
@@ -955,7 +986,7 @@ lemma repLorentzGroup_ofGenerator_dB_nil (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
 
 /-!
 
-### A.2. The complexified Lorentz representation
+### D.3.2. The complexified form
 
 -/
 
@@ -1003,14 +1034,17 @@ noncomputable def complexRepLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
 
 /-!
 
-## A. Representation of the jet Gauge group
+## D.4. The gauge representation on the jet algebra
+
+In a real and a complexified form. This is the substitution action of
+section B.5, extended to the algebra.
 
 -/
 
 
 /-!
 
-## A.1 The real version
+### D.4.1. The real form
 
 -/
 
@@ -1157,7 +1191,7 @@ lemma repJetGaugeGroupIAlgHom_apply (U : JetGaugeGroupI) (x : JetAlgebra) :
 
 /-!
 
-## A.2 The complexified version
+### D.4.2. The complexified form
 
 -/
 
@@ -1235,7 +1269,7 @@ noncomputable def complexRepJetGaugeGroupIAlgHom (U : JetGaugeGroupI) :
 
 /-!
 
-## The formal total derivative on the jet algebra
+## E.1. The formal total derivative
 
 The formal total spacetime derivative `∂_μ` acts on the component functions of
 the B-boson jet by appending the derivative index, `∂_s B_ν ↦ ∂_{s + {μ}} B_ν`,
@@ -1345,7 +1379,7 @@ lemma equivMvPolynomial_jetDeriv (ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
 
 /-!
 
-## The Maurer–Cartan correction derivations
+## E.2. The Maurer–Cartan correction derivations `mcDeriv`
 
 A local gauge transformation changes the B boson by a gradient, `δB_μ = ∂_μλ`
 with `λ` the phase of the `U(1)` jet (the Maurer–Cartan form is closed,
@@ -1375,6 +1409,141 @@ parameter on both sides are matched precisely by the anomaly operators built
 from `mcDeriv`, which annihilate the covariant derivatives (see
 `QED.JetAlgebra`).
 
+### Two orders: transforming then differentiating, and the reverse
+
+There are two operations on the algebra of component functions, and the whole
+theory of covariant derivatives comes from the fact that they do not commute.
+
+The first is the **total derivative** `∂_ν`, the derivation which raises the
+derivative index of a coordinate,
+
+`∂_ν [∂_s A_μ^a] = [∂_{s+ν} A_μ^a]`,
+
+extended to products by the Leibniz rule. Note what it does *not* see: the
+numbers `∂_x M⁻¹` and `∂_s mc(g⁻¹)` appearing in the transformation law are
+functions of `g` alone and not of the field configuration, so they are constants
+of this algebra and `∂_ν` annihilates them.
+
+The second is the **gauge action** `g •`, the algebra automorphism given on
+generators by the law above.
+
+Applying the group action first and then differentiating gives
+
+`∂_ν (g • [∂_s A_μ^a]) = ∑ (x + y = s), C(x,y) (∂_x M⁻¹)^a_b [∂_{y+ν} A_μ^b]`
+
+— the inhomogeneous term has been killed, and the new derivative has landed on
+the field in every term. Differentiating first and then acting gives instead
+
+`g • (∂_ν [∂_s A_μ^a]) = g • [∂_{s+ν} A_μ^a] =`
+`  ∑ (x + y = s + ν), C(x,y) (∂_x M⁻¹)^a_b [∂_y A_μ^b] + ∂_{s+ν} mc(g⁻¹)_μ^a`
+
+and now the decompositions of `s + ν` distribute the new derivative over *both*
+factors. Subtracting, the difference is precisely the terms in which it fell on
+the transformation data rather than on the field:
+
+`(g • ∂_ν - ∂_ν g •) [∂_s A_μ^a] =`
+`  ∑ (x + y = s), C(x,y) (∂_{x+ν} M⁻¹)^a_b [∂_y A_μ^b] + ∂_{s+ν} mc(g⁻¹)_μ^a`
+
+This defect is not a derivation, but a `g`-twisted one:
+`(g • ∂_ν - ∂_ν g •)(XY) = ((g • ∂_ν - ∂_ν g •) X)(g • Y) + (g • X)((g • ∂_ν - ∂_ν g •) Y)`.
+Untwisting it by `g` gives an honest derivation, and that is how it is packaged:
+
+`g • (∂_ν X) = ∂_ν (g • X) + g • (mcDeriv_ν X)`
+
+(`repJetGaugeGroupI_jetDeriv`), with `mcDeriv_ν = (g •)⁻¹ ∘ (g • ∂_ν - ∂_ν g •)`.
+
+In the abelian case `M ≡ 1`, so every `∂_{x+ν} M⁻¹` vanishes — the index `x + ν`
+is never zero — and the entire first sum disappears. All that survives is the
+Maurer–Cartan term, a *constant*:
+
+`mcDeriv U {ν} [∂_s B_μ] = ∂_{s+ν} mc(g⁻¹)_μ = mcShift U [∂_{s+ν} B_μ] · 1`
+
+### The general recursion, and why the weight is a multiset
+
+One commutation is not enough, because a covariant derivative is applied
+repeatedly: having moved `g •` past `∂_ν` we are left holding a correction term,
+and the next step differentiates that. So we need to know how the correction
+itself commutes with `∂`, and the answer has to be uniform enough to iterate.
+
+Two general facts do the work, neither of them abelian.
+
+First, the defect is a *twisted* derivation. Writing `ρ := (g •)`, which is an
+algebra automorphism, and `∂_ν`, which is a derivation, the operator
+`ρ ∘ ∂_ν - ∂_ν ∘ ρ` satisfies
+
+`(ρ ∂_ν - ∂_ν ρ)(X Y) = ((ρ ∂_ν - ∂_ν ρ) X)(ρ Y) + (ρ X)((ρ ∂_ν - ∂_ν ρ) Y)`
+
+so it is not a derivation, but `ρ⁻¹ ∘ (ρ ∂_ν - ∂_ν ρ)` is one. That untwisted
+operator is the correction, and it is what makes the identity
+
+`g • (∂_ν X) = ∂_ν (g • X) + g • (correction_ν X)`
+
+hold with `g •` sitting on the outside of the correction term.
+
+Second, the corrections form a family indexed by a multiset, obtained by
+displacing the derivative indices of the transformation data. For a multiset `t`
+let `D_t` be the map on generators
+
+`D_t [∂_s A_μ^a] = ∑ (x + y = s), C(x,y) (∂_{x+t} M⁻¹)^a_b [∂_y A_μ^b]`
+`  + ∂_{s+t} mc(g⁻¹)_μ^a`
+
+— literally the transformation law with every index of `M⁻¹` and `mc(g⁻¹)`
+pushed `t` further along, so that `D_0` is the gauge action itself. Since `∂_ν`
+annihilates the coefficients `∂_x M⁻¹` and `∂_s mc(g⁻¹)` (they depend on `g`, not
+on the field) and acts only on `[∂_y A_μ^b]`, splitting the decompositions of
+`s + ν` according to whether the new index lands on the field or on the data
+gives, on generators,
+
+`D_t (∂_ν x) = ∂_ν (D_t x) + D_{t + {ν}} x`
+
+for every `t`. This is the general recursion: commuting past one more derivative
+displaces the weight by one more index, and nothing else changes. The weight is
+a *multiset* because the total derivatives commute, `∂_ρ ∂_σ = ∂_σ ∂_ρ`, so only
+the multiplicity of each direction is remembered. Contrast the derivative history
+of a covariant derivative, which is a `List`: covariant derivatives do not
+commute, their commutator being the field strength.
+
+### What the abelian case buys
+
+Everything above holds for any `G`. The abelian case is easier for one reason:
+`M ≡ 1`, so `∂_z M⁻¹ = 0` for every `z ≠ 0`. For `t ≠ 0` the index `x + t` is
+never zero, so the entire first sum vanishes and only the inhomogeneous term
+survives:
+
+`D_t [∂_s B_μ] = ∂_{s+t} mc(g⁻¹)_μ = mcShift U [∂_{s+t} B_μ]`
+
+The corrections are therefore *constants*, and two simplifications follow. Since
+`ρ` fixes constants, `ρ⁻¹` does too, so the untwisting is invisible and the
+correction can simply be *defined* as the derivation sending each generator to
+that constant — this is `mcDeriv U t`:
+
+`mcDeriv U t [∂_s B_μ] = mcShift U [∂_{s+t} B_μ] · 1`
+
+(`mcDeriv_ofGenerator`), with the general recursion becoming
+
+`mcDeriv U t (∂_ν x) = ∂_ν (mcDeriv U t x) + mcDeriv U (t + {ν}) x`
+
+(`mcDeriv_jetDeriv`). And because the values are constants rather than
+coordinates, the family never grows in complexity: the induction closes on the
+single-parameter family `{mcDeriv U t}` indexed by how far along the jet
+`mc(g⁻¹)_μ` is being read. In particular `mcDeriv U 0` sends each coordinate to
+its own `mcShift`.
+
+For nonabelian `G` neither simplification is available: the `Ad`-terms survive,
+the corrections are coordinate-valued rather than constant, and the untwisting by
+`ρ⁻¹` is genuine. The recursion `D_t ∂_ν = ∂_ν D_t + D_{t+{ν}}` is still what
+organises them.
+
+### Where the two meet
+
+Both readings appear together in the Maurer–Cartan anomaly operators of the QED
+jet algebra (`QED.JetAlgebra.anomalyM`): `mcDeriv` from the gauge-field
+coordinates, `mcShift` from the `c B_ν` term of the covariant step, and
+`mcShiftSeries` from the matter coordinates. Covariance is the statement that
+these cancel, and at the base point the cancellation is term-for-term between
+`c · mcShift` and `c · constantCoeff (mcShiftSeries)`
+(`QED.JetAlgebra.anomalyM_baseM`) — which is an identity of syntax, not of
+computation, precisely because the two carry the same sign.
 -/
 
 /-- The Maurer–Cartan correction derivation of weight `t` of a `U(1)` jet: the
@@ -1592,7 +1761,7 @@ lemma mcDeriv_baseChange_ofGenerator (U : JetGaugeGroupI)
 
 /-!
 
-## The field strength of the B boson
+## F.1. The field strength
 
 -/
 
@@ -1635,7 +1804,7 @@ lemma fieldStrengthDeriv_bianchi_identity (s : Multiset (Fin 1 ⊕ Fin 3)) (μ �
 
 /-!
 
-## A. Invariance under the gauge group
+## F.2. Classification of the gauge invariants
 
 We now want to show that the if an element of the jet algebra is invariant under
 the action of the jet gauge group, then it is a polynomial
@@ -1646,7 +1815,7 @@ in the field strength and its derivatives.
 
 /-!
 
-### A.1 Gauge realization of translations of the jet coordinates
+### F.2.1. Gauge realization of translations of the jet coordinates
 
 The gauge invariants of the B-boson jet algebra are computed below by realizing
 arbitrary translations of the jet coordinates through explicit local `U(1)` gauge
@@ -2208,7 +2377,7 @@ lemma repJetGaugeGroupI_apply_eq_self_iff_mem (V : JetAlgebra) :
 
 /-!
 
-## Mass weight scaling
+## G.1. Mass weight scaling
 
 -/
 
@@ -2375,7 +2544,7 @@ end JetAlgebra
 
 /-!
 
-## Lorentz transformation laws of the B-boson jet coordinates
+## G.2. Lorentz transformation laws of the jet coordinates
 
 -/
 
@@ -2695,7 +2864,7 @@ lemma massWeightScale_ofReal_complexRepLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
 
 /-!
 
-## Lorentz transformation laws of the field strength
+## G.3. Lorentz transformation laws of the field strength
 
 The field strength `F_{μν} = ∂_μ B_ν - ∂_ν B_μ` and its derivatives are
 tensors: every index transforms by the Lorentz matrix.

@@ -535,4 +535,46 @@ lemma maurerCartanU1Coeff_succ_symm (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 
   linear_combination h
 
 
+/-- The derivative of a hypercharge power of a `U(1)` jet:
+  `∂_ν (u^q) = -q i mc_ν u^q`, the all-orders form of the first-order Taylor
+  coefficient formula for the contragredient character. -/
+lemma pderiv_pow_unitary (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
+    pderiv ℂ ν ((U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C (-(q : ℂ) * Complex.I) * (maurerCartanU1 U ν * (U.2.2 : JetRing) ^ q) := by
+  rcases Nat.eq_zero_or_pos q with rfl | hq
+  · simp
+  · have h1 : star (U.2.2 : JetRing) * (U.2.2 : JetRing) = 1 := (Unitary.mem_iff.mp U.2.2.2).1
+    have hpow : (U.2.2 : JetRing) ^ q = (U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) := by
+      conv_lhs => rw [show q = 1 + (q - 1) by omega, pow_add, pow_one]
+    have hC : (MvPowerSeries.C (-(q : ℂ) * Complex.I) : JetRing) *
+        MvPowerSeries.C Complex.I = MvPowerSeries.C ((q : ℕ) : ℂ) := by
+      rw [← map_mul]
+      congr 1
+      ring_nf
+      rw [Complex.I_sq]
+      ring
+    have hN : (MvPowerSeries.C ((q : ℕ) : ℂ) : JetRing) = ((q : ℕ) : JetRing) :=
+      map_natCast _ _
+    rw [MvPowerSeries.pderiv_pow, maurerCartanU1, hpow]
+    linear_combination
+      (-((U.2.2 : JetRing) * (U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
+        star (U.2.2 : JetRing))) * hC +
+      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing) *
+        MvPowerSeries.C ((q : ℕ) : ℂ))) * h1 +
+      (-((U.2.2 : JetRing) ^ (q - 1) * pderiv ℂ ν (U.2.2 : JetRing))) * hN
+
+/-- The derivative of a hypercharge power of the conjugate `U(1)` jet:
+  `∂_ν (ū^q) = q i mc_ν ū^q`, the conjugate-contragredient counterpart of
+  `pderiv_pow_unitary`. -/
+lemma pderiv_pow_unitary_star (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) (q : ℕ) :
+    pderiv ℂ ν (star (U.2.2 : JetRing) ^ q) =
+      MvPowerSeries.C ((q : ℂ) * Complex.I) *
+        (maurerCartanU1 U ν * star (U.2.2 : JetRing) ^ q) := by
+  have h := pderiv_pow_unitary U⁻¹ ν q
+  have hcoe : ((U⁻¹.2.2 : unitary JetRing) : JetRing) =
+      star ((U.2.2 : unitary JetRing) : JetRing) := by
+    rw [show (U⁻¹.2.2 : unitary JetRing) = (U.2.2)⁻¹ from rfl, ← Unitary.star_eq_inv,
+      Unitary.coe_star]
+  rw [hcoe, maurerCartanU1_inv, neg_mul, map_neg] at h
+  linear_combination h
 end StandardModel

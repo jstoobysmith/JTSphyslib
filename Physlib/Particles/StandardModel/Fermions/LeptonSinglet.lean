@@ -1097,7 +1097,7 @@ lemma repJetGaugeGroupI_ofGenerator_ψ_singleton (g : JetGaugeGroupI)
       -((6 : ℂ) * Complex.I * (maurerCartanU1Coeff g μ 0 : ℂ) *
         MvPowerSeries.constantCoeff ((g.2.2 : unitary JetRing) : JetRing) ^ 6) := by
     have h := congrArg (MvPowerSeries.coeff (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ))
-      (BBoson.pderiv_pow_unitary g μ 6)
+      (pderiv_pow_unitary g μ 6)
     rw [MvPowerSeries.coeff_pderiv] at h
     simp only [MvPowerSeries.coeff_zero_eq_constantCoeff_apply, map_mul, map_pow,
       MvPowerSeries.constantCoeff_C, Finsupp.coe_zero, Pi.zero_apply, Nat.cast_zero,
