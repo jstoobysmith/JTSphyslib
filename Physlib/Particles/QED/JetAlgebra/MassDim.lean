@@ -90,9 +90,8 @@ lemma massWeightScale_covariantStep (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlg
       c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
     rw [massWeightScale_ofGenerator,
       show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStep, LinearMap.add_apply, LinearMap.smul_apply,
-    LinearMap.mulLeft_apply, map_add, map_smul, massWeightScale_jetDeriv, hm, hgen,
-    smul_mul_assoc]
+  simp only [covariantStep_apply, map_add, map_smul, massWeightScale_jetDeriv,
+    hm, hgen, smul_mul_assoc]
   module
 
 /-- The conjugate covariant step raises the mass weight by two. -/
@@ -105,9 +104,8 @@ lemma massWeightScale_covariantStepBar (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : Jet
       c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
     rw [massWeightScale_ofGenerator,
       show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStepBar, LinearMap.sub_apply, LinearMap.smul_apply,
-    LinearMap.mulLeft_apply, map_sub, map_smul, massWeightScale_jetDeriv, hm, hgen,
-    smul_mul_assoc]
+  simp only [covariantStepBar_apply, map_sub, map_smul, massWeightScale_jetDeriv,
+    hm, hgen, smul_mul_assoc]
   module
 
 /-- Homogeneity of the covariant derivative: `D_l ψ_α` has mass weight

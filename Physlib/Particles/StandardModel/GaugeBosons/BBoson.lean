@@ -2328,6 +2328,118 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_singleton (Λ : SL(2,ℂ))
   congr 2
   ring
 
+set_option maxHeartbeats 2000000 in
+/-- The Lorentz action on the two-derivative-index B-boson jet coordinates:
+  all three indices transform contravariantly, by the columns of the Lorentz
+  matrix. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dB_pair
+    (Λ : SL(2,ℂ)) (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetComponentSpace.repLorentzGroup Λ
+      (BBoson.JetComponentSpace.basis (.dB {ρ, μ} ν)) =
+      ∑ r, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν)) •
+        BBoson.JetComponentSpace.basis (.dB {r, a} b) := by
+  have hpair : ∀ x y : Fin 1 ⊕ Fin 3,
+      LagrangianTheory.dualRealJetAlgebraBasis ({x, y} : Multiset (Fin 1 ⊕ Fin 3)) =
+        SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+            (Lorentz.CoVector.basis.dualBasis x) *
+          SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+            (Lorentz.CoVector.basis.dualBasis y) := fun x y => by
+    rw [← BBoson.dualRealJetAlgebraBasis_singleton,
+      ← BBoson.dualRealJetAlgebraBasis_singleton,
+      BBoson.dualRealJetAlgebraBasis_mul, Multiset.singleton_add,
+      ← Multiset.insert_eq_cons]
+  have hmul : ∀ x y : DerivAlgebraReal,
+      DerivAlgebraReal.repLorentzGroup Λ (x * y) =
+        DerivAlgebraReal.repLorentzGroup Λ x *
+          DerivAlgebraReal.repLorentzGroup Λ y := fun x y =>
+    map_mul (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
+      Lorentz.CoVector.sl2Rep.dual Λ)) x y
+  have happ : BBoson.JetComponentSpace.repLorentzGroup Λ
+      (LagrangianTheory.dualRealJetAlgebraBasis {ρ, μ} ⊗ₜ[ℝ]
+        StandardModel.BBoson.basis.dualBasis ν) =
+      (DerivAlgebraReal.repLorentzGroup Λ
+        (LagrangianTheory.dualRealJetAlgebraBasis {ρ, μ})) ⊗ₜ[ℝ]
+      (BBoson.repLorentzGroup.dual Λ
+        (StandardModel.BBoson.basis.dualBasis ν)) := rfl
+  rw [BBoson.jetComponentSpace_basis_dB, happ, hpair, hmul,
+    DerivAlgebraReal.repLorentzGroup_apply_ι,
+    DerivAlgebraReal.repLorentzGroup_apply_ι,
+    Lorentz.CoVector.sl2Rep_dual_dualBasis, Lorentz.CoVector.sl2Rep_dual_dualBasis,
+    BBoson.repLorentzGroup_dual_dualBasis]
+  simp only [map_sum, map_smul, Finset.sum_mul, Finset.mul_sum,
+    smul_mul_smul_comm, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
+    ← TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum,
+    smul_smul, BBoson.jetComponentSpace_basis_dB, hpair]
+  conv_lhs => rw [Finset.sum_comm]
+  conv_lhs => enter [2, j]; rw [Finset.sum_comm]
+  conv_lhs => rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun r _ => Finset.sum_congr rfl fun a _ =>
+    Finset.sum_congr rfl fun b _ => ?_
+  module
+
+set_option maxHeartbeats 2000000 in
+/-- The Lorentz action on the three-derivative-index B-boson jet coordinates:
+  all four indices transform contravariantly, by the columns of the Lorentz
+  matrix. -/
+lemma JetComponentSpace.repLorentzGroup_basis_dB_triple
+    (Λ : SL(2,ℂ)) (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetComponentSpace.repLorentzGroup Λ
+      (BBoson.JetComponentSpace.basis (.dB {ρ, τ, μ} ν)) =
+      ∑ r, ∑ s, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 s τ *
+          ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν))) •
+        BBoson.JetComponentSpace.basis (.dB {r, s, a} b) := by
+  have htriple : ∀ x y z : Fin 1 ⊕ Fin 3,
+      LagrangianTheory.dualRealJetAlgebraBasis ({x, y, z} : Multiset (Fin 1 ⊕ Fin 3)) =
+        SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+            (Lorentz.CoVector.basis.dualBasis x) *
+          (SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+            (Lorentz.CoVector.basis.dualBasis y) *
+           SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+            (Lorentz.CoVector.basis.dualBasis z)) := fun x y z => by
+    rw [← BBoson.dualRealJetAlgebraBasis_singleton,
+      ← BBoson.dualRealJetAlgebraBasis_singleton,
+      ← BBoson.dualRealJetAlgebraBasis_singleton,
+      BBoson.dualRealJetAlgebraBasis_mul, BBoson.dualRealJetAlgebraBasis_mul,
+      Multiset.singleton_add, Multiset.singleton_add, ← Multiset.insert_eq_cons,
+      ← Multiset.insert_eq_cons]
+  have hmul : ∀ x y : DerivAlgebraReal,
+      DerivAlgebraReal.repLorentzGroup Λ (x * y) =
+        DerivAlgebraReal.repLorentzGroup Λ x *
+          DerivAlgebraReal.repLorentzGroup Λ y := fun x y =>
+    map_mul (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
+      Lorentz.CoVector.sl2Rep.dual Λ)) x y
+  have happ : BBoson.JetComponentSpace.repLorentzGroup Λ
+      (LagrangianTheory.dualRealJetAlgebraBasis {ρ, τ, μ} ⊗ₜ[ℝ]
+        StandardModel.BBoson.basis.dualBasis ν) =
+      (DerivAlgebraReal.repLorentzGroup Λ
+        (LagrangianTheory.dualRealJetAlgebraBasis {ρ, τ, μ})) ⊗ₜ[ℝ]
+      (BBoson.repLorentzGroup.dual Λ
+        (StandardModel.BBoson.basis.dualBasis ν)) := rfl
+  rw [BBoson.jetComponentSpace_basis_dB, happ, htriple, hmul, hmul,
+    DerivAlgebraReal.repLorentzGroup_apply_ι,
+    DerivAlgebraReal.repLorentzGroup_apply_ι,
+    DerivAlgebraReal.repLorentzGroup_apply_ι,
+    Lorentz.CoVector.sl2Rep_dual_dualBasis, Lorentz.CoVector.sl2Rep_dual_dualBasis,
+    Lorentz.CoVector.sl2Rep_dual_dualBasis,
+    BBoson.repLorentzGroup_dual_dualBasis]
+  simp only [map_sum, map_smul, Finset.sum_mul, Finset.mul_sum,
+    smul_mul_smul_comm, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
+    ← TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum,
+    smul_smul, BBoson.jetComponentSpace_basis_dB, htriple]
+  conv_lhs => enter [2, i, 2, j]; rw [Finset.sum_comm]
+  conv_lhs => enter [2, i]; rw [Finset.sum_comm]
+  conv_lhs => rw [Finset.sum_comm]
+  conv_lhs => enter [2, i, 2, j]; rw [Finset.sum_comm]
+  conv_lhs => enter [2, i]; rw [Finset.sum_comm]
+  conv_lhs => enter [2, i, 2, j]; rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun r _ => Finset.sum_congr rfl fun s _ =>
+    Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+  module
+
 namespace JetAlgebra
 
 
@@ -2437,6 +2549,121 @@ lemma massWeightScale_ofReal_complexRepLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
         massWeightScaleReal r b) = (AlgHom.id ℂ ℂ) z ⊗ₜ[ℝ]
         repLorentzGroup Λ (massWeightScaleReal r b) from rfl,
       massWeightScaleReal_repLorentzGroup]
+
+/-!
+
+## Lorentz transformation laws of the field strength
+
+The field strength `F_{μν} = ∂_μ B_ν - ∂_ν B_μ` and its derivatives are
+tensors: every index transforms by the Lorentz matrix.
+
+-/
+
+set_option maxHeartbeats 2000000 in
+/-- The transformation law of the first-derivative field strength on the
+  B-boson jet algebra: a three-index tensor. -/
+lemma repLorentzGroup_fieldStrengthDeriv_singleton
+    (Λ : SL(2,ℂ)) (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetAlgebra.repLorentzGroup Λ
+      (BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν) =
+      ∑ r, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν)) •
+        BBoson.JetAlgebra.fieldStrengthDeriv {r} a b := by
+  have hFS : ∀ r a b : Fin 1 ⊕ Fin 3,
+      BBoson.JetAlgebra.fieldStrengthDeriv ({r} : Multiset _) a b =
+        BBoson.JetAlgebra.ofGenerator (.dB {r, a} b) -
+          BBoson.JetAlgebra.ofGenerator (.dB {r, b} a) := fun r a b => by
+    rw [BBoson.JetAlgebra.fieldStrengthDeriv,
+      show ({r} : Multiset (Fin 1 ⊕ Fin 3)) + {a} = {r, a} from by
+        rw [Multiset.singleton_add, ← Multiset.insert_eq_cons],
+      show ({r} : Multiset (Fin 1 ⊕ Fin 3)) + {b} = {r, b} from by
+        rw [Multiset.singleton_add, ← Multiset.insert_eq_cons]]
+  simp only [hFS]
+  rw [map_sub, BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.ofGenerator,
+    BBoson.JetAlgebra.repLorentzGroup_apply_ι,
+    BBoson.JetAlgebra.repLorentzGroup_apply_ι,
+    BBoson.JetComponentSpace.repLorentzGroup_basis_dB_pair,
+    BBoson.JetComponentSpace.repLorentzGroup_basis_dB_pair]
+  simp only [map_sum, map_smul, smul_sub, Finset.sum_sub_distrib,
+    BBoson.JetAlgebra.ofGenerator]
+  rw [sub_right_inj]
+  conv_rhs => enter [2, r]; rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun r _ => Finset.sum_congr rfl fun a _ =>
+    Finset.sum_congr rfl fun b _ => ?_
+  congr 1
+  ring
+
+/-- The transformation of the complexified first-derivative field strength. -/
+lemma complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_singleton
+    (Λ : SL(2,ℂ)) (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetAlgebra.complexRepLorentzGroup Λ
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν) =
+      ∑ r, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν)) •
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {r} a b) := by
+  rw [show BBoson.JetAlgebra.complexRepLorentzGroup Λ
+      ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν) =
+      (1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.repLorentzGroup Λ
+        (BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν) from rfl,
+    BBoson.JetAlgebra.repLorentzGroup_fieldStrengthDeriv_singleton]
+  simp only [TensorProduct.tmul_sum, TensorProduct.tmul_smul]
+
+set_option maxHeartbeats 2000000 in
+/-- The transformation law of the second-derivative field strength on the
+  B-boson jet algebra: a four-index tensor. -/
+lemma repLorentzGroup_fieldStrengthDeriv_pair
+    (Λ : SL(2,ℂ)) (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetAlgebra.repLorentzGroup Λ
+      (BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) =
+      ∑ r, ∑ s, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 s τ *
+          ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν))) •
+        BBoson.JetAlgebra.fieldStrengthDeriv {r, s} a b := by
+  have hFS : ∀ r s a b : Fin 1 ⊕ Fin 3,
+      BBoson.JetAlgebra.fieldStrengthDeriv ({r, s} : Multiset _) a b =
+        BBoson.JetAlgebra.ofGenerator (.dB {r, s, a} b) -
+          BBoson.JetAlgebra.ofGenerator (.dB {r, s, b} a) := fun r s a b => by
+    rw [BBoson.JetAlgebra.fieldStrengthDeriv,
+      show ({r, s} : Multiset (Fin 1 ⊕ Fin 3)) + {a} = {r, s, a} from by
+        rw [Multiset.insert_eq_cons, Multiset.cons_add, Multiset.singleton_add,
+          ← Multiset.insert_eq_cons, ← Multiset.insert_eq_cons],
+      show ({r, s} : Multiset (Fin 1 ⊕ Fin 3)) + {b} = {r, s, b} from by
+        rw [Multiset.insert_eq_cons, Multiset.cons_add, Multiset.singleton_add,
+          ← Multiset.insert_eq_cons, ← Multiset.insert_eq_cons]]
+  simp only [hFS]
+  rw [map_sub, BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.ofGenerator,
+    BBoson.JetAlgebra.repLorentzGroup_apply_ι,
+    BBoson.JetAlgebra.repLorentzGroup_apply_ι,
+    BBoson.JetComponentSpace.repLorentzGroup_basis_dB_triple,
+    BBoson.JetComponentSpace.repLorentzGroup_basis_dB_triple]
+  simp only [map_sum, map_smul, smul_sub, Finset.sum_sub_distrib,
+    BBoson.JetAlgebra.ofGenerator]
+  rw [sub_right_inj]
+  conv_rhs => enter [2, r, 2, s]; rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun r _ => Finset.sum_congr rfl fun s _ =>
+    Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+  congr 1
+  ring
+
+/-- The transformation of the complexified second-derivative field strength. -/
+lemma complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_pair
+    (Λ : SL(2,ℂ)) (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
+    BBoson.JetAlgebra.complexRepLorentzGroup Λ
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) =
+      ∑ r, ∑ s, ∑ a, ∑ b, ((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 s τ *
+          ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν))) •
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {r, s} a b) := by
+  rw [show BBoson.JetAlgebra.complexRepLorentzGroup Λ
+      ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) =
+      (1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.repLorentzGroup Λ
+        (BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) from rfl,
+    BBoson.JetAlgebra.repLorentzGroup_fieldStrengthDeriv_pair]
+  simp only [TensorProduct.tmul_sum, TensorProduct.tmul_smul]
 
 end JetAlgebra
 

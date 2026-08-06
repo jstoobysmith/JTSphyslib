@@ -1,0 +1,817 @@
+/-
+Copyright (c) 2026 Joseph Tooby-Smith. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Joseph Tooby-Smith
+-/
+module
+
+public import Physlib.Particles.QED.JetAlgebra.Invariants.Basic
+/-!
+# Weight and charge decomposition of the QED jet algebra
+
+The machinery for the converse inclusion. An element of
+`MassWeightLESubmodule n` decomposes uniquely into eigenvectors of
+`massWeightScale`, each of which lies in the span `covMonomialSpan w` of
+covariant monomials of exact weight `w`; each of those decomposes further into
+hypercharge eigenspaces `chargeCovSpan w k`. Both decompositions are
+compatible with the Lorentz and gauge actions, so an invariant element is a
+sum of invariant components.
+
+The selection rules `eq_zero_of_eq_smul_of_ne_one`, `eq_zero_of_charge_ne_zero`
+and the parity rule `eq_zero_of_mem_covMonomialSpan_odd` kill all components
+except those of even weight and zero charge.
+-/
+
+@[expose] public section
+
+set_option maxHeartbeats 1000000
+
+namespace QED
+open TensorProduct StandardModel
+
+namespace JetAlgebra
+
+open scoped minkowskiMatrix PauliMatrix
+open Matrix MatrixGroups
+
+/-!
+
+## Towards completeness: graded decomposition
+
+The powers `c ↦ c ^ w` are linearly independent functions of `c`, so the
+weight components of an element are unique: a vanishing combination of
+eigenvectors weighted by powers has vanishing components, and every element of
+the weight-`≤ n` submodule decomposes into exact-weight eigenvectors.
+
+-/
+
+/-- If a finite combination of vectors weighted by powers of `c` vanishes for
+  all `c`, each component vanishes. -/
+lemma eq_zero_of_forall_sum_pow_smul_eq_zero (s : Finset ℕ) (v : ℕ → JetAlgebra)
+    (h : ∀ c : ℂ, ∑ w ∈ s, c ^ w • v w = 0) {w : ℕ} (hw : w ∈ s) : v w = 0 := by
+  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
+  intro φ
+  have hp : ∀ c : ℂ, Polynomial.eval c
+      (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
+    intro c
+    have h2 := congrArg φ (h c)
+    rw [map_sum, map_zero] at h2
+    rw [Polynomial.eval_finsetSum]
+    simpa [Polynomial.eval_monomial, mul_comm] using h2
+  have hzero : (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 :=
+    Polynomial.funext fun c => by rw [hp c, Polynomial.eval_zero]
+  have hcoeff := congrArg (fun p => Polynomial.coeff p w) hzero
+  rw [Polynomial.finsetSum_coeff] at hcoeff
+  simpa [Polynomial.coeff_monomial, Finset.sum_ite_eq', hw] using hcoeff
+
+/-- Every element of the weight-`≤ n` submodule is a sum of exact-weight
+  eigenvectors of the mass-dimension scaling. -/
+lemma exists_eigen_decomp_of_mem_massWeightLESubmodule {n : ℕ} {x : JetAlgebra}
+    (hx : x ∈ MassWeightLESubmodule n) :
+    ∃ z : ℕ → JetAlgebra,
+      (∀ m, ∀ c : ℂ, massWeightScale c (z m) = c ^ m • z m) ∧
+      x = ∑ m ∈ Finset.range (n + 1), z m := by
+  induction hx using Submodule.span_induction with
+  | mem y hy =>
+    obtain ⟨m, hmn, hym⟩ := hy
+    refine ⟨fun k => if k = m then y else 0, fun k c => ?_, ?_⟩
+    · by_cases hk : k = m
+      · subst hk
+        simpa using hym c
+      · simp [hk]
+    · rw [Finset.sum_ite_eq' (Finset.range (n + 1)) m fun _ => y,
+        if_pos (Finset.mem_range.mpr (Nat.lt_succ_of_le hmn))]
+  | zero =>
+    exact ⟨fun _ => 0, by simp, by simp⟩
+  | add a b ha hb iha ihb =>
+    obtain ⟨z₁, hz₁, rfl⟩ := iha
+    obtain ⟨z₂, hz₂, rfl⟩ := ihb
+    refine ⟨z₁ + z₂, fun m c => ?_, ?_⟩
+    · simp only [Pi.add_apply, map_add, hz₁ m c, hz₂ m c, smul_add]
+    · rw [← Finset.sum_add_distrib]
+      rfl
+  | smul c a ha iha =>
+    obtain ⟨z, hz, rfl⟩ := iha
+    refine ⟨c • z, fun m c' => ?_, ?_⟩
+    · simp only [Pi.smul_apply, map_smul, hz m c', smul_comm c]
+    · rw [Finset.smul_sum]
+      rfl
+
+/-- The span of the covariant monomials of exact mass weight `w`: products of
+  field-strength derivatives and covariant derivatives of total weight `w`. -/
+noncomputable def covMonomialSpan (w : ℕ) : Submodule ℂ JetAlgebra :=
+  Submodule.span ℂ {y | y ∈ Submonoid.closure invariantGenerators ∧
+    ∀ c : ℂ, massWeightScale c y = c ^ w • y}
+
+/-- Every covariant monomial is homogeneous. -/
+lemma exists_weight_of_mem_closure {y : JetAlgebra}
+    (hy : y ∈ Submonoid.closure invariantGenerators) :
+    ∃ w, ∀ c : ℂ, massWeightScale c y = c ^ w • y := by
+  induction hy using Submonoid.closure_induction with
+  | mem z hz =>
+    rcases hz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
+    · exact ⟨4 + 2 * Multiset.card p.1,
+        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2⟩
+    · exact ⟨3 + 2 * p.1.length, fun c => massWeightScale_Dψ c p.1 p.2⟩
+    · exact ⟨3 + 2 * p.1.length, fun c => massWeightScale_Dbarψ c p.1 p.2⟩
+  | one =>
+    exact ⟨0, fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one⟩
+  | mul a b ha hb iha ihb =>
+    obtain ⟨wa, hwa⟩ := iha
+    obtain ⟨wb, hwb⟩ := ihb
+    exact ⟨wa + wb, massWeightScale_mul_eigen hwa hwb⟩
+
+/-- Elements of the weight-`w` covariant monomial span are eigenvectors. -/
+lemma forall_massWeightScale_of_mem_covMonomialSpan {w : ℕ} {y : JetAlgebra}
+    (hy : y ∈ covMonomialSpan w) (c : ℂ) :
+    massWeightScale c y = c ^ w • y := by
+  induction hy using Submodule.span_induction with
+  | mem z hz => exact hz.2 c
+  | zero => simp
+  | add a b ha hb iha ihb => rw [map_add, iha, ihb, smul_add]
+  | smul d a ha iha => rw [map_smul, iha, smul_comm]
+
+/-- A vanishing tail extends a truncated sum. -/
+lemma sum_range_succ_ext {N M : ℕ} (z : ℕ → JetAlgebra) (hNM : N ≤ M)
+    (hz : ∀ m, N < m → z m = 0) :
+    ∑ m ∈ Finset.range (N + 1), z m = ∑ m ∈ Finset.range (M + 1), z m := by
+  refine Finset.sum_subset ?_ ?_
+  · intro m hm
+    simp only [Finset.mem_range] at hm ⊢
+    omega
+  intro m hm hms
+  refine hz m ?_
+  simp only [Finset.mem_range] at hm hms
+  omega
+
+/-- Every element of the algebra generated by the covariant generators
+  decomposes into covariant monomial components of bounded weight. -/
+lemma exists_bound_decomp_of_mem_adjoin {x : JetAlgebra}
+    (hadj : x ∈ Algebra.adjoin ℂ invariantGenerators) :
+    ∃ (N : ℕ) (z : ℕ → JetAlgebra), (∀ m, z m ∈ covMonomialSpan m) ∧
+      (∀ m, N < m → z m = 0) ∧ x = ∑ m ∈ Finset.range (N + 1), z m := by
+  have hx' : x ∈ Subalgebra.toSubmodule (Algebra.adjoin ℂ invariantGenerators) := hadj
+  rw [Algebra.adjoin_eq_span] at hx'
+  clear hadj
+  induction hx' using Submodule.span_induction with
+  | mem y hy =>
+    obtain ⟨w, hw⟩ := exists_weight_of_mem_closure hy
+    refine ⟨w, fun k => if k = w then y else 0, fun k => ?_, fun k hk => ?_, ?_⟩
+    · by_cases hkw : k = w
+      · subst hkw
+        show (if k = k then y else 0) ∈ covMonomialSpan k
+        rw [if_pos rfl]
+        exact Submodule.subset_span ⟨hy, hw⟩
+      · show (if k = w then y else 0) ∈ covMonomialSpan k
+        rw [if_neg hkw]
+        exact Submodule.zero_mem _
+    · show (if k = w then y else 0) = 0
+      rw [if_neg (show ¬ k = w by omega)]
+    · show y = ∑ m ∈ Finset.range (w + 1), (if m = w then y else 0)
+      rw [Finset.sum_ite_eq' (Finset.range (w + 1)) w fun _ => y,
+        if_pos (Finset.mem_range.mpr (Nat.lt_succ_self w))]
+  | zero =>
+    exact ⟨0, fun _ => 0, fun m => Submodule.zero_mem _, fun _ _ => rfl, by simp⟩
+  | add a b ha hb iha ihb =>
+    obtain ⟨N₁, z₁, hz₁, hs₁, rfl⟩ := iha
+    obtain ⟨N₂, z₂, hz₂, hs₂, rfl⟩ := ihb
+    refine ⟨max N₁ N₂, z₁ + z₂, fun m => Submodule.add_mem _ (hz₁ m) (hz₂ m),
+      fun m hm => ?_, ?_⟩
+    · simp only [Pi.add_apply, hs₁ m (lt_of_le_of_lt (le_max_left _ _) hm),
+        hs₂ m (lt_of_le_of_lt (le_max_right _ _) hm), add_zero]
+    · rw [sum_range_succ_ext z₁ (le_max_left N₁ N₂) hs₁,
+        sum_range_succ_ext z₂ (le_max_right N₁ N₂) hs₂,
+        ← Finset.sum_add_distrib]
+      rfl
+  | smul c a ha iha =>
+    obtain ⟨N, z, hz, hs, rfl⟩ := iha
+    refine ⟨N, c • z, fun m => Submodule.smul_mem _ _ (hz m),
+      fun m hm => ?_, ?_⟩
+    · simp only [Pi.smul_apply, hs m hm, smul_zero]
+    · rw [Finset.smul_sum]
+      rfl
+
+/-- The master decomposition: an element of the adjoin of the covariant
+  generators of mass weight at most eight is a sum of nine covariant monomial
+  components of weights `0, …, 8`. -/
+lemma exists_covMonomialSpan_decomp {x : JetAlgebra}
+    (hx : x ∈ MassWeightLESubmodule 8)
+    (hadj : x ∈ Algebra.adjoin ℂ invariantGenerators) :
+    ∃ z : ℕ → JetAlgebra, (∀ m, z m ∈ covMonomialSpan m) ∧
+      x = ∑ m ∈ Finset.range 9, z m := by
+  obtain ⟨N, z, hzmem, hzsupp, hzx⟩ := exists_bound_decomp_of_mem_adjoin hadj
+  obtain ⟨z', hz'eig, hz'x⟩ := exists_eigen_decomp_of_mem_massWeightLESubmodule hx
+  refine ⟨z, hzmem, ?_⟩
+  set M := max N 8 with hM
+  have h1 : x = ∑ m ∈ Finset.range (M + 1), z m :=
+    hzx.trans (sum_range_succ_ext z (le_max_left N 8) hzsupp)
+  have hz'supp : ∀ m, 8 < m → (fun k => if k < 9 then z' k else 0) m = 0 := by
+    intro m hm
+    show (if m < 9 then z' m else 0) = 0
+    rw [if_neg (show ¬ m < 9 by omega)]
+  have h2 : x = ∑ m ∈ Finset.range (M + 1), (fun k => if k < 9 then z' k else 0) m := by
+    rw [hz'x, show (9 : ℕ) = 8 + 1 from rfl,
+      ← sum_range_succ_ext _ (le_max_right N 8) hz'supp]
+    exact Finset.sum_congr rfl fun m hm => by
+      rw [if_pos (Finset.mem_range.mp hm)]
+  have hdiff : ∀ c : ℂ, ∑ m ∈ Finset.range (M + 1),
+      c ^ m • (z m - (fun k => if k < 9 then z' k else 0) m) = 0 := by
+    intro c
+    have e1 : massWeightScale c x = ∑ m ∈ Finset.range (M + 1), c ^ m • z m := by
+      rw [h1, map_sum]
+      exact Finset.sum_congr rfl fun m _ =>
+        forall_massWeightScale_of_mem_covMonomialSpan (hzmem m) c
+    have e2 : massWeightScale c x = ∑ m ∈ Finset.range (M + 1),
+        c ^ m • (fun k => if k < 9 then z' k else 0) m := by
+      rw [h2, map_sum]
+      refine Finset.sum_congr rfl fun m _ => ?_
+      by_cases hm : m < 9
+      · simp only [if_pos hm]
+        exact hz'eig m c
+      · simp only [if_neg hm, map_zero, smul_zero]
+    calc ∑ m ∈ Finset.range (M + 1),
+        c ^ m • (z m - (fun k => if k < 9 then z' k else 0) m)
+        = (∑ m ∈ Finset.range (M + 1), c ^ m • z m) -
+          ∑ m ∈ Finset.range (M + 1),
+            c ^ m • (fun k => if k < 9 then z' k else 0) m := by
+          rw [← Finset.sum_sub_distrib]
+          exact Finset.sum_congr rfl fun m _ => smul_sub _ _ _
+      _ = massWeightScale c x - massWeightScale c x := by rw [← e1, ← e2]
+      _ = 0 := sub_self _
+  have hkill : ∀ m, 8 < m → z m = 0 := by
+    intro m hm
+    by_cases hmM : m ≤ M
+    · have h0 : z m - (fun k => if k < 9 then z' k else 0) m = 0 :=
+        eq_zero_of_forall_sum_pow_smul_eq_zero (Finset.range (M + 1)) _ hdiff
+          (show m ∈ Finset.range (M + 1) from Finset.mem_range.mpr (by omega))
+      simpa [if_neg (by omega : ¬ m < 9)] using h0
+    · exact hzsupp m (by omega)
+  rw [h1, show (9 : ℕ) = 8 + 1 from rfl, sum_range_succ_ext z (le_max_right N 8) hkill]
+
+/-!
+
+## Componentwise invariance
+
+The scaling at real scalars commutes with the Lorentz action and (at all
+scalars) with the constant gauge action, so the weight components of an
+invariant element are themselves invariant.
+
+-/
+
+
+/-- Real-scalar variant of the independence of powers. -/
+lemma eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero (s : Finset ℕ)
+    (v : ℕ → JetAlgebra)
+    (h : ∀ r : ℝ, ∑ w ∈ s, ((r : ℂ)) ^ w • v w = 0) {w : ℕ} (hw : w ∈ s) :
+    v w = 0 := by
+  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
+  intro φ
+  have hp : ∀ r : ℝ, Polynomial.eval ((r : ℂ))
+      (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
+    intro r
+    have h2 := congrArg φ (h r)
+    rw [map_sum, map_zero] at h2
+    rw [Polynomial.eval_finsetSum]
+    simpa [Polynomial.eval_monomial, mul_comm] using h2
+  have hzero : (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
+    refine Polynomial.eq_zero_of_infinite_isRoot _ ?_
+    refine Set.Infinite.mono ?_
+      (Set.infinite_range_of_injective Complex.ofReal_injective)
+    rintro z ⟨r, rfl⟩
+    exact hp r
+  have hcoeff := congrArg (fun p => Polynomial.coeff p w) hzero
+  rw [Polynomial.finsetSum_coeff] at hcoeff
+  simpa [Polynomial.coeff_monomial, Finset.sum_ite_eq', hw] using hcoeff
+
+/-- The weight components of a Lorentz-invariant covariant decomposition are
+  Lorentz invariant. -/
+lemma repLorentzGroup_covComponent_eq {z : ℕ → JetAlgebra}
+    (hz : ∀ m, z m ∈ covMonomialSpan m) (Λ : SL(2,ℂ))
+    (hx : repLorentzGroup Λ (∑ m ∈ Finset.range 9, z m) =
+      ∑ m ∈ Finset.range 9, z m)
+    {m : ℕ} (hm : m ∈ Finset.range 9) :
+    repLorentzGroup Λ (z m) = z m := by
+  have hv : ∀ r : ℝ, ∑ k ∈ Finset.range 9,
+      ((r : ℂ)) ^ k • (repLorentzGroup Λ (z k) - z k) = 0 := by
+    intro r
+    have e1 : massWeightScale ((r : ℂ))
+        (repLorentzGroup Λ (∑ k ∈ Finset.range 9, z k) -
+          ∑ k ∈ Finset.range 9, z k) = 0 := by
+      rw [hx, sub_self, map_zero]
+    rw [map_sum, map_sub, map_sum, map_sum] at e1
+    calc ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
+          (repLorentzGroup Λ (z k) - z k)
+        = (∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ))
+            (repLorentzGroup Λ (z k))) -
+          ∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ)) (z k) := by
+          rw [← Finset.sum_sub_distrib]
+          refine Finset.sum_congr rfl fun k _ => ?_
+          rw [massWeightScale_ofReal_repLorentzGroup,
+            forall_massWeightScale_of_mem_covMonomialSpan (hz k), map_smul,
+            smul_sub]
+      _ = 0 := e1
+  have h0 := eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero _ _ hv hm
+  rwa [sub_eq_zero] at h0
+
+/-- The weight components of a constant-gauge-invariant covariant decomposition
+  are constant-gauge invariant. -/
+lemma repJetGaugeGroupI_ofConstant_covComponent_eq {z : ℕ → JetAlgebra}
+    (hz : ∀ m, z m ∈ covMonomialSpan m) (g : GaugeGroupI)
+    (hx : repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
+        (∑ m ∈ Finset.range 9, z m) = ∑ m ∈ Finset.range 9, z m)
+    {m : ℕ} (hm : m ∈ Finset.range 9) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z m) = z m := by
+  have hv : ∀ r : ℝ, ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
+      (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k) - z k) = 0 := by
+    intro r
+    have e1 : massWeightScale ((r : ℂ))
+        (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
+          (∑ k ∈ Finset.range 9, z k) - ∑ k ∈ Finset.range 9, z k) = 0 := by
+      rw [hx, sub_self, map_zero]
+    rw [map_sum, map_sub, map_sum, map_sum] at e1
+    calc ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
+          (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k) - z k)
+        = (∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ))
+            (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k))) -
+          ∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ)) (z k) := by
+          rw [← Finset.sum_sub_distrib]
+          refine Finset.sum_congr rfl fun k _ => ?_
+          rw [massWeightScale_repJetGaugeGroupI_ofConstant,
+            forall_massWeightScale_of_mem_covMonomialSpan (hz k), map_smul,
+            smul_sub]
+      _ = 0 := e1
+  have h0 := eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero _ _ hv hm
+  rwa [sub_eq_zero] at h0
+
+/-!
+
+## The low-weight sectors
+
+-/
+
+/-- An element with two distinct exact weights vanishes. -/
+lemma eq_zero_of_eigen_ne {y : JetAlgebra} {m n : ℕ}
+    (hm : ∀ c : ℂ, massWeightScale c y = c ^ m • y)
+    (hn : ∀ c : ℂ, massWeightScale c y = c ^ n • y) (hmn : m ≠ n) : y = 0 := by
+  have h : ((2 : ℂ) ^ m) • y = ((2 : ℂ) ^ n) • y := (hm 2).symm.trans (hn 2)
+  have h2 : ((2 : ℂ) ^ m - 2 ^ n) • y = 0 :=
+    (sub_smul ((2 : ℂ) ^ m) ((2 : ℂ) ^ n) y).trans (by rw [h, sub_self])
+  rcases smul_eq_zero.mp h2 with h3 | h3
+  · exfalso
+    apply hmn
+    rw [sub_eq_zero] at h3
+    have h4 : ((2 ^ m : ℕ) : ℂ) = ((2 ^ n : ℕ) : ℂ) := by
+      push_cast
+      exact h3
+    exact Nat.pow_right_injective (le_refl 2) (Nat.cast_injective h4)
+  · exact h3
+
+/-- Every covariant monomial is the unit or homogeneous of weight at least
+  three. -/
+lemma mem_closure_weight_cases {y : JetAlgebra}
+    (hy : y ∈ Submonoid.closure invariantGenerators) :
+    y = 1 ∨ ∃ w, 3 ≤ w ∧ ∀ c : ℂ, massWeightScale c y = c ^ w • y := by
+  induction hy using Submonoid.closure_induction with
+  | mem z hz =>
+    rcases hz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
+    · exact Or.inr ⟨4 + 2 * Multiset.card p.1, by omega,
+        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2⟩
+    · exact Or.inr ⟨3 + 2 * p.1.length, by omega,
+        fun c => massWeightScale_Dψ c p.1 p.2⟩
+    · exact Or.inr ⟨3 + 2 * p.1.length, by omega,
+        fun c => massWeightScale_Dbarψ c p.1 p.2⟩
+  | one => exact Or.inl rfl
+  | mul a b ha hb iha ihb =>
+    rcases iha with rfl | ⟨wa, hwa3, hwa⟩
+    · rcases ihb with rfl | ⟨wb, hwb3, hwb⟩
+      · exact Or.inl (one_mul (1 : JetAlgebra))
+      · exact Or.inr ⟨wb, hwb3, fun c => by
+          rw [show (1 : JetAlgebra) * b = b from one_mul b]
+          exact hwb c⟩
+    · rcases ihb with rfl | ⟨wb, hwb3, hwb⟩
+      · exact Or.inr ⟨wa, hwa3, fun c => by
+          rw [show a * (1 : JetAlgebra) = a from mul_one a]
+          exact hwa c⟩
+      · exact Or.inr ⟨wa + wb, by omega, massWeightScale_mul_eigen hwa hwb⟩
+
+/-- The weight-zero covariant monomial span consists of the constants. -/
+lemma covMonomialSpan_zero_le :
+    covMonomialSpan 0 ≤ Submodule.span ℂ {(1 : JetAlgebra)} := by
+  rw [covMonomialSpan, Submodule.span_le]
+  rintro y ⟨hy, hy0⟩
+  rcases mem_closure_weight_cases hy with rfl | ⟨w, hw3, hwe⟩
+  · exact Submodule.subset_span rfl
+  · rw [show y = 0 from eq_zero_of_eigen_ne hwe hy0 (by omega)]
+    exact Submodule.zero_mem _
+
+/-- There are no covariant monomials of weights one or two. -/
+lemma covMonomialSpan_le_bot_of_lt_three {m : ℕ} (hm1 : 1 ≤ m) (hm2 : m < 3) :
+    covMonomialSpan m ≤ ⊥ := by
+  rw [covMonomialSpan, Submodule.span_le]
+  rintro y ⟨hy, hym⟩
+  rcases mem_closure_weight_cases hy with rfl | ⟨w, hw3, hwe⟩
+  · have h1 : ∀ c : ℂ, massWeightScale c (1 : JetAlgebra) = c ^ 0 • 1 :=
+      fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one
+    have := eq_zero_of_eigen_ne h1 hym (by omega)
+    simp [this]
+  · rw [show y = 0 from eq_zero_of_eigen_ne hwe hym (by omega)]
+    simp
+
+/-!
+
+## The parity selection rule
+
+Every covariant monomial is an eigenvector of the constant gauge action with a
+hypercharge character whose parity equals that of its mass weight: bosonic
+generators have even weight and charge zero, fermionic generators odd weight
+and charge `±6`. The constant gauge transformation with `u(0) = i` therefore
+acts on odd-weight monomials by `-1`, and no odd-weight sector contains a
+gauge invariant.
+
+-/
+
+/-- Every covariant monomial is an eigenvector of the constant gauge action,
+  with character exponent of the same parity as its mass weight. -/
+lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
+    (hy : y ∈ Submonoid.closure invariantGenerators) :
+    ∃ (w : ℕ) (k : ℤ), k.natAbs ≤ w ∧ (w : ℤ) % 2 = k % 2 ∧
+      (∀ c : ℂ, massWeightScale c y = c ^ w • y) ∧
+      ∀ g : GaugeGroupI, repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
+        (((g.2.2 : ℂ)) ^ (6 * k)) • y := by
+  have hz : ∀ g : GaugeGroupI, ((g.2.2 : ℂ)) ≠ 0 := by
+    intro g h
+    have h1 := (Unitary.mem_iff.mp (g.2.2).2).1
+    rw [h, mul_zero] at h1
+    exact zero_ne_one h1
+  induction hy using Submonoid.closure_induction with
+  | mem z hzz =>
+    rcases hzz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
+    · refine ⟨4 + 2 * Multiset.card p.1, 0, by simp, by omega,
+        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2, fun g => ?_⟩
+      rw [repJetGaugeGroupI_fieldStrengthDeriv, mul_zero, zpow_zero, one_smul]
+    · refine ⟨3 + 2 * p.1.length, 1, by omega, by omega,
+        fun c => massWeightScale_Dψ c p.1 p.2, fun g => ?_⟩
+      rw [repJetGaugeGroupI_Dψ, JetGaugeGroupI.eval_ofConstant, Submonoid.smul_def,
+        SubmonoidClass.coe_pow, mul_one,
+        show ((g.2.2 : ℂ)) ^ (6 : ℤ) = ((g.2.2 : ℂ)) ^ (6 : ℕ) from zpow_natCast _ 6]
+    · refine ⟨3 + 2 * p.1.length, -1, by omega, by omega,
+        fun c => massWeightScale_Dbarψ c p.1 p.2, fun g => ?_⟩
+      rw [repJetGaugeGroupI_Dbarψ, JetGaugeGroupI.eval_ofConstant,
+        Submonoid.smul_def, SubmonoidClass.coe_pow, Unitary.coe_star]
+      congr 1
+      have hinv : star ((g.2.2 : ℂ)) = ((g.2.2 : ℂ))⁻¹ :=
+        eq_inv_of_mul_eq_one_left (Unitary.mem_iff.mp (g.2.2).2).1
+      rw [hinv, show (6 : ℤ) * (-1) = -(6 : ℤ) from by ring, _root_.zpow_neg,
+        show ((g.2.2 : ℂ)) ^ (6 : ℤ) = ((g.2.2 : ℂ)) ^ (6 : ℕ) from zpow_natCast _ 6]
+      exact inv_pow _ 6
+  | one =>
+    refine ⟨0, 0, by simp, rfl, fun c => by
+        rw [pow_zero, one_smul]; exact (massWeightScale c).map_one, fun g => ?_⟩
+    rw [mul_zero, zpow_zero, one_smul]
+    exact (repJetGaugeGroupI_eq_repAlgHom _ 1).trans
+      (repAlgHom (JetGaugeGroupI.ofConstant g)).map_one
+  | mul a b ha hb iha ihb =>
+    obtain ⟨wa, ka, hba, hpa, hea, hga⟩ := iha
+    obtain ⟨wb, kb, hbb, hpb, heb, hgb⟩ := ihb
+    refine ⟨wa + wb, ka + kb, by
+        have := Int.natAbs_add_le ka kb
+        omega, by omega, massWeightScale_mul_eigen hea heb, fun g => ?_⟩
+    rw [repJetGaugeGroupI_mul', hga g, hgb g, smul_mul_smul_comm,
+      show (6 : ℤ) * (ka + kb) = 6 * ka + 6 * kb from by ring,
+      zpow_add₀ (hz g)]
+
+/-- The constant gauge transformation with `u(0) = i`. -/
+noncomputable def parityGauge : GaugeGroupI :=
+  (1, 1, ⟨Complex.I, by
+    rw [Unitary.mem_iff]
+    constructor <;>
+      simp [Complex.star_def, Complex.conj_I]⟩)
+
+/-- The parity gauge transformation acts by `-1` on every odd-weight covariant
+  monomial. -/
+lemma rep_parityGauge_eq_neg_of_mem_covMonomialSpan {m : ℕ} (hm : m % 2 = 1)
+    {y : JetAlgebra} (hy : y ∈ covMonomialSpan m) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant parityGauge) y = -y := by
+  induction hy using Submodule.span_induction with
+  | mem u hu =>
+    obtain ⟨hu1, hu2⟩ := hu
+    obtain ⟨w, k, hb, hp, he, hg⟩ := rep_ofConstant_eigen_of_mem_closure hu1
+    by_cases hu0 : u = 0
+    · rw [hu0, map_zero, neg_zero]
+    · have hwm : w = m := by
+        by_contra hne
+        exact hu0 (eq_zero_of_eigen_ne he hu2 hne)
+      have hkodd : Odd k := by
+        rw [Int.odd_iff]
+        omega
+      rw [hg parityGauge,
+        show ((parityGauge.2.2 : ℂ)) = Complex.I from rfl,
+        show (6 : ℤ) * k = 2 * (3 * k) from by ring, _root_.zpow_mul,
+        show Complex.I ^ (2 : ℤ) = -1 from by
+          rw [show (2 : ℤ) = ((2 : ℕ) : ℤ) from rfl, zpow_natCast, Complex.I_sq],
+        show (-1 : ℂ) ^ (3 * k) = -1 from Odd.neg_one_zpow (by
+          rcases hkodd with ⟨j, hj⟩
+          exact ⟨3 * j + 1, by omega⟩)]
+      exact neg_one_smul ℂ u
+  | zero => rw [map_zero, neg_zero]
+  | add u v hu hv ihu ihv => rw [map_add, ihu, ihv, neg_add]
+  | smul c u hu ihu => rw [map_smul, ihu, smul_neg]
+
+/-- Odd-weight covariant monomial spans contain no constant-gauge
+  invariants. -/
+lemma eq_zero_of_mem_covMonomialSpan_odd {m : ℕ} (hm : m % 2 = 1)
+    {y : JetAlgebra} (hy : y ∈ covMonomialSpan m)
+    (hinv : repJetGaugeGroupI (JetGaugeGroupI.ofConstant parityGauge) y = y) :
+    y = 0 := by
+  have h := (rep_parityGauge_eq_neg_of_mem_covMonomialSpan hm hy).symm.trans hinv
+  have h2 : (2 : ℂ) • y = 0 := by
+    calc (2 : ℂ) • y = y + y := two_smul ℂ y
+      _ = -y + y := congrArg (· + y) h.symm
+      _ = 0 := neg_add_cancel y
+  rcases smul_eq_zero.mp h2 with h3 | h3
+  · exact absurd h3 two_ne_zero
+  · exact h3
+
+/-!
+
+## The master selection rules
+
+An invariant which is also an eigenvector with a nontrivial eigenvalue must
+vanish. Specialized to the constant gauge action at a root of unity this is the
+hypercharge selection rule; specialized to diagonal Lorentz transformations it
+kills the non-scalar Lorentz components.
+
+-/
+
+/-- The master selection rule: an element that scales by a factor other than
+  one vanishes. -/
+lemma eq_zero_of_eq_smul_of_ne_one {y : JetAlgebra} {c : ℂ}
+    (h1 : y = c • y) (hc : c ≠ 1) : y = 0 := by
+  have h2 : (c - 1) • y = 0 :=
+    (sub_smul c 1 y).trans (by rw [one_smul, ← h1, sub_self])
+  rcases smul_eq_zero.mp h2 with h3 | h3
+  · exact absurd (sub_eq_zero.mp h3) hc
+  · exact h3
+
+/-- The unit-circle exponential is unitary. -/
+lemma exp_mul_I_mem_unitary (θ : ℝ) :
+    Complex.exp ((θ : ℂ) * Complex.I) ∈ unitary ℂ := by
+  have hstar : star (Complex.exp ((θ : ℂ) * Complex.I)) =
+      Complex.exp (-((θ : ℂ) * Complex.I)) := by
+    rw [show star (Complex.exp ((θ : ℂ) * Complex.I)) =
+        (starRingEnd ℂ) (Complex.exp ((θ : ℂ) * Complex.I)) from rfl,
+      ← Complex.exp_conj]
+    congr 1
+    simp [Complex.conj_ofReal]
+  rw [Unitary.mem_iff]
+  constructor
+  · rw [hstar, ← Complex.exp_add, neg_add_cancel, Complex.exp_zero]
+  · rw [hstar, ← Complex.exp_add, add_neg_cancel, Complex.exp_zero]
+
+/-- The constant `U(1)` gauge transformation at a unitary scalar. -/
+noncomputable def u1Gauge (z : ℂ) (hz : z ∈ unitary ℂ) : GaugeGroupI :=
+  (1, 1, ⟨z, hz⟩)
+
+/-- The hypercharge selection rule: a constant-gauge eigenvector of nonzero
+  charge admits no invariant. -/
+lemma eq_zero_of_charge_ne_zero {y : JetAlgebra} {k : ℤ} (hk : k ≠ 0)
+    (hy : ∀ g : GaugeGroupI, repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
+      ((g.2.2 : ℂ)) ^ (6 * k) • y)
+    (hinv : ∀ g : GaugeGroupI,
+      repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y = y) : y = 0 := by
+  have h6k : ((6 * k : ℤ) : ℝ) ≠ 0 := by
+    simp only [ne_eq, Int.cast_eq_zero]
+    omega
+  set θ : ℝ := Real.pi / ((6 * k : ℤ) : ℝ) with hθ
+  set g : GaugeGroupI := u1Gauge (Complex.exp ((θ : ℂ) * Complex.I))
+    (exp_mul_I_mem_unitary θ) with hg
+  have hval : ((g.2.2 : ℂ)) = Complex.exp ((θ : ℂ) * Complex.I) := rfl
+  have hchar : ((g.2.2 : ℂ)) ^ (6 * k) = -1 := by
+    rw [hval, ← Complex.exp_int_mul,
+      show ((6 * k : ℤ) : ℂ) * ((θ : ℂ) * Complex.I) =
+        (((6 * k : ℤ) : ℝ) * θ : ℝ) * Complex.I from by push_cast; ring,
+      show ((6 * k : ℤ) : ℝ) * θ = Real.pi from mul_div_cancel₀ Real.pi h6k ▸ rfl]
+    exact Complex.exp_pi_mul_I
+  exact eq_zero_of_eq_smul_of_ne_one
+    ((hinv g).symm.trans ((hy g).trans (by rw [hchar])))
+    (by
+      intro h
+      norm_num at h)
+
+/-!
+
+## Charge decomposition
+
+The constant gauge characters at distinct charges are linearly independent
+along the unit circle, so every element of a weight sector decomposes into
+charge components, and a constant-gauge invariant equals its neutral component.
+
+-/
+
+/-- The unit-circle exponentials are injective on `(0, 1)`. -/
+lemma exp_mul_I_injOn :
+    Set.InjOn (fun θ : ℝ => Complex.exp ((θ : ℂ) * Complex.I))
+      (Set.Ioo (0 : ℝ) 1) := by
+  intro a ha b hb hab
+  rcases Complex.exp_eq_exp_iff_exists_int.mp hab with ⟨n, hn⟩
+  have h2 : (a : ℂ) = (b : ℂ) + (n : ℂ) * (2 * (Real.pi : ℂ)) := by
+    have h1 : (a : ℂ) * Complex.I =
+        ((b : ℂ) + (n : ℂ) * (2 * (Real.pi : ℂ))) * Complex.I := by
+      rw [hn]
+      ring
+    exact mul_right_cancel₀ Complex.I_ne_zero h1
+  have h3 : a = b + (n : ℝ) * (2 * Real.pi) := by exact_mod_cast h2
+  have hn0 : n = 0 := by
+    by_contra hne
+    have h4 : (1 : ℝ) ≤ |(n : ℝ)| := by exact_mod_cast Int.one_le_abs hne
+    have hπ : (2 : ℝ) ≤ Real.pi := Real.two_le_pi
+    have h5 : |a - b| < 1 := by
+      rw [abs_sub_lt_iff]
+      constructor <;> nlinarith [ha.1, ha.2, hb.1, hb.2]
+    rw [h3] at h5
+    simp only [add_sub_cancel_left] at h5
+    rw [abs_mul, abs_of_pos (by positivity : (0 : ℝ) < 2 * Real.pi)] at h5
+    nlinarith
+  rw [hn0] at h3
+  push_cast at h3
+  linarith
+
+/-- Independence of the circle characters: a finite Laurent combination
+  vanishing on the unit circle has vanishing coefficients. -/
+lemma eq_zero_of_forall_circle_sum_zpow_smul_eq_zero (s : Finset ℤ)
+    (v : ℤ → JetAlgebra)
+    (h : ∀ θ : ℝ, ∑ j ∈ s, (Complex.exp ((θ : ℂ) * Complex.I)) ^ j • v j = 0)
+    {k : ℤ} (hk : k ∈ s) : v k = 0 := by
+  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
+  intro φ
+  have hne : s.Nonempty := ⟨k, hk⟩
+  set n₀ : ℤ := -s.min' hne with hn₀
+  have hshift : ∀ j ∈ s, 0 ≤ j + n₀ := fun j hj => by
+    have := s.min'_le j hj
+    omega
+  have heval : ∀ θ : ℝ, Polynomial.eval (Complex.exp ((θ : ℂ) * Complex.I))
+      (∑ j ∈ s, Polynomial.monomial (j + n₀).toNat (φ (v j))) = 0 := by
+    intro θ
+    have hz0 : Complex.exp ((θ : ℂ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+    have h2 := congrArg φ (h θ)
+    rw [map_sum, map_zero] at h2
+    have h3 : ∑ j ∈ s, Complex.exp ((θ : ℂ) * Complex.I) ^ j * φ (v j) = 0 := by
+      rw [← h2]
+      exact Finset.sum_congr rfl fun j _ => by rw [map_smul]; rfl
+    have h4 : Complex.exp ((θ : ℂ) * Complex.I) ^ n₀ *
+        ∑ j ∈ s, Complex.exp ((θ : ℂ) * Complex.I) ^ j * φ (v j) = 0 := by
+      rw [h3, mul_zero]
+    rw [Finset.mul_sum] at h4
+    rw [Polynomial.eval_finsetSum, ← h4]
+    refine Finset.sum_congr rfl fun j hj => ?_
+    rw [Polynomial.eval_monomial,
+      show Complex.exp ((θ : ℂ) * Complex.I) ^ (j + n₀).toNat =
+        Complex.exp ((θ : ℂ) * Complex.I) ^ ((j + n₀) : ℤ) from by
+        rw [← zpow_natCast, Int.toNat_of_nonneg (hshift j hj)],
+      zpow_add₀ hz0]
+    ring
+  have hzero : (∑ j ∈ s, Polynomial.monomial (j + n₀).toNat (φ (v j))) = 0 := by
+    refine Polynomial.eq_zero_of_infinite_isRoot _ ?_
+    refine Set.Infinite.mono ?_
+      ((Set.Ioo_infinite (by norm_num : (0 : ℝ) < 1)).image exp_mul_I_injOn)
+    rintro z ⟨θ, _, rfl⟩
+    exact heval θ
+  have hcoeff := congrArg (fun p => Polynomial.coeff p (k + n₀).toNat) hzero
+  rw [Polynomial.finsetSum_coeff] at hcoeff
+  rw [Finset.sum_eq_single k
+    (fun j hj hjk => by
+      rw [Polynomial.coeff_monomial, if_neg (fun heq => hjk (by
+        have h1 : j + n₀ = k + n₀ := by
+          rw [← Int.toNat_of_nonneg (hshift j hj),
+            ← Int.toNat_of_nonneg (hshift k hk), heq]
+        omega))])
+    (fun hks => absurd hk hks)] at hcoeff
+  simpa [Polynomial.coeff_monomial] using hcoeff
+
+/-- The charge-`6k` part of a weight sector: the span of the covariant
+  monomials of weight `m` and hypercharge `6 k`. -/
+noncomputable def chargeCovSpan (m : ℕ) (k : ℤ) : Submodule ℂ JetAlgebra :=
+  Submodule.span ℂ {y | y ∈ Submonoid.closure invariantGenerators ∧
+    (∀ c : ℂ, massWeightScale c y = c ^ m • y) ∧
+    ∀ g : GaugeGroupI, repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
+      ((g.2.2 : ℂ)) ^ (6 * k) • y}
+
+/-- Elements of the charge component are eigenvectors of the constant gauge
+  action. -/
+lemma forall_rep_ofConstant_of_mem_chargeCovSpan {m : ℕ} {k : ℤ}
+    {y : JetAlgebra} (hy : y ∈ chargeCovSpan m k) (g : GaugeGroupI) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
+      ((g.2.2 : ℂ)) ^ (6 * k) • y := by
+  induction hy using Submodule.span_induction with
+  | mem u hu => exact hu.2.2 g
+  | zero => simp
+  | add a b ha hb iha ihb => rw [map_add, iha, ihb, smul_add]
+  | smul c a ha iha => rw [map_smul, iha, smul_comm]
+
+/-- The charge components sit inside the weight sector. -/
+lemma chargeCovSpan_le_covMonomialSpan {m : ℕ} {k : ℤ} :
+    chargeCovSpan m k ≤ covMonomialSpan m :=
+  Submodule.span_mono fun y hy => ⟨hy.1, hy.2.1⟩
+
+/-- Charge decomposition within a weight sector. -/
+lemma exists_charge_decomp_of_mem_covMonomialSpan {m : ℕ} {y : JetAlgebra}
+    (hy : y ∈ covMonomialSpan m) :
+    ∃ v : ℤ → JetAlgebra, (∀ j, v j ∈ chargeCovSpan m j) ∧
+      y = ∑ j ∈ Finset.Icc (-(m : ℤ)) (m : ℤ), v j := by
+  induction hy using Submodule.span_induction with
+  | mem u hu =>
+    obtain ⟨hu1, hu2⟩ := hu
+    obtain ⟨w, k, hb, hp, he, hg⟩ := rep_ofConstant_eigen_of_mem_closure hu1
+    by_cases hu0 : u = 0
+    · exact ⟨fun _ => 0, fun j => Submodule.zero_mem _, by simp [hu0]⟩
+    · have hwm : w = m := by
+        by_contra hne
+        exact hu0 (eq_zero_of_eigen_ne he hu2 hne)
+      have hkm : k ∈ Finset.Icc (-(m : ℤ)) (m : ℤ) := by
+        rw [Finset.mem_Icc]
+        omega
+      refine ⟨fun j => if j = k then u else 0, fun j => ?_, ?_⟩
+      · show (if j = k then u else 0) ∈ chargeCovSpan m j
+        by_cases hjk : j = k
+        · subst hjk
+          rw [if_pos rfl]
+          exact Submodule.subset_span ⟨hu1, hu2, hg⟩
+        · rw [if_neg hjk]
+          exact Submodule.zero_mem _
+      · rw [show (∑ j ∈ Finset.Icc (-(m : ℤ)) (m : ℤ),
+            (fun j => if j = k then u else 0) j) =
+            ∑ j ∈ Finset.Icc (-(m : ℤ)) (m : ℤ), (if j = k then u else 0) from rfl,
+          Finset.sum_ite_eq' _ k fun _ => u, if_pos hkm]
+  | zero =>
+    exact ⟨fun _ => 0, fun j => Submodule.zero_mem _, by simp⟩
+  | add a b ha hb iha ihb =>
+    obtain ⟨v₁, hv₁, rfl⟩ := iha
+    obtain ⟨v₂, hv₂, rfl⟩ := ihb
+    exact ⟨v₁ + v₂, fun j => Submodule.add_mem _ (hv₁ j) (hv₂ j),
+      by rw [← Finset.sum_add_distrib]; rfl⟩
+  | smul c a ha iha =>
+    obtain ⟨v, hv, rfl⟩ := iha
+    exact ⟨c • v, fun j => Submodule.smul_mem _ _ (hv j),
+      by rw [Finset.smul_sum]; rfl⟩
+
+/-- The neutral-charge selection rule: a constant-gauge-invariant element of a
+  weight sector lies in the charge-zero component, since the characters
+  `u ↦ u^{6j}` of distinct charges are linearly independent along the unit
+  circle. -/
+lemma mem_chargeCovSpan_zero_of_invariant {m : ℕ} {y : JetAlgebra}
+    (hy : y ∈ covMonomialSpan m)
+    (hinv : ∀ g : GaugeGroupI,
+      repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y = y) :
+    y ∈ chargeCovSpan m 0 := by
+  obtain ⟨v, hv, hyeq⟩ := exists_charge_decomp_of_mem_covMonomialSpan hy
+  set S : Finset ℤ := Finset.Icc (-(m : ℤ)) (m : ℤ) with hS
+  have hchar : ∀ θ : ℝ, ∑ j ∈ S, (Complex.exp ((θ : ℂ) * Complex.I)) ^ (6 * j) •
+      v j = ∑ j ∈ S, v j := by
+    intro θ
+    have hval : (((u1Gauge (Complex.exp ((θ : ℂ) * Complex.I))
+        (exp_mul_I_mem_unitary θ)).2.2 : ℂ)) =
+        Complex.exp ((θ : ℂ) * Complex.I) := rfl
+    have h1 := hinv (u1Gauge (Complex.exp ((θ : ℂ) * Complex.I))
+      (exp_mul_I_mem_unitary θ))
+    rw [hyeq, map_sum] at h1
+    rw [← h1]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [forall_rep_ofConstant_of_mem_chargeCovSpan (hv j), hval]
+  have hkill : ∀ j ∈ S, j ≠ 0 → v j = 0 := by
+    intro j hj hj0
+    have h6 : Function.Injective (fun k : ℤ => 6 * k) := fun a b hab => by
+      simpa using hab
+    set w : ℤ → JetAlgebra := fun k => v (k / 6) -
+      (if k = 0 then ∑ i ∈ S, v i else 0) with hw
+    have hzero : ∀ θ : ℝ, ∑ k ∈ S.image (fun j => 6 * j),
+        (Complex.exp ((θ : ℂ) * Complex.I)) ^ k • w k = 0 := by
+      intro θ
+      rw [Finset.sum_image fun a _ b _ h => h6 h]
+      have hterm : ∀ i ∈ S, (Complex.exp ((θ : ℂ) * Complex.I)) ^ (6 * i) •
+          w (6 * i) = (Complex.exp ((θ : ℂ) * Complex.I)) ^ (6 * i) • v i -
+          (if i = 0 then ∑ i ∈ S, v i else 0) := by
+        intro i _
+        rw [hw]
+        simp only [Int.mul_ediv_cancel_left i (by norm_num : (6 : ℤ) ≠ 0),
+          show 6 * i = 0 ↔ i = 0 from by omega]
+        by_cases hi : i = 0
+        · rw [if_pos hi, smul_sub, hi]
+          norm_num
+        · rw [if_neg hi]
+          simp
+      rw [Finset.sum_congr rfl hterm, Finset.sum_sub_distrib, hchar θ,
+        Finset.sum_ite_eq' S (0 : ℤ) fun _ => ∑ i ∈ S, v i,
+        if_pos (by simp [hS] : (0 : ℤ) ∈ S), sub_self]
+    have h0 := eq_zero_of_forall_circle_sum_zpow_smul_eq_zero _ _ hzero
+      (Finset.mem_image_of_mem (fun j => 6 * j) hj)
+    rw [hw] at h0
+    simpa [Int.mul_ediv_cancel_left j (by norm_num : (6 : ℤ) ≠ 0),
+      show ¬ (6 * j = 0) from by omega] using h0
+  have hy0 : y = v 0 := by
+    rw [hyeq, Finset.sum_eq_single 0 (fun j hj hj0 => hkill j hj hj0)
+      (fun h => absurd (by simp [hS] : (0 : ℤ) ∈ S) h)]
+  rw [hy0]
+  exact hv 0
+end JetAlgebra
+
+end QED
