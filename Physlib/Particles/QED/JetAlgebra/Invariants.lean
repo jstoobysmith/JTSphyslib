@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra
+public import Physlib.Particles.QED.JetAlgebra.MassDim
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.Basic
 /-!
@@ -20,145 +20,7 @@ set_option maxHeartbeats 1000000
 namespace QED
 open TensorProduct StandardModel
 
-/-- We define the mass weight of a term as two times its mass dimnesion. -/
-def MassWeight : JetGenerators → ℕ
-  | JetGenerators.dB s _ => 2 * (1 + s.card)
-  | JetGenerators.dψ s _ => 3 + 2 * s.card
-  | JetGenerators.dbarψ s _ => 3 + 2 * s.card
-
 namespace JetAlgebra
-
-/-!
-
-## A. The massWeightScaling algebra homomorphism
-
--/
-/-- The mass-dimension scaling on the QED jet algebra: the algebra map
-  multiplying each generator by `c ^ w`, where `w` is twice its mass dimension.
-  It is the tensor product of the scalings on the B-boson and charged-lepton
-  jet algebras. -/
-noncomputable def massWeightScale (c : ℂ) : JetAlgebra →ₐ[ℂ] JetAlgebra :=
-  Algebra.TensorProduct.map (BBoson.JetAlgebra.massWeightScale c)
-    (LeptonSinglet.JetAlgebra.massWeightScale c)
-
-/-- Each generator scales by `c` to the power of its mass weight. -/
-@[simp]
-lemma massWeightScale_ofGenerator (c : ℂ) (j : JetGenerators) :
-    massWeightScale c [j]ₐ = c ^ MassWeight j • [j]ₐ := by
-  cases j with
-  | dB s μ =>
-    simp only [ofGenerator, massWeightScale, Algebra.TensorProduct.map_tmul, map_one,
-      BBoson.JetAlgebra.massWeightScale_tmul_ofGenerator, ← TensorProduct.smul_tmul']
-    rfl
-  | dψ s α =>
-    simp only [ofGenerator, massWeightScale, Algebra.TensorProduct.map_tmul,
-      ← Algebra.TensorProduct.one_def, map_one,
-      LeptonSinglet.JetAlgebra.massWeightScale_ofGenerator, TensorProduct.tmul_smul]
-    rfl
-  | dbarψ s α =>
-    simp only [ofGenerator, massWeightScale, Algebra.TensorProduct.map_tmul,
-      ← Algebra.TensorProduct.one_def, map_one,
-      LeptonSinglet.JetAlgebra.massWeightScale_ofGenerator, TensorProduct.tmul_smul]
-    rfl
-
-/-- The total derivative raises the mass weight by two. -/
-lemma massWeightScale_jetDeriv (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
-    massWeightScale c (jetDeriv μ x) = c ^ 2 • jetDeriv μ (massWeightScale c x) := by
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | add a b ha hb => simp only [map_add, ha, hb, smul_add]
-  | tmul p l =>
-    simp only [jetDeriv_tmul, map_add, massWeightScale, Algebra.TensorProduct.map_tmul,
-      BBoson.JetAlgebra.massWeightScale_jetDeriv_baseChange,
-      LeptonSinglet.JetAlgebra.massWeightScale_jetDeriv, TensorProduct.smul_tmul',
-      TensorProduct.tmul_smul, smul_add]
-
-/-- The covariant step raises the mass weight by two: the gauge-field term
-  `6 i B_μ ·` carries the same weight as the derivative. -/
-lemma massWeightScale_covariantStep (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
-    massWeightScale c (covariantStep μ x) =
-      c ^ 2 • covariantStep μ (massWeightScale c x) := by
-  have hm : ∀ a b : JetAlgebra, massWeightScale c (a * b) =
-      massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
-  have hgen : massWeightScale c [JetGenerators.dB {} μ]ₐ =
-      c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
-    rw [massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStep, LinearMap.add_apply, LinearMap.smul_apply,
-    LinearMap.mulLeft_apply, map_add, map_smul, massWeightScale_jetDeriv, hm, hgen,
-    smul_mul_assoc]
-  module
-
-/-- The conjugate covariant step raises the mass weight by two. -/
-lemma massWeightScale_covariantStepBar (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
-    massWeightScale c (covariantStepBar μ x) =
-      c ^ 2 • covariantStepBar μ (massWeightScale c x) := by
-  have hm : ∀ a b : JetAlgebra, massWeightScale c (a * b) =
-      massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
-  have hgen : massWeightScale c [JetGenerators.dB {} μ]ₐ =
-      c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
-    rw [massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStepBar, LinearMap.sub_apply, LinearMap.smul_apply,
-    LinearMap.mulLeft_apply, map_sub, map_smul, massWeightScale_jetDeriv, hm, hgen,
-    smul_mul_assoc]
-  module
-
-/-- Homogeneity of the covariant derivative: `D_l ψ_α` has mass weight
-  `3 + 2 |l|`. -/
-lemma massWeightScale_Dψ (c : ℂ) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    massWeightScale c (Dψ l α) = c ^ (3 + 2 * l.length) • Dψ l α := by
-  induction l with
-  | nil =>
-    rw [Dψ_nil, massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dψ {} α) = 3 from rfl]
-    norm_num
-  | cons μ l ih =>
-    rw [Dψ_cons, massWeightScale_covariantStep, ih, map_smul, smul_smul, ← pow_add,
-      List.length_cons, show 3 + 2 * (l.length + 1) = 2 + (3 + 2 * l.length) from by
-        omega]
-
-/-- Homogeneity of the conjugate covariant derivative: `D̄_l ψ̄_α` has mass
-  weight `3 + 2 |l|`. -/
-lemma massWeightScale_Dbarψ (c : ℂ) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    massWeightScale c (Dbarψ l α) = c ^ (3 + 2 * l.length) • Dbarψ l α := by
-  induction l with
-  | nil =>
-    rw [Dbarψ_nil, massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dbarψ {} α) = 3 from rfl]
-    norm_num
-  | cons μ l ih =>
-    rw [Dbarψ_cons, massWeightScale_covariantStepBar, ih, map_smul, smul_smul,
-      ← pow_add, List.length_cons,
-      show 3 + 2 * (l.length + 1) = 2 + (3 + 2 * l.length) from by omega]
-
-/-- Homogeneity of the field-strength derivatives: `∂_s F_{μν}` has mass weight
-  `4 + 2 |s|`. -/
-lemma massWeightScale_fieldStrengthDeriv (c : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (μ ν : Fin 1 ⊕ Fin 3) :
-    massWeightScale c (fieldStrengthDeriv s μ ν) =
-      c ^ (4 + 2 * Multiset.card s) • fieldStrengthDeriv s μ ν := by
-  have h : (fieldStrengthDeriv s μ ν : JetAlgebra) =
-      [JetGenerators.dB (s + {μ}) ν]ₐ - [JetGenerators.dB (s + {ν}) μ]ₐ := by
-    rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv,
-      TensorProduct.tmul_sub, TensorProduct.sub_tmul]
-    rfl
-  rw [h, map_sub, massWeightScale_ofGenerator, massWeightScale_ofGenerator,
-    show MassWeight (JetGenerators.dB (s + {μ}) ν) = 4 + 2 * Multiset.card s from by
-      simp only [MassWeight, Multiset.card_add, Multiset.card_singleton]; omega,
-    show MassWeight (JetGenerators.dB (s + {ν}) μ) = 4 + 2 * Multiset.card s from by
-      simp only [MassWeight, Multiset.card_add, Multiset.card_singleton]; omega,
-    smul_sub]
-
-
-noncomputable def MassDimSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
-    Submodule.span ℂ { x | ∀ c : ℂ, massWeightScale c x = c ^ n • x }
-
-noncomputable def MassWeightLESubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
-  Submodule.span ℂ {x | ∃ m ≤ n, ∀ c : ℂ, massWeightScale c x = c ^ m • x}
-
-noncomputable def InvariantMassWeightSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
-  MassWeightLESubmodule n ⊓ InvariantSubmodule
 
 /-!
 
@@ -333,32 +195,6 @@ lemma toLorentzGroup_sum_η_mul_mul (Λ : SL(2,ℂ)) (a a' : Fin 1 ⊕ Fin 3) :
   · rw [if_neg haa, minkowskiMatrix.as_diagonal, Matrix.diagonal_apply_ne _ haa]
     simp
 
-set_option maxHeartbeats 4000000 in
-/-- The Lorentz action on the QED jet algebra is multiplicative (term-level
-  form). -/
-lemma repLorentzGroup_mul' (Λ : SL(2,ℂ)) (a b : JetAlgebra) :
-    repLorentzGroup Λ (a * b) = repLorentzGroup Λ a * repLorentzGroup Λ b := by
-  have happ : ∀ (p : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : LeptonSinglet.JetAlgebra),
-      repLorentzGroup Λ (p ⊗ₜ[ℂ] l) =
-        (BBoson.JetAlgebra.complexRepLorentzGroup Λ p) ⊗ₜ[ℂ]
-          (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) := fun p l => rfl
-  have hd₁ : ∀ x y z : JetAlgebra, (x + y) * z = x * z + y * z := by grind
-  have hd₂ : ∀ x y z : JetAlgebra, x * (y + z) = x * y + x * z := by grind
-  have hz₁ : ∀ x : JetAlgebra, 0 * x = 0 := fun x => zero_mul x
-  have hz₂ : ∀ x : JetAlgebra, x * 0 = 0 := fun x => mul_zero x
-  induction a using TensorProduct.induction_on with
-  | zero => rw [hz₁, map_zero, hz₁]
-  | add x y hx hy => rw [hd₁, map_add, map_add, hx, hy, hd₁]
-  | tmul p l =>
-    induction b using TensorProduct.induction_on with
-    | zero => rw [hz₂, map_zero, hz₂]
-    | add x y hx hy => rw [hd₂, map_add, map_add, hx, hy, hd₂]
-    | tmul p' l' =>
-      rw [Algebra.TensorProduct.tmul_mul_tmul, happ, happ, happ,
-        Algebra.TensorProduct.tmul_mul_tmul,
-        BBoson.JetAlgebra.complexRepLorentzGroup_mul,
-        LeptonSinglet.JetAlgebra.repLorentzGroup_apply_mul]
-
 /-- The transformation law of the embedded field strength: an antisymmetric
   two-tensor with both indices transforming by the Lorentz matrix. -/
 lemma repLorentzGroup_fieldStrengthDeriv_nil (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3) :
@@ -416,7 +252,7 @@ lemma repLorentzGroup_maxwellTerm (Λ : SL(2,ℂ)) :
             (Lorentz.SL2C.toLorentzGroup Λ).1 b' ν : ℝ) : ℂ)) •
         (fieldStrengthDeriv {} a b * fieldStrengthDeriv {} a' b') := by
     intro μ ν
-    rw [repLorentzGroup_mul', repLorentzGroup_fieldStrengthDeriv_nil]
+    rw [repLorentzGroup_apply_mul, repLorentzGroup_fieldStrengthDeriv_nil]
     have hsm : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
         (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
       rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
@@ -466,7 +302,7 @@ lemma repLorentzGroup_fieldStrengthDeriv_mul (Λ : SL(2,ℂ))
           (((Lorentz.SL2C.toLorentzGroup Λ).1 a' ρ *
             (Lorentz.SL2C.toLorentzGroup Λ).1 b' τ : ℝ) : ℂ)) •
         (fieldStrengthDeriv {} a b * fieldStrengthDeriv {} a' b') := by
-  rw [repLorentzGroup_mul', repLorentzGroup_fieldStrengthDeriv_nil,
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_fieldStrengthDeriv_nil,
     repLorentzGroup_fieldStrengthDeriv_nil]
   have hsm : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
       (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
@@ -665,27 +501,6 @@ lemma repLorentzGroup_thetaTerm (Λ : SL(2,ℂ)) :
 
 -/
 
-/-- The QED Lorentz action on a pure tensor. -/
-lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (l : LeptonSinglet.JetAlgebra) :
-    repLorentzGroup Λ (p ⊗ₜ[ℂ] l) =
-      (BBoson.JetAlgebra.complexRepLorentzGroup Λ p) ⊗ₜ[ℂ]
-        (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) := rfl
-
-/-- The complexified B-boson Lorentz action fixes the unit. -/
-lemma complexRepLorentzGroup_one (Λ : SL(2,ℂ)) :
-    BBoson.JetAlgebra.complexRepLorentzGroup Λ
-      (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) = 1 := by
-  rw [show (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) =
-      (1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra) from rfl,
-    show BBoson.JetAlgebra.complexRepLorentzGroup Λ
-        ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) =
-      (1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.repLorentzGroup Λ (1 : BBoson.JetAlgebra)
-      from rfl,
-    show BBoson.JetAlgebra.repLorentzGroup Λ (1 : BBoson.JetAlgebra) = 1 from
-      map_one (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
-        BBoson.JetComponentSpace.repLorentzGroup Λ))]
-
 /-- The Lorentz action on the zeroth-order lepton generator: the spinor index
   transforms contragrediently, by the conjugate inverse matrix. -/
 lemma repLorentzGroup_ψ (Λ : SL(2,ℂ)) (α : Fin 2) :
@@ -695,7 +510,7 @@ lemma repLorentzGroup_ψ (Λ : SL(2,ℂ)) (α : Fin 2) :
       (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.ofGenerator
           (LeptonSinglet.JetGenerators.dψ {} α) from rfl,
-    repLorentzGroup_tmul, complexRepLorentzGroup_one,
+    repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_apply_one,
     LeptonSinglet.JetAlgebra.repLorentzGroup_ofGenerator_ψ_nil,
     TensorProduct.tmul_sum]
   refine Finset.sum_congr rfl fun β _ => ?_
@@ -712,7 +527,7 @@ lemma repLorentzGroup_dψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
       (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.ofGenerator
           (LeptonSinglet.JetGenerators.dψ {μ} α) from rfl,
-    repLorentzGroup_tmul, complexRepLorentzGroup_one,
+    repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_apply_one,
     LeptonSinglet.JetAlgebra.repLorentzGroup_ofGenerator_ψ_singleton,
     TensorProduct.tmul_sum]
   refine Finset.sum_congr rfl fun ν _ => ?_
@@ -730,7 +545,7 @@ lemma repLorentzGroup_barψ (Λ : SL(2,ℂ)) (α : Fin 2) :
       (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.ofGenerator
           (LeptonSinglet.JetGenerators.dbarψ {} α) from rfl,
-    repLorentzGroup_tmul, complexRepLorentzGroup_one,
+    repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_apply_one,
     LeptonSinglet.JetAlgebra.repLorentzGroup_ofGenerator_barψ_nil,
     TensorProduct.tmul_sum]
   refine Finset.sum_congr rfl fun β _ => ?_
@@ -747,7 +562,7 @@ lemma repLorentzGroup_dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
       (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
         LeptonSinglet.JetAlgebra.ofGenerator
           (LeptonSinglet.JetGenerators.dbarψ {μ} α) from rfl,
-    repLorentzGroup_tmul, complexRepLorentzGroup_one,
+    repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_apply_one,
     LeptonSinglet.JetAlgebra.repLorentzGroup_ofGenerator_barψ_singleton,
     TensorProduct.tmul_sum]
   refine Finset.sum_congr rfl fun ν _ => ?_
@@ -755,32 +570,6 @@ lemma repLorentzGroup_dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
   refine Finset.sum_congr rfl fun β _ => ?_
   rw [TensorProduct.tmul_smul]
   rfl
-
-/-- The Lorentz action on the zeroth-order B-boson generator of the B-boson
-  jet algebra: the covector transformation. -/
-lemma _root_.StandardModel.BBoson.JetAlgebra.repLorentzGroup_ofGenerator_dB_nil
-    (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
-    BBoson.JetAlgebra.repLorentzGroup Λ
-      (BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)) =
-      ∑ ν, (Lorentz.SL2C.toLorentzGroup Λ).1 ν μ •
-        BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} ν) := by
-  rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repLorentzGroup_apply_ι,
-    BBoson.jetComponentSpace_basis_dB,
-    show BBoson.JetComponentSpace.repLorentzGroup Λ
-        (LagrangianTheory.dualRealJetAlgebraBasis {} ⊗ₜ[ℝ]
-          StandardModel.BBoson.basis.dualBasis μ) =
-      (DerivAlgebraReal.repLorentzGroup Λ
-        (LagrangianTheory.dualRealJetAlgebraBasis {})) ⊗ₜ[ℝ]
-        (BBoson.repLorentzGroup.dual Λ (StandardModel.BBoson.basis.dualBasis μ))
-      from rfl,
-    BBoson.dualRealJetAlgebraBasis_nil,
-    show DerivAlgebraReal.repLorentzGroup Λ (1 : DerivAlgebraReal) = 1 from
-      map_one (SymmetricAlgebra.lift (SymmetricAlgebra.ι ℝ _ ∘ₗ
-        Lorentz.CoVector.sl2Rep.dual Λ)),
-    BBoson.repLorentzGroup_dual_dualBasis, TensorProduct.tmul_sum, map_sum]
-  refine Finset.sum_congr rfl fun ν _ => ?_
-  rw [TensorProduct.tmul_smul, map_smul, BBoson.JetAlgebra.ofGenerator,
-    BBoson.jetComponentSpace_basis_dB, BBoson.dualRealJetAlgebraBasis_nil]
 
 /-- The Lorentz action on the zeroth-order B-boson generator of the QED jet
   algebra. -/
@@ -854,7 +643,7 @@ lemma repLorentzGroup_Dψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [Dψ_singleton, map_add, map_smul, repLorentzGroup_mul', repLorentzGroup_B,
+  rw [Dψ_singleton, map_add, map_smul, repLorentzGroup_apply_mul, repLorentzGroup_B,
     repLorentzGroup_ψ, repLorentzGroup_dψ_singleton]
   conv_rhs => enter [2, ν, 2, β]; rw [Dψ_singleton, smul_add]
   conv_rhs => enter [2, ν]; rw [Finset.sum_add_distrib]
@@ -885,7 +674,7 @@ lemma repLorentzGroup_Dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [Dbarψ_singleton, map_sub, map_smul, repLorentzGroup_mul', repLorentzGroup_B,
+  rw [Dbarψ_singleton, map_sub, map_smul, repLorentzGroup_apply_mul, repLorentzGroup_B,
     repLorentzGroup_barψ, repLorentzGroup_dbarψ_singleton]
   conv_rhs => enter [2, ν, 2, β]; rw [Dbarψ_singleton, smul_sub]
   conv_rhs => enter [2, ν]; rw [Finset.sum_sub_distrib]
@@ -1038,7 +827,7 @@ lemma repLorentzGroup_fermionKineticTerm (Λ : SL(2,ℂ)) :
   conv_lhs => enter [2, μ, 2, α]; rw [map_sum]
   conv_lhs =>
     enter [2, μ, 2, α, 2, β]
-    rw [map_smul, repLorentzGroup_mul', repLorentzGroup_Dbarψ_nil,
+    rw [map_smul, repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_nil,
       repLorentzGroup_Dψ_singleton]
   simp only [hsmF, hmsS, hmsF, hsmul, Finset.smul_sum, smul_smul]
   -- move the primed sums out and the unprimed sums in
@@ -1088,7 +877,7 @@ lemma repLorentzGroup_fermionKineticTermBar (Λ : SL(2,ℂ)) :
   conv_lhs => enter [2, μ, 2, α]; rw [map_sum]
   conv_lhs =>
     enter [2, μ, 2, α, 2, β]
-    rw [map_smul, repLorentzGroup_mul', repLorentzGroup_Dbarψ_singleton,
+    rw [map_smul, repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_singleton,
       repLorentzGroup_Dψ_nil]
   simp only [hsmS, hsmF, hmsF, hsmul, Finset.smul_sum, smul_smul]
   -- move the transformed sums out and the original sums in
@@ -2826,7 +2615,7 @@ lemma repLorentzGroup_Dbarψ_nil_mul_Dψ_nil (Λ : SL(2,ℂ)) (α β : Fin 2) :
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [repLorentzGroup_mul', repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_nil]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_nil]
   simp only [hsm, hms, hsmul]
 
 /-- The Lorentz action on a zero-derivative fermion pair `ψ_α ψ̄_β`. -/
@@ -2845,7 +2634,7 @@ lemma repLorentzGroup_Dψ_nil_mul_Dbarψ_nil (Λ : SL(2,ℂ)) (α β : Fin 2) :
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [repLorentzGroup_mul', repLorentzGroup_Dψ_nil, repLorentzGroup_Dbarψ_nil]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dψ_nil, repLorentzGroup_Dbarψ_nil]
   simp only [hsm, hms, hsmul]
 
 /-!
@@ -3729,7 +3518,7 @@ lemma repLorentzGroup_Dbarψ_nil_mul_Dψ_singleton (Λ : SL(2,ℂ))
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [repLorentzGroup_mul', repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_singleton]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_singleton]
   simp only [hsm, hms, hms₂, hsmul]
 
 set_option maxHeartbeats 2000000 in
@@ -3755,7 +3544,7 @@ lemma repLorentzGroup_Dbarψ_singleton_mul_Dψ_nil (Λ : SL(2,ℂ))
   have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
       (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
     rw [smul_mul_smul_comm]
-  rw [repLorentzGroup_mul', repLorentzGroup_Dbarψ_singleton, repLorentzGroup_Dψ_nil]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_singleton, repLorentzGroup_Dψ_nil]
   simp only [hsm, hsm₂, hms, hsmul]
 
 set_option maxHeartbeats 2000000 in
@@ -5134,7 +4923,7 @@ lemma pairZ_F01_F01 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F01 t ht,
     genZ_F01 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5158,7 +4947,7 @@ lemma pairZ_F01_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F01 t ht,
     genZ_F01 t⁻¹ (inv_ne_zero ht),
     genZ_F23 t ht,
@@ -5184,7 +4973,7 @@ lemma pairZ_F02_F02 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F02 t ht,
     genZ_F02 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5208,7 +4997,7 @@ lemma pairZ_F02_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F02 t ht,
     genZ_F02 t⁻¹ (inv_ne_zero ht),
     genZ_F13 t ht,
@@ -5233,7 +5022,7 @@ lemma pairZ_F03_F03 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F03 t ht,
     genZ_F03 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5252,7 +5041,7 @@ lemma pairZ_F03_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F03 t ht,
     genZ_F03 t⁻¹ (inv_ne_zero ht),
     genZ_F12 t ht,
@@ -5273,7 +5062,7 @@ lemma pairZ_F12_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F12 t ht,
     genZ_F12 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5295,7 +5084,7 @@ lemma pairZ_F13_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F13 t ht,
     genZ_F13 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5319,7 +5108,7 @@ lemma pairZ_F23_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostZel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostZel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genZ_F23 t ht,
     genZ_F23 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5340,7 +5129,7 @@ lemma pairX_F01_F01 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F01 t ht,
     genX_F01 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5359,7 +5148,7 @@ lemma pairX_F01_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F01 t ht,
     genX_F01 t⁻¹ (inv_ne_zero ht),
     genX_F23 t ht,
@@ -5383,7 +5172,7 @@ lemma pairX_F02_F02 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F02 t ht,
     genX_F02 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5407,7 +5196,7 @@ lemma pairX_F02_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F02 t ht,
     genX_F02 t⁻¹ (inv_ne_zero ht),
     genX_F13 t ht,
@@ -5433,7 +5222,7 @@ lemma pairX_F03_F03 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F03 t ht,
     genX_F03 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5457,7 +5246,7 @@ lemma pairX_F03_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F03 t ht,
     genX_F03 t⁻¹ (inv_ne_zero ht),
     genX_F12 t ht,
@@ -5485,7 +5274,7 @@ lemma pairX_F12_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F12 t ht,
     genX_F12 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5509,7 +5298,7 @@ lemma pairX_F13_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F13 t ht,
     genX_F13 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5530,7 +5319,7 @@ lemma pairX_F23_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostXel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostXel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genX_F23 t ht,
     genX_F23 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5552,7 +5341,7 @@ lemma pairY_F01_F01 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F01 t ht,
     genY_F01 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5576,7 +5365,7 @@ lemma pairY_F01_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F01 t ht,
     genY_F01 t⁻¹ (inv_ne_zero ht),
     genY_F23 t ht,
@@ -5599,7 +5388,7 @@ lemma pairY_F02_F02 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F02 t ht,
     genY_F02 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5618,7 +5407,7 @@ lemma pairY_F02_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F02 t ht,
     genY_F02 t⁻¹ (inv_ne_zero ht),
     genY_F13 t ht,
@@ -5642,7 +5431,7 @@ lemma pairY_F03_F03 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F03 t ht,
     genY_F03 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5666,7 +5455,7 @@ lemma pairY_F03_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F03 t ht,
     genY_F03 t⁻¹ (inv_ne_zero ht),
     genY_F12 t ht,
@@ -5694,7 +5483,7 @@ lemma pairY_F12_F12 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F12 t ht,
     genY_F12 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -5715,7 +5504,7 @@ lemma pairY_F13_F13 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F13 t ht,
     genY_F13 t⁻¹ (inv_ne_zero ht)]
   match_scalars <;> (push_cast; try field_simp; try ring)
@@ -5737,7 +5526,7 @@ lemma pairY_F23_F23 (t : ℝ) (ht : t ≠ 0) :
         (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) *
           fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2)) := by
   have ht' : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [boostYel_inv, repLorentzGroup_mul', repLorentzGroup_mul']
+  rw [boostYel_inv, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul]
   simp only [genY_F23 t ht,
     genY_F23 t⁻¹ (inv_ne_zero ht)]
   simp only [add_mul_jet, mul_add_jet, smul_mul_smul_jet, smul_mul_jet, mul_smul_jet,
@@ -10018,7 +9807,7 @@ lemma kleinAvg_fieldStrengthDeriv_nil_mul (a b c d : Fin 1 ⊕ Fin 3) :
         paritySignX a * paritySignX b * (paritySignX c * paritySignX d)) / 4 : ℝ) : ℂ) •
         (fieldStrengthDeriv {} a b * fieldStrengthDeriv {} c d) := by
   rw [kleinAvg_apply]
-  simp only [repLorentzGroup_mul',
+  simp only [repLorentzGroup_apply_mul,
     repLorentzGroup_diag_fieldStrengthDeriv toLorentzGroup_parityZ,
     repLorentzGroup_diag_fieldStrengthDeriv toLorentzGroup_parityY,
     repLorentzGroup_diag_fieldStrengthDeriv toLorentzGroup_parityX,

@@ -1127,6 +1127,17 @@ lemma repLorentzGroup_ofGenerator_barψ_singleton (Λ : SL(2,ℂ))
   refine Finset.sum_congr rfl fun β _ => ?_
   rw [map_smul, ofGenerator]
 
+
+noncomputable def repLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
+    AlgHom ℂ JetAlgebra JetAlgebra where
+  toFun := repLorentzGroup Λ
+  map_add' := LinearMap.map_add _
+  map_zero' := LinearMap.map_zero _
+  map_one' := repLorentzGroup_apply_one Λ
+  map_mul' := repLorentzGroup_apply_mul Λ
+  commutes' r := by simp [repLorentzGroup_apply]
+
+
 /-!
 
 ### A.4. The formal total derivative on the jet algebra

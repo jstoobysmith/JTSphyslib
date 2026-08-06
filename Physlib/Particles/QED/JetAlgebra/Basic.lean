@@ -98,6 +98,31 @@ open Matrix MatrixGroups
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) JetAlgebra :=
   BBoson.JetAlgebra.complexRepLorentzGroup.tprod LeptonSinglet.JetAlgebra.repLorentzGroup
 
+/-- The QED Lorentz action on a pure tensor. -/
+lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (l : LeptonSinglet.JetAlgebra) :
+    repLorentzGroup Λ (p ⊗ₜ[ℂ] l) =
+      (BBoson.JetAlgebra.complexRepLorentzGroup Λ p) ⊗ₜ[ℂ]
+        (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) := rfl
+
+/-- The Lorentz action on the QED jet algebra agrees with the algebra
+  homomorphism obtained as the tensor product of the complexified B-boson
+  action with the exterior-algebra action on the charged-lepton factor. -/
+lemma repLorentzGroup_eq_algHom (Λ : SL(2,ℂ)) (x : JetAlgebra) :
+    repLorentzGroup Λ x = Algebra.TensorProduct.map
+        (BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
+        (LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ) x := rfl
+
+/-- The Lorentz action on the QED jet algebra is multiplicative (term-level
+  form). -/
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (a b : JetAlgebra) :
+    repLorentzGroup Λ (a * b) = repLorentzGroup Λ a * repLorentzGroup Λ b := by
+  simp [repLorentzGroup_eq_algHom]
+
+lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
+    repLorentzGroup Λ (1 : JetAlgebra) = 1 := by
+  simp [repLorentzGroup_eq_algHom]
+
 /-!
 
 ### B.2. The invarance condition
