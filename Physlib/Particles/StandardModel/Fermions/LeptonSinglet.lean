@@ -497,14 +497,24 @@ lemma JetComponentSpace.repLorentzGroup_basis_dbarψ_singleton (Λ : SL(2,ℂ))
     refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun β _ => ?_
     rw [mul_comm]
 
+/-!
+
+
+### The action of the jet gauge group
+
+Under the action of the gauge group
+`∂_s ψ` transforms as
+`∑ (x + y = s), ∂_x (star u ^ 6) ∂_y ψ`, and similarly for the conjugate.
+
+
+-/
 /-- The action of the jet gauge group on the dual jet algebra of the
   charged-lepton singlet's component functions. Component functions transform
   contragrediently to the field, so the hypercharge power series is
   `u ^ 6 = (star u ^ 6)⁻¹`, acting through the Leibniz rule on the dual
   derivative symbols. -/
 noncomputable def dualJetAlgebraRepJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI
-      (SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)) where
+    Representation ℂ JetGaugeGroupI DerivAlgebraComplex where
   toFun U := DerivAlgebraComplex.jetRingAction (((U.2.2 : unitary JetRing) : JetRing) ^ 6)
   map_one' := by
     rw [show (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) ^ 6 =
@@ -633,6 +643,77 @@ lemma JetComponentSpace.repJetGaugeGroupI_inr' (U : JetGaugeGroupI)
     rw [JetComponentSpace.repJetGaugeGroupI_inr, TensorProduct.map_tmul]
     rfl
 
+open MvPowerSeries in
+/-- The gauge action on a lepton jet coordinate is the Leibniz expansion of
+  `∂_t (u⁶ ψ)`: a sum over the splittings `t = x + y` of the `x`-th Taylor
+  coefficient of the hypercharge character `u⁶` against the `y`-th coordinate.
+  The weight `∏ descFactorial` together with `coeff x χ = (∂_x χ)(0) / x!`
+  makes up the multi-index binomial coefficient `(t choose x)`. -/
+lemma JetComponentSpace.repJetGaugeGroupI_basis_dψ (U : JetGaugeGroupI)
+      (t : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    repJetGaugeGroupI U (basis (.dψ t α)) =
+      ∑ p ∈ Finset.antidiagonal t.toFinsupp,
+          ((∏ μ, (t.toFinsupp μ).descFactorial (p.1 μ) : ℕ) : ℂ) •
+          coeff p.1 (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+            basis (.dψ (Multiset.toFinsupp.symm p.2) α) := by
+  have hb : ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ,
+      JetComponentSpace.basis (.dψ (Multiset.toFinsupp.symm p) α) =
+        ((Lorentz.complexCoBasis.dualBasis.symmetricAlgebra p ⊗ₜ[ℂ]
+          LeptonSinglet.basis.dualBasis α), 0) := by
+    intro p
+    rw [JetComponentSpace.basis_dψ, DerivAlgebraComplex.basis_apply,
+      AddEquiv.apply_symm_apply]
+  rw [JetComponentSpace.basis_dψ, JetComponentSpace.repJetGaugeGroupI_inl,
+    DerivAlgebraComplex.basis_apply, DerivAlgebraComplex.jetRingAction_basis,
+    TensorProduct.sum_tmul,
+    show ∀ v : SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule) ⊗[ℂ]
+        Module.Dual ℂ LeptonSinglet,
+        ((v, 0) : JetComponentSpace) = LinearMap.inl ℂ _ _ v from fun _ => rfl,
+    map_sum]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  rw [hb p.2, ← TensorProduct.smul_tmul', ← TensorProduct.smul_tmul',
+    map_smul, map_smul]
+  rfl
+
+open MvPowerSeries in
+/-- The gauge action on the first-order lepton coordinate: the character at the
+  base point acts on the coordinate itself, and its first Taylor coefficient
+  feeds into the zeroth-order coordinate. This is the `t = {μ}` case of
+  `repJetGaugeGroupI_basis_dψ`. -/
+lemma JetComponentSpace.repJetGaugeGroupI_basis_dψ_singleton (U : JetGaugeGroupI)
+    (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
+    repJetGaugeGroupI U (basis (.dψ {μ} α)) =
+      constantCoeff (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+          basis (.dψ {μ} α) +
+        coeff (Finsupp.single μ 1) (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+          basis (.dψ {} α) := by
+  classical
+  have hm : ({μ} : Multiset (Fin 1 ⊕ Fin 3)).toFinsupp = Finsupp.single μ 1 := by
+    simp
+  rw [JetComponentSpace.repJetGaugeGroupI_basis_dψ, hm, Finsupp.antidiagonal_single,
+    show Finset.antidiagonal (1 : ℕ) = {(0, 1), (1, 0)} from by decide,
+    Finset.map_insert, Finset.map_singleton,
+    Finset.sum_insert (by simp [Finsupp.single_eq_zero]), Finset.sum_singleton]
+  simp only [Function.Embedding.coe_prodMap, Function.Embedding.coeFn_mk,
+    Prod.map_apply, Finsupp.single_zero, coeff_zero_eq_constantCoeff,
+    Nat.descFactorial_zero, Finset.prod_const_one, Nat.cast_one, one_smul,
+    Nat.descFactorial_self]
+  have hw1 : (∏ x, ((Finsupp.single μ 1 : (Fin 1 ⊕ Fin 3) →₀ ℕ) x).descFactorial
+      ((0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) x) : ℕ) = 1 := by simp
+  have hw2 : (∏ x, ((Finsupp.single μ 1 : (Fin 1 ⊕ Fin 3) →₀ ℕ) x).factorial : ℕ)
+      = 1 := by
+    refine Finset.prod_eq_one fun x _ => ?_
+    rcases eq_or_ne μ x with rfl | h
+    · simp
+    · simp only [Finsupp.single_apply, if_neg h, Nat.factorial_zero]
+  have htf1 : Multiset.toFinsupp.symm (Finsupp.single μ 1) =
+      ({μ} : Multiset (Fin 1 ⊕ Fin 3)) := by
+    rw [← hm, AddEquiv.symm_apply_apply]
+  have htf0 : Multiset.toFinsupp.symm (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) =
+      (0 : Multiset (Fin 1 ⊕ Fin 3)) := map_zero _
+  rw [hw1, hw2, htf1, htf0]
+  simp
+
 /-!
 
 ## The formal total derivative on the component functions
@@ -681,6 +762,17 @@ lemma JetComponentSpace.jetDeriv_basis (μ : Fin 1 ⊕ Fin 3) (j : JetGenerators
     JetComponentSpace.jetDeriv μ (JetComponentSpace.basis j) =
       JetComponentSpace.basis (JetGenerators.shift μ j) := by
   rw [JetComponentSpace.jetDeriv, Module.Basis.constr_basis]
+
+lemma JetComponentSpace.jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (v : JetComponentSpace) :
+    JetComponentSpace.jetDeriv μ (JetComponentSpace.jetDeriv ν v) =
+      JetComponentSpace.jetDeriv ν (JetComponentSpace.jetDeriv μ v) := by
+  have h : JetComponentSpace.jetDeriv μ ∘ₗ JetComponentSpace.jetDeriv ν =
+      JetComponentSpace.jetDeriv ν ∘ₗ JetComponentSpace.jetDeriv μ := by
+    refine JetComponentSpace.basis.ext fun j => ?_
+    simp  [LinearMap.coe_comp, Function.comp_apply, JetComponentSpace.jetDeriv_basis,
+      JetGenerators.shift, ]
+    grind
+  exact DFunLike.congr_fun h v
 
 /-- The mass-dimension scaling on the space of component functions of the
   charged-lepton singlet: the diagonal map multiplying each component function
@@ -966,6 +1058,15 @@ lemma repJetGaugeGroupI_apply (g : JetGaugeGroupI) (x : JetAlgebra) :
     repJetGaugeGroupI g x =
       ExteriorAlgebra.map (JetComponentSpace.repJetGaugeGroupI g) x := rfl
 
+lemma repJetGaugeGroupI_apply_one (g : JetGaugeGroupI) :
+    repJetGaugeGroupI g (1 : JetAlgebra) = 1 := by
+  simp [repJetGaugeGroupI_apply]
+
+lemma repJetGaugeGroupI_apply_mul (g : JetGaugeGroupI) (x y : JetAlgebra) :
+    repJetGaugeGroupI g (x * y) =
+      repJetGaugeGroupI g x * repJetGaugeGroupI g y := by
+  simp [repJetGaugeGroupI_apply]
+
 /-- The value of the jet of gauge transformations at the base point acts by the
   contragredient hypercharge scalar on the zeroth-order singlet generator, with
   no derivative contributions. -/
@@ -1049,6 +1150,15 @@ lemma repJetGaugeGroupI_ofGenerator_ψ (g : JetGaugeGroupI)
     Representation.trivial_apply, map_zero, TensorProduct.map_tmul,
     DerivAlgebraComplex.jetRingAction_basis]
   simp only [hinl, TensorProduct.sum_tmul, ← TensorProduct.smul_tmul', map_sum, map_smul]
+
+noncomputable def repJetGaugeGroupIAlgHom (g : JetGaugeGroupI) :
+    AlgHom ℂ JetAlgebra JetAlgebra where
+  toFun := repJetGaugeGroupI g
+  map_one' := repJetGaugeGroupI_apply_one g
+  map_mul' := repJetGaugeGroupI_apply_mul g
+  map_add' := LinearMap.map_add _
+  map_zero' := LinearMap.map_zero _
+  commutes' := fun r => by simp [repJetGaugeGroupI_apply]
 
 /-!
 
@@ -1243,6 +1353,35 @@ lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
     congrArg TrivSqZeroExt.snd (map_mul (jetDerivHom μ) x y)
   rw [jetDerivHom_fst, jetDerivHom_fst] at h
   exact h.trans (add_comm _ _)
+
+lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    jetDeriv μ (jetDeriv ν x) = jetDeriv ν (jetDeriv μ x) := by
+  induction x using ExteriorAlgebra.induction with
+  | algebraMap r =>
+    simp [Algebra.algebraMap_eq_smul_one]
+  | ι v =>
+    simp [JetComponentSpace.jetDeriv_comm]
+  | mul x y hx hy =>
+    simp only [jetDeriv_mul, map_add, hx, hy]
+    abel
+  | add x y hx hy =>
+    simp only [map_add, hx, hy]
+
+/-!
+
+##
+
+Let ∂_s be the derivative with respect to the multi-index s.
+On the action of the gauge group `∂_s (g • ψ) ≠ g • ∂_s ψ`.
+The RHS of this properly takes account of derivatives of the gauge transformation,
+while the LHS does not.
+
+What we want to show is that
+`g • ∂_s ψ = ∑_{p + q = s}  q ^ {|p|} • (∂_p g) • ∂_q ψ`.
+where `q` is the charge of the field.
+
+-/
+
 
 /-!
 

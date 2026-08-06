@@ -66,9 +66,23 @@ noncomputable def ofGenerator (s : JetGenerators) : JetAlgebra :=
 
 scoped notation "[" s "]ₐ" => ofGenerator s
 
+lemma ofGenerator_dψ_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    ofGenerator (JetGenerators.dψ s α) =
+      (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+        (LeptonSinglet.JetGenerators.dψ s α) := rfl
+
+lemma ofGenerator_B_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    ofGenerator (JetGenerators.dB s μ) =
+      (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
+        (BBoson.JetGenerators.dB s μ)) ⊗ₜ[ℂ] 1 := rfl
+
+lemma ofGenerator_dbarψ_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    ofGenerator (JetGenerators.dbarψ s α) =
+      (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+        (LeptonSinglet.JetGenerators.dbarψ s α) := rfl
 /-!
 
-## B. Representation of the gauge group
+## B. Representation of the jet gauge group
 
 Gauge transformations act on the QED jet algebra
 locally via the group `JetGaugeGroupI`.
@@ -80,6 +94,20 @@ locally via the group `JetGaugeGroupI`.
   with the hypercharge action on the charged-lepton factor. -/
 noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI JetAlgebra :=
   BBoson.JetAlgebra.complexRepJetGaugeGroupI.tprod LeptonSinglet.JetAlgebra.repJetGaugeGroupI
+
+lemma repJetGaugeGroupI_eq_algHom (g : JetGaugeGroupI) (x : JetAlgebra) :
+    repJetGaugeGroupI g x = Algebra.TensorProduct.map
+        (BBoson.JetAlgebra.complexRepJetGaugeGroupIAlgHom g)
+        (LeptonSinglet.JetAlgebra.repJetGaugeGroupIAlgHom g) x := rfl
+
+lemma repJetGaugeGroupI_apply_mul (g : JetGaugeGroupI) (x y : JetAlgebra) :
+    repJetGaugeGroupI g (x * y) =
+      repJetGaugeGroupI g x * repJetGaugeGroupI g y := by
+  simp [repJetGaugeGroupI_eq_algHom]
+
+lemma repJetGaugeGroupI_apply_one (g : JetGaugeGroupI) :
+    repJetGaugeGroupI g (1 : JetAlgebra) = 1 := by
+  simp [repJetGaugeGroupI_eq_algHom]
 
 lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : BBoson.JetAlgebra)
     (l : LeptonSinglet.JetAlgebra) :
@@ -95,85 +123,16 @@ lemma repJetGaugeGroupI_tmul' (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.JetA
         (LeptonSinglet.JetAlgebra.repJetGaugeGroupI U l) := by
   rw [repJetGaugeGroupI, Representation.tprod_apply, TensorProduct.map_tmul]
 
-
-/-!
-
-### B.1. The action of the Lorentz group
-
--/
-open Matrix MatrixGroups
-
-noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) JetAlgebra :=
-  BBoson.JetAlgebra.complexRepLorentzGroup.tprod LeptonSinglet.JetAlgebra.repLorentzGroup
-
-/-- The QED Lorentz action on a pure tensor. -/
-lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (l : LeptonSinglet.JetAlgebra) :
-    repLorentzGroup Λ (p ⊗ₜ[ℂ] l) =
-      (BBoson.JetAlgebra.complexRepLorentzGroup Λ p) ⊗ₜ[ℂ]
-        (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) := rfl
-
-/-- The Lorentz action on the QED jet algebra agrees with the algebra
-  homomorphism obtained as the tensor product of the complexified B-boson
-  action with the exterior-algebra action on the charged-lepton factor. -/
-lemma repLorentzGroup_eq_algHom (Λ : SL(2,ℂ)) (x : JetAlgebra) :
-    repLorentzGroup Λ x = Algebra.TensorProduct.map
-        (BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
-        (LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ) x := rfl
-
-/-- The Lorentz action on the QED jet algebra is multiplicative (term-level
-  form). -/
-lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (a b : JetAlgebra) :
-    repLorentzGroup Λ (a * b) = repLorentzGroup Λ a * repLorentzGroup Λ b := by
-  simp [repLorentzGroup_eq_algHom]
-
-lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    repLorentzGroup Λ (1 : JetAlgebra) = 1 := by
-  simp [repLorentzGroup_eq_algHom]
-
-/-!
-
-### B.2. The invarance condition
-
--/
-
-def IsInvariant (x : JetAlgebra) : Prop :=
-  (∀ U : JetGaugeGroupI, repJetGaugeGroupI U x = x)
-  ∧ (∀ Λ : SL(2,ℂ), repLorentzGroup Λ x = x)
-
-lemma IsInvariant.add {x y : JetAlgebra} (hx : IsInvariant x) (hy : IsInvariant y) :
-    IsInvariant (x + y) := by
-  constructor
-  · intro U
-    simp [hx.left, hy.left]
-  · intro Λ
-    simp [hx.right, hy.right]
-
-lemma IsInvariant.smul {x : JetAlgebra} (hx : IsInvariant x) (r : ℂ) :
-    IsInvariant (r • x) := by
-  constructor
-  · intro U
-    simp [hx.left]
-  · intro Λ
-    simp [hx.right]
-
-noncomputable def InvariantSubmodule : Submodule ℂ JetAlgebra :=
-  Submodule.span ℂ {x | IsInvariant x}
-
-lemma InvariantSubmodule.mem_iff_isInvariant (x : JetAlgebra) :
-    x ∈ InvariantSubmodule ↔ IsInvariant x := by
-  constructor
-  · intro hx
-    induction hx using Submodule.span_induction with
-    | mem y hy => exact hy
-    | zero => exact ⟨fun U => map_zero _, fun Λ => map_zero _⟩
-    | add y z hy hz ihy ihz =>
-      exact ⟨fun U => by rw [map_add, ihy.1 U, ihz.1 U],
-        fun Λ => by rw [map_add, ihy.2 Λ, ihz.2 Λ]⟩
-    | smul c y hy ihy =>
-      exact ⟨fun U => by rw [map_smul, ihy.1 U],
-        fun Λ => by rw [map_smul, ihy.2 Λ]⟩
-  · exact fun hx => Submodule.subset_span hx
+/-- The zeroth-order lepton coordinate carries hypercharge `6`: a jet of gauge
+  transformations acts on it through the character of its value at the base
+  point alone, with no derivative contributions. This is the base case of
+  `repJetGaugeGroupI_Dψ`. -/
+lemma repJetGaugeGroupI_dψ_nil (U : JetGaugeGroupI) (α : Fin 2) :
+    repJetGaugeGroupI U [JetGenerators.dψ {} α]ₐ = U.eval.2.2 ^ 6 • [JetGenerators.dψ {} α]ₐ := by
+  rw [ofGenerator_dψ_eq, repJetGaugeGroupI_tmul',
+    BBoson.JetAlgebra.complexRepJetGaugeGroupI_one_tmul_one,
+    LeptonSinglet.JetAlgebra.repJetGaugeGroupI_ofGenerator_ψ_nil,
+    Submonoid.smul_def, Submonoid.smul_def, TensorProduct.tmul_smul]
 
 /-!
 
@@ -231,6 +190,46 @@ lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
         TensorProduct.add_tmul, TensorProduct.tmul_add, hdist₁, hdist₂]
       abel
 
+lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    jetDeriv μ (jetDeriv ν x) = jetDeriv ν (jetDeriv μ x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [map_add, ha, hb]
+  | tmul p l =>
+    simp [jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_comm μ ν,
+      BBoson.JetAlgebra.jetDeriv_baseChange_comm μ ν p]
+    abel
+
+/-- Total derivatives commute, so an iterated derivative may be indexed by a
+  multiset of directions rather than by a list. -/
+instance : LeftCommutative
+    (fun (ν : Fin 1 ⊕ Fin 3) (A : JetAlgebra →ₗ[ℂ] JetAlgebra) =>
+      jetDeriv ν ∘ₗ A) where
+  left_comm ν₁ ν₂ A := by
+    refine LinearMap.ext fun x => ?_
+    simp only [LinearMap.coe_comp, Function.comp_apply]
+    exact jetDeriv_comm ν₁ ν₂ (A x)
+
+/-- The iterated total spacetime derivative along a multiset of directions:
+  `∂_t = ∂_{μ₁} ⋯ ∂_{μ_k}` for `t = {μ₁, …, μ_k}`. The order is immaterial by
+  `jetDeriv_comm`, so the index is a multiset. -/
+noncomputable def jetDerivM (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  Multiset.foldr (fun ν A => jetDeriv ν ∘ₗ A) LinearMap.id t
+
+lemma jetDerivM_zero : jetDerivM 0 = LinearMap.id := by
+  simp [jetDerivM]
+
+lemma jetDerivM_cons (ν : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    jetDerivM (ν ::ₘ t) = jetDeriv ν ∘ₗ jetDerivM t := by
+  simp [jetDerivM]
+
+lemma jetDerivM_singleton (μ : Fin 1 ⊕ Fin 3) : jetDerivM {μ} = jetDeriv μ := by
+  rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, jetDerivM_cons,
+    jetDerivM_zero, LinearMap.comp_id]
+
+
 /-!
 
 ## Covariant derivatives
@@ -255,10 +254,6 @@ zeroth-order component function of `ψ` it produces the covariant derivatives.
 noncomputable def covariantStep (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
   jetDeriv μ + ((6 : ℂ) * Complex.I) • LinearMap.mulLeft ℂ [JetGenerators.dB {} μ]ₐ
 
-/-- The covariant derivative `D_l ψ_α` of the charged lepton along the ordered
-  list of directions `l`, with the head of the list the outermost derivative:
-  the recursion `D_{μ :: l} ψ = (∂_μ + 6 i B_μ) (D_l ψ)` starting from the
-  zeroth-order component function of `ψ`. -/
 noncomputable def Dψ (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     JetAlgebra :=
   l.foldr (fun μ x => covariantStep μ x) [JetGenerators.dψ {} α]ₐ
@@ -323,6 +318,14 @@ lemma Dbarψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
     TensorProduct.zero_tmul, zero_add,
     LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dbarψ, Multiset.empty_eq_zero]
+
+/-!
+
+## The covariant subsitution
+
+-/
+
+
 
 /-!
 
@@ -2039,56 +2042,6 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
       exact Algebra.subset_adjoin (show _ ∈ invariantGenerators from
         Set.mem_union_right _ ⟨(sortList s, α), rfl⟩)
 
-set_option maxHeartbeats 1000000 in
-/-- Characterization of the invariants of the QED jet algebra: an element is
-  invariant under the jet gauge group and the Lorentz group precisely when it
-  lies in the algebra generated by the field-strength derivatives and the
-  covariant derivatives, is invariant under the constant gauge transformations,
-  and is Lorentz invariant. The forward direction is the main theorem above; the
-  backward direction holds because on the covariant generators a jet of gauge
-  transformations acts only through its value at the base point. -/
-lemma isInvariant_iff_mem_adjoin_invariantGenerators (x : JetAlgebra) :
-    IsInvariant x ↔ x ∈ Algebra.adjoin ℂ invariantGenerators ∧
-    (∀ g : GaugeGroupI, repJetGaugeGroupI (.ofConstant g) x = x)
-    ∧ (∀ Λ : SL(2, ℂ), repLorentzGroup Λ x = x) := by
-  constructor
-  · intro h
-    exact ⟨mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq x h.1,
-      fun g => h.1 _, h.2⟩
-  · rintro ⟨hmem, hconst, hlor⟩
-    refine ⟨fun U => ?_, hlor⟩
-    suffices hkey : repJetGaugeGroupI U x =
-        repJetGaugeGroupI (JetGaugeGroupI.ofConstant U.eval) x by
-      rw [hkey]
-      exact hconst U.eval
-    clear hconst hlor
-    induction hmem using Algebra.adjoin_induction with
-    | mem z hz =>
-      rcases hz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
-      · show repJetGaugeGroupI U (fieldStrengthDeriv p.1 p.2.1 p.2.2) =
-          repJetGaugeGroupI (JetGaugeGroupI.ofConstant U.eval)
-            (fieldStrengthDeriv p.1 p.2.1 p.2.2)
-        rw [repJetGaugeGroupI_fieldStrengthDeriv, repJetGaugeGroupI_fieldStrengthDeriv]
-      · show repJetGaugeGroupI U (Dψ p.1 p.2) =
-          repJetGaugeGroupI (JetGaugeGroupI.ofConstant U.eval) (Dψ p.1 p.2)
-        rw [repJetGaugeGroupI_Dψ, repJetGaugeGroupI_Dψ, JetGaugeGroupI.eval_ofConstant]
-      · show repJetGaugeGroupI U (Dbarψ p.1 p.2) =
-          repJetGaugeGroupI (JetGaugeGroupI.ofConstant U.eval) (Dbarψ p.1 p.2)
-        rw [repJetGaugeGroupI_Dbarψ, repJetGaugeGroupI_Dbarψ,
-          JetGaugeGroupI.eval_ofConstant]
-    | algebraMap r =>
-      rw [repJetGaugeGroupI_eq_repAlgHom, repJetGaugeGroupI_eq_repAlgHom,
-        AlgHom.commutes, AlgHom.commutes]
-    | add u v hu hv ihu ihv =>
-      rw [map_add, map_add, ihu, ihv]
-    | mul u v hu hv ihu ihv =>
-      have hmul : ∀ V : JetGaugeGroupI, repJetGaugeGroupI V (u * v) =
-          repJetGaugeGroupI V u * repJetGaugeGroupI V v := fun V =>
-        (repJetGaugeGroupI_eq_repAlgHom V (u * v)).trans
-          ((map_mul (repAlgHom V) u v).trans
-            (congrArg₂ (· * ·) (repJetGaugeGroupI_eq_repAlgHom V u).symm
-              (repJetGaugeGroupI_eq_repAlgHom V v).symm))
-      exact (hmul U).trans ((congrArg₂ (· * ·) ihu ihv).trans (hmul _).symm)
 end JetAlgebra
 
 end QED

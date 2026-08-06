@@ -338,6 +338,14 @@ def shift (μ : Fin 1 ⊕ Fin 3) : JetGenerators → JetGenerators
 lemma shift_dB (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
     shift μ (dB s ν) = dB (s + {μ}) ν := rfl
 
+/-- Appending derivative indices commutes: the indices form a multiset. -/
+lemma shift_comm (μ ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
+    shift μ (shift ν g) = shift ν (shift μ g) := by
+  cases g with
+  | dB s ρ =>
+    show dB (s + {ν} + {μ}) ρ = dB (s + {μ} + {ν}) ρ
+    rw [add_right_comm]
+
 /-- Appending a derivative index raises the mass weight by two: a derivative has
   mass dimension one. -/
 @[simp]
@@ -994,6 +1002,18 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
   rw [h2]
   rfl
 
+noncomputable def repJetGaugeGroupIAlgHom (U : JetGaugeGroupI) :
+    AlgHom ℝ JetAlgebra JetAlgebra where
+  toFun := repJetGaugeGroupI U
+  map_add' := LinearMap.map_add _
+  map_zero' := LinearMap.map_zero _
+  map_one' := repJetGaugeGroupI_one U
+  map_mul' := repJetGaugeGroupI_mul U
+  commutes' r := by simp [repJetGaugeGroupI_algebraMap]
+
+lemma repJetGaugeGroupIAlgHom_apply (U : JetGaugeGroupI) (x : JetAlgebra) :
+    repJetGaugeGroupIAlgHom U x = repJetGaugeGroupI U x := rfl
+
 /-!
 
 ## A.2 The complexified version
@@ -1013,6 +1033,15 @@ noncomputable def complexRepJetGaugeGroupI :
     ext x
     simp [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp]
 
+lemma complexRepJetGaugeGroupI_eq_algHom (U : JetGaugeGroupI)
+    (x : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepJetGaugeGroupI U x =
+      Algebra.TensorProduct.map (AlgHom.id ℂ ℂ) (repJetGaugeGroupIAlgHom U) x := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => rw [map_add, map_add, ha, hb]
+  | tmul c b => rfl
+
 lemma complexRepJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : JetAlgebra) :
     complexRepJetGaugeGroupI U (c ⊗ₜ[ℝ] b) = c ⊗ₜ[ℝ] repJetGaugeGroupI U b := rfl
 
@@ -1020,18 +1049,16 @@ lemma complexRepJetGaugeGroupI_tmul (U : JetGaugeGroupI) (c : ℂ) (b : JetAlgeb
 lemma complexRepJetGaugeGroupI_mul (U : JetGaugeGroupI) (x y : ℂ ⊗[ℝ] JetAlgebra) :
     complexRepJetGaugeGroupI U (x * y) =
       complexRepJetGaugeGroupI U x * complexRepJetGaugeGroupI U y := by
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | add a b ha hb =>
-    simp only [add_mul, map_add, ha, hb]
-  | tmul c b =>
-    induction y using TensorProduct.induction_on with
-    | zero => simp
-    | add a' b' ha' hb' =>
-      simp only [mul_add, map_add, ha', hb']
-    | tmul c' b' =>
-      simp only [Algebra.TensorProduct.tmul_mul_tmul, complexRepJetGaugeGroupI_tmul,
-        repJetGaugeGroupI_mul]
+  simp [complexRepJetGaugeGroupI_eq_algHom]
+
+lemma complexRepJetGaugeGroupI_one (U : JetGaugeGroupI) :
+    complexRepJetGaugeGroupI U (1 : ℂ ⊗[ℝ] JetAlgebra) = 1 := by
+  simp [complexRepJetGaugeGroupI_eq_algHom]
+
+lemma complexRepJetGaugeGroupI_one_tmul_one (U : JetGaugeGroupI) :
+    complexRepJetGaugeGroupI U ((1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra)) =
+      (1 : ℂ) ⊗ₜ[ℝ] (1 : JetAlgebra) := by
+  rw [complexRepJetGaugeGroupI_tmul, repJetGaugeGroupI_one]
 
 /-- The complexified gauge action on a jet-algebra generator: the Maurer–Cartan
   shift of the component function. -/
@@ -1055,6 +1082,15 @@ lemma complexRepJetGaugeGroupI_ofConstant (g : GaugeGroupI)
   | zero => simp
   | add a b ha hb => rw [map_add, ha, hb]
   | tmul z b => rw [complexRepJetGaugeGroupI_tmul, repJetGaugeGroupI_ofConstant]
+
+noncomputable def complexRepJetGaugeGroupIAlgHom (U : JetGaugeGroupI) :
+    AlgHom ℂ (ℂ ⊗[ℝ] JetAlgebra) (ℂ ⊗[ℝ] JetAlgebra) where
+  toFun := complexRepJetGaugeGroupI U
+  map_add' := LinearMap.map_add _
+  map_zero' := LinearMap.map_zero _
+  map_one' := complexRepJetGaugeGroupI_one U
+  map_mul' := complexRepJetGaugeGroupI_mul U
+  commutes' r := by simp [complexRepJetGaugeGroupI_eq_algHom]
 
 /-!
 
@@ -1099,6 +1135,27 @@ lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
     smul_eq_mul, map_add, AlgEquiv.symm_apply_apply]
   ring
 
+lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    jetDeriv μ (jetDeriv ν x) = jetDeriv ν (jetDeriv μ x) := by
+  induction x using SymmetricAlgebra.induction with
+  | algebraMap r => simp [Algebra.algebraMap_eq_smul_one]
+  | ι v =>
+    have key : (jetDeriv μ) ∘ₗ (jetDeriv ν) ∘ₗ
+          (SymmetricAlgebra.ι ℝ JetComponentSpace) =
+        (jetDeriv ν) ∘ₗ (jetDeriv μ) ∘ₗ
+          (SymmetricAlgebra.ι ℝ JetComponentSpace) := by
+      refine JetComponentSpace.basis.ext fun g => ?_
+      simp only [LinearMap.coe_comp, Function.comp_apply,
+        show ∀ h : JetGenerators,
+          SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis h) =
+            ofGenerator h from fun _ => rfl,
+        jetDeriv_ofGenerator, JetGenerators.shift_comm]
+    exact DFunLike.congr_fun key v
+  | mul a b ha hb =>
+    simp only [jetDeriv_mul, map_add, ha, hb]
+    abel
+  | add a b ha hb => simp only [map_add, ha, hb]
+
 /-- The Leibniz rule for the complexified total derivative on the complexified
   jet algebra. -/
 lemma jetDeriv_baseChange_mul (μ : Fin 1 ⊕ Fin 3) (x y : ℂ ⊗[ℝ] JetAlgebra) :
@@ -1119,6 +1176,16 @@ lemma jetDeriv_baseChange_mul (μ : Fin 1 ⊕ Fin 3) (x y : ℂ ⊗[ℝ] JetAlge
     | tmul c' b' =>
       simp only [Algebra.TensorProduct.tmul_mul_tmul, LinearMap.baseChange_tmul,
         jetDeriv_mul, TensorProduct.tmul_add]
+
+lemma jetDeriv_baseChange_comm (μ ν : Fin 1 ⊕ Fin 3) (x : ℂ ⊗[ℝ] JetAlgebra) :
+    LinearMap.baseChange ℂ (jetDeriv μ) (LinearMap.baseChange ℂ (jetDeriv ν) x) =
+      LinearMap.baseChange ℂ (jetDeriv ν) (LinearMap.baseChange ℂ (jetDeriv μ) x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb =>
+    simp only [map_add, ha, hb]
+  | tmul c b =>
+    simp only [LinearMap.baseChange_tmul, jetDeriv_comm]
 
 /-- The complexified total derivative on a jet-algebra generator. -/
 lemma jetDeriv_baseChange_ofGenerator (ν : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
