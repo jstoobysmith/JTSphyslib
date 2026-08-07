@@ -313,6 +313,69 @@ lemma jetDerivM_apply_mul_eq_powerset_sum (t : Multiset (Fin 1 ⊕ Fin 3)) (x y 
       funext s
       simp [jetDeriv_jetDerivM]
 
+lemma jetDerivM_apply_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (x y : JetAlgebra) :
+    jetDerivM s (x * y) = ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+        ((∏ ν, (Multiset.toFinsupp s ν).choose (p.1 ν) : ℕ) : ℂ) •
+          (jetDerivM (Finsupp.toMultiset p.1) x * jetDerivM (Finsupp.toMultiset p.2) y) := by
+  have hcount : ∀ u t : Multiset (Fin 1 ⊕ Fin 3), Multiset.count t u.powerset =
+      ∏ ν, (Multiset.count ν u).choose (Multiset.count ν t) := by
+    intro u
+    induction u using Multiset.induction_on with
+    | empty =>
+      intro t
+      rcases eq_or_ne t 0 with rfl | h
+      · simp
+      · obtain ⟨a, ha⟩ := Multiset.exists_mem_of_ne_zero h
+        rw [Finset.prod_eq_zero (Finset.mem_univ a)]
+        · simp [h]
+        · simp [Nat.choose_eq_zero_of_lt, Multiset.count_pos.mpr ha]
+    | cons a u ih =>
+      intro t
+      rw [Multiset.powerset_cons, Multiset.count_add]
+      by_cases ha : a ∈ t
+      · obtain ⟨m, hm⟩ : ∃ m, Multiset.count a t = m + 1 :=
+          ⟨Multiset.count a t - 1, by have := Multiset.count_pos.mpr ha; omega⟩
+        have h2 : Multiset.count t (u.powerset.map (Multiset.cons a)) =
+            Multiset.count (t.erase a) u.powerset := by
+          conv_lhs => rw [← Multiset.cons_erase ha]
+          exact Multiset.count_map_eq_count' _ _ (fun v w h => by simpa using h) _
+        have hQ : ∀ ν ∈ Finset.univ.erase a,
+            (Multiset.count ν u).choose (Multiset.count ν (t.erase a)) =
+            (Multiset.count ν u).choose (Multiset.count ν t) := fun ν hν => by
+          rw [Multiset.count_erase_of_ne (Finset.mem_erase.mp hν).1]
+        have hR : ∀ ν ∈ Finset.univ.erase a,
+            (Multiset.count ν (a ::ₘ u)).choose (Multiset.count ν t) =
+            (Multiset.count ν u).choose (Multiset.count ν t) := fun ν hν => by
+          rw [Multiset.count_cons_of_ne (Finset.mem_erase.mp hν).1]
+        rw [h2, ih t, ih (t.erase a)]
+        simp only [← Finset.mul_prod_erase Finset.univ _ (Finset.mem_univ a)]
+        rw [Finset.prod_congr rfl hQ, Finset.prod_congr rfl hR, ← add_mul,
+          Multiset.count_erase_self, Multiset.count_cons_self, hm, Nat.add_sub_cancel,
+          Nat.choose_succ_succ']
+        ring
+      · have h2 : Multiset.count t (u.powerset.map (Multiset.cons a)) = 0 :=
+          Multiset.count_eq_zero.mpr fun h => by
+            obtain ⟨v, _, rfl⟩ := Multiset.mem_map.mp h
+            exact ha (Multiset.mem_cons_self a v)
+        rw [h2, ih t, add_zero]
+        refine Finset.prod_congr rfl fun ν _ => ?_
+        rcases eq_or_ne ν a with rfl | hν
+        · simp [Multiset.count_eq_zero.mpr ha]
+        · rw [Multiset.count_cons_of_ne hν]
+  have hsum : ∀ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+      Finsupp.toMultiset p.1 + Finsupp.toMultiset p.2 = s := fun p hp => by
+    rw [← map_add, Finset.mem_antidiagonal.mp hp, Multiset.toFinsupp_toMultiset]
+  rw [jetDerivM_apply_mul_eq_powerset_sum, Finset.sum_multiset_map_count]
+  refine Finset.sum_nbij' (fun t => (Multiset.toFinsupp t, Multiset.toFinsupp (s - t)))
+    (fun p => Finsupp.toMultiset p.1) (fun t ht => ?_) (fun p hp => ?_)
+    (fun t _ => Multiset.toFinsupp_toMultiset t) (fun p hp => ?_) (fun t _ => ?_)
+  · rw [Finset.mem_antidiagonal, ← map_add, add_tsub_cancel_of_le (by simpa using ht)]
+  · simpa using Multiset.le_iff_exists_add.mpr ⟨Finsupp.toMultiset p.2, (hsum p hp).symm⟩
+  · refine Prod.ext (Finsupp.toMultiset_toFinsupp p.1) ?_
+    rw [← hsum p hp, add_tsub_cancel_left]
+    exact Finsupp.toMultiset_toFinsupp p.2
+  · simp only [Multiset.toFinsupp_apply, Multiset.toFinsupp_toMultiset, hcount]
+    exact (Nat.cast_smul_eq_nsmul ℂ _ _).symm
 
 
 /-!
@@ -817,7 +880,7 @@ lemma repJetGaugeGroupI_apply_dB (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ F
 /-- The statement that if `x` and all its derivatives transform in the
   same way that `ψ` transforms under the full
   gauge group, then `covariantStep μ x` transforms this.-/
-lemma repJetGaugeGroupI_jetDerivM_covariantStep
+lemma repJetGaugeGroupI_jetDerivM_covariantSteplemma
    (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra)
     (hx : ∀ s, (repJetGaugeGroupI U) (jetDerivM s x)
       = ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
