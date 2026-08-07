@@ -52,7 +52,6 @@ lemma massWeightScale_tmul (c : ℂ) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
   Algebra.TensorProduct.map_tmul _ _ _ _
 
 /-- Each generator scales by `c` to the power of its mass weight. -/
-@[simp]
 lemma massWeightScale_ofGenerator (c : ℂ) (j : JetGenerators) :
     massWeightScale c [j]ₐ = c ^ MassWeight j • [j]ₐ := by
   cases j with
@@ -71,6 +70,11 @@ lemma massWeightScale_ofGenerator (c : ℂ) (j : JetGenerators) :
       LeptonSinglet.JetAlgebra.massWeightScale_ofGenerator, TensorProduct.tmul_smul]
     rfl
 
+lemma massWeightScale_dB_nil (c : ℂ) (μ : Fin 1 ⊕ Fin 3) :
+    massWeightScale c [JetGenerators.dB 0 μ]ₐ = c ^ 2 • [JetGenerators.dB 0 μ]ₐ := by
+  rw [massWeightScale_ofGenerator, MassWeight]
+  norm_num
+
 /-- The total derivative raises the mass weight by two. -/
 lemma massWeightScale_jetDeriv (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     massWeightScale c (jetDeriv μ x) = c ^ 2 • jetDeriv μ (massWeightScale c x) := by
@@ -88,28 +92,16 @@ lemma massWeightScale_jetDeriv (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra)
 lemma massWeightScale_covariantStep (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     massWeightScale c (covariantStep μ x) =
       c ^ 2 • covariantStep μ (massWeightScale c x) := by
-  have hm : ∀ a b : JetAlgebra, massWeightScale c (a * b) =
-      massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
-  have hgen : massWeightScale c [JetGenerators.dB {} μ]ₐ =
-      c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
-    rw [massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStep_apply, map_add, map_smul, massWeightScale_jetDeriv,
-    hm, hgen, smul_mul_assoc]
+  simp only [covariantStep_apply, Multiset.empty_eq_zero, map_sub, massWeightScale_jetDeriv,
+    map_smul, map_mul, massWeightScale_dB_nil, smul_mul_assoc]
   module
 
 /-- The conjugate covariant step raises the mass weight by two. -/
 lemma massWeightScale_covariantStepBar (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     massWeightScale c (covariantStepBar μ x) =
       c ^ 2 • covariantStepBar μ (massWeightScale c x) := by
-  have hm : ∀ a b : JetAlgebra, massWeightScale c (a * b) =
-      massWeightScale c a * massWeightScale c b := fun a b => map_mul _ a b
-  have hgen : massWeightScale c [JetGenerators.dB {} μ]ₐ =
-      c ^ 2 • [JetGenerators.dB {} μ]ₐ := by
-    rw [massWeightScale_ofGenerator,
-      show MassWeight (JetGenerators.dB {} μ) = 2 from rfl]
-  simp only [covariantStepBar_apply, map_sub, map_smul, massWeightScale_jetDeriv,
-    hm, hgen, smul_mul_assoc]
+  simp only [covariantStepBar_apply, Multiset.empty_eq_zero, map_add, massWeightScale_jetDeriv,
+    map_smul, map_mul, massWeightScale_dB_nil, smul_mul_assoc, smul_add, add_right_inj]
   module
 
 /-- Homogeneity of the covariant derivative: `D_l ψ_α` has mass weight
@@ -125,7 +117,6 @@ lemma massWeightScale_Dψ (c : ℂ) (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     rw [Dψ_cons, massWeightScale_covariantStep c μ (Dψ l α), ih]
     simp only [map_smul, smul_smul, List.length_cons]
     ring_nf
-
 
 /-- Homogeneity of the conjugate covariant derivative: `D̄_l ψ̄_α` has mass
   weight `3 + 2 |l|`. -/
@@ -198,6 +189,7 @@ lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI)
       BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant,
       LeptonSinglet.JetAlgebra.massWeightScale_repJetGaugeGroupI_ofConstant_apply]
 
+
 /-!
 
 ## A. The mass-weight submodules
@@ -206,7 +198,6 @@ lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI)
 noncomputable def MassDimSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
     Submodule.span ℂ { x | ∀ c : ℂ, massWeightScale c x = c ^ n • x }
 
-instance : GradedAlgebra (R := ℂ) (A := JetAlgebra) MassDimSubmodule := sorry
 
 noncomputable def MassWeightLESubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ {x | ∃ m ≤ n, ∀ c : ℂ, massWeightScale c x = c ^ m • x}

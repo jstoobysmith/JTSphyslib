@@ -186,7 +186,33 @@ lemma repLorentzGroup_Dbarψ_nil (Λ : SL(2,ℂ)) (α : Fin 2) :
   rw [Dbarψ_nil, repLorentzGroup_barψ]
   simp only [Dbarψ_nil]
 
-set_option maxHeartbeats 2000000 in
+/-- Multiplication distributes over a finite sum on the left. Stated through
+  `LinearMap.mulRight` because the generic `Finset.sum_mul` does not match the
+  multiplication instance of the tensor-product algebra. -/
+lemma sum_mul' {ι : Type*} [Fintype ι] (f : ι → JetAlgebra) (y : JetAlgebra) :
+    (∑ i, f i) * y = ∑ i, f i * y := by
+  rw [show (∑ i, f i) * y = LinearMap.mulRight ℂ y (∑ i, f i) from rfl, map_sum]
+  rfl
+
+/-- Multiplication distributes over a finite sum on the right; see `sum_mul'`. -/
+lemma mul_sum' {ι : Type*} [Fintype ι] (y : JetAlgebra) (f : ι → JetAlgebra) :
+    y * (∑ i, f i) = ∑ i, y * f i := by
+  rw [show y * (∑ i, f i) = LinearMap.mulLeft ℂ y (∑ i, f i) from rfl, map_sum]
+  rfl
+
+/-- Bilinearity of the product against two scaled finite sums: the form in which
+  the gauge-field term of a covariant derivative is expanded after the Lorentz
+  action has been distributed over each factor. -/
+lemma smul_sum_mul_sum {ι κ : Type*} [Fintype ι] [Fintype κ] (c : ℂ)
+    (f : ι → ℂ) (g : κ → ℂ) (x : ι → JetAlgebra) (y : κ → JetAlgebra) :
+    c • ((∑ i, f i • x i) * (∑ j, g j • y j)) =
+      ∑ i, ∑ j, (f i * g j * c) • (x i * y j) := by
+  rw [sum_mul']
+  simp only [mul_sum', smul_mul_smul_comm, Finset.smul_sum, smul_smul]
+  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+  congr 1
+  ring
+
 /-- Covariance of the first covariant derivative under the Lorentz group: the
   gauge-field term transforms exactly as the derivative term. -/
 lemma repLorentzGroup_Dψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
@@ -194,30 +220,10 @@ lemma repLorentzGroup_Dψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
     repLorentzGroup Λ (Dψ [μ] α) =
       ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
         star ((Λ⁻¹).1 α β)) • Dψ [ν] β := by
-  have hsm : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
-      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
-    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
-    rfl
-  have hms : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
-      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
-    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
-    rfl
-  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
-      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
-    rw [smul_mul_smul_comm]
-  rw [Dψ_singleton, map_add, map_smul, repLorentzGroup_apply_mul, repLorentzGroup_B,
-    repLorentzGroup_ψ, repLorentzGroup_dψ_singleton]
-  conv_rhs => enter [2, ν, 2, β]; rw [Dψ_singleton, smul_add]
-  conv_rhs => enter [2, ν]; rw [Finset.sum_add_distrib]
-  rw [Finset.sum_add_distrib]
-  congr 1
-  simp only [hsm, hms, hsmul, Finset.smul_sum]
-  refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun β _ => ?_
-  rw [smul_smul, smul_smul]
-  congr 1
-  ring
+  simp only [Dψ_singleton, map_sub, map_smul, repLorentzGroup_apply_mul,
+    repLorentzGroup_B, repLorentzGroup_ψ, repLorentzGroup_dψ_singleton,
+    smul_sub, Finset.sum_sub_distrib, smul_smul, smul_sum_mul_sum]
 
-set_option maxHeartbeats 2000000 in
 /-- Covariance of the first conjugate covariant derivative under the Lorentz
   group. -/
 lemma repLorentzGroup_Dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
@@ -225,28 +231,9 @@ lemma repLorentzGroup_Dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
     repLorentzGroup Λ (Dbarψ [μ] α) =
       ∑ ν, ∑ β, ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
         (Λ⁻¹).1 α β) • Dbarψ [ν] β := by
-  have hsm : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
-      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
-    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
-    rfl
-  have hms : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
-      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
-    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
-    rfl
-  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
-      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
-    rw [smul_mul_smul_comm]
-  rw [Dbarψ_singleton, map_sub, map_smul, repLorentzGroup_apply_mul, repLorentzGroup_B,
-    repLorentzGroup_barψ, repLorentzGroup_dbarψ_singleton]
-  conv_rhs => enter [2, ν, 2, β]; rw [Dbarψ_singleton, smul_sub]
-  conv_rhs => enter [2, ν]; rw [Finset.sum_sub_distrib]
-  rw [Finset.sum_sub_distrib]
-  congr 1
-  simp only [hsm, hms, hsmul, Finset.smul_sum]
-  refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun β _ => ?_
-  rw [smul_smul, smul_smul]
-  congr 1
-  ring
+  simp only [Dbarψ_singleton, map_add, map_smul, repLorentzGroup_apply_mul,
+    repLorentzGroup_B, repLorentzGroup_barψ, repLorentzGroup_dbarψ_singleton,
+    smul_add, Finset.sum_add_distrib, smul_smul, smul_sum_mul_sum]
 /-!
 
 ### B.2. The invarance condition
