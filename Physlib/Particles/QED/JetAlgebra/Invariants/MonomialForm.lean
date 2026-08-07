@@ -104,12 +104,6 @@ lemma leptonLinearIncl_mul_leptonLinearIncl_anticomm (x y : LeptonLinear) :
         Algebra.TensorProduct.tmul_mul_tmul, Algebra.TensorProduct.tmul_mul_tmul,
         hι a b, mul_comm q p, TensorProduct.tmul_neg]
 
-/-- Two covariant lepton derivatives anticommute. -/
-lemma Dψ_mul_Dψ_anticomm (l l' : List (Fin 1 ⊕ Fin 3)) (α β : Fin 2) :
-    Dψ l α * Dψ l' β = -(Dψ l' β * Dψ l α) := by
-  rw [Dψ_eq_leptonLinearIncl, Dψ_eq_leptonLinearIncl,
-    leptonLinearIncl_mul_leptonLinearIncl_anticomm]
-
 /-!
 
 ### Parametric boosts along the three axes

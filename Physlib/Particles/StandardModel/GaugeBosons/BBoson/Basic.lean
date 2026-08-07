@@ -799,6 +799,17 @@ lemma constantCoeff_mcShiftSeries (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
   rw [Complex.coe_selfAdjointEquiv]
   rfl
 
+lemma mcShift_dB_of_list_eq (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3) :
+    (mcShift U (.basis (.dB ↑l ν)) : ℂ) =
+      MvPowerSeries.constantCoeff (mcShiftSeries U ν l) := by
+  have h := factorial_coeff_mcShiftSeries U ν l 0
+  simp only [Finsupp.coe_zero, Pi.zero_apply, Nat.factorial_zero, Finset.prod_const_one,
+    Nat.cast_one, one_mul, zero_add] at h
+  rw [← coeff_zero_eq_constantCoeff_apply, h, mcShift_basis_dB', nsmul_eq_mul]
+  push_cast
+  rw [Complex.coe_selfAdjointEquiv]
+  rfl
+
 /-!
 
 ## C.2. The Maurer–Cartan jet series and the exponential family

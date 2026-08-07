@@ -212,6 +212,7 @@ noncomputable def jetDerivM (t : Multiset (Fin 1 ⊕ Fin 3)) :
     JetAlgebra →ₗ[ℂ] JetAlgebra :=
   Multiset.foldr (fun ν A => jetDeriv ν ∘ₗ A) LinearMap.id t
 
+@[simp]
 lemma jetDerivM_zero : jetDerivM 0 = LinearMap.id := by
   simp [jetDerivM]
 
@@ -222,6 +223,96 @@ lemma jetDerivM_cons (ν : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)) :
 lemma jetDerivM_singleton (μ : Fin 1 ⊕ Fin 3) : jetDerivM {μ} = jetDeriv μ := by
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, jetDerivM_cons,
     jetDerivM_zero, LinearMap.comp_id]
+
+lemma jetDerivM_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    jetDerivM (s + t) = jetDerivM s ∘ₗ jetDerivM t := by
+  induction s using Multiset.induction_on with
+  | empty => simp [jetDerivM_zero]
+  | cons μ s ih =>
+    trans jetDerivM (μ ::ₘ (s + t))
+    · simp
+    simp only [jetDerivM_cons, ih]
+    exact Eq.symm (LinearMap.comp_assoc (jetDerivM t) (jetDerivM s) (jetDeriv μ))
+
+lemma jetDerivM_cons' (ν : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    jetDerivM (ν ::ₘ t) = jetDerivM t ∘ₗ jetDeriv ν := by
+  trans jetDerivM (t + {ν})
+  · congr
+    rw [add_comm]
+    simp
+  · rw [jetDerivM_add, jetDerivM_singleton]
+
+lemma jetDerivM_jetDerivM (s t : Multiset (Fin 1 ⊕ Fin 3)) (x : JetAlgebra) :
+    jetDerivM t (jetDerivM s x) = jetDerivM (t + s) x := by
+  rw [jetDerivM_add]
+  simp
+
+lemma jetDerivM_jetDeriv (μ : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (a : JetAlgebra) :
+    jetDerivM t (jetDeriv μ a) = jetDerivM (μ ::ₘ t) a := by
+  trans (jetDerivM t ∘ₗ jetDeriv μ) a
+  · rfl
+  rw [← jetDerivM_cons']
+
+lemma jetDeriv_jetDerivM (μ : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3))
+    (a : JetAlgebra) :
+    jetDeriv μ (jetDerivM t a) = jetDerivM (μ ::ₘ t) a := by
+  trans (jetDeriv μ ∘ₗ jetDerivM t) a
+  · rfl
+  rw [← jetDerivM_cons]
+
+lemma ofGenerator_dB_eq_jetDerivM (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    [JetGenerators.dB s μ]ₐ = jetDerivM s [.dB 0 μ]ₐ := by
+  induction s using Multiset.induction_on with
+  | empty => rw [jetDerivM_zero, LinearMap.id_coe, id_eq]
+  | cons ν t ih =>
+    rw [jetDerivM_cons, LinearMap.comp_apply, ← ih]
+    simp only [ofGenerator]
+    rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
+    simp only [LeptonSinglet.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
+      add_zero, BBoson.JetAlgebra.jetDeriv_ofGenerator, BBoson.JetGenerators.shift_dB]
+    congr 2
+    rw [add_comm, Multiset.singleton_add]
+
+lemma jetDerivM_apply_mul_eq_powerset_sum (t : Multiset (Fin 1 ⊕ Fin 3)) (x y : JetAlgebra) :
+    jetDerivM t (x * y) = (t.powerset.map fun s => jetDerivM s x * jetDerivM (t - s) y).sum := by
+  induction t using Multiset.induction_on with
+  | empty =>
+    simp only [jetDerivM_zero, LinearMap.id_coe, id_eq, Multiset.powerset_zero, zero_tsub,
+      Multiset.map_singleton, Multiset.sum_singleton]
+  | cons ν t ih =>
+    calc _
+      _ = jetDeriv ν (jetDerivM t (x * y)) := by simp [jetDerivM_cons]
+      _ = jetDeriv ν ((t.powerset.map fun s => jetDerivM s x * jetDerivM (t - s) y).sum) := by
+        congr
+      _ = (t.powerset.map (jetDeriv ν  ∘ fun s => (jetDerivM s x * jetDerivM (t - s) y))).sum := by
+       rw [← Multiset.map_map]
+       exact map_multiset_sum (jetDeriv ν) _
+      _ = (t.powerset.map (fun s => jetDeriv ν (jetDerivM s x * jetDerivM (t - s) y))).sum := by
+        rfl
+      _ =  (t.powerset.map (fun s => jetDeriv ν (jetDerivM s x) * jetDerivM (t - s) y
+          + jetDerivM s x * jetDeriv ν (jetDerivM (t - s) y))).sum := by
+        simp [jetDeriv_mul]
+      _ = (t.powerset.map (fun s => jetDeriv ν (jetDerivM s x) * jetDerivM (t - s) y)).sum +
+          (t.powerset.map (fun s => jetDerivM s x * jetDeriv ν (jetDerivM (t - s) y))).sum := by
+        exact Multiset.sum_map_add
+      _ =  (t.powerset.map (fun s => jetDerivM s x * jetDeriv ν (jetDerivM (t - s) y))).sum
+        + (t.powerset.map (fun s => jetDeriv ν (jetDerivM s x) * jetDerivM (t - s) y)).sum
+         := by abel
+    conv_rhs => rw [Multiset.powerset_cons]
+    simp only [Multiset.map_add, Multiset.map_map, Function.comp_apply, Multiset.sub_cons,
+      Multiset.erase_cons_head, Multiset.sum_add]
+    congr 1
+    · congr 1
+      apply Multiset.map_congr (by rfl)
+      intro s hs
+      rw [jetDeriv_jetDerivM]
+      congr
+      exact (Multiset.cons_sub_of_le ν (Multiset.mem_powerset.mp hs)).symm
+    · congr
+      funext s
+      simp [jetDeriv_jetDerivM]
+
 
 
 /-!
@@ -288,6 +379,12 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
   simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
     TensorProduct.zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
+
+/-- Two covariant lepton derivatives anticommute. -/
+lemma Dψ_mul_Dψ_anticomm (l l' : List (Fin 1 ⊕ Fin 3)) (α β : Fin 2) :
+    Dψ l α * Dψ l' β = - (Dψ l' β * Dψ l α) := by
+  sorry
+
 
 
 /-- One covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` for the conjugate
@@ -685,6 +782,99 @@ lemma repJetGaugeGroupI_tmul_ι (U : JetGaugeGroupI) (p : ℂ ⊗[ℝ] BBoson.Je
   rw [repJetGaugeGroupI_tmul', LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply,
     ExteriorAlgebra.map_apply_ι]
 
+/-- The zeroth-order lepton coordinate carries hypercharge `6`: a jet of gauge
+  transformations acts on it through the character of its value at the base
+  point alone, with no derivative contributions. This is the base case of
+  `repJetGaugeGroupI_Dψ`. -/
+lemma repJetGaugeGroupI_dψ_nil (U : JetGaugeGroupI) (α : Fin 2) :
+    repJetGaugeGroupI U [JetGenerators.dψ {} α]ₐ = U.eval.2.2 ^ 6 • [JetGenerators.dψ {} α]ₐ := by
+  rw [ofGenerator_dψ_eq, repJetGaugeGroupI_tmul',
+    BBoson.JetAlgebra.complexRepJetGaugeGroupI_one_tmul_one,
+    LeptonSinglet.JetAlgebra.repJetGaugeGroupI_ofGenerator_ψ_nil,
+    Submonoid.smul_def, Submonoid.smul_def, TensorProduct.tmul_smul]
+
+lemma repJetGaugeGroupI_dψ (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    repJetGaugeGroupI U [.dψ s α]ₐ =
+     ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+        ((∏ μ, (Multiset.toFinsupp s μ).descFactorial (p.1 μ) : ℕ) : ℂ) •
+          MvPowerSeries.coeff p.1 (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+            [.dψ (Finsupp.toMultiset p.2) α]ₐ := by
+  rw [ofGenerator_dψ_eq, repJetGaugeGroupI_tmul', BBoson.JetAlgebra.complexRepJetGaugeGroupI_one_tmul_one,
+    StandardModel.LeptonSinglet.JetAlgebra.repJetGaugeGroupI_ofGenerator_ψ]
+  simp [tmul_sum, ← ofGenerator_dψ_eq]
+
+lemma repJetGaugeGroupI_apply_dB (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    repJetGaugeGroupI U [JetGenerators.dB s μ]ₐ =
+    [JetGenerators.dB s μ]ₐ + (BBoson.mcShift U (.basis (.dB s μ))) • 1 := by
+  rw [ofGenerator_B_eq, repJetGaugeGroupI_tmul',
+    BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofGenerator,
+    LeptonSinglet.JetAlgebra.repJetGaugeGroupI_apply_one, TensorProduct.add_tmul,
+    TensorProduct.smul_tmul']
+  rfl
+
+
+
+/-- The statement that if `x` and all its derivatives transform in the
+  same way that `ψ` transforms under the full
+  gauge group, then `covariantStep μ x` transforms this.-/
+lemma repJetGaugeGroupI_jetDerivM_covariantStep
+   (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra)
+    (hx : ∀ s, (repJetGaugeGroupI U) (jetDerivM s x)
+      = ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+        ((∏ μ, (Multiset.toFinsupp s μ).descFactorial (p.1 μ) : ℕ) : ℂ) •
+          MvPowerSeries.coeff p.1 (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+          jetDerivM (Finsupp.toMultiset p.2) x)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    repJetGaugeGroupI U (jetDerivM s (covariantStep μ x)) =
+    ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+        ((∏ μ, (Multiset.toFinsupp s μ).descFactorial (p.1 μ) : ℕ) : ℂ) •
+          MvPowerSeries.coeff p.1 (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+          jetDerivM (Finsupp.toMultiset p.2) (covariantStep μ x) := by
+  calc _
+    _ = repJetGaugeGroupI U (jetDerivM s (jetDeriv μ x -
+        (6 * Complex.I) • ([JetGenerators.dB {} μ]ₐ * x))) := by
+      rfl
+    -- 1. Split the covariant step: `jetDerivM s` and `repJetGaugeGroupI U` are
+    --    linear, and `jetDerivM s (jetDeriv μ x) = jetDerivM (μ ::ₘ s) x` by
+    --    `jetDerivM_cons` together with `jetDerivM_add` / `jetDeriv_comm`.
+    _ = repJetGaugeGroupI U (jetDerivM (μ ::ₘ s) x) -
+        (6 * Complex.I) • repJetGaugeGroupI U (jetDerivM s ([JetGenerators.dB {} μ]ₐ * x)) := by
+      sorry
+    -- 2. `rw [hx (μ ::ₘ s)]` turns the first term into the expected sum at the
+    --    enlarged index `μ ::ₘ s`.
+    --
+    -- 3. Leibniz on the gauge-field term via `jetDerivM_apply_mul`, then
+    --    `repJetGaugeGroupI_apply_mul` to split the action across each product:
+    --      ρ (∂_s (B_μ * x)) = ∑_q w_q • (ρ (∂_{q.1} B_μ) * ρ (∂_{q.2} x))
+    --    NOTE: `jetDerivM_apply_mul` needs weight `Nat.choose`, not
+    --    `Nat.descFactorial`.  At `s = {μ, μ}` the splitting `a = s` wants
+    --    `C(2,2) = 1`, but `Nat.descFactorial 2 2 = 2`.  (`descFactorial` is
+    --    correct in `hx`: that comes from `jetRingAction` on a
+    --    factorial-weighted basis, a different normalisation.)
+    --
+    -- 4. The gauge field is a coordinate, so it only shifts by a constant:
+    --      ρ_U (∂_a B_μ) = ∂_a B_μ + mcShift U [∂_{a+μ} B] • 1
+    --    the QED-level counterpart of `BBoson.repJetGaugeGroupI_apply_dB`
+    --    transported through `repJetGaugeGroupI_tmul'`, together with
+    --    `jetDerivM a [dB {} μ]ₐ = [dB a μ]ₐ`.  Neither exists yet.
+    --
+    -- 5. The `x`-factor of each term is the hypothesis again, at index `q.2`.
+    --
+    -- 6. Match against the target, expanded the same way:
+    --      ∂_p (D_μ x) = ∂_{μ ::ₘ p} x - 6i • ∂_p (B_μ * x)
+    --    Needs a Vandermonde/Pascal identity relating the weights at `μ ::ₘ s`
+    --    to those at `s` (reconciling `descFactorial` with `choose`), and
+    --    `coeff_p (u ^ 6)` at a shifted index expressed through the
+    --    Maurer–Cartan coefficients — the all-orders form of
+    --    `pderiv_pow_unitary`, currently only an inline `have` in
+    --    `LeptonSinglet`.  That identity is what makes the shift from step 4
+    --    cancel the derivative of the hypercharge character.
+    _ = ∑ p ∈ Finset.antidiagonal (Multiset.toFinsupp s),
+        ((∏ ν, (Multiset.toFinsupp s ν).descFactorial (p.1 ν) : ℕ) : ℂ) •
+          MvPowerSeries.coeff p.1 (((U.2.2 : unitary JetRing) : JetRing) ^ 6) •
+          jetDerivM (Finsupp.toMultiset p.2) (covariantStep μ x) := by
+      sorry
+
 /-- The linear-matter submodule is closed under the gauge group: the gauge action
   preserves the matter degree, because it acts on the matter factor functorially
   in the component space and so intertwines with the canonical inclusion. -/
@@ -714,17 +904,6 @@ lemma map_repJetGaugeGroupI_LinearMatterSubmodule (U : JetGaugeGroupI) :
   exact ⟨repJetGaugeGroupI U⁻¹ x,
     repJetGaugeGroupI_mem_LinearMatterSubmodule U⁻¹ hx,
     repJetGaugeGroupI.self_inv_apply U x⟩
-
-/-- The zeroth-order lepton coordinate carries hypercharge `6`: a jet of gauge
-  transformations acts on it through the character of its value at the base
-  point alone, with no derivative contributions. This is the base case of
-  `repJetGaugeGroupI_Dψ`. -/
-lemma repJetGaugeGroupI_dψ_nil (U : JetGaugeGroupI) (α : Fin 2) :
-    repJetGaugeGroupI U [JetGenerators.dψ {} α]ₐ = U.eval.2.2 ^ 6 • [JetGenerators.dψ {} α]ₐ := by
-  rw [ofGenerator_dψ_eq, repJetGaugeGroupI_tmul',
-    BBoson.JetAlgebra.complexRepJetGaugeGroupI_one_tmul_one,
-    LeptonSinglet.JetAlgebra.repJetGaugeGroupI_ofGenerator_ψ_nil,
-    Submonoid.smul_def, Submonoid.smul_def, TensorProduct.tmul_smul]
 
 /-- The embedded field-strength derivatives are gauge invariant. -/
 lemma repJetGaugeGroupI_fieldStrengthDeriv (U : JetGaugeGroupI)
