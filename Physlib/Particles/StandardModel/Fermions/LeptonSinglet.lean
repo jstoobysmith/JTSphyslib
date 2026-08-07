@@ -1661,12 +1661,61 @@ lemma coeff_massWeightPoly_mem_massWeightSubmodule (n : ℕ) (x : JetAlgebra) :
     (massWeightPoly x).coeff n ∈ massWeightSubmodule n :=
   massWeightPoly_coeff_massWeightPoly n x
 
-lemma massWeightSubmodule_isInternal : DirectSum.IsInternal massWeightSubmodule := by
-  constructor
-  · intro x y h
+/-- On an element of mass weight `n`, the `n`-th coefficient of the mass-weight
+  polynomial is the element itself. -/
+lemma coeff_massWeightPoly_of_mem {n : ℕ} {x : JetAlgebra}
+    (hx : x ∈ massWeightSubmodule n) : (massWeightPoly x).coeff n = x := by
+  rw [mem_massWeightSubmodule.mp hx, Polynomial.coeff_monomial, if_pos rfl]
 
-    sorry
-  · sorry
+/-- On an element of mass weight `m`, every other coefficient of the mass-weight
+  polynomial vanishes. -/
+lemma coeff_massWeightPoly_of_mem_ne {m n : ℕ} {x : JetAlgebra} (hmn : m ≠ n)
+    (hx : x ∈ massWeightSubmodule m) : (massWeightPoly x).coeff n = 0 := by
+  rw [mem_massWeightSubmodule.mp hx, Polynomial.coeff_monomial, if_neg hmn]
+
+/-- The `i`-th coefficient of the mass-weight polynomial vanishes on the span of
+  all the *other* weight submodules. This is the separation property that makes
+  the weight decomposition direct. -/
+lemma coeff_massWeightPoly_eq_zero_of_mem_iSup_ne (i : ℕ) {x : JetAlgebra}
+    (hx : x ∈ ⨆ (j : ℕ) (_ : j ≠ i), massWeightSubmodule j) :
+    (massWeightPoly x).coeff i = 0 := by
+  induction hx using Submodule.iSup_induction' with
+  | mem j x hj =>
+    by_cases hne : j ≠ i
+    · rw [iSup_pos hne] at hj
+      exact coeff_massWeightPoly_of_mem_ne hne hj
+    · rw [iSup_neg hne, Submodule.mem_bot] at hj
+      rw [hj, map_zero, Polynomial.coeff_zero]
+  | zero => simp
+  | add a b _ _ ha hb => rw [map_add, Polynomial.coeff_add, ha, hb, add_zero]
+
+/-- The weight submodules span the whole jet algebra. -/
+lemma iSup_massWeightSubmodule_eq_top :
+    ⨆ n : ℕ, massWeightSubmodule n = ⊤ := by
+  rw [eq_top_iff]
+  intro x _
+  rw [eq_sum_massWeightPoly_coeff x]
+  exact Submodule.sum_mem _ fun n _ => Submodule.mem_iSup_of_mem n
+    (coeff_massWeightPoly_mem_massWeightSubmodule n x)
+
+/-- The weight submodules are independent: an element of weight `i` lying in the
+  span of the other weights is zero, since taking the `i`-th coefficient of the
+  mass-weight polynomial returns it on the one and kills it on the other. -/
+lemma iSupIndep_massWeightSubmodule : iSupIndep massWeightSubmodule := by
+  intro i
+  rw [Submodule.disjoint_def]
+  intro x hx hx'
+  rw [← coeff_massWeightPoly_of_mem hx]
+  exact coeff_massWeightPoly_eq_zero_of_mem_iSup_ne i hx'
+
+/-- The jet algebra is the internal direct sum of its mass-weight submodules. -/
+lemma massWeightSubmodule_isInternal : DirectSum.IsInternal massWeightSubmodule :=
+  (DirectSum.isInternal_submodule_iff_iSupIndep_and_iSup_eq_top _).mpr
+    ⟨iSupIndep_massWeightSubmodule, iSup_massWeightSubmodule_eq_top⟩
+
+noncomputable instance : GradedAlgebra massWeightSubmodule :=
+  DirectSum.IsInternal.gradedAlgebra massWeightSubmodule_isInternal
+
 
 /-- The mass-dimension scaling on the jet algebra of the charged-lepton singlet:
   the (linear map underlying the) algebra map multiplying each generator by
