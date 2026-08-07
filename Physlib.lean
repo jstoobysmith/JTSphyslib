@@ -196,6 +196,7 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet
+public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
