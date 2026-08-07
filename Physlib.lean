@@ -193,7 +193,13 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.GaugeAction
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.JetDeriv
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.LorentzAction
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.MassDim
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetComponentSpace
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet
 public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness

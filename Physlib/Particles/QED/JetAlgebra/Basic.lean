@@ -14,7 +14,7 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.MassDim
 /-!
 # Jet algebra for quantum electrodynamics
 
@@ -443,13 +443,6 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
     TensorProduct.zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
 
-/-- Two covariant lepton derivatives anticommute. -/
-lemma Dψ_mul_Dψ_anticomm (l l' : List (Fin 1 ⊕ Fin 3)) (α β : Fin 2) :
-    Dψ l α * Dψ l' β = - (Dψ l' β * Dψ l α) := by
-  sorry
-
-
-
 /-- One covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` for the conjugate
   lepton on the QED jet algebra: the conjugate component function `ψ̄_α` carries
   hypercharge `-6`, so its coupling is the opposite of that in
@@ -877,6 +870,7 @@ lemma repJetGaugeGroupI_apply_dB (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ F
 
 
 
+set_option maxHeartbeats 1000000 in
 /-- The statement that if `x` and all its derivatives transform in the
   same way that `ψ` transforms under the full
   gauge group, then `covariantStep μ x` transforms this.-/
