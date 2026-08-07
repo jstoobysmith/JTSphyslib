@@ -48,6 +48,36 @@ abbrev JetAlgebra := (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] (LeptonSinglet.Je
 
 namespace JetAlgebra
 
+/-- The B-boson factor included into the QED jet algebra. -/
+noncomputable abbrev inclB : (ℂ ⊗[ℝ] BBoson.JetAlgebra) →ₐ[ℂ] JetAlgebra :=
+  Algebra.TensorProduct.includeLeft
+
+/-- The charged-lepton factor included into the QED jet algebra. -/
+noncomputable abbrev inclL : LeptonSinglet.JetAlgebra →ₐ[ℂ] JetAlgebra :=
+  Algebra.TensorProduct.includeRight
+
+/-- Polynomials pushed forward from the two tensor factors commute: the factors
+  commute in the tensor product, and the polynomial variable is central. -/
+lemma commute_mapAlgHom_inclB_inclL (p : Polynomial (ℂ ⊗[ℝ] BBoson.JetAlgebra))
+    (q : Polynomial LeptonSinglet.JetAlgebra) :
+    Commute (Polynomial.mapAlgHom inclB p) (Polynomial.mapAlgHom inclL q) := by
+  induction p using Polynomial.induction_on' with
+  | add p₁ p₂ h₁ h₂ => simpa [add_mul, mul_add] using h₁.add_left h₂
+  | monomial m a =>
+    induction q using Polynomial.induction_on' with
+    | add q₁ q₂ h₁ h₂ => simpa [add_mul, mul_add] using h₁.add_right h₂
+    | monomial n b =>
+      show Polynomial.mapAlgHom inclB (Polynomial.monomial m a) *
+          Polynomial.mapAlgHom inclL (Polynomial.monomial n b) = _
+      simp only [Polynomial.mapAlgHom, AlgHom.coe_mk, Polynomial.coe_mapRingHom,
+        Polynomial.map_monomial, Polynomial.monomial_mul_monomial]
+      rw [Nat.add_comm m n]
+      congr 1
+      show (a ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) * ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] b)
+        = ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] b) * (a ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra))
+      rw [Algebra.TensorProduct.tmul_mul_tmul, Algebra.TensorProduct.tmul_mul_tmul,
+        one_mul, mul_one, one_mul, mul_one]
+
 /-!
 
 ## A. Elements associated with the generators

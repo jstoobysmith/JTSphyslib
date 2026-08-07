@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.QED.JetAlgebra.LorentzGroup
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.Basic
+public import Physlib.Particles.StandardModel.GaugeBosons.BBoson.MassDim
 /-!
 # Mass dimension on the QED jet algebra
 
@@ -204,6 +205,32 @@ noncomputable def MassWeightLESubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
 
 noncomputable def InvariantMassWeightSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
   MassWeightLESubmodule n ⊓ InvariantSubmodule
+
+/-!
+
+## D. The mass dimension polynomial.
+
+The QED jet algebra is the tensor product of the two factors, and mass weights
+add under that product, so the mass-weight polynomial of the whole is assembled
+from the two factor polynomials: push each into `Polynomial JetAlgebra` along the
+tensor inclusions and multiply. On monomials this is exactly
+`X ^ a * b ⊗ X ^ c * l ↦ X ^ (a + c) * (b ⊗ l)`.
+
+-/
+
+/-- The mass-weight polynomial on the QED jet algebra, assembled from the
+  mass-weight polynomials of the two factors. -/
+noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
+  (Algebra.TensorProduct.lift (Polynomial.mapAlgHom inclB)
+      (Polynomial.mapAlgHom inclL) commute_mapAlgHom_inclB_inclL).comp
+    (Algebra.TensorProduct.map BBoson.JetAlgebra.massWeightPoly
+      LeptonSinglet.JetAlgebra.massWeightPoly)
+
+@[simp]
+lemma massWeightPoly_tmul (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : LeptonSinglet.JetAlgebra) :
+    massWeightPoly (b ⊗ₜ[ℂ] l) =
+      Polynomial.mapAlgHom inclB (BBoson.JetAlgebra.massWeightPoly b) *
+        Polynomial.mapAlgHom inclL (LeptonSinglet.JetAlgebra.massWeightPoly l) := rfl
 
 end JetAlgebra
 

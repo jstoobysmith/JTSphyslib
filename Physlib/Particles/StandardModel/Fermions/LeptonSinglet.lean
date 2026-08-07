@@ -1653,8 +1653,6 @@ instance : SetLike.GradedMonoid massWeightSubmodule where
     simp only [mem_massWeightSubmodule, map_mul] at hx hy ⊢
     rw [hx, hy, Polynomial.monomial_mul_monomial]
 
-
-
 /-- The coefficient of `X ^ n` in the mass-weight polynomial of `x` has mass
   weight `n`. -/
 lemma coeff_massWeightPoly_mem_massWeightSubmodule (n : ℕ) (x : JetAlgebra) :
