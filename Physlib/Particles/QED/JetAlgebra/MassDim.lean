@@ -11,6 +11,10 @@ public import Physlib.Relativity.PauliMatrices.Basic
 /-!
 # Mass dimension on the QED jet algebra
 
+*Note*: In this file we use the notion 'mass weight'. The idea been that the
+'mass weight' is twice the mass dimension. This is because it is easier to work exclusively with
+integers, and the mass dimension of the fermion fields is 3/2.
+
 -/
 
 @[expose] public section
