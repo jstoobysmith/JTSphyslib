@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.IsInvariant
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.GaugeAction
 /-!
 # The derivative-order filtration
 
@@ -17,7 +17,6 @@ generators, which the filtration is built to prove.
 
 @[expose] public section
 
-set_option maxHeartbeats 1000000
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel
@@ -39,13 +38,13 @@ filtration.
 def filtGen (d : ℕ) : Set JetAlgebra :=
   {z | ∃ (c : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : List LeptonSinglet.JetGenerators),
     (l.map genDeg).sum ≤ d ∧
-    z = c ⊗ₜ[ℂ] (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod}
+    z = c ⊗ⱼ (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod}
 
 /-- The generating set of the strict degree filtration. -/
 def sfiltGen (d : ℕ) : Set JetAlgebra :=
   {z | ∃ (c : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : List LeptonSinglet.JetGenerators),
     (l.map genDeg).sum < d ∧
-    z = c ⊗ₜ[ℂ] (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod}
+    z = c ⊗ⱼ (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod}
 
 /-- The filtration of the lepton–gauge-sector jet algebra by total fermionic derivative degree. -/
 noncomputable def filt (d : ℕ) : Submodule ℂ JetAlgebra :=
@@ -99,7 +98,7 @@ lemma mul_mem_filt {a b : ℕ} {x y : JetAlgebra} (hx : x ∈ filt a)
       refine Submodule.subset_span ⟨c * c', l ++ l', ?_, ?_⟩
       · rw [List.map_append, List.sum_append]
         omega
-      · rw [Algebra.TensorProduct.tmul_mul_tmul, List.map_append, List.prod_append]
+      · rw [tmul_mul_tmul, List.map_append, List.prod_append]
     | zero => rw [hz₂]; exact zero_mem _
     | add u v hu hv ihu ihv => rw [hd₂]; exact add_mem ihu ihv
     | smul r u hu ih => rw [hs₂]; exact Submodule.smul_mem _ _ ih
@@ -126,7 +125,7 @@ lemma mul_mem_sfilt_left {a b : ℕ} {x y : JetAlgebra} (hx : x ∈ sfilt a)
       refine Submodule.subset_span ⟨c * c', l ++ l', ?_, ?_⟩
       · rw [List.map_append, List.sum_append]
         omega
-      · rw [Algebra.TensorProduct.tmul_mul_tmul, List.map_append, List.prod_append]
+      · rw [tmul_mul_tmul, List.map_append, List.prod_append]
     | zero => rw [hz₂]; exact zero_mem _
     | add u v hu hv ihu ihv => rw [hd₂]; exact add_mem ihu ihv
     | smul r u hu ih => rw [hs₂]; exact Submodule.smul_mem _ _ ih
@@ -153,7 +152,7 @@ lemma mul_mem_sfilt_right {a b : ℕ} {x y : JetAlgebra} (hx : x ∈ filt a)
       refine Submodule.subset_span ⟨c * c', l ++ l', ?_, ?_⟩
       · rw [List.map_append, List.sum_append]
         omega
-      · rw [Algebra.TensorProduct.tmul_mul_tmul, List.map_append, List.prod_append]
+      · rw [tmul_mul_tmul, List.map_append, List.prod_append]
     | zero => rw [hz₂]; exact zero_mem _
     | add u v hu hv ihu ihv => rw [hd₂]; exact add_mem ihu ihv
     | smul r u hu ih => rw [hs₂]; exact Submodule.smul_mem _ _ ih
@@ -162,11 +161,11 @@ lemma mul_mem_sfilt_right {a b : ℕ} {x y : JetAlgebra} (hx : x ∈ filt a)
   | smul r u hu ih => rw [hs₁]; exact Submodule.smul_mem _ _ ih
 
 lemma exists_forall_tmul_mem_filt (l : LeptonSinglet.JetAlgebra) :
-    ∃ d, ∀ c : ℂ ⊗[ℝ] BBoson.JetAlgebra, c ⊗ₜ[ℂ] l ∈ filt d := by
+    ∃ d, ∀ c : ℂ ⊗[ℝ] BBoson.JetAlgebra, c ⊗ⱼ l ∈ filt d := by
   induction l using ExteriorAlgebra.induction with
   | algebraMap r =>
     refine ⟨0, fun c => ?_⟩
-    rw [Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul]
+    rw [Algebra.algebraMap_eq_smul_one, tmul_smul]
     refine Submodule.smul_mem _ _ (Submodule.subset_span ⟨c, [], by simp, ?_⟩)
     simp
   | ι m =>
@@ -180,9 +179,9 @@ lemma exists_forall_tmul_mem_filt (l : LeptonSinglet.JetAlgebra) :
       refine Finset.sum_congr rfl fun g _ => ?_
       rw [map_smul]
       rfl
-    rw [hm, Finsupp.sum, TensorProduct.tmul_sum]
+    rw [hm, Finsupp.sum, tmul_sum]
     refine Submodule.sum_mem _ fun g hg => ?_
-    rw [TensorProduct.tmul_smul]
+    rw [tmul_smul]
     refine Submodule.smul_mem _ _ (filt_mono (Finset.le_sup hg)
       (Submodule.subset_span ⟨c, [g], by simp, ?_⟩))
     simp
@@ -190,22 +189,22 @@ lemma exists_forall_tmul_mem_filt (l : LeptonSinglet.JetAlgebra) :
     obtain ⟨dx, hdx⟩ := hx
     obtain ⟨dy, hdy⟩ := hy
     refine ⟨dx + dy, fun c => ?_⟩
-    rw [show c ⊗ₜ[ℂ] (x * y) = (c ⊗ₜ[ℂ] x) *
-        ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] y) from by
-      rw [Algebra.TensorProduct.tmul_mul_tmul, mul_one]]
+    rw [show c ⊗ⱼ (x * y) = (c ⊗ⱼ x) *
+        ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ y) from by
+      rw [tmul_mul_tmul, mul_one]]
     exact mul_mem_filt (hdx c) (hdy 1)
   | add x y hx hy =>
     obtain ⟨dx, hdx⟩ := hx
     obtain ⟨dy, hdy⟩ := hy
     refine ⟨max dx dy, fun c => ?_⟩
-    rw [TensorProduct.tmul_add]
+    rw [tmul_add]
     exact add_mem (filt_mono (le_max_left _ _) (hdx c))
       (filt_mono (le_max_right _ _) (hdy c))
 
 /-- Every element of the lepton–gauge-sector jet algebra has bounded fermionic derivative
   degree. -/
 lemma exists_mem_filt (x : JetAlgebra) : ∃ d, x ∈ filt d := by
-  induction x using TensorProduct.induction_on with
+  induction x using JetAlgebra.induction_on with
   | zero => exact ⟨0, zero_mem _⟩
   | add a b ha hb =>
     obtain ⟨d1, h1⟩ := ha
@@ -221,7 +220,7 @@ lemma exists_mem_filt (x : JetAlgebra) : ∃ d, x ∈ filt d := by
 noncomputable def oddLow (d : ℕ) : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ
     {z | ∃ (c : ℂ ⊗[ℝ] BBoson.JetAlgebra) (g : LeptonSinglet.JetGenerators),
-      genDeg g < d ∧ z = c ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator g}
+      genDeg g < d ∧ z = c ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator g}
 
 lemma oddLow_le_sfilt (d : ℕ) : oddLow d ≤ sfilt d := by
   refine Submodule.span_le.mpr ?_
@@ -233,21 +232,19 @@ lemma genDeg_shift (μ : Fin 1 ⊕ Fin 3) (g : LeptonSinglet.JetGenerators) :
     genDeg (LeptonSinglet.JetGenerators.shift μ g) = genDeg g + 1 := by
   cases g <;> simp [genDeg, LeptonSinglet.JetGenerators.shift]
 
-set_option maxHeartbeats 1000000 in
 /-- Multiplication by the gauge field acts on the B-boson coefficient of an odd
   element. -/
 lemma dB_mul_tmul (μ : Fin 1 ⊕ Fin 3) (c : ℂ ⊗[ℝ] BBoson.JetAlgebra)
     (y : LeptonSinglet.JetAlgebra) :
-    ([JetGenerators.dB {} μ]ₐ : JetAlgebra) * (c ⊗ₜ[ℂ] y) =
+    ([JetGenerators.dB {} μ]ₐ : JetAlgebra) * (c ⊗ⱼ y) =
       (((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)) * c)
-        ⊗ₜ[ℂ] y := by
+        ⊗ⱼ y := by
   have hone : ∀ z : LeptonSinglet.JetAlgebra, 1 * z = z := fun z => one_mul z
   rw [show ([JetGenerators.dB {} μ]ₐ : JetAlgebra) = ((1 : ℂ) ⊗ₜ[ℝ]
-      BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)) ⊗ₜ[ℂ]
+      BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} μ)) ⊗ⱼ
       (1 : LeptonSinglet.JetAlgebra) from rfl,
-    Algebra.TensorProduct.tmul_mul_tmul, hone]
+    tmul_mul_tmul, hone]
 
-set_option maxHeartbeats 1000000 in
 lemma covariantStep_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgebra}
     (hx : x ∈ oddLow d) : covariantStep μ x ∈ oddLow (d + 1) := by
   have hone : ∀ y : LeptonSinglet.JetAlgebra, 1 * y = y := fun y => one_mul y
@@ -265,7 +262,6 @@ lemma covariantStep_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgebra}
   | add u v hu hv ihu ihv => rw [map_add]; exact add_mem ihu ihv
   | smul r u hu ih => rw [map_smul]; exact Submodule.smul_mem _ _ ih
 
-set_option maxHeartbeats 1000000 in
 lemma covariantStepBar_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgebra}
     (hx : x ∈ oddLow d) : covariantStepBar μ x ∈ oddLow (d + 1) := by
   have hone : ∀ y : LeptonSinglet.JetAlgebra, 1 * y = y := fun y => one_mul y
@@ -283,33 +279,32 @@ lemma covariantStepBar_mem_oddLow (μ : Fin 1 ⊕ Fin 3) {d : ℕ} {x : JetAlgeb
   | add u v hu hv ihu ihv => rw [map_add]; exact add_mem ihu ihv
   | smul r u hu ih => rw [map_smul]; exact Submodule.smul_mem _ _ ih
 
-set_option maxHeartbeats 4000000 in
 /-- The covariant derivative of the lepton is its plain derivative generator up
   to strictly-lower-degree odd terms. -/
 lemma Dψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dψ l α - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    Dψ l α - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator (.dψ (↑l) α) ∈ oddLow l.length := by
   induction l with
   | nil =>
     rw [Dψ_nil, show ([JetGenerators.dψ {} α]ₐ : JetAlgebra) =
-        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator
           (.dψ (↑([] : List (Fin 1 ⊕ Fin 3))) α) from by
       rw [Algebra.TensorProduct.one_def, Multiset.coe_nil, Multiset.empty_eq_zero]
       rfl, sub_self]
     exact zero_mem _
   | cons μ t ih =>
-    set L : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    set L : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator (.dψ (↑t) α) with hL
     have hstep : Dψ (μ :: t) α = covariantStep μ L + covariantStep μ (Dψ t α - L) := by
       have h := (covariantStep μ).map_add L (Dψ t α - L)
       rw [add_sub_cancel] at h
       rw [Dψ_cons, h]
-    have hleadEq : covariantStep μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    have hleadEq : covariantStep μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
         LeptonSinglet.JetAlgebra.ofGenerator (.dψ (↑(μ :: t)) α) -
         ((6 : ℂ) * Complex.I) • (([JetGenerators.dB {} μ]ₐ : JetAlgebra) * L) := by
       rw [covariantStep_apply, hL, Algebra.TensorProduct.one_def, jetDeriv_tmul,
         LinearMap.baseChange_tmul, BBoson.JetAlgebra.jetDeriv_one,
-        TensorProduct.tmul_zero, TensorProduct.zero_tmul, zero_add,
+        TensorProduct.tmul_zero, zero_tmul, zero_add,
         LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
         LeptonSinglet.JetGenerators.shift_dψ,
         show (↑t : Multiset (Fin 1 ⊕ Fin 3)) + {μ} = ↑(μ :: t) from by
@@ -324,34 +319,33 @@ lemma Dψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     rw [hstep, hleadEq, habel]
     exact sub_mem hmem2 (Submodule.smul_mem _ _ hmem1)
 
-set_option maxHeartbeats 4000000 in
 /-- The covariant derivative of the conjugate lepton is its plain derivative
   generator up to strictly-lower-degree odd terms. -/
 lemma Dbarψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
-    Dbarψ l α - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    Dbarψ l α - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator (.dbarψ (↑l) α) ∈ oddLow l.length := by
   induction l with
   | nil =>
     rw [Dbarψ_nil, show ([JetGenerators.dbarψ {} α]ₐ : JetAlgebra) =
-        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator
           (.dbarψ (↑([] : List (Fin 1 ⊕ Fin 3))) α) from by
       rw [Algebra.TensorProduct.one_def, Multiset.coe_nil, Multiset.empty_eq_zero]
       rfl, sub_self]
     exact zero_mem _
   | cons μ t ih =>
-    set L : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    set L : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator (.dbarψ (↑t) α) with hL
     have hstep : Dbarψ (μ :: t) α =
         covariantStepBar μ L + covariantStepBar μ (Dbarψ t α - L) := by
       have h := (covariantStepBar μ).map_add L (Dbarψ t α - L)
       rw [add_sub_cancel] at h
       rw [Dbarψ_cons, h]
-    have hleadEq : covariantStepBar μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    have hleadEq : covariantStepBar μ L = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
         LeptonSinglet.JetAlgebra.ofGenerator (.dbarψ (↑(μ :: t)) α) +
         ((6 : ℂ) * Complex.I) • (([JetGenerators.dB {} μ]ₐ : JetAlgebra) * L) := by
       rw [covariantStepBar_apply, hL, Algebra.TensorProduct.one_def, jetDeriv_tmul,
         LinearMap.baseChange_tmul, BBoson.JetAlgebra.jetDeriv_one,
-        TensorProduct.tmul_zero, TensorProduct.zero_tmul, zero_add,
+        TensorProduct.tmul_zero, zero_tmul, zero_add,
         LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
         LeptonSinglet.JetGenerators.shift_dbarψ,
         show (↑t : Multiset (Fin 1 ⊕ Fin 3)) + {μ} = ↑(μ :: t) from by
@@ -369,7 +363,7 @@ lemma Dbarψ_sub_mem_oddLow (l : List (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
 /-- The covariant generator is the plain generator up to strictly-lower-degree
   odd terms. -/
 lemma covGenerator_sub_mem_oddLow (g : LeptonSinglet.JetGenerators) :
-    covGenerator g - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    covGenerator g - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator g ∈ oddLow (genDeg g) := by
   cases g with
   | dψ s α =>
@@ -384,7 +378,7 @@ lemma covGenerator_sub_mem_oddLow (g : LeptonSinglet.JetGenerators) :
 lemma covGenerator_mem_filt (g : LeptonSinglet.JetGenerators) :
     covGenerator g ∈ filt (genDeg g) := by
   have h := sfilt_le_filt _ (oddLow_le_sfilt _ (covGenerator_sub_mem_oddLow g))
-  have hA : (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+  have hA : (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator g ∈ filt (genDeg g) := by
     refine Submodule.subset_span ⟨1, [g], by simp, ?_⟩
     simp
@@ -397,39 +391,38 @@ lemma prod_covGenerator_mem_filt (l : List LeptonSinglet.JetGenerators) :
   | nil =>
     simp only [List.map_nil, List.prod_nil, List.sum_nil]
     refine Submodule.subset_span ⟨1, [], by simp, ?_⟩
-    rw [List.map_nil, List.prod_nil, Algebra.TensorProduct.one_def]
+    rw [List.map_nil, List.prod_nil, one_eq_tmul]
   | cons g t ih =>
     simp only [List.map_cons, List.prod_cons, List.sum_cons]
     exact mul_mem_filt (covGenerator_mem_filt g) ih
 
-set_option maxHeartbeats 1000000 in
 /-- The product of covariant generators is the corresponding product of plain
   generators up to strictly-lower-degree terms. -/
 lemma prod_covGenerator_sub_mem_sfilt (l : List LeptonSinglet.JetGenerators) :
-    (l.map covGenerator).prod - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    (l.map covGenerator).prod - (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod ∈
       sfilt ((l.map genDeg).sum) := by
   induction l with
   | nil =>
     simp only [List.map_nil, List.prod_nil, List.sum_nil]
-    rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) :
-        JetAlgebra) = 1 from (Algebra.TensorProduct.one_def).symm, sub_self]
+    rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) :
+        JetAlgebra) = 1 from (one_eq_tmul).symm, sub_self]
     exact zero_mem _
   | cons g t ih =>
     simp only [List.map_cons, List.prod_cons, List.sum_cons]
     have hsub₁ : ∀ a b c : JetAlgebra, (a - b) * c = a * c - b * c := by grind
     have hsub₂ : ∀ a b c : JetAlgebra, a * (b - c) = a * b - a * c := by grind
     have hone : ∀ y : LeptonSinglet.JetAlgebra, 1 * y = y := fun y => one_mul y
-    set A : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    set A : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator g with hA
-    set Q : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    set Q : JetAlgebra := (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       (t.map LeptonSinglet.JetAlgebra.ofGenerator).prod with hQ
-    have hAQ : A * Q = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    have hAQ : A * Q = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
         (LeptonSinglet.JetAlgebra.ofGenerator g *
           (t.map LeptonSinglet.JetAlgebra.ofGenerator).prod) := by
-      rw [hA, hQ, Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+      rw [hA, hQ, tmul_mul_tmul, mul_one]
     have hkey : covGenerator g * (t.map covGenerator).prod -
-        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
           (LeptonSinglet.JetAlgebra.ofGenerator g *
             (t.map LeptonSinglet.JetAlgebra.ofGenerator).prod) =
         (covGenerator g - A) * (t.map covGenerator).prod +
@@ -446,7 +439,6 @@ lemma prod_covGenerator_sub_mem_sfilt (l : List LeptonSinglet.JetGenerators) :
         simp
       exact mul_mem_sfilt_right hAmem ih
 
-set_option maxHeartbeats 1000000 in
 /-- Unitriangularity of the covariant substitution: it is the identity up to
   strictly-lower-degree terms. -/
 lemma covSubst_sub_self_mem_sfilt {d : ℕ} {x : JetAlgebra} (hx : x ∈ filt d) :
@@ -470,20 +462,20 @@ lemma covSubst_sub_self_mem_sfilt {d : ℕ} {x : JetAlgebra} (hx : x ∈ filt d)
         have hm : covExtHom (a * t.prod) = covExtHom a * covExtHom t.prod :=
           map_mul covExtHom a t.prod
         rw [List.prod_cons, List.map_cons, List.prod_cons, hm, iht]
-    have hcs : covSubst (c ⊗ₜ[ℂ] (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod) =
-        (c ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) * (l.map covGenerator).prod := by
+    have hcs : covSubst (c ⊗ⱼ (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod) =
+        (c ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) * (l.map covGenerator).prod := by
       rw [covSubst_tmul]
       congr 1
       rw [hlp, List.map_map,
         show (⇑covExtHom ∘ LeptonSinglet.JetAlgebra.ofGenerator) = covGenerator from
           funext fun g => hgen g]
-    have hz2 : c ⊗ₜ[ℂ] (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod =
-        (c ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) *
-          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    have hz2 : c ⊗ⱼ (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod =
+        (c ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) *
+          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
             (l.map LeptonSinglet.JetAlgebra.ofGenerator).prod) := by
-      rw [Algebra.TensorProduct.tmul_mul_tmul, honeB, hone]
+      rw [tmul_mul_tmul, honeB, hone]
     have hsub₂ : ∀ a b c : JetAlgebra, a * (b - c) = a * b - a * c := by grind
-    have hc1 : (c ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) ∈ filt 0 := by
+    have hc1 : (c ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) ∈ filt 0 := by
       refine Submodule.subset_span ⟨c, [], by simp, ?_⟩
       simp
     have hfin := mul_mem_sfilt_right hc1 (prod_covGenerator_sub_mem_sfilt l)
@@ -562,9 +554,9 @@ set_option maxHeartbeats 2000000 in
   to be invariant under all Maurer–Cartan translations of the pure-gauge B-boson
   coordinates, hence to lie in the (complexified) field-strength subalgebra by
   the B-boson translation theorem. -/
-theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
+theorem mem_covariantAlgebra_of_forall_repJetGaugeGroupI_eq
     (x : JetAlgebra) (hx : ∀ U, repJetGaugeGroupI U x = x) :
-    x ∈ Algebra.adjoin ℂ invariantGenerators := by
+    x ∈ CovariantAlgebra := by
   classical
   obtain ⟨y, rfl⟩ := covSubst_surjective x
   have hyU : ∀ (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0),
@@ -572,10 +564,12 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
         (BBoson.JetAlgebra.expUnitary a w hw)) LinearMap.id y = y := by
     intro a w hw
     refine covSubst_injective ?_
+    show covSubst (mapB (BBoson.JetAlgebra.complexRepJetGaugeGroupI
+      (BBoson.JetAlgebra.expUnitary a w hw)) y) = covSubst y
     rw [← repJetGaugeGroupI_covSubst _ (BBoson.JetAlgebra.eval_expUnitary_u1 a w hw),
       hx]
   set bL := Module.Basis.ofVectorSpace ℂ LeptonSinglet.JetAlgebra with hbL
-  set e : JetAlgebra ≃ₗ[ℂ]
+  set e : ((ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] LeptonSinglet.JetAlgebra) ≃ₗ[ℂ]
       (Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra →₀
         ℂ ⊗[ℝ] BBoson.JetAlgebra) :=
     (TensorProduct.congr (LinearEquiv.refl ℂ (ℂ ⊗[ℝ] BBoson.JetAlgebra)) bL.repr).trans
@@ -607,18 +601,18 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
       Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
         fieldStrengthDeriv p.1 p.2.1 p.2.2) ∪
     (Set.range fun g : LeptonSinglet.JetGenerators =>
-      ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+      ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
         LeptonSinglet.JetAlgebra.ofGenerator g : JetAlgebra)) with hS
   have honeB : ∀ p : ℂ ⊗[ℝ] BBoson.JetAlgebra, p * 1 = p := fun p => mul_one p
   have honeL : ∀ l : LeptonSinglet.JetAlgebra, 1 * l = l := fun l => one_mul l
   have hone_tmul : ∀ l : LeptonSinglet.JetAlgebra,
-      ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] l : JetAlgebra) ∈ Algebra.adjoin ℂ S := by
+      ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ l : JetAlgebra) ∈ Algebra.adjoin ℂ S := by
     intro l
     induction l using ExteriorAlgebra.induction with
     | algebraMap r =>
-      rw [Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul]
+      rw [Algebra.algebraMap_eq_smul_one, tmul_smul]
       refine Subalgebra.smul_mem _ ?_ _
-      rw [← Algebra.TensorProduct.one_def]
+      rw [← one_eq_tmul]
       exact one_mem _
     | ι m =>
       have hm : ExteriorAlgebra.ι ℂ (M := LeptonSinglet.JetComponentSpace) m =
@@ -629,26 +623,26 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
         refine Finset.sum_congr rfl fun g _ => ?_
         rw [map_smul]
         rfl
-      rw [hm, Finsupp.sum, TensorProduct.tmul_sum]
+      rw [hm, Finsupp.sum, tmul_sum]
       refine sum_mem fun g _ => ?_
-      rw [TensorProduct.tmul_smul]
+      rw [tmul_smul]
       refine Subalgebra.smul_mem _ (Algebra.subset_adjoin ?_) _
       rw [hS]
       exact Set.mem_union_right _ ⟨g, rfl⟩
     | mul u v hu hv =>
-      rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] (u * v) : JetAlgebra) =
-          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] u) *
-            ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] v) from by
-        rw [Algebra.TensorProduct.tmul_mul_tmul, honeB]]
+      rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ (u * v) : JetAlgebra) =
+          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ u) *
+            ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ v) from by
+        rw [tmul_mul_tmul, honeB]]
       exact mul_mem hu hv
     | add u v hu hv =>
-      rw [TensorProduct.tmul_add]
+      rw [tmul_add]
       exact add_mem hu hv
   have hleft : ∀ c ∈ Algebra.adjoin ℂ (Set.range fun p :
       Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
       ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2 :
         ℂ ⊗[ℝ] BBoson.JetAlgebra)),
-      ((c ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) : JetAlgebra) ∈
+      ((c ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) : JetAlgebra) ∈
         Algebra.adjoin ℂ S := by
     intro c hc
     induction hc using Algebra.adjoin_induction with
@@ -658,38 +652,39 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
       rw [hS]
       exact Set.mem_union_left _ ⟨p, rfl⟩
     | algebraMap z =>
-      rw [Algebra.algebraMap_eq_smul_one, ← TensorProduct.smul_tmul']
+      rw [Algebra.algebraMap_eq_smul_one, smul_tmul']
       refine Subalgebra.smul_mem _ ?_ _
-      rw [← Algebra.TensorProduct.one_def]
+      rw [← one_eq_tmul]
       exact one_mem _
     | add u v hu hv ihu ihv =>
-      rw [TensorProduct.add_tmul]
+      rw [add_tmul]
       exact add_mem ihu ihv
     | mul u v hu hv ihu ihv =>
-      rw [show ((u * v) ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) : JetAlgebra) =
-          (u ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) *
-            (v ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) from by
-        rw [Algebra.TensorProduct.tmul_mul_tmul, honeL]]
+      rw [show ((u * v) ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) : JetAlgebra) =
+          (u ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) *
+            (v ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) from by
+        rw [tmul_mul_tmul, honeL]]
       exact mul_mem ihu ihv
   have hsymm_single : ∀ (T : Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra)
       (c : ℂ ⊗[ℝ] BBoson.JetAlgebra),
-      e.symm (Finsupp.single T c) = c ⊗ₜ[ℂ] (bL T) := by
+      e.symm (Finsupp.single T c) = c ⊗ⱼ (bL T) := by
     intro T c
     rw [hedef, LinearEquiv.symm_trans_apply,
       TensorProduct.finsuppScalarRight_symm_apply_single, TensorProduct.congr_symm_tmul]
     simp only [LinearEquiv.refl_symm, LinearEquiv.refl_apply,
       Module.Basis.repr_symm_single_one]
-  have hdecomp : y = ((e y).support).sum (fun T => (e y T) ⊗ₜ[ℂ] (bL T)) := by
+    rfl
+  have hdecomp : y = ((e y).support).sum (fun T => (e y T) ⊗ⱼ (bL T)) := by
     conv_lhs => rw [← e.symm_apply_apply y, ← Finsupp.sum_single (e y)]
     rw [Finsupp.sum, map_sum]
     exact Finset.sum_congr rfl fun T _ => hsymm_single T _
   have hyMem : y ∈ Algebra.adjoin ℂ S := by
     rw [hdecomp]
     refine sum_mem fun T _ => ?_
-    rw [show ((e y T) ⊗ₜ[ℂ] (bL T) : JetAlgebra) =
-        ((e y T) ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra)) *
-          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] (bL T)) from by
-      rw [Algebra.TensorProduct.tmul_mul_tmul, honeB, honeL]]
+    rw [show ((e y T) ⊗ⱼ (bL T) : JetAlgebra) =
+        ((e y T) ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) *
+          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ (bL T)) from by
+      rw [tmul_mul_tmul, honeB, honeL]]
     exact mul_mem (hleft _ (hcT T)) (hone_tmul _)
   have himg : covSubst y ∈ (Algebra.adjoin ℂ S).map covSubst :=
     Subalgebra.mem_map.mpr ⟨y, hyMem, rfl⟩
@@ -700,15 +695,15 @@ theorem mem_adjoin_invariantGenerators_of_forall_repJetGaugeGroupI_eq
   · show covSubst (fieldStrengthDeriv p.1 p.2.1 p.2.2) ∈
       Algebra.adjoin ℂ invariantGenerators
     rw [show (fieldStrengthDeriv p.1 p.2.1 p.2.2 : JetAlgebra) =
-        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2) ⊗ₜ[ℂ]
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2) ⊗ⱼ
           (1 : LeptonSinglet.JetAlgebra) from rfl, covSubst_tmul_one]
     exact Algebra.subset_adjoin (show _ ∈ invariantGenerators from
       Set.mem_union_left _ (Set.mem_union_left _ ⟨p, rfl⟩))
-  · show covSubst ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+  · show covSubst ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
       LeptonSinglet.JetAlgebra.ofGenerator g) ∈ Algebra.adjoin ℂ invariantGenerators
-    rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
+    rw [show ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ
         LeptonSinglet.JetAlgebra.ofGenerator g : JetAlgebra) =
-        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] ExteriorAlgebra.ι ℂ
+        (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ ExteriorAlgebra.ι ℂ
           (LeptonSinglet.JetComponentSpace.basis g) from rfl, covSubst_one_tmul_ι,
       covMap_basis]
     cases g with

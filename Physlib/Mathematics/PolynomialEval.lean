@@ -120,6 +120,10 @@ lemma coeff_mapCoeffs {A : Type*} [Semiring A] {f : A → A} (hf0 : f 0 = 0)
   · rw [if_pos hn]
   · rw [if_neg hn, Polynomial.notMem_support_iff.mp hn, hf0]
 
+@[simp]
+lemma mapCoeffs_zero {A : Type*} [Semiring A] (f : A → A) : mapCoeffs f 0 = 0 := by
+  simp [mapCoeffs]
+
 lemma mapCoeffs_monomial {A : Type*} [Semiring A] {f : A → A} (hf0 : f 0 = 0)
     (n : ℕ) (a : A) :
     mapCoeffs f (Polynomial.monomial n a) = Polynomial.monomial n (f a) := by

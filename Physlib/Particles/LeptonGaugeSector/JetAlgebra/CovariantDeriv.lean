@@ -16,7 +16,6 @@ covariant substitution that trades the plain fermionic coordinates for them.
 
 @[expose] public section
 
-set_option maxHeartbeats 1000000
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel
@@ -85,8 +84,8 @@ lemma Dψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
   congr 1
   simp only [ofGenerator]
   rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
-  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
+  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero, tmul_zero,
+    TensorProduct.zero_tmul, zero_tmul, zero_add, LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dψ, Multiset.empty_eq_zero]
 
 /-- One covariant-derivative step `D̄_μ = ∂_μ + 6 i B_μ` for the conjugate
@@ -129,8 +128,8 @@ lemma Dbarψ_singleton (μ : Fin 1 ⊕ Fin 3) (α : Fin 2) :
   congr 1
   simp only [ofGenerator]
   rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
-  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
-    TensorProduct.zero_tmul, zero_add,
+  simp only [BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero, tmul_zero,
+    TensorProduct.zero_tmul, zero_tmul, zero_add,
     LeptonSinglet.JetAlgebra.jetDeriv_ofGenerator,
     LeptonSinglet.JetGenerators.shift_dbarψ, Multiset.empty_eq_zero]
 

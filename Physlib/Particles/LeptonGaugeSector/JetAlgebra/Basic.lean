@@ -44,9 +44,129 @@ inductive JetGenerators where
   | dψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) : JetGenerators
   | dbarψ (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) : JetGenerators
 
-abbrev JetAlgebra := (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] (LeptonSinglet.JetAlgebra)
+/-- The jet algebra of the lepton–gauge sector: the tensor product of the complexified
+  B-boson jet algebra with the charged-lepton jet algebra.
+
+  This is a `def` rather than an `abbrev`, and its algebraic structure is fixed by the single
+  `Ring` and `Algebra` instances below, so that every algebraic class projects from one root.
+  On the bare tensor product `One`, `Mul`, `Zero`, `Add`, `SMul` and `Module` are instead
+  supplied by standalone `TensorProduct.*` instances rather than as projections of the
+  semiring. Those are definitionally the projections, but not syntactically, so a lemma whose
+  type argument is not pinned by an explicit argument cannot be unified against a goal — that
+  would need a projection inverted through a metavariable. Concretely `mul_one a` succeeds,
+  because `a` fixes the type first, while `one_pow n` fails. Rooting the structure here keeps
+  the generic algebraic lemmas usable.
+
+  Note that the corresponding issue does not arise for the complexification
+  `ℂ ⊗[ℝ] BBoson.JetAlgebra`, where both factors are commutative. -/
+def JetAlgebra : Type := (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] (LeptonSinglet.JetAlgebra)
+
+noncomputable instance : Ring JetAlgebra :=
+  inferInstanceAs (Ring ((ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] LeptonSinglet.JetAlgebra))
+
+noncomputable instance : Algebra ℂ JetAlgebra :=
+  inferInstanceAs (Algebra ℂ ((ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] LeptonSinglet.JetAlgebra))
 
 namespace JetAlgebra
+
+/-- A pure tensor, as an element of the jet algebra.
+
+  Writing `a ⊗ₜ[ℂ] b` builds an element of the *underlying* tensor product, which is only
+  definitionally an element of `JetAlgebra`. A goal mixing such a term with the jet algebra's
+  own operations is then not type-correct at `instances` transparency, and no rewrite can fire
+  on it. This constructor keeps pure tensors typed at `JetAlgebra`, and is what the lemmas
+  below and the induction principle are stated in terms of. -/
+noncomputable def tmul (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    JetAlgebra := a ⊗ₜ[ℂ] b
+
+@[inherit_doc] scoped infixl:100 " ⊗ⱼ " => JetAlgebra.tmul
+
+/-- `tmul` is the pure tensor of the underlying tensor product; use this to move between the
+  jet algebra and lemmas stated for the tensor product. -/
+lemma tmul_eq (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    a ⊗ⱼ b = a ⊗ₜ[ℂ] b := rfl
+
+lemma one_eq_tmul : (1 : JetAlgebra) = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ 1 := rfl
+
+/-- Multiplication of pure tensors. `Algebra.TensorProduct.tmul_mul_tmul` does not rewrite
+  here, even though it is definitionally the same statement. -/
+@[simp]
+lemma tmul_mul_tmul (a₁ a₂ : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (b₁ b₂ : LeptonSinglet.JetAlgebra) :
+    (a₁ ⊗ⱼ b₁) * (a₂ ⊗ⱼ b₂) = (a₁ * a₂) ⊗ⱼ (b₁ * b₂) :=
+  Algebra.TensorProduct.tmul_mul_tmul _ _ _ _
+
+@[simp]
+lemma zero_tmul (b : LeptonSinglet.JetAlgebra) :
+    (0 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ b = 0 := TensorProduct.zero_tmul _ b
+
+@[simp]
+lemma tmul_zero (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) :
+    a ⊗ⱼ (0 : LeptonSinglet.JetAlgebra) = 0 := TensorProduct.tmul_zero _ a
+
+@[simp]
+lemma add_tmul (a₁ a₂ : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    (a₁ + a₂) ⊗ⱼ b = a₁ ⊗ⱼ b + a₂ ⊗ⱼ b := TensorProduct.add_tmul a₁ a₂ b
+
+@[simp]
+lemma tmul_add (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b₁ b₂ : LeptonSinglet.JetAlgebra) :
+    a ⊗ⱼ (b₁ + b₂) = a ⊗ⱼ b₁ + a ⊗ⱼ b₂ := TensorProduct.tmul_add a b₁ b₂
+
+@[simp]
+lemma sub_tmul (a₁ a₂ : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    (a₁ - a₂) ⊗ⱼ b = a₁ ⊗ⱼ b - a₂ ⊗ⱼ b := TensorProduct.sub_tmul a₁ a₂ b
+
+@[simp]
+lemma tmul_sub (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b₁ b₂ : LeptonSinglet.JetAlgebra) :
+    a ⊗ⱼ (b₁ - b₂) = a ⊗ⱼ b₁ - a ⊗ⱼ b₂ := TensorProduct.tmul_sub a b₁ b₂
+
+lemma tmul_sum {ι : Type*} (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (s : Finset ι)
+    (f : ι → LeptonSinglet.JetAlgebra) : a ⊗ⱼ (∑ i ∈ s, f i) = ∑ i ∈ s, a ⊗ⱼ f i :=
+  TensorProduct.tmul_sum a s f
+
+lemma sum_tmul {ι : Type*} (s : Finset ι) (f : ι → ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (b : LeptonSinglet.JetAlgebra) : (∑ i ∈ s, f i) ⊗ⱼ b = ∑ i ∈ s, f i ⊗ⱼ b :=
+  TensorProduct.sum_tmul s f b
+
+@[simp]
+lemma tmul_smul (r : ℂ) (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    a ⊗ⱼ (r • b) = r • (a ⊗ⱼ b) := TensorProduct.tmul_smul r a b
+
+@[simp]
+lemma smul_tmul' (r : ℂ) (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    (r • a) ⊗ⱼ b = r • (a ⊗ⱼ b) := TensorProduct.smul_tmul' r a b
+
+lemma tmul_add_tmul_right (a : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (b₁ b₂ : LeptonSinglet.JetAlgebra) : a ⊗ⱼ b₁ + a ⊗ⱼ b₂ = a ⊗ⱼ (b₁ + b₂) :=
+  (TensorProduct.tmul_add a b₁ b₂).symm
+
+@[simp]
+lemma tmul_add_tmul_left (a₁ a₂ : ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (b : LeptonSinglet.JetAlgebra) : a₁ ⊗ⱼ b + a₂ ⊗ⱼ b = (a₁ + a₂) ⊗ⱼ b :=
+  (TensorProduct.add_tmul a₁ a₂ b).symm
+
+/-- A linear map on the bosonic factor, extended to the whole jet algebra. Stating this as a
+  map out of `JetAlgebra` keeps `map_zero`/`map_add` applicable, which they are not for a bare
+  `TensorProduct.map` fed a jet-algebra element. -/
+noncomputable def mapB (f : (ℂ ⊗[ℝ] BBoson.JetAlgebra) →ₗ[ℂ] ℂ ⊗[ℝ] BBoson.JetAlgebra) :
+    JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  TensorProduct.map f LinearMap.id
+
+@[simp]
+lemma mapB_tmul (f : (ℂ ⊗[ℝ] BBoson.JetAlgebra) →ₗ[ℂ] ℂ ⊗[ℝ] BBoson.JetAlgebra)
+    (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra) :
+    mapB f (a ⊗ⱼ b) = (f a) ⊗ⱼ b := rfl
+
+/-- Induction on the jet algebra, stated for `JetAlgebra` itself. Using
+  `TensorProduct.induction_on` directly leaves the zero, the sum and the pure tensors in the
+  goals carrying the tensor product's structure rather than the jet algebra's, which makes
+  those goals unrewritable. -/
+@[elab_as_elim]
+lemma induction_on {motive : JetAlgebra → Prop} (x : JetAlgebra) (zero : motive 0)
+    (tmul : ∀ (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) (b : LeptonSinglet.JetAlgebra),
+      motive (a ⊗ⱼ b))
+    (add : ∀ x y : JetAlgebra, motive x → motive y → motive (x + y)) : motive x :=
+  TensorProduct.induction_on x zero tmul add
 
 /-- The B-boson factor included into the lepton–gauge-sector jet algebra. -/
 noncomputable abbrev inclB : (ℂ ⊗[ℝ] BBoson.JetAlgebra) →ₐ[ℂ] JetAlgebra :=
@@ -87,27 +207,27 @@ lemma commute_mapAlgHom_inclB_inclL (p : Polynomial (ℂ ⊗[ℝ] BBoson.JetAlge
 noncomputable def ofGenerator (s : JetGenerators) : JetAlgebra :=
   match s with
   | JetGenerators.dB s μ =>
-    (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB s μ)) ⊗ₜ[ℂ] 1
+    (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB s μ)) ⊗ⱼ 1
   | JetGenerators.dψ s α =>
-    (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dψ s α)
+    (1 ⊗ₜ[ℝ] 1) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dψ s α)
   | JetGenerators.dbarψ s α =>
-    (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dbarψ s α)
+    (1 ⊗ₜ[ℝ] 1) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator (LeptonSinglet.JetGenerators.dbarψ s α)
 
 scoped notation "[" s "]ₐ" => ofGenerator s
 
 lemma ofGenerator_dψ_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     ofGenerator (JetGenerators.dψ s α) =
-      (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+      (1 ⊗ₜ[ℝ] 1) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator
         (LeptonSinglet.JetGenerators.dψ s α) := rfl
 
 lemma ofGenerator_B_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
     ofGenerator (JetGenerators.dB s μ) =
       (1 ⊗ₜ[ℝ] BBoson.JetAlgebra.ofGenerator
-        (BBoson.JetGenerators.dB s μ)) ⊗ₜ[ℂ] 1 := rfl
+        (BBoson.JetGenerators.dB s μ)) ⊗ⱼ 1 := rfl
 
 lemma ofGenerator_dbarψ_eq (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     ofGenerator (JetGenerators.dbarψ s α) =
-      (1 ⊗ₜ[ℝ] 1) ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.ofGenerator
+      (1 ⊗ₜ[ℝ] 1) ⊗ⱼ LeptonSinglet.JetAlgebra.ofGenerator
         (LeptonSinglet.JetGenerators.dbarψ s α) := rfl
 end JetAlgebra
 

@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.LorentzAction
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.IsInvariant
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.BBoson.MassDim
@@ -32,7 +32,6 @@ On monomials this is exactly `X ^ a * b ⊗ X ^ c * l ↦ X ^ (a + c) * (b ⊗ l
 
 @[expose] public section
 
-set_option maxHeartbeats 1000000
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel Matrix MatrixGroups
@@ -61,7 +60,7 @@ noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra 
 
 @[simp]
 lemma massWeightPoly_tmul (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : LeptonSinglet.JetAlgebra) :
-    massWeightPoly (b ⊗ₜ[ℂ] l) =
+    massWeightPoly (b ⊗ⱼ l) =
       Polynomial.mapAlgHom inclB (BBoson.JetAlgebra.massWeightPoly b) *
         Polynomial.mapAlgHom inclL (LeptonSinglet.JetAlgebra.massWeightPoly l) := rfl
 
@@ -70,7 +69,7 @@ lemma massWeightPoly_tmul (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : LeptonSingle
 lemma massWeightPoly_inclB (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) :
     massWeightPoly (inclB b) =
       Polynomial.mapAlgHom inclB (BBoson.JetAlgebra.massWeightPoly b) := by
-  rw [show inclB b = b ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) from rfl, massWeightPoly_tmul,
+  rw [show inclB b = b ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) from rfl, massWeightPoly_tmul,
     map_one, map_one, mul_one]
 
 /-- On the fermionic factor the mass-weight polynomial is the charged-lepton mass-weight
@@ -78,7 +77,7 @@ lemma massWeightPoly_inclB (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) :
 lemma massWeightPoly_inclL (l : LeptonSinglet.JetAlgebra) :
     massWeightPoly (inclL l) =
       Polynomial.mapAlgHom inclL (LeptonSinglet.JetAlgebra.massWeightPoly l) := by
-  rw [show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] l from rfl, massWeightPoly_tmul,
+  rw [show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ l from rfl, massWeightPoly_tmul,
     map_one, map_one, one_mul]
 
 /-- The bosonic inclusion is unital. -/
@@ -89,10 +88,10 @@ private lemma inclL_one : inclL (1 : LeptonSinglet.JetAlgebra) = 1 := rfl
 
 /-- A pure tensor is the product of the images of its two factors. -/
 lemma tmul_eq_inclB_mul_inclL (b : ℂ ⊗[ℝ] BBoson.JetAlgebra)
-    (l : LeptonSinglet.JetAlgebra) : b ⊗ₜ[ℂ] l = inclB b * inclL l := by
-  rw [show inclB b = b ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) from rfl,
-    show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] l from rfl,
-    Algebra.TensorProduct.tmul_mul_tmul, mul_one, one_mul]
+    (l : LeptonSinglet.JetAlgebra) : b ⊗ⱼ l = inclB b * inclL l := by
+  rw [show inclB b = b ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) from rfl,
+    show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ l from rfl,
+    tmul_mul_tmul, mul_one, one_mul]
 
 /-- Each generator is sent to `j * X ^ w`, where `w` is its mass weight. -/
 @[simp]
@@ -128,7 +127,7 @@ private lemma evalOne_apply (p : Polynomial JetAlgebra) : evalOne p = p.eval 1 :
 
 /-- Setting the formal variable to one recovers the original element. -/
 lemma massWeightPoly_eval_one (x : JetAlgebra) : (massWeightPoly x).eval 1 = x := by
-  induction x using TensorProduct.induction_on with
+  induction x using JetAlgebra.induction_on with
   | zero => simp
   | add a b ha hb => rw [map_add, Polynomial.eval_add, ha, hb]
   | tmul b l =>
@@ -215,10 +214,10 @@ lemma inclL_mem_massWeightSubmodule {n : ℕ} {l : LeptonSinglet.JetAlgebra}
   complementary weights. -/
 lemma coeff_massWeightPoly_mem_massWeightSubmodule (n : ℕ) (x : JetAlgebra) :
     (massWeightPoly x).coeff n ∈ massWeightSubmodule n := by
-  induction x using TensorProduct.induction_on generalizing n with
+  induction x using JetAlgebra.induction_on generalizing n with
   | zero => simp
   | add a b ha hb =>
-    rw [map_add, Polynomial.coeff_add]
+    simp only [map_add, Polynomial.coeff_add]
     exact Submodule.add_mem _ (ha n) (hb n)
   | tmul b l =>
     rw [massWeightPoly_tmul, Polynomial.coeff_mul]
@@ -305,20 +304,20 @@ noncomputable def InvariantMassWeightSubmodule (n : ℕ) : Submodule ℂ JetAlge
 lemma jetDeriv_inclB (μ : Fin 1 ⊕ Fin 3) (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) :
     jetDeriv μ (inclB b) =
       inclB (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) b) := by
-  rw [show inclB b = b ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) from rfl, jetDeriv_tmul,
-    LeptonSinglet.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero, add_zero]
+  rw [show inclB b = b ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) from rfl, jetDeriv_tmul,
+    LeptonSinglet.JetAlgebra.jetDeriv_one, tmul_zero, add_zero]
   rfl
 
 /-- The total derivative acts on the fermionic factor through its own total derivative. -/
 lemma jetDeriv_inclL (μ : Fin 1 ⊕ Fin 3) (l : LeptonSinglet.JetAlgebra) :
     jetDeriv μ (inclL l) = inclL (LeptonSinglet.JetAlgebra.jetDeriv μ l) := by
-  rw [show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ] l from rfl, jetDeriv_tmul,
+  rw [show inclL l = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ l from rfl, jetDeriv_tmul,
     show LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ)
         (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) = 0 from by
       rw [show (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) =
           (1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra) from rfl, LinearMap.baseChange_tmul,
         BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero],
-    TensorProduct.zero_tmul, zero_add]
+    zero_tmul, zero_add]
   rfl
 
 /-- Pushing a polynomial forward along the bosonic inclusion commutes with applying the total
@@ -407,9 +406,11 @@ lemma massWeightPoly_jetDeriv (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     rw [jetDeriv_inclL, massWeightPoly_inclL, massWeightPoly_inclL,
       LeptonSinglet.JetAlgebra.massWeightPoly_jetDeriv, map_mul,
       mapAlgHom_X_sq_inclL, mapCoeffs_jetDeriv_mapAlgHom_inclL]
-  induction x using TensorProduct.induction_on with
+  induction x using JetAlgebra.induction_on with
   | zero => simp
-  | add a b ha hb => rw [map_add, map_add, ha, hb, map_add, mul_add]
+  | add a b ha hb =>
+    rw [map_add, map_add, ha, hb, map_add,
+      Polynomial.mapCoeffs_add (map_zero (jetDeriv μ)) (map_add (jetDeriv μ)), mul_add]
   | tmul b l =>
     rw [tmul_eq_inclB_mul_inclL]
     exact hmul _ _ (hB b) (hL l)
@@ -488,7 +489,7 @@ lemma fieldStrengthDeriv_mem_massWeightSubmodule (s : Multiset (Fin 1 ⊕ Fin 3)
   have h : (fieldStrengthDeriv s μ ν : JetAlgebra) =
       [JetGenerators.dB (s + {μ}) ν]ₐ - [JetGenerators.dB (s + {ν}) μ]ₐ := by
     rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv,
-      TensorProduct.tmul_sub, TensorProduct.sub_tmul]
+      TensorProduct.tmul_sub, sub_tmul]
     rfl
   rw [h]
   refine Submodule.sub_mem _ ?_ ?_
@@ -505,44 +506,38 @@ lemma fieldStrengthDeriv_mem_massWeightSubmodule (s : Multiset (Fin 1 ⊕ Fin 3)
 
 -/
 
+set_option maxHeartbeats 400000 in
 /-- The Lorentz action preserves mass weights: the mass-weight polynomial of a transformed
   element is the transform of its mass-weight polynomial. -/
 lemma massWeightPoly_repLorentzGroup (Λ : SL(2,ℂ)) (x : JetAlgebra) :
     massWeightPoly (repLorentzGroup Λ x) =
-      Polynomial.mapAlgHom (Algebra.TensorProduct.map
-        (BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
-        (LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ)) (massWeightPoly x) := by
-  induction x using TensorProduct.induction_on with
+      Polynomial.mapAlgHom (repLorentzGroupAlgHom Λ) (massWeightPoly x) := by
+  have hB : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra, repLorentzGroupAlgHom Λ (inclB z) =
+      inclB (BBoson.JetAlgebra.complexRepLorentzGroup Λ z) := by
+    intro z
+    show repLorentzGroup Λ (z ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) = _
+    rw [repLorentzGroup_tmul, LeptonSinglet.JetAlgebra.repLorentzGroup_apply_one]
+    rfl
+  have hL : ∀ z : LeptonSinglet.JetAlgebra, repLorentzGroupAlgHom Λ (inclL z) =
+      inclL (LeptonSinglet.JetAlgebra.repLorentzGroup Λ z) := by
+    intro z
+    show repLorentzGroup Λ ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ z) = _
+    rw [repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_apply_one]
+    rfl
+  induction x using JetAlgebra.induction_on with
   | zero => simp
-  | add a b ha hb => rw [map_add, map_add, ha, hb, map_add]
+  | add a b ha hb => simp only [map_add, ha, hb]
   | tmul b l =>
     rw [repLorentzGroup_tmul, massWeightPoly_tmul, massWeightPoly_tmul,
       BBoson.JetAlgebra.massWeightPoly_complexRepLorentzGroup,
       LeptonSinglet.JetAlgebra.massWeightPoly_repLorentzGroup, map_mul]
     refine congrArg₂ (· * ·) (Polynomial.ext fun n => ?_) (Polynomial.ext fun n => ?_)
-    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
-        Polynomial.coeff_mapAlgHom_apply]
-      show inclB _ = _
-      rw [show inclB ((BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
-          ((BBoson.JetAlgebra.massWeightPoly b).coeff n)) =
-          (BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
-            ((BBoson.JetAlgebra.massWeightPoly b).coeff n) ⊗ₜ[ℂ]
-            (1 : LeptonSinglet.JetAlgebra) from rfl]
-      rw [show inclB ((BBoson.JetAlgebra.massWeightPoly b).coeff n) =
-          ((BBoson.JetAlgebra.massWeightPoly b).coeff n) ⊗ₜ[ℂ]
-            (1 : LeptonSinglet.JetAlgebra) from rfl, Algebra.TensorProduct.map_tmul, map_one]
-    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
-        Polynomial.coeff_mapAlgHom_apply]
-      show inclL _ = _
-      rw [show inclL ((LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ)
-          ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n)) =
-          (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ)
-              ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) from rfl]
-      rw [show inclL ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) =
-          (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-            ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) from rfl,
-        Algebra.TensorProduct.map_tmul, map_one]
+    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
+        Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, hB]
+      rfl
+    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
+        Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, hL]
+      rfl
 
 /-- The Lorentz action preserves each mass-weight submodule. -/
 lemma repLorentzGroup_mem_massWeightSubmodule (Λ : SL(2,ℂ)) {n : ℕ} {x : JetAlgebra}
@@ -551,54 +546,130 @@ lemma repLorentzGroup_mem_massWeightSubmodule (Λ : SL(2,ℂ)) {n : ℕ} {x : Je
   rw [massWeightPoly_repLorentzGroup, hx, Polynomial.mapAlgHom_monomial]
   rfl
 
+set_option maxHeartbeats 400000 in
 /-- Jets of constant gauge transformations preserve mass weights. This fails for a general
   jet: the higher Taylor coefficients of the hypercharge character lower the derivative
   degree, mixing weights. -/
 lemma massWeightPoly_repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
     massWeightPoly (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
-      Polynomial.mapAlgHom (Algebra.TensorProduct.map
-        (BBoson.JetAlgebra.complexRepJetGaugeGroupIAlgHom (JetGaugeGroupI.ofConstant g))
-        (LeptonSinglet.JetAlgebra.repJetGaugeGroupIAlgHom (JetGaugeGroupI.ofConstant g)))
-        (massWeightPoly x) := by
-  induction x using TensorProduct.induction_on with
+      Polynomial.mapAlgHom (repAlgHom (JetGaugeGroupI.ofConstant g)) (massWeightPoly x) := by
+  set U := JetGaugeGroupI.ofConstant g with hUdef
+  have hB : ∀ z : ℂ ⊗[ℝ] BBoson.JetAlgebra, repAlgHom U (inclB z) =
+      inclB (BBoson.JetAlgebra.complexRepJetGaugeGroupI U z) := by
+    intro z
+    rw [show inclB z = z ⊗ⱼ (1 : LeptonSinglet.JetAlgebra) from rfl, repAlgHom_tmul,
+      show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repJetGaugeGroupI U))
+          (1 : LeptonSinglet.JetAlgebra) = 1 from map_one _]
+    rfl
+  have hL : ∀ z : LeptonSinglet.JetAlgebra, repAlgHom U (inclL z) =
+      inclL (LeptonSinglet.JetAlgebra.repJetGaugeGroupI U z) := by
+    intro z
+    rw [show inclL z = (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ z from rfl, repAlgHom_tmul,
+      BBoson.JetAlgebra.complexRepJetGaugeGroupI_one]
+    rfl
+  induction x using JetAlgebra.induction_on with
   | zero => simp
-  | add a b ha hb => rw [map_add, map_add, ha, hb, map_add]
+  | add a b ha hb => simp only [map_add, ha, hb]
   | tmul b l =>
     rw [repJetGaugeGroupI_tmul', massWeightPoly_tmul, massWeightPoly_tmul,
       BBoson.JetAlgebra.massWeightPoly_complexRepJetGaugeGroupI_ofConstant,
       LeptonSinglet.JetAlgebra.massWeightPoly_repJetGaugeGroupI_ofConstant, map_mul]
     refine congrArg₂ (· * ·) (Polynomial.ext fun n => ?_) (Polynomial.ext fun n => ?_)
-    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply]
-      show inclB _ = _
-      rw [show inclB ((BBoson.JetAlgebra.massWeightPoly b).coeff n) =
-          ((BBoson.JetAlgebra.massWeightPoly b).coeff n) ⊗ₜ[ℂ]
-            (1 : LeptonSinglet.JetAlgebra) from rfl, Algebra.TensorProduct.map_tmul, map_one]
-      rw [show (BBoson.JetAlgebra.complexRepJetGaugeGroupIAlgHom
-          (JetGaugeGroupI.ofConstant g)) ((BBoson.JetAlgebra.massWeightPoly b).coeff n) =
-          (BBoson.JetAlgebra.massWeightPoly b).coeff n from
-        BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant g _]
+    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
+        Polynomial.coeff_mapAlgHom_apply, hB,
+        BBoson.JetAlgebra.complexRepJetGaugeGroupI_ofConstant]
+    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
+        Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, hL]
       rfl
-    · rw [Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply, Polynomial.coeff_mapAlgHom_apply,
-        Polynomial.coeff_mapAlgHom_apply]
-      show inclL _ = _
-      rw [show inclL ((LeptonSinglet.JetAlgebra.repJetGaugeGroupIAlgHom
-          (JetGaugeGroupI.ofConstant g))
-          ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n)) =
-          (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-            (LeptonSinglet.JetAlgebra.repJetGaugeGroupIAlgHom (JetGaugeGroupI.ofConstant g))
-              ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) from rfl]
-      rw [show inclL ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) =
-          (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ₜ[ℂ]
-            ((LeptonSinglet.JetAlgebra.massWeightPoly l).coeff n) from rfl,
-        Algebra.TensorProduct.map_tmul, map_one]
 
 /-- Jets of constant gauge transformations preserve each mass-weight submodule. -/
 lemma repJetGaugeGroupI_ofConstant_mem_massWeightSubmodule (g : GaugeGroupI) {n : ℕ}
     {x : JetAlgebra} (hx : x ∈ massWeightSubmodule n) :
     repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x ∈ massWeightSubmodule n := by
   rw [mem_massWeightSubmodule] at hx ⊢
-  rw [massWeightPoly_repJetGaugeGroupI_ofConstant, hx, Polynomial.mapAlgHom_monomial]
+  rw [massWeightPoly_repJetGaugeGroupI_ofConstant, hx, Polynomial.mapAlgHom_monomial,
+    ← repJetGaugeGroupI_eq_repAlgHom]
+
+
+/-!
+
+## E. Invariance of the mass-weight components
+
+Taking the part of a given mass weight commutes with the Lorentz action and with the action of
+the *constant* gauge transformations, because both preserve mass weights. The covariant
+subalgebra is generated by homogeneous elements, so it too is graded by mass weight. Together
+these say that an invariant element of the covariant subalgebra has invariant mass-weight
+components — which is what lets the classification be run one weight at a time.
+
+-/
+
+/-- Taking the weight-`n` part commutes with the Lorentz action. -/
+lemma repLorentzGroup_coeff_massWeightPoly (Λ : SL(2,ℂ)) (x : JetAlgebra) (n : ℕ) :
+    repLorentzGroup Λ ((massWeightPoly x).coeff n) =
+      (massWeightPoly (repLorentzGroup Λ x)).coeff n := by
+  rw [massWeightPoly_repLorentzGroup, Polynomial.coeff_mapAlgHom_apply]
   rfl
+
+/-- Taking the weight-`n` part commutes with the action of a constant gauge transformation.
+  This fails for a general gauge jet, whose higher Taylor coefficients mix weights. -/
+lemma repJetGaugeGroupI_ofConstant_coeff_massWeightPoly (g : GaugeGroupI) (x : JetAlgebra)
+    (n : ℕ) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) ((massWeightPoly x).coeff n) =
+      (massWeightPoly (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x)).coeff n := by
+  rw [massWeightPoly_repJetGaugeGroupI_ofConstant, Polynomial.coeff_mapAlgHom_apply,
+    ← repJetGaugeGroupI_eq_repAlgHom]
+
+/-- The covariant subalgebra is graded by mass weight: its generators are homogeneous — the
+  field-strength derivative `∂_s F_{μν}` has weight `4 + 2 |s|` and the covariant derivatives
+  `D_l ψ_α`, `D̄_l ψ̄_α` weight `3 + 2 |l|` — so every mass-weight part of an element of the
+  subalgebra lies in the subalgebra again. -/
+lemma coeff_massWeightPoly_mem_covariantAlgebra {x : JetAlgebra} (hx : x ∈ CovariantAlgebra)
+    (n : ℕ) : (massWeightPoly x).coeff n ∈ CovariantAlgebra := by
+  induction hx using CovariantAlgebra.induction_on generalizing n with
+  | fieldStrength s μ ν =>
+    by_cases hn : 4 + 2 * Multiset.card s = n
+    · rw [coeff_massWeightPoly_of_mem (hn ▸ fieldStrengthDeriv_mem_massWeightSubmodule s μ ν)]
+      exact fieldStrengthDeriv_mem_covariantAlgebra s μ ν
+    · rw [coeff_massWeightPoly_of_mem_ne hn (fieldStrengthDeriv_mem_massWeightSubmodule s μ ν)]
+      exact Subalgebra.zero_mem _
+  | lepton l α =>
+    by_cases hn : 3 + 2 * l.length = n
+    · rw [coeff_massWeightPoly_of_mem (hn ▸ Dψ_mem_massWeightSubmodule l α)]
+      exact Dψ_mem_covariantAlgebra l α
+    · rw [coeff_massWeightPoly_of_mem_ne hn (Dψ_mem_massWeightSubmodule l α)]
+      exact Subalgebra.zero_mem _
+  | conjLepton l α =>
+    by_cases hn : 3 + 2 * l.length = n
+    · rw [coeff_massWeightPoly_of_mem (hn ▸ Dbarψ_mem_massWeightSubmodule l α)]
+      exact Dbarψ_mem_covariantAlgebra l α
+    · rw [coeff_massWeightPoly_of_mem_ne hn (Dbarψ_mem_massWeightSubmodule l α)]
+      exact Subalgebra.zero_mem _
+  | algebraMap r =>
+    rw [AlgHom.commutes, Polynomial.algebraMap_apply, Polynomial.coeff_C]
+    split_ifs
+    · exact Subalgebra.algebraMap_mem _ r
+    · exact Subalgebra.zero_mem _
+  | add u v _ _ ihu ihv =>
+    rw [map_add, Polynomial.coeff_add]
+    exact Subalgebra.add_mem _ (ihu n) (ihv n)
+  | mul u v _ _ ihu ihv =>
+    rw [map_mul, Polynomial.coeff_mul]
+    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.mul_mem _ (ihu p.1) (ihv p.2)
+
+/-- The mass-weight components of an invariant element are themselves invariant.
+
+  Invariance under the full jet gauge group does not by itself pass to the components — a
+  general gauge jet mixes mass weights. It passes because an invariant element lies in the
+  covariant subalgebra (`isInvariant_iff_mem_covariantAlgebra`), on which invariance is
+  equivalent to membership together with invariance under the *constant* gauge transformations
+  and the Lorentz group, and all three of those conditions are inherited by the components. -/
+lemma isInvariant_coeff_massWeightPoly {x : JetAlgebra} (hx : IsInvariant x) (n : ℕ) :
+    IsInvariant ((massWeightPoly x).coeff n) := by
+  rw [isInvariant_iff_mem_covariantAlgebra] at hx ⊢
+  obtain ⟨hmem, hconst, hlor⟩ := hx
+  refine ⟨coeff_massWeightPoly_mem_covariantAlgebra hmem n, fun g => ?_, fun Λ => ?_⟩
+  · rw [repJetGaugeGroupI_ofConstant_coeff_massWeightPoly, hconst g]
+  · rw [repLorentzGroup_coeff_massWeightPoly, hlor Λ]
 
 end JetAlgebra
 

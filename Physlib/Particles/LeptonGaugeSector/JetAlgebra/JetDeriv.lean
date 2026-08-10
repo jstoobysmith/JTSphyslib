@@ -16,7 +16,6 @@ on the generators and its commutation relations.
 
 @[expose] public section
 
-set_option maxHeartbeats 1000000
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel
@@ -43,50 +42,48 @@ noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAl
 
 lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
     (l : LeptonSinglet.JetAlgebra) :
-    jetDeriv μ (p ⊗ₜ[ℂ] l) =
-      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ₜ[ℂ] l +
-        p ⊗ₜ[ℂ] LeptonSinglet.JetAlgebra.jetDeriv μ l := by
-  simp [jetDeriv]
+    jetDeriv μ (p ⊗ⱼ l) =
+      (LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p) ⊗ⱼ l +
+        p ⊗ⱼ LeptonSinglet.JetAlgebra.jetDeriv μ l := rfl
 
 @[simp]
 lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv μ (1 : JetAlgebra) = 0 := by
-  rw [show (1 : JetAlgebra) = ((1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra)) ⊗ₜ[ℂ]
-    (1 : LeptonSinglet.JetAlgebra) from rfl, jetDeriv_tmul, LinearMap.baseChange_tmul]
-  simp
+  have hB : LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ)
+      (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) = 0 := by
+    rw [show (1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) = (1 : ℂ) ⊗ₜ[ℝ] (1 : BBoson.JetAlgebra) from rfl,
+      LinearMap.baseChange_tmul, BBoson.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero]
+  rw [one_eq_tmul, jetDeriv_tmul, hB, LeptonSinglet.JetAlgebra.jetDeriv_one, zero_tmul,
+    tmul_zero, add_zero]
 
 /-- The total derivative is an even derivation on the lepton–gauge-sector jet algebra: the
   Leibniz rule holds with no Koszul signs. -/
 lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
     jetDeriv μ (x * y) = jetDeriv μ x * y + x * jetDeriv μ y := by
-  have hdist₁ : ∀ a b c : JetAlgebra, (a + b) * c = a * c + b * c := by grind
-  have hdist₂ : ∀ a b c : JetAlgebra, a * (b + c) = a * b + a * c := by grind
-  have hzero₁ : ∀ a : JetAlgebra, 0 * a = 0 := fun a => zero_mul a
-  have hzero₂ : ∀ a : JetAlgebra, a * 0 = 0 := fun a => mul_zero a
-  induction x using TensorProduct.induction_on with
-  | zero => simp [hzero₁]
+  induction x using JetAlgebra.induction_on with
+  | zero => simp
   | add a b ha hb =>
-    simp only [hdist₁, map_add, ha, hb]
+    simp only [add_mul, map_add, ha, hb]
     abel
   | tmul p l =>
-    induction y using TensorProduct.induction_on with
-    | zero => simp [hzero₂]
+    induction y using JetAlgebra.induction_on with
+    | zero => simp
     | add a' b' ha' hb' =>
-      simp only [hdist₂, map_add, ha', hb']
+      simp only [mul_add, map_add, ha', hb']
       abel
     | tmul p' l' =>
-      simp only [Algebra.TensorProduct.tmul_mul_tmul, jetDeriv_tmul,
+      simp only [tmul_mul_tmul, jetDeriv_tmul,
         BBoson.JetAlgebra.jetDeriv_baseChange_mul, LeptonSinglet.JetAlgebra.jetDeriv_mul,
-        TensorProduct.add_tmul, TensorProduct.tmul_add, hdist₁, hdist₂]
+        ← tmul_add_tmul_left, ← tmul_add_tmul_right, add_mul, mul_add, tmul_mul_tmul]
       abel
 
 lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
     jetDeriv μ (jetDeriv ν x) = jetDeriv ν (jetDeriv μ x) := by
-  induction x using TensorProduct.induction_on with
+  induction x using JetAlgebra.induction_on with
   | zero => simp
   | add a b ha hb =>
     simp only [map_add, ha, hb]
   | tmul p l =>
-    simp [jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_comm μ ν,
+    simp only [jetDeriv_tmul, map_add, LeptonSinglet.JetAlgebra.jetDeriv_comm μ ν,
       BBoson.JetAlgebra.jetDeriv_baseChange_comm μ ν p]
     abel
 
@@ -170,8 +167,8 @@ lemma ofGenerator_dB_eq_jetDerivM (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 �
     rw [jetDerivM_cons, LinearMap.comp_apply, ← ih]
     simp only [ofGenerator]
     rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
-    simp only [LeptonSinglet.JetAlgebra.jetDeriv_one, TensorProduct.tmul_zero,
-      add_zero, BBoson.JetAlgebra.jetDeriv_ofGenerator, BBoson.JetGenerators.shift_dB]
+    simp only [LeptonSinglet.JetAlgebra.jetDeriv_one, tmul_zero,
+      zero_add, BBoson.JetAlgebra.jetDeriv_ofGenerator, BBoson.JetGenerators.shift_dB]
     congr 2
     rw [add_comm, Multiset.singleton_add]
 

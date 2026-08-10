@@ -19,7 +19,6 @@ lying in the commutative bosonic factor.
 
 @[expose] public section
 
-set_option maxHeartbeats 1000000
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel
@@ -30,7 +29,7 @@ namespace JetAlgebra
   algebra. -/
 noncomputable def fieldStrengthDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) : JetAlgebra :=
-  ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv s μ ν) ⊗ₜ[ℂ] 1
+  ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv s μ ν) ⊗ⱼ 1
 
 
 /-- Antisymmetry of the embedded field-strength derivatives in the two field
@@ -42,7 +41,7 @@ lemma fieldStrengthDeriv_antisymm (s : Multiset (Fin 1 ⊕ Fin 3))
       [JetGenerators.dB (s + {a}) b]ₐ - [JetGenerators.dB (s + {b}) a]ₐ := by
     intro a b
     rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv,
-      TensorProduct.tmul_sub, TensorProduct.sub_tmul]
+      TensorProduct.tmul_sub, sub_tmul]
     rfl
   rw [h, h, neg_sub]
 
@@ -60,7 +59,7 @@ lemma fieldStrengthDeriv_self (s : Multiset (Fin 1 ⊕ Fin 3))
   have h : (fieldStrengthDeriv s μ μ : JetAlgebra) =
       [JetGenerators.dB (s + {μ}) μ]ₐ - [JetGenerators.dB (s + {μ}) μ]ₐ := by
     rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv,
-      TensorProduct.tmul_sub, TensorProduct.sub_tmul]
+      TensorProduct.tmul_sub, sub_tmul]
     rfl
   rw [h, sub_self]
 
@@ -70,10 +69,9 @@ lemma fieldStrengthDeriv_mul_comm (s s' : Multiset (Fin 1 ⊕ Fin 3))
     (μ ν ρ τ : Fin 1 ⊕ Fin 3) :
     fieldStrengthDeriv s μ ν * fieldStrengthDeriv s' ρ τ =
       fieldStrengthDeriv s' ρ τ * fieldStrengthDeriv s μ ν := by
-  rw [fieldStrengthDeriv, fieldStrengthDeriv, Algebra.TensorProduct.tmul_mul_tmul,
-    Algebra.TensorProduct.tmul_mul_tmul, Algebra.TensorProduct.tmul_mul_tmul,
-    Algebra.TensorProduct.tmul_mul_tmul,
-    mul_comm (BBoson.JetAlgebra.fieldStrengthDeriv s μ ν)]
+  rw [fieldStrengthDeriv, fieldStrengthDeriv, tmul_mul_tmul, tmul_mul_tmul]
+  congr 1
+  exact mul_comm _ _
 
 end JetAlgebra
 
