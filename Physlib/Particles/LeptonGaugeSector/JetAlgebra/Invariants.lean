@@ -5,11 +5,11 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.Membership
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.SpanOfRenormalizableTerms
 /-!
-# Classification of the renormalizable QED Lagrangian densities
+# Classification of the renormalizable Lagrangian densities of the lepton–gauge sector
 
-The gauge- and Lorentz-invariant elements of the QED jet algebra of mass
+The gauge- and Lorentz-invariant elements of the lepton–gauge-sector jet algebra of mass
 dimension at most four are exactly the linear combinations of the constants,
 the Maxwell term, the theta term and the two fermion kinetic terms:
 
@@ -17,17 +17,86 @@ the Maxwell term, the theta term and the two fermion kinetic terms:
 
 The inclusion `≥` is `span_massDimFourInvariants_le`. For `≤`, an invariant
 `x` of weight `≤ 8` decomposes into `massWeightScale`-eigenvectors, each
-lying in a `covMonomialSpan`; the parity and hypercharge selection rules leave
+lying in a `covMonomialSpan`; the rotation and hypercharge selection rules leave
 only the neutral even-weight components, the weight-four and weight-six
-sectors are killed by the Klein average and `sixKill`, and the weight-eight
-sector is pinned down by the projector `opPi`.
+sectors are killed by the rotation average and `rotationPiBoostAvg`, and the weight-eight
+sector is pinned down by the projector `boostAvgScalarProj`.
+
+## The two techniques, and the layout of `Invariants/`
+
+Everything below the top level rests on one principle, proved in
+`Invariants/GroupAverage`. If `T` is a linear operator built from the group
+action which fixes every invariant vector, then for an invariant `y` lying in a
+span,
+
+`y ∈ span S` and `T y = y` give `y = T y ∈ span (T '' S)`,
+
+so it suffices to compute `T v` for the finitely many `v ∈ S`. The operators
+used are of two kinds:
+
+* genuine averages over a finite subgroup — `rotationPiAvg` is the Reynolds
+  operator of the Klein four-group `{1, R_x, R_y, R_z}` of rotations by `π`.
+  Such an average is idempotent, so it projects onto the invariants outright;
+* weighted combinations whose weights sum to one, so that they still fix the
+  invariants, but which are engineered to annihilate the unwanted eigenvalues
+  of the operator they are built from. The boosts are non-compact and admit no
+  invariant average, so `boostAvgZ`, `boostAvgX`, `boostAvgY` pair `B(t)` with
+  `B(t)⁻¹` at `t = 2, 3, 4` with rational weights and `boostAvg` is their mean
+  over the three axes, while `rotationPiBoostAvg` weights the identity against
+  two `z`-boosts. Despite the names these are not idempotent, and the last step
+  of the argument needs one that is: `boostAvgScalarProj` is the degree-five
+  polynomial in `boostAvg` vanishing on each of its other five eigenvalues and
+  equal to one on the invariants — a spectral projector, not an average.
+
+Alongside these sit the reduction steps, which cut the problem down to a
+finite spanning set before any operator is applied: separation of components
+by a character (the powers `c ^ m` for the mass weight, roots of unity for the
+hypercharge), selection rules read off a single group element (the gauge
+element with `u 0 = i` kills every odd-weight component), and the explicit
+monomial spanning sets of each sector.
+
+The subdirectories group the files by which of these they carry, and each
+subgroup sits opposite the average taken over it.
+
+* `Invariants/GroupAverage` — the averaging principle itself, stated for an
+  arbitrary representation: the span lemma above, weighted sums of group
+  elements, the average over a finite subgroup, and the fact that a polynomial
+  with unit coefficient sum in an operator fixing `y` again fixes `y`.
+* `Invariants/Grading/` — which grading is being used.
+  `MassWeightAndHypercharge` builds the two gradings, by mass weight and by
+  hypercharge, together with the selection rules that follow from them.
+  `NeutralSectors` reduces each charge-neutral sector of weight four, six and
+  eight to a finite explicit spanning family of monomials.
+* `Invariants/Subgroups/` — which subgroup, acting on what. `RotationsPi`
+  defines the rotations by `π` and the subgroup they generate; `AxisBoosts`
+  defines the one-parameter boosts along the three coordinate axes and the two
+  fixed `z`-boosts; `BoostsOnFieldStrength`,
+  `BoostsOnFieldStrengthDerivatives`, `BoostsOnPhotonTerms` and
+  `BoostsOnFermionTerms` tabulate how the boosts move `F_{μν}`,
+  `∂_ρ ∂_τ F_{μν}`, the products `F F` and the fermion bilinears.
+* `Invariants/Averages/` — the average over each of those subgroups, and what
+  it does to the monomials. `RotationAverage` stands opposite
+  `Subgroups/RotationsPi` and kills the weight-four sector;
+  `RotationPiBoostAverage` follows it with a weighting of the two `z`-boosts
+  and kills the weight-six sector; `BoostAverage` stands opposite
+  `Subgroups/AxisBoosts` and, the boosts being non-compact, replaces the
+  missing invariant average by the weighted combinations `boostAvgZ/X/Y` and
+  their mean `boostAvg`. `BoostAvgProjector` then turns `boostAvg` into a
+  genuine projector, and `BoostAvgProjectorOnPhotonPairs`,
+  `BoostAvgProjectorOnDerivativesAndFermions` and
+  `BoostAvgProjectorOnMonomials` evaluate it on each kind of weight-eight term.
+
+`Invariants/Basic` (the four renormalizable terms, defined one per file in
+`LeptonGaugeSector/JetAlgebra/Terms/`, collected into one set together with the easy
+inclusion) and `Invariants/SpanOfRenormalizableTerms` (the projected monomials
+land in their span) bracket these and stay at the top level.
 -/
 
 @[expose] public section
 
 set_option maxHeartbeats 1000000
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -57,31 +126,31 @@ lemma mem_span_of_mem_chargeCovSpan_eight {y : JetAlgebra}
   obtain ⟨c4, hc4⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).mp hw4
   obtain ⟨c5, hc5⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).mp hw5
   obtain ⟨c6, hc6⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).mp hw6
-  have hKy : kleinAvg y = y := by
-    rw [kleinAvg_apply, hinv parityZ, hinv parityY, hinv parityX]
+  have hKy : rotationPiAvg y = y := by
+    rw [rotationPiAvg_apply, hinv rotationPiZ, hinv rotationPiY, hinv rotationPiX]
     module
-  have hself : opPi (kleinAvg y) = y := by
+  have hself : boostAvgScalarProj (rotationPiAvg y) = y := by
     rw [hKy]
-    exact opPi_apply_of_invariant hinv
+    exact boostAvgScalarProj_apply_of_invariant hinv
   rw [← hself, ← hE6, ← hE5, ← hE4, ← hE3, ← hE2, ← hc1, ← hc2, ← hc3, ← hc4,
     ← hc5, ← hc6]
   simp only [map_add, map_sum, map_smul]
   refine Submodule.add_mem _ (Submodule.add_mem _ (Submodule.add_mem _
     (Submodule.add_mem _ (Submodule.add_mem _ ?_ ?_) ?_) ?_) ?_) ?_
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_FF_mem p.1.1 p.1.2 p.2.1 p.2.2)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_FF_mem p.1.1 p.1.2 p.2.1 p.2.2)
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_DDF_mem p.1.1 p.1.2 p.2.1 p.2.2)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_DDF_mem p.1.1 p.1.2 p.2.1 p.2.2)
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_FM1_mem p.2 p.1.1 p.1.2)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_FM1_mem p.2 p.1.1 p.1.2)
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_FM1r_mem p.2 p.1.1 p.1.2)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_FM1r_mem p.2 p.1.1 p.1.2)
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_FM2r_mem p.2 p.1.1 p.1.2)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_FM2r_mem p.2 p.1.1 p.1.2)
   · exact Submodule.sum_mem _ fun p _ =>
-      Submodule.smul_mem _ _ (opPi_kleinAvg_FM2_mem p.2 p.1.2 p.1.1)
+      Submodule.smul_mem _ _ (boostAvgScalarProj_rotationPiAvg_FM2_mem p.2 p.1.2 p.1.1)
 
-/-- The classification of the renormalizable QED Lagrangian densities: the
+/-- The classification of the renormalizable Lagrangian densities of the lepton–gauge sector: the
   gauge- and Lorentz-invariant elements of mass weight at most eight are spanned
   by the constants, the Maxwell term, the theta term, and the two fermion
   kinetic terms.
@@ -118,7 +187,7 @@ lemma mem_span_of_mem_chargeCovSpan_eight {y : JetAlgebra}
      kinetic terms.
 
   Steps 3–4 remain to be formalized: they require the commutation of the
-  scaling with the two group actions at the QED level, the linear independence
+  scaling with the two group actions at the sector level, the linear independence
   of the covariant monomials, and the invariant theory of `SL(2,ℂ)` on the
   finite-dimensional weight sectors. -/
 lemma invariantMassWeightSubmodule_eight_eq_span_massDimFourInvariants :
@@ -149,22 +218,22 @@ lemma invariantMassWeightSubmodule_eight_eq_span_massDimFourInvariants :
       (covMonomialSpan_le_bot_of_lt_three (by omega) (by omega) (hzmem 2))]
     exact Submodule.zero_mem _
   · rw [eq_zero_of_mem_covMonomialSpan_odd (by norm_num) (hzmem 3)
-      (hzconst parityGauge)]
+      (hzconst fermionParityGauge)]
     exact Submodule.zero_mem _
   · rw [eq_zero_of_mem_chargeCovSpan_four
       (mem_chargeCovSpan_zero_of_invariant (hzmem 4) hzconst) hzlor]
     exact Submodule.zero_mem _
   · rw [eq_zero_of_mem_covMonomialSpan_odd (by norm_num) (hzmem 5)
-      (hzconst parityGauge)]
+      (hzconst fermionParityGauge)]
     exact Submodule.zero_mem _
   · rw [eq_zero_of_mem_chargeCovSpan_six
       (mem_chargeCovSpan_zero_of_invariant (hzmem 6) hzconst) hzlor]
     exact Submodule.zero_mem _
   · rw [eq_zero_of_mem_covMonomialSpan_odd (by norm_num) (hzmem 7)
-      (hzconst parityGauge)]
+      (hzconst fermionParityGauge)]
     exact Submodule.zero_mem _
   · exact mem_span_of_mem_chargeCovSpan_eight
       (mem_chargeCovSpan_zero_of_invariant (hzmem 8) hzconst) hzlor
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

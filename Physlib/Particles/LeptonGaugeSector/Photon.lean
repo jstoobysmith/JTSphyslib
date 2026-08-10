@@ -76,7 +76,7 @@ and `Physlib/Electromagnetism/Dynamics/KineticTerm.lean`.
 
 @[expose] public section
 
-namespace QED
+namespace LeptonGaugeSector
 
 open Electromagnetism SpaceTime minkowskiMatrix
 
@@ -392,4 +392,4 @@ end JetAlgebra
 
 end Photon
 
-end QED
+end LeptonGaugeSector

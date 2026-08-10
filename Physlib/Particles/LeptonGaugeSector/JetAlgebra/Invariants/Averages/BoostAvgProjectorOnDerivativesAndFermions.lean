@@ -5,13 +5,13 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.Projectors
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Averages.BoostAvgProjectorOnPhotonPairs
 /-!
-# The projector polynomial on the derivative and fermion patterns
+# The Lorentz-scalar projector on the derivative and fermion terms
 
-Evaluation of the projector polynomial `opPi` on the eigenvalue patterns of
-the second-derivative field strengths (`projDDF*`) and of the fermion
-bilinears (`projFMu*`, `projFMubar*`).
+Evaluation of the projector polynomial `boostAvgScalarProj` on the eigenvalue patterns of
+the second-derivative field strengths (`scalarProjDDF*`) and of the fermion
+bilinears (`scalarProjFMu*`, `scalarProjFMubar*`).
 -/
 
 @[expose] public section
@@ -20,7 +20,7 @@ set_option maxHeartbeats 1000000
 set_option linter.unusedSimpArgs false
 set_option linter.unusedTactic false
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -29,7 +29,7 @@ open scoped minkowskiMatrix PauliMatrix
 open Matrix MatrixGroups
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 0 of the DDF block. -/
-lemma projDDF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -88,7 +88,7 @@ lemma projDDF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 1 of the DDF block. -/
-lemma projDDF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -147,7 +147,7 @@ lemma projDDF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 2 of the DDF block. -/
-lemma projDDF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -206,7 +206,7 @@ lemma projDDF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 3 of the DDF block. -/
-lemma projDDF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -265,7 +265,7 @@ lemma projDDF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 4 of the DDF block. -/
-lemma projDDF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -324,7 +324,7 @@ lemma projDDF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 5 of the DDF block. -/
-lemma projDDF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -383,7 +383,7 @@ lemma projDDF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 6 of the DDF block. -/
-lemma projDDF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -442,7 +442,7 @@ lemma projDDF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 7 of the DDF block. -/
-lemma projDDF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -501,7 +501,7 @@ lemma projDDF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 8 of the DDF block. -/
-lemma projDDF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -560,7 +560,7 @@ lemma projDDF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 9 of the DDF block. -/
-lemma projDDF9 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF9 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -619,7 +619,7 @@ lemma projDDF9 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 10 of the DDF block. -/
-lemma projDDF10 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF10 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -678,7 +678,7 @@ lemma projDDF10 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 11 of the DDF block. -/
-lemma projDDF11 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjDDF11 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 : M}
     (h0 : T v0 = (1/3 : ℂ) • v0 + (1/6 : ℂ) • v7 + (1/6 : ℂ) • v9)
     (h1 : T v1 = (1/3 : ℂ) • v1 + (-(1/6) : ℂ) • v6 + (1/6 : ℂ) • v8)
@@ -737,7 +737,7 @@ lemma projDDF11 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 0 of the FMu block. -/
-lemma projFMu0 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMu0 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -784,7 +784,7 @@ lemma projFMu0 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 1 of the FMu block. -/
-lemma projFMu1 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMu1 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -831,7 +831,7 @@ lemma projFMu1 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 2 of the FMu block. -/
-lemma projFMu2 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMu2 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -878,7 +878,7 @@ lemma projFMu2 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 3 of the FMu block. -/
-lemma projFMu3 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMu3 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -925,7 +925,7 @@ lemma projFMu3 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 0 of the FMubar block. -/
-lemma projFMubar0 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMubar0 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -972,7 +972,7 @@ lemma projFMubar0 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 1 of the FMubar block. -/
-lemma projFMubar1 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMubar1 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -1019,7 +1019,7 @@ lemma projFMubar1 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 2 of the FMubar block. -/
-lemma projFMubar2 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMubar2 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -1066,7 +1066,7 @@ lemma projFMubar2 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 3 of the FMubar block. -/
-lemma projFMubar3 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFMubar3 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 : M}
     (h0 : T v0 = (1/2 : ℂ) • v0 + (-(1/6) : ℂ) • v1 + (-(Complex.I/6)) • v2 + (-(1/6) : ℂ) • v3)
     (h1 : T v1 = (5/6 : ℂ) • v1 + (-(1/6) : ℂ) • v0)
@@ -1112,4 +1112,4 @@ lemma projFMubar3 {M : Type*} [AddCommGroup M] [Module ℂ M]
   match_scalars <;> (try norm_num; try ring_nf; try norm_num [Complex.I_sq])
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

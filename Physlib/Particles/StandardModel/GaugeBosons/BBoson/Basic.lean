@@ -1418,7 +1418,7 @@ derivative of the hypercharge character produced by `∂_μ` acting on the
 transformed `ψ`, and at higher orders the iterated derivatives of the gauge
 parameter on both sides are matched precisely by the anomaly operators built
 from `mcDeriv`, which annihilate the covariant derivatives (see
-`QED.JetAlgebra`).
+`LeptonGaugeSector.JetAlgebra`).
 
 ### Two orders: transforming then differentiating, and the reverse
 
@@ -1547,13 +1547,13 @@ organises them.
 
 ### Where the two meet
 
-Both readings appear together in the Maurer–Cartan anomaly operators of the QED
-jet algebra (`QED.JetAlgebra.anomalyM`): `mcDeriv` from the gauge-field
+Both readings appear together in the Maurer–Cartan anomaly operators of the lepton–gauge-sector
+jet algebra (`LeptonGaugeSector.JetAlgebra.anomalyM`): `mcDeriv` from the gauge-field
 coordinates, `mcShift` from the `c B_ν` term of the covariant step, and
 `mcShiftSeries` from the matter coordinates. Covariance is the statement that
 these cancel, and at the base point the cancellation is term-for-term between
 `c · mcShift` and `c · constantCoeff (mcShiftSeries)`
-(`QED.JetAlgebra.anomalyM_baseM`) — which is an identity of syntax, not of
+(`LeptonGaugeSector.JetAlgebra.anomalyM_baseM`) — which is an identity of syntax, not of
 computation, precisely because the two carry the same sign.
 -/
 

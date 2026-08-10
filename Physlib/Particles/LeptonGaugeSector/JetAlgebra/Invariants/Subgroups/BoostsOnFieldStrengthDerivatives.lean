@@ -5,9 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.BoostTransforms
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Subgroups.BoostsOnFieldStrength
 /-!
-# Boost transformations of the second-derivative field strengths
+# Boosts acting on the derivatives of the field strength
 
 The paired boost actions `rep(boost t) + rep(boost t⁻¹)` on the weight-eight
 monomials `∂_r ∂_s F_{ab}`, for each of the three coordinate axes.
@@ -19,7 +19,7 @@ set_option maxHeartbeats 1000000
 set_option linter.unusedSimpArgs false
 set_option linter.unusedTactic false
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -29,7 +29,7 @@ open Matrix MatrixGroups
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(0, 1)`. -/
-lemma genZ_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inl 0) (Sum.inr 0)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -59,7 +59,7 @@ lemma genZ_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(0, 1)`. -/
-lemma genZ_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inr 1) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -89,7 +89,7 @@ lemma genZ_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(0, 2)`. -/
-lemma genZ_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -119,7 +119,7 @@ lemma genZ_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(0, 2)`. -/
-lemma genZ_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -149,7 +149,7 @@ lemma genZ_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(0, 3)`. -/
-lemma genZ_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 2)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -178,7 +178,7 @@ lemma genZ_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(0, 3)`. -/
-lemma genZ_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 1)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -204,7 +204,7 @@ lemma genZ_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(1, 2)`. -/
-lemma genZ_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 2)) =
       fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 2) := by
@@ -225,7 +225,7 @@ lemma genZ_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(1, 2)`. -/
-lemma genZ_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 1)) =
       fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 1) := by
@@ -245,7 +245,7 @@ lemma genZ_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(1, 3)`. -/
-lemma genZ_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -275,7 +275,7 @@ lemma genZ_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(1, 3)`. -/
-lemma genZ_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -305,7 +305,7 @@ lemma genZ_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(2, 3)`. -/
-lemma genZ_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inl 0) (Sum.inr 0)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -335,7 +335,7 @@ lemma genZ_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Z`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(2, 3)`. -/
-lemma genZ_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostZ_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inr 1) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -365,7 +365,7 @@ lemma genZ_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(0, 1)`. -/
-lemma genX_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inl 0) (Sum.inr 0)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -394,7 +394,7 @@ lemma genX_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(0, 1)`. -/
-lemma genX_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inr 1) (Sum.inr 2)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -420,7 +420,7 @@ lemma genX_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(0, 2)`. -/
-lemma genX_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -447,7 +447,7 @@ lemma genX_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(0, 2)`. -/
-lemma genX_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -474,7 +474,7 @@ lemma genX_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(0, 3)`. -/
-lemma genX_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -501,7 +501,7 @@ lemma genX_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(0, 3)`. -/
-lemma genX_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -528,7 +528,7 @@ lemma genX_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(1, 2)`. -/
-lemma genX_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -555,7 +555,7 @@ lemma genX_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(1, 2)`. -/
-lemma genX_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -582,7 +582,7 @@ lemma genX_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(1, 3)`. -/
-lemma genX_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -609,7 +609,7 @@ lemma genX_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(1, 3)`. -/
-lemma genX_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -636,7 +636,7 @@ lemma genX_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(2, 3)`. -/
-lemma genX_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inl 0) (Sum.inr 0)) =
       fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inl 0) (Sum.inr 0) := by
@@ -657,7 +657,7 @@ lemma genX_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `X`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(2, 3)`. -/
-lemma genX_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostX_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inr 1) (Sum.inr 2)) =
       fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inr 1) (Sum.inr 2) := by
@@ -677,7 +677,7 @@ lemma genX_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(0, 1)`. -/
-lemma genY_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inl 0) (Sum.inr 0)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -707,7 +707,7 @@ lemma genY_dd01_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(0, 1)`. -/
-lemma genY_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 0} (Sum.inr 1) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -735,7 +735,7 @@ lemma genY_dd01_F23 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(0, 2)`. -/
-lemma genY_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 1)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -764,7 +764,7 @@ lemma genY_dd02_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(0, 2)`. -/
-lemma genY_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 2)) =
       (((t ^ 8 + 1) / (2 * t ^ 4) : ℝ) : ℂ) •
@@ -790,7 +790,7 @@ lemma genY_dd02_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(0, 3)`. -/
-lemma genY_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -817,7 +817,7 @@ lemma genY_dd03_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(0, 3)`. -/
-lemma genY_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inl 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -846,7 +846,7 @@ lemma genY_dd03_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F03` with derivative indices `(1, 2)`. -/
-lemma genY_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inl 0) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -874,7 +874,7 @@ lemma genY_dd12_F03 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F12` with derivative indices `(1, 2)`. -/
-lemma genY_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 1} (Sum.inr 0) (Sum.inr 1)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -904,7 +904,7 @@ lemma genY_dd12_F12 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F02` with derivative indices `(1, 3)`. -/
-lemma genY_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 1)) =
       fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inl 0) (Sum.inr 1) := by
@@ -925,7 +925,7 @@ lemma genY_dd13_F02 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F13` with derivative indices `(1, 3)`. -/
-lemma genY_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 2)) =
       fieldStrengthDeriv {Sum.inr 0, Sum.inr 2} (Sum.inr 0) (Sum.inr 2) := by
@@ -945,7 +945,7 @@ lemma genY_dd13_F13 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F01` with derivative indices `(2, 3)`. -/
-lemma genY_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inl 0) (Sum.inr 0)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -974,7 +974,7 @@ lemma genY_dd23_F01 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The `Y`-boost action on the derivative field strength
   `∂∂F23` with derivative indices `(2, 3)`. -/
-lemma genY_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
+lemma boostY_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (fieldStrengthDeriv {Sum.inr 1, Sum.inr 2} (Sum.inr 1) (Sum.inr 2)) =
       (((t ^ 8 + 2 * t ^ 4 + 1) / (4 * t ^ 4) : ℝ) : ℂ) •
@@ -999,4 +999,4 @@ lemma genY_dd23_F23 (t : ℝ) (ht : t ≠ 0) :
   try (match_scalars <;> (push_cast; try field_simp; try ring))
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

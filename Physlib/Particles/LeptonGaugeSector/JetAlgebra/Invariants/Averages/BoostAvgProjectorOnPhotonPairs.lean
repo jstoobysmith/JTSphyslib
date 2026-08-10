@@ -5,14 +5,14 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.SymmetrisedAverage
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Averages.BoostAvgProjector
 /-!
-# The projector polynomial
+# The Lorentz-scalar projector on the photon pairs
 
-`opPi` is the polynomial in `opS` that annihilates every eigenvalue of `opS`
+`boostAvgScalarProj` is the polynomial in `boostAvg` that annihilates every eigenvalue of `boostAvg`
 other than `1`; it therefore fixes the Lorentz-invariant vectors and projects
-the weight-eight monomials onto the invariant subspace. The `projFF*`,
-`projDDF*` and `projFMu*` lemmas evaluate that polynomial on each eigenvalue
+the weight-eight monomials onto the invariant subspace. The `scalarProjFF*`,
+`scalarProjDDF*` and `scalarProjFMu*` lemmas evaluate that polynomial on each eigenvalue
 pattern occurring in the weight-eight basis.
 -/
 
@@ -22,7 +22,7 @@ set_option maxHeartbeats 1000000
 set_option linter.unusedSimpArgs false
 set_option linter.unusedTactic false
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -32,7 +32,7 @@ open Matrix MatrixGroups
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 0 of the FF block. -/
-lemma projFF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -92,7 +92,7 @@ lemma projFF0 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 1 of the FF block. -/
-lemma projFF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -140,7 +140,7 @@ lemma projFF1 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 2 of the FF block. -/
-lemma projFF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -200,7 +200,7 @@ lemma projFF2 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 3 of the FF block. -/
-lemma projFF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -248,7 +248,7 @@ lemma projFF3 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 4 of the FF block. -/
-lemma projFF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -308,7 +308,7 @@ lemma projFF4 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 5 of the FF block. -/
-lemma projFF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -356,7 +356,7 @@ lemma projFF5 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 6 of the FF block. -/
-lemma projFF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -416,7 +416,7 @@ lemma projFF6 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 7 of the FF block. -/
-lemma projFF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -476,7 +476,7 @@ lemma projFF7 {M : Type*} [AddCommGroup M] [Module ℂ M]
 
 set_option maxHeartbeats 2000000 in
 /-- The abstract projector computation for column 8 of the FF block. -/
-lemma projFF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
+lemma scalarProjFF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
     (T : Module.End ℂ M) {v0 v1 v2 v3 v4 v5 v6 v7 v8 : M}
     (h0 : T v0 = (2/3 : ℂ) • v0 + (-(1/6) : ℂ) • v6 + (-(1/6) : ℂ) • v7)
     (h1 : T v1 = (2/3 : ℂ) • v1 + (-(1/6) : ℂ) • v3 + (1/6 : ℂ) • v5)
@@ -533,7 +533,6 @@ lemma projFF8 {M : Type*} [AddCommGroup M] [Module ℂ M]
     match_scalars <;> norm_num
   rw [i5, i4, i3, i2, h8]
   match_scalars <;> norm_num
-  match_scalars <;> (try norm_num; try ring_nf; try norm_num [Complex.I_sq])
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

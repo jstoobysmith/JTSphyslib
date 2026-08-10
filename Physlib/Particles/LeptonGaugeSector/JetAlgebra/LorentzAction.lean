@@ -5,16 +5,16 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Basic
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.DerivativeOrder
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.Basic
 /-!
-# THe Lorentz group action on the QED jet algebra
+# THe Lorentz group action on the lepton–gauge-sector jet algebra
 -/
 
 @[expose] public section
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -29,14 +29,14 @@ open Matrix MatrixGroups
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) JetAlgebra :=
   BBoson.JetAlgebra.complexRepLorentzGroup.tprod LeptonSinglet.JetAlgebra.repLorentzGroup
 
-/-- The QED Lorentz action on a pure tensor. -/
+/-- The Lorentz action on a pure tensor. -/
 lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (p : ℂ ⊗[ℝ] BBoson.JetAlgebra)
     (l : LeptonSinglet.JetAlgebra) :
     repLorentzGroup Λ (p ⊗ₜ[ℂ] l) =
       (BBoson.JetAlgebra.complexRepLorentzGroup Λ p) ⊗ₜ[ℂ]
         (LeptonSinglet.JetAlgebra.repLorentzGroup Λ l) := rfl
 
-/-- The Lorentz action on the QED jet algebra agrees with the algebra
+/-- The Lorentz action on the lepton–gauge-sector jet algebra agrees with the algebra
   homomorphism obtained as the tensor product of the complexified B-boson
   action with the exterior-algebra action on the charged-lepton factor. -/
 lemma repLorentzGroup_eq_algHom (Λ : SL(2,ℂ)) (x : JetAlgebra) :
@@ -44,7 +44,7 @@ lemma repLorentzGroup_eq_algHom (Λ : SL(2,ℂ)) (x : JetAlgebra) :
         (BBoson.JetAlgebra.complexRepLorentzGroupAlgHom Λ)
         (LeptonSinglet.JetAlgebra.repLorentzGroupAlgHom Λ) x := rfl
 
-/-- The Lorentz action on the QED jet algebra is multiplicative (term-level
+/-- The Lorentz action on the lepton–gauge-sector jet algebra is multiplicative (term-level
   form). -/
 lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (a b : JetAlgebra) :
     repLorentzGroup Λ (a * b) = repLorentzGroup Λ a * repLorentzGroup Λ b := by
@@ -124,7 +124,7 @@ lemma repLorentzGroup_dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
   rw [TensorProduct.tmul_smul]
   rfl
 
-/-- The Lorentz action on the zeroth-order B-boson generator of the QED jet
+/-- The Lorentz action on the zeroth-order B-boson generator of the lepton–gauge-sector jet
   algebra. -/
 lemma repLorentzGroup_B (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
     repLorentzGroup Λ [JetGenerators.dB {} μ]ₐ =
@@ -234,6 +234,157 @@ lemma repLorentzGroup_Dbarψ_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
   simp only [Dbarψ_singleton, map_add, map_smul, repLorentzGroup_apply_mul,
     repLorentzGroup_B, repLorentzGroup_barψ, repLorentzGroup_dbarψ_singleton,
     smul_add, Finset.sum_add_distrib, smul_smul, smul_sum_mul_sum]
+
+/-!
+
+### The transformation law of the field strengths
+
+The embedded field-strength derivatives are tensors: every index, the
+derivative indices included, transforms by the Lorentz matrix. For a
+*diagonal* Lorentz matrix this collapses to a scaling by the product of the
+signs carried by the indices, which is what the parity and boost arguments of
+`Invariants/` use.
+
+-/
+
+/-- Under a diagonal Lorentz transformation the field strength scales by the
+  product of the signs of its two indices. -/
+lemma repLorentzGroup_diag_fieldStrengthDeriv {M : SL(2,ℂ)}
+    {sgn : Fin 1 ⊕ Fin 3 → ℝ}
+    (hM : ∀ a b, (Lorentz.SL2C.toLorentzGroup M).1 a b =
+      if a = b then sgn a else 0) (μ ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup M (fieldStrengthDeriv {} μ ν) =
+      ((sgn μ * sgn ν : ℝ) : ℂ) • fieldStrengthDeriv {} μ ν := by
+  rw [repLorentzGroup_fieldStrengthDeriv_nil]
+  rw [Finset.sum_eq_single μ (fun a _ ha => Finset.sum_eq_zero fun b _ => by
+      rw [hM a μ, if_neg ha, zero_mul, Complex.ofReal_zero, zero_smul])
+    (fun h => absurd (Finset.mem_univ μ) h)]
+  rw [Finset.sum_eq_single ν (fun b _ hb => by
+      rw [hM b ν, if_neg hb, mul_zero, Complex.ofReal_zero, zero_smul])
+    (fun h => absurd (Finset.mem_univ ν) h)]
+  rw [hM μ μ, if_pos rfl, hM ν ν, if_pos rfl]
+
+/-- The transformation law of the embedded first-derivative field strength:
+  a three-index tensor, all indices transforming by the Lorentz matrix. -/
+lemma repLorentzGroup_fieldStrengthDeriv_singleton (Λ : SL(2,ℂ))
+    (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup Λ (fieldStrengthDeriv {ρ} μ ν) =
+      ∑ r, ∑ a, ∑ b, ((((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν) : ℝ)) : ℂ) •
+        fieldStrengthDeriv {r} a b := by
+  have hconv : ∀ (r : ℝ) (X : ℂ ⊗[ℝ] BBoson.JetAlgebra),
+      (r • X) ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) = ((r : ℂ)) • (X ⊗ₜ[ℂ] 1) := by
+    intro r X
+    rw [← algebraMap_smul (R := ℝ) ℂ r X, ← TensorProduct.smul_tmul']
+    rfl
+  have happ : repLorentzGroup Λ (((1 : ℂ) ⊗ₜ[ℝ]
+      BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν) ⊗ₜ[ℂ]
+        (1 : LeptonSinglet.JetAlgebra)) =
+      (BBoson.JetAlgebra.complexRepLorentzGroup Λ ((1 : ℂ) ⊗ₜ[ℝ]
+        BBoson.JetAlgebra.fieldStrengthDeriv {ρ} μ ν)) ⊗ₜ[ℂ]
+      (LeptonSinglet.JetAlgebra.repLorentzGroup Λ
+        (1 : LeptonSinglet.JetAlgebra)) := rfl
+  rw [fieldStrengthDeriv, happ,
+    BBoson.JetAlgebra.complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_singleton,
+    LeptonSinglet.JetAlgebra.repLorentzGroup_apply_one]
+  simp only [TensorProduct.sum_tmul, hconv, fieldStrengthDeriv]
+
+/-- Under a diagonal Lorentz transformation the derivative field strength
+  scales by the product of the signs of its three indices. -/
+lemma repLorentzGroup_diag_fieldStrengthDeriv_singleton {M : SL(2,ℂ)}
+    {sgn : Fin 1 ⊕ Fin 3 → ℝ}
+    (hM : ∀ a b, (Lorentz.SL2C.toLorentzGroup M).1 a b =
+      if a = b then sgn a else 0) (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup M (fieldStrengthDeriv {ρ} μ ν) =
+      ((sgn ρ * (sgn μ * sgn ν) : ℝ) : ℂ) • fieldStrengthDeriv {ρ} μ ν := by
+  rw [repLorentzGroup_fieldStrengthDeriv_singleton]
+  rw [Finset.sum_eq_single ρ (fun r _ hr => Finset.sum_eq_zero fun a _ =>
+      Finset.sum_eq_zero fun b _ => by
+        rw [hM r ρ, if_neg hr, zero_mul, Complex.ofReal_zero, zero_smul])
+    (fun h => absurd (Finset.mem_univ ρ) h)]
+  rw [Finset.sum_eq_single μ (fun a _ ha => Finset.sum_eq_zero fun b _ => by
+      rw [hM a μ, if_neg ha, zero_mul, mul_zero, Complex.ofReal_zero, zero_smul])
+    (fun h => absurd (Finset.mem_univ μ) h)]
+  rw [Finset.sum_eq_single ν (fun b _ hb => by
+      rw [hM b ν, if_neg hb, mul_zero, mul_zero, Complex.ofReal_zero, zero_smul])
+    (fun h => absurd (Finset.mem_univ ν) h)]
+  rw [hM ρ ρ, if_pos rfl, hM μ μ, if_pos rfl, hM ν ν, if_pos rfl]
+
+set_option maxHeartbeats 2000000 in
+/-- The transformation law of the embedded second-derivative field strength:
+  a four-index tensor, all indices transforming by the Lorentz matrix. -/
+lemma repLorentzGroup_fieldStrengthDeriv_pair (Λ : SL(2,ℂ))
+    (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
+    repLorentzGroup Λ (fieldStrengthDeriv {ρ, τ} μ ν) =
+      ∑ r, ∑ s, ∑ a, ∑ b, ((((Lorentz.SL2C.toLorentzGroup Λ).1 r ρ *
+        ((Lorentz.SL2C.toLorentzGroup Λ).1 s τ *
+          ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ *
+          (Lorentz.SL2C.toLorentzGroup Λ).1 b ν)) : ℝ)) : ℂ) •
+        fieldStrengthDeriv {r, s} a b := by
+  have hconv : ∀ (r : ℝ) (X : ℂ ⊗[ℝ] BBoson.JetAlgebra),
+      (r • X) ⊗ₜ[ℂ] (1 : LeptonSinglet.JetAlgebra) = ((r : ℂ)) • (X ⊗ₜ[ℂ] 1) := by
+    intro r X
+    rw [← algebraMap_smul (R := ℝ) ℂ r X, ← TensorProduct.smul_tmul']
+    rfl
+  have happ : repLorentzGroup Λ (((1 : ℂ) ⊗ₜ[ℝ]
+      BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) ⊗ₜ[ℂ]
+        (1 : LeptonSinglet.JetAlgebra)) =
+      (BBoson.JetAlgebra.complexRepLorentzGroup Λ ((1 : ℂ) ⊗ₜ[ℝ]
+        BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν)) ⊗ₜ[ℂ]
+      (LeptonSinglet.JetAlgebra.repLorentzGroup Λ
+        (1 : LeptonSinglet.JetAlgebra)) := rfl
+  rw [fieldStrengthDeriv, happ,
+    BBoson.JetAlgebra.complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_pair,
+    LeptonSinglet.JetAlgebra.repLorentzGroup_apply_one]
+  simp only [TensorProduct.sum_tmul, hconv, fieldStrengthDeriv]
+
+/-!
+
+### The transformation law of a zero-derivative fermion pair
+
+-/
+
+set_option maxHeartbeats 1000000 in
+/-- The Lorentz action on a zero-derivative fermion pair `ψ̄_α ψ_β`. -/
+lemma repLorentzGroup_Dbarψ_nil_mul_Dψ_nil (Λ : SL(2,ℂ)) (α β : Fin 2) :
+    repLorentzGroup Λ (Dbarψ [] α * Dψ [] β) =
+      ∑ γ, ∑ δ, ((Λ⁻¹).1 α γ * star ((Λ⁻¹).1 β δ)) •
+        (Dbarψ [] γ * Dψ [] δ) := by
+  have hsm : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
+    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hms : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
+    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
+      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
+    rw [smul_mul_smul_comm]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_nil]
+  simp only [hsm, hms, hsmul]
+
+set_option maxHeartbeats 1000000 in
+/-- The Lorentz action on a zero-derivative fermion pair `ψ_α ψ̄_β`. -/
+lemma repLorentzGroup_Dψ_nil_mul_Dbarψ_nil (Λ : SL(2,ℂ)) (α β : Fin 2) :
+    repLorentzGroup Λ (Dψ [] α * Dbarψ [] β) =
+      ∑ γ, ∑ δ, (star ((Λ⁻¹).1 α γ) * (Λ⁻¹).1 β δ) •
+        (Dψ [] γ * Dbarψ [] δ) := by
+  have hsm : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
+    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hms : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
+    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
+      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
+    rw [smul_mul_smul_comm]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dψ_nil, repLorentzGroup_Dbarψ_nil]
+  simp only [hsm, hms, hsmul]
+
 /-!
 
 ### B.2. The invarance condition
@@ -279,7 +430,7 @@ lemma InvariantSubmodule.mem_iff_isInvariant (x : JetAlgebra) :
   · exact fun hx => Submodule.subset_span hx
 
 
-/-- Characterization of the invariants of the QED jet algebra: an element is
+/-- Characterization of the invariants of the lepton–gauge-sector jet algebra: an element is
   invariant under the jet gauge group and the Lorentz group precisely when it
   lies in the algebra generated by the field-strength derivatives and the
   covariant derivatives, is invariant under the constant gauge transformations,
@@ -328,4 +479,4 @@ lemma isInvariant_iff_mem_adjoin_invariantGenerators (x : JetAlgebra) :
 
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

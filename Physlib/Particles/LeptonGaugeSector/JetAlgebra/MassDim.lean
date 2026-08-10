@@ -5,12 +5,12 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.LorentzGroup
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.LorentzAction
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.BBoson.MassDim
 /-!
-# Mass dimension on the QED jet algebra
+# Mass dimension on the lepton–gauge-sector jet algebra
 
 *Note*: In this file we use the notion 'mass weight'. The idea been that the
 'mass weight' is twice the mass dimension. This is because it is easier to work exclusively with
@@ -20,7 +20,7 @@ integers, and the mass dimension of the fermion fields is 3/2.
 
 @[expose] public section
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel Matrix MatrixGroups
 
 /-- We define the mass weight of a term as two times its mass dimnesion. -/
@@ -36,7 +36,7 @@ namespace JetAlgebra
 ## A. The massWeightScaling algebra homomorphism
 
 -/
-/-- The mass-dimension scaling on the QED jet algebra: the algebra map
+/-- The mass-dimension scaling on the lepton–gauge-sector jet algebra: the algebra map
   multiplying each generator by `c ^ w`, where `w` is twice its mass dimension.
   It is the tensor product of the scalings on the B-boson and charged-lepton
   jet algebras. -/
@@ -162,7 +162,7 @@ lemma massWeightScale_mul_eigen {x y : JetAlgebra} {m n : ℕ}
 
 
 /-- The mass-dimension scaling at a real scalar commutes with the Lorentz
-  action on the QED jet algebra. -/
+  action on the lepton–gauge-sector jet algebra. -/
 lemma massWeightScale_ofReal_repLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
     (x : JetAlgebra) :
     massWeightScale (r : ℂ) (repLorentzGroup Λ x) =
@@ -177,7 +177,7 @@ lemma massWeightScale_ofReal_repLorentzGroup (r : ℝ) (Λ : SL(2,ℂ))
 
 
 /-- The mass-dimension scaling commutes with the constant gauge action on the
-  QED jet algebra. -/
+  lepton–gauge-sector jet algebra. -/
 lemma massWeightScale_repJetGaugeGroupI_ofConstant (c : ℂ) (g : GaugeGroupI)
     (x : JetAlgebra) :
     massWeightScale c (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
@@ -206,11 +206,71 @@ noncomputable def MassWeightLESubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
 noncomputable def InvariantMassWeightSubmodule (n : ℕ) : Submodule ℂ JetAlgebra :=
   MassWeightLESubmodule n ⊓ InvariantSubmodule
 
+/-- Eigenvectors of weight `m ≤ n` lie in the weight-`≤ n` submodule. -/
+lemma mem_massWeightLESubmodule_of_forall_massWeightScale {x : JetAlgebra}
+    {m n : ℕ} (hmn : m ≤ n)
+    (hx : ∀ c : ℂ, massWeightScale c x = c ^ m • x) :
+    x ∈ MassWeightLESubmodule n :=
+  Submodule.subset_span ⟨m, hmn, hx⟩
+
+/-- Independence of the powers `c ↦ c ^ w`: if a finite combination
+  `∑ c ^ w • v w` vanishes for every scalar `c`, then every `v w` vanishes. This
+  is what separates the mass-weight components of an element. -/
+lemma eq_zero_of_forall_sum_pow_smul_eq_zero (s : Finset ℕ) (v : ℕ → JetAlgebra)
+    (h : ∀ c : ℂ, ∑ w ∈ s, c ^ w • v w = 0) {w : ℕ} (hw : w ∈ s) : v w = 0 := by
+  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
+  intro φ
+  have hp : ∀ c : ℂ, Polynomial.eval c
+      (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
+    intro c
+    have h2 := congrArg φ (h c)
+    rw [map_sum, map_zero] at h2
+    rw [Polynomial.eval_finsetSum]
+    simpa [Polynomial.eval_monomial, mul_comm] using h2
+  have hzero : (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 :=
+    Polynomial.funext fun c => by rw [hp c, Polynomial.eval_zero]
+  have hcoeff := congrArg (fun p => Polynomial.coeff p w) hzero
+  rw [Polynomial.finsetSum_coeff] at hcoeff
+  simpa [Polynomial.coeff_monomial, Finset.sum_ite_eq', hw] using hcoeff
+
+/-- Every element of the weight-`≤ n` submodule is a sum of exact-weight
+  eigenvectors of the mass-weight scaling. -/
+lemma exists_eigen_decomp_of_mem_massWeightLESubmodule {n : ℕ} {x : JetAlgebra}
+    (hx : x ∈ MassWeightLESubmodule n) :
+    ∃ z : ℕ → JetAlgebra,
+      (∀ m, ∀ c : ℂ, massWeightScale c (z m) = c ^ m • z m) ∧
+      x = ∑ m ∈ Finset.range (n + 1), z m := by
+  induction hx using Submodule.span_induction with
+  | mem y hy =>
+    obtain ⟨m, hmn, hym⟩ := hy
+    refine ⟨fun k => if k = m then y else 0, fun k c => ?_, ?_⟩
+    · by_cases hk : k = m
+      · subst hk
+        simpa using hym c
+      · simp [hk]
+    · rw [Finset.sum_ite_eq' (Finset.range (n + 1)) m fun _ => y,
+        if_pos (Finset.mem_range.mpr (Nat.lt_succ_of_le hmn))]
+  | zero =>
+    exact ⟨fun _ => 0, by simp, by simp⟩
+  | add a b ha hb iha ihb =>
+    obtain ⟨z₁, hz₁, rfl⟩ := iha
+    obtain ⟨z₂, hz₂, rfl⟩ := ihb
+    refine ⟨z₁ + z₂, fun m c => ?_, ?_⟩
+    · simp only [Pi.add_apply, map_add, hz₁ m c, hz₂ m c, smul_add]
+    · rw [← Finset.sum_add_distrib]
+      rfl
+  | smul c a ha iha =>
+    obtain ⟨z, hz, rfl⟩ := iha
+    refine ⟨c • z, fun m c' => ?_, ?_⟩
+    · simp only [Pi.smul_apply, map_smul, hz m c', smul_comm c]
+    · rw [Finset.smul_sum]
+      rfl
+
 /-!
 
 ## D. The mass dimension polynomial.
 
-The QED jet algebra is the tensor product of the two factors, and mass weights
+The lepton–gauge-sector jet algebra is the tensor product of the two factors, and mass weights
 add under that product, so the mass-weight polynomial of the whole is assembled
 from the two factor polynomials: push each into `Polynomial JetAlgebra` along the
 tensor inclusions and multiply. On monomials this is exactly
@@ -218,7 +278,7 @@ tensor inclusions and multiply. On monomials this is exactly
 
 -/
 
-/-- The mass-weight polynomial on the QED jet algebra, assembled from the
+/-- The mass-weight polynomial on the lepton–gauge-sector jet algebra, assembled from the
   mass-weight polynomials of the two factors. -/
 noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
   (Algebra.TensorProduct.lift (Polynomial.mapAlgHom inclB)
@@ -234,4 +294,4 @@ lemma massWeightPoly_tmul (b : ℂ ⊗[ℝ] BBoson.JetAlgebra) (l : LeptonSingle
 
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

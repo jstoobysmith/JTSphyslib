@@ -5,17 +5,21 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.Basic
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Basic
 /-!
-# Weight and charge decomposition of the QED jet algebra
+# The mass-weight and hypercharge gradings
 
-The machinery for the converse inclusion. An element of
-`MassWeightLESubmodule n` decomposes uniquely into eigenvectors of
-`massWeightScale`, each of which lies in the span `covMonomialSpan w` of
-covariant monomials of exact weight `w`; each of those decomposes further into
-hypercharge eigenspaces `chargeCovSpan w k`. Both decompositions are
-compatible with the Lorentz and gauge actions, so an invariant element is a
-sum of invariant components.
+The machinery for the converse inclusion. That an element of
+`MassWeightLESubmodule n` decomposes into eigenvectors of `massWeightScale` is
+not special to the invariants and lives with the grading itself, in
+`LeptonGaugeSector.JetAlgebra.exists_eigen_decomp_of_mem_massWeightLESubmodule` in
+`LeptonGaugeSector/JetAlgebra/MassDim`, along with the independence of the powers `c ^ w` that
+gives it. What is added here is the refinement specific to the classification:
+each eigenvector lies in the span `covMonomialSpan w` of covariant monomials of
+exact weight `w`, and each of those decomposes further into hypercharge
+eigenspaces `chargeCovSpan w k`. Both decompositions are compatible with the
+Lorentz and gauge actions, so an invariant element is a sum of invariant
+components.
 
 The selection rules `eq_zero_of_eq_smul_of_ne_one`, `eq_zero_of_charge_ne_zero`
 and the parity rule `eq_zero_of_mem_covMonomialSpan_odd` kill all components
@@ -26,7 +30,7 @@ except those of even weight and zero charge.
 
 set_option maxHeartbeats 1000000
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -44,58 +48,6 @@ eigenvectors weighted by powers has vanishing components, and every element of
 the weight-`≤ n` submodule decomposes into exact-weight eigenvectors.
 
 -/
-
-/-- If a finite combination of vectors weighted by powers of `c` vanishes for
-  all `c`, each component vanishes. -/
-lemma eq_zero_of_forall_sum_pow_smul_eq_zero (s : Finset ℕ) (v : ℕ → JetAlgebra)
-    (h : ∀ c : ℂ, ∑ w ∈ s, c ^ w • v w = 0) {w : ℕ} (hw : w ∈ s) : v w = 0 := by
-  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
-  intro φ
-  have hp : ∀ c : ℂ, Polynomial.eval c
-      (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
-    intro c
-    have h2 := congrArg φ (h c)
-    rw [map_sum, map_zero] at h2
-    rw [Polynomial.eval_finsetSum]
-    simpa [Polynomial.eval_monomial, mul_comm] using h2
-  have hzero : (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 :=
-    Polynomial.funext fun c => by rw [hp c, Polynomial.eval_zero]
-  have hcoeff := congrArg (fun p => Polynomial.coeff p w) hzero
-  rw [Polynomial.finsetSum_coeff] at hcoeff
-  simpa [Polynomial.coeff_monomial, Finset.sum_ite_eq', hw] using hcoeff
-
-/-- Every element of the weight-`≤ n` submodule is a sum of exact-weight
-  eigenvectors of the mass-dimension scaling. -/
-lemma exists_eigen_decomp_of_mem_massWeightLESubmodule {n : ℕ} {x : JetAlgebra}
-    (hx : x ∈ MassWeightLESubmodule n) :
-    ∃ z : ℕ → JetAlgebra,
-      (∀ m, ∀ c : ℂ, massWeightScale c (z m) = c ^ m • z m) ∧
-      x = ∑ m ∈ Finset.range (n + 1), z m := by
-  induction hx using Submodule.span_induction with
-  | mem y hy =>
-    obtain ⟨m, hmn, hym⟩ := hy
-    refine ⟨fun k => if k = m then y else 0, fun k c => ?_, ?_⟩
-    · by_cases hk : k = m
-      · subst hk
-        simpa using hym c
-      · simp [hk]
-    · rw [Finset.sum_ite_eq' (Finset.range (n + 1)) m fun _ => y,
-        if_pos (Finset.mem_range.mpr (Nat.lt_succ_of_le hmn))]
-  | zero =>
-    exact ⟨fun _ => 0, by simp, by simp⟩
-  | add a b ha hb iha ihb =>
-    obtain ⟨z₁, hz₁, rfl⟩ := iha
-    obtain ⟨z₂, hz₂, rfl⟩ := ihb
-    refine ⟨z₁ + z₂, fun m c => ?_, ?_⟩
-    · simp only [Pi.add_apply, map_add, hz₁ m c, hz₂ m c, smul_add]
-    · rw [← Finset.sum_add_distrib]
-      rfl
-  | smul c a ha iha =>
-    obtain ⟨z, hz, rfl⟩ := iha
-    refine ⟨c • z, fun m c' => ?_, ?_⟩
-    · simp only [Pi.smul_apply, map_smul, hz m c', smul_comm c]
-    · rw [Finset.smul_sum]
-      rfl
 
 /-- The span of the covariant monomials of exact mass weight `w`: products of
   field-strength derivatives and covariant derivatives of total weight `w`. -/
@@ -481,7 +433,7 @@ lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
       zpow_add₀ (hz g)]
 
 /-- The constant gauge transformation with `u(0) = i`. -/
-noncomputable def parityGauge : GaugeGroupI :=
+noncomputable def fermionParityGauge : GaugeGroupI :=
   (1, 1, ⟨Complex.I, by
     rw [Unitary.mem_iff]
     constructor <;>
@@ -489,9 +441,9 @@ noncomputable def parityGauge : GaugeGroupI :=
 
 /-- The parity gauge transformation acts by `-1` on every odd-weight covariant
   monomial. -/
-lemma rep_parityGauge_eq_neg_of_mem_covMonomialSpan {m : ℕ} (hm : m % 2 = 1)
+lemma rep_fermionParityGauge_eq_neg_of_mem_covMonomialSpan {m : ℕ} (hm : m % 2 = 1)
     {y : JetAlgebra} (hy : y ∈ covMonomialSpan m) :
-    repJetGaugeGroupI (JetGaugeGroupI.ofConstant parityGauge) y = -y := by
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant fermionParityGauge) y = -y := by
   induction hy using Submodule.span_induction with
   | mem u hu =>
     obtain ⟨hu1, hu2⟩ := hu
@@ -504,8 +456,8 @@ lemma rep_parityGauge_eq_neg_of_mem_covMonomialSpan {m : ℕ} (hm : m % 2 = 1)
       have hkodd : Odd k := by
         rw [Int.odd_iff]
         omega
-      rw [hg parityGauge,
-        show ((parityGauge.2.2 : ℂ)) = Complex.I from rfl,
+      rw [hg fermionParityGauge,
+        show ((fermionParityGauge.2.2 : ℂ)) = Complex.I from rfl,
         show (6 : ℤ) * k = 2 * (3 * k) from by ring, _root_.zpow_mul,
         show Complex.I ^ (2 : ℤ) = -1 from by
           rw [show (2 : ℤ) = ((2 : ℕ) : ℤ) from rfl, zpow_natCast, Complex.I_sq],
@@ -521,9 +473,9 @@ lemma rep_parityGauge_eq_neg_of_mem_covMonomialSpan {m : ℕ} (hm : m % 2 = 1)
   invariants. -/
 lemma eq_zero_of_mem_covMonomialSpan_odd {m : ℕ} (hm : m % 2 = 1)
     {y : JetAlgebra} (hy : y ∈ covMonomialSpan m)
-    (hinv : repJetGaugeGroupI (JetGaugeGroupI.ofConstant parityGauge) y = y) :
+    (hinv : repJetGaugeGroupI (JetGaugeGroupI.ofConstant fermionParityGauge) y = y) :
     y = 0 := by
-  have h := (rep_parityGauge_eq_neg_of_mem_covMonomialSpan hm hy).symm.trans hinv
+  have h := (rep_fermionParityGauge_eq_neg_of_mem_covMonomialSpan hm hy).symm.trans hinv
   have h2 : (2 : ℂ) • y = 0 := by
     calc (2 : ℂ) • y = y + y := two_smul ℂ y
       _ = -y + y := congrArg (· + y) h.symm
@@ -814,4 +766,4 @@ lemma mem_chargeCovSpan_zero_of_invariant {m : ℕ} {y : JetAlgebra}
   exact hv 0
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector

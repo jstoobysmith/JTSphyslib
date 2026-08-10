@@ -5,9 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.QED.JetAlgebra.Invariants.BoostPairs
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Subgroups.BoostsOnPhotonTerms
 /-!
-# Boost transformations of the fermion pairs
+# Boosts acting on the fermion terms
 
 The paired boost actions on the weight-eight fermion bilinears
 `ψ̄_α (D_μ ψ)_β` and `(D̄_μ ψ̄)_α ψ_β`.
@@ -19,7 +19,7 @@ set_option maxHeartbeats 1000000
 set_option linter.unusedSimpArgs false
 set_option linter.unusedTactic false
 
-namespace QED
+namespace LeptonGaugeSector
 open TensorProduct StandardModel
 
 namespace JetAlgebra
@@ -30,7 +30,7 @@ open Matrix MatrixGroups
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `u0`. -/
-lemma pairZ_u0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_u0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inl 0] 0 + Dbarψ [] 1 * Dψ [Sum.inl 0] 1) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -66,7 +66,7 @@ lemma pairZ_u0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `u1`. -/
-lemma pairZ_u1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_u1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 0] 1 + Dbarψ [] 1 * Dψ [Sum.inr 0] 0) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -100,7 +100,7 @@ lemma pairZ_u1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `u2`. -/
-lemma pairZ_u2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_u2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 1] 1 - Dbarψ [] 1 * Dψ [Sum.inr 1] 0) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -134,7 +134,7 @@ lemma pairZ_u2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `u3`. -/
-lemma pairZ_u3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_u3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 2] 0 - Dbarψ [] 1 * Dψ [Sum.inr 2] 1) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -170,7 +170,7 @@ lemma pairZ_u3 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `u0`. -/
-lemma pairX_u0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_u0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inl 0] 0 + Dbarψ [] 1 * Dψ [Sum.inl 0] 1) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -206,7 +206,7 @@ lemma pairX_u0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `u1`. -/
-lemma pairX_u1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_u1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 0] 1 + Dbarψ [] 1 * Dψ [Sum.inr 0] 0) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -242,7 +242,7 @@ lemma pairX_u1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `u2`. -/
-lemma pairX_u2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_u2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 1] 1 - Dbarψ [] 1 * Dψ [Sum.inr 1] 0) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -276,7 +276,7 @@ lemma pairX_u2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `u3`. -/
-lemma pairX_u3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_u3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 2] 0 - Dbarψ [] 1 * Dψ [Sum.inr 2] 1) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -310,7 +310,7 @@ lemma pairX_u3 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `u0`. -/
-lemma pairY_u0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_u0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inl 0] 0 + Dbarψ [] 1 * Dψ [Sum.inl 0] 1) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -346,7 +346,7 @@ lemma pairY_u0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `u1`. -/
-lemma pairY_u1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_u1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 0] 1 + Dbarψ [] 1 * Dψ [Sum.inr 0] 0) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -380,7 +380,7 @@ lemma pairY_u1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `u2`. -/
-lemma pairY_u2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_u2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 1] 1 - Dbarψ [] 1 * Dψ [Sum.inr 1] 0) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -416,7 +416,7 @@ lemma pairY_u2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `u3`. -/
-lemma pairY_u3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_u3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [] 0 * Dψ [Sum.inr 2] 0 - Dbarψ [] 1 * Dψ [Sum.inr 2] 1) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -450,7 +450,7 @@ lemma pairY_u3 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `ubar0`. -/
-lemma pairZ_ubar0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_ubar0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [Sum.inl 0] 0 * Dψ [] 0 + Dbarψ [Sum.inl 0] 1 * Dψ [] 1) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -486,7 +486,7 @@ lemma pairZ_ubar0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `ubar1`. -/
-lemma pairZ_ubar1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_ubar1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [Sum.inr 0] 0 * Dψ [] 1 + Dbarψ [Sum.inr 0] 1 * Dψ [] 0) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -520,7 +520,7 @@ lemma pairZ_ubar1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `ubar2`. -/
-lemma pairZ_ubar2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_ubar2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [Sum.inr 1] 0 * Dψ [] 1 - Dbarψ [Sum.inr 1] 1 * Dψ [] 0) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -554,7 +554,7 @@ lemma pairZ_ubar2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Z`-boost on the σ-contracted fermion
   pair `ubar3`. -/
-lemma pairZ_ubar3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairZ_ubar3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostZel t ht)
         (Dbarψ [Sum.inr 2] 0 * Dψ [] 0 - Dbarψ [Sum.inr 2] 1 * Dψ [] 1) +
       repLorentzGroup ((boostZel t ht)⁻¹)
@@ -590,7 +590,7 @@ lemma pairZ_ubar3 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `ubar0`. -/
-lemma pairX_ubar0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_ubar0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [Sum.inl 0] 0 * Dψ [] 0 + Dbarψ [Sum.inl 0] 1 * Dψ [] 1) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -626,7 +626,7 @@ lemma pairX_ubar0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `ubar1`. -/
-lemma pairX_ubar1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_ubar1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [Sum.inr 0] 0 * Dψ [] 1 + Dbarψ [Sum.inr 0] 1 * Dψ [] 0) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -662,7 +662,7 @@ lemma pairX_ubar1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `ubar2`. -/
-lemma pairX_ubar2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_ubar2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [Sum.inr 1] 0 * Dψ [] 1 - Dbarψ [Sum.inr 1] 1 * Dψ [] 0) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -696,7 +696,7 @@ lemma pairX_ubar2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `X`-boost on the σ-contracted fermion
   pair `ubar3`. -/
-lemma pairX_ubar3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairX_ubar3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostXel t ht)
         (Dbarψ [Sum.inr 2] 0 * Dψ [] 0 - Dbarψ [Sum.inr 2] 1 * Dψ [] 1) +
       repLorentzGroup ((boostXel t ht)⁻¹)
@@ -730,7 +730,7 @@ lemma pairX_ubar3 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `ubar0`. -/
-lemma pairY_ubar0 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_ubar0 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [Sum.inl 0] 0 * Dψ [] 0 + Dbarψ [Sum.inl 0] 1 * Dψ [] 1) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -766,7 +766,7 @@ lemma pairY_ubar0 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `ubar1`. -/
-lemma pairY_ubar1 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_ubar1 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [Sum.inr 0] 0 * Dψ [] 1 + Dbarψ [Sum.inr 0] 1 * Dψ [] 0) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -800,7 +800,7 @@ lemma pairY_ubar1 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `ubar2`. -/
-lemma pairY_ubar2 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_ubar2 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [Sum.inr 1] 0 * Dψ [] 1 - Dbarψ [Sum.inr 1] 1 * Dψ [] 0) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -836,7 +836,7 @@ lemma pairY_ubar2 (t : ℝ) (ht : t ≠ 0) :
 set_option maxHeartbeats 4000000 in
 /-- The paired boost action of the `Y`-boost on the σ-contracted fermion
   pair `ubar3`. -/
-lemma pairY_ubar3 (t : ℝ) (ht : t ≠ 0) :
+lemma boostPairY_ubar3 (t : ℝ) (ht : t ≠ 0) :
     repLorentzGroup (boostYel t ht)
         (Dbarψ [Sum.inr 2] 0 * Dψ [] 0 - Dbarψ [Sum.inr 2] 1 * Dψ [] 1) +
       repLorentzGroup ((boostYel t ht)⁻¹)
@@ -868,4 +868,4 @@ lemma pairY_ubar3 (t : ℝ) (ht : t ≠ 0) :
   match_scalars <;> (push_cast; try field_simp; try ring_nf; try simp only [Complex.I_sq]; try ring)
 end JetAlgebra
 
-end QED
+end LeptonGaugeSector
