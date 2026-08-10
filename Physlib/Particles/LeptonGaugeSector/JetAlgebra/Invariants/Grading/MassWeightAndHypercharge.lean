@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Basic
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.Hypercharge
 /-!
 # The mass-weight and hypercharge gradings
 
@@ -24,6 +25,14 @@ components.
 The selection rules `eq_zero_of_eq_smul_of_ne_one`, `eq_zero_of_charge_ne_zero`
 and the parity rule `eq_zero_of_mem_covMonomialSpan_odd` kill all components
 except those of even weight and zero charge.
+
+The hypercharge grading itself, together with the unit-circle machinery that makes the charge
+decomposition work — `u1Gauge`, `exp_mul_I_mem_unitary`, `exp_mul_I_injOn` and the
+independence of the circle characters — now lives upstream in
+`LeptonGaugeSector/JetAlgebra/Grading/Hypercharge`, which also carries the canonical form of
+the neutral selection rule, `mem_hyperchargeSubmodule_zero_of_isInvariant`. What is left here
+is only the refinement that keeps track of the *monomial* structure alongside the charge,
+which the classification needs and the grading alone does not give.
 -/
 
 @[expose] public section
@@ -505,25 +514,6 @@ lemma eq_zero_of_eq_smul_of_ne_one {y : JetAlgebra} {c : ℂ}
   · exact absurd (sub_eq_zero.mp h3) hc
   · exact h3
 
-/-- The unit-circle exponential is unitary. -/
-lemma exp_mul_I_mem_unitary (θ : ℝ) :
-    Complex.exp ((θ : ℂ) * Complex.I) ∈ unitary ℂ := by
-  have hstar : star (Complex.exp ((θ : ℂ) * Complex.I)) =
-      Complex.exp (-((θ : ℂ) * Complex.I)) := by
-    rw [show star (Complex.exp ((θ : ℂ) * Complex.I)) =
-        (starRingEnd ℂ) (Complex.exp ((θ : ℂ) * Complex.I)) from rfl,
-      ← Complex.exp_conj]
-    congr 1
-    simp [Complex.conj_ofReal]
-  rw [Unitary.mem_iff]
-  constructor
-  · rw [hstar, ← Complex.exp_add, neg_add_cancel, Complex.exp_zero]
-  · rw [hstar, ← Complex.exp_add, add_neg_cancel, Complex.exp_zero]
-
-/-- The constant `U(1)` gauge transformation at a unitary scalar. -/
-noncomputable def u1Gauge (z : ℂ) (hz : z ∈ unitary ℂ) : GaugeGroupI :=
-  (1, 1, ⟨z, hz⟩)
-
 /-- The hypercharge selection rule: a constant-gauge eigenvector of nonzero
   charge admits no invariant. -/
 lemma eq_zero_of_charge_ne_zero {y : JetAlgebra} {k : ℤ} (hk : k ≠ 0)
@@ -559,86 +549,6 @@ along the unit circle, so every element of a weight sector decomposes into
 charge components, and a constant-gauge invariant equals its neutral component.
 
 -/
-
-/-- The unit-circle exponentials are injective on `(0, 1)`. -/
-lemma exp_mul_I_injOn :
-    Set.InjOn (fun θ : ℝ => Complex.exp ((θ : ℂ) * Complex.I))
-      (Set.Ioo (0 : ℝ) 1) := by
-  intro a ha b hb hab
-  rcases Complex.exp_eq_exp_iff_exists_int.mp hab with ⟨n, hn⟩
-  have h2 : (a : ℂ) = (b : ℂ) + (n : ℂ) * (2 * (Real.pi : ℂ)) := by
-    have h1 : (a : ℂ) * Complex.I =
-        ((b : ℂ) + (n : ℂ) * (2 * (Real.pi : ℂ))) * Complex.I := by
-      rw [hn]
-      ring
-    exact mul_right_cancel₀ Complex.I_ne_zero h1
-  have h3 : a = b + (n : ℝ) * (2 * Real.pi) := by exact_mod_cast h2
-  have hn0 : n = 0 := by
-    by_contra hne
-    have h4 : (1 : ℝ) ≤ |(n : ℝ)| := by exact_mod_cast Int.one_le_abs hne
-    have hπ : (2 : ℝ) ≤ Real.pi := Real.two_le_pi
-    have h5 : |a - b| < 1 := by
-      rw [abs_sub_lt_iff]
-      constructor <;> nlinarith [ha.1, ha.2, hb.1, hb.2]
-    rw [h3] at h5
-    simp only [add_sub_cancel_left] at h5
-    rw [abs_mul, abs_of_pos (by positivity : (0 : ℝ) < 2 * Real.pi)] at h5
-    nlinarith
-  rw [hn0] at h3
-  push_cast at h3
-  linarith
-
-/-- Independence of the circle characters: a finite Laurent combination
-  vanishing on the unit circle has vanishing coefficients. -/
-lemma eq_zero_of_forall_circle_sum_zpow_smul_eq_zero (s : Finset ℤ)
-    (v : ℤ → JetAlgebra)
-    (h : ∀ θ : ℝ, ∑ j ∈ s, (Complex.exp ((θ : ℂ) * Complex.I)) ^ j • v j = 0)
-    {k : ℤ} (hk : k ∈ s) : v k = 0 := by
-  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
-  intro φ
-  have hne : s.Nonempty := ⟨k, hk⟩
-  set n₀ : ℤ := -s.min' hne with hn₀
-  have hshift : ∀ j ∈ s, 0 ≤ j + n₀ := fun j hj => by
-    have := s.min'_le j hj
-    omega
-  have heval : ∀ θ : ℝ, Polynomial.eval (Complex.exp ((θ : ℂ) * Complex.I))
-      (∑ j ∈ s, Polynomial.monomial (j + n₀).toNat (φ (v j))) = 0 := by
-    intro θ
-    have hz0 : Complex.exp ((θ : ℂ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
-    have h2 := congrArg φ (h θ)
-    rw [map_sum, map_zero] at h2
-    have h3 : ∑ j ∈ s, Complex.exp ((θ : ℂ) * Complex.I) ^ j * φ (v j) = 0 := by
-      rw [← h2]
-      exact Finset.sum_congr rfl fun j _ => by rw [map_smul]; rfl
-    have h4 : Complex.exp ((θ : ℂ) * Complex.I) ^ n₀ *
-        ∑ j ∈ s, Complex.exp ((θ : ℂ) * Complex.I) ^ j * φ (v j) = 0 := by
-      rw [h3, mul_zero]
-    rw [Finset.mul_sum] at h4
-    rw [Polynomial.eval_finsetSum, ← h4]
-    refine Finset.sum_congr rfl fun j hj => ?_
-    rw [Polynomial.eval_monomial,
-      show Complex.exp ((θ : ℂ) * Complex.I) ^ (j + n₀).toNat =
-        Complex.exp ((θ : ℂ) * Complex.I) ^ ((j + n₀) : ℤ) from by
-        rw [← zpow_natCast, Int.toNat_of_nonneg (hshift j hj)],
-      zpow_add₀ hz0]
-    ring
-  have hzero : (∑ j ∈ s, Polynomial.monomial (j + n₀).toNat (φ (v j))) = 0 := by
-    refine Polynomial.eq_zero_of_infinite_isRoot _ ?_
-    refine Set.Infinite.mono ?_
-      ((Set.Ioo_infinite (by norm_num : (0 : ℝ) < 1)).image exp_mul_I_injOn)
-    rintro z ⟨θ, _, rfl⟩
-    exact heval θ
-  have hcoeff := congrArg (fun p => Polynomial.coeff p (k + n₀).toNat) hzero
-  rw [Polynomial.finsetSum_coeff] at hcoeff
-  rw [Finset.sum_eq_single k
-    (fun j hj hjk => by
-      rw [Polynomial.coeff_monomial, if_neg (fun heq => hjk (by
-        have h1 : j + n₀ = k + n₀ := by
-          rw [← Int.toNat_of_nonneg (hshift j hj),
-            ← Int.toNat_of_nonneg (hshift k hk), heq]
-        omega))])
-    (fun hks => absurd hk hks)] at hcoeff
-  simpa [Polynomial.coeff_monomial] using hcoeff
 
 /-- The charge-`6k` part of a weight sector: the span of the covariant
   monomials of weight `m` and hypercharge `6 k`. -/
