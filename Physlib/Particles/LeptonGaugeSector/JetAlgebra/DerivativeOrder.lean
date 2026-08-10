@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Mathematics.TensorProduct
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.GaugeAction
 /-!
 # The derivative-order filtration
@@ -541,20 +542,10 @@ set_option maxHeartbeats 2000000 in
   the field-strength derivatives and the covariant derivatives of the lepton and
   its conjugate.
 
-  Proof strategy (the sector analogue of
-  `BBoson.JetAlgebra.repJetGaugeGroupI_apply_eq_self_iff_mem`): decompose the jet
-  algebra as a free module over the (complexified) B-boson factor with basis the
-  exterior monomials in the *covariant* fermionic coordinates `D_s ψ_α`,
-  `D̄_s ψ̄_α` — a triangular change of variables from the plain coordinates
-  `∂_s ψ_α`, `∂_s ψ̄_α` by `Dψ_eq_leptonLinearIncl` and its conjugate. On this
-  decomposition a gauge transformation acts by the B-boson substitution action on
-  the coefficients and the scalars `u(0)^{±6}` on the covariant monomials
-  (`repJetGaugeGroupI_Dψ`, `repJetGaugeGroupI_Dbarψ`). Invariance under the
-  `expUnitary` translation family (which has `u(0) = 1`) forces each coefficient
-  to be invariant under all Maurer–Cartan translations of the pure-gauge B-boson
-  coordinates, hence to lie in the (complexified) field-strength subalgebra by
-  the B-boson translation theorem. -/
-theorem mem_covariantAlgebra_of_forall_repJetGaugeGroupI_eq
+  After applying the covariant substitution, every `expUnitary` transformation with value `1` at
+  the base point acts only on the complexified B-boson factor. The generic tensor fixed-submodule
+  result extends the B-boson translation result across the lepton exterior-algebra factor. -/
+lemma mem_covariantAlgebra_of_forall_repJetGaugeGroupI_eq
     (x : JetAlgebra) (hx : ∀ U, repJetGaugeGroupI U x = x) :
     x ∈ CovariantAlgebra := by
   classical
@@ -568,35 +559,41 @@ theorem mem_covariantAlgebra_of_forall_repJetGaugeGroupI_eq
       (BBoson.JetAlgebra.expUnitary a w hw)) y) = covSubst y
     rw [← repJetGaugeGroupI_covSubst _ (BBoson.JetAlgebra.eval_expUnitary_u1 a w hw),
       hx]
-  set bL := Module.Basis.ofVectorSpace ℂ LeptonSinglet.JetAlgebra with hbL
-  set e : ((ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ] LeptonSinglet.JetAlgebra) ≃ₗ[ℂ]
-      (Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra →₀
-        ℂ ⊗[ℝ] BBoson.JetAlgebra) :=
-    (TensorProduct.congr (LinearEquiv.refl ℂ (ℂ ⊗[ℝ] BBoson.JetAlgebra)) bL.repr).trans
-      (TensorProduct.finsuppScalarRight ℂ ℂ (ℂ ⊗[ℝ] BBoson.JetAlgebra)
-        (Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra)) with hedef
-  have happly : ∀ (f : (ℂ ⊗[ℝ] BBoson.JetAlgebra) →ₗ[ℂ] (ℂ ⊗[ℝ] BBoson.JetAlgebra))
-      (z : JetAlgebra) (T : Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra),
-      e (TensorProduct.map f LinearMap.id z) T = f (e z T) := by
-    intro f z T
-    induction z using TensorProduct.induction_on with
-    | zero => simp
-    | add u v hu hv => simp only [map_add, Finsupp.add_apply, hu, hv]
-    | tmul c l =>
-      rw [hedef]
-      simp only [TensorProduct.map_tmul, LinearMap.id_coe, id_eq,
-        LinearEquiv.trans_apply, TensorProduct.congr_tmul, LinearEquiv.refl_apply,
-        TensorProduct.finsuppScalarRight_apply_tmul_apply, map_smul]
-  have hcT : ∀ T, e y T ∈ Algebra.adjoin ℂ (Set.range fun p :
-      Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
-      ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2 :
-        ℂ ⊗[ℝ] BBoson.JetAlgebra)) := by
-    intro T
-    refine BBoson.JetAlgebra.mem_adjoin_of_forall_expUnitary_complex _ fun a w hw => ?_
-    have h := happly (BBoson.JetAlgebra.complexRepJetGaugeGroupI
-      (BBoson.JetAlgebra.expUnitary a w hw)) y T
-    rw [hyU a w hw] at h
-    exact h.symm
+  let Translation := {p : ℝ × ((Fin 1 ⊕ Fin 3) →₀ ℕ) // p.2 ≠ 0}
+  let F : Translation → Module.End ℂ (ℂ ⊗[ℝ] BBoson.JetAlgebra) := fun p =>
+    BBoson.JetAlgebra.complexRepJetGaugeGroupI
+      (BBoson.JetAlgebra.expUnitary p.1.1 p.1.2 p.2)
+  have hyFixed : (show (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
+      LeptonSinglet.JetAlgebra from y) ∈ ⨅ p : Translation,
+      LinearMap.eqLocus ((F p).rTensor LeptonSinglet.JetAlgebra) LinearMap.id := by
+    refine (Submodule.mem_iInf _).2 ?_
+    intro p
+    refine LinearMap.mem_eqLocus.mpr ?_
+    simpa only [LinearMap.id_apply, LinearMap.rTensor_def, F] using hyU p.1.1 p.1.2 p.2
+  have hyTensor : (show (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
+      LeptonSinglet.JetAlgebra from y) ∈ Submodule.map₂ (TensorProduct.mk ℂ
+      (ℂ ⊗[ℝ] BBoson.JetAlgebra) LeptonSinglet.JetAlgebra)
+      (⨅ p : Translation, LinearMap.eqLocus (F p) LinearMap.id) ⊤ := by
+    rw [← LinearMap.iInf_eqLocus_rTensor F]
+    exact hyFixed
+  have hB : (⨅ p : Translation, LinearMap.eqLocus (F p) LinearMap.id) ≤
+      (Algebra.adjoin ℂ (Set.range fun p :
+        Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2 :
+          ℂ ⊗[ℝ] BBoson.JetAlgebra))).toSubmodule := by
+    intro c hc
+    refine BBoson.JetAlgebra.mem_adjoin_of_forall_expUnitary_complex c fun a w hw => ?_
+    simp only [Submodule.mem_iInf, LinearMap.mem_eqLocus, LinearMap.id_apply] at hc
+    exact hc (⟨(a, w), hw⟩ : Translation)
+  have hyField : (show (ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗[ℂ]
+      LeptonSinglet.JetAlgebra from y) ∈ Submodule.map₂ (TensorProduct.mk ℂ
+      (ℂ ⊗[ℝ] BBoson.JetAlgebra) LeptonSinglet.JetAlgebra)
+      (Algebra.adjoin ℂ (Set.range fun p :
+        Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+        ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2 :
+          ℂ ⊗[ℝ] BBoson.JetAlgebra))).toSubmodule ⊤ :=
+    Submodule.map₂_le_map₂_left
+      (f := TensorProduct.mk ℂ (ℂ ⊗[ℝ] BBoson.JetAlgebra) LeptonSinglet.JetAlgebra) hB hyTensor
   set S : Set JetAlgebra := (Set.range fun p :
       Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
         fieldStrengthDeriv p.1 p.2.1 p.2.2) ∪
@@ -665,27 +662,22 @@ theorem mem_covariantAlgebra_of_forall_repJetGaugeGroupI_eq
             (v ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) from by
         rw [tmul_mul_tmul, honeL]]
       exact mul_mem ihu ihv
-  have hsymm_single : ∀ (T : Module.Basis.ofVectorSpaceIndex ℂ LeptonSinglet.JetAlgebra)
-      (c : ℂ ⊗[ℝ] BBoson.JetAlgebra),
-      e.symm (Finsupp.single T c) = c ⊗ⱼ (bL T) := by
-    intro T c
-    rw [hedef, LinearEquiv.symm_trans_apply,
-      TensorProduct.finsuppScalarRight_symm_apply_single, TensorProduct.congr_symm_tmul]
-    simp only [LinearEquiv.refl_symm, LinearEquiv.refl_apply,
-      Module.Basis.repr_symm_single_one]
-    rfl
-  have hdecomp : y = ((e y).support).sum (fun T => (e y T) ⊗ⱼ (bL T)) := by
-    conv_lhs => rw [← e.symm_apply_apply y, ← Finsupp.sum_single (e y)]
-    rw [Finsupp.sum, map_sum]
-    exact Finset.sum_congr rfl fun T _ => hsymm_single T _
   have hyMem : y ∈ Algebra.adjoin ℂ S := by
-    rw [hdecomp]
-    refine sum_mem fun T _ => ?_
-    rw [show ((e y T) ⊗ⱼ (bL T) : JetAlgebra) =
-        ((e y T) ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) *
-          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ (bL T)) from by
+    apply (show Submodule.map₂ (TensorProduct.mk ℂ
+        (ℂ ⊗[ℝ] BBoson.JetAlgebra) LeptonSinglet.JetAlgebra)
+        (Algebra.adjoin ℂ (Set.range fun p :
+          Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+          ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv p.1 p.2.1 p.2.2 :
+            ℂ ⊗[ℝ] BBoson.JetAlgebra))).toSubmodule ⊤ ≤
+        (Algebra.adjoin ℂ S).toSubmodule from ?_) hyField
+    rw [Submodule.map₂_le]
+    intro c hc l _
+    change c ⊗ⱼ l ∈ Algebra.adjoin ℂ S
+    rw [show (c ⊗ⱼ l : JetAlgebra) =
+        (c ⊗ⱼ (1 : LeptonSinglet.JetAlgebra)) *
+          ((1 : ℂ ⊗[ℝ] BBoson.JetAlgebra) ⊗ⱼ l) from by
       rw [tmul_mul_tmul, honeB, honeL]]
-    exact mul_mem (hleft _ (hcT T)) (hone_tmul _)
+    exact mul_mem (hleft c hc) (hone_tmul l)
   have himg : covSubst y ∈ (Algebra.adjoin ℂ S).map covSubst :=
     Subalgebra.mem_map.mpr ⟨y, hyMem, rfl⟩
   rw [AlgHom.map_adjoin] at himg

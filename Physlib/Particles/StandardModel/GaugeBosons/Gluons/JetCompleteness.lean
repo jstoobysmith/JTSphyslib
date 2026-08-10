@@ -5,6 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
+public import Physlib.Mathematics.TensorProduct
 public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness.FiniteHeight
 /-!
 # All-orders and full-group completeness
@@ -58,6 +59,7 @@ ordered product decomposition of a jet is constructed, and the contravariant com
 namespace StandardModel
 
 open Matrix Module MvPolynomial
+open scoped TensorProduct
 
 namespace SU3Jet
 
@@ -123,6 +125,48 @@ lemma fixed_by_jetGroup_eq_invariant_covAlgebra :
   · rintro ⟨hadj, hconst⟩ U
     rw [gaugePull_eq_ofConstantSU U hadj]
     exact hconst _
+
+/-!
+
+## C. Extension by an unchanged tensor factor
+
+The based completeness result extends to a tensor product when the gauge pull acts only on the
+gluon factor. The generic fixed-submodule result in `Physlib.Mathematics.TensorProduct` reduces
+this statement to `fixed_by_based_eq_covAlgebra`, without repeating the coefficient decomposition
+or the gluon elimination argument.
+
+-/
+
+/-- The tensor extension of the covariant gluon subalgebra by an arbitrary real module `C`. -/
+noncomputable def covTensor (C : Type*) [AddCommGroup C] [Module ℝ C] :
+    Submodule ℝ (JetAlgebra ⊗[ℝ] C) :=
+  Submodule.map₂ (TensorProduct.mk ℝ JetAlgebra C) covAlgebra.toSubmodule ⊤
+
+/-- After tensoring on the right by a free real module, the elements fixed by every based gauge
+pull acting on the gluon factor are exactly the tensor extension of `covAlgebra`. -/
+lemma fixed_by_based_tensor_eq_covTensor
+    (C : Type*) [AddCommGroup C] [Module ℝ C] [Module.Free ℝ C] :
+    {z : JetAlgebra ⊗[ℝ] C | ∀ U : specialUnitaryGroup (Fin 3) JetRing,
+        JetGaugeGroupI.evalSU (Fin 3) U = 1 →
+          (gaugePull U).toLinearMap.rTensor C z = z} =
+      (covTensor C : Set (JetAlgebra ⊗[ℝ] C)) := by
+  classical
+  let BasedJet := {U : specialUnitaryGroup (Fin 3) JetRing //
+    JetGaugeGroupI.evalSU (Fin 3) U = 1}
+  let F : BasedJet → Module.End ℝ JetAlgebra := fun U => (gaugePull U.1).toLinearMap
+  have hbase : (⨅ U : BasedJet, LinearMap.eqLocus (F U) LinearMap.id) =
+      covAlgebra.toSubmodule := by
+    ext P
+    rw [Submodule.mem_iInf]
+    change (∀ U : BasedJet, gaugePull U.1 P = P) ↔ P ∈ covAlgebra
+    have hP := Set.ext_iff.mp fixed_by_based_eq_covAlgebra P
+    simpa only [Set.mem_setOf_eq, SetLike.mem_coe, Subtype.forall, BasedJet] using hP
+  have h := LinearMap.iInf_eqLocus_rTensor (C := C) F
+  rw [hbase] at h
+  ext z
+  have hz := SetLike.ext_iff.mp h z
+  simpa only [Submodule.mem_iInf, LinearMap.mem_eqLocus, LinearMap.id_apply,
+    Set.mem_setOf_eq, SetLike.mem_coe, Subtype.forall, BasedJet, F, covTensor] using hz
 
 end SU3Jet
 

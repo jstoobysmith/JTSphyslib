@@ -12,6 +12,7 @@ public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.TensorProduct
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Mathematics.MvPowerSeriesDerivative
@@ -2280,20 +2281,11 @@ lemma mem_adjoin_of_forall_expUnitary (V : JetAlgebra)
   rw [hsymm]
   exact ofGenerator_sub_ofGenerator_canon_mem g
 
-/-- The coordinate retractions of the complexified jet algebra along the real
-  basis `{1, I}` of `ℂ`. -/
-private noncomputable def complexCoordAux (i : Fin 2) :
-    ℂ ⊗[ℝ] JetAlgebra →ₗ[ℝ] JetAlgebra :=
-  TensorProduct.lift ((LinearMap.lsmul ℝ JetAlgebra).comp (Complex.basisOneI.coord i))
-
-private lemma complexCoordAux_tmul (i : Fin 2) (z : ℂ) (b : JetAlgebra) :
-    complexCoordAux i (z ⊗ₜ[ℝ] b) = Complex.basisOneI.repr z i • b := by
-  simp [complexCoordAux, Module.Basis.coord_apply]
-
 set_option maxHeartbeats 1000000 in
 /-- The complexified invariance direction: an element of the complexified B-boson
   jet algebra fixed by the complexified action of the `expUnitary` translation
-  family lies in the complexified field-strength subalgebra. -/
+  family lies in the complexified field-strength subalgebra. The generic tensor
+  fixed-submodule result extends the real translation argument across the scalar factor `ℂ`. -/
 lemma mem_adjoin_of_forall_expUnitary_complex (x : ℂ ⊗[ℝ] JetAlgebra)
     (hx : ∀ (a : ℝ) (w : (Fin 1 ⊕ Fin 3) →₀ ℕ) (hw : w ≠ 0),
       complexRepJetGaugeGroupI (expUnitary a w hw) x = x) :
@@ -2301,44 +2293,29 @@ lemma mem_adjoin_of_forall_expUnitary_complex (x : ℂ ⊗[ℝ] JetAlgebra)
         Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
       ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv p.1 p.2.1 p.2.2 : ℂ ⊗[ℝ] JetAlgebra)) := by
   classical
-  have hrtmul : ∀ (i : Fin 2) (z : ℂ) (b : JetAlgebra),
-      complexCoordAux i (z ⊗ₜ[ℝ] b) = Complex.basisOneI.repr z i • b :=
-    complexCoordAux_tmul
-  have h1 : ∀ y : ℂ ⊗[ℝ] JetAlgebra,
-      y = (1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 y + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 y := by
-    intro y
-    induction y using TensorProduct.induction_on with
-    | zero => simp
-    | add a b ha hb =>
-      rw [map_add, map_add, TensorProduct.tmul_add, TensorProduct.tmul_add]
-      calc a + b = ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 a + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 a) +
-            ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 0 b + Complex.I ⊗ₜ[ℝ] complexCoordAux 1 b) := by rw [← ha, ← hb]
-        _ = _ := by abel
-    | tmul z b =>
-      rw [hrtmul, hrtmul, TensorProduct.tmul_smul, TensorProduct.tmul_smul,
-        TensorProduct.smul_tmul', TensorProduct.smul_tmul', ← TensorProduct.add_tmul]
-      congr 1
-      have hz := Complex.re_add_im z
-      simp only [Complex.coe_basisOneI_repr, Matrix.cons_val_zero, Matrix.cons_val_one]
-      rw [show z.re • (1 : ℂ) = (z.re : ℂ) from by simp [Complex.real_smul],
-        show z.im • Complex.I = (z.im : ℂ) * Complex.I from by rw [Complex.real_smul]]
-      exact hz.symm
-  have h2 : ∀ (U : JetGaugeGroupI) (i : Fin 2) (y : ℂ ⊗[ℝ] JetAlgebra),
-      complexCoordAux i (complexRepJetGaugeGroupI U y) =
-        repJetGaugeGroupI U (complexCoordAux i y) := by
-    intro U i y
-    induction y using TensorProduct.induction_on with
-    | zero => simp
-    | add a b ha hb => simp only [map_add, ha, hb]
-    | tmul z b =>
-      simp only [complexRepJetGaugeGroupI_tmul]
-      rw [hrtmul, hrtmul]
-      exact ((repJetGaugeGroupI U).map_smul _ _).symm
-  have hmem : ∀ i : Fin 2, complexCoordAux i x ∈ Algebra.adjoin ℝ
-      (fieldStrengthDeriv.uncurry.uncurry '' Set.univ) := by
-    intro i
-    refine mem_adjoin_of_forall_expUnitary (complexCoordAux i x) fun a w hw => ?_
-    rw [← h2, hx a w hw]
+  let Translation := {p : ℝ × ((Fin 1 ⊕ Fin 3) →₀ ℕ) // p.2 ≠ 0}
+  let F : Translation → Module.End ℝ JetAlgebra := fun p =>
+    repJetGaugeGroupI (expUnitary p.1.1 p.1.2 p.2)
+  have hxFixed : x ∈ ⨅ p : Translation,
+      LinearMap.eqLocus ((F p).lTensor ℂ) LinearMap.id := by
+    simp only [Submodule.mem_iInf, LinearMap.mem_eqLocus, LinearMap.id_apply]
+    intro p
+    rw [← LinearMap.baseChange_eq_ltensor]
+    exact hx p.1.1 p.1.2 p.2
+  have hxTensor : x ∈ Submodule.map₂ (TensorProduct.mk ℝ ℂ JetAlgebra) ⊤
+      (⨅ p : Translation, LinearMap.eqLocus (F p) LinearMap.id) := by
+    rw [← LinearMap.iInf_eqLocus_lTensor F]
+    exact hxFixed
+  have hreal : (⨅ p : Translation, LinearMap.eqLocus (F p) LinearMap.id) ≤
+      (Algebra.adjoin ℝ (fieldStrengthDeriv.uncurry.uncurry '' Set.univ)).toSubmodule := by
+    intro b hb
+    refine mem_adjoin_of_forall_expUnitary b fun a w hw => ?_
+    simp only [Submodule.mem_iInf, LinearMap.mem_eqLocus, LinearMap.id_apply] at hb
+    exact hb (⟨(a, w), hw⟩ : Translation)
+  have hxField : x ∈ Submodule.map₂ (TensorProduct.mk ℝ ℂ JetAlgebra) ⊤
+      (Algebra.adjoin ℝ
+        (fieldStrengthDeriv.uncurry.uncurry '' Set.univ)).toSubmodule :=
+    Submodule.map₂_le_map₂_right hreal hxTensor
   have hinc : ∀ b ∈ Algebra.adjoin ℝ (fieldStrengthDeriv.uncurry.uncurry '' Set.univ),
       ((1 : ℂ) ⊗ₜ[ℝ] b : ℂ ⊗[ℝ] JetAlgebra) ∈ Algebra.adjoin ℂ (Set.range fun p :
           Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
@@ -2361,12 +2338,22 @@ lemma mem_adjoin_of_forall_expUnitary_complex (x : ℂ ⊗[ℝ] JetAlgebra)
           ((1 : ℂ) ⊗ₜ[ℝ] y) * ((1 : ℂ) ⊗ₜ[ℝ] z) from by
         rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul]]
       exact mul_mem ihy ihz
-  rw [h1 x]
-  refine add_mem (hinc _ (hmem 0)) ?_
-  rw [show (Complex.I ⊗ₜ[ℝ] complexCoordAux 1 x : ℂ ⊗[ℝ] JetAlgebra) =
-      Complex.I • ((1 : ℂ) ⊗ₜ[ℝ] complexCoordAux 1 x) from by
+  apply (show Submodule.map₂ (TensorProduct.mk ℝ ℂ JetAlgebra) ⊤
+      (Algebra.adjoin ℝ
+        (fieldStrengthDeriv.uncurry.uncurry '' Set.univ)).toSubmodule ≤
+      (Algebra.adjoin ℂ (Set.range fun p :
+        Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+        ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv p.1 p.2.1 p.2.2 :
+          ℂ ⊗[ℝ] JetAlgebra))).toSubmodule.restrictScalars ℝ from ?_) hxField
+  rw [Submodule.map₂_le]
+  intro c _ b hb
+  change c ⊗ₜ[ℝ] b ∈ Algebra.adjoin ℂ (Set.range fun p :
+    Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) =>
+    ((1 : ℂ) ⊗ₜ[ℝ] fieldStrengthDeriv p.1 p.2.1 p.2.2 : ℂ ⊗[ℝ] JetAlgebra))
+  rw [show (c ⊗ₜ[ℝ] b : ℂ ⊗[ℝ] JetAlgebra) =
+      c • ((1 : ℂ) ⊗ₜ[ℝ] b) from by
     rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]]
-  exact Subalgebra.smul_mem _ (hinc _ (hmem 1)) _
+  exact Subalgebra.smul_mem _ (hinc b hb) c
 
 /-- An EFT lagrangian with field content consisting only of
   a `B` bosons is invariant under the full gauge group if and only if
