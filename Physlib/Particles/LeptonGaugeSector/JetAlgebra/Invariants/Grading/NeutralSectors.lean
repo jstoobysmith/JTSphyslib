@@ -53,31 +53,30 @@ term, and the two fermion kinetic terms.
   three. -/
 lemma exists_weight_of_mem_invariantGenerators {g : JetAlgebra}
     (hg : g ∈ invariantGenerators) :
-    ∃ w, 3 ≤ w ∧ ∀ c : ℂ, massWeightScale c g = c ^ w • g := by
+    ∃ w, 3 ≤ w ∧ g ∈ massWeightSubmodule w := by
   rcases hg with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
   · exact ⟨4 + 2 * Multiset.card p.1, by omega,
-      fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2⟩
-  · exact ⟨3 + 2 * p.1.length, by omega, fun c => massWeightScale_Dψ c p.1 p.2⟩
-  · exact ⟨3 + 2 * p.1.length, by omega, fun c => massWeightScale_Dbarψ c p.1 p.2⟩
+      fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2⟩
+  · exact ⟨3 + 2 * p.1.length, by omega, Dψ_mem_massWeightSubmodule p.1 p.2⟩
+  · exact ⟨3 + 2 * p.1.length, by omega, Dbarψ_mem_massWeightSubmodule p.1 p.2⟩
 
 /-- The product of a list of invariant generators is a weight eigenvector of
   weight at least three times the length. -/
 lemma exists_weight_of_list_prod {l : List JetAlgebra}
     (hl : ∀ g ∈ l, g ∈ invariantGenerators) :
-    ∃ w, 3 * l.length ≤ w ∧
-      ∀ c : ℂ, massWeightScale c l.prod = c ^ w • l.prod := by
+    ∃ w, 3 * l.length ≤ w ∧ l.prod ∈ massWeightSubmodule w := by
   induction l with
   | nil =>
-    exact ⟨0, by simp, fun c => by
-      rw [List.prod_nil, pow_zero, one_smul]
-      exact (massWeightScale c).map_one⟩
+    exact ⟨0, by simp, by
+      rw [List.prod_nil]
+      exact SetLike.one_mem_graded massWeightSubmodule⟩
   | cons g l ih =>
     obtain ⟨wg, hwg3, hwg⟩ := exists_weight_of_mem_invariantGenerators
       (hl g List.mem_cons_self)
     obtain ⟨wl, hwl3, hwl⟩ := ih fun x hx => hl x (List.mem_cons_of_mem g hx)
-    refine ⟨wg + wl, by simp only [List.length_cons]; omega, fun c => ?_⟩
+    refine ⟨wg + wl, by simp only [List.length_cons]; omega, ?_⟩
     rw [List.prod_cons]
-    exact massWeightScale_mul_eigen hwg hwl c
+    exact mul_mem_massWeightSubmodule hwg hwl
 
 /-- The constant gauge character of a product of two lepton factors: charge
   two. -/
@@ -116,8 +115,7 @@ lemma chargeCovSpan_four_le :
   rcases l with _ | ⟨g, _ | ⟨g', t⟩⟩
   · rw [List.prod_nil] at hy2 ⊢
     rw [eq_zero_of_eigen_ne (m := 0)
-      (fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one)
-      hy2 (by omega)]
+      (SetLike.one_mem_graded massWeightSubmodule) hy2 (by omega)]
     exact Submodule.zero_mem _
   · rw [List.prod_cons, List.prod_nil, mul_one] at hy2 ⊢
     rcases hl g List.mem_cons_self with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩ <;>
@@ -126,13 +124,13 @@ lemma chargeCovSpan_four_le :
       · rw [Multiset.card_eq_zero.mp hcard]
         exact Submodule.subset_span ⟨(p.2.1, p.2.2), rfl⟩
       · rw [eq_zero_of_eigen_ne
-          (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2) hy2
+          (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2) hy2
           (by omega)]
         exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dbarψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dbarψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
   · obtain ⟨w, hw, hweig⟩ := exists_weight_of_list_prod hl
@@ -158,8 +156,7 @@ lemma chargeCovSpan_six_le :
   rcases l with _ | ⟨g, _ | ⟨g', _ | ⟨g'', t⟩⟩⟩
   · rw [List.prod_nil] at hy2 ⊢
     rw [eq_zero_of_eigen_ne (m := 0)
-      (fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one)
-      hy2 (by omega)]
+      (SetLike.one_mem_graded massWeightSubmodule) hy2 (by omega)]
     exact Submodule.zero_mem _
   · rw [List.prod_cons, List.prod_nil, mul_one] at hy2 ⊢
     rcases hl g List.mem_cons_self with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩ <;>
@@ -169,13 +166,13 @@ lemma chargeCovSpan_six_le :
         rw [hρ]
         exact Submodule.subset_span (Or.inl (Or.inl ⟨(ρ, p.2.1, p.2.2), rfl⟩))
       · rw [eq_zero_of_eigen_ne
-          (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2) hy2
+          (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2) hy2
           (by omega)]
         exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dbarψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dbarψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
   · rw [List.prod_cons, List.prod_cons, List.prod_nil, mul_one] at hy2 hy3 ⊢
@@ -183,22 +180,22 @@ lemma chargeCovSpan_six_le :
       rcases hl g' (List.mem_cons_of_mem _ List.mem_cons_self) with
         (⟨q, rfl⟩ | ⟨q, rfl⟩) | ⟨q, rfl⟩ <;>
       dsimp only at hy2 hy3 ⊢
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-        (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+        (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
         (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-        (fun c => massWeightScale_Dψ c q.1 q.2)) hy2 (by omega)]
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+        (Dψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-        (fun c => massWeightScale_Dbarψ c q.1 q.2)) hy2 (by omega)]
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+        (Dbarψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_Dψ c p.1 p.2)
-        (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (Dψ_mem_massWeightSubmodule p.1 p.2)
+        (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
         (by omega)]
       exact Submodule.zero_mem _
     · rw [eq_zero_of_charge_ne_zero (k := 2) (by omega)
@@ -207,21 +204,21 @@ lemma chargeCovSpan_six_le :
     · by_cases hlen : p.1.length = 0 ∧ q.1.length = 0
       · rw [List.length_eq_zero_iff.mp hlen.1, List.length_eq_zero_iff.mp hlen.2]
         exact Submodule.subset_span (Or.inr ⟨(p.2, q.2), rfl⟩)
-      · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-          (fun c => massWeightScale_Dψ c p.1 p.2)
-          (fun c => massWeightScale_Dbarψ c q.1 q.2)) hy2 (by omega)]
+      · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+          (Dψ_mem_massWeightSubmodule p.1 p.2)
+          (Dbarψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
         exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_Dbarψ c p.1 p.2)
-        (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (Dbarψ_mem_massWeightSubmodule p.1 p.2)
+        (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
         (by omega)]
       exact Submodule.zero_mem _
     · by_cases hlen : p.1.length = 0 ∧ q.1.length = 0
       · rw [List.length_eq_zero_iff.mp hlen.1, List.length_eq_zero_iff.mp hlen.2]
         exact Submodule.subset_span (Or.inl (Or.inr ⟨(p.2, q.2), rfl⟩))
-      · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-          (fun c => massWeightScale_Dbarψ c p.1 p.2)
-          (fun c => massWeightScale_Dψ c q.1 q.2)) hy2 (by omega)]
+      · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+          (Dbarψ_mem_massWeightSubmodule p.1 p.2)
+          (Dψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
         exact Submodule.zero_mem _
     · rw [eq_zero_of_charge_ne_zero (k := -2) (by omega)
         (fun gc => rep_ofConstant_Dbarψ_mul_Dbarψ gc p.1 q.1 p.2 q.2) hy3]
@@ -260,8 +257,7 @@ lemma chargeCovSpan_eight_le :
   rcases l with _ | ⟨g, _ | ⟨g', _ | ⟨g'', t⟩⟩⟩
   · rw [List.prod_nil] at hy2 ⊢
     rw [eq_zero_of_eigen_ne (m := 0)
-      (fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one)
-      hy2 (by omega)]
+      (SetLike.one_mem_graded massWeightSubmodule) hy2 (by omega)]
     exact Submodule.zero_mem _
   · rw [List.prod_cons, List.prod_nil, mul_one] at hy2 ⊢
     rcases hl g List.mem_cons_self with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩ <;>
@@ -272,13 +268,13 @@ lemma chargeCovSpan_eight_le :
         exact Submodule.subset_span (Or.inl (Or.inl (Or.inl (Or.inl
           (Or.inr ⟨((ρ, τ), p.2.1, p.2.2), rfl⟩)))))
       · rw [eq_zero_of_eigen_ne
-          (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2) hy2
+          (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2) hy2
           (by omega)]
         exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (fun c => massWeightScale_Dbarψ c p.1 p.2) hy2
+    · rw [eq_zero_of_eigen_ne (Dbarψ_mem_massWeightSubmodule p.1 p.2) hy2
         (by omega)]
       exact Submodule.zero_mem _
   · rw [List.prod_cons, List.prod_cons, List.prod_nil, mul_one] at hy2 hy3 ⊢
@@ -290,22 +286,22 @@ lemma chargeCovSpan_eight_le :
       · rw [Multiset.card_eq_zero.mp hcard.1, Multiset.card_eq_zero.mp hcard.2]
         exact Submodule.subset_span (Or.inl (Or.inl (Or.inl (Or.inl
           (Or.inl ⟨((p.2.1, p.2.2), q.2.1, q.2.2), rfl⟩)))))
-      · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-          (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-          (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+      · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+          (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+          (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
           (by omega)]
         exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-        (fun c => massWeightScale_Dψ c q.1 q.2)) hy2 (by omega)]
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+        (Dψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2)
-        (fun c => massWeightScale_Dbarψ c q.1 q.2)) hy2 (by omega)]
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2)
+        (Dbarψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
       exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_Dψ c p.1 p.2)
-        (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (Dψ_mem_massWeightSubmodule p.1 p.2)
+        (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
         (by omega)]
       exact Submodule.zero_mem _
     · rw [eq_zero_of_charge_ne_zero (k := 2) (by omega)
@@ -320,13 +316,13 @@ lemma chargeCovSpan_eight_le :
           rw [List.length_eq_zero_iff.mp hlen'.2, hμ]
           exact Submodule.subset_span (Or.inl (Or.inl (Or.inr
             ⟨((q.2, p.2), μ), rfl⟩)))
-        · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-            (fun c => massWeightScale_Dψ c p.1 p.2)
-            (fun c => massWeightScale_Dbarψ c q.1 q.2)) hy2 (by omega)]
+        · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+            (Dψ_mem_massWeightSubmodule p.1 p.2)
+            (Dbarψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
           exact Submodule.zero_mem _
-    · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-        (fun c => massWeightScale_Dbarψ c p.1 p.2)
-        (fun c => massWeightScale_fieldStrengthDeriv c q.1 q.2.1 q.2.2)) hy2
+    · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+        (Dbarψ_mem_massWeightSubmodule p.1 p.2)
+        (fieldStrengthDeriv_mem_massWeightSubmodule q.1 q.2.1 q.2.2)) hy2
         (by omega)]
       exact Submodule.zero_mem _
     · by_cases hlen : p.1.length = 0 ∧ q.1.length = 1
@@ -338,9 +334,9 @@ lemma chargeCovSpan_eight_le :
         · obtain ⟨μ, hμ⟩ := List.length_eq_one_iff.mp hlen'.1
           rw [List.length_eq_zero_iff.mp hlen'.2, hμ]
           exact Submodule.subset_span (Or.inr ⟨((q.2, p.2), μ), rfl⟩)
-        · rw [eq_zero_of_eigen_ne (massWeightScale_mul_eigen
-            (fun c => massWeightScale_Dbarψ c p.1 p.2)
-            (fun c => massWeightScale_Dψ c q.1 q.2)) hy2 (by omega)]
+        · rw [eq_zero_of_eigen_ne (mul_mem_massWeightSubmodule
+            (Dbarψ_mem_massWeightSubmodule p.1 p.2)
+            (Dψ_mem_massWeightSubmodule q.1 q.2)) hy2 (by omega)]
           exact Submodule.zero_mem _
     · rw [eq_zero_of_charge_ne_zero (k := -2) (by omega)
         (fun gc => rep_ofConstant_Dbarψ_mul_Dbarψ gc p.1 q.1 p.2 q.2) hy3]

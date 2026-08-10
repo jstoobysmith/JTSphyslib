@@ -253,10 +253,10 @@ lemma thetaTerm_mem_massWeightLESubmodule :
     thetaTerm ∈ MassWeightLESubmodule 8 := by
   rw [thetaTerm]
   refine Submodule.sum_mem _ fun p _ => zsmul_mem ?_ _
-  exact mem_massWeightLESubmodule_of_forall_massWeightScale (m := 4 + 4) le_rfl
-    (massWeightScale_mul_eigen (m := 4) (n := 4)
-      (fun c => massWeightScale_fieldStrengthDeriv c {} _ _)
-      (fun c => massWeightScale_fieldStrengthDeriv c {} _ _))
+  have h4 : ∀ μ ν, (fieldStrengthDeriv {} μ ν : JetAlgebra) ∈ massWeightSubmodule 4 := fun μ ν => by
+    simpa using fieldStrengthDeriv_mem_massWeightSubmodule {} μ ν
+  exact mem_massWeightLESubmodule_of_mem (m := 4 + 4) le_rfl
+    (mul_mem_massWeightSubmodule (h4 _ _) (h4 _ _))
 
 set_option maxHeartbeats 8000000 in
 set_option linter.unusedSimpArgs false in

@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Subgroups.BoostsOnFermionTerms
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Subgroups.AxisBoosts
 /-!
 # The average over the rotations by `π`
 

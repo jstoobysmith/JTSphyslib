@@ -53,8 +53,8 @@ lemma span_massDimFourInvariants_le :
   refine Submodule.mem_inf.mpr ⟨?_, Submodule.subset_span
     (isInvariant_of_mem_massDimFourInvariants hx)⟩
   rcases hx with rfl | rfl | rfl | rfl | rfl
-  · exact mem_massWeightLESubmodule_of_forall_massWeightScale (m := 0) (Nat.zero_le 8)
-      fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one
+  · exact mem_massWeightLESubmodule_of_mem (m := 0) (Nat.zero_le 8)
+      (SetLike.one_mem_graded massWeightSubmodule)
   · exact maxwellTerm_mem_massWeightLESubmodule
   · exact thetaTerm_mem_massWeightLESubmodule
   · exact fermionKineticTerm_mem_massWeightLESubmodule

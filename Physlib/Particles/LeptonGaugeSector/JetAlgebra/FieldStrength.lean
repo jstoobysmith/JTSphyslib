@@ -32,6 +32,13 @@ noncomputable def fieldStrengthDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
   ((1 : ℂ) ⊗ₜ[ℝ] BBoson.JetAlgebra.fieldStrengthDeriv s μ ν) ⊗ⱼ 1
 
 
+/-- Reordering the two derivative indices of a second-derivative field
+  strength. -/
+lemma fieldStrengthDeriv_pair_swap (r s a b : Fin 1 ⊕ Fin 3) :
+    fieldStrengthDeriv {r, s} a b = fieldStrengthDeriv {s, r} a b := by
+  have h : ({r, s} : Multiset (Fin 1 ⊕ Fin 3)) = {s, r} := Multiset.cons_swap r s 0
+  rw [h]
+
 /-- Antisymmetry of the embedded field-strength derivatives in the two field
   indices. -/
 lemma fieldStrengthDeriv_antisymm (s : Multiset (Fin 1 ⊕ Fin 3))
@@ -54,6 +61,7 @@ lemma fieldStrengthDeriv_inr_inl (s : Multiset (Fin 1 ⊕ Fin 3)) (i : Fin 3)
   fieldStrengthDeriv_antisymm s (Sum.inl j) (Sum.inr i)
 
 /-- The field strength vanishes on a repeated index. -/
+@[simp]
 lemma fieldStrengthDeriv_self (s : Multiset (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) : fieldStrengthDeriv s μ μ = 0 := by
   have h : (fieldStrengthDeriv s μ μ : JetAlgebra) =

@@ -301,10 +301,9 @@ lemma fermionKineticTerm_mem_massWeightLESubmodule :
   refine Submodule.smul_mem _ _ (Submodule.sum_mem _ fun μ _ =>
     Submodule.sum_mem _ fun α _ => Submodule.sum_mem _ fun β _ =>
       Submodule.smul_mem _ _ ?_)
-  exact mem_massWeightLESubmodule_of_forall_massWeightScale (m := 3 + 5) le_rfl
-    (massWeightScale_mul_eigen (m := 3) (n := 5)
-      (fun c => massWeightScale_Dbarψ c [] α)
-      (fun c => massWeightScale_Dψ c [μ] β))
+  refine mem_massWeightLESubmodule_of_mem (n := 8) (by simp)
+    (mul_mem_massWeightSubmodule (Dbarψ_mem_massWeightSubmodule [] α)
+      (Dψ_mem_massWeightSubmodule [μ] β))
 
 lemma fermionKineticTermBar_mem_massWeightLESubmodule :
     fermionKineticTermBar ∈ MassWeightLESubmodule 8 := by
@@ -312,10 +311,9 @@ lemma fermionKineticTermBar_mem_massWeightLESubmodule :
   refine Submodule.smul_mem _ _ (Submodule.sum_mem _ fun μ _ =>
     Submodule.sum_mem _ fun α _ => Submodule.sum_mem _ fun β _ =>
       Submodule.smul_mem _ _ ?_)
-  exact mem_massWeightLESubmodule_of_forall_massWeightScale (m := 5 + 3) le_rfl
-    (massWeightScale_mul_eigen (m := 5) (n := 3)
-      (fun c => massWeightScale_Dbarψ c [μ] α)
-      (fun c => massWeightScale_Dψ c [] β))
+  refine mem_massWeightLESubmodule_of_mem (n := 8) (by simp)
+    (mul_mem_massWeightSubmodule (Dbarψ_mem_massWeightSubmodule [μ] α)
+      (Dψ_mem_massWeightSubmodule [] β))
 
 set_option maxHeartbeats 2000000 in
 set_option linter.unusedSimpArgs false in

@@ -70,10 +70,10 @@ subgroup sits opposite the average taken over it.
 * `Invariants/Subgroups/` — which subgroup, acting on what. `RotationsPi`
   defines the rotations by `π` and the subgroup they generate; `AxisBoosts`
   defines the one-parameter boosts along the three coordinate axes and the two
-  fixed `z`-boosts; `BoostsOnFieldStrength`,
-  `BoostsOnFieldStrengthDerivatives`, `BoostsOnPhotonTerms` and
-  `BoostsOnFermionTerms` tabulate how the boosts move `F_{μν}`,
-  `∂_ρ ∂_τ F_{μν}`, the products `F F` and the fermion bilinears.
+  fixed `z`-boosts. How the boosts move `F_{μν}`, `∂_ρ ∂_τ F_{μν}`, the products
+  `F F` and the fermion bilinears is not tabulated: it follows from the
+  transformation laws of `LorentzAction`, and the `boostAvg_calculator` tactic
+  of `Averages/BoostAverage` derives it on demand.
 * `Invariants/Averages/` — the average over each of those subgroups, and what
   it does to the monomials. `RotationAverage` stands opposite
   `Subgroups/RotationsPi` and kills the weight-four sector;

@@ -11,11 +11,11 @@ public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.Hypercharge
 # The mass-weight and hypercharge gradings
 
 The machinery for the converse inclusion. That an element of
-`MassWeightLESubmodule n` decomposes into eigenvectors of `massWeightScale` is
-not special to the invariants and lives with the grading itself, in
-`LeptonGaugeSector.JetAlgebra.exists_eigen_decomp_of_mem_massWeightLESubmodule` in
-`LeptonGaugeSector/JetAlgebra/MassDim`, along with the independence of the powers `c ^ w` that
-gives it. What is added here is the refinement specific to the classification:
+`MassWeightLESubmodule n` decomposes into its homogeneous pieces is not special to the
+invariants and lives with the grading itself, in
+`LeptonGaugeSector.JetAlgebra.eq_sum_coeff_of_mem_massWeightLESubmodule` in
+`LeptonGaugeSector/JetAlgebra/MassDim`, as the coefficients of the mass-weight polynomial.
+What is added here is the refinement specific to the classification:
 each eigenvector lies in the span `covMonomialSpan w` of covariant monomials of
 exact weight `w`, and each of those decomposes further into hypercharge
 eigenspaces `chargeCovSpan w k`. Both decompositions are compatible with the
@@ -62,35 +62,38 @@ the weight-`≤ n` submodule decomposes into exact-weight eigenvectors.
   field-strength derivatives and covariant derivatives of total weight `w`. -/
 noncomputable def covMonomialSpan (w : ℕ) : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ {y | y ∈ Submonoid.closure invariantGenerators ∧
-    ∀ c : ℂ, massWeightScale c y = c ^ w • y}
+    y ∈ massWeightSubmodule w}
 
 /-- Every covariant monomial is homogeneous. -/
 lemma exists_weight_of_mem_closure {y : JetAlgebra}
     (hy : y ∈ Submonoid.closure invariantGenerators) :
-    ∃ w, ∀ c : ℂ, massWeightScale c y = c ^ w • y := by
+    ∃ w, y ∈ massWeightSubmodule w := by
   induction hy using Submonoid.closure_induction with
   | mem z hz =>
     rcases hz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
     · exact ⟨4 + 2 * Multiset.card p.1,
-        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2⟩
-    · exact ⟨3 + 2 * p.1.length, fun c => massWeightScale_Dψ c p.1 p.2⟩
-    · exact ⟨3 + 2 * p.1.length, fun c => massWeightScale_Dbarψ c p.1 p.2⟩
-  | one =>
-    exact ⟨0, fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one⟩
+        fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2⟩
+    · exact ⟨3 + 2 * p.1.length, Dψ_mem_massWeightSubmodule p.1 p.2⟩
+    · exact ⟨3 + 2 * p.1.length, Dbarψ_mem_massWeightSubmodule p.1 p.2⟩
+  | one => exact ⟨0, SetLike.one_mem_graded massWeightSubmodule⟩
   | mul a b ha hb iha ihb =>
     obtain ⟨wa, hwa⟩ := iha
     obtain ⟨wb, hwb⟩ := ihb
-    exact ⟨wa + wb, massWeightScale_mul_eigen hwa hwb⟩
+    exact ⟨wa + wb, mul_mem_massWeightSubmodule hwa hwb⟩
 
-/-- Elements of the weight-`w` covariant monomial span are eigenvectors. -/
-lemma forall_massWeightScale_of_mem_covMonomialSpan {w : ℕ} {y : JetAlgebra}
-    (hy : y ∈ covMonomialSpan w) (c : ℂ) :
-    massWeightScale c y = c ^ w • y := by
-  induction hy using Submodule.span_induction with
-  | mem z hz => exact hz.2 c
-  | zero => simp
-  | add a b ha hb iha ihb => rw [map_add, iha, ihb, smul_add]
-  | smul d a ha iha => rw [map_smul, iha, smul_comm]
+/-- Elements of the weight-`w` covariant monomial span are homogeneous of weight `w`. -/
+lemma mem_massWeightSubmodule_of_mem_covMonomialSpan {w : ℕ} {y : JetAlgebra}
+    (hy : y ∈ covMonomialSpan w) : y ∈ massWeightSubmodule w :=
+  Submodule.span_le.mpr (fun _ hz => hz.2) hy
+
+/-- Reading a weight component off a decomposition into homogeneous pieces. -/
+lemma coeff_massWeightPoly_sum {n : ℕ} {z : ℕ → JetAlgebra}
+    (hz : ∀ k, z k ∈ massWeightSubmodule k) {m : ℕ} (hm : m ∈ Finset.range n) :
+    (massWeightPoly (∑ k ∈ Finset.range n, z k)).coeff m = z m := by
+  rw [map_sum, Polynomial.finsetSum_coeff,
+    Finset.sum_eq_single m (fun k _ hk => coeff_massWeightPoly_of_mem_ne hk (hz k))
+      (fun h => absurd hm h)]
+  exact coeff_massWeightPoly_of_mem (hz m)
 
 /-- A vanishing tail extends a truncated sum. -/
 lemma sum_range_succ_ext {N M : ℕ} (z : ℕ → JetAlgebra) (hNM : N ≤ M)
@@ -161,51 +164,19 @@ lemma exists_covMonomialSpan_decomp {x : JetAlgebra}
     ∃ z : ℕ → JetAlgebra, (∀ m, z m ∈ covMonomialSpan m) ∧
       x = ∑ m ∈ Finset.range 9, z m := by
   obtain ⟨N, z, hzmem, hzsupp, hzx⟩ := exists_bound_decomp_of_mem_adjoin hadj
-  obtain ⟨z', hz'eig, hz'x⟩ := exists_eigen_decomp_of_mem_massWeightLESubmodule hx
   refine ⟨z, hzmem, ?_⟩
+  have hzw : ∀ k, z k ∈ massWeightSubmodule k :=
+    fun k => mem_massWeightSubmodule_of_mem_covMonomialSpan (hzmem k)
   set M := max N 8 with hM
   have h1 : x = ∑ m ∈ Finset.range (M + 1), z m :=
     hzx.trans (sum_range_succ_ext z (le_max_left N 8) hzsupp)
-  have hz'supp : ∀ m, 8 < m → (fun k => if k < 9 then z' k else 0) m = 0 := by
-    intro m hm
-    show (if m < 9 then z' m else 0) = 0
-    rw [if_neg (show ¬ m < 9 by omega)]
-  have h2 : x = ∑ m ∈ Finset.range (M + 1), (fun k => if k < 9 then z' k else 0) m := by
-    rw [hz'x, show (9 : ℕ) = 8 + 1 from rfl,
-      ← sum_range_succ_ext _ (le_max_right N 8) hz'supp]
-    exact Finset.sum_congr rfl fun m hm => by
-      rw [if_pos (Finset.mem_range.mp hm)]
-  have hdiff : ∀ c : ℂ, ∑ m ∈ Finset.range (M + 1),
-      c ^ m • (z m - (fun k => if k < 9 then z' k else 0) m) = 0 := by
-    intro c
-    have e1 : massWeightScale c x = ∑ m ∈ Finset.range (M + 1), c ^ m • z m := by
-      rw [h1, map_sum]
-      exact Finset.sum_congr rfl fun m _ =>
-        forall_massWeightScale_of_mem_covMonomialSpan (hzmem m) c
-    have e2 : massWeightScale c x = ∑ m ∈ Finset.range (M + 1),
-        c ^ m • (fun k => if k < 9 then z' k else 0) m := by
-      rw [h2, map_sum]
-      refine Finset.sum_congr rfl fun m _ => ?_
-      by_cases hm : m < 9
-      · simp only [if_pos hm]
-        exact hz'eig m c
-      · simp only [if_neg hm, map_zero, smul_zero]
-    calc ∑ m ∈ Finset.range (M + 1),
-        c ^ m • (z m - (fun k => if k < 9 then z' k else 0) m)
-        = (∑ m ∈ Finset.range (M + 1), c ^ m • z m) -
-          ∑ m ∈ Finset.range (M + 1),
-            c ^ m • (fun k => if k < 9 then z' k else 0) m := by
-          rw [← Finset.sum_sub_distrib]
-          exact Finset.sum_congr rfl fun m _ => smul_sub _ _ _
-      _ = massWeightScale c x - massWeightScale c x := by rw [← e1, ← e2]
-      _ = 0 := sub_self _
   have hkill : ∀ m, 8 < m → z m = 0 := by
     intro m hm
     by_cases hmM : m ≤ M
-    · have h0 : z m - (fun k => if k < 9 then z' k else 0) m = 0 :=
-        eq_zero_of_forall_sum_pow_smul_eq_zero (Finset.range (M + 1)) _ hdiff
-          (show m ∈ Finset.range (M + 1) from Finset.mem_range.mpr (by omega))
-      simpa [if_neg (by omega : ¬ m < 9)] using h0
+    · have hc : (massWeightPoly x).coeff m = z m := by
+        rw [h1]
+        exact coeff_massWeightPoly_sum hzw (Finset.mem_range.mpr (by omega))
+      rw [← hc, coeff_massWeightPoly_eq_zero_of_mem_massWeightLESubmodule hx (by omega)]
     · exact hzsupp m (by omega)
   rw [h1, show (9 : ℕ) = 8 + 1 from rfl, sum_range_succ_ext z (le_max_right N 8) hkill]
 
@@ -220,89 +191,31 @@ invariant element are themselves invariant.
 -/
 
 
-/-- Real-scalar variant of the independence of powers. -/
-lemma eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero (s : Finset ℕ)
-    (v : ℕ → JetAlgebra)
-    (h : ∀ r : ℝ, ∑ w ∈ s, ((r : ℂ)) ^ w • v w = 0) {w : ℕ} (hw : w ∈ s) :
-    v w = 0 := by
-  rw [← Module.forall_dual_apply_eq_zero_iff ℂ]
-  intro φ
-  have hp : ∀ r : ℝ, Polynomial.eval ((r : ℂ))
-      (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
-    intro r
-    have h2 := congrArg φ (h r)
-    rw [map_sum, map_zero] at h2
-    rw [Polynomial.eval_finsetSum]
-    simpa [Polynomial.eval_monomial, mul_comm] using h2
-  have hzero : (∑ u ∈ s, Polynomial.monomial u (φ (v u))) = 0 := by
-    refine Polynomial.eq_zero_of_infinite_isRoot _ ?_
-    refine Set.Infinite.mono ?_
-      (Set.infinite_range_of_injective Complex.ofReal_injective)
-    rintro z ⟨r, rfl⟩
-    exact hp r
-  have hcoeff := congrArg (fun p => Polynomial.coeff p w) hzero
-  rw [Polynomial.finsetSum_coeff] at hcoeff
-  simpa [Polynomial.coeff_monomial, Finset.sum_ite_eq', hw] using hcoeff
-
 /-- The weight components of a Lorentz-invariant covariant decomposition are
-  Lorentz invariant. -/
+  Lorentz invariant: taking the weight-`m` part commutes with the Lorentz action. -/
 lemma repLorentzGroup_covComponent_eq {z : ℕ → JetAlgebra}
     (hz : ∀ m, z m ∈ covMonomialSpan m) (Λ : SL(2,ℂ))
     (hx : repLorentzGroup Λ (∑ m ∈ Finset.range 9, z m) =
       ∑ m ∈ Finset.range 9, z m)
     {m : ℕ} (hm : m ∈ Finset.range 9) :
     repLorentzGroup Λ (z m) = z m := by
-  have hv : ∀ r : ℝ, ∑ k ∈ Finset.range 9,
-      ((r : ℂ)) ^ k • (repLorentzGroup Λ (z k) - z k) = 0 := by
-    intro r
-    have e1 : massWeightScale ((r : ℂ))
-        (repLorentzGroup Λ (∑ k ∈ Finset.range 9, z k) -
-          ∑ k ∈ Finset.range 9, z k) = 0 := by
-      rw [hx, sub_self, map_zero]
-    rw [map_sum, map_sub, map_sum, map_sum] at e1
-    calc ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
-          (repLorentzGroup Λ (z k) - z k)
-        = (∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ))
-            (repLorentzGroup Λ (z k))) -
-          ∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ)) (z k) := by
-          rw [← Finset.sum_sub_distrib]
-          refine Finset.sum_congr rfl fun k _ => ?_
-          rw [massWeightScale_ofReal_repLorentzGroup,
-            forall_massWeightScale_of_mem_covMonomialSpan (hz k), map_smul,
-            smul_sub]
-      _ = 0 := e1
-  have h0 := eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero _ _ hv hm
-  rwa [sub_eq_zero] at h0
+  have hc : (massWeightPoly (∑ k ∈ Finset.range 9, z k)).coeff m = z m :=
+    coeff_massWeightPoly_sum
+      (fun k => mem_massWeightSubmodule_of_mem_covMonomialSpan (hz k)) hm
+  rw [← hc, repLorentzGroup_coeff_massWeightPoly, hx]
 
 /-- The weight components of a constant-gauge-invariant covariant decomposition
-  are constant-gauge invariant. -/
+  are constant-gauge invariant: the constant gauge action preserves mass weights. -/
 lemma repJetGaugeGroupI_ofConstant_covComponent_eq {z : ℕ → JetAlgebra}
     (hz : ∀ m, z m ∈ covMonomialSpan m) (g : GaugeGroupI)
     (hx : repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
         (∑ m ∈ Finset.range 9, z m) = ∑ m ∈ Finset.range 9, z m)
     {m : ℕ} (hm : m ∈ Finset.range 9) :
     repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z m) = z m := by
-  have hv : ∀ r : ℝ, ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
-      (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k) - z k) = 0 := by
-    intro r
-    have e1 : massWeightScale ((r : ℂ))
-        (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g)
-          (∑ k ∈ Finset.range 9, z k) - ∑ k ∈ Finset.range 9, z k) = 0 := by
-      rw [hx, sub_self, map_zero]
-    rw [map_sum, map_sub, map_sum, map_sum] at e1
-    calc ∑ k ∈ Finset.range 9, ((r : ℂ)) ^ k •
-          (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k) - z k)
-        = (∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ))
-            (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (z k))) -
-          ∑ k ∈ Finset.range 9, massWeightScale ((r : ℂ)) (z k) := by
-          rw [← Finset.sum_sub_distrib]
-          refine Finset.sum_congr rfl fun k _ => ?_
-          rw [massWeightScale_repJetGaugeGroupI_ofConstant,
-            forall_massWeightScale_of_mem_covMonomialSpan (hz k), map_smul,
-            smul_sub]
-      _ = 0 := e1
-  have h0 := eq_zero_of_forall_ofReal_sum_pow_smul_eq_zero _ _ hv hm
-  rwa [sub_eq_zero] at h0
+  have hc : (massWeightPoly (∑ k ∈ Finset.range 9, z k)).coeff m = z m :=
+    coeff_massWeightPoly_sum
+      (fun k => mem_massWeightSubmodule_of_mem_covMonomialSpan (hz k)) hm
+  rw [← hc, repJetGaugeGroupI_ofConstant_coeff_massWeightPoly, hx]
 
 /-!
 
@@ -312,48 +225,34 @@ lemma repJetGaugeGroupI_ofConstant_covComponent_eq {z : ℕ → JetAlgebra}
 
 /-- An element with two distinct exact weights vanishes. -/
 lemma eq_zero_of_eigen_ne {y : JetAlgebra} {m n : ℕ}
-    (hm : ∀ c : ℂ, massWeightScale c y = c ^ m • y)
-    (hn : ∀ c : ℂ, massWeightScale c y = c ^ n • y) (hmn : m ≠ n) : y = 0 := by
-  have h : ((2 : ℂ) ^ m) • y = ((2 : ℂ) ^ n) • y := (hm 2).symm.trans (hn 2)
-  have h2 : ((2 : ℂ) ^ m - 2 ^ n) • y = 0 :=
-    (sub_smul ((2 : ℂ) ^ m) ((2 : ℂ) ^ n) y).trans (by rw [h, sub_self])
-  rcases smul_eq_zero.mp h2 with h3 | h3
-  · exfalso
-    apply hmn
-    rw [sub_eq_zero] at h3
-    have h4 : ((2 ^ m : ℕ) : ℂ) = ((2 ^ n : ℕ) : ℂ) := by
-      push_cast
-      exact h3
-    exact Nat.pow_right_injective (le_refl 2) (Nat.cast_injective h4)
-  · exact h3
+    (hm : y ∈ massWeightSubmodule m) (hn : y ∈ massWeightSubmodule n) (hmn : m ≠ n) :
+    y = 0 :=
+  (coeff_massWeightPoly_of_mem hm).symm.trans
+    (coeff_massWeightPoly_of_mem_ne (Ne.symm hmn) hn)
 
 /-- Every covariant monomial is the unit or homogeneous of weight at least
   three. -/
 lemma mem_closure_weight_cases {y : JetAlgebra}
     (hy : y ∈ Submonoid.closure invariantGenerators) :
-    y = 1 ∨ ∃ w, 3 ≤ w ∧ ∀ c : ℂ, massWeightScale c y = c ^ w • y := by
+    y = 1 ∨ ∃ w, 3 ≤ w ∧ y ∈ massWeightSubmodule w := by
   induction hy using Submonoid.closure_induction with
   | mem z hz =>
     rcases hz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
     · exact Or.inr ⟨4 + 2 * Multiset.card p.1, by omega,
-        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2⟩
+        fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2⟩
     · exact Or.inr ⟨3 + 2 * p.1.length, by omega,
-        fun c => massWeightScale_Dψ c p.1 p.2⟩
+        Dψ_mem_massWeightSubmodule p.1 p.2⟩
     · exact Or.inr ⟨3 + 2 * p.1.length, by omega,
-        fun c => massWeightScale_Dbarψ c p.1 p.2⟩
+        Dbarψ_mem_massWeightSubmodule p.1 p.2⟩
   | one => exact Or.inl rfl
   | mul a b ha hb iha ihb =>
     rcases iha with rfl | ⟨wa, hwa3, hwa⟩
     · rcases ihb with rfl | ⟨wb, hwb3, hwb⟩
       · exact Or.inl (one_mul (1 : JetAlgebra))
-      · exact Or.inr ⟨wb, hwb3, fun c => by
-          rw [show (1 : JetAlgebra) * b = b from one_mul b]
-          exact hwb c⟩
+      · exact Or.inr ⟨wb, hwb3, by rwa [one_mul]⟩
     · rcases ihb with rfl | ⟨wb, hwb3, hwb⟩
-      · exact Or.inr ⟨wa, hwa3, fun c => by
-          rw [show a * (1 : JetAlgebra) = a from mul_one a]
-          exact hwa c⟩
-      · exact Or.inr ⟨wa + wb, by omega, massWeightScale_mul_eigen hwa hwb⟩
+      · exact Or.inr ⟨wa, hwa3, by rwa [mul_one]⟩
+      · exact Or.inr ⟨wa + wb, by omega, mul_mem_massWeightSubmodule hwa hwb⟩
 
 /-- The weight-zero covariant monomial span consists of the constants. -/
 lemma covMonomialSpan_zero_le :
@@ -371,9 +270,7 @@ lemma covMonomialSpan_le_bot_of_lt_three {m : ℕ} (hm1 : 1 ≤ m) (hm2 : m < 3)
   rw [covMonomialSpan, Submodule.span_le]
   rintro y ⟨hy, hym⟩
   rcases mem_closure_weight_cases hy with rfl | ⟨w, hw3, hwe⟩
-  · have h1 : ∀ c : ℂ, massWeightScale c (1 : JetAlgebra) = c ^ 0 • 1 :=
-      fun c => by rw [pow_zero, one_smul]; exact (massWeightScale c).map_one
-    have := eq_zero_of_eigen_ne h1 hym (by omega)
+  · have := eq_zero_of_eigen_ne (SetLike.one_mem_graded massWeightSubmodule) hym (by omega)
     simp [this]
   · rw [show y = 0 from eq_zero_of_eigen_ne hwe hym (by omega)]
     simp
@@ -396,7 +293,7 @@ gauge invariant.
 lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
     (hy : y ∈ Submonoid.closure invariantGenerators) :
     ∃ (w : ℕ) (k : ℤ), k.natAbs ≤ w ∧ (w : ℤ) % 2 = k % 2 ∧
-      (∀ c : ℂ, massWeightScale c y = c ^ w • y) ∧
+      y ∈ massWeightSubmodule w ∧
       ∀ g : GaugeGroupI, repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
         (((g.2.2 : ℂ)) ^ (6 * k)) • y := by
   have hz : ∀ g : GaugeGroupI, ((g.2.2 : ℂ)) ≠ 0 := by
@@ -408,15 +305,15 @@ lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
   | mem z hzz =>
     rcases hzz with (⟨p, rfl⟩ | ⟨p, rfl⟩) | ⟨p, rfl⟩
     · refine ⟨4 + 2 * Multiset.card p.1, 0, by simp, by omega,
-        fun c => massWeightScale_fieldStrengthDeriv c p.1 p.2.1 p.2.2, fun g => ?_⟩
+        fieldStrengthDeriv_mem_massWeightSubmodule p.1 p.2.1 p.2.2, fun g => ?_⟩
       rw [repJetGaugeGroupI_fieldStrengthDeriv, mul_zero, zpow_zero, one_smul]
     · refine ⟨3 + 2 * p.1.length, 1, by omega, by omega,
-        fun c => massWeightScale_Dψ c p.1 p.2, fun g => ?_⟩
+        Dψ_mem_massWeightSubmodule p.1 p.2, fun g => ?_⟩
       rw [repJetGaugeGroupI_Dψ, JetGaugeGroupI.eval_ofConstant, Submonoid.smul_def,
         SubmonoidClass.coe_pow, mul_one,
         show ((g.2.2 : ℂ)) ^ (6 : ℤ) = ((g.2.2 : ℂ)) ^ (6 : ℕ) from zpow_natCast _ 6]
     · refine ⟨3 + 2 * p.1.length, -1, by omega, by omega,
-        fun c => massWeightScale_Dbarψ c p.1 p.2, fun g => ?_⟩
+        Dbarψ_mem_massWeightSubmodule p.1 p.2, fun g => ?_⟩
       rw [repJetGaugeGroupI_Dbarψ, JetGaugeGroupI.eval_ofConstant,
         Submonoid.smul_def, SubmonoidClass.coe_pow, Unitary.coe_star]
       congr 1
@@ -426,8 +323,7 @@ lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
         show ((g.2.2 : ℂ)) ^ (6 : ℤ) = ((g.2.2 : ℂ)) ^ (6 : ℕ) from zpow_natCast _ 6]
       exact inv_pow _ 6
   | one =>
-    refine ⟨0, 0, by simp, rfl, fun c => by
-        rw [pow_zero, one_smul]; exact (massWeightScale c).map_one, fun g => ?_⟩
+    refine ⟨0, 0, by simp, rfl, SetLike.one_mem_graded massWeightSubmodule, fun g => ?_⟩
     rw [mul_zero, zpow_zero, one_smul]
     exact (repJetGaugeGroupI_eq_repAlgHom _ 1).trans
       (repAlgHom (JetGaugeGroupI.ofConstant g)).map_one
@@ -436,7 +332,7 @@ lemma rep_ofConstant_eigen_of_mem_closure {y : JetAlgebra}
     obtain ⟨wb, kb, hbb, hpb, heb, hgb⟩ := ihb
     refine ⟨wa + wb, ka + kb, by
         have := Int.natAbs_add_le ka kb
-        omega, by omega, massWeightScale_mul_eigen hea heb, fun g => ?_⟩
+        omega, by omega, mul_mem_massWeightSubmodule hea heb, fun g => ?_⟩
     rw [repJetGaugeGroupI_mul', hga g, hgb g, smul_mul_smul_comm,
       show (6 : ℤ) * (ka + kb) = 6 * ka + 6 * kb from by ring,
       zpow_add₀ (hz g)]
@@ -554,7 +450,7 @@ charge components, and a constant-gauge invariant equals its neutral component.
   monomials of weight `m` and hypercharge `6 k`. -/
 noncomputable def chargeCovSpan (m : ℕ) (k : ℤ) : Submodule ℂ JetAlgebra :=
   Submodule.span ℂ {y | y ∈ Submonoid.closure invariantGenerators ∧
-    (∀ c : ℂ, massWeightScale c y = c ^ m • y) ∧
+    y ∈ massWeightSubmodule m ∧
     ∀ g : GaugeGroupI, repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) y =
       ((g.2.2 : ℂ)) ^ (6 * k) • y}
 

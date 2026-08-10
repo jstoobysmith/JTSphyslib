@@ -14,10 +14,9 @@ three coordinate axes, the subgroups `boostSubgroupZ/X/Y` they generate, and
 their Lorentz matrices; together with the two fixed `z`-boosts `boostZ2`,
 `boostZ3` used to kill the weight-six sector.
 
-These boosts are the subgroup that the rest of `Subgroups/` acts with — the
-`BoostsOn*` files tabulate their action on the field strength, its derivatives,
-and the photon and fermion terms — and that `Averages/BoostAverage` averages
-over. Being non-compact they admit no invariant average, which is why that
+These boosts are the subgroup that `Averages/BoostAverage` averages over; its
+`boostAvg_calculator` tactic computes their action on the weight-eight monomials from the
+`boostMat*` matrices below together with the transformation laws of `LorentzAction`. Being non-compact they admit no invariant average, which is why that
 file has to weight them by hand.
 -/
 
@@ -250,6 +249,23 @@ lemma boostYel_inv (t : ℝ) (ht : t ≠ 0) :
   fin_cases i <;> fin_cases j <;>
     · simp [boostYel, Complex.ofReal_inv, inv_inv]
       try ring
+
+/-- The matrix of the `z`-boost. -/
+lemma boostZel_coe (t : ℝ) (ht : t ≠ 0) :
+    ((boostZel t ht : SL(2,ℂ)) : Matrix (Fin 2) (Fin 2) ℂ) =
+      !![((t : ℝ) : ℂ), 0; 0, (((t : ℝ) : ℂ))⁻¹] := rfl
+
+/-- The matrix of the `x`-boost. -/
+lemma boostXel_coe (t : ℝ) (ht : t ≠ 0) :
+    ((boostXel t ht : SL(2,ℂ)) : Matrix (Fin 2) (Fin 2) ℂ) =
+      !![((t : ℂ) + (t : ℂ)⁻¹)/2, ((t : ℂ) - (t : ℂ)⁻¹)/2;
+         ((t : ℂ) - (t : ℂ)⁻¹)/2, ((t : ℂ) + (t : ℂ)⁻¹)/2] := rfl
+
+/-- The matrix of the `y`-boost. -/
+lemma boostYel_coe (t : ℝ) (ht : t ≠ 0) :
+    ((boostYel t ht : SL(2,ℂ)) : Matrix (Fin 2) (Fin 2) ℂ) =
+      !![((t : ℂ) + (t : ℂ)⁻¹)/2, -Complex.I * ((t : ℂ) - (t : ℂ)⁻¹)/2;
+         Complex.I * ((t : ℂ) - (t : ℂ)⁻¹)/2, ((t : ℂ) + (t : ℂ)⁻¹)/2] := rfl
 
 /-- The inverse of the parametric `z`-boost, entrywise, with real entries. -/
 lemma boostZel_inv_coe (t : ℝ) (ht : t ≠ 0) :

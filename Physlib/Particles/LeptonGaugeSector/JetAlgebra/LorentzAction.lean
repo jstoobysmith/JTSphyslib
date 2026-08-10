@@ -362,6 +362,60 @@ lemma repLorentzGroup_fieldStrengthDeriv_pair (Λ : SL(2,ℂ))
 
 -/
 
+set_option maxHeartbeats 2000000 in
+/-- The Lorentz action on a fermion pair `ψ̄_α (Dψ_μ)_β` with one derivative on
+  the unbarred factor. -/
+lemma repLorentzGroup_Dbarψ_nil_mul_Dψ_singleton (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α β : Fin 2) :
+    repLorentzGroup Λ (Dbarψ [] α * Dψ [μ] β) =
+      ∑ γ, ∑ ν, ∑ δ, ((Λ⁻¹).1 α γ *
+        ((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+          star ((Λ⁻¹).1 β δ))) • (Dbarψ [] γ * Dψ [ν] δ) := by
+  have hsm : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
+    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hms : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
+      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
+    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hms₂ : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
+    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
+      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
+    rw [smul_mul_smul_comm]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_nil, repLorentzGroup_Dψ_singleton]
+  simp only [hsm, hms, hms₂, hsmul]
+
+set_option maxHeartbeats 2000000 in
+/-- The Lorentz action on a fermion pair `(D̄ψ̄_μ)_α ψ_β` with one derivative on
+  the barred factor. -/
+lemma repLorentzGroup_Dbarψ_singleton_mul_Dψ_nil (Λ : SL(2,ℂ))
+    (μ : Fin 1 ⊕ Fin 3) (α β : Fin 2) :
+    repLorentzGroup Λ (Dbarψ [μ] α * Dψ [] β) =
+      ∑ ν, ∑ γ, ∑ δ, (((((Lorentz.SL2C.toLorentzGroup Λ).1 ν μ : ℝ) : ℂ) *
+        (Λ⁻¹).1 α γ) * star ((Λ⁻¹).1 β δ)) • (Dbarψ [ν] γ * Dψ [] δ) := by
+  have hsm : ∀ (f : (Fin 1 ⊕ Fin 3) → JetAlgebra) (y : JetAlgebra),
+      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
+    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hsm₂ : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      (∑ x, f x) * y = ∑ x, f x * y := fun f y => by
+    rw [show (∑ x, f x) * y = LinearMap.mulRight ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hms : ∀ (f : Fin 2 → JetAlgebra) (y : JetAlgebra),
+      y * (∑ x, f x) = ∑ x, y * f x := fun f y => by
+    rw [show y * (∑ x, f x) = LinearMap.mulLeft ℂ y (∑ x, f x) from rfl, map_sum]
+    rfl
+  have hsmul : ∀ (c d : ℂ) (x y : JetAlgebra),
+      (c • x) * (d • y) = (c * d) • (x * y) := fun c d x y => by
+    rw [smul_mul_smul_comm]
+  rw [repLorentzGroup_apply_mul, repLorentzGroup_Dbarψ_singleton, repLorentzGroup_Dψ_nil]
+  simp only [hsm, hsm₂, hms, hsmul]
+
+
 /-- The Lorentz action on a zero-derivative fermion pair `ψ̄_α ψ_β`. -/
 lemma repLorentzGroup_Dbarψ_nil_mul_Dψ_nil (Λ : SL(2,ℂ)) (α β : Fin 2) :
     repLorentzGroup Λ (Dbarψ [] α * Dψ [] β) =

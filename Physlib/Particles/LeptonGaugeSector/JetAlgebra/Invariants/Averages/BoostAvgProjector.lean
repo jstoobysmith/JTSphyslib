@@ -50,6 +50,70 @@ namespace JetAlgebra
 open scoped minkowskiMatrix PauliMatrix
 open Matrix MatrixGroups
 
+/-!
+
+## A. Sylvester's polynomial
+
+The projector is a polynomial in the boost average, so it acts on an eigenvector of that average
+by the value of the polynomial at the eigenvalue. Since the polynomial was built to take the
+value one at the eigenvalue one and to vanish at the other five, every computation of the
+projector on a concrete vector reduces to a single linear-algebra step: decompose the vector
+into eigenvectors of `boostAvg` and read off the eigenvalue-one part. No iterate of the operator
+ever has to be computed.
+
+-/
+
+/-- Sylvester's interpolation polynomial for the spectrum of the boost average:
+  `(324/5) (c - 5/6) (c - 2/3) (c - 1/2) (c - 1/3) (c - 1/6)`, normalized to take the value one
+  at `c = 1`. -/
+noncomputable def sylvester (c : ℂ) : ℂ :=
+  -1 + (137/10) * c + (-(135/2)) * c ^ 2 + 153 * c ^ 3 + (-162) * c ^ 4 + (324/5) * c ^ 5
+
+@[simp] lemma sylvester_one : sylvester (1 : ℂ) = 1 := by norm_num [sylvester]
+@[simp] lemma sylvester_five_sixths : sylvester (5/6 : ℂ) = 0 := by norm_num [sylvester]
+@[simp] lemma sylvester_two_thirds : sylvester (2/3 : ℂ) = 0 := by norm_num [sylvester]
+@[simp] lemma sylvester_half : sylvester (1/2 : ℂ) = 0 := by norm_num [sylvester]
+@[simp] lemma sylvester_third : sylvester (1/3 : ℂ) = 0 := by norm_num [sylvester]
+@[simp] lemma sylvester_sixth : sylvester (1/6 : ℂ) = 0 := by norm_num [sylvester]
+
+/-- Sylvester's polynomial evaluated on an endomorphism. Stated for an arbitrary module, since
+  nothing about the jet algebra is used. -/
+noncomputable def sylvesterEnd {M : Type*} [AddCommGroup M] [Module ℂ M]
+    (T : Module.End ℂ M) : Module.End ℂ M :=
+  (-1 : ℂ) • T ^ 0 + (137/10 : ℂ) • T ^ 1 + (-(135/2) : ℂ) • T ^ 2 + (153 : ℂ) • T ^ 3
+    + (-162 : ℂ) • T ^ 4 + (324/5 : ℂ) • T ^ 5
+
+lemma sylvesterEnd_apply {M : Type*} [AddCommGroup M] [Module ℂ M]
+    (T : Module.End ℂ M) (v : M) :
+    sylvesterEnd T v = (-1 : ℂ) • v + (137/10 : ℂ) • T v + (-(135/2) : ℂ) • T (T v)
+      + (153 : ℂ) • T (T (T v)) + (-162 : ℂ) • T (T (T (T v)))
+      + (324/5 : ℂ) • T (T (T (T (T v)))) := by
+  simp [sylvesterEnd, pow_succ, Module.End.mul_apply]
+
+lemma pow_apply_of_eigen {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {T : Module.End ℂ M} {c : ℂ} {v : M} (h : T v = c • v) (n : ℕ) :
+    (T ^ n) v = c ^ n • v := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [pow_succ, Module.End.mul_apply, h, map_smul, ih, smul_smul, pow_succ]
+    ring_nf
+
+/-- On an eigenvector, a polynomial in the operator acts by the value of the polynomial at the
+  eigenvalue. This is the only fact about `sylvesterEnd` that the computations need. -/
+lemma sylvesterEnd_of_eigen {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {T : Module.End ℂ M} {c : ℂ} {v : M} (h : T v = c • v) :
+    sylvesterEnd T v = sylvester c • v := by
+  simp only [sylvesterEnd, LinearMap.add_apply, LinearMap.smul_apply, pow_apply_of_eigen h,
+    smul_smul, sylvester]
+  module
+
+/-!
+
+## B. The projector
+
+-/
+
 /-- The spectral projector onto the Lorentz scalars, obtained from the boost
   average `boostAvg` by Sylvester's formula. Not an average itself: it is the
   unique quintic in `boostAvg` taking the value one at the eigenvalue one and
@@ -71,6 +135,17 @@ lemma boostAvgScalarProj_apply (v : JetAlgebra) :
       + (324/5 : ℂ) • boostAvg (boostAvg (boostAvg (boostAvg (boostAvg v)))) := by
   simp only [boostAvgScalarProj, LinearMap.add_apply, LinearMap.smul_apply, Module.End.one_apply,
     Module.End.mul_apply]
+
+/-- The projector is Sylvester's polynomial evaluated on the boost average. -/
+lemma boostAvgScalarProj_eq_sylvesterEnd : boostAvgScalarProj = sylvesterEnd boostAvg := by
+  simp [boostAvgScalarProj, sylvesterEnd, pow_succ]
+
+/-- On an eigenvector of the boost average the projector acts by the value of Sylvester's
+  polynomial at the eigenvalue. Together with `sylvester_one` and the four vanishing values
+  this reduces every evaluation of the projector to an eigenvector decomposition. -/
+lemma boostAvgScalarProj_of_eigen {c : ℂ} {v : JetAlgebra} (h : boostAvg v = c • v) :
+    boostAvgScalarProj v = sylvester c • v := by
+  rw [boostAvgScalarProj_eq_sylvesterEnd, sylvesterEnd_of_eigen h]
 
 /-- The projector fixes every Lorentz-invariant vector: `boostAvg` fixes it and the
   coefficients sum to one. -/

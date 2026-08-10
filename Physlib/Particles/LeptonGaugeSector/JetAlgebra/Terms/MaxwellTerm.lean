@@ -75,7 +75,6 @@ lemma toLorentzGroup_sum_η_mul_mul (Λ : SL(2,ℂ)) (a a' : Fin 1 ⊕ Fin 3) :
   · rw [if_neg haa, minkowskiMatrix.as_diagonal, Matrix.diagonal_apply_ne _ haa]
     simp
 
-set_option maxHeartbeats 2000000 in
 /-- Lorentz invariance of the Maxwell term, by the `η`-contraction identity. -/
 lemma repLorentzGroup_maxwellTerm (Λ : SL(2,ℂ)) :
     repLorentzGroup Λ maxwellTerm = maxwellTerm := by
@@ -153,13 +152,11 @@ lemma maxwellTerm_mem_massWeightLESubmodule :
   rw [maxwellTerm]
   refine Submodule.sum_mem _ fun μ _ => Submodule.sum_mem _ fun ν _ =>
     Submodule.smul_mem _ _ ?_
-  exact mem_massWeightLESubmodule_of_forall_massWeightScale (m := 4 + 4) le_rfl
-    (massWeightScale_mul_eigen (m := 4) (n := 4)
-      (fun c => massWeightScale_fieldStrengthDeriv c {} μ ν)
-      (fun c => massWeightScale_fieldStrengthDeriv c {} μ ν))
+  have h4 : (fieldStrengthDeriv {} μ ν : JetAlgebra) ∈ massWeightSubmodule 4 := by
+    simpa using fieldStrengthDeriv_mem_massWeightSubmodule {} μ ν
+  exact mem_massWeightLESubmodule_of_mem (m := 4 + 4) le_rfl
+    (mul_mem_massWeightSubmodule h4 h4)
 
-set_option maxHeartbeats 4000000 in
-set_option linter.unusedSimpArgs false in
 /-- The Maxwell term as an explicit combination of the six independent
   field-strength squares. -/
 lemma maxwellTerm_eq : maxwellTerm =
@@ -175,32 +172,18 @@ lemma maxwellTerm_eq : maxwellTerm =
         fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2))
     + (2 : ℂ) • (fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) *
         fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) := by
-  have hz₁ : ∀ z : JetAlgebra, 0 * z = 0 := fun z => zero_mul z
-  have hz₂ : ∀ z : JetAlgebra, z * 0 = 0 := fun z => mul_zero z
   have hnm : ∀ u v : JetAlgebra, (-u) * v = -(u * v) := by grind
   have hmn : ∀ u v : JetAlgebra, u * (-v) = -(u * v) := by grind
   rw [maxwellTerm]
   simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three,
     minkowskiMatrix.inl_0_inl_0, minkowskiMatrix.inr_i_inr_i,
-    fieldStrengthDeriv_self, hz₁, hz₂, smul_zero, add_zero, zero_add]
+    fieldStrengthDeriv_self, mul_zero, smul_zero, add_zero, zero_add]
   simp only [
-    show fieldStrengthDeriv {} (Sum.inr 0) (Sum.inl 0) =
-      -fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) from
       fieldStrengthDeriv_antisymm {} (Sum.inl 0) (Sum.inr 0),
-    show fieldStrengthDeriv {} (Sum.inr 1) (Sum.inl 0) =
-      -fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) from
       fieldStrengthDeriv_antisymm {} (Sum.inl 0) (Sum.inr 1),
-    show fieldStrengthDeriv {} (Sum.inr 2) (Sum.inl 0) =
-      -fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) from
       fieldStrengthDeriv_antisymm {} (Sum.inl 0) (Sum.inr 2),
-    show fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 0) =
-      -fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) from
       fieldStrengthDeriv_antisymm {} (Sum.inr 0) (Sum.inr 1),
-    show fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) =
-      -fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 2) from
       fieldStrengthDeriv_antisymm {} (Sum.inr 0) (Sum.inr 2),
-    show fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 1) =
-      -fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) from
       fieldStrengthDeriv_antisymm {} (Sum.inr 1) (Sum.inr 2),
     hnm, hmn, neg_neg]
   push_cast
