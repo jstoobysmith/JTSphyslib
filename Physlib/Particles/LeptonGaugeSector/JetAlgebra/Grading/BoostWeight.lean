@@ -26,23 +26,18 @@ basis.
 With this grading we can define the subspace of boost weight zero. Any invariant under the
 Lorentz group lies in it, since a boost fixes an invariant.
 
-*How far the grading is established.* Of the two halves of `DirectSum.IsInternal`, independence
-is proved — `boostWeightSubmodule_iSupIndep`, from the weight spaces sitting inside the
-eigenspaces of a single boost at the distinct eigenvalues `2 ^ k`. Exhaustiveness is reduced to
-a single statement: `boostWeightSubalgebra_eq_top_of_forall_ofGenerator` says the homogeneous
-elements span everything as soon as each *generator* `[j]ₐ` is a finite sum of boost
-eigenvectors, and `boostWeightSubmodule_isInternal_iff` turns spanning into `IsInternal`. So the
-whole grading rests on
-
-  `∀ j : JetGenerators, [j]ₐ ∈ boostWeightSubalgebra`,
-
-which is not proved here. The route is to descend to the component spaces, where the boost acts
-linearly: `BBoson.JetComponentSpace` is `DerivAlgebraReal ⊗ Module.Dual ℝ BBoson`, and
-`DerivAlgebraReal` is a symmetric algebra on `Module.Dual ℝ Lorentz.CoVector`, so — since the
-span of eigenvectors is a subalgebra and `repLorentzGroup_apply_ι` and `repLorentzGroup_apply_mul`
-are available there — it suffices to give a light-cone eigenbasis of the four-dimensional spaces
-`Module.Dual ℝ Lorentz.CoVector` and `Module.Dual ℝ BBoson`, and of the two-dimensional spinor
-duals on the fermionic side. No covariance of `jetDeriv` is needed.
+*The grading is established.* `boostWeightSubmodule_isInternal` decomposes the jet algebra as an
+internal direct sum of the weight submodules, and `GradedAlgebra boostWeightSubmodule` is an
+instance. Independence comes from the weight spaces sitting inside the eigenspaces of a single
+boost at the distinct eigenvalues `2 ^ k`. Exhaustiveness is the content of section O': it is
+proved by descending to the component spaces, where the boost acts *linearly*. There the
+statement propagates mechanically — the span of eigenvectors is closed under tensor products,
+products, symmetric and exterior algebras, and base change — so the whole thing rests on
+four-dimensional and two-dimensional base cases. For the spacetime-indexed spaces
+`Module.Dual ℝ Lorentz.CoVector`, `Module.Dual ℂ Lorentz.CoℂModule` and `Module.Dual ℝ BBoson`
+the eigenvectors are the light-cone combinations `b₀ ∓ b₃`, of weight `±2`, together with the
+transverse directions, of weight `0`; on the spinor duals the boost is already diagonal, with
+weights `∓1`. No covariance of `jetDeriv` is needed anywhere.
 
 The boost weight is bounded by the mass weight: a generator of mass weight `w` carries at most
 `w` units of boost weight. A bosonic generator `∂_s B_μ` of mass weight `2(1 + |s|)` has
@@ -77,18 +72,22 @@ and each acts on a weight-`k` element by a power of `t`.
   it is the identity on boost weight zero and annihilates weights `±2, ±4, ±6`.
 - `JetAlgebra.boostWeightSubmodule_iSupIndep` : the weight spaces are independent.
 - `JetAlgebra.boostWeightSubalgebra` : the subalgebra they span.
-- `JetAlgebra.boostWeightSubalgebra_eq_top_of_forall_ofGenerator` and
-  `JetAlgebra.boostWeightSubmodule_isInternal_iff` : the reduction of the grading to the
-  generators.
+- `JetAlgebra.boostWeightSubmodule_isInternal` : the weight submodules decompose the jet
+  algebra as an internal direct sum, so `GradedAlgebra boostWeightSubmodule` holds.
+- `JetAlgebra.BoostWeight.IsGraded` and the transport lemmas of section O : the grading
+  propagates along tensor products, products, symmetric and exterior algebras and base change.
 
 ## iii. Table of contents
 
+- O. Boost weights of a general representation
+- O'. The component spaces are boost-graded
 - A. The boost-weight submodules
 - B. Homogeneous elements
 - B'. Independence of the weight submodules
 - B''. The span of the homogeneous elements is a subalgebra
 - C. The interpolating polynomial of `boostAvgZ`
 - D. `boostAvgZ` is the projection onto boost weight zero
+- E. The grading
 
 -/
 
@@ -100,6 +99,474 @@ open scoped minkowskiMatrix PauliMatrix
 open Matrix MatrixGroups
 
 namespace JetAlgebra
+
+/-!
+
+## O. Boost weights of a general representation
+
+The descent to the component spaces is uniform, so it is carried out once here for an arbitrary
+representation. The weight spaces are defined exactly as `boostWeightSubmodule` is, and
+`IsGraded` says that they span. The point of the section is that `IsGraded` propagates along
+every construction the jet algebra is built from: tensor products, products, symmetric algebras,
+exterior algebras and base change. The recursion bottoms out at a finite-dimensional space with
+an eigenbasis, where the light-cone combinations do the work.
+
+-/
+
+namespace BoostWeight
+
+variable {K : Type*} [Field K] [Algebra ℝ K]
+variable {M N V : Type*} [AddCommGroup M] [Module K M] [AddCommGroup N] [Module K N]
+  [AddCommGroup V] [Module K V]
+
+private lemma algebraMap_ne_zero {t : ℝ} (ht : t ≠ 0) : (algebraMap ℝ K t) ≠ 0 :=
+  fun h => ht ((algebraMap ℝ K).injective (by simpa using h))
+
+/-- The weight-`w` space of a representation: the vectors scaling by `t ^ w` under the
+  `z`-boost at parameter `t`. -/
+def space (rep : Representation K SL(2,ℂ) M) (w : ℤ) : Submodule K M where
+  carrier := {x | ∀ (t : ℝ) (ht : t ≠ 0),
+    rep (boostZel t ht) x = (algebraMap ℝ K t) ^ w • x}
+  add_mem' {a b} ha hb := fun t ht => by rw [map_add, ha t ht, hb t ht, smul_add]
+  zero_mem' := fun t ht => by rw [map_zero, smul_zero]
+  smul_mem' c x hx := fun t ht => by rw [map_smul, hx t ht, smul_comm]
+
+lemma mem_space {rep : Representation K SL(2,ℂ) M} {w : ℤ} {x : M} :
+    x ∈ space rep w ↔ ∀ (t : ℝ) (ht : t ≠ 0),
+      rep (boostZel t ht) x = (algebraMap ℝ K t) ^ w • x := Iff.rfl
+
+/-- The span of all the weight spaces. -/
+def weightSpan (rep : Representation K SL(2,ℂ) M) : Submodule K M := ⨆ w, space rep w
+
+/-- A representation is boost-graded when its weight spaces span. -/
+def IsGraded (rep : Representation K SL(2,ℂ) M) : Prop := weightSpan rep = ⊤
+
+lemma mem_weightSpan_of_mem_space {rep : Representation K SL(2,ℂ) M} {w : ℤ} {x : M}
+    (h : x ∈ space rep w) : x ∈ weightSpan rep :=
+  Submodule.mem_iSup_of_mem w h
+
+lemma mem_weightSpan_of_isGraded {rep : Representation K SL(2,ℂ) M} (h : IsGraded rep) (x : M) :
+    x ∈ weightSpan rep := by rw [IsGraded] at h; rw [h]; trivial
+
+lemma isGraded_iff_forall_mem {rep : Representation K SL(2,ℂ) M} :
+    IsGraded rep ↔ ∀ x, x ∈ weightSpan rep :=
+  ⟨mem_weightSpan_of_isGraded, fun h => eq_top_iff.mpr fun x _ => h x⟩
+
+/-- A representation with a spanning family of vectors in the weight span is graded. -/
+lemma isGraded_of_span {rep : Representation K SL(2,ℂ) M} {S : Set M}
+    (hS : Submodule.span K S = ⊤) (h : ∀ x ∈ S, x ∈ weightSpan rep) : IsGraded rep :=
+  eq_top_iff.mpr (hS ▸ Submodule.span_le.mpr h)
+
+/-- A representation with a basis of vectors lying in the weight span is graded. -/
+lemma isGraded_of_basis {ι : Type*} {rep : Representation K SL(2,ℂ) M} (b : Module.Basis ι K M)
+    (h : ∀ i, b i ∈ weightSpan rep) : IsGraded rep :=
+  isGraded_of_span b.span_eq (by rintro _ ⟨i, rfl⟩; exact h i)
+
+/-!
+
+### Tensor products
+
+-/
+
+lemma tmul_mem_space {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
+    {a b : ℤ} {x : M} {y : N} (hx : x ∈ space rep a) (hy : y ∈ space rep₂ b) :
+    x ⊗ₜ[K] y ∈ space (rep.tprod rep₂) (a + b) := by
+  intro t ht
+  show (TensorProduct.map _ _) _ = _
+  rw [TensorProduct.map_tmul, hx t ht, hy t ht]
+  simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', smul_smul]
+  rw [← zpow_add₀ (algebraMap_ne_zero (K := K) ht), add_comm b a]
+
+lemma isGraded_tprod {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
+    (h₁ : IsGraded rep) (h₂ : IsGraded rep₂) : IsGraded (rep.tprod rep₂) := by
+  refine isGraded_iff_forall_mem.mpr fun z => ?_
+  induction z using TensorProduct.induction_on with
+  | zero => exact Submodule.zero_mem _
+  | add u v hu hv => exact Submodule.add_mem _ hu hv
+  | tmul x y =>
+    have hx := mem_weightSpan_of_isGraded h₁ x
+    have hy := mem_weightSpan_of_isGraded h₂ y
+    induction hx using Submodule.iSup_induction' with
+    | mem a x' hx' =>
+      induction hy using Submodule.iSup_induction' with
+      | mem b y' hy' => exact mem_weightSpan_of_mem_space (tmul_mem_space hx' hy')
+      | zero => rw [TensorProduct.tmul_zero]; exact Submodule.zero_mem _
+      | add u v _ _ ihu ihv => rw [TensorProduct.tmul_add]; exact Submodule.add_mem _ ihu ihv
+    | zero => rw [TensorProduct.zero_tmul]; exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv => rw [TensorProduct.add_tmul]; exact Submodule.add_mem _ ihu ihv
+
+
+/-!
+
+### Products
+
+-/
+
+lemma inl_mem_space {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
+    {a : ℤ} {x : M} (hx : x ∈ space rep a) :
+    ((x, 0) : M × N) ∈ space (rep.prod rep₂) a := by
+  intro t ht
+  show ((rep _ x, rep₂ _ 0) : M × N) = _
+  rw [map_zero, hx t ht, Prod.smul_mk, smul_zero]
+
+lemma inr_mem_space {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
+    {a : ℤ} {y : N} (hy : y ∈ space rep₂ a) :
+    ((0, y) : M × N) ∈ space (rep.prod rep₂) a := by
+  intro t ht
+  show ((rep _ 0, rep₂ _ y) : M × N) = _
+  rw [map_zero, hy t ht, Prod.smul_mk, smul_zero]
+
+lemma isGraded_prod {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
+    (h₁ : IsGraded rep) (h₂ : IsGraded rep₂) : IsGraded (rep.prod rep₂) := by
+  have hleft : ∀ x : M, ((x, (0 : N))) ∈ weightSpan (rep.prod rep₂) := by
+    intro x
+    have hx := mem_weightSpan_of_isGraded h₁ x
+    induction hx using Submodule.iSup_induction' with
+    | mem a u hu => exact mem_weightSpan_of_mem_space (inl_mem_space hu)
+    | zero => exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv =>
+      rw [show ((u + v, (0 : N))) = ((u, (0 : N))) + ((v, (0 : N))) from by ext <;> simp]
+      exact Submodule.add_mem _ ihu ihv
+  have hright : ∀ y : N, (((0 : M), y)) ∈ weightSpan (rep.prod rep₂) := by
+    intro y
+    have hy := mem_weightSpan_of_isGraded h₂ y
+    induction hy using Submodule.iSup_induction' with
+    | mem a u hu => exact mem_weightSpan_of_mem_space (inr_mem_space hu)
+    | zero => exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv =>
+      rw [show (((0 : M), u + v)) = (((0 : M), u)) + (((0 : M), v)) from by ext <;> simp]
+      exact Submodule.add_mem _ ihu ihv
+  refine isGraded_iff_forall_mem.mpr fun z => ?_
+  rw [show z = ((z.1, (0 : N))) + (((0 : M), z.2)) from by ext <;> simp]
+  exact Submodule.add_mem _ (hleft z.1) (hright z.2)
+
+/-!
+
+### Algebras generated in degree one
+
+-/
+
+variable {A : Type*} [Ring A] [Algebra K A]
+
+lemma one_mem_space {rep : Representation K SL(2,ℂ) A} (hone : ∀ Λ, rep Λ 1 = 1) :
+    (1 : A) ∈ space rep 0 := fun t _ => by rw [hone, zpow_zero, one_smul]
+
+lemma mul_mem_space {rep : Representation K SL(2,ℂ) A}
+    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y)
+    {a b : ℤ} {x y : A} (hx : x ∈ space rep a) (hy : y ∈ space rep b) :
+    x * y ∈ space rep (a + b) := by
+  intro t ht
+  rw [hmul, hx t ht, hy t ht, smul_mul_smul_comm,
+    zpow_add₀ (algebraMap_ne_zero (K := K) ht)]
+
+lemma mul_mem_weightSpan {rep : Representation K SL(2,ℂ) A}
+    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y)
+    {x y : A} (hx : x ∈ weightSpan rep) (hy : y ∈ weightSpan rep) :
+    x * y ∈ weightSpan rep := by
+  induction hx using Submodule.iSup_induction' with
+  | mem a u hu =>
+    induction hy using Submodule.iSup_induction' with
+    | mem b v hv => exact mem_weightSpan_of_mem_space (mul_mem_space hmul hu hv)
+    | zero => rw [mul_zero]; exact Submodule.zero_mem _
+    | add v w _ _ ihv ihw => rw [mul_add]; exact Submodule.add_mem _ ihv ihw
+  | zero => rw [zero_mul]; exact Submodule.zero_mem _
+  | add u v _ _ ihu ihv => rw [add_mul]; exact Submodule.add_mem _ ihu ihv
+
+lemma algebraMap_mem_weightSpan {rep : Representation K SL(2,ℂ) A}
+    (hone : ∀ Λ, rep Λ 1 = 1) (r : K) : algebraMap K A r ∈ weightSpan rep := by
+  rw [Algebra.algebraMap_eq_smul_one]
+  exact Submodule.smul_mem _ _ (mem_weightSpan_of_mem_space (one_mem_space hone))
+
+/-- A symmetric algebra is boost-graded as soon as its degree-one part is. -/
+lemma isGraded_symmetricAlgebra {V : Type*} [AddCommGroup V] [Module K V]
+    {repV : Representation K SL(2,ℂ) V}
+    {repA : Representation K SL(2,ℂ) (SymmetricAlgebra K V)}
+    (hone : ∀ Λ, repA Λ 1 = 1)
+    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : SymmetricAlgebra K V),
+      repA Λ (x * y) = repA Λ x * repA Λ y)
+    (hι : ∀ (Λ : SL(2,ℂ)) (x : V),
+      repA Λ (SymmetricAlgebra.ι K V x) = SymmetricAlgebra.ι K V (repV Λ x))
+    (hV : IsGraded repV) : IsGraded repA := by
+  refine isGraded_iff_forall_mem.mpr fun x => ?_
+  induction x using SymmetricAlgebra.induction with
+  | algebraMap r => exact algebraMap_mem_weightSpan hone r
+  | ι v =>
+    have hv := mem_weightSpan_of_isGraded hV v
+    induction hv using Submodule.iSup_induction' with
+    | mem a u hu =>
+      refine mem_weightSpan_of_mem_space (w := a) fun t ht => ?_
+      rw [hι, hu t ht, map_smul]
+    | zero => rw [map_zero]; exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv => rw [map_add]; exact Submodule.add_mem _ ihu ihv
+  | mul u v ihu ihv => exact mul_mem_weightSpan hmul ihu ihv
+  | add u v ihu ihv => exact Submodule.add_mem _ ihu ihv
+
+/-- An exterior algebra is boost-graded as soon as its degree-one part is. -/
+lemma isGraded_exteriorAlgebra {V : Type*} [AddCommGroup V] [Module K V]
+    {repV : Representation K SL(2,ℂ) V}
+    {repA : Representation K SL(2,ℂ) (ExteriorAlgebra K V)}
+    (hone : ∀ Λ, repA Λ 1 = 1)
+    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : ExteriorAlgebra K V),
+      repA Λ (x * y) = repA Λ x * repA Λ y)
+    (hι : ∀ (Λ : SL(2,ℂ)) (x : V),
+      repA Λ (ExteriorAlgebra.ι K x) = ExteriorAlgebra.ι K (repV Λ x))
+    (hV : IsGraded repV) : IsGraded repA := by
+  refine isGraded_iff_forall_mem.mpr fun x => ?_
+  induction x using ExteriorAlgebra.induction with
+  | algebraMap r => exact algebraMap_mem_weightSpan hone r
+  | ι v =>
+    have hv := mem_weightSpan_of_isGraded hV v
+    induction hv using Submodule.iSup_induction' with
+    | mem a u hu =>
+      refine mem_weightSpan_of_mem_space (w := a) fun t ht => ?_
+      rw [hι, hu t ht, map_smul]
+    | zero => rw [map_zero]; exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv => rw [map_add]; exact Submodule.add_mem _ ihu ihv
+  | mul u v ihu ihv => exact mul_mem_weightSpan hmul ihu ihv
+  | add u v ihu ihv => exact Submodule.add_mem _ ihu ihv
+
+/-!
+
+### The light-cone eigenbasis of a spacetime-indexed space
+
+-/
+
+/-- A space with a basis indexed by spacetime directions transforming by the columns of the
+  Lorentz matrix is boost-graded: the light-cone combinations `b₀ ∓ b₃` are eigenvectors of
+  weight `±2` and the transverse directions are invariant. -/
+lemma isGraded_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
+    (b : Module.Basis (Fin 1 ⊕ Fin 3) K M)
+    (h : ∀ (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3), rep Λ (b μ) =
+      ∑ j, algebraMap ℝ K ((Lorentz.SL2C.toLorentzGroup Λ).1 j μ) • b j) :
+    IsGraded rep := by
+  haveI : CharZero K := charZero_of_injective_algebraMap (algebraMap ℝ K).injective
+  have key : ∀ (t : ℝ) (ht : t ≠ 0) (μ : Fin 1 ⊕ Fin 3),
+      rep (boostZel t ht) (b μ) =
+        ∑ j, algebraMap ℝ K (boostMatZ t j μ) • b j := by
+    intro t ht μ
+    rw [h]
+    exact Finset.sum_congr rfl fun j _ => by rw [toLorentzGroup_boostZel]
+  have hplus : b (Sum.inl 0) - b (Sum.inr 2) ∈ space rep 2 := by
+    intro t ht
+    have h0 : (algebraMap ℝ K t) ≠ 0 := algebraMap_ne_zero ht
+    rw [map_sub, key t ht, key t ht]
+    simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
+      map_zero, zero_smul, add_zero, zero_add, map_one, one_smul, map_div₀, map_sub,
+      map_add, map_pow, map_inv₀, map_ofNat, map_neg]
+    match_scalars <;> (field_simp; try ring_nf; try norm_num)
+  have hminus : b (Sum.inl 0) + b (Sum.inr 2) ∈ space rep (-2) := by
+    intro t ht
+    have h0 : (algebraMap ℝ K t) ≠ 0 := algebraMap_ne_zero ht
+    rw [map_add, key t ht, key t ht]
+    simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
+      map_zero, zero_smul, add_zero, zero_add, map_one, one_smul, map_div₀, map_sub,
+      map_add, map_pow, map_inv₀, map_ofNat, map_neg]
+    match_scalars <;> (field_simp; try ring_nf; try norm_num)
+  have htr : ∀ i : Fin 3, i = 0 ∨ i = 1 → b (Sum.inr i) ∈ space rep 0 := by
+    rintro i (rfl | rfl) <;>
+    · intro t ht
+      rw [key t ht]
+      simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
+        map_zero, zero_smul, add_zero, zero_add, map_one, one_smul, zpow_zero]
+  refine isGraded_of_basis b fun μ => ?_
+  match μ with
+  | Sum.inl 0 =>
+    rw [show b (Sum.inl 0) = (2⁻¹ : K) • ((b (Sum.inl 0) - b (Sum.inr 2))
+        + (b (Sum.inl 0) + b (Sum.inr 2))) from by match_scalars <;> (field_simp; try ring)]
+    exact Submodule.smul_mem _ _ (Submodule.add_mem _
+      (mem_weightSpan_of_mem_space hplus) (mem_weightSpan_of_mem_space hminus))
+  | Sum.inr 0 => exact mem_weightSpan_of_mem_space (htr 0 (Or.inl rfl))
+  | Sum.inr 1 => exact mem_weightSpan_of_mem_space (htr 1 (Or.inr rfl))
+  | Sum.inr 2 =>
+    rw [show b (Sum.inr 2) = (2⁻¹ : K) • ((b (Sum.inl 0) + b (Sum.inr 2))
+        - (b (Sum.inl 0) - b (Sum.inr 2))) from by match_scalars <;> (field_simp; try ring)]
+    exact Submodule.smul_mem _ _ (Submodule.sub_mem _
+      (mem_weightSpan_of_mem_space hminus) (mem_weightSpan_of_mem_space hplus))
+
+/-!
+
+### Base change from the real to the complex scalars
+
+-/
+
+lemma isGraded_baseChange {A : Type*} [AddCommGroup A] [Module ℝ A]
+    {repR : Representation ℝ SL(2,ℂ) A} {repC : Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] A)}
+    (h : ∀ (Λ : SL(2,ℂ)) (c : ℂ) (y : A), repC Λ (c ⊗ₜ[ℝ] y) = c ⊗ₜ[ℝ] repR Λ y)
+    (hR : IsGraded repR) : IsGraded repC := by
+  have htmul : ∀ (c : ℂ) (w : ℤ) (y : A), y ∈ space repR w →
+      (c ⊗ₜ[ℝ] y : ℂ ⊗[ℝ] A) ∈ space repC w := by
+    intro c w y hy t ht
+    rw [h, hy t ht, TensorProduct.tmul_smul,
+      show ((algebraMap ℝ ℝ) t) ^ w = t ^ w from by simp,
+      ← algebraMap_smul (R := ℝ) ℂ (t ^ w) (c ⊗ₜ[ℝ] y), map_zpow₀]
+  refine isGraded_iff_forall_mem.mpr fun z => ?_
+  induction z using TensorProduct.induction_on with
+  | zero => exact Submodule.zero_mem _
+  | add u v hu hv => exact Submodule.add_mem _ hu hv
+  | tmul c y =>
+    have hy := mem_weightSpan_of_isGraded hR y
+    induction hy using Submodule.iSup_induction' with
+    | mem w u hu => exact mem_weightSpan_of_mem_space (htmul c w u hu)
+    | zero => rw [TensorProduct.tmul_zero]; exact Submodule.zero_mem _
+    | add u v _ _ ihu ihv => rw [TensorProduct.tmul_add]; exact Submodule.add_mem _ ihu ihv
+
+end BoostWeight
+
+/-!
+
+## O'. The component spaces are boost-graded
+
+Each layer of the jet algebra is graded once the layer below it is: the two four-dimensional
+derivative and target spaces by `isGraded_of_lorentzColumns`, the spinor duals directly (the
+boost is already diagonal on them), and everything above by the tensor, product, symmetric- and
+exterior-algebra transports.
+
+-/
+
+open BoostWeight in
+/-- The real dual covectors — the derivative slots — are boost-graded. -/
+lemma isGraded_coVectorDual : IsGraded (Lorentz.CoVector.sl2Rep.dual) :=
+  isGraded_of_lorentzColumns Lorentz.CoVector.basis.dualBasis fun Λ μ => by
+    simpa using Lorentz.CoVector.sl2Rep_dual_dualBasis Λ μ
+
+open BoostWeight in
+/-- The complex dual covectors are boost-graded. -/
+lemma isGraded_coℂModuleDual : IsGraded (Lorentz.CoℂModule.SL2CRep.dual) :=
+  isGraded_of_lorentzColumns Lorentz.complexCoBasis.dualBasis fun Λ μ => by
+    simpa using Lorentz.CoℂModule.SL2CRep_dual_dualBasis Λ μ
+
+open BoostWeight in
+/-- The dual B-boson target space is boost-graded. -/
+lemma isGraded_bBosonDual : IsGraded (BBoson.repLorentzGroup.dual) :=
+  isGraded_of_lorentzColumns BBoson.basis.dualBasis fun Λ μ => by
+    simpa using BBoson.repLorentzGroup_dual_dualBasis Λ μ
+
+open BoostWeight in
+/-- The real algebra of derivative symbols is boost-graded. -/
+lemma isGraded_derivAlgebraReal : IsGraded (DerivAlgebraReal.repLorentzGroup) :=
+  isGraded_symmetricAlgebra (repV := Lorentz.CoVector.sl2Rep.dual)
+    (fun Λ => by
+      show (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) 1 = 1
+      exact map_one _)
+    (fun Λ x y => by
+      show (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) (x * y) = _
+      exact map_mul _ _ _)
+    (fun Λ x => DerivAlgebraReal.repLorentzGroup_apply_ι Λ x)
+    isGraded_coVectorDual
+
+open BoostWeight in
+/-- The complex algebra of derivative symbols is boost-graded. -/
+lemma isGraded_derivAlgebraComplex : IsGraded (DerivAlgebraComplex.repLorentzGroup) :=
+  isGraded_symmetricAlgebra (repV := Lorentz.CoℂModule.SL2CRep.dual)
+    (fun Λ => DerivAlgebraComplex.repLorentzGroup_apply_one Λ)
+    (fun Λ x y => DerivAlgebraComplex.repLorentzGroup_apply_mul Λ x y)
+    (fun Λ x => DerivAlgebraComplex.repLorentzGroup_apply_ι Λ x)
+    isGraded_coℂModuleDual
+
+open BoostWeight in
+/-- The B-boson jet component space is boost-graded. -/
+lemma isGraded_bBosonJetComponentSpace :
+    IsGraded (BBoson.JetComponentSpace.repLorentzGroup) :=
+  isGraded_tprod isGraded_derivAlgebraReal isGraded_bBosonDual
+
+open BoostWeight in
+/-- The B-boson jet algebra is boost-graded. -/
+lemma isGraded_bBosonJetAlgebra : IsGraded (BBoson.JetAlgebra.repLorentzGroup) :=
+  isGraded_symmetricAlgebra (repV := BBoson.JetComponentSpace.repLorentzGroup)
+    (fun Λ => by
+      show (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ BBoson.JetComponentSpace.repLorentzGroup Λ)) 1 = 1
+      exact map_one _)
+    (fun Λ x y => by
+      show (SymmetricAlgebra.lift
+        (SymmetricAlgebra.ι ℝ _ ∘ₗ BBoson.JetComponentSpace.repLorentzGroup Λ)) (x * y) = _
+      exact map_mul _ _ _)
+    (fun Λ x => BBoson.JetAlgebra.repLorentzGroup_apply_ι Λ x)
+    isGraded_bBosonJetComponentSpace
+
+open BoostWeight in
+/-- The complexified B-boson jet algebra is boost-graded. -/
+lemma isGraded_complexBBosonJetAlgebra :
+    IsGraded (BBoson.JetAlgebra.complexRepLorentzGroup) :=
+  isGraded_baseChange (fun _ _ _ => rfl) isGraded_bBosonJetAlgebra
+
+
+open BoostWeight in
+/-- The dual charged-lepton spinors are boost-graded: the boost is already diagonal on them,
+  with weights `∓1`. -/
+lemma isGraded_leptonSingletDual : IsGraded (LeptonSinglet.repLorentzGroup.dual) := by
+  refine isGraded_of_basis LeptonSinglet.basis.dualBasis fun α => ?_
+  match α with
+  | 0 =>
+    refine mem_weightSpan_of_mem_space (w := -1) fun t ht => ?_
+    rw [LeptonSinglet.repLorentzGroup_dual_dualBasis, boostZel_inv_coe]
+    simp only [Fin.sum_univ_two, Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.empty_val', Matrix.cons_val_fin_one, Matrix.of_apply,
+      Fin.isValue, Complex.star_def, map_zero, star_zero, zero_smul, add_zero,
+      Complex.conj_ofReal]
+    rw [_root_.zpow_neg, zpow_one, Complex.ofReal_inv]
+    rfl
+  | 1 =>
+    refine mem_weightSpan_of_mem_space (w := 1) fun t ht => ?_
+    rw [LeptonSinglet.repLorentzGroup_dual_dualBasis, boostZel_inv_coe]
+    simp only [Fin.sum_univ_two, Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.empty_val', Matrix.cons_val_fin_one, Matrix.of_apply,
+      Fin.isValue, Complex.star_def, map_zero, star_zero, zero_smul, zero_add,
+      Complex.conj_ofReal]
+    rw [zpow_one]
+    rfl
+
+open BoostWeight in
+/-- The dual conjugate charged-lepton spinors are boost-graded. -/
+lemma isGraded_leptonSingletConjDual : IsGraded (LeptonSinglet.repLorentzGroup.conj.dual) := by
+  refine isGraded_of_basis LeptonSinglet.basis.conj.dualBasis fun α => ?_
+  match α with
+  | 0 =>
+    refine mem_weightSpan_of_mem_space (w := -1) fun t ht => ?_
+    rw [LeptonSinglet.repLorentzGroup_conj_dual_dualBasis, boostZel_inv_coe]
+    simp only [Fin.sum_univ_two, Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.empty_val', Matrix.cons_val_fin_one, Matrix.of_apply,
+      Fin.isValue, zero_smul, add_zero]
+    rw [_root_.zpow_neg, zpow_one, Complex.ofReal_inv]
+    rfl
+  | 1 =>
+    refine mem_weightSpan_of_mem_space (w := 1) fun t ht => ?_
+    rw [LeptonSinglet.repLorentzGroup_conj_dual_dualBasis, boostZel_inv_coe]
+    simp only [Fin.sum_univ_two, Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.empty_val', Matrix.cons_val_fin_one, Matrix.of_apply,
+      Fin.isValue, zero_smul, zero_add]
+    rw [zpow_one]
+    rfl
+
+open BoostWeight in
+/-- The charged-lepton jet component space is boost-graded. -/
+lemma isGraded_leptonJetComponentSpace :
+    IsGraded (LeptonSinglet.JetComponentSpace.repLorentzGroup) :=
+  isGraded_prod (isGraded_tprod isGraded_derivAlgebraComplex isGraded_leptonSingletDual)
+    (isGraded_tprod isGraded_derivAlgebraComplex isGraded_leptonSingletConjDual)
+
+open BoostWeight in
+/-- The charged-lepton jet algebra is boost-graded. -/
+lemma isGraded_leptonJetAlgebra : IsGraded (LeptonSinglet.JetAlgebra.repLorentzGroup) :=
+  isGraded_exteriorAlgebra (repV := LeptonSinglet.JetComponentSpace.repLorentzGroup)
+    (fun Λ => by
+      show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repLorentzGroup Λ)) 1 = 1
+      exact map_one _)
+    (fun Λ x y => by
+      show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repLorentzGroup Λ)) (x * y) = _
+      exact map_mul _ _ _)
+    (fun Λ x => by
+      show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repLorentzGroup Λ))
+        (ExteriorAlgebra.ι ℂ x) = _
+      exact ExteriorAlgebra.map_apply_ι _ _)
+    isGraded_leptonJetComponentSpace
+
+open BoostWeight in
+/-- The lepton–gauge-sector jet algebra is boost-graded. -/
+lemma isGraded_jetAlgebra : IsGraded (repLorentzGroup) :=
+  isGraded_tprod isGraded_complexBBosonJetAlgebra isGraded_leptonJetAlgebra
 
 /-!
 
@@ -264,7 +731,7 @@ The weight submodules sit inside the eigenspaces of a single boost, `ρ(boostZel
 pairwise distinct eigenvalues `2 ^ k`. Eigenspaces at distinct eigenvalues are independent, so
 the family is independent: an element has at most one decomposition into homogeneous parts.
 This is one of the two halves of `DirectSum.IsInternal`; the other, that the weight submodules
-span, is not proved here — see the module docstring.
+span, is section O'.
 
 -/
 
@@ -520,6 +987,42 @@ lemma boostAvgZ_apply_eq_zero_of_mem {k : ℤ} {x : JetAlgebra} (hx : x ∈ boos
   must. -/
 lemma boostAvgZ_apply_of_isInvariant {x : JetAlgebra} (hx : IsInvariant x) : boostAvgZ x = x :=
   boostAvgZ_apply_of_mem_zero (mem_boostWeightSubmodule_zero_of_isInvariant hx)
+
+/-!
+
+## E. The grading
+
+The weight submodules are independent (`boostWeightSubmodule_iSupIndep`) and, by the descent
+through the component spaces of section O', they span. So they decompose the jet algebra
+internally, and together with the graded-monoid structure of section A they make it a graded
+algebra.
+
+-/
+
+/-- The homogeneous elements span the jet algebra. -/
+theorem iSup_boostWeightSubmodule_eq_top : (⨆ k, boostWeightSubmodule k) = ⊤ :=
+  isGraded_jetAlgebra
+
+/-- Every generator is a finite sum of boost eigenvectors. -/
+theorem ofGenerator_mem_boostWeightSubalgebra (j : JetGenerators) :
+    [j]ₐ ∈ boostWeightSubalgebra := by
+  rw [mem_boostWeightSubalgebra, iSup_boostWeightSubmodule_eq_top]
+  trivial
+
+/-- **The boost weight grades the jet algebra.** The weight submodules decompose it as an
+  internal direct sum: every element is a finite sum of boost eigenvectors, uniquely. -/
+theorem boostWeightSubmodule_isInternal : DirectSum.IsInternal boostWeightSubmodule :=
+  boostWeightSubmodule_isInternal_iff.mpr iSup_boostWeightSubmodule_eq_top
+
+/-- The decomposition of an element of the jet algebra into its boost-weight components. -/
+noncomputable instance : DirectSum.Decomposition boostWeightSubmodule :=
+  boostWeightSubmodule_isInternal.chooseDecomposition
+
+/-- **The jet algebra is a graded algebra for the boost weight.** Weights add under
+  multiplication, the unit is neutral, and the weight components decompose every element. -/
+noncomputable instance : GradedAlgebra boostWeightSubmodule where
+  one_mem := one_mem_boostWeightSubmodule
+  mul_mem _ _ _ _ hx hy := mul_mem_boostWeightSubmodule hx hy
 
 end JetAlgebra
 
