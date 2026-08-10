@@ -100,6 +100,12 @@ instance : LeftCommutative
     simp only [LinearMap.coe_comp, Function.comp_apply]
     exact jetDeriv_comm ν₁ ν₂ (A x)
 
+/-!
+
+## Jet derivatives over a multiset.
+
+
+-/
 /-- The iterated total spacetime derivative along a multiset of directions:
   `∂_t = ∂_{μ₁} ⋯ ∂_{μ_k}` for `t = {μ₁, …, μ_k}`. The order is immaterial by
   `jetDeriv_comm`, so the index is a multiset. -/

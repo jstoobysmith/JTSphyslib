@@ -125,6 +125,7 @@ public import Physlib.Mathematics.MvPolynomialTranslation
 public import Physlib.Mathematics.MvPowerSeriesDerivative
 public import Physlib.Mathematics.OrthogonalMatrix
 public import Physlib.Mathematics.PiTensorProduct
+public import Physlib.Mathematics.PolynomialEval
 public import Physlib.Mathematics.RatComplexNum
 public import Physlib.Mathematics.Resolvent
 public import Physlib.Mathematics.SO3.Basic

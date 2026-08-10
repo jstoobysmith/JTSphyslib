@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeBosons.BBoson.Basic
+public import Physlib.Mathematics.PolynomialEval
 /-!
 
 # The mass dimension associated with the `B` boson
@@ -228,6 +229,83 @@ instance : SetLike.GradedMonoid massWeightSubmodule where
 lemma coeff_massWeightPoly_mem_massWeightSubmodule (n : ℕ) (x : ℂ ⊗[ℝ] JetAlgebra) :
     (massWeightPoly x).coeff n ∈ massWeightSubmodule n :=
   massWeightPoly_coeff_massWeightPoly n x
+
+/-!
+
+## C. Evaluating the mass-weight polynomial
+
+The mass-weight polynomial and the mass-weight scaling are two descriptions of the same
+grading: evaluating the polynomial at a scalar gives the scaling by that scalar. Since a
+polynomial with coefficients in an algebra over an infinite field is determined by its
+values at the scalars, statements proved for one description transfer to the other.
+
+-/
+
+/-- Evaluating the mass-weight polynomial at a scalar is the mass-weight scaling by that
+  scalar. Both send a generator of weight `w` to `c ^ w` times itself, and both are
+  algebra maps. -/
+lemma eval_massWeightPoly (c : ℂ) (x : ℂ ⊗[ℝ] JetAlgebra) :
+    (massWeightPoly x).eval (algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) c) = massWeightScale c x := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℂ (ℂ ⊗[ℝ] JetAlgebra))
+      (algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) c)
+      (fun a => Commute.all a _)).comp massWeightPoly = massWeightScale c := by
+    refine (AlgHom.liftEquiv ℝ ℂ JetAlgebra _).symm.injective ?_
+    refine SymmetricAlgebra.algHom_ext
+      (Module.Basis.ext JetComponentSpace.basis fun j => ?_)
+    show (massWeightPoly ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j)).eval
+        (algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) c) =
+      massWeightScale c ((1 : ℂ) ⊗ₜ[ℝ] ofGenerator j)
+    rw [massWeightPoly_ofGenerator, massWeightScale_tmul_ofGenerator,
+      Polynomial.eval_monomial, ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
+  exact AlgHom.congr_fun h x
+
+/-- Evaluating at a real scalar, where the scalar tower lets the same value be read either
+  over `ℝ` or over `ℂ`. -/
+lemma eval_massWeightPoly_ofReal (r : ℝ) (x : ℂ ⊗[ℝ] JetAlgebra) :
+    (massWeightPoly x).eval (algebraMap ℝ (ℂ ⊗[ℝ] JetAlgebra) r) =
+      massWeightScale (r : ℂ) x := by
+  rw [IsScalarTower.algebraMap_apply ℝ ℂ (ℂ ⊗[ℝ] JetAlgebra) r, eval_massWeightPoly]
+  rfl
+
+/-!
+
+## D. The mass weight of derivatives and of transformed elements
+
+-/
+
+open Matrix MatrixGroups
+
+/-- The total derivative raises the mass weight by two: its mass-weight polynomial is
+  `X ^ 2` times the coefficientwise total derivative. -/
+lemma massWeightPoly_jetDeriv_baseChange (μ : Fin 1 ⊕ Fin 3) (x : ℂ ⊗[ℝ] JetAlgebra) :
+    massWeightPoly (LinearMap.baseChange ℂ (jetDeriv μ) x) =
+      Polynomial.X ^ 2 * Polynomial.mapCoeffs (LinearMap.baseChange ℂ (jetDeriv μ))
+        (massWeightPoly x) := by
+  refine Polynomial.ext_of_forall_eval_algebraMap (k := ℂ) fun c => ?_
+  rw [eval_massWeightPoly, Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_X,
+    Polynomial.eval_algebraMap_mapCoeffs, eval_massWeightPoly,
+    massWeightScale_jetDeriv_baseChange, ← map_pow, ← Algebra.smul_def]
+
+/-- The Lorentz action preserves mass weights: the mass-weight polynomial of a transformed
+  element is the transform of its mass-weight polynomial. -/
+lemma massWeightPoly_complexRepLorentzGroup (Λ : SL(2,ℂ)) (x : ℂ ⊗[ℝ] JetAlgebra) :
+    massWeightPoly (complexRepLorentzGroup Λ x) =
+      Polynomial.mapAlgHom (complexRepLorentzGroupAlgHom Λ) (massWeightPoly x) := by
+  refine Polynomial.ext_of_forall_eval_algebraMap (k := ℝ) fun r => ?_
+  have hmap : algebraMap ℝ (ℂ ⊗[ℝ] JetAlgebra) r =
+      algebraMap ℂ (ℂ ⊗[ℝ] JetAlgebra) (r : ℂ) :=
+    IsScalarTower.algebraMap_apply ℝ ℂ (ℂ ⊗[ℝ] JetAlgebra) r
+  rw [hmap, eval_massWeightPoly, Polynomial.eval_algebraMap_mapAlgHom,
+    eval_massWeightPoly, massWeightScale_ofReal_complexRepLorentzGroup]
+  rfl
+
+/-- Jets of constant gauge transformations act trivially on the B-boson factor, so they
+  preserve the mass-weight polynomial outright. -/
+lemma massWeightPoly_complexRepJetGaugeGroupI_ofConstant (g : GaugeGroupI)
+    (x : ℂ ⊗[ℝ] JetAlgebra) :
+    massWeightPoly (complexRepJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
+      massWeightPoly x := by
+  rw [complexRepJetGaugeGroupI_ofConstant]
 
 TODO "Show invariance of the mass weights with repsect to the Lorentz group."
 

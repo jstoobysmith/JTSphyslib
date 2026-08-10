@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.JetDeriv
+public import Physlib.Mathematics.PolynomialEval
 /-!
 # Mass dimension on the charged-lepton jet algebra
 
@@ -469,6 +470,72 @@ lemma massWeightScale_repLorentzGroup_apply (c : ℂ) (g : SL(2,ℂ)) (x : JetAl
       JetAlgebra.repLorentzGroup g (massWeightScale c x) := by
   have h := massWeightScale_repLorentzGroup c g
   exact DFunLike.congr_fun h x
+
+/-!
+
+## C. Evaluating the mass-weight polynomial
+
+The mass-weight polynomial and the mass-weight scaling are two descriptions of the same
+grading: evaluating the polynomial at a scalar gives the scaling by that scalar. Since a
+polynomial with coefficients in an algebra over an infinite field is determined by its
+values at the scalars, statements proved for one description transfer to the other.
+
+-/
+
+/-- Evaluating the mass-weight polynomial at a scalar is the mass-weight scaling by that
+  scalar. Both send a generator of weight `w` to `c ^ w` times itself, and both are
+  algebra maps. -/
+lemma eval_massWeightPoly (c : ℂ) (x : JetAlgebra) :
+    (massWeightPoly x).eval (algebraMap ℂ JetAlgebra c) = massWeightScale c x := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℂ JetAlgebra)
+      (algebraMap ℂ JetAlgebra c)
+      (fun a => (Algebra.commutes c a).symm)).comp massWeightPoly =
+      (massWeightScale c : JetAlgebra →ₐ[ℂ] JetAlgebra) := by
+    refine ExteriorAlgebra.hom_ext (Module.Basis.ext JetComponentSpace.basis fun j => ?_)
+    show (massWeightPoly (ofGenerator j)).eval (algebraMap ℂ JetAlgebra c) =
+      massWeightScale c (ofGenerator j)
+    rw [massWeightPoly_ofGenerator, massWeightScale_ofGenerator, Polynomial.eval_monomial,
+      ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
+  exact AlgHom.congr_fun h x
+
+/-!
+
+## D. The mass weight of derivatives and of transformed elements
+
+-/
+
+/-- The total derivative raises the mass weight by two: its mass-weight polynomial is
+  `X ^ 2` times the coefficientwise total derivative. -/
+lemma massWeightPoly_jetDeriv (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    massWeightPoly (jetDeriv μ x) =
+      Polynomial.X ^ 2 * Polynomial.mapCoeffs (jetDeriv μ) (massWeightPoly x) := by
+  obtain ⟨q, hq, hc⟩ := exists_massWeightPoly_jetDeriv μ x
+  rw [hq]
+  congr 1
+  refine Polynomial.ext fun n => ?_
+  rw [Polynomial.coeff_mapCoeffs (map_zero (jetDeriv μ)), hc]
+
+/-- The Lorentz action preserves mass weights: the mass-weight polynomial of a transformed
+  element is the transform of its mass-weight polynomial. -/
+lemma massWeightPoly_repLorentzGroup (Λ : SL(2,ℂ)) (x : JetAlgebra) :
+    massWeightPoly (repLorentzGroup Λ x) =
+      Polynomial.mapAlgHom (repLorentzGroupAlgHom Λ) (massWeightPoly x) := by
+  refine Polynomial.ext_of_forall_eval_algebraMap (k := ℂ) fun c => ?_
+  rw [eval_massWeightPoly, Polynomial.eval_algebraMap_mapAlgHom, eval_massWeightPoly,
+    massWeightScale_repLorentzGroup_apply]
+  rfl
+
+/-- Jets of constant gauge transformations preserve mass weights. This fails for a general
+  jet: the higher Taylor coefficients of the hypercharge character lower the derivative
+  degree, mixing weights. -/
+lemma massWeightPoly_repJetGaugeGroupI_ofConstant (g : GaugeGroupI) (x : JetAlgebra) :
+    massWeightPoly (repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) x) =
+      Polynomial.mapAlgHom (repJetGaugeGroupIAlgHom (JetGaugeGroupI.ofConstant g))
+        (massWeightPoly x) := by
+  refine Polynomial.ext_of_forall_eval_algebraMap (k := ℂ) fun c => ?_
+  rw [eval_massWeightPoly, Polynomial.eval_algebraMap_mapAlgHom, eval_massWeightPoly,
+    massWeightScale_repJetGaugeGroupI_ofConstant_apply]
+  rfl
 
 end JetAlgebra
 
