@@ -375,6 +375,7 @@ public import Physlib.Relativity.LorentzGroup.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Apply
 public import Physlib.Relativity.LorentzGroup.Boosts.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Generalized
+public import Physlib.Relativity.LorentzGroup.FermionicParity
 public import Physlib.Relativity.LorentzGroup.Orthochronous.Basic
 public import Physlib.Relativity.LorentzGroup.Proper
 public import Physlib.Relativity.LorentzGroup.Restricted.Basic
