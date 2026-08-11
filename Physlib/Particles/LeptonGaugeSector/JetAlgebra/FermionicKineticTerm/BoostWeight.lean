@@ -10,58 +10,12 @@ public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.FermionicKineticTer
 /-!
 # The boost weight zero parts of the photon pairs and the fermion kinetic bilinears
 
-The products `F_{μν} F_{μ'ν'}` of two field strengths span a submodule of the jet algebra, as do
-the fermion kinetic bilinears `ψ̄_α ∂_μ ψ_β`. This file computes the intersections of these spans
-with the boost weight zero submodule: they are spanned by seven, respectively six, explicit
-products, and both spans are written out in the statements of the two theorems below.
-
-*The proof is a certificate.* Rather than deducing the intersection abstractly, the span of the
-products is expanded into boost eigenvectors. The coordinate components `F_{μν}` are not boost
-eigenvectors, but six combinations of them are: the light-cone combinations `F_{0x} - F_{zx}` and
-`F_{0y} - F_{zy}` of weight `2`, their partners `F_{0x} + F_{zx}` and `F_{0y} + F_{zy}` of weight
-`-2`, and the two components with no free light-cone index, `F_{xy}` and `F_{0z}`, of weight `0`.
-Every `F_{μν}` is a combination of these six — the sixteen cases of step B — so the span of the
-products lies in the sum of the nine products of the three weight spaces, of weights `0, ±2, ±4`.
-The three of weight zero — a weight-`2` field strength against a weight-`-2` one, and two
-weight-zero ones — are exactly the seven products listed.
-
-The intersection then follows formally, with no linear independence of the products needed. The
-weight submodules are independent (`boostWeightSubmodule_iSupIndep`), so boost weight zero is
-disjoint from the span of the weights `±2, ±4`; since the weight-zero part sits inside boost
-weight zero, the modular law cuts the intersection down to it.
-
-The fermion bilinears follow the same pattern with less bookkeeping: the left factors `ψ̄_α` are
-already eigenvectors of weight `∓1`, and on `∂_μ ψ_β` the spinor index contributes `∓1` while the
-light-cone derivative combinations `(∂_0 ∓ ∂_z) ψ_β` add `±2`. The six weight-zero bilinears are
-listed as `±`-pairs grouped into a `∂_0/∂_z` block and `∂_x`, `∂_y` blocks, adapted to a later
-restriction by the boost weights in the `x`- and `y`-directions.
-
-## i. Overview
-
-Each proof runs in four steps, marked in its source. Step A exhibits the boost eigenvectors,
-step B decomposes the coordinate components (or, for the bilinears, spans the weight-zero
-products), step C splits every product into eigen products of a single weight, and step D
-assembles the intersection.
-
-## ii. Key results
-
-- `JetAlgebra.boostWeight_inter_fieldStrength` : the intersection of boost weight zero with the
-  span of the products `F_{μν} F_{μ'ν'}` is the span of the seven weight-zero products.
-- `JetAlgebra.boostWeight_inter_fermionic_kinetic_term` : the intersection of boost weight zero
-  with the span of the bilinears `ψ̄_α ∂_μ ψ_β` is the span of six explicit bilinears, paired
-  into blocks adapted to the boosts in the `x`- and `y`-directions.
-- `JetAlgebra.boostWeight_inter_fermionic_kinetic_term_full` : imposing boost weight zero along
-  all three axes at once leaves only the multiples of the fermion kinetic term. This last step
-  is not a certificate: the three six-dimensional spans are intersected by comparing
-  coefficients, using the linear independence of the sixteen bilinears.
+Boost weights give us the invariance under the Lorentz group. This is in the following
+way. Consider all terms in the span of `ψ̄_α ∂_μ ψ_β`.
 
 -/
 
 @[expose] public section
-
-set_option linter.unusedSimpArgs false
-set_option linter.unusedTactic false
-set_option linter.unnecessarySeqFocus false
 
 namespace LeptonGaugeSector
 open TensorProduct StandardModel
