@@ -5,7 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Invariants.Averages.BoostAverage
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.AxisBoosts
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.MassDim
 /-!
 # Grading by boost weight
 

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.BoostWeight
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Terms.KineticTerms
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.FermionicKineticTerm.LinearIndependence
 /-!
 # The boost weight zero parts of the photon pairs and the fermion kinetic bilinears

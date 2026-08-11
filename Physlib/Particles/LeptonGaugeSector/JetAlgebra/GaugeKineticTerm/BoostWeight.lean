@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.BoostWeight
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Terms.ThetaTerm
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.GaugeKineticTerm.LinearIndependence
 /-!
 # The boost weight zero part of the photon pairs

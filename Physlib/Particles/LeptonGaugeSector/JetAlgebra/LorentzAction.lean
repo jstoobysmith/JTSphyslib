@@ -261,7 +261,7 @@ The embedded field-strength derivatives are tensors: every index, the
 derivative indices included, transforms by the Lorentz matrix. For a
 *diagonal* Lorentz matrix this collapses to a scaling by the product of the
 signs carried by the indices, which is what the parity and boost arguments of
-`Invariants/` use.
+`FermionicParity` and `Grading/BoostWeight` use.
 
 -/
 
