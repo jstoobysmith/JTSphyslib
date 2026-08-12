@@ -720,6 +720,19 @@ lemma repLorentzGroup_apply_ι (Λ : SL(2,ℂ)) (x : Module.Dual ℝ Lorentz.CoV
         (Lorentz.CoVector.sl2Rep.dual Λ x) := by
   simp [repLorentzGroup]
 
+/-- The real derivative-algebra representation is multiplicative: it is the lift of a linear
+  map to the symmetric algebra. -/
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ))
+    (a b : DerivAlgebraReal) :
+    DerivAlgebraReal.repLorentzGroup Λ (a * b) =
+      DerivAlgebraReal.repLorentzGroup Λ a * DerivAlgebraReal.repLorentzGroup Λ b := by
+  simp [DerivAlgebraReal.repLorentzGroup]
+
+@[simp]
+lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
+    DerivAlgebraReal.repLorentzGroup Λ 1 = 1 := by
+  simp [DerivAlgebraReal.repLorentzGroup]
+
 /-- The components of the dual covector action on the dual basis: the dual
   derivative slots transform contravariantly, by the columns of the Lorentz
   matrix. -/

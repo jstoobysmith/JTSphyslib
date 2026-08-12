@@ -39,6 +39,14 @@ lemma fieldStrengthDeriv_pair_swap (r s a b : Fin 1 ⊕ Fin 3) :
   have h : ({r, s} : Multiset (Fin 1 ⊕ Fin 3)) = {s, r} := Multiset.cons_swap r s 0
   rw [h]
 
+
+/-- A field-strength derivative written out on the generators. -/
+lemma fieldStrengthDeriv_eq_sub (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    fieldStrengthDeriv s μ ν =
+      ofGenerator (JetGenerators.dB (s + {μ}) ν) - ofGenerator (JetGenerators.dB (s + {ν}) μ) := by
+  rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv, TensorProduct.tmul_sub, sub_tmul]
+  rfl
+
 /-- Antisymmetry of the embedded field-strength derivatives in the two field
   indices. -/
 lemma fieldStrengthDeriv_antisymm (s : Multiset (Fin 1 ⊕ Fin 3))

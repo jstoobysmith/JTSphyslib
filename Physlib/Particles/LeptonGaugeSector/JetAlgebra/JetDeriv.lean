@@ -97,6 +97,46 @@ instance : LeftCommutative
     simp only [LinearMap.coe_comp, Function.comp_apply]
     exact jetDeriv_comm ν₁ ν₂ (A x)
 
+
+/-- The jet derivative appends a derivative index to a gauge-field generator. -/
+lemma jetDeriv_ofGenerator_dB (ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) :
+    jetDeriv ν (ofGenerator (JetGenerators.dB s μ)) =
+      ofGenerator (JetGenerators.dB (s + {ν}) μ) := by
+  simp only [ofGenerator_B_eq]
+  rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
+  simp only [LeptonSinglet.JetAlgebra.jetDeriv_one, tmul_zero, add_zero,
+    BBoson.JetAlgebra.jetDeriv_ofGenerator, BBoson.JetGenerators.shift_dB]
+
+/-- **The jet derivative of a field-strength derivative is the next field-strength
+  derivative.** -/
+lemma jetDeriv_fieldStrengthDeriv (ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (a b : Fin 1 ⊕ Fin 3) :
+    jetDeriv ν (fieldStrengthDeriv s a b) = fieldStrengthDeriv (s + {ν}) a b := by
+  rw [fieldStrengthDeriv_eq_sub, fieldStrengthDeriv_eq_sub, map_sub,
+    jetDeriv_ofGenerator_dB, jetDeriv_ofGenerator_dB,
+    show s + {a} + {ν} = s + {ν} + {a} from add_right_comm _ _ _,
+    show s + {b} + {ν} = s + {ν} + {b} from add_right_comm _ _ _]
+
+/-- **The Bianchi identity.** -/
+lemma jetDeriv_fieldStrengthDeriv_bianchi (ρ μ ν : Fin 1 ⊕ Fin 3) :
+    jetDeriv ρ (fieldStrengthDeriv {} μ ν) =
+      jetDeriv μ (fieldStrengthDeriv {} ρ ν) - jetDeriv ν (fieldStrengthDeriv {} ρ μ) := by
+  simp only [fieldStrengthDeriv_eq_sub, map_sub, jetDeriv_ofGenerator_dB,
+    Multiset.empty_eq_zero, zero_add]
+  rw [add_comm ({μ} : Multiset (Fin 1 ⊕ Fin 3)) {ρ}, add_comm ({ν} : Multiset (Fin 1 ⊕ Fin 3)) {ρ},
+    add_comm ({ν} : Multiset (Fin 1 ⊕ Fin 3)) {μ}]
+  abel
+
+/-- A second-derivative field strength is the second jet derivative of a field strength. -/
+lemma fieldStrengthDeriv_pair_eq_jetDeriv (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
+    fieldStrengthDeriv {ρ, τ} μ ν =
+      jetDeriv ρ (jetDeriv τ (fieldStrengthDeriv {} μ ν)) := by
+  rw [jetDeriv_fieldStrengthDeriv, jetDeriv_fieldStrengthDeriv]
+  congr 1
+  simp only [Multiset.empty_eq_zero, zero_add, Multiset.singleton_add]
+  exact Multiset.cons_swap ρ τ 0
+
 /-!
 
 ## Jet derivatives over a multiset.

@@ -96,12 +96,6 @@ noncomputable def gaugeDerivDual (p : Multiset (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ F
   gaugeLinDual ((BBoson.JetComponentSpace.basis.coord
     (BBoson.JetGenerators.dB p.1 p.2)).smulRight (1 : ℂ))
 
-/-- A field-strength derivative written out on the generators. -/
-lemma fieldStrengthDeriv_eq_sub (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
-    fieldStrengthDeriv s μ ν =
-      ofGenerator (JetGenerators.dB (s + {μ}) ν) - ofGenerator (JetGenerators.dB (s + {ν}) μ) := by
-  rw [fieldStrengthDeriv, BBoson.JetAlgebra.fieldStrengthDeriv, TensorProduct.tmul_sub, sub_tmul]
-  rfl
 
 /-- **`gaugeDerivDual` is dual to the gauge-field generators.** Its value on a field-strength
   derivative of any order is the antisymmetric coefficient `fsDerivCoeff`. -/

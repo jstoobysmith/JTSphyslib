@@ -263,56 +263,6 @@ lemma boostYel_inv_coe (t : ℝ) (ht : t ≠ 0) :
   ext i j
   fin_cases i <;> fin_cases j <;> · simp [boostYel]; try ring
 
-/-!
-
-## D. The weighted boost averages
-
-Each average is the identity together with the paired boosts at `t = 2, 3, 4`, with weights
-chosen so that the operator fixes the invariants and annihilates the boost weights
-`± 2, ± 4, ± 6`. See `Grading/BoostWeight` for the scalar it acts by, `boostAvgZWeight`.
-
--/
-
-
-/-- The `Z`-axis boost-weighted average: the identity together with the
-  paired boosts at `t = 2, 3, 4`, with weights chosen so that the operator
-  fixes invariant vectors and acts as the rotation-averaged single-axis
-  average on the weight-eight sector. -/
-noncomputable def boostAvgZ : Module.End ℂ JetAlgebra :=
-  (65359/21600 : ℂ) • LinearMap.id
-  + (-133264/99225 : ℂ) • (repLorentzGroup (boostZel 2 (by norm_num)) +
-      repLorentzGroup ((boostZel 2 (by norm_num))⁻¹))
-  + (384183/1019200 : ℂ) • (repLorentzGroup (boostZel 3 (by norm_num)) +
-      repLorentzGroup ((boostZel 3 (by norm_num))⁻¹))
-  + (-60416/1289925 : ℂ) • (repLorentzGroup (boostZel 4 (by norm_num)) +
-      repLorentzGroup ((boostZel 4 (by norm_num))⁻¹))
-
-/-- The `X`-axis boost-weighted average: the identity together with the
-  paired boosts at `t = 2, 3, 4`, with weights chosen so that the operator
-  fixes invariant vectors and acts as the rotation-averaged single-axis
-  average on the weight-eight sector. -/
-noncomputable def boostAvgX : Module.End ℂ JetAlgebra :=
-  (65359/21600 : ℂ) • LinearMap.id
-  + (-133264/99225 : ℂ) • (repLorentzGroup (boostXel 2 (by norm_num)) +
-      repLorentzGroup ((boostXel 2 (by norm_num))⁻¹))
-  + (384183/1019200 : ℂ) • (repLorentzGroup (boostXel 3 (by norm_num)) +
-      repLorentzGroup ((boostXel 3 (by norm_num))⁻¹))
-  + (-60416/1289925 : ℂ) • (repLorentzGroup (boostXel 4 (by norm_num)) +
-      repLorentzGroup ((boostXel 4 (by norm_num))⁻¹))
-
-/-- The `Y`-axis boost-weighted average: the identity together with the
-  paired boosts at `t = 2, 3, 4`, with weights chosen so that the operator
-  fixes invariant vectors and acts as the rotation-averaged single-axis
-  average on the weight-eight sector. -/
-noncomputable def boostAvgY : Module.End ℂ JetAlgebra :=
-  (65359/21600 : ℂ) • LinearMap.id
-  + (-133264/99225 : ℂ) • (repLorentzGroup (boostYel 2 (by norm_num)) +
-      repLorentzGroup ((boostYel 2 (by norm_num))⁻¹))
-  + (384183/1019200 : ℂ) • (repLorentzGroup (boostYel 3 (by norm_num)) +
-      repLorentzGroup ((boostYel 3 (by norm_num))⁻¹))
-  + (-60416/1289925 : ℂ) • (repLorentzGroup (boostYel 4 (by norm_num)) +
-      repLorentzGroup ((boostYel 4 (by norm_num))⁻¹))
-
 end JetAlgebra
 
 end LeptonGaugeSector

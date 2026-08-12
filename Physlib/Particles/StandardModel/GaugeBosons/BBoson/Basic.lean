@@ -452,6 +452,46 @@ lemma shiftMulti_shift (t : Multiset (Fin 1 ⊕ Fin 3)) (ν : Fin 1 ⊕ Fin 3)
 
 end JetGenerators
 
+
+/-- The multiset basis of the dual derivative symbols, as a basis vector of the
+  symmetric algebra at the corresponding multi-index. -/
+lemma dualRealJetAlgebraBasis_apply' (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    LagrangianTheory.dualRealJetAlgebraBasis s =
+      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  rfl
+
+/-- The multiset basis vectors of the real dual derivative slots multiply by
+  adding the multisets. -/
+lemma _root_.StandardModel.BBoson.dualRealJetAlgebraBasis_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    LagrangianTheory.dualRealJetAlgebraBasis s *
+      LagrangianTheory.dualRealJetAlgebraBasis t =
+      LagrangianTheory.dualRealJetAlgebraBasis (s + t) := by
+  rw [dualRealJetAlgebraBasis_apply', dualRealJetAlgebraBasis_apply',
+    dualRealJetAlgebraBasis_apply', map_add]
+  simp only [Module.Basis.symmetricAlgebra, Module.Basis.map_apply,
+    show ∀ p, (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv p =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm p
+      from fun _ => rfl,
+    ← map_mul, MvPolynomial.coe_basisMonomials]
+  simp only [MvPolynomial.monomial_mul, mul_one]
+
+
+/-- The multiset basis of the real dual derivative slots at a singleton index. -/
+lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
+    LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+        (Lorentz.CoVector.basis.dualBasis μ) := by
+  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (Finsupp.single μ 1) =
+      MvPolynomial.X μ := rfl
+  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply,
+    Equiv.symm_symm,
+    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      Finsupp.single μ 1 by simp,
+    Module.Basis.symmetricAlgebra, Module.Basis.map_apply, h]
+  simp
+
 /-!
 
 ## B.2. The jet component space
@@ -471,6 +511,40 @@ noncomputable def JetComponentSpace.basis : Basis JetGenerators ℝ JetComponent
   (LagrangianTheory.dualRealJetAlgebraBasis.tensorProduct
     BBoson.basis.dualBasis).reindex JetGenerators.equiv.symm
 
+namespace JetComponentSpace
+
+
+/-- The jet component basis vector at a generator, as a pure tensor. -/
+lemma basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) :
+    JetComponentSpace.basis (.dB s ρ) =
+      LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] BBoson.basis.dualBasis ρ := by
+  rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
+  exact Module.Basis.tensorProduct_apply' _ _ _
+
+/-- Appending a derivative index, as a linear map on the B-boson jet component space: it
+  multiplies the derivative-symbol factor by the symbol `∂_μ`. -/
+noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetComponentSpace →ₗ[ℝ] JetComponentSpace :=
+  TensorProduct.map
+    (LinearMap.mulRight ℝ (LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset _)))
+    LinearMap.id
+
+lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3)
+    (p : SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector))
+    (f : Module.Dual ℝ BBoson) :
+    jetDeriv μ (p ⊗ₜ[ℝ] f) =
+      (p * LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset _)) ⊗ₜ[ℝ] f := rfl
+
+/-- On the basis, the shift appends the derivative index. -/
+@[simp]
+lemma jetDeriv_basis (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (ν : Fin 1 ⊕ Fin 3) :
+    jetDeriv μ (JetComponentSpace.basis (.dB s ν)) =
+      JetComponentSpace.basis (.dB (s + {μ}) ν) := by
+  rw [JetComponentSpace.basis_dB, jetDeriv_tmul, dualRealJetAlgebraBasis_mul,
+    JetComponentSpace.basis_dB]
+
+
+end JetComponentSpace
 
 /-!
 
@@ -503,6 +577,36 @@ lemma JetComponentSpace.massWeightScale_basis (c : ℝ) (j : JetGenerators) :
 noncomputable def JetComponentSpace.repLorentzGroup :
     Representation ℝ (SL(2,ℂ)) JetComponentSpace :=
   DerivAlgebraReal.repLorentzGroup.tprod BBoson.repLorentzGroup.dual
+
+
+/-- **The shift is Lorentz covariant on the component space.** Appending `∂_μ` and then acting
+  is acting and then appending the transformed `∂_μ`, which is a combination of the `∂_a`. -/
+lemma JetComponentSpace.repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace) :
+    JetComponentSpace.repLorentzGroup Λ (jetDeriv μ v) =
+      ∑ a, (Lorentz.SL2C.toLorentzGroup Λ).1 a μ •
+        jetDeriv a (JetComponentSpace.repLorentzGroup Λ v) := by
+  have hsym : DerivAlgebraReal.repLorentzGroup Λ
+      (LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset _)) =
+      ∑ a, (Lorentz.SL2C.toLorentzGroup Λ).1 a μ •
+        LagrangianTheory.dualRealJetAlgebraBasis ({a} : Multiset _) := by
+    rw [dualRealJetAlgebraBasis_singleton, DerivAlgebraReal.repLorentzGroup_apply_ι,
+      Lorentz.CoVector.sl2Rep_dual_dualBasis, map_sum]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [map_smul, dualRealJetAlgebraBasis_singleton]
+  induction v using TensorProduct.induction_on with
+  | zero => simp
+  | add x y hx hy =>
+    rw [map_add, map_add, map_add, hx, hy, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+  | tmul p f =>
+    have hrep : ∀ q : SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector),
+        JetComponentSpace.repLorentzGroup Λ (q ⊗ₜ[ℝ] f) =
+          (DerivAlgebraReal.repLorentzGroup Λ q) ⊗ₜ[ℝ]
+            (BBoson.repLorentzGroup.dual Λ f) := fun _ => rfl
+    rw [jetDeriv_tmul, hrep, hrep, DerivAlgebraReal.repLorentzGroup_apply_mul, hsym,
+      Finset.mul_sum, TensorProduct.sum_tmul]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [mul_smul_comm, jetDeriv_tmul, TensorProduct.smul_tmul']
 
 
 /-!
@@ -548,21 +652,6 @@ noncomputable def mcShift (U : JetGaugeGroupI) : JetComponentSpace →ₗ[ℝ] �
   (Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.constr ℝ fun m =>
     ⟨∑ ν, Lorentz.CoVector.basis ν ⊗ₜ[ℝ] ((∏ μ, Nat.factorial (m μ)) • maurerCartanU1Coeff U ν m)⟩))
 
-/-- The multiset basis of the dual derivative symbols, as a basis vector of the
-  symmetric algebra at the corresponding multi-index. -/
-lemma dualRealJetAlgebraBasis_apply' (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    LagrangianTheory.dualRealJetAlgebraBasis s =
-      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
-  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply, Equiv.symm_symm]
-  rfl
-
-/-- The jet component basis vector at a generator, as a pure tensor. -/
-lemma jetComponentSpace_basis_dB (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) :
-    JetComponentSpace.basis (.dB s ρ) =
-      LagrangianTheory.dualRealJetAlgebraBasis s ⊗ₜ[ℝ] BBoson.basis.dualBasis ρ := by
-  rw [JetComponentSpace.basis, Module.Basis.reindex_apply, Equiv.symm_symm]
-  exact Module.Basis.tensorProduct_apply' _ _ _
-
 /-- The Maurer–Cartan shift on a pure tensor over a derivative-symbol basis
   vector: minus the component function evaluated on the B boson of
   factorial-weighted Taylor coefficients of the Maurer–Cartan series. -/
@@ -584,7 +673,7 @@ lemma mcShift_basis_dB' (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     mcShift U (JetComponentSpace.basis (.dB s ν)) =
       - ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
         Complex.selfAdjointEquiv (maurerCartanU1Coeff U ν (Multiset.toFinsupp s))) := by
-  rw [jetComponentSpace_basis_dB, mcShift_tmul_basis, neg_inj,
+  rw [JetComponentSpace.basis_dB, mcShift_tmul_basis, neg_inj,
     show (⟨∑ ν', Lorentz.CoVector.basis ν' ⊗ₜ[ℝ]
         ((∏ ρ, Nat.factorial ((Multiset.toFinsupp s) ρ)) •
           maurerCartanU1Coeff U ν' (Multiset.toFinsupp s))⟩ : BBoson) =
@@ -954,22 +1043,6 @@ lemma _root_.StandardModel.BBoson.dualRealJetAlgebraBasis_nil :
     Module.Basis.symmetricAlgebra, Module.Basis.map_apply, h]
   simp
 
-/-- The multiset basis vectors of the real dual derivative slots multiply by
-  adding the multisets. -/
-lemma _root_.StandardModel.BBoson.dualRealJetAlgebraBasis_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
-    LagrangianTheory.dualRealJetAlgebraBasis s *
-      LagrangianTheory.dualRealJetAlgebraBasis t =
-      LagrangianTheory.dualRealJetAlgebraBasis (s + t) := by
-  rw [dualRealJetAlgebraBasis_apply', dualRealJetAlgebraBasis_apply',
-    dualRealJetAlgebraBasis_apply', map_add]
-  simp only [Module.Basis.symmetricAlgebra, Module.Basis.map_apply,
-    show ∀ p, (SymmetricAlgebra.equivMvPolynomial
-        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv p =
-      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm p
-      from fun _ => rfl,
-    ← map_mul, MvPolynomial.coe_basisMonomials]
-  simp only [MvPolynomial.monomial_mul, mul_one]
-
 
 /-- The Lorentz action on the zeroth-order B-boson generator of the B-boson
   jet algebra: the covector transformation. -/
@@ -979,7 +1052,7 @@ lemma repLorentzGroup_ofGenerator_dB_nil (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
       ∑ ν, (Lorentz.SL2C.toLorentzGroup Λ).1 ν μ •
         BBoson.JetAlgebra.ofGenerator (BBoson.JetGenerators.dB {} ν) := by
   rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repLorentzGroup_apply_ι,
-    BBoson.jetComponentSpace_basis_dB,
+    BBoson.JetComponentSpace.basis_dB,
     show BBoson.JetComponentSpace.repLorentzGroup Λ
         (LagrangianTheory.dualRealJetAlgebraBasis {} ⊗ₜ[ℝ]
           StandardModel.BBoson.basis.dualBasis μ) =
@@ -994,7 +1067,7 @@ lemma repLorentzGroup_ofGenerator_dB_nil (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
     BBoson.repLorentzGroup_dual_dualBasis, TensorProduct.tmul_sum, map_sum]
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [TensorProduct.tmul_smul, map_smul, BBoson.JetAlgebra.ofGenerator,
-    BBoson.jetComponentSpace_basis_dB, BBoson.dualRealJetAlgebraBasis_nil]
+    BBoson.JetComponentSpace.basis_dB, BBoson.dualRealJetAlgebraBasis_nil]
 
 /-!
 
@@ -1126,7 +1199,7 @@ lemma repJetGaugeGroupI_apply_B (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     repJetGaugeGroupI U (ofGenerator (.dB {} μ)) = .ofGenerator (.dB {} μ) +
          (mcShift U (.basis (.dB {} μ))) • 1 := by
   rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repJetGaugeGroupI_ι,
-    BBoson.jetComponentSpace_basis_dB]
+    BBoson.JetComponentSpace.basis_dB]
   simp only [Multiset.empty_eq_zero, Basis.coe_dualBasis, add_right_inj]
   exact Algebra.algebraMap_eq_smul_one ((mcShift U) (dualRealJetAlgebraBasis 0 ⊗ₜ[ℝ] basis.coord μ))
 
@@ -1134,7 +1207,7 @@ lemma repJetGaugeGroupI_apply_ofGenerator (U : JetGaugeGroupI) (s : List (Fin 1 
     (μ : Fin 1 ⊕ Fin 3) : repJetGaugeGroupI U (ofGenerator (.dB s μ)) =
       .ofGenerator (.dB s μ) + (mcShift U (.basis (.dB s μ))) • 1 := by
   rw [BBoson.JetAlgebra.ofGenerator, BBoson.JetAlgebra.repJetGaugeGroupI_ι,
-    BBoson.jetComponentSpace_basis_dB]
+    BBoson.JetComponentSpace.basis_dB]
   simp only [Basis.coe_dualBasis, add_right_inj]
   exact Algebra.algebraMap_eq_smul_one ((mcShift U)
     (dualRealJetAlgebraBasis ↑s ⊗ₜ[ℝ] basis.coord μ))
@@ -1313,6 +1386,24 @@ lemma jetDeriv_ofGenerator (μ : Fin 1 ⊕ Fin 3) (g : JetGenerators) :
 @[simp]
 lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv μ (1 : JetAlgebra) = 0 := by
   simp [jetDeriv]
+
+
+/-- The jet derivative on a linear generator is the component-space shift. -/
+lemma jetDeriv_ι (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace) :
+    jetDeriv μ (SymmetricAlgebra.ι ℝ JetComponentSpace v) =
+      SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.jetDeriv μ v) := by
+  have key : (jetDeriv μ) ∘ₗ (SymmetricAlgebra.ι ℝ JetComponentSpace) =
+      (SymmetricAlgebra.ι ℝ JetComponentSpace) ∘ₗ (JetComponentSpace.jetDeriv μ) := by
+    refine JetComponentSpace.basis.ext fun g => ?_
+    cases g with
+    | dB s ν =>
+      simp only [LinearMap.coe_comp, Function.comp_apply,
+        show SymmetricAlgebra.ι ℝ JetComponentSpace (JetComponentSpace.basis (.dB s ν)) =
+          ofGenerator (.dB s ν) from rfl,
+        jetDeriv_ofGenerator, JetGenerators.shift_dB,
+        JetComponentSpace.jetDeriv_basis]
+      rfl
+  exact DFunLike.congr_fun key v
 
 /-- The total derivative is a derivation: the Leibniz rule on the jet algebra. -/
 lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
@@ -2546,20 +2637,6 @@ end JetAlgebra
 
 -/
 
-/-- The multiset basis of the real dual derivative slots at a singleton index. -/
-lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
-    LagrangianTheory.dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
-      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
-        (Lorentz.CoVector.basis.dualBasis μ) := by
-  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (Finsupp.single μ 1) =
-      MvPolynomial.X μ := rfl
-  rw [LagrangianTheory.dualRealJetAlgebraBasis, Module.Basis.reindex_apply,
-    Equiv.symm_symm,
-    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
-      Finsupp.single μ 1 by simp,
-    Module.Basis.symmetricAlgebra, Module.Basis.map_apply, h]
-  simp
-
 /-- The degree scaling multiplies the multiset basis vector at `s` by
   `t ^ |s|`. -/
 lemma gradeScale_dualRealJetAlgebraBasis (t : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
@@ -2593,7 +2670,7 @@ lemma JetComponentSpace.massWeightScale_repLorentzGroup (c : ℝ) (Λ : SL(2,ℂ
         rw [pow_mul]
         ring
       rw [JetComponentSpace.massWeightScale_basis, hscal]
-      simp only [jetComponentSpace_basis_dB, TensorProduct.map_tmul,
+      simp only [JetComponentSpace.basis_dB, TensorProduct.map_tmul,
         AlgHom.toLinearMap_apply, LinearMap.smul_apply, LinearMap.id_apply,
         gradeScale_dualRealJetAlgebraBasis, TensorProduct.tmul_smul,
         TensorProduct.smul_tmul', smul_smul]
@@ -2627,12 +2704,12 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_singleton (Λ : SL(2,ℂ))
       (DerivAlgebraReal.repLorentzGroup Λ
         (LagrangianTheory.dualRealJetAlgebraBasis {μ})) ⊗ₜ[ℝ]
       (BBoson.repLorentzGroup.dual Λ (BBoson.basis.dualBasis ν)) := rfl
-  rw [jetComponentSpace_basis_dB, happ, dualRealJetAlgebraBasis_singleton,
+  rw [JetComponentSpace.basis_dB, happ, dualRealJetAlgebraBasis_singleton,
     DerivAlgebraReal.repLorentzGroup_apply_ι, Lorentz.CoVector.sl2Rep_dual_dualBasis,
     BBoson.repLorentzGroup_dual_dualBasis]
   simp only [map_sum, map_smul, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
     TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum, smul_smul,
-    jetComponentSpace_basis_dB, dualRealJetAlgebraBasis_singleton]
+    JetComponentSpace.basis_dB, dualRealJetAlgebraBasis_singleton]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
   congr 2
@@ -2673,7 +2750,7 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_pair
         (LagrangianTheory.dualRealJetAlgebraBasis {ρ, μ})) ⊗ₜ[ℝ]
       (BBoson.repLorentzGroup.dual Λ
         (StandardModel.BBoson.basis.dualBasis ν)) := rfl
-  rw [BBoson.jetComponentSpace_basis_dB, happ, hpair, hmul,
+  rw [BBoson.JetComponentSpace.basis_dB, happ, hpair, hmul,
     DerivAlgebraReal.repLorentzGroup_apply_ι,
     DerivAlgebraReal.repLorentzGroup_apply_ι,
     Lorentz.CoVector.sl2Rep_dual_dualBasis, Lorentz.CoVector.sl2Rep_dual_dualBasis,
@@ -2681,7 +2758,7 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_pair
   simp only [map_sum, map_smul, Finset.sum_mul, Finset.mul_sum,
     smul_mul_smul_comm, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
     ← TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum,
-    smul_smul, BBoson.jetComponentSpace_basis_dB, hpair]
+    smul_smul, BBoson.JetComponentSpace.basis_dB, hpair]
   conv_lhs => rw [Finset.sum_comm]
   conv_lhs => enter [2, j]; rw [Finset.sum_comm]
   conv_lhs => rw [Finset.sum_comm]
@@ -2729,7 +2806,7 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_triple
         (LagrangianTheory.dualRealJetAlgebraBasis {ρ, τ, μ})) ⊗ₜ[ℝ]
       (BBoson.repLorentzGroup.dual Λ
         (StandardModel.BBoson.basis.dualBasis ν)) := rfl
-  rw [BBoson.jetComponentSpace_basis_dB, happ, htriple, hmul, hmul,
+  rw [BBoson.JetComponentSpace.basis_dB, happ, htriple, hmul, hmul,
     DerivAlgebraReal.repLorentzGroup_apply_ι,
     DerivAlgebraReal.repLorentzGroup_apply_ι,
     DerivAlgebraReal.repLorentzGroup_apply_ι,
@@ -2739,7 +2816,7 @@ lemma JetComponentSpace.repLorentzGroup_basis_dB_triple
   simp only [map_sum, map_smul, Finset.sum_mul, Finset.mul_sum,
     smul_mul_smul_comm, TensorProduct.sum_tmul, TensorProduct.tmul_sum,
     ← TensorProduct.smul_tmul', TensorProduct.tmul_smul, Finset.smul_sum,
-    smul_smul, BBoson.jetComponentSpace_basis_dB, htriple]
+    smul_smul, BBoson.JetComponentSpace.basis_dB, htriple]
   conv_lhs => enter [2, i, 2, j]; rw [Finset.sum_comm]
   conv_lhs => enter [2, i]; rw [Finset.sum_comm]
   conv_lhs => rw [Finset.sum_comm]
@@ -2974,6 +3051,57 @@ lemma complexRepLorentzGroup_one_tmul_fieldStrengthDeriv_pair
         (BBoson.JetAlgebra.fieldStrengthDeriv {ρ, τ} μ ν) from rfl,
     BBoson.JetAlgebra.repLorentzGroup_fieldStrengthDeriv_pair]
   simp only [TensorProduct.tmul_sum, TensorProduct.tmul_smul]
+
+
+
+set_option maxHeartbeats 4000000 in
+/-- **The jet derivative on the B-boson jet algebra is a Lorentz vector.** -/
+lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    repLorentzGroup Λ (jetDeriv μ x) =
+      ∑ a, (Lorentz.SL2C.toLorentzGroup Λ).1 a μ • jetDeriv a (repLorentzGroup Λ x) := by
+  induction x using SymmetricAlgebra.induction with
+  | algebraMap r =>
+    have h1 : jetDeriv μ (algebraMap ℝ JetAlgebra r) = 0 := by
+      rw [Algebra.algebraMap_eq_smul_one, map_smul, jetDeriv_one, smul_zero]
+    rw [h1, map_zero]
+    refine (Finset.sum_eq_zero fun a _ => ?_).symm
+    rw [Algebra.algebraMap_eq_smul_one, map_smul, repLorentzGroup_apply_one, map_smul,
+      jetDeriv_one, smul_zero, smul_zero]
+  | ι v =>
+    rw [jetDeriv_ι, repLorentzGroup_apply_ι, repLorentzGroup_apply_ι,
+      JetComponentSpace.repLorentzGroup_jetDeriv, map_sum]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_smul, jetDeriv_ι]
+  | mul a b ha hb =>
+    rw [jetDeriv_mul, map_add, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul, ha, hb,
+      Finset.sum_mul, Finset.mul_sum, ← Finset.sum_add_distrib, repLorentzGroup_apply_mul]
+    refine Finset.sum_congr rfl fun c _ => ?_
+    rw [jetDeriv_mul, smul_add, smul_mul_assoc, mul_smul_comm]
+  | add a b ha hb =>
+    rw [map_add, map_add, map_add, ha, hb, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+
+
+set_option maxHeartbeats 1000000 in
+/-- **The complexified jet derivative is a Lorentz vector.** -/
+lemma complexRepLorentzGroup_baseChange_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (p : ℂ ⊗[ℝ] JetAlgebra) :
+    complexRepLorentzGroup Λ (LinearMap.baseChange ℂ (jetDeriv μ) p) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        LinearMap.baseChange ℂ (jetDeriv a) (complexRepLorentzGroup Λ p) := by
+  have hrep : ∀ (c : ℂ) (y : JetAlgebra), complexRepLorentzGroup Λ (c ⊗ₜ[ℝ] y) =
+      c ⊗ₜ[ℝ] repLorentzGroup Λ y := fun _ _ => rfl
+  induction p using TensorProduct.induction_on with
+  | zero => simp
+  | add x y hx hy =>
+    rw [map_add, map_add, map_add, hx, hy, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+  | tmul c y =>
+    rw [LinearMap.baseChange_tmul, hrep, hrep, repLorentzGroup_jetDeriv,
+      TensorProduct.tmul_sum]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [TensorProduct.tmul_smul, LinearMap.baseChange_tmul,
+      ← algebraMap_smul (R := ℝ) ℂ]
+    rfl
 
 end JetAlgebra
 

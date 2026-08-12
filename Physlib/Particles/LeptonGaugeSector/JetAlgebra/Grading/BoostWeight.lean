@@ -728,6 +728,12 @@ lemma mul_mem_boostWeightSubmodule {k l : ℤ} {x y : JetAlgebra}
     x * y ∈ boostWeightSubmodule i (k + l) :=
   BoostWeight.mul_mem_space repLorentzGroup_apply_mul hx hy
 
+/-- Boost weights add under multiplication, with the sum of the weights given explicitly. -/
+lemma mul_mem_boostWeightSubmodule' {k l n : ℤ} {x y : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule i k) (hy : y ∈ boostWeightSubmodule i l)
+    (hkl : k + l = n) : x * y ∈ boostWeightSubmodule i n :=
+  hkl ▸ mul_mem_boostWeightSubmodule hx hy
+
 instance : SetLike.GradedMonoid (boostWeightSubmodule i) where
   one_mem := one_mem_boostWeightSubmodule
   mul_mem _ _ _ _ hx hy := mul_mem_boostWeightSubmodule hx hy
@@ -898,6 +904,66 @@ lemma boostWeightSubmodule_iSupIndep : iSupIndep (boostWeightSubmodule i) :=
       (repLorentzGroup (boostAxis i 2 two_ne_zero) : Module.End ℂ JetAlgebra)).comp
     zpow_two_injective).mono boostWeightSubmodule_le_eigenspace
 
+/-- Recover the two summands from the sum and difference: if `u + v` and `u - v` lie in a
+  submodule then so do `u` and `v`. This inverts the passage from a pair of homogeneous
+  elements to the pair of their sum and difference, which is used to present the weight-zero
+  generators. -/
+lemma mem_of_add_mem_of_sub_mem {p : Submodule ℂ JetAlgebra} {u v : JetAlgebra}
+    (h₁ : u + v ∈ p) (h₂ : u - v ∈ p) : u ∈ p ∧ v ∈ p := by
+  constructor
+  · rw [show u = (2⁻¹ : ℂ) • (u + v) + (2⁻¹ : ℂ) • (u - v) from by module]
+    exact add_mem (Submodule.smul_mem _ _ h₁) (Submodule.smul_mem _ _ h₂)
+  · rw [show v = (2⁻¹ : ℂ) • (u + v) - (2⁻¹ : ℂ) • (u - v) from by module]
+    exact sub_mem (Submodule.smul_mem _ _ h₁) (Submodule.smul_mem _ _ h₂)
+
+/-- Multiply a two-term linear decomposition into a submodule: if `a * u` and `a * v` lie in a
+  submodule then so does `a * y` for `y` any combination of `u` and `v`. -/
+lemma mul_mem_of_eq_smul_add_smul {p : Submodule ℂ JetAlgebra} {a u v y : JetAlgebra}
+    (c d : ℂ) (hu : a * u ∈ p) (hv : a * v ∈ p) (hy : y = c • u + d • v) : a * y ∈ p := by
+  subst hy
+  rw [mul_add, mul_smul_comm, mul_smul_comm]
+  exact add_mem (Submodule.smul_mem _ _ hu) (Submodule.smul_mem _ _ hv)
+
+/-- A product of two submodules of pure weights `k` and `l` with `k + l ≠ n` lands in the span
+  of the weights other than `n`. -/
+lemma mul_le_iSup_boostWeightSubmodule_of_ne {X Y : Submodule ℂ JetAlgebra} {k l n : ℤ}
+    (hX : X ≤ boostWeightSubmodule i k) (hY : Y ≤ boostWeightSubmodule i l)
+    (h : k + l ≠ n) :
+    X * Y ≤ ⨆ (j : ℤ) (_ : j ≠ n), boostWeightSubmodule i j :=
+  Submodule.mul_le.2 fun _ hx _ hy => Submodule.mem_iSup_of_mem (k + l)
+    (Submodule.mem_iSup_of_mem h (mul_mem_boostWeightSubmodule (hX hx) (hY hy)))
+
+/-- **Extracting the weight-`k` part of a submodule.** If `V` contains a submodule `S` of pure
+  weight `k` and is contained in `S` together with the other weights, then the weight-`k` part
+  of `V` is exactly `S`. This is the modular law of the submodule lattice combined with the
+  independence of the weight submodules; it is the general skeleton behind the computations of
+  the weight-zero parts of the spans of kinetic-term monomials. -/
+lemma boostWeightSubmodule_inf_eq {k : ℤ} {S V : Submodule ℂ JetAlgebra}
+    (hS0 : S ≤ boostWeightSubmodule i k) (hSV : S ≤ V)
+    (hV : V ≤ S ⊔ ⨆ (j : ℤ) (_ : j ≠ k), boostWeightSubmodule i j) :
+    boostWeightSubmodule i k ⊓ V = S := by
+  refine le_antisymm ((inf_le_inf_left _ hV).trans ?_) (le_inf hS0 hSV)
+  rw [inf_comm, sup_inf_assoc_of_le _ hS0,
+    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := i) k).symm, sup_bot_eq]
+
+/-- **Extracting the weight-`k` part of a span of homogeneous elements.** If a submodule `V` is
+  sandwiched between `span ℂ S` and `span ℂ (S ∪ T)`, where the elements of `S` have weight `k`
+  and the elements of `T` have some weight other than `k`, then the weight-`k` part of `V` is
+  exactly `span ℂ S`. A theorem about the weight-`k` part of a span of monomials reduces to
+  exhibiting the weights of a homogeneous generating set. -/
+lemma boostWeightSubmodule_inf_eq_span {k : ℤ} {S T : Set JetAlgebra}
+    {V : Submodule ℂ JetAlgebra}
+    (hS : ∀ x ∈ S, x ∈ boostWeightSubmodule i k)
+    (hT : ∀ x ∈ T, ∃ j ≠ k, x ∈ boostWeightSubmodule i j)
+    (hSV : Submodule.span ℂ S ≤ V) (hV : V ≤ Submodule.span ℂ (S ∪ T)) :
+    boostWeightSubmodule i k ⊓ V = Submodule.span ℂ S := by
+  refine boostWeightSubmodule_inf_eq (Submodule.span_le.2 hS) hSV (hV.trans ?_)
+  rw [Submodule.span_union]
+  refine sup_le le_sup_left (le_sup_of_le_right (Submodule.span_le.2 ?_))
+  intro x hx
+  obtain ⟨j, hj, hxj⟩ := hT x hx
+  exact Submodule.mem_iSup_of_mem j (Submodule.mem_iSup_of_mem hj hxj)
+
 /-!
 
 ## G. The span of the homogeneous elements is a subalgebra
@@ -1040,125 +1106,6 @@ theorem boostWeightSubmodule_isInternal_iff :
 theorem boostWeightSubmodule_isInternal_of_top
     (h : (⨆ k, boostWeightSubmodule i k) = ⊤) : DirectSum.IsInternal (boostWeightSubmodule i) :=
   boostWeightSubmodule_isInternal_iff.mpr h
-
-/-!
-
-## H. The interpolating polynomial of the boost averages
-
-`boostAvgZ` is a fixed rational combination of the identity and the boosts at `t = 2, 3, 4`
-paired with their inverses, so on an element of boost weight `k` it acts by the scalar obtained
-by substituting `t ^ k + t ^ (-k)` for each pair. The weights were chosen to make that scalar
-one at `k = 0` and zero at `k = 2, 4, 6`; being a function of `t ^ k + t ^ (-k)` it is
-automatically even in `k`, so it vanishes at `k = -2, -4, -6` as well.
-
--/
-
-/-- The scalar by which `boostAvgZ` acts on an element of boost weight `k`. -/
-noncomputable def boostAvgZWeight (k : ℤ) : ℂ :=
-  (65359/21600 : ℂ)
-  + (-133264/99225 : ℂ) * ((2 : ℂ) ^ k + (2 : ℂ) ^ (-k))
-  + (384183/1019200 : ℂ) * ((3 : ℂ) ^ k + (3 : ℂ) ^ (-k))
-  + (-60416/1289925 : ℂ) * ((4 : ℂ) ^ k + (4 : ℂ) ^ (-k))
-
-/-- The interpolating scalar is even in the weight. -/
-lemma boostAvgZWeight_neg (k : ℤ) : boostAvgZWeight (-k) = boostAvgZWeight k := by
-  simp only [boostAvgZWeight, neg_neg]
-  ring
-
-@[simp] lemma boostAvgZWeight_zero : boostAvgZWeight 0 = 1 := by norm_num [boostAvgZWeight]
-@[simp] lemma boostAvgZWeight_two : boostAvgZWeight 2 = 0 := by norm_num [boostAvgZWeight]
-@[simp] lemma boostAvgZWeight_four : boostAvgZWeight 4 = 0 := by norm_num [boostAvgZWeight]
-@[simp] lemma boostAvgZWeight_six : boostAvgZWeight 6 = 0 := by norm_num [boostAvgZWeight]
-
-/-- The interpolating scalar does *not* vanish at weight eight. This is why `boostAvgZ` is the
-  projection only where the boost weights are among `0, ±2, ±4, ±6` — on the covariant
-  subalgebra in mass weight eight — and not on all of mass weight eight, which contains the
-  weight-eight element `∂_ρ ∂_σ ∂_τ B_μ`. -/
-lemma boostAvgZWeight_eight_ne_zero : boostAvgZWeight 8 ≠ 0 := by
-  norm_num [boostAvgZWeight]
-
-@[simp] lemma boostAvgZWeight_neg_two : boostAvgZWeight (-2) = 0 := by
-  rw [boostAvgZWeight_neg, boostAvgZWeight_two]
-
-@[simp] lemma boostAvgZWeight_neg_four : boostAvgZWeight (-4) = 0 := by
-  rw [boostAvgZWeight_neg, boostAvgZWeight_four]
-
-@[simp] lemma boostAvgZWeight_neg_six : boostAvgZWeight (-6) = 0 := by
-  rw [boostAvgZWeight_neg, boostAvgZWeight_six]
-
-/-!
-
-## I. The boost averages are the projections onto boost weight zero
-
--/
-
-/-- The weighted boost average along the `i`-th spatial axis. -/
-noncomputable def boostAvgAxis : Fin 3 → Module.End ℂ JetAlgebra
-  | 0 => boostAvgX
-  | 1 => boostAvgY
-  | 2 => boostAvgZ
-
-@[simp] lemma boostAvgAxis_zero : boostAvgAxis 0 = boostAvgX := rfl
-@[simp] lemma boostAvgAxis_one : boostAvgAxis 1 = boostAvgY := rfl
-@[simp] lemma boostAvgAxis_two : boostAvgAxis 2 = boostAvgZ := rfl
-
-lemma boostAvgAxis_eq (i : Fin 3) :
-    boostAvgAxis i = (65359/21600 : ℂ) • LinearMap.id
-      + (-133264/99225 : ℂ) • (repLorentzGroup (boostAxis i 2 (by norm_num)) +
-          repLorentzGroup ((boostAxis i 2 (by norm_num))⁻¹))
-      + (384183/1019200 : ℂ) • (repLorentzGroup (boostAxis i 3 (by norm_num)) +
-          repLorentzGroup ((boostAxis i 3 (by norm_num))⁻¹))
-      + (-60416/1289925 : ℂ) • (repLorentzGroup (boostAxis i 4 (by norm_num)) +
-          repLorentzGroup ((boostAxis i 4 (by norm_num))⁻¹)) := by
-  fin_cases i <;> rfl
-
-/-- The boost average along an axis acts on an element of boost weight `k` for that axis by the
-  scalar `boostAvgZWeight k`. -/
-lemma boostAvgAxis_apply_of_mem {i : Fin 3} {k : ℤ} {x : JetAlgebra}
-    (hx : x ∈ boostWeightSubmodule i k) :
-    boostAvgAxis i x = boostAvgZWeight k • x := by
-  have hinv : ∀ (t : ℝ) (ht : t ≠ 0),
-      repLorentzGroup ((boostAxis i t ht)⁻¹) x = ((((t : ℝ) : ℂ))⁻¹ ^ k) • x := by
-    intro t ht
-    rw [boostAxis_inv, hx t⁻¹ (inv_ne_zero ht), algebraMap_real_complex, Complex.ofReal_inv]
-  simp only [boostAvgAxis_eq i, LinearMap.add_apply, LinearMap.smul_apply, LinearMap.id_apply,
-    hx 2 (by norm_num), hx 3 (by norm_num), hx 4 (by norm_num),
-    hinv 2 (by norm_num), hinv 3 (by norm_num), hinv 4 (by norm_num),
-    algebraMap_real_complex, boostAvgZWeight]
-  push_cast
-  match_scalars
-  simp only [_root_.inv_zpow, ← _root_.zpow_neg]
-  ring
-
-/-- On boost weight zero the average is the identity. -/
-lemma boostAvgAxis_apply_of_mem_zero {i : Fin 3} {x : JetAlgebra}
-    (hx : x ∈ boostWeightSubmodule i 0) : boostAvgAxis i x = x := by
-  rw [boostAvgAxis_apply_of_mem hx, boostAvgZWeight_zero, one_smul]
-
-/-- The average annihilates the boost weights `±2, ±4, ±6`. -/
-lemma boostAvgAxis_apply_eq_zero_of_mem {i : Fin 3} {k : ℤ} {x : JetAlgebra}
-    (hx : x ∈ boostWeightSubmodule i k)
-    (hk : k = 2 ∨ k = 4 ∨ k = 6 ∨ k = -2 ∨ k = -4 ∨ k = -6) : boostAvgAxis i x = 0 := by
-  rw [boostAvgAxis_apply_of_mem hx]
-  rcases hk with rfl | rfl | rfl | rfl | rfl | rfl <;> simp
-
-/-- Each boost average fixes every Lorentz-invariant element, as the projection onto boost
-  weight zero must. -/
-lemma boostAvgAxis_apply_of_isInvariant (i : Fin 3) {x : JetAlgebra} (hx : IsInvariant x) :
-    boostAvgAxis i x = x :=
-  boostAvgAxis_apply_of_mem_zero (i := i) (mem_boostWeightSubmodule_zero_of_isInvariant hx)
-
-/-- `boostAvgZ` acts on an element of `z`-boost weight `k` by `boostAvgZWeight k`. -/
-lemma boostAvgZ_apply_of_mem {k : ℤ} {x : JetAlgebra} (hx : x ∈ boostWeightSubmodule 2 k) :
-    boostAvgZ x = boostAvgZWeight k • x := boostAvgAxis_apply_of_mem hx
-
-/-- `boostAvgX` acts on an element of `x`-boost weight `k` by `boostAvgZWeight k`. -/
-lemma boostAvgX_apply_of_mem {k : ℤ} {x : JetAlgebra} (hx : x ∈ boostWeightSubmodule 0 k) :
-    boostAvgX x = boostAvgZWeight k • x := boostAvgAxis_apply_of_mem hx
-
-/-- `boostAvgY` acts on an element of `y`-boost weight `k` by `boostAvgZWeight k`. -/
-lemma boostAvgY_apply_of_mem {k : ℤ} {x : JetAlgebra} (hx : x ∈ boostWeightSubmodule 1 k) :
-    boostAvgY x = boostAvgZWeight k • x := boostAvgAxis_apply_of_mem hx
 
 /-!
 

@@ -231,32 +231,6 @@ lemma jetDeriv_transverseY_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i �
 
 /-!
 
-## C. The jet derivative on the field strengths
-
--/
-
-/-- The jet derivative appends a derivative index to a gauge-field generator. -/
-lemma jetDeriv_ofGenerator_dB (ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3) :
-    jetDeriv ν (ofGenerator (JetGenerators.dB s μ)) =
-      ofGenerator (JetGenerators.dB (s + {ν}) μ) := by
-  simp only [ofGenerator_B_eq]
-  rw [jetDeriv_tmul, LinearMap.baseChange_tmul]
-  simp only [LeptonSinglet.JetAlgebra.jetDeriv_one, tmul_zero, add_zero,
-    BBoson.JetAlgebra.jetDeriv_ofGenerator, BBoson.JetGenerators.shift_dB]
-
-/-- **The jet derivative of a field-strength derivative is the next field-strength
-  derivative.** -/
-lemma jetDeriv_fieldStrengthDeriv (ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (a b : Fin 1 ⊕ Fin 3) :
-    jetDeriv ν (fieldStrengthDeriv s a b) = fieldStrengthDeriv (s + {ν}) a b := by
-  rw [fieldStrengthDeriv_eq_sub, fieldStrengthDeriv_eq_sub, map_sub,
-    jetDeriv_ofGenerator_dB, jetDeriv_ofGenerator_dB,
-    show s + {a} + {ν} = s + {ν} + {a} from add_right_comm _ _ _,
-    show s + {b} + {ν} = s + {ν} + {b} from add_right_comm _ _ _]
-
-/-!
-
 ## D. The light-cone derivative operators
 
 Along the axis `i` the four derivative directions regroup into the two light-cone combinations
@@ -354,15 +328,6 @@ lemma map_jetDeriv_le_bosonic (μ : Fin 1 ⊕ Fin 3) {P : Submodule ℂ JetAlgeb
 ## E. Every second derivative is a light-cone second derivative
 
 -/
-
-/-- A second-derivative field strength is the second jet derivative of a field strength. -/
-lemma fieldStrengthDeriv_pair_eq_jetDeriv (ρ τ μ ν : Fin 1 ⊕ Fin 3) :
-    fieldStrengthDeriv {ρ, τ} μ ν =
-      jetDeriv ρ (jetDeriv τ (fieldStrengthDeriv {} μ ν)) := by
-  rw [jetDeriv_fieldStrengthDeriv, jetDeriv_fieldStrengthDeriv]
-  congr 1
-  simp only [Multiset.empty_eq_zero, zero_add, Multiset.singleton_add]
-  exact Multiset.cons_swap ρ τ 0
 
 private lemma eq_or_eq_of_ne : ∀ {i t₁ t₂ j : Fin 3}, t₁ ≠ i → t₂ ≠ i → t₁ ≠ t₂ → j ≠ i →
     j = t₁ ∨ j = t₂ := by decide
@@ -1667,15 +1632,6 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
 
 -/
 
-/-- **The Bianchi identity.** -/
-lemma jetDeriv_fieldStrengthDeriv_bianchi (ρ μ ν : Fin 1 ⊕ Fin 3) :
-    jetDeriv ρ (fieldStrengthDeriv {} μ ν) =
-      jetDeriv μ (fieldStrengthDeriv {} ρ ν) - jetDeriv ν (fieldStrengthDeriv {} ρ μ) := by
-  simp only [fieldStrengthDeriv_eq_sub, map_sub, jetDeriv_ofGenerator_dB,
-    Multiset.empty_eq_zero, zero_add]
-  rw [add_comm ({μ} : Multiset (Fin 1 ⊕ Fin 3)) {ρ}, add_comm ({ν} : Multiset (Fin 1 ⊕ Fin 3)) {ρ},
-    add_comm ({ν} : Multiset (Fin 1 ⊕ Fin 3)) {μ}]
-  abel
 
 lemma lcn_T_eq : lcn 2 (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) =
     jetDeriv (Sum.inr 0) (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) +
