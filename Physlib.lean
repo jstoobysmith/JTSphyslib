@@ -375,6 +375,8 @@ public import Physlib.Relativity.LorentzAlgebra.Basis
 public import Physlib.Relativity.LorentzAlgebra.ExponentialMap
 public import Physlib.Relativity.LorentzGroup.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Apply
+public import Physlib.Relativity.LorentzGroup.Boosts.Axis
+public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Relativity.LorentzGroup.Boosts.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Generalized
 public import Physlib.Relativity.LorentzGroup.FermionicParity

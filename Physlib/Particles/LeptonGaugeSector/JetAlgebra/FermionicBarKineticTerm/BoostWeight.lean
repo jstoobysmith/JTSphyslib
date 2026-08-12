@@ -25,7 +25,7 @@ set_option linter.unusedTactic false
 set_option linter.unnecessarySeqFocus false
 
 namespace LeptonGaugeSector
-open TensorProduct StandardModel
+open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
 open Matrix MatrixGroups
 
@@ -43,7 +43,7 @@ private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t :
   The six spanning elements are chosen with the later restriction by the boost weights in the
   `x`- and `y`-directions in mind: they pair into a `∂_0/∂_z` block and `∂_x` and `∂_y` blocks. -/
 theorem boostWeight_inter_fermionic_bar_kinetic_term :
-    boostWeightSubmodule 2 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓ Submodule.span ℂ
         {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} =
       Submodule.span ℂ
         {(Dbarψ [Sum.inl 0] 0 - Dbarψ [Sum.inr 2] 0) * Dψ [] 0 +
@@ -70,14 +70,14 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term :
   set FF : Set JetAlgebra := {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} with hFF
   set S : Set JetAlgebra := {P0 * C0 + M1 * C1, P0 * C0 - M1 * C1, X1 * C0 + X0 * C1,
     X1 * C0 - X0 * C1, Y1 * C0 + Y0 * C1, Y1 * C0 - Y0 * C1} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 2 j with hW
-  have hC0w : C0 ∈ boostWeightSubmodule 2 (-1) := Dψ_nil_zero_mem_neg_one
-  have hC1w : C1 ∈ boostWeightSubmodule 2 1 := Dψ_nil_one_mem_one
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 2 j with hW
+  have hC0w : C0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-1) := Dψ_nil_zero_mem_neg_one
+  have hC1w : C1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 1 := Dψ_nil_one_mem_one
   obtain ⟨hP0w, hP1w, hM0w, hM1w, hX0w, hX1w, hY0w, hY1w⟩ :
-      P0 ∈ boostWeightSubmodule 2 1 ∧ P1 ∈ boostWeightSubmodule 2 3 ∧
-      M0 ∈ boostWeightSubmodule 2 (-3) ∧ M1 ∈ boostWeightSubmodule 2 (-1) ∧
-      X0 ∈ boostWeightSubmodule 2 (-1) ∧ X1 ∈ boostWeightSubmodule 2 1 ∧
-      Y0 ∈ boostWeightSubmodule 2 (-1) ∧ Y1 ∈ boostWeightSubmodule 2 1 := by
+      P0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 1 ∧ P1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 3 ∧
+      M0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-3) ∧ M1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-1) ∧
+      X0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-1) ∧ X1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 1 ∧
+      Y0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-1) ∧ Y1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 1 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -107,10 +107,10 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term :
   obtain ⟨kx0, kx1⟩ : X1 * C0 ∈ W ∧ X0 * C1 ∈ W := hpm (by simp [hS]) (by simp [hS])
   obtain ⟨ky0, ky1⟩ : Y1 * C0 ∈ W ∧ Y0 * C1 ∈ W := hpm (by simp [hS]) (by simp [hS])
   -- ### C. Every bilinear splits into eigen bilinears of a single weight
-  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 2 k →
-      y ∈ boostWeightSubmodule 2 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
+  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
     Submodule.mem_sup_right (Submodule.mem_iSup_of_mem _
-      (Submodule.mem_iSup_of_mem h (mul_mem_boostWeightSubmodule hx hy)))
+      (Submodule.mem_iSup_of_mem h (BoostWeight.mul_mem repLorentzGroup hx hy)))
   have k2 : M0 * C0 ∈ W := hm hM0w hC0w (by norm_num)
   have k3 : P0 * C1 ∈ W := hm hP0w hC1w (by norm_num)
   have k4 : M0 * C1 ∈ W := hm hM0w hC1w (by norm_num)
@@ -144,11 +144,11 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term :
     | 1, Sum.inr 1, 0 => exact ky0
     | 1, Sum.inr 1, 1 => exact hm hY1w hC1w (by norm_num)
   -- ### D. The intersection
-  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 2 k →
-      y ∈ boostWeightSubmodule 2 l → k + l = 0 → x * y ∈ boostWeightSubmodule 2 0 := by
+  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 l → k + l = 0 → x * y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
     intro k l x y hx hy h
-    rw [← h]; exact mul_mem_boostWeightSubmodule hx hy
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 2 0 := by
+    rw [← h]; exact BoostWeight.mul_mem repLorentzGroup hx hy
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl)
@@ -168,14 +168,14 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term :
       repeat' first | exact hFm _ _ _ | apply add_mem | apply sub_mem | apply neg_mem
   refine le_antisymm (le_trans (inf_le_inf_left _ hkey) ?_) (le_inf hSw hSF)
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 2) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 2) 0).symm, sup_bot_eq]
 
 /-- **The boost weight zero part of the conjugate fermion kinetic bilinears, `x`-direction.** The
   `x`-boost is not diagonal on the coordinate spinors, so the eigenvectors are the combinations
   `ψ_0 ± ψ_1` of weight `∓1`, and likewise on the spinor index of `D̄_μ ψ̄_α`; the light-cone
   derivative combinations are `∂_0 ∓ ∂_x`, and `∂_y`, `∂_z` are the transverse directions. -/
 theorem boostWeight_inter_fermionic_bar_kinetic_term_x :
-    boostWeightSubmodule 0 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ Submodule.span ℂ
         {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} =
       Submodule.span ℂ
         {(Dbarψ [Sum.inl 0] 0 + Dbarψ [Sum.inl 0] 1 -
@@ -212,13 +212,13 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_x :
   set FF : Set JetAlgebra := {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} with hFF
   set S : Set JetAlgebra := {P * Cp + M * Cm, P * Cp - M * Cm, T0m * Cp + T0p * Cm,
     T0m * Cp - T0p * Cm, T1m * Cp + T1p * Cm, T1m * Cp - T1p * Cm} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 0 j with hW
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 0 j with hW
   obtain ⟨hCpw, hCmw, hPw, hQw, hNw, hMw, hT0pw, hT0mw, hT1pw, hT1mw⟩ :
-      Cp ∈ boostWeightSubmodule 0 (-1) ∧ Cm ∈ boostWeightSubmodule 0 1 ∧
-      P ∈ boostWeightSubmodule 0 1 ∧ Q ∈ boostWeightSubmodule 0 3 ∧
-      N ∈ boostWeightSubmodule 0 (-3) ∧ M ∈ boostWeightSubmodule 0 (-1) ∧
-      T0p ∈ boostWeightSubmodule 0 (-1) ∧ T0m ∈ boostWeightSubmodule 0 1 ∧
-      T1p ∈ boostWeightSubmodule 0 (-1) ∧ T1m ∈ boostWeightSubmodule 0 1 := by
+      Cp ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-1) ∧ Cm ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 1 ∧
+      P ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 1 ∧ Q ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 3 ∧
+      N ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-3) ∧ M ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-1) ∧
+      T0p ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-1) ∧ T0m ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 1 ∧
+      T1p ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-1) ∧ T1m ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 1 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -249,10 +249,10 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_x :
   obtain ⟨kx0, kx1⟩ : T0m * Cp ∈ W ∧ T0p * Cm ∈ W := hpm (by simp [hS]) (by simp [hS])
   obtain ⟨ky0, ky1⟩ : T1m * Cp ∈ W ∧ T1p * Cm ∈ W := hpm (by simp [hS]) (by simp [hS])
   -- ### C. Every bilinear splits into eigen bilinears of a single weight
-  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 0 k →
-      y ∈ boostWeightSubmodule 0 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
+  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
     Submodule.mem_sup_right (Submodule.mem_iSup_of_mem _
-      (Submodule.mem_iSup_of_mem h (mul_mem_boostWeightSubmodule hx hy)))
+      (Submodule.mem_iSup_of_mem h (BoostWeight.mul_mem repLorentzGroup hx hy)))
   have hbil : ∀ x ∈ Submodule.span ℂ ({P, Q, N, M, T0p, T0m, T1p, T1m} : Set JetAlgebra),
       ∀ y ∈ Submodule.span ℂ ({Cp, Cm} : Set JetAlgebra), x * y ∈ W := by
     intro x hx
@@ -314,11 +314,11 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_x :
       | 0 => exact ⟨2⁻¹, 2⁻¹, by rw [hCp, hCm]; module⟩
       | 1 => exact ⟨2⁻¹, -2⁻¹, by rw [hCp, hCm]; module⟩
   -- ### D. The intersection
-  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 0 k →
-      y ∈ boostWeightSubmodule 0 l → k + l = 0 → x * y ∈ boostWeightSubmodule 0 0 := by
+  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 l → k + l = 0 → x * y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     intro k l x y hx hy h
-    rw [← h]; exact mul_mem_boostWeightSubmodule hx hy
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 0 0 := by
+    rw [← h]; exact BoostWeight.mul_mem repLorentzGroup hx hy
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl)
@@ -343,14 +343,14 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_x :
         | apply neg_mem
   refine le_antisymm (le_trans (inf_le_inf_left _ hkey) ?_) (le_inf hSw hSF)
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 0) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 0) 0).symm, sup_bot_eq]
 
 /-- **The boost weight zero part of the conjugate fermion kinetic bilinears, `y`-direction.** As
   for the `x`-boost, but the rotated spinor combinations now carry a factor of `i`. The
   conjugate lepton transforms by `Λ⁻¹` and the lepton by its conjugate, so the two factors take
   opposite signs of `i`: `ψ̄_0 ∓ i ψ̄_1` and `ψ_0 ± i ψ_1` have weight `∓1`. -/
 theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
-    boostWeightSubmodule 1 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓ Submodule.span ℂ
         {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} =
       Submodule.span ℂ
         {(Dbarψ [Sum.inl 0] 0 - Complex.I • Dbarψ [Sum.inl 0] 1 -
@@ -399,13 +399,13 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
   set FF : Set JetAlgebra := {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} with hFF
   set S : Set JetAlgebra := {P * Cp + M * Cm, P * Cp - M * Cm, T0m * Cp + T0p * Cm,
     T0m * Cp - T0p * Cm, T1m * Cp + T1p * Cm, T1m * Cp - T1p * Cm} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 1 j with hW
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 1 j with hW
   obtain ⟨hCpw, hCmw, hPw, hQw, hNw, hMw, hT0pw, hT0mw, hT1pw, hT1mw⟩ :
-      Cp ∈ boostWeightSubmodule 1 (-1) ∧ Cm ∈ boostWeightSubmodule 1 1 ∧
-      P ∈ boostWeightSubmodule 1 1 ∧ Q ∈ boostWeightSubmodule 1 3 ∧
-      N ∈ boostWeightSubmodule 1 (-3) ∧ M ∈ boostWeightSubmodule 1 (-1) ∧
-      T0p ∈ boostWeightSubmodule 1 (-1) ∧ T0m ∈ boostWeightSubmodule 1 1 ∧
-      T1p ∈ boostWeightSubmodule 1 (-1) ∧ T1m ∈ boostWeightSubmodule 1 1 := by
+      Cp ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-1) ∧ Cm ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 1 ∧
+      P ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 1 ∧ Q ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 3 ∧
+      N ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-3) ∧ M ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-1) ∧
+      T0p ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-1) ∧ T0m ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 1 ∧
+      T1p ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-1) ∧ T1m ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 1 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -437,10 +437,10 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
   obtain ⟨kx0, kx1⟩ : T0m * Cp ∈ W ∧ T0p * Cm ∈ W := hpm (by simp [hS]) (by simp [hS])
   obtain ⟨ky0, ky1⟩ : T1m * Cp ∈ W ∧ T1p * Cm ∈ W := hpm (by simp [hS]) (by simp [hS])
   -- ### C. Every bilinear splits into eigen bilinears of a single weight
-  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 1 k →
-      y ∈ boostWeightSubmodule 1 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
+  have hm : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 l → k + l ≠ 0 → x * y ∈ W := fun hx hy h =>
     Submodule.mem_sup_right (Submodule.mem_iSup_of_mem _
-      (Submodule.mem_iSup_of_mem h (mul_mem_boostWeightSubmodule hx hy)))
+      (Submodule.mem_iSup_of_mem h (BoostWeight.mul_mem repLorentzGroup hx hy)))
   have hbil : ∀ x ∈ Submodule.span ℂ ({P, Q, N, M, T0p, T0m, T1p, T1m} : Set JetAlgebra),
       ∀ y ∈ Submodule.span ℂ ({Cp, Cm} : Set JetAlgebra), x * y ∈ W := by
     intro x hx
@@ -522,11 +522,11 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
           match_scalars <;> ring_nf <;> (try simp only [Complex.I_sq]) <;>
             (try ring_nf)⟩
   -- ### D. The intersection
-  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 1 k →
-      y ∈ boostWeightSubmodule 1 l → k + l = 0 → x * y ∈ boostWeightSubmodule 1 0 := by
+  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 l → k + l = 0 → x * y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     intro k l x y hx hy h
-    rw [← h]; exact mul_mem_boostWeightSubmodule hx hy
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 1 0 := by
+    rw [← h]; exact BoostWeight.mul_mem repLorentzGroup hx hy
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl)
@@ -552,7 +552,7 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
         | exact hFm _ _ _
   refine le_antisymm (le_trans (inf_le_inf_left _ hkey) ?_) (le_inf hSw hSF)
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 1) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 1) 0).symm, sup_bot_eq]
 
 /-- **The conjugate fermion kinetic term is the only conjugate bilinear of boost weight zero in
   every direction.** An element of the span of the products `(D̄_μ ψ̄)_α ψ_β` has boost weight
@@ -565,8 +565,8 @@ theorem boostWeight_inter_fermionic_bar_kinetic_term_y :
   the six coefficients `a₁, …, a₆`, and five functionals, each a combination of two of the duals
   `fermionBarDual` chosen to annihilate the `x`- or the `y`-axis span, cut them down to one. -/
 lemma boostWeight_inter_fermionic_bar_kinetic_term_full :
-    boostWeightSubmodule 0 0 ⊓ boostWeightSubmodule 1 0 ⊓
-    boostWeightSubmodule 2 0 ⊓ Submodule.span ℂ {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} =
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓
+    BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓ Submodule.span ℂ {x | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} =
         Submodule.span ℂ {fermionKineticTermBar} := by
   have hFm : ∀ α μ β, Dbarψ [μ] α * Dψ [] β ∈
       Submodule.span ℂ {x : JetAlgebra | ∃ α μ β, x = Dbarψ [μ] α * Dψ [] β} :=

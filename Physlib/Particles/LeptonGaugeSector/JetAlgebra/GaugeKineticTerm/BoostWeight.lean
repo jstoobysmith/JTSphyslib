@@ -29,7 +29,7 @@ weight-`2` field strength against a weight-`-2` one, and two weight-zero ones �
 seven products listed.
 
 The intersection then follows formally, with no linear independence of the products needed. The
-weight submodules are independent (`boostWeightSubmodule_iSupIndep`), so boost weight zero is
+weight submodules are independent (`BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup`), so boost weight zero is
 disjoint from the span of the weights `±2, ±4`; since the weight-zero part sits inside boost
 weight zero, the modular law cuts the intersection down to it. The `x`- and `y`-axis theorems are
 the same certificate with the light-cone pairs built on those axes instead.
@@ -61,7 +61,7 @@ set_option linter.unusedTactic false
 set_option linter.unnecessarySeqFocus false
 
 namespace LeptonGaugeSector
-open TensorProduct StandardModel
+open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
 open Matrix MatrixGroups
 
@@ -75,7 +75,7 @@ private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t :
   `F_{0y} - F_{zy}` with a weight-`-2` one `F_{0x} + F_{zx}`, `F_{0y} + F_{zy}`, and of the
   weight-zero components `F_{xy}` and `F_{0z}` with each other. -/
 theorem boostWeight_inter_fieldStrength :
-    boostWeightSubmodule 2 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓ Submodule.span ℂ
         {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} =
       Submodule.span ℂ {(fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) -
             fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0)) *
@@ -104,7 +104,7 @@ theorem boostWeight_inter_fieldStrength :
     boostProj_z_two_map_fieldStrengthDeriv_span,
     boostProj_z_neg_two_map_fieldStrengthDeriv_span] at hmul
   have hclosed := boostProj_z_map_fieldStrengthDeriv_mul_span_le
-  rw [inf_boostWeightSubmodule_eq_map hclosed, hmul, Submodule.span_mul_span,
+  rw [BoostWeight.inf_boostWeightSubmodule_eq_map repLorentzGroup hclosed, hmul, Submodule.span_mul_span,
     Submodule.span_mul_span, Submodule.add_eq_sup, ← Submodule.span_union]
   refine Submodule.span_eq_span ?_ ?_
   · rintro x (⟨a, (rfl | rfl), b, (rfl | rfl), rfl⟩ | ⟨a, (rfl | rfl), b, (rfl | rfl), rfl⟩) <;>
@@ -123,7 +123,7 @@ theorem boostWeight_inter_fieldStrength :
   with the light-cone pairs now built on the `x`-axis: `F_{0y} ∓ F_{xy}` and `F_{0z} ∓ F_{xz}`
   have weight `±2`, and `F_{yz}`, `F_{0x}` have weight zero. -/
 theorem boostWeight_inter_fieldStrength_x :
-    boostWeightSubmodule 0 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ Submodule.span ℂ
         {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} =
       Submodule.span ℂ {(fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) -
             fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1)) *
@@ -162,9 +162,9 @@ theorem boostWeight_inter_fieldStrength_x :
     {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} with hFF
   set S : Set JetAlgebra := {P1 * M1, P1 * M2, P2 * M1, P2 * M2, T * T, T * L, L * L} with hS
   obtain ⟨hP1w, hP2w, hM1w, hM2w, hTw, hLw⟩ :
-      P1 ∈ boostWeightSubmodule 0 2 ∧ P2 ∈ boostWeightSubmodule 0 2 ∧
-      M1 ∈ boostWeightSubmodule 0 (-2) ∧ M2 ∈ boostWeightSubmodule 0 (-2) ∧
-      T ∈ boostWeightSubmodule 0 0 ∧ L ∈ boostWeightSubmodule 0 0 := by
+      P1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 ∧ P2 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 ∧
+      M1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) ∧ M2 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) ∧
+      T ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ∧ L ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -183,11 +183,11 @@ theorem boostWeight_inter_fieldStrength_x :
   set B := Submodule.span ℂ {T, L} with hB
   set C := Submodule.span ℂ {M1, M2} with hC
   set V := Submodule.span ℂ {x | ∃ μ ν, x = fieldStrengthDeriv {} μ ν} with hV
-  have hAle : A ≤ boostWeightSubmodule 0 2 := by
+  have hAle : A ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 := by
     rw [hA]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hP1w, hP2w])
-  have hBle : B ≤ boostWeightSubmodule 0 0 := by
+  have hBle : B ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     rw [hB]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hTw, hLw])
-  have hCle : C ≤ boostWeightSubmodule 0 (-2) := by
+  have hCle : C ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) := by
     rw [hC]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hM1w, hM2w])
   have hAV : A ≤ A ⊔ B ⊔ C := le_sup_left.trans le_sup_left
   have hBV : B ≤ A ⊔ B ⊔ C := le_sup_right.trans le_sup_left
@@ -256,11 +256,11 @@ theorem boostWeight_inter_fieldStrength_x :
     constructor
     · rintro ⟨μ, ν, μ', ν', rfl⟩; exact ⟨_, ⟨μ, ν, rfl⟩, _, ⟨μ', ν', rfl⟩, rfl⟩
     · rintro ⟨a, ⟨μ, ν, rfl⟩, b, ⟨μ', ν', rfl⟩, rfl⟩; exact ⟨μ, ν, μ', ν', rfl⟩
-  have hne : ∀ {X Y : Submodule ℂ JetAlgebra} {k l : ℤ}, X ≤ boostWeightSubmodule 0 k →
-      Y ≤ boostWeightSubmodule 0 l → k + l ≠ 0 →
-      X * Y ≤ Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 0 j :=
+  have hne : ∀ {X Y : Submodule ℂ JetAlgebra} {k l : ℤ}, X ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k →
+      Y ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 l → k + l ≠ 0 →
+      X * Y ≤ Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 0 j :=
     fun hX hY h => le_sup_of_le_right
-      ((Submodule.mul_le.2 fun _ hx _ hy => mul_mem_boostWeightSubmodule (hX hx) (hY hy)).trans
+      ((Submodule.mul_le.2 fun _ hx _ hy => BoostWeight.mul_mem repLorentzGroup (hX hx) (hY hy)).trans
         (le_iSup_of_le _ (le_iSup_of_le h le_rfl)))
   have hsub : ∀ {a b : JetAlgebra}, a ∈ V → b ∈ V → b * a ∈ S →
       a * b ∈ Submodule.span ℂ S := fun ha hb h => by
@@ -278,7 +278,7 @@ theorem boostWeight_inter_fieldStrength_x :
       Submodule.subset_span (by simp [hS]), Submodule.subset_span (by simp [hS]),
       hsub hLV' hTV' (by simp [hS]), Submodule.subset_span (by simp [hS])]
   have hkey : Submodule.span ℂ FF ≤
-      Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 0 j := by
+      Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 0 j := by
     rw [hspan]
     refine (Submodule.mul_le.2 fun _ hx _ hy =>
       Submodule.mul_mem_mul (hVle hx) (hVle hy)).trans ?_
@@ -288,11 +288,11 @@ theorem boostWeight_inter_fieldStrength_x :
       hne hAle hBle (by norm_num), le_sup_of_le_left hBB, hne hCle hBle (by norm_num),
       le_sup_of_le_left hAC, hne hBle hCle (by norm_num), hne hCle hCle (by norm_num)]
   -- ### D. The weight zero part of the photon pairs
-  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 0 k →
-      y ∈ boostWeightSubmodule 0 l → k + l = 0 → x * y ∈ boostWeightSubmodule 0 0 := by
+  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 l → k + l = 0 → x * y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     intro k l x y hx hy h
-    rw [← h]; exact mul_mem_boostWeightSubmodule hx hy
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 0 0 := by
+    rw [← h]; exact BoostWeight.mul_mem repLorentzGroup hx hy
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl | rfl) <;>
@@ -304,13 +304,13 @@ theorem boostWeight_inter_fieldStrength_x :
       exact Submodule.mul_mem_mul (by assumption) (by assumption)
   refine le_antisymm (le_trans (inf_le_inf_left _ hkey) ?_) (le_inf hSw hSF)
   rw [inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 0) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 0) 0).symm, sup_bot_eq]
 
 /-- **The boost weight zero part of the photon pairs, `y`-direction.** As for the `z`-boost,
   with the light-cone pairs now built on the `y`-axis: `F_{0z} ∓ F_{yz}` and `F_{0x} ∓ F_{yx}`
   have weight `±2`, and `F_{zx}`, `F_{0y}` have weight zero. -/
 theorem boostWeight_inter_fieldStrength_y :
-    boostWeightSubmodule 1 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓ Submodule.span ℂ
         {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} =
       Submodule.span ℂ {(fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) -
             fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2)) *
@@ -349,9 +349,9 @@ theorem boostWeight_inter_fieldStrength_y :
     {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} with hFF
   set S : Set JetAlgebra := {P1 * M1, P1 * M2, P2 * M1, P2 * M2, T * T, T * L, L * L} with hS
   obtain ⟨hP1w, hP2w, hM1w, hM2w, hTw, hLw⟩ :
-      P1 ∈ boostWeightSubmodule 1 2 ∧ P2 ∈ boostWeightSubmodule 1 2 ∧
-      M1 ∈ boostWeightSubmodule 1 (-2) ∧ M2 ∈ boostWeightSubmodule 1 (-2) ∧
-      T ∈ boostWeightSubmodule 1 0 ∧ L ∈ boostWeightSubmodule 1 0 := by
+      P1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 ∧ P2 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 ∧
+      M1 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) ∧ M2 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) ∧
+      T ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ∧ L ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -370,11 +370,11 @@ theorem boostWeight_inter_fieldStrength_y :
   set B := Submodule.span ℂ {T, L} with hB
   set C := Submodule.span ℂ {M1, M2} with hC
   set V := Submodule.span ℂ {x | ∃ μ ν, x = fieldStrengthDeriv {} μ ν} with hV
-  have hAle : A ≤ boostWeightSubmodule 1 2 := by
+  have hAle : A ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 := by
     rw [hA]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hP1w, hP2w])
-  have hBle : B ≤ boostWeightSubmodule 1 0 := by
+  have hBle : B ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     rw [hB]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hTw, hLw])
-  have hCle : C ≤ boostWeightSubmodule 1 (-2) := by
+  have hCle : C ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) := by
     rw [hC]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hM1w, hM2w])
   have hAV : A ≤ A ⊔ B ⊔ C := le_sup_left.trans le_sup_left
   have hBV : B ≤ A ⊔ B ⊔ C := le_sup_right.trans le_sup_left
@@ -443,11 +443,11 @@ theorem boostWeight_inter_fieldStrength_y :
     constructor
     · rintro ⟨μ, ν, μ', ν', rfl⟩; exact ⟨_, ⟨μ, ν, rfl⟩, _, ⟨μ', ν', rfl⟩, rfl⟩
     · rintro ⟨a, ⟨μ, ν, rfl⟩, b, ⟨μ', ν', rfl⟩, rfl⟩; exact ⟨μ, ν, μ', ν', rfl⟩
-  have hne : ∀ {X Y : Submodule ℂ JetAlgebra} {k l : ℤ}, X ≤ boostWeightSubmodule 1 k →
-      Y ≤ boostWeightSubmodule 1 l → k + l ≠ 0 →
-      X * Y ≤ Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 1 j :=
+  have hne : ∀ {X Y : Submodule ℂ JetAlgebra} {k l : ℤ}, X ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k →
+      Y ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 l → k + l ≠ 0 →
+      X * Y ≤ Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 1 j :=
     fun hX hY h => le_sup_of_le_right
-      ((Submodule.mul_le.2 fun _ hx _ hy => mul_mem_boostWeightSubmodule (hX hx) (hY hy)).trans
+      ((Submodule.mul_le.2 fun _ hx _ hy => BoostWeight.mul_mem repLorentzGroup (hX hx) (hY hy)).trans
         (le_iSup_of_le _ (le_iSup_of_le h le_rfl)))
   have hsub : ∀ {a b : JetAlgebra}, a ∈ V → b ∈ V → b * a ∈ S →
       a * b ∈ Submodule.span ℂ S := fun ha hb h => by
@@ -465,7 +465,7 @@ theorem boostWeight_inter_fieldStrength_y :
       Submodule.subset_span (by simp [hS]), Submodule.subset_span (by simp [hS]),
       hsub hLV' hTV' (by simp [hS]), Submodule.subset_span (by simp [hS])]
   have hkey : Submodule.span ℂ FF ≤
-      Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 1 j := by
+      Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 1 j := by
     rw [hspan]
     refine (Submodule.mul_le.2 fun _ hx _ hy =>
       Submodule.mul_mem_mul (hVle hx) (hVle hy)).trans ?_
@@ -475,11 +475,11 @@ theorem boostWeight_inter_fieldStrength_y :
       hne hAle hBle (by norm_num), le_sup_of_le_left hBB, hne hCle hBle (by norm_num),
       le_sup_of_le_left hAC, hne hBle hCle (by norm_num), hne hCle hCle (by norm_num)]
   -- ### D. The weight zero part of the photon pairs
-  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ boostWeightSubmodule 1 k →
-      y ∈ boostWeightSubmodule 1 l → k + l = 0 → x * y ∈ boostWeightSubmodule 1 0 := by
+  have hz : ∀ {k l : ℤ} {x y : JetAlgebra}, x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 l → k + l = 0 → x * y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     intro k l x y hx hy h
-    rw [← h]; exact mul_mem_boostWeightSubmodule hx hy
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 1 0 := by
+    rw [← h]; exact BoostWeight.mul_mem repLorentzGroup hx hy
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl | rfl) <;>
@@ -491,7 +491,7 @@ theorem boostWeight_inter_fieldStrength_y :
       exact Submodule.mul_mem_mul (by assumption) (by assumption)
   refine le_antisymm (le_trans (inf_le_inf_left _ hkey) ?_) (le_inf hSw hSF)
   rw [inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 1) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 1) 0).symm, sup_bot_eq]
 
 /-- **The Maxwell and theta terms are the only photon pairs of boost weight zero in every
   direction.** An element of the span of the products `F_{μν} F_{μ'ν'}` has boost weight zero
@@ -505,8 +505,8 @@ theorem boostWeight_inter_fieldStrength_y :
   functionals, each a sum of at most two of the duals chosen to annihilate the `x`- or the
   `y`-axis span, cut them down to two. -/
 theorem boostWeight_inter_fieldStrength_full :
-    boostWeightSubmodule 0 0 ⊓ boostWeightSubmodule 1 0 ⊓
-    boostWeightSubmodule 2 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓
+    BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓ Submodule.span ℂ
         {x | ∃ μ ν μ' ν', x = fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν'} =
       Submodule.span ℂ {maxwellTerm, thetaTerm} := by
   have hFm : ∀ μ ν μ' ν', fieldStrengthDeriv {} μ ν * fieldStrengthDeriv {} μ' ν' ∈

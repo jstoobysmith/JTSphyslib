@@ -15,7 +15,7 @@ public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.FermionicKineticTer
 @[expose] public section
 
 namespace LeptonGaugeSector
-open TensorProduct StandardModel
+open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
 open Matrix MatrixGroups
 
@@ -47,7 +47,7 @@ private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t :
 /-- The light-cone combination `F_{0y} - F_{zy}` has boost weight `2`. -/
 lemma fieldStrengthDeriv_lightCone_y_mem_two :
     fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) -
-        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 1) ∈ boostWeightSubmodule 2 2 := by
+        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 1) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 := by
   intro t ht
   simp only [algebraMap_real_complex]
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -62,7 +62,7 @@ lemma fieldStrengthDeriv_lightCone_y_mem_two :
 /-- The light-cone combination `F_{0y} + F_{zy}` has boost weight `-2`. -/
 lemma fieldStrengthDeriv_lightCone_y_mem_neg_two :
     fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) +
-        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 1) ∈ boostWeightSubmodule 2 (-2) := by
+        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 1) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := by
   intro t ht
   simp only [algebraMap_real_complex]
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -77,7 +77,7 @@ lemma fieldStrengthDeriv_lightCone_y_mem_neg_two :
 /-- The component along the boost, `F_{0z}`, has boost weight zero: the boost acts on the two
   indices by inverse scalings, which cancel. -/
 lemma fieldStrengthDeriv_longitudinal_mem_zero :
-    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) ∈ boostWeightSubmodule 2 0 := by
+    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
   intro t ht
   simp only [algebraMap_real_complex]
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -169,7 +169,7 @@ lemma fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z :
 /-- The longitudinal and transverse components span a subspace of `z`-boost weight zero. -/
 lemma fieldStrengthDeriv_span_pair_zero_le :
     Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 2),
-      fieldStrengthDeriv 0 (Sum.inr 0) (Sum.inr 1)} ≤ boostWeightSubmodule 2 0 :=
+      fieldStrengthDeriv 0 (Sum.inr 0) (Sum.inr 1)} ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 :=
   Submodule.span_le.2 (by
     rintro _ (rfl | rfl)
     exacts [fieldStrengthDeriv_longitudinal_mem_zero, fieldStrengthDeriv_transverse_mem_zero])
@@ -179,7 +179,7 @@ lemma fieldStrengthDeriv_span_pair_two_le :
     Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 1) -
         fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 1),
       fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 0) -
-        fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} ≤ boostWeightSubmodule 2 2 :=
+        fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 :=
   Submodule.span_le.2 (by
     rintro _ (rfl | rfl)
     exacts [fieldStrengthDeriv_lightCone_y_mem_two, fieldStrengthDeriv_lightCone_mem_two])
@@ -189,55 +189,55 @@ lemma fieldStrengthDeriv_span_pair_neg_two_le :
     Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 1) +
         fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 1),
       fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 0) +
-        fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} ≤ boostWeightSubmodule 2 (-2) :=
+        fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) :=
   Submodule.span_le.2 (by
     rintro _ (rfl | rfl)
     exacts [fieldStrengthDeriv_lightCone_y_mem_neg_two, fieldStrengthDeriv_lightCone_mem_neg_two])
 
 lemma boostProj_z_zero_map_fieldStrengthDeriv_span :
-    Submodule.map (boostProj 2 0) (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) =
+    Submodule.map (BoostWeight.boostProj repLorentzGroup 2 0) (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) =
       Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 2),
         fieldStrengthDeriv 0 (Sum.inr 0) (Sum.inr 1)} := by
   rw [fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z, Submodule.map_sup, Submodule.map_sup,
-    map_boostProj_of_le fieldStrengthDeriv_span_pair_zero_le,
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_two_le (by decide),
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_neg_two_le (by decide),
+    BoostWeight.map_boostProj_of_le repLorentzGroup fieldStrengthDeriv_span_pair_zero_le,
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_two_le (by decide),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_neg_two_le (by decide),
     sup_bot_eq, sup_bot_eq]
 
 lemma boostProj_z_two_map_fieldStrengthDeriv_span :
-    Submodule.map (boostProj 2 2) (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) =
+    Submodule.map (BoostWeight.boostProj repLorentzGroup 2 2) (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) =
       Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 1) -
           fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 1),
         fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 0) -
           fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} := by
   rw [fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z, Submodule.map_sup, Submodule.map_sup,
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_zero_le (by decide),
-    map_boostProj_of_le fieldStrengthDeriv_span_pair_two_le,
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_neg_two_le (by decide),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_zero_le (by decide),
+    BoostWeight.map_boostProj_of_le repLorentzGroup fieldStrengthDeriv_span_pair_two_le,
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_neg_two_le (by decide),
     bot_sup_eq, sup_bot_eq]
 
 lemma boostProj_z_neg_two_map_fieldStrengthDeriv_span :
-    Submodule.map (boostProj 2 (-2))
+    Submodule.map (BoostWeight.boostProj repLorentzGroup 2 (-2))
       (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) =
       Submodule.span ℂ {fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 1) +
           fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 1),
         fieldStrengthDeriv 0 (Sum.inl 0) (Sum.inr 0) +
           fieldStrengthDeriv 0 (Sum.inr 2) (Sum.inr 0)} := by
   rw [fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z, Submodule.map_sup, Submodule.map_sup,
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_zero_le (by decide),
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_two_le (by decide),
-    map_boostProj_of_le fieldStrengthDeriv_span_pair_neg_two_le,
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_zero_le (by decide),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_two_le (by decide),
+    BoostWeight.map_boostProj_of_le repLorentzGroup fieldStrengthDeriv_span_pair_neg_two_le,
     sup_bot_eq, bot_sup_eq]
 
 /-- Away from the weights `0`, `±2` the projection of the field-strength span vanishes. -/
 lemma boostProj_z_map_fieldStrengthDeriv_span_of_ne (k : ℤ) (h0 : k ≠ 0) (h2 : k ≠ 2)
     (hn2 : k ≠ -2) :
-    Submodule.map (boostProj 2 k)
+    Submodule.map (BoostWeight.boostProj repLorentzGroup 2 k)
       (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}) = ⊥ := by
   rw [fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z, Submodule.map_sup, Submodule.map_sup,
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_zero_le (Ne.symm h0),
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_two_le (Ne.symm h2),
-    map_boostProj_of_le_ne fieldStrengthDeriv_span_pair_neg_two_le (Ne.symm hn2),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_zero_le (Ne.symm h0),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_two_le (Ne.symm h2),
+    BoostWeight.map_boostProj_of_le_ne repLorentzGroup fieldStrengthDeriv_span_pair_neg_two_le (Ne.symm hn2),
     sup_bot_eq, sup_bot_eq]
 
 /-!
@@ -268,7 +268,7 @@ TODO "Generalize the below result for any axis"
 
 /-- Every weight projection of the field-strength span stays inside the span. -/
 lemma boostProj_z_map_fieldStrengthDeriv_span_le (l : ℤ) :
-    (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}).map (boostProj 2 l) ≤
+    (Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}).map (BoostWeight.boostProj repLorentzGroup 2 l) ≤
     Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν} := by
   have hd : Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν} = _ ⊔ _ ⊔ _ :=
     fieldStrengthDeriv_nil_span_eq_sup_boostWeight_z
@@ -291,30 +291,30 @@ lemma boostProj_z_map_fieldStrengthDeriv_mul_eq_boosts :
   let V0 := Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}
   let V2 := (Submodule.span ℂ {y | ∃ μ ν μ' ν', y = fieldStrengthDeriv {} μ ν *
     fieldStrengthDeriv {} μ' ν'})
-  V2.map (boostProj 2 0) = V0.map (boostProj 2 0) * V0.map (boostProj 2 0)
-  + V0.map (boostProj 2 2) * V0.map (boostProj 2 (-2)) := by
+  V2.map (BoostWeight.boostProj repLorentzGroup 2 0) = V0.map (BoostWeight.boostProj repLorentzGroup 2 0) * V0.map (BoostWeight.boostProj repLorentzGroup 2 0)
+  + V0.map (BoostWeight.boostProj repLorentzGroup 2 2) * V0.map (BoostWeight.boostProj repLorentzGroup 2 (-2)) := by
   intro V0 V2
-  have hcl : ∀ l : ℤ, V0.map (boostProj 2 l) ≤ V0 :=
+  have hcl : ∀ l : ℤ, V0.map (BoostWeight.boostProj repLorentzGroup 2 l) ≤ V0 :=
     boostProj_z_map_fieldStrengthDeriv_span_le
   have hbot : ∀ l : ℤ, l ≠ 0 → l ≠ 2 → l ≠ -2 →
-      V0.map (boostProj 2 l) * V0.map (boostProj 2 (0 - l)) = ⊥ := by
+      V0.map (BoostWeight.boostProj repLorentzGroup 2 l) * V0.map (BoostWeight.boostProj repLorentzGroup 2 (0 - l)) = ⊥ := by
     intro l h0 h2 hn2
-    rw [show V0.map (boostProj 2 l) = ⊥ from
+    rw [show V0.map (BoostWeight.boostProj repLorentzGroup 2 l) = ⊥ from
       boostProj_z_map_fieldStrengthDeriv_span_of_ne l h0 h2 hn2, Submodule.bot_mul]
-  have hbos : V0.map (boostProj 2 (-2)) ≤ bosonic := by
-    rw [show V0.map (boostProj 2 (-2)) = _ from boostProj_z_neg_two_map_fieldStrengthDeriv_span]
+  have hbos : V0.map (BoostWeight.boostProj repLorentzGroup 2 (-2)) ≤ bosonic := by
+    rw [show V0.map (BoostWeight.boostProj repLorentzGroup 2 (-2)) = _ from boostProj_z_neg_two_map_fieldStrengthDeriv_span]
     refine Submodule.span_le.2 ?_
     rintro _ (rfl | rfl) <;>
       exact add_mem (fieldStrengthDeriv_mem_bosonic _ _ _) (fieldStrengthDeriv_mem_bosonic _ _ _)
   have hV2 : V2 = V0 * V0 := fieldStrengthDeriv_mul_span_eq_mul_span
-  rw [hV2, boostProj_map_mul_submodule 0 hcl hcl, iSup_eq_sup_zero_two_neg_two _ hbot]
+  rw [hV2, BoostWeight.boostProj_map_mul repLorentzGroup 0 hcl hcl, BoostWeight.iSup_eq_sup_zero_two_neg_two repLorentzGroup _ hbot]
   simp only [sub_self, zero_sub, neg_neg]
   rw [Submodule.add_eq_sup, mul_comm_of_le_bosonic hbos, sup_assoc, sup_idem]
 
 /-- The weight-zero projection keeps the photon-pair span inside itself. -/
 lemma boostProj_z_map_fieldStrengthDeriv_mul_span_le :
     (Submodule.span ℂ {y | ∃ μ ν μ' ν', y = fieldStrengthDeriv {} μ ν *
-      fieldStrengthDeriv {} μ' ν'}).map (boostProj 2 0) ≤
+      fieldStrengthDeriv {} μ' ν'}).map (BoostWeight.boostProj repLorentzGroup 2 0) ≤
     Submodule.span ℂ {y | ∃ μ ν μ' ν', y = fieldStrengthDeriv {} μ ν *
       fieldStrengthDeriv {} μ' ν'} := by
   have hmul : _ = _ := boostProj_z_map_fieldStrengthDeriv_mul_eq_boosts

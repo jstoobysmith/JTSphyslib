@@ -44,7 +44,7 @@ set_option linter.unusedSimpArgs false
 set_option linter.unusedTactic false
 
 namespace LeptonGaugeSector
-open TensorProduct StandardModel
+open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
 open Matrix MatrixGroups
 
@@ -61,8 +61,8 @@ private lemma algebraMap_real_complex (t : ℝ) :
 
 /-- **The light-cone derivative `∂_0 - ∂_z` raises the `z`-boost weight by two.** -/
 lemma jetDeriv_lightConeZ_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 2 k) :
-    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 2) x ∈ boostWeightSubmodule 2 (k + 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 2) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (k + 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_sub, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -77,8 +77,8 @@ lemma jetDeriv_lightConeZ_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **The light-cone derivative `∂_0 + ∂_z` lowers the `z`-boost weight by two.** -/
 lemma jetDeriv_lightConeZ_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 2 k) :
-    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 2) x ∈ boostWeightSubmodule 2 (k - 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 2) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (k - 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_add, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -93,8 +93,8 @@ lemma jetDeriv_lightConeZ_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **A transverse derivative leaves the `z`-boost weight alone.** -/
 lemma jetDeriv_transverseZ_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i ≠ 2)
-    (hb : x ∈ bosonic) (hx : x ∈ boostWeightSubmodule 2 k) :
-    jetDeriv (Sum.inr i) x ∈ boostWeightSubmodule 2 k := by
+    (hb : x ∈ bosonic) (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k) :
+    jetDeriv (Sum.inr i) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 k := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb, hx t ht, algebraMap_real_complex]
@@ -119,8 +119,8 @@ lemma jetDeriv_transverseZ_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i �
 
 /-- **The light-cone derivative `∂_0 - ∂_x` raises the `x`-boost weight by two.** -/
 lemma jetDeriv_lightConeX_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 0 k) :
-    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 0) x ∈ boostWeightSubmodule 0 (k + 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 0) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (k + 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_sub, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -135,8 +135,8 @@ lemma jetDeriv_lightConeX_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **The light-cone derivative `∂_0 + ∂_x` lowers the `x`-boost weight by two.** -/
 lemma jetDeriv_lightConeX_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 0 k) :
-    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 0) x ∈ boostWeightSubmodule 0 (k - 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 0) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (k - 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_add, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -151,8 +151,8 @@ lemma jetDeriv_lightConeX_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **A transverse derivative leaves the `x`-boost weight alone.** -/
 lemma jetDeriv_transverseX_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i ≠ 0)
-    (hb : x ∈ bosonic) (hx : x ∈ boostWeightSubmodule 0 k) :
-    jetDeriv (Sum.inr i) x ∈ boostWeightSubmodule 0 k := by
+    (hb : x ∈ bosonic) (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k) :
+    jetDeriv (Sum.inr i) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 k := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb, hx t ht, algebraMap_real_complex]
@@ -175,8 +175,8 @@ lemma jetDeriv_transverseX_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i �
 
 /-- **The light-cone derivative `∂_0 - ∂_y` raises the `y`-boost weight by two.** -/
 lemma jetDeriv_lightConeY_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 1 k) :
-    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 1) x ∈ boostWeightSubmodule 1 (k + 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 1) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (k + 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_sub, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -191,8 +191,8 @@ lemma jetDeriv_lightConeY_pos_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **The light-cone derivative `∂_0 + ∂_y` lowers the `y`-boost weight by two.** -/
 lemma jetDeriv_lightConeY_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule 1 k) :
-    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 1) x ∈ boostWeightSubmodule 1 (k - 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 1) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (k - 2) := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [map_add, repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb,
@@ -207,8 +207,8 @@ lemma jetDeriv_lightConeY_neg_mem {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic
 
 /-- **A transverse derivative leaves the `y`-boost weight alone.** -/
 lemma jetDeriv_transverseY_mem {k : ℤ} {x : JetAlgebra} {i : Fin 3} (hi : i ≠ 1)
-    (hb : x ∈ bosonic) (hx : x ∈ boostWeightSubmodule 1 k) :
-    jetDeriv (Sum.inr i) x ∈ boostWeightSubmodule 1 k := by
+    (hb : x ∈ bosonic) (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k) :
+    jetDeriv (Sum.inr i) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 k := by
   intro t ht
   have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
   rw [repLorentzGroup_jetDeriv_of_mem_bosonic _ _ hb, hx t ht, algebraMap_real_complex]
@@ -256,7 +256,7 @@ lemma lcn_apply (i : Fin 3) (x : JetAlgebra) :
 
 /-- `∂_0 - ∂_i` raises the `i`-boost weight of a bosonic element by two. -/
 lemma lcp_mem_boostWeight {i : Fin 3} {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule i k) : lcp i x ∈ boostWeightSubmodule i (k + 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i k) : lcp i x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i (k + 2) := by
   fin_cases i
   · exact jetDeriv_lightConeX_pos_mem hb hx
   · exact jetDeriv_lightConeY_pos_mem hb hx
@@ -264,7 +264,7 @@ lemma lcp_mem_boostWeight {i : Fin 3} {k : ℤ} {x : JetAlgebra} (hb : x ∈ bos
 
 /-- `∂_0 + ∂_i` lowers the `i`-boost weight of a bosonic element by two. -/
 lemma lcn_mem_boostWeight {i : Fin 3} {k : ℤ} {x : JetAlgebra} (hb : x ∈ bosonic)
-    (hx : x ∈ boostWeightSubmodule i k) : lcn i x ∈ boostWeightSubmodule i (k - 2) := by
+    (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i k) : lcn i x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i (k - 2) := by
   fin_cases i
   · exact jetDeriv_lightConeX_neg_mem hb hx
   · exact jetDeriv_lightConeY_neg_mem hb hx
@@ -272,8 +272,8 @@ lemma lcn_mem_boostWeight {i : Fin 3} {k : ℤ} {x : JetAlgebra} (hb : x ∈ bos
 
 /-- A transverse derivative preserves the `i`-boost weight of a bosonic element. -/
 lemma jetDeriv_transverse_mem {i j : Fin 3} (hj : j ≠ i) {k : ℤ} {x : JetAlgebra}
-    (hb : x ∈ bosonic) (hx : x ∈ boostWeightSubmodule i k) :
-    jetDeriv (Sum.inr j) x ∈ boostWeightSubmodule i k := by
+    (hb : x ∈ bosonic) (hx : x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i k) :
+    jetDeriv (Sum.inr j) x ∈ BoostWeight.boostWeightSubmodule repLorentzGroup i k := by
   fin_cases i
   · exact jetDeriv_transverseX_mem hj hb hx
   · exact jetDeriv_transverseY_mem hj hb hx
@@ -289,22 +289,22 @@ lemma lcn_mem_bosonic {i : Fin 3} {x : JetAlgebra} (hx : x ∈ bosonic) : lcn i 
 /-- A bosonic submodule of pure `i`-boost weight is carried by `∂_0 - ∂_i` to one of weight two
   higher. -/
 lemma map_lcp_le {i : Fin 3} {k : ℤ} {P : Submodule ℂ JetAlgebra} (hb : P ≤ bosonic)
-    (hw : P ≤ boostWeightSubmodule i k) :
-    Submodule.map (lcp i) P ≤ boostWeightSubmodule i (k + 2) := by
+    (hw : P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i k) :
+    Submodule.map (lcp i) P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i (k + 2) := by
   rintro y ⟨u, hu, rfl⟩
   exact lcp_mem_boostWeight (hb hu) (hw hu)
 
 /-- The partner of `map_lcp_le`: `∂_0 + ∂_i` lowers the weight by two. -/
 lemma map_lcn_le {i : Fin 3} {k : ℤ} {P : Submodule ℂ JetAlgebra} (hb : P ≤ bosonic)
-    (hw : P ≤ boostWeightSubmodule i k) :
-    Submodule.map (lcn i) P ≤ boostWeightSubmodule i (k - 2) := by
+    (hw : P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i k) :
+    Submodule.map (lcn i) P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i (k - 2) := by
   rintro y ⟨u, hu, rfl⟩
   exact lcn_mem_boostWeight (hb hu) (hw hu)
 
 /-- A transverse derivative preserves the `i`-boost weight of a bosonic submodule. -/
 lemma map_jetDeriv_transverse_le {i j : Fin 3} (hj : j ≠ i) {k : ℤ}
-    {P : Submodule ℂ JetAlgebra} (hb : P ≤ bosonic) (hw : P ≤ boostWeightSubmodule i k) :
-    Submodule.map (jetDeriv (Sum.inr j)) P ≤ boostWeightSubmodule i k := by
+    {P : Submodule ℂ JetAlgebra} (hb : P ≤ bosonic) (hw : P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i k) :
+    Submodule.map (jetDeriv (Sum.inr j)) P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup i k := by
   rintro y ⟨u, hu, rfl⟩
   exact jetDeriv_transverse_mem hj (hb hu) (hw hu)
 
@@ -408,7 +408,7 @@ lemma jetDeriv_mem_stepAxis {i t₁ t₂ : Fin 3} (h₁ : t₁ ≠ i) (h₂ : t�
   weight, and the two must cancel. Only this inclusion feeds the three-axis theorem, so the
   converse is not recorded. -/
 lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
-    boostWeightSubmodule 2 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓ Submodule.span ℂ
         {x | ∃ ρ τ μ ν, x = fieldStrengthDeriv {ρ, τ} μ ν} ≤
       Submodule.span ℂ
         {lcp 2 (lcn 2 (fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1))),
@@ -438,9 +438,9 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
   set T := fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) with hT
   set L := fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 2) with hL
   obtain ⟨hPXw, hPYw, hMXw, hMYw, hTw, hLw⟩ :
-      PX ∈ boostWeightSubmodule 2 2 ∧ PY ∈ boostWeightSubmodule 2 2 ∧
-      MX ∈ boostWeightSubmodule 2 (-2) ∧ MY ∈ boostWeightSubmodule 2 (-2) ∧
-      T ∈ boostWeightSubmodule 2 0 ∧ L ∈ boostWeightSubmodule 2 0 := by
+      PX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 ∧ PY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 ∧
+      MX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) ∧ MY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) ∧
+      T ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ∧ L ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -461,11 +461,11 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
   set B := Submodule.span ℂ {T, L} with hB
   set C := Submodule.span ℂ {MX, MY} with hC
   set V := Submodule.span ℂ {x | ∃ μ ν, x = fieldStrengthDeriv {} μ ν} with hV
-  have hAle : A ≤ boostWeightSubmodule 2 2 := by
+  have hAle : A ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 := by
     rw [hA]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hPXw, hPYw])
-  have hBle : B ≤ boostWeightSubmodule 2 0 := by
+  have hBle : B ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
     rw [hB]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hTw, hLw])
-  have hCle : C ≤ boostWeightSubmodule 2 (-2) := by
+  have hCle : C ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := by
     rw [hC]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hMXw, hMYw])
   have hAV : A ≤ A ⊔ B ⊔ C := le_sup_left.trans le_sup_left
   have hBV : B ≤ A ⊔ B ⊔ C := le_sup_right.trans le_sup_left
@@ -523,7 +523,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
       lcn 2 ((jetDeriv (Sum.inr 0)) PY),
       lcn 2 ((jetDeriv (Sum.inr 1)) PX),
       lcn 2 ((jetDeriv (Sum.inr 1)) PY)} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 2 j with hW
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 2 j with hW
   -- the three weight spaces are bosonic
   have hFb : ∀ μ ν, fieldStrengthDeriv {} μ ν ∈ bosonic := fun μ ν =>
     fieldStrengthDeriv_mem_bosonic _ _ _
@@ -546,44 +546,44 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
     · rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
     · rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
   have hN : ∀ {j : ℤ} {P : Submodule ℂ JetAlgebra}, j ≠ 0 →
-      P ≤ boostWeightSubmodule 2 j → P ≤ W := fun hj hP =>
+      P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 j → P ≤ W := fun hj hP =>
     le_trans hP (le_sup_of_le_right (le_iSup_of_le _ (le_iSup_of_le hj le_rfl)))
   have bpA : Submodule.map (lcp 2) A ≤ bosonic := map_lcp_le_bosonic hAb
   have wpA : Submodule.map (lcp 2) A ≤
-      boostWeightSubmodule 2 (2 + 2) := map_lcp_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (2 + 2) := map_lcp_le hAb hAle
   have bpB : Submodule.map (lcp 2) B ≤ bosonic := map_lcp_le_bosonic hBb
   have wpB : Submodule.map (lcp 2) B ≤
-      boostWeightSubmodule 2 (0 + 2) := map_lcp_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (0 + 2) := map_lcp_le hBb hBle
   have bpC : Submodule.map (lcp 2) C ≤ bosonic := map_lcp_le_bosonic hCb
   have wpC : Submodule.map (lcp 2) C ≤
-      boostWeightSubmodule 2 (-2 + 2) := map_lcp_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2 + 2) := map_lcp_le hCb hCle
   have bmA : Submodule.map (lcn 2) A ≤ bosonic := map_lcn_le_bosonic hAb
   have wmA : Submodule.map (lcn 2) A ≤
-      boostWeightSubmodule 2 (2 - 2) := map_lcn_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (2 - 2) := map_lcn_le hAb hAle
   have bmB : Submodule.map (lcn 2) B ≤ bosonic := map_lcn_le_bosonic hBb
   have wmB : Submodule.map (lcn 2) B ≤
-      boostWeightSubmodule 2 (0 - 2) := map_lcn_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (0 - 2) := map_lcn_le hBb hBle
   have bmC : Submodule.map (lcn 2) C ≤ bosonic := map_lcn_le_bosonic hCb
   have wmC : Submodule.map (lcn 2) C ≤
-      boostWeightSubmodule 2 (-2 - 2) := map_lcn_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2 - 2) := map_lcn_le hCb hCle
   have bxA : Submodule.map (jetDeriv (Sum.inr 0)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hAb
   have wxA : Submodule.map (jetDeriv (Sum.inr 0)) A ≤
-      boostWeightSubmodule 2 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have bxB : Submodule.map (jetDeriv (Sum.inr 0)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hBb
   have wxB : Submodule.map (jetDeriv (Sum.inr 0)) B ≤
-      boostWeightSubmodule 2 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have bxC : Submodule.map (jetDeriv (Sum.inr 0)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hCb
   have wxC : Submodule.map (jetDeriv (Sum.inr 0)) C ≤
-      boostWeightSubmodule 2 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have byA : Submodule.map (jetDeriv (Sum.inr 1)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hAb
   have wyA : Submodule.map (jetDeriv (Sum.inr 1)) A ≤
-      boostWeightSubmodule 2 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have byB : Submodule.map (jetDeriv (Sum.inr 1)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hBb
   have wyB : Submodule.map (jetDeriv (Sum.inr 1)) B ≤
-      boostWeightSubmodule 2 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have byC : Submodule.map (jetDeriv (Sum.inr 1)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hCb
   have wyC : Submodule.map (jetDeriv (Sum.inr 1)) C ≤
-      boostWeightSubmodule 2 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have eppA : Submodule.map (lcp 2) (Submodule.map (lcp 2) A) ≤ W :=
     hN (by norm_num) (map_lcp_le bpA wpA)
   have eppB : Submodule.map (lcp 2) (Submodule.map (lcp 2) B) ≤ W :=
@@ -771,15 +771,15 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
   have hkey : Submodule.span ℂ FF ≤ W :=
     le_trans hFFle (le_trans (stepAxis_mono (stepAxis_mono hVle)) hfin)
   -- the sixteen generators have weight zero
-  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ boostWeightSubmodule 2 j →
-      y ∈ boostWeightSubmodule 2 0 := by rintro j y rfl h; exact h
+  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 j →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by rintro j y rfl h; exact h
   have hTb : T ∈ bosonic := by rw [hT]; exact hFb _ _
   have hLb : L ∈ bosonic := by rw [hL]; exact hFb _ _
   have hPXb : PX ∈ bosonic := by rw [hPX]; exact sub_mem (hFb _ _) (hFb _ _)
   have hPYb : PY ∈ bosonic := by rw [hPY]; exact sub_mem (hFb _ _) (hFb _ _)
   have hMXb : MX ∈ bosonic := by rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
   have hMYb : MY ∈ bosonic := by rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 2 0 := by
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl |
@@ -805,7 +805,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
     hwz (by norm_num) (lcn_mem_boostWeight (jetDeriv_mem_bosonic (Sum.inr 1) hPYb) (jetDeriv_transverse_mem (by decide) hPYb hPYw))]
   refine le_trans (inf_le_inf_left _ hkey) ?_
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 2) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 2) 0).symm, sup_bot_eq]
 /-!
 
 ## G. The boost weight zero part, `x`-direction
@@ -818,7 +818,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_le :
   weight, and the two must cancel. Only this inclusion feeds the three-axis theorem, so the
   converse is not recorded. -/
 lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
-    boostWeightSubmodule 0 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ Submodule.span ℂ
         {x | ∃ ρ τ μ ν, x = fieldStrengthDeriv {ρ, τ} μ ν} ≤
       Submodule.span ℂ
         {lcp 0 (lcn 0 (fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2))),
@@ -848,9 +848,9 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
   set T := fieldStrengthDeriv {} (Sum.inr 1) (Sum.inr 2) with hT
   set L := fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) with hL
   obtain ⟨hPXw, hPYw, hMXw, hMYw, hTw, hLw⟩ :
-      PX ∈ boostWeightSubmodule 0 2 ∧ PY ∈ boostWeightSubmodule 0 2 ∧
-      MX ∈ boostWeightSubmodule 0 (-2) ∧ MY ∈ boostWeightSubmodule 0 (-2) ∧
-      T ∈ boostWeightSubmodule 0 0 ∧ L ∈ boostWeightSubmodule 0 0 := by
+      PX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 ∧ PY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 ∧
+      MX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) ∧ MY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) ∧
+      T ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ∧ L ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -871,11 +871,11 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
   set B := Submodule.span ℂ {T, L} with hB
   set C := Submodule.span ℂ {MX, MY} with hC
   set V := Submodule.span ℂ {x | ∃ μ ν, x = fieldStrengthDeriv {} μ ν} with hV
-  have hAle : A ≤ boostWeightSubmodule 0 2 := by
+  have hAle : A ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 2 := by
     rw [hA]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hPXw, hPYw])
-  have hBle : B ≤ boostWeightSubmodule 0 0 := by
+  have hBle : B ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     rw [hB]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hTw, hLw])
-  have hCle : C ≤ boostWeightSubmodule 0 (-2) := by
+  have hCle : C ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) := by
     rw [hC]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hMXw, hMYw])
   have hAV : A ≤ A ⊔ B ⊔ C := le_sup_left.trans le_sup_left
   have hBV : B ≤ A ⊔ B ⊔ C := le_sup_right.trans le_sup_left
@@ -933,7 +933,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
       lcn 0 ((jetDeriv (Sum.inr 1)) PY),
       lcn 0 ((jetDeriv (Sum.inr 2)) PX),
       lcn 0 ((jetDeriv (Sum.inr 2)) PY)} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 0 j with hW
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 0 j with hW
   -- the three weight spaces are bosonic
   have hFb : ∀ μ ν, fieldStrengthDeriv {} μ ν ∈ bosonic := fun μ ν =>
     fieldStrengthDeriv_mem_bosonic _ _ _
@@ -956,44 +956,44 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
     · rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
     · rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
   have hN : ∀ {j : ℤ} {P : Submodule ℂ JetAlgebra}, j ≠ 0 →
-      P ≤ boostWeightSubmodule 0 j → P ≤ W := fun hj hP =>
+      P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 j → P ≤ W := fun hj hP =>
     le_trans hP (le_sup_of_le_right (le_iSup_of_le _ (le_iSup_of_le hj le_rfl)))
   have bpA : Submodule.map (lcp 0) A ≤ bosonic := map_lcp_le_bosonic hAb
   have wpA : Submodule.map (lcp 0) A ≤
-      boostWeightSubmodule 0 (2 + 2) := map_lcp_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (2 + 2) := map_lcp_le hAb hAle
   have bpB : Submodule.map (lcp 0) B ≤ bosonic := map_lcp_le_bosonic hBb
   have wpB : Submodule.map (lcp 0) B ≤
-      boostWeightSubmodule 0 (0 + 2) := map_lcp_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (0 + 2) := map_lcp_le hBb hBle
   have bpC : Submodule.map (lcp 0) C ≤ bosonic := map_lcp_le_bosonic hCb
   have wpC : Submodule.map (lcp 0) C ≤
-      boostWeightSubmodule 0 (-2 + 2) := map_lcp_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2 + 2) := map_lcp_le hCb hCle
   have bmA : Submodule.map (lcn 0) A ≤ bosonic := map_lcn_le_bosonic hAb
   have wmA : Submodule.map (lcn 0) A ≤
-      boostWeightSubmodule 0 (2 - 2) := map_lcn_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (2 - 2) := map_lcn_le hAb hAle
   have bmB : Submodule.map (lcn 0) B ≤ bosonic := map_lcn_le_bosonic hBb
   have wmB : Submodule.map (lcn 0) B ≤
-      boostWeightSubmodule 0 (0 - 2) := map_lcn_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (0 - 2) := map_lcn_le hBb hBle
   have bmC : Submodule.map (lcn 0) C ≤ bosonic := map_lcn_le_bosonic hCb
   have wmC : Submodule.map (lcn 0) C ≤
-      boostWeightSubmodule 0 (-2 - 2) := map_lcn_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2 - 2) := map_lcn_le hCb hCle
   have bxA : Submodule.map (jetDeriv (Sum.inr 1)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hAb
   have wxA : Submodule.map (jetDeriv (Sum.inr 1)) A ≤
-      boostWeightSubmodule 0 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have bxB : Submodule.map (jetDeriv (Sum.inr 1)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hBb
   have wxB : Submodule.map (jetDeriv (Sum.inr 1)) B ≤
-      boostWeightSubmodule 0 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have bxC : Submodule.map (jetDeriv (Sum.inr 1)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 1) hCb
   have wxC : Submodule.map (jetDeriv (Sum.inr 1)) C ≤
-      boostWeightSubmodule 0 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have byA : Submodule.map (jetDeriv (Sum.inr 2)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hAb
   have wyA : Submodule.map (jetDeriv (Sum.inr 2)) A ≤
-      boostWeightSubmodule 0 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have byB : Submodule.map (jetDeriv (Sum.inr 2)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hBb
   have wyB : Submodule.map (jetDeriv (Sum.inr 2)) B ≤
-      boostWeightSubmodule 0 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have byC : Submodule.map (jetDeriv (Sum.inr 2)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hCb
   have wyC : Submodule.map (jetDeriv (Sum.inr 2)) C ≤
-      boostWeightSubmodule 0 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 0 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have eppA : Submodule.map (lcp 0) (Submodule.map (lcp 0) A) ≤ W :=
     hN (by norm_num) (map_lcp_le bpA wpA)
   have eppB : Submodule.map (lcp 0) (Submodule.map (lcp 0) B) ≤ W :=
@@ -1181,15 +1181,15 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
   have hkey : Submodule.span ℂ FF ≤ W :=
     le_trans hFFle (le_trans (stepAxis_mono (stepAxis_mono hVle)) hfin)
   -- the sixteen generators have weight zero
-  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ boostWeightSubmodule 0 j →
-      y ∈ boostWeightSubmodule 0 0 := by rintro j y rfl h; exact h
+  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 j →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by rintro j y rfl h; exact h
   have hTb : T ∈ bosonic := by rw [hT]; exact hFb _ _
   have hLb : L ∈ bosonic := by rw [hL]; exact hFb _ _
   have hPXb : PX ∈ bosonic := by rw [hPX]; exact sub_mem (hFb _ _) (hFb _ _)
   have hPYb : PY ∈ bosonic := by rw [hPY]; exact sub_mem (hFb _ _) (hFb _ _)
   have hMXb : MX ∈ bosonic := by rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
   have hMYb : MY ∈ bosonic := by rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 0 0 := by
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl |
@@ -1215,7 +1215,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
     hwz (by norm_num) (lcn_mem_boostWeight (jetDeriv_mem_bosonic (Sum.inr 2) hPYb) (jetDeriv_transverse_mem (by decide) hPYb hPYw))]
   refine le_trans (inf_le_inf_left _ hkey) ?_
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 0) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 0) 0).symm, sup_bot_eq]
 /-!
 
 ## H. The boost weight zero part, `y`-direction
@@ -1228,7 +1228,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_x_le :
   weight, and the two must cancel. Only this inclusion feeds the three-axis theorem, so the
   converse is not recorded. -/
 lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
-    boostWeightSubmodule 1 0 ⊓ Submodule.span ℂ
+    BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓ Submodule.span ℂ
         {x | ∃ ρ τ μ ν, x = fieldStrengthDeriv {ρ, τ} μ ν} ≤
       Submodule.span ℂ
         {lcp 1 (lcn 1 (fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0))),
@@ -1258,9 +1258,9 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
   set T := fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) with hT
   set L := fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) with hL
   obtain ⟨hPXw, hPYw, hMXw, hMYw, hTw, hLw⟩ :
-      PX ∈ boostWeightSubmodule 1 2 ∧ PY ∈ boostWeightSubmodule 1 2 ∧
-      MX ∈ boostWeightSubmodule 1 (-2) ∧ MY ∈ boostWeightSubmodule 1 (-2) ∧
-      T ∈ boostWeightSubmodule 1 0 ∧ L ∈ boostWeightSubmodule 1 0 := by
+      PX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 ∧ PY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 ∧
+      MX ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) ∧ MY ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) ∧
+      T ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ∧ L ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intro t ht
     all_goals
       have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
@@ -1281,11 +1281,11 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
   set B := Submodule.span ℂ {T, L} with hB
   set C := Submodule.span ℂ {MX, MY} with hC
   set V := Submodule.span ℂ {x | ∃ μ ν, x = fieldStrengthDeriv {} μ ν} with hV
-  have hAle : A ≤ boostWeightSubmodule 1 2 := by
+  have hAle : A ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 2 := by
     rw [hA]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hPXw, hPYw])
-  have hBle : B ≤ boostWeightSubmodule 1 0 := by
+  have hBle : B ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     rw [hB]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hTw, hLw])
-  have hCle : C ≤ boostWeightSubmodule 1 (-2) := by
+  have hCle : C ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) := by
     rw [hC]; exact Submodule.span_le.2 (by rintro x (rfl | rfl); exacts [hMXw, hMYw])
   have hAV : A ≤ A ⊔ B ⊔ C := le_sup_left.trans le_sup_left
   have hBV : B ≤ A ⊔ B ⊔ C := le_sup_right.trans le_sup_left
@@ -1343,7 +1343,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
       lcn 1 ((jetDeriv (Sum.inr 2)) PY),
       lcn 1 ((jetDeriv (Sum.inr 0)) PX),
       lcn 1 ((jetDeriv (Sum.inr 0)) PY)} with hS
-  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), boostWeightSubmodule 1 j with hW
+  set W := Submodule.span ℂ S ⊔ ⨆ (j : ℤ) (_ : j ≠ 0), BoostWeight.boostWeightSubmodule repLorentzGroup 1 j with hW
   -- the three weight spaces are bosonic
   have hFb : ∀ μ ν, fieldStrengthDeriv {} μ ν ∈ bosonic := fun μ ν =>
     fieldStrengthDeriv_mem_bosonic _ _ _
@@ -1366,44 +1366,44 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
     · rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
     · rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
   have hN : ∀ {j : ℤ} {P : Submodule ℂ JetAlgebra}, j ≠ 0 →
-      P ≤ boostWeightSubmodule 1 j → P ≤ W := fun hj hP =>
+      P ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 j → P ≤ W := fun hj hP =>
     le_trans hP (le_sup_of_le_right (le_iSup_of_le _ (le_iSup_of_le hj le_rfl)))
   have bpA : Submodule.map (lcp 1) A ≤ bosonic := map_lcp_le_bosonic hAb
   have wpA : Submodule.map (lcp 1) A ≤
-      boostWeightSubmodule 1 (2 + 2) := map_lcp_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (2 + 2) := map_lcp_le hAb hAle
   have bpB : Submodule.map (lcp 1) B ≤ bosonic := map_lcp_le_bosonic hBb
   have wpB : Submodule.map (lcp 1) B ≤
-      boostWeightSubmodule 1 (0 + 2) := map_lcp_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (0 + 2) := map_lcp_le hBb hBle
   have bpC : Submodule.map (lcp 1) C ≤ bosonic := map_lcp_le_bosonic hCb
   have wpC : Submodule.map (lcp 1) C ≤
-      boostWeightSubmodule 1 (-2 + 2) := map_lcp_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2 + 2) := map_lcp_le hCb hCle
   have bmA : Submodule.map (lcn 1) A ≤ bosonic := map_lcn_le_bosonic hAb
   have wmA : Submodule.map (lcn 1) A ≤
-      boostWeightSubmodule 1 (2 - 2) := map_lcn_le hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (2 - 2) := map_lcn_le hAb hAle
   have bmB : Submodule.map (lcn 1) B ≤ bosonic := map_lcn_le_bosonic hBb
   have wmB : Submodule.map (lcn 1) B ≤
-      boostWeightSubmodule 1 (0 - 2) := map_lcn_le hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (0 - 2) := map_lcn_le hBb hBle
   have bmC : Submodule.map (lcn 1) C ≤ bosonic := map_lcn_le_bosonic hCb
   have wmC : Submodule.map (lcn 1) C ≤
-      boostWeightSubmodule 1 (-2 - 2) := map_lcn_le hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2 - 2) := map_lcn_le hCb hCle
   have bxA : Submodule.map (jetDeriv (Sum.inr 2)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hAb
   have wxA : Submodule.map (jetDeriv (Sum.inr 2)) A ≤
-      boostWeightSubmodule 1 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have bxB : Submodule.map (jetDeriv (Sum.inr 2)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hBb
   have wxB : Submodule.map (jetDeriv (Sum.inr 2)) B ≤
-      boostWeightSubmodule 1 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have bxC : Submodule.map (jetDeriv (Sum.inr 2)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 2) hCb
   have wxC : Submodule.map (jetDeriv (Sum.inr 2)) C ≤
-      boostWeightSubmodule 1 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have byA : Submodule.map (jetDeriv (Sum.inr 0)) A ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hAb
   have wyA : Submodule.map (jetDeriv (Sum.inr 0)) A ≤
-      boostWeightSubmodule 1 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (2) := map_jetDeriv_transverse_le (by decide) hAb hAle
   have byB : Submodule.map (jetDeriv (Sum.inr 0)) B ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hBb
   have wyB : Submodule.map (jetDeriv (Sum.inr 0)) B ≤
-      boostWeightSubmodule 1 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (0) := map_jetDeriv_transverse_le (by decide) hBb hBle
   have byC : Submodule.map (jetDeriv (Sum.inr 0)) C ≤ bosonic := map_jetDeriv_le_bosonic (Sum.inr 0) hCb
   have wyC : Submodule.map (jetDeriv (Sum.inr 0)) C ≤
-      boostWeightSubmodule 1 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
+      BoostWeight.boostWeightSubmodule repLorentzGroup 1 (-2) := map_jetDeriv_transverse_le (by decide) hCb hCle
   have eppA : Submodule.map (lcp 1) (Submodule.map (lcp 1) A) ≤ W :=
     hN (by norm_num) (map_lcp_le bpA wpA)
   have eppB : Submodule.map (lcp 1) (Submodule.map (lcp 1) B) ≤ W :=
@@ -1591,15 +1591,15 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
   have hkey : Submodule.span ℂ FF ≤ W :=
     le_trans hFFle (le_trans (stepAxis_mono (stepAxis_mono hVle)) hfin)
   -- the sixteen generators have weight zero
-  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ boostWeightSubmodule 1 j →
-      y ∈ boostWeightSubmodule 1 0 := by rintro j y rfl h; exact h
+  have hwz : ∀ {j : ℤ} {y : JetAlgebra}, j = 0 → y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 j →
+      y ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by rintro j y rfl h; exact h
   have hTb : T ∈ bosonic := by rw [hT]; exact hFb _ _
   have hLb : L ∈ bosonic := by rw [hL]; exact hFb _ _
   have hPXb : PX ∈ bosonic := by rw [hPX]; exact sub_mem (hFb _ _) (hFb _ _)
   have hPYb : PY ∈ bosonic := by rw [hPY]; exact sub_mem (hFb _ _) (hFb _ _)
   have hMXb : MX ∈ bosonic := by rw [hMX]; exact add_mem (hFb _ _) (hFb _ _)
   have hMYb : MY ∈ bosonic := by rw [hMY]; exact add_mem (hFb _ _) (hFb _ _)
-  have hSw : Submodule.span ℂ S ≤ boostWeightSubmodule 1 0 := by
+  have hSw : Submodule.span ℂ S ≤ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 := by
     rw [hS]
     refine Submodule.span_le.2 ?_
     rintro x (rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl |
@@ -1625,7 +1625,7 @@ lemma boostWeight_inter_fieldStrengthDeriv_pair_y_le :
     hwz (by norm_num) (lcn_mem_boostWeight (jetDeriv_mem_bosonic (Sum.inr 0) hPYb) (jetDeriv_transverse_mem (by decide) hPYb hPYw))]
   refine le_trans (inf_le_inf_left _ hkey) ?_
   rw [hW, inf_comm, sup_inf_assoc_of_le _ hSw,
-    disjoint_iff.mp (boostWeightSubmodule_iSupIndep (i := 1) 0).symm, sup_bot_eq]
+    disjoint_iff.mp (BoostWeight.boostWeightSubmodule_iSupIndep repLorentzGroup (i := 1) 0).symm, sup_bot_eq]
 /-!
 
 ## I. The Bianchi identity and the three-axis intersection
@@ -1666,7 +1666,7 @@ lemma lcn_PY_eq : lcn 2 (fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 1) -
   module
 
 theorem boostWeight_inter_fieldStrengthDeriv_pair_full :
-    boostWeightSubmodule 0 0 ⊓ boostWeightSubmodule 1 0 ⊓ boostWeightSubmodule 2 0 ⊓
+    BoostWeight.boostWeightSubmodule repLorentzGroup 0 0 ⊓ BoostWeight.boostWeightSubmodule repLorentzGroup 1 0 ⊓ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 ⊓
       Submodule.span ℂ {x | ∃ ρ τ μ ν, x = fieldStrengthDeriv {ρ, τ} μ ν} = ⊥ := by
   refine le_antisymm (fun x hx => ?_) bot_le
   rw [Submodule.mem_inf, Submodule.mem_inf, Submodule.mem_inf] at hx
