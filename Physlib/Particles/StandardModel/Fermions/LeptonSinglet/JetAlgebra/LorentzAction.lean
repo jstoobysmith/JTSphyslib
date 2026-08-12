@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.JetDeriv
 /-!
 # The Lorentz action on the charged-lepton jet algebra
 
@@ -124,6 +125,35 @@ noncomputable def repLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
   map_one' := repLorentzGroup_apply_one Λ
   map_mul' := repLorentzGroup_apply_mul Λ
   commutes' r := by simp [repLorentzGroup_apply]
+
+set_option maxHeartbeats 4000000 in
+/-- **The jet derivative on the charged-lepton jet algebra is a Lorentz vector.** -/
+lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    repLorentzGroup Λ (jetDeriv μ x) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        jetDeriv a (repLorentzGroup Λ x) := by
+  have hι : ∀ v : JetComponentSpace, repLorentzGroup Λ (ExteriorAlgebra.ι ℂ v) =
+      ExteriorAlgebra.ι ℂ (JetComponentSpace.repLorentzGroup Λ v) := fun v => by
+    rw [repLorentzGroup_apply, ExteriorAlgebra.map_apply_ι]
+  induction x using ExteriorAlgebra.induction with
+  | algebraMap r =>
+    have h1 : jetDeriv μ (algebraMap ℂ JetAlgebra r) = 0 := by
+      rw [Algebra.algebraMap_eq_smul_one, map_smul, jetDeriv_one, smul_zero]
+    rw [h1, map_zero]
+    refine (Finset.sum_eq_zero fun a _ => ?_).symm
+    rw [Algebra.algebraMap_eq_smul_one, map_smul, repLorentzGroup_apply_one, map_smul,
+      jetDeriv_one, smul_zero, smul_zero]
+  | ι v =>
+    rw [jetDeriv_ι, hι, hι, JetComponentSpace.repLorentzGroup_jetDeriv, map_sum]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_smul, jetDeriv_ι]
+  | mul a b ha hb =>
+    rw [jetDeriv_mul, map_add, repLorentzGroup_apply_mul, repLorentzGroup_apply_mul, ha, hb,
+      Finset.sum_mul, Finset.mul_sum, ← Finset.sum_add_distrib, repLorentzGroup_apply_mul]
+    refine Finset.sum_congr rfl fun c _ => ?_
+    rw [jetDeriv_mul, smul_add, smul_mul_assoc, mul_smul_comm]
+  | add a b ha hb =>
+    rw [map_add, map_add, map_add, ha, hb, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
 
 end JetAlgebra
 

@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Grading.AxisBoosts
 public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.MassDim
+public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.JetDerivLorentz
 /-!
 # Grading by boost weight
 
@@ -1145,6 +1146,507 @@ noncomputable instance (i : Fin 3) : DirectSum.Decomposition (boostWeightSubmodu
 noncomputable instance (i : Fin 3) : GradedAlgebra (boostWeightSubmodule i) where
   one_mem := one_mem_boostWeightSubmodule
   mul_mem _ _ _ _ hx hy := mul_mem_boostWeightSubmodule hx hy
+
+/-!
+
+## K. The projection onto a boost weight
+
+The grading of section J writes every element as a *unique* finite sum of homogeneous ones, so it
+supplies a projection onto each weight, `boostProj i k` — in particular onto boost weight zero,
+where the invariants live.
+
+The projection is exact, for every weight and every element. What it is not is a formula in the
+group action: it is defined through the decomposition, so nothing here says it preserves a
+subspace merely because that subspace is carried to itself by the Lorentz action. A combination
+of finitely many boosts would give that for free, but only interpolates the weight-zero
+projection correctly across a bounded range of weights.
+
+-/
+
+/-- The projection of the jet algebra onto its part of boost weight `k` along the `i`-th axis,
+  read off from the boost-weight decomposition. -/
+noncomputable def boostProj (i : Fin 3) (k : ℤ) : JetAlgebra →ₗ[ℂ] JetAlgebra :=
+  (boostWeightSubmodule i k).subtype ∘ₗ
+    DirectSum.component ℂ ℤ (fun k => (boostWeightSubmodule i k : Submodule ℂ JetAlgebra)) k ∘ₗ
+      (DirectSum.decomposeLinearEquiv (boostWeightSubmodule i)).toLinearMap
+
+lemma boostProj_apply (i : Fin 3) (k : ℤ) (x : JetAlgebra) :
+    boostProj i k x = (DirectSum.decompose (boostWeightSubmodule i) x k : JetAlgebra) := rfl
+
+/-- The projection lands in the weight it projects onto. -/
+lemma boostProj_mem (i : Fin 3) (k : ℤ) (x : JetAlgebra) :
+    boostProj i k x ∈ boostWeightSubmodule i k :=
+  (DirectSum.decompose (boostWeightSubmodule i) x k).2
+
+/-- On an element of weight `k` the weight-`k` projection is the identity. -/
+@[simp]
+lemma boostProj_of_mem {i : Fin 3} {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule i k) : boostProj i k x = x :=
+  DirectSum.decompose_of_mem_same _ hx
+
+/-- On an element of another weight the projection vanishes. -/
+lemma boostProj_of_mem_ne {i : Fin 3} {k l : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule i l) (hlk : l ≠ k) : boostProj i k x = 0 :=
+  DirectSum.decompose_of_mem_ne _ hx hlk
+
+/-- An element is of weight `k` exactly when the weight-`k` projection fixes it. -/
+lemma boostProj_eq_self_iff {i : Fin 3} {k : ℤ} {x : JetAlgebra} :
+    boostProj i k x = x ↔ x ∈ boostWeightSubmodule i k :=
+  ⟨fun h => h ▸ boostProj_mem i k x, boostProj_of_mem⟩
+
+/-- The projections are idempotent. -/
+@[simp]
+lemma boostProj_boostProj (i : Fin 3) (k : ℤ) (x : JetAlgebra) :
+    boostProj i k (boostProj i k x) = boostProj i k x :=
+  boostProj_of_mem (boostProj_mem i k x)
+
+/-- Distinct projections are orthogonal. -/
+lemma boostProj_boostProj_of_ne {i : Fin 3} {k l : ℤ} (hlk : l ≠ k) (x : JetAlgebra) :
+    boostProj i k (boostProj i l x) = 0 :=
+  boostProj_of_mem_ne (boostProj_mem i l x) hlk
+
+/-- The image of the weight-`k` projection is the weight-`k` submodule. -/
+lemma range_boostProj (i : Fin 3) (k : ℤ) :
+    LinearMap.range (boostProj i k) = boostWeightSubmodule i k := by
+  refine le_antisymm (LinearMap.range_le_iff_comap.mpr (le_top.antisymm fun x _ => ?_)) fun x hx =>
+    ⟨x, boostProj_of_mem hx⟩
+  exact boostProj_mem i k x
+
+/-- An invariant is fixed by the weight-zero projection, along every axis. -/
+lemma boostProj_zero_of_isInvariant (i : Fin 3) {x : JetAlgebra} (hx : IsInvariant x) :
+    boostProj i 0 x = x :=
+  boostProj_of_mem (mem_boostWeightSubmodule_zero_of_isInvariant hx)
+
+/-- An invariant has no component of nonzero weight. -/
+lemma boostProj_of_isInvariant_ne {i : Fin 3} {k : ℤ} (hk : (0 : ℤ) ≠ k) {x : JetAlgebra}
+    (hx : IsInvariant x) : boostProj i k x = 0 :=
+  boostProj_of_mem_ne (mem_boostWeightSubmodule_zero_of_isInvariant hx) hk
+
+/-- The weight-`k` projection fixes a submodule of pure weight `k`. -/
+lemma map_boostProj_of_le {i : Fin 3} {k : ℤ} {W : Submodule ℂ JetAlgebra}
+    (h : W ≤ boostWeightSubmodule i k) : W.map (boostProj i k) = W := by
+  refine le_antisymm ?_ fun x hx => ⟨x, hx, boostProj_of_mem (h hx)⟩
+  rintro _ ⟨x, hx, rfl⟩
+  rw [boostProj_of_mem (h hx)]
+  exact hx
+
+/-- The weight-`k` projection annihilates a submodule of pure weight `l ≠ k`. -/
+lemma map_boostProj_of_le_ne {i : Fin 3} {k l : ℤ} {W : Submodule ℂ JetAlgebra}
+    (h : W ≤ boostWeightSubmodule i l) (hlk : l ≠ k) : W.map (boostProj i k) = ⊥ := by
+  rw [eq_bot_iff]
+  rintro _ ⟨x, hx, rfl⟩
+  rw [boostProj_of_mem_ne (h hx) hlk]
+  exact zero_mem ⊥
+
+/-!
+
+## L. The projections and the jet derivatives
+
+The boost-weight parts of the span of all jet derivatives of a submodule. Along the axis `i`
+the four derivative directions regroup into the light-cone combinations `∂_0 ∓ ∂_i`, which
+shift every boost weight by `±2`, and the two transverse derivatives, which preserve it. So
+the weight-`k` part of `∑ α, ∂_α V` is exactly the light-cone derivatives of the
+weight-`(k ∓ 2)` parts of `V` together with the transverse derivatives of its weight-`k`
+part. Everything rests on the covariance `repLorentzGroup_jetDeriv` of the jet derivative,
+so no bosonicity assumption is needed.
+
+-/
+
+section
+
+set_option linter.unusedSimpArgs false
+
+/-- A transverse derivative leaves the `x`-boost weight alone. -/
+private lemma jetDeriv_transverseX_mem {k : ℤ} {x : JetAlgebra} {j : Fin 3} (hj : j ≠ 0)
+    (hx : x ∈ boostWeightSubmodule 0 k) :
+    jetDeriv (Sum.inr j) x ∈ boostWeightSubmodule 0 k := by
+  intro t ht
+  rw [repLorentzGroup_jetDeriv, hx t ht, algebraMap_real_complex]
+  fin_cases j
+  · exact absurd rfl hj
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+
+/-- A transverse derivative leaves the `y`-boost weight alone. -/
+private lemma jetDeriv_transverseY_mem {k : ℤ} {x : JetAlgebra} {j : Fin 3} (hj : j ≠ 1)
+    (hx : x ∈ boostWeightSubmodule 1 k) :
+    jetDeriv (Sum.inr j) x ∈ boostWeightSubmodule 1 k := by
+  intro t ht
+  rw [repLorentzGroup_jetDeriv, hx t ht, algebraMap_real_complex]
+  fin_cases j
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+  · exact absurd rfl hj
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+
+/-- A transverse derivative leaves the `z`-boost weight alone. -/
+private lemma jetDeriv_transverseZ_mem {k : ℤ} {x : JetAlgebra} {j : Fin 3} (hj : j ≠ 2)
+    (hx : x ∈ boostWeightSubmodule 2 k) :
+    jetDeriv (Sum.inr j) x ∈ boostWeightSubmodule 2 k := by
+  intro t ht
+  rw [repLorentzGroup_jetDeriv, hx t ht, algebraMap_real_complex]
+  fin_cases j
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
+    simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
+      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+      Complex.ofReal_one, one_smul, add_zero, zero_add]
+  · exact absurd rfl hj
+
+/-- The light-cone derivative `∂_0 - ∂_x` raises the `x`-boost weight by two. -/
+private lemma jetDeriv_lightConeX_pos_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 0 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 0) x ∈ boostWeightSubmodule 0 (k + 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_sub, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_add₀ ht']
+  simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone derivative `∂_0 + ∂_x` lowers the `x`-boost weight by two. -/
+private lemma jetDeriv_lightConeX_neg_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 0 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 0) x ∈ boostWeightSubmodule 0 (k - 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_add, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_sub₀ ht']
+  simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone derivative `∂_0 - ∂_y` raises the `y`-boost weight by two. -/
+private lemma jetDeriv_lightConeY_pos_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 1 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 1) x ∈ boostWeightSubmodule 1 (k + 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_sub, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_add₀ ht']
+  simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone derivative `∂_0 + ∂_y` lowers the `y`-boost weight by two. -/
+private lemma jetDeriv_lightConeY_neg_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 1 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 1) x ∈ boostWeightSubmodule 1 (k - 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_add, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_sub₀ ht']
+  simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone derivative `∂_0 - ∂_z` raises the `z`-boost weight by two. -/
+private lemma jetDeriv_lightConeZ_pos_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 2 k) :
+    jetDeriv (Sum.inl 0) x - jetDeriv (Sum.inr 2) x ∈ boostWeightSubmodule 2 (k + 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_sub, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_add₀ ht']
+  simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone derivative `∂_0 + ∂_z` lowers the `z`-boost weight by two. -/
+private lemma jetDeriv_lightConeZ_neg_mem {k : ℤ} {x : JetAlgebra}
+    (hx : x ∈ boostWeightSubmodule 2 k) :
+    jetDeriv (Sum.inl 0) x + jetDeriv (Sum.inr 2) x ∈ boostWeightSubmodule 2 (k - 2) := by
+  intro t ht
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_add, repLorentzGroup_jetDeriv, repLorentzGroup_jetDeriv, hx t ht]
+  rw [algebraMap_real_complex, zpow_sub₀ ht']
+  simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
+    Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
+    Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
+    Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
+    Complex.ofReal_ofNat]
+  match_scalars <;> (field_simp; ring)
+
+/-- An operator shifting every boost weight by `k - l` carries the weight-`l` component to
+  the weight-`k` component: the two sides agree on every homogeneous piece, and the pieces
+  span. -/
+private lemma boostProj_comm_aux {i : Fin 3} {D : JetAlgebra →ₗ[ℂ] JetAlgebra} (k l : ℤ)
+    (hD : ∀ {w : ℤ} {y : JetAlgebra}, y ∈ boostWeightSubmodule i w →
+      D y ∈ boostWeightSubmodule i (w + k - l))
+    (x : JetAlgebra) :
+    boostProj i k (D x) = D (boostProj i l x) := by
+  have hx : x ∈ ⨆ m, boostWeightSubmodule i m := by
+    rw [iSup_boostWeightSubmodule_eq_top]; trivial
+  induction hx using Submodule.iSup_induction' with
+  | mem w y hyw =>
+    have hd := hD hyw
+    by_cases hwl : w = l
+    · subst hwl
+      rw [show w + k - w = k from by ring] at hd
+      rw [boostProj_of_mem hd, boostProj_of_mem hyw]
+    · rw [boostProj_of_mem_ne hyw hwl, map_zero,
+        boostProj_of_mem_ne hd (show w + k - l ≠ k from by omega)]
+  | zero => simp only [map_zero]
+  | add y₁ y₂ _ _ ih₁ ih₂ => simp only [map_add, ih₁, ih₂]
+
+/-- Two composites agreeing on a submodule have the same double image. -/
+private lemma map_map_eq_of_forall_mem {f g f' g' : JetAlgebra →ₗ[ℂ] JetAlgebra}
+    {V : Submodule ℂ JetAlgebra} (h : ∀ x ∈ V, g (f x) = g' (f' x)) :
+    (V.map f).map g = (V.map f').map g' := by
+  refine le_antisymm ?_ ?_
+  · rintro _ ⟨_, ⟨v, hv, rfl⟩, rfl⟩
+    exact ⟨f' v, ⟨v, hv, rfl⟩, (h v hv).symm⟩
+  · rintro _ ⟨_, ⟨v, hv, rfl⟩, rfl⟩
+    exact ⟨f v, ⟨v, hv, rfl⟩, h v hv⟩
+
+/-- The images under `∂_0` and `∂_i` span the same submodule as the images under the two
+  light-cone derivatives `∂_0 ∓ ∂_i`. -/
+private lemma map_jetDeriv_pair_eq_lightCone (i : Fin 3) (V : Submodule ℂ JetAlgebra) :
+    V.map (jetDeriv (Sum.inl 0)) + V.map (jetDeriv (Sum.inr i)) =
+      V.map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i)) +
+      V.map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i)) := by
+  rw [Submodule.add_eq_sup, Submodule.add_eq_sup]
+  refine le_antisymm (sup_le ?_ ?_) (sup_le ?_ ?_)
+  · rintro _ ⟨v, hv, rfl⟩
+    rw [show jetDeriv (Sum.inl 0) v =
+        (2⁻¹ : ℂ) • (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i)) v +
+        (2⁻¹ : ℂ) • (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i)) v from by
+      simp only [LinearMap.sub_apply, LinearMap.add_apply]; module]
+    exact add_mem (Submodule.smul_mem _ _ (Submodule.mem_sup_left ⟨v, hv, rfl⟩))
+      (Submodule.smul_mem _ _ (Submodule.mem_sup_right ⟨v, hv, rfl⟩))
+  · rintro _ ⟨v, hv, rfl⟩
+    rw [show jetDeriv (Sum.inr i) v =
+        (-2⁻¹ : ℂ) • (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i)) v +
+        (2⁻¹ : ℂ) • (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i)) v from by
+      simp only [LinearMap.sub_apply, LinearMap.add_apply]; module]
+    exact add_mem (Submodule.smul_mem _ _ (Submodule.mem_sup_left ⟨v, hv, rfl⟩))
+      (Submodule.smul_mem _ _ (Submodule.mem_sup_right ⟨v, hv, rfl⟩))
+  · rintro _ ⟨v, hv, rfl⟩
+    rw [LinearMap.sub_apply]
+    exact sub_mem (Submodule.mem_sup_left ⟨v, hv, rfl⟩)
+      (Submodule.mem_sup_right ⟨v, hv, rfl⟩)
+  · rintro _ ⟨v, hv, rfl⟩
+    rw [LinearMap.add_apply]
+    exact add_mem (Submodule.mem_sup_left ⟨v, hv, rfl⟩)
+      (Submodule.mem_sup_right ⟨v, hv, rfl⟩)
+
+/-- The engine behind the three axis lemmas: given the weight shifts of the two light-cone
+  derivatives and the weight preservation of the two transverse ones, the projection of the
+  four derivative images redistributes onto the shifted projections of `V`. -/
+private lemma boostProj_map_submodule_aux {i t₁ t₂ : Fin 3} (k : ℤ)
+    (V : Submodule ℂ JetAlgebra)
+    (hpos : ∀ {w : ℤ} {y : JetAlgebra}, y ∈ boostWeightSubmodule i w →
+      jetDeriv (Sum.inl 0) y - jetDeriv (Sum.inr i) y ∈ boostWeightSubmodule i (w + 2))
+    (hneg : ∀ {w : ℤ} {y : JetAlgebra}, y ∈ boostWeightSubmodule i w →
+      jetDeriv (Sum.inl 0) y + jetDeriv (Sum.inr i) y ∈ boostWeightSubmodule i (w - 2))
+    (ht₁ : ∀ {w : ℤ} {y : JetAlgebra}, y ∈ boostWeightSubmodule i w →
+      jetDeriv (Sum.inr t₁) y ∈ boostWeightSubmodule i w)
+    (ht₂ : ∀ {w : ℤ} {y : JetAlgebra}, y ∈ boostWeightSubmodule i w →
+      jetDeriv (Sum.inr t₂) y ∈ boostWeightSubmodule i w) :
+    (V.map (jetDeriv (Sum.inl 0)) + V.map (jetDeriv (Sum.inr i)) +
+        V.map (jetDeriv (Sum.inr t₁)) + V.map (jetDeriv (Sum.inr t₂))).map (boostProj i k) =
+      (V.map (boostProj i (k - 2))).map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i)) +
+      (V.map (boostProj i (k + 2))).map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i)) +
+      (V.map (boostProj i k)).map (jetDeriv (Sum.inr t₁)) +
+      (V.map (boostProj i k)).map (jetDeriv (Sum.inr t₂)) := by
+  have hlcp : (V.map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i))).map (boostProj i k) =
+      (V.map (boostProj i (k - 2))).map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr i)) := by
+    refine map_map_eq_of_forall_mem fun v _ => ?_
+    refine boostProj_comm_aux k (k - 2) (fun {w} {y} hyw => ?_) v
+    rw [show w + k - (k - 2) = w + 2 from by ring]
+    simp only [LinearMap.sub_apply]
+    exact hpos hyw
+  have hlcn : (V.map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i))).map (boostProj i k) =
+      (V.map (boostProj i (k + 2))).map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr i)) := by
+    refine map_map_eq_of_forall_mem fun v _ => ?_
+    refine boostProj_comm_aux k (k + 2) (fun {w} {y} hyw => ?_) v
+    rw [show w + k - (k + 2) = w - 2 from by ring]
+    simp only [LinearMap.add_apply]
+    exact hneg hyw
+  have hd₁ : (V.map (jetDeriv (Sum.inr t₁))).map (boostProj i k) =
+      (V.map (boostProj i k)).map (jetDeriv (Sum.inr t₁)) := by
+    refine map_map_eq_of_forall_mem fun v _ => ?_
+    refine boostProj_comm_aux k k (fun {w} {y} hyw => ?_) v
+    rw [show w + k - k = w from by ring]
+    exact ht₁ hyw
+  have hd₂ : (V.map (jetDeriv (Sum.inr t₂))).map (boostProj i k) =
+      (V.map (boostProj i k)).map (jetDeriv (Sum.inr t₂)) := by
+    refine map_map_eq_of_forall_mem fun v _ => ?_
+    refine boostProj_comm_aux k k (fun {w} {y} hyw => ?_) v
+    rw [show w + k - k = w from by ring]
+    exact ht₂ hyw
+  rw [map_jetDeriv_pair_eq_lightCone]
+  simp only [Submodule.add_eq_sup, Submodule.map_sup, hlcp, hlcn, hd₁, hd₂]
+
+end
+
+/-- **The `x`-boost projections of the derivative span.** The weight-`k` part of the span of
+  all jet derivatives of `V` is spanned by the light-cone derivatives `∂_0 ∓ ∂_x` of the
+  weight-`(k ∓ 2)` parts of `V` together with the transverse derivatives `∂_y`, `∂_z` of its
+  weight-`k` part. -/
+lemma boostProj_map_submodule_jetDeriv_x (k : ℤ) (V : Submodule ℂ JetAlgebra) :
+    (∑ α, V.map (jetDeriv α)).map (boostProj 0 k) =
+    (V.map (boostProj 0 (k - 2))).map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 0))
+    + (V.map (boostProj 0 (k + 2))).map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 0))
+    + (V.map (boostProj 0 k)).map (jetDeriv (Sum.inr 1))
+    + (V.map (boostProj 0 k)).map (jetDeriv (Sum.inr 2)) := by
+  rw [show (∑ α, V.map (jetDeriv α)) =
+      V.map (jetDeriv (Sum.inl 0)) + V.map (jetDeriv (Sum.inr 0)) +
+      V.map (jetDeriv (Sum.inr 1)) + V.map (jetDeriv (Sum.inr 2)) from by
+    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
+  exact boostProj_map_submodule_aux k V
+    (fun hyw => jetDeriv_lightConeX_pos_mem hyw)
+    (fun hyw => jetDeriv_lightConeX_neg_mem hyw)
+    (fun hyw => jetDeriv_transverseX_mem (by decide) hyw)
+    (fun hyw => jetDeriv_transverseX_mem (by decide) hyw)
+
+/-- **The `y`-boost projections of the derivative span.** The weight-`k` part of the span of
+  all jet derivatives of `V` is spanned by the light-cone derivatives `∂_0 ∓ ∂_y` of the
+  weight-`(k ∓ 2)` parts of `V` together with the transverse derivatives `∂_x`, `∂_z` of its
+  weight-`k` part. -/
+lemma boostProj_map_submodule_jetDeriv_y (k : ℤ) (V : Submodule ℂ JetAlgebra) :
+    (∑ α, V.map (jetDeriv α)).map (boostProj 1 k) =
+    (V.map (boostProj 1 (k - 2))).map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 1))
+    + (V.map (boostProj 1 (k + 2))).map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 1))
+    + (V.map (boostProj 1 k)).map (jetDeriv (Sum.inr 0))
+    + (V.map (boostProj 1 k)).map (jetDeriv (Sum.inr 2)) := by
+  rw [show (∑ α, V.map (jetDeriv α)) =
+      V.map (jetDeriv (Sum.inl 0)) + V.map (jetDeriv (Sum.inr 1)) +
+      V.map (jetDeriv (Sum.inr 0)) + V.map (jetDeriv (Sum.inr 2)) from by
+    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
+  exact boostProj_map_submodule_aux k V
+    (fun hyw => jetDeriv_lightConeY_pos_mem hyw)
+    (fun hyw => jetDeriv_lightConeY_neg_mem hyw)
+    (fun hyw => jetDeriv_transverseY_mem (by decide) hyw)
+    (fun hyw => jetDeriv_transverseY_mem (by decide) hyw)
+
+/-- **The `z`-boost projections of the derivative span.** The weight-`k` part of the span of
+  all jet derivatives of `V` is spanned by the light-cone derivatives `∂_0 ∓ ∂_z` of the
+  weight-`(k ∓ 2)` parts of `V` together with the transverse derivatives `∂_x`, `∂_y` of its
+  weight-`k` part. -/
+lemma boostProj_map_submodule_jetDeriv_z (k : ℤ) (V : Submodule ℂ JetAlgebra) :
+    (∑ α, V.map (jetDeriv α)).map (boostProj 2 k) =
+    (V.map (boostProj 2 (k - 2))).map (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+    + (V.map (boostProj 2 (k + 2))).map (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+    + (V.map (boostProj 2 k)).map (jetDeriv (Sum.inr 0))
+    + (V.map (boostProj 2 k)).map (jetDeriv (Sum.inr 1)) := by
+  rw [show (∑ α, V.map (jetDeriv α)) =
+      V.map (jetDeriv (Sum.inl 0)) + V.map (jetDeriv (Sum.inr 2)) +
+      V.map (jetDeriv (Sum.inr 0)) + V.map (jetDeriv (Sum.inr 1)) from by
+    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
+  exact boostProj_map_submodule_aux k V
+    (fun hyw => jetDeriv_lightConeZ_pos_mem hyw)
+    (fun hyw => jetDeriv_lightConeZ_neg_mem hyw)
+    (fun hyw => jetDeriv_transverseZ_mem (by decide) hyw)
+    (fun hyw => jetDeriv_transverseZ_mem (by decide) hyw)
+
+/-!
+
+## The multiplication of submodules
+
+-/
+
+/-- The submodule image of `boostProj i k` is unchanged by projecting again. -/
+lemma map_boostProj_idem (i : Fin 3) (k : ℤ) (X : Submodule ℂ JetAlgebra) :
+    (X.map (boostProj i k)).map (boostProj i k) = X.map (boostProj i k) :=
+  map_boostProj_of_le (by rintro _ ⟨y, _, rfl⟩; exact boostProj_mem i k y)
+
+/-- The weight-`k` part of a projection-closed submodule is its `boostProj` image. -/
+lemma inf_boostWeightSubmodule_eq_map {i : Fin 3} {k : ℤ} {X : Submodule ℂ JetAlgebra}
+    (h : X.map (boostProj i k) ≤ X) :
+    boostWeightSubmodule i k ⊓ X = X.map (boostProj i k) := by
+  refine le_antisymm (fun x hx => ⟨x, hx.2, boostProj_of_mem hx.1⟩) (le_inf ?_ h)
+  rintro _ ⟨y, _, rfl⟩
+  exact boostProj_mem i k y
+
+/-- A submodule product with a bosonic left factor commutes. -/
+lemma mul_comm_of_le_bosonic {A B : Submodule ℂ JetAlgebra} (hA : A ≤ bosonic) :
+    A * B = B * A := by
+  refine le_antisymm (Submodule.mul_le.2 fun a ha b hb => ?_)
+    (Submodule.mul_le.2 fun b hb a ha => ?_)
+  · rw [mul_comm_of_mem_bosonic (hA ha)]
+    exact Submodule.mul_mem_mul hb ha
+  · rw [← mul_comm_of_mem_bosonic (hA ha)]
+    exact Submodule.mul_mem_mul ha hb
+
+/-- An integer-indexed supremum of submodules supported on the weights `0`, `2`, `-2`
+  collapses to the three corresponding terms. -/
+lemma iSup_eq_sup_zero_two_neg_two (f : ℤ → Submodule ℂ JetAlgebra)
+    (hf : ∀ l : ℤ, l ≠ 0 → l ≠ 2 → l ≠ -2 → f l = ⊥) :
+    (⨆ l, f l) = f 0 ⊔ f 2 ⊔ f (-2) := by
+  refine le_antisymm (iSup_le fun l => ?_)
+    (sup_le (sup_le (le_iSup f 0) (le_iSup f 2)) (le_iSup f (-2)))
+  by_cases h0 : l = 0
+  · subst h0; exact le_sup_left.trans le_sup_left
+  by_cases h2 : l = 2
+  · subst h2; exact le_sup_right.trans le_sup_left
+  by_cases hn2 : l = -2
+  · subst hn2; exact le_sup_right
+  · rw [hf l h0 h2 hn2]; exact bot_le
+
+/-- The weight-`k` part of a product of submodules is bounded by the products of the weight
+  parts pairing to `k`: the projection of `v * w` is the sum of the products of the components
+  of `v` and `w` whose weights add to `k`. This is an inequality only — the individual
+  products of components need not come from `V * W` itself. -/
+lemma boostProj_map_mul_submodule_le {i : Fin 3} (k : ℤ) (V W : Submodule ℂ JetAlgebra) :
+    (V * W).map (boostProj i k) ≤
+    ⨆ (l : ℤ), (V.map (boostProj i l)) * (W.map (boostProj i (k - l))) := by
+  classical
+  rw [Submodule.map_le_iff_le_comap]
+  refine Submodule.mul_le.2 fun v hv w hw => ?_
+  rw [Submodule.mem_comap, boostProj_apply, DirectSum.decompose_mul, DirectSum.coe_mul_apply]
+  refine sum_mem fun ij hij => ?_
+  have hk : k - ij.1 = ij.2 := by
+    have := (Finset.mem_filter.1 hij).2
+    omega
+  refine Submodule.mem_iSup_of_mem ij.1 ?_
+  rw [hk]
+  exact Submodule.mul_mem_mul ⟨v, hv, rfl⟩ ⟨w, hw, rfl⟩
+
+/-- For submodules closed under the weight projections the bound of
+  `boostProj_map_mul_submodule_le` is an equality: each product of components has pure weight
+  `k` and lies in `V * W`, so it is its own projection. -/
+lemma boostProj_map_mul_submodule {i : Fin 3} (k : ℤ) {V W : Submodule ℂ JetAlgebra}
+    (hV : ∀ l : ℤ, V.map (boostProj i l) ≤ V) (hW : ∀ l : ℤ, W.map (boostProj i l) ≤ W) :
+    (V * W).map (boostProj i k) =
+    ⨆ (l : ℤ), (V.map (boostProj i l)) * (W.map (boostProj i (k - l))) := by
+  refine le_antisymm (boostProj_map_mul_submodule_le k V W) (iSup_le fun l => ?_)
+  refine Submodule.mul_le.2 fun v' hv' w' hw' => ?_
+  refine ⟨v' * w', Submodule.mul_mem_mul (hV l hv') (hW (k - l) hw'), ?_⟩
+  obtain ⟨v, hv, rfl⟩ := hv'
+  obtain ⟨w, hw, rfl⟩ := hw'
+  exact boostProj_of_mem (mul_mem_boostWeightSubmodule' (boostProj_mem i l v)
+    (boostProj_mem i (k - l) w) (by ring))
 
 end JetAlgebra
 

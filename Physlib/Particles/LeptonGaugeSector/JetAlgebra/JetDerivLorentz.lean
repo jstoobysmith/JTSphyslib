@@ -88,6 +88,16 @@ lemma jetDeriv_mem_bosonic (μ : Fin 1 ⊕ Fin 3) {x : JetAlgebra} (hx : x ∈ b
   refine mem_bosonic.2 ⟨LinearMap.baseChange ℂ (BBoson.JetAlgebra.jetDeriv μ) p, ?_⟩
   rw [jetDeriv_tmul, LeptonSinglet.JetAlgebra.jetDeriv_one, tmul_zero, add_zero]
 
+/-- Bosonic elements are central in the jet algebra: the bosonic factor is commutative, and
+  it commutes with the lepton factor across the tensor product. -/
+lemma mul_comm_of_mem_bosonic {x : JetAlgebra} (hx : x ∈ bosonic) (y : JetAlgebra) :
+    x * y = y * x := by
+  obtain ⟨p, rfl⟩ := mem_bosonic.1 hx
+  induction y using JetAlgebra.induction_on with
+  | zero => rw [mul_zero, zero_mul]
+  | add u v hu hv => rw [mul_add, add_mul, hu, hv]
+  | tmul b l => rw [tmul_mul_tmul, tmul_mul_tmul, mul_one, one_mul, mul_comm p b]
+
 /-- The covariance of the jet derivative on the bosonic part. -/
 lemma repLorentzGroup_jetDeriv_of_mem_bosonic (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
     {x : JetAlgebra} (hx : x ∈ bosonic) :
@@ -96,6 +106,27 @@ lemma repLorentzGroup_jetDeriv_of_mem_bosonic (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ F
         jetDeriv a (repLorentzGroup Λ x) := by
   obtain ⟨p, rfl⟩ := mem_bosonic.1 hx
   exact repLorentzGroup_jetDeriv_tmul_one Λ μ p
+
+set_option maxHeartbeats 4000000 in
+/-- **The jet derivative on the lepton–gauge-sector jet algebra is a Lorentz vector.** The
+  covariance of `repLorentzGroup_jetDeriv_of_mem_bosonic`, extended to the whole jet algebra
+  by combining the covariance on the two tensor factors through the Leibniz rule. -/
+lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetAlgebra) :
+    repLorentzGroup Λ (jetDeriv μ x) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        jetDeriv a (repLorentzGroup Λ x) := by
+  induction x using JetAlgebra.induction_on with
+  | zero => simp
+  | add u v hu hv =>
+    rw [map_add, map_add, map_add, hu, hv, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+  | tmul p l =>
+    rw [jetDeriv_tmul, map_add, repLorentzGroup_tmul, repLorentzGroup_tmul,
+      repLorentzGroup_tmul, BBoson.JetAlgebra.complexRepLorentzGroup_baseChange_jetDeriv,
+      LeptonSinglet.JetAlgebra.repLorentzGroup_jetDeriv, sum_tmul, tmul_sum,
+      ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [jetDeriv_tmul, smul_add, smul_tmul', tmul_smul]
 
 end JetAlgebra
 

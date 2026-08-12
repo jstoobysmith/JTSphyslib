@@ -550,6 +550,113 @@ lemma JetComponentSpace.jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) (v : JetComponen
     grind
   exact DFunLike.congr_fun h v
 
+/-- The total derivative acts on each factor of the component space as multiplication by the
+  derivative symbol `∂_μ` on the dual jet algebra, leaving the spinor factor alone. -/
+lemma JetComponentSpace.jetDeriv_eq_prodMap (μ : Fin 1 ⊕ Fin 3) :
+    JetComponentSpace.jetDeriv μ =
+      LinearMap.prodMap
+        (TensorProduct.map
+          (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+          LinearMap.id)
+        (TensorProduct.map
+          (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+          LinearMap.id) := by
+  refine JetComponentSpace.basis.ext fun j => ?_
+  match j with
+  | .dψ s α =>
+    rw [JetComponentSpace.jetDeriv_basis]
+    show JetComponentSpace.basis (.dψ (s + {μ}) α) = _
+    rw [JetComponentSpace.basis_dψ, JetComponentSpace.basis_dψ]
+    refine Prod.ext ?_ ?_
+    · simp only [LinearMap.prodMap_apply, TensorProduct.map_tmul, LinearMap.mulRight_apply,
+        LinearMap.id_apply, DerivAlgebraComplex.basis_mul]
+    · simp only [LinearMap.prodMap_apply, map_zero]
+  | .dbarψ s α =>
+    rw [JetComponentSpace.jetDeriv_basis]
+    show JetComponentSpace.basis (.dbarψ (s + {μ}) α) = _
+    rw [JetComponentSpace.basis_dbarψ, JetComponentSpace.basis_dbarψ]
+    refine Prod.ext ?_ ?_
+    · simp only [LinearMap.prodMap_apply, map_zero]
+    · simp only [LinearMap.prodMap_apply, TensorProduct.map_tmul, LinearMap.mulRight_apply,
+        LinearMap.id_apply, DerivAlgebraComplex.basis_mul]
+
+lemma JetComponentSpace.jetDeriv_fst (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace) :
+    (JetComponentSpace.jetDeriv μ v).1 =
+      TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id v.1 := by
+  rw [JetComponentSpace.jetDeriv_eq_prodMap]; rfl
+
+lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace) :
+    (JetComponentSpace.jetDeriv μ v).2 =
+      TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id v.2 := by
+  rw [JetComponentSpace.jetDeriv_eq_prodMap]; rfl
+
+lemma JetComponentSpace.repLorentzGroup_fst (Λ : SL(2,ℂ)) (v : JetComponentSpace) :
+    (JetComponentSpace.repLorentzGroup Λ v).1 =
+      (DerivAlgebraComplex.repLorentzGroup.tprod LeptonSinglet.repLorentzGroup.dual) Λ v.1 :=
+  rfl
+
+lemma JetComponentSpace.repLorentzGroup_snd (Λ : SL(2,ℂ)) (v : JetComponentSpace) :
+    (JetComponentSpace.repLorentzGroup Λ v).2 =
+      (DerivAlgebraComplex.repLorentzGroup.tprod
+        LeptonSinglet.repLorentzGroup.conj.dual) Λ v.2 :=
+  rfl
+
+/-- The covariance of the derivative-symbol multiplication on one tensor factor of the
+  component space, for an arbitrary representation on the other factor. -/
+private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup W]
+    [Module ℂ W] (ρ : Representation ℂ SL(2,ℂ) W) (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (w : DerivAlgebraComplex ⊗[ℂ] W) :
+    (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ
+      (TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id w) =
+    ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+      TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id ((DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ w) := by
+  have hsym : DerivAlgebraComplex.repLorentzGroup Λ
+      (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
+    rw [DerivAlgebraComplex.basis_singleton, DerivAlgebraComplex.repLorentzGroup_apply_ι,
+      Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [map_smul, DerivAlgebraComplex.basis_singleton]
+  have hrep : ∀ (q : DerivAlgebraComplex) (f : W),
+      (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ (q ⊗ₜ[ℂ] f) =
+        (DerivAlgebraComplex.repLorentzGroup Λ q) ⊗ₜ[ℂ] (ρ Λ f) := fun _ _ => rfl
+  induction w using TensorProduct.induction_on with
+  | zero => simp
+  | add x y hx hy =>
+    rw [map_add, map_add, map_add, hx, hy, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+  | tmul q f =>
+    rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply, hrep, hrep,
+      DerivAlgebraComplex.repLorentzGroup_apply_mul, hsym, Finset.mul_sum,
+      TensorProduct.sum_tmul]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply,
+        mul_smul_comm, TensorProduct.smul_tmul']
+
+/-- **The shift is Lorentz covariant on the component space.** Appending `∂_μ` and then acting
+  is acting and then appending the transformed `∂_μ`, which is a combination of the `∂_a`. -/
+lemma JetComponentSpace.repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (v : JetComponentSpace) :
+    JetComponentSpace.repLorentzGroup Λ (JetComponentSpace.jetDeriv μ v) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        JetComponentSpace.jetDeriv a (JetComponentSpace.repLorentzGroup Λ v) := by
+  refine Prod.ext ?_ ?_
+  · simp only [Prod.fst_sum, Prod.smul_fst, JetComponentSpace.repLorentzGroup_fst,
+      JetComponentSpace.jetDeriv_fst]
+    exact repLorentzGroup_tprod_mulRight_jetSymbol _ Λ μ v.1
+  · simp only [Prod.snd_sum, Prod.smul_snd, JetComponentSpace.repLorentzGroup_snd,
+      JetComponentSpace.jetDeriv_snd]
+    exact repLorentzGroup_tprod_mulRight_jetSymbol _ Λ μ v.2
+
 /-!
 
 ## C. The mass-weight scaling on the component functions
