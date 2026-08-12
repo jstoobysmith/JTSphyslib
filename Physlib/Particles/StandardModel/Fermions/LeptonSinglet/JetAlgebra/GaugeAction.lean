@@ -88,7 +88,7 @@ lemma repJetGaugeGroupI_ofGenerator_ψ_nil (g : JetGaugeGroupI) (α : Fin 2) :
 /-- The action of the gauge group on ∂_μ ψ takes it to
   g • (∂_μ ψ + 6 i (maurerCartanU1Coeff g μ 0) • ψ)-/
 lemma repJetGaugeGroupI_ofGenerator_ψ_singleton (g : JetGaugeGroupI)
-      (μ : (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    (μ : (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
     repJetGaugeGroupI g (ofGenerator (.dψ {μ} α)) =
       g.eval.2.2 ^ 6 • ofGenerator (.dψ {μ} α) -
         ((6 : ℂ) * Complex.I * (maurerCartanU1Coeff g μ 0 : ℂ) * (g.eval.2.2 : ℂ) ^ 6) •
@@ -162,6 +162,70 @@ noncomputable def repJetGaugeGroupIAlgHom (g : JetGaugeGroupI) :
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
   commutes' := fun r => by simp [repJetGaugeGroupI_apply]
+
+/-!
+
+## B. Constant gauge transformations
+
+-/
+
+/-- The action of constant gauge transformations on the charged-lepton jet algebra, obtained by
+including a gauge transformation as a constant gauge jet. -/
+noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI JetAlgebra :=
+  repJetGaugeGroupI.comp JetGaugeGroupI.ofConstant
+
+/-- The constant gauge action is multiplicative. -/
+lemma repGaugeGroupI_apply_mul (g : GaugeGroupI) (x y : JetAlgebra) :
+    repGaugeGroupI g (x * y) = repGaugeGroupI g x * repGaugeGroupI g y :=
+  repJetGaugeGroupI_apply_mul (JetGaugeGroupI.ofConstant g) x y
+
+/-- A constant gauge transformation acts on every ordinary lepton-jet generator through the
+`U(1)` character determined by its hypercharge. -/
+lemma repGaugeGroupI_ofGenerator_ψ (g : GaugeGroupI)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    repGaugeGroupI g (ofGenerator (.dψ s α)) =
+      (g.toU1 : ℂ) ^ 6 • ofGenerator (.dψ s α) := by
+  change repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (ofGenerator (.dψ s α)) =
+    (g.toU1 : ℂ) ^ 6 • ofGenerator (.dψ s α)
+  rw [ofGenerator, repJetGaugeGroupI_apply, ExteriorAlgebra.map_apply_ι]
+  have hu : ((((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing)) : JetRing) =
+      MvPowerSeries.C (g.toU1 : ℂ) := rfl
+  simp only [JetComponentSpace.basis_dψ]
+  rw [JetComponentSpace.repJetGaugeGroupI_inl, hu, ← map_pow,
+    DerivAlgebraComplex.jetRingAction_C]
+  simp only [LinearMap.smul_apply, LinearMap.id_apply]
+  have hpair :
+      ((((g.toU1 : ℂ) ^ 6 • DerivAlgebraComplex.basis s) ⊗ₜ[ℂ]
+          LeptonSinglet.basis.dualBasis α, 0) : JetComponentSpace) =
+        (g.toU1 : ℂ) ^ 6 •
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
+            LeptonSinglet.basis.dualBasis α, 0) : JetComponentSpace) := by
+    simp only [TensorProduct.smul_tmul', Prod.smul_mk, smul_zero]
+  rw [hpair, map_smul]
+
+/-- A constant gauge transformation acts on every conjugate ordinary lepton-jet generator through
+the conjugate `U(1)` character determined by its hypercharge. -/
+lemma repGaugeGroupI_ofGenerator_barψ (g : GaugeGroupI)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (α : Fin 2) :
+    repGaugeGroupI g (ofGenerator (.dbarψ s α)) =
+      (star g.toU1 : ℂ) ^ 6 • ofGenerator (.dbarψ s α) := by
+  change repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) (ofGenerator (.dbarψ s α)) =
+    (star g.toU1 : ℂ) ^ 6 • ofGenerator (.dbarψ s α)
+  rw [ofGenerator, repJetGaugeGroupI_apply, ExteriorAlgebra.map_apply_ι]
+  have hu : ((((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing)) : JetRing) =
+      MvPowerSeries.C (g.toU1 : ℂ) := rfl
+  simp only [JetComponentSpace.basis_dbarψ]
+  rw [JetComponentSpace.repJetGaugeGroupI_inr, hu, JetRing.star_C, ← map_pow,
+    DerivAlgebraComplex.jetRingAction_C]
+  simp only [LinearMap.smul_apply, LinearMap.id_apply]
+  have hpair :
+      ((0, ((star g.toU1 : ℂ) ^ 6 • DerivAlgebraComplex.basis s) ⊗ₜ[ℂ]
+          LeptonSinglet.basis.conj.dualBasis α) : JetComponentSpace) =
+        (star g.toU1 : ℂ) ^ 6 •
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
+            LeptonSinglet.basis.conj.dualBasis α) : JetComponentSpace) := by
+    simp only [TensorProduct.smul_tmul', Prod.smul_mk, smul_zero]
+  rw [hpair, map_smul]
 
 end JetAlgebra
 
