@@ -17,7 +17,7 @@ public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.FermionicKineticTer
 namespace LeptonGaugeSector
 open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
-open Matrix MatrixGroups BoostWeight
+open Matrix MatrixGroups BoostWeight IsLorentzDeriv
 
 namespace JetAlgebra
 
@@ -420,31 +420,31 @@ lemma boostProj_z_map_fieldStrengthDeriv_jetDeriv_span_eq :
     let V0 := Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}
     D2V0.map (boostProj repLorentzGroup 2 0) =
       ((V0.map (boostProj repLorentzGroup 2 0)).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+        (lightConePlus jetDeriv 2)).map
+        (lightConeMinus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 (-2))).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 0))
+        (lightConePlus jetDeriv 2)).map (jetDeriv (Sum.inr 0))
     + ((V0.map (boostProj repLorentzGroup 2 (-2))).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 1))
+        (lightConePlus jetDeriv 2)).map (jetDeriv (Sum.inr 1))
     + ((V0.map (boostProj repLorentzGroup 2 0)).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+        (lightConeMinus jetDeriv 2)).map
+        (lightConePlus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 2)).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 0))
+        (lightConeMinus jetDeriv 2)).map (jetDeriv (Sum.inr 0))
     + ((V0.map (boostProj repLorentzGroup 2 2)).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 1))
+        (lightConeMinus jetDeriv 2)).map (jetDeriv (Sum.inr 1))
     + ((V0.map (boostProj repLorentzGroup 2 (-2))).map (jetDeriv (Sum.inr 0))).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+        (lightConePlus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 2)).map (jetDeriv (Sum.inr 0))).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+        (lightConeMinus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 0))).map
         (jetDeriv (Sum.inr 0))
     + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 0))).map
         (jetDeriv (Sum.inr 1))
     + ((V0.map (boostProj repLorentzGroup 2 (-2))).map (jetDeriv (Sum.inr 1))).map
-        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+        (lightConePlus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 2)).map (jetDeriv (Sum.inr 1))).map
-        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+        (lightConeMinus jetDeriv 2)
     + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 1))).map
         (jetDeriv (Sum.inr 0))
     + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 1))).map
@@ -455,7 +455,7 @@ lemma boostProj_z_map_fieldStrengthDeriv_jetDeriv_span_eq :
     boostProj_z_map_fieldStrengthDeriv_span_of_ne
   rw [show D2V0 = ∑ α, (∑ β, V0.map (jetDeriv β)).map (jetDeriv α) from
     fieldStrengthDeriv_two_deriv_eq_map_span]
-  simp only [boostProj_map_submodule_jetDeriv_z,
+  simp only [boostProj_map_submodule_z,
     show (0 : ℤ) - 2 = -2 from by decide, show (0 : ℤ) + 2 = 2 from by decide,
     show (-2 : ℤ) - 2 = -4 from by decide, show (-2 : ℤ) + 2 = 0 from by decide,
     show (2 : ℤ) - 2 = 0 from by decide, show (2 : ℤ) + 2 = 4 from by decide]
