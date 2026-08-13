@@ -17,7 +17,7 @@ public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.FermionicKineticTer
 namespace LeptonGaugeSector
 open TensorProduct StandardModel Lorentz
 open scoped minkowskiMatrix PauliMatrix Pointwise
-open Matrix MatrixGroups
+open Matrix MatrixGroups BoostWeight
 
 namespace JetAlgebra
 
@@ -43,6 +43,48 @@ private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t :
 ## B.3. Boosts in the z-direction
 
 -/
+
+/-- The light-cone combination `F_{0x} - F_{zx}` has boost weight `2`. -/
+lemma fieldStrengthDeriv_lightCone_mem_two :
+    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) -
+        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 := by
+  intro t ht
+  simp only [algebraMap_real_complex]
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_sub, repLorentzGroup_fieldStrengthDeriv_nil, repLorentzGroup_fieldStrengthDeriv_nil]
+  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
+    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
+    mul_zero, mul_one, Complex.ofReal_zero,
+    zero_smul, smul_zero, add_zero, zero_add]
+  push_cast
+  match_scalars <;> (field_simp; ring)
+
+/-- The light-cone combination `F_{0x} + F_{zx}` has boost weight `-2`. -/
+lemma fieldStrengthDeriv_lightCone_mem_neg_two :
+    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) +
+        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := by
+  intro t ht
+  simp only [algebraMap_real_complex]
+  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [map_add, repLorentzGroup_fieldStrengthDeriv_nil, repLorentzGroup_fieldStrengthDeriv_nil]
+  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
+    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
+    mul_zero, mul_one, Complex.ofReal_zero,
+    zero_smul, smul_zero, add_zero, zero_add]
+  push_cast
+  match_scalars <;> (field_simp; ring)
+
+/-- The transverse component `F_{xy}` has boost weight zero. -/
+lemma fieldStrengthDeriv_transverse_mem_zero :
+    fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
+  intro t ht
+  simp only [algebraMap_real_complex]
+  rw [repLorentzGroup_fieldStrengthDeriv_nil]
+  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
+    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
+    mul_zero, mul_one, Complex.ofReal_zero, Complex.ofReal_one,
+    zero_smul, smul_zero, add_zero, zero_add]
+  match_scalars; norm_num
 
 /-- The light-cone combination `F_{0y} - F_{zy}` has boost weight `2`. -/
 lemma fieldStrengthDeriv_lightCone_y_mem_two :
@@ -307,7 +349,8 @@ lemma boostProj_z_map_fieldStrengthDeriv_mul_eq_boosts :
     rintro _ (rfl | rfl) <;>
       exact add_mem (fieldStrengthDeriv_mem_bosonic _ _ _) (fieldStrengthDeriv_mem_bosonic _ _ _)
   have hV2 : V2 = V0 * V0 := fieldStrengthDeriv_mul_span_eq_mul_span
-  rw [hV2, BoostWeight.boostProj_map_mul repLorentzGroup 0 hcl hcl, BoostWeight.iSup_eq_sup_zero_two_neg_two repLorentzGroup _ hbot]
+  rw [hV2, BoostWeight.boostProj_map_mul repLorentzGroup 0 hcl hcl,
+    BoostWeight.iSup_eq_sup_zero_two_neg_two _ hbot]
   simp only [sub_self, zero_sub, neg_neg]
   rw [Submodule.add_eq_sup, mul_comm_of_le_bosonic hbos, sup_assoc, sup_idem]
 
@@ -365,6 +408,71 @@ lemma fieldStrengthDeriv_two_deriv_eq_map_span :
         rintro _ ⟨_, ⟨_, ⟨μ, ν, rfl⟩, rfl⟩, rfl⟩
         exact Submodule.subset_span
           ⟨γ, δ, μ, ν, (fieldStrengthDeriv_pair_eq_jetDeriv γ δ μ ν).symm⟩
+
+/-- **The weight-zero part of the twice-differentiated field strengths.** Projecting the span
+  of the `F_{{α,β}μν}` onto `z`-boost weight zero redistributes the two derivatives into the
+  light-cone combinations `∂_0 ∓ ∂_z`, which shift the weight by `±2`, and the transverse
+  derivatives `∂_x`, `∂_y`, which preserve it, applied to the weight-`0`, `±2` parts of the
+  span of the `F_{μν}` so that the total weight vanishes. Both orders of each pair of
+  derivatives appear separately: no commutation of derivatives is used. -/
+lemma boostProj_z_map_fieldStrengthDeriv_jetDeriv_span_eq :
+    let D2V0 := Submodule.span ℂ {y | ∃ α β μ ν, y = fieldStrengthDeriv {α, β} μ ν}
+    let V0 := Submodule.span ℂ {y | ∃ μ ν, y = fieldStrengthDeriv {} μ ν}
+    D2V0.map (boostProj repLorentzGroup 2 0) =
+      ((V0.map (boostProj repLorentzGroup 2 0)).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 (-2))).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 0))
+    + ((V0.map (boostProj repLorentzGroup 2 (-2))).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 1))
+    + ((V0.map (boostProj repLorentzGroup 2 0)).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 2)).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 0))
+    + ((V0.map (boostProj repLorentzGroup 2 2)).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))).map (jetDeriv (Sum.inr 1))
+    + ((V0.map (boostProj repLorentzGroup 2 (-2))).map (jetDeriv (Sum.inr 0))).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 2)).map (jetDeriv (Sum.inr 0))).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 0))).map
+        (jetDeriv (Sum.inr 0))
+    + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 0))).map
+        (jetDeriv (Sum.inr 1))
+    + ((V0.map (boostProj repLorentzGroup 2 (-2))).map (jetDeriv (Sum.inr 1))).map
+        (jetDeriv (Sum.inl 0) - jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 2)).map (jetDeriv (Sum.inr 1))).map
+        (jetDeriv (Sum.inl 0) + jetDeriv (Sum.inr 2))
+    + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 1))).map
+        (jetDeriv (Sum.inr 0))
+    + ((V0.map (boostProj repLorentzGroup 2 0)).map (jetDeriv (Sum.inr 1))).map
+        (jetDeriv (Sum.inr 1)) := by
+  intro D2V0 V0
+  have hbot : ∀ k : ℤ, k ≠ 0 → k ≠ 2 → k ≠ -2 →
+      V0.map (BoostWeight.boostProj repLorentzGroup 2 k) = ⊥ :=
+    boostProj_z_map_fieldStrengthDeriv_span_of_ne
+  rw [show D2V0 = ∑ α, (∑ β, V0.map (jetDeriv β)).map (jetDeriv α) from
+    fieldStrengthDeriv_two_deriv_eq_map_span]
+  simp only [boostProj_map_submodule_jetDeriv_z,
+    show (0 : ℤ) - 2 = -2 from by decide, show (0 : ℤ) + 2 = 2 from by decide,
+    show (-2 : ℤ) - 2 = -4 from by decide, show (-2 : ℤ) + 2 = 0 from by decide,
+    show (2 : ℤ) - 2 = 0 from by decide, show (2 : ℤ) + 2 = 4 from by decide]
+  rw [hbot (-4) (by decide) (by decide) (by decide),
+    hbot 4 (by decide) (by decide) (by decide)]
+  simp only [Submodule.map_bot, Submodule.add_eq_sup, Submodule.map_sup, bot_sup_eq,
+    sup_bot_eq]
+  simp only [← Submodule.add_eq_sup]
+  abel
+
+lemma boostProj_z_map_fieldStrengthDeriv_jetDeriv_span_le :
+    (Submodule.span ℂ {y | ∃ α β μ ν, y = fieldStrengthDeriv {α, β} μ ν}).map
+    (BoostWeight.boostProj repLorentzGroup 2 0) ≤
+    Submodule.span ℂ {y | ∃ α β μ ν, y = fieldStrengthDeriv {α, β} μ ν} := by
+  sorry
+
+
 
 end JetAlgebra
 

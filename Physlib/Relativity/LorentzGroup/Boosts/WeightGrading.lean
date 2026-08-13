@@ -25,8 +25,9 @@ algebra as an internal direct sum, grade it as a graded algebra, and support the
 projections `boostProj` together with their calculus: how projections interact with submodules,
 weight-shifting operators, and products.
 
-The section-A transports (`isGraded_tprod`, `isGraded_prod`, `isGraded_symmetricAlgebra`,
-`isGraded_exteriorAlgebra`, `isGraded_baseChange`, `isGraded_of_isGraded_two`) are the tools
+The section-A transports (`weightSpan_tprod_eq_top`, `weightSpan_prod_eq_top`,
+`weightSpan_symmetricAlgebra_eq_top`, `weightSpan_exteriorAlgebra_eq_top`,
+`weightSpan_baseChange_eq_top`, `weightSpan_eq_top_of_two`) are the tools
 for establishing `IsBoostGraded` for a concrete algebra, by descending to the spaces it is
 built from.
 
@@ -44,7 +45,8 @@ open Matrix MatrixGroups TensorProduct
 
 The descent to the component spaces is uniform, so it is carried out once here for an arbitrary
 representation. The weight spaces are defined exactly as `boostWeightSubmodule` is, and
-`IsGraded` says that they span. The point of the section is that `IsGraded` propagates along
+`weightSpan rep i = ⊤` says that they span. The point of the section is that this condition
+propagates along
 every construction the jet algebra is built from: tensor products, products, symmetric algebras,
 exterior algebras and base change. The recursion bottoms out at a finite-dimensional space with
 an eigenbasis, where the light-cone combinations do the work.
@@ -78,9 +80,6 @@ lemma mem_boostWeightSubmodule {rep : Representation K SL(2,ℂ) M} {i : Fin 3} 
 def weightSpan (rep : Representation K SL(2,ℂ) M) (i : Fin 3) : Submodule K M :=
   ⨆ w, boostWeightSubmodule rep i w
 
-/-- A representation is boost-graded when its weight spaces span. -/
-def IsGraded (rep : Representation K SL(2,ℂ) M) (i : Fin 3) : Prop := weightSpan rep i = ⊤
-
 /-- A representation of `SL(2,ℂ)` on an algebra is **boost-graded** when it acts by algebra
   automorphisms and its boost-weight spaces span, along every coordinate axis. This is the
   interface behind the boost-weight grading: given it, the weight spaces decompose the algebra
@@ -90,28 +89,22 @@ class IsBoostGraded {A : Type*} [Ring A] [Algebra K A]
     (rep : Representation K SL(2,ℂ) A) : Prop where
   apply_one : ∀ Λ, rep Λ 1 = 1
   apply_mul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y
-  isGraded : ∀ i : Fin 3, IsGraded rep i
+  weightSpan_eq_top : ∀ i : Fin 3, weightSpan rep i = ⊤
 
 lemma mem_weightSpan_of_mem_boostWeightSubmodule {rep : Representation K SL(2,ℂ) M} {w : ℤ} {x : M}
     (h : x ∈ boostWeightSubmodule rep i w) : x ∈ weightSpan rep i :=
   Submodule.mem_iSup_of_mem w h
 
-lemma mem_weightSpan_of_isGraded {rep : Representation K SL(2,ℂ) M} (h : IsGraded rep i) (x : M) :
-    x ∈ weightSpan rep i := by rw [IsGraded] at h; rw [h]; trivial
-
-lemma isGraded_iff_forall_mem {rep : Representation K SL(2,ℂ) M} :
-    IsGraded rep i ↔ ∀ x, x ∈ weightSpan rep i :=
-  ⟨mem_weightSpan_of_isGraded, fun h => eq_top_iff.mpr fun x _ => h x⟩
-
 /-- A representation with a spanning family of vectors in the weight span is graded. -/
-lemma isGraded_of_span {rep : Representation K SL(2,ℂ) M} {S : Set M}
-    (hS : Submodule.span K S = ⊤) (h : ∀ x ∈ S, x ∈ weightSpan rep i) : IsGraded rep i :=
+lemma weightSpan_eq_top_of_span {rep : Representation K SL(2,ℂ) M} {S : Set M}
+    (hS : Submodule.span K S = ⊤) (h : ∀ x ∈ S, x ∈ weightSpan rep i) :
+    weightSpan rep i = ⊤ :=
   eq_top_iff.mpr (hS ▸ Submodule.span_le.mpr h)
 
 /-- A representation with a basis of vectors lying in the weight span is graded. -/
-lemma isGraded_of_basis {ι : Type*} {rep : Representation K SL(2,ℂ) M} (b : Module.Basis ι K M)
-    (h : ∀ n, b n ∈ weightSpan rep i) : IsGraded rep i :=
-  isGraded_of_span b.span_eq (by rintro _ ⟨n, rfl⟩; exact h n)
+lemma weightSpan_eq_top_of_basis {ι : Type*} {rep : Representation K SL(2,ℂ) M}
+    (b : Module.Basis ι K M) (h : ∀ n, b n ∈ weightSpan rep i) : weightSpan rep i = ⊤ :=
+  weightSpan_eq_top_of_span b.span_eq (by rintro _ ⟨n, rfl⟩; exact h n)
 
 /-!
 
@@ -128,15 +121,16 @@ lemma tmul_mem_boostWeightSubmodule {rep : Representation K SL(2,ℂ) M} {rep₂
   simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', smul_smul]
   rw [← zpow_add₀ (algebraMap_ne_zero (K := K) ht), add_comm b a]
 
-lemma isGraded_tprod {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
-    (h₁ : IsGraded rep i) (h₂ : IsGraded rep₂ i) : IsGraded (rep.tprod rep₂) i := by
-  refine isGraded_iff_forall_mem.mpr fun z => ?_
+lemma weightSpan_tprod_eq_top {rep : Representation K SL(2,ℂ) M}
+    {rep₂ : Representation K SL(2,ℂ) N} (h₁ : weightSpan rep i = ⊤)
+    (h₂ : weightSpan rep₂ i = ⊤) : weightSpan (rep.tprod rep₂) i = ⊤ := by
+  refine Submodule.eq_top_iff'.mpr fun z => ?_
   induction z using TensorProduct.induction_on with
   | zero => exact Submodule.zero_mem _
   | add u v hu hv => exact Submodule.add_mem _ hu hv
   | tmul x y =>
-    have hx := mem_weightSpan_of_isGraded h₁ x
-    have hy := mem_weightSpan_of_isGraded h₂ y
+    have hx := Submodule.eq_top_iff'.mp h₁ x
+    have hy := Submodule.eq_top_iff'.mp h₂ y
     induction hx using Submodule.iSup_induction' with
     | mem a x' hx' =>
       induction hy using Submodule.iSup_induction' with
@@ -167,11 +161,12 @@ lemma inr_mem_boostWeightSubmodule {rep : Representation K SL(2,ℂ) M} {rep₂ 
   show ((rep _ 0, rep₂ _ y) : M × N) = _
   rw [map_zero, hy t ht, Prod.smul_mk, smul_zero]
 
-lemma isGraded_prod {rep : Representation K SL(2,ℂ) M} {rep₂ : Representation K SL(2,ℂ) N}
-    (h₁ : IsGraded rep i) (h₂ : IsGraded rep₂ i) : IsGraded (rep.prod rep₂) i := by
+lemma weightSpan_prod_eq_top {rep : Representation K SL(2,ℂ) M}
+    {rep₂ : Representation K SL(2,ℂ) N} (h₁ : weightSpan rep i = ⊤)
+    (h₂ : weightSpan rep₂ i = ⊤) : weightSpan (rep.prod rep₂) i = ⊤ := by
   have hleft : ∀ x : M, ((x, (0 : N))) ∈ weightSpan (rep.prod rep₂) i := by
     intro x
-    have hx := mem_weightSpan_of_isGraded h₁ x
+    have hx := Submodule.eq_top_iff'.mp h₁ x
     induction hx using Submodule.iSup_induction' with
     | mem a u hu => exact mem_weightSpan_of_mem_boostWeightSubmodule (inl_mem_boostWeightSubmodule hu)
     | zero => exact Submodule.zero_mem _
@@ -180,14 +175,14 @@ lemma isGraded_prod {rep : Representation K SL(2,ℂ) M} {rep₂ : Representatio
       exact Submodule.add_mem _ ihu ihv
   have hright : ∀ y : N, (((0 : M), y)) ∈ weightSpan (rep.prod rep₂) i := by
     intro y
-    have hy := mem_weightSpan_of_isGraded h₂ y
+    have hy := Submodule.eq_top_iff'.mp h₂ y
     induction hy using Submodule.iSup_induction' with
     | mem a u hu => exact mem_weightSpan_of_mem_boostWeightSubmodule (inr_mem_boostWeightSubmodule hu)
     | zero => exact Submodule.zero_mem _
     | add u v _ _ ihu ihv =>
       rw [show (((0 : M), u + v)) = (((0 : M), u)) + (((0 : M), v)) from by ext <;> simp]
       exact Submodule.add_mem _ ihu ihv
-  refine isGraded_iff_forall_mem.mpr fun z => ?_
+  refine Submodule.eq_top_iff'.mpr fun z => ?_
   rw [show z = ((z.1, (0 : N))) + (((0 : M), z.2)) from by ext <;> simp]
   exact Submodule.add_mem _ (hleft z.1) (hright z.2)
 
@@ -229,7 +224,7 @@ lemma algebraMap_mem_weightSpan {rep : Representation K SL(2,ℂ) A}
   exact Submodule.smul_mem _ _ (mem_weightSpan_of_mem_boostWeightSubmodule (one_mem_boostWeightSubmodule hone))
 
 /-- A symmetric algebra is boost-graded as soon as its degree-one part is. -/
-lemma isGraded_symmetricAlgebra {V : Type*} [AddCommGroup V] [Module K V]
+lemma weightSpan_symmetricAlgebra_eq_top {V : Type*} [AddCommGroup V] [Module K V]
     {repV : Representation K SL(2,ℂ) V}
     {repA : Representation K SL(2,ℂ) (SymmetricAlgebra K V)}
     (hone : ∀ Λ, repA Λ 1 = 1)
@@ -237,12 +232,12 @@ lemma isGraded_symmetricAlgebra {V : Type*} [AddCommGroup V] [Module K V]
       repA Λ (x * y) = repA Λ x * repA Λ y)
     (hι : ∀ (Λ : SL(2,ℂ)) (x : V),
       repA Λ (SymmetricAlgebra.ι K V x) = SymmetricAlgebra.ι K V (repV Λ x))
-    (hV : IsGraded repV i) : IsGraded repA i := by
-  refine isGraded_iff_forall_mem.mpr fun x => ?_
+    (hV : weightSpan repV i = ⊤) : weightSpan repA i = ⊤ := by
+  refine Submodule.eq_top_iff'.mpr fun x => ?_
   induction x using SymmetricAlgebra.induction with
   | algebraMap r => exact algebraMap_mem_weightSpan hone r
   | ι v =>
-    have hv := mem_weightSpan_of_isGraded hV v
+    have hv := Submodule.eq_top_iff'.mp hV v
     induction hv using Submodule.iSup_induction' with
     | mem a u hu =>
       refine mem_weightSpan_of_mem_boostWeightSubmodule (w := a) fun t ht => ?_
@@ -253,7 +248,7 @@ lemma isGraded_symmetricAlgebra {V : Type*} [AddCommGroup V] [Module K V]
   | add u v ihu ihv => exact Submodule.add_mem _ ihu ihv
 
 /-- An exterior algebra is boost-graded as soon as its degree-one part is. -/
-lemma isGraded_exteriorAlgebra {V : Type*} [AddCommGroup V] [Module K V]
+lemma weightSpan_exteriorAlgebra_eq_top {V : Type*} [AddCommGroup V] [Module K V]
     {repV : Representation K SL(2,ℂ) V}
     {repA : Representation K SL(2,ℂ) (ExteriorAlgebra K V)}
     (hone : ∀ Λ, repA Λ 1 = 1)
@@ -261,12 +256,12 @@ lemma isGraded_exteriorAlgebra {V : Type*} [AddCommGroup V] [Module K V]
       repA Λ (x * y) = repA Λ x * repA Λ y)
     (hι : ∀ (Λ : SL(2,ℂ)) (x : V),
       repA Λ (ExteriorAlgebra.ι K x) = ExteriorAlgebra.ι K (repV Λ x))
-    (hV : IsGraded repV i) : IsGraded repA i := by
-  refine isGraded_iff_forall_mem.mpr fun x => ?_
+    (hV : weightSpan repV i = ⊤) : weightSpan repA i = ⊤ := by
+  refine Submodule.eq_top_iff'.mpr fun x => ?_
   induction x using ExteriorAlgebra.induction with
   | algebraMap r => exact algebraMap_mem_weightSpan hone r
   | ι v =>
-    have hv := mem_weightSpan_of_isGraded hV v
+    have hv := Submodule.eq_top_iff'.mp hV v
     induction hv using Submodule.iSup_induction' with
     | mem a u hu =>
       refine mem_weightSpan_of_mem_boostWeightSubmodule (w := a) fun t ht => ?_
@@ -285,11 +280,11 @@ lemma isGraded_exteriorAlgebra {V : Type*} [AddCommGroup V] [Module K V]
 /-- A space with a basis indexed by spacetime directions transforming by the columns of the
   Lorentz matrix is boost-graded: the light-cone combinations `b₀ ∓ b₃` are eigenvectors of
   weight `±2` and the transverse directions are invariant. -/
-lemma isGraded_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
+lemma weightSpan_eq_top_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
     (b : Module.Basis (Fin 1 ⊕ Fin 3) K M)
     (h : ∀ (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3), rep Λ (b μ) =
       ∑ j, algebraMap ℝ K ((Lorentz.SL2C.toLorentzGroup Λ).1 j μ) • b j) :
-    IsGraded rep 2 := by
+    weightSpan rep 2 = ⊤ := by
   haveI : CharZero K := charZero_of_injective_algebraMap (algebraMap ℝ K).injective
   have key : ∀ (t : ℝ) (ht : t ≠ 0) (μ : Fin 1 ⊕ Fin 3),
       rep (boostAxis 2 t ht) (b μ) =
@@ -320,7 +315,7 @@ lemma isGraded_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
       rw [key t ht]
       simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
         map_zero, zero_smul, add_zero, zero_add, map_one, one_smul, zpow_zero]
-  refine isGraded_of_basis b fun μ => ?_
+  refine weightSpan_eq_top_of_basis b fun μ => ?_
   match μ with
   | Sum.inl 0 =>
     rw [show b (Sum.inl 0) = (2⁻¹ : K) • ((b (Sum.inl 0) - b (Sum.inr 2))
@@ -341,22 +336,22 @@ lemma isGraded_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
 
 -/
 
-lemma isGraded_baseChange {A : Type*} [AddCommGroup A] [Module ℝ A]
+lemma weightSpan_baseChange_eq_top {A : Type*} [AddCommGroup A] [Module ℝ A]
     {repR : Representation ℝ SL(2,ℂ) A} {repC : Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] A)}
     (h : ∀ (Λ : SL(2,ℂ)) (c : ℂ) (y : A), repC Λ (c ⊗ₜ[ℝ] y) = c ⊗ₜ[ℝ] repR Λ y)
-    (hR : IsGraded repR i) : IsGraded repC i := by
+    (hR : weightSpan repR i = ⊤) : weightSpan repC i = ⊤ := by
   have htmul : ∀ (c : ℂ) (w : ℤ) (y : A), y ∈ boostWeightSubmodule repR i w →
       (c ⊗ₜ[ℝ] y : ℂ ⊗[ℝ] A) ∈ boostWeightSubmodule repC i w := by
     intro c w y hy t ht
     rw [h, hy t ht, TensorProduct.tmul_smul,
       show ((algebraMap ℝ ℝ) t) ^ w = t ^ w from by simp,
       ← algebraMap_smul (R := ℝ) ℂ (t ^ w) (c ⊗ₜ[ℝ] y), map_zpow₀]
-  refine isGraded_iff_forall_mem.mpr fun z => ?_
+  refine Submodule.eq_top_iff'.mpr fun z => ?_
   induction z using TensorProduct.induction_on with
   | zero => exact Submodule.zero_mem _
   | add u v hu hv => exact Submodule.add_mem _ hu hv
   | tmul c y =>
-    have hy := mem_weightSpan_of_isGraded hR y
+    have hy := Submodule.eq_top_iff'.mp hR y
     induction hy using Submodule.iSup_induction' with
     | mem w u hu => exact mem_weightSpan_of_mem_boostWeightSubmodule (htmul c w u hu)
     | zero => rw [TensorProduct.tmul_zero]; exact Submodule.zero_mem _
@@ -369,9 +364,10 @@ lemma isGraded_baseChange {A : Type*} [AddCommGroup A] [Module ℝ A]
 
 -/
 
-/-- The axis boosts are conjugate, so being graded for one of them is being graded for all. -/
-lemma isGraded_of_isGraded_two {rep : Representation K SL(2,ℂ) M} (h : IsGraded rep 2)
-    (i : Fin 3) : IsGraded rep i := by
+/-- The axis boosts are conjugate, so the weight spaces span along every axis as soon as they
+  span along the `z`-axis. -/
+lemma weightSpan_eq_top_of_two {rep : Representation K SL(2,ℂ) M} (h : weightSpan rep 2 = ⊤)
+    (i : Fin 3) : weightSpan rep i = ⊤ := by
   obtain ⟨R, hR⟩ := exists_conj_boostAxis i
   have hsurj : ∀ x : M, rep R (rep R⁻¹ x) = x := by
     intro x
@@ -380,9 +376,9 @@ lemma isGraded_of_isGraded_two {rep : Representation K SL(2,ℂ) M} (h : IsGrade
     intro w u hu t ht
     rw [← Module.End.mul_apply, ← map_mul, hR t ht, inv_mul_cancel_right, map_mul,
       Module.End.mul_apply, hu t ht, map_smul]
-  refine isGraded_iff_forall_mem.mpr fun x => ?_
+  refine Submodule.eq_top_iff'.mpr fun x => ?_
   obtain ⟨y, rfl⟩ : ∃ y, rep R y = x := ⟨rep R⁻¹ x, hsurj x⟩
-  have hy := mem_weightSpan_of_isGraded h y
+  have hy := Submodule.eq_top_iff'.mp h y
   induction hy using Submodule.iSup_induction' with
   | mem w u hu => exact mem_weightSpan_of_mem_boostWeightSubmodule (hmap w u hu)
   | zero => rw [map_zero]; exact Submodule.zero_mem _
@@ -540,7 +536,7 @@ theorem isInternal_iff :
 
 /-- The homogeneous elements of a boost-graded representation span, along every axis. -/
 theorem iSup_boostWeightSubmodule_eq_top [IsBoostGraded rep] : (⨆ k, boostWeightSubmodule rep i k) = ⊤ :=
-  IsBoostGraded.isGraded (rep := rep) i
+  IsBoostGraded.weightSpan_eq_top (rep := rep) i
 
 /-- **The boost weight grades the algebra.** For each axis the weight spaces decompose a
   boost-graded representation as an internal direct sum. -/

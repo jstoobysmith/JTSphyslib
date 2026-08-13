@@ -39,7 +39,7 @@ already diagonal, with weights `∓1`. No covariance of `jetDeriv` is needed any
 
 *The three axes.* Everything is proved for the `z`-axis and transported. The axis boosts are
 conjugate — a rotation by `π/2` carries the `z`-boost to the `x`- and `y`-boosts
-(`boostXel_eq_conj`, `boostYel_eq_conj`) — so `isGraded_of_isGraded_two` moves the grading
+(`boostXel_eq_conj`, `boostYel_eq_conj`) — so `weightSpan_eq_top_of_two` moves the grading
 between them without repeating the descent.
 
 With this grading we can single out the subspace of boost weight zero. Any invariant under the
@@ -72,7 +72,7 @@ layer to the spaces the jet algebra is built from.
 
 - `JetAlgebra.boostAxis` : the boost along a given spatial axis, and `boostXel_eq_conj`,
   `boostYel_eq_conj` exhibiting the three as conjugate.
-- `JetAlgebra.BoostWeight.IsGraded` and the transport lemmas of section B : the grading
+- `weightSpan rep i = ⊤` and the transport lemmas of section B : the grading
   propagates along tensor products, products, symmetric and exterior algebras, base change and
   conjugation.
 - `JetAlgebra.boostWeightSubmodule` : the elements of a given boost weight along a given axis.
@@ -113,7 +113,7 @@ namespace JetAlgebra
 ## C. The component spaces are boost-graded
 
 Each layer of the jet algebra is graded once the layer below it is: the two four-dimensional
-derivative and target spaces by `isGraded_of_lorentzColumns`, the spinor duals directly (the
+derivative and target spaces by `weightSpan_eq_top_of_lorentzColumns`, the spinor duals directly (the
 boost is already diagonal on them), and everything above by the tensor, product, symmetric- and
 exterior-algebra transports.
 
@@ -121,26 +121,26 @@ exterior-algebra transports.
 
 open BoostWeight in
 /-- The real dual covectors — the derivative slots — are boost-graded. -/
-lemma isGraded_coVectorDual : IsGraded (Lorentz.CoVector.sl2Rep.dual) 2 :=
-  isGraded_of_lorentzColumns Lorentz.CoVector.basis.dualBasis fun Λ μ => by
+lemma weightSpan_coVectorDual_eq_top : weightSpan (Lorentz.CoVector.sl2Rep.dual) 2 = ⊤ :=
+  weightSpan_eq_top_of_lorentzColumns Lorentz.CoVector.basis.dualBasis fun Λ μ => by
     simpa using Lorentz.CoVector.sl2Rep_dual_dualBasis Λ μ
 
 open BoostWeight in
 /-- The complex dual covectors are boost-graded. -/
-lemma isGraded_coℂModuleDual : IsGraded (Lorentz.CoℂModule.SL2CRep.dual) 2 :=
-  isGraded_of_lorentzColumns Lorentz.complexCoBasis.dualBasis fun Λ μ => by
+lemma weightSpan_coℂModuleDual_eq_top : weightSpan (Lorentz.CoℂModule.SL2CRep.dual) 2 = ⊤ :=
+  weightSpan_eq_top_of_lorentzColumns Lorentz.complexCoBasis.dualBasis fun Λ μ => by
     simpa using Lorentz.CoℂModule.SL2CRep_dual_dualBasis Λ μ
 
 open BoostWeight in
 /-- The dual B-boson target space is boost-graded. -/
-lemma isGraded_bBosonDual : IsGraded (BBoson.repLorentzGroup.dual) 2 :=
-  isGraded_of_lorentzColumns BBoson.basis.dualBasis fun Λ μ => by
+lemma weightSpan_bBosonDual_eq_top : weightSpan (BBoson.repLorentzGroup.dual) 2 = ⊤ :=
+  weightSpan_eq_top_of_lorentzColumns BBoson.basis.dualBasis fun Λ μ => by
     simpa using BBoson.repLorentzGroup_dual_dualBasis Λ μ
 
 open BoostWeight in
 /-- The real algebra of derivative symbols is boost-graded. -/
-lemma isGraded_derivAlgebraReal : IsGraded (DerivAlgebraReal.repLorentzGroup) 2 :=
-  isGraded_symmetricAlgebra (repV := Lorentz.CoVector.sl2Rep.dual)
+lemma weightSpan_derivAlgebraReal_eq_top : weightSpan (DerivAlgebraReal.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_symmetricAlgebra_eq_top (repV := Lorentz.CoVector.sl2Rep.dual)
     (fun Λ => by
       show (SymmetricAlgebra.lift
         (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) 1 = 1
@@ -150,27 +150,28 @@ lemma isGraded_derivAlgebraReal : IsGraded (DerivAlgebraReal.repLorentzGroup) 2 
         (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) (x * y) = _
       exact map_mul _ _ _)
     (fun Λ x => DerivAlgebraReal.repLorentzGroup_apply_ι Λ x)
-    isGraded_coVectorDual
+    weightSpan_coVectorDual_eq_top
 
 open BoostWeight in
 /-- The complex algebra of derivative symbols is boost-graded. -/
-lemma isGraded_derivAlgebraComplex : IsGraded (DerivAlgebraComplex.repLorentzGroup) 2 :=
-  isGraded_symmetricAlgebra (repV := Lorentz.CoℂModule.SL2CRep.dual)
+lemma weightSpan_derivAlgebraComplex_eq_top :
+    weightSpan (DerivAlgebraComplex.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_symmetricAlgebra_eq_top (repV := Lorentz.CoℂModule.SL2CRep.dual)
     (fun Λ => DerivAlgebraComplex.repLorentzGroup_apply_one Λ)
     (fun Λ x y => DerivAlgebraComplex.repLorentzGroup_apply_mul Λ x y)
     (fun Λ x => DerivAlgebraComplex.repLorentzGroup_apply_ι Λ x)
-    isGraded_coℂModuleDual
+    weightSpan_coℂModuleDual_eq_top
 
 open BoostWeight in
 /-- The B-boson jet component space is boost-graded. -/
-lemma isGraded_bBosonJetComponentSpace :
-    IsGraded (BBoson.JetComponentSpace.repLorentzGroup) 2 :=
-  isGraded_tprod isGraded_derivAlgebraReal isGraded_bBosonDual
+lemma weightSpan_bBosonJetComponentSpace_eq_top :
+    weightSpan (BBoson.JetComponentSpace.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_tprod_eq_top weightSpan_derivAlgebraReal_eq_top weightSpan_bBosonDual_eq_top
 
 open BoostWeight in
 /-- The B-boson jet algebra is boost-graded. -/
-lemma isGraded_bBosonJetAlgebra : IsGraded (BBoson.JetAlgebra.repLorentzGroup) 2 :=
-  isGraded_symmetricAlgebra (repV := BBoson.JetComponentSpace.repLorentzGroup)
+lemma weightSpan_bBosonJetAlgebra_eq_top : weightSpan (BBoson.JetAlgebra.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_symmetricAlgebra_eq_top (repV := BBoson.JetComponentSpace.repLorentzGroup)
     (fun Λ => by
       show (SymmetricAlgebra.lift
         (SymmetricAlgebra.ι ℝ _ ∘ₗ BBoson.JetComponentSpace.repLorentzGroup Λ)) 1 = 1
@@ -180,20 +181,21 @@ lemma isGraded_bBosonJetAlgebra : IsGraded (BBoson.JetAlgebra.repLorentzGroup) 2
         (SymmetricAlgebra.ι ℝ _ ∘ₗ BBoson.JetComponentSpace.repLorentzGroup Λ)) (x * y) = _
       exact map_mul _ _ _)
     (fun Λ x => BBoson.JetAlgebra.repLorentzGroup_apply_ι Λ x)
-    isGraded_bBosonJetComponentSpace
+    weightSpan_bBosonJetComponentSpace_eq_top
 
 open BoostWeight in
 /-- The complexified B-boson jet algebra is boost-graded. -/
-lemma isGraded_complexBBosonJetAlgebra :
-    IsGraded (BBoson.JetAlgebra.complexRepLorentzGroup) 2 :=
-  isGraded_baseChange (fun _ _ _ => rfl) isGraded_bBosonJetAlgebra
+lemma weightSpan_complexBBosonJetAlgebra_eq_top :
+    weightSpan (BBoson.JetAlgebra.complexRepLorentzGroup) 2 = ⊤ :=
+  weightSpan_baseChange_eq_top (fun _ _ _ => rfl) weightSpan_bBosonJetAlgebra_eq_top
 
 
 open BoostWeight in
 /-- The dual charged-lepton spinors are boost-graded: the boost is already diagonal on them,
   with weights `∓1`. -/
-lemma isGraded_leptonSingletDual : IsGraded (LeptonSinglet.repLorentzGroup.dual) 2 := by
-  refine isGraded_of_basis LeptonSinglet.basis.dualBasis fun α => ?_
+lemma weightSpan_leptonSingletDual_eq_top :
+    weightSpan (LeptonSinglet.repLorentzGroup.dual) 2 = ⊤ := by
+  refine weightSpan_eq_top_of_basis LeptonSinglet.basis.dualBasis fun α => ?_
   match α with
   | 0 =>
     refine mem_weightSpan_of_mem_boostWeightSubmodule (w := -1) fun t ht => ?_
@@ -218,8 +220,9 @@ lemma isGraded_leptonSingletDual : IsGraded (LeptonSinglet.repLorentzGroup.dual)
 
 open BoostWeight in
 /-- The dual conjugate charged-lepton spinors are boost-graded. -/
-lemma isGraded_leptonSingletConjDual : IsGraded (LeptonSinglet.repLorentzGroup.conj.dual) 2 := by
-  refine isGraded_of_basis LeptonSinglet.basis.conj.dualBasis fun α => ?_
+lemma weightSpan_leptonSingletConjDual_eq_top :
+    weightSpan (LeptonSinglet.repLorentzGroup.conj.dual) 2 = ⊤ := by
+  refine weightSpan_eq_top_of_basis LeptonSinglet.basis.conj.dualBasis fun α => ?_
   match α with
   | 0 =>
     refine mem_weightSpan_of_mem_boostWeightSubmodule (w := -1) fun t ht => ?_
@@ -242,15 +245,16 @@ lemma isGraded_leptonSingletConjDual : IsGraded (LeptonSinglet.repLorentzGroup.c
 
 open BoostWeight in
 /-- The charged-lepton jet component space is boost-graded. -/
-lemma isGraded_leptonJetComponentSpace :
-    IsGraded (LeptonSinglet.JetComponentSpace.repLorentzGroup) 2 :=
-  isGraded_prod (isGraded_tprod isGraded_derivAlgebraComplex isGraded_leptonSingletDual)
-    (isGraded_tprod isGraded_derivAlgebraComplex isGraded_leptonSingletConjDual)
+lemma weightSpan_leptonJetComponentSpace_eq_top :
+    weightSpan (LeptonSinglet.JetComponentSpace.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_prod_eq_top (weightSpan_tprod_eq_top weightSpan_derivAlgebraComplex_eq_top weightSpan_leptonSingletDual_eq_top)
+    (weightSpan_tprod_eq_top weightSpan_derivAlgebraComplex_eq_top weightSpan_leptonSingletConjDual_eq_top)
 
 open BoostWeight in
 /-- The charged-lepton jet algebra is boost-graded. -/
-lemma isGraded_leptonJetAlgebra : IsGraded (LeptonSinglet.JetAlgebra.repLorentzGroup) 2 :=
-  isGraded_exteriorAlgebra (repV := LeptonSinglet.JetComponentSpace.repLorentzGroup)
+lemma weightSpan_leptonJetAlgebra_eq_top :
+    weightSpan (LeptonSinglet.JetAlgebra.repLorentzGroup) 2 = ⊤ :=
+  weightSpan_exteriorAlgebra_eq_top (repV := LeptonSinglet.JetComponentSpace.repLorentzGroup)
     (fun Λ => by
       show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repLorentzGroup Λ)) 1 = 1
       exact map_one _)
@@ -261,19 +265,19 @@ lemma isGraded_leptonJetAlgebra : IsGraded (LeptonSinglet.JetAlgebra.repLorentzG
       show (ExteriorAlgebra.map (LeptonSinglet.JetComponentSpace.repLorentzGroup Λ))
         (ExteriorAlgebra.ι ℂ x) = _
       exact ExteriorAlgebra.map_apply_ι _ _)
-    isGraded_leptonJetComponentSpace
+    weightSpan_leptonJetComponentSpace_eq_top
 
 open BoostWeight in
 /-- The lepton–gauge-sector jet algebra is boost-graded. -/
-lemma isGraded_jetAlgebra : IsGraded (repLorentzGroup) 2 :=
-  isGraded_tprod isGraded_complexBBosonJetAlgebra isGraded_leptonJetAlgebra
+lemma weightSpan_jetAlgebra_eq_top : weightSpan (repLorentzGroup) 2 = ⊤ :=
+  weightSpan_tprod_eq_top weightSpan_complexBBosonJetAlgebra_eq_top weightSpan_leptonJetAlgebra_eq_top
 
 /-- **The lepton–gauge-sector jet algebra is boost-graded**: the Lorentz action is by algebra
   automorphisms, and along every axis the weight spaces span, by the descent of section C
   transported between the axes. -/
 instance : BoostWeight.IsBoostGraded (repLorentzGroup) :=
   ⟨repLorentzGroup_apply_one, repLorentzGroup_apply_mul,
-    fun i => BoostWeight.isGraded_of_isGraded_two isGraded_jetAlgebra i⟩
+    fun i => BoostWeight.weightSpan_eq_top_of_two weightSpan_jetAlgebra_eq_top i⟩
 
 /-!
 
@@ -296,53 +300,11 @@ lemma mem_boostWeightSubmodule_zero_of_isInvariant {x : JetAlgebra} (hx : IsInva
 
 ## E. Homogeneous elements
 
-The coordinate components of a field strength are not boost eigenvectors; the light-cone
-combinations are. The two components with both indices transverse to the boost — `F_{xy}` — and
-the one along it — `F_{0z}` — are invariant.
+The coordinate components of the gauge potential are not boost eigenvectors; the light-cone
+combinations `B_0 ∓ B_z` are, of weight `±2`. The zeroth-order lepton coordinates are
+eigenvectors of weight `∓1`.
 
 -/
-
-/-- The light-cone combination `F_{0x} - F_{zx}` has boost weight `2`. -/
-lemma fieldStrengthDeriv_lightCone_mem_two :
-    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) -
-        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 2 := by
-  intro t ht
-  simp only [algebraMap_real_complex]
-  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [map_sub, repLorentzGroup_fieldStrengthDeriv_nil, repLorentzGroup_fieldStrengthDeriv_nil]
-  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
-    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
-    mul_zero, mul_one, Complex.ofReal_zero,
-    zero_smul, smul_zero, add_zero, zero_add]
-  push_cast
-  match_scalars <;> (field_simp; ring)
-
-/-- The light-cone combination `F_{0x} + F_{zx}` has boost weight `-2`. -/
-lemma fieldStrengthDeriv_lightCone_mem_neg_two :
-    fieldStrengthDeriv {} (Sum.inl 0) (Sum.inr 0) +
-        fieldStrengthDeriv {} (Sum.inr 2) (Sum.inr 0) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-2) := by
-  intro t ht
-  simp only [algebraMap_real_complex]
-  have ht' : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  rw [map_add, repLorentzGroup_fieldStrengthDeriv_nil, repLorentzGroup_fieldStrengthDeriv_nil]
-  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
-    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
-    mul_zero, mul_one, Complex.ofReal_zero,
-    zero_smul, smul_zero, add_zero, zero_add]
-  push_cast
-  match_scalars <;> (field_simp; ring)
-
-/-- The transverse component `F_{xy}` has boost weight zero. -/
-lemma fieldStrengthDeriv_transverse_mem_zero :
-    fieldStrengthDeriv {} (Sum.inr 0) (Sum.inr 1) ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 0 := by
-  intro t ht
-  simp only [algebraMap_real_complex]
-  rw [repLorentzGroup_fieldStrengthDeriv_nil]
-  simp only [boostAxis_two, toLorentzGroup_boostZel, Fintype.sum_sum_type, Fin.sum_univ_one,
-    Fin.sum_univ_three, boostMatZ, fieldStrengthDeriv_self,
-    mul_zero, mul_one, Complex.ofReal_zero, Complex.ofReal_one,
-    zero_smul, smul_zero, add_zero, zero_add]
-  match_scalars; norm_num
 
 /-- The zeroth-order lepton coordinate `ψ_0` has boost weight `-1`. -/
 lemma Dψ_nil_zero_mem_neg_one : Dψ [] 0 ∈ BoostWeight.boostWeightSubmodule repLorentzGroup 2 (-1) := by
@@ -432,20 +394,12 @@ span, is section C.
 
 -/
 
-/-- The homogeneous elements span a subalgebra of the jet algebra. -/
-noncomputable def boostWeightSubalgebra (i : Fin 3) : Subalgebra ℂ JetAlgebra :=
-  BoostWeight.subalgebra repLorentzGroup i
-
-@[simp]
-lemma mem_boostWeightSubalgebra {x : JetAlgebra} :
-    x ∈ boostWeightSubalgebra i ↔ x ∈ ⨆ k, BoostWeight.boostWeightSubmodule repLorentzGroup i k := Iff.rfl
-
 /-- The homogeneous span contains the whole bosonic factor once it contains the generators. -/
 private lemma inclB_mem_boostWeightSubalgebra
-    (h : ∀ j : JetGenerators, [j]ₐ ∈ boostWeightSubalgebra i)
-    (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) : inclB a ∈ boostWeightSubalgebra i := by
+    (h : ∀ j : JetGenerators, [j]ₐ ∈ BoostWeight.subalgebra repLorentzGroup i)
+    (a : ℂ ⊗[ℝ] BBoson.JetAlgebra) : inclB a ∈ BoostWeight.subalgebra repLorentzGroup i := by
   have hone : ∀ c : BBoson.JetAlgebra,
-      inclB ((1 : ℂ) ⊗ₜ[ℝ] c) ∈ boostWeightSubalgebra i := by
+      inclB ((1 : ℂ) ⊗ₜ[ℝ] c) ∈ BoostWeight.subalgebra repLorentzGroup i := by
     intro c
     induction c using SymmetricAlgebra.induction with
     | algebraMap r =>
@@ -495,10 +449,10 @@ private lemma inclB_mem_boostWeightSubalgebra
 
 /-- The homogeneous span contains the whole fermionic factor once it contains the generators. -/
 private lemma inclL_mem_boostWeightSubalgebra
-    (h : ∀ j : JetGenerators, [j]ₐ ∈ boostWeightSubalgebra i)
-    (b : LeptonSinglet.JetAlgebra) : inclL b ∈ boostWeightSubalgebra i := by
+    (h : ∀ j : JetGenerators, [j]ₐ ∈ BoostWeight.subalgebra repLorentzGroup i)
+    (b : LeptonSinglet.JetAlgebra) : inclL b ∈ BoostWeight.subalgebra repLorentzGroup i := by
   have hι : ∀ m : LeptonSinglet.JetComponentSpace,
-      inclL (ExteriorAlgebra.ι ℂ m) ∈ boostWeightSubalgebra i := by
+      inclL (ExteriorAlgebra.ι ℂ m) ∈ BoostWeight.subalgebra repLorentzGroup i := by
     intro m
     have hm : m ∈ Submodule.span ℂ (Set.range LeptonSinglet.JetComponentSpace.basis) := by
       rw [LeptonSinglet.JetComponentSpace.basis.span_eq]
@@ -525,7 +479,8 @@ private lemma inclL_mem_boostWeightSubalgebra
 /-- Once every generator is a finite sum of boost eigenvectors, so is every element: the
   homogeneous elements then span the whole jet algebra. -/
 theorem boostWeightSubalgebra_eq_top_of_forall_ofGenerator
-    (h : ∀ j : JetGenerators, [j]ₐ ∈ boostWeightSubalgebra i) : boostWeightSubalgebra i = ⊤ := by
+    (h : ∀ j : JetGenerators, [j]ₐ ∈ BoostWeight.subalgebra repLorentzGroup i) :
+    BoostWeight.subalgebra repLorentzGroup i = ⊤ := by
   refine Algebra.eq_top_iff.mpr fun x => ?_
   induction x using JetAlgebra.induction_on with
   | zero => exact Subalgebra.zero_mem _
@@ -548,8 +503,8 @@ structure of section D they make it a graded algebra three times over.
 
 /-- Every generator is a finite sum of boost eigenvectors, for every axis. -/
 theorem ofGenerator_mem_boostWeightSubalgebra (i : Fin 3) (j : JetGenerators) :
-    [j]ₐ ∈ boostWeightSubalgebra i := by
-  rw [mem_boostWeightSubalgebra, BoostWeight.iSup_boostWeightSubmodule_eq_top repLorentzGroup]
+    [j]ₐ ∈ BoostWeight.subalgebra repLorentzGroup i := by
+  rw [BoostWeight.mem_subalgebra, BoostWeight.iSup_boostWeightSubmodule_eq_top repLorentzGroup]
   trivial
 
 /-!
