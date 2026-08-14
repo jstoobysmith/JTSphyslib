@@ -72,6 +72,10 @@ instance : StarRing JetRing where
       exact Finset.sum_congr rfl fun p _ => by rw [star_mul', coeff_star, coeff_star]
     rw [h, mul_comm]
 
+/-- Real scalars commute with the coefficientwise conjugation. -/
+instance : StarModule ℝ JetRing where
+  star_smul r f := funext fun n => star_smul r (f n)
+
 @[simp]
 lemma constantCoeff_star (f : JetRing) :
     constantCoeff (star f) = star (constantCoeff f) := rfl
