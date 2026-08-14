@@ -20,9 +20,35 @@ public import Mathlib.Algebra.MvPolynomial.Derivation
 /-!
 # The jet gauge algebra
 
+We define `JetGaugeAlgebra` as the Lie algebra of `JetGaugeGroupI`,
+defined explicitly via self-adjoint matrices, and giving it an instance `LieAlgebra`.
+
+Note here that `JetGaugeAlgebra` is a module over `ℝ` not `ℂ` or `JetRing`.
+
+On this Lie algebra define a prefered basis, `basis`, indexed by `basisIndex`.
+TODO: add discussion about the basis
+
+We let `structuralConstant` be the structure constants of the Lie algebra with respect to this
+prefered basis, so that
+```
+  [basis i, basis j] = i * ∑ k, structuralConstant i j k • basis k
+```
+
+On `JetGaugeAlgebra` we define the adjoint representation of `JetGaugeGroupI`,
+`adjointRep`, which acts via `x ↦ g * x * g⁻¹`.
+
+There is also a derivative `deriv : Fin 1 ⊕ Fin 3 → JetLieAlgebra →ₗ[ℝ] JetLieAlgebra`
+whose action can be defined componentwise.
+
+The derivative acts on brackets via the Leibniz rule:
+```
+  deriv μ [x, y] = [deriv μ x, y] + [x, deriv μ y]
+```
+
 -/
 
 @[expose] public section
+TODO "Make the API here match what is in the doc-string."
 namespace StandardModel
 open MvPowerSeries Matrix
 
@@ -54,6 +80,14 @@ def toU1 (a : JetGaugeAlgebra) : selfAdjoint JetRing := a.2.2
 
 /-!
 
+## The Lie algebra instance
+
+-/
+
+TODO "Define the Lie algebra instance on `JetGaugeAlgebra`."
+
+/-!
+
 ## The basis
 
 -/
@@ -68,8 +102,6 @@ TODO "Define the basis of the jet gauge algebra."
 -/
 
 TODO "Define the adjoint representation of the jet gauge group on the jet gauge algebra."
-
-TODO "Change the Maurer–Cartan forms to be valued in the jet gauge algebra"
 
 end JetGaugeAlgebra
 
