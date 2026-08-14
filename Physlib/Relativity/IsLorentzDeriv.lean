@@ -50,7 +50,7 @@ private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t :
 
 /-!
 
-## Light cone derivatives
+## A. Light cone derivatives
 
 -/
 
@@ -66,7 +66,7 @@ def lightConeMinus (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) (i : Fin 3) : A �
 
 /-!
 
-## Relationship to boost weights
+## B. Relationship to boost weights
 
 -/
 
@@ -243,52 +243,57 @@ private lemma boostProj_map_submodule_aux [BoostWeight.IsBoostGraded rep]
   rw [map_pair_eq_lightCone]
   simp only [Submodule.add_eq_sup, Submodule.map_sup, hlcp, hlcn, hd₁, hd₂]
 
-/-- **The `x`-boost projections of the span of Lorentz derivatives.** The weight-`k` part of
-  the span of the four derivative images of `V` is spanned by the light-cone combinations
-  applied to the weight-`(k ∓ 2)` parts of `V` together with the transverse derivatives of
-  its weight-`k` part. -/
-lemma boostProj_map_submodule_x [BoostWeight.IsBoostGraded rep] [IsLorentzDeriv rep D]
-    (k : ℤ) (V : Submodule ℂ A) :
-    (∑ α, V.map (D α)).map (BoostWeight.boostProj rep 0 k) =
-    (V.map (BoostWeight.boostProj rep 0 (k - 2))).map (lightConePlus D 0)
-    + (V.map (BoostWeight.boostProj rep 0 (k + 2))).map (lightConeMinus D 0)
-    + (V.map (BoostWeight.boostProj rep 0 k)).map (D (Sum.inr 1))
-    + (V.map (BoostWeight.boostProj rep 0 k)).map (D (Sum.inr 2)) := by
-  rw [show (∑ α, V.map (D α)) =
-      V.map (D (Sum.inl 0)) + V.map (D (Sum.inr 0)) +
-      V.map (D (Sum.inr 1)) + V.map (D (Sum.inr 2)) from by
-    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
-  exact boostProj_map_submodule_aux (by decide) (by decide) k V
+/-- **The boost projections of the span of Lorentz derivatives, along any axis.** The
+  weight-`k` part of the span of the four derivative images of `V` is spanned by the
+  light-cone combinations applied to the weight-`(k ∓ 2)` parts of `V` together with the two
+  transverse derivatives, at directions `i + 1` and `i + 2`, of its weight-`k` part. -/
+lemma boostProj_map_deriv_map_submodule [BoostWeight.IsBoostGraded rep]
+    [IsLorentzDeriv rep D] (k : ℤ) (V : Submodule ℂ A) (i : Fin 3) :
+    (∑ α, V.map (D α)).map (BoostWeight.boostProj rep i k) =
+    (V.map (BoostWeight.boostProj rep i (k - 2))).map (lightConePlus D i)
+    + (V.map (BoostWeight.boostProj rep i (k + 2))).map (lightConeMinus D i)
+    + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 1)))
+    + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 2))) := by
+  have hsum : (∑ α, V.map (D α)) =
+      V.map (D (Sum.inl 0)) + V.map (D (Sum.inr i)) + V.map (D (Sum.inr (i + 1))) +
+        V.map (D (Sum.inr (i + 2))) := by
+    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]
+    fin_cases i <;>
+      (simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk, Fin.reduceAdd]; abel)
+  rw [hsum]
+  exact boostProj_map_submodule_aux (by fin_cases i <;> decide) (by fin_cases i <;> decide) k V
 
-/-- **The `y`-boost projections of the span of Lorentz derivatives.** As for the `x`-boost,
-  with the transverse derivatives now `D_x`, `D_z`. -/
-lemma boostProj_map_submodule_y [BoostWeight.IsBoostGraded rep] [IsLorentzDeriv rep D]
-    (k : ℤ) (V : Submodule ℂ A) :
-    (∑ α, V.map (D α)).map (BoostWeight.boostProj rep 1 k) =
-    (V.map (BoostWeight.boostProj rep 1 (k - 2))).map (lightConePlus D 1)
-    + (V.map (BoostWeight.boostProj rep 1 (k + 2))).map (lightConeMinus D 1)
-    + (V.map (BoostWeight.boostProj rep 1 k)).map (D (Sum.inr 0))
-    + (V.map (BoostWeight.boostProj rep 1 k)).map (D (Sum.inr 2)) := by
-  rw [show (∑ α, V.map (D α)) =
-      V.map (D (Sum.inl 0)) + V.map (D (Sum.inr 1)) +
-      V.map (D (Sum.inr 0)) + V.map (D (Sum.inr 2)) from by
-    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
-  exact boostProj_map_submodule_aux (by decide) (by decide) k V
-
-/-- **The `z`-boost projections of the span of Lorentz derivatives.** As for the `x`-boost,
-  with the transverse derivatives now `D_x`, `D_y`. -/
-lemma boostProj_map_submodule_z [BoostWeight.IsBoostGraded rep] [IsLorentzDeriv rep D]
-    (k : ℤ) (V : Submodule ℂ A) :
-    (∑ α, V.map (D α)).map (BoostWeight.boostProj rep 2 k) =
-    (V.map (BoostWeight.boostProj rep 2 (k - 2))).map (lightConePlus D 2)
-    + (V.map (BoostWeight.boostProj rep 2 (k + 2))).map (lightConeMinus D 2)
-    + (V.map (BoostWeight.boostProj rep 2 k)).map (D (Sum.inr 0))
-    + (V.map (BoostWeight.boostProj rep 2 k)).map (D (Sum.inr 1)) := by
-  rw [show (∑ α, V.map (D α)) =
-      V.map (D (Sum.inl 0)) + V.map (D (Sum.inr 2)) +
-      V.map (D (Sum.inr 0)) + V.map (D (Sum.inr 1)) from by
-    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three]; abel]
-  exact boostProj_map_submodule_aux (by decide) (by decide) k V
+/-- **Two derivative layers.** The weight-`k` part of the span of all second derivative
+  images of `V` redistributes onto the weight `k - 4, …, k + 4` parts of `V`, hit by the
+  light-cone and transverse operators twice over: `boostProj_map_deriv_map_submodule`
+  applied at the outer layer and then to each of the three inner projected spans. -/
+lemma boostProj_map_deriv_map_deriv_map [BoostWeight.IsBoostGraded rep] [IsLorentzDeriv rep D]
+    (k : ℤ) (V : Submodule ℂ A) (i : Fin 3) :
+    (∑ β, (∑ α, V.map (D α)).map (D β)).map (BoostWeight.boostProj rep i k) =
+    ((V.map (BoostWeight.boostProj rep i (k - 4))).map (lightConePlus D i)
+      + (V.map (BoostWeight.boostProj rep i k)).map (lightConeMinus D i)
+      + (V.map (BoostWeight.boostProj rep i (k - 2))).map (D (Sum.inr (i + 1)))
+      + (V.map (BoostWeight.boostProj rep i (k - 2))).map (D (Sum.inr (i + 2)))).map
+        (lightConePlus D i)
+    + ((V.map (BoostWeight.boostProj rep i k)).map (lightConePlus D i)
+      + (V.map (BoostWeight.boostProj rep i (k + 4))).map (lightConeMinus D i)
+      + (V.map (BoostWeight.boostProj rep i (k + 2))).map (D (Sum.inr (i + 1)))
+      + (V.map (BoostWeight.boostProj rep i (k + 2))).map (D (Sum.inr (i + 2)))).map
+        (lightConeMinus D i)
+    + ((V.map (BoostWeight.boostProj rep i (k - 2))).map (lightConePlus D i)
+      + (V.map (BoostWeight.boostProj rep i (k + 2))).map (lightConeMinus D i)
+      + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 1)))
+      + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 2)))).map
+        (D (Sum.inr (i + 1)))
+    + ((V.map (BoostWeight.boostProj rep i (k - 2))).map (lightConePlus D i)
+      + (V.map (BoostWeight.boostProj rep i (k + 2))).map (lightConeMinus D i)
+      + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 1)))
+      + (V.map (BoostWeight.boostProj rep i k)).map (D (Sum.inr (i + 2)))).map
+        (D (Sum.inr (i + 2))) := by
+  rw [boostProj_map_deriv_map_submodule k _ i, boostProj_map_deriv_map_submodule (k - 2) V i,
+    boostProj_map_deriv_map_submodule (k + 2) V i, boostProj_map_deriv_map_submodule k V i,
+    show k - 2 - 2 = k - 4 from by ring, show k - 2 + 2 = k from by ring,
+    show k + 2 - 2 = k from by ring, show k + 2 + 2 = k + 4 from by ring]
 
 end IsLorentzDeriv
 

@@ -541,7 +541,7 @@ lemma boostProj_of_isInvariant_ne {i : Fin 3} {k : ℤ} (hk : (0 : ℤ) ≠ k) {
 The covariance `repLorentzGroup_jetDeriv` makes the jet derivatives an instance of
 `Lorentz.IsLorentzDeriv`. The weight shifts of the light-cone combinations, the weight
 preservation of the transverse derivatives, and the boost projections of the span of all
-jet derivatives of a submodule (`IsLorentzDeriv.boostProj_map_submodule_x/y/z`) are
+jet derivatives of a submodule (`IsLorentzDeriv.boostProj_map_submodule`) are
 inherited from the general theory.
 
 -/

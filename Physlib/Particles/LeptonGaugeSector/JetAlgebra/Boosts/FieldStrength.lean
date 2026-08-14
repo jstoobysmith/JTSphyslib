@@ -455,7 +455,8 @@ lemma boostProj_z_map_fieldStrengthDeriv_jetDeriv_span_eq :
     boostProj_z_map_fieldStrengthDeriv_span_of_ne
   rw [show D2V0 = ∑ α, (∑ β, V0.map (jetDeriv β)).map (jetDeriv α) from
     fieldStrengthDeriv_two_deriv_eq_map_span]
-  simp only [boostProj_map_submodule_z,
+  simp only [IsLorentzDeriv.boostProj_map_deriv_map_submodule,
+    show (2 + 1 : Fin 3) = 0 from rfl, show (2 + 2 : Fin 3) = 1 from rfl,
     show (0 : ℤ) - 2 = -2 from by decide, show (0 : ℤ) + 2 = 2 from by decide,
     show (-2 : ℤ) - 2 = -4 from by decide, show (-2 : ℤ) + 2 = 0 from by decide,
     show (2 : ℤ) - 2 = 0 from by decide, show (2 : ℤ) + 2 = 4 from by decide]
