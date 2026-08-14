@@ -20,16 +20,20 @@ public import Mathlib.Algebra.MvPolynomial.Derivation
 /-!
 # The Maurer–Cartan forms of the jet gauge group
 
-The Maurer–Cartan forms `i (∂_ν U) U†` of a jet of gauge transformations, one for
-each factor of the Standard Model gauge group: the scalar-valued `U(1)` form and
-the matrix-valued `SU(3)` and `SU(2)` forms. These are the inhomogeneous terms in
-the local gauge transformations of the corresponding gauge bosons.
+The Maurer-Cartan form is a map
+`ω : JetGaugeGroupI → (Fin 1 ⊕ Fin 3) → JetLieAlgebra`
+defined as `ω_μ(U) := i (∂_μ U) U†`.
 
-The abelian `U(1)` form is an additive cocycle; the nonabelian forms satisfy the
-twisted cocycle law `mc(UV) = mc(U) + U mc(V) U†`. Each form satisfies its
-Maurer–Cartan structure equation, relating the antisymmetrized derivative to the
-commutator; in the abelian case the derivative is symmetric, i.e. the form is
-closed.
+We will use `ω^a_ν` to denote the `a`-th component of the Maurer–Cartan form in the
+basis of the jet Lie algebra, and `f^a_{b c}` to denote the structure constants of the
+jet Lie algebra in that basis.
+
+It satisfies the following properties:
+- *Cocycle law*: `ω_μ(UV) = ω_μ(U) + U ω_μ(V) U†`
+- *Value on the identity*: `ω_μ(1) = 0`
+- *Value on constant gauge transformations*: `ω_μ(U₀) = 0`
+- *Value on the inverse*: `ω_μ(U⁻¹) = -U⁻¹ ω_μ(U) U`
+- *Structural equation*: `∂_μ ω^a_ν(U) − ∂_ν ω^a_μ(U) = ∑_{b c} f^a_{b c} · ω^b_μ(U) · ω^c_ν(U)`
 
 -/
 
@@ -47,6 +51,7 @@ TODO "The maurerCartan form should be defined for the whole gauge group,
   and it should live in the jet Lie algebra."
 
 TODO "Define the symmetrized maurerCartan forms."
+
 /-- The `U(1)` Maurer–Cartan form of a jet of gauge transformations in the
   direction `ν`: the series `i (∂_ν u) ū` for `u` the hypercharge factor of the
   jet. -/
