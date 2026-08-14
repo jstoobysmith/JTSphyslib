@@ -13,6 +13,7 @@ public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
+public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
 /-!
 # Boost-weight gradings of representations of `SL(2,ℂ)`
 
@@ -679,6 +680,101 @@ lemma boostProj_map_mul (k : ℤ) {V W : Submodule K A}
     (by ring))
 
 end Theory
+
+/-!
+
+## C. Weight decompositions of submodules
+
+-/
+
+/-- A **weight decomposition** of a submodule `V`: a finitely supported family of subspaces of
+  pure boost weight whose supremum is `V`. Exhibiting one collapses all the per-span
+  boilerplate: the projection images, the weight intersections, projection-closure and the
+  off-support vanishing become the generic lemmas below. -/
+structure WeightDecomposition (rep : Representation K SL(2,ℂ) A) (i : Fin 3)
+    (V : Submodule K A) where
+  /-- The weight-`k` piece of the decomposition. -/
+  piece : ℤ → Submodule K A
+  /-- The finite set of weights that occur. -/
+  supp : Finset ℤ
+  piece_le : ∀ k, piece k ≤ boostWeightSubmodule rep i k
+  piece_eq_bot : ∀ k ∉ supp, piece k = ⊥
+  iSup_piece : (⨆ k, piece k) = V
+
+namespace WeightDecomposition
+
+variable {rep : Representation K SL(2,ℂ) A} [IsBoostGraded rep] {i : Fin 3}
+  {V : Submodule K A} (d : WeightDecomposition rep i V)
+
+include d
+
+/-- Each piece sits inside the decomposed submodule. -/
+lemma piece_le_self (k : ℤ) : d.piece k ≤ V :=
+  le_of_le_of_eq (le_iSup d.piece k) d.iSup_piece
+
+/-- The weight-`k` projection image of `V` is the weight-`k` piece. -/
+lemma map_boostProj (k : ℤ) : V.map (boostProj rep i k) = d.piece k := by
+  have h := congrArg (Submodule.map (boostProj rep i k)) d.iSup_piece
+  rw [← h, Submodule.map_iSup]
+  refine le_antisymm (iSup_le fun l => ?_)
+    (le_iSup_of_le k (map_boostProj_of_le rep (d.piece_le k)).ge)
+  by_cases hlk : l = k
+  · subst hlk
+    exact (map_boostProj_of_le rep (d.piece_le l)).le
+  · rw [map_boostProj_of_le_ne rep (d.piece_le l) hlk]
+    exact bot_le
+
+/-- A decomposed submodule is closed under every weight projection. -/
+lemma map_boostProj_le (k : ℤ) : V.map (boostProj rep i k) ≤ V := by
+  rw [d.map_boostProj]
+  exact d.piece_le_self k
+
+/-- The weight-`k` part of a decomposed submodule is the weight-`k` piece. -/
+lemma inf_eq (k : ℤ) : boostWeightSubmodule rep i k ⊓ V = d.piece k := by
+  rw [inf_boostWeightSubmodule_eq_map rep (d.map_boostProj_le k), d.map_boostProj]
+
+/-- Off the support the projection image vanishes. -/
+lemma map_boostProj_of_notMem {k : ℤ} (h : k ∉ d.supp) :
+    V.map (boostProj rep i k) = ⊥ := by
+  rw [d.map_boostProj, d.piece_eq_bot k h]
+
+/-- A projection-closed submodule whose projections vanish off a finite set is weight
+  decomposed by its projection images. -/
+noncomputable def ofMapClosed (rep : Representation K SL(2,ℂ) A) [IsBoostGraded rep]
+    {i : Fin 3} {V : Submodule K A} (s : Finset ℤ)
+    (hcl : ∀ k, V.map (boostProj rep i k) ≤ V)
+    (hbot : ∀ k ∉ s, V.map (boostProj rep i k) = ⊥) :
+    WeightDecomposition rep i V where
+  piece k := V.map (boostProj rep i k)
+  supp := s
+  piece_le k := by
+    rintro _ ⟨y, _, rfl⟩
+    exact boostProj_mem rep i k y
+  piece_eq_bot := hbot
+  iSup_piece := by
+    classical
+    refine le_antisymm (iSup_le hcl) fun x hx => ?_
+    rw [← DirectSum.sum_support_decompose (boostWeightSubmodule rep i) x]
+    exact sum_mem fun k _ => Submodule.mem_iSup_of_mem k ⟨x, hx, rfl⟩
+
+open scoped Pointwise in
+/-- The convolution decomposition of a product of decomposed submodules. -/
+noncomputable def mul {W : Submodule K A} (d₁ : WeightDecomposition rep i V)
+    (d₂ : WeightDecomposition rep i W) : WeightDecomposition rep i (V * W) :=
+  ofMapClosed rep (d₁.supp + d₂.supp)
+    (fun k => by
+      rw [boostProj_map_mul rep k d₁.map_boostProj_le d₂.map_boostProj_le]
+      exact iSup_le fun l => Submodule.mul_le.2 fun a ha b hb =>
+        Submodule.mul_mem_mul (d₁.map_boostProj_le l ha) (d₂.map_boostProj_le (k - l) hb))
+    (fun k hk => by
+      rw [boostProj_map_mul rep k d₁.map_boostProj_le d₂.map_boostProj_le]
+      refine iSup_eq_bot.mpr fun l => ?_
+      by_cases hl : l ∈ d₁.supp
+      · rw [d₂.map_boostProj, d₂.piece_eq_bot (k - l)
+          (fun hmem => hk (by simpa using Finset.add_mem_add hl hmem)), Submodule.mul_bot]
+      · rw [d₁.map_boostProj, d₁.piece_eq_bot l hl, Submodule.bot_mul])
+
+end WeightDecomposition
 
 end BoostWeight
 

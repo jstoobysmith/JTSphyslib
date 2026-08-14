@@ -34,6 +34,7 @@ a submodule redistributes onto the shifted weight projections
 namespace Lorentz
 
 open Matrix MatrixGroups TensorProduct
+open scoped Pointwise
 
 variable {A : Type} [Ring A] [Algebra ℂ A]
 
@@ -294,6 +295,48 @@ lemma boostProj_map_deriv_map_deriv_map [BoostWeight.IsBoostGraded rep] [IsLoren
     boostProj_map_deriv_map_submodule (k + 2) V i, boostProj_map_deriv_map_submodule k V i,
     show k - 2 - 2 = k - 4 from by ring, show k - 2 + 2 = k from by ring,
     show k + 2 - 2 = k from by ring, show k + 2 + 2 = k + 4 from by ring]
+
+/-- The span of the derivative images of a weight-decomposed submodule is weight decomposed:
+  the projections stay inside it and the support widens by the light-cone shifts `±2`. -/
+noncomputable def _root_.Lorentz.BoostWeight.WeightDecomposition.deriv
+    [BoostWeight.IsBoostGraded rep] {i : Fin 3} {V : Submodule ℂ A}
+    (d : BoostWeight.WeightDecomposition rep i V)
+    (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) [IsLorentzDeriv rep D] :
+    BoostWeight.WeightDecomposition rep i (∑ α, V.map (D α)) := by
+  classical
+  have hV : ∀ μ, V.map (D μ) ≤ ∑ α, V.map (D α) := fun μ =>
+    Finset.single_le_sum (f := fun α => V.map (D α))
+      (fun _ _ => by rw [Submodule.zero_eq_bot]; exact bot_le) (Finset.mem_univ μ)
+  have hsub : ∀ f g : A →ₗ[ℂ] A, V.map (f - g) ≤ V.map f ⊔ V.map g := by
+    rintro f g _ ⟨v, hv, rfl⟩
+    rw [LinearMap.sub_apply]
+    exact sub_mem (Submodule.mem_sup_left ⟨v, hv, rfl⟩)
+      (Submodule.mem_sup_right ⟨v, hv, rfl⟩)
+  have hadd : ∀ f g : A →ₗ[ℂ] A, V.map (f + g) ≤ V.map f ⊔ V.map g := by
+    rintro f g _ ⟨v, hv, rfl⟩
+    rw [LinearMap.add_apply]
+    exact add_mem (Submodule.mem_sup_left ⟨v, hv, rfl⟩)
+      (Submodule.mem_sup_right ⟨v, hv, rfl⟩)
+  refine BoostWeight.WeightDecomposition.ofMapClosed rep (d.supp + ({-2, 0, 2} : Finset ℤ))
+    (fun k => ?_) (fun k hk => ?_)
+  · rw [boostProj_map_deriv_map_submodule k V i]
+    simp only [Submodule.add_eq_sup]
+    refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+    · exact (Submodule.map_mono (d.map_boostProj_le _)).trans
+        ((hsub _ _).trans (sup_le (hV _) (hV _)))
+    · exact (Submodule.map_mono (d.map_boostProj_le _)).trans
+        ((hadd _ _).trans (sup_le (hV _) (hV _)))
+    · exact (Submodule.map_mono (d.map_boostProj_le _)).trans (hV _)
+    · exact (Submodule.map_mono (d.map_boostProj_le _)).trans (hV _)
+  · have h₁ : k - 2 ∉ d.supp := fun h => hk (by
+      simpa using Finset.add_mem_add h (show (2 : ℤ) ∈ ({-2, 0, 2} : Finset ℤ) by decide))
+    have h₂ : k + 2 ∉ d.supp := fun h => hk (by
+      simpa using Finset.add_mem_add h (show (-2 : ℤ) ∈ ({-2, 0, 2} : Finset ℤ) by decide))
+    have h₀ : k ∉ d.supp := fun h => hk (by
+      simpa using Finset.add_mem_add h (show (0 : ℤ) ∈ ({-2, 0, 2} : Finset ℤ) by decide))
+    rw [boostProj_map_deriv_map_submodule k V i, d.map_boostProj_of_notMem h₁,
+      d.map_boostProj_of_notMem h₂, d.map_boostProj_of_notMem h₀]
+    simp
 
 end IsLorentzDeriv
 
