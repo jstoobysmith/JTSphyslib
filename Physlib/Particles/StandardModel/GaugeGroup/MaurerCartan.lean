@@ -43,6 +43,10 @@ open MvPowerSeries
 
 -/
 
+TODO "The maurerCartan form should be defined for the whole gauge group,
+  and it should live in the jet Lie algebra."
+
+TODO "Define the symmetrized maurerCartan forms."
 /-- The `U(1)` Maurer–Cartan form of a jet of gauge transformations in the
   direction `ν`: the series `i (∂_ν u) ū` for `u` the hypercharge factor of the
   jet. -/
