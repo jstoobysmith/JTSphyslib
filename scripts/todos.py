@@ -205,7 +205,7 @@ def emit_md(items, meta, repo_url, link_ref):
     out = [
         "# TODOs introduced by this branch",
         "",
-        f"{len(items)} open &middot; as of `{meta['head'][:8]}` ({meta['date']})",
+        f"{len(items)} open &middot; as of {meta['date']}",
         "",
         "> Regenerate with `python scripts/todos.py --md todos.md` after adding or",
         "> resolving a TODO, and commit it in the same commit.",

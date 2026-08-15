@@ -1,6 +1,6 @@
 # TODOs introduced by this branch
 
-20 open &middot; as of `4390daa5` (2026-08-16)
+20 open &middot; as of 2026-08-16
 
 > Regenerate with `python scripts/todos.py --md todos.md` after adding or
 > resolving a TODO, and commit it in the same commit.
