@@ -183,6 +183,8 @@ def emit_md(items, meta, repo_url, link_ref):
         "> Regenerate with `python scripts/todos.py --md todos.md` after adding or",
         "> resolving a TODO, and commit it in the same commit.",
         "",
+        '**Format.** Use the `TODO "…"` command',
+        "",
     ]
     for directory, group in sorted(group_by_dir(items).items()):
         out += [f"### `{directory.replace('Physlib/', '')}`", ""]

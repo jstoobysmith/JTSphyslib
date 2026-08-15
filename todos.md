@@ -1,9 +1,11 @@
 # TODOs introduced by this branch
 
-19 open &middot; as of `96514504` (2026-08-14)
+19 open &middot; as of `bd9a23d1` (2026-08-16)
 
 > Regenerate with `python scripts/todos.py --md todos.md` after adding or
 > resolving a TODO, and commit it in the same commit.
+
+**Format.** Use the `TODO "…"` command
 
 ### `Particles/LeptonGaugeSector/JetAlgebra/Boosts`
 
