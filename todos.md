@@ -1,6 +1,6 @@
 # TODOs introduced by this branch
 
-19 open &middot; as of `bd9a23d1` (2026-08-16)
+20 open &middot; as of `4390daa5` (2026-08-16)
 
 > Regenerate with `python scripts/todos.py --md todos.md` after adding or
 > resolving a TODO, and commit it in the same commit.
@@ -32,7 +32,8 @@
 
 ### `Particles/StandardModel/GaugeGroup`
 
-- Make the API here match what is in the doc-string. &nbsp;[`JetGaugeAlgebra.lean:51`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L51)
+- Make the API here match what is in the doc-string. &nbsp;[`JetGaugeAlgebra.lean:50`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L50)
+- Add discussion about the basis. &nbsp;[`JetGaugeAlgebra.lean:51`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L51)
 - Define the Lie algebra instance on `JetGaugeAlgebra`. &nbsp;[`JetGaugeAlgebra.lean:87`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L87)
 - Define the basis of the jet gauge algebra. &nbsp;[`JetGaugeAlgebra.lean:95`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L95)
 - Define the adjoint representation of the jet gauge group on the jet gauge algebra. &nbsp;[`JetGaugeAlgebra.lean:104`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L104)

@@ -2,22 +2,26 @@
 """
 todos.py -- list the TODOs this branch introduces, relative to its merge-base.
 
-Scans two git refs with the same matcher and subtracts the sets, so the output
-is "what this PR adds", not "every TODO in Physlib". Reads blobs straight out
-of the object store: no checkout, no branch switching, working tree untouched.
+Scans the working tree and the merge-base with the same matcher and subtracts
+the sets, so the output is "what this PR adds", not "every TODO in Physlib".
+The default scans the working tree, so uncommitted edits are visible and the
+file can be regenerated in the same commit that changes a TODO.
+
+Pass --head to read another ref instead, straight out of the object store: no
+checkout, no branch switching, working tree untouched.
 
   python scripts/todos.py                          # to the terminal
   python scripts/todos.py --md todos.md
-  python scripts/todos.py --head origin/my-branch
+  python scripts/todos.py --head joseph/AddPotentialAlgebra
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
 import textwrap
 
-DEFAULT_HEAD = "HEAD"
 DEFAULT_MASTER = "upstream/master"
 DEFAULT_ROOT = "Physlib"
 
@@ -121,10 +125,33 @@ def parse_file(path, text):
     return items, unclassified
 
 
+def list_files_worktree(repo, root):
+    paths = git(repo, "ls-files", "--", root).splitlines()
+    return [p for p in paths if p.endswith(".lean") and not EXCLUDE.search(p)]
+
+
+def read_worktree(repo, paths):
+    blobs = {}
+    for path in paths:
+        try:
+            with open(os.path.join(repo, path), encoding="utf-8") as fh:
+                blobs[path] = fh.read()
+        except OSError:
+            continue
+    return blobs
+
+
 def scan(repo, ref, root):
-    paths = list_files(repo, ref, root)
+    """ref=None scans the working tree, so uncommitted edits are visible."""
+    if ref is None:
+        paths = list_files_worktree(repo, root)
+        blobs = read_worktree(repo, paths)
+    else:
+        paths = list_files(repo, ref, root)
+        blobs = read_blobs(repo, ref, paths)
+
     items, unknown = [], []
-    for path, text in read_blobs(repo, ref, paths).items():
+    for path, text in blobs.items():
         a, b = parse_file(path, text)
         items += a
         unknown += b
@@ -203,7 +230,7 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--head", default=DEFAULT_HEAD)
+    ap.add_argument("--head", default=None, help="defaults to the working tree")
     ap.add_argument("--base", default=None, help="defaults to merge-base with master")
     ap.add_argument("--master", default=DEFAULT_MASTER)
     ap.add_argument("--root", default=DEFAULT_ROOT)
@@ -215,9 +242,11 @@ def main():
     ap.add_argument("--link-ref", default="AddPotentialAlgebra")
     args = ap.parse_args()
 
-    head_sha = git(args.repo, "rev-parse", args.head).strip()
-    date = git(args.repo, "log", "-1", "--format=%ad", "--date=short", args.head).strip()
-    base = args.base or git(args.repo, "merge-base", args.master, args.head).strip()
+    head_sha = git(args.repo, "rev-parse", args.head or "HEAD").strip()
+    date = git(args.repo, "log", "-1", "--format=%ad", "--date=short",
+               args.head or "HEAD").strip()
+    base = args.base or git(args.repo, "merge-base", args.master,
+                            args.head or "HEAD").strip()
 
     items, unknown, nfiles = scan(args.repo, args.head, args.root)
     base_items, _, _ = scan(args.repo, base, args.root)

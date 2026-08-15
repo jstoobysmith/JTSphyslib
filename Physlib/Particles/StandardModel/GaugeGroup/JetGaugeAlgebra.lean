@@ -26,7 +26,6 @@ defined explicitly via self-adjoint matrices, and giving it an instance `LieAlge
 Note here that `JetGaugeAlgebra` is a module over `ℝ` not `ℂ` or `JetRing`.
 
 On this Lie algebra define a prefered basis, `basis`, indexed by `basisIndex`.
-TODO: add discussion about the basis
 
 We let `structuralConstant` be the structure constants of the Lie algebra with respect to this
 prefered basis, so that
@@ -49,6 +48,7 @@ The derivative acts on brackets via the Leibniz rule:
 
 @[expose] public section
 TODO "Make the API here match what is in the doc-string."
+TODO "Add discussion about the basis."
 namespace StandardModel
 open MvPowerSeries Matrix
 
