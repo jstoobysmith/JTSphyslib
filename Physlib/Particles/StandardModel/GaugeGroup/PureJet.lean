@@ -27,7 +27,7 @@ This is simply the kernel of the map `JetGaugeGroupI → GaugeGroupI` given by `
 and therefore is a normal subgroup of `JetGaugeGroupI`.
 
 Every element `U ∈ PureJetGaugeGroup` uniquely factors as `U = (U U₀⁻¹) · U₀` with
-`U U₀⁻¹ : PureJetGaugeGroup`. This gives a splitting of `JetGaugeGroupI` as as
+`U U₀⁻¹ : PureJetGaugeGroup`. This gives a splitting of `JetGaugeGroupI` as
 a semi-direct product of `PureJetGaugeGroup` and `GaugeGroupI`.
 
 There exists a map:
