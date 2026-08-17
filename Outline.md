@@ -360,11 +360,15 @@ Basic rules of this outline:
 ## C. Lorentz Invariance
 
 - Within the Standard model, after the covarance-reduction
-  there are
+  there are on three types of particles, field-strengths,
+  LH weyl fermions and RH weyl fermions.
+- We want to define collections of these objects in
+  arbitary groups.
+
 ## C.1. Boost weights
 
 ## C.2 IsLorentzFieldStrength
 
-## C.3 IsLorentzFermion
+## C.3 IsLorentzLeftFermion
 
 ## D. The global gauge group invariants
