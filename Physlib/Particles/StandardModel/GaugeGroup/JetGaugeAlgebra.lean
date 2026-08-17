@@ -21,14 +21,19 @@ public import Mathlib.Algebra.MvPolynomial.Derivation
 # The jet gauge algebra
 
 We define `JetGaugeAlgebra` as the Lie algebra of `JetGaugeGroupI`,
-defined explicitly via self-adjoint matrices, and giving it an instance `LieAlgebra`.
+defined explicitly as traceless self-adjoint matrices, and giving it an instance `LieAlgebra`.
+This is a matrix Lie algebra, so the bracket is given by the commutator of matrices.
 
 Note here that `JetGaugeAlgebra` is a module over `ℝ` not `ℂ` or `JetRing`.
 
 On this Lie algebra define a prefered basis, `basis`, indexed by `basisIndex`.
+Here `basisIndex` is the sum `Fin 8 ⊕ Fin 3 ⊕ Fin 1`. The first factor
+corresponds to the Gell-Mann matrices which form a basis of `su(3)`,
+the second factor corresponds to the Pauli matrices which form a basis of `su(2)`,
+and the third factor corresponds to the identity matrix which forms a basis of `u(1)`.
 
-We let `structuralConstant` be the structure constants of the Lie algebra with respect to this
-prefered basis, so that
+We let `structuralConstant` (typically called `f`) be the structure constants of the Lie algebra
+with respect to this prefered basis, so that
 ```
   [basis i, basis j] = i * ∑ k, structuralConstant i j k • basis k
 ```
@@ -37,7 +42,7 @@ On `JetGaugeAlgebra` we define the adjoint representation of `JetGaugeGroupI`,
 `adjointRep`, which acts via `x ↦ g * x * g⁻¹`.
 
 There is also a derivative `deriv : Fin 1 ⊕ Fin 3 → JetLieAlgebra →ₗ[ℝ] JetLieAlgebra`
-whose action can be defined componentwise.
+whose action can be defined componentwise in terms of the basis.
 
 The derivative acts on brackets via the Leibniz rule:
 ```
