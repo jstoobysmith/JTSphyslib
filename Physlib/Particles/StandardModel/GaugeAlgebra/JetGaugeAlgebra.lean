@@ -26,7 +26,8 @@ This is a matrix Lie algebra, so the bracket is given by the commutator of matri
 
 Note here that `JetGaugeAlgebra` is a module over `ℝ` not `ℂ` or `JetRing`.
 
-On this Lie algebra define a prefered basis, `basis`, indexed by `basisIndex`.
+On this Lie algebra define a prefered basis, `basis`, indexed by
+`basisIndex × Multiset (Fin 1 ⊕ Fin 3)`.
 Here `basisIndex` is the sum `Fin 8 ⊕ Fin 3 ⊕ Fin 1`. The first factor
 corresponds to the Gell-Mann matrices which form a basis of `su(3)`,
 the second factor corresponds to the Pauli matrices which form a basis of `su(2)`,
