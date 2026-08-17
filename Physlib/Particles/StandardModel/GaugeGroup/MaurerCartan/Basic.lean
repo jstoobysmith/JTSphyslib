@@ -50,7 +50,7 @@ open MvPowerSeries
 
 /-- The Maurer–Cartan form `ω_μ(U) := i (∂_μ U) U⁻¹` of the jet gauge group, valued
   in the jet gauge algebra. -/
-noncomputable def maurerCartanForm (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) : JetGaugeAlgebra :=
+noncomputable def maurerCartanForm (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra :=
   JetGaugeAlgebra.ofMatrixProd (Complex.I • (JetGaugeGroupI.deriv μ U * (U⁻¹).toVal))
     ⟨JetGaugeGroupI.star_deriv_mul_inv_toVal_SU3 μ U,
       JetGaugeGroupI.deriv_mul_inv_toVal_SU3_traceless μ U⟩
@@ -59,7 +59,61 @@ noncomputable def maurerCartanForm (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     (JetGaugeGroupI.star_deriv_mul_inv_toVal_U1 μ U)
 
 @[simp]
-lemma maurerCartanForm_one (μ : Fin 1 ⊕ Fin 3) : maurerCartanForm μ (1 : JetGaugeGroupI) = 0 := by
+lemma maurerCartanForm_one : maurerCartanForm (1 : JetGaugeGroupI) = 0 := by
   ext <;> simp [maurerCartanForm,JetGaugeGroupI.deriv_one]
+
+lemma maurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
+    maurerCartanForm (JetGaugeGroupI.ofConstant U₀) = 0 := by
+  ext <;> simp [maurerCartanForm,JetGaugeGroupI.deriv_ofConstant]
+
+lemma deriv_zero_of_maurerCartanForm_zero (U : JetGaugeGroupI) (h : maurerCartanForm U = 0) :
+    ∀ μ, U.deriv μ = 0 := by
+  intro μ
+  have h1 : maurerCartanForm U μ = 0 := congrFun h μ
+  -- extract the underlying value triple of the vanishing algebra element
+  have h2 : Complex.I • (JetGaugeGroupI.deriv μ U * (U⁻¹).toVal) = 0 :=
+    Prod.ext (congrArg (fun a => a.1.1) h1)
+      (Prod.ext (congrArg (fun a => a.2.1.1) h1) (congrArg (fun a => a.2.2.1) h1))
+  -- cancel the scalar `i`
+  have hml : (-Complex.I) * Complex.I = 1 := by simp [neg_mul, Complex.I_mul_I]
+  have h3 : JetGaugeGroupI.deriv μ U * (U⁻¹).toVal = 0 := by
+    have h4 := congrArg (fun X => (-Complex.I) • X) h2
+    simpa [smul_smul, hml] using h4
+  -- cancel `U⁻¹` on the right
+  have h5 : (U⁻¹).toVal * U.toVal = 1 := by
+    rw [show (U⁻¹).toVal * U.toVal = (U⁻¹ * U).toVal from rfl, inv_mul_cancel]
+    rfl
+  calc JetGaugeGroupI.deriv μ U
+      = JetGaugeGroupI.deriv μ U * ((U⁻¹).toVal * U.toVal) := by rw [h5, mul_one]
+    _ = JetGaugeGroupI.deriv μ U * (U⁻¹).toVal * U.toVal := by rw [mul_assoc]
+    _ = 0 := by rw [h3, zero_mul]
+
+lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
+    maurerCartanForm U = 0 ↔ ∃ c, U = JetGaugeGroupI.ofConstant c := by
+  constructor
+  · intro h
+    -- Step 1: all first derivatives of `U` vanish.
+    have hderiv := deriv_zero_of_maurerCartanForm_zero U h
+    -- Step 2: a jet with vanishing first derivatives is the constant jet of its value.
+    have hconst : ∀ f : JetRing, (∀ μ, pderiv ℂ μ f = 0) → f = C (constantCoeff f) := by
+      intro f hf
+      refine pderiv.ext (fun i => ?_) ?_
+      · rw [hf i, pderiv_C]
+      · rw [constantCoeff_C]
+    refine ⟨U.eval, Prod.ext (Subtype.ext ?_) (Prod.ext (Subtype.ext ?_) (Subtype.ext ?_))⟩
+    · show U.1.1 = ((JetGaugeGroupI.ofConstant U.eval).1 : Matrix (Fin 3) (Fin 3) JetRing)
+      ext i j : 1
+      exact hconst (U.1.1 i j) fun μ => by
+        simpa [JetGaugeGroupI.deriv, Matrix.map_apply] using
+          congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) JetRing) i j) (hderiv μ)
+    · show U.2.1.1 = ((JetGaugeGroupI.ofConstant U.eval).2.1 : Matrix (Fin 2) (Fin 2) JetRing)
+      ext i j : 1
+      exact hconst (U.2.1.1 i j) fun μ => by
+        simpa [JetGaugeGroupI.deriv, Matrix.map_apply] using
+          congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) JetRing) i j) (hderiv μ)
+    · show U.2.2.1 = ((JetGaugeGroupI.ofConstant U.eval).2.2 : JetRing)
+      exact hconst U.2.2.1 fun μ => congrArg (fun p => (p.2.2 : JetRing)) (hderiv μ)
+  · rintro ⟨c, rfl⟩
+    exact maurerCartanForm_ofConstant c
 
 end StandardModel

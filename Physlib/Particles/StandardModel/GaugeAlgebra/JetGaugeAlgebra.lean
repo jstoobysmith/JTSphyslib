@@ -66,9 +66,11 @@ open MvPowerSeries Matrix
   scalar, all with coefficients in the ring `JetRing` of formal power series in the spacetime
   coordinates. The Maurer–Cartan forms of the jet gauge group are valued here, hermiticity
   being `star_maurerCartanSU3` and its companions. -/
-def JetGaugeAlgebra :=
-  { A : Matrix (Fin 3) (Fin 3) JetRing // star A = A ∧ A.trace = 0 } ×
-  { A : Matrix (Fin 2) (Fin 2) JetRing // star A = A ∧ A.trace = 0 } ×
+abbrev JetGaugeAlgebra :=
+  ↥(selfAdjoint.submodule ℝ (Matrix (Fin 3) (Fin 3) JetRing) ⊓
+    LinearMap.ker (Matrix.traceLinearMap (Fin 3) ℝ JetRing)) ×
+  ↥(selfAdjoint.submodule ℝ (Matrix (Fin 2) (Fin 2) JetRing) ⊓
+    LinearMap.ker (Matrix.traceLinearMap (Fin 2) ℝ JetRing)) ×
   selfAdjoint JetRing
 
 namespace JetGaugeAlgebra
@@ -130,16 +132,6 @@ lemma ofMatrixProd_toU1Value (A : Matrix (Fin 3) (Fin 3) JetRing ×
 
 -/
 
-noncomputable instance : Add JetGaugeAlgebra where
-  add a b :=
-    ⟨⟨a.1.1 + b.1.1,
-      by rw [star_add, a.1.2.1, b.1.2.1],
-      by rw [trace_add, a.1.2.2, b.1.2.2, add_zero]⟩,
-    ⟨a.2.1.1 + b.2.1.1,
-      by rw [star_add, a.2.1.2.1, b.2.1.2.1],
-      by rw [trace_add, a.2.1.2.2, b.2.1.2.2, add_zero]⟩,
-    a.2.2 + b.2.2⟩
-
 @[simp]
 lemma add_toSU3Matrix (a b : JetGaugeAlgebra) :
     (a + b).toSU3Matrix = a.toSU3Matrix + b.toSU3Matrix := by rfl
@@ -152,9 +144,6 @@ lemma add_toSU2Matrix (a b : JetGaugeAlgebra) :
 lemma add_toU1Value (a b : JetGaugeAlgebra) :
     (a + b).toU1Value = a.toU1Value + b.toU1Value := by rfl
 
-noncomputable instance : Zero JetGaugeAlgebra where
-  zero := ⟨⟨0, by simp, by simp⟩, ⟨0, by simp, by simp⟩, 0⟩
-
 @[simp]
 lemma zero_toSU3Matrix : (0 : JetGaugeAlgebra).toSU3Matrix = 0 := by rfl
 
@@ -163,16 +152,6 @@ lemma zero_toSU2Matrix : (0 : JetGaugeAlgebra).toSU2Matrix = 0 := by rfl
 
 @[simp]
 lemma zero_toU1Value : (0 : JetGaugeAlgebra).toU1Value = 0 := by rfl
-
-noncomputable instance : SMul ℝ JetGaugeAlgebra where
-  smul r a :=
-    ⟨⟨r • a.1.1,
-      by rw [star_smul, star_trivial, a.1.2.1],
-      by rw [trace_smul, a.1.2.2, smul_zero]⟩,
-    ⟨r • a.2.1.1,
-      by rw [star_smul, star_trivial, a.2.1.2.1],
-      by rw [trace_smul, a.2.1.2.2, smul_zero]⟩,
-    r • a.2.2⟩
 
 @[simp]
 lemma smul_toSU3Matrix (r : ℝ) (a : JetGaugeAlgebra) :
@@ -186,6 +165,47 @@ lemma smul_toSU2Matrix (r : ℝ) (a : JetGaugeAlgebra) :
 lemma smul_toU1Value (r : ℝ) (a : JetGaugeAlgebra) :
     (r • a).toU1Value = r • a.toU1Value := by rfl
 
+
+/-!
+
+## The derivative on the jet gauge algebra
+
+-/
+
+/-- The formal derivative in the direction `μ` on the jet gauge algebra, acting
+  entrywise on each factor. It preserves hermiticity since `star` commutes with
+  `pderiv`, and tracelessness since the trace of the entrywise derivative is the
+  derivative of the trace. -/
+noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra where
+  toFun a := ofMatrixProd
+      (a.toSU3Matrix.map (pderiv ℂ μ), a.toSU2Matrix.map (pderiv ℂ μ),
+        pderiv ℂ μ a.toU1Value)
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply, ← JetRing.pderiv_star] using
+          congrArg (fun M => pderiv ℂ μ (M i j))
+            (show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU3Matrix.trace = 0 from a.1.2.2, map_zero]⟩
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply, ← JetRing.pderiv_star] using
+          congrArg (fun M => pderiv ℂ μ (M i j))
+            (show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU2Matrix.trace = 0 from a.2.1.2.2, map_zero]⟩
+      (by rw [← JetRing.pderiv_star, show star a.toU1Value = a.toU1Value from a.2.2.2])
+  map_add' a b := by
+    ext <;> simp [Matrix.map_apply]
+  map_smul' r a := by
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
+        smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value, RingHom.id_apply]
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
+    · rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
 
 /-!
 

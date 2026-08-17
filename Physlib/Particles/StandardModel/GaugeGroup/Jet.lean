@@ -415,6 +415,19 @@ lemma eval_ofConstant (g : GaugeGroupI) : eval (ofConstant g) = g := by
       RingHom.mapMatrix_apply, Matrix.map_apply]
   · simp [eval, ofConstant, evalU1, ofConstantU1]
 
+@[simp]
+lemma deriv_ofConstant (μ : Fin 1 ⊕ Fin 3) (U₀ : GaugeGroupI) :
+    deriv μ (JetGaugeGroupI.ofConstant U₀) = 0 := by
+  refine Prod.ext ?_ (Prod.ext ?_ ?_)
+  · show ((C : ℂ →+* JetRing).mapMatrix U₀.1.1).map (pderiv ℂ μ) = 0
+    ext i j : 1
+    simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
+  · show ((C : ℂ →+* JetRing).mapMatrix U₀.2.1.1).map (pderiv ℂ μ) = 0
+    ext i j : 1
+    simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
+  · show pderiv ℂ μ (C U₀.2.2.1 : JetRing) = 0
+    simp [pderiv_C]
+
 end JetGaugeGroupI
 
 end StandardModel
