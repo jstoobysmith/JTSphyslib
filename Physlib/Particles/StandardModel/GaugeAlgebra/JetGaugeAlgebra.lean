@@ -17,6 +17,9 @@ public import Physlib.Particles.LagrangianTheory.Basic
 public import Physlib.Mathematics.MvPowerSeriesDerivative
 public import Physlib.Mathematics.MvPolynomialTranslation
 public import Mathlib.Algebra.MvPolynomial.Derivation
+public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.RingTheory.MvPowerSeries.PiTopology
+public import Mathlib.Topology.Instances.Matrix
 /-!
 # The jet gauge algebra
 
@@ -59,13 +62,14 @@ namespace StandardModel
 open MvPowerSeries Matrix
 
 /-- The jet gauge algebra: the Lie-algebra analogue of `JetGaugeGroupI`, with one factor per
-  gauge group factor — self-adjoint `3 × 3` and `2 × 2` matrices and a self-adjoint scalar,
-  all with coefficients in the ring `JetRing` of formal power series in the spacetime
+  gauge group factor — traceless self-adjoint `3 × 3` and `2 × 2` matrices and a self-adjoint
+  scalar, all with coefficients in the ring `JetRing` of formal power series in the spacetime
   coordinates. The Maurer–Cartan forms of the jet gauge group are valued here, hermiticity
   being `star_maurerCartanSU3` and its companions. -/
-abbrev JetGaugeAlgebra :=
-  selfAdjoint (Matrix (Fin 3) (Fin 3) JetRing) ×
-  selfAdjoint (Matrix (Fin 2) (Fin 2) JetRing) × selfAdjoint JetRing
+def JetGaugeAlgebra :=
+  { A : Matrix (Fin 3) (Fin 3) JetRing // star A = A ∧ A.trace = 0 } ×
+  { A : Matrix (Fin 2) (Fin 2) JetRing // star A = A ∧ A.trace = 0 } ×
+  selfAdjoint JetRing
 
 namespace JetGaugeAlgebra
 
@@ -76,13 +80,49 @@ namespace JetGaugeAlgebra
 -/
 
 /-- The `su(3)`-factor component of an element of the jet gauge algebra. -/
-def toSU3 (a : JetGaugeAlgebra) : selfAdjoint (Matrix (Fin 3) (Fin 3) JetRing) := a.1
+def toSU3Matrix (a : JetGaugeAlgebra) : Matrix (Fin 3) (Fin 3) JetRing := a.1
 
 /-- The `su(2)`-factor component of an element of the jet gauge algebra. -/
-def toSU2 (a : JetGaugeAlgebra) : selfAdjoint (Matrix (Fin 2) (Fin 2) JetRing) := a.2.1
+def toSU2Matrix (a : JetGaugeAlgebra) : Matrix (Fin 2) (Fin 2) JetRing  := a.2.1
 
 /-- The `u(1)`-factor component of an element of the jet gauge algebra. -/
-def toU1 (a : JetGaugeAlgebra) : selfAdjoint JetRing := a.2.2
+def toU1Value (a : JetGaugeAlgebra) :  JetRing := a.2.2
+
+@[ext]
+lemma ext_of_matrix {a b : JetGaugeAlgebra} (h1 : a.toSU3Matrix = b.toSU3Matrix)
+    (h2 : a.toSU2Matrix = b.toSU2Matrix) (h3 : a.toU1Value = b.toU1Value) : a = b := by
+  cases a; cases b
+  simp only [toSU3Matrix, toSU2Matrix, toU1Value] at h1 h2 h3
+  grind
+
+/-!
+
+## Constructor from a product of matrices
+
+-/
+
+def ofMatrixProd (A : Matrix (Fin 3) (Fin 3) JetRing ×
+    Matrix (Fin 2) (Fin 2) JetRing × JetRing) (hA : star A.1 = A.1 ∧ A.1.trace = 0)
+    (hB : star A.2.1 = A.2.1 ∧ A.2.1.trace = 0) (hC : star A.2.2 = A.2.2) : JetGaugeAlgebra :=
+  ⟨⟨A.1, hA⟩, ⟨A.2.1, hB⟩, ⟨A.2.2, hC⟩⟩
+
+@[simp]
+lemma ofMatrixProd_toSU3Matrix (A : Matrix (Fin 3) (Fin 3) JetRing ×
+    Matrix (Fin 2) (Fin 2) JetRing × JetRing) (hA : star A.1 = A.1 ∧ A.1.trace = 0)
+    (hB : star A.2.1 = A.2.1 ∧ A.2.1.trace = 0) (hC : star A.2.2 = A.2.2) :
+    (ofMatrixProd A hA hB hC).toSU3Matrix = A.1 := by rfl
+
+@[simp]
+lemma ofMatrixProd_toSU2Matrix (A : Matrix (Fin 3) (Fin 3) JetRing ×
+    Matrix (Fin 2) (Fin 2) JetRing × JetRing) (hA : star A.1 = A.1 ∧ A.1.trace = 0)
+    (hB : star A.2.1 = A.2.1 ∧ A.2.1.trace = 0) (hC : star A.2.2 = A.2.2) :
+    (ofMatrixProd A hA hB hC).toSU2Matrix = A.2.1 := by rfl
+
+@[simp]
+lemma ofMatrixProd_toU1Value (A : Matrix (Fin 3) (Fin 3) JetRing ×
+    Matrix (Fin 2) (Fin 2) JetRing × JetRing) (hA : star A.1 = A.1 ∧ A.1.trace = 0)
+    (hB : star A.2.1 = A.2.1 ∧ A.2.1.trace = 0) (hC : star A.2.2 = A.2.2) :
+    (ofMatrixProd A hA hB hC).toU1Value = A.2.2 := by rfl
 
 /-!
 
@@ -90,7 +130,62 @@ def toU1 (a : JetGaugeAlgebra) : selfAdjoint JetRing := a.2.2
 
 -/
 
-TODO "Define the Lie algebra instance on `JetGaugeAlgebra`."
+noncomputable instance : Add JetGaugeAlgebra where
+  add a b :=
+    ⟨⟨a.1.1 + b.1.1,
+      by rw [star_add, a.1.2.1, b.1.2.1],
+      by rw [trace_add, a.1.2.2, b.1.2.2, add_zero]⟩,
+    ⟨a.2.1.1 + b.2.1.1,
+      by rw [star_add, a.2.1.2.1, b.2.1.2.1],
+      by rw [trace_add, a.2.1.2.2, b.2.1.2.2, add_zero]⟩,
+    a.2.2 + b.2.2⟩
+
+@[simp]
+lemma add_toSU3Matrix (a b : JetGaugeAlgebra) :
+    (a + b).toSU3Matrix = a.toSU3Matrix + b.toSU3Matrix := by rfl
+
+@[simp]
+lemma add_toSU2Matrix (a b : JetGaugeAlgebra) :
+    (a + b).toSU2Matrix = a.toSU2Matrix + b.toSU2Matrix := by rfl
+
+@[simp]
+lemma add_toU1Value (a b : JetGaugeAlgebra) :
+    (a + b).toU1Value = a.toU1Value + b.toU1Value := by rfl
+
+noncomputable instance : Zero JetGaugeAlgebra where
+  zero := ⟨⟨0, by simp, by simp⟩, ⟨0, by simp, by simp⟩, 0⟩
+
+@[simp]
+lemma zero_toSU3Matrix : (0 : JetGaugeAlgebra).toSU3Matrix = 0 := by rfl
+
+@[simp]
+lemma zero_toSU2Matrix : (0 : JetGaugeAlgebra).toSU2Matrix = 0 := by rfl
+
+@[simp]
+lemma zero_toU1Value : (0 : JetGaugeAlgebra).toU1Value = 0 := by rfl
+
+noncomputable instance : SMul ℝ JetGaugeAlgebra where
+  smul r a :=
+    ⟨⟨r • a.1.1,
+      by rw [star_smul, star_trivial, a.1.2.1],
+      by rw [trace_smul, a.1.2.2, smul_zero]⟩,
+    ⟨r • a.2.1.1,
+      by rw [star_smul, star_trivial, a.2.1.2.1],
+      by rw [trace_smul, a.2.1.2.2, smul_zero]⟩,
+    r • a.2.2⟩
+
+@[simp]
+lemma smul_toSU3Matrix (r : ℝ) (a : JetGaugeAlgebra) :
+    (r • a).toSU3Matrix = r • a.toSU3Matrix := by rfl
+
+@[simp]
+lemma smul_toSU2Matrix (r : ℝ) (a : JetGaugeAlgebra) :
+    (r • a).toSU2Matrix = r • a.toSU2Matrix := by rfl
+
+@[simp]
+lemma smul_toU1Value (r : ℝ) (a : JetGaugeAlgebra) :
+    (r • a).toU1Value = r • a.toU1Value := by rfl
+
 
 /-!
 

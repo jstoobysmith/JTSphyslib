@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet
+public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
@@ -41,14 +42,15 @@ It satisfies the following properties:
 namespace StandardModel
 open MvPowerSeries
 
+
+
 /-!
 
 ## The Maurer–Cartan forms of the jet gauge group
 
 -/
 
-TODO "The maurerCartan form should be defined for the whole gauge group,
-  and it should live in the jet Lie algebra."
+
 
 TODO "Define the symmetrized maurerCartan forms."
 
@@ -286,6 +288,79 @@ lemma star_maurerCartanSU2 (U : JetGaugeGroupI) (ν : Fin 1 ⊕ Fin 3) :
     exact (JetRing.pderiv_star ν (A j i)).symm
   rw [star_smul, star_mul, star_star, hstarmap, hq, JetRing.star_C,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_smul, smul_neg, neg_neg]
+
+/-!
+
+### The Maurer–Cartan form valued in the jet gauge algebra
+
+-/
+
+/-- The Maurer–Cartan form `ω_μ(U) := i (∂_μ U) U†` of the jet gauge group, valued in
+  the jet gauge algebra. Componentwise it is the triple of the `SU(3)`, `SU(2)` and
+  `U(1)` Maurer–Cartan forms. Hermiticity of each factor is `star_maurerCartanSU3` and
+  its companions; tracelessness of the two `SU` factors is Jacobi's formula,
+  `tr ((∂_μ U) U†) = tr ((∂_μ U) · adjugate U) = ∂_μ (det U) = ∂_μ 1 = 0`,
+  using `U† = adjugate U` for a special unitary `U`. -/
+noncomputable def maurerCartan (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra :=
+  ⟨⟨maurerCartanSU3 U μ,
+    -- hermitian: differentiate the unitarity relation `U U† = 1`
+    star_maurerCartanSU3 U μ,
+    -- traceless: Jacobi's formula on the `3 × 3` factor
+    by
+      set A : Matrix (Fin 3) (Fin 3) JetRing := (U.1 : Matrix (Fin 3) (Fin 3) JetRing) with hA
+      have hU : A * star A = 1 := by
+        have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1
+        rwa [Matrix.mem_unitaryGroup_iff] at h
+      have hdet : A.det = 1 := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).2
+      -- for a special unitary matrix, the conjugate transpose is the adjugate
+      have hadj : star A = A.adjugate := by
+        have h1 : star A * A = 1 := mul_eq_one_comm.mp hU
+        calc star A = star A * (A * A.adjugate) := by
+              rw [Matrix.mul_adjugate, hdet, one_smul, mul_one]
+          _ = star A * A * A.adjugate := by rw [mul_assoc]
+          _ = A.adjugate := by rw [h1, one_mul]
+      -- Jacobi's formula, by explicit computation on the `3 × 3` entries
+      have jacobi : (A.map (pderiv ℂ μ) * A.adjugate).trace = pderiv ℂ μ A.det := by
+        rw [Matrix.det_fin_three]
+        simp only [Matrix.trace_fin_three, Matrix.mul_apply, Fin.sum_univ_three,
+          Matrix.map_apply, Matrix.adjugate_fin_three, Matrix.of_apply, Matrix.cons_val',
+          Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.head_cons,
+          Matrix.tail_cons, Matrix.head_fin_const, Matrix.empty_val', Matrix.cons_val_fin_one,
+          map_sub, map_add, Derivation.leibniz, smul_eq_mul]
+        ring
+      rw [show maurerCartanSU3 U μ = (MvPowerSeries.C Complex.I : JetRing) •
+          (A.map (pderiv ℂ μ) * star A) from rfl,
+        Matrix.trace_smul, hadj, jacobi, hdet, pderiv_one, smul_zero]⟩,
+  ⟨maurerCartanSU2 U μ,
+    -- hermitian: differentiate the unitarity relation `U U† = 1`
+    star_maurerCartanSU2 U μ,
+    -- traceless: Jacobi's formula on the `2 × 2` factor
+    by
+      set A : Matrix (Fin 2) (Fin 2) JetRing := (U.2.1 : Matrix (Fin 2) (Fin 2) JetRing) with hA
+      have hU : A * star A = 1 := by
+        have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).1
+        rwa [Matrix.mem_unitaryGroup_iff] at h
+      have hdet : A.det = 1 := (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).2
+      have hadj : star A = A.adjugate := by
+        have h1 : star A * A = 1 := mul_eq_one_comm.mp hU
+        calc star A = star A * (A * A.adjugate) := by
+              rw [Matrix.mul_adjugate, hdet, one_smul, mul_one]
+          _ = star A * A * A.adjugate := by rw [mul_assoc]
+          _ = A.adjugate := by rw [h1, one_mul]
+      have jacobi : (A.map (pderiv ℂ μ) * A.adjugate).trace = pderiv ℂ μ A.det := by
+        rw [Matrix.det_fin_two]
+        simp only [Matrix.trace_fin_two, Matrix.mul_apply, Fin.sum_univ_two,
+          Matrix.map_apply, Matrix.adjugate_fin_two, Matrix.of_apply, Matrix.cons_val',
+          Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.head_fin_const,
+          Matrix.empty_val', Matrix.cons_val_fin_one, map_sub, map_add, map_neg,
+          Derivation.leibniz, smul_eq_mul]
+        ring
+      rw [show maurerCartanSU2 U μ = (MvPowerSeries.C Complex.I : JetRing) •
+          (A.map (pderiv ℂ μ) * star A) from rfl,
+        Matrix.trace_smul, hadj, jacobi, hdet, pderiv_one, smul_zero]⟩,
+  ⟨maurerCartanU1 U μ,
+    -- hermitian: differentiate the unitarity relation `u ū = 1`
+    by rw [selfAdjoint.mem_iff]; exact star_maurerCartanU1 U μ⟩⟩
 
 /-!
 
