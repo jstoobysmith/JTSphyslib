@@ -7,20 +7,72 @@ Basic rules of this outline:
 
 ## Goal
 
-- The goal of this project is to formalize the Standard Model Lagrangian.
-
-
-
-
-
-
-- Let B be an algebra.
+- The goal of this project is to formalize the form of the
+  Standard Model Lagrangian at an implicit point `x₀`.
+- The lagrangian depends only on the fields and their derivatives at `x₀`.
+- In reality, the EFT lagrangian is a formal infinite sum of terms of all
+  mass dimensions.
+- However, the questions physicists ask are about truncations of this sum,
+  for example: "what is the form of the SM lagrangian up to mass dimension `n`?".
+- Such truncations are always finite polynomials in the fields and their
+  derivatives, because at each mass dimension there are only finitely many
+  independent terms.
+- It therefore suffices to work with finite polynomials: classifying the
+  invariant terms at each mass dimension answers every truncated question.
+- If ever needed, the full infinite sum can be recovered as a formal series
+  over mass dimensions (the graded completion), without changing the
+  underlying algebra of finite polynomials.
 
 ## Jet ring
 
 - Let `JetRing` be the ring of jets.
 - For `φ : JetRing`, and `p : Multiset (Fin 1 ⊕ Fin 3)` we let `∂_p| φ` be the
    `p`-th Taylor coefficient of `φ` at the base point.
+
+## Jet component spaces
+
+- For a vector space `V`, the space `JetRing ⊗[ℂ] V` describes the jets of all functions `f : SpaceTime → V`.
+- As an example, consider a theory for a field valued in `V`.
+- The lagrangian at `x₀` is a function of the field: it takes the jet of the
+  field at `x₀` and returns a number.
+- The lagrangian therefore does not live in `JetRing ⊗[ℂ] V` itself, but in an
+  algebra of functions on `JetRing ⊗[ℂ] V`.
+- A polynomial function on a vector space is a polynomial in linear
+  functionals on that space, i.e. in coordinate functions.
+- The physicists' symbols `d_s ψ_α` are exactly such coordinate functions:
+  `d_s ψ_α` sends a jet `f` to its Taylor coefficient `∂_s| f_α`.
+- Not every linear functional on `JetRing ⊗[ℂ] V` is of this form: the full
+  dual also contains functionals depending on infinitely many Taylor
+  coefficients at once — for example, the formal evaluation of the field at
+  a point other than `x₀`.
+- Locality excludes these: each term of the lagrangian may depend on only
+  finitely many derivatives of the field at `x₀`.
+- The allowed linear functionals are therefore the finite linear
+  combinations of the `d_s ψ_α`.
+- Their span is called the jet component space, `JetComponentSpace`; it has
+  a basis indexed by the pairs `(s, α)`.
+- Formally, `JetComponentSpace = DerivAlgebra ⊗[ℂ] Module.Dual ℂ V`, where
+  `DerivAlgebra` is the restricted (polynomial) dual of `JetRing`, spanned by
+  the functionals `∂_s|`.
+- The lagrangian is then an element of the symmetric (for bosons) or
+  exterior (for fermions) algebra over `JetComponentSpace`.
+
+### The group action on coordinate functions
+
+- Suppose a group acts on the field by `f ↦ ρ(U) f`.
+- The physicists' transformation rule is the substitution
+  `S_U : ψ_α ↦ ∑_β ρ(U)_{α β} ψ_β` applied to the symbols in the lagrangian.
+- On coordinate functions, `S_U` is precomposition with `ρ(U)`:
+  `S_U(φ) = φ ∘ ρ(U)`.
+- Substitution composes in the reversed order: `S_V(S_U(ψ_α)) = S_{U V}(ψ_α)`,
+  not `S_{V U}(ψ_α)`; the substitution rule is a right action.
+- To obtain a left action (a `Representation`), one inverse must be
+  inserted: `U · φ := φ ∘ ρ(U)⁻¹`, the contragredient (dual) representation.
+- The coordinate functions thus transform with `U⁻¹`, opposite to the field
+  itself — the familiar upper-index versus lower-index distinction.
+- This changes nothing physical: invariance is quantified over the whole
+  group, so a lagrangian is invariant under all `S_U` if and only if it is
+  invariant under the contragredient action of all `U`.
 
 ## Jet gauge group
 
