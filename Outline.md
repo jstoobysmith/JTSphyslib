@@ -33,46 +33,69 @@ Basic rules of this outline:
 
 - For a vector space `V`, the space `JetRing ⊗[ℂ] V` describes the jets of all functions `f : SpaceTime → V`.
 - As an example, consider a theory for a field valued in `V`.
-- The lagrangian at `x₀` is a function of the field: it takes the jet of the
-  field at `x₀` and returns a number.
-- The lagrangian therefore does not live in `JetRing ⊗[ℂ] V` itself, but in an
-  algebra of functions on `JetRing ⊗[ℂ] V`.
-- A polynomial function on a vector space is a polynomial in linear
-  functionals on that space, i.e. in coordinate functions.
-- The physicists' symbols `d_s ψ_α` are exactly such coordinate functions:
-  `d_s ψ_α` sends a jet `f` to its Taylor coefficient `∂_s| f_α`.
-- Not every linear functional on `JetRing ⊗[ℂ] V` is of this form: the full
-  dual also contains functionals depending on infinitely many Taylor
-  coefficients at once — for example, the formal evaluation of the field at
-  a point other than `x₀`.
-- Locality excludes these: each term of the lagrangian may depend on only
-  finitely many derivatives of the field at `x₀`.
-- The allowed linear functionals are therefore the finite linear
-  combinations of the `d_s ψ_α`.
-- Their span is called the jet component space, `JetComponentSpace`; it has
-  a basis indexed by the pairs `(s, α)`.
-- Formally, `JetComponentSpace = DerivAlgebra ⊗[ℂ] Module.Dual ℂ V`, where
-  `DerivAlgebra` is the restricted (polynomial) dual of `JetRing`, spanned by
-  the functionals `∂_s|`.
-- The lagrangian is then an element of the symmetric (for bosons) or
-  exterior (for fermions) algebra over `JetComponentSpace`.
+- A physicist writes the lagrangian as a polynomial in symbols such as
+  `ψ_α`, `d_μ ψ_α`, `d_μ d_ν ψ_α`.
+- To formalize the lagrangian, we must first say what kind of object a
+  symbol `d_s ψ_α` is.
+- The symbol `d_s ψ_α` is a machine which takes a field and returns a
+  number: the `s`-th derivative of its `α`-th component at `x₀`.
+- A field enters only through its jet, so `d_s ψ_α` is a linear functional
+  on `JetRing ⊗[ℂ] V`: it sends the jet `f` to its Taylor coefficient
+  `∂_s| f_α`.
+- In other words, the symbols are the coordinate functions on the space of
+  jets.
+- When `V` is a complex vector space, the physicist also writes conjugate
+  symbols `d_s ψ̄_α`, e.g. in the mass term `ψ̄ ψ`.
+- These are genuinely new: a polynomial in the `d_s ψ_α` alone depends
+  holomorphically on the field, and real terms like `ψ̄ ψ` are not
+  holomorphic.
+- The symbol `d_s ψ̄_α` sends the jet `f` to the complex conjugate of
+  `∂_s| f_α`; it is conjugate-linear in `f`, i.e. a linear functional on
+  the conjugate space of `JetRing ⊗[ℂ] V`.
+- The physicists' practice of treating `ψ` and `ψ̄` as independent
+  variables is exactly this: conjugation is not complex-linear, so the
+  conjugate symbols cannot be built from the `d_s ψ_α` and enter as
+  independent coordinate functions.
+- We define the jet component space `JetComponentSpace` to be the span of
+  the symbols `d_s ψ_α` and `d_s ψ̄_α` together; they form a basis, indexed
+  by the pairs `(s, α)` with a bar/no-bar tag.
+- This span is smaller than the full dual of `JetRing ⊗[ℂ] V`, which also
+  contains non-local functionals — e.g. evaluation of the field at a point
+  other than `x₀` — depending on infinitely many derivatives at once;
+  locality is precisely the restriction to the span of the symbols.
+- Formally, `JetComponentSpace = (DerivAlgebra ⊗[ℂ] Module.Dual ℂ V) ×
+  (DerivAlgebra ⊗[ℂ] Module.Dual ℂ (ConjModule V))`, where `DerivAlgebra`
+  is the span of the functionals `∂_s|` on `JetRing`, and the second factor
+  is dropped when `V` is real (its conjugate is then not independent).
+- The lagrangian — a polynomial in the symbols — is then an element of the
+  symmetric (for bosons) or exterior (for fermions) algebra over
+  `JetComponentSpace`.
 
-### The group action on coordinate functions
+### The group action on the symbols
 
-- Suppose a group acts on the field by `f ↦ ρ(U) f`.
-- The physicists' transformation rule is the substitution
-  `S_U : ψ_α ↦ ∑_β ρ(U)_{α β} ψ_β` applied to the symbols in the lagrangian.
-- On coordinate functions, `S_U` is precomposition with `ρ(U)`:
-  `S_U(φ) = φ ∘ ρ(U)`.
-- Substitution composes in the reversed order: `S_V(S_U(ψ_α)) = S_{U V}(ψ_α)`,
-  not `S_{V U}(ψ_α)`; the substitution rule is a right action.
-- To obtain a left action (a `Representation`), one inverse must be
-  inserted: `U · φ := φ ∘ ρ(U)⁻¹`, the contragredient (dual) representation.
-- The coordinate functions thus transform with `U⁻¹`, opposite to the field
-  itself — the familiar upper-index versus lower-index distinction.
-- This changes nothing physical: invariance is quantified over the whole
-  group, so a lagrangian is invariant under all `S_U` if and only if it is
-  invariant under the contragredient action of all `U`.
+- Let a group act on fields by `f ↦ ρ(U) f`.
+- Because the symbols are functions of the field, their transformation is
+  not extra data — it is inherited: the transformed symbol is the symbol
+  evaluated on the transformed field.
+- Evaluating on the transformed field gives
+  `ψ_α(ρ(U) f) = ∑_β ρ(U)_{α β} ψ_β(f)` — exactly the physicists'
+  substitution rule, now derived rather than postulated.
+- As an operation on symbols this is precomposition, `φ ↦ φ ∘ ρ(U)`, which
+  composes in reverse order: acting with `U` then `V` yields `ρ(U V)`, not
+  `ρ(V U)` — a right action.
+- A `Representation` is a left action, so one inverse must be inserted:
+  `U · φ := φ ∘ ρ(U)⁻¹`.
+- This inverse is the familiar one in `φ'(x) = φ(Λ⁻¹ x)` for a scalar
+  field: a function transforms with the inverse of the transformation of
+  its argument.
+- The symbols therefore transform in the dual (contragredient)
+  representation, opposite to the field itself.
+- The conjugate symbols inherit their transformation the same way:
+  `ψ̄_α(ρ(U) f) = ∑_β conj(ρ(U)_{α β}) ψ̄_β(f)` — the physicists' rule
+  `ψ̄ ↦ ψ̄ U†` for a unitary representation.
+- Invariance is unaffected: a lagrangian is invariant under all `U` if and
+  only if it is invariant under all `U⁻¹`, so both conventions single out
+  exactly the same invariant lagrangians.
 
 ## Jet gauge group
 
@@ -323,3 +346,6 @@ Basic rules of this outline:
 - Finally, by `JetGaugeGroup = N ⋊ G`, the remaining invariance is under the
   constant jets, which act through `U₀` — i.e. `x` is a `G`-invariant of
   `adjoin({ 𝒟_q F } ∪ S)`, completing the equality.
+
+
+## SU(3)-invariants.
