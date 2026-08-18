@@ -11,6 +11,7 @@ public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Mathlib.Algebra.TrivSqZeroExt.Basic
 public import Mathlib.Data.Finsupp.Multiset
+public import Mathlib.Data.Finsupp.Weight
 public import Physlib.Particles.StandardModel.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
@@ -156,6 +157,132 @@ lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
       Finsupp.single_eq_of_ne h]
     push_cast
     ring
+
+/-!
+
+### Truncation of jets
+
+-/
+/-- The `n`-th truncation of a jet: the Taylor coefficients of total degree
+  greater than `n` are set to zero. -/
+noncomputable def truncation (n : ℕ) (f : JetRing) : JetRing :=
+  fun m => if Finsupp.degree m ≤ n then f m else 0
+
+@[simp]
+lemma coeff_truncation_of_le {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
+    (h : Finsupp.degree m ≤ n) (f : JetRing) :
+    coeff m (truncation n f) = coeff m f := if_pos h
+
+@[simp]
+lemma coeff_truncation_of_gt {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
+    (h : n < Finsupp.degree m) (f : JetRing) :
+    coeff m (truncation n f) = 0 := if_neg (not_le.mpr h)
+
+lemma truncation_add (n : ℕ) (f g : JetRing) :
+    truncation n (f + g) = truncation n f + truncation n g := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [coeff_truncation_of_le hm, map_add, map_add,
+      coeff_truncation_of_le hm, coeff_truncation_of_le hm]
+  · rw [coeff_truncation_of_gt (not_le.mp hm), map_add,
+      coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm), add_zero]
+
+lemma truncation_sum {ι : Type} (n : ℕ) (s : Finset ι) (f : ι → JetRing) :
+    truncation n (∑ i ∈ s, f i) = ∑ i ∈ s, truncation n (f i) :=
+  map_sum (AddMonoidHom.mk' (truncation n) (truncation_add n)) f s
+
+/-- Truncation of a product only sees the factors through their truncations: the
+  coefficients of `f * g` in degree at most `n` involve only coefficients of `f`
+  and `g` in degree at most `n`. -/
+lemma truncation_mul (n : ℕ) (f g : JetRing) :
+    truncation n (f * g) = truncation n (truncation n f * truncation n g) := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [coeff_truncation_of_le hm, coeff_truncation_of_le hm, coeff_mul, coeff_mul]
+    refine Finset.sum_congr rfl fun p hp => ?_
+    have hpq : p.1 + p.2 = m := Finset.mem_antidiagonal.mp hp
+    have h1 : Finsupp.degree p.1 ≤ n := by
+      refine le_trans ?_ hm
+      rw [← hpq, map_add]
+      exact Nat.le_add_right _ _
+    have h2 : Finsupp.degree p.2 ≤ n := by
+      refine le_trans ?_ hm
+      rw [← hpq, map_add]
+      exact Nat.le_add_left _ _
+    rw [coeff_truncation_of_le h1, coeff_truncation_of_le h2]
+  · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm)]
+
+/-- The congruence principle for truncated products. -/
+lemma truncation_mul_congr {n : ℕ} {f f' g g' : JetRing}
+    (hf : truncation n f = truncation n f') (hg : truncation n g = truncation n g') :
+    truncation n (f * g) = truncation n (f' * g') := by
+  rw [truncation_mul, hf, hg, ← truncation_mul]
+
+lemma truncation_star (n : ℕ) (f : JetRing) :
+    truncation n (star f) = star (truncation n f) := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [coeff_truncation_of_le hm, coeff_star, coeff_star, coeff_truncation_of_le hm]
+  · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_star,
+      coeff_truncation_of_gt (not_le.mp hm), star_zero]
+
+/-- Entrywise truncation of a matrix product only sees the factors through their
+  entrywise truncations. -/
+lemma matrix_truncation_mul {κ : Type} [Fintype κ] [DecidableEq κ] (n : ℕ)
+    (A B : Matrix κ κ JetRing) :
+    (A * B).map (truncation n) =
+      (A.map (truncation n) * B.map (truncation n)).map (truncation n) := by
+  ext i j : 1
+  simp only [Matrix.map_apply, Matrix.mul_apply]
+  rw [truncation_sum, truncation_sum]
+  exact Finset.sum_congr rfl fun k _ => truncation_mul n _ _
+
+/-- The congruence principle for entrywise-truncated matrix products. -/
+lemma matrix_truncation_mul_congr {κ : Type} [Fintype κ] [DecidableEq κ] {n : ℕ}
+    {A A' B B' : Matrix κ κ JetRing}
+    (hA : A.map (truncation n) = A'.map (truncation n))
+    (hB : B.map (truncation n) = B'.map (truncation n)) :
+    (A * B).map (truncation n) = (A' * B').map (truncation n) := by
+  rw [matrix_truncation_mul, hA, hB, ← matrix_truncation_mul]
+
+lemma matrix_truncation_star {κ : Type} [Fintype κ] [DecidableEq κ] (n : ℕ)
+    (A : Matrix κ κ JetRing) :
+    (star A).map (truncation n) = star (A.map (truncation n)) := by
+  ext i j : 1
+  simp only [Matrix.map_apply, Matrix.star_apply]
+  exact truncation_star n (A j i)
+
+@[simp]
+lemma truncation_zero (n : ℕ) : truncation n (0 : JetRing) = 0 := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [coeff_truncation_of_le hm]
+  · rw [coeff_truncation_of_gt (not_le.mp hm), map_zero]
+
+/-- Truncation fixes the identity: a constant series has its only nonzero Taylor
+  coefficient in degree zero, which every truncation keeps. -/
+@[simp]
+lemma truncation_one (n : ℕ) : truncation n (1 : JetRing) = 1 := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [coeff_truncation_of_le hm]
+  · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_one,
+      if_neg (by rintro rfl; simp at hm)]
+
+/-- Two jets have the same zeroth truncation exactly when they have the same
+  value at the base point. -/
+lemma truncation_zero_eq_iff {f g : JetRing} :
+    truncation 0 f = truncation 0 g ↔ constantCoeff f = constantCoeff g := by
+  constructor
+  · intro h
+    simpa using congrArg (coeff (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ)) h
+  · intro h
+    ext m
+    by_cases hm : Finsupp.degree m ≤ 0
+    · have hm0 : m = 0 := (Finsupp.degree_eq_zero_iff m).mp (Nat.le_zero.mp hm)
+      subst hm0
+      simpa using h
+    · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm)]
 
 end JetRing
 

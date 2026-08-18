@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
@@ -166,6 +166,18 @@ lemma smul_toSU2Matrix (r : ℝ) (a : JetGaugeAlgebra) :
 lemma smul_toU1Value (r : ℝ) (a : JetGaugeAlgebra) :
     (r • a).toU1Value = r • a.toU1Value := by rfl
 
+@[simp]
+lemma sub_toSU3Matrix (a b : JetGaugeAlgebra) :
+    (a - b).toSU3Matrix = a.toSU3Matrix - b.toSU3Matrix := by rfl
+
+@[simp]
+lemma sub_toSU2Matrix (a b : JetGaugeAlgebra) :
+    (a - b).toSU2Matrix = a.toSU2Matrix - b.toSU2Matrix := by rfl
+
+@[simp]
+lemma sub_toU1Value (a b : JetGaugeAlgebra) :
+    (a - b).toU1Value = a.toU1Value - b.toU1Value := by rfl
+
 /-- The bracket on the jet gauge algebra: `I` times the matrix commutator on the
   `su(3)` and `su(2)` factors, and zero on the (commutative) `u(1)` factor. The
   factor of `I` is what makes the bracket of two hermitian matrices hermitian
@@ -283,6 +295,37 @@ lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
     simp [Matrix.map_apply, JetRing.pderiv_comm μ ν]
   · exact JetRing.pderiv_comm μ ν _
 
+/-- The derivative is a derivation of the bracket: the Leibniz rule
+  `deriv μ ⁅x, y⁆ = ⁅deriv μ x, y⁆ + ⁅x, deriv μ y⁆`. -/
+lemma deriv_bracket (μ : Fin 1 ⊕ Fin 3) (x y : JetGaugeAlgebra) :
+    deriv μ ⁅x, y⁆ = ⁅deriv μ x, y⁆ + ⁅x, deriv μ y⁆ := by
+  have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
+      (M * N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) * N + M * N.map (pderiv ℂ μ) := by
+    intro κ _ _ M N
+    ext i j : 1
+    simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+      Derivation.leibniz, smul_eq_mul]
+    exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
+  have hsmul : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (c : ℂ) (M : Matrix κ κ JetRing),
+      (c • M).map (pderiv ℂ μ) = c • M.map (pderiv ℂ μ) :=
+    fun _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
+  have hsub : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
+      (M - N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) - N.map (pderiv ℂ μ) := by
+    intro κ _ _ M N
+    ext i j : 1
+    simp only [Matrix.map_apply, Matrix.sub_apply, map_sub]
+  refine ext_of_matrix ?_ ?_ ?_ <;>
+    simp only [deriv_toSU3Matrix, deriv_toSU2Matrix, deriv_toU1Value, bracket_toSU3Matrix,
+      bracket_toSU2Matrix, bracket_toU1Value, add_toSU3Matrix, add_toSU2Matrix,
+      add_toU1Value, hsmul, hsub, hleib, map_zero, add_zero]
+  · rw [← smul_add]
+    congr 1
+    abel
+  · rw [← smul_add]
+    congr 1
+    abel
+
+
 /-- Post-composition with `deriv` is right-commutative, since formal derivatives
   commute (`deriv_comm`). This is what allows iterated derivatives to be indexed by a
   `Multiset` of directions. -/
@@ -315,6 +358,23 @@ lemma iteratedDeriv_cons (μ : Fin 1 ⊕ Fin 3) (μs : Multiset (Fin 1 ⊕ Fin 3
         simp [LinearMap.comp_assoc]
   rw [iteratedDeriv, Multiset.foldl_cons, h]
   simp
+
+/-- The iterated derivative is additive in the multiset of directions: deriving
+  along `s + t` is deriving along `t` and then along `s`. -/
+lemma iteratedDeriv_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    iteratedDeriv (s + t) = (iteratedDeriv s).comp (iteratedDeriv t) := by
+  induction s using Multiset.induction_on with
+  | empty => simp [iteratedDeriv_zero]
+  | cons μ s ih =>
+      rw [Multiset.cons_add, iteratedDeriv_cons, iteratedDeriv_cons, ih,
+        LinearMap.comp_assoc]
+
+@[simp]
+lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
+    iteratedDeriv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = deriv μ := by
+  rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
+    iteratedDeriv_zero, LinearMap.comp_id]
+
 
 /-!
 
@@ -392,6 +452,115 @@ lemma taylorCoeff_zero_bracket (a b : JetGaugeAlgebra) :
   coefficient, as a morphism of Lie algebras. -/
 noncomputable def eval : JetGaugeAlgebra →ₗ⁅ℝ⁆ GaugeAlgebra :=
   { taylorCoeff 0 with map_lie' := taylorCoeff_zero_bracket _ _ }
+
+/-- Taylor determinacy: a jet gauge algebra element is determined by the base-point
+  values of its iterated derivatives. -/
+theorem ext_of_eval_iteratedDeriv {x y : JetGaugeAlgebra}
+    (h : ∀ s, eval (iteratedDeriv s x) = eval (iteratedDeriv s y)) : x = y := by
+  have key : ∀ (n : ℕ) (x y : JetGaugeAlgebra),
+      (∀ s, eval (iteratedDeriv s x) = eval (iteratedDeriv s y)) →
+      ∀ m : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree m = n →
+        (∀ i j, coeff m (x.toSU3Matrix i j) = coeff m (y.toSU3Matrix i j)) ∧
+        (∀ i j, coeff m (x.toSU2Matrix i j) = coeff m (y.toSU2Matrix i j)) ∧
+        coeff m x.toU1Value = coeff m y.toU1Value := by
+    intro n
+    induction n with
+    | zero =>
+        intro x y hxy m hm
+        have hm0 : m = 0 := (Finsupp.degree_eq_zero_iff m).mp hm
+        subst hm0
+        have h0 := hxy 0
+        rw [iteratedDeriv_zero] at h0
+        simp only [LinearMap.id_coe, id_eq] at h0
+        have h0' : taylorCoeff 0 x = taylorCoeff 0 y := h0
+        refine ⟨fun i j => ?_, fun i j => ?_, ?_⟩
+        · simpa [Matrix.map_apply] using
+            congrArg (fun g => GaugeAlgebra.toSU3Matrix g i j) h0'
+        · simpa [Matrix.map_apply] using
+            congrArg (fun g => GaugeAlgebra.toSU2Matrix g i j) h0'
+        · simpa using congrArg GaugeAlgebra.toU1Value h0' 
+    | succ n ih =>
+        intro x y hxy m hm
+        -- pick a direction occurring in `m` and peel one derivative off
+        have hm0 : m ≠ 0 := fun h0 => by simp [h0] at hm
+        obtain ⟨μ, hμ⟩ := Finsupp.ne_iff.mp hm0
+        simp only [Finsupp.coe_zero, Pi.zero_apply] at hμ
+        have hle : Finsupp.single μ 1 ≤ m := by
+          rw [Finsupp.single_le_iff]
+          omega
+        have hm'' : m - Finsupp.single μ 1 + Finsupp.single μ 1 = m :=
+          tsub_add_cancel_of_le hle
+        have hdeg' : Finsupp.degree (m - Finsupp.single μ 1) = n := by
+          have h1 := congrArg Finsupp.degree hm''
+          rw [map_add, Finsupp.degree_single, hm] at h1
+          omega
+        -- the derivative pair inherits the hypothesis, by additivity of `iteratedDeriv`
+        have hd : ∀ s, eval (iteratedDeriv s (deriv μ x)) =
+            eval (iteratedDeriv s (deriv μ y)) := by
+          intro s
+          have h1 := hxy (s + {μ})
+          rwa [iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton] at h1
+        obtain ⟨k3, k2, k1⟩ := ih (deriv μ x) (deriv μ y) hd (m - Finsupp.single μ 1) hdeg'
+        refine ⟨fun i j => ?_, fun i j => ?_, ?_⟩
+        · have hk := k3 i j
+          simp only [deriv_toSU3Matrix, Matrix.map_apply] at hk
+          rw [coeff_pderiv, coeff_pderiv, hm''] at hk
+          exact mul_right_cancel₀ (Nat.cast_add_one_ne_zero _) hk
+        · have hk := k2 i j
+          simp only [deriv_toSU2Matrix, Matrix.map_apply] at hk
+          rw [coeff_pderiv, coeff_pderiv, hm''] at hk
+          exact mul_right_cancel₀ (Nat.cast_add_one_ne_zero _) hk
+        · have hk := k1
+          simp only [deriv_toU1Value] at hk
+          rw [coeff_pderiv, coeff_pderiv, hm''] at hk
+          exact mul_right_cancel₀ (Nat.cast_add_one_ne_zero _) hk
+  refine ext_of_matrix ?_ ?_ ?_
+  · ext i j : 1
+    ext m
+    exact (key (Finsupp.degree m) x y h m rfl).1 i j
+  · ext i j : 1
+    ext m
+    exact (key (Finsupp.degree m) x y h m rfl).2.1 i j
+  · ext m
+    exact (key (Finsupp.degree m) x y h m rfl).2.2
+
+/-- Bracket congruence: the base-point Taylor data of an iterated derivative of a
+  bracket depends only on the corresponding Taylor data of the two arguments. -/
+lemma eval_iteratedDeriv_bracket_congr (w : Multiset (Fin 1 ⊕ Fin 3))
+    (a b a' b' : JetGaugeAlgebra)
+    (ha : ∀ p ≤ w, eval (iteratedDeriv p a) = eval (iteratedDeriv p a'))
+    (hb : ∀ p ≤ w, eval (iteratedDeriv p b) = eval (iteratedDeriv p b')) :
+    eval (iteratedDeriv w ⁅a, b⁆) = eval (iteratedDeriv w ⁅a', b'⁆) := by
+  induction w using Multiset.induction_on generalizing a b a' b' with
+  | empty =>
+      have ha0 := ha 0 le_rfl
+      have hb0 := hb 0 le_rfl
+      rw [iteratedDeriv_zero] at ha0 hb0 ⊢
+      simp only [LinearMap.id_coe, id_eq] at ha0 hb0 ⊢
+      rw [LieHom.map_lie, LieHom.map_lie, ha0, hb0]
+  | cons ρ w ihw =>
+      have hcons : ∀ c : JetGaugeAlgebra,
+          iteratedDeriv (ρ ::ₘ w) c = iteratedDeriv w (deriv ρ c) := by
+        intro c
+        rw [show (ρ ::ₘ w : Multiset (Fin 1 ⊕ Fin 3)) = w + {ρ} from by
+            rw [add_comm, Multiset.singleton_add],
+          iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
+      have htrans : ∀ (c c' : JetGaugeAlgebra),
+          (∀ p ≤ ρ ::ₘ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c')) →
+          ∀ p ≤ w, eval (iteratedDeriv p (deriv ρ c)) = eval (iteratedDeriv p (deriv ρ c')) := by
+        intro c c' hc p hp
+        have h1 := hc (p + {ρ}) (by
+          rw [show (ρ ::ₘ w : Multiset (Fin 1 ⊕ Fin 3)) = w + {ρ} from by
+            rw [add_comm, Multiset.singleton_add]]
+          exact add_le_add hp le_rfl)
+        rwa [iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton] at h1
+      have hrest : ∀ (c c' : JetGaugeAlgebra),
+          (∀ p ≤ ρ ::ₘ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c')) →
+          ∀ p ≤ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c') :=
+        fun c c' hc p hp => hc p (hp.trans (Multiset.le_cons_self w ρ))
+      rw [hcons, hcons, deriv_bracket, deriv_bracket, map_add, map_add, map_add, map_add]
+      rw [ihw _ _ _ _ (htrans a a' ha) (hrest b b' hb),
+        ihw _ _ _ _ (hrest a a' ha) (htrans b b' hb)]
 
 /-!
 

@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
@@ -158,6 +158,96 @@ lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
 
 /-!
 
+## The structural equation
+
+-/
+
+/-- The structural (Maurer–Cartan) equation, basis-independently: the Maurer–Cartan
+  form is flat,
+
+  `∂_μ ω_ν − ∂_ν ω_μ + ⁅ω_μ, ω_ν⁆ = 0`.
+
+  In components with respect to a basis of the jet gauge algebra this is
+  `∂_μ ω^a_ν − ∂_ν ω^a_μ = ∑_{b c} f^a_{b c} · ω^b_μ · ω^c_ν`. On each matrix
+  factor the second-derivative terms cancel by symmetry of mixed partials, the
+  derivative of `A†` is rewritten through the differentiated unitarity relation,
+  and the surviving first-order terms form the commutator; on the abelian `U(1)`
+  factor the commutator is absent and only the symmetry of mixed partials
+  remains. -/
+lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) :
+    deriv μ (maurerCartanForm U ν) - deriv ν (maurerCartanForm U μ) +
+      ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ = 0 := by
+  -- pulling the scalar `i` out of the entrywise formal derivative
+  have hmap : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3) (c : ℂ)
+      (M : Matrix κ κ JetRing), (c • M).map (pderiv ℂ ρ) = c • M.map (pderiv ℂ ρ) :=
+    fun _ _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
+  -- the matrix-level structural identity, generic in the size of the factor
+  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (A : Matrix κ κ JetRing),
+      A * star A = 1 →
+      (A.map (pderiv ℂ ν) * star A).map (pderiv ℂ μ) -
+        (A.map (pderiv ℂ μ) * star A).map (pderiv ℂ ν) =
+      A.map (pderiv ℂ μ) * star A * (A.map (pderiv ℂ ν) * star A) -
+        A.map (pderiv ℂ ν) * star A * (A.map (pderiv ℂ μ) * star A) := by
+    intro κ _ _ A hU
+    have hleib : ∀ (ρ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing),
+        (M * N).map (pderiv ℂ ρ) = M.map (pderiv ℂ ρ) * N + M * N.map (pderiv ℂ ρ) := by
+      intro ρ M N
+      ext i j : 1
+      simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+        Derivation.leibniz, smul_eq_mul]
+      exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
+    -- the derivative of `A†` through differentiated unitarity
+    have hq : ∀ ρ : Fin 1 ⊕ Fin 3,
+        (star A).map (pderiv ℂ ρ) = -(star A * A.map (pderiv ℂ ρ) * star A) := by
+      intro ρ
+      have h1 : A * (star A).map (pderiv ℂ ρ) = -(A.map (pderiv ℂ ρ) * star A) :=
+        eq_neg_of_add_eq_zero_right (by
+          rw [← hleib ρ A (star A), hU]
+          exact Matrix.ext fun i j => by
+            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ ρ)])
+      calc (star A).map (pderiv ℂ ρ)
+          = star A * A * (star A).map (pderiv ℂ ρ) := by
+            rw [mul_eq_one_comm.mp hU, one_mul]
+        _ = -(star A * A.map (pderiv ℂ ρ) * star A) := by
+            rw [mul_assoc, h1, mul_neg, ← mul_assoc]
+    rw [hleib μ (A.map (pderiv ℂ ν)) (star A), hleib ν (A.map (pderiv ℂ μ)) (star A),
+      show (A.map (pderiv ℂ ν)).map (pderiv ℂ μ) = (A.map (pderiv ℂ μ)).map (pderiv ℂ ν)
+        from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _, hq μ, hq ν]
+    simp only [mul_neg, ← mul_assoc]
+    abel
+  -- the abelian `U(1)` identity: no commutator, pure symmetry of mixed partials
+  have keyU1 : pderiv ℂ μ (pderiv ℂ ν U.2.2.1 * star U.2.2.1) =
+      pderiv ℂ ν (pderiv ℂ μ U.2.2.1 * star U.2.2.1) := by
+    have hu : U.2.2.1 * star U.2.2.1 = 1 := (Unitary.mem_iff.mp U.2.2.2).2
+    have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ℂ ρ (star U.2.2.1) =
+        -(star U.2.2.1 * pderiv ℂ ρ U.2.2.1 * star U.2.2.1) := by
+      intro ρ
+      have h0 : pderiv ℂ ρ (U.2.2.1 * star U.2.2.1) = 0 := by rw [hu, pderiv_one]
+      rw [Derivation.leibniz] at h0
+      simp only [smul_eq_mul] at h0
+      linear_combination star U.2.2.1 * h0 -
+        pderiv ℂ ρ (star U.2.2.1) * ((mul_comm _ _).trans hu)
+    simp only [Derivation.leibniz, smul_eq_mul]
+    rw [hstar μ, hstar ν, JetRing.pderiv_comm μ ν]
+    ring
+  refine ext_of_matrix ?_ ?_ ?_ <;>
+    simp only [add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, sub_toSU3Matrix,
+      sub_toSU2Matrix, sub_toU1Value, deriv_toSU3Matrix, deriv_toSU2Matrix,
+      deriv_toU1Value, bracket_toSU3Matrix, bracket_toSU2Matrix, bracket_toU1Value,
+      maurerCartanForm_toSU3Matrix, maurerCartanForm_toSU2Matrix,
+      maurerCartanForm_toU1Value, zero_toSU3Matrix, zero_toSU2Matrix, zero_toU1Value,
+      hmap, smul_mul_smul_comm, Complex.I_mul_I, neg_one_smul, Derivation.map_smul,
+      add_zero]
+  · rw [← smul_sub, ← smul_add, key _ U.1.1
+      (Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1)]
+    exact smul_eq_zero_of_right _ (by abel)
+  · rw [← smul_sub, ← smul_add, key _ U.2.1.1
+      (Matrix.mem_unitaryGroup_iff.mp (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).1)]
+    exact smul_eq_zero_of_right _ (by abel)
+  · rw [keyU1, sub_self]
+
+/-!
+
 ## The symmeterized Maurer–Cartan form
 
 -/
@@ -216,5 +306,83 @@ lemma symmetrizedMaurerCartanForm_cons (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 
       show ((r.card + 1 : ℕ) : ℝ) = (r.card : ℝ) + 1 by push_cast; ring,
       show (r.card : ℝ)/((r.card : ℝ) + 1) * (1/(r.card : ℝ)) = 1/((r.card : ℝ) + 1) by
         field_simp]
+
+/-!
+
+## Determination of the Maurer–Cartan form by its symmetrized coefficients
+
+-/
+
+
+/-- The symmetrization defect of the Maurer–Cartan form: an iterated derivative of
+  `ω` is the corresponding symmetrized form plus an average of iterated derivatives
+  of brackets of `ω` in strictly fewer directions. This is the jet-level form of the
+  outline's span statement, with the structure equation already substituted. -/
+lemma iteratedDeriv_maurerCartanForm_eq_symmetrized_add (U : JetGaugeGroupI)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    iteratedDeriv s (maurerCartanForm U μ) =
+      symmetrizedMaurerCartanForm U (μ ::ₘ s) +
+      (1/(s.card + 1 : ℝ)) • (s.map fun ν =>
+        iteratedDeriv (s.erase ν) ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆).sum := by
+  -- each bracket term is a difference of two iterated derivatives of `ω`
+  have hswap : ∀ ν ∈ s,
+      iteratedDeriv (s.erase ν) ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ =
+        iteratedDeriv s (maurerCartanForm U μ) -
+          iteratedDeriv (μ ::ₘ s.erase ν) (maurerCartanForm U ν) := by
+    intro ν hν
+    have hb : ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ =
+        deriv ν (maurerCartanForm U μ) - deriv μ (maurerCartanForm U ν) := by
+      have h1 : deriv μ (maurerCartanForm U ν) - deriv ν (maurerCartanForm U μ) =
+          -⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ :=
+        eq_neg_of_add_eq_zero_left (maurerCartanForm_structure U μ ν)
+      rw [← neg_sub, h1, neg_neg]
+    rw [hb, map_sub]
+    congr 1
+    · conv_rhs => rw [← Multiset.cons_erase hν]
+      rw [show (ν ::ₘ s.erase ν : Multiset (Fin 1 ⊕ Fin 3)) = s.erase ν + {ν} from by
+          rw [add_comm, Multiset.singleton_add],
+        iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
+    · rw [show (μ ::ₘ s.erase ν : Multiset (Fin 1 ⊕ Fin 3)) = s.erase ν + {μ} from by
+          rw [add_comm, Multiset.singleton_add],
+        iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
+  have herase : ∀ ν ∈ s, (μ ::ₘ s).erase ν = μ ::ₘ s.erase ν := by
+    intro ν hν
+    rcases eq_or_ne ν μ with rfl | hne
+    · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
+    · rw [Multiset.erase_cons_tail _ hne.symm]
+  rw [symmetrizedMaurerCartanForm, Multiset.map_cons, Multiset.sum_cons,
+    Multiset.card_cons, Multiset.sub_singleton, Multiset.erase_cons_head,
+    Multiset.map_congr rfl fun ν hν => by rw [Multiset.sub_singleton, herase ν hν],
+    Multiset.map_congr rfl hswap, Multiset.sum_map_sub, Multiset.map_const',
+    Multiset.sum_replicate, ← Nat.cast_smul_eq_nsmul ℝ]
+  push_cast
+  match_scalars <;> field_simp <;> ring
+
+/-- Determination step: if the base-point symmetrized Maurer–Cartan data of `U` and
+  `V` agree, and their Maurer–Cartan Taylor data agree in fewer than `n` directions,
+  then they agree in `n` directions. -/
+lemma eval_iteratedDeriv_maurerCartanForm_eq_of_symmetrized_eq (U V : JetGaugeGroupI) (n : ℕ)
+    (hsym : ∀ r, eval (symmetrizedMaurerCartanForm U r) =
+      eval (symmetrizedMaurerCartanForm V r))
+    (ih : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card < n →
+      eval (iteratedDeriv s (maurerCartanForm U μ)) =
+        eval (iteratedDeriv s (maurerCartanForm V μ)))
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (hs : s.card = n) :
+    eval (iteratedDeriv s (maurerCartanForm U μ)) =
+      eval (iteratedDeriv s (maurerCartanForm V μ)) := by
+  rw [iteratedDeriv_maurerCartanForm_eq_symmetrized_add U s μ,
+    iteratedDeriv_maurerCartanForm_eq_symmetrized_add V s μ,
+    map_add, map_add, map_smul, map_smul, hsym]
+  refine congrArg (fun z => eval (symmetrizedMaurerCartanForm V (μ ::ₘ s)) +
+    (1/(s.card + 1 : ℝ)) • z) ?_
+  rw [map_multiset_sum, map_multiset_sum, Multiset.map_map, Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun ν hν => ?_)
+  have hlt : ∀ p : Multiset (Fin 1 ⊕ Fin 3), p ≤ s.erase ν → p.card < n := by
+    intro p hp
+    have h1 := Multiset.card_le_card hp
+    have h2 := Multiset.card_erase_add_one hν
+    omega
+  exact eval_iteratedDeriv_bracket_congr (s.erase ν) _ _ _ _
+    (fun p hp => ih p μ (hlt p hp)) (fun p hp => ih p ν (hlt p hp))
 
 end StandardModel

@@ -180,13 +180,13 @@ Basic rules of this outline:
   so the symmetric data of `U` is a function of `(a, r)` with `r` nonempty.
 - Define
 
-    `symMC : PureJetGaugeGroup → κ → { r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0 } → ℂ`
+    `symmetrizedMaurerCartanCoeff : PureJetGaugeGroup → κ → { r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0 } → ℂ`
 
-    `symMC U a r := (1/|r|) ∑_{ν ∈ r} ∂_{r − ν}| ω^a_ν(U)`
+    `symmetrizedMaurerCartanCoeff U a r := (1/|r|) ∑_{ν ∈ r} ∂_{r − ν}| ω^a_ν(U)`
 
 - Total symmetry is automatic: the codomain is indexed by the multiset `r`, so there
   is no symmetry side-condition to impose.
-- Lemma (freeness): `Function.Bijective symMC`.
+- Lemma (freeness): `Function.Bijective symmetrizedMaurerCartanCoeff`.
 - Remark: this is the `sym(d_s A)` argument with the roles reversed — for `ω` the
   "field strength" vanishes identically (the structure equation), so nothing survives
   except the symmetric parts.
