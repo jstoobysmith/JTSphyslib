@@ -83,8 +83,6 @@ lemma maurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
 
 lemma maurerCartanForm_cocycle (U V : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     maurerCartanForm (U * V) μ = maurerCartanForm U μ + adjoint U (maurerCartanForm V μ) := by
-  -- Since `(X⁻¹).toVal` is definitionally the componentwise `star`, the whole identity
-  -- can be proven once in the ring of value-triples and transferred componentwise.
   have h1 : V.toVal * (V⁻¹).toVal = 1 := by
     rw [show V.toVal * (V⁻¹).toVal = (V * V⁻¹).toVal from rfl, mul_inv_cancel]; rfl
   have key : Complex.I • (JetGaugeGroupI.deriv μ (U * V) * ((U * V)⁻¹).toVal) =
@@ -96,8 +94,6 @@ lemma maurerCartanForm_cocycle (U V : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     · rw [mul_assoc (JetGaugeGroupI.deriv μ U), ← mul_assoc V.toVal, h1, one_mul]
     · simp [mul_assoc]
   refine ext_of_matrix (congrArg (fun p => p.1) key) (congrArg (fun p => p.2.1) key) ?_
-  -- on the commutative `u(1)` factor the adjoint action is trivial only up to
-  -- commutativity and unitarity, so this component is not definitional
   have h22 : (maurerCartanForm (U * V) μ).toU1Value =
       (maurerCartanForm U μ).toU1Value +
         U.2.2.1 * (maurerCartanForm V μ).toU1Value * star U.2.2.1 :=
@@ -105,6 +101,10 @@ lemma maurerCartanForm_cocycle (U V : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
   rw [h22, mul_comm (U.2.2.1 : JetRing) ((maurerCartanForm V μ).toU1Value), mul_assoc,
     (Unitary.mem_iff.mp U.2.2.2).2, mul_one]
   rfl
+
+lemma maurerCartanForm_inv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    maurerCartanForm (U⁻¹) μ = - adjoint U⁻¹ (maurerCartanForm U μ) := by
+  linear_combination (norm := simp) -(maurerCartanForm_cocycle  U⁻¹ U μ)
 
 lemma deriv_zero_of_maurerCartanForm_zero (U : JetGaugeGroupI) (h : maurerCartanForm U = 0) :
     ∀ μ, U.deriv μ = 0 := by
