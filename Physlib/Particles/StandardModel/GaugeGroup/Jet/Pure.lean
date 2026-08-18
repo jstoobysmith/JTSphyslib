@@ -101,6 +101,14 @@ lemma proj_eq_one_iff_constant {U : JetGaugeGroupI} :
     apply Subtype.ext
     simp [proj]
 
+lemma proj_ofConstant (c : GaugeGroupI) : proj (JetGaugeGroupI.ofConstant c) = 1 := by
+  rw [proj_eq_one_iff_constant]
+  exact ⟨c, rfl⟩
+
+lemma eq_proj_mul_ofConstant (U : JetGaugeGroupI) :
+    U = proj U * JetGaugeGroupI.ofConstant U.eval := by
+  simp [proj]
+
 end PureSubgroup
 
 end JetGaugeGroup
