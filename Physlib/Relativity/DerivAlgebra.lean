@@ -76,6 +76,10 @@ instance : StarRing JetRing where
 instance : StarModule ℝ JetRing where
   star_smul r f := funext fun n => star_smul r (f n)
 
+/-- Complex scalars conjugate under the coefficientwise conjugation. -/
+instance : StarModule ℂ JetRing where
+  star_smul c f := funext fun n => star_smul c (f n)
+
 @[simp]
 lemma constantCoeff_star (f : JetRing) :
     constantCoeff (star f) = star (constantCoeff f) := rfl

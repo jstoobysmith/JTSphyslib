@@ -165,6 +165,59 @@ lemma smul_toSU2Matrix (r : ℝ) (a : JetGaugeAlgebra) :
 lemma smul_toU1Value (r : ℝ) (a : JetGaugeAlgebra) :
     (r • a).toU1Value = r • a.toU1Value := by rfl
 
+/-- The bracket on the jet gauge algebra: `I` times the matrix commutator on the
+  `su(3)` and `su(2)` factors, and zero on the (commutative) `u(1)` factor. The
+  factor of `I` is what makes the bracket of two hermitian matrices hermitian
+  again; it is also why the bracket is only `ℝ`-bilinear, not `ℂ`-bilinear. -/
+noncomputable instance : Bracket JetGaugeAlgebra JetGaugeAlgebra where
+  bracket a b := ofMatrixProd
+      (Complex.I • (a.toSU3Matrix * b.toSU3Matrix - b.toSU3Matrix * a.toSU3Matrix),
+        Complex.I • (a.toSU2Matrix * b.toSU2Matrix - b.toSU2Matrix * a.toSU2Matrix),
+        0)
+      ⟨by
+        rw [star_smul, star_sub, star_mul, star_mul,
+          show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1,
+          show star b.toSU3Matrix = b.toSU3Matrix from b.1.2.1,
+          Complex.star_def, Complex.conj_I, neg_smul, ← smul_neg, neg_sub],
+        by rw [Matrix.trace_smul, Matrix.trace_sub, Matrix.trace_mul_comm, sub_self, smul_zero]⟩
+      ⟨by
+        rw [star_smul, star_sub, star_mul, star_mul,
+          show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1,
+          show star b.toSU2Matrix = b.toSU2Matrix from b.2.1.2.1,
+          Complex.star_def, Complex.conj_I, neg_smul, ← smul_neg, neg_sub],
+        by rw [Matrix.trace_smul, Matrix.trace_sub, Matrix.trace_mul_comm, sub_self, smul_zero]⟩
+      (star_zero _)
+
+@[simp]
+lemma bracket_toSU3Matrix (a b : JetGaugeAlgebra) :
+    ⁅a, b⁆.toSU3Matrix =
+      Complex.I • (a.toSU3Matrix * b.toSU3Matrix - b.toSU3Matrix * a.toSU3Matrix) := rfl
+
+@[simp]
+lemma bracket_toSU2Matrix (a b : JetGaugeAlgebra) :
+    ⁅a, b⁆.toSU2Matrix =
+      Complex.I • (a.toSU2Matrix * b.toSU2Matrix - b.toSU2Matrix * a.toSU2Matrix) := rfl
+
+@[simp]
+lemma bracket_toU1Value (a b : JetGaugeAlgebra) :
+    ⁅a, b⁆.toU1Value = 0 := rfl
+
+noncomputable instance : LieRing JetGaugeAlgebra where
+  add_lie a b c := by
+    ext <;> simp [add_mul, mul_add, smul_add, smul_sub] <;> abel
+  lie_add a b c := by
+    ext <;> simp [add_mul, mul_add, smul_add, smul_sub] <;> abel
+  lie_self a := by
+    ext <;> simp
+  leibniz_lie a b c := by
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [bracket_toSU3Matrix, bracket_toSU2Matrix, bracket_toU1Value,
+        add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, mul_smul_comm, smul_mul_assoc,
+        smul_smul, Complex.I_mul_I, smul_sub, mul_sub, sub_mul, mul_assoc, add_zero] <;>
+      module
+
+noncomputable instance : LieAlgebra ℝ JetGaugeAlgebra where
+  lie_smul r a b := by refine ext_of_matrix ?_ ?_ ?_ <;> simp <;> module
 
 /-!
 
@@ -207,6 +260,47 @@ noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra →ₗ[ℝ] Jet
       rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
     · rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
 
+@[simp]
+lemma deriv_toSU3Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (deriv μ a).toSU3Matrix = a.toSU3Matrix.map (pderiv ℂ μ) := rfl
+
+@[simp]
+lemma deriv_toSU2Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (deriv μ a).toSU2Matrix = a.toSU2Matrix.map (pderiv ℂ μ) := rfl
+
+@[simp]
+lemma deriv_toU1Value (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (deriv μ a).toU1Value = pderiv ℂ μ a.toU1Value := rfl
+
+/-- Formal derivatives on the jet gauge algebra commute. -/
+lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    deriv μ (deriv ν a) = deriv ν (deriv μ a) := by
+  refine ext_of_matrix ?_ ?_ ?_
+  · ext i j : 1
+    simp [Matrix.map_apply, JetRing.pderiv_comm μ ν]
+  · ext i j : 1
+    simp [Matrix.map_apply, JetRing.pderiv_comm μ ν]
+  · exact JetRing.pderiv_comm μ ν _
+
+/-- Post-composition with `deriv` is right-commutative, since formal derivatives
+  commute (`deriv_comm`). This is what allows iterated derivatives to be indexed by a
+  `Multiset` of directions. -/
+instance : RightCommutative
+    (fun (D : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra) (μ : Fin 1 ⊕ Fin 3) => D.comp (deriv μ)) where
+  right_comm D μ ν := by
+    refine LinearMap.ext fun a => ?_
+    exact congrArg D (deriv_comm μ ν a)
+
+/-- The iterated formal derivative on the jet gauge algebra, in the (unordered, since
+  derivatives commute) directions given by the multiset `μs`. -/
+noncomputable def iteratedDeriv (μs : Multiset (Fin 1 ⊕ Fin 3)) :
+    JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra :=
+  μs.foldl (fun D μ => D.comp (deriv μ)) LinearMap.id
+
+@[simp]
+lemma iteratedDeriv_zero : iteratedDeriv 0 = LinearMap.id := by
+  simp [iteratedDeriv]
+
 /-!
 
 ## The basis
@@ -222,7 +316,61 @@ TODO "Define the basis of the jet gauge algebra."
 
 -/
 
-TODO "Define the adjoint representation of the jet gauge group on the jet gauge algebra."
+/-- The adjoint action of an element `U` of the jet gauge group on the jet gauge algebra,
+  acting on the `su(3)` and `su(2)` factors by `a ↦ U a U⁻¹`, with `U⁻¹ = star U` by
+  unitarity, and trivially on the `u(1)` factor since `JetRing` is commutative.
+  Hermiticity is preserved since `star (U a (star U)) = U (star a) (star U)`, and
+  tracelessness since the trace is invariant under conjugation. -/
+noncomputable def adjointMap (U : JetGaugeGroupI) : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra where
+  toFun a := ofMatrixProd
+      (U.1.1 * a.toSU3Matrix * star U.1.1,
+        U.2.1.1 * a.toSU2Matrix * star U.2.1.1,
+        a.toU1Value)
+      ⟨by
+        rw [star_mul, star_mul, star_star,
+          show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1, mul_assoc],
+        by
+        rw [Matrix.trace_mul_comm, ← mul_assoc,
+          show star U.1.1 * U.1.1 = 1 from mem_unitaryGroup_iff'.mp
+            (mem_specialUnitaryGroup_iff.mp U.1.2).1,
+          one_mul, show a.toSU3Matrix.trace = 0 from a.1.2.2]⟩
+      ⟨by
+        rw [star_mul, star_mul, star_star,
+          show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1]
+        exact (mul_assoc _ _ _).symm,
+        by
+        rw [Matrix.trace_mul_comm, ← mul_assoc,
+          show star U.2.1.1 * U.2.1.1 = 1 from mem_unitaryGroup_iff'.mp
+            (mem_specialUnitaryGroup_iff.mp U.2.1.2).1,
+          one_mul, show a.toSU2Matrix.trace = 0 from a.2.1.2.2]⟩
+      (show star a.toU1Value = a.toU1Value from a.2.2.2)
+  map_add' a b := by
+    ext <;> simp [mul_add, add_mul]
+  map_smul' r a := by
+    ext <;> simp
+
+@[simp]
+lemma adjointMap_toSU3Matrix (U : JetGaugeGroupI) (a : JetGaugeAlgebra) :
+    (adjointMap U a).toSU3Matrix = U.1.1 * a.toSU3Matrix * star U.1.1 := rfl
+
+@[simp]
+lemma adjointMap_toSU2Matrix (U : JetGaugeGroupI) (a : JetGaugeAlgebra) :
+    (adjointMap U a).toSU2Matrix = U.2.1.1 * a.toSU2Matrix * star U.2.1.1 := rfl
+
+@[simp]
+lemma adjointMap_toU1Value (U : JetGaugeGroupI) (a : JetGaugeAlgebra) :
+    (adjointMap U a).toU1Value = a.toU1Value := rfl
+
+/-- The adjoint representation of the jet gauge group on the jet gauge algebra,
+  `U ↦ (a ↦ U a U⁻¹)` factorwise. -/
+noncomputable def adjoint : Representation ℝ JetGaugeGroupI JetGaugeAlgebra where
+  toFun := adjointMap
+  map_one' := by
+    refine LinearMap.ext fun a => ?_
+    ext <;> simp
+  map_mul' U V := by
+    refine LinearMap.ext fun a => ?_
+    ext <;> simp [star_mul, mul_assoc]
 
 end JetGaugeAlgebra
 

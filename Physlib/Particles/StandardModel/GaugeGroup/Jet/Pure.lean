@@ -32,7 +32,7 @@ a semi-direct product of `PureJetGaugeGroup` and `GaugeGroupI`.
 
 There exists a map:
 ```
- maurerCartanCoeff : PureJetGaugeGroup → { r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0 } → JetLieAlgebra
+ maurerCartanCoeff : PureJetGaugeGroup → { r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0 } → LieAlgebra
 ```
 Defined through the symmetrised Maurer-Cartan form, as
 ```

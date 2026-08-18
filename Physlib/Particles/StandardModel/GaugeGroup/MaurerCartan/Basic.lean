@@ -40,7 +40,7 @@ It satisfies the following properties:
 
 @[expose] public section
 namespace StandardModel
-open MvPowerSeries
+open MvPowerSeries JetGaugeAlgebra
 
 /-!
 
@@ -59,12 +59,52 @@ noncomputable def maurerCartanForm (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     (JetGaugeGroupI.star_deriv_mul_inv_toVal_U1 μ U)
 
 @[simp]
+lemma maurerCartanForm_toSU3Matrix (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    (maurerCartanForm U μ).toSU3Matrix =
+      Complex.I • (U.1.1.map (pderiv ℂ μ) * star U.1.1) := rfl
+
+@[simp]
+lemma maurerCartanForm_toSU2Matrix (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    (maurerCartanForm U μ).toSU2Matrix =
+      Complex.I • (U.2.1.1.map (pderiv ℂ μ) * star U.2.1.1) := rfl
+
+@[simp]
+lemma maurerCartanForm_toU1Value (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    (maurerCartanForm U μ).toU1Value =
+      Complex.I • (pderiv ℂ μ U.2.2.1 * star U.2.2.1) := rfl
+
+@[simp]
 lemma maurerCartanForm_one : maurerCartanForm (1 : JetGaugeGroupI) = 0 := by
   ext <;> simp [maurerCartanForm,JetGaugeGroupI.deriv_one]
 
 lemma maurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
     maurerCartanForm (JetGaugeGroupI.ofConstant U₀) = 0 := by
   ext <;> simp [maurerCartanForm,JetGaugeGroupI.deriv_ofConstant]
+
+lemma maurerCartanForm_cocycle (U V : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    maurerCartanForm (U * V) μ = maurerCartanForm U μ + adjoint U (maurerCartanForm V μ) := by
+  -- Since `(X⁻¹).toVal` is definitionally the componentwise `star`, the whole identity
+  -- can be proven once in the ring of value-triples and transferred componentwise.
+  have h1 : V.toVal * (V⁻¹).toVal = 1 := by
+    rw [show V.toVal * (V⁻¹).toVal = (V * V⁻¹).toVal from rfl, mul_inv_cancel]; rfl
+  have key : Complex.I • (JetGaugeGroupI.deriv μ (U * V) * ((U * V)⁻¹).toVal) =
+      Complex.I • (JetGaugeGroupI.deriv μ U * (U⁻¹).toVal) +
+        U.toVal * (Complex.I • (JetGaugeGroupI.deriv μ V * (V⁻¹).toVal)) * (U⁻¹).toVal := by
+    rw [show ((U * V)⁻¹).toVal = (V⁻¹).toVal * (U⁻¹).toVal from by rw [mul_inv_rev]; rfl,
+      JetGaugeGroupI.deriv_mul, add_mul, smul_add, mul_smul_comm, smul_mul_assoc]
+    congr 1
+    · rw [mul_assoc (JetGaugeGroupI.deriv μ U), ← mul_assoc V.toVal, h1, one_mul]
+    · simp [mul_assoc]
+  refine ext_of_matrix (congrArg (fun p => p.1) key) (congrArg (fun p => p.2.1) key) ?_
+  -- on the commutative `u(1)` factor the adjoint action is trivial only up to
+  -- commutativity and unitarity, so this component is not definitional
+  have h22 : (maurerCartanForm (U * V) μ).toU1Value =
+      (maurerCartanForm U μ).toU1Value +
+        U.2.2.1 * (maurerCartanForm V μ).toU1Value * star U.2.2.1 :=
+    congrArg (fun p => p.2.2) key
+  rw [h22, mul_comm (U.2.2.1 : JetRing) ((maurerCartanForm V μ).toU1Value), mul_assoc,
+    (Unitary.mem_iff.mp U.2.2.2).2, mul_one]
+  rfl
 
 lemma deriv_zero_of_maurerCartanForm_zero (U : JetGaugeGroupI) (h : maurerCartanForm U = 0) :
     ∀ μ, U.deriv μ = 0 := by
@@ -115,5 +155,31 @@ lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
       exact hconst U.2.2.1 fun μ => congrArg (fun p => (p.2.2 : JetRing)) (hderiv μ)
   · rintro ⟨c, rfl⟩
     exact maurerCartanForm_ofConstant c
+
+/-!
+
+## The symmeterized Maurer–Cartan form
+
+-/
+
+TODO "The symmetrizedMaurerCartanForm should actually land in the normal gauge algebra."
+noncomputable def symmetrizedMaurerCartanForm (U : JetGaugeGroupI)
+    (r :  Multiset (Fin 1 ⊕ Fin 3)) : JetGaugeAlgebra :=
+  (1/(r.card : ℝ) : ℝ) • (r.map fun μ => (iteratedDeriv (r - {μ})  (maurerCartanForm U μ))).sum
+
+@[simp]
+lemma symmetrizedMaurerCartanForm_zero (U : JetGaugeGroupI) :
+    symmetrizedMaurerCartanForm U 0 = 0 := by
+  simp [symmetrizedMaurerCartanForm]
+
+@[simp]
+lemma symmetrizedMaurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
+    symmetrizedMaurerCartanForm (JetGaugeGroupI.ofConstant U₀) = 0 := by
+  ext <;> simp [symmetrizedMaurerCartanForm, maurerCartanForm_ofConstant]
+
+@[simp]
+lemma symmetrizedMaurerCartanForm_singleton (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    symmetrizedMaurerCartanForm U {μ} = maurerCartanForm U μ := by
+  simp [symmetrizedMaurerCartanForm, iteratedDeriv_zero]
 
 end StandardModel
