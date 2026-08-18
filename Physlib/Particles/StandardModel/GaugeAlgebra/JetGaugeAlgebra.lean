@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
@@ -300,6 +301,97 @@ noncomputable def iteratedDeriv (μs : Multiset (Fin 1 ⊕ Fin 3)) :
 @[simp]
 lemma iteratedDeriv_zero : iteratedDeriv 0 = LinearMap.id := by
   simp [iteratedDeriv]
+
+lemma iteratedDeriv_cons (μ : Fin 1 ⊕ Fin 3) (μs : Multiset (Fin 1 ⊕ Fin 3)) :
+    iteratedDeriv (μ ::ₘ μs) = (deriv μ).comp (iteratedDeriv μs) := by
+  have h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (D : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra),
+      s.foldl (fun D μ => D.comp (deriv μ)) D = D.comp (iteratedDeriv s) := by
+    intro s
+    induction s using Multiset.induction_on with
+    | empty => intro D; simp [iteratedDeriv]
+    | cons κ t ih =>
+        intro D
+        rw [iteratedDeriv, Multiset.foldl_cons, Multiset.foldl_cons, ih, ih]
+        simp [LinearMap.comp_assoc]
+  rw [iteratedDeriv, Multiset.foldl_cons, h]
+  simp
+
+/-!
+
+## Taylor coefficients and evaluation at the base point
+
+-/
+
+/-- The Taylor coefficient of an element of the jet gauge algebra at the monomial
+  given by the multiset `r` of spacetime directions, taken entrywise, as an
+  `ℝ`-linear map to the constant gauge algebra `GaugeAlgebra`.
+
+  For `r ≠ 0` this is only linear: the coefficient of a product is a convolution of
+  coefficients, so it does not respect the bracket. The zeroth coefficient does; see
+  `eval` for that morphism of Lie algebras. -/
+noncomputable def taylorCoeff (r : Multiset (Fin 1 ⊕ Fin 3)) :
+    JetGaugeAlgebra →ₗ[ℝ] GaugeAlgebra where
+  toFun a := GaugeAlgebra.ofMatrixProd
+      (a.toSU3Matrix.map (coeff r.toFinsupp), a.toSU2Matrix.map (coeff r.toFinsupp),
+        coeff r.toFinsupp a.toU1Value)
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply] using
+          congrArg (fun M => coeff r.toFinsupp (M i j))
+            (show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU3Matrix.trace = 0 from a.1.2.2, map_zero]⟩
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply] using
+          congrArg (fun M => coeff r.toFinsupp (M i j))
+            (show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU2Matrix.trace = 0 from a.2.1.2.2, map_zero]⟩
+      (by rw [← JetRing.coeff_star, show star a.toU1Value = a.toU1Value from a.2.2.2])
+  map_add' a b := by
+    ext <;> simp [Matrix.map_apply]
+  map_smul' t a := by
+    refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [GaugeAlgebra.ofMatrixProd_toSU3Matrix, GaugeAlgebra.ofMatrixProd_toSU2Matrix,
+        GaugeAlgebra.ofMatrixProd_toU1Value, smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value,
+        GaugeAlgebra.smul_toSU3Matrix, GaugeAlgebra.smul_toSU2Matrix, GaugeAlgebra.smul_toU1Value,
+        RingHom.id_apply]
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      rw [← algebraMap_smul ℂ t, map_smul, algebraMap_smul]
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      rw [← algebraMap_smul ℂ t, map_smul, algebraMap_smul]
+    · rw [← algebraMap_smul ℂ t, map_smul, algebraMap_smul]
+
+@[simp]
+lemma taylorCoeff_toSU3Matrix (r : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (taylorCoeff r a).toSU3Matrix = a.toSU3Matrix.map (coeff r.toFinsupp) := rfl
+
+@[simp]
+lemma taylorCoeff_toSU2Matrix (r : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (taylorCoeff r a).toSU2Matrix = a.toSU2Matrix.map (coeff r.toFinsupp) := rfl
+
+@[simp]
+lemma taylorCoeff_toU1Value (r : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (taylorCoeff r a).toU1Value = coeff r.toFinsupp a.toU1Value := rfl
+
+/-- The zeroth Taylor coefficient respects the bracket, since the constant coefficient
+  of a product of jets is the product of the constant coefficients. -/
+lemma taylorCoeff_zero_bracket (a b : JetGaugeAlgebra) :
+    taylorCoeff 0 ⁅a, b⁆ = ⁅taylorCoeff 0 a, taylorCoeff 0 b⁆ := by
+  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+  · ext i j : 1
+    simp [Matrix.map_apply, Matrix.mul_apply, smul_eq_mul,
+      coeff_zero_eq_constantCoeff, map_sum, Finset.mul_sum, mul_sub]
+  · ext i j : 1
+    simp [Matrix.map_apply, Matrix.mul_apply, smul_eq_mul,
+      coeff_zero_eq_constantCoeff, mul_sub]
+  · simp
+
+/-- Evaluation of the jet gauge algebra at the base point: the zeroth Taylor
+  coefficient, as a morphism of Lie algebras. -/
+noncomputable def eval : JetGaugeAlgebra →ₗ⁅ℝ⁆ GaugeAlgebra :=
+  { taylorCoeff 0 with map_lie' := taylorCoeff_zero_bracket _ _ }
 
 /-!
 

@@ -176,6 +176,7 @@ noncomputable def evalU1 : unitary JetRing →* unitary ℂ where
 noncomputable def eval : JetGaugeGroupI →* GaugeGroupI :=
   (evalSU (Fin 3)).prodMap ((evalSU (Fin 2)).prodMap evalU1)
 
+
 /-!
 
 ## The derivative
@@ -354,6 +355,24 @@ lemma star_deriv_mul_inv_toVal_U1 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   -- the star flips `i` to `-i` and the differentiated unitarity flips the product back
   rw [hCs, star_mul', JetRing.star_C, star_mul', star_star, ← JetRing.pderiv_star, hq,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
+
+
+/-- Application of `pderiv` is right-commutative, since formal partial derivatives
+  commute (`JetRing.pderiv_comm`). This allows iterating them over a `Multiset` of
+  directions. -/
+instance : RightCommutative (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => pderiv ℂ μ f) where
+  right_comm f μ ν := JetRing.pderiv_comm ν μ f
+
+/-- The iterated formal derivative, in the (unordered) directions given by the
+  multiset `s`, of the value of a jet gauge transformation, taken entrywise on each
+  factor. This is the derivative-normalized Taylor coefficient of `U` at `s`, as a jet:
+  its value at the base point is `∏ (s.count μ)!` times the power-series coefficient
+  of `U` at the monomial `s`. -/
+noncomputable def iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI) :
+    Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
+  (U.1.1.map fun f => s.foldl (fun f μ => pderiv ℂ μ f) f,
+    U.2.1.1.map fun f => s.foldl (fun f μ => pderiv ℂ μ f) f,
+    s.foldl (fun f μ => pderiv ℂ μ f) U.2.2.1)
 
 /-!
 

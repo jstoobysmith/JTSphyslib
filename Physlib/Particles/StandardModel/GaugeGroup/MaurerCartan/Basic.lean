@@ -162,15 +162,21 @@ lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
 
 -/
 
-TODO "The symmetrizedMaurerCartanForm should actually land in the normal gauge algebra."
+
 noncomputable def symmetrizedMaurerCartanForm (U : JetGaugeGroupI)
     (r :  Multiset (Fin 1 ⊕ Fin 3)) : JetGaugeAlgebra :=
-  (1/(r.card : ℝ) : ℝ) • (r.map fun μ => (iteratedDeriv (r - {μ})  (maurerCartanForm U μ))).sum
+  ((1/(r.card : ℝ) : ℝ) • (r.map fun μ =>
+    (iteratedDeriv (r - {μ}) (maurerCartanForm U μ))).sum)
 
 @[simp]
-lemma symmetrizedMaurerCartanForm_zero (U : JetGaugeGroupI) :
+lemma symmetrizedMaurerCartanForm_apply_zero (U : JetGaugeGroupI) :
     symmetrizedMaurerCartanForm U 0 = 0 := by
   simp [symmetrizedMaurerCartanForm]
+
+@[simp]
+lemma symmetrizedMaurerCartanForm_one :
+    symmetrizedMaurerCartanForm (1 : JetGaugeGroupI) = 0 := by
+  ext <;> simp [symmetrizedMaurerCartanForm]
 
 @[simp]
 lemma symmetrizedMaurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
@@ -179,7 +185,36 @@ lemma symmetrizedMaurerCartanForm_ofConstant (U₀ : GaugeGroupI) :
 
 @[simp]
 lemma symmetrizedMaurerCartanForm_singleton (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
-    symmetrizedMaurerCartanForm U {μ} = maurerCartanForm U μ := by
+    symmetrizedMaurerCartanForm U {μ} = (maurerCartanForm U μ) := by
   simp [symmetrizedMaurerCartanForm, iteratedDeriv_zero]
+
+/-- The recursion for the symmetrized Maurer–Cartan form: peeling one direction off the
+  multiset. -/
+lemma symmetrizedMaurerCartanForm_cons (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+    (r : Multiset (Fin 1 ⊕ Fin 3)) : symmetrizedMaurerCartanForm U (μ ::ₘ r) =
+    (1/(r.card + 1 : ℝ) : ℝ) • (iteratedDeriv r (maurerCartanForm U μ))
+    + ((r.card : ℝ)/(r.card + 1 : ℝ)) • deriv μ (symmetrizedMaurerCartanForm U r) := by
+  by_cases hr : r = 0
+  · subst hr
+    simp
+  · have hn : (r.card : ℝ) ≠ 0 :=
+      Nat.cast_ne_zero.mpr fun h => hr (Multiset.card_eq_zero.mp h)
+    have herase : ∀ ν ∈ r, (μ ::ₘ r).erase ν = μ ::ₘ r.erase ν := by
+      intro ν hν
+      rcases eq_or_ne ν μ with rfl | h
+      · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
+      · rw [Multiset.erase_cons_tail _ h.symm]
+    rw [symmetrizedMaurerCartanForm, symmetrizedMaurerCartanForm, Multiset.map_cons,
+      Multiset.sum_cons, Multiset.card_cons, Multiset.sub_singleton, Multiset.erase_cons_head,
+      Multiset.map_congr rfl fun ν hν => by
+        rw [Multiset.sub_singleton, herase ν hν, iteratedDeriv_cons, LinearMap.comp_apply,
+          ← Multiset.sub_singleton],
+      show (r.map fun ν => deriv μ (iteratedDeriv (r - {ν}) (maurerCartanForm U ν))) =
+          (r.map fun ν => iteratedDeriv (r - {ν}) (maurerCartanForm U ν)).map (deriv μ) from
+        (Multiset.map_map _ _ _).symm,
+      ← map_multiset_sum, smul_add, map_smul, smul_smul,
+      show ((r.card + 1 : ℕ) : ℝ) = (r.card : ℝ) + 1 by push_cast; ring,
+      show (r.card : ℝ)/((r.card : ℝ) + 1) * (1/(r.card : ℝ)) = 1/((r.card : ℝ) + 1) by
+        field_simp]
 
 end StandardModel
