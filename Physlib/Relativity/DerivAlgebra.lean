@@ -284,6 +284,166 @@ lemma truncation_zero_eq_iff {f g : JetRing} :
       simpa using h
     · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm)]
 
+/-!
+
+### Parallel transport
+
+The formal Frobenius theorem for the jet ring: a flat family of matrices `A_μ` is
+the logarithmic derivative `(∂_μ F) F⁻¹` of a formal fundamental solution `F`,
+unique once its value at the base point is fixed. Uniqueness is the vanishing
+principle for first-order linear systems; existence is the Euler (radial)
+recursion, with flatness entering to make the radial solution solve every
+direction.
+
+-/
+
+/-- The vanishing principle for first-order linear systems of jets: a matrix of
+  jets vanishing at the base point and satisfying a linear first-order system
+  `∂_μ F = A_μ F + F B_μ` vanishes identically. Each Taylor coefficient of `F` is
+  determined by the coefficients of strictly smaller degree through the system,
+  so all vanish by strong induction on the degree.
+
+  This is the uniqueness half of the formal Frobenius theorem
+  (`JetRing.exists_parallelTransport`); the two-sided form with independent
+  left and right coefficients also yields unitarity of parallel transport along
+  an anti-hermitian connection, applied to `F Fᴴ − 1`. -/
+lemma matrix_eq_zero_of_pderiv_eq_mul_add_mul {κ : Type} [Fintype κ] [DecidableEq κ]
+    {F : Matrix κ κ JetRing} (A B : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing)
+    (h0 : (constantCoeff : JetRing →+* ℂ).mapMatrix F = 0)
+    (hF : ∀ μ, F.map (pderiv ℂ μ) = A μ * F + F * B μ) :
+    F = 0 := by
+  sorry
+
+/-- A flat gauge field is pure gauge, at the level of jets: if `A_μ` has vanishing
+  field strength, `∂_μ A_ν − ∂_ν A_μ − [A_μ, A_ν] = 0`, then `A_μ = (∂_μ F) F⁻¹`
+  for a Wilson line `F` based at the identity: `∂_μ F = A_μ F` with `F(0) = 1`.
+  Here a Wilson line means the parallel transport of `A` from the base point —
+  the path-ordered exponential `P exp(∫ A_μ dx^μ)`, path-independent since `A` is
+  flat. `F` is built order-by-order in its Taylor expansion; it is unique by
+  `JetRing.matrix_eq_zero_of_pderiv_eq_mul_add_mul`. -/
+lemma exists_parallelTransport {κ : Type} [Fintype κ] [DecidableEq κ]
+    (A : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing)
+    (hA : ∀ μ ν, (A ν).map (pderiv ℂ μ) - (A μ).map (pderiv ℂ ν) =
+      A μ * A ν - A ν * A μ) :
+    ∃ F : Matrix κ κ JetRing, (constantCoeff : JetRing →+* ℂ).mapMatrix F = 1 ∧
+      ∀ μ, F.map (pderiv ℂ μ) = A μ * F := by
+  open Finsupp Finset in
+  set B : Matrix κ κ JetRing := ∑ ρ, (X ρ : JetRing) • A ρ with hB
+  have hBlow : ∀ (M N : Matrix κ κ JetRing) p, (∀ i j q, degree q < degree p →
+      coeff q (M i j) = coeff q (N i j)) →
+      ∀ i j, coeff p ((B * M) i j) = coeff p ((B * N) i j) := fun M N p h i j => by
+    simp only [Matrix.mul_apply, map_sum, coeff_mul]
+    refine Finset.sum_congr rfl fun k _ => Finset.sum_congr rfl fun q hq => ?_
+    rcases eq_or_ne q.1 0 with h1 | h1
+    · rw [h1, coeff_zero_eq_constantCoeff, show constantCoeff (B i k) = 0 from by
+        simp [hB, Matrix.sum_apply, Matrix.smul_apply, smul_eq_mul, constantCoeff_X],
+        zero_mul, zero_mul]
+    · have h4 : degree q.1 + degree q.2 = degree p := by rw [← map_add, mem_antidiagonal.mp hq]
+      have h3 := Nat.pos_of_ne_zero fun hc => h1 ((degree_eq_zero_iff _).mp hc)
+      rw [h _ _ _ (by omega)]
+  set T : Matrix κ κ JetRing → Matrix κ κ JetRing := fun M => 1 + (B * M).map fun f =>
+    show JetRing from fun m => if m = 0 then 0 else ((degree m : ℕ) : ℂ)⁻¹ * f m with hT
+  set F : Matrix κ κ JetRing :=
+    Matrix.of fun i j => show JetRing from fun m => (T^[degree m + 1] 1) i j m with hFd
+  have hFco : ∀ p i j, coeff p (F i j) = coeff p ((T^[degree p + 1] 1) i j) := fun _ _ _ => rfl
+  have hTco : ∀ (M : Matrix κ κ JetRing) i j p,
+      coeff p ((T M) i j) = coeff p ((1 : Matrix κ κ JetRing) i j) +
+        if p = 0 then 0 else ((degree p : ℕ) : ℂ)⁻¹ * coeff p ((B * M) i j) :=
+    fun M i j p => by simp only [hT]; rw [Matrix.add_apply, map_add, Matrix.map_apply]; rfl
+  have hmain : ∀ n p, degree p = n → ∀ k, n < k → ∀ i j,
+      coeff p ((T^[k] 1) i j) = coeff p ((T F) i j) := fun n => by
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro p hp k hk i j; obtain ⟨k, rfl⟩ : ∃ k', k = k' + 1 := ⟨k - 1, by omega⟩
+      rw [Function.iterate_succ_apply', hTco, hTco]; rcases eq_or_ne p 0 with h0 | h0
+      · rw [if_pos h0, if_pos h0]
+      · rw [if_neg h0, if_neg h0, hBlow _ F _ (fun i' j' q hq => ?_) i j]
+        rw [hFco, ih (degree q) (hp ▸ hq) q rfl k (by omega) i' j',
+          ih (degree q) (hp ▸ hq) q rfl (degree q + 1) (by omega) i' j']
+  have hkey := fun p (i j : κ) => (hFco p i j).trans (hmain _ p rfl _ (Nat.lt_succ_self _) i j)
+  have hFone : (constantCoeff : JetRing →+* ℂ).mapMatrix F = 1 := by
+    ext i j; simpa [hTco, Matrix.one_apply, apply_ite, coeff_one] using hkey 0 i j
+  have hEco : ∀ (M : Matrix κ κ JetRing) p i j,
+      coeff p ((∑ ρ, (X ρ : JetRing) • M.map (pderiv ℂ ρ)) i j) =
+        ((degree p : ℕ) : ℂ) * coeff p (M i j) := fun M p i j => by
+    have ht : ∀ ρ, coeff p (((X ρ : JetRing) • M.map (pderiv ℂ ρ)) i j) =
+        (p ρ : ℂ) * coeff p (M i j) := fun ρ => by
+      rw [Matrix.smul_apply, Matrix.map_apply, smul_eq_mul,
+        show (X ρ : JetRing) = monomial (single ρ 1) 1 from rfl, coeff_monomial_mul]
+      by_cases h : single ρ 1 ≤ p
+      · have hρ : 1 ≤ p ρ := by simpa using single_le_iff.mp h
+        rw [if_pos h, one_mul, coeff_pderiv, tsub_add_cancel_of_le h, tsub_apply,
+          single_eq_same, Nat.cast_sub hρ]; push_cast; ring
+      · have hρ : p ρ = 0 := by by_contra hc; exact h (single_le_iff.mpr (by omega))
+        rw [if_neg h, hρ]; simp
+    rw [Matrix.sum_apply, map_sum, Finset.sum_congr rfl fun ρ _ => ht ρ, ← Finset.sum_mul,
+      ← Nat.cast_sum, ← degree_eq_sum]
+  have hleib : ∀ ρ (M N : Matrix κ κ JetRing), (M * N).map (pderiv ℂ ρ) =
+      M.map (pderiv ℂ ρ) * N + M * N.map (pderiv ℂ ρ) := fun ρ M N => by
+    ext i j : 1; simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+      Derivation.leibniz, smul_eq_mul]
+    exact (Finset.sum_congr rfl fun k _ => by ring).trans sum_add_distrib
+  set G := fun ν : Fin 1 ⊕ Fin 3 => F.map (pderiv ℂ ν) - A ν * F with hG
+  have hstar : ∀ μ ν, (G ν).map (pderiv ℂ μ) =
+      (G μ).map (pderiv ℂ ν) + (A μ * G ν - A ν * G μ) := fun μ ν => by
+    have hcm : ∀ (M : Matrix κ κ JetRing), (M.map (pderiv ℂ ν)).map (pderiv ℂ μ) =
+        (M.map (pderiv ℂ μ)).map (pderiv ℂ ν) :=
+      fun M => Matrix.ext fun _ _ => pderiv_comm _ _ _
+    simp only [hG]
+    rw [Matrix.map_sub _ (fun a b => map_sub _ a b), Matrix.map_sub _ (fun a b => map_sub _ a b),
+      hcm, hleib μ (A ν) F, hleib ν (A μ) F, sub_eq_iff_eq_add.mp (hA μ ν)]
+    noncomm_ring
+  have hG0 : (∑ ρ, (X ρ : JetRing) • G ρ) = 0 := by
+    have h1 : (∑ ρ, (X ρ : JetRing) • G ρ) =
+        (∑ ρ, (X ρ : JetRing) • F.map (pderiv ℂ ρ)) - B * F := by
+      rw [hB, Finset.sum_mul, ← sum_sub_distrib]
+      exact Finset.sum_congr rfl fun ρ _ => by rw [hG]; rw [smul_sub, Matrix.smul_mul]
+    rw [h1, sub_eq_zero]; ext i j : 1; ext p; rw [hEco]
+    rcases eq_or_ne p 0 with rfl | h0
+    · have h := hBlow F 0 0 (fun _ _ q hq => absurd hq (by simp)) i j
+      simp only [mul_zero, Matrix.zero_apply, map_zero] at h; simp [h]
+    · rw [hkey p i j, hTco, show coeff p ((1 : Matrix κ κ JetRing) i j) = 0 from by
+        simp [Matrix.one_apply, apply_ite, coeff_one, h0], zero_add, if_neg h0, ← mul_assoc,
+        mul_inv_cancel₀ (Nat.cast_ne_zero.mpr fun hc => h0 ((degree_eq_zero_iff p).mp hc)),
+        one_mul]
+  have hS2 : ∀ ν, (∑ ρ, (X ρ : JetRing) • (G ρ).map (pderiv ℂ ν)) = - G ν := by
+    intro ν
+    have hmap : ((∑ ρ, (X ρ : JetRing) • G ρ).map (pderiv ℂ ν)) =
+        G ν + ∑ ρ, (X ρ : JetRing) • (G ρ).map (pderiv ℂ ν) := by
+      ext i j : 1; simp only [Matrix.map_apply, Matrix.sum_apply, Matrix.smul_apply,
+        smul_eq_mul, map_sum, Derivation.leibniz, Matrix.add_apply]
+      rw [sum_add_distrib, sum_eq_single_of_mem (f := fun ρ => G ρ i j * pderiv ℂ ν (X ρ))
+          ν (mem_univ ν) fun b _ hb => by rw [pderiv_X_of_ne hb, mul_zero]]
+      rw [pderiv_X_self, mul_one]; exact add_comm _ _
+    rw [hG0, Matrix.map_zero _ (map_zero _)] at hmap
+    exact eq_neg_of_add_eq_zero_right hmap.symm
+  have halg : ∀ ν p i j,
+      (((degree p : ℕ) : ℂ) + 1) * coeff p (G ν i j) = coeff p ((B * G ν) i j) := by
+    intro ν p i j; have hs1 : (∑ ρ, (X ρ : JetRing) • (G ν).map (pderiv ℂ ρ)) =
+        (∑ ρ, (X ρ : JetRing) • (G ρ).map (pderiv ℂ ν)) +
+          (B * G ν - A ν * ∑ ρ, (X ρ : JetRing) • G ρ) := by
+      rw [Finset.sum_congr rfl fun ρ _ => congrArg ((X ρ : JetRing) • ·) (hstar ρ ν)]
+      simp only [smul_add, smul_sub, sum_add_distrib, sum_sub_distrib]
+      congr 1; congr 1
+      · rw [hB, Finset.sum_mul]; exact Finset.sum_congr rfl fun _ _ => (Matrix.smul_mul _ _ _).symm
+      · rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun _ _ => (Matrix.mul_smul _ _ _).symm
+    rw [hG0, mul_zero, sub_zero, hS2] at hs1
+    have h := congrArg (fun M => coeff p (M i j)) hs1
+    simp only [Matrix.add_apply, Matrix.neg_apply, map_add, map_neg] at h
+    rw [hEco] at h; linear_combination h
+  have hzero : ∀ ν, G ν = 0 := fun ν => by
+    have hm : ∀ n q, degree q = n → ∀ i j, coeff q (G ν i j) = 0 := fun n => by
+      induction n using Nat.strong_induction_on with
+      | _ n ih =>
+        intro q hq i j; have h := halg ν q i j
+        rw [hBlow (G ν) 0 q (fun i' j' r hr => by
+            rw [ih (degree r) (hq ▸ hr) r rfl i' j', Matrix.zero_apply, map_zero]) i j,
+          mul_zero] at h
+        simp only [Matrix.zero_apply, map_zero] at h
+        exact (mul_eq_zero.mp h).resolve_left (by exact_mod_cast Nat.succ_ne_zero (degree q))
+    ext i j : 1; ext p; rw [hm (degree p) p rfl i j, Matrix.zero_apply, map_zero]
+  exact ⟨F, hFone, fun ν => sub_eq_zero.mp (hzero ν)⟩
+
 end JetRing
 
 /-!

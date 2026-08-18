@@ -21,6 +21,8 @@ public import Mathlib.Algebra.MvPolynomial.Derivation
 public import Mathlib.Analysis.Normed.Algebra.Exponential
 public import Mathlib.RingTheory.MvPowerSeries.PiTopology
 public import Mathlib.Topology.Instances.Matrix
+public import Mathlib.RingTheory.PowerSeries.Derivative
+public import Mathlib.RingTheory.PowerSeries.Basic
 /-!
 # The jet gauge algebra
 
@@ -90,6 +92,21 @@ def toSU2Matrix (a : JetGaugeAlgebra) : Matrix (Fin 2) (Fin 2) JetRing  := a.2.1
 
 /-- The `u(1)`-factor component of an element of the jet gauge algebra. -/
 def toU1Value (a : JetGaugeAlgebra) :  JetRing := a.2.2
+
+/-- The underlying matrix value of an element of the jet gauge algebra, as a
+  product of matrices. -/
+def toVal (a : JetGaugeAlgebra) :
+    Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
+  (a.toSU3Matrix, a.toSU2Matrix, a.toU1Value)
+
+@[simp]
+lemma toVal_fst (a : JetGaugeAlgebra) : a.toVal.1 = a.toSU3Matrix := rfl
+
+@[simp]
+lemma toVal_snd_fst (a : JetGaugeAlgebra) : a.toVal.2.1 = a.toSU2Matrix := rfl
+
+@[simp]
+lemma toVal_snd_snd (a : JetGaugeAlgebra) : a.toVal.2.2 = a.toU1Value := rfl
 
 @[ext]
 lemma ext_of_matrix {a b : JetGaugeAlgebra} (h1 : a.toSU3Matrix = b.toSU3Matrix)
@@ -478,7 +495,7 @@ theorem ext_of_eval_iteratedDeriv {x y : JetGaugeAlgebra}
             congrArg (fun g => GaugeAlgebra.toSU3Matrix g i j) h0'
         · simpa [Matrix.map_apply] using
             congrArg (fun g => GaugeAlgebra.toSU2Matrix g i j) h0'
-        · simpa using congrArg GaugeAlgebra.toU1Value h0' 
+        · simpa using congrArg GaugeAlgebra.toU1Value h0'
     | succ n ih =>
         intro x y hxy m hm
         -- pick a direction occurring in `m` and peel one derivative off

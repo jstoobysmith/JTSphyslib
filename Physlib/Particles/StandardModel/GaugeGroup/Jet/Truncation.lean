@@ -172,13 +172,15 @@ lemma mem_truncationKer_zero_iff {U : JetGaugeGroupI} :
     refine Prod.ext (Subtype.ext ?_) (Prod.ext (Subtype.ext ?_) (Subtype.ext ?_))
     · ext i j : 1
       have h3 := congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) JetRing) i j) h
-      simpa [Matrix.one_apply, apply_ite constantCoeff] using
+      simpa [eval, evalSU, RingHom.mapMatrix_apply, Matrix.map_apply,
+        Matrix.one_apply, apply_ite constantCoeff] using
         JetRing.truncation_zero_eq_iff.mp h3
     · ext i j : 1
       have h2 := congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) JetRing) i j) h
-      simpa [Matrix.one_apply, apply_ite constantCoeff] using
+      simpa [eval, evalSU, RingHom.mapMatrix_apply, Matrix.map_apply,
+        Matrix.one_apply, apply_ite constantCoeff] using
         JetRing.truncation_zero_eq_iff.mp h2
-    · simpa using
+    · simpa [eval, evalU1] using
         JetRing.truncation_zero_eq_iff.mp (congrArg (fun p => (p.2.2 : JetRing)) h)
   · intro h
     refine Prod.ext ?_ (Prod.ext ?_ ?_)
@@ -187,16 +189,18 @@ lemma mem_truncationKer_zero_iff {U : JetGaugeGroupI} :
       ext i j : 1
       refine JetRing.truncation_zero_eq_iff.mpr ?_
       have h3 := congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) ℂ) i j) h
-      simpa [Matrix.one_apply, apply_ite constantCoeff] using h3
+      simpa [eval, evalSU, RingHom.mapMatrix_apply, Matrix.map_apply,
+        Matrix.one_apply, apply_ite constantCoeff] using h3
     · show U.2.1.1.map (JetRing.truncation 0) =
         (1 : Matrix (Fin 2) (Fin 2) JetRing).map (JetRing.truncation 0)
       ext i j : 1
       refine JetRing.truncation_zero_eq_iff.mpr ?_
       have h2 := congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) ℂ) i j) h
-      simpa [Matrix.one_apply, apply_ite constantCoeff] using h2
+      simpa [eval, evalSU, RingHom.mapMatrix_apply, Matrix.map_apply,
+        Matrix.one_apply, apply_ite constantCoeff] using h2
     · show JetRing.truncation 0 U.2.2.1 = JetRing.truncation 0 (1 : JetRing)
       refine JetRing.truncation_zero_eq_iff.mpr ?_
-      simpa using congrArg (fun p => (p.2.2 : ℂ)) h
+      simpa [eval, evalU1] using congrArg (fun p => (p.2.2 : ℂ)) h
 
 @[simp]
 lemma eval_coe_of_mem_truncationKer_zero (U : truncationKer 0) : U.1.eval = 1 :=

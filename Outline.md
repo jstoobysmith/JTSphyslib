@@ -195,16 +195,45 @@ Basic rules of this outline:
 
 - We define a representation of `JetGaugeGroup` as the following data:
   - a homomorphism `jρ : JetGaugeGroup → Matrix ι ι JetRing`
-  - A map `dρ : κ → Matrix ι ι ℂ` such that:
-    - `[dρ_a, dρ_b] = i ∑_c f^c_{a b} · dρ_c`.
-    - Equivariance: `∂_0| jρ(U) · dρ_a · ∂_0| jρ(U)⁻¹ = ∑_b Ad(U₀⁻¹)^a_b · dρ_b`
+  - an `ℝ`-linear map `dρ : GaugeAlgebra →ₗ[ℝ] Matrix ι ι ℂ` such that:
+    - Bracket: `dρ ⁅X, Y⁆ = i (dρ X · dρ Y − dρ Y · dρ X)`.
+      Equivalently, `X ↦ i • dρ X` is a morphism of real Lie algebras into
+      `Matrix ι ι ℂ` with the commutator bracket.
+    - Equivariance: `ρ₀(U) · dρ X · ρ₀(U)⁻¹ = dρ (Ad(U₀) X)`
   such that
-  - `∂_μ jρ(U) = -i ∑_a ω^a_μ(U) · dρ_a · ∂_0| jρ(U)`
-- We will denote a Jet representation as `jρ`, dropping the `dρ` dat for notational
+  - Compatibility: `∂_μ jρ(U) = -i · dρ̂(ω_μ(U)) · jρ(U)`
+- Here `dρ̂ : JetGaugeAlgebra → Matrix ι ι JetRing` is the coefficientwise
+  (`JetRing`-linear) extension of `dρ`, characterized by
+  `∂_r|(dρ̂ Z) = dρ (∂_r| Z)` for every multiset `r`. In the basis `T_a` it is
+  `dρ̂ Z = ∑_a Z^a • dρ_a` with `dρ_a := dρ T_a`, and the conditions above
+  recover the component form: `[dρ_a, dρ_b] = i ∑_c f^c_{a b} · dρ_c`.
+- We will denote a Jet representation as `jρ`, dropping the `dρ` data for notational
   ease.
 - The general derivatives of `jρ(U)` are then given by:
   `∂_{s + μ}|(jρ(U)) = -i ∑_{p + q = s} C(s, p) ∑_a ∂_p|(ω^a_μ(U)) · dρ_a · ∂_q|(jρ(U))`
-- We let `ρ₀(U) := ∂_0|(jρ(U))`
+- We let `ρ₀(U) := ∂_0|(jρ(U))`; note `ρ₀(U)` depends only on the base value `U₀`.
+
+#### `dρ` is determined by `jρ`
+
+- For `X : GaugeAlgebra` and a coordinate `μ`, let `U_X := exp(-i x^μ • X)` be the
+  corresponding linear pure jet (a formal power-series exponential; it is a unitary
+  jet since `X` is hermitian, has base value `1`, and `∂_0| ω_ν(U_X) = δ_{ν μ} X`).
+- Evaluating compatibility at the base point gives `∂_μ|(jρ(U_X)) = -i · dρ X`, so
+
+    `dρ X = i ∂_μ|(jρ(U_X))`.
+
+- Hence `dρ` is uniquely determined by `jρ`: two jet representations with the same
+  `jρ` are equal. We nevertheless carry `dρ` as data — an abstract homomorphism
+  cannot be differentiated, so a `jρ`-only definition would have to existentially
+  quantify over `dρ`; carrying the field with this uniqueness lemma is more
+  convenient.
+- The bracket and equivariance conditions are then derivable from the homomorphism
+  property together with compatibility (so they may be demoted to lemmas when
+  constructing instances):
+  - equivariance by applying compatibility to `U₀ V U₀⁻¹`, using the cocycle
+    identity `ω_μ(U₀ V U₀⁻¹) = Ad(U₀) ω_μ(V)` for constant `U₀`;
+  - the bracket from the symmetry of `∂_μ ∂_ν` together with the structure
+    equation, tested on the linear jets `U_X`.
 ## The algebra
 
 - Let `B` be an algebra over `ℂ`.

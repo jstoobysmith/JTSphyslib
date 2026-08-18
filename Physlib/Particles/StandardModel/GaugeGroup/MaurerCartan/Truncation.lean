@@ -57,6 +57,13 @@ lemma maurerCartanForm_injOn_truncationKer_zero {U V : JetGaugeGroupI}
   rw [hc1, map_one] at hc
   exact (inv_mul_eq_one.mp hc).symm
 
+lemma exists_maurerCartanForm_eq_of_structure
+    (ω : (Fin 1 ⊕ Fin 3) → JetGaugeAlgebra)
+    (hω : ∀ μ ν, deriv μ (ω ν) - deriv ν (ω μ) + ⁅ω μ, ω ν⁆ = 0) :
+    ∃ U ∈ JetGaugeGroupI.truncationKer 0, maurerCartanForm U = ω := by
+  sorry
+
+
 /-!
 
 ## Freeness: injectivity of the symmetrized Maurer–Cartan data
@@ -100,5 +107,8 @@ lemma symmetrizedMaurerCartanCoeff_injective : Function.Injective symmetrizedMau
     funext μ
     exact ext_of_eval_iteratedDeriv fun s => hall s.card s μ rfl
   exact Subtype.ext (maurerCartanForm_injOn_truncationKer_zero U.2 V.2 hmc)
+
+lemma symmetrizedMaurerCartanCoeff_surjective : Function.Surjective symmetrizedMaurerCartanCoeff := by
+  sorry
 
 end StandardModel
