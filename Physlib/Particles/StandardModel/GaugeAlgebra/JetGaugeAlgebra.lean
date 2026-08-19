@@ -342,7 +342,11 @@ lemma deriv_bracket (μ : Fin 1 ⊕ Fin 3) (x y : JetGaugeAlgebra) :
     congr 1
     abel
 
+/-!
 
+## The iterated derivative
+
+-/
 /-- Post-composition with `deriv` is right-commutative, since formal derivatives
   commute (`deriv_comm`). This is what allows iterated derivatives to be indexed by a
   `Multiset` of directions. -/
@@ -391,6 +395,39 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
     iteratedDeriv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = deriv μ := by
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
     iteratedDeriv_zero, LinearMap.comp_id]
+
+
+
+
+lemma iteratedDeriv_toSU3Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (iteratedDeriv s a).toSU3Matrix =
+      a.toSU3Matrix.map fun f => s.foldl (fun f ρ => pderiv ℂ ρ f) f := by
+  induction s using Multiset.induction_on with
+  | empty => simp [iteratedDeriv_zero]
+  | cons μ t ih =>
+      rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toSU3Matrix, ih]
+      ext i j : 1
+      simp only [Matrix.map_apply, Multiset.foldl_cons]
+      exact (JetRing.foldl_pderiv_pderiv t μ _).symm
+
+lemma iteratedDeriv_toSU2Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (iteratedDeriv s a).toSU2Matrix =
+      a.toSU2Matrix.map fun f => s.foldl (fun f ρ => pderiv ℂ ρ f) f := by
+  induction s using Multiset.induction_on with
+  | empty => simp [iteratedDeriv_zero]
+  | cons μ t ih =>
+      rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toSU2Matrix, ih]
+      ext i j : 1
+      simp only [Matrix.map_apply, Multiset.foldl_cons]
+      exact (JetRing.foldl_pderiv_pderiv t μ _).symm
+
+lemma iteratedDeriv_toU1Value (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (iteratedDeriv s a).toU1Value = s.foldl (fun f ρ => pderiv ℂ ρ f) a.toU1Value := by
+  induction s using Multiset.induction_on with
+  | empty => simp [iteratedDeriv_zero]
+  | cons μ t ih =>
+      rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toU1Value, ih,
+        Multiset.foldl_cons, JetRing.foldl_pderiv_pderiv]
 
 
 /-!
@@ -469,6 +506,26 @@ lemma taylorCoeff_zero_bracket (a b : JetGaugeAlgebra) :
   coefficient, as a morphism of Lie algebras. -/
 noncomputable def eval : JetGaugeAlgebra →ₗ⁅ℝ⁆ GaugeAlgebra :=
   { taylorCoeff 0 with map_lie' := taylorCoeff_zero_bracket _ _ }
+
+
+lemma eval_toSU3Matrix_apply (a : JetGaugeAlgebra) (i j : Fin 3) :
+    (eval a).toSU3Matrix i j = constantCoeff (a.toSU3Matrix i j) := by
+  rw [show eval a = taylorCoeff 0 a from rfl, taylorCoeff_toSU3Matrix, Matrix.map_apply,
+    show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 from map_zero _,
+    coeff_zero_eq_constantCoeff]
+
+lemma eval_toSU2Matrix_apply (a : JetGaugeAlgebra) (i j : Fin 2) :
+    (eval a).toSU2Matrix i j = constantCoeff (a.toSU2Matrix i j) := by
+  rw [show eval a = taylorCoeff 0 a from rfl, taylorCoeff_toSU2Matrix, Matrix.map_apply,
+    show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 from map_zero _,
+    coeff_zero_eq_constantCoeff]
+
+lemma eval_toU1Value_eq (a : JetGaugeAlgebra) :
+    (eval a).toU1Value = constantCoeff a.toU1Value := by
+  rw [show eval a = taylorCoeff 0 a from rfl, taylorCoeff_toU1Value,
+    show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 from map_zero _,
+    coeff_zero_eq_constantCoeff]
+
 
 /-- Taylor determinacy: a jet gauge algebra element is determined by the base-point
   values of its iterated derivatives. -/

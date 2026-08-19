@@ -213,7 +213,7 @@ lemma jetValue_mul (A B : Matrix (Fin 3) (Fin 3) JetRing) :
 lemma jetValue_star (A : Matrix (Fin 3) (Fin 3) JetRing) :
     jetValue (star A) = star (jetValue A) := by
   simpa [jetValue, RingHom.mapMatrix_apply] using
-    JetGaugeGroupI.mapMatrix_constantCoeff_star A
+    JetRing.mapMatrix_constantCoeff_star A
 
 /-- The unitarity of a jet of a special-unitary gauge transformation, as a matrix
   identity over the jet ring. -/
