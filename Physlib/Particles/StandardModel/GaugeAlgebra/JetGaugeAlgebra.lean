@@ -507,6 +507,67 @@ lemma taylorCoeff_zero_bracket (a b : JetGaugeAlgebra) :
 noncomputable def eval : JetGaugeAlgebra →ₗ⁅ℝ⁆ GaugeAlgebra :=
   { taylorCoeff 0 with map_lie' := taylorCoeff_zero_bracket _ _ }
 
+/-- The inclusion of the constant gauge algebra into the jet gauge algebra: the jets
+  with no spacetime dependence, given entrywise by the constant power series. This is
+  a section of `eval`. -/
+noncomputable def ofConstant : GaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra where
+  toFun a := ofMatrixProd
+      (a.toSU3Matrix.map (C : ℂ → JetRing), a.toSU2Matrix.map (C : ℂ → JetRing),
+        C a.toU1Value)
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply] using
+          congrArg (fun M => (C (M i j) : JetRing))
+            (show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU3Matrix.trace = 0 from a.1.2.2, map_zero]⟩
+      ⟨by
+        ext i j : 1
+        simpa [Matrix.star_apply, Matrix.map_apply] using
+          congrArg (fun M => (C (M i j) : JetRing))
+            (show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1),
+        by rw [← AddMonoidHom.map_trace, show a.toSU2Matrix.trace = 0 from a.2.1.2.2, map_zero]⟩
+      (by rw [JetRing.star_C, show star a.toU1Value = a.toU1Value from a.2.2.2])
+  map_add' a b := by
+    ext <;> simp [Matrix.map_apply]
+  map_smul' t a := by
+    have hC : ∀ x : ℂ, (C (t • x) : JetRing) = t • C x := fun x => by
+      rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply]
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
+        GaugeAlgebra.smul_toSU3Matrix, GaugeAlgebra.smul_toSU2Matrix,
+        GaugeAlgebra.smul_toU1Value, smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value,
+        RingHom.id_apply]
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      exact hC _
+    · ext i j : 1
+      simp only [Matrix.map_apply, Matrix.smul_apply]
+      exact hC _
+    · exact hC _
+
+@[simp]
+lemma ofConstant_toSU3Matrix (a : GaugeAlgebra) :
+    (ofConstant a).toSU3Matrix = a.toSU3Matrix.map (C : ℂ → JetRing) := rfl
+
+@[simp]
+lemma ofConstant_toSU2Matrix (a : GaugeAlgebra) :
+    (ofConstant a).toSU2Matrix = a.toSU2Matrix.map (C : ℂ → JetRing) := rfl
+
+@[simp]
+lemma ofConstant_toU1Value (a : GaugeAlgebra) :
+    (ofConstant a).toU1Value = C a.toU1Value := rfl
+
+lemma eval_apply (a : JetGaugeAlgebra) : eval a = taylorCoeff 0 a := rfl
+
+@[simp]
+lemma eval_ofConstant (a : GaugeAlgebra) : eval (ofConstant a) = a := by
+  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+  · ext i j : 1
+    simp [Matrix.map_apply, eval_apply, coeff_zero_eq_constantCoeff, constantCoeff_C]
+  · ext i j : 1
+    simp [Matrix.map_apply,  eval_apply, coeff_zero_eq_constantCoeff, constantCoeff_C]
+  · simp [coeff_zero_eq_constantCoeff, eval_apply, constantCoeff_C]
+
 
 lemma eval_toSU3Matrix_apply (a : JetGaugeAlgebra) (i j : Fin 3) :
     (eval a).toSU3Matrix i j = constantCoeff (a.toSU3Matrix i j) := by

@@ -38,6 +38,15 @@ open scoped Pointwise
 
 variable {A : Type} [Ring A] [Algebra ℂ A]
 
+/-- The iterated operator `D_s = D_{ν₁} ⋯ D_{νₙ}` of a pairwise-commuting family of
+  endomorphisms along a multiset `s` of indices. Commutativity is what makes the
+  operator well-defined on a multiset, i.e. independent of any ordering of `s`. -/
+def iteratedD {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) (s : Multiset ι) : A →ₗ[ℂ] A :=
+  letI : LeftCommutative (fun (ν : ι) (L : A →ₗ[ℂ] A) => (D ν).comp L) :=
+    ⟨fun i j L => by rw [← LinearMap.comp_assoc, ← LinearMap.comp_assoc, hD]⟩
+  s.foldr (fun ν L => (D ν).comp L) LinearMap.id
+
 class IsLorentzDeriv (rep : Representation ℂ SL(2,ℂ) A) (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) where
   rep_deriv {Λ μ x} : rep Λ (D μ x) =
     ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • D a (rep Λ x)
