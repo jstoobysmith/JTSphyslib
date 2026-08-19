@@ -768,6 +768,50 @@ noncomputable def adjoint : Representation ℝ JetGaugeGroupI JetGaugeAlgebra wh
     refine LinearMap.ext fun a => ?_
     ext <;> simp [star_mul, mul_assoc]
 
+/-- The constant inclusion is a morphism of Lie algebras: constants bracket to
+  constants. -/
+lemma ofConstant_lie (a b : GaugeAlgebra) :
+    ofConstant ⁅a, b⁆ = ⁅ofConstant a, ofConstant b⁆ := by
+  refine ext_of_matrix ?_ ?_ ?_
+  · ext i j : 1
+    simp [Matrix.map_apply, Matrix.mul_apply, Matrix.smul_apply, smul_eq_mul,
+      MvPowerSeries.smul_eq_C_mul, map_sum, Finset.mul_sum, mul_sub]
+  · ext i j : 1
+    simp [Matrix.map_apply, Matrix.mul_apply, Matrix.smul_apply, smul_eq_mul,
+      MvPowerSeries.smul_eq_C_mul, mul_sub]
+  · simp
+
+/-- The adjoint action preserves the bracket: conjugation is an automorphism of the
+  Lie algebra, using unitarity to cancel the inner `U† U` factors. -/
+lemma adjointMap_lie (U : JetGaugeGroupI) (x y : JetGaugeAlgebra) :
+    adjointMap U ⁅x, y⁆ = ⁅adjointMap U x, adjointMap U y⁆ := by
+  refine ext_of_matrix ?_ ?_ ?_
+  · have hU : star U.1.1 * U.1.1 = 1 := by
+      have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1
+      rwa [Matrix.mem_unitaryGroup_iff'] at h
+    have key : ∀ X Y : Matrix (Fin 3) (Fin 3) JetRing,
+        (U.1.1 * X * star U.1.1) * (U.1.1 * Y * star U.1.1) =
+          U.1.1 * (X * Y) * star U.1.1 := by
+      intro X Y
+      simp only [mul_assoc]
+      rw [show star U.1.1 * (U.1.1 * (Y * star U.1.1)) = Y * star U.1.1 from by
+        rw [← mul_assoc, hU, one_mul]]
+    simp only [adjointMap_toSU3Matrix, bracket_toSU3Matrix, mul_smul_comm, smul_mul_assoc]
+    rw [key, key, mul_sub, sub_mul]
+  · have hU : star U.2.1.1 * U.2.1.1 = 1 := by
+      have h := (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).1
+      rwa [Matrix.mem_unitaryGroup_iff'] at h
+    have key : ∀ X Y : Matrix (Fin 2) (Fin 2) JetRing,
+        (U.2.1.1 * X * star U.2.1.1) * (U.2.1.1 * Y * star U.2.1.1) =
+          U.2.1.1 * (X * Y) * star U.2.1.1 := by
+      intro X Y
+      simp only [mul_assoc]
+      rw [show star U.2.1.1 * (U.2.1.1 * (Y * star U.2.1.1)) = Y * star U.2.1.1 from by
+        rw [← mul_assoc, hU, one_mul]]
+    simp only [adjointMap_toSU2Matrix, bracket_toSU2Matrix, mul_smul_comm, smul_mul_assoc]
+    rw [key, key, mul_sub, sub_mul]
+  · simp
+
 end JetGaugeAlgebra
 
 end StandardModel

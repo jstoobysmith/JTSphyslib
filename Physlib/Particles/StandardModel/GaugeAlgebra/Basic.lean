@@ -42,6 +42,13 @@ abbrev GaugeAlgebra :=
     LinearMap.ker (Matrix.traceLinearMap (Fin 2) ℝ ℂ)) ×
   selfAdjoint ℂ
 
+/-- The self-adjoint scalars form a finite-dimensional real vector space, through the
+  identification with the corresponding submodule. -/
+instance : Module.Finite ℝ (selfAdjoint ℂ) :=
+  inferInstanceAs (Module.Finite ℝ (selfAdjoint.submodule ℝ ℂ))
+
+instance : Module.Finite ℝ GaugeAlgebra := by infer_instance
+
 namespace GaugeAlgebra
 
 /-!
