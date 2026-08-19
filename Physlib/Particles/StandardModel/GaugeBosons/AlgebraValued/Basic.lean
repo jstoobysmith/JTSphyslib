@@ -75,6 +75,26 @@ noncomputable def adjointDualCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕
   (JetGaugeAlgebra.eval.toLinearMap ∘ₗ JetGaugeAlgebra.iteratedDeriv x ∘ₗ
     JetGaugeAlgebra.adjointMap U ∘ₗ JetGaugeAlgebra.ofConstant).dualMap
 
+/-- The dual adjoint coefficient at a single derivative: since
+  `∂_μ (Ad_U x) = Ad_U (∂_μ x) − ⁅ω_μ(U), Ad_U x⁆` (`deriv_adjointMap`) and constants
+  have vanishing derivative, the once-derived coefficient is minus the underived
+  coefficient precomposed (on the dual index) with `ad` of the base-point
+  Maurer–Cartan form. This is what cancels the Leibniz cross terms of
+  `gauge_apply_deriv` against the commutator cross terms in the field strength. -/
+lemma adjointDualCoeff_singleton (U : JetGaugeGroupI)
+    (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    adjointDualCoeff U {μ} φ =
+      -adjointDualCoeff U 0 (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra
+        (JetGaugeAlgebra.eval (maurerCartanForm U μ))) := by
+  refine LinearMap.ext fun a => ?_
+  simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.neg_apply,
+    LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
+    JetGaugeAlgebra.iteratedDeriv_singleton, JetGaugeAlgebra.iteratedDeriv_zero,
+    LinearMap.id_coe, id_eq]
+  rw [deriv_adjointMap, JetGaugeAlgebra.deriv_ofConstant, map_zero, zero_sub, map_neg,
+    map_neg, LieHom.map_lie]
+  simp
+
 /-- The family `A` of symbols in the algebra `B` is a gauge field for the total
   derivative `D`, the Lorentz representation `repLorentz` and the gauge representation
   `repGauge`, when it satisfies the transformation laws of the physicists' gauge field:
@@ -155,12 +175,42 @@ noncomputable def commutator (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlg
 /-- The gauge transformation of the underived symbol `A_μ^φ`: the special case `s = 0`
   of `gauge_apply_deriv`, with no Leibniz convolution left over — the dual adjoint
   action of the value of `U⁻¹` plus the Maurer–Cartan shift. -/
-lemma gauge_apply (hA : IsGaugeField repLorentz repGauge A D D_comm) (U : JetGaugeGroupI)
+lemma repGauge_apply (hA : IsGaugeField repLorentz repGauge A D D_comm) (U : JetGaugeGroupI)
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repGauge U (A μ φ) = A μ (adjointDualCoeff U⁻¹ ∅ φ) +
       algebraMap ℂ B (φ (JetGaugeAlgebra.eval (maurerCartanForm U⁻¹ μ))) := by
   simpa [Lorentz.iteratedD, show (∅ : Multiset (Fin 1 ⊕ Fin 3)) = 0 from rfl] using
     hA.gauge_apply_deriv U 0 μ φ
+
+
+/-- The gauge transformation of the once-derived symbol `∂_ρ A_σ`: the case `s = {ρ}`
+  of `gauge_apply_deriv` — the two Leibniz splittings of one derivative, plus the
+  base-point value of the derived Maurer–Cartan form. -/
+lemma repGauge_deriv_apply (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI) (ρ σ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U (D ρ (A σ φ)) =
+      D ρ (A σ (adjointDualCoeff U⁻¹ 0 φ)) + A σ (adjointDualCoeff U⁻¹ {ρ} φ) +
+      algebraMap ℂ B (φ (JetGaugeAlgebra.eval
+        (JetGaugeAlgebra.deriv ρ (maurerCartanForm U⁻¹ σ)))) := by
+  have hzero : Lorentz.iteratedD D D_comm (0 : Multiset (Fin 1 ⊕ Fin 3)) =
+      LinearMap.id := by
+    simp only [Lorentz.iteratedD, Multiset.foldr_zero]
+  have hsingle : Lorentz.iteratedD D D_comm ({ρ} : Multiset (Fin 1 ⊕ Fin 3)) = D ρ := by
+    rw [show ({ρ} : Multiset (Fin 1 ⊕ Fin 3)) = ρ ::ₘ 0 from rfl]
+    simp only [Lorentz.iteratedD, Multiset.foldr_cons, Multiset.foldr_zero,
+      LinearMap.comp_id]
+  have hanti : ({ρ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
+      {((0 : Multiset (Fin 1 ⊕ Fin 3)), ({ρ} : Multiset (Fin 1 ⊕ Fin 3))),
+        (({ρ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
+    rw [show ({ρ} : Multiset (Fin 1 ⊕ Fin 3)) = ρ ::ₘ 0 from rfl,
+      Multiset.antidiagonal_cons, Multiset.antidiagonal_zero]
+    simp
+  have h := hA.gauge_apply_deriv U {ρ} σ φ
+  rw [hanti] at h
+  simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
+    Multiset.sum_cons, Multiset.sum_singleton, hzero, hsingle,
+    JetGaugeAlgebra.iteratedDeriv_singleton, LinearMap.id_coe, id_eq] at h
+  exact h
 
 /-!
 
@@ -291,7 +341,7 @@ set_option maxHeartbeats 1000000 in
   commutator of the two Maurer–Cartan shifts. Uses that the gauge action is by
   algebra homomorphisms (`gauge_mul`) and that the base-point adjoint transport is a
   morphism of Lie algebras. -/
-lemma gauge_commutator (hA : IsGaugeField repLorentz repGauge A D D_comm)
+lemma repGauge_commutator (hA : IsGaugeField repLorentz repGauge A D D_comm)
     (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repGauge U (commutator A μ ν φ) =
       commutator A μ ν (adjointDualCoeff U⁻¹ 0 φ)
@@ -324,7 +374,7 @@ lemma gauge_commutator (hA : IsGaugeField repLorentz repGauge A D D_comm)
     refine LinearMap.ext fun ψ => ?_
     simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
       LinearMap.restrictScalars_apply]
-    rw [hA.gauge_apply U ρ ψ, dualPairEquiv_one_tmul, ← hcoeff]
+    rw [hA.repGauge_apply U ρ ψ, dualPairEquiv_one_tmul, ← hcoeff]
     rfl
   have hsμ : (TensorProduct.map Φ LinearMap.id) s =
       (TensorProduct.map LinearMap.id T₀) s + (1 : B) ⊗ₜ[ℝ] cμ := by
@@ -367,6 +417,773 @@ lemma gauge_commutator (hA : IsGaugeField repLorentz repGauge A D D_comm)
       rw [← hcomm_pair, hΦdef]; rfl,
     hread, hcoeff, hcomm_pair, hπs, hπt]
   rfl
+
+/-!
+
+## Second derivatives of the gauge field
+
+-/
+
+/-- The dual adjoint coefficient at two derivatives: iterating
+  `∂ (Ad_U x) = Ad_U (∂ x) − ⁅ω(U), Ad_U x⁆` once more, the twice-derived coefficient
+  decomposes into the underived coefficient against `ad` of the derived Maurer–Cartan
+  form, and the once-derived coefficient against `ad` of the Maurer–Cartan form
+  itself. This is the two-derivative analogue of `adjointDualCoeff_singleton`. -/
+lemma _root_.StandardModel.adjointDualCoeff_pair (U : JetGaugeGroupI)
+    (ρ μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    adjointDualCoeff U (ρ ::ₘ {μ}) φ =
+      -adjointDualCoeff U 0 (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra
+        (JetGaugeAlgebra.eval (JetGaugeAlgebra.deriv ρ (maurerCartanForm U μ))))
+      - adjointDualCoeff U {ρ} (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra
+        (JetGaugeAlgebra.eval (maurerCartanForm U μ))) := by
+  refine LinearMap.ext fun a => ?_
+  have hderiv : ∀ τ : Fin 1 ⊕ Fin 3,
+      JetGaugeAlgebra.deriv τ (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)) =
+        -⁅maurerCartanForm U τ,
+          JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)⁆ :=
+    fun τ => by rw [deriv_adjointMap, JetGaugeAlgebra.deriv_ofConstant, map_zero, zero_sub]
+  have hkey : JetGaugeAlgebra.iteratedDeriv (ρ ::ₘ {μ})
+      (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)) =
+      -⁅JetGaugeAlgebra.deriv ρ (maurerCartanForm U μ),
+        JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)⁆
+      + ⁅maurerCartanForm U μ, ⁅maurerCartanForm U ρ,
+          JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)⁆⁆ := by
+    rw [JetGaugeAlgebra.iteratedDeriv_cons, LinearMap.comp_apply,
+      JetGaugeAlgebra.iteratedDeriv_singleton, hderiv μ, map_neg,
+      JetGaugeAlgebra.deriv_bracket, hderiv ρ, lie_neg]
+    abel
+  simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.sub_apply,
+    LinearMap.neg_apply, LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
+    JetGaugeAlgebra.iteratedDeriv_zero, JetGaugeAlgebra.iteratedDeriv_singleton,
+    LinearMap.id_coe, id_eq]
+  rw [hkey, map_add, map_neg, LieHom.map_lie, LieHom.map_lie, LieHom.map_lie,
+    hderiv ρ, map_neg, LieHom.map_lie]
+  simp only [map_add, map_neg, LieAlgebra.ad_apply]
+  abel
+
+/-- The gauge transformation of the twice-derived symbol `∂_ρ ∂_σ A_τ`: the case
+  `s = ρ ::ₘ {σ}` of `gauge_apply_deriv` — the four Leibniz splittings of two
+  derivatives, plus the base-point value of the twice-derived Maurer–Cartan form. -/
+lemma repGauge_deriv_deriv_apply (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI) (ρ σ τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U (D ρ (D σ (A τ φ))) =
+      D ρ (D σ (A τ (adjointDualCoeff U⁻¹ 0 φ)))
+      + D ρ (A τ (adjointDualCoeff U⁻¹ {σ} φ))
+      + D σ (A τ (adjointDualCoeff U⁻¹ {ρ} φ))
+      + A τ (adjointDualCoeff U⁻¹ (ρ ::ₘ {σ}) φ)
+      + algebraMap ℂ B (φ (JetGaugeAlgebra.eval (JetGaugeAlgebra.deriv ρ
+          (JetGaugeAlgebra.deriv σ (maurerCartanForm U⁻¹ τ))))) := by
+  have hzero : Lorentz.iteratedD D D_comm (0 : Multiset (Fin 1 ⊕ Fin 3)) =
+      LinearMap.id := by
+    simp only [Lorentz.iteratedD, Multiset.foldr_zero]
+  have hsingle : ∀ κ : Fin 1 ⊕ Fin 3,
+      Lorentz.iteratedD D D_comm ({κ} : Multiset (Fin 1 ⊕ Fin 3)) = D κ := by
+    intro κ
+    rw [show ({κ} : Multiset (Fin 1 ⊕ Fin 3)) = κ ::ₘ 0 from rfl]
+    simp only [Lorentz.iteratedD, Multiset.foldr_cons, Multiset.foldr_zero,
+      LinearMap.comp_id]
+  have hpair : Lorentz.iteratedD D D_comm (ρ ::ₘ ({σ} : Multiset (Fin 1 ⊕ Fin 3))) =
+      (D ρ).comp (D σ) := by
+    rw [show ({σ} : Multiset (Fin 1 ⊕ Fin 3)) = σ ::ₘ 0 from rfl]
+    simp only [Lorentz.iteratedD, Multiset.foldr_cons, Multiset.foldr_zero,
+      LinearMap.comp_id]
+  have hanti₁ : ({σ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
+      {((0 : Multiset (Fin 1 ⊕ Fin 3)), ({σ} : Multiset (Fin 1 ⊕ Fin 3))),
+        (({σ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
+    rw [show ({σ} : Multiset (Fin 1 ⊕ Fin 3)) = σ ::ₘ 0 from rfl,
+      Multiset.antidiagonal_cons, Multiset.antidiagonal_zero]
+    simp
+  have hanti : (ρ ::ₘ ({σ} : Multiset (Fin 1 ⊕ Fin 3))).antidiagonal =
+      {(({ρ} : Multiset (Fin 1 ⊕ Fin 3)), ({σ} : Multiset (Fin 1 ⊕ Fin 3))),
+        ((0 : Multiset (Fin 1 ⊕ Fin 3)), ρ ::ₘ ({σ} : Multiset (Fin 1 ⊕ Fin 3))),
+        (({σ} : Multiset (Fin 1 ⊕ Fin 3)), ({ρ} : Multiset (Fin 1 ⊕ Fin 3))),
+        (ρ ::ₘ ({σ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
+    rw [Multiset.antidiagonal_cons, hanti₁]
+    simp [Multiset.insert_eq_cons]
+  have h := hA.gauge_apply_deriv U (ρ ::ₘ {σ}) τ φ
+  rw [hanti] at h
+  simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
+    Multiset.sum_cons, Multiset.sum_singleton, hzero, hsingle, hpair,
+    LinearMap.comp_apply, JetGaugeAlgebra.iteratedDeriv_cons,
+    JetGaugeAlgebra.iteratedDeriv_singleton, LinearMap.id_coe, id_eq] at h
+  refine h.trans ?_
+  abel
+
+/-!
+
+## The bracket of general component families
+
+-/
+
+/-- The bracket of two arbitrary component families, generalizing `commutator` (which
+  is the case of two field symbols): assemble into `B ⊗ 𝔤` by `dualPairEquiv.symm`,
+  bracket by `tensorBracket`, read back out as components. -/
+noncomputable def bracketFam (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
+  dualPairEquiv (tensorBracket (dualPairEquiv.symm f) (dualPairEquiv.symm g))
+
+lemma commutator_eq_bracketFam (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (μ ν : Fin 1 ⊕ Fin 3) : commutator A μ ν = bracketFam (A μ) (A ν) := rfl
+
+lemma bracketFam_add_left (f₁ f₂ g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam (f₁ + f₂) g = bracketFam f₁ g + bracketFam f₂ g := by
+  simp only [bracketFam, map_add, LinearMap.add_apply]
+
+lemma bracketFam_add_right (f g₁ g₂ : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam f (g₁ + g₂) = bracketFam f g₁ + bracketFam f g₂ := by
+  simp only [bracketFam, map_add]
+
+/-- The bracket of families against a common Lie-algebra morphism on the dual index. -/
+lemma bracketFam_comp_dualMap (T : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
+    (hT : ∀ a b, T ⁅a, b⁆ = ⁅T a, T b⁆) (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam (f ∘ₗ T.dualMap) (g ∘ₗ T.dualMap) = bracketFam f g ∘ₗ T.dualMap := by
+  refine LinearMap.ext fun φ => ?_
+  show dualPairEquiv (tensorBracket (dualPairEquiv.symm (f ∘ₗ T.dualMap))
+      (dualPairEquiv.symm (g ∘ₗ T.dualMap))) φ = bracketFam f g (T.dualMap φ)
+  rw [symm_comp_right, symm_comp_right, tensorBracket_map_right T hT,
+    dualPairEquiv_map_right]
+  rfl
+
+/-- `tensorBracket` is a derivation in the algebra factor: for `Δ` satisfying the
+  Leibniz rule on `B`, applying `Δ ⊗ id` to a bracket distributes over the two
+  arguments. -/
+lemma tensorBracket_map_left_derivation (Δ : B →ₗ[ℝ] B)
+    (hΔ : ∀ b₁ b₂, Δ (b₁ * b₂) = Δ b₁ * b₂ + b₁ * Δ b₂) (s t : B ⊗[ℝ] GaugeAlgebra) :
+    (TensorProduct.map Δ LinearMap.id) (tensorBracket s t) =
+      tensorBracket ((TensorProduct.map Δ LinearMap.id) s) t +
+      tensorBracket s ((TensorProduct.map Δ LinearMap.id) t) := by
+  induction s using TensorProduct.induction_on with
+  | zero => simp
+  | tmul b₁ a₁ =>
+      induction t using TensorProduct.induction_on with
+      | zero => simp
+      | tmul b₂ a₂ => simp [hΔ, TensorProduct.add_tmul]
+      | add x y hx hy =>
+          simp only [map_add, hx, hy]
+          abel
+  | add x y hx hy =>
+      simp only [map_add, LinearMap.add_apply, hx, hy]
+      abel
+
+/-- `tensorBracket` under a relative derivation on the Lie factor: if
+  `T₁ ⁅a, b⁆ = ⁅T₁ a, T₀ b⁆ + ⁅T₀ a, T₁ b⁆`, the two mixed brackets sum to the
+  `T₁`-image of the bracket. This is how the once-derived adjoint transport
+  distributes over the commutator. -/
+lemma tensorBracket_map_right_derivation (T₀ T₁ : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
+    (hT : ∀ a b, T₁ ⁅a, b⁆ = ⁅T₁ a, T₀ b⁆ + ⁅T₀ a, T₁ b⁆) (s t : B ⊗[ℝ] GaugeAlgebra) :
+    tensorBracket ((TensorProduct.map LinearMap.id T₁) s)
+        ((TensorProduct.map LinearMap.id T₀) t) +
+      tensorBracket ((TensorProduct.map LinearMap.id T₀) s)
+        ((TensorProduct.map LinearMap.id T₁) t) =
+      (TensorProduct.map LinearMap.id T₁) (tensorBracket s t) := by
+  induction s using TensorProduct.induction_on with
+  | zero => simp
+  | tmul b₁ a₁ =>
+      induction t using TensorProduct.induction_on with
+      | zero => simp
+      | tmul b₂ a₂ => simp [hT, TensorProduct.tmul_add]
+      | add x y hx hy =>
+          simp only [map_add]
+          rw [← hx, ← hy]
+          abel
+  | add x y hx hy =>
+      simp only [map_add, LinearMap.add_apply]
+      rw [← hx, ← hy]
+      abel
+
+/-- The family-level form of `tensorBracket_map_right_derivation`: a relative
+  derivation on the dual index distributes over the bracket of families. -/
+lemma bracketFam_dualMap_derivation (T₀ T₁ : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
+    (hT : ∀ a b, T₁ ⁅a, b⁆ = ⁅T₁ a, T₀ b⁆ + ⁅T₀ a, T₁ b⁆)
+    (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam (f ∘ₗ T₁.dualMap) (g ∘ₗ T₀.dualMap) +
+      bracketFam (f ∘ₗ T₀.dualMap) (g ∘ₗ T₁.dualMap) =
+      bracketFam f g ∘ₗ T₁.dualMap := by
+  refine LinearMap.ext fun φ => ?_
+  show dualPairEquiv (tensorBracket (dualPairEquiv.symm (f ∘ₗ T₁.dualMap))
+        (dualPairEquiv.symm (g ∘ₗ T₀.dualMap))) φ +
+      dualPairEquiv (tensorBracket (dualPairEquiv.symm (f ∘ₗ T₀.dualMap))
+        (dualPairEquiv.symm (g ∘ₗ T₁.dualMap))) φ =
+      bracketFam f g (T₁.dualMap φ)
+  rw [symm_comp_right, symm_comp_right, symm_comp_right, symm_comp_right,
+    ← LinearMap.add_apply, ← map_add, tensorBracket_map_right_derivation T₀ T₁ hT,
+    dualPairEquiv_map_right]
+  rfl
+
+/-- With `D` a derivation (Leibniz rule on `B`), the derivative of the commutator
+  term distributes: `∂_ρ ⁅A_μ, A_ν⁆ = ⁅∂_ρ A_μ, A_ν⁆ + ⁅A_μ, ∂_ρ A_ν⁆`. -/
+lemma deriv_commutator (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
+    (ρ μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    D ρ (commutator A μ ν φ) =
+      bracketFam ((D ρ).restrictScalars ℝ ∘ₗ A μ) (A ν) φ +
+      bracketFam (A μ) ((D ρ).restrictScalars ℝ ∘ₗ A ν) φ := by
+  have h := congrArg (fun z => dualPairEquiv z φ)
+    (tensorBracket_map_left_derivation ((D ρ).restrictScalars ℝ)
+      (fun b₁ b₂ => hD ρ b₁ b₂) (dualPairEquiv.symm (A μ)) (dualPairEquiv.symm (A ν)))
+  simp only [map_add, LinearMap.add_apply, dualPairEquiv_map_left] at h
+  rw [← symm_comp_left, ← symm_comp_left] at h
+  exact h
+
+set_option maxHeartbeats 1000000 in
+/-- The gauge transformation of the bracket of two component families with affine
+  transformation laws `f ↦ f' + φ(c_f)·1` and `g ↦ g' + φ(c_g)·1`: the bracket of the
+  transformed families, two `ad` cross terms, and the constant bracket `⁅c_f, c_g⁆`.
+  Pure bilinearity, with `tensorBracket_one_left/right` computing the cross terms;
+  `repGauge_commutator` is the special case of two field symbols. -/
+lemma repGauge_bracketFam (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI) {f g f' g' : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+    {cf cg : GaugeAlgebra}
+    (hf : ∀ ψ : Module.Dual ℝ GaugeAlgebra,
+      repGauge U (f ψ) = f' ψ + algebraMap ℂ B (ψ cf))
+    (hg : ∀ ψ : Module.Dual ℝ GaugeAlgebra,
+      repGauge U (g ψ) = g' ψ + algebraMap ℂ B (ψ cg))
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U (bracketFam f g φ) =
+      bracketFam f' g' φ
+      + g' (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra cf)
+      - f' (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra cg)
+      + algebraMap ℂ B (φ ⁅cf, cg⁆) := by
+  set Φ : B →ₗ[ℝ] B := (repGauge U).restrictScalars ℝ with hΦdef
+  have hΦmul : ∀ b₁ b₂ : B, Φ (b₁ * b₂) = Φ b₁ * Φ b₂ := fun b₁ b₂ =>
+    hA.gauge_mul U b₁ b₂
+  set s : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm f with hs
+  set t : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm g with ht
+  set s' : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm f' with hs'
+  set t' : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm g' with ht'
+  have hfm : (TensorProduct.map Φ LinearMap.id) s = s' + (1 : B) ⊗ₜ[ℝ] cf := by
+    rw [hs, hs', ← symm_comp_left,
+      show Φ ∘ₗ f = f' + dualPairEquiv ((1 : B) ⊗ₜ[ℝ] cf) from
+        LinearMap.ext fun ψ => by
+          simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
+            LinearMap.restrictScalars_apply]
+          rw [hf ψ, dualPairEquiv_one_tmul],
+      map_add, LinearEquiv.symm_apply_apply]
+  have hgm : (TensorProduct.map Φ LinearMap.id) t = t' + (1 : B) ⊗ₜ[ℝ] cg := by
+    rw [ht, ht', ← symm_comp_left,
+      show Φ ∘ₗ g = g' + dualPairEquiv ((1 : B) ⊗ₜ[ℝ] cg) from
+        LinearMap.ext fun ψ => by
+          simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
+            LinearMap.restrictScalars_apply]
+          rw [hg ψ, dualPairEquiv_one_tmul],
+      map_add, LinearEquiv.symm_apply_apply]
+  have hbra : dualPairEquiv (tensorBracket s t) = bracketFam f g := by
+    rw [hs, ht]; rfl
+  have hbra' : dualPairEquiv (tensorBracket s' t') = bracketFam f' g' := by
+    rw [hs', ht']; rfl
+  have hπs' : dualPairEquiv s' = f' := by
+    rw [hs']; exact dualPairEquiv.apply_symm_apply _
+  have hπt' : dualPairEquiv t' = g' := by
+    rw [ht']; exact dualPairEquiv.apply_symm_apply _
+  clear_value Φ s t s' t'
+  have htensor : (TensorProduct.map Φ LinearMap.id) (tensorBracket s t) =
+      tensorBracket s' t'
+      + (TensorProduct.map LinearMap.id (LieAlgebra.ad ℝ GaugeAlgebra cf)) t'
+      - (TensorProduct.map LinearMap.id (LieAlgebra.ad ℝ GaugeAlgebra cg)) s'
+      + (1 : B) ⊗ₜ[ℝ] ⁅cf, cg⁆ := by
+    refine (tensorBracket_map_left Φ hΦmul s t).symm.trans
+      ((congrArg₂ (fun X Y => tensorBracket X Y) hfm hgm).trans ?_)
+    simp only [map_add, LinearMap.add_apply]
+    rw [tensorBracket_one_right, tensorBracket_one_left, tensorBracket_tmul, one_mul]
+    abel
+  have hread := congrArg (fun z => dualPairEquiv z φ) htensor
+  simp only [map_add, map_sub, LinearMap.add_apply, LinearMap.sub_apply,
+    dualPairEquiv_map_left, dualPairEquiv_map_right, dualPairEquiv_one_tmul] at hread
+  rw [show repGauge U (bracketFam f g φ) = Φ (dualPairEquiv (tensorBracket s t) φ) from by
+      rw [hbra, hΦdef]; rfl,
+    hread, hbra', hπs', hπt']
+  rfl
+
+
+/-!
+
+## Multiset combinatorics for iterated Leibniz sums
+
+The convolution sums of the iterated transformation laws are indexed by the multiset
+antidiagonal. The two lemmas below are the coassociativity and cocommutativity-exchange
+of this "comultiplication": a sum over splittings-of-splittings does not depend on the
+grouping. Both are proven by a cons-induction with the summand universally quantified,
+so that the inductive hypothesis absorbs the modified summands.
+
+-/
+
+/-- Coassociativity of antidiagonal sums: summing over `s = u + v` and then `u = x + y`
+  is summing over `s = x + t` and then `t = y + v`. -/
+lemma _root_.Multiset.sum_antidiagonal_assoc {ι M : Type*} [AddCommMonoid M]
+    (s : Multiset ι) (h : Multiset ι → Multiset ι → Multiset ι → M) :
+    (s.antidiagonal.map fun p =>
+      (p.1.antidiagonal.map fun q => h q.1 q.2 p.2).sum).sum =
+    (s.antidiagonal.map fun p =>
+      (p.2.antidiagonal.map fun q => h p.1 q.1 q.2).sum).sum := by
+  induction s using Multiset.induction_on generalizing h with
+  | empty => simp
+  | cons κ s ih =>
+      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq,
+        Multiset.sum_map_add]
+      rw [ih (fun x y v => h x y (κ ::ₘ v)), ih (fun x y v => h x (κ ::ₘ y) v),
+        ih (fun x y v => h (κ ::ₘ x) y v)]
+      abel
+
+/-- The exchange law of doubly-split antidiagonal sums: splitting `s = u + v` and then
+  `u = x + y`, `v = z + w` is, with the middle parts exchanged, splitting `s = u' + v'`
+  and then `u' = x + z`, `v' = y + w`. -/
+lemma _root_.Multiset.sum_antidiagonal_exchange {ι M : Type*} [AddCommMonoid M]
+    (s : Multiset ι) (h : Multiset ι → Multiset ι → Multiset ι → Multiset ι → M) :
+    (s.antidiagonal.map fun p =>
+      (p.1.antidiagonal.map fun q =>
+        (p.2.antidiagonal.map fun r => h q.1 q.2 r.1 r.2).sum).sum).sum =
+    (s.antidiagonal.map fun p =>
+      (p.1.antidiagonal.map fun q =>
+        (p.2.antidiagonal.map fun r => h q.1 r.1 q.2 r.2).sum).sum).sum := by
+  induction s using Multiset.induction_on generalizing h with
+  | empty => simp
+  | cons κ s ih =>
+      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq,
+        Multiset.sum_map_add]
+      rw [ih (fun x y z w => h x y z (κ ::ₘ w)), ih (fun x y z w => h x y (κ ::ₘ z) w),
+        ih (fun x y z w => h x (κ ::ₘ y) z w), ih (fun x y z w => h (κ ::ₘ x) y z w)]
+      abel
+
+/-- A multiset sum of linear maps, applied: the sum of the applications. -/
+lemma _root_.Multiset.sum_linearMap_apply {R M N : Type*} [Semiring R] [AddCommMonoid M]
+    [AddCommMonoid N] [Module R M] [Module R N] (S : Multiset (M →ₗ[R] N)) (x : M) :
+    S.sum x = (S.map fun f => f x).sum := by
+  induction S using Multiset.induction_on with
+  | empty => simp
+  | cons f S ih => simp [ih]
+
+/-- A pure tensor against a multiset sum distributes over the sum. -/
+lemma _root_.Multiset.tmul_sum {R M N : Type*} [CommSemiring R] [AddCommMonoid M]
+    [AddCommMonoid N] [Module R M] [Module R N] (m : M) (S : Multiset N) :
+    m ⊗ₜ[R] S.sum = (S.map fun n => m ⊗ₜ[R] n).sum := by
+  induction S using Multiset.induction_on with
+  | empty => simp
+  | cons n S ih => simp [TensorProduct.tmul_add, ih]
+
+/-!
+
+## Iterated Leibniz expansions
+
+-/
+
+lemma bracketFam_zero_left (g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam 0 g = 0 := by
+  simp [bracketFam]
+
+lemma bracketFam_zero_right (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam f 0 = 0 := by
+  simp [bracketFam]
+
+lemma bracketFam_sum_left (S : Multiset (Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B))
+    (g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    bracketFam S.sum g = (S.map fun f => bracketFam f g).sum := by
+  induction S using Multiset.induction_on with
+  | empty => simp [bracketFam_zero_left]
+  | cons f S ih => simp [bracketFam_add_left, ih]
+
+lemma bracketFam_sum_right (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (S : Multiset (Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)) :
+    bracketFam f S.sum = (S.map fun g => bracketFam f g).sum := by
+  induction S using Multiset.induction_on with
+  | empty => simp [bracketFam_zero_right]
+  | cons g S ih => simp [bracketFam_add_right, ih]
+
+/-- With `D` a derivation, the one-step Leibniz rule for the bracket of arbitrary
+  component families. -/
+lemma deriv_bracketFam (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂) (κ : Fin 1 ⊕ Fin 3)
+    (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (φ : Module.Dual ℝ GaugeAlgebra) :
+    D κ (bracketFam f g φ) =
+      bracketFam ((D κ).restrictScalars ℝ ∘ₗ f) g φ +
+      bracketFam f ((D κ).restrictScalars ℝ ∘ₗ g) φ := by
+  have h := congrArg (fun z => dualPairEquiv z φ)
+    (tensorBracket_map_left_derivation ((D κ).restrictScalars ℝ)
+      (fun b₁ b₂ => hD κ b₁ b₂) (dualPairEquiv.symm f) (dualPairEquiv.symm g))
+  simp only [map_add, LinearMap.add_apply, dualPairEquiv_map_left] at h
+  rw [← symm_comp_left, ← symm_comp_left] at h
+  exact h
+
+/-- The iterated Leibniz rule for the bracket of component families: the iterated
+  derivative of `⁅f, g⁆` is the antidiagonal convolution of derived brackets. -/
+lemma iteratedD_bracketFam (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (φ : Module.Dual ℝ GaugeAlgebra) :
+    Lorentz.iteratedD D D_comm s (bracketFam f g φ) =
+      (s.antidiagonal.map fun p =>
+        bracketFam ((Lorentz.iteratedD D D_comm p.1).restrictScalars ℝ ∘ₗ f)
+          ((Lorentz.iteratedD D D_comm p.2).restrictScalars ℝ ∘ₗ g) φ).sum := by
+  induction s using Multiset.induction_on generalizing f g with
+  | empty =>
+      simp [Lorentz.iteratedD_zero, Multiset.antidiagonal_zero,
+        show (LinearMap.id : B →ₗ[ℂ] B).restrictScalars ℝ = LinearMap.id from rfl]
+  | cons κ s ih =>
+      rw [Lorentz.iteratedD_cons, LinearMap.comp_apply, ih f g, map_multiset_sum,
+        Multiset.map_map,
+        Multiset.map_congr rfl (fun p hp => by
+          rw [Function.comp_apply, deriv_bracketFam hD κ,
+            show (D κ).restrictScalars ℝ ∘ₗ
+                ((Lorentz.iteratedD D D_comm p.1).restrictScalars ℝ ∘ₗ f) =
+              (Lorentz.iteratedD D D_comm (κ ::ₘ p.1)).restrictScalars ℝ ∘ₗ f from by
+              rw [Lorentz.iteratedD_cons]; rfl,
+            show (D κ).restrictScalars ℝ ∘ₗ
+                ((Lorentz.iteratedD D D_comm p.2).restrictScalars ℝ ∘ₗ g) =
+              (Lorentz.iteratedD D D_comm (κ ::ₘ p.2)).restrictScalars ℝ ∘ₗ g from by
+              rw [Lorentz.iteratedD_cons]; rfl]),
+        Multiset.sum_map_add]
+      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
+      abel
+
+/-!
+
+## The all-orders transport, coefficient, and structural identities
+
+-/
+
+/-- The all-orders derivation property of the base-point adjoint transport: the
+  transport of a bracket is the antidiagonal convolution of transports, by the
+  iterated Leibniz rule for the jet bracket. -/
+lemma _root_.StandardModel.adjointTransport_bracket (U : JetGaugeGroupI)
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (a b : GaugeAlgebra) :
+    JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv x
+      (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant ⁅a, b⁆))) =
+      (x.antidiagonal.map fun p =>
+        ⁅JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
+            (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a))),
+          JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.2
+            (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant b)))⁆).sum := by
+  rw [JetGaugeAlgebra.ofConstant_lie, JetGaugeAlgebra.adjointMap_lie,
+    JetGaugeAlgebra.iteratedDeriv_bracket, map_multiset_sum, Multiset.map_map]
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
+    rw [Function.comp_apply, LieHom.map_lie])
+
+/-- `tensorBracket` under an antidiagonal family of transports on the Lie factor:
+  if `T x` distributes over the bracket as the antidiagonal convolution of the
+  `T m`, so does `id ⊗ T x` over `tensorBracket`. -/
+lemma tensorBracket_map_right_antidiagonal
+    (T : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
+    (x : Multiset (Fin 1 ⊕ Fin 3))
+    (hT : ∀ a b : GaugeAlgebra, T x ⁅a, b⁆ =
+      (x.antidiagonal.map fun p => ⁅T p.1 a, T p.2 b⁆).sum)
+    (s t : B ⊗[ℝ] GaugeAlgebra) :
+    (x.antidiagonal.map fun p =>
+      tensorBracket ((TensorProduct.map LinearMap.id (T p.1)) s)
+        ((TensorProduct.map LinearMap.id (T p.2)) t)).sum =
+      (TensorProduct.map LinearMap.id (T x)) (tensorBracket s t) := by
+  induction s using TensorProduct.induction_on with
+  | zero => simp
+  | tmul b₁ a₁ =>
+      induction t using TensorProduct.induction_on with
+      | zero => simp
+      | tmul b₂ a₂ =>
+          simp only [tensorBracket_tmul, TensorProduct.map_tmul, LinearMap.id_coe, id_eq]
+          rw [hT, Multiset.tmul_sum, Multiset.map_map]
+          exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
+            simp)
+      | add y z hy hz =>
+          rw [Multiset.map_congr rfl (fun p hp => by rw [map_add, map_add]),
+            Multiset.sum_map_add, hy, hz, ← map_add, ← map_add]
+  | add y z hy hz =>
+      rw [Multiset.map_congr rfl (fun p hp => by
+          rw [map_add, map_add, LinearMap.add_apply]),
+        Multiset.sum_map_add, hy, hz, ← map_add, ← LinearMap.add_apply, ← map_add]
+
+/-- The bracket of families against an iterated dual adjoint coefficient: the
+  antidiagonal convolution — the all-orders form of `bracketFam_comp_dualMap` and
+  `bracketFam_dualMap_derivation`. -/
+lemma bracketFam_adjointDualCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3))
+    (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (φ : Module.Dual ℝ GaugeAlgebra) :
+    bracketFam f g (adjointDualCoeff U x φ) =
+      (x.antidiagonal.map fun p =>
+        bracketFam (f ∘ₗ adjointDualCoeff U p.1) (g ∘ₗ adjointDualCoeff U p.2) φ).sum := by
+  set T : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra →ₗ[ℝ] GaugeAlgebra := fun m =>
+    JetGaugeAlgebra.eval.toLinearMap ∘ₗ JetGaugeAlgebra.iteratedDeriv m ∘ₗ
+      JetGaugeAlgebra.adjointMap U ∘ₗ JetGaugeAlgebra.ofConstant with hTdef
+  have hcoeff : ∀ m, adjointDualCoeff U m = (T m).dualMap := fun m => rfl
+  have hT : ∀ a b : GaugeAlgebra, T x ⁅a, b⁆ =
+      (x.antidiagonal.map fun p => ⁅T p.1 a, T p.2 b⁆).sum := by
+    intro a b
+    simp only [hTdef, LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap]
+    exact adjointTransport_bracket U x a b
+  rw [hcoeff x,
+    show bracketFam f g ((T x).dualMap φ) =
+      dualPairEquiv ((TensorProduct.map LinearMap.id (T x)) (tensorBracket
+        (dualPairEquiv.symm f) (dualPairEquiv.symm g))) φ from
+      (dualPairEquiv_map_right (T x) _ φ).symm,
+    ← tensorBracket_map_right_antidiagonal T x hT, map_multiset_sum,
+    Multiset.map_map, Multiset.sum_linearMap_apply, Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+  simp only [Function.comp_apply]
+  rw [← symm_comp_right, ← symm_comp_right, hcoeff p.1, hcoeff p.2]
+  rfl
+
+/-- The all-orders decomposition of the dual adjoint coefficient with one extra
+  derivative — the generalization of `adjointDualCoeff_singleton` and
+  `adjointDualCoeff_pair`: differentiating the adjoint once produces minus the
+  bracket with the Maurer–Cartan form, and the remaining derivatives distribute over
+  it by the Leibniz rule. -/
+lemma _root_.StandardModel.adjointDualCoeff_cons (U : JetGaugeGroupI)
+    (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    adjointDualCoeff U (μ ::ₘ x) φ =
+      -((x.antidiagonal.map fun p =>
+        adjointDualCoeff U p.2 (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra
+          (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
+            (maurerCartanForm U μ))))).sum) := by
+  refine LinearMap.ext fun a => ?_
+  have hkey : JetGaugeAlgebra.iteratedDeriv (μ ::ₘ x)
+      (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)) =
+      -((x.antidiagonal.map fun p =>
+        ⁅JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U μ),
+          JetGaugeAlgebra.iteratedDeriv p.2
+            (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a))⁆).sum) := by
+    rw [show (μ ::ₘ x : Multiset (Fin 1 ⊕ Fin 3)) = x + {μ} from by
+        rw [add_comm, Multiset.singleton_add],
+      JetGaugeAlgebra.iteratedDeriv_add, LinearMap.comp_apply,
+      JetGaugeAlgebra.iteratedDeriv_singleton, deriv_adjointMap,
+      JetGaugeAlgebra.deriv_ofConstant, map_zero, zero_sub, map_neg,
+      JetGaugeAlgebra.iteratedDeriv_bracket]
+  simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.neg_apply,
+    LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap]
+  rw [hkey, map_neg, map_neg, map_multiset_sum, map_multiset_sum,
+    Multiset.map_map, Multiset.map_map, Multiset.sum_linearMap_apply, Multiset.map_map]
+  refine congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_))
+  simp only [Function.comp_apply, LieHom.map_lie]
+  rfl
+
+/-- The all-orders structural equation of the Maurer–Cartan form, at the base point:
+  the `s`-th derivative of `∂_μ ω_ν − ∂_ν ω_μ + ⁅ω_μ, ω_ν⁆ = 0`, with the bracket
+  expanded by the iterated Leibniz rule. -/
+lemma _root_.StandardModel.eval_iteratedDeriv_maurerCartan_structure
+    (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (μ ::ₘ s) (maurerCartanForm U ν)) =
+      JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (ν ::ₘ s) (maurerCartanForm U μ))
+      - (s.antidiagonal.map fun p =>
+          ⁅JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U μ)),
+            JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.2
+              (maurerCartanForm U ν))⁆).sum := by
+  have hconv : ∀ (κ : Fin 1 ⊕ Fin 3) (z : JetGaugeAlgebra),
+      JetGaugeAlgebra.iteratedDeriv s (JetGaugeAlgebra.deriv κ z) =
+        JetGaugeAlgebra.iteratedDeriv (κ ::ₘ s) z := by
+    intro κ z
+    rw [show (κ ::ₘ s : Multiset (Fin 1 ⊕ Fin 3)) = s + {κ} from by
+        rw [add_comm, Multiset.singleton_add],
+      JetGaugeAlgebra.iteratedDeriv_add, LinearMap.comp_apply,
+      JetGaugeAlgebra.iteratedDeriv_singleton]
+  have h0 := congrArg (fun z => JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv s z))
+    (maurerCartanForm_structure U μ ν)
+  simp only [map_add, map_sub, map_zero] at h0
+  rw [hconv, hconv, JetGaugeAlgebra.iteratedDeriv_bracket, map_multiset_sum,
+    Multiset.map_map] at h0
+  rw [Multiset.map_congr rfl (fun p hp => by rw [Function.comp_apply, LieHom.map_lie])] at h0
+  refine eq_sub_of_add_eq ?_
+  calc JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (μ ::ₘ s) (maurerCartanForm U ν))
+        + (s.antidiagonal.map fun p =>
+          ⁅JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U μ)),
+            JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.2
+              (maurerCartanForm U ν))⁆).sum
+      = (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (μ ::ₘ s) (maurerCartanForm U ν))
+        - JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (ν ::ₘ s) (maurerCartanForm U μ))
+        + (s.antidiagonal.map fun p =>
+          ⁅JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U μ)),
+            JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.2
+              (maurerCartanForm U ν))⁆).sum)
+        + JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (ν ::ₘ s) (maurerCartanForm U μ)) := by
+        abel
+    _ = JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (ν ::ₘ s) (maurerCartanForm U μ)) := by
+        rw [h0, zero_add]
+
+/-- Antidiagonal sums are symmetric under swapping the two parts. -/
+lemma _root_.Multiset.sum_antidiagonal_swap {ι M : Type*} [AddCommMonoid M]
+    (s : Multiset ι) (h : Multiset ι → Multiset ι → M) :
+    (s.antidiagonal.map fun p => h p.1 p.2).sum =
+    (s.antidiagonal.map fun p => h p.2 p.1).sum := by
+  induction s using Multiset.induction_on generalizing h with
+  | empty => simp
+  | cons κ s ih =>
+      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
+      rw [ih (fun a b => h a (κ ::ₘ b)), ih (fun a b => h (κ ::ₘ a) b)]
+      abel
+
+/-- A multiset sum of negations is the negation of the sum. -/
+lemma _root_.Multiset.sum_map_neg'' {ι M : Type*} [AddCommGroup M]
+    (s : Multiset ι) (f : ι → M) :
+    (s.map fun i => -f i).sum = -(s.map f).sum := by
+  induction s using Multiset.induction_on with
+  | empty => simp
+  | cons i s ih =>
+      simp only [Multiset.map_cons, Multiset.sum_cons, ih]
+      abel
+
+/-!
+
+## The gauge transformation of iterated derivatives
+
+-/
+
+/-- The `κ ::ₘ s` case of `gauge_apply_deriv` with the extra derivative traced through:
+  the Leibniz splittings where `κ` stays a derivative, minus (by
+  `adjointDualCoeff_cons`) the splittings where `κ` hits the adjoint — an `ad` of the
+  derived Maurer–Cartan form — plus the derived Maurer–Cartan shift. -/
+lemma repGauge_iteratedD_cons_apply (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U (Lorentz.iteratedD D D_comm (κ ::ₘ s) (A τ φ)) =
+      (s.antidiagonal.map fun p =>
+        Lorentz.iteratedD D D_comm (κ ::ₘ p.2) (A τ (adjointDualCoeff U⁻¹ p.1 φ))).sum
+      - (s.antidiagonal.map fun p =>
+          (p.1.antidiagonal.map fun q =>
+            Lorentz.iteratedD D D_comm p.2 (A τ (adjointDualCoeff U⁻¹ q.2
+              (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+                (JetGaugeAlgebra.iteratedDeriv q.1 (maurerCartanForm U⁻¹ κ))))))).sum).sum
+      + algebraMap ℂ B (φ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv (κ ::ₘ s)
+          (maurerCartanForm U⁻¹ τ)))) := by
+  rw [hA.gauge_apply_deriv U (κ ::ₘ s) τ φ]
+  congr 1
+  simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+    Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
+  have hsec : (Multiset.map (fun p => Lorentz.iteratedD D D_comm p.2
+        (A τ (adjointDualCoeff U⁻¹ (κ ::ₘ p.1) φ))) s.antidiagonal).sum =
+      -(s.antidiagonal.map fun p =>
+          (p.1.antidiagonal.map fun q =>
+            Lorentz.iteratedD D D_comm p.2 (A τ (adjointDualCoeff U⁻¹ q.2
+              (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+                (JetGaugeAlgebra.iteratedDeriv q.1 (maurerCartanForm U⁻¹ κ))))))).sum).sum := by
+    rw [← Multiset.sum_map_neg'']
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+    rw [adjointDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_neg, map_multiset_sum,
+      Multiset.map_map, map_multiset_sum, Multiset.map_map]
+    exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => rfl))
+  rw [hsec, sub_eq_add_neg]
+
+set_option maxHeartbeats 2000000 in
+/-- The all-orders gauge transformation of the derived commutator term: the Leibniz
+  convolution of the transformed commutator, the two `ad` cross-term convolutions,
+  and the convolution of Maurer–Cartan bracket shifts. This is `repGauge_commutator`
+  at every derivative order simultaneously; the regrouping of the four-fold splitting
+  is `Multiset.sum_antidiagonal_exchange`. -/
+lemma repGauge_iteratedD_commutator (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B), D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
+    (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U (Lorentz.iteratedD D D_comm s (commutator A μ ν φ)) =
+      (s.antidiagonal.map fun p =>
+        Lorentz.iteratedD D D_comm p.2 (commutator A μ ν
+          (adjointDualCoeff U⁻¹ p.1 φ))).sum
+      + (s.antidiagonal.map fun p =>
+          (p.2.antidiagonal.map fun r =>
+            Lorentz.iteratedD D D_comm r.2 (A ν (adjointDualCoeff U⁻¹ r.1
+              (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+                (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U⁻¹ μ))))))).sum).sum
+      - (s.antidiagonal.map fun p =>
+          (p.1.antidiagonal.map fun q =>
+            Lorentz.iteratedD D D_comm q.2 (A μ (adjointDualCoeff U⁻¹ q.1
+              (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+                (JetGaugeAlgebra.iteratedDeriv p.2 (maurerCartanForm U⁻¹ ν))))))).sum).sum
+      + (s.antidiagonal.map fun p =>
+          algebraMap ℂ B (φ ⁅JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
+              (maurerCartanForm U⁻¹ μ)),
+            JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.2
+              (maurerCartanForm U⁻¹ ν))⁆)).sum := by
+  -- the affine transformation law of the derived symbols, with the Leibniz sum as a map
+  have hAlaw : ∀ (τ : Fin 1 ⊕ Fin 3) (u : Multiset (Fin 1 ⊕ Fin 3))
+      (ψ : Module.Dual ℝ GaugeAlgebra),
+      repGauge U (((Lorentz.iteratedD D D_comm u).restrictScalars ℝ ∘ₗ A τ) ψ) =
+        ((u.antidiagonal.map fun q =>
+          (Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A τ ∘ₗ
+            adjointDualCoeff U⁻¹ q.1).sum) ψ
+        + algebraMap ℂ B (ψ (JetGaugeAlgebra.eval
+            (JetGaugeAlgebra.iteratedDeriv u (maurerCartanForm U⁻¹ τ)))) := by
+    intro τ u ψ
+    show repGauge U (Lorentz.iteratedD D D_comm u (A τ ψ)) = _
+    rw [hA.gauge_apply_deriv U u τ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
+    congr 1
+  -- the convolution triple sum in its two groupings
+  have hMa : (s.antidiagonal.map fun p =>
+      bracketFam ((p.1.antidiagonal.map fun q =>
+          (Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A μ ∘ₗ
+            adjointDualCoeff U⁻¹ q.1).sum)
+        ((p.2.antidiagonal.map fun r =>
+          (Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ A ν ∘ₗ
+            adjointDualCoeff U⁻¹ r.1).sum) φ).sum =
+      (s.antidiagonal.map fun p =>
+        (p.1.antidiagonal.map fun q =>
+          (p.2.antidiagonal.map fun r =>
+            bracketFam ((Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A μ ∘ₗ
+                adjointDualCoeff U⁻¹ q.1)
+              ((Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ A ν ∘ₗ
+                adjointDualCoeff U⁻¹ r.1) φ).sum).sum).sum := by
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+    rw [bracketFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
+      Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => ?_)
+    simp only [Function.comp_apply]
+    rw [bracketFam_sum_right, Multiset.sum_linearMap_apply, Multiset.map_map,
+      Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
+    simp only [Function.comp_apply]
+  have hMc : (s.antidiagonal.map fun p =>
+      Lorentz.iteratedD D D_comm p.2 (commutator A μ ν
+        (adjointDualCoeff U⁻¹ p.1 φ))).sum =
+      (s.antidiagonal.map fun p =>
+        (p.1.antidiagonal.map fun q =>
+          (p.2.antidiagonal.map fun r =>
+            bracketFam ((Lorentz.iteratedD D D_comm r.1).restrictScalars ℝ ∘ₗ A μ ∘ₗ
+                adjointDualCoeff U⁻¹ q.1)
+              ((Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ A ν ∘ₗ
+                adjointDualCoeff U⁻¹ q.2) φ).sum).sum).sum := by
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+    rw [commutator_eq_bracketFam, bracketFam_adjointDualCoeff U⁻¹ p.1 (A μ) (A ν) φ,
+      map_multiset_sum, Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => ?_)
+    simp only [Function.comp_apply]
+    rw [iteratedD_bracketFam hD p.2 (A μ ∘ₗ adjointDualCoeff U⁻¹ q.1)
+      (A ν ∘ₗ adjointDualCoeff U⁻¹ q.2) φ]
+  have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
+      bracketFam ((Lorentz.iteratedD D D_comm b).restrictScalars ℝ ∘ₗ A μ ∘ₗ
+          adjointDualCoeff U⁻¹ a)
+        ((Lorentz.iteratedD D D_comm d).restrictScalars ℝ ∘ₗ A ν ∘ₗ
+          adjointDualCoeff U⁻¹ c) φ).trans hMc.symm)
+  -- the cross-term sums, applied
+  have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
+      ((p.2.antidiagonal.map fun r =>
+        (Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ A ν ∘ₗ
+          adjointDualCoeff U⁻¹ r.1).sum)
+        (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+          (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U⁻¹ μ)))) =
+      (p.2.antidiagonal.map fun r =>
+        Lorentz.iteratedD D D_comm r.2 (A ν (adjointDualCoeff U⁻¹ r.1
+          (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+            (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U⁻¹ μ))))))).sum := by
+    intro p
+    rw [Multiset.sum_linearMap_apply, Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
+    simp only [Function.comp_apply, LinearMap.coe_comp, LinearMap.restrictScalars_apply]
+  have hCf : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
+      ((p.1.antidiagonal.map fun q =>
+        (Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A μ ∘ₗ
+          adjointDualCoeff U⁻¹ q.1).sum)
+        (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+          (JetGaugeAlgebra.iteratedDeriv p.2 (maurerCartanForm U⁻¹ ν)))) =
+      (p.1.antidiagonal.map fun q =>
+        Lorentz.iteratedD D D_comm q.2 (A μ (adjointDualCoeff U⁻¹ q.1
+          (φ ∘ₗ LieAlgebra.ad ℝ GaugeAlgebra (JetGaugeAlgebra.eval
+            (JetGaugeAlgebra.iteratedDeriv p.2 (maurerCartanForm U⁻¹ ν))))))).sum := by
+    intro p
+    rw [Multiset.sum_linearMap_apply, Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => ?_)
+    simp only [Function.comp_apply, LinearMap.coe_comp, LinearMap.restrictScalars_apply]
+  -- expand the left side and split the four convolutions
+  rw [commutator_eq_bracketFam, iteratedD_bracketFam hD s (A μ) (A ν) φ,
+    map_multiset_sum, Multiset.map_map,
+    Multiset.map_congr rfl (fun p hp => by
+      rw [Function.comp_apply, hA.repGauge_bracketFam U (hAlaw μ p.1) (hAlaw ν p.2) φ,
+        hCg p, hCf p]),
+    Multiset.sum_map_add, Multiset.sum_map_sub, Multiset.sum_map_add, hM,
+    commutator_eq_bracketFam]
+
 
 end IsGaugeField
 

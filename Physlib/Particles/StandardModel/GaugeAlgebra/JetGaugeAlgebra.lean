@@ -396,6 +396,27 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
     iteratedDeriv_zero, LinearMap.comp_id]
 
+/-- The iterated Leibniz rule for the bracket: the iterated derivative of a bracket
+  is the antidiagonal convolution of iterated derivatives of the two arguments. -/
+lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : JetGaugeAlgebra) :
+    iteratedDeriv s ⁅a, b⁆ =
+      (s.antidiagonal.map fun p => ⁅iteratedDeriv p.1 a, iteratedDeriv p.2 b⁆).sum := by
+  induction s using Multiset.induction_on with
+  | empty => simp [Multiset.antidiagonal_zero]
+  | cons κ s ih =>
+      rw [iteratedDeriv_cons, LinearMap.comp_apply, ih, map_multiset_sum,
+        Multiset.map_map,
+        Multiset.map_congr rfl (fun p hp => by
+          rw [Function.comp_apply, deriv_bracket,
+            show deriv κ (iteratedDeriv p.1 a) = iteratedDeriv (κ ::ₘ p.1) a from by
+              rw [iteratedDeriv_cons]; rfl,
+            show deriv κ (iteratedDeriv p.2 b) = iteratedDeriv (κ ::ₘ p.2) b from by
+              rw [iteratedDeriv_cons]; rfl]),
+        Multiset.sum_map_add]
+      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
+        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
+      abel
+
 
 
 

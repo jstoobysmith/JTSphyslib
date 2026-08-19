@@ -591,4 +591,66 @@ lemma eval_iteratedDeriv_maurerCartanForm_eq_of_symmetrized_eq (U V : JetGaugeGr
   exact eval_iteratedDeriv_bracket_congr (s.erase ν) _ _ _ _
     (fun p hp => ih p μ (hlt p hp)) (fun p hp => ih p ν (hlt p hp))
 
+/-!
+
+## The derivative of the adjoint action
+
+-/
+
+/-- The constant inclusion has vanishing formal derivative: constants have no
+  spacetime dependence. -/
+@[simp]
+lemma JetGaugeAlgebra.deriv_ofConstant (μ : Fin 1 ⊕ Fin 3) (a : GaugeAlgebra) :
+    deriv μ (ofConstant a) = 0 := by
+  ext <;> simp [Matrix.map_apply, pderiv_C]
+
+/-- The formal derivative intertwines the adjoint action through the Maurer–Cartan
+  form: `∂_μ (Ad_U x) = Ad_U (∂_μ x) − ⁅ω_μ(U), Ad_U x⁆`. On the matrix factors this
+  is the Leibniz rule with the derivative of `U†` rewritten through the
+  differentiated unitarity relation; on the abelian `u(1)` factor the adjoint action
+  is trivial and the bracket is absent. -/
+lemma deriv_adjointMap (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetGaugeAlgebra) :
+    deriv μ (adjointMap U x) =
+      adjointMap U (deriv μ x) - ⁅maurerCartanForm U μ, adjointMap U x⁆ := by
+  have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
+      (M * N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) * N + M * N.map (pderiv ℂ μ) := by
+    intro κ _ _ M N
+    ext i j : 1
+    simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
+      Derivation.leibniz, smul_eq_mul]
+    exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
+  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (V X : Matrix κ κ JetRing),
+      V * star V = 1 →
+      (V * X * star V).map (pderiv ℂ μ) =
+        V * X.map (pderiv ℂ μ) * star V -
+        Complex.I • (Complex.I • (V.map (pderiv ℂ μ) * star V) * (V * X * star V) -
+          (V * X * star V) * (Complex.I • (V.map (pderiv ℂ μ) * star V))) := by
+    intro κ _ _ V X hV
+    have hVV : star V * V = 1 := mul_eq_one_comm.mp hV
+    have hq : (star V).map (pderiv ℂ μ) = -(star V * V.map (pderiv ℂ μ) * star V) := by
+      have h1 : V * (star V).map (pderiv ℂ μ) = -(V.map (pderiv ℂ μ) * star V) :=
+        eq_neg_of_add_eq_zero_right (by
+          rw [← hleib _ V (star V), hV]
+          exact Matrix.ext fun i j => by
+            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ μ)])
+      calc (star V).map (pderiv ℂ μ)
+          = star V * V * (star V).map (pderiv ℂ μ) := by rw [hVV, one_mul]
+        _ = -(star V * V.map (pderiv ℂ μ) * star V) := by
+            rw [mul_assoc, h1, mul_neg, ← mul_assoc]
+    rw [hleib _ (V * X) (star V), hleib _ V X, hq]
+    simp only [smul_mul_assoc, mul_smul_comm, ← smul_sub, smul_smul, Complex.I_mul_I,
+      neg_one_smul, sub_neg_eq_add, add_mul, mul_neg, ← mul_assoc]
+    rw [mul_assoc (V.map (pderiv ℂ μ)) (star V) V, hVV, mul_one]
+    abel
+  refine ext_of_matrix ?_ ?_ ?_
+  · simpa only [deriv_toSU3Matrix, adjointMap_toSU3Matrix, sub_toSU3Matrix,
+      bracket_toSU3Matrix, maurerCartanForm_toSU3Matrix] using
+      key _ U.1.1 x.toSU3Matrix (Matrix.mem_unitaryGroup_iff.mp
+        (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1)
+  · simpa only [deriv_toSU2Matrix, adjointMap_toSU2Matrix, sub_toSU2Matrix,
+      bracket_toSU2Matrix, maurerCartanForm_toSU2Matrix] using
+      key _ U.2.1.1 x.toSU2Matrix (Matrix.mem_unitaryGroup_iff.mp
+        (Matrix.mem_specialUnitaryGroup_iff.mp U.2.1.2).1)
+  · simp
+
 end StandardModel

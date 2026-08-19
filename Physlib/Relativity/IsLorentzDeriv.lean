@@ -47,6 +47,26 @@ def iteratedD {ι : Type*} (D : ι → A →ₗ[ℂ] A)
     ⟨fun i j L => by rw [← LinearMap.comp_assoc, ← LinearMap.comp_assoc, hD]⟩
   s.foldr (fun ν L => (D ν).comp L) LinearMap.id
 
+lemma iteratedD_zero {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) :
+    iteratedD D hD (0 : Multiset ι) = LinearMap.id := by
+  simp only [iteratedD, Multiset.foldr_zero]
+
+lemma iteratedD_cons {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) (κ : ι) (s : Multiset ι) :
+    iteratedD D hD (κ ::ₘ s) = (D κ).comp (iteratedD D hD s) := by
+  simp only [iteratedD, Multiset.foldr_cons]
+
+/-- The iterated operator is additive in the multiset of directions: applying along
+  `s + t` is applying along `t` and then along `s`. -/
+lemma iteratedD_add {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) (s t : Multiset ι) :
+    iteratedD D hD (s + t) = (iteratedD D hD s).comp (iteratedD D hD t) := by
+  induction s using Multiset.induction_on with
+  | empty => rw [zero_add, iteratedD_zero, LinearMap.id_comp]
+  | cons κ s ih =>
+      rw [Multiset.cons_add, iteratedD_cons, iteratedD_cons, ih, LinearMap.comp_assoc]
+
 class IsLorentzDeriv (rep : Representation ℂ SL(2,ℂ) A) (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) where
   rep_deriv {Λ μ x} : rep Λ (D μ x) =
     ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • D a (rep Λ x)
