@@ -37,6 +37,10 @@ The construction needs two hypotheses on the jet action `rep`:
 - `repDual` : the induced action on the unconjugated symbols.
 - `repConj`, `repConj_smul_comm` : the action on the jets of the conjugate field.
 - `JetComponentSpace.repJetGaugeGroupI` : the action on the full component space.
+- `JetComponentSpace.repLorentzGroup` : the Lorentz action on the component space.
+- `JetComponentSpace.jetDeriv` : the shift `∂_s ψ_α ↦ ∂_{s + {μ}} ψ_α` of the label.
+- `JetComponentSpace.jetDeriv_comm` : the shifts in different directions commute.
+- `JetComponentSpace.repLorentzGroup_jetDeriv` : the shift is a Lorentz vector.
 
 -/
 
@@ -45,8 +49,6 @@ The construction needs two hypotheses on the jet action `rep`:
 namespace StandardModel
 
 open Matrix MatrixGroups TensorProduct
-
-variable {V : Type _} [AddCommGroup V] [Module ℂ V]
 
 variable {V : Type _} [AddCommGroup V] [Module ℂ V]
 
@@ -376,6 +378,28 @@ lemma symbolAction_tmul (g : JetRing) (T : Module.End ℂ V) :
       = TensorProduct.map (DerivAlgebraComplex.jetRingAction g) (Module.Dual.transpose T) :=
   rfl
 
+/-- **A coefficient acts on the undifferentiated symbol through its value at the base
+point.** On `1 ⊗ φ` — the symbol `ψ_φ` carrying no derivatives — only the constant term of
+the power-series coefficient survives, so the result is again undifferentiated and the
+target index is acted on by the transpose of the base-point value. -/
+lemma symbolAction_one_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V) (φ : Module.Dual ℂ V) :
+    symbolAction c ((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ)
+      = (1 : DerivAlgebraComplex) ⊗ₜ[ℂ]
+        Module.Dual.transpose (jetEval ∘ₗ TensorProduct.lift
+          ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
+            (TensorProduct.mk ℂ JetRing V)) c) φ := by
+  induction c using TensorProduct.induction_on with
+  | zero => simp
+  | add c₁ c₂ h₁ h₂ =>
+    rw [map_add, LinearMap.add_apply, h₁, h₂, map_add, LinearMap.comp_add, map_add,
+      LinearMap.add_apply, TensorProduct.tmul_add]
+  | tmul g T =>
+    rw [symbolAction_tmul, TensorProduct.map_tmul,
+      DerivAlgebraComplex.jetRingAction_apply_one, TensorProduct.smul_tmul]
+    congr 1
+    refine LinearMap.ext fun v => ?_
+    simp [Module.Dual.transpose]
+
 /-- **The gauge action on the symbols.** Given a fibrewise gauge action on the jets of a
 `V`-valued field, this is the induced (contragredient) action on the derivative symbols
 `∂_s ψ_α`, which span `DerivAlgebraComplex ⊗ Module.Dual ℂ V`.
@@ -409,6 +433,25 @@ noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
         _root_.mul_inv_rev]
     rw [hmul, symbolAction_mul symbolAction (fun g T => rfl)]
     rfl
+
+/-- **The undifferentiated symbol transforms by the value of the gauge transformation at
+the base point.** No derivative of the gauge jet contributes: the symbol `ψ_φ` is acted on
+by the contragredient of `rep U⁻¹` restricted to constant jets and evaluated at the base
+point. -/
+lemma repDual_one_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
+    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+      rep U (χ • z) = χ • rep U z)
+    (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) :
+    repDual rep hlin U ((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ)
+      = (1 : DerivAlgebraComplex) ⊗ₜ[ℂ]
+        Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ := by
+  have h : jetEval ∘ₗ TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ JetRing V)) (jetCoeff rep U⁻¹)
+      = jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant :=
+    LinearMap.ext fun v => congrArg jetEval (jetCoeff_spec rep U⁻¹ v)
+  rw [show repDual rep hlin U = symbolAction (jetCoeff rep U⁻¹) from rfl,
+    symbolAction_one_tmul, h]
 
 
 /-- **The gauge action on the jet component space.** Given a fibrewise gauge action on the
@@ -558,27 +601,79 @@ lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
             (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id) := by
   rw [JetComponentSpace.jetDeriv, DerivAlgebraComplex.basis_singleton]
 
-/-!
-
-##  C. The fermionic algebra
-
--/
-
-abbrev FermionicAlgebra (V : Type _) [AddCommGroup V] [Module ℂ V] : Type :=
-  ExteriorAlgebra ℂ (JetComponentSpace V)
-
-namespace FermionicAlgebra
+@[simp]
+lemma JetComponentSpace.jetDeriv_fst (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
+    (JetComponentSpace.jetDeriv μ v).1
+      = TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id v.1 := rfl
 
 @[simp]
-lemma adjoin_ι_eq_top :
-    Algebra.adjoin ℂ (Set.range (ExteriorAlgebra.ι ℂ (M := JetComponentSpace V))) = ⊤ :=
-  CliffordAlgebra.adjoin_range_ι
+lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
+    (JetComponentSpace.jetDeriv μ v).2
+      = TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id v.2 := rfl
 
 /-!
 
-## The jet derivative
+## Lorentz covariance of the jet derivative
 
 -/
-end FermionicAlgebra
+
+/-- The covariance of the derivative-symbol multiplication on one tensor factor of the
+  component space, for an arbitrary representation on the other factor. -/
+private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup W]
+    [Module ℂ W] (ρ : Representation ℂ SL(2,ℂ) W) (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (w : DerivAlgebraComplex ⊗[ℂ] W) :
+    (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ
+      (TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id w) =
+    ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+      TensorProduct.map
+        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id ((DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ w) := by
+  have hsym : DerivAlgebraComplex.repLorentzGroup Λ
+      (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
+    rw [DerivAlgebraComplex.basis_singleton, DerivAlgebraComplex.repLorentzGroup_apply_ι,
+      Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [map_smul, DerivAlgebraComplex.basis_singleton]
+  have hrep : ∀ (q : DerivAlgebraComplex) (f : W),
+      (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ (q ⊗ₜ[ℂ] f) =
+        (DerivAlgebraComplex.repLorentzGroup Λ q) ⊗ₜ[ℂ] (ρ Λ f) := fun _ _ => rfl
+  induction w using TensorProduct.induction_on with
+  | zero => simp
+  | add x y hx hy =>
+    rw [map_add, map_add, map_add, hx, hy, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
+  | tmul q f =>
+    rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply, hrep, hrep,
+      DerivAlgebraComplex.repLorentzGroup_apply_mul, hsym, Finset.mul_sum,
+      TensorProduct.sum_tmul]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply,
+        mul_smul_comm, TensorProduct.smul_tmul']
+
+/-- **The jet derivative is a Lorentz vector on the component space.** Appending `∂_μ` and
+  then acting is acting and then appending the transformed `∂_μ`, which is a combination of
+  the `∂_a`. Both halves of the component space are covered by the same argument: the
+  derivative label lives in the first tensor factor, and what sits in the second factor —
+  `repV.dual` or `repV.conj.dual` — plays no role. -/
+lemma JetComponentSpace.repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2,ℂ) V)
+    (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
+    JetComponentSpace.repLorentzGroup repV Λ (JetComponentSpace.jetDeriv μ v) =
+      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        JetComponentSpace.jetDeriv a (JetComponentSpace.repLorentzGroup repV Λ v) := by
+  refine Prod.ext ?_ ?_
+  · simp only [Prod.fst_sum, Prod.smul_fst, JetComponentSpace.repLorentzGroup_fst,
+      JetComponentSpace.jetDeriv_fst]
+    exact repLorentzGroup_tprod_mulRight_jetSymbol _ Λ μ v.1
+  · simp only [Prod.snd_sum, Prod.smul_snd, JetComponentSpace.repLorentzGroup_snd,
+      JetComponentSpace.jetDeriv_snd]
+    exact repLorentzGroup_tprod_mulRight_jetSymbol _ Λ μ v.2
 
 end StandardModel

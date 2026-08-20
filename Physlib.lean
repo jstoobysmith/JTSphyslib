@@ -222,6 +222,10 @@ public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
+public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Basic
+public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
+public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
+public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
