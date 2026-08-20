@@ -222,6 +222,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic

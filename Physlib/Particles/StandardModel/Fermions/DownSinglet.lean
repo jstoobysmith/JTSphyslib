@@ -6,7 +6,13 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.CovariantDeriv
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
+public import Mathlib.LinearAlgebra.TensorProduct.Pi
+public import Mathlib.Analysis.Normed.Lp.Matrix
+public import Mathlib.RingTheory.TensorProduct.Maps
 /-!
 # Down-type singlets
 
@@ -297,6 +303,139 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
   | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₆)
   | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₂)
   | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₃)
+
+/-!
+
+## The action of the Gauge algebra
+
+-/
+
+
+/-!
+
+## The representation of the jet gauge group
+-/
+
+/-- Absorbs the jet ring into the colour index: a jet of a down-type singlet is the
+same thing as a right-handed Weyl spinor tensored with a `JetRing`-valued colour
+vector,
+
+  `JetRing ⊗[ℂ] DownSinglet ≃ RightHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3)`.
+
+-/
+noncomputable def jetValLinEquiv :
+    JetRing ⊗[ℂ] DownSinglet ≃ₗ[ℂ]
+      Fermion.RightHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) valLinEquiv).trans <|
+    (TensorProduct.leftComm ℂ JetRing Fermion.RightHandedWeyl
+        (EuclideanSpace ℂ (Fin 3))).trans <|
+      TensorProduct.congr (LinearEquiv.refl ℂ Fermion.RightHandedWeyl) <|
+        (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+            (WithLp.linearEquiv 2 ℂ (Fin 3 → ℂ))).trans <|
+          ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 3)).trans
+            (WithLp.linearEquiv 2 JetRing (Fin 3 → JetRing)).symm).restrictScalars ℂ
+
+/-- The `(3, 1)_{-2}` action of the jet gauge group on the jet space of the down-type
+singlet. Through `jetValLinEquiv` the colour matrix of the gauge jet, carrying the
+`-2` hypercharge phase `(star u) ^ 2`, acts `JetRing`-linearly on the colour factor by
+matrix-vector multiplication, while the Weyl factor is untouched.
+
+Both monoid laws come from bundled algebra maps — `Matrix.toLpLinAlgEquiv` and
+`Module.End.lTensorAlgHom` are morphisms of algebras — so only the multiplicativity of
+the colour-times-hypercharge matrix itself is checked. Note `Matrix.toLpLinAlgEquiv 2`
+is the same map as the `Matrix.toEuclideanLin` used by `repGaugeGroupI`, which is an
+abbreviation for `Matrix.toLpLin 2 2`, taken at the `CommRing` generality that
+`JetRing` needs. -/
+noncomputable def repJetGaugeGroupI :
+    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] DownSinglet) where
+  toFun U :=
+    jetValLinEquiv.symm.toLinearMap ∘ₗ
+      Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3)) Fermion.RightHandedWeyl
+        ((Matrix.toLpLinAlgEquiv 2
+            (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 2) •
+              ((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
+                Matrix (Fin 3) (Fin 3) JetRing))).restrictScalars ℂ) ∘ₗ
+      jetValLinEquiv.toLinearMap
+  map_one' := by
+    have hres : (1 : Module.End JetRing (EuclideanSpace JetRing (Fin 3))).restrictScalars ℂ
+        = 1 := rfl
+    rw [show (((star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 2) •
+          (((1 : JetGaugeGroupI).1 : specialUnitaryGroup (Fin 3) JetRing) :
+            Matrix (Fin 3) (Fin 3) JetRing)) = 1 from by simp,
+      map_one, hres, map_one]
+    ext d x
+    simp [-valLinEquiv_apply]
+  map_mul' U₁ U₂ := by
+    have hres : ∀ f g : Module.End JetRing (EuclideanSpace JetRing (Fin 3)),
+        (f * g).restrictScalars ℂ = f.restrictScalars ℂ * g.restrictScalars ℂ :=
+      fun _ _ => rfl
+    have hM : (((star (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)) ^ 2) •
+          (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) JetRing) :
+            Matrix (Fin 3) (Fin 3) JetRing)) =
+        (((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 2) •
+            ((U₁.1 : specialUnitaryGroup (Fin 3) JetRing) :
+              Matrix (Fin 3) (Fin 3) JetRing)) *
+          (((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 2) •
+            ((U₂.1 : specialUnitaryGroup (Fin 3) JetRing) :
+              Matrix (Fin 3) (Fin 3) JetRing)) := by
+      rw [show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing) =
+            ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
+            from rfl,
+        show (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) JetRing) :
+              Matrix (Fin 3) (Fin 3) JetRing) =
+            ((U₁.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) *
+              ((U₂.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
+            from rfl,
+        star_mul', mul_pow, Matrix.smul_mul, Matrix.mul_smul, smul_smul]
+    rw [hM, map_mul, hres, map_mul]
+    ext d x
+    simp
+
+/-- On jets of constant gauge transformations the jet action reduces to the global
+gauge action on the fibre: the `(3, 1)_{-2}` action on the down-singlet factor, and the
+trivial action on the jet ring. -/
+lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
+      TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
+  ext d x
+  obtain ⟨v⟩ := x
+  induction v using TensorProduct.induction_on with
+  | zero => simp [show ({ val := 0 } : DownSinglet) = 0 from rfl]
+  | tmul psi c =>
+      apply jetValLinEquiv.injective
+      simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI]
+      have hu : star (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+          = MvPowerSeries.C ((starRingEnd ℂ) (g.toU1.1 : ℂ)) := by
+        rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+          = MvPowerSeries.C ((g.toU1.1 : ℂ)) from rfl, JetRing.star_C]
+        rfl
+      have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).1 :
+            specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) i j
+          = MvPowerSeries.C (g.toSU3.1 i j) := fun _ _ => rfl
+      have halg : ∀ A : Matrix (Fin 3) (Fin 3) JetRing,
+          (Matrix.toLpLinAlgEquiv 2 A :
+              Module.End JetRing (EuclideanSpace JetRing (Fin 3)))
+            = Matrix.toLpLin 2 2 A := fun _ => rfl
+      have hvec : ∀ i : Fin 3,
+          (∑ x, MvPowerSeries.C ((g.toSU3.1) i x) * (MvPowerSeries.C (c.ofLp x) * d))
+            = MvPowerSeries.C (∑ x, (g.toSU3.1) i x * c.ofLp x) * d := by
+        intro i
+        rw [map_sum, Finset.sum_mul]
+        exact Finset.sum_congr rfl fun x _ => by rw [← mul_assoc, ← map_mul]
+      rw [TensorProduct.liftAux_tmul, ← TensorProduct.tmul_smul]
+      simp only [LinearMap.compl₂_apply, TensorProduct.mk_apply, LinearMap.smul_apply,
+        LinearMap.restrictScalars_apply, halg, Matrix.toLpLin_toLp]
+      congr 1
+      refine WithLp.ofLp_injective 2 ?_
+      funext i
+      simp only [WithLp.ofLp_smul, Pi.smul_apply, Matrix.toLin'_apply,
+        Matrix.mulVec_apply_eq_sum, hM, Algebra.smul_def, MvPowerSeries.algebraMap_apply,
+        hu, map_pow, Algebra.algebraMap_self_apply]
+      rw [hvec i]
+  | add a b ha hb =>
+      simp only [show ({ val := a + b } : DownSinglet) = ⟨a⟩ + ⟨b⟩ from rfl,
+        map_add, ha, hb]
+
 
 end DownSinglet
 

@@ -13,6 +13,7 @@ public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.Data.Finsupp.Multiset
 public import Mathlib.Data.Finsupp.Weight
 public import Physlib.Mathematics.MvPowerSeriesDerivative
+public import Physlib.Mathematics.ConjModule
 /-!
 # The jet ring
 
@@ -89,6 +90,25 @@ lemma star_C (a : ℂ) :
   classical
   rw [coeff_star, coeff_C, coeff_C]
   split_ifs <;> simp
+
+/-- **The real structure of the jet ring.** Coefficientwise conjugation is a `ℂ`-linear
+equivalence from the conjugate module of the jet ring back to the jet ring itself. It is
+honestly `ℂ`-linear, not merely semilinear, because the conjugate-linearity of `star`
+cancels against the twisted scalar action of `ConjModule`.
+
+This is what identifies the jets of a conjugate field with the conjugates of the jets:
+`ConjModule (JetRing ⊗[ℂ] V)` and `JetRing ⊗[ℂ] ConjModule V` differ exactly by this
+equivalence on the jet-ring factor. -/
+noncomputable def starConjEquiv : ConjModule JetRing ≃ₗ[ℂ] JetRing :=
+  (conjEquiv (k := ℂ) (M := JetRing)).symm.trans (starLinearEquiv ℂ)
+
+@[simp]
+lemma starConjEquiv_apply (f : ConjModule JetRing) :
+    starConjEquiv f = star ((conjEquiv (k := ℂ) (M := JetRing)).symm f) := rfl
+
+@[simp]
+lemma starConjEquiv_symm_apply (f : JetRing) :
+    starConjEquiv.symm f = conjEquiv (k := ℂ) (M := JetRing) (star f) := rfl
 
 /-- The first-order Leibniz rule: the degree-one Taylor coefficient, in the
   direction `μ`, of a product of jets. This is the coefficient-level statement

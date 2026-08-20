@@ -10,6 +10,7 @@ public import Mathlib.Algebra.Star.Module
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.Tactic.Ring
 public import Mathlib.RepresentationTheory.Basic
+public import Mathlib.LinearAlgebra.TensorProduct.Basic
 /-!
 
 # The conjugate module
@@ -36,6 +37,7 @@ conjugate-linear identity `conjEquiv : M ≃ₛₗ[starRingEnd k] ConjModule M`,
 @[expose] public section
 
 open Module
+open scoped TensorProduct
 
 variable {k : Type*} [CommRing k] [StarRing k]
 variable {M : Type*} [AddCommGroup M] [Module k M]
@@ -161,6 +163,142 @@ def _root_.Representation.conj {G} [Group G] (ρ : Representation k G M) :
 lemma _root_.Representation.conj_apply {G} [Group G] (ρ : Representation k G M) (g : G)
     (m : ConjModule M) :
     ρ.conj g m = conjEquiv (k := k) (M := M) (ρ g ((conjEquiv (k := k) (M := M)).symm m)) := rfl
+
+/-!
+
+## Functoriality, and conjugation of tensor products
+
+Conjugation is monoidal: `ConjModule M ⊗ ConjModule N ≃ ConjModule (M ⊗ N)`, the identity
+on pure tensors. The map is honestly `k`-linear because the twist on each factor cancels
+against the twist on the target.
+
+Everything below routes through `conjEquiv` rather than relying on definitional unfolding
+of the `ConjModule` synonym. Writing `m ⊗ₜ n` for `m : ConjModule M` makes elaboration
+pick the *twisted* module instances, landing in the wrong tensor product; converting
+explicitly with `conjEquiv` fixes every instance by construction.
+
+-/
+
+variable {N : Type*} [AddCommGroup N] [Module k N]
+
+/-- Functoriality of conjugation: a `k`-linear map induces a `k`-linear map of the
+conjugate modules, given by the same underlying function. -/
+def map (f : M →ₗ[k] N) : ConjModule M →ₗ[k] ConjModule N where
+  toFun := f
+  map_add' := f.map_add
+  map_smul' c x := f.map_smul (star c) x
+
+@[simp]
+lemma map_apply (f : M →ₗ[k] N) (x : ConjModule M) : map f x = f x := rfl
+
+/-- The conjugate module of a finite free module is finite: the conjugated basis
+`Module.Basis.conj` is indexed by the same type. -/
+instance instFinite [Module.Free k M] [Module.Finite k M] :
+    Module.Finite k (ConjModule M) :=
+  Module.Finite.of_basis (Module.Basis.conj (Module.Free.chooseBasis k M))
+
+/-- The canonical `k`-linear map `ConjModule M ⊗ ConjModule N → ConjModule (M ⊗ N)`,
+the identity on pure tensors. -/
+noncomputable def tensorHom : ConjModule M ⊗[k] ConjModule N →ₗ[k] ConjModule (M ⊗[k] N) :=
+  TensorProduct.lift
+    { toFun := fun m =>
+        { toFun := fun n => conjEquiv (k := k) (M := M ⊗[k] N)
+            ((conjEquiv (k := k) (M := M)).symm m ⊗ₜ[k] (conjEquiv (k := k) (M := N)).symm n)
+          map_add' := by
+            intro n₁ n₂
+            rw [map_add, TensorProduct.tmul_add, map_add]
+          map_smul' := by
+            intro c n
+            rw [map_smulₛₗ, TensorProduct.tmul_smul, map_smulₛₗ]
+            simp }
+      map_add' := by
+        intro m₁ m₂
+        ext n
+        simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.add_apply]
+        rw [map_add, TensorProduct.add_tmul, map_add]
+      map_smul' := by
+        intro c m
+        ext n
+        simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.smul_apply, RingHom.id_apply]
+        rw [map_smulₛₗ, ← TensorProduct.smul_tmul', map_smulₛₗ]
+        simp }
+
+@[simp]
+lemma tensorHom_tmul (m : ConjModule M) (n : ConjModule N) :
+    tensorHom (k := k) (m ⊗ₜ[k] n)
+      = conjEquiv (k := k) (M := M ⊗[k] N)
+        ((conjEquiv (k := k) (M := M)).symm m ⊗ₜ[k] (conjEquiv (k := k) (M := N)).symm n) :=
+  rfl
+
+/-- The inverse map `ConjModule (M ⊗ N) → ConjModule M ⊗ ConjModule N`, again the identity
+on pure tensors. A `k`-linear map out of `ConjModule X` is the same data as a `k`-linear
+map into `ConjModule` of the target, which is what `map` and `involution` package here. -/
+noncomputable def tensorInv : ConjModule (M ⊗[k] N) →ₗ[k] ConjModule M ⊗[k] ConjModule N :=
+  (involution (k := k) (M := ConjModule M ⊗[k] ConjModule N)).toLinearMap ∘ₗ
+    map (TensorProduct.lift
+      { toFun := fun m =>
+          { toFun := fun n => conjEquiv (k := k) (M := ConjModule M ⊗[k] ConjModule N)
+              (conjEquiv (k := k) (M := M) m ⊗ₜ[k] conjEquiv (k := k) (M := N) n)
+            map_add' := by
+              intro n₁ n₂
+              rw [map_add, TensorProduct.tmul_add, map_add]
+            map_smul' := by
+              intro c n
+              rw [map_smulₛₗ, TensorProduct.tmul_smul, map_smulₛₗ]
+              simp }
+        map_add' := by
+          intro m₁ m₂
+          ext n
+          simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.add_apply]
+          rw [map_add, TensorProduct.add_tmul, map_add]
+        map_smul' := by
+          intro c m
+          ext n
+          simp only [LinearMap.coe_mk, AddHom.coe_mk, LinearMap.smul_apply, RingHom.id_apply]
+          rw [map_smulₛₗ, ← TensorProduct.smul_tmul', map_smulₛₗ]
+          simp })
+
+/-- **Conjugation is monoidal.** `ConjModule M ⊗ ConjModule N ≃ₗ[k] ConjModule (M ⊗ N)`,
+the identity on pure tensors. Injectivity comes from `tensorInv` being a left inverse;
+surjectivity from every element of `M ⊗ N` being a sum of pure tensors. -/
+noncomputable def tensorEquiv :
+    ConjModule M ⊗[k] ConjModule N ≃ₗ[k] ConjModule (M ⊗[k] N) :=
+  LinearEquiv.ofBijective tensorHom
+    ⟨by
+      have h : ∀ w : ConjModule M ⊗[k] ConjModule N, tensorInv (tensorHom w) = w := by
+        intro w
+        induction w using TensorProduct.induction_on with
+        | zero => simp
+        | tmul m n => rfl
+        | add x y hx hy => rw [map_add, map_add, hx, hy]
+      exact Function.LeftInverse.injective h,
+     by
+      intro z
+      induction z using TensorProduct.induction_on with
+      | zero => exact ⟨0, map_zero _⟩
+      | tmul m n =>
+          exact ⟨conjEquiv (k := k) (M := M) m ⊗ₜ[k] conjEquiv (k := k) (M := N) n, rfl⟩
+      | add x y hx hy =>
+          obtain ⟨w₁, h₁⟩ := hx
+          obtain ⟨w₂, h₂⟩ := hy
+          refine ⟨w₁ + w₂, ?_⟩
+          rw [map_add, h₁, h₂]
+          rfl⟩
+
+@[simp]
+lemma tensorEquiv_tmul (m : ConjModule M) (n : ConjModule N) :
+    tensorEquiv (k := k) (m ⊗ₜ[k] n)
+      = conjEquiv (k := k) (M := M ⊗[k] N)
+        ((conjEquiv (k := k) (M := M)).symm m ⊗ₜ[k] (conjEquiv (k := k) (M := N)).symm n) :=
+  rfl
+
+@[simp]
+lemma tensorEquiv_symm_conjEquiv_tmul (m : M) (n : N) :
+    (tensorEquiv (k := k) (M := M) (N := N)).symm
+        (conjEquiv (k := k) (M := M ⊗[k] N) (m ⊗ₜ[k] n))
+      = conjEquiv (k := k) (M := M) m ⊗ₜ[k] conjEquiv (k := k) (M := N) n := by
+  rw [LinearEquiv.symm_apply_eq, tensorEquiv_tmul]
+  simp
 
 end ConjModule
 
