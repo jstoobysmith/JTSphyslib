@@ -32,9 +32,78 @@ Basic rules of this outline:
 
 ## Jet ring
 
-- Let `JetRing` be the ring of jets.
-- For `φ : JetRing`, and `p : Multiset (Fin 1 ⊕ Fin 3)` we let `∂_p| φ` be the
-   `p`-th Taylor coefficient of `φ` at the base point.
+- Fix a spacetime point `x₀`, called the base point, at which all field values and
+  derivatives appearing below are evaluated.
+- A local lagrangian evaluated at `x₀` depends on a field only through the values of
+  its derivatives at `x₀`.
+- For a complex-valued field `φ`, its infinite formal jet at `x₀` is the collection
+  of all these derivative values.
+- The type `Fin 1 ⊕ Fin 3` indexes the four spacetime directions: one temporal
+  direction and three spatial directions.
+- A multi-index records how many derivatives are taken in each spacetime direction.
+- We represent such a multi-index by `s : Multiset (Fin 1 ⊕ Fin 3)`.
+- A multiset is an unordered collection with repetitions, where the multiplicity of
+  a direction records how many derivatives are taken in that direction.
+- For example, the multiset containing `μ` twice and `ν` once represents the
+  derivative `∂_μ ∂_μ ∂_ν`.
+- A multiset is sufficient because ordinary partial derivatives commute, so only
+  the multiplicity of each direction matters, not their order.
+- We model this derivative data by a formal power series in four spacetime variables.
+- We define `JetRing := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ`.
+- The word "formal" means that the spacetime variables are indeterminates: they
+  record spacetime directions and derivative orders but are not assigned numerical
+  coordinate values.
+- A formal power series is therefore treated as an arbitrary family of coefficients
+  equipped with algebraic operations, rather than as an infinite sum that must be
+  evaluated.
+- In particular, no convergence or analyticity condition is imposed.
+- Thus an element of `JetRing` records local Taylor data rather than a function
+  defined on all of spacetime.
+- Here "jet" means a formal Taylor jet at a point and is unrelated to the particle
+  jets of collider physics.
+- The constant coefficient of `φ : JetRing` represents the value `φ(x₀)`.
+- The coefficient at a multi-index `s` records the corresponding Taylor-series
+  coefficient.
+- For `s : Multiset (Fin 1 ⊕ Fin 3)`, let `∂_s| φ` denote the base-point value of
+  the iterated formal derivative in the directions recorded by `s`.
+- The value `∂_s| φ` is the coefficient at `s` multiplied by the corresponding
+  product of factorials.
+- Formal partial differentiation advances the derivative tower by one spacetime
+  direction.
+- More precisely, differentiating in direction `μ` sends the derivative value
+  indexed by `s` to the value indexed by `s + {μ}`.
+- The formal partial derivatives on `JetRing` commute, matching the multiset
+  representation of ordinary derivatives introduced above.
+- Addition in `JetRing` records addition of local Taylor data.
+- Multiplication in `JetRing` models multiplication of local functions at the level
+  of their Taylor data.
+- When a derivative indexed by `s` is applied to a product, the derivatives recorded
+  by `s` are distributed between the two factors.
+- We write `p + q = s` when `p` records the derivatives assigned to the first factor
+  and `q` records those assigned to the second.
+- Here addition means combining the two multisets of derivative directions,
+  including their repetitions.
+- For each decomposition `p + q = s`, the coefficient of the first factor at `p` is
+  multiplied by the coefficient of the second factor at `q`.
+- Summing these products over all decompositions `p + q = s` defines the standard
+  convolution product of formal power series.
+- When expressed in terms of the base-point derivative values `∂_s|`, each
+  decomposition is weighted by the corresponding multinomial coefficient `C(s, p)`.
+- Thus multiplication in `JetRing` reproduces the usual higher-order Leibniz rule.
+- Complex conjugation acts coefficientwise on `JetRing`.
+- The formal spacetime variables are fixed by complex conjugation.
+- For `n : ℕ`, truncation at order `n` discards all coefficients of total derivative
+  order greater than `n`.
+- Truncation is not a ring homomorphism into `JetRing`, because multiplying truncated
+  series can produce terms above order `n`.
+- Nevertheless, a product through order `n` depends only on its factors through
+  order `n`.
+- The infinite ring lets one define a single symmetry action for every derivative
+  order.
+- Any individual finite polynomial lagrangian uses only finitely many components of
+  this infinite derivative tower.
+- Vector-valued field jets and matrix-valued gauge-transformation jets are
+  constructed from this scalar coefficient ring.
 
 ## Jet component spaces
 
