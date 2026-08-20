@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Truncation
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Relativity.IsLorentzDeriv
@@ -135,6 +135,81 @@ lemma adjointDualCoeff_singleton (U : JetGaugeGroupI)
   rw [deriv_adjointMap, JetGaugeAlgebra.deriv_ofConstant, map_zero, zero_sub, map_neg,
     map_neg, LieHom.map_lie]
   simp
+
+/-- **Deep kernels kill the positive dual adjoint coefficients**: for a jet trivial to order `n`, all derivatives of the
+  adjoint action up to order `n` vanish. -/
+lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {U : JetGaugeGroupI} {n : ℕ}
+    (hU : U ∈ JetGaugeGroupI.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)}
+    (hx : x ≠ 0) (hxn : x.card ≤ n) : adjointDualCoeff U x = 0 := by
+  have hprod := JetGaugeGroupI.mem_truncationKer_iff.mp hU
+  -- the truncations of the matrix factors of `U` agree with `1`
+  have h3 : U.1.1.map (JetRing.truncation n) =
+      (1 : Matrix (Fin 3) (Fin 3) JetRing).map (JetRing.truncation n) :=
+    congrArg (fun p => p.1) hprod
+  have h2 : U.2.1.1.map (JetRing.truncation n) =
+      (1 : Matrix (Fin 2) (Fin 2) JetRing).map (JetRing.truncation n) :=
+    congrArg (fun p => p.2.1) hprod
+  have hs3 : (star U.1.1).map (JetRing.truncation n) =
+      (1 : Matrix (Fin 3) (Fin 3) JetRing).map (JetRing.truncation n) := by
+    rw [JetRing.matrix_truncation_star, h3, ← JetRing.matrix_truncation_star, star_one]
+  have hs2 : (star U.2.1.1).map (JetRing.truncation n) =
+      (1 : Matrix (Fin 2) (Fin 2) JetRing).map (JetRing.truncation n) := by
+    rw [JetRing.matrix_truncation_star, h2, ← JetRing.matrix_truncation_star, star_one]
+  -- conjugation by `U` is invisible to the `n`-th truncation
+  have hconj3 : ∀ M : Matrix (Fin 3) (Fin 3) JetRing,
+      ((U.1.1 * M) * star U.1.1).map (JetRing.truncation n) =
+        M.map (JetRing.truncation n) := by
+    intro M
+    rw [JetRing.matrix_truncation_mul_congr
+      (JetRing.matrix_truncation_mul_congr h3 rfl) hs3, one_mul, mul_one]
+  have hconj2 : ∀ M : Matrix (Fin 2) (Fin 2) JetRing,
+      ((U.2.1.1 * M) * star U.2.1.1).map (JetRing.truncation n) =
+        M.map (JetRing.truncation n) := by
+    intro M
+    rw [JetRing.matrix_truncation_mul_congr
+      (JetRing.matrix_truncation_mul_congr h2 rfl) hs2, one_mul, mul_one]
+  -- the multiset `x` sits in the truncation window, in nonzero degree
+  have hdeg : Finsupp.degree (Multiset.toFinsupp x) ≤ n := by
+    rw [JetRing.degree_toFinsupp_eq_card]; exact hxn
+  have hne : Multiset.toFinsupp x ≠ 0 := fun hc =>
+    hx (by simpa using congrArg Finsupp.toMultiset hc)
+  -- the underlying derivative of the adjoint transport vanishes at the base point
+  have key : ∀ b : GaugeAlgebra,
+      JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv x
+        (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant b))) = 0 := by
+    intro b
+    refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+    · ext i j : 1
+      rw [JetGaugeAlgebra.eval_toSU3Matrix_apply, JetGaugeAlgebra.iteratedDeriv_toSU3Matrix,
+        Matrix.map_apply, JetRing.constantCoeff_foldl_pderiv,
+        JetGaugeAlgebra.adjointMap_toSU3Matrix, JetGaugeAlgebra.ofConstant_toSU3Matrix]
+      have h1 := congrArg (fun M : Matrix (Fin 3) (Fin 3) JetRing => M i j)
+        (hconj3 (b.toSU3Matrix.map (C : ℂ → JetRing)))
+      simp only [Matrix.map_apply] at h1
+      have hcoeff := congrArg (fun f => coeff (Multiset.toFinsupp x) f) h1
+      simp only [JetRing.coeff_truncation_of_le hdeg] at hcoeff
+      rw [hcoeff, coeff_C, if_neg hne, mul_zero,
+        GaugeAlgebra.zero_toSU3Matrix, Matrix.zero_apply]
+    · ext i j : 1
+      rw [JetGaugeAlgebra.eval_toSU2Matrix_apply, JetGaugeAlgebra.iteratedDeriv_toSU2Matrix,
+        Matrix.map_apply, JetRing.constantCoeff_foldl_pderiv,
+        JetGaugeAlgebra.adjointMap_toSU2Matrix, JetGaugeAlgebra.ofConstant_toSU2Matrix]
+      have h1 := congrArg (fun M : Matrix (Fin 2) (Fin 2) JetRing => M i j)
+        (hconj2 (b.toSU2Matrix.map (C : ℂ → JetRing)))
+      simp only [Matrix.map_apply] at h1
+      have hcoeff := congrArg (fun f => coeff (Multiset.toFinsupp x) f) h1
+      simp only [JetRing.coeff_truncation_of_le hdeg] at hcoeff
+      rw [hcoeff, coeff_C, if_neg hne, mul_zero,
+        GaugeAlgebra.zero_toSU2Matrix, Matrix.zero_apply]
+    · rw [JetGaugeAlgebra.eval_toU1Value_eq, JetGaugeAlgebra.iteratedDeriv_toU1Value,
+        JetGaugeAlgebra.adjointMap_toU1Value, JetGaugeAlgebra.ofConstant_toU1Value,
+        JetRing.constantCoeff_foldl_pderiv, coeff_C, if_neg hne, mul_zero,
+        GaugeAlgebra.zero_toU1Value]
+  refine LinearMap.ext fun φ => LinearMap.ext fun b => ?_
+  simp only [LinearMap.zero_apply]
+  show φ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv x
+    (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant b)))) = 0
+  rw [key b, map_zero]
 
 /-- The family `A` of symbols in the algebra `B` is a gauge field for the total
   derivative `D`, the Lorentz representation `repLorentz` and the gauge representation

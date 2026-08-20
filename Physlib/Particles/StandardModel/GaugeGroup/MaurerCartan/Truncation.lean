@@ -341,4 +341,225 @@ lemma symmetrizedMaurerCartanCoeff_surjective :
     push_cast
     field_simp
 
+
+/-- **Maurer–Cartan triangularity**: a pure jet whose symmetrized Maurer–Cartan
+  coefficients vanish up to order `n` lies in the `n`-th truncation kernel. -/
+lemma mem_truncationKer_of_symmetrizedMaurerCartanCoeff_eq_zero
+    (U : JetGaugeGroupI.truncationKer 0) (n : ℕ)
+    (h : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0), r.card ≤ n →
+      symmetrizedMaurerCartanCoeff U ⟨r, hr⟩ = 0) :
+    U.1 ∈ JetGaugeGroupI.truncationKer n := by
+  classical
+  -- Step 1: the base-point Maurer–Cartan Taylor data vanish below order `n`, by
+  -- strong induction with the symmetrization defect formula.
+  have hall : ∀ (k : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3),
+      s.card = k → k < n → eval (iteratedDeriv s (maurerCartanForm U.1 μ)) = 0 := by
+    intro k
+    induction k using Nat.strong_induction_on with
+    | _ k ih =>
+      intro s μ hs hk
+      rw [iteratedDeriv_maurerCartanForm_eq_symmetrized_add U.1 s μ, map_add, map_smul]
+      have h1 : eval (symmetrizedMaurerCartanForm U.1 (μ ::ₘ s)) = 0 := by
+        have hle : (μ ::ₘ s).card ≤ n := by rw [Multiset.card_cons, hs]; omega
+        have h2 := h (μ ::ₘ s) (Multiset.cons_ne_zero) hle
+        rwa [symmetrizedMaurerCartanCoeff_apply] at h2
+      have h2 : eval ((s.map fun ν => iteratedDeriv (s.erase ν)
+          ⁅maurerCartanForm U.1 μ, maurerCartanForm U.1 ν⁆).sum) = 0 := by
+        rw [map_multiset_sum, Multiset.map_map]
+        refine Multiset.sum_eq_zero fun x hx => ?_
+        obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
+        have hzero : ∀ (ρ : Fin 1 ⊕ Fin 3) (p : Multiset (Fin 1 ⊕ Fin 3)),
+            p ≤ s.erase ν → eval (iteratedDeriv p (maurerCartanForm U.1 ρ)) =
+              eval (iteratedDeriv p (0 : JetGaugeAlgebra)) := by
+          intro ρ p hp
+          have hcard : p.card < k := by
+            have h3 := Multiset.card_le_card hp
+            have h4 := Multiset.card_erase_add_one hν
+            omega
+          rw [ih p.card hcard p ρ rfl (hcard.trans hk), map_zero, map_zero]
+        simp only [Function.comp_apply]
+        rw [eval_iteratedDeriv_bracket_congr (s.erase ν) _ _ 0 0 (hzero μ) (hzero ν)]
+        simp
+      rw [h1, h2]
+      simp
+  -- Step 2: the Taylor coefficients of the Maurer–Cartan form components vanish in
+  -- all degrees below `n`.
+  have hfac : ∀ s : Multiset (Fin 1 ⊕ Fin 3),
+      ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) ≠ 0 := fun s =>
+    Nat.cast_ne_zero.mpr (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _)
+  have hround : ∀ m : (Fin 1 ⊕ Fin 3) →₀ ℕ,
+      Multiset.toFinsupp (Finsupp.toMultiset m) = m := fun m => by simp
+  have hcardm : ∀ m : (Fin 1 ⊕ Fin 3) →₀ ℕ,
+      (Finsupp.toMultiset m).card = Finsupp.degree m := fun m => by
+    rw [← degree_toFinsupp_eq_card, hround]
+  have hω3 : ∀ (ρ : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree m < n →
+      ∀ i j, coeff m ((maurerCartanForm U.1 ρ).toSU3Matrix i j) = 0 := by
+    intro ρ m hm i j
+    have h0 := hall (Finsupp.toMultiset m).card (Finsupp.toMultiset m) ρ rfl
+      (by rw [hcardm m]; exact hm)
+    have h1 := congrArg (fun a => GaugeAlgebra.toSU3Matrix a i j) h0
+    simp only [GaugeAlgebra.zero_toSU3Matrix, Matrix.zero_apply] at h1
+    rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply,
+      constantCoeff_foldl_pderiv, hround] at h1
+    exact (mul_eq_zero.mp h1).resolve_left (hfac _)
+  have hω2 : ∀ (ρ : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree m < n →
+      ∀ i j, coeff m ((maurerCartanForm U.1 ρ).toSU2Matrix i j) = 0 := by
+    intro ρ m hm i j
+    have h0 := hall (Finsupp.toMultiset m).card (Finsupp.toMultiset m) ρ rfl
+      (by rw [hcardm m]; exact hm)
+    have h1 := congrArg (fun a => GaugeAlgebra.toSU2Matrix a i j) h0
+    simp only [GaugeAlgebra.zero_toSU2Matrix, Matrix.zero_apply] at h1
+    rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply,
+      constantCoeff_foldl_pderiv, hround] at h1
+    exact (mul_eq_zero.mp h1).resolve_left (hfac _)
+  have hω1 : ∀ (ρ : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree m < n →
+      coeff m ((maurerCartanForm U.1 ρ).toU1Value) = 0 := by
+    intro ρ m hm
+    have h0 := hall (Finsupp.toMultiset m).card (Finsupp.toMultiset m) ρ rfl
+      (by rw [hcardm m]; exact hm)
+    have h1 := congrArg GaugeAlgebra.toU1Value h0
+    simp only [GaugeAlgebra.zero_toU1Value] at h1
+    rw [eval_toU1Value_eq, iteratedDeriv_toU1Value, constantCoeff_foldl_pderiv,
+      hround] at h1
+    exact (mul_eq_zero.mp h1).resolve_left (hfac _)
+  -- Step 3: the Euler operator toolkit. A product with a factor whose coefficients
+  -- vanish below degree `n` has vanishing coefficients below degree `n` ...
+  have hmul : ∀ (w v : JetRing),
+      (∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q w = 0) →
+      ∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q (w * v) = 0 := by
+    intro w v hw q hq
+    rw [coeff_mul]
+    refine Finset.sum_eq_zero fun p hp => ?_
+    have hpq : p.1 + p.2 = q := Finset.mem_antidiagonal.mp hp
+    have hdeg : Finsupp.degree p.1 ≤ Finsupp.degree q := by
+      rw [← hpq, map_add]
+      exact Nat.le_add_right _ _
+    rw [hw p.1 (lt_of_le_of_lt hdeg hq), zero_mul]
+  -- ... and a jet whose derivatives have vanishing coefficients below degree `n` has
+  -- vanishing coefficients in all nonzero degrees up to `n`, by the Euler identity.
+  have hvanish : ∀ f : JetRing,
+      (∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
+        coeff q (pderiv ℂ ρ f) = 0) →
+      ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ, p ≠ 0 → Finsupp.degree p ≤ n → coeff p f = 0 := by
+    intro f hf p hp hpn
+    have h1 := JetRing.coeff_sum_X_smul_pderiv f p
+    have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f) = 0 := by
+      rw [map_sum]
+      refine Finset.sum_eq_zero fun ρ _ => ?_
+      rw [JetRing.coeff_X_smul]
+      split_ifs with hle
+      · refine hf ρ _ ?_
+        have hd := congrArg Finsupp.degree (tsub_add_cancel_of_le hle)
+        rw [map_add, Finsupp.degree_single] at hd
+        omega
+      · rfl
+    rw [h2] at h1
+    have hne : ((Finsupp.degree p : ℕ) : ℂ) ≠ 0 :=
+      Nat.cast_ne_zero.mpr fun hc => hp ((Finsupp.degree_eq_zero_iff p).mp hc)
+    exact (mul_eq_zero.mp h1.symm).resolve_left hne
+  -- the radial derivative relation `∂_μ U = (−i ω_μ) U` on each factor
+  have hstar3 : star U.1.1.1 * U.1.1.1 = 1 := by
+    have h1 := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.1.2).1
+    rwa [Matrix.mem_unitaryGroup_iff'] at h1
+  have hstar2 : star U.1.2.1.1 * U.1.2.1.1 = 1 := by
+    have h1 := (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2.1.2).1
+    rwa [Matrix.mem_unitaryGroup_iff'] at h1
+  have hstar1 : star U.1.2.2.1 * U.1.2.2.1 = 1 := (Unitary.mem_iff.mp U.1.2.2.2).1
+  have hd3 : ∀ ρ, U.1.1.1.map (pderiv ℂ ρ) =
+      ((-Complex.I) • (maurerCartanForm U.1 ρ).toSU3Matrix) * U.1.1.1 := by
+    intro ρ
+    rw [maurerCartanForm_toSU3Matrix, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
+      one_smul, mul_assoc, hstar3, mul_one]
+  have hd2 : ∀ ρ, U.1.2.1.1.map (pderiv ℂ ρ) =
+      ((-Complex.I) • (maurerCartanForm U.1 ρ).toSU2Matrix) * U.1.2.1.1 := by
+    intro ρ
+    rw [maurerCartanForm_toSU2Matrix, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
+      one_smul, mul_assoc, hstar2, mul_one]
+  have hd1 : ∀ ρ, pderiv ℂ ρ U.1.2.2.1 =
+      ((-Complex.I) • (maurerCartanForm U.1 ρ).toU1Value) * U.1.2.2.1 := by
+    intro ρ
+    rw [maurerCartanForm_toU1Value, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
+      one_smul, mul_assoc, hstar1, mul_one]
+  -- coefficient vanishing for the entries of `U` in nonzero degree up to `n`
+  have hU3 : ∀ (i j : Fin 3) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ), p ≠ 0 →
+      Finsupp.degree p ≤ n → coeff p (U.1.1.1 i j) = 0 := by
+    intro i j p hp hpn
+    refine hvanish _ (fun ρ q hq => ?_) p hp hpn
+    have h1 : pderiv ℂ ρ (U.1.1.1 i j) =
+        (((-Complex.I) • (maurerCartanForm U.1 ρ).toSU3Matrix) * U.1.1.1) i j := by
+      rw [← hd3 ρ, Matrix.map_apply]
+    rw [h1, Matrix.mul_apply, map_sum]
+    refine Finset.sum_eq_zero fun k _ => ?_
+    refine hmul _ _ (fun q' hq' => ?_) q hq
+    rw [Matrix.smul_apply, map_smul, hω3 ρ q' hq' i k, smul_zero]
+  have hU2 : ∀ (i j : Fin 2) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ), p ≠ 0 →
+      Finsupp.degree p ≤ n → coeff p (U.1.2.1.1 i j) = 0 := by
+    intro i j p hp hpn
+    refine hvanish _ (fun ρ q hq => ?_) p hp hpn
+    have h1 : pderiv ℂ ρ (U.1.2.1.1 i j) =
+        (((-Complex.I) • (maurerCartanForm U.1 ρ).toSU2Matrix) * U.1.2.1.1) i j := by
+      rw [← hd2 ρ, Matrix.map_apply]
+    rw [h1, Matrix.mul_apply, map_sum]
+    refine Finset.sum_eq_zero fun k _ => ?_
+    refine hmul _ _ (fun q' hq' => ?_) q hq
+    rw [Matrix.smul_apply, map_smul, hω2 ρ q' hq' i k, smul_zero]
+  have hU1 : ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ, p ≠ 0 → Finsupp.degree p ≤ n →
+      coeff p U.1.2.2.1 = 0 := by
+    intro p hp hpn
+    refine hvanish _ (fun ρ q hq => ?_) p hp hpn
+    rw [hd1 ρ]
+    refine hmul _ _ (fun q' hq' => ?_) q hq
+    rw [map_smul, hω1 ρ q' hq', smul_zero]
+  -- assemble: agreement with the identity jet in all degrees up to `n`
+  have heval : U.1.eval = 1 := JetGaugeGroupI.eval_coe_of_mem_truncationKer_zero U
+  rw [JetGaugeGroupI.mem_truncationKer_iff]
+  refine Prod.ext ?_ (Prod.ext ?_ ?_)
+  · show U.1.1.1.map (JetRing.truncation n) =
+      (1 : Matrix (Fin 3) (Fin 3) JetRing).map (JetRing.truncation n)
+    ext i j : 1
+    simp only [Matrix.map_apply]
+    ext m
+    by_cases hm : Finsupp.degree m ≤ n
+    · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+      rcases eq_or_ne m 0 with rfl | hm0
+      · have h3 := congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) ℂ) i j) heval
+        simpa [JetGaugeGroupI.eval, JetGaugeGroupI.evalSU, RingHom.mapMatrix_apply,
+          Matrix.map_apply, Matrix.one_apply, apply_ite constantCoeff,
+          coeff_zero_eq_constantCoeff] using h3
+      · rw [hU3 i j m hm0 hm]
+        rcases eq_or_ne i j with rfl | hij
+        · rw [Matrix.one_apply_eq, coeff_one, if_neg hm0]
+        · rw [Matrix.one_apply_ne hij, map_zero]
+    · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
+        JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+  · show U.1.2.1.1.map (JetRing.truncation n) =
+      (1 : Matrix (Fin 2) (Fin 2) JetRing).map (JetRing.truncation n)
+    ext i j : 1
+    simp only [Matrix.map_apply]
+    ext m
+    by_cases hm : Finsupp.degree m ≤ n
+    · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+      rcases eq_or_ne m 0 with rfl | hm0
+      · have h3 := congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) ℂ) i j) heval
+        simpa [JetGaugeGroupI.eval, JetGaugeGroupI.evalSU, RingHom.mapMatrix_apply,
+          Matrix.map_apply, Matrix.one_apply, apply_ite constantCoeff,
+          coeff_zero_eq_constantCoeff] using h3
+      · rw [hU2 i j m hm0 hm]
+        rcases eq_or_ne i j with rfl | hij
+        · rw [Matrix.one_apply_eq, coeff_one, if_neg hm0]
+        · rw [Matrix.one_apply_ne hij, map_zero]
+    · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
+        JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+  · show JetRing.truncation n U.1.2.2.1 = JetRing.truncation n (1 : JetRing)
+    ext m
+    by_cases hm : Finsupp.degree m ≤ n
+    · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+      rcases eq_or_ne m 0 with rfl | hm0
+      · have h3 := congrArg (fun p => (p.2.2 : ℂ)) heval
+        simpa [JetGaugeGroupI.eval, JetGaugeGroupI.evalU1,
+          coeff_zero_eq_constantCoeff] using h3
+      · rw [hU1 m hm0 hm, coeff_one, if_neg hm0]
+    · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
+        JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+
 end StandardModel
