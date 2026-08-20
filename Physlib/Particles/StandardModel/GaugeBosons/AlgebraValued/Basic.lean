@@ -143,6 +143,28 @@ variable {D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B}
 variable [Lorentz.IsLorentzDeriv repLorentz D]
 variable {D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ)}
 
+lemma iteratedD_sub_pair (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
+    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
+    (s : Multiset (Fin 1 ⊕ Fin 3)) {ν : Fin 1 ⊕ Fin 3} (hν : ν ∈ s)
+    (μ : Fin 1 ⊕ Fin 3)
+    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    Lorentz.iteratedD D D_comm s (A μ φ) -
+        Lorentz.iteratedD D D_comm (μ ::ₘ s - {ν}) (A ν φ) =
+      Lorentz.iteratedD D D_comm (s - {ν}) (D ν (A μ φ) - D μ (A ν φ)) := by
+  obtain ⟨t, rfl⟩ : ∃ t, s = ν ::ₘ t := ⟨s.erase ν, (Multiset.cons_erase hν).symm⟩
+  have h1 : ∀ (κ : Fin 1 ⊕ Fin 3) (x : B),
+      Lorentz.iteratedD D D_comm (κ ::ₘ t) x = Lorentz.iteratedD D D_comm t (D κ x) := by
+    intro κ x
+    rw [show (κ ::ₘ t) = t + {κ} from by rw [← Multiset.singleton_add, add_comm],
+      Lorentz.iteratedD_add, LinearMap.comp_apply]
+    congr 1
+  rw [show ν ::ₘ t - {ν} = t from by
+      rw [Multiset.sub_singleton, Multiset.erase_cons_head],
+    show μ ::ₘ ν ::ₘ t - {ν} = μ ::ₘ t from by
+      rw [Multiset.cons_swap, Multiset.sub_singleton, Multiset.erase_cons_head],
+    h1 ν, h1 μ, ← map_sub]
+
 /-- The canonical equivalence, through finite-dimensional duality, between
   algebra-valued fields `B ⊗ 𝔤` and their component families `φ ↦ A^φ`: the element
   `b ⊗ a` corresponds to the family `φ ↦ φ(a) b`. -/
@@ -533,6 +555,40 @@ lemma bracketFam_add_right (f g₁ g₂ : Module.Dual ℝ GaugeAlgebra →ₗ[�
     bracketFam f (g₁ + g₂) = bracketFam f g₁ + bracketFam f g₂ := by
   simp only [bracketFam, map_add]
 
+/-- The bracket of two component families expanded through a basis of the gauge
+  algebra: the physicists' `f^a_{bc} f^b g^c`, with `φ⁅e_j, e_k⁆` the structure
+  constants contracted with the dual vector. -/
+lemma bracketFam_apply_eq_sum (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    bracketFam f g φ = ∑ j, ∑ k,
+      φ ⁅Module.Free.chooseBasis ℝ GaugeAlgebra j,
+          Module.Free.chooseBasis ℝ GaugeAlgebra k⁆ •
+        (f ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord j) *
+          g ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord k)) := by
+  classical
+  set bv := Module.Free.chooseBasis ℝ GaugeAlgebra with hbv
+  have hdual : ∀ ψ : Module.Dual ℝ GaugeAlgebra, ∑ j, ψ (bv j) • bv.coord j = ψ := by
+    intro ψ
+    refine LinearMap.ext fun x => ?_
+    conv_rhs => rw [← bv.sum_repr x, map_sum]
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply, Module.Basis.coord_apply,
+      smul_eq_mul, map_smul]
+    exact Finset.sum_congr rfl fun j _ => mul_comm _ _
+  have hbasis : ∀ h : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B,
+      dualPairEquiv.symm h = ∑ j, h (bv.coord j) ⊗ₜ[ℝ] bv j := by
+    intro h
+    apply dualPairEquiv.injective
+    rw [LinearEquiv.apply_symm_apply]
+    refine LinearMap.ext fun ψ => ?_
+    calc h ψ = h (∑ j, ψ (bv j) • bv.coord j) := by rw [hdual]
+      _ = ∑ j, ψ (bv j) • h (bv.coord j) := by
+          rw [map_sum]
+          exact Finset.sum_congr rfl fun j _ => map_smul h _ _
+      _ = dualPairEquiv (∑ j, h (bv.coord j) ⊗ₜ[ℝ] bv j) ψ := by simp
+  rw [bracketFam, hbasis f, hbasis g]
+  simp [tensorBracket_tmul, dualPairEquiv_tmul]
+  rw [Finset.sum_comm]
+
 /-- The bracket of families against a common Lie-algebra morphism on the dual index. -/
 lemma bracketFam_comp_dualMap (T : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
     (hT : ∀ a b, T ⁅a, b⁆ = ⁅T a, T b⁆) (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
@@ -624,6 +680,67 @@ lemma deriv_commutator (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
   simp only [map_add, LinearMap.add_apply, dualPairEquiv_map_left] at h
   rw [← symm_comp_left, ← symm_comp_left] at h
   exact h
+
+/-- Every derivative of the commutator term is a polynomial in
+  strictly lower-order derivative symbols, by the Leibniz expansion — each factor of
+  `d_{s'}(A^b_ν A^c_λ)` has order at most `|s'|`. -/
+lemma iteratedD_commutator_mem (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
+    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    Lorentz.iteratedD D D_comm s' (commutator A ν lam φ) ∈
+      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ s'.card ∧
+        b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
+  classical
+  set bv := Module.Free.chooseBasis ℝ GaugeAlgebra with hbv
+  -- a dual vector is recovered from its values on the basis
+  have hdual : ∀ ψ : Module.Dual ℝ GaugeAlgebra, ∑ j, ψ (bv j) • bv.coord j = ψ := by
+    intro ψ
+    refine LinearMap.ext fun x => ?_
+    conv_rhs => rw [← bv.sum_repr x, map_sum]
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply, Module.Basis.coord_apply,
+      smul_eq_mul, map_smul]
+    exact Finset.sum_congr rfl fun j _ => mul_comm _ _
+  -- the tensor form of any component family, expanded through the basis
+  have hbasis : ∀ f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B,
+      dualPairEquiv.symm f = ∑ j, f (bv.coord j) ⊗ₜ[ℝ] bv j := by
+    intro f
+    apply dualPairEquiv.injective
+    rw [LinearEquiv.apply_symm_apply]
+    refine LinearMap.ext fun ψ => ?_
+    calc f ψ = f (∑ j, ψ (bv j) • bv.coord j) := by rw [hdual]
+      _ = ∑ j, ψ (bv j) • f (bv.coord j) := by
+          rw [map_sum]
+          exact Finset.sum_congr rfl fun j _ => map_smul f _ _
+      _ = dualPairEquiv (∑ j, f (bv.coord j) ⊗ₜ[ℝ] bv j) ψ := by simp
+  -- the commutator as an explicit double sum of products of symbols
+  have hcomm : commutator A ν lam φ =
+      ∑ j, ∑ k, φ ⁅bv j, bv k⁆ • (A ν (bv.coord j) * A lam (bv.coord k)) := by
+    rw [show commutator A ν lam = dualPairEquiv (tensorBracket
+        (dualPairEquiv.symm (A ν)) (dualPairEquiv.symm (A lam))) from rfl,
+      hbasis (A ν), hbasis (A lam)]
+    simp [tensorBracket_tmul, dualPairEquiv_tmul]
+    rw [Finset.sum_comm]
+  rw [hcomm, map_sum]
+  refine Subalgebra.sum_mem _ fun j _ => ?_
+  rw [map_sum]
+  refine Subalgebra.sum_mem _ fun k _ => ?_
+  rw [LinearMap.map_smul_of_tower, ← algebraMap_smul ℂ (φ ⁅bv j, bv k⁆)]
+  refine Subalgebra.smul_mem _ ?_ _
+  rw [Lorentz.iteratedD_mul D D_comm D_mul]
+  refine multiset_sum_mem _ fun x hx => ?_
+  obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+  have hle := Multiset.mem_antidiagonal.mp hp
+  refine mul_mem
+    (Algebra.subset_adjoin ⟨p.1, ν, bv.coord j, ?_, rfl⟩)
+    (Algebra.subset_adjoin ⟨p.2, lam, bv.coord k, ?_, rfl⟩)
+  · exact hle ▸ Multiset.card_le_card (Multiset.le_add_right _ _)
+  · exact hle ▸ Multiset.card_le_card (Multiset.le_add_left _ _)
+
 
 set_option maxHeartbeats 1000000 in
 /-- The gauge transformation of the bracket of two component families with affine

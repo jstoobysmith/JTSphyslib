@@ -59,6 +59,15 @@ lemma fieldStrength_apply (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebr
     (φ : Module.Dual ℝ GaugeAlgebra) :
     fieldStrength A D μ ν φ = D μ (A ν φ) - D ν (A μ φ) + commutator A μ ν φ := rfl
 
+/-- The antisymmetrized pair is the field strength minus its
+  commutator term. -/
+lemma pair_eq_fieldStrength_sub_commutator
+    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B) (ν μ : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    D ν (A μ φ) - D μ (A ν φ) = fieldStrength A D ν μ φ - commutator A ν μ φ := by
+  rw [fieldStrength_apply, add_sub_cancel_right]
+
 
 set_option maxHeartbeats 400000 in
 /-- **The field strength transforms in the adjoint.** Under a gauge jet `U` all

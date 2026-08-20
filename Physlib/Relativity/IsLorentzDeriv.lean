@@ -57,6 +57,13 @@ lemma iteratedD_cons {ι : Type*} (D : ι → A →ₗ[ℂ] A)
     iteratedD D hD (κ ::ₘ s) = (D κ).comp (iteratedD D hD s) := by
   simp only [iteratedD, Multiset.foldr_cons]
 
+/-- The iterated operator of a singleton is the operator itself. -/
+lemma iteratedD_singleton {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) (κ : ι) :
+    iteratedD D hD {κ} = D κ := by
+  rw [show ({κ} : Multiset ι) = κ ::ₘ 0 from rfl, iteratedD_cons, iteratedD_zero,
+    LinearMap.comp_id]
+
 /-- The iterated operator is additive in the multiset of directions: applying along
   `s + t` is applying along `t` and then along `s`. -/
 lemma iteratedD_add {ι : Type*} (D : ι → A →ₗ[ℂ] A)
@@ -66,6 +73,43 @@ lemma iteratedD_add {ι : Type*} (D : ι → A →ₗ[ℂ] A)
   | empty => rw [zero_add, iteratedD_zero, LinearMap.id_comp]
   | cons κ s ih =>
       rw [Multiset.cons_add, iteratedD_cons, iteratedD_cons, ih, LinearMap.comp_assoc]
+
+/-- The companion of `iteratedD_cons`, peeling the new operator on the inside: for a
+  commuting family the extra operator may equally be applied first. -/
+lemma iteratedD_cons' {ι : Type*} (D : ι → A →ₗ[ℂ] A)
+    (hD : ∀ i j, (D i).comp (D j) = (D j).comp (D i)) (κ : ι) (s : Multiset ι) :
+    iteratedD D hD (κ ::ₘ s) = (iteratedD D hD s).comp (D κ) := by
+  rw [show (κ ::ₘ s) = s + {κ} from by rw [← Multiset.singleton_add, add_comm],
+    iteratedD_add, iteratedD_singleton]
+
+lemma iteratedD_mul (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A)
+    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : A),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (b₁ b₂ : A) :
+    Lorentz.iteratedD D D_comm s (b₁ * b₂) =
+      (s.antidiagonal.map fun p =>
+        Lorentz.iteratedD D D_comm p.1 b₁ * Lorentz.iteratedD D D_comm p.2 b₂).sum := by
+  induction s using Multiset.induction_on with
+  | empty => simp [Lorentz.iteratedD_zero]
+  | cons κ s ih =>
+      have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
+          D κ (Lorentz.iteratedD D D_comm p.1 b₁ * Lorentz.iteratedD D D_comm p.2 b₂) =
+            Lorentz.iteratedD D D_comm (κ ::ₘ p.1) b₁ * Lorentz.iteratedD D D_comm p.2 b₂ +
+              Lorentz.iteratedD D D_comm p.1 b₁ *
+                Lorentz.iteratedD D D_comm (κ ::ₘ p.2) b₂ := by
+        intro p
+        rw [D_mul, Lorentz.iteratedD_cons, Lorentz.iteratedD_cons,
+          LinearMap.comp_apply, LinearMap.comp_apply]
+      rw [Lorentz.iteratedD_cons, LinearMap.comp_apply, ih, map_multiset_sum,
+        Multiset.map_map]
+      simp only [Function.comp_def]
+      rw [Multiset.map_congr rfl fun p _ => hterm p, Multiset.sum_map_add,
+        Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add, Multiset.map_map,
+        Multiset.map_map]
+      simp only [Function.comp_def, Prod.map, id_eq]
+      abel
+
 
 class IsLorentzDeriv (rep : Representation ℂ SL(2,ℂ) A) (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) where
   rep_deriv {Λ μ x} : rep Λ (D μ x) =
