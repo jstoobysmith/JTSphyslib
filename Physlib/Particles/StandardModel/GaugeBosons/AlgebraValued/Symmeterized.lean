@@ -580,6 +580,274 @@ lemma exists_repGauge_symmetrizedDeriv_shift
   refine ⟨V⁻¹, fun s hs φ => ?_⟩
   rw [repGauge_symmetrizedDeriv_truncationKer hA V⁻¹ s hs φ, inv_inv, hV]
 
+/-!
+
+## Centrality of the gauge-field symbols, and invariants of the truncation kernel
+
+Throughout, `hc` is the hypothesis that all derivative symbols of the gauge field are
+central in `B` — the statement that the gauge field is bosonic. Everything built from
+the symbols by the total derivative and the bracket is then central as well.
+
+-/
+
+/-- Scalars are central. -/
+lemma algebraMap_mem_center (c : ℂ) : algebraMap ℂ B c ∈ Subring.center B :=
+  Subring.mem_center_iff.mpr fun b => (Algebra.commutes c b).symm
+
+/-- Real multiples of central elements are central. -/
+lemma smul_mem_center (r : ℝ) {x : B} (hx : x ∈ Subring.center B) :
+    r • x ∈ Subring.center B := by
+  rw [← algebraMap_smul ℂ r x, Algebra.smul_def]
+  exact Subring.mul_mem _ (algebraMap_mem_center _) hx
+
+/-- The total derivative of a central element is central, by the Leibniz rule. -/
+lemma deriv_mem_center
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    {x : B} (hx : x ∈ Subring.center B) (ρ : Fin 1 ⊕ Fin 3) :
+    D ρ x ∈ Subring.center B := by
+  rw [Subring.mem_center_iff] at hx ⊢
+  intro b
+  have h := congrArg (D ρ) (hx b)
+  rw [D_mul, D_mul, hx (D ρ b), add_comm (D ρ x * b)] at h
+  exact add_left_cancel h
+
+/-- The bracket of component families with central components is central. -/
+lemma bracketFam_mem_center {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+    (hf : ∀ ψ, f ψ ∈ Subring.center B) (hg : ∀ ψ, g ψ ∈ Subring.center B)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    bracketFam f g φ ∈ Subring.center B := by
+  rw [bracketFam_apply_eq_sum]
+  refine Subring.sum_mem _ fun j _ => Subring.sum_mem _ fun k _ => ?_
+  exact smul_mem_center _ (Subring.mul_mem _ (hf _) (hg _))
+
+/-- **1.** If the derivative symbols of the gauge field are central, so are the
+  covariant derivatives of the field strength. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_mem_center
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ ∈ Subring.center B := by
+  have hc0 : ∀ (μ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra),
+      A μ ψ ∈ Subring.center B := by
+    intro μ ψ
+    have := hc 0 μ ψ
+    rwa [Lorentz.iteratedD_zero] at this
+  induction l generalizing φ with
+  | nil =>
+      show fieldStrength A D ν lam φ ∈ Subring.center B
+      rw [fieldStrength_apply, commutator_eq_bracketFam]
+      exact Subring.add_mem _
+        (Subring.sub_mem _ (deriv_mem_center D_mul (hc0 lam φ) ν)
+          (deriv_mem_center D_mul (hc0 ν φ) lam))
+        (bracketFam_mem_center (hc0 ν) (hc0 lam) φ)
+  | cons ρ l ih =>
+      rw [show iteratedCovDerivAdjoint A D (ρ :: l) (fieldStrength A D ν lam) φ =
+          D ρ (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ) +
+            bracketFam (A ρ) (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) φ
+          from rfl]
+      exact Subring.add_mem _ (deriv_mem_center D_mul (ih φ) ρ)
+        (bracketFam_mem_center (hc0 ρ) (fun ψ => ih ψ) φ)
+
+/-- **2.** If the derivative symbols of the gauge field are central, so are the
+  symmetrized derivative symbols. -/
+lemma symmetrizedDeriv_mem_center
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    symmetrizedDeriv D D_comm s A φ ∈ Subring.center B := by
+  rw [symmetrizedDeriv]
+  refine smul_mem_center _ (multiset_sum_mem _ fun x hx => ?_)
+  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
+  exact hc _ _ _
+
+/-- **3.** Anything that transforms in the adjoint is invariant under the kernel of
+  the zeroth truncation: at `s = 0` the transformation law is the dual adjoint action
+  of the base-point value `U₀⁻¹ = 1`, which is trivial. -/
+lemma TransformsInAdjoint.repGauge_eq_of_mem_truncationKer_zero
+    {hA : IsGaugeField repLorentz repGauge A D D_comm}
+    {F : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B} (hF : hA.TransformsInAdjoint F)
+    (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U.1 (F φ) = F φ := by
+  have hinv : ((U.1)⁻¹).eval = 1 := by
+    rw [map_inv, JetGaugeGroupI.mem_truncationKer_zero_iff.mp U.2, inv_one]
+  simpa [Lorentz.iteratedD_zero, adjointDualCoeff_zero_of_eval_eq_one hinv] using
+    hF U.1 φ 0
+
+/-- **4.** The covariant derivatives of the field strength are invariant under the
+  kernel of the zeroth truncation: they transform in the adjoint, and the truncation
+  kernel acts through the trivial base-point adjoint. -/
+lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
+    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (U : JetGaugeGroupI.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
+    (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U.1 (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ) =
+      iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ := by
+  have hadj : hA.TransformsInAdjoint
+      (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) := by
+    induction l with
+    | nil => exact transformsInAdjoint_fieldStrength hA D_mul ν lam
+    | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint D_mul ih ρ
+  exact hadj.repGauge_eq_of_mem_truncationKer_zero U φ
+
+/-!
+
+## The classification of invariants
+
+The goal of this section is the classification theorem: a gauge-invariant element of
+the subalgebra generated by the gauge-field symbols together with a set `S` of
+`truncationKer 0`-fixed elements lies in the subalgebra generated by the covariant
+field-strength tower together with `S` — assuming only that the gauge-field symbols
+are central (bosonic), with **no algebraic-independence hypothesis**.
+
+The strategy, by downward induction on the top symbol order `N` present in `x`:
+
+* By the generation theorem (relativized to `S`), `x` is a polynomial expression in
+  the symmetrized symbols of order `≤ N`, the covariant field-strength tower, and `S`.
+* Using the surjectivity of the symmetrized Maurer–Cartan coefficients, choose gauge
+  jets whose coefficients are supported at exactly order `N`. The Maurer–Cartan
+  triangularity places such jets in the deep truncation kernel `truncationKer (N-1)`,
+  which kills all dual adjoint coefficients of positive order `< N`. Consequently
+  such a jet fixes every generator of order `< N`, fixes the covariant tower and `S`,
+  and acts on the order-`N` symmetrized symbols by a *pure translation* with an
+  arbitrary prescribable scalar family.
+* The extraction step needs no independence: pick *any* representation of `x` as a
+  polynomial in the top symbols over the fixed subalgebra. Invariance under all
+  translations gives, for every shift vector, a polynomial identity; evaluating at
+  sufficiently many shifts (a Vandermonde argument — pure linear algebra in `B`, no
+  freeness) forces the top coefficient of *the chosen representation* to vanish, and
+  downward induction kills every nonconstant coefficient. Hence `x` lies in the fixed
+  subalgebra, completing the induction step.
+
+-/
+
+/-- The generation theorem relativized to an arbitrary set `S` of extra generators:
+  a corollary of `symbolAdjoin_eq_symFieldAdjoin` since `adjoin (X ∪ S)` is
+  determined by `adjoin X` and `S`. -/
+theorem symbolAdjoin_union_eq_symFieldAdjoin_union
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (n : ℕ) (S : Set B) :
+    Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
+        b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) =
+      Algebra.adjoin ℂ
+        (({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
+            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+          {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+            (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
+            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) ∪ S) := by
+  sorry
+
+/-- Finite order bound: membership in the subalgebra generated by all symbols and `S`
+  uses only finitely many generators, hence symbols of some bounded order. -/
+lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
+    (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
+      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
+      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S)) :
+    ∃ n : ℕ, x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
+      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
+      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) := by
+  sorry
+
+/-- **Maurer–Cartan triangularity** (suggested home:
+  `GaugeGroup.MaurerCartan.Truncation`): a pure jet whose symmetrized Maurer–Cartan
+  coefficients vanish up to order `n` lies in the `n`-th truncation kernel. -/
+theorem mem_truncationKer_of_symmetrizedMaurerCartanCoeff_eq_zero
+    (U : JetGaugeGroupI.truncationKer 0) (n : ℕ)
+    (h : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0), r.card ≤ n →
+      symmetrizedMaurerCartanCoeff U ⟨r, hr⟩ = 0) :
+    U.1 ∈ JetGaugeGroupI.truncationKer n := by
+  sorry
+
+/-- **Deep kernels kill the positive dual adjoint coefficients** (suggested home:
+  `AlgebraValued.Basic`): for a jet trivial to order `n`, all derivatives of the
+  adjoint action up to order `n` vanish. -/
+theorem adjointDualCoeff_eq_zero_of_mem_truncationKer {U : JetGaugeGroupI} {n : ℕ}
+    (hU : U ∈ JetGaugeGroupI.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)}
+    (hx : x ≠ 0) (hxn : x.card ≤ n) :
+    adjointDualCoeff U x = 0 := by
+  sorry
+
+/-- **Pure translation**: when all positive dual adjoint coefficients of `U⁻¹` below
+  the order of `s` vanish, the adjoint convolution in the transformation of the
+  symmetrized symbol collapses to the symbol itself, and the action is an honest
+  translation by the symmetrized Maurer–Cartan coefficient. -/
+theorem repGauge_symmetrizedDeriv_translation
+    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
+    (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < s.card →
+      adjointDualCoeff (U.1)⁻¹ x = 0)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    repGauge U.1 (symmetrizedDeriv D D_comm s A φ) =
+      symmetrizedDeriv D D_comm s A φ +
+        algebraMap ℂ B (φ (symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
+  sorry
+
+/-- **Realization of top-order translations**: any coefficient family supported at
+  exactly order `N` is realized by a jet in the deep truncation kernel — surjectivity
+  of the symmetrized Maurer–Cartan coefficients together with the triangularity and
+  vanishing theorems above. -/
+theorem exists_translation_of_support
+    (N : ℕ) (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → GaugeAlgebra)
+    (hcN : ∀ r, r.1.card ≠ N → c r = 0) :
+    ∃ U : JetGaugeGroupI.truncationKer 0,
+      symmetrizedMaurerCartanCoeff U⁻¹ = c ∧
+      ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < N →
+        adjointDualCoeff (U.1)⁻¹ x = 0 := by
+  sorry
+
+/-- **The abstract extraction theorem** — pure ring theory, no gauge input and no
+  independence hypothesis: if a family of unital ring endomorphisms fixes a
+  subalgebra `R` pointwise and translates finitely many central elements `y i` by
+  arbitrary prescribable scalars, then any element of the subalgebra generated by
+  `R` and the `y i` that is invariant under the whole family lies in `R`.
+
+  Proof idea: choose any representation of `x` as a polynomial in the `y i` over `R`;
+  invariance at sufficiently many shift vectors and a Vandermonde argument force the
+  nonconstant coefficients of the chosen representation to vanish, top degree first. -/
+theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
+    (R : Subalgebra ℂ B) (y : ι → B)
+    (hy : ∀ i, y i ∈ Subring.center B)
+    (Φ : (ι → ℝ) → (B →+* B))
+    (hΦR : ∀ t, ∀ z ∈ R, Φ t z = z)
+    (hΦy : ∀ t i, Φ t (y i) = y i + algebraMap ℂ B (t i))
+    {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ (Set.range y))
+    (hinv : ∀ t, Φ t x = x) :
+    x ∈ R := by
+  sorry
+
+/-- **The classification of invariants**: a gauge-invariant element of the subalgebra
+  generated by the gauge-field symbols and a set `S` of `truncationKer 0`-fixed
+  elements is a polynomial in the covariant derivatives of the field strength and the
+  elements of `S`. Requires only centrality of the symbols (the gauge field is
+  bosonic); no independence hypothesis. -/
+theorem invariant_mem_adjoin_fieldStrength
+    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
+      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
+    (S : Set B)
+    (hS : ∀ y ∈ S, ∀ U : JetGaugeGroupI.truncationKer 0, repGauge U.1 y = y)
+    {x : B}
+    (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
+      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
+      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S))
+    (hinv : ∀ U : JetGaugeGroupI, repGauge U x = x) :
+    x ∈ Algebra.adjoin ℂ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S) := by
+  sorry
+
 end IsGaugeField
 
 end StandardModel
