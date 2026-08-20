@@ -191,6 +191,21 @@ def map (f : M →ₗ[k] N) : ConjModule M →ₗ[k] ConjModule N where
 @[simp]
 lemma map_apply (f : M →ₗ[k] N) (x : ConjModule M) : map f x = f x := rfl
 
+/-- **Conjugation commutes with finite products.** The conjugate of a product is the product
+of the conjugates, by the identity underlying function: the twisted scalar action is applied
+componentwise. -/
+def prodEquiv : ConjModule (M × N) ≃ₗ[k] ConjModule M × ConjModule N where
+  toFun x := (map (LinearMap.fst k M N) x, map (LinearMap.snd k M N) x)
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  invFun x := (x.1, x.2)
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+@[simp]
+lemma prodEquiv_apply (x : ConjModule (M × N)) :
+    prodEquiv (k := k) x = (map (LinearMap.fst k M N) x, map (LinearMap.snd k M N) x) := rfl
+
 /-- The conjugate module of a finite free module is finite: the conjugated basis
 `Module.Basis.conj` is indexed by the same type. -/
 instance instFinite [Module.Free k M] [Module.Finite k M] :

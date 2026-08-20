@@ -41,6 +41,7 @@ The construction needs two hypotheses on the jet action `rep`:
 - `JetComponentSpace.jetDeriv` : the shift `∂_s ψ_α ↦ ∂_{s + {μ}} ψ_α` of the label.
 - `JetComponentSpace.jetDeriv_comm` : the shifts in different directions commute.
 - `JetComponentSpace.repLorentzGroup_jetDeriv` : the shift is a Lorentz vector.
+- `JetComponentSpace.comap` : functoriality, contravariant in the target space.
 
 -/
 
@@ -675,5 +676,67 @@ lemma JetComponentSpace.repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2
   · simp only [Prod.snd_sum, Prod.smul_snd, JetComponentSpace.repLorentzGroup_snd,
       JetComponentSpace.jetDeriv_snd]
     exact repLorentzGroup_tprod_mulRight_jetSymbol _ Λ μ v.2
+
+/-!
+
+## Functoriality in the target space
+
+-/
+
+variable {W : Type _} [AddCommGroup W] [Module ℂ W]
+
+/-- **The component space is contravariant in the target space.** A linear map `f : V →ₗ W`
+  of target spaces pulls the component functions of a `W`-valued field back to component
+  functions of a `V`-valued field: a component function is a *covector* on the target, so it
+  transposes. The derivative label is untouched, and the conjugate half transposes the
+  conjugate of `f`. -/
+noncomputable def JetComponentSpace.comap (f : V →ₗ[ℂ] W) :
+    JetComponentSpace W →ₗ[ℂ] JetComponentSpace V :=
+  LinearMap.prodMap
+    (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
+    (TensorProduct.map LinearMap.id (Module.Dual.transpose (ConjModule.map f)))
+
+@[simp]
+lemma JetComponentSpace.comap_fst_tmul (f : V →ₗ[ℂ] W) (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ W) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule W)) :
+    (JetComponentSpace.comap f (a ⊗ₜ[ℂ] φ, y)).1 = a ⊗ₜ[ℂ] (φ ∘ₗ f) := rfl
+
+@[simp]
+lemma JetComponentSpace.comap_snd_tmul (f : V →ₗ[ℂ] W)
+    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ W) (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ (ConjModule W)) :
+    (JetComponentSpace.comap f (x, a ⊗ₜ[ℂ] φ)).2 = a ⊗ₜ[ℂ] (φ ∘ₗ ConjModule.map f) := rfl
+
+@[simp]
+lemma JetComponentSpace.comap_id :
+    JetComponentSpace.comap (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id := by
+  rw [JetComponentSpace.comap,
+    show Module.Dual.transpose (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id from rfl,
+    show ConjModule.map (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id from rfl,
+    show Module.Dual.transpose (LinearMap.id : ConjModule V →ₗ[ℂ] ConjModule V)
+      = LinearMap.id from rfl, TensorProduct.map_id, TensorProduct.map_id]
+  rfl
+
+/-- Functoriality: pulling back along `g ∘ f` is pulling back along `g` and then along `f`.
+  The order reverses, as it must for a contravariant construction. -/
+lemma JetComponentSpace.comap_comp {U : Type _} [AddCommGroup U] [Module ℂ U]
+    (f : V →ₗ[ℂ] W) (g : W →ₗ[ℂ] U) :
+    JetComponentSpace.comap (g.comp f)
+      = (JetComponentSpace.comap f).comp (JetComponentSpace.comap g) := by
+  rw [JetComponentSpace.comap, JetComponentSpace.comap, JetComponentSpace.comap,
+    LinearMap.prodMap_comp, ← TensorProduct.map_comp, ← TensorProduct.map_comp,
+    LinearMap.id_comp]
+  rfl
+
+/-- **The pullback commutes with the jet derivative.** The two act on different tensor
+  factors — the derivative label and the target index — so an inclusion of species is a map
+  of differential algebras. -/
+lemma JetComponentSpace.comap_jetDeriv (f : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin 3) :
+    (JetComponentSpace.comap f).comp (JetComponentSpace.jetDeriv μ)
+      = (JetComponentSpace.jetDeriv μ).comp (JetComponentSpace.comap f) := by
+  rw [JetComponentSpace.comap, JetComponentSpace.jetDeriv, JetComponentSpace.jetDeriv,
+    LinearMap.prodMap_comp, LinearMap.prodMap_comp, ← TensorProduct.map_comp,
+    ← TensorProduct.map_comp, ← TensorProduct.map_comp, ← TensorProduct.map_comp]
+  simp only [LinearMap.comp_id, LinearMap.id_comp]
 
 end StandardModel
