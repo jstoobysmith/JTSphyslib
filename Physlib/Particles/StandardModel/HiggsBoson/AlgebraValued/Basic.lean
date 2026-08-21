@@ -7,6 +7,9 @@ module
 
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.IsospinDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
@@ -19,10 +22,11 @@ public import Mathlib.RingTheory.TensorProduct.Maps
 
 We suppose that we have an equivariant map
 under the global gauge group, and the Lorentz group
-`H : Module.dual HiggsSpace →ₗ[ℂ] B`
+`H : Module.Dual ℂ HiggsVec →ₗ[ℂ] B`
 and
-`barH : Module.dual (Conj HiggsSpace) →ₗ[ℂ] B`
-from the dual of the Higgs space to some algebra `B`.
+`barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B`
+from the dual of the Higgs space to some algebra `B`. The Higgs is a Lorentz scalar, so
+Lorentz equivariance carries no content for `H` itself and is not recorded as a field.
 
 We define `IsHiggsAlgebraValued` to be the property that these maps are equivariant under
 the gauge group and the Lorentz group, and there images commute with one another.
@@ -50,5 +54,588 @@ namespace StandardModel
 
 open TensorProduct Matrix
 
+
+/-- The pair of symbol maps `H`, `barH` in the algebra `B` is an *algebra-valued Higgs* for
+  the gauge representation `rep` when it satisfies the defining properties of the physicists'
+  Higgs doublet:
+
+  * the symbol `H_φ` transforms contragrediently to `HiggsVec` — under a gauge transformation
+    `g` it is acted on by the dual representation `HiggsVec.repGaugeGroupI.dual`
+    (`H_equivariant`), and `barH_φ` by the conjugate-dual (`barH_equivariant`). These are the
+    physicists' `H ↦ g H` and `H^† ↦ H^† g^†`, read on the component functions;
+  * the Higgs is a *boson*, so all of its component symbols commute with one another
+    (`H_comm_H`, `H_comm_barH`, `barH_comm_barH`). This is what distinguishes an
+    algebra-valued Higgs from an algebra-valued fermion, whose symbols anticommute. -/
+structure IsHiggsAlgebraValued (B : Type*) [Semiring B] [Algebra ℂ B]
+    (rep : Representation ℂ GaugeGroupI B) (H : Module.Dual ℂ HiggsVec →ₗ[ℂ] B)
+    (barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B) : Prop where
+  /-- The Higgs symbol carries the dual of the gauge representation on `HiggsVec`: the
+    `SU(2)` index transforms contragrediently, and the hypercharge character by `u⁻³`. -/
+  H_equivariant : ∀ (g : GaugeGroupI) (φ : Module.Dual ℂ HiggsVec),
+    rep g (H φ) = H (HiggsVec.repGaugeGroupI.dual g φ)
+  /-- The conjugate Higgs symbol carries the conjugate-dual of the gauge representation:
+    the physicists' `H^† ↦ H^† g^†`. -/
+  barH_equivariant : ∀ (g : GaugeGroupI) (φ : Module.Dual ℂ (ConjModule HiggsVec)),
+    rep g (barH φ) = barH (HiggsVec.repGaugeGroupI.conj.dual g φ)
+  /-- The Higgs is bosonic: two Higgs symbols commute. -/
+  H_comm_H : ∀ φ ψ, Commute (H φ) (H ψ)
+  /-- A Higgs symbol commutes with a conjugate Higgs symbol. -/
+  H_comm_barH : ∀ φ ψ, Commute (H φ) (barH ψ)
+  /-- Two conjugate Higgs symbols commute. -/
+  barH_comm_barH : ∀ φ ψ, Commute (barH φ) (barH ψ)
+
+namespace IsHiggsAlgebraValued
+
+variable {B : Type*} [Ring B] [Algebra ℂ B]
+  {rep : Representation ℂ GaugeGroupI B} {H : Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
+  {barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
+  (h : IsHiggsAlgebraValued B rep H barH)
+
+/-!
+
+## The generators
+
+Written in coordinates, a Lagrangian is a polynomial in the component symbols `H^α` and
+`H̄^α`. These are the values of `H` and `barH` on the dual of the standard orthonormal basis
+of `HiggsVec` — and, for the conjugate, on the dual of its conjugated basis
+`Module.Basis.conj`.
+
+-/
+
+set_option linter.unusedVariables false in
+/-- The component symbol `H^i` of the Higgs: the value of the symbol map on the `i`-th
+  covector of the standard basis of `HiggsVec`. -/
+noncomputable def higgsComponent (h : IsHiggsAlgebraValued B rep H barH) (i : Fin 2) : B :=
+  H (HiggsVec.orthonormBasis.toBasis.dualBasis i)
+
+lemma rep_higgsComponent (g : GaugeGroupI) (i : Fin 2) :
+    rep g (h.higgsComponent i) =
+      ∑ j, (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j) • h.higgsComponent j := by
+  have key : HiggsVec.repGaugeGroupI.dual g (HiggsVec.orthonormBasis.toBasis.dualBasis i)
+      = ∑ j, (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j) •
+          HiggsVec.orthonormBasis.toBasis.dualBasis j := by
+    refine HiggsVec.orthonormBasis.toBasis.ext fun k => ?_
+    rw [LinearMap.sum_apply]
+    simp only [LinearMap.smul_apply, smul_eq_mul, Module.Basis.dualBasis_apply_self,
+      mul_ite, mul_one, mul_zero, Finset.sum_ite_eq]
+    simp [Representation.dual, HiggsVec.repGaugeGroupI_apply, HiggsVec.orthonormBasis,
+      Submonoid.smul_def, -inv_pow]
+  rw [higgsComponent, h.H_equivariant, key, map_sum]
+  exact Finset.sum_congr rfl fun j _ => by rw [map_smul]; rfl
+
+set_option linter.unusedVariables false in
+/-- The component symbol `H̄^i` of the conjugate Higgs. -/
+noncomputable def barHiggsComponent (h : IsHiggsAlgebraValued B rep H barH) (i : Fin 2) : B :=
+  barH (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
+
+lemma rep_barHiggsComponent (g : GaugeGroupI) (i : Fin 2) :
+    rep g (h.barHiggsComponent i) =
+      ∑ j, (starRingEnd ℂ (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j)) •
+        h.barHiggsComponent j := by
+  have key : HiggsVec.repGaugeGroupI.conj.dual g
+        (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
+      = ∑ j, (starRingEnd ℂ (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j)) •
+          HiggsVec.orthonormBasis.toBasis.conj.dualBasis j := by
+    refine HiggsVec.orthonormBasis.toBasis.conj.ext fun k => ?_
+    rw [LinearMap.sum_apply]
+    simp only [LinearMap.smul_apply, smul_eq_mul, Module.Basis.dualBasis_apply_self,
+      mul_ite, mul_one, mul_zero, Finset.sum_ite_eq]
+    simp [Representation.dual, Representation.conj_apply, HiggsVec.repGaugeGroupI_apply,
+      HiggsVec.orthonormBasis, Submonoid.smul_def, -inv_pow]
+  rw [barHiggsComponent, h.barH_equivariant, key, map_sum]
+  exact Finset.sum_congr rfl fun j _ => by rw [map_smul]; rfl
+
+/-!
+
+## The submodules
+
+Everything below is stated relative to a fixed `h : IsHiggsAlgebraValued B rep H barH`, and
+takes it as its first explicit argument, so that the submodules and terms are reached by dot
+notation — `h.higgsSubmodule`, `h.massTerm` — and the data `B`, `rep`, `H` and `barH` are
+recovered from `h` rather than passed by hand.
+
+-/
+
+set_option linter.unusedVariables false in
+/-- The submodule of `B` spanned by the Higgs symbols `H_φ`: the terms of mass dimension one
+  and hypercharge `+3`. -/
+def higgsSubmodule (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+  LinearMap.range H
+
+lemma higgsSubmodule_eq_span_higgsComponents :
+    h.higgsSubmodule = Submodule.span ℂ (Set.range h.higgsComponent) := by
+  rw [higgsSubmodule, LinearMap.range_eq_map,
+    ← (HiggsVec.orthonormBasis.toBasis.dualBasis).span_eq, Submodule.map_span,
+    ← Set.range_comp]
+  rfl
+
+lemma higgsComponent_mem_higgsSubmodule (i : Fin 2) :
+    h.higgsComponent i ∈ h.higgsSubmodule :=
+  LinearMap.mem_range_self _ _
+
+set_option linter.unusedVariables false in
+/-- The submodule of `B` spanned by the conjugate Higgs symbols `H̄_φ`: the terms of mass
+  dimension one and hypercharge `-3`. -/
+def barHiggsSubmodule (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+  LinearMap.range barH
+
+lemma barHiggsSubmodule_eq_span_barHiggsComponents :
+    h.barHiggsSubmodule = Submodule.span ℂ (Set.range h.barHiggsComponent) := by
+  rw [barHiggsSubmodule, LinearMap.range_eq_map,
+    ← (HiggsVec.orthonormBasis.toBasis.conj.dualBasis).span_eq, Submodule.map_span,
+    ← Set.range_comp]
+  rfl
+
+lemma barHiggsComponent_mem_barHiggsSubmodule (i : Fin 2) :
+    h.barHiggsComponent i ∈ h.barHiggsSubmodule :=
+  LinearMap.mem_range_self _ _
+
+/-- The terms of mass dimension exactly one: a Higgs symbol or a conjugate Higgs symbol. -/
+def scalarSubmoduleOne : Submodule ℂ B := h.higgsSubmodule ⊔ h.barHiggsSubmodule
+
+/-- **All terms of mass dimension at most `n`** built from the Higgs and its conjugate. -/
+def scalarSubmodule (n : ℕ) : Submodule ℂ B :=
+  ∑ k ∈ Finset.range (n + 1), h.scalarSubmoduleOne ^ k
+
+@[simp]
+lemma scalarSubmodule_zero : h.scalarSubmodule 0 = 1 := by
+  rw [scalarSubmodule]
+  simp
+
+/-- Raising the mass dimension by one adjoins the products of `n + 1` symbols. -/
+lemma scalarSubmodule_succ (n : ℕ) :
+    h.scalarSubmodule (n + 1) = h.scalarSubmodule n ⊔ h.scalarSubmoduleOne ^ (n + 1) := by
+  rw [scalarSubmodule, scalarSubmodule, Finset.sum_range_succ, Submodule.add_eq_sup]
+
+lemma scalarSubmoduleOne_pow_le_scalarSubmodule {k n : ℕ} (hk : k ≤ n) :
+    h.scalarSubmoduleOne ^ k ≤ h.scalarSubmodule n := by
+  rw [scalarSubmodule]
+  exact Finset.single_le_sum (f := fun k => h.scalarSubmoduleOne ^ k)
+    (fun _ _ => bot_le) (Finset.mem_range.mpr (Nat.lt_succ_of_le hk))
+
+lemma scalarSubmoduleOne_le_scalarSubmodule {n : ℕ} (hn : 1 ≤ n) :
+    h.scalarSubmoduleOne ≤ h.scalarSubmodule n := by
+  rw [← pow_one h.scalarSubmoduleOne]
+  exact h.scalarSubmoduleOne_pow_le_scalarSubmodule hn
+
+/-- All terms in the algebra made from up to four combinations
+  of `H` and `barH` -/
+def scalarPotentialSubmodule : Submodule ℂ B := h.scalarSubmodule 4
+
+/-!
+
+## Closure under the gauge action
+
+Each of the submodules above is *stable* under the gauge action on `B`: a gauge
+transformation moves a Higgs symbol to a combination of Higgs symbols and nothing else. For
+the two spans of symbols and their join this is exactly the equivariance recorded in
+`IsHiggsAlgebraValued`. For the higher mass dimensions it needs, in addition, that a gauge
+transformation acts on `B` by an *algebra* map; that is not among the fields of
+`IsHiggsAlgebraValued`, so it is taken as the hypothesis `rep_mul` below — the analogue of
+`IsGaugeField.gauge_mul` — and packaged as `repAlgHom`, after which `Submodule.mapHom`
+carries the closure through products, powers and sums.
+
+-/
+
+lemma higgsSubmodule_map_le (g : GaugeGroupI) :
+    h.higgsSubmodule.map (rep g) ≤ h.higgsSubmodule := by
+  rintro _ ⟨_, ⟨φ, rfl⟩, rfl⟩
+  exact ⟨HiggsVec.repGaugeGroupI.dual g φ, (h.H_equivariant g φ).symm⟩
+
+lemma barHiggsSubmodule_map_le (g : GaugeGroupI) :
+    h.barHiggsSubmodule.map (rep g) ≤ h.barHiggsSubmodule := by
+  rintro _ ⟨_, ⟨φ, rfl⟩, rfl⟩
+  exact ⟨HiggsVec.repGaugeGroupI.conj.dual g φ, (h.barH_equivariant g φ).symm⟩
+
+/-- The Higgs symbols are closed under the gauge action.-/
+lemma higgsSubmodule_closure (g : GaugeGroupI) :
+    h.higgsSubmodule.map (rep g) = h.higgsSubmodule :=
+  le_antisymm (h.higgsSubmodule_map_le g) fun b hb =>
+    ⟨rep g⁻¹ b, h.higgsSubmodule_map_le g⁻¹ ⟨b, hb, rfl⟩, rep.self_inv_apply g b⟩
+
+/-- The conjugate Higgs symbols are closed under the gauge action. -/
+lemma barHiggsSubmodule_closure (g : GaugeGroupI) :
+    h.barHiggsSubmodule.map (rep g) = h.barHiggsSubmodule :=
+  le_antisymm (h.barHiggsSubmodule_map_le g) fun b hb =>
+    ⟨rep g⁻¹ b, h.barHiggsSubmodule_map_le g⁻¹ ⟨b, hb, rfl⟩, rep.self_inv_apply g b⟩
+
+/-- The mass-dimension-one terms are closed under the gauge action. -/
+lemma scalarSubmoduleOne_closure (g : GaugeGroupI) :
+    h.scalarSubmoduleOne.map (rep g) = h.scalarSubmoduleOne := by
+  rw [scalarSubmoduleOne, Submodule.map_sup, h.higgsSubmodule_closure g,
+    h.barHiggsSubmodule_closure g]
+
+variable (rep_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
+  rep g (b₁ * b₂) = rep g b₁ * rep g b₂)
+include rep_mul
+
+set_option linter.unusedVariables false in
+/-- A gauge transformation as an algebra homomorphism of `B`. Only linearity is built into
+  `Representation`; `rep_mul` supplies multiplicativity, and the unit is preserved because a
+  gauge transformation is invertible. -/
+def repAlgHom (h : IsHiggsAlgebraValued B rep H barH) (g : GaugeGroupI) : B →ₐ[ℂ] B :=
+  AlgHom.ofLinearMap (rep g)
+    (by
+      obtain ⟨c, hc⟩ := (rep.apply_bijective g).2 1
+      calc rep g 1 = rep g 1 * rep g c := by rw [hc, mul_one]
+        _ = rep g (1 * c) := (rep_mul g 1 c).symm
+        _ = 1 := by rw [one_mul, hc])
+    (rep_mul g)
+
+lemma repAlgHom_toLinearMap (g : GaugeGroupI) :
+    (h.repAlgHom rep_mul g).toLinearMap = rep g := rfl
+
+/-- The terms of mass dimension at most `n` are closed under the gauge action. -/
+lemma scalarSubmodule_closure (g : GaugeGroupI) (n : ℕ) :
+    (h.scalarSubmodule n).map (rep g) = h.scalarSubmodule n := by
+  have hmap : ∀ S : Submodule ℂ B,
+      S.map (rep g) = Submodule.mapHom (h.repAlgHom rep_mul g) S := fun _ => rfl
+  rw [scalarSubmodule, hmap, map_sum]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [map_pow, ← hmap, h.scalarSubmoduleOne_closure g]
+
+/-- The scalar potential terms are closed under the gauge action. -/
+lemma scalarPotentialSubmodule_closure (g : GaugeGroupI) :
+    (h.scalarPotentialSubmodule).map (rep g) = h.scalarPotentialSubmodule :=
+  h.scalarSubmodule_closure rep_mul g 4
+
+omit rep_mul in
+/-- **The scalar potential terms, written out.** `scalarSubmodule 4` is the join of the
+  powers `scalarSubmoduleOne ^ k` for `k ≤ 4`; expanding each power distributes over the
+  join, and the Higgs and conjugate-Higgs symbols commute, so every ordered product equals
+  the one with all `H` factors to the left. -/
+lemma scalarPotentialSubmodule_eq_higgs (h : IsHiggsAlgebraValued B rep H barH) :
+    h.scalarPotentialSubmodule =
+    1 ⊔ h.higgsSubmodule
+      ⊔ h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+  have hcomm : h.higgsSubmodule * h.barHiggsSubmodule = h.barHiggsSubmodule * h.higgsSubmodule := by
+    refine le_antisymm (Submodule.mul_le.mpr fun m hm n hn => ?_)
+      (Submodule.mul_le.mpr fun m hm n hn => ?_)
+    · obtain ⟨φ, rfl⟩ := hm
+      obtain ⟨ψ, rfl⟩ := hn
+      rw [(h.H_comm_barH φ ψ).eq]
+      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
+    · obtain ⟨ψ, rfl⟩ := hm
+      obtain ⟨φ, rfl⟩ := hn
+      rw [← (h.H_comm_barH φ ψ).eq]
+      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
+  have hcm : Commute h.higgsSubmodule h.barHiggsSubmodule := hcomm
+  have hCCA : Commute (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule := hcm.symm.mul_left hcm.symm
+  have s1 : h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc, hcm.symm.eq, ← mul_assoc]
+  have s2 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [hCCA.eq, ← mul_assoc]
+  have s3 : h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc (h.higgsSubmodule * h.higgsSubmodule) h.barHiggsSubmodule h.higgsSubmodule, hcm.symm.eq, ← mul_assoc]
+  have s4 : h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc h.higgsSubmodule h.barHiggsSubmodule h.barHiggsSubmodule, mul_assoc h.higgsSubmodule (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule, hCCA.eq, ← mul_assoc,
+      ← mul_assoc]
+  have s5 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [(hCCA.mul_left hcm.symm).eq, ← mul_assoc, ← mul_assoc]
+  have e2 : h.scalarSubmoduleOne ^ 2
+      = h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_two, scalarSubmoduleOne, Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup,
+      ← hcomm]
+    simp only [sup_assoc, sup_left_idem]
+  have e3 : h.scalarSubmoduleOne ^ 3
+      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_succ, e2, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
+      Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup, s1, s2]
+    simp only [sup_assoc, sup_left_idem]
+  have e4 : h.scalarSubmoduleOne ^ 4
+      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+        ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_succ, e3, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
+      Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup,
+      Submodule.mul_sup, s3, s4, s5]
+    simp only [sup_assoc, sup_left_idem]
+  rw [scalarPotentialSubmodule, scalarSubmodule, Finset.sum_range_succ, Finset.sum_range_succ,
+    Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_one, Submodule.add_eq_sup,
+    Submodule.add_eq_sup, Submodule.add_eq_sup, Submodule.add_eq_sup, pow_zero, pow_one,
+    e2, e3, e4, scalarSubmoduleOne]
+  simp only [sup_assoc]
+
+
+/-!
+
+## Gauge weight decomposition
+
+-/
+
+omit rep_mul in
+/-- The component symbol `H^0` is a joint eigenvector of all four torus generators, at the
+  gauge weight `(0, 0, -1, -3)`. The Higgs is a colour singlet, so both colour exponents
+  vanish; the symbol transforms contragrediently to the doublet, so its isospin weight is
+  `-1` and its hypercharge `-3`. -/
+lemma rep_gaugeTorusGen_higgsComponent_zero (i : Fin 4) :
+    rep (gaugeTorusGen i) (h.higgsComponent 0)
+      = ((expI : ℂ) ^ GaugeWeight.coord (0, 0, -1, -3) i) • h.higgsComponent 0 := by
+  have hstar : ((starRingEnd ℂ) (expI : ℂ)) ^ 3 = (((expI : ℂ)) ^ 3)⁻¹ := by
+    rw [← inv_pow]
+    congr 1
+    exact expI_inv_eq_star.symm
+  rw [h.rep_higgsComponent]
+  fin_cases i <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
+      Fin.sum_univ_two, expI_inv_eq_star, Matrix.one_apply, Unitary.coe_inv, hstar]
+  rfl
+
+omit rep_mul in
+/-- The component symbol `H^1` is a joint eigenvector of all four torus generators, at the
+  gauge weight `(0, 0, 1, -3)`. -/
+lemma rep_gaugeTorusGen_higgsComponent_one (i : Fin 4) :
+    rep (gaugeTorusGen i) (h.higgsComponent 1)
+      = ((expI : ℂ) ^ GaugeWeight.coord (0, 0, 1, -3) i) • h.higgsComponent 1 := by
+  have hstar : ((starRingEnd ℂ) (expI : ℂ)) ^ 3 = (((expI : ℂ)) ^ 3)⁻¹ := by
+    rw [← inv_pow]
+    congr 1
+    exact expI_inv_eq_star.symm
+  rw [h.rep_higgsComponent]
+  fin_cases i <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
+      Fin.sum_univ_two, expI_inv_eq_star, Matrix.one_apply, Unitary.coe_inv, hstar]
+  rfl
+
+omit rep_mul in
+/-- The gauge weight decomposition on the submodule `higgsSubmodule`.
+
+  The Higgs is a colour singlet of hypercharge `-3`, but it is *not* of pure isospin: the
+  submodule splits into the two component lines `span {H^0}` and `span {H^1}`, at the gauge
+  weights `(0, 0, -1, -3)` and `(0, 0, 1, -3)`.
+
+  In particular the zero-weight piece is `⊥`, so `mem_zero_of_invariant` says here that no
+  nonzero term linear in the Higgs is gauge invariant. -/
+noncomputable def higgsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+    GaugeWeightDecomposition rep h.higgsSubmodule where
+  piece := fun w =>
+    if w = (0, 0, -1, -3) then Submodule.span ℂ {h.higgsComponent 0}
+    else if w = (0, 0, 1, -3) then Submodule.span ℂ {h.higgsComponent 1} else ⊥
+  supp := {(0, 0, -1, -3), (0, 0, 1, -3)}
+  piece_le := by
+    have hz : ∀ i : Fin 4, Submodule.span ℂ {h.higgsComponent 0}
+        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
+          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, -1, -3) i) := fun i =>
+      (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_higgsComponent_zero i))
+    have ho : ∀ i : Fin 4, Submodule.span ℂ {h.higgsComponent 1}
+        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
+          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, 1, -3) i) := fun i =>
+      (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_higgsComponent_one i))
+    intro w x hx i
+    rcases eq_or_ne w (0, 0, -1, -3) with rfl | hw0
+    · rw [if_pos rfl] at hx
+      exact Module.End.mem_eigenspace_iff.mp (hz i hx)
+    · rcases eq_or_ne w (0, 0, 1, -3) with rfl | hw1
+      · rw [if_neg hw0, if_pos rfl] at hx
+        exact Module.End.mem_eigenspace_iff.mp (ho i hx)
+      · rw [if_neg hw0, if_neg hw1, Submodule.mem_bot] at hx
+        subst hx
+        simp
+  piece_eq_bot := by
+    intro w hw
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hw
+    rw [if_neg hw.1, if_neg hw.2]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun w => ?_) ?_
+    · rcases eq_or_ne w (0, 0, -1, -3) with rfl | hw0
+      · rw [if_pos rfl]
+        exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+          (h.higgsComponent_mem_higgsSubmodule 0)
+      · rcases eq_or_ne w (0, 0, 1, -3) with rfl | hw1
+        · rw [if_neg hw0, if_pos rfl]
+          exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+            (h.higgsComponent_mem_higgsSubmodule 1)
+        · rw [if_neg hw0, if_neg hw1]
+          exact bot_le
+    · rw [h.higgsSubmodule_eq_span_higgsComponents, Submodule.span_le]
+      rintro _ ⟨j, rfl⟩
+      fin_cases j
+      · refine Submodule.mem_iSup_of_mem (0, 0, -1, -3) ?_
+        rw [if_pos rfl]
+        exact Submodule.mem_span_singleton_self _
+      · refine Submodule.mem_iSup_of_mem (0, 0, 1, -3) ?_
+        rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_span_singleton_self _
+
+omit rep_mul in
+/-- The conjugate component symbol `H̄^0` is a joint eigenvector of all four torus
+  generators, at the gauge weight `(0, 0, 1, 3)`. Conjugation negates every exponent, so the
+  weights here are the negatives of those of `H^0` and `H^1` — with the isospin weights
+  exchanged between the two components. -/
+lemma rep_gaugeTorusGen_barHiggsComponent_zero (i : Fin 4) :
+    rep (gaugeTorusGen i) (h.barHiggsComponent 0)
+      = ((expI : ℂ) ^ GaugeWeight.coord (0, 0, 1, 3) i) • h.barHiggsComponent 0 := by
+  have hc : (starRingEnd ℂ) (expI : ℂ) = ((expI : ℂ))⁻¹ := expI_inv_eq_star.symm
+  rw [h.rep_barHiggsComponent]
+  fin_cases i <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
+      Fin.sum_univ_two, Matrix.one_apply, Unitary.coe_inv, hc]
+  rfl
+
+omit rep_mul in
+/-- The conjugate component symbol `H̄^1` is a joint eigenvector of all four torus
+  generators, at the gauge weight `(0, 0, -1, 3)`. -/
+lemma rep_gaugeTorusGen_barHiggsComponent_one (i : Fin 4) :
+    rep (gaugeTorusGen i) (h.barHiggsComponent 1)
+      = ((expI : ℂ) ^ GaugeWeight.coord (0, 0, -1, 3) i) • h.barHiggsComponent 1 := by
+  have hc : (starRingEnd ℂ) (expI : ℂ) = ((expI : ℂ))⁻¹ := expI_inv_eq_star.symm
+  rw [h.rep_barHiggsComponent]
+  fin_cases i <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
+      Fin.sum_univ_two, Matrix.one_apply, Unitary.coe_inv, hc]
+  rfl
+
+omit rep_mul in
+/-- The gauge weight decomposition on the submodule `barHiggsSubmodule`.
+
+  The conjugate Higgs is a colour singlet of hypercharge `+3`, and its two component symbols
+  carry isospin weights `+1` and `-1`; so the submodule splits into the two weight lines
+  `span {H̄^0}` and `span {H̄^1}`, at `(0, 0, 1, 3)` and `(0, 0, -1, 3)`.
+
+  As for `higgsSubmoduleGaugeWeight` the zero-weight piece is `⊥`, so no nonzero term linear
+  in the conjugate Higgs is gauge invariant. -/
+noncomputable def barHiggsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+    GaugeWeightDecomposition rep h.barHiggsSubmodule where
+  piece := fun w =>
+    if w = (0, 0, 1, 3) then Submodule.span ℂ {h.barHiggsComponent 0}
+    else if w = (0, 0, -1, 3) then Submodule.span ℂ {h.barHiggsComponent 1} else ⊥
+  supp := {(0, 0, 1, 3), (0, 0, -1, 3)}
+  piece_le := by
+    have hz : ∀ i : Fin 4, Submodule.span ℂ {h.barHiggsComponent 0}
+        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
+          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, 1, 3) i) := fun i =>
+      (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_barHiggsComponent_zero i))
+    have ho : ∀ i : Fin 4, Submodule.span ℂ {h.barHiggsComponent 1}
+        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
+          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, -1, 3) i) := fun i =>
+      (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_barHiggsComponent_one i))
+    intro w x hx i
+    rcases eq_or_ne w (0, 0, 1, 3) with rfl | hw0
+    · rw [if_pos rfl] at hx
+      exact Module.End.mem_eigenspace_iff.mp (hz i hx)
+    · rcases eq_or_ne w (0, 0, -1, 3) with rfl | hw1
+      · rw [if_neg hw0, if_pos rfl] at hx
+        exact Module.End.mem_eigenspace_iff.mp (ho i hx)
+      · rw [if_neg hw0, if_neg hw1, Submodule.mem_bot] at hx
+        subst hx
+        simp
+  piece_eq_bot := by
+    intro w hw
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hw
+    rw [if_neg hw.1, if_neg hw.2]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun w => ?_) ?_
+    · rcases eq_or_ne w (0, 0, 1, 3) with rfl | hw0
+      · rw [if_pos rfl]
+        exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+          (h.barHiggsComponent_mem_barHiggsSubmodule 0)
+      · rcases eq_or_ne w (0, 0, -1, 3) with rfl | hw1
+        · rw [if_neg hw0, if_pos rfl]
+          exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+            (h.barHiggsComponent_mem_barHiggsSubmodule 1)
+        · rw [if_neg hw0, if_neg hw1]
+          exact bot_le
+    · rw [h.barHiggsSubmodule_eq_span_barHiggsComponents, Submodule.span_le]
+      rintro _ ⟨j, rfl⟩
+      fin_cases j
+      · refine Submodule.mem_iSup_of_mem (0, 0, 1, 3) ?_
+        rw [if_pos rfl]
+        exact Submodule.mem_span_singleton_self _
+      · refine Submodule.mem_iSup_of_mem (0, 0, -1, 3) ?_
+        rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_span_singleton_self _
+
+omit rep_mul in
+lemma higgsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH) :
+    (h.higgsSubmoduleGaugeWeight).supp = {(0, 0, -1, -3), (0, 0, 1, -3)} := by
+  rfl
+
+omit rep_mul in
+lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH) :
+    (h.barHiggsSubmoduleGaugeWeight).supp = {(0, 0, 1, 3), (0, 0, -1, 3)} := by
+  rfl
+
+/-- **The gauge weight decomposition of the scalar potential terms.** Read straight off
+  `scalarPotentialSubmodule_eq_higgs`: the unit contributes `one`, the two symbol spans
+  contribute their own decompositions, every product of them is handled by `mul`, and the
+  fifteen summands are joined by `sup`. -/
+noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+    GaugeWeightDecomposition rep h.scalarPotentialSubmodule :=
+  let d := h.higgsSubmoduleGaugeWeight
+  let d' := h.barHiggsSubmoduleGaugeWeight
+  (((((((((((((((GaugeWeightDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup
+      d).sup
+      d').sup
+      (d.mul rep_mul d)).sup
+      (d.mul rep_mul d')).sup
+      (d'.mul rep_mul d')).sup
+      ((d.mul rep_mul d).mul rep_mul d)).sup
+      ((d.mul rep_mul d).mul rep_mul d')).sup
+      ((d.mul rep_mul d').mul rep_mul d')).sup
+      ((d'.mul rep_mul d').mul rep_mul d')).sup
+      (((d.mul rep_mul d).mul rep_mul d).mul rep_mul d)).sup
+      (((d.mul rep_mul d).mul rep_mul d).mul rep_mul d')).sup
+      (((d.mul rep_mul d).mul rep_mul d').mul rep_mul d')).sup
+      (((d.mul rep_mul d').mul rep_mul d').mul rep_mul d')).sup
+      (((d'.mul rep_mul d').mul rep_mul d').mul rep_mul d')).copy _
+    h.scalarPotentialSubmodule_eq_higgs
+
+def higgsQuadraticZeroGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+   Submodule.span ℂ
+      {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
+
+open GaugeWeightDecomposition in
+lemma scalarPotentialSubmoduleGaugeWeight_peice_zero (h : IsHiggsAlgebraValued B rep H barH) :
+    let H2 :=  Submodule.span ℂ
+      {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
+    (h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0 =
+    1 ⊔ H2 ⊔ H2 * H2 := by
+  dsimp only [scalarPotentialSubmoduleGaugeWeight, GaugeWeightDecomposition.copy_piece,
+    GaugeWeightDecomposition.sup_piece, GaugeWeightDecomposition.one_piece, ↓dreduceIte,
+    Submodule.zero_eq_bot]
+  simp (disch := (try simp only [higgsSubmoduleGaugeWeight, barHiggsSubmoduleGaugeWeight,
+    GaugeWeightDecomposition.one, GaugeWeightDecomposition.mul_supp]; try decide)) only
+    [GaugeWeightDecomposition.piece_eq_zero_of_not_mem_supp, sup_bot_eq]
+  simp only [GaugeWeightDecomposition.mul_piece_eq_sub', barHiggsSubmoduleGaugeWeight_supp
+  , higgsSubmoduleGaugeWeight_supp, Finset.iSup_insert, Finset.iSup_singleton]
+  simp (disch := (try simp only [higgsSubmoduleGaugeWeight, barHiggsSubmoduleGaugeWeight,
+    GaugeWeightDecomposition.one, GaugeWeightDecomposition.mul_supp]; try decide))
+    [GaugeWeightDecomposition.piece_eq_zero_of_not_mem_supp]
+  simp [barHiggsSubmoduleGaugeWeight,  higgsSubmoduleGaugeWeight, Submodule.span_mul_span]
+  rw [← Submodule.span_mul_span, Submodule.span_insert]
+  simp only [Submodule.sup_mul, Submodule.mul_sup, Submodule.span_mul_span,
+    Set.singleton_mul_singleton]
+  have hHH : ∀ i j, h.higgsComponent i * h.higgsComponent j
+      = h.higgsComponent j * h.higgsComponent i := fun i j => (h.H_comm_H _ _).eq
+  have hbH : ∀ i j, h.barHiggsComponent i * h.higgsComponent j
+      = h.higgsComponent j * h.barHiggsComponent i := fun i j => (h.H_comm_barH _ _).symm.eq
+  have hbb : ∀ i j, h.barHiggsComponent i * h.barHiggsComponent j
+      = h.barHiggsComponent j * h.barHiggsComponent i := fun i j => (h.barH_comm_barH _ _).eq
+  have hHH' : ∀ i j (x : B), h.higgsComponent i * (h.higgsComponent j * x)
+      = h.higgsComponent j * (h.higgsComponent i * x) := fun i j x => by
+    rw [← mul_assoc, hHH, mul_assoc]
+  have hbH' : ∀ i j (x : B), h.barHiggsComponent i * (h.higgsComponent j * x)
+      = h.higgsComponent j * (h.barHiggsComponent i * x) := fun i j x => by
+    rw [← mul_assoc, hbH, mul_assoc]
+  simp only [mul_assoc, hHH, hHH', hbH', hbb]
+  simp only [sup_idem]
+
+
+end IsHiggsAlgebraValued
 
 end StandardModel
