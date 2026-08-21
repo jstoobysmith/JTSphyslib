@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.IsospinDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
@@ -635,6 +636,352 @@ lemma scalarPotentialSubmoduleGaugeWeight_peice_zero (h : IsHiggsAlgebraValued B
   simp only [mul_assoc, hHH, hHH', hbH', hbb]
   simp only [sup_idem]
 
+
+/-!
+
+## SU(2) permutation decomposition
+
+-/
+
+omit rep_mul in
+/-- The Weyl element sends `H⁰` to `H¹`. -/
+lemma rep_gaugeSU2Perm_higgsComponent_zero :
+    rep gaugeSU2Perm (h.higgsComponent 0) = h.higgsComponent 1 := by
+  rw [h.rep_higgsComponent]
+  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
+    Fin.sum_univ_two]
+
+omit rep_mul in
+/-- The Weyl element sends `H¹` to `-H⁰`. -/
+lemma rep_gaugeSU2Perm_higgsComponent_one :
+    rep gaugeSU2Perm (h.higgsComponent 1) = -h.higgsComponent 0 := by
+  rw [h.rep_higgsComponent]
+  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
+    Fin.sum_univ_two]
+
+omit rep_mul in
+/-- The Weyl element sends `H̄⁰` to `H̄¹`. -/
+lemma rep_gaugeSU2Perm_barHiggsComponent_zero :
+    rep gaugeSU2Perm (h.barHiggsComponent 0) = h.barHiggsComponent 1 := by
+  rw [h.rep_barHiggsComponent]
+  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
+    Fin.sum_univ_two]
+
+omit rep_mul in
+/-- The Weyl element sends `H̄¹` to `-H̄⁰`. -/
+lemma rep_gaugeSU2Perm_barHiggsComponent_one :
+    rep gaugeSU2Perm (h.barHiggsComponent 1) = -h.barHiggsComponent 0 := by
+  rw [h.rep_barHiggsComponent]
+  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
+    Fin.sum_univ_two]
+
+/-- **The Weyl decomposition of the zero-weight quadratic.** The Weyl element exchanges
+  `H⁰H̄⁰` and `H¹H̄¹`, so the two-dimensional space `higgsQuadraticZeroGaugeWeight` splits
+  into the even line spanned by `H⁰H̄⁰ + H¹H̄¹` — this is `H†H`, the genuine invariant — and
+  the odd line spanned by `H⁰H̄⁰ - H¹H̄¹`, which is `H†σ³H`, the neutral component of the
+  isospin triplet. Only the first survives `mem_zero_of_invariant`. -/
+noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued B rep H barH) :
+    SU2PermDecomposition rep h.higgsQuadraticZeroGaugeWeight where
+  piece := fun w =>
+    if w = 0 then Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
+        + h.higgsComponent 1 * h.barHiggsComponent 1}
+    else if w = 2 then Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
+        - h.higgsComponent 1 * h.barHiggsComponent 1}
+    else ⊥
+  piece_le := by
+    have hplus : rep gaugeSU2Perm (h.higgsComponent 0 * h.barHiggsComponent 0
+        + h.higgsComponent 1 * h.barHiggsComponent 1)
+        = h.higgsComponent 0 * h.barHiggsComponent 0
+          + h.higgsComponent 1 * h.barHiggsComponent 1 := by
+      rw [map_add, rep_mul, rep_mul, h.rep_gaugeSU2Perm_higgsComponent_zero,
+        h.rep_gaugeSU2Perm_barHiggsComponent_zero, h.rep_gaugeSU2Perm_higgsComponent_one,
+        h.rep_gaugeSU2Perm_barHiggsComponent_one, neg_mul_neg, add_comm]
+    have hminus : rep gaugeSU2Perm (h.higgsComponent 0 * h.barHiggsComponent 0
+        - h.higgsComponent 1 * h.barHiggsComponent 1)
+        = -(h.higgsComponent 0 * h.barHiggsComponent 0
+          - h.higgsComponent 1 * h.barHiggsComponent 1) := by
+      rw [map_sub, rep_mul, rep_mul, h.rep_gaugeSU2Perm_higgsComponent_zero,
+        h.rep_gaugeSU2Perm_barHiggsComponent_zero, h.rep_gaugeSU2Perm_higgsComponent_one,
+        h.rep_gaugeSU2Perm_barHiggsComponent_one, neg_mul_neg, neg_sub]
+    intro k x hx
+    rcases eq_or_ne k 0 with rfl | hk0
+    · rw [if_pos rfl, Submodule.mem_span_singleton] at hx
+      obtain ⟨c, rfl⟩ := hx
+      rw [map_smul, hplus, su2PermSign_zero, one_smul]
+    · rcases eq_or_ne k 2 with rfl | hk2
+      · rw [if_neg hk0, if_pos rfl, Submodule.mem_span_singleton] at hx
+        obtain ⟨c, rfl⟩ := hx
+        rw [map_smul, hminus, su2PermSign_two, smul_neg, neg_smul, one_smul]
+      · rw [if_neg hk0, if_neg hk2, Submodule.mem_bot] at hx
+        subst hx
+        simp
+  iSup_piece := by
+    have hcases : ∀ j : ZMod 4, j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by decide
+    refine le_antisymm (iSup_le fun k => ?_) ?_
+    · rcases hcases k with rfl | rfl | rfl | rfl
+      · rw [if_pos rfl, higgsQuadraticZeroGaugeWeight, Submodule.span_le,
+          Set.singleton_subset_iff]
+        exact Submodule.add_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+      · rw [if_neg (by decide), if_neg (by decide)]
+        exact bot_le
+      · rw [if_neg (by decide), if_pos rfl, higgsQuadraticZeroGaugeWeight, Submodule.span_le,
+          Set.singleton_subset_iff]
+        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
+          (Submodule.subset_span (by simp))
+      · rw [if_neg (by decide), if_neg (by decide)]
+        exact bot_le
+    · refine le_trans ?_ (sup_le (le_iSup _ (0 : ZMod 4)) (le_iSup _ (2 : ZMod 4)))
+      rw [if_pos rfl, if_neg (by decide : ¬(2 : ZMod 4) = 0), if_pos rfl,
+        higgsQuadraticZeroGaugeWeight, Submodule.span_le]
+      have hp := Submodule.mem_sup_left (S := Submodule.span ℂ
+        {h.higgsComponent 0 * h.barHiggsComponent 0
+          + h.higgsComponent 1 * h.barHiggsComponent 1})
+        (T := Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
+          - h.higgsComponent 1 * h.barHiggsComponent 1})
+        (Submodule.mem_span_singleton_self _)
+      have hm := Submodule.mem_sup_right (S := Submodule.span ℂ
+        {h.higgsComponent 0 * h.barHiggsComponent 0
+          + h.higgsComponent 1 * h.barHiggsComponent 1})
+        (T := Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
+          - h.higgsComponent 1 * h.barHiggsComponent 1})
+        (Submodule.mem_span_singleton_self _)
+      rintro x (rfl | rfl)
+      · have hs := Submodule.smul_mem _ (2⁻¹ : ℂ) (Submodule.add_mem _ hp hm)
+        rwa [show (2⁻¹ : ℂ) • ((h.higgsComponent 0 * h.barHiggsComponent 0
+          + h.higgsComponent 1 * h.barHiggsComponent 1)
+          + (h.higgsComponent 0 * h.barHiggsComponent 0
+            - h.higgsComponent 1 * h.barHiggsComponent 1))
+          = h.higgsComponent 0 * h.barHiggsComponent 0 from by module] at hs
+      · have hs := Submodule.smul_mem _ (2⁻¹ : ℂ) (Submodule.sub_mem _ hp hm)
+        rwa [show (2⁻¹ : ℂ) • ((h.higgsComponent 0 * h.barHiggsComponent 0
+          + h.higgsComponent 1 * h.barHiggsComponent 1)
+          - (h.higgsComponent 0 * h.barHiggsComponent 0
+            - h.higgsComponent 1 * h.barHiggsComponent 1))
+          = h.higgsComponent 1 * h.barHiggsComponent 1 from by module] at hs
+
+/-- **The Weyl decomposition of the invariant candidates.** Read straight off
+  `scalarPotentialSubmoduleGaugeWeight_peice_zero`: the constants contribute `one`, the
+  quadratic `H†H` sector contributes `higgsQuadraticZeroGaugeWeightSU2Perm`, the quartic
+  sector is its `mul` with itself, and the three are joined by `sup`. -/
+noncomputable def scalarPotentialSubmoduleGaugeWeightZeroSU2Perm
+    (h : IsHiggsAlgebraValued B rep H barH) :
+    SU2PermDecomposition rep ((h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0) :=
+  let d := h.higgsQuadraticZeroGaugeWeightSU2Perm rep_mul
+  (((SU2PermDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup d).sup
+      (d.mul rep_mul d)).copy _
+    (h.scalarPotentialSubmoduleGaugeWeight_peice_zero rep_mul)
+
+/-- The gauge-invariant quadratic `H†H`, the Higgs mass term. -/
+noncomputable def massTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
+        + h.higgsComponent 1 * h.barHiggsComponent 1
+
+/-- The neutral component `H†σ³H` of the isospin triplet. It has gauge weight zero and is
+  odd under the Weyl element, so it is discarded by `SU2PermDecomposition`; its *square* is
+  even, and survives both sieves without being gauge invariant. -/
+noncomputable def tripletTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
+        - h.higgsComponent 1 * h.barHiggsComponent 1
+
+/-- **The mass term is gauge invariant.** `H†H` is fixed by every gauge transformation:
+  the hypercharge phases cancel between `H` and `H̄`, and the `SU(2)` matrix cancels against
+  its conjugate by unitarity. -/
+lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH) (g : GaugeGroupI) :
+    rep g h.massTerm = h.massTerm := by
+  have hu : ((g⁻¹).toU1 : ℂ) * (starRingEnd ℂ) ((g⁻¹).toU1 : ℂ) = 1 :=
+    Unitary.mul_star_self_of_mem (g⁻¹).toU1.2
+  have hM : star ((g⁻¹).toSU2.1) * (g⁻¹).toSU2.1 = 1 :=
+    Matrix.mem_unitaryGroup_iff'.mp (g⁻¹).toSU2.2.1
+  have hM00 := congrFun (congrFun hM 0) 0
+  have hM01 := congrFun (congrFun hM 0) 1
+  have hM10 := congrFun (congrFun hM 1) 0
+  have hM11 := congrFun (congrFun hM 1) 1
+  simp only [Matrix.mul_apply, Fin.sum_univ_two, Matrix.one_apply, star_eq_conjTranspose,
+    Matrix.conjTranspose_apply, reduceIte, Complex.star_def,
+    show ¬((0 : Fin 2) = 1) from by decide,
+    show ¬((1 : Fin 2) = 0) from by decide] at hM00 hM01 hM10 hM11
+  have hM01' := congrArg (starRingEnd ℂ) hM01
+  have hM10' := congrArg (starRingEnd ℂ) hM10
+  simp only [map_add, map_mul, Complex.conj_conj, map_zero] at hM01' hM10'
+  have hu3 : ((g⁻¹).toU1 : ℂ) ^ 3 * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3) = 1 := by
+    rw [map_pow, ← mul_pow, hu, one_pow]
+  have key : ∀ a b : ℂ, (((g⁻¹).toU1 : ℂ) ^ 3 * a) * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3 * b)
+      = a * (starRingEnd ℂ) b := by
+    intro a b
+    rw [map_mul]
+    calc (((g⁻¹).toU1 : ℂ) ^ 3 * a) * ((starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3)
+          * (starRingEnd ℂ) b)
+        = (((g⁻¹).toU1 : ℂ) ^ 3 * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3))
+          * (a * (starRingEnd ℂ) b) := by ring
+      _ = a * (starRingEnd ℂ) b := by rw [hu3, one_mul]
+  rw [massTerm, map_add, rep_mul, rep_mul, h.rep_higgsComponent, h.rep_barHiggsComponent,
+    h.rep_higgsComponent, h.rep_barHiggsComponent]
+  simp only [Fin.sum_univ_two, add_mul, mul_add, smul_mul_smul_comm, key]
+  match_scalars
+  · linear_combination hM00
+  · linear_combination hM10'
+  · linear_combination hM01'
+  · linear_combination hM11
+
+/-- **The even part of the weight-zero potential terms.** Note the fourth generator: the
+  quartic sector contributes `odd * odd` as well as `even * even`, so `(H†σ³H)²` is here
+  alongside `1`, `H†H` and `(H†H)²`. -/
+lemma scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero
+    (h : IsHiggsAlgebraValued B rep H barH) :
+    (h.scalarPotentialSubmoduleGaugeWeightZeroSU2Perm rep_mul).piece 0 =
+    Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
+      h.tripletTerm * h.tripletTerm} := by
+  dsimp only [scalarPotentialSubmoduleGaugeWeightZeroSU2Perm, SU2PermDecomposition.copy_piece,
+    SU2PermDecomposition.sup_piece, SU2PermDecomposition.one_piece]
+  rw [SU2PermDecomposition.mul_piece_eq]
+  dsimp only [higgsQuadraticZeroGaugeWeightSU2Perm]
+  simp only [show ((0 : ZMod 4) - 1) = 3 from by decide,
+    show ((0 : ZMod 4) - 2) = 2 from by decide, show ((0 : ZMod 4) - 3) = 1 from by decide,
+    show ¬((1 : ZMod 4) = 0) from by decide, show ¬((1 : ZMod 4) = 2) from by decide,
+    show ¬((2 : ZMod 4) = 0) from by decide, show ¬((3 : ZMod 4) = 0) from by decide,
+    show ¬((3 : ZMod 4) = 2) from by decide,
+    reduceIte, Submodule.mul_bot, sup_bot_eq,
+    Submodule.span_mul_span, Set.singleton_mul_singleton]
+  rw [massTerm, tripletTerm, Submodule.one_eq_span]
+  simp only [Submodule.span_insert, sup_assoc]
+
+lemma invariant_mem_span_massTerm_of_mem_scalarPotentialSubmodule
+    (h : IsHiggsAlgebraValued B rep H barH) (x : B)
+    (hx : x ∈ h.scalarPotentialSubmodule) (x_inv : ∀ g, rep g x = x) :
+    x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
+  have hmem : !![(1 - Complex.I) / 2, (-1 - Complex.I) / 2;
+      (1 - Complex.I) / 2, (1 + Complex.I) / 2] ∈ specialUnitaryGroup (Fin 2) ℂ := by
+    rw [Matrix.mem_specialUnitaryGroup_iff]
+    refine ⟨?_, ?_⟩
+    · rw [Matrix.mem_unitaryGroup_iff]
+      ext a b
+      fin_cases a <;> fin_cases b <;>
+        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
+          Matrix.conjTranspose_apply, map_div₀, map_ofNat,
+          Complex.ext_iff] <;> norm_num
+    · rw [Matrix.det_fin_two_of]
+      simp [Complex.ext_iff]
+      norm_num
+  set g : GaugeGroupI := ⟨1, ⟨_, hmem⟩, 1⟩ with hg
+  have hginv : ((g⁻¹).toSU2 : Matrix (Fin 2) (Fin 2) ℂ)
+      = !![(1 + Complex.I)/2, (1 + Complex.I)/2; (-1 + Complex.I)/2, (1 - Complex.I)/2] := by
+    rw [map_inv, ← Matrix.star_eq_inv, Matrix.specialUnitaryGroup.coe_star]
+    ext a b
+    fin_cases a <;> fin_cases b <;>
+      simp [hg, GaugeGroupI.toSU2, Complex.conj_I, Complex.ext_iff]
+  have hU1 : ((g⁻¹).toU1 : ℂ) = 1 := by simp [hg, GaugeGroupI.toU1]
+  have hH0 : rep g (h.higgsComponent 0)
+      = ((1 + Complex.I)/2) • h.higgsComponent 0 + ((1 + Complex.I)/2) • h.higgsComponent 1 := by
+    rw [h.rep_higgsComponent, Fin.sum_univ_two, hU1, hginv]
+    simp
+  have hH1 : rep g (h.higgsComponent 1)
+      = ((-1 + Complex.I)/2) • h.higgsComponent 0 + ((1 - Complex.I)/2) • h.higgsComponent 1 := by
+    rw [h.rep_higgsComponent, Fin.sum_univ_two, hU1, hginv]
+    simp
+  have hB0 : rep g (h.barHiggsComponent 0)
+      = ((1 - Complex.I)/2) • h.barHiggsComponent 0
+        + ((1 - Complex.I)/2) • h.barHiggsComponent 1 := by
+    rw [h.rep_barHiggsComponent, Fin.sum_univ_two, hU1, hginv]
+    simp [map_div₀, Complex.conj_I, map_ofNat]
+    module
+  have hB1 : rep g (h.barHiggsComponent 1)
+      = ((-1 - Complex.I)/2) • h.barHiggsComponent 0
+        + ((1 + Complex.I)/2) • h.barHiggsComponent 1 := by
+    rw [h.rep_barHiggsComponent, Fin.sum_univ_two, hU1, hginv]
+    simp [map_div₀, Complex.conj_I, map_ofNat]
+    module
+  have hn3 : rep g h.tripletTerm = h.higgsComponent 0 * h.barHiggsComponent 1
+      + h.higgsComponent 1 * h.barHiggsComponent 0 := by
+    rw [tripletTerm, map_sub, rep_mul, rep_mul, hH0, hB0, hH1, hB1]
+    simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm]
+    match_scalars <;> simp [Complex.ext_iff] <;> norm_num
+  have hn1 : rep g (h.higgsComponent 0 * h.barHiggsComponent 1
+      + h.higgsComponent 1 * h.barHiggsComponent 0)
+      = Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
+        - h.higgsComponent 1 * h.barHiggsComponent 0) := by
+    rw [map_add, rep_mul, rep_mul, hH0, hB0, hH1, hB1]
+    simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_sub]
+    match_scalars <;> simp [Complex.ext_iff] <;> norm_num
+  have hHH : ∀ i j, h.higgsComponent i * h.higgsComponent j
+      = h.higgsComponent j * h.higgsComponent i := fun i j => (h.H_comm_H _ _).eq
+  have hbH : ∀ i j, h.barHiggsComponent i * h.higgsComponent j
+      = h.higgsComponent j * h.barHiggsComponent i := fun i j => (h.H_comm_barH _ _).symm.eq
+  have hbb : ∀ i j, h.barHiggsComponent i * h.barHiggsComponent j
+      = h.barHiggsComponent j * h.barHiggsComponent i := fun i j => (h.barH_comm_barH _ _).eq
+  have hHH' : ∀ i j (y : B), h.higgsComponent i * (h.higgsComponent j * y)
+      = h.higgsComponent j * (h.higgsComponent i * y) := fun i j y => by
+    rw [← mul_assoc, hHH, mul_assoc]
+  have hbH' : ∀ i j (y : B), h.barHiggsComponent i * (h.higgsComponent j * y)
+      = h.higgsComponent j * (h.barHiggsComponent i * y) := fun i j y => by
+    rw [← mul_assoc, hbH, mul_assoc]
+  have fierz : h.tripletTerm * h.tripletTerm
+      + (h.higgsComponent 0 * h.barHiggsComponent 1 + h.higgsComponent 1 * h.barHiggsComponent 0)
+        * (h.higgsComponent 0 * h.barHiggsComponent 1
+          + h.higgsComponent 1 * h.barHiggsComponent 0)
+      + (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
+          - h.higgsComponent 1 * h.barHiggsComponent 0))
+        * (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
+          - h.higgsComponent 1 * h.barHiggsComponent 0))
+      = h.massTerm * h.massTerm := by
+    rw [tripletTerm, massTerm]
+    simp only [sub_mul, mul_sub, add_mul, mul_add, smul_mul_assoc, mul_smul_comm,
+      mul_assoc, hHH', hbH', hbb]
+    match_scalars <;> simp [Complex.ext_iff]
+  have hT3 : ∀ y : B, rep (g * g) y = rep g (rep g y) := by
+    intro y
+    rw [map_mul]
+    rfl
+  have e1 : rep g (h.tripletTerm * h.tripletTerm)
+      = (h.higgsComponent 0 * h.barHiggsComponent 1 + h.higgsComponent 1 * h.barHiggsComponent 0)
+        * (h.higgsComponent 0 * h.barHiggsComponent 1
+          + h.higgsComponent 1 * h.barHiggsComponent 0) := by
+    rw [rep_mul, hn3]
+  have e2 : rep (g * g) (h.tripletTerm * h.tripletTerm)
+      = (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
+          - h.higgsComponent 1 * h.barHiggsComponent 0))
+        * (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
+          - h.higgsComponent 1 * h.barHiggsComponent 0)) := by
+    rw [hT3, e1, rep_mul, hn1]
+  have hone : ∀ k : GaugeGroupI, rep k (1 : B) = 1 := fun k => map_one (h.repAlgHom rep_mul k)
+  have hm : ∀ k : GaugeGroupI, rep k h.massTerm = h.massTerm := massTerm_invariant rep_mul h
+  have hmm : ∀ k : GaugeGroupI, rep k (h.massTerm * h.massTerm) = h.massTerm * h.massTerm :=
+    fun k => by rw [rep_mul, hm]
+  -- the two sieves put `x` in a four-generator span
+  have hspan : x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
+      h.tripletTerm * h.tripletTerm} := by
+    rw [← h.scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero rep_mul]
+    exact SU2PermDecomposition.mem_zero_of_invariant _
+      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx x_inv) x_inv
+  -- averaging over the three axes maps that span into the three-generator one
+  have s1 : (1 : B) ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
+    Submodule.subset_span (by simp)
+  have s2 : h.massTerm ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
+    Submodule.subset_span (by simp)
+  have s3 : h.massTerm * h.massTerm
+      ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
+    Submodule.subset_span (by simp)
+  set T : B →ₗ[ℂ] B := LinearMap.id + rep g + rep (g * g) with hT
+  have hTapp : ∀ y : B, T y = y + rep g y + rep (g * g) y := fun y => rfl
+  have hmaple : Submodule.map T (Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
+        h.tripletTerm * h.tripletTerm})
+      ≤ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
+    rw [Submodule.map_span_le]
+    rintro y (rfl | rfl | rfl | rfl) <;> rw [hTapp]
+    · rw [hone, hone]
+      exact Submodule.add_mem _ (Submodule.add_mem _ s1 s1) s1
+    · rw [hm, hm]
+      exact Submodule.add_mem _ (Submodule.add_mem _ s2 s2) s2
+    · rw [hmm, hmm]
+      exact Submodule.add_mem _ (Submodule.add_mem _ s3 s3) s3
+    · rw [e1, e2, fierz]
+      exact s3
+  have hx3 : T x = (3 : ℂ) • x := by
+    rw [hTapp, x_inv, x_inv]
+    module
+  have hfin : (3 : ℂ) • x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
+    rw [← hx3]
+    exact hmaple ⟨x, hspan, rfl⟩
+  have hfin' := Submodule.smul_mem _ ((3 : ℂ)⁻¹) hfin
+  rwa [smul_smul, inv_mul_cancel₀ (by norm_num : (3 : ℂ) ≠ 0), one_smul] at hfin'
 
 end IsHiggsAlgebraValued
 
