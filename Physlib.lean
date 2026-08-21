@@ -232,6 +232,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.JetAlgebra.Covariance.Basic
 public import Physlib.Particles.StandardModel.JetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.JetAlgebra.Invariants
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
@@ -250,6 +251,8 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAct
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.InfinitesimalAction
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic

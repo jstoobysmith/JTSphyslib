@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.CovariantDeriv
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 /-!
 # The gauge action on the gauge-boson jet algebra

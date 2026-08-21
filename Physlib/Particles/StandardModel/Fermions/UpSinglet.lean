@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.CovariantDeriv
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
