@@ -86,6 +86,10 @@ open TensorProduct
 
 -/
 
+TODO "Move FermionSpace to a seperate file by itself."
+
+TODO "For FermionSpace define the infinitismal action."
+
 /-- The total target space of the Standard Model fermions: the direct sum of three
   generations each of the lepton doublet, the charged-lepton singlet, the quark doublet, and
   the up- and down-type quark singlets. The three generations of a species sit together, so

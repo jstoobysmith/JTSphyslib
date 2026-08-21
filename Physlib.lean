@@ -227,12 +227,12 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDer
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness
+public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeGraded
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.JetAlgebra.Covariance.Basic
 public import Physlib.Particles.StandardModel.JetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.JetAlgebra.Invariants
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv

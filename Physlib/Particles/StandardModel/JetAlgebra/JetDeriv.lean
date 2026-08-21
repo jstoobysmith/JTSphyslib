@@ -270,6 +270,15 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
   exact add₃_comp_comm h11 h12 (hWG _ _) h21 h22 (hWG _ _) (hWG _ _).symm
     (hWG _ _).symm h33
 
+/-!
+
+## The iterated derivative
+
+-/
+
+TODO "Define the iterated derivative, and show that the iterated derivatives span
+  the adjoin to give the whole algebra."
+
 end JetAlgebra
 
 end StandardModel
