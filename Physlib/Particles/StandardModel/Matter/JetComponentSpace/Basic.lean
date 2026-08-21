@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.CovariantDeriv
 public import Mathlib.LinearAlgebra.Contraction
+public import Mathlib.LinearAlgebra.TensorProduct.Prod
 /-!
 # The jet component space of a matter field
 
@@ -738,5 +739,113 @@ lemma JetComponentSpace.comap_jetDeriv (f : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin
     LinearMap.prodMap_comp, LinearMap.prodMap_comp, ← TensorProduct.map_comp,
     ← TensorProduct.map_comp, ← TensorProduct.map_comp, ← TensorProduct.map_comp]
   simp only [LinearMap.comp_id, LinearMap.id_comp]
+
+/-!
+
+## The mass-weight scaling
+
+The mass dimension is tracked multiplicatively, through a scaling action: for a field of
+*mass weight* `w` — twice the mass dimension, kept integral so that fermions of dimension
+`3/2` carry weight `3` — the generator `∂_s φ_α` scales by `c ^ (w + 2 |s|)`, one factor
+of `c ^ 2` per derivative. The scaling on the component space below lifts functorially to
+the bosonic and fermionic algebras, where it defines their mass-dimension grading.
+
+-/
+
+/-- The mass-weight scaling on the jet component space of a field of mass weight `w`
+  (twice the mass dimension): the generator `∂_s φ_α` and its conjugate are scaled by
+  `c ^ (w + 2 |s|)`, through the derivative-degree scaling `DerivAlgebraComplex.gradeScale`
+  on the derivative label. -/
+noncomputable def JetComponentSpace.massWeightScale (w : ℕ) (c : ℂ) :
+    JetComponentSpace V →ₗ[ℂ] JetComponentSpace V :=
+  c ^ w • LinearMap.prodMap
+    (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
+    (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
+
+/-- On an unconjugated component function `∂_s φ_α` the mass-weight scaling is
+  multiplication by `c ^ (w + 2 |s|)`. -/
+lemma JetComponentSpace.massWeightScale_fst_basis_tmul (w : ℕ) (c : ℂ)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V)
+    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)) :
+    (JetComponentSpace.massWeightScale w c
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, y) : JetComponentSpace V)).1
+      = c ^ (w + 2 * Multiset.card s) • (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) := by
+  simp only [massWeightScale, LinearMap.smul_apply, Prod.smul_fst, LinearMap.prodMap_apply,
+    TensorProduct.map_tmul, AlgHom.toLinearMap_apply, DerivAlgebraComplex.gradeScale_basis,
+    LinearMap.id_apply, TensorProduct.smul_tmul', ← pow_mul, pow_add, mul_smul,
+    mul_comm 2 (Multiset.card s)]
+
+@[simp]
+lemma JetComponentSpace.massWeightScale_fst (w : ℕ) (c : ℂ) (v : JetComponentSpace V) :
+    (JetComponentSpace.massWeightScale w c v).1
+      = c ^ w • TensorProduct.map
+          (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.1 := rfl
+
+@[simp]
+lemma JetComponentSpace.massWeightScale_snd (w : ℕ) (c : ℂ) (v : JetComponentSpace V) :
+    (JetComponentSpace.massWeightScale w c v).2
+      = c ^ w • TensorProduct.map
+          (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.2 := rfl
+
+/-- The derivative-degree scaling intertwines multiplication by a single derivative
+  symbol up to one factor of the scaling parameter, on either half of the component
+  space. -/
+private lemma gradeScale_map_mulRight_basis {W : Type*} [AddCommGroup W] [Module ℂ W]
+    (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : DerivAlgebraComplex ⊗[ℂ] W) :
+    TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id
+      (TensorProduct.map (LinearMap.mulRight ℂ
+        (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id x)
+    = c ^ 2 • TensorProduct.map (LinearMap.mulRight ℂ
+        (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id
+        (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+          LinearMap.id x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp only [map_zero, smul_zero]
+  | add a b ha hb => simp only [map_add, ha, hb, smul_add]
+  | tmul a y =>
+    simp only [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply,
+      AlgHom.toLinearMap_apply, map_mul, DerivAlgebraComplex.gradeScale_basis,
+      Multiset.card_singleton, pow_one, mul_smul_comm, TensorProduct.smul_tmul']
+
+/-- **The total derivative carries mass weight two** on the component space: the scaling
+  intertwines the derivative shift up to a factor `c ^ 2`. -/
+lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3) :
+    (JetComponentSpace.massWeightScale (V := V) w c).comp (JetComponentSpace.jetDeriv μ)
+      = c ^ 2 • (JetComponentSpace.jetDeriv μ).comp
+          (JetComponentSpace.massWeightScale w c) := by
+  have key := fun {W : Type _} [AddCommGroup W] [Module ℂ W]
+      (x : DerivAlgebraComplex ⊗[ℂ] W) => gradeScale_map_mulRight_basis c μ x
+  refine LinearMap.ext fun v => Prod.ext ?_ ?_
+  · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_fst,
+      JetComponentSpace.massWeightScale_fst, JetComponentSpace.jetDeriv_fst, map_smul]
+    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V => c ^ w • z)
+      (key v.1)).trans (smul_comm _ _ _)
+  · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_snd,
+      JetComponentSpace.massWeightScale_snd, JetComponentSpace.jetDeriv_snd, map_smul]
+    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V) =>
+      c ^ w • z) (key v.2)).trans (smul_comm _ _ _)
+
+/-!
+
+## The component space of a direct sum
+
+-/
+
+/-- **The component space of a direct sum splits.** The component functions of a
+  `(V × W)`-valued field are those of a `V`-valued field together with those of a
+  `W`-valued field: the dual and the conjugate both distribute over the finite product, and
+  the derivative label is untouched. -/
+noncomputable def JetComponentSpace.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
+    [AddCommGroup W] [Module ℂ W] :
+    JetComponentSpace (V × W) ≃ₗ[ℂ] JetComponentSpace V × JetComponentSpace W :=
+  (LinearEquiv.prodCongr
+      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+        (Module.dualProdDualEquivDual ℂ V W).symm)
+      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+        (((ConjModule.prodEquiv (k := ℂ) (M := V) (N := W)).symm.dualMap).trans
+          (Module.dualProdDualEquivDual ℂ (ConjModule V) (ConjModule W)).symm))).trans <|
+    (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)
+        (TensorProduct.prodRight ℂ ℂ _ _ _)).trans
+      (LinearEquiv.prodProdProdComm ℂ _ _ _ _)
 
 end StandardModel

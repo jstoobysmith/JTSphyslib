@@ -802,6 +802,61 @@ noncomputable def dualRealJetAlgebraBasis :
     Basis (Multiset (Fin 1 ⊕ Fin 3)) ℝ (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) :=
   Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
 
+/-- The multiset basis of the dual derivative symbols, as a basis vector of the
+  symmetric algebra at the corresponding multi-index. -/
+lemma dualRealJetAlgebraBasis_apply (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    dualRealJetAlgebraBasis s =
+      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
+  rw [dualRealJetAlgebraBasis, Basis.reindex_apply, Equiv.symm_symm]
+  rfl
+
+/-- The multiset basis vectors of the real dual derivative slots multiply by adding the
+  multisets. -/
+lemma dualRealJetAlgebraBasis_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    dualRealJetAlgebraBasis s * dualRealJetAlgebraBasis t =
+      dualRealJetAlgebraBasis (s + t) := by
+  rw [dualRealJetAlgebraBasis_apply, dualRealJetAlgebraBasis_apply,
+    dualRealJetAlgebraBasis_apply, map_add]
+  simp only [Basis.symmetricAlgebra, Basis.map_apply,
+    show ∀ p, (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv p =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm p
+      from fun _ => rfl,
+    ← map_mul, MvPolynomial.coe_basisMonomials]
+  simp only [MvPolynomial.monomial_mul, mul_one]
+
+/-- The multiset basis of the real dual derivative slots at the empty multiset is the
+  unit. -/
+lemma dualRealJetAlgebraBasis_nil :
+    dualRealJetAlgebraBasis (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 := by
+  rw [dualRealJetAlgebraBasis_apply,
+    show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 by simp,
+    Basis.symmetricAlgebra, Basis.map_apply,
+    show (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv
+        ((MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) 0) =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm
+        ((MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) 0) from rfl,
+    show (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ)
+        = 1 from by
+      rw [MvPolynomial.coe_basisMonomials]
+      show MvPolynomial.monomial 0 1 = 1
+      rw [MvPolynomial.monomial_zero', MvPolynomial.C_1],
+    map_one]
+
+/-- The multiset basis of the real dual derivative slots at a singleton index. -/
+lemma dualRealJetAlgebraBasis_singleton (μ : Fin 1 ⊕ Fin 3) :
+    dualRealJetAlgebraBasis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+        (Lorentz.CoVector.basis.dualBasis μ) := by
+  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (Finsupp.single μ 1) =
+      MvPolynomial.X μ := rfl
+  rw [dualRealJetAlgebraBasis, Basis.reindex_apply, Equiv.symm_symm,
+    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      Finsupp.single μ 1 by simp,
+    Basis.symmetricAlgebra, Basis.map_apply, h]
+  simp
+
 noncomputable def RealBosonJetComponentSpace.basis :
     Basis L.RealBosonJetGenerator ℝ L.RealBosonJetComponentSpace :=
   (dualRealJetAlgebraBasis.tensorProduct

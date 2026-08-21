@@ -111,7 +111,12 @@ lemma iteratedD_mul (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A)
       abel
 
 
-class IsLorentzDeriv (rep : Representation ℂ SL(2,ℂ) A) (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) where
+/-- A family of operators indexed by the spacetime directions is a **Lorentz derivative**
+  when the representation of `SL(2,ℂ)` intertwines it through the columns of the Lorentz
+  matrix. The class needs only the module structure, so it applies uniformly to any
+  representation space. -/
+class IsLorentzDeriv {M : Type} [AddCommMonoid M] [Module ℂ M]
+    (rep : Representation ℂ SL(2,ℂ) M) (D : (Fin 1 ⊕ Fin 3) → M →ₗ[ℂ] M) where
   rep_deriv {Λ μ x} : rep Λ (D μ x) =
     ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • D a (rep Λ x)
 

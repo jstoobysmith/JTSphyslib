@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.DerivAlgebra
 public import Physlib.Mathematics.ConjModule
@@ -114,6 +115,10 @@ lemma val_smul (r : ℂ) (l : LeptonSinglet) : (r • l).val = r • l.val := rf
 /-- A basis on the charged-lepton singlets. -/
 noncomputable def basis : Module.Basis (Fin 2) ℂ LeptonSinglet :=
   Fermion.RightHandedWeyl.basis.map valLinEquiv.symm
+
+instance : Module.Finite ℂ LeptonSinglet := Module.Finite.of_basis basis
+
+instance : Module.Free ℂ LeptonSinglet := Module.Free.of_basis basis
 
 /-!
 
@@ -268,6 +273,86 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
   | .ℤ₆ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₆)
   | .ℤ₂ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₂)
   | .ℤ₃ => QuotientGroup.lift _ repGaugeGroupI (gaugeGroup_subgroup_le_ker_repGaugeGroupI .ℤ₃)
+
+/-!
+
+## G. The representation of the jet gauge group
+
+The charged-lepton singlet carries no colour or weak index, so a jet of gauge
+transformations acts on its jets purely through the hypercharge power series
+`(star u) ^ 6`, multiplying the jet-ring factor and leaving the Weyl factor untouched.
+
+-/
+
+open TensorProduct in
+/-- The `(1, 1)_{-6}` action of the jet gauge group on the jet space of the charged-lepton
+singlet: multiplication of the jet-ring factor by the hypercharge power series
+`(star u) ^ 6`. -/
+noncomputable def repJetGaugeGroupI :
+    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonSinglet) where
+  toFun U := LinearMap.rTensor LeptonSinglet
+    (LinearMap.mulLeft ℂ ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6))
+  map_one' := by
+    rw [show (star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6
+        = 1 from by simp, LinearMap.mulLeft_one, LinearMap.rTensor_id]
+    rfl
+  map_mul' U₁ U₂ := by
+    rw [show (star (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)) ^ 6
+          = (star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6
+            * (star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6 from by
+        rw [show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)
+            = ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
+            from rfl, star_mul', mul_pow, mul_comm],
+      show LinearMap.mulLeft ℂ
+          ((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6
+            * (star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6)
+        = (LinearMap.mulLeft ℂ ((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6)) ∘ₗ
+          (LinearMap.mulLeft ℂ ((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6)) from
+        LinearMap.ext fun z => mul_assoc _ _ z,
+      LinearMap.rTensor_comp]
+    rfl
+
+open TensorProduct in
+/-- The jet gauge action on a pure tensor of the jet space of the charged-lepton
+singlet. -/
+lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (f : JetRing) (ψ : LeptonSinglet) :
+    repJetGaugeGroupI U (f ⊗ₜ[ℂ] ψ)
+      = ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6 * f) ⊗ₜ[ℂ] ψ :=
+  LinearMap.rTensor_tmul _ _ _ _
+
+open TensorProduct in
+/-- **The jet gauge action on the jets of the charged-lepton singlet is fibrewise**: it
+commutes with multiplication by scalar jets. -/
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
+    (z : JetRing ⊗[ℂ] LeptonSinglet) :
+    repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => rw [smul_add, map_add, ha, hb, map_add, smul_add]
+  | tmul f ψ =>
+    rw [TensorProduct.smul_tmul', smul_eq_mul, repJetGaugeGroupI_tmul,
+      repJetGaugeGroupI_tmul, TensorProduct.smul_tmul', smul_eq_mul, mul_left_comm]
+
+open TensorProduct in
+/-- On jets of constant gauge transformations the jet action reduces to the global
+gauge action on the fibre: the `(1, 1)_{-6}` action on the lepton-singlet factor, and
+the trivial action on the jet ring. -/
+lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
+    repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
+      TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
+  ext f x
+  obtain ⟨ψ⟩ := x
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+      = MvPowerSeries.C ((g.toU1.1 : ℂ)) := rfl
+  simp only [TensorProduct.AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
+    LinearMap.restrictScalars_apply, repJetGaugeGroupI_tmul, hu, JetRing.star_C, ← map_pow,
+    TensorProduct.map_tmul, LinearMap.id_apply, repGaugeGroupI_apply]
+  rw [show (⟨(star (g.toU1.1 : ℂ) ^ 6) • ψ⟩ : LeptonSinglet)
+      = (star (g.toU1.1 : ℂ) ^ 6) • (⟨ψ⟩ : LeptonSinglet) from rfl,
+    TensorProduct.tmul_smul,
+    show (MvPowerSeries.C (star (g.toU1.1 : ℂ) ^ 6) * f) = (star (g.toU1.1 : ℂ) ^ 6) • f from
+      by rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply, Algebra.algebraMap_self_apply],
+    TensorProduct.smul_tmul']
 
 end LeptonSinglet
 

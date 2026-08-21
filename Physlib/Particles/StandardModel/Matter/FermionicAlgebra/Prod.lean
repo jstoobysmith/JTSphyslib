@@ -30,7 +30,6 @@ which is `CliffordAlgebra.prodEquiv` specialized to the zero quadratic form.
 
 ## ii. Key results
 
-- `JetComponentSpace.prodEquiv` : the component space of a direct sum splits.
 - `FermionicAlgebra.evenOdd` : the Fermi-parity grading.
 - `FermionicAlgebra.prodEquiv` : the fermionic algebra of a direct sum is the exterior
   product of the fermionic algebras.
@@ -61,24 +60,10 @@ variable {V W : Type} [AddCommGroup V] [Module ℂ V] [AddCommGroup W] [Module �
 
 ## A. The component space of a direct sum
 
--/
+The splitting `JetComponentSpace.prodEquiv` of the component space of a direct sum lives
+with the component space itself, in `Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic`.
 
-/-- **The component space of a direct sum splits.** The component functions of a
-  `(V × W)`-valued field are those of a `V`-valued field together with those of a
-  `W`-valued field: the dual and the conjugate both distribute over the finite product, and
-  the derivative label is untouched. -/
-noncomputable def JetComponentSpace.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    JetComponentSpace (V × W) ≃ₗ[ℂ] JetComponentSpace V × JetComponentSpace W :=
-  (LinearEquiv.prodCongr
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
-        (Module.dualProdDualEquivDual ℂ V W).symm)
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
-        (((ConjModule.prodEquiv (k := ℂ) (M := V) (N := W)).symm.dualMap).trans
-          (Module.dualProdDualEquivDual ℂ (ConjModule V) (ConjModule W)).symm))).trans <|
-    (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)
-        (TensorProduct.prodRight ℂ ℂ _ _ _)).trans
-      (LinearEquiv.prodProdProdComm ℂ _ _ _ _)
+-/
 
 /-!
 

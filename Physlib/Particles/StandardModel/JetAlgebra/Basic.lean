@@ -5,339 +5,151 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet
+public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic
 /-!
-# The fermionic jet algebra of the Standard Model
+# The jet algebra of the Standard Model
 
 ## i. Overview
 
-The jet algebra of the Standard Model is the algebra in which a Lagrangian lives: the free
-algebra on the component functions of every field and all their spacetime derivatives,
-subject only to the statistics of the fields.
+The full jet algebra of the Standard Model — the algebra in which a Standard Model
+Lagrangian lives — is the tensor product of its three sector algebras: the fermionic jet
+algebra `FermionJetAlgebra`, the Higgs jet algebra `HiggsJetAlgebra`, and the
+(complexified) gauge-boson jet algebra `GaugeJetAlgebra`. The bosonic factors commute with
+everything, so the ordinary tensor product is correct; the anticommutativity of the
+fermions lives entirely inside the fermionic factor.
 
-This file builds its fermionic factor, `FermionJetAlgebra`; the bosonic factors — the gauge
-fields and the Higgs — commute with everything and will enter as separate tensor factors.
-
-The Standard Model carries five fermion species — the lepton doublet, the charged-lepton
-singlet, the quark doublet, and the up- and down-type quark singlets — each in three
-generations, and the fermionic jet algebra is the *exterior product* of their individual
-fermionic algebras: generators anticommute, and they do so **across species and generations
-as well as within a species**, since all of them are fermionic.
-
-That exterior product is *realized* here as a single exterior algebra on the direct sum of
-the fifteen target spaces, and then *identified* with the graded tensor product of the
-species algebras by `FermionicAlgebra.prodEquiv`, applied once per species
-(`FermionJetAlgebra.exteriorProductLeptonDoublet` and its siblings below). The
-identification is genuine, not a convention: the exterior algebra of a direct sum is the
-graded (super) tensor product of the exterior algebras of the summands. An ordinary tensor
-product `⊗[ℂ]` would instead make generators of different species *commute*, which is wrong
-for fermions.
-
-The direct sum is taken as the definition rather than the graded tensor product because
-Mathlib's `GradedTensorProduct` carries no `GradedAlgebra` instance, so a graded tensor
-product of three or more factors cannot currently be written down as a type; the peeled
-form, one species at a time, is as far as the type-level statement goes. Working inside a
-single `ExteriorAlgebra` also keeps every algebraic class projecting from one root, and lets
-the whole `FermionicAlgebra` API — the Lorentz action, the jet gauge action, the total
-derivative and its iterates — apply to `FermionJetAlgebra` unchanged.
+This file defines the algebra and its three sector inclusions, and proves that the gauge
+sector is central. The Lorentz action, the jet gauge action, the formal total derivative
+and the mass-dimension scaling are assembled factorwise in the sibling files.
 
 ## ii. Key results
 
-- `FermionSpace` : the total target space of the Standard Model fermions.
-- `FermionSpace.leptonDoubletProj`, … : the projections onto a species and generation.
-- `FermionSpace.leptonDoubletIncl`, … : the inclusions of a species and generation.
-- `FermionJetAlgebra` : the jet algebra of the Standard Model fermions.
-- `FermionJetAlgebra.ofLeptonDoublet`, … : the component functions of each species and
-  generation.
-- `FermionJetAlgebra.exteriorProductLeptonDoublet`, … : the jet algebra as the exterior
-  product of the species algebras.
+- `JetAlgebra` : the jet algebra of the Standard Model.
+- `JetAlgebra.includeFermion`, `includeHiggs`, `includeGauge` : the sector inclusions.
+- `JetAlgebra.includeGauge_commute` : the gauge sector is central.
+- `Representation.tprod_apply_mul` : multiplicativity of tensor-product representations,
+  the generic assembly used by the action files.
 
 ## iii. Table of contents
 
-- A. The target space of the Standard Model fermions
-  - A.1. The projections onto the species
-  - A.2. The inclusions onto the species
-  - A.3. The action of the Lorentz group
-  - A.4. The action of the global gauge group
-  - A.5. The action of the jet gauge group
-- B. The fermionic jet algebra
-  - B.1. The component functions of each species
-  - B.2. The exterior product decomposition
+- A. The jet algebra of the Standard Model
+  - A.1. The sector inclusions
+  - A.2. Centrality of the gauge sector
+- B. Tensor products of multiplicative representations
 
 -/
 
 @[expose] public section
 
+set_option maxHeartbeats 8000000
+set_option synthInstance.maxHeartbeats 1000000
+set_option synthInstance.maxSize 2048
+set_option maxRecDepth 8000
+
 namespace StandardModel
 
-open TensorProduct
+open TensorProduct Matrix MatrixGroups
 
 /-!
 
-## A. The target space of the Standard Model fermions
+## A. The jet algebra of the Standard Model
 
 -/
 
-/-- The total target space of the Standard Model fermions: the direct sum of three
-  generations each of the lepton doublet, the charged-lepton singlet, the quark doublet, and
-  the up- and down-type quark singlets. The three generations of a species sit together, so
-  that a species can be split off the jet algebra as a single exterior factor. -/
-abbrev FermionSpace : Type :=
-  (Fin 3 → LeptonDoublet) × (Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
-    (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)
+/-- **The jet algebra of the Standard Model**: the tensor product of the fermionic, Higgs
+  and gauge-boson jet algebras. A Standard Model Lagrangian is an element of this
+  algebra. -/
+abbrev JetAlgebra : Type :=
+  (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) ⊗[ℂ] (ℂ ⊗[ℝ] GaugeJetAlgebra)
 
-namespace FermionSpace
+namespace JetAlgebra
 
 /-!
 
-### A.1. The projections onto the species
-
-The component functions of a field are *covectors* on its target space, so it is the
-projections — not the inclusions — that carry the individual species into the jet algebra.
-Each projection takes a generation index `i : Fin 3`.
+### A.1. The sector inclusions
 
 -/
 
-/-- The projection onto the `i`-th generation of the lepton doublet. -/
-def leptonDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonDoublet :=
-  (LinearMap.proj i).comp (LinearMap.fst ℂ _ _)
+/-- The inclusion of the fermionic sector. -/
+noncomputable def includeFermion : FermionJetAlgebra →ₐ[ℂ] JetAlgebra :=
+  (Algebra.TensorProduct.includeLeft
+    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] GaugeJetAlgebra)).comp
+    Algebra.TensorProduct.includeLeft
 
-/-- The projection onto the `i`-th generation of the charged-lepton singlet. -/
-def leptonSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonSinglet :=
-  (LinearMap.proj i).comp ((LinearMap.fst ℂ _ _).comp (LinearMap.snd ℂ _ _))
+/-- The inclusion of the Higgs sector. -/
+noncomputable def includeHiggs : HiggsJetAlgebra →ₐ[ℂ] JetAlgebra :=
+  (Algebra.TensorProduct.includeLeft
+    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] GaugeJetAlgebra)).comp
+    Algebra.TensorProduct.includeRight
 
-/-- The projection onto the `i`-th generation of the quark doublet. -/
-def quarkDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] QuarkDoublet :=
-  (LinearMap.proj i).comp
-    ((LinearMap.fst ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _)))
+/-- The inclusion of the gauge sector. -/
+noncomputable def includeGauge : (ℂ ⊗[ℝ] GaugeJetAlgebra) →ₐ[ℂ] JetAlgebra :=
+  Algebra.TensorProduct.includeRight
 
-/-- The projection onto the `i`-th generation of the up-type quark singlet. -/
-def upSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] UpSinglet :=
-  (LinearMap.proj i).comp ((LinearMap.fst ℂ _ _).comp
-    ((LinearMap.snd ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _))))
-
-/-- The projection onto the `i`-th generation of the down-type quark singlet. -/
-def downSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] DownSinglet :=
-  (LinearMap.proj i).comp ((LinearMap.snd ℂ _ _).comp
-    ((LinearMap.snd ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _))))
+lemma includeGauge_apply (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    includeGauge y
+      = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ] y := rfl
 
 /-!
 
-### A.2. The inclusions onto the species
-
-The one-sided inverses of the projections: the inclusion of a single species and generation
-as a summand of the total target space, zero in every other slot. `…Proj i ∘ …Incl i` is the
-identity, and every other composite of a projection with an inclusion vanishes.
+### A.2. Centrality of the gauge sector
 
 -/
 
-/-- The inclusion of the `i`-th generation lepton doublet as a summand. -/
-def leptonDoubletIncl (i : Fin 3) : LeptonDoublet →ₗ[ℂ] FermionSpace :=
-  (LinearMap.inl ℂ _ _).comp (LinearMap.single ℂ (fun _ : Fin 3 => LeptonDoublet) i)
+/-- The right factor of a tensor product with a commutative right factor is central:
+  the abstract statement, proved by tensor induction at abstract types so that it can be
+  instantiated on the jet algebra without rewriting inside it. -/
+private lemma tensor_includeRight_comm {A B : Type*} [Ring A] [Algebra ℂ A]
+    [CommRing B] [Algebra ℂ B] (y : B) (x : A ⊗[ℂ] B) :
+    x * Algebra.TensorProduct.includeRight (R := ℂ) (A := A) y
+      = Algebra.TensorProduct.includeRight (R := ℂ) (A := A) y * x := by
+  induction x using TensorProduct.induction_on with
+  | zero => rw [zero_mul, mul_zero]
+  | add a b ha hb => rw [add_mul, mul_add, ha, hb]
+  | tmul w g =>
+    rw [show (Algebra.TensorProduct.includeRight (R := ℂ) (A := A) y : A ⊗[ℂ] B)
+        = (1 : A) ⊗ₜ[ℂ] y from rfl,
+      Algebra.TensorProduct.tmul_mul_tmul, Algebra.TensorProduct.tmul_mul_tmul,
+      mul_one, one_mul, mul_comm g y]
 
-/-- The inclusion of the `i`-th generation charged-lepton singlet as a summand. -/
-def leptonSingletIncl (i : Fin 3) : LeptonSinglet →ₗ[ℂ] FermionSpace :=
-  (LinearMap.inr ℂ _ _).comp ((LinearMap.inl ℂ _ _).comp
-    (LinearMap.single ℂ (fun _ : Fin 3 => LeptonSinglet) i))
-
-/-- The inclusion of the `i`-th generation quark doublet as a summand. -/
-def quarkDoubletIncl (i : Fin 3) : QuarkDoublet →ₗ[ℂ] FermionSpace :=
-  (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
-    ((LinearMap.inl ℂ _ _).comp
-      (LinearMap.single ℂ (fun _ : Fin 3 => QuarkDoublet) i)))
-
-/-- The inclusion of the `i`-th generation up-type quark singlet as a summand. -/
-def upSingletIncl (i : Fin 3) : UpSinglet →ₗ[ℂ] FermionSpace :=
-  (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
-    ((LinearMap.inl ℂ _ _).comp
-      (LinearMap.single ℂ (fun _ : Fin 3 => UpSinglet) i))))
-
-/-- The inclusion of the `i`-th generation down-type quark singlet as a summand. -/
-def downSingletIncl (i : Fin 3) : DownSinglet →ₗ[ℂ] FermionSpace :=
-  (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
-    ((LinearMap.inr ℂ _ _).comp
-      (LinearMap.single ℂ (fun _ : Fin 3 => DownSinglet) i))))
-
-@[simp]
-lemma leptonDoubletProj_comp_leptonDoubletIncl (i : Fin 3) :
-    (leptonDoubletProj i).comp (leptonDoubletIncl i) = LinearMap.id :=
-  LinearMap.ext fun _ => by simp [leptonDoubletProj, leptonDoubletIncl]
-
-@[simp]
-lemma leptonSingletProj_comp_leptonSingletIncl (i : Fin 3) :
-    (leptonSingletProj i).comp (leptonSingletIncl i) = LinearMap.id :=
-  LinearMap.ext fun _ => by simp [leptonSingletProj, leptonSingletIncl]
-
-@[simp]
-lemma quarkDoubletProj_comp_quarkDoubletIncl (i : Fin 3) :
-    (quarkDoubletProj i).comp (quarkDoubletIncl i) = LinearMap.id :=
-  LinearMap.ext fun _ => by simp [quarkDoubletProj, quarkDoubletIncl]
-
-@[simp]
-lemma upSingletProj_comp_upSingletIncl (i : Fin 3) :
-    (upSingletProj i).comp (upSingletIncl i) = LinearMap.id :=
-  LinearMap.ext fun _ => by simp [upSingletProj, upSingletIncl]
-
-@[simp]
-lemma downSingletProj_comp_downSingletIncl (i : Fin 3) :
-    (downSingletProj i).comp (downSingletIncl i) = LinearMap.id :=
-  LinearMap.ext fun _ => by simp [downSingletProj, downSingletIncl]
+/-- The image of the gauge sector is central: gauge-boson symbols commute with
+  everything, as bosons must. -/
+lemma includeGauge_commute (y : ℂ ⊗[ℝ] GaugeJetAlgebra) (x : JetAlgebra) :
+    x * includeGauge y = includeGauge y * x :=
+  tensor_includeRight_comm y x
 
 /-!
 
-### A.3. The action of the Lorentz group
+## B. Tensor products of multiplicative representations
 
 -/
 
-/-!
+/-- The tensor product of two multiplicative representations on algebras is
+  multiplicative. -/
+lemma _root_.Representation.tprod_apply_mul {k G A B : Type*} [CommSemiring k] [Monoid G]
+    [Ring A] [Algebra k A] [Ring B] [Algebra k B]
+    (ρ : Representation k G A) (σ : Representation k G B)
+    (hρ : ∀ (g : G) (x y : A), ρ g (x * y) = ρ g x * ρ g y)
+    (hσ : ∀ (g : G) (x y : B), σ g (x * y) = σ g x * σ g y)
+    (g : G) (x y : A ⊗[k] B) :
+    (ρ.tprod σ) g (x * y) = (ρ.tprod σ) g x * (ρ.tprod σ) g y := by
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add x₁ x₂ h₁ h₂ => rw [add_mul, map_add, map_add, h₁, h₂, add_mul]
+  | tmul a₁ b₁ =>
+    induction y using TensorProduct.induction_on with
+    | zero => simp
+    | add y₁ y₂ h₁ h₂ => rw [mul_add, map_add, map_add, h₁, h₂, mul_add]
+    | tmul a₂ b₂ =>
+      rw [Algebra.TensorProduct.tmul_mul_tmul,
+        show (ρ.tprod σ) g (a₁ ⊗ₜ[k] b₁) = ρ g a₁ ⊗ₜ[k] σ g b₁ from rfl,
+        show (ρ.tprod σ) g (a₂ ⊗ₜ[k] b₂) = ρ g a₂ ⊗ₜ[k] σ g b₂ from rfl,
+        show (ρ.tprod σ) g ((a₁ * a₂) ⊗ₜ[k] (b₁ * b₂))
+          = ρ g (a₁ * a₂) ⊗ₜ[k] σ g (b₁ * b₂) from rfl,
+        hρ, hσ, Algebra.TensorProduct.tmul_mul_tmul]
 
-### A.4. Th action of the global gauge group
-
--/
-
-/-!
-
-### A.5. The action of Jet gauge group.
-
--/
-end FermionSpace
-
-/-!
-
-## B. The fermionic jet algebra
-
--/
-
-/-- **The jet algebra of the Standard Model fermions**: the exterior product of the fermionic
-  algebras of the five species, realized as the fermionic algebra of their direct sum. Its
-  generators are the component functions `∂_s ψ_φ` and `∂_s ψ̄_φ` of every species and
-  generation, and any two of them anticommute — within a species and across species alike.
-
-  This is the fermionic factor of the full Standard Model jet algebra; the gauge and Higgs
-  factors are bosonic and commute with it. -/
-abbrev FermionJetAlgebra : Type := FermionicAlgebra FermionSpace
-
-namespace FermionJetAlgebra
-
-/-!
-
-### B.1. The component functions of each species
-
-Each species and generation enters through its projection out of `FermionSpace`: a covector
-on the species pulls back to a covector on the total target space, and thence to a generator
-of the jet algebra. Their iterated derivatives `FermionicAlgebra.iteratedJetDeriv` are the
-higher generators.
-
--/
-
-/-- The component functions of the `i`-th generation lepton doublet inside the Standard
-  Model jet algebra. -/
-noncomputable def ofLeptonDoublet (i : Fin 3) :
-    Module.Dual ℂ LeptonDoublet →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofField.comp (Module.Dual.transpose (FermionSpace.leptonDoubletProj i))
-
-/-- The component functions of the `i`-th generation charged-lepton singlet. -/
-noncomputable def ofLeptonSinglet (i : Fin 3) :
-    Module.Dual ℂ LeptonSinglet →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofField.comp (Module.Dual.transpose (FermionSpace.leptonSingletProj i))
-
-/-- The component functions of the `i`-th generation quark doublet. -/
-noncomputable def ofQuarkDoublet (i : Fin 3) :
-    Module.Dual ℂ QuarkDoublet →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofField.comp (Module.Dual.transpose (FermionSpace.quarkDoubletProj i))
-
-/-- The component functions of the `i`-th generation up-type quark singlet. -/
-noncomputable def ofUpSinglet (i : Fin 3) :
-    Module.Dual ℂ UpSinglet →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofField.comp (Module.Dual.transpose (FermionSpace.upSingletProj i))
-
-/-- The component functions of the `i`-th generation down-type quark singlet. -/
-noncomputable def ofDownSinglet (i : Fin 3) :
-    Module.Dual ℂ DownSinglet →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofField.comp (Module.Dual.transpose (FermionSpace.downSingletProj i))
-
-/-- The conjugate component functions of the `i`-th generation lepton doublet. -/
-noncomputable def ofConjLeptonDoublet (i : Fin 3) :
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofConjField.comp
-    (Module.Dual.transpose (ConjModule.map (FermionSpace.leptonDoubletProj i)))
-
-/-- The conjugate component functions of the `i`-th generation charged-lepton singlet. -/
-noncomputable def ofConjLeptonSinglet (i : Fin 3) :
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofConjField.comp
-    (Module.Dual.transpose (ConjModule.map (FermionSpace.leptonSingletProj i)))
-
-/-- The conjugate component functions of the `i`-th generation quark doublet. -/
-noncomputable def ofConjQuarkDoublet (i : Fin 3) :
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofConjField.comp
-    (Module.Dual.transpose (ConjModule.map (FermionSpace.quarkDoubletProj i)))
-
-/-- The conjugate component functions of the `i`-th generation up-type quark singlet. -/
-noncomputable def ofConjUpSinglet (i : Fin 3) :
-    Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofConjField.comp
-    (Module.Dual.transpose (ConjModule.map (FermionSpace.upSingletProj i)))
-
-/-- The conjugate component functions of the `i`-th generation down-type quark singlet. -/
-noncomputable def ofConjDownSinglet (i : Fin 3) :
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.ofConjField.comp
-    (Module.Dual.transpose (ConjModule.map (FermionSpace.downSingletProj i)))
-
-/-!
-
-### B.2. The exterior product decomposition
-
-`FermionicAlgebra.prodEquiv` identifies the fermionic algebra of a direct sum with the
-graded tensor product of the two fermionic algebras. Applied repeatedly it exhibits the jet
-algebra as the exterior product of the five species algebras, peeling off one species — all
-three of its generations at once — at a time. It has to be stated one species at a time:
-`GradedTensorProduct` carries no `GradedAlgebra` instance in Mathlib, so the fully nested
-five-fold graded tensor product is not expressible as a type.
-
--/
-
-open scoped TensorProduct
-
-/-- The fermionic jet algebra as the exterior product of the three-generation
-  lepton-doublet algebra with the algebra of the remaining four species. -/
-noncomputable def exteriorProductLeptonDoublet :
-    FermionJetAlgebra ≃ₐ[ℂ] (FermionicAlgebra.evenOdd (Fin 3 → LeptonDoublet) ᵍ⊗[ℂ]
-      FermionicAlgebra.evenOdd ((Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
-        (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
-
-/-- The charged-lepton singlets split off the remaining three species. -/
-noncomputable def exteriorProductLeptonSinglet :
-    FermionicAlgebra ((Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
-        (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → LeptonSinglet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((Fin 3 → QuarkDoublet) × (Fin 3 → UpSinglet) ×
-          (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
-
-/-- The quark doublets split off the two quark singlets. -/
-noncomputable def exteriorProductQuarkDoublet :
-    FermionicAlgebra ((Fin 3 → QuarkDoublet) × (Fin 3 → UpSinglet) ×
-        (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → QuarkDoublet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((Fin 3 → UpSinglet) × (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
-
-/-- The two quark singlets as an exterior product. -/
-noncomputable def exteriorProductUpSinglet :
-    FermionicAlgebra ((Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → UpSinglet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd (Fin 3 → DownSinglet)) :=
-  FermionicAlgebra.prodEquiv _ _
-
-end FermionJetAlgebra
+end JetAlgebra
 
 end StandardModel

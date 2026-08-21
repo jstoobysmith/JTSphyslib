@@ -198,6 +198,97 @@ noncomputable instance : LieAlgebra ℝ GaugeAlgebra where
   lie_smul t a b := by
     ext <;> simp [smul_sub] <;> ring
 
+/-!
+
+## The adjoint action of the global gauge group
+
+-/
+
+/-- The conjugate of a hermitian traceless matrix by a unitary matrix is hermitian and
+  traceless. -/
+lemma conj_mem {n : ℕ} {U A : Matrix (Fin n) (Fin n) ℂ}
+    (hU : U ∈ Matrix.unitaryGroup (Fin n) ℂ) (hA : star A = A) (htr : A.trace = 0) :
+    star (U * A * star U) = U * A * star U ∧ (U * A * star U).trace = 0 := by
+  constructor
+  · rw [star_mul, star_mul, star_star, hA, mul_assoc]
+  · rw [Matrix.trace_mul_cycle, Matrix.mem_unitaryGroup_iff'.mp hU, one_mul, htr]
+
+/-- The linear map by which one gauge group element acts on the gauge algebra in the
+  adjoint action: conjugation by the corresponding unitary on the `su(3)` and `su(2)`
+  factors, and the identity on the commutative `u(1)` factor. -/
+noncomputable def adjointMap (g : GaugeGroupI) : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra where
+  toFun a := ofMatrixProd
+    (g.toSU3.1 * a.toSU3Matrix * star g.toSU3.1,
+      g.toSU2.1 * a.toSU2Matrix * star g.toSU2.1,
+      a.toU1Value)
+    (conj_mem g.toSU3.2.1 a.1.2.1 a.1.2.2)
+    (conj_mem g.toSU2.2.1 a.2.1.2.1 a.2.1.2.2)
+    a.2.2.2
+  map_add' a b := by
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
+        add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, mul_add, add_mul]
+  map_smul' r a := by
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
+        smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value, RingHom.id_apply,
+        Matrix.mul_smul, Matrix.smul_mul]
+
+@[simp]
+lemma adjointMap_toSU3Matrix (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjointMap g a).toSU3Matrix = g.toSU3.1 * a.toSU3Matrix * star g.toSU3.1 := rfl
+
+@[simp]
+lemma adjointMap_toSU2Matrix (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjointMap g a).toSU2Matrix = g.toSU2.1 * a.toSU2Matrix * star g.toSU2.1 := rfl
+
+@[simp]
+lemma adjointMap_toU1Value (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjointMap g a).toU1Value = a.toU1Value := rfl
+
+/-- **The adjoint action of the global gauge group on its gauge algebra**: conjugation by
+  the corresponding unitary on the `su(3)` and `su(2)` factors, and the trivial action on
+  the commutative `u(1)` factor. -/
+noncomputable def adjoint : Representation ℝ GaugeGroupI GaugeAlgebra where
+  toFun := adjointMap
+  map_one' := by
+    refine LinearMap.ext fun a => ext_of_matrix ?_ ?_ ?_
+    · rw [adjointMap_toSU3Matrix,
+        show ((1 : GaugeGroupI).toSU3.1 : Matrix (Fin 3) (Fin 3) ℂ) = 1 from rfl,
+        one_mul, star_one, mul_one]
+      rfl
+    · rw [adjointMap_toSU2Matrix,
+        show ((1 : GaugeGroupI).toSU2.1 : Matrix (Fin 2) (Fin 2) ℂ) = 1 from rfl,
+        one_mul, star_one, mul_one]
+      rfl
+    · rfl
+  map_mul' g₁ g₂ := by
+    refine LinearMap.ext fun a => ext_of_matrix ?_ ?_ ?_
+    · rw [Module.End.mul_apply, adjointMap_toSU3Matrix, adjointMap_toSU3Matrix,
+        adjointMap_toSU3Matrix,
+        show ((g₁ * g₂).toSU3.1 : Matrix (Fin 3) (Fin 3) ℂ) = g₁.toSU3.1 * g₂.toSU3.1 from rfl,
+        star_mul]
+      simp only [mul_assoc]
+    · rw [Module.End.mul_apply, adjointMap_toSU2Matrix, adjointMap_toSU2Matrix,
+        adjointMap_toSU2Matrix,
+        show ((g₁ * g₂).toSU2.1 : Matrix (Fin 2) (Fin 2) ℂ) = g₁.toSU2.1 * g₂.toSU2.1 from rfl,
+        star_mul]
+      simp only [mul_assoc]
+    · rw [Module.End.mul_apply, adjointMap_toU1Value, adjointMap_toU1Value,
+        adjointMap_toU1Value]
+
+@[simp]
+lemma adjoint_toSU3Matrix (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjoint g a).toSU3Matrix = g.toSU3.1 * a.toSU3Matrix * star g.toSU3.1 := rfl
+
+@[simp]
+lemma adjoint_toSU2Matrix (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjoint g a).toSU2Matrix = g.toSU2.1 * a.toSU2Matrix * star g.toSU2.1 := rfl
+
+@[simp]
+lemma adjoint_toU1Value (g : GaugeGroupI) (a : GaugeAlgebra) :
+    (adjoint g a).toU1Value = a.toU1Value := rfl
+
 end GaugeAlgebra
 
 end StandardModel

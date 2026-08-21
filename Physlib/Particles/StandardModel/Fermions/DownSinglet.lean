@@ -123,6 +123,10 @@ noncomputable def basis : Module.Basis (Fin 2 × Fin 3) ℂ DownSinglet :=
   (Fermion.RightHandedWeyl.basis.tensorProduct
     (EuclideanSpace.basisFun (Fin 3) ℂ).toBasis).map valLinEquiv.symm
 
+instance : Module.Finite ℂ DownSinglet := Module.Finite.of_basis basis
+
+instance : Module.Free ℂ DownSinglet := Module.Free.of_basis basis
+
 /-!
 
 ## C. Lorentz action
@@ -390,6 +394,73 @@ noncomputable def repJetGaugeGroupI :
     rw [hM, map_mul, hres, map_mul]
     ext d x
     simp
+
+/-- The identification of the jets of the down-type singlet intertwines multiplication by
+a scalar jet with the `JetRing`-scalar action on the colour coordinates. -/
+lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] DownSinglet) :
+    jetValLinEquiv (χ • z)
+      = Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3))
+          Fermion.RightHandedWeyl
+          ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ).restrictScalars ℂ)
+          (jetValLinEquiv z) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => rw [smul_add, map_add, ha, hb, map_add, map_add]
+  | tmul f x =>
+    obtain ⟨v⟩ := x
+    induction v using TensorProduct.induction_on with
+    | zero =>
+      rw [show ({ val := 0 } : DownSinglet) = 0 from rfl, TensorProduct.tmul_zero,
+        smul_zero, map_zero, map_zero]
+    | tmul ψ c =>
+      rw [TensorProduct.smul_tmul', smul_eq_mul,
+        show jetValLinEquiv ((χ * f) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : DownSinglet))
+          = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • (χ * f)) from rfl,
+        show jetValLinEquiv (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : DownSinglet))
+          = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f) from rfl,
+        show Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3))
+            Fermion.RightHandedWeyl
+            ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ).restrictScalars ℂ)
+            (ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f))
+          = ψ ⊗ₜ[ℂ] (χ • WithLp.toLp 2 fun i => c.ofLp i • f) from rfl]
+      congr 1
+      refine WithLp.ofLp_injective 2 ?_
+      funext i
+      show c.ofLp i • (χ * f) = χ * (c.ofLp i • f)
+      rw [Algebra.mul_smul_comm]
+    | add a b ha hb =>
+      rw [show ({ val := a + b } : DownSinglet) = ⟨a⟩ + ⟨b⟩ from rfl,
+        TensorProduct.tmul_add, smul_add, map_add, ha, hb, map_add, map_add]
+
+/-- **The jet gauge action on the jets of the down-type singlet is fibrewise**: it
+commutes with multiplication by scalar jets, acting on the values of the field over the
+identity on spacetime. -/
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
+    (z : JetRing ⊗[ℂ] DownSinglet) :
+    repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
+  set S : Module.End JetRing (EuclideanSpace JetRing (Fin 3)) :=
+    LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ with hS
+  set M : Module.End JetRing (EuclideanSpace JetRing (Fin 3)) :=
+    (Matrix.toLpLinAlgEquiv 2
+      (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 2) •
+        ((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
+          Matrix (Fin 3) (Fin 3) JetRing)) :
+      Module.End JetRing (EuclideanSpace JetRing (Fin 3))) with hM
+  have hMS : M * S = S * M := LinearMap.ext fun e => by
+    simp only [Module.End.mul_apply, hS, LinearMap.lsmul_apply, map_smul]
+  apply jetValLinEquiv.injective
+  rw [show repJetGaugeGroupI U (χ • z)
+      = jetValLinEquiv.symm (Module.End.lTensorAlgHom ℂ _ Fermion.RightHandedWeyl
+          (M.restrictScalars ℂ) (jetValLinEquiv (χ • z))) from rfl,
+    LinearEquiv.apply_symm_apply, jetValLinEquiv_smul,
+    show repJetGaugeGroupI U z
+      = jetValLinEquiv.symm (Module.End.lTensorAlgHom ℂ _ Fermion.RightHandedWeyl
+          (M.restrictScalars ℂ) (jetValLinEquiv z)) from rfl,
+    jetValLinEquiv_smul, LinearEquiv.apply_symm_apply, ← Module.End.mul_apply,
+    ← Module.End.mul_apply, ← map_mul, ← map_mul,
+    show M.restrictScalars ℂ * S.restrictScalars ℂ = (M * S).restrictScalars ℂ from rfl,
+    show S.restrictScalars ℂ * M.restrictScalars ℂ = (S * M).restrictScalars ℂ from rfl,
+    hMS]
 
 /-- On jets of constant gauge transformations the jet action reduces to the global
 gauge action on the fibre: the `(3, 1)_{-2}` action on the down-singlet factor, and the
