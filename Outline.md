@@ -36,8 +36,8 @@ Basic rules of this outline:
   derivatives appearing below are evaluated.
 - A local lagrangian evaluated at `x₀` depends on a field only through the values of
   its derivatives at `x₀`.
-- For a complex-valued field `φ`, its infinite formal jet at `x₀` is the collection
-  of all these derivative values.
+- For a smooth complex-valued field `φ`, its infinite formal jet at `x₀` is the
+  collection of all these derivative values.
 - The type `Fin 1 ⊕ Fin 3` indexes the four spacetime directions: one temporal
   direction and three spatial directions.
 - A multi-index records how many derivatives are taken in each spacetime direction.
@@ -56,7 +56,6 @@ Basic rules of this outline:
 - A formal power series is therefore treated as an arbitrary family of coefficients
   equipped with algebraic operations, rather than as an infinite sum that must be
   evaluated.
-- In particular, no convergence or analyticity condition is imposed.
 - Thus an element of `JetRing` records local Taylor data rather than a function
   defined on all of spacetime.
 - Here "jet" means a formal Taylor jet at a point and is unrelated to the particle
@@ -74,6 +73,20 @@ Basic rules of this outline:
   indexed by `s` to the value indexed by `s + {μ}`.
 - The formal partial derivatives on `JetRing` commute, matching the multiset
   representation of ordinary derivatives introduced above.
+- Every smooth complex-valued field `f` determines an element of `JetRing` by taking
+  its formal Taylor series at `x₀`.
+- Borel's theorem states that every element of `JetRing` is the formal Taylor series
+  at `x₀` of at least one smooth complex-valued field.
+- In the notation above, Borel's theorem states:
+
+  `∀ Φ : JetRing, ∃ f ∈ C∞(ℝ⁴, ℂ), ∀ s : Multiset (Fin 1 ⊕ Fin 3), ∂_s f(x₀) = ∂_s| Φ`.
+
+- No convergence condition is required, so this includes formal Taylor series with
+  radius of convergence zero.
+- Therefore, `JetRing` contains all possible derivative towers of smooth
+  complex-valued fields at the base point.
+- Two fields with the same jet at `x₀` are indistinguishable to a local Lagrangian
+  evaluated at `x₀`.
 - Addition in `JetRing` records addition of local Taylor data.
 - Multiplication in `JetRing` models multiplication of local functions at the level
   of their Taylor data.
