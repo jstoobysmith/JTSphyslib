@@ -1,6 +1,6 @@
 # TODOs introduced by this branch
 
-20 open &middot; as of 2026-08-16
+21 open &middot; as of 2026-08-21
 
 > Regenerate with `python scripts/todos.py --md todos.md` after adding or
 > resolving a TODO, and commit it in the same commit.
@@ -26,19 +26,32 @@
 - Quantize: instantiate the field species of `Physlib.QFT.PerturbationTheory` with the photon and electron of this file, towards the Feynman rules of QED. &nbsp;[`Lagrangian.lean:125`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/QED/Lagrangian.lean#L125)
 - Upgrade the mass-weight scaling to a genuine filtration by submodules, following `LeptonGaugeSector.JetAlgebra.MassDim` (`MassWeightLESubmodule`), together with the derivative-order and fermion-parity gradings needed for classification arguments. &nbsp;[`MassDimension.lean:61`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/QED/MassDimension.lean#L61)
 
+### `Particles/StandardModel/Fermions/JetAlgebra`
+
+- Move FermionSpace to a seperate file by itself. &nbsp;[`Basic.lean:89`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/Fermions/JetAlgebra/Basic.lean#L89)
+- For FermionSpace define the infinitismal action. &nbsp;[`Basic.lean:91`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/Fermions/JetAlgebra/Basic.lean#L91)
+
+### `Particles/StandardModel/GaugeAlgebra`
+
+- Make the API here match what is in the doc-string. &nbsp;[`JetGaugeAlgebra.lean:62`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeAlgebra/JetGaugeAlgebra.lean#L62)
+- Add discussion about the basis. &nbsp;[`JetGaugeAlgebra.lean:63`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeAlgebra/JetGaugeAlgebra.lean#L63)
+- Define the basis of the jet gauge algebra. &nbsp;[`JetGaugeAlgebra.lean:727`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeAlgebra/JetGaugeAlgebra.lean#L727)
+
 ### `Particles/StandardModel/GaugeBosons/BBoson`
 
 - Show invariance of the mass weights with repsect to the Lorentz group. &nbsp;[`MassDim.lean:310`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeBosons/BBoson/MassDim.lean#L310)
 
 ### `Particles/StandardModel/GaugeGroup`
 
-- Make the API here match what is in the doc-string. &nbsp;[`JetGaugeAlgebra.lean:50`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L50)
-- Add discussion about the basis. &nbsp;[`JetGaugeAlgebra.lean:51`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L51)
-- Define the Lie algebra instance on `JetGaugeAlgebra`. &nbsp;[`JetGaugeAlgebra.lean:87`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L87)
-- Define the basis of the jet gauge algebra. &nbsp;[`JetGaugeAlgebra.lean:95`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L95)
-- Define the adjoint representation of the jet gauge group on the jet gauge algebra. &nbsp;[`JetGaugeAlgebra.lean:104`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/JetGaugeAlgebra.lean#L104)
-- The maurerCartan form should be defined for the whole gauge group, and it should live in the jet Lie algebra. &nbsp;[`MaurerCartan.lean:50`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/MaurerCartan.lean#L50)
-- Define the symmetrized maurerCartan forms. &nbsp;[`MaurerCartan.lean:53`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/MaurerCartan.lean#L53)
+- Define the symmetrized maurerCartan forms. &nbsp;[`MaurerCartan.lean:59`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/MaurerCartan.lean#L59)
+
+### `Particles/StandardModel/GaugeGroup/MaurerCartan`
+
+- The below code needs cleaning up and moving to the correct place. &nbsp;[`Truncation.lean:135`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/GaugeGroup/MaurerCartan/Truncation.lean#L135)
+
+### `Particles/StandardModel/JetAlgebra`
+
+- Define the iterated derivative, and show that the iterated derivatives span the adjoin to give the whole algebra. &nbsp;[`JetDeriv.lean:279`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/StandardModel/JetAlgebra/JetDeriv.lean#L279)
 
 ### `Particles/WessZumino/EFTLagrangianExclDeriv`
 
