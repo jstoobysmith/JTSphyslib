@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
+public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
@@ -69,7 +70,8 @@ open TensorProduct Matrix
     algebra-valued Higgs from an algebra-valued fermion, whose symbols anticommute. -/
 structure IsHiggsAlgebraValued (B : Type*) [Semiring B] [Algebra ℂ B]
     (rep : Representation ℂ GaugeGroupI B) (H : Module.Dual ℂ HiggsVec →ₗ[ℂ] B)
-    (barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B) : Prop where
+    (barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B)
+    (massWeightPoly : B →ₐ[ℂ] Polynomial B) : Prop where
   /-- The Higgs symbol carries the dual of the gauge representation on `HiggsVec`: the
     `SU(2)` index transforms contragrediently, and the hypercharge character by `u⁻³`. -/
   H_equivariant : ∀ (g : GaugeGroupI) (φ : Module.Dual ℂ HiggsVec),
@@ -84,13 +86,18 @@ structure IsHiggsAlgebraValued (B : Type*) [Semiring B] [Algebra ℂ B]
   H_comm_barH : ∀ φ ψ, Commute (H φ) (barH ψ)
   /-- Two conjugate Higgs symbols commute. -/
   barH_comm_barH : ∀ φ ψ, Commute (barH φ) (barH ψ)
+  H_massWeight : ∀ φ, massWeightPoly (H φ) = Polynomial.monomial 2 (H φ)
+  barH_massWeight : ∀ φ, massWeightPoly (barH φ) = Polynomial.monomial 2 (barH φ)
+
 
 namespace IsHiggsAlgebraValued
 
 variable {B : Type*} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B} {H : Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
   {barH : Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  (h : IsHiggsAlgebraValued B rep H barH)
+  {massWeightPoly : B →ₐ[ℂ] Polynomial B}
+  (h : IsHiggsAlgebraValued B rep H barH massWeightPoly)
+
 
 /-!
 
@@ -106,7 +113,7 @@ of `HiggsVec` — and, for the conjugate, on the dual of its conjugated basis
 set_option linter.unusedVariables false in
 /-- The component symbol `H^i` of the Higgs: the value of the symbol map on the `i`-th
   covector of the standard basis of `HiggsVec`. -/
-noncomputable def higgsComponent (h : IsHiggsAlgebraValued B rep H barH) (i : Fin 2) : B :=
+noncomputable def higgsComponent (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (i : Fin 2) : B :=
   H (HiggsVec.orthonormBasis.toBasis.dualBasis i)
 
 lemma rep_higgsComponent (g : GaugeGroupI) (i : Fin 2) :
@@ -126,7 +133,7 @@ lemma rep_higgsComponent (g : GaugeGroupI) (i : Fin 2) :
 
 set_option linter.unusedVariables false in
 /-- The component symbol `H̄^i` of the conjugate Higgs. -/
-noncomputable def barHiggsComponent (h : IsHiggsAlgebraValued B rep H barH) (i : Fin 2) : B :=
+noncomputable def barHiggsComponent (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (i : Fin 2) : B :=
   barH (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
 
 lemma rep_barHiggsComponent (g : GaugeGroupI) (i : Fin 2) :
@@ -160,7 +167,7 @@ recovered from `h` rather than passed by hand.
 set_option linter.unusedVariables false in
 /-- The submodule of `B` spanned by the Higgs symbols `H_φ`: the terms of mass dimension one
   and hypercharge `+3`. -/
-def higgsSubmodule (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+def higgsSubmodule (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
   LinearMap.range H
 
 lemma higgsSubmodule_eq_span_higgsComponents :
@@ -177,7 +184,7 @@ lemma higgsComponent_mem_higgsSubmodule (i : Fin 2) :
 set_option linter.unusedVariables false in
 /-- The submodule of `B` spanned by the conjugate Higgs symbols `H̄_φ`: the terms of mass
   dimension one and hypercharge `-3`. -/
-def barHiggsSubmodule (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+def barHiggsSubmodule (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
   LinearMap.range barH
 
 lemma barHiggsSubmodule_eq_span_barHiggsComponents :
@@ -274,7 +281,7 @@ set_option linter.unusedVariables false in
 /-- A gauge transformation as an algebra homomorphism of `B`. Only linearity is built into
   `Representation`; `rep_mul` supplies multiplicativity, and the unit is preserved because a
   gauge transformation is invertible. -/
-def repAlgHom (h : IsHiggsAlgebraValued B rep H barH) (g : GaugeGroupI) : B →ₐ[ℂ] B :=
+def repAlgHom (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (g : GaugeGroupI) : B →ₐ[ℂ] B :=
   AlgHom.ofLinearMap (rep g)
     (by
       obtain ⟨c, hc⟩ := (rep.apply_bijective g).2 1
@@ -305,7 +312,7 @@ omit rep_mul in
   powers `scalarSubmoduleOne ^ k` for `k ≤ 4`; expanding each power distributes over the
   join, and the Higgs and conjugate-Higgs symbols commute, so every ordered product equals
   the one with all `H` factors to the left. -/
-lemma scalarPotentialSubmodule_eq_higgs (h : IsHiggsAlgebraValued B rep H barH) :
+lemma scalarPotentialSubmodule_eq_higgs (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     h.scalarPotentialSubmodule =
     1 ⊔ h.higgsSubmodule
       ⊔ h.barHiggsSubmodule
@@ -418,7 +425,7 @@ omit rep_mul in
 
   In particular the zero-weight piece is `⊥`, so `mem_zero_of_invariant` says here that no
   nonzero term linear in the Higgs is gauge invariant. -/
-noncomputable def higgsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+noncomputable def higgsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     GaugeWeightDecomposition rep h.higgsSubmodule where
   piece := fun w =>
     if w = (0, 0, -1, -3) then Submodule.span ℂ {h.higgsComponent 0}
@@ -508,7 +515,7 @@ omit rep_mul in
 
   As for `higgsSubmoduleGaugeWeight` the zero-weight piece is `⊥`, so no nonzero term linear
   in the conjugate Higgs is gauge invariant. -/
-noncomputable def barHiggsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+noncomputable def barHiggsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     GaugeWeightDecomposition rep h.barHiggsSubmodule where
   piece := fun w =>
     if w = (0, 0, 1, 3) then Submodule.span ℂ {h.barHiggsComponent 0}
@@ -562,12 +569,12 @@ noncomputable def barHiggsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H
         exact Submodule.mem_span_singleton_self _
 
 omit rep_mul in
-lemma higgsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH) :
+lemma higgsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     (h.higgsSubmoduleGaugeWeight).supp = {(0, 0, -1, -3), (0, 0, 1, -3)} := by
   rfl
 
 omit rep_mul in
-lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH) :
+lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     (h.barHiggsSubmoduleGaugeWeight).supp = {(0, 0, 1, 3), (0, 0, -1, 3)} := by
   rfl
 
@@ -575,7 +582,7 @@ lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH) 
   `scalarPotentialSubmodule_eq_higgs`: the unit contributes `one`, the two symbol spans
   contribute their own decompositions, every product of them is handled by `mul`, and the
   fifteen summands are joined by `sup`. -/
-noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) :
+noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     GaugeWeightDecomposition rep h.scalarPotentialSubmodule :=
   let d := h.higgsSubmoduleGaugeWeight
   let d' := h.barHiggsSubmoduleGaugeWeight
@@ -596,12 +603,12 @@ noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued 
       (((d'.mul rep_mul d').mul rep_mul d').mul rep_mul d')).copy _
     h.scalarPotentialSubmodule_eq_higgs
 
-def higgsQuadraticZeroGaugeWeight (h : IsHiggsAlgebraValued B rep H barH) : Submodule ℂ B :=
+def higgsQuadraticZeroGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
    Submodule.span ℂ
       {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
 
 open GaugeWeightDecomposition in
-lemma scalarPotentialSubmoduleGaugeWeight_peice_zero (h : IsHiggsAlgebraValued B rep H barH) :
+lemma scalarPotentialSubmoduleGaugeWeight_peice_zero (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     let H2 :=  Submodule.span ℂ
       {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
     (h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0 =
@@ -680,7 +687,7 @@ lemma rep_gaugeSU2Perm_barHiggsComponent_one :
   into the even line spanned by `H⁰H̄⁰ + H¹H̄¹` — this is `H†H`, the genuine invariant — and
   the odd line spanned by `H⁰H̄⁰ - H¹H̄¹`, which is `H†σ³H`, the neutral component of the
   isospin triplet. Only the first survives `mem_zero_of_invariant`. -/
-noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued B rep H barH) :
+noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     SU2PermDecomposition rep h.higgsQuadraticZeroGaugeWeight where
   piece := fun w =>
     if w = 0 then Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
@@ -765,7 +772,7 @@ noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued
   quadratic `H†H` sector contributes `higgsQuadraticZeroGaugeWeightSU2Perm`, the quartic
   sector is its `mul` with itself, and the three are joined by `sup`. -/
 noncomputable def scalarPotentialSubmoduleGaugeWeightZeroSU2Perm
-    (h : IsHiggsAlgebraValued B rep H barH) :
+    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     SU2PermDecomposition rep ((h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0) :=
   let d := h.higgsQuadraticZeroGaugeWeightSU2Perm rep_mul
   (((SU2PermDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup d).sup
@@ -785,7 +792,7 @@ noncomputable def tripletTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
 /-- **The mass term is gauge invariant.** `H†H` is fixed by every gauge transformation:
   the hypercharge phases cancel between `H` and `H̄`, and the `SU(2)` matrix cancels against
   its conjugate by unitarity. -/
-lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH) (g : GaugeGroupI) :
+lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (g : GaugeGroupI) :
     rep g h.massTerm = h.massTerm := by
   have hu : ((g⁻¹).toU1 : ℂ) * (starRingEnd ℂ) ((g⁻¹).toU1 : ℂ) = 1 :=
     Unitary.mul_star_self_of_mem (g⁻¹).toU1.2
@@ -826,7 +833,7 @@ lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH) (g : GaugeGroup
   quartic sector contributes `odd * odd` as well as `even * even`, so `(H†σ³H)²` is here
   alongside `1`, `H†H` and `(H†H)²`. -/
 lemma scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero
-    (h : IsHiggsAlgebraValued B rep H barH) :
+    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     (h.scalarPotentialSubmoduleGaugeWeightZeroSU2Perm rep_mul).piece 0 =
     Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
       h.tripletTerm * h.tripletTerm} := by
@@ -845,7 +852,7 @@ lemma scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero
   simp only [Submodule.span_insert, sup_assoc]
 
 lemma invariant_mem_span_massTerm_of_mem_scalarPotentialSubmodule
-    (h : IsHiggsAlgebraValued B rep H barH) (x : B)
+    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (x : B)
     (hx : x ∈ h.scalarPotentialSubmodule) (x_inv : ∀ g, rep g x = x) :
     x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
   have hmem : !![(1 - Complex.I) / 2, (-1 - Complex.I) / 2;
