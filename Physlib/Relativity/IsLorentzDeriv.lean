@@ -151,23 +151,18 @@ def lightConeMinus (D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A) (i : Fin 3) : A �
 
 section
 
-set_option linter.unusedSimpArgs false
-
 /-- A transverse Lorentz derivative leaves the boost weight along the `i`-th axis alone. -/
 lemma transverse_mem [IsLorentzDeriv rep D] {i j : Fin 3} (hij : j ≠ i) {k : ℤ} {x : A}
     (hx : x ∈ BoostWeight.boostWeightSubmodule rep i k) :
     D (Sum.inr j) x ∈ BoostWeight.boostWeightSubmodule rep i k := by
   intro t ht
   rw [rep_deriv, hx t ht, algebraMap_real_complex]
+  rw [show Lorentz.SL2C.toLorentzGroup (Lorentz.SL2C.boostAxis i t ht) =
+    LorentzGroup.boostAxis i t ht from rfl]
   fin_cases i <;> fin_cases j <;>
     first
       | exact absurd rfl hij
-      | simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk,
-          boostAxis_zero, toLorentzGroup_boostXel, boostMatX,
-          boostAxis_one, toLorentzGroup_boostYel, boostMatY,
-          boostAxis_two, toLorentzGroup_boostZel, boostMatZ,
-          Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, map_smul,
-          Complex.ofReal_zero, zero_smul, Complex.ofReal_one, one_smul, add_zero, zero_add]
+      | simp [LorentzGroup.boostAxis_apply]
 
 /-- The light-cone combination `D_0 - D_i` raises the boost weight along the `i`-th axis
   by two. -/
@@ -179,28 +174,12 @@ lemma lightConePlus_mem [IsLorentzDeriv rep D] {i : Fin 3} {k : ℤ} {x : A}
   simp only [lightConePlus, LinearMap.sub_apply]
   rw [map_sub, rep_deriv, rep_deriv, hx t ht]
   rw [algebraMap_real_complex, zpow_add₀ ht']
+  rw [show Lorentz.SL2C.toLorentzGroup (Lorentz.SL2C.boostAxis i t ht) =
+    LorentzGroup.boostAxis i t ht from rfl]
   fin_cases i
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
+  all_goals
+    simp [LorentzGroup.boostAxis_apply, Fintype.sum_sum_type, Fin.sum_univ_three]
+    match_scalars <;> (field_simp [ht']; noncomm_ring)
 
 /-- The light-cone combination `D_0 + D_i` lowers the boost weight along the `i`-th axis
   by two. -/
@@ -212,28 +191,12 @@ lemma lightConeMinus_mem [IsLorentzDeriv rep D] {i : Fin 3} {k : ℤ} {x : A}
   simp only [lightConeMinus, LinearMap.add_apply]
   rw [map_add, rep_deriv, rep_deriv, hx t ht]
   rw [algebraMap_real_complex, zpow_sub₀ ht']
+  rw [show Lorentz.SL2C.toLorentzGroup (Lorentz.SL2C.boostAxis i t ht) =
+    LorentzGroup.boostAxis i t ht from rfl]
   fin_cases i
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_zero, toLorentzGroup_boostXel, boostMatX, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_one, toLorentzGroup_boostYel, boostMatY, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
-  · simp only [Fin.isValue, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk]
-    simp only [boostAxis_two, toLorentzGroup_boostZel, boostMatZ, Fintype.sum_sum_type,
-      Fin.sum_univ_one, Fin.sum_univ_three, map_smul, Complex.ofReal_zero, zero_smul,
-      Complex.ofReal_one, one_smul, add_zero, zero_add, Complex.ofReal_div, Complex.ofReal_add,
-      Complex.ofReal_sub, Complex.ofReal_pow, Complex.ofReal_inv, Complex.ofReal_neg,
-      Complex.ofReal_ofNat]
-    match_scalars <;> (field_simp; ring)
+  all_goals
+    simp [LorentzGroup.boostAxis_apply, Fintype.sum_sum_type, Fin.sum_univ_three]
+    match_scalars <;> (field_simp [ht']; noncomm_ring)
 
 end
 

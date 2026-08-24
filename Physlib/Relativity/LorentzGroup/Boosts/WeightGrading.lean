@@ -68,14 +68,14 @@ private lemma algebraMap_ne_zero {t : ℝ} (ht : t ≠ 0) : (algebraMap ℝ K t)
   `z`-boost at parameter `t`. -/
 def boostWeightSubmodule (rep : Representation K SL(2,ℂ) M) (i : Fin 3) (w : ℤ) : Submodule K M where
   carrier := {x | ∀ (t : ℝ) (ht : t ≠ 0),
-    rep (boostAxis i t ht) x = (algebraMap ℝ K t) ^ w • x}
+    rep (Lorentz.SL2C.boostAxis i t ht) x = (algebraMap ℝ K t) ^ w • x}
   add_mem' {a b} ha hb := fun t ht => by rw [map_add, ha t ht, hb t ht, smul_add]
   zero_mem' := fun t ht => by rw [map_zero, smul_zero]
   smul_mem' c x hx := fun t ht => by rw [map_smul, hx t ht, smul_comm]
 
 lemma mem_boostWeightSubmodule {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {w : ℤ} {x : M} :
     x ∈ boostWeightSubmodule rep i w ↔ ∀ (t : ℝ) (ht : t ≠ 0),
-      rep (boostAxis i t ht) x = (algebraMap ℝ K t) ^ w • x := Iff.rfl
+      rep (Lorentz.SL2C.boostAxis i t ht) x = (algebraMap ℝ K t) ^ w • x := Iff.rfl
 
 /-- The span of all the weight spaces. -/
 def weightSpan (rep : Representation K SL(2,ℂ) M) (i : Fin 3) : Submodule K M :=
@@ -288,34 +288,29 @@ lemma weightSpan_eq_top_of_lorentzColumns {rep : Representation K SL(2,ℂ) M}
     weightSpan rep 2 = ⊤ := by
   haveI : CharZero K := charZero_of_injective_algebraMap (algebraMap ℝ K).injective
   have key : ∀ (t : ℝ) (ht : t ≠ 0) (μ : Fin 1 ⊕ Fin 3),
-      rep (boostAxis 2 t ht) (b μ) =
-        ∑ j, algebraMap ℝ K (boostMatZ t j μ) • b j := by
+      rep (Lorentz.SL2C.boostAxis 2 t ht) (b μ) =
+        ∑ j, algebraMap ℝ K ((LorentzGroup.boostAxis 2 t ht).1 j μ) • b j := by
     intro t ht μ
     rw [h]
-    exact Finset.sum_congr rfl fun j _ => by
-      rw [show boostAxis 2 t ht = boostZel t ht from rfl, toLorentzGroup_boostZel]
+    rfl
   have hplus : b (Sum.inl 0) - b (Sum.inr 2) ∈ boostWeightSubmodule rep 2 2 := by
     intro t ht
     have h0 : (algebraMap ℝ K t) ≠ 0 := algebraMap_ne_zero ht
     rw [map_sub, key t ht, key t ht]
-    simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
-      map_zero, zero_smul, add_zero, zero_add, map_div₀, map_sub,
-      map_add, map_pow, map_inv₀, map_ofNat, map_neg]
-    match_scalars <;> (field_simp; try ring_nf; try norm_num)
+    simp [Fintype.sum_sum_type, Fin.sum_univ_three, LorentzGroup.boostAxis_apply]
+    match_scalars <;>
+      (field_simp; try ring_nf; try norm_num; try simp only [map_ofNat, true_or])
   have hminus : b (Sum.inl 0) + b (Sum.inr 2) ∈ boostWeightSubmodule rep 2 (-2) := by
     intro t ht
     have h0 : (algebraMap ℝ K t) ≠ 0 := algebraMap_ne_zero ht
     rw [map_add, key t ht, key t ht]
-    simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
-      map_zero, zero_smul, add_zero, zero_add, map_div₀, map_sub,
-      map_add, map_pow, map_inv₀, map_ofNat, map_neg]
-    match_scalars <;> (field_simp; try ring_nf; try norm_num)
+    simp [Fintype.sum_sum_type, Fin.sum_univ_three, LorentzGroup.boostAxis_apply]
+    match_scalars <;> (field_simp; try ring_nf; try simp only [map_ofNat])
   have htr : ∀ i' : Fin 3, i' = 0 ∨ i' = 1 → b (Sum.inr i') ∈ boostWeightSubmodule rep 2 0 := by
     rintro i (rfl | rfl) <;>
     · intro t ht
       rw [key t ht]
-      simp only [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three, boostMatZ,
-        map_zero, zero_smul, add_zero, zero_add, map_one, one_smul, zpow_zero]
+      simp [LorentzGroup.boostAxis_apply]
   refine weightSpan_eq_top_of_basis b fun μ => ?_
   match μ with
   | Sum.inl 0 =>
@@ -369,7 +364,7 @@ lemma weightSpan_baseChange_eq_top {A : Type*} [AddCommGroup A] [Module ℝ A]
   span along the `z`-axis. -/
 lemma weightSpan_eq_top_of_two {rep : Representation K SL(2,ℂ) M} (h : weightSpan rep 2 = ⊤)
     (i : Fin 3) : weightSpan rep i = ⊤ := by
-  obtain ⟨R, hR⟩ := exists_conj_boostAxis i
+  obtain ⟨R, hR⟩ := Lorentz.SL2C.exists_conj_boostAxis i
   have hsurj : ∀ x : M, rep R (rep R⁻¹ x) = x := by
     intro x
     rw [← Module.End.mul_apply, ← map_mul, mul_inv_cancel, map_one, Module.End.one_apply]
@@ -440,7 +435,8 @@ instance [IsBoostGraded rep] : SetLike.GradedMonoid (boostWeightSubmodule rep i)
 /-- The weight space of weight `k` sits inside the `2 ^ k` eigenspace of the boost at
   parameter two. -/
 lemma boostWeightSubmodule_le_eigenspace (k : ℤ) :
-    boostWeightSubmodule rep i k ≤ Module.End.eigenspace (rep (boostAxis i 2 two_ne_zero))
+    boostWeightSubmodule rep i k ≤
+      Module.End.eigenspace (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero))
       ((algebraMap ℝ K 2) ^ k) := by
   intro x hx
   rw [Module.End.mem_eigenspace_iff]
@@ -456,7 +452,7 @@ private lemma zpow_algebraMap_two_injective :
   it exists. -/
 lemma boostWeightSubmodule_iSupIndep : iSupIndep (boostWeightSubmodule rep i) :=
   ((Module.End.eigenspaces_iSupIndep
-      (rep (boostAxis i 2 two_ne_zero) : Module.End K A)).comp
+      (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero) : Module.End K A)).comp
     zpow_algebraMap_two_injective).mono fun k => boostWeightSubmodule_le_eigenspace rep k
 
 /-- Recover the two summands from the sum and difference: if `u + v` and `u - v` lie in a
