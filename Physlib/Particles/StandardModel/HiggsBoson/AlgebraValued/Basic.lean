@@ -201,34 +201,238 @@ lemma barHiggsComponent_mem_barHiggsSubmodule (i : Fin 2) :
 /-- The terms of mass dimension exactly one: a Higgs symbol or a conjugate Higgs symbol. -/
 def scalarSubmoduleOne : Submodule ℂ B := h.higgsSubmodule ⊔ h.barHiggsSubmodule
 
-/-- **All terms of mass dimension at most `n`** built from the Higgs and its conjugate. -/
-def scalarSubmodule (n : ℕ) : Submodule ℂ B :=
-  ∑ k ∈ Finset.range (n + 1), h.scalarSubmoduleOne ^ k
+/-!
 
-@[simp]
-lemma scalarSubmodule_zero : h.scalarSubmodule 0 = 1 := by
-  rw [scalarSubmodule]
-  simp
+## The mass weight submodules
 
-/-- Raising the mass dimension by one adjoins the products of `n + 1` symbols. -/
-lemma scalarSubmodule_succ (n : ℕ) :
-    h.scalarSubmodule (n + 1) = h.scalarSubmodule n ⊔ h.scalarSubmoduleOne ^ (n + 1) := by
-  rw [scalarSubmodule, scalarSubmodule, Finset.sum_range_succ, Submodule.add_eq_sup]
+A Lagrangian term is constrained by its mass dimension, and the mass-weight scaling records
+that counting intrinsically: `massWeightPoly` places the part of a term of mass weight `w`
+in degree `w`, so a term has mass weight at most `n` exactly when its mass-weight polynomial
+is its own truncation at degree `n`. A Higgs symbol carries mass weight two, so a term of
+mass dimension `d` is one of mass weight `2 * d`, and the scalar potential — the terms of
+mass dimension at most four — is `higgsMassWeightSubmodule 8`.
 
-lemma scalarSubmoduleOne_pow_le_scalarSubmodule {k n : ℕ} (hk : k ≤ n) :
-    h.scalarSubmoduleOne ^ k ≤ h.scalarSubmodule n := by
-  rw [scalarSubmodule]
-  exact Finset.single_le_sum (f := fun k => h.scalarSubmoduleOne ^ k)
-    (fun _ _ => bot_le) (Finset.mem_range.mpr (Nat.lt_succ_of_le hk))
+-/
 
-lemma scalarSubmoduleOne_le_scalarSubmodule {n : ℕ} (hn : 1 ≤ n) :
-    h.scalarSubmoduleOne ≤ h.scalarSubmodule n := by
-  rw [← pow_one h.scalarSubmoduleOne]
-  exact h.scalarSubmoduleOne_pow_le_scalarSubmodule hn
+set_option linter.unusedVariables false in
+/-- All terms created from Higgs fields of mass weight less then n.  -/
+noncomputable def higgsMassWeightSubmodule (h : IsHiggsAlgebraValued B rep H barH massWeightPoly)
+    (n : ℕ) :
+    Submodule ℂ B :=
+  (Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)))).toSubmodule
+    ⊓ Submodule.comap massWeightPoly.toLinearMap
+    ((Polynomial.degreeLE B (n : WithBot ℕ)).restrictScalars ℂ)
 
-/-- All terms in the algebra made from up to four combinations
-  of `H` and `barH` -/
-def scalarPotentialSubmodule : Submodule ℂ B := h.scalarSubmodule 4
+/-- Membership in `higgsMassWeightSubmodule`, unfolded: a term of the subalgebra generated
+  by the symbols whose mass-weight polynomial has degree at most `n`. -/
+lemma mem_higgsMassWeightSubmodule {n : ℕ} {x : B} :
+    x ∈ h.higgsMassWeightSubmodule n ↔
+      x ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ))) ∧
+        (massWeightPoly x).degree ≤ (n : WithBot ℕ) :=
+  Submodule.mem_inf.trans (and_congr_right fun _ => Polynomial.mem_degreeLE)
+
+/-- A term of mass dimension one has mass weight two: its mass-weight polynomial is a
+  monomial of degree two. -/
+lemma massWeightPoly_of_mem_scalarSubmoduleOne {y : B} (hy : y ∈ h.scalarSubmoduleOne) :
+    massWeightPoly y = Polynomial.monomial 2 y := by
+  obtain ⟨_, ⟨φ, rfl⟩, _, ⟨ψ, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hy
+  simp [map_add, h.H_massWeight, h.barH_massWeight]
+
+/-- A product of `k` symbols has mass weight `2 * k`. -/
+lemma massWeightPoly_of_mem_pow (k : ℕ) {y : B} (hy : y ∈ h.scalarSubmoduleOne ^ k) :
+    massWeightPoly y = Polynomial.monomial (2 * k) y := by
+  induction k generalizing y with
+  | zero =>
+    rw [pow_zero] at hy
+    obtain ⟨c, rfl⟩ := Submodule.mem_one.1 hy
+    simp [AlgHom.commutes]
+  | succ k ih =>
+    rw [pow_succ] at hy
+    refine Submodule.mul_induction_on hy (fun a ha b hb => ?_) (fun x y hx hy => ?_)
+    · rw [show 2 * (k + 1) = 2 * k + 2 from by omega, map_mul, ih ha,
+        h.massWeightPoly_of_mem_scalarSubmoduleOne hb, Polynomial.monomial_mul_monomial]
+    · simp [map_add, hx, hy]
+
+/-- A product of `k` symbols has mass weight `2 * k`, so it is a term of mass weight at
+  most `n` as soon as `2 * k ≤ n`. -/
+lemma scalarSubmoduleOne_pow_le_higgsMassWeightSubmodule {k n : ℕ} (hk : 2 * k ≤ n) :
+    h.scalarSubmoduleOne ^ k ≤ h.higgsMassWeightSubmodule n := by
+  have hsub : h.scalarSubmoduleOne ≤ (Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
+      Set.range (fun φ => (barH φ)))).toSubmodule := by
+    refine sup_le ?_ ?_
+    · rintro _ ⟨φ, rfl⟩
+      exact Algebra.subset_adjoin (Or.inl ⟨φ, rfl⟩)
+    · rintro _ ⟨φ, rfl⟩
+      exact Algebra.subset_adjoin (Or.inr ⟨φ, rfl⟩)
+  have hadj : ∀ m : ℕ, h.scalarSubmoduleOne ^ m ≤ (Algebra.adjoin ℂ
+      (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)))).toSubmodule := by
+    intro m
+    induction m with
+    | zero =>
+      rw [pow_zero]
+      rintro x hx
+      obtain ⟨c, rfl⟩ := Submodule.mem_one.1 hx
+      exact Subalgebra.algebraMap_mem _ c
+    | succ m ih =>
+      rw [pow_succ]
+      refine Submodule.mul_le.2 fun a ha b hb => ?_
+      show a * b ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
+        Set.range (fun φ => (barH φ)))
+      exact mul_mem (ih ha) (hsub hb)
+  intro y hy
+  refine h.mem_higgsMassWeightSubmodule.2 ⟨hadj k hy, ?_⟩
+  rw [h.massWeightPoly_of_mem_pow k hy]
+  exact (Polynomial.degree_monomial_le _ _).trans (by exact_mod_cast hk)
+
+/-- **The terms of mass weight at most `2 * n` are the combinations of products of at most
+  `n` symbols.** One inclusion is the mass-dimension counting read forwards: a product of
+  `k ≤ n` symbols sits in degree `2 * k`. The other is the counting read backwards, and is
+  the substance of the statement: the mass-weight polynomial of a term of the subalgebra is
+  supported in even degrees, with the coefficient in degree `2 * k` a combination of
+  products of `k` symbols, and the term is the sum of its own coefficients. A degree bound
+  therefore caps the number of symbols. -/
+lemma higgsMassWeightSubmodule_eq_sum_pow (n : ℕ) :
+    h.higgsMassWeightSubmodule (2 * n)
+      = ∑ k ∈ Finset.range (n + 1), h.scalarSubmoduleOne ^ k := by
+  refine le_antisymm (fun x hx => ?_) ?_
+  · obtain ⟨hadj, hdeg⟩ := h.mem_higgsMassWeightSubmodule.1 hx
+    have hmul : ∀ p q : Polynomial B, (p * q).eval 1 = p.eval 1 * q.eval 1 := fun _ _ =>
+      Polynomial.eval₂_mul_noncomm _ _ fun _ => Commute.one_right _
+    have key : ∀ y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
+        Set.range (fun φ => (barH φ))), (massWeightPoly y).eval 1 = y ∧
+        (∀ j, (massWeightPoly y).coeff j ∈ h.scalarSubmoduleOne ^ (j / 2)) ∧
+        (∀ j, ¬ 2 ∣ j → (massWeightPoly y).coeff j = 0) := by
+      intro y hy
+      induction hy using Algebra.adjoin_induction with
+      | mem y hy =>
+        have hy1 : y ∈ h.scalarSubmoduleOne := by
+          rcases hy with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
+          · exact Submodule.mem_sup_left (LinearMap.mem_range_self _ _)
+          · exact Submodule.mem_sup_right (LinearMap.mem_range_self _ _)
+        rw [h.massWeightPoly_of_mem_scalarSubmoduleOne hy1]
+        refine ⟨by simp, fun j => ?_, fun j hj => ?_⟩
+        · rw [Polynomial.coeff_monomial]
+          split_ifs with h2
+          · subst h2
+            simpa using hy1
+          · exact zero_mem _
+        · rw [Polynomial.coeff_monomial, if_neg (by omega)]
+      | algebraMap c =>
+        rw [AlgHom.commutes, show algebraMap ℂ (Polynomial B) c
+          = Polynomial.C (algebraMap ℂ B c) from rfl]
+        refine ⟨by simp, fun j => ?_, fun j hj => ?_⟩
+        · rcases Nat.eq_zero_or_pos j with rfl | hj0
+          · simp
+          · rw [Polynomial.coeff_C, if_neg (by omega)]
+            exact zero_mem _
+        · rw [Polynomial.coeff_C, if_neg (by omega)]
+      | add y z _ _ ihy ihz =>
+        rw [map_add]
+        exact ⟨by rw [Polynomial.eval_add, ihy.1, ihz.1],
+          fun j => by rw [Polynomial.coeff_add]; exact add_mem (ihy.2.1 j) (ihz.2.1 j),
+          fun j hj => by rw [Polynomial.coeff_add, ihy.2.2 j hj, ihz.2.2 j hj, add_zero]⟩
+      | mul y z _ _ ihy ihz =>
+        rw [map_mul]
+        refine ⟨by rw [hmul, ihy.1, ihz.1], fun j => ?_, fun j hj => ?_⟩
+        · rw [Polynomial.coeff_mul]
+          refine Submodule.sum_mem _ fun q hq => ?_
+          have hq' : q.1 + q.2 = j := Finset.mem_antidiagonal.1 hq
+          by_cases ha : 2 ∣ q.1
+          · by_cases hb : 2 ∣ q.2
+            · rw [show j / 2 = q.1 / 2 + q.2 / 2 from by omega, pow_add]
+              exact Submodule.mul_mem_mul (ihy.2.1 _) (ihz.2.1 _)
+            · rw [ihz.2.2 _ hb, mul_zero]
+              exact zero_mem _
+          · rw [ihy.2.2 _ ha, zero_mul]
+            exact zero_mem _
+        · rw [Polynomial.coeff_mul]
+          refine Finset.sum_eq_zero fun q hq => ?_
+          have hq' : q.1 + q.2 = j := Finset.mem_antidiagonal.1 hq
+          by_cases ha : 2 ∣ q.1
+          · rw [ihz.2.2 _ (by omega), mul_zero]
+          · rw [ihy.2.2 _ ha, zero_mul]
+    obtain ⟨heval, hcoeff, -⟩ := key x hadj
+    rw [← heval, Polynomial.eval_eq_sum_range'
+      (Nat.lt_succ_of_le (Polynomial.natDegree_le_iff_degree_le.2 hdeg))]
+    refine Submodule.sum_mem _ fun i hi => ?_
+    have hi' := Finset.mem_range.1 hi
+    rw [one_pow, mul_one]
+    exact Finset.single_le_sum (f := fun k => h.scalarSubmoduleOne ^ k)
+      (fun _ _ => bot_le) (Finset.mem_range.mpr (by omega)) (hcoeff i)
+  · refine Finset.sum_induction _ (· ≤ h.higgsMassWeightSubmodule (2 * n))
+      (fun a b ha hb => by rw [Submodule.add_eq_sup]; exact sup_le ha hb) bot_le fun k hk => ?_
+    exact h.scalarSubmoduleOne_pow_le_higgsMassWeightSubmodule
+      (by have := Finset.mem_range.1 hk; omega)
+
+/-- **The terms of mass weight at most eight, written out.** A Higgs symbol carries mass
+  weight two, so mass weight eight is mass dimension four: the join of the powers
+  `scalarSubmoduleOne ^ k` for `k ≤ 4`. Expanding each power distributes over the join, and
+  the Higgs and conjugate-Higgs symbols commute, so every ordered product equals the one
+  with all `H` factors to the left. -/
+lemma higgsMassWeightSubmodule_eq_higgs :
+    h.higgsMassWeightSubmodule 8 =
+    1 ⊔ h.higgsSubmodule
+      ⊔ h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+  have hcomm : h.higgsSubmodule * h.barHiggsSubmodule = h.barHiggsSubmodule * h.higgsSubmodule := by
+    refine le_antisymm (Submodule.mul_le.mpr fun m hm n hn => ?_)
+      (Submodule.mul_le.mpr fun m hm n hn => ?_)
+    · obtain ⟨φ, rfl⟩ := hm
+      obtain ⟨ψ, rfl⟩ := hn
+      rw [(h.H_comm_barH φ ψ).eq]
+      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
+    · obtain ⟨ψ, rfl⟩ := hm
+      obtain ⟨φ, rfl⟩ := hn
+      rw [← (h.H_comm_barH φ ψ).eq]
+      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
+  have hcm : Commute h.higgsSubmodule h.barHiggsSubmodule := hcomm
+  have hCCA : Commute (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule := hcm.symm.mul_left hcm.symm
+  have s1 : h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc, hcm.symm.eq, ← mul_assoc]
+  have s2 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [hCCA.eq, ← mul_assoc]
+  have s3 : h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc (h.higgsSubmodule * h.higgsSubmodule) h.barHiggsSubmodule h.higgsSubmodule, hcm.symm.eq, ← mul_assoc]
+  have s4 : h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [mul_assoc h.higgsSubmodule h.barHiggsSubmodule h.barHiggsSubmodule, mul_assoc h.higgsSubmodule (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule, hCCA.eq, ← mul_assoc,
+      ← mul_assoc]
+  have s5 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [(hCCA.mul_left hcm.symm).eq, ← mul_assoc, ← mul_assoc]
+  have e2 : h.scalarSubmoduleOne ^ 2
+      = h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_two, scalarSubmoduleOne, Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup,
+      ← hcomm]
+    simp only [sup_assoc, sup_left_idem]
+  have e3 : h.scalarSubmoduleOne ^ 3
+      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_succ, e2, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
+      Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup, s1, s2]
+    simp only [sup_assoc, sup_left_idem]
+  have e4 : h.scalarSubmoduleOne ^ 4
+      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
+        ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
+    rw [pow_succ, e3, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
+      Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup,
+      Submodule.mul_sup, s3, s4, s5]
+    simp only [sup_assoc, sup_left_idem]
+  rw [show (8 : ℕ) = 2 * 4 from rfl, h.higgsMassWeightSubmodule_eq_sum_pow,
+    Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
+    Finset.sum_range_one, Submodule.add_eq_sup, Submodule.add_eq_sup, Submodule.add_eq_sup,
+    Submodule.add_eq_sup, pow_zero, pow_one, e2, e3, e4, scalarSubmoduleOne]
+  simp only [sup_assoc]
+
+
 
 /-!
 
@@ -293,88 +497,47 @@ def repAlgHom (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (g : GaugeG
 lemma repAlgHom_toLinearMap (g : GaugeGroupI) :
     (h.repAlgHom rep_mul g).toLinearMap = rep g := rfl
 
-/-- The terms of mass dimension at most `n` are closed under the gauge action. -/
-lemma scalarSubmodule_closure (g : GaugeGroupI) (n : ℕ) :
-    (h.scalarSubmodule n).map (rep g) = h.scalarSubmodule n := by
-  have hmap : ∀ S : Submodule ℂ B,
-      S.map (rep g) = Submodule.mapHom (h.repAlgHom rep_mul g) S := fun _ => rfl
-  rw [scalarSubmodule, hmap, map_sum]
-  refine Finset.sum_congr rfl fun k _ => ?_
-  rw [map_pow, ← hmap, h.scalarSubmoduleOne_closure g]
-
-/-- The scalar potential terms are closed under the gauge action. -/
-lemma scalarPotentialSubmodule_closure (g : GaugeGroupI) :
-    (h.scalarPotentialSubmodule).map (rep g) = h.scalarPotentialSubmodule :=
-  h.scalarSubmodule_closure rep_mul g 4
-
-omit rep_mul in
-/-- **The scalar potential terms, written out.** `scalarSubmodule 4` is the join of the
-  powers `scalarSubmoduleOne ^ k` for `k ≤ 4`; expanding each power distributes over the
-  join, and the Higgs and conjugate-Higgs symbols commute, so every ordered product equals
-  the one with all `H` factors to the left. -/
-lemma scalarPotentialSubmodule_eq_higgs (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    h.scalarPotentialSubmodule =
-    1 ⊔ h.higgsSubmodule
-      ⊔ h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-  have hcomm : h.higgsSubmodule * h.barHiggsSubmodule = h.barHiggsSubmodule * h.higgsSubmodule := by
-    refine le_antisymm (Submodule.mul_le.mpr fun m hm n hn => ?_)
-      (Submodule.mul_le.mpr fun m hm n hn => ?_)
-    · obtain ⟨φ, rfl⟩ := hm
-      obtain ⟨ψ, rfl⟩ := hn
-      rw [(h.H_comm_barH φ ψ).eq]
-      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
-    · obtain ⟨ψ, rfl⟩ := hm
-      obtain ⟨φ, rfl⟩ := hn
-      rw [← (h.H_comm_barH φ ψ).eq]
-      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
-  have hcm : Commute h.higgsSubmodule h.barHiggsSubmodule := hcomm
-  have hCCA : Commute (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule := hcm.symm.mul_left hcm.symm
-  have s1 : h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc, hcm.symm.eq, ← mul_assoc]
-  have s2 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [hCCA.eq, ← mul_assoc]
-  have s3 : h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc (h.higgsSubmodule * h.higgsSubmodule) h.barHiggsSubmodule h.higgsSubmodule, hcm.symm.eq, ← mul_assoc]
-  have s4 : h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc h.higgsSubmodule h.barHiggsSubmodule h.barHiggsSubmodule, mul_assoc h.higgsSubmodule (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule, hCCA.eq, ← mul_assoc,
-      ← mul_assoc]
-  have s5 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [(hCCA.mul_left hcm.symm).eq, ← mul_assoc, ← mul_assoc]
-  have e2 : h.scalarSubmoduleOne ^ 2
-      = h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_two, scalarSubmoduleOne, Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup,
-      ← hcomm]
-    simp only [sup_assoc, sup_left_idem]
-  have e3 : h.scalarSubmoduleOne ^ 3
-      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_succ, e2, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
-      Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup, s1, s2]
-    simp only [sup_assoc, sup_left_idem]
-  have e4 : h.scalarSubmoduleOne ^ 4
-      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-        ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_succ, e3, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
-      Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup,
-      Submodule.mul_sup, s3, s4, s5]
-    simp only [sup_assoc, sup_left_idem]
-  rw [scalarPotentialSubmodule, scalarSubmodule, Finset.sum_range_succ, Finset.sum_range_succ,
-    Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_one, Submodule.add_eq_sup,
-    Submodule.add_eq_sup, Submodule.add_eq_sup, Submodule.add_eq_sup, pow_zero, pow_one,
-    e2, e3, e4, scalarSubmoduleOne]
-  simp only [sup_assoc]
-
+lemma higgsMassWeightSubmodule_closure (g : GaugeGroupI) (n : ℕ) :
+    (h.higgsMassWeightSubmodule n).map (rep g) = h.higgsMassWeightSubmodule n := by
+  have hgen : ∀ (u : GaugeGroupI) (y : B),
+      y ∈ Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)) →
+      rep u y ∈ Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)) := by
+    rintro u _ (⟨φ, rfl⟩ | ⟨φ, rfl⟩)
+    · exact Or.inl ⟨_, (h.H_equivariant u φ).symm⟩
+    · exact Or.inr ⟨_, (h.barH_equivariant u φ).symm⟩
+  have key : ∀ (u : GaugeGroupI) (y : B),
+      y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ))) →
+      rep u y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
+          Set.range (fun φ => (barH φ))) ∧
+        massWeightPoly (rep u y) =
+          Polynomial.mapAlgHom (h.repAlgHom rep_mul u) (massWeightPoly y) := by
+    intro u y hy
+    have hf : ∀ b : B, (h.repAlgHom rep_mul u) b = rep u b := fun _ => rfl
+    induction hy using Algebra.adjoin_induction with
+    | mem y hy =>
+      refine ⟨Algebra.subset_adjoin (hgen u y hy), ?_⟩
+      rcases hy with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
+      · simp [hf, h.H_equivariant, h.H_massWeight]
+      · simp [hf, h.barH_equivariant, h.barH_massWeight]
+    | algebraMap c =>
+      have hc : rep u (algebraMap ℂ B c) = algebraMap ℂ B c :=
+        (h.repAlgHom rep_mul u).commutes c
+      rw [hc]
+      exact ⟨Subalgebra.algebraMap_mem _ c, by simp [AlgHom.commutes]⟩
+    | add y z _ _ ihy ihz =>
+      exact ⟨by rw [map_add]; exact add_mem ihy.1 ihz.1, by simp [ihy.2, ihz.2]⟩
+    | mul y z _ _ ihy ihz =>
+      rw [rep_mul]
+      exact ⟨mul_mem ihy.1 ihz.1, by rw [map_mul, ihy.2, ihz.2, map_mul, map_mul]⟩
+  have hle : ∀ u : GaugeGroupI,
+      (h.higgsMassWeightSubmodule n).map (rep u) ≤ h.higgsMassWeightSubmodule n := by
+    rintro u _ ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
+    refine ⟨(key u y hy₁).1, Polynomial.mem_degreeLE.2 ?_⟩
+    show (massWeightPoly (rep u y)).degree ≤ (n : WithBot ℕ)
+    rw [(key u y hy₁).2, Polynomial.coe_mapAlgHom]
+    exact Polynomial.degree_map_le.trans (Polynomial.mem_degreeLE.1 hy₂)
+  exact le_antisymm (hle g) fun b hb =>
+    ⟨rep g⁻¹ b, hle g⁻¹ ⟨b, hb, rfl⟩, rep.self_inv_apply g b⟩
 
 /-!
 
@@ -578,12 +741,13 @@ lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH m
     (h.barHiggsSubmoduleGaugeWeight).supp = {(0, 0, 1, 3), (0, 0, -1, 3)} := by
   rfl
 
-/-- **The gauge weight decomposition of the scalar potential terms.** Read straight off
-  `scalarPotentialSubmodule_eq_higgs`: the unit contributes `one`, the two symbol spans
+/-- **The gauge weight decomposition of the scalar potential terms**, the terms of mass
+  weight at most eight. Read straight off
+  `higgsMassWeightSubmodule_eq_higgs`: the unit contributes `one`, the two symbol spans
   contribute their own decompositions, every product of them is handled by `mul`, and the
   fifteen summands are joined by `sup`. -/
-noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    GaugeWeightDecomposition rep h.scalarPotentialSubmodule :=
+noncomputable def higgsMassWeightGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
+    GaugeWeightDecomposition rep (h.higgsMassWeightSubmodule 8) :=
   let d := h.higgsSubmoduleGaugeWeight
   let d' := h.barHiggsSubmoduleGaugeWeight
   (((((((((((((((GaugeWeightDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup
@@ -601,19 +765,19 @@ noncomputable def scalarPotentialSubmoduleGaugeWeight (h : IsHiggsAlgebraValued 
       (((d.mul rep_mul d).mul rep_mul d').mul rep_mul d')).sup
       (((d.mul rep_mul d').mul rep_mul d').mul rep_mul d')).sup
       (((d'.mul rep_mul d').mul rep_mul d').mul rep_mul d')).copy _
-    h.scalarPotentialSubmodule_eq_higgs
+    h.higgsMassWeightSubmodule_eq_higgs
 
 def higgsQuadraticZeroGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
    Submodule.span ℂ
       {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
 
 open GaugeWeightDecomposition in
-lemma scalarPotentialSubmoduleGaugeWeight_peice_zero (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
+lemma higgsMassWeightGaugeWeight_piece_zero (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
     let H2 :=  Submodule.span ℂ
       {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
-    (h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0 =
+    (h.higgsMassWeightGaugeWeight rep_mul).piece 0 =
     1 ⊔ H2 ⊔ H2 * H2 := by
-  dsimp only [scalarPotentialSubmoduleGaugeWeight, GaugeWeightDecomposition.copy_piece,
+  dsimp only [higgsMassWeightGaugeWeight, GaugeWeightDecomposition.copy_piece,
     GaugeWeightDecomposition.sup_piece, GaugeWeightDecomposition.one_piece, ↓dreduceIte,
     Submodule.zero_eq_bot]
   simp (disch := (try simp only [higgsSubmoduleGaugeWeight, barHiggsSubmoduleGaugeWeight,
@@ -768,16 +932,16 @@ noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued
           = h.higgsComponent 1 * h.barHiggsComponent 1 from by module] at hs
 
 /-- **The Weyl decomposition of the invariant candidates.** Read straight off
-  `scalarPotentialSubmoduleGaugeWeight_peice_zero`: the constants contribute `one`, the
+  `higgsMassWeightGaugeWeight_piece_zero`: the constants contribute `one`, the
   quadratic `H†H` sector contributes `higgsQuadraticZeroGaugeWeightSU2Perm`, the quartic
   sector is its `mul` with itself, and the three are joined by `sup`. -/
-noncomputable def scalarPotentialSubmoduleGaugeWeightZeroSU2Perm
+noncomputable def higgsMassWeightGaugeWeightZeroSU2Perm
     (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    SU2PermDecomposition rep ((h.scalarPotentialSubmoduleGaugeWeight rep_mul).piece 0) :=
+    SU2PermDecomposition rep ((h.higgsMassWeightGaugeWeight rep_mul).piece 0) :=
   let d := h.higgsQuadraticZeroGaugeWeightSU2Perm rep_mul
   (((SU2PermDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup d).sup
       (d.mul rep_mul d)).copy _
-    (h.scalarPotentialSubmoduleGaugeWeight_peice_zero rep_mul)
+    (h.higgsMassWeightGaugeWeight_piece_zero rep_mul)
 
 /-- The gauge-invariant quadratic `H†H`, the Higgs mass term. -/
 noncomputable def massTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
@@ -832,12 +996,12 @@ lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) 
 /-- **The even part of the weight-zero potential terms.** Note the fourth generator: the
   quartic sector contributes `odd * odd` as well as `even * even`, so `(H†σ³H)²` is here
   alongside `1`, `H†H` and `(H†H)²`. -/
-lemma scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero
+lemma higgsMassWeightGaugeWeightZeroSU2Perm_piece_zero
     (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    (h.scalarPotentialSubmoduleGaugeWeightZeroSU2Perm rep_mul).piece 0 =
+    (h.higgsMassWeightGaugeWeightZeroSU2Perm rep_mul).piece 0 =
     Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
       h.tripletTerm * h.tripletTerm} := by
-  dsimp only [scalarPotentialSubmoduleGaugeWeightZeroSU2Perm, SU2PermDecomposition.copy_piece,
+  dsimp only [higgsMassWeightGaugeWeightZeroSU2Perm, SU2PermDecomposition.copy_piece,
     SU2PermDecomposition.sup_piece, SU2PermDecomposition.one_piece]
   rw [SU2PermDecomposition.mul_piece_eq]
   dsimp only [higgsQuadraticZeroGaugeWeightSU2Perm]
@@ -851,9 +1015,9 @@ lemma scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero
   rw [massTerm, tripletTerm, Submodule.one_eq_span]
   simp only [Submodule.span_insert, sup_assoc]
 
-lemma invariant_mem_span_massTerm_of_mem_scalarPotentialSubmodule
+lemma invariant_mem_span_massTerm_of_mem_higgsMassWeightSubmodule
     (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (x : B)
-    (hx : x ∈ h.scalarPotentialSubmodule) (x_inv : ∀ g, rep g x = x) :
+    (hx : x ∈ h.higgsMassWeightSubmodule 8) (x_inv : ∀ g, rep g x = x) :
     x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
   have hmem : !![(1 - Complex.I) / 2, (-1 - Complex.I) / 2;
       (1 - Complex.I) / 2, (1 + Complex.I) / 2] ∈ specialUnitaryGroup (Fin 2) ℂ := by
@@ -955,7 +1119,7 @@ lemma invariant_mem_span_massTerm_of_mem_scalarPotentialSubmodule
   -- the two sieves put `x` in a four-generator span
   have hspan : x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
       h.tripletTerm * h.tripletTerm} := by
-    rw [← h.scalarPotentialSubmoduleGaugeWeightZeroSU2Perm_piece_zero rep_mul]
+    rw [← h.higgsMassWeightGaugeWeightZeroSU2Perm_piece_zero rep_mul]
     exact SU2PermDecomposition.mem_zero_of_invariant _
       (GaugeWeightDecomposition.mem_zero_of_invariant _ hx x_inv) x_inv
   -- averaging over the three axes maps that span into the three-generator one
