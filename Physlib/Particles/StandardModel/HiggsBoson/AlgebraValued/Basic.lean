@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.IsospinDecomposition
@@ -19,6 +20,7 @@ public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassDim
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
+public import Mathlib.RepresentationTheory.Invariants
 /-!
 # The algebra valued Higgs boson
 
@@ -88,6 +90,10 @@ structure IsHiggsAlgebraValued (B : Type*) [Semiring B] [Algebra ℂ B]
   /-- Gauge transformations act on `B` by algebra maps: the representation is
     multiplicative. -/
   rep_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B), rep g (b₁ * b₂) = rep g b₁ * rep g b₂
+  /-- Lorentz transformations act on `B` by algebra maps: the representation is
+    multiplicative. -/
+  repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
   /-- The Higgs is bosonic: two Higgs symbols commute. -/
   H_comm_H : ∀ φ ψ n1 n2 l1 l2, Commute (H n1 l1 φ) (H n2 l2 ψ)
   /-- A Higgs symbol commutes with a conjugate Higgs symbol. -/
@@ -632,17 +638,37 @@ noncomputable instance barHiggsSubmoduleGaugeWeight (n : ℕ) :
 
 -/
 
+open Lorentz.BoostWeight
+
+noncomputable def dot (x y : Fin 2 → B) : B := x 0 * y 0 + x 1 * y 1
+
+
+include h in
+/-- The boost weights of the two factors of an isospin contraction add. -/
+lemma dot_mem_boostWeightSubmodule {i : Fin 3} {a b : ℤ} {x y : Fin 2 → B}
+    (hx : ∀ j, x j ∈ boostWeightSubmodule repLorentz i a)
+    (hy : ∀ j, y j ∈ boostWeightSubmodule repLorentz i b) :
+    dot x y ∈ boostWeightSubmodule repLorentz i (a + b) := by
+  refine mem_boostWeightSubmodule.2 fun t ht => ?_
+  have hc : (algebraMap ℝ ℂ) t ≠ 0 := by simpa using ht
+  rw [dot, map_add, h.repLorentz_mul, h.repLorentz_mul,
+    mem_boostWeightSubmodule.1 (hx 0) t ht, mem_boostWeightSubmodule.1 (hy 0) t ht,
+    mem_boostWeightSubmodule.1 (hx 1) t ht, mem_boostWeightSubmodule.1 (hy 1) t ht,
+    smul_mul_smul_comm, smul_mul_smul_comm, ← zpow_add₀ hc, ← smul_add]
+
+
 noncomputable def dotGaugeHiggs (h : IsHiggsAlgebraValued B rep repLorentz H barH massWeightPoly)
     (d1 : Fin n1 → (Fin 1 ⊕ Fin 3)) (d2 : Fin n2 → (Fin 1 ⊕ Fin 3)) :
     B := h.higgs d1 0 * h.barHiggs d2 0 + h.higgs d1 1 * h.barHiggs d2 1
+
+lemma dotGaugeHiggs_eq_dot (d1 : Fin n1 → _) (d2 : Fin n2 → _) :
+    h.dotGaugeHiggs d1 d2 = dot (h.higgs d1) (h.barHiggs d2) := by rfl
 
 lemma rep_dotGaugeHiggs (d1 : Fin n1 → (Fin 1 ⊕ Fin 3)) (d2 : Fin n2 → (Fin 1 ⊕ Fin 3)) :
     rep gaugeSU2Perm (h.dotGaugeHiggs d1 d2) = h.dotGaugeHiggs d1 d2 := by
   rw [dotGaugeHiggs]
   exact h.rep_gaugeSU2Perm_higgsBarHiggs_add d1 d2
-/-- **The inner product is gauge invariant.** `∇H†∇H` is fixed by every gauge
-  transformation: the hypercharge phases cancel between `H` and `H̄`, and the `SU(2)`
-  matrix cancels against its conjugate by unitarity. -/
+
 lemma rep_dotGaugeHiggs_invariant (g : GaugeGroupI) (d1 : Fin n1 → (Fin 1 ⊕ Fin 3))
     (d2 : Fin n2 → (Fin 1 ⊕ Fin 3)) :
     rep g (h.dotGaugeHiggs d1 d2) = h.dotGaugeHiggs d1 d2 := by
@@ -680,6 +706,555 @@ lemma rep_dotGaugeHiggs_invariant (g : GaugeGroupI) (d1 : Fin n1 → (Fin 1 ⊕ 
   · linear_combination hM10'
   · linear_combination hM01'
   · linear_combination hM11
+
+/-!
+### E
+
+An aside on derivatives and
+boost weights (to be moved).
+
+-/
+
+lemma succ_deriv_span {n : ℕ} (f : (Fin n.succ → (Fin 1 ⊕ Fin 3)) → B) :
+    ⨆ d, ℂ ∙ f d = ⨆ μ : Fin 1 ⊕ Fin 3, ⨆ d, ℂ ∙ f (Fin.cons μ d) := by
+  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun μ => iSup_le fun d => ?_)
+  · exact le_iSup_of_le (d 0) (le_iSup_of_le (Fin.tail d) (by rw [Fin.cons_self_tail]))
+  · exact le_iSup (fun d => ℂ ∙ f d) (Fin.cons μ d)
+
+lemma succ_dervi_span_eq_lightCone {n : ℕ} (f : (Fin n.succ → (Fin 1 ⊕ Fin 3)) → B)
+    (i : Fin 3) :
+    ⨆ d, ℂ ∙ f d =  (⨆ d, ℂ ∙ (f (Fin.cons (Sum.inl 0) d) - f (Fin.cons (Sum.inr i) d))) ⊔
+      (⨆ d, ℂ ∙ (f (Fin.cons (Sum.inl 0) d) + f (Fin.cons (Sum.inr i) d)))
+      ⊔ (⨆ d, ℂ ∙ f (Fin.cons (Sum.inr (i + 1)) d))
+      ⊔ (⨆ d, ℂ ∙ f (Fin.cons (Sum.inr (i + 2)) d)) := by
+  have hcomb : ∀ (A C : B) (S : Submodule ℂ B), A - C ∈ S → A + C ∈ S → A ∈ S ∧ C ∈ S := by
+    refine fun A C S h1 h2 => ⟨?_, ?_⟩
+    · rw [show A = (2⁻¹ : ℂ) • ((A - C) + (A + C)) from by module]
+      exact Submodule.smul_mem _ _ (add_mem h1 h2)
+    · rw [show C = (2⁻¹ : ℂ) • ((A + C) - (A - C)) from by module]
+      exact Submodule.smul_mem _ _ (sub_mem h2 h1)
+  have hax : ∀ a b : Fin 3, b = a ∨ b = a + 1 ∨ b = a + 2 := by decide
+  refine le_antisymm (le_trans (le_of_eq (succ_deriv_span f)) ?_)
+    (sup_le (sup_le (sup_le ?_ ?_) ?_) ?_)
+  · refine iSup_le fun μ => iSup_le fun d => ?_
+    rcases μ with a | j
+    · rw [Subsingleton.elim a 0, Submodule.span_singleton_le_iff_mem]
+      refine (hcomb (f (Fin.cons (Sum.inl 0) d)) (f (Fin.cons (Sum.inr i) d)) _ ?_ ?_).1
+      · exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left
+          (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))))
+      · exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right
+          (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))))
+    · rcases hax i j with hj | hj | hj <;> rw [hj, Submodule.span_singleton_le_iff_mem]
+      · refine (hcomb (f (Fin.cons (Sum.inl 0) d)) (f (Fin.cons (Sum.inr i) d)) _ ?_ ?_).2
+        · exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left
+            (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))))
+        · exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right
+            (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))))
+      · exact Submodule.mem_sup_left (Submodule.mem_sup_right
+          (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _)))
+      · exact Submodule.mem_sup_right
+          (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact sub_mem
+      (Submodule.mem_iSup_of_mem (Fin.cons (Sum.inl 0) d) (Submodule.mem_span_singleton_self _))
+      (Submodule.mem_iSup_of_mem (Fin.cons (Sum.inr i) d) (Submodule.mem_span_singleton_self _))
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact add_mem
+      (Submodule.mem_iSup_of_mem (Fin.cons (Sum.inl 0) d) (Submodule.mem_span_singleton_self _))
+      (Submodule.mem_iSup_of_mem (Fin.cons (Sum.inr i) d) (Submodule.mem_span_singleton_self _))
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact Submodule.mem_iSup_of_mem (Fin.cons (Sum.inr (i + 1)) d)
+      (Submodule.mem_span_singleton_self _)
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact Submodule.mem_iSup_of_mem (Fin.cons (Sum.inr (i + 2)) d)
+      (Submodule.mem_span_singleton_self _)
+
+structure IsDerivativeCollection {W} [AddCommGroup W] [Module ℂ W]
+    (repW : Representation ℂ SL(2,ℂ) W) (α : ℕ)
+    (f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B) where
+  /-- The symbol map intertwines the Lorentz action on `W` with the one on `B`, up to the
+    rotation of its derivative indices: each index is a Lorentz vector index. The partition
+    `num` of the indices among the `α` factors is a spectator — the rotation does not see
+    how the indices are grouped — so the law is one sum over one product. -/
+  repLorentz_equiv : ∀ (g : SL(2,ℂ)) (num : Fin α → ℕ)
+      (d : Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) (w : W),
+      repLorentz g (f num d w) = ∑ (a : Fin (∑ i, num i) → Fin 1 ⊕ Fin 3),
+        (∏ (j : Fin (∑ i, num i)), (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) •
+          (f num a (repW g w))
+
+namespace IsDerivativeCollection
+
+variable {W} [AddCommGroup W] [Module ℂ W] {repW : Representation ℂ SL(2,ℂ) W}
+
+/-- **One shape's worth of the rotation law**: every derivative index of `F` is a Lorentz
+  vector index. This is all the boost-weight development below uses, so it is taken as a
+  hypothesis; `IsDerivativeCollection.rotatesIndices` supplies it for each partition. -/
+abbrev RotatesIndices (repW : Representation ℂ SL(2,ℂ) W)
+    (repLorentz : Representation ℂ SL(2,ℂ) B) {n : ℕ}
+    (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) : Prop :=
+  ∀ (g : SL(2,ℂ)) (d : Fin n → Fin 1 ⊕ Fin 3) (w : W),
+    repLorentz g (F d w) = ∑ (a : Fin n → Fin 1 ⊕ Fin 3),
+      (∏ (j : Fin n), (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) • F a (repW g w)
+
+
+/-- The boost-weight decomposition of the symbols carrying no derivatives: with no Lorentz
+  index to rotate, the symbol map transports the decomposition of `W` unchanged. This is
+  the `n = 0` case of `boostDecomp`. -/
+noncomputable def boostDecompZero (F : (Fin 0 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
+    (hF : RotatesIndices repW repLorentz F) (i : Fin 3)
+    (hw : WeightDecomposition (K := ℂ) repW i ⊤) :
+    WeightDecomposition repLorentz i (⨆ d : Fin 0 → Fin 1 ⊕ Fin 3, (F d).range) where
+  piece k := (hw.piece k).map (F ![])
+  supp := hw.supp
+  piece_le k := by
+    have hf0 : ∀ a : Fin 0 → Fin 1 ⊕ Fin 3, F a = F ![] := fun a => by
+      rw [Subsingleton.elim a ![]]
+    rintro _ ⟨w, hwmem, rfl⟩ t ht
+    rw [hF]
+    simp only [Finset.univ_unique, Finset.sum_singleton, Finset.univ_eq_empty,
+      Finset.prod_empty, one_smul]
+    rw [hw.piece_le k hwmem t ht, map_smul, hf0]
+  piece_eq_bot k hk := by rw [hw.piece_eq_bot k hk, Submodule.map_bot]
+  iSup_piece := by
+    rw [← Submodule.map_iSup, hw.iSup_piece, Submodule.map_top]
+    exact le_antisymm (le_iSup (fun d => (F d).range) ![])
+      (iSup_le fun d => le_of_eq (by rw [Subsingleton.elim d ![]]))
+
+/-- The four light-cone directions along the `i`-th axis, written as coefficient vectors on
+  the coordinate directions: `D₀ - Dᵢ`, `D₀ + Dᵢ`, and the two transverse directions. -/
+def lightConeCoeff (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) : ℂ :=
+  if κ = 0 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then -1 else 0)
+  else if κ = 1 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then 1 else 0)
+  else if κ = 2 then (if μ = Sum.inr (i + 1) then 1 else 0)
+  else (if μ = Sum.inr (i + 2) then 1 else 0)
+
+/-- The boost weight carried by each light-cone direction: `+2` for `D₀ - Dᵢ`, `-2` for
+  `D₀ + Dᵢ`, and `0` for the two transverse directions. -/
+def lightConeWeight (κ : Fin 4) : ℤ := if κ = 0 then 2 else if κ = 1 then -2 else 0
+
+/-- **The light-cone directions are eigenvectors of the boost.** Along the `i`-th axis
+  `D₀ - Dᵢ` is scaled by `t²`, `D₀ + Dᵢ` by `t⁻²`, and the two transverse directions are
+  fixed. -/
+lemma sum_boostAxis_lightConeCoeff (i : Fin 3) (κ : Fin 4) (ν : Fin 1 ⊕ Fin 3)
+    {t : ℝ} (ht : t ≠ 0) :
+    ∑ μ : Fin 1 ⊕ Fin 3,
+        (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 ν μ : ℝ) : ℂ) * lightConeCoeff i κ μ
+      = ((t : ℝ) : ℂ) ^ (lightConeWeight κ) * lightConeCoeff i κ ν := by
+  have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  rw [show SL2C.toLorentzGroup (SL2C.boostAxis i t ht) = LorentzGroup.boostAxis i t ht from rfl]
+  rcases ν with a | j
+  · rw [Subsingleton.elim a 0]
+    fin_cases i <;> fin_cases κ
+    all_goals
+      simp [lightConeCoeff, lightConeWeight, Fintype.sum_sum_type,
+        LorentzGroup.boostAxis_apply]
+    all_goals try field_simp
+    all_goals try ring
+  · fin_cases i <;> fin_cases j <;> fin_cases κ
+    all_goals
+      simp [lightConeCoeff, lightConeWeight, Fintype.sum_sum_type,
+        LorentzGroup.boostAxis_apply]
+    all_goals try field_simp
+    all_goals try ring
+
+/-- The coordinate directions written back in the light-cone basis: `D₀` and `Dᵢ` are the
+  half-sum and half-difference of `D₀ ∓ Dᵢ`, and the transverse directions are themselves. -/
+noncomputable def lightConeCoeffInv (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℂ :=
+  if μ = Sum.inl 0 then (if κ = 0 then 2⁻¹ else if κ = 1 then 2⁻¹ else 0)
+  else if μ = Sum.inr i then (if κ = 0 then -2⁻¹ else if κ = 1 then 2⁻¹ else 0)
+  else if μ = Sum.inr (i + 1) then (if κ = 2 then 1 else 0)
+  else (if κ = 3 then 1 else 0)
+
+/-- The light-cone basis is a basis: the two coefficient matrices are inverse. -/
+lemma sum_lightConeCoeffInv_mul (i : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
+    ∑ κ : Fin 4, lightConeCoeffInv i μ κ * lightConeCoeff i κ ν = if μ = ν then 1 else 0 := by
+  rcases μ with a | j
+  · rw [Subsingleton.elim a 0]
+    rcases ν with a' | j'
+    · rw [Subsingleton.elim a' 0]
+      fin_cases i <;>
+        simp [lightConeCoeff, lightConeCoeffInv, Fin.sum_univ_four] <;> norm_num
+    · fin_cases i <;> fin_cases j' <;>
+        simp [lightConeCoeff, lightConeCoeffInv, Fin.sum_univ_four]
+  · rcases ν with a' | j'
+    · rw [Subsingleton.elim a' 0]
+      fin_cases i <;> fin_cases j <;>
+        simp [lightConeCoeff, lightConeCoeffInv, Fin.sum_univ_four]
+    · fin_cases i <;> fin_cases j <;> fin_cases j' <;>
+        simp [lightConeCoeff, lightConeCoeffInv, Fin.sum_univ_four] <;> norm_num
+
+/-- The scalar behind `lightConeDeriv_mem`: the boost acts on a light-cone multi-index
+  slot by slot, so the product of the per-slot eigenvalues factors out. -/
+lemma sum_prod_lightConeCoeff (i : Fin 3) {n : ℕ} (c : Fin n → Fin 4)
+    (a : Fin n → Fin 1 ⊕ Fin 3) {t : ℝ} (ht : t ≠ 0) :
+    ∑ d : Fin n → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) *
+        (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) (d j) : ℝ) : ℂ))
+      = ((t : ℝ) : ℂ) ^ (∑ j, lightConeWeight (c j)) * ∏ j, lightConeCoeff i (c j) (a j) := by
+  have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  have hzpow : ∀ (s : Finset (Fin n)) (g : Fin n → ℤ),
+      ∏ j ∈ s, ((t : ℝ) : ℂ) ^ (g j) = ((t : ℝ) : ℂ) ^ (∑ j ∈ s, g j) := by
+    intro s g
+    induction s using Finset.induction with
+    | empty => simp
+    | insert a s ha ih => rw [Finset.prod_insert ha, Finset.sum_insert ha, ih, zpow_add₀ htc]
+  calc ∑ d : Fin n → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) *
+        (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) (d j) : ℝ) : ℂ))
+      = ∑ d : Fin n → Fin 1 ⊕ Fin 3, ∏ j, (lightConeCoeff i (c j) (d j) *
+          (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) (d j) : ℝ) : ℂ)) :=
+        Finset.sum_congr rfl fun d _ => (Finset.prod_mul_distrib).symm
+    _ = ∏ j, ∑ μ : Fin 1 ⊕ Fin 3, (lightConeCoeff i (c j) μ *
+          (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) μ : ℝ) : ℂ)) := by
+        rw [Finset.prod_univ_sum, Fintype.piFinset_univ]
+    _ = ∏ j, (((t : ℝ) : ℂ) ^ (lightConeWeight (c j)) * lightConeCoeff i (c j) (a j)) := by
+        refine Finset.prod_congr rfl fun j _ => ?_
+        simp_rw [mul_comm (lightConeCoeff i (c j) _)]
+        exact sum_boostAxis_lightConeCoeff i (c j) (a j) ht
+    _ = (∏ j, ((t : ℝ) : ℂ) ^ (lightConeWeight (c j))) * ∏ j, lightConeCoeff i (c j) (a j) :=
+        Finset.prod_mul_distrib
+    _ = ((t : ℝ) : ℂ) ^ (∑ j, lightConeWeight (c j)) * ∏ j, lightConeCoeff i (c j) (a j) := by
+        rw [hzpow]
+
+/-- **The symbol with its derivative indices in the light-cone basis.** Each slot `j` of the
+  multi-index carries a light-cone direction `c j` instead of a coordinate direction, so the
+  symbol is an eigenvector of the boost along the `i`-th axis, of weight
+  `∑ j, lightConeWeight (c j)`. -/
+noncomputable def lightConeDeriv {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
+    (i : Fin 3) (c : Fin n → Fin 4) : W →ₗ[ℂ] B :=
+  ∑ d : Fin n → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) • F d
+
+/-- **A one-slot light-cone symbol**, written out as a combination of coordinate symbols. -/
+lemma lightConeDeriv_single (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) (κ : Fin 4) :
+    lightConeDeriv F i ![κ] = ∑ μ : Fin 1 ⊕ Fin 3, lightConeCoeff i κ μ • F ![μ] := by
+  rw [lightConeDeriv]
+  refine Fintype.sum_equiv (Equiv.funUnique (Fin 1) (Fin 1 ⊕ Fin 3)) _ _ fun d => ?_
+  have hd : d = ![d 0] := by
+    funext j
+    fin_cases j
+    rfl
+  simp only [Fin.prod_univ_one, Matrix.cons_val_zero, Equiv.funUnique_apply,
+    Fin.default_eq_zero]
+  rw [← hd]
+
+/-- The light-cone combination `D₀ - Dᵢ` on one slot. -/
+lemma lightConeDeriv_zero (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![0] = F ![Sum.inl 0] - F ![Sum.inr i] := by
+  rw [lightConeDeriv_single]
+  fin_cases i <;>
+    simp [lightConeCoeff, Fintype.sum_sum_type] <;> module
+
+/-- The light-cone combination `D₀ + Dᵢ` on one slot. -/
+lemma lightConeDeriv_one (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![1] = F ![Sum.inl 0] + F ![Sum.inr i] := by
+  rw [lightConeDeriv_single]
+  fin_cases i <;>
+    simp [lightConeCoeff, Fintype.sum_sum_type]
+
+/-- The first transverse direction on one slot. -/
+lemma lightConeDeriv_two (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![2] = F ![Sum.inr (i + 1)] := by
+  rw [lightConeDeriv_single]
+  fin_cases i <;>
+    simp [lightConeCoeff]
+
+/-- The second transverse direction on one slot. -/
+lemma lightConeDeriv_three (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![3] = F ![Sum.inr (i + 2)] := by
+  rw [lightConeDeriv_single]
+  fin_cases i <;>
+    simp [lightConeCoeff]
+
+/-- **The one-slot light-cone symbols of weight zero** are the two transverse directions:
+  the join of the weight-zero ranges on a single slot is the join of the ranges of the two
+  transverse symbols. -/
+lemma iSup_range_lightConeDeriv_single_weight_zero
+    (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    (⨆ (c : Fin 1 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = (0 : ℤ)),
+        LinearMap.range (lightConeDeriv F i c))
+      = LinearMap.range (F ![Sum.inr (i + 1)]) ⊔ LinearMap.range (F ![Sum.inr (i + 2)]) := by
+  refine le_antisymm (iSup₂_le fun c hc => ?_) (sup_le ?_ ?_)
+  · obtain ⟨κ, rfl⟩ : ∃ κ, c = ![κ] := ⟨c 0, funext fun j => by fin_cases j; rfl⟩
+    rw [Fin.sum_univ_one] at hc
+    fin_cases κ
+    · simp [lightConeWeight] at hc
+    · simp [lightConeWeight] at hc
+    · exact le_sup_of_le_left (le_of_eq (congrArg LinearMap.range (lightConeDeriv_two F i)))
+    · exact le_sup_of_le_right (le_of_eq (congrArg LinearMap.range (lightConeDeriv_three F i)))
+  · exact le_iSup₂_of_le ![2] (by simp [lightConeWeight])
+      (le_of_eq (by rw [lightConeDeriv_two]))
+  · exact le_iSup₂_of_le ![3] (by simp [lightConeWeight])
+      (le_of_eq (by rw [lightConeDeriv_three]))
+
+/-- The scalar behind `f_eq_sum_lightConeDeriv`: the two coefficient matrices are inverse
+  slot by slot, hence inverse on multi-indices. -/
+lemma sum_prod_lightConeCoeffInv (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) :
+    ∑ c : Fin n → Fin 4, (∏ j, lightConeCoeffInv i (d j) (c j)) *
+        (∏ j, lightConeCoeff i (c j) (e j)) = if d = e then 1 else 0 := by
+  calc ∑ c : Fin n → Fin 4, (∏ j, lightConeCoeffInv i (d j) (c j)) *
+        (∏ j, lightConeCoeff i (c j) (e j))
+      = ∑ c : Fin n → Fin 4,
+          ∏ j, (lightConeCoeffInv i (d j) (c j) * lightConeCoeff i (c j) (e j)) :=
+        Finset.sum_congr rfl fun c _ => (Finset.prod_mul_distrib).symm
+    _ = ∏ j, ∑ κ : Fin 4, (lightConeCoeffInv i (d j) κ * lightConeCoeff i κ (e j)) := by
+        rw [Finset.prod_univ_sum, Fintype.piFinset_univ]
+    _ = ∏ j, (if d j = e j then (1 : ℂ) else 0) :=
+        Finset.prod_congr rfl fun j _ => sum_lightConeCoeffInv_mul i (d j) (e j)
+    _ = if d = e then 1 else 0 := by
+        by_cases hde : d = e
+        · subst hde
+          simp
+        · rw [if_neg hde]
+          obtain ⟨j, hj⟩ := Function.ne_iff.1 hde
+          exact Finset.prod_eq_zero (Finset.mem_univ j) (if_neg hj)
+
+/-- **The coordinate symbols in the light-cone basis.** The change of basis is invertible,
+  so the two families span the same submodule. -/
+lemma eq_sum_lightConeDeriv {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3)
+    (d : Fin n → Fin 1 ⊕ Fin 3) :
+    F d = ∑ c : Fin n → Fin 4,
+      (∏ j, lightConeCoeffInv i (d j) (c j)) • lightConeDeriv F i c := by
+  simp only [lightConeDeriv, Finset.smul_sum, smul_smul]
+  rw [Finset.sum_comm]
+  simp only [← Finset.sum_smul, sum_prod_lightConeCoeffInv i d, ite_smul, one_smul, zero_smul,
+    Finset.sum_ite_eq, Finset.mem_univ, if_true]
+
+/-- **The light-cone symbols have definite boost weight.** Each derivative slot contributes
+  the weight of its light-cone direction, on top of the weight the argument carries in
+  `W`. -/
+lemma lightConeDeriv_mem {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
+    (hF : RotatesIndices repW repLorentz F)
+    (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ} {w : W}
+    (hwm : w ∈ boostWeightSubmodule repW i b) :
+    lightConeDeriv F i c w ∈
+      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) := by
+  intro t ht
+  have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
+  have key : repLorentz (SL2C.boostAxis i t ht) (lightConeDeriv F i c w)
+      = ((t : ℝ) : ℂ) ^ (∑ j, lightConeWeight (c j)) •
+        lightConeDeriv F i c (repW (SL2C.boostAxis i t ht) w) := by
+    have hstep : ∀ x : Fin n → Fin 1 ⊕ Fin 3,
+        (∏ j, lightConeCoeff i (c j) (x j)) • repLorentz (SL2C.boostAxis i t ht) (F x w)
+          = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
+            ((∏ j, lightConeCoeff i (c j) (x j)) *
+              (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) (x j) : ℝ) : ℂ))) •
+              F a (repW (SL2C.boostAxis i t ht) w) := by
+      intro x
+      rw [hF, Finset.smul_sum]
+      exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
+    simp only [lightConeDeriv, LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply,
+      map_sum, map_smul]
+    rw [Finset.smul_sum]
+    simp only [hstep]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [← Finset.sum_smul, smul_smul]
+    congr 1
+    exact sum_prod_lightConeCoeff i c a ht
+  rw [key, hwm t ht, map_smul, smul_smul,
+    show (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) from rfl, ← zpow_add₀ htc]
+
+/-- **The boost-weight decomposition of the symbols carrying `n` derivatives.** The
+  multi-index is read in the light-cone basis: a slot of type `c j` contributes
+  `lightConeWeight (c j)` — `+2` for `D₀ - Dᵢ`, `-2` for `D₀ + Dᵢ`, `0` for the two
+  transverse directions — on top of the weight the argument already carries in `W`. -/
+noncomputable def boostDecomp {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
+    (hF : RotatesIndices repW repLorentz F)
+    (i : Fin 3) (hw : WeightDecomposition (K := ℂ) repW i ⊤) :
+    WeightDecomposition repLorentz i (⨆ d : Fin n → Fin 1 ⊕ Fin 3, (F d).range) where
+  piece k := ⨆ c : Fin n → Fin 4,
+    (hw.piece (k - ∑ j, lightConeWeight (c j))).map (lightConeDeriv F i c)
+  supp := (Finset.univ ×ˢ hw.supp).image
+    fun p : (Fin n → Fin 4) × ℤ => (∑ j, lightConeWeight (p.1 j)) + p.2
+  piece_le k := by
+    refine iSup_le fun c => ?_
+    rintro _ ⟨w, hwmem, rfl⟩
+    have hmem := lightConeDeriv_mem F hF i c (hw.piece_le _ hwmem)
+    rwa [show (∑ j, lightConeWeight (c j)) + (k - ∑ j, lightConeWeight (c j)) = k from by ring]
+      at hmem
+  piece_eq_bot k hk := by
+    refine le_antisymm (iSup_le fun c => ?_) bot_le
+    have hb : k - (∑ j, lightConeWeight (c j)) ∉ hw.supp := fun hb =>
+      hk (Finset.mem_image.2 ⟨(c, k - ∑ j, lightConeWeight (c j)),
+        Finset.mem_product.2 ⟨Finset.mem_univ c, hb⟩, by dsimp only; ring⟩)
+    rw [hw.piece_eq_bot _ hb, Submodule.map_bot]
+  iSup_piece := by
+    have hc : ∀ c : Fin n → Fin 4,
+        (⨆ k : ℤ, hw.piece (k - ∑ j, lightConeWeight (c j))) = ⊤ := by
+      intro c
+      refine le_antisymm le_top ?_
+      calc (⊤ : Submodule ℂ W) = ⨆ b, hw.piece b := hw.iSup_piece.symm
+        _ ≤ ⨆ k : ℤ, hw.piece (k - ∑ j, lightConeWeight (c j)) :=
+            iSup_le fun b => le_iSup_of_le (b + ∑ j, lightConeWeight (c j))
+              (by rw [add_sub_cancel_right])
+    rw [iSup_comm]
+    calc (⨆ c : Fin n → Fin 4, ⨆ k : ℤ,
+          (hw.piece (k - ∑ j, lightConeWeight (c j))).map (lightConeDeriv F i c))
+        = ⨆ c : Fin n → Fin 4, LinearMap.range (lightConeDeriv F i c) := by
+          refine iSup_congr fun c => ?_
+          rw [← Submodule.map_iSup, hc c, Submodule.map_top]
+      _ = ⨆ d : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (F d) := by
+          refine le_antisymm (iSup_le fun c => ?_) (iSup_le fun d => ?_)
+          · rintro _ ⟨w, rfl⟩
+            rw [lightConeDeriv, LinearMap.sum_apply]
+            refine Submodule.sum_mem _ fun d _ => ?_
+            rw [LinearMap.smul_apply]
+            exact Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem d ⟨w, rfl⟩)
+          · rintro _ ⟨w, rfl⟩
+            rw [eq_sum_lightConeDeriv F i d, LinearMap.sum_apply]
+            refine Submodule.sum_mem _ fun c _ => ?_
+            rw [LinearMap.smul_apply]
+            exact Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem c ⟨w, rfl⟩)
+
+/-- Each shape of a derivative collection rotates its indices. -/
+lemma rotatesIndices {α : ℕ}
+    {f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B}
+    (hD : IsDerivativeCollection (repLorentz := repLorentz) repW α f) (num : Fin α → ℕ) :
+    RotatesIndices repW repLorentz (f num) :=
+  fun g d w => hD.repLorentz_equiv g num d w
+
+/-- **The boost-weight decomposition of the symbols of one shape.** For a term built from
+  `α` factors carrying `num i` derivatives each, the span of the symbols decomposes into
+  boost weights along any axis. -/
+noncomputable def boostDecompOfNum {α : ℕ}
+    {f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B}
+    (hD : IsDerivativeCollection (repLorentz := repLorentz) repW α f) (num : Fin α → ℕ)
+    (i : Fin 3) (hw : WeightDecomposition (K := ℂ) repW i ⊤) :
+    WeightDecomposition repLorentz i (⨆ d, (f num d).range) :=
+  boostDecomp (f num) (hD.rotatesIndices num) i hw
+
+/-- **The pieces of `boostDecompOfNum`.** The weight-`k` part is the join, over the
+  light-cone multi-indices `c`, of the images of the weight-`(k - ∑ lightConeWeight (c j))`
+  part of `W`: the derivative slots and the argument split the weight between them. -/
+lemma boostDecompOfNum_piece {α : ℕ}
+    {f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B}
+    (hD : IsDerivativeCollection (repLorentz := repLorentz) repW α f) (num : Fin α → ℕ)
+    (i : Fin 3) (hw : WeightDecomposition (K := ℂ) repW i ⊤) (k : ℤ) :
+    (hD.boostDecompOfNum num i hw).piece k
+      = ⨆ c : Fin (∑ i, num i) → Fin 4,
+        (hw.piece (k - ∑ j, lightConeWeight (c j))).map (lightConeDeriv (f num) i c) :=
+  rfl
+
+/-- **The pieces when the argument is a Lorentz scalar.** If `W` sits entirely in weight
+  zero then the weight is carried by the derivative slots alone, and the weight-`k` piece is
+  spanned by the light-cone symbols whose slots have total weight `k`. -/
+lemma boostDecompOfNum_piece_of_weight_zero {α : ℕ}
+    {f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B}
+    (hD : IsDerivativeCollection (repLorentz := repLorentz) repW α f) (num : Fin α → ℕ)
+    (i : Fin 3) (hw : WeightDecomposition (K := ℂ) repW i ⊤) (hw0 : hw.piece 0 = ⊤)
+    (hwb : ∀ b : ℤ, b ≠ 0 → hw.piece b = ⊥) (k : ℤ) :
+    (hD.boostDecompOfNum num i hw).piece k
+      = ⨆ (c : Fin (∑ i, num i) → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
+          LinearMap.range (lightConeDeriv (f num) i c) := by
+  rw [boostDecompOfNum_piece]
+  refine iSup_congr fun c => ?_
+  by_cases hc : (∑ j, lightConeWeight (c j)) = k
+  · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega, hw0, Submodule.map_top,
+      iSup_pos hc]
+  · rw [hwb _ (by omega), Submodule.map_bot, iSup_neg hc]
+
+end IsDerivativeCollection
+
+/-!
+
+### E.1. The two-factor collection from the Higgs inner product
+
+The gauge-invariant inner product `dotGaugeHiggs` of a Higgs and a conjugate Higgs, each
+carrying its own derivatives, is a two-factor derivative collection over `W = ℂ`: the
+Lorentz group rotates the derivative indices of the two factors independently, and the
+trivial action on `ℂ` records that the inner product itself is a Lorentz scalar.
+
+-/
+
+/-- The Lorentz action rotates the derivative indices of a Higgs symbol. -/
+lemma repLorentz_higgs {n : ℕ} (g : SL(2,ℂ)) (d : Fin n → Fin 1 ⊕ Fin 3) (k : Fin 2) :
+    repLorentz g (h.higgs d k) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
+      (∏ j, (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) • h.higgs a k := by
+  simp only [higgs]
+  rw [h.repLorentz_H]
+
+/-- The Lorentz action rotates the derivative indices of a conjugate Higgs symbol. -/
+lemma repLorentz_barHiggs {n : ℕ} (g : SL(2,ℂ)) (d : Fin n → Fin 1 ⊕ Fin 3) (k : Fin 2) :
+    repLorentz g (h.barHiggs d k) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
+      (∏ j, (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) • h.barHiggs a k := by
+  simp only [barHiggs]
+  rw [h.repLorentz_barH]
+
+/-- **The Higgs inner product as a two-factor symbol map.** The first `num 0` derivative
+  indices go on the Higgs, the last `num 1` on its conjugate, and the scalar `w : ℂ` scales
+  the result — the inner product carries no Lorentz index of its own. -/
+noncomputable def dotSymbol (num : Fin 2 → ℕ)
+    (d : Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) : ℂ →ₗ[ℂ] B :=
+  LinearMap.toSpanSingleton ℂ B
+    (h.dotGaugeHiggs (fun j : Fin (num 0) => d (Fin.castAdd (num 1) j))
+      (fun j : Fin (num 1) => d (Fin.natAdd (num 0) j)))
+
+/-- **The Lorentz action on the Higgs inner product.** The two factors' derivative indices
+  rotate independently; the inner product itself is a Lorentz scalar. -/
+lemma repLorentz_dotGaugeHiggs {m n : ℕ} (g : SL(2,ℂ))
+    (d₁ : Fin m → Fin 1 ⊕ Fin 3) (d₂ : Fin n → Fin 1 ⊕ Fin 3) :
+    repLorentz g (h.dotGaugeHiggs d₁ d₂) =
+      ∑ a₁ : Fin m → Fin 1 ⊕ Fin 3, ∑ a₂ : Fin n → Fin 1 ⊕ Fin 3,
+        ((∏ j, (((SL2C.toLorentzGroup g).1 (a₁ j) (d₁ j) : ℝ) : ℂ)) *
+          (∏ j, (((SL2C.toLorentzGroup g).1 (a₂ j) (d₂ j) : ℝ) : ℂ))) •
+          h.dotGaugeHiggs a₁ a₂ := by
+  simp only [dotGaugeHiggs, map_add, h.repLorentz_mul, repLorentz_higgs, repLorentz_barHiggs,
+    Finset.sum_mul_sum, smul_mul_smul_comm, smul_add, Finset.sum_add_distrib]
+
+/-- The weight decomposition of `ℂ` under the trivial Lorentz action: every scalar has
+  boost weight zero. -/
+noncomputable def trivialWeightDecomposition (i : Fin 3) :
+    WeightDecomposition (1 : Representation ℂ SL(2,ℂ) ℂ) i ⊤ where
+  piece k := if k = 0 then ⊤ else ⊥
+  supp := {0}
+  piece_le k := by
+    by_cases hk : k = 0
+    · subst hk
+      rw [if_pos rfl]
+      intro x _ t ht
+      simp
+    · rw [if_neg hk]
+      exact bot_le
+  piece_eq_bot k hk := if_neg (by simpa using hk)
+  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [if_pos rfl]))
+
+@[simp]
+lemma trivialWeightDecomposition_piece (i : Fin 3) (k : ℤ) :
+    (trivialWeightDecomposition i).piece k = if k = 0 then ⊤ else ⊥ := rfl
+
+/-- **The Higgs inner product is a two-factor derivative collection.** The Lorentz group
+  rotates the derivative indices of the two factors independently; the trivial action on
+  `ℂ` records that the inner product carries no Lorentz index of its own. -/
+lemma isDerivativeCollection_dotSymbol :
+    IsDerivativeCollection (repLorentz := repLorentz) (1 : Representation ℂ SL(2,ℂ) ℂ) 2
+      h.dotSymbol where
+  repLorentz_equiv g num d w := by
+    calc repLorentz g (h.dotSymbol num d w)
+        = ∑ q : (Fin (num 0) → Fin 1 ⊕ Fin 3) × (Fin (num 1) → Fin 1 ⊕ Fin 3),
+            (w * ((∏ j, (((SL2C.toLorentzGroup g).1 (q.1 j)
+                  (d (Fin.castAdd (num 1) j)) : ℝ) : ℂ)) *
+                (∏ j, (((SL2C.toLorentzGroup g).1 (q.2 j)
+                  (d (Fin.natAdd (num 0) j)) : ℝ) : ℂ)))) • h.dotGaugeHiggs q.1 q.2 := by
+          rw [Fintype.sum_prod_type]
+          simp only [dotSymbol, LinearMap.toSpanSingleton_apply, map_smul,
+            repLorentz_dotGaugeHiggs, Finset.smul_sum, smul_smul]
+      _ = ∑ a : Fin (∑ i, num i) → Fin 1 ⊕ Fin 3,
+            (∏ j, (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) •
+              h.dotSymbol num a ((1 : Representation ℂ SL(2,ℂ) ℂ) g w) := by
+          refine (Fintype.sum_equiv (Fin.appendEquiv (num 0) (num 1)).symm _ _ fun a => ?_).symm
+          have hprod : ∀ u : Fin (∑ i, num i) → Fin 1 ⊕ Fin 3,
+              (∏ x, (((SL2C.toLorentzGroup g).1 (u x) (d x) : ℝ) : ℂ))
+                = (∏ j : Fin (num 0), (((SL2C.toLorentzGroup g).1
+                      (u (Fin.castAdd (num 1) j)) (d (Fin.castAdd (num 1) j)) : ℝ) : ℂ)) *
+                  (∏ j : Fin (num 1), (((SL2C.toLorentzGroup g).1
+                      (u (Fin.natAdd (num 0) j)) (d (Fin.natAdd (num 0) j)) : ℝ) : ℂ)) :=
+            fun u => Fin.prod_univ_add _
+          simp only [dotSymbol, LinearMap.toSpanSingleton_apply, MonoidHom.one_apply,
+            Module.End.one_apply, hprod, Fin.appendEquiv_symm_apply, smul_smul,
+            mul_comm w, mul_assoc]
+          rfl
 
 /-!
 
@@ -1999,6 +2574,86 @@ lemma mem_of_mem_massWeightSubmodule_eight_of_invariant {w : ℕ} {x : B}
 
 -/
 
+noncomputable def gaugeInvariantOfMassDim (M : ℕ) : Submodule ℂ B :=
+  h.massWeightSubmodule M ⊓ Representation.invariants rep
+
+lemma gaugeInvariantOfMassDim_four_eq :
+    h.gaugeInvariantOfMassDim 4 = ℂ ∙ h.dotGaugeHiggs ![] ![] := by
+  refine le_antisymm (fun x hx =>
+    h.mem_of_mem_massWeightSubmodule_four_of_invariant (w := 0) hx.1 hx.2) ?_
+  rw [Submodule.span_singleton_le_iff_mem]
+  refine ⟨?_, fun g => h.rep_dotGaugeHiggs_invariant g ![] ![]⟩
+  have hH : ∀ i, h.higgs ![] i ∈ h.massWeightSubmodule 2 := fun i =>
+    h.massWeightSubmodule_higgsSubmodule_le 0
+      (Submodule.mem_iSup_of_mem ![] (LinearMap.mem_range_self _ _))
+  have hbH : ∀ i, h.barHiggs ![] i ∈ h.massWeightSubmodule 2 := fun i =>
+    h.massWeightSubmodule_barHiggsSubmodule_le 0
+      (Submodule.mem_iSup_of_mem ![] (LinearMap.mem_range_self _ _))
+  rw [dotGaugeHiggs]
+  exact add_mem (h.massWeightSubmodule_mul_le 2 2 (Submodule.mul_mem_mul (hH 0) (hbH 0)))
+    (h.massWeightSubmodule_mul_le 2 2 (Submodule.mul_mem_mul (hH 1) (hbH 1)))
+
+lemma gaugeInvariantOfMassDim_six_eq :
+    h.gaugeInvariantOfMassDim 6 = (⨆ (d : Fin 1 → _), ℂ ∙ h.dotGaugeHiggs d ![]) ⊔
+      (⨆ (d : Fin 1 → _), ℂ ∙ h.dotGaugeHiggs ![] d) := by
+  have hH : ∀ (n : ℕ) (d : Fin n → (Fin 1 ⊕ Fin 3)) (i : Fin 2),
+      h.higgs d i ∈ h.massWeightSubmodule (2 * (1 + n)) := fun n d i =>
+    h.massWeightSubmodule_higgsSubmodule_le n
+      (Submodule.mem_iSup_of_mem d (LinearMap.mem_range_self _ _))
+  have hbH : ∀ (n : ℕ) (d : Fin n → (Fin 1 ⊕ Fin 3)) (i : Fin 2),
+      h.barHiggs d i ∈ h.massWeightSubmodule (2 * (1 + n)) := fun n d i =>
+    h.massWeightSubmodule_barHiggsSubmodule_le n
+      (Submodule.mem_iSup_of_mem d (LinearMap.mem_range_self _ _))
+  refine le_antisymm (fun x hx =>
+    h.mem_of_mem_massWeightSubmodule_six_of_invariant (w := 0) hx.1 hx.2) (sup_le ?_ ?_)
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    refine ⟨?_, fun g => h.rep_dotGaugeHiggs_invariant g d ![]⟩
+    rw [dotGaugeHiggs]
+    exact add_mem
+      (h.massWeightSubmodule_mul_le 4 2 (Submodule.mul_mem_mul (hH 1 d 0) (hbH 0 ![] 0)))
+      (h.massWeightSubmodule_mul_le 4 2 (Submodule.mul_mem_mul (hH 1 d 1) (hbH 0 ![] 1)))
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    refine ⟨?_, fun g => h.rep_dotGaugeHiggs_invariant g ![] d⟩
+    rw [dotGaugeHiggs]
+    exact add_mem
+      (h.massWeightSubmodule_mul_le 2 4 (Submodule.mul_mem_mul (hH 0 ![] 0) (hbH 1 d 0)))
+      (h.massWeightSubmodule_mul_le 2 4 (Submodule.mul_mem_mul (hH 0 ![] 1) (hbH 1 d 1)))
+
+lemma gaugeInvariantOfMassDim_eight_eq :
+    h.gaugeInvariantOfMassDim 8 = (⨆ (d : Fin 2 → _), ℂ ∙ h.dotGaugeHiggs d ![]) ⊔
+      (⨆ (d : Fin 2 → _), ℂ ∙ h.dotGaugeHiggs ![] d) ⊔
+      (⨆ (d : Fin 1 → _), ⨆ (d2 : Fin 1 → _), ℂ ∙ h.dotGaugeHiggs d d2) ⊔
+      ℂ ∙ h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![] := by
+  have hdot : ∀ {n1 n2 : ℕ} (d1 : Fin n1 → (Fin 1 ⊕ Fin 3)) (d2 : Fin n2 → (Fin 1 ⊕ Fin 3)),
+      h.dotGaugeHiggs d1 d2 ∈ h.massWeightSubmodule (2 * (1 + n1) + 2 * (1 + n2)) := by
+    intro n1 n2 d1 d2
+    have hH : ∀ i, h.higgs d1 i ∈ h.massWeightSubmodule (2 * (1 + n1)) := fun i =>
+      h.massWeightSubmodule_higgsSubmodule_le n1
+        (Submodule.mem_iSup_of_mem d1 (LinearMap.mem_range_self _ _))
+    have hbH : ∀ i, h.barHiggs d2 i ∈ h.massWeightSubmodule (2 * (1 + n2)) := fun i =>
+      h.massWeightSubmodule_barHiggsSubmodule_le n2
+        (Submodule.mem_iSup_of_mem d2 (LinearMap.mem_range_self _ _))
+    rw [dotGaugeHiggs]
+    exact add_mem (h.massWeightSubmodule_mul_le _ _ (Submodule.mul_mem_mul (hH 0) (hbH 0)))
+      (h.massWeightSubmodule_mul_le _ _ (Submodule.mul_mem_mul (hH 1) (hbH 1)))
+  refine le_antisymm (fun x hx =>
+    h.mem_of_mem_massWeightSubmodule_eight_of_invariant (w := 0) hx.1 hx.2)
+    (sup_le (sup_le (sup_le ?_ ?_) ?_) ?_)
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact ⟨hdot d ![], fun g => h.rep_dotGaugeHiggs_invariant g d ![]⟩
+  · refine iSup_le fun d => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact ⟨hdot ![] d, fun g => h.rep_dotGaugeHiggs_invariant g ![] d⟩
+  · refine iSup_le fun d => iSup_le fun d2 => ?_
+    rw [Submodule.span_singleton_le_iff_mem]
+    exact ⟨hdot d d2, fun g => h.rep_dotGaugeHiggs_invariant g d d2⟩
+  · rw [Submodule.span_singleton_le_iff_mem]
+    exact ⟨h.massWeightSubmodule_mul_le 4 4 (Submodule.mul_mem_mul (hdot ![] ![]) (hdot ![] ![])),
+      fun g => by rw [h.rep_mul, h.rep_dotGaugeHiggs_invariant]⟩
+
 /-!
 
 ## D. Invariance under the Lorentz group
@@ -2013,912 +2668,359 @@ we now give the invariance under the Lorentz group.
 ### D.1. The decomposition under boost weights in the x-direction
 
 -/
+open Lorentz.BoostWeight
 
+/-- With all derivatives on the Higgs, the two-factor symbol is scaling by
+  `dotGaugeHiggs d ![]`. -/
+lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![1, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  exact funext fun j => j.elim0
+
+/-- With all derivatives on the conjugate Higgs. -/
+lemma dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![0, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  all_goals first
+    | exact funext fun j => j.elim0
+    | (funext j; congr 1; exact Fin.ext (by simp))
+
+@[simp]
+lemma range_dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![1, 0] d).range = ℂ ∙ h.dotGaugeHiggs d ![] := by
+  rw [h.dotSymbol_left d, ← LinearMap.span_singleton_eq_range]
+
+@[simp]
+lemma range_dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![0, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
+  rw [h.dotSymbol_right d, ← LinearMap.span_singleton_eq_range]
+
+/-- The span of the two-factor symbols is the gauge-invariant submodule of mass weight
+  six: one derivative on the Higgs or one on its conjugate. -/
+lemma iSup_range_dotSymbol_eq :
+    ((⨆ d, (h.dotSymbol ![1, 0] d).range) ⊔ ⨆ d, (h.dotSymbol ![0, 1] d).range)
+      = h.gaugeInvariantOfMassDim 6 := by
+  rw [h.gaugeInvariantOfMassDim_six_eq]
+  congr 1
+  · exact iSup_congr fun d => h.range_dotSymbol_left d
+  · exact iSup_congr fun d => h.range_dotSymbol_right d
+
+
+
+
+/-- **The boost-weight decomposition of the gauge-invariant terms of mass weight six.**
+  The two families — one derivative on the Higgs, one on its conjugate — are each a
+  two-factor derivative collection over `ℂ`, so each carries a decomposition; the join of
+  the two is the decomposition of their join. -/
+noncomputable def boostWeightZeroSix (i : Fin 3) :
+    WeightDecomposition repLorentz i (h.gaugeInvariantOfMassDim 6) :=
+  ((h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![1, 0] i
+      (trivialWeightDecomposition i)).sup
+    (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 1] i
+      (trivialWeightDecomposition i))).copy h.iSup_range_dotSymbol_eq
 /-!
 
-### D.2. The decomposition under boost weights in the y-direction
+### D.4. The zero parts of the boost weights
 
 -/
 
-/-!
-
-### D.3. The decomposition under boost weights in the z-direction
-
--/
-
-/-!
-
-###########################################
-# Below here is old.
-###########################################
-
-/-!
-
-## The generators
-
-Written in coordinates, a Lagrangian is a polynomial in the component symbols `H^α` and
-`H̄^α`. These are the values of `H` and `barH` on the dual of the standard orthonormal basis
-of `HiggsVec` — and, for the conjugate, on the dual of its conjugated basis
-`Module.Basis.conj`.
-
--/
-
-set_option linter.unusedVariables false in
-/-- The component symbol `H^i` of the Higgs: the value of the symbol map on the `i`-th
-  covector of the standard basis of `HiggsVec`. -/
-noncomputable def higgsComponent (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (i : Fin 2) : B :=
-  H (HiggsVec.orthonormBasis.toBasis.dualBasis i)
-
-set_option linter.unusedVariables false in
-/-- The component symbol `H̄^i` of the conjugate Higgs. -/
-noncomputable def barHiggsComponent (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (i : Fin 2) : B :=
-  barH (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
-
-/-!
-
-## The submodules
-
-Everything below is stated relative to a fixed `h : IsHiggsAlgebraValued B rep H barH`, and
-takes it as its first explicit argument, so that the submodules and terms are reached by dot
-notation — `h.higgsSubmodule`, `h.massTerm` — and the data `B`, `rep`, `H` and `barH` are
-recovered from `h` rather than passed by hand.
-
--/
-
-set_option linter.unusedVariables false in
-/-- The submodule of `B` spanned by the Higgs symbols `H_φ`: the terms of mass dimension one
-  and hypercharge `+3`. -/
-def higgsSubmodule (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
-  LinearMap.range H
-
-lemma higgsSubmodule_eq_span_higgsComponents :
-    h.higgsSubmodule = Submodule.span ℂ (Set.range h.higgsComponent) := by
-  rw [higgsSubmodule, LinearMap.range_eq_map,
-    ← (HiggsVec.orthonormBasis.toBasis.dualBasis).span_eq, Submodule.map_span,
-    ← Set.range_comp]
-  rfl
-
-lemma higgsComponent_mem_higgsSubmodule (i : Fin 2) :
-    h.higgsComponent i ∈ h.higgsSubmodule :=
-  LinearMap.mem_range_self _ _
-
-set_option linter.unusedVariables false in
-/-- The submodule of `B` spanned by the conjugate Higgs symbols `H̄_φ`: the terms of mass
-  dimension one and hypercharge `-3`. -/
-def barHiggsSubmodule (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
-  LinearMap.range barH
-
-lemma barHiggsSubmodule_eq_span_barHiggsComponents :
-    h.barHiggsSubmodule = Submodule.span ℂ (Set.range h.barHiggsComponent) := by
-  rw [barHiggsSubmodule, LinearMap.range_eq_map,
-    ← (HiggsVec.orthonormBasis.toBasis.conj.dualBasis).span_eq, Submodule.map_span,
-    ← Set.range_comp]
-  rfl
-
-lemma barHiggsComponent_mem_barHiggsSubmodule (i : Fin 2) :
-    h.barHiggsComponent i ∈ h.barHiggsSubmodule :=
-  LinearMap.mem_range_self _ _
-
-/-- The terms of mass dimension exactly one: a Higgs symbol or a conjugate Higgs symbol. -/
-def scalarSubmoduleOne : Submodule ℂ B := h.higgsSubmodule ⊔ h.barHiggsSubmodule
-
-/-!
-
-## The mass weight submodules
-
-A Lagrangian term is constrained by its mass dimension, and the mass-weight scaling records
-that counting intrinsically: `massWeightPoly` places the part of a term of mass weight `w`
-in degree `w`, so a term has mass weight at most `n` exactly when its mass-weight polynomial
-is its own truncation at degree `n`. A Higgs symbol carries mass weight two, so a term of
-mass dimension `d` is one of mass weight `2 * d`, and the scalar potential — the terms of
-mass dimension at most four — is `higgsMassWeightSubmodule 8`.
-
--/
-
-
-/-- Membership in `higgsMassWeightSubmodule`, unfolded: a term of the subalgebra generated
-  by the symbols whose mass-weight polynomial has degree at most `n`. -/
-lemma mem_higgsMassWeightSubmodule {n : ℕ} {x : B} :
-    x ∈ h.higgsMassWeightSubmodule n ↔
-      x ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ))) ∧
-        (massWeightPoly x).degree ≤ (n : WithBot ℕ) :=
-  Submodule.mem_inf.trans (and_congr_right fun _ => Polynomial.mem_degreeLE)
-
-/-- A term of mass dimension one has mass weight two: its mass-weight polynomial is a
-  monomial of degree two. -/
-lemma massWeightPoly_of_mem_scalarSubmoduleOne {y : B} (hy : y ∈ h.scalarSubmoduleOne) :
-    massWeightPoly y = Polynomial.monomial 2 y := by
-  obtain ⟨_, ⟨φ, rfl⟩, _, ⟨ψ, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hy
-  simp [map_add, h.H_massWeight, h.barH_massWeight]
-
-/-- A product of `k` symbols has mass weight `2 * k`. -/
-lemma massWeightPoly_of_mem_pow (k : ℕ) {y : B} (hy : y ∈ h.scalarSubmoduleOne ^ k) :
-    massWeightPoly y = Polynomial.monomial (2 * k) y := by
-  induction k generalizing y with
-  | zero =>
-    rw [pow_zero] at hy
-    obtain ⟨c, rfl⟩ := Submodule.mem_one.1 hy
-    simp [AlgHom.commutes]
-  | succ k ih =>
-    rw [pow_succ] at hy
-    refine Submodule.mul_induction_on hy (fun a ha b hb => ?_) (fun x y hx hy => ?_)
-    · rw [show 2 * (k + 1) = 2 * k + 2 from by omega, map_mul, ih ha,
-        h.massWeightPoly_of_mem_scalarSubmoduleOne hb, Polynomial.monomial_mul_monomial]
-    · simp [map_add, hx, hy]
-
-/-- A product of `k` symbols has mass weight `2 * k`, so it is a term of mass weight at
-  most `n` as soon as `2 * k ≤ n`. -/
-lemma scalarSubmoduleOne_pow_le_higgsMassWeightSubmodule {k n : ℕ} (hk : 2 * k ≤ n) :
-    h.scalarSubmoduleOne ^ k ≤ h.higgsMassWeightSubmodule n := by
-  have hsub : h.scalarSubmoduleOne ≤ (Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
-      Set.range (fun φ => (barH φ)))).toSubmodule := by
-    refine sup_le ?_ ?_
-    · rintro _ ⟨φ, rfl⟩
-      exact Algebra.subset_adjoin (Or.inl ⟨φ, rfl⟩)
-    · rintro _ ⟨φ, rfl⟩
-      exact Algebra.subset_adjoin (Or.inr ⟨φ, rfl⟩)
-  have hadj : ∀ m : ℕ, h.scalarSubmoduleOne ^ m ≤ (Algebra.adjoin ℂ
-      (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)))).toSubmodule := by
-    intro m
-    induction m with
-    | zero =>
-      rw [pow_zero]
-      rintro x hx
-      obtain ⟨c, rfl⟩ := Submodule.mem_one.1 hx
-      exact Subalgebra.algebraMap_mem _ c
-    | succ m ih =>
-      rw [pow_succ]
-      refine Submodule.mul_le.2 fun a ha b hb => ?_
-      show a * b ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
-        Set.range (fun φ => (barH φ)))
-      exact mul_mem (ih ha) (hsub hb)
-  intro y hy
-  refine h.mem_higgsMassWeightSubmodule.2 ⟨hadj k hy, ?_⟩
-  rw [h.massWeightPoly_of_mem_pow k hy]
-  exact (Polynomial.degree_monomial_le _ _).trans (by exact_mod_cast hk)
-
-/-- **The terms of mass weight at most `2 * n` are the combinations of products of at most
-  `n` symbols.** One inclusion is the mass-dimension counting read forwards: a product of
-  `k ≤ n` symbols sits in degree `2 * k`. The other is the counting read backwards, and is
-  the substance of the statement: the mass-weight polynomial of a term of the subalgebra is
-  supported in even degrees, with the coefficient in degree `2 * k` a combination of
-  products of `k` symbols, and the term is the sum of its own coefficients. A degree bound
-  therefore caps the number of symbols. -/
-lemma higgsMassWeightSubmodule_eq_sum_pow (n : ℕ) :
-    h.higgsMassWeightSubmodule (2 * n)
-      = ∑ k ∈ Finset.range (n + 1), h.scalarSubmoduleOne ^ k := by
-  refine le_antisymm (fun x hx => ?_) ?_
-  · obtain ⟨hadj, hdeg⟩ := h.mem_higgsMassWeightSubmodule.1 hx
-    have hmul : ∀ p q : Polynomial B, (p * q).eval 1 = p.eval 1 * q.eval 1 := fun _ _ =>
-      Polynomial.eval₂_mul_noncomm _ _ fun _ => Commute.one_right _
-    have key : ∀ y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
-        Set.range (fun φ => (barH φ))), (massWeightPoly y).eval 1 = y ∧
-        (∀ j, (massWeightPoly y).coeff j ∈ h.scalarSubmoduleOne ^ (j / 2)) ∧
-        (∀ j, ¬ 2 ∣ j → (massWeightPoly y).coeff j = 0) := by
-      intro y hy
-      induction hy using Algebra.adjoin_induction with
-      | mem y hy =>
-        have hy1 : y ∈ h.scalarSubmoduleOne := by
-          rcases hy with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
-          · exact Submodule.mem_sup_left (LinearMap.mem_range_self _ _)
-          · exact Submodule.mem_sup_right (LinearMap.mem_range_self _ _)
-        rw [h.massWeightPoly_of_mem_scalarSubmoduleOne hy1]
-        refine ⟨by simp, fun j => ?_, fun j hj => ?_⟩
-        · rw [Polynomial.coeff_monomial]
-          split_ifs with h2
-          · subst h2
-            simpa using hy1
-          · exact zero_mem _
-        · rw [Polynomial.coeff_monomial, if_neg (by omega)]
-      | algebraMap c =>
-        rw [AlgHom.commutes, show algebraMap ℂ (Polynomial B) c
-          = Polynomial.C (algebraMap ℂ B c) from rfl]
-        refine ⟨by simp, fun j => ?_, fun j hj => ?_⟩
-        · rcases Nat.eq_zero_or_pos j with rfl | hj0
-          · simp
-          · rw [Polynomial.coeff_C, if_neg (by omega)]
-            exact zero_mem _
-        · rw [Polynomial.coeff_C, if_neg (by omega)]
-      | add y z _ _ ihy ihz =>
-        rw [map_add]
-        exact ⟨by rw [Polynomial.eval_add, ihy.1, ihz.1],
-          fun j => by rw [Polynomial.coeff_add]; exact add_mem (ihy.2.1 j) (ihz.2.1 j),
-          fun j hj => by rw [Polynomial.coeff_add, ihy.2.2 j hj, ihz.2.2 j hj, add_zero]⟩
-      | mul y z _ _ ihy ihz =>
-        rw [map_mul]
-        refine ⟨by rw [hmul, ihy.1, ihz.1], fun j => ?_, fun j hj => ?_⟩
-        · rw [Polynomial.coeff_mul]
-          refine Submodule.sum_mem _ fun q hq => ?_
-          have hq' : q.1 + q.2 = j := Finset.mem_antidiagonal.1 hq
-          by_cases ha : 2 ∣ q.1
-          · by_cases hb : 2 ∣ q.2
-            · rw [show j / 2 = q.1 / 2 + q.2 / 2 from by omega, pow_add]
-              exact Submodule.mul_mem_mul (ihy.2.1 _) (ihz.2.1 _)
-            · rw [ihz.2.2 _ hb, mul_zero]
-              exact zero_mem _
-          · rw [ihy.2.2 _ ha, zero_mul]
-            exact zero_mem _
-        · rw [Polynomial.coeff_mul]
-          refine Finset.sum_eq_zero fun q hq => ?_
-          have hq' : q.1 + q.2 = j := Finset.mem_antidiagonal.1 hq
-          by_cases ha : 2 ∣ q.1
-          · rw [ihz.2.2 _ (by omega), mul_zero]
-          · rw [ihy.2.2 _ ha, zero_mul]
-    obtain ⟨heval, hcoeff, -⟩ := key x hadj
-    rw [← heval, Polynomial.eval_eq_sum_range'
-      (Nat.lt_succ_of_le (Polynomial.natDegree_le_iff_degree_le.2 hdeg))]
-    refine Submodule.sum_mem _ fun i hi => ?_
-    have hi' := Finset.mem_range.1 hi
-    rw [one_pow, mul_one]
-    exact Finset.single_le_sum (f := fun k => h.scalarSubmoduleOne ^ k)
-      (fun _ _ => bot_le) (Finset.mem_range.mpr (by omega)) (hcoeff i)
-  · refine Finset.sum_induction _ (· ≤ h.higgsMassWeightSubmodule (2 * n))
-      (fun a b ha hb => by rw [Submodule.add_eq_sup]; exact sup_le ha hb) bot_le fun k hk => ?_
-    exact h.scalarSubmoduleOne_pow_le_higgsMassWeightSubmodule
-      (by have := Finset.mem_range.1 hk; omega)
-
-/-- **The terms of mass weight at most eight, written out.** A Higgs symbol carries mass
-  weight two, so mass weight eight is mass dimension four: the join of the powers
-  `scalarSubmoduleOne ^ k` for `k ≤ 4`. Expanding each power distributes over the join, and
-  the Higgs and conjugate-Higgs symbols commute, so every ordered product equals the one
-  with all `H` factors to the left. -/
-lemma higgsMassWeightSubmodule_eq_higgs :
-    h.higgsMassWeightSubmodule 8 =
-    1 ⊔ h.higgsSubmodule
-      ⊔ h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-      ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-  have hcomm : h.higgsSubmodule * h.barHiggsSubmodule = h.barHiggsSubmodule * h.higgsSubmodule := by
-    refine le_antisymm (Submodule.mul_le.mpr fun m hm n hn => ?_)
-      (Submodule.mul_le.mpr fun m hm n hn => ?_)
-    · obtain ⟨φ, rfl⟩ := hm
-      obtain ⟨ψ, rfl⟩ := hn
-      rw [(h.H_comm_barH φ ψ).eq]
-      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
-    · obtain ⟨ψ, rfl⟩ := hm
-      obtain ⟨φ, rfl⟩ := hn
-      rw [← (h.H_comm_barH φ ψ).eq]
-      exact Submodule.mul_mem_mul (LinearMap.mem_range_self _ _) (LinearMap.mem_range_self _ _)
-  have hcm : Commute h.higgsSubmodule h.barHiggsSubmodule := hcomm
-  have hCCA : Commute (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule := hcm.symm.mul_left hcm.symm
-  have s1 : h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc, hcm.symm.eq, ← mul_assoc]
-  have s2 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [hCCA.eq, ← mul_assoc]
-  have s3 : h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc (h.higgsSubmodule * h.higgsSubmodule) h.barHiggsSubmodule h.higgsSubmodule, hcm.symm.eq, ← mul_assoc]
-  have s4 : h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [mul_assoc h.higgsSubmodule h.barHiggsSubmodule h.barHiggsSubmodule, mul_assoc h.higgsSubmodule (h.barHiggsSubmodule * h.barHiggsSubmodule) h.higgsSubmodule, hCCA.eq, ← mul_assoc,
-      ← mul_assoc]
-  have s5 : h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.higgsSubmodule = h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [(hCCA.mul_left hcm.symm).eq, ← mul_assoc, ← mul_assoc]
-  have e2 : h.scalarSubmoduleOne ^ 2
-      = h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_two, scalarSubmoduleOne, Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup,
-      ← hcomm]
-    simp only [sup_assoc, sup_left_idem]
-  have e3 : h.scalarSubmoduleOne ^ 3
-      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_succ, e2, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
-      Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup, s1, s2]
-    simp only [sup_assoc, sup_left_idem]
-  have e4 : h.scalarSubmoduleOne ^ 4
-      = h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule ⊔ h.higgsSubmodule * h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule
-        ⊔ h.higgsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule ⊔ h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule * h.barHiggsSubmodule := by
-    rw [pow_succ, e3, scalarSubmoduleOne, Submodule.sup_mul, Submodule.sup_mul,
-      Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup, Submodule.mul_sup,
-      Submodule.mul_sup, s3, s4, s5]
-    simp only [sup_assoc, sup_left_idem]
-  rw [show (8 : ℕ) = 2 * 4 from rfl, h.higgsMassWeightSubmodule_eq_sum_pow,
-    Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
-    Finset.sum_range_one, Submodule.add_eq_sup, Submodule.add_eq_sup, Submodule.add_eq_sup,
-    Submodule.add_eq_sup, pow_zero, pow_one, e2, e3, e4, scalarSubmoduleOne]
-  simp only [sup_assoc]
-
-
-
-/-!
-
-## Closure under the gauge action
-
-Each of the submodules above is *stable* under the gauge action on `B`: a gauge
-transformation moves a Higgs symbol to a combination of Higgs symbols and nothing else. For
-the two spans of symbols and their join this is exactly the equivariance recorded in
-`IsHiggsAlgebraValued`. For the higher mass dimensions it needs, in addition, that a gauge
-transformation acts on `B` by an *algebra* map; that is not among the fields of
-`IsHiggsAlgebraValued`, so it is taken as the hypothesis `rep_mul` below — the analogue of
-`IsGaugeField.gauge_mul` — and packaged as `repAlgHom`, after which `Submodule.mapHom`
-carries the closure through products, powers and sums.
-
--/
-
-lemma barHiggsSubmodule_map_le (g : GaugeGroupI) :
-    h.barHiggsSubmodule.map (rep g) ≤ h.barHiggsSubmodule := by
-  rintro _ ⟨_, ⟨φ, rfl⟩, rfl⟩
-  exact ⟨HiggsVec.repGaugeGroupI.conj.dual g φ, (h.barH_equivariant g φ).symm⟩
-
-
-/-- The mass-dimension-one terms are closed under the gauge action. -/
-lemma scalarSubmoduleOne_closure (g : GaugeGroupI) :
-    h.scalarSubmoduleOne.map (rep g) = h.scalarSubmoduleOne := by
-  rw [scalarSubmoduleOne, Submodule.map_sup, h.higgsSubmodule_closure g,
-    h.barHiggsSubmodule_closure g]
-
-variable (rep_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-  rep g (b₁ * b₂) = rep g b₁ * rep g b₂)
-include rep_mul
-
-set_option linter.unusedVariables false in
-/-- A gauge transformation as an algebra homomorphism of `B`. Only linearity is built into
-  `Representation`; `rep_mul` supplies multiplicativity, and the unit is preserved because a
-  gauge transformation is invertible. -/
-def repAlgHom (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (g : GaugeGroupI) : B →ₐ[ℂ] B :=
-  AlgHom.ofLinearMap (rep g)
-    (by
-      obtain ⟨c, hc⟩ := (rep.apply_bijective g).2 1
-      calc rep g 1 = rep g 1 * rep g c := by rw [hc, mul_one]
-        _ = rep g (1 * c) := (rep_mul g 1 c).symm
-        _ = 1 := by rw [one_mul, hc])
-    (rep_mul g)
-
-lemma repAlgHom_toLinearMap (g : GaugeGroupI) :
-    (h.repAlgHom rep_mul g).toLinearMap = rep g := rfl
-
-lemma higgsMassWeightSubmodule_closure (g : GaugeGroupI) (n : ℕ) :
-    (h.higgsMassWeightSubmodule n).map (rep g) = h.higgsMassWeightSubmodule n := by
-  have hgen : ∀ (u : GaugeGroupI) (y : B),
-      y ∈ Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)) →
-      rep u y ∈ Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ)) := by
-    rintro u _ (⟨φ, rfl⟩ | ⟨φ, rfl⟩)
-    · exact Or.inl ⟨_, (h.H_equivariant u φ).symm⟩
-    · exact Or.inr ⟨_, (h.barH_equivariant u φ).symm⟩
-  have key : ∀ (u : GaugeGroupI) (y : B),
-      y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔ Set.range (fun φ => (barH φ))) →
-      rep u y ∈ Algebra.adjoin ℂ (Set.range (fun φ => (H φ)) ⊔
-          Set.range (fun φ => (barH φ))) ∧
-        massWeightPoly (rep u y) =
-          Polynomial.mapAlgHom (h.repAlgHom rep_mul u) (massWeightPoly y) := by
-    intro u y hy
-    have hf : ∀ b : B, (h.repAlgHom rep_mul u) b = rep u b := fun _ => rfl
-    induction hy using Algebra.adjoin_induction with
-    | mem y hy =>
-      refine ⟨Algebra.subset_adjoin (hgen u y hy), ?_⟩
-      rcases hy with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
-      · simp [hf, h.H_equivariant, h.H_massWeight]
-      · simp [hf, h.barH_equivariant, h.barH_massWeight]
-    | algebraMap c =>
-      have hc : rep u (algebraMap ℂ B c) = algebraMap ℂ B c :=
-        (h.repAlgHom rep_mul u).commutes c
-      rw [hc]
-      exact ⟨Subalgebra.algebraMap_mem _ c, by simp [AlgHom.commutes]⟩
-    | add y z _ _ ihy ihz =>
-      exact ⟨by rw [map_add]; exact add_mem ihy.1 ihz.1, by simp [ihy.2, ihz.2]⟩
-    | mul y z _ _ ihy ihz =>
-      rw [rep_mul]
-      exact ⟨mul_mem ihy.1 ihz.1, by rw [map_mul, ihy.2, ihz.2, map_mul, map_mul]⟩
-  have hle : ∀ u : GaugeGroupI,
-      (h.higgsMassWeightSubmodule n).map (rep u) ≤ h.higgsMassWeightSubmodule n := by
-    rintro u _ ⟨y, ⟨hy₁, hy₂⟩, rfl⟩
-    refine ⟨(key u y hy₁).1, Polynomial.mem_degreeLE.2 ?_⟩
-    show (massWeightPoly (rep u y)).degree ≤ (n : WithBot ℕ)
-    rw [(key u y hy₁).2, Polynomial.coe_mapAlgHom]
-    exact Polynomial.degree_map_le.trans (Polynomial.mem_degreeLE.1 hy₂)
-  exact le_antisymm (hle g) fun b hb =>
-    ⟨rep g⁻¹ b, hle g⁻¹ ⟨b, hb, rfl⟩, rep.self_inv_apply g b⟩
-
-/-!
-
-## Gauge weight decomposition
-
--/
-
-omit rep_mul in
-omit rep_mul in
-/-- The gauge weight decomposition on the submodule `higgsSubmodule`.
-
-  The Higgs is a colour singlet of hypercharge `-3`, but it is *not* of pure isospin: the
-  submodule splits into the two component lines `span {H^0}` and `span {H^1}`, at the gauge
-  weights `(0, 0, -1, -3)` and `(0, 0, 1, -3)`.
-
-  In particular the zero-weight piece is `⊥`, so `mem_zero_of_invariant` says here that no
-  nonzero term linear in the Higgs is gauge invariant. -/
-noncomputable def higgsSubmoduleGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    GaugeWeightDecomposition rep h.higgsSubmodule where
-  piece := fun w =>
-    if w = (0, 0, -1, -3) then Submodule.span ℂ {h.higgsComponent 0}
-    else if w = (0, 0, 1, -3) then Submodule.span ℂ {h.higgsComponent 1} else ⊥
-  supp := {(0, 0, -1, -3), (0, 0, 1, -3)}
-  piece_le := by
-    have hz : ∀ i : Fin 4, Submodule.span ℂ {h.higgsComponent 0}
-        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
-          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, -1, -3) i) := fun i =>
-      (Submodule.span_singleton_le_iff_mem _ _).mpr
-        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_higgsComponent_zero i))
-    have ho : ∀ i : Fin 4, Submodule.span ℂ {h.higgsComponent 1}
-        ≤ Module.End.eigenspace (rep (gaugeTorusGen i))
-          ((expI : ℂ) ^ GaugeWeight.coord (0, 0, 1, -3) i) := fun i =>
-      (Submodule.span_singleton_le_iff_mem _ _).mpr
-        (Module.End.mem_eigenspace_iff.mpr (h.rep_gaugeTorusGen_higgsComponent_one i))
-    intro w x hx i
-    rcases eq_or_ne w (0, 0, -1, -3) with rfl | hw0
-    · rw [if_pos rfl] at hx
-      exact Module.End.mem_eigenspace_iff.mp (hz i hx)
-    · rcases eq_or_ne w (0, 0, 1, -3) with rfl | hw1
-      · rw [if_neg hw0, if_pos rfl] at hx
-        exact Module.End.mem_eigenspace_iff.mp (ho i hx)
-      · rw [if_neg hw0, if_neg hw1, Submodule.mem_bot] at hx
-        subst hx
-        simp
-  piece_eq_bot := by
-    intro w hw
-    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hw
-    rw [if_neg hw.1, if_neg hw.2]
-  iSup_piece := by
-    refine le_antisymm (iSup_le fun w => ?_) ?_
-    · rcases eq_or_ne w (0, 0, -1, -3) with rfl | hw0
-      · rw [if_pos rfl]
-        exact (Submodule.span_singleton_le_iff_mem _ _).mpr
-          (h.higgsComponent_mem_higgsSubmodule 0)
-      · rcases eq_or_ne w (0, 0, 1, -3) with rfl | hw1
-        · rw [if_neg hw0, if_pos rfl]
-          exact (Submodule.span_singleton_le_iff_mem _ _).mpr
-            (h.higgsComponent_mem_higgsSubmodule 1)
-        · rw [if_neg hw0, if_neg hw1]
-          exact bot_le
-    · rw [h.higgsSubmodule_eq_span_higgsComponents, Submodule.span_le]
-      rintro _ ⟨j, rfl⟩
-      fin_cases j
-      · refine Submodule.mem_iSup_of_mem (0, 0, -1, -3) ?_
-        rw [if_pos rfl]
-        exact Submodule.mem_span_singleton_self _
-      · refine Submodule.mem_iSup_of_mem (0, 0, 1, -3) ?_
-        rw [if_neg (by decide), if_pos rfl]
-        exact Submodule.mem_span_singleton_self _
-
-omit rep_mul in
-omit rep_mul in
-/-- The gauge weight decomposition on the submodule `barHiggsSubmodule`.
-
-  The conjugate Higgs is a colour singlet of hypercharge `+3`, and its two component symbols
-  carry isospin weights `+1` and `-1`; so the submodule splits into the two weight lines
-  `span {H̄^0}` and `span {H̄^1}`, at `(0, 0, 1, 3)` and `(0, 0, -1, 3)`.
-
-  As for `higgsSubmoduleGaugeWeight` the zero-weight piece is `⊥`, so no nonzero term linear
-  in the conjugate Higgs is gauge invariant. -/
-
-omit rep_mul in
-lemma higgsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    (h.higgsSubmoduleGaugeWeight).supp = {(0, 0, -1, -3), (0, 0, 1, -3)} := by
-  rfl
-
-omit rep_mul in
-lemma barHiggsSubmoduleGaugeWeight_supp (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    (h.barHiggsSubmoduleGaugeWeight).supp = {(0, 0, 1, 3), (0, 0, -1, 3)} := by
-  rfl
-
-/-- **The gauge weight decomposition of the scalar potential terms**, the terms of mass
-  weight at most eight. Read straight off
-  `higgsMassWeightSubmodule_eq_higgs`: the unit contributes `one`, the two symbol spans
-  contribute their own decompositions, every product of them is handled by `mul`, and the
-  fifteen summands are joined by `sup`. -/
-noncomputable def higgsMassWeightGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    GaugeWeightDecomposition rep (h.higgsMassWeightSubmodule 8) :=
-  let d := h.higgsSubmoduleGaugeWeight
-  let d' := h.barHiggsSubmoduleGaugeWeight
-  (((((((((((((((GaugeWeightDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup
-      d).sup
-      d').sup
-      (d.mul rep_mul d)).sup
-      (d.mul rep_mul d')).sup
-      (d'.mul rep_mul d')).sup
-      ((d.mul rep_mul d).mul rep_mul d)).sup
-      ((d.mul rep_mul d).mul rep_mul d')).sup
-      ((d.mul rep_mul d').mul rep_mul d')).sup
-      ((d'.mul rep_mul d').mul rep_mul d')).sup
-      (((d.mul rep_mul d).mul rep_mul d).mul rep_mul d)).sup
-      (((d.mul rep_mul d).mul rep_mul d).mul rep_mul d')).sup
-      (((d.mul rep_mul d).mul rep_mul d').mul rep_mul d')).sup
-      (((d.mul rep_mul d').mul rep_mul d').mul rep_mul d')).sup
-      (((d'.mul rep_mul d').mul rep_mul d').mul rep_mul d')).copy _
-    h.higgsMassWeightSubmodule_eq_higgs
-
-def higgsQuadraticZeroGaugeWeight (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) : Submodule ℂ B :=
-   Submodule.span ℂ
-      {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
-
-open GaugeWeightDecomposition in
-lemma higgsMassWeightGaugeWeight_piece_zero (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    let H2 :=  Submodule.span ℂ
-      {h.higgsComponent 0 * h.barHiggsComponent 0, h.higgsComponent 1 * h.barHiggsComponent 1}
-    (h.higgsMassWeightGaugeWeight rep_mul).piece 0 =
-    1 ⊔ H2 ⊔ H2 * H2 := by
-  dsimp only [higgsMassWeightGaugeWeight, GaugeWeightDecomposition.copy_piece,
-    GaugeWeightDecomposition.sup_piece, GaugeWeightDecomposition.one_piece, ↓dreduceIte,
-    Submodule.zero_eq_bot]
-  simp (disch := (try simp only [higgsSubmoduleGaugeWeight, barHiggsSubmoduleGaugeWeight,
-    GaugeWeightDecomposition.one, GaugeWeightDecomposition.mul_supp]; try decide)) only
-    [GaugeWeightDecomposition.piece_eq_zero_of_not_mem_supp, sup_bot_eq]
-  simp only [GaugeWeightDecomposition.mul_piece_eq_sub', barHiggsSubmoduleGaugeWeight_supp
-  , higgsSubmoduleGaugeWeight_supp, Finset.iSup_insert, Finset.iSup_singleton]
-  simp (disch := (try simp only [higgsSubmoduleGaugeWeight, barHiggsSubmoduleGaugeWeight,
-    GaugeWeightDecomposition.one, GaugeWeightDecomposition.mul_supp]; try decide))
-    [GaugeWeightDecomposition.piece_eq_zero_of_not_mem_supp]
-  simp [barHiggsSubmoduleGaugeWeight,  higgsSubmoduleGaugeWeight, Submodule.span_mul_span]
-  rw [← Submodule.span_mul_span, Submodule.span_insert]
-  simp only [Submodule.sup_mul, Submodule.mul_sup, Submodule.span_mul_span,
-    Set.singleton_mul_singleton]
-  have hHH : ∀ i j, h.higgsComponent i * h.higgsComponent j
-      = h.higgsComponent j * h.higgsComponent i := fun i j => (h.H_comm_H _ _).eq
-  have hbH : ∀ i j, h.barHiggsComponent i * h.higgsComponent j
-      = h.higgsComponent j * h.barHiggsComponent i := fun i j => (h.H_comm_barH _ _).symm.eq
-  have hbb : ∀ i j, h.barHiggsComponent i * h.barHiggsComponent j
-      = h.barHiggsComponent j * h.barHiggsComponent i := fun i j => (h.barH_comm_barH _ _).eq
-  have hHH' : ∀ i j (x : B), h.higgsComponent i * (h.higgsComponent j * x)
-      = h.higgsComponent j * (h.higgsComponent i * x) := fun i j x => by
-    rw [← mul_assoc, hHH, mul_assoc]
-  have hbH' : ∀ i j (x : B), h.barHiggsComponent i * (h.higgsComponent j * x)
-      = h.higgsComponent j * (h.barHiggsComponent i * x) := fun i j x => by
-    rw [← mul_assoc, hbH, mul_assoc]
-  simp only [mul_assoc, hHH, hHH', hbH', hbb]
-  simp only [sup_idem]
-
-
-/-!
-
-## SU(2) permutation decomposition
-
--/
-
-omit rep_mul in
-/-- The Weyl element sends `H⁰` to `H¹`. -/
-lemma rep_gaugeSU2Perm_higgsComponent_zero :
-    rep gaugeSU2Perm (h.higgsComponent 0) = h.higgsComponent 1 := by
-  rw [h.rep_higgsComponent]
-  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
-    Fin.sum_univ_two]
-
-omit rep_mul in
-/-- The Weyl element sends `H¹` to `-H⁰`. -/
-lemma rep_gaugeSU2Perm_higgsComponent_one :
-    rep gaugeSU2Perm (h.higgsComponent 1) = -h.higgsComponent 0 := by
-  rw [h.rep_higgsComponent]
-  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
-    Fin.sum_univ_two]
-
-omit rep_mul in
-/-- The Weyl element sends `H̄⁰` to `H̄¹`. -/
-lemma rep_gaugeSU2Perm_barHiggsComponent_zero :
-    rep gaugeSU2Perm (h.barHiggsComponent 0) = h.barHiggsComponent 1 := by
-  rw [h.rep_barHiggsComponent]
-  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
-    Fin.sum_univ_two]
-
-omit rep_mul in
-/-- The Weyl element sends `H̄¹` to `-H̄⁰`. -/
-lemma rep_gaugeSU2Perm_barHiggsComponent_one :
-    rep gaugeSU2Perm (h.barHiggsComponent 1) = -h.barHiggsComponent 0 := by
-  rw [h.rep_barHiggsComponent]
-  simp [gaugeSU2Perm, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2Perm_inv_coe,
-    Fin.sum_univ_two]
-
-/-- **The Weyl decomposition of the zero-weight quadratic.** The Weyl element exchanges
-  `H⁰H̄⁰` and `H¹H̄¹`, so the two-dimensional space `higgsQuadraticZeroGaugeWeight` splits
-  into the even line spanned by `H⁰H̄⁰ + H¹H̄¹` — this is `H†H`, the genuine invariant — and
-  the odd line spanned by `H⁰H̄⁰ - H¹H̄¹`, which is `H†σ³H`, the neutral component of the
-  isospin triplet. Only the first survives `mem_zero_of_invariant`. -/
-noncomputable def higgsQuadraticZeroGaugeWeightSU2Perm (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    SU2PermDecomposition rep h.higgsQuadraticZeroGaugeWeight where
-  piece := fun w =>
-    if w = 0 then Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
-        + h.higgsComponent 1 * h.barHiggsComponent 1}
-    else if w = 2 then Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
-        - h.higgsComponent 1 * h.barHiggsComponent 1}
+lemma boostWeightZeroSix_piece_zero_eq (i : Fin 3) :
+    (h.boostWeightZeroSix i).piece 0 =
+      (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1)] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2)] ![]) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 1)] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i+ 2)]) := by
+  have h1 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
+    (h.dotSymbol ![1, 0]) i
+  have h2 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
+    (h.dotSymbol ![0, 1]) i
+  simp only [h.range_dotSymbol_left] at h1
+  simp only [h.range_dotSymbol_right] at h2
+  dsimp only [boostWeightZeroSix, WeightDecomposition.copy_piece, WeightDecomposition.sup_piece]
+  rw [h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![1, 0] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
+    h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 1] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb])]
+  exact congrArg₂ (· ⊔ ·) h1 h2
+
+structure WeightDecompositionLE  {K : Type u_1} [Field K] [Algebra ℝ K] {M : Type u_2}
+    [AddCommGroup M] [Module K M] (rep : Representation K SL(2, ℂ) M) (i : Fin 3)
+    (V : Submodule K M) where
+  /-- The weight-`k` piece of the decomposition. -/
+  piece : ℤ → Submodule K M
+  /-- The finite set of weights that occur. -/
+  supp : Finset ℤ
+  piece_le : ∀ k, piece k ≤ boostWeightSubmodule rep i k
+  piece_eq_bot : ∀ k ∉ supp, piece k = ⊥
+  iSup_piece : V ≤ (⨆ k, piece k)
+
+/-- A weight decomposition of `V` covers every submodule of `V`. -/
+noncomputable def _root_.Lorentz.BoostWeight.WeightDecomposition.toLE
+    {K : Type*} [Field K] [Algebra ℝ K] {M : Type*} [AddCommGroup M] [Module K M]
+    {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {V V' : Submodule K M}
+    (d : WeightDecomposition rep i V) (hV' : V' ≤ V) :
+    WeightDecompositionLE rep i V' where
+  piece := d.piece
+  supp := d.supp
+  piece_le := d.piece_le
+  piece_eq_bot := d.piece_eq_bot
+  iSup_piece := hV'.trans d.iSup_piece.ge
+
+/-- **A weight-zero element of a covered submodule lies in the weight-zero piece**: the
+  boost-weight spaces are independent, so the pieces of nonzero weight cannot contribute
+  to it. -/
+lemma WeightDecompositionLE.mem_piece_zero_of_mem
+    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
+    {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {V : Submodule K A}
+    (d : WeightDecompositionLE rep i V) {x : A}
+    (hxV : x ∈ V) (hx0 : x ∈ boostWeightSubmodule rep i 0) : x ∈ d.piece 0 := by
+  have hcov : x ∈ d.piece 0 ⊔ ⨆ k, ⨆ (_ : k ≠ (0 : ℤ)), d.piece k := by
+    refine (d.iSup_piece.trans (iSup_le fun k => ?_)) hxV
+    by_cases hk : k = 0
+    · subst hk
+      exact le_sup_left
+    · exact le_sup_of_le_right (le_iSup₂_of_le k hk le_rfl)
+  obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.1 hcov
+  have hz1 : z ∈ ⨆ k, ⨆ (_ : k ≠ (0 : ℤ)), boostWeightSubmodule rep i k :=
+    (iSup₂_le fun k hk => le_iSup₂_of_le k hk (d.piece_le k)) hz
+  have hz0 : z ∈ boostWeightSubmodule rep i 0 := by
+    rw [show z = x - y from by rw [← hyz]; abel]
+    exact sub_mem hx0 (d.piece_le 0 hy)
+  have hz' : z = 0 :=
+    Submodule.disjoint_def.1 (iSupIndep_def.1 (boostWeightSubmodule_iSupIndep rep) 0) z hz0 hz1
+  rw [← hyz, hz', add_zero]
+  exact hy
+
+/-- **If zero is not among the weights, an invariant element of the covered submodule
+  vanishes.** -/
+lemma WeightDecompositionLE.eq_zero_of_mem_of_zero_notMem_supp
+    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
+    {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {V : Submodule K A}
+    (d : WeightDecompositionLE rep i V) {x : A} (h0 : (0 : ℤ) ∉ d.supp)
+    (hxV : x ∈ V) (hx0 : x ∈ boostWeightSubmodule rep i 0) : x = 0 := by
+  have hx := d.mem_piece_zero_of_mem hxV hx0
+  rwa [d.piece_eq_bot 0 h0, Submodule.mem_bot] at hx
+
+open IsDerivativeCollection in
+/-- **The minimal `y`-boost covering of the `x`-weight-zero part** of the dimension-six
+  terms. The `z`-derivative terms have `y`-weight zero; the `y`-derivative terms are not
+  `y`-boost eigenvectors, so they are covered by the light-cone combinations `D₀ ∓ D₁`,
+  of weights `±2`. -/
+noncomputable def dimSixWeightDecompositionLE :
+    WeightDecompositionLE repLorentz 1 ((h.boostWeightZeroSix 0).piece 0) where
+  piece k :=
+    if k = 0 then
+      ℂ ∙ h.dotGaugeHiggs ![Sum.inr 2] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 2]
+    else if k = 2 then
+      ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 1] ![]) ⊔
+        ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 1])
+    else if k = -2 then
+      ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 1] ![]) ⊔
+        ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 1])
     else ⊥
-  piece_le := by
-    have hplus : rep gaugeSU2Perm (h.higgsComponent 0 * h.barHiggsComponent 0
-        + h.higgsComponent 1 * h.barHiggsComponent 1)
-        = h.higgsComponent 0 * h.barHiggsComponent 0
-          + h.higgsComponent 1 * h.barHiggsComponent 1 := by
-      rw [map_add, rep_mul, rep_mul, h.rep_gaugeSU2Perm_higgsComponent_zero,
-        h.rep_gaugeSU2Perm_barHiggsComponent_zero, h.rep_gaugeSU2Perm_higgsComponent_one,
-        h.rep_gaugeSU2Perm_barHiggsComponent_one, neg_mul_neg, add_comm]
-    have hminus : rep gaugeSU2Perm (h.higgsComponent 0 * h.barHiggsComponent 0
-        - h.higgsComponent 1 * h.barHiggsComponent 1)
-        = -(h.higgsComponent 0 * h.barHiggsComponent 0
-          - h.higgsComponent 1 * h.barHiggsComponent 1) := by
-      rw [map_sub, rep_mul, rep_mul, h.rep_gaugeSU2Perm_higgsComponent_zero,
-        h.rep_gaugeSU2Perm_barHiggsComponent_zero, h.rep_gaugeSU2Perm_higgsComponent_one,
-        h.rep_gaugeSU2Perm_barHiggsComponent_one, neg_mul_neg, neg_sub]
-    intro k x hx
-    rcases eq_or_ne k 0 with rfl | hk0
-    · rw [if_pos rfl, Submodule.mem_span_singleton] at hx
-      obtain ⟨c, rfl⟩ := hx
-      rw [map_smul, hplus, su2PermSign_zero, one_smul]
-    · rcases eq_or_ne k 2 with rfl | hk2
-      · rw [if_neg hk0, if_pos rfl, Submodule.mem_span_singleton] at hx
-        obtain ⟨c, rfl⟩ := hx
-        rw [map_smul, hminus, su2PermSign_two, smul_neg, neg_smul, one_smul]
-      · rw [if_neg hk0, if_neg hk2, Submodule.mem_bot] at hx
-        subst hx
-        simp
+  supp := {-2, 0, 2}
+  piece_le k := by
+    have hbase : ∀ (F : (Fin 1 → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B)
+        (hF : RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz F) (κ : Fin 4),
+        lightConeDeriv F 1 ![κ] 1 ∈
+          boostWeightSubmodule repLorentz 1 (lightConeWeight κ) := fun F hF κ => by
+      simpa using lightConeDeriv_mem F hF 1 ![κ] (b := 0) (w := 1)
+        ((trivialWeightDecomposition 1).piece_le 0 (by simp))
+    have hL := hbase (h.dotSymbol ![1, 0])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 0])
+    have hR := hbase (h.dotSymbol ![0, 1])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 1])
+    split_ifs with h0 h2 hm2
+    · subst h0
+      refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+        ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+      · have e := hL 2
+        rw [lightConeDeriv_two, h.dotSymbol_left, show ((1 : Fin 3) + 1) = 2 from rfl,
+          LinearMap.toSpanSingleton_apply, one_smul,
+          show lightConeWeight 2 = (0 : ℤ) from rfl] at e
+        exact e
+      · have e := hR 2
+        rw [lightConeDeriv_two, h.dotSymbol_right, show ((1 : Fin 3) + 1) = 2 from rfl,
+          LinearMap.toSpanSingleton_apply, one_smul,
+          show lightConeWeight 2 = (0 : ℤ) from rfl] at e
+        exact e
+    · subst h2
+      refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+        ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+      · have e := hL 0
+        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 0 = (2 : ℤ) from rfl] at e
+        exact e
+      · have e := hR 0
+        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 0 = (2 : ℤ) from rfl] at e
+        exact e
+    · subst hm2
+      refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+        ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+      · have e := hL 1
+        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
+        exact e
+      · have e := hR 1
+        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
+        exact e
+    · exact bot_le
+  piece_eq_bot k hk := by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+    rw [if_neg hk.2.1, if_neg hk.2.2, if_neg hk.1]
   iSup_piece := by
-    have hcases : ∀ j : ZMod 4, j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by decide
-    refine le_antisymm (iSup_le fun k => ?_) ?_
-    · rcases hcases k with rfl | rfl | rfl | rfl
-      · rw [if_pos rfl, higgsQuadraticZeroGaugeWeight, Submodule.span_le,
-          Set.singleton_subset_iff]
-        exact Submodule.add_mem _ (Submodule.subset_span (by simp))
-          (Submodule.subset_span (by simp))
-      · rw [if_neg (by decide), if_neg (by decide)]
-        exact bot_le
-      · rw [if_neg (by decide), if_pos rfl, higgsQuadraticZeroGaugeWeight, Submodule.span_le,
-          Set.singleton_subset_iff]
-        exact Submodule.sub_mem _ (Submodule.subset_span (by simp))
-          (Submodule.subset_span (by simp))
-      · rw [if_neg (by decide), if_neg (by decide)]
-        exact bot_le
-    · refine le_trans ?_ (sup_le (le_iSup _ (0 : ZMod 4)) (le_iSup _ (2 : ZMod 4)))
-      rw [if_pos rfl, if_neg (by decide : ¬(2 : ZMod 4) = 0), if_pos rfl,
-        higgsQuadraticZeroGaugeWeight, Submodule.span_le]
-      have hp := Submodule.mem_sup_left (S := Submodule.span ℂ
-        {h.higgsComponent 0 * h.barHiggsComponent 0
-          + h.higgsComponent 1 * h.barHiggsComponent 1})
-        (T := Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
-          - h.higgsComponent 1 * h.barHiggsComponent 1})
-        (Submodule.mem_span_singleton_self _)
-      have hm := Submodule.mem_sup_right (S := Submodule.span ℂ
-        {h.higgsComponent 0 * h.barHiggsComponent 0
-          + h.higgsComponent 1 * h.barHiggsComponent 1})
-        (T := Submodule.span ℂ {h.higgsComponent 0 * h.barHiggsComponent 0
-          - h.higgsComponent 1 * h.barHiggsComponent 1})
-        (Submodule.mem_span_singleton_self _)
-      rintro x (rfl | rfl)
-      · have hs := Submodule.smul_mem _ (2⁻¹ : ℂ) (Submodule.add_mem _ hp hm)
-        rwa [show (2⁻¹ : ℂ) • ((h.higgsComponent 0 * h.barHiggsComponent 0
-          + h.higgsComponent 1 * h.barHiggsComponent 1)
-          + (h.higgsComponent 0 * h.barHiggsComponent 0
-            - h.higgsComponent 1 * h.barHiggsComponent 1))
-          = h.higgsComponent 0 * h.barHiggsComponent 0 from by module] at hs
-      · have hs := Submodule.smul_mem _ (2⁻¹ : ℂ) (Submodule.sub_mem _ hp hm)
-        rwa [show (2⁻¹ : ℂ) • ((h.higgsComponent 0 * h.barHiggsComponent 0
-          + h.higgsComponent 1 * h.barHiggsComponent 1)
-          - (h.higgsComponent 0 * h.barHiggsComponent 0
-            - h.higgsComponent 1 * h.barHiggsComponent 1))
-          = h.higgsComponent 1 * h.barHiggsComponent 1 from by module] at hs
+    rw [h.boostWeightZeroSix_piece_zero_eq 0, show ((0 : Fin 3) + 1) = 1 from rfl,
+      show ((0 : Fin 3) + 2) = 2 from rfl]
+    set pL := h.dotGaugeHiggs ![Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 1] ![] with hpL
+    set mL := h.dotGaugeHiggs ![Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 1] ![] with hmL
+    set pR := h.dotGaugeHiggs ![] ![Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 1] with hpR
+    set mR := h.dotGaugeHiggs ![] ![Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 1] with hmR
+    refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+      rw [Submodule.span_singleton_le_iff_mem]
+    · rw [show h.dotGaugeHiggs ![Sum.inr 1] ![] = (2⁻¹ : ℂ) • (pL - mL) from by
+        rw [hpL, hmL]; module]
+      refine Submodule.smul_mem _ _ (sub_mem (Submodule.mem_iSup_of_mem (-2) ?_)
+        (Submodule.mem_iSup_of_mem 2 ?_))
+      · rw [if_neg (by decide), if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+      · rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · rw [show h.dotGaugeHiggs ![] ![Sum.inr 1] = (2⁻¹ : ℂ) • (pR - mR) from by
+        rw [hpR, hmR]; module]
+      refine Submodule.smul_mem _ _ (sub_mem (Submodule.mem_iSup_of_mem (-2) ?_)
+        (Submodule.mem_iSup_of_mem 2 ?_))
+      · rw [if_neg (by decide), if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+      · rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    · refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
 
-/-- **The Weyl decomposition of the invariant candidates.** Read straight off
-  `higgsMassWeightGaugeWeight_piece_zero`: the constants contribute `one`, the
-  quadratic `H†H` sector contributes `higgsQuadraticZeroGaugeWeightSU2Perm`, the quartic
-  sector is its `mul` with itself, and the three are joined by `sup`. -/
-noncomputable def higgsMassWeightGaugeWeightZeroSU2Perm
-    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    SU2PermDecomposition rep ((h.higgsMassWeightGaugeWeight rep_mul).piece 0) :=
-  let d := h.higgsQuadraticZeroGaugeWeightSU2Perm rep_mul
-  (((SU2PermDecomposition.one (fun g => map_one (h.repAlgHom rep_mul g))).sup d).sup
-      (d.mul rep_mul d)).copy _
-    (h.higgsMassWeightGaugeWeight_piece_zero rep_mul)
 
-/-- The gauge-invariant quadratic `H†H`, the Higgs mass term. -/
-noncomputable def massTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
-        + h.higgsComponent 1 * h.barHiggsComponent 1
+lemma dimSixWeightDecompositionLE_piece_zero_eq :
+    (h.dimSixWeightDecompositionLE.piece 0) =
+      (ℂ ∙ h.dotGaugeHiggs ![Sum.inr 2] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 2]) := by
+  simp [dimSixWeightDecompositionLE]
 
-/-- The neutral component `H†σ³H` of the isospin triplet. It has gauge weight zero and is
-  odd under the Weyl element, so it is discarded by `SU2PermDecomposition`; its *square* is
-  even, and survives both sieves without being gauge invariant. -/
-noncomputable def tripletTerm : B := h.higgsComponent 0 * h.barHiggsComponent 0
-        - h.higgsComponent 1 * h.barHiggsComponent 1
+open IsDerivativeCollection in
+/-- **The `z`-boost covering of the doubly-weight-zero part** of the dimension-six terms.
+  The remaining `z`-derivative terms lie along the boost axis, so nothing survives at
+  weight zero: they are covered entirely by the light-cone combinations `D₀ ∓ D₂`, of
+  weights `±2`. -/
+noncomputable def dimSixWeightDecompositionLELE :
+    WeightDecompositionLE repLorentz 2 (h.dimSixWeightDecompositionLE.piece 0) where
+  piece k :=
+    if k = 2 then
+      ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2] ![]) ⊔
+        ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2])
+    else if k = -2 then
+      ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 2] ![]) ⊔
+        ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 2])
+    else ⊥
+  supp := {-2, 2}
+  piece_le k := by
+    have hbase : ∀ (F : (Fin 1 → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B)
+        (hF : RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz F) (κ : Fin 4),
+        lightConeDeriv F 2 ![κ] 1 ∈
+          boostWeightSubmodule repLorentz 2 (lightConeWeight κ) := fun F hF κ => by
+      simpa using lightConeDeriv_mem F hF 2 ![κ] (b := 0) (w := 1)
+        ((trivialWeightDecomposition 2).piece_le 0 (by simp))
+    have hL := hbase (h.dotSymbol ![1, 0])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 0])
+    have hR := hbase (h.dotSymbol ![0, 1])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 1])
+    split_ifs with h2 hm2
+    · subst h2
+      refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+        ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+      · have e := hL 0
+        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 0 = (2 : ℤ) from rfl] at e
+        exact e
+      · have e := hR 0
+        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 0 = (2 : ℤ) from rfl] at e
+        exact e
+    · subst hm2
+      refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+        ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
+      · have e := hL 1
+        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
+        exact e
+      · have e := hR 1
+        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
+          LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
+          show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
+        exact e
+    · exact bot_le
+  piece_eq_bot k hk := by
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+    rw [if_neg hk.2, if_neg hk.1]
+  iSup_piece := by
+    rw [h.dimSixWeightDecompositionLE_piece_zero_eq]
+    set pL := h.dotGaugeHiggs ![Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 2] ![] with hpL
+    set mL := h.dotGaugeHiggs ![Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2] ![] with hmL
+    set pR := h.dotGaugeHiggs ![] ![Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 2] with hpR
+    set mR := h.dotGaugeHiggs ![] ![Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2] with hmR
+    refine sup_le ?_ ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · rw [show h.dotGaugeHiggs ![Sum.inr 2] ![] = (2⁻¹ : ℂ) • (pL - mL) from by
+        rw [hpL, hmL]; module]
+      refine Submodule.smul_mem _ _ (sub_mem (Submodule.mem_iSup_of_mem (-2) ?_)
+        (Submodule.mem_iSup_of_mem 2 ?_))
+      · rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+      · rw [if_pos rfl]
+        exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · rw [show h.dotGaugeHiggs ![] ![Sum.inr 2] = (2⁻¹ : ℂ) • (pR - mR) from by
+        rw [hpR, hmR]; module]
+      refine Submodule.smul_mem _ _ (sub_mem (Submodule.mem_iSup_of_mem (-2) ?_)
+        (Submodule.mem_iSup_of_mem 2 ?_))
+      · rw [if_neg (by decide), if_pos rfl]
+        exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+      · rw [if_pos rfl]
+        exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
 
-/-- **The mass term is gauge invariant.** `H†H` is fixed by every gauge transformation:
-  the hypercharge phases cancel between `H` and `H̄`, and the `SU(2)` matrix cancels against
-  its conjugate by unitarity. -/
-lemma massTerm_invariant (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (g : GaugeGroupI) :
-    rep g h.massTerm = h.massTerm := by
-  have hu : ((g⁻¹).toU1 : ℂ) * (starRingEnd ℂ) ((g⁻¹).toU1 : ℂ) = 1 :=
-    Unitary.mul_star_self_of_mem (g⁻¹).toU1.2
-  have hM : star ((g⁻¹).toSU2.1) * (g⁻¹).toSU2.1 = 1 :=
-    Matrix.mem_unitaryGroup_iff'.mp (g⁻¹).toSU2.2.1
-  have hM00 := congrFun (congrFun hM 0) 0
-  have hM01 := congrFun (congrFun hM 0) 1
-  have hM10 := congrFun (congrFun hM 1) 0
-  have hM11 := congrFun (congrFun hM 1) 1
-  simp only [Matrix.mul_apply, Fin.sum_univ_two, Matrix.one_apply, star_eq_conjTranspose,
-    Matrix.conjTranspose_apply, reduceIte, Complex.star_def,
-    show ¬((0 : Fin 2) = 1) from by decide,
-    show ¬((1 : Fin 2) = 0) from by decide] at hM00 hM01 hM10 hM11
-  have hM01' := congrArg (starRingEnd ℂ) hM01
-  have hM10' := congrArg (starRingEnd ℂ) hM10
-  simp only [map_add, map_mul, Complex.conj_conj, map_zero] at hM01' hM10'
-  have hu3 : ((g⁻¹).toU1 : ℂ) ^ 3 * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3) = 1 := by
-    rw [map_pow, ← mul_pow, hu, one_pow]
-  have key : ∀ a b : ℂ, (((g⁻¹).toU1 : ℂ) ^ 3 * a) * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3 * b)
-      = a * (starRingEnd ℂ) b := by
-    intro a b
-    rw [map_mul]
-    calc (((g⁻¹).toU1 : ℂ) ^ 3 * a) * ((starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3)
-          * (starRingEnd ℂ) b)
-        = (((g⁻¹).toU1 : ℂ) ^ 3 * (starRingEnd ℂ) (((g⁻¹).toU1 : ℂ) ^ 3))
-          * (a * (starRingEnd ℂ) b) := by ring
-      _ = a * (starRingEnd ℂ) b := by rw [hu3, one_mul]
-  rw [massTerm, map_add, rep_mul, rep_mul, h.rep_higgsComponent, h.rep_barHiggsComponent,
-    h.rep_higgsComponent, h.rep_barHiggsComponent]
-  simp only [Fin.sum_univ_two, add_mul, mul_add, smul_mul_smul_comm, key]
-  match_scalars
-  · linear_combination hM00
-  · linear_combination hM10'
-  · linear_combination hM01'
-  · linear_combination hM11
+/-!
 
-/-- **The even part of the weight-zero potential terms.** Note the fourth generator: the
-  quartic sector contributes `odd * odd` as well as `even * even`, so `(H†σ³H)²` is here
-  alongside `1`, `H†H` and `(H†H)²`. -/
-lemma higgsMassWeightGaugeWeightZeroSU2Perm_piece_zero
-    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) :
-    (h.higgsMassWeightGaugeWeightZeroSU2Perm rep_mul).piece 0 =
-    Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
-      h.tripletTerm * h.tripletTerm} := by
-  dsimp only [higgsMassWeightGaugeWeightZeroSU2Perm, SU2PermDecomposition.copy_piece,
-    SU2PermDecomposition.sup_piece, SU2PermDecomposition.one_piece]
-  rw [SU2PermDecomposition.mul_piece_eq]
-  dsimp only [higgsQuadraticZeroGaugeWeightSU2Perm]
-  simp only [show ((0 : ZMod 4) - 1) = 3 from by decide,
-    show ((0 : ZMod 4) - 2) = 2 from by decide, show ((0 : ZMod 4) - 3) = 1 from by decide,
-    show ¬((1 : ZMod 4) = 0) from by decide, show ¬((1 : ZMod 4) = 2) from by decide,
-    show ¬((2 : ZMod 4) = 0) from by decide, show ¬((3 : ZMod 4) = 0) from by decide,
-    show ¬((3 : ZMod 4) = 2) from by decide,
-    reduceIte, Submodule.mul_bot, sup_bot_eq,
-    Submodule.span_mul_span, Set.singleton_mul_singleton]
-  rw [massTerm, tripletTerm, Submodule.one_eq_span]
-  simp only [Submodule.span_insert, sup_assoc]
+### D.3. The dim six invariants
 
-lemma invariant_mem_span_massTerm_of_mem_higgsMassWeightSubmodule
-    (h : IsHiggsAlgebraValued B rep H barH massWeightPoly) (x : B)
-    (hx : x ∈ h.higgsMassWeightSubmodule 8) (x_inv : ∀ g, rep g x = x) :
-    x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
-  have hmem : !![(1 - Complex.I) / 2, (-1 - Complex.I) / 2;
-      (1 - Complex.I) / 2, (1 + Complex.I) / 2] ∈ specialUnitaryGroup (Fin 2) ℂ := by
-    rw [Matrix.mem_specialUnitaryGroup_iff]
-    refine ⟨?_, ?_⟩
-    · rw [Matrix.mem_unitaryGroup_iff]
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
-          Matrix.conjTranspose_apply, map_div₀, map_ofNat,
-          Complex.ext_iff] <;> norm_num
-    · rw [Matrix.det_fin_two_of]
-      simp [Complex.ext_iff]
-      norm_num
-  set g : GaugeGroupI := ⟨1, ⟨_, hmem⟩, 1⟩ with hg
-  have hginv : ((g⁻¹).toSU2 : Matrix (Fin 2) (Fin 2) ℂ)
-      = !![(1 + Complex.I)/2, (1 + Complex.I)/2; (-1 + Complex.I)/2, (1 - Complex.I)/2] := by
-    rw [map_inv, ← Matrix.star_eq_inv, Matrix.specialUnitaryGroup.coe_star]
-    ext a b
-    fin_cases a <;> fin_cases b <;>
-      simp [hg, GaugeGroupI.toSU2, Complex.conj_I, Complex.ext_iff]
-  have hU1 : ((g⁻¹).toU1 : ℂ) = 1 := by simp [hg, GaugeGroupI.toU1]
-  have hH0 : rep g (h.higgsComponent 0)
-      = ((1 + Complex.I)/2) • h.higgsComponent 0 + ((1 + Complex.I)/2) • h.higgsComponent 1 := by
-    rw [h.rep_higgsComponent, Fin.sum_univ_two, hU1, hginv]
-    simp
-  have hH1 : rep g (h.higgsComponent 1)
-      = ((-1 + Complex.I)/2) • h.higgsComponent 0 + ((1 - Complex.I)/2) • h.higgsComponent 1 := by
-    rw [h.rep_higgsComponent, Fin.sum_univ_two, hU1, hginv]
-    simp
-  have hB0 : rep g (h.barHiggsComponent 0)
-      = ((1 - Complex.I)/2) • h.barHiggsComponent 0
-        + ((1 - Complex.I)/2) • h.barHiggsComponent 1 := by
-    rw [h.rep_barHiggsComponent, Fin.sum_univ_two, hU1, hginv]
-    simp [map_div₀, Complex.conj_I, map_ofNat]
-    module
-  have hB1 : rep g (h.barHiggsComponent 1)
-      = ((-1 - Complex.I)/2) • h.barHiggsComponent 0
-        + ((1 + Complex.I)/2) • h.barHiggsComponent 1 := by
-    rw [h.rep_barHiggsComponent, Fin.sum_univ_two, hU1, hginv]
-    simp [map_div₀, Complex.conj_I, map_ofNat]
-    module
-  have hn3 : rep g h.tripletTerm = h.higgsComponent 0 * h.barHiggsComponent 1
-      + h.higgsComponent 1 * h.barHiggsComponent 0 := by
-    rw [tripletTerm, map_sub, rep_mul, rep_mul, hH0, hB0, hH1, hB1]
-    simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm]
-    match_scalars <;> simp [Complex.ext_iff] <;> norm_num
-  have hn1 : rep g (h.higgsComponent 0 * h.barHiggsComponent 1
-      + h.higgsComponent 1 * h.barHiggsComponent 0)
-      = Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
-        - h.higgsComponent 1 * h.barHiggsComponent 0) := by
-    rw [map_add, rep_mul, rep_mul, hH0, hB0, hH1, hB1]
-    simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_sub]
-    match_scalars <;> simp [Complex.ext_iff] <;> norm_num
-  have hHH : ∀ i j, h.higgsComponent i * h.higgsComponent j
-      = h.higgsComponent j * h.higgsComponent i := fun i j => (h.H_comm_H _ _).eq
-  have hbH : ∀ i j, h.barHiggsComponent i * h.higgsComponent j
-      = h.higgsComponent j * h.barHiggsComponent i := fun i j => (h.H_comm_barH _ _).symm.eq
-  have hbb : ∀ i j, h.barHiggsComponent i * h.barHiggsComponent j
-      = h.barHiggsComponent j * h.barHiggsComponent i := fun i j => (h.barH_comm_barH _ _).eq
-  have hHH' : ∀ i j (y : B), h.higgsComponent i * (h.higgsComponent j * y)
-      = h.higgsComponent j * (h.higgsComponent i * y) := fun i j y => by
-    rw [← mul_assoc, hHH, mul_assoc]
-  have hbH' : ∀ i j (y : B), h.barHiggsComponent i * (h.higgsComponent j * y)
-      = h.higgsComponent j * (h.barHiggsComponent i * y) := fun i j y => by
-    rw [← mul_assoc, hbH, mul_assoc]
-  have fierz : h.tripletTerm * h.tripletTerm
-      + (h.higgsComponent 0 * h.barHiggsComponent 1 + h.higgsComponent 1 * h.barHiggsComponent 0)
-        * (h.higgsComponent 0 * h.barHiggsComponent 1
-          + h.higgsComponent 1 * h.barHiggsComponent 0)
-      + (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
-          - h.higgsComponent 1 * h.barHiggsComponent 0))
-        * (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
-          - h.higgsComponent 1 * h.barHiggsComponent 0))
-      = h.massTerm * h.massTerm := by
-    rw [tripletTerm, massTerm]
-    simp only [sub_mul, mul_sub, add_mul, mul_add, smul_mul_assoc, mul_smul_comm,
-      mul_assoc, hHH', hbH', hbb]
-    match_scalars <;> simp [Complex.ext_iff]
-  have hT3 : ∀ y : B, rep (g * g) y = rep g (rep g y) := by
-    intro y
-    rw [map_mul]
-    rfl
-  have e1 : rep g (h.tripletTerm * h.tripletTerm)
-      = (h.higgsComponent 0 * h.barHiggsComponent 1 + h.higgsComponent 1 * h.barHiggsComponent 0)
-        * (h.higgsComponent 0 * h.barHiggsComponent 1
-          + h.higgsComponent 1 * h.barHiggsComponent 0) := by
-    rw [rep_mul, hn3]
-  have e2 : rep (g * g) (h.tripletTerm * h.tripletTerm)
-      = (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
-          - h.higgsComponent 1 * h.barHiggsComponent 0))
-        * (Complex.I • (h.higgsComponent 0 * h.barHiggsComponent 1
-          - h.higgsComponent 1 * h.barHiggsComponent 0)) := by
-    rw [hT3, e1, rep_mul, hn1]
-  have hone : ∀ k : GaugeGroupI, rep k (1 : B) = 1 := fun k => map_one (h.repAlgHom rep_mul k)
-  have hm : ∀ k : GaugeGroupI, rep k h.massTerm = h.massTerm := massTerm_invariant rep_mul h
-  have hmm : ∀ k : GaugeGroupI, rep k (h.massTerm * h.massTerm) = h.massTerm * h.massTerm :=
-    fun k => by rw [rep_mul, hm]
-  -- the two sieves put `x` in a four-generator span
-  have hspan : x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
-      h.tripletTerm * h.tripletTerm} := by
-    rw [← h.higgsMassWeightGaugeWeightZeroSU2Perm_piece_zero rep_mul]
-    exact SU2PermDecomposition.mem_zero_of_invariant _
-      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx x_inv) x_inv
-  -- averaging over the three axes maps that span into the three-generator one
-  have s1 : (1 : B) ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
-    Submodule.subset_span (by simp)
-  have s2 : h.massTerm ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
-    Submodule.subset_span (by simp)
-  have s3 : h.massTerm * h.massTerm
-      ∈ Submodule.span ℂ ({1, h.massTerm, h.massTerm * h.massTerm} : Set B) :=
-    Submodule.subset_span (by simp)
-  set T : B →ₗ[ℂ] B := LinearMap.id + rep g + rep (g * g) with hT
-  have hTapp : ∀ y : B, T y = y + rep g y + rep (g * g) y := fun y => rfl
-  have hmaple : Submodule.map T (Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm,
-        h.tripletTerm * h.tripletTerm})
-      ≤ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
-    rw [Submodule.map_span_le]
-    rintro y (rfl | rfl | rfl | rfl) <;> rw [hTapp]
-    · rw [hone, hone]
-      exact Submodule.add_mem _ (Submodule.add_mem _ s1 s1) s1
-    · rw [hm, hm]
-      exact Submodule.add_mem _ (Submodule.add_mem _ s2 s2) s2
-    · rw [hmm, hmm]
-      exact Submodule.add_mem _ (Submodule.add_mem _ s3 s3) s3
-    · rw [e1, e2, fierz]
-      exact s3
-  have hx3 : T x = (3 : ℂ) • x := by
-    rw [hTapp, x_inv, x_inv]
-    module
-  have hfin : (3 : ℂ) • x ∈ Submodule.span ℂ {1, h.massTerm, h.massTerm * h.massTerm} := by
-    rw [← hx3]
-    exact hmaple ⟨x, hspan, rfl⟩
-  have hfin' := Submodule.smul_mem _ ((3 : ℂ)⁻¹) hfin
-  rwa [smul_smul, inv_mul_cancel₀ (by norm_num : (3 : ℂ) ≠ 0), one_smul] at hfin'
 -/
+
+/-- **There is no gauge- and Lorentz-invariant term of mass dimension three.** An invariant
+  element of the mass-weight-six sector has boost weight zero along every axis; the three
+  sieves — the `x`-weight decomposition, then the `y`- and `z`-boost coverings — leave no
+  room at weight zero. -/
+lemma gaugeInvariantOfMassDim_six_eq_boostWeightZero
+    (x : B) (hx : ∀ g, rep g x = x) (hLorentz : ∀ g, repLorentz g x = x)
+    (hdim : x ∈ h.massWeightSubmodule 6) :
+   x = 0 := by
+  have hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0 := fun i =>
+    mem_boostWeightSubmodule.2 fun t ht => by rw [hLorentz]; simp
+  have h6 : x ∈ h.gaugeInvariantOfMassDim 6 :=
+    Submodule.mem_inf.2 ⟨hdim, (Representation.mem_invariants rep x).2 hx⟩
+  have h1 : x ∈ (h.boostWeightZeroSix 0).piece 0 :=
+    ((h.boostWeightZeroSix 0).toLE le_rfl).mem_piece_zero_of_mem h6 (hw 0)
+  have h2 : x ∈ h.dimSixWeightDecompositionLE.piece 0 :=
+    h.dimSixWeightDecompositionLE.mem_piece_zero_of_mem h1 (hw 1)
+  exact h.dimSixWeightDecompositionLELE.eq_zero_of_mem_of_zero_notMem_supp
+    (by simp [dimSixWeightDecompositionLELE]) h2 (hw 2)
+
 end IsHiggsAlgebraValued
 
 end StandardModel

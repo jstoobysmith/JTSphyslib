@@ -687,10 +687,10 @@ end Theory
   pure boost weight whose supremum is `V`. Exhibiting one collapses all the per-span
   boilerplate: the projection images, the weight intersections, projection-closure and the
   off-support vanishing become the generic lemmas below. -/
-structure WeightDecomposition (rep : Representation K SL(2,ℂ) A) (i : Fin 3)
-    (V : Submodule K A) where
+structure WeightDecomposition (rep : Representation K SL(2,ℂ) M) (i : Fin 3)
+    (V : Submodule K M) where
   /-- The weight-`k` piece of the decomposition. -/
-  piece : ℤ → Submodule K A
+  piece : ℤ → Submodule K M
   /-- The finite set of weights that occur. -/
   supp : Finset ℤ
   piece_le : ∀ k, piece k ≤ boostWeightSubmodule rep i k
@@ -698,6 +698,38 @@ structure WeightDecomposition (rep : Representation K SL(2,ℂ) A) (i : Fin 3)
   iSup_piece : (⨆ k, piece k) = V
 
 namespace WeightDecomposition
+
+/-- Transport a weight decomposition along an equality of submodules. -/
+def copy {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {V₁ V₂ : Submodule K M}
+    (d₁ : WeightDecomposition rep i V₁) (hV : V₁ = V₂) : WeightDecomposition rep i V₂ where
+  piece := d₁.piece
+  supp := d₁.supp
+  piece_le := d₁.piece_le
+  piece_eq_bot := d₁.piece_eq_bot
+  iSup_piece := d₁.iSup_piece.trans hV
+
+@[simp]
+lemma copy_piece {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {V₁ V₂ : Submodule K M}
+    (d₁ : WeightDecomposition rep i V₁) (hV : V₁ = V₂) (k : ℤ) :
+    (d₁.copy hV).piece k = d₁.piece k := rfl
+
+/-- **The join of two weight decompositions** along the same axis: the weight-`k` piece of
+  the join is the join of the weight-`k` pieces. -/
+def sup {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {V₁ V₂ : Submodule K M}
+    (d₁ : WeightDecomposition rep i V₁) (d₂ : WeightDecomposition rep i V₂) :
+    WeightDecomposition rep i (V₁ ⊔ V₂) where
+  piece k := d₁.piece k ⊔ d₂.piece k
+  supp := d₁.supp ∪ d₂.supp
+  piece_le k := sup_le (d₁.piece_le k) (d₂.piece_le k)
+  piece_eq_bot k hk := by
+    rw [d₁.piece_eq_bot k fun hk' => hk (Finset.mem_union_left _ hk'),
+      d₂.piece_eq_bot k fun hk' => hk (Finset.mem_union_right _ hk'), bot_sup_eq]
+  iSup_piece := by rw [iSup_sup_eq, d₁.iSup_piece, d₂.iSup_piece]
+
+@[simp]
+lemma sup_piece {rep : Representation K SL(2,ℂ) M} {i : Fin 3} {V₁ V₂ : Submodule K M}
+    (d₁ : WeightDecomposition rep i V₁) (d₂ : WeightDecomposition rep i V₂) (k : ℤ) :
+    (d₁.sup d₂).piece k = d₁.piece k ⊔ d₂.piece k := rfl
 
 variable {rep : Representation K SL(2,ℂ) A} [IsBoostGraded rep] {i : Fin 3}
   {V : Submodule K A} (d : WeightDecomposition rep i V)
