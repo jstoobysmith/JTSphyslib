@@ -44,7 +44,7 @@ be confined to the zero-weight piece.
 - `GaugeWeightDecomposition.mul` : weights add under multiplication, decomposing `V * V'`.
 - `GaugeWeightDecomposition.piece_eq_inf` : the pieces are cut out of `V` by the torus alone.
 - `GaugeWeightDecomposition.mem_zero_of_invariant` : a gauge-invariant element lies in the
-  zero-weight piece. This is a sieve, not a characterization; see section F.
+  zero-weight piece.
 
 ## iii. Table of contents
 
@@ -125,57 +125,54 @@ lemma expI_ne_zero : ((expI : ℂ)) ≠ 0 := fun h0 => by
 lemma expI_inv_eq_star : ((expI : ℂ))⁻¹ = star (expI : ℂ) :=
   inv_eq_of_mul_eq_one_right (Unitary.mul_star_self_of_mem expI.2)
 
+/-- `exp i` times its conjugate is one. -/
+lemma expI_mul_conj : (expI : ℂ) * (starRingEnd ℂ) (expI : ℂ) = 1 :=
+  Unitary.mul_star_self_of_mem expI.2
+
+/-- The conjugate of `exp i` times `exp i` is one. -/
+lemma conj_mul_expI : (starRingEnd ℂ) (expI : ℂ) * (expI : ℂ) = 1 :=
+  Unitary.star_mul_self_of_mem expI.2
+
+/-- A diagonal matrix whose entries are unit scalars with product one lies in the special
+  unitary group. -/
+lemma _root_.Matrix.mem_specialUnitaryGroup_diagonal {n : Type*} [Fintype n] [DecidableEq n]
+    (d : n → ℂ) (hd : ∀ i, d i * star (d i) = 1) (hdet : ∏ i, d i = 1) :
+    Matrix.diagonal d ∈ Matrix.specialUnitaryGroup n ℂ := by
+  rw [Matrix.mem_specialUnitaryGroup_iff]
+  refine ⟨?_, ?_⟩
+  · rw [Matrix.mem_unitaryGroup_iff, Matrix.star_eq_conjTranspose,
+      Matrix.diagonal_conjTranspose, Matrix.diagonal_mul_diagonal]
+    simp only [Pi.star_apply]
+    rw [funext hd, Matrix.diagonal_one]
+  · rw [Matrix.det_diagonal, hdet]
+
 /-- The first colour torus generator, `diag (exp i, exp (-i), 1)`. -/
 noncomputable def su3ExpIOne : specialUnitaryGroup (Fin 3) ℂ :=
-  ⟨!![(expI : ℂ), 0, 0; 0, star (expI : ℂ), 0; 0, 0, 1], by
-    have hms : (expI : ℂ) * (starRingEnd ℂ) (expI : ℂ) = 1 :=
-      Unitary.mul_star_self_of_mem expI.2
-    have hsm : (starRingEnd ℂ) (expI : ℂ) * (expI : ℂ) = 1 :=
-      Unitary.star_mul_self_of_mem expI.2
-    rw [Matrix.mem_specialUnitaryGroup_iff]
-    refine ⟨?_, ?_⟩
-    · rw [Matrix.mem_unitaryGroup_iff]
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-        simp [Matrix.mul_apply, Fin.sum_univ_three, star_eq_conjTranspose,
-          Matrix.conjTranspose_apply, hms, hsm]
-    · simp [Matrix.det_fin_three, hms]⟩
+  ⟨Matrix.diagonal ![(expI : ℂ), star (expI : ℂ), 1],
+    Matrix.mem_specialUnitaryGroup_diagonal _
+      (fun i => by fin_cases i <;> simp [expI_mul_conj, conj_mul_expI])
+      (by simp [Fin.prod_univ_three, expI_mul_conj])⟩
 
 /-- The second colour torus generator, `diag (1, exp i, exp (-i))`. -/
 noncomputable def su3ExpITwo : specialUnitaryGroup (Fin 3) ℂ :=
-  ⟨!![1, 0, 0; 0, (expI : ℂ), 0; 0, 0, star (expI : ℂ)], by
-    have hms : (expI : ℂ) * (starRingEnd ℂ) (expI : ℂ) = 1 :=
-      Unitary.mul_star_self_of_mem expI.2
-    have hsm : (starRingEnd ℂ) (expI : ℂ) * (expI : ℂ) = 1 :=
-      Unitary.star_mul_self_of_mem expI.2
-    rw [Matrix.mem_specialUnitaryGroup_iff]
-    refine ⟨?_, ?_⟩
-    · rw [Matrix.mem_unitaryGroup_iff]
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-        simp [Matrix.mul_apply, Fin.sum_univ_three, star_eq_conjTranspose,
-          Matrix.conjTranspose_apply, hms, hsm]
-    · simp [Matrix.det_fin_three, hms]⟩
+  ⟨Matrix.diagonal ![1, (expI : ℂ), star (expI : ℂ)],
+    Matrix.mem_specialUnitaryGroup_diagonal _
+      (fun i => by fin_cases i <;> simp [expI_mul_conj, conj_mul_expI])
+      (by simp [Fin.prod_univ_three, expI_mul_conj])⟩
 
 /-- The `SU(2)` torus element, `diag (exp i, exp (-i))`. -/
 noncomputable def su2ExpI : specialUnitaryGroup (Fin 2) ℂ :=
-  ⟨!![(expI : ℂ), 0; 0, star (expI : ℂ)], by
-    have hms : (expI : ℂ) * (starRingEnd ℂ) (expI : ℂ) = 1 :=
-      Unitary.mul_star_self_of_mem expI.2
-    have hsm : (starRingEnd ℂ) (expI : ℂ) * (expI : ℂ) = 1 :=
-      Unitary.star_mul_self_of_mem expI.2
-    rw [Matrix.mem_specialUnitaryGroup_iff]
-    refine ⟨?_, ?_⟩
-    · rw [Matrix.mem_unitaryGroup_iff]
-      ext a b
-      fin_cases a <;> fin_cases b <;>
-        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
-          Matrix.conjTranspose_apply, hms, hsm]
-    · simp [Matrix.det_fin_two_of, hms]⟩
+  ⟨Matrix.diagonal ![(expI : ℂ), star (expI : ℂ)],
+    Matrix.mem_specialUnitaryGroup_diagonal _
+      (fun i => by fin_cases i <;> simp [expI_mul_conj, conj_mul_expI])
+      (by simp [Fin.prod_univ_two, expI_mul_conj])⟩
 
 /-- The underlying matrix of the `SU(2)` torus element. -/
 lemma su2ExpI_coe :
-    (su2ExpI : specialUnitaryGroup (Fin 2) ℂ).1 = !![(expI : ℂ), 0; 0, star (expI : ℂ)] := rfl
+    (su2ExpI : specialUnitaryGroup (Fin 2) ℂ).1
+      = !![(expI : ℂ), 0; 0, star (expI : ℂ)] := by
+  ext a b
+  fin_cases a <;> fin_cases b <;> simp [su2ExpI, Matrix.diagonal]
 
 /-- The inverse torus element is `diag (exp (-i), exp i)`, so on a doublet the two components
   are scaled by the reciprocal characters. -/
