@@ -5,7 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.Basic
+public import Mathlib.LinearAlgebra.Eigenspace.Basic
 /-!
 # `SU(2)` permutation decompositions
 
