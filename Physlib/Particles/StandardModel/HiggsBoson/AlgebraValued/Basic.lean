@@ -9,9 +9,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
-public import Physlib.Particles.StandardModel.GaugeGroup.HyperchargeDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.IsospinDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction

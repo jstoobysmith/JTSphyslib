@@ -5,7 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.GaugeGroup.IsospinDecomposition
+public import Physlib.Particles.StandardModel.Basic
+public import Mathlib.LinearAlgebra.Eigenspace.Basic
+public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
 # Gauge weight decompositions
 
@@ -46,7 +48,7 @@ be confined to the zero-weight piece.
 
 ## iii. Table of contents
 
-- A. The colour torus generators
+- A. The scalar `exp i` and the torus generators
 - B. The four torus generators and gauge weights
 - C. Gauge weight decompositions
 - D. Joins
@@ -62,16 +64,66 @@ namespace StandardModel
 open Matrix Pointwise
 
 /-!
-## A. The colour torus generators
+## A. The scalar `exp i` and the torus generators
 
-The maximal torus of `SU(3)` is two-dimensional, so colour is a two-component charge and two
-generators are needed to measure it. We take the diagonal elements `diag (exp i, exp (-i), 1)`
-and `diag (1, exp i, exp (-i))`, which lie in `SU(3)` because each diagonal entry has modulus
-one and the three entries multiply to one.
+Every charge here is measured by one scalar. The unit complex number `exp i` has infinite
+order, since `π` is irrational, so its integer powers are pairwise distinct and a single
+element of the torus already separates all the weights in a given direction.
 
-The generators are elements of the group and the purity of a  weight space is recorded by
-a character equation `rep g x = c • x`.
+The torus generators are built by placing `exp i` and its inverse on a diagonal. The maximal
+torus of `SU(3)` is two-dimensional, so colour is a two-component charge and needs the two
+elements `diag (exp i, exp (-i), 1)` and `diag (1, exp i, exp (-i))`. Weak isospin needs one,
+`diag (exp i, exp (-i))`. Each lies in its special unitary group because the diagonal entries
+have modulus one and multiply to one. Hypercharge needs no matrix, since its factor of the
+gauge group is already the unit circle.
+
+The generators are elements of the group, and the purity of a weight space is recorded by a
+character equation `rep g x = c • x`.
 -/
+
+/-- The unitary scalar `exp i`, a point of the unit circle of infinite order. -/
+noncomputable def expI : unitary ℂ :=
+  ⟨Complex.exp Complex.I, by
+    have hstar : star (Complex.exp Complex.I) = Complex.exp (-Complex.I) := by
+      rw [show star (Complex.exp Complex.I)
+          = (starRingEnd ℂ) (Complex.exp Complex.I) from rfl, ← Complex.exp_conj,
+        Complex.conj_I]
+    constructor
+    · rw [hstar, ← Complex.exp_add, neg_add_cancel, Complex.exp_zero]
+    · rw [hstar, ← Complex.exp_add, add_neg_cancel, Complex.exp_zero]⟩
+
+/-- The powers of `exp i` are pairwise distinct, by the irrationality of `π`. -/
+lemma expI_zpow_injective : Function.Injective fun n : ℤ => ((expI : ℂ) ^ n) := by
+  intro a b hab
+  simp only [show ((expI : ℂ)) = Complex.exp Complex.I from rfl,
+    ← Complex.exp_int_mul] at hab
+  obtain ⟨k, hk⟩ := Complex.exp_eq_exp_iff_exists_int.mp hab
+  have hℂ : ((a : ℂ)) = b + k * (2 * (Real.pi : ℂ)) := by
+    refine mul_right_cancel₀ Complex.I_ne_zero ?_
+    rw [hk]
+    ring
+  have hℝ : ((a : ℝ)) = b + k * (2 * Real.pi) := by
+    have h := congrArg Complex.re hℂ
+    simpa using h
+  rcases eq_or_ne k 0 with rfl | hk0
+  · exact_mod_cast (by simpa using hℝ : ((a : ℝ)) = b)
+  · exfalso
+    refine irrational_pi ⟨(a - b) / (2 * k), ?_⟩
+    have h2k : ((2 * k : ℝ)) ≠ 0 :=
+      mul_ne_zero two_ne_zero (Int.cast_ne_zero.mpr hk0)
+    push_cast
+    rw [div_eq_iff h2k]
+    linarith [hℝ]
+
+/-- `exp i` is nonzero. -/
+lemma expI_ne_zero : ((expI : ℂ)) ≠ 0 := fun h0 => by
+  have h := Unitary.mul_star_self_of_mem expI.2
+  rw [h0, zero_mul] at h
+  exact zero_ne_one h
+
+/-- The inverse of `exp i` is its star. -/
+lemma expI_inv_eq_star : ((expI : ℂ))⁻¹ = star (expI : ℂ) :=
+  inv_eq_of_mul_eq_one_right (Unitary.mul_star_self_of_mem expI.2)
 
 /-- The first colour torus generator, `diag (exp i, exp (-i), 1)`. -/
 noncomputable def su3ExpIOne : specialUnitaryGroup (Fin 3) ℂ :=
@@ -105,12 +157,40 @@ noncomputable def su3ExpITwo : specialUnitaryGroup (Fin 3) ℂ :=
           Matrix.conjTranspose_apply, hms, hsm]
     · simp [Matrix.det_fin_three, hms]⟩
 
+/-- The `SU(2)` torus element, `diag (exp i, exp (-i))`. -/
+noncomputable def su2ExpI : specialUnitaryGroup (Fin 2) ℂ :=
+  ⟨!![(expI : ℂ), 0; 0, star (expI : ℂ)], by
+    have hms : (expI : ℂ) * (starRingEnd ℂ) (expI : ℂ) = 1 :=
+      Unitary.mul_star_self_of_mem expI.2
+    have hsm : (starRingEnd ℂ) (expI : ℂ) * (expI : ℂ) = 1 :=
+      Unitary.star_mul_self_of_mem expI.2
+    rw [Matrix.mem_specialUnitaryGroup_iff]
+    refine ⟨?_, ?_⟩
+    · rw [Matrix.mem_unitaryGroup_iff]
+      ext a b
+      fin_cases a <;> fin_cases b <;>
+        simp [Matrix.mul_apply, Fin.sum_univ_two, star_eq_conjTranspose,
+          Matrix.conjTranspose_apply, hms, hsm]
+    · simp [Matrix.det_fin_two_of, hms]⟩
+
+/-- The underlying matrix of the `SU(2)` torus element. -/
+lemma su2ExpI_coe :
+    (su2ExpI : specialUnitaryGroup (Fin 2) ℂ).1 = !![(expI : ℂ), 0; 0, star (expI : ℂ)] := rfl
+
+/-- The inverse torus element is `diag (exp (-i), exp i)`, so on a doublet the two components
+  are scaled by the reciprocal characters. -/
+lemma su2ExpI_inv_coe :
+    (su2ExpI⁻¹ : specialUnitaryGroup (Fin 2) ℂ).1
+      = !![star (expI : ℂ), 0; 0, (expI : ℂ)] := by
+  rw [← Matrix.star_eq_inv, Matrix.specialUnitaryGroup.coe_star, su2ExpI_coe]
+  ext a b
+  fin_cases a <;> fin_cases b <;> simp
+
 /-!
 ## B. The four torus generators and gauge weights
 
-Weights are measured against four chosen elements of the maximal torus, one element per direction,
-collected in `gaugeTorusGen`. Four elements suffice because each has infinite order, so the
-characters by which it acts on the weight spaces are already pairwise distinct.
+Weights are measured against four chosen elements of the maximal torus, one element per
+direction, collected in `gaugeTorusGen`. Four suffice because of the separation in section A.
 
 Both abelian charges are normalized to integers. Weak isospin is measured as `2T₃`, so the two
 components of a doublet carry weights `+1` and `-1`, and hypercharge as `6Y`, the smallest
@@ -171,12 +251,6 @@ lemma GaugeWeight.coord_injective : Function.Injective GaugeWeight.coord := by
   subst h2
   subst h3
   rfl
-
-/-- `exp i` is nonzero. -/
-lemma expI_ne_zero : ((expI : ℂ)) ≠ 0 := fun h0 => by
-  have h := Unitary.mul_star_self_of_mem expI.2
-  rw [h0, zero_mul] at h
-  exact zero_ne_one h
 
 /-!
 ## C. Gauge weight decompositions
