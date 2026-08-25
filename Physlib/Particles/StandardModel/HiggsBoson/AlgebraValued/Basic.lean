@@ -52,6 +52,26 @@ mass-dimension 4 are given by:
 `H^† D_μ D_μ H`,`H D_μ D_μ H^†`, `D_μ H D_μ H^†`, `H H^†` and `(H^† H)^2`.
 
 
+
+So let
+`x := a0 TT + a1 XX + a2 YY + a3 ZZ`.
+
+Write `M := TT - XX - YY - ZZ` for the target, and abbreviate the three coefficients
+appearing in the conditions by
+`u := a0 + a1`, `v := a0 + a2`, `w := a0 + a3`.
+Expanding `M` gives the identity
+`x = a0 M + u XX + v YY + w ZZ`.
+
+Rotational average gives
+`x = a0 M + (u + v + w)/3  (XX + YY + ZZ)`.
+
+while the three boost conditions read `u (TT + XX) = 0`, `v (TT + YY) = 0` and
+`w (TT + ZZ) = 0`, that is `u XX = - u TT`, `v YY = - v TT` and `w ZZ = - w TT`.
+Substituting these in,
+`x = a0 M - (u + v + w) TT`.
+
+So we must have that `(u+v+w) TT = (u+v+w) M / 4`, and hence
+`x = ( a0 - (u + v + w) / 4 ) M`.
 -/
 
 @[expose] public section
@@ -871,6 +891,26 @@ noncomputable def lightConeCoeffInv (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin
   else if μ = Sum.inr (i + 1) then (if κ = 2 then 1 else 0)
   else (if κ = 3 then 1 else 0)
 
+/-- The inverse coefficient toward the first transverse direction vanishes off it. -/
+lemma lightConeCoeffInv_two_eq_zero (i : Fin 3) {μ : Fin 1 ⊕ Fin 3}
+    (hμ : μ ≠ Sum.inr (i + 1)) : lightConeCoeffInv i μ 2 = 0 := by
+  simp [lightConeCoeffInv, hμ]
+
+/-- The inverse coefficient toward the second transverse direction vanishes off it. -/
+lemma lightConeCoeffInv_three_eq_zero (i : Fin 3) {μ : Fin 1 ⊕ Fin 3}
+    (hμ : μ ≠ Sum.inr (i + 2)) : lightConeCoeffInv i μ 3 = 0 := by
+  rcases μ with a | m
+  · rw [Subsingleton.elim a 0]
+    simp [lightConeCoeffInv]
+  · fin_cases i <;> fin_cases m <;> simp_all [lightConeCoeffInv]
+
+/-- The inverse coefficient of the first transverse direction is supported on its own
+  light-cone index. -/
+lemma lightConeCoeffInv_transverse_one_eq_zero (i : Fin 3) {μ : Fin 1 ⊕ Fin 3} {κ : Fin 4}
+    (hμ : μ = Sum.inr (i + 1)) (hκ : κ ≠ 2) : lightConeCoeffInv i μ κ = 0 := by
+  subst hμ
+  fin_cases i <;> fin_cases κ <;> simp_all [lightConeCoeffInv]
+
 /-- The light-cone basis is a basis: the two coefficient matrices are inverse. -/
 lemma sum_lightConeCoeffInv_mul (i : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
     ∑ κ : Fin 4, lightConeCoeffInv i μ κ * lightConeCoeff i κ ν = if μ = ν then 1 else 0 := by
@@ -969,6 +1009,247 @@ lemma lightConeDeriv_three (F : (Fin 1 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
   fin_cases i <;>
     simp [lightConeCoeff]
 
+/-- **A two-slot light-cone symbol**, written out as a double sum over coordinate
+  symbols. -/
+lemma lightConeDeriv_pair (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3)
+    (κ₀ κ₁ : Fin 4) :
+    lightConeDeriv F i ![κ₀, κ₁] = ∑ μ : Fin 1 ⊕ Fin 3, ∑ ν : Fin 1 ⊕ Fin 3,
+      (lightConeCoeff i κ₀ μ * lightConeCoeff i κ₁ ν) • F ![μ, ν] :=
+  calc lightConeDeriv F i ![κ₀, κ₁]
+      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3),
+          (lightConeCoeff i κ₀ p.1 * lightConeCoeff i κ₁ p.2) • F ![p.1, p.2] := by
+        rw [lightConeDeriv]
+        refine Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => ?_
+        have hd : ![d 0, d 1] = d := by
+          funext j
+          fin_cases j <;> rfl
+        rw [Fin.prod_univ_two]
+        simp only [piFinTwoEquiv_apply, Matrix.cons_val_zero, Matrix.cons_val_one, hd]
+    _ = _ := Fintype.sum_prod_type _
+
+/-- The `(D₀ - Dᵢ)(D₀ + Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_zero_one (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![0, 1] = F ![Sum.inl 0, Sum.inl 0] + F ![Sum.inl 0, Sum.inr i]
+      - F ![Sum.inr i, Sum.inl 0] - F ![Sum.inr i, Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul]
+  module
+
+/-- The `(D₀ + Dᵢ)(D₀ - Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_one_zero (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![1, 0] = F ![Sum.inl 0, Sum.inl 0] - F ![Sum.inl 0, Sum.inr i]
+      + F ![Sum.inr i, Sum.inl 0] - F ![Sum.inr i, Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul, neg_ite]
+  module
+
+/-- Both slots on the first transverse direction. -/
+lemma lightConeDeriv_pair_two_two (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![2, 2] = F ![Sum.inr (i + 1), Sum.inr (i + 1)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff]
+
+/-- The first then second transverse directions. -/
+lemma lightConeDeriv_pair_two_three (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![2, 3] = F ![Sum.inr (i + 1), Sum.inr (i + 2)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff]
+
+/-- The second then first transverse directions. -/
+lemma lightConeDeriv_pair_three_two (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![3, 2] = F ![Sum.inr (i + 2), Sum.inr (i + 1)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff]
+
+/-- Both slots on the second transverse direction. -/
+lemma lightConeDeriv_pair_three_three (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![3, 3] = F ![Sum.inr (i + 2), Sum.inr (i + 2)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff]
+
+/-- The `(D₀ - Dᵢ)(D₀ - Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_zero_zero (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![0, 0] = F ![Sum.inl 0, Sum.inl 0] - F ![Sum.inl 0, Sum.inr i]
+      - F ![Sum.inr i, Sum.inl 0] + F ![Sum.inr i, Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul, neg_ite]
+  module
+
+/-- The `(D₀ + Dᵢ)(D₀ + Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_one_one (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![1, 1] = F ![Sum.inl 0, Sum.inl 0] + F ![Sum.inl 0, Sum.inr i]
+      + F ![Sum.inr i, Sum.inl 0] + F ![Sum.inr i, Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul]
+  module
+
+/-- The `(D₀ - Dᵢ)` then second transverse slot pair. -/
+lemma lightConeDeriv_pair_zero_three (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![0, 3] = F ![Sum.inl 0, Sum.inr (i + 2)]
+      - F ![Sum.inr i, Sum.inr (i + 2)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_ite_eq', ite_smul]
+  module
+
+/-- The second transverse then `(D₀ - Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_three_zero (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![3, 0] = F ![Sum.inr (i + 2), Sum.inl 0]
+      - F ![Sum.inr (i + 2), Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul, neg_ite]
+  module
+
+/-- The `(D₀ + Dᵢ)` then second transverse slot pair. -/
+lemma lightConeDeriv_pair_one_three (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![1, 3] = F ![Sum.inl 0, Sum.inr (i + 2)]
+      + F ![Sum.inr i, Sum.inr (i + 2)] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_ite_eq', ite_smul]
+
+/-- The second transverse then `(D₀ + Dᵢ)` slot pair. -/
+lemma lightConeDeriv_pair_three_one (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    lightConeDeriv F i ![3, 1] = F ![Sum.inr (i + 2), Sum.inl 0]
+      + F ![Sum.inr (i + 2), Sum.inr i] := by
+  rw [lightConeDeriv_pair]
+  simp [lightConeCoeff, Fintype.sum_sum_type, Finset.sum_add_distrib, Finset.sum_ite_eq',
+    ite_smul]
+
+/-- **The two-slot light-cone indices of weight zero**: the two mixed null pairs and the
+  four transverse pairs. -/
+lemma iSup_range_lightConeDeriv_pair_weight_zero
+    (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = (0 : ℤ)),
+        LinearMap.range (lightConeDeriv F i c))
+      = ((LinearMap.range (lightConeDeriv F i ![0, 1]) ⊔
+            LinearMap.range (lightConeDeriv F i ![1, 0])) ⊔
+          (LinearMap.range (lightConeDeriv F i ![2, 2]) ⊔
+            LinearMap.range (lightConeDeriv F i ![2, 3]))) ⊔
+        (LinearMap.range (lightConeDeriv F i ![3, 2]) ⊔
+          LinearMap.range (lightConeDeriv F i ![3, 3])) := by
+  refine le_antisymm (iSup₂_le fun c hc => ?_)
+    (sup_le (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)) (sup_le ?_ ?_))
+  · obtain ⟨κ₀, κ₁, rfl⟩ : ∃ κ₀ κ₁, c = ![κ₀, κ₁] :=
+      ⟨c 0, c 1, funext fun j => by fin_cases j <;> rfl⟩
+    rw [Fin.sum_univ_two] at hc
+    fin_cases κ₀
+    · fin_cases κ₁
+      · exact absurd hc (by decide)
+      · exact le_sup_of_le_left (le_sup_of_le_left le_sup_left)
+      · exact absurd hc (by decide)
+      · exact absurd hc (by decide)
+    · fin_cases κ₁
+      · exact le_sup_of_le_left (le_sup_of_le_left le_sup_right)
+      · exact absurd hc (by decide)
+      · exact absurd hc (by decide)
+      · exact absurd hc (by decide)
+    · fin_cases κ₁
+      · exact absurd hc (by decide)
+      · exact absurd hc (by decide)
+      · exact le_sup_of_le_left (le_sup_of_le_right le_sup_left)
+      · exact le_sup_of_le_left (le_sup_of_le_right le_sup_right)
+    · fin_cases κ₁
+      · exact absurd hc (by decide)
+      · exact absurd hc (by decide)
+      · exact le_sup_of_le_right le_sup_left
+      · exact le_sup_of_le_right le_sup_right
+  · exact le_iSup₂_of_le ![0, 1] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![1, 0] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![2, 2] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![2, 3] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![3, 2] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![3, 3] (by decide) le_rfl
+
+/-- **The weight-zero light-cone pairs avoiding the mixed transverse indices**: the two
+  null pairs and the two repeated transverse pairs. -/
+lemma iSup_range_lightConeDeriv_pair_weight_zero_notMixed
+    (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = (0 : ℤ) ∧
+        ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
+      LinearMap.range (lightConeDeriv F i c))
+      = ((LinearMap.range (lightConeDeriv F i ![0, 1]) ⊔
+            LinearMap.range (lightConeDeriv F i ![1, 0])) ⊔
+          (LinearMap.range (lightConeDeriv F i ![2, 2]) ⊔
+            LinearMap.range (lightConeDeriv F i ![3, 3]))) := by
+  refine le_antisymm (iSup₂_le fun c hc => ?_)
+    (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_))
+  · obtain ⟨κ₀, κ₁, rfl⟩ : ∃ κ₀ κ₁, c = ![κ₀, κ₁] :=
+      ⟨c 0, c 1, funext fun j => by fin_cases j <;> rfl⟩
+    obtain ⟨hw, h23, h32⟩ := hc
+    rw [Fin.sum_univ_two] at hw
+    fin_cases κ₀
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact le_sup_of_le_left le_sup_left
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+    · fin_cases κ₁
+      · exact le_sup_of_le_left le_sup_right
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact le_sup_of_le_right le_sup_left
+      · exact absurd (by decide) h23
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact absurd (by decide) h32
+      · exact le_sup_of_le_right le_sup_right
+  · exact le_iSup₂_of_le ![0, 1] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![1, 0] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![2, 2] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![3, 3] (by decide) le_rfl
+
+/-- **The weight-zero light-cone pairs whose slots hit the first transverse direction
+  together or not at all**: the two null pairs and the two repeated transverse pairs. -/
+lemma iSup_range_lightConeDeriv_pair_weight_zero_sync
+    (F : (Fin 2 → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3) :
+    (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = (0 : ℤ) ∧
+        ((c 0 = 2) ↔ (c 1 = 2))),
+      LinearMap.range (lightConeDeriv F i c))
+      = ((LinearMap.range (lightConeDeriv F i ![0, 1]) ⊔
+            LinearMap.range (lightConeDeriv F i ![1, 0])) ⊔
+          (LinearMap.range (lightConeDeriv F i ![2, 2]) ⊔
+            LinearMap.range (lightConeDeriv F i ![3, 3]))) := by
+  refine le_antisymm (iSup₂_le fun c hc => ?_)
+    (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_))
+  · obtain ⟨κ₀, κ₁, rfl⟩ : ∃ κ₀ κ₁, c = ![κ₀, κ₁] :=
+      ⟨c 0, c 1, funext fun j => by fin_cases j <;> rfl⟩
+    obtain ⟨hw, hsync⟩ := hc
+    rw [Fin.sum_univ_two] at hw
+    fin_cases κ₀
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact le_sup_of_le_left le_sup_left
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+    · fin_cases κ₁
+      · exact le_sup_of_le_left le_sup_right
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact le_sup_of_le_right le_sup_left
+      · exact absurd hsync (by decide)
+    · fin_cases κ₁
+      · exact absurd hw (by decide)
+      · exact absurd hw (by decide)
+      · exact absurd hsync (by decide)
+      · exact le_sup_of_le_right le_sup_right
+  · exact le_iSup₂_of_le ![0, 1] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![1, 0] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![2, 2] (by decide) le_rfl
+  · exact le_iSup₂_of_le ![3, 3] (by decide) le_rfl
+
 /-- **The one-slot light-cone symbols of weight zero** are the two transverse directions:
   the join of the weight-zero ranges on a single slot is the join of the ranges of the two
   transverse symbols. -/
@@ -1057,6 +1338,39 @@ lemma lightConeDeriv_mem {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ
     exact sum_prod_lightConeCoeff i c a ht
   rw [key, hwm t ht, map_smul, smul_smul,
     show (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) from rfl, ← zpow_add₀ htc]
+
+/-- The range of a light-cone symbol over a Lorentz-scalar argument lies in the
+  boost-weight space of its total slot weight. -/
+lemma range_lightConeDeriv_le {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B)
+    (hF : RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz F)
+    (i : Fin 3) (c : Fin n → Fin 4) :
+    LinearMap.range (lightConeDeriv F i c) ≤
+      boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
+  rintro x ⟨w, rfl⟩
+  simpa using lightConeDeriv_mem F hF i c (b := 0) (w := w)
+    (mem_boostWeightSubmodule.2 fun t ht => by simp)
+
+/-- The range of a light-cone symbol lies in the join of the coordinate ranges. -/
+lemma range_lightConeDeriv_le_iSup_range {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
+    (i : Fin 3) (c : Fin n → Fin 4) :
+    LinearMap.range (lightConeDeriv F i c) ≤ ⨆ d, LinearMap.range (F d) := by
+  rintro x ⟨w, rfl⟩
+  rw [lightConeDeriv]
+  simp only [LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply]
+  exact sum_mem fun d _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem d (LinearMap.mem_range_self _ w))
+
+/-- **The value of a two-slot light-cone symbol at `1`**, for a family over `ℂ`. -/
+noncomputable def lightConeDot (F : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B) (i : Fin 3)
+    (c : Fin 2 → Fin 4) : B :=
+  lightConeDeriv F i c (1 : ℂ)
+
+/-- A light-cone symbol value is a boost eigenvector of its total slot weight. -/
+lemma lightConeDot_mem (F : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B)
+    (hF : RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz F) (i : Fin 3)
+    (c : Fin 2 → Fin 4) {k : ℤ} (hk : (∑ j, lightConeWeight (c j)) = k) :
+    lightConeDot F i c ∈ boostWeightSubmodule repLorentz i k :=
+  hk ▸ range_lightConeDeriv_le (n := 2) F hF i c ⟨1, rfl⟩
 
 /-- **The boost-weight decomposition of the symbols carrying `n` derivatives.** The
   multi-index is read in the light-cone basis: a slot of type `c j` contributes
@@ -2720,6 +3034,33 @@ lemma WeightDecompositionLE.eq_zero_of_mem_of_zero_notMem_supp
   have hx := d.mem_piece_zero_of_mem hxV hx0
   rwa [d.piece_eq_bot 0 h0, Submodule.mem_bot] at hx
 
+/-- **Uniqueness of boost-weight components**: if a weight-zero element is written as a sum
+  of two homogeneous pieces of distinct nonzero weights and a weight-zero remainder, the
+  homogeneous pieces vanish. -/
+lemma eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
+    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
+    {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {a b : ℤ} {P N R : A}
+    (hP : P ∈ boostWeightSubmodule rep i a) (hN : N ∈ boostWeightSubmodule rep i b)
+    (hR : R ∈ boostWeightSubmodule rep i 0)
+    (hx : P + N + R ∈ boostWeightSubmodule rep i 0)
+    (ha : a ≠ 0) (hb : b ≠ 0) (hab : a ≠ b) : P = 0 ∧ N = 0 := by
+  have hPN : P + N ∈ boostWeightSubmodule rep i 0 := by
+    have h1 := sub_mem hx hR
+    rwa [add_sub_cancel_right] at h1
+  have hP0 : P = 0 := by
+    refine Submodule.disjoint_def.1
+      (iSupIndep_def.1 (boostWeightSubmodule_iSupIndep rep) a) P hP ?_
+    have h2 : P = (P + N) - N := by abel
+    rw [h2]
+    exact sub_mem
+      (Submodule.mem_iSup_of_mem 0 (Submodule.mem_iSup_of_mem (Ne.symm ha) hPN))
+      (Submodule.mem_iSup_of_mem b (Submodule.mem_iSup_of_mem (fun hba => hab hba.symm) hN))
+  refine ⟨hP0, ?_⟩
+  rw [hP0, zero_add] at hPN
+  exact Submodule.disjoint_def.1
+    (iSupIndep_def.1 (boostWeightSubmodule_iSupIndep rep) b) N hN
+    (Submodule.mem_iSup_of_mem 0 (Submodule.mem_iSup_of_mem (Ne.symm hb) hPN))
+
 
 /-!
 
@@ -2778,6 +3119,103 @@ lemma range_dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
     (h.dotSymbol ![0, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
   rw [h.dotSymbol_right d, ← LinearMap.span_singleton_eq_range]
 
+/-- With both derivatives on the Higgs. -/
+lemma dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![2, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  exact funext fun j => j.elim0
+
+/-- With both derivatives on the conjugate Higgs. -/
+lemma dotSymbol_right_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![0, 2] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  all_goals first
+    | exact funext fun j => j.elim0
+    | (funext j; congr 1; exact Fin.ext (by simp))
+
+/-- With one derivative on each factor. -/
+lemma dotSymbol_one_one (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![1, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![d 0] ![d 1]) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  all_goals funext j
+  all_goals fin_cases j
+  all_goals rfl
+
+@[simp]
+lemma range_dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![2, 0] d).range = ℂ ∙ h.dotGaugeHiggs d ![] := by
+  rw [h.dotSymbol_left_two d, ← LinearMap.span_singleton_eq_range]
+
+@[simp]
+lemma range_dotSymbol_right_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![0, 2] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
+  rw [h.dotSymbol_right_two d, ← LinearMap.span_singleton_eq_range]
+
+@[simp]
+lemma range_dotSymbol_one_one (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![1, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![d 0] ![d 1] := by
+  rw [h.dotSymbol_one_one d, ← LinearMap.span_singleton_eq_range]
+
+/-- The underived inner product is a Lorentz scalar. -/
+lemma repLorentz_dotGaugeHiggs_nil (g : SL(2,ℂ)) :
+    repLorentz g (h.dotGaugeHiggs ![] ![]) = h.dotGaugeHiggs ![] ![] := by
+  have hq : ∀ (a b : Fin 0 → Fin 1 ⊕ Fin 3), h.dotGaugeHiggs a b = h.dotGaugeHiggs ![] ![] :=
+    fun a b => by rw [Subsingleton.elim a ![], Subsingleton.elim b ![]]
+  rw [h.repLorentz_dotGaugeHiggs]
+  simp only [Finset.univ_unique, Finset.sum_singleton, Finset.univ_eq_empty,
+    Finset.prod_empty, one_mul, one_smul, hq]
+
+/-- **The square of the inner product as a zero-index symbol map** over `ℂ`: the quartic
+  term of mass weight eight carries no Lorentz index. -/
+noncomputable def quarticSymbol (_ : Fin 0 → Fin 1 ⊕ Fin 3) : ℂ →ₗ[ℂ] B :=
+  LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])
+
+/-- The quartic symbol rotates trivially: it has no derivative indices and is a Lorentz
+  scalar. -/
+lemma rotatesIndices_quarticSymbol :
+    IsDerivativeCollection.RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz
+      h.quarticSymbol := fun g d w => by
+  simp only [quarticSymbol, LinearMap.toSpanSingleton_apply, map_smul, Finset.univ_unique,
+    Finset.sum_singleton, Finset.univ_eq_empty, Finset.prod_empty, one_smul,
+    MonoidHom.one_apply, Module.End.one_apply]
+  rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+
+@[simp]
+lemma range_quarticSymbol (d : Fin 0 → Fin 1 ⊕ Fin 3) :
+    (h.quarticSymbol d).range
+      = ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+  rw [quarticSymbol, ← LinearMap.span_singleton_eq_range]
+
+/-- The range of a `+ + - -` combination of scalings is the span of the combination. -/
+lemma range_toSpanSingleton_add_sub_sub (x y z w : B) :
+    LinearMap.range (LinearMap.toSpanSingleton ℂ B x + LinearMap.toSpanSingleton ℂ B y
+        - LinearMap.toSpanSingleton ℂ B z - LinearMap.toSpanSingleton ℂ B w)
+      = ℂ ∙ (x + y - z - w) := by
+  rw [show LinearMap.toSpanSingleton ℂ B x + LinearMap.toSpanSingleton ℂ B y
+        - LinearMap.toSpanSingleton ℂ B z - LinearMap.toSpanSingleton ℂ B w
+      = LinearMap.toSpanSingleton ℂ B (x + y - z - w) from by
+    ext
+    simp [smul_add, smul_sub]]
+  rw [← LinearMap.span_singleton_eq_range]
+
+/-- The range of a `+ - + -` combination of scalings is the span of the combination. -/
+lemma range_toSpanSingleton_sub_add_sub (x y z w : B) :
+    LinearMap.range (LinearMap.toSpanSingleton ℂ B x - LinearMap.toSpanSingleton ℂ B y
+        + LinearMap.toSpanSingleton ℂ B z - LinearMap.toSpanSingleton ℂ B w)
+      = ℂ ∙ (x - y + z - w) := by
+  rw [show LinearMap.toSpanSingleton ℂ B x - LinearMap.toSpanSingleton ℂ B y
+        + LinearMap.toSpanSingleton ℂ B z - LinearMap.toSpanSingleton ℂ B w
+      = LinearMap.toSpanSingleton ℂ B (x - y + z - w) from by
+    ext
+    simp [smul_add, smul_sub]]
+  rw [← LinearMap.span_singleton_eq_range]
+
 /-- The span of the two-factor symbols is the gauge-invariant submodule of mass weight
   six: one derivative on the Higgs or one on its conjugate. -/
 lemma iSup_range_dotSymbol_eq :
@@ -2800,10 +3238,51 @@ noncomputable def boostWeightZeroSix (i : Fin 3) :
     (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 1] i
       (trivialWeightDecomposition i))).copy h.iSup_range_dotSymbol_eq
 
+/-- The span of the two-derivative symbols, together with the square of the underived
+  inner product, is the gauge-invariant submodule of mass weight eight. -/
+lemma iSup_range_dotSymbol_eight_eq :
+    ((((⨆ d : Fin 2 → Fin 1 ⊕ Fin 3, (h.dotSymbol ![2, 0] d).range) ⊔
+          ⨆ d : Fin 2 → Fin 1 ⊕ Fin 3, (h.dotSymbol ![0, 2] d).range) ⊔
+        ⨆ d : Fin 2 → Fin 1 ⊕ Fin 3, (h.dotSymbol ![1, 1] d).range) ⊔
+      ⨆ d : Fin 0 → Fin 1 ⊕ Fin 3, (h.quarticSymbol d).range)
+      = h.gaugeInvariantOfMassDim 8 := by
+  rw [h.gaugeInvariantOfMassDim_eight_eq]
+  congr 1
+  · congr 1
+    · congr 1
+      · exact iSup_congr fun d => h.range_dotSymbol_left_two d
+      · exact iSup_congr fun d => h.range_dotSymbol_right_two d
+    · refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun d1 => iSup_le fun d2 => ?_)
+      · rw [h.range_dotSymbol_one_one d]
+        exact le_iSup_of_le ![d 0] (le_iSup_of_le ![d 1] le_rfl)
+      · refine le_iSup_of_le ![d1 0, d2 0] (le_of_eq ?_)
+        rw [h.range_dotSymbol_one_one]
+        simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+        rw [show ![d1 0] = d1 from funext fun j => by fin_cases j; rfl,
+          show ![d2 0] = d2 from funext fun j => by fin_cases j; rfl]
+  · refine le_antisymm (iSup_le fun d => le_of_eq (h.range_quarticSymbol d)) ?_
+    exact le_iSup_of_le ![] (le_of_eq (h.range_quarticSymbol ![]).symm)
+
+/-- **The boost-weight decomposition of the gauge-invariant terms of mass weight eight.**
+  The three two-derivative families are two-factor derivative collections over `ℂ`, so
+  each carries a decomposition; the square of the inner product is a Lorentz scalar,
+  carrying its trivial decomposition; the join of the four is the decomposition of their
+  join. -/
+noncomputable def boostWeightZeroEight (i : Fin 3) :
+    WeightDecomposition repLorentz i (h.gaugeInvariantOfMassDim 8) :=
+  ((((h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![2, 0] i
+        (trivialWeightDecomposition i)).sup
+      (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 2] i
+        (trivialWeightDecomposition i))).sup
+    (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![1, 1] i
+      (trivialWeightDecomposition i))).sup
+    (IsDerivativeCollection.boostDecompZero h.quarticSymbol h.rotatesIndices_quarticSymbol i
+      (trivialWeightDecomposition i))).copy h.iSup_range_dotSymbol_eight_eq
+
 
 /-!
 
-### D.4. The zero parts of the boost weights
+### D.4. The zero parts of the boost weights in the x-direction
 
 -/
 
@@ -2823,6 +3302,86 @@ lemma boostWeightZeroSix_piece_zero_eq (i : Fin 3) :
     h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 1] i
       (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb])]
   exact congrArg₂ (· ⊔ ·) h1 h2
+
+/-- **The weight-zero piece of the mass-weight-eight decomposition.** Per two-derivative
+  family: the two null combinations `(D₀ ∓ Dᵢ)(D₀ ± Dᵢ)` and the four transverse pairs;
+  and the square of the underived inner product. -/
+lemma boostWeightZeroEight_piece_zero_eq (i : Fin 3) :
+    (h.boostWeightZeroEight i).piece 0 =
+      (((ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+              + h.dotGaugeHiggs ![Sum.inl 0, Sum.inr i] ![]
+              - h.dotGaugeHiggs ![Sum.inr i, Sum.inl 0] ![]
+              - h.dotGaugeHiggs ![Sum.inr i, Sum.inr i] ![]) ⊔
+            ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+              - h.dotGaugeHiggs ![Sum.inl 0, Sum.inr i] ![]
+              + h.dotGaugeHiggs ![Sum.inr i, Sum.inl 0] ![]
+              - h.dotGaugeHiggs ![Sum.inr i, Sum.inr i] ![])) ⊔
+          (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1), Sum.inr (i + 1)] ![] ⊔
+            ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1), Sum.inr (i + 2)] ![])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2), Sum.inr (i + 1)] ![] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2), Sum.inr (i + 2)] ![])) ⊔
+      (((ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+              + h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr i]
+              - h.dotGaugeHiggs ![] ![Sum.inr i, Sum.inl 0]
+              - h.dotGaugeHiggs ![] ![Sum.inr i, Sum.inr i]) ⊔
+            ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+              - h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr i]
+              + h.dotGaugeHiggs ![] ![Sum.inr i, Sum.inl 0]
+              - h.dotGaugeHiggs ![] ![Sum.inr i, Sum.inr i])) ⊔
+          (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 1), Sum.inr (i + 1)] ⊔
+            ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 1), Sum.inr (i + 2)])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 2), Sum.inr (i + 1)] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 2), Sum.inr (i + 2)])) ⊔
+      (((ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+              + h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr i]
+              - h.dotGaugeHiggs ![Sum.inr i] ![Sum.inl 0]
+              - h.dotGaugeHiggs ![Sum.inr i] ![Sum.inr i]) ⊔
+            ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+              - h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr i]
+              + h.dotGaugeHiggs ![Sum.inr i] ![Sum.inl 0]
+              - h.dotGaugeHiggs ![Sum.inr i] ![Sum.inr i])) ⊔
+          (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1)] ![Sum.inr (i + 1)] ⊔
+            ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1)] ![Sum.inr (i + 2)])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2)] ![Sum.inr (i + 1)] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2)] ![Sum.inr (i + 2)])) ⊔
+      ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+  have h1 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero
+    (h.dotSymbol ![2, 0]) i
+  have h2 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero
+    (h.dotSymbol ![0, 2]) i
+  have h3 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero
+    (h.dotSymbol ![1, 1]) i
+  simp only [IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+    IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+    IsDerivativeCollection.lightConeDeriv_pair_two_two,
+    IsDerivativeCollection.lightConeDeriv_pair_two_three,
+    IsDerivativeCollection.lightConeDeriv_pair_three_two,
+    IsDerivativeCollection.lightConeDeriv_pair_three_three,
+    h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+    Matrix.cons_val_zero, Matrix.cons_val_one,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h1 h2 h3
+  have hq : (IsDerivativeCollection.boostDecompZero h.quarticSymbol
+      h.rotatesIndices_quarticSymbol i (trivialWeightDecomposition i)).piece 0
+      = ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+    dsimp only [IsDerivativeCollection.boostDecompZero, trivialWeightDecomposition_piece]
+    rw [if_pos rfl, Submodule.map_top, h.range_quarticSymbol]
+  dsimp only [boostWeightZeroEight, WeightDecomposition.copy_piece,
+    WeightDecomposition.sup_piece]
+  rw [h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![2, 0] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
+    h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 2] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
+    h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![1, 1] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]), hq]
+  exact congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) h1 h2) h3) rfl
+
+/-!
+
+### D.4. The decomposition along the x and y directions
+
+-/
+
 
 open IsDerivativeCollection in
 /-- **The minimal `y`-boost covering of the `x`-weight-zero part** of the dimension-six
@@ -2935,6 +3494,334 @@ lemma dimSixWeightDecompositionLE_piece_zero_eq :
       (ℂ ∙ h.dotGaugeHiggs ![Sum.inr 2] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 2]) := by
   simp [dimSixWeightDecompositionLE]
 
+
+/-- **The minimal `y`-boost pieces over the `x`-weight-zero part of the dimension-eight
+  terms**: per two-derivative family, the ranges of the axis-`1` light-cone symbols over
+  every index pair except the two mixed transverse ones — no generator of the
+  `x`-weight-zero part meets a mixed `z`–`x` monomial — together with the square of the
+  inner product at weight zero. -/
+noncomputable def dimEightPieceOne (k : ℤ) : Submodule ℂ B :=
+  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k ∧
+      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
+    LinearMap.range (IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c)) ⊔
+  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k ∧
+      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
+    LinearMap.range (IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c)) ⊔
+  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k ∧
+      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
+    LinearMap.range (IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c)) ⊔
+  (if k = 0 then ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) else ⊥)
+
+/-- Each piece is a boost eigenspace slice of its weight. -/
+lemma dimEightPieceOne_le (k : ℤ) :
+    h.dimEightPieceOne k ≤ boostWeightSubmodule repLorentz 1 k := by
+  rw [dimEightPieceOne]
+  refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+  · exact iSup₂_le fun c hc => hc.1 ▸ IsDerivativeCollection.range_lightConeDeriv_le (n := 2)
+      (h.dotSymbol ![2, 0]) (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 c
+  · exact iSup₂_le fun c hc => hc.1 ▸ IsDerivativeCollection.range_lightConeDeriv_le (n := 2)
+      (h.dotSymbol ![0, 2]) (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 c
+  · exact iSup₂_le fun c hc => hc.1 ▸ IsDerivativeCollection.range_lightConeDeriv_le (n := 2)
+      (h.dotSymbol ![1, 1]) (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 c
+  · split_ifs with hk
+    · subst hk
+      rw [Submodule.span_singleton_le_iff_mem]
+      refine mem_boostWeightSubmodule.2 fun t ht => ?_
+      rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+      simp
+    · exact bot_le
+
+/-- The pieces vanish outside the weights `{-4, -2, 0, 2, 4}`. -/
+lemma dimEightPieceOne_eq_bot (k : ℤ) (hk : k ∉ ({-4, -2, 0, 2, 4} : Finset ℤ)) :
+    h.dimEightPieceOne k = ⊥ := by
+  have hall : ∀ c : Fin 2 → Fin 4,
+      (∑ j, IsDerivativeCollection.lightConeWeight (c j)) ∈ ({-4, -2, 0, 2, 4} : Finset ℤ) := by
+    decide
+  simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+  rw [dimEightPieceOne]
+  refine le_bot_iff.1 (sup_le (sup_le (sup_le ?_ ?_) ?_) ?_)
+  · exact iSup₂_le fun c hc => absurd (hc.1 ▸ hall c) (by
+      simp [Finset.mem_insert, Finset.mem_singleton, hk.1, hk.2.1, hk.2.2.1, hk.2.2.2.1,
+        hk.2.2.2.2])
+  · exact iSup₂_le fun c hc => absurd (hc.1 ▸ hall c) (by
+      simp [Finset.mem_insert, Finset.mem_singleton, hk.1, hk.2.1, hk.2.2.1, hk.2.2.2.1,
+        hk.2.2.2.2])
+  · exact iSup₂_le fun c hc => absurd (hc.1 ▸ hall c) (by
+      simp [Finset.mem_insert, Finset.mem_singleton, hk.1, hk.2.1, hk.2.2.1, hk.2.2.2.1,
+        hk.2.2.2.2])
+  · rw [if_neg hk.2.2.1]
+
+/-- **A two-derivative Higgs monomial avoiding the mixed transverse pair lies in the join
+  of the minimal pieces**: the disallowed light-cone indices carry vanishing coefficient
+  in its light-cone expansion. -/
+lemma mem_iSup_dimEightPieceOne_left (d : Fin 2 → Fin 1 ⊕ Fin 3)
+    (h1 : ¬(d 0 = Sum.inr 2 ∧ d 1 = Sum.inr 0)) (h2 : ¬(d 0 = Sum.inr 0 ∧ d 1 = Sum.inr 2)) :
+    h.dotGaugeHiggs d ![] ∈ ⨆ k, h.dimEightPieceOne k := by
+  have he : h.dotGaugeHiggs d ![] = ∑ c : Fin 2 → Fin 4,
+      (∏ j, IsDerivativeCollection.lightConeCoeffInv 1 (d j) (c j)) •
+        IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c 1 :=
+    calc h.dotGaugeHiggs d ![] = h.dotSymbol ![2, 0] d 1 := by
+          rw [h.dotSymbol_left_two, LinearMap.toSpanSingleton_apply, one_smul]
+      _ = _ := by
+          rw [IsDerivativeCollection.eq_sum_lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 d]
+          simp only [LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply]
+  rw [he]
+  refine sum_mem fun c _ => ?_
+  by_cases hc : ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)
+  · refine Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem
+      (∑ j, IsDerivativeCollection.lightConeWeight (c j)) ?_)
+    rw [dimEightPieceOne]
+    refine Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left ?_))
+    exact Submodule.mem_iSup_of_mem c (Submodule.mem_iSup_of_mem ⟨rfl, hc⟩
+      (LinearMap.mem_range_self _ 1))
+  · rw [not_and_or, not_not, not_not] at hc
+    rcases hc with ⟨h20, h13⟩ | ⟨h30, h12⟩
+    · rcases not_and_or.1 h1 with hd | hd
+      · rw [Fin.prod_univ_two, h20, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h13, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+    · rcases not_and_or.1 h2 with hd | hd
+      · rw [Fin.prod_univ_two, h30, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h12, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+
+/-- As `mem_iSup_dimEightPieceOne_left`, for the conjugate-Higgs family. -/
+lemma mem_iSup_dimEightPieceOne_right (d : Fin 2 → Fin 1 ⊕ Fin 3)
+    (h1 : ¬(d 0 = Sum.inr 2 ∧ d 1 = Sum.inr 0)) (h2 : ¬(d 0 = Sum.inr 0 ∧ d 1 = Sum.inr 2)) :
+    h.dotGaugeHiggs ![] d ∈ ⨆ k, h.dimEightPieceOne k := by
+  have he : h.dotGaugeHiggs ![] d = ∑ c : Fin 2 → Fin 4,
+      (∏ j, IsDerivativeCollection.lightConeCoeffInv 1 (d j) (c j)) •
+        IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c 1 :=
+    calc h.dotGaugeHiggs ![] d = h.dotSymbol ![0, 2] d 1 := by
+          rw [h.dotSymbol_right_two, LinearMap.toSpanSingleton_apply, one_smul]
+      _ = _ := by
+          rw [IsDerivativeCollection.eq_sum_lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 d]
+          simp only [LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply]
+  rw [he]
+  refine sum_mem fun c _ => ?_
+  by_cases hc : ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)
+  · refine Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem
+      (∑ j, IsDerivativeCollection.lightConeWeight (c j)) ?_)
+    rw [dimEightPieceOne]
+    refine Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right ?_))
+    exact Submodule.mem_iSup_of_mem c (Submodule.mem_iSup_of_mem ⟨rfl, hc⟩
+      (LinearMap.mem_range_self _ 1))
+  · rw [not_and_or, not_not, not_not] at hc
+    rcases hc with ⟨h20, h13⟩ | ⟨h30, h12⟩
+    · rcases not_and_or.1 h1 with hd | hd
+      · rw [Fin.prod_univ_two, h20, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h13, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+    · rcases not_and_or.1 h2 with hd | hd
+      · rw [Fin.prod_univ_two, h30, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h12, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+
+/-- As `mem_iSup_dimEightPieceOne_left`, for the mixed family. -/
+lemma mem_iSup_dimEightPieceOne_mixed (d : Fin 2 → Fin 1 ⊕ Fin 3)
+    (h1 : ¬(d 0 = Sum.inr 2 ∧ d 1 = Sum.inr 0)) (h2 : ¬(d 0 = Sum.inr 0 ∧ d 1 = Sum.inr 2)) :
+    h.dotGaugeHiggs ![d 0] ![d 1] ∈ ⨆ k, h.dimEightPieceOne k := by
+  have he : h.dotGaugeHiggs ![d 0] ![d 1] = ∑ c : Fin 2 → Fin 4,
+      (∏ j, IsDerivativeCollection.lightConeCoeffInv 1 (d j) (c j)) •
+        IsDerivativeCollection.lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c 1 :=
+    calc h.dotGaugeHiggs ![d 0] ![d 1] = h.dotSymbol ![1, 1] d 1 := by
+          rw [h.dotSymbol_one_one, LinearMap.toSpanSingleton_apply, one_smul]
+      _ = _ := by
+          rw [IsDerivativeCollection.eq_sum_lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 d]
+          simp only [LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply]
+  rw [he]
+  refine sum_mem fun c _ => ?_
+  by_cases hc : ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)
+  · refine Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem
+      (∑ j, IsDerivativeCollection.lightConeWeight (c j)) ?_)
+    rw [dimEightPieceOne]
+    refine Submodule.mem_sup_left (Submodule.mem_sup_right ?_)
+    exact Submodule.mem_iSup_of_mem c (Submodule.mem_iSup_of_mem ⟨rfl, hc⟩
+      (LinearMap.mem_range_self _ 1))
+  · rw [not_and_or, not_not, not_not] at hc
+    rcases hc with ⟨h20, h13⟩ | ⟨h30, h12⟩
+    · rcases not_and_or.1 h1 with hd | hd
+      · rw [Fin.prod_univ_two, h20, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h13, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+    · rcases not_and_or.1 h2 with hd | hd
+      · rw [Fin.prod_univ_two, h30, IsDerivativeCollection.lightConeCoeffInv_three_eq_zero
+          (μ := d 0) 1 (by simpa using hd), zero_mul, zero_smul]
+        exact Submodule.zero_mem _
+      · rw [Fin.prod_univ_two, h12, IsDerivativeCollection.lightConeCoeffInv_two_eq_zero
+          (μ := d 1) 1 (by simpa using hd), mul_zero, zero_smul]
+        exact Submodule.zero_mem _
+
+/-- Each piece lies in the dimension-eight sector. -/
+lemma dimEightPieceOne_le_gaugeInvariant (k : ℤ) :
+    h.dimEightPieceOne k ≤ h.gaugeInvariantOfMassDim 8 := by
+  rw [← h.iSup_range_dotSymbol_eight_eq, dimEightPieceOne]
+  refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+  · exact iSup₂_le fun c _ =>
+      (IsDerivativeCollection.range_lightConeDeriv_le_iSup_range (n := 2)
+        (h.dotSymbol ![2, 0]) 1 c).trans
+      (le_sup_of_le_left (le_sup_of_le_left le_sup_left))
+  · exact iSup₂_le fun c _ =>
+      (IsDerivativeCollection.range_lightConeDeriv_le_iSup_range (n := 2)
+        (h.dotSymbol ![0, 2]) 1 c).trans
+      (le_sup_of_le_left (le_sup_of_le_left le_sup_right))
+  · exact iSup₂_le fun c _ =>
+      (IsDerivativeCollection.range_lightConeDeriv_le_iSup_range (n := 2)
+        (h.dotSymbol ![1, 1]) 1 c).trans
+      (le_sup_of_le_left le_sup_right)
+  · split_ifs with hk
+    · refine le_sup_of_le_right ?_
+      rw [Submodule.span_singleton_le_iff_mem]
+      refine Submodule.mem_iSup_of_mem ![] ?_
+      rw [h.range_quarticSymbol]
+      exact Submodule.mem_span_singleton_self _
+    · exact bot_le
+
+/-- **The minimal `y`-boost covering of the `x`-weight-zero part** of the dimension-eight
+  terms. -/
+noncomputable def dimEightWeightDecompositionLE :
+    WeightDecompositionLE repLorentz 1 ((h.boostWeightZeroEight 0).piece 0) where
+  piece := h.dimEightPieceOne
+  supp := {-4, -2, 0, 2, 4}
+  piece_le := h.dimEightPieceOne_le
+  piece_eq_bot := h.dimEightPieceOne_eq_bot
+  iSup_piece := by
+    rw [h.boostWeightZeroEight_piece_zero_eq 0, show ((0 : Fin 3) + 1) = 1 from rfl,
+      show ((0 : Fin 3) + 2) = 2 from rfl]
+    refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+    · refine sup_le (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · exact sub_mem (sub_mem (add_mem
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact sub_mem (add_mem (sub_mem
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_left ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact h.mem_iSup_dimEightPieceOne_left ![Sum.inr 1, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_left ![Sum.inr 1, Sum.inr 2] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_left ![Sum.inr 2, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_left ![Sum.inr 2, Sum.inr 2] (by decide) (by decide)
+    · refine sup_le (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · exact sub_mem (sub_mem (add_mem
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact sub_mem (add_mem (sub_mem
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_right ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact h.mem_iSup_dimEightPieceOne_right ![Sum.inr 1, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_right ![Sum.inr 1, Sum.inr 2] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_right ![Sum.inr 2, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_right ![Sum.inr 2, Sum.inr 2] (by decide) (by decide)
+    · refine sup_le (sup_le (sup_le ?_ ?_) (sup_le ?_ ?_)) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · exact sub_mem (sub_mem (add_mem
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact sub_mem (add_mem (sub_mem
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inl 0, Sum.inl 0] (by decide) (by decide))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inl 0, Sum.inr 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 0, Sum.inl 0] (by decide) (by decide)))
+          (h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 0, Sum.inr 0] (by decide) (by decide))
+      · exact h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 1, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 1, Sum.inr 2] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 2, Sum.inr 1] (by decide) (by decide)
+      · exact h.mem_iSup_dimEightPieceOne_mixed ![Sum.inr 2, Sum.inr 2] (by decide) (by decide)
+    · rw [Submodule.span_singleton_le_iff_mem]
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceOne]
+      refine Submodule.mem_sup_right ?_
+      rw [if_pos rfl]
+      exact Submodule.mem_span_singleton_self _
+
+/-- **The weight-zero piece of the minimal `y`-covering**, explicitly: per family the two
+  `y`-null combinations and the repeated `z` and `x` monomials, and the square of the
+  inner product. -/
+lemma dimEightWeightDecompositionLE_piece_zero_eq :
+    h.dimEightWeightDecompositionLE.piece 0 =
+      (((ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+            + h.dotGaugeHiggs ![Sum.inl 0, Sum.inr 1] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) ⊔
+          ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inl 0, Sum.inr 1] ![]
+            + h.dotGaugeHiggs ![Sum.inr 1, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]))) ⊔
+      (((ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+            + h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr 1]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) ⊔
+          ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr 1]
+            + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]))) ⊔
+      (((ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+            + h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr 1]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) ⊔
+          ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr 1]
+            + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1])) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2] ⊔
+          ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]))) ⊔
+      ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+  have h1 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero_notMixed
+    (h.dotSymbol ![2, 0]) 1
+  have h2 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero_notMixed
+    (h.dotSymbol ![0, 2]) 1
+  have h3 := IsDerivativeCollection.iSup_range_lightConeDeriv_pair_weight_zero_notMixed
+    (h.dotSymbol ![1, 1]) 1
+  simp only [IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+    IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+    IsDerivativeCollection.lightConeDeriv_pair_two_two,
+    IsDerivativeCollection.lightConeDeriv_pair_three_three,
+    show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
+    h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+    Matrix.cons_val_zero, Matrix.cons_val_one,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h1 h2 h3
+  show h.dimEightPieceOne 0 = _
+  rw [dimEightPieceOne, if_pos rfl]
+  exact congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) h1 h2) h3) rfl
+
+
+
+/-!
+
+### D.5. The decomposition along the x, y and z directions
+
+-/
+
 open IsDerivativeCollection in
 /-- **The `z`-boost covering of the doubly-weight-zero part** of the dimension-six terms.
   The remaining `z`-derivative terms lie along the boost axis, so nothing survives at
@@ -3017,9 +3904,1224 @@ noncomputable def dimSixWeightDecompositionLELE :
       · rw [if_pos rfl]
         exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
 
+
+/-- **The minimal `z`-boost pieces over the doubly-weight-zero part** of the
+  dimension-eight terms, built from the `z`-weight components of its generators: per
+  family the null square at weight `±4`, the tied null–transverse difference at `±2`,
+  and at weight zero the symmetric null pair together with the repeated transverse
+  monomials and the square of the inner product. -/
+noncomputable def dimEightPieceTwo (k : ℤ) : Submodule ℂ B :=
+  if k = 4 then
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] ⊔
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] ⊔
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0]
+  else if k = 2 then
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 0]) ⊔
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 0]) ⊔
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 0])
+  else if k = 0 then
+    ((ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0]) ⊔
+        ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3] ⊔ ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2]) ⊔
+     (ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0]) ⊔
+        ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3] ⊔ ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2]) ⊔
+     (ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0]) ⊔
+        ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3] ⊔ ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2])) ⊔
+    ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])
+  else if k = -2 then
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1]) ⊔
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1]) ⊔
+    ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1])
+  else if k = -4 then
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] ⊔
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] ⊔
+    ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1]
+  else ⊥
+
+/-- Each piece is a boost eigenspace slice of its weight. -/
+lemma dimEightPieceTwo_le (k : ℤ) :
+    h.dimEightPieceTwo k ≤ boostWeightSubmodule repLorentz 2 k := by
+  have hL := fun (c : Fin 2 → Fin 4) (k : ℤ)
+      (hk : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k) =>
+    IsDerivativeCollection.lightConeDot_mem (h.dotSymbol ![2, 0])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 c hk
+  have hR := fun (c : Fin 2 → Fin 4) (k : ℤ)
+      (hk : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k) =>
+    IsDerivativeCollection.lightConeDot_mem (h.dotSymbol ![0, 2])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 c hk
+  have hM := fun (c : Fin 2 → Fin 4) (k : ℤ)
+      (hk : (∑ j, IsDerivativeCollection.lightConeWeight (c j)) = k) =>
+    IsDerivativeCollection.lightConeDot_mem (h.dotSymbol ![1, 1])
+      (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 c hk
+  rw [dimEightPieceTwo]
+  split_ifs with h4 h2 h0 hm2 hm4
+  · subst h4
+    refine sup_le (sup_le ?_ ?_) ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact hL _ _ (by decide)
+    · exact hR _ _ (by decide)
+    · exact hM _ _ (by decide)
+  · subst h2
+    refine sup_le (sup_le ?_ ?_) ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact sub_mem (hL _ _ (by decide)) (hL _ _ (by decide))
+    · exact sub_mem (hR _ _ (by decide)) (hR _ _ (by decide))
+    · exact sub_mem (hM _ _ (by decide)) (hM _ _ (by decide))
+  · subst h0
+    refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+    rotate_right
+    · rw [Submodule.span_singleton_le_iff_mem]
+      refine mem_boostWeightSubmodule.2 fun t ht => ?_
+      rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+      simp
+    all_goals refine sup_le (sup_le ?_ ?_) ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact add_mem (hL _ _ (by decide)) (hL _ _ (by decide))
+    · exact hL _ _ (by decide)
+    · exact hL _ _ (by decide)
+    · exact add_mem (hR _ _ (by decide)) (hR _ _ (by decide))
+    · exact hR _ _ (by decide)
+    · exact hR _ _ (by decide)
+    · exact add_mem (hM _ _ (by decide)) (hM _ _ (by decide))
+    · exact hM _ _ (by decide)
+    · exact hM _ _ (by decide)
+  · subst hm2
+    refine sup_le (sup_le ?_ ?_) ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact sub_mem (hL _ _ (by decide)) (hL _ _ (by decide))
+    · exact sub_mem (hR _ _ (by decide)) (hR _ _ (by decide))
+    · exact sub_mem (hM _ _ (by decide)) (hM _ _ (by decide))
+  · subst hm4
+    refine sup_le (sup_le ?_ ?_) ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact hL _ _ (by decide)
+    · exact hR _ _ (by decide)
+    · exact hM _ _ (by decide)
+  · exact bot_le
+
+/-- The pieces vanish outside the weights `{-4, -2, 0, 2, 4}`. -/
+lemma dimEightPieceTwo_eq_bot (k : ℤ) (hk : k ∉ ({-4, -2, 0, 2, 4} : Finset ℤ)) :
+    h.dimEightPieceTwo k = ⊥ := by
+  simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hk
+  rw [dimEightPieceTwo, if_neg hk.2.2.2.2, if_neg hk.2.2.2.1, if_neg hk.2.2.1,
+    if_neg hk.2.1, if_neg hk.1]
+
+set_option linter.unusedSimpArgs false in
+/-- **The minimal `z`-boost covering of the doubly-weight-zero part** of the
+  dimension-eight terms: each generator splits into its `z`-weight components, which
+  generate the pieces. -/
+noncomputable def dimEightWeightDecompositionLELE :
+    WeightDecompositionLE repLorentz 2 (h.dimEightWeightDecompositionLE.piece 0) where
+  piece := h.dimEightPieceTwo
+  supp := {-4, -2, 0, 2, 4}
+  piece_le := h.dimEightPieceTwo_le
+  piece_eq_bot := h.dimEightPieceTwo_eq_bot
+  iSup_piece := by
+    have hL00 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 4 ?_
+      rw [dimEightPieceTwo, if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _))
+    have hL03 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 2 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _))
+    have hL01 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)))))
+    have hL33 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)))))
+    have hL22 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))))
+    have hL13 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-2) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _))
+    have hL11 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-4) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _))
+    have hR00 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 4 ?_
+      rw [dimEightPieceTwo, if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))
+    have hR03 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 2 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))
+    have hR01 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)))))
+    have hR33 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)))))
+    have hR22 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))))
+    have hR13 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-2) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))
+    have hR11 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-4) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))
+    have hM00 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 4 ?_
+      rw [dimEightPieceTwo, if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    have hM03 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 2 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    have hM01 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _))))
+    have hM33 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _))))
+    have hM22 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)))
+    have hM13 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-2) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    have hM11 : IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] ∈ ⨆ k, h.dimEightPieceTwo k := by
+      refine Submodule.mem_iSup_of_mem (-4) ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_neg (by decide),
+        if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    rw [h.dimEightWeightDecompositionLE_piece_zero_eq]
+    refine sup_le (sup_le (sup_le ?_ ?_) ?_) ?_
+    · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · rw [show h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+            + h.dotGaugeHiggs ![Sum.inl 0, Sum.inr 1] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (add_mem (sub_mem (add_mem (add_mem
+          (Submodule.smul_mem _ _ hL00) (Submodule.smul_mem _ _ hL03))
+          (Submodule.smul_mem _ _ hL01)) hL33) (Submodule.smul_mem _ _ hL13))
+          (Submodule.smul_mem _ _ hL11)
+      · rw [show h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inl 0, Sum.inr 1] ![]
+            + h.dotGaugeHiggs ![Sum.inr 1, Sum.inl 0] ![]
+            - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
+          (Submodule.smul_mem _ _ hL00) (Submodule.smul_mem _ _ hL03))
+          (Submodule.smul_mem _ _ hL01)) hL33) (Submodule.smul_mem _ _ hL13))
+          (Submodule.smul_mem _ _ hL11)
+      · rw [show h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] - (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (Submodule.smul_mem _ _ hL00)
+          (Submodule.smul_mem _ _ hL01)) (Submodule.smul_mem _ _ hL11)
+      · rw [show h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] = IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+        exact hL22
+    · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · rw [show h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+            + h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr 1]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (add_mem (sub_mem (add_mem (add_mem
+          (Submodule.smul_mem _ _ hR00) (Submodule.smul_mem _ _ hR03))
+          (Submodule.smul_mem _ _ hR01)) hR33) (Submodule.smul_mem _ _ hR13))
+          (Submodule.smul_mem _ _ hR11)
+      · rw [show h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inr 1]
+            + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inl 0]
+            - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
+          (Submodule.smul_mem _ _ hR00) (Submodule.smul_mem _ _ hR03))
+          (Submodule.smul_mem _ _ hR01)) hR33) (Submodule.smul_mem _ _ hR13))
+          (Submodule.smul_mem _ _ hR11)
+      · rw [show h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] - (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (Submodule.smul_mem _ _ hR00)
+          (Submodule.smul_mem _ _ hR01)) (Submodule.smul_mem _ _ hR11)
+      · rw [show h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] = IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+        exact hR22
+    · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+        rw [Submodule.span_singleton_le_iff_mem]
+      · rw [show h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+            + h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr 1]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]
+          + (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (add_mem (sub_mem (add_mem (add_mem
+          (Submodule.smul_mem _ _ hM00) (Submodule.smul_mem _ _ hM03))
+          (Submodule.smul_mem _ _ hM01)) hM33) (Submodule.smul_mem _ _ hM13))
+          (Submodule.smul_mem _ _ hM11)
+      · rw [show h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inr 1]
+            + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inl 0]
+            - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 0])
+          + (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
+          - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]
+          - (2⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
+          (Submodule.smul_mem _ _ hM00) (Submodule.smul_mem _ _ hM03))
+          (Submodule.smul_mem _ _ hM01)) hM33) (Submodule.smul_mem _ _ hM13))
+          (Submodule.smul_mem _ _ hM11)
+      · rw [show h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]
+            = (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0] - (4⁻¹ : ℂ) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
+          + (4⁻¹ : ℂ) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+          module]
+        exact add_mem (sub_mem (Submodule.smul_mem _ _ hM00)
+          (Submodule.smul_mem _ _ hM01)) (Submodule.smul_mem _ _ hM11)
+      · rw [show h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] = IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] from by
+          simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+        exact hM22
+    · rw [Submodule.span_singleton_le_iff_mem]
+      refine Submodule.mem_iSup_of_mem 0 ?_
+      rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+
+set_option linter.unusedSimpArgs false in
+/-- **The weight-zero piece of the minimal `z`-covering**, explicitly: per family the
+  symmetric null combination `dotG(tt) - dotG(zz)` and the repeated `y` and `x`
+  monomials, and the square of the inner product. -/
+lemma dimEightWeightDecompositionLELE_piece_zero_eq :
+    h.dimEightWeightDecompositionLELE.piece 0 =
+      ((ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) ⊔
+        ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) ⊔
+       (ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) ⊔
+        ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) ⊔
+       (ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) ⊔
+        ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] ⊔ ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0])) ⊔
+      ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+  have hL1 : (ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0]))
+      = ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0]
+        = (2 : ℂ) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
+  have hL2 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3] = h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  have hL3 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] = h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  have hR1 : (ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0]))
+      = ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0]
+        = (2 : ℂ) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
+  have hR2 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3] = h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  have hR3 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] = h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  have hM1 : (ℂ ∙ (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0]))
+      = ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0]
+        = (2 : ℂ) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
+  have hM2 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3] = h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  have hM3 : (ℂ ∙ IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] := by
+    rw [show IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] = h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] from by
+      simp only [IsDerivativeCollection.lightConeDot, IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+        IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_one,
+        IsDerivativeCollection.lightConeDeriv_pair_zero_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_zero,
+        IsDerivativeCollection.lightConeDeriv_pair_one_three,
+        IsDerivativeCollection.lightConeDeriv_pair_three_one,
+        IsDerivativeCollection.lightConeDeriv_pair_two_two,
+        IsDerivativeCollection.lightConeDeriv_pair_three_three,
+        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply, LinearMap.sub_apply,
+        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+        Matrix.cons_val_zero, Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply, one_smul]]
+  show h.dimEightPieceTwo 0 = _
+  rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
+  exact congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·)
+    (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) hL1 hL2) hL3)
+    (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) hR1 hR2) hR3))
+    (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) hM1 hM2) hM3)) rfl
+
 /-!
 
-### D.3. The dim six invariants
+### D.5. The rotational average
+
+The three boost sieves leave, per family, the span of `TT - ZZ`, `YY` and `XX` together
+with the square of the inner product — strictly more than the invariants. The remaining
+reduction uses the cyclic rotation `x → y → z → x`: averaging an invariant element over
+its powers replaces the three transverse coefficients by their common mean, after which
+the extreme boost-weight components along each axis tie that mean to the coefficient of
+`TT`, collapsing each family onto its metric contraction.
+
+-/
+
+/-- The cyclic permutation of the coordinate directions: time is fixed and the spatial
+  directions rotate `x → y → z → x`. -/
+def cycDir : Fin 1 ⊕ Fin 3 → Fin 1 ⊕ Fin 3 := Sum.map id (· + 1)
+
+@[simp] lemma cycDir_inl : cycDir (Sum.inl 0) = Sum.inl 0 := rfl
+
+@[simp] lemma cycDir_inr (m : Fin 3) : cycDir (Sum.inr m) = Sum.inr (m + 1) := rfl
+
+/-- Composing the cyclic direction with a two-slot index vector. -/
+lemma cycDir_comp_two (μ ν : Fin 1 ⊕ Fin 3) :
+    (fun j => cycDir (![μ, ν] j)) = ![cycDir μ, cycDir ν] := by
+  funext j
+  fin_cases j <;> rfl
+
+/-- Composing the cyclic direction with a one-slot index vector. -/
+lemma cycDir_comp_one (μ : Fin 1 ⊕ Fin 3) :
+    (fun j => cycDir (![μ] j)) = ![cycDir μ] := by
+  funext j
+  fin_cases j
+  rfl
+
+/-- Composing the cyclic direction with the empty index vector. -/
+lemma cycDir_comp_nil : (fun j : Fin 0 => cycDir (![] j)) = ![] := by
+  funext j
+  exact j.elim0
+
+/-- **The cyclic rotation** `x → y → z → x` as an element of `SL(2,ℂ)`: the rotation by
+  `2π/3` about the diagonal spatial axis. -/
+noncomputable def rotationCycle : SL(2,ℂ) :=
+  ⟨(2 : ℂ)⁻¹ • !![1 - Complex.I, -(1 + Complex.I); 1 - Complex.I, 1 + Complex.I], by
+    rw [Matrix.det_smul, Matrix.det_fin_two_of, Fintype.card_fin]
+    simp [Complex.ext_iff]
+    norm_num⟩
+
+/-- **The Lorentz matrix of the cyclic rotation is the permutation matrix of `cycDir`.** -/
+lemma toLorentzGroup_rotationCycle_apply (a b : Fin 1 ⊕ Fin 3) :
+    (SL2C.toLorentzGroup rotationCycle).1 a b = if a = cycDir b then 1 else 0 := by
+  refine Complex.ofReal_injective ?_
+  rw [SL2C.toLorentzGroup_eq_trace, PauliMatrix.trace_pauliSelfAdjoint'_mul_apply]
+  rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
+    simp [rotationCycle, cycDir, PauliMatrix.pauliSelfAdjoint', PauliMatrix.pauliMatrix,
+      Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
+      Complex.ext_iff] <;>
+    norm_num
+
+/-- **The cyclic rotation acts on inner-product monomials by cycling every derivative
+  index.** -/
+lemma repLorentz_rotationCycle_dotGaugeHiggs {n1 n2 : ℕ}
+    (d₁ : Fin n1 → Fin 1 ⊕ Fin 3) (d₂ : Fin n2 → Fin 1 ⊕ Fin 3) :
+    repLorentz rotationCycle (h.dotGaugeHiggs d₁ d₂)
+      = h.dotGaugeHiggs (fun j => cycDir (d₁ j)) (fun j => cycDir (d₂ j)) := by
+  have hcoef : ∀ {n : ℕ} (a d : Fin n → Fin 1 ⊕ Fin 3),
+      (∏ j, (((SL2C.toLorentzGroup rotationCycle).1 (a j) (d j) : ℝ) : ℂ))
+        = if a = fun j => cycDir (d j) then 1 else 0 := by
+    intro n a d
+    by_cases had : a = fun j => cycDir (d j)
+    · rw [if_pos had]
+      refine Finset.prod_eq_one fun j _ => ?_
+      rw [toLorentzGroup_rotationCycle_apply, if_pos (congrFun had j), Complex.ofReal_one]
+    · rw [if_neg had]
+      obtain ⟨j, hj⟩ := Function.ne_iff.1 had
+      refine Finset.prod_eq_zero (Finset.mem_univ j) ?_
+      rw [toLorentzGroup_rotationCycle_apply, if_neg hj, Complex.ofReal_zero]
+  rw [h.repLorentz_dotGaugeHiggs]
+  simp only [hcoef]
+  simp [ite_smul, zero_smul, one_smul, Finset.sum_ite_eq']
+
+/-- Extraction of coefficients from a three-generator span. -/
+lemma mem_span_three {v₁ v₂ v₃ x : B} (hx : x ∈ ℂ ∙ v₁ ⊔ ℂ ∙ v₂ ⊔ ℂ ∙ v₃) :
+    ∃ a b c : ℂ, x = a • v₁ + b • v₂ + c • v₃ := by
+  obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.1 hx
+  obtain ⟨y₁, hy₁, y₂, hy₂, hy12⟩ := Submodule.mem_sup.1 hy
+  obtain ⟨a, ha⟩ := Submodule.mem_span_singleton.1 hy₁
+  obtain ⟨b, hb⟩ := Submodule.mem_span_singleton.1 hy₂
+  obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.1 hz
+  exact ⟨a, b, c, by rw [← hyz, ← hy12, ← ha, ← hb, ← hc]⟩
+
+/-- **The metric contraction** of the family with both derivatives on the Higgs. -/
+noncomputable def metricDotLeft : B :=
+  h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]
+    - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]
+    - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]
+
+/-- **The metric contraction** of the family with both derivatives on the conjugate
+  Higgs. -/
+noncomputable def metricDotRight : B :=
+  h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]
+    - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]
+    - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]
+
+/-- **The metric contraction** of the family with one derivative on each factor: the
+  kinetic-type term `η^{μν} (D_μ H)(D_ν H^†)`. -/
+noncomputable def metricDotMixed : B :=
+  h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]
+    - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]
+    - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]
+
+set_option maxHeartbeats 1600000 in
+set_option linter.unusedSimpArgs false in
+/-- **The gauge- and Lorentz-invariant terms of mass weight eight are spanned by the three
+  metric contractions and the square of the inner product.** The three boost sieves place
+  an invariant in the doubly-weight-zero span; averaging over the cyclic rotation equalises
+  the three transverse coefficients of each family; and the extreme boost-weight components
+  along each axis tie that common value to the coefficient of the time-time monomial,
+  collapsing each family onto its metric contraction. -/
+theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
+    (hLorentz : ∀ g, repLorentz g x = x) (hdim : x ∈ h.massWeightSubmodule 8) :
+    x ∈ (ℂ ∙ h.metricDotLeft ⊔ ℂ ∙ h.metricDotRight ⊔ ℂ ∙ h.metricDotMixed) ⊔
+      ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+  have hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0 := fun i =>
+    mem_boostWeightSubmodule.2 fun t ht => by rw [hLorentz]; simp
+  have h8 : x ∈ h.gaugeInvariantOfMassDim 8 :=
+    Submodule.mem_inf.2 ⟨hdim, (Representation.mem_invariants rep x).2 hx⟩
+  have h1 : x ∈ (h.boostWeightZeroEight 0).piece 0 :=
+    ((h.boostWeightZeroEight 0).toLE le_rfl).mem_piece_zero_of_mem h8 (hw 0)
+  have h2 : x ∈ h.dimEightPieceOne 0 :=
+    h.dimEightWeightDecompositionLE.mem_piece_zero_of_mem h1 (hw 1)
+  have h3 : x ∈ h.dimEightWeightDecompositionLELE.piece 0 :=
+    h.dimEightWeightDecompositionLELE.mem_piece_zero_of_mem h2 (hw 2)
+  rw [h.dimEightWeightDecompositionLELE_piece_zero_eq] at h3
+  obtain ⟨y, hy, zQ, hzQ, hyz⟩ := Submodule.mem_sup.1 h3
+  obtain ⟨yLR, hyLR, yM, hyM, hyLRM⟩ := Submodule.mem_sup.1 hy
+  obtain ⟨yL, hyL, yR, hyR, hyLR'⟩ := Submodule.mem_sup.1 hyLR
+  obtain ⟨aL, bL, cL, hcL⟩ := mem_span_three hyL
+  obtain ⟨aR, bR, cR, hcR⟩ := mem_span_three hyR
+  obtain ⟨aM, bM, cM, hcM⟩ := mem_span_three hyM
+  obtain ⟨q, hq⟩ := Submodule.mem_span_singleton.1 hzQ
+  have e0 : x = (aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] + cL • h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] + cR • h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) + bM • h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] + cM • h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+    rw [← hyz, ← hyLRM, ← hyLR', hcL, hcR, hcM, ← hq]
+  have e1 : x = (aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![] + cL • h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2] + cR • h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]) + bM • h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2] + cM • h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) :=
+    calc x = repLorentz rotationCycle x := (hLorentz _).symm
+      _ = _ := by
+        rw [e0]
+        simp only [map_add, map_smul, map_sub, h.repLorentz_rotationCycle_dotGaugeHiggs,
+          h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil, cycDir_comp_two, cycDir_comp_one,
+          cycDir_comp_nil, cycDir_inl, cycDir_inr,
+          show ((0 : Fin 3) + 1) = 1 from rfl, show ((1 : Fin 3) + 1) = 2 from rfl,
+          show ((2 : Fin 3) + 1) = 0 from rfl]
+  have e2 : x = (aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] + cL • h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] + cR • h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) + bM • h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] + cM • h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) :=
+    calc x = repLorentz rotationCycle x := (hLorentz _).symm
+      _ = _ := by
+        rw [e1]
+        simp only [map_add, map_smul, map_sub, h.repLorentz_rotationCycle_dotGaugeHiggs,
+          h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil, cycDir_comp_two, cycDir_comp_one,
+          cycDir_comp_nil, cycDir_inl, cycDir_inr,
+          show ((0 : Fin 3) + 1) = 1 from rfl, show ((1 : Fin 3) + 1) = 2 from rfl,
+          show ((2 : Fin 3) + 1) = 0 from rfl]
+  have ekform : x = (aL • h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + ((bL + cL - aL) / 3) • (h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![])) +
+      (aR • h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + ((bR + cR - aR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2])) +
+      (aM • h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + ((bM + cM - aM) / 3) • (h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+    rw [show ((aL • h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + ((bL + cL - aL) / 3) • (h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![])) +
+      (aR • h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + ((bR + cR - aR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2])) +
+      (aM • h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + ((bM + cM - aM) / 3) • (h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))
+        = (3⁻¹ : ℂ) • (((aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] + cL • h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] + cR • h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) + bM • h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] + cM • h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) +
+          ((aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![] + cL • h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2] + cR • h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]) + bM • h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2] + cM • h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) +
+          ((aL • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) + bL • h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] + cL • h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) +
+      (aR • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) + bR • h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] + cR • h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) +
+      (aM • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) + bM • h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] + cM • h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))) from by module,
+      ← e0, ← e1, ← e2]
+    module
+  have hsplit0 : x = ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![1, 1])) +
+      ((((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![1, 0])
+        + ((bL + cL - aL) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![1, 0])
+        + ((bR + cR - aR) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![1, 0])
+        + ((bM + cM - aM) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
+    rw [ekform]
+    simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((0 : Fin 3) + 1) = 1 from rfl, show ((0 : Fin 3) + 2) = 2 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+    module
+  have hcomp0 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
+    (a := 4) (b := -4)
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![0, 0] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![0, 0] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![0, 0] (by decide)))))
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![1, 1] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![1, 1] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![1, 1] (by decide)))))
+    (add_mem (add_mem (add_mem
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bL + cL - aL) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 0 ![3, 3] (by decide)))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bR + cR - aR) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 0 ![3, 3] (by decide))))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bM + cM - aM) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 0 ![3, 3] (by decide))))))
+      (Submodule.smul_mem _ q (mem_boostWeightSubmodule.2 fun t ht => by
+        rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+        simp)))
+    (hsplit0 ▸ hw 0) (by decide) (by decide) (by decide)
+  have haxis0 : ((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]) = 0 := by
+    rw [show (((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0]))
+        = (2 : ℂ) • (((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 0 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 0 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 0 ![1, 1]))) from by
+      simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((0 : Fin 3) + 1) = 1 from rfl, show ((0 : Fin 3) + 2) = 2 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    rw [hcomp0.1, hcomp0.2]
+    simp
+  have hsplit1 : x = ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![1, 1])) +
+      ((((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![1, 0])
+        + ((bL + cL - aL) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![1, 0])
+        + ((bR + cR - aR) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![1, 0])
+        + ((bM + cM - aM) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
+    rw [ekform]
+    simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+    module
+  have hcomp1 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
+    (a := 4) (b := -4)
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![0, 0] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![0, 0] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![0, 0] (by decide)))))
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![1, 1] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![1, 1] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![1, 1] (by decide)))))
+    (add_mem (add_mem (add_mem
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bL + cL - aL) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 1 ![3, 3] (by decide)))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bR + cR - aR) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 1 ![3, 3] (by decide))))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bM + cM - aM) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 1 ![3, 3] (by decide))))))
+      (Submodule.smul_mem _ q (mem_boostWeightSubmodule.2 fun t ht => by
+        rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+        simp)))
+    (hsplit1 ▸ hw 1) (by decide) (by decide) (by decide)
+  have haxis1 : ((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]) = 0 := by
+    rw [show (((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1]))
+        = (2 : ℂ) • (((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 1 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 1 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 1 ![1, 1]))) from by
+      simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    rw [hcomp1.1, hcomp1.2]
+    simp
+  have hsplit2 : x = ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1])) +
+      ((((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0])
+        + ((bL + cL - aL) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0])
+        + ((bR + cR - aR) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3])) +
+        (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
+        + ((bM + cM - aM) / 3) • (IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] + IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
+    rw [ekform]
+    simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+    module
+  have hcomp2 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
+    (a := 4) (b := -4)
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![0, 0] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![0, 0] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := 4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![0, 0] (by decide)))))
+    (Submodule.smul_mem _ (4⁻¹ : ℂ) (add_mem (add_mem
+      (Submodule.smul_mem _ ((2 * aL + bL + cL) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![1, 1] (by decide)))
+      (Submodule.smul_mem _ ((2 * aR + bR + cR) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![1, 1] (by decide))))
+      (Submodule.smul_mem _ ((2 * aM + bM + cM) / 3) (IsDerivativeCollection.lightConeDot_mem (k := -4) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![1, 1] (by decide)))))
+    (add_mem (add_mem (add_mem
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aL - ((bL + cL - aL) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bL + cL - aL) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![2, 0])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![2, 0]) 2 ![3, 3] (by decide)))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aR - ((bR + cR - aR) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bR + cR - aR) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![0, 2])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![0, 2]) 2 ![3, 3] (by decide))))))
+      (add_mem (Submodule.smul_mem _ ((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![0, 1] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![1, 0] (by decide))))
+      (Submodule.smul_mem _ ((bM + cM - aM) / 3) (add_mem
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![2, 2] (by decide))
+        (IsDerivativeCollection.lightConeDot_mem (k := 0) (h.dotSymbol ![1, 1])
+        (h.isDerivativeCollection_dotSymbol.rotatesIndices ![1, 1]) 2 ![3, 3] (by decide))))))
+      (Submodule.smul_mem _ q (mem_boostWeightSubmodule.2 fun t ht => by
+        rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_nil]
+        simp)))
+    (hsplit2 ▸ hw 2) (by decide) (by decide) (by decide)
+  have haxis2 : ((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) = 0 := by
+    rw [show (((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]))
+        = (2 : ℂ) • (((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] +
+        ((2 * aR + bR + cR) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] +
+        ((2 * aM + bM + cM) / 3) • IsDerivativeCollection.lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1]))) from by
+      simp only [IsDerivativeCollection.lightConeDot,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_one_one,
+          IsDerivativeCollection.lightConeDeriv_pair_zero_one,
+          IsDerivativeCollection.lightConeDeriv_pair_one_zero,
+          IsDerivativeCollection.lightConeDeriv_pair_two_two,
+          IsDerivativeCollection.lightConeDeriv_pair_three_three,
+          show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
+          LinearMap.add_apply, LinearMap.sub_apply,
+          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+          Matrix.cons_val_zero, Matrix.cons_val_one,
+          LinearMap.toSpanSingleton_apply, one_smul]
+      module]
+    rw [hcomp2.1, hcomp2.2]
+    simp
+  have hfinal : x = ((2 * aL - bL - cL) / 4) • h.metricDotLeft + ((2 * aR - bR - cR) / 4) • h.metricDotRight
+      + ((2 * aM - bM - cM) / 4) • h.metricDotMixed + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
+    rw [ekform,
+      show ((aL • h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + ((bL + cL - aL) / 3) • (h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![])) +
+      (aR • h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + ((bR + cR - aR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2])) +
+      (aM • h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + ((bM + cM - aM) / 3) • (h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))
+          = (((2 * aL - bL - cL) / 4) • h.metricDotLeft + ((2 * aR - bR - cR) / 4) • h.metricDotRight
+      + ((2 * aM - bM - cM) / 4) • h.metricDotMixed + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))
+            + (4⁻¹ : ℂ) • ((((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0])) + (((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1])) + (((2 * aL + bL + cL) / 3) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] + h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) +
+      ((2 * aR + bR + cR) / 3) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] + h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) +
+      ((2 * aM + bM + cM) / 3) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] + h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]))) from by
+        simp only [metricDotLeft, metricDotRight, metricDotMixed]
+        module,
+      haxis0, haxis1, haxis2]
+    simp
+  rw [hfinal]
+  exact add_mem (add_mem (add_mem
+    (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left
+      (Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)))))
+    (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right
+      (Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _))))))
+    (Submodule.mem_sup_left (Submodule.mem_sup_right
+      (Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)))))
+    (Submodule.mem_sup_right (Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)))
+
+
+
+/-!
+
+## I. The fully invariants
+
+-/
+
+/-!
+
+### I.1. Invariants of the mass dimension
 
 -/
 
@@ -3041,6 +5143,14 @@ lemma gaugeInvariantOfMassDim_six_eq_boostWeightZero
     h.dimSixWeightDecompositionLE.mem_piece_zero_of_mem h1 (hw 1)
   exact h.dimSixWeightDecompositionLELE.eq_zero_of_mem_of_zero_notMem_supp
     (by simp [dimSixWeightDecompositionLELE]) h2 (hw 2)
+
+
+/-!
+
+### I.2. Invariants in the full algebra
+
+-/
+
 
 end IsHiggsAlgebraValued
 
