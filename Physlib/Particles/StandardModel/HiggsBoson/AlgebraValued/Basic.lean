@@ -50,6 +50,8 @@ We also want to consider derivatives.
 The invariance involving the Higgs fields, up to
 mass-dimension 4 are given by:
 `H^† D_μ D_μ H`,`H D_μ D_μ H^†`, `D_μ H D_μ H^†`, `H H^†` and `(H^† H)^2`.
+
+
 -/
 
 @[expose] public section
@@ -2656,94 +2658,9 @@ lemma gaugeInvariantOfMassDim_eight_eq :
 
 /-!
 
-## D. Invariance under the Lorentz group
-
-Given the invariance under the the gauge group,
-we now give the invariance under the Lorentz group.
-
+## F. Aside: WeightDecomposition
 -/
 
-/-!
-
-### D.1. The decomposition under boost weights in the x-direction
-
--/
-open Lorentz.BoostWeight
-
-/-- With all derivatives on the Higgs, the two-factor symbol is scaling by
-  `dotGaugeHiggs d ![]`. -/
-lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![1, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
-  rw [dotSymbol]
-  congr 1
-  congr 1
-  exact funext fun j => j.elim0
-
-/-- With all derivatives on the conjugate Higgs. -/
-lemma dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![0, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
-  rw [dotSymbol]
-  congr 1
-  congr 1
-  all_goals first
-    | exact funext fun j => j.elim0
-    | (funext j; congr 1; exact Fin.ext (by simp))
-
-@[simp]
-lemma range_dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    (h.dotSymbol ![1, 0] d).range = ℂ ∙ h.dotGaugeHiggs d ![] := by
-  rw [h.dotSymbol_left d, ← LinearMap.span_singleton_eq_range]
-
-@[simp]
-lemma range_dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    (h.dotSymbol ![0, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
-  rw [h.dotSymbol_right d, ← LinearMap.span_singleton_eq_range]
-
-/-- The span of the two-factor symbols is the gauge-invariant submodule of mass weight
-  six: one derivative on the Higgs or one on its conjugate. -/
-lemma iSup_range_dotSymbol_eq :
-    ((⨆ d, (h.dotSymbol ![1, 0] d).range) ⊔ ⨆ d, (h.dotSymbol ![0, 1] d).range)
-      = h.gaugeInvariantOfMassDim 6 := by
-  rw [h.gaugeInvariantOfMassDim_six_eq]
-  congr 1
-  · exact iSup_congr fun d => h.range_dotSymbol_left d
-  · exact iSup_congr fun d => h.range_dotSymbol_right d
-
-
-
-
-/-- **The boost-weight decomposition of the gauge-invariant terms of mass weight six.**
-  The two families — one derivative on the Higgs, one on its conjugate — are each a
-  two-factor derivative collection over `ℂ`, so each carries a decomposition; the join of
-  the two is the decomposition of their join. -/
-noncomputable def boostWeightZeroSix (i : Fin 3) :
-    WeightDecomposition repLorentz i (h.gaugeInvariantOfMassDim 6) :=
-  ((h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![1, 0] i
-      (trivialWeightDecomposition i)).sup
-    (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 1] i
-      (trivialWeightDecomposition i))).copy h.iSup_range_dotSymbol_eq
-/-!
-
-### D.4. The zero parts of the boost weights
-
--/
-
-lemma boostWeightZeroSix_piece_zero_eq (i : Fin 3) :
-    (h.boostWeightZeroSix i).piece 0 =
-      (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1)] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2)] ![]) ⊔
-        (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 1)] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i+ 2)]) := by
-  have h1 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
-    (h.dotSymbol ![1, 0]) i
-  have h2 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
-    (h.dotSymbol ![0, 1]) i
-  simp only [h.range_dotSymbol_left] at h1
-  simp only [h.range_dotSymbol_right] at h2
-  dsimp only [boostWeightZeroSix, WeightDecomposition.copy_piece, WeightDecomposition.sup_piece]
-  rw [h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![1, 0] i
-      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
-    h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 1] i
-      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb])]
-  exact congrArg₂ (· ⊔ ·) h1 h2
 
 structure WeightDecompositionLE  {K : Type u_1} [Field K] [Algebra ℝ K] {M : Type u_2}
     [AddCommGroup M] [Module K M] (rep : Representation K SL(2, ℂ) M) (i : Fin 3)
@@ -2802,6 +2719,110 @@ lemma WeightDecompositionLE.eq_zero_of_mem_of_zero_notMem_supp
     (hxV : x ∈ V) (hx0 : x ∈ boostWeightSubmodule rep i 0) : x = 0 := by
   have hx := d.mem_piece_zero_of_mem hxV hx0
   rwa [d.piece_eq_bot 0 h0, Submodule.mem_bot] at hx
+
+
+/-!
+
+## D. Invariance under the Lorentz group
+
+Given the invariance under the the gauge group,
+we now give the invariance under the Lorentz group.
+
+The Lorentz invariant argument is the following.
+For a vector space `V` with a representation of the Lorentz group.
+we decompose `V` into eigenvectors of the Lorentz boost along the `x`-axis.
+`V = V₀ ⊕ V₁ ⊕ V₋₁ ⊕ V₂ ⊕ V₋₂ ⊕ ...`.
+We then take a minimal extension `W` of `V₀` such that `V₀ ≤ W ≤ V` and that we can
+decompose `W` based on the eigenvalues of the Lorentz boost along the `y`-axis:
+`W = W₀ ⊕ W₁ ⊕ W₋₁ ⊕ W₂ ⊕ W₋₂ ⊕ ...`.
+We now do the same with `W₀` finding a minimal extension `K` of `W₀` such that `W₀ ≤ K ≤ W`
+and that we can decompose `K` based on the eigenvalues of the Lorentz boost along the `z`-axis:
+`K = K₀ ⊕ K₁ ⊕ K₋₁ ⊕ K₂ ⊕ K₋₂ ⊕ ...`.
+An element of `V` which is Lorentz invariant must be in `K₀`.
+This is usually an if and only if statement.
+-/
+
+/-!
+
+### D.1. The decomposition under boost weights in the x-direction
+
+-/
+open Lorentz.BoostWeight
+
+/-- With all derivatives on the Higgs, the two-factor symbol is scaling by
+  `dotGaugeHiggs d ![]`. -/
+lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![1, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  exact funext fun j => j.elim0
+
+/-- With all derivatives on the conjugate Higgs. -/
+lemma dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    h.dotSymbol ![0, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
+  rw [dotSymbol]
+  congr 1
+  congr 1
+  all_goals first
+    | exact funext fun j => j.elim0
+    | (funext j; congr 1; exact Fin.ext (by simp))
+
+@[simp]
+lemma range_dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![1, 0] d).range = ℂ ∙ h.dotGaugeHiggs d ![] := by
+  rw [h.dotSymbol_left d, ← LinearMap.span_singleton_eq_range]
+
+@[simp]
+lemma range_dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
+    (h.dotSymbol ![0, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
+  rw [h.dotSymbol_right d, ← LinearMap.span_singleton_eq_range]
+
+/-- The span of the two-factor symbols is the gauge-invariant submodule of mass weight
+  six: one derivative on the Higgs or one on its conjugate. -/
+lemma iSup_range_dotSymbol_eq :
+    ((⨆ d, (h.dotSymbol ![1, 0] d).range) ⊔ ⨆ d, (h.dotSymbol ![0, 1] d).range)
+      = h.gaugeInvariantOfMassDim 6 := by
+  rw [h.gaugeInvariantOfMassDim_six_eq]
+  congr 1
+  · exact iSup_congr fun d => h.range_dotSymbol_left d
+  · exact iSup_congr fun d => h.range_dotSymbol_right d
+
+
+/-- **The boost-weight decomposition of the gauge-invariant terms of mass weight six.**
+  The two families — one derivative on the Higgs, one on its conjugate — are each a
+  two-factor derivative collection over `ℂ`, so each carries a decomposition; the join of
+  the two is the decomposition of their join. -/
+noncomputable def boostWeightZeroSix (i : Fin 3) :
+    WeightDecomposition repLorentz i (h.gaugeInvariantOfMassDim 6) :=
+  ((h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![1, 0] i
+      (trivialWeightDecomposition i)).sup
+    (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 1] i
+      (trivialWeightDecomposition i))).copy h.iSup_range_dotSymbol_eq
+
+
+/-!
+
+### D.4. The zero parts of the boost weights
+
+-/
+
+lemma boostWeightZeroSix_piece_zero_eq (i : Fin 3) :
+    (h.boostWeightZeroSix i).piece 0 =
+      (ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 1)] ![] ⊔ ℂ ∙ h.dotGaugeHiggs ![Sum.inr (i + 2)] ![]) ⊔
+        (ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i + 1)] ⊔ ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr (i+ 2)]) := by
+  have h1 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
+    (h.dotSymbol ![1, 0]) i
+  have h2 := IsDerivativeCollection.iSup_range_lightConeDeriv_single_weight_zero
+    (h.dotSymbol ![0, 1]) i
+  simp only [h.range_dotSymbol_left] at h1
+  simp only [h.range_dotSymbol_right] at h2
+  dsimp only [boostWeightZeroSix, WeightDecomposition.copy_piece, WeightDecomposition.sup_piece]
+  rw [h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![1, 0] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
+    h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 1] i
+      (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb])]
+  exact congrArg₂ (· ⊔ ·) h1 h2
 
 open IsDerivativeCollection in
 /-- **The minimal `y`-boost covering of the `x`-weight-zero part** of the dimension-six
