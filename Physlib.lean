@@ -224,7 +224,6 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invari
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
-public import Physlib.Particles.StandardModel.GaugeBosons.Gluons.JetCompleteness
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
