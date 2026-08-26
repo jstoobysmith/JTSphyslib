@@ -1575,12 +1575,6 @@ lemma eq_sum_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
   rw [hb]
   ring
 
-lemma eq_sum_boostAverageOrbitZ_smul' {x : B} (c : Fin 22 → ℂ)
-    (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ k, ((48 : ℂ)⁻¹ * ∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ) * c l)
-        • rotationOrbitSum (T := T) (orbitRep k) := by
-
 /-!
 
 ### X. Eigenvectors of the boost average on the orbit-sum span
