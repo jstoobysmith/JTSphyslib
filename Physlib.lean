@@ -186,7 +186,6 @@ public import Physlib.Particles.FlavorPhysics.CKMMatrix.Relations
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.Rows
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.Basic
 public import Physlib.Particles.FlavorPhysics.CKMMatrix.StandardParameterization.StandardParameters
-public import Physlib.Particles.LeptonGaugeSector.JetAlgebra.Covariantization
 public import Physlib.Particles.NeutrinoPhysics.Basic
 public import Physlib.Particles.QED.Basic
 public import Physlib.Particles.QED.CurrentCoupling
