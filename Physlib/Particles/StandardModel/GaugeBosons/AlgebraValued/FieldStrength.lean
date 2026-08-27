@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.TransformsInAdjoint
+public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 /-!
 
 # The field strength
@@ -95,6 +96,21 @@ lemma repGauge_fieldStrength (hA : IsGaugeField repLorentz repGauge A D D_comm)
     adjointDualCoeff_singleton U⁻¹ ν φ, map_neg, map_neg, hstruct,
     Complex.ofReal_sub, map_sub]
   abel
+
+/-- The transformation of the field strength written in the standard basis of the
+  gauge algebra, in terms of `adjointMatrix`: the component
+  `F_μν^a = F_μν(stdBasis.coord a)` transforms through the adjoint matrix of the
+  base-point value of `U⁻¹`,
+
+  `U • F_μν^a = ∑ b, Ad(U₀⁻¹)^a_b F_μν^b`. -/
+lemma repGauge_fieldStrength_stdBasis (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) (a : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :
+    repGauge U (fieldStrength A D μ ν (GaugeAlgebra.stdBasis.coord a)) =
+      ∑ b, GaugeAlgebra.adjointMatrix (U⁻¹).eval a b •
+        fieldStrength A D μ ν (GaugeAlgebra.stdBasis.coord b) := by
+  rw [hA.repGauge_fieldStrength U μ ν, adjointDualCoeff_zero,
+    GaugeAlgebra.adjoint_dualMap_coord, map_sum]
+  simp only [map_smul]
 
 set_option maxHeartbeats 1000000 in
 /-- **The transformation law of the derived field strength**: for `D` a derivation

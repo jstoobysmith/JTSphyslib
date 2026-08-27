@@ -75,46 +75,22 @@ noncomputable def adjointDualCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕
   (JetGaugeAlgebra.eval.toLinearMap ∘ₗ JetGaugeAlgebra.iteratedDeriv x ∘ₗ
     JetGaugeAlgebra.adjointMap U ∘ₗ JetGaugeAlgebra.ofConstant).dualMap
 
+/-- The zeroth dual adjoint coefficient is the dual of the adjoint action of the
+  base-point value of the gauge jet. -/
+lemma adjointDualCoeff_zero (U : JetGaugeGroupI) :
+    adjointDualCoeff U 0 = (GaugeAlgebra.adjoint U.eval).dualMap := by
+  rw [adjointDualCoeff]
+  refine congrArg LinearMap.dualMap (LinearMap.ext fun a => ?_)
+  simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
+    JetGaugeAlgebra.iteratedDeriv_zero, LinearMap.id_coe, id_eq]
+  exact JetGaugeAlgebra.eval_adjointMap_ofConstant U a
+
 /-- For a gauge jet whose value at the base point is the identity, the zeroth dual
   adjoint coefficient is trivial: the base-point adjoint action `Ad_{U₀}` is the
   identity. -/
 lemma adjointDualCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
     adjointDualCoeff U 0 = LinearMap.id := by
-  have h3 : (constantCoeff : JetRing →+* ℂ).mapMatrix U.1.1 = 1 :=
-    congrArg (fun g : GaugeGroupI => (g.1.1 : Matrix (Fin 3) (Fin 3) ℂ)) hU
-  have h2 : (constantCoeff : JetRing →+* ℂ).mapMatrix U.2.1.1 = 1 :=
-    congrArg (fun g : GaugeGroupI => (g.2.1.1 : Matrix (Fin 2) (Fin 2) ℂ)) hU
-  have hmap : ∀ {n : Type} [Fintype n] [DecidableEq n] (M : Matrix n n JetRing),
-      M.map (coeff (Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)))) =
-        (constantCoeff : JetRing →+* ℂ).mapMatrix M := by
-    intro n _ _ M
-    ext i j
-    simp [Matrix.map_apply, RingHom.mapMatrix_apply, coeff_zero_eq_constantCoeff]
-  have key : ∀ a : GaugeAlgebra,
-      JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv 0
-        (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a))) = a := by
-    intro a
-    refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
-    · simp only [JetGaugeAlgebra.iteratedDeriv_zero, LinearMap.id_coe, id_eq,
-        JetGaugeAlgebra.eval_apply, JetGaugeAlgebra.taylorCoeff_toSU3Matrix,
-        JetGaugeAlgebra.adjointMap_toSU3Matrix, JetGaugeAlgebra.ofConstant_toSU3Matrix]
-      rw [hmap, map_mul, map_mul, h3, one_mul, JetRing.mapMatrix_constantCoeff_star, h3,
-        star_one, mul_one]
-      ext i j
-      simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
-    · simp only [JetGaugeAlgebra.iteratedDeriv_zero, LinearMap.id_coe, id_eq,
-        JetGaugeAlgebra.eval_apply, JetGaugeAlgebra.taylorCoeff_toSU2Matrix,
-        JetGaugeAlgebra.adjointMap_toSU2Matrix, JetGaugeAlgebra.ofConstant_toSU2Matrix]
-      rw [hmap, map_mul, map_mul, h2, one_mul, JetRing.mapMatrix_constantCoeff_star, h2,
-        star_one, mul_one]
-      ext i j
-      simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
-    · simp [JetGaugeAlgebra.iteratedDeriv_zero, JetGaugeAlgebra.eval_apply,
-        coeff_zero_eq_constantCoeff, constantCoeff_C]
-  refine LinearMap.ext fun φ => LinearMap.ext fun a => ?_
-  show φ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv 0
-    (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant a)))) = φ a
-  rw [key a]
+  rw [adjointDualCoeff_zero, hU, map_one, Module.End.one_eq_id, LinearMap.dualMap_id]
 
 /-- The dual adjoint coefficient at a single derivative: since
   `∂_μ (Ad_U x) = Ad_U (∂_μ x) − ⁅ω_μ(U), Ad_U x⁆` (`deriv_adjointMap`) and constants

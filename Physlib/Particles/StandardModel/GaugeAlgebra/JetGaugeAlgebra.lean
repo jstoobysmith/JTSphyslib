@@ -789,6 +789,36 @@ noncomputable def adjoint : Representation ℝ JetGaugeGroupI JetGaugeAlgebra wh
     refine LinearMap.ext fun a => ?_
     ext <;> simp [star_mul, mul_assoc]
 
+/-- Evaluating the adjoint action of a gauge jet on a constant at the base point is
+  the adjoint action of the base-point value of the jet. -/
+lemma eval_adjointMap_ofConstant (U : JetGaugeGroupI) (a : GaugeAlgebra) :
+    eval (adjointMap U (ofConstant a)) = GaugeAlgebra.adjoint U.eval a := by
+  have hmap : ∀ {n : Type} [Fintype n] [DecidableEq n] (M : Matrix n n JetRing),
+      M.map (coeff (Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)))) =
+        (constantCoeff : JetRing →+* ℂ).mapMatrix M := by
+    intro n _ _ M
+    ext i j
+    simp [Matrix.map_apply, RingHom.mapMatrix_apply, coeff_zero_eq_constantCoeff]
+  have hC3 : (constantCoeff : JetRing →+* ℂ).mapMatrix (a.toSU3Matrix.map C)
+      = a.toSU3Matrix := by
+    ext i j
+    simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
+  have hC2 : (constantCoeff : JetRing →+* ℂ).mapMatrix (a.toSU2Matrix.map C)
+      = a.toSU2Matrix := by
+    ext i j
+    simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
+  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+  · simp only [eval_apply, taylorCoeff_toSU3Matrix, adjointMap_toSU3Matrix,
+      ofConstant_toSU3Matrix, GaugeAlgebra.adjoint_toSU3Matrix]
+    rw [hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star, hC3]
+    rfl
+  · simp only [eval_apply, taylorCoeff_toSU2Matrix, adjointMap_toSU2Matrix,
+      ofConstant_toSU2Matrix, GaugeAlgebra.adjoint_toSU2Matrix]
+    rw [hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star, hC2]
+    rfl
+  · simp [eval_apply, taylorCoeff_toU1Value, adjointMap_toU1Value, ofConstant_toU1Value,
+      coeff_zero_eq_constantCoeff, constantCoeff_C, GaugeAlgebra.adjoint_toU1Value]
+
 /-- The constant inclusion is a morphism of Lie algebras: constants bracket to
   constants. -/
 lemma ofConstant_lie (a b : GaugeAlgebra) :
