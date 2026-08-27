@@ -24,12 +24,23 @@ public import Mathlib.Data.Matrix.Reflection
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
-# Invariants under the Lorentz group with four-vector indices
+# Lorentz invariants among four four-vector indices
 
-In this file we show invariants within the span of tensors  `T^{μ₁ μ₂ μ₃ μ₄}` under
-the Lorentz group, where each index `μᵢ` is a four-vector index.
+`IsQuadLorentz repLorentz T` says that a family `T`, indexed by four four-vector
+indices and valued in a module `B` carrying a representation of `SL(2,ℂ)`, transforms
+as a tensor `T^{μ₁ μ₂ μ₃ μ₄}`.
 
+The main theorem `exists_smul_contraction_of_invariant` classifies the Lorentz
+invariants in the span of the components: every invariant element is a linear
+combination of the outer, inner and split metric contractions and the Levi-Civita
+contraction.
 
+The section headings tell the story: the light-cone bases (B) grade the span by boost
+weight, the weight-zero projection of a generator gives the recursion rounds (C), a
+sieve along the three axes (D) cuts an invariant down to the tied pieces supported on
+paired-or-distinct indices (E), rotation averaging reduces to `22` orbit sums (F) on
+which the boost average is an explicit integer matrix (G), and a polynomial certificate
+collapses the iterated rounds to the projector onto the four contractions (H, I, J).
 -/
 
 @[expose] public section
@@ -38,7 +49,14 @@ namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
+/-!
 
+## A. Quadruple Lorentz tensors and the span of their components
+
+-/
+
+/-- A family `T` of elements of `B`, indexed by four four-vector indices, transforms as
+  a tensor `T^{μ₁ μ₂ μ₃ μ₄}` under the representation `repLorentz` of `SL(2,ℂ)`. -/
 structure IsQuadLorentz (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B)
     (T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B) : Prop where
@@ -78,13 +96,20 @@ lemma mem_span_iff (x : B) :
 
 /-!
 
-## A. Light cone directions
+## B. The light-cone basis along one axis
+
+## B.1. Light-cone components: their span and boost weight
+
+Along a spatial axis `i` the coordinate components recombine into the light-cone
+components `lightCone i c`, which span the same space and are homogeneous of boost
+weight `∑ j, lightConeWeight (c j)`.
 
 -/
 
 open StandardModel.IsHiggsAlgebraValued StandardModel.IsHiggsAlgebraValued.IsDerivativeCollection
   BoostWeight
 
+/-- The axis-`i` light-cone component of `T` at the light-cone multi-index `c`. -/
 noncomputable def lightCone  (hT : IsQuadLorentz B repLorentz T) (i : Fin 3) (c : Fin 4 → Fin 4) :  B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) • T d
 
@@ -149,6 +174,15 @@ lemma lightCone_mem_boostWeightSubmodule (i : Fin 3) (c : Fin 4 → Fin 4) :
         rw [show (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) from rfl, lightCone, Finset.smul_sum]
         exact Finset.sum_congr rfl fun a _ => (smul_smul _ _ _).symm
 
+/-!
+
+## B.2. Integer and rational mirrors of the light-cone coefficients
+
+Mirrors of the light-cone coefficients over `ℤ` and `ℚ`, so that the vanishing of
+coefficients can be settled by `decide`.
+
+-/
+
 /-- Integer mirror of `IsDerivativeCollection.lightConeCoeff`. -/
 def lightConeCoeffZ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) : ℤ :=
   if κ = 0 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then -1 else 0)
@@ -188,19 +222,16 @@ lemma lightConeCoeffInv_eq_zero_of_coeffZ_eq_zero (i : Fin 3) (κ : Fin 4)
 
 /-!
 
-## Vanishing of homogeneous components
+## Aside: Vanishing of homogeneous boost-weight sums
 
-A finite sum of homogeneous boost-weight components vanishes only if every component
-does: the weight spaces are independent. Consequently a weight-zero element written as
-such a sum equals its weight-zero component alone.
-
-These are pure weight-grading statements (no `T` involved) generalizing
-`eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule` from two weights to finitely
-many; they will eventually move next to `boostWeightSubmodule_iSupIndep`.
+Pure weight-grading statements with no `T` involved: the weight spaces are independent,
+so a finite homogeneous sum vanishes only if every term does, and a weight-zero element
+of such a sum is its weight-zero term. These belong next to
+`boostWeightSubmodule_iSupIndep` in `WeightGrading`.
 
 -/
 
-/-- **Components of a vanishing homogeneous sum vanish**: the boost-weight spaces are
+/-- Components of a vanishing homogeneous sum vanish: the boost-weight spaces are
   independent. -/
 lemma eq_zero_of_sum_mem_boostWeightSubmodule
     {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [AddCommGroup A] [Module K A]
@@ -218,7 +249,7 @@ lemma eq_zero_of_sum_mem_boostWeightSubmodule
     (Submodule.mem_iSup_of_mem (Finset.ne_of_mem_erase hm)
       (hw m (Finset.mem_of_mem_erase hm))))
 
-/-- **A weight-zero element of a homogeneous sum is its weight-zero component**: all the
+/-- A weight-zero element of a homogeneous sum is its weight-zero component: all the
   other components must vanish. -/
 lemma eq_component_zero_of_mem_boostWeightSubmodule
     {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [AddCommGroup A] [Module K A]
@@ -244,14 +275,17 @@ lemma eq_component_zero_of_mem_boostWeightSubmodule
 
 /-!
 
-## B. Decomposing generators
+## C. The weight-zero projection of a generator
 
-We want to give the decomposition of
-`T d` into peices along the three axis.
+## C.1. The boost-weight components of a generator
+
+Each generator `T e` is the sum of its boost-weight components `monoComponent i e m`
+over the weight support along any axis.
+
 -/
 
-/-- The axis-i weight-zero component of a component, as in `boostComponent`
-    but one level down: the weight-m partial sum of `eq_sum_lightCone`. -/
+/-- The axis-`i` weight-`m` component of the generator `T e`: the weight-`m` partial
+  sum of `eq_sum_lightCone`. -/
 noncomputable def monoComponent (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) (m : ℤ) : B :=
   ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = m),
     (∏ s, lightConeCoeffInv i (e s) (c s)) • hT.lightCone i c
@@ -262,7 +296,7 @@ lemma monoComponent_mem_boostWeightSubmodule (i : Fin 3) (e : Fin 4 → Fin 1 �
   exact (show (∑ s, lightConeWeight (c s)) = m from (Finset.mem_filter.1 hc).2) ▸
     hT.lightCone_mem_boostWeightSubmodule i c
 
-/-- **The possible axis-`i` boost weights of a component**: the total light-cone weights
+/-- The possible axis-`i` boost weights of a component: the total light-cone weights
   of the axis-`i` light-cone monomials appearing in `eq_sum_lightCone` with a nonzero
   coefficient — those reachable through slots where the integer mirror `lightConeCoeffZ`
   does not vanish. Computable, so membership can be settled by `decide`. -/
@@ -299,7 +333,7 @@ lemma eq_sum_monoComponent (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
         exact Finset.sum_filter_of_ne fun c _ => hne c
 
 set_option maxRecDepth 10000 in
-/-- **A component is the sum of its weight components over the full weight set**: as
+/-- A component is the sum of its weight components over the full weight set: as
   `eq_sum_monoComponent` but over the fixed weight set common to all components. -/
 lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
     T e = ∑ m ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ), hT.monoComponent i e m := by
@@ -309,7 +343,16 @@ lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
   rw [hT.eq_sum_lightCone i e]
   exact (Finset.sum_fiberwise_of_maps_to (fun c _ => hall c) _).symm
 
-/-- **The three light-cone sectors of one index**: `0` the raising direction `κ = 0`,
+/-!
+
+## C.2. The weight-zero transition matrix
+
+The matrix of the axis-`i` weight-zero projection in the `T`-basis: a sum over balanced
+sector patterns of per-slot sector matrices.
+
+-/
+
+/-- The three light-cone sectors of one index: `0` the raising direction `κ = 0`,
   `1` the lowering direction `κ = 1`, `2` the transverse plane `κ ∈ {2, 3}`. -/
 def sectorIndex : Fin 4 → Fin 3 := ![0, 1, 2, 2]
 
@@ -320,7 +363,7 @@ def sectorWeight : Fin 3 → ℤ := ![2, -2, 0]
 lemma lightConeWeight_eq_sectorWeight (κ : Fin 4) :
     lightConeWeight κ = sectorWeight (sectorIndex κ) := by decide +revert
 
-/-- **The per-slot sector transition matrix**: the single-index composite
+/-- The per-slot sector transition matrix: the single-index composite
   `lightConeCoeffInvQ · lightConeCoeffZ` summed over the light-cone directions of one
   sector. The three sectors resolve the identity, and `weightZeroTransition` is by
   definition the balanced-sector convolution of these small matrices. -/
@@ -328,7 +371,7 @@ def slotTransition (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℚ :=
   ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
     lightConeCoeffInvQ i μ κ' * (lightConeCoeffZ i κ' ν : ℚ)
 
-/-- **The matrix of the axis-`i` weight-zero projection in the `T`-basis**: the
+/-- The matrix of the axis-`i` weight-zero projection in the `T`-basis: the
   coefficient of `T d` in the re-expansion of `monoComponent i e 0` through the
   light-cone basis, as the sum over balanced sector patterns — as many raising as
   lowering slots, `19` patterns — of the product of the per-slot sector matrices.
@@ -338,7 +381,7 @@ def weightZeroTransition (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) : ℚ :=
   ∑ w ∈ Finset.univ.filter (fun w : Fin 4 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
     ∏ s, slotTransition i (w s) (e s) (d s)
 
-/-- **Weight-zero light-cone sums are balanced-sector convolutions**: a sum over the
+/-- Weight-zero light-cone sums are balanced-sector convolutions: a sum over the
   weight-zero light-cone monomials of a product of slot factors regroups as the sum
   over balanced sector patterns of the product of the slotwise sector sums. -/
 lemma sum_weightZero_eq_sum_sector {R : Type*} [CommSemiring R] (f : Fin 4 → Fin 4 → R) :
@@ -378,7 +421,7 @@ lemma sum_weightZero_eq_sum_sector {R : Type*} [CommSemiring R] (f : Fin 4 → F
     (fun s => Finset.univ.filter fun κ' : Fin 4 => sectorIndex κ' = w s)
     (fun s κ' => f s κ')).symm
 
-/-- **The weight-zero transition as a light-cone sum**: the sector convolution defining
+/-- The weight-zero transition as a light-cone sum: the sector convolution defining
   `weightZeroTransition` expands to the sum over weight-zero light-cone monomials of
   the composite `lightConeCoeffInvQ · lightConeCoeffZ` slot coefficients. -/
 lemma weightZeroTransition_eq_sum_lightCone (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
@@ -389,7 +432,7 @@ lemma weightZeroTransition_eq_sum_lightCone (i : Fin 3) (d e : Fin 4 → Fin 1 �
   exact (sum_weightZero_eq_sum_sector
     (fun s κ => lightConeCoeffInvQ i (e s) κ * (lightConeCoeffZ i κ (d s) : ℚ))).symm
 
-/-- **The weight-zero component re-expanded in the `T`-basis**: `monoComponent i e 0`
+/-- The weight-zero component re-expanded in the `T`-basis: `monoComponent i e 0`
   is the `e`-th column of `weightZeroTransition` applied to the generators. -/
 lemma monoComponent_zero_eq (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
     hT.monoComponent i e 0
@@ -404,7 +447,16 @@ lemma monoComponent_zero_eq (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
   push_cast
   simp only [coe_lightConeCoeffInvQ, coe_lightConeCoeffZ, Finset.prod_mul_distrib]
 
-/-- **The boost-average matrix `M`**: the matrix of `3⁻¹(π₀⁰ + π₁⁰ + π₂⁰)` in the
+/-!
+
+## C.3. The boost average and iterated rounds
+
+An element of weight zero along all three axes re-expands through any power of the
+boost-average matrix applied to its coefficients.
+
+-/
+
+/-- The boost-average matrix `M`: the matrix of `3⁻¹(π₀⁰ + π₁⁰ + π₂⁰)` in the
   `T`-basis — the average over the three axes of the weight-zero transition matrices.
   Its powers drive the endgame recursion, and the certificate is a fixed rational
   combination of them. -/
@@ -413,7 +465,7 @@ def boostAverageTransition :
   Matrix.of fun d e => (3⁻¹ : ℚ) * ∑ i : Fin 3, weightZeroTransition i d e
 
 include hT in
-/-- **One round of the recursion along one axis**: an element of weight zero along axis
+/-- One round of the recursion along one axis: an element of weight zero along axis
   `i` expanded in the generators re-expands with the weight-zero transition matrix
   applied to its coefficients — the nonzero-weight components of the expansion must
   vanish, and the surviving weight-zero part is `weightZeroTransition` acting on `c`. -/
@@ -449,7 +501,7 @@ lemma eq_sum_weightZeroTransition_smul (i : Fin 3) {x : B}
         exact Finset.sum_congr rfl fun e _ => mul_comm _ _
 
 include hT in
-/-- **One averaged round of the recursion**: an element of weight zero along all three
+/-- One averaged round of the recursion: an element of weight zero along all three
   axes re-expands with the boost-average matrix `M` applied to its coefficients — the
   average over the axes of `eq_sum_weightZeroTransition_smul`. -/
 lemma eq_sum_boostAverageTransition_smul {x : B}
@@ -479,7 +531,7 @@ lemma eq_sum_boostAverageTransition_smul {x : B}
         rw [mul_assoc, Finset.sum_mul]
 
 include hT in
-/-- **Iterated averaged rounds**: an element of weight zero along all three axes
+/-- Iterated averaged rounds: an element of weight zero along all three axes
   re-expands through every power of the boost-average matrix applied to its
   coefficients. -/
 lemma eq_sum_pow_boostAverageTransition_smul {x : B}
@@ -520,10 +572,16 @@ lemma eq_sum_pow_boostAverageTransition_smul {x : B}
 
 /-!
 
-## B. Pieces along one axis
+## D. Sieving the span along the three boost axes
+
+An invariant element has boost weight zero along every axis; three successive
+weight-zero extractions cut the span down to the tied pieces of the last axis.
+
+## D.1. Pieces along one axis
 
 -/
 
+/-- The span of the axis-`i` light-cone components of total weight `n`. -/
 def boostPiece (i : Fin 3) (n : ℤ) : Submodule ℂ B :=
   ⨆ c ∈ {c : Fin 4 → Fin 4 | (∑ j, lightConeWeight (c j)) = n}, ℂ ∙ hT.lightCone i c
 
@@ -534,7 +592,7 @@ lemma boostPiece_le_boostWeightSubmodule (i : Fin 3) (n : ℤ) :
   exact (show (∑ j, lightConeWeight (c j)) = n from hc) ▸
     hT.lightCone_mem_boostWeightSubmodule i c
 
-/-- **The span regrouped by boost weight**: the light-cone components sorted by their
+/-- The span regrouped by boost weight: the light-cone components sorted by their
   total weight along the axis. -/
 lemma span_eq_iSup_boostPiece (i : Fin 3) :
     hT.span = ⨆ n : ℤ, hT.boostPiece i n := by
@@ -545,7 +603,7 @@ lemma span_eq_iSup_boostPiece (i : Fin 3) :
 
 /-!
 
-## C. Pieces along a second axis
+## D.2. Pieces along a second axis
 
 The axis-`i` and axis-`j` light-cone bases are related slot by slot by an invertible
 `4 × 4` transition matrix. An axis-`i` piece is therefore covered by axis-`j` pieces
@@ -553,7 +611,7 @@ spanned by the light-cone components reachable through nonzero transition coeffi
 
 -/
 
-/-- **The one-slot transition matrix between two light-cone bases**: the axis-`i`
+/-- The one-slot transition matrix between two light-cone bases: the axis-`i`
   light-cone direction `κ` expanded in the axis-`j` light-cone basis. Rational-valued —
   the entries are `0`, `±2⁻¹` and `±1` — so that vanishing of entries is decidable;
   `coe_lightConeTransition` identifies it with the composite change of basis over `ℂ`. -/
@@ -570,7 +628,7 @@ def lightConeTransition (i j : Fin 3) (κ κ' : Fin 4) : ℚ :=
     else if κ = 2 then (if κ' = 3 then 1 else 0)
     else (if κ' = 0 then -2⁻¹ else if κ' = 1 then 2⁻¹ else 0)
 
-/-- **The transition matrix is the composite change of basis**: the axis-`i` light-cone
+/-- The transition matrix is the composite change of basis: the axis-`i` light-cone
   coefficients composed with the inverse axis-`j` coefficients. -/
 lemma coe_lightConeTransition (i j : Fin 3) (κ κ' : Fin 4) :
     (lightConeTransition i j κ κ' : ℂ)
@@ -617,7 +675,7 @@ lemma sum_prod_lightConeTransition (i j : Fin 3) (c c' : Fin 4 → Fin 4) :
     _ = ∏ s, (lightConeTransition i j (c s) (c' s) : ℂ) :=
         Finset.prod_congr rfl fun s _ => (coe_lightConeTransition i j (c s) (c' s)).symm
 
-/-- **The change-of-axis identity**: an axis-`i` light-cone component expanded in the
+/-- The change-of-axis identity: an axis-`i` light-cone component expanded in the
   axis-`j` light-cone basis, with slot-wise transition coefficients. -/
 lemma lightCone_eq_sum_lightCone (i j : Fin 3) (c : Fin 4 → Fin 4) :
     hT.lightCone i c = ∑ c' : Fin 4 → Fin 4,
@@ -637,7 +695,7 @@ lemma lightCone_eq_sum_lightCone (i j : Fin 3) (c : Fin 4 → Fin 4) :
         exact Finset.sum_congr rfl fun c' _ => (Finset.sum_smul).symm
     _ = _ := Finset.sum_congr rfl fun c' _ => by rw [sum_prod_lightConeTransition]
 
-/-- **The second-level pieces**: the axis-`j` light-cone components of weight `m` which
+/-- The second-level pieces: the axis-`j` light-cone components of weight `m` which
   are reachable, slot by slot, from an axis-`i` multi-index of weight `n`. -/
 def boostPiece₂ (i j : Fin 3) (n m : ℤ) : Submodule ℂ B :=
   ⨆ c' ∈ {c' : Fin 4 → Fin 4 | (∑ s, lightConeWeight (c' s)) = m ∧
@@ -653,7 +711,7 @@ lemma boostPiece₂_le_boostWeightSubmodule (i j : Fin 3) (n m : ℤ) :
   exact (show (∑ s, lightConeWeight (c' s)) = m from hc'.1) ▸
     hT.lightCone_mem_boostWeightSubmodule j c'
 
-/-- **The second-axis covering**: each axis-`i` piece is covered by the second-level
+/-- The second-axis covering: each axis-`i` piece is covered by the second-level
   pieces along the axis `j` — the change-of-axis coefficients vanish on unreachable
   multi-indices. -/
 lemma boostPiece_le_iSup_boostPiece₂ (i j : Fin 3) (n : ℤ) :
@@ -674,16 +732,16 @@ lemma boostPiece_le_iSup_boostPiece₂ (i j : Fin 3) (n : ℤ) :
 
 /-!
 
-## D. Tied pieces along the third axis
+## D.3. Tied pieces along the third axis
 
-Covering the doubly-weight-zero part by spans of whole light-cone components stabilises:
-no new multi-index is excluded along the third axis. The third round instead splits each
-generator into its boost-weight components along the last axis — the tied combinations —
-and takes the pieces spanned by those components.
+Covering the doubly-weight-zero part by spans of whole light-cone components stabilises
+along the third axis, so the third round instead splits each generator into its
+boost-weight components along the last axis — the tied combinations — and takes the
+pieces spanned by those components.
 
 -/
 
-/-- **The axis-`j` weight-`m` component of an axis-`i` light-cone component**: the partial
+/-- The axis-`j` weight-`m` component of an axis-`i` light-cone component: the partial
   sum of its change-of-axis expansion over the axis-`j` multi-indices of weight `m`. -/
 noncomputable def boostComponent (i j : Fin 3) (c : Fin 4 → Fin 4) (m : ℤ) : B :=
   ∑ c' ∈ Finset.univ.filter (fun c' : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c' s)) = m),
@@ -697,8 +755,8 @@ lemma boostComponent_mem_boostWeightSubmodule (i j : Fin 3) (c : Fin 4 → Fin 4
   exact (Finset.mem_filter.1 hc').2 ▸ hT.lightCone_mem_boostWeightSubmodule j c'
 
 set_option maxRecDepth 10000 in
-/-- **A light-cone component is the sum of its boost-weight components along any other
-  axis**: the change-of-axis expansion regrouped by weight. -/
+/-- A light-cone component is the sum of its boost-weight components along any other
+  axis: the change-of-axis expansion regrouped by weight. -/
 lemma lightCone_eq_sum_boostComponent (i j : Fin 3) (c : Fin 4 → Fin 4) :
     hT.lightCone i c
       = ∑ m ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ), hT.boostComponent i j c m := by
@@ -707,7 +765,7 @@ lemma lightCone_eq_sum_boostComponent (i j : Fin 3) (c : Fin 4 → Fin 4) :
   rw [hT.lightCone_eq_sum_lightCone i j c]
   exact (Finset.sum_fiberwise_of_maps_to (fun c' _ => hall c') _).symm
 
-/-- **The tied pieces along the third axis**: for each generator of the doubly-weight-zero
+/-- The tied pieces along the third axis: for each generator of the doubly-weight-zero
   part, the span of its weight-`m` component along the last axis. -/
 noncomputable def boostPiece₃ (m : ℤ) : Submodule ℂ B :=
   ⨆ c' ∈ {c' : Fin 4 → Fin 4 | (∑ s, lightConeWeight (c' s)) = 0 ∧
@@ -723,7 +781,7 @@ lemma boostPiece₃_le_boostWeightSubmodule (m : ℤ) :
   rw [Submodule.span_singleton_le_iff_mem]
   exact hT.boostComponent_mem_boostWeightSubmodule 1 2 c' m
 
-/-- **The third-axis covering**: the doubly-weight-zero part is covered by the tied
+/-- The third-axis covering: the doubly-weight-zero part is covered by the tied
   pieces along the last axis. -/
 lemma boostPiece₂_le_iSup_boostPiece₃ :
     hT.boostPiece₂ 0 1 0 0 ≤ ⨆ m : ℤ, hT.boostPiece₃ m := by
@@ -741,17 +799,15 @@ lemma boostPiece₂_le_iSup_boostPiece₃ :
 ## E. The support of the weight-zero tied piece
 
 The weight-zero tied piece only involves components `T d` whose four indices either form
-two identical pairs or are all different: the one-pair and three-of-a-kind monomials
-cancel out of every tied generator. The cancellation is established by a sign involution:
-swapping the two null directions in every slot of the inner light-cone index negates each
-contributing term whenever a parity condition on the generator holds; the remaining cases
-vanish slot by slot — a slot whose factor vanishes identically, or an odd null-sector
-count, which no weight-zero inner index can accommodate. The finite checks are performed
-by `decide` on the integer mirrors.
+two identical pairs or are all different: the remaining components cancel out of every
+tied generator, by a sign involution swapping the two null light-cone directions. The
+finite checks are performed by `decide` on the integer mirrors.
+
+## E.1. The null-swap sign involution kills the bad components
 
 -/
 
-/-- **The index vectors surviving the three boost sieves**: the four indices either split
+/-- The index vectors surviving the three boost sieves: the four indices either split
   into two pairs of identical indices, or are all different. -/
 def IsPairedOrDistinct (d : Fin 4 → Fin 1 ⊕ Fin 3) : Prop :=
   (d 0 = d 1 ∧ d 2 = d 3) ∨ (d 0 = d 2 ∧ d 1 = d 3) ∨ (d 0 = d 3 ∧ d 1 = d 2) ∨
@@ -780,7 +836,7 @@ lemma lightConeWeight_swap01 (κ : Fin 4) :
     lightConeWeight (swap01 κ) = -lightConeWeight κ := by
   fin_cases κ <;> rfl
 
-/-- **The slot identity of the sign involution**: swapping the null directions of the
+/-- The slot identity of the sign involution: swapping the null directions of the
   inner index multiplies the slot factor by the sign `nuZ`. -/
 lemma transitionZ_swap01_mul_coeffZ :
     ∀ (a κ : Fin 4) (μ : Fin 1 ⊕ Fin 3),
@@ -789,7 +845,7 @@ lemma transitionZ_swap01_mul_coeffZ :
   decide
 
 set_option maxRecDepth 40000 in
-/-- **The odd-count case**: if the number of null-sector indices of `d` is odd, every
+/-- The odd-count case: if the number of null-sector indices of `d` is odd, every
   weight-zero inner index hits a vanishing coefficient. -/
 lemma exists_coeffZ_eq_zero_of_odd :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
@@ -799,7 +855,7 @@ lemma exists_coeffZ_eq_zero_of_odd :
   decide
 
 set_option maxRecDepth 40000 in
-/-- **The parity of the sign involution**: over a weight-zero generator, a component that
+/-- The parity of the sign involution: over a weight-zero generator, a component that
   is neither two pairs nor all distinct, with no identically-vanishing slot and an even
   null-sector count, carries total sign `-1`. -/
 lemma prod_nuZ_eq_neg_one :
@@ -817,7 +873,7 @@ lemma prod_nuZ_eq_neg_one :
     exact h1 c' hc' d ⟨hd, hC⟩ hA
   decide
 
-/-- **The vanishing of the bad coefficients**: over a weight-zero generator, the inner
+/-- The vanishing of the bad coefficients: over a weight-zero generator, the inner
   transition sum vanishes on every component that is neither two pairs nor all
   distinct — slot by slot when some slot factor vanishes identically or the null-sector
   count is odd, and by the sign involution otherwise. -/
@@ -884,88 +940,13 @@ lemma sum_prod_transitionZ_coeffZ_eq_zero (c' : Fin 4 → Fin 4)
 
 /-!
 
-### Rotation equivariance and support of the boost average
+## E.2. Sector compatibility and the support of the weight-zero transition
 
-Rotating both indices of `weightZeroTransition` advances the axis, so the average over
-the axes is rotation invariant.  And the transition out of a paired-or-distinct index
-vanishes on every bad index: a sector-incompatible slot kills every summand, and
-otherwise the null-swap involution carries sign `-1`.
+The weight-zero transition out of a paired-or-distinct index vanishes on every bad
+index: a sector-incompatible slot kills every summand, and otherwise the null-swap
+involution carries sign `-1`.
 
 -/
-
-/-- Rotating the direction letter advances the axis of the light-cone coefficient. -/
-lemma lightConeCoeffZ_cycDir :
-    ∀ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3),
-      lightConeCoeffZ (i + 1) κ (cycDir μ) = lightConeCoeffZ i κ μ := by
-  decide
-
-/-- Integer mirror of `lightConeCoeffInvQ`: twice the inverse coefficients, so that
-  slot identities can be settled by kernel `decide` over `ℤ`. -/
-def lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℤ :=
-  if μ = Sum.inl 0 then (if κ = 0 then 1 else if κ = 1 then 1 else 0)
-  else if μ = Sum.inr i then (if κ = 0 then -1 else if κ = 1 then 1 else 0)
-  else if μ = Sum.inr (i + 1) then (if κ = 2 then 2 else 0)
-  else (if κ = 3 then 2 else 0)
-
-/-- The integer mirror casts to twice the inverse coefficients. -/
-lemma coe_lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvZ i μ κ : ℤ) : ℚ) = 2 * lightConeCoeffInvQ i μ κ := by
-  rw [lightConeCoeffInvZ, lightConeCoeffInvQ]
-  split_ifs <;> norm_num
-
-/-- Rotating the direction letter advances the axis of the integer mirror. -/
-lemma lightConeCoeffInvZ_cycDir :
-    ∀ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4),
-      lightConeCoeffInvZ (i + 1) (cycDir μ) κ = lightConeCoeffInvZ i μ κ := by
-  decide
-
-/-- Rotating the direction letter advances the axis of the inverse coefficient. -/
-lemma lightConeCoeffInvQ_cycDir (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    lightConeCoeffInvQ (i + 1) (cycDir μ) κ = lightConeCoeffInvQ i μ κ := by
-  have h := congrArg (fun n : ℤ => (n : ℚ)) (lightConeCoeffInvZ_cycDir i μ κ)
-  simp only [coe_lightConeCoeffInvZ] at h
-  linarith
-
-/-- **Rotation equivariance of the weight-zero transition**: rotating both indices
-  advances the axis. -/
-lemma weightZeroTransition_cycDir (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
-    weightZeroTransition (i + 1) (fun s => cycDir (d s)) (fun s => cycDir (e s))
-      = weightZeroTransition i d e := by
-  rw [weightZeroTransition_eq_sum_lightCone, weightZeroTransition_eq_sum_lightCone]
-  refine Finset.sum_congr rfl fun c _ => Finset.prod_congr rfl fun s _ => ?_
-  rw [lightConeCoeffInvQ_cycDir, lightConeCoeffZ_cycDir]
-
-/-- **Rotation invariance of the boost average**: the average over the axes is
-  invariant under rotating both indices. -/
-lemma boostAverageTransition_cycDir (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
-    boostAverageTransition (fun s => cycDir (d s)) (fun s => cycDir (e s))
-      = boostAverageTransition d e := by
-  simp only [boostAverageTransition, Matrix.of_apply]
-  congr 1
-  exact (Fintype.sum_equiv (Equiv.addRight (1 : Fin 3)) _ _ fun i =>
-    (weightZeroTransition_cycDir i d e).symm).symm
-
-/-- The cyclic rotation of directions has order three. -/
-lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ)) = μ := by
-  decide
-
-/-- Rotating the column index moves a double rotation to the row index. -/
-lemma boostAverageTransition_cycDir_right (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
-    boostAverageTransition d (fun s => cycDir (e s))
-      = boostAverageTransition (fun s => cycDir (cycDir (d s))) e := by
-  conv_lhs => rw [show d = (fun s => cycDir (cycDir (cycDir (d s)))) from
-    funext fun s => (cycDir_cycDir_cycDir (d s)).symm]
-  exact boostAverageTransition_cycDir (fun s => cycDir (cycDir (d s))) e
-
-/-- Rotating the column index twice moves a single rotation to the row index. -/
-lemma boostAverageTransition_cycDir_right2 (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
-    boostAverageTransition d (fun s => cycDir (cycDir (e s)))
-      = boostAverageTransition (fun s => cycDir (d s)) e := by
-  calc boostAverageTransition d (fun s => cycDir (cycDir (e s)))
-      = boostAverageTransition (fun s => cycDir (cycDir (d s))) (fun s => cycDir (e s)) :=
-        boostAverageTransition_cycDir_right d (fun s => cycDir (e s))
-    _ = boostAverageTransition (fun s => cycDir (d s)) e :=
-        boostAverageTransition_cycDir (fun s => cycDir (d s)) e
 
 /-- Two direction letters lie in compatible sectors for the axis-`i` transition: both
   in the null sector, or equal. -/
@@ -994,7 +975,7 @@ lemma invQ_swap01_mul_coeffZ_swap01 :
   decide +kernel
 
 set_option maxRecDepth 100000 in
-/-- **The sign of a sector-compatible parity mismatch**: a paired-or-distinct column
+/-- The sign of a sector-compatible parity mismatch: a paired-or-distinct column
   index against a bad row index with all slots sector-compatible carries sign `-1`. -/
 lemma prod_nuSignZ_eq_neg_one :
     ∀ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3), IsPairedOrDistinct e →
@@ -1008,7 +989,7 @@ lemma prod_nuSignZ_eq_neg_one :
     exact h1 i e he d hd hs
   decide +kernel
 
-/-- **Support of the weight-zero transition**: the transition out of a
+/-- Support of the weight-zero transition: the transition out of a
   paired-or-distinct index vanishes on every bad index. -/
 lemma weightZeroTransition_eq_zero_of_not_isPairedOrDistinct (i : Fin 3)
     {d e : Fin 4 → Fin 1 ⊕ Fin 3} (he : IsPairedOrDistinct e)
@@ -1062,7 +1043,7 @@ lemma weightZeroTransition_eq_zero_of_not_isPairedOrDistinct (i : Fin 3)
     exact Finset.prod_eq_zero (Finset.mem_univ s₀)
       (slot_eq_zero_of_not_sameSlotSector i (e s₀) (d s₀) hs₀ (c s₀))
 
-/-- **Support of the boost average**: the average out of a paired-or-distinct index is
+/-- Support of the boost average: the average out of a paired-or-distinct index is
   supported on the paired-or-distinct indices. -/
 lemma boostAverageTransition_eq_zero_of_not_isPairedOrDistinct
     {d e : Fin 4 → Fin 1 ⊕ Fin 3} (he : IsPairedOrDistinct e)
@@ -1071,7 +1052,13 @@ lemma boostAverageTransition_eq_zero_of_not_isPairedOrDistinct
   rw [Finset.sum_eq_zero fun i _ =>
     weightZeroTransition_eq_zero_of_not_isPairedOrDistinct i he hd, mul_zero]
 
-/-- **The expansion of the weight-zero tied component into monomials**: the coefficient
+/-!
+
+## E.3. The support of the tied piece
+
+-/
+
+/-- The expansion of the weight-zero tied component into monomials: the coefficient
   of each component `T d` is a sixteenth of the integer transition sum. -/
 lemma boostComponent_zero_eq (c' : Fin 4 → Fin 4) :
     hT.boostComponent 1 2 c' 0 = ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
@@ -1092,8 +1079,8 @@ lemma boostComponent_zero_eq (c' : Fin 4 → Fin 4) :
     Finset.prod_const, Finset.card_univ, Fintype.card_fin]
   ring
 
-/-- **The weight-zero tied component of every weight-zero generator is supported on the
-  paired-or-distinct components.** -/
+/-- The weight-zero tied component of every weight-zero generator is supported on the
+  paired-or-distinct components. -/
 lemma boostComponent_zero_mem_iSup_pairedOrDistinct (c' : Fin 4 → Fin 4)
     (hc' : (∑ s, lightConeWeight (c' s)) = 0) :
     hT.boostComponent 1 2 c' 0 ∈
@@ -1106,7 +1093,7 @@ lemma boostComponent_zero_mem_iSup_pairedOrDistinct (c' : Fin 4 → Fin 4)
   · rw [sum_prod_transitionZ_coeffZ_eq_zero c' hc' d hd, Int.cast_zero, mul_zero, zero_smul]
     exact Submodule.zero_mem _
 
-/-- **The support of the weight-zero tied piece**: it is spanned by the components whose
+/-- The support of the weight-zero tied piece: it is spanned by the components whose
   four indices either form two identical pairs or are all different. The one-pair and
   three-of-a-kind components cancel out of every tied generator. -/
 lemma boostPiece₃_zero_le_iSup_pairedOrDistinct :
@@ -1116,34 +1103,124 @@ lemma boostPiece₃_zero_le_iSup_pairedOrDistinct :
   rw [Submodule.span_singleton_le_iff_mem]
   exact hT.boostComponent_zero_mem_iSup_pairedOrDistinct c' hc'.1
 
+/-- The span of the paired-or-distinct components. -/
 def pairedOrDistinctSubmodule : Submodule ℂ B :=
   ⨆ d ∈ {d : Fin 4 → Fin 1 ⊕ Fin 3 | IsPairedOrDistinct d}, ℂ ∙ T d
 
 
 /-!
 
-## F. The rotational group
+## F. Averaging over the cyclic rotation of the axes
+
+The cyclic rotation `x → y → z → x` of the spatial axes acts on components by cycling
+every index; averaging over it carries the paired-or-distinct span onto the span of
+`22` orbit sums, on which the boost average acts by an explicit matrix.
+
+## F.1. Rotation equivariance of the transition matrices
+
+Rotating all direction letters advances the axis of the light-cone coefficients, so
+the boost average is invariant under rotating both of its indices.
 
 -/
 
-/-- **The rotation orbit of an index vector**: the indices that `d` is carried onto by
+/-- Rotating the direction letter advances the axis of the light-cone coefficient. -/
+lemma lightConeCoeffZ_cycDir :
+    ∀ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3),
+      lightConeCoeffZ (i + 1) κ (cycDir μ) = lightConeCoeffZ i κ μ := by
+  decide
+
+/-- Integer mirror of `lightConeCoeffInvQ`: twice the inverse coefficients, so that
+  slot identities can be settled by kernel `decide` over `ℤ`. -/
+def lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℤ :=
+  if μ = Sum.inl 0 then (if κ = 0 then 1 else if κ = 1 then 1 else 0)
+  else if μ = Sum.inr i then (if κ = 0 then -1 else if κ = 1 then 1 else 0)
+  else if μ = Sum.inr (i + 1) then (if κ = 2 then 2 else 0)
+  else (if κ = 3 then 2 else 0)
+
+/-- The integer mirror casts to twice the inverse coefficients. -/
+lemma coe_lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
+    ((lightConeCoeffInvZ i μ κ : ℤ) : ℚ) = 2 * lightConeCoeffInvQ i μ κ := by
+  rw [lightConeCoeffInvZ, lightConeCoeffInvQ]
+  split_ifs <;> norm_num
+
+/-- Rotating the direction letter advances the axis of the integer mirror. -/
+lemma lightConeCoeffInvZ_cycDir :
+    ∀ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4),
+      lightConeCoeffInvZ (i + 1) (cycDir μ) κ = lightConeCoeffInvZ i μ κ := by
+  decide
+
+/-- Rotating the direction letter advances the axis of the inverse coefficient. -/
+lemma lightConeCoeffInvQ_cycDir (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
+    lightConeCoeffInvQ (i + 1) (cycDir μ) κ = lightConeCoeffInvQ i μ κ := by
+  have h := congrArg (fun n : ℤ => (n : ℚ)) (lightConeCoeffInvZ_cycDir i μ κ)
+  simp only [coe_lightConeCoeffInvZ] at h
+  linarith
+
+/-- Rotation equivariance of the weight-zero transition: rotating both indices
+  advances the axis. -/
+lemma weightZeroTransition_cycDir (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    weightZeroTransition (i + 1) (fun s => cycDir (d s)) (fun s => cycDir (e s))
+      = weightZeroTransition i d e := by
+  rw [weightZeroTransition_eq_sum_lightCone, weightZeroTransition_eq_sum_lightCone]
+  refine Finset.sum_congr rfl fun c _ => Finset.prod_congr rfl fun s _ => ?_
+  rw [lightConeCoeffInvQ_cycDir, lightConeCoeffZ_cycDir]
+
+/-- Rotation invariance of the boost average: the average over the axes is
+  invariant under rotating both indices. -/
+lemma boostAverageTransition_cycDir (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    boostAverageTransition (fun s => cycDir (d s)) (fun s => cycDir (e s))
+      = boostAverageTransition d e := by
+  simp only [boostAverageTransition, Matrix.of_apply]
+  congr 1
+  exact (Fintype.sum_equiv (Equiv.addRight (1 : Fin 3)) _ _ fun i =>
+    (weightZeroTransition_cycDir i d e).symm).symm
+
+/-- The cyclic rotation of directions has order three. -/
+lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ)) = μ := by
+  decide
+
+/-- Rotating the column index moves a double rotation to the row index. -/
+lemma boostAverageTransition_cycDir_right (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    boostAverageTransition d (fun s => cycDir (e s))
+      = boostAverageTransition (fun s => cycDir (cycDir (d s))) e := by
+  conv_lhs => rw [show d = (fun s => cycDir (cycDir (cycDir (d s)))) from
+    funext fun s => (cycDir_cycDir_cycDir (d s)).symm]
+  exact boostAverageTransition_cycDir (fun s => cycDir (cycDir (d s))) e
+
+/-- Rotating the column index twice moves a single rotation to the row index. -/
+lemma boostAverageTransition_cycDir_right2 (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    boostAverageTransition d (fun s => cycDir (cycDir (e s)))
+      = boostAverageTransition (fun s => cycDir (d s)) e := by
+  calc boostAverageTransition d (fun s => cycDir (cycDir (e s)))
+      = boostAverageTransition (fun s => cycDir (cycDir (d s))) (fun s => cycDir (e s)) :=
+        boostAverageTransition_cycDir_right d (fun s => cycDir (e s))
+    _ = boostAverageTransition (fun s => cycDir (d s)) e :=
+        boostAverageTransition_cycDir (fun s => cycDir (d s)) e
+
+/-!
+
+## F.2. The rotational average and orbit sums
+
+-/
+
+/-- The rotation orbit of an index vector: the indices that `d` is carried onto by
   the powers of the cyclic rotation `x → y → z → x` of the rotational average. -/
 def rotationIndexSet (d : Fin 4 → Fin 1 ⊕ Fin 3) : Finset (Fin 4 → Fin 1 ⊕ Fin 3) :=
   {d, fun s => cycDir (d s), fun s => cycDir (cycDir (d s))}
 
-/-- **The rotational average**: the mean of the action of the three powers of the cyclic
+/-- The rotational average: the mean of the action of the three powers of the cyclic
   rotation `x → y → z → x`. -/
 noncomputable def rotationAverage : B →ₗ[ℂ] B :=
   (3⁻¹ : ℂ) • ((LinearMap.id : B →ₗ[ℂ] B) + repLorentz rotationCycle
     + repLorentz (rotationCycle ^ 2))
 
-/-- **The action of the rotational average on the paired-or-distinct span**: the image of
+/-- The action of the rotational average on the paired-or-distinct span: the image of
   the weight-zero tied piece's support under averaging over the cyclic rotation. -/
 noncomputable def rotationSubmodule : Submodule ℂ B :=
   (pairedOrDistinctSubmodule (T := T)).map (rotationAverage (repLorentz := repLorentz))
 
 include hT in
-/-- **The cyclic rotation acts on components by cycling every index.** -/
+/-- The cyclic rotation acts on components by cycling every index. -/
 lemma repLorentz_rotationCycle_apply (d : Fin 4 → Fin 1 ⊕ Fin 3) :
     repLorentz rotationCycle (T d) = T (fun s => cycDir (d s)) := by
   have hcoef : ∀ a : Fin 4 → Fin 1 ⊕ Fin 3,
@@ -1162,7 +1239,7 @@ lemma repLorentz_rotationCycle_apply (d : Fin 4 → Fin 1 ⊕ Fin 3) :
   simp only [hcoef, ite_smul, one_smul, zero_smul, Finset.sum_ite_eq', Finset.mem_univ,
     if_true]
 
-/-- **The sum of a component over its rotation orbit** — the un-normalised rotational
+/-- The sum of a component over its rotation orbit — the un-normalised rotational
   average of `T d`. Its support is `rotationIndexSet d`. -/
 noncomputable def rotationOrbitSum (d : Fin 4 → Fin 1 ⊕ Fin 3) : B :=
   T d + T (fun s => cycDir (d s)) + T (fun s => cycDir (cycDir (d s)))
@@ -1177,8 +1254,8 @@ lemma rotationAverage_apply (d : Fin 4 → Fin 1 ⊕ Fin 3) :
     Module.End.mul_apply, hT.repLorentz_rotationCycle_apply]
 
 include hT in
-/-- **The rotational average of the paired-or-distinct span, presented by orbit
-  sums.** -/
+/-- The rotational average of the paired-or-distinct span, presented by orbit
+  sums. -/
 lemma rotationSubmodule_eq :
     rotationSubmodule (repLorentz := repLorentz) (T := T)
       = ⨆ d ∈ {d : Fin 4 → Fin 1 ⊕ Fin 3 | IsPairedOrDistinct d},
@@ -1190,7 +1267,7 @@ lemma rotationSubmodule_eq :
   exact Submodule.span_singleton_smul_eq ((by norm_num : (3⁻¹ : ℂ) ≠ 0).isUnit) _
 
 include hT in
-/-- **Extraction from the rotational average**: an element of the averaged span is a
+/-- Extraction from the rotational average: an element of the averaged span is a
   combination of the orbit sums of the paired-or-distinct components. -/
 lemma exists_eq_sum_of_mem_rotationSubmodule {x : B}
     (hx : x ∈ rotationSubmodule (repLorentz := repLorentz) (T := T)) :
@@ -1221,12 +1298,11 @@ lemma exists_eq_sum_of_mem_rotationSubmodule {x : B}
 
 /-!
 
-### Orbit representatives
+## F.3. The 22 canonical orbit representatives
 
 `rotationOrbitSum` is constant on rotation orbits, so the extraction over all
-paired-or-distinct indices collapses to one term per orbit.  The canonical
-representative of an orbit is the member whose first spatial letter is the first
-spatial direction; `rotationSubset` lists the `22` representatives explicitly.
+paired-or-distinct indices collapses to one term per orbit; `rotationSubset` lists the
+canonical representatives explicitly.
 
 -/
 
@@ -1299,7 +1375,7 @@ lemma orbitRepOf_mem_rotationSubset :
   decide
 
 include hT in
-/-- **Extraction over unique orbit representatives**: an element of the rotational
+/-- Extraction over unique orbit representatives: an element of the rotational
   average is a combination of the orbit sums of the `22` canonical representatives —
   one term per orbit. -/
 lemma exists_eq_sum_rotationSubset_of_mem_rotationSubmodule {x : B}
@@ -1324,6 +1400,16 @@ lemma exists_eq_sum_rotationSubset_of_mem_rotationSubmodule {x : B}
         refine Finset.sum_congr rfl fun d hd => ?_
         rw [show rotationOrbitSum (T := T) r = rotationOrbitSum (T := T) d from
           (Finset.mem_filter.1 hd).2 ▸ rotationOrbitSum_orbitRepOf (T := T) d]
+
+/-!
+
+## F.4. The averaged round on the orbit-sum span
+
+Through the orbit multiplicities `rotationOrbitCoeff`, an averaged round re-expands a
+combination of representative orbit sums through the row-orbit sums of the boost
+average.
+
+-/
 
 /-- The listed representatives are paired-or-distinct. -/
 lemma isPairedOrDistinct_of_mem_rotationSubset :
@@ -1379,7 +1465,7 @@ lemma rotationOrbitCoeff_eq_zero {r d : Fin 4 → Fin 1 ⊕ Fin 3}
   rw [rotationOrbitCoeff, if_neg h1, if_neg h2, if_neg h3]
   norm_num
 
-/-- **Sums over the orbit of the representative**: for any weighting, the sum over the
+/-- Sums over the orbit of the representative: for any weighting, the sum over the
   orbit of the canonical representative times the multiplicity equals the plain sum
   over the three rotations. -/
 lemma sum_rotationIndexSet_orbitRepOf_mul (f : (Fin 4 → Fin 1 ⊕ Fin 3) → ℚ)
@@ -1410,7 +1496,7 @@ lemma sum_rotationIndexSet_orbitRepOf_mul (f : (Fin 4 → Fin 1 ⊕ Fin 3) → �
     push_cast
     ring
 
-/-- **The rotated columns collapse onto the representatives**: for a good column index,
+/-- The rotated columns collapse onto the representatives: for a good column index,
   the sum of the boost average over the three rotated columns equals the
   representative-indexed combination of its row-orbit sums. -/
 lemma boostAverageTransition_orbit_eq (e : Fin 4 → Fin 1 ⊕ Fin 3)
@@ -1452,7 +1538,7 @@ lemma boostAverageTransition_orbit_eq (e : Fin 4 → Fin 1 ⊕ Fin 3)
       boostAverageTransition_eq_zero_of_not_isPairedOrDistinct hs2 hd]
     norm_num
 
-/-- **Orbit-sum expansions in components**: a combination of orbit sums over the
+/-- Orbit-sum expansions in components: a combination of orbit sums over the
   representatives, expanded into the generators through the orbit indicator. -/
 lemma sum_rotationSubset_smul_rotationOrbitSum (b : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) :
     ∑ d ∈ rotationSubset, b d • rotationOrbitSum (T := T) d
@@ -1470,7 +1556,7 @@ lemma sum_rotationSubset_smul_rotationOrbitSum (b : (Fin 4 → Fin 1 ⊕ Fin 3) 
         exact Finset.sum_congr rfl fun e _ => (Finset.sum_smul).symm
 
 include hT in
-/-- **One averaged round at orbit level**: an element of weight zero along all three
+/-- One averaged round at orbit level: an element of weight zero along all three
   axes expanded over the orbit sums of the representatives re-expands through the
   row-orbit sums of the boost average — the matrix of the boost average acting on the
   orbit-sum span. -/
@@ -1519,11 +1605,12 @@ lemma eq_sum_boostAverageTransition_of_mem_rotationSubset {x : B}
 
 /-!
 
-### The boost average as an integer `22 × 22` matrix
+## G. The boost average as an integer `22 × 22` matrix
 
-The representatives are enumerated by `Fin 22`, and the row-orbit sums of the boost
-average, scaled by `48`, form an integer matrix defined directly from the integer
-mirrors — the matrix of the boost average acting on the orbit-sum span.
+The representatives are enumerated by `Fin 22`; `48` times the row-orbit sums of the
+boost average form an integer matrix computed directly from the integer mirrors.
+
+## G.1. Enumerating the representatives
 
 -/
 
@@ -1568,6 +1655,16 @@ lemma sum_rotationSubset {β : Type*} [AddCommMonoid β]
     ∑ d ∈ rotationSubset, f d = ∑ k : Fin 22, f (orbitRep k) := by
   rw [rotationSubset_eq_image, Finset.sum_image fun k _ k' _ h => orbitRep_injective h]
 
+/-!
+
+## G.2. The closed form of the integer weight-zero transition
+
+The balanced-sector convolution collapses slot by slot, by induction on the slots:
+transverse slots contribute a diagonal `2`, sector-incompatible slots kill the entry,
+and the null slots fold their signs through `balancedSymZ`.
+
+-/
+
 /-- Integer mirror of `slotTransition`: twice its value, in closed form. On the two
   null sectors it is supported on the axis-`i` block `{t, xᵢ}` — the raising sector
   `κ = 0` carries the sign matrix `[[1, -1], [-1, 1]]`, the lowering sector `κ = 1` the
@@ -1589,26 +1686,19 @@ lemma slotTransitionZ_eq_sum (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) 
         lightConeCoeffInvZ i μ κ' * lightConeCoeffZ i κ' ν := by
   decide +revert
 
-/-!
-
-## The closed form of the integer weight-zero transition
-
-The convolution over balanced sector patterns collapses slot by slot: transverse slots
-force a diagonal factor `2`, incompatible slots kill the entry, and the null-sector
-slots contribute the balanced elementary-symmetric fold of their signs. The proof is a
-structured induction on the slots, peeling one slot at a time.
-
--/
-
+/-- A direction letter lies in the axis-`i` null sector: time or the axis direction. -/
 def InSector (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Prop := μ = Sum.inl 0 ∨ μ = Sum.inr i
 
 instance (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Decidable (InSector i μ) :=
   inferInstanceAs (Decidable (_ ∨ _))
 
+/-- The balanced fold of a list of signs: the sum, over the raise/lower assignments of
+  the listed slots whose weights total `m`, of the products of the raising signs. -/
 def balancedSymZ : ℤ → List ℤ → ℤ
   | m, [] => if m = 0 then 1 else 0
   | m, ε :: l => ε * balancedSymZ (m - 2) l + balancedSymZ (m + 2) l
 
+/-- The null-swap signs of the null-sector slots, in slot order. -/
 def sectorSigns (i : Fin 3) : {n : ℕ} → (d e : Fin n → Fin 1 ⊕ Fin 3) → List ℤ
   | 0, _, _ => []
   | _ + 1, d, e =>
@@ -1616,10 +1706,12 @@ def sectorSigns (i : Fin 3) : {n : ℕ} → (d e : Fin n → Fin 1 ⊕ Fin 3) �
       nuSignZ i (e 0) (d 0) :: sectorSigns i (Fin.tail d) (Fin.tail e)
     else sectorSigns i (Fin.tail d) (Fin.tail e)
 
+/-- The number of slots outside the axis-`i` null sector. -/
 def transverseCount (i : Fin 3) : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → ℕ
   | 0, _ => 0
   | _ + 1, e => (if InSector i (e 0) then 0 else 1) + transverseCount i (Fin.tail e)
 
+/-- The weight-`m` integer transition over `n` slots, for the slot-peeling induction. -/
 def weightTransitionZAux (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) (m : ℤ) : ℤ :=
   ∑ w : Fin n → Fin 3, if (∑ s, sectorWeight (w s)) = m then
     ∏ s, slotTransitionZ i (w s) (e s) (d s) else 0
@@ -1798,7 +1890,13 @@ lemma coe_weightZeroTransitionZ (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
         rw [Finset.prod_mul_distrib, Finset.prod_const]
         norm_num [Finset.card_univ]
 
-/-- **The boost average on the orbit-sum span, as an integer matrix**: `48` times the
+/-!
+
+## G.3. The integer matrix of the averaged round
+
+-/
+
+/-- The boost average on the orbit-sum span, as an integer matrix: `48` times the
   row-orbit sums of the boost average between representatives, in explicit form.
   `boostAverageOrbitZ_eq_sum` identifies the entries with the row-orbit sums of the
   integer weight-zero transitions. -/
@@ -1852,7 +1950,7 @@ lemma coe_boostAverageOrbitZ (k l : Fin 22) :
         ring
 
 include hT in
-/-- **One averaged round at orbit level, integer form**: over the enumerated
+/-- One averaged round at orbit level, integer form: over the enumerated
   representatives, an averaged round acts by the integer matrix `boostAverageOrbitZ`
   with the overall `48⁻¹` normalisation. -/
 lemma eq_sum_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
@@ -1890,7 +1988,7 @@ lemma eq_sum_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
   ring
 
 include hT in
-/-- **Iterated averaged rounds at orbit level**: `n` rounds act by the `n`-th power of
+/-- Iterated averaged rounds at orbit level: `n` rounds act by the `n`-th power of
   the integer matrix with the `48⁻ⁿ` normalisation. -/
 lemma eq_sum_pow_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
     (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
@@ -1944,19 +2042,16 @@ lemma eq_sum_pow_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
 
 /-!
 
-### X. Eigenvectors of the boost average on the orbit-sum span
+## H. The certificate polynomial and the contraction projector
 
-On the span of the orbit sums of the paired-or-distinct components the boost average
-acts with rational spectrum: eigenvalue `1` (dimension `4` — the invariant
-contractions), `2/3` (dimension `6`), `1/3` (dimension `9`), `0` (dimension `1`), and a
-two-dimensional block with characteristic polynomial `12λ² - 11λ + 1`.  We list integer
-coefficient vectors for each block; together they span the orbit-sum span, and every
-block except `1` is annihilated by the certificate polynomial
-`q(λ) = λ(3λ-2)(3λ-1)(12λ²-11λ+1)/4`.
+On the orbit-sum span the boost average has rational spectrum, with eigenvalue `1`
+exactly on the invariant contractions. The certificate polynomial
+`λ(3λ-2)(3λ-1)(12λ²-11λ+1)` annihilates every other eigenvalue, so applied to the
+iterated rounds it collapses them to the projector onto the invariant block.
 
 -/
 
-/-- **Twenty-four times the projector onto the invariant block**: the integer matrix
+/-- Twenty-four times the projector onto the invariant block: the integer matrix
   `P` with `boostAverageOrbitZ * P = 48 • P` and `P * P = 24 • P`, so that `24⁻¹ • P`
   projects the orbit-sum span onto the eigenvalue-`48` block — the invariant
   contractions. -/
@@ -1984,7 +2079,7 @@ def contractionProjectorZ : Matrix (Fin 22) (Fin 22) ℤ :=
     0, 0, 0, 0, 3, -3, 0, 0, -3, 3, 0, 0, 0, 0, 3, 0, 0, -3, -3, 0, 3, 0;
     3, 1, 1, -5, 0, 0, -5, 1, 0, 0, 1, 3, -1, -1, 0, -1, 5, 0, 0, -1, 0, 5]
 
-/-- **The certificate polynomial applied to the boost average**: the integer-scaled
+/-- The certificate polynomial applied to the boost average: the integer-scaled
   annihilator of the non-invariant blocks, `μ(μ-32)(μ-16)(μ²-44μ+192)` at
   `μ = boostAverageOrbitZ` — the polynomial `λ(3λ-2)(3λ-1)(12λ²-11λ+1)` of the
   normalised average `λ = μ/48`, cleared of denominators. -/
@@ -1993,7 +2088,7 @@ def Q : Matrix (Fin 22) (Fin 22) ℤ :=
     (boostAverageOrbitZ * boostAverageOrbitZ - 44 • boostAverageOrbitZ + 192)
 
 set_option maxRecDepth 40000 in
-/-- **The certificate collapses to the projector**: applying the certificate polynomial
+/-- The certificate collapses to the projector: applying the certificate polynomial
   to the boost average yields `393216` times `contractionProjectorZ`. Verified through
   materialised intermediate products, so each kernel step is a single multiplication of
   explicit integer matrices. -/
@@ -2156,7 +2251,7 @@ lemma Q_eq_poly : Q = boostAverageOrbitZ ^ 5 - (92 : ℤ) • boostAverageOrbitZ
   noncomm_ring
 
 include hT in
-/-- **The certificate round**: applying the certificate polynomial of the averaged round
+/-- The certificate round: applying the certificate polynomial of the averaged round
   to the coefficients reproduces `x` — the combination of five iterated rounds weighted
   by the certificate coefficients. -/
 lemma eq_sum_Q_smul {x : B} (c : Fin 22 → ℂ)
@@ -2203,13 +2298,13 @@ lemma eq_sum_Q_smul {x : B} (c : Fin 22 → ℂ)
       exact Finset.sum_congr rfl fun l _ => by ring
     rw [hsplit]
     field_simp
-    ring
+    ring_nf
   calc x = (27 : ℂ) • x - (207 / 4 : ℂ) • x + (33 : ℂ) • x - (31 / 4 : ℂ) • x
         + (2⁻¹ : ℂ) • x := by module
     _ = _ := key
 
 include hT in
-/-- **The projector round**: the certificate collapses to `24⁻¹` times the integer
+/-- The projector round: the certificate collapses to `24⁻¹` times the integer
   projector matrix — one clean application of `contractionProjectorZ` reproduces the
   coefficients of any all-axes weight-zero element. -/
 lemma eq_sum_contractionProjectorZ_smul {x : B} (c : Fin 22 → ℂ)
@@ -2233,13 +2328,13 @@ lemma eq_sum_contractionProjectorZ_smul {x : B} (c : Fin 22 → ℂ)
 
 /-!
 
-## G. The four invariant contractions
+## I. The four invariant contractions
 
-The Lorentz-invariant elements built from `T`: the three double metric contractions —
-outer `g^{μν} g^{ρσ} T_{μνρσ}`, inner `g^{μρ} g^{νσ} T_{μνρσ}`, split
-`g^{μσ} g^{νρ} T_{μνρσ}` — and the Levi-Civita contraction `ε^{μνρσ} T_{μνρσ}`.
-In orbit coordinates they are the four explicit integer vectors spanning the image of
-`contractionProjectorZ`.
+## I.1. The metric and Levi-Civita contractions
+
+The three double metric contractions — outer `g^{μν} g^{ρσ} T_{μνρσ}`, inner
+`g^{μρ} g^{νσ} T_{μνρσ}`, split `g^{μσ} g^{νρ} T_{μνρσ}` — and the Levi-Civita
+contraction `ε^{μνρσ} T_{μνρσ}`.
 
 -/
 
@@ -2259,21 +2354,30 @@ def epsilonSignZ (d : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
     * (dirNum (d 3) - dirNum (d 0)).sign * (dirNum (d 2) - dirNum (d 1)).sign
     * (dirNum (d 3) - dirNum (d 1)).sign * (dirNum (d 3) - dirNum (d 2)).sign
 
-/-- **The outer contraction** `g^{μν} g^{ρσ} T_{μνρσ}`. -/
+/-- The outer contraction `g^{μν} g^{ρσ} T_{μνρσ}`. -/
 noncomputable def outerContraction : B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 1) * etaZ (d 2) (d 3) : ℤ) : ℂ) • T d
 
-/-- **The inner contraction** `g^{μρ} g^{νσ} T_{μνρσ}`. -/
+/-- The inner contraction `g^{μρ} g^{νσ} T_{μνρσ}`. -/
 noncomputable def innerContraction : B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 2) * etaZ (d 1) (d 3) : ℤ) : ℂ) • T d
 
-/-- **The split contraction** `g^{μσ} g^{νρ} T_{μνρσ}`. -/
+/-- The split contraction `g^{μσ} g^{νρ} T_{μνρσ}`. -/
 noncomputable def splitContraction : B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 3) * etaZ (d 1) (d 2) : ℤ) : ℂ) • T d
 
-/-- **The Levi-Civita contraction** `ε^{μνρσ} T_{μνρσ}`. -/
+/-- The Levi-Civita contraction `ε^{μνρσ} T_{μνρσ}`. -/
 noncomputable def epsilonContraction : B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : ℂ) • T d
+
+/-!
+
+## I.2. Orbit coordinates and the projector factorisation
+
+Integer orbit vectors and weight rows for each contraction; three times the projector
+is the sum of their four rank-one products.
+
+-/
 
 /-- The outer contraction in orbit coordinates (times three). -/
 def outerOrbitZ : Fin 22 → ℤ := ![1, -3, 0, 0, 0, 0, 0, 0, 0, 0, -3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -2303,7 +2407,7 @@ def splitWeightZ : Fin 22 → ℤ :=
 def epsilonWeightZ : Fin 22 → ℤ :=
   ![0, 0, 0, 0, 9, -9, 0, 0, -9, 9, 0, 0, 0, 0, 9, 0, 0, -9, -9, 0, 9, 0]
 
-/-- **The projector factors through the four invariants**: three times the projector is
+/-- The projector factors through the four invariants: three times the projector is
   the sum of the four rank-one products of an invariant orbit vector with its weight
   row. -/
 lemma three_mul_contractionProjectorZ : ∀ k l : Fin 22,
@@ -2311,6 +2415,12 @@ lemma three_mul_contractionProjectorZ : ∀ k l : Fin 22,
       = outerOrbitZ k * outerWeightZ l + innerOrbitZ k * innerWeightZ l
         + splitOrbitZ k * splitWeightZ l + epsilonOrbitZ k * epsilonWeightZ l := by
   decide +kernel
+
+/-!
+
+## I.3. The orbit vectors represent the contractions
+
+-/
 
 /-- The orbit sum expanded through the orbit multiplicity. -/
 lemma rotationOrbitSum_eq_sum (d : Fin 4 → Fin 1 ⊕ Fin 3) :
@@ -2401,8 +2511,14 @@ lemma sum_epsilonOrbitZ_smul_rotationOrbitSum :
   congr 1
   exact_mod_cast sum_epsilonOrbitZ_mul_rotationOrbitCoeff e
 
+/-!
+
+## I.4. The projector round lands in the contractions
+
+-/
+
 include hT in
-/-- **Boost-invariant orbit combinations are spanned by the four contractions**: an
+/-- Boost-invariant orbit combinations are spanned by the four contractions: an
   all-axes weight-zero combination of the representative orbit sums is a linear
   combination of the outer, inner and split metric contractions and the Levi-Civita
   contraction. -/
@@ -2467,11 +2583,16 @@ theorem exists_smul_contraction_of_eq_sum_orbitRep {x : B} (c : Fin 22 → ℂ)
   · rfl
 /-!
 
-## H. The classification of the Lorentz invariants
+## J. The classification of the Lorentz invariants
+
+## J.1. Graded extraction along the sieve
+
+An invariant element has weight zero along every axis, so it passes down the sieve of
+sections D and E: each covering step keeps only its weight-zero member.
 
 -/
 
-/-- **Finite decomposition of an `iSup` membership**: an element of the join of a
+/-- Finite decomposition of an `iSup` membership: an element of the join of a
   `ℤ`-indexed family is a finitely supported sum of members. -/
 lemma exists_finsupp_of_mem_iSup {S : ℤ → Submodule ℂ B} {x : B} (hx : x ∈ ⨆ m, S m) :
     ∃ f : ℤ →₀ B, (∀ m, f m ∈ S m) ∧ x = f.sum fun _ b => b := by
@@ -2490,7 +2611,7 @@ lemma exists_finsupp_of_mem_iSup {S : ℤ → Submodule ℂ B} {x : B} (hx : x �
     refine ⟨f + g, fun m => by rw [Finsupp.add_apply]; exact add_mem (hf m) (hg m), ?_⟩
     rw [Finsupp.sum_add_index (fun m _ => rfl) (fun m _ b₁ b₂ => rfl)]
 
-/-- **Graded extraction**: an element of the join of a family bounded by the boost-weight
+/-- Graded extraction: an element of the join of a family bounded by the boost-weight
   grading which itself has weight zero lies in the zero member of the family. -/
 lemma mem_of_mem_iSup_of_boostWeight_zero {i : Fin 3} {S : ℤ → Submodule ℂ B}
     (hS : ∀ m : ℤ, S m ≤ boostWeightSubmodule repLorentz i m) {x : B}
@@ -2506,7 +2627,7 @@ lemma mem_of_mem_iSup_of_boostWeight_zero {i : Fin 3} {S : ℤ → Submodule ℂ
     · rw [Finset.insert_eq_self.2 h]
     · rw [Finset.sum_insert h, Finsupp.notMem_support_iff.1 h, zero_add]
 
-/-- **Invariance gives boost weight zero**: an element fixed by the Lorentz group lies in
+/-- Invariance gives boost weight zero: an element fixed by the Lorentz group lies in
   the weight-zero space of every boost axis. -/
 lemma mem_boostWeightSubmodule_zero_of_invariant {x : B}
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) (i : Fin 3) :
@@ -2515,8 +2636,14 @@ lemma mem_boostWeightSubmodule_zero_of_invariant {x : B}
   intro t ht
   rw [hinv, zpow_zero, one_smul]
 
+/-!
+
+## J.2. The classification
+
+-/
+
 include hT in
-/-- **Every Lorentz-invariant element is an orbit-sum combination**: an element of the
+/-- Every Lorentz-invariant element is an orbit-sum combination: an element of the
   span of the components fixed by the Lorentz group is a combination of the orbit sums
   of the `22` canonical representatives. -/
 theorem exists_eq_sum_orbitRep_of_invariant {x : B} (hx : x ∈ hT.span)
@@ -2550,7 +2677,7 @@ theorem exists_eq_sum_orbitRep_of_invariant {x : B} (hx : x ∈ hT.span)
   rw [hc, sum_rotationSubset (fun d => c d • rotationOrbitSum (T := T) d)]
 
 include hT in
-/-- **The classification of the Lorentz invariants**: every element of the span of the
+/-- The classification of the Lorentz invariants: every element of the span of the
   components fixed by the Lorentz group is a linear combination of the outer, inner and
   split metric contractions and the Levi-Civita contraction. -/
 theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
