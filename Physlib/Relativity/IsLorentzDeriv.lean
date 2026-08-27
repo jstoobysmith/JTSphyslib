@@ -139,6 +139,22 @@ def IsLorentzDerivTransforms {k V : Type*} [CommRing k] [AddCommGroup V] [Module
         (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
           F (List.ofFn p) (rep.dual Λ φ)
 
+/-- A family of *covariant*-derivative symbols, indexed by ordered tuples of
+  directions (covariant derivatives do not commute) and by the dual of a Lorentz
+  representation `V`, **transforms as the covariant derivatives of a
+  Lorentz-covariant field**: each derivative slot mixes by the columns of the Lorentz
+  matrix, while the value index transforms by the contragredient action `rep.dual` on
+  the dual of `V` — the ordered-tuple analogue of `IsLorentzDerivTransforms`. -/
+def IsLorentzCovDerivTransforms {k V : Type*} [CommRing k] [AddCommGroup V]
+    [Module k V] [Module k A] (repLorentz : Representation ℂ SL(2,ℂ) A)
+    (rep : Representation k SL(2,ℂ) V)
+    (F : {n : ℕ} → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual k V →ₗ[k] A) : Prop :=
+  ∀ (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual k V),
+    repLorentz Λ (F l φ) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+          F p (rep.dual Λ φ)
+
 namespace IsLorentzDeriv
 
 variable {rep : Representation ℂ SL(2,ℂ) A} {D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A}
