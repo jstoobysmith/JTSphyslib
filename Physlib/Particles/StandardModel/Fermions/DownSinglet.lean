@@ -382,18 +382,19 @@ noncomputable def actionMatrix (c : GaugeAlgebra) : Matrix (Fin 3) (Fin 3) ℂ :
   Complex.I • (c.toSU3Matrix - ((2 : ℂ) • c.toU1Value) • 1)
 
 /-- **The infinitesimal action of the gauge algebra on the down-type singlet**: the
-  derivative of the `(3, 1)_{-2}` action of the gauge group, as a real-bilinear action
-  of the gauge algebra. -/
+  derivative of the `(3, 1)_{-2}` action of the gauge group, real-linear in the
+  algebra slot and complex-linear in the value slot — the form consumed by the
+  covariant derivative `IsGaugeField.covDerivIter` and by
+  `IsGaugeField.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
-    GaugeAlgebra →ₗ[ℝ] DownSinglet →ₗ[ℝ] DownSinglet where
-  toFun c := (colourEnd (actionMatrix c)).restrictScalars ℝ
+    GaugeAlgebra →ₗ[ℝ] DownSinglet →ₗ[ℂ] DownSinglet where
+  toFun c := colourEnd (actionMatrix c)
   map_add' c₁ c₂ := by
     rw [show actionMatrix (c₁ + c₂) = actionMatrix c₁ + actionMatrix c₂ from by
       rw [actionMatrix, actionMatrix, actionMatrix, GaugeAlgebra.add_toSU3Matrix,
         GaugeAlgebra.add_toU1Value]
       module]
     rw [colourEnd_add]
-    rfl
   map_smul' r c := by
     rw [show actionMatrix (r • c) = (r : ℂ) • actionMatrix c from by
       rw [actionMatrix, actionMatrix, GaugeAlgebra.smul_toSU3Matrix,
@@ -901,34 +902,20 @@ private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
 
-private lemma restrictScalars_multiset_sum
-    (m : Multiset (DownSinglet →ₗ[ℂ] DownSinglet)) :
-    LinearMap.restrictScalars ℝ m.sum
-      = (m.map (LinearMap.restrictScalars ℝ)).sum := by
-  induction m using Multiset.induction_on with
-  | empty => rfl
-  | cons f t ih =>
-    rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, ← ih]
-    rfl
-
 set_option maxHeartbeats 1000000 in
 /-- **The base-point Taylor coefficients of the jet gauge action** on the down-type
   singlet are the colour endomorphisms of the base-point Taylor coefficients of the
   colour matrix. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     IsGaugeField.repCoeff repJetGaugeGroupI U x
-      = (colourEnd ((downMatrix U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))).restrictScalars ℝ := by
+      = colourEnd ((downMatrix U).map fun f =>
+          constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by
   refine LinearMap.ext fun d => ?_
   apply valLinEquiv.injective
   rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x d
       = StandardModel.jetEval (StandardModel.jetIteratedDeriv x
           (repJetGaugeGroupI U (StandardModel.jetOfConstant d))) from rfl,
     valLinEquiv_jetEval, jetValLinEquiv_jetIteratedDeriv,
-    show (LinearMap.restrictScalars ℝ (colourEnd ((downMatrix U).map fun f =>
-        constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)))) d
-      = colourEnd ((downMatrix U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) d from rfl,
     colourEnd_apply_mk, LinearEquiv.apply_symm_apply,
     repJetGaugeGroupI_eq_downMatrix, LinearEquiv.apply_symm_apply,
     StandardModel.jetOfConstant_apply]
@@ -1018,24 +1005,10 @@ theorem isInfinitesimalActionOf :
         matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [jetActionMatrix_map_cc_foldl]))
-    rw [repCoeff_eq, hMcons, colourEnd_neg, colourEnd_multiset_sum, Multiset.map_map,
-      show LinearMap.restrictScalars ℝ
-          (-((x.antidiagonal.map (colourEnd ∘ fun p =>
-            actionMatrix (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-              (maurerCartanForm U μ)))
-            * ((downMatrix U).map fun f =>
-                constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f)))).sum))
-        = -(LinearMap.restrictScalars ℝ
-            ((x.antidiagonal.map (colourEnd ∘ fun p =>
-              actionMatrix (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-                (maurerCartanForm U μ)))
-              * ((downMatrix U).map fun f =>
-                  constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f)))).sum)) from
-        rfl,
-      restrictScalars_multiset_sum, Multiset.map_map]
+    rw [repCoeff_eq, hMcons, colourEnd_neg, colourEnd_multiset_sum, Multiset.map_map]
     refine congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
       fun p hp => ?_))
-    rw [Function.comp_apply, Function.comp_apply, colourEnd_mul, repCoeff_eq]
+    rw [Function.comp_apply, colourEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
@@ -1092,17 +1065,16 @@ theorem isInfinitesimalActionOf :
               (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant c)))
             = IsGaugeField.adjointCoeff U p.1 c from rfl])
     rw [repCoeff_eq,
-      show ((colourEnd ((downMatrix U).map fun f =>
-            constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))).restrictScalars ℝ)
+      show (colourEnd ((downMatrix U).map fun f =>
+            constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)))
           ∘ₗ gaugeAlgebraAction c
-        = (colourEnd (((downMatrix U).map fun f =>
+        = colourEnd (((downMatrix U).map fun f =>
             constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))
-              * actionMatrix c)).restrictScalars ℝ from by
+              * actionMatrix c) from by
         rw [colourEnd_mul]; rfl,
-      hMact, colourEnd_multiset_sum, Multiset.map_map, restrictScalars_multiset_sum,
-      Multiset.map_map]
+      hMact, colourEnd_multiset_sum, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [Function.comp_apply, Function.comp_apply, colourEnd_mul, repCoeff_eq]
+    rw [Function.comp_apply, colourEnd_mul, repCoeff_eq]
     rfl
 
 end InfinitesimalAction

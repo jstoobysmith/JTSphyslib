@@ -120,6 +120,25 @@ class IsLorentzDeriv {M : Type} [AddCommMonoid M] [Module ℂ M]
   rep_deriv {Λ μ x} : rep Λ (D μ x) =
     ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • D a (rep Λ x)
 
+/-- A family of derivative symbols `F : s ↦ [∂_s ψ^φ]`, indexed by the dual of a value
+  space `V` carrying a representation of `SL(2,ℂ)`, **transforms as the derivative
+  symbols of a Lorentz-covariant field**: each ordered symbol mixes into all tuples of
+  directions by the per-slot columns of the Lorentz matrix, while the value index
+  transforms by the contragredient action `rep.dual` on the dual of `V`. This is the
+  general form of the `lorentz_apply` field of `IsGaugeField`, for a field valued in an
+  arbitrary Lorentz representation — the trivial representation for scalars, the Weyl
+  representations for fermions, and their conjugates for the barred fields. At `n = 0`
+  it reduces to the homogeneous law `Λ • F₀^φ = F₀^{Λ^{-⊤} φ}`. -/
+def IsLorentzDerivTransforms {k V : Type*} [CommRing k] [AddCommGroup V] [Module k V]
+    [Module k A]
+    (repLorentz : Representation ℂ SL(2,ℂ) A) (rep : Representation k SL(2,ℂ) V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual k V →ₗ[k] A) : Prop :=
+  ∀ (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual k V),
+    repLorentz Λ (F (List.ofFn l) φ) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+          F (List.ofFn p) (rep.dual Λ φ)
+
 namespace IsLorentzDeriv
 
 variable {rep : Representation ℂ SL(2,ℂ) A} {D : (Fin 1 ⊕ Fin 3) → A →ₗ[ℂ] A}

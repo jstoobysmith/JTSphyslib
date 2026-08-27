@@ -11,21 +11,20 @@ public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Covariant
 
 ## i. Overview
 
-The covariant derivative `∇_ρ F = D_ρ F + A_ρ · F` of a matter family is built from an
-`ℝ`-bilinear action `act` of the gauge algebra on the value space. For the covariant
-derivative to transform covariantly, `act` must be the *infinitesimal action* underlying
-the representation `rep` of the jet gauge group in which the family transforms — the
-physicists' statement that the matrices `i dρ(T^a)` generate `ρ`. This file packages
-that compatibility as the structure `IsInfinitesimalActionOf`, and proves the theorem it
-exists for: the covariant derivative preserves the gauge tensors,
-`TransformsIn.covDerivAction`.
+The covariant derivative `∇_ρ F = [∂_ρ F] + A_ρ · F` of a matter family is built from
+an action `act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V` of the gauge algebra on the value
+space. For the covariant derivative to transform covariantly, `act` must be the
+*infinitesimal action* underlying the representation `rep` of the jet gauge group in
+which the family transforms — the physicists' statement that the matrices `i dρ(T^a)`
+generate `ρ`. This file packages that compatibility as the structure
+`IsInfinitesimalActionOf`, and proves the theorem it exists for: the covariant
+derivative preserves the gauge tensors, `TransformsIn.covDerivAction`.
 
 ## ii. Key results
 
 - `IsGaugeField.IsInfinitesimalActionOf` : `act` is the infinitesimal action underlying
   `rep`.
-- `IsGaugeField.TransformsIn.covDerivAction` : the covariant derivative preserves
-  `TransformsIn`.
+- `TransformsIn.covDerivAction` : the covariant derivative preserves `TransformsIn`.
 
 ## iii. Table of contents
 
@@ -69,7 +68,7 @@ variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual �
 
   These are exactly the identities consumed by the proof that the covariant
   derivative `covDerivAction` preserves `TransformsIn`. -/
-structure IsInfinitesimalActionOf (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℝ] V)
+structure IsInfinitesimalActionOf (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)) : Prop where
   repCoeff_cons : ∀ (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
       (x : Multiset (Fin 1 ⊕ Fin 3)),
@@ -87,10 +86,10 @@ structure IsInfinitesimalActionOf (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℝ] 
   minus the antidiagonal convolution of dual coefficients against `act` of the
   derived Maurer–Cartan form — the analogue of `adjointDualCoeff_cons`. -/
 lemma IsInfinitesimalActionOf.repDualCoeff_cons
-    {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℝ] V}
+    {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
     {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     (h : IsInfinitesimalActionOf act rep) (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
-    (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ V) :
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     repDualCoeff rep U (μ ::ₘ x) φ =
       -((x.antidiagonal.map fun p =>
         repDualCoeff rep U p.2 (φ ∘ₗ act (JetGaugeAlgebra.eval
@@ -114,8 +113,8 @@ lemma IsInfinitesimalActionOf.repDualCoeff_cons
 section MatterCovariance
 
 variable {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℝ] V}
-variable [FiniteDimensional ℝ V]
+variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+variable [FiniteDimensional ℂ V]
 
 /-- The action of families against the dual representation coefficients: the
   antidiagonal convolution mixing the adjoint transport on the field slot with the
@@ -125,7 +124,7 @@ variable [FiniteDimensional ℝ V]
 lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
     (h : IsInfinitesimalActionOf act rep) (U : JetGaugeGroupI)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (g : Module.Dual ℝ V →ₗ[ℝ] B) (φ : Module.Dual ℝ V) :
+    (g : Module.Dual ℂ V →ₗ[ℂ] B) (φ : Module.Dual ℂ V) :
     actionFam act f g (repDualCoeff rep U x φ) =
       (x.antidiagonal.map fun p =>
         actionFam act (f ∘ₗ adjointDualCoeff U p.1)
@@ -139,28 +138,27 @@ lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
       Function.comp_apply] using h1
   rw [show repDualCoeff rep U x = (repCoeff rep U x).dualMap from rfl,
     show actionFam act f g ((repCoeff rep U x).dualMap φ) =
-      dualPairEquivW ((TensorProduct.map LinearMap.id (repCoeff rep U x))
-        (tensorAction act (dualPairEquiv.symm f) (dualPairEquivW.symm g))) φ from
-      (dualPairEquivW_map_right (repCoeff rep U x) _ φ).symm,
+      dualPairEquivC ((TensorProduct.map LinearMap.id (repCoeff rep U x))
+        (tensorAction act (dualPairEquiv.symm f) (dualPairEquivC.symm g))) φ from
+      (dualPairEquivC_map_right (repCoeff rep U x) _ φ).symm,
     ← tensorAction_map_right_antidiagonal act (adjointCoeff U) (repCoeff rep U) x hT,
     map_multiset_sum, Multiset.map_map, Multiset.sum_linearMap_apply, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
   simp only [Function.comp_apply]
-  rw [← symm_comp_right, ← symm_comp_right_W]
+  rw [← symm_comp_right, ← symm_comp_right_C]
   rfl
 
-
-omit [FiniteDimensional ℝ V] in
+omit [FiniteDimensional ℂ V] in
 /-- If `F` transforms in `rep`, so do its `κ ::ₘ s`-derived symbols, with the extra
   derivative traced through `IsInfinitesimalActionOf.repDualCoeff_cons`: the Leibniz
   splittings where `κ` stays a derivative, minus the convolution where `κ` hits the
   representation — `act` of the derived Maurer–Cartan form. -/
-lemma TransformsIn.repGauge_cons
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
-    (hF : TransformsIn (repGauge := repGauge) rep F)
+lemma _root_.StandardModel.TransformsIn.repGauge_cons
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf act rep)
     (U : JetGaugeGroupI) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (φ : Module.Dual ℝ V) :
+    (φ : Module.Dual ℂ V) :
     repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
         F (κ ::ₘ p.2) (repDualCoeff rep U⁻¹ p.1 φ)).sum
@@ -191,13 +189,13 @@ set_option maxHeartbeats 2000000 in
   convolution through `act` survives — the analogue of
   `TransformsInAdjoint.repGauge_bracketFamConv` with a matter field in the second
   slot. -/
-lemma TransformsIn.repGauge_actionFamConv
+lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
     (hA : IsGaugeField repLorentz repGauge A)
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
-    (hF : TransformsIn (repGauge := repGauge) rep F)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf act rep)
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ V) :
+    (φ : Module.Dual ℂ V) :
     repGauge U (actionFamConv A act ρ F s φ) =
       (s.antidiagonal.map fun p =>
         actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
@@ -214,7 +212,7 @@ lemma TransformsIn.repGauge_actionFamConv
     intro u ψ
     rw [hA.gauge_apply_deriv U u ρ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
-  have hFlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ V),
+  have hFlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ V),
       repGauge U (F u ψ) =
         ((u.antidiagonal.map fun r => F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum) ψ := by
     intro u ψ
@@ -281,12 +279,12 @@ set_option maxHeartbeats 2000000 in
   convolution of `[∂_{ρ ::ₘ s} F]` cancels the single `act` cross-term convolution of
   `A_ρ · F` through the coassociativity of the antidiagonal — the matter-field
   analogue of `TransformsInAdjoint.covDerivAdjoint`. -/
-theorem TransformsIn.covDerivAction
+theorem _root_.StandardModel.TransformsIn.covDerivAction
     (hA : IsGaugeField repLorentz repGauge A)
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
-    (hF : TransformsIn (repGauge := repGauge) rep F)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf act rep) (ρ : Fin 1 ⊕ Fin 3) :
-    TransformsIn (repGauge := repGauge) rep (IsGaugeField.covDerivAction A act F ρ) := by
+    TransformsIn repGauge rep (IsGaugeField.covDerivAction A act F ρ) := by
   intro U φ s
   have hL : repGauge U (IsGaugeField.covDerivAction A act F ρ s φ) =
       repGauge U (F (ρ ::ₘ s) φ) + repGauge U (actionFamConv A act ρ F s φ) := by
