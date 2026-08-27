@@ -11,7 +11,6 @@ public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Conjugation
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Mathematics.ConjModule
-public import Physlib.Mathematics.MultisetsOfMassDim
 public import Mathlib.RingTheory.GradedAlgebra.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
