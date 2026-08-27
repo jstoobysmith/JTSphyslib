@@ -17,6 +17,7 @@ public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzActio
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet

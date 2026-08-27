@@ -250,6 +250,12 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic
