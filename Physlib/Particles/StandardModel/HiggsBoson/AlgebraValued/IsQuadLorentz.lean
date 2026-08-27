@@ -20,6 +20,7 @@ public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
 public import Mathlib.RepresentationTheory.Invariants
+public import Mathlib.Data.Matrix.Reflection
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
@@ -303,12 +304,85 @@ lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
   rw [hT.eq_sum_lightCone i e]
   exact (Finset.sum_fiberwise_of_maps_to (fun c _ => hall c) _).symm
 
+/-- **The three light-cone sectors of one index**: `0` the raising direction `κ = 0`,
+  `1` the lowering direction `κ = 1`, `2` the transverse plane `κ ∈ {2, 3}`. -/
+def sectorIndex : Fin 4 → Fin 3 := ![0, 1, 2, 2]
+
+/-- The boost weight of each sector. -/
+def sectorWeight : Fin 3 → ℤ := ![2, -2, 0]
+
+/-- The light-cone weight of an index is the weight of its sector. -/
+lemma lightConeWeight_eq_sectorWeight (κ : Fin 4) :
+    lightConeWeight κ = sectorWeight (sectorIndex κ) := by decide +revert
+
+/-- **The per-slot sector transition matrix**: the single-index composite
+  `lightConeCoeffInvQ · lightConeCoeffZ` summed over the light-cone directions of one
+  sector. The three sectors resolve the identity, and `weightZeroTransition` is by
+  definition the balanced-sector convolution of these small matrices. -/
+def slotTransition (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℚ :=
+  ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
+    lightConeCoeffInvQ i μ κ' * (lightConeCoeffZ i κ' ν : ℚ)
+
 /-- **The matrix of the axis-`i` weight-zero projection in the `T`-basis**: the
   coefficient of `T d` in the re-expansion of `monoComponent i e 0` through the
-  light-cone basis. Rational-valued and computable, built from the two mirrors. -/
+  light-cone basis, as the sum over balanced sector patterns — as many raising as
+  lowering slots, `19` patterns — of the product of the per-slot sector matrices.
+  Rational-valued and computable; `weightZeroTransition_eq_sum_lightCone` gives the
+  equivalent sum over the `70` weight-zero light-cone monomials. -/
 def weightZeroTransition (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) : ℚ :=
-  ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-    ∏ s, lightConeCoeffInvQ i (e s) (c s) * (lightConeCoeffZ i (c s) (d s) : ℚ)
+  ∑ w ∈ Finset.univ.filter (fun w : Fin 4 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
+    ∏ s, slotTransition i (w s) (e s) (d s)
+
+/-- **Weight-zero light-cone sums are balanced-sector convolutions**: a sum over the
+  weight-zero light-cone monomials of a product of slot factors regroups as the sum
+  over balanced sector patterns of the product of the slotwise sector sums. -/
+lemma sum_weightZero_eq_sum_sector {R : Type*} [CommSemiring R] (f : Fin 4 → Fin 4 → R) :
+    ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
+        ∏ s, f s (c s)
+      = ∑ w ∈ Finset.univ.filter (fun w : Fin 4 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
+          ∏ s, ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = w s), f s κ' := by
+  have hmaps : ∀ c ∈ Finset.univ.filter
+      (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
+      (fun s => sectorIndex (c s)) ∈ Finset.univ.filter
+        (fun w : Fin 4 → Fin 3 => (∑ s, sectorWeight (w s)) = 0) := by
+    intro c hc
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hc ⊢
+    rw [← hc]
+    exact (Finset.sum_congr rfl fun s _ => lightConeWeight_eq_sectorWeight (c s)).symm
+  rw [← Finset.sum_fiberwise_of_maps_to hmaps]
+  refine Finset.sum_congr rfl fun w hw => ?_
+  have hw0 : (∑ s, sectorWeight (w s)) = 0 := (Finset.mem_filter.1 hw).2
+  have hfiber : (Finset.univ.filter
+        (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0)).filter
+      (fun c => (fun s => sectorIndex (c s)) = w)
+      = Fintype.piFinset
+          (fun s => Finset.univ.filter (fun κ : Fin 4 => sectorIndex κ = w s)) := by
+    ext c
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fintype.mem_piFinset,
+      funext_iff]
+    constructor
+    · rintro ⟨-, hcw⟩ s
+      exact hcw s
+    · intro hcw
+      refine ⟨?_, hcw⟩
+      rw [show (∑ s, lightConeWeight (c s)) = ∑ s, sectorWeight (w s) from
+        Finset.sum_congr rfl fun s _ => by rw [lightConeWeight_eq_sectorWeight, hcw s]]
+      exact hw0
+  rw [hfiber]
+  exact (Finset.prod_univ_sum
+    (fun s => Finset.univ.filter fun κ' : Fin 4 => sectorIndex κ' = w s)
+    (fun s κ' => f s κ')).symm
+
+/-- **The weight-zero transition as a light-cone sum**: the sector convolution defining
+  `weightZeroTransition` expands to the sum over weight-zero light-cone monomials of
+  the composite `lightConeCoeffInvQ · lightConeCoeffZ` slot coefficients. -/
+lemma weightZeroTransition_eq_sum_lightCone (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    weightZeroTransition i d e
+      = ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
+        ∏ s, lightConeCoeffInvQ i (e s) (c s) * (lightConeCoeffZ i (c s) (d s) : ℚ) := by
+  rw [weightZeroTransition]
+  exact (sum_weightZero_eq_sum_sector
+    (fun s κ => lightConeCoeffInvQ i (e s) κ * (lightConeCoeffZ i κ (d s) : ℚ))).symm
 
 /-- **The weight-zero component re-expanded in the `T`-basis**: `monoComponent i e 0`
   is the `e`-th column of `weightZeroTransition` applied to the generators. -/
@@ -321,7 +395,7 @@ lemma monoComponent_zero_eq (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
   refine Finset.sum_congr rfl fun d _ => ?_
   rw [← Finset.sum_smul]
   congr 1
-  rw [weightZeroTransition]
+  rw [weightZeroTransition_eq_sum_lightCone]
   push_cast
   simp only [coe_lightConeCoeffInvQ, coe_lightConeCoeffZ, Finset.prod_mul_distrib]
 
@@ -852,7 +926,7 @@ lemma lightConeCoeffInvQ_cycDir (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) 
 lemma weightZeroTransition_cycDir (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
     weightZeroTransition (i + 1) (fun s => cycDir (d s)) (fun s => cycDir (e s))
       = weightZeroTransition i d e := by
-  rw [weightZeroTransition, weightZeroTransition]
+  rw [weightZeroTransition_eq_sum_lightCone, weightZeroTransition_eq_sum_lightCone]
   refine Finset.sum_congr rfl fun c _ => Finset.prod_congr rfl fun s _ => ?_
   rw [lightConeCoeffInvQ_cycDir, lightConeCoeffZ_cycDir]
 
@@ -954,7 +1028,7 @@ lemma weightZeroTransition_eq_zero_of_not_isPairedOrDistinct (i : Fin 3)
             (∑ s, lightConeWeight (c s)) = 0),
           ∏ s, lightConeCoeffInvQ i (e s) (swap01 (c s)) *
             (lightConeCoeffZ i (swap01 (c s)) (d s) : ℚ) := by
-      rw [weightZeroTransition]
+      rw [weightZeroTransition_eq_sum_lightCone]
       refine Finset.sum_nbij' (i := fun c => fun s => swap01 (c s))
         (j := fun c => fun s => swap01 (c s)) ?_ ?_ ?_ ?_ ?_
       · intro c hc
@@ -973,12 +1047,12 @@ lemma weightZeroTransition_eq_zero_of_not_isPairedOrDistinct (i : Fin 3)
         simp only [swap01_swap01]
     have hkey := hrei.trans ((Finset.sum_congr rfl fun c _ => hswap c).trans
       (Finset.mul_sum _ _ _).symm)
-    rw [← weightZeroTransition, hsgn] at hkey
+    rw [← weightZeroTransition_eq_sum_lightCone, hsgn] at hkey
     push_cast at hkey
     linarith [hkey]
   · push Not at hA
     obtain ⟨s₀, hs₀⟩ := hA
-    rw [weightZeroTransition]
+    rw [weightZeroTransition_eq_sum_lightCone]
     refine Finset.sum_eq_zero fun c _ => ?_
     exact Finset.prod_eq_zero (Finset.mem_univ s₀)
       (slot_eq_zero_of_not_sameSlotSector i (e s₀) (d s₀) hs₀ (c s₀))
@@ -1489,15 +1563,221 @@ lemma sum_rotationSubset {β : Type*} [AddCommMonoid β]
     ∑ d ∈ rotationSubset, f d = ∑ k : Fin 22, f (orbitRep k) := by
   rw [rotationSubset_eq_image, Finset.sum_image fun k _ k' _ h => orbitRep_injective h]
 
-/-- Integer mirror of the weight-zero transition: sixteen times its value. -/
+/-- Integer mirror of `slotTransition`: twice its value, in closed form. On the two
+  null sectors it is supported on the axis-`i` block `{t, xᵢ}` — the raising sector
+  `κ = 0` carries the sign matrix `[[1, -1], [-1, 1]]`, the lowering sector `κ = 1` the
+  all-ones matrix — and the transverse sector `κ = 2` is twice the identity on the two
+  transverse directions. `slotTransitionZ_eq_sum` recovers it as the
+  `lightConeCoeffInvZ · lightConeCoeffZ` composite summed over the sector. -/
+def slotTransitionZ (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℤ :=
+  if κ = 2 then (if μ = ν ∧ μ ≠ Sum.inl 0 ∧ μ ≠ Sum.inr i then 2 else 0)
+  else if (μ = Sum.inl 0 ∨ μ = Sum.inr i) ∧ (ν = Sum.inl 0 ∨ ν = Sum.inr i) then
+    (if κ = 0 then (if μ = Sum.inr i then -1 else 1) * (if ν = Sum.inr i then -1 else 1)
+    else 1)
+  else 0
+
+/-- The closed-form integer slot matrix is the sector sum of the coefficient
+  composites. -/
+lemma slotTransitionZ_eq_sum (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
+    slotTransitionZ i κ μ ν
+      = ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
+        lightConeCoeffInvZ i μ κ' * lightConeCoeffZ i κ' ν := by
+  decide +revert
+
+/-!
+
+## The closed form of the integer weight-zero transition
+
+The convolution over balanced sector patterns collapses slot by slot: transverse slots
+force a diagonal factor `2`, incompatible slots kill the entry, and the null-sector
+slots contribute the balanced elementary-symmetric fold of their signs. The proof is a
+structured induction on the slots, peeling one slot at a time.
+
+-/
+
+def InSector (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Prop := μ = Sum.inl 0 ∨ μ = Sum.inr i
+
+instance (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Decidable (InSector i μ) :=
+  inferInstanceAs (Decidable (_ ∨ _))
+
+def balancedSymZ : ℤ → List ℤ → ℤ
+  | m, [] => if m = 0 then 1 else 0
+  | m, ε :: l => ε * balancedSymZ (m - 2) l + balancedSymZ (m + 2) l
+
+def sectorSigns (i : Fin 3) : {n : ℕ} → (d e : Fin n → Fin 1 ⊕ Fin 3) → List ℤ
+  | 0, _, _ => []
+  | _ + 1, d, e =>
+    if InSector i (e 0) then
+      nuSignZ i (e 0) (d 0) :: sectorSigns i (Fin.tail d) (Fin.tail e)
+    else sectorSigns i (Fin.tail d) (Fin.tail e)
+
+def transverseCount (i : Fin 3) : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → ℕ
+  | 0, _ => 0
+  | _ + 1, e => (if InSector i (e 0) then 0 else 1) + transverseCount i (Fin.tail e)
+
+def weightTransitionZAux (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) (m : ℤ) : ℤ :=
+  ∑ w : Fin n → Fin 3, if (∑ s, sectorWeight (w s)) = m then
+    ∏ s, slotTransitionZ i (w s) (e s) (d s) else 0
+
+lemma slotTransitionZ_raise_of_sector {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hμ : InSector i μ) (hν : InSector i ν) :
+    slotTransitionZ i 0 μ ν = nuSignZ i μ ν := by
+  rw [slotTransitionZ, nuSignZ, if_neg (by simp), if_pos ⟨hμ, hν⟩, if_pos rfl]
+
+lemma slotTransitionZ_lower_of_sector {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hμ : InSector i μ) (hν : InSector i ν) :
+    slotTransitionZ i 1 μ ν = 1 := by
+  rw [slotTransitionZ, if_neg (by simp), if_pos ⟨hμ, hν⟩, if_neg (by simp)]
+
+lemma slotTransitionZ_transverse_of_sector {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hμ : InSector i μ) :
+    slotTransitionZ i 2 μ ν = 0 := by
+  rw [slotTransitionZ, if_pos rfl, if_neg]
+  rintro ⟨-, h1, h2⟩
+  rcases hμ with h | h
+  exacts [h1 h, h2 h]
+
+lemma slotTransitionZ_null_of_not_sector_left {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hμ : ¬InSector i μ) (κ : Fin 3) (hκ : κ ≠ 2) :
+    slotTransitionZ i κ μ ν = 0 := by
+  rw [slotTransitionZ, if_neg hκ, if_neg]
+  exact fun h => hμ h.1
+
+lemma slotTransitionZ_null_of_not_sector_right {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hν : ¬InSector i ν) (κ : Fin 3) (hκ : κ ≠ 2) :
+    slotTransitionZ i κ μ ν = 0 := by
+  rw [slotTransitionZ, if_neg hκ, if_neg]
+  exact fun h => hν h.2
+
+lemma slotTransitionZ_transverse_of_not_sector {i : Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (hμ : ¬InSector i μ) :
+    slotTransitionZ i 2 μ ν = if μ = ν then 2 else 0 := by
+  rw [slotTransitionZ, if_pos rfl]
+  simp only [InSector, not_or] at hμ
+  by_cases h : μ = ν
+  · rw [if_pos ⟨h, hμ.1, hμ.2⟩, if_pos h]
+  · rw [if_neg (fun hc => h hc.1), if_neg h]
+
+lemma weightTransitionZAux_nil (i : Fin 3) (d e : Fin 0 → Fin 1 ⊕ Fin 3) (m : ℤ) :
+    weightTransitionZAux i d e m = if m = 0 then 1 else 0 := by
+  rw [weightTransitionZAux, Fintype.sum_unique]
+  simp [eq_comm]
+
+lemma weightTransitionZAux_succ (i : Fin 3) {n : ℕ} (d e : Fin (n + 1) → Fin 1 ⊕ Fin 3)
+    (m : ℤ) :
+    weightTransitionZAux i d e m
+      = slotTransitionZ i 0 (e 0) (d 0)
+          * weightTransitionZAux i (Fin.tail d) (Fin.tail e) (m - 2)
+        + slotTransitionZ i 1 (e 0) (d 0)
+          * weightTransitionZAux i (Fin.tail d) (Fin.tail e) (m + 2)
+        + slotTransitionZ i 2 (e 0) (d 0)
+          * weightTransitionZAux i (Fin.tail d) (Fin.tail e) m := by
+  rw [weightTransitionZAux,
+    ← Equiv.sum_comp (Fin.consEquiv (fun _ : Fin (n + 1) => Fin 3)), Fintype.sum_prod_type]
+  simp only [Fin.consEquiv_apply, Fin.sum_univ_succ, Fin.prod_univ_succ, Fin.cons_zero,
+    Fin.cons_succ, Fin.sum_univ_zero, add_zero]
+  simp only [show sectorWeight 0 = 2 from rfl, show sectorWeight (Fin.succ 0) = -2 from rfl,
+    show sectorWeight ((Fin.succ 0).succ) = 0 from rfl]
+  rw [weightTransitionZAux, weightTransitionZAux, weightTransitionZAux, add_assoc]
+  congr 1
+  · rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun w _ => by
+      rw [mul_ite, mul_zero]
+      exact if_congr (by omega) rfl rfl
+  · congr 1
+    · rw [Finset.mul_sum]
+      exact Finset.sum_congr rfl fun w _ => by
+        rw [mul_ite, mul_zero]
+        exact if_congr (by omega) rfl rfl
+    · rw [Finset.mul_sum]
+      exact Finset.sum_congr rfl fun w _ => by
+        rw [mul_ite, mul_zero]
+        exact if_congr (by omega) rfl rfl
+
+theorem weightTransitionZAux_eq_closed (i : Fin 3) :
+    ∀ {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) (m : ℤ),
+    weightTransitionZAux i d e m
+      = if ∀ s, SameSlotSector i (e s) (d s) then
+          2 ^ transverseCount i e * balancedSymZ m (sectorSigns i d e)
+        else 0
+  | 0, d, e, m => by
+    rw [weightTransitionZAux_nil, if_pos (fun s => s.elim0)]
+    simp [transverseCount, sectorSigns, balancedSymZ]
+  | n + 1, d, e, m => by
+    rw [weightTransitionZAux_succ,
+      weightTransitionZAux_eq_closed i (Fin.tail d) (Fin.tail e) (m - 2),
+      weightTransitionZAux_eq_closed i (Fin.tail d) (Fin.tail e) (m + 2),
+      weightTransitionZAux_eq_closed i (Fin.tail d) (Fin.tail e) m]
+    simp only [Fin.forall_fin_succ]
+    by_cases htail : ∀ s : Fin n, SameSlotSector i (Fin.tail e s) (Fin.tail d s)
+    case neg =>
+      rw [if_neg htail, if_neg htail, if_neg htail, if_neg (fun h => htail h.2)]
+      ring
+    case pos =>
+      rw [if_pos htail, if_pos htail, if_pos htail]
+      by_cases he : InSector i (e 0)
+      · by_cases hd : InSector i (d 0)
+        · rw [slotTransitionZ_raise_of_sector he hd, slotTransitionZ_lower_of_sector he hd,
+            slotTransitionZ_transverse_of_sector he, if_pos ⟨Or.inl ⟨he, hd⟩, htail⟩]
+          simp only [transverseCount, if_pos he, zero_add, sectorSigns, balancedSymZ]
+          ring
+        · rw [slotTransitionZ_null_of_not_sector_right hd 0 (by simp),
+            slotTransitionZ_null_of_not_sector_right hd 1 (by simp),
+            slotTransitionZ_transverse_of_sector he, if_neg ?_]
+          · ring
+          · rintro ⟨⟨-, hd'⟩ | heq, -⟩
+            exacts [hd hd', hd (heq ▸ he)]
+      · by_cases heq : e 0 = d 0
+        · rw [slotTransitionZ_null_of_not_sector_left he 0 (by simp),
+            slotTransitionZ_null_of_not_sector_left he 1 (by simp),
+            slotTransitionZ_transverse_of_not_sector he, if_pos heq,
+            if_pos ⟨Or.inr heq, htail⟩]
+          simp only [transverseCount, if_neg he, sectorSigns]
+          rw [pow_add, pow_one]
+          ring
+        · rw [slotTransitionZ_null_of_not_sector_left he 0 (by simp),
+            slotTransitionZ_null_of_not_sector_left he 1 (by simp),
+            slotTransitionZ_transverse_of_not_sector he, if_neg heq, if_neg ?_]
+          · ring
+          · rintro ⟨⟨he', -⟩ | h, -⟩
+            exacts [he he', heq h]
+
+/-- Integer mirror of the weight-zero transition: sixteen times its value, in closed
+  form — zero unless every slot is sector-compatible, and otherwise a power of two from
+  the transverse slots times the balanced symmetric fold of the null-sector signs.
+  `weightZeroTransitionZ_eq_sum_sector` recovers the balanced-sector convolution of the
+  integer slot matrices. -/
 def weightZeroTransitionZ (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
-  ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-    ∏ s, lightConeCoeffInvZ i (e s) (c s) * lightConeCoeffZ i (c s) (d s)
+  if ∀ s, SameSlotSector i (e s) (d s) then
+    2 ^ transverseCount i e * balancedSymZ 0 (sectorSigns i d e)
+  else 0
+
+/-- The closed-form integer weight-zero transition as the balanced-sector convolution
+  of the integer slot matrices. -/
+lemma weightZeroTransitionZ_eq_sum_sector (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    weightZeroTransitionZ i d e
+      = ∑ w ∈ Finset.univ.filter (fun w : Fin 4 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
+        ∏ s, slotTransitionZ i (w s) (e s) (d s) := by
+  rw [weightZeroTransitionZ, ← weightTransitionZAux_eq_closed, weightTransitionZAux,
+    Finset.sum_filter]
+
+
+/-- The integer weight-zero transition as a light-cone sum. -/
+lemma weightZeroTransitionZ_eq_sum_lightCone (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    weightZeroTransitionZ i d e
+      = ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
+        ∏ s, lightConeCoeffInvZ i (e s) (c s) * lightConeCoeffZ i (c s) (d s) := by
+  rw [weightZeroTransitionZ_eq_sum_sector]
+  simp only [slotTransitionZ_eq_sum]
+  exact (sum_weightZero_eq_sum_sector
+    (fun s κ => lightConeCoeffInvZ i (e s) κ * lightConeCoeffZ i κ (d s))).symm
+
+
 
 /-- The integer mirror casts to sixteen times the weight-zero transition. -/
 lemma coe_weightZeroTransitionZ (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
     ((weightZeroTransitionZ i d e : ℤ) : ℚ) = 16 * weightZeroTransition i d e := by
-  rw [weightZeroTransitionZ, weightZeroTransition]
+  rw [weightZeroTransitionZ_eq_sum_lightCone, weightZeroTransition_eq_sum_lightCone]
   push_cast
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl fun c _ => ?_
@@ -1514,17 +1794,47 @@ lemma coe_weightZeroTransitionZ (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
         norm_num [Finset.card_univ]
 
 /-- **The boost average on the orbit-sum span, as an integer matrix**: `48` times the
-  row-orbit sums of the boost average between representatives. -/
+  row-orbit sums of the boost average between representatives, in explicit form.
+  `boostAverageOrbitZ_eq_sum` identifies the entries with the row-orbit sums of the
+  integer weight-zero transitions. -/
 def boostAverageOrbitZ : Matrix (Fin 22) (Fin 22) ℤ :=
-  Matrix.of fun k l => ∑ d' ∈ rotationIndexSet (orbitRep k),
-    ∑ i : Fin 3, weightZeroTransitionZ i d' (orbitRep l)
+  !![18, -2, -2, -2, 0, 0, -2, -2, 0, 0, -2, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    -6, 22, -2, -2, 0, 0, -2, -2, 0, 0, 6, -2, -8, -8, 0, 0, 0, 0, 0, 0, 0, 0;
+    -6, -2, 22, -2, 0, 0, -2, 6, 0, 0, -2, -2, 0, 0, 0, -8, 0, 0, 0, -8, 0, 0;
+    -6, -2, -2, 22, 0, 0, 6, -2, 0, 0, -2, -2, 0, 0, 0, 0, -8, 0, 0, 0, 0, -8;
+    0, 0, 0, 0, 24, 0, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, -8, -8, 0, 0, 0;
+    0, 0, 0, 0, 0, 24, 0, 0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, -8, 0;
+    -6, -2, -2, 6, 0, 0, 22, -2, 0, 0, -2, -2, 0, 0, 0, 0, -8, 0, 0, 0, 0, -8;
+    -6, -2, 6, -2, 0, 0, -2, 22, 0, 0, -2, -2, 0, 0, 0, -8, 0, 0, 0, -8, 0, 0;
+    0, 0, 0, 0, -8, 0, 0, 0, 24, 0, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, -8, 0;
+    0, 0, 0, 0, 0, -8, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, -8, -8, 0, 0, 0;
+    -6, 6, -2, -2, 0, 0, -2, -2, 0, 0, 22, -2, -8, -8, 0, 0, 0, 0, 0, 0, 0, 0;
+    18, -2, -2, -2, 0, 0, -2, -2, 0, 0, -2, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    0, -8, 0, 0, 0, 0, 0, 0, 0, 0, -8, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    0, -8, 0, 0, 0, 0, 0, 0, 0, 0, -8, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0;
+    0, 0, 0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 24, 0, 0, -8, 0, 0, 0, 0;
+    0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0;
+    0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0;
+    0, 0, 0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 24, 0, 0, 0, 0;
+    0, 0, 0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 24, 0, -8, 0;
+    0, 0, -8, 0, 0, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0;
+    0, 0, 0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, -8, 0, 24, 0;
+    0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32]
+
+set_option maxRecDepth 40000 in
+/-- The entries of the explicit boost-average matrix are the row-orbit sums of the
+  integer weight-zero transitions. -/
+lemma boostAverageOrbitZ_eq_sum : ∀ k l : Fin 22,
+    boostAverageOrbitZ k l = ∑ d' ∈ rotationIndexSet (orbitRep k),
+      ∑ i : Fin 3, weightZeroTransitionZ i d' (orbitRep l) := by
+  decide +kernel
 
 /-- The integer matrix casts to `48` times the row-orbit sums of the boost average. -/
 lemma coe_boostAverageOrbitZ (k l : Fin 22) :
     ((boostAverageOrbitZ k l : ℤ) : ℚ)
       = 48 * ∑ d' ∈ rotationIndexSet (orbitRep k),
           boostAverageTransition d' (orbitRep l) := by
-  simp only [boostAverageOrbitZ, Matrix.of_apply]
+  simp only [boostAverageOrbitZ_eq_sum]
   push_cast
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl fun d' _ => ?_
@@ -1535,7 +1845,6 @@ lemma coe_boostAverageOrbitZ (k l : Fin 22) :
         simp only [boostAverageTransition, Matrix.of_apply]
         rw [← Finset.mul_sum]
         ring
-
 
 include hT in
 /-- **One averaged round at orbit level, integer form**: over the enumerated
@@ -1575,6 +1884,59 @@ lemma eq_sum_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
   rw [hb]
   ring
 
+include hT in
+/-- **Iterated averaged rounds at orbit level**: `n` rounds act by the `n`-th power of
+  the integer matrix with the `48⁻ⁿ` normalisation. -/
+lemma eq_sum_pow_boostAverageOrbitZ_smul {x : B} (c : Fin 22 → ℂ)
+    (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
+    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) (n : ℕ) :
+    x = ∑ k, (((48 : ℂ) ^ n)⁻¹ * ∑ l, (((boostAverageOrbitZ ^ n) k l : ℤ) : ℂ) * c l)
+        • rotationOrbitSum (T := T) (orbitRep k) := by
+  induction n with
+  | zero =>
+    rw [hx]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    congr 1
+    rw [pow_zero, pow_zero]
+    simp [Matrix.one_apply, apply_ite (fun q : ℤ => (q : ℂ)), ite_mul, Finset.sum_ite_eq]
+  | succ n ih =>
+    rw [hT.eq_sum_boostAverageOrbitZ_smul
+      (fun k => ((48 : ℂ) ^ n)⁻¹ * ∑ l, (((boostAverageOrbitZ ^ n) k l : ℤ) : ℂ) * c l)
+      ih hw]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    congr 1
+    calc (48 : ℂ)⁻¹ * ∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ)
+          * (((48 : ℂ) ^ n)⁻¹ * ∑ m, (((boostAverageOrbitZ ^ n) l m : ℤ) : ℂ) * c m)
+        = ((48 : ℂ) ^ (n + 1))⁻¹ * ∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ)
+            * ∑ m, (((boostAverageOrbitZ ^ n) l m : ℤ) : ℂ) * c m := by
+          rw [Finset.mul_sum, Finset.mul_sum]
+          refine Finset.sum_congr rfl fun l _ => ?_
+          rw [pow_succ]
+          field_simp
+      _ = ((48 : ℂ) ^ (n + 1))⁻¹ * ∑ m, (((boostAverageOrbitZ * boostAverageOrbitZ ^ n) k m
+            : ℤ) : ℂ) * c m := by
+          congr 1
+          calc ∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ)
+                * ∑ m, (((boostAverageOrbitZ ^ n) l m : ℤ) : ℂ) * c m
+              = ∑ l, ∑ m, ((boostAverageOrbitZ k l : ℤ) : ℂ)
+                  * ((((boostAverageOrbitZ ^ n) l m : ℤ) : ℂ) * c m) :=
+                Finset.sum_congr rfl fun l _ => by rw [Finset.mul_sum]
+            _ = ∑ m, (∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ)
+                  * (((boostAverageOrbitZ ^ n) l m : ℤ) : ℂ)) * c m := by
+                rw [Finset.sum_comm]
+                refine Finset.sum_congr rfl fun m _ => ?_
+                rw [Finset.sum_mul]
+                exact Finset.sum_congr rfl fun l _ => (mul_assoc _ _ _).symm
+            _ = ∑ m, (((boostAverageOrbitZ * boostAverageOrbitZ ^ n) k m : ℤ) : ℂ) * c m := by
+                refine Finset.sum_congr rfl fun m _ => ?_
+                congr 1
+                rw [Matrix.mul_apply]
+                push_cast
+                rfl
+      _ = ((48 : ℂ) ^ (n + 1))⁻¹
+            * ∑ m, (((boostAverageOrbitZ ^ (n + 1)) k m : ℤ) : ℂ) * c m := by
+          rw [← pow_succ' boostAverageOrbitZ n]
+
 /-!
 
 ### X. Eigenvectors of the boost average on the orbit-sum span
@@ -1589,69 +1951,613 @@ block except `1` is annihilated by the certificate polynomial
 
 -/
 
-/-!
+/-- **Twenty-four times the projector onto the invariant block**: the integer matrix
+  `P` with `boostAverageOrbitZ * P = 48 • P` and `P * P = 24 • P`, so that `24⁻¹ • P`
+  projects the orbit-sum span onto the eigenvalue-`48` block — the invariant
+  contractions. -/
+def contractionProjectorZ : Matrix (Fin 22) (Fin 22) ℤ :=
+  !![3, -1, -1, -1, 0, 0, -1, -1, 0, 0, -1, 3, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1;
+    -3, 5, -1, -1, 0, 0, -1, -1, 0, 0, 5, -3, -5, -5, 0, 1, 1, 0, 0, 1, 0, 1;
+    -3, -1, 5, -1, 0, 0, -1, 5, 0, 0, -1, -3, 1, 1, 0, -5, 1, 0, 0, -5, 0, 1;
+    -3, -1, -1, 5, 0, 0, 5, -1, 0, 0, -1, -3, 1, 1, 0, 1, -5, 0, 0, 1, 0, -5;
+    0, 0, 0, 0, 3, -3, 0, 0, -3, 3, 0, 0, 0, 0, 3, 0, 0, -3, -3, 0, 3, 0;
+    0, 0, 0, 0, -3, 3, 0, 0, 3, -3, 0, 0, 0, 0, -3, 0, 0, 3, 3, 0, -3, 0;
+    -3, -1, -1, 5, 0, 0, 5, -1, 0, 0, -1, -3, 1, 1, 0, 1, -5, 0, 0, 1, 0, -5;
+    -3, -1, 5, -1, 0, 0, -1, 5, 0, 0, -1, -3, 1, 1, 0, -5, 1, 0, 0, -5, 0, 1;
+    0, 0, 0, 0, -3, 3, 0, 0, 3, -3, 0, 0, 0, 0, -3, 0, 0, 3, 3, 0, -3, 0;
+    0, 0, 0, 0, 3, -3, 0, 0, -3, 3, 0, 0, 0, 0, 3, 0, 0, -3, -3, 0, 3, 0;
+    -3, 5, -1, -1, 0, 0, -1, -1, 0, 0, 5, -3, -5, -5, 0, 1, 1, 0, 0, 1, 0, 1;
+    9, -3, -3, -3, 0, 0, -3, -3, 0, 0, -3, 9, 3, 3, 0, 3, 3, 0, 0, 3, 0, 3;
+    3, -5, 1, 1, 0, 0, 1, 1, 0, 0, -5, 3, 5, 5, 0, -1, -1, 0, 0, -1, 0, -1;
+    3, -5, 1, 1, 0, 0, 1, 1, 0, 0, -5, 3, 5, 5, 0, -1, -1, 0, 0, -1, 0, -1;
+    0, 0, 0, 0, 3, -3, 0, 0, -3, 3, 0, 0, 0, 0, 3, 0, 0, -3, -3, 0, 3, 0;
+    3, 1, -5, 1, 0, 0, 1, -5, 0, 0, 1, 3, -1, -1, 0, 5, -1, 0, 0, 5, 0, -1;
+    3, 1, 1, -5, 0, 0, -5, 1, 0, 0, 1, 3, -1, -1, 0, -1, 5, 0, 0, -1, 0, 5;
+    0, 0, 0, 0, -3, 3, 0, 0, 3, -3, 0, 0, 0, 0, -3, 0, 0, 3, 3, 0, -3, 0;
+    0, 0, 0, 0, -3, 3, 0, 0, 3, -3, 0, 0, 0, 0, -3, 0, 0, 3, 3, 0, -3, 0;
+    3, 1, -5, 1, 0, 0, 1, -5, 0, 0, 1, 3, -1, -1, 0, 5, -1, 0, 0, 5, 0, -1;
+    0, 0, 0, 0, 3, -3, 0, 0, -3, 3, 0, 0, 0, 0, 3, 0, 0, -3, -3, 0, 3, 0;
+    3, 1, 1, -5, 0, 0, -5, 1, 0, 0, 1, 3, -1, -1, 0, -1, 5, 0, 0, -1, 0, 5]
 
-## G. The invariant contractions
+/-- **The certificate polynomial applied to the boost average**: the integer-scaled
+  annihilator of the non-invariant blocks, `μ(μ-32)(μ-16)(μ²-44μ+192)` at
+  `μ = boostAverageOrbitZ` — the polynomial `λ(3λ-2)(3λ-1)(12λ²-11λ+1)` of the
+  normalised average `λ = μ/48`, cleared of denominators. -/
+def Q : Matrix (Fin 22) (Fin 22) ℤ :=
+  boostAverageOrbitZ * (boostAverageOrbitZ - 32) * (boostAverageOrbitZ - 16) *
+    (boostAverageOrbitZ * boostAverageOrbitZ - 44 • boostAverageOrbitZ + 192)
 
--/
+set_option maxRecDepth 40000 in
+/-- **The certificate collapses to the projector**: applying the certificate polynomial
+  to the boost average yields `393216` times `contractionProjectorZ`. Verified through
+  materialised intermediate products, so each kernel step is a single multiplication of
+  explicit integer matrices. -/
+lemma Q_explicit : Q = (393216 : ℤ) • contractionProjectorZ := by
+  have h1 : boostAverageOrbitZ * (boostAverageOrbitZ - 32)
+      = (!![-72, -24, -24, -24, 0, 0, -24, -24, 0, 0, -24, 168, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        -72, -24, -24, -24, 0, 0, -24, -24, 0, 0, 232, -88, -224, -224, 0, 32, 32, 0, 0, 32, 0, 32;
+        -72, -24, -24, -24, 0, 0, -24, 232, 0, 0, -24, -88, 32, 32, 0, -224, 32, 0, 0, -224, 0, 32;
+        -72, -24, -24, -24, 0, 0, 232, -24, 0, 0, -24, -88, 32, 32, 0, 32, -224, 0, 0, 32, 0, -224;
+        0, 0, 0, 0, 0, 0, 0, 0, -128, 128, 0, 0, 0, 0, 128, 0, 0, -128, -128, 0, 128, 0;
+        0, 0, 0, 0, 0, 0, 0, 0, 128, -128, 0, 0, 0, 0, -128, 0, 0, 128, 128, 0, -128, 0;
+        -72, -24, -24, 232, 0, 0, -24, -24, 0, 0, -24, -88, 32, 32, 0, 32, -224, 0, 0, 32, 0, -224;
+        -72, -24, 232, -24, 0, 0, -24, -24, 0, 0, -24, -88, 32, 32, 0, -224, 32, 0, 0, -224, 0, 32;
+        0, 0, 0, 0, -128, 128, 0, 0, 0, 0, 0, 0, 0, 0, -128, 0, 0, 128, 128, 0, -128, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, 0, 0, 0, 0, 0, 0, 128, 0, 0, -128, -128, 0, 128, 0;
+        -72, 232, -24, -24, 0, 0, -24, -24, 0, 0, -24, -88, -224, -224, 0, 32, 32, 0, 0, 32, 0, 32;
+        504, -88, -88, -88, 0, 0, -88, -88, 0, 0, -88, 360, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        96, -224, 32, 32, 0, 0, 32, 32, 0, 0, -224, 32, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        96, -224, 32, 32, 0, 0, 32, 32, 0, 0, -224, 32, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, -128, 128, 0, 0, 0, 0, 0, 0, 0, -128, 0, 0, 128, 0;
+        96, 32, -224, 32, 0, 0, 32, -224, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, 128, 0, 0;
+        96, 32, 32, -224, 0, 0, -224, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, 128;
+        0, 0, 0, 0, -128, 128, 0, 0, 128, -128, 0, 0, 0, 0, -128, 0, 0, 0, 128, 0, 0, 0;
+        0, 0, 0, 0, -128, 128, 0, 0, 128, -128, 0, 0, 0, 0, 0, 0, 0, 128, 0, 0, -128, 0;
+        96, 32, -224, 32, 0, 0, 32, -224, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, 128, 0, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, -128, 128, 0, 0, 0, 0, 128, 0, 0, 0, -128, 0, 0, 0;
+        96, 32, 32, -224, 0, 0, -224, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, 128] : Matrix (Fin 22) (Fin 22) ℤ) := by
+    ext k l
+    revert k l
+    decide +kernel
+  have h2 : (!![-72, -24, -24, -24, 0, 0, -24, -24, 0, 0, -24, 168, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        -72, -24, -24, -24, 0, 0, -24, -24, 0, 0, 232, -88, -224, -224, 0, 32, 32, 0, 0, 32, 0, 32;
+        -72, -24, -24, -24, 0, 0, -24, 232, 0, 0, -24, -88, 32, 32, 0, -224, 32, 0, 0, -224, 0, 32;
+        -72, -24, -24, -24, 0, 0, 232, -24, 0, 0, -24, -88, 32, 32, 0, 32, -224, 0, 0, 32, 0, -224;
+        0, 0, 0, 0, 0, 0, 0, 0, -128, 128, 0, 0, 0, 0, 128, 0, 0, -128, -128, 0, 128, 0;
+        0, 0, 0, 0, 0, 0, 0, 0, 128, -128, 0, 0, 0, 0, -128, 0, 0, 128, 128, 0, -128, 0;
+        -72, -24, -24, 232, 0, 0, -24, -24, 0, 0, -24, -88, 32, 32, 0, 32, -224, 0, 0, 32, 0, -224;
+        -72, -24, 232, -24, 0, 0, -24, -24, 0, 0, -24, -88, 32, 32, 0, -224, 32, 0, 0, -224, 0, 32;
+        0, 0, 0, 0, -128, 128, 0, 0, 0, 0, 0, 0, 0, 0, -128, 0, 0, 128, 128, 0, -128, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, 0, 0, 0, 0, 0, 0, 128, 0, 0, -128, -128, 0, 128, 0;
+        -72, 232, -24, -24, 0, 0, -24, -24, 0, 0, -24, -88, -224, -224, 0, 32, 32, 0, 0, 32, 0, 32;
+        504, -88, -88, -88, 0, 0, -88, -88, 0, 0, -88, 360, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        96, -224, 32, 32, 0, 0, 32, 32, 0, 0, -224, 32, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        96, -224, 32, 32, 0, 0, 32, 32, 0, 0, -224, 32, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, -128, 128, 0, 0, 0, 0, 0, 0, 0, -128, 0, 0, 128, 0;
+        96, 32, -224, 32, 0, 0, 32, -224, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, 128, 0, 0;
+        96, 32, 32, -224, 0, 0, -224, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, 128;
+        0, 0, 0, 0, -128, 128, 0, 0, 128, -128, 0, 0, 0, 0, -128, 0, 0, 0, 128, 0, 0, 0;
+        0, 0, 0, 0, -128, 128, 0, 0, 128, -128, 0, 0, 0, 0, 0, 0, 0, 128, 0, 0, -128, 0;
+        96, 32, -224, 32, 0, 0, 32, -224, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, 128, 0, 0;
+        0, 0, 0, 0, 128, -128, 0, 0, -128, 128, 0, 0, 0, 0, 128, 0, 0, 0, -128, 0, 0, 0;
+        96, 32, 32, -224, 0, 0, -224, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, 128] : Matrix (Fin 22) (Fin 22) ℤ)
+        * (boostAverageOrbitZ - 16)
+      = (!![3744, -800, -800, -800, 0, 0, -800, -800, 0, 0, -800, 3552, 896, 896, 0, 896, 896, 0, 0, 896, 0, 896;
+        -2400, 5344, -800, -800, 0, 0, -800, -800, 0, 0, 5344, -2592, -5248, -5248, 0, 896, 896, 0, 0, 896, 0, 896;
+        -2400, -800, 5344, -800, 0, 0, -800, 5344, 0, 0, -800, -2592, 896, 896, 0, -5248, 896, 0, 0, -5248, 0, 896;
+        -2400, -800, -800, 5344, 0, 0, 5344, -800, 0, 0, -800, -2592, 896, 896, 0, 896, -5248, 0, 0, 896, 0, -5248;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        -2400, -800, -800, 5344, 0, 0, 5344, -800, 0, 0, -800, -2592, 896, 896, 0, 896, -5248, 0, 0, 896, 0, -5248;
+        -2400, -800, 5344, -800, 0, 0, -800, 5344, 0, 0, -800, -2592, 896, 896, 0, -5248, 896, 0, 0, -5248, 0, 896;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        -2400, 5344, -800, -800, 0, 0, -800, -800, 0, 0, 5344, -2592, -5248, -5248, 0, 896, 896, 0, 0, 896, 0, 896;
+        10656, -2592, -2592, -2592, 0, 0, -2592, -2592, 0, 0, -2592, 12000, 1920, 1920, 0, 1920, 1920, 0, 0, 1920, 0, 1920;
+        2688, -5248, 896, 896, 0, 0, 896, 896, 0, 0, -5248, 1920, 5632, 5632, 0, -512, -512, 0, 0, -512, 0, -512;
+        2688, -5248, 896, 896, 0, 0, 896, 896, 0, 0, -5248, 1920, 5632, 5632, 0, -512, -512, 0, 0, -512, 0, -512;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        2688, 896, -5248, 896, 0, 0, 896, -5248, 0, 0, 896, 1920, -512, -512, 0, 5632, -512, 0, 0, 5632, 0, -512;
+        2688, 896, 896, -5248, 0, 0, -5248, 896, 0, 0, 896, 1920, -512, -512, 0, -512, 5632, 0, 0, -512, 0, 5632;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        2688, 896, -5248, 896, 0, 0, 896, -5248, 0, 0, 896, 1920, -512, -512, 0, 5632, -512, 0, 0, 5632, 0, -512;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        2688, 896, 896, -5248, 0, 0, -5248, 896, 0, 0, 896, 1920, -512, -512, 0, -512, 5632, 0, 0, -512, 0, 5632] : Matrix (Fin 22) (Fin 22) ℤ) := by
+    ext k l
+    revert k l
+    decide +kernel
+  have h3 : boostAverageOrbitZ * boostAverageOrbitZ - 44 • boostAverageOrbitZ + 192
+      = (!![-96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 96, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        0, -96, 0, 0, 0, 0, 0, 0, 0, 0, 160, -64, -128, -128, 0, 32, 32, 0, 0, 32, 0, 32;
+        0, 0, -96, 0, 0, 0, 0, 160, 0, 0, 0, -64, 32, 32, 0, -128, 32, 0, 0, -128, 0, 32;
+        0, 0, 0, -96, 0, 0, 160, 0, 0, 0, 0, -64, 32, 32, 0, 32, -128, 0, 0, 32, 0, -128;
+        0, 0, 0, 0, -96, 0, 0, 0, -32, 128, 0, 0, 0, 0, 128, 0, 0, -32, -32, 0, 128, 0;
+        0, 0, 0, 0, 0, -96, 0, 0, 128, -32, 0, 0, 0, 0, -32, 0, 0, 128, 128, 0, -32, 0;
+        0, 0, 0, 160, 0, 0, -96, 0, 0, 0, 0, -64, 32, 32, 0, 32, -128, 0, 0, 32, 0, -128;
+        0, 0, 160, 0, 0, 0, 0, -96, 0, 0, 0, -64, 32, 32, 0, -128, 32, 0, 0, -128, 0, 32;
+        0, 0, 0, 0, -32, 128, 0, 0, -96, 0, 0, 0, 0, 0, -32, 0, 0, 128, 128, 0, -32, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, 0, -96, 0, 0, 0, 0, 128, 0, 0, -32, -32, 0, 128, 0;
+        0, 160, 0, 0, 0, 0, 0, 0, 0, 0, -96, -64, -128, -128, 0, 32, 32, 0, 0, 32, 0, 32;
+        288, -64, -64, -64, 0, 0, -64, -64, 0, 0, -64, 96, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        96, -128, 32, 32, 0, 0, 32, 32, 0, 0, -128, 32, -64, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        96, -128, 32, 32, 0, 0, 32, 32, 0, 0, -128, 32, 128, -64, 0, 0, 0, 0, 0, 0, 0, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, -32, 128, 0, 0, 0, 0, -96, 0, 0, -32, 0, 0, 128, 0;
+        96, 32, -128, 32, 0, 0, 32, -128, 0, 0, 32, 32, 0, 0, 0, -64, 0, 0, 0, 128, 0, 0;
+        96, 32, 32, -128, 0, 0, -128, 32, 0, 0, 32, 32, 0, 0, 0, 0, -64, 0, 0, 0, 0, 128;
+        0, 0, 0, 0, -32, 128, 0, 0, 128, -32, 0, 0, 0, 0, -32, 0, 0, -96, 128, 0, 0, 0;
+        0, 0, 0, 0, -32, 128, 0, 0, 128, -32, 0, 0, 0, 0, 0, 0, 0, 128, -96, 0, -32, 0;
+        96, 32, -128, 32, 0, 0, 32, -128, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, -64, 0, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, -32, 128, 0, 0, 0, 0, 128, 0, 0, 0, -32, 0, -96, 0;
+        96, 32, 32, -128, 0, 0, -128, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, -64] : Matrix (Fin 22) (Fin 22) ℤ) := by
+    ext k l
+    revert k l
+    decide +kernel
+  have h4 : (!![3744, -800, -800, -800, 0, 0, -800, -800, 0, 0, -800, 3552, 896, 896, 0, 896, 896, 0, 0, 896, 0, 896;
+        -2400, 5344, -800, -800, 0, 0, -800, -800, 0, 0, 5344, -2592, -5248, -5248, 0, 896, 896, 0, 0, 896, 0, 896;
+        -2400, -800, 5344, -800, 0, 0, -800, 5344, 0, 0, -800, -2592, 896, 896, 0, -5248, 896, 0, 0, -5248, 0, 896;
+        -2400, -800, -800, 5344, 0, 0, 5344, -800, 0, 0, -800, -2592, 896, 896, 0, 896, -5248, 0, 0, 896, 0, -5248;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        -2400, -800, -800, 5344, 0, 0, 5344, -800, 0, 0, -800, -2592, 896, 896, 0, 896, -5248, 0, 0, 896, 0, -5248;
+        -2400, -800, 5344, -800, 0, 0, -800, 5344, 0, 0, -800, -2592, 896, 896, 0, -5248, 896, 0, 0, -5248, 0, 896;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        -2400, 5344, -800, -800, 0, 0, -800, -800, 0, 0, 5344, -2592, -5248, -5248, 0, 896, 896, 0, 0, 896, 0, 896;
+        10656, -2592, -2592, -2592, 0, 0, -2592, -2592, 0, 0, -2592, 12000, 1920, 1920, 0, 1920, 1920, 0, 0, 1920, 0, 1920;
+        2688, -5248, 896, 896, 0, 0, 896, 896, 0, 0, -5248, 1920, 5632, 5632, 0, -512, -512, 0, 0, -512, 0, -512;
+        2688, -5248, 896, 896, 0, 0, 896, 896, 0, 0, -5248, 1920, 5632, 5632, 0, -512, -512, 0, 0, -512, 0, -512;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        2688, 896, -5248, 896, 0, 0, 896, -5248, 0, 0, 896, 1920, -512, -512, 0, 5632, -512, 0, 0, 5632, 0, -512;
+        2688, 896, 896, -5248, 0, 0, -5248, 896, 0, 0, 896, 1920, -512, -512, 0, -512, 5632, 0, 0, -512, 0, 5632;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        0, 0, 0, 0, -3072, 3072, 0, 0, 3072, -3072, 0, 0, 0, 0, -3072, 0, 0, 3072, 3072, 0, -3072, 0;
+        2688, 896, -5248, 896, 0, 0, 896, -5248, 0, 0, 896, 1920, -512, -512, 0, 5632, -512, 0, 0, 5632, 0, -512;
+        0, 0, 0, 0, 3072, -3072, 0, 0, -3072, 3072, 0, 0, 0, 0, 3072, 0, 0, -3072, -3072, 0, 3072, 0;
+        2688, 896, 896, -5248, 0, 0, -5248, 896, 0, 0, 896, 1920, -512, -512, 0, -512, 5632, 0, 0, -512, 0, 5632] : Matrix (Fin 22) (Fin 22) ℤ)
+        * (!![-96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 96, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        0, -96, 0, 0, 0, 0, 0, 0, 0, 0, 160, -64, -128, -128, 0, 32, 32, 0, 0, 32, 0, 32;
+        0, 0, -96, 0, 0, 0, 0, 160, 0, 0, 0, -64, 32, 32, 0, -128, 32, 0, 0, -128, 0, 32;
+        0, 0, 0, -96, 0, 0, 160, 0, 0, 0, 0, -64, 32, 32, 0, 32, -128, 0, 0, 32, 0, -128;
+        0, 0, 0, 0, -96, 0, 0, 0, -32, 128, 0, 0, 0, 0, 128, 0, 0, -32, -32, 0, 128, 0;
+        0, 0, 0, 0, 0, -96, 0, 0, 128, -32, 0, 0, 0, 0, -32, 0, 0, 128, 128, 0, -32, 0;
+        0, 0, 0, 160, 0, 0, -96, 0, 0, 0, 0, -64, 32, 32, 0, 32, -128, 0, 0, 32, 0, -128;
+        0, 0, 160, 0, 0, 0, 0, -96, 0, 0, 0, -64, 32, 32, 0, -128, 32, 0, 0, -128, 0, 32;
+        0, 0, 0, 0, -32, 128, 0, 0, -96, 0, 0, 0, 0, 0, -32, 0, 0, 128, 128, 0, -32, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, 0, -96, 0, 0, 0, 0, 128, 0, 0, -32, -32, 0, 128, 0;
+        0, 160, 0, 0, 0, 0, 0, 0, 0, 0, -96, -64, -128, -128, 0, 32, 32, 0, 0, 32, 0, 32;
+        288, -64, -64, -64, 0, 0, -64, -64, 0, 0, -64, 96, 32, 32, 0, 32, 32, 0, 0, 32, 0, 32;
+        96, -128, 32, 32, 0, 0, 32, 32, 0, 0, -128, 32, -64, 128, 0, 0, 0, 0, 0, 0, 0, 0;
+        96, -128, 32, 32, 0, 0, 32, 32, 0, 0, -128, 32, 128, -64, 0, 0, 0, 0, 0, 0, 0, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, -32, 128, 0, 0, 0, 0, -96, 0, 0, -32, 0, 0, 128, 0;
+        96, 32, -128, 32, 0, 0, 32, -128, 0, 0, 32, 32, 0, 0, 0, -64, 0, 0, 0, 128, 0, 0;
+        96, 32, 32, -128, 0, 0, -128, 32, 0, 0, 32, 32, 0, 0, 0, 0, -64, 0, 0, 0, 0, 128;
+        0, 0, 0, 0, -32, 128, 0, 0, 128, -32, 0, 0, 0, 0, -32, 0, 0, -96, 128, 0, 0, 0;
+        0, 0, 0, 0, -32, 128, 0, 0, 128, -32, 0, 0, 0, 0, 0, 0, 0, 128, -96, 0, -32, 0;
+        96, 32, -128, 32, 0, 0, 32, -128, 0, 0, 32, 32, 0, 0, 0, 128, 0, 0, 0, -64, 0, 0;
+        0, 0, 0, 0, 128, -32, 0, 0, -32, 128, 0, 0, 0, 0, 128, 0, 0, 0, -32, 0, -96, 0;
+        96, 32, 32, -128, 0, 0, -128, 32, 0, 0, 32, 32, 0, 0, 0, 0, 128, 0, 0, 0, 0, -64] : Matrix (Fin 22) (Fin 22) ℤ)
+      = (393216 : ℤ) • contractionProjectorZ := by
+    ext k l
+    revert k l
+    decide +kernel
+  rw [Q, h1, h2, h3, h4]
 
-def test : Matrix (Fin 22) (Fin 22) ℚ := Matrix.of fun i j => if i = j then 1 else 0
-
-
-/-- The Minkowski sign of a coordinate direction: `+1` on the time direction and `-1` on
-  the spatial directions. -/
-def minkSign : Fin 1 ⊕ Fin 3 → ℂ := Sum.elim (fun _ => 1) (fun _ => -1)
-
-/-- The enumeration `t, x, y, z` of the coordinate directions. -/
-def coordIdx : Fin 4 → Fin 1 ⊕ Fin 3 := ![Sum.inl 0, Sum.inr 0, Sum.inr 1, Sum.inr 2]
-
-/-- **The Levi-Civita sign of an index vector**: the determinant of its indicator matrix
-  against the coordinate enumeration — zero unless the four indices are a permutation of
-  the coordinates, and the sign of that permutation otherwise. -/
-def epsSign (d : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
-  (Matrix.of fun s t : Fin 4 => if d s = coordIdx t then (1 : ℤ) else 0).det
-
-/-- **The outer double contraction** `η^{μν} η^{ρσ} T_{μνρσ}`. -/
-noncomputable def contractionOuter : B :=
-  ∑ μ : Fin 1 ⊕ Fin 3, ∑ ν : Fin 1 ⊕ Fin 3, (minkSign μ * minkSign ν) • T ![μ, μ, ν, ν]
-
-/-- **The crossed double contraction** `η^{μρ} η^{νσ} T_{μνρσ}`. -/
-noncomputable def contractionCross : B :=
-  ∑ μ : Fin 1 ⊕ Fin 3, ∑ ν : Fin 1 ⊕ Fin 3, (minkSign μ * minkSign ν) • T ![μ, ν, μ, ν]
-
-/-- **The nested double contraction** `η^{μσ} η^{νρ} T_{μνρσ}`. -/
-noncomputable def contractionNested : B :=
-  ∑ μ : Fin 1 ⊕ Fin 3, ∑ ν : Fin 1 ⊕ Fin 3, (minkSign μ * minkSign ν) • T ![μ, ν, ν, μ]
-
-/-- **The Levi-Civita contraction** `ε^{μνρσ} T_{μνρσ}`: supported on the all-distinct
-  components. It is invariant under the connected Lorentz group, whose elements have unit
-  determinant. -/
-noncomputable def contractionEps : B :=
-  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsSign d : ℤ) : ℂ) • T d
-
-/-!
-
-## H. The final phase
-
-The endgame in the shape of the dimension-eight case: extract the orbit-sum coefficients
-from membership in the rotational average, then let the extreme boost-weight components
-along each axis vanish — `eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule` on the
-concrete decomposition — and collapse the resulting relations onto the four invariant
-contractions.
-
--/
+/-- The certificate polynomial expanded into powers. -/
+lemma Q_eq_poly : Q = boostAverageOrbitZ ^ 5 - (92 : ℤ) • boostAverageOrbitZ ^ 4
+    + (2816 : ℤ) • boostAverageOrbitZ ^ 3 - (31744 : ℤ) • boostAverageOrbitZ ^ 2
+    + (98304 : ℤ) • boostAverageOrbitZ := by
+  rw [Q]
+  noncomm_ring
 
 include hT in
-/-- **The final collapse** (in progress): an element of the rotational average of the
-  paired-or-distinct span with boost weight zero along every axis is a combination of the
-  three metric double contractions and the Levi-Civita contraction. -/
-theorem mem_span_contractions_of_mem_rotationSubmodule {x : B}
-    (hx : x ∈ rotationSubmodule (repLorentz := repLorentz) (T := T))
+/-- **The certificate round**: applying the certificate polynomial of the averaged round
+  to the coefficients reproduces `x` — the combination of five iterated rounds weighted
+  by the certificate coefficients. -/
+lemma eq_sum_Q_smul {x : B} (c : Fin 22 → ℂ)
+    (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
     (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x ∈ ((ℂ ∙ contractionOuter (T := T) ⊔ ℂ ∙ contractionCross (T := T)) ⊔
-        ℂ ∙ contractionNested (T := T)) ⊔ ℂ ∙ contractionEps (T := T) := by
-  obtain ⟨c, rfl⟩ := hT.exists_eq_sum_of_mem_rotationSubmodule hx
-  sorry
+    x = ∑ k, ((9437184 : ℂ)⁻¹ * ∑ l, ((Q k l : ℤ) : ℂ) * c l)
+        • rotationOrbitSum (T := T) (orbitRep k) := by
+  have h1 := hT.eq_sum_pow_boostAverageOrbitZ_smul c hx hw 1
+  have h2 := hT.eq_sum_pow_boostAverageOrbitZ_smul c hx hw 2
+  have h3 := hT.eq_sum_pow_boostAverageOrbitZ_smul c hx hw 3
+  have h4 := hT.eq_sum_pow_boostAverageOrbitZ_smul c hx hw 4
+  have h5 := hT.eq_sum_pow_boostAverageOrbitZ_smul c hx hw 5
+  have key : (27 : ℂ) • x - (207 / 4 : ℂ) • x + (33 : ℂ) • x - (31 / 4 : ℂ) • x
+      + (2⁻¹ : ℂ) • x
+      = ∑ k, ((9437184 : ℂ)⁻¹ * ∑ l, ((Q k l : ℤ) : ℂ) * c l)
+        • rotationOrbitSum (T := T) (orbitRep k) := by
+    nth_rewrite 1 [h5]
+    nth_rewrite 1 [h4]
+    nth_rewrite 1 [h3]
+    nth_rewrite 1 [h2]
+    nth_rewrite 1 [h1]
+    simp only [Finset.smul_sum, smul_smul]
+    rw [← Finset.sum_sub_distrib, ← Finset.sum_add_distrib, ← Finset.sum_sub_distrib,
+      ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    simp only [← sub_smul, ← add_smul]
+    congr 1
+    have hQc : ∀ l, ((Q k l : ℤ) : ℂ)
+        = (((boostAverageOrbitZ ^ 5) k l : ℤ) : ℂ)
+          - 92 * (((boostAverageOrbitZ ^ 4) k l : ℤ) : ℂ)
+          + 2816 * (((boostAverageOrbitZ ^ 3) k l : ℤ) : ℂ)
+          - 31744 * (((boostAverageOrbitZ ^ 2) k l : ℤ) : ℂ)
+          + 98304 * ((boostAverageOrbitZ k l : ℤ) : ℂ) := fun l => by
+      rw [Q_eq_poly]
+      push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
+      ring
+    have hsplit : ∑ l, ((Q k l : ℤ) : ℂ) * c l
+        = (∑ l, (((boostAverageOrbitZ ^ 5) k l : ℤ) : ℂ) * c l)
+          - 92 * (∑ l, (((boostAverageOrbitZ ^ 4) k l : ℤ) : ℂ) * c l)
+          + 2816 * (∑ l, (((boostAverageOrbitZ ^ 3) k l : ℤ) : ℂ) * c l)
+          - 31744 * (∑ l, (((boostAverageOrbitZ ^ 2) k l : ℤ) : ℂ) * c l)
+          + 98304 * (∑ l, ((boostAverageOrbitZ k l : ℤ) : ℂ) * c l) := by
+      simp only [hQc, Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
+      exact Finset.sum_congr rfl fun l _ => by ring
+    rw [hsplit]
+    field_simp
+    ring
+  calc x = (27 : ℂ) • x - (207 / 4 : ℂ) • x + (33 : ℂ) • x - (31 / 4 : ℂ) • x
+        + (2⁻¹ : ℂ) • x := by module
+    _ = _ := key
+
+include hT in
+/-- **The projector round**: the certificate collapses to `24⁻¹` times the integer
+  projector matrix — one clean application of `contractionProjectorZ` reproduces the
+  coefficients of any all-axes weight-zero element. -/
+lemma eq_sum_contractionProjectorZ_smul {x : B} (c : Fin 22 → ℂ)
+    (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
+    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
+    x = ∑ k, ((24 : ℂ)⁻¹ * ∑ l, ((contractionProjectorZ k l : ℤ) : ℂ) * c l)
+        • rotationOrbitSum (T := T) (orbitRep k) := by
+  rw [hT.eq_sum_Q_smul c hx hw]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  congr 1
+  have hP : ∀ l, ((Q k l : ℤ) : ℂ) = 393216 * ((contractionProjectorZ k l : ℤ) : ℂ) :=
+    fun l => by
+      rw [Q_explicit]
+      simp only [Matrix.smul_apply, smul_eq_mul]
+      push_cast
+      ring
+  simp only [hP, mul_assoc]
+  rw [← Finset.mul_sum]
+  field_simp
+  ring
+
+/-!
+
+## G. The four invariant contractions
+
+The Lorentz-invariant elements built from `T`: the three double metric contractions —
+outer `g^{μν} g^{ρσ} T_{μνρσ}`, inner `g^{μρ} g^{νσ} T_{μνρσ}`, split
+`g^{μσ} g^{νρ} T_{μνρσ}` — and the Levi-Civita contraction `ε^{μνρσ} T_{μνρσ}`.
+In orbit coordinates they are the four explicit integer vectors spanning the image of
+`contractionProjectorZ`.
+
+-/
+
+/-- The Minkowski sign of a direction: `+1` on time, `-1` on space. -/
+def minkowskiSignZ : Fin 1 ⊕ Fin 3 → ℤ := Sum.elim (fun _ => 1) (fun _ => -1)
+
+/-- The Minkowski metric on direction letters. -/
+def etaZ (μ ν : Fin 1 ⊕ Fin 3) : ℤ := if μ = ν then minkowskiSignZ μ else 0
+
+/-- The numeric label of a direction, for the Levi-Civita sign. -/
+def dirNum : Fin 1 ⊕ Fin 3 → ℤ := Sum.elim (fun _ => 0) (fun j => (j : ℤ) + 1)
+
+/-- The Levi-Civita sign of a four-tuple of directions: the product of the signs of the
+  label differences — `±1` on the permutations of `(t, x, y, z)` and `0` otherwise. -/
+def epsilonSignZ (d : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
+  (dirNum (d 1) - dirNum (d 0)).sign * (dirNum (d 2) - dirNum (d 0)).sign
+    * (dirNum (d 3) - dirNum (d 0)).sign * (dirNum (d 2) - dirNum (d 1)).sign
+    * (dirNum (d 3) - dirNum (d 1)).sign * (dirNum (d 3) - dirNum (d 2)).sign
+
+/-- **The outer contraction** `g^{μν} g^{ρσ} T_{μνρσ}`. -/
+noncomputable def outerContraction : B :=
+  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 1) * etaZ (d 2) (d 3) : ℤ) : ℂ) • T d
+
+/-- **The inner contraction** `g^{μρ} g^{νσ} T_{μνρσ}`. -/
+noncomputable def innerContraction : B :=
+  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 2) * etaZ (d 1) (d 3) : ℤ) : ℂ) • T d
+
+/-- **The split contraction** `g^{μσ} g^{νρ} T_{μνρσ}`. -/
+noncomputable def splitContraction : B :=
+  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 3) * etaZ (d 1) (d 2) : ℤ) : ℂ) • T d
+
+/-- **The Levi-Civita contraction** `ε^{μνρσ} T_{μνρσ}`. -/
+noncomputable def epsilonContraction : B :=
+  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : ℂ) • T d
+
+/-- The outer contraction in orbit coordinates (times three). -/
+def outerOrbitZ : Fin 22 → ℤ := ![1, -3, 0, 0, 0, 0, 0, 0, 0, 0, -3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0]
+
+/-- The inner contraction in orbit coordinates (times three). -/
+def innerOrbitZ : Fin 22 → ℤ := ![1, 0, -3, 0, 0, 0, 0, -3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0]
+
+/-- The split contraction in orbit coordinates (times three). -/
+def splitOrbitZ : Fin 22 → ℤ := ![1, 0, 0, -3, 0, 0, -3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3]
+
+/-- The Levi-Civita contraction in orbit coordinates. -/
+def epsilonOrbitZ : Fin 22 → ℤ := ![0, 0, 0, 0, 1, -1, 0, 0, -1, 1, 0, 0, 0, 0, 1, 0, 0, -1, -1, 0, 1, 0]
+
+/-- The outer weight row of the projector factorisation. -/
+def outerWeightZ : Fin 22 → ℤ :=
+  ![3, -5, 1, 1, 0, 0, 1, 1, 0, 0, -5, 3, 5, 5, 0, -1, -1, 0, 0, -1, 0, -1]
+
+/-- The inner weight row of the projector factorisation. -/
+def innerWeightZ : Fin 22 → ℤ :=
+  ![3, 1, -5, 1, 0, 0, 1, -5, 0, 0, 1, 3, -1, -1, 0, 5, -1, 0, 0, 5, 0, -1]
+
+/-- The split weight row of the projector factorisation. -/
+def splitWeightZ : Fin 22 → ℤ :=
+  ![3, 1, 1, -5, 0, 0, -5, 1, 0, 0, 1, 3, -1, -1, 0, -1, 5, 0, 0, -1, 0, 5]
+
+/-- The Levi-Civita weight row of the projector factorisation. -/
+def epsilonWeightZ : Fin 22 → ℤ :=
+  ![0, 0, 0, 0, 9, -9, 0, 0, -9, 9, 0, 0, 0, 0, 9, 0, 0, -9, -9, 0, 9, 0]
+
+/-- **The projector factors through the four invariants**: three times the projector is
+  the sum of the four rank-one products of an invariant orbit vector with its weight
+  row. -/
+lemma three_mul_contractionProjectorZ : ∀ k l : Fin 22,
+    3 * contractionProjectorZ k l
+      = outerOrbitZ k * outerWeightZ l + innerOrbitZ k * innerWeightZ l
+        + splitOrbitZ k * splitWeightZ l + epsilonOrbitZ k * epsilonWeightZ l := by
+  decide +kernel
+
+/-- The orbit sum expanded through the orbit multiplicity. -/
+lemma rotationOrbitSum_eq_sum (d : Fin 4 → Fin 1 ⊕ Fin 3) :
+    rotationOrbitSum (T := T) d
+      = ∑ e : Fin 4 → Fin 1 ⊕ Fin 3, ((rotationOrbitCoeff d e : ℤ) : ℂ) • T e := by
+  rw [rotationOrbitSum]
+  simp [rotationOrbitCoeff, apply_ite (fun n : ℤ => (n : ℂ)), add_smul, ite_smul,
+    Finset.sum_add_distrib, Finset.sum_ite_eq']
+
+/-- A combination of the representative orbit sums, expanded into the generators. -/
+lemma sum_smul_rotationOrbitSum_orbitRep (c : Fin 22 → ℂ) :
+    ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k)
+      = ∑ e : Fin 4 → Fin 1 ⊕ Fin 3,
+          (∑ k, c k * ((rotationOrbitCoeff (orbitRep k) e : ℤ) : ℂ)) • T e := by
+  calc ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k)
+      = ∑ k, ∑ e : Fin 4 → Fin 1 ⊕ Fin 3,
+          (c k * ((rotationOrbitCoeff (orbitRep k) e : ℤ) : ℂ)) • T e := by
+        refine Finset.sum_congr rfl fun k _ => ?_
+        rw [rotationOrbitSum_eq_sum, Finset.smul_sum]
+        exact Finset.sum_congr rfl fun e _ => smul_smul _ _ _
+    _ = _ := by
+        rw [Finset.sum_comm]
+        exact Finset.sum_congr rfl fun e _ => (Finset.sum_smul).symm
+
+/-- The outer orbit vector against the orbit multiplicities gives the outer metric
+  coefficients. -/
+lemma sum_outerOrbitZ_mul_rotationOrbitCoeff : ∀ e : Fin 4 → Fin 1 ⊕ Fin 3,
+    (∑ k, outerOrbitZ k * rotationOrbitCoeff (orbitRep k) e)
+      = 3 * (etaZ (e 0) (e 1) * etaZ (e 2) (e 3)) := by
+  decide +kernel
+
+/-- The inner orbit vector against the orbit multiplicities gives the inner metric
+  coefficients. -/
+lemma sum_innerOrbitZ_mul_rotationOrbitCoeff : ∀ e : Fin 4 → Fin 1 ⊕ Fin 3,
+    (∑ k, innerOrbitZ k * rotationOrbitCoeff (orbitRep k) e)
+      = 3 * (etaZ (e 0) (e 2) * etaZ (e 1) (e 3)) := by
+  decide +kernel
+
+/-- The split orbit vector against the orbit multiplicities gives the split metric
+  coefficients. -/
+lemma sum_splitOrbitZ_mul_rotationOrbitCoeff : ∀ e : Fin 4 → Fin 1 ⊕ Fin 3,
+    (∑ k, splitOrbitZ k * rotationOrbitCoeff (orbitRep k) e)
+      = 3 * (etaZ (e 0) (e 3) * etaZ (e 1) (e 2)) := by
+  decide +kernel
+
+/-- The Levi-Civita orbit vector against the orbit multiplicities gives the Levi-Civita
+  signs. -/
+lemma sum_epsilonOrbitZ_mul_rotationOrbitCoeff : ∀ e : Fin 4 → Fin 1 ⊕ Fin 3,
+    (∑ k, epsilonOrbitZ k * rotationOrbitCoeff (orbitRep k) e) = epsilonSignZ e := by
+  decide +kernel
+
+/-- The outer orbit vector represents three times the outer contraction. -/
+lemma sum_outerOrbitZ_smul_rotationOrbitSum :
+    ∑ k, ((outerOrbitZ k : ℤ) : ℂ) • rotationOrbitSum (T := T) (orbitRep k)
+      = (3 : ℂ) • outerContraction (T := T) := by
+  rw [sum_smul_rotationOrbitSum_orbitRep, outerContraction, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  rw [smul_smul]
+  congr 1
+  exact_mod_cast sum_outerOrbitZ_mul_rotationOrbitCoeff e
+
+/-- The inner orbit vector represents three times the inner contraction. -/
+lemma sum_innerOrbitZ_smul_rotationOrbitSum :
+    ∑ k, ((innerOrbitZ k : ℤ) : ℂ) • rotationOrbitSum (T := T) (orbitRep k)
+      = (3 : ℂ) • innerContraction (T := T) := by
+  rw [sum_smul_rotationOrbitSum_orbitRep, innerContraction, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  rw [smul_smul]
+  congr 1
+  exact_mod_cast sum_innerOrbitZ_mul_rotationOrbitCoeff e
+
+/-- The split orbit vector represents three times the split contraction. -/
+lemma sum_splitOrbitZ_smul_rotationOrbitSum :
+    ∑ k, ((splitOrbitZ k : ℤ) : ℂ) • rotationOrbitSum (T := T) (orbitRep k)
+      = (3 : ℂ) • splitContraction (T := T) := by
+  rw [sum_smul_rotationOrbitSum_orbitRep, splitContraction, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  rw [smul_smul]
+  congr 1
+  exact_mod_cast sum_splitOrbitZ_mul_rotationOrbitCoeff e
+
+/-- The Levi-Civita orbit vector represents the Levi-Civita contraction. -/
+lemma sum_epsilonOrbitZ_smul_rotationOrbitSum :
+    ∑ k, ((epsilonOrbitZ k : ℤ) : ℂ) • rotationOrbitSum (T := T) (orbitRep k)
+      = epsilonContraction (T := T) := by
+  rw [sum_smul_rotationOrbitSum_orbitRep, epsilonContraction]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  congr 1
+  exact_mod_cast sum_epsilonOrbitZ_mul_rotationOrbitCoeff e
+
+include hT in
+/-- **Boost-invariant orbit combinations are spanned by the four contractions**: an
+  all-axes weight-zero combination of the representative orbit sums is a linear
+  combination of the outer, inner and split metric contractions and the Levi-Civita
+  contraction. -/
+theorem exists_smul_contraction_of_eq_sum_orbitRep {x : B} (c : Fin 22 → ℂ)
+    (hx : x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k))
+    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
+    ∃ a₁ a₂ a₃ a₄ : ℂ,
+      x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) := by
+  refine ⟨(24 : ℂ)⁻¹ * ∑ l, ((outerWeightZ l : ℤ) : ℂ) * c l,
+    (24 : ℂ)⁻¹ * ∑ l, ((innerWeightZ l : ℤ) : ℂ) * c l,
+    (24 : ℂ)⁻¹ * ∑ l, ((splitWeightZ l : ℤ) : ℂ) * c l,
+    (72 : ℂ)⁻¹ * ∑ l, ((epsilonWeightZ l : ℤ) : ℂ) * c l, ?_⟩
+  rw [hT.eq_sum_contractionProjectorZ_smul c hx hw]
+  have hfac : ∀ k, (24 : ℂ)⁻¹ * ∑ l, ((contractionProjectorZ k l : ℤ) : ℂ) * c l
+      = ((outerOrbitZ k : ℤ) : ℂ) * ((72 : ℂ)⁻¹ * ∑ l, ((outerWeightZ l : ℤ) : ℂ) * c l)
+        + ((innerOrbitZ k : ℤ) : ℂ) * ((72 : ℂ)⁻¹ * ∑ l, ((innerWeightZ l : ℤ) : ℂ) * c l)
+        + ((splitOrbitZ k : ℤ) : ℂ) * ((72 : ℂ)⁻¹ * ∑ l, ((splitWeightZ l : ℤ) : ℂ) * c l)
+        + ((epsilonOrbitZ k : ℤ) : ℂ)
+            * ((72 : ℂ)⁻¹ * ∑ l, ((epsilonWeightZ l : ℤ) : ℂ) * c l) := by
+    intro k
+    have hZ : ∀ l, ((contractionProjectorZ k l : ℤ) : ℂ)
+        = (3 : ℂ)⁻¹ * (((outerOrbitZ k : ℤ) : ℂ) * ((outerWeightZ l : ℤ) : ℂ)
+          + ((innerOrbitZ k : ℤ) : ℂ) * ((innerWeightZ l : ℤ) : ℂ)
+          + ((splitOrbitZ k : ℤ) : ℂ) * ((splitWeightZ l : ℤ) : ℂ)
+          + ((epsilonOrbitZ k : ℤ) : ℂ) * ((epsilonWeightZ l : ℤ) : ℂ)) := by
+      intro l
+      have h := three_mul_contractionProjectorZ k l
+      have h' := congrArg (fun n : ℤ => ((n : ℤ) : ℂ)) h
+      push_cast at h'
+      field_simp
+      linear_combination h'
+    simp only [Finset.mul_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun l _ => ?_
+    rw [hZ l]
+    field_simp
+    ring
+  simp only [hfac, add_smul, Finset.sum_add_distrib]
+  have hpull : ∀ (v : Fin 22 → ℤ) (α : ℂ),
+      (∑ k, (((v k : ℤ) : ℂ) * α) • rotationOrbitSum (T := T) (orbitRep k))
+        = α • ∑ k, ((v k : ℤ) : ℂ) • rotationOrbitSum (T := T) (orbitRep k) := by
+    intro v α
+    rw [Finset.smul_sum]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    rw [smul_smul, mul_comm]
+  rw [hpull outerOrbitZ _, hpull innerOrbitZ _, hpull splitOrbitZ _, hpull epsilonOrbitZ _,
+    sum_outerOrbitZ_smul_rotationOrbitSum, sum_innerOrbitZ_smul_rotationOrbitSum,
+    sum_splitOrbitZ_smul_rotationOrbitSum, sum_epsilonOrbitZ_smul_rotationOrbitSum]
+  refine congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg₂ (· + ·) ?_ ?_) ?_) ?_
+  · rw [smul_smul]
+    congr 1
+    field_simp
+    ring
+  · rw [smul_smul]
+    congr 1
+    field_simp
+    ring
+  · rw [smul_smul]
+    congr 1
+    field_simp
+    ring
+  · rfl
+/-!
+
+## H. The classification of the Lorentz invariants
+
+-/
+
+/-- **Finite decomposition of an `iSup` membership**: an element of the join of a
+  `ℤ`-indexed family is a finitely supported sum of members. -/
+lemma exists_finsupp_of_mem_iSup {S : ℤ → Submodule ℂ B} {x : B} (hx : x ∈ ⨆ m, S m) :
+    ∃ f : ℤ →₀ B, (∀ m, f m ∈ S m) ∧ x = f.sum fun _ b => b := by
+  refine Submodule.iSup_induction
+    (motive := fun y => ∃ f : ℤ →₀ B, (∀ m, f m ∈ S m) ∧ y = f.sum fun _ b => b)
+    S hx ?_ ?_ ?_
+  · intro m y hy
+    refine ⟨Finsupp.single m y, fun m' => ?_, by simp [Finsupp.sum_single_index]⟩
+    rcases eq_or_ne m' m with rfl | hne
+    · rw [Finsupp.single_eq_same]
+      exact hy
+    · rw [Finsupp.single_eq_of_ne hne]
+      exact Submodule.zero_mem _
+  · exact ⟨0, fun m => Submodule.zero_mem _, by simp⟩
+  · rintro y z ⟨f, hf, rfl⟩ ⟨g, hg, rfl⟩
+    refine ⟨f + g, fun m => by rw [Finsupp.add_apply]; exact add_mem (hf m) (hg m), ?_⟩
+    rw [Finsupp.sum_add_index (fun m _ => rfl) (fun m _ b₁ b₂ => rfl)]
+
+/-- **Graded extraction**: an element of the join of a family bounded by the boost-weight
+  grading which itself has weight zero lies in the zero member of the family. -/
+lemma mem_of_mem_iSup_of_boostWeight_zero {i : Fin 3} {S : ℤ → Submodule ℂ B}
+    (hS : ∀ m : ℤ, S m ≤ boostWeightSubmodule repLorentz i m) {x : B}
+    (hx : x ∈ ⨆ m, S m) (h0 : x ∈ boostWeightSubmodule repLorentz i 0) : x ∈ S 0 := by
+  obtain ⟨f, hf, rfl⟩ := exists_finsupp_of_mem_iSup hx
+  have hkey := eq_component_zero_of_mem_boostWeightSubmodule (i := i)
+    (s := insert 0 f.support) (w := fun m => f m) h0
+    (fun m _ => hS m (hf m)) (Finset.mem_insert_self 0 _) ?_
+  · rw [hkey]
+    exact hf 0
+  · rw [Finsupp.sum]
+    by_cases h : (0 : ℤ) ∈ f.support
+    · rw [Finset.insert_eq_self.2 h]
+    · rw [Finset.sum_insert h, Finsupp.notMem_support_iff.1 h, zero_add]
+
+/-- **Invariance gives boost weight zero**: an element fixed by the Lorentz group lies in
+  the weight-zero space of every boost axis. -/
+lemma mem_boostWeightSubmodule_zero_of_invariant {x : B}
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) (i : Fin 3) :
+    x ∈ boostWeightSubmodule repLorentz i 0 := by
+  rw [mem_boostWeightSubmodule]
+  intro t ht
+  rw [hinv, zpow_zero, one_smul]
+
+include hT in
+/-- **Every Lorentz-invariant element is an orbit-sum combination**: an element of the
+  span of the components fixed by the Lorentz group is a combination of the orbit sums
+  of the `22` canonical representatives. -/
+theorem exists_eq_sum_orbitRep_of_invariant {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ c : Fin 22 → ℂ, x = ∑ k, c k • rotationOrbitSum (T := T) (orbitRep k) := by
+  have hw := mem_boostWeightSubmodule_zero_of_invariant (repLorentz := repLorentz) hinv
+  have h1 : x ∈ hT.boostPiece 0 0 := by
+    refine mem_of_mem_iSup_of_boostWeight_zero (i := 0)
+      (hT.boostPiece_le_boostWeightSubmodule 0) ?_ (hw 0)
+    rw [← hT.span_eq_iSup_boostPiece 0]
+    exact hx
+  have h2 : x ∈ hT.boostPiece₂ 0 1 0 0 :=
+    mem_of_mem_iSup_of_boostWeight_zero (i := 1)
+      (hT.boostPiece₂_le_boostWeightSubmodule 0 1 0)
+      (hT.boostPiece_le_iSup_boostPiece₂ 0 1 0 h1) (hw 1)
+  have h3 : x ∈ hT.boostPiece₃ 0 :=
+    mem_of_mem_iSup_of_boostWeight_zero (i := 2)
+      hT.boostPiece₃_le_boostWeightSubmodule
+      (hT.boostPiece₂_le_iSup_boostPiece₃ h2) (hw 2)
+  have h4 : x ∈ pairedOrDistinctSubmodule (T := T) :=
+    hT.boostPiece₃_zero_le_iSup_pairedOrDistinct h3
+  have havg : rotationAverage (repLorentz := repLorentz) x = x := by
+    rw [rotationAverage]
+    simp only [LinearMap.smul_apply, LinearMap.add_apply, LinearMap.id_apply]
+    rw [hinv rotationCycle, hinv (rotationCycle ^ 2)]
+    module
+  have h5 : x ∈ rotationSubmodule (repLorentz := repLorentz) (T := T) :=
+    havg ▸ Submodule.mem_map_of_mem h4
+  obtain ⟨c, hc⟩ := hT.exists_eq_sum_rotationSubset_of_mem_rotationSubmodule h5
+  refine ⟨fun k => c (orbitRep k), ?_⟩
+  rw [hc, sum_rotationSubset (fun d => c d • rotationOrbitSum (T := T) d)]
+
+include hT in
+/-- **The classification of the Lorentz invariants**: every element of the span of the
+  components fixed by the Lorentz group is a linear combination of the outer, inner and
+  split metric contractions and the Levi-Civita contraction. -/
+theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a₁ a₂ a₃ a₄ : ℂ,
+      x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) := by
+  obtain ⟨c, hc⟩ := hT.exists_eq_sum_orbitRep_of_invariant hx hinv
+  exact hT.exists_smul_contraction_of_eq_sum_orbitRep c hc
+    (mem_boostWeightSubmodule_zero_of_invariant (repLorentz := repLorentz) hinv)
+
+
 
 end IsQuadLorentz
 
