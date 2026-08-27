@@ -412,6 +412,30 @@ lemma iSup_eq_sup_zero_two_neg_two (f : ℤ → Submodule K M)
   · subst hn2; exact le_sup_right
   · rw [hf l h0 h2 hn2]; exact bot_le
 
+/-- The weight space of weight `k` sits inside the `2 ^ k` eigenspace of the boost at
+  parameter two. -/
+lemma boostWeightSubmodule_le_eigenspace (rep : Representation K SL(2,ℂ) M) (k : ℤ) :
+    boostWeightSubmodule rep i k ≤
+      Module.End.eigenspace (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero))
+      ((algebraMap ℝ K 2) ^ k) := by
+  intro x hx
+  rw [Module.End.mem_eigenspace_iff]
+  exact hx 2 two_ne_zero
+
+private lemma zpow_algebraMap_two_injective :
+    Function.Injective (fun k : ℤ => ((algebraMap ℝ K 2) ^ k)) := by
+  intro a b hab
+  simp only [← map_zpow₀] at hab
+  exact zpow_right_injective₀ (by norm_num) (by norm_num) ((algebraMap ℝ K).injective hab)
+
+/-- The weight spaces are independent: a decomposition into homogeneous parts is unique when
+  it exists. -/
+lemma boostWeightSubmodule_iSupIndep (rep : Representation K SL(2,ℂ) M) :
+    iSupIndep (boostWeightSubmodule rep i) :=
+  ((Module.End.eigenspaces_iSupIndep
+      (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero) : Module.End K M)).comp
+    zpow_algebraMap_two_injective).mono fun k => boostWeightSubmodule_le_eigenspace rep k
+
 variable (rep : Representation K SL(2,ℂ) A)
 
 /-- The unit has boost weight zero. -/
@@ -431,29 +455,6 @@ lemma mul_mem' [IsBoostGraded rep] {k l n : ℤ} {x y : A} (hx : x ∈ boostWeig
 instance [IsBoostGraded rep] : SetLike.GradedMonoid (boostWeightSubmodule rep i) where
   one_mem := one_mem rep
   mul_mem _ _ _ _ hx hy := mul_mem rep hx hy
-
-/-- The weight space of weight `k` sits inside the `2 ^ k` eigenspace of the boost at
-  parameter two. -/
-lemma boostWeightSubmodule_le_eigenspace (k : ℤ) :
-    boostWeightSubmodule rep i k ≤
-      Module.End.eigenspace (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero))
-      ((algebraMap ℝ K 2) ^ k) := by
-  intro x hx
-  rw [Module.End.mem_eigenspace_iff]
-  exact hx 2 two_ne_zero
-
-private lemma zpow_algebraMap_two_injective :
-    Function.Injective (fun k : ℤ => ((algebraMap ℝ K 2) ^ k)) := by
-  intro a b hab
-  simp only [← map_zpow₀] at hab
-  exact zpow_right_injective₀ (by norm_num) (by norm_num) ((algebraMap ℝ K).injective hab)
-
-/-- The weight spaces are independent: a decomposition into homogeneous parts is unique when
-  it exists. -/
-lemma boostWeightSubmodule_iSupIndep : iSupIndep (boostWeightSubmodule rep i) :=
-  ((Module.End.eigenspaces_iSupIndep
-      (rep (Lorentz.SL2C.boostAxis i 2 two_ne_zero) : Module.End K A)).comp
-    zpow_algebraMap_two_injective).mono fun k => boostWeightSubmodule_le_eigenspace rep k
 
 /-- Recover the two summands from the sum and difference: if `u + v` and `u - v` lie in a
   submodule then so do `u` and `v`. -/

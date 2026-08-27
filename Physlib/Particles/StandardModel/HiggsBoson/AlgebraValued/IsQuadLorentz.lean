@@ -25,6 +25,11 @@ public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
 # Invariants under the Lorentz group with four-vector indices
+
+In this file we show invariants within the span of tensors  `T^{μ₁ μ₂ μ₃ μ₄}` under
+the Lorentz group, where each index `μᵢ` is a four-vector index.
+
+
 -/
 
 @[expose] public section
@@ -34,7 +39,7 @@ namespace Lorentz
 open TensorProduct Matrix MatrixGroups Lorentz
 
 
-structure IsQuadLorentz (B : Type*) [Semiring B] [Algebra ℂ B]
+structure IsQuadLorentz (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B)
     (T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B) : Prop where
   repLorentz_T : ∀ (g : SL(2,ℂ)) l,
@@ -44,7 +49,7 @@ structure IsQuadLorentz (B : Type*) [Semiring B] [Algebra ℂ B]
 namespace IsQuadLorentz
 set_option linter.unusedVariables false
 
-variable {B : Type*} [Ring B] [Algebra ℂ B]
+variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B}
   (hT : IsQuadLorentz B repLorentz T)
@@ -198,7 +203,7 @@ many; they will eventually move next to `boostWeightSubmodule_iSupIndep`.
 /-- **Components of a vanishing homogeneous sum vanish**: the boost-weight spaces are
   independent. -/
 lemma eq_zero_of_sum_mem_boostWeightSubmodule
-    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
+    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [AddCommGroup A] [Module K A]
     {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {s : Finset ℤ} {w : ℤ → A}
     (hw : ∀ m ∈ s, w m ∈ boostWeightSubmodule rep i m)
     (hsum : ∑ m ∈ s, w m = 0) :
@@ -216,7 +221,7 @@ lemma eq_zero_of_sum_mem_boostWeightSubmodule
 /-- **A weight-zero element of a homogeneous sum is its weight-zero component**: all the
   other components must vanish. -/
 lemma eq_component_zero_of_mem_boostWeightSubmodule
-    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
+    {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [AddCommGroup A] [Module K A]
     {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {s : Finset ℤ} {w : ℤ → A} {x : A}
     (hx : x ∈ boostWeightSubmodule rep i 0)
     (hw : ∀ m ∈ s, w m ∈ boostWeightSubmodule rep i m)
@@ -1225,7 +1230,7 @@ spatial direction; `rotationSubset` lists the `22` representatives explicitly.
 
 -/
 
-omit [Algebra ℂ B] in
+omit [Module ℂ B] in
 /-- The orbit sum is invariant under rotating the index. -/
 lemma rotationOrbitSum_cycDir (d : Fin 4 → Fin 1 ⊕ Fin 3) :
     rotationOrbitSum (T := T) (fun s => cycDir (d s)) = rotationOrbitSum (T := T) d := by
@@ -1249,7 +1254,7 @@ def orbitRepOf (d : Fin 4 → Fin 1 ⊕ Fin 3) : Fin 4 → Fin 1 ⊕ Fin 3 :=
   else if IsOrbitRep (fun s => cycDir (d s)) then fun s => cycDir (d s)
   else fun s => cycDir (cycDir (d s))
 
-omit [Algebra ℂ B] in
+omit [Module ℂ B] in
 /-- The orbit sum of an index equals that of its canonical representative. -/
 lemma rotationOrbitSum_orbitRepOf (d : Fin 4 → Fin 1 ⊕ Fin 3) :
     rotationOrbitSum (T := T) (orbitRepOf d) = rotationOrbitSum (T := T) d := by
