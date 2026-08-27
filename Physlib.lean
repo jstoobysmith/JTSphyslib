@@ -249,7 +249,7 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic

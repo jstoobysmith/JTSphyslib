@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 /-!
 # The infinitesimal action underlying a matter representation
@@ -22,7 +23,7 @@ derivative preserves the gauge tensors, `TransformsIn.covDerivAction`.
 
 ## ii. Key results
 
-- `IsGaugeField.IsInfinitesimalActionOf` : `act` is the infinitesimal action underlying
+- `GaugeAlgebra.IsInfinitesimalActionOf` : `act` is the infinitesimal action underlying
   `rep`.
 - `TransformsIn.covDerivAction` : the covariant derivative preserves `TransformsIn`.
 
@@ -30,6 +31,7 @@ derivative preserves the gauge tensors, `TransformsIn.covDerivAction`.
 
 - A. The infinitesimal action underlying a representation
 - B. The covariant derivative preserves `TransformsIn`
+- C. The conjugate action and the conjugate representation
 
 -/
 
@@ -40,7 +42,9 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
-namespace IsGaugeField
+namespace GaugeAlgebra
+
+open IsGaugeField
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ JetGaugeGroupI B}
@@ -318,6 +322,181 @@ theorem _root_.StandardModel.TransformsIn.covDerivAction
 
 end MatterCovariance
 
-end IsGaugeField
+/-!
+
+## C. The conjugate action and the conjugate representation
+
+-/
+
+section ConjugateAction
+
+/-- A linear endomorphism read on the conjugate module: the same underlying map,
+  through the identity `conjEquiv`. Conjugating twists nothing at the level of the
+  additive group, so all structural identities (`comp`, `add`, `neg`, sums) hold
+  definitionally. -/
+def _root_.ConjModule.endConj {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
+    ConjModule M →ₗ[k] ConjModule M where
+  toFun v := conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v))
+  map_add' v w := f.map_add v w
+  map_smul' a v := f.map_smul (star a) v
+
+@[simp]
+lemma _root_.ConjModule.endConj_apply {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) (v : ConjModule M) :
+    ConjModule.endConj f v =
+      conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v)) := rfl
+
+lemma _root_.ConjModule.endConj_comp {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
+    ConjModule.endConj (f ∘ₗ g) = ConjModule.endConj f ∘ₗ ConjModule.endConj g := rfl
+
+lemma _root_.ConjModule.endConj_add {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
+    ConjModule.endConj (f + g) = ConjModule.endConj f + ConjModule.endConj g := rfl
+
+lemma _root_.ConjModule.endConj_neg {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
+    ConjModule.endConj (-f) = -ConjModule.endConj f := rfl
+
+lemma _root_.ConjModule.endConj_multiset_sum {k : Type*} [CommRing k] [StarRing k]
+    {M : Type*} [AddCommGroup M] [Module k M] (S : Multiset (M →ₗ[k] M)) :
+    ConjModule.endConj S.sum = (S.map ConjModule.endConj).sum := by
+  induction S using Multiset.induction_on with
+  | empty => rfl
+  | cons f S ih =>
+      rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons,
+        ConjModule.endConj_add, ih]
+
+/-- Conjugation of endomorphisms commutes with real scalars: the star on the
+  conjugated complex scalar is invisible on the reals. -/
+lemma _root_.ConjModule.endConj_real_smul {M : Type*} [AddCommGroup M] [Module ℂ M]
+    (r : ℝ) (f : M →ₗ[ℂ] M) :
+    ConjModule.endConj (r • f) = r • ConjModule.endConj f := by
+  refine LinearMap.ext fun v => ?_
+  show (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
+      = (starRingEnd ℂ) (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
+  rw [show (starRingEnd ℂ) (algebraMap ℝ ℂ r) = algebraMap ℝ ℂ r from
+    Complex.conj_ofReal r]
+
+/-- **The conjugate of an infinitesimal action**: the same maps, read on the conjugate
+  module — the generators of the conjugate representation. -/
+noncomputable def actionConj (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) :
+    GaugeAlgebra →ₗ[ℝ] ConjModule V →ₗ[ℂ] ConjModule V where
+  toFun c := ConjModule.endConj (act c)
+  map_add' c₁ c₂ := by rw [map_add, ConjModule.endConj_add]
+  map_smul' r c := by rw [map_smul, ConjModule.endConj_real_smul, RingHom.id_apply]
+
+@[simp]
+lemma actionConj_apply (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (c : GaugeAlgebra) :
+    actionConj act c = ConjModule.endConj (act c) := rfl
+
+/-- The identification of the jets of a conjugate field with the conjugates of the
+  jets: conjugation is monoidal, and the star of the jet-ring factor absorbs the
+  twist — `conj (g ⊗ u) ↦ star g ⊗ conj u`. This is the equivalence along which
+  `repConj` carries the conjugated representation. -/
+noncomputable def conjJetEquiv :
+    ConjModule (JetRing ⊗[ℂ] V) ≃ₗ[ℂ] JetRing ⊗[ℂ] ConjModule V :=
+  (ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
+    (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V)))
+
+lemma conjJetEquiv_conjEquiv_tmul (g : JetRing) (u : V) :
+    conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (g ⊗ₜ[ℂ] u))
+      = star g ⊗ₜ[ℂ] conjEquiv (k := ℂ) (M := V) u := by
+  rw [conjJetEquiv, LinearEquiv.trans_apply, ConjModule.tensorEquiv_symm_conjEquiv_tmul,
+    TensorProduct.congr_tmul, JetRing.starConjEquiv_apply, LinearEquiv.refl_apply,
+    LinearEquiv.symm_apply_apply]
+
+section ConjRep
+
+variable {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+
+/-- The conjugate representation acts through `conjJetEquiv` by the original maps. -/
+lemma repConj_conjJetEquiv (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
+    (U : JetGaugeGroupI) (w : JetRing ⊗[ℂ] V) :
+    repConj rep U (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+      = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U w)) := by
+  show conjJetEquiv ((rep.conj U) (conjJetEquiv.symm
+      (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w)))) = _
+  rw [LinearEquiv.symm_apply_apply, Representation.conj_apply,
+    LinearEquiv.symm_apply_apply]
+
+/-- **The base-point Taylor coefficients of the conjugate representation are the
+  conjugated coefficients**: the derivative directions are real, so conjugation passes
+  through `∂_x` and the base-point evaluation untouched. -/
+lemma repCoeff_repConj (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
+    (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+    repCoeff (repConj rep) U x = ConjModule.endConj (repCoeff rep U x) := by
+  have hE_tmul := conjJetEquiv_conjEquiv_tmul (V := V)
+  -- conjugation intertwines the formal derivative
+  have hderiv1 : ∀ (μ : Fin 1 ⊕ Fin 3) (w : JetRing ⊗[ℂ] V),
+      jetDeriv μ (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+        = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (jetDeriv μ w)) := by
+    intro μ w
+    induction w using TensorProduct.induction_on with
+    | zero => simp
+    | tmul g u =>
+        rw [hE_tmul, jetDeriv_tmul, jetDeriv_tmul, hE_tmul, JetRing.pderiv_star]
+    | add a b ha hb =>
+        rw [map_add, map_add, map_add, ha, hb, map_add, map_add, map_add]
+  have hderiv : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (w : JetRing ⊗[ℂ] V),
+      jetIteratedDeriv s (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+        = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)
+            (jetIteratedDeriv s w)) := by
+    intro s
+    induction s using Multiset.induction_on with
+    | empty => intro w; rw [jetIteratedDeriv_zero]; rfl
+    | cons μ t ih =>
+        intro w
+        rw [jetIteratedDeriv_cons, LinearMap.comp_apply, ih, hderiv1,
+          jetIteratedDeriv_cons, LinearMap.comp_apply]
+  -- conjugation intertwines the base-point evaluation
+  have heval : ∀ w : JetRing ⊗[ℂ] V,
+      jetEval (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+        = conjEquiv (k := ℂ) (M := V) (jetEval w) := by
+    intro w
+    induction w using TensorProduct.induction_on with
+    | zero => simp
+    | tmul g u =>
+        rw [hE_tmul, jetEval_tmul, jetEval_tmul, JetRing.constantCoeff_star,
+          map_smulₛₗ, starRingEnd_apply]
+    | add a b ha hb => rw [map_add, map_add, map_add, ha, hb, map_add, map_add]
+  refine LinearMap.ext fun v => ?_
+  have hv : jetOfConstant v = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)
+      (jetOfConstant ((conjEquiv (k := ℂ) (M := V)).symm v))) := by
+    rw [jetOfConstant_apply, jetOfConstant_apply, hE_tmul, star_one,
+      LinearEquiv.apply_symm_apply]
+  show jetEval (jetIteratedDeriv x (repConj rep U (jetOfConstant v))) = _
+  rw [hv, repConj_conjJetEquiv, hderiv, heval]
+  rfl
+
+/-- **The conjugate of an infinitesimal action underlies the conjugate
+  representation**: conjugating the Taylor coefficients preserves both the
+  Maurer–Cartan Leibniz law and the adjoint intertwining, since the gauge-algebra
+  inputs are real. -/
+theorem IsInfinitesimalActionOf.conj (h : IsInfinitesimalActionOf act rep) :
+    IsInfinitesimalActionOf (actionConj act) (repConj rep) := by
+  constructor
+  · intro U μ x
+    rw [repCoeff_repConj, h.repCoeff_cons U μ x, ConjModule.endConj_neg,
+      ConjModule.endConj_multiset_sum, Multiset.map_map]
+    refine congrArg Neg.neg (congrArg Multiset.sum
+      (Multiset.map_congr rfl fun p hp => ?_))
+    rw [Function.comp_apply, ConjModule.endConj_comp, repCoeff_repConj]
+    rfl
+  · intro U x c
+    rw [repCoeff_repConj, show actionConj act c = ConjModule.endConj (act c) from rfl,
+      ← ConjModule.endConj_comp, h.repCoeff_act U x c,
+      ConjModule.endConj_multiset_sum, Multiset.map_map]
+    refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+    rw [Function.comp_apply, ConjModule.endConj_comp, repCoeff_repConj]
+    rfl
+
+end ConjRep
+
+end ConjugateAction
+
+end GaugeAlgebra
 
 end StandardModel

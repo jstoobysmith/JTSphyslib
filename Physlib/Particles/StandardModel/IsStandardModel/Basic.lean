@@ -215,19 +215,30 @@ noncomputable def covDerivD (h : IsStandardModel B repJet repLorentz massWeightP
     Module.Dual ℂ DownSinglet →ₗ[ℂ] B :=
   IsGaugeField.covDerivIter A DownSinglet.gaugeAlgebraAction (d i) n l 0
 
+noncomputable def covDerivBarD (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
+    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B :=
+  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  (bard i) n l 0
 
+/-- **The field algebra with covariant down-quark derivatives**: replacing the plain
+  derivative symbols of the down-type quarks *and their conjugates* by their covariant
+  derivative towers does not change the generated algebra — the corrections `∇ − ∂`
+  are polynomials in gauge-field and quark symbols. This is the span lemma
+  `IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter`, instantiated per family for
+  `d` (with the `(3, 1)_{-2}` action) and for `bard` (with its conjugate action). -/
 lemma fieldAlgebra_eq_covDerivD :
     h.fieldAlgebra = Algebra.adjoin ℂ
     ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
       (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)), Set.range (H s) ∪ Set.range (barH s)) ∪
-      (⋃ (i : Fin 3) (n : ℕ) (l :  Fin n → (Fin 1 ⊕ Fin 3)), Set.range (h.covDerivD i l)) ∪
+      (⋃ (i : Fin 3) (n : ℕ) (l :  Fin n → (Fin 1 ⊕ Fin 3)), Set.range (h.covDerivD i l)
+      ∪ Set.range (h.covDerivBarD i l)) ∪
       (⋃ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)),
-        Set.range (bard i s) ∪
         Set.range (u i s) ∪ Set.range (baru i s) ∪
         Set.range (Q i s) ∪ Set.range (barQ i s) ∪
         Set.range (L i s) ∪ Set.range (barL i s) ∪
         Set.range (e i s) ∪ Set.range (bare i s))) := by
-  -- the span lemma, per family
+  -- the span lemma, per family and per conjugation
   have hAT : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
@@ -243,16 +254,31 @@ lemma fieldAlgebra_eq_covDerivD :
               n l 0 φ}) :=
     fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
       DownSinglet.gaugeAlgebraAction (d i)
-  -- the down symbols lie in the covariant-tower algebra
+  have hATbar : ∀ i : Fin 3,
+      Algebra.adjoin ℂ
+        ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+          {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
+            (φ : Module.Dual ℂ (ConjModule DownSinglet)), b = bard i s φ}) =
+      Algebra.adjoin ℂ
+        ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+          {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
+            (φ : Module.Dual ℂ (ConjModule DownSinglet)),
+            b = IsGaugeField.covDerivIter A
+              (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i)
+              n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i)
+  -- the down symbols and their conjugates lie in the covariant-tower algebra
   have hdmem : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ DownSinglet),
       d i s φ ∈ Algebra.adjoin ℂ
         ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
           (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)), Set.range (H s) ∪ Set.range (barH s)) ∪
-          (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
-            Set.range (h.covDerivD i l)) ∪
+          (⋃ (i : Fin 3) (n : ℕ) (l :  Fin n → (Fin 1 ⊕ Fin 3)),
+            Set.range (h.covDerivD i l) ∪ Set.range (h.covDerivBarD i l)) ∪
           (⋃ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)),
-            Set.range (bard i s) ∪
             Set.range (u i s) ∪ Set.range (baru i s) ∪
             Set.range (Q i s) ∪ Set.range (barQ i s) ∪
             Set.range (L i s) ∪ Set.range (barL i s) ∪
@@ -271,7 +297,35 @@ lemma fieldAlgebra_eq_covDerivD :
     · exact Or.inl (Or.inl (Or.inl
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩)))
     · exact Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
-        Set.mem_iUnion.mpr ⟨l, ⟨φ', rfl⟩⟩⟩⟩))
+        Set.mem_iUnion.mpr ⟨l, Or.inl ⟨φ', rfl⟩⟩⟩⟩))
+  have hbardmem : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)),
+      bard i s φ ∈ Algebra.adjoin ℂ
+        ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+          (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)), Set.range (H s) ∪ Set.range (barH s)) ∪
+          (⋃ (i : Fin 3) (n : ℕ) (l :  Fin n → (Fin 1 ⊕ Fin 3)),
+            Set.range (h.covDerivD i l) ∪ Set.range (h.covDerivBarD i l)) ∪
+          (⋃ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)),
+            Set.range (u i s) ∪ Set.range (baru i s) ∪
+            Set.range (Q i s) ∪ Set.range (barQ i s) ∪
+            Set.range (L i s) ∪ Set.range (barL i s) ∪
+            Set.range (e i s) ∪ Set.range (bare i s))) := by
+    intro i s φ
+    have h1 : bard i s φ ∈ Algebra.adjoin ℂ
+        ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+          {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
+            (φ : Module.Dual ℂ (ConjModule DownSinglet)),
+            b = IsGaugeField.covDerivIter A
+              (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i)
+              n l 0 φ}) :=
+      (hATbar i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
+    refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
+    rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
+    · exact Or.inl (Or.inl (Or.inl
+        (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩)))
+    · exact Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
+        Set.mem_iUnion.mpr ⟨l, Or.inr ⟨φ', rfl⟩⟩⟩⟩))
   refine le_antisymm (Algebra.adjoin_le ?_) (Algebra.adjoin_le ?_)
   · rintro b (hAH | hbF)
     · exact Algebra.subset_adjoin (Or.inl (Or.inl hAH))
@@ -280,35 +334,56 @@ lemma fieldAlgebra_eq_covDerivD :
       by_cases hd : b ∈ Set.range (d i s)
       · obtain ⟨φ, rfl⟩ := hd
         exact hdmem i s φ
-      · refine Algebra.subset_adjoin (Or.inr (Set.mem_iUnion.mpr ⟨i,
-          Set.mem_iUnion.mpr ⟨s, ?_⟩⟩))
-        simp only [Set.mem_union] at hbF ⊢
-        tauto
+      · by_cases hbd : b ∈ Set.range (bard i s)
+        · obtain ⟨φ, rfl⟩ := hbd
+          exact hbardmem i s φ
+        · refine Algebra.subset_adjoin (Or.inr (Set.mem_iUnion.mpr ⟨i,
+            Set.mem_iUnion.mpr ⟨s, ?_⟩⟩))
+          simp only [Set.mem_union] at hbF ⊢
+          tauto
   · rintro b ((hAH | hT) | hbF)
     · exact Algebra.subset_adjoin (Or.inl hAH)
-    · simp only [Set.mem_iUnion, Set.mem_range] at hT
-      obtain ⟨i, n, l, φ, rfl⟩ := hT
-      have h1 : IsGaugeField.covDerivIter A DownSinglet.gaugeAlgebraAction (d i)
-          n l 0 φ ∈ Algebra.adjoin ℂ
-            ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-                (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
-              {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                (φ : Module.Dual ℂ DownSinglet), b = d i s φ}) :=
-        (hAT i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
-      refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
-      rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
-      · exact Or.inl (Or.inl
-          (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
-      · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-        have hmem : d i s' φ' ∈ Set.range (d i s') := ⟨φ', rfl⟩
-        simp only [Set.mem_union]
-        tauto
+    · simp only [Set.mem_iUnion] at hT
+      obtain ⟨i, n, l, hT⟩ := hT
+      rcases hT with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
+      · have h1 : IsGaugeField.covDerivIter A DownSinglet.gaugeAlgebraAction (d i)
+            n l 0 φ ∈ Algebra.adjoin ℂ
+              ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+                  (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+                {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
+                  (φ : Module.Dual ℂ DownSinglet), b = d i s φ}) :=
+          (hAT i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
+        refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
+        rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
+        · exact Or.inl (Or.inl
+            (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
+        · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
+          have hmem : d i s' φ' ∈ Set.range (d i s') := ⟨φ', rfl⟩
+          simp only [Set.mem_union]
+          tauto
+      · have h1 : IsGaugeField.covDerivIter A
+            (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i)
+            n l 0 φ ∈ Algebra.adjoin ℂ
+              ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+                  (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+                {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
+                  (φ : Module.Dual ℂ (ConjModule DownSinglet)), b = bard i s φ}) :=
+          (hATbar i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
+        refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
+        rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
+        · exact Or.inl (Or.inl
+            (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
+        · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
+          have hmem : bard i s' φ' ∈ Set.range (bard i s') := ⟨φ', rfl⟩
+          simp only [Set.mem_union]
+          tauto
     · simp only [Set.mem_iUnion] at hbF
       obtain ⟨i, s, hbF⟩ := hbF
       refine Algebra.subset_adjoin (Or.inr (Set.mem_iUnion.mpr ⟨i,
         Set.mem_iUnion.mpr ⟨s, ?_⟩⟩))
       simp only [Set.mem_union] at hbF ⊢
       tauto
+
 end IsStandardModel
 
 end StandardModel
