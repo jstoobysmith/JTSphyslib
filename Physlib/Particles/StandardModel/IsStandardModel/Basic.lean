@@ -4,38 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
 module
-
-public import Physlib.Particles.StandardModel.HiggsBoson.Basic
-public import Physlib.Relativity.IsLorentzDeriv
-public import Physlib.Particles.StandardModel.HiggsBoson.AlgebraValued.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
-public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
-public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
-public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassDim
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
-public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
-public import Mathlib.LinearAlgebra.TensorProduct.Pi
-public import Mathlib.Analysis.Normed.Lp.Matrix
-public import Mathlib.RingTheory.TensorProduct.Maps
-public import Mathlib.RepresentationTheory.Invariants
+public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 /-!
 # The algebra valued Standard model
 
