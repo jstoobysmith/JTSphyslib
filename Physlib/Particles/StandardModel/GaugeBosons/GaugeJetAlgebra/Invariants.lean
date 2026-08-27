@@ -140,8 +140,8 @@ theorem invariant_mem_adjoin_fieldStrength
       b = IsGaugeField.iteratedCovDerivAdjoint gaugeField l
         (IsGaugeField.fieldStrength gaugeField ν lam) 0 φ} ∪ S) :=
   IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField
-    (fun _ _ _ => Subring.mem_center_iff.mpr fun _ => mul_comm _ _)
-    S hS hx hinv
+    (fun _ _ _ _ _ _ => Commute.all _ _)
+    S (fun _ _ _ _ _ => Commute.all _ _) hS hx hinv
 
 end GaugeJetAlgebra
 

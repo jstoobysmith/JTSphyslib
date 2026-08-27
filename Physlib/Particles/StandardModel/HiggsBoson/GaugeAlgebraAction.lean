@@ -408,6 +408,29 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
   rw [mul_smul_comm, mul_one, foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul,
     mul_comm]
 
+
+/-- The weak endomorphism of the identity matrix is the identity. -/
+lemma weakEnd_one : weakEnd 1 = LinearMap.id := by
+  rw [weakEnd, map_one, Module.End.one_eq_id]
+
+/-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
+  Taylor coefficient of the jet gauge action is the identity. -/
+lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
+    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+  have h2 : (constantCoeff : JetRing →+* ℂ).mapMatrix
+      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+        = 1 := Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.1) hU)
+  have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
+    Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
+  have hM : ((jetGaugeMatrix U).map fun f =>
+      constantCoeff ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ℂ ρ h) f))
+        = 1 := by
+    ext i j
+    rw [Matrix.map_apply, Multiset.foldl_zero, jetGaugeMatrix, Matrix.smul_apply,
+      smul_eq_mul, map_mul, map_pow, hu, one_pow, one_mul]
+    exact Matrix.ext_iff.mpr h2 i j
+  rw [repCoeff_eq, hM, weakEnd_one]
+
 set_option maxHeartbeats 1000000 in
 /-- **The `(1, 2)_{3}` action of the gauge algebra is the infinitesimal action
   underlying the jet gauge action on the Higgs doublet**: its base-point Taylor

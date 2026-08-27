@@ -186,6 +186,16 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     jetIteratedDeriv_tmul, StandardModel.jetEval_tmul, jetPhase_eq,
     LinearMap.smul_apply, LinearMap.id_apply]
 
+/-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
+  Taylor coefficient of the jet gauge action is the identity. -/
+lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
+    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+  have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
+    Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
+  rw [repCoeff_eq, Multiset.foldl_zero, jetPhase_eq, map_pow,
+    JetRing.constantCoeff_star, hu, star_one, one_pow, one_smul]
+
+
 /-!
 
 ## D. The derivative identity for the hypercharge phase

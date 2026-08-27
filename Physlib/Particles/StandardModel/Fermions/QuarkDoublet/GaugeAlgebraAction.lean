@@ -613,6 +613,38 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
       simp only [map_add]
       rw [ha, hb]
 
+
+/-- The colour–weak endomorphism of the identity matrix is the identity. -/
+lemma colourWeakEnd_one : colourWeakEnd 1 = LinearMap.id := by
+  refine LinearMap.ext fun v => ?_
+  rw [colourWeakEnd_apply_mk, map_one, map_one, Module.End.one_apply,
+    LinearEquiv.symm_apply_apply, LinearMap.id_apply]
+
+/-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
+  Taylor coefficient of the jet gauge action is the identity. -/
+lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
+    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+  have h1 : (constantCoeff : JetRing →+* ℂ).mapMatrix
+      ((U.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
+        = 1 := Subtype.ext_iff.mp (congrArg Prod.fst hU)
+  have h2 : (constantCoeff : JetRing →+* ℂ).mapMatrix
+      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+        = 1 := Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.1) hU)
+  have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
+    Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
+  have hM : ((jetGaugeMatrix U).map fun f =>
+      constantCoeff ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ℂ ρ h) f))
+        = 1 := by
+    rw [show (1 : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) ℂ)
+        = (1 : Matrix (Fin 3) (Fin 3) ℂ) ⊗ₖ (1 : Matrix (Fin 2) (Fin 2) ℂ) from
+        (Matrix.one_kronecker_one).symm, ← h1, ← h2]
+    ext i j
+    rw [Matrix.map_apply, Multiset.foldl_zero, jetGaugeMatrix, Matrix.smul_apply,
+      smul_eq_mul, map_mul, hu, one_mul, Matrix.kronecker_apply,
+      Matrix.kronecker_apply, map_mul, RingHom.mapMatrix_apply,
+      RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.map_apply]
+  rw [repCoeff_eq, hM, colourWeakEnd_one]
+
 set_option maxHeartbeats 1000000 in
 /-- **The `(3, 2)_{1}` action of the gauge algebra is the infinitesimal action
   underlying the jet gauge action on the quark doublet**: its base-point Taylor

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 /-!
 # The infinitesimal action underlying a matter representation
@@ -320,6 +321,42 @@ theorem _root_.StandardModel.TransformsIn.covDerivAction
     hR, hcancel]
   abel
 
+/-- **Every iterated covariant derivative preserves `TransformsIn`**: if `F` transforms
+  in `rep` and `act` is the infinitesimal action underlying `rep`, then
+  `∇_{l 0} ⋯ ∇_{l (n-1)} F` transforms in `rep` — the recursion of
+  `TransformsIn.covDerivAction` over the tuple of directions. -/
+theorem _root_.StandardModel.TransformsIn.covDerivIter
+    (hA : IsGaugeField repLorentz repGauge A)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : TransformsIn repGauge rep F)
+    (hact : IsInfinitesimalActionOf act rep)
+    (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    TransformsIn repGauge rep (IsGaugeField.covDerivIter A act F n l) := by
+  induction n with
+  | zero => exact hF
+  | succ n ih =>
+      exact TransformsIn.covDerivAction hA (ih fun i => l i.succ) hact (l 0)
+
+omit [FiniteDimensional ℂ V] in
+/-- **Matter gauge tensors whose zeroth representation coefficient is trivial on pure
+  jets are fixed by pure jets**: for a family transforming in `rep`, a gauge jet with
+  trivial base-point value acts trivially on the underived symbol, provided the
+  representation's zeroth Taylor coefficient is the identity on such jets. -/
+lemma _root_.StandardModel.TransformsIn.repGauge_eq_of_mem_truncationKer_zero
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : TransformsIn repGauge rep F)
+    (hrep : ∀ {W : JetGaugeGroupI}, W.eval = 1 → repCoeff rep W 0 = LinearMap.id)
+    (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℂ V) :
+    repGauge U.1 (F 0 φ) = F 0 φ := by
+  have hinv : ((U.1)⁻¹).eval = 1 := by
+    rw [map_inv, JetGaugeGroupI.mem_truncationKer_zero_iff.mp U.2, inv_one]
+  have h1 := hF U.1 φ 0
+  simp only [Multiset.antidiagonal_zero, Multiset.map_singleton,
+    Multiset.sum_singleton] at h1
+  rw [h1, show repDualCoeff rep (U.1)⁻¹ 0 = (repCoeff rep (U.1)⁻¹ 0).dualMap from rfl,
+    hrep hinv]
+  rfl
+
 end MatterCovariance
 
 /-!
@@ -346,6 +383,10 @@ lemma _root_.ConjModule.endConj_apply {k : Type*} [CommRing k] [StarRing k] {M :
     [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) (v : ConjModule M) :
     ConjModule.endConj f v =
       conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v)) := rfl
+
+lemma _root_.ConjModule.endConj_id {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] :
+    ConjModule.endConj (LinearMap.id : M →ₗ[k] M) = LinearMap.id := rfl
 
 lemma _root_.ConjModule.endConj_comp {k : Type*} [CommRing k] [StarRing k] {M : Type*}
     [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
@@ -470,6 +511,13 @@ lemma repCoeff_repConj (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ
   show jetEval (jetIteratedDeriv x (repConj rep U (jetOfConstant v))) = _
   rw [hv, repConj_conjJetEquiv, hderiv, heval]
   rfl
+
+/-- The base-point triviality of the zeroth Taylor coefficient passes to the
+  conjugate representation. -/
+lemma repCoeff_repConj_zero_eq_id {W : JetGaugeGroupI}
+    (hrep : repCoeff rep W 0 = LinearMap.id) :
+    repCoeff (repConj rep) W 0 = LinearMap.id := by
+  rw [repCoeff_repConj, hrep, ConjModule.endConj_id]
 
 /-- **The conjugate of an infinitesimal action underlies the conjugate
   representation**: conjugating the Taylor coefficients preserves both the
