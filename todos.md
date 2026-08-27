@@ -1,15 +1,11 @@
 # TODOs introduced by this branch
 
-21 open &middot; as of 2026-08-21
+20 open &middot; as of 2026-08-25
 
 > Regenerate with `python scripts/todos.py --md todos.md` after adding or
 > resolving a TODO, and commit it in the same commit.
 
 **Format.** Use the `TODO "…"` command
-
-### `Particles/LeptonGaugeSector/JetAlgebra/Boosts`
-
-- Generalize the below result for any axis &nbsp;[`FieldStrength.lean:348`](https://github.com/jstoobysmith/JTSphyslib/blob/AddPotentialAlgebra/Physlib/Particles/LeptonGaugeSector/JetAlgebra/Boosts/FieldStrength.lean#L348)
 
 ### `Particles/PureFermionic`
 
