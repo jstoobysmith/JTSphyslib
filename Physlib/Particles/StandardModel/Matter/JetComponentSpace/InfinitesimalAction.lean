@@ -45,10 +45,7 @@ namespace IsGaugeField
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ JetGaugeGroupI B}
-variable {A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-variable {D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B}
-variable [Lorentz.IsLorentzDeriv repLorentz D]
-variable {D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ)}
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
 
 /-!
 
@@ -152,39 +149,39 @@ lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
   rw [← symm_comp_right, ← symm_comp_right_W]
   rfl
 
+
 omit [FiniteDimensional ℝ V] in
 /-- If `F` transforms in `rep`, so do its `κ ::ₘ s`-derived symbols, with the extra
   derivative traced through `IsInfinitesimalActionOf.repDualCoeff_cons`: the Leibniz
   splittings where `κ` stays a derivative, minus the convolution where `κ` hits the
   representation — `act` of the derived Maurer–Cartan form. -/
-lemma TransformsIn.repGauge_iteratedD_cons
-    {hA : IsGaugeField repLorentz repGauge A D D_comm}
-    {F : Module.Dual ℝ V →ₗ[ℝ] B} (hF : hA.TransformsIn rep F)
+lemma TransformsIn.repGauge_cons
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
+    (hF : TransformsIn (repGauge := repGauge) rep F)
     (hact : IsInfinitesimalActionOf act rep)
     (U : JetGaugeGroupI) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ V) :
-    repGauge U (Lorentz.iteratedD D D_comm (κ ::ₘ s) (F φ)) =
+    repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
-        Lorentz.iteratedD D D_comm (κ ::ₘ p.2) (F (repDualCoeff rep U⁻¹ p.1 φ))).sum
+        F (κ ::ₘ p.2) (repDualCoeff rep U⁻¹ p.1 φ)).sum
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            Lorentz.iteratedD D D_comm p.2 (F (repDualCoeff rep U⁻¹ q.2
+            F p.2 (repDualCoeff rep U⁻¹ q.2
               (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-                (maurerCartanForm U⁻¹ κ))))))).sum).sum := by
+                (maurerCartanForm U⁻¹ κ)))))).sum).sum := by
   rw [hF U φ (κ ::ₘ s)]
   simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
     Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
-  have hsec : (Multiset.map (fun p => Lorentz.iteratedD D D_comm p.2
-        (F (repDualCoeff rep U⁻¹ (κ ::ₘ p.1) φ))) s.antidiagonal).sum =
+  have hsec : (Multiset.map (fun p =>
+        F p.2 (repDualCoeff rep U⁻¹ (κ ::ₘ p.1) φ)) s.antidiagonal).sum =
       -(s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            Lorentz.iteratedD D D_comm p.2 (F (repDualCoeff rep U⁻¹ q.2
+            F p.2 (repDualCoeff rep U⁻¹ q.2
               (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-                (maurerCartanForm U⁻¹ κ))))))).sum).sum := by
+                (maurerCartanForm U⁻¹ κ)))))).sum).sum := by
     rw [← Multiset.sum_map_neg'']
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [hact.repDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_neg, map_multiset_sum,
-      Multiset.map_map, map_multiset_sum, Multiset.map_map]
+    rw [hact.repDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_multiset_sum, Multiset.map_map]
     exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => rfl))
   rw [hsec, sub_eq_add_neg]
 
@@ -192,57 +189,47 @@ set_option maxHeartbeats 2000000 in
 /-- The all-orders gauge transformation of the derived action `A_ρ · F` for `F`
   transforming in `rep`: since `F` transforms homogeneously, only one cross-term
   convolution through `act` survives — the analogue of
-  `repGauge_iteratedD_commutator` with a matter field in the second slot. -/
-lemma TransformsIn.repGauge_iteratedD_action
-    {hA : IsGaugeField repLorentz repGauge A D D_comm}
-    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B), D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
-    {F : Module.Dual ℝ V →ₗ[ℝ] B} (hF : hA.TransformsIn rep F)
+  `TransformsInAdjoint.repGauge_bracketFamConv` with a matter field in the second
+  slot. -/
+lemma TransformsIn.repGauge_actionFamConv
+    (hA : IsGaugeField repLorentz repGauge A)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
+    (hF : TransformsIn (repGauge := repGauge) rep F)
     (hact : IsInfinitesimalActionOf act rep)
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ V) :
-    repGauge U (Lorentz.iteratedD D D_comm s (actionFam act (A ρ) F φ)) =
+    repGauge U (actionFamConv A act ρ F s φ) =
       (s.antidiagonal.map fun p =>
-        Lorentz.iteratedD D D_comm p.2 (actionFam act (A ρ) F
-          (repDualCoeff rep U⁻¹ p.1 φ))).sum
+        actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun r =>
-            Lorentz.iteratedD D D_comm r.2 (F (repDualCoeff rep U⁻¹ r.1
+            F r.2 (repDualCoeff rep U⁻¹ r.1
               (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-                (maurerCartanForm U⁻¹ ρ))))))).sum).sum := by
+                (maurerCartanForm U⁻¹ ρ)))))).sum).sum := by
   have hAlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ GaugeAlgebra),
-      repGauge U (((Lorentz.iteratedD D D_comm u).restrictScalars ℝ ∘ₗ A ρ) ψ) =
-        ((u.antidiagonal.map fun q =>
-          (Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A ρ ∘ₗ
-            adjointDualCoeff U⁻¹ q.1).sum) ψ
+      repGauge U (A u ρ ψ) =
+        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1).sum) ψ
         + algebraMap ℂ B (ψ (JetGaugeAlgebra.eval
             (JetGaugeAlgebra.iteratedDeriv u (maurerCartanForm U⁻¹ ρ)))) := by
     intro u ψ
-    show repGauge U (Lorentz.iteratedD D D_comm u (A ρ ψ)) = _
     rw [hA.gauge_apply_deriv U u ρ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
   have hFlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ V),
-      repGauge U (((Lorentz.iteratedD D D_comm u).restrictScalars ℝ ∘ₗ F) ψ) =
-        ((u.antidiagonal.map fun r =>
-          (Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ F ∘ₗ
-            repDualCoeff rep U⁻¹ r.1).sum) ψ := by
+      repGauge U (F u ψ) =
+        ((u.antidiagonal.map fun r => F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum) ψ := by
     intro u ψ
-    show repGauge U (Lorentz.iteratedD D D_comm u (F ψ)) = _
     rw [hF U ψ u, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
   have hMa : (s.antidiagonal.map fun p =>
       actionFam act ((p.1.antidiagonal.map fun q =>
-          (Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A ρ ∘ₗ
-            adjointDualCoeff U⁻¹ q.1).sum)
+          A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1).sum)
         ((p.2.antidiagonal.map fun r =>
-          (Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ F ∘ₗ
-            repDualCoeff rep U⁻¹ r.1).sum) φ).sum =
+          F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum) φ).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act ((Lorentz.iteratedD D D_comm q.2).restrictScalars ℝ ∘ₗ A ρ ∘ₗ
-                adjointDualCoeff U⁻¹ q.1)
-              ((Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ F ∘ₗ
-                repDualCoeff rep U⁻¹ r.1) φ).sum).sum).sum := by
+            actionFam act (A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1)
+              (F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [actionFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_map]
@@ -253,100 +240,82 @@ lemma TransformsIn.repGauge_iteratedD_action
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply]
   have hMc : (s.antidiagonal.map fun p =>
-      Lorentz.iteratedD D D_comm p.2 (actionFam act (A ρ) F
-        (repDualCoeff rep U⁻¹ p.1 φ))).sum =
+      actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act ((Lorentz.iteratedD D D_comm r.1).restrictScalars ℝ ∘ₗ A ρ ∘ₗ
-                adjointDualCoeff U⁻¹ q.1)
-              ((Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ F ∘ₗ
-                repDualCoeff rep U⁻¹ q.2) φ).sum).sum).sum := by
+            actionFam act (A r.1 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1)
+              (F r.2 ∘ₗ repDualCoeff rep U⁻¹ q.2) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [hact.actionFam_repDualCoeff U⁻¹ p.1 (A ρ) F φ, map_multiset_sum,
-      Multiset.map_map]
-    refine congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => ?_)
-    simp only [Function.comp_apply]
-    rw [iteratedD_actionFam hD p.2 (A ρ ∘ₗ adjointDualCoeff U⁻¹ q.1)
-      (F ∘ₗ repDualCoeff rep U⁻¹ q.2) φ]
+    rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map,
+      Multiset.map_congr rfl (fun r hr => by
+        rw [Function.comp_apply,
+          hact.actionFam_repDualCoeff U⁻¹ p.1 (A r.1 ρ) (F r.2) φ]),
+      Multiset.sum_map_sum_map]
   have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
-      actionFam act ((Lorentz.iteratedD D D_comm b).restrictScalars ℝ ∘ₗ A ρ ∘ₗ
-          adjointDualCoeff U⁻¹ a)
-        ((Lorentz.iteratedD D D_comm d).restrictScalars ℝ ∘ₗ F ∘ₗ
-          repDualCoeff rep U⁻¹ c) φ).trans hMc.symm)
+      actionFam act (A b ρ ∘ₗ adjointDualCoeff U⁻¹ a)
+        (F d ∘ₗ repDualCoeff rep U⁻¹ c) φ).trans hMc.symm)
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-      ((p.2.antidiagonal.map fun r =>
-        (Lorentz.iteratedD D D_comm r.2).restrictScalars ℝ ∘ₗ F ∘ₗ
-          repDualCoeff rep U⁻¹ r.1).sum)
+      ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum)
         (φ ∘ₗ act (JetGaugeAlgebra.eval
           (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U⁻¹ ρ)))) =
       (p.2.antidiagonal.map fun r =>
-        Lorentz.iteratedD D D_comm r.2 (F (repDualCoeff rep U⁻¹ r.1
+        F r.2 (repDualCoeff rep U⁻¹ r.1
           (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-            (maurerCartanForm U⁻¹ ρ))))))).sum := by
+            (maurerCartanForm U⁻¹ ρ)))))).sum := by
     intro p
     rw [Multiset.sum_linearMap_apply, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
-    simp only [Function.comp_apply, LinearMap.coe_comp, LinearMap.restrictScalars_apply]
-  rw [iteratedD_actionFam hD s (A ρ) F φ, map_multiset_sum, Multiset.map_map,
+    simp only [Function.comp_apply, LinearMap.coe_comp]
+  rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map, map_multiset_sum,
+    Multiset.map_map,
     Multiset.map_congr rfl (fun p hp => by
-      rw [Function.comp_apply, repGauge_actionFam hA U (hAlaw p.1) (hFlaw p.2) φ,
-        hCg p]),
+      rw [Function.comp_apply, Function.comp_apply,
+        repGauge_actionFam hA U (hAlaw p.1) (hFlaw p.2) φ, hCg p]),
     Multiset.sum_map_add, hM]
 
 set_option maxHeartbeats 2000000 in
 /-- **The covariant derivative preserves `TransformsIn`**: if `F` transforms in the
   representation `rep` and `act` is the infinitesimal action underlying `rep`, then
-  `∇_ρ F = D_ρ F + A_ρ · F` transforms in `rep`. The single inhomogeneous
-  convolution of `∂_{ρ ::ₘ s} F` cancels the single `act` cross-term convolution of
+  `∇_ρ F = [∂_ρ F] + A_ρ · F` transforms in `rep`. The single inhomogeneous
+  convolution of `[∂_{ρ ::ₘ s} F]` cancels the single `act` cross-term convolution of
   `A_ρ · F` through the coassociativity of the antidiagonal — the matter-field
   analogue of `TransformsInAdjoint.covDerivAdjoint`. -/
 theorem TransformsIn.covDerivAction
-    {hA : IsGaugeField repLorentz repGauge A D D_comm}
-    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B), D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
-    {F : Module.Dual ℝ V →ₗ[ℝ] B} (hF : hA.TransformsIn rep F)
+    (hA : IsGaugeField repLorentz repGauge A)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ V →ₗ[ℝ] B}
+    (hF : TransformsIn (repGauge := repGauge) rep F)
     (hact : IsInfinitesimalActionOf act rep) (ρ : Fin 1 ⊕ Fin 3) :
-    hA.TransformsIn rep (covDerivAction A act F D ρ) := by
+    TransformsIn (repGauge := repGauge) rep (IsGaugeField.covDerivAction A act F ρ) := by
   intro U φ s
-  have hDcomp : ∀ (κ : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)) (b : B),
-      Lorentz.iteratedD D D_comm t (D κ b) = Lorentz.iteratedD D D_comm (κ ::ₘ t) b := by
-    intro κ t b
-    rw [show (κ ::ₘ t : Multiset (Fin 1 ⊕ Fin 3)) = t + {κ} from by
-        rw [add_comm, Multiset.singleton_add],
-      Lorentz.iteratedD_add, LinearMap.comp_apply]
-    congr 1
-  have hL : repGauge U (Lorentz.iteratedD D D_comm s
-      (IsGaugeField.covDerivAction A act F D ρ φ)) =
-      repGauge U (Lorentz.iteratedD D D_comm (ρ ::ₘ s) (F φ))
-      + repGauge U (Lorentz.iteratedD D D_comm s (actionFam act (A ρ) F φ)) := by
-    rw [covDerivAction_apply, map_add, hDcomp ρ s, map_add]
+  have hL : repGauge U (IsGaugeField.covDerivAction A act F ρ s φ) =
+      repGauge U (F (ρ ::ₘ s) φ) + repGauge U (actionFamConv A act ρ F s φ) := by
+    rw [covDerivAction_apply, map_add]
   have hR : (s.antidiagonal.map fun p =>
-      Lorentz.iteratedD D D_comm p.2 (IsGaugeField.covDerivAction A act F D ρ
-        (repDualCoeff rep U⁻¹ p.1 φ))).sum =
+      IsGaugeField.covDerivAction A act F ρ p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
-        Lorentz.iteratedD D D_comm (ρ ::ₘ p.2) (F (repDualCoeff rep U⁻¹ p.1 φ))).sum
+        F (ρ ::ₘ p.2) (repDualCoeff rep U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
-        Lorentz.iteratedD D D_comm p.2 (actionFam act (A ρ) F
-          (repDualCoeff rep U⁻¹ p.1 φ))).sum := by
+        actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [covDerivAction_apply, map_add, hDcomp ρ p.2]
+    rw [covDerivAction_apply]
   have hcancel : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        Lorentz.iteratedD D D_comm p.2 (F (repDualCoeff rep U⁻¹ q.2
+        F p.2 (repDualCoeff rep U⁻¹ q.2
           (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-            (maurerCartanForm U⁻¹ ρ))))))).sum).sum =
+            (maurerCartanForm U⁻¹ ρ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
-        Lorentz.iteratedD D D_comm r.2 (F (repDualCoeff rep U⁻¹ r.1
+        F r.2 (repDualCoeff rep U⁻¹ r.1
           (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-            (maurerCartanForm U⁻¹ ρ))))))).sum).sum :=
+            (maurerCartanForm U⁻¹ ρ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      Lorentz.iteratedD D D_comm c (F (repDualCoeff rep U⁻¹ b
+      F c (repDualCoeff rep U⁻¹ b
         (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv a
-          (maurerCartanForm U⁻¹ ρ)))))))
-  rw [hL, hF.repGauge_iteratedD_cons hact U ρ s φ,
-    hF.repGauge_iteratedD_action hD hact U s ρ φ, hR, hcancel]
+          (maurerCartanForm U⁻¹ ρ))))))
+  rw [hL, hF.repGauge_cons hact U ρ s φ, hF.repGauge_actionFamConv hA hact U s ρ φ,
+    hR, hcancel]
   abel
 
 end MatterCovariance

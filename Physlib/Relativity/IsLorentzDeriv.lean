@@ -127,6 +127,68 @@ variable {rep : Representation ℂ SL(2,ℂ) A} {D : (Fin 1 ⊕ Fin 3) → A →
 /-- The scalar action of a real parameter, in the form the weight condition presents it. -/
 private lemma algebraMap_real_complex (t : ℝ) : (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) := rfl
 
+/-- **The Lorentz transformation of iterated derivatives**: for a Lorentz derivative the
+  ordered derivative symbol `D_{l 0} ⋯ D_{l (n-1)} x` mixes into all tuples of
+  directions, with one Lorentz matrix factor per slot. -/
+lemma rep_iteratedD_ofFn [IsLorentzDeriv rep D]
+    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
+    (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (x : A) :
+    rep Λ (iteratedD D D_comm (List.ofFn l) x) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+          iteratedD D D_comm (List.ofFn p) (rep Λ x) := by
+  induction n with
+  | zero =>
+      rw [List.ofFn_zero,
+        show ((([] : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) = 0) from rfl,
+        iteratedD_zero, Fintype.sum_unique]
+      simp [List.ofFn_zero, iteratedD_zero]
+  | succ n ih =>
+      have hstep : ∀ (a : Fin 1 ⊕ Fin 3) (p : Fin n → (Fin 1 ⊕ Fin 3)),
+          ((List.ofFn (Fin.cons a p) : List (Fin 1 ⊕ Fin 3)) :
+              Multiset (Fin 1 ⊕ Fin 3)) =
+            a ::ₘ ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) := by
+        intro a p
+        rw [List.ofFn_succ]
+        simp only [Fin.cons_zero, Fin.cons_succ]
+        rfl
+      calc rep Λ (iteratedD D D_comm (List.ofFn l) x)
+          = ∑ a, (((SL2C.toLorentzGroup Λ).1 a (l 0) : ℝ) : ℂ) •
+              D a (rep Λ (iteratedD D D_comm
+                (List.ofFn fun i : Fin n => l i.succ) x)) := by
+            rw [show ((List.ofFn l : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) =
+                l 0 ::ₘ ((List.ofFn fun i : Fin n => l i.succ : List (Fin 1 ⊕ Fin 3)) :
+                  Multiset (Fin 1 ⊕ Fin 3)) from by rw [List.ofFn_succ]; rfl,
+              iteratedD_cons, LinearMap.comp_apply, rep_deriv]
+        _ = ∑ a, ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              ((((SL2C.toLorentzGroup Λ).1 a (l 0) : ℝ) : ℂ) *
+                ∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+              iteratedD D D_comm (a ::ₘ ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) :
+                Multiset (Fin 1 ⊕ Fin 3))) (rep Λ x) := by
+            refine Finset.sum_congr rfl fun a _ => ?_
+            rw [ih (fun i => l i.succ), map_sum, Finset.smul_sum]
+            refine Finset.sum_congr rfl fun p _ => ?_
+            rw [map_smul, smul_smul, iteratedD_cons, LinearMap.comp_apply]
+        _ = ∑ p : Fin (n + 1) → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+              iteratedD D D_comm (List.ofFn p) (rep Λ x) := by
+            rw [← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => (Fin 1 ⊕ Fin 3))
+                (fun p : Fin (n + 1) → (Fin 1 ⊕ Fin 3) =>
+                  (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+                  iteratedD D D_comm (List.ofFn p) (rep Λ x)),
+              Fintype.sum_prod_type]
+            refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun p _ => ?_
+            show ((((SL2C.toLorentzGroup Λ).1 a (l 0) : ℝ) : ℂ) *
+                ∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+              iteratedD D D_comm (a ::ₘ ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) :
+                Multiset (Fin 1 ⊕ Fin 3))) (rep Λ x) =
+              (∏ i, (((SL2C.toLorentzGroup Λ).1
+                  ((Fin.cons a p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) i) (l i) : ℝ) : ℂ)) •
+              iteratedD D D_comm
+                (List.ofFn (Fin.cons a p : Fin (n + 1) → (Fin 1 ⊕ Fin 3))) (rep Λ x)
+            rw [Fin.prod_univ_succ, hstep a p]
+            simp only [Fin.cons_zero, Fin.cons_succ]
+
 /-!
 
 ## A. Light cone derivatives
