@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
@@ -410,5 +411,60 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
         map_add, ha, hb]
 
 end UpSinglet
+
+/-!
+
+## The gauge weight of the UpSinglet components
+
+The gauge torus acts diagonally on the basis of `UpSinglet`; the weights are recorded by
+`UpSinglet.valueGaugeWeight`, and pass to the dual and conjugate-dual coordinate
+functionals with the expected signs.
+
+-/
+
+/-- The gauge weight of the up-singlet basis: the colour weights and hypercharge
+  `4`. -/
+def UpSinglet.valueGaugeWeight (j : Fin 2 × Fin 3) : GaugeWeight :=
+  ((colourWeight j.2).1, (colourWeight j.2).2, 0, 4)
+
+/-- The gauge torus acts diagonally on the basis of `UpSinglet`, with the weights
+  `UpSinglet.valueGaugeWeight`. -/
+lemma UpSinglet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 × Fin 3) :
+    UpSinglet.repGaugeGroupI (gaugeTorusGen i) (UpSinglet.basis j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i) •
+        UpSinglet.basis j := by
+  obtain ⟨k, c⟩ := j
+  have hb : UpSinglet.basis (k, c) = ⟨Fermion.RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c⟩ := by
+    simp only [UpSinglet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis]
+    rfl
+  rw [hb, UpSinglet.repGaugeGroupI_tmul_basis_eq_sum]
+  fin_cases i <;> fin_cases c <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo, Fin.sum_univ_three,
+      Matrix.diagonal,
+      UpSinglet.valueGaugeWeight, colourWeight, GaugeWeight.coord,
+      expI_inv_eq_star] <;>
+  (try congr 1)
+
+/-- The dual action of the gauge torus on the coordinate functionals of
+  `UpSinglet`: the weights are negated. -/
+lemma UpSinglet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3) :
+    UpSinglet.repGaugeGroupI.dual (gaugeTorusGen i) (UpSinglet.basis.coord j)
+      = ((expI : ℂ) ^ (-(GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i))) •
+        UpSinglet.basis.coord j :=
+  dual_gaugeTorusGen_coord _ _ _ _
+    (fun j' => UpSinglet.repGaugeGroupI_gaugeTorusGen_basis i j') j
+
+/-- The dual of the conjugate action of the gauge torus on the coordinate functionals
+  of the conjugate of `UpSinglet`: the two negations cancel and the weights are those of
+  the value space. -/
+lemma UpSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3) :
+    UpSinglet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((UpSinglet.basis.conj).coord j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i) •
+        (UpSinglet.basis.conj).coord j := by
+  have hd := dual_gaugeTorusGen_coord UpSinglet.repGaugeGroupI.conj (UpSinglet.basis.conj)
+    (gaugeTorusGen i) (fun j' => -(GaugeWeight.coord (UpSinglet.valueGaugeWeight j') i))
+    (fun j' => conj_gaugeTorusGen_basis _ _ _ _
+      (fun j'' => UpSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
+  simpa using hd
 
 end StandardModel

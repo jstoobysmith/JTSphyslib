@@ -949,6 +949,154 @@ theorem sectorMassWeight_fermion_eq {w : ℕ} (hw : w ≠ 0) :
   rw [hkey, hz', add_zero]
   exact hy'
 
+/-!
+
+## Two-class sectors
+
+A word realising exactly two classes splits, up to reordering, into the part of the
+first class and the part of the second.  When the two classes' algebras commute, the
+weight-`w` piece of the two-class sector is therefore contained in the join of the
+products of the two sectors' own mass-weight submodules, over the splittings of `w`
+into two non-zero parts.  The hypotheses are stated abstractly so that the three
+pairs of sectors can each instantiate them.
+
+-/
+
+/-- The total mass weight carried by the generators of a given class in a word. -/
+def classWeight (c : GeneratorClass) (gl : List Generators) : ℕ :=
+  ((gl.filter fun g => decide (g.kind = c)).map Generators.weight).sum
+
+@[simp] lemma classWeight_nil (c : GeneratorClass) : classWeight c [] = 0 := rfl
+
+lemma classWeight_cons_of_eq {c : GeneratorClass} {g : Generators} (hg : g.kind = c)
+    (t : List Generators) :
+    classWeight c (g :: t) = g.weight + classWeight c t := by
+  simp [classWeight, hg]
+
+lemma classWeight_cons_of_ne {c : GeneratorClass} {g : Generators} (hg : g.kind ≠ c)
+    (t : List Generators) : classWeight c (g :: t) = classWeight c t := by
+  simp [classWeight, hg]
+
+/-- Every generator carries a non-zero mass weight. -/
+lemma Generators.weight_pos (g : Generators) : 0 < g.weight := by
+  cases g <;> simp [Generators.weight]
+
+/-- A class realised by a word carries a non-zero part of its weight. -/
+lemma classWeight_ne_zero {c : GeneratorClass} {gl : List Generators}
+    (hc : c ∈ wordClasses gl) : classWeight c gl ≠ 0 := by
+  induction gl with
+  | nil => simp [wordClasses] at hc
+  | cons g t ih =>
+    rw [wordClasses_cons, Finset.mem_insert] at hc
+    by_cases hg : g.kind = c
+    · rw [classWeight_cons_of_eq hg]
+      have := g.weight_pos
+      omega
+    · rw [classWeight_cons_of_ne hg]
+      exact ih (hc.resolve_left fun hh => hg hh.symm)
+
+/-- Over a word realising only two classes, the two class weights add up to the total
+  weight. -/
+lemma classWeight_add {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂) {gl : List Generators}
+    (hgl : ∀ g ∈ gl, g.kind = c₁ ∨ g.kind = c₂) :
+    classWeight c₁ gl + classWeight c₂ gl = (gl.map Generators.weight).sum := by
+  induction gl with
+  | nil => simp
+  | cons g t ih =>
+    have ht : ∀ g' ∈ t, g'.kind = c₁ ∨ g'.kind = c₂ := fun g' hg' => hgl g' (by simp [hg'])
+    rcases hgl g (by simp) with hg | hg
+    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne),
+        List.map_cons, List.sum_cons, ← ih ht]
+      omega
+    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne.symm),
+        List.map_cons, List.sum_cons, ← ih ht]
+      omega
+
+/-- A single generator's value lies in any family of submodules dominating its own
+  class's sector. -/
+lemma generatorVal_mem_of_kind {c : GeneratorClass} {M : ℕ → Submodule ℂ B}
+    (hM : ∀ w, h.sectorMassWeight {c} w ≤ M w) {g : Generators} (hg : g.kind = c) :
+    h.generatorVal g ∈ M g.weight := by
+  refine hM _ ?_
+  have h1 := h.list_prod_mem_sectorMassWeight [g]
+  simpa [wordClasses_cons, hg] using h1
+
+/-- **The two-class word decomposition.** A word all of whose generators lie in one of
+  two classes is a product of an element of weight `classWeight c₁` from the first
+  class's family and an element of weight `classWeight c₂` from the second. -/
+lemma list_prod_mem_mul_of_forall_kind {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂)
+    {M₁ M₂ : ℕ → Submodule ℂ B}
+    (hM₁ : ∀ w, h.sectorMassWeight {c₁} w ≤ M₁ w)
+    (hM₂ : ∀ w, h.sectorMassWeight {c₂} w ≤ M₂ w)
+    (hone₁ : (1 : Submodule ℂ B) ≤ M₁ 0) (hone₂ : (1 : Submodule ℂ B) ≤ M₂ 0)
+    (hmul₁ : ∀ a b, M₁ a * M₁ b ≤ M₁ (a + b))
+    (hmul₂ : ∀ a b, M₂ a * M₂ b ≤ M₂ (a + b))
+    (hcomm : ∀ a b, M₂ a * M₁ b ≤ M₁ b * M₂ a)
+    (gl : List Generators) (hgl : ∀ g ∈ gl, g.kind = c₁ ∨ g.kind = c₂) :
+    (gl.map h.generatorVal).prod
+      ∈ M₁ (classWeight c₁ gl) * M₂ (classWeight c₂ gl) := by
+  induction gl with
+  | nil =>
+    simp only [List.map_nil, List.prod_nil, classWeight_nil]
+    have h1 : (1 : B) ∈ M₁ 0 := hone₁ (Submodule.mem_one.mpr ⟨1, by simp⟩)
+    have h2 : (1 : B) ∈ M₂ 0 := hone₂ (Submodule.mem_one.mpr ⟨1, by simp⟩)
+    simpa using Submodule.mul_mem_mul h1 h2
+  | cons g t ih =>
+    have ht : ∀ g' ∈ t, g'.kind = c₁ ∨ g'.kind = c₂ := fun g' hg' => hgl g' (by simp [hg'])
+    have hIH := ih ht
+    simp only [List.map_cons, List.prod_cons]
+    rcases hgl g (by simp) with hg | hg
+    · have hgm : h.generatorVal g ∈ M₁ g.weight := h.generatorVal_mem_of_kind hM₁ hg
+      have hne2 : g.kind ≠ c₂ := by rw [hg]; exact hne
+      rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne hne2]
+      refine (?_ : M₁ g.weight * (M₁ (classWeight c₁ t) * M₂ (classWeight c₂ t))
+        ≤ M₁ (g.weight + classWeight c₁ t) * M₂ (classWeight c₂ t))
+        (Submodule.mul_mem_mul hgm hIH)
+      rw [← mul_assoc]
+      exact mul_le_mul' (hmul₁ _ _) le_rfl
+    · have hgm : h.generatorVal g ∈ M₂ g.weight := h.generatorVal_mem_of_kind hM₂ hg
+      have hne1 : g.kind ≠ c₁ := by rw [hg]; exact hne.symm
+      rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne hne1]
+      refine (?_ : M₂ g.weight * (M₁ (classWeight c₁ t) * M₂ (classWeight c₂ t))
+        ≤ M₁ (classWeight c₁ t) * M₂ (g.weight + classWeight c₂ t))
+        (Submodule.mul_mem_mul hgm hIH)
+      calc M₂ g.weight * (M₁ (classWeight c₁ t) * M₂ (classWeight c₂ t))
+          = M₂ g.weight * M₁ (classWeight c₁ t) * M₂ (classWeight c₂ t) :=
+            (mul_assoc _ _ _).symm
+        _ ≤ M₁ (classWeight c₁ t) * M₂ g.weight * M₂ (classWeight c₂ t) :=
+            mul_le_mul' (hcomm _ _) le_rfl
+        _ = M₁ (classWeight c₁ t) * (M₂ g.weight * M₂ (classWeight c₂ t)) := mul_assoc _ _ _
+        _ ≤ M₁ (classWeight c₁ t) * M₂ (g.weight + classWeight c₂ t) :=
+            mul_le_mul' le_rfl (hmul₂ _ _)
+
+/-- **The two-class sector decomposition.** The weight-`w` piece of the sector of two
+  classes is contained in the join, over the splittings of `w` into two non-zero
+  parts, of the products of the two classes' mass-weight submodules. -/
+theorem sectorMassWeight_pair_le {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂)
+    {M₁ M₂ : ℕ → Submodule ℂ B}
+    (hM₁ : ∀ w, h.sectorMassWeight {c₁} w ≤ M₁ w)
+    (hM₂ : ∀ w, h.sectorMassWeight {c₂} w ≤ M₂ w)
+    (hone₁ : (1 : Submodule ℂ B) ≤ M₁ 0) (hone₂ : (1 : Submodule ℂ B) ≤ M₂ 0)
+    (hmul₁ : ∀ a b, M₁ a * M₁ b ≤ M₁ (a + b))
+    (hmul₂ : ∀ a b, M₂ a * M₂ b ≤ M₂ (a + b))
+    (hcomm : ∀ a b, M₂ a * M₁ b ≤ M₁ b * M₂ a) (w : ℕ) :
+    h.sectorMassWeight {c₁, c₂} w
+      ≤ ⨆ (p : ℕ × ℕ) (_ : p.1 + p.2 = w) (_ : p.1 ≠ 0) (_ : p.2 ≠ 0), M₁ p.1 * M₂ p.2 := by
+  rw [sectorMassWeight, Submodule.span_le]
+  rintro x ⟨gl, hS, hsum, rfl⟩
+  have hgl : ∀ g ∈ gl, g.kind = c₁ ∨ g.kind = c₂ := by
+    intro g hg
+    have : g.kind ∈ wordClasses gl := List.mem_toFinset.mpr (List.mem_map_of_mem hg)
+    rw [hS] at this
+    simpa using this
+  have h1 : c₁ ∈ wordClasses gl := by rw [hS]; simp
+  have h2 : c₂ ∈ wordClasses gl := by rw [hS]; simp
+  refine Submodule.mem_iSup_of_mem (classWeight c₁ gl, classWeight c₂ gl)
+    (Submodule.mem_iSup_of_mem (by rw [classWeight_add hne hgl, hsum])
+      (Submodule.mem_iSup_of_mem (classWeight_ne_zero h1)
+        (Submodule.mem_iSup_of_mem (classWeight_ne_zero h2) ?_)))
+  exact h.list_prod_mem_mul_of_forall_kind hne hM₁ hM₂ hone₁ hone₂ hmul₁ hmul₂ hcomm gl hgl
+
 end IsCovStandardModel
 
 end StandardModel

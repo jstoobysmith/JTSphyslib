@@ -95,6 +95,112 @@ def derivSubmodule (h : IsGaugeSector B repGauge hrepGauge_mul repLorentz hrepLo
   ⨆ (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
     Submodule.span ℂ (Set.range (F l μ ν))
 
+/-!
+
+### Commutativity of the derivative submodules
+
+-/
+
+/-- The gauge sector is bosonic: any element of a derivative-`n` submodule commutes with any
+  element of a derivative-`m` submodule. This extends `F_comm_F` from generators to the
+  submodules that they span. -/
+lemma commute_of_mem_derivSubmodule {n m : ℕ} {x y : B}
+    (hx : x ∈ h.derivSubmodule n) (hy : y ∈ h.derivSubmodule m) : Commute x y := by
+  have gen : ∀ (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra),
+      h.derivSubmodule m ≤ LinearMap.ker
+        (LinearMap.mulLeft ℂ (F l μ ν ψ) - LinearMap.mulRight ℂ (F l μ ν ψ)) := by
+    intro l μ ν ψ
+    rw [derivSubmodule]
+    refine iSup_le fun l' => iSup_le fun μ' => iSup_le fun ν' => Submodule.span_le.mpr ?_
+    rintro _ ⟨ψ', rfl⟩
+    simp only [SetLike.mem_coe, LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.mulLeft_apply,
+      LinearMap.mulRight_apply, sub_eq_zero]
+    exact (h.F_comm_F l μ ν ψ l' μ' ν' ψ').eq
+  have key : ∀ x ∈ h.derivSubmodule n, ∀ y ∈ h.derivSubmodule m, x * y = y * x := by
+    intro x hx y hy
+    have step : h.derivSubmodule n ≤
+        LinearMap.ker (LinearMap.mulRight ℂ y - LinearMap.mulLeft ℂ y) := by
+      rw [derivSubmodule]
+      refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => Submodule.span_le.mpr ?_
+      rintro _ ⟨ψ, rfl⟩
+      simp only [SetLike.mem_coe, LinearMap.mem_ker, LinearMap.sub_apply,
+        LinearMap.mulRight_apply, LinearMap.mulLeft_apply, sub_eq_zero]
+      have := gen l μ ν ψ hy
+      simpa only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.mulLeft_apply,
+        LinearMap.mulRight_apply, sub_eq_zero] using this
+    have := step hx
+    simpa only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.mulRight_apply,
+      LinearMap.mulLeft_apply, sub_eq_zero] using this
+  exact key x hx y hy
+
+/-- The derivative-`n` and derivative-`m` submodules commute with one another as submodules
+  of `B`, since every pair of their elements commute. -/
+lemma derivSubmodule_mul_comm (n m : ℕ) :
+    h.derivSubmodule n * h.derivSubmodule m = h.derivSubmodule m * h.derivSubmodule n := by
+  refine le_antisymm (Submodule.mul_le.mpr fun x hx y hy => ?_)
+    (Submodule.mul_le.mpr fun x hx y hy => ?_)
+  · rw [(h.commute_of_mem_derivSubmodule hx hy).eq]
+    exact Submodule.mul_mem_mul hy hx
+  · rw [← (h.commute_of_mem_derivSubmodule hy hx).eq]
+    exact Submodule.mul_mem_mul hy hx
+
+/-!
+
+### Closure of the derivative submodules under the gauge and Lorentz groups
+
+-/
+
+/-- The image of a derivative-`n` submodule under a gauge transformation lies inside the
+  same submodule: each generator `F l μ ν φ` is sent by `repGauge_F` to another generator
+  `F l μ ν φ'` with the same derivative slots and covector indices. -/
+lemma derivSubmodule_map_repGauge_le (n : ℕ) (g : GaugeGroupI) :
+    (h.derivSubmodule n).map (repGauge g) ≤ h.derivSubmodule n := by
+  rw [derivSubmodule, Submodule.map_iSup]
+  refine iSup_le fun l => ?_
+  rw [Submodule.map_iSup]
+  refine iSup_le fun μ => ?_
+  rw [Submodule.map_iSup]
+  refine iSup_le fun ν => ?_
+  rw [Submodule.map_span_le]
+  rintro _ ⟨φ, rfl⟩
+  rw [h.repGauge_F]
+  exact Submodule.mem_iSup_of_mem l (Submodule.mem_iSup_of_mem μ
+    (Submodule.mem_iSup_of_mem ν (Submodule.subset_span ⟨_, rfl⟩)))
+
+/-- The derivative-`n` submodule is invariant, as a set, under the gauge group. -/
+lemma derivSubmodule_map_repGauge (n : ℕ) (g : GaugeGroupI) :
+    (h.derivSubmodule n).map (repGauge g) = h.derivSubmodule n :=
+  le_antisymm (h.derivSubmodule_map_repGauge_le n g) fun b hb =>
+    ⟨repGauge g⁻¹ b, h.derivSubmodule_map_repGauge_le n g⁻¹ ⟨b, hb, rfl⟩,
+      repGauge.self_inv_apply g b⟩
+
+/-- The image of a derivative-`n` submodule under a Lorentz transformation lies inside the
+  same submodule: `repLorentz_F` expands each generator into a finite linear combination of
+  generators with the same number `n` of derivative slots. -/
+lemma derivSubmodule_map_repLorentz_le (n : ℕ) (Λ : SL(2,ℂ)) :
+    (h.derivSubmodule n).map (repLorentz Λ) ≤ h.derivSubmodule n := by
+  rw [derivSubmodule, Submodule.map_iSup]
+  refine iSup_le fun l => ?_
+  rw [Submodule.map_iSup]
+  refine iSup_le fun μ => ?_
+  rw [Submodule.map_iSup]
+  refine iSup_le fun ν => ?_
+  rw [Submodule.map_span_le]
+  rintro _ ⟨φ, rfl⟩
+  rw [h.repLorentz_F]
+  refine Submodule.sum_mem _ fun p _ => Submodule.smul_mem _ _ ?_
+  refine Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _ ?_
+  refine Submodule.sum_mem _ fun b _ => Submodule.smul_mem _ _ ?_
+  exact Submodule.mem_iSup_of_mem p (Submodule.mem_iSup_of_mem a
+    (Submodule.mem_iSup_of_mem b (Submodule.subset_span ⟨_, rfl⟩)))
+
+/-- The derivative-`n` submodule is invariant, as a set, under the Lorentz group. -/
+lemma derivSubmodule_map_repLorentz (n : ℕ) (Λ : SL(2,ℂ)) :
+    (h.derivSubmodule n).map (repLorentz Λ) = h.derivSubmodule n :=
+  le_antisymm (h.derivSubmodule_map_repLorentz_le n Λ) fun b hb =>
+    ⟨repLorentz Λ⁻¹ b, h.derivSubmodule_map_repLorentz_le n Λ⁻¹ ⟨b, hb, rfl⟩,
+      repLorentz.self_inv_apply Λ b⟩
+
 end IsGaugeSector
 
 end StandardModel

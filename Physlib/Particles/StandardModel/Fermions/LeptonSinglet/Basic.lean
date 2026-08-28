@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.DerivAlgebra
@@ -355,5 +356,57 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
     TensorProduct.smul_tmul']
 
 end LeptonSinglet
+
+/-!
+
+## The gauge weight of the LeptonSinglet components
+
+The gauge torus acts diagonally on the basis of `LeptonSinglet`; the weights are recorded by
+`LeptonSinglet.valueGaugeWeight`, and pass to the dual and conjugate-dual coordinate
+functionals with the expected signs.
+
+-/
+
+/-- The gauge weight of the lepton-singlet basis: hypercharge `-6`. -/
+def LeptonSinglet.valueGaugeWeight (_ : Fin 2) : GaugeWeight :=
+  (0, 0, 0, -6)
+
+/-- The gauge torus acts diagonally on the basis of `LeptonSinglet`, with the weights
+  `LeptonSinglet.valueGaugeWeight`. -/
+lemma LeptonSinglet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2) :
+    LeptonSinglet.repGaugeGroupI (gaugeTorusGen i) (LeptonSinglet.basis j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j) i) •
+        LeptonSinglet.basis j := by
+  have hb : LeptonSinglet.basis j = ⟨Fermion.RightHandedWeyl.basis j⟩ := by
+    simp only [LeptonSinglet.basis, Module.Basis.map_apply]
+    rfl
+  rw [hb, LeptonSinglet.repGaugeGroupI_basis]
+  fin_cases i <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1,
+      LeptonSinglet.valueGaugeWeight, GaugeWeight.coord,
+      starRingEnd_expI_pow]
+  (try congr 1)
+
+/-- The dual action of the gauge torus on the coordinate functionals of
+  `LeptonSinglet`: the weights are negated. -/
+lemma LeptonSinglet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2) :
+    LeptonSinglet.repGaugeGroupI.dual (gaugeTorusGen i) (LeptonSinglet.basis.coord j)
+      = ((expI : ℂ) ^ (-(GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j) i))) •
+        LeptonSinglet.basis.coord j :=
+  dual_gaugeTorusGen_coord _ _ _ _
+    (fun j' => LeptonSinglet.repGaugeGroupI_gaugeTorusGen_basis i j') j
+
+/-- The dual of the conjugate action of the gauge torus on the coordinate functionals
+  of the conjugate of `LeptonSinglet`: the two negations cancel and the weights are those of
+  the value space. -/
+lemma LeptonSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2) :
+    LeptonSinglet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((LeptonSinglet.basis.conj).coord j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j) i) •
+        (LeptonSinglet.basis.conj).coord j := by
+  have hd := dual_gaugeTorusGen_coord LeptonSinglet.repGaugeGroupI.conj (LeptonSinglet.basis.conj)
+    (gaugeTorusGen i) (fun j' => -(GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j') i))
+    (fun j' => conj_gaugeTorusGen_basis _ _ _ _
+      (fun j'' => LeptonSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
+  simpa using hd
 
 end StandardModel

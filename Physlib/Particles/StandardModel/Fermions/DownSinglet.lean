@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
@@ -510,5 +511,60 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
         map_add, ha, hb]
 
 end DownSinglet
+
+/-!
+
+## The gauge weight of the DownSinglet components
+
+The gauge torus acts diagonally on the basis of `DownSinglet`; the weights are recorded by
+`DownSinglet.valueGaugeWeight`, and pass to the dual and conjugate-dual coordinate
+functionals with the expected signs.
+
+-/
+
+/-- The gauge weight of the down-singlet basis: the colour weights and hypercharge
+  `-2`. -/
+def DownSinglet.valueGaugeWeight (j : Fin 2 × Fin 3) : GaugeWeight :=
+  ((colourWeight j.2).1, (colourWeight j.2).2, 0, -2)
+
+/-- The gauge torus acts diagonally on the basis of `DownSinglet`, with the weights
+  `DownSinglet.valueGaugeWeight`. -/
+lemma DownSinglet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 × Fin 3) :
+    DownSinglet.repGaugeGroupI (gaugeTorusGen i) (DownSinglet.basis j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i) •
+        DownSinglet.basis j := by
+  obtain ⟨k, c⟩ := j
+  have hb : DownSinglet.basis (k, c) = ⟨Fermion.RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c⟩ := by
+    simp only [DownSinglet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis]
+    rfl
+  rw [hb, DownSinglet.repGaugeGroupI_tmul_basis_eq_sum]
+  fin_cases i <;> fin_cases c <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo, Fin.sum_univ_three,
+      Matrix.diagonal,
+      DownSinglet.valueGaugeWeight, colourWeight, GaugeWeight.coord,
+      expI_inv_eq_star, starRingEnd_expI_pow] <;>
+  (try congr 1)
+
+/-- The dual action of the gauge torus on the coordinate functionals of
+  `DownSinglet`: the weights are negated. -/
+lemma DownSinglet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3) :
+    DownSinglet.repGaugeGroupI.dual (gaugeTorusGen i) (DownSinglet.basis.coord j)
+      = ((expI : ℂ) ^ (-(GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i))) •
+        DownSinglet.basis.coord j :=
+  dual_gaugeTorusGen_coord _ _ _ _
+    (fun j' => DownSinglet.repGaugeGroupI_gaugeTorusGen_basis i j') j
+
+/-- The dual of the conjugate action of the gauge torus on the coordinate functionals
+  of the conjugate of `DownSinglet`: the two negations cancel and the weights are those of
+  the value space. -/
+lemma DownSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3) :
+    DownSinglet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((DownSinglet.basis.conj).coord j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i) •
+        (DownSinglet.basis.conj).coord j := by
+  have hd := dual_gaugeTorusGen_coord DownSinglet.repGaugeGroupI.conj (DownSinglet.basis.conj)
+    (gaugeTorusGen i) (fun j' => -(GaugeWeight.coord (DownSinglet.valueGaugeWeight j') i))
+    (fun j' => conj_gaugeTorusGen_basis _ _ _ _
+      (fun j'' => DownSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
+  simpa using hd
 
 end StandardModel

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
@@ -283,6 +284,92 @@ lemma IsMulRep.map_one {rep : Representation ℂ GaugeGroupI B} (hmul : IsMulRep
   have h1 := hmul g 1 (rep g⁻¹ 1)
   rw [one_mul, rep.self_inv_apply, mul_one] at h1
   exact h1.symm
+
+/-!
+
+## C.1. Powers of `expI` under conjugation
+
+-/
+
+lemma starRingEnd_expI_pow (n : ℕ) :
+    ((starRingEnd ℂ) (expI : ℂ)) ^ n = ((expI : ℂ) ^ n)⁻¹ := by
+  rw [← inv_pow, expI_inv_eq_star]
+  rfl
+
+lemma starRingEnd_expI_zpow (z : ℤ) :
+    (starRingEnd ℂ) ((expI : ℂ) ^ z) = (expI : ℂ) ^ (-z) := by
+  rw [map_zpow₀, _root_.zpow_neg, ← _root_.inv_zpow]
+  congr 1
+  rw [expI_inv_eq_star]
+  rfl
+
+lemma expI_zpow_ne_zero (z : ℤ) : ((expI : ℂ) ^ z) ≠ 0 :=
+  zpow_ne_zero _ (by simp [expI, Complex.exp_ne_zero])
+
+/-!
+
+## C.2. The torus weights of the fundamental representations
+
+The colour and isospin weights of the fundamental representations of `SU(3)` and
+`SU(2)` against the torus generators.  They are the building blocks of the gauge
+weights of the matter representations.
+
+-/
+
+/-- The colour weights of the fundamental of `SU(3)` against the two colour torus
+  generators. -/
+def colourWeight (c : Fin 3) : ℤ × ℤ := ![(1, 0), (-1, 1), (0, -1)] c
+
+/-- The isospin weight of the fundamental of `SU(2)` against the isospin torus
+  generator. -/
+def isoWeight (s : Fin 2) : ℤ := ![1, -1] s
+
+/-!
+
+## C.3. The torus action on dual and conjugate bases
+
+If the torus acts diagonally on a basis then it acts diagonally on the dual basis with
+the negated weights, and on the conjugate basis with the negated weights as well — so
+the conjugate-dual action carries the original weights back.
+
+-/
+
+section TorusBases
+
+variable {V : Type} [AddCommGroup V] [Module ℂ V] {ι : Type} [Fintype ι] [DecidableEq ι]
+
+omit [Fintype ι] in
+lemma dual_gaugeTorusGen_coord (ρ : Representation ℂ GaugeGroupI V)
+    (b : Module.Basis ι ℂ V) (g : GaugeGroupI) (w : ι → ℤ)
+    (hb : ∀ j, ρ g (b j) = ((expI : ℂ) ^ w j) • b j) (j : ι) :
+    ρ.dual g (b.coord j) = ((expI : ℂ) ^ (-(w j))) • b.coord j := by
+  have hinv : ∀ j', ρ g⁻¹ (b j') = ((expI : ℂ) ^ (-(w j'))) • b j' := by
+    intro j'
+    have h1 : ρ g⁻¹ (ρ g (b j')) = b j' := by
+      rw [← Module.End.mul_apply, ← map_mul, inv_mul_cancel, map_one,
+        Module.End.one_apply]
+    rw [hb j', map_smul] at h1
+    rw [_root_.zpow_neg]
+    exact ((inv_smul_eq_iff₀ (expI_zpow_ne_zero (w j'))).mpr h1.symm).symm
+  refine b.ext fun j' => ?_
+  rw [Representation.dual_apply]
+  simp only [Module.Dual.transpose_apply, LinearMap.comp_apply, hinv j', map_smul,
+    LinearMap.smul_apply, Module.Basis.coord_apply, Module.Basis.repr_self, smul_eq_mul]
+  by_cases hne : j' = j
+  · subst hne
+    simp
+  · simp [hne]
+
+omit [Fintype ι] [DecidableEq ι] in
+lemma conj_gaugeTorusGen_basis (ρ : Representation ℂ GaugeGroupI V)
+    (b : Module.Basis ι ℂ V) (g : GaugeGroupI) (w : ι → ℤ)
+    (hb : ∀ j, ρ g (b j) = ((expI : ℂ) ^ w j) • b j) (j : ι) :
+    ρ.conj g (Module.Basis.conj b j)
+      = ((expI : ℂ) ^ (-(w j))) • Module.Basis.conj b j := by
+  simp only [Module.Basis.conj_apply, Representation.conj_apply,
+    LinearEquiv.symm_apply_apply, hb j, map_smulₛₗ, starRingEnd_expI_zpow]
+
+end TorusBases
 
 /-- A **gauge weight decomposition** of a submodule `V`, a finitely supported family of
   subspaces of pure gauge weight whose supremum is `V`. Purity is recorded against the four
