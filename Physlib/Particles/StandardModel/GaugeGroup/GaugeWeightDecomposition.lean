@@ -6,6 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Mathematics.ConjModule
+public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
@@ -45,6 +47,8 @@ be confined to the zero-weight piece.
 - `GaugeWeightDecomposition.piece_eq_inf` : the pieces are cut out of `V` by the torus alone.
 - `GaugeWeightDecomposition.mem_zero_of_invariant` : a gauge-invariant element lies in the
   zero-weight piece.
+- `GaugeWeightDecomposition.pieceBoostWeightDecomposition` : a gauge weight piece inherits a
+  boost weight decomposition, when the gauge and Lorentz actions commute.
 
 ## iii. Table of contents
 
@@ -54,6 +58,7 @@ be confined to the zero-weight piece.
 - D. Joins
 - E. Products
 - F. Invariants
+- G. Compatibility with the boost weight decomposition
 
 -/
 
@@ -224,6 +229,10 @@ def GaugeWeight.coord (w : GaugeWeight) : Fin 4 → ℤ := ![w.1, w.2.1, w.2.2.1
 @[simp] lemma GaugeWeight.coord_three (w : GaugeWeight) : w.coord 3 = w.2.2.2 := rfl
 
 /-- The zero gauge weight has vanishing exponent against every torus generator. -/
+@[simp] lemma GaugeWeight.coord_neg (w : GaugeWeight) (i : Fin 4) :
+    (-w).coord i = -(w.coord i) := by
+  fin_cases i <;> rfl
+
 @[simp] lemma GaugeWeight.zero_coord (i : Fin 4) : (0 : GaugeWeight).coord i = 0 := by
   fin_cases i <;> rfl
 
@@ -279,6 +288,92 @@ lemma IsMulRep.map_one {rep : Representation ℂ GaugeGroupI B} (hmul : IsMulRep
   have h1 := hmul g 1 (rep g⁻¹ 1)
   rw [one_mul, rep.self_inv_apply, mul_one] at h1
   exact h1.symm
+
+/-!
+
+## C.1. Powers of `expI` under conjugation
+
+-/
+
+lemma starRingEnd_expI_pow (n : ℕ) :
+    ((starRingEnd ℂ) (expI : ℂ)) ^ n = ((expI : ℂ) ^ n)⁻¹ := by
+  rw [← inv_pow, expI_inv_eq_star]
+  rfl
+
+lemma starRingEnd_expI_zpow (z : ℤ) :
+    (starRingEnd ℂ) ((expI : ℂ) ^ z) = (expI : ℂ) ^ (-z) := by
+  rw [map_zpow₀, _root_.zpow_neg, ← _root_.inv_zpow]
+  congr 1
+  rw [expI_inv_eq_star]
+  rfl
+
+lemma expI_zpow_ne_zero (z : ℤ) : ((expI : ℂ) ^ z) ≠ 0 :=
+  zpow_ne_zero _ (by simp [expI, Complex.exp_ne_zero])
+
+/-!
+
+## C.2. The torus weights of the fundamental representations
+
+The colour and isospin weights of the fundamental representations of `SU(3)` and
+`SU(2)` against the torus generators.  They are the building blocks of the gauge
+weights of the matter representations.
+
+-/
+
+/-- The colour weights of the fundamental of `SU(3)` against the two colour torus
+  generators. -/
+def colourWeight (c : Fin 3) : ℤ × ℤ := ![(1, 0), (-1, 1), (0, -1)] c
+
+/-- The isospin weight of the fundamental of `SU(2)` against the isospin torus
+  generator. -/
+def isoWeight (s : Fin 2) : ℤ := ![1, -1] s
+
+/-!
+
+## C.3. The torus action on dual and conjugate bases
+
+If the torus acts diagonally on a basis then it acts diagonally on the dual basis with
+the negated weights, and on the conjugate basis with the negated weights as well — so
+the conjugate-dual action carries the original weights back.
+
+-/
+
+section TorusBases
+
+variable {V : Type} [AddCommGroup V] [Module ℂ V] {ι : Type} [Fintype ι] [DecidableEq ι]
+
+omit [Fintype ι] in
+lemma dual_gaugeTorusGen_coord (ρ : Representation ℂ GaugeGroupI V)
+    (b : Module.Basis ι ℂ V) (g : GaugeGroupI) (w : ι → ℤ)
+    (hb : ∀ j, ρ g (b j) = ((expI : ℂ) ^ w j) • b j) (j : ι) :
+    ρ.dual g (b.coord j) = ((expI : ℂ) ^ (-(w j))) • b.coord j := by
+  have hinv : ∀ j', ρ g⁻¹ (b j') = ((expI : ℂ) ^ (-(w j'))) • b j' := by
+    intro j'
+    have h1 : ρ g⁻¹ (ρ g (b j')) = b j' := by
+      rw [← Module.End.mul_apply, ← map_mul, inv_mul_cancel, map_one,
+        Module.End.one_apply]
+    rw [hb j', map_smul] at h1
+    rw [_root_.zpow_neg]
+    exact ((inv_smul_eq_iff₀ (expI_zpow_ne_zero (w j'))).mpr h1.symm).symm
+  refine b.ext fun j' => ?_
+  rw [Representation.dual_apply]
+  simp only [Module.Dual.transpose_apply, LinearMap.comp_apply, hinv j', map_smul,
+    LinearMap.smul_apply, Module.Basis.coord_apply, Module.Basis.repr_self, smul_eq_mul]
+  by_cases hne : j' = j
+  · subst hne
+    simp
+  · simp [hne]
+
+omit [Fintype ι] [DecidableEq ι] in
+lemma conj_gaugeTorusGen_basis (ρ : Representation ℂ GaugeGroupI V)
+    (b : Module.Basis ι ℂ V) (g : GaugeGroupI) (w : ι → ℤ)
+    (hb : ∀ j, ρ g (b j) = ((expI : ℂ) ^ w j) • b j) (j : ι) :
+    ρ.conj g (Module.Basis.conj b j)
+      = ((expI : ℂ) ^ (-(w j))) • Module.Basis.conj b j := by
+  simp only [Module.Basis.conj_apply, Representation.conj_apply,
+    LinearEquiv.symm_apply_apply, hb j, map_smulₛₗ, starRingEnd_expI_zpow]
+
+end TorusBases
 
 /-- A **gauge weight decomposition** of a submodule `V`, a finitely supported family of
   subspaces of pure gauge weight whose supremum is `V`. Purity is recorded against the four
@@ -386,6 +481,41 @@ lemma bot_piece (hmul : IsMulRep rep)
 @[simp]
 lemma bot_supp (hmul : IsMulRep rep) :
     (bot hmul).supp = ∅ := rfl
+
+/-- **The span of a single simultaneous eigenvector** of the gauge torus, as a
+  decomposition concentrated in its one weight. This is the base case from which the
+  decompositions of spans of weight vectors are assembled by `iSup` and `sup`. -/
+@[implicit_reducible]
+noncomputable def spanSingleton (hmul : IsMulRep rep) (x : B) (w : GaugeWeight)
+    (hx : ∀ i, rep (gaugeTorusGen i) x = ((expI : ℂ) ^ w.coord i) • x) :
+    GaugeWeightDecomposition rep (Submodule.span ℂ {x}) where
+  piece w' := if w' = w then Submodule.span ℂ {x} else ⊥
+  supp := {w}
+  rep_mul := hmul
+  piece_le := by
+    intro w' y hy i
+    split_ifs at hy with hw'
+    · subst hw'
+      obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.mp hy
+      rw [map_smul, hx i, smul_comm]
+    · rw [Submodule.mem_bot] at hy
+      subst hy
+      simp
+  piece_eq_bot := by
+    intro w' hw'
+    rw [if_neg (by simpa using hw')]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun w' => ?_) (le_iSup_of_le w (by rw [if_pos rfl]))
+    split_ifs
+    · exact le_rfl
+    · exact bot_le
+
+@[simp]
+lemma spanSingleton_piece (hmul : IsMulRep rep) (x : B) (w : GaugeWeight)
+    (hx : ∀ i, rep (gaugeTorusGen i) x = ((expI : ℂ) ^ w.coord i) • x)
+    (w' : GaugeWeight) :
+    (spanSingleton hmul x w hx).piece w'
+      = if w' = w then Submodule.span ℂ {x} else ⊥ := rfl
 
 /-- **An indexed join of decompositions.** A family of decompositions indexed by a finite type
   decomposes the join, its pieces joined and its supports united one weight at a time. This is
@@ -714,6 +844,179 @@ lemma mem_zero_of_invariant (d : GaugeWeightDecomposition rep V) {x : B} (hx : x
   refine ⟨hx, Submodule.mem_iInf _ |>.mpr fun i => ?_⟩
   rw [Module.End.mem_eigenspace_iff, GaugeWeight.zero_coord, zpow_zero, one_smul]
   exact hV _
+
+/-!
+## G. Compatibility with the boost weight decomposition
+
+The gauge group acts on the value indices of an operator and the Lorentz group on its
+spacetime indices, so in every representation met here the two actions commute. Given that, a
+submodule carrying both a gauge weight decomposition and a boost weight decomposition passes
+the second one down to each piece of the first.
+
+The content is that a boost-homogeneous component of a vector of pure gauge weight again has
+that gauge weight. A torus generator commutes with the boosts, so it preserves every boost
+weight space; the boost weight spaces are independent, so the weight-`k` component of a
+scaled vector is the scaled weight-`k` component; and the eigenvector equations defining the
+gauge weight therefore descend to every component. The lattice identity `piece_eq_inf` then
+places each component back in the gauge weight piece.
+
+Meets do not distribute over suprema in a submodule lattice, so the independence is what makes
+the argument work; it is isolated in `biSup_inf_eigenspace_le` and its two corollaries, which
+know nothing about either group.
+-/
+
+section BoostWeight
+
+open MatrixGroups
+open Lorentz.BoostWeight (WeightDecomposition boostWeightSubmodule mem_boostWeightSubmodule
+  boostWeightSubmodule_iSupIndep)
+
+variable {repLorentz : Representation ℂ SL(2,ℂ) B} {i : Fin 3}
+
+/-- **Refining a finite independent decomposition by a commuting operator.** If the pieces `p`
+  sit inside an independent family `P` of `T`-invariant submodules, then an eigenvector of `T`
+  in the join of the pieces is the sum of eigenvectors, one in each piece. -/
+lemma biSup_inf_eigenspace_le {ι : Type*} {P p : ι → Submodule ℂ B} (hpP : ∀ j, p j ≤ P j)
+    (hP : iSupIndep P) {T : Module.End ℂ B} (hT : ∀ j, (P j).map T ≤ P j) (c : ℂ)
+    (s : Finset ι) :
+    (⨆ j ∈ s, p j) ⊓ Module.End.eigenspace T c
+      ≤ ⨆ j ∈ s, (p j ⊓ Module.End.eigenspace T c) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert a s ha ih =>
+    rw [Finset.iSup_insert, Finset.iSup_insert]
+    rintro x ⟨hx, hxE⟩
+    obtain ⟨u, hu, v, hv, rfl⟩ := Submodule.mem_sup.mp hx
+    have hvP : v ∈ ⨆ j ∈ s, P j := (iSup₂_mono fun j _ => hpP j) hv
+    have hTv : T v ∈ ⨆ j ∈ s, P j := by
+      have hmap : (⨆ j ∈ s, P j).map T ≤ ⨆ j ∈ s, P j := by
+        simp only [Submodule.map_iSup]
+        exact iSup₂_mono fun j _ => hT j
+      exact hmap ⟨v, hvP, rfl⟩
+    have hzero : (T u - c • u) + (T v - c • v) = 0 := by
+      have hsum : T (u + v) = c • (u + v) := Module.End.mem_eigenspace_iff.mp hxE
+      rw [map_add, smul_add] at hsum
+      rw [show (T u - c • u) + (T v - c • v) = (T u + T v) - (c • u + c • v) from by abel,
+        hsum, sub_self]
+    have hdisj : Disjoint (P a) (⨆ j ∈ s, P j) :=
+      (hP a).mono_right (iSup₂_le fun j hj =>
+        le_iSup₂_of_le j (show j ≠ a from fun hja => ha (hja ▸ hj)) le_rfl)
+    have hu0 : T u - c • u = 0 := by
+      refine Submodule.disjoint_def.mp hdisj _ (sub_mem (hT a ⟨u, hpP a hu, rfl⟩)
+        (Submodule.smul_mem _ _ (hpP a hu))) ?_
+      rw [show T u - c • u = -(T v - c • v) from by rw [eq_neg_iff_add_eq_zero]; exact hzero]
+      exact neg_mem (sub_mem hTv (Submodule.smul_mem _ _ hvP))
+    have hv0 : T v - c • v = 0 := by rwa [hu0, zero_add] at hzero
+    refine Submodule.mem_sup.mpr ⟨u, ⟨hu, Module.End.mem_eigenspace_iff.mpr (by
+      rwa [sub_eq_zero] at hu0)⟩, v, ih ⟨hv, Module.End.mem_eigenspace_iff.mpr (by
+      rwa [sub_eq_zero] at hv0)⟩, rfl⟩
+
+/-- **Refining an independent decomposition by a commuting operator.** The form of
+  `biSup_inf_eigenspace_le` for a family vanishing off a finite set of indices. -/
+lemma iSup_inf_eigenspace_le {ι : Type*} {P p : ι → Submodule ℂ B} {s : Finset ι}
+    (hpP : ∀ j, p j ≤ P j) (hbot : ∀ j ∉ s, p j = ⊥) (hP : iSupIndep P)
+    {T : Module.End ℂ B} (hT : ∀ j, (P j).map T ≤ P j) (c : ℂ) :
+    (⨆ j, p j) ⊓ Module.End.eigenspace T c
+      ≤ ⨆ j, (p j ⊓ Module.End.eigenspace T c) := by
+  classical
+  have hs : (⨆ j, p j) = ⨆ j ∈ s, p j := by
+    refine le_antisymm (iSup_le fun j => ?_) (iSup₂_le fun j _ => le_iSup p j)
+    by_cases hj : j ∈ s
+    · exact le_iSup₂_of_le j hj le_rfl
+    · rw [hbot j hj]
+      exact bot_le
+  rw [hs]
+  exact (biSup_inf_eigenspace_le hpP hP hT c s).trans
+    (iSup₂_le fun j _ => le_iSup (fun j => p j ⊓ Module.End.eigenspace T c) j)
+
+/-- **Refining an independent decomposition by a family of commuting operators.** A joint
+  eigenvector of finitely many operators preserving each member of an independent family is a
+  sum of joint eigenvectors, one in each piece. -/
+lemma iSup_inf_iInf_eigenspace_le {ι κ : Type*} [Fintype κ] {P p : ι → Submodule ℂ B}
+    {s : Finset ι} (hpP : ∀ j, p j ≤ P j) (hbot : ∀ j ∉ s, p j = ⊥) (hP : iSupIndep P)
+    {T : κ → Module.End ℂ B} (hT : ∀ a j, (P j).map (T a) ≤ P j) (c : κ → ℂ) :
+    (⨆ j, p j) ⊓ ⨅ a, Module.End.eigenspace (T a) (c a)
+      ≤ ⨆ j, (p j ⊓ ⨅ a, Module.End.eigenspace (T a) (c a)) := by
+  classical
+  have key : ∀ (S : Finset κ) (q : ι → Submodule ℂ B), (∀ j, q j ≤ P j) →
+      (∀ j ∉ s, q j = ⊥) →
+      (⨆ j, q j) ⊓ (⨅ a ∈ S, Module.End.eigenspace (T a) (c a))
+        ≤ ⨆ j, (q j ⊓ ⨅ a ∈ S, Module.End.eigenspace (T a) (c a)) := by
+    intro S
+    induction S using Finset.induction_on with
+    | empty =>
+      intro q _ _
+      simp
+    | @insert a S ha ih =>
+      intro q hq hqbot
+      simp only [Finset.iInf_insert, ← inf_assoc]
+      refine le_trans (inf_le_inf_right _ (iSup_inf_eigenspace_le hq hqbot hP
+        (fun j => hT a j) (c a))) ?_
+      exact ih (fun j => q j ⊓ Module.End.eigenspace (T a) (c a))
+        (fun j => inf_le_left.trans (hq j))
+        (fun j hj => by rw [hqbot j hj, bot_inf_eq])
+  have huniv : (⨅ a ∈ (Finset.univ : Finset κ), Module.End.eigenspace (T a) (c a))
+      = ⨅ a, Module.End.eigenspace (T a) (c a) := by simp
+  rw [← huniv]
+  exact key Finset.univ p hpP hbot
+
+/-- **A gauge transformation preserves every boost weight space**, when the gauge action and
+  the Lorentz action commute. The boosts are what cut out the weight space, and the two
+  actions may be exchanged past them. -/
+lemma boostWeightSubmodule_map_le
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (g : GaugeGroupI) (k : ℤ) :
+    (boostWeightSubmodule repLorentz i k).map (rep g)
+      ≤ boostWeightSubmodule repLorentz i k := by
+  rintro _ ⟨y, hy, rfl⟩
+  refine mem_boostWeightSubmodule.mpr fun t ht => ?_
+  rw [← hcomm, mem_boostWeightSubmodule.mp hy t ht, map_smul]
+
+/-- **A gauge weight piece inherits the boost weight decomposition.** If `V` carries both a
+  gauge weight decomposition and a boost weight decomposition, and the two actions commute,
+  then the weight-`w` gauge piece is decomposed by its intersections with the boost pieces. -/
+noncomputable def pieceBoostWeightDecomposition (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) :
+    WeightDecomposition repLorentz i (d.piece w) where
+  piece k := b.piece k ⊓ d.piece w
+  supp := b.supp
+  piece_le k := inf_le_left.trans (b.piece_le k)
+  piece_eq_bot k hk := by rw [b.piece_eq_bot k hk, bot_inf_eq]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun k => inf_le_right) ?_
+    have hpiece : ∀ k, b.piece k ≤ V := fun k =>
+      le_of_le_of_eq (le_iSup b.piece k) b.iSup_piece
+    have hkey := iSup_inf_iInf_eigenspace_le (P := boostWeightSubmodule repLorentz i)
+      (p := b.piece) (s := b.supp) b.piece_le b.piece_eq_bot
+      (boostWeightSubmodule_iSupIndep (i := i) repLorentz)
+      (T := fun j => rep (gaugeTorusGen j))
+      (hT := fun j k => boostWeightSubmodule_map_le hcomm (gaugeTorusGen j) k)
+      (c := fun j => (expI : ℂ) ^ w.coord j)
+    rw [b.iSup_piece] at hkey
+    refine le_trans (le_of_eq (d.piece_eq_inf w)) (hkey.trans (iSup_mono fun k => ?_))
+    refine le_inf inf_le_left ?_
+    rw [d.piece_eq_inf]
+    exact inf_le_inf (hpiece k) le_rfl
+
+/-- The pieces of the inherited boost weight decomposition. -/
+@[simp]
+lemma pieceBoostWeightDecomposition_piece (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) (k : ℤ) :
+    (pieceBoostWeightDecomposition d b hcomm w).piece k = b.piece k ⊓ d.piece w := rfl
+
+/-- The support of the inherited boost weight decomposition. -/
+lemma pieceBoostWeightDecomposition_supp (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) :
+    (pieceBoostWeightDecomposition d b hcomm w).supp = b.supp := rfl
+
+end BoostWeight
 
 end GaugeWeightDecomposition
 end StandardModel

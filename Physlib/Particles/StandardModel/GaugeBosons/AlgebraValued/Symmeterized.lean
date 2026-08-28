@@ -36,83 +36,40 @@ namespace StandardModel
 namespace IsGaugeField
 open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ JetGaugeGroupI B}
-variable {A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-variable {D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B}
-variable [Lorentz.IsLorentzDeriv repLorentz D]
-variable {D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ)}
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
 
-noncomputable def symmetrizedDeriv (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
-    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
-    (s : Multiset (Fin 1 ⊕ Fin 3))
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ GaugeAlgebra) : B:=
-  ((1/(s.card : ℝ) : ℝ) • (s.map fun μ =>
-    (Lorentz.iteratedD D D_comm (s - {μ}) (A μ φ))).sum)
+/-- The symmetrized derivative symbol `sym(d_s A)^φ`: the average over the directions
+  `μ ∈ s` of the symbols `d_{s−μ} A_μ^φ`, so that the direction of the gauge field is
+  symmetrized into the derivative multiset. -/
+noncomputable def symmetrizedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (φ : Module.Dual ℝ GaugeAlgebra) : B :=
+  ((1/(s.card : ℝ) : ℝ) • (s.map fun μ => A (s - {μ}) μ φ).sum)
 
 @[simp]
-lemma symmetrizedDeriv_singleton (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
-    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
-    (μ : Fin 1 ⊕ Fin 3) (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+lemma symmetrizedDeriv_singleton (μ : Fin 1 ⊕ Fin 3)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    symmetrizedDeriv D D_comm ({μ}) A φ = A μ φ := by
-  simp [symmetrizedDeriv, Lorentz.iteratedD]
-
-@[simp]
-lemma symmetrizedDeriv_empty (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
-    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ GaugeAlgebra) :
-    symmetrizedDeriv D D_comm 0 A φ = 0 := by
+    symmetrizedDeriv ({μ}) A φ = A 0 μ φ := by
   simp [symmetrizedDeriv]
 
-/-- The recursion for the symmetrized derivative: peeling one direction off the
-  multiset. The factor `card s / (card s + 1)` on the derivative term comes from the
-  mismatch of the symmetrization factors `1/(card s + 1)` and `1/card s`. -/
-lemma symmetrizedDeriv_cons (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
-    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
-    (s : Multiset (Fin 1 ⊕ Fin 3))
-    (μ : Fin 1 ⊕ Fin 3)
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+@[simp]
+lemma symmetrizedDeriv_empty
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    symmetrizedDeriv D D_comm (μ ::ₘ s) A φ =
-      (1/(s.card + 1 : ℝ) : ℝ) • (Lorentz.iteratedD D D_comm s (A μ φ))
-    + ((s.card : ℝ)/(s.card + 1 : ℝ)) • D μ (symmetrizedDeriv D D_comm s A φ) := by
-  by_cases hs : s = 0
-  · subst hs
-    simp [Lorentz.iteratedD_zero]
-  · have hn : (s.card : ℝ) ≠ 0 :=
-      Nat.cast_ne_zero.mpr fun h => hs (Multiset.card_eq_zero.mp h)
-    have herase : ∀ ν ∈ s, (μ ::ₘ s).erase ν = μ ::ₘ s.erase ν := by
-      intro ν hν
-      rcases eq_or_ne ν μ with rfl | h
-      · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
-      · rw [Multiset.erase_cons_tail _ h.symm]
-    rw [symmetrizedDeriv, symmetrizedDeriv, Multiset.map_cons, Multiset.sum_cons,
-      Multiset.card_cons, Multiset.sub_singleton, Multiset.erase_cons_head,
-      Multiset.map_congr rfl (fun ν hν => by
-        rw [Multiset.sub_singleton, herase ν hν, Lorentz.iteratedD_cons,
-          LinearMap.comp_apply, ← Multiset.sub_singleton]),
-      show (s.map fun ν => D μ (Lorentz.iteratedD D D_comm (s - {ν}) (A ν φ))) =
-          (s.map fun ν => Lorentz.iteratedD D D_comm (s - {ν}) (A ν φ)).map (⇑(D μ)) from
-        (Multiset.map_map _ _ _).symm,
-      ← map_multiset_sum, smul_add, LinearMap.map_smul_of_tower, smul_smul,
-      show ((s.card + 1 : ℕ) : ℝ) = (s.card : ℝ) + 1 by push_cast; ring,
-      show (s.card : ℝ)/((s.card : ℝ) + 1) * (1/(s.card : ℝ)) = 1/((s.card : ℝ) + 1) by
-        field_simp]
+    symmetrizedDeriv 0 A φ = 0 := by
+  simp [symmetrizedDeriv]
 
-lemma deriv_sub_symmetrizedDeriv_eq_sum (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B)
-    (D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ))
-    (s : Multiset (Fin 1 ⊕ Fin 3))
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+lemma deriv_sub_symmetrizedDeriv_eq_sum (s : Multiset (Fin 1 ⊕ Fin 3))
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (φ : Module.Dual ℝ GaugeAlgebra)
     (μ : Fin 1 ⊕ Fin 3) :
-    Lorentz.iteratedD D D_comm s (A μ φ) - symmetrizedDeriv D D_comm (μ ::ₘ s) A φ =
-      ((1/(s.card + 1 : ℝ)) • ((s.map fun ν => Lorentz.iteratedD D D_comm s (A μ φ) -
-        Lorentz.iteratedD D D_comm (μ ::ₘ s - {ν}) (A ν φ)).sum)) := by
+    A s μ φ - symmetrizedDeriv (μ ::ₘ s) A φ =
+      ((1/(s.card + 1 : ℝ)) • ((s.map fun ν => A s μ φ -
+        A (μ ::ₘ s - {ν}) ν φ).sum)) := by
   have hn1 : (s.card : ℝ) + 1 ≠ 0 := by positivity
   rw [symmetrizedDeriv, Multiset.map_cons, Multiset.sum_cons, Multiset.card_cons,
     Multiset.sub_singleton, Multiset.erase_cons_head, Multiset.sum_map_sub,
@@ -129,71 +86,34 @@ The chain of lemmas below implements the outline in the module docstring, leadin
 
   `adjoin({ d_p A }) = adjoin({ sym(d_p A) } ∪ { 𝒟_q F })`.
 
-Throughout, `D_mul` is the Leibniz rule for the total derivative — a property of `D`
-on the algebra `B` that `IsGaugeField` does not currently record, taken here as an
-explicit hypothesis.
+With the derivative symbols as primitives no Leibniz hypothesis is needed: the
+covariant derivative of a family shifts the derivative index and adds a bracket
+convolution, both of which stay inside the symbol subalgebras by construction.
 
 -/
 
-/-- The iterated covariant derivative `𝒟_l F` of an adjoint component family along a
-  *list* of directions: covariant derivatives do not commute (their commutator is an
-  `ad F` term), so the iteration is order-dependent and indexed by a list. -/
+/-- The iterated covariant derivative `𝒟_l F` of an adjoint family of derivative
+  symbols along a *list* of directions: covariant derivatives do not commute (their
+  commutator is an `ad F` term), so the iteration is order-dependent and indexed by a
+  list. The result is again a family of derivative symbols; the underived covariant
+  tower is its value at the empty multiset. -/
 noncomputable def iteratedCovDerivAdjoint
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B) :
-    List (Fin 1 ⊕ Fin 3) → (Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) →
-      Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    List (Fin 1 ⊕ Fin 3) →
+      (Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) →
+      Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B
   | [], F => F
-  | ρ :: l, F => covDerivAdjoint A (iteratedCovDerivAdjoint A D l F) D ρ
-
+  | ρ :: l, F => covDerivAdjoint A (iteratedCovDerivAdjoint A l F) ρ
 
 /-- Symbol subalgebras are monotone in the order bound. -/
 lemma adjoin_symbols_mono {n m : ℕ} (hnm : n ≤ m) :
     Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ≤
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧ b = A p μ φ} ≤
       Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ m ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ m ∧ b = A p μ φ} := by
   refine Algebra.adjoin_mono fun b => ?_
   rintro ⟨p, μ, φ, h, rfl⟩
   exact ⟨p, μ, φ, h.trans hnm, rfl⟩
-
-/-- The total derivative raises the order of a symbol polynomial by at most one:
-  it maps the subalgebra of order-`n` symbols into the order-`n + 1` one, by the
-  Leibniz rule. -/
-lemma deriv_mem_adjoin_symbols
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
-    (ρ : Fin 1 ⊕ Fin 3) {n : ℕ} {x : B}
-    (hx : x ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)}) :
-    D ρ x ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n + 1 ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
-  induction hx using Algebra.adjoin_induction with
-  | mem b hb =>
-      obtain ⟨p, κ, ψ, hpc, rfl⟩ := hb
-      refine Algebra.subset_adjoin ⟨ρ ::ₘ p, κ, ψ, ?_, ?_⟩
-      · simpa using Nat.succ_le_succ hpc
-      · rw [Lorentz.iteratedD_cons]
-        rfl
-  | algebraMap c =>
-      have h1 : D ρ (1 : B) = 0 := by
-        have h := D_mul ρ 1 1
-        simp only [one_mul, mul_one] at h
-        have h3 : D ρ (1 : B) + 0 = D ρ 1 + D ρ 1 := by rw [add_zero]; exact h
-        exact (add_left_cancel h3).symm
-      rw [Algebra.algebraMap_eq_smul_one, map_smul, h1, smul_zero]
-      exact zero_mem _
-  | add x y hx hy ihx ihy =>
-      rw [map_add]
-      exact add_mem ihx ihy
-  | mul x y hx hy ihx ihy =>
-      rw [D_mul]
-      exact add_mem (mul_mem ihx (adjoin_symbols_mono (Nat.le_succ n) hy))
-        (mul_mem (adjoin_symbols_mono (Nat.le_succ n) hx) ihy)
 
 /-- The bracket of two component families whose components are order-`n` symbol
   polynomials is again an order-`n` symbol polynomial, componentwise. -/
@@ -201,110 +121,117 @@ lemma bracketFam_mem_adjoin_symbols {n : ℕ}
     {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
     (hf : ∀ ψ, f ψ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)})
+      b = A p μ φ})
     (hg : ∀ ψ, g ψ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)})
+      b = A p μ φ})
     (φ : Module.Dual ℝ GaugeAlgebra) :
     bracketFam f g φ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
+      b = A p μ φ} := by
   rw [bracketFam_apply_eq_sum]
   refine Subalgebra.sum_mem _ fun j _ => Subalgebra.sum_mem _ fun k _ => ?_
   rw [← algebraMap_smul ℂ]
   exact Subalgebra.smul_mem _ (mul_mem (hf _) (hg _)) _
 
-/-- Every iterated derivative of the field strength is a symbol polynomial of order
+/-- Every derivative symbol of the field strength is a symbol polynomial of order
   one higher than the number of derivatives. -/
-lemma iteratedD_fieldStrength_mem
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+lemma fieldStrength_mem_adjoin_symbols
     (q : Multiset (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    Lorentz.iteratedD D D_comm q (fieldStrength A D ν lam φ) ∈
+    fieldStrength A ν lam q φ ∈
       Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ q.card + 1 ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
-  rw [fieldStrength_apply, map_add, map_sub]
+        b = A p μ φ} := by
+  rw [fieldStrength_apply]
   refine add_mem (sub_mem ?_ ?_) ?_
-  · rw [show Lorentz.iteratedD D D_comm q (D ν (A lam φ)) =
-        Lorentz.iteratedD D D_comm (ν ::ₘ q) (A lam φ) from by
-      rw [Lorentz.iteratedD_cons']; rfl]
-    exact Algebra.subset_adjoin ⟨ν ::ₘ q, lam, φ, by simp, rfl⟩
-  · rw [show Lorentz.iteratedD D D_comm q (D lam (A ν φ)) =
-        Lorentz.iteratedD D D_comm (lam ::ₘ q) (A ν φ) from by
-      rw [Lorentz.iteratedD_cons']; rfl]
-    exact Algebra.subset_adjoin ⟨lam ::ₘ q, ν, φ, by simp, rfl⟩
+  · exact Algebra.subset_adjoin ⟨ν ::ₘ q, lam, φ, by simp, rfl⟩
+  · exact Algebra.subset_adjoin ⟨lam ::ₘ q, ν, φ, by simp, rfl⟩
   · exact adjoin_symbols_mono (Nat.le_succ q.card)
-      (iteratedD_commutator_mem A D D_comm D_mul q ν lam φ)
+      (commutatorFam_mem A q ν lam φ)
 
 /-- **Outline step 6** (unitriangularity of the covariant tower): the covariant and
-  plain iterated derivatives of the field strength differ by an element of the
-  subalgebra generated by lower-order symbols and lower-order plain derivatives of
-  the field strength; consequently the two towers generate the same subalgebras.
-  Stated as the membership needed for the induction. -/
-lemma iteratedCovDerivAdjoint_sub_iteratedD_mem
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+  plain derivative symbols of the field strength differ by an element of the
+  subalgebra generated by lower-order symbols; consequently the two towers generate
+  the same subalgebras. Stated at every derivative multiset `s`, as needed for the
+  induction: the covariant derivative shifts the family index. -/
+lemma iteratedCovDerivAdjoint_sub_mem
     (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ GaugeAlgebra) :
-    iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ -
-        Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam φ) ∈
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) s φ -
+        fieldStrength A ν lam (Multiset.ofList l + s) φ ∈
       Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ l.length ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
-  induction l generalizing φ with
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ l.length + s.card ∧
+        b = A p μ φ} := by
+  induction l generalizing s φ with
   | nil =>
       simp only [iteratedCovDerivAdjoint,
-        show (Multiset.ofList ([] : List (Fin 1 ⊕ Fin 3))) = 0 from rfl,
-        Lorentz.iteratedD_zero, LinearMap.id_coe, id_eq, sub_self]
+        show (Multiset.ofList ([] : List (Fin 1 ⊕ Fin 3))) = 0 from rfl, zero_add,
+        sub_self]
       exact zero_mem _
   | cons ρ l ih =>
-      have hsplit : iteratedCovDerivAdjoint A D (ρ :: l) (fieldStrength A D ν lam) φ -
-          Lorentz.iteratedD D D_comm (Multiset.ofList (ρ :: l)) (fieldStrength A D ν lam φ) =
-        D ρ (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ -
-            Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam φ)) +
-          bracketFam (A ρ) (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) φ := by
-        rw [show (Multiset.ofList (ρ :: l)) = ρ ::ₘ Multiset.ofList l from rfl,
-          Lorentz.iteratedD_cons, LinearMap.comp_apply, map_sub,
-          show iteratedCovDerivAdjoint A D (ρ :: l) (fieldStrength A D ν lam) φ =
-            D ρ (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ) +
-              bracketFam (A ρ) (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) φ
-            from rfl]
+      have hms : Multiset.ofList (ρ :: l) + s = Multiset.ofList l + (ρ ::ₘ s) := by
+        rw [show Multiset.ofList (ρ :: l) = ρ ::ₘ Multiset.ofList l from rfl,
+          Multiset.cons_add, Multiset.add_cons]
+      have hsplit : iteratedCovDerivAdjoint A (ρ :: l) (fieldStrength A ν lam) s φ -
+          fieldStrength A ν lam (Multiset.ofList (ρ :: l) + s) φ =
+        (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) (ρ ::ₘ s) φ -
+            fieldStrength A ν lam (Multiset.ofList l + (ρ ::ₘ s)) φ) +
+          bracketFamConv A ρ (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ := by
+        rw [show iteratedCovDerivAdjoint A (ρ :: l) (fieldStrength A ν lam) s φ =
+              iteratedCovDerivAdjoint A l (fieldStrength A ν lam) (ρ ::ₘ s) φ +
+                bracketFamConv A ρ
+                  (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ
+            from rfl, hms]
         abel
       rw [hsplit]
-      refine add_mem (deriv_mem_adjoin_symbols D_mul ρ (ih φ)) ?_
-      refine bracketFam_mem_adjoin_symbols (fun ψ => ?_) (fun ψ => ?_) φ
-      · exact Algebra.subset_adjoin ⟨0, ρ, ψ, by simp, by rw [Lorentz.iteratedD_zero]; rfl⟩
-      · have h3 : iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) ψ =
-            (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) ψ -
-              Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam ψ)) +
-            Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam ψ) := by
-          abel
-        rw [h3]
-        refine add_mem (adjoin_symbols_mono (Nat.le_succ l.length) (ih ψ)) ?_
-        simpa using iteratedD_fieldStrength_mem (A := A) D_mul (Multiset.ofList l) ν lam ψ
+      refine add_mem ?_ ?_
+      · refine adjoin_symbols_mono ?_ (ih (ρ ::ₘ s) φ)
+        simp only [List.length_cons, Multiset.card_cons]
+        omega
+      · rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+        refine multiset_sum_mem _ fun x hx => ?_
+        obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+        have hle := Multiset.mem_antidiagonal.mp hp
+        have h1 : p.1.card ≤ s.card :=
+          hle ▸ Multiset.card_le_card (Multiset.le_add_right _ _)
+        have h2 : p.2.card ≤ s.card :=
+          hle ▸ Multiset.card_le_card (Multiset.le_add_left _ _)
+        refine bracketFam_mem_adjoin_symbols (fun ψ => ?_) (fun ψ => ?_) _
+        · refine Algebra.subset_adjoin ⟨p.1, ρ, ψ, ?_, rfl⟩
+          simp only [List.length_cons]
+          omega
+        · have h3 : iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ =
+              (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ -
+                fieldStrength A ν lam (Multiset.ofList l + p.2) ψ) +
+              fieldStrength A ν lam (Multiset.ofList l + p.2) ψ := by abel
+          rw [h3]
+          refine add_mem (adjoin_symbols_mono ?_ (ih p.2 ψ))
+            (adjoin_symbols_mono ?_
+              (fieldStrength_mem_adjoin_symbols (Multiset.ofList l + p.2) ν lam ψ))
+          · simp only [List.length_cons]
+            omega
+          · simp only [Multiset.card_add, Multiset.coe_card, List.length_cons]
+            omega
 
 /-- **Outline step 7** (chaining the memberships): every derivative symbol of order
   `n + 1` lies in the subalgebra generated by its symmetrization, the covariant
   derivatives of the field strength of order `n`, and the symbols of order at most
   `n`. This is the inductive step of the generation theorem. -/
-lemma iteratedD_mem_symFieldAdjoin_sup
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+lemma symbol_mem_symFieldAdjoin_sup
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    Lorentz.iteratedD D D_comm s (A μ φ) ∈
+    A s μ φ ∈
       Algebra.adjoin ℂ
         ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ r.card ≤ s.card + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ r.card ≤ s.card + 1 ∧ b = symmetrizedDeriv r A φ} ∪
           {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra), l.length < s.card ∧
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) ⊔
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ⊔
       Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ (s.card - 1) ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
-  rw [sub_eq_iff_eq_add.mp (deriv_sub_symmetrizedDeriv_eq_sum D D_comm s A φ μ)]
+        b = A p μ φ} := by
+  rw [sub_eq_iff_eq_add.mp (deriv_sub_symmetrizedDeriv_eq_sum s A φ μ)]
   refine add_mem ?_ ?_
   · -- the antisymmetric remainder: field strength plus lower-order terms
     rw [← algebraMap_smul ℂ ((1 : ℝ)/(s.card + 1 : ℝ))]
@@ -315,28 +242,41 @@ lemma iteratedD_mem_symFieldAdjoin_sup
       Multiset.card_pos.mpr fun h => Multiset.notMem_zero ν (h ▸ hν)
     have hcard : (s - {ν}).card = s.card - 1 := by
       rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
-    rw [iteratedD_sub_pair D D_comm s hν μ A φ, pair_eq_fieldStrength_sub_commutator,
-      map_sub]
+    have hνs : ν ::ₘ (s - {ν}) = s := by
+      rw [Multiset.sub_singleton, Multiset.cons_erase hν]
+    have hμs : μ ::ₘ (s - {ν}) = μ ::ₘ s - {ν} := by
+      rw [Multiset.sub_singleton, Multiset.sub_singleton]
+      rcases eq_or_ne ν μ with rfl | h
+      · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
+      · rw [Multiset.erase_cons_tail _ h.symm]
+    have hpair : A s μ φ - A (μ ::ₘ s - {ν}) ν φ =
+        fieldStrength A ν μ (s - {ν}) φ - commutatorFam A ν μ (s - {ν}) φ := by
+      have h := congrArg (fun f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B => f φ)
+        (pair_eq_fieldStrength_sub_commutatorFam A ν μ (s - {ν}))
+      simp only [LinearMap.sub_apply] at h
+      rw [← h, hνs, hμs]
+    rw [hpair]
     refine sub_mem ?_ ?_
     · -- the field-strength part, through the covariant tower
       set l := (s - {ν}).toList with hl'
       have hl : (Multiset.ofList l) = s - {ν} := Multiset.coe_toList _
       have hlen : l.length = s.card - 1 := by rw [← Multiset.coe_card, hl, hcard]
-      rw [show Lorentz.iteratedD D D_comm (s - {ν}) (fieldStrength A D ν μ φ) =
-          iteratedCovDerivAdjoint A D l (fieldStrength A D ν μ) φ -
-            (iteratedCovDerivAdjoint A D l (fieldStrength A D ν μ) φ -
-              Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν μ φ))
-          from by rw [hl]; abel]
+      rw [show fieldStrength A ν μ (s - {ν}) φ =
+          iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
+            (iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
+              fieldStrength A ν μ (Multiset.ofList l + 0) φ)
+          from by rw [add_zero, hl]; abel]
       refine sub_mem ?_ ?_
       · refine SetLike.le_def.mp le_sup_left
           (Algebra.subset_adjoin (Or.inr ⟨l, ν, μ, φ, ?_, rfl⟩))
         omega
       · refine SetLike.le_def.mp le_sup_right (adjoin_symbols_mono ?_
-          (iteratedCovDerivAdjoint_sub_iteratedD_mem (D_mul := D_mul) l ν μ φ))
+          (iteratedCovDerivAdjoint_sub_mem l ν μ 0 φ))
+        simp only [Multiset.card_zero]
         omega
     · -- the commutator part is strictly lower order
       refine SetLike.le_def.mp le_sup_right (adjoin_symbols_mono ?_
-        (iteratedD_commutator_mem A D D_comm D_mul (s - {ν}) ν μ φ))
+        (commutatorFam_mem A (s - {ν}) ν μ φ))
       omega
   · -- the symmetrized symbol is a generator
     exact SetLike.le_def.mp le_sup_left
@@ -347,69 +287,63 @@ lemma iteratedD_mem_symFieldAdjoin_sup
   together with the covariant field-strength tower generate the same subalgebra,
 
   `adjoin({ d_p A : |p| ≤ n }) = adjoin({ sym(d_p A) : |p| ≤ n } ∪ { 𝒟_q F : |q| < n })`. -/
-theorem symbolAdjoin_eq_symFieldAdjoin
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
-    (n : ℕ) :
+theorem symbolAdjoin_eq_symFieldAdjoin (n : ℕ) :
     Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} =
+        (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧ b = A p μ φ} =
       Algebra.adjoin ℂ
         ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
           {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) := by
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
   refine le_antisymm ?_ ?_
   · -- symbols are generated by symmetrized symbols and the covariant tower,
     -- by strong induction on the order
     have main : ∀ m, ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ m → m ≤ n →
-        Lorentz.iteratedD D D_comm p (A μ φ) ∈ Algebra.adjoin ℂ
+        A p μ φ ∈ Algebra.adjoin ℂ
           ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-              r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+              r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
             {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
               (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
-              b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) := by
+              b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
       intro m
       induction m using Nat.strong_induction_on with
       | _ m ih =>
         intro p μ φ hpm hmn
         have hSF : Algebra.adjoin ℂ
             ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-                r ≠ 0 ∧ r.card ≤ p.card + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+                r ≠ 0 ∧ r.card ≤ p.card + 1 ∧ b = symmetrizedDeriv r A φ} ∪
               {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
                 (φ : Module.Dual ℝ GaugeAlgebra), l.length < p.card ∧
-                b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) ≤
+                b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ≤
             Algebra.adjoin ℂ
               ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
                 {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
                   (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
-                  b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) := by
+                  b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
           refine Algebra.adjoin_mono ?_
           rintro b (⟨r, ψ, h0, hc, rfl⟩ | ⟨l, ν, lam, ψ, hl, rfl⟩)
           · exact Or.inl ⟨r, ψ, h0, by omega, rfl⟩
           · exact Or.inr ⟨l, ν, lam, ψ, by omega, rfl⟩
         have hAdj : Algebra.adjoin ℂ {b : B | ∃ (q : Multiset (Fin 1 ⊕ Fin 3))
             (κ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra), q.card ≤ (p.card - 1) ∧
-            b = Lorentz.iteratedD D D_comm q (A κ ψ)} ≤
+            b = A q κ ψ} ≤
             Algebra.adjoin ℂ
               ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
                 {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
                   (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
-                  b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) := by
+                  b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
           refine Algebra.adjoin_le ?_
           rintro b ⟨q, κ, ψ, hqc, rfl⟩
           rcases Nat.eq_zero_or_pos q.card with hq0 | hqpos
           · obtain rfl : q = 0 := Multiset.card_eq_zero.mp hq0
-            rw [Lorentz.iteratedD_zero]
             refine Algebra.subset_adjoin (Or.inl ⟨{κ}, ψ, by simp, by simp, ?_⟩)
             rw [symmetrizedDeriv_singleton]
-            rfl
           · exact ih q.card (by omega) q κ ψ (le_refl _) (by omega)
-        exact sup_le hSF hAdj (iteratedD_mem_symFieldAdjoin_sup D_mul p μ φ)
+        exact sup_le hSF hAdj (symbol_mem_symFieldAdjoin_sup p μ φ)
     refine Algebra.adjoin_le ?_
     rintro b ⟨p, μ, φ, hpc, rfl⟩
     exact main n p μ φ hpc (le_refl n)
@@ -424,19 +358,18 @@ theorem symbolAdjoin_eq_symFieldAdjoin
       have : (r - {ν}).card = r.card - 1 := by
         rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
       omega
-    · have h6 := iteratedCovDerivAdjoint_sub_iteratedD_mem (A := A) (D_comm := D_comm)
-        D_mul l ν lam φ
-      have hF := iteratedD_fieldStrength_mem (A := A) (D_comm := D_comm) D_mul
-        (Multiset.ofList l) ν lam φ
-      rw [show iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ =
-          (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ -
-            Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam φ)) +
-          Lorentz.iteratedD D D_comm (Multiset.ofList l) (fieldStrength A D ν lam φ)
+    · have h6 := iteratedCovDerivAdjoint_sub_mem (A := A) l ν lam 0 φ
+      have hF := fieldStrength_mem_adjoin_symbols (A := A) (Multiset.ofList l + 0) ν lam φ
+      rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
+          (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ -
+            fieldStrength A ν lam (Multiset.ofList l + 0) φ) +
+          fieldStrength A ν lam (Multiset.ofList l + 0) φ
           from by abel]
-      refine add_mem (adjoin_symbols_mono (by omega) h6)
-        (adjoin_symbols_mono ?_ hF)
-      simp only [Multiset.coe_card]
-      omega
+      refine add_mem (adjoin_symbols_mono ?_ h6) (adjoin_symbols_mono ?_ hF)
+      · simp only [Multiset.card_zero]
+        omega
+      · simp only [Multiset.card_add, Multiset.coe_card, Multiset.card_zero]
+        omega
 
 /-- **The generation theorem, unbounded version**: the derivative symbols of the gauge
   field of all orders, and the symmetrized symbols together with the full covariant
@@ -446,20 +379,18 @@ theorem symbolAdjoin_eq_symFieldAdjoin
 
   It follows from the graded version `symbolAdjoin_eq_symFieldAdjoin` since every
   generator on either side appears at some finite order. -/
-theorem symbolAdjoin_eq_symFieldAdjoin_top
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂) :
+theorem symbolAdjoin_eq_symFieldAdjoin_top :
     Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ GaugeAlgebra), b = Lorentz.iteratedD D D_comm p (A μ φ)} =
+        (φ : Module.Dual ℝ GaugeAlgebra), b = A p μ φ} =
       Algebra.adjoin ℂ
         ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ b = symmetrizedDeriv r A φ} ∪
           {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra),
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) := by
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
   refine le_antisymm (Algebra.adjoin_le ?_) (Algebra.adjoin_le ?_)
   · rintro b ⟨p, μ, φ, rfl⟩
-    have h := (symbolAdjoin_eq_symFieldAdjoin (A := A) (D_comm := D_comm) D_mul p.card).le
+    have h := (symbolAdjoin_eq_symFieldAdjoin (A := A) p.card).le
       (Algebra.subset_adjoin ⟨p, μ, φ, le_refl _, rfl⟩)
     refine Algebra.adjoin_mono ?_ h
     rintro b (⟨r, ψ, h0, _, rfl⟩ | ⟨l, ν, lam, ψ, _, rfl⟩)
@@ -467,9 +398,9 @@ theorem symbolAdjoin_eq_symFieldAdjoin_top
     · exact Or.inr ⟨l, ν, lam, ψ, rfl⟩
   · have hmono : ∀ n : ℕ, Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
         (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ≤
+        b = A p μ φ} ≤
         Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ GaugeAlgebra), b = Lorentz.iteratedD D D_comm p (A μ φ)} := by
+          (φ : Module.Dual ℝ GaugeAlgebra), b = A p μ φ} := by
       intro n
       refine Algebra.adjoin_mono ?_
       rintro b ⟨p, μ, ψ, _, rfl⟩
@@ -478,18 +409,11 @@ theorem symbolAdjoin_eq_symFieldAdjoin_top
     · have hcard : 1 ≤ r.card :=
         Nat.one_le_iff_ne_zero.mpr fun h => hr0 (Multiset.card_eq_zero.mp h)
       exact hmono (r.card - 1)
-        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (D_comm := D_comm) D_mul (r.card - 1)).ge
+        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (r.card - 1)).ge
           (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, by omega, rfl⟩)))
     · exact hmono (l.length + 1)
-        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (D_comm := D_comm) D_mul (l.length + 1)).ge
+        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (l.length + 1)).ge
           (Algebra.subset_adjoin (Or.inr ⟨l, ν, lam, φ, by omega, rfl⟩)))
-
-/-!
-
-## The group action on the symmetrized derivatives
-
--/
-
 
 /-!
 
@@ -509,13 +433,13 @@ theorem symbolAdjoin_eq_symFieldAdjoin_top
   This is the symbol-level counterpart of `symmetrizedMaurerCartanForm`: the gauge
   group acts on the symmetrized derivative coordinates through the symmetrized
   Maurer–Cartan data. -/
-lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A D D_comm)
+lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A)
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U (symmetrizedDeriv D D_comm s A φ) =
+    repGauge U (symmetrizedDeriv s A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
-          Lorentz.iteratedD D D_comm p.2 (A μ (adjointDualCoeff U⁻¹ p.1 φ))).sum).sum
+          A p.2 μ (adjointDualCoeff U⁻¹ p.1 φ)).sum).sum
       + algebraMap ℂ B (φ (JetGaugeAlgebra.eval (symmetrizedMaurerCartanForm U⁻¹ s))) := by
   set L : JetGaugeAlgebra →ₗ[ℝ] B :=
     (Algebra.linearMap ℂ B).restrictScalars ℝ ∘ₗ Algebra.linearMap ℝ ℂ ∘ₗ
@@ -545,13 +469,13 @@ lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A D D_com
   This is the mechanism by which the truncation kernel can be used to gauge away the
   symmetrized derivative coordinates. -/
 lemma repGauge_symmetrizedDeriv_truncationKer
-    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (hA : IsGaugeField repLorentz repGauge A)
     (U : JetGaugeGroupI.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U.1 (symmetrizedDeriv D D_comm s A φ) =
+    repGauge U.1 (symmetrizedDeriv s A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
-          Lorentz.iteratedD D D_comm p.2 (A μ (adjointDualCoeff (U.1)⁻¹ p.1 φ))).sum).sum
+          A p.2 μ (adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
       + algebraMap ℂ B (φ (symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
   rw [repGauge_symmetrizedDeriv hA U.1 s φ]
   rfl
@@ -567,14 +491,14 @@ lemma repGauge_symmetrizedDeriv_truncationKer
   sent to zero, but on any fixed field configuration (a point of `Spec B`) the shift
   `c` can be chosen to cancel the configuration's symmetrized derivative values. -/
 lemma exists_repGauge_symmetrizedDeriv_shift
-    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (hA : IsGaugeField repLorentz repGauge A)
     (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → GaugeAlgebra) :
     ∃ U : JetGaugeGroupI.truncationKer 0,
       ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0) (φ : Module.Dual ℝ GaugeAlgebra),
-        repGauge U.1 (symmetrizedDeriv D D_comm s A φ) =
+        repGauge U.1 (symmetrizedDeriv s A φ) =
           (1/(s.card : ℝ)) • (s.map fun μ =>
             ((s - {μ}).antidiagonal.map fun p =>
-              Lorentz.iteratedD D D_comm p.2 (A μ (adjointDualCoeff (U.1)⁻¹ p.1 φ))).sum).sum
+              A p.2 μ (adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
           + algebraMap ℂ B (φ (c ⟨s, hs⟩)) := by
   obtain ⟨V, hV⟩ := symmetrizedMaurerCartanCoeff_surjective c
   refine ⟨V⁻¹, fun s hs φ => ?_⟩
@@ -586,7 +510,7 @@ lemma exists_repGauge_symmetrizedDeriv_shift
 
 Throughout, `hc` is the hypothesis that all derivative symbols of the gauge field are
 central in `B` — the statement that the gauge field is bosonic. Everything built from
-the symbols by the total derivative and the bracket is then central as well.
+the symbols by the bracket is then central as well.
 
 -/
 
@@ -600,18 +524,6 @@ lemma smul_mem_center (r : ℝ) {x : B} (hx : x ∈ Subring.center B) :
   rw [← algebraMap_smul ℂ r x, Algebra.smul_def]
   exact Subring.mul_mem _ (algebraMap_mem_center _) hx
 
-/-- The total derivative of a central element is central, by the Leibniz rule. -/
-lemma deriv_mem_center
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
-    {x : B} (hx : x ∈ Subring.center B) (ρ : Fin 1 ⊕ Fin 3) :
-    D ρ x ∈ Subring.center B := by
-  rw [Subring.mem_center_iff] at hx ⊢
-  intro b
-  have h := congrArg (D ρ) (hx b)
-  rw [D_mul, D_mul, hx (D ρ b), add_comm (D ρ x * b)] at h
-  exact add_left_cancel h
-
 /-- The bracket of component families with central components is central. -/
 lemma bracketFam_mem_center {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
     (hf : ∀ ψ, f ψ ∈ Subring.center B) (hg : ∀ ψ, g ψ ∈ Subring.center B)
@@ -621,46 +533,52 @@ lemma bracketFam_mem_center {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
   refine Subring.sum_mem _ fun j _ => Subring.sum_mem _ fun k _ => ?_
   exact smul_mem_center _ (Subring.mul_mem _ (hf _) (hg _))
 
-/-- **1.** If the derivative symbols of the gauge field are central, so are the
-  covariant derivatives of the field strength. -/
-lemma iteratedCovDerivAdjoint_fieldStrength_mem_center
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+/-- The derived commutator terms of central symbols are central. -/
+lemma commutatorFam_mem_center
     (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ GaugeAlgebra),
-      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
-    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra), A p μ φ ∈ Subring.center B)
+    (ν lam : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ ∈ Subring.center B := by
-  have hc0 : ∀ (μ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra),
-      A μ ψ ∈ Subring.center B := by
-    intro μ ψ
-    have := hc 0 μ ψ
-    rwa [Lorentz.iteratedD_zero] at this
-  induction l generalizing φ with
+    commutatorFam A ν lam s φ ∈ Subring.center B := by
+  rw [commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map]
+  refine multiset_sum_mem _ fun x hx => ?_
+  obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+  exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => hc _ _ _) φ
+
+/-- **1.** If the derivative symbols of the gauge field are central, so are all
+  derivative symbols of the covariant derivatives of the field strength. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_mem_center
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra), A p μ φ ∈ Subring.center B)
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) s φ ∈ Subring.center B := by
+  induction l generalizing s φ with
   | nil =>
-      show fieldStrength A D ν lam φ ∈ Subring.center B
-      rw [fieldStrength_apply, commutator_eq_bracketFam]
+      show fieldStrength A ν lam s φ ∈ Subring.center B
+      rw [fieldStrength_apply]
       exact Subring.add_mem _
-        (Subring.sub_mem _ (deriv_mem_center D_mul (hc0 lam φ) ν)
-          (deriv_mem_center D_mul (hc0 ν φ) lam))
-        (bracketFam_mem_center (hc0 ν) (hc0 lam) φ)
+        (Subring.sub_mem _ (hc _ _ _) (hc _ _ _))
+        (commutatorFam_mem_center hc ν lam s φ)
   | cons ρ l ih =>
-      rw [show iteratedCovDerivAdjoint A D (ρ :: l) (fieldStrength A D ν lam) φ =
-          D ρ (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ) +
-            bracketFam (A ρ) (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) φ
+      rw [show iteratedCovDerivAdjoint A (ρ :: l) (fieldStrength A ν lam) s φ =
+          iteratedCovDerivAdjoint A l (fieldStrength A ν lam) (ρ ::ₘ s) φ +
+            bracketFamConv A ρ
+              (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ
           from rfl]
-      exact Subring.add_mem _ (deriv_mem_center D_mul (ih φ) ρ)
-        (bracketFam_mem_center (hc0 ρ) (fun ψ => ih ψ) φ)
+      refine Subring.add_mem _ (ih (ρ ::ₘ s) φ) ?_
+      rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      refine multiset_sum_mem _ fun x hx => ?_
+      obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+      exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => ih p.2 ψ) φ
 
 /-- **2.** If the derivative symbols of the gauge field are central, so are the
   symmetrized derivative symbols. -/
 lemma symmetrizedDeriv_mem_center
     (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ GaugeAlgebra),
-      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
+      (φ : Module.Dual ℝ GaugeAlgebra), A p μ φ ∈ Subring.center B)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
-    symmetrizedDeriv D D_comm s A φ ∈ Subring.center B := by
+    symmetrizedDeriv s A φ ∈ Subring.center B := by
   rw [symmetrizedDeriv]
   refine smul_mem_center _ (multiset_sum_mem _ fun x hx => ?_)
   obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
@@ -670,32 +588,37 @@ lemma symmetrizedDeriv_mem_center
   the zeroth truncation: at `s = 0` the transformation law is the dual adjoint action
   of the base-point value `U₀⁻¹ = 1`, which is trivial. -/
 lemma TransformsInAdjoint.repGauge_eq_of_mem_truncationKer_zero
-    {hA : IsGaugeField repLorentz repGauge A D D_comm}
-    {F : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B} (hF : hA.TransformsInAdjoint F)
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+    (hF : TransformsInAdjoint repGauge F)
     (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U.1 (F φ) = F φ := by
+    repGauge U.1 (F 0 φ) = F 0 φ := by
   have hinv : ((U.1)⁻¹).eval = 1 := by
     rw [map_inv, JetGaugeGroupI.mem_truncationKer_zero_iff.mp U.2, inv_one]
-  simpa [Lorentz.iteratedD_zero, adjointDualCoeff_zero_of_eval_eq_one hinv] using
-    hF U.1 φ 0
+  simpa [adjointDualCoeff_zero_of_eval_eq_one hinv] using hF U.1 φ 0
+
+/-- **Every iterated covariant derivative of the field strength is an adjoint gauge
+  tensor**: the recursion of `TransformsInAdjoint.covDerivAdjoint` over the list of
+  directions, from the base case `transformsInAdjoint_fieldStrength`. -/
+theorem transformsInAdjoint_iteratedCovDerivAdjoint
+    (hA : IsGaugeField repLorentz repGauge A) (l : List (Fin 1 ⊕ Fin 3))
+    (ν lam : Fin 1 ⊕ Fin 3) :
+    TransformsInAdjoint repGauge
+      (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) := by
+  induction l with
+  | nil => exact transformsInAdjoint_fieldStrength hA ν lam
+  | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint hA ih ρ
 
 /-- **4.** The covariant derivatives of the field strength are invariant under the
   kernel of the zeroth truncation: they transform in the adjoint, and the truncation
   kernel acts through the trivial base-point adjoint. -/
 lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-    (hA : IsGaugeField repLorentz repGauge A D D_comm)
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
+    (hA : IsGaugeField repLorentz repGauge A)
     (U : JetGaugeGroupI.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
     (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U.1 (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ) =
-      iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ := by
-  have hadj : hA.TransformsInAdjoint
-      (iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam)) := by
-    induction l with
-    | nil => exact transformsInAdjoint_fieldStrength hA D_mul ν lam
-    | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint D_mul ih ρ
-  exact hadj.repGauge_eq_of_mem_truncationKer_zero U φ
+    repGauge U.1 (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ) =
+      iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ :=
+  (transformsInAdjoint_iteratedCovDerivAdjoint hA l ν
+    lam).repGauge_eq_of_mem_truncationKer_zero U φ
 
 /-!
 
@@ -731,38 +654,35 @@ The strategy, by downward induction on the top symbol order `N` present in `x`:
 /-- The generation theorem relativized to an arbitrary set `S` of extra generators:
   a corollary of `symbolAdjoin_eq_symFieldAdjoin` since `adjoin (X ∪ S)` is
   determined by `adjoin X` and `S`. -/
-theorem symbolAdjoin_union_eq_symFieldAdjoin_union
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
-    (n : ℕ) (S : Set B) :
+theorem symbolAdjoin_union_eq_symFieldAdjoin_union (n : ℕ) (S : Set B) :
     Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) =
+        b = A p μ φ} ∪ S) =
       Algebra.adjoin ℂ
         (({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
           {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra), l.length < n ∧
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ}) ∪ S) := by
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ∪ S) := by
   rw [Algebra.adjoin_union, Algebra.adjoin_union,
-    symbolAdjoin_eq_symFieldAdjoin (A := A) (D_comm := D_comm) D_mul n]
+    symbolAdjoin_eq_symFieldAdjoin (A := A) n]
 
 /-- Finite order bound: membership in the subalgebra generated by all symbols and `S`
   uses only finitely many generators, hence symbols of some bounded order. -/
 lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
     (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S)) :
+      b = A p μ φ} ∪ S)) :
     ∃ n : ℕ, x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) := by
+      b = A p μ φ} ∪ S) := by
   have hmono : ∀ {n m : ℕ}, n ≤ m →
       Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ n ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) ≤
+        b = A p μ φ} ∪ S) ≤
       Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ m ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S) := by
+        b = A p μ φ} ∪ S) := by
     intro n m hnm
     refine Algebra.adjoin_mono (Set.union_subset_union_left S ?_)
     rintro b ⟨p, μ, φ, h, rfl⟩
@@ -787,13 +707,13 @@ lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
   symmetrized symbol collapses to the symbol itself, and the action is an honest
   translation by the symmetrized Maurer–Cartan coefficient. -/
 theorem repGauge_symmetrizedDeriv_translation
-    (hA : IsGaugeField repLorentz repGauge A D D_comm)
+    (hA : IsGaugeField repLorentz repGauge A)
     (U : JetGaugeGroupI.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < s.card →
       adjointDualCoeff (U.1)⁻¹ x = 0)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U.1 (symmetrizedDeriv D D_comm s A φ) =
-      symmetrizedDeriv D D_comm s A φ +
+    repGauge U.1 (symmetrizedDeriv s A φ) =
+      symmetrizedDeriv s A φ +
         algebraMap ℂ B (φ (symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
   -- collapsing principle: a sum over the antidiagonal whose terms vanish off the
   -- `(0, t)` splitting reduces to the `(0, t)` term
@@ -836,7 +756,7 @@ theorem repGauge_symmetrizedDeriv_translation
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun μ hμ => ?_)
   have hvan : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
       p.1 + p.2 = s - {μ} → p.1 ≠ 0 →
-      Lorentz.iteratedD D D_comm p.2 (A μ (adjointDualCoeff (U.1)⁻¹ p.1 φ)) = 0 := by
+      A p.2 μ (adjointDualCoeff (U.1)⁻¹ p.1 φ) = 0 := by
     intro p hp hp1
     have hcard : p.1.card < s.card := by
       have h1 : p.1.card + p.2.card = (s - {μ}).card := by rw [← Multiset.card_add, hp]
@@ -901,7 +821,8 @@ lemma eq_zero_of_forall_sum_smul_pow_eq_zero {n : ℕ} {b : ℕ → B}
 
 /-- Any element of the subalgebra generated by a subalgebra `R` and a single central
   element `y` is a polynomial in `y` with coefficients in `R`. -/
-lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B) (hy : y ∈ Subring.center B)
+lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B)
+    (hy : ∀ r ∈ R, Commute r y)
     {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ {y}) :
     ∃ (n : ℕ) (r : ℕ → B), (∀ k, r k ∈ R) ∧ x = ∑ k ∈ Finset.range n, r k * y ^ k := by
   classical
@@ -973,7 +894,7 @@ lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B) (hy : y ∈ Subring.c
       rw [Finset.sum_mul_sum]
       refine hsum _ _ _ fun k _ => hsum _ _ _ fun l _ => ?_
       have hcomm : y ^ k * r₂ l = r₂ l * y ^ k :=
-        (Subring.mem_center_iff.mp (pow_mem hy k) (r₂ l)).symm
+        ((hy _ (h₂ l)).pow_right k).eq.symm
       have hterm : (r₁ k * y ^ k) * (r₂ l * y ^ l) = (r₁ k * r₂ l) * y ^ (k + l) := by
         rw [← mul_assoc, mul_assoc (r₁ k), hcomm, ← mul_assoc, mul_assoc, ← pow_add]
       rw [hterm]
@@ -985,7 +906,7 @@ lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B) (hy : y ∈ Subring.c
   coefficient of any chosen polynomial representation to vanish, by expanding the
   translated polynomial and extracting the top power of the shift. -/
 lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
-    (hy : y ∈ Subring.center B) (Φ : ℝ → B →+* B)
+    (hy : ∀ r ∈ R, Commute r y) (Φ : ℝ → B →+* B)
     (hΦR : ∀ t : ℝ, ∀ z ∈ R, Φ t z = z)
     (hΦy : ∀ t : ℝ, Φ t y = y + algebraMap ℂ B (t : ℂ))
     {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ {y}) (hinv : ∀ t, Φ t x = x) : x ∈ R := by
@@ -1106,7 +1027,8 @@ lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
   nonconstant coefficients of the chosen representation to vanish, top degree first. -/
 theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
     (R : Subalgebra ℂ B) (y : ι → B)
-    (hy : ∀ i, y i ∈ Subring.center B)
+    (hyR : ∀ i, ∀ r ∈ R, Commute r (y i))
+    (hyy : ∀ i j, Commute (y i) (y j))
     (Φ : (ι → ℝ) → (B →+* B))
     (hΦR : ∀ t, ∀ z ∈ R, Φ t z = z)
     (hΦy : ∀ t i, Φ t (y i) = y i + algebraMap ℂ B (t i))
@@ -1146,45 +1068,101 @@ theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
         | algebraMap c => exact hΦR _ _ (Subalgebra.algebraMap_mem R c)
         | add a b _ _ iha ihb => rw [map_add, iha, ihb]
         | mul a b _ _ iha ihb => rw [map_mul, iha, ihb]
+      have hy' : ∀ r ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s), Commute r (y i) := by
+        intro r hr
+        rw [← Algebra.adjoin_eq R, ← Algebra.adjoin_union] at hr
+        induction hr using Algebra.adjoin_induction with
+        | mem b hb =>
+            rcases hb with hbR | ⟨j, hj, rfl⟩
+            · exact hyR i b hbR
+            · exact hyy j i
+        | algebraMap c => exact Algebra.commutes c (y i)
+        | add a b _ _ iha ihb => exact iha.add_left ihb
+        | mul a b _ _ iha ihb => exact iha.mul_left ihb
       have hxmid : x ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s) :=
-        mem_of_translationInvariant_single (R ⊔ Algebra.adjoin ℂ (y '' ↑s)) (y i) (hy i)
+        mem_of_translationInvariant_single (R ⊔ Algebra.adjoin ℂ (y '' ↑s)) (y i) hy'
           (fun u => Φ (Pi.single i u)) hfix
           (fun u => by rw [hΦy (Pi.single i u) i, Pi.single_eq_same])
           hxR' (fun u => hinv _)
       exact ih x hxmid hinv
 
+/-- Commutation with a generating set extends to the generated subalgebra. -/
+lemma commute_of_mem_adjoin {X : Set B} {y : B} (hX : ∀ x ∈ X, Commute x y)
+    {r : B} (hr : r ∈ Algebra.adjoin ℂ X) : Commute r y := by
+  induction hr using Algebra.adjoin_induction with
+  | mem b hb => exact hX b hb
+  | algebraMap c => exact Algebra.commutes c y
+  | add a b _ _ iha ihb => exact iha.add_left ihb
+  | mul a b _ _ iha ihb => exact iha.mul_left ihb
+
+/-- Anything commuting with all gauge-field symbols commutes with the symmetrized
+  symbols. -/
+lemma commute_symmetrizedDeriv_right {y : B}
+    (hy : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra), Commute y (A p μ φ))
+    (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    Commute y (symmetrizedDeriv r A φ) := by
+  rw [symmetrizedDeriv, ← algebraMap_smul ℂ ((1 : ℝ)/(r.card : ℝ))]
+  refine Commute.smul_right ?_ _
+  refine Commute.multiset_sum_right _ _ fun x hx => ?_
+  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
+  exact hy _ _ _
+
+/-- The underived covariant field-strength tower consists of polynomials in the
+  gauge-field symbols. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ ∈
+      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+        (ψ : Module.Dual ℝ GaugeAlgebra), b = A p μ ψ} := by
+  rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
+      (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ -
+        fieldStrength A ν lam (Multiset.ofList l + 0) φ) +
+      fieldStrength A ν lam (Multiset.ofList l + 0) φ from by abel]
+  refine add_mem
+    (SetLike.le_def.mp (Algebra.adjoin_mono ?_)
+      (iteratedCovDerivAdjoint_sub_mem l ν lam 0 φ))
+    (SetLike.le_def.mp (Algebra.adjoin_mono ?_)
+      (fieldStrength_mem_adjoin_symbols _ ν lam φ))
+  · rintro b ⟨p, μ, ψ, _, rfl⟩
+    exact ⟨p, μ, ψ, rfl⟩
+  · rintro b ⟨p, μ, ψ, _, rfl⟩
+    exact ⟨p, μ, ψ, rfl⟩
+
+set_option maxHeartbeats 1000000 in
 /-- **The classification of invariants**: a gauge-invariant element of the subalgebra
   generated by the gauge-field symbols and a set `S` of `truncationKer 0`-fixed
   elements is a polynomial in the covariant derivatives of the field strength and the
-  elements of `S`. Requires only centrality of the symbols (the gauge field is
-  bosonic); no independence hypothesis. -/
+  elements of `S`. Requires only that the gauge-field symbols commute with each other
+  (the gauge field is bosonic) and with the elements of `S` — nothing about the rest
+  of `B`; no independence hypothesis. -/
 theorem invariant_mem_adjoin_fieldStrength
-    (hA : IsGaugeField repLorentz repGauge A D D_comm)
-    (D_mul : ∀ (μ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D μ (b₁ * b₂) = D μ b₁ * b₂ + b₁ * D μ b₂)
-    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ GaugeAlgebra),
-      Lorentz.iteratedD D D_comm p (A μ φ) ∈ Subring.center B)
+    (hA : IsGaugeField repLorentz repGauge A)
+    (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+      (φ ψ : Module.Dual ℝ GaugeAlgebra), Commute (A p μ φ) (A q ν ψ))
     (S : Set B)
+    (hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra), ∀ y ∈ S, Commute y (A p μ φ))
     (hS : ∀ y ∈ S, ∀ U : JetGaugeGroupI.truncationKer 0, repGauge U.1 y = y)
     {x : B}
     (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪ S))
+      b = A p μ φ} ∪ S))
     (hinv : ∀ U : JetGaugeGroupI, repGauge U x = x) :
     x ∈ Algebra.adjoin ℂ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
       (φ : Module.Dual ℝ GaugeAlgebra),
-      b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S) := by
+      b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S) := by
   classical
   -- every element of the covariant tower together with `S` is fixed by the
   -- truncation kernel
   have hS' : ∀ y ∈ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
       (φ : Module.Dual ℝ GaugeAlgebra),
-      b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S),
+      b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S),
       ∀ U : JetGaugeGroupI.truncationKer 0, repGauge U.1 y = y := by
     rintro y (⟨l, ν, lam, φ, rfl⟩ | hyS) U
     · exact repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-        hA D_mul U l ν lam φ
+        hA U l ν lam φ
     · exact hS y hyS U
   -- the gauge action preserves the unit, hence acts by ring endomorphisms
   have hone : ∀ U : JetGaugeGroupI, repGauge U (1 : B) = 1 := by
@@ -1201,27 +1179,27 @@ theorem invariant_mem_adjoin_fieldStrength
   have hdescent : ∀ (m : ℕ) (z : B),
       z ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ r.card ≤ m + 1 ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ r.card ≤ m + 1 ∧ b = symmetrizedDeriv r A φ} ∪
           ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra),
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) →
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
       (∀ U : JetGaugeGroupI.truncationKer 0, repGauge U.1 z = z) →
       z ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-            r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+            r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv r A φ} ∪
           ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
             (φ : Module.Dual ℝ GaugeAlgebra),
-            b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) := by
+            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) := by
     intro m z hz hzinv
     set bv := Module.Free.chooseBasis ℝ GaugeAlgebra with hbv
     set R₀ : Subalgebra ℂ B := Algebra.adjoin ℂ
       ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-          r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv D D_comm r A φ} ∪
+          r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv r A φ} ∪
         ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
           (φ : Module.Dual ℝ GaugeAlgebra),
-          b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) with hR₀
+          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) with hR₀
     set Y : Sym (Fin 1 ⊕ Fin 3) (m + 1) × Module.Free.ChooseBasisIndex ℝ GaugeAlgebra → B :=
-      fun p => symmetrizedDeriv D D_comm (p.1 : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord p.2)
+      fun p => symmetrizedDeriv (p.1 : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord p.2)
       with hYdef
     -- the translating jets realizing an arbitrary top-order shift
     have hUt' : ∀ t : Sym (Fin 1 ⊕ Fin 3) (m + 1) ×
@@ -1292,8 +1270,8 @@ theorem invariant_mem_adjoin_fieldStrength
           Finsupp.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero]
         rw [Finset.sum_ite_eq' Finset.univ j (fun j' => t (ps, j'))]
         simp
-      show repGauge (Ut t).1 (symmetrizedDeriv D D_comm (ps : Multiset (Fin 1 ⊕ Fin 3)) A
-          (bv.coord j)) = symmetrizedDeriv D D_comm (ps : Multiset (Fin 1 ⊕ Fin 3)) A
+      show repGauge (Ut t).1 (symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A
+          (bv.coord j)) = symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A
           (bv.coord j) + algebraMap ℂ B ((t (ps, j) : ℝ) : ℂ)
       rw [repGauge_symmetrizedDeriv_translation hA (Ut t) _ hp0 hUvan (bv.coord j), hval]
     -- the coordinate expansion of a top-order symmetrized symbol in the chosen basis
@@ -1305,20 +1283,19 @@ theorem invariant_mem_adjoin_fieldStrength
         smul_eq_mul, map_smul]
       exact Finset.sum_congr rfl fun j _ => mul_comm _ _
     have hexpand : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra),
-        symmetrizedDeriv D D_comm r A φ =
-          ∑ j, φ (bv j) • symmetrizedDeriv D D_comm r A (bv.coord j) := by
+        symmetrizedDeriv r A φ =
+          ∑ j, φ (bv j) • symmetrizedDeriv r A (bv.coord j) := by
       intro r φ
       set L : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
-        { toFun := fun ψ => symmetrizedDeriv D D_comm r A ψ,
+        { toFun := fun ψ => symmetrizedDeriv r A ψ,
           map_add' := fun ψ ψ' => by
             simp only [symmetrizedDeriv, map_add]
             rw [← smul_add, ← Multiset.sum_map_add]
           map_smul' := fun c ψ => by
-            simp only [symmetrizedDeriv, map_smul, RingHom.id_apply,
-              LinearMap.map_smul_of_tower]
-            rw [show (r.map fun μ => c • Lorentz.iteratedD D D_comm (r - {μ}) (A μ ψ)) =
-                (r.map fun μ => Lorentz.iteratedD D D_comm (r - {μ}) (A μ ψ)).map
-                  (fun w => c • w) from (Multiset.map_map _ _ _).symm,
+            simp only [symmetrizedDeriv, map_smul, RingHom.id_apply]
+            rw [show (r.map fun μ => c • A (r - {μ}) μ ψ) =
+                (r.map fun μ => A (r - {μ}) μ ψ).map (fun w => c • w) from
+                (Multiset.map_map _ _ _).symm,
               ← Multiset.smul_sum, smul_comm] } with hL
       have hLcalc : L φ = ∑ j, φ (bv j) • L (bv.coord j) := by
         conv_lhs => rw [← hdual φ, map_sum]
@@ -1339,41 +1316,70 @@ theorem invariant_mem_adjoin_fieldStrength
           exact SetLike.le_def.mp le_sup_right
             (Algebra.subset_adjoin ⟨(⟨r, hcard⟩, j), rfl⟩)
       · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inr hb))
+    -- the commutation data: symbols commute with each other, the tower, and `S`
+    have hsymbSD : ∀ (a : Multiset (Fin 1 ⊕ Fin 3)) (b : Fin 1 ⊕ Fin 3)
+        (c : Module.Dual ℝ GaugeAlgebra) (r : Multiset (Fin 1 ⊕ Fin 3))
+        (φ : Module.Dual ℝ GaugeAlgebra),
+        Commute (A a b c) (symmetrizedDeriv r A φ) :=
+      fun a b c r φ => commute_symmetrizedDeriv_right
+        (fun p' μ' φ' => hcomm a p' b μ' c φ') r φ
+    have hsymbY : ∀ (a : Multiset (Fin 1 ⊕ Fin 3)) (b : Fin 1 ⊕ Fin 3)
+        (c : Module.Dual ℝ GaugeAlgebra) (p), Commute (A a b c) (Y p) :=
+      fun a b c p => hsymbSD a b c (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
+    have hYY : ∀ p q, Commute (Y p) (Y q) :=
+      fun p q => commute_symmetrizedDeriv_right
+        (fun p' μ' φ' => (hsymbSD p' μ' φ' (p.1 : Multiset (Fin 1 ⊕ Fin 3))
+          (bv.coord p.2)).symm) (q.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord q.2)
+    have hRY : ∀ p, ∀ r ∈ R₀, Commute r (Y p) := by
+      intro p r hr
+      rw [hR₀] at hr
+      refine commute_of_mem_adjoin ?_ hr
+      rintro b (⟨r', φ', hr0, hrm, rfl⟩ | (⟨l, ν, lam, φ', rfl⟩ | hbS))
+      · exact commute_symmetrizedDeriv_right
+          (fun p' μ' φ'' => (hsymbSD p' μ' φ'' r' φ').symm)
+          (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
+      · exact commute_of_mem_adjoin
+          (fun x hx => by
+            obtain ⟨a, b2, c, rfl⟩ := hx
+            exact hsymbY a b2 c p)
+          (iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols l ν lam φ')
+      · exact commute_symmetrizedDeriv_right
+          (fun p' μ' φ' => hcS p' μ' φ' b hbS)
+          (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
     -- extraction: the invariant lies in the lower-order subalgebra
     have hzR₀ : z ∈ R₀ :=
-      mem_of_translationInvariant R₀ Y
-        (fun p => symmetrizedDeriv_mem_center hc _ _) Φ hfixR₀ hΦy hzsup
+      mem_of_translationInvariant R₀ Y hRY hYY Φ hfixR₀ hΦy hzsup
         (fun t => hzinv (Ut t))
     rw [hR₀] at hzR₀
     exact hzR₀
   -- bound the symbol order of the invariant, working relative to the full tower
   have hxS' : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
       (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
-      b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪
+      b = A p μ φ} ∪
       ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-        b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) :=
+        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) :=
     Algebra.adjoin_mono (Set.union_subset_union_right _ Set.subset_union_right) hx
   obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union _ hxS'
   -- convert bounded symbols to symmetrized symbols, absorbing the tower
   have hconv : ∀ (k : ℕ) (z : B),
       z ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra), p.card ≤ k ∧
-        b = Lorentz.iteratedD D D_comm p (A μ φ)} ∪
+        b = A p μ φ} ∪
         ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
           (φ : Module.Dual ℝ GaugeAlgebra),
-          b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) →
+          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
       z ∈ Algebra.adjoin ℂ ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3))
         (φ : Module.Dual ℝ GaugeAlgebra), r ≠ 0 ∧ r.card ≤ k + 1 ∧
-        b = symmetrizedDeriv D D_comm r A φ} ∪
+        b = symmetrizedDeriv r A φ} ∪
         ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
           (φ : Module.Dual ℝ GaugeAlgebra),
-          b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) := by
+          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) := by
     intro k z hzk
-    rw [symbolAdjoin_union_eq_symFieldAdjoin_union D_mul k
+    rw [symbolAdjoin_union_eq_symFieldAdjoin_union k
       ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-        b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)] at hzk
+        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)] at hzk
     refine Algebra.adjoin_mono ?_ hzk
     rintro b ((⟨r, φ, h0, hcr, rfl⟩ | ⟨l, ν, lam, φ, _, rfl⟩) | hb)
     · exact Or.inl ⟨r, φ, h0, hcr, rfl⟩
@@ -1383,14 +1389,14 @@ theorem invariant_mem_adjoin_fieldStrength
   have hiter : ∀ (k : ℕ) (z : B),
       z ∈ Algebra.adjoin ℂ ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3))
         (φ : Module.Dual ℝ GaugeAlgebra), r ≠ 0 ∧ r.card ≤ k ∧
-        b = symmetrizedDeriv D D_comm r A φ} ∪
+        b = symmetrizedDeriv r A φ} ∪
         ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
           (φ : Module.Dual ℝ GaugeAlgebra),
-          b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S)) →
+          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
       (∀ U : JetGaugeGroupI.truncationKer 0, repGauge U.1 z = z) →
       z ∈ Algebra.adjoin ℂ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-        b = iteratedCovDerivAdjoint A D l (fieldStrength A D ν lam) φ} ∪ S) := by
+        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S) := by
     intro k
     induction k with
     | zero =>

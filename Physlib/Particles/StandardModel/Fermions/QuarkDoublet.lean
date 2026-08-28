@@ -6,6 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Relativity.Fermions.Weyl.BoostWeight
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
@@ -529,5 +531,79 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
         map_add, ha, hb]
 
 end QuarkDoublet
+
+/-!
+
+## The gauge weight of the QuarkDoublet components
+
+The gauge torus acts diagonally on the basis of `QuarkDoublet`; the weights are recorded by
+`QuarkDoublet.valueGaugeWeight`, and pass to the dual and conjugate-dual coordinate
+functionals with the expected signs.
+
+-/
+
+/-- The gauge weight of the quark-doublet basis: the colour and isospin weights and
+  hypercharge `1`. -/
+def QuarkDoublet.valueGaugeWeight (j : Fin 2 × Fin 3 × Fin 2) : GaugeWeight :=
+  ((colourWeight j.2.1).1, (colourWeight j.2.1).2, isoWeight j.2.2, 1)
+
+/-- The gauge torus acts diagonally on the basis of `QuarkDoublet`, with the weights
+  `QuarkDoublet.valueGaugeWeight`. -/
+lemma QuarkDoublet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 × Fin 3 × Fin 2) :
+    QuarkDoublet.repGaugeGroupI (gaugeTorusGen i) (QuarkDoublet.basis j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) •
+        QuarkDoublet.basis j := by
+  obtain ⟨k, c, s⟩ := j
+  have hb : QuarkDoublet.basis (k, c, s) = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c ⊗ₜ[ℂ]
+      EuclideanSpace.basisFun (Fin 2) ℂ s⟩ := by
+    simp only [QuarkDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis,
+      Module.Basis.reindex_apply, Equiv.prodAssoc_symm_apply]
+    rfl
+  rw [hb, QuarkDoublet.repGaugeGroupI_tmul_basis_eq_sum]
+  fin_cases i <;> fin_cases c <;> fin_cases s <;>
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo, Fin.sum_univ_three, GaugeGroupI.toSU2, su2ExpI, Fin.sum_univ_two,
+      Matrix.diagonal,
+      QuarkDoublet.valueGaugeWeight, colourWeight, isoWeight, GaugeWeight.coord,
+      expI_inv_eq_star]
+
+/-- The dual action of the gauge torus on the coordinate functionals of
+  `QuarkDoublet`: the weights are negated. -/
+lemma QuarkDoublet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3 × Fin 2) :
+    QuarkDoublet.repGaugeGroupI.dual (gaugeTorusGen i) (QuarkDoublet.basis.coord j)
+      = ((expI : ℂ) ^ (-(GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i))) •
+        QuarkDoublet.basis.coord j :=
+  dual_gaugeTorusGen_coord _ _ _ _
+    (fun j' => QuarkDoublet.repGaugeGroupI_gaugeTorusGen_basis i j') j
+
+/-- The dual of the conjugate action of the gauge torus on the coordinate functionals
+  of the conjugate of `QuarkDoublet`: the two negations cancel and the weights are those of
+  the value space. -/
+lemma QuarkDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3 × Fin 2) :
+    QuarkDoublet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((QuarkDoublet.basis.conj).coord j)
+      = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) •
+        (QuarkDoublet.basis.conj).coord j := by
+  have hd := dual_gaugeTorusGen_coord QuarkDoublet.repGaugeGroupI.conj (QuarkDoublet.basis.conj)
+    (gaugeTorusGen i) (fun j' => -(GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j') i))
+    (fun j' => conj_gaugeTorusGen_basis _ _ _ _
+      (fun j'' => QuarkDoublet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
+  simpa using hd
+
+/-!
+
+## The boost weight of the QuarkDoublet components
+
+-/
+
+open Lorentz in
+/-- The quark-doublet basis diagonalises the `z`-boost: the colour and isospin indices are
+  inert. -/
+lemma quarkDoublet_repLorentzGroup_boostAxis_two_basis (t : ℝ) (ht : t ≠ 0)
+    (j : Fin 2 × Fin 3 × Fin 2) :
+    QuarkDoublet.repLorentzGroup (SL2C.boostAxis 2 t ht) (QuarkDoublet.basis j)
+      = ((t : ℝ) : ℂ) ^ (weylWeight j.1) • QuarkDoublet.basis j := by
+  obtain ⟨k, c, a⟩ := j
+  simp [QuarkDoublet.basis, QuarkDoublet.repLorentzGroup, Module.Basis.map_apply,
+    Module.Basis.tensorProduct_apply, leftHandedWeyl_rep_boostAxis_two_basis]
+  rw [← TensorProduct.smul_tmul', ← TensorProduct.smul_tmul', map_smul]
 
 end StandardModel

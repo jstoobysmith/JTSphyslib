@@ -71,19 +71,20 @@ open TensorProduct Matrix MatrixGroups
 
 -/
 
-/-- The gauge-field generators of the jet algebra of the Standard Model: the gauge
-  sector's generators, included into the full algebra. -/
-noncomputable def gaugeField (μ : Fin 1 ⊕ Fin 3) :
+/-- The gauge-field derivative symbols of the jet algebra of the Standard Model: the
+  gauge sector's symbols, included into the full algebra. -/
+noncomputable def gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
     Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] JetAlgebra where
-  toFun φ := includeGauge (GaugeJetAlgebra.gaugeField μ φ)
+  toFun φ := includeGauge (GaugeJetAlgebra.gaugeField s μ φ)
   map_add' φ ψ := by rw [map_add, map_add]
   map_smul' r φ := by
-    rw [map_smul, ← algebraMap_smul ℂ r (GaugeJetAlgebra.gaugeField μ φ), map_smul,
+    rw [map_smul, ← algebraMap_smul ℂ r (GaugeJetAlgebra.gaugeField s μ φ), map_smul,
       algebraMap_smul, RingHom.id_apply]
 
 @[simp]
-lemma gaugeField_apply (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
-    gaugeField μ φ = includeGauge (GaugeJetAlgebra.gaugeField μ φ) := rfl
+lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    gaugeField s μ φ = includeGauge (GaugeJetAlgebra.gaugeField s μ φ) := rfl
 
 /-!
 
@@ -124,28 +125,30 @@ lemma includeGauge_mem_center (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
 -/
 
 /-- **The jet algebra of the Standard Model is a gauge field**: its gauge-field
-  generators are Lorentz covectors, transform under the jet gauge group by the
-  all-orders Leibniz convolution of the adjoint Taylor coefficients plus the
-  Maurer–Cartan shift, and the gauge action is multiplicative. All three laws transport
-  from the gauge sector through the central inclusion. -/
+  derivative symbols are those of a Lorentz covector, transform under the jet gauge
+  group by the all-orders Leibniz convolution of the adjoint Taylor coefficients plus
+  the Maurer–Cartan shift, and the gauge action is multiplicative. All three laws
+  transport from the gauge sector through the central inclusion. -/
 theorem isGaugeField :
-    IsGaugeField (B := JetAlgebra) repLorentzGroup repJetGaugeGroupI gaugeField jetDeriv
-      jetDeriv_comm where
-  lorentz_apply Λ μ φ :=
-    (repLorentzGroup_includeGauge Λ (GaugeJetAlgebra.gaugeField μ φ)).trans <|
-      (congrArg includeGauge (GaugeJetAlgebra.isGaugeField.lorentz_apply Λ μ φ)).trans <|
+    IsGaugeField (B := JetAlgebra) repLorentzGroup repJetGaugeGroupI gaugeField where
+  lorentz_apply Λ n l μ φ :=
+    (repLorentzGroup_includeGauge Λ
+        (GaugeJetAlgebra.gaugeField (List.ofFn l) μ φ)).trans <|
+      (congrArg includeGauge
+          (GaugeJetAlgebra.isGaugeField.lorentz_apply Λ n l μ φ)).trans <|
         (map_sum includeGauge _ Finset.univ).trans <|
-          Finset.sum_congr rfl fun a _ => map_smul includeGauge _ _
+          Finset.sum_congr rfl fun p _ =>
+            (map_smul includeGauge _ _).trans <|
+              congrArg (HSMul.hSMul _) <|
+                (map_sum includeGauge _ Finset.univ).trans <|
+                  Finset.sum_congr rfl fun a _ => map_smul includeGauge _ _
   gauge_apply_deriv U s μ φ :=
-    (congrArg (fun z => repJetGaugeGroupI U z)
-      (iteratedD_includeGauge s (GaugeJetAlgebra.gaugeField μ φ))).trans <|
     (repJetGaugeGroupI_includeGauge U _).trans <|
     (congrArg includeGauge
       (GaugeJetAlgebra.isGaugeField.gauge_apply_deriv U s μ φ)).trans <| by
     rw [map_add, map_multiset_sum, Multiset.map_map, AlgHom.commutes]
     exact congrArg₂ (· + ·)
-      (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp =>
-        (iteratedD_includeGauge p.2 _).symm)) rfl
+      (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => rfl)) rfl
   gauge_mul U b₁ b₂ := repJetGaugeGroupI_apply_mul U b₁ b₂
 
 /-!
@@ -169,17 +172,22 @@ theorem invariant_mem_adjoin_fieldStrength (S : Set JetAlgebra)
     (hx : x ∈ Algebra.adjoin ℂ ({b : JetAlgebra |
       ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-      b = Lorentz.iteratedD jetDeriv jetDeriv_comm p (gaugeField μ φ)} ∪ S))
+      b = gaugeField p μ φ} ∪ S))
     (hinv : ∀ U : JetGaugeGroupI, repJetGaugeGroupI U x = x) :
     x ∈ Algebra.adjoin ℂ ({b : JetAlgebra |
       ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-      b = IsGaugeField.iteratedCovDerivAdjoint gaugeField jetDeriv l
-        (IsGaugeField.fieldStrength gaugeField jetDeriv ν lam) φ} ∪ S) :=
-  IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField jetDeriv_mul
-    (fun p μ φ => (iteratedD_includeGauge p (GaugeJetAlgebra.gaugeField μ φ)) ▸
-      includeGauge_mem_center _)
-    S hS hx hinv
+      b = IsGaugeField.iteratedCovDerivAdjoint gaugeField l
+        (IsGaugeField.fieldStrength gaugeField ν lam) 0 φ} ∪ S) :=
+  IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField
+    (fun p q μ ν φ ψ =>
+      Subring.mem_center_iff.mp
+        (includeGauge_mem_center (GaugeJetAlgebra.gaugeField q ν ψ)) _)
+    S
+    (fun p μ φ y _ =>
+      Subring.mem_center_iff.mp
+        (includeGauge_mem_center (GaugeJetAlgebra.gaugeField p μ φ)) y)
+    hS hx hinv
 
 end JetAlgebra
 

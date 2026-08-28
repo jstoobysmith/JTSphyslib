@@ -15,7 +15,7 @@ public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassDim
-public import Physlib.Particles.StandardModel.HiggsBoson.AlgebraValued.Basic
+public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
@@ -106,7 +106,7 @@ weight `∑ j, lightConeWeight (c j)`.
 
 -/
 
-open StandardModel.IsHiggsAlgebraValued StandardModel.IsHiggsAlgebraValued.IsDerivativeCollection
+open StandardModel.IsHiggsSector StandardModel.IsHiggsSector.IsDerivativeCollection
   BoostWeight
 
 /-- The axis-`i` light-cone component of `T` at the light-cone multi-index `c`. -/
@@ -183,7 +183,7 @@ coefficients can be settled by `decide`.
 
 -/
 
-/-- Integer mirror of `IsDerivativeCollection.lightConeCoeff`. -/
+/-- Integer mirror of `lightConeCoeff`. -/
 def lightConeCoeffZ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) : ℤ :=
   if κ = 0 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then -1 else 0)
   else if κ = 1 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then 1 else 0)
@@ -196,7 +196,7 @@ lemma coe_lightConeCoeffZ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) :
   rw [lightConeCoeffZ, lightConeCoeff]
   split_ifs <;> norm_num
 
-/-- Rational mirror of `IsDerivativeCollection.lightConeCoeffInv`: entries `0`, `±2⁻¹`
+/-- Rational mirror of `lightConeCoeffInv`: entries `0`, `±2⁻¹`
   and `1`, so ℚ-valued (like `lightConeTransition`) rather than integer. -/
 def lightConeCoeffInvQ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℚ :=
   if μ = Sum.inl 0 then (if κ = 0 then 2⁻¹ else if κ = 1 then 2⁻¹ else 0)

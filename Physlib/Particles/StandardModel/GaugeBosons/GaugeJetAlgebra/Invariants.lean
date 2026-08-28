@@ -14,7 +14,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeter
 ## i. Overview
 
 The gauge-boson jet algebra, complexified, together with its Lorentz action, jet gauge
-action, gauge-field generators and total derivative, is a *gauge field* in the sense of
+action and gauge-field derivative symbols, is a *gauge field* in the sense of
 the abstract covariance machinery of
 `Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued`: the structure `IsGaugeField`
 holds. This file establishes that instance and instantiates the abstract classification
@@ -29,8 +29,8 @@ strengths, their covariant derivatives, and the matter content `S` remain.
 
 ## ii. Key results
 
-- `GaugeJetAlgebra.gaugeField` : the gauge-field generators, as a family over the dual of
-  the gauge algebra.
+- `GaugeJetAlgebra.gaugeField` : the gauge-field derivative symbols, as a family over the
+  derivative multiset and the dual of the gauge algebra.
 - `GaugeJetAlgebra.isGaugeField` : the complexified gauge-boson jet algebra is a gauge
   field.
 - `GaugeJetAlgebra.invariant_mem_adjoin_fieldStrength` : the classification of gauge
@@ -39,7 +39,7 @@ strengths, their covariant derivatives, and the matter content `S` remain.
 ## iii. Table of contents
 
 - A. The gauge-field structure
-  - A.1. The gauge-field generators
+  - A.1. The gauge-field derivative symbols
   - A.2. The `IsGaugeField` instance
 - B. The classification of gauge invariants
 
@@ -63,20 +63,23 @@ open TensorProduct Matrix MatrixGroups
 
 /-!
 
-### A.1. The gauge-field generators
+### A.1. The gauge-field derivative symbols
 
 -/
 
-/-- The gauge-field generators of the complexified gauge-boson jet algebra, as a family
-  over the spacetime index and the dual of the gauge algebra — the form consumed by the
-  abstract covariance machinery. -/
-noncomputable def gaugeField (μ : Fin 1 ⊕ Fin 3) :
+/-- The gauge-field derivative symbols of the complexified gauge-boson jet algebra, as a
+  family over the derivative multiset, the spacetime index and the dual of the gauge
+  algebra — the form consumed by the abstract covariance machinery. -/
+noncomputable def gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
     Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] ℂ ⊗[ℝ] GaugeJetAlgebra :=
-  (TensorProduct.mk ℝ ℂ GaugeJetAlgebra 1).comp (ofA μ)
+  (Lorentz.iteratedD complexJetDeriv complexJetDeriv_comm s).restrictScalars ℝ ∘ₗ
+    (TensorProduct.mk ℝ ℂ GaugeJetAlgebra 1).comp (ofA μ)
 
 @[simp]
-lemma gaugeField_apply (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
-    gaugeField μ φ = (1 : ℂ) ⊗ₜ[ℝ] ofA μ φ := rfl
+lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    gaugeField s μ φ = Lorentz.iteratedD complexJetDeriv complexJetDeriv_comm s
+      ((1 : ℂ) ⊗ₜ[ℝ] ofA μ φ) := rfl
 
 /-!
 
@@ -84,14 +87,26 @@ lemma gaugeField_apply (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra
 
 -/
 
-/-- **The complexified gauge-boson jet algebra is a gauge field**: its generators are
-  Lorentz covectors, transform under the jet gauge group by the all-orders Leibniz
-  convolution of the adjoint Taylor coefficients plus the Maurer–Cartan shift, and the
-  gauge action is multiplicative. -/
+/-- **The complexified gauge-boson jet algebra is a gauge field**: its derivative symbols
+  are those of a Lorentz covector, transform under the jet gauge group by the all-orders
+  Leibniz convolution of the adjoint Taylor coefficients plus the Maurer–Cartan shift, and
+  the gauge action is multiplicative. -/
 theorem isGaugeField :
-    IsGaugeField complexRepLorentzGroup complexRepJetGaugeGroupI gaugeField
-      complexJetDeriv complexJetDeriv_comm where
-  lorentz_apply Λ μ φ := complexRepLorentzGroup_one_tmul_ofA Λ μ φ
+    IsGaugeField complexRepLorentzGroup complexRepJetGaugeGroupI gaugeField where
+  lorentz_apply Λ n l μ φ := by
+    calc complexRepLorentzGroup Λ (gaugeField (List.ofFn l) μ φ)
+        = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+            (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+            Lorentz.iteratedD complexJetDeriv complexJetDeriv_comm (List.ofFn p)
+              (complexRepLorentzGroup Λ ((1 : ℂ) ⊗ₜ[ℝ] ofA μ φ)) :=
+          Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn complexJetDeriv_comm Λ l
+            ((1 : ℂ) ⊗ₜ[ℝ] ofA μ φ)
+      _ = _ := by
+          refine Finset.sum_congr rfl fun p _ => ?_
+          rw [complexRepLorentzGroup_one_tmul_ofA, map_sum]
+          refine congrArg (HSMul.hSMul _) (Finset.sum_congr rfl fun a _ => ?_)
+          rw [map_smul]
+          rfl
   gauge_apply_deriv U s μ φ := complexRepJetGaugeGroupI_iteratedD_one_tmul_ofA U s μ φ
   gauge_mul U b₁ b₂ := complexRepJetGaugeGroupI_apply_mul U b₁ b₂
 
@@ -117,16 +132,16 @@ theorem invariant_mem_adjoin_fieldStrength
     (hx : x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra |
       ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-      b = Lorentz.iteratedD complexJetDeriv complexJetDeriv_comm p (gaugeField μ φ)} ∪ S))
+      b = gaugeField p μ φ} ∪ S))
     (hinv : ∀ U : JetGaugeGroupI, complexRepJetGaugeGroupI U x = x) :
     x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra |
       ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-      b = IsGaugeField.iteratedCovDerivAdjoint gaugeField complexJetDeriv l
-        (IsGaugeField.fieldStrength gaugeField complexJetDeriv ν lam) φ} ∪ S) :=
-  IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField complexJetDeriv_mul
-    (fun p μ φ => Subring.mem_center_iff.mpr fun y => mul_comm _ _)
-    S hS hx hinv
+      b = IsGaugeField.iteratedCovDerivAdjoint gaugeField l
+        (IsGaugeField.fieldStrength gaugeField ν lam) 0 φ} ∪ S) :=
+  IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField
+    (fun _ _ _ _ _ _ => Commute.all _ _)
+    S (fun _ _ _ _ _ => Commute.all _ _) hS hx hinv
 
 end GaugeJetAlgebra
 

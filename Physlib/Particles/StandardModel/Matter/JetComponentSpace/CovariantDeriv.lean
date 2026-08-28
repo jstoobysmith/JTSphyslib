@@ -49,7 +49,7 @@ case `act = adAction` (the bracket as a bilinear map) literally specializes:
 
 The compatibility between `rep` and `act` — the structure `IsInfinitesimalActionOf` —
 and the theorem that under it the covariant derivative preserves the gauge tensors live
-in `Physlib.Particles.StandardModel.Matter.JetComponentSpace.InfinitesimalAction`.
+in `Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction`.
 
 -/
 
@@ -170,10 +170,9 @@ namespace IsGaugeField
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ JetGaugeGroupI B}
-variable {A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-variable {D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B}
-variable [Lorentz.IsLorentzDeriv repLorentz D]
-variable {D_comm : ∀ μ ν, (D μ).comp (D ν) = (D ν).comp (D μ)}
+variable {repLorentz : Representation ℂ SL(2,ℂ) B}
+variable {repGauge : Representation ℂ JetGaugeGroupI B}
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
 
 /-!
 
@@ -191,84 +190,83 @@ noncomputable def adjointCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin
 lemma adjointDualCoeff_eq_dualMap (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     adjointDualCoeff U x = (adjointCoeff U x).dualMap := rfl
 
-/-- The physicists' `∂_x (rep U)^i_j|₀`, un-dualized: include the constant vector
-  into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at the base
-  point — the base-point Taylor coefficient of the representation, as a real-linear
-  map on the value space. -/
+/-- The base-point Taylor coefficient of the representation: include the constant
+  vector into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at
+  the base point. The composite is complex-linear: the physicists'
+  `∂_x (rep U)^i_j|₀` as a ℂ-linear map on the value space. -/
 noncomputable def repCoeff (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) : V →ₗ[ℝ] V :=
-  (jetEval ∘ₗ jetIteratedDeriv x ∘ₗ rep U ∘ₗ jetOfConstant).restrictScalars ℝ
+    (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) : V →ₗ[ℂ] V :=
+  jetEval ∘ₗ jetIteratedDeriv x ∘ₗ rep U ∘ₗ jetOfConstant
 
-/-- The physicists' `∂_x (rep U)^i_j|₀` acting on the dual index of a matter-field
-  symbol: the transpose of `repCoeff`. This is the analogue of `adjointDualCoeff`
-  for a general representation of the jet gauge group; for `x = 0` it is the dual
-  (contragredient) action of the value of `U`, and for `x ≠ 0` it sees the
-  derivatives of the gauge transformation. -/
+/-- The physicists' `∂_x (rep U)^i_j|₀` acting on the complex dual index of a
+  matter-field symbol: the transpose of `repCoeff`. This is the analogue of
+  `adjointDualCoeff` for a general representation of the jet gauge group; for `x = 0`
+  it is the dual (contragredient) action of the value of `U`, and for `x ≠ 0` it sees
+  the derivatives of the gauge transformation. -/
 noncomputable def repDualCoeff (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
     (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    Module.Dual ℝ V →ₗ[ℝ] Module.Dual ℝ V :=
+    Module.Dual ℂ V →ₗ[ℂ] Module.Dual ℂ V :=
   (repCoeff rep U x).dualMap
 
-/-- A component family `F`, with values in `B` and index in the dual of the
+/-- A component family `F`, valued in `B` and indexed by the complex dual of the
   representation space `V`, *transforms in* the representation `rep` of the jet gauge
-  group when each derivative symbol `[∂_s F^φ]` transforms by the Leibniz convolution
-  of the dual representation coefficients against lower derivative symbols, with no
-  inhomogeneous term — the generalization of `TransformsInAdjoint` from the adjoint
-  representation to an arbitrary one. -/
-def TransformsIn (_hA : IsGaugeField repLorentz repGauge A D D_comm)
+  group — with the ambient action `repGauge` on `B` — when each derivative symbol
+  `[∂_s F^φ]` transforms by the Leibniz convolution of the dual representation
+  coefficients against lower symbols, with no inhomogeneous term — the generalization
+  of `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and
+  the form consumed by `IsStandardModel`. -/
+def _root_.StandardModel.TransformsIn (repGauge : Representation ℂ JetGaugeGroupI B)
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (F : Module.Dual ℝ V →ₗ[ℝ] B) : Prop :=
-  ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℝ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
-    repGauge U (Lorentz.iteratedD D D_comm s (F φ)) =
-      (s.antidiagonal.map fun p =>
-        Lorentz.iteratedD D D_comm p.2 (F (repDualCoeff rep U⁻¹ p.1 φ))).sum
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) : Prop :=
+  ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
+    repGauge U (F s φ) =
+      (s.antidiagonal.map fun p => F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
 
 /-!
 
 ## The covariant derivative through an infinitesimal action
 
+The covariant derivative `∇_ρ F = [∂_ρ F] + A_ρ · F` requires the *infinitesimal*
+action of the gauge algebra on the value space — physicists' `i dρ(T^a)` — which
+cannot be extracted from the abstract group representation `rep` (there is no
+differentiable structure to differentiate it). It is therefore taken as data: an
+action `act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V`, real-linear in the algebra slot (the
+gauge algebra is a real Lie algebra) and complex-linear in the value slot, matching
+the complex duals indexing the matter families.
+
 -/
 
 section Action
 
-variable {W : Type} [AddCommGroup W] [Module ℝ W]
+variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
 
-/-- The action of an adjoint-valued field on a `W`-valued field at the tensor level:
-  multiplication in `B` on the first factors, the infinitesimal action `act` of the
-  gauge algebra on `W` on the second, so that on pure tensors
-  `(b₁ ⊗ c) · (b₂ ⊗ w) = (b₁ b₂) ⊗ act c w`. For `W` the gauge algebra and `act` the
-  adjoint action this is `tensorBracket` (`tensorAction_ad`). -/
-noncomputable def tensorAction (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) :
-    (B ⊗[ℝ] GaugeAlgebra) →ₗ[ℝ] (B ⊗[ℝ] W) →ₗ[ℝ] B ⊗[ℝ] W :=
-  TensorProduct.curry
-    ((TensorProduct.map (TensorProduct.lift (LinearMap.mul ℝ B))
-        (TensorProduct.lift act)) ∘ₗ
-      (TensorProduct.tensorTensorTensorComm ℝ B GaugeAlgebra B W).toLinearMap)
-
-@[simp]
-lemma tensorAction_tmul (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (b₁ b₂ : B)
-    (c : GaugeAlgebra) (w : W) :
-    tensorAction act (b₁ ⊗ₜ[ℝ] c) (b₂ ⊗ₜ[ℝ] w) = (b₁ * b₂) ⊗ₜ[ℝ] act c w := by
-  simp [tensorAction, TensorProduct.tensorTensorTensorComm_tmul]
-
-/-- The gauge-algebra bracket as a bilinear map — the infinitesimal adjoint
-  action. -/
-noncomputable def adAction : GaugeAlgebra →ₗ[ℝ] GaugeAlgebra →ₗ[ℝ] GaugeAlgebra :=
-  LinearMap.mk₂ ℝ (fun a b => ⁅a, b⁆) (fun a a' b => add_lie a a' b)
-    (fun t a b => smul_lie t a b) (fun a b b' => lie_add a b b')
-    (fun t a b => lie_smul t a b)
+/-- The action of an adjoint-valued field on a matter field at the tensor level:
+  multiplication in `B` on the first factors, the ℂ-linear infinitesimal action `act`
+  of the gauge algebra on `V` on the second, so that on pure tensors
+  `(b₁ ⊗ c) · (b₂ ⊗ v) = (b₁ b₂) ⊗ act c v`. -/
+noncomputable def tensorAction (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) :
+    (B ⊗[ℝ] GaugeAlgebra) →ₗ[ℝ] (B ⊗[ℂ] V) →ₗ[ℂ] B ⊗[ℂ] V :=
+  TensorProduct.lift
+    { toFun := fun b₁ =>
+        { toFun := fun c => TensorProduct.map (LinearMap.mulLeft ℂ b₁) (act c)
+          map_add' := fun c₁ c₂ => TensorProduct.ext' fun b₂ v => by
+            simp [TensorProduct.tmul_add]
+          map_smul' := fun r c => TensorProduct.ext' fun b₂ v => by
+            simp [TensorProduct.tmul_smul] }
+      map_add' := fun b₁ b₁' => LinearMap.ext fun c => TensorProduct.ext' fun b₂ v => by
+        simp [add_mul, TensorProduct.add_tmul]
+      map_smul' := fun r b₁ => LinearMap.ext fun c => TensorProduct.ext' fun b₂ v => by
+        simp [TensorProduct.smul_tmul'] }
 
 @[simp]
-lemma adAction_apply (a b : GaugeAlgebra) : adAction a b = ⁅a, b⁆ := rfl
+lemma tensorAction_tmul (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (b₁ b₂ : B)
+    (c : GaugeAlgebra) (v : V) :
+    tensorAction act (b₁ ⊗ₜ[ℝ] c) (b₂ ⊗ₜ[ℂ] v) = (b₁ * b₂) ⊗ₜ[ℂ] act c v := rfl
 
-/-- On the gauge algebra, the tensor action through the adjoint is the tensor
-  bracket. -/
-lemma tensorAction_adAction : tensorAction (B := B) adAction = tensorBracket := rfl
-
-lemma tensorAction_map_left (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (Φ : B →ₗ[ℝ] B)
+lemma tensorAction_map_left (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (Φ : B →ₗ[ℂ] B)
     (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂) (s : B ⊗[ℝ] GaugeAlgebra)
-    (t : B ⊗[ℝ] W) :
-    tensorAction act ((TensorProduct.map Φ LinearMap.id) s)
+    (t : B ⊗[ℂ] V) :
+    tensorAction act ((TensorProduct.map (Φ.restrictScalars ℝ) LinearMap.id) s)
         ((TensorProduct.map Φ LinearMap.id) t) =
       (TensorProduct.map Φ LinearMap.id) (tensorAction act s t) := by
   induction s using TensorProduct.induction_on with
@@ -282,8 +280,8 @@ lemma tensorAction_map_left (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (Φ
           rw [hx, hy]
   | add x y hx hy => simp [hx, hy]
 
-lemma tensorAction_one_left (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (c : GaugeAlgebra)
-    (t : B ⊗[ℝ] W) :
+lemma tensorAction_one_left (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (c : GaugeAlgebra)
+    (t : B ⊗[ℂ] V) :
     tensorAction act ((1 : B) ⊗ₜ[ℝ] c) t =
       (TensorProduct.map LinearMap.id (act c)) t := by
   induction t using TensorProduct.induction_on with
@@ -291,36 +289,15 @@ lemma tensorAction_one_left (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (c 
   | tmul b a => simp
   | add x y hx hy => simp [hx, hy]
 
-/-- `tensorAction` is a derivation in the algebra factor: for `Δ` satisfying the
-  Leibniz rule on `B`, applying `Δ ⊗ id` distributes over the two arguments. -/
-lemma tensorAction_map_left_derivation (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W)
-    (Δ : B →ₗ[ℝ] B) (hΔ : ∀ b₁ b₂, Δ (b₁ * b₂) = Δ b₁ * b₂ + b₁ * Δ b₂)
-    (s : B ⊗[ℝ] GaugeAlgebra) (t : B ⊗[ℝ] W) :
-    (TensorProduct.map Δ LinearMap.id) (tensorAction act s t) =
-      tensorAction act ((TensorProduct.map Δ LinearMap.id) s) t +
-      tensorAction act s ((TensorProduct.map Δ LinearMap.id) t) := by
-  induction s using TensorProduct.induction_on with
-  | zero => simp
-  | tmul b₁ a₁ =>
-      induction t using TensorProduct.induction_on with
-      | zero => simp
-      | tmul b₂ a₂ => simp [hΔ, TensorProduct.add_tmul]
-      | add x y hx hy =>
-          simp only [map_add, hx, hy]
-          abel
-  | add x y hx hy =>
-      simp only [map_add, LinearMap.add_apply, hx, hy]
-      abel
-
 /-- `tensorAction` under an antidiagonal pair of transport families: if the
-  `W`-transports intertwine `act` with the `GaugeAlgebra`-transports as an
+  `V`-transports intertwine `act` with the `GaugeAlgebra`-transports as an
   antidiagonal convolution, so do `id ⊗ ·` over `tensorAction`. -/
-lemma tensorAction_map_right_antidiagonal (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W)
+lemma tensorAction_map_right_antidiagonal (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
     (Tg : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra →ₗ[ℝ] GaugeAlgebra)
-    (Tv : Multiset (Fin 1 ⊕ Fin 3) → W →ₗ[ℝ] W) (x : Multiset (Fin 1 ⊕ Fin 3))
-    (hT : ∀ (c : GaugeAlgebra) (w : W), Tv x (act c w) =
+    (Tv : Multiset (Fin 1 ⊕ Fin 3) → V →ₗ[ℂ] V) (x : Multiset (Fin 1 ⊕ Fin 3))
+    (hT : ∀ (c : GaugeAlgebra) (w : V), Tv x (act c w) =
       (x.antidiagonal.map fun p => act (Tg p.1 c) (Tv p.2 w)).sum)
-    (s : B ⊗[ℝ] GaugeAlgebra) (t : B ⊗[ℝ] W) :
+    (s : B ⊗[ℝ] GaugeAlgebra) (t : B ⊗[ℂ] V) :
     (x.antidiagonal.map fun p =>
       tensorAction act ((TensorProduct.map LinearMap.id (Tg p.1)) s)
         ((TensorProduct.map LinearMap.id (Tv p.2)) t)).sum =
@@ -343,89 +320,77 @@ lemma tensorAction_map_right_antidiagonal (act : GaugeAlgebra →ₗ[ℝ] W →�
           rw [map_add, map_add, LinearMap.add_apply]),
         Multiset.sum_map_add, hy, hz, ← map_add, ← LinearMap.add_apply, ← map_add]
 
-variable [FiniteDimensional ℝ W]
+variable [FiniteDimensional ℂ V]
 
-/-- The canonical equivalence between `W`-valued fields `B ⊗ W` and their component
-  families `φ ↦ F^φ` — `dualPairEquiv` for a general finite-dimensional value
-  space. -/
-noncomputable def dualPairEquivW : (B ⊗[ℝ] W) ≃ₗ[ℝ] (Module.Dual ℝ W →ₗ[ℝ] B) :=
-  TensorProduct.comm ℝ B W ≪≫ₗ
-    TensorProduct.congr (Module.evalEquiv ℝ W) (LinearEquiv.refl ℝ B) ≪≫ₗ
-    dualTensorHomEquiv ℝ (Module.Dual ℝ W) B
+/-- The canonical equivalence between matter fields `B ⊗[ℂ] V` and their component
+  families `φ ↦ F^φ` over the complex dual — `dualPairEquiv` for a general
+  finite-dimensional complex value space. -/
+noncomputable def dualPairEquivC : (B ⊗[ℂ] V) ≃ₗ[ℂ] (Module.Dual ℂ V →ₗ[ℂ] B) :=
+  TensorProduct.comm ℂ B V ≪≫ₗ
+    TensorProduct.congr (Module.evalEquiv ℂ V) (LinearEquiv.refl ℂ B) ≪≫ₗ
+    dualTensorHomEquiv ℂ (Module.Dual ℂ V) B
 
 @[simp]
-lemma dualPairEquivW_tmul (b : B) (w : W) (φ : Module.Dual ℝ W) :
-    dualPairEquivW (b ⊗ₜ[ℝ] w) φ = φ w • b := by
-  simp [dualPairEquivW, dualTensorHomEquiv, Module.evalEquiv_apply]
+lemma dualPairEquivC_tmul (b : B) (v : V) (φ : Module.Dual ℂ V) :
+    dualPairEquivC (b ⊗ₜ[ℂ] v) φ = φ v • b := by
+  simp [dualPairEquivC, dualTensorHomEquiv, Module.evalEquiv_apply]
 
-/-- On the gauge algebra, `dualPairEquivW` is `dualPairEquiv`. -/
-lemma dualPairEquivW_gaugeAlgebra :
-    (dualPairEquivW : (B ⊗[ℝ] GaugeAlgebra) ≃ₗ[ℝ] _) = dualPairEquiv := rfl
-
-lemma dualPairEquivW_map_left (Φ : B →ₗ[ℝ] B) (t : B ⊗[ℝ] W)
-    (φ : Module.Dual ℝ W) :
-    dualPairEquivW ((TensorProduct.map Φ LinearMap.id) t) φ =
-      Φ (dualPairEquivW t φ) := by
+lemma dualPairEquivC_map_left (Φ : B →ₗ[ℂ] B) (t : B ⊗[ℂ] V)
+    (φ : Module.Dual ℂ V) :
+    dualPairEquivC ((TensorProduct.map Φ LinearMap.id) t) φ =
+      Φ (dualPairEquivC t φ) := by
   induction t using TensorProduct.induction_on with
   | zero => simp
   | tmul b w => simp
   | add x y hx hy => simp [hx, hy]
 
-lemma dualPairEquivW_map_right (T : W →ₗ[ℝ] W) (t : B ⊗[ℝ] W)
-    (φ : Module.Dual ℝ W) :
-    dualPairEquivW ((TensorProduct.map LinearMap.id T) t) φ =
-      dualPairEquivW t (T.dualMap φ) := by
+lemma dualPairEquivC_map_right (T : V →ₗ[ℂ] V) (t : B ⊗[ℂ] V)
+    (φ : Module.Dual ℂ V) :
+    dualPairEquivC ((TensorProduct.map LinearMap.id T) t) φ =
+      dualPairEquivC t (T.dualMap φ) := by
   induction t using TensorProduct.induction_on with
   | zero => simp
   | tmul b w => simp
   | add x y hx hy => simp [hx, hy]
 
-lemma symm_comp_left_W (Φ : B →ₗ[ℝ] B) (g : Module.Dual ℝ W →ₗ[ℝ] B) :
-    dualPairEquivW.symm (Φ ∘ₗ g) =
-      (TensorProduct.map Φ LinearMap.id) (dualPairEquivW.symm g) := by
-  apply dualPairEquivW.injective
+lemma symm_comp_left_C (Φ : B →ₗ[ℂ] B) (g : Module.Dual ℂ V →ₗ[ℂ] B) :
+    dualPairEquivC.symm (Φ ∘ₗ g) =
+      (TensorProduct.map Φ LinearMap.id) (dualPairEquivC.symm g) := by
+  apply dualPairEquivC.injective
   rw [LinearEquiv.apply_symm_apply]
   refine LinearMap.ext fun φ => ?_
-  rw [dualPairEquivW_map_left, LinearEquiv.apply_symm_apply]
+  rw [dualPairEquivC_map_left, LinearEquiv.apply_symm_apply]
   rfl
 
-lemma symm_comp_right_W (T : W →ₗ[ℝ] W) (g : Module.Dual ℝ W →ₗ[ℝ] B) :
-    dualPairEquivW.symm (g ∘ₗ T.dualMap) =
-      (TensorProduct.map LinearMap.id T) (dualPairEquivW.symm g) := by
-  apply dualPairEquivW.injective
+lemma symm_comp_right_C (T : V →ₗ[ℂ] V) (g : Module.Dual ℂ V →ₗ[ℂ] B) :
+    dualPairEquivC.symm (g ∘ₗ T.dualMap) =
+      (TensorProduct.map LinearMap.id T) (dualPairEquivC.symm g) := by
+  apply dualPairEquivC.injective
   rw [LinearEquiv.apply_symm_apply]
   refine LinearMap.ext fun φ => ?_
-  rw [dualPairEquivW_map_right, LinearEquiv.apply_symm_apply]
+  rw [dualPairEquivC_map_right, LinearEquiv.apply_symm_apply]
   rfl
 
-/-- The action of an adjoint-indexed component family on a `W`-indexed one, through
-  the infinitesimal action `act`: assemble both into fields, act by `tensorAction`,
-  read back out as components. This is the physicists' `f^a (T_a)^i_j g^j` with
-  `T = act`, basis-free; for the adjoint action it is `bracketFam`
-  (`actionFam_ad`). -/
-noncomputable def actionFam (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W)
-    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℝ W →ₗ[ℝ] B) :
-    Module.Dual ℝ W →ₗ[ℝ] B :=
-  dualPairEquivW (tensorAction act (dualPairEquiv.symm f) (dualPairEquivW.symm g))
-
-/-- On the gauge algebra, the action family through the adjoint is the bracket
-  family. -/
-lemma actionFam_adAction (f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
-    actionFam adAction f g = bracketFam f g := rfl
-
-variable {act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W}
+/-- The action of an adjoint-indexed component family on a matter one, through the
+  infinitesimal action `act`: assemble both into fields, act by `tensorAction`, read
+  back out as components. This is the physicists' `f^a (T_a)^i_j g^j` with `T = act`,
+  basis-free. -/
+noncomputable def actionFam (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℂ V →ₗ[ℂ] B) :
+    Module.Dual ℂ V →ₗ[ℂ] B :=
+  dualPairEquivC (tensorAction act (dualPairEquiv.symm f) (dualPairEquivC.symm g))
 
 lemma actionFam_add_left (f₁ f₂ : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (g : Module.Dual ℝ W →ₗ[ℝ] B) :
+    (g : Module.Dual ℂ V →ₗ[ℂ] B) :
     actionFam act (f₁ + f₂) g = actionFam act f₁ g + actionFam act f₂ g := by
   simp only [actionFam, map_add, LinearMap.add_apply]
 
 lemma actionFam_add_right (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (g₁ g₂ : Module.Dual ℝ W →ₗ[ℝ] B) :
+    (g₁ g₂ : Module.Dual ℂ V →ₗ[ℂ] B) :
     actionFam act f (g₁ + g₂) = actionFam act f g₁ + actionFam act f g₂ := by
   simp only [actionFam, map_add]
 
-lemma actionFam_zero_left (g : Module.Dual ℝ W →ₗ[ℝ] B) :
+lemma actionFam_zero_left (g : Module.Dual ℂ V →ₗ[ℂ] B) :
     actionFam act 0 g = 0 := by
   simp [actionFam]
 
@@ -434,107 +399,60 @@ lemma actionFam_zero_right (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
   simp [actionFam]
 
 lemma actionFam_sum_left (S : Multiset (Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B))
-    (g : Module.Dual ℝ W →ₗ[ℝ] B) :
+    (g : Module.Dual ℂ V →ₗ[ℂ] B) :
     actionFam act S.sum g = (S.map fun f => actionFam act f g).sum := by
   induction S using Multiset.induction_on with
   | empty => simp [actionFam_zero_left]
   | cons f S ih => simp [actionFam_add_left, ih]
 
 lemma actionFam_sum_right (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (S : Multiset (Module.Dual ℝ W →ₗ[ℝ] B)) :
+    (S : Multiset (Module.Dual ℂ V →ₗ[ℂ] B)) :
     actionFam act f S.sum = (S.map fun g => actionFam act f g).sum := by
   induction S using Multiset.induction_on with
   | empty => simp [actionFam_zero_right]
   | cons g S ih => simp [actionFam_add_right, ih]
 
-/-- With `D` a derivation, the one-step Leibniz rule for the action of families. -/
-lemma deriv_actionFam (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂) (κ : Fin 1 ⊕ Fin 3)
-    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℝ W →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ W) :
-    D κ (actionFam act f g φ) =
-      actionFam act ((D κ).restrictScalars ℝ ∘ₗ f) g φ +
-      actionFam act f ((D κ).restrictScalars ℝ ∘ₗ g) φ := by
-  have h := congrArg (fun z => dualPairEquivW z φ)
-    (tensorAction_map_left_derivation act ((D κ).restrictScalars ℝ)
-      (fun b₁ b₂ => hD κ b₁ b₂) (dualPairEquiv.symm f) (dualPairEquivW.symm g))
-  simp only [map_add, LinearMap.add_apply, dualPairEquivW_map_left] at h
-  rw [← symm_comp_left, ← symm_comp_left_W] at h
-  exact h
-
-/-- The iterated Leibniz rule for the action of families: the iterated derivative of
-  `A · F` is the antidiagonal convolution of derived actions. -/
-lemma iteratedD_actionFam (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℝ W →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ W) :
-    Lorentz.iteratedD D D_comm s (actionFam act f g φ) =
-      (s.antidiagonal.map fun p =>
-        actionFam act ((Lorentz.iteratedD D D_comm p.1).restrictScalars ℝ ∘ₗ f)
-          ((Lorentz.iteratedD D D_comm p.2).restrictScalars ℝ ∘ₗ g) φ).sum := by
-  induction s using Multiset.induction_on generalizing f g with
-  | empty =>
-      simp [Lorentz.iteratedD_zero, Multiset.antidiagonal_zero,
-        show (LinearMap.id : B →ₗ[ℂ] B).restrictScalars ℝ = LinearMap.id from rfl]
-  | cons κ s ih =>
-      rw [Lorentz.iteratedD_cons, LinearMap.comp_apply, ih f g, map_multiset_sum,
-        Multiset.map_map,
-        Multiset.map_congr rfl (fun p hp => by
-          rw [Function.comp_apply, deriv_actionFam hD κ,
-            show (D κ).restrictScalars ℝ ∘ₗ
-                ((Lorentz.iteratedD D D_comm p.1).restrictScalars ℝ ∘ₗ f) =
-              (Lorentz.iteratedD D D_comm (κ ::ₘ p.1)).restrictScalars ℝ ∘ₗ f from by
-              rw [Lorentz.iteratedD_cons]; rfl,
-            show (D κ).restrictScalars ℝ ∘ₗ
-                ((Lorentz.iteratedD D D_comm p.2).restrictScalars ℝ ∘ₗ g) =
-              (Lorentz.iteratedD D D_comm (κ ::ₘ p.2)).restrictScalars ℝ ∘ₗ g from by
-              rw [Lorentz.iteratedD_cons]; rfl]),
-        Multiset.sum_map_add]
-      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
-        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
-      abel
-
 set_option maxHeartbeats 1000000 in
 /-- The gauge transformation of the action of an affinely-transforming
-  adjoint-indexed family on a linearly-transforming `W`-indexed family: the action of
-  the transformed families plus one `ad`-type cross term through `act`. This is
-  `repGauge_bracketFam` with a homogeneous second slot and the bracket replaced by
-  a general action. -/
-lemma repGauge_actionFam (hA : IsGaugeField repLorentz repGauge A D D_comm)
+  adjoint-indexed family on a linearly-transforming matter family: the action of the
+  transformed families plus one `act`-type cross term. This is `repGauge_bracketFam`
+  with a homogeneous second slot and the bracket replaced by a general action. -/
+lemma repGauge_actionFam (hA : IsGaugeField repLorentz repGauge A)
     (U : JetGaugeGroupI) {f f' : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-    {g g' : Module.Dual ℝ W →ₗ[ℝ] B} {cf : GaugeAlgebra}
+    {g g' : Module.Dual ℂ V →ₗ[ℂ] B} {cf : GaugeAlgebra}
     (hf : ∀ ψ : Module.Dual ℝ GaugeAlgebra,
       repGauge U (f ψ) = f' ψ + algebraMap ℂ B (ψ cf))
-    (hg : ∀ ψ : Module.Dual ℝ W, repGauge U (g ψ) = g' ψ)
-    (φ : Module.Dual ℝ W) :
+    (hg : ∀ ψ : Module.Dual ℂ V, repGauge U (g ψ) = g' ψ)
+    (φ : Module.Dual ℂ V) :
     repGauge U (actionFam act f g φ) =
       actionFam act f' g' φ + g' (φ ∘ₗ act cf) := by
-  set Φ : B →ₗ[ℝ] B := (repGauge U).restrictScalars ℝ with hΦdef
+  set Φ : B →ₗ[ℂ] B := repGauge U with hΦdef
   have hΦmul : ∀ b₁ b₂ : B, Φ (b₁ * b₂) = Φ b₁ * Φ b₂ := fun b₁ b₂ =>
     hA.gauge_mul U b₁ b₂
   set s : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm f with hs
-  set t : B ⊗[ℝ] W := dualPairEquivW.symm g with ht
+  set t : B ⊗[ℂ] V := dualPairEquivC.symm g with ht
   set s' : B ⊗[ℝ] GaugeAlgebra := dualPairEquiv.symm f' with hs'
-  set t' : B ⊗[ℝ] W := dualPairEquivW.symm g' with ht'
-  have hfm : (TensorProduct.map Φ LinearMap.id) s = s' + (1 : B) ⊗ₜ[ℝ] cf := by
+  set t' : B ⊗[ℂ] V := dualPairEquivC.symm g' with ht'
+  have hfm : (TensorProduct.map (Φ.restrictScalars ℝ) LinearMap.id) s
+      = s' + (1 : B) ⊗ₜ[ℝ] cf := by
     rw [hs, hs', ← symm_comp_left,
-      show Φ ∘ₗ f = f' + dualPairEquiv ((1 : B) ⊗ₜ[ℝ] cf) from
+      show Φ.restrictScalars ℝ ∘ₗ f = f' + dualPairEquiv ((1 : B) ⊗ₜ[ℝ] cf) from
         LinearMap.ext fun ψ => by
           simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
             LinearMap.restrictScalars_apply]
           rw [hf ψ, dualPairEquiv_one_tmul],
       map_add, LinearEquiv.symm_apply_apply]
   have hgm : (TensorProduct.map Φ LinearMap.id) t = t' := by
-    rw [ht, ht', ← symm_comp_left_W,
+    rw [ht, ht', ← symm_comp_left_C,
       show Φ ∘ₗ g = g' from LinearMap.ext fun ψ => by
-        simp only [LinearMap.comp_apply, hΦdef, LinearMap.restrictScalars_apply]
+        simp only [LinearMap.comp_apply, hΦdef]
         rw [hg ψ]]
-  have hact : dualPairEquivW (tensorAction act s t) = actionFam act f g := by
+  have hact : dualPairEquivC (tensorAction act s t) = actionFam act f g := by
     rw [hs, ht]; rfl
-  have hact' : dualPairEquivW (tensorAction act s' t') = actionFam act f' g' := by
+  have hact' : dualPairEquivC (tensorAction act s' t') = actionFam act f' g' := by
     rw [hs', ht']; rfl
-  have hπt' : dualPairEquivW t' = g' := by
-    rw [ht']; exact dualPairEquivW.apply_symm_apply _
+  have hπt' : dualPairEquivC t' = g' := by
+    rw [ht']; exact dualPairEquivC.apply_symm_apply _
   clear_value Φ s t s' t'
   have htensor : (TensorProduct.map Φ LinearMap.id) (tensorAction act s t) =
       tensorAction act s' t'
@@ -542,43 +460,72 @@ lemma repGauge_actionFam (hA : IsGaugeField repLorentz repGauge A D D_comm)
     refine (tensorAction_map_left act Φ hΦmul s t).symm.trans
       ((congrArg₂ (fun X Y => tensorAction act X Y) hfm hgm).trans ?_)
     rw [map_add, LinearMap.add_apply, tensorAction_one_left]
-  have hread := congrArg (fun z => dualPairEquivW z φ) htensor
-  simp only [map_add, LinearMap.add_apply, dualPairEquivW_map_left,
-    dualPairEquivW_map_right] at hread
-  rw [show repGauge U (actionFam act f g φ) =
-      Φ (dualPairEquivW (tensorAction act s t) φ) from by
-      rw [hact, hΦdef]; rfl,
+  have hread := congrArg (fun z => dualPairEquivC z φ) htensor
+  simp only [map_add, LinearMap.add_apply, dualPairEquivC_map_left,
+    dualPairEquivC_map_right] at hread
+  rw [show Φ (actionFam act f g φ) =
+      Φ (dualPairEquivC (tensorAction act s t) φ) from by rw [hact],
     hread, hact', hπt']
   rfl
 
-/-- The covariant derivative of a `W`-indexed component family through the
-  infinitesimal action `act` of the gauge algebra on `W`:
+/-- The derived action family `A_ρ · F`: the `s`-derivative of the action of the
+  gauge field on a matter family, given by the Leibniz convolution of the derivative
+  symbols over the multiset antidiagonal — the matter analogue of `bracketFamConv`. -/
+noncomputable def actionFamConv
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (ρ : Fin 1 ⊕ Fin 3)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) : Module.Dual ℂ V →ₗ[ℂ] B :=
+  (s.antidiagonal.map fun p => actionFam act (A p.1 ρ) (F p.2)).sum
 
-  `∇_ρ F = D_ρ F + A_ρ · F`,
-
-  the total derivative plus the action of the gauge field on the value index. With
-  the physicists' factor of `i` absorbed into `act` (as it is in the gauge-algebra
-  bracket), this is `∂_ρ F + i A_ρ^a T_a F` in the `D = ∂ + i A` convention. For the
-  adjoint action it is `covDerivAdjoint` (`covDerivAction_ad`). -/
+/-- The covariant derivative `∇_ρ F = [∂_ρ F] + A_ρ · F` of a matter family of
+  derivative symbols, in the single direction `ρ`: the extra derivative on the symbol
+  plus the derived action of the gauge field on the value index. With the physicists'
+  factor of `i` absorbed into `act` (as it is in the gauge-algebra bracket), this is
+  `∂_ρ F + i A_ρ^a T_a F` in the `D = ∂ + i A` convention. -/
 noncomputable def covDerivAction
-    (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (F : Module.Dual ℝ W →ₗ[ℝ] B)
-    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B) (ρ : Fin 1 ⊕ Fin 3) :
-    Module.Dual ℝ W →ₗ[ℝ] B :=
-  (D ρ).restrictScalars ℝ ∘ₗ F + actionFam act (A ρ) F
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) : Module.Dual ℂ V →ₗ[ℂ] B :=
+  F (ρ ::ₘ s) + actionFamConv A act ρ F s
 
 @[simp]
-lemma covDerivAction_apply (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (F : Module.Dual ℝ W →ₗ[ℝ] B)
-    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B) (ρ : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ W) :
-    covDerivAction A act F D ρ φ = D ρ (F φ) + actionFam act (A ρ) F φ := rfl
+lemma covDerivAction_apply
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+    covDerivAction A act F ρ s φ = F (ρ ::ₘ s) φ + actionFamConv A act ρ F s φ := rfl
 
-/-- Through the adjoint action, the general covariant derivative is the adjoint
-  one. -/
-lemma covDerivAction_adAction (F : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (ρ : Fin 1 ⊕ Fin 3) :
-    covDerivAction A adAction F D ρ = covDerivAdjoint A F D ρ := rfl
+/-- **The iterated covariant derivative** `∇_{l 0} ⋯ ∇_{l (n-1)} F` of a matter family
+  along an ordered tuple of directions: covariant derivatives do not commute (their
+  commutator is the action of the field strength), so the iteration is order-dependent
+  and indexed by `(n : ℕ)` and `l : Fin n → (Fin 1 ⊕ Fin 3)` — the same ordered-tuple
+  indexing as the derivative labels of `IsHiggsSector`. The result is again a
+  family of derivative symbols; the physical iterated covariant derivative is its
+  value at the empty multiset. -/
+noncomputable def covDerivIter
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) :
+    (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) →
+      Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B
+  | 0, _ => F
+  | n + 1, l => covDerivAction A act (covDerivIter A act F n fun i => l i.succ) (l 0)
+
+@[simp]
+lemma covDerivIter_zero (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (l : Fin 0 → (Fin 1 ⊕ Fin 3)) :
+    covDerivIter A act F 0 l = F := rfl
+
+@[simp]
+lemma covDerivIter_succ (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    {n : ℕ} (l : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) :
+    covDerivIter A act F (n + 1) l =
+      covDerivAction A act (covDerivIter A act F n fun i => l i.succ) (l 0) := rfl
 
 /-!
 
@@ -592,17 +539,41 @@ which lies in the algebra generated by the symbols but not in their linear span.
 
 -/
 
-/-- Decomposition of an assembled family along a basis of the value space: the
-  components against the dual basis, tensored with the basis vectors. -/
-lemma dualPairEquivW_symm_eq_sum {ι : Type*} [Fintype ι] (bW : Module.Basis ι ℝ W)
-    (g : Module.Dual ℝ W →ₗ[ℝ] B) :
-    dualPairEquivW.symm g = ∑ i, g (bW.coord i) ⊗ₜ[ℝ] bW i := by
-  apply dualPairEquivW.injective
+/-- Decomposition of an assembled adjoint-indexed family along a basis of the gauge
+  algebra: the components against the dual basis, tensored with the basis vectors. -/
+lemma dualPairEquiv_symm_eq_sum {ι : Type*} [Fintype ι]
+    (bW : Module.Basis ι ℝ GaugeAlgebra)
+    (g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    dualPairEquiv.symm g = ∑ i, g (bW.coord i) ⊗ₜ[ℝ] bW i := by
+  apply dualPairEquiv.injective
   rw [LinearEquiv.apply_symm_apply]
   refine LinearMap.ext fun φ => ?_
   symm
   rw [map_sum, LinearMap.sum_apply]
-  simp only [dualPairEquivW_tmul]
+  simp only [dualPairEquiv_tmul]
+  have hdual : (∑ i, φ (bW i) • bW.coord i) = φ := by
+    refine bW.ext fun j => ?_
+    rw [LinearMap.sum_apply]
+    simp only [LinearMap.smul_apply, Module.Basis.coord_apply, Module.Basis.repr_self,
+      smul_eq_mul]
+    rw [Finset.sum_eq_single j
+      (fun i _ hij => by simp [Ne.symm hij])
+      (fun h => absurd (Finset.mem_univ j) h)]
+    simp
+  calc ∑ i, φ (bW i) • g (bW.coord i)
+      = g (∑ i, φ (bW i) • bW.coord i) := by rw [map_sum]; simp
+    _ = g φ := by rw [hdual]
+
+/-- Decomposition of an assembled matter family along a basis of the value space. -/
+lemma dualPairEquivC_symm_eq_sum {ι : Type*} [Fintype ι] (bW : Module.Basis ι ℂ V)
+    (g : Module.Dual ℂ V →ₗ[ℂ] B) :
+    dualPairEquivC.symm g = ∑ i, g (bW.coord i) ⊗ₜ[ℂ] bW i := by
+  apply dualPairEquivC.injective
+  rw [LinearEquiv.apply_symm_apply]
+  refine LinearMap.ext fun φ => ?_
+  symm
+  rw [map_sum, LinearMap.sum_apply]
+  simp only [dualPairEquivC_tmul]
   have hdual : (∑ i, φ (bW i) • bW.coord i) = φ := by
     refine bW.ext fun j => ?_
     rw [LinearMap.sum_apply]
@@ -618,178 +589,172 @@ lemma dualPairEquivW_symm_eq_sum {ι : Type*} [Fintype ι] (bW : Module.Basis ι
 
 /-- The value of an action of families lies in any subalgebra containing the values
   of both families: the action is a finite sum of products of components. -/
-lemma actionFam_apply_mem {act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W} {P : Subalgebra ℂ B}
-    {f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B} {g : Module.Dual ℝ W →ₗ[ℝ] B}
-    (hf : ∀ ψ, f ψ ∈ P) (hg : ∀ χ, g χ ∈ P) (φ : Module.Dual ℝ W) :
+lemma actionFam_apply_mem {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V} {P : Subalgebra ℂ B}
+    {f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B} {g : Module.Dual ℂ V →ₗ[ℂ] B}
+    (hf : ∀ ψ, f ψ ∈ P) (hg : ∀ χ, g χ ∈ P) (φ : Module.Dual ℂ V) :
     actionFam act f g φ ∈ P := by
-  rw [actionFam,
-    show dualPairEquiv.symm f = ∑ i,
-        f ((Module.finBasis ℝ GaugeAlgebra).coord i) ⊗ₜ[ℝ]
-          (Module.finBasis ℝ GaugeAlgebra) i from by
-      rw [← dualPairEquivW_gaugeAlgebra]
-      exact dualPairEquivW_symm_eq_sum (Module.finBasis ℝ GaugeAlgebra) f,
-    dualPairEquivW_symm_eq_sum (Module.finBasis ℝ W) g]
-  simp only [map_sum, LinearMap.sum_apply, tensorAction_tmul, dualPairEquivW_tmul]
+  rw [actionFam, dualPairEquiv_symm_eq_sum (Module.finBasis ℝ GaugeAlgebra) f,
+    dualPairEquivC_symm_eq_sum (Module.finBasis ℂ V) g]
+  simp only [map_sum, LinearMap.sum_apply, tensorAction_tmul, dualPairEquivC_tmul]
   refine sum_mem fun i _ => sum_mem fun j _ => ?_
-  rw [← algebraMap_smul ℂ]
   exact P.smul_mem (mul_mem (hf _) (hg _)) _
 
-/-- Iterated covariant derivatives along a list of directions. -/
-noncomputable def covDerivIter (A : (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (F : Module.Dual ℝ W →ₗ[ℝ] B)
-    (D : (Fin 1 ⊕ Fin 3) → B →ₗ[ℂ] B) (l : List (Fin 1 ⊕ Fin 3)) :
-    Module.Dual ℝ W →ₗ[ℝ] B :=
-  l.foldr (fun ρ G => covDerivAction A act G D ρ) F
-
-@[simp]
-lemma covDerivIter_nil (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W)
-    (F : Module.Dual ℝ W →ₗ[ℝ] B) : covDerivIter A act F D [] = F := rfl
-
-@[simp]
-lemma covDerivIter_cons (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W)
-    (F : Module.Dual ℝ W →ₗ[ℝ] B) (ρ : Fin 1 ⊕ Fin 3) (l : List (Fin 1 ⊕ Fin 3)) :
-    covDerivIter A act F D (ρ :: l) =
-      covDerivAction A act (covDerivIter A act F D l) D ρ := rfl
-
-/-- With `D` a derivation, `D` kills the scalars. -/
-lemma deriv_algebraMap_eq_zero (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂) (κ : Fin 1 ⊕ Fin 3) (c : ℂ) :
-    D κ (algebraMap ℂ B c) = 0 := by
-  have h1 : D κ (1 : B) = 0 := by
-    have h := hD κ 1 1
-    rw [one_mul, one_mul, mul_one] at h
-    have h2 : D κ (1 : B) + 0 = D κ (1 : B) + D κ (1 : B) := by rw [add_zero]; exact h
-    exact (add_left_cancel h2).symm
-  rw [Algebra.algebraMap_eq_smul_one, map_smul, h1, smul_zero]
-
-/-- A subalgebra generated by a `D`-stable set of generators is `D`-stable. -/
-lemma adjoin_deriv_mem {S : Set B}
-    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
-    (hS : ∀ (κ : Fin 1 ⊕ Fin 3), ∀ x ∈ S, D κ x ∈ Algebra.adjoin ℂ S)
-    (κ : Fin 1 ⊕ Fin 3) {x : B} (hx : x ∈ Algebra.adjoin ℂ S) :
-    D κ x ∈ Algebra.adjoin ℂ S := by
-  induction hx using Algebra.adjoin_induction with
-  | mem y hy => exact hS κ y hy
-  | algebraMap c =>
-      rw [deriv_algebraMap_eq_zero hD κ c]
+/-- **Unitriangularity of the covariant matter tower**: the covariant and plain
+  derivative symbols of a matter family differ by an element of the subalgebra
+  generated by the gauge-field symbols and the strictly lower-order matter symbols.
+  Stated at every derivative multiset `s`, as needed for the induction. -/
+lemma covDerivIter_sub_mem (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ V) :
+    covDerivIter A act F n l s φ - F (List.ofFn l + s) φ ∈
+      Algebra.adjoin ℂ
+        ({b : B | ∃ (u : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = A u μ ψ} ∪
+          {b : B | ∃ (t : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V),
+            t.card < n + s.card ∧ b = F t χ}) := by
+  induction n generalizing s φ with
+  | zero =>
+      simp only [covDerivIter_zero, List.ofFn_zero,
+        show ((([] : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) = 0) from rfl,
+        zero_add, sub_self]
       exact zero_mem _
-  | add y z hy hz ihy ihz =>
-      rw [map_add]
-      exact add_mem ihy ihz
-  | mul y z hy hz ihy ihz =>
-      rw [hD κ y z]
-      exact add_mem (mul_mem ihy hz) (mul_mem hy ihz)
-
-/-- A subalgebra generated by a `D`-stable set of generators is stable under
-  iterated derivatives. -/
-lemma adjoin_iteratedD_mem {S : Set B}
-    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
-    (hS : ∀ (κ : Fin 1 ⊕ Fin 3), ∀ x ∈ S, D κ x ∈ Algebra.adjoin ℂ S)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) {x : B} (hx : x ∈ Algebra.adjoin ℂ S) :
-    Lorentz.iteratedD D D_comm s x ∈ Algebra.adjoin ℂ S := by
-  induction s using Multiset.induction_on with
-  | empty => rw [Lorentz.iteratedD_zero]; exact hx
-  | cons κ t ih =>
-      rw [Lorentz.iteratedD_cons, LinearMap.comp_apply]
-      exact adjoin_deriv_mem hD hS κ ih
-
-set_option maxHeartbeats 1000000 in
-/-- **The span lemma**: the algebra of symbols generated by the gauge field with its
-  derivatives together with a matter family with its *derivatives* equals the one
-  generated by the gauge field with its derivatives together with the matter family
-  with its *covariant* derivatives. The correction `∇_ρ − ∂_ρ` is the action of the
-  gauge field — a sum of products of symbols, absorbed by the algebra structure. -/
-theorem adjoin_iteratedD_eq_adjoin_covDerivIter
-    (hD : ∀ (κ : Fin 1 ⊕ Fin 3) (b₁ b₂ : B),
-      D κ (b₁ * b₂) = D κ b₁ * b₂ + b₁ * D κ b₂)
-    (act : GaugeAlgebra →ₗ[ℝ] W →ₗ[ℝ] W) (F : Module.Dual ℝ W →ₗ[ℝ] B) :
-    Algebra.adjoin ℂ
-      ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-          (ψ : Module.Dual ℝ GaugeAlgebra), b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-        {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ W),
-          b = Lorentz.iteratedD D D_comm s (F φ)}) =
-    Algebra.adjoin ℂ
-      ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-          (ψ : Module.Dual ℝ GaugeAlgebra), b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-        {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ W),
-          b = covDerivIter A act F D l φ}) := by
-  have hA0 : ∀ (μ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra),
-      A μ ψ = Lorentz.iteratedD D D_comm 0 (A μ ψ) := fun μ ψ => by
-    rw [Lorentz.iteratedD_zero]; rfl
-  have hDA : ∀ (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (y : B),
-      D κ (Lorentz.iteratedD D D_comm s y) =
-        Lorentz.iteratedD D D_comm (κ ::ₘ s) y := fun κ s y => by
-    rw [Lorentz.iteratedD_cons]; rfl
-  -- `D`-stability of the generators on the covariant side
-  have hS₂ : ∀ (κ : Fin 1 ⊕ Fin 3), ∀ x ∈
-      ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-        {b : B | ∃ l φ, b = covDerivIter A act F D l φ}),
-      D κ x ∈ Algebra.adjoin ℂ
-        ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-          {b : B | ∃ l φ, b = covDerivIter A act F D l φ}) := by
-    rintro κ x (⟨s, μ, ψ, rfl⟩ | ⟨l, φ, rfl⟩)
-    · exact Algebra.subset_adjoin (Set.mem_union_left _ ⟨κ ::ₘ s, μ, ψ, hDA κ s _⟩)
-    · have hsplit : D κ (covDerivIter A act F D l φ) =
-          covDerivIter A act F D (κ :: l) φ
-          - actionFam act (A κ) (covDerivIter A act F D l) φ := by
-        rw [covDerivIter_cons, covDerivAction_apply]
+  | succ n ih =>
+      have hmono : ∀ {k m : ℕ}, k ≤ m →
+          Algebra.adjoin ℂ
+            ({b : B | ∃ u μ ψ, b = A u μ ψ} ∪
+              {b : B | ∃ (t : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V),
+                t.card < k ∧ b = F t χ}) ≤
+          Algebra.adjoin ℂ
+            ({b : B | ∃ u μ ψ, b = A u μ ψ} ∪
+              {b : B | ∃ (t : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V),
+                t.card < m ∧ b = F t χ}) := by
+        intro k m hkm
+        refine Algebra.adjoin_mono (Set.union_subset_union_right _ ?_)
+        rintro b ⟨t, χ, ht, rfl⟩
+        exact ⟨t, χ, by omega, rfl⟩
+      have hms : ((List.ofFn l : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) + s =
+          ((List.ofFn fun i : Fin n => l i.succ : List (Fin 1 ⊕ Fin 3)) :
+            Multiset (Fin 1 ⊕ Fin 3)) + (l 0 ::ₘ s) := by
+        rw [List.ofFn_succ,
+          show (((l 0 :: List.ofFn fun i : Fin n => l i.succ : List (Fin 1 ⊕ Fin 3))) :
+              Multiset (Fin 1 ⊕ Fin 3))
+            = l 0 ::ₘ ((List.ofFn fun i : Fin n => l i.succ : List (Fin 1 ⊕ Fin 3)) :
+              Multiset (Fin 1 ⊕ Fin 3)) from rfl,
+          Multiset.cons_add, Multiset.add_cons]
+      have hsplit : covDerivIter A act F (n + 1) l s φ -
+          F (List.ofFn l + s) φ =
+        (covDerivIter A act F n (fun i => l i.succ) (l 0 ::ₘ s) φ -
+            F (List.ofFn (fun i : Fin n => l i.succ) + (l 0 ::ₘ s)) φ) +
+          actionFamConv A act (l 0) (covDerivIter A act F n fun i => l i.succ) s φ := by
+        rw [show covDerivIter A act F (n + 1) l s φ =
+              covDerivIter A act F n (fun i => l i.succ) (l 0 ::ₘ s) φ +
+                actionFamConv A act (l 0)
+                  (covDerivIter A act F n fun i => l i.succ) s φ
+            from rfl, hms]
         abel
       rw [hsplit]
-      have hmem₁ : covDerivIter A act F D (κ :: l) φ ∈
-          ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-            {b : B | ∃ l φ, b = covDerivIter A act F D l φ}) :=
-        Set.mem_union_right _ ⟨κ :: l, φ, rfl⟩
-      have hmemA : ∀ ψ' : Module.Dual ℝ GaugeAlgebra, A κ ψ' ∈
-          ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-            {b : B | ∃ l φ, b = covDerivIter A act F D l φ}) :=
-        fun ψ' => Set.mem_union_left _ ⟨0, κ, ψ', hA0 κ ψ'⟩
-      have hmemC : ∀ χ : Module.Dual ℝ W, covDerivIter A act F D l χ ∈
-          ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-            {b : B | ∃ l φ, b = covDerivIter A act F D l φ}) :=
-        fun χ => Set.mem_union_right _ ⟨l, χ, rfl⟩
-      exact sub_mem (Algebra.subset_adjoin hmem₁)
-        (actionFam_apply_mem (fun ψ' => Algebra.subset_adjoin (hmemA ψ'))
-          (fun χ => Algebra.subset_adjoin (hmemC χ)) φ)
-  -- `D`-stability of the generators on the derivative side
-  have hS₁ : ∀ (κ : Fin 1 ⊕ Fin 3), ∀ x ∈
-      ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-        {b : B | ∃ s φ, b = Lorentz.iteratedD D D_comm s (F φ)}),
-      D κ x ∈ Algebra.adjoin ℂ
-        ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-          {b : B | ∃ s φ, b = Lorentz.iteratedD D D_comm s (F φ)}) := by
-    rintro κ x (⟨s, μ, ψ, rfl⟩ | ⟨s, φ, rfl⟩)
-    · exact Algebra.subset_adjoin (Set.mem_union_left _ ⟨κ ::ₘ s, μ, ψ, hDA κ s _⟩)
-    · exact Algebra.subset_adjoin (Set.mem_union_right _ ⟨κ ::ₘ s, φ, hDA κ s _⟩)
+      refine add_mem ?_ ?_
+      · refine hmono ?_ (ih (fun i => l i.succ) (l 0 ::ₘ s) φ)
+        simp only [Multiset.card_cons]
+        omega
+      · rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+        refine multiset_sum_mem _ fun x hx => ?_
+        obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+        have hle := Multiset.mem_antidiagonal.mp hp
+        have h2 : p.2.card ≤ s.card :=
+          hle ▸ Multiset.card_le_card (Multiset.le_add_left _ _)
+        refine actionFam_apply_mem (fun ψ => ?_) (fun χ => ?_) _
+        · exact Algebra.subset_adjoin (Or.inl ⟨p.1, l 0, ψ, rfl⟩)
+        · have h3 : covDerivIter A act F n (fun i => l i.succ) p.2 χ =
+              (covDerivIter A act F n (fun i => l i.succ) p.2 χ -
+                F (List.ofFn (fun i : Fin n => l i.succ) + p.2) χ) +
+              F (List.ofFn (fun i : Fin n => l i.succ) + p.2) χ := by abel
+          rw [h3]
+          refine add_mem (hmono ?_ (ih (fun i => l i.succ) p.2 χ)) ?_
+          · omega
+          · refine Algebra.subset_adjoin
+              (Or.inr ⟨List.ofFn (fun i : Fin n => l i.succ) + p.2, χ, ?_, rfl⟩)
+            simp only [Multiset.card_add, Multiset.coe_card, List.length_ofFn]
+            omega
+
+/-- Every derivative symbol of the covariant tower is a polynomial in the gauge-field
+  symbols and the matter symbols. -/
+lemma covDerivIter_mem_adjoin_symbols (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ V) :
+    covDerivIter A act F n l s φ ∈ Algebra.adjoin ℂ
+      ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+          (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+        {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+          b = F s φ}) := by
+  induction n generalizing s φ with
+  | zero => exact Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩)
+  | succ n ih =>
+      rw [covDerivIter_succ, covDerivAction_apply]
+      refine add_mem (ih (fun i => l i.succ) (l 0 ::ₘ s) φ) ?_
+      rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      refine multiset_sum_mem _ fun x hx => ?_
+      obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+      refine actionFam_apply_mem (fun ψ' => ?_) (fun χ => ?_) _
+      · exact Algebra.subset_adjoin (Or.inl ⟨p.1, l 0, ψ', rfl⟩)
+      · exact ih (fun i => l i.succ) p.2 χ
+
+/-- **The span lemma**: the algebra of symbols generated by the gauge field together
+  with a matter family's *derivative* symbols equals the one generated by the gauge
+  field together with the matter family's *covariant* derivative tower. The
+  correction `∇_ρ − ∂_ρ` is the derived action of the gauge field — a sum of products
+  of symbols, absorbed by the algebra structure. -/
+theorem adjoin_symbols_eq_adjoin_covDerivIter (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) :
+    Algebra.adjoin ℂ
+      ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+          (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+        {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+          b = F s φ}) =
+    Algebra.adjoin ℂ
+      ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+          (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+        {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+          b = covDerivIter A act F n l 0 φ}) := by
   refine le_antisymm (Algebra.adjoin_le ?_) (Algebra.adjoin_le ?_)
   · rintro x (⟨s, μ, ψ, rfl⟩ | ⟨s, φ, rfl⟩)
-    · exact Algebra.subset_adjoin (Set.mem_union_left _ ⟨s, μ, ψ, rfl⟩)
-    · refine adjoin_iteratedD_mem hD hS₂ s ?_
-      have hmem : F φ ∈
-          ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-            {b : B | ∃ l φ, b = covDerivIter A act F D l φ}) :=
-        Set.mem_union_right _ ⟨[], φ, by rw [covDerivIter_nil]⟩
-      exact Algebra.subset_adjoin hmem
-  · rintro x (⟨s, μ, ψ, rfl⟩ | ⟨l, φ, rfl⟩)
-    · exact Algebra.subset_adjoin (Set.mem_union_left _ ⟨s, μ, ψ, rfl⟩)
-    · induction l generalizing φ with
-      | nil =>
-          have hmem : covDerivIter A act F D [] φ ∈
-              ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-                {b : B | ∃ s φ, b = Lorentz.iteratedD D D_comm s (F φ)}) :=
-            Set.mem_union_right _
-              ⟨0, φ, by rw [Lorentz.iteratedD_zero, covDerivIter_nil]; rfl⟩
-          exact Algebra.subset_adjoin hmem
-      | cons κ l ih =>
-          rw [covDerivIter_cons, covDerivAction_apply]
-          have hmemA : ∀ ψ' : Module.Dual ℝ GaugeAlgebra, A κ ψ' ∈
-              ({b : B | ∃ s μ ψ, b = Lorentz.iteratedD D D_comm s (A μ ψ)} ∪
-                {b : B | ∃ s φ, b = Lorentz.iteratedD D D_comm s (F φ)}) :=
-            fun ψ' => Set.mem_union_left _ ⟨0, κ, ψ', hA0 κ ψ'⟩
-          exact add_mem (adjoin_deriv_mem hD hS₁ κ (ih φ))
-            (actionFam_apply_mem (fun ψ' => Algebra.subset_adjoin (hmemA ψ'))
-              (fun χ => ih χ) φ)
+    · exact Algebra.subset_adjoin (Or.inl ⟨s, μ, ψ, rfl⟩)
+    · -- express a matter symbol through the covariant tower, by strong induction on
+      -- the order
+      have main : ∀ n, ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+          s.card ≤ n →
+          F s φ ∈ Algebra.adjoin ℂ
+            ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+                (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+              {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+                b = covDerivIter A act F n l 0 φ}) := by
+        intro n
+        induction n using Nat.strong_induction_on with
+        | _ n ih =>
+          intro s φ hs
+          set L := s.toList with hL'
+          have hL : Multiset.ofList L = s := Multiset.coe_toList _
+          have hofFn : List.ofFn L.get = L := List.ofFn_get L
+          rw [show F s φ = covDerivIter A act F L.length L.get 0 φ -
+              (covDerivIter A act F L.length L.get 0 φ -
+                F (List.ofFn L.get + 0) φ) from by
+            rw [add_zero, hofFn, hL]; abel]
+          refine sub_mem (Algebra.subset_adjoin (Or.inr ⟨L.length, L.get, φ, rfl⟩)) ?_
+          refine SetLike.le_def.mp (Algebra.adjoin_le ?_)
+            (covDerivIter_sub_mem act F L.length L.get 0 φ)
+          rintro b (⟨u, μ, ψ, rfl⟩ | ⟨t, χ, htc, rfl⟩)
+          · exact Algebra.subset_adjoin (Or.inl ⟨u, μ, ψ, rfl⟩)
+          · have htn : t.card < n := by
+              have hlen : L.length = s.card := Multiset.length_toList s
+              simp only [Multiset.card_zero] at htc
+              omega
+            exact ih t.card htn t χ (le_refl _)
+      exact main s.card s φ (le_refl _)
+  · rintro x (⟨s, μ, ψ, rfl⟩ | ⟨n, l, φ, rfl⟩)
+    · exact Algebra.subset_adjoin (Or.inl ⟨s, μ, ψ, rfl⟩)
+    · exact covDerivIter_mem_adjoin_symbols act F n l 0 φ
 
 end Action
 
