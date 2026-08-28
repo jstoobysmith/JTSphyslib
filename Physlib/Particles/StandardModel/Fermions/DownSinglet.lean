@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
@@ -566,5 +567,23 @@ lemma DownSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : 
     (fun j' => conj_gaugeTorusGen_basis _ _ _ _
       (fun j'' => DownSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
   simpa using hd
+
+/-!
+
+## The boost weight of the DownSinglet components
+
+-/
+
+open Lorentz in
+/-- The down-singlet basis diagonalises the `z`-boost: the colour index is inert, so the
+  weight is the Weyl weight of the spinor index. -/
+lemma downSinglet_repLorentzGroup_boostAxis_two_basis (t : ℝ) (ht : t ≠ 0)
+    (j : Fin 2 × Fin 3) :
+    DownSinglet.repLorentzGroup (SL2C.boostAxis 2 t ht) (DownSinglet.basis j)
+      = ((t : ℝ) : ℂ) ^ (weylWeight j.1) • DownSinglet.basis j := by
+  obtain ⟨k, c⟩ := j
+  simp [DownSinglet.basis, DownSinglet.repLorentzGroup, Module.Basis.map_apply,
+    Module.Basis.tensorProduct_apply, rightHandedWeyl_rep_boostAxis_two_basis]
+  rw [← TensorProduct.smul_tmul', map_smul]
 
 end StandardModel

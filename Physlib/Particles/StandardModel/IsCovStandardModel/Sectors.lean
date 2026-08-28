@@ -68,54 +68,6 @@ seven sectors below.
 
 -/
 
-/-- The three classes of covariant generator. -/
-inductive GeneratorClass where
-  /-- The gauge class: the field-strength towers. -/
-  | gauge : GeneratorClass
-  /-- The Higgs class: the Higgs towers and their conjugates. -/
-  | higgs : GeneratorClass
-  /-- The fermion class: the fermion towers and their conjugates. -/
-  | fermion : GeneratorClass
-deriving DecidableEq
-
-/-- The class of a covariant generator. -/
-def Generators.kind : Generators → GeneratorClass
-  | .F _ _ _ _ _ => .gauge
-  | .H _ _ _ => .higgs
-  | .barH _ _ _ => .higgs
-  | _ => .fermion
-
-@[simp]
-lemma Generators.isGaugeField_iff_kind (g : Generators) :
-    g.IsGaugeField ↔ g.kind = .gauge := by
-  cases g <;> simp [Generators.IsGaugeField, Generators.kind]
-
-@[simp]
-lemma Generators.isHiggs_iff_kind (g : Generators) : g.IsHiggs ↔ g.kind = .higgs := by
-  cases g <;> simp [Generators.IsHiggs, Generators.kind]
-
-@[simp]
-lemma Generators.isFermionic_iff_kind (g : Generators) :
-    g.IsFermionic ↔ g.kind = .fermion := by
-  cases g <;> simp [Generators.IsFermionic, Generators.kind]
-
-/-- The classes realised by a word in the covariant generators. -/
-def wordClasses (gl : List Generators) : Finset GeneratorClass :=
-  (gl.map Generators.kind).toFinset
-
-@[simp]
-lemma wordClasses_nil : wordClasses [] = ∅ := by simp [wordClasses]
-
-/-- Concatenating words unions the classes they realise. -/
-lemma wordClasses_append (gl gl' : List Generators) :
-    wordClasses (gl ++ gl') = wordClasses gl ∪ wordClasses gl' := by
-  rw [wordClasses, wordClasses, wordClasses, List.map_append, List.toFinset_append]
-
-/-- Prepending a generator inserts its class. -/
-lemma wordClasses_cons (a : Generators) (gl : List Generators) :
-    wordClasses (a :: gl) = insert a.kind (wordClasses gl) := by
-  rw [wordClasses, wordClasses, List.map_cons, List.toFinset_cons]
-
 /-- The span of the words in the covariant generators realising exactly the classes
   `S`. -/
 def sectorSubmodule (S : Finset GeneratorClass) : Submodule ℂ B :=
@@ -574,7 +526,7 @@ lemma coeff_massWeightPoly_mem_sectorMassWeight {S : Finset GeneratorClass} {x :
 
 /-- The weight-`w` part of the sector of `S` is exactly the intersection of the
   sector with the mass-weight submodule. -/
-theorem sectorMassWeight_eq_inf (S : Finset GeneratorClass) (w : ℕ) :
+lemma sectorMassWeight_eq_inf (S : Finset GeneratorClass) (w : ℕ) :
     h.sectorMassWeight S w = h.sectorSubmodule S ⊓ h.massWeightSubmodule w := by
   refine le_antisymm (le_inf (h.sectorMassWeight_le_sectorSubmodule S w)
     (h.sectorMassWeight_le_massWeightSubmodule S w)) ?_
@@ -588,7 +540,7 @@ theorem sectorMassWeight_eq_inf (S : Finset GeneratorClass) (w : ℕ) :
   component of the field algebra is the join over the class sets `S` of the
   weight-`w` parts of the sectors, since every word realises exactly one class set.
   The empty class set contributes the scalars, at weight zero only. -/
-theorem massWeightSubmodule_eq_iSup_sectorMassWeight (w : ℕ) :
+lemma massWeightSubmodule_eq_iSup_sectorMassWeight (w : ℕ) :
     h.massWeightSubmodule w = ⨆ S : Finset GeneratorClass, h.sectorMassWeight S w := by
   refine le_antisymm ?_ (iSup_le fun S => h.sectorMassWeight_le_massWeightSubmodule S w)
   rw [h.massWeightSubmodule_eq_span, Submodule.span_le]
@@ -714,7 +666,7 @@ lemma sectorMassWeight_higgs_le (w : ℕ) :
 /-- **The Higgs-sector mass-weight submodules are the weight parts of the `{higgs}`
   sector**, at any non-zero weight. (At weight zero the Higgs-sector submodule also
   contains the scalars, which the sector decomposition files under the `∅` sector.) -/
-theorem sectorMassWeight_higgs_eq {w : ℕ} (hw : w ≠ 0) :
+lemma sectorMassWeight_higgs_eq {w : ℕ} (hw : w ≠ 0) :
     h.sectorMassWeight {GeneratorClass.higgs} w
       = h.isHiggsSector.massWeightSubmodule w := by
   refine le_antisymm (h.sectorMassWeight_higgs_le w) (fun x hx => ?_)
@@ -815,7 +767,7 @@ lemma sectorMassWeight_gauge_le (w : ℕ) :
   `{gauge}` sector**, at any non-zero weight. (At weight zero the sector's
   submodule also contains the scalars, which the sector decomposition files under the
   `∅` sector.) -/
-theorem sectorMassWeight_gauge_eq {w : ℕ} (hw : w ≠ 0) :
+lemma sectorMassWeight_gauge_eq {w : ℕ} (hw : w ≠ 0) :
     h.sectorMassWeight {GeneratorClass.gauge} w
       = h.isGaugeSector.massWeightSubmodule w := by
   refine le_antisymm (h.sectorMassWeight_gauge_le w) (fun x hx => ?_)
@@ -932,7 +884,7 @@ lemma sectorMassWeight_fermion_le (w : ℕ) :
   `{fermion}` sector**, at any non-zero weight. (At weight zero the sector's
   submodule also contains the scalars, which the sector decomposition files under the
   `∅` sector.) -/
-theorem sectorMassWeight_fermion_eq {w : ℕ} (hw : w ≠ 0) :
+lemma sectorMassWeight_fermion_eq {w : ℕ} (hw : w ≠ 0) :
     h.sectorMassWeight {GeneratorClass.fermion} w
       = h.isFermionSector.massWeightSubmodule w := by
   refine le_antisymm (h.sectorMassWeight_fermion_le w) (fun x hx => ?_)
@@ -961,56 +913,6 @@ into two non-zero parts.  The hypotheses are stated abstractly so that the three
 pairs of sectors can each instantiate them.
 
 -/
-
-/-- The total mass weight carried by the generators of a given class in a word. -/
-def classWeight (c : GeneratorClass) (gl : List Generators) : ℕ :=
-  ((gl.filter fun g => decide (g.kind = c)).map Generators.weight).sum
-
-@[simp] lemma classWeight_nil (c : GeneratorClass) : classWeight c [] = 0 := rfl
-
-lemma classWeight_cons_of_eq {c : GeneratorClass} {g : Generators} (hg : g.kind = c)
-    (t : List Generators) :
-    classWeight c (g :: t) = g.weight + classWeight c t := by
-  simp [classWeight, hg]
-
-lemma classWeight_cons_of_ne {c : GeneratorClass} {g : Generators} (hg : g.kind ≠ c)
-    (t : List Generators) : classWeight c (g :: t) = classWeight c t := by
-  simp [classWeight, hg]
-
-/-- Every generator carries a non-zero mass weight. -/
-lemma Generators.weight_pos (g : Generators) : 0 < g.weight := by
-  cases g <;> simp [Generators.weight]
-
-/-- A class realised by a word carries a non-zero part of its weight. -/
-lemma classWeight_ne_zero {c : GeneratorClass} {gl : List Generators}
-    (hc : c ∈ wordClasses gl) : classWeight c gl ≠ 0 := by
-  induction gl with
-  | nil => simp [wordClasses] at hc
-  | cons g t ih =>
-    rw [wordClasses_cons, Finset.mem_insert] at hc
-    by_cases hg : g.kind = c
-    · rw [classWeight_cons_of_eq hg]
-      have := g.weight_pos
-      omega
-    · rw [classWeight_cons_of_ne hg]
-      exact ih (hc.resolve_left fun hh => hg hh.symm)
-
-/-- Over a word realising only two classes, the two class weights add up to the total
-  weight. -/
-lemma classWeight_add {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂) {gl : List Generators}
-    (hgl : ∀ g ∈ gl, g.kind = c₁ ∨ g.kind = c₂) :
-    classWeight c₁ gl + classWeight c₂ gl = (gl.map Generators.weight).sum := by
-  induction gl with
-  | nil => simp
-  | cons g t ih =>
-    have ht : ∀ g' ∈ t, g'.kind = c₁ ∨ g'.kind = c₂ := fun g' hg' => hgl g' (by simp [hg'])
-    rcases hgl g (by simp) with hg | hg
-    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne),
-        List.map_cons, List.sum_cons, ← ih ht]
-      omega
-    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne.symm),
-        List.map_cons, List.sum_cons, ← ih ht]
-      omega
 
 /-- A single generator's value lies in any family of submodules dominating its own
   class's sector. -/
@@ -1072,7 +974,7 @@ lemma list_prod_mem_mul_of_forall_kind {c₁ c₂ : GeneratorClass} (hne : c₁ 
 /-- **The two-class sector decomposition.** The weight-`w` piece of the sector of two
   classes is contained in the join, over the splittings of `w` into two non-zero
   parts, of the products of the two classes' mass-weight submodules. -/
-theorem sectorMassWeight_pair_le {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂)
+lemma sectorMassWeight_pair_le {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂)
     {M₁ M₂ : ℕ → Submodule ℂ B}
     (hM₁ : ∀ w, h.sectorMassWeight {c₁} w ≤ M₁ w)
     (hM₂ : ∀ w, h.sectorMassWeight {c₂} w ≤ M₂ w)

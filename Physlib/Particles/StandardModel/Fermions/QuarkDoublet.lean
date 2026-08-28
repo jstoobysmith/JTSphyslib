@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
@@ -586,5 +587,23 @@ lemma QuarkDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j :
     (fun j' => conj_gaugeTorusGen_basis _ _ _ _
       (fun j'' => QuarkDoublet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
   simpa using hd
+
+/-!
+
+## The boost weight of the QuarkDoublet components
+
+-/
+
+open Lorentz in
+/-- The quark-doublet basis diagonalises the `z`-boost: the colour and isospin indices are
+  inert. -/
+lemma quarkDoublet_repLorentzGroup_boostAxis_two_basis (t : ℝ) (ht : t ≠ 0)
+    (j : Fin 2 × Fin 3 × Fin 2) :
+    QuarkDoublet.repLorentzGroup (SL2C.boostAxis 2 t ht) (QuarkDoublet.basis j)
+      = ((t : ℝ) : ℂ) ^ (weylWeight j.1) • QuarkDoublet.basis j := by
+  obtain ⟨k, c, a⟩ := j
+  simp [QuarkDoublet.basis, QuarkDoublet.repLorentzGroup, Module.Basis.map_apply,
+    Module.Basis.tensorProduct_apply, leftHandedWeyl_rep_boostAxis_two_basis]
+  rw [← TensorProduct.smul_tmul', ← TensorProduct.smul_tmul', map_smul]
 
 end StandardModel

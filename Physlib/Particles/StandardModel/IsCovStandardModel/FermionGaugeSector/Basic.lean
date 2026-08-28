@@ -127,7 +127,7 @@ lemma fermionMassWeight_mul_gaugeMassWeight_le (a b : ℕ) :
   `{gauge, fermion}` sector lies in the join, over the splittings of `w` into two
   non-zero parts, of the products of the gauge and fermion sectors' own mass-weight
   submodules. -/
-theorem sectorMassWeight_gauge_fermion_le (w : ℕ) :
+lemma sectorMassWeight_gauge_fermion_le (w : ℕ) :
     h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.fermion} w
       ≤ ⨆ (p : ℕ × ℕ) (_ : p.1 + p.2 = w) (_ : p.1 ≠ 0) (_ : p.2 ≠ 0),
         h.isGaugeSector.massWeightSubmodule p.1 * h.isFermionSector.massWeightSubmodule p.2 :=
@@ -144,7 +144,7 @@ theorem sectorMassWeight_gauge_fermion_le (w : ℕ) :
 /-- **The mixed gauge-fermion sector vanishes below weight `7`.** A non-zero gauge
   weight is at least `4` and a non-zero fermion weight is at least `3`, so no
   splitting of a weight below `7` into two non-zero parts can supply both. -/
-theorem sectorMassWeight_gauge_fermion_eq_bot_of_lt_seven {w : ℕ} (hw : w < 7) :
+lemma sectorMassWeight_gauge_fermion_eq_bot_of_lt_seven {w : ℕ} (hw : w < 7) :
     h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.fermion} w = ⊥ := by
   refine le_bot_iff.mp ((h.sectorMassWeight_gauge_fermion_le w).trans ?_)
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
@@ -167,7 +167,7 @@ theorem sectorMassWeight_gauge_fermion_eq_bot_of_lt_seven {w : ℕ} (hw : w < 7)
   `8` into two non-zero parts with a non-zero gauge weight and a non-zero fermion
   weight would need the gauge part to be `4` or `6`(with fermion part `4` or `2`), but
   the fermion sector vanishes at both `4` and `2`. -/
-theorem sectorMassWeight_gauge_fermion_eight :
+lemma sectorMassWeight_gauge_fermion_eight :
     h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.fermion} 8 = ⊥ := by
   refine le_bot_iff.mp ((h.sectorMassWeight_gauge_fermion_le 8).trans ?_)
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
@@ -191,7 +191,7 @@ theorem sectorMassWeight_gauge_fermion_eight :
   underived field-strength submodule with the underived fermion submodule: the only
   splitting of `7` into a non-zero gauge weight and a non-zero fermion weight that
   survives is `4 + 3`. -/
-theorem sectorMassWeight_gauge_fermion_seven :
+lemma sectorMassWeight_gauge_fermion_seven :
     h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.fermion} 7
       = h.isGaugeSector.derivSubmodule 0 * h.isFermionSector.derivSubmodule 0 := by
   refine le_antisymm ?_ ?_

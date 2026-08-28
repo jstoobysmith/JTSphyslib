@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.HiggsBoson.AlgebraValued.Basic
+public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
 /-!
 # The derivative submodules of the Higgs sector
 
@@ -193,6 +193,13 @@ noncomputable instance derivSubmoduleGaugeWeight (n : ℕ) :
     (GaugeWeightDecomposition.sup (d := h.higgsSubmoduleGaugeWeight n)
       (d' := h.barHiggsSubmoduleGaugeWeight n))
     _ (by rw [derivSubmodule])
+
+/-- The gauge weights occurring in the Higgs derivative submodules: the two Higgs
+  weights `(0, 0, ∓1, -3)` and the two conjugate-Higgs weights `(0, 0, ±1, 3)`. -/
+lemma derivSubmoduleGaugeWeight_supp (n : ℕ) :
+    (h.derivSubmoduleGaugeWeight n).supp
+      = {((0, 0, -1, -3) : GaugeWeight), (0, 0, 1, -3), (0, 0, 1, 3), (0, 0, -1, 3)} :=
+  rfl
 
 end IsHiggsSector
 

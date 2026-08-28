@@ -322,7 +322,8 @@ lemma massWeightSubmodule_seven_eq :
     h.massWeightSubmodule_two_eq,
     h.massWeightSubmodule_three_eq]
 
-/-- Weight eight is the twice-derived field-strength towers together with the products of two underived ones — the `∇∇F` and `F · F` sectors. -/
+/-- Weight eight is the twice-derived field-strength towers together with the
+  products of two underived ones — the `∇∇F` and `F · F` sectors. -/
 lemma massWeightSubmodule_eight_eq :
     h.massWeightSubmodule 8 = h.derivSubmodule 2 ⊔ h.derivSubmodule 0 * h.derivSubmodule 0 := by
   rw [h.massWeightSubmodule_eq 8 (by norm_num)]

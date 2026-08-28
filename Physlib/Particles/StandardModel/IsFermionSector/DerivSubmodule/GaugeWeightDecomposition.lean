@@ -313,6 +313,96 @@ noncomputable instance derivSubmoduleGaugeWeight (n : ℕ) :
         (d' := h.rangeGaugeWeight_bare f l))
     _ (by rw [derivSubmodule])
 
+
+/-!
+
+## The support of the decomposition
+
+-/
+
+/-- The gauge weights carried by the fermion symbols: for each species the image of
+  its value weights, negated for the unbarred species (the symbols pair with the dual
+  of the value space) and taken as they are for the barred ones. -/
+def fermionGaugeWeights : Finset GaugeWeight :=
+  Finset.univ.image (fun j : Fin 2 × Fin 3 => -(DownSinglet.valueGaugeWeight j))
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 3 => DownSinglet.valueGaugeWeight j)
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 3 => -(UpSinglet.valueGaugeWeight j))
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 3 => UpSinglet.valueGaugeWeight j)
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 3 × Fin 2 => -(QuarkDoublet.valueGaugeWeight j))
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 3 × Fin 2 => QuarkDoublet.valueGaugeWeight j)
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 2 => -(LeptonDoublet.valueGaugeWeight j))
+    ∪ Finset.univ.image (fun j : Fin 2 × Fin 2 => LeptonDoublet.valueGaugeWeight j)
+    ∪ Finset.univ.image (fun j : Fin 2 => -(LeptonSinglet.valueGaugeWeight j))
+    ∪ Finset.univ.image (fun j : Fin 2 => LeptonSinglet.valueGaugeWeight j)
+
+/-- The support of the `d` range decomposition. -/
+lemma rangeGaugeWeight_d_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_d f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 => -(DownSinglet.valueGaugeWeight j)) :=
+  Finset.biUnion_singleton
+/-- The support of the `bard` range decomposition. -/
+lemma rangeGaugeWeight_bard_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_bard f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 => DownSinglet.valueGaugeWeight j) :=
+  Finset.biUnion_singleton
+/-- The support of the `u` range decomposition. -/
+lemma rangeGaugeWeight_u_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_u f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 => -(UpSinglet.valueGaugeWeight j)) :=
+  Finset.biUnion_singleton
+/-- The support of the `baru` range decomposition. -/
+lemma rangeGaugeWeight_baru_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_baru f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 => UpSinglet.valueGaugeWeight j) :=
+  Finset.biUnion_singleton
+/-- The support of the `Q` range decomposition. -/
+lemma rangeGaugeWeight_Q_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_Q f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 × Fin 2 => -(QuarkDoublet.valueGaugeWeight j)) :=
+  Finset.biUnion_singleton
+/-- The support of the `barQ` range decomposition. -/
+lemma rangeGaugeWeight_barQ_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_barQ f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 3 × Fin 2 => QuarkDoublet.valueGaugeWeight j) :=
+  Finset.biUnion_singleton
+/-- The support of the `L` range decomposition. -/
+lemma rangeGaugeWeight_L_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_L f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 2 => -(LeptonDoublet.valueGaugeWeight j)) :=
+  Finset.biUnion_singleton
+/-- The support of the `barL` range decomposition. -/
+lemma rangeGaugeWeight_barL_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_barL f l).supp
+      = Finset.univ.image (fun j : Fin 2 × Fin 2 => LeptonDoublet.valueGaugeWeight j) :=
+  Finset.biUnion_singleton
+/-- The support of the `e` range decomposition. -/
+lemma rangeGaugeWeight_e_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_e f l).supp
+      = Finset.univ.image (fun j : Fin 2 => -(LeptonSinglet.valueGaugeWeight j)) :=
+  Finset.biUnion_singleton
+/-- The support of the `bare` range decomposition. -/
+lemma rangeGaugeWeight_bare_supp (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
+    (h.rangeGaugeWeight_bare f l).supp
+      = Finset.univ.image (fun j : Fin 2 => LeptonSinglet.valueGaugeWeight j) :=
+  Finset.biUnion_singleton
+
+/-- **The support of the gauge weight decomposition of the fermion derivative
+  submodules**: the gauge weights of the ten species, independent of the number of
+  covariant derivatives. -/
+lemma derivSubmoduleGaugeWeight_supp (n : ℕ) :
+    (h.derivSubmoduleGaugeWeight n).supp = fermionGaugeWeights := by
+  have hconst : ∀ (t : Finset GaugeWeight),
+      (Finset.univ.biUnion fun _ : Fin 3 =>
+        Finset.univ.biUnion fun _ : Fin n → Fin 1 ⊕ Fin 3 => t) = t := by
+    intro t
+    ext x
+    simp only [Finset.mem_biUnion, Finset.mem_univ, true_and]
+    exact ⟨fun ⟨_, _, hx⟩ => hx, fun hx => ⟨0, fun _ => Sum.inl 0, hx⟩⟩
+  show (Finset.univ.biUnion fun _ : Fin 3 =>
+    Finset.univ.biUnion fun _ : Fin n → Fin 1 ⊕ Fin 3 => fermionGaugeWeights)
+      = fermionGaugeWeights
+  exact hconst _
+
 end IsFermionSector
 
 end StandardModel

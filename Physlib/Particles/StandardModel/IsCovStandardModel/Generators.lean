@@ -149,6 +149,37 @@ end Generators
 
 -/
 
+/-- The three classes of covariant generator. -/
+inductive GeneratorClass where
+  /-- The gauge class: the field-strength towers. -/
+  | gauge : GeneratorClass
+  /-- The Higgs class: the Higgs towers and their conjugates. -/
+  | higgs : GeneratorClass
+  /-- The fermion class: the fermion towers and their conjugates. -/
+  | fermion : GeneratorClass
+deriving DecidableEq
+
+/-- The class of a covariant generator. -/
+def Generators.kind : Generators → GeneratorClass
+  | .F _ _ _ _ _ => .gauge
+  | .H _ _ _ => .higgs
+  | .barH _ _ _ => .higgs
+  | _ => .fermion
+
+@[simp]
+lemma Generators.isGaugeField_iff_kind (g : Generators) :
+    g.IsGaugeField ↔ g.kind = .gauge := by
+  cases g <;> simp [Generators.IsGaugeField, Generators.kind]
+
+@[simp]
+lemma Generators.isHiggs_iff_kind (g : Generators) : g.IsHiggs ↔ g.kind = .higgs := by
+  cases g <;> simp [Generators.IsHiggs, Generators.kind]
+
+@[simp]
+lemma Generators.isFermionic_iff_kind (g : Generators) :
+    g.IsFermionic ↔ g.kind = .fermion := by
+  cases g <;> simp [Generators.IsFermionic, Generators.kind]
+
 /-- The mass weight (twice the mass dimension) of a covariant generator. -/
 def Generators.weight : Generators → ℕ
   | .H n _ _ => 2 * (1 + n)
@@ -164,6 +195,154 @@ def Generators.weight : Generators → ℕ
   | .barL _ n _ _ => 3 + 2 * n
   | .e _ n _ _ => 3 + 2 * n
   | .bare _ n _ _ => 3 + 2 * n
+
+/-!
+
+## Per-kind minimum weights
+
+Each of the three classes of covariant generator carries a minimum mass weight: the
+field-strength towers `F` are the heaviest, at weight `2 * (2 + n) ≥ 4`; the Higgs and
+conjugate-Higgs towers `H`, `barH` are the lightest, at weight `2 * (1 + n) ≥ 2`; and
+the ten families of fermion towers sit in between, at weight `3 + 2 * n ≥ 3`.
+
+-/
+
+/-- A gauge-class generator — a field-strength tower symbol — carries mass weight at
+  least four. -/
+lemma Generators.four_le_weight_of_gauge {g : Generators} (hg : g.kind = GeneratorClass.gauge) :
+    4 ≤ g.weight := by
+  cases g <;> simp_all [Generators.weight, Generators.kind]
+  omega
+
+/-- A Higgs-class generator — a Higgs or conjugate-Higgs tower symbol — carries mass
+  weight at least two. -/
+lemma Generators.two_le_weight_of_higgs {g : Generators} (hg : g.kind = GeneratorClass.higgs) :
+    2 ≤ g.weight := by
+  cases g <;> simp_all [Generators.weight, Generators.kind]
+
+/-- A fermion-class generator — any of the ten families of fermion tower symbols —
+  carries mass weight at least three. -/
+lemma Generators.three_le_weight_of_fermion {g : Generators}
+    (hg : g.kind = GeneratorClass.fermion) : 3 ≤ g.weight := by
+  cases g <;> simp_all [Generators.weight, Generators.kind]
+
+/-!
+
+## B.1. The classes realised by a word
+
+-/
+
+/-- The classes realised by a word in the covariant generators. -/
+def wordClasses (gl : List Generators) : Finset GeneratorClass :=
+  (gl.map Generators.kind).toFinset
+
+@[simp]
+lemma wordClasses_nil : wordClasses [] = ∅ := by simp [wordClasses]
+
+/-- Concatenating words unions the classes they realise. -/
+lemma wordClasses_append (gl gl' : List Generators) :
+    wordClasses (gl ++ gl') = wordClasses gl ∪ wordClasses gl' := by
+  rw [wordClasses, wordClasses, wordClasses, List.map_append, List.toFinset_append]
+
+/-- Prepending a generator inserts its class. -/
+lemma wordClasses_cons (a : Generators) (gl : List Generators) :
+    wordClasses (a :: gl) = insert a.kind (wordClasses gl) := by
+  rw [wordClasses, wordClasses, List.map_cons, List.toFinset_cons]
+
+/-- The total mass weight carried by the generators of a given class in a word. -/
+def classWeight (c : GeneratorClass) (gl : List Generators) : ℕ :=
+  ((gl.filter fun g => decide (g.kind = c)).map Generators.weight).sum
+
+@[simp] lemma classWeight_nil (c : GeneratorClass) : classWeight c [] = 0 := rfl
+
+lemma classWeight_cons_of_eq {c : GeneratorClass} {g : Generators} (hg : g.kind = c)
+    (t : List Generators) :
+    classWeight c (g :: t) = g.weight + classWeight c t := by
+  simp [classWeight, hg]
+
+lemma classWeight_cons_of_ne {c : GeneratorClass} {g : Generators} (hg : g.kind ≠ c)
+    (t : List Generators) : classWeight c (g :: t) = classWeight c t := by
+  simp [classWeight, hg]
+
+/-- Every generator carries a non-zero mass weight. -/
+lemma Generators.weight_pos (g : Generators) : 0 < g.weight := by
+  cases g <;> simp [Generators.weight]
+
+/-- A class realised by a word carries a non-zero part of its weight. -/
+lemma classWeight_ne_zero {c : GeneratorClass} {gl : List Generators}
+    (hc : c ∈ wordClasses gl) : classWeight c gl ≠ 0 := by
+  induction gl with
+  | nil => simp [wordClasses] at hc
+  | cons g t ih =>
+    rw [wordClasses_cons, Finset.mem_insert] at hc
+    by_cases hg : g.kind = c
+    · rw [classWeight_cons_of_eq hg]
+      have := g.weight_pos
+      omega
+    · rw [classWeight_cons_of_ne hg]
+      exact ih (hc.resolve_left fun hh => hg hh.symm)
+
+/-- Over a word realising only two classes, the two class weights add up to the total
+  weight. -/
+lemma classWeight_add {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂) {gl : List Generators}
+    (hgl : ∀ g ∈ gl, g.kind = c₁ ∨ g.kind = c₂) :
+    classWeight c₁ gl + classWeight c₂ gl = (gl.map Generators.weight).sum := by
+  induction gl with
+  | nil => simp
+  | cons g t ih =>
+    have ht : ∀ g' ∈ t, g'.kind = c₁ ∨ g'.kind = c₂ := fun g' hg' => hgl g' (by simp [hg'])
+    rcases hgl g (by simp) with hg | hg
+    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne),
+        List.map_cons, List.sum_cons, ← ih ht]
+      omega
+    · rw [classWeight_cons_of_eq hg, classWeight_cons_of_ne (by rw [hg]; exact hne.symm),
+        List.map_cons, List.sum_cons, ← ih ht]
+      omega
+
+/-- A class realised by a word carries at least the minimum weight of that class: the
+  generator witnessing the realisation already contributes that much, and the
+  remaining generators of the class only add more. -/
+lemma le_classWeight_of_mem {c : GeneratorClass} {gl : List Generators} {m : ℕ}
+    (hc : c ∈ wordClasses gl) (hm : ∀ g : Generators, g.kind = c → m ≤ g.weight) :
+    m ≤ classWeight c gl := by
+  induction gl with
+  | nil => simp [wordClasses] at hc
+  | cons g t ih =>
+    rw [wordClasses_cons, Finset.mem_insert] at hc
+    by_cases hg : g.kind = c
+    · rw [classWeight_cons_of_eq hg]
+      have := hm g hg
+      omega
+    · rw [classWeight_cons_of_ne hg]
+      exact ih (hc.resolve_left fun hh => hg hh.symm)
+
+/-- The three class weights exhaust the total weight of a word: every generator has
+  exactly one of the three kinds. -/
+lemma classWeight_add_three (gl : List Generators) :
+    classWeight GeneratorClass.gauge gl + classWeight GeneratorClass.higgs gl
+      + classWeight GeneratorClass.fermion gl = (gl.map Generators.weight).sum := by
+  induction gl with
+  | nil => simp
+  | cons g t ih =>
+    cases hg : g.kind with
+    | gauge =>
+      rw [classWeight_cons_of_eq hg,
+        classWeight_cons_of_ne (c := GeneratorClass.higgs) (by simp [hg]),
+        classWeight_cons_of_ne (c := GeneratorClass.fermion) (by simp [hg]),
+        List.map_cons, List.sum_cons]
+      omega
+    | higgs =>
+      rw [classWeight_cons_of_ne (c := GeneratorClass.gauge) (by simp [hg]),
+        classWeight_cons_of_eq hg,
+        classWeight_cons_of_ne (c := GeneratorClass.fermion) (by simp [hg]),
+        List.map_cons, List.sum_cons]
+      omega
+    | fermion =>
+      rw [classWeight_cons_of_ne (c := GeneratorClass.gauge) (by simp [hg]),
+        classWeight_cons_of_ne (c := GeneratorClass.higgs) (by simp [hg]),
+        classWeight_cons_of_eq hg,
+        List.map_cons, List.sum_cons]
+      omega
 
 set_option linter.unusedVariables false in
 /-- The value in `B` of a covariant generator: the corresponding covariant tower

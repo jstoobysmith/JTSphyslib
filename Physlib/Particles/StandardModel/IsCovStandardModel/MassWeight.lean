@@ -146,7 +146,7 @@ lemma coeff_massWeightPoly_mem_span (w : ℕ) {x : B}
 /-- **The weight grading of the field algebra.** The submodule of elements of the
   field algebra of mass weight `w` is exactly the span of the words in the covariant
   basis generators of total weight `w`. -/
-theorem massWeightSubmodule_eq_span (w : ℕ) :
+lemma massWeightSubmodule_eq_span (w : ℕ) :
     h.massWeightSubmodule w = Submodule.span ℂ
       {x | ∃ gl : List Generators,
         (gl.map Generators.weight).sum = w ∧ (gl.map h.generatorVal).prod = x} := by
@@ -166,7 +166,7 @@ theorem massWeightSubmodule_eq_span (w : ℕ) :
 /-- Weight-homogeneous elements of the field algebra supercommute: elements of the
   mass-weight submodules of weights `w` and `w'` exchange up to the sign
   `(-1) ^ (w * w')` — fermion parity is the parity of the mass weight. -/
-theorem mul_eq_smul_mul_of_mem_massWeightSubmodule {w w' : ℕ} {x y : B}
+lemma mul_eq_smul_mul_of_mem_massWeightSubmodule {w w' : ℕ} {x y : B}
     (hx : x ∈ h.massWeightSubmodule w) (hy : y ∈ h.massWeightSubmodule w') :
     x * y = ((-1 : ℂ) ^ (w * w')) • (y * x) := by
   rw [h.massWeightSubmodule_eq_span] at hx hy
@@ -199,10 +199,6 @@ lemma span_mul_comm_of_mem_massWeightSubmodule {w w' : ℕ} {x y : B}
   rw [h.mul_eq_smul_mul_of_mem_massWeightSubmodule hx hy]
   exact Submodule.span_singleton_smul_eq ((isUnit_one.neg).pow _) _
 
-lemma d_supercommute_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
-    (φ : Module.Dual ℂ DownSinglet) {w : ℕ} (x : B) (hx : x ∈ h.massWeightSubmodule w) :
-    d i l φ * x = ((-1 : ℂ) ^ w) • (x * d i l φ) := by
-  sorry
 /-!
 
 ## D. Invariance of the weight components
@@ -263,6 +259,19 @@ lemma d_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ F
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
     (gl := [Generators.d i n l j]) (by simp [Generators.weight])
+
+/-- A `d` tower symbol supercommutes with any weight-homogeneous element: its own
+  weight `3 + 2 * n` is odd, so moving it past an element of weight `w` costs
+  `(-1) ^ w`. -/
+lemma d_supercommute_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
+    (φ : Module.Dual ℂ DownSinglet) {w : ℕ} (x : B) (hx : x ∈ h.massWeightSubmodule w) :
+    d i l φ * x = ((-1 : ℂ) ^ w) • (x * d i l φ) := by
+  rw [h.mul_eq_smul_mul_of_mem_massWeightSubmodule (h.d_mem_massWeightSubmodule i l φ) hx]
+  congr 1
+  rw [pow_mul]
+  congr 1
+  rw [pow_add, pow_mul]
+  norm_num
 
 /-- Any `bard` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma bard_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)

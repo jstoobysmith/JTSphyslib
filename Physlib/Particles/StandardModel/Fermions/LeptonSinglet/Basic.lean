@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
@@ -408,5 +409,19 @@ lemma LeptonSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j 
     (fun j' => conj_gaugeTorusGen_basis _ _ _ _
       (fun j'' => LeptonSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j
   simpa using hd
+
+/-!
+
+## The boost weight of the LeptonSinglet components
+
+-/
+
+open Lorentz in
+/-- The charged-lepton-singlet basis diagonalises the `z`-boost. -/
+lemma leptonSinglet_repLorentzGroup_boostAxis_two_basis (t : ℝ) (ht : t ≠ 0) (j : Fin 2) :
+    LeptonSinglet.repLorentzGroup (SL2C.boostAxis 2 t ht) (LeptonSinglet.basis j)
+      = ((t : ℝ) : ℂ) ^ (weylWeight j) • LeptonSinglet.basis j := by
+  simp [LeptonSinglet.basis, LeptonSinglet.repLorentzGroup, Module.Basis.map_apply,
+    rightHandedWeyl_rep_boostAxis_two_basis]
 
 end StandardModel

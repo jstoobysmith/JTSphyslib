@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Sectors
+public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
 /-!
 # The Yukawa sector's mass-weight submodules
 
@@ -132,7 +133,7 @@ lemma fermionMassWeight_mul_higgsMassWeight_le (a b : ℕ) :
   fermion}` sector is contained in the join, over the splittings of `w` into two
   non-zero parts, of the products of the Higgs-sector and fermion-sector mass-weight
   submodules. -/
-theorem sectorMassWeight_higgs_fermion_le (w : ℕ) :
+lemma sectorMassWeight_higgs_fermion_le (w : ℕ) :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} w
       ≤ ⨆ (p : ℕ × ℕ) (_ : p.1 + p.2 = w) (_ : p.1 ≠ 0) (_ : p.2 ≠ 0),
         h.isHiggsSector.massWeightSubmodule p.1 * h.isFermionSector.massWeightSubmodule p.2 :=
@@ -146,7 +147,7 @@ theorem sectorMassWeight_higgs_fermion_le (w : ℕ) :
   under five into two non-zero parts survives — the Higgs part is either odd (hence
   zero) or equal to two, forcing the fermion part to be one or two (hence also
   zero). -/
-theorem sectorMassWeight_higgs_fermion_eq_bot_of_lt_five {w : ℕ} (hw : w < 5) :
+lemma sectorMassWeight_higgs_fermion_eq_bot_of_lt_five {w : ℕ} (hw : w < 5) :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} w = ⊥ := by
   refine le_antisymm (le_trans (h.sectorMassWeight_higgs_fermion_le w) ?_) bot_le
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
@@ -166,7 +167,7 @@ theorem sectorMassWeight_higgs_fermion_eq_bot_of_lt_five {w : ℕ} (hw : w < 5) 
 /-- **The Yukawa sector vanishes at weight six**: every splitting of six into two
   non-zero parts has either an odd Higgs part or a fermion part of weight two or
   four, all of which vanish. -/
-theorem sectorMassWeight_higgs_fermion_six :
+lemma sectorMassWeight_higgs_fermion_six :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 6 = ⊥ := by
   refine le_antisymm (le_trans (h.sectorMassWeight_higgs_fermion_le 6) ?_) bot_le
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
@@ -183,11 +184,35 @@ theorem sectorMassWeight_higgs_fermion_six :
     rw [hb, h.isFermionSector.massWeightSubmodule_two_eq, Submodule.mul_bot]
   · rw [h.isHiggsSector.massWeightSubmodule_odd_eq_bot 5 (by decide), Submodule.bot_mul]
 
+/-- A product of a Higgs-weight piece and a fermion-weight piece lands in the Yukawa
+  sector of the total weight. -/
+lemma mul_le_sectorMassWeight_higgs_fermion {a b w : ℕ} {X Y : Submodule ℂ B}
+    (ha : a ≠ 0) (hb : b ≠ 0) (hab : a + b = w)
+    (hX : X ≤ h.isHiggsSector.massWeightSubmodule a)
+    (hY : Y ≤ h.isFermionSector.massWeightSubmodule b) :
+    X * Y ≤ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} w := by
+  have hset : ({GeneratorClass.higgs} ∪ {GeneratorClass.fermion} : Finset GeneratorClass)
+      = {GeneratorClass.higgs, GeneratorClass.fermion} := by decide
+  refine Submodule.mul_le.mpr fun x hx y hy => ?_
+  have hx' : x ∈ h.sectorMassWeight {GeneratorClass.higgs} a := by
+    rw [h.sectorMassWeight_higgs_eq ha]; exact hX hx
+  have hy' : y ∈ h.sectorMassWeight {GeneratorClass.fermion} b := by
+    rw [h.sectorMassWeight_fermion_eq hb]; exact hY hy
+  have hmem := h.mul_mem_sectorMassWeight hx' hy'
+  rwa [hset, hab] at hmem
+
 /-- **The weight-five Yukawa sector**: the only surviving splitting is the Higgs
   field itself (weight two) against the underived fermion towers (weight three). -/
-theorem sectorMassWeight_higgs_fermion_five :
+lemma sectorMassWeight_higgs_fermion_five :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 5
-      ≤ h.isHiggsSector.massWeightSubmodule 2 * h.isFermionSector.derivSubmodule 0 := by
+      = h.isHiggsSector.derivSubmodule 0 * h.isFermionSector.derivSubmodule 0 := by
+  refine le_antisymm ?_ ?_
+  case refine_2 =>
+    exact h.mul_le_sectorMassWeight_higgs_fermion (a := 2) (b := 3) (by norm_num)
+      (by norm_num) (by norm_num)
+      (le_of_eq h.isHiggsSector.massWeightSubmodule_two_eq_deriv.symm)
+      (le_of_eq h.isFermionSector.massWeightSubmodule_three_eq.symm)
+  rw [← h.isHiggsSector.massWeightSubmodule_two_eq_deriv]
   refine le_trans (h.sectorMassWeight_higgs_fermion_le 5) ?_
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
   obtain ⟨a, b⟩ := p
@@ -205,14 +230,32 @@ theorem sectorMassWeight_higgs_fermion_five :
     rw [hb, h.isFermionSector.massWeightSubmodule_one_eq, Submodule.mul_bot]
     exact bot_le
 
+set_option maxHeartbeats 1000000 in
 /-- **The weight-seven Yukawa sector**: the surviving splittings pair the Higgs
   field (weight two) with the once-derived fermion towers (weight five), or the
   once-derived Higgs field (weight four) with the underived fermion towers (weight
   three). -/
-theorem sectorMassWeight_higgs_fermion_seven :
+lemma sectorMassWeight_higgs_fermion_seven :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 7
-      ≤ h.isHiggsSector.massWeightSubmodule 2 * h.isFermionSector.derivSubmodule 1
-        ⊔ h.isHiggsSector.massWeightSubmodule 4 * h.isFermionSector.derivSubmodule 0 := by
+      = h.isHiggsSector.derivSubmodule 0 * h.isFermionSector.derivSubmodule 1
+        ⊔ h.isHiggsSector.derivSubmodule 1 * h.isFermionSector.derivSubmodule 0
+        ⊔ h.isHiggsSector.derivSubmodule 0 * h.isHiggsSector.derivSubmodule 0
+          * h.isFermionSector.derivSubmodule 0 := by
+  refine le_antisymm ?_ ?_
+  case refine_2 =>
+    refine sup_le (sup_le ?_ ?_) ?_
+    · exact h.mul_le_sectorMassWeight_higgs_fermion (a := 2) (b := 5) (by norm_num)
+        (by norm_num) (by norm_num)
+        (le_of_eq h.isHiggsSector.massWeightSubmodule_two_eq_deriv.symm)
+        (le_of_eq h.isFermionSector.massWeightSubmodule_five_eq.symm)
+    · exact h.mul_le_sectorMassWeight_higgs_fermion (a := 4) (b := 3) (by norm_num)
+        (by norm_num) (by norm_num)
+        (by rw [h.isHiggsSector.massWeightSubmodule_four_eq_deriv]; exact le_sup_left)
+        (le_of_eq h.isFermionSector.massWeightSubmodule_three_eq.symm)
+    · exact h.mul_le_sectorMassWeight_higgs_fermion (a := 4) (b := 3) (by norm_num)
+        (by norm_num) (by norm_num)
+        (by rw [h.isHiggsSector.massWeightSubmodule_four_eq_deriv]; exact le_sup_right)
+        (le_of_eq h.isFermionSector.massWeightSubmodule_three_eq.symm)
   refine le_trans (h.sectorMassWeight_higgs_fermion_le 7) ?_
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
   obtain ⟨a, b⟩ := p
@@ -223,13 +266,15 @@ theorem sectorMassWeight_higgs_fermion_seven :
   · rw [h.isHiggsSector.massWeightSubmodule_odd_eq_bot 1 (by decide), Submodule.bot_mul]
     exact bot_le
   · have hb : b = 5 := by omega
-    rw [hb, h.isFermionSector.massWeightSubmodule_five_eq]
-    exact le_sup_left
+    rw [hb, h.isFermionSector.massWeightSubmodule_five_eq,
+      h.isHiggsSector.massWeightSubmodule_two_eq_deriv]
+    exact le_sup_left.trans le_sup_left
   · rw [h.isHiggsSector.massWeightSubmodule_odd_eq_bot 3 (by decide), Submodule.bot_mul]
     exact bot_le
   · have hb : b = 3 := by omega
-    rw [hb, h.isFermionSector.massWeightSubmodule_three_eq]
-    exact le_sup_right
+    rw [hb, h.isFermionSector.massWeightSubmodule_three_eq,
+      h.isHiggsSector.massWeightSubmodule_four_eq_deriv, Submodule.sup_mul]
+    exact sup_le (le_sup_right.trans le_sup_left) le_sup_right
   · rw [h.isHiggsSector.massWeightSubmodule_odd_eq_bot 5 (by decide), Submodule.bot_mul]
     exact bot_le
   · have hb : b = 1 := by omega
@@ -239,10 +284,17 @@ theorem sectorMassWeight_higgs_fermion_seven :
 /-- **The weight-eight Yukawa sector**: the only surviving splitting pairs the Higgs
   field (weight two) with the product of two underived fermion towers (weight six)
   — this is the sector of the Yukawa term `H ψ ψ` itself. -/
-theorem sectorMassWeight_higgs_fermion_eight :
+lemma sectorMassWeight_higgs_fermion_eight :
     h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8
-      ≤ h.isHiggsSector.massWeightSubmodule 2
+      = h.isHiggsSector.derivSubmodule 0
         * (h.isFermionSector.derivSubmodule 0 * h.isFermionSector.derivSubmodule 0) := by
+  refine le_antisymm ?_ ?_
+  case refine_2 =>
+    exact h.mul_le_sectorMassWeight_higgs_fermion (a := 2) (b := 6) (by norm_num)
+      (by norm_num) (by norm_num)
+      (le_of_eq h.isHiggsSector.massWeightSubmodule_two_eq_deriv.symm)
+      (le_of_eq h.isFermionSector.massWeightSubmodule_six_eq.symm)
+  rw [← h.isHiggsSector.massWeightSubmodule_two_eq_deriv]
   refine le_trans (h.sectorMassWeight_higgs_fermion_le 8) ?_
   refine iSup_le fun p => iSup_le fun hp => iSup_le fun h1 => iSup_le fun h2 => ?_
   obtain ⟨a, b⟩ := p

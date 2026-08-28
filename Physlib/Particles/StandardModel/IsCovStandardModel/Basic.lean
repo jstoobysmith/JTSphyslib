@@ -11,9 +11,9 @@ public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebra
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.HiggsBoson.AlgebraValued.Basic
-public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight
-public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight
+public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
+public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Basic
 /-!
 # The algebra valued Standard model
 
@@ -27,6 +27,35 @@ with their gauge, Lorentz, mass-weight and commutation properties — together w
 algebra they generate. The covariant generators of that algebra are in
 `IsCovStandardModel.Generators`, and the mass-weight grading in
 `IsCovStandardModel.MassWeight`.
+
+## The sectors
+
+Every covariant generator belongs to one of three classes — **gauge** (the
+field-strength towers), **Higgs** (the Higgs towers and their conjugates) and
+**fermion** (the ten families and their conjugates) — and a word in the generators
+realises a set of classes.  The weight-`w` part of the algebra therefore splits over
+the eight subsets of the three classes; the splitting itself is
+[`Sectors.lean`](Sectors.lean), and each subset is developed in its own file:
+
+| classes realised | sector | file |
+| --- | --- | --- |
+| `∅` | the scalars, present at weight zero only | — |
+| `{gauge}` | `IsGaugeSector` | [`IsGaugeSector/MassWeight/Basic.lean`](../IsGaugeSector/MassWeight/Basic.lean) |
+| `{higgs}` | `IsHiggsSector` | [`IsHiggsSector/MassWeight/Basic.lean`](../IsHiggsSector/MassWeight/Basic.lean) |
+| `{fermion}` | `IsFermionSector` | [`IsFermionSector/MassWeight/Basic.lean`](../IsFermionSector/MassWeight/Basic.lean) |
+| `{gauge, higgs}` | the gauge–Higgs sector | [`GaugeHiggsSector/Basic.lean`](GaugeHiggsSector/Basic.lean) |
+| `{gauge, fermion}` | the gauge–fermion sector | [`FermionGaugeSector/Basic.lean`](FermionGaugeSector/Basic.lean) |
+| `{higgs, fermion}` | the Yukawa sector | [`YukawaSector/Basic.lean`](YukawaSector/Basic.lean) |
+| `{gauge, higgs, fermion}` | the mixed sector | [`MixedSector/Basic.lean`](MixedSector/Basic.lean) |
+
+The weight-`w` part of a pure sector is exactly the mass-weight submodule of the
+corresponding sector structure; the mixed sectors are bounded by products of those.
+
+Because the lightest generator of each class has mass weight four (gauge), two
+(Higgs) and three (fermion), a sector is empty below the sum of the minimum weights
+of the classes it contains.  In particular the mixed sector is empty below weight
+nine, so no Standard-Model term of mass dimension at most four involves all three
+kinds of field at once.
 
 -/
 
