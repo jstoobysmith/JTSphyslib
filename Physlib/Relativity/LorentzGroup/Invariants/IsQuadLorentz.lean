@@ -2592,31 +2592,12 @@ sections D and E: each covering step keeps only its weight-zero member.
 
 -/
 
-/-- Finite decomposition of an `iSup` membership: an element of the join of a
-  `ℤ`-indexed family is a finitely supported sum of members. -/
-lemma exists_finsupp_of_mem_iSup {S : ℤ → Submodule ℂ B} {x : B} (hx : x ∈ ⨆ m, S m) :
-    ∃ f : ℤ →₀ B, (∀ m, f m ∈ S m) ∧ x = f.sum fun _ b => b := by
-  refine Submodule.iSup_induction
-    (motive := fun y => ∃ f : ℤ →₀ B, (∀ m, f m ∈ S m) ∧ y = f.sum fun _ b => b)
-    S hx ?_ ?_ ?_
-  · intro m y hy
-    refine ⟨Finsupp.single m y, fun m' => ?_, by simp [Finsupp.sum_single_index]⟩
-    rcases eq_or_ne m' m with rfl | hne
-    · rw [Finsupp.single_eq_same]
-      exact hy
-    · rw [Finsupp.single_eq_of_ne hne]
-      exact Submodule.zero_mem _
-  · exact ⟨0, fun m => Submodule.zero_mem _, by simp⟩
-  · rintro y z ⟨f, hf, rfl⟩ ⟨g, hg, rfl⟩
-    refine ⟨f + g, fun m => by rw [Finsupp.add_apply]; exact add_mem (hf m) (hg m), ?_⟩
-    rw [Finsupp.sum_add_index (fun m _ => rfl) (fun m _ b₁ b₂ => rfl)]
-
 /-- Graded extraction: an element of the join of a family bounded by the boost-weight
   grading which itself has weight zero lies in the zero member of the family. -/
 lemma mem_of_mem_iSup_of_boostWeight_zero {i : Fin 3} {S : ℤ → Submodule ℂ B}
     (hS : ∀ m : ℤ, S m ≤ boostWeightSubmodule repLorentz i m) {x : B}
     (hx : x ∈ ⨆ m, S m) (h0 : x ∈ boostWeightSubmodule repLorentz i 0) : x ∈ S 0 := by
-  obtain ⟨f, hf, rfl⟩ := exists_finsupp_of_mem_iSup hx
+  obtain ⟨f, hf, rfl⟩ := (Submodule.mem_iSup_iff_exists_finsupp _ _).mp hx
   have hkey := eq_component_zero_of_mem_boostWeightSubmodule (i := i)
     (s := insert 0 f.support) (w := fun m => f m) h0
     (fun m _ => hS m (hf m)) (Finset.mem_insert_self 0 _) ?_
