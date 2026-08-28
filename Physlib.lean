@@ -258,6 +258,8 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
+public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.BoostWeightDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Basic

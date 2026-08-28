@@ -178,48 +178,108 @@ lemma massWeightSubmoduleGaugeWeightSix_piece_zero :
         ℂ ∙ F l μ ν (stdBasis.coord (cartanIdx c)) :=
   h.derivSubmoduleGaugeWeight_piece_zero 1
 
-/-- The weight-zero piece at mass weight eight: the twice-differentiated field strength
-  on the four fixed directions, joined with the products of two undifferentiated field
-  strengths whose gauge weights cancel.  The nine surviving splittings pair each of the
-  eight roots with its opposite, and the fixed directions with themselves. -/
+/-- Any two weight pieces of a gauge derivative submodule commute: the gauge sector is
+  bosonic, and every piece sits inside the derivative submodule. -/
+lemma piece_mul_comm (n : ℕ) (w w' : GaugeWeight) :
+    (h.derivSubmoduleGaugeWeight n).piece w * (h.derivSubmoduleGaugeWeight n).piece w'
+      = (h.derivSubmoduleGaugeWeight n).piece w' * (h.derivSubmoduleGaugeWeight n).piece w := by
+  have hle : ∀ v : GaugeWeight,
+      (h.derivSubmoduleGaugeWeight n).piece v ≤ h.derivSubmodule n := fun v => by
+    conv_rhs => rw [← (h.derivSubmoduleGaugeWeight n).iSup_piece]
+    exact le_iSup _ v
+  refine le_antisymm (Submodule.mul_le.mpr fun x hx y hy => ?_)
+    (Submodule.mul_le.mpr fun x hx y hy => ?_) <;>
+  · rw [(h.commute_of_mem_derivSubmodule (hle _ hx) (hle _ hy)).eq]
+    exact Submodule.mul_mem_mul hy hx
+
+/-- The weight-zero piece at mass weight eight, written out in the weight vectors
+  themselves: the twice-differentiated field strength on the four fixed directions of
+  the adjoint, joined with the four products pairing a root vector against its
+  opposite and the product of the fixed directions with themselves. -/
 lemma massWeightSubmoduleGaugeWeightEight_piece_zero :
     (h.massWeightSubmoduleGaugeWeightEight).piece 0
       = (⨆ (l : Fin 2 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
           (c : Fin 4),
           ℂ ∙ F l μ ν (stdBasis.coord (cartanIdx c)))
+        ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inl 0))
+            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 0)))
+          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inl 1))
+            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 1)))
+          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inl 2))
+            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 2)))
+          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inl 3))
+            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 3)))
+          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
+              (c : Fin 4), ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c)))
+            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
+              (c : Fin 4), ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c)))))))) := by
+  have h5 : (h.massWeightSubmoduleGaugeWeightEight).piece 0
+      = (⨆ (l : Fin 2 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
+          (c : Fin 4),
+          ℂ ∙ F l μ ν (stdBasis.coord (cartanIdx c)))
         ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (2, -1, 0, 0)
               * (h.derivSubmoduleGaugeWeight 0).piece (-2, 1, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (1, 1, 0, 0)
+          ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (1, 1, 0, 0)
               * (h.derivSubmoduleGaugeWeight 0).piece (-1, -1, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (-1, 2, 0, 0)
+          ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (-1, 2, 0, 0)
               * (h.derivSubmoduleGaugeWeight 0).piece (1, -2, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (0, 0, 2, 0)
+          ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (0, 0, 2, 0)
               * (h.derivSubmoduleGaugeWeight 0).piece (0, 0, -2, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (-2, 1, 0, 0)
-              * (h.derivSubmoduleGaugeWeight 0).piece (2, -1, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (-1, -1, 0, 0)
-              * (h.derivSubmoduleGaugeWeight 0).piece (1, 1, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (1, -2, 0, 0)
-              * (h.derivSubmoduleGaugeWeight 0).piece (-1, 2, 0, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (0, 0, -2, 0)
-              * (h.derivSubmoduleGaugeWeight 0).piece (0, 0, 2, 0)
-            ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (0, 0, 0, 0)
-              * (h.derivSubmoduleGaugeWeight 0).piece (0, 0, 0, 0)))))))))) := by
-  show (h.derivSubmoduleGaugeWeight 2).piece 0
-      ⊔ GaugeWeightDecomposition.piece repGauge
-        (h.derivSubmodule 0 * h.derivSubmodule 0) 0 = _
-  rw [h.derivSubmoduleGaugeWeight_piece_zero 2,
-    GaugeWeightDecomposition.mul_piece_eq_sub 0, h.derivSubmoduleGaugeWeight_supp 0]
-  simp only [Finset.iSup_insert, Finset.iSup_singleton,
-    show (0 : GaugeWeight) - (2, -1, 0, 0) = (-2, 1, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (1, 1, 0, 0) = (-1, -1, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (-1, 2, 0, 0) = (1, -2, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (0, 0, 2, 0) = (0, 0, -2, 0) from by decide,
-    show (0 : GaugeWeight) - (-2, 1, 0, 0) = (2, -1, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (-1, -1, 0, 0) = (1, 1, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (1, -2, 0, 0) = (-1, 2, 0, 0) from by decide,
-    show (0 : GaugeWeight) - (0, 0, -2, 0) = (0, 0, 2, 0) from by decide,
-    show (0 : GaugeWeight) - (0, 0, 0, 0) = (0, 0, 0, 0) from by decide]
+          ⊔ ((h.derivSubmoduleGaugeWeight 0).piece (0, 0, 0, 0)
+              * (h.derivSubmoduleGaugeWeight 0).piece (0, 0, 0, 0)))))) := by
+    show (h.derivSubmoduleGaugeWeight 2).piece 0
+        ⊔ GaugeWeightDecomposition.piece repGauge
+          (h.derivSubmodule 0 * h.derivSubmodule 0) 0 = _
+    rw [h.derivSubmoduleGaugeWeight_piece_zero 2,
+      GaugeWeightDecomposition.mul_piece_eq_sub 0, h.derivSubmoduleGaugeWeight_supp 0]
+    simp only [Finset.iSup_insert, Finset.iSup_singleton,
+      show (0 : GaugeWeight) - (2, -1, 0, 0) = (-2, 1, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (1, 1, 0, 0) = (-1, -1, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (-1, 2, 0, 0) = (1, -2, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (0, 0, 2, 0) = (0, 0, -2, 0) from by decide,
+      show (0 : GaugeWeight) - (-2, 1, 0, 0) = (2, -1, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (-1, -1, 0, 0) = (1, 1, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (1, -2, 0, 0) = (-1, 2, 0, 0) from by decide,
+      show (0 : GaugeWeight) - (0, 0, -2, 0) = (0, 0, 2, 0) from by decide,
+      show (0 : GaugeWeight) - (0, 0, 0, 0) = (0, 0, 0, 0) from by decide]
+    rw [h.piece_mul_comm 0 (-2, 1, 0, 0) (2, -1, 0, 0),
+      h.piece_mul_comm 0 (-1, -1, 0, 0) (1, 1, 0, 0),
+      h.piece_mul_comm 0 (1, -2, 0, 0) (-1, 2, 0, 0),
+      h.piece_mul_comm 0 (0, 0, -2, 0) (0, 0, 2, 0)]
+    congr 1
+    have key : ∀ a b c d e : Submodule ℂ B,
+        a ⊔ (b ⊔ (c ⊔ (d ⊔ (a ⊔ (b ⊔ (c ⊔ (d ⊔ e)))))))
+          = a ⊔ (b ⊔ (c ⊔ (d ⊔ e))) := by
+      intro a b c d e
+      simp [sup_left_comm]
+    exact key _ _ _ _ _
+  have e0 : ((2, -1, 0, 0) : GaugeWeight) = GaugeAlgebra.rootWeight 0 := rfl
+  have e1 : ((1, 1, 0, 0) : GaugeWeight) = GaugeAlgebra.rootWeight 1 := rfl
+  have e2 : ((-1, 2, 0, 0) : GaugeWeight) = GaugeAlgebra.rootWeight 2 := rfl
+  have e3 : ((0, 0, 2, 0) : GaugeWeight) = GaugeAlgebra.rootWeight 3 := rfl
+  have f0 : ((-2, 1, 0, 0) : GaugeWeight) = -(GaugeAlgebra.rootWeight 0) := by decide
+  have f1 : ((-1, -1, 0, 0) : GaugeWeight) = -(GaugeAlgebra.rootWeight 1) := by decide
+  have f2 : ((1, -2, 0, 0) : GaugeWeight) = -(GaugeAlgebra.rootWeight 2) := by decide
+  have f3 : ((0, 0, -2, 0) : GaugeWeight) = -(GaugeAlgebra.rootWeight 3) := by decide
+  have z0 : ((0, 0, 0, 0) : GaugeWeight) = 0 := rfl
+  rw [h5, e0, e1, e2, e3, f0, f1, f2, f3, z0,
+    h.derivSubmoduleGaugeWeight_piece_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
+    h.derivSubmoduleGaugeWeight_piece_zero']
 
 end IsGaugeSector
 

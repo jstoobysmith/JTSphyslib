@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
@@ -46,6 +47,8 @@ be confined to the zero-weight piece.
 - `GaugeWeightDecomposition.piece_eq_inf` : the pieces are cut out of `V` by the torus alone.
 - `GaugeWeightDecomposition.mem_zero_of_invariant` : a gauge-invariant element lies in the
   zero-weight piece.
+- `GaugeWeightDecomposition.pieceBoostWeightDecomposition` : a gauge weight piece inherits a
+  boost weight decomposition, when the gauge and Lorentz actions commute.
 
 ## iii. Table of contents
 
@@ -55,6 +58,7 @@ be confined to the zero-weight piece.
 - D. Joins
 - E. Products
 - F. Invariants
+- G. Compatibility with the boost weight decomposition
 
 -/
 
@@ -840,6 +844,179 @@ lemma mem_zero_of_invariant (d : GaugeWeightDecomposition rep V) {x : B} (hx : x
   refine ⟨hx, Submodule.mem_iInf _ |>.mpr fun i => ?_⟩
   rw [Module.End.mem_eigenspace_iff, GaugeWeight.zero_coord, zpow_zero, one_smul]
   exact hV _
+
+/-!
+## G. Compatibility with the boost weight decomposition
+
+The gauge group acts on the value indices of an operator and the Lorentz group on its
+spacetime indices, so in every representation met here the two actions commute. Given that, a
+submodule carrying both a gauge weight decomposition and a boost weight decomposition passes
+the second one down to each piece of the first.
+
+The content is that a boost-homogeneous component of a vector of pure gauge weight again has
+that gauge weight. A torus generator commutes with the boosts, so it preserves every boost
+weight space; the boost weight spaces are independent, so the weight-`k` component of a
+scaled vector is the scaled weight-`k` component; and the eigenvector equations defining the
+gauge weight therefore descend to every component. The lattice identity `piece_eq_inf` then
+places each component back in the gauge weight piece.
+
+Meets do not distribute over suprema in a submodule lattice, so the independence is what makes
+the argument work; it is isolated in `biSup_inf_eigenspace_le` and its two corollaries, which
+know nothing about either group.
+-/
+
+section BoostWeight
+
+open MatrixGroups
+open Lorentz.BoostWeight (WeightDecomposition boostWeightSubmodule mem_boostWeightSubmodule
+  boostWeightSubmodule_iSupIndep)
+
+variable {repLorentz : Representation ℂ SL(2,ℂ) B} {i : Fin 3}
+
+/-- **Refining a finite independent decomposition by a commuting operator.** If the pieces `p`
+  sit inside an independent family `P` of `T`-invariant submodules, then an eigenvector of `T`
+  in the join of the pieces is the sum of eigenvectors, one in each piece. -/
+lemma biSup_inf_eigenspace_le {ι : Type*} {P p : ι → Submodule ℂ B} (hpP : ∀ j, p j ≤ P j)
+    (hP : iSupIndep P) {T : Module.End ℂ B} (hT : ∀ j, (P j).map T ≤ P j) (c : ℂ)
+    (s : Finset ι) :
+    (⨆ j ∈ s, p j) ⊓ Module.End.eigenspace T c
+      ≤ ⨆ j ∈ s, (p j ⊓ Module.End.eigenspace T c) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert a s ha ih =>
+    rw [Finset.iSup_insert, Finset.iSup_insert]
+    rintro x ⟨hx, hxE⟩
+    obtain ⟨u, hu, v, hv, rfl⟩ := Submodule.mem_sup.mp hx
+    have hvP : v ∈ ⨆ j ∈ s, P j := (iSup₂_mono fun j _ => hpP j) hv
+    have hTv : T v ∈ ⨆ j ∈ s, P j := by
+      have hmap : (⨆ j ∈ s, P j).map T ≤ ⨆ j ∈ s, P j := by
+        simp only [Submodule.map_iSup]
+        exact iSup₂_mono fun j _ => hT j
+      exact hmap ⟨v, hvP, rfl⟩
+    have hzero : (T u - c • u) + (T v - c • v) = 0 := by
+      have hsum : T (u + v) = c • (u + v) := Module.End.mem_eigenspace_iff.mp hxE
+      rw [map_add, smul_add] at hsum
+      rw [show (T u - c • u) + (T v - c • v) = (T u + T v) - (c • u + c • v) from by abel,
+        hsum, sub_self]
+    have hdisj : Disjoint (P a) (⨆ j ∈ s, P j) :=
+      (hP a).mono_right (iSup₂_le fun j hj =>
+        le_iSup₂_of_le j (show j ≠ a from fun hja => ha (hja ▸ hj)) le_rfl)
+    have hu0 : T u - c • u = 0 := by
+      refine Submodule.disjoint_def.mp hdisj _ (sub_mem (hT a ⟨u, hpP a hu, rfl⟩)
+        (Submodule.smul_mem _ _ (hpP a hu))) ?_
+      rw [show T u - c • u = -(T v - c • v) from by rw [eq_neg_iff_add_eq_zero]; exact hzero]
+      exact neg_mem (sub_mem hTv (Submodule.smul_mem _ _ hvP))
+    have hv0 : T v - c • v = 0 := by rwa [hu0, zero_add] at hzero
+    refine Submodule.mem_sup.mpr ⟨u, ⟨hu, Module.End.mem_eigenspace_iff.mpr (by
+      rwa [sub_eq_zero] at hu0)⟩, v, ih ⟨hv, Module.End.mem_eigenspace_iff.mpr (by
+      rwa [sub_eq_zero] at hv0)⟩, rfl⟩
+
+/-- **Refining an independent decomposition by a commuting operator.** The form of
+  `biSup_inf_eigenspace_le` for a family vanishing off a finite set of indices. -/
+lemma iSup_inf_eigenspace_le {ι : Type*} {P p : ι → Submodule ℂ B} {s : Finset ι}
+    (hpP : ∀ j, p j ≤ P j) (hbot : ∀ j ∉ s, p j = ⊥) (hP : iSupIndep P)
+    {T : Module.End ℂ B} (hT : ∀ j, (P j).map T ≤ P j) (c : ℂ) :
+    (⨆ j, p j) ⊓ Module.End.eigenspace T c
+      ≤ ⨆ j, (p j ⊓ Module.End.eigenspace T c) := by
+  classical
+  have hs : (⨆ j, p j) = ⨆ j ∈ s, p j := by
+    refine le_antisymm (iSup_le fun j => ?_) (iSup₂_le fun j _ => le_iSup p j)
+    by_cases hj : j ∈ s
+    · exact le_iSup₂_of_le j hj le_rfl
+    · rw [hbot j hj]
+      exact bot_le
+  rw [hs]
+  exact (biSup_inf_eigenspace_le hpP hP hT c s).trans
+    (iSup₂_le fun j _ => le_iSup (fun j => p j ⊓ Module.End.eigenspace T c) j)
+
+/-- **Refining an independent decomposition by a family of commuting operators.** A joint
+  eigenvector of finitely many operators preserving each member of an independent family is a
+  sum of joint eigenvectors, one in each piece. -/
+lemma iSup_inf_iInf_eigenspace_le {ι κ : Type*} [Fintype κ] {P p : ι → Submodule ℂ B}
+    {s : Finset ι} (hpP : ∀ j, p j ≤ P j) (hbot : ∀ j ∉ s, p j = ⊥) (hP : iSupIndep P)
+    {T : κ → Module.End ℂ B} (hT : ∀ a j, (P j).map (T a) ≤ P j) (c : κ → ℂ) :
+    (⨆ j, p j) ⊓ ⨅ a, Module.End.eigenspace (T a) (c a)
+      ≤ ⨆ j, (p j ⊓ ⨅ a, Module.End.eigenspace (T a) (c a)) := by
+  classical
+  have key : ∀ (S : Finset κ) (q : ι → Submodule ℂ B), (∀ j, q j ≤ P j) →
+      (∀ j ∉ s, q j = ⊥) →
+      (⨆ j, q j) ⊓ (⨅ a ∈ S, Module.End.eigenspace (T a) (c a))
+        ≤ ⨆ j, (q j ⊓ ⨅ a ∈ S, Module.End.eigenspace (T a) (c a)) := by
+    intro S
+    induction S using Finset.induction_on with
+    | empty =>
+      intro q _ _
+      simp
+    | @insert a S ha ih =>
+      intro q hq hqbot
+      simp only [Finset.iInf_insert, ← inf_assoc]
+      refine le_trans (inf_le_inf_right _ (iSup_inf_eigenspace_le hq hqbot hP
+        (fun j => hT a j) (c a))) ?_
+      exact ih (fun j => q j ⊓ Module.End.eigenspace (T a) (c a))
+        (fun j => inf_le_left.trans (hq j))
+        (fun j hj => by rw [hqbot j hj, bot_inf_eq])
+  have huniv : (⨅ a ∈ (Finset.univ : Finset κ), Module.End.eigenspace (T a) (c a))
+      = ⨅ a, Module.End.eigenspace (T a) (c a) := by simp
+  rw [← huniv]
+  exact key Finset.univ p hpP hbot
+
+/-- **A gauge transformation preserves every boost weight space**, when the gauge action and
+  the Lorentz action commute. The boosts are what cut out the weight space, and the two
+  actions may be exchanged past them. -/
+lemma boostWeightSubmodule_map_le
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (g : GaugeGroupI) (k : ℤ) :
+    (boostWeightSubmodule repLorentz i k).map (rep g)
+      ≤ boostWeightSubmodule repLorentz i k := by
+  rintro _ ⟨y, hy, rfl⟩
+  refine mem_boostWeightSubmodule.mpr fun t ht => ?_
+  rw [← hcomm, mem_boostWeightSubmodule.mp hy t ht, map_smul]
+
+/-- **A gauge weight piece inherits the boost weight decomposition.** If `V` carries both a
+  gauge weight decomposition and a boost weight decomposition, and the two actions commute,
+  then the weight-`w` gauge piece is decomposed by its intersections with the boost pieces. -/
+noncomputable def pieceBoostWeightDecomposition (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) :
+    WeightDecomposition repLorentz i (d.piece w) where
+  piece k := b.piece k ⊓ d.piece w
+  supp := b.supp
+  piece_le k := inf_le_left.trans (b.piece_le k)
+  piece_eq_bot k hk := by rw [b.piece_eq_bot k hk, bot_inf_eq]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun k => inf_le_right) ?_
+    have hpiece : ∀ k, b.piece k ≤ V := fun k =>
+      le_of_le_of_eq (le_iSup b.piece k) b.iSup_piece
+    have hkey := iSup_inf_iInf_eigenspace_le (P := boostWeightSubmodule repLorentz i)
+      (p := b.piece) (s := b.supp) b.piece_le b.piece_eq_bot
+      (boostWeightSubmodule_iSupIndep (i := i) repLorentz)
+      (T := fun j => rep (gaugeTorusGen j))
+      (hT := fun j k => boostWeightSubmodule_map_le hcomm (gaugeTorusGen j) k)
+      (c := fun j => (expI : ℂ) ^ w.coord j)
+    rw [b.iSup_piece] at hkey
+    refine le_trans (le_of_eq (d.piece_eq_inf w)) (hkey.trans (iSup_mono fun k => ?_))
+    refine le_inf inf_le_left ?_
+    rw [d.piece_eq_inf]
+    exact inf_le_inf (hpiece k) le_rfl
+
+/-- The pieces of the inherited boost weight decomposition. -/
+@[simp]
+lemma pieceBoostWeightDecomposition_piece (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) (k : ℤ) :
+    (pieceBoostWeightDecomposition d b hcomm w).piece k = b.piece k ⊓ d.piece w := rfl
+
+/-- The support of the inherited boost weight decomposition. -/
+lemma pieceBoostWeightDecomposition_supp (d : GaugeWeightDecomposition rep V)
+    (b : WeightDecomposition repLorentz i V)
+    (hcomm : ∀ (g : GaugeGroupI) (Λ : SL(2,ℂ)) (x : B),
+      rep g (repLorentz Λ x) = repLorentz Λ (rep g x)) (w : GaugeWeight) :
+    (pieceBoostWeightDecomposition d b hcomm w).supp = b.supp := rfl
+
+end BoostWeight
 
 end GaugeWeightDecomposition
 end StandardModel

@@ -12,8 +12,10 @@ public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
 The Higgs symbols and their conjugates carrying a fixed number `n` of derivatives span
 the submodule `derivSubmodule n`.  The Higgs is bosonic, so these submodules commute
 with one another, and since neither the gauge nor the Lorentz action changes the number
-of derivatives they are closed under both.  Finally the gauge weight decompositions of
-the Higgs and conjugate-Higgs submodules join to one of `derivSubmodule n`.
+of derivatives they are closed under both.
+
+The gauge and boost weight decompositions of these submodules live in
+`GaugeWeightDecomposition.lean` and `BoostWeightDecomposition.lean`.
 
 -/
 
@@ -34,7 +36,8 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
     repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {H : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) →  Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
+  {barH : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) →
+    Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
   (h : IsHiggsSector B rep hrep_mul repLorentz hrepLorentz_mul H barH
       massWeightPoly)
@@ -146,7 +149,8 @@ lemma derivSubmodule_map_rep_le (n : ℕ) (g : GaugeGroupI) :
 lemma derivSubmodule_map_rep (n : ℕ) (g : GaugeGroupI) :
     (h.derivSubmodule n).map (rep g) = h.derivSubmodule n :=
   le_antisymm (h.derivSubmodule_map_rep_le n g) fun b hb =>
-    ⟨rep g⁻¹ b, h.derivSubmodule_map_rep_le n g⁻¹ ⟨b, hb, rfl⟩, rep.self_inv_apply g b⟩
+    ⟨rep g⁻¹ b, h.derivSubmodule_map_rep_le n g⁻¹ ⟨b, hb, rfl⟩,
+      rep.self_inv_apply g b⟩
 
 /-- The derivative submodules are closed under the Lorentz action: the Lorentz group
   only mixes the derivative indices within a fixed number of derivatives. -/
@@ -173,33 +177,6 @@ lemma derivSubmodule_map_repLorentz (n : ℕ) (Λ : SL(2,ℂ)) :
   le_antisymm (h.derivSubmodule_map_repLorentz_le n Λ) fun b hb =>
     ⟨repLorentz Λ⁻¹ b, h.derivSubmodule_map_repLorentz_le n Λ⁻¹ ⟨b, hb, rfl⟩,
       repLorentz.self_inv_apply Λ b⟩
-
-/-!
-
-## The gauge weight decomposition
-
--/
-
-/-- **The gauge weight decomposition of the Higgs derivative submodules**: the join of
-  the decompositions of the Higgs and conjugate-Higgs submodules, whose weights are
-  `(0, 0, ∓1, -3)` and `(0, 0, ±1, 3)` respectively.
-
-  This is an instance: its statement mentions `h`, so unification against the goal
-  recovers the sector and with it the rest of the structure's implicit data. -/
-@[implicit_reducible]
-noncomputable instance derivSubmoduleGaugeWeight (n : ℕ) :
-    GaugeWeightDecomposition rep (h.derivSubmodule n) :=
-  GaugeWeightDecomposition.copy
-    (GaugeWeightDecomposition.sup (d := h.higgsSubmoduleGaugeWeight n)
-      (d' := h.barHiggsSubmoduleGaugeWeight n))
-    _ (by rw [derivSubmodule])
-
-/-- The gauge weights occurring in the Higgs derivative submodules: the two Higgs
-  weights `(0, 0, ∓1, -3)` and the two conjugate-Higgs weights `(0, 0, ±1, 3)`. -/
-lemma derivSubmoduleGaugeWeight_supp (n : ℕ) :
-    (h.derivSubmoduleGaugeWeight n).supp
-      = {((0, 0, -1, -3) : GaugeWeight), (0, 0, 1, -3), (0, 0, 1, 3), (0, 0, -1, 3)} :=
-  rfl
 
 end IsHiggsSector
 

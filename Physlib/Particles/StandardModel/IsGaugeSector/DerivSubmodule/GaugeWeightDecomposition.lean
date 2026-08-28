@@ -288,6 +288,85 @@ lemma derivSubmoduleGaugeWeight_supp (n : ℕ) :
   rw [hstep]
   decide
 
+/-!
+
+## G. The pieces of the decomposition
+
+-/
+
+/-- **The pieces of the gauge weight decomposition.**  The weight-`w` piece is the join,
+  over the derivative slots and the two covector indices, of the lines spanned by those
+  weight vectors whose weight is `w`. -/
+lemma derivSubmoduleGaugeWeight_piece (n : ℕ) (w : GaugeWeight) :
+    (h.derivSubmoduleGaugeWeight n).piece w
+      = ⨆ (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
+        (k : Fin 4 ⊕ Fin 4 ⊕ Fin 4),
+        (if w = adjWeight k then ℂ ∙ h.adjVec l μ ν k else ⊥) := rfl
+
+/-- The piece at a root weight: the `+` combination for that root alone. -/
+lemma derivSubmoduleGaugeWeight_piece_rootWeight (n : ℕ) (r : Fin 4) :
+    (h.derivSubmoduleGaugeWeight n).piece (GaugeAlgebra.rootWeight r)
+      = ⨆ (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+        ℂ ∙ h.adjVec l μ ν (Sum.inl r) := by
+  rw [h.derivSubmoduleGaugeWeight_piece]
+  refine iSup_congr fun l => iSup_congr fun μ => iSup_congr fun ν => ?_
+  rw [iSup_sum, iSup_sum]
+  have h1 : ∀ a b : Fin 4,
+      (GaugeAlgebra.rootWeight a = adjWeight (Sum.inl b)) ↔ b = a := by decide
+  have h2 : ∀ a b : Fin 4,
+      ¬ (GaugeAlgebra.rootWeight a = adjWeight (Sum.inr (Sum.inl b))) := by decide
+  have h3 : ∀ a c : Fin 4,
+      ¬ (GaugeAlgebra.rootWeight a = adjWeight (Sum.inr (Sum.inr c))) := by decide
+  simp only [h1, h2, h3, if_false, iSup_bot, sup_bot_eq]
+  refine le_antisymm (iSup_le fun i => ?_) (le_iSup_of_le r (by simp))
+  split_ifs with hi
+  · subst hi
+    exact le_rfl
+  · exact bot_le
+
+/-- The piece at the opposite of a root weight: the `-` combination for that root. -/
+lemma derivSubmoduleGaugeWeight_piece_neg_rootWeight (n : ℕ) (r : Fin 4) :
+    (h.derivSubmoduleGaugeWeight n).piece (-(GaugeAlgebra.rootWeight r))
+      = ⨆ (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+        ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl r)) := by
+  rw [h.derivSubmoduleGaugeWeight_piece]
+  refine iSup_congr fun l => iSup_congr fun μ => iSup_congr fun ν => ?_
+  rw [iSup_sum, iSup_sum]
+  have h1 : ∀ a b : Fin 4, ¬ (-(GaugeAlgebra.rootWeight a) = adjWeight (Sum.inl b)) := by decide
+  have h2 : ∀ a b : Fin 4,
+      (-(GaugeAlgebra.rootWeight a) = adjWeight (Sum.inr (Sum.inl b))) ↔ b = a := by
+    decide
+  have h3 : ∀ a c : Fin 4,
+      ¬ (-(GaugeAlgebra.rootWeight a) = adjWeight (Sum.inr (Sum.inr c))) := by decide
+  simp only [h1, h2, h3, if_false, iSup_bot, bot_sup_eq, sup_bot_eq]
+  refine le_antisymm (iSup_le fun i => ?_) (le_iSup_of_le r (by simp))
+  split_ifs with hi
+  · subst hi
+    exact le_rfl
+  · exact bot_le
+
+/-- The weight-zero piece: the two `su(3)` Cartan generators, the `su(2)` Cartan
+  generator and the `u(1)` generator, the only directions the torus fixes. -/
+lemma derivSubmoduleGaugeWeight_piece_zero' (n : ℕ) :
+    (h.derivSubmoduleGaugeWeight n).piece 0
+      = ⨆ (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
+          (c : Fin 4),
+        ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c)) := by
+  rw [h.derivSubmoduleGaugeWeight_piece]
+  refine iSup_congr fun l => iSup_congr fun μ => iSup_congr fun ν => ?_
+  rw [iSup_sum, iSup_sum]
+  have h1 : ∀ b : Fin 4, ¬ ((0 : GaugeWeight) = adjWeight (Sum.inl b)) := by decide
+  have h2 : ∀ b : Fin 4, ¬ ((0 : GaugeWeight) = adjWeight (Sum.inr (Sum.inl b))) := by decide
+  have h3 : ∀ c : Fin 4, ((0 : GaugeWeight) = adjWeight (Sum.inr (Sum.inr c))) := by decide
+  simp only [h1, h2, if_false, iSup_bot, bot_sup_eq]
+  exact iSup_congr fun c => if_pos (h3 c)
+
+/-- Every other weight has a trivial piece. -/
+lemma derivSubmoduleGaugeWeight_piece_eq_bot (n : ℕ) {w : GaugeWeight}
+    (hw : w ∉ (h.derivSubmoduleGaugeWeight n).supp) :
+    (h.derivSubmoduleGaugeWeight n).piece w = ⊥ :=
+  (h.derivSubmoduleGaugeWeight n).piece_eq_bot w hw
+
 end IsGaugeSector
 
 
