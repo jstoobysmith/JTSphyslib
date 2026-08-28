@@ -530,46 +530,6 @@ lemma eq_sum_boostAverageTransition_smul {x : B}
         push_cast
         rw [mul_assoc, Finset.sum_mul]
 
-include hT in
-/-- Iterated averaged rounds: an element of weight zero along all three axes
-  re-expands through every power of the boost-average matrix applied to its
-  coefficients. -/
-lemma eq_sum_pow_boostAverageTransition_smul {x : B}
-    (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) (n : ℕ) :
-    x = ∑ d, (∑ e, (((boostAverageTransition ^ n) d e : ℚ) : ℂ) * c e) • T d := by
-  induction n with
-  | zero =>
-    rw [hx]
-    refine Finset.sum_congr rfl fun d _ => ?_
-    congr 1
-    rw [pow_zero]
-    simp [Matrix.one_apply, apply_ite (fun q : ℚ => (q : ℂ)), ite_mul, Finset.sum_ite_eq]
-  | succ n ih =>
-    rw [hT.eq_sum_boostAverageTransition_smul
-      (fun d => ∑ e, (((boostAverageTransition ^ n) d e : ℚ) : ℂ) * c e) ih hw]
-    refine Finset.sum_congr rfl fun d _ => ?_
-    congr 1
-    rw [pow_succ']
-    calc ∑ e, ((boostAverageTransition d e : ℚ) : ℂ)
-          * ∑ f, (((boostAverageTransition ^ n) e f : ℚ) : ℂ) * c f
-        = ∑ e, ∑ f, ((boostAverageTransition d e : ℚ) : ℂ)
-            * ((((boostAverageTransition ^ n) e f : ℚ) : ℂ) * c f) :=
-          Finset.sum_congr rfl fun e _ => by rw [Finset.mul_sum]
-      _ = ∑ f, (∑ e, ((boostAverageTransition d e : ℚ) : ℂ)
-            * (((boostAverageTransition ^ n) e f : ℚ) : ℂ)) * c f := by
-          rw [Finset.sum_comm]
-          refine Finset.sum_congr rfl fun f _ => ?_
-          rw [Finset.sum_mul]
-          exact Finset.sum_congr rfl fun e _ => (mul_assoc _ _ _).symm
-      _ = ∑ e, (((boostAverageTransition * boostAverageTransition ^ n) d e : ℚ) : ℂ)
-            * c e := by
-          refine Finset.sum_congr rfl fun f _ => ?_
-          congr 1
-          rw [Matrix.mul_apply]
-          push_cast
-          rfl
-
 /-!
 
 ## D. Sieving the span along the three boost axes
