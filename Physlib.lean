@@ -262,6 +262,7 @@ public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight
 public import Physlib.Particles.StandardModel.IsFermionSector.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight
+public import Physlib.Particles.StandardModel.IsGaugeSector.GaugeWieghtDecomposition
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Generators
 public import Physlib.Particles.StandardModel.IsCovStandardModel.MassWeight
