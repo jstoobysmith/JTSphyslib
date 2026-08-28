@@ -19,6 +19,12 @@ down to the covariant version.
 In the covariant version we will do the work with
 the invariants.
 
+This file carries the structure `IsCovStandardModel` itself — the covariant fields
+with their gauge, Lorentz, mass-weight and commutation properties — together with the
+algebra they generate. The covariant generators of that algebra are in
+`IsCovStandardModel.Generators`, and the mass-weight grading in
+`IsCovStandardModel.MassWeight`.
+
 -/
 
 @[expose] public section
@@ -174,6 +180,378 @@ structure IsCovStandardModel (B : Type) [Ring B] [Algebra ℂ B]
     massWeightPoly (e i l φ) = Polynomial.monomial (3 + 2 * n) (e i l φ)
   massWeight_bare : ∀ i {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) φ,
     massWeightPoly (bare i l φ) = Polynomial.monomial (3 + 2 * n) (bare i l φ)
+  -- **The commutation rules**
+  -- The gauge sector is bosonic: every field-strength tower commutes with every
+  -- field.
+  F_comm_F : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (μ' ν' : Fin 1 ⊕ Fin 3) (ψ' : Module.Dual ℝ GaugeAlgebra),
+    Commute (F l μ ν ψ) (F l' μ' ν' ψ')
+  F_comm_H : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec),
+    Commute (F l μ ν ψ) (H l' φ)
+  F_comm_barH : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (F l μ ν ψ) (barH l' φ)
+  F_comm_d : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ DownSinglet),
+    Commute (F l μ ν ψ) (d i l' φ)
+  F_comm_bard : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (F l μ ν ψ) (bard i l' φ)
+  F_comm_u : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ UpSinglet),
+    Commute (F l μ ν ψ) (u i l' φ)
+  F_comm_baru : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (F l μ ν ψ) (baru i l' φ)
+  F_comm_Q : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ QuarkDoublet),
+    Commute (F l μ ν ψ) (Q i l' φ)
+  F_comm_barQ : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (F l μ ν ψ) (barQ i l' φ)
+  F_comm_L : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ LeptonDoublet),
+    Commute (F l μ ν ψ) (L i l' φ)
+  F_comm_barL : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (F l μ ν ψ) (barL i l' φ)
+  F_comm_e : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ LeptonSinglet),
+    Commute (F l μ ν ψ) (e i l' φ)
+  F_comm_bare : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (F l μ ν ψ) (bare i l' φ)
+  -- The Higgs sector is bosonic: the Higgs towers and their conjugates commute
+  -- with each other and with every fermion.
+  H_comm_H : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ HiggsVec),
+    Commute (H l φ) (H l' φ')
+  H_comm_barH : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (H l φ) (barH l' φ')
+  barH_comm_barH : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (barH l φ) (barH l' φ')
+  H_comm_d : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ DownSinglet),
+    Commute (H l φ) (d i l' φ')
+  H_comm_bard : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (H l φ) (bard i l' φ')
+  H_comm_u : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ UpSinglet),
+    Commute (H l φ) (u i l' φ')
+  H_comm_baru : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (H l φ) (baru i l' φ')
+  H_comm_Q : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (H l φ) (Q i l' φ')
+  H_comm_barQ : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (H l φ) (barQ i l' φ')
+  H_comm_L : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (H l φ) (L i l' φ')
+  H_comm_barL : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (H l φ) (barL i l' φ')
+  H_comm_e : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (H l φ) (e i l' φ')
+  H_comm_bare : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ HiggsVec) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (H l φ) (bare i l' φ')
+  barH_comm_d : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ DownSinglet),
+    Commute (barH l φ) (d i l' φ')
+  barH_comm_bard : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (barH l φ) (bard i l' φ')
+  barH_comm_u : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ UpSinglet),
+    Commute (barH l φ) (u i l' φ')
+  barH_comm_baru : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (barH l φ) (baru i l' φ')
+  barH_comm_Q : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (barH l φ) (Q i l' φ')
+  barH_comm_barQ : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (barH l φ) (barQ i l' φ')
+  barH_comm_L : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (barH l φ) (L i l' φ')
+  barH_comm_barL : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (barH l φ) (barL i l' φ')
+  barH_comm_e : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (barH l φ) (e i l' φ')
+  barH_comm_bare : ∀ {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℂ (ConjModule HiggsVec)) (i : Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (barH l φ) (bare i l' φ')
+  -- The fermion sector: any two fermionic towers anticommute. On the diagonal
+  -- (same species, family, derivative slots and dual vector) this forces the
+  -- square of every fermionic symbol to vanish, since `2` is invertible in `B`.
+  d_anticomm_d : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ DownSinglet),
+    d i l φ * d j l' φ' = -(d j l' φ' * d i l φ)
+  d_anticomm_bard : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    d i l φ * bard j l' φ' = -(bard j l' φ' * d i l φ)
+  d_anticomm_u : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ UpSinglet),
+    d i l φ * u j l' φ' = -(u j l' φ' * d i l φ)
+  d_anticomm_baru : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    d i l φ * baru j l' φ' = -(baru j l' φ' * d i l φ)
+  d_anticomm_Q : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    d i l φ * Q j l' φ' = -(Q j l' φ' * d i l φ)
+  d_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    d i l φ * barQ j l' φ' = -(barQ j l' φ' * d i l φ)
+  d_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    d i l φ * L j l' φ' = -(L j l' φ' * d i l φ)
+  d_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    d i l φ * barL j l' φ' = -(barL j l' φ' * d i l φ)
+  d_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    d i l φ * e j l' φ' = -(e j l' φ' * d i l φ)
+  d_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    d i l φ * bare j l' φ' = -(bare j l' φ' * d i l φ)
+  bard_anticomm_bard : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    bard i l φ * bard j l' φ' = -(bard j l' φ' * bard i l φ)
+  bard_anticomm_u : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ UpSinglet),
+    bard i l φ * u j l' φ' = -(u j l' φ' * bard i l φ)
+  bard_anticomm_baru : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    bard i l φ * baru j l' φ' = -(baru j l' φ' * bard i l φ)
+  bard_anticomm_Q : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    bard i l φ * Q j l' φ' = -(Q j l' φ' * bard i l φ)
+  bard_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    bard i l φ * barQ j l' φ' = -(barQ j l' φ' * bard i l φ)
+  bard_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    bard i l φ * L j l' φ' = -(L j l' φ' * bard i l φ)
+  bard_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    bard i l φ * barL j l' φ' = -(barL j l' φ' * bard i l φ)
+  bard_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    bard i l φ * e j l' φ' = -(e j l' φ' * bard i l φ)
+  bard_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule DownSinglet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    bard i l φ * bare j l' φ' = -(bare j l' φ' * bard i l φ)
+  u_anticomm_u : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ UpSinglet),
+    u i l φ * u j l' φ' = -(u j l' φ' * u i l φ)
+  u_anticomm_baru : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    u i l φ * baru j l' φ' = -(baru j l' φ' * u i l φ)
+  u_anticomm_Q : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    u i l φ * Q j l' φ' = -(Q j l' φ' * u i l φ)
+  u_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    u i l φ * barQ j l' φ' = -(barQ j l' φ' * u i l φ)
+  u_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    u i l φ * L j l' φ' = -(L j l' φ' * u i l φ)
+  u_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    u i l φ * barL j l' φ' = -(barL j l' φ' * u i l φ)
+  u_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    u i l φ * e j l' φ' = -(e j l' φ' * u i l φ)
+  u_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    u i l φ * bare j l' φ' = -(bare j l' φ' * u i l φ)
+  baru_anticomm_baru : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    baru i l φ * baru j l' φ' = -(baru j l' φ' * baru i l φ)
+  baru_anticomm_Q : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    baru i l φ * Q j l' φ' = -(Q j l' φ' * baru i l φ)
+  baru_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    baru i l φ * barQ j l' φ' = -(barQ j l' φ' * baru i l φ)
+  baru_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    baru i l φ * L j l' φ' = -(L j l' φ' * baru i l φ)
+  baru_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    baru i l φ * barL j l' φ' = -(barL j l' φ' * baru i l φ)
+  baru_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    baru i l φ * e j l' φ' = -(e j l' φ' * baru i l φ)
+  baru_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule UpSinglet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    baru i l φ * bare j l' φ' = -(bare j l' φ' * baru i l φ)
+  Q_anticomm_Q : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    Q i l φ * Q j l' φ' = -(Q j l' φ' * Q i l φ)
+  Q_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Q i l φ * barQ j l' φ' = -(barQ j l' φ' * Q i l φ)
+  Q_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    Q i l φ * L j l' φ' = -(L j l' φ' * Q i l φ)
+  Q_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Q i l φ * barL j l' φ' = -(barL j l' φ' * Q i l φ)
+  Q_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    Q i l φ * e j l' φ' = -(e j l' φ' * Q i l φ)
+  Q_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Q i l φ * bare j l' φ' = -(bare j l' φ' * Q i l φ)
+  barQ_anticomm_barQ : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule QuarkDoublet))
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    barQ i l φ * barQ j l' φ' = -(barQ j l' φ' * barQ i l φ)
+  barQ_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule QuarkDoublet))
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    barQ i l φ * L j l' φ' = -(L j l' φ' * barQ i l φ)
+  barQ_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule QuarkDoublet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    barQ i l φ * barL j l' φ' = -(barL j l' φ' * barQ i l φ)
+  barQ_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule QuarkDoublet))
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    barQ i l φ * e j l' φ' = -(e j l' φ' * barQ i l φ)
+  barQ_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule QuarkDoublet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    barQ i l φ * bare j l' φ' = -(bare j l' φ' * barQ i l φ)
+  L_anticomm_L : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonDoublet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    L i l φ * L j l' φ' = -(L j l' φ' * L i l φ)
+  L_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonDoublet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    L i l φ * barL j l' φ' = -(barL j l' φ' * L i l φ)
+  L_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonDoublet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    L i l φ * e j l' φ' = -(e j l' φ' * L i l φ)
+  L_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonDoublet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    L i l φ * bare j l' φ' = -(bare j l' φ' * L i l φ)
+  barL_anticomm_barL : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule LeptonDoublet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    barL i l φ * barL j l' φ' = -(barL j l' φ' * barL i l φ)
+  barL_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule LeptonDoublet))
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    barL i l φ * e j l' φ' = -(e j l' φ' * barL i l φ)
+  barL_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule LeptonDoublet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    barL i l φ * bare j l' φ' = -(bare j l' φ' * barL i l φ)
+  e_anticomm_e : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonSinglet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    e i l φ * e j l' φ' = -(e j l' φ' * e i l φ)
+  e_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ LeptonSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    e i l φ * bare j l' φ' = -(bare j l' φ' * e i l φ)
+  bare_anticomm_bare : ∀ (i j : Fin 3) {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+      (l' : Fin m → Fin 1 ⊕ Fin 3) (φ : Module.Dual ℂ (ConjModule LeptonSinglet))
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    bare i l φ * bare j l' φ' = -(bare j l' φ' * bare i l φ)
 
 namespace IsCovStandardModel
 
@@ -200,7 +578,38 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-!
 
-## A. The field algebra
+## A. The gauge and Lorentz actions
+
+The two actions on the algebra are multiplicative, so each is a unital algebra
+automorphism; in particular each fixes the unit.
+
+-/
+
+include h in
+/-- The multiplicative gauge action fixes the unit of the algebra. -/
+lemma repGauge_one (g : GaugeGroupI) : repGauge g (1 : B) = 1 := by
+  obtain ⟨u, hu⟩ : ∃ u, repGauge g u = 1 :=
+    ⟨repGauge g⁻¹ 1, by
+      rw [← Module.End.mul_apply, ← map_mul, mul_inv_cancel, map_one repGauge,
+        Module.End.one_apply]⟩
+  have h1 := h.repGauge_mul g u 1
+  rw [mul_one, hu, one_mul] at h1
+  exact h1.symm
+
+include h in
+/-- The multiplicative Lorentz action fixes the unit of the algebra. -/
+lemma repLorentz_one (Λ : SL(2,ℂ)) : repLorentz Λ (1 : B) = 1 := by
+  obtain ⟨u, hu⟩ : ∃ u, repLorentz Λ u = 1 :=
+    ⟨repLorentz Λ⁻¹ 1, by
+      rw [← Module.End.mul_apply, ← map_mul, mul_inv_cancel, map_one repLorentz,
+        Module.End.one_apply]⟩
+  have h1 := h.repLorentz_mul Λ u 1
+  rw [mul_one, hu, one_mul] at h1
+  exact h1.symm
+
+/-!
+
+## B. The field algebra
 
 -/
 
@@ -222,355 +631,82 @@ def fieldAlgebra (_ : IsCovStandardModel B repGauge repLorentz massWeightPoly H 
 
 /-!
 
-## B. The mass dimension submodules
+### B.1. Basic commutation relations
 
 -/
 
-/-- All elements of the field algebra of mass weight exactly `n`: the intersection of
-  the algebra generated by the covariant fields with the part on which
-  `massWeightPoly` is the monomial `X ^ n`. -/
-noncomputable def massWeightSubmodule
-    (h : IsCovStandardModel B repGauge repLorentz massWeightPoly H barH F
-    d bard u baru Q barQ L barL e bare) (n : ℕ) : Submodule ℂ B :=
-  (h.fieldAlgebra).toSubmodule
-    ⊓ LinearMap.ker (massWeightPoly.toLinearMap
-      - (Polynomial.monomial n : B →ₗ[B] Polynomial B).restrictScalars ℂ)
+lemma F_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3} {μ ν : Fin 1 ⊕ Fin 3}
+    (φ : Module.Dual ℝ GaugeAlgebra) (x : B) (hx : x ∈ h.fieldAlgebra) :
+    F l μ ν φ * x = x * F l μ ν φ := by
+  rw [fieldAlgebra] at hx
+  refine (IsGaugeField.commute_of_mem_adjoin (y := F l μ ν φ) ?_ hx).symm
+  intro z hz
+  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
+  obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
+  · exact (h.F_comm_F l μ ν φ l' μ' ν' ψ).symm
+  · exact (h.F_comm_H l μ ν φ l' φ').symm
+  · exact (h.F_comm_barH l μ ν φ l' φ').symm
+  · obtain (((((((((⟨φ', rfl⟩ | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) |
+      ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) := hz
+    · exact (h.F_comm_d l μ ν φ i l' φ').symm
+    · exact (h.F_comm_bard l μ ν φ i l' φ').symm
+    · exact (h.F_comm_u l μ ν φ i l' φ').symm
+    · exact (h.F_comm_baru l μ ν φ i l' φ').symm
+    · exact (h.F_comm_Q l μ ν φ i l' φ').symm
+    · exact (h.F_comm_barQ l μ ν φ i l' φ').symm
+    · exact (h.F_comm_L l μ ν φ i l' φ').symm
+    · exact (h.F_comm_barL l μ ν φ i l' φ').symm
+    · exact (h.F_comm_e l μ ν φ i l' φ').symm
+    · exact (h.F_comm_bare l μ ν φ i l' φ').symm
 
-lemma massWeightPoly_of_mem_massWeightSubmodule {n : ℕ} {x : B}
-    (hx : x ∈ h.massWeightSubmodule n) :
-    massWeightPoly x = Polynomial.monomial n x := by
-  rw [massWeightSubmodule, Submodule.mem_inf] at hx
-  rcases hx with ⟨-, hx'⟩
-  rw [LinearMap.mem_ker] at hx'
-  simp only [LinearMap.sub_apply, AlgHom.toLinearMap_apply, LinearMap.coe_restrictScalars,
-    sub_eq_zero] at hx'
-  exact hx'
+lemma H_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
+    (φ : Module.Dual ℂ HiggsVec) (x : B) (hx : x ∈ h.fieldAlgebra) :
+    H l φ * x = x * H l φ := by
+  rw [fieldAlgebra] at hx
+  refine (IsGaugeField.commute_of_mem_adjoin (y := H l φ) ?_ hx).symm
+  intro z hz
+  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
+  obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
+  · exact h.F_comm_H l' μ' ν' ψ l φ
+  · exact h.H_comm_H l' φ' l φ
+  · exact (h.H_comm_barH l φ l' φ').symm
+  · obtain (((((((((⟨φ', rfl⟩ | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) |
+      ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) := hz
+    · exact (h.H_comm_d l φ i l' φ').symm
+    · exact (h.H_comm_bard l φ i l' φ').symm
+    · exact (h.H_comm_u l φ i l' φ').symm
+    · exact (h.H_comm_baru l φ i l' φ').symm
+    · exact (h.H_comm_Q l φ i l' φ').symm
+    · exact (h.H_comm_barQ l φ i l' φ').symm
+    · exact (h.H_comm_L l φ i l' φ').symm
+    · exact (h.H_comm_barL l φ i l' φ').symm
+    · exact (h.H_comm_e l φ i l' φ').symm
+    · exact (h.H_comm_bare l φ i l' φ').symm
 
-lemma mem_fieldAlgebra_of_mem_massWeightSubmodule {n : ℕ} {x : B}
-    (hx : x ∈ h.massWeightSubmodule n) : x ∈ h.fieldAlgebra := by
-  rw [massWeightSubmodule, Submodule.mem_inf] at hx
-  exact hx.1
+lemma barH_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
+    (φ : Module.Dual ℂ (ConjModule HiggsVec)) (x : B) (hx : x ∈ h.fieldAlgebra) :
+    barH l φ * x = x * barH l φ := by
+  rw [fieldAlgebra] at hx
+  refine (IsGaugeField.commute_of_mem_adjoin (y := barH l φ) ?_ hx).symm
+  intro z hz
+  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
+  obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
+  · exact h.F_comm_barH l' μ' ν' ψ l φ
+  · exact h.H_comm_barH l' φ' l φ
+  · exact h.barH_comm_barH l' φ' l φ
+  · obtain (((((((((⟨φ', rfl⟩ | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) |
+      ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) := hz
+    · exact (h.barH_comm_d l φ i l' φ').symm
+    · exact (h.barH_comm_bard l φ i l' φ').symm
+    · exact (h.barH_comm_u l φ i l' φ').symm
+    · exact (h.barH_comm_baru l φ i l' φ').symm
+    · exact (h.barH_comm_Q l φ i l' φ').symm
+    · exact (h.barH_comm_barQ l φ i l' φ').symm
+    · exact (h.barH_comm_L l φ i l' φ').symm
+    · exact (h.barH_comm_barL l φ i l' φ').symm
+    · exact (h.barH_comm_e l φ i l' φ').symm
+    · exact (h.barH_comm_bare l φ i l' φ').symm
 
-/-!
-
-## C. Covariant generators and the weight-graded monomial span
-
--/
-
-/-- The abstract index of a single covariant generator of the field algebra: one of
-  the covariant-derivative towers of the field strength, of the Higgs and its
-  conjugate, or of the three families of each fermion species and their conjugates,
-  applied to a member of the dual basis of its value space. Only basis indices are
-  stored, so for a fixed tower length the generators of a given mass weight form a
-  finite type. The evaluation in `B` is `generatorVal`. -/
-inductive Generators where
-  /-- The Higgs tower `∇_l H` applied to a dual basis vector. -/
-  | H : (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 → Generators
-  /-- The conjugate-Higgs tower `∇_l H̄` applied to a dual basis vector. -/
-  | barH : (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 → Generators
-  /-- The field-strength tower `∇_l F_μν` applied to a dual basis vector. -/
-  | F : (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-      (Fin 8 ⊕ Fin 3 ⊕ Fin 1) → Generators
-  /-- The fermion tower `∇_l d` of the `i`-th family applied to a dual basis vector. -/
-  | d : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 → Generators
-  /-- The fermion tower `∇_l bard` of the `i`-th family applied to a dual basis vector. -/
-  | bard : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 → Generators
-  /-- The fermion tower `∇_l u` of the `i`-th family applied to a dual basis vector. -/
-  | u : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 → Generators
-  /-- The fermion tower `∇_l baru` of the `i`-th family applied to a dual basis vector. -/
-  | baru : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 → Generators
-  /-- The fermion tower `∇_l Q` of the `i`-th family applied to a dual basis vector. -/
-  | Q : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 × Fin 2 → Generators
-  /-- The fermion tower `∇_l barQ` of the `i`-th family applied to a dual basis vector. -/
-  | barQ : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 3 × Fin 2 → Generators
-  /-- The fermion tower `∇_l L` of the `i`-th family applied to a dual basis vector. -/
-  | L : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 2 → Generators
-  /-- The fermion tower `∇_l barL` of the `i`-th family applied to a dual basis vector. -/
-  | barL : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 × Fin 2 → Generators
-  /-- The fermion tower `∇_l e` of the `i`-th family applied to a dual basis vector. -/
-  | e : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 → Generators
-  /-- The fermion tower `∇_l bare` of the `i`-th family applied to a dual basis vector. -/
-  | bare : Fin 3 → (n : ℕ) → (Fin n → Fin 1 ⊕ Fin 3) → Fin 2 → Generators
-deriving DecidableEq
-
-/-- The mass weight (twice the mass dimension) of a covariant generator. -/
-def Generators.weight : Generators → ℕ
-  | .H n _ _ => 2 * (1 + n)
-  | .barH n _ _ => 2 * (1 + n)
-  | .F n _ _ _ _ => 2 * (2 + n)
-  | .d _ n _ _ => 3 + 2 * n
-  | .bard _ n _ _ => 3 + 2 * n
-  | .u _ n _ _ => 3 + 2 * n
-  | .baru _ n _ _ => 3 + 2 * n
-  | .Q _ n _ _ => 3 + 2 * n
-  | .barQ _ n _ _ => 3 + 2 * n
-  | .L _ n _ _ => 3 + 2 * n
-  | .barL _ n _ _ => 3 + 2 * n
-  | .e _ n _ _ => 3 + 2 * n
-  | .bare _ n _ _ => 3 + 2 * n
-
-set_option linter.unusedVariables false in
-/-- The value in `B` of a covariant generator: the corresponding covariant tower
-  applied to the indicated dual basis vector of its value space. -/
-noncomputable def generatorVal
-    (h : IsCovStandardModel B repGauge repLorentz massWeightPoly H barH F
-    d bard u baru Q barQ L barL e bare) : Generators → B
-  | .H _ l j => H l (HiggsVec.orthonormBasis.toBasis.coord j)
-  | .barH _ l j => barH l (HiggsVec.orthonormBasis.toBasis.conj.coord j)
-  | .F _ l μ ν j => F l μ ν (GaugeAlgebra.stdBasis.coord j)
-  | .d i _ l j => d i l (DownSinglet.basis.coord j)
-  | .bard i _ l j => bard i l (DownSinglet.basis.conj.coord j)
-  | .u i _ l j => u i l (UpSinglet.basis.coord j)
-  | .baru i _ l j => baru i l (UpSinglet.basis.conj.coord j)
-  | .Q i _ l j => Q i l (QuarkDoublet.basis.coord j)
-  | .barQ i _ l j => barQ i l (QuarkDoublet.basis.conj.coord j)
-  | .L i _ l j => L i l (LeptonDoublet.basis.coord j)
-  | .barL i _ l j => barL i l (LeptonDoublet.basis.conj.coord j)
-  | .e i _ l j => e i l (LeptonSinglet.basis.coord j)
-  | .bare i _ l j => bare i l (LeptonSinglet.basis.conj.coord j)
-
-/-- Every covariant generator is a `massWeightPoly`-eigenvector of its weight. -/
-lemma massWeightPoly_generatorVal (g : Generators) :
-    massWeightPoly (h.generatorVal g) = Polynomial.monomial g.weight (h.generatorVal g) := by
-  cases g with
-  | H n l j => exact h.massWeight_H l _
-  | barH n l j => exact h.massWeight_barH l _
-  | F n l μ ν j => exact h.massWeight_F l μ ν _
-  | d i n l j => exact h.massWeight_d i l _
-  | bard i n l j => exact h.massWeight_bard i l _
-  | u i n l j => exact h.massWeight_u i l _
-  | baru i n l j => exact h.massWeight_baru i l _
-  | Q i n l j => exact h.massWeight_Q i l _
-  | barQ i n l j => exact h.massWeight_barQ i l _
-  | L i n l j => exact h.massWeight_L i l _
-  | barL i n l j => exact h.massWeight_barL i l _
-  | e i n l j => exact h.massWeight_e i l _
-  | bare i n l j => exact h.massWeight_bare i l _
-
-lemma generatorVal_mem_fieldAlgebra (g : Generators) :
-    h.generatorVal g ∈ h.fieldAlgebra := by
-  rw [fieldAlgebra]
-  refine Algebra.subset_adjoin ?_
-  cases g with
-    | F n l μ ν j =>
-      exact Set.mem_union_left _ (Set.mem_union_left _
-        (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l, Set.mem_iUnion.mpr ⟨μ,
-          Set.mem_iUnion.mpr ⟨ν, ⟨_, rfl⟩⟩⟩⟩⟩))
-    | H n l j =>
-      exact Set.mem_union_left _ (Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l, Set.mem_union_left _ ⟨_, rfl⟩⟩⟩))
-    | barH n l j =>
-      exact Set.mem_union_left _ (Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l, Set.mem_union_right _ ⟨_, rfl⟩⟩⟩))
-    | d i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (⟨_, rfl⟩)))))))))⟩⟩⟩)
-    | bard i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩))))))))⟩⟩⟩)
-    | u i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩)))))))⟩⟩⟩)
-    | baru i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩))))))⟩⟩⟩)
-    | Q i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩)))))⟩⟩⟩)
-    | barQ i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩))))⟩⟩⟩)
-    | L i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩)))⟩⟩⟩)
-    | barL i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩))⟩⟩⟩)
-    | e i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_left _ (Set.mem_union_right _ ⟨_, rfl⟩)⟩⟩⟩)
-    | bare i n l j =>
-      exact Set.mem_union_right _
-        (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l,
-          Set.mem_union_right _ ⟨_, rfl⟩⟩⟩⟩)
-
-/-- Expanding every dual vector in the dual basis of its value space: the field
-  algebra is already generated by the countable family of basis generators. -/
-lemma fieldAlgebra_le_adjoin_range :
-    h.fieldAlgebra ≤ Algebra.adjoin ℂ (Set.range h.generatorVal) := by
-  rw [fieldAlgebra]
-  refine Algebra.adjoin_le fun x hx => ?_
-  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hx
-  obtain ((⟨n, l, μ, ν, φ, rfl⟩ | ⟨n, l, ⟨φ, rfl⟩ | ⟨φ, rfl⟩⟩) | ⟨i, n, l, hx⟩) := hx
-  · rw [← GaugeAlgebra.stdBasis.sum_dual_apply_smul_coord φ]
-    simp only [map_sum, map_smul]
-    refine Subalgebra.sum_mem _ fun j _ => ?_
-    rw [← algebraMap_smul ℂ (φ (GaugeAlgebra.stdBasis j))]
-    exact Subalgebra.smul_mem _ (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.F n l μ ν j))) _
-  · rw [← HiggsVec.orthonormBasis.toBasis.sum_dual_apply_smul_coord φ]
-    simp only [map_sum, map_smul]
-    exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-      (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.H n l j))) _
-  · rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
-    simp only [map_sum, map_smul]
-    exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-      (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.barH n l j))) _
-  · obtain (((((((((⟨φ, rfl⟩ | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) |
-      ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) := hx
-    · rw [← DownSinglet.basis.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.d i n l j))) _
-    · rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.bard i n l j))) _
-    · rw [← UpSinglet.basis.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.u i n l j))) _
-    · rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.baru i n l j))) _
-    · rw [← QuarkDoublet.basis.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.Q i n l j))) _
-    · rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.barQ i n l j))) _
-    · rw [← LeptonDoublet.basis.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.L i n l j))) _
-    · rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.barL i n l j))) _
-    · rw [← LeptonSinglet.basis.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.e i n l j))) _
-    · rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-      simp only [map_sum, map_smul]
-      exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
-        (Algebra.subset_adjoin
-          (Set.mem_range_self (f := h.generatorVal) (Generators.bare i n l j))) _
-
-/-- The field algebra is generated by the covariant basis generators. -/
-lemma fieldAlgebra_eq_adjoin_range :
-    h.fieldAlgebra = Algebra.adjoin ℂ (Set.range h.generatorVal) := by
-  refine le_antisymm h.fieldAlgebra_le_adjoin_range (Algebra.adjoin_le ?_)
-  rintro x ⟨g, rfl⟩
-  exact h.generatorVal_mem_fieldAlgebra g
-
-/-- A word in the covariant generators is a `massWeightPoly`-eigenvector whose
-  weight is the sum of the weights of its factors. -/
-lemma massWeightPoly_generatorVal_list_prod (gl : List Generators) :
-    massWeightPoly ((gl.map h.generatorVal).prod) =
-      Polynomial.monomial ((gl.map Generators.weight).sum) ((gl.map h.generatorVal).prod) := by
-  induction gl with
-  | nil => simp
-  | cons g t ih =>
-    simp only [List.map_cons, List.prod_cons, List.sum_cons, map_mul,
-      h.massWeightPoly_generatorVal, ih, Polynomial.monomial_mul_monomial]
-
-/-- The span of the words in the covariant basis generators of total mass weight `w`. -/
-def covMonomialSpan (h : IsCovStandardModel B repGauge repLorentz massWeightPoly H barH F
-    d bard u baru Q barQ L barL e bare) (w : ℕ) : Submodule ℂ B :=
-  Submodule.span ℂ
-    {x | ∃ gl : List Generators,
-      (gl.map Generators.weight).sum = w ∧ (gl.map h.generatorVal).prod = x}
-
-lemma list_prod_mem_covMonomialSpan {w : ℕ} {gl : List Generators}
-    (hw : (gl.map Generators.weight).sum = w) :
-    (gl.map h.generatorVal).prod ∈ h.covMonomialSpan w :=
-  Submodule.subset_span ⟨gl, hw, rfl⟩
-
-private lemma exists_list_map_eq (l₀ : List B) :
-    (∀ y ∈ l₀, y ∈ Set.range h.generatorVal) →
-    ∃ gl : List Generators, gl.map h.generatorVal = l₀ := by
-  induction l₀ with
-  | nil => exact fun _ => ⟨[], rfl⟩
-  | cons a t ih =>
-    intro hl₀
-    obtain ⟨g, hg⟩ := hl₀ a (by simp)
-    obtain ⟨gl, hgl⟩ := ih (fun y hy => hl₀ y (by simp [hy]))
-    exact ⟨g :: gl, by rw [List.map_cons, hg, hgl]⟩
-
-/-- Reading off the `X ^ w` coefficient of `massWeightPoly` sends the field algebra
-  into the weight-`w` monomial span — the projection onto the weight-`w` component,
-  with no independence argument needed. -/
-lemma coeff_massWeightPoly_mem_covMonomialSpan (w : ℕ) {x : B}
-    (hx : x ∈ h.fieldAlgebra) :
-    (massWeightPoly x).coeff w ∈ h.covMonomialSpan w := by
-  rw [h.fieldAlgebra_eq_adjoin_range, ← Subalgebra.mem_toSubmodule,
-    Algebra.adjoin_eq_span] at hx
-  induction hx using Submodule.span_induction with
-  | mem y hy =>
-    obtain ⟨l₀, hl₀, rfl⟩ := Submonoid.exists_list_of_mem_closure hy
-    obtain ⟨gl, rfl⟩ := h.exists_list_map_eq l₀ hl₀
-    rw [h.massWeightPoly_generatorVal_list_prod, Polynomial.coeff_monomial]
-    by_cases hw : (gl.map Generators.weight).sum = w
-    · rw [if_pos hw]
-      exact h.list_prod_mem_covMonomialSpan hw
-    · rw [if_neg hw]
-      exact Submodule.zero_mem _
-  | zero =>
-    rw [map_zero, Polynomial.coeff_zero]
-    exact Submodule.zero_mem _
-  | add a b ha hb iha ihb =>
-    rw [map_add, Polynomial.coeff_add]
-    exact Submodule.add_mem _ iha ihb
-  | smul c a ha iha =>
-    rw [map_smul, Polynomial.coeff_smul]
-    exact Submodule.smul_mem _ _ iha
-
-/-- **The weight grading of the field algebra.** The submodule of elements of the
-  field algebra of mass weight `w` is exactly the span of the words in the covariant
-  basis generators of total weight `w`. -/
-theorem massWeightSubmodule_eq_covMonomialSpan (w : ℕ) :
-    h.massWeightSubmodule w = h.covMonomialSpan w := by
-  refine le_antisymm (fun x hx => ?_) ?_
-  · have h1 := h.massWeightPoly_of_mem_massWeightSubmodule hx
-    have h2 := h.coeff_massWeightPoly_mem_covMonomialSpan w
-      (h.mem_fieldAlgebra_of_mem_massWeightSubmodule hx)
-    rwa [h1, Polynomial.coeff_monomial, if_pos rfl] at h2
-  · rw [covMonomialSpan, Submodule.span_le]
-    rintro x ⟨gl, hw, rfl⟩
-    rw [massWeightSubmodule]
-    refine Submodule.mem_inf.mpr ⟨?_, ?_⟩
-    · refine Subalgebra.list_prod_mem _ (fun y hy => ?_)
-      obtain ⟨g, -, rfl⟩ := List.mem_map.mp hy
-      exact h.generatorVal_mem_fieldAlgebra g
-    · rw [LinearMap.mem_ker]
-      simp only [LinearMap.sub_apply, AlgHom.toLinearMap_apply,
-        LinearMap.coe_restrictScalars, sub_eq_zero]
-      rw [h.massWeightPoly_generatorVal_list_prod, hw]
-
-end  IsCovStandardModel
+end IsCovStandardModel
 
 end StandardModel

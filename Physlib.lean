@@ -257,6 +257,8 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
+public import Physlib.Particles.StandardModel.IsCovStandardModel.Generators
+public import Physlib.Particles.StandardModel.IsCovStandardModel.MassWeight
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic
