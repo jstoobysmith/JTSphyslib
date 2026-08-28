@@ -256,9 +256,15 @@ public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebra
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.IsFermionSector.Basic
+public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight
+public import Physlib.Particles.StandardModel.IsFermionSector.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Generators
 public import Physlib.Particles.StandardModel.IsCovStandardModel.MassWeight
+public import Physlib.Particles.StandardModel.IsCovStandardModel.Sectors
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic

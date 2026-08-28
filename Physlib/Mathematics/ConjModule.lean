@@ -164,6 +164,19 @@ lemma _root_.Representation.conj_apply {G} [Group G] (ρ : Representation k G M)
     (m : ConjModule M) :
     ρ.conj g m = conjEquiv (k := k) (M := M) (ρ g ((conjEquiv (k := k) (M := M)).symm m)) := rfl
 
+/-- The conjugate of the trivial representation acts trivially. -/
+@[simp] lemma _root_.Representation.conj_trivial_apply {G : Type*} [Group G] (g : G)
+    (m : ConjModule M) : (Representation.trivial k G M).conj g m = m := by
+  rw [Representation.conj_apply]
+  simp
+
+/-- The dual of the conjugate of the trivial representation acts trivially. -/
+@[simp] lemma _root_.Representation.conj_trivial_dual_apply {G : Type*} [Group G] (g : G)
+    (φ : Module.Dual k (ConjModule M)) :
+    ((Representation.trivial k G M).conj).dual g φ = φ := by
+  ext m
+  simp [Representation.dual_apply, Module.Dual.transpose_apply]
+
 /-!
 
 ## Functoriality, and conjugation of tensor products

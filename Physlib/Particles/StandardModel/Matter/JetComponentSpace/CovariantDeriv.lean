@@ -502,7 +502,7 @@ lemma covDerivAction_apply
   along an ordered tuple of directions: covariant derivatives do not commute (their
   commutator is the action of the field strength), so the iteration is order-dependent
   and indexed by `(n : ℕ)` and `l : Fin n → (Fin 1 ⊕ Fin 3)` — the same ordered-tuple
-  indexing as the derivative labels of `IsHiggsAlgebraValued`. The result is again a
+  indexing as the derivative labels of `IsHiggsSector`. The result is again a
   family of derivative symbols; the physical iterated covariant derivative is its
   value at the empty multiset. -/
 noncomputable def covDerivIter

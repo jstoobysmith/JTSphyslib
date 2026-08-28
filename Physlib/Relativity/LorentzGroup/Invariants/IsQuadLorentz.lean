@@ -106,7 +106,7 @@ weight `∑ j, lightConeWeight (c j)`.
 
 -/
 
-open StandardModel.IsHiggsAlgebraValued StandardModel.IsHiggsAlgebraValued.IsDerivativeCollection
+open StandardModel.IsHiggsSector StandardModel.IsHiggsSector.IsDerivativeCollection
   BoostWeight
 
 /-- The axis-`i` light-cone component of `T` at the light-cone multi-index `c`. -/

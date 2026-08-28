@@ -224,6 +224,10 @@ def GaugeWeight.coord (w : GaugeWeight) : Fin 4 → ℤ := ![w.1, w.2.1, w.2.2.1
 @[simp] lemma GaugeWeight.coord_three (w : GaugeWeight) : w.coord 3 = w.2.2.2 := rfl
 
 /-- The zero gauge weight has vanishing exponent against every torus generator. -/
+@[simp] lemma GaugeWeight.coord_neg (w : GaugeWeight) (i : Fin 4) :
+    (-w).coord i = -(w.coord i) := by
+  fin_cases i <;> rfl
+
 @[simp] lemma GaugeWeight.zero_coord (i : Fin 4) : (0 : GaugeWeight).coord i = 0 := by
   fin_cases i <;> rfl
 
@@ -386,6 +390,41 @@ lemma bot_piece (hmul : IsMulRep rep)
 @[simp]
 lemma bot_supp (hmul : IsMulRep rep) :
     (bot hmul).supp = ∅ := rfl
+
+/-- **The span of a single simultaneous eigenvector** of the gauge torus, as a
+  decomposition concentrated in its one weight. This is the base case from which the
+  decompositions of spans of weight vectors are assembled by `iSup` and `sup`. -/
+@[implicit_reducible]
+noncomputable def spanSingleton (hmul : IsMulRep rep) (x : B) (w : GaugeWeight)
+    (hx : ∀ i, rep (gaugeTorusGen i) x = ((expI : ℂ) ^ w.coord i) • x) :
+    GaugeWeightDecomposition rep (Submodule.span ℂ {x}) where
+  piece w' := if w' = w then Submodule.span ℂ {x} else ⊥
+  supp := {w}
+  rep_mul := hmul
+  piece_le := by
+    intro w' y hy i
+    split_ifs at hy with hw'
+    · subst hw'
+      obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.mp hy
+      rw [map_smul, hx i, smul_comm]
+    · rw [Submodule.mem_bot] at hy
+      subst hy
+      simp
+  piece_eq_bot := by
+    intro w' hw'
+    rw [if_neg (by simpa using hw')]
+  iSup_piece := by
+    refine le_antisymm (iSup_le fun w' => ?_) (le_iSup_of_le w (by rw [if_pos rfl]))
+    split_ifs
+    · exact le_rfl
+    · exact bot_le
+
+@[simp]
+lemma spanSingleton_piece (hmul : IsMulRep rep) (x : B) (w : GaugeWeight)
+    (hx : ∀ i, rep (gaugeTorusGen i) x = ((expI : ℂ) ^ w.coord i) • x)
+    (w' : GaugeWeight) :
+    (spanSingleton hmul x w hx).piece w'
+      = if w' = w then Submodule.span ℂ {x} else ⊥ := rfl
 
 /-- **An indexed join of decompositions.** A family of decompositions indexed by a finite type
   decomposes the join, its pieces joined and its supports united one weight at a time. This is

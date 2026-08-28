@@ -32,7 +32,11 @@ namespace IsCovStandardModel
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
+  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
+    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
   {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
   {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
@@ -48,8 +52,8 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
   {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
   {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge repLorentz massWeightPoly H barH F
-    d bard u baru Q barQ L barL e bare)
+  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
+    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
 
 /-!
 
@@ -165,8 +169,8 @@ set_option linter.unusedVariables false in
 /-- The value in `B` of a covariant generator: the corresponding covariant tower
   applied to the indicated dual basis vector of its value space. -/
 noncomputable def generatorVal
-    (h : IsCovStandardModel B repGauge repLorentz massWeightPoly H barH F
-    d bard u baru Q barQ L barL e bare) : Generators → B
+    (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
+    massWeightPoly H barH F d bard u baru Q barQ L barL e bare) : Generators → B
   | .H _ l j => H l (HiggsVec.orthonormBasis.toBasis.coord j)
   | .barH _ l j => barH l (HiggsVec.orthonormBasis.toBasis.conj.coord j)
   | .F _ l μ ν j => F l μ ν (GaugeAlgebra.stdBasis.coord j)
@@ -185,19 +189,19 @@ noncomputable def generatorVal
 lemma massWeightPoly_generatorVal (g : Generators) :
     massWeightPoly (h.generatorVal g) = Polynomial.monomial g.weight (h.generatorVal g) := by
   cases g with
-  | H n l j => exact h.massWeight_H l _
-  | barH n l j => exact h.massWeight_barH l _
-  | F n l μ ν j => exact h.massWeight_F l μ ν _
-  | d i n l j => exact h.massWeight_d i l _
-  | bard i n l j => exact h.massWeight_bard i l _
-  | u i n l j => exact h.massWeight_u i l _
-  | baru i n l j => exact h.massWeight_baru i l _
-  | Q i n l j => exact h.massWeight_Q i l _
-  | barQ i n l j => exact h.massWeight_barQ i l _
-  | L i n l j => exact h.massWeight_L i l _
-  | barL i n l j => exact h.massWeight_barL i l _
-  | e i n l j => exact h.massWeight_e i l _
-  | bare i n l j => exact h.massWeight_bare i l _
+  | H n l j => exact h.isHiggsSector.H_massWeight _ n l
+  | barH n l j => exact h.isHiggsSector.barH_massWeight _ n l
+  | F n l μ ν j => exact h.isGaugeSector.massWeight_F l μ ν _
+  | d i n l j => exact h.isFermionSector.massWeight_d i l _
+  | bard i n l j => exact h.isFermionSector.massWeight_bard i l _
+  | u i n l j => exact h.isFermionSector.massWeight_u i l _
+  | baru i n l j => exact h.isFermionSector.massWeight_baru i l _
+  | Q i n l j => exact h.isFermionSector.massWeight_Q i l _
+  | barQ i n l j => exact h.isFermionSector.massWeight_barQ i l _
+  | L i n l j => exact h.isFermionSector.massWeight_L i l _
+  | barL i n l j => exact h.isFermionSector.massWeight_barL i l _
+  | e i n l j => exact h.isFermionSector.massWeight_e i l _
+  | bare i n l j => exact h.isFermionSector.massWeight_bare i l _
 
 lemma generatorVal_mem_fieldAlgebra (g : Generators) :
     h.generatorVal g ∈ h.fieldAlgebra := by
@@ -380,7 +384,7 @@ lemma commute_F_generatorVal {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : 
   cases g with
   | H n' l' j => exact h.F_comm_H l μ ν ψ l' _
   | barH n' l' j => exact h.F_comm_barH l μ ν ψ l' _
-  | F n' l' μ' ν' j => exact h.F_comm_F l μ ν ψ l' μ' ν' _
+  | F n' l' μ' ν' j => exact h.isGaugeSector.F_comm_F l μ ν ψ l' μ' ν' _
   | d i n' l' j => exact h.F_comm_d l μ ν ψ i l' _
   | bard i n' l' j => exact h.F_comm_bard l μ ν ψ i l' _
   | u i n' l' j => exact h.F_comm_u l μ ν ψ i l' _
@@ -397,8 +401,8 @@ lemma commute_H_generatorVal {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ HiggsVec) (g : Generators) :
     Commute (H l φ) (h.generatorVal g) := by
   cases g with
-  | H n' l' j => exact h.H_comm_H l φ l' _
-  | barH n' l' j => exact h.H_comm_barH l φ l' _
+  | H n' l' j => exact h.isHiggsSector.H_comm_H φ _ _ _ l l'
+  | barH n' l' j => exact h.isHiggsSector.H_comm_barH φ _ _ _ l l'
   | F n' l' μ' ν' j => exact (h.F_comm_H l' μ' ν' _ l φ).symm
   | d i n' l' j => exact h.H_comm_d l φ i l' _
   | bard i n' l' j => exact h.H_comm_bard l φ i l' _
@@ -417,8 +421,8 @@ lemma commute_barH_generatorVal {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) (g : Generators) :
     Commute (barH l φ) (h.generatorVal g) := by
   cases g with
-  | H n' l' j => exact (h.H_comm_barH l' _ l φ).symm
-  | barH n' l' j => exact h.barH_comm_barH l φ l' _
+  | H n' l' j => exact (h.isHiggsSector.H_comm_barH _ φ _ _ l' l).symm
+  | barH n' l' j => exact h.isHiggsSector.barH_comm_barH φ _ _ _ l l'
   | F n' l' μ' ν' j => exact (h.F_comm_barH l' μ' ν' _ l φ).symm
   | d i n' l' j => exact h.barH_comm_d l φ i l' _
   | bard i n' l' j => exact h.barH_comm_bard l φ i l' _
@@ -467,34 +471,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_d i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_d i i' l l' _ _
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_bard i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_bard i i' l l' _ _
     | u i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_u i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_u i i' l l' _ _
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_baru i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_baru i i' l l' _ _
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_Q i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_Q i i' l l' _ _
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.d_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.d_anticomm_bare i i' l l' _ _
   | bard i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -502,34 +506,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_bard i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_bard i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_bard i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_bard i i' l l' _ _
     | u i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_u i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_u i i' l l' _ _
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_baru i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_baru i i' l l' _ _
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_Q i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_Q i i' l l' _ _
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bard_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.bard_anticomm_bare i i' l l' _ _
   | u i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -537,34 +541,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_u i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_u i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_u i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_u i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_u i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_u i i' l l' _ _
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_baru i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_baru i i' l l' _ _
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_Q i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_Q i i' l l' _ _
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.u_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.u_anticomm_bare i i' l l' _ _
   | baru i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -572,34 +576,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_baru i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_baru i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_baru i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_baru i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_baru i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_baru i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_baru i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_baru i i' l l' _ _
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_Q i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_Q i i' l l' _ _
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.baru_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.baru_anticomm_bare i i' l l' _ _
   | Q i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -607,34 +611,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_Q i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_Q i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_Q i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_Q i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_Q i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_Q i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_Q i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_Q i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_Q i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_Q i i' l l' _ _
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.Q_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.Q_anticomm_bare i i' l l' _ _
   | barQ i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -642,34 +646,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_barQ i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_barQ i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_barQ i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_barQ i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_barQ i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_barQ i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_barQ i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_barQ i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.Q_anticomm_barQ i' i l' l, neg_neg]
+      rw [h.isFermionSector.Q_anticomm_barQ i' i l' l, neg_neg]
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barQ_anticomm_barQ i i' l l' _ _
+      exact h.isFermionSector.barQ_anticomm_barQ i i' l l' _ _
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barQ_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.barQ_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barQ_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.barQ_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barQ_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.barQ_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barQ_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.barQ_anticomm_bare i i' l l' _ _
   | L i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -677,34 +681,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_L i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_L i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_L i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_L i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.Q_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.Q_anticomm_L i' i l' l, neg_neg]
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barQ_anticomm_L i' i l' l, neg_neg]
+      rw [h.isFermionSector.barQ_anticomm_L i' i l' l, neg_neg]
     | L i' n' l' j' =>
       simp only [generatorVal]
-      exact h.L_anticomm_L i i' l l' _ _
+      exact h.isFermionSector.L_anticomm_L i i' l l' _ _
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.L_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.L_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.L_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.L_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.L_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.L_anticomm_bare i i' l l' _ _
   | barL i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -712,34 +716,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_barL i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_barL i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_barL i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_barL i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.Q_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.Q_anticomm_barL i' i l' l, neg_neg]
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barQ_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.barQ_anticomm_barL i' i l' l, neg_neg]
     | L i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.L_anticomm_barL i' i l' l, neg_neg]
+      rw [h.isFermionSector.L_anticomm_barL i' i l' l, neg_neg]
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barL_anticomm_barL i i' l l' _ _
+      exact h.isFermionSector.barL_anticomm_barL i i' l l' _ _
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barL_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.barL_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.barL_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.barL_anticomm_bare i i' l l' _ _
   | e i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -747,34 +751,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_e i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_e i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_e i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_e i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.Q_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.Q_anticomm_e i' i l' l, neg_neg]
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barQ_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.barQ_anticomm_e i' i l' l, neg_neg]
     | L i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.L_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.L_anticomm_e i' i l' l, neg_neg]
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barL_anticomm_e i' i l' l, neg_neg]
+      rw [h.isFermionSector.barL_anticomm_e i' i l' l, neg_neg]
     | e i' n' l' j' =>
       simp only [generatorVal]
-      exact h.e_anticomm_e i i' l l' _ _
+      exact h.isFermionSector.e_anticomm_e i i' l l' _ _
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.e_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.e_anticomm_bare i i' l l' _ _
   | bare i n l j =>
     cases g' with
     | H n' l' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
@@ -782,34 +786,34 @@ lemma generatorVal_anticomm_of_odd_of_odd {g g' : Generators}
     | F n' l' μ' ν' j' => exact absurd hg' (by simp only [Generators.weight]; omega)
     | d i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.d_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.d_anticomm_bare i' i l' l, neg_neg]
     | bard i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.bard_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.bard_anticomm_bare i' i l' l, neg_neg]
     | u i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.u_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.u_anticomm_bare i' i l' l, neg_neg]
     | baru i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.baru_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.baru_anticomm_bare i' i l' l, neg_neg]
     | Q i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.Q_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.Q_anticomm_bare i' i l' l, neg_neg]
     | barQ i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barQ_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.barQ_anticomm_bare i' i l' l, neg_neg]
     | L i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.L_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.L_anticomm_bare i' i l' l, neg_neg]
     | barL i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.barL_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.barL_anticomm_bare i' i l' l, neg_neg]
     | e i' n' l' j' =>
       simp only [generatorVal]
-      rw [h.e_anticomm_bare i' i l' l, neg_neg]
+      rw [h.isFermionSector.e_anticomm_bare i' i l' l, neg_neg]
     | bare i' n' l' j' =>
       simp only [generatorVal]
-      exact h.bare_anticomm_bare i i' l l' _ _
+      exact h.isFermionSector.bare_anticomm_bare i i' l l' _ _
 
 /-- Two covariant generators exchange up to the sign determined by their mass
   weights: the weight is odd exactly on the fermionic generators, so the sign is
@@ -878,449 +882,6 @@ lemma list_prod_mul_list_prod (gl gl' : List Generators) :
               = (g.weight + (t.map Generators.weight).sum) *
                 (gl'.map Generators.weight).sum from by ring]
 
-
-/-!
-
-## The different sectors of the Standard Model
-
-Each covariant generator belongs to one of three classes — gauge, Higgs or fermion —
-and a word in the generators realises a set of classes. The sector of a class set `S`
-is spanned by the words realising exactly `S`. It contains no non-zero scalar, since
-the empty word realises no class at all, and it is closed under multiplication because
-`S ∪ S = S`: it is a non-unital subalgebra. The seven non-empty class sets give the
-seven sectors below.
-
--/
-
-/-- The three classes of covariant generator. -/
-inductive GeneratorClass where
-  /-- The gauge class: the field-strength towers. -/
-  | gauge : GeneratorClass
-  /-- The Higgs class: the Higgs towers and their conjugates. -/
-  | higgs : GeneratorClass
-  /-- The fermion class: the fermion towers and their conjugates. -/
-  | fermion : GeneratorClass
-deriving DecidableEq
-
-/-- The class of a covariant generator. -/
-def Generators.kind : Generators → GeneratorClass
-  | .F _ _ _ _ _ => .gauge
-  | .H _ _ _ => .higgs
-  | .barH _ _ _ => .higgs
-  | _ => .fermion
-
-@[simp]
-lemma Generators.isGaugeField_iff_kind (g : Generators) :
-    g.IsGaugeField ↔ g.kind = .gauge := by
-  cases g <;> simp [Generators.IsGaugeField, Generators.kind]
-
-@[simp]
-lemma Generators.isHiggs_iff_kind (g : Generators) : g.IsHiggs ↔ g.kind = .higgs := by
-  cases g <;> simp [Generators.IsHiggs, Generators.kind]
-
-@[simp]
-lemma Generators.isFermionic_iff_kind (g : Generators) :
-    g.IsFermionic ↔ g.kind = .fermion := by
-  cases g <;> simp [Generators.IsFermionic, Generators.kind]
-
-/-- The classes realised by a word in the covariant generators. -/
-def wordClasses (gl : List Generators) : Finset GeneratorClass :=
-  (gl.map Generators.kind).toFinset
-
-@[simp]
-lemma wordClasses_nil : wordClasses [] = ∅ := by simp [wordClasses]
-
-/-- Concatenating words unions the classes they realise. -/
-lemma wordClasses_append (gl gl' : List Generators) :
-    wordClasses (gl ++ gl') = wordClasses gl ∪ wordClasses gl' := by
-  rw [wordClasses, wordClasses, wordClasses, List.map_append, List.toFinset_append]
-
-/-- Prepending a generator inserts its class. -/
-lemma wordClasses_cons (a : Generators) (gl : List Generators) :
-    wordClasses (a :: gl) = insert a.kind (wordClasses gl) := by
-  rw [wordClasses, wordClasses, List.map_cons, List.toFinset_cons]
-
-/-- The span of the words in the covariant generators realising exactly the classes
-  `S`. -/
-def sectorSubmodule (S : Finset GeneratorClass) : Submodule ℂ B :=
-  Submodule.span ℂ
-    {x | ∃ gl : List Generators, wordClasses gl = S ∧ (gl.map h.generatorVal).prod = x}
-
-/-- Multiplication carries the class spans of `S` and `T` into that of `S ∪ T`. -/
-lemma mul_mem_sectorSubmodule {S T : Finset GeneratorClass} {x y : B}
-    (hx : x ∈ h.sectorSubmodule S) (hy : y ∈ h.sectorSubmodule T) :
-    x * y ∈ h.sectorSubmodule (S ∪ T) := by
-  induction hx using Submodule.span_induction with
-  | mem x hxw =>
-    obtain ⟨gl, hgl, rfl⟩ := hxw
-    induction hy using Submodule.span_induction with
-    | mem y hyw =>
-      obtain ⟨gl', hgl', rfl⟩ := hyw
-      refine Submodule.subset_span ⟨gl ++ gl', ?_, ?_⟩
-      · rw [wordClasses_append, hgl, hgl']
-      · rw [List.map_append, List.prod_append]
-    | zero => rw [mul_zero]; exact Submodule.zero_mem _
-    | add a b ha hb iha ihb => rw [mul_add]; exact Submodule.add_mem _ iha ihb
-    | smul c a ha iha => rw [mul_smul_comm]; exact Submodule.smul_mem _ _ iha
-  | zero => rw [zero_mul]; exact Submodule.zero_mem _
-  | add a b ha hb iha ihb => rw [add_mul]; exact Submodule.add_mem _ iha ihb
-  | smul c a ha iha => rw [smul_mul_assoc]; exact Submodule.smul_mem _ _ iha
-
-/-- The sector realising exactly the classes `S`: the span of the words whose
-  generators realise `S`. It is a non-unital subalgebra — closed under multiplication
-  since `S ∪ S = S`, but containing no non-zero scalar, since the empty word realises
-  no class. -/
-def sector (S : Finset GeneratorClass) : NonUnitalSubalgebra ℂ B :=
-  (h.sectorSubmodule S).toNonUnitalSubalgebra fun x y hx hy => by
-    have hxy := h.mul_mem_sectorSubmodule hx hy
-    rwa [Finset.union_self] at hxy
-
-@[simp]
-lemma mem_sector {S : Finset GeneratorClass} {x : B} :
-    x ∈ h.sector S ↔ x ∈ h.sectorSubmodule S := Iff.rfl
-
-/-- A word lies in the sector of the classes it realises. -/
-lemma list_prod_mem_sector (gl : List Generators) :
-    (gl.map h.generatorVal).prod ∈ h.sector (wordClasses gl) :=
-  Submodule.subset_span ⟨gl, rfl, rfl⟩
-
-/-- Multiplication carries the sectors of `S` and `T` into the sector of `S ∪ T`. -/
-lemma mul_mem_sector {S T : Finset GeneratorClass} {x y : B}
-    (hx : x ∈ h.sector S) (hy : y ∈ h.sector T) : x * y ∈ h.sector (S ∪ T) :=
-  h.mul_mem_sectorSubmodule hx hy
-
-/-- Every sector sits inside the field algebra. -/
-lemma mem_fieldAlgebra_of_mem_sector {S : Finset GeneratorClass} {x : B}
-    (hx : x ∈ h.sector S) : x ∈ h.fieldAlgebra := by
-  rw [mem_sector, sectorSubmodule] at hx
-  induction hx using Submodule.span_induction with
-  | mem y hy =>
-    obtain ⟨gl, -, rfl⟩ := hy
-    refine Subalgebra.list_prod_mem _ fun z hz => ?_
-    obtain ⟨g, -, rfl⟩ := List.mem_map.mp hz
-    exact h.generatorVal_mem_fieldAlgebra g
-  | zero => exact Subalgebra.zero_mem _
-  | add a b ha hb iha ihb => exact Subalgebra.add_mem _ iha ihb
-  | smul c a ha iha => exact Subalgebra.smul_mem _ iha c
-
-/-- **The sectors exhaust the field algebra**: every element of the field algebra is a
-  sum of elements of the sectors, since every word realises exactly one class set. The
-  unit is supplied by `sector ∅`, the sector of the empty word, so the join is the
-  whole of `fieldAlgebra` — read as a non-unital subalgebra, the two sides having
-  otherwise different types. -/
-lemma fieldAlgebra_eq_iSup_sector :
-    h.fieldAlgebra.toNonUnitalSubalgebra = ⨆ S : Finset GeneratorClass, h.sector S := by
-  refine le_antisymm ?_ (iSup_le fun S => ?_)
-  · intro x hx
-    rw [Subalgebra.mem_toNonUnitalSubalgebra, h.fieldAlgebra_eq_adjoin_range,
-      ← Subalgebra.mem_toSubmodule, Algebra.adjoin_eq_span] at hx
-    induction hx using Submodule.span_induction with
-    | mem y hy =>
-      obtain ⟨l₀, hl₀, rfl⟩ := Submonoid.exists_list_of_mem_closure hy
-      obtain ⟨gl, rfl⟩ := h.exists_list_map_eq l₀ hl₀
-      exact le_iSup (fun S : Finset GeneratorClass => h.sector S) (wordClasses gl)
-        (h.list_prod_mem_sector gl)
-    | zero => exact zero_mem _
-    | add a b ha hb iha ihb => exact add_mem iha ihb
-    | smul c a ha iha => exact SMulMemClass.smul_mem c iha
-  · intro x hx
-    exact Subalgebra.mem_toNonUnitalSubalgebra.mpr (h.mem_fieldAlgebra_of_mem_sector hx)
-
-
-/-!
-
-### The sectors are preserved by the gauge and Lorentz actions
-
-Both actions carry a covariant tower into combinations of towers of the same
-species, hence each generator into the sector of its own class, hence — word by
-word — each sector into itself.
-
--/
-
-/-- Any Higgs tower symbol lies in the Higgs sector. -/
-lemma H_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ HiggsVec) : H l φ ∈ h.sector {GeneratorClass.higgs} := by
-  rw [← HiggsVec.orthonormBasis.toBasis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.H n l j]
-
-/-- Any conjugate-Higgs tower symbol lies in the Higgs sector. -/
-lemma barH_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
-    barH l φ ∈ h.sector {GeneratorClass.higgs} := by
-  rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.barH n l j]
-
-/-- Any field-strength tower symbol lies in the gauge sector. -/
-lemma F_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ GaugeAlgebra) : F l μ ν φ ∈ h.sector {GeneratorClass.gauge} := by
-  rw [← GaugeAlgebra.stdBasis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => ?_
-  rw [← algebraMap_smul ℂ (φ (GaugeAlgebra.stdBasis j))]
-  refine SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.F n l μ ν j]
-
-/-- Any `d` tower symbol lies in the fermion sector. -/
-lemma d_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ DownSinglet) : d i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← DownSinglet.basis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.d i n l j]
-
-/-- Any `bard` tower symbol lies in the fermion sector. -/
-lemma bard_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule DownSinglet)) : bard i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.bard i n l j]
-
-/-- Any `u` tower symbol lies in the fermion sector. -/
-lemma u_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ UpSinglet) : u i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← UpSinglet.basis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.u i n l j]
-
-/-- Any `baru` tower symbol lies in the fermion sector. -/
-lemma baru_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule UpSinglet)) : baru i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.baru i n l j]
-
-/-- Any `Q` tower symbol lies in the fermion sector. -/
-lemma Q_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ QuarkDoublet) : Q i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← QuarkDoublet.basis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.Q i n l j]
-
-/-- Any `barQ` tower symbol lies in the fermion sector. -/
-lemma barQ_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) : barQ i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.barQ i n l j]
-
-/-- Any `L` tower symbol lies in the fermion sector. -/
-lemma L_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ LeptonDoublet) : L i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonDoublet.basis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.L i n l j]
-
-/-- Any `barL` tower symbol lies in the fermion sector. -/
-lemma barL_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) : barL i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.barL i n l j]
-
-/-- Any `e` tower symbol lies in the fermion sector. -/
-lemma e_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ LeptonSinglet) : e i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonSinglet.basis.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.e i n l j]
-
-/-- Any `bare` tower symbol lies in the fermion sector. -/
-lemma bare_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) : bare i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
-  simp only [map_sum, map_smul]
-  refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
-  simpa [generatorVal, wordClasses, Generators.kind] using
-    h.list_prod_mem_sector [Generators.bare i n l j]
-
-/-- The gauge action carries a covariant generator into the sector of its class. -/
-lemma repGauge_generatorVal_mem_sector (g : GaugeGroupI) (a : Generators) :
-    repGauge g (h.generatorVal a) ∈ h.sector {a.kind} := by
-  cases a with
-  | H n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_H g l _]
-    exact h.H_mem_sector l _
-  | barH n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_barH g l _]
-    exact h.barH_mem_sector l _
-  | F n l μ ν j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_F g l μ ν _]
-    exact h.F_mem_sector l μ ν _
-  | d i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_d g i l _]
-    exact h.d_mem_sector i l _
-  | bard i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_bard g i l _]
-    exact h.bard_mem_sector i l _
-  | u i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_u g i l _]
-    exact h.u_mem_sector i l _
-  | baru i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_baru g i l _]
-    exact h.baru_mem_sector i l _
-  | Q i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_Q g i l _]
-    exact h.Q_mem_sector i l _
-  | barQ i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_barQ g i l _]
-    exact h.barQ_mem_sector i l _
-  | L i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_L g i l _]
-    exact h.L_mem_sector i l _
-  | barL i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_barL g i l _]
-    exact h.barL_mem_sector i l _
-  | e i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_e g i l _]
-    exact h.e_mem_sector i l _
-  | bare i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repGauge_bare g i l _]
-    exact h.bare_mem_sector i l _
-
-/-- The Lorentz action carries a covariant generator into the sector of its
-  class. -/
-lemma repLorentz_generatorVal_mem_sector (Λ : SL(2,ℂ)) (a : Generators) :
-    repLorentz Λ (h.generatorVal a) ∈ h.sector {a.kind} := by
-  cases a with
-  | H n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_H Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.H_mem_sector p _)
-  | barH n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_barH Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.barH_mem_sector p _)
-  | F n l μ ν j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_F Λ n l μ ν _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _
-      (sum_mem fun a _ => SMulMemClass.smul_mem _
-        (sum_mem fun b _ => SMulMemClass.smul_mem _ (h.F_mem_sector p a b _)))
-  | d i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_d i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.d_mem_sector i p _)
-  | bard i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_bard i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.bard_mem_sector i p _)
-  | u i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_u i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.u_mem_sector i p _)
-  | baru i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_baru i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.baru_mem_sector i p _)
-  | Q i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_Q i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.Q_mem_sector i p _)
-  | barQ i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_barQ i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.barQ_mem_sector i p _)
-  | L i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_L i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.L_mem_sector i p _)
-  | barL i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_barL i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.barL_mem_sector i p _)
-  | e i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_e i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.e_mem_sector i p _)
-  | bare i n l j =>
-    simp only [generatorVal, Generators.kind]
-    rw [h.repLorentz_bare i Λ n l _]
-    exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.bare_mem_sector i p _)
-
-/-- The action `repGauge` preserves every sector. -/
-lemma repGauge_mem_sector {S : Finset GeneratorClass} {x : B} (g : GaugeGroupI)
-    (hx : x ∈ h.sector S) : repGauge g x ∈ h.sector S := by
-  rw [mem_sector, sectorSubmodule] at hx
-  induction hx using Submodule.span_induction with
-  | mem y hy =>
-    obtain ⟨gl, hgl, rfl⟩ := hy
-    subst hgl
-    induction gl with
-    | nil =>
-      simp only [List.map_nil, List.prod_nil]
-      rw [h.repGauge_one g]
-      simpa using h.list_prod_mem_sector ([] : List Generators)
-    | cons a t ih =>
-      simp only [List.map_cons, List.prod_cons]
-      rw [h.repGauge_mul g, wordClasses_cons, ← Finset.singleton_union]
-      exact h.mul_mem_sector (h.repGauge_generatorVal_mem_sector g a) ih
-  | zero => rw [map_zero]; exact zero_mem _
-  | add a b ha hb iha ihb => rw [map_add]; exact add_mem iha ihb
-  | smul c a ha iha => rw [map_smul]; exact SMulMemClass.smul_mem _ iha
-
-/-- The action `repLorentz` preserves every sector. -/
-lemma repLorentz_mem_sector {S : Finset GeneratorClass} {x : B} (Λ : SL(2,ℂ))
-    (hx : x ∈ h.sector S) : repLorentz Λ x ∈ h.sector S := by
-  rw [mem_sector, sectorSubmodule] at hx
-  induction hx using Submodule.span_induction with
-  | mem y hy =>
-    obtain ⟨gl, hgl, rfl⟩ := hy
-    subst hgl
-    induction gl with
-    | nil =>
-      simp only [List.map_nil, List.prod_nil]
-      rw [h.repLorentz_one Λ]
-      simpa using h.list_prod_mem_sector ([] : List Generators)
-    | cons a t ih =>
-      simp only [List.map_cons, List.prod_cons]
-      rw [h.repLorentz_mul Λ, wordClasses_cons, ← Finset.singleton_union]
-      exact h.mul_mem_sector (h.repLorentz_generatorVal_mem_sector Λ a) ih
-  | zero => rw [map_zero]; exact zero_mem _
-  | add a b ha hb iha ihb => rw [map_add]; exact add_mem iha ihb
-  | smul c a ha iha => rw [map_smul]; exact SMulMemClass.smul_mem _ iha
-
-/-!
-
-### Decomposition lemma
-
--/
 end IsCovStandardModel
 
 end StandardModel

@@ -38,6 +38,14 @@ open scoped Pointwise
 
 variable {A : Type} [Ring A] [Algebra ℂ A]
 
+/-- The dual of the trivial representation acts trivially. -/
+@[simp] lemma _root_.Representation.trivial_dual_apply {k G V : Type*} [CommSemiring k]
+    [Group G] [AddCommMonoid V] [Module k V] (g : G) (φ : Module.Dual k V) :
+    (Representation.trivial k G V).dual g φ = φ := by
+  ext v
+  simp [Representation.dual_apply, Module.Dual.transpose_apply]
+
+
 /-- The iterated operator `D_s = D_{ν₁} ⋯ D_{νₙ}` of a pairwise-commuting family of
   endomorphisms along a multiset `s` of indices. Commutativity is what makes the
   operator well-defined on a multiset, i.e. independent of any ordering of `s`. -/
