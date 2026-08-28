@@ -869,34 +869,24 @@ lemma sum_prod_transitionZ_coeffZ_eq_zero (c' : Fin 4 → Fin 4)
       = -∑ s, lightConeWeight (c'' s) := fun c'' => by
     rw [← Finset.sum_neg_distrib]
     exact Finset.sum_congr rfl fun s _ => lightConeWeight_swap01 (c'' s)
-  have hrei : (∑ c'' ∈ Finset.univ.filter (fun c'' : Fin 4 → Fin 4 =>
-        (∑ s, lightConeWeight (c'' s)) = 0),
-      (∏ s, lightConeTransitionZ 1 2 (c' s) (c'' s)) *
-        (∏ s, lightConeCoeffZ 2 (c'' s) (d s)))
-      = ∑ c'' ∈ Finset.univ.filter (fun c'' : Fin 4 → Fin 4 =>
-        (∑ s, lightConeWeight (c'' s)) = 0),
-      ((∏ s, lightConeTransitionZ 1 2 (c' s) (swap01 (c'' s))) *
-        (∏ s, lightConeCoeffZ 2 (swap01 (c'' s)) (d s))) := by
-    refine Finset.sum_nbij' (i := fun c'' => fun s => swap01 (c'' s))
-      (j := fun c'' => fun s => swap01 (c'' s)) ?_ ?_ ?_ ?_ ?_
-    · intro c'' hc''
-      refine Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩
-      rw [hwt, (Finset.mem_filter.1 hc'').2, neg_zero]
-    · intro c'' hc''
-      refine Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩
-      rw [hwt, (Finset.mem_filter.1 hc'').2, neg_zero]
-    · intro c'' _
-      funext s
-      rw [swap01_swap01]
-    · intro c'' _
-      funext s
-      rw [swap01_swap01]
-    · intro c'' _
-      simp only [swap01_swap01]
-  have hkey := hrei.trans ((Finset.sum_congr rfl fun c'' _ => hswap c'').trans
-    (Finset.mul_sum _ _ _).symm)
-  rw [hsgn] at hkey
-  omega
+  refine Finset.sum_involution (fun c'' _ => fun s => swap01 (c'' s)) ?_ ?_ ?_ ?_
+  · intro c'' _
+    simp only
+    rw [hswap c'', hsgn, neg_one_mul]
+    exact add_neg_cancel _
+  · intro c'' _ hne heq
+    refine hne ?_
+    have hpt : ∀ s, swap01 (c'' s) = c'' s := fun s => congrFun heq s
+    have h := hswap c''
+    rw [hsgn] at h
+    simp only [hpt, neg_one_mul] at h
+    exact eq_zero_of_neg_eq h.symm
+  · intro c'' hc''
+    refine Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩
+    rw [hwt, (Finset.mem_filter.1 hc'').2, neg_zero]
+  · intro c'' _
+    funext s
+    exact swap01_swap01 (c'' s)
 
 /-!
 
