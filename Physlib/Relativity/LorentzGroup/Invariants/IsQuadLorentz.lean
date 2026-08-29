@@ -796,6 +796,41 @@ lemma lightConeWeight_swap01 (κ : Fin 4) :
     lightConeWeight (swap01 κ) = -lightConeWeight κ := by
   fin_cases κ <;> rfl
 
+/-- Null-swap cancellation: a function of light-cone multi-indices which the null swap
+  negates sums to zero over the weight-zero multi-indices. The swap preserves the
+  weight-zero condition because it negates the total weight, so it is an involution of
+  the summation set pairing each term with its negative. Torsion-freeness is needed
+  because the involution does have fixed points — the multi-indices whose entries are
+  all transverse — and their terms vanish only because `x = -x` forces `x = 0`. Used
+  along both axes, in the sign-involution cases of
+  `sum_prod_transitionZ_coeffZ_eq_zero` and
+  `weightZeroTransition_eq_zero_of_not_isPairedOrDistinct`. -/
+lemma sum_weightZero_eq_zero_of_swap01_neg {M : Type*} [AddCommGroup M]
+    [IsAddTorsionFree M] (f : (Fin 4 → Fin 4) → M)
+    (hf : ∀ c, f (fun s => swap01 (c s)) = -f c) :
+    ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 =>
+      (∑ s, lightConeWeight (c s)) = 0), f c = 0 := by
+  refine Finset.sum_involution (fun c _ => fun s => swap01 (c s)) ?_ ?_ ?_ ?_
+  · intro c _
+    rw [hf c]
+    exact add_neg_cancel _
+  · intro c _ hne heq
+    refine hne ?_
+    have h := hf c
+    rw [heq] at h
+    refine two_nsmul_eq_zero.mp ?_
+    rw [two_nsmul]
+    exact eq_neg_iff_add_eq_zero.mp h
+  · intro c hc
+    refine Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩
+    rw [show (∑ s, lightConeWeight (swap01 (c s))) = -∑ s, lightConeWeight (c s) from by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun s _ => lightConeWeight_swap01 (c s),
+      (Finset.mem_filter.1 hc).2, neg_zero]
+  · intro c _
+    funext s
+    exact swap01_swap01 (c s)
+
 /-- The slot identity of the sign involution: swapping the null directions of the
   inner index multiplies the slot factor by the sign `nuZ`. -/
 lemma transitionZ_swap01_mul_coeffZ :
@@ -865,28 +900,8 @@ lemma sum_prod_transitionZ_coeffZ_eq_zero (c' : Fin 4 → Fin 4)
     intro c''
     simp only [← Finset.prod_mul_distrib]
     exact Finset.prod_congr rfl fun s _ => transitionZ_swap01_mul_coeffZ (c' s) (c'' s) (d s)
-  have hwt : ∀ c'' : Fin 4 → Fin 4, (∑ s, lightConeWeight (swap01 (c'' s)))
-      = -∑ s, lightConeWeight (c'' s) := fun c'' => by
-    rw [← Finset.sum_neg_distrib]
-    exact Finset.sum_congr rfl fun s _ => lightConeWeight_swap01 (c'' s)
-  refine Finset.sum_involution (fun c'' _ => fun s => swap01 (c'' s)) ?_ ?_ ?_ ?_
-  · intro c'' _
-    simp only
-    rw [hswap c'', hsgn, neg_one_mul]
-    exact add_neg_cancel _
-  · intro c'' _ hne heq
-    refine hne ?_
-    have hpt : ∀ s, swap01 (c'' s) = c'' s := fun s => congrFun heq s
-    have h := hswap c''
-    rw [hsgn] at h
-    simp only [hpt, neg_one_mul] at h
-    exact eq_zero_of_neg_eq h.symm
-  · intro c'' hc''
-    refine Finset.mem_filter.2 ⟨Finset.mem_univ _, ?_⟩
-    rw [hwt, (Finset.mem_filter.1 hc'').2, neg_zero]
-  · intro c'' _
-    funext s
-    exact swap01_swap01 (c'' s)
+  refine sum_weightZero_eq_zero_of_swap01_neg _ fun c'' => ?_
+  rw [hswap c'', hsgn, neg_one_mul]
 
 /-!
 
@@ -955,37 +970,11 @@ lemma weightZeroTransition_eq_zero_of_not_isPairedOrDistinct (i : Fin 3)
       push_cast
       rw [← Finset.prod_mul_distrib]
       exact Finset.prod_congr rfl fun s _ => invQ_swap01_mul_coeffZ_swap01 i (e s) (c s) (d s)
-    have hwt : ∀ c : Fin 4 → Fin 4, (∑ s, lightConeWeight (swap01 (c s)))
-        = -∑ s, lightConeWeight (c s) := fun c => by
-      rw [← Finset.sum_neg_distrib]
-      exact Finset.sum_congr rfl fun s _ => lightConeWeight_swap01 (c s)
-    have hrei : weightZeroTransition i d e
-        = ∑ c ∈ Finset.univ.filter (fun c : Fin 4 → Fin 4 =>
-            (∑ s, lightConeWeight (c s)) = 0),
-          ∏ s, lightConeCoeffInvQ i (e s) (swap01 (c s)) *
-            (lightConeCoeffZ i (swap01 (c s)) (d s) : ℚ) := by
-      rw [weightZeroTransition_eq_sum_lightCone]
-      refine Finset.sum_nbij' (i := fun c => fun s => swap01 (c s))
-        (j := fun c => fun s => swap01 (c s)) ?_ ?_ ?_ ?_ ?_
-      · intro c hc
-        exact Finset.mem_filter.2 ⟨Finset.mem_univ _, by
-          rw [hwt, (Finset.mem_filter.1 hc).2, neg_zero]⟩
-      · intro c hc
-        exact Finset.mem_filter.2 ⟨Finset.mem_univ _, by
-          rw [hwt, (Finset.mem_filter.1 hc).2, neg_zero]⟩
-      · intro c _
-        funext s
-        rw [swap01_swap01]
-      · intro c _
-        funext s
-        rw [swap01_swap01]
-      · intro c _
-        simp only [swap01_swap01]
-    have hkey := hrei.trans ((Finset.sum_congr rfl fun c _ => hswap c).trans
-      (Finset.mul_sum _ _ _).symm)
-    rw [← weightZeroTransition_eq_sum_lightCone, hsgn] at hkey
-    push_cast at hkey
-    linarith [hkey]
+    rw [weightZeroTransition_eq_sum_lightCone]
+    refine sum_weightZero_eq_zero_of_swap01_neg _ fun c => ?_
+    rw [hswap c, hsgn]
+    push_cast
+    ring
   · push Not at hA
     obtain ⟨s₀, hs₀⟩ := hA
     rw [weightZeroTransition_eq_sum_lightCone]
