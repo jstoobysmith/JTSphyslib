@@ -68,7 +68,14 @@ lemma cycDir_comp_nil : (fun j : Fin 0 => cycDir (![] j)) = ![] := by
 
 /-- The cyclic permutation of Lorentz direction labels has order three. -/
 lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ)) = μ := by
-  decide
+  rintro (μ | μ)
+  · rfl
+  · simp only [cycDir, Sum.map_inr]
+    congr 1
+    calc
+      (μ + 1 + 1) + 1 = μ + ((1 + 1 + 1) : Fin 3) := by ac_rfl
+      _ = μ + 0 := rfl
+      _ = μ := add_zero μ
 
 namespace SL2C
 
