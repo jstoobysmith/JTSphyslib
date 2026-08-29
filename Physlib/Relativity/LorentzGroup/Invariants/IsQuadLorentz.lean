@@ -332,16 +332,31 @@ lemma eq_sum_monoComponent (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
         rw [Finset.filter_comm, monoComponent]
         exact Finset.sum_filter_of_ne fun c _ => hne c
 
+/-- The total light-cone weight of four slots is even and lies between `-8` and `8`. -/
+lemma sum_lightConeWeight_mem (c : Fin 4 → Fin 4) :
+    (∑ s, lightConeWeight (c s)) ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ) := by
+  have hweight (κ : Fin 4) :
+      ∃ q : ℤ, -1 ≤ q ∧ q ≤ 1 ∧ lightConeWeight κ = 2 * q := by
+    fin_cases κ
+    · exact ⟨1, by norm_num [lightConeWeight]⟩
+    · exact ⟨-1, by norm_num [lightConeWeight]⟩
+    · exact ⟨0, by norm_num [lightConeWeight]⟩
+    · exact ⟨0, by norm_num [lightConeWeight]⟩
+  obtain ⟨q0, hq0_lower, hq0_upper, hq0⟩ := hweight (c 0)
+  obtain ⟨q1, hq1_lower, hq1_upper, hq1⟩ := hweight (c 1)
+  obtain ⟨q2, hq2_lower, hq2_upper, hq2⟩ := hweight (c 2)
+  obtain ⟨q3, hq3_lower, hq3_upper, hq3⟩ := hweight (c 3)
+  rw [Fin.sum_univ_four, hq0, hq1, hq2, hq3]
+  simp only [Finset.mem_insert, Finset.mem_singleton]
+  omega
+
 set_option maxRecDepth 10000 in
 /-- A component is the sum of its weight components over the full weight set: as
   `eq_sum_monoComponent` but over the fixed weight set common to all components. -/
 lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3) :
     T e = ∑ m ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ), hT.monoComponent i e m := by
-  have hall : ∀ c : Fin 4 → Fin 4,
-      (∑ s, lightConeWeight (c s)) ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ) := by
-    decide
   rw [hT.eq_sum_lightCone i e]
-  exact (Finset.sum_fiberwise_of_maps_to (fun c _ => hall c) _).symm
+  exact (Finset.sum_fiberwise_of_maps_to (fun c _ => sum_lightConeWeight_mem c) _).symm
 
 /-!
 
@@ -720,10 +735,8 @@ set_option maxRecDepth 10000 in
 lemma lightCone_eq_sum_boostComponent (i j : Fin 3) (c : Fin 4 → Fin 4) :
     hT.lightCone i c
       = ∑ m ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ), hT.boostComponent i j c m := by
-  have hall : ∀ c' : Fin 4 → Fin 4,
-      (∑ s, lightConeWeight (c' s)) ∈ ({-8, -6, -4, -2, 0, 2, 4, 6, 8} : Finset ℤ) := by decide
   rw [hT.lightCone_eq_sum_lightCone i j c]
-  exact (Finset.sum_fiberwise_of_maps_to (fun c' _ => hall c') _).symm
+  exact (Finset.sum_fiberwise_of_maps_to (fun c' _ => sum_lightConeWeight_mem c') _).symm
 
 /-- The tied pieces along the third axis: for each generator of the doubly-weight-zero
   part, the span of its weight-`m` component along the last axis. -/
