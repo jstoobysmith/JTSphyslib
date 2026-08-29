@@ -8,6 +8,7 @@ module
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.LightConeDeriv
+public import Physlib.Relativity.SL2C.AxisRotations
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
@@ -77,7 +78,7 @@ So we must have that `(u+v+w) TT = (u+v+w) M / 4`, and hence
 
 namespace StandardModel
 
-open TensorProduct Matrix MatrixGroups Lorentz
+open TensorProduct Matrix MatrixGroups Lorentz Lorentz.SL2C
 
 
 /-- The pair of symbol maps `H`, `barH` in the algebra `B` is an *algebra-valued Higgs* for
@@ -4105,51 +4106,6 @@ the extreme boost-weight components along each axis tie that mean to the coeffic
 `TT`, collapsing each family onto its metric contraction.
 
 -/
-
-/-- The cyclic permutation of the coordinate directions: time is fixed and the spatial
-  directions rotate `x → y → z → x`. -/
-def cycDir : Fin 1 ⊕ Fin 3 → Fin 1 ⊕ Fin 3 := Sum.map id (· + 1)
-
-@[simp] lemma cycDir_inl : cycDir (Sum.inl 0) = Sum.inl 0 := rfl
-
-@[simp] lemma cycDir_inr (m : Fin 3) : cycDir (Sum.inr m) = Sum.inr (m + 1) := rfl
-
-/-- Composing the cyclic direction with a two-slot index vector. -/
-lemma cycDir_comp_two (μ ν : Fin 1 ⊕ Fin 3) :
-    (fun j => cycDir (![μ, ν] j)) = ![cycDir μ, cycDir ν] := by
-  funext j
-  fin_cases j <;> rfl
-
-/-- Composing the cyclic direction with a one-slot index vector. -/
-lemma cycDir_comp_one (μ : Fin 1 ⊕ Fin 3) :
-    (fun j => cycDir (![μ] j)) = ![cycDir μ] := by
-  funext j
-  fin_cases j
-  rfl
-
-/-- Composing the cyclic direction with the empty index vector. -/
-lemma cycDir_comp_nil : (fun j : Fin 0 => cycDir (![] j)) = ![] := by
-  funext j
-  exact j.elim0
-
-/-- **The cyclic rotation** `x → y → z → x` as an element of `SL(2,ℂ)`: the rotation by
-  `2π/3` about the diagonal spatial axis. -/
-noncomputable def rotationCycle : SL(2,ℂ) :=
-  ⟨(2 : ℂ)⁻¹ • !![1 - Complex.I, -(1 + Complex.I); 1 - Complex.I, 1 + Complex.I], by
-    rw [Matrix.det_smul, Matrix.det_fin_two_of, Fintype.card_fin]
-    simp [Complex.ext_iff]
-    norm_num⟩
-
-/-- **The Lorentz matrix of the cyclic rotation is the permutation matrix of `cycDir`.** -/
-lemma toLorentzGroup_rotationCycle_apply (a b : Fin 1 ⊕ Fin 3) :
-    (SL2C.toLorentzGroup rotationCycle).1 a b = if a = cycDir b then 1 else 0 := by
-  refine Complex.ofReal_injective ?_
-  rw [SL2C.toLorentzGroup_eq_trace, PauliMatrix.trace_pauliSelfAdjoint'_mul_apply]
-  rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
-    simp [rotationCycle, cycDir, PauliMatrix.pauliSelfAdjoint', PauliMatrix.pauliMatrix,
-      Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two,
-      Complex.ext_iff] <;>
-    norm_num
 
 /-- **The cyclic rotation acts on inner-product monomials by cycling every derivative
   index.** -/

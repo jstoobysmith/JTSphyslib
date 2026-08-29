@@ -15,7 +15,8 @@ public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassDim
-public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
+public import Physlib.Relativity.LightConeDeriv
+public import Physlib.Relativity.SL2C.AxisRotations
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
@@ -47,7 +48,7 @@ collapses the iterated rounds to the projector onto the four contractions (H, I,
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups Lorentz
+open TensorProduct Matrix MatrixGroups Lorentz SL2C
 
 /-!
 
@@ -106,8 +107,7 @@ weight `∑ j, lightConeWeight (c j)`.
 
 -/
 
-open StandardModel.IsHiggsSector StandardModel.IsHiggsSector.IsDerivativeCollection
-  BoostWeight
+open BoostWeight
 
 /-- The axis-`i` light-cone component of `T` at the light-cone multi-index `c`. -/
 noncomputable def lightCone  (hT : IsQuadLorentz B repLorentz T) (i : Fin 3) (c : Fin 4 → Fin 4) :  B :=
@@ -1113,10 +1113,6 @@ lemma boostAverageTransition_cycDir (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
   congr 1
   exact (Fintype.sum_equiv (Equiv.addRight (1 : Fin 3)) _ _ fun i =>
     (weightZeroTransition_cycDir i d e).symm).symm
-
-/-- The cyclic rotation of directions has order three. -/
-lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ)) = μ := by
-  decide
 
 /-- Rotating the column index moves a double rotation to the row index. -/
 lemma boostAverageTransition_cycDir_right (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
