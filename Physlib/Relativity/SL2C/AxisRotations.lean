@@ -83,8 +83,8 @@ lemma cycDir_injective : Function.Injective cycDir :=
   Function.LeftInverse.injective (g := fun μ => cycDir (cycDir μ)) cycDir_cycDir_cycDir
 
 /-- An index not fixed by the rotation has three distinct rotations. -/
-lemma cycDir_orbit_distinct :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
+lemma cycDir_orbit_distinct {ι : Type*} :
+    ∀ d : ι → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
       ((fun s => cycDir (cycDir (d s))) ≠ d
         ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s))) := by
   intro d hd
