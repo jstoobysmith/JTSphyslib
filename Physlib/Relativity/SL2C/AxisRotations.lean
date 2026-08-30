@@ -77,6 +77,11 @@ lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ
       _ = μ + 0 := rfl
       _ = μ := add_zero μ
 
+/-- The cyclic permutation of Lorentz direction labels is injective: applying it twice
+more returns the original label. -/
+lemma cycDir_injective : Function.Injective cycDir :=
+  Function.LeftInverse.injective (g := fun μ => cycDir (cycDir μ)) cycDir_cycDir_cycDir
+
 namespace SL2C
 
 open Matrix MatrixGroups

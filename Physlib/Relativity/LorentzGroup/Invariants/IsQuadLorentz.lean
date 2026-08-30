@@ -1368,7 +1368,11 @@ lemma isPairedOrDistinct_of_mem_rotationSubset :
 lemma isPairedOrDistinct_cycDir :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, IsPairedOrDistinct d →
       IsPairedOrDistinct (fun s => cycDir (d s)) := by
-  decide +kernel
+  rintro d (⟨h01, h23⟩ | ⟨h02, h13⟩ | ⟨h03, h12⟩ | hinj)
+  · exact Or.inl ⟨congrArg cycDir h01, congrArg cycDir h23⟩
+  · exact Or.inr (Or.inl ⟨congrArg cycDir h02, congrArg cycDir h13⟩)
+  · exact Or.inr (Or.inr (Or.inl ⟨congrArg cycDir h03, congrArg cycDir h12⟩))
+  · exact Or.inr (Or.inr (Or.inr (cycDir_injective.comp hinj)))
 
 /-- The multiplicity with which `d` appears among the three rotations of `e`. -/
 def rotationOrbitCoeff (e d : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
@@ -1399,7 +1403,13 @@ lemma cycDir_orbit_distinct :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
       ((fun s => cycDir (cycDir (d s))) ≠ d
         ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s))) := by
-  decide +kernel
+  intro d hd
+  constructor
+  · refine fun h => hd (funext fun s => ?_)
+    have h3 := congrArg cycDir (congrFun h s)
+    rw [cycDir_cycDir_cycDir] at h3
+    exact h3.symm
+  · exact fun h => hd (funext fun s => cycDir_injective (congrFun h s))
 
 /-- The orbit indicator of a good index vanishes on every bad index. -/
 lemma rotationOrbitCoeff_eq_zero {r d : Fin 4 → Fin 1 ⊕ Fin 3}
