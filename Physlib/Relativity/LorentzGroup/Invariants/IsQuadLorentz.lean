@@ -1398,19 +1398,6 @@ lemma rotationOrbitCoeff_orbitRepOf :
       = if (fun s => cycDir (d s)) = d then 3 else 1 := by
   decide +kernel
 
-/-- An index not fixed by the rotation has three distinct rotations. -/
-lemma cycDir_orbit_distinct :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
-      ((fun s => cycDir (cycDir (d s))) ≠ d
-        ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s))) := by
-  intro d hd
-  constructor
-  · refine fun h => hd (funext fun s => ?_)
-    have h3 := congrArg cycDir (congrFun h s)
-    rw [cycDir_cycDir_cycDir] at h3
-    exact h3.symm
-  · exact fun h => hd (funext fun s => cycDir_injective (congrFun h s))
-
 /-- The orbit indicator of a good index vanishes on every bad index. -/
 lemma rotationOrbitCoeff_eq_zero {r d : Fin 4 → Fin 1 ⊕ Fin 3}
     (hr : IsPairedOrDistinct r) (hd : ¬IsPairedOrDistinct d) :

@@ -82,6 +82,19 @@ more returns the original label. -/
 lemma cycDir_injective : Function.Injective cycDir :=
   Function.LeftInverse.injective (g := fun μ => cycDir (cycDir μ)) cycDir_cycDir_cycDir
 
+/-- An index not fixed by the rotation has three distinct rotations. -/
+lemma cycDir_orbit_distinct :
+    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
+      ((fun s => cycDir (cycDir (d s))) ≠ d
+        ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s))) := by
+  intro d hd
+  constructor
+  · refine fun h => hd (funext fun s => ?_)
+    have h3 := congrArg cycDir (congrFun h s)
+    rw [cycDir_cycDir_cycDir] at h3
+    exact h3.symm
+  · exact fun h => hd (funext fun s => cycDir_injective (congrFun h s))
+
 namespace SL2C
 
 open Matrix MatrixGroups
