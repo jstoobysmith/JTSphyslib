@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Algebra.Module.Equiv.Defs
 public import Mathlib.Algebra.Star.Module
+public import Mathlib.LinearAlgebra.Complex.Module
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.Tactic.Ring
 public import Mathlib.RepresentationTheory.Basic
@@ -327,6 +328,69 @@ lemma tensorEquiv_symm_conjEquiv_tmul (m : M) (n : N) :
       = conjEquiv (k := k) (M := M) m ⊗ₜ[k] conjEquiv (k := k) (M := N) n := by
   rw [LinearEquiv.symm_apply_eq, tensorEquiv_tmul]
   simp
+
+/-!
+
+## Endomorphisms of the conjugate module
+
+An endomorphism of `M` is read on `ConjModule M` through `conjEquiv`. Conjugating twists
+nothing at the level of the additive group, so the structural identities hold
+definitionally; only the real-scalar one needs an argument.
+
+-/
+
+/-- A linear endomorphism read on the conjugate module: the same underlying map,
+  through the identity `conjEquiv`. Conjugating twists nothing at the level of the
+  additive group, so all structural identities (`comp`, `add`, `neg`, sums) hold
+  definitionally. -/
+def endConj {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
+    ConjModule M →ₗ[k] ConjModule M where
+  toFun v := conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v))
+  map_add' v w := f.map_add v w
+  map_smul' a v := f.map_smul (star a) v
+
+@[simp]
+lemma endConj_apply {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) (v : ConjModule M) :
+    ConjModule.endConj f v =
+      conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v)) := rfl
+
+lemma endConj_id {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] :
+    ConjModule.endConj (LinearMap.id : M →ₗ[k] M) = LinearMap.id := rfl
+
+lemma endConj_comp {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
+    ConjModule.endConj (f ∘ₗ g) = ConjModule.endConj f ∘ₗ ConjModule.endConj g := rfl
+
+lemma endConj_add {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
+    ConjModule.endConj (f + g) = ConjModule.endConj f + ConjModule.endConj g := rfl
+
+lemma endConj_neg {k : Type*} [CommRing k] [StarRing k] {M : Type*}
+    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
+    ConjModule.endConj (-f) = -ConjModule.endConj f := rfl
+
+lemma endConj_multiset_sum {k : Type*} [CommRing k] [StarRing k]
+    {M : Type*} [AddCommGroup M] [Module k M] (S : Multiset (M →ₗ[k] M)) :
+    ConjModule.endConj S.sum = (S.map ConjModule.endConj).sum := by
+  induction S using Multiset.induction_on with
+  | empty => rfl
+  | cons f S ih =>
+      rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons,
+        ConjModule.endConj_add, ih]
+
+/-- Conjugation of endomorphisms commutes with real scalars: the star on the
+  conjugated complex scalar is invisible on the reals. -/
+lemma endConj_real_smul {M : Type*} [AddCommGroup M] [Module ℂ M]
+    (r : ℝ) (f : M →ₗ[ℂ] M) :
+    ConjModule.endConj (r • f) = r • ConjModule.endConj f := by
+  refine LinearMap.ext fun v => ?_
+  show (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
+      = (starRingEnd ℂ) (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
+  rw [show (starRingEnd ℂ) (algebraMap ℝ ℂ r) = algebraMap ℝ ℂ r from
+    Complex.conj_ofReal r]
 
 end ConjModule
 

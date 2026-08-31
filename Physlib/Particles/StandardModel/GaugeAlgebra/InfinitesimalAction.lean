@@ -367,59 +367,6 @@ end MatterCovariance
 
 section ConjugateAction
 
-/-- A linear endomorphism read on the conjugate module: the same underlying map,
-  through the identity `conjEquiv`. Conjugating twists nothing at the level of the
-  additive group, so all structural identities (`comp`, `add`, `neg`, sums) hold
-  definitionally. -/
-def _root_.ConjModule.endConj {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
-    ConjModule M →ₗ[k] ConjModule M where
-  toFun v := conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v))
-  map_add' v w := f.map_add v w
-  map_smul' a v := f.map_smul (star a) v
-
-@[simp]
-lemma _root_.ConjModule.endConj_apply {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) (v : ConjModule M) :
-    ConjModule.endConj f v =
-      conjEquiv (k := k) (M := M) (f ((conjEquiv (k := k) (M := M)).symm v)) := rfl
-
-lemma _root_.ConjModule.endConj_id {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] :
-    ConjModule.endConj (LinearMap.id : M →ₗ[k] M) = LinearMap.id := rfl
-
-lemma _root_.ConjModule.endConj_comp {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
-    ConjModule.endConj (f ∘ₗ g) = ConjModule.endConj f ∘ₗ ConjModule.endConj g := rfl
-
-lemma _root_.ConjModule.endConj_add {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] (f g : M →ₗ[k] M) :
-    ConjModule.endConj (f + g) = ConjModule.endConj f + ConjModule.endConj g := rfl
-
-lemma _root_.ConjModule.endConj_neg {k : Type*} [CommRing k] [StarRing k] {M : Type*}
-    [AddCommGroup M] [Module k M] (f : M →ₗ[k] M) :
-    ConjModule.endConj (-f) = -ConjModule.endConj f := rfl
-
-lemma _root_.ConjModule.endConj_multiset_sum {k : Type*} [CommRing k] [StarRing k]
-    {M : Type*} [AddCommGroup M] [Module k M] (S : Multiset (M →ₗ[k] M)) :
-    ConjModule.endConj S.sum = (S.map ConjModule.endConj).sum := by
-  induction S using Multiset.induction_on with
-  | empty => rfl
-  | cons f S ih =>
-      rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons,
-        ConjModule.endConj_add, ih]
-
-/-- Conjugation of endomorphisms commutes with real scalars: the star on the
-  conjugated complex scalar is invisible on the reals. -/
-lemma _root_.ConjModule.endConj_real_smul {M : Type*} [AddCommGroup M] [Module ℂ M]
-    (r : ℝ) (f : M →ₗ[ℂ] M) :
-    ConjModule.endConj (r • f) = r • ConjModule.endConj f := by
-  refine LinearMap.ext fun v => ?_
-  show (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
-      = (starRingEnd ℂ) (algebraMap ℝ ℂ r) • (f ((conjEquiv (k := ℂ) (M := M)).symm v))
-  rw [show (starRingEnd ℂ) (algebraMap ℝ ℂ r) = algebraMap ℝ ℂ r from
-    Complex.conj_ofReal r]
-
 /-- **The conjugate of an infinitesimal action**: the same maps, read on the conjugate
   module — the generators of the conjugate representation. -/
 noncomputable def actionConj (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) :

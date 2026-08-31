@@ -164,7 +164,15 @@ def parse_file(path, text):
 
 
 def list_files_worktree(repo, root):
-    paths = git(repo, "ls-files", "--", root).splitlines()
+    """Tracked files, plus new ones not yet added to the index.
+
+    A file that has just been written is exactly where a fresh TODO is most likely to
+    be, and `git ls-files` alone lists only what is tracked, so a note in a new file
+    would be reported by no run of this script until someone remembered to `git add` it.
+    """
+    tracked = git(repo, "ls-files", "--", root).splitlines()
+    new = git(repo, "ls-files", "--others", "--exclude-standard", "--", root).splitlines()
+    paths = sorted(set(tracked) | set(new))
     return [p for p in paths if p.endswith(".lean") and not EXCLUDE.search(p)]
 
 

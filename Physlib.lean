@@ -225,7 +225,10 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Lorent
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
@@ -265,6 +268,7 @@ public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.BoostWeightDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
+public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
@@ -285,6 +289,7 @@ public import Physlib.Particles.StandardModel.IsCovStandardModel.FermionGaugeSec
 public import Physlib.Particles.StandardModel.IsCovStandardModel.GaugeHiggsSector.Basic
 public import Physlib.Particles.StandardModel.IsCovStandardModel.MixedSector.Basic
 public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.Basic
+public import Physlib.Particles.StandardModel.IsStandardModel.CovStandardModel
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic

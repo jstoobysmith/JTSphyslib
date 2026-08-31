@@ -180,6 +180,351 @@ structure IsStandardModel (B : Type) [Ring B] [Algebra ℂ B]
   A_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
     Commute (A s μ ψ) (bare i s' φ)
+  -- *Multiplicativity of the Lorentz action*
+  -- A `Representation` records only a linear action, so being an algebra map is a
+  -- separate demand; it is what carries the Lorentz action through products of
+  -- symbols, as the covariant derivative of a matter field needs
+  /-- Lorentz transformations act on `B` by algebra maps: the action preserves products, so each
+    `repLorentz Λ` is an algebra endomorphism of `B`. -/
+  repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
+  -- **Statistics of the matter symbols**
+  -- The gauge field is bosonic above; here the matter symbols are typed. The Higgs
+  -- symbols commute with each other and with every fermion symbol, and the fermion
+  -- symbols anticommute among themselves. Together with the `A_comm_*` rules these
+  -- fix the statistics of every symbol of the theory
+  /-- The Higgs is bosonic: two Higgs symbols commute. -/
+  H_comm_H : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ HiggsVec),
+    Commute (H s φ) (H s' φ')
+  /-- A Higgs symbol commutes with a conjugate Higgs symbol. -/
+  H_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec)
+      (φ' : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (H s φ) (barH s' φ')
+  /-- Two conjugate Higgs symbols commute. -/
+  barH_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (barH s φ) (barH s' φ')
+  /-- The Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so it
+    carries no statistics against the fermions. -/
+  H_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
+    Commute (H s φ) (d i s' φ')
+  /-- The Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  H_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (H s φ) (bard i s' φ')
+  /-- The Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so it carries
+    no statistics against the fermions. -/
+  H_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
+    Commute (H s φ) (u i s' φ')
+  /-- The Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  H_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (H s φ) (baru i s' φ')
+  /-- The Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so it carries
+    no statistics against the fermions. -/
+  H_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (H s φ) (Q i s' φ')
+  /-- The Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  H_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (H s φ) (barQ i s' φ')
+  /-- The Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so it carries
+    no statistics against the fermions. -/
+  H_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (H s φ) (L i s' φ')
+  /-- The Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  H_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (H s φ) (barL i s' φ')
+  /-- The Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so it carries
+    no statistics against the fermions. -/
+  H_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (H s φ) (e i s' φ')
+  /-- The Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  H_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (H s φ) (bare i s' φ')
+  /-- The conjugate Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  barH_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
+    Commute (barH s φ) (d i s' φ')
+  /-- The conjugate Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a
+    boson, so it carries no statistics against the fermions. -/
+  barH_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (barH s φ) (bard i s' φ')
+  /-- The conjugate Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  barH_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
+    Commute (barH s φ) (u i s' φ')
+  /-- The conjugate Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a
+    boson, so it carries no statistics against the fermions. -/
+  barH_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (barH s φ) (baru i s' φ')
+  /-- The conjugate Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  barH_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (barH s φ) (Q i s' φ')
+  /-- The conjugate Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a
+    boson, so it carries no statistics against the fermions. -/
+  barH_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (barH s φ) (barQ i s' φ')
+  /-- The conjugate Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  barH_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (barH s φ) (L i s' φ')
+  /-- The conjugate Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a
+    boson, so it carries no statistics against the fermions. -/
+  barH_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (barH s φ) (barL i s' φ')
+  /-- The conjugate Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so
+    it carries no statistics against the fermions. -/
+  barH_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (barH s φ) (e i s' φ')
+  /-- The conjugate Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a
+    boson, so it carries no statistics against the fermions. -/
+  barH_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (barH s φ) (bare i s' φ')
+  /-- The down-type quark symbols anticommute among themselves. -/
+  d_anticomm_d : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ DownSinglet),
+    d i s φ * d j s' φ' = -(d j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the conjugate down-type quark symbols. -/
+  d_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    d i s φ * bard j s' φ' = -(bard j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the up-type quark symbols. -/
+  d_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ UpSinglet),
+    d i s φ * u j s' φ' = -(u j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+  d_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    d i s φ * baru j s' φ' = -(baru j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the quark doublet symbols. -/
+  d_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    d i s φ * Q j s' φ' = -(Q j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+  d_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    d i s φ * barQ j s' φ' = -(barQ j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the lepton doublet symbols. -/
+  d_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    d i s φ * L j s' φ' = -(L j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+  d_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    d i s φ * barL j s' φ' = -(barL j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the lepton singlet symbols. -/
+  d_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    d i s φ * e j s' φ' = -(e j s' φ' * d i s φ)
+  /-- The down-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+  d_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    d i s φ * bare j s' φ' = -(bare j s' φ' * d i s φ)
+  /-- The conjugate down-type quark symbols anticommute among themselves. -/
+  bard_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    bard i s φ * bard j s' φ' = -(bard j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the up-type quark symbols. -/
+  bard_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ UpSinglet),
+    bard i s φ * u j s' φ' = -(u j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+  bard_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    bard i s φ * baru j s' φ' = -(baru j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the quark doublet symbols. -/
+  bard_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
+    bard i s φ * Q j s' φ' = -(Q j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+  bard_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    bard i s φ * barQ j s' φ' = -(barQ j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the lepton doublet symbols. -/
+  bard_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    bard i s φ * L j s' φ' = -(L j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the conjugate lepton doublet symbols.
+    -/
+  bard_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    bard i s φ * barL j s' φ' = -(barL j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the lepton singlet symbols. -/
+  bard_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    bard i s φ * e j s' φ' = -(e j s' φ' * bard i s φ)
+  /-- The conjugate down-type quark symbols anticommute with the conjugate lepton singlet symbols.
+    -/
+  bard_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    bard i s φ * bare j s' φ' = -(bare j s' φ' * bard i s φ)
+  /-- The up-type quark symbols anticommute among themselves. -/
+  u_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ UpSinglet),
+    u i s φ * u j s' φ' = -(u j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+  u_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    u i s φ * baru j s' φ' = -(baru j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the quark doublet symbols. -/
+  u_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ QuarkDoublet),
+    u i s φ * Q j s' φ' = -(Q j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+  u_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    u i s φ * barQ j s' φ' = -(barQ j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the lepton doublet symbols. -/
+  u_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    u i s φ * L j s' φ' = -(L j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+  u_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    u i s φ * barL j s' φ' = -(barL j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the lepton singlet symbols. -/
+  u_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    u i s φ * e j s' φ' = -(e j s' φ' * u i s φ)
+  /-- The up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+  u_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    u i s φ * bare j s' φ' = -(bare j s' φ' * u i s φ)
+  /-- The conjugate up-type quark symbols anticommute among themselves. -/
+  baru_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    baru i s φ * baru j s' φ' = -(baru j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the quark doublet symbols. -/
+  baru_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
+    baru i s φ * Q j s' φ' = -(Q j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+  baru_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    baru i s φ * barQ j s' φ' = -(barQ j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the lepton doublet symbols. -/
+  baru_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    baru i s φ * L j s' φ' = -(L j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+  baru_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    baru i s φ * barL j s' φ' = -(barL j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the lepton singlet symbols. -/
+  baru_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    baru i s φ * e j s' φ' = -(e j s' φ' * baru i s φ)
+  /-- The conjugate up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+  baru_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    baru i s φ * bare j s' φ' = -(bare j s' φ' * baru i s φ)
+  /-- The quark doublet symbols anticommute among themselves. -/
+  Q_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ QuarkDoublet),
+    Q i s φ * Q j s' φ' = -(Q j s' φ' * Q i s φ)
+  /-- The quark doublet symbols anticommute with the conjugate quark doublet symbols. -/
+  Q_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Q i s φ * barQ j s' φ' = -(barQ j s' φ' * Q i s φ)
+  /-- The quark doublet symbols anticommute with the lepton doublet symbols. -/
+  Q_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ LeptonDoublet),
+    Q i s φ * L j s' φ' = -(L j s' φ' * Q i s φ)
+  /-- The quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+  Q_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Q i s φ * barL j s' φ' = -(barL j s' φ' * Q i s φ)
+  /-- The quark doublet symbols anticommute with the lepton singlet symbols. -/
+  Q_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    Q i s φ * e j s' φ' = -(e j s' φ' * Q i s φ)
+  /-- The quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+  Q_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Q i s φ * bare j s' φ' = -(bare j s' φ' * Q i s φ)
+  /-- The conjugate quark doublet symbols anticommute among themselves. -/
+  barQ_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    barQ i s φ * barQ j s' φ' = -(barQ j s' φ' * barQ i s φ)
+  /-- The conjugate quark doublet symbols anticommute with the lepton doublet symbols. -/
+  barQ_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    barQ i s φ * L j s' φ' = -(L j s' φ' * barQ i s φ)
+  /-- The conjugate quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+  barQ_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    barQ i s φ * barL j s' φ' = -(barL j s' φ' * barQ i s φ)
+  /-- The conjugate quark doublet symbols anticommute with the lepton singlet symbols. -/
+  barQ_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    barQ i s φ * e j s' φ' = -(e j s' φ' * barQ i s φ)
+  /-- The conjugate quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+  barQ_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    barQ i s φ * bare j s' φ' = -(bare j s' φ' * barQ i s φ)
+  /-- The lepton doublet symbols anticommute among themselves. -/
+  L_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ LeptonDoublet),
+    L i s φ * L j s' φ' = -(L j s' φ' * L i s φ)
+  /-- The lepton doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+  L_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    L i s φ * barL j s' φ' = -(barL j s' φ' * L i s φ)
+  /-- The lepton doublet symbols anticommute with the lepton singlet symbols. -/
+  L_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonDoublet)
+      (φ' : Module.Dual ℂ LeptonSinglet),
+    L i s φ * e j s' φ' = -(e j s' φ' * L i s φ)
+  /-- The lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+  L_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    L i s φ * bare j s' φ' = -(bare j s' φ' * L i s φ)
+  /-- The conjugate lepton doublet symbols anticommute among themselves. -/
+  barL_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    barL i s φ * barL j s' φ' = -(barL j s' φ' * barL i s φ)
+  /-- The conjugate lepton doublet symbols anticommute with the lepton singlet symbols. -/
+  barL_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    barL i s φ * e j s' φ' = -(e j s' φ' * barL i s φ)
+  /-- The conjugate lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+  barL_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet))
+      ,
+    barL i s φ * bare j s' φ' = -(bare j s' φ' * barL i s φ)
+  /-- The lepton singlet symbols anticommute among themselves. -/
+  e_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ LeptonSinglet),
+    e i s φ * e j s' φ' = -(e j s' φ' * e i s φ)
+  /-- The lepton singlet symbols anticommute with the conjugate lepton singlet symbols. -/
+  e_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ LeptonSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    e i s φ * bare j s' φ' = -(bare j s' φ' * e i s φ)
+  /-- The conjugate lepton singlet symbols anticommute among themselves. -/
+  bare_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+      (φ φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    bare i s φ * bare j s' φ' = -(bare j s' φ' * bare i s φ)
 
 set_option linter.unusedVariables false
 namespace IsStandardModel
@@ -1681,6 +2026,30 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
     rcases hbS with h1 | h2
     · exact Or.inl (Or.inr h1)
     · exact Or.inr h2
+
+
+TODO (lines := 2029-2030) "Prove the Lorentz transformation laws of the covariant
+  towers, the last thing missing from the construction of `IsCovStandardModel` in
+  CovStandardModel.lean: with them, `isCovStandardModel_of_lorentzCovDeriv` loses its
+  thirteen hypotheses. What is needed is that `IsGaugeField.covDerivIter` and
+  `IsGaugeField.iteratedCovDerivAdjoint` satisfy `IsLorentzCovDerivTransforms`, given
+  the Lorentz laws of the bare symbols — the `repLorentz_*` fields above and
+  `lorentz_apply` of `IsGaugeField`. Three ingredients. First, the Lorentz mixing of the
+  derivative slots should be written as an operator on multiset-indexed families defined
+  by recursion on the multiset — peel a direction `a`, replace it by every direction `b`
+  weighted by the Lorentz matrix entry, mix the rest — rather than as a sum over ordered
+  tuples; peeling two directions commutes, so the recursion is well defined on a
+  multiset, and it agrees with the tuple form of `IsLorentzDerivTransforms`. Second,
+  that operator is a morphism for the Leibniz convolution over `Multiset.antidiagonal`,
+  by induction on the multiset using `Multiset.antidiagonal_cons`; this is what carries
+  the law through `actionFamConv` and `bracketFamConv`, both of which are, after
+  expansion in a basis, scalar combinations of convolutions of products in the algebra.
+  Third — and this is not yet recorded anywhere — the gauge-algebra action on each value
+  space must commute with the Lorentz action on it, since the correction term of a
+  covariant derivative acts on the value index by `act` while the Lorentz group acts on
+  it by the species representation. That is true because the two act on different tensor
+  factors, but it needs a lemma for each of the ten fermion species (for the Higgs it is
+  trivial, the Lorentz representation being trivial)."
 
 end IsStandardModel
 

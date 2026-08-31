@@ -800,6 +800,31 @@ lemma adjointMatrix_mul_transpose (g : GaugeGroupI) :
   rw [← adjointMatrix_star, ← adjointMatrix_mul, gaugeGroup_mul_star_self,
     adjointMatrix_one]
 
+/-- The rows of the `su(3)` block of the adjoint matrix are orthonormal. The matrix is
+  block diagonal, so orthogonality of the whole matrix restricts to each block. -/
+lemma sum_adjointMatrix_inl_row_mul (g : GaugeGroupI) (c d : Fin 8) :
+    ∑ a : Fin 8, adjointMatrix g (Sum.inl c) (Sum.inl a) *
+      adjointMatrix g (Sum.inl d) (Sum.inl a) = if c = d then 1 else 0 := by
+  have h : (adjointMatrix g * (adjointMatrix g)ᵀ) (Sum.inl c) (Sum.inl d)
+      = (1 : Matrix (Fin 8 ⊕ Fin 3 ⊕ Fin 1) (Fin 8 ⊕ Fin 3 ⊕ Fin 1) ℝ)
+        (Sum.inl c) (Sum.inl d) := by
+    rw [adjointMatrix_mul_transpose]
+  rw [Matrix.mul_apply, Fintype.sum_sum_type] at h
+  simpa [Fintype.sum_sum_type, Matrix.one_apply] using h
+
+/-- The rows of the `su(2)` block of the adjoint matrix are orthonormal. -/
+lemma sum_adjointMatrix_inr_inl_row_mul (g : GaugeGroupI) (c d : Fin 3) :
+    ∑ a : Fin 3, adjointMatrix g (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl a)) *
+      adjointMatrix g (Sum.inr (Sum.inl d)) (Sum.inr (Sum.inl a))
+      = if c = d then 1 else 0 := by
+  have h : (adjointMatrix g * (adjointMatrix g)ᵀ)
+      (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl d))
+      = (1 : Matrix (Fin 8 ⊕ Fin 3 ⊕ Fin 1) (Fin 8 ⊕ Fin 3 ⊕ Fin 1) ℝ)
+        (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl d)) := by
+    rw [adjointMatrix_mul_transpose]
+  rw [Matrix.mul_apply, Fintype.sum_sum_type] at h
+  simpa [Fintype.sum_sum_type, Matrix.one_apply] using h
+
 /-- The matrix of the adjoint action of the inverse of a gauge group element is the
   transpose of the matrix of the adjoint action. -/
 lemma adjointMatrix_inv_apply (g : GaugeGroupI) (a b : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :

@@ -19,21 +19,68 @@ This is the gauge analogue of `IsQuadLorentz`. The field strength of the `W` bos
 carries one `su(2)` adjoint index, so a product of two field strengths carries two, and
 the proposition here records how such a product transforms.
 
-Section A gives the proposition and the span of its components, section B the
-orthogonality of the `su(2)` block of `adjointMatrix`, section C the trace contraction,
-which is the natural gauge invariant built from two adjoint indices, and section D the
-gauge weight decomposition of the span.
+Section A records the adjoint matrix of the `SU(2)` factor, through which the
+transformation law is phrased, section B gives the proposition and the span of its
+components, section C the trace contraction, which is the natural gauge invariant built
+from two adjoint indices, and section D the gauge weight decomposition of the span.
 -/
 
 @[expose] public section
 
 namespace StandardModel
 
-open Matrix
+open Matrix PauliMatrix
 
 /-!
 
-## A. Bi-adjoint `su(2)` families and the span of their components
+## A. The adjoint matrix of the `SU(2)` factor
+
+An `su(2)` adjoint index is acted on by the `SU(2)` factor of the gauge group alone,
+through the trace pairing of the Pauli basis with the Pauli basis conjugated by the
+`SU(2)` matrix. That pairing is recorded here as `su2AdjointMatrix`, a matrix built from
+an element of `SU(2)` and nothing else, so that the transformation law below can be
+stated without mentioning the other two factors of the gauge group. It is the `su(2)`
+block of `GaugeAlgebra.adjointMatrix`, and inherits from it the orthonormality of its
+rows.
+
+-/
+
+/-- The adjoint matrix of an element of `SU(2)`: the trace pairing of the Pauli basis of
+  `su(2)` with the Pauli basis conjugated by that element. -/
+noncomputable def su2AdjointMatrix (U : specialUnitaryGroup (Fin 2) ℂ) :
+    Matrix (Fin 3) (Fin 3) ℝ :=
+  Matrix.of fun i j =>
+    2⁻¹ * (Matrix.trace (pauliMatrix (Sum.inr i) *
+      (U.1 * pauliMatrix (Sum.inr j) * star U.1))).re
+
+/-- The entries of the adjoint matrix of an element of `SU(2)`. -/
+@[simp]
+lemma su2AdjointMatrix_apply (U : specialUnitaryGroup (Fin 2) ℂ) (i j : Fin 3) :
+    su2AdjointMatrix U i j
+      = 2⁻¹ * (Matrix.trace (pauliMatrix (Sum.inr i) *
+          (U.1 * pauliMatrix (Sum.inr j) * star U.1))).re := rfl
+
+/-- The adjoint matrix of the `SU(2)` factor of a gauge group element is the `su(2)`
+  block of the adjoint matrix of the gauge algebra. -/
+lemma su2AdjointMatrix_toSU2 (g : GaugeGroupI) (i j : Fin 3) :
+    su2AdjointMatrix (GaugeGroupI.toSU2 g) i j
+      = GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl i)) (Sum.inr (Sum.inl j)) := rfl
+
+/-- The rows of the adjoint matrix of an element of `SU(2)` are orthonormal, the adjoint
+  action preserving the trace pairing of the Pauli basis. -/
+lemma sum_su2AdjointMatrix_row_mul (U : specialUnitaryGroup (Fin 2) ℂ) (c d : Fin 3) :
+    ∑ a : Fin 3, su2AdjointMatrix U c a * su2AdjointMatrix U d a
+      = if c = d then 1 else 0 :=
+  GaugeAlgebra.sum_adjointMatrix_inr_inl_row_mul (1, U, 1) c d
+
+/-!
+
+## B. Bi-adjoint `su(2)` families and the span of their components
+
+The transformation law carries one factor of `su2AdjointMatrix` per index, with the
+summed index in the row slot, exactly as `IsSU2BiFundamental` carries one factor of the
+fundamental matrix per index. It is the `SU(2)` factor alone, and is the law obeyed by
+the `W`-boson field strengths of `IsGaugeSector`.
 
 -/
 
@@ -44,11 +91,7 @@ structure IsSU2BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (T : (Fin 2 → Fin 3) → B) : Prop where
   repGauge_T : ∀ (g : GaugeGroupI) (l : Fin 2 → Fin 3),
     repGauge g (T l) = ∑ a : Fin 2 → Fin 3,
-      (∏ i : Fin 2, ((GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl (a i)))
-        (Sum.inr (Sum.inl (l i))) : ℝ) : ℂ)) • T a
-
-TODO (lines := 43-47) "we could probably make this just be about
- the action of the SU(2) factor."
+      (∏ i : Fin 2, ((su2AdjointMatrix (GaugeGroupI.toSU2 g) (a i) (l i) : ℝ) : ℂ)) • T a
 
 namespace IsSU2BiAdjoint
 set_option linter.unusedVariables false
@@ -81,32 +124,6 @@ lemma mem_span_iff (x : B) :
   · rintro ⟨c, rfl⟩
     exact sum_mem fun d _ => Submodule.smul_mem _ _
       (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
-
-/-!
-
-## B. Orthogonality of the adjoint matrix
-
-Orthogonality of `adjointMatrix` is proved where the matrix is defined, in
-`GaugeAlgebra.Basis`. All that is needed here is the row orthonormality of the block
-belonging to this gauge factor, which is what makes the trace contraction of section C
-gauge invariant.
-
--/
-
-/-- The rows of the `su(2)` block of the adjoint matrix are orthonormal. -/
-lemma sum_adjointMatrix_row_mul (g : GaugeGroupI) (c d : Fin 3) :
-    ∑ a : Fin 3, GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl a)) *
-      GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl d)) (Sum.inr (Sum.inl a))
-      = if c = d then 1 else 0 := by
-  have h : (GaugeAlgebra.adjointMatrix g * (GaugeAlgebra.adjointMatrix g)ᵀ)
-      (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl d)) = (1 : Matrix (Fin 8 ⊕ Fin 3 ⊕ Fin 1)
-        (Fin 8 ⊕ Fin 3 ⊕ Fin 1) ℝ) (Sum.inr (Sum.inl c)) (Sum.inr (Sum.inl d)) := by
-    rw [GaugeAlgebra.adjointMatrix_mul_transpose]
-  rw [Matrix.mul_apply, Fintype.sum_sum_type] at h
-  simpa [Fintype.sum_sum_type, Matrix.one_apply] using h
-
-TODO (lines := 90-102) "Move this to where `adjointMatrix` is
-  defined."
 
 /-!
 
@@ -152,9 +169,8 @@ lemma repGauge_traceContraction (hT : IsSU2BiAdjoint B repGauge T) (g : GaugeGro
     rw [map_sum]
     have h1 : ∀ c : Fin 3, repGauge g (T ![c, c])
         = ∑ b : Fin 2 → Fin 3,
-          ((GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl (b 0))) (Sum.inr (Sum.inl c)) *
-            GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl (b 1)))
-              (Sum.inr (Sum.inl c)) : ℝ) : ℂ) • T b := by
+          ((su2AdjointMatrix (GaugeGroupI.toSU2 g) (b 0) c *
+            su2AdjointMatrix (GaugeGroupI.toSU2 g) (b 1) c : ℝ) : ℂ) • T b := by
       intro c
       rw [hT.repGauge_T g ![c, c]]
       refine Finset.sum_congr rfl fun b _ => ?_
@@ -165,12 +181,9 @@ lemma repGauge_traceContraction (hT : IsSU2BiAdjoint B repGauge T) (g : GaugeGro
     refine Finset.sum_congr rfl fun b _ => ?_
     rw [← Finset.sum_smul]
     congr 1
-    rw [← Complex.ofReal_sum, sum_adjointMatrix_row_mul]
+    rw [← Complex.ofReal_sum, sum_su2AdjointMatrix_row_mul]
     simp [apply_ite]
   rw [step, ← hT.traceContraction_eq_sum]
-
-TODO (lines := 170-171) "Make a corresponding
-  file to this one for IsSU2BiFundamental."
 
 end IsSU2BiAdjoint
 
@@ -183,6 +196,10 @@ do not carry a definite gauge weight. The eigenvectors appear only after passing
 weight basis of the `su(2)` adjoint: for the one root direction the two complex
 combinations `x₁ ± i x₂` of the paired Pauli coordinates, and the Cartan direction as it
 stands. That is three coordinate vectors, recorded in `wtCoeff`, with weights `wtWeight`.
+The Cartan direction is named in the gauge algebra itself, as `GaugeAlgebra.su2CartanId`,
+since the Cartan directions of the whole algebra are assembled from it and its `su(3)`
+companions; the root pair is recorded here and matched with that of the whole algebra
+below.
 
 With two adjoint indices a weight vector is a product of two of these, contracted against
 `T` by `biVec`, and its weight is the sum of the two individual weights. There are nine
@@ -215,9 +232,6 @@ def rootPair : Fin 3 × Fin 3 := (0, 1)
 /-- The gauge weight of the `su(2)` root direction. -/
 def rootWt : GaugeWeight := (0, 0, 2, 0)
 
-/-- The Pauli index of the Cartan direction of `su(2)`. -/
-def cartanId : Fin 3 := 2
-
 /-- The root direction here is the `su(2)` root direction of the full gauge algebra. -/
 lemma rootIdx_three :
     GaugeAlgebra.rootIdx 3
@@ -228,18 +242,18 @@ lemma rootWeight_three : GaugeAlgebra.rootWeight 3 = rootWt := rfl
 
 /-- The Cartan direction here is the `su(2)` Cartan direction of the full gauge
   algebra. -/
-lemma cartanIdx_two : GaugeAlgebra.cartanIdx 2 = Sum.inr (Sum.inl cartanId) := rfl
+lemma cartanIdx_two : GaugeAlgebra.cartanIdx 2 = Sum.inr (Sum.inl GaugeAlgebra.su2CartanId) := rfl
 
 /-- Every Pauli index is either one of the two members of the root pair or the Cartan
   index. -/
 lemma eq_rootPair_or_cartanId (a : Fin 3) :
-    a = rootPair.1 ∨ a = rootPair.2 ∨ a = cartanId := by
+    a = rootPair.1 ∨ a = rootPair.2 ∨ a = GaugeAlgebra.su2CartanId := by
   revert a
   decide
 
 /-!
 
-## D.2. The adjoint matrix of a torus generator in the weight basis
+## D.2. The `SU(2)` adjoint matrix of a torus generator in the weight basis
 
 -/
 
@@ -262,15 +276,15 @@ lemma dualMap_coord_apply (g : GaugeGroupI) (a b : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :
     Finset.sum_ite_eq', Finset.mem_univ, if_true]
   rw [GaugeAlgebra.adjointMatrix_inv_apply]
 
-/-- The first column of the root pair: the torus rotates the two columns of the adjoint
-  matrix belonging to the root direction into each other. -/
-lemma adjointMatrix_rootPair_fst (i : Fin 4) (a : Fin 3) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inr (Sum.inl a))
-        (Sum.inr (Sum.inl rootPair.1))
+/-- The first column of the root pair: the torus rotates the two columns of the `SU(2)`
+  adjoint matrix belonging to the root direction into each other. -/
+lemma su2AdjointMatrix_rootPair_fst (i : Fin 4) (a : Fin 3) :
+    su2AdjointMatrix (GaugeGroupI.toSU2 (gaugeTorusGen i)) a rootPair.1
       = ((expI : ℂ) ^ GaugeWeight.coord rootWt i).re *
           (if a = rootPair.1 then 1 else 0)
         - ((expI : ℂ) ^ GaugeWeight.coord rootWt i).im *
           (if a = rootPair.2 then 1 else 0) := by
+  rw [su2AdjointMatrix_toSU2]
   obtain ⟨p1, -⟩ := GaugeAlgebra.dualMap_pair_of_entry
     (GaugeAlgebra.coord_rootIdx_fst 3)
     (GaugeAlgebra.coord_rootIdx_snd 3)
@@ -282,13 +296,13 @@ lemma adjointMatrix_rootPair_fst (i : Fin 4) (a : Fin 3) :
   simp [Finsupp.single_apply]
 
 /-- The second column of the root pair. -/
-lemma adjointMatrix_rootPair_snd (i : Fin 4) (a : Fin 3) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inr (Sum.inl a))
-        (Sum.inr (Sum.inl rootPair.2))
+lemma su2AdjointMatrix_rootPair_snd (i : Fin 4) (a : Fin 3) :
+    su2AdjointMatrix (GaugeGroupI.toSU2 (gaugeTorusGen i)) a rootPair.2
       = ((expI : ℂ) ^ GaugeWeight.coord rootWt i).im *
           (if a = rootPair.1 then 1 else 0)
         + ((expI : ℂ) ^ GaugeWeight.coord rootWt i).re *
           (if a = rootPair.2 then 1 else 0) := by
+  rw [su2AdjointMatrix_toSU2]
   obtain ⟨-, p2⟩ := GaugeAlgebra.dualMap_pair_of_entry
     (GaugeAlgebra.coord_rootIdx_fst 3)
     (GaugeAlgebra.coord_rootIdx_snd 3)
@@ -299,11 +313,11 @@ lemma adjointMatrix_rootPair_snd (i : Fin 4) (a : Fin 3) :
   rw [e]
   simp [Finsupp.single_apply]
 
-/-- The torus fixes the Cartan column of the adjoint matrix. -/
-lemma adjointMatrix_cartanId (i : Fin 4) (a : Fin 3) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inr (Sum.inl a))
-        (Sum.inr (Sum.inl cartanId))
-      = if a = cartanId then 1 else 0 := by
+/-- The torus fixes the Cartan column of the `SU(2)` adjoint matrix. -/
+lemma su2AdjointMatrix_cartanId (i : Fin 4) (a : Fin 3) :
+    su2AdjointMatrix (GaugeGroupI.toSU2 (gaugeTorusGen i)) a GaugeAlgebra.su2CartanId
+      = if a = GaugeAlgebra.su2CartanId then 1 else 0 := by
+  rw [su2AdjointMatrix_toSU2]
   have p := GaugeAlgebra.dualMap_coord_cartanIdx 2 i
   simp only [cartanIdx_two] at p
   have e := LinearMap.congr_fun p (GaugeAlgebra.stdBasis (Sum.inr (Sum.inl a)))
@@ -325,7 +339,7 @@ noncomputable def wtCoeff : WeightIdx → Fin 3 → ℂ
       + Complex.I * (if a = rootPair.2 then 1 else 0)
   | Sum.inr (Sum.inl _), a => (if a = rootPair.1 then 1 else 0)
       - Complex.I * (if a = rootPair.2 then 1 else 0)
-  | Sum.inr (Sum.inr _), a => if a = cartanId then 1 else 0
+  | Sum.inr (Sum.inr _), a => if a = GaugeAlgebra.su2CartanId then 1 else 0
 
 /-- The gauge weight carried by each `su(2)` adjoint weight vector. -/
 def wtWeight : WeightIdx → GaugeWeight
@@ -339,8 +353,7 @@ def unitVec (a : Fin 3) : Fin 3 → ℂ := fun x => if x = a then 1 else 0
 /-- The action of a gauge transformation on the coordinates of one `su(2)` adjoint
   index. -/
 noncomputable def rowAct (g : GaugeGroupI) (c : Fin 3 → ℂ) : Fin 3 → ℂ := fun a =>
-  ∑ x : Fin 3, ((GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl a))
-    (Sum.inr (Sum.inl x)) : ℝ) : ℂ) * c x
+  ∑ x : Fin 3, ((su2AdjointMatrix (GaugeGroupI.toSU2 g) a x : ℝ) : ℂ) * c x
 
 /-- Collapsing a sum against the two Kronecker deltas of the root pair. -/
 lemma sum_mul_pair (f : Fin 3 → ℂ) (b₁ b₂ : Fin 3) (s : ℂ) :
@@ -383,7 +396,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
   | Sum.inl r =>
     show ∑ x : Fin 3, _ = _
     simp only [wtCoeff]
-    rw [sum_mul_pair, adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
+    rw [sum_mul_pair, su2AdjointMatrix_rootPair_fst, su2AdjointMatrix_rootPair_snd]
     simp only [wtCoeff, wtWeight, Pi.smul_apply, smul_eq_mul,
       apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
       Complex.ofReal_sub, Complex.ofReal_add, Complex.ofReal_mul]
@@ -397,7 +410,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
       simp only [wtCoeff]
       ring
     simp only [hneg]
-    rw [sum_mul_pair, adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
+    rw [sum_mul_pair, su2AdjointMatrix_rootPair_fst, su2AdjointMatrix_rootPair_snd]
     simp only [wtWeight, Pi.smul_apply, smul_eq_mul,
       apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
       Complex.ofReal_sub, Complex.ofReal_add, Complex.ofReal_mul]
@@ -410,7 +423,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
   | Sum.inr (Sum.inr c) =>
     show ∑ x : Fin 3, _ = _
     simp only [wtCoeff, wtWeight, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
-      Finset.mem_univ, if_true, adjointMatrix_cartanId, Pi.smul_apply, smul_eq_mul,
+      Finset.mem_univ, if_true, su2AdjointMatrix_cartanId, Pi.smul_apply, smul_eq_mul,
       GaugeWeight.zero_coord, zpow_zero,
       apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero]
 
@@ -475,10 +488,8 @@ lemma repGauge_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 3 → ℂ) :
   have step : ∀ d : Fin 2 → Fin 3, repGauge g ((c₀ (d 0) * c₁ (d 1)) • T d)
       = ∑ a : Fin 2 → Fin 3,
         ((c₀ (d 0) * c₁ (d 1)) *
-          (((GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl (a 0)))
-              (Sum.inr (Sum.inl (d 0))) : ℝ) : ℂ) *
-            ((GaugeAlgebra.adjointMatrix g (Sum.inr (Sum.inl (a 1)))
-              (Sum.inr (Sum.inl (d 1))) : ℝ) : ℂ)))
+          (((su2AdjointMatrix (GaugeGroupI.toSU2 g) (a 0) (d 0) : ℝ) : ℂ) *
+            ((su2AdjointMatrix (GaugeGroupI.toSU2 g) (a 1) (d 1) : ℝ) : ℂ)))
           • T a := by
     intro d
     rw [map_smul, hT.repGauge_T g d, Finset.smul_sum]
@@ -531,7 +542,7 @@ lemma unitVec_rootPair_snd :
   ring
 
 /-- The Cartan direction is already a weight vector. -/
-lemma unitVec_cartanId : unitVec cartanId = wtCoeff (Sum.inr (Sum.inr 0)) := rfl
+lemma unitVec_cartanId : unitVec GaugeAlgebra.su2CartanId = wtCoeff (Sum.inr (Sum.inr 0)) := rfl
 
 /-- Contracting a weight vector against a single Pauli direction stays in the join of the
   weight lines. -/

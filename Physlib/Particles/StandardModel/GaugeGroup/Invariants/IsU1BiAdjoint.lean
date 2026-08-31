@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
+public import Mathlib.RepresentationTheory.Invariants
 /-!
 # Gauge tensors carrying two `u(1)` adjoint indices
 
@@ -169,7 +170,8 @@ lemma repGauge_traceContraction (hT : IsU1BiAdjoint B repGauge T) (g : GaugeGrou
 
 The `u(1)` adjoint index takes a single value and the gauge group acts trivially on it,
 so every component of `T` is itself gauge invariant, and hence so is every linear
-combination of the components.
+combination of the components. At the level of submodules this says that the span sits
+inside the invariants of `repGauge`.
 
 -/
 
@@ -188,8 +190,11 @@ lemma repGauge_of_mem_span (hT : IsU1BiAdjoint B repGauge T) (g : GaugeGroupI) {
   rw [map_sum]
   exact Finset.sum_congr rfl fun d _ => by rw [map_smul, hT.repGauge_T_self g d]
 
-TODO (lines := 185-190) "Write the spanned version
-  of this result, similar to in `IsQuadLorentz`."
+/-- The span of the components of a bi-adjoint `u(1)` family lies in the gauge
+  invariants: the submodule form of `repGauge_of_mem_span`. -/
+lemma span_le_invariants (hT : IsU1BiAdjoint B repGauge T) :
+    hT.span ≤ repGauge.invariants :=
+  fun _ hx => (Representation.mem_invariants _ _).2 fun g => hT.repGauge_of_mem_span g hx
 
 end IsU1BiAdjoint
 

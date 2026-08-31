@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 /-!
 # Gauge tensors carrying two `su(3)` adjoint indices
 
@@ -19,10 +20,14 @@ This is the gauge analogue of `IsQuadLorentz`. The field strength of the gluons 
 one `su(3)` adjoint index, so a product of two field strengths carries two, and the
 proposition here records how such a product transforms.
 
-Section A gives the proposition and the span of its components, section B the
-orthogonality of the `su(3)` block of `adjointMatrix`, section C the trace
+Section A gives the proposition and the span of its components, section B the trace
 contraction, which is the natural gauge invariant built from two adjoint indices, and
-section D the gauge weight decomposition of the span.
+section C the gauge weight decomposition of the span. Section D grades the zero-weight
+piece of that decomposition by the cyclic colour rotation, which is what the gauge weight
+alone cannot do, and section E upgrades that grading to the isotypic decomposition of the
+whole Weyl group `S₃`, in which the trace contraction lands in the trivial isotype. The row
+orthonormality of the `su(3)` block of `adjointMatrix` that section B rests on is proved
+where the matrix is defined, in `GaugeAlgebra.Basis`.
 -/
 
 @[expose] public section
@@ -81,32 +86,7 @@ lemma mem_span_iff (x : B) :
 
 /-!
 
-## B. Orthogonality of the adjoint matrix
-
-Orthogonality of `adjointMatrix` is proved where the matrix is defined, in
-`GaugeAlgebra.Basis`. All that is needed here is the row orthonormality of the block
-belonging to this gauge factor, which is what makes the trace contraction of section C
-gauge invariant.
-
--/
-
-/-- The rows of the `su(3)` block of the adjoint matrix are orthonormal. -/
-lemma sum_adjointMatrix_row_mul (g : GaugeGroupI) (c d : Fin 8) :
-    ∑ a : Fin 8, GaugeAlgebra.adjointMatrix g (Sum.inl c) (Sum.inl a) *
-      GaugeAlgebra.adjointMatrix g (Sum.inl d) (Sum.inl a)
-      = if c = d then 1 else 0 := by
-  have h : (GaugeAlgebra.adjointMatrix g * (GaugeAlgebra.adjointMatrix g)ᵀ)
-      (Sum.inl c) (Sum.inl d) = (1 : Matrix (Fin 8 ⊕ Fin 3 ⊕ Fin 1)
-        (Fin 8 ⊕ Fin 3 ⊕ Fin 1) ℝ) (Sum.inl c) (Sum.inl d) := by
-    rw [GaugeAlgebra.adjointMatrix_mul_transpose]
-  rw [Matrix.mul_apply, Fintype.sum_sum_type] at h
-  simpa [Fintype.sum_sum_type, Matrix.one_apply] using h
-
-TODO (lines := 92-104) "Move this to where `adjointMatrix` is defined."
-
-/-!
-
-## C. The trace contraction
+## B. The trace contraction
 
 -/
 
@@ -160,7 +140,7 @@ lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (g : GaugeGro
     refine Finset.sum_congr rfl fun b _ => ?_
     rw [← Finset.sum_smul]
     congr 1
-    rw [← Complex.ofReal_sum, sum_adjointMatrix_row_mul]
+    rw [← Complex.ofReal_sum, GaugeAlgebra.sum_adjointMatrix_inl_row_mul]
     simp [apply_ite]
   rw [step, ← hT.traceContraction_eq_sum]
 
@@ -169,14 +149,17 @@ end IsSU3BiAdjoint
 
 /-!
 
-## D. The gauge weight decomposition of the span
+## C. The gauge weight decomposition of the span
 
 The Gell-Mann basis vectors are not eigenvectors of the gauge torus, so the components
 `T d` do not carry a definite gauge weight. The eigenvectors appear only after passing to
 the weight basis of the `su(3)` adjoint: for each of the three root directions the two
 complex combinations `x₁ ± i x₂` of the paired Gell-Mann coordinates, and the two Cartan
 directions as they stand. That is eight coordinate vectors, recorded in `wtCoeff`, with
-weights `wtWeight`.
+weights `wtWeight`. The two Cartan directions are named in the gauge algebra itself, as
+`GaugeAlgebra.su3CartanId`, since the Cartan directions of the whole algebra are
+assembled from them; the root pairs are recorded here and matched with those of the whole
+algebra in C.1.
 
 With two adjoint indices a weight vector is a product of two of these, contracted against
 `T` by `biVec`, and its weight is the sum of the two individual weights. There are sixty
@@ -195,7 +178,7 @@ set_option linter.unusedVariables false
 
 /-!
 
-## D.1. The weight basis of the `su(3)` adjoint
+## C.1. The weight basis of the `su(3)` adjoint
 
 -/
 
@@ -215,11 +198,6 @@ def rootWt : Fin 3 → GaugeWeight
   | 1 => (1, 1, 0, 0)
   | 2 => (-1, 2, 0, 0)
 
-/-- The Gell-Mann indices of the two Cartan directions of `su(3)`. -/
-def cartanId : Fin 2 → Fin 8
-  | 0 => 2
-  | 1 => 7
-
 /-- The root directions here are the `su(3)` root directions of the full gauge algebra. -/
 lemma rootIdx_castSucc (r : Fin 3) :
     GaugeAlgebra.rootIdx r.castSucc
@@ -234,20 +212,20 @@ lemma rootWeight_castSucc (r : Fin 3) :
 /-- The Cartan directions here are the `su(3)` Cartan directions of the full gauge
   algebra. -/
 lemma cartanIdx_castSucc (c : Fin 2) :
-    GaugeAlgebra.cartanIdx c.castSucc.castSucc = Sum.inl (cartanId c) := by
+    GaugeAlgebra.cartanIdx c.castSucc.castSucc = Sum.inl (GaugeAlgebra.su3CartanId c) := by
   fin_cases c <;> rfl
 
 /-- Every Gell-Mann index is either one of the two members of a root pair or a Cartan
   index. -/
 lemma exists_rootPair_or_cartanId (a : Fin 8) :
     (∃ r : Fin 3, a = (rootPair r).1) ∨ (∃ r : Fin 3, a = (rootPair r).2)
-      ∨ ∃ c : Fin 2, a = cartanId c := by
+      ∨ ∃ c : Fin 2, a = GaugeAlgebra.su3CartanId c := by
   revert a
   decide
 
 /-!
 
-## D.2. The adjoint matrix of a torus generator in the weight basis
+## C.2. The adjoint matrix of a torus generator in the weight basis
 
 -/
 
@@ -307,8 +285,8 @@ lemma adjointMatrix_rootPair_snd (i : Fin 4) (r : Fin 3) (a : Fin 8) :
 
 /-- The torus fixes the Cartan columns of the adjoint matrix. -/
 lemma adjointMatrix_cartanId (i : Fin 4) (c : Fin 2) (a : Fin 8) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inl a) (Sum.inl (cartanId c))
-      = if a = cartanId c then 1 else 0 := by
+    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inl a) (Sum.inl (GaugeAlgebra.su3CartanId c))
+      = if a = GaugeAlgebra.su3CartanId c then 1 else 0 := by
   have p := GaugeAlgebra.dualMap_coord_cartanIdx c.castSucc.castSucc i
   simp only [cartanIdx_castSucc] at p
   have e := LinearMap.congr_fun p (GaugeAlgebra.stdBasis (Sum.inl a))
@@ -318,7 +296,7 @@ lemma adjointMatrix_cartanId (i : Fin 4) (c : Fin 2) (a : Fin 8) :
 
 /-!
 
-## D.3. The weight vectors of one adjoint index
+## C.3. The weight vectors of one adjoint index
 
 -/
 
@@ -330,7 +308,7 @@ noncomputable def wtCoeff : WeightIdx → Fin 8 → ℂ
       + Complex.I * (if a = (rootPair r).2 then 1 else 0)
   | Sum.inr (Sum.inl r), a => (if a = (rootPair r).1 then 1 else 0)
       - Complex.I * (if a = (rootPair r).2 then 1 else 0)
-  | Sum.inr (Sum.inr c), a => if a = cartanId c then 1 else 0
+  | Sum.inr (Sum.inr c), a => if a = GaugeAlgebra.su3CartanId c then 1 else 0
 
 /-- The gauge weight carried by each `su(3)` adjoint weight vector. -/
 def wtWeight : WeightIdx → GaugeWeight
@@ -424,7 +402,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     rfl
   | Sum.inr (Sum.inr c) =>
     have hw : ∀ x : Fin 8, wtCoeff (Sum.inr (Sum.inr c)) x
-        = if x = cartanId c then (1 : ℂ) else 0 := fun _ => rfl
+        = if x = GaugeAlgebra.su3CartanId c then (1 : ℂ) else 0 := fun _ => rfl
     have hz : ((expI : ℂ) ^ GaugeWeight.coord
         (wtWeight (Sum.inr (Sum.inr c) : WeightIdx)) i) = 1 := by
       show ((expI : ℂ) ^ GaugeWeight.coord (0 : GaugeWeight) i) = 1
@@ -437,7 +415,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
 
 /-!
 
-## D.4. The bi-adjoint weight vectors and their span
+## C.4. The bi-adjoint weight vectors and their span
 
 -/
 
@@ -484,6 +462,11 @@ lemma biVec_add_right (c₀ c₁ c₁' : Fin 8 → ℂ) :
 lemma biVec_sub_right (c₀ c₁ c₁' : Fin 8 → ℂ) :
     hT.biVec c₀ (c₁ - c₁') = hT.biVec c₀ c₁ - hT.biVec c₀ c₁' := by
   simp only [biVec, Pi.sub_apply, mul_sub, sub_smul, Finset.sum_sub_distrib]
+
+/-- Negating both coordinate vectors leaves the contraction unchanged: the two signs
+  cancel against each other. -/
+lemma biVec_neg_neg (c₀ c₁ : Fin 8 → ℂ) : hT.biVec (-c₀) (-c₁) = hT.biVec c₀ c₁ := by
+  simp only [biVec, Pi.neg_apply, neg_mul_neg]
 
 /-- Contracting against two single Gell-Mann directions returns a component of `T`. -/
 lemma biVec_unitVec (a b : Fin 8) : hT.biVec (unitVec a) (unitVec b) = T ![a, b] := by
@@ -551,7 +534,7 @@ lemma unitVec_rootPair_snd (r : Fin 3) :
 
 /-- A Cartan direction is already a weight vector. -/
 lemma unitVec_cartanId (c : Fin 2) :
-    unitVec (cartanId c) = wtCoeff (Sum.inr (Sum.inr c)) := rfl
+    unitVec (GaugeAlgebra.su3CartanId c) = wtCoeff (Sum.inr (Sum.inr c)) := rfl
 
 /-- Contracting a weight vector against a single Gell-Mann direction stays in the join of
   the weight lines. -/
@@ -597,7 +580,7 @@ lemma span_eq_wtSpan : hT.span = hT.wtSpan := by
 
 /-!
 
-## D.5. The decomposition
+## C.5. The decomposition
 
 -/
 
@@ -642,7 +625,7 @@ lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
 
 /-!
 
-## D.6. The zero-weight piece
+## C.6. The zero-weight piece
 
 A gauge invariant built from `T` is fixed by the torus, so it lies in the zero-weight
 piece, which makes that piece worth describing explicitly. A product of two weight vectors
@@ -701,6 +684,1186 @@ lemma traceContraction_mem_piece_zero (hmul : IsMulRep repGauge) :
     hT.traceContraction ∈ (hT.gaugeWeightDecomposition hmul).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _ hT.traceContraction_mem_span
     hT.repGauge_traceContraction
+
+/-!
+
+## C.7. The ten zero-weight products written out
+
+Each of the ten lines of the previous section is the line through an explicit element of
+`B`: for each of the three roots the raising vector paired with the matching lowering
+vector and the same pair in the other order, and the four products of two Cartan
+directions. Expanding the weight vectors in the Gell-Mann basis writes each of the ten as
+a combination of the components of `T`, and the zero-weight piece is the span of the ten
+element set they form.
+
+-/
+
+/-- The weight vector of a positive root, in terms of the two Gell-Mann coordinate
+  directions of its root pair. -/
+lemma wtCoeff_inl (r : Fin 3) :
+    wtCoeff (Sum.inl r) = unitVec (rootPair r).1 + Complex.I • unitVec (rootPair r).2 := by
+  funext x
+  simp [wtCoeff, unitVec]
+
+/-- The weight vector of a negative root, in terms of the two Gell-Mann coordinate
+  directions of its root pair. -/
+lemma wtCoeff_inr_inl (r : Fin 3) :
+    wtCoeff (Sum.inr (Sum.inl r))
+      = unitVec (rootPair r).1 - Complex.I • unitVec (rootPair r).2 := by
+  funext x
+  simp [wtCoeff, unitVec]
+
+/-- The raising vector of a root paired with the matching lowering vector. -/
+noncomputable def posNegProd (hT : IsSU3BiAdjoint B repGauge T) (r : Fin 3) : B :=
+  hT.biVec (wtCoeff (Sum.inl r)) (wtCoeff (Sum.inr (Sum.inl r)))
+
+/-- The lowering vector of a root paired with the matching raising vector. -/
+noncomputable def negPosProd (hT : IsSU3BiAdjoint B repGauge T) (r : Fin 3) : B :=
+  hT.biVec (wtCoeff (Sum.inr (Sum.inl r))) (wtCoeff (Sum.inl r))
+
+/-- The product of two Cartan directions. -/
+noncomputable def cartanProd (hT : IsSU3BiAdjoint B repGauge T) (c₀ c₁ : Fin 2) : B :=
+  hT.biVec (wtCoeff (Sum.inr (Sum.inr c₀))) (wtCoeff (Sum.inr (Sum.inr c₁)))
+
+/-- The raising-lowering product of a root, written out in the components of `T`. -/
+lemma posNegProd_eq (r : Fin 3) :
+    hT.posNegProd r
+      = T ![(rootPair r).1, (rootPair r).1] + T ![(rootPair r).2, (rootPair r).2]
+        + Complex.I • (T ![(rootPair r).2, (rootPair r).1]
+          - T ![(rootPair r).1, (rootPair r).2]) := by
+  rw [posNegProd, wtCoeff_inl, wtCoeff_inr_inl, hT.biVec_add_left, hT.biVec_smul_left,
+    hT.biVec_sub_right, hT.biVec_sub_right, hT.biVec_smul_right, hT.biVec_smul_right,
+    hT.biVec_unitVec, hT.biVec_unitVec, hT.biVec_unitVec, hT.biVec_unitVec, smul_sub,
+    smul_smul, Complex.I_mul_I, neg_one_smul, smul_sub]
+  abel
+
+/-- The lowering-raising product of a root, written out in the components of `T`. -/
+lemma negPosProd_eq (r : Fin 3) :
+    hT.negPosProd r
+      = T ![(rootPair r).1, (rootPair r).1] + T ![(rootPair r).2, (rootPair r).2]
+        + Complex.I • (T ![(rootPair r).1, (rootPair r).2]
+          - T ![(rootPair r).2, (rootPair r).1]) := by
+  rw [negPosProd, wtCoeff_inl, wtCoeff_inr_inl, hT.biVec_sub_left, hT.biVec_smul_left,
+    hT.biVec_add_right, hT.biVec_add_right, hT.biVec_smul_right, hT.biVec_smul_right,
+    hT.biVec_unitVec, hT.biVec_unitVec, hT.biVec_unitVec, hT.biVec_unitVec, smul_add,
+    smul_smul, Complex.I_mul_I, neg_one_smul, smul_sub]
+  abel
+
+/-- A product of two Cartan directions is a single component of `T`: the Cartan
+  directions are already Gell-Mann coordinate directions. -/
+lemma cartanProd_eq (c₀ c₁ : Fin 2) :
+    hT.cartanProd c₀ c₁
+      = T ![GaugeAlgebra.su3CartanId c₀, GaugeAlgebra.su3CartanId c₁] := by
+  rw [cartanProd, ← unitVec_cartanId, ← unitVec_cartanId, hT.biVec_unitVec]
+
+/-- The zero-weight piece of the gauge weight decomposition, fully explicitly: the span
+  of the ten products of two weight vectors of opposite weight. -/
+lemma gaugeWeightDecomposition_piece_zero_span (hmul : IsMulRep repGauge) :
+    (hT.gaugeWeightDecomposition hmul).piece 0
+      = Submodule.span ℂ
+        {hT.posNegProd 0, hT.posNegProd 1, hT.posNegProd 2,
+          hT.negPosProd 0, hT.negPosProd 1, hT.negPosProd 2,
+          hT.cartanProd 0 0, hT.cartanProd 0 1, hT.cartanProd 1 0, hT.cartanProd 1 1} := by
+  refine le_antisymm ?_ ?_
+  · rw [hT.gaugeWeightDecomposition_piece_zero hmul]
+    refine sup_le (sup_le (iSup_le fun r => ?_) (iSup_le fun r => ?_))
+      (iSup_le fun c₀ => iSup_le fun c₁ => ?_)
+    · refine (Submodule.span_singleton_le_iff_mem _ _).mpr (Submodule.subset_span ?_)
+      fin_cases r <;> simp [posNegProd]
+    · refine (Submodule.span_singleton_le_iff_mem _ _).mpr (Submodule.subset_span ?_)
+      fin_cases r <;> simp [negPosProd]
+    · refine (Submodule.span_singleton_le_iff_mem _ _).mpr (Submodule.subset_span ?_)
+      fin_cases c₀ <;> fin_cases c₁ <;> simp [cartanProd]
+  · rw [Submodule.span_le]
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    have hmem : ∀ k₀ k₁ : WeightIdx, wtWeight k₀ + wtWeight k₁ = 0 →
+        hT.biVec (wtCoeff k₀) (wtCoeff k₁)
+          ∈ (hT.gaugeWeightDecomposition hmul).piece 0 := fun k₀ k₁ h =>
+      (Submodule.span_singleton_le_iff_mem _ _).mp (hT.span_biVec_le_piece_zero hmul h)
+    rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · exact hmem (Sum.inl 0) (Sum.inr (Sum.inl 0)) (by simp [wtWeight])
+    · exact hmem (Sum.inl 1) (Sum.inr (Sum.inl 1)) (by simp [wtWeight])
+    · exact hmem (Sum.inl 2) (Sum.inr (Sum.inl 2)) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inl 0)) (Sum.inl 0) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inl 1)) (Sum.inl 1) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inl 2)) (Sum.inl 2) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inr 0)) (Sum.inr (Sum.inr 0)) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inr 0)) (Sum.inr (Sum.inr 1)) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inr 1)) (Sum.inr (Sum.inr 0)) (by simp [wtWeight])
+    · exact hmem (Sum.inr (Sum.inr 1)) (Sum.inr (Sum.inr 1)) (by simp [wtWeight])
+
+/-!
+
+## D. The `SU(3)` permutation decomposition of the zero-weight piece
+
+The gauge weight cannot see inside its own zero-weight piece: the torus fixes all ten of
+the products above. The cyclic colour rotation `gaugeSU3Perm` does see inside it. It
+normalises the torus and sends each weight to another weight, fixing the weight zero, so
+it acts on the zero-weight piece, and `SU3PermDecomposition` grades that action by the
+cube roots of unity.
+
+Sections D.1 and D.2 compute the action, first on the Gell-Mann coordinate directions and
+then on the weight vectors: the six root directions are permuted in two three-cycles,
+while the two Cartan directions are rotated into each other and are diagonalised by the
+combinations `x₂ ∓ i x₇`. Section D.3 transfers this to the ten products, section D.4
+grades a three-cycle by the cube roots of unity, and section D.5 assembles the
+decomposition.
+
+This grading is a sieve, not a classification: `SU3PermDecomposition` records that grade
+zero is necessary for gauge invariance but proves no converse. It is also only half of the
+Weyl group of `SU(3)`. Section E adds the other half, and the decomposition built here is
+the scaffolding that the isotypic decomposition there is assembled from, rather than the
+end of the story.
+
+## D.1. The cyclic colour rotation on the Gell-Mann directions
+
+Conjugation by the cyclic matrix permutes the matrix units, hence the Gell-Mann matrices,
+up to signs; only the two diagonal ones are mixed, by a rotation through `2 π / 3`.
+
+-/
+
+/-- The star of the cyclic colour matrix is the permutation matrix of the inverse
+  three-cycle. -/
+lemma star_su3PermMatrix :
+    star !![(0 : ℂ), 0, 1; 1, 0, 0; 0, 1, 0] = !![(0 : ℂ), 1, 0; 0, 0, 1; 1, 0, 0] := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp
+
+/-- An entry of the `su(3)` block of an adjoint matrix is a Gell-Mann coordinate of the
+  conjugated Gell-Mann matrix. -/
+lemma adjointMatrix_inl_inl_eq_gellMannCoeff (g : GaugeGroupI) (a b : Fin 8) :
+    GaugeAlgebra.adjointMatrix g (Sum.inl a) (Sum.inl b)
+      = gellMannCoeff (g.toSU3.1 * gellMannMatrix b * star g.toSU3.1) a := by
+  have hmem := GaugeAlgebra.conj_mem g.toSU3.2.1
+    (gellMannMatrix_selfAdjoint b) (gellMannMatrix_trace b)
+  rw [GaugeAlgebra.adjointMatrix_inl_inl, gellMannCoeff_eq_trace hmem.1 hmem.2]
+
+/-- The conjugate of each Gell-Mann matrix by the cyclic colour rotation. -/
+noncomputable def permGellMann : Fin 8 → Matrix (Fin 3) (Fin 3) ℂ
+  | 0 => !![0, 0, 0; 0, 0, 1; 0, 1, 0]
+  | 1 => !![0, 0, 0; 0, 0, -Complex.I; 0, Complex.I, 0]
+  | 2 => !![0, 0, 0; 0, 1, 0; 0, 0, -1]
+  | 3 => !![0, 1, 0; 1, 0, 0; 0, 0, 0]
+  | 4 => !![0, Complex.I, 0; -Complex.I, 0, 0; 0, 0, 0]
+  | 5 => !![0, 0, 1; 0, 0, 0; 1, 0, 0]
+  | 6 => !![0, 0, Complex.I; 0, 0, 0; -Complex.I, 0, 0]
+  | 7 => !![((-2 * (Real.sqrt 3)⁻¹ : ℝ) : ℂ), 0, 0;
+            0, (((Real.sqrt 3)⁻¹ : ℝ) : ℂ), 0;
+            0, 0, (((Real.sqrt 3)⁻¹ : ℝ) : ℂ)]
+
+/-- Conjugating a Gell-Mann matrix by the cyclic colour rotation. -/
+lemma conj_gellMannMatrix_gaugeSU3Perm (b : Fin 8) :
+    gaugeSU3Perm.toSU3.1 * gellMannMatrix b * star gaugeSU3Perm.toSU3.1 = permGellMann b := by
+  rw [show gaugeSU3Perm.toSU3.1 = !![(0 : ℂ), 0, 1; 1, 0, 0; 0, 1, 0] from rfl,
+    star_su3PermMatrix]
+  fin_cases b <;> ext i j <;> fin_cases i <;> fin_cases j <;>
+    simp [permGellMann, gellMannMatrix_zero, gellMannMatrix_one, gellMannMatrix_two,
+      gellMannMatrix_three, gellMannMatrix_four, gellMannMatrix_five, gellMannMatrix_six,
+      gellMannMatrix_seven, Matrix.mul_apply, Fin.sum_univ_three]
+  all_goals ring
+
+/-- The coordinates of the image of each Gell-Mann direction under the cyclic colour
+  rotation: the six directions of the root pairs are permuted up to sign, and the two
+  Cartan directions are rotated into each other. -/
+noncomputable def permCol : Fin 8 → Fin 8 → ℂ
+  | 0 => unitVec 5
+  | 1 => unitVec 6
+  | 2 => -(2 : ℂ)⁻¹ • unitVec 2 + (((Real.sqrt 3 : ℝ) : ℂ) / 2) • unitVec 7
+  | 3 => unitVec 0
+  | 4 => -unitVec 1
+  | 5 => unitVec 3
+  | 6 => -unitVec 4
+  | 7 => -((((Real.sqrt 3 : ℝ) : ℂ) / 2) • unitVec 2) - (2 : ℂ)⁻¹ • unitVec 7
+
+/-- The row action on a Gell-Mann coordinate direction is a column of the adjoint
+  matrix. -/
+lemma rowAct_unitVec (g : GaugeGroupI) (b a : Fin 8) :
+    rowAct g (unitVec b) a
+      = ((GaugeAlgebra.adjointMatrix g (Sum.inl a) (Sum.inl b) : ℝ) : ℂ) := by
+  simp [rowAct, unitVec, mul_ite]
+
+/-- The cyclic colour rotation on the Gell-Mann coordinate directions. -/
+lemma rowAct_gaugeSU3Perm_unitVec (b : Fin 8) :
+    rowAct gaugeSU3Perm (unitVec b) = permCol b := by
+  have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
+    rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
+    norm_num
+  funext a
+  rw [rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff, conj_gellMannMatrix_gaugeSU3Perm]
+  fin_cases b <;> fin_cases a <;> simp [permGellMann, gellMannCoeff, permCol, unitVec]
+  all_goals first
+    | ring1
+    | linear_combination (-(1 : ℂ) / 6) * h3
+
+/-!
+
+## D.2. The cyclic colour rotation on the weight vectors
+
+The six root weight vectors are permuted in two three-cycles, `wtCycle j` for `j = 0, 1`.
+The two Cartan weight vectors are not permuted but rotated, and the combinations
+`x₂ ∓ i x₇` recorded in `cartanVec` diagonalise the rotation, at the eigenvalues `ω` and
+`ω ^ 2`.
+
+-/
+
+/-- The row action is additive in the coordinate vector. -/
+lemma rowAct_add (g : GaugeGroupI) (c c' : Fin 8 → ℂ) :
+    rowAct g (c + c') = rowAct g c + rowAct g c' := by
+  funext a
+  simp only [rowAct, Pi.add_apply, mul_add, Finset.sum_add_distrib]
+
+/-- The row action is additive on differences of coordinate vectors. -/
+lemma rowAct_sub (g : GaugeGroupI) (c c' : Fin 8 → ℂ) :
+    rowAct g (c - c') = rowAct g c - rowAct g c' := by
+  funext a
+  simp only [rowAct, Pi.sub_apply, mul_sub, Finset.sum_sub_distrib]
+
+/-- The row action is homogeneous in the coordinate vector. -/
+lemma rowAct_smul (g : GaugeGroupI) (z : ℂ) (c : Fin 8 → ℂ) :
+    rowAct g (z • c) = z • rowAct g c := by
+  funext a
+  simp only [rowAct, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun x _ => by ring
+
+/-- The six root weight indices arranged in the two three-cycles along which the cyclic
+  colour rotation moves them. -/
+def wtCycle : Fin 2 → Fin 3 → WeightIdx
+  | 0, 0 => Sum.inl 0
+  | 0, 1 => Sum.inl 2
+  | 0, 2 => Sum.inr (Sum.inl 1)
+  | 1, 0 => Sum.inl 1
+  | 1, 1 => Sum.inr (Sum.inl 0)
+  | 1, 2 => Sum.inr (Sum.inl 2)
+
+/-- The cyclic colour rotation moves the root weight vectors one step along their
+  cycle. -/
+lemma rowAct_gaugeSU3Perm_wtCoeff (j : Fin 2) (i : Fin 3) :
+    rowAct gaugeSU3Perm (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle j (i + 1)) := by
+  fin_cases j <;> fin_cases i <;>
+    simp [wtCycle, wtCoeff_inl, wtCoeff_inr_inl, rootPair, rowAct_add, rowAct_sub,
+      rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol]
+  all_goals module
+
+/-- The two eigenvectors of the cyclic colour rotation in the Cartan plane. -/
+noncomputable def cartanVec : Fin 2 → Fin 8 → ℂ
+  | 0 => wtCoeff (Sum.inr (Sum.inr 0)) - Complex.I • wtCoeff (Sum.inr (Sum.inr 1))
+  | 1 => wtCoeff (Sum.inr (Sum.inr 0)) + Complex.I • wtCoeff (Sum.inr (Sum.inr 1))
+
+/-- The grade of each Cartan eigenvector. -/
+def cartanGrade : Fin 2 → ZMod 3
+  | 0 => 1
+  | 1 => 2
+
+/-- The cube root of unity `ω = exp (2 π i / 3)`, written out. -/
+lemma su3Omega_eq : su3Omega = -2⁻¹ + ((Real.sqrt 3 / 2 : ℝ) : ℂ) * Complex.I := by
+  have h : (2 * (Real.pi : ℂ) * Complex.I / 3)
+      = ((2 * Real.pi / 3 : ℝ) : ℂ) * Complex.I := by
+    push_cast
+    ring
+  rw [su3Omega, h, Complex.exp_mul_I, ← Complex.ofReal_cos, ← Complex.ofReal_sin,
+    show (2 * Real.pi / 3 : ℝ) = Real.pi - Real.pi / 3 by ring,
+    Real.cos_pi_sub, Real.sin_pi_sub, Real.cos_pi_div_three, Real.sin_pi_div_three]
+  push_cast
+  ring
+
+/-- The square of `ω`, written out. -/
+lemma su3Omega_sq : su3Omega ^ 2 = -2⁻¹ - ((Real.sqrt 3 / 2 : ℝ) : ℂ) * Complex.I := by
+  have h3 : ((Real.sqrt 3 : ℝ) : ℂ) ^ 2 = 3 := by
+    rw [← Complex.ofReal_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
+    norm_num
+  rw [su3Omega_eq]
+  push_cast
+  linear_combination (((Real.sqrt 3 : ℝ) : ℂ) ^ 2 / 4) * Complex.I_sq + (-(1 : ℂ) / 4) * h3
+
+/-- The grade-one sign, written out. -/
+lemma su3PermSign_one_eq :
+    su3PermSign 1 = -2⁻¹ + ((Real.sqrt 3 / 2 : ℝ) : ℂ) * Complex.I := by
+  rw [su3PermSign_one, su3Omega_eq]
+
+/-- The grade-two sign, written out. -/
+lemma su3PermSign_two_eq :
+    su3PermSign 2 = -2⁻¹ - ((Real.sqrt 3 / 2 : ℝ) : ℂ) * Complex.I := by
+  rw [su3PermSign_two, su3Omega_sq]
+
+/-- The cyclic colour rotation scales each Cartan eigenvector by the cube root of unity
+  of its grade. -/
+lemma rowAct_gaugeSU3Perm_cartanVec (c : Fin 2) :
+    rowAct gaugeSU3Perm (cartanVec c) = su3PermSign (cartanGrade c) • cartanVec c := by
+  fin_cases c <;>
+    simp only [cartanVec, cartanGrade, ← unitVec_cartanId, GaugeAlgebra.su3CartanId,
+      rowAct_sub, rowAct_add, rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol,
+      su3PermSign_one_eq, su3PermSign_two_eq] <;>
+    match_scalars
+  all_goals ring_nf
+  all_goals try simp only [Complex.I_sq]
+  all_goals ring1
+
+/-- The first Cartan weight vector in terms of the two eigenvectors. -/
+lemma wtCoeff_cartan_zero :
+    wtCoeff (Sum.inr (Sum.inr 0)) = (2 : ℂ)⁻¹ • (cartanVec 0 + cartanVec 1) := by
+  simp only [cartanVec]
+  module
+
+/-- The second Cartan weight vector in terms of the two eigenvectors. -/
+lemma wtCoeff_cartan_one :
+    wtCoeff (Sum.inr (Sum.inr 1)) = (Complex.I / 2) • (cartanVec 0 - cartanVec 1) := by
+  simp only [cartanVec]
+  match_scalars
+  all_goals first
+    | ring1
+    | linear_combination Complex.I_sq
+
+/-!
+
+## D.3. The ten zero-weight products under the rotation
+
+Pairing each weight vector of a cycle with the opposite weight vector turns the two
+three-cycles of weight vectors into two three-cycles of zero-weight products, `prodCycle 0`
+and `prodCycle 1`. The four Cartan products are not permuted: written in the eigenbasis
+`cartanVec` they are scaled, by the product of the two eigenvalues.
+
+-/
+
+/-- The six root products of weight zero, arranged in the two three-cycles along which the
+  cyclic colour rotation moves them. -/
+noncomputable def prodCycle (hT : IsSU3BiAdjoint B repGauge T) : Fin 2 → Fin 3 → B
+  | 0, i => hT.biVec (wtCoeff (wtCycle 0 i)) (wtCoeff (wtCycle 1 (i + 1)))
+  | 1, i => hT.biVec (wtCoeff (wtCycle 1 (i + 1))) (wtCoeff (wtCycle 0 i))
+
+/-- The forward cycle starts at the first raising-lowering product. -/
+lemma prodCycle_zero_zero : hT.prodCycle 0 0 = hT.posNegProd 0 := rfl
+
+/-- The forward cycle continues with the third raising-lowering product. -/
+lemma prodCycle_zero_one : hT.prodCycle 0 1 = hT.posNegProd 2 := rfl
+
+/-- The forward cycle closes on the second lowering-raising product. -/
+lemma prodCycle_zero_two : hT.prodCycle 0 2 = hT.negPosProd 1 := rfl
+
+/-- The reverse cycle starts at the first lowering-raising product. -/
+lemma prodCycle_one_zero : hT.prodCycle 1 0 = hT.negPosProd 0 := rfl
+
+/-- The reverse cycle continues with the third lowering-raising product. -/
+lemma prodCycle_one_one : hT.prodCycle 1 1 = hT.negPosProd 2 := rfl
+
+/-- The reverse cycle closes on the second raising-lowering product. -/
+lemma prodCycle_one_two : hT.prodCycle 1 2 = hT.posNegProd 1 := rfl
+
+/-- The cyclic colour rotation moves each root product one step along its cycle. -/
+lemma repGauge_gaugeSU3Perm_prodCycle (j : Fin 2) (i : Fin 3) :
+    repGauge gaugeSU3Perm (hT.prodCycle j i) = hT.prodCycle j (i + 1) := by
+  fin_cases j <;>
+    simp only [prodCycle, hT.repGauge_biVec, rowAct_gaugeSU3Perm_wtCoeff]
+
+/-- The two weight vectors of a root product carry opposite weights. -/
+lemma wtWeight_wtCycle_add (i : Fin 3) :
+    wtWeight (wtCycle 0 i) + wtWeight (wtCycle 1 (i + 1)) = 0 := by
+  revert i
+  decide
+
+/-- The same pair of weight vectors in the other order. -/
+lemma wtWeight_wtCycle_add' (i : Fin 3) :
+    wtWeight (wtCycle 1 (i + 1)) + wtWeight (wtCycle 0 i) = 0 := by
+  revert i
+  decide
+
+/-- Every root product lies in the zero-weight piece. -/
+lemma prodCycle_mem_piece_zero (hmul : IsMulRep repGauge) (j : Fin 2) (i : Fin 3) :
+    hT.prodCycle j i ∈ (hT.gaugeWeightDecomposition hmul).piece 0 := by
+  fin_cases j
+  · exact (Submodule.span_singleton_le_iff_mem _ _).mp
+      (hT.span_biVec_le_piece_zero hmul (wtWeight_wtCycle_add i))
+  · exact (Submodule.span_singleton_le_iff_mem _ _).mp
+      (hT.span_biVec_le_piece_zero hmul (wtWeight_wtCycle_add' i))
+
+/-- The products of two Cartan eigenvectors. -/
+noncomputable def cartanEigenProd (hT : IsSU3BiAdjoint B repGauge T) (a b : Fin 2) : B :=
+  hT.biVec (cartanVec a) (cartanVec b)
+
+/-- A product of two Cartan eigenvectors is scaled by the cube root of unity of the sum of
+  the two grades. -/
+lemma repGauge_gaugeSU3Perm_cartanEigenProd (a b : Fin 2) :
+    repGauge gaugeSU3Perm (hT.cartanEigenProd a b)
+      = su3PermSign (cartanGrade a + cartanGrade b) • hT.cartanEigenProd a b := by
+  rw [cartanEigenProd, hT.repGauge_biVec, rowAct_gaugeSU3Perm_cartanVec,
+    rowAct_gaugeSU3Perm_cartanVec, hT.biVec_smul_left, hT.biVec_smul_right, smul_smul,
+    su3PermSign_add]
+
+/-- Every product of two Cartan eigenvectors lies in the zero-weight piece. -/
+lemma cartanEigenProd_mem_piece_zero (hmul : IsMulRep repGauge) (a b : Fin 2) :
+    hT.cartanEigenProd a b ∈ (hT.gaugeWeightDecomposition hmul).piece 0 := by
+  have hbase : ∀ c₀ c₁ : Fin 2, hT.biVec (wtCoeff (Sum.inr (Sum.inr c₀)))
+      (wtCoeff (Sum.inr (Sum.inr c₁))) ∈ (hT.gaugeWeightDecomposition hmul).piece 0 :=
+    fun c₀ c₁ => (Submodule.span_singleton_le_iff_mem _ _).mp
+      (hT.span_biVec_le_piece_zero hmul (by simp [wtWeight]))
+  have hc : ∀ c : Fin 2, c = 0 ∨ c = 1 := by decide
+  rcases hc a with rfl | rfl <;> rcases hc b with rfl | rfl <;>
+    simp only [cartanEigenProd, cartanVec, hT.biVec_add_left, hT.biVec_sub_left,
+      hT.biVec_smul_left, hT.biVec_add_right, hT.biVec_sub_right, hT.biVec_smul_right]
+  all_goals
+    repeat' first
+      | exact hbase _ _
+      | apply add_mem
+      | apply sub_mem
+      | apply Submodule.smul_mem
+
+/-!
+
+## D.4. The graded combinations of a three-cycle
+
+A three-cycle `x` of elements of `B` has three graded combinations, one for each cube root
+of unity: `cycleEigen x k` is scaled by `ω ^ k`, and the three of them span the same
+subspace as the cycle, by the inverse of the Vandermonde matrix of the cube roots of unity.
+
+-/
+
+/-- The grade `k` combination of a three-cycle. -/
+noncomputable def cycleEigen (x : Fin 3 → B) (k : ZMod 3) : B :=
+  x 0 + su3PermSign (2 * k) • x 1 + su3PermSign k • x 2
+
+/-- The grade zero combination of a three-cycle is the plain sum of its three members:
+  the character is trivial there. -/
+lemma cycleEigen_zero_eq (x : Fin 3 → B) : cycleEigen x 0 = x 0 + x 1 + x 2 := by
+  simp [cycleEigen, su3PermSign_zero]
+
+/-- The cube roots of unity sum to zero. -/
+lemma su3Omega_add : 1 + su3Omega + su3Omega ^ 2 = 0 := by
+  rw [su3Omega_sq, su3Omega_eq]
+  ring
+
+/-- The cyclic element scales the grade `k` combination of a three-cycle by `ω ^ k`. -/
+lemma repGauge_cycleEigen (x : Fin 3 → B)
+    (hx : ∀ i : Fin 3, repGauge gaugeSU3Perm (x i) = x (i + 1)) (k : ZMod 3) :
+    repGauge gaugeSU3Perm (cycleEigen x k) = su3PermSign k • cycleEigen x k := by
+  have h3k : k + 2 * k = 0 := by
+    have h : (3 : ZMod 3) * k = 0 := by
+      rw [show (3 : ZMod 3) = 0 from rfl, zero_mul]
+    linear_combination h
+  have h2k : k + k = 2 * k := by ring
+  rw [cycleEigen, map_add, map_add, map_smul, map_smul, hx 0, hx 1, hx 2,
+    show (0 : Fin 3) + 1 = 1 from rfl, show (1 : Fin 3) + 1 = 2 from rfl,
+    show (2 : Fin 3) + 1 = 0 from rfl, smul_add, smul_add, smul_smul, smul_smul,
+    ← su3PermSign_add, ← su3PermSign_add, h3k, h2k, su3PermSign_zero, one_smul]
+  abel
+
+/-- The three graded combinations sum to three times the first member of the cycle. -/
+lemma cycleEigen_sum_zero (x : Fin 3 → B) :
+    cycleEigen x 0 + cycleEigen x 1 + cycleEigen x 2 = (3 : ℂ) • x 0 := by
+  simp only [cycleEigen, show (2 : ZMod 3) * 0 = 0 from rfl, show (2 : ZMod 3) * 1 = 2 from rfl,
+    show (2 : ZMod 3) * 2 = 1 from rfl, su3PermSign_zero, su3PermSign_one, su3PermSign_two]
+  match_scalars
+  all_goals first
+    | ring1
+    | linear_combination su3Omega_add
+
+/-- Weighting the graded combinations by the cube roots of unity picks out the second
+  member of the cycle. -/
+lemma cycleEigen_sum_one (x : Fin 3 → B) :
+    cycleEigen x 0 + su3Omega • cycleEigen x 1 + su3Omega ^ 2 • cycleEigen x 2
+      = (3 : ℂ) • x 1 := by
+  simp only [cycleEigen, show (2 : ZMod 3) * 0 = 0 from rfl, show (2 : ZMod 3) * 1 = 2 from rfl,
+    show (2 : ZMod 3) * 2 = 1 from rfl, su3PermSign_zero, su3PermSign_one, su3PermSign_two]
+  match_scalars
+  all_goals first
+    | ring1
+    | linear_combination su3Omega_add
+    | linear_combination (2 : ℂ) * su3Omega_pow_three
+    | linear_combination su3Omega_add + su3Omega * su3Omega_pow_three
+
+/-- Weighting by the other cube root of unity picks out the third member of the cycle. -/
+lemma cycleEigen_sum_two (x : Fin 3 → B) :
+    cycleEigen x 0 + su3Omega ^ 2 • cycleEigen x 1 + su3Omega • cycleEigen x 2
+      = (3 : ℂ) • x 2 := by
+  simp only [cycleEigen, show (2 : ZMod 3) * 0 = 0 from rfl, show (2 : ZMod 3) * 1 = 2 from rfl,
+    show (2 : ZMod 3) * 2 = 1 from rfl, su3PermSign_zero, su3PermSign_one, su3PermSign_two]
+  match_scalars
+  all_goals first
+    | ring1
+    | linear_combination su3Omega_add
+    | linear_combination (2 : ℂ) * su3Omega_pow_three
+    | linear_combination su3Omega_add + su3Omega * su3Omega_pow_three
+
+/-- Every member of a three-cycle lies in the join of the lines through its three graded
+  combinations. -/
+lemma cycle_mem_iSup (x : Fin 3 → B) (i : Fin 3) :
+    x i ∈ ⨆ k : ZMod 3, ℂ ∙ cycleEigen x k := by
+  have hmem : ∀ k : ZMod 3, cycleEigen x k ∈ ⨆ k : ZMod 3, ℂ ∙ cycleEigen x k :=
+    fun k => Submodule.mem_iSup_of_mem k (Submodule.mem_span_singleton_self _)
+  have hcomb : ∀ z₀ z₁ z₂ : ℂ,
+      z₀ • cycleEigen x 0 + z₁ • cycleEigen x 1 + z₂ • cycleEigen x 2
+        ∈ ⨆ k : ZMod 3, ℂ ∙ cycleEigen x k := fun z₀ z₁ z₂ =>
+    add_mem (add_mem (Submodule.smul_mem _ _ (hmem 0)) (Submodule.smul_mem _ _ (hmem 1)))
+      (Submodule.smul_mem _ _ (hmem 2))
+  have hthree : ∀ y : B, (3 : ℂ) • y ∈ (⨆ k : ZMod 3, ℂ ∙ cycleEigen x k) →
+      y ∈ ⨆ k : ZMod 3, ℂ ∙ cycleEigen x k := by
+    intro y hy
+    have h := Submodule.smul_mem _ ((3 : ℂ)⁻¹) hy
+    rwa [smul_smul, inv_mul_cancel₀ (by norm_num : (3 : ℂ) ≠ 0), one_smul] at h
+  have hi : i = 0 ∨ i = 1 ∨ i = 2 := by
+    revert i
+    decide
+  rcases hi with rfl | rfl | rfl
+  · refine hthree _ ?_
+    rw [← cycleEigen_sum_zero x]
+    simpa using hcomb 1 1 1
+  · refine hthree _ ?_
+    rw [← cycleEigen_sum_one x]
+    simpa using hcomb 1 su3Omega (su3Omega ^ 2)
+  · refine hthree _ ?_
+    rw [← cycleEigen_sum_two x]
+    simpa using hcomb 1 (su3Omega ^ 2) su3Omega
+
+/-!
+
+## D.5. The decomposition
+
+The grade `k` piece holds one line from each of the two cycles of root products, together
+with those products of Cartan eigenvectors whose two grades sum to `k`. That is four of the
+ten lines in grade zero and three in each of the grades one and two.
+
+-/
+
+/-- The grade `k` piece of the `SU(3)` permutation decomposition of the zero-weight
+  piece. -/
+noncomputable def zeroPiece (hT : IsSU3BiAdjoint B repGauge T) (k : ZMod 3) : Submodule ℂ B :=
+  ℂ ∙ cycleEigen (hT.prodCycle 0) k ⊔ ℂ ∙ cycleEigen (hT.prodCycle 1) k
+    ⊔ ⨆ (a : Fin 2) (b : Fin 2) (_ : cartanGrade a + cartanGrade b = k),
+      ℂ ∙ hT.cartanEigenProd a b
+
+/-- Each graded piece is of pure sign under the cyclic colour rotation. -/
+lemma zeroPiece_le_eigenspace (k : ZMod 3) :
+    hT.zeroPiece k ≤ Module.End.eigenspace (repGauge gaugeSU3Perm) (su3PermSign k) := by
+  refine sup_le (sup_le ?_ ?_) (iSup_le fun a => iSup_le fun b => iSup_le fun hab => ?_)
+  · rw [Submodule.span_le, Set.singleton_subset_iff]
+    exact Module.End.mem_eigenspace_iff.mpr
+      (repGauge_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 0) k)
+  · rw [Submodule.span_le, Set.singleton_subset_iff]
+    exact Module.End.mem_eigenspace_iff.mpr
+      (repGauge_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 1) k)
+  · rw [Submodule.span_le, Set.singleton_subset_iff]
+    refine Module.End.mem_eigenspace_iff.mpr ?_
+    rw [hT.repGauge_gaugeSU3Perm_cartanEigenProd, hab]
+
+/-- Every product of two Cartan directions lies in the join of the graded pieces. -/
+lemma cartanProd_mem_iSup_zeroPiece (c₀ c₁ : Fin 2) :
+    hT.cartanProd c₀ c₁ ∈ ⨆ k : ZMod 3, hT.zeroPiece k := by
+  have hbase : ∀ a b : Fin 2,
+      hT.biVec (cartanVec a) (cartanVec b) ∈ ⨆ k : ZMod 3, hT.zeroPiece k := fun a b =>
+    Submodule.mem_iSup_of_mem (cartanGrade a + cartanGrade b)
+      (Submodule.mem_sup_right (Submodule.mem_iSup_of_mem a (Submodule.mem_iSup_of_mem b
+        (Submodule.mem_iSup_of_mem rfl (Submodule.mem_span_singleton_self _)))))
+  have hc : ∀ c : Fin 2, c = 0 ∨ c = 1 := by decide
+  rcases hc c₀ with rfl | rfl <;> rcases hc c₁ with rfl | rfl <;>
+    simp only [cartanProd, wtCoeff_cartan_zero, wtCoeff_cartan_one, hT.biVec_add_left,
+      hT.biVec_sub_left, hT.biVec_smul_left, hT.biVec_add_right, hT.biVec_sub_right,
+      hT.biVec_smul_right]
+  all_goals
+    repeat' first
+      | exact hbase _ _
+      | apply add_mem
+      | apply sub_mem
+      | apply Submodule.smul_mem
+
+/-- The graded pieces exhaust the zero-weight piece. -/
+lemma iSup_zeroPiece (hmul : IsMulRep repGauge) :
+    (⨆ k : ZMod 3, hT.zeroPiece k) = (hT.gaugeWeightDecomposition hmul).piece 0 := by
+  have hcyc : ∀ (j : Fin 2) (i : Fin 3),
+      hT.prodCycle j i ∈ ⨆ k : ZMod 3, hT.zeroPiece k := by
+    intro j i
+    have hle : (⨆ k : ZMod 3, ℂ ∙ cycleEigen (hT.prodCycle j) k)
+        ≤ ⨆ k : ZMod 3, hT.zeroPiece k := by
+      refine iSup_mono fun k => ?_
+      fin_cases j
+      · exact le_sup_of_le_left le_sup_left
+      · exact le_sup_of_le_left le_sup_right
+    exact hle (cycle_mem_iSup (hT.prodCycle j) i)
+  refine le_antisymm (iSup_le fun k => ?_) ?_
+  · refine sup_le (sup_le ?_ ?_) (iSup_le fun a => iSup_le fun b => iSup_le fun _ => ?_)
+    · exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (add_mem (add_mem (hT.prodCycle_mem_piece_zero hmul 0 0)
+          (Submodule.smul_mem _ _ (hT.prodCycle_mem_piece_zero hmul 0 1)))
+          (Submodule.smul_mem _ _ (hT.prodCycle_mem_piece_zero hmul 0 2)))
+    · exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (add_mem (add_mem (hT.prodCycle_mem_piece_zero hmul 1 0)
+          (Submodule.smul_mem _ _ (hT.prodCycle_mem_piece_zero hmul 1 1)))
+          (Submodule.smul_mem _ _ (hT.prodCycle_mem_piece_zero hmul 1 2)))
+    · exact (Submodule.span_singleton_le_iff_mem _ _).mpr
+        (hT.cartanEigenProd_mem_piece_zero hmul a b)
+  · rw [hT.gaugeWeightDecomposition_piece_zero_span hmul, Submodule.span_le]
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    · exact hcyc 0 0
+    · exact hcyc 1 2
+    · exact hcyc 0 1
+    · exact hcyc 1 0
+    · exact hcyc 0 2
+    · exact hcyc 1 1
+    · exact hT.cartanProd_mem_iSup_zeroPiece 0 0
+    · exact hT.cartanProd_mem_iSup_zeroPiece 0 1
+    · exact hT.cartanProd_mem_iSup_zeroPiece 1 0
+    · exact hT.cartanProd_mem_iSup_zeroPiece 1 1
+
+/-- The `SU(3)` permutation decomposition of the zero-weight piece of the gauge weight
+  decomposition: the cyclic colour rotation grades the ten dimensions the gauge weight
+  cannot separate. Grade zero is necessary for gauge invariance but not sufficient;
+  `zeroPiece_zero` says more about what a further reduction would need. -/
+noncomputable def zeroPieceSU3Perm (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMulRep repGauge) :
+    SU3PermDecomposition repGauge ((hT.gaugeWeightDecomposition hmul).piece 0) where
+  piece := hT.zeroPiece
+  piece_le k x hx := Module.End.mem_eigenspace_iff.mp (hT.zeroPiece_le_eigenspace k hx)
+  iSup_piece := hT.iSup_zeroPiece hmul
+
+/-- The pieces of the decomposition are the graded pieces. -/
+@[simp]
+lemma zeroPieceSU3Perm_piece (hmul : IsMulRep repGauge) (k : ZMod 3) :
+    (hT.zeroPieceSU3Perm hmul).piece k = hT.zeroPiece k := rfl
+
+/-- The grade zero piece, written out: one line from each cycle of root products, together
+  with the two mixed products of Cartan eigenvectors.
+
+  The four generators, written out in the components of `T`. The three root pairs are
+  `rootPair 0 = (0, 1)`, `rootPair 1 = (3, 4)`, `rootPair 2 = (5, 6)`, and the two Cartan
+  directions are `GaugeAlgebra.su3CartanId 0 = 2`, `GaugeAlgebra.su3CartanId 1 = 7`.
+
+  `cycleEigen (hT.prodCycle 0) 0` unfolds, by `cycleEigen`, `prodCycle_zero_zero`,
+  `prodCycle_zero_one`, `prodCycle_zero_two`, `posNegProd_eq` and `negPosProd_eq`, to
+  `T ![0, 0] + T ![1, 1] + T ![3, 3] + T ![4, 4] + T ![5, 5] + T ![6, 6]`
+  `+ Complex.I • (T ![1, 0] - T ![0, 1] + T ![3, 4] - T ![4, 3] + T ![6, 5] - T ![5, 6])`.
+
+  `cycleEigen (hT.prodCycle 1) 0` unfolds the same way, with `prodCycle_one_zero`,
+  `prodCycle_one_one`, `prodCycle_one_two` in place of the forward cycle, to
+  `T ![0, 0] + T ![1, 1] + T ![3, 3] + T ![4, 4] + T ![5, 5] + T ![6, 6]`
+  `+ Complex.I • (T ![0, 1] - T ![1, 0] + T ![4, 3] - T ![3, 4] + T ![5, 6] - T ![6, 5])`,
+  the same six diagonal terms with the antisymmetric part negated.
+
+  `hT.cartanEigenProd 0 1` and `hT.cartanEigenProd 1 0` unfold, by `cartanEigenProd`,
+  `cartanVec` and the bilinearity of `biVec` (`biVec_add_left`, `biVec_sub_left`,
+  `biVec_smul_left`, `biVec_add_right`, `biVec_sub_right`, `biVec_smul_right`), to
+  `cartanProd 0 0 + cartanProd 1 1 ± Complex.I • (cartanProd 0 1 - cartanProd 1 0)`,
+  the sign matching the order of the two arguments, which `cartanProd_eq` writes as
+  `T ![2, 2] + T ![7, 7] + Complex.I • (T ![2, 7] - T ![7, 2])` and
+  `T ![2, 2] + T ![7, 7] + Complex.I • (T ![7, 2] - T ![2, 7])` respectively.
+
+  Grade zero is necessary for a gauge invariant to land here, not sufficient:
+  `SU3PermDecomposition.mem_zero_of_invariant` has no converse, and combining the gauge
+  weight decomposition with this `SU(3)` permutation decomposition only reaches the cyclic
+  subgroup of the Weyl group. Section E cuts these four lines down to two, the trivial
+  isotype of the whole Weyl group, by separating the two combinations of them that the
+  transposition fixes from the two it negates. That is as far as a finite group takes the
+  argument; deciding which elements of those two lines are genuinely gauge invariant needs
+  the continuous part of `GaugeGroupI` — for instance averaging a general element of the
+  piece over the gauge orbit, the way `IsQuadLorentz` uses boost and rotation averages to
+  pin down its own Lorentz invariants. -/
+lemma zeroPiece_zero :
+    hT.zeroPiece 0
+      = ℂ ∙ cycleEigen (hT.prodCycle 0) 0 ⊔ ℂ ∙ cycleEigen (hT.prodCycle 1) 0
+      ⊔ (ℂ ∙ hT.cartanEigenProd 0 1 ⊔ ℂ ∙ hT.cartanEigenProd 1 0) := by
+  have hgrade : ∀ a b : Fin 2, cartanGrade a + cartanGrade b = 0 →
+      (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) := by decide
+  rw [zeroPiece]
+  refine congrArg _ (le_antisymm (iSup_le fun a => iSup_le fun b => iSup_le fun hab => ?_)
+    (sup_le ?_ ?_))
+  · rcases hgrade a b hab with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · exact le_sup_left
+    · exact le_sup_right
+  · exact le_iSup_of_le 0 (le_iSup_of_le 1 (le_iSup_of_le (by decide) le_rfl))
+  · exact le_iSup_of_le 1 (le_iSup_of_le 0 (le_iSup_of_le (by decide) le_rfl))
+
+/-- The grade one piece, written out: one line from each cycle of root products, together
+  with the square of the second Cartan eigenvector. -/
+lemma zeroPiece_one :
+    hT.zeroPiece 1
+      = ℂ ∙ cycleEigen (hT.prodCycle 0) 1 ⊔ ℂ ∙ cycleEigen (hT.prodCycle 1) 1
+      ⊔ ℂ ∙ hT.cartanEigenProd 1 1 := by
+  have hgrade : ∀ a b : Fin 2, cartanGrade a + cartanGrade b = 1 → a = 1 ∧ b = 1 := by decide
+  rw [zeroPiece]
+  refine congrArg _ (le_antisymm (iSup_le fun a => iSup_le fun b => iSup_le fun hab => ?_)
+    (le_iSup_of_le 1 (le_iSup_of_le 1 (le_iSup_of_le (by decide) le_rfl))))
+  obtain ⟨rfl, rfl⟩ := hgrade a b hab
+  exact le_rfl
+
+/-- The grade two piece, written out: one line from each cycle of root products, together
+  with the square of the first Cartan eigenvector. -/
+lemma zeroPiece_two :
+    hT.zeroPiece 2
+      = ℂ ∙ cycleEigen (hT.prodCycle 0) 2 ⊔ ℂ ∙ cycleEigen (hT.prodCycle 1) 2
+      ⊔ ℂ ∙ hT.cartanEigenProd 0 0 := by
+  have hgrade : ∀ a b : Fin 2, cartanGrade a + cartanGrade b = 2 → a = 0 ∧ b = 0 := by decide
+  rw [zeroPiece]
+  refine congrArg _ (le_antisymm (iSup_le fun a => iSup_le fun b => iSup_le fun hab => ?_)
+    (le_iSup_of_le 0 (le_iSup_of_le 0 (le_iSup_of_le (by decide) le_rfl))))
+  obtain ⟨rfl, rfl⟩ := hgrade a b hab
+  exact le_rfl
+
+/-!
+
+## E. The `S₃` isotypic decomposition of the zero-weight piece
+
+The cyclic rotation generates half of the Weyl group `S₃` of `SU(3)`; the transposition
+`gaugeSU3Transp` reaches the other half, and it does not preserve the cyclic grading.
+Conjugating the three-cycle by it inverts the three-cycle, so it carries grade `k` to grade
+`-k`: it fixes grade zero and exchanges grades one and two. What replaces the grading is
+the isotypic decomposition `SU3WeylDecomposition`, whose three pieces are the trivial, sign
+and standard isotypes of `S₃`.
+
+Section E.1 computes the transposition, first on the Gell-Mann coordinate directions and
+then on the weight vectors. Unlike the cyclic rotation it mixes nothing: it fixes the first
+root pair up to the sign of its second member, exchanges the other two root pairs, and
+negates the first Cartan direction while fixing the second. On the weight vectors it
+therefore exchanges the raising and lowering vectors of the first root, exchanges the other
+two roots, and exchanges the two Cartan eigenvectors up to a sign. Section E.2 transfers
+this to the ten products: the two cycles of root products are exchanged, each running
+backwards, and the four products of Cartan eigenvectors are exchanged in pairs. Grade zero
+is stable under the transposition as a result, which is the hypothesis that
+`SU3PermDecomposition.toWeyl` needs. Section E.3 names the four combinations of the grade
+zero generators that the transposition fixes or negates, and section E.4 assembles the
+isotypic decomposition and places the trace contraction in its trivial piece.
+
+The sharpening is real but finite. The trivial isotype is the join of two of the four lines
+of grade zero, so this sieve discards the sign isotype — spanned by the two antisymmetric
+combinations, which vanish for `T` symmetric in its two indices but not in general — as
+well as the two nonzero grades. It remains a sieve:
+`SU3WeylDecomposition.mem_triv_of_invariant` has no converse, and `S₃` is finite, so the
+gauge weight and the Weyl group together decide invariance under the normaliser of the
+torus and nothing more. `rootTriv_add_cartanTriv` measures what is left over: the trace
+contraction is half the sum of the two generators of the trivial isotype, and nothing here
+says anything about the other combinations of those two generators. Deciding which of them
+are gauge invariant needs the continuous part of `GaugeGroupI`, not another finite group.
+
+## E.1. The transposition on the Gell-Mann directions and the weight vectors
+
+Conjugation by the transposition matrix permutes the matrix units by the transposition of
+the first two colours, so it permutes the Gell-Mann matrices up to signs, this time without
+mixing any two of them.
+
+-/
+
+/-- The transposition colour matrix is real and symmetric, so it is its own star. -/
+lemma star_su3TranspMatrix :
+    star !![(0 : ℂ), -1, 0; -1, 0, 0; 0, 0, -1] = !![(0 : ℂ), -1, 0; -1, 0, 0; 0, 0, -1] := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp
+
+/-- The conjugate of each Gell-Mann matrix by the transposition: the sign of the
+  transposition cancels between the two factors, leaving conjugation by the permutation
+  matrix of the transposition of the first two colours. -/
+noncomputable def transpGellMann : Fin 8 → Matrix (Fin 3) (Fin 3) ℂ
+  | 0 => gellMannMatrix 0
+  | 1 => -gellMannMatrix 1
+  | 2 => -gellMannMatrix 2
+  | 3 => gellMannMatrix 5
+  | 4 => gellMannMatrix 6
+  | 5 => gellMannMatrix 3
+  | 6 => gellMannMatrix 4
+  | 7 => gellMannMatrix 7
+
+/-- Conjugating a Gell-Mann matrix by the transposition. -/
+lemma conj_gellMannMatrix_gaugeSU3Transp (b : Fin 8) :
+    gaugeSU3Transp.toSU3.1 * gellMannMatrix b * star gaugeSU3Transp.toSU3.1
+      = transpGellMann b := by
+  rw [show gaugeSU3Transp.toSU3.1 = !![(0 : ℂ), -1, 0; -1, 0, 0; 0, 0, -1] from su3Transp_coe,
+    star_su3TranspMatrix]
+  fin_cases b <;> ext i j <;> fin_cases i <;> fin_cases j <;>
+    simp [transpGellMann, gellMannMatrix_zero, gellMannMatrix_one, gellMannMatrix_two,
+      gellMannMatrix_three, gellMannMatrix_four, gellMannMatrix_five, gellMannMatrix_six,
+      gellMannMatrix_seven, Matrix.mul_apply, Fin.sum_univ_three]
+
+/-- The coordinates of the image of each Gell-Mann direction under the transposition: the
+  first root pair is fixed up to the sign of its second member, the other two root pairs
+  are exchanged, and of the two Cartan directions the first is negated and the second
+  fixed. -/
+noncomputable def transpCol : Fin 8 → Fin 8 → ℂ
+  | 0 => unitVec 0
+  | 1 => -unitVec 1
+  | 2 => -unitVec 2
+  | 3 => unitVec 5
+  | 4 => unitVec 6
+  | 5 => unitVec 3
+  | 6 => unitVec 4
+  | 7 => unitVec 7
+
+/-- The transposition on the Gell-Mann coordinate directions. -/
+lemma rowAct_gaugeSU3Transp_unitVec (b : Fin 8) :
+    rowAct gaugeSU3Transp (unitVec b) = transpCol b := by
+  have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
+    rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
+    norm_num
+  funext a
+  rw [rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff,
+    conj_gellMannMatrix_gaugeSU3Transp]
+  fin_cases b <;> fin_cases a <;>
+    simp [transpGellMann, gellMannCoeff, transpCol, unitVec, gellMannMatrix_zero,
+      gellMannMatrix_one, gellMannMatrix_two, gellMannMatrix_three, gellMannMatrix_four,
+      gellMannMatrix_five, gellMannMatrix_six, gellMannMatrix_seven]
+  all_goals first
+    | linear_combination ((1 : ℂ) / 3) * h3
+    | norm_num
+
+/-- The transposition moves each root weight vector into the other cycle, sending the
+  member at index `i` there to the member at index `1 - i`. -/
+lemma rowAct_gaugeSU3Transp_wtCoeff (j : Fin 2) (i : Fin 3) :
+    rowAct gaugeSU3Transp (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle (j + 1) (1 - i)) := by
+  fin_cases j <;> fin_cases i <;>
+    simp [wtCycle, wtCoeff_inl, wtCoeff_inr_inl, rootPair, rowAct_add, rowAct_sub,
+      rowAct_smul, rowAct_gaugeSU3Transp_unitVec, transpCol]
+  all_goals module
+
+/-- The transposition exchanges the two Cartan eigenvectors, up to a sign. It cannot fix
+  them: they are the grade one and grade two eigenvectors of the cyclic rotation, and the
+  transposition inverts grades. -/
+lemma rowAct_gaugeSU3Transp_cartanVec (c : Fin 2) :
+    rowAct gaugeSU3Transp (cartanVec c) = -cartanVec (c + 1) := by
+  fin_cases c <;>
+    simp [cartanVec, ← unitVec_cartanId, GaugeAlgebra.su3CartanId, rowAct_sub,
+      rowAct_add, rowAct_smul, rowAct_gaugeSU3Transp_unitVec, transpCol]
+  all_goals module
+
+/-!
+
+## E.2. The transposition on the zero-weight products
+
+The transposition exchanges the two cycles of root products, reversing the direction of
+travel, and exchanges the four products of Cartan eigenvectors in pairs. In particular it
+exchanges the two grade zero cycle sums, and exchanges the two mixed Cartan products, which
+is what makes the grade zero piece stable under it.
+
+-/
+
+/-- The transposition exchanges the two cycles of root products, reversing each. -/
+lemma repGauge_gaugeSU3Transp_prodCycle (j : Fin 2) (i : Fin 3) :
+    repGauge gaugeSU3Transp (hT.prodCycle j i) = hT.prodCycle (j + 1) (-i) := by
+  fin_cases j <;> fin_cases i <;>
+    simp only [prodCycle, hT.repGauge_biVec, rowAct_gaugeSU3Transp_wtCoeff] <;>
+    rfl
+
+/-- The transposition exchanges the two Cartan eigenvectors in each product. The two signs
+  it picks up, one from each factor, cancel. -/
+lemma repGauge_gaugeSU3Transp_cartanEigenProd (a b : Fin 2) :
+    repGauge gaugeSU3Transp (hT.cartanEigenProd a b)
+      = hT.cartanEigenProd (a + 1) (b + 1) := by
+  rw [cartanEigenProd, hT.repGauge_biVec, rowAct_gaugeSU3Transp_cartanVec,
+    rowAct_gaugeSU3Transp_cartanVec, hT.biVec_neg_neg, cartanEigenProd]
+
+/-- The transposition exchanges the two grade zero cycle sums. -/
+lemma repGauge_gaugeSU3Transp_cycleEigen_zero (j : Fin 2) :
+    repGauge gaugeSU3Transp (cycleEigen (hT.prodCycle j) 0)
+      = cycleEigen (hT.prodCycle (j + 1)) 0 := by
+  rw [cycleEigen_zero_eq, cycleEigen_zero_eq, map_add, map_add,
+    hT.repGauge_gaugeSU3Transp_prodCycle, hT.repGauge_gaugeSU3Transp_prodCycle,
+    hT.repGauge_gaugeSU3Transp_prodCycle, show (-0 : Fin 3) = 0 from rfl,
+    show (-1 : Fin 3) = 2 from rfl, show (-2 : Fin 3) = 1 from rfl]
+  abel
+
+/-- Each grade zero cycle sum lies in the grade zero piece. -/
+lemma cycleEigen_mem_zeroPiece_zero (j : Fin 2) :
+    cycleEigen (hT.prodCycle j) 0 ∈ hT.zeroPiece 0 := by
+  rw [zeroPiece]
+  fin_cases j
+  · exact Submodule.mem_sup_left (Submodule.mem_sup_left
+      (Submodule.mem_span_singleton_self _))
+  · exact Submodule.mem_sup_left (Submodule.mem_sup_right
+      (Submodule.mem_span_singleton_self _))
+
+/-- A product of two Cartan eigenvectors whose grades cancel lies in the grade zero
+  piece. -/
+lemma cartanEigenProd_mem_zeroPiece_zero {a b : Fin 2}
+    (hab : cartanGrade a + cartanGrade b = 0) :
+    hT.cartanEigenProd a b ∈ hT.zeroPiece 0 :=
+  Submodule.mem_sup_right (Submodule.mem_iSup_of_mem a (Submodule.mem_iSup_of_mem b
+    (Submodule.mem_iSup_of_mem hab (Submodule.mem_span_singleton_self _))))
+
+/-!
+
+## E.3. The symmetric and antisymmetric combinations of grade zero
+
+The transposition exchanges the two grade zero cycle sums, and exchanges the two mixed
+Cartan products. Their sums are therefore fixed by it and their differences negated, which
+is exactly the split of grade zero into the trivial and the sign isotype. Written in the
+components of `T` the two symmetric combinations are the symmetric part of the trace: twice
+the six root diagonal terms, and twice the two Cartan diagonal terms. The two antisymmetric
+combinations are the corresponding antisymmetric parts, and vanish when `T` is symmetric in
+its two indices.
+
+-/
+
+/-- The symmetric combination of the two cycles of root products, spanning one line of the
+  trivial isotype. -/
+noncomputable def rootTriv (hT : IsSU3BiAdjoint B repGauge T) : B :=
+  cycleEigen (hT.prodCycle 0) 0 + cycleEigen (hT.prodCycle 1) 0
+
+/-- The antisymmetric combination of the two cycles of root products, spanning one line of
+  the sign isotype. -/
+noncomputable def rootSign (hT : IsSU3BiAdjoint B repGauge T) : B :=
+  cycleEigen (hT.prodCycle 0) 0 - cycleEigen (hT.prodCycle 1) 0
+
+/-- The symmetric combination of the two mixed products of Cartan eigenvectors, spanning
+  the other line of the trivial isotype. -/
+noncomputable def cartanTriv (hT : IsSU3BiAdjoint B repGauge T) : B :=
+  hT.cartanEigenProd 0 1 + hT.cartanEigenProd 1 0
+
+/-- The antisymmetric combination of the two mixed products of Cartan eigenvectors,
+  spanning the other line of the sign isotype. -/
+noncomputable def cartanSign (hT : IsSU3BiAdjoint B repGauge T) : B :=
+  hT.cartanEigenProd 0 1 - hT.cartanEigenProd 1 0
+
+/-- The transposition fixes the symmetric root combination. -/
+lemma repGauge_gaugeSU3Transp_rootTriv :
+    repGauge gaugeSU3Transp hT.rootTriv = hT.rootTriv := by
+  rw [rootTriv, map_add, hT.repGauge_gaugeSU3Transp_cycleEigen_zero,
+    hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+  show cycleEigen (hT.prodCycle 1) 0 + cycleEigen (hT.prodCycle 0) 0 = _
+  abel
+
+/-- The transposition negates the antisymmetric root combination. -/
+lemma repGauge_gaugeSU3Transp_rootSign :
+    repGauge gaugeSU3Transp hT.rootSign = -hT.rootSign := by
+  rw [rootSign, map_sub, hT.repGauge_gaugeSU3Transp_cycleEigen_zero,
+    hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+  show cycleEigen (hT.prodCycle 1) 0 - cycleEigen (hT.prodCycle 0) 0 = _
+  abel
+
+/-- The transposition fixes the symmetric Cartan combination. -/
+lemma repGauge_gaugeSU3Transp_cartanTriv :
+    repGauge gaugeSU3Transp hT.cartanTriv = hT.cartanTriv := by
+  rw [cartanTriv, map_add, hT.repGauge_gaugeSU3Transp_cartanEigenProd,
+    hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+  show hT.cartanEigenProd 1 0 + hT.cartanEigenProd 0 1 = _
+  abel
+
+/-- The transposition negates the antisymmetric Cartan combination. -/
+lemma repGauge_gaugeSU3Transp_cartanSign :
+    repGauge gaugeSU3Transp hT.cartanSign = -hT.cartanSign := by
+  rw [cartanSign, map_sub, hT.repGauge_gaugeSU3Transp_cartanEigenProd,
+    hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+  show hT.cartanEigenProd 1 0 - hT.cartanEigenProd 0 1 = _
+  abel
+
+/-- The symmetric root combination, written out in the components of `T`: twice the six
+  diagonal components of the root directions. -/
+lemma rootTriv_eq :
+    hT.rootTriv = (2 : ℂ) • (T ![0, 0] + T ![1, 1] + T ![3, 3] + T ![4, 4]
+      + T ![5, 5] + T ![6, 6]) := by
+  rw [rootTriv, cycleEigen_zero_eq, cycleEigen_zero_eq]
+  simp only [prodCycle_zero_zero, prodCycle_zero_one, prodCycle_zero_two,
+    prodCycle_one_zero, prodCycle_one_one, prodCycle_one_two, hT.posNegProd_eq,
+    hT.negPosProd_eq, rootPair]
+  module
+
+/-- The antisymmetric root combination, written out in the components of `T`: the
+  antisymmetric part of the same six components. -/
+lemma rootSign_eq :
+    hT.rootSign = (2 * Complex.I) • (T ![1, 0] - T ![0, 1] + T ![3, 4] - T ![4, 3]
+      + T ![6, 5] - T ![5, 6]) := by
+  rw [rootSign, cycleEigen_zero_eq, cycleEigen_zero_eq]
+  simp only [prodCycle_zero_zero, prodCycle_zero_one, prodCycle_zero_two,
+    prodCycle_one_zero, prodCycle_one_one, prodCycle_one_two, hT.posNegProd_eq,
+    hT.negPosProd_eq, rootPair]
+  module
+
+/-- The symmetric Cartan combination, written out in the components of `T`: twice the two
+  diagonal components of the Cartan directions. -/
+lemma cartanTriv_eq : hT.cartanTriv = (2 : ℂ) • (T ![2, 2] + T ![7, 7]) := by
+  have hc : ∀ a b : Fin 2, hT.biVec (wtCoeff (Sum.inr (Sum.inr a)))
+      (wtCoeff (Sum.inr (Sum.inr b)))
+      = T ![GaugeAlgebra.su3CartanId a, GaugeAlgebra.su3CartanId b] :=
+    fun a b => hT.cartanProd_eq a b
+  simp only [cartanTriv, cartanEigenProd, cartanVec, hT.biVec_add_left, hT.biVec_sub_left,
+    hT.biVec_smul_left, hT.biVec_add_right, hT.biVec_sub_right, hT.biVec_smul_right, hc]
+  match_scalars
+  all_goals ring_nf
+  all_goals try simp only [Complex.I_sq]
+  all_goals ring1
+
+/-- The antisymmetric Cartan combination, written out in the components of `T`: the
+  antisymmetric part of the two mixed Cartan components. -/
+lemma cartanSign_eq : hT.cartanSign = (2 * Complex.I) • (T ![2, 7] - T ![7, 2]) := by
+  have hc : ∀ a b : Fin 2, hT.biVec (wtCoeff (Sum.inr (Sum.inr a)))
+      (wtCoeff (Sum.inr (Sum.inr b)))
+      = T ![GaugeAlgebra.su3CartanId a, GaugeAlgebra.su3CartanId b] :=
+    fun a b => hT.cartanProd_eq a b
+  simp only [cartanSign, cartanEigenProd, cartanVec, hT.biVec_add_left, hT.biVec_sub_left,
+    hT.biVec_smul_left, hT.biVec_add_right, hT.biVec_sub_right, hT.biVec_smul_right, hc]
+  match_scalars
+  all_goals ring1
+
+/-- The two symmetric combinations sum to twice the trace contraction: between them they
+  cover the eight diagonal components, six from the root directions and two from the Cartan
+  directions. -/
+lemma rootTriv_add_cartanTriv :
+    hT.rootTriv + hT.cartanTriv = (2 : ℂ) • hT.traceContraction := by
+  rw [hT.rootTriv_eq, hT.cartanTriv_eq, traceContraction, Fin.sum_univ_eight]
+  module
+
+/-!
+
+## E.4. The isotypic decomposition
+
+Symmetrizing and antisymmetrizing over the transposition carry the grade zero piece into
+the two symmetric and the two antisymmetric lines respectively, which is enough for three
+things at once: grade zero is stable under the transposition, so `toWeyl` applies; the
+trivial piece of the resulting decomposition is the join of the two symmetric lines; and
+the sign piece is the join of the two antisymmetric ones. The standard piece is the join of
+the two nonzero grades, which the transposition exchanges.
+
+-/
+
+/-- Symmetrizing an element of the grade zero piece over the transposition lands in the
+  join of the two symmetric lines. -/
+lemma add_transp_mem_triv {x : B} (hx : x ∈ hT.zeroPiece 0) :
+    x + repGauge gaugeSU3Transp x ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
+  have key : hT.zeroPiece 0 ≤ Submodule.comap
+      (LinearMap.id + (repGauge gaugeSU3Transp : Module.End ℂ B))
+      (ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv) := by
+    rw [hT.zeroPiece_zero]
+    refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+      rw [Submodule.span_singleton_le_iff_mem, Submodule.mem_comap,
+        LinearMap.add_apply, LinearMap.id_apply]
+    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+      exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+      show cycleEigen (hT.prodCycle 1) 0 + cycleEigen (hT.prodCycle 0) 0 ∈ _
+      rw [add_comm]
+      exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+      show hT.cartanEigenProd 1 0 + hT.cartanEigenProd 0 1 ∈ _
+      rw [add_comm]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+  have h := key hx
+  rwa [Submodule.mem_comap, LinearMap.add_apply, LinearMap.id_apply] at h
+
+/-- Antisymmetrizing an element of the grade zero piece over the transposition lands in the
+  join of the two antisymmetric lines. -/
+lemma sub_transp_mem_sign {x : B} (hx : x ∈ hT.zeroPiece 0) :
+    x - repGauge gaugeSU3Transp x ∈ ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign := by
+  have key : hT.zeroPiece 0 ≤ Submodule.comap
+      (LinearMap.id - (repGauge gaugeSU3Transp : Module.End ℂ B))
+      (ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign) := by
+    rw [hT.zeroPiece_zero]
+    refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
+      rw [Submodule.span_singleton_le_iff_mem, Submodule.mem_comap,
+        LinearMap.sub_apply, LinearMap.id_apply]
+    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+      exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
+    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+      show cycleEigen (hT.prodCycle 1) 0 - cycleEigen (hT.prodCycle 0) 0 ∈ _
+      rw [← neg_sub]
+      exact Submodule.mem_sup_left (neg_mem (Submodule.mem_span_singleton_self _))
+    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+      exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
+    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+      show hT.cartanEigenProd 1 0 - hT.cartanEigenProd 0 1 ∈ _
+      rw [← neg_sub]
+      exact Submodule.mem_sup_right (neg_mem (Submodule.mem_span_singleton_self _))
+  have h := key hx
+  rwa [Submodule.mem_comap, LinearMap.sub_apply, LinearMap.id_apply] at h
+
+/-- The two symmetric lines lie inside the grade zero piece. -/
+lemma sup_span_triv_le_zeroPiece_zero :
+    ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv ≤ hT.zeroPiece 0 := by
+  refine sup_le ?_ ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+  · exact add_mem (hT.cycleEigen_mem_zeroPiece_zero 0) (hT.cycleEigen_mem_zeroPiece_zero 1)
+  · exact add_mem (hT.cartanEigenProd_mem_zeroPiece_zero (by decide))
+      (hT.cartanEigenProd_mem_zeroPiece_zero (by decide))
+
+/-- The two antisymmetric lines lie inside the grade zero piece. -/
+lemma sup_span_sign_le_zeroPiece_zero :
+    ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign ≤ hT.zeroPiece 0 := by
+  refine sup_le ?_ ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+  · exact sub_mem (hT.cycleEigen_mem_zeroPiece_zero 0) (hT.cycleEigen_mem_zeroPiece_zero 1)
+  · exact sub_mem (hT.cartanEigenProd_mem_zeroPiece_zero (by decide))
+      (hT.cartanEigenProd_mem_zeroPiece_zero (by decide))
+
+/-- The transposition preserves the grade zero piece: an element and its symmetrization
+  both lie there, so the image of the element does too. -/
+lemma repGauge_gaugeSU3Transp_mem_zeroPiece_zero {x : B} (hx : x ∈ hT.zeroPiece 0) :
+    repGauge gaugeSU3Transp x ∈ hT.zeroPiece 0 := by
+  have h := hT.sup_span_triv_le_zeroPiece_zero (hT.add_transp_mem_triv hx)
+  simpa using sub_mem h hx
+
+/-- The `S₃` isotypic decomposition of the zero-weight piece of the gauge weight
+  decomposition: the whole Weyl group of `SU(3)` sorting the ten dimensions that the gauge
+  weight cannot separate. It is the cyclic decomposition upgraded by
+  `SU3PermDecomposition.toWeyl`, whose hypothesis is met because the transposition
+  exchanges the two grade zero cycle sums and the two mixed Cartan products. -/
+noncomputable def zeroPieceSU3Weyl (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) :
+    SU3WeylDecomposition repGauge ((hT.gaugeWeightDecomposition hmul).piece 0) :=
+  (hT.zeroPieceSU3Perm hmul).toWeyl fun _ hx =>
+    hT.repGauge_gaugeSU3Transp_mem_zeroPiece_zero hx
+
+/-- The trivial isotype piece, written out: the join of the two symmetric lines. Two of the
+  four dimensions of grade zero survive here; the other two are of sign isotype. -/
+lemma zeroPieceSU3Weyl_isotypic_triv (hmul : IsMulRep repGauge) :
+    (hT.zeroPieceSU3Weyl hmul).isotypic .triv
+      = ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
+  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_triv, zeroPieceSU3Perm_piece]
+  refine le_antisymm ?_ ?_
+  · rintro x ⟨hx0, hxR⟩
+    have hR : repGauge gaugeSU3Transp x = x := by
+      simpa using Module.End.mem_eigenspace_iff.mp hxR
+    have h := hT.add_transp_mem_triv hx0
+    rw [hR] at h
+    have h2 := Submodule.smul_mem _ ((2 : ℂ)⁻¹) h
+    rwa [show (2 : ℂ)⁻¹ • (x + x) = x from by module] at h2
+  · refine sup_le ?_ ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact ⟨hT.sup_span_triv_le_zeroPiece_zero
+        (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)),
+        Module.End.mem_eigenspace_iff.mpr
+          (by rw [one_smul]; exact hT.repGauge_gaugeSU3Transp_rootTriv)⟩
+    · exact ⟨hT.sup_span_triv_le_zeroPiece_zero
+        (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)),
+        Module.End.mem_eigenspace_iff.mpr
+          (by rw [one_smul]; exact hT.repGauge_gaugeSU3Transp_cartanTriv)⟩
+
+/-- The sign isotype piece, written out: the join of the two antisymmetric lines. This is
+  the part of grade zero that the cyclic grading alone cannot discard. -/
+lemma zeroPieceSU3Weyl_isotypic_sign (hmul : IsMulRep repGauge) :
+    (hT.zeroPieceSU3Weyl hmul).isotypic .sign
+      = ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign := by
+  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_sign, zeroPieceSU3Perm_piece]
+  refine le_antisymm ?_ ?_
+  · rintro x ⟨hx0, hxR⟩
+    have hR : repGauge gaugeSU3Transp x = -x := by
+      simpa using Module.End.mem_eigenspace_iff.mp hxR
+    have h := hT.sub_transp_mem_sign hx0
+    rw [hR] at h
+    have h2 := Submodule.smul_mem _ ((2 : ℂ)⁻¹) h
+    rwa [show (2 : ℂ)⁻¹ • (x - -x) = x from by module] at h2
+  · refine sup_le ?_ ?_ <;> rw [Submodule.span_singleton_le_iff_mem]
+    · exact ⟨hT.sup_span_sign_le_zeroPiece_zero
+        (Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)),
+        Module.End.mem_eigenspace_iff.mpr
+          (by rw [neg_one_smul]; exact hT.repGauge_gaugeSU3Transp_rootSign)⟩
+    · exact ⟨hT.sup_span_sign_le_zeroPiece_zero
+        (Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)),
+        Module.End.mem_eigenspace_iff.mpr
+          (by rw [neg_one_smul]; exact hT.repGauge_gaugeSU3Transp_cartanSign)⟩
+
+/-- The standard isotype piece: the join of the two nonzero grades, which the transposition
+  exchanges and which therefore pair into two-dimensional irreducibles. -/
+lemma zeroPieceSU3Weyl_isotypic_std (hmul : IsMulRep repGauge) :
+    (hT.zeroPieceSU3Weyl hmul).isotypic .std = hT.zeroPiece 1 ⊔ hT.zeroPiece 2 := rfl
+
+/-- The trace contraction is of trivial isotype: it is gauge invariant, so in particular
+  the whole Weyl group fixes it. This is strictly stronger than lying in grade zero, which
+  is the join of the trivial and the sign isotype. -/
+lemma traceContraction_mem_isotypic_triv (hmul : IsMulRep repGauge) :
+    hT.traceContraction ∈ (hT.zeroPieceSU3Weyl hmul).isotypic .triv :=
+  SU3WeylDecomposition.mem_triv_of_invariant _ (hT.traceContraction_mem_piece_zero hmul)
+    hT.repGauge_traceContraction
+
+/-- The trace contraction lies in the join of the two symmetric lines: of the ten
+  dimensions of the zero-weight piece, the gauge weight and the Weyl group together confine
+  it to two. By `rootTriv_add_cartanTriv` it is half the sum of the two generators, so it is
+  one particular element of that join; which other elements of the join are gauge invariant
+  is not decided here. -/
+lemma traceContraction_mem_span_triv (hmul : IsMulRep repGauge) :
+    hT.traceContraction ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
+  rw [← hT.zeroPieceSU3Weyl_isotypic_triv hmul]
+  exact hT.traceContraction_mem_isotypic_triv hmul
 
 end Decomposition
 

@@ -34,6 +34,10 @@ four gradings are simultaneously realizable. An invariant operator is fixed by t
 group, so in particular by these four elements, so it carries zero weight and the search can
 be confined to the zero-weight piece.
 
+In the adjoint representation this grading is the root decomposition of the gauge algebra.
+That identification cannot be made here, since the file recording the root data imports
+this one; it is `GaugeAlgebra.adjointDecomposition` in
+`Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition`.
 
 ## ii. Key results
 
