@@ -852,7 +852,40 @@ lemma transitionZ_swap01_mul_coeffZ :
         = nuZ a μ * (lightConeTransitionZ 1 2 a κ * lightConeCoeffZ 2 κ μ) := by
   decide
 
-set_option maxRecDepth 40000 in
+/-- Weight balance is a parity constraint on the null slots: a weight-zero light-cone
+  multi-index uses the two null directions equally often, and so uses an even number of
+  them. -/
+lemma even_card_null_of_sum_lightConeWeight_eq_zero (c : Fin 4 → Fin 4)
+    (hc : (∑ s, lightConeWeight (c s)) = 0) :
+    Even (Finset.univ.filter fun s => c s = 0 ∨ c s = 1).card := by
+  have hw (κ : Fin 4) :
+      lightConeWeight κ = 2 * (if κ = 0 then 1 else 0) - 2 * (if κ = 1 then 1 else 0) := by
+    fin_cases κ <;> simp [lightConeWeight]
+  have hsum : (2 : ℤ) * ((Finset.univ.filter fun s => c s = 0).card : ℤ)
+      - 2 * ((Finset.univ.filter fun s => c s = 1).card : ℤ) = 0 := by
+    rw [← hc]
+    simp only [hw, Finset.sum_sub_distrib, ← Finset.mul_sum, Finset.sum_boole]
+  have hdisj : Disjoint (Finset.univ.filter fun s : Fin 4 => c s = 0)
+      (Finset.univ.filter fun s : Fin 4 => c s = 1) :=
+    Finset.disjoint_filter.2 fun s _ h0 h1 => by simp [h0] at h1
+  have hunion : (Finset.univ.filter fun s => c s = 0 ∨ c s = 1).card
+      = (Finset.univ.filter fun s => c s = 0).card
+        + (Finset.univ.filter fun s => c s = 1).card := by
+    rw [Finset.filter_or, Finset.card_union_of_disjoint hdisj]
+  rw [hunion]
+  exact ⟨(Finset.univ.filter fun s => c s = 0).card, by omega⟩
+
+/-- The axis-`2` coefficients are sector-block-diagonal: where a slot factor is nonzero,
+  the inner light-cone index is null exactly when the outer direction lies in the null
+  sector. The transverse directions match one to one instead. -/
+lemma null_iff_of_lightConeCoeffZ_ne_zero (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3)
+    (h : lightConeCoeffZ 2 κ μ ≠ 0) :
+    (μ = Sum.inl 0 ∨ μ = Sum.inr 2) ↔ (κ = 0 ∨ κ = 1) := by
+  rcases μ with a | j
+  · rw [Subsingleton.elim a 0] at h ⊢
+    fin_cases κ <;> simp_all [lightConeCoeffZ]
+  · fin_cases j <;> fin_cases κ <;> simp_all [lightConeCoeffZ]
+
 /-- The odd-count case: if the number of null-sector indices of `d` is odd, every
   weight-zero inner index hits a vanishing coefficient. -/
 lemma exists_coeffZ_eq_zero_of_odd :
@@ -860,7 +893,13 @@ lemma exists_coeffZ_eq_zero_of_odd :
       Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card →
       ∀ c'' : Fin 4 → Fin 4, (∑ s, lightConeWeight (c'' s)) = 0 →
       ∃ s, lightConeCoeffZ 2 (c'' s) (d s) = 0 := by
-  decide
+  intro d hodd c'' hc''
+  by_contra hne
+  push Not at hne
+  rw [Finset.filter_congr fun s _ =>
+    null_iff_of_lightConeCoeffZ_ne_zero (c'' s) (d s) (hne s)] at hodd
+  exact (Nat.not_even_iff_odd.2 hodd)
+    (even_card_null_of_sum_lightConeWeight_eq_zero c'' hc'')
 
 set_option maxRecDepth 40000 in
 /-- The parity of the sign involution: over a weight-zero generator, a component that
