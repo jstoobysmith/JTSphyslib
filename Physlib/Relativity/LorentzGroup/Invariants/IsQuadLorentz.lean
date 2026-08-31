@@ -2616,6 +2616,112 @@ theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
     (mem_boostWeightSubmodule_zero_of_invariant (repLorentz := repLorentz) hinv)
 
 
+/-!
+
+## J.3. The classification modulo a Lorentz-stable submodule
+
+A Lorentz-stable submodule can be divided out: the quotient representation carries the
+images of the components as a quadruple Lorentz tensor again, so the classification
+applies verbatim in the quotient and lifts to a classification modulo the submodule.
+
+-/
+
+/-- The representation induced on the quotient by a Lorentz-stable submodule. -/
+noncomputable def quotRep (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
+    Representation ℂ SL(2,ℂ) (B ⧸ S) where
+  toFun g := S.mapQ S (repLorentz g) fun y hy => hS g y hy
+  map_one' := by
+    ext y
+    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
+      Submodule.mapQ_apply, map_one, Module.End.one_apply]
+  map_mul' g₁ g₂ := by
+    ext y
+    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
+      Submodule.mapQ_apply, map_mul, Module.End.mul_apply]
+
+@[simp]
+lemma quotRep_mkQ (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (g : SL(2,ℂ)) (y : B) :
+    quotRep (repLorentz := repLorentz) S hS g (S.mkQ y) = S.mkQ (repLorentz g y) := rfl
+
+include hT in
+/-- The images of the components in the quotient by a Lorentz-stable submodule again
+  form a quadruple Lorentz tensor. -/
+lemma isQuadLorentz_quotRep (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
+    IsQuadLorentz (B ⧸ S) (quotRep (repLorentz := repLorentz) S hS)
+      (fun l => S.mkQ (T l)) where
+  repLorentz_T g l := by
+    rw [quotRep_mkQ, hT.repLorentz_T g l, map_sum]
+    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
+
+/-- The quotient map carries the outer contraction to the outer contraction of the
+  images. -/
+lemma mkQ_outerContraction (S : Submodule ℂ B) :
+    S.mkQ (outerContraction (T := T)) = outerContraction (T := fun l => S.mkQ (T l)) := by
+  rw [outerContraction, outerContraction, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
+/-- The quotient map carries the inner contraction to the inner contraction of the
+  images. -/
+lemma mkQ_innerContraction (S : Submodule ℂ B) :
+    S.mkQ (innerContraction (T := T)) = innerContraction (T := fun l => S.mkQ (T l)) := by
+  rw [innerContraction, innerContraction, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
+/-- The quotient map carries the split contraction to the split contraction of the
+  images. -/
+lemma mkQ_splitContraction (S : Submodule ℂ B) :
+    S.mkQ (splitContraction (T := T)) = splitContraction (T := fun l => S.mkQ (T l)) := by
+  rw [splitContraction, splitContraction, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
+/-- The quotient map carries the Levi-Civita contraction to the Levi-Civita contraction
+  of the images. -/
+lemma mkQ_epsilonContraction (S : Submodule ℂ B) :
+    S.mkQ (epsilonContraction (T := T)) = epsilonContraction (T := fun l => S.mkQ (T l)) := by
+  rw [epsilonContraction, epsilonContraction, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
+include hT in
+/-- The classification of the Lorentz invariants modulo a stable submodule: an
+  element of the span of the components together with a Lorentz-stable submodule `S`,
+  fixed by the Lorentz group, is a linear combination of the four contractions up to an
+  error in `S`. The classification is applied in the quotient by `S`, where the images
+  of the components form a quadruple Lorentz tensor again. -/
+lemma exists_smul_contraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
+    (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
+      x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) + y := by
+  have hT' := hT.isQuadLorentz_quotRep S hS
+  -- the class of `x` lies in the span of the images of the components
+  have hmk : S.mkQ x ∈ hT'.span := by
+    obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
+    obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
+    refine (hT'.mem_span_iff _).2 ⟨c, ?_⟩
+    rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
+      add_zero, hc, map_sum]
+    exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+  -- and is invariant for the quotient action
+  have hinv' : ∀ g : SL(2,ℂ),
+      quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x := by
+    intro g
+    rw [quotRep_mkQ, hinv g]
+  obtain ⟨a₁, a₂, a₃, a₄, hcomb⟩ := hT'.exists_smul_contraction_of_invariant hmk hinv'
+  rw [← mkQ_outerContraction, ← mkQ_innerContraction, ← mkQ_splitContraction,
+    ← mkQ_epsilonContraction] at hcomb
+  refine ⟨a₁, a₂, a₃, a₄, x - (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+    + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T)), ?_, by abel⟩
+  have hker : x - (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+      + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T))
+      ∈ LinearMap.ker S.mkQ := by
+    rw [LinearMap.mem_ker, map_sub, hcomb]
+    simp only [map_add, map_smul]
+    abel
+  rwa [Submodule.ker_mkQ] at hker
 
 end IsQuadLorentz
 
