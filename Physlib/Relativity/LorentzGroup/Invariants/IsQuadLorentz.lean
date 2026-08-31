@@ -790,6 +790,119 @@ instance : DecidablePred IsPairedOrDistinct := fun d =>
   inferInstanceAs (Decidable ((d 0 = d 1 ∧ d 2 = d 3) ∨ (d 0 = d 2 ∧ d 1 = d 3) ∨
     (d 0 = d 3 ∧ d 1 = d 2) ∨ Function.Injective d))
 
+/-- A slot whose fibre has even size shares its direction letter with another slot: the
+  fibre is nonempty, so an even fibre has at least two elements. -/
+lemma exists_ne_eq_of_even_card (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (h : ∀ μ, Even (Finset.univ.filter fun s => d s = μ).card) (s : Fin 4) :
+    ∃ t, t ≠ s ∧ d t = d s := by
+  have hmem : s ∈ Finset.univ.filter fun t => d t = d s := by simp
+  have hpos : 0 < (Finset.univ.filter fun t => d t = d s).card :=
+    Finset.card_pos.2 ⟨s, hmem⟩
+  have h1 : 1 < (Finset.univ.filter fun t => d t = d s).card := by
+    have := Nat.even_iff.1 (h (d s)); omega
+  obtain ⟨a, ha, b, hb, hab⟩ := Finset.one_lt_card.1 h1
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at ha hb
+  rcases eq_or_ne a s with rfl | hne
+  · exact ⟨b, Ne.symm hab, hb⟩
+  · exact ⟨a, hne, ha⟩
+
+/-- **Paired-or-distinct is a parity condition on the multiplicities.** Counting how often
+  each of the four direction letters occurs among the four slots, the surviving patterns are
+  exactly those whose four multiplicities share a parity: all even gives four of a kind or
+  two pairs, and all odd forces every multiplicity to be one, four odd numbers summing to
+  four only as `1 + 1 + 1 + 1`. Both fours are used, four slots and four letters. -/
+lemma isPairedOrDistinct_iff_card_parity (d : Fin 4 → Fin 1 ⊕ Fin 3) :
+    IsPairedOrDistinct d ↔
+      (∀ μ, Even (Finset.univ.filter fun s => d s = μ).card) ∨
+      (∀ μ, Odd (Finset.univ.filter fun s => d s = μ).card) := by
+  constructor
+  · rintro (⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | hinj)
+    · exact Or.inl fun μ => by
+        rw [Nat.even_iff, Finset.card_filter, Fin.sum_univ_four, h1, h2]; split_ifs <;> rfl
+    · exact Or.inl fun μ => by
+        rw [Nat.even_iff, Finset.card_filter, Fin.sum_univ_four, h1, h2]; split_ifs <;> rfl
+    · exact Or.inl fun μ => by
+        rw [Nat.even_iff, Finset.card_filter, Fin.sum_univ_four, h1, h2]; split_ifs <;> rfl
+    · refine Or.inr fun μ => ?_
+      have hbij : Function.Bijective d :=
+        (Fintype.bijective_iff_injective_and_card d).2 ⟨hinj, by simp⟩
+      obtain ⟨s, hs⟩ := hbij.surjective μ
+      have hsingle : (Finset.univ.filter fun t => d t = μ) = {s} := by
+        ext t
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
+        exact ⟨fun h => hbij.injective (h.trans hs.symm), fun h => h ▸ hs⟩
+      rw [hsingle, Finset.card_singleton]
+      exact Nat.odd_iff.2 rfl
+  · rintro (heven | hodd)
+    · -- all fibres even: slot 0 has a partner, and the complementary pair must agree
+      obtain ⟨k, hk0, hk⟩ := exists_ne_eq_of_even_card d heven 0
+      have pair : ∀ a b c e : Fin 4, (∀ t : Fin 4, t = a ∨ t = b ∨ t = c ∨ t = e) →
+          d a = d b → c ≠ e → d c = d e := by
+        intro a b c e hall hab hce
+        by_contra hne
+        obtain ⟨t, ht, htc⟩ := exists_ne_eq_of_even_card d heven c
+        obtain ⟨u, hu, hue⟩ := exists_ne_eq_of_even_card d heven e
+        have hdc : d c = d a := by
+          rcases hall t with rfl | rfl | rfl | rfl
+          · exact htc.symm
+          · exact htc.symm.trans hab.symm
+          · exact absurd rfl ht
+          · exact absurd htc.symm hne
+        have hde : d e = d a := by
+          rcases hall u with rfl | rfl | rfl | rfl
+          · exact hue.symm
+          · exact hue.symm.trans hab.symm
+          · exact absurd hue hne
+          · exact absurd rfl hu
+        exact hne (hdc.trans hde.symm)
+      fin_cases k
+      · exact absurd rfl hk0
+      · exact Or.inl ⟨hk.symm,
+          pair 0 1 2 3 (by intro t; fin_cases t <;> simp) hk.symm (by omega)⟩
+      · exact Or.inr (Or.inl ⟨hk.symm,
+          pair 0 2 1 3 (by intro t; fin_cases t <;> simp) hk.symm (by omega)⟩)
+      · exact Or.inr (Or.inr (Or.inl ⟨hk.symm,
+          pair 0 3 1 2 (by intro t; fin_cases t <;> simp) hk.symm (by omega)⟩))
+    · -- all fibres odd: each is exactly 1, so `d` is injective
+      have hsum : ∑ μ : Fin 1 ⊕ Fin 3,
+          (Finset.univ.filter fun s => d s = μ).card = 4 := by
+        rw [← Finset.card_eq_sum_card_fiberwise (fun s _ => Finset.mem_univ (d s))]
+        simp
+      rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three] at hsum
+      have h0 := Nat.odd_iff.1 (hodd (Sum.inl 0))
+      have h1 := Nat.odd_iff.1 (hodd (Sum.inr 0))
+      have h2 := Nat.odd_iff.1 (hodd (Sum.inr 1))
+      have h3 := Nat.odd_iff.1 (hodd (Sum.inr 2))
+      have hone : ∀ μ, (Finset.univ.filter fun s => d s = μ).card = 1 := by
+        intro μ
+        rcases μ with a | j
+        · rw [Subsingleton.elim a 0]; omega
+        · fin_cases j
+          · exact (by omega : (Finset.univ.filter fun s => d s = Sum.inr 0).card = 1)
+          · exact (by omega : (Finset.univ.filter fun s => d s = Sum.inr 1).card = 1)
+          · exact (by omega : (Finset.univ.filter fun s => d s = Sum.inr 2).card = 1)
+      refine Or.inr (Or.inr (Or.inr fun s t hst => ?_))
+      by_contra hne
+      have h2le : 1 < (Finset.univ.filter fun r => d r = d s).card :=
+        Finset.one_lt_card.2 ⟨s, by simp, t, by simp [hst], hne⟩
+      rw [hone] at h2le
+      omega
+
+/-- Parity is the only obstruction: two index vectors whose multiplicities agree in parity
+  are paired-or-distinct together. -/
+lemma isPairedOrDistinct_congr_of_card_parity {d e : Fin 4 → Fin 1 ⊕ Fin 3}
+    (h : ∀ μ, (Finset.univ.filter fun s => d s = μ).card % 2
+        = (Finset.univ.filter fun s => e s = μ).card % 2) :
+    IsPairedOrDistinct d ↔ IsPairedOrDistinct e := by
+  rw [isPairedOrDistinct_iff_card_parity, isPairedOrDistinct_iff_card_parity]
+  constructor
+  · rintro (hh | hh)
+    · exact Or.inl fun μ => Nat.even_iff.2 (by have := h μ; have := Nat.even_iff.1 (hh μ); omega)
+    · exact Or.inr fun μ => Nat.odd_iff.2 (by have := h μ; have := Nat.odd_iff.1 (hh μ); omega)
+  · rintro (hh | hh)
+    · exact Or.inl fun μ => Nat.even_iff.2 (by have := h μ; have := Nat.even_iff.1 (hh μ); omega)
+    · exact Or.inr fun μ => Nat.odd_iff.2 (by have := h μ; have := Nat.odd_iff.1 (hh μ); omega)
+
 /-- The swap of the two null light-cone directions. -/
 def swap01 : Fin 4 → Fin 4 := fun κ => if κ = 0 then 1 else if κ = 1 then 0 else κ
 
@@ -991,7 +1104,63 @@ lemma invQ_swap01_mul_coeffZ_swap01 :
           * (lightConeCoeffInvQ i μ κ * (lightConeCoeffZ i κ ν : ℚ)) := by
   decide +kernel
 
-set_option maxRecDepth 100000 in
+/-- Sector compatibility transfers every multiplicity parity. Off the null sector the two
+  index vectors agree slotwise, so those fibres are equal; the null-sector supports coincide,
+  so the two null multiplicities have equal totals, and the axis parity then pins the other. -/
+lemma card_mod_two_congr_of_sameSlotSector (i : Fin 3) {d e : Fin 4 → Fin 1 ⊕ Fin 3}
+    (hs : ∀ s, SameSlotSector i (e s) (d s))
+    (hi : (Finset.univ.filter fun s => d s = Sum.inr i).card % 2
+        = (Finset.univ.filter fun s => e s = Sum.inr i).card % 2) (μ : Fin 1 ⊕ Fin 3) :
+    (Finset.univ.filter fun s => d s = μ).card % 2
+      = (Finset.univ.filter fun s => e s = μ).card % 2 := by
+  have hsplit : ∀ f : Fin 4 → Fin 1 ⊕ Fin 3,
+      (Finset.univ.filter fun s => f s = Sum.inl 0 ∨ f s = Sum.inr i).card
+        = (Finset.univ.filter fun s => f s = Sum.inl 0).card
+          + (Finset.univ.filter fun s => f s = Sum.inr i).card := by
+    intro f
+    rw [Finset.filter_or, Finset.card_union_of_disjoint]
+    exact Finset.disjoint_filter.2 fun s _ h0 h1 => by rw [h0] at h1; simp at h1
+  have hsupp : (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr i)
+      = (Finset.univ.filter fun s => e s = Sum.inl 0 ∨ e s = Sum.inr i) := by
+    ext s
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+    rcases hs s with ⟨he, hd⟩ | hed
+    · exact ⟨fun _ => he, fun _ => hd⟩
+    · rw [← hed]
+  have htot : (Finset.univ.filter fun s => d s = Sum.inl 0).card
+        + (Finset.univ.filter fun s => d s = Sum.inr i).card
+      = (Finset.univ.filter fun s => e s = Sum.inl 0).card
+        + (Finset.univ.filter fun s => e s = Sum.inr i).card := by
+    rw [← hsplit d, ← hsplit e, hsupp]
+  by_cases hμ0 : μ = Sum.inl 0
+  · subst hμ0; omega
+  by_cases hμi : μ = Sum.inr i
+  · subst hμi; exact hi
+  have hfil : (Finset.univ.filter fun s => d s = μ)
+      = (Finset.univ.filter fun s => e s = μ) := by
+    ext s
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+    rcases hs s with ⟨he, hd⟩ | hed
+    · constructor
+      · rintro rfl; rcases hd with h | h; exacts [(hμ0 h).elim, (hμi h).elim]
+      · rintro rfl; rcases he with h | h; exacts [(hμ0 h).elim, (hμi h).elim]
+    · rw [← hed]
+  rw [hfil]
+
+/-- The total null-swap sign counts the axis-`i` slots of both index vectors: `nuSignZ` is a
+  product of two slot signs, so the product over slots splits into two powers of `-1`. -/
+lemma prod_nuSignZ_eq_pow (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
+    (∏ s, nuSignZ i (e s) (d s))
+      = (-1 : ℤ) ^ ((Finset.univ.filter fun s => e s = Sum.inr i).card
+          + (Finset.univ.filter fun s => d s = Sum.inr i).card) := by
+  have key : ∀ f : Fin 4 → Fin 1 ⊕ Fin 3,
+      (∏ s, (if f s = Sum.inr i then (-1 : ℤ) else 1))
+        = (-1 : ℤ) ^ (Finset.univ.filter fun s => f s = Sum.inr i).card := by
+    intro f
+    rw [Finset.prod_ite, Finset.prod_const, Finset.prod_const, one_pow, mul_one]
+  simp only [nuSignZ]
+  rw [Finset.prod_mul_distrib, key e, key d, ← pow_add]
+
 /-- The sign of a sector-compatible parity mismatch: a paired-or-distinct column
   index against a bad row index with all slots sector-compatible carries sign `-1`. -/
 lemma prod_nuSignZ_eq_neg_one :
@@ -999,12 +1168,14 @@ lemma prod_nuSignZ_eq_neg_one :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, ¬IsPairedOrDistinct d →
     (∀ s, SameSlotSector i (e s) (d s)) →
     (∏ s, nuSignZ i (e s) (d s)) = -1 := by
-  suffices h1 : ∀ i : Fin 3, ∀ e ∈ {e : Fin 4 → Fin 1 ⊕ Fin 3 | IsPairedOrDistinct e},
-      ∀ d ∈ {d : Fin 4 → Fin 1 ⊕ Fin 3 | ¬IsPairedOrDistinct d},
-      (∀ s, SameSlotSector i (e s) (d s)) → (∏ s, nuSignZ i (e s) (d s)) = -1 by
-    intro i e he d hd hs
-    exact h1 i e he d hd hs
-  decide +kernel
+  intro i e he d hd hs
+  rw [prod_nuSignZ_eq_pow]
+  refine Odd.neg_one_pow ?_
+  rw [Nat.odd_iff]
+  by_contra hpar
+  refine hd ((isPairedOrDistinct_congr_of_card_parity
+    (card_mod_two_congr_of_sameSlotSector i hs ?_)).2 he)
+  omega
 
 /-- Support of the weight-zero transition: the transition out of a
   paired-or-distinct index vanishes on every bad index. -/
