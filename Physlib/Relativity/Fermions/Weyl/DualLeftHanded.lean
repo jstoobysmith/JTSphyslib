@@ -32,7 +32,6 @@ Although a different index convention is used there.
 namespace Fermion
 noncomputable section
 
-TODO "Relate `DualLeftHandedWeyl` to `LeftHandedWeyl` via `Module.dual`."
 
 /-- The module in which dual-left handed fermions live. This is equivalent to `Fin 2 → ℂ`. -/
 structure DualLeftHandedWeyl where

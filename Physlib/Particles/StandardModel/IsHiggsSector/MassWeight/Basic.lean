@@ -102,6 +102,14 @@ lemma massWeightSubmodule_eight_eq_deriv :
     barHiggsSubmodule_comm_higgsSubmodule, mul_assoc, h.barHiggs_higgs_left_comm]
   simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
 
+
+TODO (lines := 104-105) "In a new file, give the gauge weight decomposition
+  on each of the mass-weight submodules. Copy what is in
+  the IsHiggSector.Basic file (which will eventually be overwritten).
+  In fact complete the guage argument which is there in this new formulation.
+  The best way is probably to develop the general code in `IsSU2BiFundamental` file
+  and then directly appply it here."
+
 end IsHiggsSector
 
 end StandardModel

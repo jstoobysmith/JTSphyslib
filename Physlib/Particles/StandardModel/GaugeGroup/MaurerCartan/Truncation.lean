@@ -132,7 +132,6 @@ lemma symmetrizedMaurerCartanCoeff_injective : Function.Injective symmetrizedMau
     exact ext_of_eval_iteratedDeriv fun s => hall s.card s μ rfl
   exact Subtype.ext (maurerCartanForm_injOn_truncationKer_zero U.2 V.2 hmc)
 
-TODO "The below code needs cleaning up and moving to the correct place."
 /-!
 
 ## The symmetrized data through the radial Maurer–Cartan component

@@ -56,7 +56,6 @@ open MvPowerSeries
 
 
 
-TODO "Define the symmetrized maurerCartan forms."
 
 /-- The `U(1)` Maurer–Cartan form of a jet of gauge transformations in the
   direction `ν`: the series `i (∂_ν u) ū` for `u` the hypercharge factor of the

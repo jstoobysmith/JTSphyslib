@@ -385,10 +385,11 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
   funext a
   match k with
   | Sum.inl r =>
-    show ∑ x : Fin 8, _ = _
-    rw [show (fun x => wtCoeff (Sum.inl r) x) = fun x =>
-        (if x = (rootPair r).1 then (1 : ℂ) else 0)
-          + Complex.I * (if x = (rootPair r).2 then 1 else 0) from rfl]
+    have hw : ∀ x : Fin 8, wtCoeff (Sum.inl r) x
+        = (if x = (rootPair r).1 then (1 : ℂ) else 0)
+          + Complex.I * (if x = (rootPair r).2 then 1 else 0) := fun _ => rfl
+    show ∑ x : Fin 8, _ * wtCoeff (Sum.inl r) x = _
+    simp only [hw]
     rw [sum_mul_pair]
     simp only [adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
@@ -397,11 +398,15 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     rw [pair_add_eq]
     rfl
   | Sum.inr (Sum.inl r) =>
-    show ∑ x : Fin 8, _ = _
-    rw [show (fun x => wtCoeff (Sum.inr (Sum.inl r)) x) = fun x =>
-        (if x = (rootPair r).1 then (1 : ℂ) else 0)
-          + (-Complex.I) * (if x = (rootPair r).2 then 1 else 0) from by
-      funext x; show _ = _; ring]
+    have hw : ∀ x : Fin 8, wtCoeff (Sum.inr (Sum.inl r)) x
+        = (if x = (rootPair r).1 then (1 : ℂ) else 0)
+          + (-Complex.I) * (if x = (rootPair r).2 then 1 else 0) := by
+      intro x
+      show (if x = (rootPair r).1 then (1 : ℂ) else 0)
+          - Complex.I * (if x = (rootPair r).2 then 1 else 0) = _
+      ring
+    show ∑ x : Fin 8, _ * wtCoeff (Sum.inr (Sum.inl r)) x = _
+    simp only [hw]
     rw [sum_mul_pair]
     simp only [adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
@@ -418,17 +423,17 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     show _ = _ * wtCoeff (Sum.inr (Sum.inl r)) a
     rfl
   | Sum.inr (Sum.inr c) =>
-    show ∑ x : Fin 8, _ = _
-    have hz : ((expI : ℂ) ^ GaugeWeight.coord (wtWeight (Sum.inr (Sum.inr c) : WeightIdx)) i)
-        = 1 := by
+    have hw : ∀ x : Fin 8, wtCoeff (Sum.inr (Sum.inr c)) x
+        = if x = cartanId c then (1 : ℂ) else 0 := fun _ => rfl
+    have hz : ((expI : ℂ) ^ GaugeWeight.coord
+        (wtWeight (Sum.inr (Sum.inr c) : WeightIdx)) i) = 1 := by
       show ((expI : ℂ) ^ GaugeWeight.coord (0 : GaugeWeight) i) = 1
       simp
+    show ∑ x : Fin 8, _ * wtCoeff (Sum.inr (Sum.inr c)) x = _
     rw [hz]
-    simp only [wtCoeff, adjointMatrix_cartanId, Pi.smul_apply, smul_eq_mul, one_mul]
+    simp only [hw, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ,
+      if_true, adjointMatrix_cartanId, one_smul]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero]
-    simp
-
-TODO (lines := 379-430) "Fix the errors within these lemmas."
 
 /-!
 
@@ -633,7 +638,62 @@ lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
         (3, -3, 0, 0), (2, 2, 0, 0), (0, 3, 0, 0), (-2, 4, 0, 0), (-3, 3, 0, 0),
         (-4, 2, 0, 0), (-3, 0, 0, 0), (-2, -2, 0, 0), (0, -3, 0, 0), (2, -4, 0, 0)} := by
   rw [hT.gaugeWeightDecomposition_supp_eq hmul]
+  decide +kernel
+
+/-!
+
+## D.6. The zero-weight piece
+
+A gauge invariant built from `T` is fixed by the torus, so it lies in the zero-weight
+piece, which makes that piece worth describing explicitly. A product of two weight vectors
+has weight zero exactly when the two weights cancel: a root against its negative, in
+either order, or any two Cartan directions. That is ten lines, the multiplicity of the
+zero weight in the tensor square of the `su(3)` adjoint.
+
+-/
+
+/-- Two `su(3)` adjoint weight vectors have cancelling weights precisely when they are a
+  root and its negative, in either order, or two Cartan directions. -/
+lemma wtWeight_add_eq_zero_iff (k : WeightIdx × WeightIdx) :
+    wtWeight k.1 + wtWeight k.2 = 0
+      ↔ (∃ r : Fin 3, k = (Sum.inl r, Sum.inr (Sum.inl r)))
+        ∨ (∃ r : Fin 3, k = (Sum.inr (Sum.inl r), Sum.inl r))
+        ∨ ∃ c₀ c₁ : Fin 2, k = (Sum.inr (Sum.inr c₀), Sum.inr (Sum.inr c₁)) := by
+  revert k
   decide
+
+/-- The line through a product of two weight vectors whose weights cancel lies in the
+  zero-weight piece. -/
+lemma span_biVec_le_piece_zero (hmul : IsMulRep repGauge) {k₀ k₁ : WeightIdx}
+    (h : wtWeight k₀ + wtWeight k₁ = 0) :
+    ℂ ∙ hT.biVec (wtCoeff k₀) (wtCoeff k₁)
+      ≤ (hT.gaugeWeightDecomposition hmul).piece 0 := by
+  rw [hT.gaugeWeightDecomposition_piece hmul]
+  exact le_iSup_of_le (k₀, k₁) (le_of_eq (if_pos h.symm).symm)
+
+/-- The zero-weight piece of the gauge weight decomposition, explicitly: the join of the
+  ten lines through the products of two weight vectors of opposite weight, one for each
+  root against its negative in either order and one for each pair of Cartan directions. -/
+lemma gaugeWeightDecomposition_piece_zero (hmul : IsMulRep repGauge) :
+    (hT.gaugeWeightDecomposition hmul).piece 0
+      = (⨆ r : Fin 3, ℂ ∙ hT.biVec (wtCoeff (Sum.inl r)) (wtCoeff (Sum.inr (Sum.inl r))))
+        ⊔ (⨆ r : Fin 3, ℂ ∙ hT.biVec (wtCoeff (Sum.inr (Sum.inl r))) (wtCoeff (Sum.inl r)))
+        ⊔ ⨆ c₀ : Fin 2, ⨆ c₁ : Fin 2, ℂ ∙ hT.biVec (wtCoeff (Sum.inr (Sum.inr c₀)))
+            (wtCoeff (Sum.inr (Sum.inr c₁))) := by
+  refine le_antisymm ?_ (sup_le (sup_le (iSup_le fun r => ?_) (iSup_le fun r => ?_))
+    (iSup_le fun c₀ => iSup_le fun c₁ => ?_))
+  · rw [hT.gaugeWeightDecomposition_piece hmul]
+    refine iSup_le fun k => ?_
+    split_ifs with hk
+    · rcases (wtWeight_add_eq_zero_iff k).1 hk.symm with
+        ⟨r, rfl⟩ | ⟨r, rfl⟩ | ⟨c₀, c₁, rfl⟩
+      · exact le_sup_of_le_left (le_sup_of_le_left (le_iSup_of_le r le_rfl))
+      · exact le_sup_of_le_left (le_sup_of_le_right (le_iSup_of_le r le_rfl))
+      · exact le_sup_of_le_right (le_iSup_of_le c₀ (le_iSup_of_le c₁ le_rfl))
+    · exact bot_le
+  · exact hT.span_biVec_le_piece_zero hmul (by simp [wtWeight])
+  · exact hT.span_biVec_le_piece_zero hmul (by simp [wtWeight])
+  · exact hT.span_biVec_le_piece_zero hmul (by simp [wtWeight])
 
 /-- **The trace contraction lies in the zero-weight piece.** It is gauge invariant, so in
   particular the torus fixes it. -/
@@ -641,10 +701,6 @@ lemma traceContraction_mem_piece_zero (hmul : IsMulRep repGauge) :
     hT.traceContraction ∈ (hT.gaugeWeightDecomposition hmul).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _ hT.traceContraction_mem_span
     hT.repGauge_traceContraction
-
-
-TODO (lines := 640-641) "Give the
-  expclit form of the zero peice of the decomposition."
 
 end Decomposition
 

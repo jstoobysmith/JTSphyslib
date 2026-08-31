@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import textwrap
+from typing import NamedTuple
 
 DEFAULT_MASTER = "upstream/master"
 DEFAULT_ROOT = "Physlib"
@@ -48,6 +49,31 @@ NOISE = re.compile(
     r"|(is a TODO to)|(Open TODO items)|(see the `TODO`)",
     re.I,
 )
+
+
+class Todo(NamedTuple):
+    """One TODO item: the code it is about, and where the note itself is written.
+
+    `line` and `endline` are the range given by a `(lines := ...)` clause, or the
+    line the note is written on when it carries no clause. `at` is always the line
+    the note itself is on: since `scripts/insert_todo.py` writes a note *below* the
+    code it is about, the two are usually different.
+    """
+
+    path: str
+    line: int
+    endline: int
+    kind: str
+    content: str
+    at: int
+
+    def lines(self):
+        """The range of code, as it is written in a `(lines := ...)` clause."""
+        return f"{self.line}-{self.endline}" if self.endline > self.line else f"{self.line}"
+
+    def label(self, name):
+        """`name` and the code range, saying where the note is when that differs."""
+        return f"{name}:{self.lines()}" + (f" (at {self.at})" if self.at != self.line else "")
 
 
 def git(repo, *args):
@@ -109,7 +135,8 @@ def parse_file(path, text):
                 body += " " + lines[i].strip()
             if '"' in body:
                 body = body[:body.rindex('"')]
-            items.append((path, first, last, "cmd", " ".join(body.split())))
+            items.append(Todo(path, first, last, "cmd",
+                               " ".join(body.split()), start + 1))
             i += 1
             continue
 
@@ -124,12 +151,13 @@ def parse_file(path, text):
                     break
                 body += " " + nxt
                 i += 1
-            items.append((path, start + 1, start + 1, "doc", " ".join(body.split())))
+            items.append(Todo(path, start + 1, start + 1, "doc",
+                               " ".join(body.split()), start + 1))
             i += 1
             continue
 
         if LOOSE.search(line) and not NOISE.search(line):
-            unclassified.append((path, i + 1, "?", line.strip()))
+            unclassified.append(Todo(path, i + 1, i + 1, "?", line.strip(), i + 1))
         i += 1
 
     return items, unclassified
@@ -175,8 +203,8 @@ def key(content):
 
 def group_by_dir(items):
     by_dir = {}
-    for path, line, last, _, content in sorted(items):
-        by_dir.setdefault(path.rsplit("/", 1)[0], []).append((path, line, last, content))
+    for todo in sorted(items):
+        by_dir.setdefault(todo.path.rsplit("/", 1)[0], []).append(todo)
     return by_dir
 
 
@@ -187,23 +215,22 @@ def emit_terminal(items, unknown, meta, plain):
 
     for directory, group in sorted(group_by_dir(items).items()):
         if plain:
-            for path, _, _, content in group:
-                print(f"{path} | {content}")
+            for todo in group:
+                print(f"{todo.path} | {todo.content}")
             continue
         print(directory.replace("Physlib/", ""))
-        for path, line, last, content in group:
-            name = path.rsplit("/", 1)[1]
-            head, *rest = textwrap.wrap(content, 62) or [""]
-            label = f"{name}:{line}-{last}" if last > line else f"{name}:{line}"
-            print(f"  {label:<34} {head}")
+        for todo in group:
+            label = todo.label(todo.path.rsplit("/", 1)[1])
+            head, *rest = textwrap.wrap(todo.content, 56) or [""]
+            print(f"  {label:<40} {head}")
             for cont in rest:
-                print(f"  {'':<34} {cont}")
+                print(f"  {'':<40} {cont}")
         print()
 
     if unknown:
-        print(f"UNCLASSIFIED ({len(unknown)}) - matched /todo/i, no known form:")
-        for path, line, _, content in sorted(unknown):
-            print(f"  {path}:{line}  {content[:70]}")
+        print(f"UNCLASSIFIED ({len(unknown)}) - new here, matched /todo/i, no known form:")
+        for todo in sorted(unknown):
+            print(f"  {todo.path}:{todo.line}  {todo.content[:70]}")
 
 
 def md_escape(text):
@@ -225,12 +252,16 @@ def emit_md(items, meta, repo_url, link_ref):
     ]
     for directory, group in sorted(group_by_dir(items).items()):
         out += [f"### `{directory.replace('Physlib/', '')}`", ""]
-        for path, line, last, content in group:
-            name = path.rsplit("/", 1)[1]
-            anchor = f"L{line}-L{last}" if last > line else f"L{line}"
-            label = f"{name}:{line}-{last}" if last > line else f"{name}:{line}"
-            link = f"{repo_url}/blob/{link_ref}/{path}#{anchor}"
-            out.append(f"- {md_escape(content)} &nbsp;[`{label}`]({link})")
+        for todo in group:
+            name = todo.path.rsplit("/", 1)[1]
+            anchor = f"L{todo.line}-L{todo.endline}" if todo.endline > todo.line \
+                else f"L{todo.line}"
+            link = f"{repo_url}/blob/{link_ref}/{todo.path}"
+            row = (f"- {md_escape(todo.content)} "
+                   f"&nbsp;[`{name}:{todo.lines()}`]({link}#{anchor})")
+            if todo.at != todo.line:   # where to go to edit the note itself
+                row += f" &nbsp;[`@{todo.at}`]({link}#L{todo.at})"
+            out.append(row)
         out.append("")
 
     return "\n".join(out)
@@ -261,10 +292,18 @@ def main():
                             args.head or "HEAD").strip()
 
     items, unknown, nfiles = scan(args.repo, args.head, args.root)
-    base_items, _, _ = scan(args.repo, base, args.root)
+    base_items, base_unknown, _ = scan(args.repo, base, args.root)
 
-    base_keys = {key(c) for *_, c in base_items}
-    items = [it for it in items if key(it[3]) not in base_keys]
+    base_keys = {key(todo.content) for todo in base_items}
+    items = [todo for todo in items if key(todo.content) not in base_keys]
+
+    # The unclassified lines are subtracted too, so that section only ever reports a
+    # loose TODO this branch itself introduced. A loose line counts as pre-existing if
+    # its wording is anywhere at the merge-base, in either form: a stray `-- todo:`
+    # rewritten as a `TODO` command is not new work. Only this list is widened that
+    # way; the items above stay keyed against the items at the base alone.
+    loose_keys = base_keys | {key(todo.content) for todo in base_unknown}
+    unknown = [todo for todo in unknown if key(todo.content) not in loose_keys]
 
     meta = {"base": base, "head": head_sha, "date": date, "files": nfiles}
 

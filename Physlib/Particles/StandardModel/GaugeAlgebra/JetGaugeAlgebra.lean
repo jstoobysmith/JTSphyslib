@@ -59,8 +59,7 @@ The derivative acts on brackets via the Leibniz rule:
 -/
 
 @[expose] public section
-TODO "Make the API here match what is in the doc-string."
-TODO "Add discussion about the basis."
+
 namespace StandardModel
 open MvPowerSeries Matrix
 
@@ -723,8 +722,6 @@ lemma eval_iteratedDeriv_bracket_congr (w : Multiset (Fin 1 ⊕ Fin 3))
 ## The basis
 
 -/
-
-TODO "Define the basis of the jet gauge algebra."
 
 
 /-!

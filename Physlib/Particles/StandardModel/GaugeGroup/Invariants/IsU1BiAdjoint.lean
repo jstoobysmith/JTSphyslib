@@ -21,8 +21,9 @@ one dimensional and the adjoint action of the gauge group on it is trivial, so t
 proposition says that the components of `T` are already gauge invariant.
 
 Section A gives the proposition and the span of its components, section B the
-orthogonality of the `u(1)` block of `adjointMatrix`, and section C the trace
-contraction, which is the natural gauge invariant built from two adjoint indices.
+orthogonality of the `u(1)` block of `adjointMatrix`, section C the trace
+contraction, which is the natural gauge invariant built from two adjoint indices, and
+section D the gauge invariance of every element of the span.
 -/
 
 @[expose] public section
@@ -162,9 +163,33 @@ lemma repGauge_traceContraction (hT : IsU1BiAdjoint B repGauge T) (g : GaugeGrou
     simp [apply_ite]
   rw [step, ← hT.traceContraction_eq_sum]
 
-TODO (lines := 164-165) "Add here the
-  lemma that the every element of `span` is invariant under the gauge group
-  action."
+/-!
+
+## D. Gauge invariance of the whole span
+
+The `u(1)` adjoint index takes a single value and the gauge group acts trivially on it,
+so every component of `T` is itself gauge invariant, and hence so is every linear
+combination of the components.
+
+-/
+
+/-- Every component of a bi-adjoint `u(1)` family is gauge invariant. -/
+lemma repGauge_T_self (hT : IsU1BiAdjoint B repGauge T) (g : GaugeGroupI)
+    (l : Fin 2 → Fin 1) : repGauge g (T l) = T l := by
+  rw [hT.repGauge_T g l, Fintype.sum_unique,
+    Subsingleton.elim (default : Fin 2 → Fin 1) l]
+  simp only [adjointMatrix_u1, Complex.ofReal_one, Finset.prod_const_one, one_smul]
+
+/-- Every element of the span of the components of a bi-adjoint `u(1)` family is gauge
+  invariant. -/
+lemma repGauge_of_mem_span (hT : IsU1BiAdjoint B repGauge T) (g : GaugeGroupI) {x : B}
+    (hx : x ∈ hT.span) : repGauge g x = x := by
+  obtain ⟨c, rfl⟩ := (hT.mem_span_iff x).1 hx
+  rw [map_sum]
+  exact Finset.sum_congr rfl fun d _ => by rw [map_smul, hT.repGauge_T_self g d]
+
+TODO (lines := 185-190) "Write the spanned version
+  of this result, similar to in `IsQuadLorentz`."
 
 end IsU1BiAdjoint
 

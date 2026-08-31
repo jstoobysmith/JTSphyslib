@@ -276,9 +276,6 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
 
 -/
 
-TODO "Define the iterated derivative, and show that the iterated derivatives span
-  the adjoin to give the whole algebra."
-
 end JetAlgebra
 
 end StandardModel
