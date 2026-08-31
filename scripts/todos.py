@@ -30,7 +30,10 @@ DEFAULT_ROOT = "Physlib"
 # subproject with its own `--TODO` convention and is out of scope.
 EXCLUDE = re.compile(r"(^|/)(Meta|scripts)/")
 
-CMD_START = re.compile(r'^\s*TODO\s+"')          # TODO "..."  (Lean command)
+# TODO "..." and TODO (lines := 82) "..." / TODO (lines := 201-223) "..."  (Lean command)
+CMD_START = re.compile(
+    r'^\s*TODO\s*(?:\(\s*lines\s*:=\s*(\d+)\s*(?:-\s*(\d+)\s*)?\)\s*)?"'
+)
 DOC_LINE = re.compile(r"^\s*/-!\s*TODO:\s*")     # /-! TODO: ... -/
 LOOSE = re.compile(r"todo", re.I)
 
@@ -81,7 +84,11 @@ def read_blobs(repo, ref, paths):
 
 
 def parse_file(path, text):
-    """Yield (path, line, kind, content) items, coalescing wrapped ones."""
+    """Yield (path, line, endline, kind, content) items, coalescing wrapped ones.
+
+    `line`/`endline` are the lines of code the item is about: the range given by a
+    `(lines := ...)` clause, or the line the item is written on when it has none.
+    """
     lines = text.splitlines()
     items, unclassified = [], []
     i = 0
@@ -89,8 +96,11 @@ def parse_file(path, text):
         line = lines[i]
 
         # --- TODO "..." command; the string may span several lines -----------
-        if CMD_START.match(line):
+        cmd = CMD_START.match(line)
+        if cmd:
             start = i
+            first = int(cmd.group(1)) if cmd.group(1) else start + 1
+            last = int(cmd.group(2)) if cmd.group(2) else first
             body = line[line.index('"') + 1:]
             while '"' not in body.replace('\\"', ""):
                 i += 1
@@ -99,7 +109,7 @@ def parse_file(path, text):
                 body += " " + lines[i].strip()
             if '"' in body:
                 body = body[:body.rindex('"')]
-            items.append((path, start + 1, "cmd", " ".join(body.split())))
+            items.append((path, first, last, "cmd", " ".join(body.split())))
             i += 1
             continue
 
@@ -114,7 +124,7 @@ def parse_file(path, text):
                     break
                 body += " " + nxt
                 i += 1
-            items.append((path, start + 1, "doc", " ".join(body.split())))
+            items.append((path, start + 1, start + 1, "doc", " ".join(body.split())))
             i += 1
             continue
 
@@ -165,8 +175,8 @@ def key(content):
 
 def group_by_dir(items):
     by_dir = {}
-    for path, line, _, content in sorted(items):
-        by_dir.setdefault(path.rsplit("/", 1)[0], []).append((path, line, content))
+    for path, line, last, _, content in sorted(items):
+        by_dir.setdefault(path.rsplit("/", 1)[0], []).append((path, line, last, content))
     return by_dir
 
 
@@ -177,14 +187,14 @@ def emit_terminal(items, unknown, meta, plain):
 
     for directory, group in sorted(group_by_dir(items).items()):
         if plain:
-            for path, _, content in group:
+            for path, _, _, content in group:
                 print(f"{path} | {content}")
             continue
         print(directory.replace("Physlib/", ""))
-        for path, line, content in group:
+        for path, line, last, content in group:
             name = path.rsplit("/", 1)[1]
             head, *rest = textwrap.wrap(content, 62) or [""]
-            label = f"{name}:{line}"
+            label = f"{name}:{line}-{last}" if last > line else f"{name}:{line}"
             print(f"  {label:<34} {head}")
             for cont in rest:
                 print(f"  {'':<34} {cont}")
@@ -215,10 +225,12 @@ def emit_md(items, meta, repo_url, link_ref):
     ]
     for directory, group in sorted(group_by_dir(items).items()):
         out += [f"### `{directory.replace('Physlib/', '')}`", ""]
-        for path, line, content in group:
+        for path, line, last, content in group:
             name = path.rsplit("/", 1)[1]
-            link = f"{repo_url}/blob/{link_ref}/{path}#L{line}"
-            out.append(f"- {md_escape(content)} &nbsp;[`{name}:{line}`]({link})")
+            anchor = f"L{line}-L{last}" if last > line else f"L{line}"
+            label = f"{name}:{line}-{last}" if last > line else f"{name}:{line}"
+            link = f"{repo_url}/blob/{link_ref}/{path}#{anchor}"
+            out.append(f"- {md_escape(content)} &nbsp;[`{label}`]({link})")
         out.append("")
 
     return "\n".join(out)

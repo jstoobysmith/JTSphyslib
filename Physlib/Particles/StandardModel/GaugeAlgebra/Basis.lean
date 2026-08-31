@@ -736,6 +736,77 @@ lemma adjoint_dualMap_coord (g : GaugeGroupI) (a : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :
   rw [← h]
   simp [Matrix.mulVec, dotProduct]
 
+/-!
+
+## H. Orthogonality of the adjoint matrix
+
+The adjoint action preserves the trace pairing of the standard basis, so `adjointMatrix`
+is an orthogonal matrix. Multiplicativity turns the star of a group element into the
+transpose of its matrix, and the two combine to the orthogonality relation.
+
+-/
+
+/-- The matrix of the adjoint action turns a product in the gauge group into the
+  product of the corresponding matrices. -/
+lemma adjointMatrix_mul (g h : GaugeGroupI) :
+    GaugeAlgebra.adjointMatrix (g * h)
+      = GaugeAlgebra.adjointMatrix g * GaugeAlgebra.adjointMatrix h := by
+  rw [← GaugeAlgebra.toMatrix_adjoint, ← GaugeAlgebra.toMatrix_adjoint,
+    ← GaugeAlgebra.toMatrix_adjoint, map_mul, LinearMap.toMatrix_mul]
+
+/-- The matrix of the adjoint action of the identity is the identity matrix. -/
+lemma adjointMatrix_one : GaugeAlgebra.adjointMatrix (1 : GaugeGroupI) = 1 := by
+  rw [← GaugeAlgebra.toMatrix_adjoint, map_one, LinearMap.toMatrix_one]
+
+/-- The star of a gauge group element is its inverse. -/
+lemma gaugeGroup_mul_star_self (g : GaugeGroupI) : g * star g = 1 := by
+  refine GaugeGroupI.ext ?_ ?_ ?_
+  · rw [map_mul, GaugeGroupI.star_toSU3, map_one, Matrix.star_eq_inv, mul_inv_cancel]
+  · rw [map_mul, GaugeGroupI.star_toSU2, map_one, Matrix.star_eq_inv, mul_inv_cancel]
+  · rw [map_mul, GaugeGroupI.star_toU1, map_one, Unitary.mul_star_self]
+
+/-- The matrix of the adjoint action of the star of a gauge group element is the
+  transpose of the matrix of the adjoint action, since the trace pairing is symmetric
+  under moving the conjugation from one argument to the other. -/
+lemma adjointMatrix_star (g : GaugeGroupI) :
+    GaugeAlgebra.adjointMatrix (star g) = (GaugeAlgebra.adjointMatrix g)ᵀ := by
+  have key : ∀ {m : ℕ} (X Y U : Matrix (Fin m) (Fin m) ℂ),
+      Matrix.trace (X * (star U * Y * U)) = Matrix.trace (Y * (U * X * star U)) := by
+    intro m X Y U
+    calc Matrix.trace (X * (star U * Y * U))
+        = Matrix.trace (X * star U * Y * U) := by simp only [mul_assoc]
+      _ = Matrix.trace (U * (X * star U * Y)) := Matrix.trace_mul_comm _ _
+      _ = Matrix.trace (U * X * star U * Y) := by simp only [mul_assoc]
+      _ = Matrix.trace (Y * (U * X * star U)) := Matrix.trace_mul_comm _ _
+  ext a b
+  match a, b with
+  | Sum.inl a, Sum.inl b =>
+    simp only [Matrix.transpose_apply, GaugeAlgebra.adjointMatrix_inl_inl,
+      GaugeGroupI.star_toSU3, Matrix.specialUnitaryGroup.coe_star, star_star]
+    rw [key]
+  | Sum.inl a, Sum.inr x => simp
+  | Sum.inr x, Sum.inl b => simp
+  | Sum.inr (Sum.inl i), Sum.inr (Sum.inl j) =>
+    simp only [Matrix.transpose_apply, GaugeAlgebra.adjointMatrix_inr_inl_inr_inl,
+      GaugeGroupI.star_toSU2, Matrix.specialUnitaryGroup.coe_star, star_star]
+    rw [key]
+  | Sum.inr (Sum.inl i), Sum.inr (Sum.inr u) => simp
+  | Sum.inr (Sum.inr u), Sum.inr (Sum.inl j) => simp
+  | Sum.inr (Sum.inr u), Sum.inr (Sum.inr v) => simp
+
+/-- The matrix of the adjoint action is orthogonal. -/
+lemma adjointMatrix_mul_transpose (g : GaugeGroupI) :
+    GaugeAlgebra.adjointMatrix g * (GaugeAlgebra.adjointMatrix g)ᵀ = 1 := by
+  rw [← adjointMatrix_star, ← adjointMatrix_mul, gaugeGroup_mul_star_self,
+    adjointMatrix_one]
+
+/-- The matrix of the adjoint action of the inverse of a gauge group element is the
+  transpose of the matrix of the adjoint action. -/
+lemma adjointMatrix_inv_apply (g : GaugeGroupI) (a b : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :
+    adjointMatrix g⁻¹ a b = adjointMatrix g b a := by
+  rw [inv_eq_of_mul_eq_one_right (gaugeGroup_mul_star_self g), adjointMatrix_star,
+    Matrix.transpose_apply]
+
 end GaugeAlgebra
 
 end

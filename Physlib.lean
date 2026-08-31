@@ -224,7 +224,11 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDer
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
@@ -268,7 +272,9 @@ public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.Gau
 public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.BoostWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.BiAdjoint
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.BoostWeightDecomposition
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
@@ -450,6 +456,11 @@ public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Relativity.LorentzGroup.Boosts.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Generalized
 public import Physlib.Relativity.LorentzGroup.FermionicParity
+public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
+public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
+public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.IsSingleLorentz
 public import Physlib.Relativity.LorentzGroup.Orthochronous.Basic
 public import Physlib.Relativity.LorentzGroup.Proper
 public import Physlib.Relativity.LorentzGroup.Restricted.Basic

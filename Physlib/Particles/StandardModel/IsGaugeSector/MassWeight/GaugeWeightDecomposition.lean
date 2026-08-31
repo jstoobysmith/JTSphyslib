@@ -192,35 +192,62 @@ lemma piece_mul_comm (n : ℕ) (w w' : GaugeWeight) :
   · rw [(h.commute_of_mem_derivSubmodule (hle _ hx) (hle _ hy)).eq]
     exact Submodule.mul_mem_mul hy hx
 
-/-- The weight-zero piece at mass weight eight, written out in the weight vectors
-  themselves: the twice-differentiated field strength on the four fixed directions of
-  the adjoint, joined with the four products pairing a root vector against its
-  opposite and the product of the fixed directions with themselves. -/
+/-!
+
+## The gauge-component pieces
+
+At mass weight eight the weight-zero content splits by gauge group factor.  A product
+of two underived symbols has weight zero exactly when the two weights are opposite, so
+the contributions are indexed by the root directions: the roots `0`, `1` and `2` are the
+`su(3)` roots and give the gluon contribution, the root `3` is the `su(2)` root and
+gives the isospin contribution, and the weight-zero directions pair with themselves to
+give the neutral contribution of the two `su(3)` Cartan directions, the `su(2)` Cartan
+direction and hypercharge.
+
+-/
+
+/-- The span of the underived raising vectors along the `r`-th root direction. -/
+noncomputable def rootRaisingSpan (r : Fin 4) : Submodule ℂ B :=
+  ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+    ℂ ∙ h.adjVec l μ ν (Sum.inl r)
+
+/-- The span of the underived lowering vectors along the `r`-th root direction. -/
+noncomputable def rootLoweringSpan (r : Fin 4) : Submodule ℂ B :=
+  ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
+    ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl r))
+
+/-- The span of the underived weight-zero vectors: the two `su(3)` Cartan directions,
+  the `su(2)` Cartan direction and the `u(1)` direction. -/
+noncomputable def cartanSpan : Submodule ℂ B :=
+  ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3) (c : Fin 4),
+    ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c))
+
+/-- The gluon contribution to the weight-zero piece: the three products pairing an
+  `su(3)` raising vector against the matching lowering vector. -/
+noncomputable def gluonRootPart : Submodule ℂ B :=
+  h.rootRaisingSpan 0 * h.rootLoweringSpan 0
+    ⊔ (h.rootRaisingSpan 1 * h.rootLoweringSpan 1
+      ⊔ h.rootRaisingSpan 2 * h.rootLoweringSpan 2)
+
+/-- The isospin contribution to the weight-zero piece: the single product pairing the
+  `su(2)` raising vector against the matching lowering vector. -/
+noncomputable def isospinRootPart : Submodule ℂ B :=
+  h.rootRaisingSpan 3 * h.rootLoweringSpan 3
+
+/-- The neutral contribution to the weight-zero piece: the products of the weight-zero
+  directions with themselves, namely the two `su(3)` Cartan directions, the `su(2)`
+  Cartan direction and hypercharge. -/
+noncomputable def neutralCartanPart : Submodule ℂ B := h.cartanSpan * h.cartanSpan
+
+/-- The weight-zero piece at mass weight eight, split into the contributions of the
+  three gauge group factors: the twice-differentiated field strength on the four fixed
+  directions of the adjoint, joined with the gluon, isospin and neutral parts. -/
 lemma massWeightSubmoduleGaugeWeightEight_piece_zero :
     (h.massWeightSubmoduleGaugeWeightEight).piece 0
       = (⨆ (l : Fin 2 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
           (c : Fin 4),
           ℂ ∙ F l μ ν (stdBasis.coord (cartanIdx c)))
-        ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inl 0))
-            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 0)))
-          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inl 1))
-            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 1)))
-          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inl 2))
-            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 2)))
-          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inl 3))
-            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
-              ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inl 3)))
-          ⊔ (((⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
-              (c : Fin 4), ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c)))
-            * ⨆ (l : Fin 0 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
-              (c : Fin 4), ℂ ∙ h.adjVec l μ ν (Sum.inr (Sum.inr c)))))))) := by
+        ⊔ (h.gluonRootPart ⊔ (h.isospinRootPart ⊔ h.neutralCartanPart)) := by
   have h5 : (h.massWeightSubmoduleGaugeWeightEight).piece 0
       = (⨆ (l : Fin 2 → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3)
           (c : Fin 4),
@@ -280,6 +307,8 @@ lemma massWeightSubmoduleGaugeWeightEight_piece_zero :
     h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
     h.derivSubmoduleGaugeWeight_piece_neg_rootWeight,
     h.derivSubmoduleGaugeWeight_piece_zero']
+  simp only [gluonRootPart, isospinRootPart, neutralCartanPart, rootRaisingSpan,
+    rootLoweringSpan, cartanSpan, sup_assoc]
 
 end IsGaugeSector
 

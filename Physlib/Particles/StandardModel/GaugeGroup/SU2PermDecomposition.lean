@@ -198,6 +198,19 @@ def copy (d : SU2PermDecomposition rep V) (W : Submodule ℂ B) (hW : W = V) :
 lemma copy_piece (d : SU2PermDecomposition rep V) (W : Submodule ℂ B) (hW : W = V) :
     (d.copy W hW).piece = d.piece := rfl
 
+/-- The zero submodule carries the trivial decomposition, with every grade empty. This is
+  the unit for `sup`, and the decomposition of every submodule that turns out to vanish. -/
+def bot : SU2PermDecomposition rep (⊥ : Submodule ℂ B) where
+  piece _ := ⊥
+  piece_le k x hx := by
+    rw [Submodule.mem_bot] at hx
+    subst hx
+    simp
+  iSup_piece := by simp
+
+@[simp]
+lemma bot_piece (k : ZMod 4) : (bot (rep := rep)).piece k = ⊥ := rfl
+
 /-!
 
 ## D. Joins

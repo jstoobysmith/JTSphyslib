@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
+public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.Algebra.Polynomial.AlgebraMap
 /-!
@@ -79,6 +80,53 @@ def gaugeAlgebra (h : IsGaugeSector B repGauge hrepGauge_mul repLorentz hrepLore
     (⋃ (n : ℕ) (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3) (ν : Fin 1 ⊕ Fin 3),
       Set.range (F l μ ν))
 
+/-!
+
+## The individual gauge-group contributions to the field strength
+
+The field-strength symbol family `F` packages together the contributions of the three
+factors of the gauge group. Evaluating it on the coordinate of `GaugeAlgebra.stdBasis`
+dual to a Gell-Mann direction, a Pauli direction, or the `u(1)` direction isolates the
+gluon, `W`-boson, and hypercharge contributions individually.
+
+-/
+
+set_option linter.unusedVariables false in
+/-- The gluon contribution to the field strength (and its covariant derivatives): the
+  field-strength symbol evaluated on the coordinate dual to the `a`-th Gell-Mann
+  direction of the standard basis of the gauge algebra, i.e. the `su(3)` factor. -/
+noncomputable def gluonField (h : IsGaugeSector B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
+      F massWeightPoly) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+    (a : Fin 8) : B :=
+  F l μ ν (GaugeAlgebra.stdBasis.coord (Sum.inl a))
+
+@[inherit_doc gluonField]
+scoped[StandardModel.IsGaugeSector] notation "𝐆" => gluonField
+
+set_option linter.unusedVariables false in
+/-- The `W`-boson contribution to the field strength (and its covariant derivatives):
+  the field-strength symbol evaluated on the coordinate dual to the `i`-th Pauli
+  direction of the standard basis of the gauge algebra, i.e. the `su(2)` factor. -/
+noncomputable def wField (h : IsGaugeSector B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
+      F massWeightPoly) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+    (i : Fin 3) : B :=
+  F l μ ν (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inl i)))
+
+@[inherit_doc wField]
+scoped[StandardModel.IsGaugeSector] notation "𝐖" => wField
+
+set_option linter.unusedVariables false in
+/-- The hypercharge contribution to the field strength (and its covariant derivatives),
+  i.e. the `B`-boson contribution: the field-strength symbol evaluated on the coordinate
+  dual to the single basis direction of the `u(1)` factor of the standard basis of the
+  gauge algebra. -/
+noncomputable def hyperchargeField (h : IsGaugeSector B repGauge hrepGauge_mul repLorentz
+      hrepLorentz_mul F massWeightPoly) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) : B :=
+  F l μ ν (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inr 0)))
+
+@[inherit_doc hyperchargeField]
+scoped[StandardModel.IsGaugeSector] notation "𝐁" => hyperchargeField
 
 /-!
 
