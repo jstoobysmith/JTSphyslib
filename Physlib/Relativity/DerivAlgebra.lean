@@ -12,7 +12,6 @@ public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Mathlib.Algebra.TrivSqZeroExt.Basic
 public import Mathlib.Data.Finsupp.Multiset
 public import Mathlib.Data.Finsupp.Weight
-public import Physlib.Particles.StandardModel.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
@@ -650,5 +649,74 @@ lemma gradeScale_repLorentzGroup (t : ℝ) (Λ : SL(2,ℂ)) (a : DerivAlgebraRea
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     simp
   exact DFunLike.congr_fun h a
+
+/-!
+
+## The multiset basis of `DerivAlgebraReal`
+
+-/
+
+open Module
+
+/-- The basis of the symmetric algebra of dual real jet slots, indexed by multisets of
+  spacetime indices. -/
+noncomputable def basisMultiset :
+    Basis (Multiset (Fin 1 ⊕ Fin 3)) ℝ (SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)) :=
+  Lorentz.CoVector.basis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
+
+/-- The multiset basis of the dual derivative symbols, as a basis vector of the
+  symmetric algebra at the corresponding multi-index. -/
+lemma basisMultiset_apply (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    basisMultiset s =
+      Lorentz.CoVector.basis.dualBasis.symmetricAlgebra (Multiset.toFinsupp s) := by
+  rw [basisMultiset, Basis.reindex_apply, Equiv.symm_symm]
+  rfl
+
+/-- The multiset basis vectors of the real dual derivative slots multiply by adding the
+  multisets. -/
+lemma basisMultiset_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    basisMultiset s * basisMultiset t =
+      basisMultiset (s + t) := by
+  rw [basisMultiset_apply, basisMultiset_apply,
+    basisMultiset_apply, map_add]
+  simp only [Basis.symmetricAlgebra, Basis.map_apply,
+    show ∀ p, (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv p =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm p
+      from fun _ => rfl,
+    ← map_mul, MvPolynomial.coe_basisMonomials]
+  simp only [MvPolynomial.monomial_mul, mul_one]
+
+/-- The multiset basis of the real dual derivative slots at the empty multiset is the
+  unit. -/
+lemma basisMultiset_nil :
+    basisMultiset (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 := by
+  rw [basisMultiset_apply,
+    show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 by simp,
+    Basis.symmetricAlgebra, Basis.map_apply,
+    show (SymmetricAlgebra.equivMvPolynomial
+        Lorentz.CoVector.basis.dualBasis).symm.toLinearEquiv
+        ((MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) 0) =
+      (SymmetricAlgebra.equivMvPolynomial Lorentz.CoVector.basis.dualBasis).symm
+        ((MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) 0) from rfl,
+    show (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ)
+        = 1 from by
+      rw [MvPolynomial.coe_basisMonomials]
+      show MvPolynomial.monomial 0 1 = 1
+      rw [MvPolynomial.monomial_zero', MvPolynomial.C_1],
+    map_one]
+
+/-- The multiset basis of the real dual derivative slots at a singleton index. -/
+lemma basisMultiset_singleton (μ : Fin 1 ⊕ Fin 3) :
+    basisMultiset ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+        (Lorentz.CoVector.basis.dualBasis μ) := by
+  have h : (MvPolynomial.basisMonomials (Fin 1 ⊕ Fin 3) ℝ) (Finsupp.single μ 1) =
+      MvPolynomial.X μ := rfl
+  rw [basisMultiset, Basis.reindex_apply, Equiv.symm_symm,
+    show Multiset.toFinsupp.toEquiv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) =
+      Finsupp.single μ 1 by simp,
+    Basis.symmetricAlgebra, Basis.map_apply, h]
+  simp
 
 end DerivAlgebraReal
