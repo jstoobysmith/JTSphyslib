@@ -15,9 +15,11 @@ Usage:
     python scripts/insert_todo.py FILE START [END] [--text "..."]
 
 `START` and `END` are 1-indexed line numbers of the code the note is about; `END`
-defaults to `START`.  With no `--text` an empty string is inserted, ready to type into.
-The point between the quotes of the note is printed on stdout as `LINE:COLUMN`, and with
-`--goto` the cursor of the running editor is put there.
+defaults to `START`.  A blank line, or a pair of them, is a place in the file rather than
+a piece of code, so a note taken there is written without a `(lines := ...)` clause and
+refers to where it sits.  With no `--text` an empty string is inserted, ready to type
+into.  The point between the quotes of the note is printed on stdout as `LINE:COLUMN`,
+and with `--goto` the cursor of the running editor is put there.
 """
 
 from __future__ import annotations
@@ -102,9 +104,25 @@ def safe_insertion_line(lines: list[str], target: int) -> int:
     return len(lines)
 
 
-def render(start: int, end: int, text: str) -> str:
-    """The `TODO` command for a line or a range of lines."""
+def names_lines(lines: list[str], start: int, end: int) -> bool:
+    """Whether a note about lines `start` to `end` (1-indexed) should say so.
+
+    One or two blank lines are a gap between declarations rather than any code, so a
+    note taken there is about the place and not about what is written on it.  Naming
+    those lines would only pin the note to nothing; without a `(lines := ...)` clause it
+    refers to the line the command is on, which is exactly that place.
+    """
+    if end - start > 1:
+        return True
+    return any(lines[i - 1].strip() for i in range(start, end + 1))
+
+
+def render(start: int | None, end: int, text: str) -> str:
+    """The `TODO` command for a line or a range of lines, or, when `start` is `None`,
+    one that names no lines at all."""
     escaped = text.replace("\\", "\\\\").replace('"', '\\"')
+    if start is None:
+        return f'TODO "{escaped}"\n'
     if end > start:
         return f'TODO (lines := {start}-{end}) "{escaped}"\n'
     return f'TODO (lines := {start}) "{escaped}"\n'
@@ -189,7 +207,7 @@ def main() -> int:
         lines[-1] += "\n"
 
     at = safe_insertion_line(lines, end - 1)
-    command = render(start, end, args.text)
+    command = render(start if names_lines(lines, start, end) else None, end, args.text)
     # Keep the note a paragraph of its own, without doubling a blank line already there.
     before = ["\n"] if at > 0 and lines[at - 1].strip() else []
     after = ["\n"] if at < len(lines) and lines[at].strip() else []
