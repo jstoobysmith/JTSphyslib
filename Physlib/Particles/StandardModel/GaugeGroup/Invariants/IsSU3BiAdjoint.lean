@@ -21,9 +21,25 @@ This is the gauge analogue of `IsQuadLorentz`. The field strength of the gluons 
 one `su(3)` adjoint index, so a product of two field strengths carries two, and the
 proposition here records how such a product transforms.
 
-Section A gives the proposition and the span of its components, section B the trace
-contraction, which is the natural gauge invariant built from two adjoint indices, and
-section C the gauge weight decomposition of the span. Section D grades the zero-weight
+The transformation law itself is `IsSU3BiAdjointMat`, which relates one element of
+`SU(3)` to one linear map on `B` and mentions no other factor of the gauge group, through
+`su3AdjointMatrix`, the adjoint matrix of an `SU(3)` element alone. `IsSU3BiAdjoint` says
+that every gauge transformation obeys that law through its `SU(3)` part. Everything the
+file proves about how the components move is proved at the level of `IsSU3BiAdjointMat`
+and instantiated afterwards, so the mathematics here is `SU(3)` mathematics; the elements
+that do the work, `su3Perm`, `su3Transp`, `su3TurnFst` and `su3TurnSnd`, all live in
+`SU(3)`. What stays about `GaugeGroupI` is the bookkeeping of the decompositions, which
+`GaugeWeightDecomposition`, `SU3PermDecomposition` and `SU3WeylDecomposition` supply only
+for representations of the gauge group, and the notion of gauge invariance itself. Section
+A.3 records `repSU3`, the colour part of a representation, for which a bi-adjoint family
+is again bi-adjoint; reading the classification of section F there sharpens it to
+invariance under the colour factor alone, and the two notions of invariance then turn out
+to agree on the span.
+
+Section A gives the adjoint matrix of the `SU(3)` factor, the proposition and the span of
+its components, section B the trace contraction, which is the natural gauge invariant
+built from two adjoint indices, and section C the gauge weight decomposition of the
+span. Section D grades the zero-weight
 piece of that decomposition by the cyclic colour rotation, which is what the gauge weight
 alone cannot do, and section E upgrades that grading to the isotypic decomposition of the
 whole Weyl group `S₃`, in which the trace contraction lands in the trivial isotype. Those
@@ -37,9 +53,9 @@ Sections F.4 and F.5 shed the hypotheses that classification is stated under. Th
 square-zero extension of a module is an algebra on which every representation acts by
 algebra maps, so the classification needs no algebra structure and no multiplicativity at
 all, and it then descends to the quotient by a gauge-stable submodule, which is
-`mem_span_sup_invariant_iff`. The row orthonormality of the `su(3)` block of
-`adjointMatrix` that section B rests on is proved where the matrix is defined, in
-`GaugeAlgebra.Basis`.
+`mem_span_sup_invariant_iff`. The row orthonormality of `su3AdjointMatrix` that section B
+rests on is inherited from the `su(3)` block of `adjointMatrix`, and proved where that
+matrix is defined, in `GaugeAlgebra.Basis`.
 -/
 
 @[expose] public section
@@ -50,24 +66,158 @@ open Matrix
 
 /-!
 
-## A. Bi-adjoint `su(3)` families and the span of their components
+## A. The `SU(3)` adjoint matrix and bi-adjoint families
+
+An `su(3)` adjoint index is acted on by the `SU(3)` factor of the gauge group alone. That
+action is recorded in A.1 as `su3AdjointMatrix`, a matrix built from an element of `SU(3)`
+and nothing else, and A.2 phrases the transformation law through it, so that no other
+factor of the gauge group appears in the law.
+
+## A.1. The adjoint matrix of the `SU(3)` factor
+
+The matrix is the trace pairing of the Gell-Mann basis of `su(3)` with the Gell-Mann basis
+conjugated by the `SU(3)` element. It is the `su(3)` block of `GaugeAlgebra.adjointMatrix`,
+definitionally so, and inherits from it the orthonormality of its rows.
 
 -/
 
+/-- The adjoint matrix of an element of `SU(3)`: the trace pairing of the Gell-Mann basis
+  of `su(3)` with the Gell-Mann basis conjugated by that element. -/
+noncomputable def su3AdjointMatrix (U : specialUnitaryGroup (Fin 3) ℂ) :
+    Matrix (Fin 8) (Fin 8) ℝ :=
+  Matrix.of fun i j =>
+    2⁻¹ * (Matrix.trace (gellMannMatrix i * (U.1 * gellMannMatrix j * star U.1))).re
+
+/-- The entries of the adjoint matrix of an element of `SU(3)`. -/
+@[simp]
+lemma su3AdjointMatrix_apply (U : specialUnitaryGroup (Fin 3) ℂ) (i j : Fin 8) :
+    su3AdjointMatrix U i j
+      = 2⁻¹ * (Matrix.trace (gellMannMatrix i *
+          (U.1 * gellMannMatrix j * star U.1))).re := rfl
+
+/-- The adjoint matrix of the `SU(3)` factor of a gauge group element is the `su(3)`
+  block of the adjoint matrix of the gauge algebra. -/
+lemma su3AdjointMatrix_toSU3 (g : GaugeGroupI) (i j : Fin 8) :
+    su3AdjointMatrix (GaugeGroupI.toSU3 g) i j
+      = GaugeAlgebra.adjointMatrix g (Sum.inl i) (Sum.inl j) := rfl
+
+/-- The rows of the adjoint matrix of an element of `SU(3)` are orthonormal, the adjoint
+  action preserving the trace pairing of the Gell-Mann basis. -/
+lemma sum_su3AdjointMatrix_row_mul (U : specialUnitaryGroup (Fin 3) ℂ) (c d : Fin 8) :
+    ∑ a : Fin 8, su3AdjointMatrix U c a * su3AdjointMatrix U d a
+      = if c = d then 1 else 0 :=
+  GaugeAlgebra.sum_adjointMatrix_inl_row_mul (U, 1, 1) c d
+
+/-- An entry of the adjoint matrix of an element of `SU(3)` is a Gell-Mann coordinate of
+  the conjugated Gell-Mann matrix. -/
+lemma su3AdjointMatrix_eq_gellMannCoeff (U : specialUnitaryGroup (Fin 3) ℂ) (a b : Fin 8) :
+    su3AdjointMatrix U a b = gellMannCoeff (U.1 * gellMannMatrix b * star U.1) a := by
+  have hmem := GaugeAlgebra.conj_mem U.2.1
+    (gellMannMatrix_selfAdjoint b) (gellMannMatrix_trace b)
+  rw [su3AdjointMatrix_apply, gellMannCoeff_eq_trace hmem.1 hmem.2]
+
+/-!
+
+## A.2. Bi-adjoint `su(3)` families and the span of their components
+
+The transformation law carries one factor of `su3AdjointMatrix` per index, with the summed
+index in the row slot. It is recorded by `IsSU3BiAdjointMat`, a relation between one
+element of `SU(3)` and one linear map on `B` in which no other factor of the gauge group
+appears, and it is the law obeyed by the gluon field strengths of `IsGaugeSector`.
+
+`IsSU3BiAdjoint` then says that every gauge transformation obeys that law through its
+`SU(3)` part. Since `GaugeGroupI.toSU3` is a monoid homomorphism this is an action.
+Quantifying over the whole of `GaugeGroupI` is what makes the proposition say more than a
+statement about a single `SU(3)` element would: an element of the isospin or hypercharge
+factor is sent to `1` in `SU(3)`, so those factors fix every component, and section C
+reads that off as the vanishing of the isospin and hypercharge coordinates of every
+weight.
+
+-/
+
+/-- The linear map `f` moves the components of the family `T` as the `SU(3)` matrix `U`
+  moves a tensor with two adjoint indices: one factor of `su3AdjointMatrix U` per index,
+  with the summed index in the row slot. -/
+def IsSU3BiAdjointMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (U : specialUnitaryGroup (Fin 3) ℂ) (f : B →ₗ[ℂ] B)
+    (T : (Fin 2 → Fin 8) → B) : Prop :=
+  ∀ l : Fin 2 → Fin 8,
+    f (T l) = ∑ a : Fin 2 → Fin 8,
+      (∏ i : Fin 2, ((su3AdjointMatrix U (a i) (l i) : ℝ) : ℂ)) • T a
+
 /-- A family `T` of elements of `B`, indexed by two `su(3)` adjoint indices, transforms
-  as a tensor `T^{a₁ a₂}` under the representation `repGauge` of the gauge group. -/
+  as a tensor `T^{a₁ a₂}` under the representation `repGauge` of the gauge group: every
+  gauge transformation moves the components by its `SU(3)` part alone. -/
 structure IsSU3BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B)
     (T : (Fin 2 → Fin 8) → B) : Prop where
-  repGauge_T : ∀ (g : GaugeGroupI) (l : Fin 2 → Fin 8),
-    repGauge g (T l) = ∑ a : Fin 2 → Fin 8,
-      (∏ i : Fin 2, ((GaugeAlgebra.adjointMatrix g (Sum.inl (a i))
-        (Sum.inl (l i)) : ℝ) : ℂ)) • T a
+  repGauge_T : ∀ g : GaugeGroupI,
+    IsSU3BiAdjointMat (GaugeGroupI.toSU3 g) (repGauge g) T
 
-TODO (lines := 56-60) "The `g` in this expression should only
-  be the `SU(3)` part of this gauge group, and this hypothesis should
-  only be about how that part acts. The same is true for
-  every other result in this file."
+/-!
+
+## A.3. The colour part of a representation
+
+Reading a representation of the gauge group at the colour factor of its argument alone
+gives `repSU3`, again a representation of the whole gauge group. Every construction stated
+for a representation of `GaugeGroupI` therefore applies to it verbatim, and a bi-adjoint
+family for `repGauge` is a bi-adjoint family for `repSU3 repGauge`, with the same span and
+the same trace contraction. That is what lets section F.3 sharpen its classification from
+gauge invariance to invariance under the colour factor alone, which is the weaker
+hypothesis `∀ U : SU(3), repGauge (U, 1, 1) x = x`; the two turn out to agree on the span.
+
+`repSU3` is machinery for that transport and nothing more. The statements themselves are
+written with the colour transformation `(U, 1, 1)` spelled out, so that reading one needs
+no unfolding, and `repSU3_invariant_iff_su3` is the bridge between the two spellings.
+
+-/
+
+/-- The colour part of a representation of the gauge group: the representation reading
+  only the `SU(3)` factor of its argument and sending the isospin and hypercharge factors
+  to the identity. -/
+noncomputable def repSU3 {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) : Representation ℂ GaugeGroupI B where
+  toFun g := repGauge (GaugeGroupI.toSU3 g, 1, 1)
+  map_one' := by
+    have h1 : ((GaugeGroupI.toSU3 1, 1, 1) : GaugeGroupI) = 1 := by
+      simp [Prod.ext_iff]
+    rw [h1, map_one]
+  map_mul' g h := by
+    have hgh : ((GaugeGroupI.toSU3 (g * h), 1, 1) : GaugeGroupI)
+        = ((GaugeGroupI.toSU3 g, 1, 1) : GaugeGroupI) * (GaugeGroupI.toSU3 h, 1, 1) := by
+      simp [map_mul]
+    rw [hgh, map_mul]
+
+/-- The colour part of a representation acts by the representation itself, at the gauge
+  transformation with the same colour factor and nothing else. -/
+lemma repSU3_apply {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) (g : GaugeGroupI) :
+    repSU3 repGauge g = repGauge (GaugeGroupI.toSU3 g, 1, 1) := rfl
+
+/-- The colour part of a representation acts by algebra maps whenever the representation
+  does, each of its values being a value of that representation. -/
+lemma isMulRep_repSU3 {B : Type*} [Ring B] [Algebra ℂ B]
+    {repGauge : Representation ℂ GaugeGroupI B} (hmul : IsMulRep repGauge) :
+    IsMulRep (repSU3 repGauge) :=
+  fun g x y => hmul (GaugeGroupI.toSU3 g, 1, 1) x y
+
+/-- Invariance under the colour part of a representation is invariance under the gauge
+  transformations that are trivial on isospin and hypercharge. The colour part reads only
+  the colour factor of its argument, and every element of `SU(3)` is the colour factor of
+  such a transformation. -/
+lemma repSU3_invariant_iff_su3 {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) (x : B) :
+    (∀ g : GaugeGroupI, repSU3 repGauge g x = x)
+      ↔ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x :=
+  ⟨fun h U => h (U, 1, 1), fun h g => h (GaugeGroupI.toSU3 g)⟩
+
+/-- A submodule is stable under the colour part of a representation precisely when it is
+  stable under the gauge transformations trivial on isospin and hypercharge. -/
+lemma repSU3_stable_iff_su3 {B : Type*} [AddCommGroup B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B) :
+    (∀ g : GaugeGroupI, ∀ y ∈ S, repSU3 repGauge g y ∈ S)
+      ↔ ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S :=
+  ⟨fun h U => h (U, 1, 1), fun h g => h (GaugeGroupI.toSU3 g)⟩
 
 namespace IsSU3BiAdjoint
 set_option linter.unusedVariables false
@@ -76,6 +226,14 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
   {T : (Fin 2 → Fin 8) → B}
   (hT : IsSU3BiAdjoint B repGauge T)
+
+/-- A bi-adjoint family for a representation is a bi-adjoint family for its colour part:
+  the transformation law reads only the colour factor to begin with. The span and the
+  trace contraction do not mention the representation, so every statement of this file
+  transports along this and is read at the colour factor alone. -/
+lemma toRepSU3 (hT : IsSU3BiAdjoint B repGauge T) :
+    IsSU3BiAdjoint B (repSU3 repGauge) T where
+  repGauge_T g := hT.repGauge_T (GaugeGroupI.toSU3 g, 1, 1)
 
 /-- The span of all the components. -/
 def span (hT : IsSU3BiAdjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
@@ -136,19 +294,22 @@ lemma traceContraction_mem_span (hT : IsSU3BiAdjoint B repGauge T) :
   exact sum_mem fun d _ =>
     Submodule.mem_iSup_of_mem _ (Submodule.mem_span_singleton_self _)
 
-/-- The trace contraction of a bi-adjoint family is gauge invariant. -/
-lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (g : GaugeGroupI) :
-    repGauge g hT.traceContraction = hT.traceContraction := by
-  have step : repGauge g hT.traceContraction
+/-- The trace contraction of a bi-adjoint family is fixed by any linear map moving the
+  components by an `SU(3)` matrix: the rows of `su3AdjointMatrix` are orthonormal, so the
+  Kronecker delta contracting the two indices is carried to itself. -/
+lemma map_traceContraction (hT : IsSU3BiAdjoint B repGauge T)
+    {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat U f T) :
+    f hT.traceContraction = hT.traceContraction := by
+  have step : f hT.traceContraction
       = ∑ b : Fin 2 → Fin 8, (if b 0 = b 1 then (1 : ℂ) else 0) • T b := by
-    show repGauge g (∑ c : Fin 8, T ![c, c]) = _
+    show f (∑ c : Fin 8, T ![c, c]) = _
     rw [map_sum]
-    have h1 : ∀ c : Fin 8, repGauge g (T ![c, c])
+    have h1 : ∀ c : Fin 8, f (T ![c, c])
         = ∑ b : Fin 2 → Fin 8,
-          ((GaugeAlgebra.adjointMatrix g (Sum.inl (b 0)) (Sum.inl c) *
-            GaugeAlgebra.adjointMatrix g (Sum.inl (b 1)) (Sum.inl c) : ℝ) : ℂ) • T b := by
+          ((su3AdjointMatrix U (b 0) c * su3AdjointMatrix U (b 1) c : ℝ) : ℂ) • T b := by
       intro c
-      rw [hT.repGauge_T g ![c, c]]
+      rw [hf ![c, c]]
       refine Finset.sum_congr rfl fun b _ => ?_
       congr 1
       simp [Fin.prod_univ_two]
@@ -157,9 +318,15 @@ lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (g : GaugeGro
     refine Finset.sum_congr rfl fun b _ => ?_
     rw [← Finset.sum_smul]
     congr 1
-    rw [← Complex.ofReal_sum, GaugeAlgebra.sum_adjointMatrix_inl_row_mul]
+    rw [← Complex.ofReal_sum, sum_su3AdjointMatrix_row_mul]
     simp [apply_ite]
   rw [step, ← hT.traceContraction_eq_sum]
+
+/-- The trace contraction of a bi-adjoint family is gauge invariant: every gauge
+  transformation acts on it through its `SU(3)` part alone. -/
+lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (g : GaugeGroupI) :
+    repGauge g hT.traceContraction = hT.traceContraction :=
+  hT.map_traceContraction (hT.repGauge_T g)
 
 
 end IsSU3BiAdjoint
@@ -240,7 +407,7 @@ lemma exists_rootPair_or_cartanId (a : Fin 8) :
   revert a
   decide
 
-TODO (lines := 195-235) "All of these should be in a more general file
+TODO (lines := 330-370) "All of these should be in a more general file
   in the GaugeAlgebra section."
 
 /-!
@@ -270,12 +437,13 @@ lemma dualMap_coord_apply (g : GaugeGroupI) (a b : Fin 8 ⊕ Fin 3 ⊕ Fin 1) :
 
 /-- The first column of a root pair: the torus rotates the two columns of the adjoint
   matrix belonging to a root direction into each other. -/
-lemma adjointMatrix_rootPair_fst (i : Fin 4) (r : Fin 3) (a : Fin 8) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inl a) (Sum.inl (rootPair r).1)
+lemma su3AdjointMatrix_rootPair_fst (i : Fin 4) (r : Fin 3) (a : Fin 8) :
+    su3AdjointMatrix (GaugeGroupI.toSU3 (gaugeTorusGen i)) a (rootPair r).1
       = ((expI : ℂ) ^ GaugeWeight.coord (rootWt r) i).re *
           (if a = (rootPair r).1 then 1 else 0)
         - ((expI : ℂ) ^ GaugeWeight.coord (rootWt r) i).im *
           (if a = (rootPair r).2 then 1 else 0) := by
+  rw [su3AdjointMatrix_toSU3]
   obtain ⟨p1, -⟩ := GaugeAlgebra.dualMap_pair_of_entry
     (GaugeAlgebra.coord_rootIdx_fst r.castSucc)
     (GaugeAlgebra.coord_rootIdx_snd r.castSucc)
@@ -287,12 +455,13 @@ lemma adjointMatrix_rootPair_fst (i : Fin 4) (r : Fin 3) (a : Fin 8) :
   simp [Finsupp.single_apply]
 
 /-- The second column of a root pair. -/
-lemma adjointMatrix_rootPair_snd (i : Fin 4) (r : Fin 3) (a : Fin 8) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inl a) (Sum.inl (rootPair r).2)
+lemma su3AdjointMatrix_rootPair_snd (i : Fin 4) (r : Fin 3) (a : Fin 8) :
+    su3AdjointMatrix (GaugeGroupI.toSU3 (gaugeTorusGen i)) a (rootPair r).2
       = ((expI : ℂ) ^ GaugeWeight.coord (rootWt r) i).im *
           (if a = (rootPair r).1 then 1 else 0)
         + ((expI : ℂ) ^ GaugeWeight.coord (rootWt r) i).re *
           (if a = (rootPair r).2 then 1 else 0) := by
+  rw [su3AdjointMatrix_toSU3]
   obtain ⟨-, p2⟩ := GaugeAlgebra.dualMap_pair_of_entry
     (GaugeAlgebra.coord_rootIdx_fst r.castSucc)
     (GaugeAlgebra.coord_rootIdx_snd r.castSucc)
@@ -304,9 +473,10 @@ lemma adjointMatrix_rootPair_snd (i : Fin 4) (r : Fin 3) (a : Fin 8) :
   simp [Finsupp.single_apply]
 
 /-- The torus fixes the Cartan columns of the adjoint matrix. -/
-lemma adjointMatrix_cartanId (i : Fin 4) (c : Fin 2) (a : Fin 8) :
-    GaugeAlgebra.adjointMatrix (gaugeTorusGen i) (Sum.inl a) (Sum.inl (GaugeAlgebra.su3CartanId c))
+lemma su3AdjointMatrix_cartanId (i : Fin 4) (c : Fin 2) (a : Fin 8) :
+    su3AdjointMatrix (GaugeGroupI.toSU3 (gaugeTorusGen i)) a (GaugeAlgebra.su3CartanId c)
       = if a = GaugeAlgebra.su3CartanId c then 1 else 0 := by
+  rw [su3AdjointMatrix_toSU3]
   have p := GaugeAlgebra.dualMap_coord_cartanIdx c.castSucc.castSucc i
   simp only [cartanIdx_castSucc] at p
   have e := LinearMap.congr_fun p (GaugeAlgebra.stdBasis (Sum.inl a))
@@ -339,10 +509,11 @@ def wtWeight : WeightIdx → GaugeWeight
 /-- The coordinate vector of a single Gell-Mann direction. -/
 def unitVec (a : Fin 8) : Fin 8 → ℂ := fun x => if x = a then 1 else 0
 
-/-- The action of a gauge transformation on the coordinates of one `su(3)` adjoint
+/-- The action of an element of `SU(3)` on the coordinates of one `su(3)` adjoint
   index. -/
-noncomputable def rowAct (g : GaugeGroupI) (c : Fin 8 → ℂ) : Fin 8 → ℂ := fun a =>
-  ∑ x : Fin 8, ((GaugeAlgebra.adjointMatrix g (Sum.inl a) (Sum.inl x) : ℝ) : ℂ) * c x
+noncomputable def rowAct (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 8 → ℂ) :
+    Fin 8 → ℂ := fun a =>
+  ∑ x : Fin 8, ((su3AdjointMatrix U a x : ℝ) : ℂ) * c x
 
 /-- Collapsing a sum against the two Kronecker deltas of a root pair. -/
 lemma sum_mul_pair (f : Fin 8 → ℂ) (b₁ b₂ : Fin 8) (s : ℂ) :
@@ -378,7 +549,7 @@ lemma pair_sub_eq (z u v : ℂ) :
 /-- Each weight vector of the `su(3)` adjoint is an eigenvector of every torus
   generator, at the character of its weight. -/
 lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
-    rowAct (gaugeTorusGen i) (wtCoeff k)
+    rowAct (GaugeGroupI.toSU3 (gaugeTorusGen i)) (wtCoeff k)
       = ((expI : ℂ) ^ GaugeWeight.coord (wtWeight k) i) • wtCoeff k := by
   funext a
   match k with
@@ -389,7 +560,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     show ∑ x : Fin 8, _ * wtCoeff (Sum.inl r) x = _
     simp only [hw]
     rw [sum_mul_pair]
-    simp only [adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
+    simp only [su3AdjointMatrix_rootPair_fst, su3AdjointMatrix_rootPair_snd]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
       Complex.ofReal_sub, Complex.ofReal_add, Complex.ofReal_mul]
     show _ = ((expI : ℂ) ^ GaugeWeight.coord (rootWt r) i) * _
@@ -406,7 +577,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     show ∑ x : Fin 8, _ * wtCoeff (Sum.inr (Sum.inl r)) x = _
     simp only [hw]
     rw [sum_mul_pair]
-    simp only [adjointMatrix_rootPair_fst, adjointMatrix_rootPair_snd]
+    simp only [su3AdjointMatrix_rootPair_fst, su3AdjointMatrix_rootPair_snd]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero,
       Complex.ofReal_sub, Complex.ofReal_add, Complex.ofReal_mul]
     rw [show ((expI : ℂ) ^ GaugeWeight.coord (wtWeight (Sum.inr (Sum.inl r) : WeightIdx)) i)
@@ -430,7 +601,7 @@ lemma rowAct_wtCoeff (i : Fin 4) (k : WeightIdx) :
     show ∑ x : Fin 8, _ * wtCoeff (Sum.inr (Sum.inr c)) x = _
     rw [hz]
     simp only [hw, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ,
-      if_true, adjointMatrix_cartanId, one_smul]
+      if_true, su3AdjointMatrix_cartanId, one_smul]
     simp only [apply_ite (fun x : ℝ => (x : ℂ)), Complex.ofReal_one, Complex.ofReal_zero]
 
 /-!
@@ -493,17 +664,21 @@ lemma biVec_unitVec (a b : Fin 8) : hT.biVec (unitVec a) (unitVec b) = T ![a, b]
   rw [biVec, sum_pi_two]
   simp [unitVec, ite_smul]
 
-/-- Every bi-adjoint weight vector transforms by the product of the two characters. -/
-lemma repGauge_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 8 → ℂ) :
-    repGauge g (hT.biVec c₀ c₁) = hT.biVec (rowAct g c₀) (rowAct g c₁) := by
-  have step : ∀ d : Fin 2 → Fin 8, repGauge g ((c₀ (d 0) * c₁ (d 1)) • T d)
+/-- A map moving the components by an `SU(3)` matrix moves a contraction against a pair
+  of coordinate vectors by the row action of that matrix on each of them. This is the whole
+  content of the transformation law in coordinate form, and it mentions no other factor of
+  the gauge group. -/
+lemma map_biVec (hT : IsSU3BiAdjoint B repGauge T) {U : specialUnitaryGroup (Fin 3) ℂ}
+    {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat U f T) (c₀ c₁ : Fin 8 → ℂ) :
+    f (hT.biVec c₀ c₁) = hT.biVec (rowAct U c₀) (rowAct U c₁) := by
+  have step : ∀ d : Fin 2 → Fin 8, f ((c₀ (d 0) * c₁ (d 1)) • T d)
       = ∑ a : Fin 2 → Fin 8,
         ((c₀ (d 0) * c₁ (d 1)) *
-          (((GaugeAlgebra.adjointMatrix g (Sum.inl (a 0)) (Sum.inl (d 0)) : ℝ) : ℂ) *
-            ((GaugeAlgebra.adjointMatrix g (Sum.inl (a 1)) (Sum.inl (d 1)) : ℝ) : ℂ)))
+          (((su3AdjointMatrix U (a 0) (d 0) : ℝ) : ℂ) *
+            ((su3AdjointMatrix U (a 1) (d 1) : ℝ) : ℂ)))
           • T a := by
     intro d
-    rw [map_smul, hT.repGauge_T g d, Finset.smul_sum]
+    rw [map_smul, hf d, Finset.smul_sum]
     refine Finset.sum_congr rfl fun a _ => ?_
     rw [smul_smul, Fin.prod_univ_two]
   simp only [biVec, rowAct]
@@ -517,6 +692,13 @@ lemma repGauge_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 8 → ℂ) :
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
   rw [Finset.sum_mul_sum]
   exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by ring
+
+/-- Every gauge transformation moves a contraction against a pair of coordinate vectors
+  by the row action of its `SU(3)` part. -/
+lemma repGauge_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 8 → ℂ) :
+    repGauge g (hT.biVec c₀ c₁)
+      = hT.biVec (rowAct (GaugeGroupI.toSU3 g) c₀) (rowAct (GaugeGroupI.toSU3 g) c₁) :=
+  hT.map_biVec (hT.repGauge_T g) c₀ c₁
 
 /-- **The bi-adjoint weight vectors are simultaneous eigenvectors of the gauge torus**,
   at the character of the sum of the two individual weights. -/
@@ -850,14 +1032,8 @@ lemma star_su3PermMatrix :
   ext i j
   fin_cases i <;> fin_cases j <;> simp
 
-/-- An entry of the `su(3)` block of an adjoint matrix is a Gell-Mann coordinate of the
-  conjugated Gell-Mann matrix. -/
-lemma adjointMatrix_inl_inl_eq_gellMannCoeff (g : GaugeGroupI) (a b : Fin 8) :
-    GaugeAlgebra.adjointMatrix g (Sum.inl a) (Sum.inl b)
-      = gellMannCoeff (g.toSU3.1 * gellMannMatrix b * star g.toSU3.1) a := by
-  have hmem := GaugeAlgebra.conj_mem g.toSU3.2.1
-    (gellMannMatrix_selfAdjoint b) (gellMannMatrix_trace b)
-  rw [GaugeAlgebra.adjointMatrix_inl_inl, gellMannCoeff_eq_trace hmem.1 hmem.2]
+/-- The `SU(3)` part of the cyclic colour gauge transformation is the cyclic element. -/
+lemma toSU3_gaugeSU3Perm : GaugeGroupI.toSU3 gaugeSU3Perm = su3Perm := rfl
 
 /-- The conjugate of each Gell-Mann matrix by the cyclic colour rotation. -/
 noncomputable def permGellMann : Fin 8 → Matrix (Fin 3) (Fin 3) ℂ
@@ -873,10 +1049,9 @@ noncomputable def permGellMann : Fin 8 → Matrix (Fin 3) (Fin 3) ℂ
             0, 0, (((Real.sqrt 3)⁻¹ : ℝ) : ℂ)]
 
 /-- Conjugating a Gell-Mann matrix by the cyclic colour rotation. -/
-lemma conj_gellMannMatrix_gaugeSU3Perm (b : Fin 8) :
-    gaugeSU3Perm.toSU3.1 * gellMannMatrix b * star gaugeSU3Perm.toSU3.1 = permGellMann b := by
-  rw [show gaugeSU3Perm.toSU3.1 = !![(0 : ℂ), 0, 1; 1, 0, 0; 0, 1, 0] from rfl,
-    star_su3PermMatrix]
+lemma conj_gellMannMatrix_su3Perm (b : Fin 8) :
+    su3Perm.1 * gellMannMatrix b * star su3Perm.1 = permGellMann b := by
+  rw [su3Perm_coe, star_su3PermMatrix]
   fin_cases b <;> ext i j <;> fin_cases i <;> fin_cases j <;>
     simp [permGellMann, gellMannMatrix_zero, gellMannMatrix_one, gellMannMatrix_two,
       gellMannMatrix_three, gellMannMatrix_four, gellMannMatrix_five, gellMannMatrix_six,
@@ -898,19 +1073,19 @@ noncomputable def permCol : Fin 8 → Fin 8 → ℂ
 
 /-- The row action on a Gell-Mann coordinate direction is a column of the adjoint
   matrix. -/
-lemma rowAct_unitVec (g : GaugeGroupI) (b a : Fin 8) :
-    rowAct g (unitVec b) a
-      = ((GaugeAlgebra.adjointMatrix g (Sum.inl a) (Sum.inl b) : ℝ) : ℂ) := by
-  simp [rowAct, unitVec, mul_ite]
+lemma rowAct_unitVec (U : specialUnitaryGroup (Fin 3) ℂ) (b a : Fin 8) :
+    rowAct U (unitVec b) a = ((su3AdjointMatrix U a b : ℝ) : ℂ) := by
+  simp only [rowAct, unitVec, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
+    Finset.mem_univ, if_true]
 
 /-- The cyclic colour rotation on the Gell-Mann coordinate directions. -/
-lemma rowAct_gaugeSU3Perm_unitVec (b : Fin 8) :
-    rowAct gaugeSU3Perm (unitVec b) = permCol b := by
+lemma rowAct_su3Perm_unitVec (b : Fin 8) :
+    rowAct su3Perm (unitVec b) = permCol b := by
   have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
     rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
     norm_num
   funext a
-  rw [rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff, conj_gellMannMatrix_gaugeSU3Perm]
+  rw [rowAct_unitVec, su3AdjointMatrix_eq_gellMannCoeff, conj_gellMannMatrix_su3Perm]
   fin_cases b <;> fin_cases a <;> simp [permGellMann, gellMannCoeff, permCol, unitVec]
   all_goals first
     | ring1
@@ -928,20 +1103,20 @@ The two Cartan weight vectors are not permuted but rotated, and the combinations
 -/
 
 /-- The row action is additive in the coordinate vector. -/
-lemma rowAct_add (g : GaugeGroupI) (c c' : Fin 8 → ℂ) :
-    rowAct g (c + c') = rowAct g c + rowAct g c' := by
+lemma rowAct_add (U : specialUnitaryGroup (Fin 3) ℂ) (c c' : Fin 8 → ℂ) :
+    rowAct U (c + c') = rowAct U c + rowAct U c' := by
   funext a
   simp only [rowAct, Pi.add_apply, mul_add, Finset.sum_add_distrib]
 
 /-- The row action is additive on differences of coordinate vectors. -/
-lemma rowAct_sub (g : GaugeGroupI) (c c' : Fin 8 → ℂ) :
-    rowAct g (c - c') = rowAct g c - rowAct g c' := by
+lemma rowAct_sub (U : specialUnitaryGroup (Fin 3) ℂ) (c c' : Fin 8 → ℂ) :
+    rowAct U (c - c') = rowAct U c - rowAct U c' := by
   funext a
   simp only [rowAct, Pi.sub_apply, mul_sub, Finset.sum_sub_distrib]
 
 /-- The row action is homogeneous in the coordinate vector. -/
-lemma rowAct_smul (g : GaugeGroupI) (z : ℂ) (c : Fin 8 → ℂ) :
-    rowAct g (z • c) = z • rowAct g c := by
+lemma rowAct_smul (U : specialUnitaryGroup (Fin 3) ℂ) (z : ℂ) (c : Fin 8 → ℂ) :
+    rowAct U (z • c) = z • rowAct U c := by
   funext a
   simp only [rowAct, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
   exact Finset.sum_congr rfl fun x _ => by ring
@@ -958,11 +1133,11 @@ def wtCycle : Fin 2 → Fin 3 → WeightIdx
 
 /-- The cyclic colour rotation moves the root weight vectors one step along their
   cycle. -/
-lemma rowAct_gaugeSU3Perm_wtCoeff (j : Fin 2) (i : Fin 3) :
-    rowAct gaugeSU3Perm (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle j (i + 1)) := by
+lemma rowAct_su3Perm_wtCoeff (j : Fin 2) (i : Fin 3) :
+    rowAct su3Perm (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle j (i + 1)) := by
   fin_cases j <;> fin_cases i <;>
     simp [wtCycle, wtCoeff_inl, wtCoeff_inr_inl, rootPair, rowAct_add, rowAct_sub,
-      rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol]
+      rowAct_smul, rowAct_su3Perm_unitVec, permCol]
   all_goals module
 
 /-- The two eigenvectors of the cyclic colour rotation in the Cartan plane. -/
@@ -1008,11 +1183,11 @@ lemma su3PermSign_two_eq :
 
 /-- The cyclic colour rotation scales each Cartan eigenvector by the cube root of unity
   of its grade. -/
-lemma rowAct_gaugeSU3Perm_cartanVec (c : Fin 2) :
-    rowAct gaugeSU3Perm (cartanVec c) = su3PermSign (cartanGrade c) • cartanVec c := by
+lemma rowAct_su3Perm_cartanVec (c : Fin 2) :
+    rowAct su3Perm (cartanVec c) = su3PermSign (cartanGrade c) • cartanVec c := by
   fin_cases c <;>
     simp only [cartanVec, cartanGrade, ← unitVec_cartanId, GaugeAlgebra.su3CartanId,
-      rowAct_sub, rowAct_add, rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol,
+      rowAct_sub, rowAct_add, rowAct_smul, rowAct_su3Perm_unitVec, permCol,
       su3PermSign_one_eq, su3PermSign_two_eq] <;>
     match_scalars
   all_goals ring_nf
@@ -1069,11 +1244,23 @@ lemma prodCycle_one_one : hT.prodCycle 1 1 = hT.negPosProd 2 := rfl
 /-- The reverse cycle closes on the second raising-lowering product. -/
 lemma prodCycle_one_two : hT.prodCycle 1 2 = hT.posNegProd 1 := rfl
 
+/-- Every gauge transformation acts through its `SU(3)` part; for the cyclic colour
+  rotation that part is `su3Perm`. -/
+lemma repGauge_T_gaugeSU3Perm (hT : IsSU3BiAdjoint B repGauge T) :
+    IsSU3BiAdjointMat su3Perm (repGauge gaugeSU3Perm) T := hT.repGauge_T gaugeSU3Perm
+
+/-- A map moving the components by the cyclic colour rotation moves each root product one
+  step along its cycle. -/
+lemma map_su3Perm_prodCycle {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Perm f T)
+    (j : Fin 2) (i : Fin 3) :
+    f (hT.prodCycle j i) = hT.prodCycle j (i + 1) := by
+  fin_cases j <;>
+    simp only [prodCycle, hT.map_biVec hf, rowAct_su3Perm_wtCoeff]
+
 /-- The cyclic colour rotation moves each root product one step along its cycle. -/
 lemma repGauge_gaugeSU3Perm_prodCycle (j : Fin 2) (i : Fin 3) :
-    repGauge gaugeSU3Perm (hT.prodCycle j i) = hT.prodCycle j (i + 1) := by
-  fin_cases j <;>
-    simp only [prodCycle, hT.repGauge_biVec, rowAct_gaugeSU3Perm_wtCoeff]
+    repGauge gaugeSU3Perm (hT.prodCycle j i) = hT.prodCycle j (i + 1) :=
+  hT.map_su3Perm_prodCycle hT.repGauge_T_gaugeSU3Perm j i
 
 /-- The two weight vectors of a root product carry opposite weights. -/
 lemma wtWeight_wtCycle_add (i : Fin 3) :
@@ -1100,14 +1287,22 @@ lemma prodCycle_mem_piece_zero (hmul : IsMulRep repGauge) (j : Fin 2) (i : Fin 3
 noncomputable def cartanEigenProd (hT : IsSU3BiAdjoint B repGauge T) (a b : Fin 2) : B :=
   hT.biVec (cartanVec a) (cartanVec b)
 
+/-- A map moving the components by the cyclic colour rotation scales a product of two
+  Cartan eigenvectors by the cube root of unity of the sum of the two grades. -/
+lemma map_su3Perm_cartanEigenProd {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Perm f T)
+    (a b : Fin 2) :
+    f (hT.cartanEigenProd a b)
+      = su3PermSign (cartanGrade a + cartanGrade b) • hT.cartanEigenProd a b := by
+  rw [cartanEigenProd, hT.map_biVec hf, rowAct_su3Perm_cartanVec,
+    rowAct_su3Perm_cartanVec, hT.biVec_smul_left, hT.biVec_smul_right, smul_smul,
+    su3PermSign_add]
+
 /-- A product of two Cartan eigenvectors is scaled by the cube root of unity of the sum of
   the two grades. -/
 lemma repGauge_gaugeSU3Perm_cartanEigenProd (a b : Fin 2) :
     repGauge gaugeSU3Perm (hT.cartanEigenProd a b)
-      = su3PermSign (cartanGrade a + cartanGrade b) • hT.cartanEigenProd a b := by
-  rw [cartanEigenProd, hT.repGauge_biVec, rowAct_gaugeSU3Perm_cartanVec,
-    rowAct_gaugeSU3Perm_cartanVec, hT.biVec_smul_left, hT.biVec_smul_right, smul_smul,
-    su3PermSign_add]
+      = su3PermSign (cartanGrade a + cartanGrade b) • hT.cartanEigenProd a b :=
+  hT.map_su3Perm_cartanEigenProd hT.repGauge_T_gaugeSU3Perm a b
 
 /-- Every product of two Cartan eigenvectors lies in the zero-weight piece. -/
 lemma cartanEigenProd_mem_piece_zero (hmul : IsMulRep repGauge) (a b : Fin 2) :
@@ -1151,10 +1346,12 @@ lemma su3Omega_add : 1 + su3Omega + su3Omega ^ 2 = 0 := by
   rw [su3Omega_sq, su3Omega_eq]
   ring
 
-/-- The cyclic element scales the grade `k` combination of a three-cycle by `ω ^ k`. -/
-lemma repGauge_cycleEigen (x : Fin 3 → B)
-    (hx : ∀ i : Fin 3, repGauge gaugeSU3Perm (x i) = x (i + 1)) (k : ZMod 3) :
-    repGauge gaugeSU3Perm (cycleEigen x k) = su3PermSign k • cycleEigen x k := by
+/-- A linear map moving a three-cycle one step along itself scales the grade `k`
+  combination by `ω ^ k`. Nothing here is about the gauge group at all: it is the
+  character of a cyclic action of order three. -/
+lemma map_cycleEigen {f : B →ₗ[ℂ] B} (x : Fin 3 → B)
+    (hx : ∀ i : Fin 3, f (x i) = x (i + 1)) (k : ZMod 3) :
+    f (cycleEigen x k) = su3PermSign k • cycleEigen x k := by
   have h3k : k + 2 * k = 0 := by
     have h : (3 : ZMod 3) * k = 0 := by
       rw [show (3 : ZMod 3) = 0 from rfl, zero_mul]
@@ -1256,10 +1453,10 @@ lemma zeroPiece_le_eigenspace (k : ZMod 3) :
   refine sup_le (sup_le ?_ ?_) (iSup_le fun a => iSup_le fun b => iSup_le fun hab => ?_)
   · rw [Submodule.span_le, Set.singleton_subset_iff]
     exact Module.End.mem_eigenspace_iff.mpr
-      (repGauge_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 0) k)
+      (map_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 0) k)
   · rw [Submodule.span_le, Set.singleton_subset_iff]
     exact Module.End.mem_eigenspace_iff.mpr
-      (repGauge_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 1) k)
+      (map_cycleEigen _ (hT.repGauge_gaugeSU3Perm_prodCycle 1) k)
   · rw [Submodule.span_le, Set.singleton_subset_iff]
     refine Module.End.mem_eigenspace_iff.mpr ?_
     rw [hT.repGauge_gaugeSU3Perm_cartanEigenProd, hab]
@@ -1478,12 +1675,14 @@ noncomputable def transpGellMann : Fin 8 → Matrix (Fin 3) (Fin 3) ℂ
   | 6 => gellMannMatrix 4
   | 7 => gellMannMatrix 7
 
+/-- The `SU(3)` part of the transposition gauge transformation is the transposition
+  element. -/
+lemma toSU3_gaugeSU3Transp : GaugeGroupI.toSU3 gaugeSU3Transp = su3Transp := rfl
+
 /-- Conjugating a Gell-Mann matrix by the transposition. -/
-lemma conj_gellMannMatrix_gaugeSU3Transp (b : Fin 8) :
-    gaugeSU3Transp.toSU3.1 * gellMannMatrix b * star gaugeSU3Transp.toSU3.1
-      = transpGellMann b := by
-  rw [show gaugeSU3Transp.toSU3.1 = !![(0 : ℂ), -1, 0; -1, 0, 0; 0, 0, -1] from su3Transp_coe,
-    star_su3TranspMatrix]
+lemma conj_gellMannMatrix_su3Transp (b : Fin 8) :
+    su3Transp.1 * gellMannMatrix b * star su3Transp.1 = transpGellMann b := by
+  rw [su3Transp_coe, star_su3TranspMatrix]
   fin_cases b <;> ext i j <;> fin_cases i <;> fin_cases j <;>
     simp [transpGellMann, gellMannMatrix_zero, gellMannMatrix_one, gellMannMatrix_two,
       gellMannMatrix_three, gellMannMatrix_four, gellMannMatrix_five, gellMannMatrix_six,
@@ -1504,14 +1703,14 @@ noncomputable def transpCol : Fin 8 → Fin 8 → ℂ
   | 7 => unitVec 7
 
 /-- The transposition on the Gell-Mann coordinate directions. -/
-lemma rowAct_gaugeSU3Transp_unitVec (b : Fin 8) :
-    rowAct gaugeSU3Transp (unitVec b) = transpCol b := by
+lemma rowAct_su3Transp_unitVec (b : Fin 8) :
+    rowAct su3Transp (unitVec b) = transpCol b := by
   have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
     rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
     norm_num
   funext a
-  rw [rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff,
-    conj_gellMannMatrix_gaugeSU3Transp]
+  rw [rowAct_unitVec, su3AdjointMatrix_eq_gellMannCoeff,
+    conj_gellMannMatrix_su3Transp]
   fin_cases b <;> fin_cases a <;>
     simp [transpGellMann, gellMannCoeff, transpCol, unitVec, gellMannMatrix_zero,
       gellMannMatrix_one, gellMannMatrix_two, gellMannMatrix_three, gellMannMatrix_four,
@@ -1522,21 +1721,21 @@ lemma rowAct_gaugeSU3Transp_unitVec (b : Fin 8) :
 
 /-- The transposition moves each root weight vector into the other cycle, sending the
   member at index `i` there to the member at index `1 - i`. -/
-lemma rowAct_gaugeSU3Transp_wtCoeff (j : Fin 2) (i : Fin 3) :
-    rowAct gaugeSU3Transp (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle (j + 1) (1 - i)) := by
+lemma rowAct_su3Transp_wtCoeff (j : Fin 2) (i : Fin 3) :
+    rowAct su3Transp (wtCoeff (wtCycle j i)) = wtCoeff (wtCycle (j + 1) (1 - i)) := by
   fin_cases j <;> fin_cases i <;>
     simp [wtCycle, wtCoeff_inl, wtCoeff_inr_inl, rootPair, rowAct_add, rowAct_sub,
-      rowAct_smul, rowAct_gaugeSU3Transp_unitVec, transpCol]
+      rowAct_smul, rowAct_su3Transp_unitVec, transpCol]
   all_goals module
 
 /-- The transposition exchanges the two Cartan eigenvectors, up to a sign. It cannot fix
   them: they are the grade one and grade two eigenvectors of the cyclic rotation, and the
   transposition inverts grades. -/
-lemma rowAct_gaugeSU3Transp_cartanVec (c : Fin 2) :
-    rowAct gaugeSU3Transp (cartanVec c) = -cartanVec (c + 1) := by
+lemma rowAct_su3Transp_cartanVec (c : Fin 2) :
+    rowAct su3Transp (cartanVec c) = -cartanVec (c + 1) := by
   fin_cases c <;>
     simp [cartanVec, ← unitVec_cartanId, GaugeAlgebra.su3CartanId, rowAct_sub,
-      rowAct_add, rowAct_smul, rowAct_gaugeSU3Transp_unitVec, transpCol]
+      rowAct_add, rowAct_smul, rowAct_su3Transp_unitVec, transpCol]
   all_goals module
 
 /-!
@@ -1550,30 +1749,56 @@ is what makes the grade zero piece stable under it.
 
 -/
 
-/-- The transposition exchanges the two cycles of root products, reversing each. -/
-lemma repGauge_gaugeSU3Transp_prodCycle (j : Fin 2) (i : Fin 3) :
-    repGauge gaugeSU3Transp (hT.prodCycle j i) = hT.prodCycle (j + 1) (-i) := by
+/-- Every gauge transformation acts through its `SU(3)` part; for the transposition that
+  part is `su3Transp`. -/
+lemma repGauge_T_gaugeSU3Transp (hT : IsSU3BiAdjoint B repGauge T) :
+    IsSU3BiAdjointMat su3Transp (repGauge gaugeSU3Transp) T :=
+  hT.repGauge_T gaugeSU3Transp
+
+/-- A map moving the components by the transposition exchanges the two cycles of root
+  products, reversing each. -/
+lemma map_su3Transp_prodCycle {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T)
+    (j : Fin 2) (i : Fin 3) :
+    f (hT.prodCycle j i) = hT.prodCycle (j + 1) (-i) := by
   fin_cases j <;> fin_cases i <;>
-    simp only [prodCycle, hT.repGauge_biVec, rowAct_gaugeSU3Transp_wtCoeff] <;>
+    simp only [prodCycle, hT.map_biVec hf, rowAct_su3Transp_wtCoeff] <;>
     rfl
 
-/-- The transposition exchanges the two Cartan eigenvectors in each product. The two signs
-  it picks up, one from each factor, cancel. -/
+/-- The transposition exchanges the two cycles of root products, reversing each. -/
+lemma repGauge_gaugeSU3Transp_prodCycle (j : Fin 2) (i : Fin 3) :
+    repGauge gaugeSU3Transp (hT.prodCycle j i) = hT.prodCycle (j + 1) (-i) :=
+  hT.map_su3Transp_prodCycle hT.repGauge_T_gaugeSU3Transp j i
+
+/-- A map moving the components by the transposition exchanges the two Cartan
+  eigenvectors in each product. The two signs it picks up, one from each factor, cancel. -/
+lemma map_su3Transp_cartanEigenProd {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3Transp f T) (a b : Fin 2) :
+    f (hT.cartanEigenProd a b) = hT.cartanEigenProd (a + 1) (b + 1) := by
+  rw [cartanEigenProd, hT.map_biVec hf, rowAct_su3Transp_cartanVec,
+    rowAct_su3Transp_cartanVec, hT.biVec_neg_neg, cartanEigenProd]
+
+/-- The transposition exchanges the two Cartan eigenvectors in each product. -/
 lemma repGauge_gaugeSU3Transp_cartanEigenProd (a b : Fin 2) :
     repGauge gaugeSU3Transp (hT.cartanEigenProd a b)
-      = hT.cartanEigenProd (a + 1) (b + 1) := by
-  rw [cartanEigenProd, hT.repGauge_biVec, rowAct_gaugeSU3Transp_cartanVec,
-    rowAct_gaugeSU3Transp_cartanVec, hT.biVec_neg_neg, cartanEigenProd]
+      = hT.cartanEigenProd (a + 1) (b + 1) :=
+  hT.map_su3Transp_cartanEigenProd hT.repGauge_T_gaugeSU3Transp a b
+
+/-- A map moving the components by the transposition exchanges the two grade zero cycle
+  sums. -/
+lemma map_su3Transp_cycleEigen_zero {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3Transp f T) (j : Fin 2) :
+    f (cycleEigen (hT.prodCycle j) 0) = cycleEigen (hT.prodCycle (j + 1)) 0 := by
+  rw [cycleEigen_zero_eq, cycleEigen_zero_eq, map_add, map_add,
+    hT.map_su3Transp_prodCycle hf, hT.map_su3Transp_prodCycle hf,
+    hT.map_su3Transp_prodCycle hf, show (-0 : Fin 3) = 0 from rfl,
+    show (-1 : Fin 3) = 2 from rfl, show (-2 : Fin 3) = 1 from rfl]
+  abel
 
 /-- The transposition exchanges the two grade zero cycle sums. -/
 lemma repGauge_gaugeSU3Transp_cycleEigen_zero (j : Fin 2) :
     repGauge gaugeSU3Transp (cycleEigen (hT.prodCycle j) 0)
-      = cycleEigen (hT.prodCycle (j + 1)) 0 := by
-  rw [cycleEigen_zero_eq, cycleEigen_zero_eq, map_add, map_add,
-    hT.repGauge_gaugeSU3Transp_prodCycle, hT.repGauge_gaugeSU3Transp_prodCycle,
-    hT.repGauge_gaugeSU3Transp_prodCycle, show (-0 : Fin 3) = 0 from rfl,
-    show (-1 : Fin 3) = 2 from rfl, show (-2 : Fin 3) = 1 from rfl]
-  abel
+      = cycleEigen (hT.prodCycle (j + 1)) 0 :=
+  hT.map_su3Transp_cycleEigen_zero hT.repGauge_T_gaugeSU3Transp j
 
 /-- Each grade zero cycle sum lies in the grade zero piece. -/
 lemma cycleEigen_mem_zeroPiece_zero (j : Fin 2) :
@@ -1627,37 +1852,61 @@ noncomputable def cartanTriv (hT : IsSU3BiAdjoint B repGauge T) : B :=
 noncomputable def cartanSign (hT : IsSU3BiAdjoint B repGauge T) : B :=
   hT.cartanEigenProd 0 1 - hT.cartanEigenProd 1 0
 
+/-- A map moving the components by the transposition fixes the symmetric root
+  combination. -/
+lemma map_su3Transp_rootTriv {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T) :
+    f hT.rootTriv = hT.rootTriv := by
+  rw [rootTriv, map_add, hT.map_su3Transp_cycleEigen_zero hf,
+    hT.map_su3Transp_cycleEigen_zero hf]
+  show cycleEigen (hT.prodCycle 1) 0 + cycleEigen (hT.prodCycle 0) 0 = _
+  abel
+
 /-- The transposition fixes the symmetric root combination. -/
 lemma repGauge_gaugeSU3Transp_rootTriv :
-    repGauge gaugeSU3Transp hT.rootTriv = hT.rootTriv := by
-  rw [rootTriv, map_add, hT.repGauge_gaugeSU3Transp_cycleEigen_zero,
-    hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
-  show cycleEigen (hT.prodCycle 1) 0 + cycleEigen (hT.prodCycle 0) 0 = _
+    repGauge gaugeSU3Transp hT.rootTriv = hT.rootTriv :=
+  hT.map_su3Transp_rootTriv hT.repGauge_T_gaugeSU3Transp
+
+/-- A map moving the components by the transposition negates the antisymmetric root
+  combination. -/
+lemma map_su3Transp_rootSign {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T) :
+    f hT.rootSign = -hT.rootSign := by
+  rw [rootSign, map_sub, hT.map_su3Transp_cycleEigen_zero hf,
+    hT.map_su3Transp_cycleEigen_zero hf]
+  show cycleEigen (hT.prodCycle 1) 0 - cycleEigen (hT.prodCycle 0) 0 = _
   abel
 
 /-- The transposition negates the antisymmetric root combination. -/
 lemma repGauge_gaugeSU3Transp_rootSign :
-    repGauge gaugeSU3Transp hT.rootSign = -hT.rootSign := by
-  rw [rootSign, map_sub, hT.repGauge_gaugeSU3Transp_cycleEigen_zero,
-    hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
-  show cycleEigen (hT.prodCycle 1) 0 - cycleEigen (hT.prodCycle 0) 0 = _
+    repGauge gaugeSU3Transp hT.rootSign = -hT.rootSign :=
+  hT.map_su3Transp_rootSign hT.repGauge_T_gaugeSU3Transp
+
+/-- A map moving the components by the transposition fixes the symmetric Cartan
+  combination. -/
+lemma map_su3Transp_cartanTriv {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T) :
+    f hT.cartanTriv = hT.cartanTriv := by
+  rw [cartanTriv, map_add, hT.map_su3Transp_cartanEigenProd hf,
+    hT.map_su3Transp_cartanEigenProd hf]
+  show hT.cartanEigenProd 1 0 + hT.cartanEigenProd 0 1 = _
   abel
 
 /-- The transposition fixes the symmetric Cartan combination. -/
 lemma repGauge_gaugeSU3Transp_cartanTriv :
-    repGauge gaugeSU3Transp hT.cartanTriv = hT.cartanTriv := by
-  rw [cartanTriv, map_add, hT.repGauge_gaugeSU3Transp_cartanEigenProd,
-    hT.repGauge_gaugeSU3Transp_cartanEigenProd]
-  show hT.cartanEigenProd 1 0 + hT.cartanEigenProd 0 1 = _
+    repGauge gaugeSU3Transp hT.cartanTriv = hT.cartanTriv :=
+  hT.map_su3Transp_cartanTriv hT.repGauge_T_gaugeSU3Transp
+
+/-- A map moving the components by the transposition negates the antisymmetric Cartan
+  combination. -/
+lemma map_su3Transp_cartanSign {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T) :
+    f hT.cartanSign = -hT.cartanSign := by
+  rw [cartanSign, map_sub, hT.map_su3Transp_cartanEigenProd hf,
+    hT.map_su3Transp_cartanEigenProd hf]
+  show hT.cartanEigenProd 1 0 - hT.cartanEigenProd 0 1 = _
   abel
 
 /-- The transposition negates the antisymmetric Cartan combination. -/
 lemma repGauge_gaugeSU3Transp_cartanSign :
-    repGauge gaugeSU3Transp hT.cartanSign = -hT.cartanSign := by
-  rw [cartanSign, map_sub, hT.repGauge_gaugeSU3Transp_cartanEigenProd,
-    hT.repGauge_gaugeSU3Transp_cartanEigenProd]
-  show hT.cartanEigenProd 1 0 - hT.cartanEigenProd 0 1 = _
-  abel
+    repGauge gaugeSU3Transp hT.cartanSign = -hT.cartanSign :=
+  hT.map_su3Transp_cartanSign hT.repGauge_T_gaugeSU3Transp
 
 /-- The symmetric root combination, written out in the components of `T`: twice the six
   diagonal components of the root directions. -/
@@ -1730,24 +1979,25 @@ the two nonzero grades, which the transposition exchanges.
 
 /-- Symmetrizing an element of the grade zero piece over the transposition lands in the
   join of the two symmetric lines. -/
-lemma add_transp_mem_triv {x : B} (hx : x ∈ hT.zeroPiece 0) :
-    x + repGauge gaugeSU3Transp x ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
+lemma map_add_mem_triv {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T)
+    {x : B} (hx : x ∈ hT.zeroPiece 0) :
+    x + f x ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
   have key : hT.zeroPiece 0 ≤ Submodule.comap
-      (LinearMap.id + (repGauge gaugeSU3Transp : Module.End ℂ B))
+      (LinearMap.id + (f : Module.End ℂ B))
       (ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv) := by
     rw [hT.zeroPiece_zero]
     refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
       rw [Submodule.span_singleton_le_iff_mem, Submodule.mem_comap,
         LinearMap.add_apply, LinearMap.id_apply]
-    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+    · rw [hT.map_su3Transp_cycleEigen_zero hf]
       exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
-    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+    · rw [hT.map_su3Transp_cycleEigen_zero hf]
       show cycleEigen (hT.prodCycle 1) 0 + cycleEigen (hT.prodCycle 0) 0 ∈ _
       rw [add_comm]
       exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
-    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+    · rw [hT.map_su3Transp_cartanEigenProd hf]
       exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
-    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+    · rw [hT.map_su3Transp_cartanEigenProd hf]
       show hT.cartanEigenProd 1 0 + hT.cartanEigenProd 0 1 ∈ _
       rw [add_comm]
       exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
@@ -1756,24 +2006,25 @@ lemma add_transp_mem_triv {x : B} (hx : x ∈ hT.zeroPiece 0) :
 
 /-- Antisymmetrizing an element of the grade zero piece over the transposition lands in the
   join of the two antisymmetric lines. -/
-lemma sub_transp_mem_sign {x : B} (hx : x ∈ hT.zeroPiece 0) :
-    x - repGauge gaugeSU3Transp x ∈ ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign := by
+lemma map_sub_mem_sign {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat su3Transp f T)
+    {x : B} (hx : x ∈ hT.zeroPiece 0) :
+    x - f x ∈ ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign := by
   have key : hT.zeroPiece 0 ≤ Submodule.comap
-      (LinearMap.id - (repGauge gaugeSU3Transp : Module.End ℂ B))
+      (LinearMap.id - (f : Module.End ℂ B))
       (ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign) := by
     rw [hT.zeroPiece_zero]
     refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
       rw [Submodule.span_singleton_le_iff_mem, Submodule.mem_comap,
         LinearMap.sub_apply, LinearMap.id_apply]
-    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+    · rw [hT.map_su3Transp_cycleEigen_zero hf]
       exact Submodule.mem_sup_left (Submodule.mem_span_singleton_self _)
-    · rw [hT.repGauge_gaugeSU3Transp_cycleEigen_zero]
+    · rw [hT.map_su3Transp_cycleEigen_zero hf]
       show cycleEigen (hT.prodCycle 1) 0 - cycleEigen (hT.prodCycle 0) 0 ∈ _
       rw [← neg_sub]
       exact Submodule.mem_sup_left (neg_mem (Submodule.mem_span_singleton_self _))
-    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+    · rw [hT.map_su3Transp_cartanEigenProd hf]
       exact Submodule.mem_sup_right (Submodule.mem_span_singleton_self _)
-    · rw [hT.repGauge_gaugeSU3Transp_cartanEigenProd]
+    · rw [hT.map_su3Transp_cartanEigenProd hf]
       show hT.cartanEigenProd 1 0 - hT.cartanEigenProd 0 1 ∈ _
       rw [← neg_sub]
       exact Submodule.mem_sup_right (neg_mem (Submodule.mem_span_singleton_self _))
@@ -1800,7 +2051,8 @@ lemma sup_span_sign_le_zeroPiece_zero :
   both lie there, so the image of the element does too. -/
 lemma repGauge_gaugeSU3Transp_mem_zeroPiece_zero {x : B} (hx : x ∈ hT.zeroPiece 0) :
     repGauge gaugeSU3Transp x ∈ hT.zeroPiece 0 := by
-  have h := hT.sup_span_triv_le_zeroPiece_zero (hT.add_transp_mem_triv hx)
+  have h := hT.sup_span_triv_le_zeroPiece_zero
+    (hT.map_add_mem_triv hT.repGauge_T_gaugeSU3Transp hx)
   simpa using sub_mem h hx
 
 /-- The `S₃` isotypic decomposition of the zero-weight piece of the gauge weight
@@ -1824,7 +2076,7 @@ lemma zeroPieceSU3Weyl_isotypic_triv (hmul : IsMulRep repGauge) :
   · rintro x ⟨hx0, hxR⟩
     have hR : repGauge gaugeSU3Transp x = x := by
       simpa using Module.End.mem_eigenspace_iff.mp hxR
-    have h := hT.add_transp_mem_triv hx0
+    have h := hT.map_add_mem_triv hT.repGauge_T_gaugeSU3Transp hx0
     rw [hR] at h
     have h2 := Submodule.smul_mem _ ((2 : ℂ)⁻¹) h
     rwa [show (2 : ℂ)⁻¹ • (x + x) = x from by module] at h2
@@ -1848,7 +2100,7 @@ lemma zeroPieceSU3Weyl_isotypic_sign (hmul : IsMulRep repGauge) :
   · rintro x ⟨hx0, hxR⟩
     have hR : repGauge gaugeSU3Transp x = -x := by
       simpa using Module.End.mem_eigenspace_iff.mp hxR
-    have h := hT.sub_transp_mem_sign hx0
+    have h := hT.map_sub_mem_sign hT.repGauge_T_gaugeSU3Transp hx0
     rw [hR] at h
     have h2 := Submodule.smul_mem _ ((2 : ℂ)⁻¹) h
     rwa [show (2 : ℂ)⁻¹ • (x - -x) = x from by module] at h2
@@ -1964,12 +2216,12 @@ noncomputable def gaugeSU3Turn (v : ℂ) (hv : v * (starRingEnd ℂ) v = 2⁻¹)
 /-- Conjugating the first Cartan direction by a quarter turn: the diagonal of the result
   cancels, since the two entries of the turn have the same modulus, and what is left is a
   combination of the two members of the first root pair. -/
-lemma conj_gellMannMatrix_two_gaugeSU3Turn {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
-    (gaugeSU3Turn v hv).toSU3.1 * gellMannMatrix 2 * star (gaugeSU3Turn v hv).toSU3.1
+lemma conj_gellMannMatrix_two_su3Turn {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
+    (su3Turn v hv).1 * gellMannMatrix 2 * star (su3Turn v hv).1
       = !![0, -((1 + Complex.I) * v), 0;
           -((1 - Complex.I) * (starRingEnd ℂ) v), 0, 0;
           0, 0, 0] := by
-  rw [show (gaugeSU3Turn v hv).toSU3.1 = su3TurnMatrix v from rfl, star_su3TurnMatrix]
+  rw [show (su3Turn v hv).1 = su3TurnMatrix v from rfl, star_su3TurnMatrix]
   ext i j
   fin_cases i <;> fin_cases j <;>
     simp [su3TurnMatrix, gellMannMatrix_two, Matrix.mul_apply, Fin.sum_univ_three]
@@ -1995,69 +2247,82 @@ lemma conj_diag_su3TurnMatrix {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) 
     | linear_combination hv - (1 / 4 : ℂ) * Complex.I_sq
 
 /-- Conjugating the second Cartan direction by a quarter turn leaves it alone. -/
-lemma conj_gellMannMatrix_seven_gaugeSU3Turn {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
-    (gaugeSU3Turn v hv).toSU3.1 * gellMannMatrix 7 * star (gaugeSU3Turn v hv).toSU3.1
+lemma conj_gellMannMatrix_seven_su3Turn {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
+    (su3Turn v hv).1 * gellMannMatrix 7 * star (su3Turn v hv).1
       = gellMannMatrix 7 := by
-  rw [show (gaugeSU3Turn v hv).toSU3.1 = su3TurnMatrix v from rfl, gellMannMatrix_seven,
+  rw [show (su3Turn v hv).1 = su3TurnMatrix v from rfl, gellMannMatrix_seven,
     Matrix.mul_smul, Matrix.smul_mul, conj_diag_su3TurnMatrix hv]
 
 /-- The first quarter turn, at `v = (1 - i) / 2`: it carries `λ₃` to `-λ₁`. -/
-noncomputable def gaugeSU3TurnFst : GaugeGroupI :=
-  gaugeSU3Turn ((1 - Complex.I) / 2)
+noncomputable def su3TurnFst : specialUnitaryGroup (Fin 3) ℂ :=
+  su3Turn ((1 - Complex.I) / 2)
     (by rw [map_div₀, map_sub, map_one, Complex.conj_I, map_ofNat]
         linear_combination (-1 / 4 : ℂ) * Complex.I_sq)
 
 /-- The second quarter turn, at `v = (1 + i) / 2`: it carries `λ₃` to `λ₂`. -/
-noncomputable def gaugeSU3TurnSnd : GaugeGroupI :=
-  gaugeSU3Turn ((1 + Complex.I) / 2)
+noncomputable def su3TurnSnd : specialUnitaryGroup (Fin 3) ℂ :=
+  su3Turn ((1 + Complex.I) / 2)
     (by rw [map_div₀, map_add, map_one, Complex.conj_I, map_ofNat]
         linear_combination (-1 / 4 : ℂ) * Complex.I_sq)
+
+/-- The first quarter turn as a gauge transformation: trivial on isospin and
+  hypercharge. -/
+noncomputable def gaugeSU3TurnFst : GaugeGroupI := ⟨su3TurnFst, 1, 1⟩
+
+/-- The second quarter turn as a gauge transformation. -/
+noncomputable def gaugeSU3TurnSnd : GaugeGroupI := ⟨su3TurnSnd, 1, 1⟩
+
+/-- The `SU(3)` part of the first quarter turn gauge transformation. -/
+lemma toSU3_gaugeSU3TurnFst : GaugeGroupI.toSU3 gaugeSU3TurnFst = su3TurnFst := rfl
+
+/-- The `SU(3)` part of the second quarter turn gauge transformation. -/
+lemma toSU3_gaugeSU3TurnSnd : GaugeGroupI.toSU3 gaugeSU3TurnSnd = su3TurnSnd := rfl
 
 /-- The first quarter turn on the first Cartan coordinate direction: it lands on the first
   member of the first root pair, up to sign. This is the step no element of the normaliser
   of the torus can take. -/
-lemma rowAct_gaugeSU3TurnFst_unitVec_two :
-    rowAct gaugeSU3TurnFst (unitVec 2) = -unitVec 0 := by
+lemma rowAct_su3TurnFst_unitVec_two :
+    rowAct su3TurnFst (unitVec 2) = -unitVec 0 := by
   funext a
-  rw [gaugeSU3TurnFst, rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff,
-    conj_gellMannMatrix_two_gaugeSU3Turn]
+  rw [su3TurnFst, rowAct_unitVec, su3AdjointMatrix_eq_gellMannCoeff,
+    conj_gellMannMatrix_two_su3Turn]
   fin_cases a <;> simp [gellMannCoeff, unitVec]
   all_goals norm_num
 
 /-- The second quarter turn on the first Cartan coordinate direction: it lands on the
   second member of the first root pair. The two turns are both needed, since the Weyl group
   never mixes the two members of a root pair with each other. -/
-lemma rowAct_gaugeSU3TurnSnd_unitVec_two :
-    rowAct gaugeSU3TurnSnd (unitVec 2) = unitVec 1 := by
+lemma rowAct_su3TurnSnd_unitVec_two :
+    rowAct su3TurnSnd (unitVec 2) = unitVec 1 := by
   funext a
-  rw [gaugeSU3TurnSnd, rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff,
-    conj_gellMannMatrix_two_gaugeSU3Turn]
+  rw [su3TurnSnd, rowAct_unitVec, su3AdjointMatrix_eq_gellMannCoeff,
+    conj_gellMannMatrix_two_su3Turn]
   fin_cases a <;> simp [gellMannCoeff, unitVec]
   all_goals norm_num
 
 /-- A quarter turn fixes the second Cartan coordinate direction. -/
-lemma rowAct_gaugeSU3Turn_unitVec_seven {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
-    rowAct (gaugeSU3Turn v hv) (unitVec 7) = unitVec 7 := by
+lemma rowAct_su3Turn_unitVec_seven {v : ℂ} (hv : v * (starRingEnd ℂ) v = 2⁻¹) :
+    rowAct (su3Turn v hv) (unitVec 7) = unitVec 7 := by
   have h3 : Real.sqrt 3 ≠ 0 := ne_of_gt (Real.sqrt_pos.mpr (by norm_num))
   funext a
-  rw [rowAct_unitVec, adjointMatrix_inl_inl_eq_gellMannCoeff,
-    conj_gellMannMatrix_seven_gaugeSU3Turn hv]
+  rw [rowAct_unitVec, su3AdjointMatrix_eq_gellMannCoeff,
+    conj_gellMannMatrix_seven_su3Turn hv]
   fin_cases a <;> simp [gellMannCoeff, gellMannMatrix_seven, unitVec]
   field_simp
   rw [← Complex.ofReal_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
   norm_num
 
 /-- The first quarter turn fixes the second Cartan coordinate direction. -/
-lemma rowAct_gaugeSU3TurnFst_unitVec_seven :
-    rowAct gaugeSU3TurnFst (unitVec 7) = unitVec 7 := by
-  rw [gaugeSU3TurnFst]
-  exact rowAct_gaugeSU3Turn_unitVec_seven _
+lemma rowAct_su3TurnFst_unitVec_seven :
+    rowAct su3TurnFst (unitVec 7) = unitVec 7 := by
+  rw [su3TurnFst]
+  exact rowAct_su3Turn_unitVec_seven _
 
 /-- The second quarter turn fixes the second Cartan coordinate direction. -/
-lemma rowAct_gaugeSU3TurnSnd_unitVec_seven :
-    rowAct gaugeSU3TurnSnd (unitVec 7) = unitVec 7 := by
-  rw [gaugeSU3TurnSnd]
-  exact rowAct_gaugeSU3Turn_unitVec_seven _
+lemma rowAct_su3TurnSnd_unitVec_seven :
+    rowAct su3TurnSnd (unitVec 7) = unitVec 7 := by
+  rw [su3TurnSnd]
+  exact rowAct_su3Turn_unitVec_seven _
 
 
 /-!
@@ -2084,52 +2349,102 @@ them plus the pair, to four times it.
 
 /-- The first quarter turn on the Cartan pair of diagonal components: the second is fixed,
   and the first is carried to the diagonal component of the first root direction. -/
-lemma repGauge_gaugeSU3TurnFst_cartanPair (hT : IsSU3BiAdjoint B repGauge T) :
-    repGauge gaugeSU3TurnFst (T ![2, 2] + T ![7, 7]) = T ![0, 0] + T ![7, 7] := by
-  rw [← hT.biVec_unitVec 2 2, ← hT.biVec_unitVec 7 7, map_add, hT.repGauge_biVec,
-    hT.repGauge_biVec, rowAct_gaugeSU3TurnFst_unitVec_two,
-    rowAct_gaugeSU3TurnFst_unitVec_seven, hT.biVec_neg_neg, hT.biVec_unitVec,
+lemma map_su3TurnFst_cartanPair (hT : IsSU3BiAdjoint B repGauge T) {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnFst f T) :
+    f (T ![2, 2] + T ![7, 7]) = T ![0, 0] + T ![7, 7] := by
+  rw [← hT.biVec_unitVec 2 2, ← hT.biVec_unitVec 7 7, map_add, hT.map_biVec hf,
+    hT.map_biVec hf, rowAct_su3TurnFst_unitVec_two,
+    rowAct_su3TurnFst_unitVec_seven, hT.biVec_neg_neg, hT.biVec_unitVec,
     hT.biVec_unitVec]
+
+/-- Every gauge transformation acts through its `SU(3)` part; for the first quarter turn
+  that part is `su3TurnFst`. -/
+lemma repGauge_T_gaugeSU3TurnFst (hT : IsSU3BiAdjoint B repGauge T) :
+    IsSU3BiAdjointMat su3TurnFst (repGauge gaugeSU3TurnFst) T :=
+  hT.repGauge_T gaugeSU3TurnFst
+
+/-- Every gauge transformation acts through its `SU(3)` part; for the second quarter turn
+  that part is `su3TurnSnd`. -/
+lemma repGauge_T_gaugeSU3TurnSnd (hT : IsSU3BiAdjoint B repGauge T) :
+    IsSU3BiAdjointMat su3TurnSnd (repGauge gaugeSU3TurnSnd) T :=
+  hT.repGauge_T gaugeSU3TurnSnd
+
+/-- The first quarter turn on the Cartan pair of diagonal components. -/
+lemma repGauge_gaugeSU3TurnFst_cartanPair (hT : IsSU3BiAdjoint B repGauge T) :
+    repGauge gaugeSU3TurnFst (T ![2, 2] + T ![7, 7]) = T ![0, 0] + T ![7, 7] :=
+  hT.map_su3TurnFst_cartanPair hT.repGauge_T_gaugeSU3TurnFst
+
+/-- The second quarter turn on the Cartan pair of diagonal components: the second is
+  fixed, and the first is carried to the diagonal component of the second root
+  direction. -/
+lemma map_su3TurnSnd_cartanPair (hT : IsSU3BiAdjoint B repGauge T) {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnSnd f T) :
+    f (T ![2, 2] + T ![7, 7]) = T ![1, 1] + T ![7, 7] := by
+  rw [← hT.biVec_unitVec 2 2, ← hT.biVec_unitVec 7 7, map_add, hT.map_biVec hf,
+    hT.map_biVec hf, rowAct_su3TurnSnd_unitVec_two,
+    rowAct_su3TurnSnd_unitVec_seven, hT.biVec_unitVec, hT.biVec_unitVec]
 
 /-- The second quarter turn on the Cartan pair of diagonal components. -/
 lemma repGauge_gaugeSU3TurnSnd_cartanPair (hT : IsSU3BiAdjoint B repGauge T) :
-    repGauge gaugeSU3TurnSnd (T ![2, 2] + T ![7, 7]) = T ![1, 1] + T ![7, 7] := by
-  rw [← hT.biVec_unitVec 2 2, ← hT.biVec_unitVec 7 7, map_add, hT.repGauge_biVec,
-    hT.repGauge_biVec, rowAct_gaugeSU3TurnSnd_unitVec_two,
-    rowAct_gaugeSU3TurnSnd_unitVec_seven, hT.biVec_unitVec, hT.biVec_unitVec]
+    repGauge gaugeSU3TurnSnd (T ![2, 2] + T ![7, 7]) = T ![1, 1] + T ![7, 7] :=
+  hT.map_su3TurnSnd_cartanPair hT.repGauge_T_gaugeSU3TurnSnd
 
 /-- The first quarter turn on the symmetric Cartan combination: one of its two diagonal
   components becomes a root one, so it leaves the line it spans. -/
+lemma map_su3TurnFst_cartanTriv {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnFst f T) :
+    f hT.cartanTriv = (2 : ℂ) • (T ![0, 0] + T ![7, 7]) := by
+  rw [hT.cartanTriv_eq, map_smul, hT.map_su3TurnFst_cartanPair hf]
+
+/-- The first quarter turn on the symmetric Cartan combination. -/
 lemma repGauge_gaugeSU3TurnFst_cartanTriv :
-    repGauge gaugeSU3TurnFst hT.cartanTriv = (2 : ℂ) • (T ![0, 0] + T ![7, 7]) := by
-  rw [hT.cartanTriv_eq, map_smul, hT.repGauge_gaugeSU3TurnFst_cartanPair]
+    repGauge gaugeSU3TurnFst hT.cartanTriv = (2 : ℂ) • (T ![0, 0] + T ![7, 7]) :=
+  hT.map_su3TurnFst_cartanTriv hT.repGauge_T_gaugeSU3TurnFst
+
+/-- The second quarter turn on the symmetric Cartan combination. -/
+lemma map_su3TurnSnd_cartanTriv {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnSnd f T) :
+    f hT.cartanTriv = (2 : ℂ) • (T ![1, 1] + T ![7, 7]) := by
+  rw [hT.cartanTriv_eq, map_smul, hT.map_su3TurnSnd_cartanPair hf]
 
 /-- The second quarter turn on the symmetric Cartan combination. -/
 lemma repGauge_gaugeSU3TurnSnd_cartanTriv :
-    repGauge gaugeSU3TurnSnd hT.cartanTriv = (2 : ℂ) • (T ![1, 1] + T ![7, 7]) := by
-  rw [hT.cartanTriv_eq, map_smul, hT.repGauge_gaugeSU3TurnSnd_cartanPair]
+    repGauge gaugeSU3TurnSnd hT.cartanTriv = (2 : ℂ) • (T ![1, 1] + T ![7, 7]) :=
+  hT.map_su3TurnSnd_cartanTriv hT.repGauge_T_gaugeSU3TurnSnd
 
 /-- The first quarter turn on the symmetric root combination: it gains exactly the weight
   the symmetric Cartan combination loses, the two together summing to twice the gauge
   invariant trace contraction. -/
-lemma repGauge_gaugeSU3TurnFst_rootTriv :
-    repGauge gaugeSU3TurnFst hT.rootTriv
-      = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![0, 0]) := by
+lemma map_su3TurnFst_rootTriv {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnFst f T) :
+    f hT.rootTriv = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![0, 0]) := by
   have hr : hT.rootTriv = (2 : ℂ) • hT.traceContraction - hT.cartanTriv :=
     eq_sub_of_add_eq hT.rootTriv_add_cartanTriv
-  rw [hr, map_sub, map_smul, hT.repGauge_traceContraction,
-    hT.repGauge_gaugeSU3TurnFst_cartanTriv, hT.cartanTriv_eq]
+  rw [hr, map_sub, map_smul, hT.map_traceContraction hf,
+    hT.map_su3TurnFst_cartanTriv hf, hT.cartanTriv_eq]
+  module
+
+/-- The first quarter turn on the symmetric root combination. -/
+lemma repGauge_gaugeSU3TurnFst_rootTriv :
+    repGauge gaugeSU3TurnFst hT.rootTriv
+      = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![0, 0]) :=
+  hT.map_su3TurnFst_rootTriv hT.repGauge_T_gaugeSU3TurnFst
+
+/-- The second quarter turn on the symmetric root combination. -/
+lemma map_su3TurnSnd_rootTriv {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat su3TurnSnd f T) :
+    f hT.rootTriv = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![1, 1]) := by
+  have hr : hT.rootTriv = (2 : ℂ) • hT.traceContraction - hT.cartanTriv :=
+    eq_sub_of_add_eq hT.rootTriv_add_cartanTriv
+  rw [hr, map_sub, map_smul, hT.map_traceContraction hf,
+    hT.map_su3TurnSnd_cartanTriv hf, hT.cartanTriv_eq]
   module
 
 /-- The second quarter turn on the symmetric root combination. -/
 lemma repGauge_gaugeSU3TurnSnd_rootTriv :
     repGauge gaugeSU3TurnSnd hT.rootTriv
-      = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![1, 1]) := by
-  have hr : hT.rootTriv = (2 : ℂ) • hT.traceContraction - hT.cartanTriv :=
-    eq_sub_of_add_eq hT.rootTriv_add_cartanTriv
-  rw [hr, map_sub, map_smul, hT.repGauge_traceContraction,
-    hT.repGauge_gaugeSU3TurnSnd_cartanTriv, hT.cartanTriv_eq]
-  module
+      = hT.rootTriv + (2 : ℂ) • (T ![2, 2] - T ![1, 1]) :=
+  hT.map_su3TurnSnd_rootTriv hT.repGauge_T_gaugeSU3TurnSnd
 
 /-- The three coordinate directions the cyclic colour rotation moves the first Cartan
   direction through: one Cartan direction for each of the three colour pairs. -/
@@ -2143,22 +2458,22 @@ lemma cartanTurn_zero : cartanTurn 0 = unitVec 2 := rfl
 
 /-- The cyclic colour rotation moves each of the three directions one step along the
   cycle. -/
-lemma rowAct_gaugeSU3Perm_cartanTurn (i : Fin 3) :
-    rowAct gaugeSU3Perm (cartanTurn i) = cartanTurn (i + 1) := by
+lemma rowAct_su3Perm_cartanTurn (i : Fin 3) :
+    rowAct su3Perm (cartanTurn i) = cartanTurn (i + 1) := by
   have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
     rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
     norm_num
   fin_cases i
-  · show rowAct gaugeSU3Perm (cartanTurn 0) = cartanTurn 1
-    simp only [cartanTurn, rowAct_gaugeSU3Perm_unitVec, permCol]
-  · show rowAct gaugeSU3Perm (cartanTurn 1) = cartanTurn 2
-    simp only [cartanTurn, rowAct_add, rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol]
+  · show rowAct su3Perm (cartanTurn 0) = cartanTurn 1
+    simp only [cartanTurn, rowAct_su3Perm_unitVec, permCol]
+  · show rowAct su3Perm (cartanTurn 1) = cartanTurn 2
+    simp only [cartanTurn, rowAct_add, rowAct_smul, rowAct_su3Perm_unitVec, permCol]
     match_scalars
     all_goals first
       | ring1
       | linear_combination (-(1 : ℂ) / 4) * h3
-  · show rowAct gaugeSU3Perm (cartanTurn 2) = cartanTurn 0
-    simp only [cartanTurn, rowAct_sub, rowAct_smul, rowAct_gaugeSU3Perm_unitVec, permCol]
+  · show rowAct su3Perm (cartanTurn 2) = cartanTurn 0
+    simp only [cartanTurn, rowAct_sub, rowAct_smul, rowAct_su3Perm_unitVec, permCol]
     match_scalars
     all_goals first
       | ring1
@@ -2190,11 +2505,12 @@ lemma smul_traceContraction_eq_of_invariant (f : ℂ)
       = f • (T ![2, 2] + T ![7, 7])) :
     f • hT.traceContraction = (4 : ℂ) • (f • (T ![2, 2] + T ![7, 7])) := by
   have hperm : ∀ c₀ c₁ : Fin 8 → ℂ, f • hT.biVec c₀ c₀ = f • hT.biVec c₁ c₁ →
-      f • hT.biVec (rowAct gaugeSU3Perm c₀) (rowAct gaugeSU3Perm c₀)
-        = f • hT.biVec (rowAct gaugeSU3Perm c₁) (rowAct gaugeSU3Perm c₁) := by
+      f • hT.biVec (rowAct su3Perm c₀) (rowAct su3Perm c₀)
+        = f • hT.biVec (rowAct su3Perm c₁) (rowAct su3Perm c₁) := by
     intro c₀ c₁ h
     have h' := congrArg (repGauge gaugeSU3Perm) h
-    rwa [map_smul, map_smul, hT.repGauge_biVec, hT.repGauge_biVec] at h'
+    rwa [map_smul, map_smul, hT.map_biVec hT.repGauge_T_gaugeSU3Perm,
+      hT.map_biVec hT.repGauge_T_gaugeSU3Perm] at h'
   have hbase : ∀ g : GaugeGroupI, ∀ y : B,
       repGauge g (T ![2, 2] + T ![7, 7]) = y + T ![7, 7] → f • y = f • T ![2, 2] := by
     intro g y hg
@@ -2212,22 +2528,22 @@ lemma smul_traceContraction_eq_of_invariant (f : ℂ)
   have hA1 : f • hT.biVec (unitVec 5) (unitVec 5)
       = f • hT.biVec (cartanTurn 1) (cartanTurn 1) := by
     have h := hperm _ _ hA0
-    rwa [rowAct_gaugeSU3Perm_unitVec, rowAct_gaugeSU3Perm_cartanTurn,
+    rwa [rowAct_su3Perm_unitVec, rowAct_su3Perm_cartanTurn,
       show ((0 : Fin 3) + 1) = 1 from rfl, show permCol 0 = unitVec 5 from rfl] at h
   have hB1 : f • hT.biVec (unitVec 6) (unitVec 6)
       = f • hT.biVec (cartanTurn 1) (cartanTurn 1) := by
     have h := hperm _ _ hB0
-    rwa [rowAct_gaugeSU3Perm_unitVec, rowAct_gaugeSU3Perm_cartanTurn,
+    rwa [rowAct_su3Perm_unitVec, rowAct_su3Perm_cartanTurn,
       show ((0 : Fin 3) + 1) = 1 from rfl, show permCol 1 = unitVec 6 from rfl] at h
   have hA2 : f • hT.biVec (unitVec 3) (unitVec 3)
       = f • hT.biVec (cartanTurn 2) (cartanTurn 2) := by
     have h := hperm _ _ hA1
-    rwa [rowAct_gaugeSU3Perm_unitVec, rowAct_gaugeSU3Perm_cartanTurn,
+    rwa [rowAct_su3Perm_unitVec, rowAct_su3Perm_cartanTurn,
       show ((1 : Fin 3) + 1) = 2 from rfl, show permCol 5 = unitVec 3 from rfl] at h
   have hB2 : f • hT.biVec (unitVec 4) (unitVec 4)
       = f • hT.biVec (cartanTurn 2) (cartanTurn 2) := by
     have h := hperm _ _ hB1
-    rwa [rowAct_gaugeSU3Perm_unitVec, rowAct_gaugeSU3Perm_cartanTurn,
+    rwa [rowAct_su3Perm_unitVec, rowAct_su3Perm_cartanTurn,
       show ((1 : Fin 3) + 1) = 2 from rfl, show permCol 6 = -unitVec 4 from rfl,
       hT.biVec_neg_neg] at h
   simp only [hT.biVec_unitVec] at hA0 hB0 hA1 hB1 hA2 hB2
@@ -2292,6 +2608,39 @@ lemma mem_span_and_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMu
   · obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hx
     exact ⟨Submodule.smul_mem _ _ hT.traceContraction_mem_span,
       fun g => by rw [map_smul, hT.repGauge_traceContraction]⟩
+
+/-- The sharper reading of the classification: invariance under the colour factor alone
+  already forces a member of the span to be a multiple of the trace contraction. The
+  family is bi-adjoint for the colour part of the representation as well, with the same
+  span and the same trace contraction, so this is the statement above read there, and it
+  is stronger because its hypothesis is weaker. -/
+lemma exists_smul_traceContraction_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
+    ∃ c : ℂ, x = c • hT.traceContraction :=
+  hT.toRepSU3.exists_smul_traceContraction_of_invariant (isMulRep_repSU3 hmul) hx
+    ((repSU3_invariant_iff_su3 repGauge x).2 hinv)
+
+/-- The colour invariants in the span of the components are exactly the multiples of the
+  trace contraction, the isospin and hypercharge factors adding nothing. -/
+lemma mem_span_and_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) (x : B) :
+    (x ∈ hT.span ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
+      ↔ x ∈ ℂ ∙ hT.traceContraction := by
+  rw [← repSU3_invariant_iff_su3 repGauge x]
+  exact hT.toRepSU3.mem_span_and_invariant_iff (isMulRep_repSU3 hmul) x
+
+/-- Inside the span of the components the two notions of invariance agree: a vector fixed
+  by the colour factor is fixed by the whole gauge group. One direction is free, a colour
+  transformation being a gauge transformation; the other is the classification, the colour
+  invariants being multiples of the trace contraction and that being gauge invariant. -/
+lemma su3_invariant_iff_invariant (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span) :
+    (∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
+      ↔ ∀ g : GaugeGroupI, repGauge g x = x := by
+  refine ⟨fun h g => ?_, fun h U => h (U, 1, 1)⟩
+  obtain ⟨c, rfl⟩ := hT.exists_smul_traceContraction_of_su3_invariant hmul hx h
+  rw [map_smul, hT.repGauge_traceContraction]
 
 /-!
 
@@ -2407,6 +2756,15 @@ lemma exists_smul_traceContraction_of_invariant_module (hU : IsSU3BiAdjoint M ρ
   refine ⟨c, TrivSqZeroExt.inr_injective (R := ℂ) ?_⟩
   rw [hc, hU.traceContraction_sqZeroRep, TrivSqZeroExt.inr_smul]
 
+/-- The same classification for a family valued in a mere module, read at the colour
+  factor alone. -/
+lemma exists_smul_traceContraction_of_su3_invariant_module (hU : IsSU3BiAdjoint M ρ U)
+    {x : M} (hx : x ∈ hU.span)
+    (hinv : ∀ V : specialUnitaryGroup (Fin 3) ℂ, ρ (V, 1, 1) x = x) :
+    ∃ c : ℂ, x = c • hU.traceContraction :=
+  hU.toRepSU3.exists_smul_traceContraction_of_invariant_module hx
+    ((repSU3_invariant_iff_su3 ρ x).2 hinv)
+
 end SquareZero
 
 /-!
@@ -2495,6 +2853,23 @@ lemma mem_span_sup_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMu
       rw [LinearMap.mem_ker, map_sub, map_smul, hc, sub_self]
     rwa [Submodule.ker_mkQ] at hker
   · rw [map_sub, map_smul, hinv g, hT.repGauge_traceContraction]
+
+/-- The same statement modulo a colour-stable submodule, read at the colour factor alone:
+  a vector of the span joined with `S` that the colour factor fixes is a multiple of the
+  trace contraction up to an error in `S`, and the error is fixed by the colour factor
+  too. -/
+lemma mem_span_sup_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) (x : B) (S : Submodule ℂ B)
+    (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S)
+    (hx : x ∈ hT.span ⊔ S)
+    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
+    ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
+      ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) y = y := by
+  obtain ⟨c, y, hyS, hxy, hyinv⟩ :=
+    hT.toRepSU3.mem_span_sup_invariant_iff (isMulRep_repSU3 hmul) x S
+      ((repSU3_stable_iff_su3 repGauge S).2 hS) hx
+      ((repSU3_invariant_iff_su3 repGauge x).2 hinv)
+  exact ⟨c, y, hyS, hxy, (repSU3_invariant_iff_su3 repGauge y).1 hyinv⟩
 
 end Decomposition
 
