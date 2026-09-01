@@ -151,8 +151,8 @@ def IsSU3BiAdjointMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
 structure IsSU3BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B)
     (T : (Fin 2 → Fin 8) → B) : Prop where
-  repGauge_T : ∀ g : GaugeGroupI,
-    IsSU3BiAdjointMat (GaugeGroupI.toSU3 g) (repGauge g) T
+  repGauge_T : ∀ g : specialUnitaryGroup (Fin 3) ℂ,
+    IsSU3BiAdjointMat g (repGauge (g, 1, 1)) T
 
 /-!
 
@@ -219,6 +219,18 @@ lemma repSU3_stable_iff_su3 {B : Type*} [AddCommGroup B] [Module ℂ B]
       ↔ ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S :=
   ⟨fun h U => h (U, 1, 1), fun h g => h (GaugeGroupI.toSU3 g)⟩
 
+/-- The colour part of a representation agrees with the representation at the cyclic
+  colour rotation, that rotation being trivial on isospin and hypercharge. -/
+lemma repSU3_gaugeSU3Perm {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) :
+    repSU3 repGauge gaugeSU3Perm = repGauge gaugeSU3Perm := rfl
+
+/-- The colour part of a representation agrees with the representation at the colour
+  transposition, that transposition being trivial on isospin and hypercharge. -/
+lemma repSU3_gaugeSU3Transp {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) :
+    repSU3 repGauge gaugeSU3Transp = repGauge gaugeSU3Transp := rfl
+
 namespace IsSU3BiAdjoint
 set_option linter.unusedVariables false
 
@@ -233,7 +245,7 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   transports along this and is read at the colour factor alone. -/
 lemma toRepSU3 (hT : IsSU3BiAdjoint B repGauge T) :
     IsSU3BiAdjoint B (repSU3 repGauge) T where
-  repGauge_T g := hT.repGauge_T (GaugeGroupI.toSU3 g, 1, 1)
+  repGauge_T g := hT.repGauge_T g
 
 /-- The span of all the components. -/
 def span (hT : IsSU3BiAdjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
@@ -322,11 +334,20 @@ lemma map_traceContraction (hT : IsSU3BiAdjoint B repGauge T)
     simp [apply_ite]
   rw [step, ← hT.traceContraction_eq_sum]
 
-/-- The trace contraction of a bi-adjoint family is gauge invariant: every gauge
-  transformation acts on it through its `SU(3)` part alone. -/
-lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (g : GaugeGroupI) :
-    repGauge g hT.traceContraction = hT.traceContraction :=
-  hT.map_traceContraction (hT.repGauge_T g)
+/-- The trace contraction of a bi-adjoint family is fixed by the colour factor. That is
+  all the transformation law constrains: the isospin and hypercharge factors are free to
+  move the trace contraction, and in general they do. -/
+lemma repGauge_traceContraction (hT : IsSU3BiAdjoint B repGauge T)
+    (U : specialUnitaryGroup (Fin 3) ℂ) :
+    repGauge (U, 1, 1) hT.traceContraction = hT.traceContraction :=
+  hT.map_traceContraction (hT.repGauge_T U)
+
+/-- The trace contraction is fixed by the colour factor, under the name spelling out which
+  factor is meant. This is `repGauge_traceContraction`. -/
+lemma repGauge_su3_traceContraction (hT : IsSU3BiAdjoint B repGauge T)
+    (U : specialUnitaryGroup (Fin 3) ℂ) :
+    repGauge (U, 1, 1) hT.traceContraction = hT.traceContraction :=
+  hT.repGauge_traceContraction U
 
 
 end IsSU3BiAdjoint
@@ -407,7 +428,7 @@ lemma exists_rootPair_or_cartanId (a : Fin 8) :
   revert a
   decide
 
-TODO (lines := 330-370) "All of these should be in a more general file
+TODO (lines := 362-402) "All of these should be in a more general file
   in the GaugeAlgebra section."
 
 /-!
@@ -693,20 +714,31 @@ lemma map_biVec (hT : IsSU3BiAdjoint B repGauge T) {U : specialUnitaryGroup (Fin
   rw [Finset.sum_mul_sum]
   exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by ring
 
-/-- Every gauge transformation moves a contraction against a pair of coordinate vectors
-  by the row action of its `SU(3)` part. -/
-lemma repGauge_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 8 → ℂ) :
-    repGauge g (hT.biVec c₀ c₁)
-      = hT.biVec (rowAct (GaugeGroupI.toSU3 g) c₀) (rowAct (GaugeGroupI.toSU3 g) c₁) :=
-  hT.map_biVec (hT.repGauge_T g) c₀ c₁
+/-- A colour transformation moves a contraction against a pair of coordinate vectors by
+  the row action of its `SU(3)` element. -/
+lemma repGauge_su3_biVec (U : specialUnitaryGroup (Fin 3) ℂ) (c₀ c₁ : Fin 8 → ℂ) :
+    repGauge (U, 1, 1) (hT.biVec c₀ c₁) = hT.biVec (rowAct U c₀) (rowAct U c₁) :=
+  hT.map_biVec (hT.repGauge_T U) c₀ c₁
 
-/-- **The bi-adjoint weight vectors are simultaneous eigenvectors of the gauge torus**,
-  at the character of the sum of the two individual weights. -/
-lemma repGauge_biVec_wtCoeff (k₀ k₁ : WeightIdx) (i : Fin 4) :
-    repGauge (gaugeTorusGen i) (hT.biVec (wtCoeff k₀) (wtCoeff k₁))
+/-- The colour part of the representation moves a contraction against a pair of coordinate
+  vectors by the row action of the `SU(3)` factor of its argument. Unlike the
+  representation itself, the colour part is constrained at every gauge transformation,
+  which is what lets the weight decomposition be built for it. -/
+lemma repSU3_biVec (g : GaugeGroupI) (c₀ c₁ : Fin 8 → ℂ) :
+    repSU3 repGauge g (hT.biVec c₀ c₁)
+      = hT.biVec (rowAct (GaugeGroupI.toSU3 g) c₀) (rowAct (GaugeGroupI.toSU3 g) c₁) :=
+  hT.repGauge_su3_biVec (GaugeGroupI.toSU3 g) c₀ c₁
+
+/-- The bi-adjoint weight vectors are simultaneous eigenvectors of the gauge torus in the
+  colour part of the representation, at the character of the sum of the two individual
+  weights. The isospin and hypercharge generators have trivial colour factor, so the colour
+  part fixes every weight vector at those, matching the vanishing isospin and hypercharge
+  coordinates of the weights. -/
+lemma repSU3_biVec_wtCoeff (k₀ k₁ : WeightIdx) (i : Fin 4) :
+    repSU3 repGauge (gaugeTorusGen i) (hT.biVec (wtCoeff k₀) (wtCoeff k₁))
       = ((expI : ℂ) ^ GaugeWeight.coord (wtWeight k₀ + wtWeight k₁) i)
         • hT.biVec (wtCoeff k₀) (wtCoeff k₁) := by
-  rw [hT.repGauge_biVec, rowAct_wtCoeff, rowAct_wtCoeff, hT.biVec_smul_left,
+  rw [hT.repSU3_biVec, rowAct_wtCoeff, rowAct_wtCoeff, hT.biVec_smul_left,
     hT.biVec_smul_right, smul_smul, GaugeWeight.coord_add,
     zpow_add₀ expI_ne_zero]
 
@@ -786,17 +818,23 @@ lemma span_eq_wtSpan : hT.span = hT.wtSpan := by
 
 -/
 
-/-- **The gauge weight decomposition of the span of a bi-adjoint `su(3)` family.** The
-  span is the join of the lines through the sixty four products of weight vectors, and
-  each of those carries the sum of the two weights. -/
+/-- The gauge weight decomposition of the span of a bi-adjoint `su(3)` family, for the
+  colour part of the representation. The span is the join of the lines through the sixty
+  four products of weight vectors, and each of those carries the sum of the two weights.
+
+  The decomposition is for `repSU3 repGauge` and not for `repGauge` itself because a
+  decomposition must know how all four torus generators act, and the transformation law
+  constrains only the colour factor: of the four generators only `gaugeTorusGen 0` and
+  `gaugeTorusGen 1` are colour transformations. The colour part sends the other two to the
+  identity, so their weights vanish by construction. -/
 @[implicit_reducible]
 noncomputable def gaugeWeightDecomposition (hT : IsSU3BiAdjoint B repGauge T)
-    (hmul : IsMulRep repGauge) : GaugeWeightDecomposition repGauge hT.span :=
+    (hmul : IsMulRep repGauge) : GaugeWeightDecomposition (repSU3 repGauge) hT.span :=
   GaugeWeightDecomposition.copy
-    (GaugeWeightDecomposition.iSup hmul fun k : WeightIdx × WeightIdx =>
-      GaugeWeightDecomposition.spanSingleton hmul
+    (GaugeWeightDecomposition.iSup (isMulRep_repSU3 hmul) fun k : WeightIdx × WeightIdx =>
+      GaugeWeightDecomposition.spanSingleton (isMulRep_repSU3 hmul)
         (hT.biVec (wtCoeff k.1) (wtCoeff k.2)) (wtWeight k.1 + wtWeight k.2)
-        (hT.repGauge_biVec_wtCoeff k.1 k.2))
+        (hT.repSU3_biVec_wtCoeff k.1 k.2))
     _ hT.span_eq_wtSpan
 
 /-- The pieces of the decomposition: the weight-`w` piece is the join of the lines through
@@ -813,9 +851,10 @@ lemma gaugeWeightDecomposition_supp_eq (hmul : IsMulRep repGauge) :
       = Finset.univ.biUnion fun k : WeightIdx × WeightIdx =>
         ({wtWeight k.1 + wtWeight k.2} : Finset GaugeWeight) := rfl
 
-/-- **The gauge weights carried by a bi-adjoint `su(3)` family**: the nineteen weights of
-  the tensor square of the `su(3)` adjoint. Every one of them has vanishing weak isospin
-  and hypercharge, since the family carries colour only. -/
+/-- The gauge weights carried by a bi-adjoint `su(3)` family: the nineteen weights of the
+  tensor square of the `su(3)` adjoint. Every one of them has vanishing weak isospin and
+  hypercharge, the colour part of the representation sending the isospin and hypercharge
+  generators to the identity. -/
 lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
     (hT.gaugeWeightDecomposition hmul).supp
       = {((0, 0, 0, 0) : GaugeWeight), (2, -1, 0, 0), (1, 1, 0, 0), (-1, 2, 0, 0),
@@ -880,12 +919,12 @@ lemma gaugeWeightDecomposition_piece_zero (hmul : IsMulRep repGauge) :
   · exact hT.span_biVec_le_piece_zero hmul (by simp [wtWeight])
   · exact hT.span_biVec_le_piece_zero hmul (by simp [wtWeight])
 
-/-- **The trace contraction lies in the zero-weight piece.** It is gauge invariant, so in
-  particular the torus fixes it. -/
+/-- The trace contraction lies in the zero-weight piece. It is fixed by the colour factor,
+  so in particular the colour part of the representation fixes it at the torus. -/
 lemma traceContraction_mem_piece_zero (hmul : IsMulRep repGauge) :
     hT.traceContraction ∈ (hT.gaugeWeightDecomposition hmul).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _ hT.traceContraction_mem_span
-    hT.repGauge_traceContraction
+    ((repSU3_invariant_iff_su3 repGauge _).2 hT.repGauge_traceContraction)
 
 /-!
 
@@ -1247,7 +1286,7 @@ lemma prodCycle_one_two : hT.prodCycle 1 2 = hT.posNegProd 1 := rfl
 /-- Every gauge transformation acts through its `SU(3)` part; for the cyclic colour
   rotation that part is `su3Perm`. -/
 lemma repGauge_T_gaugeSU3Perm (hT : IsSU3BiAdjoint B repGauge T) :
-    IsSU3BiAdjointMat su3Perm (repGauge gaugeSU3Perm) T := hT.repGauge_T gaugeSU3Perm
+    IsSU3BiAdjointMat su3Perm (repGauge gaugeSU3Perm) T := hT.repGauge_T su3Perm
 
 /-- A map moving the components by the cyclic colour rotation moves each root product one
   step along its cycle. -/
@@ -1526,9 +1565,11 @@ lemma iSup_zeroPiece (hmul : IsMulRep repGauge) :
   cannot separate. Grade zero is necessary for gauge invariance but not sufficient;
   `zeroPiece_zero` says more about what a further reduction would need. -/
 noncomputable def zeroPieceSU3Perm (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMulRep repGauge) :
-    SU3PermDecomposition repGauge ((hT.gaugeWeightDecomposition hmul).piece 0) where
+    SU3PermDecomposition (repSU3 repGauge) ((hT.gaugeWeightDecomposition hmul).piece 0) where
   piece := hT.zeroPiece
-  piece_le k x hx := Module.End.mem_eigenspace_iff.mp (hT.zeroPiece_le_eigenspace k hx)
+  piece_le k x hx := by
+    rw [repSU3_gaugeSU3Perm]
+    exact Module.End.mem_eigenspace_iff.mp (hT.zeroPiece_le_eigenspace k hx)
   iSup_piece := hT.iSup_zeroPiece hmul
 
 /-- The pieces of the decomposition are the graded pieces. -/
@@ -1753,7 +1794,7 @@ is what makes the grade zero piece stable under it.
   part is `su3Transp`. -/
 lemma repGauge_T_gaugeSU3Transp (hT : IsSU3BiAdjoint B repGauge T) :
     IsSU3BiAdjointMat su3Transp (repGauge gaugeSU3Transp) T :=
-  hT.repGauge_T gaugeSU3Transp
+  hT.repGauge_T su3Transp
 
 /-- A map moving the components by the transposition exchanges the two cycles of root
   products, reversing each. -/
@@ -2062,16 +2103,18 @@ lemma repGauge_gaugeSU3Transp_mem_zeroPiece_zero {x : B} (hx : x ∈ hT.zeroPiec
   exchanges the two grade zero cycle sums and the two mixed Cartan products. -/
 noncomputable def zeroPieceSU3Weyl (hT : IsSU3BiAdjoint B repGauge T)
     (hmul : IsMulRep repGauge) :
-    SU3WeylDecomposition repGauge ((hT.gaugeWeightDecomposition hmul).piece 0) :=
-  (hT.zeroPieceSU3Perm hmul).toWeyl fun _ hx =>
-    hT.repGauge_gaugeSU3Transp_mem_zeroPiece_zero hx
+    SU3WeylDecomposition (repSU3 repGauge) ((hT.gaugeWeightDecomposition hmul).piece 0) :=
+  (hT.zeroPieceSU3Perm hmul).toWeyl fun _ hx => by
+    rw [repSU3_gaugeSU3Transp]
+    exact hT.repGauge_gaugeSU3Transp_mem_zeroPiece_zero hx
 
 /-- The trivial isotype piece, written out: the join of the two symmetric lines. Two of the
   four dimensions of grade zero survive here; the other two are of sign isotype. -/
 lemma zeroPieceSU3Weyl_isotypic_triv (hmul : IsMulRep repGauge) :
     (hT.zeroPieceSU3Weyl hmul).isotypic .triv
       = ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
-  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_triv, zeroPieceSU3Perm_piece]
+  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_triv, zeroPieceSU3Perm_piece,
+    repSU3_gaugeSU3Transp]
   refine le_antisymm ?_ ?_
   · rintro x ⟨hx0, hxR⟩
     have hR : repGauge gaugeSU3Transp x = x := by
@@ -2095,7 +2138,8 @@ lemma zeroPieceSU3Weyl_isotypic_triv (hmul : IsMulRep repGauge) :
 lemma zeroPieceSU3Weyl_isotypic_sign (hmul : IsMulRep repGauge) :
     (hT.zeroPieceSU3Weyl hmul).isotypic .sign
       = ℂ ∙ hT.rootSign ⊔ ℂ ∙ hT.cartanSign := by
-  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_sign, zeroPieceSU3Perm_piece]
+  rw [zeroPieceSU3Weyl, SU3PermDecomposition.toWeyl_isotypic_sign, zeroPieceSU3Perm_piece,
+    repSU3_gaugeSU3Transp]
   refine le_antisymm ?_ ?_
   · rintro x ⟨hx0, hxR⟩
     have hR : repGauge gaugeSU3Transp x = -x := by
@@ -2119,13 +2163,13 @@ lemma zeroPieceSU3Weyl_isotypic_sign (hmul : IsMulRep repGauge) :
 lemma zeroPieceSU3Weyl_isotypic_std (hmul : IsMulRep repGauge) :
     (hT.zeroPieceSU3Weyl hmul).isotypic .std = hT.zeroPiece 1 ⊔ hT.zeroPiece 2 := rfl
 
-/-- The trace contraction is of trivial isotype: it is gauge invariant, so in particular
-  the whole Weyl group fixes it. This is strictly stronger than lying in grade zero, which
-  is the join of the trivial and the sign isotype. -/
+/-- The trace contraction is of trivial isotype: it is fixed by the colour factor, so in
+  particular the whole Weyl group fixes it. This is strictly stronger than lying in grade
+  zero, which is the join of the trivial and the sign isotype. -/
 lemma traceContraction_mem_isotypic_triv (hmul : IsMulRep repGauge) :
     hT.traceContraction ∈ (hT.zeroPieceSU3Weyl hmul).isotypic .triv :=
   SU3WeylDecomposition.mem_triv_of_invariant _ (hT.traceContraction_mem_piece_zero hmul)
-    hT.repGauge_traceContraction
+    ((repSU3_invariant_iff_su3 repGauge _).2 hT.repGauge_traceContraction)
 
 /-- The trace contraction lies in the join of the two symmetric lines: of the ten
   dimensions of the zero-weight piece, the gauge weight and the Weyl group together confine
@@ -2361,13 +2405,13 @@ lemma map_su3TurnFst_cartanPair (hT : IsSU3BiAdjoint B repGauge T) {f : B →ₗ
   that part is `su3TurnFst`. -/
 lemma repGauge_T_gaugeSU3TurnFst (hT : IsSU3BiAdjoint B repGauge T) :
     IsSU3BiAdjointMat su3TurnFst (repGauge gaugeSU3TurnFst) T :=
-  hT.repGauge_T gaugeSU3TurnFst
+  hT.repGauge_T su3TurnFst
 
 /-- Every gauge transformation acts through its `SU(3)` part; for the second quarter turn
   that part is `su3TurnSnd`. -/
 lemma repGauge_T_gaugeSU3TurnSnd (hT : IsSU3BiAdjoint B repGauge T) :
     IsSU3BiAdjointMat su3TurnSnd (repGauge gaugeSU3TurnSnd) T :=
-  hT.repGauge_T gaugeSU3TurnSnd
+  hT.repGauge_T su3TurnSnd
 
 /-- The first quarter turn on the Cartan pair of diagonal components. -/
 lemma repGauge_gaugeSU3TurnFst_cartanPair (hT : IsSU3BiAdjoint B repGauge T) :
@@ -2496,13 +2540,15 @@ lemma biVec_cartanTurn_sum :
     | ring1
     | linear_combination ((1 : ℂ) / 2) * h3
 
-/-- A multiple of the Cartan pair that is gauge invariant is a quarter of the same multiple
-  of the trace contraction. The two quarter turns tie the first two root diagonal
+/-- A multiple of the Cartan pair that the colour factor fixes is a quarter of the same
+  multiple of the trace contraction. The two quarter turns tie the first two root diagonal
   components to the Cartan pair, and the cyclic colour rotation carries those two relations
-  to the remaining four. -/
+  to the remaining four. All four elements used are colour transformations, which is all
+  the transformation law constrains. -/
 lemma smul_traceContraction_eq_of_invariant (f : ℂ)
-    (hinv : ∀ g : GaugeGroupI, repGauge g (f • (T ![2, 2] + T ![7, 7]))
-      = f • (T ![2, 2] + T ![7, 7])) :
+    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ,
+      repGauge (U, 1, 1) (f • (T ![2, 2] + T ![7, 7]))
+        = f • (T ![2, 2] + T ![7, 7])) :
     f • hT.traceContraction = (4 : ℂ) • (f • (T ![2, 2] + T ![7, 7])) := by
   have hperm : ∀ c₀ c₁ : Fin 8 → ℂ, f • hT.biVec c₀ c₀ = f • hT.biVec c₁ c₁ →
       f • hT.biVec (rowAct su3Perm c₀) (rowAct su3Perm c₀)
@@ -2511,20 +2557,20 @@ lemma smul_traceContraction_eq_of_invariant (f : ℂ)
     have h' := congrArg (repGauge gaugeSU3Perm) h
     rwa [map_smul, map_smul, hT.map_biVec hT.repGauge_T_gaugeSU3Perm,
       hT.map_biVec hT.repGauge_T_gaugeSU3Perm] at h'
-  have hbase : ∀ g : GaugeGroupI, ∀ y : B,
-      repGauge g (T ![2, 2] + T ![7, 7]) = y + T ![7, 7] → f • y = f • T ![2, 2] := by
-    intro g y hg
-    have h := hinv g
+  have hbase : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y : B,
+      repGauge (U, 1, 1) (T ![2, 2] + T ![7, 7]) = y + T ![7, 7] → f • y = f • T ![2, 2] := by
+    intro U y hg
+    have h := hinv U
     rw [map_smul, hg, smul_add, smul_add] at h
     exact add_right_cancel h
   have hA0 : f • hT.biVec (unitVec 0) (unitVec 0)
       = f • hT.biVec (cartanTurn 0) (cartanTurn 0) := by
     rw [cartanTurn_zero, hT.biVec_unitVec, hT.biVec_unitVec]
-    exact hbase _ _ hT.repGauge_gaugeSU3TurnFst_cartanPair
+    exact hbase su3TurnFst _ hT.repGauge_gaugeSU3TurnFst_cartanPair
   have hB0 : f • hT.biVec (unitVec 1) (unitVec 1)
       = f • hT.biVec (cartanTurn 0) (cartanTurn 0) := by
     rw [cartanTurn_zero, hT.biVec_unitVec, hT.biVec_unitVec]
-    exact hbase _ _ hT.repGauge_gaugeSU3TurnSnd_cartanPair
+    exact hbase su3TurnSnd _ hT.repGauge_gaugeSU3TurnSnd_cartanPair
   have hA1 : f • hT.biVec (unitVec 5) (unitVec 5)
       = f • hT.biVec (cartanTurn 1) (cartanTurn 1) := by
     have h := hperm _ _ hA0
@@ -2554,29 +2600,41 @@ lemma smul_traceContraction_eq_of_invariant (f : ℂ)
 
 /-!
 
-## F.3. The gauge invariants in the span
+## F.3. The colour invariants in the span
 
-A gauge invariant in the span is of trivial isotype by section E, so it is a combination
+A colour invariant in the span is of trivial isotype by section E, so it is a combination
 `a • rootTriv + b • cartanTriv`. Subtracting the right multiple of the trace contraction
-leaves a multiple of `cartanTriv` alone, still gauge invariant, and F.2 says such a multiple
-is a multiple of the trace contraction as well. So the two lines the finite group left
-collapse to one, which is the one singlet of `8 ⊗ 8`, and the containment of section B
-becomes an equality.
+leaves a multiple of `cartanTriv` alone, still fixed by the colour factor, and F.2 says
+such a multiple is a multiple of the trace contraction as well. So the two lines the finite
+group left collapse to one, which is the one singlet of `8 ⊗ 8`, and the containment of
+section B becomes an equality.
+
+`mem_span_and_su3_invariant_iff` is the classification proper, and its hypothesis is
+invariance under the colour factor, which is all the transformation law constrains. Its
+gauge counterpart `mem_span_and_invariant_iff` needs the trace contraction to be gauge
+invariant, and takes that as a hypothesis: the transformation law leaves the isospin and
+hypercharge factors free, so they may scale the trace contraction, and then the multiples
+of it are not gauge invariants at all. The same hypothesis is what
+`su3_invariant_iff_invariant` needs to upgrade colour invariance in the span to gauge
+invariance; without it that statement is false.
 
 -/
 
-/-- Every gauge invariant in the span of the components is a multiple of the trace
+/-- Every colour invariant in the span of the components is a multiple of the trace
   contraction. The gauge weight, the cyclic colour rotation and the Weyl group cut the span
   down to the two lines through `rootTriv` and `cartanTriv`, and the quarter turns of F.1
-  cut those two down to one. -/
-lemma exists_smul_traceContraction_of_invariant (hT : IsSU3BiAdjoint B repGauge T)
+  cut those two down to one. Only the colour factor is used, which is all the
+  transformation law constrains. -/
+lemma exists_smul_traceContraction_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T)
     (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     ∃ c : ℂ, x = c • hT.traceContraction := by
+  have hinv' : ∀ g : GaugeGroupI, repSU3 repGauge g x = x :=
+    (repSU3_invariant_iff_su3 repGauge x).2 hinv
   have hmem : x ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
     rw [← hT.zeroPieceSU3Weyl_isotypic_triv hmul]
     exact SU3WeylDecomposition.mem_triv_of_invariant _
-      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx hinv) hinv
+      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx hinv') hinv'
   obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.mem_sup.1 hmem
   obtain ⟨a, rfl⟩ := Submodule.mem_span_singleton.1 hy
   obtain ⟨b, rfl⟩ := Submodule.mem_span_singleton.1 hz
@@ -2585,21 +2643,50 @@ lemma exists_smul_traceContraction_of_invariant (hT : IsSU3BiAdjoint B repGauge 
   have hE : ((b - a) * 2) • (T ![2, 2] + T ![7, 7])
       = (a • hT.rootTriv + b • hT.cartanTriv) - (2 * a) • hT.traceContraction := by
     linear_combination (norm := module) (-a) • hrt + (a - b) • hct
-  have hinvC : ∀ g : GaugeGroupI,
-      repGauge g (((b - a) * 2) • (T ![2, 2] + T ![7, 7]))
+  have hinvC : ∀ U : specialUnitaryGroup (Fin 3) ℂ,
+      repGauge (U, 1, 1) (((b - a) * 2) • (T ![2, 2] + T ![7, 7]))
         = ((b - a) * 2) • (T ![2, 2] + T ![7, 7]) := by
-    intro g
-    rw [hE, map_sub, map_smul, hinv g, hT.repGauge_traceContraction]
+    intro U
+    rw [hE, map_sub, map_smul, hinv U, hT.repGauge_traceContraction]
   have hkey := hT.smul_traceContraction_eq_of_invariant ((b - a) * 2) hinvC
   exact ⟨2 * a + (b - a) / 2, by
     linear_combination (norm := module) a • hrt + (b - a) • hct + (-1 / 4 : ℂ) • hkey⟩
 
-/-- The gauge invariants in the span of the components are exactly the multiples of the
+/-- Every gauge invariant in the span of the components is a multiple of the trace
+  contraction. A gauge invariant is in particular fixed by the transformations trivial on
+  isospin and hypercharge, and those alone already force the conclusion. -/
+lemma exists_smul_traceContraction_of_invariant (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    ∃ c : ℂ, x = c • hT.traceContraction :=
+  hT.exists_smul_traceContraction_of_su3_invariant hmul hx fun U => hinv (U, 1, 1)
+
+/-- The colour invariants in the span of the components are exactly the multiples of the
   trace contraction. The three sieves of sections C, D and E together with the quarter turns
-  of section F bound them from above, and the trace contraction is itself invariant and in
-  the span, which bounds them from below. This is the one singlet of `8 ⊗ 8`. -/
+  of section F bound them from above, and the trace contraction is itself fixed by the
+  colour factor and in the span, which bounds them from below. This is the one singlet of
+  `8 ⊗ 8`. -/
+lemma mem_span_and_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T)
+    (hmul : IsMulRep repGauge) (x : B) :
+    (x ∈ hT.span ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
+      ↔ x ∈ ℂ ∙ hT.traceContraction := by
+  refine ⟨fun h => ?_, fun hx => ?_⟩
+  · obtain ⟨c, rfl⟩ := hT.exists_smul_traceContraction_of_su3_invariant hmul h.1 h.2
+    exact Submodule.mem_span_singleton.2 ⟨c, rfl⟩
+  · obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hx
+    exact ⟨Submodule.smul_mem _ _ hT.traceContraction_mem_span,
+      fun U => by rw [map_smul, hT.repGauge_traceContraction]⟩
+
+/-- The gauge invariants in the span of the components are exactly the multiples of the
+  trace contraction, once the trace contraction is known to be gauge invariant. That
+  hypothesis cannot be dropped: the transformation law says nothing about the isospin and
+  hypercharge factors, so they may well move the trace contraction, and then the right-hand
+  side has invariants that the left-hand side has not. Where the two factors do fix it, as
+  they do for the gluon field strengths, the hypothesis is supplied from the transformation
+  law of the underlying field. -/
 lemma mem_span_and_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMulRep repGauge)
-    (x : B) :
+    (x : B)
+    (htc : ∀ g : GaugeGroupI, repGauge g hT.traceContraction = hT.traceContraction) :
     (x ∈ hT.span ∧ ∀ g : GaugeGroupI, repGauge g x = x)
       ↔ x ∈ ℂ ∙ hT.traceContraction := by
   refine ⟨fun h => ?_, fun hx => ?_⟩
@@ -2607,40 +2694,24 @@ lemma mem_span_and_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMu
     exact Submodule.mem_span_singleton.2 ⟨c, rfl⟩
   · obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hx
     exact ⟨Submodule.smul_mem _ _ hT.traceContraction_mem_span,
-      fun g => by rw [map_smul, hT.repGauge_traceContraction]⟩
+      fun g => by rw [map_smul, htc]⟩
 
-/-- The sharper reading of the classification: invariance under the colour factor alone
-  already forces a member of the span to be a multiple of the trace contraction. The
-  family is bi-adjoint for the colour part of the representation as well, with the same
-  span and the same trace contraction, so this is the statement above read there, and it
-  is stronger because its hypothesis is weaker. -/
-lemma exists_smul_traceContraction_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T)
-    (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
-    ∃ c : ℂ, x = c • hT.traceContraction :=
-  hT.toRepSU3.exists_smul_traceContraction_of_invariant (isMulRep_repSU3 hmul) hx
-    ((repSU3_invariant_iff_su3 repGauge x).2 hinv)
-
-/-- The colour invariants in the span of the components are exactly the multiples of the
-  trace contraction, the isospin and hypercharge factors adding nothing. -/
-lemma mem_span_and_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T)
-    (hmul : IsMulRep repGauge) (x : B) :
-    (x ∈ hT.span ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
-      ↔ x ∈ ℂ ∙ hT.traceContraction := by
-  rw [← repSU3_invariant_iff_su3 repGauge x]
-  exact hT.toRepSU3.mem_span_and_invariant_iff (isMulRep_repSU3 hmul) x
-
-/-- Inside the span of the components the two notions of invariance agree: a vector fixed
-  by the colour factor is fixed by the whole gauge group. One direction is free, a colour
-  transformation being a gauge transformation; the other is the classification, the colour
-  invariants being multiples of the trace contraction and that being gauge invariant. -/
+/-- Inside the span of the components the two notions of invariance agree, provided the
+  trace contraction is gauge invariant: a vector fixed by the colour factor is then fixed
+  by the whole gauge group. One direction is free, a colour transformation being a gauge
+  transformation; the other is the classification, the colour invariants being multiples of
+  the trace contraction. The hypothesis `htc` is exactly what the transformation law no
+  longer supplies, and without it the statement is false, the isospin and hypercharge
+  factors being unconstrained. -/
 lemma su3_invariant_iff_invariant (hT : IsSU3BiAdjoint B repGauge T)
-    (hmul : IsMulRep repGauge) {x : B} (hx : x ∈ hT.span) :
+    (hmul : IsMulRep repGauge)
+    (htc : ∀ g : GaugeGroupI, repGauge g hT.traceContraction = hT.traceContraction)
+    {x : B} (hx : x ∈ hT.span) :
     (∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
       ↔ ∀ g : GaugeGroupI, repGauge g x = x := by
   refine ⟨fun h g => ?_, fun h U => h (U, 1, 1)⟩
   obtain ⟨c, rfl⟩ := hT.exists_smul_traceContraction_of_su3_invariant hmul hx h
-  rw [map_smul, hT.repGauge_traceContraction]
+  rw [map_smul, htc]
 
 /-!
 
@@ -2828,11 +2899,16 @@ end Quotient
   `S`, and the error is gauge invariant as well, being the difference of two invariants.
   Stability of `S` is needed, and not just convenient: for an unstable line the only
   invariant of the line is zero, while the sum can carry invariants outside the span. The
-  classification is applied in the quotient by `S`, where the images of the components
+  gauge invariance `htc` of the trace contraction is a hypothesis for the same reason as in
+  `mem_span_and_invariant_iff`: the transformation law constrains the colour factor only,
+  so it is what makes the error term gauge invariant rather than merely colour invariant.
+  The classification is applied in the quotient by `S`, where the images of the components
   form a bi-adjoint family again. -/
 lemma mem_span_sup_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMulRep repGauge)
     (x : B) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) (hx : x ∈ hT.span ⊔ S)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (htc : ∀ g : GaugeGroupI, repGauge g hT.traceContraction = hT.traceContraction)
+    (hx : x ∈ hT.span ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
       ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
@@ -2852,7 +2928,7 @@ lemma mem_span_sup_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMu
   · have hker : x - c • hT.traceContraction ∈ LinearMap.ker S.mkQ := by
       rw [LinearMap.mem_ker, map_sub, map_smul, hc, sub_self]
     rwa [Submodule.ker_mkQ] at hker
-  · rw [map_sub, map_smul, hinv g, hT.repGauge_traceContraction]
+  · rw [map_sub, map_smul, hinv g, htc g]
 
 /-- The same statement modulo a colour-stable submodule, read at the colour factor alone:
   a vector of the span joined with `S` that the colour factor fixes is a multiple of the
@@ -2867,7 +2943,8 @@ lemma mem_span_sup_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T)
       ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) y = y := by
   obtain ⟨c, y, hyS, hxy, hyinv⟩ :=
     hT.toRepSU3.mem_span_sup_invariant_iff (isMulRep_repSU3 hmul) x S
-      ((repSU3_stable_iff_su3 repGauge S).2 hS) hx
+      ((repSU3_stable_iff_su3 repGauge S).2 hS)
+      ((repSU3_invariant_iff_su3 repGauge _).2 hT.repGauge_traceContraction) hx
       ((repSU3_invariant_iff_su3 repGauge x).2 hinv)
   exact ⟨c, y, hyS, hxy, (repSU3_invariant_iff_su3 repGauge y).1 hyinv⟩
 
