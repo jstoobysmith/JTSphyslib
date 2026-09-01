@@ -19,6 +19,13 @@ down to the covariant version.
 In the covariant version we will do the work with
 the invariants.
 
+Before the structure's own sections, the file develops the Lorentz-transformation
+machinery the covariant towers need: the mixing operator on multiset-indexed families
+of derivative symbols, its compatibility with the Leibniz convolution, the commutation
+of the infinitesimal gauge action with the Lorentz action on each value space, and,
+from those, the Lorentz laws of `IsGaugeField.covDerivIter` and of
+`IsGaugeField.iteratedCovDerivAdjoint` of the field strength.
+
 -/
 
 @[expose] public section
@@ -525,6 +532,1235 @@ structure IsStandardModel (B : Type) [Ring B] [Algebra ℂ B]
   bare_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
       (φ φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
     bare i s φ * bare j s' φ' = -(bare j s' φ' * bare i s φ)
+
+/-!
+
+## The Lorentz mixing of derivative slots
+
+A Lorentz transformation mixes every derivative slot of a symbol through a column of
+the Lorentz matrix. For symbols indexed by an ordered tuple that mixing is a sum over
+tuples, but the covariant derivative symbols carry multisets of directions, where no
+ordering is available. The mixing is therefore written here as an operator on
+multiset-indexed families: peel one direction `a`, replace it by every direction `b`
+weighted by the entry `Λ_{b a}`, and mix what is left. Peeling two directions commutes,
+so the recursion descends to multisets, and `lorentzMix_ofFn` identifies the operator
+with the tuple form used by `IsLorentzDerivTransforms`.
+
+-/
+
+section LorentzMix
+
+variable {M N : Type*} [AddCommMonoid M] [Module ℂ M] [AddCommMonoid N] [Module ℂ N]
+
+/-- One peeling step of the Lorentz mixing: the direction `a` is removed from the
+  multiset index of the family and put back as every direction `b`, weighted by the
+  Lorentz matrix entry `Λ_{b a}`. -/
+noncomputable def lorentzMixStep (Λ : SL(2,ℂ)) (a : Fin 1 ⊕ Fin 3)
+    (G : Multiset (Fin 1 ⊕ Fin 3) → M) : Multiset (Fin 1 ⊕ Fin 3) → M :=
+  fun t => ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) • G (b ::ₘ t)
+
+/-- Peeling two directions commutes, so the mixing is well defined on a multiset. -/
+instance (Λ : SL(2,ℂ)) : LeftCommutative (lorentzMixStep (M := M) Λ) where
+  left_comm a₁ a₂ G := by
+    funext t
+    simp only [lorentzMixStep, Finset.smul_sum, smul_smul]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun b₁ _ => Finset.sum_congr rfl fun b₂ _ => ?_
+    rw [mul_comm, Multiset.cons_swap]
+
+/-- The Lorentz mixing of a multiset-indexed family along a multiset `s` of directions:
+  every direction of `s` is peeled and replaced by all directions, weighted by the
+  corresponding column of the Lorentz matrix. -/
+noncomputable def lorentzMix (Λ : SL(2,ℂ)) (G : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3) → M :=
+  s.foldr (lorentzMixStep Λ) G
+
+variable (Λ : SL(2,ℂ)) (G : Multiset (Fin 1 ⊕ Fin 3) → M)
+
+/-- Mixing no directions is the identity. -/
+@[simp]
+lemma lorentzMix_zero : lorentzMix Λ G 0 = G := Multiset.foldr_zero _ _
+
+/-- Mixing along `a ::ₘ s` peels `a` after mixing along `s`. -/
+lemma lorentzMix_cons (a : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ G (a ::ₘ s) = lorentzMixStep Λ a (lorentzMix Λ G s) :=
+  Multiset.foldr_cons _ _ _ _
+
+/-- The peeling step of `lorentzMix_cons`, written out. -/
+lemma lorentzMix_cons_apply (a : Fin 1 ⊕ Fin 3) (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ G (a ::ₘ s) t =
+      ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) • lorentzMix Λ G s (b ::ₘ t) := by
+  rw [lorentzMix_cons]; rfl
+
+/-- Mixing along a sum of multisets is mixing twice. -/
+lemma lorentzMix_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ G (s + t) = lorentzMix Λ (lorentzMix Λ G t) s := by
+  induction s using Multiset.induction_on with
+  | empty => rw [zero_add, lorentzMix_zero]
+  | cons a s ih => rw [Multiset.cons_add, lorentzMix_cons, ih, lorentzMix_cons]
+
+/-- The mixing operator agrees with the tuple form of the Lorentz law: along an
+  ordered tuple of directions it is the sum over all tuples with one Lorentz matrix
+  factor per slot. -/
+lemma lorentzMix_ofFn {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ G (List.ofFn l) t =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+          G ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) + t) := by
+  induction n generalizing t with
+  | zero =>
+      rw [List.ofFn_zero, show ((([] : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) = 0)
+        from rfl, lorentzMix_zero, Fintype.sum_unique]
+      simp [List.ofFn_zero, show ((([] : List (Fin 1 ⊕ Fin 3)) :
+        Multiset (Fin 1 ⊕ Fin 3)) = 0) from rfl]
+  | succ n ih =>
+      have hcons : ∀ (a : Fin 1 ⊕ Fin 3) (p : Fin n → (Fin 1 ⊕ Fin 3)),
+          ((List.ofFn (Fin.cons a p) : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) =
+            a ::ₘ ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) := by
+        intro a p
+        rw [List.ofFn_succ]
+        simp only [Fin.cons_zero, Fin.cons_succ]
+        rfl
+      rw [show ((List.ofFn l : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) =
+          l 0 ::ₘ ((List.ofFn fun i : Fin n => l i.succ : List (Fin 1 ⊕ Fin 3)) :
+            Multiset (Fin 1 ⊕ Fin 3)) from by rw [List.ofFn_succ]; rfl,
+        lorentzMix_cons_apply]
+      rw [← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => (Fin 1 ⊕ Fin 3))
+          (fun p : Fin (n + 1) → (Fin 1 ⊕ Fin 3) =>
+            (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+              G ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) + t)),
+        Fintype.sum_prod_type]
+      refine Finset.sum_congr rfl fun a _ => ?_
+      rw [ih (fun i => l i.succ) (a ::ₘ t), Finset.smul_sum]
+      refine Finset.sum_congr rfl fun p _ => ?_
+      show (((SL2C.toLorentzGroup Λ).1 a (l 0) : ℝ) : ℂ) •
+          ((∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+            G ((List.ofFn p : List (Fin 1 ⊕ Fin 3)) + (a ::ₘ t))) =
+          (∏ i, (((SL2C.toLorentzGroup Λ).1
+            ((Fin.cons a p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) i) (l i) : ℝ) : ℂ)) •
+          G ((List.ofFn (Fin.cons a p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) :
+            List (Fin 1 ⊕ Fin 3)) + t)
+      rw [Fin.prod_univ_succ, hcons a p, smul_smul]
+      simp only [Fin.cons_zero, Fin.cons_succ]
+      congr 1
+      rw [Multiset.cons_add, add_comm _ (a ::ₘ t), Multiset.cons_add, add_comm t]
+
+/-- Evaluating a mixed family away from the empty multiset is mixing the translated
+  family at the empty multiset. -/
+lemma lorentzMix_apply_add (Λ : SL(2,ℂ)) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    ∀ (G : Multiset (Fin 1 ⊕ Fin 3) → M) (t : Multiset (Fin 1 ⊕ Fin 3)),
+      lorentzMix Λ G s t = lorentzMix Λ (fun r => G (r + t)) s 0 := by
+  induction s using Multiset.induction_on with
+  | empty => intro G t; rw [lorentzMix_zero, lorentzMix_zero, zero_add]
+  | cons a s ih =>
+      intro G t
+      rw [lorentzMix_cons_apply, lorentzMix_cons_apply]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [ih G (b ::ₘ t), ih (fun r => G (r + t)) (b ::ₘ 0)]
+      congr 2
+      funext r
+      congr 1
+      rw [show (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = {b} from rfl,
+        ← Multiset.singleton_add, add_assoc]
+
+/-- The mixing operator is additive in the family. -/
+lemma lorentzMix_add_fam (Λ : SL(2,ℂ)) (G₁ G₂ : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ (fun r => G₁ r + G₂ r) s t =
+      lorentzMix Λ G₁ s t + lorentzMix Λ G₂ s t := by
+  induction s using Multiset.induction_on generalizing t with
+  | empty => rw [lorentzMix_zero, lorentzMix_zero, lorentzMix_zero]
+  | cons a s ih =>
+      rw [lorentzMix_cons_apply, lorentzMix_cons_apply, lorentzMix_cons_apply,
+        ← Finset.sum_add_distrib]
+      exact Finset.sum_congr rfl fun b _ => by rw [ih, smul_add]
+
+/-- The mixing operator commutes with any linear map applied to the values. -/
+lemma lorentzMix_map (Φ : M →ₗ[ℂ] N) (Λ : SL(2,ℂ)) (G : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    Φ (lorentzMix Λ G s t) = lorentzMix Λ (fun r => Φ (G r)) s t := by
+  induction s using Multiset.induction_on generalizing t with
+  | empty => rw [lorentzMix_zero, lorentzMix_zero]
+  | cons a s ih =>
+      rw [lorentzMix_cons_apply, lorentzMix_cons_apply, map_sum]
+      exact Finset.sum_congr rfl fun b _ => by rw [map_smul, ih]
+
+/-- The mixing operator is homogeneous in the family. -/
+lemma lorentzMix_smul_fam (Λ : SL(2,ℂ)) (c : ℂ) (G : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ (fun r => c • G r) s t = c • lorentzMix Λ G s t :=
+  (lorentzMix_map (c • LinearMap.id) Λ G s t).symm
+
+/-- The mixing operator commutes with finite sums of families. -/
+lemma lorentzMix_sum_fam {ι : Type*} [Fintype ι] (Λ : SL(2,ℂ))
+    (H : ι → Multiset (Fin 1 ⊕ Fin 3) → M) (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ (fun r => ∑ i, H i r) s t = ∑ i, lorentzMix Λ (H i) s t := by
+  induction s using Multiset.induction_on generalizing t with
+  | empty => simp only [lorentzMix_zero]
+  | cons a s ih =>
+      rw [lorentzMix_cons_apply]
+      simp only [lorentzMix_cons_apply, ih, Finset.smul_sum]
+      rw [Finset.sum_comm]
+
+end LorentzMix
+
+section LorentzMixGroup
+
+variable {M : Type*} [AddCommGroup M] [Module ℂ M]
+
+/-- The mixing operator commutes with negation of the family. -/
+lemma lorentzMix_neg_fam (Λ : SL(2,ℂ)) (G : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ (fun r => -G r) s t = -lorentzMix Λ G s t := by
+  rw [show (fun r => -G r) = fun r => (-1 : ℂ) • G r from
+      funext fun r => by rw [neg_one_smul], lorentzMix_smul_fam, neg_one_smul]
+
+/-- The mixing operator is additive in the family, in subtracted form. -/
+lemma lorentzMix_sub_fam (Λ : SL(2,ℂ)) (G₁ G₂ : Multiset (Fin 1 ⊕ Fin 3) → M)
+    (s t : Multiset (Fin 1 ⊕ Fin 3)) :
+    lorentzMix Λ (fun r => G₁ r - G₂ r) s t =
+      lorentzMix Λ G₁ s t - lorentzMix Λ G₂ s t := by
+  simp only [sub_eq_add_neg]
+  rw [lorentzMix_add_fam Λ G₁ (fun r => -G₂ r), lorentzMix_neg_fam]
+
+end LorentzMixGroup
+
+
+/-!
+
+## The Leibniz convolution and the mixing operator
+
+The correction terms of a covariant derivative are Leibniz convolutions over the
+multiset antidiagonal: a gauge-field symbol carrying `x` derivatives against a matter
+symbol carrying `y`, summed over all splittings `s = x + y`. Expanded in bases of the
+gauge algebra and of the value space, both `actionFamConv` and `bracketFamConv` are
+scalar combinations of such convolutions of plain products in `B`, which is why
+`lorentzMix_derivConv` — the mixing operator is a morphism for the convolution — is
+what carries a Lorentz law through a covariant derivative.
+
+-/
+
+section DerivConv
+
+variable {B : Type} [Ring B] [Algebra ℂ B]
+
+omit [Algebra ℂ B] in
+/-- A finite sum inside a multiset sum may be taken outside. -/
+lemma multiset_sum_map_sum {α ι : Type*} [Fintype ι] (m : Multiset α) (F : ι → α → B) :
+    (m.map fun x => ∑ i, F i x).sum = ∑ i, (m.map (F i)).sum := by
+  induction m using Multiset.induction_on with
+  | empty => simp
+  | cons x m ih =>
+      rw [Multiset.map_cons, Multiset.sum_cons, ih, ← Finset.sum_add_distrib]
+      exact Finset.sum_congr rfl fun i _ => by rw [Multiset.map_cons, Multiset.sum_cons]
+
+/-- The Leibniz convolution of two families of derivative symbols: the sum over the
+  splittings of the multiset of the products of the two symbols. -/
+noncomputable def derivConv (f g : Multiset (Fin 1 ⊕ Fin 3) → B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) : B :=
+  (s.antidiagonal.map fun p => f p.1 * g p.2).sum
+
+omit [Algebra ℂ B] in
+/-- One derivative peeled off a convolution lands on one factor or the other. -/
+lemma derivConv_cons (f g : Multiset (Fin 1 ⊕ Fin 3) → B) (a : Fin 1 ⊕ Fin 3)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    derivConv f g (a ::ₘ s) =
+      derivConv f (fun r => g (r + {a})) s + derivConv (fun r => f (r + {a})) g s := by
+  rw [derivConv, derivConv, derivConv, Multiset.antidiagonal_cons, Multiset.map_add,
+    Multiset.sum_add, Multiset.map_map, Multiset.map_map]
+  congr 1
+  · exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => by
+      simp [← Multiset.singleton_add, add_comm])
+  · exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => by
+      simp [← Multiset.singleton_add, add_comm])
+
+/-- The convolution is linear in its right-hand family. -/
+lemma derivConv_sum_right {ι : Type*} [Fintype ι] (f : Multiset (Fin 1 ⊕ Fin 3) → B)
+    (c : ι → ℂ) (g : ι → Multiset (Fin 1 ⊕ Fin 3) → B) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    derivConv f (fun r => ∑ i, c i • g i r) s = ∑ i, c i • derivConv f (g i) s := by
+  rw [derivConv]
+  rw [Multiset.map_congr rfl fun p _ => show
+      f p.1 * (∑ i, c i • g i p.2) = ∑ i, c i • (f p.1 * g i p.2) from by
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => by rw [mul_smul_comm]]
+  rw [multiset_sum_map_sum]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [derivConv, Multiset.smul_sum, Multiset.map_map]
+    rfl
+
+/-- The convolution is linear in its left-hand family. -/
+lemma derivConv_sum_left {ι : Type*} [Fintype ι] (g : Multiset (Fin 1 ⊕ Fin 3) → B)
+    (c : ι → ℂ) (f : ι → Multiset (Fin 1 ⊕ Fin 3) → B) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    derivConv (fun r => ∑ i, c i • f i r) g s = ∑ i, c i • derivConv (f i) g s := by
+  rw [derivConv]
+  rw [Multiset.map_congr rfl fun p _ => show
+      (∑ i, c i • f i p.1) * g p.2 = ∑ i, c i • (f i p.1 * g p.2) from by
+    rw [Finset.sum_mul]
+    exact Finset.sum_congr rfl fun i _ => by rw [smul_mul_assoc]]
+  rw [multiset_sum_map_sum]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [derivConv, Multiset.smul_sum, Multiset.map_map]
+    rfl
+
+/-- The Lorentz mixing operator is a morphism for the Leibniz convolution: mixing the
+  two factors separately and convolving is the same as convolving and then mixing. -/
+lemma lorentzMix_derivConv (Λ : SL(2,ℂ)) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    ∀ (f g : Multiset (Fin 1 ⊕ Fin 3) → B),
+      derivConv (fun x => lorentzMix Λ f x 0) (fun y => lorentzMix Λ g y 0) s =
+        lorentzMix Λ (derivConv f g) s 0 := by
+  induction s using Multiset.induction_on with
+  | empty => simp [derivConv]
+  | cons a s ih =>
+      intro f g
+      have hshift : ∀ (h : Multiset (Fin 1 ⊕ Fin 3) → B) (r : Multiset (Fin 1 ⊕ Fin 3)),
+          lorentzMix Λ h (r + {a}) 0 =
+            ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) •
+              lorentzMix Λ (fun q => h (q + {b})) r 0 := by
+        intro h r
+        rw [lorentzMix_add]
+        rw [show lorentzMix Λ h {a} = fun q =>
+            ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) • h (q + {b}) from by
+          funext q
+          rw [show ({a} : Multiset (Fin 1 ⊕ Fin 3)) = a ::ₘ 0 from rfl,
+            lorentzMix_cons_apply]
+          exact Finset.sum_congr rfl fun b _ => by
+            rw [lorentzMix_zero, ← Multiset.singleton_add, add_comm]]
+        rw [lorentzMix_sum_fam]
+        exact Finset.sum_congr rfl fun b _ => by rw [lorentzMix_smul_fam]
+      rw [derivConv_cons, lorentzMix_cons_apply]
+      rw [show (fun r => lorentzMix Λ g (r + {a}) 0) = fun r =>
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) •
+            lorentzMix Λ (fun q => g (q + {b})) r 0 from funext fun r => hshift g r,
+        show (fun r => lorentzMix Λ f (r + {a}) 0) = fun r =>
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b a : ℝ) : ℂ) •
+            lorentzMix Λ (fun q => f (q + {b})) r 0 from funext fun r => hshift f r,
+        derivConv_sum_right, derivConv_sum_left, ← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [ih f (fun q => g (q + {b})), ih (fun q => f (q + {b})) g, ← smul_add]
+      congr 1
+      rw [lorentzMix_apply_add Λ s (derivConv f g) (b ::ₘ 0),
+        show (fun r => derivConv f g (r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))))) =
+            fun r => derivConv f (fun q => g (q + {b})) r +
+              derivConv (fun q => f (q + {b})) g r from
+          funext fun r => by
+            rw [show r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = b ::ₘ r from by
+              rw [show (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = {b} from rfl,
+                ← Multiset.singleton_add, add_comm], derivConv_cons],
+        lorentzMix_add_fam]
+
+end DerivConv
+
+/-!
+
+## The gauge action commutes with the Lorentz action on the value spaces
+
+The correction term of a covariant derivative acts on the value index of a matter
+symbol by the infinitesimal gauge action, while a Lorentz transformation acts on it by
+the species representation. The two commute, because they act on different tensor
+factors: the Lorentz group acts on the Weyl factor and the gauge algebra on the
+colour and weak factors. That is what lets the contragredient Lorentz action be pulled
+out of a covariant derivative symbol, in `IsGaugeField.actionFam_comp_dual` below.
+
+-/
+
+section GaugeLorentzComm
+
+/-- An endomorphism of the second tensor factor commutes with one of the first. -/
+lemma lTensor_map_id_comm {W X : Type} [AddCommGroup W] [Module ℂ W] [AddCommGroup X]
+    [Module ℂ X] (f : X →ₗ[ℂ] X) (g : W →ₗ[ℂ] W) (t : W ⊗[ℂ] X) :
+    (LinearMap.lTensor W f) (TensorProduct.map g LinearMap.id t) =
+      TensorProduct.map g LinearMap.id ((LinearMap.lTensor W f) t) := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y => simp
+  | add x y hx hy => simp [hx, hy]
+
+/-- Reassociating and recombining the last two tensor factors commutes with an
+  endomorphism of the first: the shape needed for the quark doublet, whose gauge action
+  is read on the combined colour–weak factor. -/
+lemma congr_assoc_map_id_comm {W X Y Z : Type} [AddCommGroup W] [Module ℂ W]
+    [AddCommGroup X] [Module ℂ X] [AddCommGroup Y] [Module ℂ Y] [AddCommGroup Z]
+    [Module ℂ Z] (E : X ⊗[ℂ] Y ≃ₗ[ℂ] Z) (g : W →ₗ[ℂ] W) (t : (W ⊗[ℂ] X) ⊗[ℂ] Y) :
+    (TensorProduct.congr (LinearEquiv.refl ℂ W) E) (TensorProduct.assoc ℂ W X Y
+        (TensorProduct.map (TensorProduct.map g LinearMap.id) LinearMap.id t)) =
+      TensorProduct.map g LinearMap.id
+        ((TensorProduct.congr (LinearEquiv.refl ℂ W) E) (TensorProduct.assoc ℂ W X Y t)) := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul x y =>
+      induction x using TensorProduct.induction_on with
+      | zero => simp
+      | tmul a b => simp
+      | add p q hp hq => simp only [TensorProduct.add_tmul, map_add, hp, hq]
+  | add p q hp hq => simp only [map_add, hp, hq]
+
+/-- The infinitesimal gauge action on the Higgs commutes with the Lorentz action, which
+  is trivial. -/
+lemma HiggsVec.gaugeAlgebraAction_comm_repLorentz (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : HiggsVec) :
+    HiggsVec.gaugeAlgebraAction c ((Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ v) =
+      (Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ (HiggsVec.gaugeAlgebraAction c v) := by
+  simp
+
+/-- The infinitesimal gauge action on the down-type singlet acts on the colour factor,
+  the Lorentz action on the Weyl factor, so the two commute. -/
+lemma DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra)
+    (Λ : SL(2,ℂ)) (v : DownSinglet) :
+    DownSinglet.gaugeAlgebraAction c (DownSinglet.repLorentzGroup Λ v) =
+      DownSinglet.repLorentzGroup Λ (DownSinglet.gaugeAlgebraAction c v) :=
+  DownSinglet.valLinEquiv.injective
+    (lTensor_map_id_comm _ (Fermion.RightHandedWeyl.rep Λ) (DownSinglet.valLinEquiv v))
+
+/-- The infinitesimal gauge action on the up-type singlet acts on the colour factor,
+  the Lorentz action on the Weyl factor, so the two commute. -/
+lemma UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : UpSinglet) :
+    UpSinglet.gaugeAlgebraAction c (UpSinglet.repLorentzGroup Λ v) =
+      UpSinglet.repLorentzGroup Λ (UpSinglet.gaugeAlgebraAction c v) :=
+  UpSinglet.valLinEquiv.injective
+    (lTensor_map_id_comm _ (Fermion.RightHandedWeyl.rep Λ) (UpSinglet.valLinEquiv v))
+
+/-- The infinitesimal gauge action on the lepton doublet acts on the weak factor, the
+  Lorentz action on the Weyl factor, so the two commute. -/
+lemma LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra)
+    (Λ : SL(2,ℂ)) (v : LeptonDoublet) :
+    LeptonDoublet.gaugeAlgebraAction c (LeptonDoublet.repLorentzGroup Λ v) =
+      LeptonDoublet.repLorentzGroup Λ (LeptonDoublet.gaugeAlgebraAction c v) :=
+  LeptonDoublet.valLinEquiv.injective
+    (lTensor_map_id_comm _ (Fermion.LeftHandedWeyl.rep Λ) (LeptonDoublet.valLinEquiv v))
+
+/-- The infinitesimal gauge action on the charged-lepton singlet is a scalar, so it
+  commutes with the Lorentz action. -/
+lemma LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra)
+    (Λ : SL(2,ℂ)) (v : LeptonSinglet) :
+    LeptonSinglet.gaugeAlgebraAction c (LeptonSinglet.repLorentzGroup Λ v) =
+      LeptonSinglet.repLorentzGroup Λ (LeptonSinglet.gaugeAlgebraAction c v) := by
+  show (Complex.I * (-(6 : ℂ) * c.toU1Value)) • (LeptonSinglet.repLorentzGroup Λ v) =
+    LeptonSinglet.repLorentzGroup Λ ((Complex.I * (-(6 : ℂ) * c.toU1Value)) • v)
+  rw [map_smul]
+
+/-- The infinitesimal gauge action on the quark doublet acts on the combined
+  colour–weak factor, the Lorentz action on the Weyl factor, so the two commute. -/
+lemma QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra)
+    (Λ : SL(2,ℂ)) (v : QuarkDoublet) :
+    QuarkDoublet.gaugeAlgebraAction c (QuarkDoublet.repLorentzGroup Λ v) =
+      QuarkDoublet.repLorentzGroup Λ (QuarkDoublet.gaugeAlgebraAction c v) := by
+  have hg : ∀ x : QuarkDoublet, QuarkDoublet.colourWeakValLinEquiv
+      (QuarkDoublet.gaugeAlgebraAction c x) =
+      LinearMap.lTensor Fermion.LeftHandedWeyl
+        (Matrix.toLpLinAlgEquiv 2 (QuarkDoublet.actionMatrix c))
+        (QuarkDoublet.colourWeakValLinEquiv x) := fun x => by
+    rw [show QuarkDoublet.gaugeAlgebraAction c x =
+      QuarkDoublet.colourWeakEnd (QuarkDoublet.actionMatrix c) x from rfl,
+      QuarkDoublet.colourWeakEnd_apply_mk, LinearEquiv.apply_symm_apply]
+    rfl
+  have hl : ∀ x : QuarkDoublet, QuarkDoublet.colourWeakValLinEquiv
+      (QuarkDoublet.repLorentzGroup Λ x) =
+      TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ) LinearMap.id
+        (QuarkDoublet.colourWeakValLinEquiv x) := by
+    intro x
+    have h1 : QuarkDoublet.valLinEquiv (QuarkDoublet.repLorentzGroup Λ x) =
+        TensorProduct.map (TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ) LinearMap.id)
+          LinearMap.id (QuarkDoublet.valLinEquiv x) := rfl
+    simp only [QuarkDoublet.colourWeakValLinEquiv, LinearEquiv.trans_apply, h1]
+    exact congr_assoc_map_id_comm _ _ _
+  refine QuarkDoublet.colourWeakValLinEquiv.injective ?_
+  rw [hg (QuarkDoublet.repLorentzGroup Λ v), hl v,
+    hl (QuarkDoublet.gaugeAlgebraAction c v), hg v]
+  exact lTensor_map_id_comm _ _ _
+
+/-- Conjugation preserves the commutation of the gauge action with the Lorentz
+  action: both are read on the conjugate module through the same underlying maps. -/
+lemma actionConj_comm_repConj {V : Type} [AddCommGroup V] [Module ℂ V]
+    (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (rep : Representation ℂ SL(2,ℂ) V)
+    (h : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
+    (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : ConjModule V) :
+    GaugeAlgebra.actionConj act c (rep.conj Λ v) =
+      rep.conj Λ (GaugeAlgebra.actionConj act c v) :=
+  congrArg (conjEquiv (k := ℂ) (M := V)) (h c Λ _)
+
+end GaugeLorentzComm
+
+/-!
+
+## The Lorentz law of the covariant matter towers
+
+The covariant derivative of a matter family adds one ordered derivative slot and a
+Leibniz correction `A_ρ · F`. Under a Lorentz transformation the new slot mixes by its
+own column of the Lorentz matrix, the plain derivative slots mix by `lorentzMix`, and
+the value index transforms by the contragredient of the species representation. The
+proof runs by induction on the number of covariant slots: the correction term is
+handled by `repLorentz_actionFamConv`, which expands it in bases into convolutions of
+products in `B` and applies `lorentzMix_derivConv`, and the contragredient action is
+pulled through the correction by `actionFamConv_comp_dual`, which is where the
+commutation of the gauge action with the Lorentz action is used.
+
+-/
+
+namespace IsGaugeField
+
+variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V]
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+
+/-- The action of families expanded in bases of the gauge algebra and the value space. -/
+lemma actionFam_apply_eq_sum {ι κ : Type} [Fintype ι] [Fintype κ]
+    (bg : Module.Basis ι ℝ GaugeAlgebra) (bv : Module.Basis κ ℂ V)
+    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℂ V →ₗ[ℂ] B)
+    (φ : Module.Dual ℂ V) :
+    actionFam act f g φ =
+      ∑ j, ∑ k, φ (act (bg j) (bv k)) • (f (bg.coord j) * g (bv.coord k)) := by
+  rw [actionFam, dualPairEquiv_symm_eq_sum bg f, dualPairEquivC_symm_eq_sum bv g]
+  simp only [map_sum, LinearMap.sum_apply, tensorAction_tmul, dualPairEquivC_tmul]
+  rw [Finset.sum_comm]
+
+/-- The derived action family expanded in bases. -/
+lemma actionFamConv_eq_sum {ι κ : Type} [Fintype ι] [Fintype κ]
+    (bg : Module.Basis ι ℝ GaugeAlgebra) (bv : Module.Basis κ ℂ V)
+    (ρ : Fin 1 ⊕ Fin 3) (G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+    actionFamConv A act ρ G s φ =
+      ∑ j, ∑ k, φ (act (bg j) (bv k)) •
+        derivConv (fun x => A x ρ (bg.coord j)) (fun y => G y (bv.coord k)) s := by
+  rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+  rw [Multiset.map_congr rfl fun p _ => actionFam_apply_eq_sum bg bv (A p.1 ρ) (G p.2) φ]
+  rw [multiset_sum_map_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [multiset_sum_map_sum]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [derivConv, Multiset.smul_sum, Multiset.map_map]
+  rfl
+
+/-- Rotating a triple sum so that the innermost index comes first. -/
+lemma sum_comm₃ {α β γ M : Type*} [Fintype α] [Fintype β] [Fintype γ] [AddCommMonoid M]
+    (X : α → β → γ → M) : (∑ a, ∑ b, ∑ c, X a b c) = ∑ c, ∑ a, ∑ b, X a b c :=
+  (Finset.sum_congr rfl fun _ _ => Finset.sum_comm).trans Finset.sum_comm
+
+/-- The derived action family is linear in the matter family. -/
+lemma actionFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c : ι → ℂ)
+    (H : ι → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+    actionFamConv A act ρ (fun t => ∑ i, c i • H i t) s φ =
+      ∑ i, c i • actionFamConv A act ρ (H i) s φ := by
+  classical
+  set bg := Module.finBasis ℝ GaugeAlgebra with hbg
+  set bv := Module.finBasis ℂ V with hbv
+  have hin : ∀ j k, derivConv (fun x => A x ρ (bg.coord j))
+      (fun y => (∑ i, c i • H i y) (bv.coord k)) s =
+      ∑ i, c i • derivConv (fun x => A x ρ (bg.coord j))
+        (fun y => H i y (bv.coord k)) s := by
+    intro j k
+    rw [← derivConv_sum_right]
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply]
+  have hrhs : ∀ i, c i • actionFamConv A act ρ (H i) s φ =
+      ∑ j, ∑ k, (φ (act (bg j) (bv k)) * c i) •
+        derivConv (fun x => A x ρ (bg.coord j)) (fun y => H i y (bv.coord k)) s := by
+    intro i
+    rw [actionFamConv_eq_sum bg bv, Finset.smul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun k _ => by rw [smul_smul, mul_comm]
+  rw [actionFamConv_eq_sum bg bv]
+  simp only [hin, Finset.smul_sum, smul_smul, hrhs]
+  exact sum_comm₃ _
+
+omit [FiniteDimensional ℂ V] in
+/-- A dual vector is the sum of its coordinates against the dual basis. -/
+lemma dual_eq_sum_coord {κ : Type} [Fintype κ] (bv : Module.Basis κ ℂ V)
+    (ψ : Module.Dual ℂ V) : ∑ k, ψ (bv k) • bv.coord k = ψ := by
+  refine bv.ext fun j => ?_
+  rw [LinearMap.sum_apply]
+  simp only [LinearMap.smul_apply, Module.Basis.coord_apply, Module.Basis.repr_self,
+    smul_eq_mul]
+  rw [Finset.sum_eq_single j
+    (fun k _ hk => by rw [Finsupp.single_eq_of_ne hk, mul_zero])
+    (fun h => absurd (Finset.mem_univ j) h)]
+  simp
+
+omit [FiniteDimensional ℂ V] in
+/-- The twist of the value index past the gauge action: an endomorphism commuting with
+  the gauge action may be moved from the dual basis onto the dual vector. -/
+lemma dual_twist {κ : Type} [Fintype κ] (bv : Module.Basis κ ℂ V) (T : V →ₗ[ℂ] V)
+    (hT : ∀ (c : GaugeAlgebra) (v : V), act c (T v) = T (act c v))
+    (c : GaugeAlgebra) (φ : Module.Dual ℂ V) :
+    ∑ k, φ (act c (bv k)) • T.dualMap (bv.coord k) =
+      ∑ k, (T.dualMap φ) (act c (bv k)) • bv.coord k := by
+  have h1 : ∑ k, φ (act c (bv k)) • T.dualMap (bv.coord k)
+      = T.dualMap (∑ k, φ (act c (bv k)) • bv.coord k) := by
+    rw [map_sum]
+    exact Finset.sum_congr rfl fun k _ => (map_smul _ _ _).symm
+  rw [h1, show (∑ k, φ (act c (bv k)) • bv.coord k) = φ ∘ₗ act c from
+      dual_eq_sum_coord bv (φ ∘ₗ act c),
+    show (∑ k, (T.dualMap φ) (act c (bv k)) • bv.coord k) = (T.dualMap φ) ∘ₗ act c from
+      dual_eq_sum_coord bv ((T.dualMap φ) ∘ₗ act c)]
+  exact LinearMap.ext fun v => congrArg φ (hT c v)
+
+/-- The contragredient action may be pulled out of an action of families, provided the
+  gauge action commutes with it on the value space. -/
+lemma actionFam_comp_dual (T : V →ₗ[ℂ] V)
+    (hT : ∀ (c : GaugeAlgebra) (v : V), act c (T v) = T (act c v))
+    (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) (g : Module.Dual ℂ V →ₗ[ℂ] B)
+    (φ : Module.Dual ℂ V) :
+    actionFam act f (g ∘ₗ T.dualMap) φ = actionFam act f g (T.dualMap φ) := by
+  classical
+  set bg := Module.finBasis ℝ GaugeAlgebra with hbg
+  set bv := Module.finBasis ℂ V with hbv
+  rw [actionFam_apply_eq_sum bg bv, actionFam_apply_eq_sum bg bv]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  have key : ∀ (α : Fin (Module.finrank ℂ V) → ℂ)
+      (v : Fin (Module.finrank ℂ V) → Module.Dual ℂ V),
+      ∑ k, α k • (f (bg.coord j) * g (v k)) = f (bg.coord j) * g (∑ k, α k • v k) := by
+    intro α v
+    rw [map_sum, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun k _ => by rw [map_smul, mul_smul_comm]
+  simp only [LinearMap.comp_apply]
+  rw [key (fun k => φ (act (bg j) (bv k))) (fun k => T.dualMap (bv.coord k)),
+    key (fun k => (T.dualMap φ) (act (bg j) (bv k))) (fun k => bv.coord k),
+    dual_twist bv T hT]
+
+/-- The contragredient action may be pulled out of a derived action family. -/
+lemma actionFamConv_comp_dual (T : V →ₗ[ℂ] V)
+    (hT : ∀ (c : GaugeAlgebra) (v : V), act c (T v) = T (act c v)) (ρ : Fin 1 ⊕ Fin 3)
+    (K : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+    actionFamConv A act ρ (fun t => K t ∘ₗ T.dualMap) s φ =
+      actionFamConv A act ρ K s (T.dualMap φ) := by
+  rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map, actionFamConv,
+    Multiset.sum_linearMap_apply, Multiset.map_map]
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ =>
+    actionFam_comp_dual T hT (A p.1 ρ) (K p.2) φ)
+
+section LorentzLaws
+
+variable {repLorentz : Representation ℂ SL(2,ℂ) B}
+variable {repGauge : Representation ℂ JetGaugeGroupI B}
+variable {rep : Representation ℂ SL(2,ℂ) V}
+
+/-- Every multiset of directions is the underlying multiset of an ordered tuple. -/
+lemma exists_ofFn_eq (x : Multiset (Fin 1 ⊕ Fin 3)) :
+    ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
+      x = ((List.ofFn l : List (Fin 1 ⊕ Fin 3)) : Multiset (Fin 1 ⊕ Fin 3)) :=
+  ⟨x.toList.length, x.toList.get, by rw [List.ofFn_get, Multiset.coe_toList]⟩
+
+/-- The Lorentz law of the gauge-field symbols, in the multiset form. -/
+lemma repLorentz_apply_mix (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ))
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (χ : Module.Dual ℝ GaugeAlgebra) :
+    repLorentz Λ (A x μ χ) =
+      lorentzMix Λ (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • A t a χ) x 0 := by
+  obtain ⟨n, l, rfl⟩ := exists_ofFn_eq x
+  rw [hA.lorentz_apply Λ n l μ χ, lorentzMix_ofFn]
+  exact Finset.sum_congr rfl fun p _ => by rw [add_zero]
+
+omit [FiniteDimensional ℂ V] in
+/-- The Lorentz law of a family of derivative symbols, in the multiset form. -/
+lemma isLorentzDerivTransforms_mix
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
+    (hF : IsLorentzDerivTransforms repLorentz rep F) (Λ : SL(2,ℂ))
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V) :
+    repLorentz Λ (F x χ) = lorentzMix Λ (fun t => F t (rep.dual Λ χ)) x 0 := by
+  obtain ⟨n, l, rfl⟩ := exists_ofFn_eq x
+  rw [hF Λ n l χ, lorentzMix_ofFn]
+  exact Finset.sum_congr rfl fun p _ => by rw [add_zero]
+
+/-- The Lorentz law of a Leibniz convolution: the mixing operator is a morphism for the
+  convolution, so a convolution of two families with Lorentz laws has one too. -/
+lemma repLorentz_derivConv
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (Λ : SL(2,ℂ)) (f f' g g' : Multiset (Fin 1 ⊕ Fin 3) → B)
+    (hf : ∀ x, repLorentz Λ (f x) = lorentzMix Λ f' x 0)
+    (hg : ∀ y, repLorentz Λ (g y) = lorentzMix Λ g' y 0)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    repLorentz Λ (derivConv f g s) = lorentzMix Λ (derivConv f' g') s 0 := by
+  rw [derivConv, map_multiset_sum, Multiset.map_map, ← lorentzMix_derivConv, derivConv]
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => by
+    rw [Function.comp_apply, hmul, hf, hg])
+
+/-- The Lorentz law of the derived action family: the derivative slots mix, the
+  direction of the gauge field mixes by its own column, and the value index is carried
+  by the transformed matter family. -/
+lemma repLorentz_actionFamConv
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+    (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+    repLorentz Λ (actionFamConv A act ρ G s φ) =
+      ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+        lorentzMix Λ (fun t => actionFamConv A act a G' t φ) s 0 := by
+  classical
+  set bg := Module.finBasis ℝ GaugeAlgebra with hbg
+  set bv := Module.finBasis ℂ V with hbv
+  rw [actionFamConv_eq_sum bg bv]
+  simp only [map_sum]
+  have hterm : ∀ (j : Fin (Module.finrank ℝ GaugeAlgebra))
+      (k : Fin (Module.finrank ℂ V)),
+      repLorentz Λ (φ (act (bg j) (bv k)) •
+          derivConv (fun x => A x ρ (bg.coord j)) (fun y => G y (bv.coord k)) s) =
+        ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • (φ (act (bg j) (bv k)) •
+          lorentzMix Λ (derivConv (fun x => A x a (bg.coord j))
+            (fun y => G' y (bv.coord k))) s 0) := by
+    intro j k
+    rw [map_smul, repLorentz_derivConv hmul Λ _
+        (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • A t a (bg.coord j)) _
+        (fun t => G' t (bv.coord k))
+      (fun x => repLorentz_apply_mix hA Λ x ρ (bg.coord j))
+      (fun y => hG y (bv.coord k))]
+    rw [show derivConv
+          (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • A t a (bg.coord j))
+          (fun y => G' y (bv.coord k)) =
+        fun r => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+          derivConv (fun x => A x a (bg.coord j)) (fun y => G' y (bv.coord k)) r from
+      funext fun r => derivConv_sum_left _ _ _ _, lorentzMix_sum_fam, Finset.smul_sum]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [lorentzMix_smul_fam, smul_comm]
+  simp only [hterm]
+  rw [sum_comm₃ (fun j k a => (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+    (φ (act (bg j) (bv k)) • lorentzMix Λ (derivConv (fun x => A x a (bg.coord j))
+      (fun y => G' y (bv.coord k))) s 0))]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [show (fun t => actionFamConv A act a G' t φ) = fun t =>
+        ∑ j, ∑ k, φ (act (bg j) (bv k)) •
+          derivConv (fun x => A x a (bg.coord j)) (fun y => G' y (bv.coord k)) t from
+      funext fun t => actionFamConv_eq_sum bg bv a G' t φ,
+    lorentzMix_sum_fam, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [lorentzMix_sum_fam, Finset.smul_sum]
+  exact Finset.sum_congr rfl fun k _ => by rw [lorentzMix_smul_fam]
+
+/-- The Lorentz law of the iterated covariant derivative of a matter family: the
+  ordered covariant slots mix by their own columns and the multiset of plain derivative
+  slots mixes by `lorentzMix`, while the value index transforms contragradiently. -/
+lemma repLorentz_covDerivIter
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A)
+    (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V),
+      act c (rep Λ v) = rep Λ (act c v))
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (hF : IsLorentzDerivTransforms repLorentz rep F) (Λ : SL(2,ℂ)) :
+    ∀ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ V),
+      repLorentz Λ (covDerivIter A act F n l s φ) =
+        ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+            lorentzMix Λ (fun t => covDerivIter A act F n p t (rep.dual Λ φ)) s 0 := by
+  have hT : ∀ (c : GaugeAlgebra) (v : V), act c (rep Λ⁻¹ v) = rep Λ⁻¹ (act c v) :=
+    fun c v => hcomm c Λ⁻¹ v
+  intro n
+  induction n with
+  | zero =>
+      intro l s φ
+      rw [Fintype.sum_unique]
+      simp only [covDerivIter_zero, Finset.univ_eq_empty, Finset.prod_empty, one_smul]
+      exact isLorentzDerivTransforms_mix hF Λ s φ
+  | succ n ih =>
+      intro l s φ
+      have hG : ∀ (y : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V),
+          repLorentz Λ (covDerivIter A act F n (fun i => l i.succ) y χ) =
+            lorentzMix Λ (fun t => (∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                (covDerivIter A act F n p t ∘ₗ (rep Λ⁻¹).dualMap)) χ) y 0 := by
+        intro y χ
+        rw [show (fun t => (∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                (covDerivIter A act F n p t ∘ₗ (rep Λ⁻¹).dualMap)) χ) =
+            fun t => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                covDerivIter A act F n p t (rep.dual Λ χ) from funext fun t => by
+          simp only [LinearMap.sum_apply, LinearMap.smul_apply, LinearMap.comp_apply]
+          rfl, lorentzMix_sum_fam, ih (fun i => l i.succ) y χ]
+        exact Finset.sum_congr rfl fun p _ => (lorentzMix_smul_fam _ _ _ _ _).symm
+      have hconv : ∀ (b : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)),
+          actionFamConv A act b (fun r => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                (covDerivIter A act F n p r ∘ₗ (rep Λ⁻¹).dualMap)) t φ =
+            ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                actionFamConv A act b (covDerivIter A act F n p) t (rep.dual Λ φ) := by
+        intro b t
+        rw [actionFamConv_sum_fam b
+          (fun p : Fin n → (Fin 1 ⊕ Fin 3) =>
+            (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)))
+          (fun p r => covDerivIter A act F n p r ∘ₗ (rep Λ⁻¹).dualMap) t φ]
+        refine Finset.sum_congr rfl fun p _ => ?_
+        rw [actionFamConv_comp_dual (rep Λ⁻¹) hT b (covDerivIter A act F n p) t φ]
+        rfl
+      rw [covDerivIter_succ, covDerivAction_apply, map_add,
+        ih (fun i => l i.succ) (l 0 ::ₘ s) φ,
+        repLorentz_actionFamConv hmul hA Λ (l 0) _ _ hG s φ]
+      -- the two terms, both as sums over a direction and a lower tuple
+      have hterm₁ : ∀ p : Fin n → (Fin 1 ⊕ Fin 3),
+          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t => covDerivIter A act F n p t (rep.dual Λ φ))
+                (l 0 ::ₘ s) 0 =
+            ∑ b, ((∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) *
+                (((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t => covDerivIter A act F n p (b ::ₘ t)
+                (rep.dual Λ φ)) s 0 := by
+        intro p
+        rw [lorentzMix_cons_apply, Finset.smul_sum]
+        refine Finset.sum_congr rfl fun b _ => ?_
+        rw [lorentzMix_apply_add Λ s _ (b ::ₘ 0), smul_smul,
+          show (fun r => (fun t => covDerivIter A act F n p t (rep.dual Λ φ))
+              (r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))))) =
+            fun r => covDerivIter A act F n p (b ::ₘ r) (rep.dual Λ φ) from
+          funext fun r => by
+            rw [show r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = b ::ₘ r from by
+              rw [show (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = {b} from rfl,
+                ← Multiset.singleton_add, add_comm]]]
+      have hterm₂ : ∀ b : Fin 1 ⊕ Fin 3,
+          (((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ) •
+              lorentzMix Λ (fun t => actionFamConv A act b
+                (fun r => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+                  (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                    (covDerivIter A act F n p r ∘ₗ (rep Λ⁻¹).dualMap)) t φ) s 0 =
+            ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              ((((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ) *
+                  (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ))) •
+                lorentzMix Λ (fun t => actionFamConv A act b
+                  (covDerivIter A act F n p) t (rep.dual Λ φ)) s 0 := by
+        intro b
+        rw [show (fun t => actionFamConv A act b
+              (fun r => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+                (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                  (covDerivIter A act F n p r ∘ₗ (rep Λ⁻¹).dualMap)) t φ) =
+            fun t => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                actionFamConv A act b (covDerivIter A act F n p) t (rep.dual Λ φ) from
+          funext fun t => hconv b t, lorentzMix_sum_fam, Finset.smul_sum]
+        exact Finset.sum_congr rfl fun p _ => by rw [lorentzMix_smul_fam, smul_smul]
+      simp only [hterm₁, hterm₂]
+      rw [Finset.sum_comm (γ := Fin n → (Fin 1 ⊕ Fin 3)), ← Finset.sum_add_distrib]
+      rw [← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => (Fin 1 ⊕ Fin 3))
+          (fun q : Fin (n + 1) → (Fin 1 ⊕ Fin 3) =>
+            (∏ i, (((SL2C.toLorentzGroup Λ).1 (q i) (l i) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t => covDerivIter A act F (n + 1) q t (rep.dual Λ φ))
+                s 0),
+        Fintype.sum_prod_type]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun p _ => ?_
+      show _ = (∏ i, (((SL2C.toLorentzGroup Λ).1
+          ((Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) i) (l i) : ℝ) : ℂ)) •
+        lorentzMix Λ (fun t => covDerivIter A act F (n + 1)
+          (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) t (rep.dual Λ φ)) s 0
+      rw [Fin.prod_univ_succ]
+      simp only [Fin.cons_zero, Fin.cons_succ]
+      rw [show (fun t => covDerivIter A act F (n + 1)
+            (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) t (rep.dual Λ φ)) =
+          fun t => covDerivIter A act F n p (b ::ₘ t) (rep.dual Λ φ) +
+            actionFamConv A act b (covDerivIter A act F n p) t (rep.dual Λ φ) from
+        funext fun t => by
+          rw [covDerivIter_succ]
+          simp only [Fin.cons_zero, Fin.cons_succ]
+          rw [covDerivAction_apply], lorentzMix_add_fam, smul_add, mul_comm]
+
+/-- The iterated covariant derivative of a matter family transforms as the covariant
+  derivatives of a Lorentz-covariant field, given the Lorentz law of the bare symbols,
+  the Lorentz law of the gauge field, and the commutation of the infinitesimal gauge
+  action with the Lorentz action on the value space. -/
+theorem isLorentzCovDerivTransforms_covDerivIter
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A)
+    (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V),
+      act c (rep Λ v) = rep Λ (act c v))
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (hF : IsLorentzDerivTransforms repLorentz rep F) :
+    IsLorentzCovDerivTransforms repLorentz rep
+      (fun {n} l => covDerivIter A act F n l 0) := by
+  intro Λ n l φ
+  rw [repLorentz_covDerivIter hmul hA hcomm F hF Λ n l 0 φ]
+  simp only [lorentzMix_zero]
+
+end LorentzLaws
+
+end IsGaugeField
+
+/-!
+
+## The Lorentz law of the covariant field-strength tower
+
+The covariant derivative of an adjoint family is the same shape as that of a matter
+family, with the action of the gauge field on the value index replaced by the bracket
+`⁅A_ρ, ·⁆`; the gauge index carries no Lorentz weight, so no contragredient twist
+appears and the induction is the matter one with `bracketFamConv` in place of
+`actionFamConv`. What is new is the seed: the field strength itself carries two
+covector indices, and its Lorentz law (`repLorentz_fieldStrength_mix`) mixes both,
+the derivative terms through `repLorentz_apply_mix` and the commutator term through
+the bracket convolution.
+
+-/
+
+namespace IsGaugeField
+
+variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+variable {repLorentz : Representation ℂ SL(2,ℂ) B}
+variable {repGauge : Representation ℂ JetGaugeGroupI B}
+
+/-- The derived bracket family expanded in a basis of the gauge algebra. -/
+lemma bracketFamConv_eq_sum (ρ : Fin 1 ⊕ Fin 3)
+    (G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    bracketFamConv A ρ G s φ =
+      ∑ j, ∑ k, ((φ ⁅Module.Free.chooseBasis ℝ GaugeAlgebra j,
+            Module.Free.chooseBasis ℝ GaugeAlgebra k⁆ : ℝ) : ℂ) •
+        derivConv (fun x => A x ρ ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord j))
+          (fun y => G y ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord k)) s := by
+  rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+  rw [Multiset.map_congr rfl fun p _ => bracketFam_apply_eq_sum (A p.1 ρ) (G p.2) φ]
+  rw [multiset_sum_map_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [multiset_sum_map_sum]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [derivConv, Multiset.smul_sum, Multiset.map_map]
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => (Complex.coe_smul _ _).symm)
+
+/-- The derived bracket family is linear in the second family. -/
+lemma bracketFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c : ι → ℂ)
+    (H : ι → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    bracketFamConv A ρ (fun t => ∑ i, c i • H i t) s φ =
+      ∑ i, c i • bracketFamConv A ρ (H i) s φ := by
+  classical
+  have hin : ∀ j k, derivConv
+      (fun x => A x ρ ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord j))
+      (fun y => (∑ i, c i • H i y)
+        ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord k)) s =
+      ∑ i, c i • derivConv
+        (fun x => A x ρ ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord j))
+        (fun y => H i y ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord k)) s := by
+    intro j k
+    rw [← derivConv_sum_right]
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply]
+  have hrhs : ∀ i, c i • bracketFamConv A ρ (H i) s φ =
+      ∑ j, ∑ k, (((φ ⁅Module.Free.chooseBasis ℝ GaugeAlgebra j,
+            Module.Free.chooseBasis ℝ GaugeAlgebra k⁆ : ℝ) : ℂ) * c i) •
+        derivConv (fun x => A x ρ ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord j))
+          (fun y => H i y ((Module.Free.chooseBasis ℝ GaugeAlgebra).coord k)) s := by
+    intro i
+    rw [bracketFamConv_eq_sum, Finset.smul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun k _ => by rw [smul_smul, mul_comm]
+  rw [bracketFamConv_eq_sum]
+  simp only [hin, Finset.smul_sum, smul_smul, hrhs]
+  exact sum_comm₃ _
+
+/-- The Lorentz law of the derived bracket family. -/
+lemma repLorentz_bracketFamConv
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+    (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repLorentz Λ (bracketFamConv A ρ G s φ) =
+      ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+        lorentzMix Λ (fun t => bracketFamConv A a G' t φ) s 0 := by
+  classical
+  rw [bracketFamConv_eq_sum]
+  set bg := Module.Free.chooseBasis ℝ GaugeAlgebra with hbg
+  simp only [map_sum]
+  have hterm : ∀ (j k : Module.Free.ChooseBasisIndex ℝ GaugeAlgebra),
+      repLorentz Λ (((φ ⁅bg j, bg k⁆ : ℝ) : ℂ) •
+          derivConv (fun x => A x ρ (bg.coord j)) (fun y => G y (bg.coord k)) s) =
+        ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • (((φ ⁅bg j, bg k⁆ : ℝ) : ℂ) •
+          lorentzMix Λ (derivConv (fun x => A x a (bg.coord j))
+            (fun y => G' y (bg.coord k))) s 0) := by
+    intro j k
+    rw [map_smul, repLorentz_derivConv hmul Λ _
+        (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • A t a (bg.coord j)) _
+        (fun t => G' t (bg.coord k))
+      (fun x => repLorentz_apply_mix hA Λ x ρ (bg.coord j))
+      (fun y => hG y (bg.coord k))]
+    rw [show derivConv
+          (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) • A t a (bg.coord j))
+          (fun y => G' y (bg.coord k)) =
+        fun r => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+          derivConv (fun x => A x a (bg.coord j)) (fun y => G' y (bg.coord k)) r from
+      funext fun r => derivConv_sum_left _ _ _ _, lorentzMix_sum_fam, Finset.smul_sum]
+    exact Finset.sum_congr rfl fun a _ => by
+      rw [lorentzMix_smul_fam, smul_comm]
+  simp only [hterm]
+  rw [sum_comm₃ (fun j k a => (((SL2C.toLorentzGroup Λ).1 a ρ : ℝ) : ℂ) •
+    (((φ ⁅bg j, bg k⁆ : ℝ) : ℂ) • lorentzMix Λ (derivConv (fun x => A x a (bg.coord j))
+      (fun y => G' y (bg.coord k))) s 0))]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [show (fun t => bracketFamConv A a G' t φ) = fun t =>
+        ∑ j, ∑ k, ((φ ⁅bg j, bg k⁆ : ℝ) : ℂ) •
+          derivConv (fun x => A x a (bg.coord j)) (fun y => G' y (bg.coord k)) t from
+      funext fun t => bracketFamConv_eq_sum a G' t φ,
+    lorentzMix_sum_fam, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [lorentzMix_sum_fam, Finset.smul_sum]
+  exact Finset.sum_congr rfl fun k _ => by rw [lorentzMix_smul_fam]
+
+/-- The iterated covariant derivative in the adjoint is linear in the seed family. -/
+lemma iteratedCovDerivAdjoint_sum_fam {ι : Type} [Fintype ι] (c : ι → ℂ)
+    (H : ι → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B) :
+    ∀ (l : List (Fin 1 ⊕ Fin 3)) (x : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      iteratedCovDerivAdjoint A l (fun t => ∑ i, c i • H i t) x φ =
+        ∑ i, c i • iteratedCovDerivAdjoint A l (H i) x φ := by
+  intro l
+  induction l with
+  | nil =>
+      intro x φ
+      simp only [iteratedCovDerivAdjoint, LinearMap.sum_apply, LinearMap.smul_apply]
+  | cons ρ l ih =>
+      intro x φ
+      have hfam : iteratedCovDerivAdjoint A l (fun t => ∑ i, c i • H i t) =
+          fun t => ∑ i, c i • iteratedCovDerivAdjoint A l (H i) t :=
+        funext fun t => LinearMap.ext fun χ => by
+          rw [ih t χ]
+          simp only [LinearMap.sum_apply, LinearMap.smul_apply]
+      show covDerivAdjoint A (iteratedCovDerivAdjoint A l
+        (fun t => ∑ i, c i • H i t)) ρ x φ = _
+      rw [covDerivAdjoint_apply, hfam, bracketFamConv_sum_fam]
+      simp only [LinearMap.sum_apply, LinearMap.smul_apply]
+      rw [← Finset.sum_add_distrib]
+      exact Finset.sum_congr rfl fun i _ => by rw [← smul_add]; rfl
+
+/-- The Lorentz law of the iterated covariant derivative in the adjoint: the covariant
+  slots mix by their own columns and the seed family is replaced by its transform. -/
+lemma repLorentz_iteratedCovDerivAdjoint
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ))
+    (F F' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (hF : ∀ x χ, repLorentz Λ (F x χ) = lorentzMix Λ (fun t => F' t χ) x 0) :
+    ∀ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (x : Multiset (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℝ GaugeAlgebra),
+      repLorentz Λ (iteratedCovDerivAdjoint A (List.ofFn l) F x φ) =
+        ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+            lorentzMix Λ (fun t =>
+              iteratedCovDerivAdjoint A (List.ofFn p) F' t φ) x 0 := by
+  intro n
+  induction n with
+  | zero =>
+      intro l x φ
+      rw [Fintype.sum_unique]
+      simp only [List.ofFn_zero, Finset.univ_eq_empty, Finset.prod_empty, one_smul]
+      exact hF x φ
+  | succ n ih =>
+      intro l x φ
+      have hG : ∀ (y : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℝ GaugeAlgebra),
+          repLorentz Λ (iteratedCovDerivAdjoint A
+              (List.ofFn fun i : Fin n => l i.succ) F y χ) =
+            lorentzMix Λ (fun t => (∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                iteratedCovDerivAdjoint A (List.ofFn p) F' t) χ) y 0 := by
+        intro y χ
+        rw [show (fun t => (∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                iteratedCovDerivAdjoint A (List.ofFn p) F' t) χ) =
+            fun t => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                iteratedCovDerivAdjoint A (List.ofFn p) F' t χ from funext fun t => by
+          simp only [LinearMap.sum_apply, LinearMap.smul_apply],
+          lorentzMix_sum_fam, ih (fun i => l i.succ) y χ]
+        exact Finset.sum_congr rfl fun p _ => (lorentzMix_smul_fam _ _ _ _ _).symm
+      rw [show (List.ofFn l) = l 0 :: List.ofFn (fun i : Fin n => l i.succ) from
+        List.ofFn_succ]
+      show repLorentz Λ (covDerivAdjoint A (iteratedCovDerivAdjoint A
+        (List.ofFn fun i : Fin n => l i.succ) F) (l 0) x φ) = _
+      rw [covDerivAdjoint_apply, map_add, ih (fun i => l i.succ) (l 0 ::ₘ x) φ,
+        repLorentz_bracketFamConv hmul hA Λ (l 0) _ _ hG x φ]
+      have hterm₁ : ∀ p : Fin n → (Fin 1 ⊕ Fin 3),
+          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t => iteratedCovDerivAdjoint A (List.ofFn p) F' t φ)
+                (l 0 ::ₘ x) 0 =
+            ∑ b, ((∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) *
+                (((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t => iteratedCovDerivAdjoint A (List.ofFn p) F'
+                (b ::ₘ t) φ) x 0 := by
+        intro p
+        rw [lorentzMix_cons_apply, Finset.smul_sum]
+        refine Finset.sum_congr rfl fun b _ => ?_
+        rw [lorentzMix_apply_add Λ x _ (b ::ₘ 0), smul_smul,
+          show (fun r => (fun t => iteratedCovDerivAdjoint A (List.ofFn p) F' t φ)
+              (r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))))) =
+            fun r => iteratedCovDerivAdjoint A (List.ofFn p) F' (b ::ₘ r) φ from
+          funext fun r => by
+            rw [show r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = b ::ₘ r from by
+              rw [show (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = {b} from rfl,
+                ← Multiset.singleton_add, add_comm]]]
+      have hterm₂ : ∀ b : Fin 1 ⊕ Fin 3,
+          (((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ) •
+              lorentzMix Λ (fun t => bracketFamConv A b
+                (fun r => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+                  (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                    iteratedCovDerivAdjoint A (List.ofFn p) F' r) t φ) x 0 =
+            ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              ((((SL2C.toLorentzGroup Λ).1 b (l 0) : ℝ) : ℂ) *
+                  (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ))) •
+                lorentzMix Λ (fun t => bracketFamConv A b
+                  (iteratedCovDerivAdjoint A (List.ofFn p) F') t φ) x 0 := by
+        intro b
+        rw [show (fun t => bracketFamConv A b
+              (fun r => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+                (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                  iteratedCovDerivAdjoint A (List.ofFn p) F' r) t φ) =
+            fun t => ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+              (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i.succ) : ℝ) : ℂ)) •
+                bracketFamConv A b (iteratedCovDerivAdjoint A (List.ofFn p) F') t φ from
+          funext fun t => bracketFamConv_sum_fam b _ _ t φ,
+          lorentzMix_sum_fam, Finset.smul_sum]
+        exact Finset.sum_congr rfl fun p _ => by rw [lorentzMix_smul_fam, smul_smul]
+      simp only [hterm₁, hterm₂]
+      rw [Finset.sum_comm (γ := Fin n → (Fin 1 ⊕ Fin 3)), ← Finset.sum_add_distrib]
+      rw [← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => (Fin 1 ⊕ Fin 3))
+          (fun q : Fin (n + 1) → (Fin 1 ⊕ Fin 3) =>
+            (∏ i, (((SL2C.toLorentzGroup Λ).1 (q i) (l i) : ℝ) : ℂ)) •
+              lorentzMix Λ (fun t =>
+                iteratedCovDerivAdjoint A (List.ofFn q) F' t φ) x 0),
+        Fintype.sum_prod_type]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun p _ => ?_
+      show _ = (∏ i, (((SL2C.toLorentzGroup Λ).1
+          ((Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) i) (l i) : ℝ) : ℂ)) •
+        lorentzMix Λ (fun t => iteratedCovDerivAdjoint A
+          (List.ofFn (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3))) F' t φ) x 0
+      rw [Fin.prod_univ_succ]
+      simp only [Fin.cons_zero, Fin.cons_succ]
+      rw [show (fun t => iteratedCovDerivAdjoint A
+            (List.ofFn (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3))) F' t φ) =
+          fun t => iteratedCovDerivAdjoint A (List.ofFn p) F' (b ::ₘ t) φ +
+            bracketFamConv A b (iteratedCovDerivAdjoint A (List.ofFn p) F') t φ from
+        funext fun t => by
+          rw [show (List.ofFn (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3))) =
+            b :: List.ofFn p from by
+              rw [List.ofFn_succ]
+              simp only [Fin.cons_zero, Fin.cons_succ]]
+          rfl, lorentzMix_add_fam, smul_add, mul_comm]
+
+/-- The Lorentz law of the field strength: both covector indices mix by their columns,
+  and the derivative slots mix by `lorentzMix`. -/
+lemma repLorentz_fieldStrength_mix
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3)
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repLorentz Λ (fieldStrength A μ ν x φ) =
+      lorentzMix Λ (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • fieldStrength A a b t φ) x 0 := by
+  have hcons : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (b : Fin 1 ⊕ Fin 3),
+      r + (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = b ::ₘ r := by
+    intro r b
+    rw [show (b ::ₘ (0 : Multiset (Fin 1 ⊕ Fin 3))) = {b} from rfl,
+      ← Multiset.singleton_add, add_comm]
+  -- the derivative terms
+  have hA1 : ∀ κ σ : Fin 1 ⊕ Fin 3, repLorentz Λ (A (κ ::ₘ x) σ φ) =
+      lorentzMix Λ (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a κ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b σ : ℝ) : ℂ) • A (a ::ₘ t) b φ) x 0 := by
+    intro κ σ
+    rw [repLorentz_apply_mix hA Λ (κ ::ₘ x) σ φ, lorentzMix_cons_apply,
+      lorentzMix_sum_fam]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [lorentzMix_smul_fam, lorentzMix_apply_add Λ x
+      (fun t => ∑ b, (((SL2C.toLorentzGroup Λ).1 b σ : ℝ) : ℂ) • A t b φ) (a ::ₘ 0)]
+    congr 2
+    funext r
+    rw [hcons r a]
+  -- the commutator term
+  have hbc : ∀ (κ σ : Fin 1 ⊕ Fin 3) (t : Multiset (Fin 1 ⊕ Fin 3)),
+      commutatorFam A κ σ t = bracketFamConv A κ (fun r => A r σ) t := fun _ _ _ => rfl
+  have hC : repLorentz Λ (commutatorFam A μ ν x φ) =
+      lorentzMix Λ (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • commutatorFam A a b t φ) x 0 := by
+    have hG : ∀ (y : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℝ GaugeAlgebra),
+        repLorentz Λ (A y ν χ) = lorentzMix Λ (fun t =>
+          (∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A t b) χ) y 0 := by
+      intro y χ
+      rw [repLorentz_apply_mix hA Λ y ν χ]
+      congr 1
+    rw [hbc μ ν x, repLorentz_bracketFamConv hmul hA Λ μ (fun r => A r ν)
+      (fun t => ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A t b) hG x φ,
+      lorentzMix_sum_fam]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [lorentzMix_smul_fam]
+    congr 2
+    funext t
+    rw [bracketFamConv_sum_fam a _ (fun b r => A r b) t φ]
+    exact Finset.sum_congr rfl fun b _ => by rw [hbc a b t]
+  -- the index swap of the second derivative term
+  have hswap : ∀ t : Multiset (Fin 1 ⊕ Fin 3),
+      (∑ a, (((SL2C.toLorentzGroup Λ).1 a ν : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b μ : ℝ) : ℂ) • A (a ::ₘ t) b φ) =
+      ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A (b ::ₘ t) a φ := by
+    intro t
+    simp only [Finset.smul_sum]
+    rw [Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => smul_comm _ _ _
+  -- assemble
+  rw [show (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • fieldStrength A a b t φ) =
+      fun t => ((∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A (a ::ₘ t) b φ) -
+        (∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A (b ::ₘ t) a φ)) +
+        ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • commutatorFam A a b t φ from
+    funext fun t => by
+      simp only [fieldStrength_apply, smul_sub, smul_add, Finset.sum_sub_distrib,
+        Finset.sum_add_distrib],
+    lorentzMix_add_fam, lorentzMix_sub_fam, fieldStrength_apply, map_add, map_sub,
+    hA1 μ ν, hA1 ν μ, hC]
+  rw [show (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a ν : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b μ : ℝ) : ℂ) • A (a ::ₘ t) b φ) =
+      fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • A (b ::ₘ t) a φ from
+    funext hswap]
+
+/-- The Lorentz law of the covariant tower of the field strength: the covariant slots
+  mix by their own columns and the two covector indices of the field strength mix by
+  theirs. -/
+lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength
+    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (n : ℕ)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    repLorentz Λ (iteratedCovDerivAdjoint A (List.ofFn l) (fieldStrength A μ ν) 0 φ) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+        ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) •
+          iteratedCovDerivAdjoint A (List.ofFn p) (fieldStrength A a b) 0 φ := by
+  have hF' : ∀ (y : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℝ GaugeAlgebra),
+      repLorentz Λ (fieldStrength A μ ν y χ) =
+        lorentzMix Λ (fun t => (∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • fieldStrength A a b t) χ)
+          y 0 := by
+    intro y χ
+    rw [repLorentz_fieldStrength_mix hmul hA Λ μ ν y χ]
+    congr 1
+  rw [repLorentz_iteratedCovDerivAdjoint hmul hA Λ (fieldStrength A μ ν)
+    (fun t => ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+      ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • fieldStrength A a b t) hF' n l 0 φ]
+  simp only [lorentzMix_zero]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  congr 1
+  rw [iteratedCovDerivAdjoint_sum_fam
+    (fun a => (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ))
+    (fun a t => ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • fieldStrength A a b t)
+    (List.ofFn p) 0 φ]
+  exact Finset.sum_congr rfl fun a _ => by
+    rw [iteratedCovDerivAdjoint_sum_fam
+      (fun b => (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ))
+      (fun b t => fieldStrength A a b t) (List.ofFn p) 0 φ]
+
+end IsGaugeField
 
 set_option linter.unusedVariables false
 namespace IsStandardModel
@@ -2028,28 +3264,127 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
     · exact Or.inr h2
 
 
-TODO (lines := 2029-2030) "Prove the Lorentz transformation laws of the covariant
-  towers, the last thing missing from the construction of `IsCovStandardModel` in
-  CovStandardModel.lean: with them, `isCovStandardModel_of_lorentzCovDeriv` loses its
-  thirteen hypotheses. What is needed is that `IsGaugeField.covDerivIter` and
-  `IsGaugeField.iteratedCovDerivAdjoint` satisfy `IsLorentzCovDerivTransforms`, given
-  the Lorentz laws of the bare symbols — the `repLorentz_*` fields above and
-  `lorentz_apply` of `IsGaugeField`. Three ingredients. First, the Lorentz mixing of the
-  derivative slots should be written as an operator on multiset-indexed families defined
-  by recursion on the multiset — peel a direction `a`, replace it by every direction `b`
-  weighted by the Lorentz matrix entry, mix the rest — rather than as a sum over ordered
-  tuples; peeling two directions commutes, so the recursion is well defined on a
-  multiset, and it agrees with the tuple form of `IsLorentzDerivTransforms`. Second,
-  that operator is a morphism for the Leibniz convolution over `Multiset.antidiagonal`,
-  by induction on the multiset using `Multiset.antidiagonal_cons`; this is what carries
-  the law through `actionFamConv` and `bracketFamConv`, both of which are, after
-  expansion in a basis, scalar combinations of convolutions of products in the algebra.
-  Third — and this is not yet recorded anywhere — the gauge-algebra action on each value
-  space must commute with the Lorentz action on it, since the correction term of a
-  covariant derivative acts on the value index by `act` while the Lorentz group acts on
-  it by the species representation. That is true because the two act on different tensor
-  factors, but it needs a lemma for each of the ten fermion species (for the Higgs it is
-  trivial, the Lorentz representation being trivial)."
+/-!
+
+## H. The Lorentz laws of the covariant matter towers
+
+Each covariant matter tower is an iterated covariant derivative of the corresponding
+bare family, so `IsGaugeField.isLorentzCovDerivTransforms_covDerivIter` turns the bare
+Lorentz law recorded by `IsStandardModel` into the covariant one. The commutation of
+the infinitesimal gauge action with the Lorentz action, which that theorem needs, is
+the species lemma proved above; for the conjugate towers it is transported by
+`actionConj_comm_repConj`.
+
+-/
+
+include h in
+/-- The covariant tower of the Higgs transforms as a Lorentz scalar. -/
+lemma repLorentz_covDerivH :
+    IsLorentzCovDerivTransforms repLorentz
+      (Representation.trivial ℂ SL(2,ℂ) HiggsVec) (fun {_n} l => h.covDerivH l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    HiggsVec.gaugeAlgebraAction_comm_repLorentz H h.repLorentz_H
+
+include h in
+/-- The covariant tower of the conjugate Higgs transforms as a Lorentz scalar. -/
+lemma repLorentz_covDerivBarH :
+    IsLorentzCovDerivTransforms repLorentz
+      (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj
+      (fun {_n} l => h.covDerivBarH l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj HiggsVec.gaugeAlgebraAction _
+      HiggsVec.gaugeAlgebraAction_comm_repLorentz) barH h.repLorentz_barH
+
+include h in
+/-- The covariant tower of the down-type quarks transforms as a right-handed Weyl
+  spinor. -/
+lemma repLorentz_covDerivD (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz DownSinglet.repLorentzGroup
+      (fun {_n} l => h.covDerivD i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (d i) (h.repLorentz_d i)
+
+include h in
+/-- The covariant tower of the conjugate down-type quarks transforms in the conjugate
+  Weyl representation. -/
+lemma repLorentz_covDerivBarD (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz DownSinglet.repLorentzGroup.conj
+      (fun {_n} l => h.covDerivBarD i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj DownSinglet.gaugeAlgebraAction _
+      DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (bard i) (h.repLorentz_bard i)
+
+include h in
+/-- The covariant tower of the up-type quarks transforms as a right-handed Weyl spinor. -/
+lemma repLorentz_covDerivU (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz UpSinglet.repLorentzGroup
+      (fun {_n} l => h.covDerivU i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (u i) (h.repLorentz_u i)
+
+include h in
+/-- The covariant tower of the conjugate up-type quarks transforms in the conjugate Weyl
+  representation. -/
+lemma repLorentz_covDerivBarU (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz UpSinglet.repLorentzGroup.conj
+      (fun {_n} l => h.covDerivBarU i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj UpSinglet.gaugeAlgebraAction _
+      UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (baru i) (h.repLorentz_baru i)
+
+include h in
+/-- The covariant tower of the quark doublets transforms as a left-handed Weyl spinor. -/
+lemma repLorentz_covDerivQ (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz QuarkDoublet.repLorentzGroup
+      (fun {_n} l => h.covDerivQ i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (Q i) (h.repLorentz_Q i)
+
+include h in
+/-- The covariant tower of the conjugate quark doublets transforms in the conjugate Weyl
+  representation. -/
+lemma repLorentz_covDerivBarQ (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz QuarkDoublet.repLorentzGroup.conj
+      (fun {_n} l => h.covDerivBarQ i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj QuarkDoublet.gaugeAlgebraAction _
+      QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (barQ i) (h.repLorentz_barQ i)
+
+include h in
+/-- The covariant tower of the lepton doublets transforms as a left-handed Weyl spinor. -/
+lemma repLorentz_covDerivL (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz LeptonDoublet.repLorentzGroup
+      (fun {_n} l => h.covDerivL i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (L i) (h.repLorentz_L i)
+
+include h in
+/-- The covariant tower of the conjugate lepton doublets transforms in the conjugate Weyl
+  representation. -/
+lemma repLorentz_covDerivBarL (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz LeptonDoublet.repLorentzGroup.conj
+      (fun {_n} l => h.covDerivBarL i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj LeptonDoublet.gaugeAlgebraAction _
+      LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (barL i) (h.repLorentz_barL i)
+
+include h in
+/-- The covariant tower of the lepton singlets transforms as a right-handed Weyl spinor. -/
+lemma repLorentz_covDerivE (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz LeptonSinglet.repLorentzGroup
+      (fun {_n} l => h.covDerivE i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (e i) (h.repLorentz_e i)
+
+include h in
+/-- The covariant tower of the conjugate lepton singlets transforms in the conjugate Weyl
+  representation. -/
+lemma repLorentz_covDerivBarE (i : Fin 3) :
+    IsLorentzCovDerivTransforms repLorentz LeptonSinglet.repLorentzGroup.conj
+      (fun {_n} l => h.covDerivBarE i l) :=
+  IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+    (actionConj_comm_repConj LeptonSinglet.gaugeAlgebraAction _
+      LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (bare i) (h.repLorentz_bare i)
 
 end IsStandardModel
 

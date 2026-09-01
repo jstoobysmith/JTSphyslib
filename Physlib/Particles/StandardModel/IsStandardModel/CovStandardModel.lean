@@ -33,14 +33,11 @@ The gauge equivariance of the towers is section E; their mass weights are sectio
 which grades the algebra by the weight eigenspaces of `massWeightPoly` and pushes the
 grading through the recursion defining a covariant derivative; their statistics are
 section J, which reads them off the statistics of the bare symbols because each term
-of a tower carries exactly one bare matter symbol. What is *not* proved here is the
-Lorentz transformation law of a covariant tower, which
-`isCovStandardModel_of_lorentzCovDeriv` therefore takes as thirteen explicit
-hypotheses. They are not further assumptions about the model: each follows from the
-Lorentz law `IsStandardModel` records for the corresponding bare symbols, together
-with the fact that the gauge-algebra action on the value space commutes with the
-Lorentz action on it. Proving them is the one thing that remains; the `TODO` at the
-end of [`Basic.lean`](Basic.lean) says what the proof needs.
+of a tower carries exactly one bare matter symbol. Their Lorentz transformation laws
+are section H of [`Basic.lean`](Basic.lean): each follows from the Lorentz law
+`IsStandardModel` records for the corresponding bare symbols, together with the fact
+that the gauge-algebra action on the value space commutes with the Lorentz action on
+it. So `isCovStandardModel` is unconditional.
 
 ## ii. Key results
 
@@ -63,8 +60,8 @@ end of [`Basic.lean`](Basic.lean) says what the proof needs.
 - `IsStandardModel.commute_covDerivIter_covDerivIter` and
   `IsStandardModel.anticommute_covDerivIter_covDerivIter` : the statistics of a pair of
   towers is the statistics of the pair of bare families.
-- `IsStandardModel.isCovStandardModel_of_lorentzCovDeriv` : the covariant form of the
-  theory, modulo the Lorentz laws of the towers.
+- `IsStandardModel.repLorentz_covF` : the Lorentz law of the field-strength tower.
+- `IsStandardModel.isCovStandardModel` : the covariant form of the theory.
 
 ## iii. Table of contents
 
@@ -2285,55 +2282,34 @@ lemma covBarE_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
 ## K. The covariant form of the theory
 
 Everything above assembles into an `IsCovStandardModel` for the covariant towers,
-acted on by the global gauge group and the Lorentz group — except for the Lorentz
-transformation laws of the towers themselves, which are taken here as explicit
-hypotheses. They are *not* new assumptions about the model: they are theorems about
-`IsGaugeField.covDerivIter` and `IsGaugeField.iteratedCovDerivAdjoint` which follow
-from the Lorentz laws that `IsStandardModel` already records for the bare symbols, and
-which remain to be proved. See the `TODO` at the end of [`Basic.lean`](Basic.lean) for
-what that proof needs.
+acted on by the global gauge group and the Lorentz group. The Lorentz laws of the
+matter towers are section H of [`Basic.lean`](Basic.lean); the one for the
+field-strength tower is `repLorentz_covF` just below, which is
+`IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength` read in the
+ordered-tuple indexing.
 
 -/
 
 include h in
-/-- The covariant form of the Standard Model, modulo the Lorentz transformation laws
-  of the covariant towers. Every gauge-equivariance, mass-weight and commutation
-  obligation of `IsCovStandardModel` is discharged from `IsStandardModel`; the
-  thirteen `hLorentz` arguments are the Lorentz laws of the towers, which follow from
-  the bare Lorentz laws recorded by `IsStandardModel` but are not yet proved, and are
-  therefore passed in. -/
-theorem isCovStandardModel_of_lorentzCovDeriv
-    (hLorentzF : ∀ (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
-        (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
-      repLorentz Λ (h.covF l μ ν φ) =
-        ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
-          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
-        ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
-        ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • h.covF p a b φ)
-    (hLorentzH : IsLorentzCovDerivTransforms repLorentz
-      (Representation.trivial ℂ SL(2,ℂ) HiggsVec) (fun {_n} l => h.covDerivH l))
-    (hLorentzBarH : IsLorentzCovDerivTransforms repLorentz
-      (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj (fun {_n} l => h.covDerivBarH l))
-    (hLorentzD : ∀ i, IsLorentzCovDerivTransforms repLorentz DownSinglet.repLorentzGroup
-      (fun {_n} l => h.covDerivD i l))
-    (hLorentzBarD : ∀ i, IsLorentzCovDerivTransforms repLorentz DownSinglet.repLorentzGroup.conj
-      (fun {_n} l => h.covDerivBarD i l))
-    (hLorentzU : ∀ i, IsLorentzCovDerivTransforms repLorentz UpSinglet.repLorentzGroup
-      (fun {_n} l => h.covDerivU i l))
-    (hLorentzBarU : ∀ i, IsLorentzCovDerivTransforms repLorentz UpSinglet.repLorentzGroup.conj
-      (fun {_n} l => h.covDerivBarU i l))
-    (hLorentzQ : ∀ i, IsLorentzCovDerivTransforms repLorentz QuarkDoublet.repLorentzGroup
-      (fun {_n} l => h.covDerivQ i l))
-    (hLorentzBarQ : ∀ i, IsLorentzCovDerivTransforms repLorentz QuarkDoublet.repLorentzGroup.conj
-      (fun {_n} l => h.covDerivBarQ i l))
-    (hLorentzL : ∀ i, IsLorentzCovDerivTransforms repLorentz LeptonDoublet.repLorentzGroup
-      (fun {_n} l => h.covDerivL i l))
-    (hLorentzBarL : ∀ i, IsLorentzCovDerivTransforms repLorentz LeptonDoublet.repLorentzGroup.conj
-      (fun {_n} l => h.covDerivBarL i l))
-    (hLorentzE : ∀ i, IsLorentzCovDerivTransforms repLorentz LeptonSinglet.repLorentzGroup
-      (fun {_n} l => h.covDerivE i l))
-    (hLorentzBarE : ∀ i, IsLorentzCovDerivTransforms repLorentz LeptonSinglet.repLorentzGroup.conj
-      (fun {_n} l => h.covDerivBarE i l)) :
+/-- The Lorentz law of the covariant field-strength tower: the covariant derivative
+  slots mix by their own columns of the Lorentz matrix, and the two covector indices
+  of the field strength mix by theirs. -/
+lemma repLorentz_covF (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    repLorentz Λ (h.covF l μ ν φ) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+      ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+      ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • h.covF p a b φ :=
+  IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength h.repLorentz_mul
+    h.repJet_A Λ n l μ ν φ
+
+include h in
+/-- The covariant form of the Standard Model. Every gauge-equivariance, Lorentz,
+  mass-weight and commutation obligation of `IsCovStandardModel` is discharged from
+  `IsStandardModel`: the Lorentz laws of the matter towers are section H of
+  `Basic.lean`, the one of the field-strength tower is `repLorentz_covF`. -/
+theorem isCovStandardModel :
     IsCovStandardModel B (repGlobal repJet) h.repGlobal_mul repLorentz h.repLorentz_mul
       massWeightPoly (fun {_n} l => h.covDerivH l) (fun {_n} l => h.covDerivBarH l)
       (fun {_n} l μ ν => h.covF l μ ν)
@@ -2350,11 +2326,11 @@ theorem isCovStandardModel_of_lorentzCovDeriv
       barH_comm_barH := fun φ ψ _n₁ _n₂ l₁ l₂ => h.covBarH_comm_covBarH l₁ l₂ φ ψ
       H_massWeight := fun φ _n l => h.massWeight_covDerivH l φ
       barH_massWeight := fun φ _n l => h.massWeight_covDerivBarH l φ
-      repLorentz_H := hLorentzH
-      repLorentz_barH := hLorentzBarH }
+      repLorentz_H := h.repLorentz_covDerivH
+      repLorentz_barH := h.repLorentz_covDerivBarH }
   isGaugeSector :=
     { repGauge_F := fun g {_n} l μ ν φ => h.repGlobal_covF g l μ ν φ
-      repLorentz_F := hLorentzF
+      repLorentz_F := h.repLorentz_covF
       massWeight_F := fun {_n} l μ ν φ => h.massWeight_covF l μ ν φ
       F_comm_F := fun {_n _m} l μ ν ψ l' μ' ν' ψ' =>
         h.covF_comm_covF l l' μ ν μ' ν' ψ ψ' }
@@ -2369,16 +2345,16 @@ theorem isCovStandardModel_of_lorentzCovDeriv
       repGauge_barL := fun g i {_n} l φ => h.repGlobal_covDerivBarL g i l φ
       repGauge_e := fun g i {_n} l φ => h.repGlobal_covDerivE g i l φ
       repGauge_bare := fun g i {_n} l φ => h.repGlobal_covDerivBarE g i l φ
-      repLorentz_d := hLorentzD
-      repLorentz_bard := hLorentzBarD
-      repLorentz_u := hLorentzU
-      repLorentz_baru := hLorentzBarU
-      repLorentz_Q := hLorentzQ
-      repLorentz_barQ := hLorentzBarQ
-      repLorentz_L := hLorentzL
-      repLorentz_barL := hLorentzBarL
-      repLorentz_e := hLorentzE
-      repLorentz_bare := hLorentzBarE
+      repLorentz_d := h.repLorentz_covDerivD
+      repLorentz_bard := h.repLorentz_covDerivBarD
+      repLorentz_u := h.repLorentz_covDerivU
+      repLorentz_baru := h.repLorentz_covDerivBarU
+      repLorentz_Q := h.repLorentz_covDerivQ
+      repLorentz_barQ := h.repLorentz_covDerivBarQ
+      repLorentz_L := h.repLorentz_covDerivL
+      repLorentz_barL := h.repLorentz_covDerivBarL
+      repLorentz_e := h.repLorentz_covDerivE
+      repLorentz_bare := h.repLorentz_covDerivBarE
       massWeight_d := fun i {_n} l φ => h.massWeight_covDerivD i l φ
       massWeight_bard := fun i {_n} l φ => h.massWeight_covDerivBarD i l φ
       massWeight_u := fun i {_n} l φ => h.massWeight_covDerivU i l φ
@@ -2477,7 +2453,10 @@ theorem isCovStandardModel_of_lorentzCovDeriv
   barH_comm_e := fun {_n _m} l φ i l' φ' => h.covBarH_comm_covE i l l' φ φ'
   barH_comm_bare := fun {_n _m} l φ i l' φ' => h.covBarH_comm_covBarE i l l' φ φ'
 
-TODO (lines := 2313-2336) "These should be proved results."
+TODO (lines := 2454-2455) "Below this I would be expecting
+  the explicit form of the invariance lemmas, relating
+  invariance of the algebra generaged by `IsStandardModel` to the
+  (global) invariance of the algebra generated by `IsCovStandardModel`."
 
 end IsStandardModel
 

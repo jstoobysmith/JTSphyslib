@@ -71,10 +71,6 @@ structure IsSU3BiFundamental (B : Type*) [AddCommMonoid B] [Module ℂ B]
     repGauge g (T l) = ∑ a : Fin 2 → Fin 3,
       (∏ i : Fin 2, (GaugeGroupI.toSU3 g).1 (a i) (l i)) • T a
 
-TODO (lines := 63-73) "Make a file IsSU3FunAntiFun, which
-  is the analogue of IsSU2BiFundamental, and which contains the invariant
-  δ^a_b."
-
 namespace IsSU3BiFundamental
 set_option linter.unusedVariables false
 

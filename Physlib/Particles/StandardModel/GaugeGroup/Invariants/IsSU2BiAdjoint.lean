@@ -638,6 +638,10 @@ lemma traceContraction_mem_piece_zero (hmul : IsMulRep repGauge) :
 
 end Decomposition
 
+TODO (lines := 638-639) "Fill in the rest of this file, using
+  IsSU3BiAdjoint.lean as a template. We should finish with a similar result
+  at the end."
+
 end IsSU2BiAdjoint
 
 end StandardModel

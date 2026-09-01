@@ -229,6 +229,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFunda
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
