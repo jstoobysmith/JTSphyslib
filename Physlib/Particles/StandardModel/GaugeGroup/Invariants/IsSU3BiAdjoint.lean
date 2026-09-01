@@ -24,22 +24,29 @@ proposition here records how such a product transforms.
 The transformation law itself is `IsSU3BiAdjointMat`, which relates one element of
 `SU(3)` to one linear map on `B` and mentions no other factor of the gauge group, through
 `su3AdjointMatrix`, the adjoint matrix of an `SU(3)` element alone. `IsSU3BiAdjoint` says
-that every gauge transformation obeys that law through its `SU(3)` part. Everything the
-file proves about how the components move is proved at the level of `IsSU3BiAdjointMat`
-and instantiated afterwards, so the mathematics here is `SU(3)` mathematics; the elements
-that do the work, `su3Perm`, `su3Transp`, `su3TurnFst` and `su3TurnSnd`, all live in
-`SU(3)`. What stays about `GaugeGroupI` is the bookkeeping of the decompositions, which
-`GaugeWeightDecomposition`, `SU3PermDecomposition` and `SU3WeylDecomposition` supply only
-for representations of the gauge group, and the notion of gauge invariance itself. Section
-A.3 records `repSU3`, the colour part of a representation, for which a bi-adjoint family
-is again bi-adjoint; reading the classification of section F there sharpens it to
-invariance under the colour factor alone, and the two notions of invariance then turn out
-to agree on the span.
+that the colour transformation `(U, 1, 1)` obeys that law with the matrix of `U`, for every
+`U` in `SU(3)`, and it says nothing whatever about the isospin and hypercharge factors:
+those may move the components as they please. So the mathematics here is `SU(3)`
+mathematics twice over, in the law and in the hypothesis, and the conclusions are about
+invariance under the colour factor. The elements that do the work, `su3Perm`, `su3Transp`,
+`su3TurnFst` and `su3TurnSnd`, all live in `SU(3)`.
+
+Two things follow that are worth stating at the outset. The gauge weight decomposition must
+know how all four torus generators act, and only `gaugeTorusGen 0` and `gaugeTorusGen 1`
+are colour transformations, so the decomposition cannot be built for `repGauge`. It is
+built instead for `repSU3 repGauge` of section A.3, the colour part of the representation,
+which sends the isospin and hypercharge generators to the identity and so gives them weight
+zero by construction rather than by hypothesis; the permutation and Weyl decompositions of
+sections D and E are read there too. And the trace contraction is fixed by the colour
+factor only; the statements that need it to be gauge invariant,
+`mem_span_and_invariant_iff`, `su3_invariant_iff_invariant` and
+`mem_span_sup_invariant_iff`, take that invariance as an explicit hypothesis, since nothing
+here proves it.
 
 Section A gives the adjoint matrix of the `SU(3)` factor, the proposition and the span of
-its components, section B the trace contraction, which is the natural gauge invariant
-built from two adjoint indices, and section C the gauge weight decomposition of the
-span. Section D grades the zero-weight
+its components, section B the trace contraction, which is the natural colour invariant
+built from two adjoint indices, and section C the gauge weight decomposition of the span,
+for the colour part of the representation. Section D grades the zero-weight
 piece of that decomposition by the cyclic colour rotation, which is what the gauge weight
 alone cannot do, and section E upgrades that grading to the isotypic decomposition of the
 whole Weyl group `S₃`, in which the trace contraction lands in the trivial isotype. Those
@@ -47,15 +54,15 @@ four sections are all built from the normaliser of the torus, and they stop two 
 short. Section F leaves the normaliser behind: a quarter turn in the `SU(2)` of the first
 two colours carries a Cartan direction to a root direction, which no element of the
 normaliser does, and that cuts the two lines section E leaves down to the one line through
-the trace contraction. So `mem_span_and_invariant_iff` says the gauge invariants in the
-span are exactly the multiples of the trace contraction, the single singlet of `8 ⊗ 8`.
-Sections F.4 and F.5 shed the hypotheses that classification is stated under. The trivial
-square-zero extension of a module is an algebra on which every representation acts by
-algebra maps, so the classification needs no algebra structure and no multiplicativity at
-all, and it then descends to the quotient by a gauge-stable submodule, which is
-`mem_span_sup_invariant_iff`. The row orthonormality of `su3AdjointMatrix` that section B
-rests on is inherited from the `su(3)` block of `adjointMatrix`, and proved where that
-matrix is defined, in `GaugeAlgebra.Basis`.
+the trace contraction. So `mem_span_and_su3_invariant_iff` says the colour invariants in
+the span are exactly the multiples of the trace contraction, the single singlet of
+`8 ⊗ 8`. Sections F.4 and F.5 shed the hypotheses that classification is stated under. The
+trivial square-zero extension of a module is an algebra on which every representation acts
+by algebra maps, so the classification needs no algebra structure and no multiplicativity
+at all, and it then descends to the quotient by a stable submodule, which is
+`mem_span_sup_su3_invariant_iff`. The row orthonormality of `su3AdjointMatrix` that
+section B rests on is inherited from the `su(3)` block of `adjointMatrix`, and proved where
+that matrix is defined, in `GaugeAlgebra.Basis`.
 -/
 
 @[expose] public section
@@ -125,13 +132,13 @@ index in the row slot. It is recorded by `IsSU3BiAdjointMat`, a relation between
 element of `SU(3)` and one linear map on `B` in which no other factor of the gauge group
 appears, and it is the law obeyed by the gluon field strengths of `IsGaugeSector`.
 
-`IsSU3BiAdjoint` then says that every gauge transformation obeys that law through its
-`SU(3)` part. Since `GaugeGroupI.toSU3` is a monoid homomorphism this is an action.
-Quantifying over the whole of `GaugeGroupI` is what makes the proposition say more than a
-statement about a single `SU(3)` element would: an element of the isospin or hypercharge
-factor is sent to `1` in `SU(3)`, so those factors fix every component, and section C
-reads that off as the vanishing of the isospin and hypercharge coordinates of every
-weight.
+`IsSU3BiAdjoint` then says that the gauge transformation `(U, 1, 1)` obeys that law with
+the matrix of `U`, for every `U` in `SU(3)`. Since `U ↦ (U, 1, 1)` is a monoid homomorphism
+this is an action of `SU(3)`, and it is all that is assumed: a gauge transformation with a
+nontrivial isospin or hypercharge factor is not mentioned, and may move the components
+arbitrarily. So nothing here forces the isospin and hypercharge coordinates of a weight to
+vanish; section C gets that instead from `repSU3`, which sends the isospin and hypercharge
+generators to the identity outright.
 
 -/
 
@@ -146,8 +153,9 @@ def IsSU3BiAdjointMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
       (∏ i : Fin 2, ((su3AdjointMatrix U (a i) (l i) : ℝ) : ℂ)) • T a
 
 /-- A family `T` of elements of `B`, indexed by two `su(3)` adjoint indices, transforms
-  as a tensor `T^{a₁ a₂}` under the representation `repGauge` of the gauge group: every
-  gauge transformation moves the components by its `SU(3)` part alone. -/
+  as a tensor `T^{a₁ a₂}` under the representation `repGauge` of the gauge group: a colour
+  transformation moves the components by the `SU(3)` element it is built from. Nothing is
+  asked of the isospin or hypercharge factors. -/
 structure IsSU3BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B)
     (T : (Fin 2 → Fin 8) → B) : Prop where
@@ -162,13 +170,19 @@ Reading a representation of the gauge group at the colour factor of its argument
 gives `repSU3`, again a representation of the whole gauge group. Every construction stated
 for a representation of `GaugeGroupI` therefore applies to it verbatim, and a bi-adjoint
 family for `repGauge` is a bi-adjoint family for `repSU3 repGauge`, with the same span and
-the same trace contraction. That is what lets section F.3 sharpen its classification from
-gauge invariance to invariance under the colour factor alone, which is the weaker
-hypothesis `∀ U : SU(3), repGauge (U, 1, 1) x = x`; the two turn out to agree on the span.
+the same trace contraction. Invariance under it is invariance under the colour factor,
+`∀ U : SU(3), repGauge (U, 1, 1) x = x`, which is exactly what the transformation law
+constrains.
 
-`repSU3` is machinery for that transport and nothing more. The statements themselves are
-written with the colour transformation `(U, 1, 1)` spelled out, so that reading one needs
-no unfolding, and `repSU3_invariant_iff_su3` is the bridge between the two spellings.
+`repSU3` carries the weight bookkeeping of section C and the permutation and Weyl
+bookkeeping of sections D and E, all of which need a representation of the whole gauge
+group and none of which is available for `repGauge` itself, and it transports the
+statements of section F that are proved for a representation of `GaugeGroupI`. The
+statements themselves are written with the colour transformation `(U, 1, 1)` spelled out,
+so that reading one needs no unfolding, and `repSU3_invariant_iff_su3` is the bridge
+between the two spellings. The cyclic rotation and the transposition of sections D and E
+are colour transformations, so the two representations agree at them outright, which is
+`repSU3_gaugeSU3Perm` and `repSU3_gaugeSU3Transp`.
 
 -/
 
@@ -371,6 +385,14 @@ With two adjoint indices a weight vector is a product of two of these, contracte
 four such products, they span the same subspace as the components, and joining their
 lines one weight at a time gives `gaugeWeightDecomposition`.
 
+That decomposition is for `repSU3 repGauge`, not for `repGauge`. A decomposition must say
+how all four torus generators act, and of the four only `gaugeTorusGen 0` and
+`gaugeTorusGen 1` are colour transformations, so the transformation law says nothing about
+the other two. The colour part sends them to the identity, so it fixes every weight vector
+there and their isospin and hypercharge coordinates vanish for that reason. This is why
+`gaugeWeightDecomposition_supp` still lists only the nineteen weights of the tensor square
+of the `su(3)` adjoint, all of them of the form `(m, n, 0, 0)`.
+
 The stronger typeclass assumptions are forced: `GaugeWeightDecomposition` lives in an
 algebra and records multiplicativity of the representation, neither of which
 `IsSU3BiAdjoint` needs, so both appear as extra arguments here.
@@ -428,7 +450,7 @@ lemma exists_rootPair_or_cartanId (a : Fin 8) :
   revert a
   decide
 
-TODO (lines := 362-402) "All of these should be in a more general file
+TODO (lines := 405-445) "All of these should be in a more general file
   in the GaugeAlgebra section."
 
 /-!
@@ -797,7 +819,7 @@ lemma biVec_unitVec_mem (a b : Fin 8) :
   · rw [unitVec_cartanId]
     exact hT.biVec_wtCoeff_unitVec_mem _ _
 
-/-- **The weight vectors span the components.** The change of basis from the Gell-Mann
+/-- The weight vectors span the components. The change of basis from the Gell-Mann
   basis to the weight basis is invertible, so nothing is lost. -/
 lemma span_eq_wtSpan : hT.span = hT.wtSpan := by
   refine le_antisymm (iSup_le fun d => (Submodule.span_singleton_le_iff_mem _ _).mpr ?_)
@@ -868,8 +890,9 @@ lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
 
 ## C.6. The zero-weight piece
 
-A gauge invariant built from `T` is fixed by the torus, so it lies in the zero-weight
-piece, which makes that piece worth describing explicitly. A product of two weight vectors
+A colour invariant built from `T` is fixed by the colour part of the representation at the
+torus, so it lies in the zero-weight piece, which makes that piece worth describing
+explicitly. A product of two weight vectors
 has weight zero exactly when the two weights cancel: a root against its negative, in
 either order, or any two Cartan directions. That is ten lines, the multiplicity of the
 zero weight in the tensor square of the `su(3)` adjoint.
@@ -1042,7 +1065,10 @@ The gauge weight cannot see inside its own zero-weight piece: the torus fixes al
 the products above. The cyclic colour rotation `gaugeSU3Perm` does see inside it. It
 normalises the torus and sends each weight to another weight, fixing the weight zero, so
 it acts on the zero-weight piece, and `SU3PermDecomposition` grades that action by the
-cube roots of unity.
+cube roots of unity. Like the gauge weight decomposition it is recorded for the colour
+part `repSU3 repGauge`, which is where the transformation law constrains every gauge
+transformation; the rotation itself is a colour transformation, so the two representations
+agree at it and the action computed below is the action of `repGauge gaugeSU3Perm`.
 
 Sections D.1 and D.2 compute the action, first on the Gell-Mann coordinate directions and
 then on the weight vectors: the six root directions are permuted in two three-cycles,
@@ -1052,7 +1078,7 @@ grades a three-cycle by the cube roots of unity, and section D.5 assembles the
 decomposition.
 
 This grading is a sieve, not a classification: `SU3PermDecomposition` records that grade
-zero is necessary for gauge invariance but proves no converse. It is also only half of the
+zero is necessary for colour invariance but proves no converse. It is also only half of the
 Weyl group of `SU(3)`. Section E adds the other half, and the decomposition built here is
 the scaffolding that the isotypic decomposition there is assembled from, rather than the
 end of the story.
@@ -1561,9 +1587,10 @@ lemma iSup_zeroPiece (hmul : IsMulRep repGauge) :
     · exact hT.cartanProd_mem_iSup_zeroPiece 1 1
 
 /-- The `SU(3)` permutation decomposition of the zero-weight piece of the gauge weight
-  decomposition: the cyclic colour rotation grades the ten dimensions the gauge weight
-  cannot separate. Grade zero is necessary for gauge invariance but not sufficient;
-  `zeroPiece_zero` says more about what a further reduction would need. -/
+  decomposition, for the colour part of the representation: the cyclic colour rotation
+  grades the ten dimensions the gauge weight cannot separate. Grade zero is necessary for
+  colour invariance but not sufficient; `zeroPiece_zero` says more about what a further
+  reduction would need. -/
 noncomputable def zeroPieceSU3Perm (hT : IsSU3BiAdjoint B repGauge T) (hmul : IsMulRep repGauge) :
     SU3PermDecomposition (repSU3 repGauge) ((hT.gaugeWeightDecomposition hmul).piece 0) where
   piece := hT.zeroPiece
@@ -1603,7 +1630,7 @@ lemma zeroPieceSU3Perm_piece (hmul : IsMulRep repGauge) (k : ZMod 3) :
   `T ![2, 2] + T ![7, 7] + Complex.I • (T ![2, 7] - T ![7, 2])` and
   `T ![2, 2] + T ![7, 7] + Complex.I • (T ![7, 2] - T ![2, 7])` respectively.
 
-  Grade zero is necessary for a gauge invariant to land here, not sufficient:
+  Grade zero is necessary for a colour invariant to land here, not sufficient:
   `SU3PermDecomposition.mem_zero_of_invariant` has no converse, and combining the gauge
   weight decomposition with this `SU(3)` permutation decomposition only reaches the cyclic
   subgroup of the Weyl group. Section E cuts these four lines down to two, the trivial
@@ -1685,9 +1712,9 @@ well as the two nonzero grades. It remains a sieve:
 gauge weight and the Weyl group together decide invariance under the normaliser of the
 torus and nothing more. `rootTriv_add_cartanTriv` measures what is left over: the trace
 contraction is half the sum of the two generators of the trivial isotype, and nothing here
-says anything about the other combinations of those two generators. Which of them are gauge
-invariant is settled in section F, by an element of `SU(3)` that does not normalise the
-torus; no finite group settles it.
+says anything about the other combinations of those two generators. Which of them are
+colour invariant is settled in section F, by an element of `SU(3)` that does not normalise
+the torus; no finite group settles it.
 
 ## E.1. The transposition on the Gell-Mann directions and the weight vectors
 
@@ -2097,10 +2124,11 @@ lemma repGauge_gaugeSU3Transp_mem_zeroPiece_zero {x : B} (hx : x ∈ hT.zeroPiec
   simpa using sub_mem h hx
 
 /-- The `S₃` isotypic decomposition of the zero-weight piece of the gauge weight
-  decomposition: the whole Weyl group of `SU(3)` sorting the ten dimensions that the gauge
-  weight cannot separate. It is the cyclic decomposition upgraded by
-  `SU3PermDecomposition.toWeyl`, whose hypothesis is met because the transposition
-  exchanges the two grade zero cycle sums and the two mixed Cartan products. -/
+  decomposition, for the colour part of the representation: the whole Weyl group of `SU(3)`
+  sorting the ten dimensions that the gauge weight cannot separate. It is the cyclic
+  decomposition upgraded by `SU3PermDecomposition.toWeyl`, whose hypothesis is met because
+  the transposition exchanges the two grade zero cycle sums and the two mixed Cartan
+  products. -/
 noncomputable def zeroPieceSU3Weyl (hT : IsSU3BiAdjoint B repGauge T)
     (hmul : IsMulRep repGauge) :
     SU3WeylDecomposition (repSU3 repGauge) ((hT.gaugeWeightDecomposition hmul).piece 0) :=
@@ -2174,8 +2202,9 @@ lemma traceContraction_mem_isotypic_triv (hmul : IsMulRep repGauge) :
 /-- The trace contraction lies in the join of the two symmetric lines: of the ten
   dimensions of the zero-weight piece, the gauge weight and the Weyl group together confine
   it to two. By `rootTriv_add_cartanTriv` it is half the sum of the two generators, so it is
-  one particular element of that join; which other elements of the join are gauge invariant
-  is settled in section F, where the answer turns out to be only its own multiples. -/
+  one particular element of that join; which other elements of the join are colour
+  invariant is settled in section F, where the answer turns out to be only its own
+  multiples. -/
 lemma traceContraction_mem_span_triv (hmul : IsMulRep repGauge) :
     hT.traceContraction ∈ ℂ ∙ hT.rootTriv ⊔ ℂ ∙ hT.cartanTriv := by
   rw [← hT.zeroPieceSU3Weyl_isotypic_triv hmul]
@@ -2202,8 +2231,9 @@ needed, one landing on `λ₁` and one on `λ₂`, because the Weyl group preser
 the six root directions into those two classes. Section F.2 computes what the two turns do
 to `rootTriv` and to `cartanTriv`: they move weight between the six root diagonal terms and
 the two Cartan ones while preserving the total, which is `2 • traceContraction`. Section
-F.3 turns that into the statement that the gauge invariants in the span are exactly the
-multiples of the trace contraction.
+F.3 turns that into the statement that the colour invariants in the span are exactly the
+multiples of the trace contraction, and reads off what the gauge invariants are once the
+trace contraction is known to be gauge invariant.
 
 ## F.1. A quarter turn in the `SU(2)` of the first two colours
 
@@ -2724,7 +2754,8 @@ extension `TrivSqZeroExt ℂ M` of a module `M` is a commutative `ℂ`-algebra b
 module structure alone, a representation on `M` extends to it by acting trivially on the
 scalar part, and that extension acts by algebra maps for free. So F.3 holds in the
 extension, and the injection of `M` carries the conclusion back:
-`exists_smul_traceContraction_of_invariant_module` is F.3 with the algebra structure and
+`exists_smul_traceContraction_of_su3_invariant_module` and its gauge corollary
+`exists_smul_traceContraction_of_invariant_module` are F.3 with the algebra structure and
 the multiplicativity hypothesis both removed.
 
 -/
@@ -2840,15 +2871,21 @@ end SquareZero
 
 /-!
 
-## F.5. The gauge invariants modulo a gauge-stable submodule
+## F.5. The invariants modulo a stable submodule
 
-A gauge-stable submodule can be divided out: the quotient representation carries the
-images of the components as a bi-adjoint family again, so F.4 applies verbatim in the
-quotient and lifts to a classification modulo the submodule. Stability of the submodule is
-what makes the quotient representation exist, and it cannot be dropped: for an unstable
-line `ℂ ∙ v` the only invariant of the line is `0`, while an invariant of the sum may well
-lie outside the span. The error term is invariant for free, since it is the difference of
-two invariants.
+A stable submodule can be divided out: the quotient representation carries the images of
+the components as a bi-adjoint family again, so F.4 applies verbatim in the quotient and
+lifts to a classification modulo the submodule. Stability of the submodule is what makes
+the quotient representation exist, and it cannot be dropped: for an unstable line `ℂ ∙ v`
+the only invariant of the line is `0`, while an invariant of the sum may well lie outside
+the span. The error term is invariant for free, since it is the difference of two
+invariants.
+
+`mem_span_sup_su3_invariant_iff` is the colour form, stable and invariant meaning under
+`repGauge (U, 1, 1)` throughout, and it is the form the transformation law supports.
+`mem_span_sup_invariant_iff`, the gauge form, asks in addition that the trace contraction
+be gauge invariant, for the reason given in F.3: that is what makes the error term a gauge
+invariant rather than merely a colour invariant.
 
 -/
 

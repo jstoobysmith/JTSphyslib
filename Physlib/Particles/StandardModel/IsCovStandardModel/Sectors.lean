@@ -999,6 +999,68 @@ lemma sectorMassWeight_pair_le {c₁ c₂ : GeneratorClass} (hne : c₁ ≠ c₂
         (Submodule.mem_iSup_of_mem (classWeight_ne_zero h2) ?_)))
   exact h.list_prod_mem_mul_of_forall_kind hne hM₁ hM₂ hone₁ hone₂ hmul₁ hmul₂ hcomm gl hgl
 
+/-!
+
+## Invariance in terms of sectors
+
+Both actions preserve every weight part of every sector
+(`repGauge_mem_sectorMassWeight`, `repLorentz_mem_sectorMassWeight`), and the
+weight-`w` submodule is the join of those parts
+(`massWeightSubmodule_eq_iSup_sectorMassWeight`), so an element of the weight-`w`
+submodule is a sum of sector pieces and each action carries one such sum to
+another. Reading off from that alone that the pieces are themselves invariant is
+not possible: it needs the pieces to be determined by their sum, that is, needs
+the family of weight parts to be independent, and that is the hypothesis of
+`sector_invariant_of_iSupIndep`.
+
+-/
+
+/-- An element of the weight-`w` submodule fixed by both actions is a sum of
+  weight-`w` sector pieces, each of them fixed by both actions, provided the weight
+  parts of the sectors are independent. Independence is what turns the two
+  decompositions `x = ∑ s, f s` and `x = ∑ s, repGauge g (f s)` into an equality
+  piece by piece; without it the pieces are not determined by their sum. -/
+lemma sector_invariant_of_iSupIndep {w : ℕ}
+    (hind : iSupIndep fun S : Finset GeneratorClass => h.sectorMassWeight S w)
+    (x : B) (x_gauge_invariant : ∀ g, repGauge g x = x)
+    (x_lorentz_invariant : ∀ g, repLorentz g x = x)
+    (x_mass_dim : x ∈ h.massWeightSubmodule w) :
+    ∃ f : Finset GeneratorClass → B,
+      x = ∑ s, f s ∧ (∀ s, f s ∈ h.sectorMassWeight s w ∧
+      (∀ g, repGauge g (f s) = (f s)) ∧ (∀ g, repLorentz g (f s) = (f s))) := by
+  rw [h.massWeightSubmodule_eq_iSup_sectorMassWeight w] at x_mass_dim
+  obtain ⟨c, hc, hcx⟩ := (Submodule.mem_iSup_iff_exists_finsupp _ x).mp x_mass_dim
+  have hsum : ∑ s, c s = x := by
+    rw [← hcx, Finsupp.sum_fintype _ _ fun _ => rfl]
+  have huniq := (iSupIndep_iff_finsetSum_eq_imp_eq
+    fun S : Finset GeneratorClass => h.sectorMassWeight S w).mp hind
+  have key : ∀ T : Module.End ℂ B, (∀ s, T (c s) ∈ h.sectorMassWeight s w) →
+      T x = x → ∀ s, T (c s) = c s := by
+    intro T hT hTx s
+    refine huniq Finset.univ (fun t => T (c t)) (fun t => c t)
+      (fun t _ => ⟨hT t, hc t⟩) ?_ s (Finset.mem_univ s)
+    rw [← map_sum, hsum, hTx]
+  exact ⟨fun s => c s, hsum.symm, fun s => ⟨hc s,
+    fun g => key (repGauge g) (fun t => h.repGauge_mem_sectorMassWeight g (hc t))
+      (x_gauge_invariant g) s,
+    fun Λ => key (repLorentz Λ) (fun t => h.repLorentz_mem_sectorMassWeight Λ (hc t))
+      (x_lorentz_invariant Λ) s⟩⟩
+
+/-- An element of the field algebra of weight `w` fixed by both actions is a sum of
+  weight-`w` sector pieces, each of them fixed by both actions. -/
+lemma sector_invariant {w : ℕ} (x : B) (hx : x ∈ h.fieldAlgebra)
+    (x_gauge_invariant : ∀ g, repGauge g x = x)
+    (x_lorentz_invariant : ∀ g, repLorentz g x = x)
+    (x_mass_dim : x ∈ h.massWeightSubmodule w) :
+    ∃ f : Finset GeneratorClass → B,
+      x = ∑ s, f s ∧  (∀ s, f s ∈ h.sectorMassWeight s w ∧
+      (∀ g, repGauge g (f s) = (f s)) ∧ (∀ g, repLorentz g (f s) = (f s))) := by
+  -- Open. `sector_invariant_of_iSupIndep` closes this given
+  -- `iSupIndep fun S => h.sectorMassWeight S w`, and that independence is the whole
+  -- of what is missing; it does not follow from `IsCovStandardModel`, whose axioms
+  -- are all equations and so survive quotients that the independence does not.
+  sorry
+
 end IsCovStandardModel
 
 end StandardModel

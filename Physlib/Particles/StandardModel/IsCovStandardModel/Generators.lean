@@ -157,7 +157,7 @@ inductive GeneratorClass where
   | higgs : GeneratorClass
   /-- The fermion class: the fermion towers and their conjugates. -/
   | fermion : GeneratorClass
-deriving DecidableEq
+deriving DecidableEq, Fintype
 
 /-- The class of a covariant generator. -/
 def Generators.kind : Generators → GeneratorClass

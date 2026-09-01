@@ -121,15 +121,38 @@ lemma repGauge_hyperchargeField (g : GaugeGroupI) {n : ℕ} (l : Fin n → Fin 1
 
 -/
 
+/-- A gauge transformation moves a product of two gluon field strengths as the `SU(3)`
+  factor of that gauge group element moves a tensor with two `su(3)` adjoint indices. -/
+lemma isSU3BiAdjointMat_gluonField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3)
+    (g : GaugeGroupI) :
+    IsSU3BiAdjointMat (GaugeGroupI.toSU3 g) (repGauge g)
+      (fun a : Fin 2 → Fin 8 => h.gluonField l μ ν (a 0) * h.gluonField l' μ' ν' (a 1)) := by
+  intro d
+  rw [hrepGauge_mul, h.repGauge_gluonField, h.repGauge_gluonField,
+    Fintype.sum_mul_sum, IsSU3BiAdjoint.sum_pi_two]
+  refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
+  rw [smul_mul_smul_comm]
+  simp [Fin.prod_univ_two]
+
 /-- A product of two gluon field strengths, viewed as a family indexed by the two `su(3)`
   adjoint indices it carries, is a bi-adjoint `su(3)` tensor. -/
 lemma isSU3BiAdjoint_gluonField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3) :
     IsSU3BiAdjoint B repGauge
-      (fun a : Fin 2 → Fin 8 => h.gluonField l μ ν (a 0) * h.gluonField l' μ' ν' (a 1)) := by
-  refine ⟨fun g d => ?_⟩
-  rw [hrepGauge_mul, h.repGauge_gluonField, h.repGauge_gluonField,
-    Fintype.sum_mul_sum, IsSU3BiAdjoint.sum_pi_two]
+      (fun a : Fin 2 → Fin 8 => h.gluonField l μ ν (a 0) * h.gluonField l' μ' ν' (a 1)) :=
+  ⟨fun U => h.isSU3BiAdjointMat_gluonField_mul l μ ν l' μ' ν' (U, 1, 1)⟩
+
+/-- A gauge transformation moves a product of two `W`-boson field strengths as the `SU(2)`
+  factor of that gauge group element moves a tensor with two `su(2)` adjoint indices. -/
+lemma isSU2BiAdjointMat_wField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3)
+    (g : GaugeGroupI) :
+    IsSU2BiAdjointMat (GaugeGroupI.toSU2 g) (repGauge g)
+      (fun a : Fin 2 → Fin 3 => h.wField l μ ν (a 0) * h.wField l' μ' ν' (a 1)) := by
+  intro d
+  rw [hrepGauge_mul, h.repGauge_wField, h.repGauge_wField,
+    Fintype.sum_mul_sum, IsSU2BiAdjoint.sum_pi_two]
   refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
   rw [smul_mul_smul_comm]
   simp [Fin.prod_univ_two]
@@ -139,13 +162,8 @@ lemma isSU3BiAdjoint_gluonField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 lemma isSU2BiAdjoint_wField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3) :
     IsSU2BiAdjoint B repGauge
-      (fun a : Fin 2 → Fin 3 => h.wField l μ ν (a 0) * h.wField l' μ' ν' (a 1)) := by
-  refine ⟨fun g d => ?_⟩
-  rw [hrepGauge_mul, h.repGauge_wField, h.repGauge_wField,
-    Fintype.sum_mul_sum, IsSU2BiAdjoint.sum_pi_two]
-  refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
-  rw [smul_mul_smul_comm]
-  simp [Fin.prod_univ_two]
+      (fun a : Fin 2 → Fin 3 => h.wField l μ ν (a 0) * h.wField l' μ' ν' (a 1)) :=
+  ⟨fun U => h.isSU2BiAdjointMat_wField_mul l μ ν l' μ' ν' (1, U, 1)⟩
 
 /-- A product of two hypercharge field strengths, viewed as a family indexed by the two
   `u(1)` adjoint indices it carries, is a bi-adjoint `u(1)` tensor. -/
@@ -345,7 +363,8 @@ lemma traceContraction_gluonField_mul_mem {n m : ℕ} (l : Fin n → Fin 1 ⊕ F
   · rw [h.traceContraction_gluonField_mul]
     exact Submodule.sum_mem _ fun a _ => h.F_mul_F_mem_massWeightSubmodule l μ ν _ l' μ' ν' _
   · exact (Representation.mem_invariants _ _).mpr fun g =>
-      IsSU3BiAdjoint.repGauge_traceContraction _ g
+      IsSU3BiAdjoint.map_traceContraction _
+        (h.isSU3BiAdjointMat_gluonField_mul l μ ν l' μ' ν' g)
 
 /-- The `W`-boson trace contraction is a gauge invariant of the expected mass weight. -/
 lemma traceContraction_wField_mul_mem {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
@@ -356,7 +375,8 @@ lemma traceContraction_wField_mul_mem {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3
   · rw [h.traceContraction_wField_mul]
     exact Submodule.sum_mem _ fun i _ => h.F_mul_F_mem_massWeightSubmodule l μ ν _ l' μ' ν' _
   · exact (Representation.mem_invariants _ _).mpr fun g =>
-      IsSU2BiAdjoint.repGauge_traceContraction _ g
+      IsSU2BiAdjoint.map_traceContraction _
+        (h.isSU2BiAdjointMat_wField_mul l μ ν l' μ' ν' g)
 
 /-- The hypercharge trace contraction is a gauge invariant of the expected mass weight. -/
 lemma traceContraction_hyperchargeField_mul_mem {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
@@ -415,7 +435,8 @@ lemma traceContraction_gluonField_mul_mem_piece_zero (μ ν μ' ν' : Fin 1 ⊕ 
       ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _
     (Submodule.mem_inf.mp (h.traceContraction_gluonField_mul_mem_eight μ ν μ' ν')).1
-    fun g => IsSU3BiAdjoint.repGauge_traceContraction _ g
+    fun g => IsSU3BiAdjoint.map_traceContraction _
+      (h.isSU3BiAdjointMat_gluonField_mul ![] μ ν ![] μ' ν' g)
 
 /-- The trace contraction of two underived `W`-boson field strengths lies in the
   zero-weight piece of the gauge weight decomposition of mass weight eight. -/
@@ -424,7 +445,8 @@ lemma traceContraction_wField_mul_mem_piece_zero (μ ν μ' ν' : Fin 1 ⊕ Fin 
       ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _
     (Submodule.mem_inf.mp (h.traceContraction_wField_mul_mem_eight μ ν μ' ν')).1
-    fun g => IsSU2BiAdjoint.repGauge_traceContraction _ g
+    fun g => IsSU2BiAdjoint.map_traceContraction _
+      (h.isSU2BiAdjointMat_wField_mul ![] μ ν ![] μ' ν' g)
 
 /-- The trace contraction of two underived hypercharge field strengths lies in the
   zero-weight piece of the gauge weight decomposition of mass weight eight. -/
