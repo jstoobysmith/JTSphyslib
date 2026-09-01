@@ -161,6 +161,14 @@ noncomputable def covF (h : IsStandardModel B repJet repLorentz massWeightPoly H
     (μ ν : Fin 1 ⊕ Fin 3) : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
   h.covDerivFieldStrength (List.ofFn l) μ ν
 
+/-- The field-strength tower is antisymmetric in its two covector indices: the
+  ordered-tuple indexing of `covDerivFieldStrength_swap`. -/
+lemma covF_swap (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
+    d bard u baru Q barQ L barL e bare) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
+    h.covF l ν μ φ = - h.covF l μ ν φ :=
+  h.covDerivFieldStrength_swap (List.ofFn l) μ ν φ
+
 /-- The covariant generators of the Standard Model: the field-strength tower, the Higgs
   towers and their conjugates, and the ten fermion towers and their conjugates. -/
 def covGenerators (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
@@ -2333,7 +2341,8 @@ theorem isCovStandardModel :
       repLorentz_F := h.repLorentz_covF
       massWeight_F := fun {_n} l μ ν φ => h.massWeight_covF l μ ν φ
       F_comm_F := fun {_n _m} l μ ν ψ l' μ' ν' ψ' =>
-        h.covF_comm_covF l l' μ ν μ' ν' ψ ψ' }
+        h.covF_comm_covF l l' μ ν μ' ν' ψ ψ'
+      F_antisymm := fun {_n} l μ ν φ => h.covF_swap l μ ν φ }
   isFermionSector :=
     { repGauge_d := fun g i {_n} l φ => h.repGlobal_covDerivD g i l φ
       repGauge_bard := fun g i {_n} l φ => h.repGlobal_covDerivBarD g i l φ

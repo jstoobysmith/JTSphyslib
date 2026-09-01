@@ -84,6 +84,61 @@ lemma pair_eq_fieldStrength_sub_commutatorFam
     A (ν ::ₘ s) μ - A (μ ::ₘ s) ν = fieldStrength A ν μ s - commutatorFam A ν μ s := by
   rw [fieldStrength, add_sub_cancel_right]
 
+/-!
+
+## The antisymmetry of the field strength
+
+The field strength is antisymmetric in its two covector indices as soon as the
+symbols of the gauge field commute with one another in `B`: the two derivative terms
+swap outright, and the commutator term swaps by the antisymmetry of the gauge-algebra
+bracket, once the two factors of each product may be exchanged.
+
+-/
+
+/-- The bracket of two component families with commuting values is antisymmetric: in
+  the basis expansion the structure constants are antisymmetric in the two gauge
+  indices, and the two field factors of each term may be exchanged. -/
+lemma bracketFam_swap_of_commute {f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (hfg : ∀ φ ψ, Commute (f φ) (g ψ)) :
+    bracketFam g f = - bracketFam f g := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.neg_apply, bracketFam_apply_eq_sum, bracketFam_apply_eq_sum]
+  set bv := Module.Free.chooseBasis ℝ 𝔤 with hbv
+  have hstep : ∀ j k, φ ⁅bv j, bv k⁆ • (g (bv.coord j) * f (bv.coord k)) =
+      -(φ ⁅bv k, bv j⁆ • (f (bv.coord k) * g (bv.coord j))) := by
+    intro j k
+    rw [(hfg (bv.coord k) (bv.coord j)).eq, ← lie_skew (bv k) (bv j), map_neg,
+      neg_smul, neg_neg]
+  rw [Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => hstep j k]
+  simp only [Finset.sum_neg_distrib]
+  exact congrArg Neg.neg Finset.sum_comm
+
+/-- The derived commutator term is antisymmetric in its two directions when the symbols
+  of the gauge field commute: swapping the two parts of the antidiagonal matches the
+  Leibniz convolution with the swapped one termwise. -/
+lemma commutatorFam_swap
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (hA : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
+      (ψ ψ' : Module.Dual ℝ 𝔤), Commute (A s μ ψ) (A s' μ' ψ'))
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    commutatorFam A ν μ s = - commutatorFam A μ ν s := by
+  rw [commutatorFam, commutatorFam,
+    Multiset.sum_antidiagonal_swap s (fun a b => bracketFam (A a ν) (A b μ)),
+    ← Multiset.sum_map_neg'']
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ =>
+    bracketFam_swap_of_commute fun φ ψ => hA _ _ _ _ _ _)
+
+/-- The field strength is antisymmetric in its two covector indices when the symbols of
+  the gauge field commute: the two derivative terms swap outright, the commutator term
+  by `commutatorFam_swap`. -/
+lemma fieldStrength_swap
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (hA : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
+      (ψ ψ' : Module.Dual ℝ 𝔤), Commute (A s μ ψ) (A s' μ' ψ'))
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    fieldStrength A ν μ s = - fieldStrength A μ ν s := by
+  rw [fieldStrength, fieldStrength, commutatorFam_swap A hA μ ν s]
+  abel
 
 /-- **The field strength transforms in the adjoint, at every derivative order**: under
   a gauge jet `U` every derivative symbol of `F_μν` transforms by the pure Leibniz

@@ -290,8 +290,9 @@ public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.BoostWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
-public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.BiAdjoint
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimEight
+public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.BoostWeightDecomposition
@@ -495,6 +496,7 @@ public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsSingleLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.IsTriLorentz
 public import Physlib.Relativity.LorentzGroup.Orthochronous.Basic
 public import Physlib.Relativity.LorentzGroup.Proper
 public import Physlib.Relativity.LorentzGroup.Restricted.Basic

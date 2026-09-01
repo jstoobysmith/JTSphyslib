@@ -1760,6 +1760,77 @@ lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength
       (fun b => (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ))
       (fun b t => fieldStrength A a b t) (List.ofFn p) 0 φ]
 
+/-!
+
+## The antisymmetry of the field strength
+
+The field strength is antisymmetric in its two covector indices as soon as the
+symbols of the gauge field commute with one another in `B`: the two derivative terms
+swap outright, and the commutator term swaps by the antisymmetry of the gauge-algebra
+bracket, once the two factors of each product may be exchanged. The covariant tower
+inherits the antisymmetry, the iterated covariant derivative being linear in the
+family it differentiates.
+
+-/
+
+/-- The bracket of two component families with commuting values is antisymmetric: in
+  the basis expansion the structure constants are antisymmetric in the two gauge
+  indices, and the two field factors of each term may be exchanged. -/
+lemma bracketFam_swap_of_commute {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+    (hfg : ∀ φ ψ, Commute (f φ) (g ψ)) :
+    bracketFam g f = - bracketFam f g := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.neg_apply, bracketFam_apply_eq_sum, bracketFam_apply_eq_sum]
+  set bv := Module.Free.chooseBasis ℝ GaugeAlgebra with hbv
+  have hstep : ∀ j k, φ ⁅bv j, bv k⁆ • (g (bv.coord j) * f (bv.coord k)) =
+      -(φ ⁅bv k, bv j⁆ • (f (bv.coord k) * g (bv.coord j))) := by
+    intro j k
+    rw [(hfg (bv.coord k) (bv.coord j)).eq, ← lie_skew (bv k) (bv j), map_neg,
+      neg_smul, neg_neg]
+  rw [Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => hstep j k]
+  simp only [Finset.sum_neg_distrib]
+  exact congrArg Neg.neg Finset.sum_comm
+
+/-- The derived commutator term is antisymmetric in its two directions when the symbols
+  of the gauge field commute: swapping the two parts of the antidiagonal matches the
+  Leibniz convolution with the swapped one termwise. -/
+lemma commutatorFam_swap
+    (hA : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
+      (ψ ψ' : Module.Dual ℝ GaugeAlgebra), Commute (A s μ ψ) (A s' μ' ψ'))
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    commutatorFam A ν μ s = - commutatorFam A μ ν s := by
+  rw [commutatorFam, commutatorFam,
+    Multiset.sum_antidiagonal_swap s (fun a b => bracketFam (A a ν) (A b μ)),
+    ← Multiset.sum_map_neg'']
+  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ =>
+    bracketFam_swap_of_commute fun φ ψ => hA _ _ _ _ _ _)
+
+/-- The field strength is antisymmetric in its two covector indices when the symbols of
+  the gauge field commute: the two derivative terms swap outright, the commutator term
+  by `commutatorFam_swap`. -/
+lemma fieldStrength_swap
+    (hA : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
+      (ψ ψ' : Module.Dual ℝ GaugeAlgebra), Commute (A s μ ψ) (A s' μ' ψ'))
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    fieldStrength A ν μ s = - fieldStrength A μ ν s := by
+  rw [fieldStrength, fieldStrength, commutatorFam_swap hA μ ν s]
+  abel
+
+/-- The iterated covariant derivative is odd in the family it differentiates: the case
+  of a one-element index in `iteratedCovDerivAdjoint_sum_fam`. -/
+lemma iteratedCovDerivAdjoint_neg_fam
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (l : List (Fin 1 ⊕ Fin 3)) (x : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    iteratedCovDerivAdjoint A l (fun t => - F t) x φ =
+      - iteratedCovDerivAdjoint A l F x φ := by
+  have h1 : (fun t => - F t) = fun t => ∑ _i : Fin 1, (-1 : ℂ) • F t := by
+    funext t
+    simp
+  rw [h1, iteratedCovDerivAdjoint_sum_fam (A := A) (fun _ : Fin 1 => (-1 : ℂ))
+    (fun _ => F) l x φ]
+  simp
+
 end IsGaugeField
 
 set_option linter.unusedVariables false
@@ -2771,6 +2842,19 @@ noncomputable def covDerivFieldStrength (h : IsStandardModel B repJet repLorentz
     (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
     Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
   IsGaugeField.iteratedCovDerivAdjoint A l (IsGaugeField.fieldStrength A μ ν) 0
+
+/-- The covariant tower of the field strength is antisymmetric in its two covector
+  indices: the field strength itself is (`IsGaugeField.fieldStrength_swap`, using that
+  the gauge-field symbols commute), and the iterated covariant derivative is odd in the
+  family it differentiates. -/
+lemma covDerivFieldStrength_swap (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    h.covDerivFieldStrength l ν μ φ = - h.covDerivFieldStrength l μ ν φ := by
+  rw [covDerivFieldStrength, covDerivFieldStrength,
+    show IsGaugeField.fieldStrength A ν μ =
+      fun t => - IsGaugeField.fieldStrength A μ ν t from
+      funext fun t => IsGaugeField.fieldStrength_swap h.A_comm_A μ ν t,
+    IsGaugeField.iteratedCovDerivAdjoint_neg_fam]
 
 include h in
 /-- **Gauge covariance of the covariant derivatives of the field strength**: every

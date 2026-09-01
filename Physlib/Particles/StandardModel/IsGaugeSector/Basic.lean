@@ -57,6 +57,10 @@ structure IsGaugeSector (B : Type) [Ring B] [Algebra ℂ B]
       (ψ : Module.Dual ℝ GaugeAlgebra) (l' : Fin m → Fin 1 ⊕ Fin 3)
       (μ' ν' : Fin 1 ⊕ Fin 3) (ψ' : Module.Dual ℝ GaugeAlgebra),
     Commute (F l μ ν ψ) (F l' μ' ν' ψ')
+  -- The field strength is antisymmetric in its two covector indices.
+  F_antisymm : ∀ {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
+      (φ : Module.Dual ℝ GaugeAlgebra),
+    F l ν μ φ = - F l μ ν φ
 
 namespace IsGaugeSector
 
