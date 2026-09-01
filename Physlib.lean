@@ -257,9 +257,11 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDer
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3Adjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun

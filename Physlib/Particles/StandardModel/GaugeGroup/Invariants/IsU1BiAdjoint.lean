@@ -34,7 +34,7 @@ factor. What is no longer claimed is that they are fixed by the colour and isosp
 factors, about which the law says nothing; the statements that need that, here
 `span_le_invariants`, take the law at every gauge element as an explicit hypothesis,
 in the way that `htc` is a hypothesis in `IsSU2BiAdjoint` and `IsSU3BiAdjoint`. The
-hypothesis-free form is `span_le_repU1_invariants`, for `repU1 repGauge`, the
+hypothesis-free form is `span_le_repU1Factor_invariants`, for `repU1Factor repGauge`, the
 hypercharge part of the representation, which sends the colour and isospin factors to
 the identity outright.
 
@@ -155,15 +155,15 @@ structure IsU1BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
 ## A.3. The hypercharge part of a representation
 
 Reading a representation of the gauge group at the hypercharge factor of its argument
-alone gives `repU1`, again a representation of the whole gauge group. Every construction
+alone gives `repU1Factor`, again a representation of the whole gauge group. Every construction
 stated for a representation of `GaugeGroupI` therefore applies to it verbatim, and a
-bi-adjoint family for `repGauge` is a bi-adjoint family for `repU1 repGauge`, with the
+bi-adjoint family for `repGauge` is a bi-adjoint family for `repU1Factor repGauge`, with the
 same span and the same trace contraction. Invariance under it is invariance under the
 hypercharge factor, `∀ u : U(1), repGauge (1, 1, u) x = x`, which is exactly what the
 transformation law constrains.
 
 The statements of section D are written with the hypercharge transformation `(1, 1, u)`
-spelled out, so that reading one needs no unfolding, and `repU1_invariant_iff_u1` is the
+spelled out, so that reading one needs no unfolding, and `repU1Factor_invariant_iff_u1` is the
 bridge between the two spellings.
 
 -/
@@ -171,7 +171,7 @@ bridge between the two spellings.
 /-- The hypercharge part of a representation of the gauge group: the representation
   reading only the `U(1)` factor of its argument and sending the colour and isospin
   factors to the identity. -/
-noncomputable def repU1 {B : Type*} [AddCommMonoid B] [Module ℂ B]
+noncomputable def repU1Factor {B : Type*} [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B) : Representation ℂ GaugeGroupI B where
   toFun g := repGauge (1, 1, GaugeGroupI.toU1 g)
   map_one' := by
@@ -186,32 +186,32 @@ noncomputable def repU1 {B : Type*} [AddCommMonoid B] [Module ℂ B]
 
 /-- The hypercharge part of a representation acts by the representation itself, at the
   gauge transformation with the same hypercharge factor and nothing else. -/
-lemma repU1_apply {B : Type*} [AddCommMonoid B] [Module ℂ B]
+lemma repU1Factor_apply {B : Type*} [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B) (g : GaugeGroupI) :
-    repU1 repGauge g = repGauge (1, 1, GaugeGroupI.toU1 g) := rfl
+    repU1Factor repGauge g = repGauge (1, 1, GaugeGroupI.toU1 g) := rfl
 
 /-- The hypercharge part of a representation acts by algebra maps whenever the
   representation does, each of its values being a value of that representation. -/
-lemma isMulRep_repU1 {B : Type*} [Ring B] [Algebra ℂ B]
+lemma isMulRep_repU1Factor {B : Type*} [Ring B] [Algebra ℂ B]
     {repGauge : Representation ℂ GaugeGroupI B} (hmul : IsMulRep repGauge) :
-    IsMulRep (repU1 repGauge) :=
+    IsMulRep (repU1Factor repGauge) :=
   fun g x y => hmul (1, 1, GaugeGroupI.toU1 g) x y
 
 /-- Invariance under the hypercharge part of a representation is invariance under the
   gauge transformations that are trivial on colour and isospin. The hypercharge part
   reads only the hypercharge factor of its argument, and every element of `U(1)` is the
   hypercharge factor of such a transformation. -/
-lemma repU1_invariant_iff_u1 {B : Type*} [AddCommMonoid B] [Module ℂ B]
+lemma repU1Factor_invariant_iff_u1 {B : Type*} [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B) (x : B) :
-    (∀ g : GaugeGroupI, repU1 repGauge g x = x)
+    (∀ g : GaugeGroupI, repU1Factor repGauge g x = x)
       ↔ ∀ u : unitary ℂ, repGauge (1, 1, u) x = x :=
   ⟨fun h u => h (1, 1, u), fun h g => h (GaugeGroupI.toU1 g)⟩
 
 /-- A submodule is stable under the hypercharge part of a representation precisely when
   it is stable under the gauge transformations trivial on colour and isospin. -/
-lemma repU1_stable_iff_u1 {B : Type*} [AddCommGroup B] [Module ℂ B]
+lemma repU1Factor_stable_iff_u1 {B : Type*} [AddCommGroup B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B) :
-    (∀ g : GaugeGroupI, ∀ y ∈ S, repU1 repGauge g y ∈ S)
+    (∀ g : GaugeGroupI, ∀ y ∈ S, repU1Factor repGauge g y ∈ S)
       ↔ ∀ u : unitary ℂ, ∀ y ∈ S, repGauge (1, 1, u) y ∈ S :=
   ⟨fun h u => h (1, 1, u), fun h g => h (GaugeGroupI.toU1 g)⟩
 
@@ -228,7 +228,7 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   and the trace contraction do not mention the representation, so every statement of this
   file transports along this and is read at the hypercharge factor alone. -/
 lemma toRepU1 (hT : IsU1BiAdjoint B repGauge T) :
-    IsU1BiAdjoint B (repU1 repGauge) T where
+    IsU1BiAdjoint B (repU1Factor repGauge) T where
   repGauge_T g := hT.repGauge_T g
 
 /-- The span of all the components. -/
@@ -341,7 +341,7 @@ lemma repGauge_u1_traceContraction (hT : IsU1BiAdjoint B repGauge T) (u : unitar
 The `u(1)` adjoint index takes a single value and the `U(1)` factor acts trivially on it,
 so every component of `T` is fixed by that factor, and hence so is every linear
 combination of the components. At the level of submodules this says that the span sits
-inside the invariants of `repU1 repGauge`, the hypercharge part of the representation.
+inside the invariants of `repU1Factor repGauge`, the hypercharge part of the representation.
 
 Invariance under the whole gauge group is a different matter, and does not follow: the
 colour and isospin factors are outside the transformation law and may move the components
@@ -372,8 +372,8 @@ lemma repGauge_of_mem_span (hT : IsU1BiAdjoint B repGauge T) (u : unitary ℂ) {
 /-- The span of the components of a bi-adjoint `u(1)` family lies in the invariants of
   the hypercharge part of the representation: the submodule form of
   `repGauge_of_mem_span`. -/
-lemma span_le_repU1_invariants (hT : IsU1BiAdjoint B repGauge T) :
-    hT.span ≤ (repU1 repGauge).invariants :=
+lemma span_le_repU1Factor_invariants (hT : IsU1BiAdjoint B repGauge T) :
+    hT.span ≤ (repU1Factor repGauge).invariants :=
   fun _ hx => (Representation.mem_invariants _ _).2 fun g =>
     hT.repGauge_of_mem_span (GaugeGroupI.toU1 g) hx
 

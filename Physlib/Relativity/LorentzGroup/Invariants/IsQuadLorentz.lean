@@ -34,7 +34,14 @@ as a tensor `T^{μ₁ μ₂ μ₃ μ₄}`.
 The main theorem `exists_smul_contraction_of_invariant` classifies the Lorentz
 invariants in the span of the components: every invariant element is a linear
 combination of the outer, inner and split metric contractions and the Levi-Civita
-contraction.
+contraction. The four contractions are themselves Lorentz invariant
+(`repLorentz_outerContraction` and its three companions): the metric ones because
+`Λ η Λᵀ = η` is what defines the Lorentz group, the Levi-Civita one because the
+transformations coming from `SL(2,ℂ)` are proper. That is what makes the error term of
+the classification modulo a Lorentz-stable submodule invariant as well
+(`exists_smul_contraction_of_invariant_subset`), the error being the difference of two
+invariants, and it is what turns both classifications into the equivalences
+`mem_span_and_invariant_iff` and `mem_span_sup_invariant_iff`.
 
 The section headings tell the story: the light-cone bases (B) grade the span by boost
 weight, the weight-zero projection of a generator gives the recursion rounds (C), a
@@ -42,6 +49,8 @@ sieve along the three axes (D) cuts an invariant down to the tied pieces support
 paired-or-distinct indices (E), rotation averaging reduces to `22` orbit sums (F) on
 which the boost average is an explicit integer matrix (G), and a polynomial certificate
 collapses the iterated rounds to the projector onto the four contractions (H, I, J).
+The two symbols the contractions are built from are shown invariant in I.5 and the
+contractions themselves in I.6.
 -/
 
 @[expose] public section
@@ -2525,6 +2534,30 @@ noncomputable def splitContraction : B :=
 noncomputable def epsilonContraction : B :=
   ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : ℂ) • T d
 
+include hT in
+/-- The outer contraction lies in the span of the components. -/
+lemma outerContraction_mem_span : outerContraction (T := T) ∈ hT.span :=
+  sum_mem fun d _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+
+include hT in
+/-- The inner contraction lies in the span of the components. -/
+lemma innerContraction_mem_span : innerContraction (T := T) ∈ hT.span :=
+  sum_mem fun d _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+
+include hT in
+/-- The split contraction lies in the span of the components. -/
+lemma splitContraction_mem_span : splitContraction (T := T) ∈ hT.span :=
+  sum_mem fun d _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+
+include hT in
+/-- The Levi-Civita contraction lies in the span of the components. -/
+lemma epsilonContraction_mem_span : epsilonContraction (T := T) ∈ hT.span :=
+  sum_mem fun d _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+
 /-!
 
 ## I.2. Orbit coordinates and the projector factorisation
@@ -2738,6 +2771,377 @@ theorem exists_smul_contraction_of_eq_sum_orbitRep {x : B} (c : Fin 22 → ℂ)
   · rfl
 /-!
 
+## I.5. The metric and the Levi-Civita sign under a Lorentz transformation
+
+The four contractions are built from two integer symbols, the metric `etaZ` and the
+Levi-Civita sign `epsilonSignZ`, and the invariance of the contractions is the
+invariance of those symbols. For the metric that is the defining property
+`Λ η Λᵀ = η` of the Lorentz group, read entrywise. For the Levi-Civita sign it is the
+transformation law of a determinant, `∑_d ε d ∏ᵢ Λ (a i) (d i) = det Λ * ε a`, which
+holds because `ε` is the determinant of the Kronecker matrix of a multi-index against
+the standard listing of the four directions; the sign is then invariant for the proper
+transformations, and those coming from `SL(2,ℂ)` are proper.
+
+-/
+
+/-- A sum over families of four four-vector indices is a fourfold sum. -/
+lemma sum_pi_four {M : Type*} [AddCommMonoid M] (F : (Fin 4 → Fin 1 ⊕ Fin 3) → M) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, F d
+      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, ∑ z : Fin 1 ⊕ Fin 3,
+        ∑ w : Fin 1 ⊕ Fin 3, F ![x, y, z, w] := by
+  rw [show (∑ d : Fin 4 → Fin 1 ⊕ Fin 3, F d)
+      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3),
+        F ![p.1, p.2.1, p.2.2.1, p.2.2.2] from
+      Fintype.sum_equiv
+        { toFun := fun d => (d 0, d 1, d 2, d 3)
+          invFun := fun p => ![p.1, p.2.1, p.2.2.1, p.2.2.2]
+          left_inv := fun d => by funext i; fin_cases i <;> simp
+          right_inv := fun p => by simp } _ _ fun d => by
+        congr 1
+        funext i
+        fin_cases i <;> simp]
+  simp only [Fintype.sum_prod_type]
+
+/-- The integer metric is the Minkowski matrix. -/
+lemma etaZ_cast (μ ν : Fin 1 ⊕ Fin 3) : ((etaZ μ ν : ℤ) : ℝ) = minkowskiMatrix μ ν := by
+  rcases eq_or_ne μ ν with rfl | h
+  · match μ with
+    | Sum.inl i => fin_cases i; simp [etaZ, minkowskiSignZ]
+    | Sum.inr i => simp [etaZ, minkowskiSignZ]
+  · simp [etaZ, h]
+
+/-- The metric is carried to itself by a Lorentz matrix: this is `Λ η Λᵀ = η`, the
+  defining property of the Lorentz group, read on the entry `(a, b)`. -/
+lemma sum_etaZ_mul (Λ : LorentzGroup 3) (a b : Fin 1 ⊕ Fin 3) :
+    ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, ((etaZ x y : ℤ) : ℂ)
+        * (((Λ.1 a x : ℝ) : ℂ) * ((Λ.1 b y : ℝ) : ℂ))
+      = ((etaZ a b : ℤ) : ℂ) := by
+  have hR : ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3,
+      ((etaZ x y : ℤ) : ℝ) * (Λ.1 a x * Λ.1 b y) = ((etaZ a b : ℤ) : ℝ) := by
+    have h := congrFun (congrFun
+      (LorentzGroup.mul_minkowskiMatrix_mul_transpose (Λ := Λ)) a) b
+    simp only [Matrix.mul_apply, Matrix.transpose_apply] at h
+    rw [etaZ_cast, ← h, Finset.sum_comm]
+    refine Finset.sum_congr rfl fun y _ => ?_
+    rw [Finset.sum_mul]
+    exact Finset.sum_congr rfl fun x _ => by rw [etaZ_cast]; ring
+  have hC := congrArg (fun r : ℝ => (r : ℂ)) hR
+  push_cast at hC ⊢
+  exact hC
+
+/-- The outer pairing of two metrics is carried to itself by a Lorentz matrix: the
+  fourfold sum factors into two copies of `sum_etaZ_mul`. -/
+lemma sum_outerPair_mul (Λ : LorentzGroup 3) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 1) * etaZ (d 2) (d 3) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = ((etaZ (a 0) (a 1) * etaZ (a 2) (a 3) : ℤ) : ℂ) := by
+  have key : ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 1) * etaZ (d 2) (d 3) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = (∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, ((etaZ x y : ℤ) : ℂ)
+            * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 1) y : ℝ) : ℂ)))
+        * (∑ z : Fin 1 ⊕ Fin 3, ∑ w : Fin 1 ⊕ Fin 3, ((etaZ z w : ℤ) : ℂ)
+            * (((Λ.1 (a 2) z : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ))) := by
+    rw [sum_pi_four]
+    have hterm : ∀ x y z w : Fin 1 ⊕ Fin 3,
+        ((etaZ (![x, y, z, w] 0) (![x, y, z, w] 1)
+            * etaZ (![x, y, z, w] 2) (![x, y, z, w] 3) : ℤ) : ℂ)
+          * ∏ i, ((Λ.1 (a i) (![x, y, z, w] i) : ℝ) : ℂ)
+        = (((etaZ x y : ℤ) : ℂ) * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 1) y : ℝ) : ℂ)))
+          * (((etaZ z w : ℤ) : ℂ)
+            * (((Λ.1 (a 2) z : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ))) := by
+      intro x y z w
+      simp only [Fin.prod_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
+      push_cast
+      ring
+    simp only [hterm, ← Finset.mul_sum, ← Finset.sum_mul]
+  rw [key, sum_etaZ_mul, sum_etaZ_mul]
+  push_cast
+  ring
+
+/-- The inner pairing of two metrics is carried to itself by a Lorentz matrix, by the
+  same factorisation with the indices interleaved. -/
+lemma sum_innerPair_mul (Λ : LorentzGroup 3) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 2) * etaZ (d 1) (d 3) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = ((etaZ (a 0) (a 2) * etaZ (a 1) (a 3) : ℤ) : ℂ) := by
+  have key : ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 2) * etaZ (d 1) (d 3) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = (∑ x : Fin 1 ⊕ Fin 3, ∑ z : Fin 1 ⊕ Fin 3, ((etaZ x z : ℤ) : ℂ)
+            * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 2) z : ℝ) : ℂ)))
+        * (∑ y : Fin 1 ⊕ Fin 3, ∑ w : Fin 1 ⊕ Fin 3, ((etaZ y w : ℤ) : ℂ)
+            * (((Λ.1 (a 1) y : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ))) := by
+    rw [sum_pi_four]
+    have hterm : ∀ x y z w : Fin 1 ⊕ Fin 3,
+        ((etaZ (![x, y, z, w] 0) (![x, y, z, w] 2)
+            * etaZ (![x, y, z, w] 1) (![x, y, z, w] 3) : ℤ) : ℂ)
+          * ∏ i, ((Λ.1 (a i) (![x, y, z, w] i) : ℝ) : ℂ)
+        = (((etaZ x z : ℤ) : ℂ) * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 2) z : ℝ) : ℂ)))
+          * (((etaZ y w : ℤ) : ℂ)
+            * (((Λ.1 (a 1) y : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ))) := by
+      intro x y z w
+      simp only [Fin.prod_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
+      push_cast
+      ring
+    simp only [hterm, ← Finset.mul_sum, ← Finset.sum_mul]
+  rw [key, sum_etaZ_mul, sum_etaZ_mul]
+  push_cast
+  ring
+
+/-- The split pairing of two metrics is carried to itself by a Lorentz matrix. -/
+lemma sum_splitPair_mul (Λ : LorentzGroup 3) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 3) * etaZ (d 1) (d 2) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = ((etaZ (a 0) (a 3) * etaZ (a 1) (a 2) : ℤ) : ℂ) := by
+  have key : ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((etaZ (d 0) (d 3) * etaZ (d 1) (d 2) : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = (∑ x : Fin 1 ⊕ Fin 3, ∑ w : Fin 1 ⊕ Fin 3, ((etaZ x w : ℤ) : ℂ)
+            * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ)))
+        * (∑ y : Fin 1 ⊕ Fin 3, ∑ z : Fin 1 ⊕ Fin 3, ((etaZ y z : ℤ) : ℂ)
+            * (((Λ.1 (a 1) y : ℝ) : ℂ) * ((Λ.1 (a 2) z : ℝ) : ℂ))) := by
+    rw [sum_pi_four]
+    have hterm : ∀ x y z w : Fin 1 ⊕ Fin 3,
+        ((etaZ (![x, y, z, w] 0) (![x, y, z, w] 3)
+            * etaZ (![x, y, z, w] 1) (![x, y, z, w] 2) : ℤ) : ℂ)
+          * ∏ i, ((Λ.1 (a i) (![x, y, z, w] i) : ℝ) : ℂ)
+        = (((etaZ x w : ℤ) : ℂ) * (((Λ.1 (a 0) x : ℝ) : ℂ) * ((Λ.1 (a 3) w : ℝ) : ℂ)))
+          * (((etaZ y z : ℤ) : ℂ)
+            * (((Λ.1 (a 1) y : ℝ) : ℂ) * ((Λ.1 (a 2) z : ℝ) : ℂ))) := by
+      intro x y z w
+      simp only [Fin.prod_univ_four, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
+      push_cast
+      ring
+    simp only [hterm, ← Finset.mul_sum, ← Finset.sum_mul]
+  rw [key, sum_etaZ_mul, sum_etaZ_mul]
+  push_cast
+  ring
+
+set_option maxRecDepth 100000 in
+/-- The Levi-Civita sign is a determinant: it is the determinant of the Kronecker
+  matrix of the multi-index against the standard listing of the four directions. A
+  finite check over the `256` multi-indices. -/
+lemma det_delta_eq_epsilonSignZ_int (b : Fin 4 → Fin 1 ⊕ Fin 3) :
+    (Matrix.of fun μ ν : Fin 1 ⊕ Fin 3 =>
+      if b (finSumFinEquiv μ) = ν then (1 : ℤ) else 0).det = epsilonSignZ b := by
+  revert b
+  decide
+
+/-- The determinant form of the Levi-Civita sign over any commutative ring, the integer
+  identity carried along the ring map from `ℤ`. -/
+lemma det_delta_eq_epsilonSignZ {R : Type*} [CommRing R] (b : Fin 4 → Fin 1 ⊕ Fin 3) :
+    (Matrix.of fun μ ν : Fin 1 ⊕ Fin 3 =>
+      if b (finSumFinEquiv μ) = ν then (1 : R) else 0).det = ((epsilonSignZ b : ℤ) : R) := by
+  have h := RingHom.map_det (Int.castRingHom R)
+    (Matrix.of fun μ ν : Fin 1 ⊕ Fin 3 => if b (finSumFinEquiv μ) = ν then (1 : ℤ) else 0)
+  simp only [Int.coe_castRingHom, RingHom.mapMatrix_apply] at h
+  rw [← det_delta_eq_epsilonSignZ_int b, h]
+  congr 1
+  ext μ ν
+  by_cases hbν : b (finSumFinEquiv μ) = ν <;> simp [Matrix.map_apply, hbν]
+
+/-- The Leibniz formula with the permutation moving the column index. -/
+lemma det_eq_sum_perm_prod {R : Type*} [CommRing R]
+    (X : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) R) :
+    X.det = ∑ σ : Equiv.Perm (Fin 1 ⊕ Fin 3),
+      ((Equiv.Perm.sign σ : ℤ) : R) * ∏ μ, X μ (σ μ) := by
+  rw [← Matrix.det_transpose X, Matrix.det_apply']
+  rfl
+
+/-- The Levi-Civita sign transforms by the determinant: contracting it against four rows
+  of a matrix returns the determinant times the sign of the rows. Both sides are the
+  determinant of the matrix whose rows are those of `M` selected by `a`, the left one
+  after expanding each row in the standard directions and the right one after the
+  product rule for determinants. -/
+lemma sum_epsilonSignZ_mul_prod {R : Type*} [CommRing R]
+    (M : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) R) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : R) * ∏ i, M (a i) (d i)
+      = M.det * ((epsilonSignZ a : ℤ) : R) := by
+  classical
+  have hre : ∀ (σ : Equiv.Perm (Fin 1 ⊕ Fin 3)) (d : Fin 4 → Fin 1 ⊕ Fin 3),
+      (∏ μ, (if d (finSumFinEquiv μ) = σ μ then (1 : R) else 0))
+        = ∏ i, (if d i = σ (finSumFinEquiv.symm i) then (1 : R) else 0) := by
+    intro σ d
+    rw [← Equiv.prod_comp finSumFinEquiv
+      (fun i => if d i = σ (finSumFinEquiv.symm i) then (1 : R) else 0)]
+    exact Finset.prod_congr rfl fun μ _ => by rw [Equiv.symm_apply_apply]
+  have hprod : ∀ (σ : Equiv.Perm (Fin 1 ⊕ Fin 3)) (d : Fin 4 → Fin 1 ⊕ Fin 3),
+      (∏ μ, (if d (finSumFinEquiv μ) = σ μ then (1 : R) else 0)) * ∏ i, M (a i) (d i)
+        = ∏ i, ((if d i = σ (finSumFinEquiv.symm i) then (1 : R) else 0)
+          * M (a i) (d i)) := by
+    intro σ d
+    rw [hre σ d, ← Finset.prod_mul_distrib]
+  calc ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : R) * ∏ i, M (a i) (d i)
+      = ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ∑ σ : Equiv.Perm (Fin 1 ⊕ Fin 3),
+          ((Equiv.Perm.sign σ : ℤ) : R)
+            * ∏ i, ((if d i = σ (finSumFinEquiv.symm i) then (1 : R) else 0)
+              * M (a i) (d i)) := by
+        refine Finset.sum_congr rfl fun d _ => ?_
+        rw [← det_delta_eq_epsilonSignZ (R := R) d, det_eq_sum_perm_prod, Finset.sum_mul]
+        refine Finset.sum_congr rfl fun σ _ => ?_
+        simp only [Matrix.of_apply]
+        rw [mul_assoc, hprod σ d]
+    _ = ∑ σ : Equiv.Perm (Fin 1 ⊕ Fin 3), ((Equiv.Perm.sign σ : ℤ) : R)
+          * ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
+            ∏ i, ((if d i = σ (finSumFinEquiv.symm i) then (1 : R) else 0)
+              * M (a i) (d i)) := by
+        rw [Finset.sum_comm]
+        exact Finset.sum_congr rfl fun σ _ => by rw [Finset.mul_sum]
+    _ = ∑ σ : Equiv.Perm (Fin 1 ⊕ Fin 3), ((Equiv.Perm.sign σ : ℤ) : R)
+          * ∏ i, M (a i) (σ (finSumFinEquiv.symm i)) := by
+        refine Finset.sum_congr rfl fun σ _ => ?_
+        congr 1
+        have hpi := Finset.sum_prod_piFinset (ι := Fin 4) (κ := Fin 1 ⊕ Fin 3) Finset.univ
+          (fun i ν => (if ν = σ (finSumFinEquiv.symm i) then (1 : R) else 0) * M (a i) ν)
+        rw [Fintype.piFinset_univ] at hpi
+        rw [hpi]
+        exact Finset.prod_congr rfl fun i _ => by simp
+    _ = M.det * ((epsilonSignZ a : ℤ) : R) := by
+        rw [mul_comm, ← det_delta_eq_epsilonSignZ (R := R) a, ← Matrix.det_mul,
+          det_eq_sum_perm_prod]
+        refine Finset.sum_congr rfl fun σ _ => ?_
+        congr 1
+        rw [← Equiv.prod_comp finSumFinEquiv
+          (fun i => M (a i) (σ (finSumFinEquiv.symm i)))]
+        refine Finset.prod_congr rfl fun μ _ => ?_
+        rw [Equiv.symm_apply_apply, Matrix.mul_apply]
+        simp
+
+/-- The Levi-Civita sign is carried to itself by a proper Lorentz matrix: the
+  determinant factor of `sum_epsilonSignZ_mul_prod` is one. -/
+lemma sum_epsilonSignZ_mul (Λ : LorentzGroup 3) (hΛ : Λ.1.det = 1)
+    (a : Fin 4 → Fin 1 ⊕ Fin 3) :
+    ∑ d : Fin 4 → Fin 1 ⊕ Fin 3, ((epsilonSignZ d : ℤ) : ℂ)
+        * ∏ i, ((Λ.1 (a i) (d i) : ℝ) : ℂ)
+      = ((epsilonSignZ a : ℤ) : ℂ) := by
+  have hdet : (Complex.ofRealHom.mapMatrix Λ.1).det = 1 := by
+    rw [← RingHom.map_det, hΛ]
+    simp
+  have h := sum_epsilonSignZ_mul_prod (Complex.ofRealHom.mapMatrix Λ.1) a
+  rw [hdet, one_mul] at h
+  rw [← h]
+  rfl
+
+/-!
+
+## I.6. The four contractions are Lorentz invariant
+
+A linear map moving the components by a Lorentz matrix fixes any combination of the
+components whose coefficient family that matrix fixes, and I.5 says the four coefficient
+families are fixed. The statements are made for an arbitrary such map, so that they can
+be read in the quotient of J.3 as well as for `repLorentz`; the Levi-Civita one asks in
+addition that the matrix be proper, which the matrices coming from `SL(2,ℂ)` are.
+
+-/
+
+/-- A linear map moving the components by a Lorentz matrix fixes every combination of
+  the components whose coefficient family that matrix fixes. -/
+lemma map_sum_smul_eq_self {f : B →ₗ[ℂ] B} {Λ : LorentzGroup 3}
+    (hf : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a)
+    (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ)
+    (hc : ∀ a : Fin 4 → Fin 1 ⊕ Fin 3,
+      ∑ l : Fin 4 → Fin 1 ⊕ Fin 3, c l * ∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ) = c a) :
+    f (∑ l : Fin 4 → Fin 1 ⊕ Fin 3, c l • T l)
+      = ∑ l : Fin 4 → Fin 1 ⊕ Fin 3, c l • T l := by
+  rw [map_sum]
+  have h1 : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (c l • T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (c l * ∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a := by
+    intro l
+    rw [map_smul, hf l, Finset.smul_sum]
+    exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
+  simp only [h1]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [← Finset.sum_smul, hc a]
+
+/-- The outer contraction is fixed by any linear map moving the components by a Lorentz
+  matrix. -/
+lemma map_outerContraction {f : B →ₗ[ℂ] B} {Λ : LorentzGroup 3}
+    (hf : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a) :
+    f (outerContraction (T := T)) = outerContraction (T := T) := by
+  rw [outerContraction]
+  exact map_sum_smul_eq_self hf _ (sum_outerPair_mul Λ)
+
+/-- The inner contraction is fixed by any linear map moving the components by a Lorentz
+  matrix. -/
+lemma map_innerContraction {f : B →ₗ[ℂ] B} {Λ : LorentzGroup 3}
+    (hf : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a) :
+    f (innerContraction (T := T)) = innerContraction (T := T) := by
+  rw [innerContraction]
+  exact map_sum_smul_eq_self hf _ (sum_innerPair_mul Λ)
+
+/-- The split contraction is fixed by any linear map moving the components by a Lorentz
+  matrix. -/
+lemma map_splitContraction {f : B →ₗ[ℂ] B} {Λ : LorentzGroup 3}
+    (hf : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a) :
+    f (splitContraction (T := T)) = splitContraction (T := T) := by
+  rw [splitContraction]
+  exact map_sum_smul_eq_self hf _ (sum_splitPair_mul Λ)
+
+/-- The Levi-Civita contraction is fixed by any linear map moving the components by a
+  proper Lorentz matrix. Properness cannot be dropped: an improper matrix negates the
+  Levi-Civita sign, and with it the contraction. -/
+lemma map_epsilonContraction {f : B →ₗ[ℂ] B} {Λ : LorentzGroup 3} (hΛ : Λ.1.det = 1)
+    (hf : ∀ l : Fin 4 → Fin 1 ⊕ Fin 3, f (T l)
+      = ∑ a : Fin 4 → Fin 1 ⊕ Fin 3, (∏ i, ((Λ.1 (a i) (l i) : ℝ) : ℂ)) • T a) :
+    f (epsilonContraction (T := T)) = epsilonContraction (T := T) := by
+  rw [epsilonContraction]
+  exact map_sum_smul_eq_self hf _ (sum_epsilonSignZ_mul Λ hΛ)
+
+include hT in
+/-- The outer contraction is Lorentz invariant. -/
+lemma repLorentz_outerContraction (g : SL(2,ℂ)) :
+    repLorentz g (outerContraction (T := T)) = outerContraction (T := T) :=
+  map_outerContraction (Λ := SL2C.toLorentzGroup g) (hT.repLorentz_T g)
+
+include hT in
+/-- The inner contraction is Lorentz invariant. -/
+lemma repLorentz_innerContraction (g : SL(2,ℂ)) :
+    repLorentz g (innerContraction (T := T)) = innerContraction (T := T) :=
+  map_innerContraction (Λ := SL2C.toLorentzGroup g) (hT.repLorentz_T g)
+
+include hT in
+/-- The split contraction is Lorentz invariant. -/
+lemma repLorentz_splitContraction (g : SL(2,ℂ)) :
+    repLorentz g (splitContraction (T := T)) = splitContraction (T := T) :=
+  map_splitContraction (Λ := SL2C.toLorentzGroup g) (hT.repLorentz_T g)
+
+include hT in
+/-- The Levi-Civita contraction is Lorentz invariant, the Lorentz matrix of an element
+  of `SL(2,ℂ)` being proper. -/
+lemma repLorentz_epsilonContraction (g : SL(2,ℂ)) :
+    repLorentz g (epsilonContraction (T := T)) = epsilonContraction (T := T) :=
+  map_epsilonContraction (Λ := SL2C.toLorentzGroup g) (SL2C.toLorentzGroup_det_one g)
+    (hT.repLorentz_T g)
+
+include hT in
+/-- A linear combination of the four contractions is Lorentz invariant. -/
+lemma repLorentz_smul_contraction (a₁ a₂ a₃ a₄ : ℂ) (g : SL(2,ℂ)) :
+    repLorentz g (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T))
+      = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) := by
+  simp only [map_add, map_smul, hT.repLorentz_outerContraction,
+    hT.repLorentz_innerContraction, hT.repLorentz_splitContraction,
+    hT.repLorentz_epsilonContraction]
+
+include hT in
+/-- A linear combination of the four contractions lies in the span of the components. -/
+lemma smul_contraction_mem_span (a₁ a₂ a₃ a₄ : ℂ) :
+    a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+      + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) ∈ hT.span :=
+  add_mem (add_mem (add_mem (Submodule.smul_mem _ _ hT.outerContraction_mem_span)
+    (Submodule.smul_mem _ _ hT.innerContraction_mem_span))
+    (Submodule.smul_mem _ _ hT.splitContraction_mem_span))
+    (Submodule.smul_mem _ _ hT.epsilonContraction_mem_span)
+
+/-!
+
 ## J. The classification of the Lorentz invariants
 
 ## J.1. Graded extraction along the sieve
@@ -2825,6 +3229,21 @@ theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
   exact hT.exists_smul_contraction_of_eq_sum_orbitRep c hc
     (mem_boostWeightSubmodule_zero_of_invariant (repLorentz := repLorentz) hinv)
 
+include hT in
+/-- The classification read as an equivalence: an element of the span of the components
+  is fixed by the Lorentz group exactly when it is a linear combination of the four
+  contractions. The forward direction is the classification, the backward one the
+  invariance of the four contractions of I.6. -/
+theorem mem_span_and_invariant_iff (x : B) :
+    (x ∈ hT.span ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ a₁ a₂ a₃ a₄ : ℂ,
+        x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+          + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) := by
+  refine ⟨fun h => hT.exists_smul_contraction_of_invariant h.1 h.2, ?_⟩
+  rintro ⟨a₁, a₂, a₃, a₄, rfl⟩
+  exact ⟨hT.smul_contraction_mem_span a₁ a₂ a₃ a₄,
+    hT.repLorentz_smul_contraction a₁ a₂ a₃ a₄⟩
+
 
 /-!
 
@@ -2833,6 +3252,11 @@ theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
 A Lorentz-stable submodule can be divided out: the quotient representation carries the
 images of the components as a quadruple Lorentz tensor again, so the classification
 applies verbatim in the quotient and lifts to a classification modulo the submodule.
+Stability of the submodule is what makes the quotient representation exist, and it
+cannot be dropped: for an unstable line the only invariant of the line is `0`, while an
+invariant of the sum may well lie outside the span. The error term is invariant for
+free, being the difference of two invariants, the element and the combination of the
+four contractions, which I.6 shows to be invariant.
 
 -/
 
@@ -2898,14 +3322,16 @@ include hT in
 /-- The classification of the Lorentz invariants modulo a stable submodule: an
   element of the span of the components together with a Lorentz-stable submodule `S`,
   fixed by the Lorentz group, is a linear combination of the four contractions up to an
-  error in `S`. The classification is applied in the quotient by `S`, where the images
+  error in `S`, and the error is Lorentz invariant as well, being the difference of two
+  invariants. The classification is applied in the quotient by `S`, where the images
   of the components form a quadruple Lorentz tensor again. -/
 lemma exists_smul_contraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
       x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
-        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) + y := by
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) + y
+      ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
   have hT' := hT.isQuadLorentz_quotRep S hS
   -- the class of `x` lies in the span of the images of the components
   have hmk : S.mkQ x ∈ hT'.span := by
@@ -2924,14 +3350,35 @@ lemma exists_smul_contraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
   rw [← mkQ_outerContraction, ← mkQ_innerContraction, ← mkQ_splitContraction,
     ← mkQ_epsilonContraction] at hcomb
   refine ⟨a₁, a₂, a₃, a₄, x - (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
-    + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T)), ?_, by abel⟩
-  have hker : x - (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
-      + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T))
-      ∈ LinearMap.ker S.mkQ := by
-    rw [LinearMap.mem_ker, map_sub, hcomb]
-    simp only [map_add, map_smul]
-    abel
-  rwa [Submodule.ker_mkQ] at hker
+    + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T)), ?_, by abel,
+    fun g => ?_⟩
+  · have hker : x - (a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+        + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T))
+        ∈ LinearMap.ker S.mkQ := by
+      rw [LinearMap.mem_ker, map_sub, hcomb]
+      simp only [map_add, map_smul]
+      abel
+    rwa [Submodule.ker_mkQ] at hker
+  · rw [map_sub, hinv g, hT.repLorentz_smul_contraction a₁ a₂ a₃ a₄ g]
+
+include hT in
+/-- The classification modulo a stable submodule read as an equivalence: a vector of the
+  span joined with a Lorentz-stable submodule `S` is fixed by the Lorentz group exactly
+  when it is a linear combination of the four contractions up to an invariant error in
+  `S`. The forward direction is `exists_smul_contraction_of_invariant_subset`, the
+  backward one the invariance of the four contractions of I.6. -/
+theorem mem_span_sup_invariant_iff (x : B) (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
+    (x ∈ hT.span ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
+        x = a₁ • outerContraction (T := T) + a₂ • innerContraction (T := T)
+          + a₃ • splitContraction (T := T) + a₄ • epsilonContraction (T := T) + y
+        ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
+  refine ⟨fun h => hT.exists_smul_contraction_of_invariant_subset S hS h.1 h.2, ?_⟩
+  rintro ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩
+  refine ⟨add_mem (Submodule.mem_sup_left (hT.smul_contraction_mem_span a₁ a₂ a₃ a₄))
+    (Submodule.mem_sup_right hyS), fun g => ?_⟩
+  rw [map_add, hT.repLorentz_smul_contraction a₁ a₂ a₃ a₄ g, hyinv g]
 
 end IsQuadLorentz
 
