@@ -165,15 +165,24 @@ lemma isSU2BiAdjoint_wField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
       (fun a : Fin 2 → Fin 3 => h.wField l μ ν (a 0) * h.wField l' μ' ν' (a 1)) :=
   ⟨fun U => h.isSU2BiAdjointMat_wField_mul l μ ν l' μ' ν' (1, U, 1)⟩
 
+/-- A gauge transformation moves a product of two hypercharge field strengths as the
+  `U(1)` factor of that gauge group element moves a tensor with two `u(1)` adjoint
+  indices. -/
+lemma isU1BiAdjointMat_hyperchargeField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3)
+    (g : GaugeGroupI) :
+    IsU1BiAdjointMat (GaugeGroupI.toU1 g) (repGauge g)
+      (fun _ : Fin 2 → Fin 1 => h.hyperchargeField l μ ν * h.hyperchargeField l' μ' ν') :=
+  (isU1BiAdjointMat_iff _ _ _).2 fun _ => by
+    rw [hrepGauge_mul, h.repGauge_hyperchargeField, h.repGauge_hyperchargeField]
+
 /-- A product of two hypercharge field strengths, viewed as a family indexed by the two
   `u(1)` adjoint indices it carries, is a bi-adjoint `u(1)` tensor. -/
 lemma isU1BiAdjoint_hyperchargeField_mul {n m : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3) (μ' ν' : Fin 1 ⊕ Fin 3) :
     IsU1BiAdjoint B repGauge
-      (fun _ : Fin 2 → Fin 1 => h.hyperchargeField l μ ν * h.hyperchargeField l' μ' ν') := by
-  refine ⟨fun g d => ?_⟩
-  rw [hrepGauge_mul, h.repGauge_hyperchargeField, h.repGauge_hyperchargeField]
-  simp
+      (fun _ : Fin 2 → Fin 1 => h.hyperchargeField l μ ν * h.hyperchargeField l' μ' ν') :=
+  ⟨fun u => h.isU1BiAdjointMat_hyperchargeField_mul l μ ν l' μ' ν' (1, 1, u)⟩
 
 /-!
 
@@ -188,9 +197,12 @@ containing its generators, so the whole bi-adjoint subspace lies there too.
 What holds is an inclusion and not an equality. The mass-weight submodule of that weight
 also contains the towers carrying more covariant derivatives, and the products mixing
 two different gauge factors, and none of those is a component of any of the three
-families. For the `u(1)` family the inclusion sharpens: every component of a bi-adjoint
-`u(1)` family is gauge invariant already, so its span meets the mass-weight submodule
-inside the gauge invariants.
+families. For the `u(1)` family the inclusion sharpens, so that its span meets the
+mass-weight submodule inside the gauge invariants. That sharpening does not come from
+`IsU1BiAdjoint`, which constrains the hypercharge factor alone; it comes from
+`repGauge_hyperchargeField`, the transformation law of the hypercharge field strength
+itself, which fixes it under every gauge element and so makes every component of the
+family gauge invariant.
 
 -/
 
@@ -312,15 +324,16 @@ lemma isU1BiAdjoint_hyperchargeField_mul_span_le_massWeightSubmodule {n m : ℕ}
     (h.derivSubmodule_mul_le_massWeightSubmodule n m)
 
 /-- The bi-adjoint subspace of a product of two hypercharge field strengths is a space of
-  gauge invariants of the expected mass weight, the `u(1)` adjoint action being
-  trivial. -/
+  gauge invariants of the expected mass weight, each hypercharge field strength being
+  fixed by the whole gauge group on its own. -/
 lemma isU1BiAdjoint_hyperchargeField_mul_span_le_inf {n m : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3) (l' : Fin m → Fin 1 ⊕ Fin 3)
     (μ' ν' : Fin 1 ⊕ Fin 3) :
     (h.isU1BiAdjoint_hyperchargeField_mul l μ ν l' μ' ν').span
       ≤ h.massWeightSubmodule (2 * (2 + n) + 2 * (2 + m)) ⊓ repGauge.invariants :=
   le_inf (h.isU1BiAdjoint_hyperchargeField_mul_span_le_massWeightSubmodule l μ ν l' μ' ν')
-    (IsU1BiAdjoint.span_le_invariants _)
+    (IsU1BiAdjoint.span_le_invariants _
+      fun g => h.isU1BiAdjointMat_hyperchargeField_mul l μ ν l' μ' ν' g)
 
 /-!
 
@@ -387,7 +400,8 @@ lemma traceContraction_hyperchargeField_mul_mem {n m : ℕ} (l : Fin n → Fin 1
   · rw [h.traceContraction_hyperchargeField_mul]
     exact h.F_mul_F_mem_massWeightSubmodule l μ ν _ l' μ' ν' _
   · exact (Representation.mem_invariants _ _).mpr fun g =>
-      IsU1BiAdjoint.repGauge_traceContraction _ g
+      IsU1BiAdjoint.map_traceContraction _
+        (h.isU1BiAdjointMat_hyperchargeField_mul l μ ν l' μ' ν' g)
 
 /-!
 
@@ -455,7 +469,8 @@ lemma traceContraction_hyperchargeField_mul_mem_piece_zero (μ ν μ' ν' : Fin 
       ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _
     (Submodule.mem_inf.mp (h.traceContraction_hyperchargeField_mul_mem_eight μ ν μ' ν')).1
-    fun g => IsU1BiAdjoint.repGauge_traceContraction _ g
+    fun g => IsU1BiAdjoint.map_traceContraction _
+      (h.isU1BiAdjointMat_hyperchargeField_mul ![] μ ν ![] μ' ν' g)
 
 /-!
 

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 /-!
 # Gauge tensors carrying two `su(2)` fundamental indices
@@ -27,20 +28,37 @@ contracted against another doublet index except through the antisymmetric symbol
 whose invariance is the statement that the determinant of an `SU(2)` matrix is one.
 
 The law itself is `IsSU2BiFundamentalMat`, which relates one element of `SU(2)` to one
-linear map on `B` and mentions no other factor of the gauge group, and
-`IsSU2BiFundamental` says only that every element of the gauge group obeys that law
-through its `SU(2)` part. Everything the file proves about how the components move is
-proved at the level of `IsSU2BiFundamentalMat` and instantiated afterwards, so the
-mathematics here is `SU(2)` mathematics. What stays about `GaugeGroupI` is the
-bookkeeping of the two decompositions: `GaugeWeightDecomposition` and
-`SU2PermDecomposition` are supplied only for representations of the gauge group.
+linear map on `B` and mentions no other factor of the gauge group. `IsSU2BiFundamental`
+says that the isospin transformation `(1, U, 1)` obeys that law with the matrix of `U`,
+for every `U` in `SU(2)`, and it says nothing whatever about the colour and hypercharge
+factors: those may move the components as they please. So the mathematics here is `SU(2)`
+mathematics twice over, in the law and in the hypothesis, and the conclusions are about
+invariance under the isospin factor.
 
-Section A gives the transformation law, the proposition and the span of its components,
-section B the epsilon contraction, which is the natural gauge invariant built from two
-fundamental indices, and section C the gauge weight decomposition of the span. Section D
+Two things follow that are worth stating at the outset. The gauge weight decomposition
+must know how all four torus generators act, and only `gaugeTorusGen 2` is an isospin
+transformation, so the decomposition cannot be built for `repGauge`. It is built instead
+for `repSU2 repGauge`, the isospin part of the representation, which sends the colour and
+hypercharge generators to the identity and so gives them weight zero by construction
+rather than by hypothesis; `gaugeWeightDecomposition_supp` still lists exactly the three
+weights of the tensor square of the `su(2)` fundamental. And the epsilon contraction is
+fixed by the isospin factor only, which is why `repGauge_epsilonContraction` speaks of
+`repGauge (1, U, 1)`: the hypercharge factor by itself is enough to scale the contraction,
+so no statement about a general gauge transformation is available.
+
+`repSU2` is not declared here. It is declared in `IsSU2BiAdjoint`, the file that first
+needed it, and this file imports that one for it: the two constrain the same factor of the
+gauge group in the same way, and a second copy of the definition in the same namespace
+would collide with the first. The import is heavier than the borrowing warrants, and the
+proper home for `repSU2` and its companions is a file both can lean on.
+
+Section A gives the transformation law, the proposition, the isospin part of a
+representation and the span of the components, section B the epsilon contraction, which is
+the natural isospin invariant built from two fundamental indices, and section C the gauge
+weight decomposition of the span, for the isospin part of the representation. Section D
 grades the zero-weight piece of that decomposition by the Weyl element of the `SU(2)`
 factor, which the gauge weight alone cannot split, and the two gradings together leave the
-epsilon contraction spanning the gauge invariants.
+epsilon contraction spanning the isospin invariants.
 -/
 
 @[expose] public section
@@ -53,6 +71,12 @@ open Matrix
 
 ## A. Bi-fundamental `su(2)` families and the span of their components
 
+A.1 gives the transformation law and the proposition, A.2 reads a representation of the
+gauge group at the isospin factor of its argument alone, and A.3 the span of the
+components.
+
+## A.1. The transformation law and the proposition
+
 The transformation law carries one factor of the fundamental matrix per index, with the
 summed index in the row slot, exactly as `IsSU2BiAdjoint` carries one factor of
 `su2AdjointMatrix` per index. It is recorded by `IsSU2BiFundamentalMat`, a relation
@@ -61,12 +85,13 @@ gauge group appears. It is the law obeyed by the conjugate Higgs doublet symbols
 `IsHiggsSector` once their hypercharge character is set aside, the Higgs symbols
 themselves obeying the complex conjugate law.
 
-`IsSU2BiFundamental` then says that every gauge transformation obeys that law through its
-`SU(2)` part. Since `GaugeGroupI.toSU2` is a monoid homomorphism this is an action.
-Quantifying over the whole of `GaugeGroupI` is what makes the proposition say more than a
-statement about a single `SU(2)` element would: an element of the colour or hypercharge
-factor is sent to `1` in `SU(2)`, so those factors fix every component, and section C
-reads that off as the vanishing of the colour and hypercharge coordinates of every weight.
+`IsSU2BiFundamental` then says that the gauge transformation `(1, U, 1)` obeys that law
+with the matrix of `U`, for every `U` in `SU(2)`. Since `U ↦ (1, U, 1)` is a monoid
+homomorphism this is an action of `SU(2)`, and it is all that is assumed: a gauge
+transformation with a nontrivial colour or hypercharge factor is not mentioned, and may
+move the components arbitrarily. So nothing here forces the colour and hypercharge
+coordinates of a weight to vanish; section C gets that instead from `repSU2`, which sends
+the colour and hypercharge generators to the identity outright.
 
 -/
 
@@ -81,19 +106,67 @@ def IsSU2BiFundamentalMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
 
 /-- A family `T` of elements of `B`, indexed by two `su(2)` fundamental indices,
   transforms as a tensor `T^{a₁ a₂}` under the representation `repGauge` of the gauge
-  group: every gauge transformation moves the components by its `SU(2)` part alone. -/
+  group: an isospin transformation moves the components by the `SU(2)` element it is built
+  from. Nothing is asked of the colour or hypercharge factors. -/
 structure IsSU2BiFundamental (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B)
     (T : (Fin 2 → Fin 2) → B) : Prop where
-  repGauge_T : ∀ g : GaugeGroupI,
-    IsSU2BiFundamentalMat (GaugeGroupI.toSU2 g) (repGauge g) T
+  repGauge_T : ∀ g : specialUnitaryGroup (Fin 2) ℂ,
+    IsSU2BiFundamentalMat g (repGauge (1, g, 1)) T
 
 namespace IsSU2BiFundamental
 set_option linter.unusedVariables false
 
+/-!
+
+## A.2. The isospin part of a representation
+
+Reading a representation of the gauge group at the isospin factor of its argument alone
+gives `repSU2`, again a representation of the whole gauge group. It is declared in
+`IsSU2BiAdjoint`, the file that first needed it, and imported here rather than repeated,
+along with `repSU2_apply`, `isMulRep_repSU2`, `repSU2_invariant_iff_su2` and
+`repSU2_stable_iff_su2`. Every construction stated for a representation of `GaugeGroupI`
+applies to it verbatim, and a bi-fundamental family for `repGauge` is a bi-fundamental
+family for `repSU2 repGauge`, with the same span and the same epsilon contraction.
+Invariance under it is invariance under the isospin factor,
+`∀ U : SU(2), repGauge (1, U, 1) x = x`, which is exactly what the transformation law
+constrains.
+
+`repSU2` carries the weight bookkeeping of section C and the Weyl grading of section D,
+both of which ask how a gauge transformation acts and are not available for `repGauge`
+itself. The statements are written with the isospin transformation `(1, U, 1)` spelled
+out, so that reading one needs no unfolding, and `repSU2_invariant_iff_su2` is the bridge
+between the two spellings.
+
+All that is added here is the reading of `repSU2` at the Weyl element, which the adjoint
+file has no use for; it sits in this file's own namespace, `repSU2` itself being a
+`StandardModel` declaration.
+
+-/
+
+/-- The isospin part of a representation agrees with it at the Weyl element, which is an
+  isospin transformation to begin with. -/
+lemma repSU2_gaugeSU2Perm {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (repGauge : Representation ℂ GaugeGroupI B) :
+    repSU2 repGauge gaugeSU2Perm = repGauge gaugeSU2Perm := rfl
+
+/-!
+
+## A.3. The span of the components
+
+-/
+
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
   {U : specialUnitaryGroup (Fin 2) ℂ} {f : B →ₗ[ℂ] B}
+
+/-- A bi-fundamental family for a representation is a bi-fundamental family for its
+  isospin part: the transformation law reads only the isospin factor to begin with. The
+  span and the epsilon contraction do not mention the representation, so every statement
+  of this file transports along this and is read at the isospin factor alone. -/
+lemma toRepSU2 {T : (Fin 2 → Fin 2) → B} (hT : IsSU2BiFundamental B repGauge T) :
+    IsSU2BiFundamental B (repSU2 repGauge) T where
+  repGauge_T g := hT.repGauge_T g
 
 /-- The span of all the components of a family indexed by two `su(2)` fundamental
   indices. -/
@@ -133,12 +206,14 @@ the antisymmetric symbol, so there is exactly one contraction to make here. That
 not new: Physlib writes a Levi-Civita symbol as the generalized Kronecker delta of a
 multi-index against the identity, which is what `euclidLeviCivita` is in four dimensions
 and what `epsilon` is here in two. Its invariance is the statement that the determinant of
-an `SU(2)` matrix is one, and that is what makes the contraction gauge invariant.
+an `SU(2)` matrix is one, and that is what makes the contraction isospin invariant.
 
 The whole section is about `SU(2)`. The contraction is built from the family alone, and
 its invariance is proved for an arbitrary element of `specialUnitaryGroup (Fin 2) ℂ`
-acting through an arbitrary linear map; gauge invariance is that statement read at
-`GaugeGroupI.toSU2 g`.
+acting through an arbitrary linear map; isospin invariance is that statement read at the
+isospin transformation `(1, U, 1)`. Isospin invariance is all there is: the law says
+nothing about the colour and hypercharge factors, and the hypercharge factor by itself
+can scale the contraction, so no statement about a general gauge transformation holds.
 
 -/
 
@@ -233,13 +308,22 @@ lemma map_epsilonContraction {T : (Fin 2 → Fin 2) → B}
     exact sum_epsilon_mul U (b 0) (b 1)
   rw [step, ← epsilonContraction_eq_sum]
 
-/-- The epsilon contraction of a bi-fundamental family is gauge invariant: a gauge
-  transformation moves the components by its `SU(2)` part, which fixes the
-  contraction. -/
+/-- The epsilon contraction of a bi-fundamental family is fixed by the isospin factor: an
+  isospin transformation moves the components by the `SU(2)` element it is built from,
+  which fixes the contraction. That is all the transformation law constrains, the colour
+  and hypercharge factors being free to move the contraction. -/
 lemma repGauge_epsilonContraction {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) (U : specialUnitaryGroup (Fin 2) ℂ) :
+    repGauge (1, U, 1) (epsilonContraction T) = epsilonContraction T :=
+  map_epsilonContraction (hT.repGauge_T U)
+
+/-- The isospin part of the representation fixes the epsilon contraction, at every gauge
+  transformation. This is `repGauge_epsilonContraction` read through `repSU2`, and it is
+  what the two decompositions of sections C and D consume. -/
+lemma repSU2_epsilonContraction {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) (g : GaugeGroupI) :
-    repGauge g (epsilonContraction T) = epsilonContraction T :=
-  map_epsilonContraction (hT.repGauge_T g)
+    repSU2 repGauge g (epsilonContraction T) = epsilonContraction T :=
+  (repSU2_invariant_iff_su2 repGauge _).2 (repGauge_epsilonContraction hT) g
 
 /-!
 
@@ -256,9 +340,15 @@ The `SU(2)` content of the section is `map_of_diagonal`: a family moved by a dia
 `SU(2)` matrix has every component an eigenvector, at the product of the diagonal entries
 at its two indices. The torus generators enter only through `toSU2_gaugeTorusGen_apply`,
 which says that their `SU(2)` parts are diagonal with the characters of `fundWeight` on
-the diagonal. The decomposition itself is where the gauge group is unavoidable:
-`GaugeWeightDecomposition` is defined for a representation of `GaugeGroupI`, and it is
-what records that the colour and hypercharge coordinates of every weight vanish.
+the diagonal.
+
+The decomposition is for `repSU2 repGauge` and not for `repGauge` itself. A decomposition
+must know how all four torus generators act, and of the four only `gaugeTorusGen 2` is an
+isospin transformation, so the transformation law says nothing about the other three. The
+isospin part sends them to the identity, so it fixes every component there and their
+colour and hypercharge coordinates vanish for that reason. This is why
+`gaugeWeightDecomposition_supp` still lists only the three weights of the tensor square of
+the `su(2)` fundamental, all of them of the form `(0, 0, k, 0)`.
 
 The stronger typeclass assumptions are forced: `GaugeWeightDecomposition` lives in an
 algebra and records multiplicativity of the representation, neither of which
@@ -319,14 +409,25 @@ def wtWeight (l : Fin 2 → Fin 2) : GaugeWeight := fundWeight (l 0) + fundWeigh
 
 -/
 
+/-- An isospin transformation built from a diagonal `SU(2)` element scales every component
+  of a bi-fundamental family, by the product of the diagonal entries at its two indices.
+  This is `map_of_diagonal` read at the transformation law. -/
+lemma repGauge_su2_of_diagonal {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) (U : specialUnitaryGroup (Fin 2) ℂ)
+    (hU : ∀ a b : Fin 2, a ≠ b → U.1 a b = 0) (l : Fin 2 → Fin 2) :
+    repGauge (1, U, 1) (T l) = (U.1 (l 0) (l 0) * U.1 (l 1) (l 1)) • T l :=
+  map_of_diagonal (hT.repGauge_T U) hU l
+
 /-- Every component of a bi-fundamental family is a simultaneous eigenvector of the gauge
-  torus, at the character of the sum of the weights of its two indices. -/
-lemma repGauge_gaugeTorusGen {T : (Fin 2 → Fin 2) → B}
+  torus in the isospin part of the representation, at the character of the sum of the
+  weights of its two indices. The colour and hypercharge generators have trivial isospin
+  factor, so the isospin part fixes every component at those, matching the vanishing
+  colour and hypercharge coordinates of the weights. -/
+lemma repSU2_gaugeTorusGen {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) (l : Fin 2 → Fin 2) (i : Fin 4) :
-    repGauge (gaugeTorusGen i) (T l)
+    repSU2 repGauge (gaugeTorusGen i) (T l)
       = ((expI : ℂ) ^ GaugeWeight.coord (wtWeight l) i) • T l := by
-  rw [map_of_diagonal (hT.repGauge_T (gaugeTorusGen i))
-    (toSU2_gaugeTorusGen_offDiag i) l]
+  rw [repSU2_apply, hT.repGauge_su2_of_diagonal _ (toSU2_gaugeTorusGen_offDiag i) l]
   congr 1
   rw [toSU2_gaugeTorusGen_apply, toSU2_gaugeTorusGen_apply, if_pos rfl, if_pos rfl,
     wtWeight, GaugeWeight.coord_add, zpow_add₀ expI_ne_zero]
@@ -343,16 +444,23 @@ variable {B : Type*} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
   {T : (Fin 2 → Fin 2) → B}
 
-/-- The gauge weight decomposition of the span of a bi-fundamental `su(2)` family. The
-  span is the join of the lines through the four components, and each of those carries the
-  sum of the weights of its two indices. -/
+/-- The gauge weight decomposition of the span of a bi-fundamental `su(2)` family, for the
+  isospin part of the representation. The span is the join of the lines through the four
+  components, and each of those carries the sum of the weights of its two indices.
+
+  The decomposition is for `repSU2 repGauge` and not for `repGauge` itself because a
+  decomposition must know how all four torus generators act, and the transformation law
+  constrains only the isospin factor: of the four generators only `gaugeTorusGen 2` is an
+  isospin transformation. The isospin part sends the other three to the identity, so their
+  weights vanish by construction. -/
 @[implicit_reducible]
 noncomputable def gaugeWeightDecomposition (hT : IsSU2BiFundamental B repGauge T)
-    (hmul : IsMulRep repGauge) : GaugeWeightDecomposition repGauge (span T) :=
+    (hmul : IsMulRep repGauge) :
+    GaugeWeightDecomposition (repSU2 repGauge) (span T) :=
   GaugeWeightDecomposition.copy
-    (GaugeWeightDecomposition.iSup hmul fun d : Fin 2 → Fin 2 =>
-      GaugeWeightDecomposition.spanSingleton hmul (T d) (wtWeight d)
-        (repGauge_gaugeTorusGen hT d))
+    (GaugeWeightDecomposition.iSup (isMulRep_repSU2 hmul) fun d : Fin 2 → Fin 2 =>
+      GaugeWeightDecomposition.spanSingleton (isMulRep_repSU2 hmul) (T d) (wtWeight d)
+        (repSU2_gaugeTorusGen hT d))
     _ rfl
 
 variable (hT : IsSU2BiFundamental B repGauge T)
@@ -371,7 +479,8 @@ lemma gaugeWeightDecomposition_supp_eq (hmul : IsMulRep repGauge) :
 
 /-- The gauge weights carried by a bi-fundamental `su(2)` family: the three weights of the
   tensor square of the `su(2)` fundamental. Every one of them has vanishing colour and
-  hypercharge, since the family carries weak isospin only. -/
+  hypercharge, the isospin part of the representation sending the colour and hypercharge
+  generators to the identity. -/
 lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
     (hT.gaugeWeightDecomposition hmul).supp
       = {((0, 0, 2, 0) : GaugeWeight), (0, 0, 0, 0), (0, 0, -2, 0)} := by
@@ -382,8 +491,9 @@ lemma gaugeWeightDecomposition_supp (hmul : IsMulRep repGauge) :
 
 ## C.4. The zero-weight piece
 
-A gauge invariant built from `T` is fixed by the torus, so it lies in the zero-weight
-piece, which makes that piece worth describing explicitly. The weight of a component is
+An isospin invariant built from `T` is fixed by the isospin part of the representation at
+the torus, so it lies in the zero-weight piece, which makes that piece worth describing
+explicitly. The weight of a component is
 the sum of the isospin weights of its two indices, each `±1`, so it vanishes exactly when
 the two indices differ. That leaves the two mixed components, and the zero-weight piece is
 the plane they span, the multiplicity of the zero weight in the tensor square of the
@@ -412,12 +522,12 @@ lemma gaugeWeightDecomposition_piece_zero (hmul : IsMulRep repGauge) :
   · exact le_iSup_of_le ![0, 1] (le_of_eq (if_pos (by decide)).symm)
   · exact le_iSup_of_le ![1, 0] (le_of_eq (if_pos (by decide)).symm)
 
-/-- The epsilon contraction lies in the zero-weight piece. It is gauge invariant, so in
-  particular the torus fixes it. -/
+/-- The epsilon contraction lies in the zero-weight piece. The isospin factor fixes it, so
+  in particular the isospin part of the representation fixes it at the torus. -/
 lemma epsilonContraction_mem_piece_zero (hmul : IsMulRep repGauge) :
     epsilonContraction T ∈ (hT.gaugeWeightDecomposition hmul).piece 0 :=
   GaugeWeightDecomposition.mem_zero_of_invariant _ (epsilonContraction_mem_span T)
-    (repGauge_epsilonContraction hT)
+    (repSU2_epsilonContraction hT)
 
 end Decomposition
 
@@ -436,12 +546,23 @@ enters as the element `su2Perm` of `specialUnitaryGroup (Fin 2) ℂ`, and the ga
 only through `toSU2_gaugeSU2Perm`, which says that `gaugeSU2Perm` is that element.
 
 The grading is therefore concentrated in the grades zero and two, as it must be for a
-product of an even number of doublets. Grade zero is in general only a sieve, since
+product of an even number of doublets. It is built for `repSU2 repGauge`, as is the gauge
+weight decomposition it grades, and nothing is lost by that: `gaugeSU2Perm` is an isospin
+transformation, so the isospin part of the representation acts at it exactly as the
+representation itself does. Grade zero is in general only a sieve, since
 `SU2PermDecomposition.mem_zero_of_invariant` has no converse, but here the two gradings
 together are sharp: the zero-weight piece is a plane and grade zero is a line in it, so
-every gauge invariant in the span of the components is a multiple of the epsilon
+every isospin invariant in the span of the components is a multiple of the epsilon
 contraction. The ten-dimensional zero-weight piece of `IsSU3BiAdjoint` is what a sieve
 looks like when it is not sharp.
+
+`mem_span_and_su2_invariant_iff` of D.3 is the classification proper. Its gauge
+counterpart `mem_span_and_invariant_iff` needs the epsilon contraction to be gauge
+invariant and takes that as a hypothesis: the transformation law leaves the colour and
+hypercharge factors free, so they may scale the contraction, and then the multiples of it
+are not gauge invariants at all. The same hypothesis is what `su2_invariant_iff_invariant`
+needs to upgrade isospin invariance in the span to gauge invariance; without it that
+statement is false.
 
 -/
 
@@ -488,24 +609,31 @@ lemma map_su2Perm_neutralTriplet {T : (Fin 2 → Fin 2) → B}
   abel
 
 /-- The Weyl element of the gauge group sends the first mixed component to minus the
-  second. -/
+  second. It is an isospin transformation, so the transformation law reaches it. -/
 lemma repGauge_gaugeSU2Perm_zero_one {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) :
     repGauge gaugeSU2Perm (T ![0, 1]) = -T ![1, 0] :=
-  map_su2Perm_zero_one (hT.repGauge_T gaugeSU2Perm)
+  map_su2Perm_zero_one (hT.repGauge_T su2Perm)
 
 /-- The Weyl element of the gauge group sends the second mixed component to minus the
   first. -/
 lemma repGauge_gaugeSU2Perm_one_zero {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) :
     repGauge gaugeSU2Perm (T ![1, 0]) = -T ![0, 1] :=
-  map_su2Perm_one_zero (hT.repGauge_T gaugeSU2Perm)
+  map_su2Perm_one_zero (hT.repGauge_T su2Perm)
 
 /-- The Weyl element of the gauge group negates the neutral triplet combination. -/
 lemma repGauge_gaugeSU2Perm_neutralTriplet {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) :
     repGauge gaugeSU2Perm (neutralTriplet T) = -neutralTriplet T :=
-  map_su2Perm_neutralTriplet (hT.repGauge_T gaugeSU2Perm)
+  map_su2Perm_neutralTriplet (hT.repGauge_T su2Perm)
+
+/-- The Weyl element of the gauge group fixes the epsilon contraction, being an isospin
+  transformation. -/
+lemma repGauge_gaugeSU2Perm_epsilonContraction {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) :
+    repGauge gaugeSU2Perm (epsilonContraction T) = epsilonContraction T :=
+  repGauge_epsilonContraction hT su2Perm
 
 /-- Replacing two elements by their antisymmetric and symmetric combinations spans the
   same submodule, since two is invertible. -/
@@ -574,7 +702,7 @@ lemma zeroPiece_le_eigenspace (hT : IsSU2BiFundamental B repGauge T) (k : ZMod 4
   rcases hcases k with rfl | rfl | rfl | rfl
   · rw [zeroPiece_zero, Submodule.span_singleton_le_iff_mem]
     exact Module.End.mem_eigenspace_iff.mpr
-      (by rw [su2PermSign_zero, one_smul, repGauge_epsilonContraction hT])
+      (by rw [su2PermSign_zero, one_smul, repGauge_gaugeSU2Perm_epsilonContraction hT])
   · rw [zeroPiece_one]
     exact bot_le
   · rw [zeroPiece_two, Submodule.span_singleton_le_iff_mem]
@@ -606,41 +734,118 @@ lemma iSup_zeroPiece (hmul : IsMulRep repGauge) :
 
 /-- The `SU(2)` permutation decomposition of the zero-weight piece of the gauge weight
   decomposition: the Weyl element grades the plane the gauge weight cannot split, putting
-  the epsilon contraction in grade zero and the neutral triplet combination in grade
-  two. -/
+  the epsilon contraction in grade zero and the neutral triplet combination in grade two.
+  It is stated for the isospin part of the representation, as the decomposition it grades
+  is, though the two agree at the Weyl element. -/
 noncomputable def zeroPieceSU2Perm (hT : IsSU2BiFundamental B repGauge T)
     (hmul : IsMulRep repGauge) :
-    SU2PermDecomposition repGauge ((hT.gaugeWeightDecomposition hmul).piece 0) where
+    SU2PermDecomposition (repSU2 repGauge)
+      ((hT.gaugeWeightDecomposition hmul).piece 0) where
   piece := zeroPiece T
-  piece_le k x hx := Module.End.mem_eigenspace_iff.mp (zeroPiece_le_eigenspace hT k hx)
+  piece_le k x hx := by
+    rw [repSU2_gaugeSU2Perm]
+    exact Module.End.mem_eigenspace_iff.mp (zeroPiece_le_eigenspace hT k hx)
   iSup_piece := hT.iSup_zeroPiece hmul
 
 /-- The pieces of the decomposition are the graded pieces. -/
 @[simp] lemma zeroPieceSU2Perm_piece (hmul : IsMulRep repGauge) (k : ZMod 4) :
     (hT.zeroPieceSU2Perm hmul).piece k = zeroPiece T k := rfl
 
-/-- The epsilon contraction lies in the grade zero piece: it is gauge invariant, so in
-  particular the Weyl element fixes it. -/
+/-- The epsilon contraction lies in the grade zero piece: the isospin factor fixes it, so
+  in particular the Weyl element does. -/
 lemma epsilonContraction_mem_zeroPiece_zero (hT : IsSU2BiFundamental B repGauge T)
     (hmul : IsMulRep repGauge) :
     epsilonContraction T ∈ zeroPiece T 0 :=
   SU2PermDecomposition.mem_zero_of_invariant (hT.zeroPieceSU2Perm hmul)
-    (hT.epsilonContraction_mem_piece_zero hmul) (repGauge_epsilonContraction hT)
+    (hT.epsilonContraction_mem_piece_zero hmul) (repSU2_epsilonContraction hT)
 
-/-- Every gauge invariant in the span of the components is a multiple of the epsilon
+/-!
+
+## D.3. The classification
+
+-/
+
+/-- Every isospin invariant in the span of the components is a multiple of the epsilon
   contraction. The gauge weight cuts the span down to the plane of the two mixed
   components, and the Weyl element cuts that plane down to the line through their
-  antisymmetric combination. -/
-lemma exists_smul_epsilonContraction_of_invariant (hT : IsSU2BiFundamental B repGauge T)
-    (hmul : IsMulRep repGauge) {x : B}
-    (hx : x ∈ span T) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+  antisymmetric combination. Only the isospin factor is used, which is all the
+  transformation law constrains. -/
+lemma exists_smul_epsilonContraction_of_su2_invariant
+    (hT : IsSU2BiFundamental B repGauge T) (hmul : IsMulRep repGauge) {x : B}
+    (hx : x ∈ span T)
+    (hinv : ∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) x = x) :
     ∃ c : ℂ, x = c • epsilonContraction T := by
+  have hinv' : ∀ g : GaugeGroupI, repSU2 repGauge g x = x :=
+    (repSU2_invariant_iff_su2 repGauge x).2 hinv
   have hmem : x ∈ zeroPiece T 0 :=
     SU2PermDecomposition.mem_zero_of_invariant (hT.zeroPieceSU2Perm hmul)
-      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx hinv) hinv
+      (GaugeWeightDecomposition.mem_zero_of_invariant _ hx hinv') hinv'
   rw [zeroPiece_zero] at hmem
   obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.1 hmem
   exact ⟨c, hc.symm⟩
+
+/-- Every gauge invariant in the span of the components is a multiple of the epsilon
+  contraction. A gauge invariant is in particular fixed by the transformations trivial on
+  colour and hypercharge, and those alone already force the conclusion. -/
+lemma exists_smul_epsilonContraction_of_invariant (hT : IsSU2BiFundamental B repGauge T)
+    (hmul : IsMulRep repGauge) {x : B}
+    (hx : x ∈ span T) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    ∃ c : ℂ, x = c • epsilonContraction T :=
+  hT.exists_smul_epsilonContraction_of_su2_invariant hmul hx fun U => hinv (1, U, 1)
+
+/-- The isospin invariants in the span of the components are exactly the multiples of the
+  epsilon contraction. The gauge weight and the Weyl element bound them from above, and
+  the epsilon contraction is itself isospin invariant and in the span, which bounds them
+  from below. This is the one singlet of `2 ⊗ 2`. -/
+lemma mem_span_and_su2_invariant_iff (hT : IsSU2BiFundamental B repGauge T)
+    (hmul : IsMulRep repGauge) (x : B) :
+    (x ∈ span T ∧ ∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) x = x)
+      ↔ x ∈ ℂ ∙ epsilonContraction T := by
+  refine ⟨fun h => ?_, fun hx => ?_⟩
+  · obtain ⟨c, rfl⟩ := hT.exists_smul_epsilonContraction_of_su2_invariant hmul h.1 h.2
+    exact Submodule.mem_span_singleton.2 ⟨c, rfl⟩
+  · obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hx
+    exact ⟨Submodule.smul_mem _ _ (epsilonContraction_mem_span T),
+      fun U => by rw [map_smul, repGauge_epsilonContraction hT]⟩
+
+/-- The gauge invariants in the span of the components are exactly the multiples of the
+  epsilon contraction, once the epsilon contraction is known to be gauge invariant. That
+  hypothesis cannot be dropped: the transformation law says nothing about the colour and
+  hypercharge factors, and the hypercharge factor by itself can scale the contraction,
+  after which the right-hand side has invariants that the left-hand side has not. Where
+  the two factors do fix it, as they do for a product of a Higgs doublet with its
+  conjugate, the hypothesis is supplied from the transformation law of the underlying
+  field. -/
+lemma mem_span_and_invariant_iff (hT : IsSU2BiFundamental B repGauge T)
+    (hmul : IsMulRep repGauge) (x : B)
+    (hec : ∀ g : GaugeGroupI,
+      repGauge g (epsilonContraction T) = epsilonContraction T) :
+    (x ∈ span T ∧ ∀ g : GaugeGroupI, repGauge g x = x)
+      ↔ x ∈ ℂ ∙ epsilonContraction T := by
+  refine ⟨fun h => ?_, fun hx => ?_⟩
+  · obtain ⟨c, rfl⟩ := hT.exists_smul_epsilonContraction_of_invariant hmul h.1 h.2
+    exact Submodule.mem_span_singleton.2 ⟨c, rfl⟩
+  · obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hx
+    exact ⟨Submodule.smul_mem _ _ (epsilonContraction_mem_span T),
+      fun g => by rw [map_smul, hec]⟩
+
+/-- Inside the span of the components the two notions of invariance agree, provided the
+  epsilon contraction is gauge invariant: a vector fixed by the isospin factor is then
+  fixed by the whole gauge group. One direction is free, an isospin transformation being a
+  gauge transformation; the other is the classification, the isospin invariants being
+  multiples of the epsilon contraction. The hypothesis `hec` is exactly what the
+  transformation law no longer supplies, and without it the statement is false, the colour
+  and hypercharge factors being unconstrained. -/
+lemma su2_invariant_iff_invariant (hT : IsSU2BiFundamental B repGauge T)
+    (hmul : IsMulRep repGauge)
+    (hec : ∀ g : GaugeGroupI,
+      repGauge g (epsilonContraction T) = epsilonContraction T)
+    {x : B} (hx : x ∈ span T) :
+    (∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) x = x)
+      ↔ ∀ g : GaugeGroupI, repGauge g x = x := by
+  refine ⟨fun h g => ?_, fun h U => h (1, U, 1)⟩
+  obtain ⟨c, rfl⟩ := hT.exists_smul_epsilonContraction_of_su2_invariant hmul hx h
+  rw [map_smul, hec]
 
 end Grading
 
