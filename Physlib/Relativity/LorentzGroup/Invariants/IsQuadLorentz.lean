@@ -1023,7 +1023,67 @@ lemma exists_coeffZ_eq_zero_of_odd :
   exact (Nat.not_even_iff_odd.2 hodd)
     (even_card_null_of_sum_lightConeWeight_eq_zero c'' hc'')
 
-set_option maxRecDepth 40000 in
+/-- On a supported slot, `nuZ` factors into the sign of the outer row and the sign of
+  the coordinate column. -/
+lemma nuZ_eq_row_sign_mul_column_sign (a : Fin 4) (μ : Fin 1 ⊕ Fin 3)
+    (h : ∃ κ, lightConeTransitionZ 1 2 a κ * lightConeCoeffZ 2 κ μ ≠ 0) :
+    nuZ a μ =
+      (if a = 0 ∨ a = 1 then -1 else 1) *
+      (if μ = Sum.inl 0 ∨ μ = Sum.inr 1 then -1 else 1) := by
+  obtain ⟨κ, hκ⟩ := h
+  rcases μ with b | j
+  · rw [Subsingleton.elim b 0] at hκ ⊢
+    fin_cases a <;> fin_cases κ <;>
+      simp_all [nuZ, lightConeTransitionZ, lightConeCoeffZ]
+  · fin_cases j <;> fin_cases a <;> fin_cases κ <;>
+      simp_all [nuZ, lightConeTransitionZ, lightConeCoeffZ]
+
+/-- A bad coordinate-index pattern with even null-sector multiplicity has odd
+  multiplicity in the column-sign sector. -/
+lemma odd_card_inl_zero_or_inr_one_of_not_isPairedOrDistinct
+    (d : Fin 4 → Fin 1 ⊕ Fin 3) (hd : ¬IsPairedOrDistinct d)
+    (hC : ¬Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card) :
+    Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 1).card := by
+  rw [isPairedOrDistinct_iff_card_parity] at hd
+  let n0 := (Finset.univ.filter fun s => d s = Sum.inl 0).card
+  let n1 := (Finset.univ.filter fun s => d s = Sum.inr 0).card
+  let n2 := (Finset.univ.filter fun s => d s = Sum.inr 1).card
+  let n3 := (Finset.univ.filter fun s => d s = Sum.inr 2).card
+  have hsplit (μ ν : Fin 1 ⊕ Fin 3) (hne : μ ≠ ν) :
+      (Finset.univ.filter fun s => d s = μ ∨ d s = ν).card
+        = (Finset.univ.filter fun s => d s = μ).card
+          + (Finset.univ.filter fun s => d s = ν).card := by
+    rw [Finset.filter_or, Finset.card_union_of_disjoint]
+    exact Finset.disjoint_filter.2 fun s _ hμ hν => hne (hμ.symm.trans hν)
+  have hsum : n0 + n1 + n2 + n3 = 4 := by
+    have h : ∑ μ : Fin 1 ⊕ Fin 3,
+        (Finset.univ.filter fun s => d s = μ).card = 4 := by
+      rw [← Finset.card_eq_sum_card_fiberwise (fun s _ => Finset.mem_univ (d s))]
+      simp
+    rw [Fintype.sum_sum_type, Fin.sum_univ_one, Fin.sum_univ_three] at h
+    simpa [n0, n1, n2, n3, Nat.add_assoc] using h
+  have hnullEven : Even (n0 + n3) := by
+    rw [← hsplit (Sum.inl 0) (Sum.inr 2) (by simp)]
+    exact Nat.not_odd_iff_even.mp hC
+  rw [hsplit (Sum.inl 0) (Sum.inr 1) (by simp), ← Nat.not_even_iff_odd]
+  intro hcolumnEven
+  apply hd
+  have h03 := Nat.even_iff.1 hnullEven
+  have h02 := Nat.even_iff.1 hcolumnEven
+  have hparity : ∀ μ, (Finset.univ.filter fun s => d s = μ).card % 2 = n0 % 2 := by
+    rintro (b | j)
+    · rw [Subsingleton.elim b 0]
+    · fin_cases j
+      · change n1 % 2 = n0 % 2
+        omega
+      · change n2 % 2 = n0 % 2
+        omega
+      · change n3 % 2 = n0 % 2
+        omega
+  rcases Nat.even_or_odd n0 with h0 | h0
+  · exact Or.inl fun μ => Nat.even_iff.2 (by rw [hparity μ]; exact Nat.even_iff.1 h0)
+  · exact Or.inr fun μ => Nat.odd_iff.2 (by rw [hparity μ]; exact Nat.odd_iff.1 h0)
+
 /-- The parity of the sign involution: over a weight-zero generator, a component that
   is neither two pairs nor all distinct, with no identically-vanishing slot and an even
   null-sector count, carries total sign `-1`. -/
@@ -1033,14 +1093,30 @@ lemma prod_nuZ_eq_neg_one :
     ¬(∃ s, ∀ κ, lightConeTransitionZ 1 2 (c' s) κ * lightConeCoeffZ 2 κ (d s) = 0) →
     ¬Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card →
     (∏ s, nuZ (c' s) (d s)) = -1 := by
-  suffices h1 : ∀ c' ∈ {c : Fin 4 → Fin 4 | (∑ s, lightConeWeight (c s)) = 0},
-      ∀ d ∈  {d : Fin 4 → Fin 1 ⊕ Fin 3 | ¬IsPairedOrDistinct d
-      ∧  ¬Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card } ,
-      ¬(∃ s, ∀ κ, lightConeTransitionZ 1 2 (c' s) κ * lightConeCoeffZ 2 κ (d s) = 0) →
-      (∏ s, nuZ (c' s) (d s)) = -1 by
-    intro c' hc' d hd hA hC
-    exact h1 c' hc' d ⟨hd, hC⟩ hA
-  decide
+  intro c' hc' d hd hA hC
+  push Not at hA
+  have hcolumn :=
+    odd_card_inl_zero_or_inr_one_of_not_isPairedOrDistinct d hd hC
+  have hrow : Even (Finset.univ.filter fun s => c' s = 0 ∨ c' s = 1).card :=
+    even_card_null_of_sum_lightConeWeight_eq_zero c' hc'
+  have hfactor (s : Fin 4) :
+      nuZ (c' s) (d s) =
+        (if c' s = 0 ∨ c' s = 1 then -1 else 1) *
+        (if d s = Sum.inl 0 ∨ d s = Sum.inr 1 then -1 else 1) :=
+    nuZ_eq_row_sign_mul_column_sign (c' s) (d s) (hA s)
+  calc
+    (∏ s, nuZ (c' s) (d s)) =
+        (∏ s, if c' s = 0 ∨ c' s = 1 then (-1 : ℤ) else 1) *
+        (∏ s, if d s = Sum.inl 0 ∨ d s = Sum.inr 1 then (-1 : ℤ) else 1) := by
+      rw [← Finset.prod_mul_distrib]
+      exact Finset.prod_congr rfl fun s _ => hfactor s
+    _ = (-1 : ℤ) ^
+        ((Finset.univ.filter fun s => c' s = 0 ∨ c' s = 1).card +
+          (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 1).card) := by
+      rw [pow_add]
+      congr 1 <;>
+        rw [Finset.prod_ite, Finset.prod_const, Finset.prod_const, one_pow, mul_one]
+    _ = -1 := Odd.neg_one_pow (Even.add_odd hrow hcolumn)
 
 /-- The vanishing of the bad coefficients: over a weight-zero generator, the inner
   transition sum vanishes on every component that is neither two pairs nor all
