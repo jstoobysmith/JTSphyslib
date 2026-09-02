@@ -59,6 +59,7 @@ Model gauge group.
 - G. The action of the gauge algebra
 - H. The representation of the jet gauge group
 - I. The infinitesimal action underlies the jet gauge action
+- J. Component transformation laws
 
 -/
 
@@ -511,6 +512,121 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
       simp only [show ({ val := a + b } : DownSinglet) = ⟨a⟩ + ⟨b⟩ from rfl,
         map_add, ha, hb]
 
+/-!
+
+## J. Component transformation laws
+
+The basis of `DownSinglet` splits as a right-handed Weyl index and a colour index. The
+Lorentz group moves only the first, the gauge group only the second (up to the hypercharge
+scalar), so both actions are recorded as a single sum over the index they move. Dualising
+inverts and transposes the coefficient matrix, and conjugating stars it; the four
+combinations below are what a component of a down-singlet symbol needs.
+
+-/
+
+/-- The down-singlet basis vector as an explicit spinor–colour tensor. -/
+lemma basis_eq_mk (k : Fin 2) (c : Fin 3) : basis (k, c) =
+    ⟨Fermion.RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c⟩ := by
+  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+    OrthonormalBasis.coe_toBasis]
+  rfl
+
+/-- The Lorentz action on the down-singlet basis: the colour index is inert and the
+  spinor index transforms by the entrywise conjugate matrix. -/
+lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
+    repLorentzGroup Λ (basis j) = ∑ β, star (Λ.1 β j.1) • basis (β, j.2) := by
+  obtain ⟨k, c⟩ := j
+  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+    repLorentzGroup, MonoidHom.coe_mk, OneHom.coe_mk, LinearMap.coe_comp,
+    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.apply_symm_apply,
+    TensorProduct.map_tmul, Fermion.RightHandedWeyl.rep_apply_basis,
+    Representation.trivial_apply, TensorProduct.sum_tmul, map_sum,
+    Matrix.map_apply, RCLike.star_def]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [← TensorProduct.smul_tmul', map_smul]
+
+/-- The down-singlet coordinate functionals transform contragrediently, by the entrywise
+  conjugate of the inverse matrix. -/
+lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
+    repLorentzGroup.dual Λ (basis.dualBasis j) =
+      ∑ β, star ((Λ⁻¹).1 j.1 β) • basis.dualBasis (β, j.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup basis Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then star ((Λ⁻¹).1 p.1 q.1) else 0)
+    (fun q => by
+      rw [repLorentzGroup_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The Lorentz action on the conjugate down-singlet basis: the coefficients are the
+  conjugates of those of the down-singlet action, that is, the matrix itself. -/
+lemma repLorentzGroup_conj_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
+    repLorentzGroup.conj Λ (basis.conj j) = ∑ β, Λ.1 β j.1 • basis.conj (β, j.2) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repLorentzGroup_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, star_star, Module.Basis.conj_apply]
+
+/-- The conjugate down-singlet coordinate functionals transform by the inverse matrix. -/
+lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
+    repLorentzGroup.conj.dual Λ (basis.conj.dualBasis j) =
+      ∑ β, (Λ⁻¹).1 j.1 β • basis.conj.dualBasis (β, j.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup.conj basis.conj Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then ((Λ⁻¹).1 p.1 q.1) else 0)
+    (fun q => by
+      rw [repLorentzGroup_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the down-singlet basis: the spinor index is inert and the colour
+  index transforms by the `SU(3)` matrix, scaled by the hypercharge factor. -/
+lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
+    repGaugeGroupI g (basis j) =
+      ∑ c, (star g.toU1.1 ^ 2 * g.toSU3.1 c j.2) • basis (j.1, c) := by
+  obtain ⟨k, c⟩ := j
+  simp only [basis_eq_mk]
+  exact repGaugeGroupI_tmul_basis_eq_sum g k c
+
+/-- The down-singlet coordinate functionals carry the contragredient gauge action: the
+  hypercharge and `SU(3)` factors of the inverse group element, transposed. -/
+lemma repGaugeGroupI_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
+    repGaugeGroupI.dual g (basis.dualBasis j) =
+      ∑ c, (star (g⁻¹).toU1.1 ^ 2 * (g⁻¹).toSU3.1 j.2 c) • basis.dualBasis (j.1, c) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI basis g j
+    (Matrix.of fun p q =>
+      if p.1 = q.1 then star (g⁻¹).toU1.1 ^ 2 * (g⁻¹).toSU3.1 p.2 q.2 else 0)
+    (fun q => by
+      rw [repGaugeGroupI_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the conjugate down-singlet basis: the coefficients of the
+  down-singlet action, conjugated. -/
+lemma repGaugeGroupI_conj_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
+    repGaugeGroupI.conj g (basis.conj j) =
+      ∑ c, star (star g.toU1.1 ^ 2 * g.toSU3.1 c j.2) • basis.conj (j.1, c) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repGaugeGroupI_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun c _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+
+/-- The conjugate down-singlet coordinate functionals carry the conjugate of the
+  contragredient gauge action. -/
+lemma repGaugeGroupI_conj_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
+    repGaugeGroupI.conj.dual g (basis.conj.dualBasis j) =
+      ∑ c, star (star (g⁻¹).toU1.1 ^ 2 * (g⁻¹).toSU3.1 j.2 c) •
+        basis.conj.dualBasis (j.1, c) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj basis.conj g j
+    (Matrix.of fun p q =>
+      if p.1 = q.1 then star (star (g⁻¹).toU1.1 ^ 2 * (g⁻¹).toSU3.1 p.2 q.2) else 0)
+    (fun q => by
+      rw [repGaugeGroupI_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
 end DownSinglet
 
 /-!
@@ -535,12 +651,15 @@ lemma DownSinglet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 × F
       = ((expI : ℂ) ^ GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i) •
         DownSinglet.basis j := by
   obtain ⟨k, c⟩ := j
-  have hb : DownSinglet.basis (k, c) = ⟨Fermion.RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c⟩ := by
-    simp only [DownSinglet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis]
+  have hb : DownSinglet.basis (k, c)
+      = ⟨Fermion.RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c⟩ := by
+    simp only [DownSinglet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+      OrthonormalBasis.coe_toBasis]
     rfl
   rw [hb, DownSinglet.repGaugeGroupI_tmul_basis_eq_sum]
   fin_cases i <;> fin_cases c <;>
-    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo, Fin.sum_univ_three,
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo,
+      Fin.sum_univ_three,
       Matrix.diagonal,
       DownSinglet.valueGaugeWeight, colourWeight, GaugeWeight.coord,
       expI_inv_eq_star, starRingEnd_expI_pow] <;>

@@ -50,6 +50,7 @@ form of the Standard Model gauge group.
 - E. Kernel of the gauge action
 - F. Descent to quotient gauge groups
 - G. Jet gauge action
+- H. Component transformation laws
 
 -/
 
@@ -509,6 +510,122 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
       simp only [show ({ val := a + b } : LeptonDoublet) = ⟨a⟩ + ⟨b⟩ from rfl,
         map_add, ha, hb]
 
+/-!
+
+## H. Component transformation laws
+
+The basis of `LeptonDoublet` splits as a left-handed Weyl index and a weak-isospin index.
+The Lorentz group moves only the first, the gauge group only the second (up to the
+hypercharge scalar), so both actions are recorded as a single sum over the index they move.
+Dualising inverts and transposes the coefficient matrix, and conjugating stars it; the four
+combinations below are what a component of a lepton-doublet symbol needs.
+
+-/
+
+/-- The lepton-doublet basis vector as an explicit spinor–weak tensor. -/
+lemma basis_eq_mk (k j : Fin 2) : basis (k, j) =
+    ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩ := by
+  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+    OrthonormalBasis.coe_toBasis]
+  rfl
+
+/-- The Lorentz action on the lepton-doublet basis: the weak index is inert and the
+  spinor index transforms by the matrix itself. -/
+lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) :
+    repLorentzGroup Λ (basis j) = ∑ β, Λ.1 β j.1 • basis (β, j.2) := by
+  obtain ⟨k, w⟩ := j
+  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+    repLorentzGroup, MonoidHom.coe_mk, OneHom.coe_mk, LinearMap.coe_comp,
+    LinearEquiv.coe_coe, Function.comp_apply, LinearEquiv.apply_symm_apply,
+    TensorProduct.map_tmul, Fermion.LeftHandedWeyl.rep_apply_basis,
+    Representation.trivial_apply, TensorProduct.sum_tmul, map_sum]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [← TensorProduct.smul_tmul', map_smul]
+
+/-- The lepton-doublet coordinate functionals transform contragrediently, by the
+  inverse matrix. -/
+lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) :
+    repLorentzGroup.dual Λ (basis.dualBasis j) =
+      ∑ β, (Λ⁻¹).1 j.1 β • basis.dualBasis (β, j.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup basis Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then (Λ⁻¹).1 p.1 q.1 else 0)
+    (fun q => by
+      rw [repLorentzGroup_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The Lorentz action on the conjugate lepton-doublet basis: the coefficients are the
+  conjugates of those of the lepton-doublet action. -/
+lemma repLorentzGroup_conj_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) :
+    repLorentzGroup.conj Λ (basis.conj j)
+      = ∑ β, star (Λ.1 β j.1) • basis.conj (β, j.2) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repLorentzGroup_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+
+/-- The conjugate lepton-doublet coordinate functionals transform by the entrywise
+  conjugate of the inverse matrix. -/
+lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) :
+    repLorentzGroup.conj.dual Λ (basis.conj.dualBasis j) =
+      ∑ β, star ((Λ⁻¹).1 j.1 β) • basis.conj.dualBasis (β, j.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup.conj basis.conj Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then star ((Λ⁻¹).1 p.1 q.1) else 0)
+    (fun q => by
+      rw [repLorentzGroup_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the lepton-doublet basis: the spinor index is inert and the weak
+  index transforms by the `SU(2)` matrix, scaled by the hypercharge factor. -/
+lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
+    repGaugeGroupI g (basis j) =
+      ∑ w, (star g.toU1.1 ^ 3 * g.toSU2.1 w j.2) • basis (j.1, w) := by
+  obtain ⟨k, w⟩ := j
+  simp only [basis_eq_mk]
+  exact repGaugeGroupI_tmul_basis_eq_sum g k w
+
+/-- The lepton-doublet coordinate functionals carry the contragredient gauge action: the
+  hypercharge and `SU(2)` factors of the inverse group element, transposed. -/
+lemma repGaugeGroupI_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
+    repGaugeGroupI.dual g (basis.dualBasis j) =
+      ∑ w, (star (g⁻¹).toU1.1 ^ 3 * (g⁻¹).toSU2.1 j.2 w) • basis.dualBasis (j.1, w) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI basis g j
+    (Matrix.of fun p q =>
+      if p.1 = q.1 then star (g⁻¹).toU1.1 ^ 3 * (g⁻¹).toSU2.1 p.2 q.2 else 0)
+    (fun q => by
+      rw [repGaugeGroupI_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the conjugate lepton-doublet basis: the coefficients of the
+  lepton-doublet action, conjugated. -/
+lemma repGaugeGroupI_conj_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
+    repGaugeGroupI.conj g (basis.conj j) =
+      ∑ w, star (star g.toU1.1 ^ 3 * g.toSU2.1 w j.2) • basis.conj (j.1, w) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repGaugeGroupI_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun w _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+
+/-- The conjugate lepton-doublet coordinate functionals carry the conjugate of the
+  contragredient gauge action. -/
+lemma repGaugeGroupI_conj_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
+    repGaugeGroupI.conj.dual g (basis.conj.dualBasis j) =
+      ∑ w, star (star (g⁻¹).toU1.1 ^ 3 * (g⁻¹).toSU2.1 j.2 w) •
+        basis.conj.dualBasis (j.1, w) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj basis.conj g j
+    (Matrix.of fun p q =>
+      if p.1 = q.1 then star (star (g⁻¹).toU1.1 ^ 3 * (g⁻¹).toSU2.1 p.2 q.2) else 0)
+    (fun q => by
+      rw [repGaugeGroupI_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
 end LeptonDoublet
 
 /-!
@@ -533,8 +650,10 @@ lemma LeptonDoublet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 ×
       = ((expI : ℂ) ^ GaugeWeight.coord (LeptonDoublet.valueGaugeWeight j) i) •
         LeptonDoublet.basis j := by
   obtain ⟨k, s⟩ := j
-  have hb : LeptonDoublet.basis (k, s) = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ s⟩ := by
-    simp only [LeptonDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis]
+  have hb : LeptonDoublet.basis (k, s)
+      = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ s⟩ := by
+    simp only [LeptonDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+      OrthonormalBasis.coe_toBasis]
     rfl
   rw [hb, LeptonDoublet.repGaugeGroupI_tmul_basis_eq_sum]
   fin_cases i <;> fin_cases s <;>

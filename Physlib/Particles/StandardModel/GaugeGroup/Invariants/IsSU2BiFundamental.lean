@@ -59,13 +59,27 @@ weight decomposition of the span, for the isospin part of the representation. Se
 grades the zero-weight piece of that decomposition by the Weyl element of the `SU(2)`
 factor, which the gauge weight alone cannot split, and the two gradings together leave the
 epsilon contraction spanning the isospin invariants.
+
+The rest of the file is what the Yukawa sector asks for on top of that. Section E verifies
+the two matrix identities that make the anti-fundamental of `SU(2)` the fundamental in
+another basis, `conj U = ε U ε⁻¹` and `(U⁻¹)ᵀ = conj U`; `SU(3)` has no analogue, which is
+why the colour side needs a separate `IsSU3FunAntiFun` and the isospin side does not.
+Section F carries the classification to a family valued in a mere module, through the
+square-zero extension, and section G divides out a stable submodule, which together are
+what let one family at a time be peeled off a join.
+
+The two twisted cases, `2 ⊗ 2̄` and `2̄ ⊗ 2̄`, are not here: they are `IsSU2FunAntiFun` and
+`IsSU2BiAntiFun` of `IsSU2AntiFundamental`, which imports this file for section E. Neither
+needs a classification of its own, the epsilon re-index turning each into a bi-fundamental
+family with the same span, so all that is left there is the bookkeeping of which contraction
+of the original family the epsilon contraction of the re-indexed one is.
 -/
 
 @[expose] public section
 
 namespace StandardModel
 
-open Matrix
+open Matrix ComplexConjugate
 
 /-!
 
@@ -848,6 +862,300 @@ lemma su2_invariant_iff_invariant (hT : IsSU2BiFundamental B repGauge T)
   rw [map_smul, hec]
 
 end Grading
+
+/-!
+
+## E. The anti-fundamental of `SU(2)` is the fundamental in another basis
+
+Everything after this section rests on a single fact about `SU(2)` which has no analogue in
+`SU(3)`: the anti-fundamental representation is the fundamental one in a different basis,
+the change of basis being the antisymmetric symbol. Concretely, `conj U = ε U ε⁻¹` for
+every `U` in `SU(2)`, and `(U⁻¹)ᵀ = conj U` because `U` is unitary. The first identity is
+what makes the doublet pseudo-real; the second is the same statement read for the
+transposed inverse, which is the matrix an anti-fundamental index is moved by.
+
+Both come from one computation. An `SU(2)` matrix has determinant one, so its adjugate is
+its inverse, and it is unitary, so its inverse is its conjugate transpose; hence its
+conjugate transpose is its adjugate, which for a two by two matrix is an explicit
+rearrangement of the entries. That gives the four entry identities `conj U₀₀ = U₁₁`,
+`conj U₁₁ = U₀₀`, `conj U₀₁ = -U₁₀` and `conj U₁₀ = -U₀₁`, and the two matrix identities
+are those four read together. Everything else in this file's later sections is bookkeeping
+around them: sections H and I never touch a complex conjugate again, because the entry
+identities have already removed every one of them.
+
+`eq_cons` is a small utility of the same section, used whenever an index pair has to be
+split into its two entries so that a computation can be done on concrete indices.
+
+-/
+
+/-- An index pair is the pair of its own two entries. This is the step that turns a
+  statement about a general pair of `su(2)` indices into four statements about concrete
+  ones. -/
+lemma eq_cons (d : Fin 2 → Fin 2) : d = ![d 0, d 1] :=
+  funext fun j => by fin_cases j <;> simp
+
+/-- The antisymmetric symbol as a matrix: the change of basis carrying the fundamental
+  representation of `SU(2)` to its conjugate. -/
+def epsilonMat : Matrix (Fin 2) (Fin 2) ℂ := !![0, 1; -1, 0]
+
+/-- The conjugate transpose of an `SU(2)` matrix is its adjugate: the determinant being
+  one, the adjugate is the inverse, and unitarity makes the conjugate transpose the
+  inverse as well. -/
+lemma star_eq_adjugate (U : specialUnitaryGroup (Fin 2) ℂ) :
+    star U.1 = Matrix.adjugate U.1 := by
+  have hmem := Matrix.mem_specialUnitaryGroup_iff.mp U.2
+  have hu : star U.1 * U.1 = 1 := Matrix.mem_unitaryGroup_iff'.mp hmem.1
+  calc star U.1 = star U.1 * (U.1 * Matrix.adjugate U.1) := by
+        rw [Matrix.mul_adjugate, hmem.2, one_smul, mul_one]
+    _ = star U.1 * U.1 * Matrix.adjugate U.1 := by rw [mul_assoc]
+    _ = Matrix.adjugate U.1 := by rw [hu, one_mul]
+
+/-- The conjugate of an entry of an `SU(2)` matrix is the transposed entry of its
+  adjugate. -/
+lemma conj_apply (U : specialUnitaryGroup (Fin 2) ℂ) (i j : Fin 2) :
+    conj (U.1 i j) = Matrix.adjugate U.1 j i := by
+  have := congrFun (congrFun (star_eq_adjugate U) j) i
+  simpa [Matrix.star_apply] using this
+
+/-- Conjugating the upper left entry of an `SU(2)` matrix gives the lower right one. -/
+@[simp] lemma conj_apply_zero_zero (U : specialUnitaryGroup (Fin 2) ℂ) :
+    conj (U.1 0 0) = U.1 1 1 := by
+  rw [conj_apply, Matrix.adjugate_fin_two]
+  simp
+
+/-- Conjugating the lower right entry of an `SU(2)` matrix gives the upper left one. -/
+@[simp] lemma conj_apply_one_one (U : specialUnitaryGroup (Fin 2) ℂ) :
+    conj (U.1 1 1) = U.1 0 0 := by
+  rw [conj_apply, Matrix.adjugate_fin_two]
+  simp
+
+/-- Conjugating the upper right entry of an `SU(2)` matrix gives minus the lower left
+  one. -/
+@[simp] lemma conj_apply_zero_one (U : specialUnitaryGroup (Fin 2) ℂ) :
+    conj (U.1 0 1) = -U.1 1 0 := by
+  rw [conj_apply, Matrix.adjugate_fin_two]
+  simp
+
+/-- Conjugating the lower left entry of an `SU(2)` matrix gives minus the upper right
+  one. -/
+@[simp] lemma conj_apply_one_zero (U : specialUnitaryGroup (Fin 2) ℂ) :
+    conj (U.1 1 0) = -U.1 0 1 := by
+  rw [conj_apply, Matrix.adjugate_fin_two]
+  simp
+
+/-- The inverse of the antisymmetric symbol, which is minus itself. -/
+lemma epsilonMat_inv : epsilonMat⁻¹ = !![0, -1; 1, 0] := by
+  apply Matrix.inv_eq_right_inv
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [epsilonMat, Matrix.mul_apply, Fin.sum_univ_two]
+
+/-- The first of the two identities the rest of the file rests on: conjugation of an
+  `SU(2)` matrix is conjugation by the antisymmetric symbol. This is the pseudo-reality of
+  the doublet, and it is what `SU(3)` lacks; without it the fundamental and the
+  anti-fundamental would be inequivalent and each would need its own classification. -/
+lemma map_conj_eq (U : specialUnitaryGroup (Fin 2) ℂ) :
+    U.1.map conj = epsilonMat * U.1 * epsilonMat⁻¹ := by
+  rw [epsilonMat_inv]
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [epsilonMat, Matrix.mul_apply, Matrix.vecMul, Matrix.vecHead, Matrix.vecTail,
+      Fin.sum_univ_two]
+
+/-- The second of the two identities: the matrix moving an anti-fundamental index, the
+  transposed inverse, is the complex conjugate matrix. This is unitarity alone, the inverse
+  of a unitary matrix being its conjugate transpose. -/
+lemma transpose_inv_eq (U : specialUnitaryGroup (Fin 2) ℂ) :
+    (U.1⁻¹)ᵀ = U.1.map conj := by
+  have hu : U.1 * star U.1 = 1 := Matrix.mem_unitaryGroup_iff.mp
+    (Matrix.mem_specialUnitaryGroup_iff.mp U.2).1
+  rw [Matrix.inv_eq_right_inv hu]
+  ext i j
+  simp [Matrix.star_apply]
+
+/-!
+
+## F. The classification for a family valued in a module
+
+Downstream a bi-fundamental family is met inside a module that is not an algebra, and the
+classification of section D cannot be read there: `GaugeWeightDecomposition` lives in an
+algebra and `IsMulRep` is a statement about a product. The square-zero extension supplies
+both for free. Adjoining `ℂ` to the module with a zero product makes an algebra whose
+representation is multiplicative for the cheapest of reasons, the product being built from
+the module structure the representation is already linear for, and the injection of the
+module is injective, so a conclusion proved upstairs comes straight back down.
+
+The extension itself is not rebuilt here. `IsSU2BiAdjoint` declares `sqZeroRep` and its
+companions for an arbitrary representation of the gauge group, with no reference to a
+bi-adjoint family, and this file imports that one already; only the statements that mention
+a bi-fundamental family are new. What is gained is that
+`exists_smul_epsilonContraction_of_invariant_module` asks for `[AddCommGroup B]` and
+`[Module ℂ B]` and nothing else, no algebra structure and no multiplicativity hypothesis.
+
+-/
+
+section SquareZero
+
+variable {M : Type*} [AddCommGroup M] [Module ℂ M]
+  {ρ : Representation ℂ GaugeGroupI M} {T : (Fin 2 → Fin 2) → M}
+
+-- The opposite scalar action and its two compatibilities, which make the square-zero
+-- extension of a complex vector space a ring. They are the instances `IsSU2BiAdjoint`
+-- states its square-zero lemmas with, and are borrowed rather than restated so that the
+-- instances here and there are literally the same.
+attribute [local instance 100] IsSU2BiAdjoint.opModule
+  IsSU2BiAdjoint.smulCommClassOpModule IsSU2BiAdjoint.isCentralScalarOpModule
+
+/-- The images of the components in the square-zero extension again form a bi-fundamental
+  family, the extended representation acting on them by the representation extended. -/
+lemma isSU2BiFundamental_sqZeroRep (hT : IsSU2BiFundamental M ρ T) :
+    IsSU2BiFundamental (TrivSqZeroExt ℂ M) (IsSU2BiAdjoint.sqZeroRep ρ)
+      fun l => TrivSqZeroExt.inr (T l) where
+  repGauge_T g l := by
+    rw [IsSU2BiAdjoint.sqZeroRep_inr, hT.repGauge_T g l]
+    simp only [TrivSqZeroExt.inr_sum, TrivSqZeroExt.inr_smul]
+
+omit [Module ℂ M] in
+/-- The epsilon contraction of the images is the image of the epsilon contraction. -/
+lemma epsilonContraction_inr (T : (Fin 2 → Fin 2) → M) :
+    epsilonContraction (fun l => (TrivSqZeroExt.inr (T l) : TrivSqZeroExt ℂ M))
+      = TrivSqZeroExt.inr (epsilonContraction T) := by
+  simp only [epsilonContraction, ← TrivSqZeroExt.inr_sub]
+
+/-- The image of an element of the span lies in the span of the images. -/
+lemma inr_mem_span_sqZeroRep (T : (Fin 2 → Fin 2) → M) {x : M} (hx : x ∈ span T) :
+    (TrivSqZeroExt.inr x : TrivSqZeroExt ℂ M)
+      ∈ span fun l => (TrivSqZeroExt.inr (T l) : TrivSqZeroExt ℂ M) := by
+  obtain ⟨c, rfl⟩ := (mem_span_iff x).1 hx
+  refine (mem_span_iff _).2 ⟨c, ?_⟩
+  simp only [TrivSqZeroExt.inr_sum, TrivSqZeroExt.inr_smul]
+
+/-- Every gauge invariant in the span of the components is a multiple of the epsilon
+  contraction, for a family valued in a mere module. Neither an algebra structure on the
+  target nor multiplicativity of the representation is needed: the square-zero extension
+  supplies both, and the injection of the module reflects the conclusion back. -/
+lemma exists_smul_epsilonContraction_of_invariant_module (hT : IsSU2BiFundamental M ρ T)
+    {x : M} (hx : x ∈ span T) (hinv : ∀ g : GaugeGroupI, ρ g x = x) :
+    ∃ c : ℂ, x = c • epsilonContraction T := by
+  obtain ⟨c, hc⟩ :=
+    hT.isSU2BiFundamental_sqZeroRep.exists_smul_epsilonContraction_of_invariant
+      (IsSU2BiAdjoint.isMulRep_sqZeroRep ρ) (inr_mem_span_sqZeroRep T hx)
+      (fun g => by rw [IsSU2BiAdjoint.sqZeroRep_inr, hinv g])
+  refine ⟨c, TrivSqZeroExt.inr_injective (R := ℂ) ?_⟩
+  rw [hc, epsilonContraction_inr, TrivSqZeroExt.inr_smul]
+
+/-- The same classification for a family valued in a mere module, read at the isospin
+  factor alone, which is all the transformation law constrains. -/
+lemma exists_smul_epsilonContraction_of_su2_invariant_module
+    (hT : IsSU2BiFundamental M ρ T) {x : M} (hx : x ∈ span T)
+    (hinv : ∀ V : specialUnitaryGroup (Fin 2) ℂ, ρ (1, V, 1) x = x) :
+    ∃ c : ℂ, x = c • epsilonContraction T :=
+  hT.toRepSU2.exists_smul_epsilonContraction_of_invariant_module hx
+    ((repSU2_invariant_iff_su2 ρ x).2 hinv)
+
+end SquareZero
+
+/-!
+
+## G. The invariants modulo a stable submodule
+
+Peeling one family at a time off a join needs the invariants of the span of that family
+together with everything not yet peeled, gathered in a submodule `S`. A stable submodule
+can be divided out: the images of the components in the quotient again form a
+bi-fundamental family, so section F applies verbatim there and lifts to a classification
+modulo `S`. The error term is invariant for free, being the difference of two invariants.
+
+Stability of `S` cannot be dropped. For an unstable line `ℂ ∙ v` the only invariant of the
+line is zero, while an invariant of the sum may well lie outside the span, so the statement
+would be false without it. As in section F the quotient representation is the one
+`IsSU2BiAdjoint` already declares, and only the statements mentioning a bi-fundamental
+family are new.
+
+`mem_span_sup_su2_invariant_iff` is the isospin form, stable and invariant meaning under
+`repGauge (1, V, 1)` throughout, and it is the form the transformation law supports.
+`mem_span_sup_invariant_iff`, the gauge form, asks in addition that the epsilon contraction
+be gauge invariant, for the reason given in D.3: that is what makes the error term a gauge
+invariant rather than merely an isospin invariant.
+
+-/
+
+section Quotient
+
+variable {M : Type*} [AddCommGroup M] [Module ℂ M]
+  {ρ : Representation ℂ GaugeGroupI M} {T : (Fin 2 → Fin 2) → M}
+
+/-- The images of the components in the quotient by a gauge-stable submodule again form a
+  bi-fundamental family. -/
+lemma isSU2BiFundamental_quotRep (hT : IsSU2BiFundamental M ρ T) (S : Submodule ℂ M)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) :
+    IsSU2BiFundamental (M ⧸ S) (IsSU2BiAdjoint.quotRep ρ S hS) fun l => S.mkQ (T l) where
+  repGauge_T g l := by
+    rw [IsSU2BiAdjoint.quotRep_mkQ, hT.repGauge_T g l, map_sum]
+    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
+
+/-- The quotient map carries the epsilon contraction to the epsilon contraction of the
+  images. -/
+lemma mkQ_epsilonContraction (T : (Fin 2 → Fin 2) → M) (S : Submodule ℂ M) :
+    S.mkQ (epsilonContraction T) = epsilonContraction fun l => S.mkQ (T l) := by
+  simp only [epsilonContraction, map_sub]
+
+/-- The image of an element of the join of the span with a submodule lies in the span of
+  the images, the submodule dying in the quotient. -/
+lemma mkQ_mem_span_quotRep (T : (Fin 2 → Fin 2) → M) (S : Submodule ℂ M) {x : M}
+    (hx : x ∈ span T ⊔ S) : S.mkQ x ∈ span fun l => S.mkQ (T l) := by
+  obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
+  obtain ⟨c, hc⟩ := (mem_span_iff u).1 hu
+  refine (mem_span_iff _).2 ⟨c, ?_⟩
+  rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
+    add_zero, hc, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
+end Quotient
+
+/-- The gauge invariants of the span of the components together with a gauge-stable
+  submodule `S`: such an element is a multiple of the epsilon contraction up to an error in
+  `S`, and the error is gauge invariant as well, being the difference of two invariants.
+  Stability of `S` is needed, and not just convenient: for an unstable line the only
+  invariant of the line is zero, while the sum can carry invariants outside the span. The
+  gauge invariance `hec` of the epsilon contraction is a hypothesis for the same reason as
+  in `mem_span_and_invariant_iff`: the transformation law constrains the isospin factor
+  only, so it is what makes the error term gauge invariant rather than merely isospin
+  invariant. -/
+lemma mem_span_sup_invariant_iff {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) (x : B) (S : Submodule ℂ B)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hec : ∀ g : GaugeGroupI,
+      repGauge g (epsilonContraction T) = epsilonContraction T)
+    (hx : x ∈ span T ⊔ S)
+    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    ∃ c : ℂ, ∃ y ∈ S, x = c • epsilonContraction T + y
+      ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
+  have hquot := hT.isSU2BiFundamental_quotRep S hS
+  obtain ⟨c, hc⟩ := hquot.exists_smul_epsilonContraction_of_invariant_module
+    (mkQ_mem_span_quotRep T S hx) (fun g => by rw [IsSU2BiAdjoint.quotRep_mkQ, hinv g])
+  rw [← mkQ_epsilonContraction T S] at hc
+  refine ⟨c, x - c • epsilonContraction T, ?_, by abel, fun g => ?_⟩
+  · have hker : x - c • epsilonContraction T ∈ LinearMap.ker S.mkQ := by
+      rw [LinearMap.mem_ker, map_sub, map_smul, hc, sub_self]
+    rwa [Submodule.ker_mkQ] at hker
+  · rw [map_sub, map_smul, hinv g, hec g]
+
+/-- The same statement modulo an isospin-stable submodule, read at the isospin factor
+  alone: a vector of the span joined with `S` that the isospin factor fixes is a multiple
+  of the epsilon contraction up to an error in `S`, and the error is fixed by the isospin
+  factor too. No hypothesis on the epsilon contraction is needed here, the isospin factor
+  fixing it already. -/
+lemma mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) (x : B) (S : Submodule ℂ B)
+    (hS : ∀ V : specialUnitaryGroup (Fin 2) ℂ, ∀ y ∈ S, repGauge (1, V, 1) y ∈ S)
+    (hx : x ∈ span T ⊔ S)
+    (hinv : ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) x = x) :
+    ∃ c : ℂ, ∃ y ∈ S, x = c • epsilonContraction T + y
+      ∧ ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) y = y := by
+  obtain ⟨c, y, hyS, hxy, hyinv⟩ :=
+    hT.toRepSU2.mem_span_sup_invariant_iff x S
+      ((repSU2_stable_iff_su2 repGauge S).2 hS) (repSU2_epsilonContraction hT) hx
+      ((repSU2_invariant_iff_su2 repGauge x).2 hinv)
+  exact ⟨c, y, hyS, hxy, (repSU2_invariant_iff_su2 repGauge y).1 hyinv⟩
 
 end IsSU2BiFundamental
 

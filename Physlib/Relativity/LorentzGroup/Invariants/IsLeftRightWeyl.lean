@@ -29,6 +29,12 @@ carry the weights `2`, `0`, `0` and `-2`. Averaging the weight-zero projection o
 three axes gives a matrix `M` with `M ^ 2 = 2 M` and no eigenvalue `3`, so the quadratic
 certificate `3 λ ^ 2 - 2 λ` in `M / 3` annihilates every invariant.
 
+A family carrying dual Weyl indices transforms by the contragredient `(Λ⁻¹)ᵀ` on the
+undotted slot and by its complex conjugate `(Λ⁻¹)ᴴ` on the dotted one. That law is
+`IsDualLeftRightWeyl`, and its classification — still that there is no invariant at all,
+so there is no Dirac mass term — lives in `IsVectorLeftRightWeyl`, downstream of the `ε`
+re-index of `IsBiLeftWeyl` which bridges the two laws.
+
 The section headings tell the story: the Weyl weight bases along one axis (A), the
 tensor of two of them and the span of the components (B, C), the weight grading of the
 span (D), the weight-zero round and its average over the three axes (E), and the

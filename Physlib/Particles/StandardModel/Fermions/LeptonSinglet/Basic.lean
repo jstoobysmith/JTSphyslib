@@ -228,6 +228,45 @@ lemma repGaugeGroupI_eq_iff {g₁ g₂ : GaugeGroupI} :
     ext l
     simp [repGaugeGroupI, h']
 
+/-- The gauge action on the lepton-singlet basis: multiplication by the hypercharge
+  scalar, the colour and weak factors acting trivially. -/
+lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (α : Fin 2) :
+    repGaugeGroupI g (basis α) = (star g.toU1.1 ^ 6 : ℂ) • basis α := by
+  have hb : basis α = ⟨Fermion.RightHandedWeyl.basis α⟩ := by
+    simp only [basis, Module.Basis.map_apply]
+    rfl
+  rw [hb, repGaugeGroupI_basis]
+
+/-- The lepton-singlet coordinate functionals carry the contragredient gauge action: the
+  hypercharge scalar of the inverse group element. -/
+lemma repGaugeGroupI_dual_dualBasis (g : GaugeGroupI) (α : Fin 2) :
+    repGaugeGroupI.dual g (basis.dualBasis α) =
+      (star (g⁻¹).toU1.1 ^ 6 : ℂ) • basis.dualBasis α := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI basis g α
+    (Matrix.of fun p q => if p = q then (star (g⁻¹).toU1.1 ^ 6 : ℂ) else 0)
+    (fun q => by rw [repGaugeGroupI_apply_basis]; simp [ite_smul, eq_comm])
+  rw [key]
+  simp [ite_smul]
+
+/-- The gauge action on the conjugate lepton-singlet basis: the hypercharge scalar,
+  conjugated. -/
+lemma repGaugeGroupI_conj_apply_basis (g : GaugeGroupI) (α : Fin 2) :
+    repGaugeGroupI.conj g (basis.conj α) =
+      star (star g.toU1.1 ^ 6 : ℂ) • basis.conj α := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repGaugeGroupI_apply_basis, LinearEquiv.map_smulₛₗ, starRingEnd_apply]
+
+/-- The conjugate lepton-singlet coordinate functionals carry the conjugate of the
+  contragredient gauge action. -/
+lemma repGaugeGroupI_conj_dual_dualBasis (g : GaugeGroupI) (α : Fin 2) :
+    repGaugeGroupI.conj.dual g (basis.conj.dualBasis α) =
+      star (star (g⁻¹).toU1.1 ^ 6 : ℂ) • basis.conj.dualBasis α := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj basis.conj g α
+    (Matrix.of fun p q => if p = q then star (star (g⁻¹).toU1.1 ^ 6 : ℂ) else 0)
+    (fun q => by rw [repGaugeGroupI_conj_apply_basis]; simp [ite_smul, eq_comm])
+  rw [key]
+  simp [ite_smul]
+
 /-!
 
 ## E. Kernel of the gauge action

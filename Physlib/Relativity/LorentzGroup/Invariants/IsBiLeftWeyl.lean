@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
+public import Physlib.Relativity.Fermions.Weyl.Metric
 /-!
 # Lorentz invariants of two left-handed Weyl indices
 
@@ -28,11 +29,24 @@ three axes now gives `M = 2 - swap`, whose eigenvalue `3` is simple and carried 
 antisymmetric line, so the linear certificate `(3 λ - 1) / 2` in `M / 3` collapses an
 invariant onto the antisymmetrisation of its coefficients, which is the `ε` contraction.
 
+A family carrying dual Weyl indices transforms by the contragredient `(Λ⁻¹)ᵀ`, or, for
+a barred species, by its complex conjugate `(Λ⁻¹)ᴴ`; neither is the fundamental law, so
+neither is an `IsBiLeftWeyl` family on the nose. Two independent mechanisms bridge the
+gap. The contragredient is inner, `(Λ⁻¹)ᵀ = ε Λ ε⁻¹`, so re-indexing the two index slots
+by `ε` turns a contragredient family into a fundamental one without touching the
+representation. Entrywise conjugation is instead a genuine automorphism of `SL(2,ℂ)`, so
+a conjugated family is a fundamental family for the twisted representation
+`repLorentz.comp conjHom`; since the twist is by a surjection, invariance is the same
+condition for both, and the whole classification carries over.
+
 The section headings tell the story: the weight basis of a pair of left-handed indices
 (A), the tensors and the span of their components (B), the weight grading of the span
 (C), the weight-zero round and its average over the three axes (D), the `ε` contraction
-and the linear certificate which produces it (E), and the classification modulo a
-Lorentz-stable submodule (F).
+and the linear certificate which produces it (E), the classification modulo a
+Lorentz-stable submodule (F), the symplectic form and the contragredient as an inner
+twist (G), the conjugation automorphism of `SL(2,ℂ)` (H), transfer of invariance along a
+surjective endomorphism (I), dual-index families and the `ε` re-index (J), and the
+classification of the invariants of a dual-index family (K).
 -/
 
 @[expose] public section
@@ -474,5 +488,467 @@ lemma exists_smul_epsilonContraction_of_invariant_subset {x : B} (S : Submodule 
   rwa [Submodule.ker_mkQ] at hker
 
 end IsBiLeftWeyl
+
+/-!
+
+## G. The symplectic form and the contragredient as an inner twist
+
+The antisymmetric form `ε = !![0, 1; -1, 0]` has determinant one, so it is itself an
+element of `SL(2,ℂ)`, and `Λᵀ ε Λ = ε` holds for every `Λ ∈ SL(2,ℂ)`: this is the
+statement that `ε` is the invariant symplectic form, and it is nothing but the condition
+`det Λ = 1` written out. Rearranged it reads `(Λ⁻¹)ᵀ = ε Λ ε⁻¹`, so the contragredient
+matrix is the fundamental one conjugated by a fixed group element. That is a change of
+basis on the index type, not a change of representation.
+
+-/
+
+namespace SL2C
+
+/-- The antisymmetric symplectic form `ε = !![0, 1; -1, 0]`, whose underlying matrix is
+  the Weyl metric `Fermion.metricRaw`, as an element of `SL(2,ℂ)`. -/
+def epsilon : SL(2,ℂ) :=
+  ⟨Fermion.metricRaw, by simp [Fermion.metricRaw, Matrix.det_fin_two_of]⟩
+
+/-- The matrix underlying `epsilon`. -/
+lemma epsilon_coe : (epsilon : Matrix (Fin 2) (Fin 2) ℂ) = !![0, 1; -1, 0] := rfl
+
+/-- The matrix underlying `epsilon` is the Weyl metric `Fermion.metricRaw`. -/
+lemma epsilon_coe_metricRaw :
+    (epsilon : Matrix (Fin 2) (Fin 2) ℂ) = Fermion.metricRaw := rfl
+
+/-- The form `ε` is the invariant symplectic form of `SL(2,ℂ)`: `Λᵀ ε Λ = ε`, which is
+  the determinant condition `det Λ = 1` written out entrywise. -/
+lemma transpose_mul_epsilon_mul (g : SL(2,ℂ)) :
+    g.1ᵀ * epsilon.1 * g.1 = epsilon.1 := by
+  have hdet : g.1 0 0 * g.1 1 1 - g.1 0 1 * g.1 1 0 = 1 := by
+    have h := g.2
+    rwa [Matrix.det_fin_two] at h
+  ext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [epsilon_coe, Matrix.mul_apply, Fin.sum_univ_two] <;>
+    first | linear_combination | linear_combination hdet | linear_combination -hdet
+
+/-- The matrix of `ε` times the matrix of its group inverse is the identity. -/
+lemma epsilon_mul_epsilon_inv : epsilon.1 * (epsilon⁻¹ : SL(2,ℂ)).1 = 1 := by
+  rw [← SpecialLinearGroup.coe_mul, mul_inv_cancel]
+  rfl
+
+/-- The contragredient is inner: conjugation by `ε` carries the fundamental matrix `Λ`
+  to the inverse transpose `(Λ⁻¹)ᵀ`. -/
+lemma inv_transpose_eq_epsilon_conj (g : SL(2,ℂ)) :
+    (g.1⁻¹)ᵀ = epsilon.1 * g.1 * (epsilon⁻¹ : SL(2,ℂ)).1 := by
+  symm
+  calc epsilon.1 * g.1 * (epsilon⁻¹ : SL(2,ℂ)).1
+      = ((g.1⁻¹)ᵀ * Fermion.metricRaw) * (epsilon⁻¹ : SL(2,ℂ)).1 := by
+        rw [epsilon_coe_metricRaw, Fermion.metricRaw_comm]
+    _ = (g.1⁻¹)ᵀ * (epsilon.1 * (epsilon⁻¹ : SL(2,ℂ)).1) := by
+        rw [epsilon_coe_metricRaw, Matrix.mul_assoc]
+    _ = (g.1⁻¹)ᵀ := by rw [epsilon_mul_epsilon_inv, Matrix.mul_one]
+
+/-- The form of the symplectic identity used to re-index: `ε Λ⁻¹ = Λᵀ ε`. -/
+lemma epsilon_mul_inv_eq_transpose_mul_epsilon (g : SL(2,ℂ)) :
+    epsilon.1 * g.1⁻¹ = g.1ᵀ * epsilon.1 := by
+  have hg : g.1 * g.1⁻¹ = 1 := by
+    rw [SL2C.inverse_coe, ← SpecialLinearGroup.coe_mul, mul_inv_cancel]
+    rfl
+  calc epsilon.1 * g.1⁻¹ = (g.1ᵀ * epsilon.1 * g.1) * g.1⁻¹ := by
+        rw [transpose_mul_epsilon_mul]
+    _ = g.1ᵀ * epsilon.1 * (g.1 * g.1⁻¹) := by rw [Matrix.mul_assoc]
+    _ = g.1ᵀ * epsilon.1 := by rw [hg, Matrix.mul_one]
+
+/-!
+
+## H. The conjugation automorphism of `SL(2,ℂ)`
+
+Entrywise complex conjugation is a monoid homomorphism `SL(2,ℂ) → SL(2,ℂ)`: it is
+multiplicative because conjugation is a ring homomorphism of `ℂ`, and it lands back in
+`SL(2,ℂ)` because `det (conj Λ) = conj (det Λ) = 1`. It is its own inverse, hence
+bijective. Unlike the `ε` twist of section G this is a genuine automorphism of the
+group, so twisting a representation along it gives a genuinely different representation
+rather than a re-indexing.
+
+-/
+
+/-- Entrywise conjugation of an element of `SL(2,ℂ)` again has determinant one. -/
+lemma det_map_star (g : SL(2,ℂ)) : (g.1.map star).det = 1 := by
+  have hdet : g.1 0 0 * g.1 1 1 - g.1 0 1 * g.1 1 0 = 1 := by
+    have h := g.2
+    rwa [Matrix.det_fin_two] at h
+  rw [Matrix.det_fin_two]
+  simp only [Matrix.map_apply]
+  rw [← star_mul', ← star_mul', ← star_sub, hdet, star_one]
+
+/-- Entrywise complex conjugation as a monoid endomorphism of `SL(2,ℂ)`. -/
+def conjHom : SL(2,ℂ) →* SL(2,ℂ) where
+  toFun g := ⟨g.1.map star, det_map_star g⟩
+  map_one' := by
+    apply Subtype.ext
+    ext i j
+    simp [Matrix.map_apply, Matrix.one_apply]
+  map_mul' g h := by
+    apply Subtype.ext
+    ext i j
+    simp [Matrix.map_apply, Matrix.mul_apply]
+
+/-- The matrix underlying `conjHom g` is the entrywise conjugate of that of `g`. -/
+lemma conjHom_coe (g : SL(2,ℂ)) : (conjHom g).1 = g.1.map star := rfl
+
+/-- Conjugation is an involution. -/
+lemma conjHom_conjHom (g : SL(2,ℂ)) : conjHom (conjHom g) = g := by
+  apply Subtype.ext
+  ext i j
+  simp [conjHom_coe, Matrix.map_apply]
+
+/-- Being an involution, conjugation is surjective. -/
+lemma conjHom_surjective : Function.Surjective conjHom :=
+  fun g => ⟨conjHom g, conjHom_conjHom g⟩
+
+/-- Being an involution, conjugation is bijective. -/
+lemma conjHom_bijective : Function.Bijective conjHom :=
+  Function.bijective_iff_has_inverse.2 ⟨conjHom, conjHom_conjHom, conjHom_conjHom⟩
+
+end SL2C
+
+/-!
+
+## I. Transfer of invariance along a surjective endomorphism
+
+Twisting a representation by a monoid endomorphism `σ` of the group does not change what
+it means for a vector to be invariant, provided `σ` is surjective: the two families of
+conditions `rep g x = x` and `rep (σ g) x = x` range over the very same set of group
+elements. This is what makes the conjugation twist of section H free of charge.
+
+-/
+
+/-- Invariance under a representation and invariance under its twist by a surjective
+  monoid endomorphism of the group are the same condition. -/
+lemma forall_comp_apply_eq_self_iff {k G V : Type*} [CommSemiring k] [Monoid G]
+    [AddCommMonoid V] [Module k V] (rep : Representation k G V) {σ : G →* G}
+    (hσ : Function.Surjective σ) (x : V) :
+    (∀ g : G, (rep.comp σ) g x = x) ↔ ∀ g : G, rep g x = x := by
+  constructor
+  · intro h g
+    obtain ⟨g', rfl⟩ := hσ g
+    exact h g'
+  · intro h g
+    exact h (σ g)
+
+/-!
+
+## J. Dual-index families and the `ε` re-index
+
+`IsBiDualLeftWeyl` and `IsBiDualRightWeyl` are the two index laws actually carried by
+the Standard Model's fermion symbols: one factor of the contragredient `(Λ⁻¹)ᵀ` per
+index for an undotted pair, and one factor of its complex conjugate `(Λ⁻¹)ᴴ` per index
+for a dotted pair. The re-index `epsReindex` transports both index slots through the
+symplectic form. By section G it converts the contragredient law into the fundamental
+one and leaves the representation alone; it is an involution, so it does not change the
+span of the components; and it leaves the `ε` contraction strictly unchanged, with
+neither a sign nor a scalar appearing. For a dotted family the same re-index works once
+the representation has been twisted by `conjHom`, because conjugating the group argument
+undoes the conjugation of the matrix entries. The two laws are not vacuous:
+`isBiDualLeftWeyl_dualLeftHandedWeyl` and `isBiDualRightWeyl_dualRightHandedWeyl` check
+that they are exactly the laws carried by the tensor squares of the repo's dual Weyl
+representations.
+
+-/
+
+/-- A family `T` of elements of `B`, indexed by two dual left-handed Weyl indices,
+  transforms as a tensor `T_{α₁ α₂}` under `repLorentz`: each index carries a factor of
+  the contragredient matrix `(Λ⁻¹)ᵀ`. -/
+structure IsBiDualLeftWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
+    (repLorentz : Representation ℂ SL(2,ℂ) B)
+    (T : Fin 2 × Fin 2 → B) : Prop where
+  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
+    repLorentz g (T l) = ∑ (a : Fin 2 × Fin 2),
+      ((g.1⁻¹)ᵀ a.1 l.1 * (g.1⁻¹)ᵀ a.2 l.2) • T a
+
+/-- A family `T` of elements of `B`, indexed by two dual right-handed Weyl indices,
+  transforms as a tensor `T_{α̇₁ α̇₂}` under `repLorentz`: each index carries a factor of
+  the conjugate contragredient matrix `(Λ⁻¹)ᴴ`. -/
+structure IsBiDualRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
+    (repLorentz : Representation ℂ SL(2,ℂ) B)
+    (T : Fin 2 × Fin 2 → B) : Prop where
+  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
+    repLorentz g (T l) = ∑ (a : Fin 2 × Fin 2),
+      ((g.1⁻¹)ᴴ a.1 l.1 * (g.1⁻¹)ᴴ a.2 l.2) • T a
+
+open Fermion in
+/-- The tensor square of the dual left-handed Weyl representation, on the products of
+  basis vectors, is the basic example of a family with the contragredient index law. -/
+lemma isBiDualLeftWeyl_dualLeftHandedWeyl :
+    IsBiDualLeftWeyl (DualLeftHandedWeyl ⊗[ℂ] DualLeftHandedWeyl)
+      (DualLeftHandedWeyl.rep.tprod DualLeftHandedWeyl.rep)
+      (fun l => DualLeftHandedWeyl.basis l.1 ⊗ₜ[ℂ] DualLeftHandedWeyl.basis l.2) where
+  repLorentz_T g l := by
+    rw [Representation.tprod_apply, TensorProduct.map_tmul,
+      DualLeftHandedWeyl.rep_apply_basis, DualLeftHandedWeyl.rep_apply_basis,
+      TensorProduct.sum_tmul]
+    simp only [TensorProduct.smul_tmul', TensorProduct.tmul_sum, TensorProduct.tmul_smul,
+      smul_smul, Fintype.sum_prod_type, Matrix.transpose_apply]
+    exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
+      rw [mul_comm]
+
+open Fermion in
+/-- The tensor square of the dual right-handed Weyl representation, on the products of
+  basis vectors, is the basic example of a family with the conjugate contragredient
+  index law. -/
+lemma isBiDualRightWeyl_dualRightHandedWeyl :
+    IsBiDualRightWeyl (DualRightHandedWeyl ⊗[ℂ] DualRightHandedWeyl)
+      (DualRightHandedWeyl.rep.tprod DualRightHandedWeyl.rep)
+      (fun l => DualRightHandedWeyl.basis l.1 ⊗ₜ[ℂ] DualRightHandedWeyl.basis l.2) where
+  repLorentz_T g l := by
+    rw [Representation.tprod_apply, TensorProduct.map_tmul,
+      DualRightHandedWeyl.rep_apply_basis, DualRightHandedWeyl.rep_apply_basis,
+      TensorProduct.sum_tmul]
+    simp only [TensorProduct.smul_tmul', TensorProduct.tmul_sum, TensorProduct.tmul_smul,
+      smul_smul, Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
+      rw [mul_comm]
+
+/-- The `ε` re-index of a family indexed by two Weyl indices: both index slots are
+  transported through the symplectic form. -/
+noncomputable def epsReindex {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (T : Fin 2 × Fin 2 → B) : Fin 2 × Fin 2 → B :=
+  fun l => ∑ k : Fin 2 × Fin 2, (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2) • T k
+
+section Reindex
+
+variable {B : Type*} [AddCommGroup B] [Module ℂ B] (T : Fin 2 × Fin 2 → B)
+
+/-- The re-index written out on the diagonal component `(0, 0)`. -/
+lemma epsReindex_zero_zero : epsReindex T (0, 0) = T (1, 1) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the mixed component `(0, 1)`. -/
+lemma epsReindex_zero_one : epsReindex T (0, 1) = - T (1, 0) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the mixed component `(1, 0)`. -/
+lemma epsReindex_one_zero : epsReindex T (1, 0) = - T (0, 1) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the diagonal component `(1, 1)`. -/
+lemma epsReindex_one_one : epsReindex T (1, 1) = T (0, 0) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The `ε` re-index is an involution, because `ε² = -1` on each index slot. -/
+lemma epsReindex_epsReindex : epsReindex (epsReindex T) = T := by
+  funext l
+  obtain ⟨l₁, l₂⟩ := l
+  fin_cases l₁ <;> fin_cases l₂ <;>
+    simp [epsReindex_zero_zero, epsReindex_zero_one, epsReindex_one_zero,
+      epsReindex_one_one]
+
+/-- The `ε` re-index leaves the `ε` contraction unchanged: no sign and no scalar are
+  introduced, so a conclusion about the re-indexed family is literally a conclusion
+  about the original one. -/
+lemma epsilonContraction_epsReindex :
+    IsBiLeftWeyl.epsilonContraction (T := epsReindex T)
+      = IsBiLeftWeyl.epsilonContraction (T := T) := by
+  rw [IsBiLeftWeyl.epsilonContraction_eq, IsBiLeftWeyl.epsilonContraction_eq,
+    epsReindex_zero_one, epsReindex_one_zero]
+  abel
+
+/-- Every re-indexed component lies in the span of the original components. -/
+lemma epsReindex_mem_iSup (d : Fin 2 × Fin 2) : epsReindex T d ∈ ⨆ e, ℂ ∙ T e :=
+  sum_mem fun k _ => Submodule.smul_mem _ _
+    (Submodule.mem_iSup_of_mem k (Submodule.mem_span_singleton_self _))
+
+/-- The re-index does not change the span of the components. -/
+lemma iSup_span_epsReindex : (⨆ d, ℂ ∙ epsReindex T d) = ⨆ d, ℂ ∙ T d := by
+  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun d => ?_)
+  · rw [Submodule.span_singleton_le_iff_mem]
+    exact epsReindex_mem_iSup T d
+  · rw [Submodule.span_singleton_le_iff_mem]
+    have h : T d = epsReindex (epsReindex T) d := by rw [epsReindex_epsReindex]
+    rw [h]
+    exact epsReindex_mem_iSup (epsReindex T) d
+
+end Reindex
+
+/-- The single-index form of the symplectic identity: moving a contragredient factor
+  across `ε` turns it into a fundamental factor acting on the other slot. -/
+lemma sum_epsilon_mul_inv_transpose (g : SL(2,ℂ)) (l a : Fin 2) :
+    ∑ k : Fin 2, epsilon.1 l k * (g.1⁻¹)ᵀ a k
+      = ∑ b : Fin 2, g.1 b l * epsilon.1 b a := by
+  have h : (epsilon.1 * g.1⁻¹) l a = (g.1ᵀ * epsilon.1) l a := by
+    rw [SL2C.epsilon_mul_inv_eq_transpose_mul_epsilon]
+  simpa [Matrix.mul_apply, Matrix.transpose_apply] using h
+
+/-- The two-index form of the symplectic identity, obtained from the single-index form
+  by factorising each sum over the two slots. -/
+lemma sum_biEpsilon_mul_inv_transpose (g : SL(2,ℂ)) (l a : Fin 2 × Fin 2) :
+    ∑ k : Fin 2 × Fin 2, (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2)
+        * ((g.1⁻¹)ᵀ a.1 k.1 * (g.1⁻¹)ᵀ a.2 k.2)
+      = ∑ b : Fin 2 × Fin 2, (g.1 b.1 l.1 * g.1 b.2 l.2)
+        * (epsilon.1 b.1 a.1 * epsilon.1 b.2 a.2) := by
+  have hL : (∑ k₁, epsilon.1 l.1 k₁ * (g.1⁻¹)ᵀ a.1 k₁)
+      * (∑ k₂, epsilon.1 l.2 k₂ * (g.1⁻¹)ᵀ a.2 k₂)
+      = ∑ k : Fin 2 × Fin 2, (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2)
+        * ((g.1⁻¹)ᵀ a.1 k.1 * (g.1⁻¹)ᵀ a.2 k.2) := by
+    rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun k₁ _ => Finset.sum_congr rfl fun k₂ _ => by ring
+  have hR : (∑ b₁, g.1 b₁ l.1 * epsilon.1 b₁ a.1)
+      * (∑ b₂, g.1 b₂ l.2 * epsilon.1 b₂ a.2)
+      = ∑ b : Fin 2 × Fin 2, (g.1 b.1 l.1 * g.1 b.2 l.2)
+        * (epsilon.1 b.1 a.1 * epsilon.1 b.2 a.2) := by
+    rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun b₁ _ => Finset.sum_congr rfl fun b₂ _ => by ring
+  rw [← hL, ← hR, sum_epsilon_mul_inv_transpose, sum_epsilon_mul_inv_transpose]
+
+/-- The `ε` re-index turns a family with the contragredient index law into a family with
+  the fundamental index law, for the very same representation: the twist is a change of
+  basis on the index type, not a change of representation. -/
+lemma IsBiDualLeftWeyl.isBiLeftWeyl_epsReindex {B : Type*} [AddCommGroup B] [Module ℂ B]
+    {repLorentz : Representation ℂ SL(2,ℂ) B} {T : Fin 2 × Fin 2 → B}
+    (hT : IsBiDualLeftWeyl B repLorentz T) :
+    IsBiLeftWeyl B repLorentz (epsReindex T) where
+  repLorentz_T g l := by
+    have hstep : ∀ k : Fin 2 × Fin 2,
+        (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2) • repLorentz g (T k)
+          = ∑ a : Fin 2 × Fin 2, ((epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2)
+              * ((g.1⁻¹)ᵀ a.1 k.1 * (g.1⁻¹)ᵀ a.2 k.2)) • T a := by
+      intro k
+      rw [hT.repLorentz_T, Finset.smul_sum]
+      exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
+    calc repLorentz g (epsReindex T l)
+        = ∑ k : Fin 2 × Fin 2, (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2)
+            • repLorentz g (T k) := by
+          simp only [epsReindex, map_sum, map_smul]
+      _ = ∑ a : Fin 2 × Fin 2, (∑ k : Fin 2 × Fin 2,
+            (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2)
+              * ((g.1⁻¹)ᵀ a.1 k.1 * (g.1⁻¹)ᵀ a.2 k.2)) • T a := by
+          simp only [hstep]
+          rw [Finset.sum_comm]
+          exact Finset.sum_congr rfl fun a _ => (Finset.sum_smul).symm
+      _ = ∑ a : Fin 2 × Fin 2, (∑ b : Fin 2 × Fin 2, (g.1 b.1 l.1 * g.1 b.2 l.2)
+            * (epsilon.1 b.1 a.1 * epsilon.1 b.2 a.2)) • T a :=
+          Finset.sum_congr rfl fun a _ => by
+            rw [sum_biEpsilon_mul_inv_transpose]
+      _ = ∑ b : Fin 2 × Fin 2, (g.1 b.1 l.1 * g.1 b.2 l.2) • epsReindex T b := by
+          symm
+          simp only [epsReindex, Finset.smul_sum, smul_smul]
+          rw [Finset.sum_comm]
+          exact Finset.sum_congr rfl fun a _ => (Finset.sum_smul).symm
+
+/-- Conjugating the group argument undoes the conjugation of the matrix entries: the
+  inverse conjugate transpose at `conjHom g` is the plain inverse transpose at `g`. -/
+lemma conjHom_inv_conjTranspose (g : SL(2,ℂ)) :
+    (((SL2C.conjHom g).1)⁻¹)ᴴ = (g.1⁻¹)ᵀ := by
+  have h1 : ((SL2C.conjHom g).1)⁻¹ = (g.1⁻¹).map star := by
+    rw [SL2C.inverse_coe, ← map_inv, SL2C.conjHom_coe, SL2C.inverse_coe]
+  rw [h1]
+  ext i j
+  simp [Matrix.conjTranspose_apply, Matrix.map_apply]
+
+/-- A family with the conjugate contragredient index law is a family with the plain
+  contragredient index law for the representation twisted by `conjHom`. -/
+lemma IsBiDualRightWeyl.isBiDualLeftWeyl_comp {B : Type*} [AddCommGroup B] [Module ℂ B]
+    {repLorentz : Representation ℂ SL(2,ℂ) B} {T : Fin 2 × Fin 2 → B}
+    (hT : IsBiDualRightWeyl B repLorentz T) :
+    IsBiDualLeftWeyl B (repLorentz.comp SL2C.conjHom) T where
+  repLorentz_T g l := by
+    have h := hT.repLorentz_T (SL2C.conjHom g) l
+    rwa [conjHom_inv_conjTranspose] at h
+
+/-- The `ε` re-index turns a family with the conjugate contragredient index law into a
+  family with the fundamental index law for the conjugation-twisted representation. -/
+lemma IsBiDualRightWeyl.isBiLeftWeyl_epsReindex {B : Type*} [AddCommGroup B]
+    [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B} {T : Fin 2 × Fin 2 → B}
+    (hT : IsBiDualRightWeyl B repLorentz T) :
+    IsBiLeftWeyl B (repLorentz.comp SL2C.conjHom) (epsReindex T) :=
+  hT.isBiDualLeftWeyl_comp.isBiLeftWeyl_epsReindex
+
+/-!
+
+## K. The classification of the invariants of a dual-index family
+
+Sections G to J assemble into contragredient and conjugate contragredient analogues of
+`IsBiLeftWeyl.exists_smul_epsilonContraction_of_invariant` and of its version modulo a
+Lorentz-stable submodule. Nothing in the classification had to be redone: the whole
+argument, and in particular `mem_boostWeightSubmodule_zero_of_invariant`, is generic in
+the representation, so it applies verbatim to the conjugation-twisted one. Because the
+re-index leaves the `ε` contraction alone, the contraction named in the conclusions is
+the contraction of the original family, `T (0, 1) - T (1, 0)`, with no sign and no
+scalar attached.
+
+-/
+
+section DualClassification
+
+variable {B : Type*} [AddCommGroup B] [Module ℂ B]
+  {repLorentz : Representation ℂ SL(2,ℂ) B} {T : Fin 2 × Fin 2 → B}
+
+/-- The `ε` contraction of a family with the contragredient index law is Lorentz
+  invariant. -/
+lemma IsBiDualLeftWeyl.repLorentz_epsilonContraction
+    (hT : IsBiDualLeftWeyl B repLorentz T) (g : SL(2,ℂ)) :
+    repLorentz g (IsBiLeftWeyl.epsilonContraction (T := T))
+      = IsBiLeftWeyl.epsilonContraction (T := T) := by
+  have h := hT.isBiLeftWeyl_epsReindex.repLorentz_epsilonContraction g
+  rwa [epsilonContraction_epsReindex] at h
+
+/-- The `ε` contraction of a family with the conjugate contragredient index law is
+  Lorentz invariant. -/
+lemma IsBiDualRightWeyl.repLorentz_epsilonContraction
+    (hT : IsBiDualRightWeyl B repLorentz T) (g : SL(2,ℂ)) :
+    repLorentz g (IsBiLeftWeyl.epsilonContraction (T := T))
+      = IsBiLeftWeyl.epsilonContraction (T := T) := by
+  have h := hT.isBiLeftWeyl_epsReindex.repLorentz_epsilonContraction
+  rw [epsilonContraction_epsReindex] at h
+  exact (forall_comp_apply_eq_self_iff repLorentz SL2C.conjHom_surjective _).1 h g
+
+/-- The classification of the Lorentz invariants of a family with the contragredient
+  index law: every element of the span of the components fixed by the Lorentz group is a
+  scalar multiple of the `ε` contraction of that family. -/
+theorem IsBiDualLeftWeyl.exists_smul_epsilonContraction_of_invariant
+    (hT : IsBiDualLeftWeyl B repLorentz T) {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, x = a • IsBiLeftWeyl.epsilonContraction (T := T) := by
+  have hT' := hT.isBiLeftWeyl_epsReindex
+  have hx' : x ∈ hT'.span := by
+    rw [IsBiLeftWeyl.span, iSup_span_epsReindex]
+    exact hx
+  obtain ⟨a, ha⟩ := hT'.exists_smul_epsilonContraction_of_invariant hx' hinv
+  exact ⟨a, by rwa [epsilonContraction_epsReindex] at ha⟩
+
+/-- The classification of the Lorentz invariants of a family with the contragredient
+  index law, modulo a Lorentz-stable submodule `S`. -/
+theorem IsBiDualLeftWeyl.exists_smul_epsilonContraction_of_invariant_subset
+    (hT : IsBiDualLeftWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
+    (hx : x ∈ (⨆ d, ℂ ∙ T d) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, ∃ y ∈ S, x = a • IsBiLeftWeyl.epsilonContraction (T := T) + y := by
+  have hT' := hT.isBiLeftWeyl_epsReindex
+  have hx' : x ∈ hT'.span ⊔ S := by
+    rw [IsBiLeftWeyl.span, iSup_span_epsReindex]
+    exact hx
+  obtain ⟨a, y, hy, ha⟩ :=
+    hT'.exists_smul_epsilonContraction_of_invariant_subset S hS hx' hinv
+  exact ⟨a, y, hy, by rwa [epsilonContraction_epsReindex] at ha⟩
+
+/-- The classification of the Lorentz invariants of a family with the conjugate
+  contragredient index law: every element of the span of the components fixed by the
+  Lorentz group is a scalar multiple of the `ε` contraction of that family. -/
+theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant
+    (hT : IsBiDualRightWeyl B repLorentz T) {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, x = a • IsBiLeftWeyl.epsilonContraction (T := T) :=
+  hT.isBiDualLeftWeyl_comp.exists_smul_epsilonContraction_of_invariant hx
+    ((forall_comp_apply_eq_self_iff repLorentz SL2C.conjHom_surjective x).2 hinv)
+
+/-- The classification of the Lorentz invariants of a family with the conjugate
+  contragredient index law, modulo a Lorentz-stable submodule `S`. -/
+theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant_subset
+    (hT : IsBiDualRightWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
+    (hx : x ∈ (⨆ d, ℂ ∙ T d) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, ∃ y ∈ S, x = a • IsBiLeftWeyl.epsilonContraction (T := T) + y :=
+  hT.isBiDualLeftWeyl_comp.exists_smul_epsilonContraction_of_invariant_subset S
+    (fun g y hy => hS (SL2C.conjHom g) y hy) hx
+    ((forall_comp_apply_eq_self_iff repLorentz SL2C.conjHom_surjective x).2 hinv)
+
+end DualClassification
 
 end Lorentz

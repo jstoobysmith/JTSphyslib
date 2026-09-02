@@ -530,6 +530,129 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
       simp only [show ({ val := a + b } : QuarkDoublet) = ⟨a⟩ + ⟨b⟩ from rfl,
         map_add, ha, hb]
 
+/-!
+
+## Component transformation laws
+
+The basis of `QuarkDoublet` splits as a left-handed Weyl index, a colour index and a
+weak-isospin index. The Lorentz group moves only the first, the gauge group only the last
+two (up to the hypercharge scalar), so each action is recorded as a sum over the indices it
+moves. Dualising inverts and transposes the coefficient matrices, and conjugating stars
+them; the four combinations below are what a component of a quark-doublet symbol needs.
+
+-/
+
+/-- The quark-doublet basis vector as an explicit spinor–colour–weak tensor. -/
+lemma basis_eq_mk (k : Fin 2) (c : Fin 3) (w : Fin 2) : basis (k, c, w) =
+    ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c
+      ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ w⟩ := by
+  simp only [basis, Module.Basis.reindex_apply, Module.Basis.map_apply,
+    Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis,
+    Equiv.prodAssoc_symm_apply]
+  rfl
+
+/-- The Lorentz action on the quark-doublet basis: the colour and weak indices are inert
+  and the spinor index transforms by the matrix itself. -/
+lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3 × Fin 2) :
+    repLorentzGroup Λ (basis j) = ∑ β, Λ.1 β j.1 • basis (β, j.2.1, j.2.2) := by
+  obtain ⟨k, c, w⟩ := j
+  simp only [basis_eq_mk, repLorentzGroup, MonoidHom.coe_mk, OneHom.coe_mk,
+    LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+    valLinEquiv_apply, TensorProduct.map_tmul, Fermion.LeftHandedWeyl.rep_apply_basis,
+    Representation.trivial_apply, TensorProduct.sum_tmul, map_sum]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [← TensorProduct.smul_tmul', ← TensorProduct.smul_tmul']
+  exact map_smul valLinEquiv.symm _ _
+
+/-- The quark-doublet coordinate functionals transform contragrediently, by the inverse
+  matrix. -/
+lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3 × Fin 2) :
+    repLorentzGroup.dual Λ (basis.dualBasis j) =
+      ∑ β, (Λ⁻¹).1 j.1 β • basis.dualBasis (β, j.2.1, j.2.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup basis Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then (Λ⁻¹).1 p.1 q.1 else 0)
+    (fun q => by
+      rw [repLorentzGroup_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The Lorentz action on the conjugate quark-doublet basis: the coefficients are the
+  conjugates of those of the quark-doublet action. -/
+lemma repLorentzGroup_conj_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3 × Fin 2) :
+    repLorentzGroup.conj Λ (basis.conj j) =
+      ∑ β, star (Λ.1 β j.1) • basis.conj (β, j.2.1, j.2.2) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repLorentzGroup_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+
+/-- The conjugate quark-doublet coordinate functionals transform by the entrywise
+  conjugate of the inverse matrix. -/
+lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3 × Fin 2) :
+    repLorentzGroup.conj.dual Λ (basis.conj.dualBasis j) =
+      ∑ β, star ((Λ⁻¹).1 j.1 β) • basis.conj.dualBasis (β, j.2.1, j.2.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup.conj basis.conj Λ j
+    (Matrix.of fun p q => if p.2 = q.2 then star ((Λ⁻¹).1 p.1 q.1) else 0)
+    (fun q => by
+      rw [repLorentzGroup_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the quark-doublet basis: the spinor index is inert, the colour
+  index transforms by the `SU(3)` matrix and the weak index by the `SU(2)` matrix, scaled
+  by the hypercharge factor. -/
+lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 3 × Fin 2) :
+    repGaugeGroupI g (basis j) =
+      ∑ c, ∑ w, (g.toU1.1 * g.toSU3.1 c j.2.1 * g.toSU2.1 w j.2.2) • basis (j.1, c, w) := by
+  obtain ⟨k, c, w⟩ := j
+  simp only [basis_eq_mk]
+  exact repGaugeGroupI_tmul_basis_eq_sum g k c w
+
+/-- The quark-doublet coordinate functionals carry the contragredient gauge action: the
+  hypercharge, `SU(3)` and `SU(2)` factors of the inverse group element, transposed. -/
+lemma repGaugeGroupI_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3 × Fin 2) :
+    repGaugeGroupI.dual g (basis.dualBasis j) =
+      ∑ c, ∑ w, ((g⁻¹).toU1.1 * (g⁻¹).toSU3.1 j.2.1 c * (g⁻¹).toSU2.1 j.2.2 w) •
+        basis.dualBasis (j.1, c, w) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI basis g j
+    (Matrix.of fun p q => if p.1 = q.1 then
+      (g⁻¹).toU1.1 * (g⁻¹).toSU3.1 p.2.1 q.2.1 * (g⁻¹).toSU2.1 p.2.2 q.2.2 else 0)
+    (fun q => by
+      rw [repGaugeGroupI_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
+/-- The gauge action on the conjugate quark-doublet basis: the coefficients of the
+  quark-doublet action, conjugated. -/
+lemma repGaugeGroupI_conj_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 3 × Fin 2) :
+    repGaugeGroupI.conj g (basis.conj j) =
+      ∑ c, ∑ w, star (g.toU1.1 * g.toSU3.1 c j.2.1 * g.toSU2.1 w j.2.2) •
+        basis.conj (j.1, c, w) := by
+  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repGaugeGroupI_apply_basis, map_sum]
+  refine Finset.sum_congr rfl fun c _ => ?_
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun w _ => ?_
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+
+/-- The conjugate quark-doublet coordinate functionals carry the conjugate of the
+  contragredient gauge action. -/
+lemma repGaugeGroupI_conj_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3 × Fin 2) :
+    repGaugeGroupI.conj.dual g (basis.conj.dualBasis j) =
+      ∑ c, ∑ w, star ((g⁻¹).toU1.1 * (g⁻¹).toSU3.1 j.2.1 c * (g⁻¹).toSU2.1 j.2.2 w) •
+        basis.conj.dualBasis (j.1, c, w) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj basis.conj g j
+    (Matrix.of fun p q => if p.1 = q.1 then
+      star ((g⁻¹).toU1.1 * (g⁻¹).toSU3.1 p.2.1 q.2.1 * (g⁻¹).toSU2.1 p.2.2 q.2.2) else 0)
+    (fun q => by
+      rw [repGaugeGroupI_conj_apply_basis]
+      simp [Fintype.sum_prod_type, ite_smul, eq_comm])
+  rw [key]
+  simp [Fintype.sum_prod_type, ite_smul]
+
 end QuarkDoublet
 
 /-!
@@ -554,21 +677,25 @@ lemma QuarkDoublet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 × 
       = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) •
         QuarkDoublet.basis j := by
   obtain ⟨k, c, s⟩ := j
-  have hb : QuarkDoublet.basis (k, c, s) = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c ⊗ₜ[ℂ]
+  have hb : QuarkDoublet.basis (k, c, s)
+      = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ c ⊗ₜ[ℂ]
       EuclideanSpace.basisFun (Fin 2) ℂ s⟩ := by
-    simp only [QuarkDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply, OrthonormalBasis.coe_toBasis,
+    simp only [QuarkDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
+      OrthonormalBasis.coe_toBasis,
       Module.Basis.reindex_apply, Equiv.prodAssoc_symm_apply]
     rfl
   rw [hb, QuarkDoublet.repGaugeGroupI_tmul_basis_eq_sum]
   fin_cases i <;> fin_cases c <;> fin_cases s <;>
-    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo, Fin.sum_univ_three, GaugeGroupI.toSU2, su2ExpI, Fin.sum_univ_two,
+    simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU3, su3ExpIOne, su3ExpITwo,
+      Fin.sum_univ_three, GaugeGroupI.toSU2, su2ExpI, Fin.sum_univ_two,
       Matrix.diagonal,
       QuarkDoublet.valueGaugeWeight, colourWeight, isoWeight, GaugeWeight.coord,
       expI_inv_eq_star]
 
 /-- The dual action of the gauge torus on the coordinate functionals of
   `QuarkDoublet`: the weights are negated. -/
-lemma QuarkDoublet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3 × Fin 2) :
+lemma QuarkDoublet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4)
+    (j : Fin 2 × Fin 3 × Fin 2) :
     QuarkDoublet.repGaugeGroupI.dual (gaugeTorusGen i) (QuarkDoublet.basis.coord j)
       = ((expI : ℂ) ^ (-(GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i))) •
         QuarkDoublet.basis.coord j :=
@@ -578,7 +705,8 @@ lemma QuarkDoublet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 
 /-- The dual of the conjugate action of the gauge torus on the coordinate functionals
   of the conjugate of `QuarkDoublet`: the two negations cancel and the weights are those of
   the value space. -/
-lemma QuarkDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3 × Fin 2) :
+lemma QuarkDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4)
+    (j : Fin 2 × Fin 3 × Fin 2) :
     QuarkDoublet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((QuarkDoublet.basis.conj).coord j)
       = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) •
         (QuarkDoublet.basis.conj).coord j := by
