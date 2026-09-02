@@ -43,8 +43,7 @@ cocycle identity for the Maurer–Cartan shift are both corollaries.
 ## iii. Table of contents
 
 - A. Taylor–Leibniz for jets
-  - A.1. The scalar Leibniz rule for iterated derivatives
-  - A.2. The matrix Leibniz rule at the base point
+  - A.1. The matrix Leibniz rule at the base point
 - B. The Taylor–Leibniz theorem for the adjoint action
   - B.1. Collapsing convolutions against constants
   - B.2. The theorem
@@ -72,95 +71,7 @@ open TensorProduct MvPowerSeries
 
 /-!
 
-### A.1. The scalar Leibniz rule for iterated derivatives
-
--/
-
-namespace JetRing
-
-/-- The iterated formal derivative is additive. -/
-lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (f + g)
-      = s.foldl (fun h ρ => pderiv ℂ ρ h) f + s.foldl (fun h ρ => pderiv ℂ ρ h) g := by
-  induction s using Multiset.induction_on generalizing f g with
-  | empty => rfl
-  | cons μ t ih => rw [Multiset.foldl_cons, Multiset.foldl_cons, Multiset.foldl_cons,
-      map_add, ih]
-
-@[simp]
-lemma foldl_pderiv_zero (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (0 : JetRing) = 0 := by
-  induction s using Multiset.induction_on with
-  | empty => rfl
-  | cons μ t ih => rw [Multiset.foldl_cons, map_zero, ih]
-
-/-- The iterated formal derivative of a finite sum. -/
-lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset κ)
-    (f : κ → JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (∑ k ∈ t, f k)
-      = ∑ k ∈ t, s.foldl (fun h ρ => pderiv ℂ ρ h) (f k) := by
-  classical
-  induction t using Finset.induction_on with
-  | empty => simp
-  | insert a t ha ih => rw [Finset.sum_insert ha, foldl_pderiv_add, ih,
-      Finset.sum_insert ha]
-
-/-- **The all-orders Leibniz rule for the iterated formal derivative** on the jet ring:
-  the derivative of a product distributes over the antidiagonal of the multiset of
-  directions. -/
-lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (f * g)
-      = (s.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ℂ ρ h) g).sum := by
-  induction s using Multiset.induction_on generalizing f g with
-  | empty => simp [Multiset.antidiagonal_zero]
-  | cons μ t ih =>
-    rw [Multiset.foldl_cons,
-      show pderiv ℂ μ (f * g) = pderiv ℂ μ f * g + f * pderiv ℂ μ g from by
-        rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g],
-      foldl_pderiv_add, ih, ih,
-      Multiset.map_congr rfl (fun p hp => by
-        rw [show p.1.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ f)
-            = (μ ::ₘ p.1).foldl (fun h ρ => pderiv ℂ ρ h) f from
-          (Multiset.foldl_cons _ _ _ _).symm]),
-      show (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ g)).sum
-        = (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            (μ ::ₘ p.2).foldl (fun h ρ => pderiv ℂ ρ h) g).sum from
-        congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
-          rw [show (μ ::ₘ p.2).foldl (fun h ρ => pderiv ℂ ρ h) g
-            = p.2.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ g) from
-            Multiset.foldl_cons _ _ _ _])]
-    simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
-      Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
-    exact add_comm _ _
-
-/-- The base-point Taylor coefficient of a product: the convolution of the base-point
-  Taylor coefficients. -/
-lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f * g))
-      = (s.antidiagonal.map fun p =>
-          constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f) *
-            constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) g)).sum := by
-  rw [foldl_pderiv_mul, map_multiset_sum, Multiset.map_map]
-  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => map_mul _ _ _)
-
-/-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
-  directions. -/
-lemma foldl_pderiv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) (c : ℂ) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (C c : JetRing) = 0 := by
-  obtain ⟨μ, hμ⟩ := Multiset.exists_mem_of_ne_zero hs
-  obtain ⟨t, rfl⟩ := Multiset.exists_cons_of_mem hμ
-  rw [Multiset.foldl_cons, pderiv_C, foldl_pderiv_zero]
-
-end JetRing
-
-/-!
-
-### A.2. The matrix Leibniz rule at the base point
+### A.1. The matrix Leibniz rule at the base point
 
 -/
 

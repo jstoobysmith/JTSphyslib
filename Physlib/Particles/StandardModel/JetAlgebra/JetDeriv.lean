@@ -16,8 +16,9 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDer
 
 The formal total derivative on the jet algebra of the Standard Model is the sum of the
 total derivatives of the three sector algebras, each acting on its own tensor factor. It
-obeys the Leibniz rule, its components commute, and it restricts to the gauge sector's own
-derivative through the sector inclusion.
+obeys the Leibniz rule, its components commute, and through each sector inclusion it
+restricts to that sector's own derivative — for a single direction and for an iterated
+multiset of directions alike.
 
 The Leibniz rule and the commutation are assembled from the sector facts through abstract
 lemmas proved at small types, instantiated in term mode — rewriting inside the full tensor
@@ -28,15 +29,20 @@ product is prohibitively slow.
 - `JetAlgebra.jetDeriv` : the formal total derivative.
 - `JetAlgebra.jetDeriv_mul` : the Leibniz rule.
 - `JetAlgebra.jetDeriv_comm` : the total derivatives commute.
-- `JetAlgebra.jetDeriv_includeGauge` : the restriction to the gauge sector.
+- `JetAlgebra.jetDeriv_includeGauge`, `jetDeriv_includeFermion`, `jetDeriv_includeHiggs` :
+  the restrictions to the three sectors.
+- `JetAlgebra.iteratedD_includeFermion`, `iteratedD_includeHiggs` : the same for the
+  iterated derivative.
 
 ## iii. Table of contents
 
 - A. The formal total derivative
-  - A.1. The action on pure tensors and the gauge sector
+  - A.1. The action on pure tensors
+  - A.2. The action on the three sectors
 - B. Derivations on tensor products
 - C. The Leibniz rule
 - D. Commutativity
+- E. The iterated derivative
 
 -/
 
@@ -70,7 +76,7 @@ noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAl
 
 /-!
 
-### A.1. The action on pure tensors and the gauge sector
+### A.1. The action on pure tensors
 
 -/
 
@@ -80,6 +86,51 @@ lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra) (h : HiggsJet
       = ((FermionicAlgebra.jetDeriv μ f) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] g
         + (f ⊗ₜ[ℂ] (BosonicAlgebra.jetDeriv μ h)) ⊗ₜ[ℂ] g
         + (f ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] (GaugeJetAlgebra.complexJetDeriv μ g) := rfl
+
+/-!
+
+### A.2. The action on the three sectors
+
+Each sector inclusion sends a sector element to a pure tensor whose other two factors are
+`1`, and the total derivative annihilates `1` in every factor; so only the sector's own
+derivative survives, and each inclusion intertwines the two derivatives.
+
+-/
+
+/-- The gauge sector's derivative annihilates the unit of the complexified gauge jet
+  algebra. -/
+private lemma complexJetDeriv_one (μ : Fin 1 ⊕ Fin 3) :
+    GaugeJetAlgebra.complexJetDeriv μ (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = 0 := by
+  rw [show (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = (1 : ℂ) ⊗ₜ[ℝ] (1 : GaugeJetAlgebra) from rfl,
+    GaugeJetAlgebra.complexJetDeriv_tmul, GaugeJetAlgebra.jetDeriv_one,
+    TensorProduct.tmul_zero]
+
+/-- The derivative acts on the fermionic sector through the fermionic sector's own
+  derivative. -/
+lemma jetDeriv_includeFermion (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra) :
+    jetDeriv μ (includeFermion f) = includeFermion (FermionicAlgebra.jetDeriv μ f) := by
+  have hincl : ∀ x : FermionJetAlgebra, includeFermion x
+      = (x ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) :=
+    fun _ => rfl
+  rw [hincl f, jetDeriv_tmul,
+    show BosonicAlgebra.jetDeriv (V := HiggsVec) μ (1 : HiggsJetAlgebra) = 0 from
+      BosonicAlgebra.jetDeriv_one μ,
+    complexJetDeriv_one, TensorProduct.tmul_zero, TensorProduct.zero_tmul,
+    TensorProduct.tmul_zero, add_zero, add_zero]
+  exact (hincl (FermionicAlgebra.jetDeriv μ f)).symm
+
+/-- The derivative acts on the Higgs sector through the Higgs sector's own derivative. -/
+lemma jetDeriv_includeHiggs (μ : Fin 1 ⊕ Fin 3) (h : HiggsJetAlgebra) :
+    jetDeriv μ (includeHiggs h) = includeHiggs (BosonicAlgebra.jetDeriv μ h) := by
+  have hincl : ∀ x : HiggsJetAlgebra, includeHiggs x
+      = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] x) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) :=
+    fun _ => rfl
+  rw [hincl h, jetDeriv_tmul,
+    show FermionicAlgebra.jetDeriv (V := FermionSpace) μ (1 : FermionJetAlgebra) = 0 from
+      FermionicAlgebra.jetDeriv_one μ,
+    complexJetDeriv_one, TensorProduct.zero_tmul, TensorProduct.zero_tmul,
+    TensorProduct.tmul_zero, zero_add, add_zero]
+  exact (hincl (BosonicAlgebra.jetDeriv μ h)).symm
 
 /-- The derivative acts on the gauge sector through the gauge sector's own derivative. -/
 lemma jetDeriv_includeGauge (μ : Fin 1 ⊕ Fin 3) (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
@@ -272,9 +323,39 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
 
 /-!
 
-## The iterated derivative
+## E. The iterated derivative
+
+Iterating the sector restrictions of section A.2 along a multiset of directions: the
+iterated total derivative restricts to the sector's own iterated derivative. These are the
+forms the generator families of each sector consume.
 
 -/
+
+/-- The iterated total derivative acts on the fermionic sector through the fermionic
+  sector's own iterated derivative. -/
+lemma iteratedD_includeFermion (s : Multiset (Fin 1 ⊕ Fin 3)) (f : FermionJetAlgebra) :
+    Lorentz.iteratedD jetDeriv jetDeriv_comm s (includeFermion f)
+      = includeFermion (FermionicAlgebra.iteratedJetDeriv s f) := by
+  induction s using Multiset.induction_on with
+  | empty =>
+    rw [Lorentz.iteratedD_zero, FermionicAlgebra.iteratedJetDeriv_zero,
+      LinearMap.id_apply, LinearMap.id_apply]
+  | cons κ s ih =>
+    rw [Lorentz.iteratedD_cons, FermionicAlgebra.iteratedJetDeriv_cons,
+      LinearMap.comp_apply, LinearMap.comp_apply, ih, jetDeriv_includeFermion]
+
+/-- The iterated total derivative acts on the Higgs sector through the Higgs sector's own
+  iterated derivative. -/
+lemma iteratedD_includeHiggs (s : Multiset (Fin 1 ⊕ Fin 3)) (h : HiggsJetAlgebra) :
+    Lorentz.iteratedD jetDeriv jetDeriv_comm s (includeHiggs h)
+      = includeHiggs (BosonicAlgebra.iteratedJetDeriv s h) := by
+  induction s using Multiset.induction_on with
+  | empty =>
+    rw [Lorentz.iteratedD_zero, BosonicAlgebra.iteratedJetDeriv_zero,
+      LinearMap.id_apply, LinearMap.id_apply]
+  | cons κ s ih =>
+    rw [Lorentz.iteratedD_cons, BosonicAlgebra.iteratedJetDeriv_cons,
+      LinearMap.comp_apply, LinearMap.comp_apply, ih, jetDeriv_includeHiggs]
 
 end JetAlgebra
 

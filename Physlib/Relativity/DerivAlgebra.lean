@@ -147,6 +147,28 @@ lemma deriv_apply_eq_mul (μ : Fin 1 ⊕ Fin 3) (a : DerivAlgebraComplex) :
 -/
 open Nat
 
+/-- Formal partial derivatives of a multivariate power series commute: each is given on
+  coefficients by a shift and a multiplication, and the two shifts commute. -/
+lemma _root_.MvPowerSeries.pderiv_comm {σ R : Type*} [CommSemiring R] (i j : σ)
+    (f : MvPowerSeries σ R) :
+    MvPowerSeries.pderiv R i (MvPowerSeries.pderiv R j f) =
+      MvPowerSeries.pderiv R j (MvPowerSeries.pderiv R i f) := by
+  ext n
+  rw [MvPowerSeries.coeff_pderiv, MvPowerSeries.coeff_pderiv, MvPowerSeries.coeff_pderiv,
+    MvPowerSeries.coeff_pderiv, add_right_comm n (Finsupp.single i 1) (Finsupp.single j 1)]
+  rcases eq_or_ne i j with rfl | h
+  · ring
+  · rw [Finsupp.add_apply, Finsupp.add_apply, Finsupp.single_eq_of_ne h,
+      Finsupp.single_eq_of_ne h.symm]
+    push_cast
+    ring
+
+/-- Differentiating a jet along a multiset of directions is well defined: the partial
+  derivatives commute, so the fold over a multiset does not depend on the order. -/
+instance : RightCommutative
+    (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => MvPowerSeries.pderiv ℂ μ f) where
+  right_comm f μ ν := MvPowerSeries.pderiv_comm ν μ f
+
 /-- The evaluation map taking a function `f : JetRing` to `∂_μ f`. -/
 noncomputable def eval : DerivAlgebraComplex →ₗ[ℂ] JetRing →ₗ[ℂ] ℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
@@ -212,6 +234,31 @@ lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : DerivAlgebraComplex) (f : JetRing) 
     ring
   exact LinearMap.congr_fun h p
 
+/-- The pairing of the unit derivative symbol with a jet is its value at the base
+  point: the empty derivative multiset reads off the constant term. -/
+lemma eval_one (f : JetRing) :
+    eval (1 : DerivAlgebraComplex) f = MvPowerSeries.constantCoeff f := by
+  rw [show (1 : DerivAlgebraComplex) = basis (0 : Multiset (Fin 1 ⊕ Fin 3)) from basis_nil.symm,
+    basis_apply]
+  simp
+
+/-- Iterating adjointness: the pairing of the basis monomial `∂_s` with a jet is the
+  constant term of the iterated formal partial derivative `∂_s f`. This is the concrete
+  description of the divided-power pairing that `eval_deriv` encodes one derivative at a
+  time. -/
+lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+    eval (basis s) f =
+      MvPowerSeries.constantCoeff (s.foldl (fun g μ => MvPowerSeries.pderiv ℂ μ g) f) := by
+  induction s using Multiset.induction_on generalizing f with
+  | empty =>
+    rw [Multiset.foldl_zero, show (0 : Multiset (Fin 1 ⊕ Fin 3)) = {} from rfl, basis_nil,
+      eval_one]
+  | cons μ t ih =>
+    rw [Multiset.foldl_cons, ← ih,
+      show basis (μ ::ₘ t) = deriv μ (basis t) by
+        rw [deriv_basis_multiset, ← Multiset.singleton_add, add_comm],
+      eval_deriv]
+
 /-!
 
 ### B.2. The action of the Jet ring
@@ -260,6 +307,34 @@ lemma eval_jetRingAction (χ f : JetRing) (p : DerivAlgebraComplex) :
     rw [← hfac]
     ring
   exact LinearMap.congr_fun h p
+
+/-- The action of a jet on a derivative monomial, in multiset form: `∂_s` is sent to the
+  all-orders Leibniz convolution, each splitting `s = s₁ + s₂` of the derivative multiset
+  contributing the base-point Taylor coefficient `(∂_{s₁} χ)(0)` against the lower monomial
+  `∂_{s₂}`.
+
+  This is `jetRingAction_basis` with the `Nat.choose` bookkeeping traded for the
+  divided-power pairing: both sides are compared through `eval`, where the identity is the
+  Leibniz rule `JetRing.constantCoeff_foldl_pderiv_mul` at the base point. It is the form
+  in which the transformation law of a matter field is stated. -/
+lemma jetRingAction_basis_multiset (χ : JetRing) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    jetRingAction χ (basis s) =
+      (s.antidiagonal.map fun p =>
+        MvPowerSeries.constantCoeff
+            (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum := by
+  refine eval_injective fun f => ?_
+  rw [eval_jetRingAction, eval_basis_eq_constantCoeff_foldl_pderiv,
+    JetRing.constantCoeff_foldl_pderiv_mul,
+    show eval ((s.antidiagonal.map fun p =>
+        MvPowerSeries.constantCoeff
+          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum) f
+      = (eval.flip f) ((s.antidiagonal.map fun p =>
+        MvPowerSeries.constantCoeff
+          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum) from rfl,
+    map_multiset_sum, Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
+  rw [Function.comp_apply, map_smul, LinearMap.flip_apply, smul_eq_mul,
+    eval_basis_eq_constantCoeff_foldl_pderiv]
 
 /-- Constant jets act on the derivative symbols by their value: `C c` has no
   derivative coordinates. -/
@@ -545,6 +620,54 @@ lemma gradeScale_repLorentzGroup (t : ℂ) (Λ : SL(2,ℂ)) (a : DerivAlgebraCom
     simp
   exact DFunLike.congr_fun h a
 
+/-!
+
+### B.7. The derivative-degree polynomial
+
+The degree scaling of the previous section records the derivative degree in a scalar. The
+same construction with the scalar replaced by a formal variable records it in a polynomial:
+`gradePoly` is the linear map sending the basis monomial `∂_s` to `X ^ |s| ∂_s`, so the
+coefficient of `X ^ n` in `gradePoly a` is the part of `a` of derivative degree `n`.
+
+-/
+
+/-- The derivative-degree polynomial on the algebra of derivative symbols: the linear map
+  sending the basis monomial `∂_s` to `X ^ |s|` times itself. It is `gradeScale` with the
+  scalar replaced by the formal variable `X`. -/
+noncomputable def gradePoly : DerivAlgebraComplex →ₗ[ℂ] Polynomial DerivAlgebraComplex :=
+  basis.constr ℂ fun s => Polynomial.monomial (Multiset.card s) (basis s)
+
+/-- The derivative-degree polynomial of a basis monomial is the monomial of degree `|s|`. -/
+@[simp]
+lemma gradePoly_basis (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    gradePoly (basis s) = Polynomial.monomial (Multiset.card s) (basis s) := by
+  rw [gradePoly, Module.Basis.constr_basis]
+
+/-- Evaluating the derivative-degree polynomial at a scalar is the derivative-degree
+  scaling by that scalar: the two descriptions of the grading agree. -/
+lemma eval_algebraMap_gradePoly (t : ℂ) (a : DerivAlgebraComplex) :
+    (gradePoly a).eval (algebraMap ℂ DerivAlgebraComplex t) = gradeScale t a := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℂ DerivAlgebraComplex)
+      (algebraMap ℂ DerivAlgebraComplex t)
+      (fun b => (Algebra.commutes t b).symm)).toLinearMap ∘ₗ gradePoly =
+      (gradeScale t).toLinearMap := by
+    refine basis.ext fun s => ?_
+    simp only [LinearMap.coe_comp, Function.comp_apply, gradePoly_basis,
+      AlgHom.toLinearMap_apply, gradeScale_basis]
+    show (Polynomial.monomial (Multiset.card s) (basis s)).eval
+      (algebraMap ℂ DerivAlgebraComplex t) = _
+    rw [Polynomial.eval_monomial, ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
+  exact LinearMap.congr_fun h a
+
+/-- Setting the formal variable to one recovers the original element: the pieces of a
+  graded decomposition sum to the element. -/
+lemma gradePoly_eval_one (a : DerivAlgebraComplex) : (gradePoly a).eval 1 = a := by
+  have h := eval_algebraMap_gradePoly 1 a
+  rw [map_one] at h
+  rw [h, gradeScale, show (1 : ℂ) • SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+    = SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) from one_smul _ _,
+    SymmetricAlgebra.lift_ι, AlgHom.id_apply]
+
 end DerivAlgebraComplex
 
 
@@ -718,5 +841,61 @@ lemma basisMultiset_singleton (μ : Fin 1 ⊕ Fin 3) :
       Finsupp.single μ 1 by simp,
     Basis.symmetricAlgebra, Basis.map_apply, h]
   simp
+
+/-!
+
+## The derivative-degree polynomial on the real derivative algebra
+
+-/
+
+/-- The degree scaling multiplies the real basis monomial at `s` by `t ^ |s|`. -/
+lemma gradeScale_basisMultiset (t : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    gradeScale t (basisMultiset s) = t ^ Multiset.card s • basisMultiset s := by
+  induction s using Multiset.induction_on with
+  | empty =>
+    rw [show basisMultiset (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 from basisMultiset_nil, map_one]
+    simp
+  | cons a s ih =>
+    rw [← Multiset.singleton_add, ← basisMultiset_mul, map_mul, ih, basisMultiset_singleton,
+      gradeScale_ι, smul_mul_smul_comm, ← _root_.pow_succ', ← basisMultiset_singleton,
+      basisMultiset_mul, Multiset.singleton_add, Multiset.card_cons]
+
+/-- The derivative-degree polynomial on the real algebra of derivative symbols: the linear
+  map sending the basis monomial `∂_s` to `X ^ |s|` times itself. -/
+noncomputable def gradePoly : DerivAlgebraReal →ₗ[ℝ] Polynomial DerivAlgebraReal :=
+  basisMultiset.constr ℝ fun s => Polynomial.monomial (Multiset.card s) (basisMultiset s)
+
+/-- The derivative-degree polynomial of a real basis monomial is the monomial of degree
+  `|s|`. -/
+@[simp]
+lemma gradePoly_basisMultiset (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    gradePoly (basisMultiset s) =
+      Polynomial.monomial (Multiset.card s) (basisMultiset s) := by
+  rw [gradePoly, Module.Basis.constr_basis]
+
+/-- Evaluating the real derivative-degree polynomial at a scalar is the derivative-degree
+  scaling by that scalar. -/
+lemma eval_algebraMap_gradePoly (t : ℝ) (a : DerivAlgebraReal) :
+    (gradePoly a).eval (algebraMap ℝ DerivAlgebraReal t) = gradeScale t a := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℝ DerivAlgebraReal)
+      (algebraMap ℝ DerivAlgebraReal t)
+      (fun b => (Algebra.commutes t b).symm)).toLinearMap ∘ₗ gradePoly =
+      (gradeScale t).toLinearMap := by
+    refine basisMultiset.ext fun s => ?_
+    simp only [LinearMap.coe_comp, Function.comp_apply, gradePoly_basisMultiset,
+      AlgHom.toLinearMap_apply, gradeScale_basisMultiset]
+    show (Polynomial.monomial (Multiset.card s) (basisMultiset s)).eval
+      (algebraMap ℝ DerivAlgebraReal t) = _
+    rw [Polynomial.eval_monomial, ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
+  exact LinearMap.congr_fun h a
+
+/-- Setting the formal variable to one recovers the original element of the real
+  derivative algebra. -/
+lemma gradePoly_eval_one (a : DerivAlgebraReal) : (gradePoly a).eval 1 = a := by
+  have h := eval_algebraMap_gradePoly 1 a
+  rw [map_one] at h
+  rw [h, gradeScale, show (1 : ℝ) • SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
+    = SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector) from one_smul _ _,
+    SymmetricAlgebra.lift_ι, AlgHom.id_apply]
 
 end DerivAlgebraReal
