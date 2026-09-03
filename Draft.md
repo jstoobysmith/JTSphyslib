@@ -21,6 +21,26 @@ Of course, there is no question of the actual correctness of these theorems. Thu
 
 ## 2. Overview
 
+In this paper we formalize the Standard Model Lagrangian. To do that we must first say what a Lagrangian is, and it is worth building that up from what is actually in front of us.
+
+At the point `x` we have the fields: the gauge bosons, the fermions and the Higgs. We also have their conjugates, and all of their derivatives — `∂_μ H`, `∂_μ∂_ν H`, and so on. These are the ingredients, and a Lagrangian is built from nothing else.
+
+To build one we add these ingredients, scale them by complex numbers, and multiply them together. Those three operations are exactly what an associative algebra over `ℂ` provides — so whatever the fields are, they are elements of such an algebra, which we call `B`.
+
+Nothing further about B is ever used: no norm, no topology, no involution, and no commitment as to what its elements are. We therefore do not fix it. B is an arbitrary `ℂ`-algebra, and the fields are an arbitrary family of its elements, labelled the way the Standard Model fields are labelled.
+
+What we do need to know is how those elements behave inside `B`:
+
+- how they multiply past one another — the fermionic ones anticommute, the bosonic ones commute;
+- how the gauge group acts on them;
+- how the Lorentz group acts on them;
+- what mass dimension each one carries.
+
+`IsStandardModel` is precisely this package: an algebra `B`, a family of elements in it, an action of the gauge group and an action of the Lorentz group, together with the requirement that they fit together as the Standard Model fields do.
+
+
+
+
 **The data structures**
 
 The main story is carried by three data structures. The first two are predicates — conditions on an arbitrary algebra B and a family of operators in it — while the third is a concrete algebra.
@@ -70,3 +90,11 @@ All of the above are supported by API around the Gauge group, the Lorentz group,
 ## 3. The details
 
 ## 4. Future work
+
+- BSM
+- EFTs
+- Improvements to group theory & algebra
+- Symmetry breaking
+- Connection to Feynman diagrams
+- QED and the connection to EM
+- Appropaite inclusion of total derivative removals.
