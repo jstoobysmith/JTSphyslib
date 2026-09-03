@@ -86,6 +86,10 @@ lemma massWeightPoly_eval_one (x : JetAlgebra) :
       fun a => Commute.one_right a).comp massWeightPoly = AlgHom.id ℂ JetAlgebra := by
     refine ExteriorAlgebra.hom_ext (Module.Basis.ext JetComponentSpace.basis fun j => ?_)
     simp [massWeightPoly, ofGenerator]
+    change Polynomial.eval₂ (RingHom.id _) 1
+      (Polynomial.monomial j.massWeight (ExteriorAlgebra.ι ℂ (JetComponentSpace.basis j))) = _
+    rw [Polynomial.eval₂_id]
+    simp
   exact AlgHom.congr_fun h x
 
 lemma eq_sum_massWeightPoly_coeff (x : JetAlgebra) :

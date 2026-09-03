@@ -422,7 +422,6 @@ lemma rep_gaugeTorusGen_higgs_zero (i : Fin 4) {n : ℕ} (d : Fin n → (Fin 1 �
   fin_cases i <;>
     simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
       Fin.sum_univ_two, expI_inv_eq_star, Matrix.one_apply, Unitary.coe_inv, hstar]
-  rfl
 
 lemma rep_gaugeTorusGen_higg_one (i : Fin 4) {n : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3)) :
     rep (gaugeTorusGen i) (h.higgs d 1)
@@ -435,7 +434,6 @@ lemma rep_gaugeTorusGen_higg_one (i : Fin 4) {n : ℕ} (d : Fin n → (Fin 1 ⊕
   fin_cases i <;>
     simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
       Fin.sum_univ_two, expI_inv_eq_star, Matrix.one_apply, Unitary.coe_inv, hstar]
-  rfl
 
 lemma rep_gaugeTorusGen_barHiggsComponent_zero (i : Fin 4) {n : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3)) :
     rep (gaugeTorusGen i) (h.barHiggs d 0)
@@ -445,7 +443,6 @@ lemma rep_gaugeTorusGen_barHiggsComponent_zero (i : Fin 4) {n : ℕ} (d : Fin n 
   fin_cases i <;>
     simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
       Fin.sum_univ_two, Matrix.one_apply, Unitary.coe_inv, hc]
-  rfl
 
 lemma rep_gaugeTorusGen_barHiggsComponent_one (i : Fin 4) {n : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3)) :
     rep (gaugeTorusGen i) (h.barHiggs d 1)
@@ -455,7 +452,6 @@ lemma rep_gaugeTorusGen_barHiggsComponent_one (i : Fin 4) {n : ℕ} (d : Fin n �
   fin_cases i <;>
     simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI_inv_coe,
       Fin.sum_univ_two, Matrix.one_apply, Unitary.coe_inv, hc]
-  rfl
 
 /-!
 
@@ -1067,8 +1063,9 @@ lemma isDerivativeCollection_dotSymbol :
                       (u (Fin.natAdd (num 0) j)) (d (Fin.natAdd (num 0) j)) : ℝ) : ℂ)) :=
             fun u => Fin.prod_univ_add _
           simp only [dotSymbol, LinearMap.toSpanSingleton_apply, MonoidHom.one_apply,
-            Module.End.one_apply, hprod, Fin.appendEquiv_symm_apply, smul_smul,
+            Module.End.one_apply, Fin.appendEquiv_symm_apply, smul_smul,
             mul_comm w, mul_assoc]
+          rw [hprod a, mul_assoc]
           rfl
 
 /-!
@@ -2595,7 +2592,7 @@ open Lorentz.BoostWeight
   `dotGaugeHiggs d ![]`. -/
 lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
     h.dotSymbol ![1, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
-  rw [dotSymbol]
+  delta dotSymbol
   congr 1
   congr 1
   exact funext fun j => j.elim0
@@ -2603,12 +2600,12 @@ lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
 /-- With all derivatives on the conjugate Higgs. -/
 lemma dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
     h.dotSymbol ![0, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
-  rw [dotSymbol]
+  delta dotSymbol
   congr 1
   congr 1
   all_goals first
     | exact funext fun j => j.elim0
-    | (funext j; congr 1; exact Fin.ext (by simp))
+    | (funext j; congr 1; exact Fin.ext (by simp [Fin.natAdd]))
 
 @[simp]
 lemma range_dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
@@ -2623,7 +2620,7 @@ lemma range_dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
 /-- With both derivatives on the Higgs. -/
 lemma dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
     h.dotSymbol ![2, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
-  rw [dotSymbol]
+  delta dotSymbol
   congr 1
   congr 1
   exact funext fun j => j.elim0
@@ -2631,17 +2628,17 @@ lemma dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
 /-- With both derivatives on the conjugate Higgs. -/
 lemma dotSymbol_right_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
     h.dotSymbol ![0, 2] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
-  rw [dotSymbol]
+  delta dotSymbol
   congr 1
   congr 1
   all_goals first
     | exact funext fun j => j.elim0
-    | (funext j; congr 1; exact Fin.ext (by simp))
+    | (funext j; congr 1; exact Fin.ext (by simp [Fin.natAdd]))
 
 /-- With one derivative on each factor. -/
 lemma dotSymbol_one_one (d : Fin 2 → Fin 1 ⊕ Fin 3) :
     h.dotSymbol ![1, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![d 0] ![d 1]) := by
-  rw [dotSymbol]
+  delta dotSymbol
   congr 1
   congr 1
   all_goals funext j
@@ -2852,23 +2849,47 @@ lemma boostWeightZeroEight_piece_zero_eq (i : Fin 3) :
     (h.dotSymbol ![0, 2]) i
   have h3 := iSup_range_lightConeDeriv_pair_weight_zero
     (h.dotSymbol ![1, 1]) i
-  simp only [lightConeDeriv_pair_zero_one,
-    lightConeDeriv_pair_one_zero,
-    lightConeDeriv_pair_two_two,
-    lightConeDeriv_pair_two_three,
-    lightConeDeriv_pair_three_two,
-    lightConeDeriv_pair_three_three,
-    h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) i,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) i,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) i,
+    lightConeDeriv_pair_two_three (h.dotSymbol ![2, 0]) i,
+    lightConeDeriv_pair_three_two (h.dotSymbol ![2, 0]) i,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) i,
+    h.dotSymbol_left_two,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h1
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) i,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) i,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) i,
+    lightConeDeriv_pair_two_three (h.dotSymbol ![0, 2]) i,
+    lightConeDeriv_pair_three_two (h.dotSymbol ![0, 2]) i,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) i,
+    h.dotSymbol_right_two,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h2
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) i,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) i,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) i,
+    lightConeDeriv_pair_two_three (h.dotSymbol ![1, 1]) i,
+    lightConeDeriv_pair_three_two (h.dotSymbol ![1, 1]) i,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) i,
+    h.dotSymbol_one_one,
     Matrix.cons_val_zero, Matrix.cons_val_one,
     range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
-    ← LinearMap.span_singleton_eq_range] at h1 h2 h3
+    ← LinearMap.span_singleton_eq_range] at h3
   have hq : (IsDerivativeCollection.boostDecompZero h.quarticSymbol
       h.rotatesIndices_quarticSymbol i (trivialWeightDecomposition i)).piece 0
       = ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
     dsimp only [IsDerivativeCollection.boostDecompZero, trivialWeightDecomposition_piece]
     rw [if_pos rfl, Submodule.map_top, h.range_quarticSymbol]
-  dsimp only [boostWeightZeroEight, WeightDecomposition.copy_piece,
-    WeightDecomposition.sup_piece]
+  show ((((h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![2, 0] i
+          (trivialWeightDecomposition i)).piece 0 ⊔
+        (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![0, 2] i
+          (trivialWeightDecomposition i)).piece 0) ⊔
+      (h.isDerivativeCollection_dotSymbol.boostDecompOfNum ![1, 1] i
+        (trivialWeightDecomposition i)).piece 0) ⊔
+    (IsDerivativeCollection.boostDecompZero h.quarticSymbol h.rotatesIndices_quarticSymbol i
+      (trivialWeightDecomposition i)).piece 0) = _
   rw [h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![2, 0] i
       (trivialWeightDecomposition i) (by simp) (fun b hb => by simp [hb]),
     h.isDerivativeCollection_dotSymbol.boostDecompOfNum_piece_of_weight_zero ![0, 2] i
@@ -2918,12 +2939,14 @@ noncomputable def dimSixWeightDecompositionLE :
       refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
         ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
       · have e := hL 2
-        rw [lightConeDeriv_two, h.dotSymbol_left, show ((1 : Fin 3) + 1) = 2 from rfl,
+        rw [lightConeDeriv_two (h.dotSymbol ![1, 0]) 1,
+          h.dotSymbol_left, show ((1 : Fin 3) + 1) = 2 from rfl,
           LinearMap.toSpanSingleton_apply, one_smul,
           show lightConeWeight 2 = (0 : ℤ) from rfl] at e
         exact e
       · have e := hR 2
-        rw [lightConeDeriv_two, h.dotSymbol_right, show ((1 : Fin 3) + 1) = 2 from rfl,
+        rw [lightConeDeriv_two (h.dotSymbol ![0, 1]) 1,
+          h.dotSymbol_right, show ((1 : Fin 3) + 1) = 2 from rfl,
           LinearMap.toSpanSingleton_apply, one_smul,
           show lightConeWeight 2 = (0 : ℤ) from rfl] at e
         exact e
@@ -2931,12 +2954,14 @@ noncomputable def dimSixWeightDecompositionLE :
       refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
         ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
       · have e := hL 0
-        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
+        rw [lightConeDeriv_zero (h.dotSymbol ![1, 0]) 1,
+          LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 0 = (2 : ℤ) from rfl] at e
         exact e
       · have e := hR 0
-        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
+        rw [lightConeDeriv_zero (h.dotSymbol ![0, 1]) 1,
+          LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 0 = (2 : ℤ) from rfl] at e
         exact e
@@ -2944,12 +2969,14 @@ noncomputable def dimSixWeightDecompositionLE :
       refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
         ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
       · have e := hL 1
-        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
+        rw [lightConeDeriv_one (h.dotSymbol ![1, 0]) 1,
+          LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
         exact e
       · have e := hR 1
-        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
+        rw [lightConeDeriv_one (h.dotSymbol ![0, 1]) 1,
+          LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
         exact e
@@ -3302,15 +3329,31 @@ lemma dimEightWeightDecompositionLE_piece_zero_eq :
     (h.dotSymbol ![0, 2]) 1
   have h3 := iSup_range_lightConeDeriv_pair_weight_zero_notMixed
     (h.dotSymbol ![1, 1]) 1
-  simp only [lightConeDeriv_pair_zero_one,
-    lightConeDeriv_pair_one_zero,
-    lightConeDeriv_pair_two_two,
-    lightConeDeriv_pair_three_three,
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 1,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 1,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 1,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 1,
     show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
-    h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
+    h.dotSymbol_left_two,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h1
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 1,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 1,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 1,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 1,
+    show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
+    h.dotSymbol_right_two,
+    range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
+    ← LinearMap.span_singleton_eq_range] at h2
+  simp only [lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 1,
+    lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 1,
+    lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 1,
+    lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 1,
+    show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
+    h.dotSymbol_one_one,
     Matrix.cons_val_zero, Matrix.cons_val_one,
     range_toSpanSingleton_add_sub_sub, range_toSpanSingleton_sub_add_sub,
-    ← LinearMap.span_singleton_eq_range] at h1 h2 h3
+    ← LinearMap.span_singleton_eq_range] at h3
   show h.dimEightPieceOne 0 = _
   rw [dimEightPieceOne, if_pos rfl]
   exact congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) h1 h2) h3) rfl
@@ -3355,12 +3398,14 @@ noncomputable def dimSixWeightDecompositionLELE :
       refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
         ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
       · have e := hL 0
-        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
+        rw [lightConeDeriv_zero (h.dotSymbol ![1, 0]) 2,
+          LinearMap.sub_apply, h.dotSymbol_left, h.dotSymbol_left,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 0 = (2 : ℤ) from rfl] at e
         exact e
       · have e := hR 0
-        rw [lightConeDeriv_zero, LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
+        rw [lightConeDeriv_zero (h.dotSymbol ![0, 1]) 2,
+          LinearMap.sub_apply, h.dotSymbol_right, h.dotSymbol_right,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 0 = (2 : ℤ) from rfl] at e
         exact e
@@ -3368,12 +3413,14 @@ noncomputable def dimSixWeightDecompositionLELE :
       refine sup_le ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
         ((Submodule.span_singleton_le_iff_mem _ _).2 ?_)
       · have e := hL 1
-        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
+        rw [lightConeDeriv_one (h.dotSymbol ![1, 0]) 2,
+          LinearMap.add_apply, h.dotSymbol_left, h.dotSymbol_left,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
         exact e
       · have e := hR 1
-        rw [lightConeDeriv_one, LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
+        rw [lightConeDeriv_one (h.dotSymbol ![0, 1]) 2,
+          LinearMap.add_apply, h.dotSymbol_right, h.dotSymbol_right,
           LinearMap.toSpanSingleton_apply, LinearMap.toSpanSingleton_apply, one_smul, one_smul,
           show lightConeWeight 1 = (-2 : ℤ) from rfl] at e
         exact e
@@ -3616,21 +3663,53 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]
           + (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (add_mem (sub_mem (add_mem (add_mem
           (Submodule.smul_mem _ _ hL00) (Submodule.smul_mem _ _ hL03))
@@ -3646,21 +3725,41 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]
           - (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
           (Submodule.smul_mem _ _ hL00) (Submodule.smul_mem _ _ hL03))
@@ -3669,40 +3768,56 @@ noncomputable def dimEightWeightDecompositionLELE :
       · rw [show h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]
             = (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 0] - (4⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (Submodule.smul_mem _ _ hL00)
           (Submodule.smul_mem _ _ hL01)) (Submodule.smul_mem _ _ hL11)
       · rw [show h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] = lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]]
         exact hL22
     · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
         rw [Submodule.span_singleton_le_iff_mem]
@@ -3716,21 +3831,41 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]
           + (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (add_mem (sub_mem (add_mem (add_mem
           (Submodule.smul_mem _ _ hR00) (Submodule.smul_mem _ _ hR03))
@@ -3746,21 +3881,41 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]
           - (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
           (Submodule.smul_mem _ _ hR00) (Submodule.smul_mem _ _ hR03))
@@ -3769,40 +3924,56 @@ noncomputable def dimEightWeightDecompositionLELE :
       · rw [show h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]
             = (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 0] - (4⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (Submodule.smul_mem _ _ hR00)
           (Submodule.smul_mem _ _ hR01)) (Submodule.smul_mem _ _ hR11)
       · rw [show h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] = lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]]
         exact hR22
     · refine sup_le (sup_le ?_ ?_) (sup_le ?_ ?_) <;>
         rw [Submodule.span_singleton_le_iff_mem]
@@ -3816,21 +3987,41 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]
           + (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (add_mem (sub_mem (add_mem (add_mem
           (Submodule.smul_mem _ _ hM00) (Submodule.smul_mem _ _ hM03))
@@ -3846,21 +4037,41 @@ noncomputable def dimEightWeightDecompositionLELE :
           - lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]
           - (2⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 3] - lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 1])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+            show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (sub_mem (add_mem (sub_mem
           (Submodule.smul_mem _ _ hM00) (Submodule.smul_mem _ _ hM03))
@@ -3869,40 +4080,56 @@ noncomputable def dimEightWeightDecompositionLELE :
       · rw [show h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]
             = (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0] - (4⁻¹ : ℂ) • (lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
           + (4⁻¹ : ℂ) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]
           module]
         exact add_mem (sub_mem (Submodule.smul_mem _ _ hM00)
           (Submodule.smul_mem _ _ hM01)) (Submodule.smul_mem _ _ hM11)
       · rw [show h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] = lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] from by
-          simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+          simp only [show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+                = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+            lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+            lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+            show ((2 : Fin 3) + 1) = 0 from rfl,
+            show ((2 : Fin 3) + 2) = 1 from rfl,
+            LinearMap.add_apply,
+            LinearMap.sub_apply,
+            h.dotSymbol_left_two,
+            h.dotSymbol_right_two,
+            h.dotSymbol_one_one,
+            Matrix.cons_val_zero,
+            Matrix.cons_val_one,
+            LinearMap.toSpanSingleton_apply,
+            one_smul]]
         exact hM22
     · rw [Submodule.span_singleton_le_iff_mem]
       refine Submodule.mem_iSup_of_mem 0 ?_
@@ -3926,167 +4153,335 @@ lemma dimEightWeightDecompositionLELE_piece_zero_eq :
       = ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) := by
     rw [show lightConeDot (h.dotSymbol ![2, 0]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 0]
         = (2 : ℂ) • (h.dotGaugeHiggs ![Sum.inl 0, Sum.inl 0] ![] - h.dotGaugeHiggs ![Sum.inr 2, Sum.inr 2] ![]) from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
   have hL2 : (ℂ ∙ lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] := by
     rw [show lightConeDot (h.dotSymbol ![2, 0]) 2 ![3, 3] = h.dotGaugeHiggs ![Sum.inr 1, Sum.inr 1] ![] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   have hL3 : (ℂ ∙ lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] := by
     rw [show lightConeDot (h.dotSymbol ![2, 0]) 2 ![2, 2] = h.dotGaugeHiggs ![Sum.inr 0, Sum.inr 0] ![] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   have hR1 : (ℂ ∙ (lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0]))
       = ℂ ∙ (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) := by
     rw [show lightConeDot (h.dotSymbol ![0, 2]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 0]
         = (2 : ℂ) • (h.dotGaugeHiggs ![] ![Sum.inl 0, Sum.inl 0] - h.dotGaugeHiggs ![] ![Sum.inr 2, Sum.inr 2]) from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
   have hR2 : (ℂ ∙ lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] := by
     rw [show lightConeDot (h.dotSymbol ![0, 2]) 2 ![3, 3] = h.dotGaugeHiggs ![] ![Sum.inr 1, Sum.inr 1] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   have hR3 : (ℂ ∙ lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] := by
     rw [show lightConeDot (h.dotSymbol ![0, 2]) 2 ![2, 2] = h.dotGaugeHiggs ![] ![Sum.inr 0, Sum.inr 0] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   have hM1 : (ℂ ∙ (lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0]))
       = ℂ ∙ (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) := by
     rw [show lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0]
         = (2 : ℂ) • (h.dotGaugeHiggs ![Sum.inl 0] ![Sum.inl 0] - h.dotGaugeHiggs ![Sum.inr 2] ![Sum.inr 2]) from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     exact Submodule.span_singleton_smul_eq (by norm_num : (2 : ℂ) ≠ 0).isUnit _
   have hM2 : (ℂ ∙ lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] := by
     rw [show lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3] = h.dotGaugeHiggs ![Sum.inr 1] ![Sum.inr 1] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   have hM3 : (ℂ ∙ lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2]) = ℂ ∙ h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] := by
     rw [show lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] = h.dotGaugeHiggs ![Sum.inr 0] ![Sum.inr 0] from by
-      simp only [lightConeDot, lightConeDeriv_pair_zero_zero,
-        lightConeDeriv_pair_zero_one,
-        lightConeDeriv_pair_one_zero,
-        lightConeDeriv_pair_one_one,
-        lightConeDeriv_pair_zero_three,
-        lightConeDeriv_pair_three_zero,
-        lightConeDeriv_pair_one_three,
-        lightConeDeriv_pair_three_one,
-        lightConeDeriv_pair_two_two,
-        lightConeDeriv_pair_three_three,
-        show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-        LinearMap.add_apply, LinearMap.sub_apply,
-        h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-        Matrix.cons_val_zero, Matrix.cons_val_one,
-        LinearMap.toSpanSingleton_apply, one_smul]]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_three (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]]
   show h.dimEightPieceTwo 0 = _
   rw [dimEightPieceTwo, if_neg (by decide), if_neg (by decide), if_pos rfl]
   exact congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·) (congrArg₂ (· ⊔ ·)
@@ -4244,18 +4639,41 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (lightConeDot (h.dotSymbol ![1, 1]) 0 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 0 ![1, 0])
         + ((bM + cM - aM) / 3) • (lightConeDot (h.dotSymbol ![1, 1]) 0 ![2, 2] + lightConeDot (h.dotSymbol ![1, 1]) 0 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
     rw [ekform]
-    simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((0 : Fin 3) + 1) = 1 from rfl, show ((0 : Fin 3) + 2) = 2 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+    simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 0,
+      show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 0,
+      show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 0,
+      show ((0 : Fin 3) + 1) = 1 from rfl,
+      show ((0 : Fin 3) + 2) = 2 from rfl,
+      LinearMap.add_apply,
+      LinearMap.sub_apply,
+      h.dotSymbol_left_two,
+      h.dotSymbol_right_two,
+      h.dotSymbol_one_one,
+      Matrix.cons_val_zero,
+      Matrix.cons_val_one,
+      LinearMap.toSpanSingleton_apply,
+      one_smul]
     module
   have hcomp0 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
     (a := 4) (b := -4)
@@ -4319,18 +4737,41 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 0 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • lightConeDot (h.dotSymbol ![2, 0]) 0 ![1, 1] +
         ((2 * aR + bR + cR) / 3) • lightConeDot (h.dotSymbol ![0, 2]) 0 ![1, 1] +
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 0 ![1, 1]))) from by
-      simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((0 : Fin 3) + 1) = 1 from rfl, show ((0 : Fin 3) + 2) = 2 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 0 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 0 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 0,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 0,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 0,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 0,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 0,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 0,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 0 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 0 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 0,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 0,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 0,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 0,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 0,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 0,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 0 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 0 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 0,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 0,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 0,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 0,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 0,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 0,
+        show ((0 : Fin 3) + 1) = 1 from rfl,
+        show ((0 : Fin 3) + 2) = 2 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     rw [hcomp0.1, hcomp0.2]
     simp
@@ -4346,18 +4787,65 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (lightConeDot (h.dotSymbol ![1, 1]) 1 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 1 ![1, 0])
         + ((bM + cM - aM) / 3) • (lightConeDot (h.dotSymbol ![1, 1]) 1 ![2, 2] + lightConeDot (h.dotSymbol ![1, 1]) 1 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
     rw [ekform]
-    simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+    simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 0,
+      show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 1,
+      show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 0,
+      show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 1,
+      show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 0 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 0 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 0,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 0,
+      show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 1,
+      show ((1 : Fin 3) + 1) = 2 from rfl,
+      show ((1 : Fin 3) + 2) = 0 from rfl,
+      LinearMap.add_apply,
+      LinearMap.sub_apply,
+      h.dotSymbol_left_two,
+      h.dotSymbol_right_two,
+      h.dotSymbol_one_one,
+      Matrix.cons_val_zero,
+      Matrix.cons_val_one,
+      LinearMap.toSpanSingleton_apply,
+      one_smul]
     module
   have hcomp1 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
     (a := 4) (b := -4)
@@ -4421,18 +4909,41 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 1 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • lightConeDot (h.dotSymbol ![2, 0]) 1 ![1, 1] +
         ((2 * aR + bR + cR) / 3) • lightConeDot (h.dotSymbol ![0, 2]) 1 ![1, 1] +
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 1 ![1, 1]))) from by
-      simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((1 : Fin 3) + 1) = 2 from rfl, show ((1 : Fin 3) + 2) = 0 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 1 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 1,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 1,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 1,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 1,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 1,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 1,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 1 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 1,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 1,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 1,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 1,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 1,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 1,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 1 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 1,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 1,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 1,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 1,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 1,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 1,
+        show ((1 : Fin 3) + 1) = 2 from rfl,
+        show ((1 : Fin 3) + 2) = 0 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     rw [hcomp1.1, hcomp1.2]
     simp
@@ -4448,18 +4959,65 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         (((4⁻¹ : ℂ) * (aM - ((bM + cM - aM) / 3))) • (lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 1] + lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 0])
         + ((bM + cM - aM) / 3) • (lightConeDot (h.dotSymbol ![1, 1]) 2 ![2, 2] + lightConeDot (h.dotSymbol ![1, 1]) 2 ![3, 3])) + q • (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
     rw [ekform]
-    simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+    simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 1,
+      show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+      show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 1,
+      show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+      show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 1 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 1,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 1,
+      show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+          = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+      lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+      lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+      lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+      lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+      lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+      lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+      show ((2 : Fin 3) + 1) = 0 from rfl,
+      show ((2 : Fin 3) + 2) = 1 from rfl,
+      LinearMap.add_apply,
+      LinearMap.sub_apply,
+      h.dotSymbol_left_two,
+      h.dotSymbol_right_two,
+      h.dotSymbol_one_one,
+      Matrix.cons_val_zero,
+      Matrix.cons_val_one,
+      LinearMap.toSpanSingleton_apply,
+      one_smul]
     module
   have hcomp2 := eq_zero_and_eq_zero_of_add_add_mem_boostWeightSubmodule
     (a := 4) (b := -4)
@@ -4523,18 +5081,41 @@ theorem mem_span_metric_of_invariant (x : B) (hx : ∀ g, rep g x = x)
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![0, 0])) + ((4⁻¹ : ℂ) • (((2 * aL + bL + cL) / 3) • lightConeDot (h.dotSymbol ![2, 0]) 2 ![1, 1] +
         ((2 * aR + bR + cR) / 3) • lightConeDot (h.dotSymbol ![0, 2]) 2 ![1, 1] +
         ((2 * aM + bM + cM) / 3) • lightConeDot (h.dotSymbol ![1, 1]) 2 ![1, 1]))) from by
-      simp only [lightConeDot,
-          lightConeDeriv_pair_zero_zero,
-          lightConeDeriv_pair_one_one,
-          lightConeDeriv_pair_zero_one,
-          lightConeDeriv_pair_one_zero,
-          lightConeDeriv_pair_two_two,
-          lightConeDeriv_pair_three_three,
-          show ((2 : Fin 3) + 1) = 0 from rfl, show ((2 : Fin 3) + 2) = 1 from rfl,
-          LinearMap.add_apply, LinearMap.sub_apply,
-          h.dotSymbol_left_two, h.dotSymbol_right_two, h.dotSymbol_one_one,
-          Matrix.cons_val_zero, Matrix.cons_val_one,
-          LinearMap.toSpanSingleton_apply, one_smul]
+      simp only [show ∀ c, lightConeDot (h.dotSymbol ![0, 2]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![0, 2]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![0, 2]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![1, 1]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![1, 1]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![1, 1]) 2,
+        show ∀ c, lightConeDot (h.dotSymbol ![2, 0]) 2 c
+            = lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 2 c 1 from fun _ => rfl,
+        lightConeDeriv_pair_zero_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_zero_one (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_one_zero (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_two_two (h.dotSymbol ![2, 0]) 2,
+        lightConeDeriv_pair_three_three (h.dotSymbol ![2, 0]) 2,
+        show ((2 : Fin 3) + 1) = 0 from rfl,
+        show ((2 : Fin 3) + 2) = 1 from rfl,
+        LinearMap.add_apply,
+        LinearMap.sub_apply,
+        h.dotSymbol_left_two,
+        h.dotSymbol_right_two,
+        h.dotSymbol_one_one,
+        Matrix.cons_val_zero,
+        Matrix.cons_val_one,
+        LinearMap.toSpanSingleton_apply,
+        one_smul]
       module]
     rw [hcomp2.1, hcomp2.2]
     simp

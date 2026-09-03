@@ -215,6 +215,9 @@ lemma massWeightPoly_eval_one (x : GaugeJetAlgebra) :
       (Algebra.TensorProduct.includeRight :
         GaugeJetAlgebra →ₐ[ℝ] ℂ ⊗[ℝ] GaugeJetAlgebra) := by
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun y => ?_)
+    simp
+    change Polynomial.eval₂ (RingHom.id _) 1 (jetComponentPoly y) = _
+    rw [Polynomial.eval₂_id]
     simpa using jetComponentPoly_eval_one y
   exact AlgHom.congr_fun h x
 

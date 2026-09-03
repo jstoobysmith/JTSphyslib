@@ -336,7 +336,10 @@ lemma massWeightPoly_eval_one (w : ℕ) (a : FermionicAlgebra V) :
       fun b => Commute.one_right b).comp (massWeightPoly w) =
       AlgHom.id ℂ (FermionicAlgebra V) := by
     refine ExteriorAlgebra.hom_ext (LinearMap.ext fun x => ?_)
-    simpa using jetComponentPoly_eval_one w x
+    simp
+    change Polynomial.eval₂ (RingHom.id _) 1 (jetComponentPoly w x) = _
+    rw [Polynomial.eval₂_id]
+    exact jetComponentPoly_eval_one w x
   exact AlgHom.congr_fun h a
 
 /-- The mass-weight polynomial is injective: an element is recovered from its graded

@@ -15,7 +15,7 @@ public import Physlib.Relativity.SL2C.Basic
 public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
-public import Physlib.Mathematics.MvPowerSeriesDerivative
+public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Mathematics.MvPolynomialTranslation
 public import Mathlib.Algebra.MvPolynomial.Derivation
 public import Mathlib.Analysis.Normed.Algebra.Exponential

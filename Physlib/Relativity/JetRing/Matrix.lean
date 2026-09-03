@@ -97,7 +97,9 @@ lemma exists_parallelTransport {κ : Type} [Fintype κ] [DecidableEq κ]
   have hTco : ∀ (M : Matrix κ κ JetRing) i j p,
       coeff p ((T M) i j) = coeff p ((1 : Matrix κ κ JetRing) i j) +
         if p = 0 then 0 else ((degree p : ℕ) : ℂ)⁻¹ * coeff p ((B * M) i j) :=
-    fun M i j p => by simp only [hT]; rw [Matrix.add_apply, map_add, Matrix.map_apply]; rfl
+    fun M i j p => by
+      simp only [hT, Matrix.add_apply, map_add]
+      rfl
   have hmain : ∀ n p, degree p = n → ∀ k, n < k → ∀ i j,
       coeff p ((T^[k] 1) i j) = coeff p ((T F) i j) := fun n => by
     induction n using Nat.strong_induction_on with
@@ -312,8 +314,7 @@ lemma exists_matrix_eulerTransport {κ : Type} [Fintype κ] [DecidableEq κ]
       coeff p ((T M) i j) = coeff p ((1 : Matrix κ κ JetRing) i j) +
         if p = 0 then 0 else ((Finsupp.degree p : ℕ) : ℂ)⁻¹ * coeff p ((R * M) i j) :=
     fun M i j p => by
-      simp only [hT]
-      rw [Matrix.add_apply, map_add, Matrix.map_apply]
+      simp only [hT, Matrix.add_apply, map_add]
       rfl
   have hmain : ∀ (n : ℕ) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree p = n → ∀ k, n < k →
       ∀ i j, coeff p ((T^[k] 1) i j) = coeff p ((T U) i j) := fun n => by

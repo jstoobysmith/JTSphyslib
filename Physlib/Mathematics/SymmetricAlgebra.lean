@@ -201,7 +201,7 @@ lemma derivationHom_ι (x : M) :
 lemma derivationHom_fst (x : SymmetricAlgebra R M) : (derivationHom d x).fst = x := by
   have h : (TrivSqZeroExt.fstHom R (SymmetricAlgebra R M) (SymmetricAlgebra R M)).comp
       (derivationHom d) = AlgHom.id R (SymmetricAlgebra R M) :=
-    algHom_ext (LinearMap.ext fun x => by simp)
+    algHom_ext (LinearMap.ext fun x => by simp; rfl)
   exact DFunLike.congr_fun h x
 
 /-- **The derivation of the symmetric algebra extending a linear endomorphism** `d` of `M`:

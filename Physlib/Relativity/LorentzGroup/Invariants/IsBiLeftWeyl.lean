@@ -587,8 +587,8 @@ def conjHom : SL(2,ℂ) →* SL(2,ℂ) where
     simp [Matrix.map_apply, Matrix.one_apply]
   map_mul' g h := by
     apply Subtype.ext
-    ext i j
-    simp [Matrix.map_apply, Matrix.mul_apply]
+    simp [Matrix.SpecialLinearGroup.coe_mul, Matrix.map_mul]
+    rfl
 
 /-- The matrix underlying `conjHom g` is the entrywise conjugate of that of `g`. -/
 lemma conjHom_coe (g : SL(2,ℂ)) : (conjHom g).1 = g.1.map star := rfl

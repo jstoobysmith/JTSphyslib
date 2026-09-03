@@ -452,6 +452,14 @@ def boostAverageEntry (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℤ :=
     (if e 0 = d 0 ∧ e 1 = d 1 then 2 else if e 0 = d 1 ∧ e 1 = d 0 then -2 else 0)
   else (if e 0 = d 0 ∧ e 1 = d 1 then 4 else 0)
 
+/-- Entrywise decidability for integer matrices over a finite index type. The pointwise
+  `Decidable` instances are supplied explicitly: instance search cannot see through the
+  `Matrix` type synonym when the two indices are bound. -/
+private instance decidableForallEntriesZ {ι : Type*} [Fintype ι] (f g : Matrix ι ι ℤ) :
+    Decidable (∀ k l, f k l = g k l) :=
+  @Fintype.decidableForallFintype ι _
+    (fun _ => @Fintype.decidableForallFintype ι _ (fun _ => Int.instDecidableEq _ _) _) _
+
 /-- The integer averaged round agrees with its closed form. -/
 lemma boostAverageZ_eq : boostAverageZ = Matrix.of boostAverageEntry := by
   ext d e

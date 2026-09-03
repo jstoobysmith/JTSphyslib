@@ -706,6 +706,8 @@ lemma biVec_neg_neg (c₀ c₁ : Fin 8 → ℂ) : hT.biVec (-c₀) (-c₁) = hT.
 lemma biVec_unitVec (a b : Fin 8) : hT.biVec (unitVec a) (unitVec b) = T ![a, b] := by
   rw [biVec, sum_pi_two]
   simp [unitVec, ite_smul]
+  rw [Finset.sum_eq_single_of_mem a (Finset.mem_univ a) fun x _ hx => by simp [hx]]
+  simp
 
 /-- A map moving the components by an `SU(3)` matrix moves a contraction against a pair
   of coordinate vectors by the row action of that matrix on each of them. This is the whole
@@ -732,7 +734,7 @@ lemma map_biVec (hT : IsSU3BiAdjoint B repGauge T) {U : specialUnitaryGroup (Fin
   rw [← Finset.sum_smul]
   congr 1
   rw [sum_pi_two]
-  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
   rw [Finset.sum_mul_sum]
   exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by ring
 

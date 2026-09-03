@@ -248,25 +248,23 @@ lemma rootEntry_adjointMap (r : Fin 4) (i : Fin 4) (x : GaugeAlgebra) :
     congr 1
     fin_cases i <;>
       simp [torusSU3Diag, rootWeight, GaugeWeight.coord,
-        expI_inv_eq_star, _root_.zpow_neg, zpow_two, zpow_one]
+        expI_inv_eq_star, _root_.zpow_neg, pow_two]
   · show (adjointMap (gaugeTorusGen i)⁻¹ x).toSU3Matrix 0 2 = _
     rw [adjointMap_toSU3Matrix_apply_diagonal (toSU3_inv_gaugeTorusGen i) x 0 2]
     congr 1
     fin_cases i <;>
-      simp [torusSU3Diag, rootWeight, GaugeWeight.coord,
-        zpow_one]
+      simp [torusSU3Diag, rootWeight, GaugeWeight.coord]
   · show (adjointMap (gaugeTorusGen i)⁻¹ x).toSU3Matrix 1 2 = _
     rw [adjointMap_toSU3Matrix_apply_diagonal (toSU3_inv_gaugeTorusGen i) x 1 2]
     congr 1
     fin_cases i <;>
       simp [torusSU3Diag, rootWeight, GaugeWeight.coord,
-        expI_inv_eq_star, _root_.zpow_neg, zpow_two, zpow_one]
+        expI_inv_eq_star, _root_.zpow_neg, pow_two]
   · show (adjointMap (gaugeTorusGen i)⁻¹ x).toSU2Matrix 0 1 = _
     rw [adjointMap_toSU2Matrix_apply_diagonal (toSU2_inv_gaugeTorusGen i) x 0 1]
     congr 1
     fin_cases i <;>
-      simp [torusSU2Diag, rootWeight, GaugeWeight.coord,
-        zpow_two]
+      simp [torusSU2Diag, rootWeight, GaugeWeight.coord, pow_two]
 
 lemma dualMap_coord_cartanIdx (c : Fin 4) (i : Fin 4) :
     (adjointMap (gaugeTorusGen i)⁻¹).dualMap (stdBasis.coord (cartanIdx c))

@@ -14,7 +14,7 @@ public import Physlib.Relativity.SL2C.Basic
 public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.Particles.LagrangianTheory.Basic
-public import Physlib.Mathematics.MvPowerSeriesDerivative
+public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Mathematics.MvPolynomialTranslation
 public import Mathlib.Algebra.MvPolynomial.Derivation
 /-!
@@ -227,12 +227,14 @@ noncomputable def adjointMap (g : GaugeGroupI) : GaugeAlgebra →ₗ[ℝ] GaugeA
   map_add' a b := by
     refine ext_of_matrix ?_ ?_ ?_ <;>
       simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
-        add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, mul_add, add_mul]
+        add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, mul_add, add_mul] <;>
+      rfl
   map_smul' r a := by
     refine ext_of_matrix ?_ ?_ ?_ <;>
       simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
         smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value, RingHom.id_apply,
-        Matrix.mul_smul, Matrix.smul_mul]
+        Matrix.mul_smul, Matrix.smul_mul] <;>
+      rfl
 
 @[simp]
 lemma adjointMap_toSU3Matrix (g : GaugeGroupI) (a : GaugeAlgebra) :

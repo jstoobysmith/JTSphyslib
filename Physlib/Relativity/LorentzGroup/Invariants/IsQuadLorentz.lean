@@ -2164,6 +2164,20 @@ def boostAverageOrbitZ : Matrix (Fin 22) (Fin 22) ℤ :=
     0, 0, 0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, -8, 0, 24, 0;
     0, 0, 0, -8, 0, 0, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32]
 
+/-- Entrywise decidability for integer families indexed by two copies of `Fin n`.
+  The pointwise `Decidable` instances are supplied explicitly: instance search cannot
+  see through the `Matrix` type synonym when the two indices are bound. -/
+private instance decidableForallEntriesZ {n : ℕ} (f : Matrix (Fin n) (Fin n) ℤ)
+    (g : Fin n → Fin n → ℤ) : Decidable (∀ k l, f k l = g k l) :=
+  @Nat.decidableForallFin n _ fun _ => @Nat.decidableForallFin n _ fun _ =>
+    Int.instDecidableEq _ _
+
+/-- The same, with both sides matrices. -/
+private instance decidableForallEntriesZ' {n : ℕ} (f g : Matrix (Fin n) (Fin n) ℤ) :
+    Decidable (∀ k l, f k l = g k l) :=
+  @Nat.decidableForallFin n _ fun _ => @Nat.decidableForallFin n _ fun _ =>
+    Int.instDecidableEq _ _
+
 set_option maxRecDepth 40000 in
 /-- The entries of the explicit boost-average matrix are the row-orbit sums of the
   integer weight-zero transitions. -/

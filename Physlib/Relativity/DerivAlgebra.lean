@@ -18,7 +18,7 @@ public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
-public import Physlib.Mathematics.MvPowerSeriesDerivative
+public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Relativity.JetRing.Matrix
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation

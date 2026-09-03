@@ -248,21 +248,30 @@ lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 2) → M) :
 def epsilon (a b : Fin 2) : ℂ :=
   (KroneckerDelta.generalizedKroneckerDelta ![a, b] (id : Fin 2 → Fin 2) : ℤ)
 
+/-- The two-by-two determinant, stated for a plain function of the indices. Unfolding
+  `generalizedKroneckerDelta` leaves the matrix as a bare lambda, which `Matrix.det_fin_two`
+  cannot match through the `Matrix` type synonym. -/
+private lemma det_fin_two_fun (f : Fin 2 → Fin 2 → ℤ) :
+    Matrix.det f = f 0 0 * f 1 1 - f 0 1 * f 1 0 :=
+  Matrix.det_fin_two _
+
 /-- The antisymmetric symbol vanishes on the repeated lower index. -/
 @[simp] lemma epsilon_zero_zero : epsilon 0 0 = 0 := by
-  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, Matrix.det_fin_two]
+  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, det_fin_two_fun]
 
 /-- The antisymmetric symbol on the increasing pair. -/
 @[simp] lemma epsilon_zero_one : epsilon 0 1 = 1 := by
-  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, Matrix.det_fin_two]
+  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, det_fin_two_fun,
+    KroneckerDelta.kroneckerDelta]
 
 /-- The antisymmetric symbol on the decreasing pair. -/
 @[simp] lemma epsilon_one_zero : epsilon 1 0 = -1 := by
-  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, Matrix.det_fin_two]
+  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, det_fin_two_fun,
+    KroneckerDelta.kroneckerDelta]
 
 /-- The antisymmetric symbol vanishes on the repeated upper index. -/
 @[simp] lemma epsilon_one_one : epsilon 1 1 = 0 := by
-  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, Matrix.det_fin_two]
+  simp [epsilon, KroneckerDelta.generalizedKroneckerDelta, det_fin_two_fun]
 
 /-- The antisymmetric symbol is invariant under the fundamental representation of an
   element of `SU(2)`, because the determinant of an `SU(2)` matrix is one. -/

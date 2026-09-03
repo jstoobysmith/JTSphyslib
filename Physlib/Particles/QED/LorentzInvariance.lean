@@ -179,7 +179,8 @@ lemma sum_lorentz_inv_conjTranspose_pauli_conj (M : SL(2,ℂ)) (τ : Fin 1 ⊕ F
     rw [show ((⟨M.1ᴴ, hdet⟩ : SL(2,ℂ)) : Matrix (Fin 2) (Fin 2) ℂ) = M.1ᴴ from rfl] at h
     rw [h]
     refine Finset.sum_congr rfl fun ν _ => ?_
-    rw [Lorentz.SL2C.toLorentzGroup_conjTranspose (M := M) rfl, Matrix.transpose_apply]
+    rw [Lorentz.SL2C.toLorentzGroup_conjTranspose (M := M) (N := ⟨M.1ᴴ, hdet⟩) rfl,
+      Matrix.transpose_apply]
   rw [Finset.sum_congr rfl fun μ _ => by rw [hswap μ, Finset.smul_sum], Finset.sum_comm]
   rw [Finset.sum_congr rfl fun ν _ => show
       (∑ μ, ((Lorentz.SL2C.toLorentzGroup M)⁻¹).1 τ μ •

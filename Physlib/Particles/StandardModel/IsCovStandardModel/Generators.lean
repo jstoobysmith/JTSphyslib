@@ -157,7 +157,14 @@ inductive GeneratorClass where
   | higgs : GeneratorClass
   /-- The fermion class: the fermion towers and their conjugates. -/
   | fermion : GeneratorClass
-deriving DecidableEq, Fintype
+deriving DecidableEq
+
+/-- The three classes exhaust `GeneratorClass`. The instance is written out rather than
+  derived: the `Fintype` deriving handler builds the enumerating `Finset` with a membership
+  that resolves through `SetLike`, which is not type-correct here. -/
+instance instFintypeGeneratorClass : Fintype GeneratorClass where
+  elems := {GeneratorClass.gauge, GeneratorClass.higgs, GeneratorClass.fermion}
+  complete := fun x => by cases x <;> decide
 
 /-- The class of a covariant generator. -/
 def Generators.kind : Generators → GeneratorClass
