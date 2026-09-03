@@ -9,103 +9,12 @@ The Standard Model of particle physics is our most successful theory of elementa
 
 ## 1. Introduction
 
-The Standard Model of particle physics consists of the gauge group
-G
-:
-=
-S
-U
-(
-3
-)
-×
-S
-U
-(
-2
-)
-×
-U
-(
-1
-)
-G:=SU(3)×SU(2)×U(1) acting on a matter content consisting of 45 Weyl-fermions which collect into 15 irreducible representations of
-G
-G, conventionally written as
-Q
-i
-Q
-i
-​
- ,
-u
-i
-u
-i
-​
- ,
-d
-i
-d
-i
-​
- ,
-L
-i
-L
-i
-​
- , and
-e
-i
-e
-i
-​
-  for
-i
-∈
-{
-0
-,
-1
-,
-2
-}
-i∈{0,1,2}. The gauge group itself contributes the gauge bosons
-G
-μ
-a
-G
-μ
-a
-​
- ,
-W
-μ
-a
-W
-μ
-a
-​
-  and
-B
-μ
-a
-B
-μ
-a
-​
- . There is also the Higgs boson
-H
-H which is a complex scalar.
-At each point
-x
-x in space the Lagrangian is a polynomial function in the values of these fields at
-x
-x as well as all of their derivatives at
-x
-x which is invariant under the local action of the gauge group and the (global) action of the Lorentz group. The aim of this project is to formally verify that the only terms which can appear in such a Lagrangian are those known to appear in the SM Lagrangian, up-to total derivatives. In this sense we 'formally verify the Standard Model'.
+The Standard Model of particle physics consists of the gauge group `G := SU(3) × SU(2) × U(1)` acting on a matter content consisting of 45 Weyl-fermions which collect into 15 irreducible representations of `G`, conventionally written as `Q_i`, `u_i`, `d_i`, `L_i`, and `e_i` for `i ∈ {0, 1, 2}`. The gauge group itself contributes the gauge bosons `G^a_μ`, `W^a_μ` and `B^a_μ`. There is also the Higgs boson `H` which is a complex scalar.
+
+At each point `x` in space the Lagrangian is a polynomial function in the values of these fields at `x` as well as all of their derivatives at `x` which is invariant under the local action of the gauge group and the (global) action of the Lorentz group. The aim of this project is to formally verify that the only terms which can appear in such a Lagrangian are those known to appear in the SM Lagrangian, up-to total derivatives. In this sense we 'formally verify the Standard Model'.
+
 Along the way we will also prove another theorem about the SM Lagrangian. In any oder of an EFT expansion gauge invariance implies that the lagrangian can be written as a polynomial in terms of just the field strengths, the matter fields, including the Higgs and their covariant derivatives. In other words, the gauge bosons must come packaged as a field strength or a covariant derivative. After this, only the global action of the gauge group matters for invariance.
+
 Of course, there is no question of the actual correctness of these theorems. Thus we want the reader of this project to take away two things: 1) That we are now at a stage where we can formally verify the standard model Lagrangian, and 2) That we have built a reusable API so that one can formally verify (with the help of AI or by hand) other similar problems in high-energy physics, such as EFT expansions, or allowed terms in BSM theories.
 
 
