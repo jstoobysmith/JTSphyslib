@@ -343,7 +343,9 @@ public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimEight
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimLTEight
+public import Physlib.Particles.StandardModel.IsStandardModel.Commutations
 public import Physlib.Particles.StandardModel.IsStandardModel.CovStandardModel
+public import Physlib.Particles.StandardModel.IsStandardModel.CovariantDeriv
 public import Physlib.Particles.StandardModel.IsStandardModel.MassWeight.Filtration
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.JetAlgebra.FieldAlgebra

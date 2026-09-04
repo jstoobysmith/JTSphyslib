@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
-public import Physlib.Particles.StandardModel.IsStandardModel.Basic
+public import Physlib.Particles.StandardModel.IsStandardModel.CovariantDeriv
 /-!
 # From the jet Standard Model to its covariant form
 
@@ -34,7 +34,8 @@ which grades the algebra by the weight eigenspaces of `massWeightPoly` and pushe
 grading through the recursion defining a covariant derivative; their statistics are
 section J, which reads them off the statistics of the bare symbols because each term
 of a tower carries exactly one bare matter symbol. Their Lorentz transformation laws
-are section U of [`Basic.lean`](Basic.lean): each follows from the Lorentz law
+are section O of [`CovariantDeriv.lean`](CovariantDeriv.lean): each follows from the
+Lorentz law
 `IsStandardModel` records for the corresponding bare symbols, together with the fact
 that the gauge-algebra action on the value space commutes with the Lorentz action on
 it. So `isCovStandardModel` is unconditional.
@@ -84,8 +85,9 @@ it. So `isCovStandardModel` is unconditional.
 
 The classification of jet-gauge invariants that section D consumes is
 `IsStandardModel.invariant_mem_adjoin_covDeriv`, proved in
-[`IsStandardModel/Basic.lean`](Basic.lean); the splitting of a gauge jet into a pure
-jet and a constant jet is `JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant`. The
+[`IsStandardModel/CovariantDeriv.lean`](CovariantDeriv.lean); the splitting of a gauge
+jet into a pure jet and a constant jet is
+`JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant`. The
 target structure and its three sectors are
 [`IsCovStandardModel/Basic.lean`](../IsCovStandardModel/Basic.lean),
 [`IsGaugeSector/Basic.lean`](../IsGaugeSector/Basic.lean),
@@ -133,10 +135,10 @@ lemma repGlobal_apply (repJet : Representation ℂ JetGaugeGroupI B) (g : GaugeG
 
 ## B. The covariant generators and the covariant algebra
 
-The covariant towers of section N and section Q of `IsStandardModel.Basic` are indexed
-there by multisets (for the field strength, by lists) of directions. `IsCovStandardModel`
-indexes them by ordered tuples `Fin n → (Fin 1 ⊕ Fin 3)`; `covF` is the field-strength
-tower in that indexing, and the matter towers already carry it.
+The covariant towers of section H and section K of `IsStandardModel.CovariantDeriv` are
+indexed there by multisets (for the field strength, by lists) of directions.
+`IsCovStandardModel` indexes them by ordered tuples `Fin n → (Fin 1 ⊕ Fin 3)`; `covF` is
+the field-strength tower in that indexing, and the matter towers already carry it.
 
 -/
 
@@ -216,9 +218,9 @@ lemma covGenerators_eq_covGeneratorsList : h.covGenerators = h.covGeneratorsList
 
 ## C. Pure gauge jets fix the covariant algebra
 
-Section S of `IsStandardModel.Basic` shows that a gauge jet with trivial base-point
-value fixes every covariant generator. The jet action is multiplicative, so it fixes
-the whole algebra those generators span.
+Section M of `IsStandardModel.CovariantDeriv` shows that a gauge jet with trivial
+base-point value fixes every covariant generator. The jet action is multiplicative, so it
+fixes the whole algebra those generators span.
 
 -/
 
@@ -238,8 +240,8 @@ lemma repJet_algebraMap (U : JetGaugeGroupI) (c : ℂ) :
   rw [Algebra.algebraMap_eq_smul_one, map_smul, hone]
 
 include h in
-/-- Pure gauge jets fix the covariant generators: this is section S of
-  `IsStandardModel.Basic` together with the field-strength case of section Q. -/
+/-- Pure gauge jets fix the covariant generators: this is section M of
+  `IsStandardModel.CovariantDeriv` together with the field-strength case of section K. -/
 lemma repJet_eq_of_mem_covGenerators_of_mem_truncationKer_zero
     (U : JetGaugeGroupI.truncationKer 0) {x : B} (hx : x ∈ h.covGenerators) :
     repJet U.1 x = x := by
@@ -287,10 +289,10 @@ lemma repJet_eq_of_mem_covAlgebra_of_mem_truncationKer_zero
 
 Every gauge jet splits as a pure jet times a constant jet. On the covariant algebra the
 pure part acts trivially, so only the constant part — the global gauge group — is left.
-In the other direction the classification of section T of `IsStandardModel.Basic` puts
-every jet-invariant of the field algebra inside the covariant algebra. Together: on the
-field algebra, jet invariance is membership of the covariant algebra plus global
-invariance.
+In the other direction the classification of section N of
+`IsStandardModel.CovariantDeriv` puts every jet-invariant of the field algebra inside the
+covariant algebra. Together: on the field algebra, jet invariance is membership of the
+covariant algebra plus global invariance.
 
 -/
 
@@ -334,9 +336,9 @@ theorem forall_repJet_and_repLorentz_eq_iff {x : B} (hx : x ∈ h.fieldAlgebra) 
 
 ## E. The covariant generators are globally equivariant
 
-Section R of `IsStandardModel.Basic` shows that a gauge jet acts on a covariant tower
-through the base-point Taylor coefficient of its representation alone. Evaluated on a
-constant jet, that coefficient is the corresponding action of the global gauge group,
+Section L of `IsStandardModel.CovariantDeriv` shows that a gauge jet acts on a covariant
+tower through the base-point Taylor coefficient of its representation alone. Evaluated on
+a constant jet, that coefficient is the corresponding action of the global gauge group,
 so each covariant tower is equivariant for `repGlobal` in the (contragredient of the)
 global representation of its species. These are exactly the `repGauge_*` obligations of
 `IsGaugeSector`, `IsHiggsSector` and `IsFermionSector`.
@@ -2279,8 +2281,8 @@ lemma covBarE_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
 
 Everything above assembles into an `IsCovStandardModel` for the covariant towers,
 acted on by the global gauge group and the Lorentz group. The Lorentz laws of the
-matter towers are section U of [`Basic.lean`](Basic.lean); the one for the
-field-strength tower is `repLorentz_covF` just below, which is
+matter towers are section O of [`CovariantDeriv.lean`](CovariantDeriv.lean); the one for
+the field-strength tower is `repLorentz_covF` just below, which is
 `IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength` read in the
 ordered-tuple indexing.
 
@@ -2303,8 +2305,8 @@ lemma repLorentz_covF (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3
 include h in
 /-- The covariant form of the Standard Model. Every gauge-equivariance, Lorentz,
   mass-weight and commutation obligation of `IsCovStandardModel` is discharged from
-  `IsStandardModel`: the Lorentz laws of the matter towers are section U of
-  `Basic.lean`, the one of the field-strength tower is `repLorentz_covF`. -/
+  `IsStandardModel`: the Lorentz laws of the matter towers are section O of
+  `CovariantDeriv.lean`, the one of the field-strength tower is `repLorentz_covF`. -/
 theorem isCovStandardModel :
     IsCovStandardModel B (repGlobal repJet) h.repGlobal_mul repLorentz h.repLorentz_mul
       massWeightPoly (fun {_n} l => h.covDerivH l) (fun {_n} l => h.covDerivBarH l)
