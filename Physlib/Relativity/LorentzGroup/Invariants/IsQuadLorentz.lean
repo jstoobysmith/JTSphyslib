@@ -1674,24 +1674,171 @@ def rotationOrbitCoeff (e d : Fin 4 → Fin 1 ⊕ Fin 3) : ℤ :=
   (if d = e then 1 else 0) + (if d = (fun s => cycDir (e s)) then 1 else 0)
     + (if d = (fun s => cycDir (cycDir (e s))) then 1 else 0)
 
+/-- Cycles every Lorentz direction in an index vector. -/
+private abbrev rotateIndex {ι : Type*} (d : ι → Fin 1 ⊕ Fin 3) :=
+  fun s => cycDir (d s)
+
+/-- Cycling every direction three times fixes an index vector. -/
+private lemma rotateIndex_three {ι : Type*} (d : ι → Fin 1 ⊕ Fin 3) :
+    rotateIndex (rotateIndex (rotateIndex d)) = d := by
+  funext s
+  exact cycDir_cycDir_cycDir (d s)
+
+/-- Two consecutive members of a rotation orbit can both be canonical only when they coincide. -/
+private lemma isOrbitRep_rotateIndex_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3}
+    (hd : IsOrbitRep d) (hr : IsOrbitRep (rotateIndex d)) : rotateIndex d = d := by
+  rcases hd with hall | ⟨s, hs, hbefore⟩
+  · funext s
+    simp [rotateIndex, hall s]
+  · exfalso
+    rcases hr with hall | ⟨t, ht, htbefore⟩
+    · have h := hall s
+      simp [rotateIndex, hs] at h
+    · obtain hlt | heq | hgt := lt_trichotomy t s
+      · have h := ht
+        simp [rotateIndex, hbefore t hlt] at h
+      · subst t
+        simp [rotateIndex, hs] at ht
+      · have h := htbefore s hgt
+        simp [rotateIndex, hs] at h
+
+/-- Canonical representatives two rotations apart coincide. -/
+private lemma isOrbitRep_rotateIndex_rotateIndex_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3}
+    (hd : IsOrbitRep d) (hr : IsOrbitRep (rotateIndex (rotateIndex d))) :
+    rotateIndex (rotateIndex d) = d := by
+  have h := isOrbitRep_rotateIndex_eq_self hr
+    (show IsOrbitRep (rotateIndex (rotateIndex (rotateIndex d))) by
+      simpa only [rotateIndex_three] using hd)
+  rw [rotateIndex_three] at h
+  exact h.symm
+
+/-- A canonical index is its own chosen orbit representative. -/
+private lemma orbitRepOf_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3} (hd : IsOrbitRep d) :
+    orbitRepOf d = d := by
+  simp [orbitRepOf, hd]
+
+/-- The representative chosen from the first rotation of a canonical index is that index. -/
+private lemma orbitRepOf_rotateIndex_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3}
+    (hd : IsOrbitRep d) : orbitRepOf (rotateIndex d) = d := by
+  rw [orbitRepOf]
+  split_ifs with h1 h2
+  · exact isOrbitRep_rotateIndex_eq_self hd h1
+  · exact isOrbitRep_rotateIndex_rotateIndex_eq_self hd h2
+  · exact rotateIndex_three d
+
+/-- The representative chosen from the second rotation of a canonical index is that index. -/
+private lemma orbitRepOf_rotateIndex_rotateIndex_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3}
+    (hd : IsOrbitRep d) : orbitRepOf (rotateIndex (rotateIndex d)) = d := by
+  rw [orbitRepOf]
+  split_ifs with h1 h2
+  · exact isOrbitRep_rotateIndex_rotateIndex_eq_self hd h1
+  · exact rotateIndex_three d
+  · exfalso
+    apply h2
+    rw [show (fun s => cycDir (cycDir (cycDir (d s)))) = d from
+      funext fun s => cycDir_cycDir_cycDir (d s)]
+    exact hd
+
+/-- Cyclically shifting the three displayed members of a rotation orbit does not change its set. -/
+private lemma rotationIndexSet_rotateIndex (d : Fin 4 → Fin 1 ⊕ Fin 3) :
+    rotationIndexSet (rotateIndex d) = rotationIndexSet d := by
+  change rotationIndexSet (fun s => cycDir (d s)) = rotationIndexSet d
+  ext e
+  simp only [rotationIndexSet, Finset.mem_insert, Finset.mem_singleton]
+  rw [show (fun s => cycDir (cycDir (cycDir (d s)))) = d from
+    funext fun s => cycDir_cycDir_cycDir (d s)]
+  constructor
+  · rintro (h | h | h)
+    · exact Or.inr (Or.inl h)
+    · exact Or.inr (Or.inr h)
+    · exact Or.inl h
+  · rintro (h | h | h)
+    · exact Or.inr (Or.inr h)
+    · exact Or.inl h
+    · exact Or.inr (Or.inl h)
+
+/-- A rotation-fixed index has no spatial directions and is therefore canonical. -/
+private lemma isOrbitRep_of_rotateIndex_eq_self {d : Fin 4 → Fin 1 ⊕ Fin 3}
+    (h : rotateIndex d = d) : IsOrbitRep d := by
+  left
+  intro s
+  have hs := congrFun h s
+  rcases hds : d s with x | x
+  · congr 1
+    exact Subsingleton.elim _ _
+  · simp only [rotateIndex, hds, cycDir_inr, Sum.inr.injEq] at hs
+    fin_cases x <;> norm_num at hs
+
+/-- A nonzero orbit coefficient says that the index is one of the three displayed rotations. -/
+private lemma eq_or_eq_rotateIndex_or_eq_rotateIndex_rotateIndex_of_rotationOrbitCoeff_ne_zero
+    {e d : Fin 4 → Fin 1 ⊕ Fin 3} (h : rotationOrbitCoeff e d ≠ 0) :
+    d = e ∨ d = rotateIndex e ∨ d = rotateIndex (rotateIndex e) := by
+  by_contra hn
+  push Not at hn
+  simp [rotationOrbitCoeff, hn] at h
+
+/-- Every explicitly listed representative satisfies the structural canonicality predicate. -/
+private lemma isOrbitRep_of_mem_rotationSubset :
+    ∀ r ∈ rotationSubset, IsOrbitRep r := by
+  set_option maxRecDepth 10000 in
+    decide
+
+/-- Every index in the rotation orbit of a canonical representative chooses that representative. -/
+private lemma orbitRepOf_eq_of_isOrbitRep_of_rotationOrbitCoeff_ne_zero
+    {r d : Fin 4 → Fin 1 ⊕ Fin 3} (hr : IsOrbitRep r)
+    (h : rotationOrbitCoeff r d ≠ 0) : orbitRepOf d = r := by
+  rcases eq_or_eq_rotateIndex_or_eq_rotateIndex_rotateIndex_of_rotationOrbitCoeff_ne_zero h
+    with rfl | rfl | rfl
+  · exact orbitRepOf_eq_self hr
+  · exact orbitRepOf_rotateIndex_eq_self hr
+  · exact orbitRepOf_rotateIndex_rotateIndex_eq_self hr
+
 /-- Only members of the orbit of a listed representative meet its indicator. -/
 lemma orbitRepOf_eq_of_rotationOrbitCoeff_ne_zero :
     ∀ r ∈ rotationSubset, ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
       rotationOrbitCoeff r d ≠ 0 → orbitRepOf d = r := by
-  decide +kernel
+  intro r hr d h
+  exact orbitRepOf_eq_of_isOrbitRep_of_rotationOrbitCoeff_ne_zero
+    (isOrbitRep_of_mem_rotationSubset r hr) h
 
 /-- The orbit of the canonical representative is the orbit. -/
 lemma rotationIndexSet_orbitRepOf :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
       rotationIndexSet (orbitRepOf d) = rotationIndexSet d := by
-  decide +kernel
+  intro d
+  rw [orbitRepOf]
+  split_ifs
+  · rfl
+  · exact rotationIndexSet_rotateIndex d
+  · exact (rotationIndexSet_rotateIndex (rotateIndex d)).trans (rotationIndexSet_rotateIndex d)
 
 /-- The multiplicity of an index in its own orbit: `3` on a rotation-fixed index and
   `1` otherwise. -/
 lemma rotationOrbitCoeff_orbitRepOf :
     ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, rotationOrbitCoeff (orbitRepOf d) d
       = if (fun s => cycDir (d s)) = d then 3 else 1 := by
-  decide +kernel
+  intro d
+  by_cases hfix : (fun s => cycDir (d s)) = d
+  · rw [if_pos hfix, orbitRepOf_eq_self (isOrbitRep_of_rotateIndex_eq_self hfix)]
+    have h2 : (fun s => cycDir (cycDir (d s))) = d := by
+      funext s
+      exact (congrArg cycDir (congrFun hfix s)).trans (congrFun hfix s)
+    simp [rotationOrbitCoeff, hfix, h2]
+  · rw [if_neg hfix]
+    obtain ⟨h2, _⟩ := cycDir_orbit_distinct d hfix
+    have hfix' : d ≠ (fun s => cycDir (d s)) := Ne.symm hfix
+    have h2' : d ≠ (fun s => cycDir (cycDir (d s))) := Ne.symm h2
+    have h3 : (fun s => cycDir (cycDir (cycDir (d s)))) = d :=
+      funext fun s => cycDir_cycDir_cycDir (d s)
+    have h4 : (fun s => cycDir (cycDir (cycDir (cycDir (d s))))) =
+        (fun s => cycDir (d s)) := by
+      funext s
+      rw [cycDir_cycDir_cycDir]
+    rw [orbitRepOf]
+    split_ifs
+    · simp [rotationOrbitCoeff, hfix', h2']
+    · simp [rotationOrbitCoeff, hfix', h2', h3]
+    · simp [rotationOrbitCoeff, hfix', h2', h3, h4]
 
 /-- The orbit indicator of a good index vanishes on every bad index. -/
 lemma rotationOrbitCoeff_eq_zero {r d : Fin 4 → Fin 1 ⊕ Fin 3}
