@@ -6,11 +6,11 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsCovStandardModel.MassWeight.Filtration
-public import Physlib.Particles.StandardModel.IsStandardModel.CovStandardModel
+public import Physlib.Particles.StandardModel.AlgebraRealization.CovStandardModel
 /-!
 # The mass-weight filtration of the jet Standard Model
 
-`IsStandardModel` is written in the bare symbols, on which the whole jet gauge group acts;
+`AlgebraRealization` is written in the bare symbols, on which the whole jet gauge group acts;
 `IsCovStandardModel` is written in the covariant towers, on which only the global gauge
 group acts. [`CovStandardModel.lean`](../CovStandardModel.lean) shows that these are one
 theory seen twice: `isCovStandardModel` builds the covariant form on the same algebra with
@@ -65,27 +65,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace IsStandardModel
+namespace AlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare)
+  (h : AlgebraRealization B repJet repLorentz massWeightPoly)
 
 /-!
 
@@ -98,8 +84,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   monomial `X ^ n`. This is the jet-form counterpart of
   `IsCovStandardModel.massWeightSubmodule`. -/
 noncomputable def massWeightSubmodule
-    (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-      d bard u baru Q barQ L barL e bare) (n : ℕ) : Submodule ℂ B :=
+    (h : AlgebraRealization B repJet repLorentz massWeightPoly) (n : ℕ) : Submodule ℂ B :=
   h.fieldAlgebra.toSubmodule
     ⊓ LinearMap.ker (massWeightPoly.toLinearMap
       - (Polynomial.monomial n : B →ₗ[B] Polynomial B).restrictScalars ℂ)
@@ -416,6 +401,6 @@ theorem mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian (x : B) :
   rw [← h.isCovStandardModel.standardModelSpanLE_eight]
   exact h.mem_massWeightSubmoduleLE_eight_and_invariant_iff x
 
-end IsStandardModel
+end AlgebraRealization
 
 end StandardModel
