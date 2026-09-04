@@ -355,6 +355,7 @@ public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.JetAlgebra.MassWeightPoly
+public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv

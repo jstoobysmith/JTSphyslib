@@ -11,531 +11,1291 @@ public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebra
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 /-!
 # The algebra valued Standard model
 
-The basic idea here is to just reduce things
-down to the covariant version.
-In the covariant version we will do the work with
-the invariants.
+## i. Overview
 
-Before the structure's own sections, the file develops the Lorentz-transformation
-machinery the covariant towers need: the mixing operator on multiset-indexed families
-of derivative symbols, its compatibility with the Leibniz convolution, the commutation
-of the infinitesimal gauge action with the Lorentz action on each value space, and,
-from those, the Lorentz laws of `IsGaugeField.covDerivIter` and of
-`IsGaugeField.iteratedCovDerivAdjoint` of the field strength.
+An algebra `B` carries a Standard Model when the fields of the Standard Model, and every
+polynomial expression in them, sit inside it compatibly with the gauge action, the Lorentz
+action and the mass-weight grading. The jet algebra `StandardModel.JetAlgebra` is the
+universal object with those fields, so the statement is a single one: an algebra map
+`JetAlgebra →ₐ[ℂ] B`, equivariant for the jet gauge group and the Lorentz group and
+compatible with `massWeightPoly`. That is the structure `IsStandardModel`, together with
+the two demands that the group actions be multiplicative on the whole of `B` and not
+merely on the image of the map — the covariant derivative of a matter field needs them
+there.
+
+The thirteen families of derivative symbols are then derived: `h.A`, `h.H`, `h.barH` and
+the ten fermion families are the jet algebra's own families pushed along the map. Every
+transformation law, mass weight and commutation rule they satisfy is likewise the jet
+algebra's own fact pushed along the map, and sections C to F prove them, one section per
+shape of law. They carry the names they carried when they were axioms, so they are used
+exactly as before.
+
+The rest of the file is the covariant reduction. Sections G to L develop the
+Lorentz-transformation machinery the covariant towers need: the mixing operator on
+multiset-indexed families of derivative symbols, its compatibility with the Leibniz
+convolution, the commutation of the infinitesimal gauge action with the Lorentz action on
+each value space, and, from those, the Lorentz laws of `IsGaugeField.covDerivIter` and of
+`IsGaugeField.iteratedCovDerivAdjoint` of the field strength. Sections M onwards work
+inside a Standard Model: the field algebra, the covariant derivative towers, their gauge
+covariance, and the classification of jet-gauge invariants that the covariant form of the
+theory consumes.
+
+## ii. Key results
+
+- `StandardModel.IsStandardModel` : an algebra is a Standard Model when it receives an
+  equivariant algebra map from the jet algebra.
+- `IsStandardModel.A`, `IsStandardModel.H` and their companions : the thirteen families of
+  derivative symbols of a Standard Model.
+- `IsStandardModel.repJet_A`, `IsStandardModel.repLorentz_H`,
+  `IsStandardModel.massWeight_d`, `IsStandardModel.d_anticomm_bard` and their companions :
+  the transformation laws, mass weights and statistics of those families.
+- `IsStandardModel.fieldAlgebra` : the algebra the fields generate.
+- `IsStandardModel.covDerivH` and its companions : the covariant derivative towers.
+- `IsStandardModel.invariant_mem_adjoin_covDeriv` : the classification of jet-gauge
+  invariants of the field algebra.
+
+## iii. Table of contents
+
+- A. The fields of a Standard Model
+- B. Transporting a fact along the defining map
+- C. The gauge transformation of the fields
+- D. The Lorentz transformation of the fields
+- E. The mass weights of the fields
+- F. The statistics of the fields
+- G. The Lorentz mixing of derivative slots
+- H. The Leibniz convolution and the mixing operator
+- I. The gauge action commutes with the Lorentz action on the value spaces
+- J. The Lorentz law of the covariant matter towers
+- K. The Lorentz law of the covariant field-strength tower
+- L. The antisymmetry of the field strength
+- M. The field algebra
+- N. Covariant derivatives
+- O. The algebra written in terms of covariant derivatives
+- P. Gauge covariance of the covariant derivatives
+- Q. The field strength and its covariant derivatives
+- R. The matter covariant derivatives transform through the base point
+- S. Pure gauge jets fix the matter covariant derivatives
+- T. The classification of gauge invariants
+- U. The Lorentz laws of the covariant matter towers
 
 -/
 
 @[expose] public section
 
+set_option maxHeartbeats 4000000
+set_option synthInstance.maxHeartbeats 1000000
+set_option synthInstance.maxSize 2048
+set_option maxRecDepth 8000
+
 namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
+/-- The algebra `B`, with a jet gauge action, a Lorentz action and a mass-weight grading,
+  is a Standard Model when it receives an algebra map from the jet algebra of the Standard
+  Model which is equivariant for both actions and compatible with the grading. The fields
+  of the Standard Model then sit inside `B` as the images of the jet algebra's own, and
+  every law they satisfy there is the jet algebra's own law pushed along the map.
+
+  The last two fields are not consequences of the first four: an equivariant map forces the
+  two actions to be multiplicative only on its image, whereas the covariant derivative of a
+  matter field needs them multiplicative on the whole of `B`. -/
 structure IsStandardModel (B : Type) [Ring B] [Algebra ℂ B]
-    -- The representations
-    (repJet : Representation ℂ JetGaugeGroupI B) (repLorentz : Representation ℂ SL(2,ℂ) B)
-    -- The mass weights
-    (massWeightPoly : B →ₐ[ℂ] Polynomial B)
-    -- The Higgs fields + derivatives
-    (H : Multiset (Fin 1 ⊕ Fin 3) →  Module.Dual ℂ HiggsVec →ₗ[ℂ] B)
-    (barH : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B)
-    -- The gauge fields + derivatives
-    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
-    -- Three families of down-type quarks + derivatives + conjugates
-    (d : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B)
-    (bard : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B)
-    -- Three families of up-type quarks + derivatives + conjugates
-    (u : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B)
-    (baru : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B)
-    -- Three families of quark doublets + derivatives + conjugates
-    (Q : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B)
-    (barQ : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B)
-    -- Three families of lepton doublets + derivatives + conjugates
-    (L : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B)
-    (barL : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B)
-    -- Three families of lepton singlets + derivatives + conjugates
-    (e : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B)
-    (bare : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B)
-    : Prop where
-  -- *Gauge transformation*
-  -- The gauge field transforms as a gauge field: Lorentz covector symbols, the
-  -- all-orders adjoint Leibniz convolution with the Maurer–Cartan shift, and a
-  -- multiplicative gauge action
-  repJet_A : IsGaugeField repLorentz repJet A
-  -- The Higgs field and its conjugate transform in the Higgs representation
-  repJet_H : TransformsIn repJet HiggsVec.repJetGaugeGroupI H
-  repJet_barH : TransformsIn repJet (repConj HiggsVec.repJetGaugeGroupI) barH
-  -- The down-type quarks and their conjugates transform in the down-singlet
-  -- representation
-  repJet_d : ∀ i, TransformsIn repJet DownSinglet.repJetGaugeGroupI (d i)
-  repJet_bard : ∀ i, TransformsIn repJet (repConj DownSinglet.repJetGaugeGroupI) (bard i)
-  -- The up-type quarks and their conjugates transform in the up-singlet representation
-  repJet_u : ∀ i, TransformsIn repJet UpSinglet.repJetGaugeGroupI (u i)
-  repJet_baru : ∀ i, TransformsIn repJet (repConj UpSinglet.repJetGaugeGroupI) (baru i)
-  -- The quark doublets and their conjugates transform in the quark-doublet
-  -- representation
-  repJet_Q : ∀ i, TransformsIn repJet QuarkDoublet.repJetGaugeGroupI (Q i)
-  repJet_barQ : ∀ i, TransformsIn repJet (repConj QuarkDoublet.repJetGaugeGroupI) (barQ i)
-  -- The lepton doublets and their conjugates transform in the lepton-doublet
-  -- representation
-  repJet_L : ∀ i, TransformsIn repJet LeptonDoublet.repJetGaugeGroupI (L i)
-  repJet_barL : ∀ i, TransformsIn repJet (repConj LeptonDoublet.repJetGaugeGroupI) (barL i)
-  -- The lepton singlets and their conjugates transform in the lepton-singlet
-  -- representation
-  repJet_e : ∀ i, TransformsIn repJet LeptonSinglet.repJetGaugeGroupI (e i)
-  repJet_bare : ∀ i, TransformsIn repJet (repConj LeptonSinglet.repJetGaugeGroupI) (bare i)
-  -- *The Lorentz transformation*
-  -- The Lorentz transformations: the derivative slots of every field mix by per-slot
-  -- Lorentz matrices, the value index by the contragredient of the species' Lorentz
-  -- representation — the Higgs is a scalar, the fermions are Weyl spinors, and the
-  -- barred fields carry the conjugate representations
-  repLorentz_H : IsLorentzDerivTransforms repLorentz
-    (Representation.trivial ℂ SL(2,ℂ) HiggsVec) H
-  repLorentz_barH : IsLorentzDerivTransforms repLorentz
-    (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj barH
-  repLorentz_d : ∀ i, IsLorentzDerivTransforms repLorentz
-    DownSinglet.repLorentzGroup (d i)
-  repLorentz_bard : ∀ i, IsLorentzDerivTransforms repLorentz
-    DownSinglet.repLorentzGroup.conj (bard i)
-  repLorentz_u : ∀ i, IsLorentzDerivTransforms repLorentz
-    UpSinglet.repLorentzGroup (u i)
-  repLorentz_baru : ∀ i, IsLorentzDerivTransforms repLorentz
-    UpSinglet.repLorentzGroup.conj (baru i)
-  repLorentz_Q : ∀ i, IsLorentzDerivTransforms repLorentz
-    QuarkDoublet.repLorentzGroup (Q i)
-  repLorentz_barQ : ∀ i, IsLorentzDerivTransforms repLorentz
-    QuarkDoublet.repLorentzGroup.conj (barQ i)
-  repLorentz_L : ∀ i, IsLorentzDerivTransforms repLorentz
-    LeptonDoublet.repLorentzGroup (L i)
-  repLorentz_barL : ∀ i, IsLorentzDerivTransforms repLorentz
-    LeptonDoublet.repLorentzGroup.conj (barL i)
-  repLorentz_e : ∀ i, IsLorentzDerivTransforms repLorentz
-    LeptonSinglet.repLorentzGroup (e i)
-  repLorentz_bare : ∀ i, IsLorentzDerivTransforms repLorentz
-    LeptonSinglet.repLorentzGroup.conj (bare i)
-  -- **Mass weights (= 2 * mass dimension)**
-  -- Every derivative symbol is a `massWeightPoly`-eigenvector of pure monomial weight:
-  -- the bosons have mass dimension `1 + |s|` (weight `2 * (1 + |s|)`), the fermions
-  -- mass dimension `3/2 + |s|` (weight `3 + 2 * |s|`)
-  massWeight_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (H s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (H s φ)
-  massWeight_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (barH s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (barH s φ)
-  massWeight_A : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) μ φ,
-    massWeightPoly (A s μ φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (A s μ φ)
-  massWeight_d : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (d i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (d i s φ)
-  massWeight_bard : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (bard i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (bard i s φ)
-  massWeight_u : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (u i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (u i s φ)
-  massWeight_baru : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (baru i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (baru i s φ)
-  massWeight_Q : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (Q i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (Q i s φ)
-  massWeight_barQ : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (barQ i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (barQ i s φ)
-  massWeight_L : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (L i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (L i s φ)
-  massWeight_barL : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (barL i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (barL i s φ)
-  massWeight_e : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (e i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (e i s φ)
-  massWeight_bare : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (bare i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (bare i s φ)
-  -- **Commutation**: the gauge field is bosonic — its derivative symbols commute with
-  -- each other and with every matter symbol (the matter symbols themselves are free to
-  -- anticommute among each other)
-  A_comm_A : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
-    (ψ ψ' : Module.Dual ℝ GaugeAlgebra), Commute (A s μ ψ) (A s' μ' ψ')
-  A_comm_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec),
-    Commute (A s μ ψ) (H s' φ)
-  A_comm_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec)),
-    Commute (A s μ ψ) (barH s' φ)
-  A_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet),
-    Commute (A s μ ψ) (d i s' φ)
-  A_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule DownSinglet)),
-    Commute (A s μ ψ) (bard i s' φ)
-  A_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet),
-    Commute (A s μ ψ) (u i s' φ)
-  A_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule UpSinglet)),
-    Commute (A s μ ψ) (baru i s' φ)
-  A_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet),
-    Commute (A s μ ψ) (Q i s' φ)
-  A_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    Commute (A s μ ψ) (barQ i s' φ)
-  A_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonDoublet),
-    Commute (A s μ ψ) (L i s' φ)
-  A_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    Commute (A s μ ψ) (barL i s' φ)
-  A_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonSinglet),
-    Commute (A s μ ψ) (e i s' φ)
-  A_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    Commute (A s μ ψ) (bare i s' φ)
-  -- *Multiplicativity of the Lorentz action*
-  -- A `Representation` records only a linear action, so being an algebra map is a
-  -- separate demand; it is what carries the Lorentz action through products of
-  -- symbols, as the covariant derivative of a matter field needs
-  /-- Lorentz transformations act on `B` by algebra maps: the action preserves products, so each
-    `repLorentz Λ` is an algebra endomorphism of `B`. -/
+    (repJet : Representation ℂ JetGaugeGroupI B)
+    (repLorentz : Representation ℂ SL(2,ℂ) B)
+    (massWeightPoly : B →ₐ[ℂ] Polynomial B) where
+  /-- The algebra map out of the jet algebra of the Standard Model: it is what places the
+    fields of the Standard Model, and every polynomial expression in them, inside `B`. -/
+  toAlgHom : JetAlgebra →ₐ[ℂ] B
+  /-- The map is equivariant for the jet gauge group: the gauge action on `B` restricts
+    along it to the jet algebra's own. -/
+  map_repJet : ∀ (U : JetGaugeGroupI) (x : JetAlgebra),
+    toAlgHom (JetAlgebra.repJetGaugeGroupI U x) = repJet U (toAlgHom x)
+  /-- The map is equivariant for the Lorentz group: the Lorentz action on `B` restricts
+    along it to the jet algebra's own. -/
+  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : JetAlgebra),
+    toAlgHom (JetAlgebra.repLorentzGroup Λ x) = repLorentz Λ (toAlgHom x)
+  /-- The map carries the mass-weight grading of the jet algebra to that of `B`: the
+    mass-weight polynomial of an image is the image of the mass-weight polynomial. -/
+  map_massWeight : ∀ x : JetAlgebra, massWeightPoly (toAlgHom x)
+    = Polynomial.mapAlgHom toAlgHom (JetAlgebra.massWeightPoly x)
+  /-- The jet gauge action preserves products on the whole of `B`, not merely on the image
+    of the jet algebra: gauge transformations act by algebra endomorphisms. -/
+  repJet_mul : ∀ (U : JetGaugeGroupI) (b₁ b₂ : B),
+    repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂
+  /-- Lorentz transformations act on `B` by algebra maps: the action preserves products, so
+    each `repLorentz Λ` is an algebra endomorphism of `B`. -/
   repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
     repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
-  -- **Statistics of the matter symbols**
-  -- The gauge field is bosonic above; here the matter symbols are typed. The Higgs
-  -- symbols commute with each other and with every fermion symbol, and the fermion
-  -- symbols anticommute among themselves. Together with the `A_comm_*` rules these
-  -- fix the statistics of every symbol of the theory
-  /-- The Higgs is bosonic: two Higgs symbols commute. -/
-  H_comm_H : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ HiggsVec),
-    Commute (H s φ) (H s' φ')
-  /-- A Higgs symbol commutes with a conjugate Higgs symbol. -/
-  H_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec)
-      (φ' : Module.Dual ℂ (ConjModule HiggsVec)),
-    Commute (H s φ) (barH s' φ')
-  /-- Two conjugate Higgs symbols commute. -/
-  barH_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ (ConjModule HiggsVec)),
-    Commute (barH s φ) (barH s' φ')
-  /-- The Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so it
-    carries no statistics against the fermions. -/
-  H_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
-    Commute (H s φ) (d i s' φ')
-  /-- The Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  H_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
-    Commute (H s φ) (bard i s' φ')
-  /-- The Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so it carries
-    no statistics against the fermions. -/
-  H_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
-    Commute (H s φ) (u i s' φ')
-  /-- The Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  H_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    Commute (H s φ) (baru i s' φ')
-  /-- The Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so it carries
-    no statistics against the fermions. -/
-  H_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
-    Commute (H s φ) (Q i s' φ')
-  /-- The Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  H_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    Commute (H s φ) (barQ i s' φ')
-  /-- The Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so it carries
-    no statistics against the fermions. -/
-  H_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
-    Commute (H s φ) (L i s' φ')
-  /-- The Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  H_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    Commute (H s φ) (barL i s' φ')
-  /-- The Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so it carries
-    no statistics against the fermions. -/
-  H_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
-    Commute (H s φ) (e i s' φ')
-  /-- The Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  H_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
-      (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    Commute (H s φ) (bare i s' φ')
-  /-- The conjugate Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  barH_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
-    Commute (barH s φ) (d i s' φ')
-  /-- The conjugate Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a
-    boson, so it carries no statistics against the fermions. -/
-  barH_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
-    Commute (barH s φ) (bard i s' φ')
-  /-- The conjugate Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  barH_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
-    Commute (barH s φ) (u i s' φ')
-  /-- The conjugate Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a
-    boson, so it carries no statistics against the fermions. -/
-  barH_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    Commute (barH s φ) (baru i s' φ')
-  /-- The conjugate Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  barH_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
-    Commute (barH s φ) (Q i s' φ')
-  /-- The conjugate Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a
-    boson, so it carries no statistics against the fermions. -/
-  barH_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    Commute (barH s φ) (barQ i s' φ')
-  /-- The conjugate Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  barH_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
-    Commute (barH s φ) (L i s' φ')
-  /-- The conjugate Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a
-    boson, so it carries no statistics against the fermions. -/
-  barH_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    Commute (barH s φ) (barL i s' φ')
-  /-- The conjugate Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so
-    it carries no statistics against the fermions. -/
-  barH_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
-    Commute (barH s φ) (e i s' φ')
-  /-- The conjugate Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a
-    boson, so it carries no statistics against the fermions. -/
-  barH_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
-      (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    Commute (barH s φ) (bare i s' φ')
-  /-- The down-type quark symbols anticommute among themselves. -/
-  d_anticomm_d : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ DownSinglet),
-    d i s φ * d j s' φ' = -(d j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the conjugate down-type quark symbols. -/
-  d_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
-    d i s φ * bard j s' φ' = -(bard j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the up-type quark symbols. -/
-  d_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
-      (φ' : Module.Dual ℂ UpSinglet),
-    d i s φ * u j s' φ' = -(u j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
-  d_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    d i s φ * baru j s' φ' = -(baru j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the quark doublet symbols. -/
-  d_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
-      (φ' : Module.Dual ℂ QuarkDoublet),
-    d i s φ * Q j s' φ' = -(Q j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
-  d_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    d i s φ * barQ j s' φ' = -(barQ j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the lepton doublet symbols. -/
-  d_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
-      (φ' : Module.Dual ℂ LeptonDoublet),
-    d i s φ * L j s' φ' = -(L j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
-  d_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    d i s φ * barL j s' φ' = -(barL j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the lepton singlet symbols. -/
-  d_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet)
-      (φ' : Module.Dual ℂ LeptonSinglet),
-    d i s φ * e j s' φ' = -(e j s' φ' * d i s φ)
-  /-- The down-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
-  d_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    d i s φ * bare j s' φ' = -(bare j s' φ' * d i s φ)
-  /-- The conjugate down-type quark symbols anticommute among themselves. -/
-  bard_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ (ConjModule DownSinglet)),
-    bard i s φ * bard j s' φ' = -(bard j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the up-type quark symbols. -/
-  bard_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ UpSinglet),
-    bard i s φ * u j s' φ' = -(u j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
-  bard_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    bard i s φ * baru j s' φ' = -(baru j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the quark doublet symbols. -/
-  bard_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
-    bard i s φ * Q j s' φ' = -(Q j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
-  bard_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    bard i s φ * barQ j s' φ' = -(barQ j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the lepton doublet symbols. -/
-  bard_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
-    bard i s φ * L j s' φ' = -(L j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the conjugate lepton doublet symbols.
-    -/
-  bard_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    bard i s φ * barL j s' φ' = -(barL j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the lepton singlet symbols. -/
-  bard_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
-    bard i s φ * e j s' φ' = -(e j s' φ' * bard i s φ)
-  /-- The conjugate down-type quark symbols anticommute with the conjugate lepton singlet symbols.
-    -/
-  bard_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    bard i s φ * bare j s' φ' = -(bare j s' φ' * bard i s φ)
-  /-- The up-type quark symbols anticommute among themselves. -/
-  u_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ UpSinglet),
-    u i s φ * u j s' φ' = -(u j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the conjugate up-type quark symbols. -/
-  u_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    u i s φ * baru j s' φ' = -(baru j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the quark doublet symbols. -/
-  u_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ QuarkDoublet),
-    u i s φ * Q j s' φ' = -(Q j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
-  u_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    u i s φ * barQ j s' φ' = -(barQ j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the lepton doublet symbols. -/
-  u_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ LeptonDoublet),
-    u i s φ * L j s' φ' = -(L j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
-  u_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    u i s φ * barL j s' φ' = -(barL j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the lepton singlet symbols. -/
-  u_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ LeptonSinglet),
-    u i s φ * e j s' φ' = -(e j s' φ' * u i s φ)
-  /-- The up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
-  u_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
-      (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    u i s φ * bare j s' φ' = -(bare j s' φ' * u i s φ)
-  /-- The conjugate up-type quark symbols anticommute among themselves. -/
-  baru_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ (ConjModule UpSinglet)),
-    baru i s φ * baru j s' φ' = -(baru j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the quark doublet symbols. -/
-  baru_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
-    baru i s φ * Q j s' φ' = -(Q j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
-  baru_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    baru i s φ * barQ j s' φ' = -(barQ j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the lepton doublet symbols. -/
-  baru_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
-    baru i s φ * L j s' φ' = -(L j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
-  baru_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    baru i s φ * barL j s' φ' = -(barL j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the lepton singlet symbols. -/
-  baru_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
-    baru i s φ * e j s' φ' = -(e j s' φ' * baru i s φ)
-  /-- The conjugate up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
-  baru_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    baru i s φ * bare j s' φ' = -(bare j s' φ' * baru i s φ)
-  /-- The quark doublet symbols anticommute among themselves. -/
-  Q_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ QuarkDoublet),
-    Q i s φ * Q j s' φ' = -(Q j s' φ' * Q i s φ)
-  /-- The quark doublet symbols anticommute with the conjugate quark doublet symbols. -/
-  Q_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    Q i s φ * barQ j s' φ' = -(barQ j s' φ' * Q i s φ)
-  /-- The quark doublet symbols anticommute with the lepton doublet symbols. -/
-  Q_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet)
-      (φ' : Module.Dual ℂ LeptonDoublet),
-    Q i s φ * L j s' φ' = -(L j s' φ' * Q i s φ)
-  /-- The quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
-  Q_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    Q i s φ * barL j s' φ' = -(barL j s' φ' * Q i s φ)
-  /-- The quark doublet symbols anticommute with the lepton singlet symbols. -/
-  Q_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet)
-      (φ' : Module.Dual ℂ LeptonSinglet),
-    Q i s φ * e j s' φ' = -(e j s' φ' * Q i s φ)
-  /-- The quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
-  Q_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    Q i s φ * bare j s' φ' = -(bare j s' φ' * Q i s φ)
-  /-- The conjugate quark doublet symbols anticommute among themselves. -/
-  barQ_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
-    barQ i s φ * barQ j s' φ' = -(barQ j s' φ' * barQ i s φ)
-  /-- The conjugate quark doublet symbols anticommute with the lepton doublet symbols. -/
-  barQ_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonDoublet),
-    barQ i s φ * L j s' φ' = -(L j s' φ' * barQ i s φ)
-  /-- The conjugate quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
-  barQ_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    barQ i s φ * barL j s' φ' = -(barL j s' φ' * barQ i s φ)
-  /-- The conjugate quark doublet symbols anticommute with the lepton singlet symbols. -/
-  barQ_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
-    barQ i s φ * e j s' φ' = -(e j s' φ' * barQ i s φ)
-  /-- The conjugate quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
-  barQ_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    barQ i s φ * bare j s' φ' = -(bare j s' φ' * barQ i s φ)
-  /-- The lepton doublet symbols anticommute among themselves. -/
-  L_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ LeptonDoublet),
-    L i s φ * L j s' φ' = -(L j s' φ' * L i s φ)
-  /-- The lepton doublet symbols anticommute with the conjugate lepton doublet symbols. -/
-  L_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    L i s φ * barL j s' φ' = -(barL j s' φ' * L i s φ)
-  /-- The lepton doublet symbols anticommute with the lepton singlet symbols. -/
-  L_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonDoublet)
-      (φ' : Module.Dual ℂ LeptonSinglet),
-    L i s φ * e j s' φ' = -(e j s' φ' * L i s φ)
-  /-- The lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
-  L_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    L i s φ * bare j s' φ' = -(bare j s' φ' * L i s φ)
-  /-- The conjugate lepton doublet symbols anticommute among themselves. -/
-  barL_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
-    barL i s φ * barL j s' φ' = -(barL j s' φ' * barL i s φ)
-  /-- The conjugate lepton doublet symbols anticommute with the lepton singlet symbols. -/
-  barL_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
-    barL i s φ * e j s' φ' = -(e j s' φ' * barL i s φ)
-  /-- The conjugate lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
-  barL_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet))
-      ,
-    barL i s φ * bare j s' φ' = -(bare j s' φ' * barL i s φ)
-  /-- The lepton singlet symbols anticommute among themselves. -/
-  e_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ LeptonSinglet),
-    e i s φ * e j s' φ' = -(e j s' φ' * e i s φ)
-  /-- The lepton singlet symbols anticommute with the conjugate lepton singlet symbols. -/
-  e_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ LeptonSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    e i s φ * bare j s' φ' = -(bare j s' φ' * e i s φ)
-  /-- The conjugate lepton singlet symbols anticommute among themselves. -/
-  bare_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
-      (φ φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
-    bare i s φ * bare j s' φ' = -(bare j s' φ' * bare i s φ)
+
+namespace IsStandardModel
+
+variable {B : Type} [Ring B] [Algebra ℂ B]
+  {repJet : Representation ℂ JetGaugeGroupI B}
+  {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {massWeightPoly : B →ₐ[ℂ] Polynomial B}
+  (h : IsStandardModel B repJet repLorentz massWeightPoly)
 
 /-!
 
-## The Lorentz mixing of derivative slots
+## A. The fields of a Standard Model
+
+The thirteen families of derivative symbols the theory is written in — the gauge field,
+the Higgs field and its conjugate, and the five fermion species in three generations with
+their conjugates — are no longer data of the structure. They are the corresponding
+families of the jet algebra, carried into `B` along the defining algebra map. The gauge
+family is real-linear in its value index, so the map is restricted to `ℝ` there.
+
+-/
+
+/-- The derivative symbols `∂_s A_μ^ψ` of the gauge field inside `B`. -/
+noncomputable def A (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
+  h.toAlgHom.toLinearMap.restrictScalars ℝ ∘ₗ JetAlgebra.gaugeField s μ
+
+/-- The derivative symbols `∂_s H_φ` of the Higgs field inside `B`. -/
+noncomputable def H (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ HiggsVec →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.higgsField s
+
+/-- The derivative symbols `∂_s H̄_φ` of the conjugate Higgs field inside `B`. -/
+noncomputable def barH (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjHiggsField s
+
+/-- The derivative symbols of the `i`-th generation down-type quark singlet inside `B`. -/
+noncomputable def d (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ DownSinglet →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.downSingletField i s
+
+/-- The derivative symbols of the `i`-th generation conjugate down-type quark singlet
+  inside `B`. -/
+noncomputable def bard (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjDownSingletField i s
+
+/-- The derivative symbols of the `i`-th generation up-type quark singlet inside `B`. -/
+noncomputable def u (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ UpSinglet →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.upSingletField i s
+
+/-- The derivative symbols of the `i`-th generation conjugate up-type quark singlet
+  inside `B`. -/
+noncomputable def baru (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjUpSingletField i s
+
+/-- The derivative symbols of the `i`-th generation quark doublet inside `B`. -/
+noncomputable def Q (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.quarkDoubletField i s
+
+/-- The derivative symbols of the `i`-th generation conjugate quark doublet inside `B`. -/
+noncomputable def barQ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjQuarkDoubletField i s
+
+/-- The derivative symbols of the `i`-th generation lepton doublet inside `B`. -/
+noncomputable def L (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.leptonDoubletField i s
+
+/-- The derivative symbols of the `i`-th generation conjugate lepton doublet inside `B`. -/
+noncomputable def barL (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjLeptonDoubletField i s
+
+/-- The derivative symbols of the `i`-th generation charged-lepton singlet inside `B`. -/
+noncomputable def e (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.leptonSingletField i s
+
+/-- The derivative symbols of the `i`-th generation conjugate charged-lepton singlet
+  inside `B`. -/
+noncomputable def bare (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B :=
+  h.toAlgHom.toLinearMap ∘ₗ JetAlgebra.conjLeptonSingletField i s
+
+/-!
+
+## B. Transporting a fact along the defining map
+
+Every law the old structure demanded as an axiom is now a theorem, proved once for the jet
+algebra and transported along `toAlgHom`. The transport is the same in each of the five
+shapes the laws take — a Leibniz convolution for the gauge action, a slot-mixing sum for
+the Lorentz action, a monomial eigenvalue equation for the mass weights, a commutation and
+an anticommutation — so each shape is done once here.
+
+-/
+
+/-- A jet gauge transformation law transports along the defining map: the convolution is a
+  multiset sum, and the map is additive and equivariant. -/
+private lemma map_family_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
+    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] JetAlgebra}
+    (hG : TransformsIn (B := JetAlgebra) JetAlgebra.repJetGaugeGroupI rep G) :
+    TransformsIn repJet rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
+  intro U φ s
+  show repJet U (h.toAlgHom _) = _
+  rw [← h.map_repJet, hG U φ s, map_multiset_sum, Multiset.map_map]
+  rfl
+
+/-- A Lorentz transformation law transports along the defining map: the slot mixing is a
+  finite sum of scalar multiples, and the map is linear and equivariant. -/
+private lemma map_family_repLorentz {V : Type} [AddCommGroup V] [Module ℂ V]
+    {rep : Representation ℂ SL(2,ℂ) V}
+    {G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] JetAlgebra}
+    (hG : IsLorentzDerivTransforms (A := JetAlgebra) JetAlgebra.repLorentzGroup rep G) :
+    IsLorentzDerivTransforms repLorentz rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
+  intro Λ n l φ
+  show repLorentz Λ (h.toAlgHom _) = _
+  rw [← h.map_repLorentz, hG Λ n l φ, map_sum]
+  exact Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _
+
+/-- A monomial mass-weight eigenvalue transports along the defining map: the map carries
+  the mass-weight polynomial to the mass-weight polynomial, and a monomial to a monomial. -/
+private lemma map_massWeight_monomial {x : JetAlgebra} {n : ℕ}
+    (hx : JetAlgebra.massWeightPoly x = Polynomial.monomial n x) :
+    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) := by
+  rw [h.map_massWeight, hx, Polynomial.mapAlgHom_monomial]
+
+/-- An anticommutation transports along the defining map: the map preserves products and
+  negation. -/
+private lemma map_anticomm {x y : JetAlgebra} (hxy : x * y = -(y * x)) :
+    h.toAlgHom x * h.toAlgHom y = -(h.toAlgHom y * h.toAlgHom x) := by
+  rw [← map_mul h.toAlgHom, hxy, map_neg h.toAlgHom, map_mul h.toAlgHom]
+
+/-!
+
+## C. The gauge transformation of the fields
+
+The gauge field is a gauge field — Lorentz covector symbols, the all-orders adjoint
+Leibniz convolution with the Maurer–Cartan shift, and a multiplicative gauge action — and
+each of the twelve matter families transforms in its own jet gauge representation, the
+barred families in the conjugate of it.
+
+-/
+
+/-- The law `repJet_A` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_A : IsGaugeField repLorentz repJet h.A where
+  lorentz_apply := by
+    intro Λ n l μ φ
+    have key := congrArg h.toAlgHom (JetAlgebra.isGaugeField.lorentz_apply Λ n l μ φ)
+    rw [h.map_repLorentz] at key
+    refine key.trans ?_
+    rw [map_sum]
+    refine Finset.sum_congr rfl fun p _ => ?_
+    rw [map_smul, map_sum]
+    congr 1
+    exact Finset.sum_congr rfl fun a _ => map_smul h.toAlgHom _ _
+  gauge_apply_deriv := by
+    intro U s μ φ
+    have key := congrArg h.toAlgHom (JetAlgebra.isGaugeField.gauge_apply_deriv U s μ φ)
+    rw [h.map_repJet] at key
+    refine key.trans ?_
+    rw [map_add, map_multiset_sum, Multiset.map_map, AlgHom.commutes]
+    rfl
+  gauge_mul := h.repJet_mul
+
+/-- The law `repJet_H` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_H : TransformsIn repJet HiggsVec.repJetGaugeGroupI h.H :=
+  h.map_family_repJet JetAlgebra.transformsIn_higgsField
+
+/-- The law `repJet_barH` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_barH : TransformsIn repJet (repConj HiggsVec.repJetGaugeGroupI) h.barH :=
+  h.map_family_repJet JetAlgebra.transformsIn_conjHiggsField
+
+/-- The law `repJet_d` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_d : ∀ i, TransformsIn repJet DownSinglet.repJetGaugeGroupI (h.d i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_downSingletField i)
+
+/-- The law `repJet_bard` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_bard : ∀ i, TransformsIn repJet (repConj DownSinglet.repJetGaugeGroupI) (h.bard i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjDownSingletField i)
+
+/-- The law `repJet_u` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_u : ∀ i, TransformsIn repJet UpSinglet.repJetGaugeGroupI (h.u i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_upSingletField i)
+
+/-- The law `repJet_baru` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_baru : ∀ i, TransformsIn repJet (repConj UpSinglet.repJetGaugeGroupI) (h.baru i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjUpSingletField i)
+
+/-- The law `repJet_Q` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_Q : ∀ i, TransformsIn repJet QuarkDoublet.repJetGaugeGroupI (h.Q i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_quarkDoubletField i)
+
+/-- The law `repJet_barQ` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_barQ : ∀ i, TransformsIn repJet (repConj QuarkDoublet.repJetGaugeGroupI) (h.barQ i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjQuarkDoubletField i)
+
+/-- The law `repJet_L` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_L : ∀ i, TransformsIn repJet LeptonDoublet.repJetGaugeGroupI (h.L i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_leptonDoubletField i)
+
+/-- The law `repJet_barL` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_barL : ∀ i, TransformsIn repJet (repConj LeptonDoublet.repJetGaugeGroupI) (h.barL i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjLeptonDoubletField i)
+
+/-- The law `repJet_e` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_e : ∀ i, TransformsIn repJet LeptonSinglet.repJetGaugeGroupI (h.e i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_leptonSingletField i)
+
+/-- The law `repJet_bare` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repJet_bare : ∀ i, TransformsIn repJet (repConj LeptonSinglet.repJetGaugeGroupI) (h.bare i) :=
+  fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjLeptonSingletField i)
+
+/-!
+
+## D. The Lorentz transformation of the fields
+
+The derivative slots of every field mix by per-slot Lorentz matrices, and the value index
+by the contragredient of the species' Lorentz representation: the Higgs is a scalar, the
+fermions are Weyl spinors, and the barred fields carry the conjugate representations.
+
+-/
+
+/-- The law `repLorentz_H` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_H : IsLorentzDerivTransforms repLorentz
+    (Representation.trivial ℂ SL(2,ℂ) HiggsVec) h.H :=
+  h.map_family_repLorentz JetAlgebra.isLorentzDerivTransforms_higgsField
+
+/-- The law `repLorentz_barH` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_barH : IsLorentzDerivTransforms repLorentz
+    (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj h.barH :=
+  h.map_family_repLorentz JetAlgebra.isLorentzDerivTransforms_conjHiggsField
+
+/-- The law `repLorentz_d` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_d : ∀ i, IsLorentzDerivTransforms repLorentz
+    DownSinglet.repLorentzGroup (h.d i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_downSingletField i)
+
+/-- The law `repLorentz_bard` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_bard : ∀ i, IsLorentzDerivTransforms repLorentz
+    DownSinglet.repLorentzGroup.conj (h.bard i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjDownSingletField i)
+
+/-- The law `repLorentz_u` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_u : ∀ i, IsLorentzDerivTransforms repLorentz
+    UpSinglet.repLorentzGroup (h.u i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_upSingletField i)
+
+/-- The law `repLorentz_baru` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_baru : ∀ i, IsLorentzDerivTransforms repLorentz
+    UpSinglet.repLorentzGroup.conj (h.baru i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjUpSingletField i)
+
+/-- The law `repLorentz_Q` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_Q : ∀ i, IsLorentzDerivTransforms repLorentz
+    QuarkDoublet.repLorentzGroup (h.Q i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_quarkDoubletField i)
+
+/-- The law `repLorentz_barQ` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_barQ : ∀ i, IsLorentzDerivTransforms repLorentz
+    QuarkDoublet.repLorentzGroup.conj (h.barQ i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjQuarkDoubletField i)
+
+/-- The law `repLorentz_L` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_L : ∀ i, IsLorentzDerivTransforms repLorentz
+    LeptonDoublet.repLorentzGroup (h.L i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_leptonDoubletField i)
+
+/-- The law `repLorentz_barL` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_barL : ∀ i, IsLorentzDerivTransforms repLorentz
+    LeptonDoublet.repLorentzGroup.conj (h.barL i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjLeptonDoubletField i)
+
+/-- The law `repLorentz_e` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_e : ∀ i, IsLorentzDerivTransforms repLorentz
+    LeptonSinglet.repLorentzGroup (h.e i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_leptonSingletField i)
+
+/-- The law `repLorentz_bare` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma repLorentz_bare : ∀ i, IsLorentzDerivTransforms repLorentz
+    LeptonSinglet.repLorentzGroup.conj (h.bare i) :=
+  fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjLeptonSingletField i)
+
+/-!
+
+## E. The mass weights of the fields
+
+Every derivative symbol is a `massWeightPoly`-eigenvector of pure monomial weight — twice
+its mass dimension. The bosons have mass dimension `1 + |s|`, the fermions `3/2 + |s|`.
+
+-/
+
+/-- The law `massWeight_H` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.H s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.H s φ) :=
+  fun s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_higgsField s φ)
+
+/-- The law `massWeight_barH` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.barH s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.barH s φ) :=
+  fun s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjHiggsField s φ)
+
+/-- The law `massWeight_A` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_A : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) μ φ,
+    massWeightPoly (h.A s μ φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.A s μ φ) :=
+  fun s μ φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_gaugeField s μ φ)
+
+/-- The law `massWeight_d` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_d : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.d i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.d i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_downSingletField i s φ)
+
+/-- The law `massWeight_bard` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_bard : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.bard i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.bard i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjDownSingletField i s φ)
+
+/-- The law `massWeight_u` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_u : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.u i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.u i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_upSingletField i s φ)
+
+/-- The law `massWeight_baru` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_baru : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.baru i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.baru i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjUpSingletField i s φ)
+
+/-- The law `massWeight_Q` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_Q : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.Q i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.Q i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_quarkDoubletField i s φ)
+
+/-- The law `massWeight_barQ` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_barQ : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.barQ i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.barQ i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjQuarkDoubletField i s φ)
+
+/-- The law `massWeight_L` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_L : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.L i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.L i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_leptonDoubletField i s φ)
+
+/-- The law `massWeight_barL` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_barL : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.barL i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.barL i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjLeptonDoubletField i s φ)
+
+/-- The law `massWeight_e` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_e : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.e i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.e i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_leptonSingletField i s φ)
+
+/-- The law `massWeight_bare` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma massWeight_bare : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
+    massWeightPoly (h.bare i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.bare i s φ) :=
+  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjLeptonSingletField i s φ)
+
+/-!
+
+## F. The statistics of the fields
+
+The gauge field is bosonic: its symbols commute with each other and with every matter
+symbol. The Higgs symbols commute with each other and with every fermion symbol, and the
+fermion symbols anticommute among themselves. Together these fix the statistics of every
+symbol of the theory.
+
+-/
+
+/-- The law `A_comm_A` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_A : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (μ μ' : Fin 1 ⊕ Fin 3)
+    (ψ ψ' : Module.Dual ℝ GaugeAlgebra), Commute (h.A s μ ψ) (h.A s' μ' ψ') :=
+  fun s _ μ _ ψ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_H` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec),
+    Commute (h.A s μ ψ) (h.H s' φ) :=
+  fun s μ ψ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_barH` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (h.A s μ ψ) (h.barH s' φ) :=
+  fun s μ ψ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_d` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ DownSinglet),
+    Commute (h.A s μ ψ) (h.d i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_bard` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (h.A s μ ψ) (h.bard i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_u` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet),
+    Commute (h.A s μ ψ) (h.u i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_baru` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (h.A s μ ψ) (h.baru i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_Q` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ QuarkDoublet),
+    Commute (h.A s μ ψ) (h.Q i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_barQ` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (h.A s μ ψ) (h.barQ i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_L` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonDoublet),
+    Commute (h.A s μ ψ) (h.L i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_barL` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (h.A s μ ψ) (h.barL i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_e` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ LeptonSinglet),
+    Commute (h.A s μ ψ) (h.e i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The law `A_comm_bare` of a Standard Model, obtained from the corresponding law of the
+  jet algebra by pushing it along the defining algebra map. -/
+lemma A_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (h.A s μ ψ) (h.bare i s' φ) :=
+  fun s μ ψ _ _ _ => (JetAlgebra.gaugeField_commute s μ ψ _).map h.toAlgHom
+
+/-- The Higgs is bosonic: two Higgs symbols commute. -/
+lemma H_comm_H : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ HiggsVec),
+    Commute (h.H s φ) (h.H s' φ') :=
+  fun s s' φ φ' => ((JetAlgebra.memHiggsSector_higgsField s φ).commute
+    (JetAlgebra.memHiggsSector_higgsField s' φ')).map h.toAlgHom
+
+/-- A Higgs symbol commutes with a conjugate Higgs symbol. -/
+lemma H_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec)
+    (φ' : Module.Dual ℂ (ConjModule HiggsVec)),
+    Commute (h.H s φ) (h.barH s' φ') :=
+  fun s s' φ φ' => ((JetAlgebra.memHiggsSector_higgsField s φ).commute
+    (JetAlgebra.memHiggsSector_conjHiggsField s' φ')).map h.toAlgHom
+
+/-- Two conjugate Higgs symbols commute. -/
+lemma barH_comm_barH : ∀ (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℂ
+    (ConjModule HiggsVec)),
+    Commute (h.barH s φ) (h.barH s' φ') :=
+  fun s s' φ φ' => ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute
+    (JetAlgebra.memHiggsSector_conjHiggsField s' φ')).map h.toAlgHom
+
+/-- The Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so it
+  carries no statistics against the fermions. -/
+lemma H_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
+    Commute (h.H s φ) (h.d i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_downSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma H_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (h.H s φ) (h.bard i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjDownSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so it carries
+  no statistics against the fermions. -/
+lemma H_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
+    Commute (h.H s φ) (h.u i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_upSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma H_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (h.H s φ) (h.baru i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjUpSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so it carries
+  no statistics against the fermions. -/
+lemma H_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (h.H s φ) (h.Q i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_quarkDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma H_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (h.H s φ) (h.barQ i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so it carries
+  no statistics against the fermions. -/
+lemma H_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (h.H s φ) (h.L i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_leptonDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma H_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (h.H s φ) (h.barL i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField i s' φ').memFermionSector).map
+        h.toAlgHom
+
+/-- The Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so it carries
+  no statistics against the fermions. -/
+lemma H_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (h.H s φ) (h.e i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_leptonSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma H_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) (i : Fin 3)
+    (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (h.H s φ) (h.bare i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_higgsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField i s' φ').memFermionSector).map
+        h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the down-type quark symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma barH_comm_d : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ DownSinglet),
+    Commute (h.barH s φ) (h.d i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_downSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the conjugate down-type quark symbols: the Higgs is a
+  boson, so it carries no statistics against the fermions. -/
+lemma barH_comm_bard : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    Commute (h.barH s φ) (h.bard i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjDownSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the up-type quark symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma barH_comm_u : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ UpSinglet),
+    Commute (h.barH s φ) (h.u i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_upSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the conjugate up-type quark symbols: the Higgs is a
+  boson, so it carries no statistics against the fermions. -/
+lemma barH_comm_baru : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    Commute (h.barH s φ) (h.baru i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjUpSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the quark doublet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma barH_comm_Q : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ QuarkDoublet),
+    Commute (h.barH s φ) (h.Q i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_quarkDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the conjugate quark doublet symbols: the Higgs is a
+  boson, so it carries no statistics against the fermions. -/
+lemma barH_comm_barQ : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    Commute (h.barH s φ) (h.barQ i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the lepton doublet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma barH_comm_L : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonDoublet),
+    Commute (h.barH s φ) (h.L i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_leptonDoubletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the conjugate lepton doublet symbols: the Higgs is a
+  boson, so it carries no statistics against the fermions. -/
+lemma barH_comm_barL : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    Commute (h.barH s φ) (h.barL i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField i s' φ').memFermionSector).map
+        h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the lepton singlet symbols: the Higgs is a boson, so
+  it carries no statistics against the fermions. -/
+lemma barH_comm_e : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ LeptonSinglet),
+    Commute (h.barH s φ) (h.e i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_leptonSingletField i s' φ').memFermionSector).map h.toAlgHom
+
+/-- The conjugate Higgs symbols commute with the conjugate lepton singlet symbols: the Higgs is a
+  boson, so it carries no statistics against the fermions. -/
+lemma barH_comm_bare : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
+    (i : Fin 3) (s' : Multiset (Fin 1 ⊕ Fin 3)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    Commute (h.barH s φ) (h.bare i s' φ') :=
+  fun s φ i s' φ' =>
+    ((JetAlgebra.memHiggsSector_conjHiggsField s φ).commute_of_memFermionSector
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField i s' φ').memFermionSector).map
+        h.toAlgHom
+
+/-- The down-type quark symbols anticommute among themselves. -/
+lemma d_anticomm_d : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ DownSinglet),
+    h.d i s φ * h.d j s' φ' = -(h.d j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_downSingletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the conjugate down-type quark symbols. -/
+lemma d_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    h.d i s φ * h.bard j s' φ' = -(h.bard j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjDownSingletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the up-type quark symbols. -/
+lemma d_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet)
+    (φ' : Module.Dual ℂ UpSinglet),
+    h.d i s φ * h.u j s' φ' = -(h.u j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_upSingletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+lemma d_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    h.d i s φ * h.baru j s' φ' = -(h.baru j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjUpSingletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the quark doublet symbols. -/
+lemma d_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet)
+    (φ' : Module.Dual ℂ QuarkDoublet),
+    h.d i s φ * h.Q j s' φ' = -(h.Q j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_quarkDoubletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+lemma d_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.d i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the lepton doublet symbols. -/
+lemma d_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet)
+    (φ' : Module.Dual ℂ LeptonDoublet),
+    h.d i s φ * h.L j s' φ' = -(h.L j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma d_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.d i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the lepton singlet symbols. -/
+lemma d_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet)
+    (φ' : Module.Dual ℂ LeptonSinglet),
+    h.d i s φ * h.e j s' φ' = -(h.e j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The down-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma d_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.d i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.d i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_downSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute among themselves. -/
+lemma bard_anticomm_bard : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ (ConjModule DownSinglet)),
+    h.bard i s φ * h.bard j s' φ' = -(h.bard j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjDownSingletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the up-type quark symbols. -/
+lemma bard_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ UpSinglet),
+    h.bard i s φ * h.u j s' φ' = -(h.u j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_upSingletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+lemma bard_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    h.bard i s φ * h.baru j s' φ' = -(h.baru j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjUpSingletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the quark doublet symbols. -/
+lemma bard_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
+    h.bard i s φ * h.Q j s' φ' = -(h.Q j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_quarkDoubletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+lemma bard_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.bard i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the lepton doublet symbols. -/
+lemma bard_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    h.bard i s φ * h.L j s' φ' = -(h.L j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the conjugate lepton doublet symbols.
+  -/
+lemma bard_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.bard i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the lepton singlet symbols. -/
+lemma bard_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    h.bard i s φ * h.e j s' φ' = -(h.e j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The conjugate down-type quark symbols anticommute with the conjugate lepton singlet symbols.
+  -/
+lemma bard_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.bard i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.bard i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjDownSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The up-type quark symbols anticommute among themselves. -/
+lemma u_anticomm_u : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ UpSinglet),
+    h.u i s φ * h.u j s' φ' = -(h.u j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_upSingletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the conjugate up-type quark symbols. -/
+lemma u_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    h.u i s φ * h.baru j s' φ' = -(h.baru j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjUpSingletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the quark doublet symbols. -/
+lemma u_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ QuarkDoublet),
+    h.u i s φ * h.Q j s' φ' = -(h.Q j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_quarkDoubletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+lemma u_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.u i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the lepton doublet symbols. -/
+lemma u_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ LeptonDoublet),
+    h.u i s φ * h.L j s' φ' = -(h.L j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma u_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.u i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the lepton singlet symbols. -/
+lemma u_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ LeptonSinglet),
+    h.u i s φ * h.e j s' φ' = -(h.e j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma u_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ UpSinglet)
+    (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.u i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.u i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_upSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute among themselves. -/
+lemma baru_anticomm_baru : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ (ConjModule UpSinglet)),
+    h.baru i s φ * h.baru j s' φ' = -(h.baru j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjUpSingletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the quark doublet symbols. -/
+lemma baru_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ QuarkDoublet),
+    h.baru i s φ * h.Q j s' φ' = -(h.Q j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_quarkDoubletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the conjugate quark doublet symbols. -/
+lemma baru_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.baru i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the lepton doublet symbols. -/
+lemma baru_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    h.baru i s φ * h.L j s' φ' = -(h.L j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma baru_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.baru i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the lepton singlet symbols. -/
+lemma baru_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    h.baru i s φ * h.e j s' φ' = -(h.e j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The conjugate up-type quark symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma baru_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.baru i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.baru i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjUpSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The quark doublet symbols anticommute among themselves. -/
+lemma Q_anticomm_Q : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ QuarkDoublet),
+    h.Q i s φ * h.Q j s' φ' = -(h.Q j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_quarkDoubletField j s' φ'))
+
+/-- The quark doublet symbols anticommute with the conjugate quark doublet symbols. -/
+lemma Q_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.Q i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The quark doublet symbols anticommute with the lepton doublet symbols. -/
+lemma Q_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet)
+    (φ' : Module.Dual ℂ LeptonDoublet),
+    h.Q i s φ * h.L j s' φ' = -(h.L j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma Q_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.Q i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The quark doublet symbols anticommute with the lepton singlet symbols. -/
+lemma Q_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet)
+    (φ' : Module.Dual ℂ LeptonSinglet),
+    h.Q i s φ * h.e j s' φ' = -(h.e j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma Q_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.Q i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.Q i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_quarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The conjugate quark doublet symbols anticommute among themselves. -/
+lemma barQ_anticomm_barQ : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ (ConjModule QuarkDoublet)),
+    h.barQ i s φ * h.barQ j s' φ' = -(h.barQ j s' φ' * h.barQ i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjQuarkDoubletField j s' φ'))
+
+/-- The conjugate quark doublet symbols anticommute with the lepton doublet symbols. -/
+lemma barQ_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonDoublet),
+    h.barQ i s φ * h.L j s' φ' = -(h.L j s' φ' * h.barQ i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The conjugate quark doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma barQ_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.barQ i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.barQ i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The conjugate quark doublet symbols anticommute with the lepton singlet symbols. -/
+lemma barQ_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    h.barQ i s φ * h.e j s' φ' = -(h.e j s' φ' * h.barQ i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The conjugate quark doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma barQ_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.barQ i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.barQ i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjQuarkDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The lepton doublet symbols anticommute among themselves. -/
+lemma L_anticomm_L : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ LeptonDoublet),
+    h.L i s φ * h.L j s' φ' = -(h.L j s' φ' * h.L i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonDoubletField j s' φ'))
+
+/-- The lepton doublet symbols anticommute with the conjugate lepton doublet symbols. -/
+lemma L_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.L i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.L i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The lepton doublet symbols anticommute with the lepton singlet symbols. -/
+lemma L_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonDoublet)
+    (φ' : Module.Dual ℂ LeptonSinglet),
+    h.L i s φ * h.e j s' φ' = -(h.e j s' φ' * h.L i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma L_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonDoublet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.L i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.L i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The conjugate lepton doublet symbols anticommute among themselves. -/
+lemma barL_anticomm_barL : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ (ConjModule LeptonDoublet)),
+    h.barL i s φ * h.barL j s' φ' = -(h.barL j s' φ' * h.barL i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjLeptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonDoubletField j s' φ'))
+
+/-- The conjugate lepton doublet symbols anticommute with the lepton singlet symbols. -/
+lemma barL_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ LeptonSinglet),
+    h.barL i s φ * h.e j s' φ' = -(h.e j s' φ' * h.barL i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjLeptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The conjugate lepton doublet symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma barL_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet))
+      ,
+    h.barL i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.barL i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjLeptonDoubletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The lepton singlet symbols anticommute among themselves. -/
+lemma e_anticomm_e : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ LeptonSinglet),
+    h.e i s φ * h.e j s' φ' = -(h.e j s' φ' * h.e i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_leptonSingletField j s' φ'))
+
+/-- The lepton singlet symbols anticommute with the conjugate lepton singlet symbols. -/
+lemma e_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonSinglet) (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.e i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.e i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_leptonSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+/-- The conjugate lepton singlet symbols anticommute among themselves. -/
+lemma bare_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
+    (φ φ' : Module.Dual ℂ (ConjModule LeptonSinglet)),
+    h.bare i s φ * h.bare j s' φ' = -(h.bare j s' φ' * h.bare i s φ) :=
+  fun i j s s' φ φ' => h.map_anticomm
+    ((JetAlgebra.isFermionGenerator_conjLeptonSingletField i s φ).anticomm
+      (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
+
+end IsStandardModel
+
+
+/-!
+
+## G. The Lorentz mixing of derivative slots
 
 A Lorentz transformation mixes every derivative slot of a symbol through a column of
 the Lorentz matrix. For symbols indexed by an ordered tuple that mixing is a sum over
@@ -729,7 +1489,7 @@ end LorentzMixGroup
 
 /-!
 
-## The Leibniz convolution and the mixing operator
+## H. The Leibniz convolution and the mixing operator
 
 The correction terms of a covariant derivative are Leibniz convolutions over the
 multiset antidiagonal: a gauge-field symbol carrying `x` derivatives against a matter
@@ -853,7 +1613,7 @@ end DerivConv
 
 /-!
 
-## The gauge action commutes with the Lorentz action on the value spaces
+## I. The gauge action commutes with the Lorentz action on the value spaces
 
 The correction term of a covariant derivative acts on the value index of a matter
 symbol by the infinitesimal gauge action, while a Lorentz transformation acts on it by
@@ -984,7 +1744,7 @@ end GaugeLorentzComm
 
 /-!
 
-## The Lorentz law of the covariant matter towers
+## J. The Lorentz law of the covariant matter towers
 
 The covariant derivative of a matter family adds one ordered derivative slot and a
 Leibniz correction `A_ρ · F`. Under a Lorentz transformation the new slot mixes by its
@@ -1384,7 +2144,7 @@ end IsGaugeField
 
 /-!
 
-## The Lorentz law of the covariant field-strength tower
+## K. The Lorentz law of the covariant field-strength tower
 
 The covariant derivative of an adjoint family is the same shape as that of a matter
 family, with the action of the gauge field on the value index replaced by the bracket
@@ -1762,7 +2522,7 @@ lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength
 
 /-!
 
-## The antisymmetry of the field strength
+## L. The antisymmetry of the field strength
 
 The field strength is antisymmetric in its two covector indices as soon as the
 symbols of the gauge field commute with one another in `B`: the two derivative terms
@@ -1840,138 +2600,118 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : Fin 3 → Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare)
+  (h : IsStandardModel B repJet repLorentz massWeightPoly)
 
 
 /-!
 
-## A. The field algebra
+## M. The field algebra
 
 -/
 
 /-- The algebra generated by all the fields of the Standard Model and their derivative
   symbols: the gauge field, the Higgs and its conjugate, and the three families of each
   fermion species with their conjugates. -/
-def fieldAlgebra (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare): Subalgebra ℂ B :=
+def fieldAlgebra (h : IsStandardModel B repJet repLorentz massWeightPoly): Subalgebra ℂ B :=
   Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
-      (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)), Set.range (H s) ∪ Set.range (barH s)) ∪
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
+      (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)), Set.range (h.H s) ∪ Set.range (h.barH s)) ∪
       (⋃ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)),
-        Set.range (d i s) ∪ Set.range (bard i s) ∪
-        Set.range (u i s) ∪ Set.range (baru i s) ∪
-        Set.range (Q i s) ∪ Set.range (barQ i s) ∪
-        Set.range (L i s) ∪ Set.range (barL i s) ∪
-        Set.range (e i s) ∪ Set.range (bare i s)))
+        Set.range (h.d i s) ∪ Set.range (h.bard i s) ∪
+        Set.range (h.u i s) ∪ Set.range (h.baru i s) ∪
+        Set.range (h.Q i s) ∪ Set.range (h.barQ i s) ∪
+        Set.range (h.L i s) ∪ Set.range (h.barL i s) ∪
+        Set.range (h.e i s) ∪ Set.range (h.bare i s)))
 
 /-!
 
-## B. Covariant derivatives
+## N. Covariant derivatives
 
 -/
 
 include h in
-noncomputable def covDerivD (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+/-- The iterated covariant derivative of the down-type quarks. -/
+noncomputable def covDerivD (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ DownSinglet →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A DownSinglet.gaugeAlgebraAction (d i) n l 0
+  IsGaugeField.covDerivIter h.A DownSinglet.gaugeAlgebraAction (h.d i) n l 0
 
-noncomputable def covDerivBarD (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+/-- The iterated covariant derivative of the conjugate down-type quarks. -/
+noncomputable def covDerivBarD (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-  (bard i) n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  (h.bard i) n l 0
 
 /-- The iterated covariant derivative of the Higgs field. -/
-noncomputable def covDerivH (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivH (h : IsStandardModel B repJet repLorentz massWeightPoly) {n : ℕ}
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ HiggsVec →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A HiggsVec.gaugeAlgebraAction H n l 0
+  IsGaugeField.covDerivIter h.A HiggsVec.gaugeAlgebraAction h.H n l 0
 
 /-- The iterated covariant derivative of the conjugate Higgs field. -/
-noncomputable def covDerivBarH (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivBarH (h : IsStandardModel B repJet repLorentz massWeightPoly) {n : ℕ}
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction)
-  barH n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction)
+  h.barH n l 0
 
 /-- The iterated covariant derivative of the up-type quarks. -/
-noncomputable def covDerivU (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivU (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ UpSinglet →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A UpSinglet.gaugeAlgebraAction (u i) n l 0
+  IsGaugeField.covDerivIter h.A UpSinglet.gaugeAlgebraAction (h.u i) n l 0
 
 /-- The iterated covariant derivative of the conjugate up-type quarks. -/
-noncomputable def covDerivBarU (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivBarU (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
-  (baru i) n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
+  (h.baru i) n l 0
 
 /-- The iterated covariant derivative of the quark doublets. -/
-noncomputable def covDerivQ (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivQ (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A QuarkDoublet.gaugeAlgebraAction (Q i) n l 0
+  IsGaugeField.covDerivIter h.A QuarkDoublet.gaugeAlgebraAction (h.Q i) n l 0
 
 /-- The iterated covariant derivative of the conjugate quark doublets. -/
-noncomputable def covDerivBarQ (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivBarQ (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
-  (barQ i) n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
+  (h.barQ i) n l 0
 
 /-- The iterated covariant derivative of the lepton doublets. -/
-noncomputable def covDerivL (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivL (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A LeptonDoublet.gaugeAlgebraAction (L i) n l 0
+  IsGaugeField.covDerivIter h.A LeptonDoublet.gaugeAlgebraAction (h.L i) n l 0
 
 /-- The iterated covariant derivative of the conjugate lepton doublets. -/
-noncomputable def covDerivBarL (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivBarL (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
-  (barL i) n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
+  (h.barL i) n l 0
 
 /-- The iterated covariant derivative of the lepton singlets. -/
-noncomputable def covDerivE (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivE (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A LeptonSinglet.gaugeAlgebraAction (e i) n l 0
+  IsGaugeField.covDerivIter h.A LeptonSinglet.gaugeAlgebraAction (h.e i) n l 0
 
 /-- The iterated covariant derivative of the conjugate lepton singlets. -/
-noncomputable def covDerivBarE (h : IsStandardModel B repJet repLorentz massWeightPoly H barH A
-    d bard u baru Q barQ L barL e bare) (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+noncomputable def covDerivBarE (h : IsStandardModel B repJet repLorentz massWeightPoly)
+    (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction)
-  (bare i) n l 0
+  IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction)
+  (h.bare i) n l 0
 
 
 /-!
 
-## Gauge group actions on the covariant derivatives
-
--/
-
-
-/-!
-
-## The algebra written in terms of covariant derivatives
+## O. The algebra written in terms of covariant derivatives
 
 
 -/
@@ -1983,7 +2723,7 @@ noncomputable def covDerivBarE (h : IsStandardModel B repJet repLorentz massWeig
   infinitesimal action (`GaugeAlgebra.actionConj` of it for the conjugates). -/
 lemma fieldAlgebra_eq_covDeriv :
     h.fieldAlgebra = Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -1996,163 +2736,182 @@ lemma fieldAlgebra_eq_covDeriv :
   have hATH :
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (HiggsVec)),
-            b = H s φ}) =
+            b = h.H s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (HiggsVec)),
-            b = IsGaugeField.covDerivIter A (HiggsVec.gaugeAlgebraAction) H n l 0 φ}) :=
-    IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (HiggsVec.gaugeAlgebraAction) H
+            b = IsGaugeField.covDerivIter h.A (HiggsVec.gaugeAlgebraAction) h.H n l 0 φ}) :=
+    IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (HiggsVec.gaugeAlgebraAction) h.H
   have hATbarH :
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec)),
-            b = barH s φ}) =
+            b = h.barH s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule HiggsVec)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l 0 φ}) :=
-    IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ}) :=
+    IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
   have hATd : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (DownSinglet)),
-            b = d i s φ}) =
+            b = h.d i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (DownSinglet)),
-            b = IsGaugeField.covDerivIter A (DownSinglet.gaugeAlgebraAction) (d i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (DownSinglet.gaugeAlgebraAction) (d i)
+            b = IsGaugeField.covDerivIter h.A (DownSinglet.gaugeAlgebraAction) (h.d i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (DownSinglet.gaugeAlgebraAction)
+      (h.d i)
   have hATbard : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule DownSinglet)),
-            b = bard i s φ}) =
+            b = h.bard i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule DownSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i)
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i)
   have hATu : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (UpSinglet)),
-            b = u i s φ}) =
+            b = h.u i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (UpSinglet)),
-            b = IsGaugeField.covDerivIter A (UpSinglet.gaugeAlgebraAction) (u i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (UpSinglet.gaugeAlgebraAction) (u i)
+            b = IsGaugeField.covDerivIter h.A (UpSinglet.gaugeAlgebraAction) (h.u i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (UpSinglet.gaugeAlgebraAction)
+      (h.u i)
   have hATbaru : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule UpSinglet)),
-            b = baru i s φ}) =
+            b = h.baru i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule UpSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i)
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i)
   have hATQ : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (QuarkDoublet)),
-            b = Q i s φ}) =
+            b = h.Q i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (QuarkDoublet)),
-            b = IsGaugeField.covDerivIter A (QuarkDoublet.gaugeAlgebraAction) (Q i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (QuarkDoublet.gaugeAlgebraAction) (Q i)
+            b = IsGaugeField.covDerivIter h.A (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (QuarkDoublet.gaugeAlgebraAction)
+      (h.Q i)
   have hATbarQ : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
-            b = barQ i s φ}) =
+            b = h.barQ i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i)
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i)
   have hATL : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (LeptonDoublet)),
-            b = L i s φ}) =
+            b = h.L i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (LeptonDoublet)),
-            b = IsGaugeField.covDerivIter A (LeptonDoublet.gaugeAlgebraAction) (L i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (LeptonDoublet.gaugeAlgebraAction) (L i)
+            b = IsGaugeField.covDerivIter h.A (LeptonDoublet.gaugeAlgebraAction)
+              (h.L i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (LeptonDoublet.gaugeAlgebraAction)
+      (h.L i)
   have hATbarL : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
-            b = barL i s φ}) =
+            b = h.barL i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i)
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i)
   have hATe : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (LeptonSinglet)),
-            b = e i s φ}) =
+            b = h.e i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (LeptonSinglet)),
-            b = IsGaugeField.covDerivIter A (LeptonSinglet.gaugeAlgebraAction) (e i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (LeptonSinglet.gaugeAlgebraAction) (e i)
+            b = IsGaugeField.covDerivIter h.A (LeptonSinglet.gaugeAlgebraAction)
+              (h.e i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (LeptonSinglet.gaugeAlgebraAction)
+      (h.e i)
   have hATbare : ∀ i : Fin 3,
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
-            b = bare i s φ}) =
+            b = h.bare i s φ}) =
       Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l 0 φ}) :=
-    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i)
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ}) :=
+    fun i => IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter
+      (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i)
   -- every plain matter symbol lies in the covariant algebra
   have hmem_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (HiggsVec)),
-      H s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.H s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2162,25 +2921,25 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro s φ
-    have h1 : H s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.H s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (HiggsVec)),
-            b = IsGaugeField.covDerivIter A (HiggsVec.gaugeAlgebraAction) H n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (HiggsVec.gaugeAlgebraAction) h.H n l 0 φ}) :=
       hATH.le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
     · exact Or.inl (Or.inl
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l, ?_⟩⟩))
-      have hmem : IsGaugeField.covDerivIter A (HiggsVec.gaugeAlgebraAction) H n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (HiggsVec.gaugeAlgebraAction) h.H n l 0 φ'
           ∈ Set.range (h.covDerivH l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec)),
-      barH s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.barH s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2190,26 +2949,28 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro s φ
-    have h1 : barH s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.barH s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule HiggsVec)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ}) :=
       hATbarH.le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
     · exact Or.inl (Or.inl
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr ⟨l, ?_⟩⟩))
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ'
           ∈ Set.range (h.covDerivBarH l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_d : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (DownSinglet)),
-      d i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.d i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2219,12 +2980,12 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : d i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.d i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (DownSinglet)),
-            b = IsGaugeField.covDerivIter A (DownSinglet.gaugeAlgebraAction) (d i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (DownSinglet.gaugeAlgebraAction) (h.d i) n l 0 φ}) :=
       (hATd i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2232,14 +2993,14 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (DownSinglet.gaugeAlgebraAction) (d i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (DownSinglet.gaugeAlgebraAction) (h.d i) n l 0 φ'
           ∈ Set.range (h.covDerivD i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_bard : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule DownSinglet)),
-      bard i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.bard i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2249,12 +3010,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : bard i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.bard i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule DownSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ}) :=
       (hATbard i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2262,14 +3024,15 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ'
           ∈ Set.range (h.covDerivBarD i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_u : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (UpSinglet)),
-      u i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.u i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2279,12 +3042,12 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : u i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.u i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (UpSinglet)),
-            b = IsGaugeField.covDerivIter A (UpSinglet.gaugeAlgebraAction) (u i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (UpSinglet.gaugeAlgebraAction) (h.u i) n l 0 φ}) :=
       (hATu i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2292,14 +3055,14 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (UpSinglet.gaugeAlgebraAction) (u i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (UpSinglet.gaugeAlgebraAction) (h.u i) n l 0 φ'
           ∈ Set.range (h.covDerivU i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_baru : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule UpSinglet)),
-      baru i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.baru i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2309,12 +3072,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : baru i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.baru i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule UpSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ}) :=
       (hATbaru i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2322,14 +3086,15 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ'
           ∈ Set.range (h.covDerivBarU i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_Q : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (QuarkDoublet)),
-      Q i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.Q i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2339,12 +3104,12 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : Q i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.Q i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (QuarkDoublet)),
-            b = IsGaugeField.covDerivIter A (QuarkDoublet.gaugeAlgebraAction) (Q i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l 0 φ}) :=
       (hATQ i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2352,14 +3117,14 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (QuarkDoublet.gaugeAlgebraAction) (Q i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l 0 φ'
           ∈ Set.range (h.covDerivQ i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_barQ : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
-      barQ i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.barQ i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2369,12 +3134,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : barQ i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.barQ i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule QuarkDoublet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ}) :=
       (hATbarQ i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2382,14 +3148,15 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ'
           ∈ Set.range (h.covDerivBarQ i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_L : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (LeptonDoublet)),
-      L i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.L i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2399,12 +3166,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : L i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.L i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (LeptonDoublet)),
-            b = IsGaugeField.covDerivIter A (LeptonDoublet.gaugeAlgebraAction) (L i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (LeptonDoublet.gaugeAlgebraAction)
+              (h.L i) n l 0 φ}) :=
       (hATL i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2412,14 +3180,14 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (LeptonDoublet.gaugeAlgebraAction) (L i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (LeptonDoublet.gaugeAlgebraAction) (h.L i) n l 0 φ'
           ∈ Set.range (h.covDerivL i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_barL : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
-      barL i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.barL i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2429,12 +3197,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : barL i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.barL i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule LeptonDoublet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ}) :=
       (hATbarL i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2442,14 +3211,15 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ'
           ∈ Set.range (h.covDerivBarL i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_e : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (LeptonSinglet)),
-      e i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.e i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2459,12 +3229,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : e i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.e i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (LeptonSinglet)),
-            b = IsGaugeField.covDerivIter A (LeptonSinglet.gaugeAlgebraAction) (e i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A (LeptonSinglet.gaugeAlgebraAction)
+              (h.e i) n l 0 φ}) :=
       (hATe i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2472,14 +3243,14 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (LeptonSinglet.gaugeAlgebraAction) (e i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A (LeptonSinglet.gaugeAlgebraAction) (h.e i) n l 0 φ'
           ∈ Set.range (h.covDerivE i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
   have hmem_bare : ∀ (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
-      bare i s φ ∈ Algebra.adjoin ℂ
-    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (A s μ)) ∪
+      h.bare i s φ ∈ Algebra.adjoin ℂ
+    ((⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (h.A s μ)) ∪
       (⋃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
         Set.range (h.covDerivH l) ∪ Set.range (h.covDerivBarH l)) ∪
       (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)),
@@ -2489,12 +3260,13 @@ lemma fieldAlgebra_eq_covDeriv :
         Set.range (h.covDerivL i l) ∪ Set.range (h.covDerivBarL i l) ∪
         Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l))) := by
     intro i s φ
-    have h1 : bare i s φ ∈ Algebra.adjoin ℂ
+    have h1 : h.bare i s φ ∈ Algebra.adjoin ℂ
         ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
           {b : B | ∃ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
             (φ : Module.Dual ℂ (ConjModule LeptonSinglet)),
-            b = IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l 0 φ}) :=
+            b = IsGaugeField.covDerivIter h.A
+              (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ}) :=
       (hATbare i).le (Algebra.subset_adjoin (Or.inr ⟨s, φ, rfl⟩))
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
     rintro b (⟨u', μ, ψ, rfl⟩ | ⟨n, l, φ', rfl⟩)
@@ -2502,7 +3274,8 @@ lemma fieldAlgebra_eq_covDeriv :
         (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
     · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨n,
         Set.mem_iUnion.mpr ⟨l, ?_⟩⟩⟩)
-      have hmem : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l 0 φ'
+      have hmem : IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ'
           ∈ Set.range (h.covDerivBarE i l) := ⟨φ', rfl⟩
       simp only [Set.mem_union]
       tauto
@@ -2534,12 +3307,12 @@ lemma fieldAlgebra_eq_covDeriv :
     · simp only [Set.mem_iUnion] at hHT
       obtain ⟨n, l, hHT⟩ := hHT
       rcases hHT with ⟨φ, rfl⟩ | ⟨φ, rfl⟩
-      · have h1 : IsGaugeField.covDerivIter A (HiggsVec.gaugeAlgebraAction) H n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (HiggsVec.gaugeAlgebraAction) h.H n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (HiggsVec)), b = H s φ}) :=
+                  (φ : Module.Dual ℂ (HiggsVec)), b = h.H s φ}) :=
           hATH.ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
@@ -2547,12 +3320,13 @@ lemma fieldAlgebra_eq_covDeriv :
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨s', ?_⟩))
           exact Or.inl ⟨φ', rfl⟩
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule HiggsVec)), b = barH s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule HiggsVec)), b = h.barH s φ}) :=
           hATbarH.ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
@@ -2564,160 +3338,165 @@ lemma fieldAlgebra_eq_covDeriv :
       obtain ⟨i, n, l, hFT⟩ := hFT
       rcases hFT with (((((((((⟨φ, rfl⟩ | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) |
         ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩)
-      · have h1 : IsGaugeField.covDerivIter A (DownSinglet.gaugeAlgebraAction) (d i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (DownSinglet.gaugeAlgebraAction) (h.d i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (DownSinglet)), b = d i s φ}) :=
+                  (φ : Module.Dual ℂ (DownSinglet)), b = h.d i s φ}) :=
           (hATd i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : d i s' φ' ∈ Set.range (d i s') := ⟨φ', rfl⟩
+          have hmem : h.d i s' φ' ∈ Set.range (h.d i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule DownSinglet)), b = bard i s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule DownSinglet)), b = h.bard i s φ}) :=
           (hATbard i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : bard i s' φ' ∈ Set.range (bard i s') := ⟨φ', rfl⟩
+          have hmem : h.bard i s' φ' ∈ Set.range (h.bard i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (UpSinglet.gaugeAlgebraAction) (u i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (UpSinglet.gaugeAlgebraAction) (h.u i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (UpSinglet)), b = u i s φ}) :=
+                  (φ : Module.Dual ℂ (UpSinglet)), b = h.u i s φ}) :=
           (hATu i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : u i s' φ' ∈ Set.range (u i s') := ⟨φ', rfl⟩
+          have hmem : h.u i s' φ' ∈ Set.range (h.u i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule UpSinglet)), b = baru i s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule UpSinglet)), b = h.baru i s φ}) :=
           (hATbaru i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : baru i s' φ' ∈ Set.range (baru i s') := ⟨φ', rfl⟩
+          have hmem : h.baru i s' φ' ∈ Set.range (h.baru i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (QuarkDoublet.gaugeAlgebraAction) (Q i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (QuarkDoublet)), b = Q i s φ}) :=
+                  (φ : Module.Dual ℂ (QuarkDoublet)), b = h.Q i s φ}) :=
           (hATQ i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : Q i s' φ' ∈ Set.range (Q i s') := ⟨φ', rfl⟩
+          have hmem : h.Q i s' φ' ∈ Set.range (h.Q i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule QuarkDoublet)), b = barQ i s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule QuarkDoublet)), b = h.barQ i s φ}) :=
           (hATbarQ i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : barQ i s' φ' ∈ Set.range (barQ i s') := ⟨φ', rfl⟩
+          have hmem : h.barQ i s' φ' ∈ Set.range (h.barQ i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (LeptonDoublet.gaugeAlgebraAction) (L i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (LeptonDoublet.gaugeAlgebraAction) (h.L i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (LeptonDoublet)), b = L i s φ}) :=
+                  (φ : Module.Dual ℂ (LeptonDoublet)), b = h.L i s φ}) :=
           (hATL i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : L i s' φ' ∈ Set.range (L i s') := ⟨φ', rfl⟩
+          have hmem : h.L i s' φ' ∈ Set.range (h.L i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule LeptonDoublet)), b = barL i s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule LeptonDoublet)), b = h.barL i s φ}) :=
           (hATbarL i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : barL i s' φ' ∈ Set.range (barL i s') := ⟨φ', rfl⟩
+          have hmem : h.barL i s' φ' ∈ Set.range (h.barL i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (LeptonSinglet.gaugeAlgebraAction) (e i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A (LeptonSinglet.gaugeAlgebraAction) (h.e i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (LeptonSinglet)), b = e i s φ}) :=
+                  (φ : Module.Dual ℂ (LeptonSinglet)), b = h.e i s φ}) :=
           (hATe i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : e i s' φ' ∈ Set.range (e i s') := ⟨φ', rfl⟩
+          have hmem : h.e i s' φ' ∈ Set.range (h.e i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
-      · have h1 : IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l 0 φ
+      · have h1 : IsGaugeField.covDerivIter h.A
+            (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ
             ∈ Algebra.adjoin ℂ
               ({b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-            (ψ : Module.Dual ℝ GaugeAlgebra), b = A s μ ψ} ∪
+            (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s μ ψ} ∪
                 {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
-                  (φ : Module.Dual ℂ (ConjModule LeptonSinglet)), b = bare i s φ}) :=
+                  (φ : Module.Dual ℂ (ConjModule LeptonSinglet)), b = h.bare i s φ}) :=
           (hATbare i).ge (Algebra.subset_adjoin (Or.inr ⟨n, l, φ, rfl⟩))
         refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) h1
         rintro b (⟨u', μ, ψ, rfl⟩ | ⟨s', φ', rfl⟩)
         · exact Or.inl (Or.inl
             (Set.mem_iUnion.mpr ⟨u', Set.mem_iUnion.mpr ⟨μ, ⟨ψ, rfl⟩⟩⟩))
         · refine Or.inr (Set.mem_iUnion.mpr ⟨i, Set.mem_iUnion.mpr ⟨s', ?_⟩⟩)
-          have hmem : bare i s' φ' ∈ Set.range (bare i s') := ⟨φ', rfl⟩
+          have hmem : h.bare i s' φ' ∈ Set.range (h.bare i s') := ⟨φ', rfl⟩
           simp only [Set.mem_union]
           tauto
 
 /-!
 
-## C. Gauge covariance of the covariant derivatives
+## P. Gauge covariance of the covariant derivatives
 
 -/
 
@@ -2727,7 +3506,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (HiggsVec.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (HiggsVec.gaugeAlgebraAction) H n l) :=
+      (IsGaugeField.covDerivIter h.A (HiggsVec.gaugeAlgebraAction) h.H n l) :=
   TransformsIn.covDerivIter h.repJet_A h.repJet_H (HiggsVec.isInfinitesimalActionOf) n l
 
 include h in
@@ -2736,7 +3515,8 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj HiggsVec.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l) :=
+      (IsGaugeField.covDerivIter h.A
+        (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l) :=
   TransformsIn.covDerivIter h.repJet_A h.repJet_barH (HiggsVec.isInfinitesimalActionOf.conj) n l
 
 include h in
@@ -2745,7 +3525,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivD (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (DownSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (DownSinglet.gaugeAlgebraAction) (d i) n l) :=
+      (IsGaugeField.covDerivIter h.A (DownSinglet.gaugeAlgebraAction) (h.d i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_d i) (DownSinglet.isInfinitesimalActionOf) n l
 
 include h in
@@ -2754,7 +3534,8 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarD (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj DownSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l) :=
+      (IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+        (h.bard i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_bard i) (DownSinglet.isInfinitesimalActionOf.conj) n l
 
 include h in
@@ -2763,7 +3544,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivU (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (UpSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (UpSinglet.gaugeAlgebraAction) (u i) n l) :=
+      (IsGaugeField.covDerivIter h.A (UpSinglet.gaugeAlgebraAction) (h.u i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_u i) (UpSinglet.isInfinitesimalActionOf) n l
 
 include h in
@@ -2772,7 +3553,8 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarU (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj UpSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l) :=
+      (IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
+        (h.baru i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_baru i) (UpSinglet.isInfinitesimalActionOf.conj) n l
 
 include h in
@@ -2781,7 +3563,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivQ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (QuarkDoublet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (QuarkDoublet.gaugeAlgebraAction) (Q i) n l) :=
+      (IsGaugeField.covDerivIter h.A (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_Q i) (QuarkDoublet.isInfinitesimalActionOf) n l
 
 include h in
@@ -2790,7 +3572,8 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarQ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj QuarkDoublet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l) :=
+      (IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
+        (h.barQ i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_barQ i) (QuarkDoublet.isInfinitesimalActionOf.conj) n l
 
 include h in
@@ -2799,7 +3582,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivL (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (LeptonDoublet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (LeptonDoublet.gaugeAlgebraAction) (L i) n l) :=
+      (IsGaugeField.covDerivIter h.A (LeptonDoublet.gaugeAlgebraAction) (h.L i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_L i) (LeptonDoublet.isInfinitesimalActionOf) n l
 
 include h in
@@ -2808,7 +3591,8 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarL (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj LeptonDoublet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l) :=
+      (IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
+        (h.barL i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_barL i) (LeptonDoublet.isInfinitesimalActionOf.conj) n l
 
 include h in
@@ -2817,7 +3601,7 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivE (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (LeptonSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (LeptonSinglet.gaugeAlgebraAction) (e i) n l) :=
+      (IsGaugeField.covDerivIter h.A (LeptonSinglet.gaugeAlgebraAction) (h.e i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_e i) (LeptonSinglet.isInfinitesimalActionOf) n l
 
 include h in
@@ -2826,22 +3610,22 @@ include h in
   representation coefficients, with no inhomogeneous term. -/
 lemma transformsIn_covDerivBarE (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repJet (repConj LeptonSinglet.repJetGaugeGroupI)
-      (IsGaugeField.covDerivIter A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l) :=
+      (IsGaugeField.covDerivIter h.A (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction)
+        (h.bare i) n l) :=
   TransformsIn.covDerivIter h.repJet_A (h.repJet_bare i) (LeptonSinglet.isInfinitesimalActionOf.conj) n l
 
 /-!
 
-## D. The field strength and its covariant derivatives
+## Q. The field strength and its covariant derivatives
 
 -/
 
 /-- The iterated covariant derivative `∇_{l₁} ⋯ ∇_{lₙ} F_{μν}` of the field strength
   of the gauge field, along an ordered list of directions. -/
-noncomputable def covDerivFieldStrength (h : IsStandardModel B repJet repLorentz
-    massWeightPoly H barH A d bard u baru Q barQ L barL e bare)
+noncomputable def covDerivFieldStrength (h : IsStandardModel B repJet repLorentz massWeightPoly)
     (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
     Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B :=
-  IsGaugeField.iteratedCovDerivAdjoint A l (IsGaugeField.fieldStrength A μ ν) 0
+  IsGaugeField.iteratedCovDerivAdjoint h.A l (IsGaugeField.fieldStrength h.A μ ν) 0
 
 /-- The covariant tower of the field strength is antisymmetric in its two covector
   indices: the field strength itself is (`IsGaugeField.fieldStrength_swap`, using that
@@ -2851,8 +3635,8 @@ lemma covDerivFieldStrength_swap (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕
     (φ : Module.Dual ℝ GaugeAlgebra) :
     h.covDerivFieldStrength l ν μ φ = - h.covDerivFieldStrength l μ ν φ := by
   rw [covDerivFieldStrength, covDerivFieldStrength,
-    show IsGaugeField.fieldStrength A ν μ =
-      fun t => - IsGaugeField.fieldStrength A μ ν t from
+    show IsGaugeField.fieldStrength h.A ν μ =
+      fun t => - IsGaugeField.fieldStrength h.A μ ν t from
       funext fun t => IsGaugeField.fieldStrength_swap h.A_comm_A μ ν t,
     IsGaugeField.iteratedCovDerivAdjoint_neg_fam]
 
@@ -2863,7 +3647,7 @@ include h in
 lemma transformsInAdjoint_covDerivFieldStrength (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) :
     IsGaugeField.TransformsInAdjoint repJet
-      (IsGaugeField.iteratedCovDerivAdjoint A l (IsGaugeField.fieldStrength A μ ν)) :=
+      (IsGaugeField.iteratedCovDerivAdjoint h.A l (IsGaugeField.fieldStrength h.A μ ν)) :=
   IsGaugeField.transformsInAdjoint_iteratedCovDerivAdjoint h.repJet_A l μ ν
 
 include h in
@@ -2892,7 +3676,7 @@ lemma repJet_covDerivFieldStrength_of_mem_truncationKer_zero
 
 /-!
 
-## E. The matter covariant derivatives transform through the base point
+## R. The matter covariant derivatives transform through the base point
 
 -/
 
@@ -3054,7 +3838,7 @@ lemma repJet_covDerivBarE (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
 
 /-!
 
-## F. Pure gauge jets fix the matter covariant derivatives
+## S. Pure gauge jets fix the matter covariant derivatives
 
 -/
 
@@ -3180,7 +3964,7 @@ lemma repJet_covDerivBarE_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-!
 
-## G. The classification of gauge invariants
+## T. The classification of gauge invariants
 
 -/
 
@@ -3216,7 +4000,7 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
       Set.range (h.covDerivE i l) ∪ Set.range (h.covDerivBarE i l)) with hSdef
   -- the matter covariant towers commute with the gauge-field symbols
   have hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (ψ : Module.Dual ℝ GaugeAlgebra), ∀ y ∈ S, Commute y (A p μ ψ) := by
+      (ψ : Module.Dual ℝ GaugeAlgebra), ∀ y ∈ S, Commute y (h.A p μ ψ) := by
     intro p μ ψ y hy
     rw [hSdef] at hy
     rcases hy with hy | hy
@@ -3225,13 +4009,13 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
       rcases hy with ⟨φ', rfl⟩ | ⟨φ', rfl⟩
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (HiggsVec.gaugeAlgebraAction) H n l 0 φ')
+            (HiggsVec.gaugeAlgebraAction) h.H n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_H p μ ψ s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) barH n l 0 φ')
+            (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_barH p μ ψ s' φ'').symm
@@ -3241,61 +4025,61 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
         ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩) | ⟨φ', rfl⟩)
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (DownSinglet.gaugeAlgebraAction) (d i) n l 0 φ')
+            (DownSinglet.gaugeAlgebraAction) (h.d i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_d p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (bard i) n l 0 φ')
+            (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_bard p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (UpSinglet.gaugeAlgebraAction) (u i) n l 0 φ')
+            (UpSinglet.gaugeAlgebraAction) (h.u i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_u p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (baru i) n l 0 φ')
+            (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_baru p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (QuarkDoublet.gaugeAlgebraAction) (Q i) n l 0 φ')
+            (QuarkDoublet.gaugeAlgebraAction) (h.Q i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_Q p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (barQ i) n l 0 φ')
+            (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_barQ p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (LeptonDoublet.gaugeAlgebraAction) (L i) n l 0 φ')
+            (LeptonDoublet.gaugeAlgebraAction) (h.L i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_L p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (barL i) n l 0 φ')
+            (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_barL p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (LeptonSinglet.gaugeAlgebraAction) (e i) n l 0 φ')
+            (LeptonSinglet.gaugeAlgebraAction) (h.e i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_e p μ ψ i s' φ'').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (bare i) n l 0 φ')
+            (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ')
         rintro x' (⟨s', μ', ψ', rfl⟩ | ⟨s', φ'', rfl⟩)
         · exact h.A_comm_A s' p μ' μ ψ' ψ
         · exact (h.A_comm_bare p μ ψ i s' φ'').symm
@@ -3326,7 +4110,7 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
   -- the invariant lies in the algebra of gauge symbols over the matter towers
   have hx' : x ∈ Algebra.adjoin ℂ
       ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (ψ : Module.Dual ℝ GaugeAlgebra), b = A p μ ψ} ∪ S) := by
+        (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A p μ ψ} ∪ S) := by
     rw [h.fieldAlgebra_eq_covDeriv] at hx
     refine SetLike.le_def.mp (Algebra.adjoin_mono ?_) hx
     rintro b ((hA | hHT) | hFT)
@@ -3350,7 +4134,7 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
 
 /-!
 
-## H. The Lorentz laws of the covariant matter towers
+## U. The Lorentz laws of the covariant matter towers
 
 Each covariant matter tower is an iterated covariant derivative of the corresponding
 bare family, so `IsGaugeField.isLorentzCovDerivTransforms_covDerivIter` turns the bare
@@ -3367,7 +4151,7 @@ lemma repLorentz_covDerivH :
     IsLorentzCovDerivTransforms repLorentz
       (Representation.trivial ℂ SL(2,ℂ) HiggsVec) (fun {_n} l => h.covDerivH l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    HiggsVec.gaugeAlgebraAction_comm_repLorentz H h.repLorentz_H
+    HiggsVec.gaugeAlgebraAction_comm_repLorentz h.H h.repLorentz_H
 
 include h in
 /-- The covariant tower of the conjugate Higgs transforms as a Lorentz scalar. -/
@@ -3377,7 +4161,7 @@ lemma repLorentz_covDerivBarH :
       (fun {_n} l => h.covDerivBarH l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj HiggsVec.gaugeAlgebraAction _
-      HiggsVec.gaugeAlgebraAction_comm_repLorentz) barH h.repLorentz_barH
+      HiggsVec.gaugeAlgebraAction_comm_repLorentz) h.barH h.repLorentz_barH
 
 include h in
 /-- The covariant tower of the down-type quarks transforms as a right-handed Weyl
@@ -3386,7 +4170,7 @@ lemma repLorentz_covDerivD (i : Fin 3) :
     IsLorentzCovDerivTransforms repLorentz DownSinglet.repLorentzGroup
       (fun {_n} l => h.covDerivD i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (d i) (h.repLorentz_d i)
+    DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.d i) (h.repLorentz_d i)
 
 include h in
 /-- The covariant tower of the conjugate down-type quarks transforms in the conjugate
@@ -3396,7 +4180,7 @@ lemma repLorentz_covDerivBarD (i : Fin 3) :
       (fun {_n} l => h.covDerivBarD i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj DownSinglet.gaugeAlgebraAction _
-      DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (bard i) (h.repLorentz_bard i)
+      DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (h.bard i) (h.repLorentz_bard i)
 
 include h in
 /-- The covariant tower of the up-type quarks transforms as a right-handed Weyl spinor. -/
@@ -3404,7 +4188,7 @@ lemma repLorentz_covDerivU (i : Fin 3) :
     IsLorentzCovDerivTransforms repLorentz UpSinglet.repLorentzGroup
       (fun {_n} l => h.covDerivU i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (u i) (h.repLorentz_u i)
+    UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.u i) (h.repLorentz_u i)
 
 include h in
 /-- The covariant tower of the conjugate up-type quarks transforms in the conjugate Weyl
@@ -3414,7 +4198,7 @@ lemma repLorentz_covDerivBarU (i : Fin 3) :
       (fun {_n} l => h.covDerivBarU i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj UpSinglet.gaugeAlgebraAction _
-      UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (baru i) (h.repLorentz_baru i)
+      UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (h.baru i) (h.repLorentz_baru i)
 
 include h in
 /-- The covariant tower of the quark doublets transforms as a left-handed Weyl spinor. -/
@@ -3422,7 +4206,7 @@ lemma repLorentz_covDerivQ (i : Fin 3) :
     IsLorentzCovDerivTransforms repLorentz QuarkDoublet.repLorentzGroup
       (fun {_n} l => h.covDerivQ i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (Q i) (h.repLorentz_Q i)
+    QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.Q i) (h.repLorentz_Q i)
 
 include h in
 /-- The covariant tower of the conjugate quark doublets transforms in the conjugate Weyl
@@ -3432,7 +4216,7 @@ lemma repLorentz_covDerivBarQ (i : Fin 3) :
       (fun {_n} l => h.covDerivBarQ i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj QuarkDoublet.gaugeAlgebraAction _
-      QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (barQ i) (h.repLorentz_barQ i)
+      QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (h.barQ i) (h.repLorentz_barQ i)
 
 include h in
 /-- The covariant tower of the lepton doublets transforms as a left-handed Weyl spinor. -/
@@ -3440,7 +4224,7 @@ lemma repLorentz_covDerivL (i : Fin 3) :
     IsLorentzCovDerivTransforms repLorentz LeptonDoublet.repLorentzGroup
       (fun {_n} l => h.covDerivL i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (L i) (h.repLorentz_L i)
+    LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.L i) (h.repLorentz_L i)
 
 include h in
 /-- The covariant tower of the conjugate lepton doublets transforms in the conjugate Weyl
@@ -3450,7 +4234,7 @@ lemma repLorentz_covDerivBarL (i : Fin 3) :
       (fun {_n} l => h.covDerivBarL i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj LeptonDoublet.gaugeAlgebraAction _
-      LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (barL i) (h.repLorentz_barL i)
+      LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup) (h.barL i) (h.repLorentz_barL i)
 
 include h in
 /-- The covariant tower of the lepton singlets transforms as a right-handed Weyl spinor. -/
@@ -3458,7 +4242,7 @@ lemma repLorentz_covDerivE (i : Fin 3) :
     IsLorentzCovDerivTransforms repLorentz LeptonSinglet.repLorentzGroup
       (fun {_n} l => h.covDerivE i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
-    LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (e i) (h.repLorentz_e i)
+    LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.e i) (h.repLorentz_e i)
 
 include h in
 /-- The covariant tower of the conjugate lepton singlets transforms in the conjugate Weyl
@@ -3468,7 +4252,7 @@ lemma repLorentz_covDerivBarE (i : Fin 3) :
       (fun {_n} l => h.covDerivBarE i l) :=
   IsGaugeField.isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
     (actionConj_comm_repConj LeptonSinglet.gaugeAlgebraAction _
-      LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (bare i) (h.repLorentz_bare i)
+      LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup) (h.bare i) (h.repLorentz_bare i)
 
 end IsStandardModel
 
