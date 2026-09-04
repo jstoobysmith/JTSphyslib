@@ -36,7 +36,7 @@ gauge sector is central.
 Because each sector's generator lemma has the shape `massWeightPoly g = monomial n g` — the
 generator *itself* as the coefficient — transporting it along `Polynomial.mapAlgHom` is a
 single rewrite by `Polynomial.mapAlgHom_monomial`. So every generating family of the full
-algebra is again a monomial eigenvector, of exactly the weight `IsStandardModel` predicts:
+algebra is again a monomial eigenvector, of exactly the weight `AlgebraRealization` predicts:
 `2 * (1 + |s|)` for the bosons, `3 + 2 * |s|` for the fermions.
 
 ## ii. Key results
@@ -236,7 +236,7 @@ lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
 
 The Higgs field has mass dimension one, so the symbol `∂_s H_φ` has mass dimension
 `1 + |s|` and mass weight twice that. The exponent is written in the form
-`2 * (1 + |s|)` that `IsStandardModel` asks for.
+`2 * (1 + |s|)` that `AlgebraRealization` asks for.
 
 -/
 
@@ -289,7 +289,7 @@ lemma massWeightPoly_gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕
 
 Every fermion of the Standard Model has mass dimension `3/2`, so a fermionic symbol
 `∂_s ψ_φ` has mass dimension `3/2 + |s|` and mass weight `3 + 2 |s|` — the exponent form
-`IsStandardModel` asks for. The computation is the same for all ten species families,
+`AlgebraRealization` asks for. The computation is the same for all ten species families,
 because each of them reduces, by the lemmas of
 `Physlib.Particles.StandardModel.JetAlgebra.Generators`, to a single included generator of
 the fermionic sector.

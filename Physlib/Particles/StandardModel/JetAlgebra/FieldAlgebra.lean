@@ -19,7 +19,7 @@ algebra in which a Standard Model Lagrangian lives is a polynomial in the fields
 derivatives, because there is nothing else to write down.
 
 The set adjoined is `JetAlgebra.generators`, written to match the body of
-`IsStandardModel.fieldAlgebra` verbatim, so that once the `IsStandardModel` instance on the
+`AlgebraRealization.fieldAlgebra` verbatim, so that once the `AlgebraRealization` instance on the
 jet algebra exists the two are identified by `rfl`.
 
 The proof factors along the two tensor products. `Algebra.TensorProduct.adjoin_tmul_eq_top`
@@ -78,8 +78,8 @@ open TensorProduct Matrix MatrixGroups
 /-- The derivative symbols of every field of the Standard Model: the gauge field, the Higgs
   and its conjugate, and the three generations of each of the five fermion species with
   their conjugates. The set is written in exactly the shape of the body of
-  `IsStandardModel.fieldAlgebra`, so that the field algebra of the eventual
-  `IsStandardModel` instance on the jet algebra is this set adjoined. -/
+  `AlgebraRealization.fieldAlgebra`, so that the field algebra of the eventual
+  `AlgebraRealization` instance on the jet algebra is this set adjoined. -/
 noncomputable def generators : Set JetAlgebra :=
   (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), Set.range (gaugeField s μ)) ∪
     (⋃ (s : Multiset (Fin 1 ⊕ Fin 3)),
@@ -469,7 +469,7 @@ lemma tmul_mem_adjoin_generators (w : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra
   Physically: every element of the algebra in which a Standard Model Lagrangian lives is a
   polynomial in the fields and their spacetime derivatives — nothing else is available to
   write down. Formally it is the statement that the field algebra of the eventual
-  `IsStandardModel` instance on the jet algebra is the whole of it. -/
+  `AlgebraRealization` instance on the jet algebra is the whole of it. -/
 theorem adjoin_generators_eq_top :
     Algebra.adjoin ℂ generators = (⊤ : Subalgebra ℂ JetAlgebra) := by
   refine top_le_iff.mp ?_

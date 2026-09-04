@@ -22,7 +22,7 @@ polynomial expression in them, sit inside it compatibly with the gauge action, t
 action and the mass-weight grading. The jet algebra `StandardModel.JetAlgebra` is the
 universal object with those fields, so the statement is a single one: an algebra map
 `JetAlgebra →ₐ[ℂ] B`, equivariant for the jet gauge group and the Lorentz group and
-compatible with `massWeightPoly`. That is the structure `IsStandardModel`, together with
+compatible with `massWeightPoly`. That is the structure `AlgebraRealization`, together with
 the two demands that the group actions be multiplicative on the whole of `B` and not
 merely on the image of the map — the covariant derivative of a matter field needs them
 there.
@@ -43,12 +43,12 @@ their gauge covariance and the classification of jet-gauge invariants.
 
 ## ii. Key results
 
-- `StandardModel.IsStandardModel` : an algebra is a Standard Model when it receives an
+- `StandardModel.AlgebraRealization` : an algebra is a Standard Model when it receives an
   equivariant algebra map from the jet algebra.
-- `IsStandardModel.A`, `IsStandardModel.H` and their companions : the thirteen families of
+- `AlgebraRealization.A`, `AlgebraRealization.H` and their companions : the thirteen families of
   derivative symbols of a Standard Model.
-- `IsStandardModel.repJet_A`, `IsStandardModel.repLorentz_H`,
-  `IsStandardModel.massWeight_d` and their companions : the transformation laws and mass
+- `AlgebraRealization.repJet_A`, `AlgebraRealization.repLorentz_H`,
+  `AlgebraRealization.massWeight_d` and their companions : the transformation laws and mass
   weights of those families.
 
 ## iii. Table of contents
@@ -81,7 +81,7 @@ open TensorProduct Matrix MatrixGroups Lorentz
   The last two fields are not consequences of the first four: an equivariant map forces the
   two actions to be multiplicative only on its image, whereas the covariant derivative of a
   matter field needs them multiplicative on the whole of `B`. -/
-structure IsStandardModel (B : Type) [Ring B] [Algebra ℂ B]
+structure AlgebraRealization (B : Type) [Ring B] [Algebra ℂ B]
     (repJet : Representation ℂ JetGaugeGroupI B)
     (repLorentz : Representation ℂ SL(2,ℂ) B)
     (massWeightPoly : B →ₐ[ℂ] Polynomial B) where
@@ -109,13 +109,13 @@ structure IsStandardModel (B : Type) [Ring B] [Algebra ℂ B]
   repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
     repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
 
-namespace IsStandardModel
+namespace AlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsStandardModel B repJet repLorentz massWeightPoly)
+  (h : AlgebraRealization B repJet repLorentz massWeightPoly)
 
 /-!
 
@@ -233,13 +233,6 @@ private lemma map_family_repLorentz {V : Type} [AddCommGroup V] [Module ℂ V]
   show repLorentz Λ (h.toAlgHom _) = _
   rw [← h.map_repLorentz, hG Λ n l φ, map_sum]
   exact Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _
-
-/-- A monomial mass-weight eigenvalue transports along the defining map: the map carries
-  the mass-weight polynomial to the mass-weight polynomial, and a monomial to a monomial. -/
-private lemma map_massWeight_monomial {x : JetAlgebra} {n : ℕ}
-    (hx : JetAlgebra.massWeightPoly x = Polynomial.monomial n x) :
-    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) := by
-  rw [h.map_massWeight, hx, Polynomial.mapAlgHom_monomial]
 
 /-!
 
@@ -416,93 +409,7 @@ lemma repLorentz_bare : ∀ i, IsLorentzDerivTransforms repLorentz
     LeptonSinglet.repLorentzGroup.conj (h.bare i) :=
   fun i => h.map_family_repLorentz (JetAlgebra.isLorentzDerivTransforms_conjLeptonSingletField i)
 
-/-!
 
-## E. The mass weights of the fields
-
-Every derivative symbol is a `massWeightPoly`-eigenvector of pure monomial weight — twice
-its mass dimension. The bosons have mass dimension `1 + |s|`, the fermions `3/2 + |s|`.
-
--/
-
-/-- The law `massWeight_H` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_H : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.H s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.H s φ) :=
-  fun s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_higgsField s φ)
-
-/-- The law `massWeight_barH` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_barH : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.barH s φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.barH s φ) :=
-  fun s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjHiggsField s φ)
-
-/-- The law `massWeight_A` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_A : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) μ φ,
-    massWeightPoly (h.A s μ φ) = Polynomial.monomial (2 * (1 + Multiset.card s)) (h.A s μ φ) :=
-  fun s μ φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_gaugeField s μ φ)
-
-/-- The law `massWeight_d` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_d : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.d i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.d i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_downSingletField i s φ)
-
-/-- The law `massWeight_bard` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_bard : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.bard i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.bard i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjDownSingletField i s φ)
-
-/-- The law `massWeight_u` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_u : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.u i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.u i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_upSingletField i s φ)
-
-/-- The law `massWeight_baru` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_baru : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.baru i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.baru i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjUpSingletField i s φ)
-
-/-- The law `massWeight_Q` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_Q : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.Q i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.Q i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_quarkDoubletField i s φ)
-
-/-- The law `massWeight_barQ` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_barQ : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.barQ i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.barQ i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjQuarkDoubletField i s φ)
-
-/-- The law `massWeight_L` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_L : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.L i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.L i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_leptonDoubletField i s φ)
-
-/-- The law `massWeight_barL` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_barL : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.barL i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.barL i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjLeptonDoubletField i s φ)
-
-/-- The law `massWeight_e` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_e : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.e i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.e i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_leptonSingletField i s φ)
-
-/-- The law `massWeight_bare` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma massWeight_bare : ∀ i (s : Multiset (Fin 1 ⊕ Fin 3)) φ,
-    massWeightPoly (h.bare i s φ) = Polynomial.monomial (3 + 2 * Multiset.card s) (h.bare i s φ) :=
-  fun i s φ => h.map_massWeight_monomial (JetAlgebra.massWeightPoly_conjLeptonSingletField i s φ)
-
-end IsStandardModel
+end AlgebraRealization
 
 end StandardModel

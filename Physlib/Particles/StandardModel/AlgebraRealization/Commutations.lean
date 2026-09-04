@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
 module
-public import Physlib.Particles.StandardModel.IsStandardModel.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.Basic
 /-!
 # The statistics of the Standard Model fields
 
@@ -21,18 +21,18 @@ Each law is one line: the corresponding jet algebra fact, transported. A commuta
 transports by `Commute.map`, an anticommutation by the private helper `map_anticomm` at
 the head of the section, which is the fourth of the transport shapes of section B of
 [`Basic.lean`](Basic.lean) and is needed only here. The laws carry the names they carried
-when they were axioms of `IsStandardModel`, so they are used exactly as before.
+when they were axioms of `AlgebraRealization`, so they are used exactly as before.
 
 These are the last of the laws of the bare symbols; the covariant reduction that uses them
 is [`CovariantDeriv.lean`](CovariantDeriv.lean).
 
 ## ii. Key results
 
-- `IsStandardModel.A_comm_A`, `IsStandardModel.A_comm_H` and their companions : the
+- `AlgebraRealization.A_comm_A`, `AlgebraRealization.A_comm_H` and their companions : the
   gauge-field symbols commute with every symbol of the theory.
-- `IsStandardModel.H_comm_H` and its companions : the Higgs symbols commute with each
+- `AlgebraRealization.H_comm_H` and its companions : the Higgs symbols commute with each
   other and with every fermion symbol.
-- `IsStandardModel.d_anticomm_bard` and its companions : the fermion symbols anticommute
+- `AlgebraRealization.d_anticomm_bard` and its companions : the fermion symbols anticommute
   among themselves.
 
 ## iii. Table of contents
@@ -52,13 +52,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace IsStandardModel
+namespace AlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsStandardModel B repJet repLorentz massWeightPoly)
+  (h : AlgebraRealization B repJet repLorentz massWeightPoly)
 
 /-!
 
@@ -829,6 +829,6 @@ lemma bare_anticomm_bare : ∀ (i j : Fin 3) (s s' : Multiset (Fin 1 ⊕ Fin 3))
     ((JetAlgebra.isFermionGenerator_conjLeptonSingletField i s φ).anticomm
       (JetAlgebra.isFermionGenerator_conjLeptonSingletField j s' φ'))
 
-end IsStandardModel
+end AlgebraRealization
 
 end StandardModel

@@ -113,7 +113,7 @@ noncomputable def repDualCoeff (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
   `[∂_s F^φ]` transforms by the Leibniz convolution of the dual representation
   coefficients against lower symbols, with no inhomogeneous term — the generalization
   of `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and
-  the form consumed by `IsStandardModel`. -/
+  the form consumed by `AlgebraRealization`. -/
 def _root_.TransformsIn (repGauge : Representation ℂ G B)
     (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) : Prop :=
