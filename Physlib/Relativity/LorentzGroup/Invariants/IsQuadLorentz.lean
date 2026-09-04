@@ -1010,12 +1010,10 @@ lemma null_iff_of_lightConeCoeffZ_ne_zero (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3)
 
 /-- The odd-count case: if the number of null-sector indices of `d` is odd, every
   weight-zero inner index hits a vanishing coefficient. -/
-lemma exists_coeffZ_eq_zero_of_odd :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
-      Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card →
-      ∀ c'' : Fin 4 → Fin 4, (∑ s, lightConeWeight (c'' s)) = 0 →
-      ∃ s, lightConeCoeffZ 2 (c'' s) (d s) = 0 := by
-  intro d hodd c'' hc''
+lemma exists_coeffZ_eq_zero_of_odd (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (hodd : Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card)
+    (c'' : Fin 4 → Fin 4) (hc'' : (∑ s, lightConeWeight (c'' s)) = 0) :
+    ∃ s, lightConeCoeffZ 2 (c'' s) (d s) = 0 := by
   by_contra hne
   push Not at hne
   rw [Finset.filter_congr fun s _ =>
@@ -1087,13 +1085,13 @@ lemma odd_card_inl_zero_or_inr_one_of_not_isPairedOrDistinct
 /-- The parity of the sign involution: over a weight-zero generator, a component that
   is neither two pairs nor all distinct, with no identically-vanishing slot and an even
   null-sector count, carries total sign `-1`. -/
-lemma prod_nuZ_eq_neg_one :
-    ∀ c' : Fin 4 → Fin 4, (∑ s, lightConeWeight (c' s)) = 0 →
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, ¬IsPairedOrDistinct d →
-    ¬(∃ s, ∀ κ, lightConeTransitionZ 1 2 (c' s) κ * lightConeCoeffZ 2 κ (d s) = 0) →
-    ¬Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card →
+lemma prod_nuZ_eq_neg_one (c' : Fin 4 → Fin 4)
+    (hc' : (∑ s, lightConeWeight (c' s)) = 0) (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (hd : ¬IsPairedOrDistinct d)
+    (hA : ¬(∃ s, ∀ κ,
+      lightConeTransitionZ 1 2 (c' s) κ * lightConeCoeffZ 2 κ (d s) = 0))
+    (hC : ¬Odd (Finset.univ.filter fun s => d s = Sum.inl 0 ∨ d s = Sum.inr 2).card) :
     (∏ s, nuZ (c' s) (d s)) = -1 := by
-  intro c' hc' d hd hA hC
   push Not at hA
   have hcolumn :=
     odd_card_inl_zero_or_inr_one_of_not_isPairedOrDistinct d hd hC
@@ -1248,12 +1246,10 @@ lemma prod_nuSignZ_eq_pow (i : Fin 3) (d e : Fin 4 → Fin 1 ⊕ Fin 3) :
 
 /-- The sign of a sector-compatible parity mismatch: a paired-or-distinct column
   index against a bad row index with all slots sector-compatible carries sign `-1`. -/
-lemma prod_nuSignZ_eq_neg_one :
-    ∀ (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3), IsPairedOrDistinct e →
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, ¬IsPairedOrDistinct d →
-    (∀ s, SameSlotSector i (e s) (d s)) →
+lemma prod_nuSignZ_eq_neg_one (i : Fin 3) (e : Fin 4 → Fin 1 ⊕ Fin 3)
+    (he : IsPairedOrDistinct e) (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (hd : ¬IsPairedOrDistinct d) (hs : ∀ s, SameSlotSector i (e s) (d s)) :
     (∏ s, nuSignZ i (e s) (d s)) = -1 := by
-  intro i e he d hd hs
   rw [prod_nuSignZ_eq_pow]
   refine Odd.neg_one_pow ?_
   rw [Nat.odd_iff]
@@ -1660,10 +1656,9 @@ lemma isPairedOrDistinct_of_mem_rotationSubset :
   decide +kernel
 
 /-- Goodness is preserved by rotating the index. -/
-lemma isPairedOrDistinct_cycDir :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, IsPairedOrDistinct d →
-      IsPairedOrDistinct (fun s => cycDir (d s)) := by
-  rintro d (⟨h01, h23⟩ | ⟨h02, h13⟩ | ⟨h03, h12⟩ | hinj)
+lemma isPairedOrDistinct_cycDir (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (hd : IsPairedOrDistinct d) : IsPairedOrDistinct (fun s => cycDir (d s)) := by
+  rcases hd with ⟨h01, h23⟩ | ⟨h02, h13⟩ | ⟨h03, h12⟩ | hinj
   · exact Or.inl ⟨congrArg cycDir h01, congrArg cycDir h23⟩
   · exact Or.inr (Or.inl ⟨congrArg cycDir h02, congrArg cycDir h13⟩)
   · exact Or.inr (Or.inr (Or.inl ⟨congrArg cycDir h03, congrArg cycDir h12⟩))
@@ -1794,18 +1789,15 @@ private lemma orbitRepOf_eq_of_isOrbitRep_of_rotationOrbitCoeff_ne_zero
   · exact orbitRepOf_rotateIndex_rotateIndex_eq_self hr
 
 /-- Only members of the orbit of a listed representative meet its indicator. -/
-lemma orbitRepOf_eq_of_rotationOrbitCoeff_ne_zero :
-    ∀ r ∈ rotationSubset, ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
-      rotationOrbitCoeff r d ≠ 0 → orbitRepOf d = r := by
-  intro r hr d h
+lemma orbitRepOf_eq_of_rotationOrbitCoeff_ne_zero (r : Fin 4 → Fin 1 ⊕ Fin 3)
+    (hr : r ∈ rotationSubset) (d : Fin 4 → Fin 1 ⊕ Fin 3)
+    (h : rotationOrbitCoeff r d ≠ 0) : orbitRepOf d = r := by
   exact orbitRepOf_eq_of_isOrbitRep_of_rotationOrbitCoeff_ne_zero
     (isOrbitRep_of_mem_rotationSubset r hr) h
 
 /-- The orbit of the canonical representative is the orbit. -/
-lemma rotationIndexSet_orbitRepOf :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3,
-      rotationIndexSet (orbitRepOf d) = rotationIndexSet d := by
-  intro d
+lemma rotationIndexSet_orbitRepOf (d : Fin 4 → Fin 1 ⊕ Fin 3) :
+    rotationIndexSet (orbitRepOf d) = rotationIndexSet d := by
   rw [orbitRepOf]
   split_ifs
   · rfl
@@ -1814,10 +1806,9 @@ lemma rotationIndexSet_orbitRepOf :
 
 /-- The multiplicity of an index in its own orbit: `3` on a rotation-fixed index and
   `1` otherwise. -/
-lemma rotationOrbitCoeff_orbitRepOf :
-    ∀ d : Fin 4 → Fin 1 ⊕ Fin 3, rotationOrbitCoeff (orbitRepOf d) d
-      = if (fun s => cycDir (d s)) = d then 3 else 1 := by
-  intro d
+lemma rotationOrbitCoeff_orbitRepOf (d : Fin 4 → Fin 1 ⊕ Fin 3) :
+    rotationOrbitCoeff (orbitRepOf d) d =
+      if (fun s => cycDir (d s)) = d then 3 else 1 := by
   by_cases hfix : (fun s => cycDir (d s)) = d
   · rw [if_pos hfix, orbitRepOf_eq_self (isOrbitRep_of_rotateIndex_eq_self hfix)]
     have h2 : (fun s => cycDir (cycDir (d s))) = d := by

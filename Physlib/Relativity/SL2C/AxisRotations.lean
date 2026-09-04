@@ -67,8 +67,8 @@ lemma cycDir_comp_nil : (fun j : Fin 0 => cycDir (![] j)) = ![] := by
   exact j.elim0
 
 /-- The cyclic permutation of Lorentz direction labels has order three. -/
-lemma cycDir_cycDir_cycDir : ∀ μ : Fin 1 ⊕ Fin 3, cycDir (cycDir (cycDir μ)) = μ := by
-  rintro (μ | μ)
+lemma cycDir_cycDir_cycDir (μ : Fin 1 ⊕ Fin 3) : cycDir (cycDir (cycDir μ)) = μ := by
+  rcases μ with μ | μ
   · rfl
   · simp only [cycDir, Sum.map_inr]
     congr 1
@@ -83,11 +83,10 @@ lemma cycDir_injective : Function.Injective cycDir :=
   Function.LeftInverse.injective (g := fun μ => cycDir (cycDir μ)) cycDir_cycDir_cycDir
 
 /-- An index not fixed by the rotation has three distinct rotations. -/
-lemma cycDir_orbit_distinct {ι : Type*} :
-    ∀ d : ι → Fin 1 ⊕ Fin 3, (fun s => cycDir (d s)) ≠ d →
-      ((fun s => cycDir (cycDir (d s))) ≠ d
-        ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s))) := by
-  intro d hd
+lemma cycDir_orbit_distinct {ι : Type*} (d : ι → Fin 1 ⊕ Fin 3)
+    (hd : (fun s => cycDir (d s)) ≠ d) :
+    (fun s => cycDir (cycDir (d s))) ≠ d
+      ∧ (fun s => cycDir (cycDir (d s))) ≠ (fun s => cycDir (d s)) := by
   constructor
   · refine fun h => hd (funext fun s => ?_)
     have h3 := congrArg cycDir (congrFun h s)
