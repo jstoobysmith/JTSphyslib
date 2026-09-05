@@ -300,6 +300,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Lorent
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint

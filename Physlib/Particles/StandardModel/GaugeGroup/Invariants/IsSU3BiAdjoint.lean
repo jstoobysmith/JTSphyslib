@@ -7,8 +7,8 @@ module
 
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Mathlib.Algebra.TrivSqZeroExt.Basic
-public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 /-!
 # Gauge tensors carrying two `su(3)` adjoint indices
 
@@ -34,13 +34,11 @@ of the trace contraction up to a colour-invariant error in `S`.
 
 The proof has two halves, and neither needs more than the module structure of `B`.
 
-The first half is linear algebra. A vector of the span is `∑ l, c l • T l` for a
-coefficient function `c` on pairs of colour indices, and a colour rotation acts on `c` by
-the Kronecker square of its adjoint matrix. The coefficients contracting to zero form a
-subspace stable under all these actions; the actions are orthogonal for the standard inner
-product, so the orthogonal complement is stable too. Projecting the coefficient of an
-invariant vector onto that complement leaves the vector alone and makes the coefficient
-itself invariant. One inner product thus replaces every averaging argument.
+The first half is the linear algebra of `Invariants.Basic`. A vector of the span is
+`∑ l, c l • T l` for a coefficient function `c` on pairs of colour indices, and a colour
+rotation acts on `c` by the Kronecker square of its adjoint matrix, a unitary action. So an
+invariant vector of the span is the contraction of an invariant coefficient
+(`Family.exists_invariant_coeff`), and the question becomes a finite one.
 
 The second half is a finite computation. An invariant coefficient is a bilinear form on
 colour coordinates fixed by every colour rotation, and a handful of explicit rotations pin
@@ -53,14 +51,13 @@ Cartan direction onto the two members of a root pair and tie the Cartan entries 
 entries. So the form is a multiple of the Kronecker delta and the vector a multiple of the
 trace.
 
-Section A sets up the adjoint matrix, the transformation law and the colour part of a
-representation. Section B has the span, the contraction against a coefficient function, the
-action on coefficients and the trace contraction. Section C has the coordinate vectors of
-one index, section D computes the rotations on them, section E is the finite computation,
-section F the inner product argument, and section G divides out a stable submodule and
-proves the theorem. An aside at the end holds what other files import from here and the
-theorem does not use: the weight basis of the adjoint, the trivial square-zero extension
-and the gauge form of the theorem.
+Section A sets up the adjoint matrix and the transformation law. Section B has the span,
+the action on coefficients and the trace contraction. Section C has the coordinate vectors
+of one index, section D computes the rotations on them, section E is the finite
+computation, section F classifies the invariants of the span, and section G divides out a
+stable submodule and proves the theorem. An aside at the end holds what other files import
+from here and the theorem does not use: the weight basis of the adjoint, the quotient and
+square-zero representations, and the gauge form of the theorem.
 -/
 
 @[expose] public section
@@ -162,80 +159,28 @@ structure IsSU3BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
   repGauge_T : ∀ g : specialUnitaryGroup (Fin 3) ℂ,
     IsSU3BiAdjointMat g (repGauge (g, 1, 1)) T
 
-/-!
-
-## A.3. The colour part of a representation
-
-Reading a representation of the gauge group at the colour factor of its argument alone
-gives `repSU3`, again a representation of the whole gauge group. Invariance under it is
-invariance under colour, `∀ U, repGauge (U, 1, 1) x = x`, stability of a submodule under it
-is stability under colour, and a bi-adjoint family for `repGauge` is one for
-`repSU3 repGauge`. Section G uses it to divide out a submodule that is only known to be
-stable under colour.
-
--/
-
-/-- The colour part of a representation of the gauge group: it reads only the `SU(3)`
-  factor of its argument. -/
-noncomputable def repSU3 {B : Type*} [AddCommMonoid B] [Module ℂ B]
-    (repGauge : Representation ℂ GaugeGroupI B) : Representation ℂ GaugeGroupI B where
-  toFun g := repGauge (GaugeGroupI.toSU3 g, 1, 1)
-  map_one' := by
-    have h1 : ((GaugeGroupI.toSU3 1, 1, 1) : GaugeGroupI) = 1 := by
-      simp [Prod.ext_iff]
-    rw [h1, map_one]
-  map_mul' g h := by
-    have hgh : ((GaugeGroupI.toSU3 (g * h), 1, 1) : GaugeGroupI)
-        = ((GaugeGroupI.toSU3 g, 1, 1) : GaugeGroupI) * (GaugeGroupI.toSU3 h, 1, 1) := by
-      simp [map_mul]
-    rw [hgh, map_mul]
-
-/-- The colour part acts by the representation at the colour rotation with the same
-  `SU(3)` factor. -/
-lemma repSU3_apply {B : Type*} [AddCommMonoid B] [Module ℂ B]
-    (repGauge : Representation ℂ GaugeGroupI B) (g : GaugeGroupI) :
-    repSU3 repGauge g = repGauge (GaugeGroupI.toSU3 g, 1, 1) := rfl
-
-/-- Invariance under the colour part is invariance under the colour rotations. -/
-lemma repSU3_invariant_iff_su3 {B : Type*} [AddCommMonoid B] [Module ℂ B]
-    (repGauge : Representation ℂ GaugeGroupI B) (x : B) :
-    (∀ g : GaugeGroupI, repSU3 repGauge g x = x)
-      ↔ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x :=
-  ⟨fun h U => h (U, 1, 1), fun h g => h (GaugeGroupI.toSU3 g)⟩
-
-/-- Stability under the colour part is stability under the colour rotations. -/
-lemma repSU3_stable_iff_su3 {B : Type*} [AddCommGroup B] [Module ℂ B]
-    (repGauge : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B) :
-    (∀ g : GaugeGroupI, ∀ y ∈ S, repSU3 repGauge g y ∈ S)
-      ↔ ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S :=
-  ⟨fun h U => h (U, 1, 1), fun h g => h (GaugeGroupI.toSU3 g)⟩
-
 namespace IsSU3BiAdjoint
 
-/- `span`, `contract`, `traceContraction` and `biVec` take the hypothesis `hT` only to hang
-off it by dot notation, and `mem_span_sup_invariant_iff` keeps a hypothesis for its caller;
-each is marked `nolint unusedArguments` where it is declared. -/
+/- `span`, `traceContraction` and `biVec` take the hypothesis `hT` only to hang off it by
+dot notation, and `mem_span_sup_invariant_iff` keeps a hypothesis for its caller; each is
+marked `nolint unusedArguments` where it is declared. -/
 set_option linter.unusedVariables false
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B} {T : (Fin 2 → Fin 8) → B}
 
-/-- A bi-adjoint family for a representation is one for its colour part: the law reads only
-  the colour factor to begin with. -/
-lemma toRepSU3 (hT : IsSU3BiAdjoint B repGauge T) :
-    IsSU3BiAdjoint B (repSU3 repGauge) T where
-  repGauge_T g := hT.repGauge_T g
-
 /-!
 
-## B. Coefficients, the contraction and the trace
+## B. Coefficients, their action and the trace
 
 A vector of the span of the components is a contraction `∑ l, c l • T l` against a
-coefficient function `c` on pairs of colour indices. The transformation law says exactly
+coefficient function `c` on pairs of colour indices, and the transformation law says exactly
 that a colour rotation moves such a contraction by moving `c` with the Kronecker square of
-its adjoint matrix, `act U`, and orthogonality of the adjoint matrix says that `act U⁻¹` is
-the transpose of `act U`. The trace contraction `∑ a, T ![a, a]` is the contraction against
-the Kronecker delta `traceCoeff`, and it is colour invariant because the delta is.
+its adjoint matrix, `act U`. Orthogonality of the adjoint matrix makes `act U⁻¹` the
+transpose of `act U`, and the matrix being real, `act U` commutes with conjugation: these are
+the two hypotheses of `Family.exists_invariant_coeff`. The trace contraction
+`∑ a, T ![a, a]` is the contraction against the Kronecker delta `traceCoeff`, and it is
+colour invariant because the delta is an invariant coefficient.
 
 -/
 
@@ -243,34 +188,16 @@ the Kronecker delta `traceCoeff`, and it is colour invariant because the delta i
 @[nolint unusedArguments]
 def span (hT : IsSU3BiAdjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
-/-- The contraction of the family against a coefficient function, `c ↦ ∑ l, c l • T l`. -/
-@[nolint unusedArguments]
-noncomputable def contract (hT : IsSU3BiAdjoint B repGauge T) :
-    ((Fin 2 → Fin 8) → ℂ) →ₗ[ℂ] B :=
-  Fintype.linearCombination ℂ T
-
-/-- The contraction, written out. -/
-lemma contract_apply (hT : IsSU3BiAdjoint B repGauge T) (c : (Fin 2 → Fin 8) → ℂ) :
-    hT.contract c = ∑ l, c l • T l :=
-  Fintype.linearCombination_apply _ _ _
-
-/-- The span of the components is the range of the contraction: a vector lies in it
-  precisely when it is a linear combination of the components. -/
+/-- A vector lies in the span precisely when it is a linear combination of the
+  components. -/
 lemma mem_span_iff (hT : IsSU3BiAdjoint B repGauge T) (x : B) :
-    x ∈ hT.span ↔ ∃ (c : (Fin 2 → Fin 8) → ℂ), x = ∑ d, c d • T d := by
-  rw [span, ← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-    LinearMap.mem_range]
-  simp only [Fintype.linearCombination_apply, eq_comm]
+    x ∈ hT.span ↔ ∃ (c : (Fin 2 → Fin 8) → ℂ), x = ∑ d, c d • T d :=
+  Family.mem_iSup_span_singleton_iff T x
 
 /-- A sum over pairs of colour indices is a double sum. -/
 lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 8) → M) :
-    ∑ d : Fin 2 → Fin 8, F d = ∑ x : Fin 8, ∑ y : Fin 8, F ![x, y] := by
-  rw [show (∑ d : Fin 2 → Fin 8, F d) = ∑ p : Fin 8 × Fin 8, F ![p.1, p.2] from
-      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 8) _ _ fun d => by
-        congr 1
-        funext i
-        fin_cases i <;> simp,
-    Fintype.sum_prod_type]
+    ∑ d : Fin 2 → Fin 8, F d = ∑ x : Fin 8, ∑ y : Fin 8, F ![x, y] :=
+  Family.sum_pi_two F
 
 /-- The action of `U ∈ SU(3)` on coefficient functions: the Kronecker square of its
   adjoint matrix. -/
@@ -287,10 +214,10 @@ lemma act_apply (U : specialUnitaryGroup (Fin 3) ℂ) (c : (Fin 2 → Fin 8) →
 
 /-- The transformation law in coefficient form: a map moving the components by `U` moves a
   contraction by `act U` on its coefficients. -/
-lemma map_contract (hT : IsSU3BiAdjoint B repGauge T) {U : specialUnitaryGroup (Fin 3) ℂ}
-    {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat U f T) (c : (Fin 2 → Fin 8) → ℂ) :
-    f (hT.contract c) = hT.contract (act U c) := by
-  simp only [contract_apply, map_sum, map_smul, act_apply, Finset.sum_smul]
+lemma map_sum_smul {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat U f T) (c : (Fin 2 → Fin 8) → ℂ) :
+    f (∑ l, c l • T l) = ∑ a, act U c a • T a := by
+  simp only [map_sum, map_smul, act_apply, Finset.sum_smul]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun l _ => ?_
   rw [hf l, Finset.smul_sum]
@@ -303,6 +230,13 @@ lemma sum_act_mul (U : specialUnitaryGroup (Fin 3) ℂ) (c d : (Fin 2 → Fin 8)
   simp only [act_apply, su3AdjointMatrix_inv, Finset.sum_mul, Finset.mul_sum]
   rw [Finset.sum_comm]
   exact Finset.sum_congr rfl fun l _ => Finset.sum_congr rfl fun a _ => by ring
+
+/-- The action on coefficients commutes with complex conjugation, the adjoint matrix being
+  real. -/
+lemma act_star (U : specialUnitaryGroup (Fin 3) ℂ) (c : (Fin 2 → Fin 8) → ℂ) :
+    act U (star c) = star (act U c) := by
+  funext a
+  simp [act_apply, star_sum, star_mul', Complex.conj_ofReal]
 
 /-- The Kronecker delta on pairs of colour indices: the coefficients of the trace. -/
 def traceCoeff : (Fin 2 → Fin 8) → ℂ := fun l => if l 0 = l 1 then 1 else 0
@@ -329,17 +263,17 @@ lemma act_traceCoeff (U : specialUnitaryGroup (Fin 3) ℂ) : act U traceCoeff = 
 @[nolint unusedArguments]
 def traceContraction (hT : IsSU3BiAdjoint B repGauge T) : B := ∑ a : Fin 8, T ![a, a]
 
-/-- The trace contraction is the contraction against the Kronecker delta. -/
-lemma contract_traceCoeff (hT : IsSU3BiAdjoint B repGauge T) :
-    hT.contract traceCoeff = hT.traceContraction := by
-  rw [contract_apply, sum_pi_two]
-  simp [traceCoeff, traceContraction, ite_smul]
+/-- The trace is the contraction against the Kronecker delta. -/
+lemma sum_traceCoeff_smul (T : (Fin 2 → Fin 8) → B) :
+    ∑ l, traceCoeff l • T l = ∑ a : Fin 8, T ![a, a] := by
+  rw [sum_pi_two]
+  simp [traceCoeff, ite_smul]
 
 /-- Any map moving the components by an `SU(3)` matrix fixes the trace contraction. -/
 lemma map_traceContraction (hT : IsSU3BiAdjoint B repGauge T)
     {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat U f T) :
     f hT.traceContraction = hT.traceContraction := by
-  rw [← hT.contract_traceCoeff, hT.map_contract hf, act_traceCoeff]
+  rw [traceContraction, ← sum_traceCoeff_smul, map_sum_smul hf, act_traceCoeff]
 
 /-- The trace contraction is colour invariant. Nothing constrains the isospin and
   hypercharge factors, which may well move it. -/
@@ -966,154 +900,60 @@ theorem exists_smul_traceCoeff_of_act_eq {c : (Fin 2 → Fin 8) → ℂ}
 
 /-!
 
-## F. An invariant of the span is the contraction of an invariant coefficient
+## F. The colour invariants of the span
 
-Give the coefficient functions their standard inner product. The coefficients contracting to
-zero form the kernel `K` of the contraction, stable under every `act U` by the
-transformation law; and since `act U⁻¹` is the transpose of `act U` and the adjoint matrix
-is real, `act U⁻¹` is the adjoint of `act U`, so the orthogonal complement `Kᗮ` is stable
-as well. Write the coefficient of an invariant vector `x` as `k + k'` with `k ∈ K` and
-`k' ∈ Kᗮ`. Then `x` is the contraction of `k'`, and `act U k' - k'` contracts to
-`repGauge (U, 1, 1) x - x = 0` while lying in `Kᗮ`, so it is zero: `k'` is invariant.
+The action on coefficients is unitary, by `sum_act_mul` and `act_star`, so
+`Family.exists_invariant_coeff` writes a colour invariant of the span as the contraction of
+an invariant coefficient, and section E makes that coefficient a multiple of the delta. The
+statement is made for any family of linear maps `φ U` obeying the law, not only for the
+colour rotations `repGauge (U, 1, 1)`, so that section G can apply it in a quotient.
 
 -/
 
-/-- The action on coefficients commutes with complex conjugation, the adjoint matrix being
-  real. -/
-lemma act_star (U : specialUnitaryGroup (Fin 3) ℂ) (c : (Fin 2 → Fin 8) → ℂ) :
-    act U (star c) = star (act U c) := by
-  funext a
-  simp [act_apply, star_sum, star_mul', Complex.conj_ofReal]
-
-/-- The contraction, on the coefficient space with its standard inner product. -/
-noncomputable def contractₗ (hT : IsSU3BiAdjoint B repGauge T) :
-    EuclideanSpace ℂ (Fin 2 → Fin 8) →ₗ[ℂ] B where
-  toFun c := hT.contract c.ofLp
-  map_add' c c' := by simp only [WithLp.ofLp_add, map_add]
-  map_smul' z c := by simp only [WithLp.ofLp_smul, map_smul, RingHom.id_apply]
-
-/-- The action on coefficients, on the coefficient space with its standard inner product. -/
-noncomputable def actₗ (U : specialUnitaryGroup (Fin 3) ℂ) :
-    EuclideanSpace ℂ (Fin 2 → Fin 8) →ₗ[ℂ] EuclideanSpace ℂ (Fin 2 → Fin 8) where
-  toFun c := WithLp.toLp 2 (act U c.ofLp)
-  map_add' c c' := by simp only [WithLp.ofLp_add, map_add, WithLp.toLp_add]
-  map_smul' z c := by
-    simp only [WithLp.ofLp_smul, map_smul, RingHom.id_apply, WithLp.toLp_smul]
-
-/-- The transformation law in coefficient form, on the inner product space. -/
-lemma contractₗ_actₗ (hT : IsSU3BiAdjoint B repGauge T) {U : specialUnitaryGroup (Fin 3) ℂ}
-    {f : B →ₗ[ℂ] B} (hf : IsSU3BiAdjointMat U f T)
-    (c : EuclideanSpace ℂ (Fin 2 → Fin 8)) :
-    hT.contractₗ (actₗ U c) = f (hT.contractₗ c) := by
-  simp only [contractₗ, actₗ, LinearMap.coe_mk, AddHom.coe_mk]
-  exact (hT.map_contract hf _).symm
-
-open scoped InnerProductSpace in
-/-- The action of `U⁻¹` is the adjoint of the action of `U`. -/
-lemma inner_actₗ (U : specialUnitaryGroup (Fin 3) ℂ)
-    (a b : EuclideanSpace ℂ (Fin 2 → Fin 8)) :
-    ⟪a, actₗ U b⟫_ℂ = ⟪actₗ U⁻¹ a, b⟫_ℂ := by
-  have h := sum_act_mul U b.ofLp (star a.ofLp)
-  rw [act_star] at h
-  simpa only [PiLp.inner_apply, RCLike.inner_apply, actₗ, LinearMap.coe_mk, AddHom.coe_mk,
-    PiLp.toLp_apply, Pi.star_apply, Complex.star_def] using h
-
-/-- A colour invariant of the span is the contraction of an invariant coefficient. -/
-theorem exists_eq_contract_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T) {x : B}
-    (hx : x ∈ hT.span)
-    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
-    ∃ c : (Fin 2 → Fin 8) → ℂ, x = hT.contract c
-      ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, act U c = c := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff x).1 hx
-  rw [← hT.contract_apply] at hinv ⊢
-  set K := LinearMap.ker hT.contractₗ with hK
-  have hKstab : ∀ (V : specialUnitaryGroup (Fin 3) ℂ), ∀ u ∈ K, actₗ V u ∈ K := by
-    intro V u hu
-    rw [hK, LinearMap.mem_ker] at hu ⊢
-    rw [hT.contractₗ_actₗ (hT.repGauge_T V), hu, map_zero]
-  obtain ⟨k, hk, k', hk', hkk'⟩ := K.exists_add_mem_mem_orthogonal (WithLp.toLp 2 c)
-  have hx' : hT.contract c = hT.contractₗ k' := by
-    have h := congrArg hT.contractₗ hkk'
-    rw [map_add, LinearMap.mem_ker.1 hk, zero_add] at h
-    exact h
-  refine ⟨k'.ofLp, hx', fun U => ?_⟩
-  have h1 : actₗ U k' - k' ∈ K := by
-    rw [hK, LinearMap.mem_ker, map_sub, sub_eq_zero, hT.contractₗ_actₗ (hT.repGauge_T U),
-      ← hx', hinv]
-  have h2 : actₗ U k' ∈ Kᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro u hu
-    rw [inner_actₗ]
-    exact Submodule.inner_right_of_mem_orthogonal (hKstab _ u hu) hk'
-  have h3 : actₗ U k' - k' ∈ K ⊓ Kᗮ := ⟨h1, Submodule.sub_mem _ h2 hk'⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot, sub_eq_zero] at h3
-  exact congrArg WithLp.ofLp h3
+/-- Every invariant in the span of a family obeying the law for a family of linear maps
+  `φ U` is a multiple of the trace: the one singlet of `8 ⊗ 8`. -/
+theorem exists_smul_sum_diag_of_invariant {φ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B}
+    (hT : ∀ U, IsSU3BiAdjointMat U (φ U) T) {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d)
+    (hinv : ∀ U, φ U x = x) :
+    ∃ z : ℂ, x = z • ∑ a : Fin 8, T ![a, a] := by
+  obtain ⟨c, rfl, hc⟩ := Family.exists_invariant_coeff T φ act
+    (fun U c => map_sum_smul (hT U) c)
+    (Family.sum_star_mul_of_transpose act sum_act_mul act_star) hx hinv
+  obtain ⟨z, hz⟩ := exists_smul_traceCoeff_of_act_eq hc
+  refine ⟨z, ?_⟩
+  rw [hz, ← sum_traceCoeff_smul, Finset.smul_sum]
+  simp only [Pi.smul_apply, smul_eq_mul, mul_smul]
 
 /-- Every colour invariant in the span of the components is a multiple of the trace
-  contraction: the one singlet of `8 ⊗ 8`. -/
-theorem exists_smul_traceContraction_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T) {x : B}
-    (hx : x ∈ hT.span)
+  contraction. -/
+theorem exists_smul_traceContraction_of_su3_invariant (hT : IsSU3BiAdjoint B repGauge T)
+    {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
-    ∃ z : ℂ, x = z • hT.traceContraction := by
-  obtain ⟨c, rfl, hc⟩ := hT.exists_eq_contract_of_su3_invariant hx hinv
-  obtain ⟨z, hz⟩ := exists_smul_traceCoeff_of_act_eq hc
-  exact ⟨z, by rw [hz, map_smul, contract_traceCoeff]⟩
+    ∃ z : ℂ, x = z • hT.traceContraction :=
+  exists_smul_sum_diag_of_invariant hT.repGauge_T hx hinv
 
 /-!
 
 ## G. The invariants modulo a stable submodule
 
 The Standard Model files handle many families at once and peel them off one at a time, so
-the classification of section F is wanted modulo a submodule `S` in which the other families
-are parked. A submodule stable under a representation carries the quotient representation
-`quotRep`, and the images of the components form a bi-adjoint family for it, with the image
-of the trace contraction as trace contraction; so section F applies in the quotient, and
-the theorem lifts the result back. Stability of `S` is what makes the quotient
-representation exist, and it cannot be dropped: an unstable line has no invariant but `0`,
-while its sum with the span may carry invariants outside the span. Only stability under
-colour is assumed, which is stability under the colour part `repSU3` of the
-representation, and that is the representation the quotient is taken for.
+the classification is wanted modulo a submodule `S` in which the other families are parked.
+The law descends to the quotient by a colour-stable `S`, so section F applies there, and
+`Family.exists_smul_add_of_mem_sup` lifts the result back.
 
 -/
 
-/-- The representation induced on the quotient by a stable submodule. -/
-noncomputable def quotRep (ρ : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) :
-    Representation ℂ GaugeGroupI (B ⧸ S) where
-  toFun g := S.mapQ S (ρ g) fun y hy => hS g y hy
-  map_one' := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_one, Module.End.one_apply]
-  map_mul' g₁ g₂ := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_mul, Module.End.mul_apply]
-
-/-- The quotient representation on a class is the class of the representation. -/
-lemma quotRep_mkQ {ρ : Representation ℂ GaugeGroupI B} (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) (g : GaugeGroupI) (y : B) :
-    quotRep ρ S hS g (S.mkQ y) = S.mkQ (ρ g y) := rfl
-
-/-- The images of the components in the quotient by a stable submodule form a bi-adjoint
-  family. -/
-lemma isSU3BiAdjoint_quotRep (hT : IsSU3BiAdjoint B repGauge T) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) :
-    IsSU3BiAdjoint (B ⧸ S) (quotRep repGauge S hS) fun l => S.mkQ (T l) where
-  repGauge_T g l := by
-    rw [quotRep_mkQ, hT.repGauge_T g l, map_sum]
-    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
-
-/-- The quotient map carries the trace contraction to the trace contraction of the
-  images. -/
-lemma mkQ_traceContraction (hT : IsSU3BiAdjoint B repGauge T) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) :
-    S.mkQ hT.traceContraction = (hT.isSU3BiAdjoint_quotRep S hS).traceContraction := by
-  simp only [traceContraction, map_sum]
+/-- The law descends to the quotient by a submodule stable under the map. -/
+lemma isSU3BiAdjointMat_mapQ {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
+    (hf : IsSU3BiAdjointMat U f T) (S : Submodule ℂ B) (hS : ∀ y ∈ S, f y ∈ S) :
+    IsSU3BiAdjointMat U (S.mapQ S f hS) fun l => S.mkQ (T l) := by
+  intro l
+  dsimp only
+  rw [← LinearMap.comp_apply, Submodule.mapQ_mkQ, LinearMap.comp_apply, hf l, map_sum]
+  exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 /-- A colour invariant of the span of the components joined with a colour-stable submodule
-  `S` is a multiple of the trace contraction up to a colour-invariant remainder in `S`. The
-  remainder is invariant for free, being the difference of two invariants. -/
+  `S` is a multiple of the trace contraction up to a colour-invariant remainder in `S`. -/
 theorem mem_span_sup_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (x : B)
     (S : Submodule ℂ B)
     (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S)
@@ -1121,59 +961,18 @@ theorem mem_span_sup_su3_invariant_iff (hT : IsSU3BiAdjoint B repGauge T) (x : B
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
       ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) y = y := by
-  have hS' : ∀ g : GaugeGroupI, ∀ y ∈ S, repSU3 repGauge g y ∈ S :=
-    (repSU3_stable_iff_su3 repGauge S).2 hS
-  have hQ := hT.toRepSU3.isSU3BiAdjoint_quotRep S hS'
-  have hmk : S.mkQ x ∈ hQ.span := by
-    obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
-    obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
-    refine (hQ.mem_span_iff _).2 ⟨c, ?_⟩
-    rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
-      add_zero, hc, map_sum]
-    exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
-  obtain ⟨c, hc⟩ := hQ.exists_smul_traceContraction_of_su3_invariant hmk
-    fun U => by rw [quotRep_mkQ, repSU3_apply, hinv]
-  rw [← hT.toRepSU3.mkQ_traceContraction S hS'] at hc
-  change S.mkQ x = c • S.mkQ hT.traceContraction at hc
-  refine ⟨c, x - c • hT.traceContraction, ?_, by abel, fun U => ?_⟩
-  · have hker : x - c • hT.traceContraction ∈ LinearMap.ker S.mkQ := by
-      rw [LinearMap.mem_ker, map_sub, map_smul, hc, sub_self]
-    rwa [Submodule.ker_mkQ] at hker
-  · rw [map_sub, map_smul, hinv U, hT.repGauge_traceContraction U]
+  refine Family.exists_smul_add_of_mem_sup T (fun U => repGauge (U, 1, 1)) S hS
+    hT.traceContraction hT.repGauge_traceContraction (fun x hx hinv => ?_) hx hinv
+  obtain ⟨z, hz⟩ := exists_smul_sum_diag_of_invariant
+    (fun U => isSU3BiAdjointMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv
+  exact ⟨z, by rw [hz, traceContraction, map_sum]⟩
 
 /-!
 
 ## Aside: what other files import from here
 
 Nothing from here on is used by the theorem above. Each item exists because another file
-imports it under this name, and each says which. `isMulRep_repSU3` and
-`repSU3_gaugeSU3Perm` serve the siblings `IsSU3BiFundamental` and `IsSU3FunAntiFun`, which
-build the gauge weight decomposition for the colour part of a representation.
-
--/
-
-end IsSU3BiAdjoint
-
-/-- The colour part of a multiplicative representation is multiplicative. -/
-lemma isMulRep_repSU3 {B : Type*} [Ring B] [Algebra ℂ B]
-    {repGauge : Representation ℂ GaugeGroupI B} (hmul : IsMulRep repGauge) :
-    IsMulRep (repSU3 repGauge) :=
-  fun g x y => hmul (GaugeGroupI.toSU3 g, 1, 1) x y
-
-/-- The colour part agrees with the representation at the cyclic colour rotation, which is
-  trivial on isospin and hypercharge. -/
-lemma repSU3_gaugeSU3Perm {B : Type*} [AddCommMonoid B] [Module ℂ B]
-    (repGauge : Representation ℂ GaugeGroupI B) :
-    repSU3 repGauge gaugeSU3Perm = repGauge gaugeSU3Perm := rfl
-
-namespace IsSU3BiAdjoint
-
-set_option linter.unusedVariables false
-
-variable {B : Type*} [AddCommGroup B] [Module ℂ B]
-  {repGauge : Representation ℂ GaugeGroupI B} {T : (Fin 2 → Fin 8) → B}
-
-/-!
+imports it under this name, and each says which.
 
 ## Aside: the weight basis of the adjoint, for `MassDimEight` and `IsSU3Adjoint`
 
@@ -1348,6 +1147,35 @@ lemma span_eq_wtSpan : hT.span = hT.wtSpan := by
   · rw [span, biVec]
     exact sum_mem fun d _ => Submodule.smul_mem _ _
       (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
+
+/-!
+
+## Aside: the quotient representation, for `MassDimEight`
+
+A submodule stable under a representation of the whole gauge group carries the induced
+representation on the quotient. The theorem above needs only the induced maps
+`Submodule.mapQ`; `MassDimEight` uses the representation.
+
+-/
+
+/-- The representation induced on the quotient by a stable submodule. -/
+noncomputable def quotRep (ρ : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) :
+    Representation ℂ GaugeGroupI (B ⧸ S) where
+  toFun g := S.mapQ S (ρ g) fun y hy => hS g y hy
+  map_one' := by
+    ext y
+    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
+      Submodule.mapQ_apply, map_one, Module.End.one_apply]
+  map_mul' g₁ g₂ := by
+    ext y
+    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
+      Submodule.mapQ_apply, map_mul, Module.End.mul_apply]
+
+/-- The quotient representation on a class is the class of the representation. -/
+lemma quotRep_mkQ {ρ : Representation ℂ GaugeGroupI B} (S : Submodule ℂ B)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) (g : GaugeGroupI) (y : B) :
+    quotRep ρ S hS g (S.mkQ y) = S.mkQ (ρ g y) := rfl
 
 /-!
 
