@@ -361,7 +361,6 @@ public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimEight
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimLTEight
-public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.BoostWeightDecomposition
