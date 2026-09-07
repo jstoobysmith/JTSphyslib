@@ -287,7 +287,6 @@ public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.FieldStrength
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.TransformsInAdjoint
-public import Physlib.Particles.StandardModel.GaugeBosons.FieldStrength.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invariants
