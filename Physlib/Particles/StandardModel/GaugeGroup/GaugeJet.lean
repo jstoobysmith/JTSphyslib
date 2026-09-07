@@ -15,30 +15,31 @@ public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Covariant
 
 ## i. Overview
 
-The generic transformation laws of gauge and matter fields are stated against the class
-`GaugeJet G 𝔤 G₀ 𝔤J`. The Standard Model already carries all of its data, for the jet
-gauge group `JetGaugeGroupI` of `SU(3) × SU(2) × U(1)` with jet Lie algebra
-`JetGaugeAlgebra`, global group `GaugeGroupI` and gauge algebra `GaugeAlgebra`.
+The generic transformation laws of gauge and matter fields are stated against a supplied
+gauge-jet package `jets : GaugeJet G 𝔤 G₀ 𝔤J`. The Standard Model already carries all of
+its data, for the jet gauge group `JetGaugeGroupI` of `SU(3) × SU(2) × U(1)` with jet Lie
+algebra `JetGaugeAlgebra`, global group `GaugeGroupI` and gauge algebra `GaugeAlgebra`.
 
-This file installs those existing constructions as the instance
-`StandardModel.instGaugeJet`, and records the rules that compute the generic interface
-back to the Standard Model definition it came from, so the existing Standard Model lemmas
-apply to it unchanged. `GaugeJetLeibniz` is not instantiated here.
+This file packages those existing constructions as the named term
+`StandardModel.gaugeJet`, and records the rules that compute the generic interface back to
+the Standard Model definition it came from, so the existing Standard Model lemmas apply to
+it unchanged. It is a term, not an instance: every generic construction receives it as an
+argument. `GaugeJetLeibniz` is not instantiated here.
 
 ## ii. Key results
 
-- `StandardModel.instGaugeJet` : the Standard Model gauge group as jets of a gauge group.
+- `StandardModel.gaugeJet` : the Standard Model gauge group as jets of a gauge group.
 - `StandardModel.gaugeJet_eval`, `StandardModel.gaugeJet_deriv`,
   `StandardModel.gaugeJet_mc`, … : the generic interface computed back to the Standard
   Model definitions.
 - `StandardModel.gaugeJet_iteratedDeriv` : the generic iterated derivative is the Standard
   Model iterated derivative.
 - `StandardModel.gaugeJet_adjointCoeff`, `StandardModel.gaugeJet_adjointDualCoeff` : the
-  generic base-point adjoint transport at the instance is the existing Standard Model one.
+  generic base-point adjoint transport at this package is the existing Standard Model one.
 
 ## iii. Table of contents
 
-- A. The gauge-jet instance
+- A. The gauge-jet package
 - B. The generic interface in Standard Model terms
   - B.1. The group and Lie algebra data
   - B.2. The derivative, the adjoint action and the Maurer–Cartan form
@@ -54,11 +55,12 @@ open JetGaugeAlgebra
 
 /-!
 
-## A. The gauge-jet instance
+## A. The gauge-jet package
 
-It is registered as a global instance because `G₀` and `𝔤J` are output parameters of the
-class, so the pair `(JetGaugeGroupI, GaugeAlgebra)` determines it, and the library holds
-no other `GaugeJet` instance.
+`GaugeJet` is an ordinary structure, so this is a named term supplied at each use site,
+not an instance found by search. The four carriers do not determine it — a truncated jet
+group over the same gauge group would be a second, equally canonical package — so nothing
+is registered globally.
 
 -/
 
@@ -67,7 +69,7 @@ no other `GaugeJet` instance.
   `GaugeGroupI` and gauge algebra `GaugeAlgebra`. Nothing is redefined. Every data field
   is an existing Standard Model construction and every proof field an existing Standard
   Model lemma. -/
-noncomputable instance instGaugeJet :
+noncomputable def gaugeJet :
     GaugeJet JetGaugeGroupI GaugeAlgebra GaugeGroupI JetGaugeAlgebra where
   eval := JetGaugeGroupI.eval
   ofConstant := JetGaugeGroupI.ofConstant
@@ -101,24 +103,19 @@ the direction in which the existing Standard Model lemmas become applicable.
 -/
 
 @[simp]
-lemma gaugeJet_eval : GaugeJet.eval GaugeAlgebra (G := JetGaugeGroupI) =
-    JetGaugeGroupI.eval := rfl
+lemma gaugeJet_eval : gaugeJet.eval = JetGaugeGroupI.eval := rfl
 
 @[simp]
-lemma gaugeJet_ofConstant : GaugeJet.ofConstant GaugeAlgebra (G := JetGaugeGroupI) =
-    JetGaugeGroupI.ofConstant := rfl
+lemma gaugeJet_ofConstant : gaugeJet.ofConstant = JetGaugeGroupI.ofConstant := rfl
 
 @[simp]
-lemma gaugeJet_evalLie : GaugeJet.evalLie JetGaugeGroupI (𝔤 := GaugeAlgebra) =
-    JetGaugeAlgebra.eval := rfl
+lemma gaugeJet_evalLie : gaugeJet.evalLie = JetGaugeAlgebra.eval := rfl
 
 @[simp]
-lemma gaugeJet_ofConstantLie : GaugeJet.ofConstantLie JetGaugeGroupI (𝔤 := GaugeAlgebra) =
-    JetGaugeAlgebra.ofConstant := rfl
+lemma gaugeJet_ofConstantLie : gaugeJet.ofConstantLie = JetGaugeAlgebra.ofConstant := rfl
 
 @[simp]
-lemma gaugeJet_adjointValue : GaugeJet.adjointValue JetGaugeGroupI (𝔤 := GaugeAlgebra) =
-    GaugeAlgebra.adjoint := rfl
+lemma gaugeJet_adjointValue : gaugeJet.adjointValue = GaugeAlgebra.adjoint := rfl
 
 /-!
 
@@ -127,22 +124,19 @@ lemma gaugeJet_adjointValue : GaugeJet.adjointValue JetGaugeGroupI (𝔤 := Gaug
 -/
 
 @[simp]
-lemma gaugeJet_deriv (μ : Fin 1 ⊕ Fin 3) :
-    GaugeJet.deriv JetGaugeGroupI GaugeAlgebra μ = JetGaugeAlgebra.deriv μ := rfl
+lemma gaugeJet_deriv (μ : Fin 1 ⊕ Fin 3) : gaugeJet.deriv μ = JetGaugeAlgebra.deriv μ := rfl
 
 /-- The generic iterated derivative is the Standard Model iterated derivative, both being
   the same fold of `JetGaugeAlgebra.deriv` over the multiset of directions. -/
 @[simp]
 lemma gaugeJet_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    GaugeJet.iteratedDeriv JetGaugeGroupI GaugeAlgebra s = JetGaugeAlgebra.iteratedDeriv s :=
-  rfl
+    gaugeJet.iteratedDeriv s = JetGaugeAlgebra.iteratedDeriv s := rfl
 
 @[simp]
-lemma gaugeJet_adjoint : GaugeJet.adjoint GaugeAlgebra (G := JetGaugeGroupI) =
-    JetGaugeAlgebra.adjoint := rfl
+lemma gaugeJet_adjoint : gaugeJet.adjoint = JetGaugeAlgebra.adjoint := rfl
 
 @[simp]
-lemma gaugeJet_mc : GaugeJet.mc GaugeAlgebra (G := JetGaugeGroupI) = maurerCartanForm := rfl
+lemma gaugeJet_mc : gaugeJet.mc = maurerCartanForm := rfl
 
 /-!
 
@@ -156,11 +150,10 @@ covariant-derivative development already uses under the same name.
 
 @[simp]
 lemma gaugeJet_adjointCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    _root_.IsGaugeField.adjointCoeff (𝔤 := GaugeAlgebra) U x = IsGaugeField.adjointCoeff U x :=
-  rfl
+    _root_.IsGaugeField.adjointCoeff gaugeJet U x = IsGaugeField.adjointCoeff U x := rfl
 
 @[simp]
 lemma gaugeJet_adjointDualCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    _root_.adjointDualCoeff (𝔤 := GaugeAlgebra) U x = adjointDualCoeff U x := rfl
+    _root_.adjointDualCoeff gaugeJet U x = adjointDualCoeff U x := rfl
 
 end StandardModel

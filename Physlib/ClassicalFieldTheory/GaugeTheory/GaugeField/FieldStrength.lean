@@ -37,7 +37,7 @@ open Matrix MatrixGroups TensorProduct
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable [GaugeJet G 𝔤 G₀ 𝔤J]
+variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
 
 namespace IsGaugeField
 
@@ -149,72 +149,72 @@ lemma fieldStrength_swap
   the commutator (`repGauge_commutatorFam`) through the coassociativity and swap of
   the antidiagonal, and the derived Maurer–Cartan shifts cancel the bracket-shift
   convolution through the all-orders structural equation. -/
-theorem repGauge_fieldStrength (hA : IsGaugeField repLorentz repGauge A)
+theorem repGauge_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (fieldStrength A μ ν s φ) =
       (s.antidiagonal.map fun p =>
-        fieldStrength A μ ν p.2 (adjointDualCoeff U⁻¹ p.1 φ)).sum := by
+        fieldStrength A μ ν p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum := by
   have hL : repGauge U (fieldStrength A μ ν s φ) =
       repGauge U (A (μ ::ₘ s) ν φ) - repGauge U (A (ν ::ₘ s) μ φ)
       + repGauge U (commutatorFam A μ ν s φ) := by
     rw [fieldStrength_apply, map_add, map_sub]
   have hR : (s.antidiagonal.map fun p =>
-      fieldStrength A μ ν p.2 (adjointDualCoeff U⁻¹ p.1 φ)).sum =
+      fieldStrength A μ ν p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
-        A (μ ::ₘ p.2) ν (adjointDualCoeff U⁻¹ p.1 φ)).sum
+        A (μ ::ₘ p.2) ν (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
       - (s.antidiagonal.map fun p =>
-        A (ν ::ₘ p.2) μ (adjointDualCoeff U⁻¹ p.1 φ)).sum
+        A (ν ::ₘ p.2) μ (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
-        commutatorFam A μ ν p.2 (adjointDualCoeff U⁻¹ p.1 φ)).sum := by
+        commutatorFam A μ ν p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_sub, ← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [fieldStrength_apply]
   have hcancel₁ : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A p.2 ν (adjointDualCoeff U⁻¹ q.2
-          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-            (GaugeJet.iteratedDeriv G 𝔤 q.1 (GaugeJet.mc 𝔤 (G := G) U⁻¹ μ)))))).sum).sum =
+        A p.2 ν (adjointDualCoeff jets U⁻¹ q.2
+          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+            (jets.iteratedDeriv q.1 (jets.mc U⁻¹ μ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
-        A r.2 ν (adjointDualCoeff U⁻¹ r.1
-          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-            (GaugeJet.iteratedDeriv G 𝔤 p.1 (GaugeJet.mc 𝔤 (G := G) U⁻¹ μ)))))).sum).sum :=
+        A r.2 ν (adjointDualCoeff jets U⁻¹ r.1
+          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+            (jets.iteratedDeriv p.1 (jets.mc U⁻¹ μ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      A c ν (adjointDualCoeff U⁻¹ b
-        (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-          (GaugeJet.iteratedDeriv G 𝔤 a (GaugeJet.mc 𝔤 (G := G) U⁻¹ μ))))))
+      A c ν (adjointDualCoeff jets U⁻¹ b
+        (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+          (jets.iteratedDeriv a (jets.mc U⁻¹ μ))))))
   have hcancel₂ : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A p.2 μ (adjointDualCoeff U⁻¹ q.2
-          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-            (GaugeJet.iteratedDeriv G 𝔤 q.1 (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν)))))).sum).sum =
+        A p.2 μ (adjointDualCoeff jets U⁻¹ q.2
+          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+            (jets.iteratedDeriv q.1 (jets.mc U⁻¹ ν)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A q.2 μ (adjointDualCoeff U⁻¹ q.1
-          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-            (GaugeJet.iteratedDeriv G 𝔤 p.2 (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν)))))).sum).sum := by
+        A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
+          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+            (jets.iteratedDeriv p.2 (jets.mc U⁻¹ ν)))))).sum).sum := by
     refine (Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      A c μ (adjointDualCoeff U⁻¹ b
-        (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-          (GaugeJet.iteratedDeriv G 𝔤 a (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν))))))).trans ?_
+      A c μ (adjointDualCoeff jets U⁻¹ b
+        (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+          (jets.iteratedDeriv a (jets.mc U⁻¹ ν))))))).trans ?_
     exact Multiset.sum_antidiagonal_swap s (fun a b =>
       (b.antidiagonal.map fun q =>
-        A q.2 μ (adjointDualCoeff U⁻¹ q.1
-          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (GaugeJet.evalLie G (𝔤 := 𝔤)
-            (GaugeJet.iteratedDeriv G 𝔤 a (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν)))))).sum)
+        A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
+          (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
+            (jets.iteratedDeriv a (jets.mc U⁻¹ ν)))))).sum)
   set Θ : 𝔤 →+ B := ((algebraMap ℂ B).toAddMonoidHom.comp
     ((Complex.ofRealHom : ℝ →+* ℂ).toAddMonoidHom.comp φ.toAddMonoidHom)) with hΘdef
   have hΘ : ∀ z : 𝔤, algebraMap ℂ B ((φ z : ℝ) : ℂ) = Θ z := fun z => rfl
-  have hconst : Θ (GaugeJet.evalLie G (𝔤 := 𝔤) (GaugeJet.iteratedDeriv G 𝔤 (μ ::ₘ s)
-      (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν))) =
-    Θ (GaugeJet.evalLie G (𝔤 := 𝔤) (GaugeJet.iteratedDeriv G 𝔤 (ν ::ₘ s)
-      (GaugeJet.mc 𝔤 (G := G) U⁻¹ μ)))
+  have hconst : Θ (jets.evalLie (jets.iteratedDeriv (μ ::ₘ s)
+      (jets.mc U⁻¹ ν))) =
+    Θ (jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
+      (jets.mc U⁻¹ μ)))
     - (s.antidiagonal.map fun p =>
-        Θ ⁅GaugeJet.evalLie G (𝔤 := 𝔤) (GaugeJet.iteratedDeriv G 𝔤 p.1
-            (GaugeJet.mc 𝔤 (G := G) U⁻¹ μ)),
-          GaugeJet.evalLie G (𝔤 := 𝔤) (GaugeJet.iteratedDeriv G 𝔤 p.2
-            (GaugeJet.mc 𝔤 (G := G) U⁻¹ ν))⁆).sum := by
+        Θ ⁅jets.evalLie (jets.iteratedDeriv p.1
+            (jets.mc U⁻¹ μ)),
+          jets.evalLie (jets.iteratedDeriv p.2
+            (jets.mc U⁻¹ ν))⁆).sum := by
     rw [eval_iteratedDeriv_maurerCartan_structure U⁻¹ s μ ν, map_sub, map_multiset_sum,
       Multiset.map_map]
     congr 1
@@ -227,17 +227,17 @@ theorem repGauge_fieldStrength (hA : IsGaugeField repLorentz repGauge A)
 /-- **The field strength is an adjoint gauge tensor**: the packaging of
   `repGauge_fieldStrength` as `TransformsInAdjoint` — the base case of the
   covariant-derivative recursion `TransformsInAdjoint.covDerivAdjoint`. -/
-theorem transformsInAdjoint_fieldStrength (hA : IsGaugeField repLorentz repGauge A)
-    (μ ν : Fin 1 ⊕ Fin 3) : TransformsInAdjoint repGauge (fieldStrength A μ ν) :=
+theorem transformsInAdjoint_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
+    (μ ν : Fin 1 ⊕ Fin 3) : TransformsInAdjoint jets repGauge (fieldStrength A μ ν) :=
   fun U φ s => hA.repGauge_fieldStrength U s μ ν φ
 
 /-- The underived transformation law: at `s = 0` the Leibniz convolution collapses to
   the homogeneous law — the field strength transforms by the base-point dual adjoint
   action of `U⁻¹` on the adjoint index. -/
-lemma repGauge_fieldStrength_zero (hA : IsGaugeField repLorentz repGauge A)
+lemma repGauge_fieldStrength_zero (hA : IsGaugeField jets repLorentz repGauge A)
     (U : G) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (fieldStrength A μ ν 0 φ) =
-      fieldStrength A μ ν 0 (adjointDualCoeff U⁻¹ 0 φ) := by
+      fieldStrength A μ ν 0 (adjointDualCoeff jets U⁻¹ 0 φ) := by
   rw [hA.repGauge_fieldStrength U 0 μ ν φ, Multiset.antidiagonal_zero,
     Multiset.map_singleton, Multiset.sum_singleton]
 

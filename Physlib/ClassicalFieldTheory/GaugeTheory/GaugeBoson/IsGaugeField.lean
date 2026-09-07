@@ -14,7 +14,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 The symbols `∂_s A_μ^φ` of the algebra of gauge-boson jets, complexified, satisfy the
 transformation laws `IsGaugeField` of a gauge field: the Lorentz law from `IsLorentzDeriv`, and
 the gauge law from the action of the jet gauge group constructed in `GaugeAction`. This holds
-for any `GaugeJet` with the Taylor–Leibniz rule `GaugeJetLeibniz`.
+for any gauge-jet package `jets` with the Taylor–Leibniz rule `GaugeJetLeibniz jets`.
 -/
 
 @[expose] public section
@@ -23,8 +23,8 @@ set_option linter.unusedSectionVars false
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable [GaugeJet G 𝔤 G₀ 𝔤J]
-variable [GaugeJetLeibniz G 𝔤 G₀ 𝔤J]
+variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
+variable [GaugeJetLeibniz jets]
 
 set_option maxHeartbeats 1000000
 
@@ -66,12 +66,13 @@ lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
 
 -/
 
+variable (jets) in
 /-- **The complexified gauge-boson jet algebra is a gauge field**: its derivative symbols
   are those of a Lorentz covector, transform under the jet gauge group by the all-orders
   Leibniz convolution of the adjoint Taylor coefficients plus the Maurer–Cartan shift, and
   the gauge action is multiplicative. -/
 theorem isGaugeField :
-    IsGaugeField (complexRepLorentzGroup 𝔤) (complexRepJet G 𝔤) (gaugeField 𝔤) where
+    IsGaugeField jets (complexRepLorentzGroup 𝔤) (complexRepJet jets) (gaugeField 𝔤) where
   lorentz_apply Λ n l μ φ := by
     calc (complexRepLorentzGroup 𝔤) Λ ((gaugeField 𝔤) (List.ofFn l) μ φ)
         = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),

@@ -19,7 +19,7 @@ local Lagrangian sees of it is its *jet* at the base point. The jet gauge transf
 form a group `G`, and their infinitesimal counterparts a Lie algebra `𝔤J` over `ℝ`, with the
 value at the base point given by `eval : G →* G₀` and `evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤`.
 
-This file records, as the class `GaugeJet G 𝔤 G₀ 𝔤J`, exactly the structure of this
+This file records, as the structure `GaugeJet G 𝔤 G₀ 𝔤J`, exactly the structure of this
 situation that the transformation laws of gauge fields and matter fields use:
 
 * the inclusion of constants and evaluation at the base point, on the group and on the
@@ -30,18 +30,25 @@ situation that the transformation laws of gauge fields and matter fields use:
 * the Maurer–Cartan form `mc U μ = i (∂_μ U) U⁻¹`, with its flatness equation
   `mc_structure` and the Leibniz rule `deriv_adjoint` for the adjoint action.
 
+A term `jets : GaugeJet G 𝔤 G₀ 𝔤J` is supplied, not inferred: every construction below,
+and every construction downstream, takes the package it works over as an ordinary
+argument. The four carriers do not determine it — a truncated jet group beside the full
+one is the same four carriers with different data — so there is nothing canonical for
+instance search to choose.
+
 For the Standard Model, `G₀ = SU(3) × SU(2) × U(1)` and `G` is the same group with
 coefficients in the ring of formal power series in the spacetime coordinates
-(`StandardModel.JetGaugeGroupI`); nothing here depends on that choice.
+(`StandardModel.JetGaugeGroupI`), packaged as `StandardModel.gaugeJet`; nothing here
+depends on that choice.
 
 ## ii. Key results
 
-- `GaugeJet` : the class.
+- `GaugeJet` : the structure.
 - `GaugeJet.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset of
   directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz rule
   `iteratedDeriv_bracket`.
-- `GaugeJetLeibniz` : the Taylor–Leibniz rule for the adjoint action, the input to the
-  gauge action on the algebra of gauge-boson symbols.
+- `GaugeJetLeibniz` : the Taylor–Leibniz rule for the adjoint action of a given package,
+  the input to the gauge action on the algebra of gauge-boson symbols.
 - `GaugeJetTruncation` : the filtration of `G` by the order to which a jet is trivial, with
   the vanishing of the derivatives of the adjoint action on its members.
 
@@ -52,9 +59,13 @@ coefficients in the ring of formal power series in the spacetime coordinates
 /-- **Jets of a gauge group.** A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G`
   with Lie algebra of jets `𝔤J`, evaluation at the base point, formal derivatives, the adjoint
   action and the Maurer–Cartan form, subject to the identities used by the transformation
-  laws of gauge and matter fields. -/
-class GaugeJet (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    (G₀ : outParam Type) [Group G₀] (𝔤J : outParam Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J] where
+  laws of gauge and matter fields.
+
+  This is data attached to the four carriers, not a property of them, and it is passed
+  explicitly: the generic theory takes `jets : GaugeJet G 𝔤 G₀ 𝔤J` as an argument rather
+  than searching for it. -/
+structure GaugeJet (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    (G₀ : Type) [Group G₀] (𝔤J : Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J] where
   /-- Evaluation of a gauge jet at the base point. -/
   eval : G →* G₀
   /-- A constant gauge transformation as a jet. -/
@@ -96,17 +107,17 @@ namespace GaugeJet
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  [GaugeJet G 𝔤 G₀ 𝔤J]
+  (jets : GaugeJet G 𝔤 G₀ 𝔤J)
 
 /-- A constant jet evaluates to its constant. -/
-lemma evalLie_ofConstantLie (a : 𝔤) : evalLie G (𝔤 := 𝔤) (ofConstantLie G a) = a := by
-  have h := evalLie_adjoint_ofConstantLie (G := G) (𝔤 := 𝔤) 1 a
+lemma evalLie_ofConstantLie (a : 𝔤) : jets.evalLie (jets.ofConstantLie a) = a := by
+  have h := jets.evalLie_adjoint_ofConstantLie 1 a
   simp only [map_one, Module.End.one_apply] at h
   exact h
 
 /-- A jet with trivial value acts trivially on constants at the base point. -/
-lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : eval 𝔤 U = 1) (a : 𝔤) :
-    evalLie G (adjoint 𝔤 U (ofConstantLie G a)) = a := by
+lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : jets.eval U = 1) (a : 𝔤) :
+    jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = a := by
   rw [evalLie_adjoint_ofConstantLie, hU, map_one, Module.End.one_apply]
 
 /-!
@@ -119,26 +130,24 @@ lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : eval 𝔤 U = 1
   commute (`deriv_comm`). This is what allows iterated derivatives to be indexed by a
   `Multiset` of directions. -/
 instance instRightCommutativeCompDeriv : RightCommutative
-    (fun (D : 𝔤J →ₗ[ℝ] 𝔤J) (μ : Fin 1 ⊕ Fin 3) => D.comp (deriv (G := G) (𝔤 := 𝔤) μ)) where
+    (fun (D : 𝔤J →ₗ[ℝ] 𝔤J) (μ : Fin 1 ⊕ Fin 3) => D.comp (jets.deriv μ)) where
   right_comm D μ ν := by
     refine LinearMap.ext fun a => ?_
-    exact congrArg D (deriv_comm (G := G) (𝔤 := 𝔤) μ ν a)
+    exact congrArg D (jets.deriv_comm μ ν a)
 
-variable (G 𝔤) in
 /-- The iterated formal derivative on the jet Lie algebra, in the (unordered, since
   derivatives commute) directions given by the multiset `μs`. -/
 noncomputable def iteratedDeriv (μs : Multiset (Fin 1 ⊕ Fin 3)) : 𝔤J →ₗ[ℝ] 𝔤J :=
-  μs.foldl (fun D μ => D.comp (deriv (G := G) (𝔤 := 𝔤) μ)) LinearMap.id
+  μs.foldl (fun D μ => D.comp (jets.deriv μ)) LinearMap.id
 
 @[simp]
-lemma iteratedDeriv_zero : iteratedDeriv G 𝔤 (0 : Multiset (Fin 1 ⊕ Fin 3)) = LinearMap.id := by
+lemma iteratedDeriv_zero : jets.iteratedDeriv (0 : Multiset (Fin 1 ⊕ Fin 3)) = LinearMap.id := by
   simp [iteratedDeriv]
 
 lemma iteratedDeriv_cons (μ : Fin 1 ⊕ Fin 3) (μs : Multiset (Fin 1 ⊕ Fin 3)) :
-    iteratedDeriv G 𝔤 (μ ::ₘ μs) = (deriv (G := G) (𝔤 := 𝔤) μ).comp (iteratedDeriv G 𝔤 μs) := by
+    jets.iteratedDeriv (μ ::ₘ μs) = (jets.deriv μ).comp (jets.iteratedDeriv μs) := by
   have h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (D : 𝔤J →ₗ[ℝ] 𝔤J),
-      s.foldl (fun D μ => D.comp (deriv (G := G) (𝔤 := 𝔤) μ)) D
-        = D.comp (iteratedDeriv G 𝔤 s) := by
+      s.foldl (fun D μ => D.comp (jets.deriv μ)) D = D.comp (jets.iteratedDeriv s) := by
     intro s
     induction s using Multiset.induction_on with
     | empty => intro D; simp [iteratedDeriv]
@@ -152,7 +161,7 @@ lemma iteratedDeriv_cons (μ : Fin 1 ⊕ Fin 3) (μs : Multiset (Fin 1 ⊕ Fin 3
 /-- The iterated derivative is additive in the multiset of directions: deriving
   along `s + t` is deriving along `t` and then along `s`. -/
 lemma iteratedDeriv_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
-    iteratedDeriv G 𝔤 (s + t) = (iteratedDeriv G 𝔤 s).comp (iteratedDeriv G 𝔤 t) := by
+    jets.iteratedDeriv (s + t) = (jets.iteratedDeriv s).comp (jets.iteratedDeriv t) := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ s ih =>
@@ -161,27 +170,28 @@ lemma iteratedDeriv_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
 
 @[simp]
 lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
-    iteratedDeriv G 𝔤 ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = deriv (G := G) (𝔤 := 𝔤) μ := by
+    jets.iteratedDeriv ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = jets.deriv μ := by
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
     iteratedDeriv_zero, LinearMap.comp_id]
 
 /-- The iterated Leibniz rule for the bracket: the iterated derivative of a bracket
   is the antidiagonal convolution of iterated derivatives of the two arguments. -/
 lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤J) :
-    iteratedDeriv G 𝔤 s ⁅a, b⁆ =
-      (s.antidiagonal.map fun p => ⁅iteratedDeriv G 𝔤 p.1 a, iteratedDeriv G 𝔤 p.2 b⁆).sum := by
+    jets.iteratedDeriv s ⁅a, b⁆ =
+      (s.antidiagonal.map fun p =>
+        ⁅jets.iteratedDeriv p.1 a, jets.iteratedDeriv p.2 b⁆).sum := by
   induction s using Multiset.induction_on with
   | empty => simp [Multiset.antidiagonal_zero]
   | cons κ s ih =>
       rw [iteratedDeriv_cons, LinearMap.comp_apply, ih, map_multiset_sum,
         Multiset.map_map,
         Multiset.map_congr rfl (fun p hp => by
-          rw [Function.comp_apply, deriv_bracket,
-            show deriv (G := G) (𝔤 := 𝔤) κ (iteratedDeriv G 𝔤 p.1 a)
-                = iteratedDeriv G 𝔤 (κ ::ₘ p.1) a from by
+          rw [Function.comp_apply, jets.deriv_bracket,
+            show jets.deriv κ (jets.iteratedDeriv p.1 a)
+                = jets.iteratedDeriv (κ ::ₘ p.1) a from by
               rw [iteratedDeriv_cons]; rfl,
-            show deriv (G := G) (𝔤 := 𝔤) κ (iteratedDeriv G 𝔤 p.2 b)
-                = iteratedDeriv G 𝔤 (κ ::ₘ p.2) b from by
+            show jets.deriv κ (jets.iteratedDeriv p.2 b)
+                = jets.iteratedDeriv (κ ::ₘ p.2) b from by
               rw [iteratedDeriv_cons]; rfl]),
         Multiset.sum_map_add]
       simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
@@ -191,7 +201,7 @@ lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤J) :
 /-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
   directions. -/
 lemma iteratedDeriv_ofConstantLie_of_ne_zero {p : Multiset (Fin 1 ⊕ Fin 3)} (hp : p ≠ 0)
-    (a : 𝔤) : iteratedDeriv G 𝔤 p (ofConstantLie G a) = 0 := by
+    (a : 𝔤) : jets.iteratedDeriv p (jets.ofConstantLie a) = 0 := by
   induction p using Multiset.induction_on with
   | empty => exact absurd rfl hp
   | cons μ t ih =>
@@ -210,23 +220,23 @@ end GaugeJet
 
 -/
 
-/-- **The Taylor–Leibniz rule for the adjoint action**: the base-point Taylor coefficients
-  of `Ad_U Y` are the antidiagonal convolution of the Taylor coefficients of `Ad_U` — the
-  `evalLie ∘ ∂_p ∘ Ad_U ∘ ofConstantLie` of the covariance machinery — with those of `Y`.
-  This is what makes the gauge action on the algebra of gauge-boson symbols a
-  representation; for a matrix group it is the Leibniz rule for products of matrices of
-  power series. -/
-class GaugeJetLeibniz (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    (G₀ : outParam Type) [Group G₀] (𝔤J : outParam Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    [GaugeJet G 𝔤 G₀ 𝔤J] where
+/-- **The Taylor–Leibniz rule for the adjoint action** of a gauge-jet package `jets`: the
+  base-point Taylor coefficients of `Ad_U Y` are the antidiagonal convolution of the Taylor
+  coefficients of `Ad_U` — the `evalLie ∘ ∂_p ∘ Ad_U ∘ ofConstantLie` of the covariance
+  machinery — with those of `Y`. This is what makes the gauge action on the algebra of
+  gauge-boson symbols a representation; for a matrix group it is the Leibniz rule for
+  products of matrices of power series.
+
+  It is an extra law of one package, so `jets` is its only explicit parameter and the
+  carriers are read off from it. -/
+class GaugeJetLeibniz {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : GaugeJet G 𝔤 G₀ 𝔤J) where
   evalLie_iteratedDeriv_adjoint : ∀ (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J),
-    GaugeJet.evalLie G (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J)
-        (GaugeJet.iteratedDeriv G 𝔤 x (GaugeJet.adjoint 𝔤 (G := G) (G₀ := G₀) (𝔤J := 𝔤J) U Y))
-      = (x.antidiagonal.map fun p => GaugeJet.evalLie G (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J)
-          (GaugeJet.iteratedDeriv G 𝔤 p.1 (GaugeJet.adjoint 𝔤 (G := G) (G₀ := G₀) (𝔤J := 𝔤J) U
-            (GaugeJet.ofConstantLie G (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J)
-              (GaugeJet.evalLie G (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J)
-                (GaugeJet.iteratedDeriv G 𝔤 p.2 Y)))))).sum
+    jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y))
+      = (x.antidiagonal.map fun p => jets.evalLie (jets.iteratedDeriv p.1
+          (jets.adjoint U (jets.ofConstantLie
+            (jets.evalLie (jets.iteratedDeriv p.2 Y)))))).sum
 
 /-!
 
@@ -237,15 +247,15 @@ class GaugeJetLeibniz (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlge
 /-- **The truncation filtration of the jet gauge group**: `truncationKer n` is the subgroup
   of jets trivial to order `n`. What is used of it is that on a jet trivial to order `n` all
     derivatives of the adjoint action
-  of order between `1` and `n` vanish at the base point. -/
-class GaugeJetTruncation (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    (G₀ : outParam Type) [Group G₀] (𝔤J : outParam Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    [GaugeJet G 𝔤 G₀ 𝔤J] where
+  of order between `1` and `n` vanish at the base point.
+
+  Like `GaugeJetLeibniz` this is an extra law of one package `jets`, its only explicit
+  parameter. -/
+class GaugeJetTruncation {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : GaugeJet G 𝔤 G₀ 𝔤J) where
   /-- The subgroup of jets trivial to order `n`. -/
   truncationKer : ℕ → Subgroup G
   evalLie_iteratedDeriv_adjoint_ofConstantLie_eq_zero : ∀ {U : G} {n : ℕ},
     U ∈ truncationKer n → ∀ {x : Multiset (Fin 1 ⊕ Fin 3)}, x ≠ 0 → x.card ≤ n →
-    ∀ b : 𝔤, GaugeJet.evalLie (G := G) (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J)
-      (GaugeJet.iteratedDeriv G 𝔤 x
-        (GaugeJet.adjoint (G := G) (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J) U
-          (GaugeJet.ofConstantLie (G := G) (𝔤 := 𝔤) (G₀ := G₀) (𝔤J := 𝔤J) b))) = 0
+    ∀ b : 𝔤, jets.evalLie (jets.iteratedDeriv x (jets.adjoint U (jets.ofConstantLie b))) = 0

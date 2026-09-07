@@ -62,7 +62,7 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable [GaugeJet G 𝔤 G₀ 𝔤J]
+variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 namespace IsGaugeField
@@ -79,15 +79,16 @@ variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual �
 
 -/
 
+variable (jets) in
 /-- The base-point adjoint transport at `x` derivatives, un-dualized: the map on the
   gauge algebra whose transpose is `adjointDualCoeff`. -/
 noncomputable def adjointCoeff (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     𝔤 →ₗ[ℝ] 𝔤 :=
-  (GaugeJet.evalLie G (𝔤 := 𝔤)).toLinearMap ∘ₗ GaugeJet.iteratedDeriv G 𝔤 x ∘ₗ
-    GaugeJet.adjoint 𝔤 (G := G) U ∘ₗ GaugeJet.ofConstantLie G (𝔤 := 𝔤)
+  (jets.evalLie).toLinearMap ∘ₗ jets.iteratedDeriv x ∘ₗ
+    jets.adjoint U ∘ₗ jets.ofConstantLie
 
 lemma adjointDualCoeff_eq_dualMap (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointDualCoeff (𝔤 := 𝔤) U x = (adjointCoeff U x).dualMap := rfl
+    adjointDualCoeff jets U x = (adjointCoeff jets U x).dualMap := rfl
 
 /-- The base-point Taylor coefficient of the representation: include the constant
   vector into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at
@@ -316,7 +317,7 @@ set_option maxHeartbeats 1000000 in
   adjoint-indexed family on a linearly-transforming matter family: the action of the
   transformed families plus one `act`-type cross term. This is `repGauge_bracketFam`
   with a homogeneous second slot and the bracket replaced by a general action. -/
-lemma repGauge_actionFam (hA : IsGaugeField repLorentz repGauge A)
+lemma repGauge_actionFam (hA : IsGaugeField jets repLorentz repGauge A)
     (U : G) {f f' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     {g g' : Module.Dual ℂ V →ₗ[ℂ] B} {cf : 𝔤}
     (hf : ∀ ψ : Module.Dual ℝ 𝔤,
@@ -666,19 +667,19 @@ end Action
 
 section Leibniz
 
-variable [GaugeJetLeibniz G 𝔤 G₀ 𝔤J]
+variable [GaugeJetLeibniz jets]
 
 /-- **The adjoint Taylor coefficients are multiplicative up to convolution**: the
   coefficient of a product of jets of gauge transformations is the antidiagonal
   convolution of the coefficients of the factors. -/
 lemma adjointCoeff_mul (U V : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointCoeff (𝔤 := 𝔤) (U * V) x
-      = (x.antidiagonal.map fun p => adjointCoeff U p.1 ∘ₗ adjointCoeff V p.2).sum := by
+    adjointCoeff jets (U * V) x
+      = (x.antidiagonal.map fun p => adjointCoeff jets U p.1 ∘ₗ adjointCoeff jets V p.2).sum := by
   refine LinearMap.ext fun a => ?_
   rw [Multiset.sum_linearMap_apply, Multiset.map_map,
-    show adjointCoeff (U * V) x a
-      = GaugeJet.evalLie G (𝔤 := 𝔤) (GaugeJet.iteratedDeriv G 𝔤 x (GaugeJet.adjoint 𝔤 (G := G) U
-          (GaugeJet.adjoint 𝔤 (G := G) V (GaugeJet.ofConstantLie G (𝔤 := 𝔤) a)))) from by
+    show adjointCoeff jets (U * V) x a
+      = jets.evalLie (jets.iteratedDeriv x (jets.adjoint U
+          (jets.adjoint V (jets.ofConstantLie a)))) from by
       rw [adjointCoeff]
       simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_mul,
         Module.End.mul_apply],
@@ -689,7 +690,7 @@ lemma adjointCoeff_mul (U V : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- The adjoint Taylor coefficient of the identity: only the base point survives. -/
 lemma adjointCoeff_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointCoeff (𝔤 := 𝔤) (1 : G) p = if p = 0 then LinearMap.id else 0 := by
+    adjointCoeff jets (1 : G) p = if p = 0 then LinearMap.id else 0 := by
   refine LinearMap.ext fun a => ?_
   rw [adjointCoeff]
   simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_one,
@@ -697,7 +698,7 @@ lemma adjointCoeff_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
   rcases eq_or_ne p 0 with rfl | hp
   · rw [GaugeJet.iteratedDeriv_zero, LinearMap.id_apply, GaugeJet.evalLie_ofConstantLie,
       if_pos rfl, LinearMap.id_apply]
-  · rw [GaugeJet.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, if_neg hp,
+  · rw [jets.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, if_neg hp,
       LinearMap.zero_apply]
 
 end Leibniz
