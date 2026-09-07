@@ -275,9 +275,6 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.LeptonSector.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetComponentSpace
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
