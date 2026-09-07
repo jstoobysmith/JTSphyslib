@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 public import Physlib.Particles.StandardModel.IsCovStandardModel.Basic
-public import Physlib.Particles.StandardModel.AlgebraRealization.CovariantDeriv
+public import Physlib.Particles.StandardModel.AlgebraRealization.CovFieldAlgebra.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.MassWeight.Basic
 /-!
 # From the jet Standard Model to its covariant form
@@ -35,7 +35,7 @@ which grades the algebra by the weight eigenspaces of `massWeightPoly` and pushe
 grading through the recursion defining a covariant derivative; their statistics are
 section J, which reads them off the statistics of the bare symbols because each term
 of a tower carries exactly one bare matter symbol. Their Lorentz transformation laws
-are section O of [`CovariantDeriv.lean`](CovariantDeriv.lean): each follows from the
+are section L of [`CovariantDeriv.lean`](CovariantDeriv.lean): each follows from the
 Lorentz law
 `AlgebraRealization` records for the corresponding bare symbols, together with the fact
 that the gauge-algebra action on the value space commutes with the Lorentz action on
@@ -86,7 +86,7 @@ it. So `isCovStandardModel` is unconditional.
 
 The classification of jet-gauge invariants that section D consumes is
 `AlgebraRealization.invariant_mem_adjoin_covDeriv`, proved in
-[`AlgebraRealization/CovariantDeriv.lean`](CovariantDeriv.lean); the splitting of a gauge
+[`CovFieldAlgebra/Basic.lean`](CovFieldAlgebra/Basic.lean); the splitting of a gauge
 jet into a pure jet and a constant jet is
 `JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant`. The
 target structure and its three sectors are
@@ -241,8 +241,9 @@ lemma repJet_algebraMap (U : JetGaugeGroupI) (c : ℂ) :
   rw [Algebra.algebraMap_eq_smul_one, map_smul, hone]
 
 include h in
-/-- Pure gauge jets fix the covariant generators: this is section M of
-  `AlgebraRealization.CovariantDeriv` together with the field-strength case of section K. -/
+/-- Pure gauge jets fix the covariant generators: this is section L of
+  `AlgebraRealization.CovariantDeriv` together with the field-strength case of
+  `AlgebraRealization.CovFieldAlgebra.Basic`. -/
 lemma repJet_eq_of_mem_covGenerators_of_mem_truncationKer_zero
     (U : JetGaugeGroupI.truncationKer 0) {x : B} (hx : x ∈ h.covGenerators) :
     repJet U.1 x = x := by
@@ -290,9 +291,9 @@ lemma repJet_eq_of_mem_covAlgebra_of_mem_truncationKer_zero
 
 Every gauge jet splits as a pure jet times a constant jet. On the covariant algebra the
 pure part acts trivially, so only the constant part — the global gauge group — is left.
-In the other direction the classification of section N of
-`AlgebraRealization.CovariantDeriv` puts every jet-invariant of the field algebra inside the
-covariant algebra. Together: on the field algebra, jet invariance is membership of the
+In the other direction the classification `AlgebraRealization.invariant_mem_adjoin_covDeriv`
+of `AlgebraRealization.CovFieldAlgebra.Basic` puts every jet-invariant of the field algebra
+inside the covariant algebra. Together: on the field algebra, jet invariance is membership of the
 covariant algebra plus global invariance.
 
 -/
@@ -2282,7 +2283,7 @@ lemma covBarE_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
 
 Everything above assembles into an `IsCovStandardModel` for the covariant towers,
 acted on by the global gauge group and the Lorentz group. The Lorentz laws of the
-matter towers are section O of [`CovariantDeriv.lean`](CovariantDeriv.lean); the one for
+matter towers are section L of [`CovariantDeriv.lean`](CovariantDeriv.lean); the one for
 the field-strength tower is `repLorentz_covF` just below, which is
 `IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength` read in the
 ordered-tuple indexing.
@@ -2306,7 +2307,7 @@ lemma repLorentz_covF (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3
 include h in
 /-- The covariant form of the Standard Model. Every gauge-equivariance, Lorentz,
   mass-weight and commutation obligation of `IsCovStandardModel` is discharged from
-  `AlgebraRealization`: the Lorentz laws of the matter towers are section O of
+  `AlgebraRealization`: the Lorentz laws of the matter towers are section L of
   `CovariantDeriv.lean`, the one of the field-strength tower is `repLorentz_covF`. -/
 theorem isCovStandardModel :
     IsCovStandardModel B (repGlobal repJet) h.repGlobal_mul repLorentz h.repLorentz_mul

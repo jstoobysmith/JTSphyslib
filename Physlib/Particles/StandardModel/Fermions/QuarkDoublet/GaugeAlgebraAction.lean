@@ -12,6 +12,7 @@ public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.LinearAlgebra.Matrix.Kronecker
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
+public import Physlib.Mathematics.TensorProductComm
 /-!
 # The infinitesimal gauge action on the quark doublet
 
@@ -762,6 +763,41 @@ theorem isInfinitesimalActionOf :
     rfl
 
 end InfinitesimalAction
+
+/-!
+
+## D. The gauge action commutes with the Lorentz action
+
+-/
+
+/-- The infinitesimal gauge action on the quark doublet acts on the combined colour–weak
+  factor, the Lorentz action on the Weyl factor, so the two commute. -/
+lemma gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : QuarkDoublet) :
+    QuarkDoublet.gaugeAlgebraAction c (QuarkDoublet.repLorentzGroup Λ v) =
+      QuarkDoublet.repLorentzGroup Λ (QuarkDoublet.gaugeAlgebraAction c v) := by
+  have hg : ∀ x : QuarkDoublet, QuarkDoublet.colourWeakValLinEquiv
+      (QuarkDoublet.gaugeAlgebraAction c x) =
+      LinearMap.lTensor Fermion.LeftHandedWeyl
+        (Matrix.toLpLinAlgEquiv 2 (QuarkDoublet.actionMatrix c))
+        (QuarkDoublet.colourWeakValLinEquiv x) := fun x => by
+    rw [show QuarkDoublet.gaugeAlgebraAction c x =
+      QuarkDoublet.colourWeakEnd (QuarkDoublet.actionMatrix c) x from rfl,
+      QuarkDoublet.colourWeakEnd_apply_mk, LinearEquiv.apply_symm_apply]
+    rfl
+  have hl : ∀ x : QuarkDoublet, QuarkDoublet.colourWeakValLinEquiv
+      (QuarkDoublet.repLorentzGroup Λ x) =
+      TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ) LinearMap.id
+        (QuarkDoublet.colourWeakValLinEquiv x) := fun x => by
+    have h1 : QuarkDoublet.valLinEquiv (QuarkDoublet.repLorentzGroup Λ x) =
+        TensorProduct.map (TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ) LinearMap.id)
+          LinearMap.id (QuarkDoublet.valLinEquiv x) := rfl
+    simp only [QuarkDoublet.colourWeakValLinEquiv, LinearEquiv.trans_apply, h1]
+    exact congr_assoc_map_id_comm _ _ _
+  refine QuarkDoublet.colourWeakValLinEquiv.injective ?_
+  rw [hg (QuarkDoublet.repLorentzGroup Λ v), hl v,
+    hl (QuarkDoublet.gaugeAlgebraAction c v), hg v]
+  exact lTensor_map_id_comm _ _ _
 
 end QuarkDoublet
 

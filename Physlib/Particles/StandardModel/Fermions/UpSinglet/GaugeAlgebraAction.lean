@@ -11,6 +11,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeA
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
+public import Physlib.Mathematics.TensorProductComm
 /-!
 # The infinitesimal gauge action on the up-type singlet
 
@@ -624,6 +625,21 @@ theorem isInfinitesimalActionOf :
     rfl
 
 end InfinitesimalAction
+
+/-!
+
+## D. The gauge action commutes with the Lorentz action
+
+-/
+
+/-- The infinitesimal gauge action on the up-type singlet acts on the colour factor, the
+  Lorentz action on the Weyl factor, so the two commute. -/
+lemma gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : UpSinglet) :
+    UpSinglet.gaugeAlgebraAction c (UpSinglet.repLorentzGroup Λ v) =
+      UpSinglet.repLorentzGroup Λ (UpSinglet.gaugeAlgebraAction c v) :=
+  UpSinglet.valLinEquiv.injective
+    (lTensor_map_id_comm _ (Fermion.RightHandedWeyl.rep Λ) (UpSinglet.valLinEquiv v))
 
 end UpSinglet
 

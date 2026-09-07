@@ -11,6 +11,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeA
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
+public import Physlib.Mathematics.TensorProductComm
 /-!
 # The infinitesimal gauge action on the lepton doublet
 
@@ -643,6 +644,21 @@ theorem isInfinitesimalActionOf :
     rfl
 
 end InfinitesimalAction
+
+/-!
+
+## C. The gauge action commutes with the Lorentz action
+
+-/
+
+/-- The infinitesimal gauge action on the lepton doublet acts on the weak factor, the
+  Lorentz action on the Weyl factor, so the two commute. -/
+lemma gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : LeptonDoublet) :
+    LeptonDoublet.gaugeAlgebraAction c (LeptonDoublet.repLorentzGroup Λ v) =
+      LeptonDoublet.repLorentzGroup Λ (LeptonDoublet.gaugeAlgebraAction c v) :=
+  LeptonDoublet.valLinEquiv.injective
+    (lTensor_map_id_comm _ (Fermion.LeftHandedWeyl.rep Λ) (LeptonDoublet.valLinEquiv v))
 
 end LeptonDoublet
 

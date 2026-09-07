@@ -540,6 +540,19 @@ theorem isInfinitesimalActionOf :
 
 end InfinitesimalAction
 
+/-!
+
+## C. The gauge action commutes with the Lorentz action
+
+-/
+
+/-- The infinitesimal gauge action on the Higgs commutes with the Lorentz action, which is
+  trivial. -/
+lemma gaugeAlgebraAction_comm_repLorentz (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : HiggsVec) :
+    HiggsVec.gaugeAlgebraAction c ((Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ v) =
+      (Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ (HiggsVec.gaugeAlgebraAction c v) := by
+  simp
+
 end HiggsVec
 
 end StandardModel

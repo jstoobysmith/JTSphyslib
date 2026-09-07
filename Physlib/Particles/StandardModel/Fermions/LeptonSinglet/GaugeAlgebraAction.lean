@@ -52,7 +52,7 @@ namespace StandardModel
 
 namespace LeptonSinglet
 
-open TensorProduct MvPowerSeries
+open TensorProduct MvPowerSeries MatrixGroups
 
 /-!
 
@@ -320,6 +320,22 @@ theorem isInfinitesimalActionOf :
         mul_comm _ _,
       ← hcollapse]
     exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => (hterm p).symm)
+
+/-!
+
+## F. The gauge action commutes with the Lorentz action
+
+-/
+
+/-- The infinitesimal gauge action on the charged-lepton singlet is a scalar, so it
+  commutes with the Lorentz action. -/
+lemma gaugeAlgebraAction_comm_repLorentzGroup (c : GaugeAlgebra) (Λ : SL(2,ℂ))
+    (v : LeptonSinglet) :
+    LeptonSinglet.gaugeAlgebraAction c (LeptonSinglet.repLorentzGroup Λ v) =
+      LeptonSinglet.repLorentzGroup Λ (LeptonSinglet.gaugeAlgebraAction c v) := by
+  show (Complex.I * (-(6 : ℂ) * c.toU1Value)) • (LeptonSinglet.repLorentzGroup Λ v) =
+    LeptonSinglet.repLorentzGroup Λ ((Complex.I * (-(6 : ℂ) * c.toU1Value)) • v)
+  rw [map_smul]
 
 end LeptonSinglet
 
