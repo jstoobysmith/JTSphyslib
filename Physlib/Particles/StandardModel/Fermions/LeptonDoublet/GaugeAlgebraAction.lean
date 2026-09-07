@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi

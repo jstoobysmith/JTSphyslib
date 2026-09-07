@@ -25,7 +25,7 @@ functions `∂_s H_α` and `∂_s H̄_α`, commuting as bosons do.
 
 The file first equips the jets `JetRing ⊗[ℂ] HiggsVec` of the Higgs field with the action
 of the jet gauge group, following the same pattern as the fermion species (see
-`Physlib.Particles.StandardModel.Fermions.DownSinglet`): the `SU(2)` power-series matrix,
+`Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic`): the `SU(2)` power-series matrix,
 scaled by the hypercharge power series `u ^ 3`, acts `JetRing`-linearly through the
 identification `JetRing ⊗[ℂ] HiggsVec ≃ EuclideanSpace JetRing (Fin 2)`. Everything the
 generic bosonic algebra provides — the total derivative, the Lorentz action (trivial: the

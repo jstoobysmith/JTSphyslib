@@ -5,10 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Mathematics.ConjModule
 public import Physlib.Relativity.IsLorentzDeriv

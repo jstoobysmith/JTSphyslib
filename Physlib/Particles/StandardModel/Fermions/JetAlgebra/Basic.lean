@@ -9,11 +9,11 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassDim
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
 /-!
 # The fermionic jet algebra of the Standard Model
 
