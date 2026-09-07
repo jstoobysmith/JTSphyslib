@@ -582,6 +582,7 @@ public import Physlib.Relativity.LorentzGroup.Boosts.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Generalized
 public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Relativity.LorentzGroup.FermionicParity
+public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl

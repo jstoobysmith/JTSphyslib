@@ -22,22 +22,23 @@ The components are vectors `T d` of a complex vector space `B` carrying a repres
 moves them with one factor of the Lorentz matrix per slot (B). `hT.span` is the set of
 their combinations.
 
-One axis does all the work, with a parity argument in place of a certificate. Along a
-spatial axis the four light-cone directions carry boost weights `2`, `-2`, `0`, `0`, the
-two of weight `0` being the two directions transverse to time and to that axis (C). An
-invariant has weight `0`, so it is a combination of light-cone multi-indices of total
-weight `0` (D); in such a multi-index the `+2` and `-2` slots pair off, leaving an odd
-number of the three slots transverse. The half turn about the axis, the rotation by `π`,
-fixes time and the axis and negates the two transverse directions (A), so it multiplies
-each of those multi-indices by `-1` to an odd power, that is by `-1`. An invariant is
-therefore both negated and fixed by it, hence zero (E). Section F divides out `S`.
+An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
+matrices themselves fix (B, from `Invariants.Basic`). One axis then does all the work, with a
+parity argument in place of a certificate. Along a spatial axis the four light-cone directions
+carry boost weights `2`, `-2`, `0`, `0`, and an invariant `c` has no light-cone component of
+nonzero weight. In a multi-index of total weight `0` the `+2` and `-2` slots pair off, leaving
+an odd number of the three slots transverse. The half turn about the axis, the rotation by `π`,
+fixes time and the axis and negates the two transverse directions (A), so it multiplies each
+weight-zero component by `-1` to an odd power, that is by `-1`, and an invariant component both
+fixed and negated is `0` (C). Every light-cone component of `c` vanishes, so `c` does, and with
+it the invariant. Section D divides out `S`.
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C BoostWeight
+open TensorProduct Matrix MatrixGroups SL2C Invariants
 open IsQuadLorentz (quotRep quotRep_mkQ)
 
 /-!
@@ -176,217 +177,77 @@ lemma mem_span_iff (x : B) :
     LinearMap.mem_range]
   simp only [Fintype.linearCombination_apply, eq_comm]
 
-/-!
-
-## C. The light-cone basis along one axis
-
-Recombining the components along the light-cone directions of the axis `i` gives the
-light-cone components `hT.lightCone i c`: they span the same space, are boost
-eigenvectors of weight the total weight of `c`, and the half turn multiplies each by the
-product of the signs of its slots, so it negates exactly those with an odd number of
-transverse slots.
-
--/
-
-set_option linter.unusedVariables false in
-/-- The light-cone component of `T` along axis `i` at the light-cone index `c`; `hT` is
-  present only so it reads `hT.lightCone`. -/
-noncomputable def lightCone (hT : IsTriLorentz B repLorentz T) (i : Fin 3)
-    (c : Fin 3 → Fin 4) : B :=
-  ∑ d : Fin 3 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) • T d
-
-/-- Each light-cone component lies in the span of the components. -/
-lemma lightCone_mem_span (i : Fin 3) (c : Fin 3 → Fin 4) : hT.lightCone i c ∈ hT.span :=
-  sum_mem fun d _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
-
-/-- Each component is recovered from the light-cone components along any axis. -/
-lemma eq_sum_lightCone (i : Fin 3) (d : Fin 3 → Fin 1 ⊕ Fin 3) :
-    T d = ∑ c : Fin 3 → Fin 4,
-      (∏ j, lightConeCoeffInv i (d j) (c j)) • hT.lightCone i c := by
-  calc T d = ∑ e : Fin 3 → Fin 1 ⊕ Fin 3,
-        (∑ c : Fin 3 → Fin 4, (∏ j, lightConeCoeffInv i (d j) (c j)) *
-          (∏ j, lightConeCoeff i (c j) (e j))) • T e := by
-        simp only [sum_prod_lightConeCoeffInv, ite_smul, one_smul, zero_smul,
-          Finset.sum_ite_eq, Finset.mem_univ, if_true]
-    _ = _ := by
-        simp only [lightCone, Finset.smul_sum, smul_smul, Finset.sum_smul]
-        rw [Finset.sum_comm]
-
-/-- The light-cone components along any axis span the same space as the components. -/
-lemma span_eq_lightCone (hT : IsTriLorentz B repLorentz T) (i : Fin 3) :
-    hT.span = ⨆ c, ℂ ∙ hT.lightCone i c := by
-  rw [span]
-  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun c => ?_)
-  · rw [Submodule.span_singleton_le_iff_mem, hT.eq_sum_lightCone i d]
-    exact sum_mem fun c _ => Submodule.smul_mem _ _
-      (Submodule.mem_iSup_of_mem c (Submodule.mem_span_singleton_self _))
-  · rw [Submodule.span_singleton_le_iff_mem]
-    exact hT.lightCone_mem_span i c
-
-/-- The light-cone components are boost eigenvectors: along axis `i` the component at
-  `c` has boost weight the total light-cone weight of `c`. -/
-lemma lightCone_mem_boostWeightSubmodule (i : Fin 3) (c : Fin 3 → Fin 4) :
-    hT.lightCone i c ∈ boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
-  refine mem_boostWeightSubmodule.2 fun t ht => ?_
-  calc repLorentz (SL2C.boostAxis i t ht) (hT.lightCone i c)
-      = ∑ a : Fin 3 → Fin 1 ⊕ Fin 3,
-          (∑ x : Fin 3 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (x j)) *
-            (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j)
-              (x j) : ℝ) : ℂ))) • T a := by
-        simp only [lightCone, map_sum, map_smul, hT.repLorentz_T, Finset.smul_sum,
-          smul_smul]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun a _ => Finset.sum_smul.symm
-    _ = (algebraMap ℝ ℂ) t ^ (∑ j, lightConeWeight (c j)) • hT.lightCone i c := by
-        simp only [sum_prod_lightConeCoeff i c _ ht, lightCone, Finset.smul_sum, smul_smul]
-        rfl
-
-/-- The half turn about the axis `i` acts on the light-cone component at `c` by the
-  product of the signs of its slots. -/
-lemma repLorentz_halfTurn_lightCone (i : Fin 3) (c : Fin 3 → Fin 4) :
-    repLorentz (SL2C.halfTurn i) (hT.lightCone i c)
-      = ((∏ j, lightConeSign (c j) : ℤ) : ℂ) • hT.lightCone i c := by
-  have hstep : ∀ x : Fin 3 → Fin 1 ⊕ Fin 3,
-      (∏ j, lightConeCoeff i (c j) (x j)) • repLorentz (SL2C.halfTurn i) (T x)
-        = ∑ a : Fin 3 → Fin 1 ⊕ Fin 3,
-            ((∏ j, lightConeCoeff i (c j) (x j)) *
-              (∏ j, (((SL2C.toLorentzGroup (SL2C.halfTurn i)).1 (a j)
-                (x j) : ℝ) : ℂ))) • T a := by
-    intro x
-    rw [hT.repLorentz_T, Finset.smul_sum]
-    exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
-  calc repLorentz (SL2C.halfTurn i) (hT.lightCone i c)
-      = ∑ x : Fin 3 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (x j)) •
-          repLorentz (SL2C.halfTurn i) (T x) := by
-        simp only [lightCone, map_sum, map_smul]
-    _ = ∑ a : Fin 3 → Fin 1 ⊕ Fin 3,
-          (∑ x : Fin 3 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (x j)) *
-            (∏ j, (((SL2C.toLorentzGroup (SL2C.halfTurn i)).1 (a j)
-              (x j) : ℝ) : ℂ))) • T a := by
-        simp only [hstep]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun a _ => (Finset.sum_smul).symm
-    _ = ∑ a : Fin 3 → Fin 1 ⊕ Fin 3, (((∏ j, lightConeSign (c j) : ℤ) : ℂ) *
-          (∏ j, lightConeCoeff i (c j) (a j))) • T a :=
-        Finset.sum_congr rfl fun a _ => by
-          rw [sum_prod_halfTurn_lightConeCoeff i c a]
-    _ = ((∏ j, lightConeSign (c j) : ℤ) : ℂ) • hT.lightCone i c := by
-        rw [lightCone, Finset.smul_sum]
-        exact Finset.sum_congr rfl fun a _ => (smul_smul _ _ _).symm
-
-/-!
-
-## D. The weight-zero part of a component
-
-Each component `T e` is the sum of its boost-weight parts `hT.monoComponent i e m`, so a
-vector of weight zero along the axis `i` is the combination of the weight-zero parts
-alone. Those are built from light-cone multi-indices of total weight zero, which the half
-turn negates.
-
--/
-
-/-- The weight-`m` part of `T e` along axis `i`: the weight-`m` terms of `eq_sum_lightCone`. -/
-noncomputable def monoComponent (i : Fin 3) (e : Fin 3 → Fin 1 ⊕ Fin 3) (m : ℤ) : B :=
-  ∑ c ∈ Finset.univ.filter (fun c : Fin 3 → Fin 4 => (∑ s, lightConeWeight (c s)) = m),
-    (∏ s, lightConeCoeffInv i (e s) (c s)) • hT.lightCone i c
-
-/-- The weight-`m` part has boost weight `m`. -/
-lemma monoComponent_mem_boostWeightSubmodule (i : Fin 3) (e : Fin 3 → Fin 1 ⊕ Fin 3)
-    (m : ℤ) : hT.monoComponent i e m ∈ boostWeightSubmodule repLorentz i m := by
-  refine sum_mem fun c hc => Submodule.smul_mem _ _ ?_
-  exact (show (∑ s, lightConeWeight (c s)) = m from (Finset.mem_filter.1 hc).2) ▸
-    hT.lightCone_mem_boostWeightSubmodule i c
-
-/-- The total weight of three slots is even and between `-6` and `6`, a finite check. -/
-lemma sum_lightConeWeight_mem (c : Fin 3 → Fin 4) :
-    (∑ s, lightConeWeight (c s)) ∈ ({-6, -4, -2, 0, 2, 4, 6} : Finset ℤ) := by
-  revert c
-  decide
-
-/-- A component is the sum of its boost-weight parts. -/
-lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 3 → Fin 1 ⊕ Fin 3) :
-    T e = ∑ m ∈ ({-6, -4, -2, 0, 2, 4, 6} : Finset ℤ), hT.monoComponent i e m := by
-  rw [hT.eq_sum_lightCone i e]
-  exact (Finset.sum_fiberwise_of_maps_to (fun c _ => sum_lightConeWeight_mem c) _).symm
-
 include hT in
-/-- A vector of boost weight zero along axis `i` is the combination of the weight-zero
-  parts alone. -/
-lemma eq_sum_monoComponent_zero (i : Fin 3) {x : B}
-    (c : (Fin 3 → Fin 1 ⊕ Fin 3) → ℂ) (hx : x = ∑ e, c e • T e)
-    (hw : x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ e, c e • hT.monoComponent i e 0 := by
-  have hsum : x = ∑ m ∈ ({-6, -4, -2, 0, 2, 4, 6} : Finset ℤ),
-      ∑ e, c e • hT.monoComponent i e m := by
-    rw [hx]
-    calc ∑ e, c e • T e
-        = ∑ e, c e • ∑ m ∈ ({-6, -4, -2, 0, 2, 4, 6} : Finset ℤ),
-            hT.monoComponent i e m :=
-          Finset.sum_congr rfl fun e _ => by rw [← hT.eq_sum_monoComponent_univ i e]
-      _ = _ := by
-          simp only [Finset.smul_sum]
-          exact Finset.sum_comm
-  exact eq_component_zero_of_mem_boostWeightSubmodule
-    (w := fun m => ∑ e, c e • hT.monoComponent i e m) hw
-    (fun m _ => sum_mem fun e _ => Submodule.smul_mem _ _
-      (hT.monoComponent_mem_boostWeightSubmodule i e m))
-    (by decide) hsum
-
-/-- The half turn about the axis `i` negates the weight-zero part of a component: every
-  light-cone multi-index in it has an odd number of transverse slots. -/
-lemma repLorentz_halfTurn_monoComponent_zero (i : Fin 3) (e : Fin 3 → Fin 1 ⊕ Fin 3) :
-    repLorentz (SL2C.halfTurn i) (hT.monoComponent i e 0) = -hT.monoComponent i e 0 := by
-  rw [monoComponent, map_sum, ← neg_one_smul (R := ℂ), Finset.smul_sum]
-  refine Finset.sum_congr rfl fun c hc => ?_
-  rw [map_smul, hT.repLorentz_halfTurn_lightCone i c,
-    prod_lightConeSign_of_sum_lightConeWeight_eq_zero c (Finset.mem_filter.1 hc).2,
-    smul_smul, smul_smul]
-  norm_num [mul_comm]
+/-- An invariant of the span is the contraction of an invariant coefficient tensor. -/
+theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ c : (Fin 3 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
+  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-!
 
-## E. The classification of the Lorentz invariants
+## C. The classification of the Lorentz invariants
 
-One axis suffices. An invariant has boost weight zero along it, so section D writes it
-through the weight-zero parts alone, which the half turn about that axis negates. The
-invariant is therefore both fixed and negated by one Lorentz transformation, so it is
-zero.
+Writing a coefficient tensor in the light-cone basis of one axis leaves only the multi-indices
+of total weight zero, the others being killed by the boost. The half turn about that axis
+negates exactly those, so they vanish too and nothing is left.
 
 -/
+
+/-- The Lorentz matrix of the half turn is diagonal, hence symmetric. -/
+lemma toLorentzGroup_halfTurn_symm (i : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
+    (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 a b
+      = (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 b a := by
+  rw [SL2C.toLorentzGroup_halfTurn_apply, SL2C.toLorentzGroup_halfTurn_apply]
+  by_cases h : a = b
+  · rw [h]
+  · rw [if_neg h, if_neg (Ne.symm h)]
+
+/-- The half turn multiplies a light-cone component by the product of the signs of its slots. -/
+lemma lightConeComponent_act_halfTurn {n : ℕ} (i : Fin 3)
+    (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) :
+    lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 c) κ
+      = ((∏ s, lightConeSign (κ s) : ℤ) : ℂ) * lightConeComponent i c κ := by
+  simp only [lightConeComponent, act, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  have h := sum_prod_halfTurn_lightConeCoeff i κ d
+  simp only [toLorentzGroup_halfTurn_symm i (d _)] at h
+  rw [← mul_assoc, mul_comm _ (c d), ← h, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun a _ => by ring
+
+/-- An invariant coefficient tensor has no weight-zero light-cone component either, the half
+  turn negating those. -/
+lemma lightConeComponent_eq_zero_of_weight_zero {c : (Fin 3 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) (i : Fin 3) {κ : Fin 3 → Fin 4}
+    (hκ : ∑ s, lightConeWeight (κ s) = 0) : lightConeComponent i c κ = 0 := by
+  have h := lightConeComponent_act_halfTurn i c κ
+  rw [hc, prod_lightConeSign_of_sum_lightConeWeight_eq_zero κ hκ] at h
+  push_cast at h
+  linear_combination h / 2
+
+/-- An invariant coefficient tensor is zero: no light-cone component of it survives. -/
+lemma eq_zero_of_isInvariantCoeff {c : (Fin 3 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) : c = 0 := by
+  funext d
+  show c d = 0
+  rw [eq_sum_lightConeComponent 2 c d]
+  refine Finset.sum_eq_zero fun κ _ => ?_
+  by_cases hκ : ∑ s, lightConeWeight (κ s) = 0
+  · rw [lightConeComponent_eq_zero_of_weight_zero hc 2 hκ, mul_zero]
+  · rw [hc.lightConeComponent_eq_zero 2 hκ, mul_zero]
 
 include hT in
 /-- Every Lorentz invariant in the span of the components is zero: three indices carry no
   invariant contraction. -/
 theorem eq_zero_of_invariant {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
-  obtain ⟨c, hc⟩ := (hT.mem_span_iff x).1 hx
-  have hw := mem_boostWeightSubmodule_zero_of_invariant (rep := repLorentz) hinv
-  have h0 : x = ∑ e, c e • hT.monoComponent 2 e 0 :=
-    hT.eq_sum_monoComponent_zero 2 c hc (hw 2)
-  have hneg : repLorentz (SL2C.halfTurn 2) x = -x := by
-    calc repLorentz (SL2C.halfTurn 2) x
-        = ∑ e, c e • repLorentz (SL2C.halfTurn 2) (hT.monoComponent 2 e 0) := by
-          conv_lhs => rw [h0]
-          rw [map_sum]
-          exact Finset.sum_congr rfl fun e _ => map_smul _ _ _
-      _ = ∑ e, c e • -hT.monoComponent 2 e 0 :=
-          Finset.sum_congr rfl fun e _ => by
-            rw [hT.repLorentz_halfTurn_monoComponent_zero 2 e]
-      _ = -x := by
-          rw [h0]
-          simp
-  have hself : x = -x := by
-    conv_lhs => rw [← hinv (SL2C.halfTurn 2)]
-    exact hneg
-  have htwo : (2 : ℂ) • x = 0 := by
-    rw [two_smul]
-    exact add_eq_zero_iff_eq_neg.2 hself
-  simpa using htwo
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
+  simp [eq_zero_of_isInvariantCoeff hc]
 
 /-!
 
-## F. The classification modulo a Lorentz-stable submodule
+## D. The classification modulo a Lorentz-stable submodule
 
 A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`, that is `B` with
 `S` declared zero: the classes of the components again form a triple Lorentz tensor, so

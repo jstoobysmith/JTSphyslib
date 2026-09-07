@@ -5,9 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LightConeDeriv
+public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 public import Physlib.Mathematics.LeviCivita.Basic
-public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 -- Not used here; `Peeling` reaches it through this file.
 public import Physlib.Relativity.IsLorentzDeriv
@@ -44,7 +43,7 @@ integer equation left being solved by one checked matrix identity (F, G).
 
 namespace Lorentz
 
-open Matrix MatrixGroups SL2C BoostWeight
+open Matrix MatrixGroups SL2C Invariants
 
 /-!
 
@@ -61,7 +60,8 @@ with `l` free and `a` summed, and transforming a contraction moves its coefficie
 (`repLorentz_sum_smul`): the same `Λ`, never its inverse, but transposed index slots, which is
 what makes `act Λᵀ` the adjoint of `act Λ` in C. Two invariance conditions are therefore in
 play, kept apart by name: `x : B` is Lorentz invariant when `repLorentz g x = x`, and `c` is
-`IsInvariantCoeff` when `act Λ c = c`.
+`IsInvariantCoeff` when `act Λ c = c`. Everything in this paragraph, and section C below, is
+stated for any number of slots in `Invariants.Basic` and used here at four.
 -/
 
 /-- A family `T` of vectors of `B`, one per index vector, which `repLorentz` moves the way the
@@ -95,32 +95,6 @@ lemma mem_span_iff (x : B) :
 /-- Every contraction of the components lies in their span. -/
 lemma sum_smul_mem_span (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) : ∑ d, c d • T d ∈ hT.span :=
   (hT.mem_span_iff _).2 ⟨c, rfl⟩
-
-/-- The action of a real `4 × 4` matrix on coefficient tensors, one factor per slot:
-  `(act Λ c) a = ∑_d c_d Λ_{a₀ d₀} ⋯ Λ_{a₃ d₃}`, with `a` free and `d` summed. Same `Λ` as on
-  the components, never its inverse, but with the free index in the first slot, not the second. -/
-def act (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ)
-    (a : Fin 4 → Fin 1 ⊕ Fin 3) : ℂ :=
-  ∑ d, c d * ∏ s, ((Λ (a s) (d s) : ℝ) : ℂ)
-
-include hT in
-/-- Transforming a contraction is the same as contracting the transformed coefficient tensor. -/
-lemma repLorentz_sum_smul (g : SL(2,ℂ)) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) :
-    repLorentz g (∑ d, c d • T d) = ∑ a, act (SL2C.toLorentzGroup g).1 c a • T a := by
-  simp only [map_sum, map_smul, hT.repLorentz_T, Finset.smul_sum, smul_smul, act,
-    Finset.sum_smul]
-  exact Finset.sum_comm
-
-/-- A coefficient tensor fixed by `act` of the Lorentz matrix of every `g : SL(2,ℂ)`. -/
-def IsInvariantCoeff (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) : Prop :=
-  ∀ g : SL(2,ℂ), act (SL2C.toLorentzGroup g).1 c = c
-
-include hT in
-/-- Contracting with an invariant coefficient tensor gives a Lorentz invariant vector. -/
-lemma repLorentz_sum_smul_of_isInvariantCoeff {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
-    repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d := by
-  rw [hT.repLorentz_sum_smul, hc g]
 
 /-!
 
@@ -333,7 +307,8 @@ include hT in
 lemma repLorentz_contraction (i : Fin 4) (g : SL(2,ℂ)) :
     repLorentz g (contraction T i) = contraction T i := by
   rw [contraction_eq,
-    hT.repLorentz_sum_smul_of_isInvariantCoeff (isInvariantCoeff_contractionCoeff i)]
+    Invariants.repLorentz_sum_smul_of_isInvariantCoeff hT.repLorentz_T
+      (isInvariantCoeff_contractionCoeff i)]
 
 include hT in
 /-- The outer contraction is Lorentz invariant. -/
@@ -379,67 +354,19 @@ determined by `x` and need not be invariant. Let `K` be the coefficient tensors 
 Give `ℂ^{256}` the standard inner product `∑_d conj(u_d) v_d`, positive definite and unrelated
 to `η`, written `EuclideanSpace ℂ (Fin 4 → Fin 1 ⊕ Fin 3)`, where `WithLp.toLp 2` and `.ofLp`
 only move to and from the plain function type. The complement `Kᗮ` is preserved too, since
-`act Λ` across the inner product becomes `act Λᵀ` (`inner_act_eq_inner_act_transpose`) and `Λᵀ`
+`act Λ` across the inner product becomes `act Λᵀ` (`Invariants.inner_actMat`) and `Λᵀ`
 is again such a matrix, that of `g†`; the action is not unitary, and is not used to be. So keep
 the `Kᗮ` part of `c`: it still contracts to `x`, and acting on it changes it by an element of
-`K` and of `Kᗮ`, hence by `0` (`exists_isInvariantCoeff_of_mem_span`).
+`K` and of `Kᗮ`, hence by `0`. The argument is the same for any number of slots and is carried
+out there, `exists_isInvariantCoeff_of_mem_span` below being the reading of it for four.
 -/
-
-/-- The conjugate transpose `g†`, again in `SL(2,ℂ)`. -/
-def dagger (g : SL(2,ℂ)) : SL(2,ℂ) := ⟨g.1ᴴ, by rw [Matrix.det_conjTranspose, g.2, star_one]⟩
-
-/-- The Lorentz matrix of `g†` is the transpose of that of `g`. -/
-lemma toLorentzGroup_dagger (g : SL(2,ℂ)) :
-    (SL2C.toLorentzGroup (dagger g)).1 = (SL2C.toLorentzGroup g).1ᵀ :=
-  SL2C.toLorentzGroup_conjTranspose rfl
-
-/-- Contraction with the components, as a linear map on the inner product space. -/
-noncomputable def contractₗ (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) :
-    EuclideanSpace ℂ (Fin 4 → Fin 1 ⊕ Fin 3) →ₗ[ℂ] B where
-  toFun c := ∑ d, c.ofLp d • T d
-  map_add' c c' := by
-    simp only [WithLp.ofLp_add, Pi.add_apply, add_smul, Finset.sum_add_distrib]
-  map_smul' z c := by
-    simp only [WithLp.ofLp_smul, Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.smul_sum,
-      smul_smul]
-
-open scoped InnerProductSpace in
-/-- Across the standard inner product the action of a real matrix `Λ` becomes that of `Λᵀ`. -/
-lemma inner_act_eq_inner_act_transpose (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ)
-    (u v : EuclideanSpace ℂ (Fin 4 → Fin 1 ⊕ Fin 3)) :
-    ⟪u, WithLp.toLp 2 (act Λ v.ofLp)⟫_ℂ = ⟪WithLp.toLp 2 (act Λᵀ u.ofLp), v⟫_ℂ := by
-  simp only [PiLp.inner_apply, RCLike.inner_apply, act, Matrix.transpose_apply, map_sum,
-    map_mul, map_prod, Complex.conj_ofReal, Finset.mul_sum, Finset.sum_mul]
-  rw [Finset.sum_comm]
-  exact Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun d _ => by ring
 
 include hT in
 /-- An invariant of the span is the contraction of an invariant coefficient tensor. -/
 theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff x).1 hx
-  have hcontr : ∀ (g : SL(2,ℂ)) (u : EuclideanSpace ℂ (Fin 4 → Fin 1 ⊕ Fin 3)),
-      contractₗ T (WithLp.toLp 2 (act (SL2C.toLorentzGroup g).1 u.ofLp))
-        = repLorentz g (contractₗ T u) :=
-    fun g u => (hT.repLorentz_sum_smul g u.ofLp).symm
-  set K := LinearMap.ker (contractₗ T) with hK
-  obtain ⟨k, hk, k', hk', hkk'⟩ := K.exists_add_mem_mem_orthogonal (WithLp.toLp 2 c)
-  have hx' : ∑ d, c d • T d = contractₗ T k' := by
-    have h := congrArg (contractₗ T) hkk'
-    rwa [map_add, LinearMap.mem_ker.1 hk, zero_add] at h
-  refine ⟨k'.ofLp, fun g => ?_, hx'⟩
-  have h1 : WithLp.toLp 2 (act (SL2C.toLorentzGroup g).1 k'.ofLp) - k' ∈ K := by
-    rw [hK, LinearMap.mem_ker, map_sub, hcontr, ← hx', hinv, hx', sub_self]
-  have h2 : WithLp.toLp 2 (act (SL2C.toLorentzGroup g).1 k'.ofLp) ∈ Kᗮ := by
-    refine (Submodule.mem_orthogonal _ _).2 fun u hu => ?_
-    rw [inner_act_eq_inner_act_transpose, ← toLorentzGroup_dagger]
-    refine Submodule.inner_right_of_mem_orthogonal (K := K) ?_ hk'
-    rw [hK, LinearMap.mem_ker, hcontr, LinearMap.mem_ker.1 hu, map_zero]
-  have h3 : WithLp.toLp 2 (act (SL2C.toLorentzGroup g).1 k'.ofLp) - k' ∈ K ⊓ Kᗮ :=
-    ⟨h1, Submodule.sub_mem _ h2 hk'⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot, sub_eq_zero] at h3
-  exact congrArg WithLp.ofLp h3
+    ∃ c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
+  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-!
 
@@ -510,7 +437,7 @@ instance : DecidablePred IsFlipFixed := fun d =>
   inferInstanceAs (Decidable (∀ k : Fin 3, ∏ s, flipSign k (d s) = 1))
 
 /-- An invariant coefficient tensor vanishes off the flip-fixed index vectors. -/
-lemma IsInvariantCoeff.eq_zero_of_not_isFlipFixed {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
+lemma eq_zero_of_not_isFlipFixed {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
     (hc : IsInvariantCoeff c) {d : Fin 4 → Fin 1 ⊕ Fin 3} (hd : ¬IsFlipFixed d) : c d = 0 := by
   obtain ⟨k, hk⟩ := not_forall.1 hd
   have h := congrFun (hc (flipAxis k)) d
@@ -541,7 +468,7 @@ lemma act_rotationCycle (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin 4 →
   · exact fun h => absurd (Finset.mem_univ _) h
 
 /-- An invariant coefficient tensor is constant on the orbits of the cyclic rotation. -/
-lemma IsInvariantCoeff.apply_cycIdx {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+lemma apply_cycIdx {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
     (d : Fin 4 → Fin 1 ⊕ Fin 3) : c (cycIdx d) = c d := by
   have h := congrFun (hc rotationCycle) (cycIdx d)
   rw [act_rotationCycle, cycIdx_cycIdx_cycIdx] at h
@@ -563,43 +490,6 @@ slot and `lightConeComponent i c κ` contracts `c` against that choice; the boos
 `z`-axis is used below, and nothing claims these elements generate the group: F and G show that
 what they force is enough.
 -/
-
-/-- A light-cone component: `c` contracted against one light-cone direction per slot. -/
-def lightConeComponent (i : Fin 3) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin 4 → Fin 4) : ℂ :=
-  ∑ a, (∏ s, lightConeCoeff i (κ s) (a s)) * c a
-
-/-- The Lorentz matrix of a boost is symmetric. -/
-lemma toLorentzGroup_boostAxis_symm (i : Fin 3) {t : ℝ} (ht : t ≠ 0) (a b : Fin 1 ⊕ Fin 3) :
-    (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 a b
-      = (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 b a :=
-  congrFun (congrFun
-    (SL2C.toLorentzGroup_conjTranspose (SL2C.boostAxis_conjTranspose i t ht).symm) a) b
-
-/-- The boost with parameter `t` multiplies a light-cone component by `t` to the weight of `κ`. -/
-lemma lightConeComponent_act_boostAxis (i : Fin 3) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ)
-    (κ : Fin 4 → Fin 4) {t : ℝ} (ht : t ≠ 0) :
-    lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 c) κ
-      = ((t : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) * lightConeComponent i c κ := by
-  simp only [lightConeComponent, act, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  have h := sum_prod_lightConeCoeff i κ d ht
-  simp only [toLorentzGroup_boostAxis_symm i ht (d _)] at h
-  rw [← mul_assoc, mul_comm _ (c d), ← h, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun a _ => by ring
-
-/-- An invariant coefficient tensor has no light-cone component of nonzero weight. -/
-lemma IsInvariantCoeff.lightConeComponent_eq_zero {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (i : Fin 3) {κ : Fin 4 → Fin 4}
-    (hκ : ∑ s, lightConeWeight (κ s) ≠ 0) :
-    lightConeComponent i c κ = 0 := by
-  have h := lightConeComponent_act_boostAxis i c κ (two_ne_zero (α := ℝ))
-  rw [hc] at h
-  have h2 : ((2 : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) ≠ 1 := by
-    rw [← Complex.ofReal_zpow, Ne, Complex.ofReal_eq_one,
-      zpow_eq_one_iff_right₀ (by norm_num) (by norm_num)]
-    exact hκ
-  exact (mul_left_eq_self₀.1 h.symm).resolve_left h2
 
 /-!
 
@@ -720,17 +610,8 @@ lemma transitionZ_eq_sum (i : Fin 3) :
           simp only [Fin.consEquiv_apply, Fin.sum_univ_succ, Fin.prod_univ_succ, Fin.cons_zero,
             Fin.cons_succ]
 
-/-- A coefficient tensor is recovered from its light-cone components. -/
-lemma eq_sum_lightConeComponent (i : Fin 3) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ)
-    (d : Fin 4 → Fin 1 ⊕ Fin 3) :
-    c d = ∑ κ, (∏ s, lightConeCoeffInv i (d s) (κ s)) * lightConeComponent i c κ := by
-  simp only [lightConeComponent, Finset.mul_sum, ← mul_assoc]
-  rw [Finset.sum_comm]
-  simp only [← Finset.sum_mul, sum_prod_lightConeCoeffInv, ite_mul, one_mul, zero_mul,
-    Finset.sum_ite_eq, Finset.mem_univ, if_true]
-
 /-- An invariant coefficient tensor is its own weight-zero projection. -/
-lemma IsInvariantCoeff.sixteen_mul_eq_sum_transitionZ {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
+lemma sixteen_mul_eq_sum_transitionZ {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
     (hc : IsInvariantCoeff c) (i : Fin 3) (d : Fin 4 → Fin 1 ⊕ Fin 3) :
     16 * c d = ∑ e, ((transitionZ i d e 0 : ℤ) : ℂ) * c e := by
   rw [eq_sum_lightConeComponent i c d, ← Finset.sum_filter_add_sum_filter_not Finset.univ
@@ -820,16 +701,16 @@ noncomputable def ofOrbitCoord (b : Fin 22 → ℂ) (d : Fin 4 → Fin 1 ⊕ Fin
   ∑ k, if d ∈ orbit k then b k else 0
 
 /-- An invariant coefficient tensor is rebuilt from its `22` orbit coordinates. -/
-lemma IsInvariantCoeff.eq_ofOrbitCoord {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
+lemma eq_ofOrbitCoord {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
     c = ofOrbitCoord fun k => c (orbitRep k) := by
   funext d
   by_cases hd : IsFlipFixed d
   · obtain ⟨k, hk⟩ := (isFlipFixed_iff_exists_mem_orbit d).1 hd
     rw [ofOrbitCoord, Finset.sum_eq_single k, if_pos hk,
-      eq_orbitRep_of_mem_orbit hc.apply_cycIdx hk]
+      eq_orbitRep_of_mem_orbit (apply_cycIdx hc) hk]
     · exact fun l _ hl => if_neg fun hdl => hl (eq_of_mem_orbit hdl hk)
     · exact fun h => absurd (Finset.mem_univ k) h
-  · rw [hc.eq_zero_of_not_isFlipFixed hd]
+  · rw [eq_zero_of_not_isFlipFixed hc hd]
     exact (Finset.sum_eq_zero fun k _ =>
       if_neg fun hk => hd ((isFlipFixed_iff_exists_mem_orbit d).2 ⟨k, hk⟩)).symm
 
@@ -901,22 +782,22 @@ lemma orbitMatrix_apply : ∀ k l : Fin 22,
   decide +kernel
 
 /-- The orbit coordinates of an invariant coefficient tensor satisfy `M b = 48 b`. -/
-lemma IsInvariantCoeff.orbitMatrix_mulVec {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
+lemma orbitMatrix_mulVec {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
     (hc : IsInvariantCoeff c) :
     orbitMatrix.map (Int.cast : ℤ → ℂ) *ᵥ (fun k => c (orbitRep k))
       = (48 : ℂ) • fun k => c (orbitRep k) := by
   have h : ∀ d, 16 * c d
       = ∑ l, (∑ e ∈ orbit l, ((transitionZ 2 d e 0 : ℤ) : ℂ)) * c (orbitRep l) := by
     intro d
-    rw [hc.sixteen_mul_eq_sum_transitionZ 2 d]
-    conv_lhs => rw [hc.eq_ofOrbitCoord]
+    rw [sixteen_mul_eq_sum_transitionZ hc 2 d]
+    conv_lhs => rw [eq_ofOrbitCoord hc]
     exact sum_mul_ofOrbitCoord _ _
   funext k
   have h₀ := h (orbitRep k)
   have h₁ := h (cycIdx (orbitRep k))
   have h₂ := h (cycIdx (cycIdx (orbitRep k)))
-  rw [hc.apply_cycIdx] at h₁
-  rw [hc.apply_cycIdx, hc.apply_cycIdx] at h₂
+  rw [apply_cycIdx hc] at h₁
+  rw [apply_cycIdx hc, apply_cycIdx hc] at h₂
   simp only [Matrix.mulVec, dotProduct, Matrix.map_apply, orbitMatrix_apply, Pi.smul_apply,
     smul_eq_mul, Int.cast_sum, Int.cast_add, Finset.sum_add_distrib, add_mul]
   linear_combination -(h₀ + h₁ + h₂)
@@ -972,13 +853,13 @@ lemma certificate :
   decide +kernel
 
 /-- `24` times the orbit coordinates of an invariant tensor is `projector` applied to them. -/
-lemma IsInvariantCoeff.orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+lemma orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
     (k : Fin 22) :
     24 * c (orbitRep k)
       = ∑ i, (contractionOrbit i k : ℂ) * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l) := by
   set b : Fin 22 → ℂ := fun k => c (orbitRep k) with hb
   set M : Matrix (Fin 22) (Fin 22) ℂ := orbitMatrix.map (Int.cast : ℤ → ℂ) with hM
-  have hMb : M *ᵥ b = (48 : ℂ) • b := hc.orbitMatrix_mulVec
+  have hMb : M *ᵥ b = (48 : ℂ) • b := orbitMatrix_mulVec hc
   have hlin : ∀ z : ℂ, (M - z • 1) *ᵥ b = (48 - z) • b := fun z => by
     rw [Matrix.sub_mulVec, hMb, Matrix.smul_mulVec, Matrix.one_mulVec, sub_smul]
   have hquad : (M * M - (44 : ℂ) • M + (192 : ℂ) • 1) *ᵥ b = (384 : ℂ) • b := by
@@ -1022,16 +903,16 @@ lemma IsInvariantCoeff.orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (
   exact mul_left_cancel₀ (by norm_num) hk'
 
 /-- An invariant coefficient tensor is a combination of the four. -/
-theorem IsInvariantCoeff.exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
+theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
     ∃ a : Fin 4 → ℂ, c = fun d => ∑ i, a i * ((contractionCoeff i d : ℤ) : ℂ) := by
   refine ⟨fun i => 24⁻¹ * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l), funext fun d => ?_⟩
   have hfour : ∀ i d, ((contractionCoeff i d : ℤ) : ℂ)
       = ∑ k, if d ∈ orbit k then (contractionOrbit i k : ℂ) else 0 :=
-    fun i d => congrFun (isInvariantCoeff_contractionCoeff i).eq_ofOrbitCoord d
+    fun i d => congrFun (eq_ofOrbitCoord (isInvariantCoeff_contractionCoeff i)) d
   have hb : ∀ k, c (orbitRep k) = 24⁻¹ * ∑ i, (contractionOrbit i k : ℂ)
       * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l) :=
-    fun k => by rw [← hc.orbitCoord_eq]; ring
-  conv_lhs => rw [hc.eq_ofOrbitCoord, ofOrbitCoord]
+    fun k => by rw [← orbitCoord_eq hc]; ring
+  conv_lhs => rw [eq_ofOrbitCoord hc, ofOrbitCoord]
   rw [Finset.sum_congr rfl fun k _ => by rw [hb k]]
   simp only [hfour, Finset.mul_sum, mul_ite, mul_zero]
   rw [Finset.sum_comm]
@@ -1062,7 +943,7 @@ theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
-  obtain ⟨a, rfl⟩ := hc.exists_eq_sum
+  obtain ⟨a, rfl⟩ := exists_eq_sum hc
   refine ⟨a 0, a 1, a 2, a 3, ?_⟩
   rw [← sum_smul_contraction]
   simp only [contraction_eq, Finset.smul_sum, Finset.sum_smul, smul_smul]
@@ -1154,10 +1035,9 @@ theorem mem_span_sup_invariant_iff (x : B) (S : Submodule ℂ B)
 
 ## Aside: what other files import from here
 
-None of this is used above. A vector has weight `m` along the axis `i` when the boost with
-parameter `t` scales it by `t ^ m`, `boostWeightSubmodule` is the space of such vectors, an
-invariant has weight `0` along every axis, and weights are independent. The rest repeats E over
-`ℚ`, sorting the light-cone directions into sectors: raising `2`, lowering `-2`, transverse `0`.
+None of this is used above. It repeats E over `ℚ`, sorting the light-cone directions into
+sectors by weight, raising `2`, lowering `-2` and transverse `0`, which is the form
+`IsBiLorentz` needs.
 -/
 
 /-- The inverse light-cone coefficients of section E over `ℚ`, with the halves kept as halves. -/

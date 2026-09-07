@@ -48,7 +48,7 @@ there is no Dirac mass term.
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C BoostWeight
+open TensorProduct Matrix MatrixGroups SL2C
 open IsQuadLorentz (sum_minkowskiMatrixZ_mul quotRep quotRep_mkQ)
 
 /-!

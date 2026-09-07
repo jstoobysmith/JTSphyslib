@@ -22,14 +22,16 @@ The components are vectors `T a` of a complex vector space `B` carrying a repres
 the group moves the left index by the matrix of `g` and the right index by its complex
 conjugate (C). `hT.span` is the set of their combinations.
 
-The proof follows the four-vector one with the light-cone basis replaced by Weyl weight
-bases. Along a spatial axis the `SL(2,ℂ)` boost is the diagonal `z`-boost conjugated by
-`rotationZToAxis i`, so the columns of that rotation are boost eigenvectors of weight
-`±1` (A), and the four products of a left and a right eigenvector carry weights `2`, `0`,
-`0`, `-2` (B). An invariant has weight `0` along every axis, so it is fixed by the
-weight-zero projection along each (D); averaging the three gives a matrix `M` with
-`M ^ 2 = 2 M` and no eigenvalue `3` (E), so `3 λ ^ 2 - 2 λ` at `λ = M / 3` annihilates
-every invariant (F). Section G divides out `S`.
+An invariant of the span is `∑_a c_a • T a` for a coefficient function `c` that the group
+itself fixes (C, from `Invariants.Basic`), and the proof then follows the four-vector one with
+the light-cone basis replaced by Weyl weight bases. Along a spatial axis the `SL(2,ℂ)` boost is
+the diagonal `z`-boost conjugated by `rotationZToAxis i`, so the columns of that rotation are
+boost eigenvectors of weight `±1` (A). The coefficients transform contragrediently, so their
+weight basis conjugates the left slot and not the right, the opposite of the components; the
+four products of a left and a right eigenvector carry weights `2`, `0`, `0`, `-2` (B). An
+invariant has weight `0` along every axis, so it is fixed by the weight-zero projection along
+each (D); averaging the three gives a matrix `M` with `M ^ 2 = 2 M` (E), and an invariant would
+need `M c = 3 c`, which forces `c = 0` (F). Section G divides out `S`.
 
 A family carrying dual Weyl indices transforms by the contragredient `(Λ⁻¹)ᵀ` on the
 undotted slot and by `(Λ⁻¹)ᴴ` on the dotted one. That law is `IsDualLeftRightWeyl` here;
@@ -41,7 +43,7 @@ its classification, still that there is no invariant, hence no Dirac mass term, 
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C BoostWeight
+open TensorProduct Matrix MatrixGroups SL2C Invariants
 open IsQuadLorentz (quotRep quotRep_mkQ)
 
 /-!
@@ -134,20 +136,17 @@ lemma sum_boostAxis_weylCoeffC (i : Fin 3) (κ β : Fin 2) {t : ℝ} (ht : t ≠
 
 /-!
 
-## B. The weight basis of a left-right pair
+## B. The weight basis of the coefficients of a left-right pair
 
 The two indices are graded independently, so the weight basis of the pair is the tensor
-product of the two, and its weight is the sum of the two Weyl weights.
+product of the two, and its weight is the sum of the two Weyl weights. What is graded here is
+the coefficient function, which transforms contragrediently, so its left slot takes the
+conjugated basis and its right slot the plain one, the opposite of the components.
 
 -/
 
 /-- The boost weight of a pair of Weyl weight indices: the sum of the two. -/
 def pairWeight (κ : Fin 2 × Fin 2) : ℤ := weylWeight κ.1 + weylWeight κ.2
-
-/-- The pair weight takes the values `-2`, `0` and `2`. -/
-lemma pairWeight_mem (κ : Fin 2 × Fin 2) : pairWeight κ ∈ ({-2, 0, 2} : Finset ℤ) := by
-  revert κ
-  decide
 
 /-- The weight-zero pairs are the two mixed pairs. -/
 lemma sum_weightZeroFilter {M : Type*} [AddCommMonoid M] (f : Fin 2 × Fin 2 → M) :
@@ -157,54 +156,53 @@ lemma sum_weightZeroFilter {M : Type*} [AddCommMonoid M] (f : Fin 2 × Fin 2 →
       = {(0, 1), (1, 0)} from by decide, Finset.sum_insert (by decide),
     Finset.sum_singleton]
 
-/-- The axis-`i` weight basis of a left-right pair of indices. -/
+/-- The axis-`i` weight basis of the coefficients of a left-right pair of indices. -/
 def pairCoeff (i : Fin 3) (κ α : Fin 2 × Fin 2) : ℂ :=
-  weylCoeff i κ.1 α.1 * weylCoeffC i κ.2 α.2
+  weylCoeffC i κ.1 α.1 * weylCoeff i κ.2 α.2
 
-/-- The standard basis of a left-right pair written back in the axis-`i` weight
-  basis. -/
+/-- The standard basis of the coefficients written back in the axis-`i` weight basis. -/
 noncomputable def pairCoeffInv (i : Fin 3) (α κ : Fin 2 × Fin 2) : ℂ :=
-  weylCoeffInv i α.1 κ.1 * weylCoeffInvC i α.2 κ.2
+  weylCoeffInvC i α.1 κ.1 * weylCoeffInv i α.2 κ.2
 
 /-- The pair weight basis is a basis: the two coefficient matrices are inverse. -/
 lemma sum_pairCoeffInv_mul (i : Fin 3) (α β : Fin 2 × Fin 2) :
     ∑ κ : Fin 2 × Fin 2, pairCoeffInv i α κ * pairCoeff i κ β
       = if α = β then 1 else 0 := by
-  have hfac : (∑ κ₁, weylCoeffInv i α.1 κ₁ * weylCoeff i κ₁ β.1)
-      * (∑ κ₂, weylCoeffInvC i α.2 κ₂ * weylCoeffC i κ₂ β.2)
+  have hfac : (∑ κ₁, weylCoeffInvC i α.1 κ₁ * weylCoeffC i κ₁ β.1)
+      * (∑ κ₂, weylCoeffInv i α.2 κ₂ * weylCoeff i κ₂ β.2)
       = ∑ κ : Fin 2 × Fin 2, pairCoeffInv i α κ * pairCoeff i κ β := by
     rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
     exact Finset.sum_congr rfl fun κ₁ _ => Finset.sum_congr rfl fun κ₂ _ => by
       simp only [pairCoeff, pairCoeffInv]
       ring
-  rw [← hfac, sum_weylCoeffInv_mul, sum_weylCoeffInvC_mul]
+  rw [← hfac, sum_weylCoeffInvC_mul, sum_weylCoeffInv_mul]
   obtain ⟨α₁, α₂⟩ := α
   obtain ⟨β₁, β₂⟩ := β
   by_cases h1 : α₁ = β₁ <;> by_cases h2 : α₂ = β₂ <;> simp [h1, h2, Prod.mk.injEq]
 
-/-- The pair weight basis diagonalises the axis-`i` boost, with the weight
+/-- The pair weight basis diagonalises the axis-`i` boost on coefficients, with the weight
   `pairWeight`. -/
-lemma sum_boostAxis_pairCoeff (i : Fin 3) (κ a : Fin 2 × Fin 2) {t : ℝ} (ht : t ≠ 0) :
-    ∑ l : Fin 2 × Fin 2, pairCoeff i κ l
+lemma sum_boostAxis_pairCoeff (i : Fin 3) (κ l : Fin 2 × Fin 2) {t : ℝ} (ht : t ≠ 0) :
+    ∑ a : Fin 2 × Fin 2, pairCoeff i κ a
         * ((SL2C.boostAxis i t ht).1 a.1 l.1 * star ((SL2C.boostAxis i t ht).1 a.2 l.2))
-      = ((t : ℝ) : ℂ) ^ (pairWeight κ) * pairCoeff i κ a := by
+      = ((t : ℝ) : ℂ) ^ (pairWeight κ) * pairCoeff i κ l := by
   have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  have hfac : (∑ l₁, (SL2C.boostAxis i t ht).1 a.1 l₁ * weylCoeff i κ.1 l₁)
-      * (∑ l₂, star ((SL2C.boostAxis i t ht).1 a.2 l₂) * weylCoeffC i κ.2 l₂)
-      = ∑ l : Fin 2 × Fin 2, pairCoeff i κ l
+  have hfac : (∑ a₁, star ((SL2C.boostAxis i t ht).1 l.1 a₁) * weylCoeffC i κ.1 a₁)
+      * (∑ a₂, (SL2C.boostAxis i t ht).1 l.2 a₂ * weylCoeff i κ.2 a₂)
+      = ∑ a : Fin 2 × Fin 2, pairCoeff i κ a
         * ((SL2C.boostAxis i t ht).1 a.1 l.1
           * star ((SL2C.boostAxis i t ht).1 a.2 l.2)) := by
     rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
-    exact Finset.sum_congr rfl fun l₁ _ => Finset.sum_congr rfl fun l₂ _ => by
-      simp only [pairCoeff]
-      ring
-  rw [← hfac, sum_boostAxis_weylCoeff i κ.1 a.1 ht, sum_boostAxis_weylCoeffC i κ.2 a.2 ht,
+    refine Finset.sum_congr rfl fun a₁ _ => Finset.sum_congr rfl fun a₂ _ => ?_
+    simp only [pairCoeff, star_boostAxis_apply]
+    ring
+  rw [← hfac, sum_boostAxis_weylCoeffC i κ.1 l.1 ht, sum_boostAxis_weylCoeff i κ.2 l.2 ht,
     pairWeight, pairCoeff, zpow_add₀ htc]
   ring
 
 /-!
 
-## C. Left-right bispinors and the span of their components
+## C. Left-right bispinors, their span, and coefficient functions
 
 `IsLeftRightWeyl B repLorentz T` says the group moves the left index of `T^{α α'}` by the
 matrix of `g` and the right index by its complex conjugate, and `hT.span` is the set of
@@ -239,158 +237,110 @@ lemma mem_span_iff (x : B) :
     LinearMap.mem_range]
   simp only [Fintype.linearCombination_apply, eq_comm]
 
+/-- The action of `g : SL(2,ℂ)` on coefficient functions: the left slot moves by `g` and the
+  right by its conjugate, with the free index first in each factor and the summed one second. -/
+def act (g : SL(2,ℂ)) (c : Fin 2 × Fin 2 → ℂ) (a : Fin 2 × Fin 2) : ℂ :=
+  ∑ d : Fin 2 × Fin 2, c d * (g.1 a.1 d.1 * star (g.1 a.2 d.2))
+
+/-- A coefficient function fixed by every `g : SL(2,ℂ)`. -/
+def IsInvariantCoeff (c : Fin 2 × Fin 2 → ℂ) : Prop := ∀ g : SL(2,ℂ), act g c = c
+
+include hT in
+/-- An invariant of the span is the contraction of an invariant coefficient function: the
+  adjoint of the action of `g` is the action of `g†`. -/
+theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ c : Fin 2 × Fin 2 → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
+  obtain ⟨c, hc, hx'⟩ := Invariants.exists_invariantCoeff_matrix T (fun g => repLorentz g)
+    (fun g a d => g.1 a.1 d.1 * star (g.1 a.2 d.2)) hT.repLorentz_T
+    (fun g => ⟨Invariants.dagger g, fun a d => by
+      simp [Invariants.dagger, Matrix.conjTranspose_apply, mul_comm]⟩)
+    (by rwa [← span]) hinv
+  exact ⟨c, hc, hx'⟩
+
 /-!
 
-## D. The weight grading of the span
+## D. The weight grading of the coefficients
 
-The four products `weightVec i κ` of a left and a right weight vector span the same space
-as the components and are boost eigenvectors along the axis `i`, of weights `2`, `0`, `0`
-and `-2`.
+The four products `pairCoeff i κ` of a left and a right weight covector read off the weight
+components of a coefficient function, and the axis-`i` boost multiplies the component at `κ`
+by `t ^ pairWeight κ`. An invariant function therefore has no component of weight `±2`, and is
+recovered from its two weight-zero components alone.
 
 -/
 
-set_option linter.unusedVariables false in
-/-- The weight component of `T` along axis `i` at the pair `κ` of Weyl weight indices;
-  `hT` is present only so it reads `hT.weightVec`. -/
-noncomputable def weightVec (hT : IsLeftRightWeyl B repLorentz T) (i : Fin 3)
-    (κ : Fin 2 × Fin 2) : B :=
-  ∑ a : Fin 2 × Fin 2, pairCoeff i κ a • T a
+/-- The axis-`i` weight component of a coefficient function at the pair `κ`. -/
+def weightComponent (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ) (κ : Fin 2 × Fin 2) : ℂ :=
+  ∑ a : Fin 2 × Fin 2, pairCoeff i κ a * c a
 
-/-- Each weight component lies in the span of the components. -/
-lemma weightVec_mem_span (i : Fin 3) (κ : Fin 2 × Fin 2) :
-    hT.weightVec i κ ∈ hT.span :=
-  sum_mem fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _))
+/-- The axis-`i` boost multiplies the weight component at `κ` by `t ^ pairWeight κ`. -/
+lemma weightComponent_act_boostAxis (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ)
+    (κ : Fin 2 × Fin 2) {t : ℝ} (ht : t ≠ 0) :
+    weightComponent i (act (SL2C.boostAxis i t ht) c) κ
+      = ((t : ℝ) : ℂ) ^ (pairWeight κ) * weightComponent i c κ := by
+  simp only [weightComponent, act, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  calc ∑ a : Fin 2 × Fin 2, pairCoeff i κ a * (c d * ((SL2C.boostAxis i t ht).1 a.1 d.1
+        * star ((SL2C.boostAxis i t ht).1 a.2 d.2)))
+      = c d * ∑ a : Fin 2 × Fin 2, pairCoeff i κ a * ((SL2C.boostAxis i t ht).1 a.1 d.1
+          * star ((SL2C.boostAxis i t ht).1 a.2 d.2)) := by
+        rw [Finset.mul_sum]
+        exact Finset.sum_congr rfl fun a _ => by ring
+    _ = _ := by rw [sum_boostAxis_pairCoeff i κ d ht]; ring
 
-/-- Each generator is recovered from the weight components along any axis. -/
-lemma eq_sum_weightVec (i : Fin 3) (α : Fin 2 × Fin 2) :
-    T α = ∑ κ : Fin 2 × Fin 2, pairCoeffInv i α κ • hT.weightVec i κ := by
-  calc T α = ∑ β : Fin 2 × Fin 2,
-        (∑ κ : Fin 2 × Fin 2, pairCoeffInv i α κ * pairCoeff i κ β) • T β := by
-        simp only [sum_pairCoeffInv_mul, ite_smul, one_smul, zero_smul,
-          Finset.sum_ite_eq, Finset.mem_univ, if_true]
-    _ = _ := by
-        simp only [weightVec, Finset.smul_sum, smul_smul, Finset.sum_smul]
-        rw [Finset.sum_comm]
+/-- An invariant coefficient function has no weight component of nonzero weight. -/
+lemma weightComponent_eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) (i : Fin 3)
+    {κ : Fin 2 × Fin 2} (hκ : pairWeight κ ≠ 0) : weightComponent i c κ = 0 := by
+  have h := weightComponent_act_boostAxis i c κ (two_ne_zero (α := ℝ))
+  rw [hc] at h
+  have h2 : ((2 : ℝ) : ℂ) ^ (pairWeight κ) ≠ 1 := by
+    rw [← Complex.ofReal_zpow, Ne, Complex.ofReal_eq_one,
+      zpow_eq_one_iff_right₀ (by norm_num) (by norm_num)]
+    exact hκ
+  exact (mul_left_eq_self₀.1 h.symm).resolve_left h2
 
-/-- The weight components along any axis span the same space as the components. -/
-lemma span_eq_weightVec (hT : IsLeftRightWeyl B repLorentz T) (i : Fin 3) :
-    hT.span = ⨆ κ, ℂ ∙ hT.weightVec i κ := by
-  rw [span]
-  refine le_antisymm (iSup_le fun α => ?_) (iSup_le fun κ => ?_)
-  · rw [Submodule.span_singleton_le_iff_mem, hT.eq_sum_weightVec i α]
-    exact sum_mem fun κ _ => Submodule.smul_mem _ _
-      (Submodule.mem_iSup_of_mem κ (Submodule.mem_span_singleton_self _))
-  · rw [Submodule.span_singleton_le_iff_mem]
-    exact hT.weightVec_mem_span i κ
-
-/-- The weight components are boost eigenvectors: along axis `i` the component at `κ`
-  has boost weight `pairWeight κ`. -/
-lemma weightVec_mem_boostWeightSubmodule (i : Fin 3) (κ : Fin 2 × Fin 2) :
-    hT.weightVec i κ ∈ boostWeightSubmodule repLorentz i (pairWeight κ) := by
-  refine mem_boostWeightSubmodule.2 fun t ht => ?_
-  have hstep : ∀ l : Fin 2 × Fin 2,
-      pairCoeff i κ l • repLorentz (SL2C.boostAxis i t ht) (T l)
-        = ∑ a : Fin 2 × Fin 2, (pairCoeff i κ l
-            * ((SL2C.boostAxis i t ht).1 a.1 l.1
-              * star ((SL2C.boostAxis i t ht).1 a.2 l.2))) • T a := by
-    intro l
-    rw [hT.repLorentz_T, Finset.smul_sum]
-    exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
-  calc repLorentz (SL2C.boostAxis i t ht) (hT.weightVec i κ)
-      = ∑ l : Fin 2 × Fin 2, pairCoeff i κ l
-          • repLorentz (SL2C.boostAxis i t ht) (T l) := by
-        simp only [weightVec, map_sum, map_smul]
-    _ = ∑ a : Fin 2 × Fin 2, (∑ l : Fin 2 × Fin 2, pairCoeff i κ l
-          * ((SL2C.boostAxis i t ht).1 a.1 l.1
-            * star ((SL2C.boostAxis i t ht).1 a.2 l.2))) • T a := by
-        simp only [hstep]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun a _ => (Finset.sum_smul).symm
-    _ = ∑ a : Fin 2 × Fin 2,
-          (((t : ℝ) : ℂ) ^ (pairWeight κ) * pairCoeff i κ a) • T a :=
-        Finset.sum_congr rfl fun a _ => by rw [sum_boostAxis_pairCoeff i κ a ht]
-    _ = (algebraMap ℝ ℂ) t ^ (pairWeight κ) • hT.weightVec i κ := by
-        rw [show (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) from rfl, weightVec, Finset.smul_sum]
-        exact Finset.sum_congr rfl fun a _ => (smul_smul _ _ _).symm
-
-/-- The axis-`i` weight-`m` component of the generator `T α`: the weight-`m` partial sum
-  of `eq_sum_weightVec`. -/
-noncomputable def monoComponent (i : Fin 3) (α : Fin 2 × Fin 2) (m : ℤ) : B :=
-  ∑ κ ∈ Finset.univ.filter (fun κ : Fin 2 × Fin 2 => pairWeight κ = m),
-    pairCoeffInv i α κ • hT.weightVec i κ
-
-/-- The weight components are homogeneous of the stated weight. -/
-lemma monoComponent_mem_boostWeightSubmodule (i : Fin 3) (α : Fin 2 × Fin 2) (m : ℤ) :
-    hT.monoComponent i α m ∈ boostWeightSubmodule repLorentz i m := by
-  refine sum_mem fun κ hκ => Submodule.smul_mem _ _ ?_
-  exact (show pairWeight κ = m from (Finset.mem_filter.1 hκ).2) ▸
-    hT.weightVec_mem_boostWeightSubmodule i κ
-
-/-- A component is the sum of its weight components over the three possible weights. -/
-lemma eq_sum_monoComponent_univ (i : Fin 3) (α : Fin 2 × Fin 2) :
-    T α = ∑ m ∈ ({-2, 0, 2} : Finset ℤ), hT.monoComponent i α m := by
-  rw [hT.eq_sum_weightVec i α]
-  exact (Finset.sum_fiberwise_of_maps_to (fun κ _ => pairWeight_mem κ) _).symm
+/-- A coefficient function is recovered from its weight components. -/
+lemma eq_sum_weightComponent (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ) (α : Fin 2 × Fin 2) :
+    c α = ∑ κ : Fin 2 × Fin 2, pairCoeffInv i α κ * weightComponent i c κ := by
+  simp only [weightComponent, Finset.mul_sum, ← mul_assoc]
+  rw [Finset.sum_comm]
+  simp only [← Finset.sum_mul, sum_pairCoeffInv_mul, ite_mul, one_mul, zero_mul,
+    Finset.sum_ite_eq, Finset.mem_univ, if_true]
 
 /-!
 
 ## E. The weight-zero round and its average over the axes
 
-An invariant has boost weight zero along every axis, so along each axis it equals its own
-weight-zero part, which written back on the components is the matrix
-`weightZeroTransition i`.
+Keeping only the weight-zero components writes an invariant coefficient function as one matrix
+per axis applied to itself, and the three average to a matrix with a short closed form.
 
 -/
 
-/-- The matrix of the axis-`i` weight-zero projection in the `T`-basis: the coefficient
-  of `T β` in the re-expansion of `monoComponent i α 0` through the weight basis. -/
-noncomputable def weightZeroTransition (i : Fin 3) (β α : Fin 2 × Fin 2) : ℂ :=
+/-- The matrix of the axis-`i` weight-zero projection on coefficient functions. -/
+noncomputable def weightZeroTransition (i : Fin 3) (α β : Fin 2 × Fin 2) : ℂ :=
   ∑ κ ∈ Finset.univ.filter (fun κ : Fin 2 × Fin 2 => pairWeight κ = 0),
     pairCoeffInv i α κ * pairCoeff i κ β
 
-/-- The weight-zero component re-expanded in the `T`-basis: `monoComponent i α 0` is the
-  `α`-th column of `weightZeroTransition` applied to the generators. -/
-lemma monoComponent_zero_eq (i : Fin 3) (α : Fin 2 × Fin 2) :
-    hT.monoComponent i α 0
-      = ∑ β : Fin 2 × Fin 2, weightZeroTransition i β α • T β := by
-  rw [monoComponent]
-  simp only [weightVec, Finset.smul_sum, smul_smul]
+/-- An invariant coefficient function is fixed by the axis-`i` weight-zero projection. -/
+lemma eq_sum_weightZeroTransition {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) (i : Fin 3)
+    (α : Fin 2 × Fin 2) : c α = ∑ β, weightZeroTransition i α β * c β := by
+  have hfil : ∀ κ ∈ Finset.univ.filter (fun κ : Fin 2 × Fin 2 => ¬ pairWeight κ = 0),
+      pairCoeffInv i α κ * weightComponent i c κ = 0 :=
+    fun κ hκ => by rw [weightComponent_eq_zero hc i (Finset.mem_filter.1 hκ).2, mul_zero]
+  rw [eq_sum_weightComponent i c α, ← Finset.sum_filter_add_sum_filter_not Finset.univ
+    (fun κ : Fin 2 × Fin 2 => pairWeight κ = 0), Finset.sum_eq_zero hfil, add_zero]
+  simp only [weightComponent, weightZeroTransition, Finset.mul_sum, Finset.sum_mul, ← mul_assoc]
   rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun β _ => ?_
-  rw [← Finset.sum_smul, weightZeroTransition]
 
-include hT in
-/-- A vector of boost weight zero along axis `i` is written with the weight-zero transition
-  applied to its coefficients. -/
-lemma eq_sum_weightZeroTransition_smul (i : Fin 3) {x : B}
-    (c : Fin 2 × Fin 2 → ℂ) (hx : x = ∑ α, c α • T α)
-    (hw : x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ β, (∑ α, weightZeroTransition i β α * c α) • T β := by
-  have hsum : x = ∑ m ∈ ({-2, 0, 2} : Finset ℤ),
-      ∑ α, c α • hT.monoComponent i α m := by
-    rw [hx]
-    calc ∑ α, c α • T α
-        = ∑ α, c α • ∑ m ∈ ({-2, 0, 2} : Finset ℤ), hT.monoComponent i α m :=
-          Finset.sum_congr rfl fun α _ => by rw [← hT.eq_sum_monoComponent_univ i α]
-      _ = _ := by
-          simp only [Finset.smul_sum]
-          exact Finset.sum_comm
-  have hx0 : x = ∑ α, c α • hT.monoComponent i α 0 :=
-    eq_component_zero_of_mem_boostWeightSubmodule
-      (w := fun m => ∑ α, c α • hT.monoComponent i α m) hw
-      (fun m _ => sum_mem fun α _ => Submodule.smul_mem _ _
-        (hT.monoComponent_mem_boostWeightSubmodule i α m))
-      (by decide) hsum
-  calc x = ∑ α, c α • hT.monoComponent i α 0 := hx0
-    _ = ∑ α, c α • ∑ β, weightZeroTransition i β α • T β :=
-        Finset.sum_congr rfl fun α _ => by rw [hT.monoComponent_zero_eq i α]
-    _ = ∑ β, (∑ α, weightZeroTransition i β α * c α) • T β := by
-        simp only [Finset.smul_sum, smul_smul]
-        rw [Finset.sum_comm]
-        refine Finset.sum_congr rfl fun β _ => ?_
-        rw [← Finset.sum_smul]
-        exact congrArg (· • T β) (Finset.sum_congr rfl fun α _ => mul_comm _ _)
+/-!
+
+## F. The quadratic certificate and the classification
+
+The summed transition `M` satisfies `M ^ 2 = 2 M`, while an invariant coefficient function
+would have to satisfy `M c = 3 c`. Only `c = 0` does both.
+
+-/
 
 /-- The closed form of the summed weight-zero transition: twice the identity minus the
   outer product of the two diagonal indicators. -/
@@ -409,44 +359,6 @@ lemma sum_weightZeroTransition_eq (β α : Fin 2 × Fin 2) :
     simp [transitionEntry, pairCoeff, pairCoeffInv, weylCoeff, weylCoeffC,
       weylCoeffInv, weylCoeffInvC] <;>
     norm_num [Complex.ext_iff]
-
-include hT in
-/-- A vector of boost weight zero along all three axes is written with a third of the summed
-  transition applied to its coefficients. -/
-lemma eq_sum_transitionEntry_smul {x : B} (c : Fin 2 × Fin 2 → ℂ)
-    (hx : x = ∑ α, c α • T α)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ β, ((3 : ℂ)⁻¹ * ∑ α, transitionEntry β α * c α) • T β := by
-  have hround : ∀ i : Fin 3,
-      x = ∑ β, (∑ α, weightZeroTransition i β α * c α) • T β :=
-    fun i => hT.eq_sum_weightZeroTransition_smul i c hx (hw i)
-  have h3 : (3 : ℂ) • x = ∑ i : Fin 3, x := by
-    rw [Fin.sum_univ_three, show (3 : ℂ) = 1 + 1 + 1 from by norm_num,
-      add_smul, add_smul, one_smul]
-  calc x = (3 : ℂ)⁻¹ • ((3 : ℂ) • x) := by rw [smul_smul]; norm_num
-    _ = (3 : ℂ)⁻¹ • ∑ i : Fin 3, x := by rw [h3]
-    _ = (3 : ℂ)⁻¹ • ∑ i : Fin 3, ∑ β,
-          (∑ α, weightZeroTransition i β α * c α) • T β :=
-        congrArg (fun y => (3 : ℂ)⁻¹ • y) (Finset.sum_congr rfl fun i _ => hround i)
-    _ = ∑ β, ((3 : ℂ)⁻¹ * ∑ α, transitionEntry β α * c α) • T β := by
-        rw [Finset.sum_comm, Finset.smul_sum]
-        refine Finset.sum_congr rfl fun β _ => ?_
-        rw [← Finset.sum_smul, smul_smul]
-        congr 1
-        rw [show (∑ i : Fin 3, ∑ α, weightZeroTransition i β α * c α)
-            = ∑ α, transitionEntry β α * c α from by
-          rw [Finset.sum_comm]
-          exact Finset.sum_congr rfl fun α _ => by
-            rw [← Finset.sum_mul, sum_weightZeroTransition_eq]]
-
-/-!
-
-## F. The quadratic certificate and the classification
-
-The summed transition `M` satisfies `M ^ 2 = 2 M`, so `M / 3` has eigenvalues `2/3` and
-`0`, never the `1` an invariant would need: `3 λ ^ 2 - 2 λ` annihilates every invariant.
-
--/
 
 /-- The action of the summed transition matrix on a coefficient vector. -/
 noncomputable def applyTransition (c : Fin 2 × Fin 2 → ℂ) (β : Fin 2 × Fin 2) : ℂ :=
@@ -482,35 +394,40 @@ lemma applyTransition_applyTransition (c : Fin 2 × Fin 2 → ℂ) (β : Fin 2 �
         simp only [applyTransition, Finset.mul_sum]
         exact Finset.sum_congr rfl fun α _ => by ring
 
+/-- An invariant coefficient function is `3` times its averaged round, so it is an eigenvector
+  of the summed transition for the eigenvalue `3`. -/
+lemma applyTransition_eq_three_smul {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
+    (β : Fin 2 × Fin 2) : applyTransition c β = 3 * c β := by
+  have h3 : ∑ i : Fin 3, ∑ α, weightZeroTransition i β α * c α = 3 * c β := by
+    rw [Fin.sum_univ_three, ← eq_sum_weightZeroTransition hc 0 β,
+      ← eq_sum_weightZeroTransition hc 1 β, ← eq_sum_weightZeroTransition hc 2 β]
+    ring
+  rw [← h3, applyTransition, Finset.sum_comm]
+  exact Finset.sum_congr rfl fun α _ => by rw [← Finset.sum_mul, sum_weightZeroTransition_eq]
+
+/-- An invariant coefficient function is zero: `3` is not an eigenvalue of a matrix squaring
+  to twice itself unless the eigenvector is. -/
+lemma eq_zero_of_isInvariantCoeff {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) : c = 0 := by
+  funext β
+  show c β = 0
+  have h9 : applyTransition (applyTransition c) β = 9 * c β := by
+    rw [show applyTransition c = fun γ => 3 * c γ from
+      funext fun γ => applyTransition_eq_three_smul hc γ, applyTransition_const_mul,
+      applyTransition_eq_three_smul hc]
+    ring
+  have h6 : applyTransition (applyTransition c) β = 6 * c β := by
+    rw [applyTransition_applyTransition, applyTransition_eq_three_smul hc]
+    ring
+  rw [h9] at h6
+  linear_combination h6 / 3
+
 include hT in
 /-- Every Lorentz invariant in the span of the components is zero: the pair of indices carries
   the four-vector representation, which has no invariant contraction. -/
 theorem eq_zero_of_invariant {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
-  obtain ⟨c, hc⟩ := (hT.mem_span_iff x).1 hx
-  have hw := mem_boostWeightSubmodule_zero_of_invariant (rep := repLorentz) hinv
-  have h1 := hT.eq_sum_transitionEntry_smul c hc hw
-  have h2 := hT.eq_sum_transitionEntry_smul
-    (fun β => (3 : ℂ)⁻¹ * applyTransition c β) h1 hw
-  have h2' : x = ∑ β, ((9 : ℂ)⁻¹ * (2 * applyTransition c β)) • T β := by
-    rw [h2]
-    refine Finset.sum_congr rfl fun β _ => ?_
-    congr 1
-    rw [show (∑ α, transitionEntry β α * ((3 : ℂ)⁻¹ * applyTransition c α))
-      = applyTransition (fun γ => (3 : ℂ)⁻¹ * applyTransition c γ) β from rfl,
-      applyTransition_const_mul, applyTransition_applyTransition]
-    ring
-  have h1' : x = ∑ β, ((3 : ℂ)⁻¹ * applyTransition c β) • T β := h1
-  calc x = (3 : ℂ) • x - (2 : ℂ) • x := by module
-    _ = ∑ β, ((3 : ℂ) * ((9 : ℂ)⁻¹ * (2 * applyTransition c β))
-        - (2 : ℂ) * ((3 : ℂ)⁻¹ * applyTransition c β)) • T β := by
-        nth_rewrite 1 [h2']
-        nth_rewrite 1 [h1']
-        simp only [Finset.smul_sum, smul_smul, ← Finset.sum_sub_distrib, ← sub_smul]
-    _ = 0 := by
-        refine Finset.sum_eq_zero fun β _ => ?_
-        rw [show (3 : ℂ) * ((9 : ℂ)⁻¹ * (2 * applyTransition c β))
-          - (2 : ℂ) * ((3 : ℂ)⁻¹ * applyTransition c β) = 0 from by ring, zero_smul]
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
+  simp [eq_zero_of_isInvariantCoeff hc]
 
 /-!
 

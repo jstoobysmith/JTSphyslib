@@ -26,14 +26,16 @@ The components are vectors `T d` of a complex vector space `B` carrying a repres
 moves them with one factor of the Lorentz matrix per slot (A). `hT.span` is the set of
 their combinations.
 
-The proof is the two-index case of the argument in `IsQuadLorentz`, and reuses its
-light-cone coefficients and sector matrices. Along a spatial axis the four light-cone
-directions carry boost weights `2`, `-2`, `0`, `0` (B), and an invariant, having weight
-`0` along every axis, is fixed by the weight-zero projection along each; averaging the
-three gives one linear map on the `16` components, `12` times an integer matrix with a
-short closed form (C, D). Its eigenvalues are `12`, `10`, `4`, `0`, with `12` simple, so
-the cubic `λ (λ - 4) (λ - 10)` sends everything onto that one eigenvector, which is the
-metric (E). Section F draws the conclusion and G divides out `S`.
+An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
+matrices themselves fix (A, from `Invariants.Basic`), and the rest is the two-index case of the
+argument in `IsQuadLorentz`, reusing its light-cone coefficients and sector matrices. Along a
+spatial axis the four light-cone directions carry boost weights `2`, `-2`, `0`, `0`, and an
+invariant `c` has no light-cone component of nonzero weight, so it is fixed by the weight-zero
+projection along each axis (B); averaging the three gives one linear map on the `16`
+coefficients, `12` times an integer matrix with a short closed form (C, D). Its eigenvalues are
+`12`, `10`, `4`, `0`, with `12` simple, so the cubic `λ (λ - 4) (λ - 10)` sends everything onto
+that one eigenvector, which is the metric (E). Section F draws the conclusion and G divides
+out `S`.
 
 No rotation averaging is needed here, unlike the four-index case: for two indices the
 three weight-zero conditions already cut the `16` components down to a single line.
@@ -43,7 +45,7 @@ three weight-zero conditions already cut the `16` components down to a single li
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C BoostWeight
+open TensorProduct Matrix MatrixGroups SL2C Invariants
 open IsQuadLorentz (lightConeCoeffZ coe_lightConeCoeffZ lightConeCoeffInvQ
   coe_lightConeCoeffInvQ lightConeCoeffInvZ coe_lightConeCoeffInvZ sectorIndex sectorWeight
   lightConeWeight_eq_sectorWeight slotTransition slotTransitionZ slotTransitionZ_eq_sum quotRep
@@ -87,124 +89,21 @@ lemma mem_span_iff (x : B) :
     LinearMap.mem_range]
   simp only [Fintype.linearCombination_apply, eq_comm]
 
-/-!
 
-## B. The light-cone basis along one axis
-
-The boost along the axis `i` scales the light-cone directions `D₀ - Dᵢ`, `D₀ + Dᵢ` and the
-two transverse ones by `t²`, `t⁻²`, `1`, `1`, so their weights are `2`, `-2`, `0`, `0`.
-Recombining the components along those directions gives `hT.lightCone i c`, which spans
-the same space and is a boost eigenvector of weight the total weight of `c`.
-
--/
-
-set_option linter.unusedVariables false in
-/-- The light-cone component of `T` along axis `i` at the light-cone index `c`; `hT` is
-  present only so it reads `hT.lightCone`. -/
-noncomputable def lightCone (hT : IsBiLorentz B repLorentz T) (i : Fin 3)
-    (c : Fin 2 → Fin 4) : B :=
-  ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) • T d
-
-/-- Each light-cone component lies in the span of the coordinate components. -/
-lemma lightCone_mem_span (i : Fin 3) (c : Fin 2 → Fin 4) : hT.lightCone i c ∈ hT.span :=
-  sum_mem fun d _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
-
-/-- Each generator is recovered from the light-cone components along any axis. -/
-lemma eq_sum_lightCone (i : Fin 3) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    T d = ∑ c : Fin 2 → Fin 4,
-      (∏ j, lightConeCoeffInv i (d j) (c j)) • hT.lightCone i c := by
-  calc T d = ∑ e : Fin 2 → Fin 1 ⊕ Fin 3,
-        (∑ c : Fin 2 → Fin 4, (∏ j, lightConeCoeffInv i (d j) (c j)) *
-          (∏ j, lightConeCoeff i (c j) (e j))) • T e := by
-        simp only [sum_prod_lightConeCoeffInv, ite_smul, one_smul, zero_smul,
-          Finset.sum_ite_eq, Finset.mem_univ, if_true]
-    _ = _ := by
-        simp only [lightCone, Finset.smul_sum, smul_smul, Finset.sum_smul]
-        rw [Finset.sum_comm]
-
-/-- The light-cone components along any axis span the same space as the components. -/
-lemma span_eq_lightCone (hT : IsBiLorentz B repLorentz T) (i : Fin 3) :
-    hT.span = ⨆ c, ℂ ∙ hT.lightCone i c := by
-  rw [span]
-  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun c => ?_)
-  · rw [Submodule.span_singleton_le_iff_mem, hT.eq_sum_lightCone i d]
-    exact sum_mem fun c _ => Submodule.smul_mem _ _
-      (Submodule.mem_iSup_of_mem c (Submodule.mem_span_singleton_self _))
-  · rw [Submodule.span_singleton_le_iff_mem]
-    exact hT.lightCone_mem_span i c
-
-/-- The light-cone components are boost eigenvectors: along axis `i` the component at
-  `c` has boost weight the total light-cone weight of `c`. -/
-lemma lightCone_mem_boostWeightSubmodule (i : Fin 3) (c : Fin 2 → Fin 4) :
-    hT.lightCone i c ∈ boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
-  refine mem_boostWeightSubmodule.2 fun t ht => ?_
-  calc repLorentz (SL2C.boostAxis i t ht) (hT.lightCone i c)
-      = ∑ a : Fin 2 → Fin 1 ⊕ Fin 3,
-          (∑ x : Fin 2 → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (x j)) *
-            (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j)
-              (x j) : ℝ) : ℂ))) • T a := by
-        simp only [lightCone, map_sum, map_smul, hT.repLorentz_T, Finset.smul_sum,
-          smul_smul]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun a _ => Finset.sum_smul.symm
-    _ = (algebraMap ℝ ℂ) t ^ (∑ j, lightConeWeight (c j)) • hT.lightCone i c := by
-        simp only [sum_prod_lightConeCoeff i c _ ht, lightCone, Finset.smul_sum, smul_smul]
-        rfl
+include hT in
+/-- An invariant of the span is the contraction of an invariant coefficient tensor. -/
+theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
+  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-!
 
-## C. The weight-zero projection and its average over the axes
+## B. The weight-zero transition along one axis
 
-## C.1. The boost-weight parts of a component
-
-Each component `T e` is the sum of its boost-weight parts `hT.monoComponent i e m`; with
-two indices the weights are the five even numbers from `-4` to `4`.
-
--/
-
-/-- The axis-`i` weight-`m` component of the generator `T e`: the weight-`m` partial
-  sum of `eq_sum_lightCone`. -/
-noncomputable def monoComponent (i : Fin 3) (e : Fin 2 → Fin 1 ⊕ Fin 3) (m : ℤ) : B :=
-  ∑ c ∈ Finset.univ.filter (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = m),
-    (∏ s, lightConeCoeffInv i (e s) (c s)) • hT.lightCone i c
-
-/-- The weight components are homogeneous of the stated weight. -/
-lemma monoComponent_mem_boostWeightSubmodule (i : Fin 3) (e : Fin 2 → Fin 1 ⊕ Fin 3)
-    (m : ℤ) : hT.monoComponent i e m ∈ boostWeightSubmodule repLorentz i m := by
-  refine sum_mem fun c hc => Submodule.smul_mem _ _ ?_
-  exact (show (∑ s, lightConeWeight (c s)) = m from (Finset.mem_filter.1 hc).2) ▸
-    hT.lightCone_mem_boostWeightSubmodule i c
-
-/-- The total light-cone weight of two slots is even and lies between `-4` and `4`. -/
-lemma sum_lightConeWeight_mem (c : Fin 2 → Fin 4) :
-    (∑ s, lightConeWeight (c s)) ∈ ({-4, -2, 0, 2, 4} : Finset ℤ) := by
-  have hweight (κ : Fin 4) :
-      ∃ q : ℤ, -1 ≤ q ∧ q ≤ 1 ∧ lightConeWeight κ = 2 * q := by
-    fin_cases κ
-    · exact ⟨1, by norm_num [lightConeWeight]⟩
-    · exact ⟨-1, by norm_num [lightConeWeight]⟩
-    · exact ⟨0, by norm_num [lightConeWeight]⟩
-    · exact ⟨0, by norm_num [lightConeWeight]⟩
-  obtain ⟨q0, hq0_lower, hq0_upper, hq0⟩ := hweight (c 0)
-  obtain ⟨q1, hq1_lower, hq1_upper, hq1⟩ := hweight (c 1)
-  rw [Fin.sum_univ_two, hq0, hq1]
-  simp only [Finset.mem_insert, Finset.mem_singleton]
-  omega
-
-/-- A component is the sum of its weight components over the five possible weights. -/
-lemma eq_sum_monoComponent_univ (i : Fin 3) (e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    T e = ∑ m ∈ ({-4, -2, 0, 2, 4} : Finset ℤ), hT.monoComponent i e m := by
-  rw [hT.eq_sum_lightCone i e]
-  exact (Finset.sum_fiberwise_of_maps_to (fun c _ => sum_lightConeWeight_mem c) _).symm
-
-/-!
-
-## C.2. The weight-zero transition matrix
-
-Written back on the components, the weight-zero part of `T e` is a matrix applied to the
-components: a sum over the sector patterns of total weight zero of the per-slot sector
-matrices of `IsQuadLorentz`.
+An invariant coefficient tensor keeps only its light-cone components of total weight zero, so
+writing it back on the coefficients it is fixed by one matrix per axis: a sum over the sector
+patterns of total weight zero of the per-slot sector matrices of `IsQuadLorentz`.
 
 -/
 
@@ -265,27 +164,39 @@ lemma weightZeroTransition_eq_sum_lightCone (i : Fin 3) (d e : Fin 2 → Fin 1 �
   exact (sum_weightZero_eq_sum_sector
     (fun s κ => lightConeCoeffInvQ i (e s) κ * (lightConeCoeffZ i κ (d s) : ℚ))).symm
 
-/-- The weight-zero component re-expanded in the `T`-basis: `monoComponent i e 0`
-  is the `e`-th column of `weightZeroTransition` applied to the generators. -/
-lemma monoComponent_zero_eq (i : Fin 3) (e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    hT.monoComponent i e 0
-      = ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, ((weightZeroTransition i d e : ℚ) : ℂ) • T d := by
-  rw [monoComponent]
-  simp only [lightCone, Finset.smul_sum, smul_smul]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  rw [← Finset.sum_smul]
-  congr 1
-  rw [weightZeroTransition_eq_sum_lightCone]
-  push_cast
-  simp only [coe_lightConeCoeffInvQ, coe_lightConeCoeffZ, Finset.prod_mul_distrib]
+/-- An invariant coefficient tensor is fixed by the axis-`i` weight-zero transition. -/
+lemma eq_sum_weightZeroTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) (i : Fin 3) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    c d = ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e := by
+  have hfil : ∀ κ ∈ Finset.univ.filter
+      (fun κ : Fin 2 → Fin 4 => ¬ (∑ s, lightConeWeight (κ s)) = 0),
+      (∏ s, lightConeCoeffInv i (d s) (κ s)) * lightConeComponent i c κ = 0 :=
+    fun κ hκ => by
+      rw [hc.lightConeComponent_eq_zero i (Finset.mem_filter.1 hκ).2, mul_zero]
+  rw [eq_sum_lightConeComponent i c d, ← Finset.sum_filter_add_sum_filter_not Finset.univ
+    (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0), Finset.sum_eq_zero hfil,
+    add_zero]
+  calc ∑ κ ∈ Finset.univ.filter (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0),
+        (∏ s, lightConeCoeffInv i (d s) (κ s)) * lightConeComponent i c κ
+      = ∑ e, (∑ κ ∈ Finset.univ.filter
+          (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0),
+          ∏ s, lightConeCoeffInv i (d s) (κ s) * lightConeCoeff i (κ s) (e s)) * c e := by
+        simp only [lightConeComponent, Finset.mul_sum, Finset.sum_mul, Finset.prod_mul_distrib]
+        rw [Finset.sum_comm]
+        exact Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun κ _ => by ring
+    _ = _ := by
+        refine Finset.sum_congr rfl fun e _ => ?_
+        congr 1
+        rw [weightZeroTransition_eq_sum_lightCone]
+        push_cast
+        simp only [coe_lightConeCoeffInvQ, coe_lightConeCoeffZ]
 
 /-!
 
-## C.3. The average over the axes, and its powers
+## C. The average over the axes
 
-An invariant has weight zero along all three axes, so it is fixed by each of the three
-weight-zero transitions, hence by their average and by every power of that average.
+An invariant coefficient tensor is fixed by each of the three weight-zero transitions, hence
+by their average.
 
 -/
 
@@ -295,67 +206,22 @@ def boostAverageTransition :
     Matrix (Fin 2 → Fin 1 ⊕ Fin 3) (Fin 2 → Fin 1 ⊕ Fin 3) ℚ :=
   Matrix.of fun d e => (3⁻¹ : ℚ) * ∑ i : Fin 3, weightZeroTransition i d e
 
-include hT in
-/-- A vector of boost weight zero along axis `i` is written with the weight-zero transition
-  applied to its coefficients. -/
-lemma eq_sum_weightZeroTransition_smul (i : Fin 3) {x : B}
-    (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ) (hx : x = ∑ e, c e • T e)
-    (hw : x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ d, (∑ e, ((weightZeroTransition i d e : ℚ) : ℂ) * c e) • T d := by
-  have hsum : x = ∑ m ∈ ({-4, -2, 0, 2, 4} : Finset ℤ),
-      ∑ e, c e • hT.monoComponent i e m := by
-    rw [hx]
-    calc ∑ e, c e • T e
-        = ∑ e, c e • ∑ m ∈ ({-4, -2, 0, 2, 4} : Finset ℤ), hT.monoComponent i e m :=
-          Finset.sum_congr rfl fun e _ => by rw [← hT.eq_sum_monoComponent_univ i e]
-      _ = _ := by
-          simp only [Finset.smul_sum]
-          exact Finset.sum_comm
-  have hx0 : x = ∑ e, c e • hT.monoComponent i e 0 :=
-    eq_component_zero_of_mem_boostWeightSubmodule
-      (w := fun m => ∑ e, c e • hT.monoComponent i e m) hw
-      (fun m _ => sum_mem fun e _ => Submodule.smul_mem _ _
-        (hT.monoComponent_mem_boostWeightSubmodule i e m))
-      (by decide) hsum
-  calc x = ∑ e, c e • hT.monoComponent i e 0 := hx0
-    _ = ∑ e, c e • ∑ d, ((weightZeroTransition i d e : ℚ) : ℂ) • T d :=
-        Finset.sum_congr rfl fun e _ => by rw [hT.monoComponent_zero_eq i e]
-    _ = ∑ d, (∑ e, ((weightZeroTransition i d e : ℚ) : ℂ) * c e) • T d := by
-        simp only [Finset.smul_sum, smul_smul]
-        rw [Finset.sum_comm]
-        refine Finset.sum_congr rfl fun d _ => ?_
-        rw [← Finset.sum_smul]
-        congr 1
-        exact Finset.sum_congr rfl fun e _ => mul_comm _ _
-
-include hT in
-/-- One averaged round of the recursion: an element of weight zero along all three
-  axes re-expands with the boost-average matrix `M` applied to its coefficients. -/
-lemma eq_sum_boostAverageTransition_smul {x : B}
-    (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ) (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ d, (∑ e, ((boostAverageTransition d e : ℚ) : ℂ) * c e) • T d := by
-  have hround : ∀ i : Fin 3,
-      x = ∑ d, (∑ e, ((weightZeroTransition i d e : ℚ) : ℂ) * c e) • T d :=
-    fun i => hT.eq_sum_weightZeroTransition_smul i c hx (hw i)
-  have h3 : (3 : ℂ) • x = ∑ i : Fin 3, x := by
-    rw [Fin.sum_univ_three, show (3 : ℂ) = 1 + 1 + 1 from by norm_num,
-      add_smul, add_smul, one_smul]
-  calc x = (3⁻¹ : ℂ) • ((3 : ℂ) • x) := by rw [smul_smul]; norm_num
-    _ = (3⁻¹ : ℂ) • ∑ i : Fin 3, x := by rw [h3]
-    _ = (3⁻¹ : ℂ) • ∑ i : Fin 3, ∑ d,
-          (∑ e, ((weightZeroTransition i d e : ℚ) : ℂ) * c e) • T d :=
-        congrArg (fun y => (3⁻¹ : ℂ) • y) (Finset.sum_congr rfl fun i _ => hround i)
-    _ = ∑ d, (∑ e, ((boostAverageTransition d e : ℚ) : ℂ) * c e) • T d := by
-        rw [Finset.sum_comm, Finset.smul_sum]
-        refine Finset.sum_congr rfl fun d _ => ?_
-        rw [← Finset.sum_smul, smul_smul]
-        congr 1
-        rw [Finset.sum_comm, Finset.mul_sum]
-        refine Finset.sum_congr rfl fun e _ => ?_
-        simp only [boostAverageTransition, Matrix.of_apply]
-        push_cast
-        rw [mul_assoc, Finset.sum_mul]
+/-- An invariant coefficient tensor is fixed by the average of the three transitions. -/
+lemma eq_sum_boostAverageTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    c d = ∑ e, ((boostAverageTransition e d : ℚ) : ℂ) * c e := by
+  have h3 : (3 : ℂ) * c d = ∑ i : Fin 3, ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e := by
+    rw [Fin.sum_univ_three, ← eq_sum_weightZeroTransition hc 0 d,
+      ← eq_sum_weightZeroTransition hc 1 d, ← eq_sum_weightZeroTransition hc 2 d]
+    ring
+  rw [show (∑ e, ((boostAverageTransition e d : ℚ) : ℂ) * c e)
+      = (3 : ℂ)⁻¹ * ∑ i : Fin 3, ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e from by
+    rw [Finset.sum_comm, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun e _ => ?_
+    simp only [boostAverageTransition, Matrix.of_apply]
+    push_cast
+    rw [mul_assoc, Finset.sum_mul], ← h3]
+  ring
 
 /-!
 
@@ -488,6 +354,19 @@ lemma Q_eq_poly : Q = boostAverageZ ^ 3 - (14 : ℤ) • boostAverageZ ^ 2
   rw [Q]
   noncomm_ring
 
+/-- The integer averaged round is a symmetric matrix, a finite check. -/
+lemma boostAverageZ_transpose : boostAverageZᵀ = boostAverageZ := by
+  rw [boostAverageZ_eq]
+  ext d e
+  revert d e
+  decide +kernel
+
+/-- The same read on a pair of entries. -/
+lemma boostAverageZ_symm (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
+    boostAverageZ d e = boostAverageZ e d := by
+  have h := congrFun (congrFun boostAverageZ_transpose e) d
+  rwa [Matrix.transpose_apply] at h
+
 /-!
 
 ## F. The classification of the Lorentz invariants
@@ -503,79 +382,41 @@ noncomputable def metricContraction : B :=
 
 /-!
 
-## F.2. Iterating the averaged round
+## F.2. Iterating the averaged round on the coefficients
 
 -/
 
-include hT in
-/-- One averaged round in integer form: the averaged round acts by the integer matrix
-  `boostAverageZ` with the overall `12⁻¹` normalisation. -/
-lemma eq_sum_boostAverageZ_smul {x : B} (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ)
-    (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ d, ((12 : ℂ)⁻¹ * ∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) • T d := by
-  rw [hT.eq_sum_boostAverageTransition_smul c hx hw]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  congr 1
-  rw [Finset.mul_sum]
+/-- An invariant coefficient tensor is fixed by the integer averaged round, up to `12`. -/
+lemma twelve_mul_eq_sum_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    (12 : ℂ) * c d = ∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e := by
+  rw [show (12 : ℂ) * c d = ∑ e, (12 : ℂ) * (((boostAverageTransition e d : ℚ) : ℂ) * c e) from by
+    rw [← Finset.mul_sum, ← eq_sum_boostAverageTransition hc]]
   refine Finset.sum_congr rfl fun e _ => ?_
-  have hb := congrArg (fun q : ℚ => (q : ℂ)) (coe_boostAverageZ d e)
-  push_cast at hb ⊢
-  rw [hb]
+  have hb := congrArg (fun q : ℚ => (q : ℂ)) (coe_boostAverageZ e d)
+  push_cast at hb
+  rw [boostAverageZ_symm d e, hb]
   ring
 
-include hT in
-/-- Iterated averaged rounds in integer form: `n` rounds act by the `n`-th power of the
-  integer matrix with the `12⁻ⁿ` normalisation. -/
-lemma eq_sum_pow_boostAverageZ_smul {x : B} (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ)
-    (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) (n : ℕ) :
-    x = ∑ d, (((12 : ℂ) ^ n)⁻¹ * ∑ e, (((boostAverageZ ^ n) d e : ℤ) : ℂ) * c e)
-      • T d := by
-  induction n with
-  | zero =>
-    rw [hx]
-    refine Finset.sum_congr rfl fun d _ => ?_
-    congr 1
-    rw [pow_zero, pow_zero]
-    simp [Matrix.one_apply, apply_ite (fun q : ℤ => (q : ℂ)), ite_mul, Finset.sum_ite_eq]
+/-- The same for `n` rounds: the `n`-th power of the integer matrix, up to `12 ^ n`. -/
+lemma pow_mul_eq_sum_pow_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) (n : ℕ) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    ((12 : ℂ) ^ n) * c d = ∑ e, (((boostAverageZ ^ n) d e : ℤ) : ℂ) * c e := by
+  induction n generalizing d with
+  | zero => simp [Matrix.one_apply, apply_ite (fun q : ℤ => (q : ℂ)), ite_mul, Finset.sum_ite_eq]
   | succ n ih =>
-    rw [hT.eq_sum_boostAverageZ_smul
-      (fun d => ((12 : ℂ) ^ n)⁻¹ * ∑ e, (((boostAverageZ ^ n) d e : ℤ) : ℂ) * c e)
-      ih hw]
-    refine Finset.sum_congr rfl fun d _ => ?_
-    congr 1
-    calc (12 : ℂ)⁻¹ * ∑ f, ((boostAverageZ d f : ℤ) : ℂ)
-          * (((12 : ℂ) ^ n)⁻¹ * ∑ e, (((boostAverageZ ^ n) f e : ℤ) : ℂ) * c e)
-        = ((12 : ℂ) ^ (n + 1))⁻¹ * ∑ f, ((boostAverageZ d f : ℤ) : ℂ)
-            * ∑ e, (((boostAverageZ ^ n) f e : ℤ) : ℂ) * c e := by
-          rw [Finset.mul_sum, Finset.mul_sum]
-          refine Finset.sum_congr rfl fun f _ => ?_
-          rw [pow_succ]
-          field_simp
-      _ = ((12 : ℂ) ^ (n + 1))⁻¹
-            * ∑ e, (((boostAverageZ * boostAverageZ ^ n) d e : ℤ) : ℂ) * c e := by
-          congr 1
-          calc ∑ f, ((boostAverageZ d f : ℤ) : ℂ)
-                * ∑ e, (((boostAverageZ ^ n) f e : ℤ) : ℂ) * c e
-              = ∑ f, ∑ e, ((boostAverageZ d f : ℤ) : ℂ)
-                  * ((((boostAverageZ ^ n) f e : ℤ) : ℂ) * c e) :=
-                Finset.sum_congr rfl fun f _ => by rw [Finset.mul_sum]
-            _ = ∑ e, (∑ f, ((boostAverageZ d f : ℤ) : ℂ)
-                  * (((boostAverageZ ^ n) f e : ℤ) : ℂ)) * c e := by
-                rw [Finset.sum_comm]
-                refine Finset.sum_congr rfl fun e _ => ?_
-                rw [Finset.sum_mul]
-                exact Finset.sum_congr rfl fun f _ => (mul_assoc _ _ _).symm
-            _ = ∑ e, (((boostAverageZ * boostAverageZ ^ n) d e : ℤ) : ℂ) * c e := by
-                refine Finset.sum_congr rfl fun e _ => ?_
-                congr 1
-                rw [Matrix.mul_apply]
-                push_cast
-                rfl
-      _ = ((12 : ℂ) ^ (n + 1))⁻¹
-            * ∑ e, (((boostAverageZ ^ (n + 1)) d e : ℤ) : ℂ) * c e := by
-          rw [← pow_succ' boostAverageZ n]
+    calc ((12 : ℂ) ^ (n + 1)) * c d
+        = (12 : ℂ) ^ n * ((12 : ℂ) * c d) := by ring
+      _ = ∑ f, ((boostAverageZ d f : ℤ) : ℂ) * ((12 : ℂ) ^ n * c f) := by
+          rw [twelve_mul_eq_sum_boostAverageZ hc, Finset.mul_sum]
+          exact Finset.sum_congr rfl fun f _ => by ring
+      _ = ∑ e, (((boostAverageZ ^ (n + 1)) d e : ℤ) : ℂ) * c e := by
+          simp only [ih, Finset.mul_sum, pow_succ' boostAverageZ n, Matrix.mul_apply]
+          rw [Finset.sum_comm]
+          refine Finset.sum_congr rfl fun e _ => ?_
+          push_cast
+          rw [Finset.sum_mul]
+          exact Finset.sum_congr rfl fun f _ => by ring
 
 /-!
 
@@ -583,70 +424,36 @@ lemma eq_sum_pow_boostAverageZ_smul {x : B} (c : (Fin 2 → Fin 1 ⊕ Fin 3) →
 
 -/
 
-include hT in
-/-- Applying the certificate polynomial to the coefficients reproduces `x`, as the combination
-  of three iterated averages weighted by the certificate coefficients. -/
-lemma eq_sum_Q_smul {x : B} (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ)
-    (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ∑ d, ((192 : ℂ)⁻¹ * ∑ e, ((Q d e : ℤ) : ℂ) * c e) • T d := by
-  have h1 := hT.eq_sum_pow_boostAverageZ_smul c hx hw 1
-  have h2 := hT.eq_sum_pow_boostAverageZ_smul c hx hw 2
-  have h3 := hT.eq_sum_pow_boostAverageZ_smul c hx hw 3
-  simp only [pow_one] at h1
-  have key : (9 : ℂ) • x - (21 / 2 : ℂ) • x + (5 / 2 : ℂ) • x
-      = ∑ d, ((192 : ℂ)⁻¹ * ∑ e, ((Q d e : ℤ) : ℂ) * c e) • T d := by
-    nth_rewrite 1 [h3]
-    nth_rewrite 1 [h2]
-    nth_rewrite 1 [h1]
-    simp only [Finset.smul_sum, smul_smul]
-    rw [← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun d _ => ?_
-    simp only [← sub_smul, ← add_smul]
-    congr 1
-    have hQc : ∀ e, ((Q d e : ℤ) : ℂ)
-        = (((boostAverageZ ^ 3) d e : ℤ) : ℂ)
-          - 14 * (((boostAverageZ ^ 2) d e : ℤ) : ℂ)
-          + 40 * ((boostAverageZ d e : ℤ) : ℂ) := fun e => by
-      rw [Q_eq_poly]
-      push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
-      ring
-    have hsplit : ∑ e, ((Q d e : ℤ) : ℂ) * c e
+/-- The certificate applied to an invariant coefficient tensor: `192 c = 48 η (η ⬝ c)`, so
+  every invariant coefficient tensor is a multiple of the metric. -/
+lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    c d = ((4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e)
+      * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
+  have hQ : ∑ e, ((Q d e : ℤ) : ℂ) * c e = (192 : ℂ) * c d := by
+    have h1 := pow_mul_eq_sum_pow_boostAverageZ hc 1 d
+    have h2 := pow_mul_eq_sum_pow_boostAverageZ hc 2 d
+    have h3 := pow_mul_eq_sum_pow_boostAverageZ hc 3 d
+    simp only [pow_one] at h1
+    rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
         = (∑ e, (((boostAverageZ ^ 3) d e : ℤ) : ℂ) * c e)
           - 14 * (∑ e, (((boostAverageZ ^ 2) d e : ℤ) : ℂ) * c e)
-          + 40 * (∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) := by
-      simp only [hQc, Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
-      exact Finset.sum_congr rfl fun e _ => by ring
-    rw [hsplit]
-    field_simp
-    ring_nf
-  calc x = (9 : ℂ) • x - (21 / 2 : ℂ) • x + (5 / 2 : ℂ) • x := by module
-    _ = _ := key
-
-include hT in
-/-- A vector of the span of boost weight zero along all three axes is the corresponding
-  multiple of the metric contraction. -/
-lemma eq_smul_metricContraction {x : B} (c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ)
-    (hx : x = ∑ e, c e • T e)
-    (hw : ∀ i : Fin 3, x ∈ boostWeightSubmodule repLorentz i 0) :
-    x = ((4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e)
-      • metricContraction (T := T) := by
-  rw [hT.eq_sum_Q_smul c hx hw, metricContraction, Finset.smul_sum]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  rw [smul_smul]
-  congr 1
-  have hP : ∀ e, ((Q d e : ℤ) : ℂ) = 48 * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)
-      * ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) := fun e => by
-    rw [Q_explicit, Matrix.of_apply]
-    push_cast
+          + 40 * (∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) from by
+      simp only [Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl fun e _ => ?_
+      rw [Q_eq_poly]
+      push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
+      ring, ← h1, ← h2, ← h3]
     ring
   rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
       = 48 * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)
         * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e from by
     rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl fun e _ => by rw [hP e]; ring]
-  field_simp
-  ring
+    refine Finset.sum_congr rfl fun e _ => ?_
+    rw [Q_explicit, Matrix.of_apply]
+    push_cast
+    ring] at hQ
+  linear_combination -hQ / 192
 
 /-!
 
@@ -660,9 +467,11 @@ include hT in
 theorem exists_smul_metricContraction_of_invariant {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • metricContraction (T := T) := by
-  obtain ⟨c, hc⟩ := (hT.mem_span_iff x).1 hx
-  exact ⟨_, hT.eq_smul_metricContraction c hc
-    (mem_boostWeightSubmodule_zero_of_invariant (rep := repLorentz) hinv)⟩
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
+  refine ⟨(4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e, ?_⟩
+  rw [metricContraction, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  rw [smul_smul, ← eq_smul_minkowskiMatrixZ hc d]
 
 /-!
 
