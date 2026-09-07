@@ -38,9 +38,9 @@ decomposition of the span of that species' symbols; joining the ten species and 
 families gives `derivSubmoduleBoostWeight`, a `Lorentz.BoostWeight.WeightDecomposition` of
 `h.derivSubmodule n` along every axis.  The weights that occur are a light-cone slot total —
 `+2` for `D₀ - Dᵢ`, `-2` for `D₀ + Dᵢ`, `0` for the two transverse directions — shifted by
-the spinor weight `±1`.  In particular every fermion boost weight is **odd**
+the spinor weight `±1`.  In particular every fermion boost weight is odd
 (`not_two_dvd_of_mem_derivSubmoduleBoostWeight_supp`), where the gauge and Higgs weights are
-even, and its absolute value is at most `2 * n + 1`.
+even.
 
 -/
 
@@ -505,27 +505,6 @@ lemma not_two_dvd_of_mem_fermionBoostWeights {n : ℕ} {k : ℤ}
   simp only [Finset.mem_insert, Finset.mem_singleton] at hbmem
   rcases hbmem with rfl | rfl <;> rw [hm] <;> omega
 
-/-- Every fermion boost weight has absolute value at most `2 * n + 1`: each of the `n`
-  derivative slots contributes at most `2`, and the spinor index one more. -/
-lemma abs_le_of_mem_fermionBoostWeights {n : ℕ} {k : ℤ}
-    (hk : k ∈ fermionBoostWeights n) : |k| ≤ 2 * n + 1 := by
-  rw [fermionBoostWeights, Finset.mem_image] at hk
-  obtain ⟨⟨c, b⟩, hb, rfl⟩ := hk
-  dsimp only
-  have hbmem : b ∈ ({-1, 1} : Finset ℤ) := (Finset.mem_product.1 hb).2
-  have hsum : |∑ j, lightConeWeight (c j)| ≤ 2 * n :=
-    calc |∑ j, lightConeWeight (c j)|
-        ≤ ∑ j, |lightConeWeight (c j)| := Finset.abs_sum_le_sum_abs _ _
-      _ ≤ ∑ _j : Fin n, (2 : ℤ) := Finset.sum_le_sum fun j _ => by
-          simp only [lightConeWeight]
-          split_ifs <;> norm_num
-      _ = 2 * n := by
-          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-          ring
-  simp only [Finset.mem_insert, Finset.mem_singleton] at hbmem
-  rw [abs_le] at hsum
-  rcases hbmem with rfl | rfl <;> rw [abs_le] <;> omega
-
 /-- The support of the d decomposition. -/
 lemma boostWeight_d_supp (f : Fin 3) (n : ℕ) (i : Fin 3) :
     (h.boostWeight_d f n i).supp = fermionBoostWeights n := rfl
@@ -589,143 +568,6 @@ lemma derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) :
 lemma not_two_dvd_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : ℤ}
     (hk : k ∈ (h.derivSubmoduleBoostWeight n i).supp) : ¬ (2 : ℤ) ∣ k :=
   not_two_dvd_of_mem_fermionBoostWeights ((h.derivSubmoduleBoostWeight_supp n i) ▸ hk)
-
-/-- **Every boost weight occurring in a fermion derivative submodule has absolute value at
-  most `2 * n + 1`**: `2` from each of the `n` derivative slots and `1` from the spinor
-  index. -/
-lemma abs_le_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : ℤ}
-    (hk : k ∈ (h.derivSubmoduleBoostWeight n i).supp) : |k| ≤ 2 * n + 1 :=
-  abs_le_of_mem_fermionBoostWeights ((h.derivSubmoduleBoostWeight_supp n i) ▸ hk)
-
-/-!
-
-## G. The light-cone fermion symbols and their boost weights
-
-The unconditional decomposition above is assembled from the following pointwise statement:
-a light-cone symbol evaluated at a value vector of definite boost weight `b` is a boost
-eigenvector, of weight `(∑ j, lightConeWeight (c j)) + b`.
-
--/
-
-include h in
-/-- **The light-cone `d` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_d_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ DownSinglet}
-    (hφ : φ ∈ boostWeightSubmodule DownSinglet.repLorentzGroup.dual i b) :
-    lightConeDeriv (d (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_d f n) i c hφ
-
-include h in
-/-- **The light-cone `bard` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_bard_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ (ConjModule DownSinglet)}
-    (hφ : φ ∈ boostWeightSubmodule DownSinglet.repLorentzGroup.conj.dual i b) :
-    lightConeDeriv (bard (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_bard f n) i c hφ
-
-include h in
-/-- **The light-cone `u` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_u_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ UpSinglet}
-    (hφ : φ ∈ boostWeightSubmodule UpSinglet.repLorentzGroup.dual i b) :
-    lightConeDeriv (u (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_u f n) i c hφ
-
-include h in
-/-- **The light-cone `baru` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_baru_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ (ConjModule UpSinglet)}
-    (hφ : φ ∈ boostWeightSubmodule UpSinglet.repLorentzGroup.conj.dual i b) :
-    lightConeDeriv (baru (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_baru f n) i c hφ
-
-include h in
-/-- **The light-cone `Q` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_Q_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ QuarkDoublet}
-    (hφ : φ ∈ boostWeightSubmodule QuarkDoublet.repLorentzGroup.dual i b) :
-    lightConeDeriv (Q (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_Q f n) i c hφ
-
-include h in
-/-- **The light-cone `barQ` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_barQ_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ (ConjModule QuarkDoublet)}
-    (hφ : φ ∈ boostWeightSubmodule QuarkDoublet.repLorentzGroup.conj.dual i b) :
-    lightConeDeriv (barQ (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_barQ f n) i c hφ
-
-include h in
-/-- **The light-cone `L` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_L_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ LeptonDoublet}
-    (hφ : φ ∈ boostWeightSubmodule LeptonDoublet.repLorentzGroup.dual i b) :
-    lightConeDeriv (L (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_L f n) i c hφ
-
-include h in
-/-- **The light-cone `barL` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_barL_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ (ConjModule LeptonDoublet)}
-    (hφ : φ ∈ boostWeightSubmodule LeptonDoublet.repLorentzGroup.conj.dual i b) :
-    lightConeDeriv (barL (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_barL f n) i c hφ
-
-include h in
-/-- **The light-cone `e` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_e_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ LeptonSinglet}
-    (hφ : φ ∈ boostWeightSubmodule LeptonSinglet.repLorentzGroup.dual i b) :
-    lightConeDeriv (e (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_e f n) i c hφ
-
-include h in
-/-- **The light-cone `bare` symbols have definite boost weight.**  Each derivative slot
-  contributes the weight of its light-cone direction — `+2` for `D₀ - Dᵢ`, `-2` for
-  `D₀ + Dᵢ`, `0` for the two transverse directions — on top of the weight `b` carried by the
-  value index. -/
-lemma lightConeDeriv_bare_mem (f : Fin 3) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ}
-    {φ : Module.Dual ℂ (ConjModule LeptonSinglet)}
-    (hφ : φ ∈ boostWeightSubmodule LeptonSinglet.repLorentzGroup.conj.dual i b) :
-    lightConeDeriv (bare (n := n) f) i c φ ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) :=
-  lightConeDeriv_mem _ (h.rotatesIndices_bare f n) i c hφ
 
 end IsFermionSector
 

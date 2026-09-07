@@ -308,62 +308,6 @@ lemma two_dvd_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : �
   rcases lightConeWeight_eq_two_or_neg_two_or_zero (c j) with hj | hj | hj <;>
     rw [hj] <;> norm_num
 
-/-- Every boost weight occurring in a gauge derivative submodule has absolute value at most
-  `2 * (n + 2)`: the `n + 2` slots contribute at most `2` each. -/
-lemma abs_le_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : ℤ}
-    (hk : k ∈ (h.derivSubmoduleBoostWeight n i).supp) : |k| ≤ 2 * (n + 2) := by
-  rw [h.derivSubmoduleBoostWeight_supp n i, Finset.mem_image] at hk
-  obtain ⟨c, -, rfl⟩ := hk
-  calc |∑ j, lightConeWeight (c j)|
-      ≤ ∑ j, |lightConeWeight (c j)| := Finset.abs_sum_le_sum_abs _ _
-    _ ≤ ∑ _j : Fin (n + 2), (2 : ℤ) := Finset.sum_le_sum fun j _ => by
-        rcases lightConeWeight_eq_two_or_neg_two_or_zero (c j) with hj | hj | hj <;>
-          rw [hj] <;> norm_num
-    _ = 2 * (n + 2) := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-        push_cast
-        ring
-
-/-!
-
-## The occurring weights in low order
-
--/
-
-/-- The light-cone weight totals of two slots. -/
-lemma image_lightConeWeight_sum_two :
-    (Finset.univ : Finset (Fin 2 → Fin 4)).image (fun c => ∑ j, lightConeWeight (c j))
-      = {-4, -2, 0, 2, 4} := by decide
-
-/-- The light-cone weight totals of three slots. -/
-lemma image_lightConeWeight_sum_three :
-    (Finset.univ : Finset (Fin 3 → Fin 4)).image (fun c => ∑ j, lightConeWeight (c j))
-      = {-6, -4, -2, 0, 2, 4, 6} := by decide
-
-set_option maxRecDepth 4000 in
-/-- The light-cone weight totals of four slots. -/
-lemma image_lightConeWeight_sum_four :
-    (Finset.univ : Finset (Fin 4 → Fin 4)).image (fun c => ∑ j, lightConeWeight (c j))
-      = {-8, -6, -4, -2, 0, 2, 4, 6, 8} := by decide
-
-/-- The boost weights of the underived field strength: two slots, so `-4` to `4`. -/
-lemma derivSubmoduleBoostWeight_supp_zero (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 0 i).supp = {-4, -2, 0, 2, 4} := by
-  rw [h.derivSubmoduleBoostWeight_supp 0 i]
-  exact image_lightConeWeight_sum_two
-
-/-- The boost weights of the once-derived field strength: three slots, so `-6` to `6`. -/
-lemma derivSubmoduleBoostWeight_supp_one (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 1 i).supp = {-6, -4, -2, 0, 2, 4, 6} := by
-  rw [h.derivSubmoduleBoostWeight_supp 1 i]
-  exact image_lightConeWeight_sum_three
-
-/-- The boost weights of the twice-derived field strength: four slots, so `-8` to `8`. -/
-lemma derivSubmoduleBoostWeight_supp_two (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 2 i).supp = {-8, -6, -4, -2, 0, 2, 4, 6, 8} := by
-  rw [h.derivSubmoduleBoostWeight_supp 2 i]
-  exact image_lightConeWeight_sum_four
-
 end IsGaugeSector
 
 end StandardModel

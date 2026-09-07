@@ -305,8 +305,8 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoi
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Truncation
+public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition

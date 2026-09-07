@@ -17,7 +17,7 @@ public import Physlib.Relativity.SL2C.Basic
 
 This file is stated for any `GaugeJet G 𝔤 G₀ 𝔤J` (jets of a gauge group `G₀` with Lie
 algebra `𝔤`); the Standard Model is the instance in
-`Physlib.Particles.StandardModel.GaugeGroup.Jet.GaugeJet`.
+`Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.GaugeJet`.
 
 An algebra `B` (for instance a jet algebra of Lagrangian terms) may contain a family of
 elements playing the role of the gauge-field symbols `[∂_s A_μ^a]`. This file defines

@@ -9,7 +9,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Relativity.SL2C.AxisRotations
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
@@ -836,15 +836,6 @@ lemma repLorentz_barHiggs {n : ℕ} (g : SL(2,ℂ)) (d : Fin n → Fin 1 ⊕ Fin
   simp only [barHiggs]
   rw [h.repLorentz_barH_apply]
 
-/-- **The Higgs inner product as a two-factor symbol map.** The first `num 0` derivative
-  indices go on the Higgs, the last `num 1` on its conjugate, and the scalar `w : ℂ` scales
-  the result — the inner product carries no Lorentz index of its own. -/
-noncomputable def dotSymbol (num : Fin 2 → ℕ)
-    (d : Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) : ℂ →ₗ[ℂ] B :=
-  LinearMap.toSpanSingleton ℂ B
-    (h.dotGaugeHiggs (fun j : Fin (num 0) => d (Fin.castAdd (num 1) j))
-      (fun j : Fin (num 1) => d (Fin.natAdd (num 0) j)))
-
 /-- **The Lorentz action on the Higgs inner product.** The two factors' derivative indices
   rotate independently; the inner product itself is a Lorentz scalar. -/
 lemma repLorentz_dotGaugeHiggs {m n : ℕ} (g : SL(2,ℂ))
@@ -1452,155 +1443,11 @@ lemma massWeightSubmodule_eight_eq :
 
 ## C. Gauge invariance
 
-We now turn to the gauge invariance of the
-different terms.
-
 -/
 
-/-!
-
-## C. Gauge invariance
-
--/
-
+/-- The gauge invariants of a given mass weight. -/
 noncomputable def gaugeInvariantOfMassDim (M : ℕ) : Submodule ℂ B :=
   h.massWeightSubmodule M ⊓ Representation.invariants rep
-
-/-!
-
-## D. Invariance under the Lorentz group
-
-Given the invariance under the the gauge group,
-we now give the invariance under the Lorentz group.
-
-The Lorentz invariant argument is the following.
-For a vector space `V` with a representation of the Lorentz group.
-we decompose `V` into eigenvectors of the Lorentz boost along the `x`-axis.
-`V = V₀ ⊕ V₁ ⊕ V₋₁ ⊕ V₂ ⊕ V₋₂ ⊕ ...`.
-We then take a minimal extension `W` of `V₀` such that `V₀ ≤ W ≤ V` and that we can
-decompose `W` based on the eigenvalues of the Lorentz boost along the `y`-axis:
-`W = W₀ ⊕ W₁ ⊕ W₋₁ ⊕ W₂ ⊕ W₋₂ ⊕ ...`.
-We now do the same with `W₀` finding a minimal extension `K` of `W₀` such that `W₀ ≤ K ≤ W`
-and that we can decompose `K` based on the eigenvalues of the Lorentz boost along the `z`-axis:
-`K = K₀ ⊕ K₁ ⊕ K₋₁ ⊕ K₂ ⊕ K₋₂ ⊕ ...`.
-An element of `V` which is Lorentz invariant must be in `K₀`.
-This is usually an if and only if statement.
--/
-
-/-!
-
-### D.1. The decomposition under boost weights in the x-direction
-
--/
-open Lorentz.BoostWeight
-
-/-- With all derivatives on the Higgs, the two-factor symbol is scaling by
-  `dotGaugeHiggs d ![]`. -/
-lemma dotSymbol_left (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![1, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
-  delta dotSymbol
-  congr 1
-  congr 1
-  exact funext fun j => j.elim0
-
-/-- With all derivatives on the conjugate Higgs. -/
-lemma dotSymbol_right (d : Fin 1 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![0, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
-  delta dotSymbol
-  congr 1
-  congr 1
-  all_goals first
-    | exact funext fun j => j.elim0
-    | (funext j; congr 1; exact Fin.ext (by simp [Fin.natAdd]))
-
-/-- With both derivatives on the Higgs. -/
-lemma dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![2, 0] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs d ![]) := by
-  delta dotSymbol
-  congr 1
-  congr 1
-  exact funext fun j => j.elim0
-
-/-- With both derivatives on the conjugate Higgs. -/
-lemma dotSymbol_right_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![0, 2] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] d) := by
-  delta dotSymbol
-  congr 1
-  congr 1
-  all_goals first
-    | exact funext fun j => j.elim0
-    | (funext j; congr 1; exact Fin.ext (by simp [Fin.natAdd]))
-
-/-- With one derivative on each factor. -/
-lemma dotSymbol_one_one (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    h.dotSymbol ![1, 1] d = LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![d 0] ![d 1]) := by
-  delta dotSymbol
-  congr 1
-  congr 1
-  all_goals funext j
-  all_goals fin_cases j
-  all_goals rfl
-
-@[simp]
-lemma range_dotSymbol_left_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    (h.dotSymbol ![2, 0] d).range = ℂ ∙ h.dotGaugeHiggs d ![] := by
-  rw [h.dotSymbol_left_two d, ← LinearMap.span_singleton_eq_range]
-
-@[simp]
-lemma range_dotSymbol_right_two (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    (h.dotSymbol ![0, 2] d).range = ℂ ∙ h.dotGaugeHiggs ![] d := by
-  rw [h.dotSymbol_right_two d, ← LinearMap.span_singleton_eq_range]
-
-@[simp]
-lemma range_dotSymbol_one_one (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    (h.dotSymbol ![1, 1] d).range = ℂ ∙ h.dotGaugeHiggs ![d 0] ![d 1] := by
-  rw [h.dotSymbol_one_one d, ← LinearMap.span_singleton_eq_range]
-
-/-- **The square of the inner product as a zero-index symbol map** over `ℂ`: the quartic
-  term of mass weight eight carries no Lorentz index. -/
-noncomputable def quarticSymbol (_ : Fin 0 → Fin 1 ⊕ Fin 3) : ℂ →ₗ[ℂ] B :=
-  LinearMap.toSpanSingleton ℂ B (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])
-
-@[simp]
-lemma range_quarticSymbol (d : Fin 0 → Fin 1 ⊕ Fin 3) :
-    (h.quarticSymbol d).range
-      = ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
-  rw [quarticSymbol, ← LinearMap.span_singleton_eq_range]
-
-/-!
-
-### D.4. The decomposition along the x and y directions
-
--/
-
-/-- **The minimal `y`-boost pieces over the `x`-weight-zero part of the dimension-eight
-  terms**: per two-derivative family, the ranges of the axis-`1` light-cone symbols over
-  every index pair except the two mixed transverse ones — no generator of the
-  `x`-weight-zero part meets a mixed `z`–`x` monomial — together with the square of the
-  inner product at weight zero. -/
-noncomputable def dimEightPieceOne (k : ℤ) : Submodule ℂ B :=
-  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k ∧
-      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
-    LinearMap.range (lightConeDeriv (n := 2) (h.dotSymbol ![2, 0]) 1 c)) ⊔
-  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k ∧
-      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
-    LinearMap.range (lightConeDeriv (n := 2) (h.dotSymbol ![0, 2]) 1 c)) ⊔
-  (⨆ (c : Fin 2 → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k ∧
-      ¬(c 0 = 2 ∧ c 1 = 3) ∧ ¬(c 0 = 3 ∧ c 1 = 2)),
-    LinearMap.range (lightConeDeriv (n := 2) (h.dotSymbol ![1, 1]) 1 c)) ⊔
-  (if k = 0 then ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) else ⊥)
-
-/-!
-
-## I. The fully invariants
-
--/
-
-/-!
-
-### I.2. Invariants in the full algebra
-
--/
 
 end IsHiggsSector
 

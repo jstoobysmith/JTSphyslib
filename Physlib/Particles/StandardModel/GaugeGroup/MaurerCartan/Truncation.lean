@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Truncation
+public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Truncation
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic

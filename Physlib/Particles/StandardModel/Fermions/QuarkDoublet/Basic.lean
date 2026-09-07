@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.RightHanded

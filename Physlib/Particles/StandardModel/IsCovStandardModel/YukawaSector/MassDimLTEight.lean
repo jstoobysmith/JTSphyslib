@@ -28,11 +28,10 @@ the four products surviving at weights five and seven has exactly one fermion fa
 its boost weight is odd along every axis; and an element of odd boost weight cannot be
 Lorentz invariant, since invariance forces boost weight zero and zero is even.
 
-Running that argument needs the product of two weight decompositions, and the general
-construction in `WeightGrading.lean` asks for `IsBoostGraded`, which the Standard Model
-algebra has no reason to satisfy: nothing says its boost weight spaces span. Yet
-multiplicativity of the Lorentz representation is by itself enough to convolve two
-decompositions, and section A rebuilds the product from that alone. Section B turns an odd
+Running that argument needs the product of two weight decompositions, which
+`WeightGrading.lean` does not provide: multiplicativity of the Lorentz representation is by
+itself enough to convolve two decompositions, and section A builds the product from that
+alone. Section B turns an odd
 support into the absence of invariants, and does so modulo a Lorentz-stable submodule `S`
 by passing to the quotient, where the weight-zero piece of the pushed-forward
 decomposition is still trivial.
@@ -63,9 +62,7 @@ The weight-`m` piece of a product is the join, over the splittings `k + l = m`, 
 products of the weight-`k` and weight-`l` pieces of the factors. That this is a weight
 decomposition of the product submodule needs nothing of the representation beyond
 multiplicativity: `mul_mem_boostWeightSubmodule` adds the two weights, and the pieces of
-the factors join to the factors themselves. The general `mul` of `WeightGrading.lean`
-instead routes through the projections `boostProj`, and so through `IsBoostGraded`, which
-is more than is available here.
+the factors join to the factors themselves.
 
 -/
 

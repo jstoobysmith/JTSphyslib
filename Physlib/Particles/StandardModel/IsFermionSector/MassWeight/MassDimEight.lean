@@ -1294,7 +1294,7 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
     ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
       ∧ (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ x - y ∈ h.kineticSpan := by
   have hzero : x ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 ⊔ S :=
-    mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
+    GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
   have hblk : x ∈ h.kineticBlockSubmodule ⊔ S :=
     sup_le_sup_right h.massWeightSubmoduleGaugeWeightEight_piece_zero_le S hzero
   have hSstab : IsStableUnder (gaugeLorentzMaps repGauge repLorentz) S :=

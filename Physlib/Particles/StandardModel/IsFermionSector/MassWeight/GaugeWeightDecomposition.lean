@@ -744,63 +744,14 @@ with `a` of pure weight `w` and `y` in the join of the remaining pieces with `S`
 hypercharge generator `g` fixes `x` and scales `a` by some `c ≠ 1`, so
 `(c - 1) • x = c • y - g y`, which lies in that smaller join because both the pieces and `S`
 are stable under `g`. Dividing by `c - 1` deletes the weight `w`, and the induction closes on
-the empty support. Only the hypercharge generator is needed, since it alone separates every
-fermion weight from zero.
+the empty support. This is `GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero`,
+with the hypercharge generator chosen at every step, since it alone separates every fermion
+weight from zero.
 
 This is the fermionic analogue of `exists_smul_contraction_of_invariant_subset` for the
 Lorentz group.
 
 -/
-
-/-- The one-weight-at-a-time refinement. Let `S` be closed under the gauge action and let `s`
-  be a finite set of gauge weights each of which is seen by the `i`-th torus generator, in
-  the sense that its `i`-th coordinate is nonzero. Then a gauge-invariant element of the join
-  of the weight-`w` pieces for `w ∈ s` with `S` already lies in `S`. -/
-lemma mem_of_invariant_of_mem_biSup_piece_sup {V S : Submodule ℂ B}
-    (dV : GaugeWeightDecomposition repGauge V)
-    (hS : ∀ (g : GaugeGroupI) (y : B), y ∈ S → repGauge g y ∈ S) (i : Fin 4) :
-    ∀ (s : Finset GaugeWeight), (∀ w ∈ s, w.coord i ≠ 0) →
-      ∀ x ∈ (⨆ w ∈ s, dV.piece w) ⊔ S, (∀ g : GaugeGroupI, repGauge g x = x) → x ∈ S := by
-  intro s
-  induction s using Finset.induction_on with
-  | empty =>
-    intro _ x hx _
-    simpa using hx
-  | @insert w₀ s' hw₀ ih =>
-    intro hs x hx hinv
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    obtain ⟨a, ha, y, hy, rfl⟩ := Submodule.mem_sup.mp hx
-    have hc1 : ((expI : ℂ) ^ w₀.coord i) ≠ 1 := by
-      intro hcc
-      exact hs w₀ (Finset.mem_insert_self w₀ s')
-        (expI_zpow_injective (show (expI : ℂ) ^ w₀.coord i = (expI : ℂ) ^ (0 : ℤ) by
-          rw [zpow_zero]; exact hcc))
-    have hpiece : ∀ w, ∀ z ∈ dV.piece w, repGauge (gaugeTorusGen i) z ∈ dV.piece w := by
-      intro w z hz
-      rw [dV.piece_le w z hz i]
-      exact (dV.piece w).smul_mem _ hz
-    have hmap : Submodule.map (repGauge (gaugeTorusGen i)) ((⨆ w ∈ s', dV.piece w) ⊔ S)
-        ≤ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      rw [Submodule.map_sup]
-      refine sup_le (le_sup_of_le_left ?_) (le_sup_of_le_right ?_)
-      · simp only [Submodule.map_iSup]
-        exact iSup₂_le fun w hw => le_iSup₂_of_le w hw
-          (Submodule.map_le_iff_le_comap.mpr fun z hz => hpiece w z hz)
-      · exact Submodule.map_le_iff_le_comap.mpr fun z hz => hS _ z hz
-    have hsum : ((expI : ℂ) ^ w₀.coord i) • a + repGauge (gaugeTorusGen i) y = a + y := by
-      have hg := hinv (gaugeTorusGen i)
-      rwa [map_add, dV.piece_le w₀ a ha i] at hg
-    have hkey : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y)
-        = ((expI : ℂ) ^ w₀.coord i) • y - repGauge (gaugeTorusGen i) y := by
-      rw [sub_smul, one_smul, smul_add, ← hsum]
-      abel
-    have hmem : (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      have h1 : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-        rw [hkey]
-        exact Submodule.sub_mem _ (Submodule.smul_mem _ _ hy) (hmap ⟨y, hy, rfl⟩)
-      have h2 := Submodule.smul_mem _ (((expI : ℂ) ^ w₀.coord i - 1)⁻¹) h1
-      rwa [smul_smul, inv_mul_cancel₀ (sub_ne_zero.mpr hc1), one_smul] at h2
-    exact ih (fun w hw => hs w (Finset.mem_insert_of_mem hw)) (a + y) hmem hinv
 
 /-- A gauge-invariant element of `h.derivSubmodule n ⊔ S`, for any submodule `S` closed under
   the gauge action, already lies in `S`. The fermionic part carries no gauge singlet, since
@@ -810,10 +761,12 @@ lemma mem_of_invariant_of_mem_derivSubmodule_sup {n : ℕ} {S : Submodule ℂ B}
     (hS : ∀ (g : GaugeGroupI) (y : B), y ∈ S → repGauge g y ∈ S)
     {x : B} (hx : x ∈ h.derivSubmodule n ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) : x ∈ S := by
-  refine mem_of_invariant_of_mem_biSup_piece_sup (h.derivSubmoduleGaugeWeight n) hS 3
+  refine GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero
+    (h.derivSubmoduleGaugeWeight n) (fun i y hy => hS _ y hy)
     (h.derivSubmoduleGaugeWeight n).supp ?_ x ?_ hinv
   · have hhc : ∀ w ∈ fermionGaugeWeights, w.2.2.2 ≠ 0 := by decide
     intro w hw
+    refine ⟨3, ?_⟩
     rw [GaugeWeight.coord_three]
     exact hhc w (h.derivSubmoduleGaugeWeight_supp n ▸ hw)
   · refine sup_le_sup_right

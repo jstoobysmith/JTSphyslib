@@ -8,7 +8,6 @@ module
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
-public import Mathlib.Algebra.TrivSqZeroExt.Basic
 /-!
 # Gauge tensors carrying two `su(3)` adjoint indices
 
@@ -56,8 +55,8 @@ the action on coefficients and the trace contraction. Section C has the coordina
 of one index, section D computes the rotations on them, section E is the finite
 computation, section F classifies the invariants of the span, and section G divides out a
 stable submodule and proves the theorem. An aside at the end holds what other files import
-from here and the theorem does not use: the weight basis of the adjoint, the quotient and
-square-zero representations, and the gauge form of the theorem.
+from here and the theorem does not use: the weight basis of the adjoint and the gauge form
+of the theorem.
 -/
 
 @[expose] public section
@@ -1147,111 +1146,6 @@ lemma span_eq_wtSpan : hT.span = hT.wtSpan := by
   · rw [span, biVec]
     exact sum_mem fun d _ => Submodule.smul_mem _ _
       (Submodule.mem_iSup_of_mem d (Submodule.mem_span_singleton_self _))
-
-/-!
-
-## Aside: the quotient representation, for `MassDimEight`
-
-A submodule stable under a representation of the whole gauge group carries the induced
-representation on the quotient. The theorem above needs only the induced maps
-`Submodule.mapQ`; `MassDimEight` uses the representation.
-
--/
-
-/-- The representation induced on the quotient by a stable submodule. -/
-noncomputable def quotRep (ρ : Representation ℂ GaugeGroupI B) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) :
-    Representation ℂ GaugeGroupI (B ⧸ S) where
-  toFun g := S.mapQ S (ρ g) fun y hy => hS g y hy
-  map_one' := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_one, Module.End.one_apply]
-  map_mul' g₁ g₂ := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_mul, Module.End.mul_apply]
-
-/-- The quotient representation on a class is the class of the representation. -/
-lemma quotRep_mkQ {ρ : Representation ℂ GaugeGroupI B} (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, ρ g y ∈ S) (g : GaugeGroupI) (y : B) :
-    quotRep ρ S hS g (S.mkQ y) = S.mkQ (ρ g y) := rfl
-
-/-!
-
-## Aside: the trivial square-zero extension, for `MassDimEight`
-
-`MassDimEight` needs a transport in the opposite direction to `quotRep`, from a module to an
-algebra: the trivial square-zero extension `TrivSqZeroExt ℂ M` is a commutative algebra on
-which any representation of `M` acts multiplicatively, `sqZeroRep`. It belongs with
-`GaugeWeightDecomposition`.
-
--/
-
-section SquareZero
-
-variable {M : Type*} [AddCommGroup M] [Module ℂ M]
-
-/-- The opposite scalar action on a complex vector space, which the square-zero extension
-  needs to be a ring. Since `ℂ` is commutative it is the given action read through `unop`,
-  and it is given a low priority so that the action of `ℂ` on itself is unaffected. -/
-noncomputable local instance (priority := 100) opModule : Module ℂᵐᵒᵖ M :=
-  Module.compHom M ((RingHom.id ℂ).fromOpposite fun x y => mul_comm x y)
-
-/-- The two scalar actions of `ℂ` on a complex vector space commute. -/
-local instance (priority := 100) smulCommClassOpModule : SMulCommClass ℂ ℂᵐᵒᵖ M :=
-  ⟨fun a b m => smul_comm a b.unop m⟩
-
-/-- The opposite scalar action agrees with the given one, `ℂ` being commutative. -/
-local instance (priority := 100) isCentralScalarOpModule : IsCentralScalar ℂ M :=
-  ⟨fun _ _ => rfl⟩
-
-/-- The linear map of the square-zero extension induced by a linear map of the module: the
-  identity on the scalar part and the given map on the module part. -/
-def sqZeroMap (f : M →ₗ[ℂ] M) : TrivSqZeroExt ℂ M →ₗ[ℂ] TrivSqZeroExt ℂ M where
-  toFun u := TrivSqZeroExt.inl u.fst + TrivSqZeroExt.inr (f u.snd)
-  map_add' u v := by
-    refine TrivSqZeroExt.ext ?_ ?_ <;> simp
-  map_smul' c u := by
-    refine TrivSqZeroExt.ext ?_ ?_ <;> simp
-
-/-- The induced map leaves the scalar part alone. -/
-@[simp]
-lemma fst_sqZeroMap (f : M →ₗ[ℂ] M) (u : TrivSqZeroExt ℂ M) :
-    (sqZeroMap f u).fst = u.fst := by
-  simp [sqZeroMap]
-
-/-- The induced map acts by the given map on the module part. -/
-@[simp]
-lemma snd_sqZeroMap (f : M →ₗ[ℂ] M) (u : TrivSqZeroExt ℂ M) :
-    (sqZeroMap f u).snd = f u.snd := by
-  simp [sqZeroMap]
-
-/-- The representation carried by the square-zero extension: trivial on the scalar part
-  and the given representation on the module part. -/
-def sqZeroRep (ρ : Representation ℂ GaugeGroupI M) :
-    Representation ℂ GaugeGroupI (TrivSqZeroExt ℂ M) where
-  toFun g := sqZeroMap (ρ g)
-  map_one' := by
-    refine LinearMap.ext fun u => TrivSqZeroExt.ext ?_ ?_ <;> simp
-  map_mul' g₁ g₂ := by
-    refine LinearMap.ext fun u => TrivSqZeroExt.ext ?_ ?_ <;> simp [Module.End.mul_apply]
-
-/-- The extended representation on the image of the module is the given one. -/
-@[simp]
-lemma sqZeroRep_inr (ρ : Representation ℂ GaugeGroupI M) (g : GaugeGroupI) (m : M) :
-    sqZeroRep ρ g (TrivSqZeroExt.inr m) = TrivSqZeroExt.inr (ρ g m) := by
-  refine TrivSqZeroExt.ext ?_ ?_ <;> simp [sqZeroRep]
-
-/-- The extended representation acts by algebra maps, whatever the representation it
-  extends. -/
-lemma isMulRep_sqZeroRep (ρ : Representation ℂ GaugeGroupI M) : IsMulRep (sqZeroRep ρ) := by
-  intro g u v
-  refine TrivSqZeroExt.ext ?_ ?_
-  · simp [sqZeroRep]
-  · simp [sqZeroRep, TrivSqZeroExt.snd_mul, op_smul_eq_smul]
-
-end SquareZero
 
 /-!
 

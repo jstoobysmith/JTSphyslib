@@ -484,97 +484,13 @@ lemma range_e_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 Gauge invariance is what selects the conjugate pairings. A gauge-invariant element lies
 in the weight-zero piece of the gauge weight decomposition, and modulo a gauge-stable
 submodule the same holds with the submodule joined on: the torus generators scale every
-other weight, and the induction of `mem_of_invariant_of_mem_biSup_piece_sup` deletes them
+other weight, and the induction of
+`GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero` deletes them
 one at a time. Unlike the single-tower case, the generator has to be chosen weight by
 weight: a product like `Q barQ` at two different colours has vanishing hypercharge and
 nonzero colour, so no one generator sees every weight.
 
 -/
-
-/-- The one-weight-at-a-time refinement, with the separating generator chosen per weight.
-  Let `S` be closed under the four torus generators and let `s` be a finite set of gauge
-  weights, each seen by some generator. Then a gauge-invariant element of the join of the
-  weight-`w` pieces for `w ∈ s` with `S` already lies in `S`. -/
-lemma mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero {V S : Submodule ℂ B}
-    (dV : GaugeWeightDecomposition repGauge V)
-    (hS : ∀ (i : Fin 4) (y : B), y ∈ S → repGauge (gaugeTorusGen i) y ∈ S) :
-    ∀ (s : Finset GaugeWeight), (∀ w ∈ s, ∃ i, w.coord i ≠ 0) →
-      ∀ x ∈ (⨆ w ∈ s, dV.piece w) ⊔ S, (∀ g : GaugeGroupI, repGauge g x = x) → x ∈ S := by
-  intro s
-  induction s using Finset.induction_on with
-  | empty =>
-    intro _ x hx _
-    simpa using hx
-  | @insert w₀ s' hw₀ ih =>
-    intro hs x hx hinv
-    obtain ⟨i, hi⟩ := hs w₀ (Finset.mem_insert_self w₀ s')
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    obtain ⟨a, ha, y, hy, rfl⟩ := Submodule.mem_sup.mp hx
-    have hc1 : ((expI : ℂ) ^ w₀.coord i) ≠ 1 := by
-      intro hcc
-      exact hi (expI_zpow_injective
-        (show (expI : ℂ) ^ w₀.coord i = (expI : ℂ) ^ (0 : ℤ) by rw [zpow_zero]; exact hcc))
-    have hpiece : ∀ w, ∀ z ∈ dV.piece w, repGauge (gaugeTorusGen i) z ∈ dV.piece w := by
-      intro w z hz
-      rw [dV.piece_le w z hz i]
-      exact (dV.piece w).smul_mem _ hz
-    have hmap : Submodule.map (repGauge (gaugeTorusGen i)) ((⨆ w ∈ s', dV.piece w) ⊔ S)
-        ≤ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      rw [Submodule.map_sup]
-      refine sup_le (le_sup_of_le_left ?_) (le_sup_of_le_right ?_)
-      · simp only [Submodule.map_iSup]
-        exact iSup₂_le fun w hw => le_iSup₂_of_le w hw
-          (Submodule.map_le_iff_le_comap.mpr fun z hz => hpiece w z hz)
-      · exact Submodule.map_le_iff_le_comap.mpr fun z hz => hS i z hz
-    have hsum : ((expI : ℂ) ^ w₀.coord i) • a + repGauge (gaugeTorusGen i) y = a + y := by
-      have hg := hinv (gaugeTorusGen i)
-      rwa [map_add, dV.piece_le w₀ a ha i] at hg
-    have hkey : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y)
-        = ((expI : ℂ) ^ w₀.coord i) • y - repGauge (gaugeTorusGen i) y := by
-      rw [sub_smul, one_smul, smul_add, ← hsum]
-      abel
-    have hmem : (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      have h1 : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-        rw [hkey]
-        exact Submodule.sub_mem _ (Submodule.smul_mem _ _ hy) (hmap ⟨y, hy, rfl⟩)
-      have h2 := Submodule.smul_mem _ (((expI : ℂ) ^ w₀.coord i - 1)⁻¹) h1
-      rwa [smul_smul, inv_mul_cancel₀ (sub_ne_zero.mpr hc1), one_smul] at h2
-    exact ih (fun w hw => hs w (Finset.mem_insert_of_mem hw)) (a + y) hmem hinv
-
-/-- A gauge-invariant element of `V ⊔ S`, for `S` closed under the four torus generators,
-  already lies in the weight-zero piece joined with `S`: every other weight is seen by
-  some generator and is scaled away by it. -/
-lemma mem_piece_zero_sup_of_invariant {V S : Submodule ℂ B}
-    (dV : GaugeWeightDecomposition repGauge V)
-    (hS : ∀ (i : Fin 4) (y : B), y ∈ S → repGauge (gaugeTorusGen i) y ∈ S)
-    {x : B} (hx : x ∈ V ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    x ∈ dV.piece 0 ⊔ S := by
-  refine mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero dV ?_ (dV.supp.erase 0) ?_ x ?_
-    hinv
-  · intro i y hy
-    rw [Submodule.mem_sup] at hy ⊢
-    obtain ⟨a, ha, b, hb, rfl⟩ := hy
-    refine ⟨repGauge (gaugeTorusGen i) a, ?_, repGauge (gaugeTorusGen i) b, hS i b hb, ?_⟩
-    · rw [dV.piece_le 0 a ha i]
-      exact (dV.piece 0).smul_mem _ ha
-    · rw [map_add]
-  · intro w hw
-    have hw0 : w ≠ 0 := (Finset.mem_erase.mp hw).1
-    by_contra hcon
-    refine hw0 (GaugeWeight.coord_injective (funext fun i => ?_))
-    have hi := not_not.mp (not_exists.mp hcon i)
-    rw [hi, GaugeWeight.zero_coord i]
-  · have hVle : V ≤ (⨆ w ∈ dV.supp.erase 0, dV.piece w) ⊔ dV.piece 0 := by
-      refine le_trans (le_of_eq dV.iSup_piece.symm) (iSup_le fun w => ?_)
-      by_cases hw0 : w = 0
-      · subst hw0
-        exact le_sup_right
-      · by_cases hw : w ∈ dV.supp
-        · exact le_sup_of_le_left (le_iSup₂_of_le w (Finset.mem_erase.mpr ⟨hw0, hw⟩) le_rfl)
-        · rw [dV.piece_eq_bot w hw]
-          exact bot_le
-    exact ((sup_le_sup_right hVle S).trans (le_of_eq (sup_assoc _ _ _))) hx
-
 
 /-!
 
@@ -706,7 +622,7 @@ theorem mem_of_invariant_of_mem_massWeightSubmoduleSix_sup {S : Submodule ℂ B}
     (hG : ∀ g : GaugeGroupI, repGauge g x = x)
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hzero : x ∈ (h.massWeightSubmoduleGaugeWeightSix).piece 0 ⊔ S :=
-    mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
+    GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
   refine mem_of_lorentz_invariant_iSup_dualLeftRightWeyl_span
     h.isDualLeftRightWeyl_sixFamily S hSL ?_ hL
   exact sup_le_sup_right h.massWeightSubmoduleGaugeWeightSix_piece_zero_le S hzero

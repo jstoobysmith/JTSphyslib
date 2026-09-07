@@ -731,20 +731,14 @@ lemma isBiDualRightWeyl_sub {M : Type*} [AddCommGroup M] [Module ℂ M]
 ## G. Weight pieces, symbol ranges and stability
 
 The last group of shared facts is about the objects a sector-level argument hands the
-peeling: a weight piece of a gauge weight decomposition lies in the submodule it
-decomposes, a symbol range is the span of the symbol's components against a dual basis, and
-the product of two stable submodules is stable. None of them mentions a particular sector.
+peeling: a symbol range is the span of the symbol's components against a dual basis, and
+the product of two stable submodules is stable. Neither mentions a particular sector.
 
 -/
 
 section Bridges
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
-
-/-- A weight piece lies inside the submodule it decomposes. -/
-lemma GaugeWeightDecomposition.piece_le_self {rep : Representation ℂ GaugeGroupI B}
-    {V : Submodule ℂ B} (d : GaugeWeightDecomposition rep V) (w : GaugeWeight) :
-    d.piece w ≤ V := le_trans (le_iSup d.piece w) (le_of_eq d.iSup_piece)
 
 /-- The range of a symbol map is the span of its components against the dual basis of the
   value space. This is the companion of `range_eq_iSup_span`, which reads the same range off

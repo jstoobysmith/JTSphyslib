@@ -762,8 +762,9 @@ trace contractions. They are the second summand of the conclusion.
 
 The hypothesis is membership of the zero-weight piece joined with `S`. An element of the
 mass-weight submodule joined with `S` need not have its mass-weight eight part invariant,
-so nothing places it in the zero-weight piece directly; `mem_piece_zero_sup_of_invariant`
-of section G.4 supplies that step for any gauge-stable `S`, and
+so nothing places it in the zero-weight piece directly;
+`GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant` supplies that step for any
+gauge-stable `S`, and
 `exists_mem_of_invariant_massWeightSubmodule_eight_sup` is the resulting statement about
 `massWeightSubmodule 8 ⊔ S`.
 
@@ -1572,99 +1573,6 @@ lemma mixedCartanPart_le :
 
 /-!
 
-## G.4. The sup form of the zero-weight step
-
-`GaugeWeightDecomposition.mem_zero_of_invariant` places an invariant of `V` in the
-zero-weight piece, but an element of `V ⊔ S` need not have its `V`-part invariant, so it
-does not apply. Dividing by the gauge-stable `S` repairs that, at the cost of a target
-that is only a module: the decomposition carries `IsMulRep` as a field and the quotient of
-a ring by a submodule is no ring. Section F.4 of `IsSU3BiAdjoint` closes exactly that gap.
-The trivial square-zero extension of a module is an algebra built from the module
-structure alone, a representation extends to it acting trivially on the scalar part, and
-the extension is multiplicative for free. Transporting the decomposition along the
-composite of the quotient map with the injection of the module therefore gives a
-decomposition to which `mem_zero_of_invariant` applies, and the injectivity of the two
-maps carries the conclusion back.
-
--/
-
-/-- Transport of a gauge weight decomposition along an equivariant linear map into an
-  algebra: the pieces of the image are the images of the pieces, the eigenvector
-  equations being carried along by equivariance. -/
-@[implicit_reducible]
-noncomputable def mapGaugeWeightDecomposition {N : Type} [Ring N] [Algebra ℂ N]
-    {rep' : Representation ℂ GaugeGroupI N} {V : Submodule ℂ B}
-    (d : GaugeWeightDecomposition repGauge V) (f : B →ₗ[ℂ] N)
-    (hf : ∀ (g : GaugeGroupI) (b : B), f (repGauge g b) = rep' g (f b))
-    (hmul : IsMulRep rep') : GaugeWeightDecomposition rep' (V.map f) where
-  piece w := (d.piece w).map f
-  supp := d.supp
-  rep_mul := hmul
-  piece_le w x hx i := by
-    obtain ⟨b, hb, rfl⟩ := hx
-    rw [← hf, d.piece_le w b hb i, map_smul]
-  piece_eq_bot w hw := by rw [d.piece_eq_bot w hw, Submodule.map_bot]
-  iSup_piece := by rw [← Submodule.map_iSup, d.iSup_piece]
-
-section SquareZero
-
-variable {M : Type} [AddCommGroup M] [Module ℂ M]
-
-/-- The opposite scalar action on a complex vector space, which the square-zero extension
-  needs to be a ring. Since `ℂ` is commutative it is the given action read through `unop`,
-  and it is given a low priority so that the action of `ℂ` on itself is unaffected. -/
-noncomputable local instance (priority := 100) opModule : Module ℂᵐᵒᵖ M :=
-  Module.compHom M ((RingHom.id ℂ).fromOpposite fun x y => mul_comm x y)
-
-/-- The two scalar actions of `ℂ` on a complex vector space commute. -/
-local instance (priority := 100) smulCommClassOpModule : SMulCommClass ℂ ℂᵐᵒᵖ M :=
-  ⟨fun a b m => smul_comm a b.unop m⟩
-
-/-- The opposite scalar action agrees with the given one, `ℂ` being commutative. -/
-local instance (priority := 100) isCentralScalarOpModule : IsCentralScalar ℂ M :=
-  ⟨fun _ _ => rfl⟩
-
-/-- A gauge invariant of `V ⊔ S`, for a gauge-stable `S`, lies in the zero-weight piece of
-  `V` joined with `S`. Nothing is asked of `S` beyond stability: the argument runs in the
-  square-zero extension of the quotient by `S`, where the transported decomposition still
-  makes sense. -/
-lemma mem_piece_zero_sup_of_invariant {V : Submodule ℂ B}
-    (d : GaugeWeightDecomposition repGauge V) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B} (hx : x ∈ V ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) : x ∈ d.piece 0 ⊔ S := by
-  set ρ := IsSU3BiAdjoint.quotRep repGauge S hS with hρ
-  set f : B →ₗ[ℂ] TrivSqZeroExt ℂ (B ⧸ S) :=
-    (TrivSqZeroExt.inrHom ℂ (B ⧸ S)).comp S.mkQ with hfdef
-  have hfapply : ∀ b : B, f b = TrivSqZeroExt.inr (S.mkQ b) := fun b => rfl
-  have hf : ∀ (g : GaugeGroupI) (b : B),
-      f (repGauge g b) = IsSU3BiAdjoint.sqZeroRep ρ g (f b) := by
-    intro g b
-    rw [hfapply, hfapply, IsSU3BiAdjoint.sqZeroRep_inr, hρ,
-      IsSU3BiAdjoint.quotRep_mkQ]
-  obtain ⟨u, hu, s, hs, hus⟩ := Submodule.mem_sup.1 hx
-  have hfs : f s = 0 := by
-    rw [hfapply, Submodule.mkQ_apply, (Submodule.Quotient.mk_eq_zero S).2 hs]
-    simp
-  have hfx : f x ∈ V.map f := by
-    rw [← hus, map_add, hfs, add_zero]
-    exact Submodule.mem_map_of_mem hu
-  have hfinv : ∀ g : GaugeGroupI, IsSU3BiAdjoint.sqZeroRep ρ g (f x) = f x := by
-    intro g
-    rw [← hf, hinv g]
-  obtain ⟨v, hv, hvx⟩ := GaugeWeightDecomposition.mem_zero_of_invariant
-    (mapGaugeWeightDecomposition d f hf (IsSU3BiAdjoint.isMulRep_sqZeroRep ρ)) hfx hfinv
-  have hxv : x - v ∈ S := by
-    have hq : S.mkQ (x - v) = 0 := by
-      rw [map_sub, sub_eq_zero]
-      exact (TrivSqZeroExt.inr_injective (R := ℂ) (by rw [← hfapply, ← hfapply, hvx])).symm
-    rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
-  rw [show x = v + (x - v) from by abel]
-  exact Submodule.add_mem _ (Submodule.mem_sup_left hv) (Submodule.mem_sup_right hxv)
-
-end SquareZero
-
-/-!
-
 ## G.3. The invariants of mass weight eight
 
 -/
@@ -1844,7 +1752,8 @@ theorem exists_mem_of_invariant_massWeightSubmodule_eight_sup (S : Submodule ℂ
     ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
       ∧ x - y ∈ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan :=
   h.exists_mem_of_invariant_piece_zero_sup S hS
-    (mem_piece_zero_sup_of_invariant h.massWeightSubmoduleGaugeWeightEight S hS hx hinv)
+    (GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
+      h.massWeightSubmoduleGaugeWeightEight (fun i y hy => hS _ y hy) hx hinv)
     hinv
 
 /-- The gauge invariants of the mass-weight eight submodule itself, the case `x ∈ V` of

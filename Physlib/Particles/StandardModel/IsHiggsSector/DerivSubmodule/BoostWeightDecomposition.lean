@@ -339,49 +339,6 @@ lemma two_dvd_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : �
   refine Finset.dvd_sum fun j _ => ?_
   rcases hw (c j) with hj | hj | hj <;> rw [hj] <;> norm_num
 
-/-- Every boost weight occurring in a Higgs derivative submodule has absolute value at most
-  `2 * n`: the `n` slots contribute at most `2` each. -/
-lemma abs_le_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : ℤ}
-    (hk : k ∈ (h.derivSubmoduleBoostWeight n i).supp) : |k| ≤ 2 * n := by
-  have hw : ∀ κ : Fin 4,
-      lightConeWeight κ = 2 ∨ lightConeWeight κ = -2 ∨ lightConeWeight κ = 0 := by
-    intro κ
-    simp only [lightConeWeight]
-    split_ifs <;> simp
-  rw [h.derivSubmoduleBoostWeight_supp n i, Finset.mem_image] at hk
-  obtain ⟨c, -, rfl⟩ := hk
-  calc |∑ j, lightConeWeight (c j)|
-      ≤ ∑ j, |lightConeWeight (c j)| := Finset.abs_sum_le_sum_abs _ _
-    _ ≤ ∑ _j : Fin n, (2 : ℤ) := Finset.sum_le_sum fun j _ => by
-        rcases hw (c j) with hj | hj | hj <;> rw [hj] <;> norm_num
-    _ = 2 * n := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-        ring
-
-/-!
-
-## F. The occurring weights in low order
-
--/
-
-/-- The boost weights of the underived Higgs: no slots, so only `0`. -/
-lemma derivSubmoduleBoostWeight_supp_zero (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 0 i).supp = {0} := by
-  rw [h.derivSubmoduleBoostWeight_supp 0 i]
-  decide
-
-/-- The boost weights of the once-derived Higgs: one slot, so `-2`, `0` or `2`. -/
-lemma derivSubmoduleBoostWeight_supp_one (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 1 i).supp = {-2, 0, 2} := by
-  rw [h.derivSubmoduleBoostWeight_supp 1 i]
-  decide
-
-/-- The boost weights of the twice-derived Higgs: two slots, so `-4` to `4`. -/
-lemma derivSubmoduleBoostWeight_supp_two (i : Fin 3) :
-    (h.derivSubmoduleBoostWeight 2 i).supp = {-4, -2, 0, 2, 4} := by
-  rw [h.derivSubmoduleBoostWeight_supp 2 i]
-  decide
-
 end IsHiggsSector
 
 end StandardModel
