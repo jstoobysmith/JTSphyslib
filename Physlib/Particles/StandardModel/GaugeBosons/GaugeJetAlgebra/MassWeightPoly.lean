@@ -5,17 +5,15 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
+public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
 /-!
 # The mass-weight polynomial on the gauge-boson jet algebra
 
 ## i. Overview
 
-The mass-weight scaling of
-`Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim` records the mass
-dimension of a homogeneous element in a scalar. Replacing that scalar by a formal variable
-turns the scaling into a grading: the generator `∂_s A_μ^φ` is sent to `X ^ (2 + 2 |s|)`
-times itself, the gauge field carrying mass weight two and each derivative two more.
+Replacing the scalar of a mass-weight scaling by a formal variable turns the scaling into a
+grading: the generator `∂_s A_μ^φ` is sent to `X ^ (2 + 2 |s|)` times itself, the gauge field
+carrying mass weight two and each derivative two more.
 
 The gauge-boson jet algebra is real, but the jet algebra of the Standard Model uses its
 complexification `ℂ ⊗[ℝ] GaugeJetAlgebra`. So the grading is built in two steps: the
@@ -106,8 +104,7 @@ lemma jetComponentPoly_basisMultiset_tmul (s : Multiset (Fin 1 ⊕ Fin 3))
 -/
 
 /-- The mass-weight polynomial on the gauge-boson jet algebra: the `ℝ`-algebra map sending
-  a generator of mass weight `n` to `X ^ n` times its image in the complexification. It is
-  `GaugeJetAlgebra.massWeightScale` with the scalar replaced by the formal variable `X`, and
+  a generator of mass weight `n` to `X ^ n` times its image in the complexification. It
   needs no side condition because the target is commutative. -/
 noncomputable def massWeightPoly :
     GaugeJetAlgebra →ₐ[ℝ] Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra) := by

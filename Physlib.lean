@@ -292,7 +292,6 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeA
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invariants
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
@@ -368,7 +367,6 @@ public import Physlib.Particles.StandardModel.JetAlgebra.Generators
 public import Physlib.Particles.StandardModel.JetAlgebra.Invariants
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
-public import Physlib.Particles.StandardModel.JetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.JetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
