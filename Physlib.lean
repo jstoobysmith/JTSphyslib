@@ -274,6 +274,7 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.MatterField
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
@@ -293,6 +294,7 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invari
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint
