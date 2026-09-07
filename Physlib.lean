@@ -276,10 +276,8 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonSector.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.LorentzAction
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.JetComponentSpace
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
@@ -316,7 +314,6 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAnti
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Jet.Truncation
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
