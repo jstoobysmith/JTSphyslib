@@ -31,15 +31,15 @@ satisfies, with nothing postulated beyond them.
 Let `A_μ^a` be a gauge field for the gauge group `G`, with `μ` a spacetime (covector)
 index and `a` an adjoint index. Under a gauge transformation `g` the field transforms as
 
-  `A_μ ↦ Ad_g A_μ + mc(g)_μ`,
+  `A_μ ↦ Ad_g A_μ + maurerCartan(g)_μ`,
 
-where `mc(g)_μ = i (∂_μ g) g⁻¹` is the Maurer–Cartan form. The symbols `[∂_s A_μ^a]`
+where `maurerCartan(g)_μ = i (∂_μ g) g⁻¹` is the Maurer–Cartan form. The symbols `[∂_s A_μ^a]`
 are coordinate functions on the space of field configurations, so the induced (left)
 action is the pullback along `g⁻¹`: one substitutes `g⁻¹` into the field law and
 differentiates `s` times with the Leibniz rule:
 
   `g • [∂_s A_μ^a] = ∑_{x+y=s} C(x,y) (∂_x (Ad_{g⁻¹})^a_b)| [∂_y A_μ^b]`
-  `                  + (∂_s mc(g⁻¹)_μ^a)|`,
+  `                  + (∂_s maurerCartan(g⁻¹)_μ^a)|`,
 
 where `C(x,y)` is the multinomial coefficient of the splitting and `|` denotes
 evaluation at the base point. All the data on the right is carried by the *jet* of the
@@ -56,7 +56,7 @@ of the jet group `G` and not merely of its value group `G₀`.
   differentiate `x` times, evaluate at the base point, and pair with `φ`.
 * The sum `∑_{x+y=s} C(x,y)` is the sum over `s.antidiagonal`: a splitting `(x, y)`
   occurs in the antidiagonal of the multiset `s` with multiplicity exactly `C(x,y)`.
-* `(∂_s mc(g⁻¹)_μ)|` is `JetGaugeAlgebra.eval (iteratedDeriv s (maurerCartanForm g⁻¹ μ))`,
+* `(∂_s maurerCartan(g⁻¹)_μ)|` is `JetGaugeAlgebra.eval (iteratedDeriv s (maurerCartanForm g⁻¹ μ))`,
   a constant algebra element, paired with `φ` and embedded in `B` as a scalar.
 
 -/
@@ -111,7 +111,7 @@ lemma adjointDualCoeff_singleton (U : G)
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     adjointDualCoeff jets U {μ} φ =
       -adjointDualCoeff jets U 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
-        (jets.evalLie (jets.mc U μ))) := by
+        (jets.evalLie (jets.maurerCartan U μ))) := by
   refine LinearMap.ext fun a => ?_
   simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.neg_apply,
     LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
@@ -153,7 +153,7 @@ variable (jets) in
   * the symbol `A_μ^a` carries one covector index, transforming through the columns of
     the Lorentz matrix (`lorentz_A`);
   * under a gauge jet `U` the derivative symbols `[∂_s A_μ^a]` transform by the
-    Leibniz expansion of `A_μ ↦ Ad_{U⁻¹} A_μ + mc(U⁻¹)_μ` (`gauge_A`) — the adjoint
+    Leibniz expansion of `A_μ ↦ Ad_{U⁻¹} A_μ + maurerCartan(U⁻¹)_μ` (`gauge_A`) — the adjoint
     convolution plus the inhomogeneous Maurer–Cartan shift. The inverse makes the
     action a left action, exactly as in `φ'(x) = φ(Λ⁻¹ x)`. -/
 structure IsGaugeField (repLorentz : Representation ℂ SL(2,ℂ) B)
@@ -176,7 +176,7 @@ structure IsGaugeField (repLorentz : Representation ℂ SL(2,ℂ) B)
       (s.antidiagonal.map fun p => (A p.2 μ (adjointDualCoeff jets U⁻¹ p.1 φ))).sum
       + algebraMap ℂ B
           (φ (jets.evalLie (jets.iteratedDeriv s
-            (jets.mc U⁻¹ μ))))
+            (jets.maurerCartan U⁻¹ μ))))
   /-- The gauge action preserves products: gauge transformations act on the algebra of
     local expressions as algebra homomorphisms. -/
   gauge_mul : ∀ (U : G) (b₁ b₂ : B),
@@ -224,7 +224,7 @@ noncomputable def commutator
 lemma repGauge_apply (hA : IsGaugeField jets repLorentz repGauge A) (U : G)
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (A 0 μ φ) = A 0 μ (adjointDualCoeff jets U⁻¹ ∅ φ) +
-      algebraMap ℂ B (φ (jets.evalLie (jets.mc U⁻¹ μ))) := by
+      algebraMap ℂ B (φ (jets.evalLie (jets.maurerCartan U⁻¹ μ))) := by
   simpa [show (∅ : Multiset (Fin 1 ⊕ Fin 3)) = 0 from rfl] using
     hA.gauge_apply_deriv U 0 μ φ
 
@@ -237,7 +237,7 @@ lemma repGauge_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
     repGauge U (A {ρ} σ φ) =
       A {ρ} σ (adjointDualCoeff jets U⁻¹ 0 φ) + A 0 σ (adjointDualCoeff jets U⁻¹ {ρ} φ) +
       algebraMap ℂ B (φ (jets.evalLie
-        (jets.deriv ρ (jets.mc U⁻¹ σ)))) := by
+        (jets.deriv ρ (jets.maurerCartan U⁻¹ σ)))) := by
   have hanti : ({ρ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
       {((0 : Multiset (Fin 1 ⊕ Fin 3)), ({ρ} : Multiset (Fin 1 ⊕ Fin 3))),
         (({ρ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
@@ -371,7 +371,7 @@ lemma tensorBracket_one_left (c : 𝔤) (t : B ⊗[ℝ] 𝔤) :
 set_option maxHeartbeats 1000000 in
 /-- The gauge transformation law of the commutator term: writing the field law as
   `A_μ ↦ Ad₀ A_μ + c_μ` with `Ad₀` the base-point adjoint of `U₀⁻¹` and
-  `c_μ = mc(U⁻¹)_μ|₀` the constant Maurer–Cartan shift, bilinearity of the bracket
+  `c_μ = maurerCartan(U⁻¹)_μ|₀` the constant Maurer–Cartan shift, bilinearity of the bracket
   gives
 
   `⁅A_μ, A_ν⁆ ↦ Ad₀ ⁅A_μ, A_ν⁆ + ⁅Ad₀ A_μ, c_ν⁆ + ⁅c_μ, Ad₀ A_ν⁆ + ⁅c_μ, c_ν⁆`:
@@ -386,18 +386,18 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
     repGauge U (commutator A μ ν φ) =
       commutator A μ ν (adjointDualCoeff jets U⁻¹ 0 φ)
       - A 0 μ (adjointDualCoeff jets U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
-          (jets.evalLie (jets.mc U⁻¹ ν))))
+          (jets.evalLie (jets.maurerCartan U⁻¹ ν))))
       + A 0 ν (adjointDualCoeff jets U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
-          (jets.evalLie (jets.mc U⁻¹ μ))))
-      + algebraMap ℂ B (φ ⁅jets.evalLie (jets.mc U⁻¹ μ),
-          jets.evalLie (jets.mc U⁻¹ ν)⁆) := by
+          (jets.evalLie (jets.maurerCartan U⁻¹ μ))))
+      + algebraMap ℂ B (φ ⁅jets.evalLie (jets.maurerCartan U⁻¹ μ),
+          jets.evalLie (jets.maurerCartan U⁻¹ ν)⁆) := by
   -- the linear maps and constants of the transformation law
   set Φ : B →ₗ[ℝ] B := (repGauge U).restrictScalars ℝ with hΦdef
   set T₀ : 𝔤 →ₗ[ℝ] 𝔤 :=
     (jets.evalLie).toLinearMap ∘ₗ jets.iteratedDeriv 0 ∘ₗ
       jets.adjoint U⁻¹ ∘ₗ jets.ofConstantLie with hT₀def
-  set cμ : 𝔤 := jets.evalLie (jets.mc U⁻¹ μ) with hcμ
-  set cν : 𝔤 := jets.evalLie (jets.mc U⁻¹ ν) with hcν
+  set cμ : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ μ) with hcμ
+  set cν : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ ν) with hcν
   set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (A 0 μ) with hs
   set t : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (A 0 ν) with ht
   have hcoeff : adjointDualCoeff jets U⁻¹ 0 = T₀.dualMap := by rw [hT₀def]; rfl
@@ -411,7 +411,7 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
   have hfam : ∀ (ρ : Fin 1 ⊕ Fin 3),
       Φ ∘ₗ A 0 ρ = A 0 ρ ∘ₗ T₀.dualMap +
         dualPairEquiv ((1 : B) ⊗ₜ[ℝ] jets.evalLie
-          (jets.mc U⁻¹ ρ)) := by
+          (jets.maurerCartan U⁻¹ ρ)) := by
     intro ρ
     refine LinearMap.ext fun ψ => ?_
     simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
@@ -475,21 +475,21 @@ lemma _root_.adjointDualCoeff_pair (U : G)
     (ρ μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     adjointDualCoeff jets U (ρ ::ₘ {μ}) φ =
       -adjointDualCoeff jets U 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
-        (jets.evalLie (jets.deriv ρ (jets.mc U μ))))
+        (jets.evalLie (jets.deriv ρ (jets.maurerCartan U μ))))
       - adjointDualCoeff jets U {ρ} (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
-        (jets.evalLie (jets.mc U μ))) := by
+        (jets.evalLie (jets.maurerCartan U μ))) := by
   refine LinearMap.ext fun a => ?_
   have hderiv : ∀ τ : Fin 1 ⊕ Fin 3,
       jets.deriv τ (jets.adjoint U (jets.ofConstantLie a)) =
-        -⁅jets.mc U τ,
+        -⁅jets.maurerCartan U τ,
           jets.adjoint U (jets.ofConstantLie a)⁆ :=
     fun τ => by rw [jets.deriv_adjoint,
       jets.deriv_ofConstantLie, map_zero, zero_sub]
   have hkey : jets.iteratedDeriv (ρ ::ₘ {μ})
       (jets.adjoint U (jets.ofConstantLie a)) =
-      -⁅jets.deriv ρ (jets.mc U μ),
+      -⁅jets.deriv ρ (jets.maurerCartan U μ),
         jets.adjoint U (jets.ofConstantLie a)⁆
-      + ⁅jets.mc U μ, ⁅jets.mc U ρ,
+      + ⁅jets.maurerCartan U μ, ⁅jets.maurerCartan U ρ,
           jets.adjoint U (jets.ofConstantLie a)⁆⁆ := by
     rw [LocalGaugeData.iteratedDeriv_cons, LinearMap.comp_apply,
       LocalGaugeData.iteratedDeriv_singleton, hderiv μ, map_neg,
@@ -515,7 +515,7 @@ lemma repGauge_deriv_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
       + A {σ} τ (adjointDualCoeff jets U⁻¹ {ρ} φ)
       + A 0 τ (adjointDualCoeff jets U⁻¹ (ρ ::ₘ {σ}) φ)
       + algebraMap ℂ B (φ (jets.evalLie (jets.deriv ρ
-          (jets.deriv σ (jets.mc U⁻¹ τ))))) := by
+          (jets.deriv σ (jets.maurerCartan U⁻¹ τ))))) := by
   have hanti₁ : ({σ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
       {((0 : Multiset (Fin 1 ⊕ Fin 3)), ({σ} : Multiset (Fin 1 ⊕ Fin 3))),
         (({σ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
@@ -921,12 +921,12 @@ lemma _root_.adjointDualCoeff_cons (U : G)
       -((x.antidiagonal.map fun p =>
         adjointDualCoeff jets U p.2 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
           (jets.evalLie (jets.iteratedDeriv p.1
-            (jets.mc U μ))))).sum) := by
+            (jets.maurerCartan U μ))))).sum) := by
   refine LinearMap.ext fun a => ?_
   have hkey : jets.iteratedDeriv (μ ::ₘ x)
       (jets.adjoint U (jets.ofConstantLie a)) =
       -((x.antidiagonal.map fun p =>
-        ⁅jets.iteratedDeriv p.1 (jets.mc U μ),
+        ⁅jets.iteratedDeriv p.1 (jets.maurerCartan U μ),
           jets.iteratedDeriv p.2
             (jets.adjoint U (jets.ofConstantLie a))⁆).sum) := by
     rw [show (μ ::ₘ x : Multiset (Fin 1 ⊕ Fin 3)) = x + {μ} from by
@@ -949,14 +949,14 @@ lemma _root_.adjointDualCoeff_cons (U : G)
 lemma _root_.eval_iteratedDeriv_maurerCartan_structure
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
     jets.evalLie (jets.iteratedDeriv (μ ::ₘ s)
-      (jets.mc U ν)) =
+      (jets.maurerCartan U ν)) =
       jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
-        (jets.mc U μ))
+        (jets.maurerCartan U μ))
       - (s.antidiagonal.map fun p =>
           ⁅jets.evalLie (jets.iteratedDeriv p.1
-            (jets.mc U μ)),
+            (jets.maurerCartan U μ)),
             jets.evalLie (jets.iteratedDeriv p.2
-              (jets.mc U ν))⁆).sum := by
+              (jets.maurerCartan U ν))⁆).sum := by
   have hconv : ∀ (κ : Fin 1 ⊕ Fin 3) (z : 𝔤J),
       jets.iteratedDeriv s (jets.deriv κ z) =
         jets.iteratedDeriv (κ ::ₘ s) z := by
@@ -966,33 +966,33 @@ lemma _root_.eval_iteratedDeriv_maurerCartan_structure
       LocalGaugeData.iteratedDeriv_add, LinearMap.comp_apply,
       LocalGaugeData.iteratedDeriv_singleton]
   have h0 := congrArg (fun z => jets.evalLie (jets.iteratedDeriv s z))
-    (jets.mc_structure U μ ν)
+    (jets.maurerCartan_structure U μ ν)
   simp only [map_add, map_sub, map_zero] at h0
   rw [hconv, hconv, LocalGaugeData.iteratedDeriv_bracket, map_multiset_sum,
     Multiset.map_map] at h0
   rw [Multiset.map_congr rfl (fun p hp => by rw [Function.comp_apply, LieHom.map_lie])] at h0
   refine eq_sub_of_add_eq ?_
   calc jets.evalLie (jets.iteratedDeriv (μ ::ₘ s)
-    (jets.mc U ν))
+    (jets.maurerCartan U ν))
         + (s.antidiagonal.map fun p =>
           ⁅jets.evalLie (jets.iteratedDeriv p.1
-            (jets.mc U μ)),
+            (jets.maurerCartan U μ)),
             jets.evalLie (jets.iteratedDeriv p.2
-              (jets.mc U ν))⁆).sum
+              (jets.maurerCartan U ν))⁆).sum
       = (jets.evalLie (jets.iteratedDeriv (μ ::ₘ s)
-        (jets.mc U ν))
+        (jets.maurerCartan U ν))
         - jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
-          (jets.mc U μ))
+          (jets.maurerCartan U μ))
         + (s.antidiagonal.map fun p =>
           ⁅jets.evalLie (jets.iteratedDeriv p.1
-            (jets.mc U μ)),
+            (jets.maurerCartan U μ)),
             jets.evalLie (jets.iteratedDeriv p.2
-              (jets.mc U ν))⁆).sum)
+              (jets.maurerCartan U ν))⁆).sum)
         + jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
-          (jets.mc U μ)) := by
+          (jets.maurerCartan U μ)) := by
         abel
     _ = jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
-      (jets.mc U μ)) := by
+      (jets.maurerCartan U μ)) := by
         rw [h0, zero_add]
 
 /-!
@@ -1015,9 +1015,9 @@ lemma repGauge_cons_apply (hA : IsGaugeField jets repLorentz repGauge A)
           (p.1.antidiagonal.map fun q =>
             A p.2 τ (adjointDualCoeff jets U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-                (jets.iteratedDeriv q.1 (jets.mc U⁻¹ κ)))))).sum).sum
+                (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ κ)))))).sum).sum
       + algebraMap ℂ B (φ (jets.evalLie (jets.iteratedDeriv (κ ::ₘ s)
-          (jets.mc U⁻¹ τ)))) := by
+          (jets.maurerCartan U⁻¹ τ)))) := by
   rw [hA.gauge_apply_deriv U (κ ::ₘ s) τ φ]
   congr 1
   simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
@@ -1028,7 +1028,7 @@ lemma repGauge_cons_apply (hA : IsGaugeField jets repLorentz repGauge A)
           (p.1.antidiagonal.map fun q =>
             A p.2 τ (adjointDualCoeff jets U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-                (jets.iteratedDeriv q.1 (jets.mc U⁻¹ κ)))))).sum).sum := by
+                (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ κ)))))).sum).sum := by
     rw [← Multiset.sum_map_neg'']
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [adjointDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_multiset_sum, Multiset.map_map]
@@ -1051,24 +1051,24 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
           (p.2.antidiagonal.map fun r =>
             A r.2 ν (adjointDualCoeff jets U⁻¹ r.1
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-                (jets.iteratedDeriv p.1 (jets.mc U⁻¹ μ)))))).sum).sum
+                (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
             A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-                (jets.iteratedDeriv p.2 (jets.mc U⁻¹ ν)))))).sum).sum
+                (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum).sum
       + (s.antidiagonal.map fun p =>
           algebraMap ℂ B (φ ⁅jets.evalLie (jets.iteratedDeriv p.1
-              (jets.mc U⁻¹ μ)),
+              (jets.maurerCartan U⁻¹ μ)),
             jets.evalLie (jets.iteratedDeriv p.2
-              (jets.mc U⁻¹ ν))⁆)).sum := by
+              (jets.maurerCartan U⁻¹ ν))⁆)).sum := by
   -- the affine transformation law of the derived symbols, with the Leibniz sum as a map
   have hAlaw : ∀ (τ : Fin 1 ⊕ Fin 3) (u : Multiset (Fin 1 ⊕ Fin 3))
       (ψ : Module.Dual ℝ 𝔤),
       repGauge U (A u τ ψ) =
         ((u.antidiagonal.map fun q => A q.2 τ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum) ψ
         + algebraMap ℂ B (ψ (jets.evalLie
-            (jets.iteratedDeriv u (jets.mc U⁻¹ τ)))) := by
+            (jets.iteratedDeriv u (jets.maurerCartan U⁻¹ τ)))) := by
     intro τ u ψ
     rw [hA.gauge_apply_deriv U u τ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
@@ -1110,11 +1110,11 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
       ((p.2.antidiagonal.map fun r => A r.2 ν ∘ₗ adjointDualCoeff jets U⁻¹ r.1).sum)
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-          (jets.iteratedDeriv p.1 (jets.mc U⁻¹ μ)))) =
+          (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))) =
       (p.2.antidiagonal.map fun r =>
         A r.2 ν (adjointDualCoeff jets U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv p.1 (jets.mc U⁻¹ μ)))))).sum := by
+            (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum := by
     intro p
     rw [Multiset.sum_linearMap_apply, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
@@ -1122,11 +1122,11 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
   have hCf : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
       ((p.1.antidiagonal.map fun q => A q.2 μ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum)
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-          (jets.iteratedDeriv p.2 (jets.mc U⁻¹ ν)))) =
+          (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))) =
       (p.1.antidiagonal.map fun q =>
         A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv p.2 (jets.mc U⁻¹ ν)))))).sum := by
+            (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum := by
     intro p
     rw [Multiset.sum_linearMap_apply, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => ?_)

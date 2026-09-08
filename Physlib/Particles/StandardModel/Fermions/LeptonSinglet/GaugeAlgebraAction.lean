@@ -265,7 +265,7 @@ theorem isInfinitesimalActionOf :
   constructor
   · intro U μ x
     simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
-      localGaugeData_iteratedDeriv, localGaugeData_mc]
+      localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
     have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
         = -((x.antidiagonal.map fun p =>
             Complex.I * (-(6 : ℂ) * (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv

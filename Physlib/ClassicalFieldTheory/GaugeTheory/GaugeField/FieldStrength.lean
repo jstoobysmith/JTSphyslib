@@ -174,47 +174,47 @@ theorem repGauge_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
       (p.1.antidiagonal.map fun q =>
         A p.2 ν (adjointDualCoeff jets U⁻¹ q.2
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv q.1 (jets.mc U⁻¹ μ)))))).sum).sum =
+            (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
         A r.2 ν (adjointDualCoeff jets U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv p.1 (jets.mc U⁻¹ μ)))))).sum).sum :=
+            (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
       A c ν (adjointDualCoeff jets U⁻¹ b
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-          (jets.iteratedDeriv a (jets.mc U⁻¹ μ))))))
+          (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ μ))))))
   have hcancel₂ : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
         A p.2 μ (adjointDualCoeff jets U⁻¹ q.2
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv q.1 (jets.mc U⁻¹ ν)))))).sum).sum =
+            (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ ν)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
         A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv p.2 (jets.mc U⁻¹ ν)))))).sum).sum := by
+            (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum).sum := by
     refine (Multiset.sum_antidiagonal_assoc s (fun a b c =>
       A c μ (adjointDualCoeff jets U⁻¹ b
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-          (jets.iteratedDeriv a (jets.mc U⁻¹ ν))))))).trans ?_
+          (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ ν))))))).trans ?_
     exact Multiset.sum_antidiagonal_swap s (fun a b =>
       (b.antidiagonal.map fun q =>
         A q.2 μ (adjointDualCoeff jets U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
-            (jets.iteratedDeriv a (jets.mc U⁻¹ ν)))))).sum)
+            (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ ν)))))).sum)
   set Θ : 𝔤 →+ B := ((algebraMap ℂ B).toAddMonoidHom.comp
     ((Complex.ofRealHom : ℝ →+* ℂ).toAddMonoidHom.comp φ.toAddMonoidHom)) with hΘdef
   have hΘ : ∀ z : 𝔤, algebraMap ℂ B ((φ z : ℝ) : ℂ) = Θ z := fun z => rfl
   have hconst : Θ (jets.evalLie (jets.iteratedDeriv (μ ::ₘ s)
-      (jets.mc U⁻¹ ν))) =
+      (jets.maurerCartan U⁻¹ ν))) =
     Θ (jets.evalLie (jets.iteratedDeriv (ν ::ₘ s)
-      (jets.mc U⁻¹ μ)))
+      (jets.maurerCartan U⁻¹ μ)))
     - (s.antidiagonal.map fun p =>
         Θ ⁅jets.evalLie (jets.iteratedDeriv p.1
-            (jets.mc U⁻¹ μ)),
+            (jets.maurerCartan U⁻¹ μ)),
           jets.evalLie (jets.iteratedDeriv p.2
-            (jets.mc U⁻¹ ν))⁆).sum := by
+            (jets.maurerCartan U⁻¹ ν))⁆).sum := by
     rw [eval_iteratedDeriv_maurerCartan_structure U⁻¹ s μ ν, map_sub, map_multiset_sum,
       Multiset.map_map]
     congr 1

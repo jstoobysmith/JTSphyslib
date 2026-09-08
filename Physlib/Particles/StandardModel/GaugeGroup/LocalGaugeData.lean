@@ -7,6 +7,7 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
@@ -34,8 +35,8 @@ choice, so it is an instance, discharged by the existing Taylor–Leibniz theore
 
 - `StandardModel.localGaugeData` : the Standard Model gauge group as jets of a gauge group.
 - `StandardModel.localGaugeData_eval`, `StandardModel.localGaugeData_deriv`,
-  `StandardModel.localGaugeData_mc`, … : the generic interface computed back to the Standard
-  Model definitions.
+  `StandardModel.localGaugeData_maurerCartan`, … : the generic interface computed back to
+  the Standard Model definitions.
 - `StandardModel.localGaugeData_iteratedDeriv` : the generic iterated derivative is the Standard
   Model iterated derivative.
 - `StandardModel.localGaugeData_adjointCoeff`, `StandardModel.localGaugeData_adjointDualCoeff` : the
@@ -100,10 +101,11 @@ noncomputable def localGaugeData :
   deriv_ofConstantLie := JetGaugeAlgebra.deriv_ofConstant
   adjoint := JetGaugeAlgebra.adjoint
   adjoint_lie := JetGaugeAlgebra.adjointMap_lie
-  mc := maurerCartanForm
-  mc_one := fun μ => congrFun maurerCartanForm_one μ
-  mc_cocycle := maurerCartanForm_cocycle
-  mc_structure := maurerCartanForm_structure
+  maurerCartan := maurerCartanForm
+  maurerCartan_one := fun μ => congrFun maurerCartanForm_one μ
+  maurerCartan_ofConstant := fun g μ => congrFun (maurerCartanForm_ofConstant g) μ
+  maurerCartan_cocycle := maurerCartanForm_cocycle
+  maurerCartan_structure := maurerCartanForm_structure
   deriv_adjoint := deriv_adjointMap
   adjointValue := GaugeAlgebra.adjoint
   evalLie_adjoint_ofConstantLie := JetGaugeAlgebra.eval_adjointMap_ofConstant
@@ -155,7 +157,33 @@ lemma localGaugeData_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) :
 lemma localGaugeData_adjoint : localGaugeData.adjoint = JetGaugeAlgebra.adjoint := rfl
 
 @[simp]
-lemma localGaugeData_mc : localGaugeData.mc = maurerCartanForm := rfl
+lemma localGaugeData_maurerCartan : localGaugeData.maurerCartan = maurerCartanForm := rfl
+
+/-- The symmetrized Maurer–Cartan form of the package, written out in Standard Model
+  terms: the generic iterated derivative and Maurer–Cartan form are the Standard Model
+  ones, so the average is the one the component computations use. -/
+lemma localGaugeData_symmetrizedMaurerCartanForm_eq (U : JetGaugeGroupI)
+    (r : Multiset (Fin 1 ⊕ Fin 3)) :
+    localGaugeData.symmetrizedMaurerCartanForm U r =
+      (1/(r.card : ℝ) : ℝ) • (r.map fun μ =>
+        JetGaugeAlgebra.iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum := rfl
+
+/-- The symmetrization defect of the Maurer–Cartan form in Standard Model terms: the
+  generic `LocalGaugeData.iteratedDeriv_maurerCartan_eq_symmetrized_add` read at this package. -/
+lemma iteratedDeriv_maurerCartanForm_eq_symmetrized_add (U : JetGaugeGroupI)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    JetGaugeAlgebra.iteratedDeriv s (maurerCartanForm U μ) =
+      localGaugeData.symmetrizedMaurerCartanForm U (μ ::ₘ s) +
+      (1/(s.card + 1 : ℝ)) • (s.map fun ν =>
+        JetGaugeAlgebra.iteratedDeriv (s.erase ν)
+          ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆).sum :=
+  localGaugeData.iteratedDeriv_maurerCartan_eq_symmetrized_add U s μ
+
+/-- **The Maurer–Cartan form of an inverse**: the generic `LocalGaugeData.maurerCartan_inv` read at
+  this package. -/
+lemma maurerCartanForm_inv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
+    maurerCartanForm U⁻¹ μ = - JetGaugeAlgebra.adjoint U⁻¹ (maurerCartanForm U μ) :=
+  localGaugeData.maurerCartan_inv U μ
 
 /-!
 

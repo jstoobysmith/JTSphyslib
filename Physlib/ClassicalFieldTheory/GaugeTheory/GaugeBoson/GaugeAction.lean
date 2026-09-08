@@ -15,7 +15,7 @@ public import Physlib.Mathematics.MultisetAntidiagonal
 ## i. Overview
 
 A jet of gauge transformations `U` acts on the gauge field by
-`A_μ ↦ Ad_U A_μ + mc(U)_μ`, so on a component function `∂_s A_μ^φ` it acts affinely: the
+`A_μ ↦ Ad_U A_μ + maurerCartan(U)_μ`, so on a component function `∂_s A_μ^φ` it acts affinely: the
 linear part is the all-orders Leibniz convolution of the Taylor coefficients of `Ad(U⁻¹)`
 against lower component functions, and the constant part is the Taylor coefficient of the
 Maurer–Cartan form of `U⁻¹`. The action extends to the whole jet algebra as the
@@ -291,14 +291,14 @@ variable (jets) in
 noncomputable def mcBosonCoeff (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     (GaugeBoson 𝔤) :=
   ⟨∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
-    jets.evalLie (jets.iteratedDeriv s (jets.mc U μ))⟩
+    jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ))⟩
 
 @[simp]
 lemma mcBosonCoeff_one (s : Multiset (Fin 1 ⊕ Fin 3)) : mcBosonCoeff jets 1 s = 0 := by
   rw [show (0 : (GaugeBoson 𝔤)) = ⟨0⟩ from rfl, mcBosonCoeff]
   congr 1
   refine Finset.sum_eq_zero fun μ _ => ?_
-  rw [show jets.mc 1 μ = 0 from jets.mc_one μ, map_zero,
+  rw [show jets.maurerCartan 1 μ = 0 from jets.maurerCartan_one μ, map_zero,
     map_zero, TensorProduct.tmul_zero]
 
 /-- The Maurer–Cartan Taylor coefficients of a product: the cocycle identity, with the
@@ -313,12 +313,12 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
       (GaugeBoson.valLinEquiv 𝔤) (mcBosonCoeff jets W t)
         = ∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
             jets.evalLie (jets.iteratedDeriv t
-              (jets.mc W μ)) := fun W t => rfl
+              (jets.maurerCartan W μ)) := fun W t => rfl
   have hB : ∀ p q : Multiset (Fin 1 ⊕ Fin 3),
       (GaugeBoson.valLinEquiv 𝔤) (GaugeBoson.adjointTransport jets U p (mcBosonCoeff jets V q))
         = ∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
             IsGaugeField.adjointCoeff jets U p (jets.evalLie
-              (jets.iteratedDeriv q (jets.mc V μ))) := by
+              (jets.iteratedDeriv q (jets.maurerCartan V μ))) := by
     intro p q
     rw [show (GaugeBoson.valLinEquiv 𝔤) (GaugeBoson.adjointTransport jets U p
       (mcBosonCoeff jets V q))
@@ -332,19 +332,19 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
       rw [TensorProduct.map_tmul, LinearMap.id_apply]
   have hA : (GaugeBoson.valLinEquiv 𝔤) (mcBosonCoeff jets (U * V) s)
       = ∑ μ, (Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
-          jets.evalLie (jets.iteratedDeriv s (jets.mc U μ))
+          jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ))
         + (s.antidiagonal.map fun p =>
             Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
               IsGaugeField.adjointCoeff jets U p.1 (jets.evalLie
-                (jets.iteratedDeriv p.2 (jets.mc V μ)))).sum) := by
+                (jets.iteratedDeriv p.2 (jets.maurerCartan V μ)))).sum) := by
     rw [hE]
     refine Finset.sum_congr rfl fun μ _ => ?_
-    rw [show jets.mc (U * V) μ
-        = jets.mc U μ + jets.adjoint U (jets.mc V μ) from
-        jets.mc_cocycle U V μ,
+    rw [show jets.maurerCartan (U * V) μ
+        = jets.maurerCartan U μ + jets.adjoint U (jets.maurerCartan V μ) from
+        jets.maurerCartan_cocycle U V μ,
       map_add, map_add,
-      show jets.adjoint U (jets.mc V μ)
-        = jets.adjoint U (jets.mc V μ) from rfl,
+      show jets.adjoint U (jets.maurerCartan V μ)
+        = jets.adjoint U (jets.maurerCartan V μ) from rfl,
       LocalGaugeDataLeibniz.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
       Multiset.tmul_sum, Multiset.map_map]
     exact congrArg (fun z => _ + z)
@@ -484,11 +484,11 @@ lemma componentDual_dualBasis_mcBosonCoeff (W : G)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     (GaugeBoson.componentDual 𝔤) (Lorentz.CoVector.basis.dualBasis μ) φ (mcBosonCoeff jets W s)
       = φ (jets.evalLie (jets.iteratedDeriv s
-          (jets.mc W μ))) := by
+          (jets.maurerCartan W μ))) := by
   have hsum : mcBosonCoeff jets W s
       = ∑ ν, (⟨Lorentz.CoVector.basis ν ⊗ₜ[ℝ]
           jets.evalLie (jets.iteratedDeriv s
-            (jets.mc W ν))⟩ : (GaugeBoson 𝔤)) := by
+            (jets.maurerCartan W ν))⟩ : (GaugeBoson 𝔤)) := by
     apply (GaugeBoson.valLinEquiv 𝔤).injective
     rw [map_sum]
     rfl
@@ -498,7 +498,7 @@ lemma componentDual_dualBasis_mcBosonCoeff (W : G)
     rw [Module.Basis.dualBasis_apply_self, ite_mul, one_mul, zero_mul]]
   rw [Finset.sum_ite_eq' Finset.univ μ
     (fun ν => φ (jets.evalLie (jets.iteratedDeriv s
-      (jets.mc W ν)))), if_pos (Finset.mem_univ μ)]
+      (jets.maurerCartan W ν)))), if_pos (Finset.mem_univ μ)]
 
 /-- **The transformation law of the derivative generators**, in the form used by
   `IsGaugeField`: a jet of gauge transformations acts on `∂_s A_μ^φ` by the all-orders
@@ -511,7 +511,7 @@ theorem repJet_iteratedJetDeriv_ofA (U : G)
           (iteratedJetDeriv 𝔤) p.2 ((ofA 𝔤) μ (adjointDualCoeff jets U⁻¹ p.1 φ))).sum
         + algebraMap ℝ (GaugeJetAlgebra 𝔤)
             (φ (jets.evalLie (jets.iteratedDeriv s
-              (jets.mc U⁻¹ μ)))) := by
+              (jets.maurerCartan U⁻¹ μ)))) := by
   rw [iteratedJetDeriv_ofA, repJet_ι, transport_basis_tmul, mcShift_basis_tmul,
     componentDual_dualBasis_mcBosonCoeff, map_multiset_sum, Multiset.map_map]
   congr 1
@@ -590,7 +590,7 @@ theorem complexRepJet_iteratedD_one_tmul_ofA (U : G)
             ((1 : ℂ) ⊗ₜ[ℝ] (ofA 𝔤) μ (adjointDualCoeff jets U⁻¹ p.1 φ))).sum
         + algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤))
             (((φ (jets.evalLie (jets.iteratedDeriv s
-              (jets.mc U⁻¹ μ))) : ℝ)) : ℂ) := by
+              (jets.maurerCartan U⁻¹ μ))) : ℝ)) : ℂ) := by
   rw [iteratedD_complexJetDeriv_one_tmul, complexRepJet_tmul,
     repJet_iteratedJetDeriv_ofA, TensorProduct.tmul_add, Multiset.tmul_sum,
     Multiset.map_map, one_tmul_algebraMap]

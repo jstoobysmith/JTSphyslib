@@ -430,7 +430,8 @@ theorem symbolAdjoin_eq_symFieldAdjoin_top :
   `U • sym(d_s A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} d_y A_μ^{∂_x Ad*(U⁻¹) φ}`
   `                   + φ( sym(mc(U⁻¹))_s |₀ )`.
 
-  This is the symbol-level counterpart of `symmetrizedMaurerCartanForm`: the gauge
+  This is the symbol-level counterpart of `LocalGaugeData.symmetrizedMaurerCartanForm`:
+  the gauge
   group acts on the symmetrized derivative coordinates through the symmetrized
   Maurer–Cartan data. -/
 lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A)
@@ -440,7 +441,8 @@ lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A)
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
           A p.2 μ (adjointDualCoeff U⁻¹ p.1 φ)).sum).sum
-      + algebraMap ℂ B (φ (JetGaugeAlgebra.eval (symmetrizedMaurerCartanForm U⁻¹ s))) := by
+      + algebraMap ℂ B (φ (JetGaugeAlgebra.eval
+          (localGaugeData.symmetrizedMaurerCartanForm U⁻¹ s))) := by
   set L : JetGaugeAlgebra →ₗ[ℝ] B :=
     (Algebra.linearMap ℂ B).restrictScalars ℝ ∘ₗ Algebra.linearMap ℝ ℂ ∘ₗ
       φ ∘ₗ JetGaugeAlgebra.eval.toLinearMap with hL
@@ -457,8 +459,9 @@ lemma repGauge_symmetrizedDeriv (hA : IsGaugeField repLorentz repGauge A)
           JetGaugeAlgebra.iteratedDeriv (s - {μ}) (maurerCartanForm U⁻¹ μ)).sum) := by
         rw [map_smul, map_multiset_sum, Multiset.map_map]
         simp only [Function.comp_def]
-    _ = algebraMap ℂ B (φ (JetGaugeAlgebra.eval (symmetrizedMaurerCartanForm U⁻¹ s))) := by
-        rw [symmetrizedMaurerCartanForm]
+    _ = algebraMap ℂ B (φ (JetGaugeAlgebra.eval
+          (localGaugeData.symmetrizedMaurerCartanForm U⁻¹ s))) := by
+        rw [localGaugeData_symmetrizedMaurerCartanForm_eq]
         rfl
 
 /-- **The action of the truncation kernel on the symmetrized derivatives is through

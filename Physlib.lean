@@ -11,6 +11,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
