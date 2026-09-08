@@ -5,15 +5,17 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
+public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 /-!
 # The Standard Model Higgs field as a matter field
 
 ## i. Overview
 
-`MatterField G` bundles the value space of one field of a gauge theory with jet gauge
-group `G`, its Lorentz representation, the fibrewise action of the jets of gauge
+`MatterField jets` bundles the value space of one field of a gauge theory over a gauge
+context `jets`, its Lorentz representation, the fibrewise action of the jets of gauge
 transformations, and its mass weight. The Higgs already carries all four, and this file
 collects them, as `Physlib.Particles.StandardModel.Fermions.MatterField` does for the five
 fermion types. Nothing is redefined and no convention is changed: the `2_{3}` jet action
@@ -47,12 +49,13 @@ namespace HiggsVec
 
 -/
 
-/-- The Higgs field as a matter field of `JetGaugeGroupI`, valued in `HiggsVec`, in the
+/-- The Higgs field as a matter field of `StandardModel.gaugeJet`, valued in `HiggsVec`, in the
   `2_{3}` representation of the gauge group, a Lorentz scalar, of mass weight two. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := HiggsVec
   repLorentz := Representation.trivial ℂ SL(2,ℂ) HiggsVec
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 2
 
@@ -65,6 +68,9 @@ lemma matterField_repLorentz :
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 2 := rfl

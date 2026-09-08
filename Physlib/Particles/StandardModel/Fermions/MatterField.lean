@@ -5,8 +5,9 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
@@ -16,8 +17,8 @@ public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
 
 ## i. Overview
 
-`MatterField G` bundles the value space of one field of a gauge theory with jet gauge
-group `G`, its Lorentz representation, the fibrewise action of the jets of gauge
+`MatterField jets` bundles the value space of one field of a gauge theory over a gauge
+context `jets`, its Lorentz representation, the fibrewise action of the jets of gauge
 transformations on the jets of the field, and its mass weight. The five Standard Model
 fermion types already carry all four, and this file collects them. Nothing is redefined
 and no convention is changed. The chirality, the gauge representation, the hypercharge
@@ -68,12 +69,13 @@ namespace StandardModel
 
 namespace LeptonDoublet
 
-/-- The lepton doublet as a matter field of `JetGaugeGroupI`, in the `(1, 2)_{-3}`
+/-- The lepton doublet as a matter field of `StandardModel.gaugeJet`, in the `(1, 2)_{-3}`
   representation with its left-handed Lorentz action. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := LeptonDoublet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -85,6 +87,9 @@ lemma matterField_repLorentz : matterField.repLorentz = repLorentzGroup := rfl
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
@@ -99,12 +104,13 @@ end LeptonDoublet
 
 namespace LeptonSinglet
 
-/-- The charged-lepton singlet as a matter field of `JetGaugeGroupI`, in the
+/-- The charged-lepton singlet as a matter field of `StandardModel.gaugeJet`, in the
   `(1, 1)_{-6}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := LeptonSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -116,6 +122,9 @@ lemma matterField_repLorentz : matterField.repLorentz = repLorentzGroup := rfl
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
@@ -132,12 +141,13 @@ end LeptonSinglet
 
 namespace QuarkDoublet
 
-/-- The quark doublet as a matter field of `JetGaugeGroupI`, in the `(3, 2)_{1}`
+/-- The quark doublet as a matter field of `StandardModel.gaugeJet`, in the `(3, 2)_{1}`
   representation with its left-handed Lorentz action. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := QuarkDoublet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -149,6 +159,9 @@ lemma matterField_repLorentz : matterField.repLorentz = repLorentzGroup := rfl
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
@@ -163,12 +176,13 @@ end QuarkDoublet
 
 namespace UpSinglet
 
-/-- The up-type quark singlet as a matter field of `JetGaugeGroupI`, in the
+/-- The up-type quark singlet as a matter field of `StandardModel.gaugeJet`, in the
   `(3, 1)_{4}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := UpSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -180,6 +194,9 @@ lemma matterField_repLorentz : matterField.repLorentz = repLorentzGroup := rfl
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
@@ -194,12 +211,13 @@ end UpSinglet
 
 namespace DownSinglet
 
-/-- The down-type quark singlet as a matter field of `JetGaugeGroupI`, in the
+/-- The down-type quark singlet as a matter field of `StandardModel.gaugeJet`, in the
   `(3, 1)_{-2}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField JetGaugeGroupI where
+noncomputable def matterField : MatterField gaugeJet where
   V := DownSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
+  repAlgebra := gaugeAlgebraAction
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -211,6 +229,9 @@ lemma matterField_repLorentz : matterField.repLorentz = repLorentzGroup := rfl
 
 @[simp]
 lemma matterField_repJet : matterField.repJet = repJetGaugeGroupI := rfl
+
+@[simp]
+lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rfl
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl

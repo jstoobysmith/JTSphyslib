@@ -6,7 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 /-!
 # The field data of a gauge theory and its local field algebra
@@ -19,7 +19,7 @@ group `G₀` with finite-dimensional real Lie algebra `𝔤`, a jet group `G` wi
 algebra `𝔤J`, a gauge-jet package `jets : GaugeJet G 𝔤 G₀ 𝔤J` relating them and its
 Taylor–Leibniz law `GaugeJetLeibniz jets`. The matter content is a finite family of
 fermionic species and a finite family of bosonic species, each given by an existing
-`MatterField G`.
+`MatterField jets`.
 
 `GaugeFieldData jets` bundles the matter content over such a context. From it this file
 derives, with no further data,
@@ -96,7 +96,7 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
   with global group `G₀`, a finite-dimensional real gauge algebra `𝔤` with jet algebra
   `𝔤J` and a gauge-jet package `jets` over them, it records a finite family of fermionic
   species and a finite family of bosonic species, each given by an existing
-  `MatterField G`.
+  `MatterField jets`.
 
   Nothing is repeated from `MatterField`, whose fields already carry the value space, the
   Lorentz representation, the gauge-jet action and the mass weight of a species. Nothing is
@@ -115,13 +115,13 @@ structure GaugeFieldData {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieA
   [decidableEqFermionSpecies : DecidableEq FermionSpecies]
   [finiteFermionSpecies : Finite FermionSpecies]
   /-- The matter field of each fermionic species. -/
-  fermion : FermionSpecies → MatterField G
+  fermion : FermionSpecies → MatterField jets
   /-- The index type of the bosonic species. -/
   BosonSpecies : Type
   [decidableEqBosonSpecies : DecidableEq BosonSpecies]
   [finiteBosonSpecies : Finite BosonSpecies]
   /-- The matter field of each bosonic species. -/
-  boson : BosonSpecies → MatterField G
+  boson : BosonSpecies → MatterField jets
 
 attribute [instance] GaugeFieldData.decidableEqFermionSpecies
   GaugeFieldData.finiteFermionSpecies GaugeFieldData.decidableEqBosonSpecies

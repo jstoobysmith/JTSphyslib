@@ -12,7 +12,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAd
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeJet
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.ConstantGaugeAction
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.GaugeAction

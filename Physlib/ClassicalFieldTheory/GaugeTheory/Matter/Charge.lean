@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 /-!
 # Charged matter fields under `U(1)` jets
 
@@ -100,10 +100,13 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
 
 /-- **The charged matter field**: a field with values in `V`, Lorentz representation
   `repLorentz`, electric charge `n` and mass weight `w`, as a matter field for the jets of
-  `U(1)`. -/
-noncomputable def charged [Module.Free ℂ V] [Module.Finite ℂ V]
+  `U(1)`, in any gauge context `jets` whose jet group is `unitary JetRing`. None of the
+  data below depends on `jets` beyond that, so it is supplied polymorphically. -/
+noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : GaugeJet (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
-    MatterField (unitary JetRing) where
+    MatterField jets where
   V := V
   repLorentz := repLorentz
   repJet := chargeRep n V
@@ -111,8 +114,10 @@ noncomputable def charged [Module.Free ℂ V] [Module.Finite ℂ V]
   massWeight := w
 
 @[simp]
-lemma charged_V [Module.Free ℂ V] [Module.Finite ℂ V]
+lemma charged_V {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : GaugeJet (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
-    (charged repLorentz n w).V = V := rfl
+    (charged jets repLorentz n w).V = V := rfl
 
 end MatterField
