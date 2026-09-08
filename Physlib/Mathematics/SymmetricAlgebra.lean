@@ -84,7 +84,14 @@ lemma congr_apply_ι (e : M ≃ₗ[R] N) (x : M) : congr e (ι R M x) = ι R N (
 
 -/
 
-/-- The symmetric algebra is generated, as an `R`-algebra, by the degree-one elements. -/
+section Generation
+
+variable {R M : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+
+/-- The symmetric algebra is generated, as an `R`-algebra, by the degree-one elements.
+  Only a commutative semiring of scalars and a module are needed, so that the statement
+  applies to a module whose additive structure is not presented as a group, such as a
+  direct sum. -/
 @[simp]
 lemma adjoin_range_ι :
     Algebra.adjoin R (Set.range (ι R M)) = (⊤ : Subalgebra R (SymmetricAlgebra R M)) := by
@@ -96,6 +103,8 @@ lemma adjoin_range_ι :
     | mul a b ha hb => exact mul_mem ha hb
     | add a b ha hb => exact add_mem ha hb
   exact top_le_iff.mp fun x _ => h x
+
+end Generation
 
 /-!
 

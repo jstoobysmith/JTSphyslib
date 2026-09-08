@@ -6,6 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
+public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra
 public import Physlib.Particles.StandardModel.Fermions.MatterField
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
@@ -30,7 +31,7 @@ multiplet. The gauge bosons are not a species: their generator space is fixed by
 algebra alone, and `GaugeFieldData` supplies it as the connection sector.
 
 From the datum the generic theory produces the generator spaces, the local field algebra
-`fieldData.LocalAlgebra`, the transformation data and the realization arrow, with no
+`fieldData.LocalFieldAlgebra`, the transformation data and the realization arrow, with no
 further Standard Model input.
 
 ## ii. Key results
