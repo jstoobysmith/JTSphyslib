@@ -5,10 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.FermionGaugeSector.MassWeight
-public import Physlib.Particles.StandardModel.IsCovStandardModel.GaugeHiggsSector.MassWeight
-public import Physlib.Particles.StandardModel.IsCovStandardModel.MixedSector.Basic
-public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.MassDimEight
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.MassWeight
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.GaugeHiggsSector.MassWeight
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.MixedSector.Basic
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.MassDimEight
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimEight
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimEight
@@ -35,7 +35,7 @@ The join is the delicate step. `massWeightSubmodule_eq_iSup_sectorMassWeight` wr
 weight-`w` submodule as the join of the eight sectors' weight-`w` parts, but reading off
 from an invariant of the whole that its eight pieces are separately invariant would need
 the pieces to be determined by their sum — the independence of the sectors, which does
-not follow from `IsCovStandardModel` and is deliberately left open in `Sectors.lean`.
+not follow from `CovAlgebraRealization` and is deliberately left open in `Sectors.lean`.
 
 Nothing here uses it. The classifications are carried in the shared form `Peels σ V W` of
 `Peeling.lean` — every `σ`-invariant of `V ⊔ S` lies in `W ⊔ S`, for every `σ`-stable `S`
@@ -70,37 +70,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -559,6 +535,6 @@ theorem mem_massWeightSubmodule_four_sup_and_gauge_lorentz_invariant_iff_higgsMa
   exact h.mem_massWeightSubmodule_sup_and_gauge_lorentz_invariant_iff 4 (by norm_num)
     (by norm_num) S hS hSL x
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

@@ -25,7 +25,7 @@ in the weight-zero one.
 A `WeightDecomposition` records a finitely supported family of subspaces of pure boost
 weight joining to a given submodule; it is transported along equalities and joined here. The
 product of two decompositions, which needs only multiplicativity of the representation, is
-built where it is used, in `IsCovStandardModel/YukawaSector/MassDimLTEight.lean`, together
+built where it is used, in `CovAlgebraRealization/YukawaSector/MassDimLTEight.lean`, together
 with the parity argument that a submodule of odd boost weights carries no invariant.
 
 ## ii. Key results

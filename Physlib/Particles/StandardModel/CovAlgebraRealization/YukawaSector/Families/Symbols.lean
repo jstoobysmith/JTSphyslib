@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.Basic
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
@@ -69,37 +69,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz Pointwise ComplexConjugate
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -622,61 +598,61 @@ lemma barHiggs_mem_derivSubmodule {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (i :
 
 /-- The range of a down-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_d_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (d f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covD f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left le_sup_left))))))))
 
 /-- The range of a conjugate down-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_bard_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (bard f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covBarD f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left le_sup_right))))))))
 
 /-- The range of an up-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_u_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (u f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covU f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left le_sup_right)))))))
 
 /-- The range of a conjugate up-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_baru_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (baru f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covBarU f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left le_sup_right))))))
 
 /-- The range of a quark-doublet symbol map lies in the fermion derivative submodule. -/
 lemma range_Q_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (Q f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covQ f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left (le_sup_of_le_left le_sup_right)))))
 
 /-- The range of a conjugate quark-doublet symbol map lies in the fermion derivative submodule. -/
 lemma range_barQ_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (barQ f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covBarQ f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left (
     le_sup_of_le_left le_sup_right))))
 
 /-- The range of a lepton-doublet symbol map lies in the fermion derivative submodule. -/
 lemma range_L_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (L f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covL f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left (le_sup_of_le_left le_sup_right)))
 
 /-- The range of a conjugate lepton-doublet symbol map lies in the fermion derivative submodule. -/
 lemma range_barL_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (barL f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covBarL f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left (le_sup_of_le_left le_sup_right))
 
 /-- The range of a lepton-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_e_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (e f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covE f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l (le_sup_of_le_left le_sup_right)
 
 /-- The range of a conjugate lepton-singlet symbol map lies in the fermion derivative submodule. -/
 lemma range_bare_le_derivSubmodule (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
-    LinearMap.range (bare f l) ≤ h.isFermionSector.derivSubmodule n :=
+    LinearMap.range (h.covBarE f l) ≤ h.isFermionSector.derivSubmodule n :=
   le_iSup₂_of_le f l le_sup_right
 
 /-- A `d` component lies in the fermion derivative submodule. -/
@@ -791,6 +767,6 @@ lemma mul_mul_swap_eq_neg {n m : ℕ} (a : B) {x y : B}
     a * (y * x) = -(a * (x * y)) := by
   rw [h.isFermionSector.anticomm_of_mem_derivSubmodule hy hx, mul_neg]
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

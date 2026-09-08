@@ -253,11 +253,11 @@ theorem mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian (x : JetAlg
         ∧ (∀ U : JetGaugeGroupI, repJetGaugeGroupI U x = x)
         ∧ ∀ Λ : SL(2,ℂ), repLorentzGroup Λ x = x)
       ↔ x ∈ 1
-          ⊔ (AlgebraRealization.id.isCovStandardModel.isHiggsSector.dotSpan 0 0
-            ⊔ (AlgebraRealization.id.isCovStandardModel.isGaugeSector.lorentzContractionEightSpan
-                ⊔ AlgebraRealization.id.isCovStandardModel.isHiggsSector.lorentzContractionEightSpan
-              ⊔ (AlgebraRealization.id.isCovStandardModel.isFermionSector.kineticSpan
-                ⊔ AlgebraRealization.id.isCovStandardModel.yukawaSpan))) := by
+          ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.dotSpan 0 0
+            ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isGaugeSector.lorentzContractionEightSpan
+                ⊔ AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.lorentzContractionEightSpan
+              ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isFermionSector.kineticSpan
+                ⊔ AlgebraRealization.id.toCovAlgebraRealization.yukawaSpan))) := by
   rw [← algebraRealization_massWeightSubmoduleLE]
   exact AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian x
 
@@ -286,11 +286,11 @@ theorem mem_massWeightSubmoduleLE_eight_sup_and_invariant_iff_lagrangian
       ↔ ∃ y ∈ S, (∀ U : JetGaugeGroupI, repJetGaugeGroupI U y = y)
           ∧ (∀ Λ : SL(2,ℂ), repLorentzGroup Λ y = y)
           ∧ x - y ∈ 1
-            ⊔ (AlgebraRealization.id.isCovStandardModel.isHiggsSector.dotSpan 0 0
-              ⊔ (AlgebraRealization.id.isCovStandardModel.isGaugeSector.lorentzContractionEightSpan
-                  ⊔ AlgebraRealization.id.isCovStandardModel.isHiggsSector.lorentzContractionEightSpan
-                ⊔ (AlgebraRealization.id.isCovStandardModel.isFermionSector.kineticSpan
-                  ⊔ AlgebraRealization.id.isCovStandardModel.yukawaSpan))) := by
+            ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.dotSpan 0 0
+              ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isGaugeSector.lorentzContractionEightSpan
+                  ⊔ AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.lorentzContractionEightSpan
+                ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isFermionSector.kineticSpan
+                  ⊔ AlgebraRealization.id.toCovAlgebraRealization.yukawaSpan))) := by
   rw [← algebraRealization_massWeightSubmoduleLE]
   exact AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_sup_and_invariant_iff_lagrangian
     S hS hSL hScov x

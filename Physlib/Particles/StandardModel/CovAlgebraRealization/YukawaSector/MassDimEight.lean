@@ -5,8 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.Families.BarHiggs
-public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Families.BarHiggs
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.Peeling
 /-!
 # The Yukawa sector at mass weight eight
@@ -63,36 +63,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz Pointwise ComplexConjugate
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -105,7 +82,7 @@ lemma higgsSubmodule_zero_le :
     h.isHiggsSector.higgsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.higgs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis (H ![])]
+    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis (h.covH ![])]
   exact le_rfl
 
 /-- The conjugate Higgs submodule without derivatives lies in the span of the conjugate
@@ -114,68 +91,68 @@ lemma barHiggsSubmodule_zero_le :
     h.isHiggsSector.barHiggsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.barHiggs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis.conj (barH ![])]
+    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis.conj (h.covBarH ![])]
   exact le_rfl
 
 /-- The range of the down-singlet symbol map is the span of its components. -/
 lemma range_d_eq (f : Fin 3) :
-    LinearMap.range (d f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.dComponent f ![] j :=
-  range_eq_iSup_span_dualBasis DownSinglet.basis (d f ![])
+  range_eq_iSup_span_dualBasis DownSinglet.basis (h.covD f ![])
 
 /-- The range of the conjugate down-singlet symbol map is the span of its components. -/
 lemma range_bard_eq (f : Fin 3) :
-    LinearMap.range (bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.bardComponent f ![] j :=
-  range_eq_iSup_span_dualBasis DownSinglet.basis.conj (bard f ![])
+  range_eq_iSup_span_dualBasis DownSinglet.basis.conj (h.covBarD f ![])
 
 /-- The range of the up-singlet symbol map is the span of its components. -/
 lemma range_u_eq (f : Fin 3) :
-    LinearMap.range (u f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.uComponent f ![] j :=
-  range_eq_iSup_span_dualBasis UpSinglet.basis (u f ![])
+  range_eq_iSup_span_dualBasis UpSinglet.basis (h.covU f ![])
 
 /-- The range of the conjugate up-singlet symbol map is the span of its components. -/
 lemma range_baru_eq (f : Fin 3) :
-    LinearMap.range (baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.baruComponent f ![] j :=
-  range_eq_iSup_span_dualBasis UpSinglet.basis.conj (baru f ![])
+  range_eq_iSup_span_dualBasis UpSinglet.basis.conj (h.covBarU f ![])
 
 /-- The range of the quark-doublet symbol map is the span of its components. -/
 lemma range_Q_eq (f : Fin 3) :
-    LinearMap.range (Q f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.QComponent f ![] j :=
-  range_eq_iSup_span_dualBasis QuarkDoublet.basis (Q f ![])
+  range_eq_iSup_span_dualBasis QuarkDoublet.basis (h.covQ f ![])
 
 /-- The range of the conjugate quark-doublet symbol map is the span of its components. -/
 lemma range_barQ_eq (f : Fin 3) :
-    LinearMap.range (barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covBarQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.barQComponent f ![] j :=
-  range_eq_iSup_span_dualBasis QuarkDoublet.basis.conj (barQ f ![])
+  range_eq_iSup_span_dualBasis QuarkDoublet.basis.conj (h.covBarQ f ![])
 
 /-- The range of the lepton-doublet symbol map is the span of its components. -/
 lemma range_L_eq (f : Fin 3) :
-    LinearMap.range (L f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.LComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonDoublet.basis (L f ![])
+  range_eq_iSup_span_dualBasis LeptonDoublet.basis (h.covL f ![])
 
 /-- The range of the conjugate lepton-doublet symbol map is the span of its components. -/
 lemma range_barL_eq (f : Fin 3) :
-    LinearMap.range (barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.barLComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonDoublet.basis.conj (barL f ![])
+  range_eq_iSup_span_dualBasis LeptonDoublet.basis.conj (h.covBarL f ![])
 
 /-- The range of the lepton-singlet symbol map is the span of its components. -/
 lemma range_e_eq (f : Fin 3) :
-    LinearMap.range (e f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.eComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonSinglet.basis (e f ![])
+  range_eq_iSup_span_dualBasis LeptonSinglet.basis (h.covE f ![])
 
 /-- The range of the conjugate lepton-singlet symbol map is the span of its components. -/
 lemma range_bare_eq (f : Fin 3) :
-    LinearMap.range (bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    LinearMap.range (h.covBarE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.bareComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonSinglet.basis.conj (bare f ![])
+  range_eq_iSup_span_dualBasis LeptonSinglet.basis.conj (h.covBarE f ![])
 
 /-!
 
@@ -223,7 +200,7 @@ include h in
 /-- The range of the down-singlet symbol map is carried into itself by both groups. -/
 lemma isStableUnder_range_d (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (d f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_d g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_d f) Λ⟩
@@ -233,7 +210,7 @@ include h in
   groups. -/
 lemma isStableUnder_range_bard (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_bard g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_bard f) Λ⟩
@@ -242,7 +219,7 @@ include h in
 /-- The range of the up-singlet symbol map is carried into itself by both groups. -/
 lemma isStableUnder_range_u (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (u f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_u g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_u f) Λ⟩
@@ -252,7 +229,7 @@ include h in
   groups. -/
 lemma isStableUnder_range_baru (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_baru g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_baru f) Λ⟩
@@ -261,7 +238,7 @@ include h in
 /-- The range of the quark-doublet symbol map is carried into itself by both groups. -/
 lemma isStableUnder_range_Q (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (Q f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_Q g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_Q f) Λ⟩
@@ -271,7 +248,7 @@ include h in
   groups. -/
 lemma isStableUnder_range_barQ (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covBarQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_barQ g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_barQ f) Λ⟩
@@ -280,7 +257,7 @@ include h in
 /-- The range of the lepton-doublet symbol map is carried into itself by both groups. -/
 lemma isStableUnder_range_L (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (L f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_L g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_L f) Λ⟩
@@ -290,7 +267,7 @@ include h in
   groups. -/
 lemma isStableUnder_range_barL (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_barL g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_barL f) Λ⟩
@@ -299,7 +276,7 @@ include h in
 /-- The range of the lepton-singlet symbol map is carried into itself by both groups. -/
 lemma isStableUnder_range_e (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (e f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_e g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_e f) Λ⟩
@@ -309,7 +286,7 @@ include h in
   groups. -/
 lemma isStableUnder_range_bare (f : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
-      (LinearMap.range (bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
+      (LinearMap.range (h.covBarE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))) :=
   isStableUnder_gaugeLorentzMaps_iff.2
     ⟨isStableUnder_range_repGauge fun g φ => h.isFermionSector.repGauge_bare g f ![] φ,
       fun Λ => isStableUnder_range_repLorentz (h.isFermionSector.repLorentz_bare f) Λ⟩
@@ -328,36 +305,36 @@ lands inside the join of the six.
 
 /-- The submodule of the down-type block `H d barQ` of a family pair. -/
 noncomputable def downBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
-  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (d f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-    * LinearMap.range (barQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (h.covD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    * LinearMap.range (h.covBarQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The submodule of the up-type block `H baru Q` of a family pair. -/
 noncomputable def upBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
-  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-    * LinearMap.range (Q f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    * LinearMap.range (h.covQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The submodule of the charged-lepton block `H barL e` of a family pair. -/
 noncomputable def leptonBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
-  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-    * LinearMap.range (e f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+  h.isHiggsSector.higgsSubmodule 0 * (LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+    * LinearMap.range (h.covE f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The submodule of the conjugate down-type block `barH bard Q` of a family pair. -/
 noncomputable def barDownBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
   h.isHiggsSector.barHiggsSubmodule 0
-    * (LinearMap.range (bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      * LinearMap.range (Q f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+    * (LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+      * LinearMap.range (h.covQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The submodule of the conjugate up-type block `barH u barQ` of a family pair. -/
 noncomputable def barUpBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
   h.isHiggsSector.barHiggsSubmodule 0
-    * (LinearMap.range (u f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      * LinearMap.range (barQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+    * (LinearMap.range (h.covU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+      * LinearMap.range (h.covBarQ f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The submodule of the conjugate charged-lepton block `barH L bare` of a family pair. -/
 noncomputable def barLeptonBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
   h.isHiggsSector.barHiggsSubmodule 0
-    * (LinearMap.range (L f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      * LinearMap.range (bare f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
+    * (LinearMap.range (h.covL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
+      * LinearMap.range (h.covBarE f' (![] : Fin 0 → Fin 1 ⊕ Fin 3)))
 
 /-- The down-type block submodule is carried into itself by both groups. -/
 lemma isStableUnder_downBlockSubmodule (f f' : Fin 3) :
@@ -877,6 +854,6 @@ theorem mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant
       rw [map_add, (Representation.mem_invariants _ _).1 hL g, hyL g]
     simpa using hstep
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

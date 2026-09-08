@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.YukawaSector.Basic
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.GaugeWeightDecomposition
 /-!
@@ -56,36 +56,13 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz Pointwise
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -630,26 +607,26 @@ lemma sectorMassWeightEightGaugeWeight_piece_zero :
       * (h.isFermionSector.derivSubmodule 0 * h.isFermionSector.derivSubmodule 0)
       = ⨆ (f : Fin 3) (f' : Fin 3),
         (h.isHiggsSector.higgsSubmodule 0 ⊔ h.isHiggsSector.barHiggsSubmodule 0)
-          * ((LinearMap.range (d f ![]) ⊔
-            LinearMap.range (bard f ![]) ⊔
-            LinearMap.range (u f ![]) ⊔
-            LinearMap.range (baru f ![]) ⊔
-            LinearMap.range (Q f ![]) ⊔
-            LinearMap.range (barQ f ![]) ⊔
-            LinearMap.range (L f ![]) ⊔
-            LinearMap.range (barL f ![]) ⊔
-            LinearMap.range (e f ![]) ⊔
-            LinearMap.range (bare f ![]))
-            * (LinearMap.range (d f' ![]) ⊔
-            LinearMap.range (bard f' ![]) ⊔
-            LinearMap.range (u f' ![]) ⊔
-            LinearMap.range (baru f' ![]) ⊔
-            LinearMap.range (Q f' ![]) ⊔
-            LinearMap.range (barQ f' ![]) ⊔
-            LinearMap.range (L f' ![]) ⊔
-            LinearMap.range (barL f' ![]) ⊔
-            LinearMap.range (e f' ![]) ⊔
-            LinearMap.range (bare f' ![]))) := by
+          * ((LinearMap.range (h.covD f ![]) ⊔
+            LinearMap.range (h.covBarD f ![]) ⊔
+            LinearMap.range (h.covU f ![]) ⊔
+            LinearMap.range (h.covBarU f ![]) ⊔
+            LinearMap.range (h.covQ f ![]) ⊔
+            LinearMap.range (h.covBarQ f ![]) ⊔
+            LinearMap.range (h.covL f ![]) ⊔
+            LinearMap.range (h.covBarL f ![]) ⊔
+            LinearMap.range (h.covE f ![]) ⊔
+            LinearMap.range (h.covBarE f ![]))
+            * (LinearMap.range (h.covD f' ![]) ⊔
+            LinearMap.range (h.covBarD f' ![]) ⊔
+            LinearMap.range (h.covU f' ![]) ⊔
+            LinearMap.range (h.covBarU f' ![]) ⊔
+            LinearMap.range (h.covQ f' ![]) ⊔
+            LinearMap.range (h.covBarQ f' ![]) ⊔
+            LinearMap.range (h.covL f' ![]) ⊔
+            LinearMap.range (h.covBarL f' ![]) ⊔
+            LinearMap.range (h.covE f' ![]) ⊔
+            LinearMap.range (h.covBarE f' ![]))) := by
     rw [IsHiggsSector.derivSubmodule, h.isFermionSector.derivSubmodule_zero_eq,
       Submodule.iSup_mul, Submodule.mul_iSup]
     exact iSup_congr fun f => by rw [Submodule.mul_iSup, Submodule.mul_iSup]
@@ -662,8 +639,8 @@ lemma sectorMassWeightEightGaugeWeight_piece_zero :
         (d' := GaugeWeightDecomposition.mul
           (d := h.isFermionSector.derivSubmoduleGaugeWeight 0)
           (d' := h.isFermionSector.derivSubmoduleGaugeWeight 0)))
-      (d' := GaugeWeightDecomposition.iSup hrepGauge_mul fun f =>
-        GaugeWeightDecomposition.iSup hrepGauge_mul fun f' =>
+      (d' := GaugeWeightDecomposition.iSup h.repGauge_mul fun f =>
+        GaugeWeightDecomposition.iSup h.repGauge_mul fun f' =>
           GaugeWeightDecomposition.mul
             (d := GaugeWeightDecomposition.sup
               (d := h.isHiggsSector.higgsSubmoduleGaugeWeight 0)
@@ -709,6 +686,6 @@ lemma mem_sectorMassWeightEight_piece_zero_sup_of_invariant {S : Submodule ℂ B
     x ∈ h.sectorMassWeightEightGaugeWeight.piece 0 ⊔ S :=
   GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ hS hx hinv
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

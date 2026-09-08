@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.MassWeight
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.MassWeight
 /-!
 # The sectors of the field algebra
 
@@ -29,32 +29,13 @@ namespace StandardModel
 open TensorProduct Matrix MatrixGroups Lorentz
 
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 /-!
 
 ## The different sectors of the Standard Model
@@ -167,7 +148,7 @@ word — each sector into itself.
 
 /-- Any Higgs tower symbol lies in the Higgs sector. -/
 lemma H_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ HiggsVec) : H l φ ∈ h.sector {GeneratorClass.higgs} := by
+    (φ : Module.Dual ℂ HiggsVec) : h.covH l φ ∈ h.sector {GeneratorClass.higgs} := by
   rw [← HiggsVec.orthonormBasis.toBasis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -177,7 +158,7 @@ lemma H_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any conjugate-Higgs tower symbol lies in the Higgs sector. -/
 lemma barH_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
-    barH l φ ∈ h.sector {GeneratorClass.higgs} := by
+    h.covBarH l φ ∈ h.sector {GeneratorClass.higgs} := by
   rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -186,7 +167,7 @@ lemma barH_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any field-strength tower symbol lies in the gauge sector. -/
 lemma F_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ GaugeAlgebra) : F l μ ν φ ∈ h.sector {GeneratorClass.gauge} := by
+    (φ : Module.Dual ℝ GaugeAlgebra) : h.covF l μ ν φ ∈ h.sector {GeneratorClass.gauge} := by
   rw [← GaugeAlgebra.stdBasis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => ?_
@@ -197,7 +178,7 @@ lemma F_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ 
 
 /-- Any `d` tower symbol lies in the fermion sector. -/
 lemma d_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ DownSinglet) : d i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ DownSinglet) : h.covD i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← DownSinglet.basis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -206,7 +187,7 @@ lemma d_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `bard` tower symbol lies in the fermion sector. -/
 lemma bard_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule DownSinglet)) : bard i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) : h.covBarD i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -215,7 +196,7 @@ lemma bard_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `u` tower symbol lies in the fermion sector. -/
 lemma u_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ UpSinglet) : u i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ UpSinglet) : h.covU i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← UpSinglet.basis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -224,7 +205,7 @@ lemma u_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `baru` tower symbol lies in the fermion sector. -/
 lemma baru_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule UpSinglet)) : baru i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) : h.covBarU i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -233,7 +214,7 @@ lemma baru_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `Q` tower symbol lies in the fermion sector. -/
 lemma Q_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ QuarkDoublet) : Q i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ QuarkDoublet) : h.covQ i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← QuarkDoublet.basis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -242,7 +223,7 @@ lemma Q_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `barQ` tower symbol lies in the fermion sector. -/
 lemma barQ_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) : barQ i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) : h.covBarQ i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -251,7 +232,7 @@ lemma barQ_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `L` tower symbol lies in the fermion sector. -/
 lemma L_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ LeptonDoublet) : L i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ LeptonDoublet) : h.covL i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← LeptonDoublet.basis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -260,7 +241,7 @@ lemma L_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `barL` tower symbol lies in the fermion sector. -/
 lemma barL_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) : barL i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) : h.covBarL i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -269,7 +250,7 @@ lemma barL_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `e` tower symbol lies in the fermion sector. -/
 lemma e_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ LeptonSinglet) : e i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ LeptonSinglet) : h.covE i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← LeptonSinglet.basis.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -278,7 +259,7 @@ lemma e_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 
 /-- Any `bare` tower symbol lies in the fermion sector. -/
 lemma bare_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) : bare i l φ ∈ h.sector {GeneratorClass.fermion} := by
+    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) : h.covBarE i l φ ∈ h.sector {GeneratorClass.fermion} := by
   rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
@@ -1057,10 +1038,10 @@ lemma sector_invariant {w : ℕ} (x : B) (hx : x ∈ h.fieldAlgebra)
       (∀ g, repGauge g (f s) = (f s)) ∧ (∀ g, repLorentz g (f s) = (f s))) := by
   -- Open. `sector_invariant_of_iSupIndep` closes this given
   -- `iSupIndep fun S => h.sectorMassWeight S w`, and that independence is the whole
-  -- of what is missing; it does not follow from `IsCovStandardModel`, whose axioms
+  -- of what is missing; it does not follow from `CovAlgebraRealization`, whose axioms
   -- are all equations and so survive quotients that the independence does not.
   sorry
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

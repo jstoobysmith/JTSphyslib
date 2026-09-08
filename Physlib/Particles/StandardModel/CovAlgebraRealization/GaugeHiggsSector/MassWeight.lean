@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.GaugeHiggsSector.Basic
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.GaugeHiggsSector.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimLTEight
 /-!
 # The gauge-Higgs invariants below mass weight nine
@@ -217,36 +217,13 @@ lemma repLorentz_mem_sup_of_stable {V W : Submodule ℂ B}
 
 end Peeling
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) →
-    Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -308,12 +285,12 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_fixed_sup (C : Submodul
     (hx : x ∈ h.isGaugeSector.derivSubmodule 0 * C ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hT : ∀ i : Module.Dual ℝ GaugeAlgebra × C, IsBiLorentz B repLorentz
-      (fun l : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (l 0) (l 1) i.1 * (i.2 : B)) :=
-    fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).mul_fixed hrepLorentz_mul
+      (fun l : Fin 2 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)) :=
+    fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
   have hzero : ∀ i : Module.Dual ℝ GaugeAlgebra × C,
       IsBiLorentz.metricContraction
-        (T := fun l : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (l 0) (l 1) i.1 * (i.2 : B)) = 0 := by
+        (T := fun l : Fin 2 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)) = 0 := by
     intro i
     refine IsGaugeSector.metricContraction_eq_zero_of_antisymm fun a b => ?_
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -342,8 +319,8 @@ theorem mem_of_lorentz_invariant_derivSubmodule_one_mul_fixed_sup (C : Submodule
     (hx : x ∈ h.isGaugeSector.derivSubmodule 1 * C ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hT : ∀ i : Module.Dual ℝ GaugeAlgebra × C, IsTriLorentz B repLorentz
-      (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => F ![l 0] (l 1) (l 2) i.1 * (i.2 : B)) :=
-    fun i => (h.isGaugeSector.isTriLorentz_F_deriv_one i.1).mul_fixed hrepLorentz_mul
+      (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => h.covF ![l 0] (l 1) (l 2) i.1 * (i.2 : B)) :=
+    fun i => (h.isGaugeSector.isTriLorentz_F_deriv_one i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
   refine mem_of_lorentz_invariant_iSup_isTriLorentz_span hT S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
@@ -369,9 +346,9 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hU : ∀ (j : Module.Dual ℂ HiggsVec ⊕ Module.Dual ℂ (ConjModule HiggsVec))
       (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3),
-      repLorentz g (Sum.elim (fun φ => H ![μ] φ) (fun ψ => barH ![μ] ψ) j)
+      repLorentz g (Sum.elim (fun φ => h.covH ![μ] φ) (fun ψ => h.covBarH ![μ] ψ) j)
         = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ) •
-            Sum.elim (fun φ => H ![ν] φ) (fun ψ => barH ![ν] ψ) j := by
+            Sum.elim (fun φ => h.covH ![ν] φ) (fun ψ => h.covBarH ![ν] ψ) j := by
     rintro (φ | ψ) g μ
     · simp only [Sum.elim_inl]
       rw [h.isHiggsSector.repLorentz_H_apply g φ 1 ![μ], IsGaugeSector.sum_cov_one]
@@ -381,16 +358,16 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       exact Finset.sum_congr rfl fun ν _ => by simp
   have hT : ∀ i : Module.Dual ℝ GaugeAlgebra ×
       (Module.Dual ℂ HiggsVec ⊕ Module.Dual ℂ (ConjModule HiggsVec)),
-      IsTriLorentz B repLorentz (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => F ![] (l 0) (l 1) i.1 *
-        Sum.elim (fun φ => H ![l 2] φ) (fun ψ => barH ![l 2] ψ) i.2) :=
+      IsTriLorentz B repLorentz (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 *
+        Sum.elim (fun φ => h.covH ![l 2] φ) (fun ψ => h.covBarH ![l 2] ψ) i.2) :=
     fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).isTriLorentz_mul_vector
-      hrepLorentz_mul (hU i.2)
+      h.repLorentz_mul (hU i.2)
   refine mem_of_lorentz_invariant_iSup_isTriLorentz_span hT S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : ∀ (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
       h.isHiggsSector.derivSubmodule 1
-        ≤ Submodule.comap (LinearMap.mulLeft ℂ (F ![] μ ν φ)) (⨆ i, (hT i).span) := by
+        ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ)) (⨆ i, (hT i).span) := by
     intro μ ν φ
     rw [IsHiggsSector.derivSubmodule]
     refine sup_le ?_ ?_
@@ -461,13 +438,13 @@ theorem mem_of_lorentz_invariant_sectorMassWeight_gauge_higgs_eight_sup (S : Sub
     fun g y hy => h.repLorentz_eq_self_of_mem_higgs_derivSubmodule_zero g hy
   have hH0H0 : ∀ (g : SL(2,ℂ)), ∀ y ∈ h.isHiggsSector.derivSubmodule 0 *
       h.isHiggsSector.derivSubmodule 0, repLorentz g y = y :=
-    repLorentz_eq_self_of_mem_mul hrepLorentz_mul hH0 hH0
+    repLorentz_eq_self_of_mem_mul h.repLorentz_mul hH0 hH0
   have hGst : ∀ (n : ℕ) (g : SL(2,ℂ)), ∀ y ∈ h.isGaugeSector.derivSubmodule n,
       repLorentz g y ∈ h.isGaugeSector.derivSubmodule n :=
     fun n g y hy => h.isGaugeSector.derivSubmodule_map_repLorentz_le n g ⟨y, hy, rfl⟩
-  have hBst := repLorentz_mem_mul_of_stable hrepLorentz_mul (hGst 0)
+  have hBst := repLorentz_mem_mul_of_stable h.repLorentz_mul (hGst 0)
     (repLorentz_mem_of_fixed hH0H0)
-  have hCst := repLorentz_mem_mul_of_stable hrepLorentz_mul (hGst 1)
+  have hCst := repLorentz_mem_mul_of_stable h.repLorentz_mul (hGst 1)
     (repLorentz_mem_of_fixed hH0)
   rw [h.sectorMassWeight_gauge_higgs_eight, mul_assoc, sup_assoc, sup_assoc] at hx
   exact h.mem_of_lorentz_invariant_derivSubmodule_one_mul_fixed_sup _ hH0 S hSL
@@ -540,6 +517,6 @@ theorem mem_sectorMassWeight_gauge_higgs_lt_nine_sup_and_gauge_lorentz_invariant
   ⟨fun hx => ⟨h.mem_of_invariant_sectorMassWeight_gauge_higgs_lt_nine_sup w hw S hSL
     hx.1 hx.2.2, hx.2⟩, fun hx => ⟨Submodule.mem_sup_right hx.1, hx.2⟩⟩
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel

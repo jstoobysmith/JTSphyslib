@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsCovStandardModel.Sectors
+public import Physlib.Particles.StandardModel.CovAlgebraRealization.Sectors
 /-!
 # The mixed gauge-fermion sector
 
@@ -35,32 +35,13 @@ namespace StandardModel
 open TensorProduct Matrix MatrixGroups Lorentz
 
 
-namespace IsCovStandardModel
+namespace CovAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
-  {hrepGauge_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  {H : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
-  {F : {n : ℕ} → (Fin n → Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-  {d : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ DownSinglet →ₗ[ℂ] B}
-  {bard : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule DownSinglet) →ₗ[ℂ] B}
-  {u : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ UpSinglet →ₗ[ℂ] B}
-  {baru : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule UpSinglet) →ₗ[ℂ] B}
-  {Q : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ QuarkDoublet →ₗ[ℂ] B}
-  {barQ : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule QuarkDoublet) →ₗ[ℂ] B}
-  {L : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonDoublet →ₗ[ℂ] B}
-  {barL : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonDoublet) →ₗ[ℂ] B}
-  {e : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ LeptonSinglet →ₗ[ℂ] B}
-  {bare : {n : ℕ} → Fin 3 → (Fin n → Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule LeptonSinglet) →ₗ[ℂ] B}
-  (h : IsCovStandardModel B repGauge hrepGauge_mul repLorentz hrepLorentz_mul
-    massWeightPoly H barH F d bard u baru Q barQ L barL e bare)
+  (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly)
 
 /-!
 
@@ -76,13 +57,13 @@ lemma commute_of_mem_gaugeAlgebra_of_mem_fermionAlgebra {x y : B}
     (hx : x ∈ h.isGaugeSector.gaugeAlgebra) (hy : y ∈ h.isFermionSector.fermionAlgebra) :
     Commute x y := by
   have hgen : ∀ a ∈ (⋃ (n : ℕ) (l : Fin n → Fin 1 ⊕ Fin 3) (μ : Fin 1 ⊕ Fin 3)
-        (ν : Fin 1 ⊕ Fin 3), Set.range (F l μ ν)),
+        (ν : Fin 1 ⊕ Fin 3), Set.range (h.covF l μ ν)),
       ∀ b ∈ (⋃ (i : Fin 3) (n : ℕ) (l : Fin n → Fin 1 ⊕ Fin 3),
-        Set.range (d i l) ∪ Set.range (bard i l) ∪
-        Set.range (u i l) ∪ Set.range (baru i l) ∪
-        Set.range (Q i l) ∪ Set.range (barQ i l) ∪
-        Set.range (L i l) ∪ Set.range (barL i l) ∪
-        Set.range (e i l) ∪ Set.range (bare i l)), Commute a b := by
+        Set.range (h.covD i l) ∪ Set.range (h.covBarD i l) ∪
+        Set.range (h.covU i l) ∪ Set.range (h.covBarU i l) ∪
+        Set.range (h.covQ i l) ∪ Set.range (h.covBarQ i l) ∪
+        Set.range (h.covL i l) ∪ Set.range (h.covBarL i l) ∪
+        Set.range (h.covE i l) ∪ Set.range (h.covBarE i l)), Commute a b := by
     intro a ha b hb
     simp only [Set.mem_iUnion, Set.mem_range] at ha
     obtain ⟨n, l, μ, ν, φ, rfl⟩ := ha
@@ -226,6 +207,6 @@ lemma sectorMassWeight_gauge_fermion_seven :
     have := h.mul_mem_sectorMassWeight hx hy
     rwa [hset] at this
 
-end IsCovStandardModel
+end CovAlgebraRealization
 
 end StandardModel
