@@ -25,6 +25,7 @@ and with `--goto` the cursor of the running editor is put there.
 from __future__ import annotations
 
 import argparse
+import datetime
 import os
 import re
 import sys
@@ -119,13 +120,15 @@ def names_lines(lines: list[str], start: int, end: int) -> bool:
 
 def render(start: int | None, end: int, text: str) -> str:
     """The `TODO` command for a line or a range of lines, or, when `start` is `None`,
-    one that names no lines at all."""
+    one that names no lines at all. Always carries today's date."""
     escaped = text.replace("\\", "\\\\").replace('"', '\\"')
-    if start is None:
-        return f'TODO "{escaped}"\n'
-    if end > start:
-        return f'TODO (lines := {start}-{end}) "{escaped}"\n'
-    return f'TODO (lines := {start}) "{escaped}"\n'
+    parts = ["TODO"]
+    if start is not None:
+        lines = f"{start}-{end}" if end > start else f"{start}"
+        parts.append(f"(lines := {lines})")
+    parts.append(f"(date := {datetime.date.today().isoformat()})")
+    parts.append(f'"{escaped}"')
+    return " ".join(parts) + "\n"
 
 
 def goto(path: str, line: int, column: int, settle: float) -> None:

@@ -82,7 +82,7 @@ lemma higgsSubmodule_zero_le :
     h.isHiggsSector.higgsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.higgs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis (h.covH ![])]
+    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis (h.isHiggsSector.covH 0 ![])]
   exact le_rfl
 
 /-- The conjugate Higgs submodule without derivatives lies in the span of the conjugate
@@ -91,7 +91,8 @@ lemma barHiggsSubmodule_zero_le :
     h.isHiggsSector.barHiggsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.barHiggs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis.conj (h.covBarH ![])]
+    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis.conj
+      (h.isHiggsSector.covBarH 0 ![])]
   exact le_rfl
 
 /-- The range of the down-singlet symbol map is the span of its components. -/

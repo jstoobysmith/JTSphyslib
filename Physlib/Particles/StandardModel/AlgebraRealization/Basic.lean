@@ -45,8 +45,6 @@ their gauge covariance and the classification of jet-gauge invariants.
 
 - `StandardModel.AlgebraRealization` : an algebra is a Standard Model when it receives an
   equivariant algebra map from the jet algebra.
-- `AlgebraRealization.id` : the jet algebra of the Standard Model is a Standard Model, along
-  the identity algebra map.
 - `AlgebraRealization.A`, `AlgebraRealization.H` and their companions : the thirteen families of
   derivative symbols of a Standard Model.
 - `AlgebraRealization.repJet_A`, `AlgebraRealization.repLorentz_H`,
@@ -55,12 +53,11 @@ their gauge covariance and the classification of jet-gauge invariants.
 
 ## iii. Table of contents
 
-- A. The identity realization
-- B. The fields of a Standard Model
-- C. Transporting a fact along the defining map
-- D. The gauge transformation of the fields
-- E. The Lorentz transformation of the fields
-- F. The mass weights of the fields
+- A. The fields of a Standard Model
+- B. Transporting a fact along the defining map
+- C. The gauge transformation of the fields
+- D. The Lorentz transformation of the fields
+- E. The mass weights of the fields
 
 -/
 
@@ -114,34 +111,6 @@ structure AlgebraRealization (B : Type) [Ring B] [Algebra ℂ B]
 
 namespace AlgebraRealization
 
-/-!
-
-## A. The identity realization
-
-The jet algebra of the Standard Model is a Standard Model along the identity algebra map,
-since `AlgebraRealization` asks precisely for an equivariant algebra map out of the jet
-algebra. The four compatibility laws hold by definition, and the two multiplicativity laws
-are the ones the jet gauge action and the Lorentz action were shown to satisfy when they
-were built.
-
-This is the point at which the abstract theory of `AlgebraRealization` — its covariant
-reduction, its mass-weight filtration and its classification of invariants — becomes a
-theory of the concrete algebra in which a Standard Model Lagrangian is written.
-
--/
-
-/-- The jet algebra of the Standard Model is a Standard Model: it is one along the identity
-  algebra map. -/
-noncomputable def id : AlgebraRealization JetAlgebra JetAlgebra.repJetGaugeGroupI
-    JetAlgebra.repLorentzGroup JetAlgebra.massWeightPoly where
-  toAlgHom := AlgHom.id ℂ JetAlgebra
-  map_repJet _ _ := rfl
-  map_repLorentz _ _ := rfl
-  map_massWeight x := by
-    simp [Polynomial.mapAlgHom]
-  repJet_mul := JetAlgebra.isGaugeField.gauge_mul
-  repLorentz_mul := JetAlgebra.repLorentzGroup_apply_mul
-
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -150,7 +119,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-!
 
-## B. The fields of a Standard Model
+## A. The fields of a Standard Model
 
 The thirteen families of derivative symbols the theory is written in — the gauge field,
 the Higgs field and its conjugate, and the five fermion species in three generations with
@@ -230,7 +199,7 @@ noncomputable def bare (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-!
 
-## C. Transporting a fact along the defining map
+## B. Transporting a fact along the defining map
 
 Every law the old structure demanded as an axiom is now a theorem, proved once for the jet
 algebra and transported along `toAlgHom`. The transport is the same in each of the shapes
@@ -267,7 +236,7 @@ private lemma map_family_repLorentz {V : Type} [AddCommGroup V] [Module ℂ V]
 
 /-!
 
-## D. The gauge transformation of the fields
+## C. The gauge transformation of the fields
 
 The gauge field is a gauge field — Lorentz covector symbols, the all-orders adjoint
 Leibniz convolution with the Maurer–Cartan shift, and a multiplicative gauge action — and
@@ -360,7 +329,7 @@ lemma repJet_bare : ∀ i, TransformsIn repJet (repConj LeptonSinglet.repJetGaug
 
 /-!
 
-## E. The Lorentz transformation of the fields
+## D. The Lorentz transformation of the fields
 
 The derivative slots of every field mix by per-slot Lorentz matrices, and the value index
 by the contragredient of the species' Lorentz representation: the Higgs is a scalar, the

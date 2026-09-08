@@ -350,10 +350,10 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
         = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ) •
             Sum.elim (fun φ => h.covH ![ν] φ) (fun ψ => h.covBarH ![ν] ψ) j := by
     rintro (φ | ψ) g μ
-    · simp only [Sum.elim_inl]
+    · simp only [Sum.elim_inl, ← h.isHiggsSector_covH 1 ![μ]]
       rw [h.isHiggsSector.repLorentz_H_apply g φ 1 ![μ], IsGaugeSector.sum_cov_one]
       exact Finset.sum_congr rfl fun ν _ => by simp
-    · simp only [Sum.elim_inr]
+    · simp only [Sum.elim_inr, ← h.isHiggsSector_covBarH 1 ![μ]]
       rw [h.isHiggsSector.repLorentz_barH_apply g ψ 1 ![μ], IsGaugeSector.sum_cov_one]
       exact Finset.sum_congr rfl fun ν _ => by simp
   have hT : ∀ i : Module.Dual ℝ GaugeAlgebra ×

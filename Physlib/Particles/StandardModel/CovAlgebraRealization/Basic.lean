@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
 module
-public import Physlib.Particles.StandardModel.CovJetAlgebra.Sectors
+public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Sectors
 /-!
 # The covariant algebra valued Standard Model
 
@@ -292,25 +292,32 @@ inside it.
 
 -/
 
-/-- The Higgs sector of a covariant Standard Model. -/
-theorem isHiggsSector : IsHiggsSector B repGauge k.repGauge_mul repLorentz k.repLorentz_mul
-    (fun _n l => k.covH l) (fun _n l => k.covBarH l) massWeightPoly where
-  H_equivariant := fun g φ _n l =>
-    k.map_repGauge_eq (CovJetAlgebra.isHiggsSector.H_equivariant g φ _n l)
-  barH_equivariant := fun g φ _n l =>
-    k.map_repGauge_eq (CovJetAlgebra.isHiggsSector.barH_equivariant g φ _n l)
-  H_comm_H := fun φ ψ _n₁ _n₂ l₁ l₂ =>
-    (CovJetAlgebra.isHiggsSector.H_comm_H φ ψ _n₁ _n₂ l₁ l₂).map k.toAlgHom
-  H_comm_barH := fun φ ψ _n₁ _n₂ l₁ l₂ =>
-    (CovJetAlgebra.isHiggsSector.H_comm_barH φ ψ _n₁ _n₂ l₁ l₂).map k.toAlgHom
-  barH_comm_barH := fun φ ψ _n₁ _n₂ l₁ l₂ =>
-    (CovJetAlgebra.isHiggsSector.barH_comm_barH φ ψ _n₁ _n₂ l₁ l₂).map k.toAlgHom
-  H_massWeight := fun φ _n l =>
-    k.map_massWeight_monomial (CovJetAlgebra.isHiggsSector.H_massWeight φ _n l)
-  barH_massWeight := fun φ _n l =>
-    k.map_massWeight_monomial (CovJetAlgebra.isHiggsSector.barH_massWeight φ _n l)
-  repLorentz_H := k.map_lorentz CovJetAlgebra.isHiggsSector.repLorentz_H
-  repLorentz_barH := k.map_lorentz CovJetAlgebra.isHiggsSector.repLorentz_barH
+/-- The Higgs sector of a covariant Standard Model: the defining map restricted to the
+  covariant jet algebra of the Higgs field. -/
+noncomputable def isHiggsSector :
+    IsHiggsSector B repGauge repLorentz massWeightPoly where
+  toAlgHom := k.toAlgHom.comp CovJetAlgebra.higgsSubalgebra.val
+  map_rep g x := k.map_repGauge g (x : CovJetAlgebra)
+  map_repLorentz Λ x := k.map_repLorentz Λ (x : CovJetAlgebra)
+  map_massWeight x := by
+    show massWeightPoly (k.toAlgHom (x : CovJetAlgebra)) = _
+    rw [k.map_massWeight, ← Subalgebra.mapAlgHom_polyRestrict
+      CovJetAlgebra.massWeightPoly_mem_polyRange x]
+    exact AlgHom.congr_fun (Polynomial.mapAlgHom_comp _ k.toAlgHom
+      CovJetAlgebra.higgsSubalgebra.val) _
+  rep_mul := k.repGauge_mul
+  repLorentz_mul := k.repLorentz_mul
+
+/-- The Higgs towers of the Higgs sector of a covariant Standard Model are its own. -/
+@[simp]
+lemma isHiggsSector_covH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    k.isHiggsSector.covH n l = k.covH l := rfl
+
+/-- The conjugate Higgs towers of the Higgs sector of a covariant Standard Model are its
+  own. -/
+@[simp]
+lemma isHiggsSector_covBarH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    k.isHiggsSector.covBarH n l = k.covBarH l := rfl
 
 /-- The gauge sector of a covariant Standard Model. -/
 theorem isGaugeSector : IsGaugeSector B repGauge k.repGauge_mul repLorentz k.repLorentz_mul

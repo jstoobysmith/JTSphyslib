@@ -271,11 +271,11 @@ lemma repGauge_generatorVal_mem_sector (g : GaugeGroupI) (a : Generators) :
     repGauge g (h.generatorVal a) ∈ h.sector {a.kind} := by
   cases a with
   | H n l j =>
-    simp only [generatorVal, Generators.kind]
+    simp only [generatorVal, Generators.kind, ← h.isHiggsSector_covH n l]
     rw [h.isHiggsSector.H_equivariant g _ n l]
     exact h.H_mem_sector l _
   | barH n l j =>
-    simp only [generatorVal, Generators.kind]
+    simp only [generatorVal, Generators.kind, ← h.isHiggsSector_covBarH n l]
     rw [h.isHiggsSector.barH_equivariant g _ n l]
     exact h.barH_mem_sector l _
   | F n l μ ν j =>
@@ -329,11 +329,11 @@ lemma repLorentz_generatorVal_mem_sector (Λ : SL(2,ℂ)) (a : Generators) :
     repLorentz Λ (h.generatorVal a) ∈ h.sector {a.kind} := by
   cases a with
   | H n l j =>
-    simp only [generatorVal, Generators.kind]
+    simp only [generatorVal, Generators.kind, ← h.isHiggsSector_covH n l]
     rw [h.isHiggsSector.repLorentz_H Λ n l _]
     exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.H_mem_sector p _)
   | barH n l j =>
-    simp only [generatorVal, Generators.kind]
+    simp only [generatorVal, Generators.kind, ← h.isHiggsSector_covBarH n l]
     rw [h.isHiggsSector.repLorentz_barH Λ n l _]
     exact sum_mem fun p _ => SMulMemClass.smul_mem _ (h.barH_mem_sector p _)
   | F n l μ ν j =>

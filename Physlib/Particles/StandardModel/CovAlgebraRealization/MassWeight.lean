@@ -340,11 +340,11 @@ lemma repGauge_generatorVal_mem (g : GaugeGroupI) (a : Generators) :
     repGauge g (h.generatorVal a) ∈ h.massWeightSubmodule a.weight := by
   cases a with
   | H n l j =>
-    simp only [generatorVal]
+    simp only [generatorVal, ← h.isHiggsSector_covH n l]
     rw [h.isHiggsSector.H_equivariant g _ n l]
     exact h.H_mem_massWeightSubmodule l _
   | barH n l j =>
-    simp only [generatorVal]
+    simp only [generatorVal, ← h.isHiggsSector_covBarH n l]
     rw [h.isHiggsSector.barH_equivariant g _ n l]
     exact h.barH_mem_massWeightSubmodule l _
   | F n l μ ν j =>
@@ -398,12 +398,12 @@ lemma repLorentz_generatorVal_mem (Λ : SL(2,ℂ)) (a : Generators) :
     repLorentz Λ (h.generatorVal a) ∈ h.massWeightSubmodule a.weight := by
   cases a with
   | H n l j =>
-    simp only [generatorVal]
+    simp only [generatorVal, ← h.isHiggsSector_covH n l]
     rw [h.isHiggsSector.repLorentz_H Λ n l _]
     exact Submodule.sum_mem _ fun p _ => Submodule.smul_mem _ _
       (h.H_mem_massWeightSubmodule p _)
   | barH n l j =>
-    simp only [generatorVal]
+    simp only [generatorVal, ← h.isHiggsSector_covBarH n l]
     rw [h.isHiggsSector.repLorentz_barH Λ n l _]
     exact Submodule.sum_mem _ fun p _ => Submodule.smul_mem _ _
       (h.barH_mem_massWeightSubmodule p _)

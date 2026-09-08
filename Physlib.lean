@@ -183,6 +183,7 @@ public import Physlib.Mathematics.SO3.Basic
 public import Physlib.Mathematics.SchurTriangulation
 public import Physlib.Mathematics.SpecialFunctions.EllipticIntegral
 public import Physlib.Mathematics.SpecialFunctions.PhysHermite
+public import Physlib.Mathematics.SubalgebraRestriction
 public import Physlib.Mathematics.SymmetricAlgebra
 public import Physlib.Mathematics.TensorProductComm
 public import Physlib.Mathematics.Trigonometry.SinSq
@@ -286,8 +287,6 @@ public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.MassDimEight
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.MassDimLTEight
-public import Physlib.Particles.StandardModel.CovJetAlgebra.Basic
-public import Physlib.Particles.StandardModel.CovJetAlgebra.Sectors
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
@@ -369,6 +368,9 @@ public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimEi
 public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.JetAlgebra.AlgebraRealization
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Basic
+public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Higgs
+public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Sectors
 public import Physlib.Particles.StandardModel.JetAlgebra.FieldAlgebra
 public import Physlib.Particles.StandardModel.JetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.JetAlgebra.Generators
@@ -376,6 +378,7 @@ public import Physlib.Particles.StandardModel.JetAlgebra.Invariants
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.MassWeightPoly
+public import Physlib.Particles.StandardModel.JetAlgebra.Realization
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction

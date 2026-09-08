@@ -28,16 +28,9 @@ set_option linter.unusedVariables false
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
-  {hrep_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B), rep g (b₁ * b₂) = rep g b₁ * rep g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
-  {H : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) →
-    Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep hrep_mul repLorentz hrepLorentz_mul H barH
-      massWeightPoly)
+  (h : IsHiggsSector B rep repLorentz massWeightPoly)
 
 /-- **The gauge weight decomposition of the Higgs derivative submodules**: the join of
   the decompositions of the Higgs and conjugate-Higgs submodules, whose weights are

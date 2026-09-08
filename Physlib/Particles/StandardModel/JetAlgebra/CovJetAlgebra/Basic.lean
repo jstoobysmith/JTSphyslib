@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 public import Physlib.Particles.StandardModel.AlgebraRealization.CovStandardModel
+public import Physlib.Particles.StandardModel.JetAlgebra.Realization
 /-!
 # The covariant jet algebra
 
@@ -54,6 +55,7 @@ That it is itself a covariant Standard Model is
 - C. The covariant subalgebra as an algebra in its own right
   - C.1. Corestricting a family of symbols
 - D. The covariant jet algebra
+- E. Transporting a law to the covariant jet algebra
 
 -/
 
@@ -207,8 +209,8 @@ lemma covGenerators_induction {P : B → Prop}
     (hE : ∀ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ LeptonSinglet), P (h.covDerivE i l φ))
     (hBarE : ∀ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
-      (φ : Module.Dual ℂ (ConjModule LeptonSinglet)), P (h.covDerivBarE i l φ))
-    : ∀ x ∈ h.covGenerators, P x := by
+      (φ : Module.Dual ℂ (ConjModule LeptonSinglet)), P (h.covDerivBarE i l φ)) :
+    ∀ x ∈ h.covGenerators, P x := by
   rintro x hx
   rw [covGenerators] at hx
   rcases hx with hx | hx
@@ -762,6 +764,54 @@ noncomputable def conjLeptonSingletField (i : Fin 3) {n : ℕ} (l : Fin n → (F
 lemma coe_conjLeptonSingletField (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     (conjLeptonSingletField i l φ : JetAlgebra) = AlgebraRealization.id.covDerivBarE i l φ := rfl
+
+/-!
+
+## E. Transporting a law to the covariant jet algebra
+
+A law of the covariant jet algebra is an equation between elements of a subalgebra of the
+jet algebra, so it is the jet algebra's own law under `Subtype.ext`. Three shapes need more
+than that: the multiplicativity of the two actions, which is the ambient multiplicativity;
+a mass-weight eigenvalue equation, whose target is the polynomials over the subalgebra; and
+a Lorentz law, whose right-hand side is a sum of scalar multiples that the coercion has to
+be pushed through.
+
+-/
+
+/-- The global gauge action on the covariant jet algebra is multiplicative. -/
+lemma repGaugeGroupI_mul (g : GaugeGroupI) (x y : CovJetAlgebra) :
+    repGaugeGroupI g (x * y) = repGaugeGroupI g x * repGaugeGroupI g y :=
+  Subtype.ext (AlgebraRealization.id.repGlobal_mul g (x : JetAlgebra) (y : JetAlgebra))
+
+/-- The Lorentz action on the covariant jet algebra is multiplicative. -/
+lemma repLorentzGroup_mul (Λ : SL(2,ℂ)) (x y : CovJetAlgebra) :
+    repLorentzGroup Λ (x * y) = repLorentzGroup Λ x * repLorentzGroup Λ y :=
+  Subtype.ext (JetAlgebra.repLorentzGroup_apply_mul Λ (x : JetAlgebra) (y : JetAlgebra))
+
+/-- A mass-weight eigenvalue equation of the jet algebra, for an element of the covariant jet
+  algebra, is a mass-weight eigenvalue equation there. -/
+lemma massWeightPoly_eq_monomial {n : ℕ} {x : CovJetAlgebra}
+    (hx : JetAlgebra.massWeightPoly (x : JetAlgebra)
+      = Polynomial.monomial n (x : JetAlgebra)) :
+    massWeightPoly x = Polynomial.monomial n x :=
+  (AlgebraRealization.id.covMassWeightPoly_eq_monomial_iff x).mpr hx
+
+/-- A Lorentz law of the jet algebra, for a family valued in the covariant jet algebra, is a
+  Lorentz law there: the coercion is additive and commutes with scalar multiplication. -/
+lemma isLorentzCovDerivTransforms_of {V : Type} [AddCommGroup V] [Module ℂ V]
+    {rep : Representation ℂ SL(2,ℂ) V}
+    {G : {n : ℕ} → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual ℂ V →ₗ[ℂ] CovJetAlgebra}
+    (hG : ∀ (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+      JetAlgebra.repLorentzGroup Λ ((G l φ : CovJetAlgebra) : JetAlgebra) =
+        ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+          (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
+            ((G p (rep.dual Λ φ) : CovJetAlgebra) : JetAlgebra)) :
+    IsLorentzCovDerivTransforms repLorentzGroup rep G := fun Λ n l φ =>
+  Subtype.ext <| by
+    simp only [AlgebraRealization.coe_covRepLorentz, AddSubmonoidClass.coe_finsetSum,
+      SetLike.val_smul]
+    exact hG Λ n l φ
+
 
 end CovJetAlgebra
 

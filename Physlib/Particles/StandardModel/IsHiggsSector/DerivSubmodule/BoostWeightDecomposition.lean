@@ -86,16 +86,9 @@ set_option linter.unusedVariables false
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
-  {hrep_mul : ∀ (g : GaugeGroupI) (b₁ b₂ : B), rep g (b₁ * b₂) = rep g b₁ * rep g b₂}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {hrepLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂}
-  {H : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual ℂ HiggsVec →ₗ[ℂ] B}
-  {barH : (n : ℕ) → (Fin n → (Fin 1 ⊕ Fin 3)) →
-    Module.Dual ℂ (ConjModule HiggsVec) →ₗ[ℂ] B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep hrep_mul repLorentz hrepLorentz_mul H barH
-      massWeightPoly)
+  (h : IsHiggsSector B rep repLorentz massWeightPoly)
 
 /-!
 
@@ -109,7 +102,7 @@ include h in
   on; the value index transforms by the dual of the *trivial* representation, i.e. not at
   all. -/
 lemma rotatesIndices_H (n : ℕ) :
-    RotatesIndices (Representation.trivial ℂ SL(2,ℂ) HiggsVec).dual repLorentz (H n) :=
+    RotatesIndices (Representation.trivial ℂ SL(2,ℂ) HiggsVec).dual repLorentz (h.covH n) :=
   fun g l φ => h.repLorentz_H g n l φ
 
 include h in
@@ -117,7 +110,7 @@ include h in
   value index transforms by the dual of the conjugate of the trivial representation, which
   again is the identity. -/
 lemma rotatesIndices_barH (n : ℕ) :
-    RotatesIndices (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj.dual repLorentz (barH n) :=
+    RotatesIndices (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj.dual repLorentz (h.covBarH n) :=
   fun g l φ => h.repLorentz_barH g n l φ
 
 /-!
@@ -158,16 +151,16 @@ lemma mem_boostWeightSubmodule_barHiggsValue (i : Fin 3)
 /-- **The light-cone Higgs symbols.**  The `n` covariant-derivative slots of `H n` are read
   in the light-cone basis of the `i`-th spatial axis, `c j` naming the light-cone direction
   of the `j`-th slot. -/
-noncomputable def lightConeHiggs (h : IsHiggsSector B rep hrep_mul repLorentz hrepLorentz_mul
-      H barH massWeightPoly) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
+noncomputable def lightConeHiggs (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     (φ : Module.Dual ℂ HiggsVec) : B :=
-  lightConeDeriv (H n) i c φ
+  lightConeDeriv (h.covH n) i c φ
 
 /-- **The light-cone conjugate-Higgs symbols.** -/
-noncomputable def lightConeBarHiggs (h : IsHiggsSector B rep hrep_mul repLorentz
-      hrepLorentz_mul H barH massWeightPoly) {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
+noncomputable def lightConeBarHiggs (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) : B :=
-  lightConeDeriv (barH n) i c φ
+  lightConeDeriv (h.covBarH n) i c φ
 
 /-- **The light-cone Higgs symbols have definite boost weight.**  Each of the `n` slots
   contributes the weight of its light-cone direction: `+2` for `D₀ - Dᵢ`, `-2` for
@@ -178,7 +171,7 @@ lemma lightConeHiggs_mem {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     h.lightConeHiggs i c φ ∈
       boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
   rw [lightConeHiggs]
-  simpa using lightConeDeriv_mem (H n) (h.rotatesIndices_H n) i c
+  simpa using lightConeDeriv_mem (h.covH n) (h.rotatesIndices_H n) i c
     (mem_boostWeightSubmodule_higgsValue i φ)
 
 /-- **The light-cone conjugate-Higgs symbols have definite boost weight**, carried entirely
@@ -188,13 +181,13 @@ lemma lightConeBarHiggs_mem {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     h.lightConeBarHiggs i c φ ∈
       boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
   rw [lightConeBarHiggs]
-  simpa using lightConeDeriv_mem (barH n) (h.rotatesIndices_barH n) i c
+  simpa using lightConeDeriv_mem (h.covBarH n) (h.rotatesIndices_barH n) i c
     (mem_boostWeightSubmodule_barHiggsValue i φ)
 
 include h in
 /-- The range of a light-cone Higgs symbol map lies in one boost weight space. -/
 lemma range_lightConeDeriv_H_le {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) :
-    LinearMap.range (lightConeDeriv (H n) i c)
+    LinearMap.range (lightConeDeriv (h.covH n) i c)
       ≤ boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
   rintro _ ⟨φ, rfl⟩
   exact h.lightConeHiggs_mem i c φ
@@ -202,7 +195,7 @@ lemma range_lightConeDeriv_H_le {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) :
 include h in
 /-- The range of a light-cone conjugate-Higgs symbol map lies in one boost weight space. -/
 lemma range_lightConeDeriv_barH_le {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) :
-    LinearMap.range (lightConeDeriv (barH n) i c)
+    LinearMap.range (lightConeDeriv (h.covBarH n) i c)
       ≤ boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
   rintro _ ⟨φ, rfl⟩
   exact h.lightConeBarHiggs_mem i c φ
@@ -216,28 +209,28 @@ lemma range_lightConeDeriv_barH_le {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4) :
 /-- The ranges of the Higgs symbol maps, joined over the derivative indices, are the Higgs
   submodule. -/
 lemma iSup_range_H (n : ℕ) :
-    (⨆ d : Fin n → (Fin 1 ⊕ Fin 3), LinearMap.range (H n d)) = h.higgsSubmodule n := by
+    (⨆ d : Fin n → (Fin 1 ⊕ Fin 3), LinearMap.range (h.covH n d)) = h.higgsSubmodule n := by
   rw [higgsSubmodule]
 
 /-- The ranges of the conjugate-Higgs symbol maps, joined over the derivative indices, are
   the conjugate-Higgs submodule. -/
 lemma iSup_range_barH (n : ℕ) :
-    (⨆ d : Fin n → (Fin 1 ⊕ Fin 3), LinearMap.range (barH n d)) = h.barHiggsSubmodule n := by
+    (⨆ d : Fin n → (Fin 1 ⊕ Fin 3), LinearMap.range (h.covBarH n d)) = h.barHiggsSubmodule n := by
   rw [barHiggsSubmodule]
 
 /-- **The boost weight decomposition of the Higgs submodules**, along any spatial axis and
   for any number of covariant derivatives: the derivative slots carry all the weight. -/
-noncomputable def higgsSubmoduleBoostWeight (h : IsHiggsSector B rep hrep_mul repLorentz
-      hrepLorentz_mul H barH massWeightPoly) (n : ℕ) (i : Fin 3) :
+noncomputable def higgsSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.higgsSubmodule n) :=
-  (IsDerivativeCollection.boostDecomp (H n) (h.rotatesIndices_H n) i
+  (IsDerivativeCollection.boostDecomp (h.covH n) (h.rotatesIndices_H n) i
     (higgsValueWeight i)).copy (h.iSup_range_H n)
 
 /-- **The boost weight decomposition of the conjugate-Higgs submodules.** -/
-noncomputable def barHiggsSubmoduleBoostWeight (h : IsHiggsSector B rep hrep_mul repLorentz
-      hrepLorentz_mul H barH massWeightPoly) (n : ℕ) (i : Fin 3) :
+noncomputable def barHiggsSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.barHiggsSubmodule n) :=
-  (IsDerivativeCollection.boostDecomp (barH n) (h.rotatesIndices_barH n) i
+  (IsDerivativeCollection.boostDecomp (h.covBarH n) (h.rotatesIndices_barH n) i
     (barHiggsValueWeight i)).copy (h.iSup_range_barH n)
 
 /-- The weight-`k` piece of the Higgs submodule is the join of the light-cone symbol ranges
@@ -245,10 +238,10 @@ noncomputable def barHiggsSubmoduleBoostWeight (h : IsHiggsSector B rep hrep_mul
 lemma higgsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
     (h.higgsSubmoduleBoostWeight n i).piece k
       = ⨆ (c : Fin n → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
-        LinearMap.range (lightConeDeriv (H n) i c) := by
+        LinearMap.range (lightConeDeriv (h.covH n) i c) := by
   show (⨆ c : Fin n → Fin 4,
     ((higgsValueWeight i).piece (k - ∑ j, lightConeWeight (c j))).map
-      (lightConeDeriv (H n) i c)) = _
+      (lightConeDeriv (h.covH n) i c)) = _
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega, higgsValueWeight,
@@ -261,10 +254,10 @@ lemma higgsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
 lemma barHiggsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
     (h.barHiggsSubmoduleBoostWeight n i).piece k
       = ⨆ (c : Fin n → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
-        LinearMap.range (lightConeDeriv (barH n) i c) := by
+        LinearMap.range (lightConeDeriv (h.covBarH n) i c) := by
   show (⨆ c : Fin n → Fin 4,
     ((barHiggsValueWeight i).piece (k - ∑ j, lightConeWeight (c j))).map
-      (lightConeDeriv (barH n) i c)) = _
+      (lightConeDeriv (h.covBarH n) i c)) = _
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega, barHiggsValueWeight,
@@ -281,8 +274,8 @@ lemma barHiggsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
 /-- **The boost weight decomposition of the Higgs derivative submodules**, along any spatial
   axis and for any number of covariant derivatives: the join of the Higgs and
   conjugate-Higgs decompositions. -/
-noncomputable def derivSubmoduleBoostWeight (h : IsHiggsSector B rep hrep_mul repLorentz
-      hrepLorentz_mul H barH massWeightPoly) (n : ℕ) (i : Fin 3) :
+noncomputable def derivSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.derivSubmodule n) :=
   ((h.higgsSubmoduleBoostWeight n i).sup
     (h.barHiggsSubmoduleBoostWeight n i)).copy (by rw [derivSubmodule])
@@ -292,9 +285,9 @@ noncomputable def derivSubmoduleBoostWeight (h : IsHiggsSector B rep hrep_mul re
 lemma derivSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
     (h.derivSubmoduleBoostWeight n i).piece k
       = (⨆ (c : Fin n → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
-          LinearMap.range (lightConeDeriv (H n) i c))
+          LinearMap.range (lightConeDeriv (h.covH n) i c))
         ⊔ ⨆ (c : Fin n → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
-          LinearMap.range (lightConeDeriv (barH n) i c) := by
+          LinearMap.range (lightConeDeriv (h.covBarH n) i c) := by
   show (h.higgsSubmoduleBoostWeight n i).piece k
       ⊔ (h.barHiggsSubmoduleBoostWeight n i).piece k = _
   rw [h.higgsSubmoduleBoostWeight_piece n i k, h.barHiggsSubmoduleBoostWeight_piece n i k]

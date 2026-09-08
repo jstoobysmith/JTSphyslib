@@ -32,8 +32,10 @@ DEFAULT_ROOT = "Physlib"
 EXCLUDE = re.compile(r"(^|/)(Meta|scripts)/")
 
 # TODO "..." and TODO (lines := 82) "..." / TODO (lines := 201-223) "..."  (Lean command)
+# An optional (date := YYYY-MM-DD) clause may follow the lines clause.
 CMD_START = re.compile(
-    r'^\s*TODO\s*(?:\(\s*lines\s*:=\s*(\d+)\s*(?:-\s*(\d+)\s*)?\)\s*)?"'
+    r'^\s*TODO\s*(?:\(\s*lines\s*:=\s*(\d+)\s*(?:-\s*(\d+)\s*)?\)\s*)?'
+    r'(?:\(\s*date\s*:=\s*(\d+-\d+-\d+)\s*\)\s*)?"'
 )
 DOC_LINE = re.compile(r"^\s*/-!\s*TODO:\s*")     # /-! TODO: ... -/
 LOOSE = re.compile(r"todo", re.I)
@@ -66,14 +68,21 @@ class Todo(NamedTuple):
     kind: str
     content: str
     at: int
+    date_added: str = ""
 
     def lines(self):
         """The range of code, as it is written in a `(lines := ...)` clause."""
         return f"{self.line}-{self.endline}" if self.endline > self.line else f"{self.line}"
 
     def label(self, name):
-        """`name` and the code range, saying where the note is when that differs."""
-        return f"{name}:{self.lines()}" + (f" (at {self.at})" if self.at != self.line else "")
+        """`name` and the code range, saying where the note is when that differs, and
+        the date it was added when the `TODO` carries one."""
+        label = f"{name}:{self.lines()}"
+        if self.at != self.line:
+            label += f" (at {self.at})"
+        if self.date_added:
+            label += f" [{self.date_added}]"
+        return label
 
 
 def git(repo, *args):
@@ -127,6 +136,7 @@ def parse_file(path, text):
             start = i
             first = int(cmd.group(1)) if cmd.group(1) else start + 1
             last = int(cmd.group(2)) if cmd.group(2) else first
+            date_added = cmd.group(3) or ""
             body = line[line.index('"') + 1:]
             while '"' not in body.replace('\\"', ""):
                 i += 1
@@ -136,7 +146,7 @@ def parse_file(path, text):
             if '"' in body:
                 body = body[:body.rindex('"')]
             items.append(Todo(path, first, last, "cmd",
-                               " ".join(body.split()), start + 1))
+                               " ".join(body.split()), start + 1, date_added))
             i += 1
             continue
 
@@ -269,6 +279,8 @@ def emit_md(items, meta, repo_url, link_ref):
                    f"&nbsp;[`{name}:{todo.lines()}`]({link}#{anchor})")
             if todo.at != todo.line:   # where to go to edit the note itself
                 row += f" &nbsp;[`@{todo.at}`]({link}#L{todo.at})"
+            if todo.date_added:
+                row += f" &nbsp;`{todo.date_added}`"
             out.append(row)
         out.append("")
 
