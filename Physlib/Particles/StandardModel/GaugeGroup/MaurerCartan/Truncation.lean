@@ -425,38 +425,17 @@ lemma mem_truncationKer_of_symmetrizedMaurerCartanCoeff_eq_zero
       symmetrizedMaurerCartanCoeff U ⟨r, hr⟩ = 0) :
     U.1 ∈ JetGaugeGroupI.truncationKer n := by
   classical
-  -- Step 1: the base-point Maurer–Cartan Taylor data vanish below order `n`, by
-  -- strong induction with the symmetrization defect formula.
+  -- Step 1: the base-point Maurer–Cartan Taylor data vanish below order `n`. This is
+  -- the generic `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero`,
+  -- which follows from the symmetrization defect formula alone.
   have hall : ∀ (k : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3),
-      s.card = k → k < n → eval (iteratedDeriv s (maurerCartanForm U.1 μ)) = 0 := by
-    intro k
-    induction k using Nat.strong_induction_on with
-    | _ k ih =>
-      intro s μ hs hk
-      rw [iteratedDeriv_maurerCartanForm_eq_symmetrized_add U.1 s μ, map_add, map_smul]
-      have h1 : eval (localGaugeData.symmetrizedMaurerCartanForm U.1 (μ ::ₘ s)) = 0 := by
-        have hle : (μ ::ₘ s).card ≤ n := by rw [Multiset.card_cons, hs]; omega
-        have h2 := h (μ ::ₘ s) (Multiset.cons_ne_zero) hle
-        rwa [symmetrizedMaurerCartanCoeff_apply] at h2
-      have h2 : eval ((s.map fun ν => iteratedDeriv (s.erase ν)
-          ⁅maurerCartanForm U.1 μ, maurerCartanForm U.1 ν⁆).sum) = 0 := by
-        rw [map_multiset_sum, Multiset.map_map]
-        refine Multiset.sum_eq_zero fun x hx => ?_
-        obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
-        have hzero : ∀ (ρ : Fin 1 ⊕ Fin 3) (p : Multiset (Fin 1 ⊕ Fin 3)),
-            p ≤ s.erase ν → eval (iteratedDeriv p (maurerCartanForm U.1 ρ)) =
-              eval (iteratedDeriv p (0 : JetGaugeAlgebra)) := by
-          intro ρ p hp
-          have hcard : p.card < k := by
-            have h3 := Multiset.card_le_card hp
-            have h4 := Multiset.card_erase_add_one hν
-            omega
-          rw [ih p.card hcard p ρ rfl (hcard.trans hk), map_zero, map_zero]
-        simp only [Function.comp_apply]
-        rw [eval_iteratedDeriv_bracket_congr (s.erase ν) _ _ 0 0 (hzero μ) (hzero ν)]
-        simp
-      rw [h1, h2]
-      simp
+      s.card = k → k < n → eval (iteratedDeriv s (maurerCartanForm U.1 μ)) = 0 :=
+    fun _ s μ hk hkn =>
+      localGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero U.1
+        (fun r hr hrn => by
+          have hcoeff := h r hr hrn
+          rw [symmetrizedMaurerCartanCoeff_apply] at hcoeff
+          exact hcoeff) s μ (hk ▸ hkn)
   -- Step 2: the Taylor coefficients of the Maurer–Cartan form components vanish in
   -- all degrees below `n`.
   have hfac : ∀ s : Multiset (Fin 1 ⊕ Fin 3),

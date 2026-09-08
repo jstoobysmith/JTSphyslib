@@ -41,6 +41,8 @@ data of `ω` is determined by the base-point symmetrized data.
   defect is an average of brackets in fewer directions.
 - `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq` : the base-point
   symmetrized data determines the base-point Taylor data of `ω`.
+- `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero` : the
+  base-point half of Maurer–Cartan triangularity.
 
 ## iii. Table of contents
 
@@ -188,6 +190,52 @@ lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : G)
     Multiset.sum_replicate, ← Nat.cast_smul_eq_nsmul ℝ]
   push_cast
   match_scalars <;> field_simp <;> ring
+
+/-- **Maurer–Cartan triangularity, base-point half**: if the base-point symmetrized
+  Maurer–Cartan data of `U` vanish in every nonempty multiset of at most `n` directions,
+  then so do all its base-point Maurer–Cartan Taylor coefficients below order `n`. The
+  induction is on the order: the symmetrization defect
+  `iteratedDeriv_maurerCartan_eq_symmetrized_add` expresses `∂_s ω_μ` through the
+  symmetrized form, which vanishes by hypothesis, and brackets of `ω`s differentiated
+  strictly fewer times, which vanish by the inductive hypothesis through
+  `evalLie_iteratedDeriv_bracket_congr`. -/
+lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero (U : G) {n : ℕ}
+    (h : ∀ r : Multiset (Fin 1 ⊕ Fin 3), r ≠ 0 → r.card ≤ n →
+      jets.evalLie (jets.symmetrizedMaurerCartanForm U r) = 0)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (hs : s.card < n) :
+    jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 := by
+  have hall : ∀ (k : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card = k →
+      k < n → jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 := by
+    intro k
+    induction k using Nat.strong_induction_on with
+    | _ k ih =>
+      intro s μ hs hk
+      rw [iteratedDeriv_maurerCartan_eq_symmetrized_add jets U s μ, map_add, map_smul]
+      have h1 : jets.evalLie (jets.symmetrizedMaurerCartanForm U (μ ::ₘ s)) = 0 := by
+        refine h (μ ::ₘ s) Multiset.cons_ne_zero ?_
+        rw [Multiset.card_cons, hs]
+        omega
+      have h2 : jets.evalLie ((s.map fun ν => jets.iteratedDeriv (s.erase ν)
+          ⁅jets.maurerCartan U μ, jets.maurerCartan U ν⁆).sum) = 0 := by
+        rw [map_multiset_sum, Multiset.map_map]
+        refine Multiset.sum_eq_zero fun x hx => ?_
+        obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
+        have hzero : ∀ (ρ : Fin 1 ⊕ Fin 3) (p : Multiset (Fin 1 ⊕ Fin 3)), p ≤ s.erase ν →
+            jets.evalLie (jets.iteratedDeriv p (jets.maurerCartan U ρ)) =
+              jets.evalLie (jets.iteratedDeriv p (0 : 𝔤J)) := by
+          intro ρ p hp
+          have hcard : p.card < k := by
+            have h3 := Multiset.card_le_card hp
+            have h4 := Multiset.card_erase_add_one hν
+            omega
+          rw [ih p.card hcard p ρ rfl (hcard.trans hk), map_zero, map_zero]
+        simp only [Function.comp_apply]
+        rw [jets.evalLie_iteratedDeriv_bracket_congr (s.erase ν) _ _ 0 0
+          (hzero μ) (hzero ν)]
+        simp
+      rw [h1, h2]
+      simp
+  exact hall s.card s μ rfl hs
 
 /-- **Determination step**: if the base-point symmetrized Maurer–Cartan data of `U` and
   `V` agree, and their Maurer–Cartan Taylor data agree in fewer than `n` directions,
