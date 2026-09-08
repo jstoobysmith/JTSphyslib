@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
+public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 /-!
@@ -24,7 +25,8 @@ This file packages those existing constructions as the named term
 `StandardModel.gaugeJet`, and records the rules that compute the generic interface back to
 the Standard Model definition it came from, so the existing Standard Model lemmas apply to
 it unchanged. It is a term, not an instance: every generic construction receives it as an
-argument. `GaugeJetLeibniz` is not instantiated here.
+argument. Its extra law `GaugeJetLeibniz` is a property of that package rather than a
+choice, so it is an instance, discharged by the existing Taylor–Leibniz theorem.
 
 ## ii. Key results
 
@@ -36,6 +38,8 @@ argument. `GaugeJetLeibniz` is not instantiated here.
   Model iterated derivative.
 - `StandardModel.gaugeJet_adjointCoeff`, `StandardModel.gaugeJet_adjointDualCoeff` : the
   generic base-point adjoint transport at this package is the existing Standard Model one.
+- `StandardModel.instGaugeJetLeibniz` : the package obeys the Taylor–Leibniz rule for the
+  adjoint action.
 
 ## iii. Table of contents
 
@@ -44,6 +48,7 @@ argument. `GaugeJetLeibniz` is not instantiated here.
   - B.1. The group and Lie algebra data
   - B.2. The derivative, the adjoint action and the Maurer–Cartan form
 - C. The generic adjoint transport is the Standard Model adjoint transport
+- D. The Taylor–Leibniz rule
 
 -/
 
@@ -155,5 +160,21 @@ lemma gaugeJet_adjointCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)
 @[simp]
 lemma gaugeJet_adjointDualCoeff (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     _root_.adjointDualCoeff gaugeJet U x = adjointDualCoeff U x := rfl
+
+/-!
+
+## D. The Taylor–Leibniz rule
+
+-/
+
+/-- The Standard Model package obeys the Taylor–Leibniz rule for the adjoint action. The
+  class field is the existing theorem `JetGaugeAlgebra.eval_iteratedDeriv_adjointMap`: the
+  `IsGaugeField.adjointCoeff U p.1` appearing there is by definition the composite
+  `evalLie ∘ ∂_{p.1} ∘ Ad_U ∘ ofConstantLie` that the field writes out.
+
+  Unlike the package itself this is a property of it and not a choice, so it is an
+  instance. -/
+instance instGaugeJetLeibniz : GaugeJetLeibniz gaugeJet where
+  evalLie_iteratedDeriv_adjoint := JetGaugeAlgebra.eval_iteratedDeriv_adjointMap
 
 end StandardModel

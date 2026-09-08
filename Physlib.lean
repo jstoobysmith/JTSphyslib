@@ -301,6 +301,7 @@ public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.FieldData
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
@@ -339,6 +340,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
