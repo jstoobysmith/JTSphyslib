@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Basic
-public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.Basic
 public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Higgs
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Basic
@@ -65,7 +65,7 @@ namespace CovJetAlgebra
 /-- The Higgs sector of the covariant jet algebra: its Higgs towers are the covariant jet
   algebra of the Higgs field, included. -/
 noncomputable def isHiggsSector :
-    IsHiggsSector CovJetAlgebra repGaugeGroupI repLorentzGroup massWeightPoly where
+    HiggsAlgebraCovRealization CovJetAlgebra repGaugeGroupI repLorentzGroup massWeightPoly where
   toAlgHom := higgsSubalgebra.val
   map_rep _ _ := rfl
   map_repLorentz _ _ := rfl
@@ -74,7 +74,7 @@ noncomputable def isHiggsSector :
   repLorentz_mul := repLorentzGroup_mul
 
 TODO (lines := 64-75) (date := 2026-09-08) "This should be
-  renamed to IsHiggsSector.id"
+  renamed to HiggsAlgebraCovRealization.id"
 
 /-- The gauge sector of the covariant jet algebra. -/
 theorem isGaugeSector : IsGaugeSector CovJetAlgebra repGaugeGroupI repGaugeGroupI_mul

@@ -5,12 +5,12 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Basic
 /-!
 # The mass-weight grading of the Higgs sector, in derivative submodules
 
 The mass-weight submodules of the Higgs sector are described in
-`IsHiggsSector.Basic` in terms of the Higgs and conjugate-Higgs submodules
+`HiggsAlgebraCovRealization.Basic` in terms of the Higgs and conjugate-Higgs submodules
 separately.  Since the two always occur together, the description is cleaner in terms
 of the derivative submodules `derivSubmodule n = higgsSubmodule n ⊔ barHiggsSubmodule n`:
 a Higgs tower with `n` derivatives has weight `2 * (1 + n)`, only even weights are
@@ -25,7 +25,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -33,7 +33,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-- The derivative submodule sits in the mass-weight submodule of weight `2 * (1 + n)`. -/
 lemma derivSubmodule_le_massWeightSubmodule (n : ℕ) :
@@ -96,6 +96,6 @@ lemma massWeightSubmodule_eight_eq_deriv :
     barHiggsSubmodule_comm_higgsSubmodule, mul_assoc, h.barHiggs_higgs_left_comm]
   simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel

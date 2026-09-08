@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
-public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.Basic
 /-!
 # The boost weight decomposition of the gauge sector
 
@@ -21,7 +21,7 @@ the same Lorentz matrix.  So the symbols are repackaged, by `fieldStrengthSymbol
 family indexed by `Fin (n + 2) → Fin 1 ⊕ Fin 3`: the first `n` slots are the derivative
 directions and the last two are `μ` and `ν`.  The value index is a *real* dual vector, so
 the repackaged family is presented as a `ℂ`-linear map out of `ℂ` — one for each `φ` —
-which is exactly the shape `IsHiggsSector.RotatesIndices` asks for,
+which is exactly the shape `HiggsAlgebraCovRealization.RotatesIndices` asks for,
 with the trivial representation on `ℂ` recording that the value index carries no Lorentz
 weight.
 
@@ -72,7 +72,7 @@ end Lorentz.BoostWeight.WeightDecomposition
 namespace StandardModel
 
 open Matrix MatrixGroups Lorentz Lorentz.BoostWeight
-open IsHiggsSector.IsDerivativeCollection
+open HiggsAlgebraCovRealization.IsDerivativeCollection
 
 /-- Each light-cone direction carries weight `+2`, `-2` or `0`. -/
 lemma lightConeWeight_eq_two_or_neg_two_or_zero (κ : Fin 4) :
@@ -228,7 +228,7 @@ noncomputable def symbolBoostWeight
     WeightDecomposition repLorentz i
       (⨆ d : Fin (n + 2) → Fin 1 ⊕ Fin 3, LinearMap.range (h.fieldStrengthSymbol φ d)) :=
   boostDecomp (h.fieldStrengthSymbol (n := n) φ) (h.rotatesIndices_fieldStrengthSymbol φ) i
-    (IsHiggsSector.trivialWeightDecomposition i)
+    (HiggsAlgebraCovRealization.trivialWeightDecomposition i)
 
 /-- The weight-`k` piece at one value index is spanned by the light-cone field strengths
   whose slots have total weight `k`. -/
@@ -237,15 +237,15 @@ lemma symbolBoostWeight_piece {n : ℕ} (i : Fin 3) (φ : Module.Dual ℝ GaugeA
       = ⨆ (c : Fin (n + 2) → Fin 4) (_ : (∑ j, lightConeWeight (c j)) = k),
         Submodule.span ℂ {h.lightConeFieldStrength i c φ} := by
   show (⨆ c : Fin (n + 2) → Fin 4,
-    ((IsHiggsSector.trivialWeightDecomposition i).piece
+    ((HiggsAlgebraCovRealization.trivialWeightDecomposition i).piece
       (k - ∑ j, lightConeWeight (c j))).map
         (lightConeDeriv (h.fieldStrengthSymbol (n := n) φ) i c)) = _
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega,
-      IsHiggsSector.trivialWeightDecomposition_piece, if_pos rfl, Submodule.map_top,
+      HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, if_pos rfl, Submodule.map_top,
       iSup_pos hc, h.range_lightConeDeriv_fieldStrengthSymbol i c φ]
-  · rw [IsHiggsSector.trivialWeightDecomposition_piece, if_neg (by omega),
+  · rw [HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, if_neg (by omega),
       Submodule.map_bot, iSup_neg hc]
 
 /-- The packed symbol ranges, joined over the value index and the `n + 2` slots, recover the

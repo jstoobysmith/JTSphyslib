@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.GaugeWeightDecomposition
 public import Physlib.Relativity.LorentzGroup.Invariants.IsSingleLorentz
 /-!
 # The Higgs invariants below mass weight eight
@@ -47,7 +47,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz ComplexConjugate
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -55,7 +55,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-!
 
@@ -266,7 +266,7 @@ happen to be trivial.
   `0 < w < 8`: the line through the Higgs mass term at weight four, and nothing at any
   other weight. -/
 noncomputable def lorentzContractionLTEightSpan
-    (h : IsHiggsSector B rep repLorentz massWeightPoly)
+    (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (w : ℕ) : Submodule ℂ B :=
   if w = 4 then h.dotSpan 0 0 else ⊥
 
@@ -396,6 +396,6 @@ theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff_mem
     exact ⟨sup_le_sup_right (h.lorentzContractionLTEightSpan_le_massWeightSubmodule w) S
       hxm, hG, hL⟩
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel

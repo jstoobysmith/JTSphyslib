@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
-public import Physlib.Particles.StandardModel.IsHiggsSector.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.Basic
 /-!
 # The boost weight decomposition of the fermion sector
 
@@ -322,7 +322,7 @@ lemma rotatesIndices_bare (f : Fin 3) (n : ℕ) :
 noncomputable def boostWeight_d (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (d f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (d (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (d (n := n) f)
     (h.rotatesIndices_d f n) i
     (dualBoostWeightOfBasis DownSinglet.repLorentzGroup DownSinglet.basis
       (fun j : Fin 2 × Fin 3 => weylWeight j.1) downSinglet_repLorentzGroup_boostAxis_two_basis
@@ -334,7 +334,7 @@ noncomputable def boostWeight_d (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_bard (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (bard f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (bard (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (bard (n := n) f)
     (h.rotatesIndices_bard f n) i
     (conjDualBoostWeightOfBasis DownSinglet.repLorentzGroup DownSinglet.basis
       (fun j : Fin 2 × Fin 3 => weylWeight j.1) downSinglet_repLorentzGroup_boostAxis_two_basis
@@ -346,7 +346,7 @@ noncomputable def boostWeight_bard (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_u (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (u f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (u (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (u (n := n) f)
     (h.rotatesIndices_u f n) i
     (dualBoostWeightOfBasis UpSinglet.repLorentzGroup UpSinglet.basis
       (fun j : Fin 2 × Fin 3 => weylWeight j.1) upSinglet_repLorentzGroup_boostAxis_two_basis
@@ -358,7 +358,7 @@ noncomputable def boostWeight_u (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_baru (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (baru f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (baru (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (baru (n := n) f)
     (h.rotatesIndices_baru f n) i
     (conjDualBoostWeightOfBasis UpSinglet.repLorentzGroup UpSinglet.basis
       (fun j : Fin 2 × Fin 3 => weylWeight j.1) upSinglet_repLorentzGroup_boostAxis_two_basis
@@ -370,7 +370,7 @@ noncomputable def boostWeight_baru (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_Q (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (Q f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (Q (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (Q (n := n) f)
     (h.rotatesIndices_Q f n) i
     (dualBoostWeightOfBasis QuarkDoublet.repLorentzGroup QuarkDoublet.basis
       (fun j : Fin 2 × Fin 3 × Fin 2 => weylWeight j.1)
@@ -383,7 +383,7 @@ noncomputable def boostWeight_Q (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_barQ (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (barQ f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (barQ (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (barQ (n := n) f)
     (h.rotatesIndices_barQ f n) i
     (conjDualBoostWeightOfBasis QuarkDoublet.repLorentzGroup QuarkDoublet.basis
       (fun j : Fin 2 × Fin 3 × Fin 2 => weylWeight j.1)
@@ -396,7 +396,7 @@ noncomputable def boostWeight_barQ (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_L (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (L f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (L (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (L (n := n) f)
     (h.rotatesIndices_L f n) i
     (dualBoostWeightOfBasis LeptonDoublet.repLorentzGroup LeptonDoublet.basis
       (fun j : Fin 2 × Fin 2 => weylWeight j.1) leptonDoublet_repLorentzGroup_boostAxis_two_basis
@@ -408,7 +408,7 @@ noncomputable def boostWeight_L (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_barL (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (barL f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (barL (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (barL (n := n) f)
     (h.rotatesIndices_barL f n) i
     (conjDualBoostWeightOfBasis LeptonDoublet.repLorentzGroup LeptonDoublet.basis
       (fun j : Fin 2 × Fin 2 => weylWeight j.1) leptonDoublet_repLorentzGroup_boostAxis_two_basis
@@ -420,7 +420,7 @@ noncomputable def boostWeight_barL (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_e (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (e f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (e (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (e (n := n) f)
     (h.rotatesIndices_e f n) i
     (dualBoostWeightOfBasis LeptonSinglet.repLorentzGroup LeptonSinglet.basis
       (fun j : Fin 2 => weylWeight j) leptonSinglet_repLorentzGroup_boostAxis_two_basis
@@ -432,7 +432,7 @@ noncomputable def boostWeight_e (f : Fin 3) (n : ℕ) (i : Fin 3) :
 noncomputable def boostWeight_bare (f : Fin 3) (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i
       (⨆ l : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (bare f l)) :=
-  IsHiggsSector.IsDerivativeCollection.boostDecomp (bare (n := n) f)
+  HiggsAlgebraCovRealization.IsDerivativeCollection.boostDecomp (bare (n := n) f)
     (h.rotatesIndices_bare f n) i
     (conjDualBoostWeightOfBasis LeptonSinglet.repLorentzGroup LeptonSinglet.basis
       (fun j : Fin 2 => weylWeight j) leptonSinglet_repLorentzGroup_boostAxis_two_basis

@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.Sectors
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
 /-!
 # The mixed gauge-Higgs sector
 
@@ -59,7 +59,7 @@ lemma commute_of_mem_gaugeAlgebra_of_mem_higgsAlgebra {x y : B}
     · exact h.F_comm_H l μ ν φ dd φ'
     · exact h.F_comm_barH l μ ν φ dd φ'
   rw [IsGaugeSector.gaugeAlgebra] at hx
-  rw [IsHiggsSector.higgsAlgebra] at hy
+  rw [HiggsAlgebraCovRealization.higgsAlgebra] at hy
   refine Algebra.commute_of_mem_adjoin_of_forall_mem_commute hy fun b hb => ?_
   exact (Algebra.commute_of_mem_adjoin_of_forall_mem_commute hx
     fun a ha => (hgen a ha b hb).symm).symm

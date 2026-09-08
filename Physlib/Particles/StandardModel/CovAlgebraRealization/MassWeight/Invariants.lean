@@ -12,7 +12,7 @@ public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimEight
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.MassDimEight
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimEight
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.MassDimEight
 /-!
 # The invariant content of the Standard Model
 
@@ -109,14 +109,14 @@ lemma standardModelSpan_eight :
 /-- At mass weight four the span is the line through the Higgs mass term `H† H`, the one
   invariant of the Standard Model below mass dimension four. -/
 lemma standardModelSpan_four : h.standardModelSpan 4 = h.isHiggsSector.dotSpan 0 0 := by
-  rw [standardModelSpan, if_neg (by norm_num), IsHiggsSector.lorentzContractionLTEightSpan,
+  rw [standardModelSpan, if_neg (by norm_num), HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
     if_pos rfl]
 
 /-- At every mass weight other than four and eight the span is trivial: apart from the
   Higgs mass term there is no Standard-Model term below mass dimension four. -/
 lemma standardModelSpan_eq_bot {w : ℕ} (hw : w ≠ 8) (hw4 : w ≠ 4) :
     h.standardModelSpan w = ⊥ := by
-  rw [standardModelSpan, if_neg hw, IsHiggsSector.lorentzContractionLTEightSpan,
+  rw [standardModelSpan, if_neg hw, HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
     if_neg hw4]
 
 /-!
@@ -166,7 +166,7 @@ lemma standardModelSpan_le_massWeightSubmodule (w : ℕ) :
     · subst hw4
       exact (h.isHiggsSector.lorentzContractionLTEightSpan_le_massWeightSubmodule 4).trans
         (h.isHiggsSector_massWeightSubmodule_le (by norm_num))
-    · rw [IsHiggsSector.lorentzContractionLTEightSpan, if_neg hw4]
+    · rw [HiggsAlgebraCovRealization.lorentzContractionLTEightSpan, if_neg hw4]
       exact bot_le
 
 /-- The span at weight `w` is fixed pointwise by the gauge and Lorentz groups together:
@@ -486,7 +486,7 @@ theorem mem_massWeightSubmodule_sup_and_gauge_lorentz_invariant_iff_mem (w : ℕ
   the gauge kinetic and theta terms of the three gauge groups
   (`IsGaugeSector.lorentzContractionEightSpan`),
   the Higgs kinetic term, its quartic potential and its two box terms
-  (`IsHiggsSector.lorentzContractionEightSpan`),
+  (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`),
   the kinetic terms of the ten fermion species over the nine family pairs
   (`IsFermionSector.kineticSpan`),
   and the six Yukawa couplings over the nine family pairs (`yukawaSpan`),

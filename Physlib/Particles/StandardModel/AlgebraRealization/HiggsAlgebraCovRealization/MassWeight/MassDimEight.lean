@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.MassDimLTEight
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.MassDimLTEight
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLorentz
 /-!
 # The Higgs invariants of mass weight eight
@@ -44,7 +44,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz ComplexConjugate
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -52,7 +52,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-!
 
@@ -292,7 +292,7 @@ the kinetic term and the quartic potential.
   terms `□H† H` and `H† □H`, the kinetic term `∂^μ H† ∂_μ H`, and the quartic potential
   `(H† H)²`. -/
 noncomputable def lorentzContractionEightSpan
-    (h : IsHiggsSector B rep repLorentz massWeightPoly) :
+    (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) :
     Submodule ℂ B :=
   ℂ ∙ IsBiLorentz.metricContraction
       (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
@@ -502,6 +502,6 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
       rw [map_add, h.repLorentz_of_mem_lorentzContractionEightSpan g hxy, hyL g]
     simpa using hstep
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel

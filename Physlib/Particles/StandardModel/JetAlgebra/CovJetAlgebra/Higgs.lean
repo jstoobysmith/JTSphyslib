@@ -24,7 +24,7 @@ together with the two towers.
 
 `CovHiggsJetAlgebra` is to the Higgs sector what `CovJetAlgebra` is to the Standard Model:
 the object every Higgs sector receives its fields from, which is the content of
-`IsHiggsSector`.
+`HiggsAlgebraCovRealization`.
 
 ## ii. Key results
 

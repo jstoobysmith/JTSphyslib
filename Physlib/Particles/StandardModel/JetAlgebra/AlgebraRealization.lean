@@ -241,7 +241,7 @@ towers for the classification to say anything about it.
   a combination of the constant term, the Higgs mass term `H† H`, and the Standard Model
   Lagrangian of mass dimension four: the gauge kinetic and theta terms
   (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs kinetic term, quartic potential
-  and box terms (`IsHiggsSector.lorentzContractionEightSpan`), the fermion kinetic terms
+  and box terms (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`), the fermion kinetic terms
   (`IsFermionSector.kineticSpan`) and the Yukawa couplings (`yukawaSpan`) — and nothing
   else.
 

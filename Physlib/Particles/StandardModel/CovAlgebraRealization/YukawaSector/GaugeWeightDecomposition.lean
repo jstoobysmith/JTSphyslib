@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.GaugeWeightDecomposition
 /-!
 # The gauge weight decomposition of the Yukawa sector at mass weight eight
 
@@ -627,7 +627,7 @@ lemma sectorMassWeightEightGaugeWeight_piece_zero :
             LinearMap.range (h.covBarL f' ![]) ⊔
             LinearMap.range (h.covE f' ![]) ⊔
             LinearMap.range (h.covBarE f' ![]))) := by
-    rw [IsHiggsSector.derivSubmodule, h.isFermionSector.derivSubmodule_zero_eq,
+    rw [HiggsAlgebraCovRealization.derivSubmodule, h.isFermionSector.derivSubmodule_zero_eq,
       Submodule.iSup_mul, Submodule.mul_iSup]
     exact iSup_congr fun f => by rw [Submodule.mul_iSup, Submodule.mul_iSup]
   show (GaugeWeightDecomposition.mul (d := h.isHiggsSector.derivSubmoduleGaugeWeight 0)

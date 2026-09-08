@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Basic
 /-!
 # The gauge weight decomposition of the Higgs sector
 
@@ -22,7 +22,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -30,7 +30,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-- **The gauge weight decomposition of the Higgs derivative submodules**: the join of
   the decompositions of the Higgs and conjugate-Higgs submodules, whose weights are
@@ -53,6 +53,6 @@ lemma derivSubmoduleGaugeWeight_supp (n : ℕ) :
       = {((0, 0, -1, -3) : GaugeWeight), (0, 0, 1, -3), (0, 0, 1, 3), (0, 0, -1, 3)} :=
   rfl
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel

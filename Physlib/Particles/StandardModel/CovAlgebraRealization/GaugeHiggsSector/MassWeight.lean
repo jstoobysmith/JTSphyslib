@@ -242,9 +242,9 @@ lemma repLorentz_eq_self_of_mem_higgs_derivSubmodule_zero (g : SL(2,ℂ)) {y : B
     (hy : y ∈ h.isHiggsSector.derivSubmodule 0) : repLorentz g y = y := by
   have key : h.isHiggsSector.derivSubmodule 0
       ≤ LinearMap.ker (repLorentz g - LinearMap.id) := by
-    rw [IsHiggsSector.derivSubmodule]
+    rw [HiggsAlgebraCovRealization.derivSubmodule]
     refine sup_le ?_ ?_
-    · rw [IsHiggsSector.higgsSubmodule]
+    · rw [HiggsAlgebraCovRealization.higgsSubmodule]
       refine iSup_le fun l => ?_
       rintro _ ⟨φ, rfl⟩
       simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
@@ -253,7 +253,7 @@ lemma repLorentz_eq_self_of_mem_higgs_derivSubmodule_zero (g : SL(2,ℂ)) {y : B
           (fun b _ hb => absurd (Subsingleton.elim b ![]) hb)
           (fun hb => absurd (Finset.mem_univ _) hb),
         Fin.prod_univ_zero, one_smul, Subsingleton.elim l ![]]
-    · rw [IsHiggsSector.barHiggsSubmodule]
+    · rw [HiggsAlgebraCovRealization.barHiggsSubmodule]
       refine iSup_le fun l => ?_
       rintro _ ⟨φ, rfl⟩
       simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
@@ -369,9 +369,9 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       h.isHiggsSector.derivSubmodule 1
         ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ)) (⨆ i, (hT i).span) := by
     intro μ ν φ
-    rw [IsHiggsSector.derivSubmodule]
+    rw [HiggsAlgebraCovRealization.derivSubmodule]
     refine sup_le ?_ ?_
-    · rw [IsHiggsSector.higgsSubmodule]
+    · rw [HiggsAlgebraCovRealization.higgsSubmodule]
       refine iSup_le fun dd => ?_
       obtain ⟨ρ, rfl⟩ : ∃ ρ, dd = ![ρ] := ⟨dd 0, (IsGaugeSector.etaExpand_cov_one dd).symm⟩
       rintro _ ⟨ψ, rfl⟩
@@ -381,7 +381,7 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
         Matrix.tail_cons, Sum.elim_inl]
       exact Submodule.mem_span_singleton_self _
-    · rw [IsHiggsSector.barHiggsSubmodule]
+    · rw [HiggsAlgebraCovRealization.barHiggsSubmodule]
       refine iSup_le fun dd => ?_
       obtain ⟨ρ, rfl⟩ : ∃ ρ, dd = ![ρ] := ⟨dd 0, (IsGaugeSector.etaExpand_cov_one dd).symm⟩
       rintro _ ⟨ψ, rfl⟩

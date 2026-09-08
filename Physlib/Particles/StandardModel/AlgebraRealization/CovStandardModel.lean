@@ -87,7 +87,7 @@ jet into a pure jet and a constant jet is
 `JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant`. The
 three sector structures are
 [`IsGaugeSector/Basic.lean`](../IsGaugeSector/Basic.lean),
-[`IsHiggsSector/Basic.lean`](../IsHiggsSector/Basic.lean) and
+[`HiggsAlgebraCovRealization/Basic.lean`](../HiggsAlgebraCovRealization/Basic.lean) and
 [`IsFermionSector/Basic.lean`](../IsFermionSector/Basic.lean).
 
 -/
@@ -253,7 +253,7 @@ tower through the base-point Taylor coefficient of its representation alone. Eva
 a constant jet, that coefficient is the corresponding action of the global gauge group,
 so each covariant tower is equivariant for `repGlobal` in the (contragredient of the)
 global representation of its species. These are exactly the `repGauge_*` obligations of
-`IsGaugeSector`, `IsHiggsSector` and `IsFermionSector`.
+`IsGaugeSector`, `HiggsAlgebraCovRealization` and `IsFermionSector`.
 
 -/
 
@@ -642,7 +642,7 @@ sum of products of them. The weight-`w` eigenspace of `massWeightPoly` is a subm
 and the product of a weight-`w` and a weight-`w'` element has weight `w + w'`; the
 recursion defining a covariant derivative adds one derivative on one branch and one
 gauge-field factor on the other, which cost the same two units of weight. Both towers
-are therefore eigenvectors, of the weights `IsGaugeSector`, `IsHiggsSector` and
+are therefore eigenvectors, of the weights `IsGaugeSector`, `HiggsAlgebraCovRealization` and
 `IsFermionSector` demand.
 
 -/
@@ -818,7 +818,7 @@ lemma iteratedCovDerivAdjoint_ofFn_zero_mem_massWeightEigenspace (c : ℕ)
 ### I.1. The mass weights, species by species
 
 The two towers of section I, evaluated at the empty derivative multiset, give the
-mass weights that `IsGaugeSector`, `IsHiggsSector` and `IsFermionSector` demand:
+mass weights that `IsGaugeSector`, `HiggsAlgebraCovRealization` and `IsFermionSector` demand:
 `2 * (2 + n)` for the field strength, `2 * (1 + n)` for the Higgs, and `3 + 2 * n`
 for the fermions.
 

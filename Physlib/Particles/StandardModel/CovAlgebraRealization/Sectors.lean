@@ -579,7 +579,7 @@ lemma higgsAlgebra_le_sup_sectorSubmodule :
     Subalgebra.toSubmodule h.isHiggsSector.higgsAlgebra
       ≤ h.sectorSubmodule {GeneratorClass.higgs} ⊔ h.sectorSubmodule ∅ := by
   intro x hx
-  rw [Subalgebra.mem_toSubmodule, IsHiggsSector.higgsAlgebra] at hx
+  rw [Subalgebra.mem_toSubmodule, HiggsAlgebraCovRealization.higgsAlgebra] at hx
   induction hx using Algebra.adjoin_induction with
   | mem y hy =>
     apply Submodule.mem_sup_left
@@ -618,7 +618,7 @@ lemma sectorMassWeight_higgs_le (w : ℕ) :
         exact List.mem_toFinset.mpr (List.mem_map_of_mem hg)
       rw [hS] at hmem'
       simpa using hmem'
-    rw [IsHiggsSector.higgsAlgebra]
+    rw [HiggsAlgebraCovRealization.higgsAlgebra]
     cases g with
     | H n l j =>
       exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨n, Set.mem_iUnion.mpr
@@ -637,7 +637,7 @@ lemma sectorMassWeight_higgs_le (w : ℕ) :
     | barL i n l j => simp [Generators.kind] at hk
     | e i n l j => simp [Generators.kind] at hk
     | bare i n l j => simp [Generators.kind] at hk
-  rw [IsHiggsSector.massWeightSubmodule]
+  rw [HiggsAlgebraCovRealization.massWeightSubmodule]
   refine Submodule.mem_inf.mpr ⟨(Subalgebra.mem_toSubmodule _).mpr hmem, ?_⟩
   rw [LinearMap.mem_ker]
   simp only [LinearMap.sub_apply, AlgHom.toLinearMap_apply,

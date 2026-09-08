@@ -5,8 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
-public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
 /-!
@@ -60,7 +60,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz ComplexConjugate
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -68,7 +68,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-!
 
@@ -250,14 +250,14 @@ three quartic monomials.
 
 /-- The span of the isospin-diagonal pairings of a Higgs symbol carrying `n` derivatives
   with a conjugate-Higgs symbol carrying `m` derivatives, at isospin component `i`. -/
-noncomputable def higgsBarHiggsSpan (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def higgsBarHiggsSpan (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n m : ℕ) (i : Fin 2) : Submodule ℂ B :=
   ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
     ℂ ∙ (h.higgs d i * h.barHiggs d' i)
 
 /-- The span of the underived quartic monomial pairing the isospin components `i` and
   `j`. -/
-noncomputable def quarticSpan (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def quarticSpan (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (i j : Fin 2) : Submodule ℂ B :=
   ℂ ∙ (h.higgs ![] i * h.barHiggs ![] i * h.higgs ![] j * h.barHiggs ![] j)
 
@@ -553,7 +553,7 @@ lemma barHiggs_mul_barHiggs_comm {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
 /-- The isospin family of a Higgs tower carrying `n` derivatives against a conjugate tower
   carrying `m`: the conjugate symbol supplies the fundamental index and so goes in the
   first slot, the Higgs symbol the anti-fundamental one. -/
-noncomputable def isoFamily (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def isoFamily (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
     (d' : Fin m → (Fin 1 ⊕ Fin 3)) : (Fin 2 → Fin 2) → B :=
   fun l => h.barHiggs d' (l 0) * h.higgs d (l 1)
@@ -579,7 +579,7 @@ lemma deltaContraction_isoFamily {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
 /-- The span of the isospin contractions of a Higgs tower carrying `n` derivatives against
   a conjugate tower carrying `m`: the gauge invariants the isospin classification leaves
   at those two derivative orders. -/
-noncomputable def dotSpan (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def dotSpan (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n m : ℕ) : Submodule ℂ B :=
   ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)), ℂ ∙ h.dotGaugeHiggs d d'
 
@@ -621,7 +621,7 @@ lemma higgsBarHiggsSpan_le_isoFamily_span (n m : ℕ) :
 /-- The re-index of an underived Higgs symbol by the antisymmetric symbol, `H̃⁰ = H¹` and
   `H̃¹ = -H⁰`.  `SU(2)` is pseudo-real, so this turns the anti-fundamental index of a Higgs
   symbol into a fundamental one, which is what the quartic family needs. -/
-noncomputable def tildeHiggs (h : IsHiggsSector B rep repLorentz massWeightPoly) (i : Fin 2) : B :=
+noncomputable def tildeHiggs (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) (i : Fin 2) : B :=
   ∑ m : Fin 2, IsSU2BiFundamental.epsilon i m • h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) m
 
 /-- The re-index at isospin zero is the Higgs symbol of isospin one. -/
@@ -655,7 +655,7 @@ lemma rep_su2_tildeHiggs (V : specialUnitaryGroup (Fin 2) ℂ) (i : Fin 2) :
 
 /-- The quartic isospin family: two conjugate Higgs symbols against two re-indexed Higgs
   symbols, each of the four carrying a fundamental isospin index. -/
-noncomputable def quadFamily (h : IsHiggsSector B rep repLorentz massWeightPoly) :
+noncomputable def quadFamily (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) :
     (Fin 4 → Fin 2) → B :=
   fun l => h.barHiggs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) (l 0)
     * (h.tildeHiggs (l 1)
@@ -824,7 +824,7 @@ lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableE
 /-- The span of the components of all the isospin families of a Higgs tower carrying `n`
   derivatives against a conjugate tower carrying `m`.  This is the gauge-stable
   enlargement of the pairing span of section C. -/
-noncomputable def isoSpan (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def isoSpan (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n m : ℕ) : Submodule ℂ B :=
   ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
     IsSU2BiFundamental.span (h.isoFamily d d')
@@ -1164,6 +1164,6 @@ lemma gaugeInvariantOfMassDim_eight_eq_dotSpan :
         (h.dotGaugeHiggs_mem_massWeightSubmodule ![] ![]))
     · rw [h.rep_mul, h.rep_dotGaugeHiggs_invariant]
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel

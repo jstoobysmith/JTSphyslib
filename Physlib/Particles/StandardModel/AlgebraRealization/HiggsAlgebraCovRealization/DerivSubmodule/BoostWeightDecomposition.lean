@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.IsHiggsSector.DerivSubmodule.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Basic
 /-!
 # The boost weight decomposition of the Higgs sector
 
@@ -18,7 +18,7 @@ This is the simplest of the three sectors.  The Higgs symbols `H n l φ` and `ba
 carry only the `n` covariant-derivative slots — there is no extra covector index to pack
 alongside them, as there is for the field strength of the gauge sector — so
 `IsLorentzCovDerivTransforms` is literally `RotatesIndices` for each of the two families.
-And the value space is *Lorentz trivial*: `IsHiggsSector.repLorentz_H` runs through
+And the value space is *Lorentz trivial*: `HiggsAlgebraCovRealization.repLorentz_H` runs through
 `Representation.trivial ℂ SL(2,ℂ) HiggsVec` and `repLorentz_barH` through its conjugate,
 so the dual value index carries boost weight `0` and contributes nothing — unlike the
 Weyl-spinor value index of the fermion sector.
@@ -44,7 +44,7 @@ open MatrixGroups
 variable {K : Type*} [Field K] [Algebra ℝ K] {M : Type*} [AddCommGroup M] [Module K M]
 
 /-- **The weight decomposition of a space the Lorentz group acts trivially on**: everything
-  sits in weight zero.  `IsHiggsSector.trivialWeightDecomposition` is the case `M = K`; the
+  sits in weight zero.  `HiggsAlgebraCovRealization.trivialWeightDecomposition` is the case `M = K`; the
   Higgs value spaces need the same statement for the (conjugate) dual of `HiggsVec`. -/
 noncomputable def ofTrivialAction (rep : Representation K SL(2,ℂ) M)
     (htriv : ∀ (g : SL(2,ℂ)) (x : M), rep g x = x) (i : Fin 3) :
@@ -80,7 +80,7 @@ namespace StandardModel
 
 open TensorProduct Matrix MatrixGroups Lorentz Lorentz.BoostWeight
 
-namespace IsHiggsSector
+namespace HiggsAlgebraCovRealization
 
 set_option linter.unusedVariables false
 
@@ -88,7 +88,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
   {rep : Representation ℂ GaugeGroupI B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {massWeightPoly : B →ₐ[ℂ] Polynomial B}
-  (h : IsHiggsSector B rep repLorentz massWeightPoly)
+  (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
 
 /-!
 
@@ -151,13 +151,13 @@ lemma mem_boostWeightSubmodule_barHiggsValue (i : Fin 3)
 /-- **The light-cone Higgs symbols.**  The `n` covariant-derivative slots of `H n` are read
   in the light-cone basis of the `i`-th spatial axis, `c j` naming the light-cone direction
   of the `j`-th slot. -/
-noncomputable def lightConeHiggs (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def lightConeHiggs (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     (φ : Module.Dual ℂ HiggsVec) : B :=
   lightConeDeriv (h.covH n) i c φ
 
 /-- **The light-cone conjugate-Higgs symbols.** -/
-noncomputable def lightConeBarHiggs (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def lightConeBarHiggs (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     {n : ℕ} (i : Fin 3) (c : Fin n → Fin 4)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) : B :=
   lightConeDeriv (h.covBarH n) i c φ
@@ -220,14 +220,14 @@ lemma iSup_range_barH (n : ℕ) :
 
 /-- **The boost weight decomposition of the Higgs submodules**, along any spatial axis and
   for any number of covariant derivatives: the derivative slots carry all the weight. -/
-noncomputable def higgsSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def higgsSubmoduleBoostWeight (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.higgsSubmodule n) :=
   (IsDerivativeCollection.boostDecomp (h.covH n) (h.rotatesIndices_H n) i
     (higgsValueWeight i)).copy (h.iSup_range_H n)
 
 /-- **The boost weight decomposition of the conjugate-Higgs submodules.** -/
-noncomputable def barHiggsSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def barHiggsSubmoduleBoostWeight (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.barHiggsSubmodule n) :=
   (IsDerivativeCollection.boostDecomp (h.covBarH n) (h.rotatesIndices_barH n) i
@@ -274,7 +274,7 @@ lemma barHiggsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
 /-- **The boost weight decomposition of the Higgs derivative submodules**, along any spatial
   axis and for any number of covariant derivatives: the join of the Higgs and
   conjugate-Higgs decompositions. -/
-noncomputable def derivSubmoduleBoostWeight (h : IsHiggsSector B rep repLorentz massWeightPoly)
+noncomputable def derivSubmoduleBoostWeight (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n : ℕ) (i : Fin 3) :
     WeightDecomposition repLorentz i (h.derivSubmodule n) :=
   ((h.higgsSubmoduleBoostWeight n i).sup
@@ -332,7 +332,7 @@ lemma two_dvd_of_mem_derivSubmoduleBoostWeight_supp (n : ℕ) (i : Fin 3) {k : �
   refine Finset.dvd_sum fun j _ => ?_
   rcases hw (c j) with hj | hj | hj <;> rw [hj] <;> norm_num
 
-end IsHiggsSector
+end HiggsAlgebraCovRealization
 
 end StandardModel
 

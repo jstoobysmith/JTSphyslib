@@ -295,7 +295,7 @@ inside it.
 /-- The Higgs sector of a covariant Standard Model: the defining map restricted to the
   covariant jet algebra of the Higgs field. -/
 noncomputable def isHiggsSector :
-    IsHiggsSector B repGauge repLorentz massWeightPoly where
+    HiggsAlgebraCovRealization B repGauge repLorentz massWeightPoly where
   toAlgHom := k.toAlgHom.comp CovJetAlgebra.higgsSubalgebra.val
   map_rep g x := k.map_repGauge g (x : CovJetAlgebra)
   map_repLorentz Λ x := k.map_repLorentz Λ (x : CovJetAlgebra)

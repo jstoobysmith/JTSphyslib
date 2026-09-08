@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.Sectors
-public import Physlib.Particles.StandardModel.IsHiggsSector.MassWeight.Basic
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
 /-!
 # The Yukawa sector's mass-weight submodules
 
@@ -87,7 +87,7 @@ lemma commute_of_mem_higgsAlgebra_of_mem_fermionAlgebra {x y : B}
     · exact h.barH_comm_barL _ _ _ _ _
     · exact h.barH_comm_e _ _ _ _ _
     · exact h.barH_comm_bare _ _ _ _ _
-  rw [IsHiggsSector.higgsAlgebra] at hx
+  rw [HiggsAlgebraCovRealization.higgsAlgebra] at hx
   rw [IsFermionSector.fermionAlgebra] at hy
   refine Algebra.commute_of_mem_adjoin_of_forall_mem_commute hy fun b hb => ?_
   exact (Algebra.commute_of_mem_adjoin_of_forall_mem_commute hx

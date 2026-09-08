@@ -341,11 +341,11 @@ include h in
   under both groups, is fixed by the jet gauge group and the Lorentz group exactly when it
   is a combination of
   the constant term, of mass dimension zero,
-  the Higgs mass term `H† H`, of mass dimension two (`IsHiggsSector.dotSpan`),
+  the Higgs mass term `H† H`, of mass dimension two (`HiggsAlgebraCovRealization.dotSpan`),
   and the Standard-Model Lagrangian of mass dimension four — the gauge kinetic and theta
   terms of the three gauge groups (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs
   kinetic term, its quartic potential and its two box terms
-  (`IsHiggsSector.lorentzContractionEightSpan`), the kinetic terms of the ten fermion
+  (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`), the kinetic terms of the ten fermion
   species over the nine family pairs (`IsFermionSector.kineticSpan`), and the six Yukawa
   couplings over the nine family pairs (`yukawaSpan`) —
   up to a remainder in `S` fixed by both groups, and nothing else. -/
