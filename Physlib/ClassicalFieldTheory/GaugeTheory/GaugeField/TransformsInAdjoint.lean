@@ -33,7 +33,7 @@ open Matrix MatrixGroups TensorProduct
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 namespace IsGaugeField
 

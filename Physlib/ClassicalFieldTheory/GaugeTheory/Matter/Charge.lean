@@ -104,7 +104,7 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
   data below depends on `jets` beyond that, so it is supplied polymorphically. -/
 noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
     MatterField jets where
   V := V
@@ -116,7 +116,7 @@ noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 @[simp]
 lemma charged_V {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
     (charged jets repLorentz n w).V = V := rfl
 

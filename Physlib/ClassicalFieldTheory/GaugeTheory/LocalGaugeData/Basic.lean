@@ -10,7 +10,7 @@ public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.Algebra.Group.Subgroup.Basic
 public import Physlib.Relativity.DerivAlgebra
 /-!
-# Jets of a gauge group
+# Local gauge data
 
 ## i. Overview
 
@@ -19,8 +19,8 @@ local Lagrangian sees of it is its *jet* at the base point. The jet gauge transf
 form a group `G`, and their infinitesimal counterparts a Lie algebra `𝔤J` over `ℝ`, with the
 value at the base point given by `eval : G →* G₀` and `evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤`.
 
-This file records, as the structure `GaugeJet G 𝔤 G₀ 𝔤J`, exactly the structure of this
-situation that the transformation laws of gauge fields and matter fields use:
+This file records, as the structure `LocalGaugeData G 𝔤 G₀ 𝔤J`, exactly the structure of
+this situation that the transformation laws of gauge fields and matter fields use:
 
 * the inclusion of constants and evaluation at the base point, on the group and on the
   Lie algebra;
@@ -30,41 +30,41 @@ situation that the transformation laws of gauge fields and matter fields use:
 * the Maurer–Cartan form `mc U μ = i (∂_μ U) U⁻¹`, with its flatness equation
   `mc_structure` and the Leibniz rule `deriv_adjoint` for the adjoint action.
 
-A term `jets : GaugeJet G 𝔤 G₀ 𝔤J` is supplied, not inferred: every construction below,
-and every construction downstream, takes the package it works over as an ordinary
+A term `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` is supplied, not inferred: every construction
+below, and every construction downstream, takes the package it works over as an ordinary
 argument. The four carriers do not determine it — a truncated jet group beside the full
 one is the same four carriers with different data — so there is nothing canonical for
 instance search to choose.
 
 For the Standard Model, `G₀ = SU(3) × SU(2) × U(1)` and `G` is the same group with
 coefficients in the ring of formal power series in the spacetime coordinates
-(`StandardModel.JetGaugeGroupI`), packaged as `StandardModel.gaugeJet`; nothing here
+(`StandardModel.JetGaugeGroupI`), packaged as `StandardModel.localGaugeData`; nothing here
 depends on that choice.
 
 ## ii. Key results
 
-- `GaugeJet` : the structure.
-- `GaugeJet.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset of
-  directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz rule
-  `iteratedDeriv_bracket`.
-- `GaugeJetLeibniz` : the Taylor–Leibniz rule for the adjoint action of a given package,
-  the input to the gauge action on the algebra of gauge-boson symbols.
-- `GaugeJetTruncation` : the filtration of `G` by the order to which a jet is trivial, with
-  the vanishing of the derivatives of the adjoint action on its members.
+- `LocalGaugeData` : the structure.
+- `LocalGaugeData.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset
+  of directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz
+  rule `iteratedDeriv_bracket`.
+- `LocalGaugeDataLeibniz` : the Taylor–Leibniz rule for the adjoint action of a given
+  package, the input to the gauge action on the algebra of gauge-boson symbols.
+- `LocalGaugeDataTruncation` : the filtration of `G` by the order to which a jet is
+  trivial, with the vanishing of the derivatives of the adjoint action on its members.
 
 -/
 
 @[expose] public section
 
-/-- **Jets of a gauge group.** A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G`
+/-- **Local gauge data.** A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G`
   with Lie algebra of jets `𝔤J`, evaluation at the base point, formal derivatives, the adjoint
   action and the Maurer–Cartan form, subject to the identities used by the transformation
   laws of gauge and matter fields.
 
   This is data attached to the four carriers, not a property of them, and it is passed
-  explicitly: the generic theory takes `jets : GaugeJet G 𝔤 G₀ 𝔤J` as an argument rather
+  explicitly: the generic theory takes `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` as an argument rather
   than searching for it. -/
-structure GaugeJet (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     (G₀ : Type) [Group G₀] (𝔤J : Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J] where
   /-- Evaluation of a gauge jet at the base point. -/
   eval : G →* G₀
@@ -103,11 +103,11 @@ structure GaugeJet (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra
   evalLie_adjoint_ofConstantLie : ∀ (U : G) (a : 𝔤),
     evalLie (adjoint U (ofConstantLie a)) = adjointValue (eval U) a
 
-namespace GaugeJet
+namespace LocalGaugeData
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  (jets : GaugeJet G 𝔤 G₀ 𝔤J)
+  (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
 
 /-- A constant jet evaluates to its constant. -/
 lemma evalLie_ofConstantLie (a : 𝔤) : jets.evalLie (jets.ofConstantLie a) = a := by
@@ -210,9 +210,9 @@ lemma iteratedDeriv_ofConstantLie_of_ne_zero {p : Multiset (Fin 1 ⊕ Fin 3)} (h
     · rw [iteratedDeriv_zero, LinearMap.id_apply, deriv_ofConstantLie]
     · rw [ih ht, map_zero]
 
-TODO "Add product of GaugeJet."
+TODO "Add product of LocalGaugeData."
 
-end GaugeJet
+end LocalGaugeData
 
 /-!
 
@@ -220,7 +220,7 @@ end GaugeJet
 
 -/
 
-/-- **The Taylor–Leibniz rule for the adjoint action** of a gauge-jet package `jets`: the
+/-- **The Taylor–Leibniz rule for the adjoint action** of a local-gauge-data package `jets`: the
   base-point Taylor coefficients of `Ad_U Y` are the antidiagonal convolution of the Taylor
   coefficients of `Ad_U` — the `evalLie ∘ ∂_p ∘ Ad_U ∘ ofConstantLie` of the covariance
   machinery — with those of `Y`. This is what makes the gauge action on the algebra of
@@ -229,9 +229,9 @@ end GaugeJet
 
   It is an extra law of one package, so `jets` is its only explicit parameter and the
   carriers are read off from it. -/
-class GaugeJetLeibniz {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+class LocalGaugeDataLeibniz {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet G 𝔤 G₀ 𝔤J) where
+    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
   evalLie_iteratedDeriv_adjoint : ∀ (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J),
     jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y))
       = (x.antidiagonal.map fun p => jets.evalLie (jets.iteratedDeriv p.1
@@ -249,11 +249,11 @@ class GaugeJetLeibniz {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlge
     derivatives of the adjoint action
   of order between `1` and `n` vanish at the base point.
 
-  Like `GaugeJetLeibniz` this is an extra law of one package `jets`, its only explicit
+  Like `LocalGaugeDataLeibniz` this is an extra law of one package `jets`, its only explicit
   parameter. -/
-class GaugeJetTruncation {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+class LocalGaugeDataTruncation {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet G 𝔤 G₀ 𝔤J) where
+    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
   /-- The subgroup of jets trivial to order `n`. -/
   truncationKer : ℕ → Subgroup G
   evalLie_iteratedDeriv_adjoint_ofConstantLie_eq_zero : ∀ {U : G} {n : ℕ},

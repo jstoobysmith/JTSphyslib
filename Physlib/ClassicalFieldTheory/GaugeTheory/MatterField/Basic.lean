@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeJet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.ConstantGaugeAction
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.LorentzAction
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.MassDim
@@ -20,7 +20,7 @@ finite-dimensional complex vector space `V` in which the field takes its values,
 representation of the Lorentz group on `V`, the action of the jets of gauge
 transformations on the jets of the field — which must be *fibrewise*, that is act on the
 values of the field over the identity of spacetime — and the mass weight of the field.
-All of this is relative to a gauge context `jets : GaugeJet G 𝔤 G₀ 𝔤J`: the jet gauge
+All of this is relative to a gauge context `jets : LocalGaugeData G 𝔤 G₀ 𝔤J`: the jet gauge
 group `G` the field's jet action is a representation of, and the global group `G₀`, Lie
 algebras `𝔤`, `𝔤J` and structure maps that make `G` the jets of `G₀` rather than an
 unrelated group. Fixing `jets` rather than `G` alone is what lets the global gauge action
@@ -58,13 +58,14 @@ open Matrix MatrixGroups TensorProduct
 
 -/
 
-/-- **A matter field** of a gauge theory over the gauge context `jets : GaugeJet G 𝔤 G₀ 𝔤J`:
+/-- **A matter field** of a gauge theory over the gauge context `jets : LocalGaugeData G 𝔤 G₀ 𝔤J`:
   a finite-dimensional complex target space `V`, the Lorentz representation on `V`, a
-  fibrewise action of `G` on the jets `JetRing ⊗[ℂ] V` of the field, and the mass weight of
-  the field (in the units in which a derivative has weight `2`). -/
+  fibrewise action of `G` on the jets `JetRing ⊗[ℂ] V` of the field, the infinitesimal
+  action of the gauge algebra generating it, and the mass weight of the field (in the units
+  in which a derivative has weight `2`). -/
 structure MatterField {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet G 𝔤 G₀ 𝔤J) where
+    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
   /-- The target space of the field. -/
   V : Type
   [instAddCommGroup : AddCommGroup V]
@@ -79,6 +80,11 @@ structure MatterField {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlge
   repAlgebra : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V
   /-- The gauge action is fibrewise: it commutes with multiplication by scalar jets. -/
   repJet_smul : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V), repJet U (χ • z) = χ • repJet U z
+  /-- The action of the gauge algebra generates the action of the jets of gauge
+    transformations: it is the infinitesimal action underlying `repJet`, the physicists'
+    `i dρ(T^a)`. This is what makes the covariant derivative of the field transform
+    covariantly. -/
+  repAlgebra_isInfinitesimalAction : jets.IsInfinitesimalActionOf repAlgebra repJet
   /-- The mass weight of the field. -/
   massWeight : ℕ
 
@@ -89,7 +95,7 @@ namespace MatterField
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : GaugeJet G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
 
 /-!
 

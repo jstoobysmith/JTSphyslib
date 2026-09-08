@@ -16,8 +16,8 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 A gauge theory is fixed, before any Lagrangian is chosen, by a gauge context and a matter
 content. The gauge context is the existing jet data of the gauge group, namely a global
 group `G₀` with finite-dimensional real Lie algebra `𝔤`, a jet group `G` with jet Lie
-algebra `𝔤J`, a gauge-jet package `jets : GaugeJet G 𝔤 G₀ 𝔤J` relating them and its
-Taylor–Leibniz law `GaugeJetLeibniz jets`. The matter content is a finite family of
+algebra `𝔤J`, a local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` relating them and its
+Taylor–Leibniz law `LocalGaugeDataLeibniz jets`. The matter content is a finite family of
 fermionic species and a finite family of bosonic species, each given by an existing
 `MatterField jets`.
 
@@ -85,7 +85,7 @@ open Matrix MatrixGroups TensorProduct
 ## A. The gauge context and the field datum
 
 The gauge context is the parameter list of the structure below, namely the two groups, the
-two Lie algebras, the supplied gauge-jet package `jets` and its Taylor–Leibniz law. It is
+two Lie algebras, the supplied local-gauge-data package `jets` and its Taylor–Leibniz law. It is
 `jets` that makes `𝔤` the gauge algebra of `G` rather than an unrelated Lie algebra, and
 it is supplied rather than inferred, so a second package over the same carriers is a
 different context. `GaugeFieldData` adds only the matter content on top of it.
@@ -94,12 +94,12 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
 
 /-- The field data of a gauge theory. Over a gauge context, given by a jet gauge group `G`
   with global group `G₀`, a finite-dimensional real gauge algebra `𝔤` with jet algebra
-  `𝔤J` and a gauge-jet package `jets` over them, it records a finite family of fermionic
+  `𝔤J` and a local-gauge-data package `jets` over them, it records a finite family of fermionic
   species and a finite family of bosonic species, each given by an existing
   `MatterField jets`.
 
   Nothing is repeated from `MatterField`, whose fields already carry the value space, the
-  Lorentz representation, the gauge-jet action and the mass weight of a species. Nothing is
+  Lorentz representation, the local-gauge-data action and the mass weight of a species. Nothing is
   repeated from the gauge context either, and the gauge bosons are not a species, since
   their generator space is determined by `𝔤` alone.
 
@@ -109,7 +109,7 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
   conditions, none of them imposed here. -/
 structure GaugeFieldData {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     [Module.Finite ℝ 𝔤] {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : GaugeJet G 𝔤 G₀ 𝔤J) [GaugeJetLeibniz jets] where
+    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) [LocalGaugeDataLeibniz jets] where
   /-- The index type of the fermionic species. -/
   FermionSpecies : Type
   [decidableEqFermionSpecies : DecidableEq FermionSpecies]
@@ -131,7 +131,7 @@ namespace GaugeFieldData
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : GaugeJet G 𝔤 G₀ 𝔤J} [GaugeJetLeibniz jets] (T : GaugeFieldData jets)
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} [LocalGaugeDataLeibniz jets] (T : GaugeFieldData jets)
 
 /-!
 

@@ -6,12 +6,12 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
-public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
-public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
-public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
-public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.DownSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
+public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
 /-!
 # The Standard Model fermions as matter fields
 
@@ -69,13 +69,14 @@ namespace StandardModel
 
 namespace LeptonDoublet
 
-/-- The lepton doublet as a matter field of `StandardModel.gaugeJet`, in the `(1, 2)_{-3}`
+/-- The lepton doublet as a matter field of `StandardModel.localGaugeData`, in the `(1, 2)_{-3}`
   representation with its left-handed Lorentz action. -/
-noncomputable def matterField : MatterField gaugeJet where
+noncomputable def matterField : MatterField localGaugeData where
   V := LeptonDoublet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -104,13 +105,14 @@ end LeptonDoublet
 
 namespace LeptonSinglet
 
-/-- The charged-lepton singlet as a matter field of `StandardModel.gaugeJet`, in the
+/-- The charged-lepton singlet as a matter field of `StandardModel.localGaugeData`, in the
   `(1, 1)_{-6}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField gaugeJet where
+noncomputable def matterField : MatterField localGaugeData where
   V := LeptonSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -141,13 +143,14 @@ end LeptonSinglet
 
 namespace QuarkDoublet
 
-/-- The quark doublet as a matter field of `StandardModel.gaugeJet`, in the `(3, 2)_{1}`
+/-- The quark doublet as a matter field of `StandardModel.localGaugeData`, in the `(3, 2)_{1}`
   representation with its left-handed Lorentz action. -/
-noncomputable def matterField : MatterField gaugeJet where
+noncomputable def matterField : MatterField localGaugeData where
   V := QuarkDoublet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -176,13 +179,14 @@ end QuarkDoublet
 
 namespace UpSinglet
 
-/-- The up-type quark singlet as a matter field of `StandardModel.gaugeJet`, in the
+/-- The up-type quark singlet as a matter field of `StandardModel.localGaugeData`, in the
   `(3, 1)_{4}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField gaugeJet where
+noncomputable def matterField : MatterField localGaugeData where
   V := UpSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 
@@ -211,13 +215,14 @@ end UpSinglet
 
 namespace DownSinglet
 
-/-- The down-type quark singlet as a matter field of `StandardModel.gaugeJet`, in the
+/-- The down-type quark singlet as a matter field of `StandardModel.localGaugeData`, in the
   `(3, 1)_{-2}` representation with its right-handed Lorentz action. -/
-noncomputable def matterField : MatterField gaugeJet where
+noncomputable def matterField : MatterField localGaugeData where
   V := DownSinglet
   repLorentz := repLorentzGroup
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 3
 

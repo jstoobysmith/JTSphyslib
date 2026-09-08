@@ -32,9 +32,9 @@ and with them
 
 * `repDualCoeff rep U x` — the physicists' `∂_x (rep U)^i_j|₀` transposed to the dual
   of `V`, the analogue of `adjointDualCoeff` for a general representation;
-* `TransformsIn` — the generalization of `TransformsInAdjoint`: the derivative
-  symbols of the family transform by the Leibniz convolution of `repDualCoeff`, with
-  no inhomogeneous term.
+The gauge tensors of a representation themselves — `LocalGaugeData.TransformsIn`, the
+generalization of `TransformsInAdjoint` — are defined on top of `repDualCoeff` in
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn`.
 
 ## The covariant derivative
 
@@ -50,7 +50,7 @@ case `act = adAction` (the bracket as a bilinear map) literally specializes:
 
 The compatibility between `rep` and `act` — the structure `IsInfinitesimalActionOf` —
 and the theorem that under it the covariant derivative preserves the gauge tensors live
-in `Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction`.
+in `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction`.
 
 -/
 
@@ -62,7 +62,7 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 namespace IsGaugeField
@@ -107,20 +107,6 @@ noncomputable def repDualCoeff (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
     (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ V →ₗ[ℂ] Module.Dual ℂ V :=
   (repCoeff rep U x).dualMap
-
-/-- A component family `F`, valued in `B` and indexed by the complex dual of the
-  representation space `V`, *transforms in* the representation `rep` of the jet gauge
-  group — with the ambient action `repGauge` on `B` — when each derivative symbol
-  `[∂_s F^φ]` transforms by the Leibniz convolution of the dual representation
-  coefficients against lower symbols, with no inhomogeneous term — the generalization
-  of `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and
-  the form consumed by `AlgebraRealization`. -/
-def _root_.TransformsIn (repGauge : Representation ℂ G B)
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) : Prop :=
-  ∀ (U : G) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
-    repGauge U (F s φ) =
-      (s.antidiagonal.map fun p => F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
 
 /-!
 
@@ -667,7 +653,7 @@ end Action
 
 section Leibniz
 
-variable [GaugeJetLeibniz jets]
+variable [LocalGaugeDataLeibniz jets]
 
 /-- **The adjoint Taylor coefficients are multiplicative up to convolution**: the
   coefficient of a product of jets of gauge transformations is the antidiagonal
@@ -683,7 +669,7 @@ lemma adjointCoeff_mul (U V : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
       rw [adjointCoeff]
       simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_mul,
         Module.End.mul_apply],
-    GaugeJetLeibniz.evalLie_iteratedDeriv_adjoint]
+    LocalGaugeDataLeibniz.evalLie_iteratedDeriv_adjoint]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
     rw [Function.comp_apply, LinearMap.comp_apply]
     rfl)
@@ -696,7 +682,7 @@ lemma adjointCoeff_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
   simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_one,
     Module.End.one_apply]
   rcases eq_or_ne p 0 with rfl | hp
-  · rw [GaugeJet.iteratedDeriv_zero, LinearMap.id_apply, GaugeJet.evalLie_ofConstantLie,
+  · rw [LocalGaugeData.iteratedDeriv_zero, LinearMap.id_apply, LocalGaugeData.evalLie_ofConstantLie,
       if_pos rfl, LinearMap.id_apply]
   · rw [jets.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, if_neg hp,
       LinearMap.zero_apply]

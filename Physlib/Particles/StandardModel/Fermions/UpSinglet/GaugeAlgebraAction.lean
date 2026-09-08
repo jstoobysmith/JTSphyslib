@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
-public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
@@ -22,7 +23,7 @@ the algebra element acts on the colour index and the hypercharge part scales, bo
 through the physicists' factor of `i`, matching the group action `u ^ 4 • U₃`
 infinitesimally. The main theorem shows this is the infinitesimal action underlying the
 jet gauge action `UpSinglet.repJetGaugeGroupI`, in the sense of
-`GaugeAlgebra.IsInfinitesimalActionOf`.
+`LocalGaugeData.IsInfinitesimalActionOf`.
 
 ## ii. Key results
 
@@ -114,7 +115,7 @@ noncomputable def actionMatrix (c : GaugeAlgebra) : Matrix (Fin 3) (Fin 3) ℂ :
   derivative of the `(3, 1)_{4}` action of the gauge group, real-linear in the
   algebra slot and complex-linear in the value slot — the form consumed by the
   covariant derivative `IsGaugeField.covDerivIter` and by
-  `GaugeAlgebra.IsInfinitesimalActionOf`. -/
+  `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] UpSinglet →ₗ[ℂ] UpSinglet where
   toFun c := colourEnd (actionMatrix c)
@@ -147,7 +148,7 @@ noncomputable def gaugeAlgebraAction :
 ## C. The infinitesimal action underlies the jet gauge action
 
 The `(3, 1)_{4}` action of the gauge algebra is the infinitesimal action underlying the
-jet gauge action, in the sense of `GaugeAlgebra.IsInfinitesimalActionOf`: the base-point
+jet gauge action, in the sense of `LocalGaugeData.IsInfinitesimalActionOf`: the base-point
 Taylor coefficients of the jet action satisfy the Maurer–Cartan Leibniz law and
 intertwine the action with the adjoint transports. The proofs work through the colour
 matrix of the jet action and the all-orders matrix Leibniz rule at the base point.
@@ -524,9 +525,11 @@ set_option maxHeartbeats 1000000 in
   coefficients obey the Maurer–Cartan Leibniz law and intertwine the action with the
   adjoint transports. -/
 theorem isInfinitesimalActionOf :
-    GaugeAlgebra.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
+    localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
+    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+      localGaugeData_iteratedDeriv, localGaugeData_mc]
     have hMcons : ((upMatrix U).map fun f =>
         constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
         = -((x.antidiagonal.map fun p =>
@@ -558,6 +561,7 @@ theorem isInfinitesimalActionOf :
     rw [Function.comp_apply, colourEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
+    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]

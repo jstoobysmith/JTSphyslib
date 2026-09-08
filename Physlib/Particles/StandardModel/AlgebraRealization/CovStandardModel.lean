@@ -293,7 +293,7 @@ lemma repDualCoeff_repConj_zero_ofConstant_inv {V : Type} [AddCommGroup V] [Modu
       repG.conj.dual g := by
   rw [show ((JetGaugeGroupI.ofConstant g)⁻¹ : JetGaugeGroupI) =
       JetGaugeGroupI.ofConstant g⁻¹ from (map_inv JetGaugeGroupI.ofConstant g).symm,
-    IsGaugeField.repDualCoeff, GaugeAlgebra.repCoeff_repConj,
+    IsGaugeField.repDualCoeff, repCoeff_repConj,
     repCoeff_zero_ofConstant (hg g⁻¹)]
   rfl
 
@@ -487,7 +487,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
         · exact (h.A_comm_H p ρ ψ s' φ').symm
       · refine IsGaugeField.commute_of_mem_adjoin ?_
           (IsGaugeField.covDerivIter_mem_adjoin_symbols
-            (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ)
+            (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH n l 0 φ)
         rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
         · exact h.A_comm_A s' p ρ' ρ ψ' ψ
         · exact (h.A_comm_barH p ρ ψ s' φ').symm
@@ -503,7 +503,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
       · exact (h.A_comm_d p ρ ψ i s' φ').symm
     · refine IsGaugeField.commute_of_mem_adjoin ?_
         (IsGaugeField.covDerivIter_mem_adjoin_symbols
-          (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ)
+          (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) n l 0 φ)
       rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
       · exact h.A_comm_A s' p ρ' ρ ψ' ψ
       · exact (h.A_comm_bard p ρ ψ i s' φ').symm
@@ -515,7 +515,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
       · exact (h.A_comm_u p ρ ψ i s' φ').symm
     · refine IsGaugeField.commute_of_mem_adjoin ?_
         (IsGaugeField.covDerivIter_mem_adjoin_symbols
-          (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ)
+          (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) n l 0 φ)
       rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
       · exact h.A_comm_A s' p ρ' ρ ψ' ψ
       · exact (h.A_comm_baru p ρ ψ i s' φ').symm
@@ -527,7 +527,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
       · exact (h.A_comm_Q p ρ ψ i s' φ').symm
     · refine IsGaugeField.commute_of_mem_adjoin ?_
         (IsGaugeField.covDerivIter_mem_adjoin_symbols
-          (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ)
+          (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) n l 0 φ)
       rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
       · exact h.A_comm_A s' p ρ' ρ ψ' ψ
       · exact (h.A_comm_barQ p ρ ψ i s' φ').symm
@@ -539,7 +539,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
       · exact (h.A_comm_L p ρ ψ i s' φ').symm
     · refine IsGaugeField.commute_of_mem_adjoin ?_
         (IsGaugeField.covDerivIter_mem_adjoin_symbols
-          (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ)
+          (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) n l 0 φ)
       rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
       · exact h.A_comm_A s' p ρ' ρ ψ' ψ
       · exact (h.A_comm_barL p ρ ψ i s' φ').symm
@@ -551,7 +551,7 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
       · exact (h.A_comm_e p ρ ψ i s' φ').symm
     · refine IsGaugeField.commute_of_mem_adjoin ?_
         (IsGaugeField.covDerivIter_mem_adjoin_symbols
-          (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ)
+          (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) n l 0 φ)
       rintro x' (⟨s', ρ', ψ', rfl⟩ | ⟨s', φ', rfl⟩)
       · exact h.A_comm_A s' p ρ' ρ ψ' ψ
       · exact (h.A_comm_bare p ρ ψ i s' φ').symm
@@ -862,7 +862,7 @@ lemma massWeight_covDerivBarH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
   rw [show 2 * (1 + n) = 2 + 2 * n from by ring]
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH 2
+      (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH 2
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr
         (by rw [show 2 + 2 * Multiset.card t = 2 * (1 + Multiset.card t) from by ring]
@@ -887,7 +887,7 @@ lemma massWeight_covDerivBarD (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fi
       Polynomial.monomial (3 + 2 * n) (h.covDerivBarD i l φ) := by
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) 3
+      (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) 3
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr (h.massWeight_bard i t χ)) n l φ)
 
@@ -910,7 +910,7 @@ lemma massWeight_covDerivBarU (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fi
       Polynomial.monomial (3 + 2 * n) (h.covDerivBarU i l φ) := by
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) 3
+      (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) 3
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr (h.massWeight_baru i t χ)) n l φ)
 
@@ -933,7 +933,7 @@ lemma massWeight_covDerivBarQ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fi
       Polynomial.monomial (3 + 2 * n) (h.covDerivBarQ i l φ) := by
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) 3
+      (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) 3
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr (h.massWeight_barQ i t χ)) n l φ)
 
@@ -956,7 +956,7 @@ lemma massWeight_covDerivBarL (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fi
       Polynomial.monomial (3 + 2 * n) (h.covDerivBarL i l φ) := by
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) 3
+      (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) 3
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr (h.massWeight_barL i t χ)) n l φ)
 
@@ -979,7 +979,7 @@ lemma massWeight_covDerivBarE (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fi
       Polynomial.monomial (3 + 2 * n) (h.covDerivBarE i l φ) := by
   exact mem_massWeightEigenspace_iff.mp
     (h.covDerivIter_zero_mem_massWeightEigenspace
-      (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) 3
+      (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) 3
       (fun p μ ψ => mem_massWeightEigenspace_iff.mpr (h.massWeight_A p μ ψ))
       (fun t χ => mem_massWeightEigenspace_iff.mpr (h.massWeight_bare i t χ)) n l φ)
 
@@ -1195,7 +1195,7 @@ lemma covF_comm_covBarH {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarH l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     h.A_comm_barH l μ ν ψ m l' 0 φ
 
 include h in
@@ -1213,7 +1213,7 @@ lemma covF_comm_covBarD {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarD i l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i)
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i)
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) l μ ν ψ m l' 0 φ
 
 include h in
@@ -1231,7 +1231,7 @@ lemma covF_comm_covBarU {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarU i l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i)
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i)
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) l μ ν ψ m l' 0 φ
 
 include h in
@@ -1249,7 +1249,7 @@ lemma covF_comm_covBarQ {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarQ i l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i)
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i)
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) l μ ν ψ m l' 0 φ
 
 include h in
@@ -1267,8 +1267,8 @@ lemma covF_comm_covBarL {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarL i l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i)
-    (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) l μ ν ψ m l' 0 φ
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction)
+    (h.barL i) (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) l μ ν ψ m l' 0 φ
 
 include h in
 /-- The field-strength tower commutes with the lepton singlet tower. -/
@@ -1285,8 +1285,8 @@ lemma covF_comm_covBarE {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) (i : Fin 3) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     Commute (h.covF l μ ν ψ) (h.covDerivBarE i l' φ) :=
-  h.commute_covF_covDerivIter (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i)
-    (fun p μ ψ t χ => h.A_comm_bare p μ ψ i t χ) l μ ν ψ m l' 0 φ
+  h.commute_covF_covDerivIter (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction)
+    (h.bare i) (fun p μ ψ t χ => h.A_comm_bare p μ ψ i t χ) l μ ν ψ m l' 0 φ
 
 include h in
 /-- Two Higgs towers commute. -/
@@ -1303,7 +1303,8 @@ lemma covH_comm_covBarH {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (l' : Fin 
     (φ : Module.Dual ℂ HiggsVec) (φ' : Module.Dual ℂ (ConjModule HiggsVec)) :
     Commute (h.covDerivH l φ) (h.covDerivBarH l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH h.A_comm_A h.A_comm_H h.A_comm_barH
+    (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH h.A_comm_A h.A_comm_H
+    h.A_comm_barH
     (fun t χ t' χ' => h.H_comm_barH t t' χ χ') n l 0 φ m l' 0 φ'
 
 include h in
@@ -1311,8 +1312,8 @@ include h in
 lemma covBarH_comm_covBarH {n m : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (l' : Fin m → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) (φ' : Module.Dual ℂ (ConjModule HiggsVec)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarH l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH h.A_comm_A h.A_comm_barH
     h.A_comm_barH (fun t χ t' χ' => h.barH_comm_barH t t' χ χ') n l 0 φ m l' 0 φ'
 
 include h in
@@ -1331,7 +1332,7 @@ lemma covH_comm_covBarD {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ' : Module.Dual ℂ (ConjModule DownSinglet)) :
     Commute (h.covDerivH l φ) (h.covDerivBarD i l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) h.A_comm_A h.A_comm_H
+    (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) h.A_comm_A h.A_comm_H
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun t χ t' χ' => h.H_comm_bard t χ i t' χ') n l 0
     φ m l' 0 φ'
 
@@ -1352,7 +1353,7 @@ lemma covH_comm_covBarU {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ' : Module.Dual ℂ (ConjModule UpSinglet)) :
     Commute (h.covDerivH l φ) (h.covDerivBarU i l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) h.A_comm_A h.A_comm_H
+    (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) h.A_comm_A h.A_comm_H
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun t χ t' χ' => h.H_comm_baru t χ i t' χ') n l 0
     φ m l' 0 φ'
 
@@ -1373,7 +1374,7 @@ lemma covH_comm_covBarQ {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     Commute (h.covDerivH l φ) (h.covDerivBarQ i l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) h.A_comm_A h.A_comm_H
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) h.A_comm_A h.A_comm_H
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun t χ t' χ' => h.H_comm_barQ t χ i t' χ') n l 0
     φ m l' 0 φ'
 
@@ -1394,7 +1395,7 @@ lemma covH_comm_covBarL {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     Commute (h.covDerivH l φ) (h.covDerivBarL i l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) h.A_comm_A h.A_comm_H
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) h.A_comm_A h.A_comm_H
     (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) (fun t χ t' χ' => h.H_comm_barL t χ i t' χ') n l 0
     φ m l' 0 φ'
 
@@ -1415,7 +1416,7 @@ lemma covH_comm_covBarE {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     Commute (h.covDerivH l φ) (h.covDerivBarE i l' φ') :=
   h.commute_covDerivIter_covDerivIter HiggsVec.gaugeAlgebraAction h.H
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) h.A_comm_A h.A_comm_H
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) h.A_comm_A h.A_comm_H
     (fun p μ ψ t χ => h.A_comm_bare p μ ψ i t χ) (fun t χ t' χ' => h.H_comm_bare t χ i t' χ') n l 0
     φ m l' 0 φ'
 
@@ -1425,7 +1426,7 @@ lemma covBarH_comm_covD {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ DownSinglet) :
     Commute (h.covDerivBarH l φ) (h.covDerivD i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     DownSinglet.gaugeAlgebraAction (h.d i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_d t χ i t' χ') n l 0 φ m
     l' 0 φ'
@@ -1436,8 +1437,8 @@ lemma covBarH_comm_covBarD {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ (ConjModule DownSinglet)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarD i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_bard t χ i t' χ') n l
     0 φ m l' 0 φ'
 
@@ -1447,7 +1448,7 @@ lemma covBarH_comm_covU {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ UpSinglet) :
     Commute (h.covDerivBarH l φ) (h.covDerivU i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     UpSinglet.gaugeAlgebraAction (h.u i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_u p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_u t χ i t' χ') n l 0 φ m
     l' 0 φ'
@@ -1458,8 +1459,8 @@ lemma covBarH_comm_covBarU {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ (ConjModule UpSinglet)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarU i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_baru t χ i t' χ') n l
     0 φ m l' 0 φ'
 
@@ -1469,7 +1470,7 @@ lemma covBarH_comm_covQ {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ QuarkDoublet) :
     Commute (h.covDerivBarH l φ) (h.covDerivQ i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     QuarkDoublet.gaugeAlgebraAction (h.Q i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_Q p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_Q t χ i t' χ') n l 0 φ m
     l' 0 φ'
@@ -1480,8 +1481,8 @@ lemma covBarH_comm_covBarQ {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarQ i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_barQ t χ i t' χ') n l
     0 φ m l' 0 φ'
 
@@ -1491,7 +1492,7 @@ lemma covBarH_comm_covL {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ LeptonDoublet) :
     Commute (h.covDerivBarH l φ) (h.covDerivL i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     LeptonDoublet.gaugeAlgebraAction (h.L i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_L p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_L t χ i t' χ') n l 0 φ m
     l' 0 φ'
@@ -1502,8 +1503,8 @@ lemma covBarH_comm_covBarL {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarL i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_barL t χ i t' χ') n l
     0 φ m l' 0 φ'
 
@@ -1513,7 +1514,7 @@ lemma covBarH_comm_covE {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin 3)
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ LeptonSinglet) :
     Commute (h.covDerivBarH l φ) (h.covDerivE i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
     LeptonSinglet.gaugeAlgebraAction (h.e i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_e p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_e t χ i t' χ') n l 0 φ m
     l' 0 φ'
@@ -1524,8 +1525,8 @@ lemma covBarH_comm_covBarE {n m : ℕ} (i : Fin 3) (l : Fin n → (Fin 1 ⊕ Fin
     (l' : Fin m → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule HiggsVec))
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     Commute (h.covDerivBarH l φ) (h.covDerivBarE i l' φ') :=
-  h.commute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj HiggsVec.gaugeAlgebraAction) h.barH
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) h.A_comm_A h.A_comm_barH
+  h.commute_covDerivIter_covDerivIter (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction) h.barH
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare i) h.A_comm_A h.A_comm_barH
     (fun p μ ψ t χ => h.A_comm_bare p μ ψ i t χ) (fun t χ t' χ' => h.barH_comm_bare t χ i t' χ') n l
     0 φ m l' 0 φ'
 
@@ -1549,7 +1550,7 @@ lemma covD_anticomm_covBarD (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivD i l φ * h.covDerivBarD j l' φ' =
       -(h.covDerivBarD j l' φ' * h.covDerivD i l φ) :=
   h.anticommute_covDerivIter_covDerivIter DownSinglet.gaugeAlgebraAction (h.d i)
-    (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard j) h.A_comm_A
+    (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bard p μ ψ j t χ)
     (fun t χ t' χ' => h.d_anticomm_bard i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1572,7 +1573,7 @@ lemma covD_anticomm_covBarU (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivD i l φ * h.covDerivBarU j l' φ' =
       -(h.covDerivBarU j l' φ' * h.covDerivD i l φ) :=
   h.anticommute_covDerivIter_covDerivIter DownSinglet.gaugeAlgebraAction (h.d i)
-    (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
+    (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_baru p μ ψ j t χ)
     (fun t χ t' χ' => h.d_anticomm_baru i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1596,7 +1597,7 @@ lemma covD_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivD i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivD i l φ) :=
   h.anticommute_covDerivIter_covDerivIter DownSinglet.gaugeAlgebraAction (h.d i)
-    (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.d_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1620,7 +1621,7 @@ lemma covD_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivD i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivD i l φ) :=
   h.anticommute_covDerivIter_covDerivIter DownSinglet.gaugeAlgebraAction (h.d i)
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.d_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1644,7 +1645,7 @@ lemma covD_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivD i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivD i l φ) :=
   h.anticommute_covDerivIter_covDerivIter DownSinglet.gaugeAlgebraAction (h.d i)
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_d p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.d_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1655,8 +1656,8 @@ lemma covBarD_anticomm_covBarD (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule DownSinglet)) :
     h.covDerivBarD i l φ * h.covDerivBarD j l' φ' =
       -(h.covDerivBarD j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-    (h.bard i) (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction) (h.bard j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
+    (h.bard i) (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction) (h.bard j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bard p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_bard i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1667,7 +1668,7 @@ lemma covBarD_anticomm_covU (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ UpSinglet) :
     h.covDerivBarD i l φ * h.covDerivU j l' φ' =
       -(h.covDerivU j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
     (h.bard i) UpSinglet.gaugeAlgebraAction (h.u j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_u p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_u i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1679,8 +1680,8 @@ lemma covBarD_anticomm_covBarU (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule UpSinglet)) :
     h.covDerivBarD i l φ * h.covDerivBarU j l' φ' =
       -(h.covDerivBarU j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-    (h.bard i) (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
+    (h.bard i) (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_baru p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_baru i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1691,7 +1692,7 @@ lemma covBarD_anticomm_covQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ QuarkDoublet) :
     h.covDerivBarD i l φ * h.covDerivQ j l' φ' =
       -(h.covDerivQ j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
     (h.bard i) QuarkDoublet.gaugeAlgebraAction (h.Q j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_Q p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_Q i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1703,8 +1704,8 @@ lemma covBarD_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     h.covDerivBarD i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-    (h.bard i) (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
+    (h.bard i) (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1715,7 +1716,7 @@ lemma covBarD_anticomm_covL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonDoublet) :
     h.covDerivBarD i l φ * h.covDerivL j l' φ' =
       -(h.covDerivL j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
     (h.bard i) LeptonDoublet.gaugeAlgebraAction (h.L j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_L p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_L i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1727,8 +1728,8 @@ lemma covBarD_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     h.covDerivBarD i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-    (h.bard i) (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
+    (h.bard i) (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1739,7 +1740,7 @@ lemma covBarD_anticomm_covE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonSinglet) :
     h.covDerivBarD i l φ * h.covDerivE j l' φ' =
       -(h.covDerivE j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
     (h.bard i) LeptonSinglet.gaugeAlgebraAction (h.e j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_e p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_e i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1751,8 +1752,8 @@ lemma covBarD_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     h.covDerivBarD i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivBarD i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj DownSinglet.gaugeAlgebraAction)
-    (h.bard i) (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
+    (h.bard i) (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bard p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.bard_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1775,7 +1776,7 @@ lemma covU_anticomm_covBarU (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivU i l φ * h.covDerivBarU j l' φ' =
       -(h.covDerivBarU j l' φ' * h.covDerivU i l φ) :=
   h.anticommute_covDerivIter_covDerivIter UpSinglet.gaugeAlgebraAction (h.u i)
-    (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
+    (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_u p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_baru p μ ψ j t χ)
     (fun t χ t' χ' => h.u_anticomm_baru i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1798,7 +1799,7 @@ lemma covU_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivU i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivU i l φ) :=
   h.anticommute_covDerivIter_covDerivIter UpSinglet.gaugeAlgebraAction (h.u i)
-    (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_u p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.u_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1822,7 +1823,7 @@ lemma covU_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivU i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivU i l φ) :=
   h.anticommute_covDerivIter_covDerivIter UpSinglet.gaugeAlgebraAction (h.u i)
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_u p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.u_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1846,7 +1847,7 @@ lemma covU_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivU i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivU i l φ) :=
   h.anticommute_covDerivIter_covDerivIter UpSinglet.gaugeAlgebraAction (h.u i)
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_u p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.u_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1857,8 +1858,8 @@ lemma covBarU_anticomm_covBarU (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule UpSinglet)) :
     h.covDerivBarU i l φ * h.covDerivBarU j l' φ' =
       -(h.covDerivBarU j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
-    (h.baru i) (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
+    (h.baru i) (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction) (h.baru j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_baru p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_baru i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1869,7 +1870,7 @@ lemma covBarU_anticomm_covQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ QuarkDoublet) :
     h.covDerivBarU i l φ * h.covDerivQ j l' φ' =
       -(h.covDerivQ j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
     (h.baru i) QuarkDoublet.gaugeAlgebraAction (h.Q j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_Q p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_Q i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1881,8 +1882,8 @@ lemma covBarU_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     h.covDerivBarU i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
-    (h.baru i) (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
+    (h.baru i) (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1893,7 +1894,7 @@ lemma covBarU_anticomm_covL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonDoublet) :
     h.covDerivBarU i l φ * h.covDerivL j l' φ' =
       -(h.covDerivL j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
     (h.baru i) LeptonDoublet.gaugeAlgebraAction (h.L j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_L p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_L i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1905,8 +1906,8 @@ lemma covBarU_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     h.covDerivBarU i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
-    (h.baru i) (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
+    (h.baru i) (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1917,7 +1918,7 @@ lemma covBarU_anticomm_covE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonSinglet) :
     h.covDerivBarU i l φ * h.covDerivE j l' φ' =
       -(h.covDerivE j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
     (h.baru i) LeptonSinglet.gaugeAlgebraAction (h.e j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_e p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_e i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -1929,8 +1930,8 @@ lemma covBarU_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     h.covDerivBarU i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivBarU i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj UpSinglet.gaugeAlgebraAction)
-    (h.baru i) (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
+    (h.baru i) (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_baru p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.baru_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1954,7 +1955,7 @@ lemma covQ_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivQ i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivQ i l φ) :=
   h.anticommute_covDerivIter_covDerivIter QuarkDoublet.gaugeAlgebraAction (h.Q i)
-    (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_Q p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.Q_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -1978,7 +1979,7 @@ lemma covQ_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivQ i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivQ i l φ) :=
   h.anticommute_covDerivIter_covDerivIter QuarkDoublet.gaugeAlgebraAction (h.Q i)
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_Q p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.Q_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2002,7 +2003,7 @@ lemma covQ_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivQ i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivQ i l φ) :=
   h.anticommute_covDerivIter_covDerivIter QuarkDoublet.gaugeAlgebraAction (h.Q i)
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_Q p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.Q_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2013,8 +2014,9 @@ lemma covBarQ_anticomm_covBarQ (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     h.covDerivBarQ i l φ * h.covDerivBarQ j l' φ' =
       -(h.covDerivBarQ j l' φ' * h.covDerivBarQ i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
-    (h.barQ i) (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
+    (h.barQ i) (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction) (h.barQ j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barQ p μ ψ j t χ)
     (fun t χ t' χ' => h.barQ_anticomm_barQ i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2025,7 +2027,8 @@ lemma covBarQ_anticomm_covL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonDoublet) :
     h.covDerivBarQ i l φ * h.covDerivL j l' φ' =
       -(h.covDerivL j l' φ' * h.covDerivBarQ i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
     (h.barQ i) LeptonDoublet.gaugeAlgebraAction (h.L j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_L p μ ψ j t χ)
     (fun t χ t' χ' => h.barQ_anticomm_L i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -2037,8 +2040,9 @@ lemma covBarQ_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     h.covDerivBarQ i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivBarQ i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
-    (h.barQ i) (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
+    (h.barQ i) (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.barQ_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2049,7 +2053,8 @@ lemma covBarQ_anticomm_covE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonSinglet) :
     h.covDerivBarQ i l φ * h.covDerivE j l' φ' =
       -(h.covDerivE j l' φ' * h.covDerivBarQ i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
     (h.barQ i) LeptonSinglet.gaugeAlgebraAction (h.e j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_e p μ ψ j t χ)
     (fun t χ t' χ' => h.barQ_anticomm_e i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -2061,8 +2066,9 @@ lemma covBarQ_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     h.covDerivBarQ i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivBarQ i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj QuarkDoublet.gaugeAlgebraAction)
-    (h.barQ i) (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
+    (h.barQ i) (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barQ p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.barQ_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2086,7 +2092,7 @@ lemma covL_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivL i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivL i l φ) :=
   h.anticommute_covDerivIter_covDerivIter LeptonDoublet.gaugeAlgebraAction (h.L i)
-    (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_L p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.L_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2110,7 +2116,7 @@ lemma covL_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivL i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivL i l φ) :=
   h.anticommute_covDerivIter_covDerivIter LeptonDoublet.gaugeAlgebraAction (h.L i)
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_L p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.L_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2121,8 +2127,9 @@ lemma covBarL_anticomm_covBarL (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     h.covDerivBarL i l φ * h.covDerivBarL j l' φ' =
       -(h.covDerivBarL j l' φ' * h.covDerivBarL i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
-    (h.barL i) (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction)
+    (h.barL i) (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction) (h.barL j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_barL p μ ψ j t χ)
     (fun t χ t' χ' => h.barL_anticomm_barL i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2133,7 +2140,8 @@ lemma covBarL_anticomm_covE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     (φ' : Module.Dual ℂ LeptonSinglet) :
     h.covDerivBarL i l φ * h.covDerivE j l' φ' =
       -(h.covDerivE j l' φ' * h.covDerivBarL i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction)
     (h.barL i) LeptonSinglet.gaugeAlgebraAction (h.e j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_e p μ ψ j t χ)
     (fun t χ t' χ' => h.barL_anticomm_e i j t t' χ χ') n l 0 φ m l' 0 φ'
@@ -2145,8 +2153,9 @@ lemma covBarL_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     h.covDerivBarL i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivBarL i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj LeptonDoublet.gaugeAlgebraAction)
-    (h.barL i) (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction)
+    (h.barL i) (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_barL p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.barL_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2170,7 +2179,7 @@ lemma covE_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 ⊕ 
     h.covDerivE i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivE i l φ) :=
   h.anticommute_covDerivIter_covDerivIter LeptonSinglet.gaugeAlgebraAction (h.e i)
-    (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_e p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.e_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 
@@ -2181,8 +2190,9 @@ lemma covBarE_anticomm_covBarE (i j : Fin 3) {n m : ℕ} (l : Fin n → (Fin 1 �
     (φ' : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     h.covDerivBarE i l φ * h.covDerivBarE j l' φ' =
       -(h.covDerivBarE j l' φ' * h.covDerivBarE i l φ) :=
-  h.anticommute_covDerivIter_covDerivIter (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction)
-    (h.bare i) (GaugeAlgebra.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
+  h.anticommute_covDerivIter_covDerivIter
+    (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction)
+    (h.bare i) (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction) (h.bare j) h.A_comm_A
     (fun p μ ψ t χ => h.A_comm_bare p μ ψ i t χ) (fun p μ ψ t χ => h.A_comm_bare p μ ψ j t χ)
     (fun t χ t' χ' => h.bare_anticomm_bare i j t t' χ χ') n l 0 φ m l' 0 φ'
 

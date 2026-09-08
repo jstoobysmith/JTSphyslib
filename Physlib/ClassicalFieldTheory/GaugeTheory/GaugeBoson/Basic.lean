@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeJet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.Relativity.DerivAlgebra
 public import Physlib.Mathematics.SymmetricAlgebra
 public import Mathlib.LinearAlgebra.Dual.Lemmas

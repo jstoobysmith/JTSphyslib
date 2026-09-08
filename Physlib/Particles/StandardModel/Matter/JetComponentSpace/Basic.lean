@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
 public import Mathlib.LinearAlgebra.Contraction
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
@@ -252,6 +253,23 @@ lemma repConj_apply_tmul (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[�
       = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
           (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
         (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U (star f ⊗ₜ[ℂ] v))) := rfl
+
+/-- **The base-point Taylor coefficients of the conjugate representation are the
+  conjugated coefficients.** This is the generic `LocalGaugeData.repCoeff_repConj`, read at
+  the Standard Model `repConj`: the two conjugate representations are the same map. -/
+lemma repCoeff_repConj (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
+    (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+    IsGaugeField.repCoeff (repConj rep) U x
+      = ConjModule.endConj (IsGaugeField.repCoeff rep U x) :=
+  _root_.LocalGaugeData.repCoeff_repConj rep U x
+
+/-- The base-point triviality of the zeroth Taylor coefficient passes to the conjugate
+  representation. -/
+lemma repCoeff_repConj_zero_eq_id
+    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)} {W : JetGaugeGroupI}
+    (hrep : IsGaugeField.repCoeff rep W 0 = LinearMap.id) :
+    IsGaugeField.repCoeff (repConj rep) W 0 = LinearMap.id :=
+  _root_.LocalGaugeData.repCoeff_repConj_zero_eq_id hrep
 
 /-- **The identification conjugates the jet-ring action.** Carrying a `V`-valued jet over
 to the conjugate side turns multiplication by `star χ` into multiplication by `χ`: the

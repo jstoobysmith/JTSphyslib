@@ -6,7 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 /-!
@@ -49,13 +49,15 @@ namespace HiggsVec
 
 -/
 
-/-- The Higgs field as a matter field of `StandardModel.gaugeJet`, valued in `HiggsVec`, in the
-  `2_{3}` representation of the gauge group, a Lorentz scalar, of mass weight two. -/
-noncomputable def matterField : MatterField gaugeJet where
+/-- The Higgs field as a matter field of `StandardModel.localGaugeData`, valued in
+  `HiggsVec`, in the `2_{3}` representation of the gauge group, a Lorentz scalar, of mass
+  weight two. -/
+noncomputable def matterField : MatterField localGaugeData where
   V := HiggsVec
   repLorentz := Representation.trivial ℂ SL(2,ℂ) HiggsVec
   repJet := repJetGaugeGroupI
   repAlgebra := gaugeAlgebraAction
+  repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf
   repJet_smul := repJetGaugeGroupI_smul
   massWeight := 2
 

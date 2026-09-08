@@ -50,7 +50,7 @@ case `act = adAction` (the bracket as a bilinear map) literally specializes:
 
 The compatibility between `rep` and `act` — the structure `IsInfinitesimalActionOf` —
 and the theorem that under it the covariant derivative preserves the gauge tensors live
-in `Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction`.
+in `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction`.
 
 -/
 

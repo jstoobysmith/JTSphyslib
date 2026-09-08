@@ -275,7 +275,7 @@ private lemma repDualCoeff_repConj_transpose {V W : Type} [AddCommGroup V] [Modu
   refine LinearMap.ext fun v => ?_
   show φ (ConjModule.map p (IsGaugeField.repCoeff (repConj repV) U s v))
     = φ (IsGaugeField.repCoeff (repConj repW) U s (ConjModule.map p v))
-  rw [GaugeAlgebra.repCoeff_repConj, GaugeAlgebra.repCoeff_repConj]
+  rw [repCoeff_repConj, repCoeff_repConj]
   exact congrArg φ (LinearMap.congr_fun (hp U s) v)
 
 /-- The jet gauge transformation law of the conjugate symbols of a fermion species: the law

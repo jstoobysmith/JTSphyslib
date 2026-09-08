@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeJet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.Mathematics.MultisetAntidiagonal
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
@@ -15,10 +15,10 @@ public import Physlib.Relativity.SL2C.Basic
 /-!
 # Algebra valued gauge bosons
 
-This file is stated for a supplied gauge-jet package `jets : GaugeJet G 𝔤 G₀ 𝔤J`
+This file is stated for a supplied local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J`
 (jets of a gauge group `G₀` with Lie algebra `𝔤`), which every declaration below takes
-as an argument; the Standard Model package is `StandardModel.gaugeJet` in
-`Physlib.Particles.StandardModel.GaugeGroup.GaugeJet`.
+as an argument; the Standard Model package is `StandardModel.localGaugeData` in
+`Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData`.
 
 An algebra `B` (for instance a jet algebra of Lagrangian terms) may contain a family of
 elements playing the role of the gauge-field symbols `[∂_s A_μ^a]`. This file defines
@@ -69,7 +69,7 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 
 variable (jets) in
@@ -91,7 +91,7 @@ lemma adjointDualCoeff_zero (U : G) :
   rw [adjointDualCoeff]
   refine congrArg LinearMap.dualMap (LinearMap.ext fun a => ?_)
   simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
-    GaugeJet.iteratedDeriv_zero, LinearMap.id_coe, id_eq]
+    LocalGaugeData.iteratedDeriv_zero, LinearMap.id_coe, id_eq]
   exact jets.evalLie_adjoint_ofConstantLie U a
 
 /-- For a gauge jet whose value at the base point is the identity, the zeroth dual
@@ -102,7 +102,7 @@ lemma adjointDualCoeff_zero_of_eval_eq_one {U : G} (hU : (jets.eval U) = 1) :
   rw [adjointDualCoeff_zero, hU, map_one, Module.End.one_eq_id, LinearMap.dualMap_id]
 
 /-- The dual adjoint coefficient at a single derivative: since
-  `∂_μ (Ad_U x) = Ad_U (∂_μ x) − ⁅ω_μ(U), Ad_U x⁆` (`GaugeJet.deriv_adjoint`) and constants
+  `∂_μ (Ad_U x) = Ad_U (∂_μ x) − ⁅ω_μ(U), Ad_U x⁆` (`LocalGaugeData.deriv_adjoint`) and constants
   have vanishing derivative, the once-derived coefficient is minus the underived
   coefficient precomposed (on the dual index) with `ad` of the base-point
   Maurer–Cartan form. This is what cancels the Leibniz cross terms of
@@ -115,7 +115,7 @@ lemma adjointDualCoeff_singleton (U : G)
   refine LinearMap.ext fun a => ?_
   simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.neg_apply,
     LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
-    GaugeJet.iteratedDeriv_singleton, GaugeJet.iteratedDeriv_zero,
+    LocalGaugeData.iteratedDeriv_singleton, LocalGaugeData.iteratedDeriv_zero,
     LinearMap.id_coe, id_eq]
   rw [jets.deriv_adjoint,
     jets.deriv_ofConstantLie, map_zero, zero_sub, map_neg,
@@ -124,18 +124,18 @@ lemma adjointDualCoeff_singleton (U : G)
 
 section Truncation
 
-variable [GaugeJetTruncation jets]
+variable [LocalGaugeDataTruncation jets]
 
 /-- **Deep kernels kill the positive dual adjoint coefficients**: for a jet trivial to
   order `n`, all derivatives of the adjoint action up to order `n` vanish. -/
 lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {U : G} {n : ℕ}
-    (hU : U ∈ GaugeJetTruncation.truncationKer jets n) {x : Multiset (Fin 1 ⊕ Fin 3)}
+    (hU : U ∈ LocalGaugeDataTruncation.truncationKer jets n) {x : Multiset (Fin 1 ⊕ Fin 3)}
     (hx : x ≠ 0) (hxn : x.card ≤ n) : adjointDualCoeff jets U x = 0 := by
   refine LinearMap.ext fun φ => LinearMap.ext fun b => ?_
   simp only [LinearMap.zero_apply]
   show φ (jets.evalLie (jets.iteratedDeriv x
     (jets.adjoint U (jets.ofConstantLie b)))) = 0
-  rw [GaugeJetTruncation.evalLie_iteratedDeriv_adjoint_ofConstantLie_eq_zero hU hx hxn b,
+  rw [LocalGaugeDataTruncation.evalLie_iteratedDeriv_adjoint_ofConstantLie_eq_zero hU hx hxn b,
     map_zero]
 
 end Truncation
@@ -248,7 +248,7 @@ lemma repGauge_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
   rw [hanti] at h
   simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
     Multiset.sum_cons, Multiset.sum_singleton,
-    GaugeJet.iteratedDeriv_singleton] at h
+    LocalGaugeData.iteratedDeriv_singleton] at h
   refine h.trans ?_
   abel
 
@@ -491,13 +491,13 @@ lemma _root_.adjointDualCoeff_pair (U : G)
         jets.adjoint U (jets.ofConstantLie a)⁆
       + ⁅jets.mc U μ, ⁅jets.mc U ρ,
           jets.adjoint U (jets.ofConstantLie a)⁆⁆ := by
-    rw [GaugeJet.iteratedDeriv_cons, LinearMap.comp_apply,
-      GaugeJet.iteratedDeriv_singleton, hderiv μ, map_neg,
+    rw [LocalGaugeData.iteratedDeriv_cons, LinearMap.comp_apply,
+      LocalGaugeData.iteratedDeriv_singleton, hderiv μ, map_neg,
       jets.deriv_bracket, hderiv ρ, lie_neg]
     abel
   simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.sub_apply,
     LinearMap.neg_apply, LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap,
-    GaugeJet.iteratedDeriv_zero, GaugeJet.iteratedDeriv_singleton,
+    LocalGaugeData.iteratedDeriv_zero, LocalGaugeData.iteratedDeriv_singleton,
     LinearMap.id_coe, id_eq]
   rw [hkey, map_add, map_neg, LieHom.map_lie, LieHom.map_lie, LieHom.map_lie,
     hderiv ρ, map_neg, LieHom.map_lie]
@@ -532,8 +532,8 @@ lemma repGauge_deriv_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
   have h := hA.gauge_apply_deriv U (ρ ::ₘ {σ}) τ φ
   rw [hanti] at h
   simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
-    Multiset.sum_cons, Multiset.sum_singleton, GaugeJet.iteratedDeriv_cons,
-    LinearMap.comp_apply, GaugeJet.iteratedDeriv_singleton] at h
+    Multiset.sum_cons, Multiset.sum_singleton, LocalGaugeData.iteratedDeriv_cons,
+    LinearMap.comp_apply, LocalGaugeData.iteratedDeriv_singleton] at h
   refine h.trans ?_
   abel
 
@@ -845,7 +845,7 @@ lemma _root_.adjointTransport_bracket (U : G)
           jets.evalLie (jets.iteratedDeriv p.2
             (jets.adjoint U (jets.ofConstantLie b)))⁆).sum := by
   rw [jets.ofConstantLie_lie, jets.adjoint_lie,
-    GaugeJet.iteratedDeriv_bracket, map_multiset_sum, Multiset.map_map]
+    LocalGaugeData.iteratedDeriv_bracket, map_multiset_sum, Multiset.map_map]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
     rw [Function.comp_apply, LieHom.map_lie])
 
@@ -931,10 +931,10 @@ lemma _root_.adjointDualCoeff_cons (U : G)
             (jets.adjoint U (jets.ofConstantLie a))⁆).sum) := by
     rw [show (μ ::ₘ x : Multiset (Fin 1 ⊕ Fin 3)) = x + {μ} from by
         rw [add_comm, Multiset.singleton_add],
-      GaugeJet.iteratedDeriv_add, LinearMap.comp_apply,
-      GaugeJet.iteratedDeriv_singleton, jets.deriv_adjoint,
+      LocalGaugeData.iteratedDeriv_add, LinearMap.comp_apply,
+      LocalGaugeData.iteratedDeriv_singleton, jets.deriv_adjoint,
       jets.deriv_ofConstantLie, map_zero, zero_sub, map_neg,
-      GaugeJet.iteratedDeriv_bracket]
+      LocalGaugeData.iteratedDeriv_bracket]
   simp only [adjointDualCoeff, LinearMap.dualMap_apply, LinearMap.neg_apply,
     LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap]
   rw [hkey, map_neg, map_neg, map_multiset_sum, map_multiset_sum,
@@ -963,12 +963,12 @@ lemma _root_.eval_iteratedDeriv_maurerCartan_structure
     intro κ z
     rw [show (κ ::ₘ s : Multiset (Fin 1 ⊕ Fin 3)) = s + {κ} from by
         rw [add_comm, Multiset.singleton_add],
-      GaugeJet.iteratedDeriv_add, LinearMap.comp_apply,
-      GaugeJet.iteratedDeriv_singleton]
+      LocalGaugeData.iteratedDeriv_add, LinearMap.comp_apply,
+      LocalGaugeData.iteratedDeriv_singleton]
   have h0 := congrArg (fun z => jets.evalLie (jets.iteratedDeriv s z))
     (jets.mc_structure U μ ν)
   simp only [map_add, map_sub, map_zero] at h0
-  rw [hconv, hconv, GaugeJet.iteratedDeriv_bracket, map_multiset_sum,
+  rw [hconv, hconv, LocalGaugeData.iteratedDeriv_bracket, map_multiset_sum,
     Multiset.map_map] at h0
   rw [Multiset.map_congr rfl (fun p hp => by rw [Function.comp_apply, LieHom.map_lie])] at h0
   refine eq_sub_of_add_eq ?_

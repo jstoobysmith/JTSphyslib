@@ -5,28 +5,35 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
+public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
 /-!
 # The infinitesimal action underlying a matter representation
 
 ## i. Overview
 
 The covariant derivative `∇_ρ F = [∂_ρ F] + A_ρ · F` of a matter family is built from
-an action `act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V` of the gauge algebra on the value
-space. For the covariant derivative to transform covariantly, `act` must be the
-*infinitesimal action* underlying the representation `rep` of the jet gauge group in
-which the family transforms — the physicists' statement that the matrices `i dρ(T^a)`
-generate `ρ`. This file packages that compatibility as the structure
-`IsInfinitesimalActionOf`, and proves the theorem it exists for: the covariant
-derivative preserves the gauge tensors, `TransformsIn.covDerivAction`.
+an action `act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V` of the gauge algebra on the value space. For the
+covariant derivative to transform covariantly, `act` must be the *infinitesimal action*
+underlying the representation `rep` of the jet gauge group in which the family
+transforms — the physicists' statement that the matrices `i dρ(T^a)` generate `rep`.
+This file packages that compatibility as the structure `IsInfinitesimalActionOf`, and
+proves the theorem it exists for: the covariant derivative preserves the gauge tensors,
+`TransformsIn.covDerivAction`.
+
+Everything is stated over a supplied local-gauge-data package
+`jets : LocalGaugeData G 𝔤 G₀ 𝔤J`; nothing depends on the Standard Model choice of it.
 
 ## ii. Key results
 
-- `GaugeAlgebra.IsInfinitesimalActionOf` : `act` is the infinitesimal action underlying
+- `LocalGaugeData.IsInfinitesimalActionOf` : `act` is the infinitesimal action underlying
   `rep`.
-- `TransformsIn.covDerivAction` : the covariant derivative preserves `TransformsIn`.
+- `LocalGaugeData.TransformsIn.covDerivAction` : the covariant derivative preserves
+  `TransformsIn`.
+- `LocalGaugeData.TransformsIn.covDerivIter` : so does every iterated covariant
+  derivative.
+- `LocalGaugeData.IsInfinitesimalActionOf.conj` : the conjugate action underlies the
+  conjugate representation.
 
 ## iii. Table of contents
 
@@ -38,18 +45,23 @@ derivative preserves the gauge tensors, `TransformsIn.covDerivAction`.
 
 @[expose] public section
 
-namespace StandardModel
+set_option linter.unusedSectionVars false
+
 open Matrix MatrixGroups TensorProduct MvPowerSeries
+
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
-namespace GaugeAlgebra
+namespace LocalGaugeData
 
 open IsGaugeField
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ JetGaugeGroupI B}
-variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
+variable {repGauge : Representation ℂ G B}
+variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 
 /-!
 
@@ -73,32 +85,31 @@ variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual �
 
   These are exactly the identities consumed by the proof that the covariant
   derivative `covDerivAction` preserves `TransformsIn`. -/
-structure IsInfinitesimalActionOf (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V)
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)) : Prop where
-  repCoeff_cons : ∀ (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
-      (x : Multiset (Fin 1 ⊕ Fin 3)),
+structure IsInfinitesimalActionOf (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+    (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
+    (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) : Prop where
+  repCoeff_cons : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)),
     repCoeff rep U (μ ::ₘ x) =
       -((x.antidiagonal.map fun p =>
-        act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-          (maurerCartanForm U μ))) ∘ₗ repCoeff rep U p.2).sum)
-  repCoeff_act : ∀ (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3))
-      (c : GaugeAlgebra),
+        act (jets.evalLie (jets.iteratedDeriv p.1 (jets.mc U μ))) ∘ₗ
+          repCoeff rep U p.2).sum)
+  repCoeff_act : ∀ (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) (c : 𝔤),
     repCoeff rep U x ∘ₗ act c =
       ((x.antidiagonal.map fun p =>
-        act (adjointCoeff U p.1 c) ∘ₗ repCoeff rep U p.2).sum)
+        act (adjointCoeff jets U p.1 c) ∘ₗ repCoeff rep U p.2).sum)
 
 /-- The dual form of the Leibniz law: the once-more-derived dual coefficient is
   minus the antidiagonal convolution of dual coefficients against `act` of the
   derived Maurer–Cartan form — the analogue of `adjointDualCoeff_cons`. -/
 lemma IsInfinitesimalActionOf.repDualCoeff_cons
-    {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-    (h : IsInfinitesimalActionOf act rep) (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3)
+    {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
+    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+    (h : IsInfinitesimalActionOf jets act rep) (U : G) (μ : Fin 1 ⊕ Fin 3)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     repDualCoeff rep U (μ ::ₘ x) φ =
       -((x.antidiagonal.map fun p =>
-        repDualCoeff rep U p.2 (φ ∘ₗ act (JetGaugeAlgebra.eval
-          (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U μ))))).sum) := by
+        repDualCoeff rep U p.2 (φ ∘ₗ act (jets.evalLie
+          (jets.iteratedDeriv p.1 (jets.mc U μ))))).sum) := by
   refine LinearMap.ext fun v => ?_
   have h1 := LinearMap.congr_fun (h.repCoeff_cons U μ x) v
   simp only [LinearMap.neg_apply, Multiset.sum_linearMap_apply, Multiset.map_map,
@@ -117,8 +128,8 @@ lemma IsInfinitesimalActionOf.repDualCoeff_cons
 
 section MatterCovariance
 
-variable {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+variable {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 variable [FiniteDimensional ℂ V]
 
 /-- The action of families against the dual representation coefficients: the
@@ -127,16 +138,16 @@ variable [FiniteDimensional ℂ V]
   `IsInfinitesimalActionOf.repCoeff_act`, and the analogue of
   `bracketFam_adjointDualCoeff`. -/
 lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
-    (h : IsInfinitesimalActionOf act rep) (U : JetGaugeGroupI)
-    (x : Multiset (Fin 1 ⊕ Fin 3)) (f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
+    (h : IsInfinitesimalActionOf jets act rep) (U : G)
+    (x : Multiset (Fin 1 ⊕ Fin 3)) (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
     (g : Module.Dual ℂ V →ₗ[ℂ] B) (φ : Module.Dual ℂ V) :
     actionFam act f g (repDualCoeff rep U x φ) =
       (x.antidiagonal.map fun p =>
-        actionFam act (f ∘ₗ adjointDualCoeff U p.1)
+        actionFam act (f ∘ₗ adjointDualCoeff jets U p.1)
           (g ∘ₗ repDualCoeff rep U p.2) φ).sum := by
-  have hT : ∀ (c : GaugeAlgebra) (v : V), repCoeff rep U x (act c v) =
+  have hT : ∀ (c : 𝔤) (v : V), repCoeff rep U x (act c v) =
       (x.antidiagonal.map fun p =>
-        act (adjointCoeff U p.1 c) (repCoeff rep U p.2 v)).sum := by
+        act (adjointCoeff jets U p.1 c) (repCoeff rep U p.2 v)).sum := by
     intro c v
     have h1 := LinearMap.congr_fun (h.repCoeff_act U x c) v
     simpa [Multiset.sum_linearMap_apply, Multiset.map_map, LinearMap.coe_comp,
@@ -146,7 +157,7 @@ lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
       dualPairEquivC ((TensorProduct.map LinearMap.id (repCoeff rep U x))
         (tensorAction act (dualPairEquiv.symm f) (dualPairEquivC.symm g))) φ from
       (dualPairEquivC_map_right (repCoeff rep U x) _ φ).symm,
-    ← tensorAction_map_right_antidiagonal act (adjointCoeff U) (repCoeff rep U) x hT,
+    ← tensorAction_map_right_antidiagonal act (adjointCoeff jets U) (repCoeff rep U) x hT,
     map_multiset_sum, Multiset.map_map, Multiset.sum_linearMap_apply, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
   simp only [Function.comp_apply]
@@ -158,11 +169,11 @@ omit [FiniteDimensional ℂ V] in
   derivative traced through `IsInfinitesimalActionOf.repDualCoeff_cons`: the Leibniz
   splittings where `κ` stays a derivative, minus the convolution where `κ` hits the
   representation — `act` of the derived Maurer–Cartan form. -/
-lemma _root_.StandardModel.TransformsIn.repGauge_cons
+lemma TransformsIn.repGauge_cons
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
-    (hact : IsInfinitesimalActionOf act rep)
-    (U : JetGaugeGroupI) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (hact : IsInfinitesimalActionOf jets act rep)
+    (U : G) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ V) :
     repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
@@ -170,8 +181,8 @@ lemma _root_.StandardModel.TransformsIn.repGauge_cons
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
             F p.2 (repDualCoeff rep U⁻¹ q.2
-              (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-                (maurerCartanForm U⁻¹ κ)))))).sum).sum := by
+              (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv q.1
+                (jets.mc U⁻¹ κ)))))).sum).sum := by
   rw [hF U φ (κ ::ₘ s)]
   simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
     Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
@@ -180,8 +191,8 @@ lemma _root_.StandardModel.TransformsIn.repGauge_cons
       -(s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
             F p.2 (repDualCoeff rep U⁻¹ q.2
-              (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-                (maurerCartanForm U⁻¹ κ)))))).sum).sum := by
+              (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv q.1
+                (jets.mc U⁻¹ κ)))))).sum).sum := by
     rw [← Multiset.sum_map_neg'']
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [hact.repDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_multiset_sum, Multiset.map_map]
@@ -194,12 +205,12 @@ set_option maxHeartbeats 2000000 in
   convolution through `act` survives — the analogue of
   `TransformsInAdjoint.repGauge_bracketFamConv` with a matter field in the second
   slot. -/
-lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
-    (hA : IsGaugeField repLorentz repGauge A)
+lemma TransformsIn.repGauge_actionFamConv
+    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
-    (hact : IsInfinitesimalActionOf act rep)
-    (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
+    (hact : IsInfinitesimalActionOf jets act rep)
+    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ V) :
     repGauge U (actionFamConv A act ρ F s φ) =
       (s.antidiagonal.map fun p =>
@@ -207,13 +218,13 @@ lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
       + (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun r =>
             F r.2 (repDualCoeff rep U⁻¹ r.1
-              (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-                (maurerCartanForm U⁻¹ ρ)))))).sum).sum := by
-  have hAlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ GaugeAlgebra),
+              (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv p.1
+                (jets.mc U⁻¹ ρ)))))).sum).sum := by
+  have hAlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ 𝔤),
       repGauge U (A u ρ ψ) =
-        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1).sum) ψ
-        + algebraMap ℂ B (ψ (JetGaugeAlgebra.eval
-            (JetGaugeAlgebra.iteratedDeriv u (maurerCartanForm U⁻¹ ρ)))) := by
+        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum) ψ
+        + algebraMap ℂ B (ψ (jets.evalLie
+            (jets.iteratedDeriv u (jets.mc U⁻¹ ρ)))) := by
     intro u ψ
     rw [hA.gauge_apply_deriv U u ρ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
@@ -225,13 +236,13 @@ lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
     congr 1
   have hMa : (s.antidiagonal.map fun p =>
       actionFam act ((p.1.antidiagonal.map fun q =>
-          A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1).sum)
+          A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum)
         ((p.2.antidiagonal.map fun r =>
           F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum) φ).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act (A q.2 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1)
+            actionFam act (A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1)
               (F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [actionFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
@@ -247,7 +258,7 @@ lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act (A r.1 ρ ∘ₗ adjointDualCoeff U⁻¹ q.1)
+            actionFam act (A r.1 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1)
               (F r.2 ∘ₗ repDualCoeff rep U⁻¹ q.2) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map,
@@ -256,16 +267,16 @@ lemma _root_.StandardModel.TransformsIn.repGauge_actionFamConv
           hact.actionFam_repDualCoeff U⁻¹ p.1 (A r.1 ρ) (F r.2) φ]),
       Multiset.sum_map_sum_map]
   have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
-      actionFam act (A b ρ ∘ₗ adjointDualCoeff U⁻¹ a)
+      actionFam act (A b ρ ∘ₗ adjointDualCoeff jets U⁻¹ a)
         (F d ∘ₗ repDualCoeff rep U⁻¹ c) φ).trans hMc.symm)
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
       ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum)
-        (φ ∘ₗ act (JetGaugeAlgebra.eval
-          (JetGaugeAlgebra.iteratedDeriv p.1 (maurerCartanForm U⁻¹ ρ)))) =
+        (φ ∘ₗ act (jets.evalLie
+          (jets.iteratedDeriv p.1 (jets.mc U⁻¹ ρ)))) =
       (p.2.antidiagonal.map fun r =>
         F r.2 (repDualCoeff rep U⁻¹ r.1
-          (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-            (maurerCartanForm U⁻¹ ρ)))))).sum := by
+          (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv p.1
+            (jets.mc U⁻¹ ρ)))))).sum := by
     intro p
     rw [Multiset.sum_linearMap_apply, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
@@ -284,16 +295,16 @@ set_option maxHeartbeats 2000000 in
   convolution of `[∂_{ρ ::ₘ s} F]` cancels the single `act` cross-term convolution of
   `A_ρ · F` through the coassociativity of the antidiagonal — the matter-field
   analogue of `TransformsInAdjoint.covDerivAdjoint`. -/
-theorem _root_.StandardModel.TransformsIn.covDerivAction
-    (hA : IsGaugeField repLorentz repGauge A)
+theorem TransformsIn.covDerivAction
+    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
-    (hact : IsInfinitesimalActionOf act rep) (ρ : Fin 1 ⊕ Fin 3) :
+    (hact : IsInfinitesimalActionOf jets act rep) (ρ : Fin 1 ⊕ Fin 3) :
     TransformsIn repGauge rep (IsGaugeField.covDerivAction A act F ρ) := by
   intro U φ s
   have hL : repGauge U (IsGaugeField.covDerivAction A act F ρ s φ) =
       repGauge U (F (ρ ::ₘ s) φ) + repGauge U (actionFamConv A act ρ F s φ) := by
-    rw [covDerivAction_apply, map_add]
+    rw [IsGaugeField.covDerivAction_apply, map_add]
   have hR : (s.antidiagonal.map fun p =>
       IsGaugeField.covDerivAction A act F ρ p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
@@ -302,21 +313,21 @@ theorem _root_.StandardModel.TransformsIn.covDerivAction
         actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [covDerivAction_apply]
+    rw [IsGaugeField.covDerivAction_apply]
   have hcancel : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
         F p.2 (repDualCoeff rep U⁻¹ q.2
-          (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv q.1
-            (maurerCartanForm U⁻¹ ρ)))))).sum).sum =
+          (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv q.1
+            (jets.mc U⁻¹ ρ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
         F r.2 (repDualCoeff rep U⁻¹ r.1
-          (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
-            (maurerCartanForm U⁻¹ ρ)))))).sum).sum :=
+          (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv p.1
+            (jets.mc U⁻¹ ρ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
       F c (repDualCoeff rep U⁻¹ b
-        (φ ∘ₗ act (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv a
-          (maurerCartanForm U⁻¹ ρ))))))
+        (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv a
+          (jets.mc U⁻¹ ρ))))))
   rw [hL, hF.repGauge_cons hact U ρ s φ, hF.repGauge_actionFamConv hA hact U s ρ φ,
     hR, hcancel]
   abel
@@ -325,37 +336,17 @@ theorem _root_.StandardModel.TransformsIn.covDerivAction
   in `rep` and `act` is the infinitesimal action underlying `rep`, then
   `∇_{l 0} ⋯ ∇_{l (n-1)} F` transforms in `rep` — the recursion of
   `TransformsIn.covDerivAction` over the tuple of directions. -/
-theorem _root_.StandardModel.TransformsIn.covDerivIter
-    (hA : IsGaugeField repLorentz repGauge A)
+theorem TransformsIn.covDerivIter
+    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
-    (hact : IsInfinitesimalActionOf act rep)
+    (hact : IsInfinitesimalActionOf jets act rep)
     (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
     TransformsIn repGauge rep (IsGaugeField.covDerivIter A act F n l) := by
   induction n with
   | zero => exact hF
   | succ n ih =>
       exact TransformsIn.covDerivAction hA (ih fun i => l i.succ) hact (l 0)
-
-omit [FiniteDimensional ℂ V] in
-/-- **Matter gauge tensors whose zeroth representation coefficient is trivial on pure
-  jets are fixed by pure jets**: for a family transforming in `rep`, a gauge jet with
-  trivial base-point value acts trivially on the underived symbol, provided the
-  representation's zeroth Taylor coefficient is the identity on such jets. -/
-lemma _root_.StandardModel.TransformsIn.repGauge_eq_of_mem_truncationKer_zero
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
-    (hF : TransformsIn repGauge rep F)
-    (hrep : ∀ {W : JetGaugeGroupI}, W.eval = 1 → repCoeff rep W 0 = LinearMap.id)
-    (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℂ V) :
-    repGauge U.1 (F 0 φ) = F 0 φ := by
-  have hinv : ((U.1)⁻¹).eval = 1 := by
-    rw [map_inv, JetGaugeGroupI.mem_truncationKer_zero_iff.mp U.2, inv_one]
-  have h1 := hF U.1 φ 0
-  simp only [Multiset.antidiagonal_zero, Multiset.map_singleton,
-    Multiset.sum_singleton] at h1
-  rw [h1, show repDualCoeff rep (U.1)⁻¹ 0 = (repCoeff rep (U.1)⁻¹ 0).dualMap from rfl,
-    hrep hinv]
-  rfl
 
 end MatterCovariance
 
@@ -369,20 +360,20 @@ section ConjugateAction
 
 /-- **The conjugate of an infinitesimal action**: the same maps, read on the conjugate
   module — the generators of the conjugate representation. -/
-noncomputable def actionConj (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) :
-    GaugeAlgebra →ₗ[ℝ] ConjModule V →ₗ[ℂ] ConjModule V where
+noncomputable def actionConj (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V) :
+    𝔤 →ₗ[ℝ] ConjModule V →ₗ[ℂ] ConjModule V where
   toFun c := ConjModule.endConj (act c)
   map_add' c₁ c₂ := by rw [map_add, ConjModule.endConj_add]
   map_smul' r c := by rw [map_smul, ConjModule.endConj_real_smul, RingHom.id_apply]
 
 @[simp]
-lemma actionConj_apply (act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V) (c : GaugeAlgebra) :
+lemma actionConj_apply (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V) (c : 𝔤) :
     actionConj act c = ConjModule.endConj (act c) := rfl
 
 /-- The identification of the jets of a conjugate field with the conjugates of the
   jets: conjugation is monoidal, and the star of the jet-ring factor absorbs the
   twist — `conj (g ⊗ u) ↦ star g ⊗ conj u`. This is the equivalence along which
-  `repConj` carries the conjugated representation. -/
+  `JetComponentSpace.repConj` carries the conjugated representation. -/
 noncomputable def conjJetEquiv :
     ConjModule (JetRing ⊗[ℂ] V) ≃ₗ[ℂ] JetRing ⊗[ℂ] ConjModule V :=
   (ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
@@ -397,13 +388,14 @@ lemma conjJetEquiv_conjEquiv_tmul (g : JetRing) (u : V) :
 
 section ConjRep
 
-variable {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+variable {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 
 /-- The conjugate representation acts through `conjJetEquiv` by the original maps. -/
-lemma repConj_conjJetEquiv (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (U : JetGaugeGroupI) (w : JetRing ⊗[ℂ] V) :
-    repConj rep U (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+lemma repConj_conjJetEquiv (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
+    (U : G) (w : JetRing ⊗[ℂ] V) :
+    JetComponentSpace.repConj rep U
+        (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
       = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U w)) := by
   show conjJetEquiv ((rep.conj U) (conjJetEquiv.symm
       (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w)))) = _
@@ -413,9 +405,10 @@ lemma repConj_conjJetEquiv (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗
 /-- **The base-point Taylor coefficients of the conjugate representation are the
   conjugated coefficients**: the derivative directions are real, so conjugation passes
   through `∂_x` and the base-point evaluation untouched. -/
-lemma repCoeff_repConj (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    repCoeff (repConj rep) U x = ConjModule.endConj (repCoeff rep U x) := by
+lemma repCoeff_repConj (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
+    (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+    repCoeff (JetComponentSpace.repConj rep) U x
+      = ConjModule.endConj (repCoeff rep U x) := by
   have hE_tmul := conjJetEquiv_conjEquiv_tmul (V := V)
   -- conjugation intertwines the formal derivative
   have hderiv1 : ∀ (μ : Fin 1 ⊕ Fin 3) (w : JetRing ⊗[ℂ] V),
@@ -455,23 +448,24 @@ lemma repCoeff_repConj (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ
       (jetOfConstant ((conjEquiv (k := ℂ) (M := V)).symm v))) := by
     rw [jetOfConstant_apply, jetOfConstant_apply, hE_tmul, star_one,
       LinearEquiv.apply_symm_apply]
-  show jetEval (jetIteratedDeriv x (repConj rep U (jetOfConstant v))) = _
+  show jetEval (jetIteratedDeriv x
+    (JetComponentSpace.repConj rep U (jetOfConstant v))) = _
   rw [hv, repConj_conjJetEquiv, hderiv, heval]
   rfl
 
 /-- The base-point triviality of the zeroth Taylor coefficient passes to the
   conjugate representation. -/
-lemma repCoeff_repConj_zero_eq_id {W : JetGaugeGroupI}
+lemma repCoeff_repConj_zero_eq_id {W : G}
     (hrep : repCoeff rep W 0 = LinearMap.id) :
-    repCoeff (repConj rep) W 0 = LinearMap.id := by
+    repCoeff (JetComponentSpace.repConj rep) W 0 = LinearMap.id := by
   rw [repCoeff_repConj, hrep, ConjModule.endConj_id]
 
 /-- **The conjugate of an infinitesimal action underlies the conjugate
   representation**: conjugating the Taylor coefficients preserves both the
   Maurer–Cartan Leibniz law and the adjoint intertwining, since the gauge-algebra
   inputs are real. -/
-theorem IsInfinitesimalActionOf.conj (h : IsInfinitesimalActionOf act rep) :
-    IsInfinitesimalActionOf (actionConj act) (repConj rep) := by
+theorem IsInfinitesimalActionOf.conj (h : IsInfinitesimalActionOf jets act rep) :
+    IsInfinitesimalActionOf jets (actionConj act) (JetComponentSpace.repConj rep) := by
   constructor
   · intro U μ x
     rw [repCoeff_repConj, h.repCoeff_cons U μ x, ConjModule.endConj_neg,
@@ -492,6 +486,4 @@ end ConjRep
 
 end ConjugateAction
 
-end GaugeAlgebra
-
-end StandardModel
+end LocalGaugeData

@@ -9,7 +9,9 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.MassDim
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeJet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
@@ -311,7 +313,6 @@ public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAct
 public import Physlib.Particles.StandardModel.FieldData
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
-public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
 public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
@@ -324,7 +325,6 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invari
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint
@@ -339,6 +339,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAnti
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Truncation
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition

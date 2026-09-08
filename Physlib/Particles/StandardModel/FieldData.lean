@@ -7,7 +7,7 @@ module
 
 public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
 public import Physlib.Particles.StandardModel.Fermions.MatterField
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeJet
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 /-!
 # The field data of the Standard Model
@@ -16,7 +16,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 
 `GaugeFieldData jets` is the matter content of a gauge theory over a gauge context: a
 family of fermionic species and a family of bosonic species, each given by a
-`MatterField`. The Standard Model has all the pieces — `StandardModel.gaugeJet` with its
+`MatterField`. The Standard Model has all the pieces — `StandardModel.localGaugeData` with its
 Taylor–Leibniz law, and the five fermion types and the Higgs already packaged as matter
 fields — and this file assembles them into `StandardModel.fieldData`.
 
@@ -85,7 +85,7 @@ namespace FermionType
 
 /-- The matter field of a fermion species, one of the five existing adapters. It is the
   same in every generation. -/
-noncomputable def matterField : FermionType → MatterField gaugeJet
+noncomputable def matterField : FermionType → MatterField localGaugeData
   | .leptonDoublet _ => LeptonDoublet.matterField
   | .leptonSinglet _ => LeptonSinglet.matterField
   | .quarkDoublet _ => QuarkDoublet.matterField
@@ -126,8 +126,8 @@ end FermionType
 -/
 
 /-- The field data of the Standard Model: three generations of each of the five fermion
-  types and one Higgs multiplet, over the gauge context `StandardModel.gaugeJet`. -/
-noncomputable def fieldData : GaugeFieldData gaugeJet where
+  types and one Higgs multiplet, over the gauge context `StandardModel.localGaugeData`. -/
+noncomputable def fieldData : GaugeFieldData localGaugeData where
   FermionSpecies := FermionType
   fermion := FermionType.matterField
   BosonSpecies := Unit

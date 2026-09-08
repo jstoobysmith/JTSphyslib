@@ -63,8 +63,8 @@ set_option linter.unusedSectionVars false
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
-variable [GaugeJetLeibniz jets]
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable [LocalGaugeDataLeibniz jets]
 
 set_option maxHeartbeats 1000000
 
@@ -345,7 +345,7 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
       map_add, map_add,
       show jets.adjoint U (jets.mc V μ)
         = jets.adjoint U (jets.mc V μ) from rfl,
-      GaugeJetLeibniz.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
+      LocalGaugeDataLeibniz.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
       Multiset.tmul_sum, Multiset.map_map]
     exact congrArg (fun z => _ + z)
       (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => rfl))

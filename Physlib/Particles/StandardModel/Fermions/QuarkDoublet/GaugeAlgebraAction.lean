@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
-public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.LinearAlgebra.Matrix.Kronecker
@@ -23,7 +24,7 @@ parts of the algebra element act on the combined colour–weak index through the
 sum, and the hypercharge part scales, all through the physicists' factor of `i`, matching
 the group action `u • (U₃ ⊗ₖ U₂)` infinitesimally. The main theorem shows this is the
 infinitesimal action underlying the jet gauge action `QuarkDoublet.repJetGaugeGroupI`,
-in the sense of `GaugeAlgebra.IsInfinitesimalActionOf`.
+in the sense of `LocalGaugeData.IsInfinitesimalActionOf`.
 
 ## ii. Key results
 
@@ -133,7 +134,7 @@ noncomputable def actionMatrix (c : GaugeAlgebra) :
   derivative of the `(3, 2)_{1}` action of the gauge group, real-linear in the
   algebra slot and complex-linear in the value slot — the form consumed by the
   covariant derivative `IsGaugeField.covDerivIter` and by
-  `GaugeAlgebra.IsInfinitesimalActionOf`. -/
+  `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] QuarkDoublet →ₗ[ℂ] QuarkDoublet where
   toFun c := colourWeakEnd (actionMatrix c)
@@ -172,7 +173,7 @@ noncomputable def gaugeAlgebraAction :
 ## C. The infinitesimal action underlies the jet gauge action
 
 The `(3, 2)_{1}` action of the gauge algebra is the infinitesimal action underlying the
-jet gauge action, in the sense of `GaugeAlgebra.IsInfinitesimalActionOf`: the base-point
+jet gauge action, in the sense of `LocalGaugeData.IsInfinitesimalActionOf`: the base-point
 Taylor coefficients of the jet action satisfy the Maurer–Cartan Leibniz law and
 intertwine the action with the adjoint transports. The proofs work through the
 colour–weak matrix `jetGaugeMatrix` of the jet action and the all-orders matrix Leibniz
@@ -652,9 +653,11 @@ set_option maxHeartbeats 1000000 in
   coefficients obey the Maurer–Cartan Leibniz law and intertwine the action with the
   adjoint transports. -/
 theorem isInfinitesimalActionOf :
-    GaugeAlgebra.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
+    localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
+    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+      localGaugeData_iteratedDeriv, localGaugeData_mc]
     have hMcons : ((jetGaugeMatrix U).map fun f =>
         constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
         = -((x.antidiagonal.map fun p =>
@@ -687,6 +690,7 @@ theorem isInfinitesimalActionOf :
     rw [Function.comp_apply, colourWeakEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
+    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]

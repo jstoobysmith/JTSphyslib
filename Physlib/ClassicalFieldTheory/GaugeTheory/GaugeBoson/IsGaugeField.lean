@@ -14,7 +14,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 The symbols `∂_s A_μ^φ` of the algebra of gauge-boson jets, complexified, satisfy the
 transformation laws `IsGaugeField` of a gauge field: the Lorentz law from `IsLorentzDeriv`, and
 the gauge law from the action of the jet gauge group constructed in `GaugeAction`. This holds
-for any gauge-jet package `jets` with the Taylor–Leibniz rule `GaugeJetLeibniz jets`.
+for any local-gauge-data package `jets` with the Taylor–Leibniz rule `LocalGaugeDataLeibniz jets`.
 -/
 
 @[expose] public section
@@ -23,8 +23,8 @@ set_option linter.unusedSectionVars false
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : GaugeJet G 𝔤 G₀ 𝔤J}
-variable [GaugeJetLeibniz jets]
+variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable [LocalGaugeDataLeibniz jets]
 
 set_option maxHeartbeats 1000000
 

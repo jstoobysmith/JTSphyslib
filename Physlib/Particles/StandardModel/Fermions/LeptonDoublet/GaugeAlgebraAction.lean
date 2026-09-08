@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
-public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
@@ -21,7 +22,7 @@ The infinitesimal `(1, 2)_{-3}` action of the gauge algebra on the lepton double
 weak part of the algebra element acts on the weak index and the hypercharge part scales,
 both through the physicists' factor of `i`, matching the group action
 `(star u) ^ 3 • U₂` infinitesimally. The compatibility with the jet gauge action —
-`GaugeAlgebra.IsInfinitesimalActionOf` — is proved at the end of this file: the
+`LocalGaugeData.IsInfinitesimalActionOf` — is proved at the end of this file: the
 base-point Taylor coefficients of the jet action satisfy the Maurer–Cartan Leibniz law
 and intertwine the action with the adjoint transports. The proofs work through the weak
 matrix of the jet action and the all-orders matrix Leibniz rule at the base point.
@@ -113,7 +114,7 @@ noncomputable def actionMatrix (c : GaugeAlgebra) : Matrix (Fin 2) (Fin 2) ℂ :
   derivative of the `(1, 2)_{-3}` action of the gauge group, real-linear in the
   algebra slot and complex-linear in the value slot — the form consumed by the
   covariant derivative `IsGaugeField.covDerivIter` and by
-  `GaugeAlgebra.IsInfinitesimalActionOf`. -/
+  `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] LeptonDoublet →ₗ[ℂ] LeptonDoublet where
   toFun c := weakEnd (actionMatrix c)
@@ -144,7 +145,7 @@ noncomputable def gaugeAlgebraAction :
 ## B. The infinitesimal action underlies the jet gauge action
 
 The `(1, 2)_{-3}` action of the gauge algebra is the infinitesimal action underlying the
-jet gauge action, in the sense of `GaugeAlgebra.IsInfinitesimalActionOf`: the base-point
+jet gauge action, in the sense of `LocalGaugeData.IsInfinitesimalActionOf`: the base-point
 Taylor coefficients of the jet action satisfy the Maurer–Cartan Leibniz law and
 intertwine the action with the adjoint transports. The proofs work through the weak
 matrix of the jet action and the all-orders matrix Leibniz rule at the base point.
@@ -543,9 +544,11 @@ set_option maxHeartbeats 1000000 in
   coefficients obey the Maurer–Cartan Leibniz law and intertwine the action with the
   adjoint transports. -/
 theorem isInfinitesimalActionOf :
-    GaugeAlgebra.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
+    localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
+    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+      localGaugeData_iteratedDeriv, localGaugeData_mc]
     have hMcons : ((doubletMatrix U).map fun f =>
         constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
         = -((x.antidiagonal.map fun p =>
@@ -577,6 +580,7 @@ theorem isInfinitesimalActionOf :
     rw [Function.comp_apply, weakEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
+    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]

@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Particles.StandardModel.GaugeAlgebra.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
 /-!
 # The gauge-algebra action on the charged-lepton singlet
@@ -17,7 +18,7 @@ The charged-lepton singlet carries the `(1, 1)_{-6}` representation of the gauge
 so the infinitesimal action of the gauge algebra is scalar: multiplication by
 `i` times `-6` times the `u(1)` value of the algebra element. This file defines that
 action and proves it is the infinitesimal action underlying the jet gauge action, in
-the sense of `GaugeAlgebra.IsInfinitesimalActionOf`.
+the sense of `LocalGaugeData.IsInfinitesimalActionOf`.
 
 Because the singlet has no colour or weak index, the jet gauge action is multiplication
 of the jet-ring factor by the hypercharge phase `(star u) ^ 6`, and both laws of
@@ -67,7 +68,7 @@ derivative is scalar multiplication by `i (-6)` times the `u(1)` value.
   the derivative of the `(1, 1)_{-6}` action of the gauge group — scalar
   multiplication by `i` times `-6` times the `u(1)` value, real-linear in the algebra
   slot and complex-linear in the value slot — the form consumed by
-  `GaugeAlgebra.IsInfinitesimalActionOf`. -/
+  `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] LeptonSinglet →ₗ[ℂ] LeptonSinglet where
   toFun c := (Complex.I * (-(6 : ℂ) * c.toU1Value))
@@ -247,7 +248,7 @@ lemma jetPhase_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
 
 ## E. The infinitesimal action underlies the jet gauge action
 
-Both laws of `GaugeAlgebra.IsInfinitesimalActionOf` reduce through `repCoeff_eq` to
+Both laws of `LocalGaugeData.IsInfinitesimalActionOf` reduce through `repCoeff_eq` to
 scalar identities: the Maurer–Cartan Leibniz law is the all-orders product rule at the
 base point applied to the derivative identity, and the adjoint intertwining collapses
 because the adjoint action on the `u(1)` component is trivial.
@@ -260,9 +261,11 @@ set_option maxHeartbeats 1000000 in
   Taylor coefficients obey the Maurer–Cartan Leibniz law and intertwine the action
   with the adjoint transports. -/
 theorem isInfinitesimalActionOf :
-    GaugeAlgebra.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
+    localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
+    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+      localGaugeData_iteratedDeriv, localGaugeData_mc]
     have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
         = -((x.antidiagonal.map fun p =>
             Complex.I * (-(6 : ℂ) * (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv
@@ -279,6 +282,7 @@ theorem isInfinitesimalActionOf :
     exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
       fun p hp => by rw [gaugeAlgebraAction_apply, repCoeff_eq, smul_id_comp]))
   · intro U x c
+    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
     have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
         gaugeAlgebraAction (IsGaugeField.adjointCoeff U p.1 c)
             ∘ₗ IsGaugeField.repCoeff repJetGaugeGroupI U p.2
