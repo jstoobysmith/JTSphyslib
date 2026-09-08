@@ -21,39 +21,29 @@ against lower component functions, and the constant part is the Taylor coefficie
 Maurer–Cartan form of `U⁻¹`. The action extends to the whole jet algebra as the
 substitution homomorphism determined by this affine action on the generators.
 
-The heart of the file is the *Taylor–Leibniz theorem* for the adjoint action
-(`JetGaugeAlgebra.eval_iteratedDeriv_adjointMap`): the base-point Taylor coefficients of
-`Ad_U Y` are the convolution of the coefficients of `Ad_U` — the `adjointCoeff` of the
-covariance machinery — with those of `Y`. Multiplicativity of the transport and the
-cocycle identity for the Maurer–Cartan shift are both corollaries.
+The linear part is built from the adjoint Taylor coefficients `LocalGaugeData.adjointCoeff` of
+the package, whose multiplicativity up to convolution is the Taylor–Leibniz theorem
+`LocalGaugeData.evalLie_iteratedDeriv_adjoint`; it makes the transport multiplicative and
+gives the cocycle identity for the Maurer–Cartan shift.
 
 ## ii. Key results
 
-- `JetGaugeAlgebra.eval_iteratedDeriv_adjointMap` : the Taylor–Leibniz theorem for the
-  adjoint action on jets.
-- `IsGaugeField.adjointCoeff_mul` : the Taylor coefficients of `Ad` are multiplicative up
-  to convolution.
+- `GaugeBoson.adjointTransport` : the adjoint Taylor coefficients on the target space.
 - `GaugeJetAlgebra.transport` : the linear part of the gauge action on the component
   space.
 - `GaugeJetAlgebra.mcShift` : the Maurer–Cartan shift.
-- `GaugeJetAlgebra.repJetGaugeGroupI` : the action of the jet gauge group on the jet
-  algebra.
-- `GaugeJetAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofA` : the transformation law of
-  the derivative generators, in the form used by `IsGaugeField`.
+- `GaugeJetAlgebra.repJet` : the action of the jet gauge group on the jet algebra.
+- `GaugeJetAlgebra.repJet_iteratedJetDeriv_ofA` : the transformation law of the derivative
+  generators, in the form used by `IsGaugeField`.
+- `GaugeJetAlgebra.complexRepJet` : the action on the complexified jet algebra.
 
 ## iii. Table of contents
 
-- A. Taylor–Leibniz for jets
-  - A.1. The scalar Leibniz rule for iterated derivatives
-  - A.2. The matrix Leibniz rule at the base point
-- B. The Taylor–Leibniz theorem for the adjoint action
-  - B.1. Collapsing convolutions against constants
-  - B.2. The theorem
-  - B.3. Multiplicativity of the adjoint Taylor coefficients
-- C. The transport on the component space
-- D. The Maurer–Cartan shift
-- E. The action of the jet gauge group
-  - E.1. The transformation law of the generators
+- A. The transport on the component space
+- B. The Maurer–Cartan shift
+- C. The action of the jet gauge group
+  - C.1. The transformation law of the generators
+  - C.2. The complexified action
 
 -/
 
@@ -64,7 +54,6 @@ set_option linter.unusedSectionVars false
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
-variable [LocalGaugeDataLeibniz jets]
 
 set_option maxHeartbeats 1000000
 
@@ -73,7 +62,7 @@ open TensorProduct MvPowerSeries
 
 /-!
 
-## C. The transport on the component space
+## A. The transport on the component space
 
 -/
 
@@ -85,17 +74,17 @@ variable (jets) in
 noncomputable def adjointTransport (U : G) (p : Multiset (Fin 1 ⊕ Fin 3)) :
     (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤) :=
   (valLinEquiv 𝔤).symm.toLinearMap ∘ₗ
-    TensorProduct.map LinearMap.id (IsGaugeField.adjointCoeff jets U p) ∘ₗ
+    TensorProduct.map LinearMap.id (jets.adjointCoeff U p) ∘ₗ
     (valLinEquiv 𝔤).toLinearMap
 
 lemma adjointTransport_mk_tmul (U : G) (p : Multiset (Fin 1 ⊕ Fin 3))
     (v : Lorentz.CoVector) (a : 𝔤) :
-    adjointTransport jets U p ⟨v ⊗ₜ[ℝ] a⟩ = ⟨v ⊗ₜ[ℝ] IsGaugeField.adjointCoeff jets U p a⟩ := rfl
+    adjointTransport jets U p ⟨v ⊗ₜ[ℝ] a⟩ = ⟨v ⊗ₜ[ℝ] jets.adjointCoeff U p a⟩ := rfl
 
 /-- The adjoint transport at the identity: only the base point survives. -/
 lemma adjointTransport_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
     adjointTransport jets 1 p = if p = 0 then LinearMap.id else 0 := by
-  rw [adjointTransport, IsGaugeField.adjointCoeff_one]
+  rw [adjointTransport, jets.adjointCoeff_one]
   rcases eq_or_ne p 0 with rfl | hp
   · rw [if_pos rfl, if_pos rfl, TensorProduct.map_id]
     refine LinearMap.ext fun v => ?_
@@ -126,9 +115,9 @@ lemma adjointTransport_mul (U V : G) (p : Multiset (Fin 1 ⊕ Fin 3)) :
   | tmul x a =>
     apply (valLinEquiv 𝔤).injective
     rw [adjointTransport_mk_tmul, map_multiset_sum, Multiset.map_map, valLinEquiv_apply,
-      show ((⟨x ⊗ₜ[ℝ] IsGaugeField.adjointCoeff jets (U * V) p a⟩ : (GaugeBoson 𝔤))).val
-        = x ⊗ₜ[ℝ] IsGaugeField.adjointCoeff jets (U * V) p a from rfl,
-      IsGaugeField.adjointCoeff_mul, Multiset.sum_linearMap_apply, Multiset.map_map,
+      show ((⟨x ⊗ₜ[ℝ] jets.adjointCoeff (U * V) p a⟩ : (GaugeBoson 𝔤))).val
+        = x ⊗ₜ[ℝ] jets.adjointCoeff (U * V) p a from rfl,
+      jets.adjointCoeff_mul, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.tmul_sum, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply, LinearMap.comp_apply, adjointTransport_mk_tmul,
@@ -146,7 +135,7 @@ lemma dualMap_adjointTransport_componentDual (U : G)
     (p : Multiset (Fin 1 ⊕ Fin 3)) (ω : Module.Dual ℝ Lorentz.CoVector)
     (φ : Module.Dual ℝ 𝔤) :
     (adjointTransport jets U p).dualMap ((componentDual 𝔤) ω φ)
-      = (componentDual 𝔤) ω (φ ∘ₗ IsGaugeField.adjointCoeff jets U p) := by
+      = (componentDual 𝔤) ω (φ ∘ₗ jets.adjointCoeff U p) := by
   refine LinearMap.ext fun v => ?_
   obtain ⟨m⟩ := v
   induction m using TensorProduct.induction_on with
@@ -175,7 +164,7 @@ noncomputable def transportFun (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
       ((GaugeBoson.adjointTransport jets U p.1).dualMap)).sum
 
 variable (jets) in
-/-- **The linear part of the gauge action on the jet component space**: on a component
+/-- The linear part of the gauge action on the jet component space: on a component
   function `∂_s A^ψ` it is the all-orders Leibniz convolution of the Taylor coefficients
   of the adjoint action of `U` against the lower component functions. -/
 noncomputable def transport (U : G) :
@@ -223,14 +212,14 @@ lemma transport_one : transport jets (1 : G) = LinearMap.id := by
       (fun p => DerivAlgebraReal.basisMultiset p.2 ⊗ₜ[ℝ]
         ((if p.1 = 0 then LinearMap.id else 0) :
           (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤)).dualMap ψ)
-      (fun p hp => by
+      (fun p _ hp => by
         rw [if_neg hp, show ((0 : (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤))).dualMap ψ = 0 from
             LinearMap.ext fun v => by simp, TensorProduct.tmul_zero]),
     if_pos rfl, LinearMap.id_apply,
     show (LinearMap.id : (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤)).dualMap ψ = ψ from
       LinearMap.ext fun v => rfl]
 
-/-- **The transport is an anti-homomorphism**: the transport of a product is the reverse
+/-- The transport is an anti-homomorphism: the transport of a product is the reverse
   composite. Composed with the inverse, it becomes the linear part of the gauge
   representation. -/
 lemma transport_mul (U V : G) :
@@ -277,7 +266,7 @@ end GaugeJetAlgebra
 
 /-!
 
-## D. The Maurer–Cartan shift
+## B. The Maurer–Cartan shift
 
 -/
 
@@ -317,12 +306,12 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
   have hB : ∀ p q : Multiset (Fin 1 ⊕ Fin 3),
       (GaugeBoson.valLinEquiv 𝔤) (GaugeBoson.adjointTransport jets U p (mcBosonCoeff jets V q))
         = ∑ μ, Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
-            IsGaugeField.adjointCoeff jets U p (jets.evalLie
+            jets.adjointCoeff U p (jets.evalLie
               (jets.iteratedDeriv q (jets.maurerCartan V μ))) := by
     intro p q
     rw [show (GaugeBoson.valLinEquiv 𝔤) (GaugeBoson.adjointTransport jets U p
       (mcBosonCoeff jets V q))
-        = TensorProduct.map LinearMap.id (IsGaugeField.adjointCoeff jets U p)
+        = TensorProduct.map LinearMap.id (jets.adjointCoeff U p)
             ((GaugeBoson.valLinEquiv 𝔤) (mcBosonCoeff jets V q)) from by
         rw [GaugeBoson.adjointTransport]
         simp only [LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
@@ -335,7 +324,7 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
           jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ))
         + (s.antidiagonal.map fun p =>
             Lorentz.CoVector.basis μ ⊗ₜ[ℝ]
-              IsGaugeField.adjointCoeff jets U p.1 (jets.evalLie
+              jets.adjointCoeff U p.1 (jets.evalLie
                 (jets.iteratedDeriv p.2 (jets.maurerCartan V μ)))).sum) := by
     rw [hE]
     refine Finset.sum_congr rfl fun μ _ => ?_
@@ -345,7 +334,7 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
       map_add, map_add,
       show jets.adjoint U (jets.maurerCartan V μ)
         = jets.adjoint U (jets.maurerCartan V μ) from rfl,
-      LocalGaugeDataLeibniz.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
+      jets.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
       Multiset.tmul_sum, Multiset.map_map]
     exact congrArg (fun z => _ + z)
       (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => rfl))
@@ -354,7 +343,7 @@ lemma mcBosonCoeff_mul (U V : G) (s : Multiset (Fin 1 ⊕ Fin 3)) :
   congr 1
 
 variable (jets) in
-/-- **The Maurer–Cartan shift**: the linear functional on the component space pairing a
+/-- The Maurer–Cartan shift: the linear functional on the component space pairing a
   component `∂_s A^ψ` with the Taylor coefficient of the Maurer–Cartan form of `U`. It is
   the constant part of the affine gauge action. -/
 noncomputable def mcShift (U : G) : (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] ℝ :=
@@ -373,7 +362,7 @@ lemma mcShift_one : mcShift jets (1 : G) = 0 := by
   refine GaugeBoson.JetComponentSpace.ext_of_basis fun s ψ => ?_
   rw [mcShift_basis_tmul, mcBosonCoeff_one, map_zero, LinearMap.zero_apply]
 
-/-- **The cocycle identity for the Maurer–Cartan shift.** -/
+/-- The cocycle identity for the Maurer–Cartan shift. -/
 lemma mcShift_mul (U V : G) :
     mcShift jets (U * V) = mcShift jets V ∘ₗ transport jets U + mcShift jets U := by
   refine GaugeBoson.JetComponentSpace.ext_of_basis fun s ψ => ?_
@@ -389,7 +378,7 @@ lemma mcShift_mul (U V : G) :
 
 /-!
 
-## E. The action of the jet gauge group
+## C. The action of the jet gauge group
 
 -/
 
@@ -407,7 +396,7 @@ lemma gaugeGen_apply (U : G) (x : (GaugeBoson.JetComponentSpace 𝔤)) :
       + algebraMap ℝ (GaugeJetAlgebra 𝔤) (mcShift jets U⁻¹ x) := rfl
 
 variable (jets) in
-/-- **The action of the jet gauge group on the gauge-boson jet algebra**: the substitution
+/-- The action of the jet gauge group on the gauge-boson jet algebra: the substitution
   homomorphism determined by the affine action on the generators, `∂_s A^ψ` going to its
   transported convolution plus the Maurer–Cartan shift of `U⁻¹`. -/
 noncomputable def repJet : Representation ℝ G (GaugeJetAlgebra 𝔤) where
@@ -474,7 +463,7 @@ lemma repJet_algebraMap (U : G) (r : ℝ) :
 
 /-!
 
-### E.1. The transformation law of the generators
+### C.1. The transformation law of the generators
 
 -/
 
@@ -500,7 +489,7 @@ lemma componentDual_dualBasis_mcBosonCoeff (W : G)
     (fun ν => φ (jets.evalLie (jets.iteratedDeriv s
       (jets.maurerCartan W ν)))), if_pos (Finset.mem_univ μ)]
 
-/-- **The transformation law of the derivative generators**, in the form used by
+/-- The transformation law of the derivative generators, in the form used by
   `IsGaugeField`: a jet of gauge transformations acts on `∂_s A_μ^φ` by the all-orders
   Leibniz convolution of the adjoint Taylor coefficients of `U⁻¹` against lower
   generators, plus the Taylor coefficient of the Maurer–Cartan form of `U⁻¹`. -/
@@ -508,7 +497,7 @@ theorem repJet_iteratedJetDeriv_ofA (U : G)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repJet jets U ((iteratedJetDeriv 𝔤) s ((ofA 𝔤) μ φ))
       = (s.antidiagonal.map fun p =>
-          (iteratedJetDeriv 𝔤) p.2 ((ofA 𝔤) μ (adjointDualCoeff jets U⁻¹ p.1 φ))).sum
+          (iteratedJetDeriv 𝔤) p.2 ((ofA 𝔤) μ (jets.adjointDualCoeff U⁻¹ p.1 φ))).sum
         + algebraMap ℝ (GaugeJetAlgebra 𝔤)
             (φ (jets.evalLie (jets.iteratedDeriv s
               (jets.maurerCartan U⁻¹ μ)))) := by
@@ -522,7 +511,7 @@ theorem repJet_iteratedJetDeriv_ofA (U : G)
 
 /-!
 
-### E.2. The complexified action
+### C.2. The complexified action
 
 -/
 
@@ -579,7 +568,7 @@ lemma one_tmul_algebraMap (r : ℝ) :
       = (((r : ℝ) : ℂ)) • ((1 : ℂ) ⊗ₜ[ℝ] (1 : (GaugeJetAlgebra 𝔤))) from
       (algebraMap_smul ℂ r _).symm, Algebra.TensorProduct.one_def]
 
-/-- **The transformation law of the derivative generators on the complexification**: the
+/-- The transformation law of the derivative generators on the complexification: the
   form consumed by the `IsGaugeField` structure of the ambient Lagrangian theory. -/
 theorem complexRepJet_iteratedD_one_tmul_ofA (U : G)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
@@ -587,7 +576,7 @@ theorem complexRepJet_iteratedD_one_tmul_ofA (U : G)
         ((1 : ℂ) ⊗ₜ[ℝ] (ofA 𝔤) μ φ))
       = (s.antidiagonal.map fun p =>
           Lorentz.iteratedD (complexJetDeriv 𝔤) complexJetDeriv_comm p.2
-            ((1 : ℂ) ⊗ₜ[ℝ] (ofA 𝔤) μ (adjointDualCoeff jets U⁻¹ p.1 φ))).sum
+            ((1 : ℂ) ⊗ₜ[ℝ] (ofA 𝔤) μ (jets.adjointDualCoeff U⁻¹ p.1 φ))).sum
         + algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤))
             (((φ (jets.evalLie (jets.iteratedDeriv s
               (jets.maurerCartan U⁻¹ μ))) : ℝ)) : ℂ) := by

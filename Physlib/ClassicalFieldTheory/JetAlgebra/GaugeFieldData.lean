@@ -16,8 +16,8 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 A gauge theory is fixed, before any Lagrangian is chosen, by a gauge context and a matter
 content. The gauge context is the existing jet data of the gauge group, namely a global
 group `G₀` with finite-dimensional real Lie algebra `𝔤`, a jet group `G` with jet Lie
-algebra `𝔤J`, a local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` relating them and its
-Taylor–Leibniz law `LocalGaugeDataLeibniz jets`. The matter content is a finite family of
+algebra `𝔤J`, and a local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` relating them. The
+matter content is a finite family of
 fermionic species and a finite family of bosonic species, each given by an existing
 `MatterField jets`.
 
@@ -102,7 +102,7 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
   conditions, none of them imposed here. -/
 structure GaugeFieldData {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     [Module.Finite ℝ 𝔤] {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) [LocalGaugeDataLeibniz jets] where
+    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
   /-- The index type of the fermionic species. -/
   FermionSpecies : Type
   [decidableEqFermionSpecies : DecidableEq FermionSpecies]
@@ -124,7 +124,7 @@ namespace GaugeFieldData
 
 variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} [LocalGaugeDataLeibniz jets] (T : GaugeFieldData jets)
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 

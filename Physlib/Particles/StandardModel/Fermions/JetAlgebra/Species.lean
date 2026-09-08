@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # Species compatibility inside the fermionic target space
 

@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LorentzAction
 /-!
 # The Lorentz action on the jet algebra of the Standard Model
 
@@ -64,14 +64,14 @@ namespace JetAlgebra
   transform independently. -/
 noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) JetAlgebra :=
   (FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup).tprod
-    GaugeJetAlgebra.complexRepLorentzGroup
+    (GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra)
 
 @[simp]
 lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (w : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra)
-    (g : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    (g : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     repLorentzGroup Λ (w ⊗ₜ[ℂ] g)
       = ((FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup) Λ w)
-          ⊗ₜ[ℂ] (GaugeJetAlgebra.complexRepLorentzGroup Λ g) := rfl
+          ⊗ₜ[ℂ] ((GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ g) := rfl
 
 /-!
 
@@ -95,9 +95,9 @@ lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : JetAlgebra) :
 -/
 
 /-- The Lorentz action restricts to the gauge sector's own action. -/
-lemma repLorentzGroup_includeGauge (Λ : SL(2,ℂ)) (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+lemma repLorentzGroup_includeGauge (Λ : SL(2,ℂ)) (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     repLorentzGroup Λ (includeGauge y)
-      = includeGauge (GaugeJetAlgebra.complexRepLorentzGroup Λ y) := by
+      = includeGauge ((GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ y) := by
   rw [includeGauge_apply, repLorentzGroup_tmul,
     show (FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup) Λ
         ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
@@ -158,11 +158,11 @@ lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetA
   have e : ∀ ν, TensorProduct.map
       (TensorProduct.map (FermionicAlgebra.jetDeriv ν) LinearMap.id
         + TensorProduct.map LinearMap.id (BosonicAlgebra.jetDeriv ν))
-      (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra))
-      + TensorProduct.map LinearMap.id (GaugeJetAlgebra.complexJetDeriv ν)
+      (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)))
+      + TensorProduct.map LinearMap.id ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) ν)
       = jetDeriv ν := fun ν =>
     congrArg (fun m => m + TensorProduct.map LinearMap.id
-      (GaugeJetAlgebra.complexJetDeriv ν)) (TensorProduct.map_add_left _ _ _)
+      ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) ν)) (TensorProduct.map_add_left _ _ _)
   have hFH : ∀ (ν : Fin 1 ⊕ Fin 3) (w : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra),
       (FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup) Λ
         ((TensorProduct.map (FermionicAlgebra.jetDeriv (V := FermionSpace) ν)

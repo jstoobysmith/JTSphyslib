@@ -51,7 +51,17 @@ def TransformsInAdjoint (repGauge : Representation ℂ G B)
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) : Prop :=
   ∀ (U : G) (φ : Module.Dual ℝ 𝔤) (s : Multiset (Fin 1 ⊕ Fin 3)),
     repGauge U (F s φ) =
-      (s.antidiagonal.map fun p => F p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
+      (s.antidiagonal.map fun p => F p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
+
+/-- An adjoint gauge tensor transforms at the base point through the dual adjoint
+  coefficient of the value of the gauge jet alone: the antidiagonal of the empty multiset
+  has a single term. -/
+lemma TransformsInAdjoint.repGauge_zero
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (hF : TransformsInAdjoint jets repGauge F) (U : G) (φ : Module.Dual ℝ 𝔤) :
+    repGauge U (F 0 φ) = F 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
+  simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton, Multiset.sum_singleton]
+    using hF U φ 0
 
 /-- **The derived bracket family** `⁅A_ρ, F⁆`: the `s`-derivative of the bracket of the
   gauge field against a family, given by the Leibniz convolution of the derivative
@@ -90,7 +100,7 @@ lemma covDerivAdjoint_apply
 -/
 
 /-- If `F` transforms in the adjoint, so do its `κ ::ₘ s`-derived symbols with the
-  extra derivative traced through `adjointDualCoeff_cons`: the Leibniz splittings
+  extra derivative traced through `LocalGaugeData.adjointDualCoeff_cons`: the Leibniz splittings
   where `κ` stays a derivative, minus the convolution where `κ` hits the adjoint —
   an `ad` of the derived Maurer–Cartan form. -/
 lemma TransformsInAdjoint.repGauge_cons
@@ -100,10 +110,10 @@ lemma TransformsInAdjoint.repGauge_cons
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
-        F (κ ::ₘ p.2) (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
+        F (κ ::ₘ p.2) (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            F p.2 (adjointDualCoeff jets U⁻¹ q.2
+            F p.2 (jets.adjointDualCoeff U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv q.1
                   (jets.maurerCartan U⁻¹ κ)))))).sum).sum := by
@@ -111,16 +121,16 @@ lemma TransformsInAdjoint.repGauge_cons
   simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
     Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
   have hsec : (Multiset.map (fun p =>
-        F p.2 (adjointDualCoeff jets U⁻¹ (κ ::ₘ p.1) φ)) s.antidiagonal).sum =
+        F p.2 (jets.adjointDualCoeff U⁻¹ (κ ::ₘ p.1) φ)) s.antidiagonal).sum =
       -(s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            F p.2 (adjointDualCoeff jets U⁻¹ q.2
+            F p.2 (jets.adjointDualCoeff U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv q.1
                   (jets.maurerCartan U⁻¹ κ)))))).sum).sum := by
     rw [← Multiset.sum_map_neg'']
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [adjointDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_multiset_sum, Multiset.map_map]
+    rw [jets.adjointDualCoeff_cons U⁻¹ κ p.1 φ, map_neg, map_multiset_sum, Multiset.map_map]
     exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => rfl))
   rw [hsec, sub_eq_add_neg]
 
@@ -137,16 +147,16 @@ lemma TransformsInAdjoint.repGauge_bracketFamConv
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (bracketFamConv A ρ F s φ) =
       (s.antidiagonal.map fun p =>
-        bracketFamConv A ρ F p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
+        bracketFamConv A ρ F p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun r =>
-            F r.2 (adjointDualCoeff jets U⁻¹ r.1
+            F r.2 (jets.adjointDualCoeff U⁻¹ r.1
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv p.1
                   (jets.maurerCartan U⁻¹ ρ)))))).sum).sum := by
   have hAlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ 𝔤),
       repGauge U (A u ρ ψ) =
-        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum) ψ
+        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum) ψ
         + algebraMap ℂ B (ψ (jets.evalLie
             (jets.iteratedDeriv u (jets.maurerCartan U⁻¹ ρ)))) := by
     intro u ψ
@@ -154,20 +164,20 @@ lemma TransformsInAdjoint.repGauge_bracketFamConv
     congr 1
   have hFlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ 𝔤),
       repGauge U (F u ψ) =
-        ((u.antidiagonal.map fun r => F r.2 ∘ₗ adjointDualCoeff jets U⁻¹ r.1).sum) ψ
+        ((u.antidiagonal.map fun r => F r.2 ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum) ψ
         + algebraMap ℂ B (ψ (0 : 𝔤)) := by
     intro u ψ
     rw [hF U ψ u, Multiset.sum_linearMap_apply, Multiset.map_map]
     simp only [map_zero, Complex.ofReal_zero, add_zero]
     congr 1
   have hMa : (s.antidiagonal.map fun p =>
-      bracketFam ((p.1.antidiagonal.map fun q => A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1).sum)
-        ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ adjointDualCoeff jets U⁻¹ r.1).sum) φ).sum =
+      bracketFam ((p.1.antidiagonal.map fun q => A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
+        ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum) φ).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            bracketFam (A q.2 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1)
-              (F r.2 ∘ₗ adjointDualCoeff jets U⁻¹ r.1) φ).sum).sum).sum := by
+            bracketFam (A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+              (F r.2 ∘ₗ jets.adjointDualCoeff U⁻¹ r.1) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [bracketFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_map]
@@ -178,12 +188,12 @@ lemma TransformsInAdjoint.repGauge_bracketFamConv
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply]
   have hMc : (s.antidiagonal.map fun p =>
-      bracketFamConv A ρ F p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum =
+      bracketFamConv A ρ F p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            bracketFam (A r.1 ρ ∘ₗ adjointDualCoeff jets U⁻¹ q.1)
-              (F r.2 ∘ₗ adjointDualCoeff jets U⁻¹ q.2) φ).sum).sum).sum := by
+            bracketFam (A r.1 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+              (F r.2 ∘ₗ jets.adjointDualCoeff U⁻¹ q.2) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_congr rfl (fun r hr => by
@@ -191,14 +201,14 @@ lemma TransformsInAdjoint.repGauge_bracketFamConv
           bracketFam_adjointDualCoeff U⁻¹ p.1 (A r.1 ρ) (F r.2) φ]),
       Multiset.sum_map_sum_map]
   have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
-      bracketFam (A b ρ ∘ₗ adjointDualCoeff jets U⁻¹ a)
-        (F d ∘ₗ adjointDualCoeff jets U⁻¹ c) φ).trans hMc.symm)
+      bracketFam (A b ρ ∘ₗ jets.adjointDualCoeff U⁻¹ a)
+        (F d ∘ₗ jets.adjointDualCoeff U⁻¹ c) φ).trans hMc.symm)
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-      ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ adjointDualCoeff jets U⁻¹ r.1).sum)
+      ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum)
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ ρ)))) =
       (p.2.antidiagonal.map fun r =>
-        F r.2 (adjointDualCoeff jets U⁻¹ r.1
+        F r.2 (jets.adjointDualCoeff U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ ρ)))))).sum := by
     intro p
@@ -233,28 +243,28 @@ theorem TransformsInAdjoint.covDerivAdjoint
       repGauge U (F (ρ ::ₘ s) φ) + repGauge U (bracketFamConv A ρ F s φ) := by
     rw [covDerivAdjoint_apply, map_add]
   have hR : (s.antidiagonal.map fun p =>
-      IsGaugeField.covDerivAdjoint A F ρ p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum =
+      IsGaugeField.covDerivAdjoint A F ρ p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
-        F (ρ ::ₘ p.2) (adjointDualCoeff jets U⁻¹ p.1 φ)).sum
+        F (ρ ::ₘ p.2) (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
-        bracketFamConv A ρ F p.2 (adjointDualCoeff jets U⁻¹ p.1 φ)).sum := by
+        bracketFamConv A ρ F p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [covDerivAdjoint_apply]
   have hcancel : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        F p.2 (adjointDualCoeff jets U⁻¹ q.2
+        F p.2 (jets.adjointDualCoeff U⁻¹ q.2
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv q.1
               (jets.maurerCartan U⁻¹ ρ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
-        F r.2 (adjointDualCoeff jets U⁻¹ r.1
+        F r.2 (jets.adjointDualCoeff U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.1
               (jets.maurerCartan U⁻¹ ρ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      F c (adjointDualCoeff jets U⁻¹ b
+      F c (jets.adjointDualCoeff U⁻¹ b
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ ρ))))))
   rw [hL, hF.repGauge_cons U ρ s φ, hF.repGauge_bracketFamConv hA U s ρ φ,

@@ -448,7 +448,7 @@ together with the membership of each family; the instance then instantiates them
 lemma gaugeField_commute (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (ψ : Module.Dual ℝ GaugeAlgebra) (x : JetAlgebra) :
     Commute (gaugeField s μ ψ) x :=
-  (includeGauge_commute (GaugeJetAlgebra.gaugeField s μ ψ) x).symm
+  (includeGauge_commute ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ ψ) x).symm
 
 /-!
 
@@ -504,7 +504,7 @@ lemma MemHiggsSector.commute_of_memFermionSector {x y : JetAlgebra}
     (hx : MemHiggsSector x) (hy : MemFermionSector y) : Commute x y := by
   obtain ⟨h, rfl⟩ := hx
   obtain ⟨f, rfl⟩ := hy
-  exact tensor_left_comm_right (C := ℂ ⊗[ℝ] GaugeJetAlgebra) f h
+  exact tensor_left_comm_right (C := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) f h
 
 /-!
 

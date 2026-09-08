@@ -8,7 +8,8 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The jet gauge action on the jet algebra of the Standard Model
 
@@ -57,15 +58,15 @@ namespace JetAlgebra
   transform independently. -/
 noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI JetAlgebra :=
   (FermionJetAlgebra.repJetGaugeGroupI.tprod HiggsJetAlgebra.repJetGaugeGroupI).tprod
-    GaugeJetAlgebra.complexRepJetGaugeGroupI
+    (GaugeJetAlgebra.complexRepJet localGaugeData)
 
 @[simp]
 lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI)
-    (w : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) (g : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    (w : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) (g : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     repJetGaugeGroupI U (w ⊗ₜ[ℂ] g)
       = ((FermionJetAlgebra.repJetGaugeGroupI.tprod
             HiggsJetAlgebra.repJetGaugeGroupI) U w)
-          ⊗ₜ[ℂ] (GaugeJetAlgebra.complexRepJetGaugeGroupI U g) := rfl
+          ⊗ₜ[ℂ] ((GaugeJetAlgebra.complexRepJet localGaugeData) U g) := rfl
 
 /-!
 
@@ -81,7 +82,7 @@ lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
     (Representation.tprod_apply_mul _ _
       (FermionicAlgebra.repJetGaugeGroupI_apply_mul _ _)
       (BosonicAlgebra.repJetGaugeGroupI_apply_mul _ _))
-    GaugeJetAlgebra.complexRepJetGaugeGroupI_apply_mul U x y
+    GaugeJetAlgebra.complexRepJet_apply_mul U x y
 
 /-!
 
@@ -91,9 +92,9 @@ lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
 
 /-- The jet gauge action restricts to the gauge sector's own action. -/
 lemma repJetGaugeGroupI_includeGauge (U : JetGaugeGroupI)
-    (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     repJetGaugeGroupI U (includeGauge y)
-      = includeGauge (GaugeJetAlgebra.complexRepJetGaugeGroupI U y) := by
+      = includeGauge ((GaugeJetAlgebra.complexRepJet localGaugeData) U y) := by
   rw [includeGauge_apply, repJetGaugeGroupI_tmul,
     show (FermionJetAlgebra.repJetGaugeGroupI.tprod
         HiggsJetAlgebra.repJetGaugeGroupI) U

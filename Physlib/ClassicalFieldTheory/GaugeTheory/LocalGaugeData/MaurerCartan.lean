@@ -13,10 +13,9 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 
 The Maurer–Cartan form `ω_μ(U) = i (∂_μ U) U⁻¹` of a package
 `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` is the field `jets.maurerCartan`, subject to the cocycle
-law `maurerCartan_cocycle`, its value `maurerCartan_one` on the identity and
-`maurerCartan_ofConstant` on constants, and the flatness (structural) equation
-`maurerCartan_structure`. This file develops what follows from those laws alone, for any
-package: nothing here mentions a particular gauge group.
+law `maurerCartan_cocycle`, its value `maurerCartan_ofConstant` on constants, and the
+flatness (structural) equation `maurerCartan_structure`. This file develops what follows
+from those laws alone, for any package: nothing here mentions a particular gauge group.
 
 The main construction is the *symmetrized* Maurer–Cartan form
 
@@ -24,16 +23,18 @@ The main construction is the *symmetrized* Maurer–Cartan form
 
 the average over which direction of the multiset `r` is carried by the form itself rather
 than by a derivative. Its point is `iteratedDeriv_maurerCartan_eq_symmetrized_add`: an
-iterated
-derivative `∂_s ω_μ(U)` is the symmetrized form at `μ ::ₘ s` plus an average of iterated
-derivatives of *brackets* of Maurer–Cartan forms in strictly fewer directions — the
-structural equation used to trade an antisymmetric part for lower-order data. Iterating
+iterated derivative `∂_s ω_μ(U)` is the symmetrized form at `μ ::ₘ s` plus an average of
+iterated derivatives of *brackets* of Maurer–Cartan forms in strictly fewer directions —
+the structural equation used to trade an antisymmetric part for lower-order data. Iterating
 that gives `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq`: the base-point Taylor
-data of `ω` is determined by the base-point symmetrized data.
+data of `ω` is determined by the base-point symmetrized data. How this determines a pure
+jet, and the truncation filtration it defines, is the subject of
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation`.
 
 ## ii. Key results
 
-- `LocalGaugeData.maurerCartan_inv` : `ω_μ(U⁻¹) = − Ad_{U⁻¹} ω_μ(U)`.
+- `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_structure` : the structural equation
+  at the base point, to all orders.
 - `LocalGaugeData.symmetrizedMaurerCartanForm` : the symmetrized Maurer–Cartan form, with
   `symmetrizedMaurerCartanForm_singleton` and the recursion
   `symmetrizedMaurerCartanForm_cons`.
@@ -46,7 +47,7 @@ data of `ω` is determined by the base-point symmetrized data.
 
 ## iii. Table of contents
 
-- A. The Maurer–Cartan form on inverses
+- A. The structural equation at the base point
 - B. The symmetrized Maurer–Cartan form
 - C. Determination of the Maurer–Cartan form by its symmetrized coefficients
 
@@ -62,17 +63,28 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-!
 
-## A. The Maurer–Cartan form on inverses
+## A. The structural equation at the base point
 
 -/
 
-/-- **The Maurer–Cartan form of an inverse**: `ω_μ(U⁻¹) = − Ad_{U⁻¹} ω_μ(U)`, the cocycle
-  law applied to `U⁻¹ U = 1`. -/
-lemma maurerCartan_inv (U : G) (μ : Fin 1 ⊕ Fin 3) :
-    jets.maurerCartan U⁻¹ μ = - jets.adjoint U⁻¹ (jets.maurerCartan U μ) := by
-  have h := jets.maurerCartan_cocycle U⁻¹ U μ
-  rw [inv_mul_cancel, jets.maurerCartan_one] at h
-  exact eq_neg_of_add_eq_zero_left h.symm
+/-- The all-orders structural equation of the Maurer–Cartan form, at the base point:
+  the `s`-th derivative of `∂_μ ω_ν − ∂_ν ω_μ + ⁅ω_μ, ω_ν⁆ = 0`, with the bracket
+  expanded by the iterated Leibniz rule. -/
+lemma evalLie_iteratedDeriv_maurerCartan_structure
+    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.maurerCartan U ν)) =
+      jets.evalLie (jets.iteratedDeriv (ν ::ₘ s) (jets.maurerCartan U μ))
+      - (s.antidiagonal.map fun p =>
+          ⁅jets.evalLie (jets.iteratedDeriv p.1 (jets.maurerCartan U μ)),
+            jets.evalLie (jets.iteratedDeriv p.2 (jets.maurerCartan U ν))⁆).sum := by
+  have h0 := congrArg (fun z => jets.evalLie (jets.iteratedDeriv s z))
+    (jets.maurerCartan_structure U μ ν)
+  simp only [map_add, map_sub, map_zero] at h0
+  rw [← LinearMap.comp_apply, ← iteratedDeriv_cons_eq_comp_deriv, ← LinearMap.comp_apply,
+    ← iteratedDeriv_cons_eq_comp_deriv, iteratedDeriv_bracket, map_multiset_sum,
+    Multiset.map_map,
+    Multiset.map_congr rfl (fun p hp => by rw [Function.comp_apply, LieHom.map_lie])] at h0
+  exact eq_sub_of_add_eq (sub_eq_zero.mp (by rw [← h0]; abel))
 
 /-!
 
@@ -80,7 +92,7 @@ lemma maurerCartan_inv (U : G) (μ : Fin 1 ⊕ Fin 3) :
 
 -/
 
-/-- **The symmetrized Maurer–Cartan form** `ω̄_r(U) = (1/|r|) ∑_{μ ∈ r} ∂_{r − {μ}} ω_μ(U)`:
+/-- The symmetrized Maurer–Cartan form `ω̄_r(U) = (1/|r|) ∑_{μ ∈ r} ∂_{r − {μ}} ω_μ(U)`:
   the average, over the directions of `r`, of the Maurer–Cartan form in one direction
   differentiated along the remaining ones. -/
 noncomputable def symmetrizedMaurerCartanForm (U : G) (r : Multiset (Fin 1 ⊕ Fin 3)) : 𝔤J :=
@@ -191,7 +203,7 @@ lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : G)
   push_cast
   match_scalars <;> field_simp <;> ring
 
-/-- **Maurer–Cartan triangularity, base-point half**: if the base-point symmetrized
+/-- Maurer–Cartan triangularity, base-point half: if the base-point symmetrized
   Maurer–Cartan data of `U` vanish in every nonempty multiset of at most `n` directions,
   then so do all its base-point Maurer–Cartan Taylor coefficients below order `n`. The
   induction is on the order: the symmetrization defect
@@ -237,7 +249,7 @@ lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero (U : G) 
       simp
   exact hall s.card s μ rfl hs
 
-/-- **Determination step**: if the base-point symmetrized Maurer–Cartan data of `U` and
+/-- Determination step: if the base-point symmetrized Maurer–Cartan data of `U` and
   `V` agree, and their Maurer–Cartan Taylor data agree in fewer than `n` directions,
   then they agree in `n` directions. -/
 lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : G) (n : ℕ)

@@ -879,6 +879,8 @@ algebra's own covariant towers pushed along the defining map.
 
 namespace IsGaugeField
 
+open _root_.IsGaugeField
+
 variable {B B' : Type} [Ring B] [Algebra ℂ B] [Ring B'] [Algebra ℂ B']
   {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Finite ℂ V]
 

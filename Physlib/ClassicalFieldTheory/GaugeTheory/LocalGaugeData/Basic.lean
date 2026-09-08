@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.Lie.Basic
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.Algebra.Group.Subgroup.Basic
+public import Physlib.Mathematics.MultisetAntidiagonal
 public import Physlib.Relativity.DerivAlgebra
 /-!
 # Local gauge data
@@ -26,9 +27,18 @@ this situation that the transformation laws of gauge fields and matter fields us
   Lie algebra;
 * the formal spacetime derivatives `deriv μ` on `𝔤J`, commuting, satisfying the Leibniz
   rule for the bracket, and killing constants;
-* the adjoint action of `G` on `𝔤J`, by Lie algebra automorphisms;
-* the Maurer–Cartan form `maurerCartan U μ = i (∂_μ U) U⁻¹`, with its flatness equation
-  `maurerCartan_structure` and the Leibniz rule `deriv_adjoint` for the adjoint action.
+* the adjoint action of `G` on `𝔤J`, by Lie algebra automorphisms, evaluating at the base
+  point to the adjoint action of `G₀` on `𝔤`;
+* the Maurer–Cartan form `maurerCartan U μ = i (∂_μ U) U⁻¹`, with its cocycle law, its
+  flatness equation `maurerCartan_structure` and the Leibniz rule `deriv_adjoint` for the
+  adjoint action.
+
+Everything else — the Taylor coefficients of the adjoint action, the truncation filtration
+of `G`, the symmetrized Maurer–Cartan form — is *derived* from these laws in the sibling
+files of this folder. Two further properties, which are true of any honest jet group but are
+not consequences of the transformation laws, are collected in the mixin `Faithful`: an
+element of `𝔤J` is determined by its base-point Taylor data, and a jet with vanishing
+Maurer–Cartan form is constant.
 
 A term `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` is supplied, not inferred: every construction
 below, and every construction downstream, takes the package it works over as an ordinary
@@ -44,23 +54,35 @@ depends on that choice.
 ## ii. Key results
 
 - `LocalGaugeData` : the structure.
-- `LocalGaugeData.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset
-  of directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz
-  rule `iteratedDeriv_bracket`.
+- `LocalGaugeData.maurerCartan_one`, `LocalGaugeData.maurerCartan_inv` : the values of the
+  Maurer–Cartan form on the identity and on inverses, from the cocycle law.
 - `LocalGaugeData.maurerCartan_eq_of_deriv_adjoint` : the Maurer–Cartan form is determined
   by the Leibniz rule `deriv_adjoint` up to the centre of `𝔤J`, and so is genuine data
   only because that centre can be nonzero.
-- `LocalGaugeDataLeibniz` : the Taylor–Leibniz rule for the adjoint action of a given
-  package, the input to the gauge action on the algebra of gauge-boson symbols.
-- `LocalGaugeDataTruncation` : the filtration of `G` by the order to which a jet is
-  trivial, with the vanishing of the derivatives of the adjoint action on its members.
+- `LocalGaugeData.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset
+  of directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz
+  rule `iteratedDeriv_bracket`.
+- `LocalGaugeData.Faithful` : the jets are determined by their base-point Taylor data.
+
+## iii. Table of contents
+
+- A. The structure
+- B. First consequences of the laws
+- C. The iterated derivative
+- D. Faithful packages
 
 -/
 
 @[expose] public section
 
-/-- **Local gauge data.** A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G`
-  with Lie algebra of jets `𝔤J`, evaluation at the base point, formal derivatives, the adjoint
+/-!
+
+## A. The structure
+
+-/
+
+/-- Local gauge data. A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G` with
+  Lie algebra of jets `𝔤J`, evaluation at the base point, formal derivatives, the adjoint
   action and the Maurer–Cartan form, subject to the identities used by the transformation
   laws of gauge and matter fields.
 
@@ -79,6 +101,7 @@ structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieA
   /-- A constant Lie algebra element as a jet. -/
   ofConstantLie : 𝔤 →ₗ[ℝ] 𝔤J
   ofConstantLie_lie : ∀ a b, ofConstantLie ⁅a, b⁆ = ⁅ofConstantLie a, ofConstantLie b⁆
+  evalLie_ofConstantLie : ∀ a, evalLie (ofConstantLie a) = a
   /-- The formal derivative in the direction `μ`. -/
   deriv : (Fin 1 ⊕ Fin 3) → 𝔤J →ₗ[ℝ] 𝔤J
   deriv_comm : ∀ (μ ν : Fin 1 ⊕ Fin 3) (a : 𝔤J), deriv μ (deriv ν a) = deriv ν (deriv μ a)
@@ -88,9 +111,12 @@ structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieA
   /-- The adjoint action of the jet group on the jet Lie algebra. -/
   adjoint : Representation ℝ G 𝔤J
   adjoint_lie : ∀ (U : G) (x y : 𝔤J), adjoint U ⁅x, y⁆ = ⁅adjoint U x, adjoint U y⁆
+  /-- The adjoint representation of the value group on its Lie algebra. -/
+  adjointValue : Representation ℝ G₀ 𝔤
+  /-- At the base point the adjoint action of a jet is the adjoint action of its value. -/
+  evalLie_adjoint : ∀ (U : G) (x : 𝔤J), evalLie (adjoint U x) = adjointValue (eval U) (evalLie x)
   /-- The Maurer–Cartan form `i (∂_μ U) U⁻¹` of a gauge jet. -/
   maurerCartan : G → (Fin 1 ⊕ Fin 3) → 𝔤J
-  maurerCartan_one : ∀ μ, maurerCartan 1 μ = 0
   /-- A constant gauge transformation has vanishing Maurer–Cartan form: it has no
     spacetime dependence to differentiate. -/
   maurerCartan_ofConstant : ∀ (g : G₀) (μ : Fin 1 ⊕ Fin 3), maurerCartan (ofConstant g) μ = 0
@@ -104,12 +130,6 @@ structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieA
   /-- The Leibniz rule for the adjoint action. -/
   deriv_adjoint : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J),
     deriv μ (adjoint U x) = adjoint U (deriv μ x) - ⁅maurerCartan U μ, adjoint U x⁆
-  /-- The adjoint representation of the value group on its Lie algebra. -/
-  adjointValue : Representation ℝ G₀ 𝔤
-  /-- At the base point, the adjoint action of a jet on a constant is the adjoint action of
-    its value. -/
-  evalLie_adjoint_ofConstantLie : ∀ (U : G) (a : 𝔤),
-    evalLie (adjoint U (ofConstantLie a)) = adjointValue (eval U) a
 
 namespace LocalGaugeData
 
@@ -117,18 +137,39 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
   (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
 
-/-- A constant jet evaluates to its constant. -/
-lemma evalLie_ofConstantLie (a : 𝔤) : jets.evalLie (jets.ofConstantLie a) = a := by
-  have h := jets.evalLie_adjoint_ofConstantLie 1 a
-  simp only [map_one, Module.End.one_apply] at h
-  exact h
+/-!
+
+## B. First consequences of the laws
+
+-/
+
+/-- The Maurer–Cartan form of the identity vanishes: the cocycle law at `1 * 1 = 1`. -/
+@[simp]
+lemma maurerCartan_one (μ : Fin 1 ⊕ Fin 3) : jets.maurerCartan 1 μ = 0 := by
+  have h := jets.maurerCartan_cocycle 1 1 μ
+  rw [one_mul, map_one, Module.End.one_apply] at h
+  exact add_left_cancel (h.symm.trans (add_zero _).symm)
+
+/-- The Maurer–Cartan form of an inverse: `ω_μ(U⁻¹) = − Ad_{U⁻¹} ω_μ(U)`, the cocycle
+  law applied to `U⁻¹ U = 1`. -/
+lemma maurerCartan_inv (U : G) (μ : Fin 1 ⊕ Fin 3) :
+    jets.maurerCartan U⁻¹ μ = - jets.adjoint U⁻¹ (jets.maurerCartan U μ) := by
+  have h := jets.maurerCartan_cocycle U⁻¹ U μ
+  rw [inv_mul_cancel, jets.maurerCartan_one] at h
+  exact eq_neg_of_add_eq_zero_left h.symm
+
+/-- At the base point, the adjoint action of a jet on a constant is the adjoint action of
+  its value. -/
+lemma evalLie_adjoint_ofConstantLie (U : G) (a : 𝔤) :
+    jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = jets.adjointValue (jets.eval U) a := by
+  rw [jets.evalLie_adjoint, jets.evalLie_ofConstantLie]
 
 /-- A jet with trivial value acts trivially on constants at the base point. -/
 lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : jets.eval U = 1) (a : 𝔤) :
     jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = a := by
   rw [evalLie_adjoint_ofConstantLie, hU, map_one, Module.End.one_apply]
 
-/-- **The Maurer–Cartan form is determined by the Leibniz rule, up to the centre.** Since
+/-- The Maurer–Cartan form is determined by the Leibniz rule, up to the centre. Since
   `adjoint U` is invertible, `deriv_adjoint` says exactly that the inner derivation
   `⁅maurerCartan U μ, ·⁆` is `adjoint U ∘ deriv μ ∘ adjoint U⁻¹ − deriv μ`; so any other
   form obeying the same rule differs from it by something acting trivially in the adjoint
@@ -154,7 +195,7 @@ lemma maurerCartan_eq_of_deriv_adjoint
 
 /-!
 
-## A. The iterated derivative
+## C. The iterated derivative
 
 -/
 
@@ -206,6 +247,14 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
     iteratedDeriv_zero, LinearMap.comp_id]
 
+/-- Since derivatives commute, the direction added by `cons` may be taken first as well
+  as last. -/
+lemma iteratedDeriv_cons_eq_comp_deriv (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    jets.iteratedDeriv (μ ::ₘ s) = (jets.iteratedDeriv s).comp (jets.deriv μ) := by
+  rw [show (μ ::ₘ s : Multiset (Fin 1 ⊕ Fin 3)) = s + {μ} from by
+      rw [add_comm, Multiset.singleton_add],
+    iteratedDeriv_add, iteratedDeriv_singleton]
+
 /-- The iterated Leibniz rule for the bracket: the iterated derivative of a bracket
   is the antidiagonal convolution of iterated derivatives of the two arguments. -/
 lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤J) :
@@ -230,7 +279,7 @@ lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤J) :
         Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
       abel
 
-/-- **The base-point Taylor data of a bracket is determined by that of its arguments.**
+/-- The base-point Taylor data of a bracket is determined by that of its arguments.
   If the base-point values of the iterated derivatives of `a` and `b` along sub-multisets
   of `w` agree with those of `a'` and `b'`, then so do those of the brackets: the iterated
   Leibniz rule expands the bracket over the antidiagonal of `w`, whose parts are all
@@ -245,11 +294,9 @@ lemma evalLie_iteratedDeriv_bracket_congr (w : Multiset (Fin 1 ⊕ Fin 3)) (a b 
   rw [iteratedDeriv_bracket, iteratedDeriv_bracket, map_multiset_sum, map_multiset_sum,
     Multiset.map_map, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-  have hw := Multiset.mem_antidiagonal.mp hp
-  have h1 : p.1 ≤ w := Multiset.le_iff_exists_add.mpr ⟨p.2, hw.symm⟩
-  have h2 : p.2 ≤ w := Multiset.le_iff_exists_add.mpr ⟨p.1, by rw [← hw, add_comm]⟩
   simp only [Function.comp_apply]
-  rw [LieHom.map_lie, LieHom.map_lie, ha p.1 h1, hb p.2 h2]
+  rw [LieHom.map_lie, LieHom.map_lie, ha p.1 (Multiset.fst_le_of_mem_antidiagonal hp),
+    hb p.2 (Multiset.snd_le_of_mem_antidiagonal hp)]
 
 /-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
   directions. -/
@@ -265,50 +312,42 @@ lemma iteratedDeriv_ofConstantLie_of_ne_zero {p : Multiset (Fin 1 ⊕ Fin 3)} (h
 
 TODO "Add product of LocalGaugeData."
 
+/-!
+
+## D. Faithful packages
+
+The transformation laws never ask that the jets be *honest* jets: nothing in the structure
+prevents `𝔤J` from carrying elements invisible to every base-point derivative. The two laws
+below say that it does not, and together they make a pure jet (`eval U = 1`) recoverable
+from its Maurer–Cartan form; see `LocalGaugeData.maurerCartan_injOn_truncationKer_zero`.
+They hold for the full jet group of any matrix group and for its truncations, but are
+recorded separately from the structure because the covariance theory does not need them.
+
+-/
+
+/-- A package is faithful when an element of `𝔤J` is determined by the base-point values
+  of its iterated derivatives (Taylor determinacy) and a jet with vanishing Maurer–Cartan
+  form is the constant jet of its value. -/
+class Faithful (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) : Prop where
+  ext_of_evalLie_iteratedDeriv : ∀ {x y : 𝔤J},
+    (∀ s : Multiset (Fin 1 ⊕ Fin 3),
+      jets.evalLie (jets.iteratedDeriv s x) = jets.evalLie (jets.iteratedDeriv s y)) → x = y
+  eq_ofConstant_of_maurerCartan_eq_zero : ∀ {U : G},
+    jets.maurerCartan U = 0 → U = jets.ofConstant (jets.eval U)
+
+/-- Taylor determinacy of a faithful package, in the form of an extensionality lemma. -/
+lemma ext_of_evalLie_iteratedDeriv [jets.Faithful] {x y : 𝔤J}
+    (h : ∀ s : Multiset (Fin 1 ⊕ Fin 3),
+      jets.evalLie (jets.iteratedDeriv s x) = jets.evalLie (jets.iteratedDeriv s y)) :
+    x = y :=
+  Faithful.ext_of_evalLie_iteratedDeriv h
+
+/-- In a faithful package, the Maurer–Cartan form vanishes exactly on the constant jets. -/
+lemma maurerCartan_eq_zero_iff [jets.Faithful] (U : G) :
+    jets.maurerCartan U = 0 ↔ U = jets.ofConstant (jets.eval U) := by
+  refine ⟨Faithful.eq_ofConstant_of_maurerCartan_eq_zero, fun h => ?_⟩
+  funext μ
+  rw [h, jets.maurerCartan_ofConstant]
+  rfl
+
 end LocalGaugeData
-
-/-!
-
-## B. The Taylor–Leibniz rule for the adjoint action
-
--/
-
-/-- **The Taylor–Leibniz rule for the adjoint action** of a local-gauge-data package `jets`: the
-  base-point Taylor coefficients of `Ad_U Y` are the antidiagonal convolution of the Taylor
-  coefficients of `Ad_U` — the `evalLie ∘ ∂_p ∘ Ad_U ∘ ofConstantLie` of the covariance
-  machinery — with those of `Y`. This is what makes the gauge action on the algebra of
-  gauge-boson symbols a representation; for a matrix group it is the Leibniz rule for
-  products of matrices of power series.
-
-  It is an extra law of one package, so `jets` is its only explicit parameter and the
-  carriers are read off from it. -/
-class LocalGaugeDataLeibniz {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
-  evalLie_iteratedDeriv_adjoint : ∀ (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J),
-    jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y))
-      = (x.antidiagonal.map fun p => jets.evalLie (jets.iteratedDeriv p.1
-          (jets.adjoint U (jets.ofConstantLie
-            (jets.evalLie (jets.iteratedDeriv p.2 Y)))))).sum
-
-/-!
-
-## C. Truncation
-
--/
-
-/-- **The truncation filtration of the jet gauge group**: `truncationKer n` is the subgroup
-  of jets trivial to order `n`. What is used of it is that on a jet trivial to order `n` all
-    derivatives of the adjoint action
-  of order between `1` and `n` vanish at the base point.
-
-  Like `LocalGaugeDataLeibniz` this is an extra law of one package `jets`, its only explicit
-  parameter. -/
-class LocalGaugeDataTruncation {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
-  /-- The subgroup of jets trivial to order `n`. -/
-  truncationKer : ℕ → Subgroup G
-  evalLie_iteratedDeriv_adjoint_ofConstantLie_eq_zero : ∀ {U : G} {n : ℕ},
-    U ∈ truncationKer n → ∀ {x : Multiset (Fin 1 ⊕ Fin 3)}, x ≠ 0 → x.card ≤ n →
-    ∀ b : 𝔤, jets.evalLie (jets.iteratedDeriv x (jets.adjoint U (jets.ofConstantLie b))) = 0

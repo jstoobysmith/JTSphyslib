@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.TransformsIn
 /-!
 # The transformation law of the bosonic generators
 
@@ -18,14 +18,15 @@ public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Transform
 do not: a jet of gauge transformations mixes `∂_s ψ_φ` with the lower generators
 `∂_{s₂} ψ_φ`, weighted by the base-point Taylor coefficients `IsGaugeField.repDualCoeff` of
 the gauge jet at the complementary multiset `s₁`. This file proves that all-orders Leibniz
-law, in the form `StandardModel.TransformsIn` demands.
+law, in the form `LocalGaugeData.TransformsIn` demands.
 
 All the work is in `StandardModel.repDual_basis_tmul`, the corresponding statement on the
 jet component space. The symmetric algebra contributes only linearity: the generators are
 the image of the component space under `SymmetricAlgebra.ι`, and a multiset sum passes
 through a linear map.
 
-The conjugate generators are the same statement for the conjugate action `repConj rep` on
+The conjugate generators are the same statement for the conjugate action
+`JetComponentSpace.repConj rep` on
 the jets of the conjugate field, which is what the conjugate half of the component space
 carries; so they are an instance of the same lemma, not a second proof.
 
@@ -37,7 +38,7 @@ carries; so they are an instance of the same lemma, not a second proof.
   law of the conjugate derivative generators `∂_s ψ̄_φ`.
 - `BosonicAlgebra.transformsIn_iteratedJetDeriv_ofField`,
   `BosonicAlgebra.transformsIn_iteratedJetDeriv_ofConjField` : the same, packaged as
-  `StandardModel.TransformsIn`.
+  `LocalGaugeData.TransformsIn`.
 
 ## iii. Table of contents
 
@@ -118,23 +119,23 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2 (ofField (IsGaugeField.repDualCoeff rep U⁻¹ p.1 φ))).sum := by
   rw [iteratedJetDeriv_ofField, repJetGaugeGroupI_ι,
-    show JetComponentSpace.repJetGaugeGroupI rep hlin U
+    show JetComponentSpace.repJet rep hlin U
         ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V)
-      = (repDual rep hlin U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ), 0) from by
+      = (JetComponentSpace.repDual rep hlin U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ), 0) from by
       refine Prod.ext rfl ?_
-      rw [JetComponentSpace.repJetGaugeGroupI_snd]
+      rw [JetComponentSpace.repJet_snd]
       exact map_zero _,
-    repDual_basis_tmul, sum_inl, Multiset.map_map]
+    JetComponentSpace.repDual_basis_tmul, sum_inl, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
   rw [Function.comp_apply, iteratedJetDeriv_ofField]
 
 /-- The derivative generators of a matter field transform in the representation `rep`
-  carried by its jets, in the sense demanded by `StandardModel.TransformsIn`. -/
+  carried by its jets, in the sense demanded by `LocalGaugeData.TransformsIn`. -/
 theorem transformsIn_iteratedJetDeriv_ofField
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
     (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z) :
-    TransformsIn (repJetGaugeGroupI rep hlin) rep
+    LocalGaugeData.TransformsIn (repJetGaugeGroupI rep hlin) rep
       fun s => (iteratedJetDeriv s).comp (ofField (V := V)) :=
   fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofField rep hlin U φ s
 
@@ -145,7 +146,8 @@ theorem transformsIn_iteratedJetDeriv_ofField
 -/
 
 /-- The transformation law of the derivative generators of the conjugate matter field. It
-  is the law of the field itself for the conjugate action `repConj rep` on the jets of the
+  is the law of the field itself for the conjugate action `JetComponentSpace.repConj rep` on
+  the jets of the
   conjugate field — the physicists' `ψ̄ ↦ ψ̄ U†` and its derivatives. -/
 lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
@@ -156,27 +158,29 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
     repJetGaugeGroupI rep hlin U (iteratedJetDeriv s (ofConjField φ)) =
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2
-          (ofConjField (IsGaugeField.repDualCoeff (repConj rep) U⁻¹ p.1 φ))).sum := by
+          (ofConjField
+            (IsGaugeField.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ p.1 φ))).sum := by
   rw [iteratedJetDeriv_ofConjField, repJetGaugeGroupI_ι,
-    show JetComponentSpace.repJetGaugeGroupI rep hlin U
+    show JetComponentSpace.repJet rep hlin U
         ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace V)
-      = (0, repDual (repConj rep) (repConj_smul_comm hlin) U
+      = (0, JetComponentSpace.repDual (JetComponentSpace.repConj rep)
+          (JetComponentSpace.repConj_smul_comm hlin) U
           (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)) from by
       refine Prod.ext ?_ rfl
-      rw [JetComponentSpace.repJetGaugeGroupI_fst]
+      rw [JetComponentSpace.repJet_fst]
       exact map_zero _,
-    repDual_basis_tmul, sum_inr, Multiset.map_map]
+    JetComponentSpace.repDual_basis_tmul, sum_inr, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
   rw [Function.comp_apply, iteratedJetDeriv_ofConjField]
 
 /-- The derivative generators of the conjugate matter field transform in the conjugate
-  representation `repConj rep`, in the sense demanded by
-  `StandardModel.TransformsIn`. -/
+  representation `JetComponentSpace.repConj rep`, in the sense demanded by
+  `LocalGaugeData.TransformsIn`. -/
 theorem transformsIn_iteratedJetDeriv_ofConjField
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
     (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z) :
-    TransformsIn (repJetGaugeGroupI rep hlin) (repConj rep)
+    LocalGaugeData.TransformsIn (repJetGaugeGroupI rep hlin) (JetComponentSpace.repConj rep)
       fun s => (iteratedJetDeriv s).comp (ofConjField (V := V)) :=
   fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofConjField rep hlin U φ s
 

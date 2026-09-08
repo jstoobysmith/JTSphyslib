@@ -7,7 +7,8 @@ module
 
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The jet algebra of the Standard Model
 
@@ -16,7 +17,8 @@ public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic
 The full jet algebra of the Standard Model — the algebra in which a Standard Model
 Lagrangian lives — is the tensor product of its three sector algebras: the fermionic jet
 algebra `FermionJetAlgebra`, the Higgs jet algebra `HiggsJetAlgebra`, and the
-(complexified) gauge-boson jet algebra `GaugeJetAlgebra`. The bosonic factors commute with
+(complexified) gauge-boson jet algebra `GaugeJetAlgebra GaugeAlgebra`. The bosonic factors
+commute with
 everything, so the ordinary tensor product is correct; the anticommutativity of the
 fermions lives entirely inside the fermionic factor.
 
@@ -62,7 +64,7 @@ open TensorProduct Matrix MatrixGroups
   and gauge-boson jet algebras. A Standard Model Lagrangian is an element of this
   algebra. -/
 abbrev JetAlgebra : Type :=
-  (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) ⊗[ℂ] (ℂ ⊗[ℝ] GaugeJetAlgebra)
+  (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) ⊗[ℂ] (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
 
 namespace JetAlgebra
 
@@ -75,20 +77,20 @@ namespace JetAlgebra
 /-- The inclusion of the fermionic sector. -/
 noncomputable def includeFermion : FermionJetAlgebra →ₐ[ℂ] JetAlgebra :=
   (Algebra.TensorProduct.includeLeft
-    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] GaugeJetAlgebra)).comp
+    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))).comp
     Algebra.TensorProduct.includeLeft
 
 /-- The inclusion of the Higgs sector. -/
 noncomputable def includeHiggs : HiggsJetAlgebra →ₐ[ℂ] JetAlgebra :=
   (Algebra.TensorProduct.includeLeft
-    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] GaugeJetAlgebra)).comp
+    (R := ℂ) (S := ℂ) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))).comp
     Algebra.TensorProduct.includeRight
 
 /-- The inclusion of the gauge sector. -/
-noncomputable def includeGauge : (ℂ ⊗[ℝ] GaugeJetAlgebra) →ₐ[ℂ] JetAlgebra :=
+noncomputable def includeGauge : (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₐ[ℂ] JetAlgebra :=
   Algebra.TensorProduct.includeRight
 
-lemma includeGauge_apply (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+lemma includeGauge_apply (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     includeGauge y
       = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ] y := rfl
 
@@ -116,7 +118,7 @@ private lemma tensor_includeRight_comm {A B : Type*} [Ring A] [Algebra ℂ A]
 
 /-- The image of the gauge sector is central: gauge-boson symbols commute with
   everything, as bosons must. -/
-lemma includeGauge_commute (y : ℂ ⊗[ℝ] GaugeJetAlgebra) (x : JetAlgebra) :
+lemma includeGauge_commute (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) (x : JetAlgebra) :
     x * includeGauge y = includeGauge y * x :=
   tensor_includeRight_comm y x
 

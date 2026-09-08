@@ -9,7 +9,8 @@ public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix

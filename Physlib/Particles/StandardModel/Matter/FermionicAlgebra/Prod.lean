@@ -56,7 +56,8 @@ variable {V W : Type} [AddCommGroup V] [Module â„‚ V] [AddCommGroup W] [Module â
 ## A. The component space of a direct sum
 
 The splitting `JetComponentSpace.prodEquiv` of the component space of a direct sum lives
-with the component space itself, in `Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic`.
+with the component space itself, in
+`Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic`.
 
 -/
 

@@ -37,8 +37,6 @@ Thus locally it is enough to consider the action of `JetGaugeGroupI` on the fiel
 their derivatives at a point, instead of the full set of gauge transformations on spacetime,
 which is large and unwieldy.
 
-## Start at a better overview
-
 A Lagrangian at a point x is a polynomial in the fields and
  finitely many of their derivatives at x — that is the whole of
  its input. Symmetries of such an expression can therefore only
@@ -83,6 +81,22 @@ The payoff is that the derivative bookkeeping disappears into th
   transformations — which is exactly right, since so is a
   Lagrangian at a point.
 
+## ii. Key results
+
+- `JetGaugeGroupI` : the jets of gauge transformations, the gauge group with coefficients
+  in `JetRing`.
+- `JetGaugeGroupI.eval`, `JetGaugeGroupI.ofConstant` : evaluation at the base point and
+  the constant jets, with `eval_ofConstant`.
+- `JetGaugeGroupI.deriv` : the entrywise formal derivative of a jet, with the Leibniz rule
+  `deriv_mul` and the hermiticity and tracelessness of `i (∂_μ U) U⁻¹` that make the
+  Maurer–Cartan form take values in the jet gauge algebra.
+
+## iii. Table of contents
+
+- A. The jet gauge group
+- B. Evaluation at the base point
+- C. The derivative
+- D. Constant jets
 
 -/
 
@@ -95,7 +109,7 @@ open scoped Nat
 
 /-!
 
-## B. The jet gauge group
+## A. The jet gauge group
 
 The ring `JetRing` of formal power series in the spacetime coordinates, in which
 jets of fields and of gauge transformations are valued, is defined in
@@ -127,7 +141,7 @@ def toVal (U : JetGaugeGroupI) : Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2
 
 /-!
 
-## C. Evaluation at the base point
+## B. Evaluation at the base point
 
 The constant coefficient of a power series is its value at the base point of the
 jet. Applied entrywise it sends jets of gauge transformations to their zeroth-order
@@ -179,7 +193,7 @@ noncomputable def eval : JetGaugeGroupI →* GaugeGroupI :=
 
 /-!
 
-## The derivative
+## C. The derivative
 
 We define the derivative of an element of `JetGaugeGroupI` as a product of matrices,
 and give some properties of it related to the Maurer–Cartan form.
@@ -356,17 +370,6 @@ lemma star_deriv_mul_inv_toVal_U1 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   rw [hCs, star_mul', JetRing.star_C, star_mul', star_star, ← JetRing.pderiv_star, hq,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
 
-
-/-- The iterated formal derivative, in the (unordered) directions given by the
-  multiset `s`, of the value of a jet gauge transformation, taken entrywise on each
-  factor. This is the derivative-normalized Taylor coefficient of `U` at `s`, as a jet:
-  its value at the base point is `∏ (s.count μ)!` times the power-series coefficient
-  of `U` at the monomial `s`. -/
-noncomputable def iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI) :
-    Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
-  (U.1.1.map fun f => s.foldl (fun f μ => pderiv ℂ μ f) f,
-    U.2.1.1.map fun f => s.foldl (fun f μ => pderiv ℂ μ f) f,
-    s.foldl (fun f μ => pderiv ℂ μ f) U.2.2.1)
 
 /-!
 

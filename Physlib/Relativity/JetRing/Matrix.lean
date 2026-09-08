@@ -9,6 +9,7 @@ public import Physlib.Relativity.JetRing.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.LinearAlgebra.Matrix.Adjugate
 public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Physlib.Mathematics.MultisetAntidiagonal
 /-!
 # Matrices over the jet ring
 
@@ -472,5 +473,37 @@ lemma jacobi_fin2 (M : Matrix (Fin 2) (Fin 2) JetRing) (μ : Fin 1 ⊕ Fin 3) :
     Matrix.empty_val', Matrix.cons_val_fin_one, Fin.sum_univ_two, Matrix.cons_val_one,
     map_sub, Derivation.leibniz, smul_eq_mul]
   ring
+
+/-!
+
+## The Leibniz rule at the base point for matrices of power series
+
+-/
+
+/-- The entry of a multiset sum of matrices is the multiset sum of the entries. -/
+lemma matrix_multiset_sum_apply {κ α : Type*} [AddCommMonoid α]
+    (m : Multiset (Matrix κ κ α)) (i j : κ) :
+    m.sum i j = (m.map fun A => A i j).sum := by
+  induction m using Multiset.induction_on with
+  | empty => rfl
+  | cons A t ih =>
+    rw [Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, ← ih, Matrix.add_apply]
+
+/-- The matrix Leibniz rule at the base point: the base-point Taylor coefficients of a
+  product of matrices of jets are the antidiagonal convolution of the base-point
+  coefficients of the factors. -/
+lemma matrix_constantCoeff_foldl_pderiv_mul {κ : Type} [Fintype κ] [DecidableEq κ]
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (M N : Matrix κ κ JetRing) :
+    ((M * N).map fun f => constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) f))
+      = (s.antidiagonal.map fun p =>
+          (M.map fun f => constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f)) *
+            (N.map fun f => constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f))).sum := by
+  ext i j
+  rw [Matrix.map_apply, Matrix.mul_apply, foldl_pderiv_sum, map_sum]
+  simp only [constantCoeff_foldl_pderiv_mul]
+  rw [← Multiset.sum_map_finsetSum, matrix_multiset_sum_apply, Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
+  rw [Function.comp_apply, Matrix.mul_apply]
+  exact Finset.sum_congr rfl fun k _ => by rw [Matrix.map_apply, Matrix.map_apply]
 
 end JetRing

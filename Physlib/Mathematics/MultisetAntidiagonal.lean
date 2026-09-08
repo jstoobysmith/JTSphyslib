@@ -109,11 +109,22 @@ lemma sum_map_finsetSum {α β M : Type*} [AddCommMonoid M]
     rw [Multiset.map_cons, Multiset.sum_cons, ih, ← Finset.sum_add_distrib]
     exact Finset.sum_congr rfl fun b _ => by rw [Multiset.map_cons, Multiset.sum_cons]
 
+/-- The first part of a splitting of `s` is a sub-multiset of `s`. -/
+lemma fst_le_of_mem_antidiagonal {ι : Type*} {s : Multiset ι} {p : Multiset ι × Multiset ι}
+    (hp : p ∈ s.antidiagonal) : p.1 ≤ s :=
+  Multiset.le_iff_exists_add.mpr ⟨p.2, (Multiset.mem_antidiagonal.mp hp).symm⟩
+
+/-- The second part of a splitting of `s` is a sub-multiset of `s`. -/
+lemma snd_le_of_mem_antidiagonal {ι : Type*} {s : Multiset ι} {p : Multiset ι × Multiset ι}
+    (hp : p ∈ s.antidiagonal) : p.2 ≤ s :=
+  Multiset.le_iff_exists_add.mpr
+    ⟨p.1, by rw [add_comm]; exact (Multiset.mem_antidiagonal.mp hp).symm⟩
+
 /-- A sum over the antidiagonal of a family vanishing off `p.1 = 0` collapses to the
   single term at `(0, s)`. -/
 lemma sum_antidiagonal_eq_of_fst_ne_zero {ι M : Type*} [AddCommMonoid M]
     (s : Multiset ι) (F : Multiset ι × Multiset ι → M)
-    (hF : ∀ p : Multiset ι × Multiset ι, p.1 ≠ 0 → F p = 0) :
+    (hF : ∀ p ∈ s.antidiagonal, p.1 ≠ 0 → F p = 0) :
     (s.antidiagonal.map F).sum = F (0, s) := by
   induction s using Multiset.induction_on generalizing F with
   | empty => simp [Multiset.antidiagonal_zero]
@@ -123,21 +134,28 @@ lemma sum_antidiagonal_eq_of_fst_ne_zero {ι M : Type*} [AddCommMonoid M]
       show ((t.antidiagonal.map (F ∘ Prod.map (Multiset.cons a) id)).sum) = 0 from
         Multiset.sum_eq_zero fun x hx => by
           obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
-          exact hF _ (Multiset.cons_ne_zero),
-      add_zero, ih (F ∘ Prod.map id (Multiset.cons a)) fun p hp => hF _ hp]
-    rfl
+          refine hF _ ?_ (Multiset.cons_ne_zero)
+          rw [Multiset.antidiagonal_cons, Multiset.mem_add]
+          exact Or.inr (Multiset.mem_map_of_mem _ hp),
+      add_zero, ih (F ∘ Prod.map id (Multiset.cons a)) fun p hp hp1 => hF _ ?_ hp1]
+    · rfl
+    · rw [Multiset.antidiagonal_cons, Multiset.mem_add]
+      exact Or.inl (Multiset.mem_map_of_mem _ hp)
 
 /-- A sum over the antidiagonal of a family vanishing off `p.2 = 0` collapses to the
   single term at `(s, 0)`. -/
 lemma sum_antidiagonal_eq_of_snd_ne_zero {ι M : Type*} [AddCommMonoid M]
     (s : Multiset ι) (F : Multiset ι × Multiset ι → M)
-    (hF : ∀ p : Multiset ι × Multiset ι, p.2 ≠ 0 → F p = 0) :
+    (hF : ∀ p ∈ s.antidiagonal, p.2 ≠ 0 → F p = 0) :
     (s.antidiagonal.map F).sum = F (s, 0) := by
   rw [show (s.antidiagonal.map F).sum
       = (s.antidiagonal.map fun p => (fun a b => F (b, a)) p.2 p.1).sum from rfl,
     ← Multiset.sum_antidiagonal_swap s (fun a b => F (b, a))]
-  exact Multiset.sum_antidiagonal_eq_of_fst_ne_zero s (fun p => F (p.2, p.1))
-    fun p hp => hF _ hp
+  refine Multiset.sum_antidiagonal_eq_of_fst_ne_zero s (fun p => F (p.2, p.1))
+    fun p hp hp1 => hF _ ?_ hp1
+  rw [Multiset.mem_antidiagonal] at hp ⊢
+  rw [add_comm]
+  exact hp
 
 /-- The exchange of the second and third slot in a nested antidiagonal sum. -/
 lemma sum_antidiagonal_middle_exchange {ι M : Type*} [AddCommMonoid M]

@@ -187,7 +187,7 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
     · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_bare s μ ψ i s' φ) n l φ p μ ψ
   -- the matter towers are fixed by pure gauge jets
-  have hS : ∀ y ∈ h.matterTowers, ∀ U : JetGaugeGroupI.truncationKer 0, repJet U.1 y = y := by
+  have hS : ∀ y ∈ h.matterTowers, ∀ U : localGaugeData.truncationKer 0, repJet U.1 y = y := by
     intro y hy U
     exact h.matterTowers_induction (fun y => repJet U.1 y = y) hy
       (fun _ l φ => h.repJet_covDerivH_of_mem_truncationKer_zero l U φ)

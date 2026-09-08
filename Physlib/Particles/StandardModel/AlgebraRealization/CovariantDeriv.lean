@@ -450,6 +450,8 @@ covariant tower needs.
 
 namespace IsGaugeField
 
+open _root_.IsGaugeField
+
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V]
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
@@ -480,7 +482,7 @@ lemma exists_ofFn_eq (x : Multiset (Fin 1 ⊕ Fin 3)) :
   ⟨x.toList.length, x.toList.get, by rw [List.ofFn_get, Multiset.coe_toList]⟩
 
 /-- The Lorentz law of the gauge-field symbols, in the multiset form. -/
-lemma repLorentz_apply_mix (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ))
+lemma repLorentz_apply_mix (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ))
     (x : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (χ : Module.Dual ℝ GaugeAlgebra) :
     repLorentz Λ (A x μ χ) = lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • A t a χ) x 0 := by
   obtain ⟨n, l, rfl⟩ := exists_ofFn_eq x
@@ -503,7 +505,7 @@ lemma isLorentzDerivTransforms_mix {rep : Representation ℂ SL(2,ℂ) V}
   `lorentzMix`, and the right-hand families are replaced by their transforms. -/
 lemma repLorentz_sum_derivConv
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     {ι κ : Type} [Fintype ι] [Fintype κ] (bg : Module.Basis ι ℝ GaugeAlgebra) (coef : ι → κ → ℂ)
     (g g' : κ → Multiset (Fin 1 ⊕ Fin 3) → B)
     (hg : ∀ k y, repLorentz Λ (g k y) = lorentzMix Λ (g' k) y 0) (s : Multiset (Fin 1 ⊕ Fin 3)) :
@@ -561,7 +563,7 @@ lemma actionFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c :
   transformed matter family. -/
 lemma repLorentz_actionFamConv
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
@@ -622,7 +624,7 @@ lemma actionFamConv_comp_dual (T : V →ₗ[ℂ] V)
   mixes by `lorentzMix`, while the value index transforms contragrediently. -/
 lemma repLorentz_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A)
     (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hF : IsLorentzDerivTransforms repLorentz rep F) (Λ : SL(2,ℂ))
@@ -645,7 +647,7 @@ lemma repLorentz_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
   action with the Lorentz action on the value space. -/
 theorem isLorentzCovDerivTransforms_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A)
     (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hF : IsLorentzDerivTransforms repLorentz rep F) :
@@ -693,7 +695,7 @@ lemma bracketFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c 
 /-- The Lorentz law of the derived bracket family. -/
 lemma repLorentz_bracketFamConv
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
@@ -708,7 +710,7 @@ lemma repLorentz_bracketFamConv
   slots mix by their own columns and the seed family is replaced by its transform. -/
 lemma repLorentz_iteratedCovDerivAdjoint
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ))
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ))
     (F F' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (hF : ∀ x χ, repLorentz Λ (F x χ) = lorentzMix Λ (fun t => F' t χ) x 0)
     (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (x : Multiset (Fin 1 ⊕ Fin 3))
@@ -745,7 +747,7 @@ lemma iteratedCovDerivAdjoint_sum_fam {ι : Type} [Fintype ι] (c : ι → ℂ)
   and the derivative slots mix by `lorentzMix`. -/
 lemma repLorentz_fieldStrength_mix
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
     repLorentz Λ (fieldStrength A μ ν x φ) =
       lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • fieldStrength A a b t φ) x 0 := by
@@ -786,7 +788,7 @@ lemma repLorentz_fieldStrength_mix
 lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength
     (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
       repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField repLorentz repGauge A) (Λ : SL(2,ℂ)) (n : ℕ)
+    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (n : ℕ)
     (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
     repLorentz Λ (iteratedCovDerivAdjoint A (List.ofFn l) (fieldStrength A μ ν) 0 φ) =
@@ -885,6 +887,8 @@ convolution over the empty multiset having a single term.
 
 namespace IsGaugeField
 
+open _root_.IsGaugeField
+
 variable {B : Type} [Ring B] [Algebra ℂ B] {repGauge : Representation ℂ JetGaugeGroupI B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
 variable {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V]
@@ -922,15 +926,6 @@ lemma commute_covDerivIter
   refine commute_of_mem_adjoin ?_ (covDerivIter_mem_adjoin_symbols act F n l 0 φ)
   rintro y (⟨s, μ', ψ', rfl⟩ | ⟨s, φ', rfl⟩)
   exacts [hAA s p μ' μ ψ' ψ, (hAF p μ ψ s φ').symm]
-
-/-- An adjoint gauge tensor transforms at the base point through the dual adjoint
-  coefficient of the base-point value of the gauge jet alone. -/
-lemma TransformsInAdjoint.repGauge_zero
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
-    (hF : TransformsInAdjoint repGauge F) (U : JetGaugeGroupI) (φ : Module.Dual ℝ GaugeAlgebra) :
-    repGauge U (F 0 φ) = F 0 (adjointDualCoeff U⁻¹ 0 φ) := by
-  simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton, Multiset.sum_singleton] using
-    hF U φ 0
 
 end IsGaugeField
 
@@ -1187,7 +1182,8 @@ lemma fieldAlgebra_eq_covDeriv :
 ## J. Gauge covariance of the covariant towers
 
 Each matter tower transforms in the representation of its species, by
-`TransformsIn.covDerivIter`; the field-strength tower transforms in the adjoint. At the
+`LocalGaugeData.TransformsIn.covDerivIter`; the field-strength tower transforms in the adjoint.
+At the
 base point that is the action of the base-point value of the gauge jet alone, and a pure
 gauge jet — one with trivial base-point value — fixes every tower.
 
@@ -1195,90 +1191,98 @@ gauge jet — one with trivial base-point value — fixes every tower.
 
 /-- The covariant tower of the Higgs transforms in the Higgs representation. -/
 lemma transformsIn_covDerivH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet HiggsVec.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet HiggsVec.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A HiggsVec.gaugeAlgebraAction h.H n l) :=
-  TransformsIn.covDerivIter h.repJet_A h.repJet_H HiggsVec.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A h.repJet_H
+    HiggsVec.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate Higgs transforms in the conjugate Higgs
   representation. -/
 lemma transformsIn_covDerivBarH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj HiggsVec.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj HiggsVec.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj HiggsVec.gaugeAlgebraAction)
         h.barH n l) :=
-  TransformsIn.covDerivIter h.repJet_A h.repJet_barH HiggsVec.isInfinitesimalActionOf.conj n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A h.repJet_barH
+    HiggsVec.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the down-type quarks transforms in their representation. -/
 lemma transformsIn_covDerivD (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet DownSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet DownSinglet.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A DownSinglet.gaugeAlgebraAction (h.d i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_d i) DownSinglet.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_d i)
+    DownSinglet.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate down-type quarks transforms in their conjugate
   representation. -/
 lemma transformsIn_covDerivBarD (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj DownSinglet.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj DownSinglet.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj DownSinglet.gaugeAlgebraAction)
         (h.bard i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_bard i)
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_bard i)
     DownSinglet.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the up-type quarks transforms in their representation. -/
 lemma transformsIn_covDerivU (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet UpSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet UpSinglet.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A UpSinglet.gaugeAlgebraAction (h.u i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_u i) UpSinglet.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_u i)
+    UpSinglet.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate up-type quarks transforms in their conjugate
   representation. -/
 lemma transformsIn_covDerivBarU (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj UpSinglet.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj UpSinglet.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj UpSinglet.gaugeAlgebraAction)
         (h.baru i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_baru i) UpSinglet.isInfinitesimalActionOf.conj n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_baru i)
+    UpSinglet.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the quark doublets transforms in their representation. -/
 lemma transformsIn_covDerivQ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet QuarkDoublet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet QuarkDoublet.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A QuarkDoublet.gaugeAlgebraAction (h.Q i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_Q i) QuarkDoublet.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_Q i)
+    QuarkDoublet.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate quark doublets transforms in their conjugate
   representation. -/
 lemma transformsIn_covDerivBarQ (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj QuarkDoublet.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj QuarkDoublet.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj QuarkDoublet.gaugeAlgebraAction)
         (h.barQ i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_barQ i)
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_barQ i)
     QuarkDoublet.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the lepton doublets transforms in their representation. -/
 lemma transformsIn_covDerivL (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet LeptonDoublet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet LeptonDoublet.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A LeptonDoublet.gaugeAlgebraAction (h.L i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_L i) LeptonDoublet.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_L i)
+    LeptonDoublet.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate lepton doublets transforms in their conjugate
   representation. -/
 lemma transformsIn_covDerivBarL (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj LeptonDoublet.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj LeptonDoublet.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj LeptonDoublet.gaugeAlgebraAction)
         (h.barL i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_barL i)
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_barL i)
     LeptonDoublet.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the lepton singlets transforms in their representation. -/
 lemma transformsIn_covDerivE (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet LeptonSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn repJet LeptonSinglet.repJetGaugeGroupI
       (IsGaugeField.covDerivIter h.A LeptonSinglet.gaugeAlgebraAction (h.e i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_e i) LeptonSinglet.isInfinitesimalActionOf n l
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_e i)
+    LeptonSinglet.isInfinitesimalActionOf n l
 
 /-- The covariant tower of the conjugate lepton singlets transforms in their conjugate
   representation. -/
 lemma transformsIn_covDerivBarE (i : Fin 3) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repJet (repConj LeptonSinglet.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj LeptonSinglet.repJetGaugeGroupI)
       (IsGaugeField.covDerivIter h.A (LocalGaugeData.actionConj LeptonSinglet.gaugeAlgebraAction)
         (h.bare i) n l) :=
-  TransformsIn.covDerivIter h.repJet_A (h.repJet_bare i)
+  LocalGaugeData.TransformsIn.covDerivIter h.repJet_A (h.repJet_bare i)
     LeptonSinglet.isInfinitesimalActionOf.conj n l
 
 /-- The covariant tower of the Higgs transforms through the base point of a gauge jet. -/
@@ -1293,7 +1297,9 @@ lemma repJet_covDerivH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGauge
 lemma repJet_covDerivBarH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     repJet U (h.covDerivBarH l φ) =
-      h.covDerivBarH l (IsGaugeField.repDualCoeff (repConj HiggsVec.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+      h.covDerivBarH l
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj HiggsVec.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarH n l).repGauge_zero U φ
 
 /-- The covariant tower of the down-type quarks transforms through the base point of a
@@ -1310,7 +1316,8 @@ lemma repJet_covDerivBarD (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
     repJet U (h.covDerivBarD i l φ) =
       h.covDerivBarD i l
-        (IsGaugeField.repDualCoeff (repConj DownSinglet.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj DownSinglet.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarD i n l).repGauge_zero U φ
 
 /-- The covariant tower of the up-type quarks transforms through the base point of a gauge
@@ -1327,7 +1334,8 @@ lemma repJet_covDerivBarU (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) :
     repJet U (h.covDerivBarU i l φ) =
       h.covDerivBarU i l
-        (IsGaugeField.repDualCoeff (repConj UpSinglet.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj UpSinglet.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarU i n l).repGauge_zero U φ
 
 /-- The covariant tower of the quark doublets transforms through the base point of a gauge
@@ -1344,7 +1352,8 @@ lemma repJet_covDerivBarQ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     repJet U (h.covDerivBarQ i l φ) =
       h.covDerivBarQ i l
-        (IsGaugeField.repDualCoeff (repConj QuarkDoublet.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj QuarkDoublet.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarQ i n l).repGauge_zero U φ
 
 /-- The covariant tower of the lepton doublets transforms through the base point of a gauge
@@ -1361,7 +1370,8 @@ lemma repJet_covDerivBarL (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     repJet U (h.covDerivBarL i l φ) =
       h.covDerivBarL i l
-        (IsGaugeField.repDualCoeff (repConj LeptonDoublet.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj LeptonDoublet.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarL i n l).repGauge_zero U φ
 
 /-- The covariant tower of the lepton singlets transforms through the base point of a gauge
@@ -1378,27 +1388,28 @@ lemma repJet_covDerivBarE (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     repJet U (h.covDerivBarE i l φ) =
       h.covDerivBarE i l
-        (IsGaugeField.repDualCoeff (repConj LeptonSinglet.repJetGaugeGroupI) U⁻¹ 0 φ) :=
+        (IsGaugeField.repDualCoeff (JetComponentSpace.repConj LeptonSinglet.repJetGaugeGroupI)
+          U⁻¹ 0 φ) :=
   (h.transformsIn_covDerivBarE i n l).repGauge_zero U φ
 
 /-- A pure gauge jet fixes the covariant tower of the Higgs. -/
 lemma repJet_covDerivH_of_mem_truncationKer_zero {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
-    (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℂ HiggsVec) :
+    (U : localGaugeData.truncationKer 0) (φ : Module.Dual ℂ HiggsVec) :
     repJet U.1 (h.covDerivH l φ) = h.covDerivH l φ :=
   (h.transformsIn_covDerivH n l).repGauge_eq_of_mem_truncationKer_zero
     (fun hW => HiggsVec.repCoeff_zero_of_eval_eq_one hW) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate Higgs. -/
 lemma repJet_covDerivBarH_of_mem_truncationKer_zero {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
-    (U : JetGaugeGroupI.truncationKer 0) (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
+    (U : localGaugeData.truncationKer 0) (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     repJet U.1 (h.covDerivBarH l φ) = h.covDerivBarH l φ :=
   (h.transformsIn_covDerivBarH n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (HiggsVec.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the down-type quarks. -/
 lemma repJet_covDerivD_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ DownSinglet) :
     repJet U.1 (h.covDerivD i l φ) = h.covDerivD i l φ :=
   (h.transformsIn_covDerivD i n l).repGauge_eq_of_mem_truncationKer_zero
@@ -1406,16 +1417,16 @@ lemma repJet_covDerivD_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate down-type quarks. -/
 lemma repJet_covDerivBarD_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
     repJet U.1 (h.covDerivBarD i l φ) = h.covDerivBarD i l φ :=
   (h.transformsIn_covDerivBarD i n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (DownSinglet.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the up-type quarks. -/
 lemma repJet_covDerivU_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ UpSinglet) :
     repJet U.1 (h.covDerivU i l φ) = h.covDerivU i l φ :=
   (h.transformsIn_covDerivU i n l).repGauge_eq_of_mem_truncationKer_zero
@@ -1423,16 +1434,16 @@ lemma repJet_covDerivU_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate up-type quarks. -/
 lemma repJet_covDerivBarU_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) :
     repJet U.1 (h.covDerivBarU i l φ) = h.covDerivBarU i l φ :=
   (h.transformsIn_covDerivBarU i n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (UpSinglet.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the quark doublets. -/
 lemma repJet_covDerivQ_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ QuarkDoublet) :
     repJet U.1 (h.covDerivQ i l φ) = h.covDerivQ i l φ :=
   (h.transformsIn_covDerivQ i n l).repGauge_eq_of_mem_truncationKer_zero
@@ -1440,16 +1451,16 @@ lemma repJet_covDerivQ_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate quark doublets. -/
 lemma repJet_covDerivBarQ_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     repJet U.1 (h.covDerivBarQ i l φ) = h.covDerivBarQ i l φ :=
   (h.transformsIn_covDerivBarQ i n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (QuarkDoublet.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the lepton doublets. -/
 lemma repJet_covDerivL_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ LeptonDoublet) :
     repJet U.1 (h.covDerivL i l φ) = h.covDerivL i l φ :=
   (h.transformsIn_covDerivL i n l).repGauge_eq_of_mem_truncationKer_zero
@@ -1457,16 +1468,16 @@ lemma repJet_covDerivL_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate lepton doublets. -/
 lemma repJet_covDerivBarL_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     repJet U.1 (h.covDerivBarL i l φ) = h.covDerivBarL i l φ :=
   (h.transformsIn_covDerivBarL i n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (LeptonDoublet.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- A pure gauge jet fixes the covariant tower of the lepton singlets. -/
 lemma repJet_covDerivE_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ LeptonSinglet) :
     repJet U.1 (h.covDerivE i l φ) = h.covDerivE i l φ :=
   (h.transformsIn_covDerivE i n l).repGauge_eq_of_mem_truncationKer_zero
@@ -1474,11 +1485,11 @@ lemma repJet_covDerivE_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
 
 /-- A pure gauge jet fixes the covariant tower of the conjugate lepton singlets. -/
 lemma repJet_covDerivBarE_of_mem_truncationKer_zero (i : Fin 3) {n : ℕ}
-    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI.truncationKer 0)
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : localGaugeData.truncationKer 0)
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     repJet U.1 (h.covDerivBarE i l φ) = h.covDerivBarE i l φ :=
   (h.transformsIn_covDerivBarE i n l).repGauge_eq_of_mem_truncationKer_zero
-    (fun hW => repCoeff_repConj_zero_eq_id
+    (fun hW => LocalGaugeData.repCoeff_repConj_zero_eq_id
       (LeptonSinglet.repCoeff_zero_of_eval_eq_one hW)) U φ
 
 /-- The covariant tower of the field strength is antisymmetric in its two covector
@@ -1495,7 +1506,7 @@ lemma covDerivFieldStrength_swap (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕
 /-- The covariant tower of the field strength transforms in the adjoint. -/
 lemma transformsInAdjoint_covDerivFieldStrength (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) :
-    IsGaugeField.TransformsInAdjoint repJet
+    IsGaugeField.TransformsInAdjoint localGaugeData repJet
       (IsGaugeField.iteratedCovDerivAdjoint h.A l (IsGaugeField.fieldStrength h.A μ ν)) :=
   IsGaugeField.transformsInAdjoint_iteratedCovDerivAdjoint h.repJet_A l μ ν
 
@@ -1504,12 +1515,12 @@ lemma transformsInAdjoint_covDerivFieldStrength (l : List (Fin 1 ⊕ Fin 3))
 lemma repJet_covDerivFieldStrength (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repJet U (h.covDerivFieldStrength l μ ν φ) =
-      h.covDerivFieldStrength l μ ν (adjointDualCoeff U⁻¹ 0 φ) :=
+      h.covDerivFieldStrength l μ ν (localGaugeData.adjointDualCoeff U⁻¹ 0 φ) :=
   (h.transformsInAdjoint_covDerivFieldStrength l μ ν).repGauge_zero U φ
 
 /-- A pure gauge jet fixes the covariant tower of the field strength. -/
 lemma repJet_covDerivFieldStrength_of_mem_truncationKer_zero
-    (U : JetGaugeGroupI.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
+    (U : localGaugeData.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repJet U.1 (h.covDerivFieldStrength l μ ν φ) = h.covDerivFieldStrength l μ ν φ :=
   IsGaugeField.repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero

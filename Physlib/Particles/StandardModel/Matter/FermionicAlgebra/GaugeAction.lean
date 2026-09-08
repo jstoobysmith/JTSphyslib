@@ -63,7 +63,7 @@ noncomputable def repJetGaugeGroupI
       rep U (χ • z) = χ • rep U z) :
     Representation ℂ JetGaugeGroupI (FermionicAlgebra V) where
   toFun U :=
-    (ExteriorAlgebra.map (JetComponentSpace.repJetGaugeGroupI rep hlin U)).toLinearMap
+    (ExteriorAlgebra.map (JetComponentSpace.repJet rep hlin U)).toLinearMap
   map_one' := by
     simp only [map_one, Module.End.one_eq_id, ExteriorAlgebra.map_id,
       AlgHom.toLinearMap_id]
@@ -77,7 +77,7 @@ lemma repJetGaugeGroupI_apply
       rep U (χ • z) = χ • rep U z)
     (U : JetGaugeGroupI) (x : FermionicAlgebra V) :
     repJetGaugeGroupI rep hlin U x =
-      ExteriorAlgebra.map (JetComponentSpace.repJetGaugeGroupI rep hlin U) x := rfl
+      ExteriorAlgebra.map (JetComponentSpace.repJet rep hlin U) x := rfl
 
 @[simp]
 lemma repJetGaugeGroupI_apply_one
@@ -105,7 +105,7 @@ lemma repJetGaugeGroupI_ι
       rep U (χ • z) = χ • rep U z)
     (U : JetGaugeGroupI) (v : JetComponentSpace V) :
     repJetGaugeGroupI rep hlin U (ExteriorAlgebra.ι ℂ v) =
-      ExteriorAlgebra.ι ℂ (JetComponentSpace.repJetGaugeGroupI rep hlin U v) := by
+      ExteriorAlgebra.ι ℂ (JetComponentSpace.repJet rep hlin U v) := by
   rw [repJetGaugeGroupI_apply, ExteriorAlgebra.map_apply_ι]
 
 /-- The jet gauge action as an algebra homomorphism: a gauge transformation acts on a
@@ -146,11 +146,12 @@ lemma repJetGaugeGroupI_ofField
   rw [ofField_apply, repJetGaugeGroupI_ι, ofField_apply]
   congr 1
   refine Prod.ext ?_ ?_
-  · exact repDual_one_tmul rep hlin U φ
-  · rw [JetComponentSpace.repJetGaugeGroupI_snd]
+  · exact JetComponentSpace.repDual_one_tmul rep hlin U φ
+  · rw [JetComponentSpace.repJet_snd]
     exact map_zero _
 
-/-- **`ofConjField` is gauge equivariant**, for the conjugate action `repConj rep` on the
+/-- **`ofConjField` is gauge equivariant**, for the conjugate action
+  `JetComponentSpace.repConj rep` on the
   jets of the conjugate field — which is the physicists' `ψ̄ ↦ ψ̄ U†`. -/
 lemma repJetGaugeGroupI_ofConjField
     (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
@@ -159,13 +160,14 @@ lemma repJetGaugeGroupI_ofConjField
     (U : JetGaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)) :
     repJetGaugeGroupI rep hlin U (ofConjField φ) =
       ofConjField (Module.Dual.transpose
-        (jetEval ∘ₗ (repConj rep U⁻¹).comp jetOfConstant) φ) := by
+        (jetEval ∘ₗ (JetComponentSpace.repConj rep U⁻¹).comp jetOfConstant) φ) := by
   rw [ofConjField_apply, repJetGaugeGroupI_ι, ofConjField_apply]
   congr 1
   refine Prod.ext ?_ ?_
-  · rw [JetComponentSpace.repJetGaugeGroupI_fst]
+  · rw [JetComponentSpace.repJet_fst]
     exact map_zero _
-  · exact repDual_one_tmul (repConj rep) (repConj_smul_comm hlin) U φ
+  · exact JetComponentSpace.repDual_one_tmul (JetComponentSpace.repConj rep)
+      (JetComponentSpace.repConj_smul_comm hlin) U φ
 
 /-!
 
@@ -231,7 +233,8 @@ lemma repGaugeGroupI_ofConjField
     (g : GaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)) :
     repGaugeGroupI rep hlin g (ofConjField φ) =
       ofConjField (Module.Dual.transpose
-        (jetEval ∘ₗ (repConj rep (JetGaugeGroupI.ofConstant g⁻¹)).comp jetOfConstant) φ) := by
+        (jetEval ∘ₗ (JetComponentSpace.repConj rep (JetGaugeGroupI.ofConstant g⁻¹)).comp
+          jetOfConstant) φ) := by
   have h : (JetGaugeGroupI.ofConstant g)⁻¹ = JetGaugeGroupI.ofConstant g⁻¹ :=
     (map_inv JetGaugeGroupI.ofConstant g).symm
   rw [repGaugeGroupI_apply, repJetGaugeGroupI_ofConjField, h]

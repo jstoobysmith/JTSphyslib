@@ -8,7 +8,8 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.JetDeriv
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The total derivative on the jet algebra of the Standard Model
 
@@ -72,7 +73,7 @@ noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAl
       LinearMap.id
     + TensorProduct.map (TensorProduct.map LinearMap.id (BosonicAlgebra.jetDeriv μ))
         LinearMap.id
-    + TensorProduct.map LinearMap.id (GaugeJetAlgebra.complexJetDeriv μ)
+    + TensorProduct.map LinearMap.id ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) μ)
 
 /-!
 
@@ -81,11 +82,11 @@ noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) : JetAlgebra →ₗ[ℂ] JetAl
 -/
 
 lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra) (h : HiggsJetAlgebra)
-    (g : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    (g : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     jetDeriv μ ((f ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] g)
       = ((FermionicAlgebra.jetDeriv μ f) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] g
         + (f ⊗ₜ[ℂ] (BosonicAlgebra.jetDeriv μ h)) ⊗ₜ[ℂ] g
-        + (f ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] (GaugeJetAlgebra.complexJetDeriv μ g) := rfl
+        + (f ⊗ₜ[ℂ] h) ⊗ₜ[ℂ] ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) μ g) := rfl
 
 /-!
 
@@ -100,8 +101,10 @@ derivative survives, and each inclusion intertwines the two derivatives.
 /-- The gauge sector's derivative annihilates the unit of the complexified gauge jet
   algebra. -/
 private lemma complexJetDeriv_one (μ : Fin 1 ⊕ Fin 3) :
-    GaugeJetAlgebra.complexJetDeriv μ (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = 0 := by
-  rw [show (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = (1 : ℂ) ⊗ₜ[ℝ] (1 : GaugeJetAlgebra) from rfl,
+    (GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) μ
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 0 := by
+  rw [show (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
+      = (1 : ℂ) ⊗ₜ[ℝ] (1 : (GaugeJetAlgebra GaugeAlgebra)) from rfl,
     GaugeJetAlgebra.complexJetDeriv_tmul, GaugeJetAlgebra.jetDeriv_one,
     TensorProduct.tmul_zero]
 
@@ -110,7 +113,7 @@ private lemma complexJetDeriv_one (μ : Fin 1 ⊕ Fin 3) :
 lemma jetDeriv_includeFermion (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra) :
     jetDeriv μ (includeFermion f) = includeFermion (FermionicAlgebra.jetDeriv μ f) := by
   have hincl : ∀ x : FermionJetAlgebra, includeFermion x
-      = (x ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) :=
+      = (x ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :=
     fun _ => rfl
   rw [hincl f, jetDeriv_tmul,
     show BosonicAlgebra.jetDeriv (V := HiggsVec) μ (1 : HiggsJetAlgebra) = 0 from
@@ -123,7 +126,7 @@ lemma jetDeriv_includeFermion (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra) :
 lemma jetDeriv_includeHiggs (μ : Fin 1 ⊕ Fin 3) (h : HiggsJetAlgebra) :
     jetDeriv μ (includeHiggs h) = includeHiggs (BosonicAlgebra.jetDeriv μ h) := by
   have hincl : ∀ x : HiggsJetAlgebra, includeHiggs x
-      = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] x) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) :=
+      = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] x) ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :=
     fun _ => rfl
   rw [hincl h, jetDeriv_tmul,
     show FermionicAlgebra.jetDeriv (V := FermionSpace) μ (1 : FermionJetAlgebra) = 0 from
@@ -133,8 +136,9 @@ lemma jetDeriv_includeHiggs (μ : Fin 1 ⊕ Fin 3) (h : HiggsJetAlgebra) :
   exact (hincl (BosonicAlgebra.jetDeriv μ h)).symm
 
 /-- The derivative acts on the gauge sector through the gauge sector's own derivative. -/
-lemma jetDeriv_includeGauge (μ : Fin 1 ⊕ Fin 3) (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
-    jetDeriv μ (includeGauge y) = includeGauge (GaugeJetAlgebra.complexJetDeriv μ y) := by
+lemma jetDeriv_includeGauge (μ : Fin 1 ⊕ Fin 3) (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    jetDeriv μ (includeGauge y)
+      = includeGauge ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) μ y) := by
   rw [includeGauge_apply, jetDeriv_tmul,
     show FermionicAlgebra.jetDeriv (V := FermionSpace) μ (1 : FermionJetAlgebra) = 0 from
       FermionicAlgebra.jetDeriv_one μ,
@@ -219,18 +223,18 @@ private lemma add₃_derivation {R : Type*} [NonUnitalNonAssocRing R]
 lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : JetAlgebra) :
     jetDeriv μ (x * y) = jetDeriv μ x * y + x * jetDeriv μ y := by
   have h₁ := TensorProduct.map_derivation_left
-    (B := ℂ ⊗[ℝ] GaugeJetAlgebra)
+    (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
     (TensorProduct.map (FermionicAlgebra.jetDeriv μ) LinearMap.id)
     (TensorProduct.map_derivation_left (FermionicAlgebra.jetDeriv μ)
       (FermionicAlgebra.jetDeriv_mul μ)) x y
   have h₂ := TensorProduct.map_derivation_left
-    (B := ℂ ⊗[ℝ] GaugeJetAlgebra)
+    (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
     (TensorProduct.map LinearMap.id (BosonicAlgebra.jetDeriv μ))
     (TensorProduct.map_derivation_right (BosonicAlgebra.jetDeriv μ)
       (BosonicAlgebra.jetDeriv_mul μ)) x y
   have h₃ := TensorProduct.map_derivation_right
     (A := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra)
-    (GaugeJetAlgebra.complexJetDeriv μ)
+    ((GaugeJetAlgebra.complexJetDeriv GaugeAlgebra) μ)
     (GaugeJetAlgebra.complexJetDeriv_mul μ) x y
   exact add₃_derivation h₁ h₂ h₃
 
@@ -260,18 +264,19 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
     (jetDeriv μ).comp (jetDeriv ν) = (jetDeriv ν).comp (jetDeriv μ) := by
   have hW : ∀ D D' : (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) →ₗ[ℂ]
       (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra),
-      (TensorProduct.map D (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra))).comp
+      (TensorProduct.map D (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)))).comp
         (TensorProduct.map D' LinearMap.id)
       = TensorProduct.map (D.comp D') LinearMap.id := fun D D' => by
     rw [← TensorProduct.map_comp, LinearMap.id_comp]
-  have hG : ∀ D D' : (ℂ ⊗[ℝ] GaugeJetAlgebra) →ₗ[ℂ] (ℂ ⊗[ℝ] GaugeJetAlgebra),
+  have hG : ∀ D D' : (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₗ[ℂ]
+      (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)),
       (TensorProduct.map (LinearMap.id (M := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra))
         D).comp (TensorProduct.map LinearMap.id D')
       = TensorProduct.map LinearMap.id (D.comp D') := fun D D' => by
     rw [← TensorProduct.map_comp, LinearMap.id_comp]
   have hWG : ∀ (D : (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) →ₗ[ℂ]
       (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra))
-      (D' : (ℂ ⊗[ℝ] GaugeJetAlgebra) →ₗ[ℂ] (ℂ ⊗[ℝ] GaugeJetAlgebra)),
+      (D' : (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₗ[ℂ] (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))),
       (TensorProduct.map D LinearMap.id).comp (TensorProduct.map LinearMap.id D')
       = (TensorProduct.map LinearMap.id D').comp (TensorProduct.map D LinearMap.id) :=
     fun D D' => by
@@ -295,13 +300,15 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
       = TensorProduct.map LinearMap.id (D.comp D') := fun D D' => by
     rw [← TensorProduct.map_comp, LinearMap.id_comp]
   have h11 := (hW _ _).trans
-    ((congrArg (fun m => TensorProduct.map m (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra)))
+    ((congrArg (fun m => TensorProduct.map m
+        (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))))
       ((hFF _ _).trans
         ((congrArg (fun d => TensorProduct.map d (LinearMap.id (M := HiggsJetAlgebra)))
           (FermionicAlgebra.jetDeriv_comm μ ν)).trans (hFF _ _).symm))).trans
       (hW _ _).symm)
   have h22 := (hW _ _).trans
-    ((congrArg (fun m => TensorProduct.map m (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra)))
+    ((congrArg (fun m => TensorProduct.map m
+        (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))))
       ((hHH _ _).trans
         ((congrArg (fun d => TensorProduct.map (LinearMap.id (M := FermionJetAlgebra)) d)
           (BosonicAlgebra.jetDeriv_comm μ ν)).trans (hHH _ _).symm))).trans
@@ -311,11 +318,13 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
         (LinearMap.id (M := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra)) d)
       (GaugeJetAlgebra.complexJetDeriv_comm μ ν)).trans (hG _ _).symm)
   have h12 := (hW _ _).trans
-    ((congrArg (fun m => TensorProduct.map m (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra)))
+    ((congrArg (fun m => TensorProduct.map m
+        (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))))
       (hFH (FermionicAlgebra.jetDeriv μ) (BosonicAlgebra.jetDeriv ν))).trans
       (hW _ _).symm)
   have h21 := (hW _ _).trans
-    ((congrArg (fun m => TensorProduct.map m (LinearMap.id (M := ℂ ⊗[ℝ] GaugeJetAlgebra)))
+    ((congrArg (fun m => TensorProduct.map m
+        (LinearMap.id (M := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))))
       (hFH (FermionicAlgebra.jetDeriv ν) (BosonicAlgebra.jetDeriv μ)).symm).trans
       (hW _ _).symm)
   exact add₃_comp_comm h11 h12 (hWG _ _) h21 h22 (hWG _ _) (hWG _ _).symm

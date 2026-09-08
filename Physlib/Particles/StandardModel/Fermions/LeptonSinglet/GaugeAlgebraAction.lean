@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
 /-!
 # The gauge-algebra action on the charged-lepton singlet
 
@@ -181,10 +181,10 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
         • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
   refine LinearMap.ext fun l => ?_
   rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x l
-      = StandardModel.jetEval (StandardModel.jetIteratedDeriv x
-          (repJetGaugeGroupI U (StandardModel.jetOfConstant l))) from rfl,
-    StandardModel.jetOfConstant_apply, repJetGaugeGroupI_tmul, mul_one,
-    jetIteratedDeriv_tmul, StandardModel.jetEval_tmul, jetPhase_eq,
+      = jetEval (jetIteratedDeriv x
+          (repJetGaugeGroupI U (jetOfConstant l))) from rfl,
+    jetOfConstant_apply, repJetGaugeGroupI_tmul, mul_one,
+    jetIteratedDeriv_tmul, jetEval_tmul, jetPhase_eq,
     LinearMap.smul_apply, LinearMap.id_apply]
 
 /-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
@@ -264,7 +264,7 @@ theorem isInfinitesimalActionOf :
     localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
-    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+    simp only [localGaugeData_evalLie,
       localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
     have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
         = -((x.antidiagonal.map fun p =>
@@ -282,16 +282,16 @@ theorem isInfinitesimalActionOf :
     exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
       fun p hp => by rw [gaugeAlgebraAction_apply, repCoeff_eq, smul_id_comp]))
   · intro U x c
-    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
+    simp only [localGaugeData_adjointCoeff_apply]
     have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-        gaugeAlgebraAction (IsGaugeField.adjointCoeff U p.1 c)
+        gaugeAlgebraAction (localGaugeData.adjointCoeff U p.1 c)
             ∘ₗ IsGaugeField.repCoeff repJetGaugeGroupI U p.2
           = (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
                 (C c.toU1Value)))
               * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := fun p => by
       rw [gaugeAlgebraAction_apply, repCoeff_eq, smul_id_comp,
-        IsGaugeField.adjointCoeff_toU1Value]
+        localGaugeData_adjointCoeff_toU1Value]
     have hvan : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3), p.1 ≠ 0 →
         (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
               (C c.toU1Value)))
@@ -312,7 +312,7 @@ theorem isInfinitesimalActionOf :
           (fun p => (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl
                 (fun h ρ => pderiv ℂ ρ h) (C c.toU1Value)))
               * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
-            • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)) hvan,
+            • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)) (fun p _ hp => hvan p hp),
         show ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ℂ ρ h)
             (C c.toU1Value : JetRing)) = C c.toU1Value from rfl,
         constantCoeff_C]

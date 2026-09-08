@@ -84,7 +84,7 @@ The classification of jet-gauge invariants that section D consumes is
 `AlgebraRealization.invariant_mem_adjoin_covDeriv`, proved in
 [`CovFieldAlgebra/Basic.lean`](CovFieldAlgebra/Basic.lean); the splitting of a gauge
 jet into a pure jet and a constant jet is
-`JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant`. The
+`localGaugeData.eq_truncationProjZero_mul_ofConstant`. The
 three sector structures are
 [`IsGaugeSector/Basic.lean`](../IsGaugeSector/Basic.lean),
 [`HiggsAlgebraCovRealization/Basic.lean`](../HiggsAlgebraCovRealization/Basic.lean) and
@@ -157,7 +157,7 @@ include h in
   `AlgebraRealization.CovariantDeriv` together with the field-strength case of
   `AlgebraRealization.CovFieldAlgebra.Basic`. -/
 lemma repJet_eq_of_mem_covGenerators_of_mem_truncationKer_zero
-    (U : JetGaugeGroupI.truncationKer 0) {x : B} (hx : x ∈ h.covGenerators) :
+    (U : localGaugeData.truncationKer 0) {x : B} (hx : x ∈ h.covGenerators) :
     repJet U.1 x = x := by
   rw [covGenerators] at hx
   rcases hx with hx | hx
@@ -189,7 +189,7 @@ include h in
 /-- Pure gauge jets fix the covariant algebra pointwise: they fix its generators, and
   the jet action is an algebra map. -/
 lemma repJet_eq_of_mem_covAlgebra_of_mem_truncationKer_zero
-    (U : JetGaugeGroupI.truncationKer 0) {x : B} (hx : x ∈ h.covAlgebra) :
+    (U : localGaugeData.truncationKer 0) {x : B} (hx : x ∈ h.covAlgebra) :
     repJet U.1 x = x := by
   induction hx using Algebra.adjoin_induction with
   | mem b hb => exact h.repJet_eq_of_mem_covGenerators_of_mem_truncationKer_zero U hb
@@ -221,17 +221,17 @@ theorem forall_repJet_eq_iff {x : B} (hx : x ∈ h.fieldAlgebra) :
   · intro hinv
     exact ⟨h.invariant_mem_adjoin_covDeriv hx hinv, fun g => hinv _⟩
   · rintro ⟨hmem, hglob⟩ U
-    have hU := JetGaugeGroupI.eq_truncationProjZero_mul_ofConstant U
+    have hU := localGaugeData.eq_truncationProjZero_mul_ofConstant U
     calc repJet U x
-        = repJet ((JetGaugeGroupI.truncationProjZero U : JetGaugeGroupI) *
-            JetGaugeGroupI.ofConstant U.eval) x := by rw [← hU]
-      _ = repJet (JetGaugeGroupI.truncationProjZero U : JetGaugeGroupI)
+        = repJet ((localGaugeData.truncationProjZero U : JetGaugeGroupI) *
+            JetGaugeGroupI.ofConstant U.eval) x := congrArg (fun W => repJet W x) hU
+      _ = repJet (localGaugeData.truncationProjZero U : JetGaugeGroupI)
             (repJet (JetGaugeGroupI.ofConstant U.eval) x) := by
           rw [map_mul]; rfl
-      _ = repJet (JetGaugeGroupI.truncationProjZero U : JetGaugeGroupI) x := by
+      _ = repJet (localGaugeData.truncationProjZero U : JetGaugeGroupI) x := by
           rw [show repJet (JetGaugeGroupI.ofConstant U.eval) x = x from hglob U.eval]
       _ = x := h.repJet_eq_of_mem_covAlgebra_of_mem_truncationKer_zero
-          (JetGaugeGroupI.truncationProjZero U) hmem
+          (localGaugeData.truncationProjZero U) hmem
 
 include h in
 /-- The reduction theorem in the form used for Lagrangians: for an element of the field
@@ -289,20 +289,21 @@ lemma repDualCoeff_repConj_zero_ofConstant_inv {V : Type} [AddCommGroup V] [Modu
     {repG : Representation ℂ GaugeGroupI V} (g : GaugeGroupI)
     (hg : ∀ g' : GaugeGroupI,
       rep (JetGaugeGroupI.ofConstant g') = TensorProduct.map LinearMap.id (repG g')) :
-    IsGaugeField.repDualCoeff (repConj rep) (JetGaugeGroupI.ofConstant g)⁻¹ 0 =
+    IsGaugeField.repDualCoeff (JetComponentSpace.repConj rep) (JetGaugeGroupI.ofConstant g)⁻¹ 0 =
       repG.conj.dual g := by
   rw [show ((JetGaugeGroupI.ofConstant g)⁻¹ : JetGaugeGroupI) =
       JetGaugeGroupI.ofConstant g⁻¹ from (map_inv JetGaugeGroupI.ofConstant g).symm,
-    IsGaugeField.repDualCoeff, repCoeff_repConj,
+    IsGaugeField.repDualCoeff, LocalGaugeData.repCoeff_repConj,
     repCoeff_zero_ofConstant (hg g⁻¹)]
   rfl
 
 /-- At an inverse constant jet the dual adjoint coefficient is the contragredient
   adjoint action of the global gauge group. -/
-lemma adjointDualCoeff_zero_ofConstant_inv (g : GaugeGroupI) :
-    adjointDualCoeff (JetGaugeGroupI.ofConstant g)⁻¹ 0 =
+lemma localGaugeData.adjointDualCoeff_zero_ofConstant_inv (g : GaugeGroupI) :
+    localGaugeData.adjointDualCoeff (JetGaugeGroupI.ofConstant g)⁻¹ 0 =
       (GaugeAlgebra.adjointMap g⁻¹).dualMap := by
-  rw [adjointDualCoeff_zero, map_inv, JetGaugeGroupI.eval_ofConstant]
+  rw [localGaugeData.adjointDualCoeff_zero, map_inv, localGaugeData_eval,
+    JetGaugeGroupI.eval_ofConstant]
   rfl
 
 include h in
@@ -315,7 +316,7 @@ lemma repGlobal_covF (g : GaugeGroupI) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3
   rw [repGlobal_apply]
   refine (h.repJet_covDerivFieldStrength (JetGaugeGroupI.ofConstant g)
     (List.ofFn l) μ ν φ).trans ?_
-  rw [adjointDualCoeff_zero_ofConstant_inv]
+  rw [localGaugeData.adjointDualCoeff_zero_ofConstant_inv]
   rfl
 
 include h in

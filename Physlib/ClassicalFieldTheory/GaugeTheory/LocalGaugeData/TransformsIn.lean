@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 /-!
 # Gauge tensors in a representation
 
@@ -28,8 +29,9 @@ lives in the `LocalGaugeData` namespace with the transformation laws that consum
 - `LocalGaugeData.TransformsIn` : the gauge tensors of a representation.
 - `LocalGaugeData.TransformsIn.repGauge_zero` : the underived symbol transforms through
   the base-point value of the gauge jet alone.
-- `LocalGaugeData.TransformsIn.repGauge_eq_of_eval_eq_one` : a jet with trivial base-point
-  value fixes the underived symbol, when the representation is trivial on such jets.
+- `LocalGaugeData.TransformsIn.repGauge_eq_of_eval_eq_one`,
+  `LocalGaugeData.TransformsIn.repGauge_eq_of_mem_truncationKer_zero` : a pure jet fixes the
+  underived symbol, when the representation is trivial on such jets.
 
 -/
 
@@ -74,8 +76,8 @@ lemma TransformsIn.repGauge_zero (hF : TransformsIn repGauge rep F) (U : G)
   simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton,
     Multiset.sum_singleton] using hF U φ 0
 
-/-- **Matter gauge tensors whose zeroth representation coefficient is trivial on pure
-  jets are fixed by pure jets**: for a family transforming in `rep`, a gauge jet with
+/-- Matter gauge tensors whose zeroth representation coefficient is trivial on pure
+  jets are fixed by pure jets: for a family transforming in `rep`, a gauge jet with
   trivial base-point value acts trivially on the underived symbol, provided the
   representation's zeroth Taylor coefficient is the identity on such jets. -/
 lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
@@ -88,5 +90,15 @@ lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieA
   rw [hF.repGauge_zero U φ,
     show repDualCoeff rep U⁻¹ 0 = (repCoeff rep U⁻¹ 0).dualMap from rfl, hrep hinv]
   rfl
+
+/-- Matter gauge tensors are fixed by pure jets: the members of the zeroth truncation kernel
+  are the jets with trivial base-point value, so `repGauge_eq_of_eval_eq_one` applies. -/
+lemma TransformsIn.repGauge_eq_of_mem_truncationKer_zero {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (hF : TransformsIn repGauge rep F)
+    (hrep : ∀ {W : G}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
+    (U : jets.truncationKer 0) (φ : Module.Dual ℂ V) :
+    repGauge U.1 (F 0 φ) = F 0 φ :=
+  hF.repGauge_eq_of_eval_eq_one hrep (jets.mem_truncationKer_zero_iff.mp U.2) φ
 
 end LocalGaugeData

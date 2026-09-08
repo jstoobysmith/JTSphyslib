@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
@@ -276,7 +276,7 @@ private lemma pderivWeak_comp_foldWeak (μ : Fin 1 ⊕ Fin 3)
   entrywise derivative on the weak coordinates. -/
 private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
     (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    jetValLinEquiv (StandardModel.jetDeriv μ z)
+    jetValLinEquiv (jetDeriv μ z)
       = (TensorProduct.map LinearMap.id (pderivWeak μ)) (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => rw [map_zero, map_zero, map_zero]
@@ -288,7 +288,7 @@ private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
       rw [show ({ val := 0 } : LeptonDoublet) = 0 from rfl, TensorProduct.tmul_zero,
         map_zero, map_zero, map_zero]
     | tmul ψ c =>
-      rw [show StandardModel.jetDeriv μ (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
+      rw [show jetDeriv μ (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
           = (pderiv ℂ μ f) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet) from rfl,
         show jetValLinEquiv ((pderiv ℂ μ f) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
           = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • pderiv ℂ μ f) from rfl,
@@ -307,22 +307,22 @@ private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
   with the entrywise iterated derivative on the weak coordinates. -/
 private lemma jetValLinEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3))
     (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    jetValLinEquiv (StandardModel.jetIteratedDeriv x z)
+    jetValLinEquiv (jetIteratedDeriv x z)
       = (TensorProduct.map LinearMap.id (foldWeak x)) (jetValLinEquiv z) := by
   induction x using Multiset.induction_on with
   | empty =>
-    rw [StandardModel.jetIteratedDeriv_zero, LinearMap.id_apply,
+    rw [jetIteratedDeriv_zero, LinearMap.id_apply,
       show foldWeak 0 = LinearMap.id from LinearMap.ext fun v =>
         WithLp.ofLp_injective 2 rfl,
       TensorProduct.map_id, LinearMap.id_apply]
   | cons μ t ih =>
-    rw [StandardModel.jetIteratedDeriv_cons, LinearMap.comp_apply,
+    rw [jetIteratedDeriv_cons, LinearMap.comp_apply,
       jetValLinEquiv_jetDeriv, ih, ← LinearMap.comp_apply, ← TensorProduct.map_comp,
       LinearMap.id_comp, pderivWeak_comp_foldWeak]
 
 /-- The base-point evaluation of a lepton-doublet jet through the weak coordinates. -/
 private lemma valLinEquiv_jetEval (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    valLinEquiv (StandardModel.jetEval z)
+    valLinEquiv (jetEval z)
       = (TensorProduct.map LinearMap.id ccWeak) (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp; rfl
@@ -335,7 +335,7 @@ private lemma valLinEquiv_jetEval (z : JetRing ⊗[ℂ] LeptonDoublet) :
       simp
       rfl
     | tmul ψ c =>
-      rw [StandardModel.jetEval_tmul, map_smul,
+      rw [jetEval_tmul, map_smul,
         show valLinEquiv (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet) = ψ ⊗ₜ[ℂ] c from rfl,
         show jetValLinEquiv (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
           = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f) from rfl,
@@ -456,12 +456,12 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
   refine LinearMap.ext fun d => ?_
   apply valLinEquiv.injective
   rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x d
-      = StandardModel.jetEval (StandardModel.jetIteratedDeriv x
-          (repJetGaugeGroupI U (StandardModel.jetOfConstant d))) from rfl,
+      = jetEval (jetIteratedDeriv x
+          (repJetGaugeGroupI U (jetOfConstant d))) from rfl,
     valLinEquiv_jetEval, jetValLinEquiv_jetIteratedDeriv,
     weakEnd_apply_mk, LinearEquiv.apply_symm_apply,
     repJetGaugeGroupI_eq_doubletMatrix, LinearEquiv.apply_symm_apply,
-    StandardModel.jetOfConstant_apply]
+    jetOfConstant_apply]
   obtain ⟨w⟩ := d
   induction w using TensorProduct.induction_on with
   | zero =>
@@ -547,7 +547,7 @@ theorem isInfinitesimalActionOf :
     localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
-    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+    simp only [localGaugeData_evalLie,
       localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
     have hMcons : ((doubletMatrix U).map fun f =>
         constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
@@ -571,7 +571,7 @@ theorem isInfinitesimalActionOf :
           Matrix.ext fun i j => by
             rw [Matrix.map_apply, Matrix.neg_apply, Matrix.neg_apply,
               Matrix.map_apply, foldl_pderiv_neg, map_neg],
-        matrix_constantCoeff_foldl_pderiv_mul]
+        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [jetActionMatrix_map_cc_foldl]))
     rw [repCoeff_eq, hMcons, weakEnd_neg, weakEnd_multiset_sum, Multiset.map_map]
@@ -580,7 +580,7 @@ theorem isInfinitesimalActionOf :
     rw [Function.comp_apply, weakEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
-    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
+    simp only [localGaugeData_adjointCoeff_apply]
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]
@@ -612,7 +612,7 @@ theorem isInfinitesimalActionOf :
     have hMact : ((doubletMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) * actionMatrix c
         = (x.antidiagonal.map fun p =>
-            actionMatrix (IsGaugeField.adjointCoeff U p.1 c)
+            actionMatrix (localGaugeData.adjointCoeff U p.1 c)
             * ((doubletMatrix U).map fun f =>
                 constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f))).sum := by
       have h1 : ((doubletMatrix U * jetActionMatrix (JetGaugeAlgebra.ofConstant c)).map
@@ -620,20 +620,20 @@ theorem isInfinitesimalActionOf :
           = ((doubletMatrix U).map fun f =>
               constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))
             * actionMatrix c := by
-        rw [hconst, matrix_constantCoeff_foldl_pderiv_mul,
+        rw [hconst, JetRing.matrix_constantCoeff_foldl_pderiv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((doubletMatrix U).map fun f =>
               constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f)) *
                 (if p.2 = 0 then actionMatrix c else 0))
-            (fun p hp => by rw [if_neg hp, Matrix.mul_zero]),
+            (fun p _ hp => by rw [if_neg hp, Matrix.mul_zero]),
           if_pos rfl]
-      rw [← h1, doubletMatrix_mul_jetActionMatrix, matrix_constantCoeff_foldl_pderiv_mul]
+      rw [← h1, doubletMatrix_mul_jetActionMatrix, JetRing.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [jetActionMatrix_map_cc_foldl,
           show JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
               (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant c)))
-            = IsGaugeField.adjointCoeff U p.1 c from rfl])
+            = localGaugeData.adjointCoeff U p.1 c from rfl])
     rw [repCoeff_eq,
       show (weakEnd ((doubletMatrix U).map fun f =>
             constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)))

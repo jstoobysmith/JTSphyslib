@@ -114,7 +114,7 @@ lemma commute_mapAlgHom {A B C : Type*} [Semiring A] [Algebra ℂ A] [Semiring B
   in the gauge sector: the gauge sector is central, so the commutation holds coefficient by
   coefficient. -/
 lemma commute_mapAlgHom_includeGauge (p : Polynomial JetAlgebra)
-    (q : Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra)) :
+    (q : Polynomial (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) :
     Commute p (Polynomial.mapAlgHom includeGauge q) := by
   induction q using Polynomial.induction_on' with
   | add q₁ q₂ h₁ h₂ => rw [map_add]; exact h₁.add_right h₂
@@ -151,7 +151,7 @@ noncomputable def higgsMassWeightPoly : HiggsJetAlgebra →ₐ[ℂ] Polynomial J
 /-- The gauge-boson mass-weight grading, transported into the full jet algebra. The gauge
   symbols have mass dimension one, hence mass weight two. -/
 noncomputable def gaugeMassWeightPoly :
-    (ℂ ⊗[ℝ] GaugeJetAlgebra) →ₐ[ℂ] Polynomial JetAlgebra :=
+    (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₐ[ℂ] Polynomial JetAlgebra :=
   (Polynomial.mapAlgHom includeGauge).comp GaugeJetAlgebra.complexMassWeightPoly
 
 /-- The mass-weight grading on the matter factor of the jet algebra: the fermionic and
@@ -173,7 +173,7 @@ noncomputable def matterMassWeightPoly :
   outer lift being the centrality of the gauge sector. -/
 noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
   Algebra.TensorProduct.lift (R := ℂ) (S := ℂ)
-    (A := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) (B := ℂ ⊗[ℝ] GaugeJetAlgebra)
+    (A := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
     (C := Polynomial JetAlgebra) matterMassWeightPoly gaugeMassWeightPoly
     fun _ _ => commute_mapAlgHom_includeGauge _ _
 
@@ -190,7 +190,7 @@ generator computation below is one of them followed by a sector generator lemma.
 
 /-- On a pure tensor the grading is the product of the matter and gauge gradings. -/
 lemma massWeightPoly_tmul (x : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra)
-    (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     massWeightPoly (x ⊗ₜ[ℂ] y) = matterMassWeightPoly x * gaugeMassWeightPoly y := rfl
 
 /-- On a pure tensor the matter grading is the product of the fermionic and Higgs
@@ -205,7 +205,7 @@ lemma massWeightPoly_includeFermion (a : FermionJetAlgebra) :
     massWeightPoly (includeFermion a)
       = Polynomial.mapAlgHom includeFermion (FermionicAlgebra.massWeightPoly 3 a) := by
   rw [show includeFermion a = (a ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) from rfl, massWeightPoly_tmul,
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) from rfl, massWeightPoly_tmul,
     matterMassWeightPoly_tmul, map_one, map_one, mul_one, mul_one]
   rfl
 
@@ -215,13 +215,13 @@ lemma massWeightPoly_includeHiggs (h : HiggsJetAlgebra) :
     massWeightPoly (includeHiggs h)
       = Polynomial.mapAlgHom includeHiggs (BosonicAlgebra.massWeightPoly 2 h) := by
   rw [show includeHiggs h = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) from rfl, massWeightPoly_tmul,
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) from rfl, massWeightPoly_tmul,
     matterMassWeightPoly_tmul, map_one, map_one, mul_one, one_mul]
   rfl
 
 /-- On the gauge sector the grading is the gauge sector's own grading, pushed forward along
   the gauge inclusion. -/
-lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] GaugeJetAlgebra) :
+lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     massWeightPoly (includeGauge y)
       = Polynomial.mapAlgHom includeGauge (GaugeJetAlgebra.complexMassWeightPoly y) := by
   rw [show includeGauge y = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))

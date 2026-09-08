@@ -395,30 +395,6 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
   rw [show ({μ} : Multiset (Fin 1 ⊕ Fin 3)) = μ ::ₘ 0 from rfl, iteratedDeriv_cons,
     iteratedDeriv_zero, LinearMap.comp_id]
 
-/-- The iterated Leibniz rule for the bracket: the iterated derivative of a bracket
-  is the antidiagonal convolution of iterated derivatives of the two arguments. -/
-lemma iteratedDeriv_bracket (s : Multiset (Fin 1 ⊕ Fin 3)) (a b : JetGaugeAlgebra) :
-    iteratedDeriv s ⁅a, b⁆ =
-      (s.antidiagonal.map fun p => ⁅iteratedDeriv p.1 a, iteratedDeriv p.2 b⁆).sum := by
-  induction s using Multiset.induction_on with
-  | empty => simp [Multiset.antidiagonal_zero]
-  | cons κ s ih =>
-      rw [iteratedDeriv_cons, LinearMap.comp_apply, ih, map_multiset_sum,
-        Multiset.map_map,
-        Multiset.map_congr rfl (fun p hp => by
-          rw [Function.comp_apply, deriv_bracket,
-            show deriv κ (iteratedDeriv p.1 a) = iteratedDeriv (κ ::ₘ p.1) a from by
-              rw [iteratedDeriv_cons]; rfl,
-            show deriv κ (iteratedDeriv p.2 b) = iteratedDeriv (κ ::ₘ p.2) b from by
-              rw [iteratedDeriv_cons]; rfl]),
-        Multiset.sum_map_add]
-      simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
-        Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
-      abel
-
-
-
-
 lemma iteratedDeriv_toSU3Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (iteratedDeriv s a).toSU3Matrix =
       a.toSU3Matrix.map fun f => s.foldl (fun f ρ => pderiv ℂ ρ f) f := by
@@ -607,6 +583,26 @@ lemma eval_toU1Value_eq (a : JetGaugeAlgebra) :
     show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 from map_zero _,
     coeff_zero_eq_constantCoeff]
 
+/-- The `su(3)` component of the base-point Taylor coefficients. -/
+lemma eval_iteratedDeriv_toSU3Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (eval (iteratedDeriv x a)).toSU3Matrix
+      = a.toSU3Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+  ext i j
+  rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply, Matrix.map_apply]
+
+/-- The `su(2)` component of the base-point Taylor coefficients. -/
+lemma eval_iteratedDeriv_toSU2Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (eval (iteratedDeriv x a)).toSU2Matrix
+      = a.toSU2Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+  ext i j
+  rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply, Matrix.map_apply]
+
+/-- The `u(1)` component of the base-point Taylor coefficients. -/
+lemma eval_iteratedDeriv_toU1Value (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
+    (eval (iteratedDeriv x a)).toU1Value
+      = constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) a.toU1Value) := by
+  rw [eval_toU1Value_eq, iteratedDeriv_toU1Value]
+
 
 /-- Taylor determinacy: a jet gauge algebra element is determined by the base-point
   values of its iterated derivatives. -/
@@ -679,44 +675,6 @@ theorem ext_of_eval_iteratedDeriv {x y : JetGaugeAlgebra}
   · ext m
     exact (key (Finsupp.degree m) x y h m rfl).2.2
 
-/-- Bracket congruence: the base-point Taylor data of an iterated derivative of a
-  bracket depends only on the corresponding Taylor data of the two arguments. -/
-lemma eval_iteratedDeriv_bracket_congr (w : Multiset (Fin 1 ⊕ Fin 3))
-    (a b a' b' : JetGaugeAlgebra)
-    (ha : ∀ p ≤ w, eval (iteratedDeriv p a) = eval (iteratedDeriv p a'))
-    (hb : ∀ p ≤ w, eval (iteratedDeriv p b) = eval (iteratedDeriv p b')) :
-    eval (iteratedDeriv w ⁅a, b⁆) = eval (iteratedDeriv w ⁅a', b'⁆) := by
-  induction w using Multiset.induction_on generalizing a b a' b' with
-  | empty =>
-      have ha0 := ha 0 le_rfl
-      have hb0 := hb 0 le_rfl
-      rw [iteratedDeriv_zero] at ha0 hb0 ⊢
-      simp only [LinearMap.id_coe, id_eq] at ha0 hb0 ⊢
-      rw [LieHom.map_lie, LieHom.map_lie, ha0, hb0]
-  | cons ρ w ihw =>
-      have hcons : ∀ c : JetGaugeAlgebra,
-          iteratedDeriv (ρ ::ₘ w) c = iteratedDeriv w (deriv ρ c) := by
-        intro c
-        rw [show (ρ ::ₘ w : Multiset (Fin 1 ⊕ Fin 3)) = w + {ρ} from by
-            rw [add_comm, Multiset.singleton_add],
-          iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
-      have htrans : ∀ (c c' : JetGaugeAlgebra),
-          (∀ p ≤ ρ ::ₘ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c')) →
-          ∀ p ≤ w, eval (iteratedDeriv p (deriv ρ c)) = eval (iteratedDeriv p (deriv ρ c')) := by
-        intro c c' hc p hp
-        have h1 := hc (p + {ρ}) (by
-          rw [show (ρ ::ₘ w : Multiset (Fin 1 ⊕ Fin 3)) = w + {ρ} from by
-            rw [add_comm, Multiset.singleton_add]]
-          exact add_le_add hp le_rfl)
-        rwa [iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton] at h1
-      have hrest : ∀ (c c' : JetGaugeAlgebra),
-          (∀ p ≤ ρ ::ₘ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c')) →
-          ∀ p ≤ w, eval (iteratedDeriv p c) = eval (iteratedDeriv p c') :=
-        fun c c' hc p hp => hc p (hp.trans (Multiset.le_cons_self w ρ))
-      rw [hcons, hcons, deriv_bracket, deriv_bracket, map_add, map_add, map_add, map_add]
-      rw [ihw _ _ _ _ (htrans a a' ha) (hrest b b' hb),
-        ihw _ _ _ _ (hrest a a' ha) (htrans b b' hb)]
-
 /-!
 
 ## The basis
@@ -786,35 +744,27 @@ noncomputable def adjoint : Representation ℝ JetGaugeGroupI JetGaugeAlgebra wh
     refine LinearMap.ext fun a => ?_
     ext <;> simp [star_mul, mul_assoc]
 
-/-- Evaluating the adjoint action of a gauge jet on a constant at the base point is
-  the adjoint action of the base-point value of the jet. -/
-lemma eval_adjointMap_ofConstant (U : JetGaugeGroupI) (a : GaugeAlgebra) :
-    eval (adjointMap U (ofConstant a)) = GaugeAlgebra.adjoint U.eval a := by
+/-- At the base point the adjoint action of a gauge jet is the adjoint action of its
+  value: the constant coefficient of `U x U†` is `U₀ x₀ U₀†`. -/
+lemma eval_adjointMap (U : JetGaugeGroupI) (x : JetGaugeAlgebra) :
+    eval (adjointMap U x) = GaugeAlgebra.adjoint U.eval (eval x) := by
   have hmap : ∀ {n : Type} [Fintype n] [DecidableEq n] (M : Matrix n n JetRing),
       M.map (coeff (Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)))) =
         (constantCoeff : JetRing →+* ℂ).mapMatrix M := by
     intro n _ _ M
     ext i j
     simp [Matrix.map_apply, RingHom.mapMatrix_apply, coeff_zero_eq_constantCoeff]
-  have hC3 : (constantCoeff : JetRing →+* ℂ).mapMatrix (a.toSU3Matrix.map C)
-      = a.toSU3Matrix := by
-    ext i j
-    simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
-  have hC2 : (constantCoeff : JetRing →+* ℂ).mapMatrix (a.toSU2Matrix.map C)
-      = a.toSU2Matrix := by
-    ext i j
-    simp [RingHom.mapMatrix_apply, Matrix.map_apply, constantCoeff_C]
   refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
   · simp only [eval_apply, taylorCoeff_toSU3Matrix, adjointMap_toSU3Matrix,
-      ofConstant_toSU3Matrix, GaugeAlgebra.adjoint_toSU3Matrix]
-    rw [hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star, hC3]
+      GaugeAlgebra.adjoint_toSU3Matrix]
+    rw [hmap, hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star]
     rfl
   · simp only [eval_apply, taylorCoeff_toSU2Matrix, adjointMap_toSU2Matrix,
-      ofConstant_toSU2Matrix, GaugeAlgebra.adjoint_toSU2Matrix]
-    rw [hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star, hC2]
+      GaugeAlgebra.adjoint_toSU2Matrix]
+    rw [hmap, hmap, map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star]
     rfl
-  · simp [eval_apply, taylorCoeff_toU1Value, adjointMap_toU1Value, ofConstant_toU1Value,
-      coeff_zero_eq_constantCoeff, constantCoeff_C, GaugeAlgebra.adjoint_toU1Value]
+  · simp [eval_apply, taylorCoeff_toU1Value, adjointMap_toU1Value,
+      GaugeAlgebra.adjoint_toU1Value]
 
 /-- The constant inclusion is a morphism of Lie algebras: constants bracket to
   constants. -/

@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps
@@ -243,13 +243,13 @@ private lemma pderivWeak_comp_foldWeak (μ : Fin 1 ⊕ Fin 3)
   entrywise derivative on the weak coordinates. -/
 private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
     (z : JetRing ⊗[ℂ] HiggsVec) :
-    jetValLinEquiv (StandardModel.jetDeriv μ z)
+    jetValLinEquiv (jetDeriv μ z)
       = pderivWeak μ (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add a b ha hb => rw [map_add, map_add, ha, hb, map_add, map_add]
   | tmul f v =>
-    rw [StandardModel.jetDeriv_tmul, jetValLinEquiv_tmul, jetValLinEquiv_tmul]
+    rw [jetDeriv_tmul, jetValLinEquiv_tmul, jetValLinEquiv_tmul]
     refine WithLp.ofLp_injective 2 ?_
     funext i
     exact (Derivation.map_smul (pderiv ℂ μ) (v.ofLp i) f).symm
@@ -258,26 +258,26 @@ private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
   with the entrywise iterated derivative on the weak coordinates. -/
 private lemma jetValLinEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3))
     (z : JetRing ⊗[ℂ] HiggsVec) :
-    jetValLinEquiv (StandardModel.jetIteratedDeriv x z)
+    jetValLinEquiv (jetIteratedDeriv x z)
       = foldWeak x (jetValLinEquiv z) := by
   induction x using Multiset.induction_on with
   | empty =>
-    rw [StandardModel.jetIteratedDeriv_zero, LinearMap.id_apply,
+    rw [jetIteratedDeriv_zero, LinearMap.id_apply,
       show foldWeak 0 = LinearMap.id from LinearMap.ext fun v =>
         WithLp.ofLp_injective 2 rfl,
       LinearMap.id_apply]
   | cons μ t ih =>
-    rw [StandardModel.jetIteratedDeriv_cons, LinearMap.comp_apply,
+    rw [jetIteratedDeriv_cons, LinearMap.comp_apply,
       jetValLinEquiv_jetDeriv, ih, ← LinearMap.comp_apply, pderivWeak_comp_foldWeak]
 
 /-- The base-point evaluation of a Higgs-doublet jet through the weak coordinates. -/
 private lemma jetEval_eq (z : JetRing ⊗[ℂ] HiggsVec) :
-    StandardModel.jetEval z = ccWeak (jetValLinEquiv z) := by
+    jetEval z = ccWeak (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add a b ha hb => rw [map_add, map_add, map_add, ha, hb]
   | tmul f v =>
-    rw [StandardModel.jetEval_tmul, jetValLinEquiv_tmul]
+    rw [jetEval_tmul, jetValLinEquiv_tmul]
     refine WithLp.ofLp_injective 2 ?_
     funext i
     show (constantCoeff f • v).ofLp i = constantCoeff (v.ofLp i • f)
@@ -383,10 +383,10 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by
   refine LinearMap.ext fun v => ?_
   rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x v
-      = StandardModel.jetEval (StandardModel.jetIteratedDeriv x
-          (repJetGaugeGroupI U (StandardModel.jetOfConstant v))) from rfl,
+      = jetEval (jetIteratedDeriv x
+          (repJetGaugeGroupI U (jetOfConstant v))) from rfl,
     jetEval_eq, jetValLinEquiv_jetIteratedDeriv, repJetGaugeGroupI_apply,
-    LinearEquiv.apply_symm_apply, StandardModel.jetOfConstant_apply,
+    LinearEquiv.apply_symm_apply, jetOfConstant_apply,
     jetValLinEquiv_tmul]
   refine WithLp.ofLp_injective 2 ?_
   funext j
@@ -441,7 +441,7 @@ theorem isInfinitesimalActionOf :
     localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI := by
   constructor
   · intro U μ x
-    simp only [localGaugeData_repCoeff, localGaugeData_evalLie,
+    simp only [localGaugeData_evalLie,
       localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
     have hMcons : ((jetGaugeMatrix U).map fun f =>
         constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
@@ -465,7 +465,7 @@ theorem isInfinitesimalActionOf :
           Matrix.ext fun i j => by
             rw [Matrix.map_apply, Matrix.neg_apply, Matrix.neg_apply,
               Matrix.map_apply, foldl_pderiv_neg, map_neg],
-        matrix_constantCoeff_foldl_pderiv_mul]
+        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [jetActionMatrix_map_cc_foldl]))
     rw [repCoeff_eq, hMcons, weakEnd_neg, weakEnd_multiset_sum, Multiset.map_map]
@@ -474,7 +474,7 @@ theorem isInfinitesimalActionOf :
     rw [Function.comp_apply, weakEnd_mul, repCoeff_eq]
     rfl
   · intro U x c
-    simp only [localGaugeData_repCoeff, localGaugeData_adjointCoeff]
+    simp only [localGaugeData_adjointCoeff_apply]
     have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]
@@ -506,7 +506,7 @@ theorem isInfinitesimalActionOf :
     have hMact : ((jetGaugeMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) * actionMatrix c
         = (x.antidiagonal.map fun p =>
-            actionMatrix (IsGaugeField.adjointCoeff U p.1 c)
+            actionMatrix (localGaugeData.adjointCoeff U p.1 c)
             * ((jetGaugeMatrix U).map fun f =>
                 constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f))).sum := by
       have h1 : ((jetGaugeMatrix U * jetActionMatrix (JetGaugeAlgebra.ofConstant c)).map
@@ -514,21 +514,21 @@ theorem isInfinitesimalActionOf :
           = ((jetGaugeMatrix U).map fun f =>
               constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))
             * actionMatrix c := by
-        rw [hconst, matrix_constantCoeff_foldl_pderiv_mul,
+        rw [hconst, JetRing.matrix_constantCoeff_foldl_pderiv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((jetGaugeMatrix U).map fun f =>
               constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f)) *
                 (if p.2 = 0 then actionMatrix c else 0))
-            (fun p hp => by rw [if_neg hp, Matrix.mul_zero]),
+            (fun p _ hp => by rw [if_neg hp, Matrix.mul_zero]),
           if_pos rfl]
       rw [← h1, jetGaugeMatrix_mul_jetActionMatrix,
-        matrix_constantCoeff_foldl_pderiv_mul]
+        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [jetActionMatrix_map_cc_foldl,
           show JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1
               (JetGaugeAlgebra.adjointMap U (JetGaugeAlgebra.ofConstant c)))
-            = IsGaugeField.adjointCoeff U p.1 c from rfl])
+            = localGaugeData.adjointCoeff U p.1 c from rfl])
     rw [repCoeff_eq,
       show (weakEnd ((jetGaugeMatrix U).map fun f =>
             constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)))

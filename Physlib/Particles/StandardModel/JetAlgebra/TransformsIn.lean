@@ -88,12 +88,12 @@ they do — they are actions by algebra maps.
 /-- The fermionic inclusion puts the unit in the Higgs and gauge factors. -/
 lemma includeFermion_apply (f : FermionJetAlgebra) :
     includeFermion f = ((f ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] GaugeJetAlgebra)) := rfl
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) := rfl
 
 /-- The Higgs inclusion puts the unit in the fermionic and gauge factors. -/
 lemma includeHiggs_apply (h : HiggsJetAlgebra) :
     includeHiggs h = (((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] GaugeJetAlgebra)) := rfl
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) := rfl
 
 /-!
 
@@ -103,13 +103,15 @@ lemma includeHiggs_apply (h : HiggsJetAlgebra) :
 
 /-- The jet gauge action on the complexified gauge sector fixes the unit. -/
 lemma complexRepJetGaugeGroupI_apply_one (U : JetGaugeGroupI) :
-    GaugeJetAlgebra.complexRepJetGaugeGroupI U (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = 1 := by
-  rw [Algebra.TensorProduct.one_def, GaugeJetAlgebra.complexRepJetGaugeGroupI_tmul,
-    GaugeJetAlgebra.repJetGaugeGroupI_apply_one]
+    (GaugeJetAlgebra.complexRepJet localGaugeData) U
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
+  rw [Algebra.TensorProduct.one_def, GaugeJetAlgebra.complexRepJet_tmul,
+    GaugeJetAlgebra.repJet_apply_one]
 
 /-- The Lorentz action on the complexified gauge sector fixes the unit. -/
 lemma complexRepLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    GaugeJetAlgebra.complexRepLorentzGroup Λ (1 : ℂ ⊗[ℝ] GaugeJetAlgebra) = 1 := by
+    (GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ
+      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
   rw [Algebra.TensorProduct.one_def, GaugeJetAlgebra.complexRepLorentzGroup_tmul,
     GaugeJetAlgebra.repLorentzGroup_apply_one]
 
@@ -199,7 +201,7 @@ the total target space `FermionSpace` down to the individual species.
 /-- The Higgs symbols transform in the jet gauge representation carried by the jets of the
   Higgs field. -/
 theorem transformsIn_higgsField :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI HiggsVec.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI HiggsVec.repJetGaugeGroupI
       higgsField := by
   intro U φ s
   rw [higgsField_eq_includeHiggs, repJetGaugeGroupI_includeHiggs,
@@ -214,7 +216,8 @@ theorem transformsIn_higgsField :
 /-- The conjugate Higgs symbols transform in the conjugate of the jet gauge representation
   carried by the jets of the Higgs field. -/
 theorem transformsIn_conjHiggsField :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI (repConj HiggsVec.repJetGaugeGroupI)
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj HiggsVec.repJetGaugeGroupI)
       conjHiggsField := by
   intro U φ s
   rw [conjHiggsField_eq_includeHiggs, repJetGaugeGroupI_includeHiggs,
@@ -242,7 +245,7 @@ private lemma transformsIn_species {W : Type} [AddCommGroup W] [Module ℂ W]
       = (repW U).comp (LinearMap.lTensor JetRing p))
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ W →ₗ[ℂ] JetAlgebra}
     (hF : ∀ s φ, F s φ = fermionSymbol s (Module.Dual.transpose p φ)) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI repW F := by
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI repW F := by
   intro U φ s
   rw [hF, fermionSymbol_eq_includeFermion, repJetGaugeGroupI_includeFermion,
     show FermionJetAlgebra.repJetGaugeGroupI U
@@ -268,14 +271,14 @@ private lemma repDualCoeff_repConj_transpose {V W : Type} [AddCommGroup V] [Modu
       p.comp (IsGaugeField.repCoeff repV U s) = (IsGaugeField.repCoeff repW U s).comp p)
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule W)) :
-    IsGaugeField.repDualCoeff (repConj repV) U s
+    IsGaugeField.repDualCoeff (JetComponentSpace.repConj repV) U s
         (Module.Dual.transpose (ConjModule.map p) φ)
       = Module.Dual.transpose (ConjModule.map p)
-          (IsGaugeField.repDualCoeff (repConj repW) U s φ) := by
+          (IsGaugeField.repDualCoeff (JetComponentSpace.repConj repW) U s φ) := by
   refine LinearMap.ext fun v => ?_
-  show φ (ConjModule.map p (IsGaugeField.repCoeff (repConj repV) U s v))
-    = φ (IsGaugeField.repCoeff (repConj repW) U s (ConjModule.map p v))
-  rw [repCoeff_repConj, repCoeff_repConj]
+  show φ (ConjModule.map p (IsGaugeField.repCoeff (JetComponentSpace.repConj repV) U s v))
+    = φ (IsGaugeField.repCoeff (JetComponentSpace.repConj repW) U s (ConjModule.map p v))
+  rw [LocalGaugeData.repCoeff_repConj, LocalGaugeData.repCoeff_repConj]
   exact congrArg φ (LinearMap.congr_fun (hp U s) v)
 
 /-- The jet gauge transformation law of the conjugate symbols of a fermion species: the law
@@ -288,7 +291,8 @@ private lemma transformsIn_conjSpecies {W : Type} [AddCommGroup W] [Module ℂ W
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule W) →ₗ[ℂ] JetAlgebra}
     (hF : ∀ s φ, F s φ = conjFermionSymbol s
       (Module.Dual.transpose (ConjModule.map p) φ)) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI (repConj repW) F := by
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj repW) F := by
   intro U φ s
   rw [hF, conjFermionSymbol_eq_includeFermion, repJetGaugeGroupI_includeFermion,
     show FermionJetAlgebra.repJetGaugeGroupI U
@@ -306,7 +310,7 @@ private lemma transformsIn_conjSpecies {W : Type} [AddCommGroup W] [Module ℂ W
 /-- The symbols of the `i`-th generation down-type quark singlet transform in the jet gauge
   representation carried by the jets of that species. -/
 theorem transformsIn_downSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI DownSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI DownSinglet.repJetGaugeGroupI
       (downSingletField i) :=
   transformsIn_species _ _ (FermionSpace.lTensor_downSingletProj_repJetGaugeGroupI i)
     (downSingletField_eq_fermionSymbol i)
@@ -314,8 +318,8 @@ theorem transformsIn_downSingletField (i : Fin 3) :
 /-- The conjugate symbols of the `i`-th generation down-type quark singlet transform in the
   conjugate of the jet gauge representation carried by the jets of that species. -/
 theorem transformsIn_conjDownSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI
-      (repConj DownSinglet.repJetGaugeGroupI) (conjDownSingletField i) :=
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj DownSinglet.repJetGaugeGroupI) (conjDownSingletField i) :=
   transformsIn_conjSpecies _ _ (FermionSpace.lTensor_downSingletProj_repJetGaugeGroupI i)
     (conjDownSingletField_eq_conjFermionSymbol i)
 
@@ -323,7 +327,7 @@ theorem transformsIn_conjDownSingletField (i : Fin 3) :
 /-- The symbols of the `i`-th generation up-type quark singlet transform in the jet gauge
   representation carried by the jets of that species. -/
 theorem transformsIn_upSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI UpSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI UpSinglet.repJetGaugeGroupI
       (upSingletField i) :=
   transformsIn_species _ _ (FermionSpace.lTensor_upSingletProj_repJetGaugeGroupI i)
     (upSingletField_eq_fermionSymbol i)
@@ -331,8 +335,8 @@ theorem transformsIn_upSingletField (i : Fin 3) :
 /-- The conjugate symbols of the `i`-th generation up-type quark singlet transform in the
   conjugate of the jet gauge representation carried by the jets of that species. -/
 theorem transformsIn_conjUpSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI
-      (repConj UpSinglet.repJetGaugeGroupI) (conjUpSingletField i) :=
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj UpSinglet.repJetGaugeGroupI) (conjUpSingletField i) :=
   transformsIn_conjSpecies _ _ (FermionSpace.lTensor_upSingletProj_repJetGaugeGroupI i)
     (conjUpSingletField_eq_conjFermionSymbol i)
 
@@ -340,7 +344,7 @@ theorem transformsIn_conjUpSingletField (i : Fin 3) :
 /-- The symbols of the `i`-th generation quark doublet transform in the jet gauge
   representation carried by the jets of that species. -/
 theorem transformsIn_quarkDoubletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI QuarkDoublet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI QuarkDoublet.repJetGaugeGroupI
       (quarkDoubletField i) :=
   transformsIn_species _ _ (FermionSpace.lTensor_quarkDoubletProj_repJetGaugeGroupI i)
     (quarkDoubletField_eq_fermionSymbol i)
@@ -348,8 +352,8 @@ theorem transformsIn_quarkDoubletField (i : Fin 3) :
 /-- The conjugate symbols of the `i`-th generation quark doublet transform in the
   conjugate of the jet gauge representation carried by the jets of that species. -/
 theorem transformsIn_conjQuarkDoubletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI
-      (repConj QuarkDoublet.repJetGaugeGroupI) (conjQuarkDoubletField i) :=
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj QuarkDoublet.repJetGaugeGroupI) (conjQuarkDoubletField i) :=
   transformsIn_conjSpecies _ _ (FermionSpace.lTensor_quarkDoubletProj_repJetGaugeGroupI i)
     (conjQuarkDoubletField_eq_conjFermionSymbol i)
 
@@ -357,7 +361,7 @@ theorem transformsIn_conjQuarkDoubletField (i : Fin 3) :
 /-- The symbols of the `i`-th generation lepton doublet transform in the jet gauge
   representation carried by the jets of that species. -/
 theorem transformsIn_leptonDoubletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI LeptonDoublet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI LeptonDoublet.repJetGaugeGroupI
       (leptonDoubletField i) :=
   transformsIn_species _ _ (FermionSpace.lTensor_leptonDoubletProj_repJetGaugeGroupI i)
     (leptonDoubletField_eq_fermionSymbol i)
@@ -365,8 +369,8 @@ theorem transformsIn_leptonDoubletField (i : Fin 3) :
 /-- The conjugate symbols of the `i`-th generation lepton doublet transform in the
   conjugate of the jet gauge representation carried by the jets of that species. -/
 theorem transformsIn_conjLeptonDoubletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI
-      (repConj LeptonDoublet.repJetGaugeGroupI) (conjLeptonDoubletField i) :=
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj LeptonDoublet.repJetGaugeGroupI) (conjLeptonDoubletField i) :=
   transformsIn_conjSpecies _ _ (FermionSpace.lTensor_leptonDoubletProj_repJetGaugeGroupI i)
     (conjLeptonDoubletField_eq_conjFermionSymbol i)
 
@@ -374,7 +378,7 @@ theorem transformsIn_conjLeptonDoubletField (i : Fin 3) :
 /-- The symbols of the `i`-th generation charged-lepton singlet transform in the jet gauge
   representation carried by the jets of that species. -/
 theorem transformsIn_leptonSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI LeptonSinglet.repJetGaugeGroupI
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI LeptonSinglet.repJetGaugeGroupI
       (leptonSingletField i) :=
   transformsIn_species _ _ (FermionSpace.lTensor_leptonSingletProj_repJetGaugeGroupI i)
     (leptonSingletField_eq_fermionSymbol i)
@@ -382,8 +386,8 @@ theorem transformsIn_leptonSingletField (i : Fin 3) :
 /-- The conjugate symbols of the `i`-th generation charged-lepton singlet transform in the
   conjugate of the jet gauge representation carried by the jets of that species. -/
 theorem transformsIn_conjLeptonSingletField (i : Fin 3) :
-    TransformsIn (B := JetAlgebra) repJetGaugeGroupI
-      (repConj LeptonSinglet.repJetGaugeGroupI) (conjLeptonSingletField i) :=
+    LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
+      (JetComponentSpace.repConj LeptonSinglet.repJetGaugeGroupI) (conjLeptonSingletField i) :=
   transformsIn_conjSpecies _ _ (FermionSpace.lTensor_leptonSingletProj_repJetGaugeGroupI i)
     (conjLeptonSingletField_eq_conjFermionSymbol i)
 /-!

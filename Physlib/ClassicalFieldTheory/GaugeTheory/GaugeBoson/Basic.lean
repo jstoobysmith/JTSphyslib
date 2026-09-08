@@ -23,7 +23,7 @@ built here in the same way as the `BBoson` jet algebra, but non-abelian and **wi
 basis of the gauge algebra**: the adjoint index is carried by an abstract covector
 `φ : Module.Dual ℝ GaugeAlgebra` throughout, following the dual-family formulation of
 `Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField`. For the Standard Model, `𝔤` is
-`GaugeAlgebra`; see `Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic`.
+`StandardModel.GaugeAlgebra`.
 
 Following the split promised for this directory, the structure is:
 1. this file — the target space, the jet component space, and the jet algebra with its
@@ -37,7 +37,8 @@ Following the split promised for this directory, the structure is:
 
 - `GaugeBoson` : the target space of the gauge-boson field.
 - `GaugeBoson.repLorentzGroup` : the Lorentz action on the target space.
-- `GaugeBoson.repGaugeGroupI` : the global (adjoint) gauge action on the target space.
+- `GaugeBoson.repValue` : the global gauge action on the target space, from a
+  representation of the value group.
 - `GaugeBoson.JetComponentSpace` : the span of the component functions `∂_s A_μ^φ`.
 - `GaugeJetAlgebra` : the jet algebra of the gauge bosons.
 - `GaugeJetAlgebra.ofComponent`, `GaugeJetAlgebra.ofA` : the generators.

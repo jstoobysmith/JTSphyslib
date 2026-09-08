@@ -79,17 +79,6 @@ variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual �
 
 -/
 
-variable (jets) in
-/-- The base-point adjoint transport at `x` derivatives, un-dualized: the map on the
-  gauge algebra whose transpose is `adjointDualCoeff`. -/
-noncomputable def adjointCoeff (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    𝔤 →ₗ[ℝ] 𝔤 :=
-  (jets.evalLie).toLinearMap ∘ₗ jets.iteratedDeriv x ∘ₗ
-    jets.adjoint U ∘ₗ jets.ofConstantLie
-
-lemma adjointDualCoeff_eq_dualMap (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointDualCoeff jets U x = (adjointCoeff jets U x).dualMap := rfl
-
 /-- The base-point Taylor coefficient of the representation: include the constant
   vector into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at
   the base point. The composite is complex-linear: the physicists'
@@ -644,50 +633,6 @@ theorem adjoin_symbols_eq_adjoin_covDerivIter (act : 𝔤 →ₗ[ℝ] V →ₗ[�
 
 end Action
 
-
-/-!
-
-## E. Multiplicativity of the adjoint Taylor coefficients
-
--/
-
-section Leibniz
-
-variable [LocalGaugeDataLeibniz jets]
-
-/-- **The adjoint Taylor coefficients are multiplicative up to convolution**: the
-  coefficient of a product of jets of gauge transformations is the antidiagonal
-  convolution of the coefficients of the factors. -/
-lemma adjointCoeff_mul (U V : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointCoeff jets (U * V) x
-      = (x.antidiagonal.map fun p => adjointCoeff jets U p.1 ∘ₗ adjointCoeff jets V p.2).sum := by
-  refine LinearMap.ext fun a => ?_
-  rw [Multiset.sum_linearMap_apply, Multiset.map_map,
-    show adjointCoeff jets (U * V) x a
-      = jets.evalLie (jets.iteratedDeriv x (jets.adjoint U
-          (jets.adjoint V (jets.ofConstantLie a)))) from by
-      rw [adjointCoeff]
-      simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_mul,
-        Module.End.mul_apply],
-    LocalGaugeDataLeibniz.evalLie_iteratedDeriv_adjoint]
-  exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
-    rw [Function.comp_apply, LinearMap.comp_apply]
-    rfl)
-
-/-- The adjoint Taylor coefficient of the identity: only the base point survives. -/
-lemma adjointCoeff_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
-    adjointCoeff jets (1 : G) p = if p = 0 then LinearMap.id else 0 := by
-  refine LinearMap.ext fun a => ?_
-  rw [adjointCoeff]
-  simp only [LinearMap.coe_comp, Function.comp_apply, LieHom.coe_toLinearMap, map_one,
-    Module.End.one_apply]
-  rcases eq_or_ne p 0 with rfl | hp
-  · rw [LocalGaugeData.iteratedDeriv_zero, LinearMap.id_apply, LocalGaugeData.evalLie_ofConstantLie,
-      if_pos rfl, LinearMap.id_apply]
-  · rw [jets.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, if_neg hp,
-      LinearMap.zero_apply]
-
-end Leibniz
 
 end IsGaugeField
 

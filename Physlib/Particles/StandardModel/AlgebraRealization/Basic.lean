@@ -9,7 +9,8 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Symmetrized
+public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 /-!
@@ -215,8 +216,8 @@ eigenvalue equation for the mass weights; the anticommutation shape is transport
 private lemma map_family_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
     {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     {G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] JetAlgebra}
-    (hG : TransformsIn (B := JetAlgebra) JetAlgebra.repJetGaugeGroupI rep G) :
-    TransformsIn repJet rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
+    (hG : LocalGaugeData.TransformsIn (B := JetAlgebra) JetAlgebra.repJetGaugeGroupI rep G) :
+    LocalGaugeData.TransformsIn repJet rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
   intro U φ s
   show repJet U (h.toAlgHom _) = _
   rw [← h.map_repJet, hG U φ s, map_multiset_sum, Multiset.map_map]
@@ -247,7 +248,7 @@ barred families in the conjugate of it.
 
 /-- The law `repJet_A` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_A : IsGaugeField repLorentz repJet h.A where
+lemma repJet_A : IsGaugeField localGaugeData repLorentz repJet h.A where
   lorentz_apply := by
     intro Λ n l μ φ
     have key := congrArg h.toAlgHom (JetAlgebra.isGaugeField.lorentz_apply Λ n l μ φ)
@@ -269,62 +270,74 @@ lemma repJet_A : IsGaugeField repLorentz repJet h.A where
 
 /-- The law `repJet_H` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_H : TransformsIn repJet HiggsVec.repJetGaugeGroupI h.H :=
+lemma repJet_H : LocalGaugeData.TransformsIn repJet HiggsVec.repJetGaugeGroupI h.H :=
   h.map_family_repJet JetAlgebra.transformsIn_higgsField
 
 /-- The law `repJet_barH` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_barH : TransformsIn repJet (repConj HiggsVec.repJetGaugeGroupI) h.barH :=
+lemma repJet_barH :
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj HiggsVec.repJetGaugeGroupI)
+      h.barH :=
   h.map_family_repJet JetAlgebra.transformsIn_conjHiggsField
 
 /-- The law `repJet_d` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_d : ∀ i, TransformsIn repJet DownSinglet.repJetGaugeGroupI (h.d i) :=
+lemma repJet_d : ∀ i, LocalGaugeData.TransformsIn repJet DownSinglet.repJetGaugeGroupI (h.d i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_downSingletField i)
 
 /-- The law `repJet_bard` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_bard : ∀ i, TransformsIn repJet (repConj DownSinglet.repJetGaugeGroupI) (h.bard i) :=
+lemma repJet_bard : ∀ i,
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj DownSinglet.repJetGaugeGroupI)
+      (h.bard i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjDownSingletField i)
 
 /-- The law `repJet_u` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_u : ∀ i, TransformsIn repJet UpSinglet.repJetGaugeGroupI (h.u i) :=
+lemma repJet_u : ∀ i, LocalGaugeData.TransformsIn repJet UpSinglet.repJetGaugeGroupI (h.u i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_upSingletField i)
 
 /-- The law `repJet_baru` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_baru : ∀ i, TransformsIn repJet (repConj UpSinglet.repJetGaugeGroupI) (h.baru i) :=
+lemma repJet_baru : ∀ i,
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj UpSinglet.repJetGaugeGroupI)
+      (h.baru i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjUpSingletField i)
 
 /-- The law `repJet_Q` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_Q : ∀ i, TransformsIn repJet QuarkDoublet.repJetGaugeGroupI (h.Q i) :=
+lemma repJet_Q : ∀ i, LocalGaugeData.TransformsIn repJet QuarkDoublet.repJetGaugeGroupI (h.Q i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_quarkDoubletField i)
 
 /-- The law `repJet_barQ` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_barQ : ∀ i, TransformsIn repJet (repConj QuarkDoublet.repJetGaugeGroupI) (h.barQ i) :=
+lemma repJet_barQ : ∀ i,
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj QuarkDoublet.repJetGaugeGroupI)
+      (h.barQ i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjQuarkDoubletField i)
 
 /-- The law `repJet_L` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_L : ∀ i, TransformsIn repJet LeptonDoublet.repJetGaugeGroupI (h.L i) :=
+lemma repJet_L : ∀ i, LocalGaugeData.TransformsIn repJet LeptonDoublet.repJetGaugeGroupI (h.L i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_leptonDoubletField i)
 
 /-- The law `repJet_barL` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_barL : ∀ i, TransformsIn repJet (repConj LeptonDoublet.repJetGaugeGroupI) (h.barL i) :=
+lemma repJet_barL : ∀ i,
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj LeptonDoublet.repJetGaugeGroupI)
+      (h.barL i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjLeptonDoubletField i)
 
 /-- The law `repJet_e` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_e : ∀ i, TransformsIn repJet LeptonSinglet.repJetGaugeGroupI (h.e i) :=
+lemma repJet_e : ∀ i, LocalGaugeData.TransformsIn repJet LeptonSinglet.repJetGaugeGroupI (h.e i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_leptonSingletField i)
 
 /-- The law `repJet_bare` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_bare : ∀ i, TransformsIn repJet (repConj LeptonSinglet.repJetGaugeGroupI) (h.bare i) :=
+lemma repJet_bare : ∀ i,
+    LocalGaugeData.TransformsIn repJet (JetComponentSpace.repConj LeptonSinglet.repJetGaugeGroupI)
+      (h.bare i) :=
   fun i => h.map_family_repJet (JetAlgebra.transformsIn_conjLeptonSingletField i)
 
 /-!

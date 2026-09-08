@@ -8,11 +8,14 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LorentzAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.MassDim
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.FieldStrength
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Symmetrized
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
@@ -30,6 +33,7 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.TransformsIn
 public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra
 public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 public import Physlib.ClassicalFieldTheory.Local.Variation
@@ -317,15 +321,6 @@ public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Basic
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.FieldStrength
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.Symmeterized
-public import Physlib.Particles.StandardModel.GaugeBosons.AlgebraValued.TransformsInAdjoint
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Basic
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.GaugeAction
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.Invariants
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.JetDeriv
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
@@ -343,7 +338,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Truncation
+public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
@@ -399,9 +394,6 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.TransformsIn
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.CovariantDeriv
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.TransformsIn
 public import Physlib.Particles.StandardModel.Peeling
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3

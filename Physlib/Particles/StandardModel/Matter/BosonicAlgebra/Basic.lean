@@ -5,7 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Matter.JetComponentSpace.Basic
+public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Mathematics.SymmetricAlgebra
 /-!
 # The bosonic algebra of a matter field
