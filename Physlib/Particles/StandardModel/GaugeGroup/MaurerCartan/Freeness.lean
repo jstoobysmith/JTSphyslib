@@ -95,89 +95,49 @@ lemma exists_maurerCartanForm_eq_of_structure
 
 ## B. The symmetrized Maurer–Cartan data in components
 
+The gauge algebra is a product of three matrix factors. Rather than argue factor by
+factor, the passage from the symmetrized Maurer–Cartan data to the radial component
+`∑_μ x_μ ω_μ` of the Maurer–Cartan form is proved once for an arbitrary real-linear scalar
+`ψ` of the gauge algebra that computes evaluated iterated derivatives as base-point values
+of power-series derivatives of a scalar entry `f`; the three factors are instances.
+
 -/
 
-/-- The `su(3)` entry of the evaluated symmetrized Maurer–Cartan form, as a sum of
-  base-point values of iterated derivatives of the Maurer–Cartan form entries. -/
-lemma eval_symmetrizedMaurerCartanForm_toSU3_apply (U : JetGaugeGroupI)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (i j : Fin 3) :
-    (eval (localGaugeData.symmetrizedMaurerCartanForm U r)).toSU3Matrix i j =
+/-- A scalar component of the evaluated symmetrized Maurer–Cartan form: the average over
+  `μ ∈ r` of the base-point values of the `r − μ` derivatives of the entry `f (ω_μ)`. -/
+lemma eval_symmetrizedMaurerCartanForm_comp (ψ : GaugeAlgebra →+ ℂ)
+    (hψ : ∀ (c : ℝ) (a : GaugeAlgebra), ψ (c • a) = c • ψ a) (f : JetGaugeAlgebra → JetRing)
+    (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
+      ψ (eval (iteratedDeriv s a)) = constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
+    (U : JetGaugeGroupI) (r : Multiset (Fin 1 ⊕ Fin 3)) :
+    ψ (eval (localGaugeData.symmetrizedMaurerCartanForm U r)) =
       (1/(r.card : ℝ)) • (r.map fun μ => constantCoeff ((r.erase μ).foldl
-        (fun f ρ => pderiv ℂ ρ f) ((maurerCartanForm U μ).toSU3Matrix i j))).sum := by
-  set Φ : JetGaugeAlgebra →+ ℂ := AddMonoidHom.mk'
-    (fun a => (eval a).toSU3Matrix i j)
-    (fun a b => by simp [map_add, GaugeAlgebra.add_toSU3Matrix]) with hΦ
-  have hΦiter : ∀ μ ∈ r, Φ (iteratedDeriv (r - {μ}) (maurerCartanForm U μ)) =
-      constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ℂ ρ f)
-        ((maurerCartanForm U μ).toSU3Matrix i j)) := by
-    intro μ hμ
-    show (eval (iteratedDeriv (r - {μ}) (maurerCartanForm U μ))).toSU3Matrix i j = _
-    rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply,
-      Multiset.sub_singleton]
+        (fun h ρ => pderiv ℂ ρ h) (f (maurerCartanForm U μ)))).sum := by
   rw [LocalGaugeData.symmetrizedMaurerCartanForm]
   simp only [localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-  rw [map_smul, GaugeAlgebra.smul_toSU3Matrix, Matrix.smul_apply]
+  rw [map_smul, hψ, map_multiset_sum, map_multiset_sum, Multiset.map_map, Multiset.map_map]
   congr 1
-  rw [show (eval ((r.map fun μ =>
-        iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum)).toSU3Matrix i j
-      = Φ ((r.map fun μ => iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum) from rfl,
-    map_multiset_sum, Multiset.map_map]
-  exact congrArg Multiset.sum (Multiset.map_congr rfl fun μ hμ => hΦiter μ hμ)
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun μ _ => ?_)
+  rw [Function.comp_apply, Function.comp_apply, hf, Multiset.sub_singleton]
 
-/-- The `su(2)` entry of the evaluated symmetrized Maurer–Cartan form. -/
-lemma eval_symmetrizedMaurerCartanForm_toSU2_apply (U : JetGaugeGroupI)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (i j : Fin 2) :
-    (eval (localGaugeData.symmetrizedMaurerCartanForm U r)).toSU2Matrix i j =
-      (1/(r.card : ℝ)) • (r.map fun μ => constantCoeff ((r.erase μ).foldl
-        (fun f ρ => pderiv ℂ ρ f) ((maurerCartanForm U μ).toSU2Matrix i j))).sum := by
-  set Φ : JetGaugeAlgebra →+ ℂ := AddMonoidHom.mk'
-    (fun a => (eval a).toSU2Matrix i j)
-    (fun a b => by simp [map_add, GaugeAlgebra.add_toSU2Matrix]) with hΦ
-  have hΦiter : ∀ μ ∈ r, Φ (iteratedDeriv (r - {μ}) (maurerCartanForm U μ)) =
-      constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ℂ ρ f)
-        ((maurerCartanForm U μ).toSU2Matrix i j)) := by
-    intro μ hμ
-    show (eval (iteratedDeriv (r - {μ}) (maurerCartanForm U μ))).toSU2Matrix i j = _
-    rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply,
-      Multiset.sub_singleton]
-  rw [LocalGaugeData.symmetrizedMaurerCartanForm]
-  simp only [localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-  rw [map_smul, GaugeAlgebra.smul_toSU2Matrix, Matrix.smul_apply]
-  congr 1
-  rw [show (eval ((r.map fun μ =>
-        iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum)).toSU2Matrix i j
-      = Φ ((r.map fun μ => iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum) from rfl,
-    map_multiset_sum, Multiset.map_map]
-  exact congrArg Multiset.sum (Multiset.map_congr rfl fun μ hμ => hΦiter μ hμ)
+/-- A scalar component of the symmetrized Maurer–Cartan data, through the radial component
+  `p = ∑_μ x_μ f(ω_μ)` of the Maurer–Cartan form: a coefficient of that component,
+  normalized by the factorials of the multiset. -/
+lemma symmetrizedMaurerCartanCoeff_comp (ψ : GaugeAlgebra →+ ℂ)
+    (hψ : ∀ (c : ℝ) (a : GaugeAlgebra), ψ (c • a) = c • ψ a) (f : JetGaugeAlgebra → JetRing)
+    (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
+      ψ (eval (iteratedDeriv s a)) = constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
+    (U : localGaugeData.truncationKer 0) (p : JetRing)
+    (hrad : ∑ μ, (X μ : JetRing) • f (maurerCartanForm U.1 μ) = p)
+    (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) :
+    ψ (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩) =
+      (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
+        coeff (Multiset.toFinsupp r) p) := by
+  rw [LocalGaugeData.symmetrizedMaurerCartanCoeff_apply, localGaugeData_evalLie,
+    eval_symmetrizedMaurerCartanForm_comp ψ hψ f hf, sum_constantCoeff_foldl_erase, hrad]
 
-/-- The `u(1)` value of the evaluated symmetrized Maurer–Cartan form. -/
-lemma eval_symmetrizedMaurerCartanForm_toU1Value (U : JetGaugeGroupI)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) :
-    (eval (localGaugeData.symmetrizedMaurerCartanForm U r)).toU1Value =
-      (1/(r.card : ℝ)) • (r.map fun μ => constantCoeff ((r.erase μ).foldl
-        (fun f ρ => pderiv ℂ ρ f) ((maurerCartanForm U μ).toU1Value))).sum := by
-  set Φ : JetGaugeAlgebra →+ ℂ := AddMonoidHom.mk'
-    (fun a => (eval a).toU1Value)
-    (fun a b => by simp [map_add, GaugeAlgebra.add_toU1Value]) with hΦ
-  have hΦiter : ∀ μ ∈ r, Φ (iteratedDeriv (r - {μ}) (maurerCartanForm U μ)) =
-      constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ℂ ρ f)
-        ((maurerCartanForm U μ).toU1Value)) := by
-    intro μ hμ
-    show (eval (iteratedDeriv (r - {μ}) (maurerCartanForm U μ))).toU1Value = _
-    rw [eval_toU1Value_eq, iteratedDeriv_toU1Value, Multiset.sub_singleton]
-  rw [LocalGaugeData.symmetrizedMaurerCartanForm]
-  simp only [localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-  rw [map_smul, GaugeAlgebra.smul_toU1Value]
-  congr 1
-  rw [show (eval ((r.map fun μ =>
-        iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum)).toU1Value
-      = Φ ((r.map fun μ => iteratedDeriv (r - {μ}) (maurerCartanForm U μ)).sum) from rfl,
-    map_multiset_sum, Multiset.map_map]
-  exact congrArg Multiset.sum (Multiset.map_congr rfl fun μ hμ => hΦiter μ hμ)
-
-/-- The `su(3)` entry of the symmetrized Maurer–Cartan data, through the radial component
-  `∑_μ x_μ ω_μ` of the Maurer–Cartan form: a coefficient of that component, normalized by
-  the factorials of the multiset. -/
+/-- The `su(3)` entries of the symmetrized Maurer–Cartan data through the radial
+  component. -/
 lemma symmetrizedMaurerCartanCoeff_toSU3_eq (U : localGaugeData.truncationKer 0)
     (P : Matrix (Fin 3) (Fin 3) JetRing)
     (hrad : ∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toSU3Matrix = P)
@@ -185,17 +145,18 @@ lemma symmetrizedMaurerCartanCoeff_toSU3_eq (U : localGaugeData.truncationKer 0)
     (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toSU3Matrix i j =
       (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
         coeff (Multiset.toFinsupp r) (P i j)) := by
-  have hentry : (∑ μ, (X μ : JetRing) • ((maurerCartanForm U.1 μ).toSU3Matrix i j)) =
-      P i j := by
-    have h1 : (∑ μ, (X μ : JetRing) • ((maurerCartanForm U.1 μ).toSU3Matrix i j)) =
-        (∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toSU3Matrix) i j := by
-      rw [Matrix.sum_apply]
-      exact Finset.sum_congr rfl fun μ _ => rfl
-    rw [h1, hrad]
-  rw [LocalGaugeData.symmetrizedMaurerCartanCoeff_apply, localGaugeData_evalLie,
-    eval_symmetrizedMaurerCartanForm_toSU3_apply, sum_constantCoeff_foldl_erase, hentry]
+  refine symmetrizedMaurerCartanCoeff_comp
+    (AddMonoidHom.mk' (fun a => a.toSU3Matrix i j) fun a b => by
+      simp [GaugeAlgebra.add_toSU3Matrix])
+    (fun c a => by simp [GaugeAlgebra.smul_toSU3Matrix]) (fun a => a.toSU3Matrix i j)
+    (fun s a => by
+      rw [AddMonoidHom.mk'_apply, eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix,
+        Matrix.map_apply])
+    U (P i j) ?_ r hr
+  rw [← hrad, Matrix.sum_apply]
+  exact Finset.sum_congr rfl fun μ _ => rfl
 
-/-- The `su(2)` entry of the symmetrized Maurer–Cartan data through the radial
+/-- The `su(2)` entries of the symmetrized Maurer–Cartan data through the radial
   component. -/
 lemma symmetrizedMaurerCartanCoeff_toSU2_eq (U : localGaugeData.truncationKer 0)
     (P : Matrix (Fin 2) (Fin 2) JetRing)
@@ -204,15 +165,16 @@ lemma symmetrizedMaurerCartanCoeff_toSU2_eq (U : localGaugeData.truncationKer 0)
     (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toSU2Matrix i j =
       (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
         coeff (Multiset.toFinsupp r) (P i j)) := by
-  have hentry : (∑ μ, (X μ : JetRing) • ((maurerCartanForm U.1 μ).toSU2Matrix i j)) =
-      P i j := by
-    have h1 : (∑ μ, (X μ : JetRing) • ((maurerCartanForm U.1 μ).toSU2Matrix i j)) =
-        (∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toSU2Matrix) i j := by
-      rw [Matrix.sum_apply]
-      exact Finset.sum_congr rfl fun μ _ => rfl
-    rw [h1, hrad]
-  rw [LocalGaugeData.symmetrizedMaurerCartanCoeff_apply, localGaugeData_evalLie,
-    eval_symmetrizedMaurerCartanForm_toSU2_apply, sum_constantCoeff_foldl_erase, hentry]
+  refine symmetrizedMaurerCartanCoeff_comp
+    (AddMonoidHom.mk' (fun a => a.toSU2Matrix i j) fun a b => by
+      simp [GaugeAlgebra.add_toSU2Matrix])
+    (fun c a => by simp [GaugeAlgebra.smul_toSU2Matrix]) (fun a => a.toSU2Matrix i j)
+    (fun s a => by
+      rw [AddMonoidHom.mk'_apply, eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix,
+        Matrix.map_apply])
+    U (P i j) ?_ r hr
+  rw [← hrad, Matrix.sum_apply]
+  exact Finset.sum_congr rfl fun μ _ => rfl
 
 /-- The `u(1)` value of the symmetrized Maurer–Cartan data through the radial
   component. -/
@@ -222,9 +184,12 @@ lemma symmetrizedMaurerCartanCoeff_toU1_eq (U : localGaugeData.truncationKer 0)
     (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) :
     (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toU1Value =
       (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff (Multiset.toFinsupp r) p) := by
-  rw [LocalGaugeData.symmetrizedMaurerCartanCoeff_apply, localGaugeData_evalLie,
-    eval_symmetrizedMaurerCartanForm_toU1Value, sum_constantCoeff_foldl_erase, hrad]
+        coeff (Multiset.toFinsupp r) p) :=
+  symmetrizedMaurerCartanCoeff_comp
+    (AddMonoidHom.mk' (fun a => a.toU1Value) fun a b => by simp [GaugeAlgebra.add_toU1Value])
+    (fun c a => by simp [GaugeAlgebra.smul_toU1Value]) (fun a => a.toU1Value)
+    (fun s a => by rw [AddMonoidHom.mk'_apply, eval_toU1Value_eq, iteratedDeriv_toU1Value])
+    U p hrad r hr
 
 /-!
 

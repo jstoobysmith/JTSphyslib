@@ -46,18 +46,23 @@ symbols commute with each other and with the further generators.
 - `IsGaugeField.symmetrizedDeriv` : the symmetrized derivative symbols.
 - `IsGaugeField.iteratedCovDerivAdjoint` : the iterated covariant derivative of an adjoint
   family along a list of directions.
+- `IsGaugeField.symbolsLE`, `IsGaugeField.symSymbolsLE`, `IsGaugeField.towerLT` : the
+  generating sets of the three towers, filtered by order.
 - `IsGaugeField.symbolAdjoin_eq_symFieldAdjoin` : the generation theorem.
 - `IsGaugeField.repGauge_symmetrizedDeriv` : the gauge action on the symmetrized symbols.
 - `IsGaugeField.repGauge_symmetrizedDeriv_translation` : deep jets act by pure translations.
+- `IsGaugeField.mem_of_translationInvariant` : the ring-theoretic extraction principle.
 - `IsGaugeField.invariant_mem_adjoin_fieldStrength` : the classification of invariants.
 
 ## iii. Table of contents
 
 - A. The symmetrized derivative symbols
-- B. The generation theorem
-- C. The gauge action on the symmetrized derivatives
-- D. Centrality, and invariance under the pure jets
-- E. The classification of invariants
+- B. The generating sets
+- C. The generation theorem
+- D. The gauge action on the symmetrized derivatives
+- E. Centrality, and invariance under the pure jets
+- F. Translation invariance in a ring
+- G. The classification of invariants
 
 -/
 
@@ -78,9 +83,14 @@ variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 
+/-!
 
-/-- The symmetrized derivative symbol `sym(d_s A)^φ`: the average over the directions
-  `μ ∈ s` of the symbols `d_{s−μ} A_μ^φ`, so that the direction of the gauge field is
+## A. The symmetrized derivative symbols
+
+-/
+
+/-- The symmetrized derivative symbol `sym(∂_s A)^φ`: the average over the directions
+  `μ ∈ s` of the symbols `∂_{s−μ} A_μ^φ`, so that the direction of the gauge field is
   symmetrized into the derivative multiset. -/
 noncomputable def symmetrizedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
     (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
@@ -90,43 +100,64 @@ noncomputable def symmetrizedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
 @[simp]
 lemma symmetrizedDeriv_singleton (μ : Fin 1 ⊕ Fin 3)
     (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ 𝔤) :
-    symmetrizedDeriv ({μ}) A φ = A 0 μ φ := by
+    (φ : Module.Dual ℝ 𝔤) : symmetrizedDeriv ({μ}) A φ = A 0 μ φ := by
   simp [symmetrizedDeriv]
 
 @[simp]
 lemma symmetrizedDeriv_empty
     (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ 𝔤) :
-    symmetrizedDeriv 0 A φ = 0 := by
+    (φ : Module.Dual ℝ 𝔤) : symmetrizedDeriv 0 A φ = 0 := by
   simp [symmetrizedDeriv]
 
+/-- The symmetrization defect of a symbol: the average of its differences with the symbols
+  in which one derivative direction has been exchanged with the field direction. -/
 lemma deriv_sub_symmetrizedDeriv_eq_sum (s : Multiset (Fin 1 ⊕ Fin 3))
     (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
-    (φ : Module.Dual ℝ 𝔤)
-    (μ : Fin 1 ⊕ Fin 3) :
+    (φ : Module.Dual ℝ 𝔤) (μ : Fin 1 ⊕ Fin 3) :
     A s μ φ - symmetrizedDeriv (μ ::ₘ s) A φ =
-      ((1/(s.card + 1 : ℝ)) • ((s.map fun ν => A s μ φ -
-        A (μ ::ₘ s - {ν}) ν φ).sum)) := by
+      ((1/(s.card + 1 : ℝ)) • ((s.map fun ν => A s μ φ - A (μ ::ₘ s - {ν}) ν φ).sum)) := by
   have hn1 : (s.card : ℝ) + 1 ≠ 0 := by positivity
   rw [symmetrizedDeriv, Multiset.map_cons, Multiset.sum_cons, Multiset.card_cons,
     Multiset.sub_singleton, Multiset.erase_cons_head, Multiset.sum_map_sub,
-    Multiset.map_const', Multiset.sum_replicate,
-    ← Nat.cast_smul_eq_nsmul ℝ s.card,
+    Multiset.map_const', Multiset.sum_replicate, ← Nat.cast_smul_eq_nsmul ℝ s.card,
     show ((s.card + 1 : ℕ) : ℝ) = (s.card : ℝ) + 1 by push_cast; ring]
   match_scalars <;> (field_simp; try ring)
 
+/-- The symmetrized symbols are linear in the dual index. -/
+noncomputable def symmetrizedDerivₗ (s : Multiset (Fin 1 ⊕ Fin 3))
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    Module.Dual ℝ 𝔤 →ₗ[ℝ] B where
+  toFun φ := symmetrizedDeriv s A φ
+  map_add' φ ψ := by
+    simp only [symmetrizedDeriv, map_add]
+    rw [← smul_add, ← Multiset.sum_map_add]
+  map_smul' c φ := by
+    simp only [symmetrizedDeriv, map_smul, RingHom.id_apply]
+    rw [show (s.map fun μ => c • A (s - {μ}) μ φ) =
+        (s.map fun μ => A (s - {μ}) μ φ).map (fun w => c • w) from
+        (Multiset.map_map _ _ _).symm, ← Multiset.smul_sum, smul_comm]
+
+/-- The expansion of a symmetrized symbol in a basis of the gauge algebra. -/
+lemma symmetrizedDeriv_eq_sum_coord {ι : Type} [Fintype ι] (bv : Module.Basis ι ℝ 𝔤)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
+    symmetrizedDeriv s A φ = ∑ j, φ (bv j) • symmetrizedDeriv s A (bv.coord j) := by
+  have hdual : ∑ j, φ (bv j) • bv.coord j = φ := by
+    refine LinearMap.ext fun v => ?_
+    conv_rhs => rw [← bv.sum_repr v, map_sum]
+    simp only [LinearMap.sum_apply, LinearMap.smul_apply, Module.Basis.coord_apply,
+      smul_eq_mul, map_smul]
+    exact Finset.sum_congr rfl fun j _ => mul_comm _ _
+  change symmetrizedDerivₗ s A φ = ∑ j, φ (bv j) • symmetrizedDerivₗ s A (bv.coord j)
+  conv_lhs => rw [← hdual, map_sum]
+  exact Finset.sum_congr rfl fun j _ => by rw [map_smul]
+
 /-!
 
-## B. The generation theorem: symbols = symmetrized symbols + field strength
+## B. The generating sets
 
-The chain of lemmas below implements the outline in the module docstring, leading to
-
-  `adjoin({ d_p A }) = adjoin({ sym(d_p A) } ∪ { 𝒟_q F })`.
-
-With the derivative symbols as primitives no Leibniz hypothesis is needed: the
-covariant derivative of a family shifts the derivative index and adds a bracket
-convolution, both of which stay inside the symbol subalgebras by construction.
+The three towers appearing in the generation theorem and the classification: the derivative
+symbols `∂_p A_μ`, the symmetrized symbols `sym(∂_r A)`, and the covariant derivatives
+`𝒟_l F` of the field strength, each filtered by the number of derivatives.
 
 -/
 
@@ -143,30 +174,93 @@ noncomputable def iteratedCovDerivAdjoint
   | [], F => F
   | ρ :: l, F => covDerivAdjoint A (iteratedCovDerivAdjoint A l F) ρ
 
+variable (A) in
+/-- The derivative symbols `∂_p A_μ^φ` with at most `n` derivatives. -/
+abbrev symbolsLE (n : ℕ) : Set B :=
+  {b | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+    p.card ≤ n ∧ b = A p μ φ}
+
+variable (A) in
+/-- All derivative symbols `∂_p A_μ^φ`. -/
+abbrev symbols : Set B :=
+  {b | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+    b = A p μ φ}
+
+variable (A) in
+/-- The symmetrized symbols `sym(∂_r A)^φ` with at least one and at most `n` derivatives. -/
+abbrev symSymbolsLE (n : ℕ) : Set B :=
+  {b | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
+    r ≠ 0 ∧ r.card ≤ n ∧ b = symmetrizedDeriv r A φ}
+
+variable (A) in
+/-- The covariant derivatives `𝒟_l F_{ν λ}^φ` of the field strength with fewer than `n`
+  derivatives. -/
+abbrev towerLT (n : ℕ) : Set B :=
+  {b | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+    l.length < n ∧ b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}
+
+variable (A) in
+/-- All covariant derivatives `𝒟_l F_{ν λ}^φ` of the field strength. -/
+abbrev tower : Set B :=
+  {b | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+    b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}
+
+lemma symbolsLE_mono {n m : ℕ} (hnm : n ≤ m) : symbolsLE A n ⊆ symbolsLE A m := by
+  rintro b ⟨p, μ, φ, h, rfl⟩
+  exact ⟨p, μ, φ, h.trans hnm, rfl⟩
+
+lemma symbolsLE_subset_symbols (n : ℕ) : symbolsLE A n ⊆ symbols A := by
+  rintro b ⟨p, μ, φ, _, rfl⟩
+  exact ⟨p, μ, φ, rfl⟩
+
+lemma symSymbolsLE_mono {n m : ℕ} (hnm : n ≤ m) : symSymbolsLE A n ⊆ symSymbolsLE A m := by
+  rintro b ⟨r, φ, h0, h, rfl⟩
+  exact ⟨r, φ, h0, h.trans hnm, rfl⟩
+
+lemma towerLT_mono {n m : ℕ} (hnm : n ≤ m) : towerLT A n ⊆ towerLT A m := by
+  rintro b ⟨l, ν, lam, φ, h, rfl⟩
+  exact ⟨l, ν, lam, φ, h.trans_le hnm, rfl⟩
+
+lemma towerLT_subset_tower (n : ℕ) : towerLT A n ⊆ tower A := by
+  rintro b ⟨l, ν, lam, φ, _, rfl⟩
+  exact ⟨l, ν, lam, φ, rfl⟩
+
 /-- Symbol subalgebras are monotone in the order bound. -/
 lemma adjoin_symbols_mono {n m : ℕ} (hnm : n ≤ m) :
-    Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧ b = A p μ φ} ≤
-      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ m ∧ b = A p μ φ} := by
-  refine Algebra.adjoin_mono fun b => ?_
-  rintro ⟨p, μ, φ, h, rfl⟩
-  exact ⟨p, μ, φ, h.trans hnm, rfl⟩
+    Algebra.adjoin ℂ (symbolsLE A n) ≤ Algebra.adjoin ℂ (symbolsLE A m) :=
+  Algebra.adjoin_mono (symbolsLE_mono hnm)
+
+/-- A symmetrized symbol with `r` derivatives is a polynomial in the symbols with fewer
+  than `r` derivatives. -/
+lemma symmetrizedDeriv_mem_adjoin_symbolsLE (r : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℝ 𝔤) :
+    symmetrizedDeriv r A φ ∈ Algebra.adjoin ℂ (symbolsLE A (r.card - 1)) := by
+  rw [symmetrizedDeriv, ← algebraMap_smul ℂ ((1 : ℝ)/(r.card : ℝ))]
+  refine Subalgebra.smul_mem _ (multiset_sum_mem _ fun x hx => ?_) _
+  obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
+  refine Algebra.subset_adjoin ⟨r - {ν}, ν, φ, ?_, rfl⟩
+  rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
+
+/-!
+
+## C. The generation theorem
+
+The chain of lemmas below leads to
+
+  `adjoin({ ∂_p A }) = adjoin({ sym(∂_p A) } ∪ { 𝒟_q F })`.
+
+With the derivative symbols as primitives no Leibniz hypothesis is needed: the covariant
+derivative of a family shifts the derivative index and adds a bracket convolution, both of
+which stay inside the symbol subalgebras by construction.
+
+-/
 
 /-- The bracket of two component families whose components are order-`n` symbol
   polynomials is again an order-`n` symbol polynomial, componentwise. -/
-lemma bracketFam_mem_adjoin_symbols {n : ℕ}
-    {f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-    (hf : ∀ ψ, f ψ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-      b = A p μ φ})
-    (hg : ∀ ψ, g ψ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-      b = A p μ φ})
-    (φ : Module.Dual ℝ 𝔤) :
-    bracketFam f g φ ∈ Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-      b = A p μ φ} := by
+lemma bracketFam_mem_adjoin_symbols {n : ℕ} {f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (hf : ∀ ψ, f ψ ∈ Algebra.adjoin ℂ (symbolsLE A n))
+    (hg : ∀ ψ, g ψ ∈ Algebra.adjoin ℂ (symbolsLE A n)) (φ : Module.Dual ℝ 𝔤) :
+    bracketFam f g φ ∈ Algebra.adjoin ℂ (symbolsLE A n) := by
   rw [bracketFam_apply_eq_sum]
   refine Subalgebra.sum_mem _ fun j _ => Subalgebra.sum_mem _ fun k _ => ?_
   rw [← algebraMap_smul ℂ]
@@ -174,38 +268,28 @@ lemma bracketFam_mem_adjoin_symbols {n : ℕ}
 
 /-- Every derivative symbol of the field strength is a symbol polynomial of order
   one higher than the number of derivatives. -/
-lemma fieldStrength_mem_adjoin_symbols
-    (q : Multiset (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+lemma fieldStrength_mem_adjoin_symbols (q : Multiset (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    fieldStrength A ν lam q φ ∈
-      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ q.card + 1 ∧
-        b = A p μ φ} := by
+    fieldStrength A ν lam q φ ∈ Algebra.adjoin ℂ (symbolsLE A (q.card + 1)) := by
   rw [fieldStrength_apply]
   refine add_mem (sub_mem ?_ ?_) ?_
   · exact Algebra.subset_adjoin ⟨ν ::ₘ q, lam, φ, by simp, rfl⟩
   · exact Algebra.subset_adjoin ⟨lam ::ₘ q, ν, φ, by simp, rfl⟩
-  · exact adjoin_symbols_mono (Nat.le_succ q.card)
-      (commutatorFam_mem A q ν lam φ)
+  · exact adjoin_symbols_mono (Nat.le_succ q.card) (commutatorFam_mem A q ν lam φ)
 
-/-- Outline step 6 (unitriangularity of the covariant tower): the covariant and
-  plain derivative symbols of the field strength differ by an element of the
-  subalgebra generated by lower-order symbols; consequently the two towers generate
-  the same subalgebras. Stated at every derivative multiset `s`, as needed for the
-  induction: the covariant derivative shifts the family index. -/
-lemma iteratedCovDerivAdjoint_sub_mem
-    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
+/-- Unitriangularity of the covariant tower: the covariant and plain derivative symbols of
+  the field strength differ by a polynomial in lower-order symbols. Stated at every
+  derivative multiset `s`, as needed for the induction: the covariant derivative shifts
+  the family index. -/
+lemma iteratedCovDerivAdjoint_sub_mem (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
     iteratedCovDerivAdjoint A l (fieldStrength A ν lam) s φ -
         fieldStrength A ν lam (Multiset.ofList l + s) φ ∈
-      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ l.length + s.card ∧
-        b = A p μ φ} := by
+      Algebra.adjoin ℂ (symbolsLE A (l.length + s.card)) := by
   induction l generalizing s φ with
   | nil =>
       simp only [iteratedCovDerivAdjoint,
-        show (Multiset.ofList ([] : List (Fin 1 ⊕ Fin 3))) = 0 from rfl, zero_add,
-        sub_self]
+        show (Multiset.ofList ([] : List (Fin 1 ⊕ Fin 3))) = 0 from rfl, zero_add, sub_self]
       exact zero_mem _
   | cons ρ l ih =>
       have hms : Multiset.ofList (ρ :: l) + s = Multiset.ofList l + (ρ ::ₘ s) := by
@@ -218,269 +302,194 @@ lemma iteratedCovDerivAdjoint_sub_mem
           bracketFamConv A ρ (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ := by
         rw [show iteratedCovDerivAdjoint A (ρ :: l) (fieldStrength A ν lam) s φ =
               iteratedCovDerivAdjoint A l (fieldStrength A ν lam) (ρ ::ₘ s) φ +
-                bracketFamConv A ρ
-                  (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ
+                bracketFamConv A ρ (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ
             from rfl, hms]
         abel
       rw [hsplit]
-      refine add_mem ?_ ?_
-      · refine adjoin_symbols_mono ?_ (ih (ρ ::ₘ s) φ)
-        simp only [List.length_cons, Multiset.card_cons]
-        omega
-      · rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
-        refine multiset_sum_mem _ fun x hx => ?_
-        obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
-        have hle := Multiset.mem_antidiagonal.mp hp
-        have h1 : p.1.card ≤ s.card :=
-          hle ▸ Multiset.card_le_card (Multiset.le_add_right _ _)
-        have h2 : p.2.card ≤ s.card :=
-          hle ▸ Multiset.card_le_card (Multiset.le_add_left _ _)
-        refine bracketFam_mem_adjoin_symbols (fun ψ => ?_) (fun ψ => ?_) _
-        · refine Algebra.subset_adjoin ⟨p.1, ρ, ψ, ?_, rfl⟩
-          simp only [List.length_cons]
-          omega
-        · have h3 : iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ =
-              (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ -
-                fieldStrength A ν lam (Multiset.ofList l + p.2) ψ) +
-              fieldStrength A ν lam (Multiset.ofList l + p.2) ψ := by abel
-          rw [h3]
-          refine add_mem (adjoin_symbols_mono ?_ (ih p.2 ψ))
-            (adjoin_symbols_mono ?_
-              (fieldStrength_mem_adjoin_symbols (Multiset.ofList l + p.2) ν lam ψ))
-          · simp only [List.length_cons]
-            omega
-          · simp only [Multiset.card_add, Multiset.coe_card, List.length_cons]
-            omega
+      refine add_mem (adjoin_symbols_mono (by simp; omega) (ih (ρ ::ₘ s) φ)) ?_
+      rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      refine multiset_sum_mem _ fun x hx => ?_
+      obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+      have h1 := Multiset.card_le_card (Multiset.fst_le_of_mem_antidiagonal hp)
+      have h2 := Multiset.card_le_card (Multiset.snd_le_of_mem_antidiagonal hp)
+      refine bracketFam_mem_adjoin_symbols (fun ψ => ?_) (fun ψ => ?_) _
+      · exact Algebra.subset_adjoin ⟨p.1, ρ, ψ, by simp; omega, rfl⟩
+      · rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ =
+            (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) p.2 ψ -
+              fieldStrength A ν lam (Multiset.ofList l + p.2) ψ) +
+            fieldStrength A ν lam (Multiset.ofList l + p.2) ψ by abel]
+        refine add_mem (adjoin_symbols_mono (by simp; omega) (ih p.2 ψ))
+          (adjoin_symbols_mono (by simp; omega)
+            (fieldStrength_mem_adjoin_symbols (Multiset.ofList l + p.2) ν lam ψ))
 
-/-- Outline step 7 (chaining the memberships): every derivative symbol of order
-  `n + 1` lies in the subalgebra generated by its symmetrization, the covariant
-  derivatives of the field strength of order `n`, and the symbols of order at most
-  `n`. This is the inductive step of the generation theorem. -/
-lemma symbol_mem_symFieldAdjoin_sup
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+/-- The underived covariant field-strength tower consists of polynomials in the
+  gauge-field symbols. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ ∈ Algebra.adjoin ℂ (symbols A) := by
+  rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
+      (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ -
+        fieldStrength A ν lam (Multiset.ofList l + 0) φ) +
+      fieldStrength A ν lam (Multiset.ofList l + 0) φ from by abel]
+  exact add_mem
+    (Algebra.adjoin_mono (symbolsLE_subset_symbols _) (iteratedCovDerivAdjoint_sub_mem l ν lam 0 φ))
+    (Algebra.adjoin_mono (symbolsLE_subset_symbols _) (fieldStrength_mem_adjoin_symbols _ ν lam φ))
+
+/-- The inductive step of the generation theorem: every derivative symbol of order `n + 1`
+  lies in the subalgebra generated by its symmetrization, the covariant derivatives of the
+  field strength of order `n`, and the symbols of order at most `n`. -/
+lemma symbol_mem_symFieldAdjoin_sup (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    A s μ φ ∈
-      Algebra.adjoin ℂ
-        ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ r.card ≤ s.card + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-          {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤), l.length < s.card ∧
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ⊔
-      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ (s.card - 1) ∧
-        b = A p μ φ} := by
+    A s μ φ ∈ Algebra.adjoin ℂ (symSymbolsLE A (s.card + 1) ∪ towerLT A s.card) ⊔
+      Algebra.adjoin ℂ (symbolsLE A (s.card - 1)) := by
   rw [sub_eq_iff_eq_add.mp (deriv_sub_symmetrizedDeriv_eq_sum s A φ μ)]
-  refine add_mem ?_ ?_
-  · -- the antisymmetric remainder: field strength plus lower-order terms
-    rw [← algebraMap_smul ℂ ((1 : ℝ)/(s.card + 1 : ℝ))]
-    refine Subalgebra.smul_mem _ ?_ _
-    refine multiset_sum_mem _ fun x hx => ?_
-    obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
-    have hpos : 0 < s.card :=
-      Multiset.card_pos.mpr fun h => Multiset.notMem_zero ν (h ▸ hν)
-    have hcard : (s - {ν}).card = s.card - 1 := by
-      rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
-    have hνs : ν ::ₘ (s - {ν}) = s := by
-      rw [Multiset.sub_singleton, Multiset.cons_erase hν]
-    have hμs : μ ::ₘ (s - {ν}) = μ ::ₘ s - {ν} := by
-      rw [Multiset.sub_singleton, Multiset.sub_singleton]
-      rcases eq_or_ne ν μ with rfl | h
-      · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
-      · rw [Multiset.erase_cons_tail _ h.symm]
-    have hpair : A s μ φ - A (μ ::ₘ s - {ν}) ν φ =
-        fieldStrength A ν μ (s - {ν}) φ - commutatorFam A ν μ (s - {ν}) φ := by
-      have h := congrArg (fun f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B => f φ)
-        (pair_eq_fieldStrength_sub_commutatorFam A ν μ (s - {ν}))
-      simp only [LinearMap.sub_apply] at h
-      rw [← h, hνs, hμs]
-    rw [hpair]
-    refine sub_mem ?_ ?_
-    · -- the field-strength part, through the covariant tower
-      set l := (s - {ν}).toList with hl'
-      have hl : (Multiset.ofList l) = s - {ν} := Multiset.coe_toList _
-      have hlen : l.length = s.card - 1 := by rw [← Multiset.coe_card, hl, hcard]
-      rw [show fieldStrength A ν μ (s - {ν}) φ =
-          iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
-            (iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
-              fieldStrength A ν μ (Multiset.ofList l + 0) φ)
-          from by rw [add_zero, hl]; abel]
-      refine sub_mem ?_ ?_
-      · refine SetLike.le_def.mp le_sup_left
-          (Algebra.subset_adjoin (Or.inr ⟨l, ν, μ, φ, ?_, rfl⟩))
-        omega
-      · refine SetLike.le_def.mp le_sup_right (adjoin_symbols_mono ?_
-          (iteratedCovDerivAdjoint_sub_mem l ν μ 0 φ))
-        simp only [Multiset.card_zero]
-        omega
-    · -- the commutator part is strictly lower order
-      refine SetLike.le_def.mp le_sup_right (adjoin_symbols_mono ?_
-        (commutatorFam_mem A (s - {ν}) ν μ φ))
-      omega
-  · -- the symmetrized symbol is a generator
-    exact SetLike.le_def.mp le_sup_left
-      (Algebra.subset_adjoin (Or.inl ⟨μ ::ₘ s, φ, Multiset.cons_ne_zero, by simp, rfl⟩))
+  refine add_mem ?_ (SetLike.le_def.mp le_sup_left
+    (Algebra.subset_adjoin (Or.inl ⟨μ ::ₘ s, φ, Multiset.cons_ne_zero, by simp, rfl⟩)))
+  -- the antisymmetric remainder: field strength plus lower-order terms
+  rw [← algebraMap_smul ℂ ((1 : ℝ)/(s.card + 1 : ℝ))]
+  refine Subalgebra.smul_mem _ (multiset_sum_mem _ fun x hx => ?_) _
+  obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
+  have hpos : 0 < s.card := Multiset.card_pos.mpr fun h => Multiset.notMem_zero ν (h ▸ hν)
+  have hcard : (s - {ν}).card = s.card - 1 := by
+    rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
+  have hνs : ν ::ₘ (s - {ν}) = s := by rw [Multiset.sub_singleton, Multiset.cons_erase hν]
+  have hμs : μ ::ₘ (s - {ν}) = μ ::ₘ s - {ν} := by
+    rw [Multiset.sub_singleton, Multiset.sub_singleton]
+    rcases eq_or_ne ν μ with rfl | h
+    · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
+    · rw [Multiset.erase_cons_tail _ h.symm]
+  have hpair : A s μ φ - A (μ ::ₘ s - {ν}) ν φ =
+      fieldStrength A ν μ (s - {ν}) φ - commutatorFam A ν μ (s - {ν}) φ := by
+    have h := congrArg (fun f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B => f φ)
+      (pair_eq_fieldStrength_sub_commutatorFam A ν μ (s - {ν}))
+    simp only [LinearMap.sub_apply] at h
+    rw [← h, hνs, hμs]
+  rw [hpair]
+  refine sub_mem ?_ (SetLike.le_def.mp le_sup_right
+    (adjoin_symbols_mono (by omega) (commutatorFam_mem A (s - {ν}) ν μ φ)))
+  -- the field-strength part, through the covariant tower
+  set l := (s - {ν}).toList with hl'
+  have hl : (Multiset.ofList l) = s - {ν} := Multiset.coe_toList _
+  have hlen : l.length = s.card - 1 := by rw [← Multiset.coe_card, hl, hcard]
+  rw [show fieldStrength A ν μ (s - {ν}) φ =
+      iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
+        (iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
+          fieldStrength A ν μ (Multiset.ofList l + 0) φ) from by rw [add_zero, hl]; abel]
+  refine sub_mem (SetLike.le_def.mp le_sup_left
+    (Algebra.subset_adjoin (Or.inr ⟨l, ν, μ, φ, by omega, rfl⟩))) ?_
+  exact SetLike.le_def.mp le_sup_right (adjoin_symbols_mono (by simp; omega)
+    (iteratedCovDerivAdjoint_sub_mem l ν μ 0 φ))
 
-/-- The generation theorem (outline final step, by strong induction on the
-  order): the derivative symbols of order at most `n` and the symmetrized symbols
-  together with the covariant field-strength tower generate the same subalgebra,
+/-- The generation theorem, by strong induction on the order: the derivative symbols of
+  order at most `n` and the symmetrized symbols together with the covariant field-strength
+  tower generate the same subalgebra,
 
-  `adjoin({ d_p A : |p| ≤ n }) = adjoin({ sym(d_p A) : |p| ≤ n } ∪ { 𝒟_q F : |q| < n })`. -/
+  `adjoin({ ∂_p A : |p| ≤ n }) = adjoin({ sym(∂_p A) : |p| ≤ n + 1 } ∪ { 𝒟_q F : |q| < n })`. -/
 theorem symbolAdjoin_eq_symFieldAdjoin (n : ℕ) :
-    Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧ b = A p μ φ} =
-      Algebra.adjoin ℂ
-        ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-          {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤), l.length < n ∧
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
-  refine le_antisymm ?_ ?_
-  · -- symbols are generated by symmetrized symbols and the covariant tower,
-    -- by strong induction on the order
+    Algebra.adjoin ℂ (symbolsLE A n) =
+      Algebra.adjoin ℂ (symSymbolsLE A (n + 1) ∪ towerLT A n) := by
+  refine le_antisymm ?_ (Algebra.adjoin_le ?_)
+  · -- symbols are generated by symmetrized symbols and the covariant tower
     have main : ∀ m, ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ 𝔤), p.card ≤ m → m ≤ n →
-        A p μ φ ∈ Algebra.adjoin ℂ
-          ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-              r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-            {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-              (φ : Module.Dual ℝ 𝔤), l.length < n ∧
-              b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
+        A p μ φ ∈ Algebra.adjoin ℂ (symSymbolsLE A (n + 1) ∪ towerLT A n) := by
       intro m
       induction m using Nat.strong_induction_on with
       | _ m ih =>
         intro p μ φ hpm hmn
-        have hSF : Algebra.adjoin ℂ
-            ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-                r ≠ 0 ∧ r.card ≤ p.card + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-              {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-                (φ : Module.Dual ℝ 𝔤), l.length < p.card ∧
-                b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ≤
-            Algebra.adjoin ℂ
-              ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-                {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-                  (φ : Module.Dual ℝ 𝔤), l.length < n ∧
-                  b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
-          refine Algebra.adjoin_mono ?_
-          rintro b (⟨r, ψ, h0, hc, rfl⟩ | ⟨l, ν, lam, ψ, hl, rfl⟩)
-          · exact Or.inl ⟨r, ψ, h0, by omega, rfl⟩
-          · exact Or.inr ⟨l, ν, lam, ψ, by omega, rfl⟩
-        have hAdj : Algebra.adjoin ℂ {b : B | ∃ (q : Multiset (Fin 1 ⊕ Fin 3))
-            (κ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ 𝔤), q.card ≤ (p.card - 1) ∧
-            b = A q κ ψ} ≤
-            Algebra.adjoin ℂ
-              ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-                  r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-                {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-                  (φ : Module.Dual ℝ 𝔤), l.length < n ∧
-                  b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
-          refine Algebra.adjoin_le ?_
-          rintro b ⟨q, κ, ψ, hqc, rfl⟩
-          rcases Nat.eq_zero_or_pos q.card with hq0 | hqpos
-          · obtain rfl : q = 0 := Multiset.card_eq_zero.mp hq0
-            refine Algebra.subset_adjoin (Or.inl ⟨{κ}, ψ, by simp, by simp, ?_⟩)
-            rw [symmetrizedDeriv_singleton]
-          · exact ih q.card (by omega) q κ ψ (le_refl _) (by omega)
-        exact sup_le hSF hAdj (symbol_mem_symFieldAdjoin_sup p μ φ)
+        refine sup_le (Algebra.adjoin_mono (Set.union_subset_union
+          (symSymbolsLE_mono (by omega)) (towerLT_mono (by omega)))) (Algebra.adjoin_le ?_)
+          (symbol_mem_symFieldAdjoin_sup p μ φ)
+        rintro b ⟨q, κ, ψ, hqc, rfl⟩
+        rcases Nat.eq_zero_or_pos q.card with hq0 | hqpos
+        · obtain rfl : q = 0 := Multiset.card_eq_zero.mp hq0
+          exact Algebra.subset_adjoin (Or.inl ⟨{κ}, ψ, by simp, by simp, by simp⟩)
+        · exact ih q.card (by omega) q κ ψ (le_refl _) (by omega)
     refine Algebra.adjoin_le ?_
     rintro b ⟨p, μ, φ, hpc, rfl⟩
     exact main n p μ φ hpc (le_refl n)
   · -- symmetrized symbols and the covariant tower are symbol polynomials
-    refine Algebra.adjoin_le ?_
     rintro b (⟨r, φ, hr0, hrc, rfl⟩ | ⟨l, ν, lam, φ, hl, rfl⟩)
-    · rw [symmetrizedDeriv, ← algebraMap_smul ℂ ((1 : ℝ)/(r.card : ℝ))]
-      refine Subalgebra.smul_mem _ ?_ _
-      refine multiset_sum_mem _ fun x hx => ?_
-      obtain ⟨ν, hν, rfl⟩ := Multiset.mem_map.mp hx
-      refine Algebra.subset_adjoin ⟨r - {ν}, ν, φ, ?_, rfl⟩
-      have : (r - {ν}).card = r.card - 1 := by
-        rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hν, Nat.pred_eq_sub_one]
-      omega
-    · have h6 := iteratedCovDerivAdjoint_sub_mem (A := A) l ν lam 0 φ
-      have hF := fieldStrength_mem_adjoin_symbols (A := A) (Multiset.ofList l + 0) ν lam φ
-      rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
+    · exact adjoin_symbols_mono (by omega) (symmetrizedDeriv_mem_adjoin_symbolsLE r φ)
+    · rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
           (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ -
             fieldStrength A ν lam (Multiset.ofList l + 0) φ) +
-          fieldStrength A ν lam (Multiset.ofList l + 0) φ
-          from by abel]
-      refine add_mem (adjoin_symbols_mono ?_ h6) (adjoin_symbols_mono ?_ hF)
-      · simp only [Multiset.card_zero]
-        omega
-      · simp only [Multiset.card_add, Multiset.coe_card, Multiset.card_zero]
-        omega
+          fieldStrength A ν lam (Multiset.ofList l + 0) φ from by abel]
+      refine add_mem (adjoin_symbols_mono (by simp; omega)
+        (iteratedCovDerivAdjoint_sub_mem l ν lam 0 φ))
+        (adjoin_symbols_mono (by simp; omega)
+          (fieldStrength_mem_adjoin_symbols (Multiset.ofList l + 0) ν lam φ))
 
-/-- The generation theorem, unbounded version: the derivative symbols of the gauge
-  field of all orders, and the symmetrized symbols together with the full covariant
-  field-strength tower, generate the same subalgebra of local expressions,
+/-- The generation theorem, unbounded version: the derivative symbols of all orders, and
+  the symmetrized symbols together with the full covariant field-strength tower, generate
+  the same subalgebra of local expressions,
 
-  `adjoin({ d_p A }) = adjoin({ sym(d_p A) } ∪ { 𝒟_q F })`.
-
-  It follows from the graded version `symbolAdjoin_eq_symFieldAdjoin` since every
-  generator on either side appears at some finite order. -/
+  `adjoin({ ∂_p A }) = adjoin({ sym(∂_p A) } ∪ { 𝒟_q F })`. -/
 theorem symbolAdjoin_eq_symFieldAdjoin_top :
-    Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), b = A p μ φ} =
-      Algebra.adjoin ℂ
-        ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ b = symmetrizedDeriv r A φ} ∪
-          {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤),
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) := by
+    Algebra.adjoin ℂ (symbols A) =
+      Algebra.adjoin ℂ ({b | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
+        r ≠ 0 ∧ b = symmetrizedDeriv r A φ} ∪ tower A) := by
   refine le_antisymm (Algebra.adjoin_le ?_) (Algebra.adjoin_le ?_)
   · rintro b ⟨p, μ, φ, rfl⟩
-    have h := (symbolAdjoin_eq_symFieldAdjoin (A := A) p.card).le
-      (Algebra.subset_adjoin ⟨p, μ, φ, le_refl _, rfl⟩)
-    refine Algebra.adjoin_mono ?_ h
-    rintro b (⟨r, ψ, h0, _, rfl⟩ | ⟨l, ν, lam, ψ, _, rfl⟩)
-    · exact Or.inl ⟨r, ψ, h0, rfl⟩
-    · exact Or.inr ⟨l, ν, lam, ψ, rfl⟩
-  · have hmono : ∀ n : ℕ, Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-        (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-        b = A p μ φ} ≤
-        Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ 𝔤), b = A p μ φ} := by
-      intro n
-      refine Algebra.adjoin_mono ?_
-      rintro b ⟨p, μ, ψ, _, rfl⟩
-      exact ⟨p, μ, ψ, rfl⟩
-    rintro b (⟨r, φ, hr0, rfl⟩ | ⟨l, ν, lam, φ, rfl⟩)
-    · have hcard : 1 ≤ r.card :=
-        Nat.one_le_iff_ne_zero.mpr fun h => hr0 (Multiset.card_eq_zero.mp h)
-      exact hmono (r.card - 1)
-        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (r.card - 1)).ge
-          (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, by omega, rfl⟩)))
-    · exact hmono (l.length + 1)
-        ((symbolAdjoin_eq_symFieldAdjoin (A := A) (l.length + 1)).ge
-          (Algebra.subset_adjoin (Or.inr ⟨l, ν, lam, φ, by omega, rfl⟩)))
+    refine Algebra.adjoin_mono ?_ ((symbolAdjoin_eq_symFieldAdjoin (A := A) p.card).le
+      (Algebra.subset_adjoin ⟨p, μ, φ, le_refl _, rfl⟩))
+    exact Set.union_subset_union (fun b ⟨r, ψ, h0, _, h⟩ => ⟨r, ψ, h0, h⟩)
+      (towerLT_subset_tower _)
+  · rintro b (⟨r, φ, hr0, rfl⟩ | ⟨l, ν, lam, φ, rfl⟩)
+    · exact Algebra.adjoin_mono (symbolsLE_subset_symbols _)
+        (symmetrizedDeriv_mem_adjoin_symbolsLE r φ)
+    · exact iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols l ν lam φ
+
+/-- The generation theorem relativized to an arbitrary set `S` of extra generators. -/
+theorem symbolAdjoin_union_eq_symFieldAdjoin_union (n : ℕ) (S : Set B) :
+    Algebra.adjoin ℂ (symbolsLE A n ∪ S) =
+      Algebra.adjoin ℂ ((symSymbolsLE A (n + 1) ∪ towerLT A n) ∪ S) := by
+  rw [Algebra.adjoin_union, Algebra.adjoin_union, symbolAdjoin_eq_symFieldAdjoin (A := A) n]
+
+/-- Finite order bound: membership in the subalgebra generated by all symbols and `S`
+  uses only finitely many generators, hence symbols of some bounded order. -/
+lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
+    (hx : x ∈ Algebra.adjoin ℂ (symbols A ∪ S)) :
+    ∃ n : ℕ, x ∈ Algebra.adjoin ℂ (symbolsLE A n ∪ S) := by
+  have hmono : ∀ {n m : ℕ}, n ≤ m →
+      Algebra.adjoin ℂ (symbolsLE A n ∪ S) ≤ Algebra.adjoin ℂ (symbolsLE A m ∪ S) :=
+    fun hnm => Algebra.adjoin_mono (Set.union_subset_union_left S (symbolsLE_mono hnm))
+  induction hx using Algebra.adjoin_induction with
+  | mem b hb =>
+      rcases hb with ⟨p, μ, φ, rfl⟩ | hbS
+      · exact ⟨p.card, Algebra.subset_adjoin (Or.inl ⟨p, μ, φ, le_refl _, rfl⟩)⟩
+      · exact ⟨0, Algebra.subset_adjoin (Or.inr hbS)⟩
+  | algebraMap c => exact ⟨0, Subalgebra.algebraMap_mem _ c⟩
+  | add u v _ _ ihu ihv =>
+      obtain ⟨n₁, h₁⟩ := ihu
+      obtain ⟨n₂, h₂⟩ := ihv
+      exact ⟨max n₁ n₂, add_mem (hmono (le_max_left _ _) h₁) (hmono (le_max_right _ _) h₂)⟩
+  | mul u v _ _ ihu ihv =>
+      obtain ⟨n₁, h₁⟩ := ihu
+      obtain ⟨n₂, h₂⟩ := ihv
+      exact ⟨max n₁ n₂, mul_mem (hmono (le_max_left _ _) h₁) (hmono (le_max_right _ _) h₂)⟩
 
 /-!
 
-## C. The gauge action on the symmetrized derivatives
+## D. The gauge action on the symmetrized derivatives
 
 -/
 
-/-- The gauge transformation of the symmetrized derivatives: averaging the
-  transformation law `gauge_apply_deriv` of the individual derivative symbols over
-  the multiset `s`, the homogeneous part is the symmetrized adjoint convolution and
-  the inhomogeneous Maurer–Cartan shifts average to exactly the base-point value of
-  the *symmetrized Maurer–Cartan form* of `U⁻¹`:
+/-- The gauge transformation of the symmetrized derivatives: averaging the transformation
+  law `gauge_apply_deriv` of the individual derivative symbols over the multiset `s`, the
+  homogeneous part is the symmetrized adjoint convolution and the inhomogeneous
+  Maurer–Cartan shifts average to exactly the base-point value of the symmetrized
+  Maurer–Cartan form of `U⁻¹`:
 
-  `U • sym(d_s A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} d_y A_μ^{∂_x Ad*(U⁻¹) φ}`
-  `                   + φ( sym(mc(U⁻¹))_s |₀ )`.
-
-  This is the symbol-level counterpart of `LocalGaugeData.symmetrizedMaurerCartanForm`:
-  the gauge
-  group acts on the symmetrized derivative coordinates through the symmetrized
-  Maurer–Cartan data. -/
+  `U • sym(∂_s A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} ∂_y A_μ^{∂_x Ad*(U⁻¹) φ}`
+  `                   + φ( sym(ω(U⁻¹))_s |₀ )`. -/
 lemma repGauge_symmetrizedDeriv (hA : IsGaugeField jets repLorentz repGauge A)
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (φ : Module.Dual ℝ 𝔤) :
+    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (symmetrizedDeriv s A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
           A p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum).sum
-      + algebraMap ℂ B (φ (jets.evalLie
-          (jets.symmetrizedMaurerCartanForm U⁻¹ s))) := by
+      + algebraMap ℂ B (φ (jets.evalLie (jets.symmetrizedMaurerCartanForm U⁻¹ s))) := by
   set L : 𝔤J →ₗ[ℝ] B :=
     (Algebra.linearMap ℂ B).restrictScalars ℝ ∘ₗ Algebra.linearMap ℝ ℂ ∘ₗ
       φ ∘ₗ jets.evalLie.toLinearMap with hL
@@ -497,20 +506,15 @@ lemma repGauge_symmetrizedDeriv (hA : IsGaugeField jets repLorentz repGauge A)
           jets.iteratedDeriv (s - {μ}) (jets.maurerCartan U⁻¹ μ)).sum) := by
         rw [map_smul, map_multiset_sum, Multiset.map_map]
         simp only [Function.comp_def]
-    _ = algebraMap ℂ B (φ (jets.evalLie
-          (jets.symmetrizedMaurerCartanForm U⁻¹ s))) := by
+    _ = algebraMap ℂ B (φ (jets.evalLie (jets.symmetrizedMaurerCartanForm U⁻¹ s))) := by
         rw [LocalGaugeData.symmetrizedMaurerCartanForm]
         rfl
 
-/-- The action of the truncation kernel on the symmetrized derivatives is through
-  the symmetrized Maurer–Cartan coefficients: for a gauge jet `U` whose value at
-  the base point is the identity, the inhomogeneous shift of `sym(d_s A)^φ` is the
-  pairing of `φ` with the symmetrized Maurer–Cartan coefficient of `U⁻¹` at `s` —
-  the very data that classifies pure jets (`symmetrizedMaurerCartanCoeff_injective`).
-  This is the mechanism by which the truncation kernel can be used to gauge away the
-  symmetrized derivative coordinates. -/
-lemma repGauge_symmetrizedDeriv_truncationKer
-    (hA : IsGaugeField jets repLorentz repGauge A)
+/-- The action of a pure jet on the symmetrized derivatives is through the symmetrized
+  Maurer–Cartan data: for a gauge jet `U` with identity value, the inhomogeneous shift of
+  `sym(∂_s A)^φ` is the pairing of `φ` with the symmetrized Maurer–Cartan coefficient of
+  `U⁻¹` at `s`, the very data that classifies pure jets. -/
+lemma repGauge_symmetrizedDeriv_truncationKer (hA : IsGaugeField jets repLorentz repGauge A)
     (U : jets.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U.1 (symmetrizedDeriv s A φ) =
@@ -521,16 +525,10 @@ lemma repGauge_symmetrizedDeriv_truncationKer
   rw [repGauge_symmetrizedDeriv hA U.1 s φ]
   rfl
 
-/-- The truncation kernel realizes arbitrary translations of the symmetrized
-  derivative coordinates: for any prescribed family `c` of gauge-algebra values,
-  there is a gauge jet `U` in the kernel of the zeroth truncation whose action shifts
-  every symmetrized derivative symbol by exactly `φ (c s)` — by the surjectivity of
-  the symmetrized Maurer–Cartan coefficients.
-
-  This is the freeness/transitivity statement behind "gauging away" the symmetrized
-  coordinates: since the action of `U` is invertible on `B`, no symbol is literally
-  sent to zero, but on any fixed field configuration (a point of `Spec B`) the shift
-  `c` can be chosen to cancel the configuration's symmetrized derivative values. -/
+/-- The pure jets realize arbitrary translations of the symmetrized derivative
+  coordinates: for any prescribed family `c` of gauge-algebra values there is a pure jet
+  `U` whose action shifts every symmetrized symbol by exactly `φ (c s)`, by the freeness of
+  the symmetrized Maurer–Cartan data. -/
 lemma exists_repGauge_symmetrizedDeriv_shift [jets.Free]
     (hA : IsGaugeField jets repLorentz repGauge A)
     (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → 𝔤) :
@@ -545,210 +543,11 @@ lemma exists_repGauge_symmetrizedDeriv_shift [jets.Free]
   refine ⟨V⁻¹, fun s hs φ => ?_⟩
   rw [repGauge_symmetrizedDeriv_truncationKer hA V⁻¹ s hs φ, inv_inv, hV]
 
-/-!
-
-## D. Centrality of the gauge-field symbols, and invariance under the pure jets
-
-Throughout, `hc` is the hypothesis that all derivative symbols of the gauge field are
-central in `B` — the statement that the gauge field is bosonic. Everything built from
-the symbols by the bracket is then central as well.
-
--/
-
-/-- Scalars are central. -/
-lemma algebraMap_mem_center (c : ℂ) : algebraMap ℂ B c ∈ Subring.center B :=
-  Subring.mem_center_iff.mpr fun b => (Algebra.commutes c b).symm
-
-/-- Real multiples of central elements are central. -/
-lemma smul_mem_center (r : ℝ) {x : B} (hx : x ∈ Subring.center B) :
-    r • x ∈ Subring.center B := by
-  rw [← algebraMap_smul ℂ r x, Algebra.smul_def]
-  exact Subring.mul_mem _ (algebraMap_mem_center _) hx
-
-/-- The bracket of component families with central components is central. -/
-lemma bracketFam_mem_center {f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-    (hf : ∀ ψ, f ψ ∈ Subring.center B) (hg : ∀ ψ, g ψ ∈ Subring.center B)
-    (φ : Module.Dual ℝ 𝔤) :
-    bracketFam f g φ ∈ Subring.center B := by
-  rw [bracketFam_apply_eq_sum]
-  refine Subring.sum_mem _ fun j _ => Subring.sum_mem _ fun k _ => ?_
-  exact smul_mem_center _ (Subring.mul_mem _ (hf _) (hg _))
-
-/-- The derived commutator terms of central symbols are central. -/
-lemma commutatorFam_mem_center
-    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤), A p μ φ ∈ Subring.center B)
-    (ν lam : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (φ : Module.Dual ℝ 𝔤) :
-    commutatorFam A ν lam s φ ∈ Subring.center B := by
-  rw [commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map]
-  refine multiset_sum_mem _ fun x hx => ?_
-  obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
-  exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => hc _ _ _) φ
-
-/-- 1. If the derivative symbols of the gauge field are central, so are all
-  derivative symbols of the covariant derivatives of the field strength. -/
-lemma iteratedCovDerivAdjoint_fieldStrength_mem_center
-    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤), A p μ φ ∈ Subring.center B)
-    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
-    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) s φ ∈ Subring.center B := by
-  induction l generalizing s φ with
-  | nil =>
-      show fieldStrength A ν lam s φ ∈ Subring.center B
-      rw [fieldStrength_apply]
-      exact Subring.add_mem _
-        (Subring.sub_mem _ (hc _ _ _) (hc _ _ _))
-        (commutatorFam_mem_center hc ν lam s φ)
-  | cons ρ l ih =>
-      rw [show iteratedCovDerivAdjoint A (ρ :: l) (fieldStrength A ν lam) s φ =
-          iteratedCovDerivAdjoint A l (fieldStrength A ν lam) (ρ ::ₘ s) φ +
-            bracketFamConv A ρ
-              (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) s φ
-          from rfl]
-      refine Subring.add_mem _ (ih (ρ ::ₘ s) φ) ?_
-      rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
-      refine multiset_sum_mem _ fun x hx => ?_
-      obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
-      exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => ih p.2 ψ) φ
-
-/-- 2. If the derivative symbols of the gauge field are central, so are the
-  symmetrized derivative symbols. -/
-lemma symmetrizedDeriv_mem_center
-    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤), A p μ φ ∈ Subring.center B)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
-    symmetrizedDeriv s A φ ∈ Subring.center B := by
-  rw [symmetrizedDeriv]
-  refine smul_mem_center _ (multiset_sum_mem _ fun x hx => ?_)
-  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
-  exact hc _ _ _
-
-/-- 3. Anything that transforms in the adjoint is invariant under the kernel of
-  the zeroth truncation: at `s = 0` the transformation law is the dual adjoint action
-  of the base-point value `U₀⁻¹ = 1`, which is trivial. -/
-lemma TransformsInAdjoint.repGauge_eq_of_mem_truncationKer_zero
-    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-    (hF : TransformsInAdjoint jets repGauge F)
-    (U : jets.truncationKer 0) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U.1 (F 0 φ) = F 0 φ := by
-  have hinv : jets.eval (U.1)⁻¹ = 1 := by
-    rw [map_inv, jets.mem_truncationKer_zero_iff.mp U.2, inv_one]
-  simpa [jets.adjointDualCoeff_zero_of_eval_eq_one hinv] using hF U.1 φ 0
-
-/-- Every iterated covariant derivative of the field strength is an adjoint gauge
-  tensor: the recursion of `TransformsInAdjoint.covDerivAdjoint` over the list of
-  directions, from the base case `transformsInAdjoint_fieldStrength`. -/
-theorem transformsInAdjoint_iteratedCovDerivAdjoint
-    (hA : IsGaugeField jets repLorentz repGauge A) (l : List (Fin 1 ⊕ Fin 3))
-    (ν lam : Fin 1 ⊕ Fin 3) :
-    TransformsInAdjoint jets repGauge
-      (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) := by
-  induction l with
-  | nil => exact transformsInAdjoint_fieldStrength hA ν lam
-  | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint hA ih ρ
-
-/-- 4. The covariant derivatives of the field strength are invariant under the
-  kernel of the zeroth truncation: they transform in the adjoint, and the truncation
-  kernel acts through the trivial base-point adjoint. -/
-lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-    (hA : IsGaugeField jets repLorentz repGauge A)
-    (U : jets.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
-    (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U.1 (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ) =
-      iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ :=
-  (transformsInAdjoint_iteratedCovDerivAdjoint hA l ν
-    lam).repGauge_eq_of_mem_truncationKer_zero U φ
-
-/-!
-
-## E. The classification of invariants
-
-The goal of this section is the classification theorem: a gauge-invariant element of
-the subalgebra generated by the gauge-field symbols together with a set `S` of
-`truncationKer 0`-fixed elements lies in the subalgebra generated by the covariant
-field-strength tower together with `S` — assuming only that the gauge-field symbols
-are central (bosonic), with **no algebraic-independence hypothesis**.
-
-The strategy, by downward induction on the top symbol order `N` present in `x`:
-
-* By the generation theorem (relativized to `S`), `x` is a polynomial expression in
-  the symmetrized symbols of order `≤ N`, the covariant field-strength tower, and `S`.
-* Using the surjectivity of the symmetrized Maurer–Cartan coefficients, choose gauge
-  jets whose coefficients are supported at exactly order `N`. The Maurer–Cartan
-  triangularity places such jets in the deep truncation kernel `truncationKer (N-1)`,
-  which kills all dual adjoint coefficients of positive order `< N`. Consequently
-  such a jet fixes every generator of order `< N`, fixes the covariant tower and `S`,
-  and acts on the order-`N` symmetrized symbols by a *pure translation* with an
-  arbitrary prescribable scalar family.
-* The extraction step needs no independence: pick *any* representation of `x` as a
-  polynomial in the top symbols over the fixed subalgebra. Invariance under all
-  translations gives, for every shift vector, a polynomial identity; evaluating at
-  sufficiently many shifts (a Vandermonde argument — pure linear algebra in `B`, no
-  freeness) forces the top coefficient of *the chosen representation* to vanish, and
-  downward induction kills every nonconstant coefficient. Hence `x` lies in the fixed
-  subalgebra, completing the induction step.
-
--/
-
-/-- The generation theorem relativized to an arbitrary set `S` of extra generators:
-  a corollary of `symbolAdjoin_eq_symFieldAdjoin` since `adjoin (X ∪ S)` is
-  determined by `adjoin X` and `S`. -/
-theorem symbolAdjoin_union_eq_symFieldAdjoin_union (n : ℕ) (S : Set B) :
-    Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-        b = A p μ φ} ∪ S) =
-      Algebra.adjoin ℂ
-        (({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ r.card ≤ n + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-          {b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤), l.length < n ∧
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ}) ∪ S) := by
-  rw [Algebra.adjoin_union, Algebra.adjoin_union,
-    symbolAdjoin_eq_symFieldAdjoin (A := A) n]
-
-/-- Finite order bound: membership in the subalgebra generated by all symbols and `S`
-  uses only finitely many generators, hence symbols of some bounded order. -/
-lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
-    (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
-      b = A p μ φ} ∪ S)) :
-    ∃ n : ℕ, x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-      b = A p μ φ} ∪ S) := by
-  have hmono : ∀ {n m : ℕ}, n ≤ m →
-      Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ n ∧
-        b = A p μ φ} ∪ S) ≤
-      Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ m ∧
-        b = A p μ φ} ∪ S) := by
-    intro n m hnm
-    refine Algebra.adjoin_mono (Set.union_subset_union_left S ?_)
-    rintro b ⟨p, μ, φ, h, rfl⟩
-    exact ⟨p, μ, φ, h.trans hnm, rfl⟩
-  induction hx using Algebra.adjoin_induction with
-  | mem b hb =>
-      rcases hb with ⟨p, μ, φ, rfl⟩ | hbS
-      · exact ⟨p.card, Algebra.subset_adjoin (Or.inl ⟨p, μ, φ, le_refl _, rfl⟩)⟩
-      · exact ⟨0, Algebra.subset_adjoin (Or.inr hbS)⟩
-  | algebraMap c => exact ⟨0, Subalgebra.algebraMap_mem _ c⟩
-  | add u v hu hv ihu ihv =>
-      obtain ⟨n₁, h₁⟩ := ihu
-      obtain ⟨n₂, h₂⟩ := ihv
-      exact ⟨max n₁ n₂, add_mem (hmono (le_max_left _ _) h₁) (hmono (le_max_right _ _) h₂)⟩
-  | mul u v hu hv ihu ihv =>
-      obtain ⟨n₁, h₁⟩ := ihu
-      obtain ⟨n₂, h₂⟩ := ihv
-      exact ⟨max n₁ n₂, mul_mem (hmono (le_max_left _ _) h₁) (hmono (le_max_right _ _) h₂)⟩
-
-/-- Pure translation: when all positive dual adjoint coefficients of `U⁻¹` below
-  the order of `s` vanish, the adjoint convolution in the transformation of the
-  symmetrized symbol collapses to the symbol itself, and the action is an honest
-  translation by the symmetrized Maurer–Cartan coefficient. -/
-theorem repGauge_symmetrizedDeriv_translation
-    (hA : IsGaugeField jets repLorentz repGauge A)
+/-- Pure translation: when all positive dual adjoint coefficients of `U⁻¹` below the order
+  of `s` vanish, the adjoint convolution in the transformation of the symmetrized symbol
+  collapses to the symbol itself, and the action is an honest translation by the
+  symmetrized Maurer–Cartan coefficient. -/
+theorem repGauge_symmetrizedDeriv_translation (hA : IsGaugeField jets repLorentz repGauge A)
     (U : jets.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < s.card →
       jets.adjointDualCoeff (U.1)⁻¹ x = 0)
@@ -756,85 +555,207 @@ theorem repGauge_symmetrizedDeriv_translation
     repGauge U.1 (symmetrizedDeriv s A φ) =
       symmetrizedDeriv s A φ +
         algebraMap ℂ B (φ (jets.symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
-  -- collapsing principle: a sum over the antidiagonal whose terms vanish off the
-  -- `(0, t)` splitting reduces to the `(0, t)` term
-  have hcollapse : ∀ (t : Multiset (Fin 1 ⊕ Fin 3))
-      (g : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3) → B),
-      (∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-        p.1 + p.2 = t → p.1 ≠ 0 → g p = 0) →
-      (t.antidiagonal.map g).sum = g (0, t) := by
-    intro t
-    induction t using Multiset.induction_on with
-    | empty =>
-        intro g hg
-        simp [Multiset.antidiagonal_zero]
-    | cons a t ih =>
-        intro g hg
-        rw [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
-          Multiset.map_map, Multiset.map_map]
-        have h1 : ((t.antidiagonal.map (g ∘ Prod.map (a ::ₘ ·) id)).sum) = 0 := by
-          refine Multiset.sum_eq_zero fun z hz => ?_
-          obtain ⟨q, hq, rfl⟩ := Multiset.mem_map.mp hz
-          have hq' := Multiset.mem_antidiagonal.mp hq
-          refine hg _ ?_ (Multiset.cons_ne_zero)
-          show (a ::ₘ q.1) + q.2 = a ::ₘ t
-          rw [Multiset.cons_add, hq']
-        have h2 : ((t.antidiagonal.map (g ∘ Prod.map id (a ::ₘ ·))).sum) =
-            g (0, a ::ₘ t) := by
-          rw [ih (g ∘ Prod.map id (a ::ₘ ·)) fun p hp hp1 => ?_]
-          · rfl
-          · refine hg _ ?_ hp1
-            show p.1 + (a ::ₘ p.2) = a ::ₘ t
-            rw [Multiset.add_cons, hp]
-        rw [h1, h2, add_zero]
   rw [repGauge_symmetrizedDeriv_truncationKer hA U s hs φ]
   congr 1
-  have hinv1 : jets.eval (U.1)⁻¹ = 1 := by
-    rw [map_inv, jets.mem_truncationKer_zero_iff.mp U.2, inv_one]
-  have hid := jets.adjointDualCoeff_zero_of_eval_eq_one hinv1
+  have hid : jets.adjointDualCoeff (U.1)⁻¹ 0 = LinearMap.id :=
+    jets.adjointDualCoeff_zero_of_eval_eq_one
+      (by rw [map_inv, jets.mem_truncationKer_zero_iff.mp U.2, inv_one])
   rw [symmetrizedDeriv]
   congr 1
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun μ hμ => ?_)
-  have hvan : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-      p.1 + p.2 = s - {μ} → p.1 ≠ 0 →
-      A p.2 μ (jets.adjointDualCoeff (U.1)⁻¹ p.1 φ) = 0 := by
-    intro p hp hp1
-    have hcard : p.1.card < s.card := by
-      have h1 : p.1.card + p.2.card = (s - {μ}).card := by rw [← Multiset.card_add, hp]
-      have h2 : (s - {μ}).card = s.card - 1 := by
-        rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hμ, Nat.pred_eq_sub_one]
-      have h3 : s.card ≠ 0 := fun h => hs (Multiset.card_eq_zero.mp h)
-      omega
-    rw [hU p.1 hp1 hcard]
+  rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero _ _ fun p hp hp1 => ?_, hid]
+  · rfl
+  · have h1 := Multiset.card_le_card (Multiset.fst_le_of_mem_antidiagonal hp)
+    have h2 : (s - {μ}).card = s.card - 1 := by
+      rw [Multiset.sub_singleton, Multiset.card_erase_of_mem hμ, Nat.pred_eq_sub_one]
+    have h3 : s.card ≠ 0 := fun h => hs (Multiset.card_eq_zero.mp h)
+    rw [hU p.1 hp1 (by omega)]
     simp
-  rw [hcollapse (s - {μ}) _ hvan, hid]
-  rfl
 
-/-- Realization of top-order translations: any coefficient family supported at
-  exactly order `N` is realized by a jet in the deep truncation kernel — surjectivity
-  of the symmetrized Maurer–Cartan coefficients together with the triangularity and
-  vanishing theorems above. -/
-theorem exists_translation_of_support [jets.Free]
-    (N : ℕ) (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → 𝔤)
-    (hcN : ∀ r, r.1.card ≠ N → c r = 0) :
+/-- Realization of top-order translations: any coefficient family supported at exactly
+  order `N` is realized by a pure jet trivial to order `N - 1`, by freeness of the
+  symmetrized Maurer–Cartan data together with Maurer–Cartan triangularity. -/
+theorem exists_translation_of_support [jets.Free] (N : ℕ)
+    (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → 𝔤) (hcN : ∀ r, r.1.card ≠ N → c r = 0) :
     ∃ U : jets.truncationKer 0,
       jets.symmetrizedMaurerCartanCoeff U⁻¹ = c ∧
       ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < N →
         jets.adjointDualCoeff (U.1)⁻¹ x = 0 := by
   obtain ⟨V, hV⟩ := jets.symmetrizedMaurerCartanCoeff_surjective c
-  -- the realizing jet is deep in the truncation filtration, by triangularity
-  have hVmem : V.1 ∈ jets.truncationKer (N - 1) := by
-    refine jets.mem_truncationKer_of_symmetrizedMaurerCartanCoeff_eq_zero V (N - 1) ?_
-    intro r hr hrcard
-    rw [hV]
-    refine hcN ⟨r, hr⟩ ?_
-    show r.card ≠ N
-    have hne : r.card ≠ 0 := fun h => hr (Multiset.card_eq_zero.mp h)
-    omega
+  have hVmem : V.1 ∈ jets.truncationKer (N - 1) :=
+    jets.mem_truncationKer_of_symmetrizedMaurerCartanCoeff_eq_zero V (N - 1)
+      fun r hr hrcard => by
+        have hne : r.card ≠ 0 := fun h => hr (Multiset.card_eq_zero.mp h)
+        rw [hV]
+        exact hcN ⟨r, hr⟩ (by simp only; omega)
   refine ⟨V⁻¹, by rw [inv_inv, hV], fun x hx hxN => ?_⟩
-  have hcoe : ((V⁻¹ : jets.truncationKer 0).1)⁻¹ = V.1 := by simp
-  rw [hcoe]
+  rw [show ((V⁻¹ : jets.truncationKer 0).1)⁻¹ = V.1 by simp]
   exact jets.adjointDualCoeff_eq_zero_of_mem_truncationKer hVmem hx (by omega)
+
+/-!
+
+## E. Centrality, and invariance under the pure jets
+
+Throughout, `hc` is the hypothesis that all derivative symbols of the gauge field are
+central in `B`, the statement that the gauge field is bosonic. Everything built from the
+symbols by the bracket is then central as well.
+
+-/
+
+/-- Real multiples of central elements are central. -/
+lemma smul_mem_center (r : ℝ) {x : B} (hx : x ∈ Subring.center B) :
+    r • x ∈ Subring.center B := by
+  rw [← algebraMap_smul ℂ r x, Algebra.smul_def]
+  exact Subring.mul_mem _ (Subring.mem_center_iff.mpr fun b => (Algebra.commutes _ b).symm) hx
+
+/-- The bracket of component families with central components is central. -/
+lemma bracketFam_mem_center {f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (hf : ∀ ψ, f ψ ∈ Subring.center B) (hg : ∀ ψ, g ψ ∈ Subring.center B)
+    (φ : Module.Dual ℝ 𝔤) : bracketFam f g φ ∈ Subring.center B := by
+  rw [bracketFam_apply_eq_sum]
+  refine Subring.sum_mem _ fun j _ => Subring.sum_mem _ fun k _ => ?_
+  exact smul_mem_center _ (Subring.mul_mem _ (hf _) (hg _))
+
+/-- The derived commutator terms of central symbols are central. -/
+lemma commutatorFam_mem_center
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      A p μ φ ∈ Subring.center B)
+    (ν lam : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
+    commutatorFam A ν lam s φ ∈ Subring.center B := by
+  rw [commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map]
+  refine multiset_sum_mem _ fun x hx => ?_
+  obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+  exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => hc _ _ _) φ
+
+/-- If the derivative symbols of the gauge field are central, so are all derivative symbols
+  of the covariant derivatives of the field strength. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_mem_center
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      A p μ φ ∈ Subring.center B)
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℝ 𝔤) :
+    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) s φ ∈ Subring.center B := by
+  induction l generalizing s φ with
+  | nil =>
+      show fieldStrength A ν lam s φ ∈ Subring.center B
+      rw [fieldStrength_apply]
+      exact Subring.add_mem _ (Subring.sub_mem _ (hc _ _ _) (hc _ _ _))
+        (commutatorFam_mem_center hc ν lam s φ)
+  | cons ρ l ih =>
+      refine Subring.add_mem _ (ih (ρ ::ₘ s) φ) ?_
+      rw [bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      refine multiset_sum_mem _ fun x hx => ?_
+      obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
+      exact bracketFam_mem_center (fun ψ => hc _ _ _) (fun ψ => ih p.2 ψ) φ
+
+/-- If the derivative symbols of the gauge field are central, so are the symmetrized
+  symbols. -/
+lemma symmetrizedDeriv_mem_center
+    (hc : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      A p μ φ ∈ Subring.center B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
+    symmetrizedDeriv s A φ ∈ Subring.center B := by
+  rw [symmetrizedDeriv]
+  refine smul_mem_center _ (multiset_sum_mem _ fun x hx => ?_)
+  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
+  exact hc _ _ _
+
+/-- Anything that transforms in the adjoint is invariant under the pure jets: at `s = 0`
+  the transformation law is the dual adjoint action of the base-point value `U₀⁻¹ = 1`. -/
+lemma TransformsInAdjoint.repGauge_eq_of_mem_truncationKer_zero
+    {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (hF : TransformsInAdjoint jets repGauge F) (U : jets.truncationKer 0)
+    (φ : Module.Dual ℝ 𝔤) : repGauge U.1 (F 0 φ) = F 0 φ := by
+  rw [hF.repGauge_zero, jets.adjointDualCoeff_zero_of_eval_eq_one
+    (by rw [map_inv, jets.mem_truncationKer_zero_iff.mp U.2, inv_one]), LinearMap.id_apply]
+
+/-- Every iterated covariant derivative of the field strength is an adjoint gauge tensor:
+  the recursion of `TransformsInAdjoint.covDerivAdjoint` over the list of directions, from
+  the base case `transformsInAdjoint_fieldStrength`. -/
+theorem transformsInAdjoint_iteratedCovDerivAdjoint
+    (hA : IsGaugeField jets repLorentz repGauge A) (l : List (Fin 1 ⊕ Fin 3))
+    (ν lam : Fin 1 ⊕ Fin 3) :
+    TransformsInAdjoint jets repGauge (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) := by
+  induction l with
+  | nil => exact transformsInAdjoint_fieldStrength hA ν lam
+  | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint hA ih ρ
+
+/-- The covariant derivatives of the field strength are invariant under the pure jets. -/
+lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
+    (hA : IsGaugeField jets repLorentz repGauge A) (U : jets.truncationKer 0)
+    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    repGauge U.1 (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ) =
+      iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ :=
+  (transformsInAdjoint_iteratedCovDerivAdjoint hA l ν lam).repGauge_eq_of_mem_truncationKer_zero
+    U φ
+
+/-- The gauge action fixes the unit, being multiplicative and invertible. -/
+lemma repGauge_one (hA : IsGaugeField jets repLorentz repGauge A) (U : G) :
+    repGauge U (1 : B) = 1 := by
+  have h2 : repGauge U (repGauge U⁻¹ (1 : B)) = 1 := by
+    have h3 : repGauge U * repGauge U⁻¹ = 1 := by
+      rw [← map_mul, mul_inv_cancel, map_one]
+    calc repGauge U (repGauge U⁻¹ (1 : B)) = (repGauge U * repGauge U⁻¹) (1 : B) := rfl
+      _ = 1 := by rw [h3]; rfl
+  have h1 := hA.gauge_mul U (repGauge U⁻¹ (1 : B)) 1
+  rw [mul_one, h2, one_mul] at h1
+  exact h1.symm
+
+/-- The gauge action of a jet as a ring endomorphism of the algebra of local
+  expressions. -/
+def repGaugeRingHom (hA : IsGaugeField jets repLorentz repGauge A) (U : G) : B →+* B where
+  toFun := repGauge U
+  map_one' := repGauge_one hA U
+  map_mul' := hA.gauge_mul U
+  map_zero' := map_zero _
+  map_add' := map_add _
+
+@[simp]
+lemma repGaugeRingHom_apply (hA : IsGaugeField jets repLorentz repGauge A) (U : G) (x : B) :
+    repGaugeRingHom hA U x = repGauge U x := rfl
+
+/-!
+
+## F. Translation invariance in a ring
+
+The extraction principle behind the classification is pure ring theory: if a family of ring
+endomorphisms fixes a subalgebra `R` pointwise and translates finitely many central
+elements `y i` by arbitrary prescribable scalars, then an element of the subalgebra
+generated by `R` and the `y i` that is invariant under the whole family lies in `R`. The
+proof chooses any polynomial representation and kills its top coefficient by evaluating the
+invariance at enough shifts.
+
+-/
+
+/-- Commutation with a generating set extends to the generated subalgebra. -/
+lemma commute_of_mem_adjoin {X : Set B} {y : B} (hX : ∀ x ∈ X, Commute x y)
+    {r : B} (hr : r ∈ Algebra.adjoin ℂ X) : Commute r y := by
+  induction hr using Algebra.adjoin_induction with
+  | mem b hb => exact hX b hb
+  | algebraMap c => exact Algebra.commutes c y
+  | add a b _ _ iha ihb => exact iha.add_left ihb
+  | mul a b _ _ iha ihb => exact iha.mul_left ihb
+
+/-- Anything commuting with all gauge-field symbols commutes with the symmetrized
+  symbols. -/
+lemma commute_symmetrizedDeriv_right {y : B}
+    (hy : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      Commute y (A p μ φ))
+    (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
+    Commute y (symmetrizedDeriv r A φ) := by
+  rw [symmetrizedDeriv, ← algebraMap_smul ℂ ((1 : ℝ)/(r.card : ℝ))]
+  refine Commute.smul_right (Commute.multiset_sum_right _ _ fun x hx => ?_) _
+  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
+  exact hy _ _ _
+
+/-- For a bosonic gauge field the symmetrized symbols commute with each other. -/
+lemma commute_symmetrizedDeriv
+    (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+      (φ ψ : Module.Dual ℝ 𝔤), Commute (A p μ φ) (A q ν ψ))
+    (r r' : Multiset (Fin 1 ⊕ Fin 3)) (φ φ' : Module.Dual ℝ 𝔤) :
+    Commute (symmetrizedDeriv r A φ) (symmetrizedDeriv r' A φ') :=
+  commute_symmetrizedDeriv_right (fun p μ ψ =>
+    (commute_symmetrizedDeriv_right (fun p' μ' ψ' => hcomm p p' μ μ' ψ ψ') r φ).symm) r' φ'
 
 /-- A `B`-valued polynomial function of one real variable that vanishes identically
   has vanishing coefficients: pair with real-linear functionals, which separate
@@ -851,8 +772,7 @@ lemma eq_zero_of_forall_sum_smul_pow_eq_zero {n : ℕ} {b : ℕ → B}
     have h1 := congrArg f (h t)
     rw [map_sum, map_zero] at h1
     rw [Polynomial.eval_finsetSum]
-    simp only [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow,
-      Polynomial.eval_X]
+    simp only [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_X]
     rw [← h1]
     exact Finset.sum_congr rfl fun j _ => by rw [map_smul, smul_eq_mul, mul_comm]
   have hcoeff := congrArg (fun q => Polynomial.coeff q m) hpz
@@ -860,114 +780,64 @@ lemma eq_zero_of_forall_sum_smul_pow_eq_zero {n : ℕ} {b : ℕ → B}
     Polynomial.coeff_zero, mul_ite, mul_one, mul_zero] at hcoeff
   rwa [Finset.sum_ite_eq (Finset.range n) m (fun j => f (b j)), if_pos hm] at hcoeff
 
-/-- Any element of the subalgebra generated by a subalgebra `R` and a single central
-  element `y` is a polynomial in `y` with coefficients in `R`. -/
-lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B)
-    (hy : ∀ r ∈ R, Commute r y)
+/-- Any element of the subalgebra generated by a subalgebra `R` and a single element `y`
+  commuting with `R` is a polynomial in `y` with coefficients in `R`: the subalgebra is the
+  image of `R[X]` under evaluation at `y`. -/
+lemma exists_polynomial_rep (R : Subalgebra ℂ B) (y : B) (hy : ∀ r ∈ R, Commute r y)
     {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ {y}) :
     ∃ (n : ℕ) (r : ℕ → B), (∀ k, r k ∈ R) ∧ x = ∑ k ∈ Finset.range n, r k * y ^ k := by
-  classical
-  have hx' : x ∈ Algebra.adjoin ℂ (↑R ∪ {y}) := by
-    rw [Algebra.adjoin_union, Algebra.adjoin_eq]
-    exact hx
-  clear hx
-  -- single monomials are representable
-  have hmono : ∀ z : B, z ∈ R → ∀ k : ℕ, ∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧
-      z * y ^ k = ∑ j ∈ Finset.range n, r j * y ^ j := by
-    intro z hz k
-    refine ⟨k + 1, fun j => if j = k then z else 0,
-      fun j => by show (if j = k then z else 0) ∈ R; split_ifs; exacts [hz, zero_mem R], ?_⟩
-    rw [Finset.sum_congr rfl fun j _ => by rw [ite_mul, zero_mul],
-      Finset.sum_ite_eq' (Finset.range (k + 1)) k (fun j => z * y ^ j),
-      if_pos (Finset.self_mem_range_succ k)]
-  -- representability is closed under addition
-  have hadd : ∀ x₁ x₂ : B,
-      (∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧ x₁ = ∑ j ∈ Finset.range n, r j * y ^ j) →
-      (∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧ x₂ = ∑ j ∈ Finset.range n, r j * y ^ j) →
-      ∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧
-        x₁ + x₂ = ∑ j ∈ Finset.range n, r j * y ^ j := by
-    rintro x₁ x₂ ⟨n₁, r₁, h₁, rfl⟩ ⟨n₂, r₂, h₂, rfl⟩
-    have hext : ∀ (n m : ℕ) (r : ℕ → B), n ≤ m →
-        (∑ j ∈ Finset.range n, r j * y ^ j) =
-          ∑ j ∈ Finset.range m, (if j < n then r j else 0) * y ^ j :=
-      fun n m r hnm =>
-        (Finset.sum_congr rfl fun j hj => by
-            rw [if_pos (Finset.mem_range.mp hj)]).trans
-          (Finset.sum_subset (Finset.range_subset_range.mpr hnm) fun j _ hj => by
-            rw [if_neg fun h => hj (Finset.mem_range.mpr h), zero_mul])
-    refine ⟨max n₁ n₂,
-      fun j => (if j < n₁ then r₁ j else 0) + (if j < n₂ then r₂ j else 0),
-      fun j => add_mem (by split_ifs; exacts [h₁ j, zero_mem R])
-        (by split_ifs; exacts [h₂ j, zero_mem R]), ?_⟩
-    rw [hext n₁ (max n₁ n₂) r₁ (le_max_left _ _), hext n₂ (max n₁ n₂) r₂ (le_max_right _ _),
-      ← Finset.sum_add_distrib]
-    exact Finset.sum_congr rfl fun j _ => by rw [add_mul]
-  -- representability is closed under finite sums
-  have hsum : ∀ (κ : Type) (s : Finset κ) (f : κ → B),
-      (∀ i ∈ s, ∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧
-        f i = ∑ j ∈ Finset.range n, r j * y ^ j) →
-      ∃ (n : ℕ) (r : ℕ → B), (∀ j, r j ∈ R) ∧
-        (∑ i ∈ s, f i) = ∑ j ∈ Finset.range n, r j * y ^ j := by
-    intro κ s f hf
-    classical
-    induction s using Finset.induction_on with
-    | empty => exact ⟨0, fun _ => 0, fun _ => zero_mem R, by simp⟩
-    | insert i s his ih =>
-        rw [Finset.sum_insert his]
-        exact hadd _ _ (hf i (Finset.mem_insert_self i s))
-          (ih fun i' hi' => hf i' (Finset.mem_insert_of_mem hi'))
-  induction hx' using Algebra.adjoin_induction with
+  set ev : Polynomial R →+* B := Polynomial.eval₂RingHom' R.val.toRingHom y fun r => hy r.1 r.2
+    with hev
+  suffices h : ∀ z ∈ R ⊔ Algebra.adjoin ℂ {y}, ∃ p : Polynomial R, z = ev p by
+    obtain ⟨p, rfl⟩ := h x hx
+    refine ⟨p.natDegree + 1, fun k => p.coeff k, fun k => (p.coeff k).2, ?_⟩
+    exact Polynomial.eval₂_eq_sum_range (f := R.val.toRingHom) (x := y)
+  intro z hz
+  rw [← Algebra.adjoin_eq R, ← Algebra.adjoin_union] at hz
+  induction hz using Algebra.adjoin_induction with
   | mem b hb =>
       rcases hb with hbR | hby
-      · obtain ⟨n, r, hr, hrep⟩ := hmono b hbR 0
-        exact ⟨n, r, hr, by rw [← hrep, pow_zero, mul_one]⟩
+      · exact ⟨Polynomial.C ⟨b, hbR⟩, by simp [hev]⟩
       · rw [Set.mem_singleton_iff] at hby
-        subst hby
-        obtain ⟨n, r, hr, hrep⟩ := hmono 1 (one_mem R) 1
-        exact ⟨n, r, hr, by rw [← hrep, pow_one, one_mul]⟩
-  | algebraMap c =>
-      obtain ⟨n, r, hr, hrep⟩ := hmono (algebraMap ℂ B c) (Subalgebra.algebraMap_mem R c) 0
-      exact ⟨n, r, hr, by rw [← hrep, pow_zero, mul_one]⟩
-  | add u v hu hv ihu ihv => exact hadd u v ihu ihv
-  | mul u v hu hv ihu ihv =>
-      obtain ⟨n₁, r₁, h₁, rfl⟩ := ihu
-      obtain ⟨n₂, r₂, h₂, rfl⟩ := ihv
-      rw [Finset.sum_mul_sum]
-      refine hsum _ _ _ fun k _ => hsum _ _ _ fun l _ => ?_
-      have hcomm : y ^ k * r₂ l = r₂ l * y ^ k :=
-        ((hy _ (h₂ l)).pow_right k).eq.symm
-      have hterm : (r₁ k * y ^ k) * (r₂ l * y ^ l) = (r₁ k * r₂ l) * y ^ (k + l) := by
-        rw [← mul_assoc, mul_assoc (r₁ k), hcomm, ← mul_assoc, mul_assoc, ← pow_add]
-      rw [hterm]
-      exact hmono _ (mul_mem (h₁ k) (h₂ l)) (k + l)
+        exact ⟨Polynomial.X, by simp [hev, hby]⟩
+  | algebraMap c => exact ⟨Polynomial.C ⟨algebraMap ℂ B c, Subalgebra.algebraMap_mem R c⟩,
+      by simp [hev]⟩
+  | add u v _ _ ihu ihv =>
+      obtain ⟨p, rfl⟩ := ihu
+      obtain ⟨q, rfl⟩ := ihv
+      exact ⟨p + q, (map_add ev p q).symm⟩
+  | mul u v _ _ ihu ihv =>
+      obtain ⟨p, rfl⟩ := ihu
+      obtain ⟨q, rfl⟩ := ihv
+      exact ⟨p * q, (map_mul ev p q).symm⟩
 
-/-- The single-variable extraction: an element of `R[y]` invariant under a family of
-  ring endomorphisms fixing `R` pointwise and translating the central element `y` by
-  arbitrary prescribable real scalars lies in `R`. Invariance forces the top
-  coefficient of any chosen polynomial representation to vanish, by expanding the
-  translated polynomial and extracting the top power of the shift. -/
+/-- The binomial expansion of the translate of a single monomial `r * y ^ k` under an
+  endomorphism fixing `r` and shifting `y` by a real scalar `t`. -/
+lemma map_mul_pow_eq_sum (Φ : B →+* B) {r y : B} (hr : Φ r = r) {t : ℝ}
+    (hy : Φ y = y + algebraMap ℂ B (t : ℂ)) (k : ℕ) :
+    Φ (r * y ^ k) =
+      ∑ j ∈ Finset.range (k + 1), t ^ j • ((k.choose j : ℂ) • (r * y ^ (k - j))) := by
+  have hpull : ∀ (z : ℂ) (w : B), w * algebraMap ℂ B z = z • w := fun z w => by
+    rw [← Algebra.commutes z w, ← Algebra.smul_def]
+  rw [map_mul, map_pow, hr, hy,
+    Commute.add_pow ((Algebra.commute_algebraMap_left ((t : ℝ) : ℂ) y).symm) k, Finset.mul_sum]
+  conv_rhs => rw [← Finset.sum_range_reflect]
+  simp only [Nat.add_sub_cancel]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  have hik : i ≤ k := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
+  rw [Nat.choose_symm hik, Nat.sub_sub_self hik, ← map_pow,
+    ← map_natCast (algebraMap ℂ B) (k.choose i), mul_assoc (y ^ i), ← map_mul,
+    ← mul_assoc, hpull, mul_smul, ← Complex.ofReal_pow, Complex.coe_smul]
+
+/-- The single-variable extraction: an element of `R[y]` invariant under a family of ring
+  endomorphisms fixing `R` pointwise and translating `y` by arbitrary real scalars lies in
+  `R`. Invariance forces the top coefficient of any chosen polynomial representation to
+  vanish, by expanding the translated polynomial in powers of the shift. -/
 lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
     (hy : ∀ r ∈ R, Commute r y) (Φ : ℝ → B →+* B)
     (hΦR : ∀ t : ℝ, ∀ z ∈ R, Φ t z = z)
     (hΦy : ∀ t : ℝ, Φ t y = y + algebraMap ℂ B (t : ℂ))
     {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ {y}) (hinv : ∀ t, Φ t x = x) : x ∈ R := by
-  -- scalars pull out of products against the algebra
-  have hpull : ∀ (z : ℂ) (w : B), w * algebraMap ℂ B z = z • w := fun z w => by
-    rw [← Algebra.commutes z w, ← Algebra.smul_def]
-  -- the binomial expansion of the translate of a single monomial
-  have hterm : ∀ (r : ℕ → B), (∀ k, r k ∈ R) → ∀ (t : ℝ) (k : ℕ), Φ t (r k * y ^ k) =
-      ∑ j ∈ Finset.range (k + 1), t ^ j • ((k.choose j : ℂ) • (r k * y ^ (k - j))) := by
-    intro r hrR t k
-    rw [map_mul, map_pow, hΦR t _ (hrR k), hΦy t,
-      Commute.add_pow ((Algebra.commute_algebraMap_left ((t : ℝ) : ℂ) y).symm) k,
-      Finset.mul_sum]
-    conv_rhs => rw [← Finset.sum_range_reflect]
-    simp only [Nat.add_sub_cancel]
-    refine Finset.sum_congr rfl fun i hi => ?_
-    have hik : i ≤ k := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
-    rw [Nat.choose_symm hik, Nat.sub_sub_self hik, ← map_pow,
-      ← map_natCast (algebraMap ℂ B) (k.choose i), mul_assoc (y ^ i), ← map_mul,
-      ← mul_assoc, hpull, mul_smul, ← Complex.ofReal_pow, Complex.coe_smul]
   suffices h : ∀ (n : ℕ) (r : ℕ → B), (∀ k, r k ∈ R) →
       (∀ t, Φ t (∑ k ∈ Finset.range n, r k * y ^ k) = ∑ k ∈ Finset.range n, r k * y ^ k) →
       (∑ k ∈ Finset.range n, r k * y ^ k) ∈ R by
@@ -980,39 +850,23 @@ lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
     rcases n with _ | n
     · simp
     rcases n with _ | m
-    · have h1 : (∑ k ∈ Finset.range 1, r k * y ^ k) = r 0 := by
-        rw [Finset.sum_range_one, pow_zero, mul_one]
-      rw [h1]
-      exact hrR 0
+    · simpa using hrR 0
     -- top order `m + 1 ≥ 1`: the collected coefficients of the shift powers
     set b : ℕ → B := fun j => ∑ k ∈ Finset.range (m + 2),
       if j ≤ k then (k.choose j : ℂ) • (r k * y ^ (k - j)) else 0 with hbdef
     have hexp : ∀ t : ℝ, Φ t (∑ k ∈ Finset.range (m + 2), r k * y ^ k) =
         ∑ j ∈ Finset.range (m + 2), t ^ j • b j := by
       intro t
-      calc Φ t (∑ k ∈ Finset.range (m + 2), r k * y ^ k)
-          = ∑ k ∈ Finset.range (m + 2), Φ t (r k * y ^ k) := map_sum _ _ _
-        _ = ∑ k ∈ Finset.range (m + 2), ∑ j ∈ Finset.range (k + 1),
-              t ^ j • ((k.choose j : ℂ) • (r k * y ^ (k - j))) :=
-            Finset.sum_congr rfl fun k _ => hterm r hrR t k
-        _ = ∑ k ∈ Finset.range (m + 2), ∑ j ∈ Finset.range (m + 2),
-              (if j ≤ k then t ^ j • ((k.choose j : ℂ) • (r k * y ^ (k - j))) else 0) := by
-            refine Finset.sum_congr rfl fun k hk => ?_
-            refine ((Finset.sum_congr rfl fun j hj => ?_).trans
-              (Finset.sum_subset (Finset.range_subset_range.mpr
-                (Nat.succ_le_succ (Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))))
-                fun j _ hj => if_neg fun h =>
-                  hj (Finset.mem_range.mpr (Nat.lt_succ_of_le h))))
-            rw [if_pos (Nat.lt_succ_iff.mp (Finset.mem_range.mp hj))]
-        _ = ∑ j ∈ Finset.range (m + 2), ∑ k ∈ Finset.range (m + 2),
-              (if j ≤ k then t ^ j • ((k.choose j : ℂ) • (r k * y ^ (k - j))) else 0) :=
-            Finset.sum_comm
-        _ = ∑ j ∈ Finset.range (m + 2), t ^ j • b j := by
-            refine Finset.sum_congr rfl fun j _ => ?_
-            rw [hbdef]
-            dsimp only
-            rw [Finset.smul_sum]
-            exact Finset.sum_congr rfl fun k _ => (smul_ite_zero _ _ _).symm
+      rw [map_sum, Finset.sum_congr rfl fun k _ => map_mul_pow_eq_sum (Φ t) (hΦR t _ (hrR k))
+        (hΦy t) k]
+      simp only [hbdef, Finset.smul_sum, smul_ite, smul_zero]
+      rw [Finset.sum_comm]
+      refine Finset.sum_congr rfl fun k hk => ?_
+      refine ((Finset.sum_congr rfl fun j hj => ?_).trans
+        (Finset.sum_subset (Finset.range_subset_range.mpr
+          (Nat.succ_le_succ (Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))))
+          fun j _ hj => if_neg fun h => hj (Finset.mem_range.mpr (Nat.lt_succ_of_le h))))
+      rw [if_pos (Nat.lt_succ_iff.mp (Finset.mem_range.mp hj))]
     have hconst : ∀ t : ℝ, ∑ j ∈ Finset.range (m + 2), t ^ j • b j =
         ∑ k ∈ Finset.range (m + 2), r k * y ^ k := fun t => by rw [← hexp t, hinv t]
     -- evaluate at zero to identify the constant coefficient
@@ -1024,32 +878,25 @@ lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
     -- all positive-order coefficients vanish
     have hvan : ∀ j ∈ Finset.range (m + 2), (if j = 0 then 0 else b j) = 0 := by
       refine eq_zero_of_forall_sum_smul_pow_eq_zero fun t => ?_
-      rw [Finset.sum_range_succ'
-        (fun j => t ^ j • (if j = 0 then (0 : B) else b j)) (m + 1)]
+      rw [Finset.sum_range_succ' (fun j => t ^ j • (if j = 0 then (0 : B) else b j)) (m + 1)]
       simp only [Nat.succ_ne_zero, ite_false, ite_true, smul_zero, add_zero]
       have h := hconst t
       rw [Finset.sum_range_succ' (fun j => t ^ j • b j) (m + 1), pow_zero, one_smul,
         ← hb0] at h
-      have h2 := congrArg (fun z => z - b 0) h
-      simpa using h2
-    -- the top coefficient of the representation is the top `b`
-    have hbtop : b (m + 1) = r (m + 1) := by
-      have h1 : ∀ k ∈ Finset.range (m + 2),
-          (if m + 1 ≤ k then (k.choose (m + 1) : ℂ) • (r k * y ^ (k - (m + 1))) else 0) =
-          (if k = m + 1 then (k.choose (m + 1) : ℂ) • (r k * y ^ (k - (m + 1))) else 0) := by
-        intro k hk
-        have hk' := Finset.mem_range.mp hk
-        simp only [show (m + 1 ≤ k) ↔ k = m + 1 by omega]
-      rw [hbdef]
-      dsimp only
-      rw [Finset.sum_congr rfl h1,
-        Finset.sum_ite_eq' (Finset.range (m + 2)) (m + 1)
-          (fun k => (k.choose (m + 1) : ℂ) • (r k * y ^ (k - (m + 1)))),
-        if_pos (Finset.self_mem_range_succ _), Nat.choose_self, Nat.sub_self, pow_zero,
-        mul_one, Nat.cast_one, one_smul]
+      simpa using congrArg (fun z => z - b 0) h
+    -- the top coefficient of the representation is the top `b`, hence vanishes
     have hrtop : r (m + 1) = 0 := by
       have h := hvan (m + 1) (Finset.self_mem_range_succ _)
-      rwa [if_neg (Nat.succ_ne_zero m), hbtop] at h
+      rw [if_neg (Nat.succ_ne_zero m), hbdef] at h
+      simp only at h
+      rwa [Finset.sum_congr rfl fun k hk => show
+          (if m + 1 ≤ k then (k.choose (m + 1) : ℂ) • (r k * y ^ (k - (m + 1))) else 0) =
+          (if k = m + 1 then (k.choose (m + 1) : ℂ) • (r k * y ^ (k - (m + 1))) else 0) by
+            have := Finset.mem_range.mp hk
+            simp only [show (m + 1 ≤ k) ↔ k = m + 1 by omega],
+        Finset.sum_ite_eq' (Finset.range (m + 2)) (m + 1) _,
+        if_pos (Finset.self_mem_range_succ _), Nat.choose_self, Nat.sub_self, pow_zero,
+        mul_one, Nat.cast_one, one_smul] at h
     -- strip the top term and recurse
     have hstrip : (∑ k ∈ Finset.range (m + 2), r k * y ^ k) =
         ∑ k ∈ Finset.range (m + 1), r k * y ^ k := by
@@ -1057,24 +904,17 @@ lemma mem_of_translationInvariant_single (R : Subalgebra ℂ B) (y : B)
     rw [hstrip] at hinv ⊢
     exact ih (m + 1) (Nat.lt_succ_self _) r hrR hinv
 
-/-- The abstract extraction theorem — pure ring theory, no gauge input and no
-  independence hypothesis: if a family of unital ring endomorphisms fixes a
-  subalgebra `R` pointwise and translates finitely many central elements `y i` by
-  arbitrary prescribable scalars, then any element of the subalgebra generated by
-  `R` and the `y i` that is invariant under the whole family lies in `R`.
-
-  Proof idea: choose any representation of `x` as a polynomial in the `y i` over `R`;
-  invariance at sufficiently many shift vectors and a Vandermonde argument force the
-  nonconstant coefficients of the chosen representation to vanish, top degree first. -/
+/-- The extraction theorem: if a family of ring endomorphisms fixes a subalgebra `R`
+  pointwise and translates finitely many commuting elements `y i`, each commuting with
+  `R`, by arbitrary prescribable scalars, then an element of the subalgebra generated by
+  `R` and the `y i` that is invariant under the whole family lies in `R`. The variables are
+  eliminated one at a time by `mem_of_translationInvariant_single`. -/
 theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
     (R : Subalgebra ℂ B) (y : ι → B)
-    (hyR : ∀ i, ∀ r ∈ R, Commute r (y i))
-    (hyy : ∀ i j, Commute (y i) (y j))
-    (Φ : (ι → ℝ) → (B →+* B))
-    (hΦR : ∀ t, ∀ z ∈ R, Φ t z = z)
+    (hyR : ∀ i, ∀ r ∈ R, Commute r (y i)) (hyy : ∀ i j, Commute (y i) (y j))
+    (Φ : (ι → ℝ) → (B →+* B)) (hΦR : ∀ t, ∀ z ∈ R, Φ t z = z)
     (hΦy : ∀ t i, Φ t (y i) = y i + algebraMap ℂ B (t i))
-    {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ (Set.range y))
-    (hinv : ∀ t, Φ t x = x) :
+    {x : B} (hx : x ∈ R ⊔ Algebra.adjoin ℂ (Set.range y)) (hinv : ∀ t, Φ t x = x) :
     x ∈ R := by
   classical
   suffices h : ∀ s : Finset ι, ∀ x : B, x ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s) →
@@ -1092,11 +932,9 @@ theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
       have hxR' : x ∈ (R ⊔ Algebra.adjoin ℂ (y '' ↑s)) ⊔ Algebra.adjoin ℂ {y i} := by
         have hset : (y '' ↑(insert i s) : Set B) = {y i} ∪ y '' ↑s := by
           rw [Finset.coe_insert, Set.image_insert_eq, Set.insert_eq]
-        rwa [hset, Algebra.adjoin_union, sup_comm (Algebra.adjoin ℂ {y i}),
-          ← sup_assoc] at hx
+        rwa [hset, Algebra.adjoin_union, sup_comm (Algebra.adjoin ℂ {y i}), ← sup_assoc] at hx
       -- the single-coordinate translations fix the enlarged base subalgebra
-      have hfix : ∀ u : ℝ, ∀ z ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s),
-          Φ (Pi.single i u) z = z := by
+      have hfix : ∀ u : ℝ, ∀ z ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s), Φ (Pi.single i u) z = z := by
         intro u z hz
         rw [← Algebra.adjoin_eq R, ← Algebra.adjoin_union] at hz
         induction hz using Algebra.adjoin_induction with
@@ -1112,72 +950,223 @@ theorem mem_of_translationInvariant {ι : Type} [Fintype ι]
       have hy' : ∀ r ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s), Commute r (y i) := by
         intro r hr
         rw [← Algebra.adjoin_eq R, ← Algebra.adjoin_union] at hr
-        induction hr using Algebra.adjoin_induction with
-        | mem b hb =>
-            rcases hb with hbR | ⟨j, hj, rfl⟩
-            · exact hyR i b hbR
-            · exact hyy j i
-        | algebraMap c => exact Algebra.commutes c (y i)
-        | add a b _ _ iha ihb => exact iha.add_left ihb
-        | mul a b _ _ iha ihb => exact iha.mul_left ihb
-      have hxmid : x ∈ R ⊔ Algebra.adjoin ℂ (y '' ↑s) :=
-        mem_of_translationInvariant_single (R ⊔ Algebra.adjoin ℂ (y '' ↑s)) (y i) hy'
-          (fun u => Φ (Pi.single i u)) hfix
-          (fun u => by rw [hΦy (Pi.single i u) i, Pi.single_eq_same])
-          hxR' (fun u => hinv _)
-      exact ih x hxmid hinv
+        refine commute_of_mem_adjoin ?_ hr
+        rintro b (hbR | ⟨j, _, rfl⟩)
+        exacts [hyR i b hbR, hyy j i]
+      exact ih x (mem_of_translationInvariant_single (R ⊔ Algebra.adjoin ℂ (y '' ↑s)) (y i)
+        hy' (fun u => Φ (Pi.single i u)) hfix
+        (fun u => by rw [hΦy (Pi.single i u) i, Pi.single_eq_same]) hxR' (fun u => hinv _))
+        hinv
 
-/-- Commutation with a generating set extends to the generated subalgebra. -/
-lemma commute_of_mem_adjoin {X : Set B} {y : B} (hX : ∀ x ∈ X, Commute x y)
-    {r : B} (hr : r ∈ Algebra.adjoin ℂ X) : Commute r y := by
-  induction hr using Algebra.adjoin_induction with
-  | mem b hb => exact hX b hb
-  | algebraMap c => exact Algebra.commutes c y
-  | add a b _ _ iha ihb => exact iha.add_left ihb
-  | mul a b _ _ iha ihb => exact iha.mul_left ihb
+/-!
 
-/-- Anything commuting with all gauge-field symbols commutes with the symmetrized
-  symbols. -/
-lemma commute_symmetrizedDeriv_right {y : B}
-    (hy : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤), Commute y (A p μ φ))
+## G. The classification of invariants
+
+The goal is the classification theorem: a gauge-invariant element of the subalgebra
+generated by the gauge-field symbols together with a set `S` of elements fixed by the pure
+jets lies in the subalgebra generated by the covariant field-strength tower together with
+`S`, assuming only that the gauge-field symbols are central (bosonic), with no
+algebraic-independence hypothesis.
+
+The strategy, by downward induction on the top symmetrized order `m + 1` present in `x`:
+
+* By the generation theorem, `x` is a polynomial in the symmetrized symbols of order at most
+  `m + 1`, the covariant tower, and `S`.
+* By freeness of the symmetrized Maurer–Cartan data, there are pure jets whose data are
+  supported at exactly order `m + 1`. Triangularity places them in the deep truncation
+  kernel `truncationKer m`, so they fix every generator of order at most `m`, the covariant
+  tower and `S`, and act on the order-`m + 1` symmetrized symbols by pure translations with
+  arbitrary prescribable scalars.
+* The extraction theorem `mem_of_translationInvariant` then places `x` in the subalgebra of
+  order at most `m`.
+
+-/
+
+section Descent
+
+variable (hA : IsGaugeField jets repLorentz repGauge A)
+  (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ ψ : Module.Dual ℝ 𝔤), Commute (A p μ φ) (A q ν ψ))
+  (S : Set B)
+  (hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+    ∀ y ∈ S, Commute y (A p μ φ))
+  (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, repGauge U.1 y = y)
+  (m : ℕ)
+
+/-!
+
+### G.1. The order-`m` subalgebra
+
+The subalgebra generated by the symmetrized symbols of order at most `m`, the covariant
+tower and `S`. It is fixed by the pure jets trivial to order `m`, and its elements commute
+with every symmetrized symbol.
+
+-/
+
+include hA hS in
+/-- A pure jet trivial to order `m` fixes every generator of order at most `m`: the
+  symmetrized symbols with at most `m` derivatives, the covariant tower and `S`. -/
+lemma repGauge_eq_of_mem_adjoin_symSymbolsLE {U : jets.truncationKer 0}
+    (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card ≤ m →
+      jets.adjointDualCoeff (U.1)⁻¹ x = 0)
+    (hUsym : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0), r.card ≤ m →
+      jets.symmetrizedMaurerCartanCoeff U⁻¹ ⟨r, hr⟩ = 0)
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S))) :
+    repGauge U.1 z = z := by
+  induction hz using Algebra.adjoin_induction with
+  | mem b hb =>
+      rcases hb with ⟨r, φ, hr0, hrm, rfl⟩ | ⟨l, ν, lam, φ, rfl⟩ | hb'
+      · rw [repGauge_symmetrizedDeriv_translation hA U r hr0
+          (fun x hx hxc => hU x hx (by omega)) φ, hUsym r hr0 hrm, map_zero, Complex.ofReal_zero,
+          map_zero, add_zero]
+      · exact repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
+          hA U l ν lam φ
+      · exact hS b hb' U
+  | algebraMap c => rw [Algebra.algebraMap_eq_smul_one, map_smul, repGauge_one hA]
+  | add a b _ _ iha ihb => rw [map_add, iha, ihb]
+  | mul a b _ _ iha ihb => rw [hA.gauge_mul, iha, ihb]
+
+include hcomm hcS in
+/-- Every element of the order-`m` subalgebra commutes with every symmetrized symbol. -/
+lemma commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)))
     (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
-    Commute y (symmetrizedDeriv r A φ) := by
-  rw [symmetrizedDeriv, ← algebraMap_smul ℂ ((1 : ℝ)/(r.card : ℝ))]
-  refine Commute.smul_right ?_ _
-  refine Commute.multiset_sum_right _ _ fun x hx => ?_
-  obtain ⟨μ, hμ, rfl⟩ := Multiset.mem_map.mp hx
-  exact hy _ _ _
+    Commute z (symmetrizedDeriv r A φ) := by
+  refine commute_of_mem_adjoin ?_ hz
+  rintro b (⟨r', φ', _, _, rfl⟩ | ⟨l, ν, lam, φ', rfl⟩ | hbS)
+  · exact commute_symmetrizedDeriv hcomm r' r φ' φ
+  · refine commute_of_mem_adjoin (fun x hx => ?_)
+      (iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols l ν lam φ')
+    obtain ⟨a, b2, c, rfl⟩ := hx
+    exact commute_symmetrizedDeriv_right (fun p' μ' φ'' => hcomm a p' b2 μ' c φ'') r φ
+  · exact commute_symmetrizedDeriv_right (fun p' μ' φ' => hcS p' μ' φ' b hbS) r φ
 
-/-- The underived covariant field-strength tower consists of polynomials in the
-  gauge-field symbols. -/
-lemma iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols
-    (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ 𝔤) :
-    iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ ∈
-      Algebra.adjoin ℂ {b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (ψ : Module.Dual ℝ 𝔤), b = A p μ ψ} := by
-  rw [show iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ =
-      (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ -
-        fieldStrength A ν lam (Multiset.ofList l + 0) φ) +
-      fieldStrength A ν lam (Multiset.ofList l + 0) φ from by abel]
-  refine add_mem
-    (SetLike.le_def.mp (Algebra.adjoin_mono ?_)
-      (iteratedCovDerivAdjoint_sub_mem l ν lam 0 φ))
-    (SetLike.le_def.mp (Algebra.adjoin_mono ?_)
-      (fieldStrength_mem_adjoin_symbols _ ν lam φ))
-  · rintro b ⟨p, μ, ψ, _, rfl⟩
-    exact ⟨p, μ, ψ, rfl⟩
-  · rintro b ⟨p, μ, ψ, _, rfl⟩
-    exact ⟨p, μ, ψ, rfl⟩
+/-!
 
-set_option maxHeartbeats 1000000 in
+### G.2. The top-order coordinates and their translations
+
+The symmetrized symbols of order exactly `m + 1` are indexed, in a basis `bv` of the gauge
+algebra, by a multiset of `m + 1` directions and a basis index. A real function `t` on that
+index set prescribes a shift family supported at order `m + 1`, hence a pure jet
+translating each coordinate by the corresponding value of `t`.
+
+-/
+
+variable {ι : Type} [Fintype ι] (bv : Module.Basis ι ℝ 𝔤)
+
+variable (A) in
+/-- The top-order coordinates: the symmetrized symbols of order `m + 1` in the basis
+  `bv`. -/
+noncomputable def topCoord : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → B :=
+  fun p => symmetrizedDeriv (p.1 : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord p.2)
+
+/-- The shift family supported at order `m + 1` with coordinates `t` in the basis `bv`. -/
+noncomputable def shiftFamily (t : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → ℝ) :
+    {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → 𝔤 :=
+  fun r => if h : r.1.card = m + 1 then ∑ j, t (⟨r.1, h⟩, j) • bv j else 0
+
+lemma shiftFamily_eq_zero_of_card_ne (t : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → ℝ)
+    (r : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0}) (hr : r.1.card ≠ m + 1) :
+    shiftFamily m bv t r = 0 :=
+  dif_neg hr
+
+lemma coord_shiftFamily (t : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → ℝ)
+    (ps : Sym (Fin 1 ⊕ Fin 3) (m + 1)) (hp0 : (ps : Multiset (Fin 1 ⊕ Fin 3)) ≠ 0) (j : ι) :
+    bv.coord j (shiftFamily m bv t ⟨ps, hp0⟩) = t (ps, j) := by
+  classical
+  rw [shiftFamily, dif_pos (Sym.card_coe (s := ps)), map_sum]
+  simp only [map_smul, Module.Basis.coord_apply, Module.Basis.repr_self, Finsupp.single_apply,
+    smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]
+  rfl
+
+include hcomm S hcS in
+/-- The top-order coordinates commute with the order-`m` subalgebra. -/
+lemma commute_topCoord_of_mem_adjoin_symSymbolsLE (p : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι)
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S))) :
+    Commute z (topCoord A m bv p) :=
+  commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE hcomm S hcS m hz _ _
+
+/-- An element of the order-`m + 1` subalgebra lies in the sup of the order-`m` subalgebra
+  and the subalgebra generated by the top-order coordinates. -/
+lemma mem_sup_adjoin_range_topCoord {z : B}
+    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A (m + 1) ∪ (tower A ∪ S))) :
+    z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)) ⊔
+      Algebra.adjoin ℂ (Set.range (topCoord A m bv)) := by
+  refine Algebra.adjoin_le ?_ hz
+  rintro b (⟨r, φ, hr0, hrm1, rfl⟩ | hb)
+  · by_cases hcm : r.card ≤ m
+    · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, hcm, rfl⟩))
+    · rw [symmetrizedDeriv_eq_sum_coord bv r φ]
+      refine Subalgebra.sum_mem _ fun j _ => ?_
+      rw [← algebraMap_smul ℂ (φ (bv j))]
+      exact Subalgebra.smul_mem _ (SetLike.le_def.mp le_sup_right (Algebra.subset_adjoin
+        (Set.mem_range_self (f := topCoord A m bv) (⟨r, by omega⟩, j)))) _
+  · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inr hb))
+
+include hA in
+/-- The pure jet realizing the shift family `t` translates each top-order coordinate by
+  the corresponding value of `t`. -/
+lemma repGauge_topCoord {U : jets.truncationKer 0}
+    (t : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → ℝ)
+    (hU1 : jets.symmetrizedMaurerCartanCoeff U⁻¹ = shiftFamily m bv t)
+    (hU2 : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < m + 1 →
+      jets.adjointDualCoeff (U.1)⁻¹ x = 0)
+    (p : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι) :
+    repGauge U.1 (topCoord A m bv p) = topCoord A m bv p + algebraMap ℂ B ((t p : ℝ) : ℂ) := by
+  obtain ⟨ps, j⟩ := p
+  have hps : Multiset.card (ps : Multiset (Fin 1 ⊕ Fin 3)) = m + 1 := Sym.card_coe (s := ps)
+  have hp0 : (ps : Multiset (Fin 1 ⊕ Fin 3)) ≠ 0 := fun h => by simp [h] at hps
+  show repGauge U.1 (symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord j)) = _
+  rw [repGauge_symmetrizedDeriv_translation hA U _ hp0
+    (fun x hx hxc => hU2 x hx (by omega)) (bv.coord j), hU1, coord_shiftFamily]
+  rfl
+
+/-!
+
+### G.3. The descent
+
+-/
+
+include hA hcomm hcS hS in
+/-- The descent: an element of the order-`m + 1` subalgebra fixed by all pure jets lies
+  in the order-`m` subalgebra. The pure jets realizing the shift families at order
+  `m + 1` fix the order-`m` subalgebra and translate the top-order coordinates by arbitrary
+  real scalars, so `mem_of_translationInvariant` applies. -/
+lemma mem_adjoin_symSymbolsLE_of_repGauge_eq [jets.Free] {z : B}
+    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A (m + 1) ∪ (tower A ∪ S)))
+    (hzinv : ∀ U : jets.truncationKer 0, repGauge U.1 z = z) :
+    z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)) := by
+  classical
+  set bv := Module.Free.chooseBasis ℝ 𝔤 with hbv
+  choose Ut hUt1 hUt2 using fun t : Sym (Fin 1 ⊕ Fin 3) (m + 1) ×
+      Module.Free.ChooseBasisIndex ℝ 𝔤 → ℝ =>
+    exists_translation_of_support (jets := jets) (m + 1) (shiftFamily m bv t)
+      (shiftFamily_eq_zero_of_card_ne m bv t)
+  refine mem_of_translationInvariant _ (topCoord A m bv)
+    (fun p r hr => commute_topCoord_of_mem_adjoin_symSymbolsLE hcomm S hcS m bv p hr)
+    (fun p q => commute_symmetrizedDeriv hcomm _ _ _ _)
+    (fun t => repGaugeRingHom hA (Ut t).1) (fun t w hw => ?_)
+    (fun t p => repGauge_topCoord hA m bv t (hUt1 t) (hUt2 t) p)
+    (mem_sup_adjoin_range_topCoord S m bv hz) (fun t => hzinv (Ut t))
+  refine repGauge_eq_of_mem_adjoin_symSymbolsLE hA S hS m
+    (fun x hx hxm => hUt2 t x hx (by omega)) (fun r hr hrm => ?_) hw
+  rw [hUt1 t]
+  exact shiftFamily_eq_zero_of_card_ne m bv t ⟨r, hr⟩ (by simp only; omega)
+
+end Descent
+
+/-!
+
+### G.4. The classification
+
+-/
+
 /-- The classification of invariants: a gauge-invariant element of the subalgebra
   generated by the gauge-field symbols and a set `S` of `truncationKer 0`-fixed
   elements is a polynomial in the covariant derivatives of the field strength and the
   elements of `S`. Requires only that the gauge-field symbols commute with each other
-  (the gauge field is bosonic) and with the elements of `S` — nothing about the rest
-  of `B`; no independence hypothesis. -/
+  (the gauge field is bosonic) and with the elements of `S`, nothing about the rest
+  of `B`, and no independence hypothesis. -/
 theorem invariant_mem_adjoin_fieldStrength [jets.Free]
     (hA : IsGaugeField jets repLorentz repGauge A)
     (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
@@ -1186,269 +1175,31 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free]
     (hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
       (φ : Module.Dual ℝ 𝔤), ∀ y ∈ S, Commute y (A p μ φ))
     (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, repGauge U.1 y = y)
-    {x : B}
-    (hx : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
-      b = A p μ φ} ∪ S))
+    {x : B} (hx : x ∈ Algebra.adjoin ℂ (symbols A ∪ S))
     (hinv : ∀ U : G, repGauge U x = x) :
-    x ∈ Algebra.adjoin ℂ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤),
-      b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S) := by
-  classical
-  -- every element of the covariant tower together with `S` is fixed by the
-  -- truncation kernel
-  have hS' : ∀ y ∈ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤),
-      b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S),
-      ∀ U : jets.truncationKer 0, repGauge U.1 y = y := by
-    rintro y (⟨l, ν, lam, φ, rfl⟩ | hyS) U
-    · exact repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-        hA U l ν lam φ
-    · exact hS y hyS U
-  -- the gauge action preserves the unit, hence acts by ring endomorphisms
-  have hone : ∀ U : G, repGauge U (1 : B) = 1 := by
-    intro U
-    have h2 : repGauge U (repGauge U⁻¹ (1 : B)) = 1 := by
-      have h3 : repGauge U * repGauge U⁻¹ = 1 := by
-        rw [← map_mul, mul_inv_cancel, map_one]
-      calc repGauge U (repGauge U⁻¹ (1 : B)) = (repGauge U * repGauge U⁻¹) (1 : B) := rfl
-        _ = 1 := by rw [h3]; rfl
-    have h1 := hA.gauge_mul U (repGauge U⁻¹ (1 : B)) 1
-    rw [mul_one, h2, one_mul] at h1
-    exact h1.symm
-  -- the descent: invariance strips the top symmetrized order
-  have hdescent : ∀ (m : ℕ) (z : B),
-      z ∈ Algebra.adjoin ℂ
-        ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ r.card ≤ m + 1 ∧ b = symmetrizedDeriv r A φ} ∪
-          ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤),
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
-      (∀ U : jets.truncationKer 0, repGauge U.1 z = z) →
-      z ∈ Algebra.adjoin ℂ
-        ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-            r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv r A φ} ∪
-          ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-            (φ : Module.Dual ℝ 𝔤),
-            b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) := by
-    intro m z hz hzinv
-    set bv := Module.Free.chooseBasis ℝ 𝔤 with hbv
-    set R₀ : Subalgebra ℂ B := Algebra.adjoin ℂ
-      ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-          r ≠ 0 ∧ r.card ≤ m ∧ b = symmetrizedDeriv r A φ} ∪
-        ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ 𝔤),
-          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) with hR₀
-    set Y : Sym (Fin 1 ⊕ Fin 3) (m + 1) × Module.Free.ChooseBasisIndex ℝ 𝔤 → B :=
-      fun p => symmetrizedDeriv (p.1 : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord p.2)
-      with hYdef
-    -- the translating jets realizing an arbitrary top-order shift
-    have hUt' : ∀ t : Sym (Fin 1 ⊕ Fin 3) (m + 1) ×
-        Module.Free.ChooseBasisIndex ℝ 𝔤 → ℝ,
-        ∃ U : jets.truncationKer 0,
-          jets.symmetrizedMaurerCartanCoeff U⁻¹ = (fun r =>
-            if h : Multiset.card r.1 = m + 1 then ∑ j, t (⟨r.1, h⟩, j) • bv j else 0) ∧
-          ∀ x' : Multiset (Fin 1 ⊕ Fin 3), x' ≠ 0 → x'.card < m + 1 →
-            jets.adjointDualCoeff (U.1)⁻¹ x' = 0 :=
-      fun t => exists_translation_of_support (m + 1) _ (fun r hr => dif_neg hr)
-    choose Ut hUt1 hUt2 using hUt'
-    -- the family of ring endomorphisms
-    set Φ : (Sym (Fin 1 ⊕ Fin 3) (m + 1) ×
-        Module.Free.ChooseBasisIndex ℝ 𝔤 → ℝ) → B →+* B :=
-      fun t =>
-        { toFun := repGauge (Ut t).1
-          map_one' := hone (Ut t).1
-          map_mul' := hA.gauge_mul (Ut t).1
-          map_zero' := map_zero _
-          map_add' := fun a b => map_add _ a b } with hΦdef
-    -- the endomorphisms fix the lower-order subalgebra pointwise
-    have hfixR₀ : ∀ t, ∀ w ∈ R₀, Φ t w = w := by
-      intro t w hw
-      rw [hR₀] at hw
-      induction hw using Algebra.adjoin_induction with
-      | mem b hb =>
-          show repGauge (Ut t).1 b = b
-          rcases hb with ⟨r, φ, hr0, hrm, rfl⟩ | hb'
-          · have hUvan : ∀ x' : Multiset (Fin 1 ⊕ Fin 3), x' ≠ 0 → x'.card < r.card →
-                jets.adjointDualCoeff ((Ut t).1)⁻¹ x' = 0 :=
-              fun x' hx' hxc => hUt2 t x' hx' (by omega)
-            rw [repGauge_symmetrizedDeriv_translation hA (Ut t) r hr0 hUvan φ]
-            have hshift : jets.symmetrizedMaurerCartanCoeff (Ut t)⁻¹ ⟨r, hr0⟩ = 0 := by
-              simp only [hUt1 t]
-              exact dif_neg (show ¬ Multiset.card r = m + 1 by omega)
-            rw [hshift, map_zero]
-            simp
-          · exact hS' b hb' (Ut t)
-      | algebraMap c =>
-          show repGauge (Ut t).1 (algebraMap ℂ B c) = algebraMap ℂ B c
-          rw [Algebra.algebraMap_eq_smul_one, map_smul, hone]
-      | add a b _ _ iha ihb => rw [map_add, iha, ihb]
-      | mul a b _ _ iha ihb => rw [map_mul, iha, ihb]
-    -- the endomorphisms translate the top-order coordinates by the prescribed shifts
-    have hΦy : ∀ t p, Φ t (Y p) = Y p + algebraMap ℂ B ((t p : ℝ) : ℂ) := by
-      rintro t ⟨ps, j⟩
-      have hps : Multiset.card (ps : Multiset (Fin 1 ⊕ Fin 3)) = m + 1 :=
-        Sym.card_coe (s := ps)
-      have hp0 : (ps : Multiset (Fin 1 ⊕ Fin 3)) ≠ 0 := by
-        intro h
-        rw [h] at hps
-        simp at hps
-      have hUvan : ∀ x' : Multiset (Fin 1 ⊕ Fin 3), x' ≠ 0 →
-          x'.card < (ps : Multiset (Fin 1 ⊕ Fin 3)).card →
-          jets.adjointDualCoeff ((Ut t).1)⁻¹ x' = 0 :=
-        fun x' hx' hxc => hUt2 t x' hx' (by omega)
-      have hval : bv.coord j (jets.symmetrizedMaurerCartanCoeff (Ut t)⁻¹
-          ⟨(ps : Multiset (Fin 1 ⊕ Fin 3)), hp0⟩) = t (ps, j) := by
-        have hcoeff : jets.symmetrizedMaurerCartanCoeff (Ut t)⁻¹
-            ⟨(ps : Multiset (Fin 1 ⊕ Fin 3)), hp0⟩ = ∑ j', t (ps, j') • bv j' := by
-          simp only [hUt1 t]
-          rw [dif_pos hps]
-          exact Finset.sum_congr rfl fun j' _ =>
-            congrArg (fun q : Sym (Fin 1 ⊕ Fin 3) (m + 1) => t (q, j') • bv j')
-              (Sym.ext rfl)
-        rw [hcoeff, map_sum]
-        simp only [map_smul, Module.Basis.coord_apply, Module.Basis.repr_self,
-          Finsupp.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero]
-        rw [Finset.sum_ite_eq' Finset.univ j (fun j' => t (ps, j'))]
-        simp
-      show repGauge (Ut t).1 (symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A
-          (bv.coord j)) = symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A
-          (bv.coord j) + algebraMap ℂ B ((t (ps, j) : ℝ) : ℂ)
-      rw [repGauge_symmetrizedDeriv_translation hA (Ut t) _ hp0 hUvan (bv.coord j), hval]
-    -- the coordinate expansion of a top-order symmetrized symbol in the chosen basis
-    have hdual : ∀ ψ : Module.Dual ℝ 𝔤, ∑ j, ψ (bv j) • bv.coord j = ψ := by
-      intro ψ
-      refine LinearMap.ext fun v => ?_
-      conv_rhs => rw [← bv.sum_repr v, map_sum]
-      simp only [LinearMap.sum_apply, LinearMap.smul_apply, Module.Basis.coord_apply,
-        smul_eq_mul, map_smul]
-      exact Finset.sum_congr rfl fun j _ => mul_comm _ _
-    have hexpand : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤),
-        symmetrizedDeriv r A φ =
-          ∑ j, φ (bv j) • symmetrizedDeriv r A (bv.coord j) := by
-      intro r φ
-      set L : Module.Dual ℝ 𝔤 →ₗ[ℝ] B :=
-        { toFun := fun ψ => symmetrizedDeriv r A ψ,
-          map_add' := fun ψ ψ' => by
-            simp only [symmetrizedDeriv, map_add]
-            rw [← smul_add, ← Multiset.sum_map_add]
-          map_smul' := fun c ψ => by
-            simp only [symmetrizedDeriv, map_smul, RingHom.id_apply]
-            rw [show (r.map fun μ => c • A (r - {μ}) μ ψ) =
-                (r.map fun μ => A (r - {μ}) μ ψ).map (fun w => c • w) from
-                (Multiset.map_map _ _ _).symm,
-              ← Multiset.smul_sum, smul_comm] } with hL
-      have hLcalc : L φ = ∑ j, φ (bv j) • L (bv.coord j) := by
-        conv_lhs => rw [← hdual φ, map_sum]
-        exact Finset.sum_congr rfl fun j _ => by rw [map_smul]
-      exact hLcalc
-    -- the invariant lies in the sup of the lower-order subalgebra and the coordinates
-    have hzsup : z ∈ R₀ ⊔ Algebra.adjoin ℂ (Set.range Y) := by
-      refine Algebra.adjoin_le ?_ hz
-      rintro b (⟨r, φ, hr0, hrm1, rfl⟩ | hb)
-      · by_cases hcm : r.card ≤ m
-        · exact SetLike.le_def.mp le_sup_left
-            (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, hcm, rfl⟩))
-        · have hcard : Multiset.card r = m + 1 := by omega
-          rw [hexpand r φ]
-          refine Subalgebra.sum_mem _ fun j _ => ?_
-          rw [← algebraMap_smul ℂ (φ (bv j))]
-          refine Subalgebra.smul_mem _ ?_ _
-          exact SetLike.le_def.mp le_sup_right
-            (Algebra.subset_adjoin ⟨(⟨r, hcard⟩, j), rfl⟩)
-      · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inr hb))
-    -- the commutation data: symbols commute with each other, the tower, and `S`
-    have hsymbSD : ∀ (a : Multiset (Fin 1 ⊕ Fin 3)) (b : Fin 1 ⊕ Fin 3)
-        (c : Module.Dual ℝ 𝔤) (r : Multiset (Fin 1 ⊕ Fin 3))
-        (φ : Module.Dual ℝ 𝔤),
-        Commute (A a b c) (symmetrizedDeriv r A φ) :=
-      fun a b c r φ => commute_symmetrizedDeriv_right
-        (fun p' μ' φ' => hcomm a p' b μ' c φ') r φ
-    have hsymbY : ∀ (a : Multiset (Fin 1 ⊕ Fin 3)) (b : Fin 1 ⊕ Fin 3)
-        (c : Module.Dual ℝ 𝔤) (p), Commute (A a b c) (Y p) :=
-      fun a b c p => hsymbSD a b c (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
-    have hYY : ∀ p q, Commute (Y p) (Y q) :=
-      fun p q => commute_symmetrizedDeriv_right
-        (fun p' μ' φ' => (hsymbSD p' μ' φ' (p.1 : Multiset (Fin 1 ⊕ Fin 3))
-          (bv.coord p.2)).symm) (q.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord q.2)
-    have hRY : ∀ p, ∀ r ∈ R₀, Commute r (Y p) := by
-      intro p r hr
-      rw [hR₀] at hr
-      refine commute_of_mem_adjoin ?_ hr
-      rintro b (⟨r', φ', hr0, hrm, rfl⟩ | (⟨l, ν, lam, φ', rfl⟩ | hbS))
-      · exact commute_symmetrizedDeriv_right
-          (fun p' μ' φ'' => (hsymbSD p' μ' φ'' r' φ').symm)
-          (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
-      · exact commute_of_mem_adjoin
-          (fun x hx => by
-            obtain ⟨a, b2, c, rfl⟩ := hx
-            exact hsymbY a b2 c p)
-          (iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols l ν lam φ')
-      · exact commute_symmetrizedDeriv_right
-          (fun p' μ' φ' => hcS p' μ' φ' b hbS)
-          (p.1 : Multiset (Fin 1 ⊕ Fin 3)) (bv.coord p.2)
-    -- extraction: the invariant lies in the lower-order subalgebra
-    have hzR₀ : z ∈ R₀ :=
-      mem_of_translationInvariant R₀ Y hRY hYY Φ hfixR₀ hΦy hzsup
-        (fun t => hzinv (Ut t))
-    rw [hR₀] at hzR₀
-    exact hzR₀
+    x ∈ Algebra.adjoin ℂ (tower A ∪ S) := by
   -- bound the symbol order of the invariant, working relative to the full tower
-  have hxS' : x ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3))
-      (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
-      b = A p μ φ} ∪
-      ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤),
-        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) :=
-    Algebra.adjoin_mono (Set.union_subset_union_right _ Set.subset_union_right) hx
-  obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union _ hxS'
-  -- convert bounded symbols to symmetrized symbols, absorbing the tower
-  have hconv : ∀ (k : ℕ) (z : B),
-      z ∈ Algebra.adjoin ℂ ({b : B | ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤), p.card ≤ k ∧
-        b = A p μ φ} ∪
-        ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ 𝔤),
-          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
-      z ∈ Algebra.adjoin ℂ ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3))
-        (φ : Module.Dual ℝ 𝔤), r ≠ 0 ∧ r.card ≤ k + 1 ∧
-        b = symmetrizedDeriv r A φ} ∪
-        ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ 𝔤),
-          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) := by
-    intro k z hzk
-    rw [symbolAdjoin_union_eq_symFieldAdjoin_union k
-      ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤),
-        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)] at hzk
-    refine Algebra.adjoin_mono ?_ hzk
-    rintro b ((⟨r, φ, h0, hcr, rfl⟩ | ⟨l, ν, lam, φ, _, rfl⟩) | hb)
-    · exact Or.inl ⟨r, φ, h0, hcr, rfl⟩
-    · exact Or.inr (Or.inl ⟨l, ν, lam, φ, rfl⟩)
-    · exact Or.inr hb
+  obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union (tower A ∪ S)
+    (Algebra.adjoin_mono (Set.union_subset_union_right _ Set.subset_union_right) hx)
+  -- convert the bounded symbols to symmetrized symbols, absorbing the tower
+  have hconv : x ∈ Algebra.adjoin ℂ (symSymbolsLE A (n + 1) ∪ (tower A ∪ S)) := by
+    rw [symbolAdjoin_union_eq_symFieldAdjoin_union n (tower A ∪ S)] at hxn
+    refine Algebra.adjoin_mono ?_ hxn
+    rintro b ((hb | hb) | hb)
+    exacts [Or.inl hb, Or.inr (Or.inl (towerLT_subset_tower n hb)), Or.inr hb]
   -- iterate the descent from the top order down to zero
-  have hiter : ∀ (k : ℕ) (z : B),
-      z ∈ Algebra.adjoin ℂ ({b : B | ∃ (r : Multiset (Fin 1 ⊕ Fin 3))
-        (φ : Module.Dual ℝ 𝔤), r ≠ 0 ∧ r.card ≤ k ∧
-        b = symmetrizedDeriv r A φ} ∪
-        ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-          (φ : Module.Dual ℝ 𝔤),
-          b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S)) →
-      (∀ U : jets.truncationKer 0, repGauge U.1 z = z) →
-      z ∈ Algebra.adjoin ℂ ({b : B | ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
-        (φ : Module.Dual ℝ 𝔤),
-        b = iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ} ∪ S) := by
-    intro k
-    induction k with
-    | zero =>
-        intro z hz0 _
-        refine Algebra.adjoin_mono ?_ hz0
-        rintro b (⟨r, φ, hr0, hrc, rfl⟩ | hb)
-        · exact absurd (Multiset.card_eq_zero.mp (Nat.le_zero.mp hrc)) hr0
-        · exact hb
-    | succ k ih =>
-        intro z hzk hzinv
-        exact ih z (hdescent k z hzk hzinv) hzinv
-  exact hiter (n + 1) x (hconv n x hxn) fun U => hinv U.1
+  suffices h : ∀ k, x ∈ Algebra.adjoin ℂ (symSymbolsLE A k ∪ (tower A ∪ S)) →
+      x ∈ Algebra.adjoin ℂ (tower A ∪ S) from h (n + 1) hconv
+  intro k
+  induction k with
+  | zero =>
+      intro h0
+      refine Algebra.adjoin_mono ?_ h0
+      rintro b (⟨r, φ, hr0, hrc, rfl⟩ | hb)
+      · exact absurd (Multiset.card_eq_zero.mp (Nat.le_zero.mp hrc)) hr0
+      · exact hb
+  | succ k ih =>
+      intro hk
+      exact ih (mem_adjoin_symSymbolsLE_of_repGauge_eq hA hcomm S hcS hS k hk fun U => hinv U.1)
 
 end IsGaugeField
