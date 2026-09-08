@@ -8,6 +8,7 @@ module
 public import Physlib.Electromagnetism.Kinematics.GaugeTransformation
 public import Physlib.Electromagnetism.Dynamics.KineticTerm
 public import Physlib.Relativity.SL2C.Basic
+public import Physlib.Mathematics.MultisetAntidiagonal
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 public import Mathlib.LinearAlgebra.Finsupp.LSum
 public import Mathlib.Data.Multiset.Antidiagonal
@@ -477,22 +478,8 @@ exactly the multinomial weight of the Leibniz rule.
 lemma sum_map_antidiagonal_ite {M : Type*} [AddCommMonoid M]
     (t : Multiset (Fin 1 ⊕ Fin 3)) (f : Multiset (Fin 1 ⊕ Fin 3) → M) :
     ((t.antidiagonal).map fun p => if p.1 = 0 then f p.2 else 0).sum = f t := by
-  induction t using Multiset.induction_on generalizing f with
-  | empty => simp
-  | cons a s ih =>
-    rw [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
-      Multiset.map_map, Multiset.map_map]
-    have h2 : ((s.antidiagonal).map
-        ((fun p => if p.1 = 0 then f p.2 else 0) ∘
-          Prod.map (Multiset.cons a) id)).sum = 0 :=
-      Multiset.sum_eq_zero fun x hx => by
-        obtain ⟨p, _, rfl⟩ := Multiset.mem_map.mp hx
-        simp
-    rw [h2, add_zero,
-      show ((fun p => if p.1 = 0 then f p.2 else 0) ∘ Prod.map id (Multiset.cons a)) =
-        fun p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3) =>
-          if p.1 = 0 then f (a ::ₘ p.2) else 0 from rfl]
-    exact ih fun u => f (a ::ₘ u)
+  rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero t _ fun p _ hp => if_neg hp]
+  exact if_pos rfl
 
 /-- The Leibniz convolution of a phase family against a module-valued family
   of jets, over the antidiagonal of the derivative multiset: the formal
@@ -565,24 +552,9 @@ lemma phaseAct_smul_right (c : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
   the convolution `u ⋆ v`. -/
 lemma phaseAct_assoc (s : Multiset (Fin 1 ⊕ Fin 3)) :
     phaseAct u (phaseAct v f) s = phaseAct (phaseAct u v) f s := by
-  induction s using Multiset.induction_on generalizing u v f with
-  | empty =>
-    simp [smul_smul]
-  | cons a s ih =>
-    rw [show a ::ₘ s = s + {a} from by
-      rw [Multiset.add_comm, Multiset.singleton_add]]
-    rw [phaseAct_add_singleton, phaseAct_add_singleton,
-      show (fun t => phaseAct v f (t + {a})) = fun t =>
-          phaseAct v (fun t' => f (t' + {a})) t +
-            phaseAct (fun t' => v (t' + {a})) f t from
-        funext fun t => phaseAct_add_singleton v f a t,
-      phaseAct_add_right, ih, ih, ih,
-      show (fun t => phaseAct u v (t + {a})) = fun t =>
-          phaseAct u (fun t' => v (t' + {a})) t +
-            phaseAct (fun t' => u (t' + {a})) v t from
-        funext fun t => phaseAct_add_singleton u v a t,
-      phaseAct_add_left]
-    abel
+  simp only [phaseAct, Multiset.smul_sum, Multiset.sum_smul, Multiset.map_map,
+    Function.comp_def, smul_smul, smul_eq_mul]
+  exact (Multiset.sum_antidiagonal_assoc s fun a b c => (u a * v b) • f c).symm
 
 /-- Commutativity of the scalar convolution. -/
 lemma phaseAct_comm (s : Multiset (Fin 1 ⊕ Fin 3)) :
