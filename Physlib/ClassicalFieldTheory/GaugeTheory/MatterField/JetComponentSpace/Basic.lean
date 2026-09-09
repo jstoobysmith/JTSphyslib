@@ -35,6 +35,8 @@ is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Ga
 - `JetComponentSpace.repLorentzGroup_jetDeriv` : the shift is a Lorentz vector.
 - `JetComponentSpace.comap` : functoriality, contravariant in the target space.
 - `JetComponentSpace.massWeightScale` : the mass-weight scaling.
+- `JetComponentSpace.comap_comp_massWeightScale` : the scaling is natural in the target
+  space, hence blind to which part of it a component function came from.
 - `JetComponentSpace.prodEquiv` : the component space of a direct sum.
 - `JetComponentSpace.piEquiv` : the component space of a finite direct sum.
 
@@ -420,6 +422,21 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1
       JetComponentSpace.massWeightScale_snd, JetComponentSpace.jetDeriv_snd, map_smul]
     exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V) =>
       c ^ w • z) (key v.2)).trans (smul_comm _ _ _)
+
+/-- **The mass-weight scaling is natural in the target space.** It commutes with every
+  pullback, acting as it does on the derivative label and not on the target index. So the
+  scaling cannot see which part of a target space a component function came from: in
+  `JetComponentSpace (∀ i, V i)`, where a species enters through
+  `comap (LinearMap.proj i)`, every species is scaled by the same weight. This is why the
+  generator space of a multi-species theory, `GaugeFieldData.FermionGenerators`, records
+  the weights on a direct sum, one per species, rather than on a single component space of
+  the product. -/
+lemma JetComponentSpace.comap_comp_massWeightScale (f : V →ₗ[ℂ] W) (w : ℕ) (c : ℂ) :
+    (JetComponentSpace.comap f).comp (JetComponentSpace.massWeightScale w c)
+      = (JetComponentSpace.massWeightScale w c).comp (JetComponentSpace.comap f) := by
+  simp only [JetComponentSpace.comap, JetComponentSpace.massWeightScale,
+    LinearMap.comp_smul, LinearMap.smul_comp, LinearMap.prodMap_comp,
+    ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
 
 /-!
 

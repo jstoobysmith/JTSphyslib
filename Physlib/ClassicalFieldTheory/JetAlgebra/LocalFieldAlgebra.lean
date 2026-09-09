@@ -377,12 +377,12 @@ lemma algHom_ext {B : Type*} [Ring B] [Algebra ℂ B] {Φ Ψ : T.LocalFieldAlgeb
     (hb : ∀ j y, Φ (T.ιBoson j y) = Ψ (T.ιBoson j y))
     (ha : ∀ v, Φ (T.ιConnection v) = Ψ (T.ιConnection v)) : Φ = Ψ :=
   algHom_ext_generators T
-    (fun v => LinearMap.congr_fun (SpeciesComponentSpace.hom_ext
+    (fun v => LinearMap.congr_fun (fermionGenerators_hom_ext
       (F := Φ.toLinearMap ∘ₗ T.ιFermionTotal)
-      (G := Ψ.toLinearMap ∘ₗ T.ιFermionTotal) hf) v)
-    (fun v => LinearMap.congr_fun (SpeciesComponentSpace.hom_ext
+      (F' := Ψ.toLinearMap ∘ₗ T.ιFermionTotal) hf) v)
+    (fun v => LinearMap.congr_fun (bosonGenerators_hom_ext
       (F := Φ.toLinearMap ∘ₗ T.ιBosonTotal)
-      (G := Ψ.toLinearMap ∘ₗ T.ιBosonTotal) hb) v)
+      (F' := Ψ.toLinearMap ∘ₗ T.ιBosonTotal) hb) v)
     ha
 
 variable (T)
@@ -437,8 +437,7 @@ variable {T}
   vacuous only for a family with at most one species. -/
 lemma assemble_mul_self_iff {B : Type*} [Ring B] [Algebra ℂ B]
     (f : ∀ i, JetComponentSpace (T.FermionValue i) →ₗ[ℂ] B) :
-    (∀ v, SpeciesComponentSpace.assemble T.FermionValue f v *
-        SpeciesComponentSpace.assemble T.FermionValue f v = 0)
+    (∀ v, T.assembleFermion f v * T.assembleFermion f v = 0)
       ↔ ((∀ i x, f i x * f i x = 0) ∧
         ∀ i j x y, f i x * f j y = -(f j y * f i x)) := by
   rw [DirectSum.mul_self_iff_lof]
@@ -461,22 +460,22 @@ the role of the generators.
 
 /-- The images of all the fermionic generators at once, assembled from the species. -/
 def fermionTotal : T.FermionGenerators →ₗ[ℂ] B :=
-  SpeciesComponentSpace.assemble T.FermionValue d.fermion
+  T.assembleFermion d.fermion
 
 /-- The images of all the bosonic generators at once. -/
 def bosonTotal : T.BosonGenerators →ₗ[ℂ] B :=
-  SpeciesComponentSpace.assemble T.BosonValue d.boson
+  T.assembleBoson d.boson
 
 @[simp]
 lemma fermionTotal_inclFermion (i : T.FermionSpecies)
     (x : JetComponentSpace (T.FermionValue i)) :
     d.fermionTotal (T.inclFermion i x) = d.fermion i x :=
-  SpeciesComponentSpace.assemble_incl d.fermion i x
+  assembleFermion_inclFermion d.fermion i x
 
 @[simp]
 lemma bosonTotal_inclBoson (j : T.BosonSpecies) (y : JetComponentSpace (T.BosonValue j)) :
     d.bosonTotal (T.inclBoson j y) = d.boson j y :=
-  SpeciesComponentSpace.assemble_incl d.boson j y
+  assembleBoson_inclBoson d.boson j y
 
 /-- The assembled fermionic images square to zero, which is more than the species-wise
   condition and needs the cross-species anticommutation as well. -/

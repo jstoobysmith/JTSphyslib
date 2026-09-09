@@ -6,7 +6,6 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 /-!
 # The field data of a gauge theory
 

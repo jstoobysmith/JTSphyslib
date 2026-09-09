@@ -47,7 +47,6 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.JetAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra
-public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 public import Physlib.ClassicalFieldTheory.Local.Variation
 public import Physlib.ClassicalMechanics.Basic
 public import Physlib.ClassicalMechanics.DampedHarmonicOscillator.Basic
