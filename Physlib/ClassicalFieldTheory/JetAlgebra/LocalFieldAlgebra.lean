@@ -5,7 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.Basic
 public import Physlib.Mathematics.AlgebraGeneration
 public import Physlib.Mathematics.SymmetricAlgebra
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic

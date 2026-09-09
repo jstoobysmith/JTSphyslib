@@ -10,6 +10,7 @@ public import Physlib.Relativity.JetRing.Basic
 public import Physlib.Relativity.DerivAlgebra
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
+public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.LinearAlgebra.Dimension.Free
 /-!
@@ -197,3 +198,70 @@ lemma jetEval_prod (z : JetRing ⊗[ℂ] (V × W)) :
       simp only [map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
 
 end Prod
+
+/-!
+
+## The jets of an indexed product of value spaces
+
+A field valued in a finite product `∀ i, E i` is a family of fields, one for each index,
+and `jetPiEquiv` identifies its jets with the family of their jets. It intertwines the
+whole jet toolkit index by index, exactly as `jetProdEquiv` does in the binary case. The
+index type has to be finite for the identification to exist at all: a jet of a field
+valued in an infinite product need not have all but finitely many of its components
+constant, so `TensorProduct.piRightHom` is only an equivalence in the finite case.
+
+-/
+
+section Pi
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι] (E : ι → Type)
+  [∀ i, AddCommGroup (E i)] [∀ i, Module ℂ (E i)]
+
+/-- **The jets of a finite product are the product of the jets**:
+  `JetRing ⊗ (∀ i, E i)` splits as `∀ i, JetRing ⊗ E i`, the jet-ring factor being
+  shared. -/
+noncomputable abbrev jetPiEquiv :
+    JetRing ⊗[ℂ] (∀ i, E i) ≃ₗ[ℂ] ∀ i, JetRing ⊗[ℂ] E i :=
+  TensorProduct.piRight ℂ ℂ JetRing E
+
+lemma jetPiEquiv_jetOfConstant (v : ∀ i, E i) :
+    jetPiEquiv E (jetOfConstant v) = fun i => jetOfConstant (v i) := rfl
+
+lemma jetPiEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetPiEquiv E (jetDeriv μ z) i = jetDeriv μ (jetPiEquiv E z i) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul f p => rfl
+  | add a b ha hb => simp only [map_add, Pi.add_apply, ha, hb]
+
+lemma jetPiEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
+    (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetPiEquiv E (jetIteratedDeriv s z) i = jetIteratedDeriv s (jetPiEquiv E z i) := by
+  induction s using Multiset.induction_on generalizing z with
+  | empty => rw [jetIteratedDeriv_zero, jetIteratedDeriv_zero]; rfl
+  | cons μ t ih =>
+      rw [jetIteratedDeriv_cons, LinearMap.comp_apply, jetPiEquiv_jetDeriv, ih,
+        jetIteratedDeriv_cons, LinearMap.comp_apply]
+
+/-- The identification is `JetRing`-linear: multiplication by a scalar jet acts on every
+  component. -/
+lemma jetPiEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetPiEquiv E (χ • z) i = χ • (jetPiEquiv E z i) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul f p => rw [TensorProduct.smul_tmul', smul_eq_mul]; rfl
+  | add a b ha hb => simp only [smul_add, map_add, Pi.add_apply, ha, hb]
+
+lemma jetPiEquiv_symm_smul (χ : JetRing) (a : ∀ i, JetRing ⊗[ℂ] E i) :
+    (jetPiEquiv E).symm (fun i => χ • a i) = χ • (jetPiEquiv E).symm a := by
+  refine (jetPiEquiv E).injective (funext fun i => ?_)
+  rw [LinearEquiv.apply_symm_apply, jetPiEquiv_smul, LinearEquiv.apply_symm_apply]
+
+lemma jetEval_pi (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetEval z i = jetEval (jetPiEquiv E z i) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul f p => rfl
+  | add a b ha hb => simp only [map_add, Pi.add_apply, ha, hb]
+
+end Pi

@@ -29,6 +29,12 @@ single `JetComponentSpace (∀ i, V i)` on the product of the value spaces, is a
 carries only one mass weight, since its scaling commutes with `JetComponentSpace.comap`
 and so cannot distinguish the species. The direct sum records one weight per species.
 
+That is the only difference between the two. When the species do share a weight — as the
+fermions of a gauge theory do — the direct sum *is* the component space of the product,
+compatibly with the Lorentz action and the scaling; this is
+`GaugeFieldData.fermionGeneratorsEquiv`, which recovers the presentation of the fermion
+content as one field that a physicist writes down.
+
 Nothing here is finite. Neither the index type `ι` nor any of the value spaces `V i` is
 assumed finite, and the component spaces are infinite-dimensional in any case, since a
 derivative label ranges over all multisets of directions. Only `DecidableEq ι` is used,

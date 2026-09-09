@@ -30,6 +30,16 @@ derives, with no further data,
 * the Lorentz and jet gauge actions and the mass-weight scaling on those spaces,
   assembled species by species.
 
+The value spaces of the species assemble in a second, independent way: not into a direct
+sum of component spaces but into a single finite-dimensional module, the `FermionModule`
+and `BosonModule` of the sibling files, each carrying the structure of one `MatterField`
+in `FermionMatterField` and `BosonMatterField`. That assembly needs the species to share
+a mass weight, which is exactly what the generator spaces built here do not need, and the
+two are used for different purposes: one field for writing the theory, one graded
+generator space per species for grading its algebra. When the weights do agree the two
+presentations of the generators are the same, by
+`GaugeFieldData.fermionGeneratorsEquiv`.
+
 The algebra built on the three generator spaces, `GaugeFieldData.LocalFieldAlgebra`, and
 its mapping-out universal property are in
 `Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra`, which imports this file. The
@@ -89,7 +99,10 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
   with global group `G₀`, a finite-dimensional real gauge algebra `𝔤` with jet algebra
   `𝔤J` and a local-gauge-data package `jets` over them, it records a finite family of fermionic
   species and a finite family of bosonic species, each given by an existing
-  `MatterField jets`.
+  `MatterField jets`. The species types are `Fintype` rather than merely `Finite`, so
+  that a theory may be summed over its species: this is what lets the several fermionic
+  multiplets be assembled into the single fermionic matter field of
+  `GaugeFieldData.fermionMatterField`.
 
   Nothing is repeated from `MatterField`, whose fields already carry the value space, the
   Lorentz representation, the local-gauge-data action and the mass weight of a species. Nothing is
@@ -106,19 +119,19 @@ structure GaugeFieldData {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieA
   /-- The index type of the fermionic species. -/
   FermionSpecies : Type
   [decidableEqFermionSpecies : DecidableEq FermionSpecies]
-  [finiteFermionSpecies : Finite FermionSpecies]
+  [fintypeFermionSpecies : Fintype FermionSpecies]
   /-- The matter field of each fermionic species. -/
   fermion : FermionSpecies → MatterField jets
   /-- The index type of the bosonic species. -/
   BosonSpecies : Type
   [decidableEqBosonSpecies : DecidableEq BosonSpecies]
-  [finiteBosonSpecies : Finite BosonSpecies]
+  [fintypeBosonSpecies : Fintype BosonSpecies]
   /-- The matter field of each bosonic species. -/
   boson : BosonSpecies → MatterField jets
 
 attribute [instance] GaugeFieldData.decidableEqFermionSpecies
-  GaugeFieldData.finiteFermionSpecies GaugeFieldData.decidableEqBosonSpecies
-  GaugeFieldData.finiteBosonSpecies
+  GaugeFieldData.fintypeFermionSpecies GaugeFieldData.decidableEqBosonSpecies
+  GaugeFieldData.fintypeBosonSpecies
 
 namespace GaugeFieldData
 

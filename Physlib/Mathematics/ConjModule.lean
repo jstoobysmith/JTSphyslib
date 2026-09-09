@@ -32,6 +32,7 @@ conjugate-linear identity `conjEquiv : M ≃ₛₗ[starRingEnd k] ConjModule M`,
 - `conjEquiv` : the canonical conjugate-linear equivalence `M ≃ₛₗ[starRingEnd k] ConjModule M`.
 - `ConjModule.involution` : the involution `ConjModule (ConjModule M) ≃ₗ[k] M`.
 - `Basis.conj` : a basis of `M` transported to a basis of `ConjModule M` (coordinates by `star`).
+- `ConjModule.prodEquiv`, `ConjModule.piEquiv` : conjugation commutes with products.
 
 -/
 
@@ -219,6 +220,33 @@ def prodEquiv : ConjModule (M × N) ≃ₗ[k] ConjModule M × ConjModule N where
 @[simp]
 lemma prodEquiv_apply (x : ConjModule (M × N)) :
     prodEquiv (k := k) x = (map (LinearMap.fst k M N) x, map (LinearMap.snd k M N) x) := rfl
+
+section Pi
+
+variable {ι : Type*} (P : ι → Type*) [∀ i, AddCommGroup (P i)] [∀ i, Module k (P i)]
+
+/-- **Conjugation commutes with arbitrary products.** The conjugate of a product of a
+family of modules is the product of their conjugates, by the identity underlying
+function: the twisted scalar action is applied componentwise, so no finiteness of the
+index type is needed. -/
+def piEquiv : ConjModule (∀ i, P i) ≃ₗ[k] ∀ i, ConjModule (P i) where
+  toFun x i := x i
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  invFun x i := x i
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+@[simp]
+lemma piEquiv_apply (x : ConjModule (∀ i, P i)) (i : ι) :
+    (piEquiv P : ConjModule (∀ i, P i) ≃ₗ[k] ∀ i, ConjModule (P i)) x i
+      = map (k := k) (LinearMap.proj i) x := rfl
+
+lemma piEquiv_symm_apply (x : ∀ i, ConjModule (P i)) (i : ι) :
+    map (k := k) (LinearMap.proj i)
+        ((piEquiv P : ConjModule (∀ i, P i) ≃ₗ[k] ∀ i, ConjModule (P i)).symm x) = x i := rfl
+
+end Pi
 
 /-- The conjugate module of a finite free module is finite: the conjugated basis
 `Module.Basis.conj` is indexed by the same type. -/

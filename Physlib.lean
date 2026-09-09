@@ -12,6 +12,13 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Fi
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.GaugeLaw
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonGenerators
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonMatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonModule
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionGenerators
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionModule
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
@@ -25,6 +32,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Pi
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.ConstantGaugeAction
@@ -36,7 +44,6 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.LorentzAction
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.MassDim
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Prod
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
-public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.JetAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra

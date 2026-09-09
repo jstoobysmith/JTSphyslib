@@ -12,6 +12,7 @@ public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.LinearAlgebra.Contraction
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
+public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 /-!
 # The jet component space of a matter field
@@ -35,6 +36,7 @@ is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Ga
 - `JetComponentSpace.comap` : functoriality, contravariant in the target space.
 - `JetComponentSpace.massWeightScale` : the mass-weight scaling.
 - `JetComponentSpace.prodEquiv` : the component space of a direct sum.
+- `JetComponentSpace.piEquiv` : the component space of a finite direct sum.
 
 -/
 
@@ -286,6 +288,43 @@ lemma JetComponentSpace.comap_comp {U : Type _} [AddCommGroup U] [Module ℂ U]
     LinearMap.id_comp]
   rfl
 
+/-- **An equivariant map of target spaces gives an equivariant pullback.** If `f : V →ₗ W`
+  intertwines two Lorentz representations then `comap f` intertwines the induced actions on
+  the component spaces, in the opposite direction. Component functions are covectors, so
+  the unconjugated half transposes `f` against the contragredient action and the conjugate
+  half against its conjugate; both reduce to equivariance of `f` at `Λ⁻¹`. -/
+lemma JetComponentSpace.comap_comp_repLorentzGroup (repV : Representation ℂ SL(2,ℂ) V)
+    (repW : Representation ℂ SL(2,ℂ) W) (f : V →ₗ[ℂ] W)
+    (hf : ∀ Λ : SL(2,ℂ), f.comp (repV Λ) = (repW Λ).comp f) (Λ : SL(2,ℂ)) :
+    (JetComponentSpace.comap f).comp (JetComponentSpace.repLorentzGroup repW Λ)
+      = (JetComponentSpace.repLorentzGroup repV Λ).comp (JetComponentSpace.comap f) := by
+  have hdual : (Module.Dual.transpose (R := ℂ) f).comp (repW.dual Λ)
+      = (repV.dual Λ).comp (Module.Dual.transpose f) :=
+    LinearMap.ext fun ψ =>
+      LinearMap.ext fun v => (congrArg ψ (LinearMap.congr_fun (hf Λ⁻¹) v)).symm
+  have hconj : (Module.Dual.transpose (R := ℂ) (ConjModule.map (k := ℂ) f)).comp
+        (repW.conj.dual Λ)
+      = (repV.conj.dual Λ).comp
+        (Module.Dual.transpose (ConjModule.map (k := ℂ) f)) :=
+    LinearMap.ext fun ψ => LinearMap.ext fun v =>
+      (congrArg ψ (LinearMap.congr_fun (hf Λ⁻¹)
+        ((conjEquiv (k := ℂ) (M := V)).symm v))).symm
+  show (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
+        (TensorProduct.map LinearMap.id
+          (Module.Dual.transpose (ConjModule.map (k := ℂ) f)))).comp
+      (LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repW.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repW.conj.dual Λ)))
+    = (LinearMap.prodMap
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repV.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repV.conj.dual Λ))).comp
+      (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
+        (TensorProduct.map LinearMap.id
+          (Module.Dual.transpose (ConjModule.map (k := ℂ) f))))
+  rw [LinearMap.prodMap_comp, LinearMap.prodMap_comp, ← TensorProduct.map_comp,
+    ← TensorProduct.map_comp, ← TensorProduct.map_comp, ← TensorProduct.map_comp,
+    LinearMap.id_comp, LinearMap.comp_id, hdual, hconj]
+
 /-- **The pullback commutes with the jet derivative.** The two act on different tensor
   factors — the derivative label and the target index — so an inclusion of species is a map
   of differential algebras. -/
@@ -404,3 +443,157 @@ noncomputable def JetComponentSpace.prodEquiv (V W : Type) [AddCommGroup V] [Mod
     (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)
         (TensorProduct.prodRight ℂ ℂ _ _ _)).trans
       (LinearEquiv.prodProdProdComm ℂ _ _ _ _)
+
+/-!
+
+## The component space of a finite direct sum
+
+The binary splitting above extends to a finite family. Both halves of the component space
+split for the same two reasons as before — the dual of a finite product is the product of
+the duals, and conjugation commutes with products — and the derivative label, carried by
+the `DerivAlgebraComplex` factor, is untouched by either. The index type must be finite:
+the dual of an infinite product is strictly larger than the product of the duals, and
+`TensorProduct.piRight` is an equivalence only in the finite case.
+
+This is the component-space counterpart of `MatterField.pi`: the component functions of
+the direct sum of a finite family of matter fields are the families of component
+functions of the summands, so nothing is lost or gained by assembling the species into
+one field before taking components.
+
+-/
+
+section Pi
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι] (E : ι → Type)
+  [∀ i, AddCommGroup (E i)] [∀ i, Module ℂ (E i)]
+
+/-- **The unconjugated half of the component space of a finite direct sum splits.** The
+  symbols `∂_s ψ_α` of a `(∀ i, E i)`-valued field are the families, over the index, of
+  the symbols of the summands: the dual distributes over the finite product and the
+  derivative label is untouched. -/
+noncomputable def JetComponentSpace.fstPiEquiv :
+    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (∀ i, E i))
+      ≃ₗ[ℂ] ∀ i, DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (E i) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+      (LinearMap.lsum ℂ E ℂ).symm).trans
+    (TensorProduct.piRight ℂ ℂ DerivAlgebraComplex fun i => Module.Dual ℂ (E i))
+
+/-- On a pure symbol the splitting restricts the target index to one summand: the
+  component `∂_s ψ_α` of the direct sum in the summand `i` is `∂_s` of the covector `φ`
+  precomposed with the inclusion of that summand. -/
+@[simp]
+lemma JetComponentSpace.fstPiEquiv_tmul (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ (∀ i, E i)) (i : ι) :
+    fstPiEquiv E (a ⊗ₜ[ℂ] φ) i = a ⊗ₜ[ℂ] (φ ∘ₗ LinearMap.single ℂ E i) := rfl
+
+/-- **The conjugate half of the component space of a finite direct sum splits**, by the
+  same argument applied to the conjugate modules, using that conjugation commutes with
+  products. -/
+noncomputable def JetComponentSpace.sndPiEquiv :
+    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (∀ i, E i)))
+      ≃ₗ[ℂ] ∀ i, DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (E i)) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+      (((ConjModule.piEquiv (k := ℂ) E).symm.dualMap).trans
+        (LinearMap.lsum ℂ (fun i => ConjModule (E i)) ℂ).symm)).trans
+    (TensorProduct.piRight ℂ ℂ DerivAlgebraComplex fun i => Module.Dual ℂ (ConjModule (E i)))
+
+/-- On a pure conjugate symbol the splitting again restricts the target index to one
+  summand, the inclusion being read through the conjugation. -/
+@[simp]
+lemma JetComponentSpace.sndPiEquiv_tmul (a : DerivAlgebraComplex)
+    (ψ : Module.Dual ℂ (ConjModule (∀ i, E i))) (i : ι) :
+    sndPiEquiv E (a ⊗ₜ[ℂ] ψ) i
+      = a ⊗ₜ[ℂ] (ψ ∘ₗ ConjModule.map (k := ℂ) (LinearMap.single ℂ E i)) := rfl
+
+/-- The splitting sends the family supported on one summand back to the pullback along
+  the projection onto that summand: a component function of the summand `i`, read as a
+  component function of the whole, is `φ ∘ proj i`. -/
+lemma JetComponentSpace.fstPiEquiv_symm_single (i : ι)
+    (z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (E i)) :
+    (fstPiEquiv E).symm (Pi.single i z)
+      = TensorProduct.map LinearMap.id (Module.Dual.transpose (LinearMap.proj i)) z := by
+  refine (fstPiEquiv E).injective (funext fun j => ?_)
+  rw [LinearEquiv.apply_symm_apply]
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul a φ =>
+      rw [TensorProduct.map_tmul, fstPiEquiv_tmul, LinearMap.id_apply]
+      by_cases hij : i = j
+      · subst hij
+        rw [Pi.single_eq_same]
+        exact congrArg (fun ψ => a ⊗ₜ[ℂ] ψ)
+          (LinearMap.ext fun v => (congrArg φ (Pi.single_eq_same i v)).symm)
+      · have h0 : (Module.Dual.transpose (LinearMap.proj i) φ).comp
+            (LinearMap.single ℂ E j) = 0 :=
+          LinearMap.ext fun v => (congrArg φ (Pi.single_eq_of_ne hij v)).trans (map_zero φ)
+        rw [Pi.single_eq_of_ne (Ne.symm hij), h0, TensorProduct.tmul_zero]
+  | add x y hx hy =>
+      simp only [Pi.single_add, Pi.add_apply, map_add, hx, hy]
+
+/-- The conjugate half of the splitting behaves in the same way, the projection read
+  through the conjugation. -/
+lemma JetComponentSpace.sndPiEquiv_symm_single (i : ι)
+    (z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (E i))) :
+    (sndPiEquiv E).symm (Pi.single i z)
+      = TensorProduct.map LinearMap.id
+          (Module.Dual.transpose (ConjModule.map (k := ℂ) (LinearMap.proj i))) z := by
+  refine (sndPiEquiv E).injective (funext fun j => ?_)
+  rw [LinearEquiv.apply_symm_apply]
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul a φ =>
+      rw [TensorProduct.map_tmul, sndPiEquiv_tmul, LinearMap.id_apply]
+      by_cases hij : i = j
+      · subst hij
+        rw [Pi.single_eq_same]
+        exact congrArg (fun ψ => a ⊗ₜ[ℂ] ψ)
+          (LinearMap.ext fun v => (congrArg φ (Pi.single_eq_same i v)).symm)
+      · have h0 : (Module.Dual.transpose
+            (ConjModule.map (k := ℂ) (LinearMap.proj i)) φ).comp
+            (ConjModule.map (k := ℂ) (LinearMap.single ℂ E j)) = 0 :=
+          LinearMap.ext fun v => (congrArg φ (Pi.single_eq_of_ne hij v)).trans (map_zero φ)
+        rw [Pi.single_eq_of_ne (Ne.symm hij), h0, TensorProduct.tmul_zero]
+  | add x y hx hy =>
+      simp only [Pi.single_add, Pi.add_apply, map_add, hx, hy]
+
+/-- **The component space of a finite direct sum splits.** The component functions of a
+  `(∀ i, E i)`-valued field are exactly the families, over the index, of the component
+  functions of the summands. Both halves split by `fstPiEquiv` and `sndPiEquiv`, and the
+  pair of families is reassembled into a family of pairs index by index. -/
+noncomputable def JetComponentSpace.piEquiv :
+    JetComponentSpace (∀ i, E i) ≃ₗ[ℂ] ∀ i, JetComponentSpace (E i) where
+  toFun x i := (fstPiEquiv E x.1 i, sndPiEquiv E x.2 i)
+  map_add' x y := funext fun i => Prod.ext (by simp) (by simp)
+  map_smul' c x := funext fun i => Prod.ext (by simp) (by simp)
+  invFun y := ((fstPiEquiv E).symm (fun i => (y i).1), (sndPiEquiv E).symm (fun i => (y i).2))
+  left_inv x := Prod.ext (by simp) (by simp)
+  right_inv y := funext fun i => Prod.ext (by simp) (by simp)
+
+@[simp]
+lemma JetComponentSpace.piEquiv_apply (x : JetComponentSpace (∀ i, E i)) (i : ι) :
+    piEquiv E x i = (fstPiEquiv E x.1 i, sndPiEquiv E x.2 i) := rfl
+
+@[simp]
+lemma JetComponentSpace.piEquiv_symm_apply (y : ∀ i, JetComponentSpace (E i)) :
+    (piEquiv E).symm y =
+      ((fstPiEquiv E).symm (fun i => (y i).1), (sndPiEquiv E).symm (fun i => (y i).2)) := rfl
+
+/-- **The summand of one species is the pullback along the projection onto it.** A
+  component function of the summand `i`, placed in the family and read back as a component
+  function of the whole `(∀ i, E i)`-valued field, is that function precomposed with the
+  projection `∀ i, E i → E i`. This is what identifies the splitting with the species
+  inclusions of a direct sum of component spaces. -/
+lemma JetComponentSpace.piEquiv_symm_single (i : ι) (x : JetComponentSpace (E i)) :
+    (piEquiv E).symm (Pi.single i x) = comap (LinearMap.proj i) x := by
+  have hfst : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (E j)) j).1)
+      = Pi.single i x.1 :=
+    funext fun j =>
+      Pi.apply_single (fun j (p : JetComponentSpace (E j)) => p.1) (fun _ => rfl) i x j
+  have hsnd : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (E j)) j).2)
+      = Pi.single i x.2 :=
+    funext fun j =>
+      Pi.apply_single (fun j (p : JetComponentSpace (E j)) => p.2) (fun _ => rfl) i x j
+  rw [piEquiv_symm_apply, hfst, hsnd, fstPiEquiv_symm_single, sndPiEquiv_symm_single]
+  rfl
+
+end Pi

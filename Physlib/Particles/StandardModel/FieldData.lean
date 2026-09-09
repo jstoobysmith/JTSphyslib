@@ -5,7 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra
 public import Physlib.Particles.StandardModel.Fermions.MatterField
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
