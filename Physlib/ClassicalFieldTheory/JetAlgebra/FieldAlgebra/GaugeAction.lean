@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 /-!
 # The gauge action on the field algebra
 

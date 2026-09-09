@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 /-!
 # The infinitesimal action underlying a matter representation
 

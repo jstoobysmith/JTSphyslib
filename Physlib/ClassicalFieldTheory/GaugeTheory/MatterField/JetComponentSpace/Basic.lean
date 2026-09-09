@@ -23,7 +23,7 @@ span of the derivative symbols `∂_s ψ_α` and their conjugates `∂_s ψ̄_α
 coordinate functions on the space of jets of the field. This file defines that space and
 the structure on it that does not involve a gauge group: the Lorentz action, the jet
 derivative, functoriality in `V` and the mass-weight scaling. The action of a gauge group
-is in `Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction`.
+is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction`.
 
 ## ii. Key results
 

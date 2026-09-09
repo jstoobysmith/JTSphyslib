@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
 /-!
 # The transformation law of the fermionic generators
 

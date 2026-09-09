@@ -21,6 +21,10 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.ConstantGaugeAction
@@ -34,9 +38,7 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Prod
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
 public import Physlib.ClassicalFieldTheory.JetAlgebra.GaugeFieldData
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.JetAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra
 public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 public import Physlib.ClassicalFieldTheory.Local.Variation

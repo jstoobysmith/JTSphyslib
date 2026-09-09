@@ -74,7 +74,7 @@ variable {V W : Type} [AddCommGroup V] [Module â„‚ V] [AddCommGroup W] [Module â
 
 The splitting `JetComponentSpace.prodEquiv` of the component space of a direct sum lives
 with the component space itself, in
-  `Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic`.
+  `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic`.
 
 -/
 

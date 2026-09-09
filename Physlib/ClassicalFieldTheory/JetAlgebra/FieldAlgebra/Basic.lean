@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 /-!
 # The field algebra of a matter field
 

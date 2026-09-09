@@ -5,7 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Mathlib.Algebra.DirectSum.Module
 /-!
 # The generator spaces of a family of species
@@ -281,7 +281,8 @@ end ComponentSpace
   summand.
 
   The statement is about a single `JetComponentSpace` and would sit more naturally with the
-  rest of that API in `Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Basic`; it
+  rest of that API in
+  `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic`; it
   is here because it justifies the choice this file makes. -/
 lemma JetComponentSpace.comap_comp_massWeightScale {V W : Type*} [AddCommGroup V]
     [Module ℂ V] [AddCommGroup W] [Module ℂ W] (f : V →ₗ[ℂ] W) (w : ℕ) (c : ℂ) :

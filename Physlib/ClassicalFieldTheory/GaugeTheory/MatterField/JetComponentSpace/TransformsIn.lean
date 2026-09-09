@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 /-!
 # The transformation law of a derivative symbol

@@ -11,7 +11,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecompositio
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Pi

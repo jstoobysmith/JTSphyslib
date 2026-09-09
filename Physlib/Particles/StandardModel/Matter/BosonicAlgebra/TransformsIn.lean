@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
 /-!
 # The transformation law of the bosonic generators
 
