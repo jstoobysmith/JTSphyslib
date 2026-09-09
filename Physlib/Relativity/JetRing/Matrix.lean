@@ -350,6 +350,50 @@ lemma exists_matrix_eulerTransport {κ : Type} [Fintype κ] [DecidableEq κ]
 
 /-!
 
+## The Euler vanishing principle by degree on matrices
+
+-/
+
+/-- The matrix form of `coeff_eq_zero_of_pderiv_eq_mul`: the entries of a matrix of power
+  series satisfying `∂_ρ A = X_ρ A`, with the `X_ρ` vanishing below degree `n`, have no
+  coefficients in nonzero degree up to `n`. -/
+lemma coeff_entry_eq_zero_of_map_pderiv_eq_mul {κ : Type} [Fintype κ] [DecidableEq κ] {n : ℕ}
+    {A : Matrix κ κ JetRing} {X : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing}
+    (hd : ∀ ρ, A.map (pderiv ℂ ρ) = X ρ * A)
+    (hX : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
+      ∀ i j, coeff q (X ρ i j) = 0)
+    (i j : κ) {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) :
+    coeff p (A i j) = 0 := by
+  refine coeff_eq_zero_of_coeff_pderiv_eq_zero (fun ρ q hq => ?_) hp hpn
+  have h1 : pderiv ℂ ρ (A i j) = (X ρ * A) i j := by rw [← hd ρ, Matrix.map_apply]
+  rw [h1, Matrix.mul_apply, map_sum]
+  exact Finset.sum_eq_zero fun k _ => coeff_mul_eq_zero_of_lt (fun q' hq' => hX ρ q' hq' i k) _ hq
+
+/-- A matrix of power series with identity value and no coefficients in nonzero degree up
+  to `n` truncates to the identity. -/
+lemma matrix_map_truncation_eq_one {κ : Type} [Fintype κ] [DecidableEq κ] {n : ℕ}
+    {A : Matrix κ κ JetRing} (h0 : (constantCoeff : JetRing →+* ℂ).mapMatrix A = 1)
+    (hA : ∀ (i j : κ) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ), p ≠ 0 → Finsupp.degree p ≤ n →
+      coeff p (A i j) = 0) :
+    A.map (JetRing.truncation n) = (1 : Matrix κ κ JetRing).map (JetRing.truncation n) := by
+  ext i j : 1
+  simp only [Matrix.map_apply]
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+    rcases eq_or_ne m 0 with rfl | hm0
+    · have h3 := congrArg (fun N => N i j) h0
+      simpa [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.one_apply,
+        apply_ite constantCoeff, coeff_zero_eq_constantCoeff] using h3
+    · rw [hA i j m hm0 hm]
+      rcases eq_or_ne i j with rfl | hij
+      · rw [Matrix.one_apply_eq, coeff_one, if_neg hm0]
+      · rw [Matrix.one_apply_ne hij, map_zero]
+  · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
+      JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+
+/-!
+
 ## Unitarity and determinant of the Euler transport
 
 -/

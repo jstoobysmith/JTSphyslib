@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
+public import Physlib.Relativity.JetRing.Matrix
 /-!
 # Truncation of the jet gauge group
 
@@ -22,8 +23,9 @@ local-gauge-data package, `localGaugeData.truncationKer n`, defined in
 `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation` through the value and
 the Maurer–Cartan form of the jet alone. This file compares the two notions: a jet trivial to
 order `n` in that sense truncates to the identity, `truncation_eq_one_of_mem_truncationKer`.
-The argument is the Euler identity `∑_ρ x_ρ ∂_ρ f = (degree) f` on power series, applied to
-the radial relation `∂_ρ U = −i ω_ρ(U) U` between a jet and its Maurer–Cartan form.
+The argument is the Euler vanishing principle by degree on power series,
+`JetRing.coeff_eq_zero_of_pderiv_eq_mul`, applied to the radial relation
+`∂_ρ U = −i ω_ρ(U) U` between a jet and its Maurer–Cartan form.
 
 ## ii. Key results
 
@@ -34,8 +36,7 @@ the radial relation `∂_ρ U = −i ω_ρ(U) U` between a jet and its Maurer–
 ## iii. Table of contents
 
 - A. The truncation
-- B. Aside: vanishing of coefficients from the Euler identity
-- C. The comparison with the Maurer–Cartan filtration
+- B. The comparison with the Maurer–Cartan filtration
 
 -/
 
@@ -71,160 +72,58 @@ lemma truncation_one (n : ℕ) : truncation n (1 : JetGaugeGroupI) = 1 :=
 
 /-!
 
-## B. Aside: vanishing of coefficients from the Euler identity
-
--/
-
-/-- A product with a factor whose coefficients vanish below degree `n` has coefficients
-  vanishing below degree `n`. -/
-lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : JetRing}
-    (hw : ∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q w = 0) (v : JetRing)
-    {q : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hq : Finsupp.degree q < n) : coeff q (w * v) = 0 := by
-  rw [coeff_mul]
-  refine Finset.sum_eq_zero fun p hp => ?_
-  have hpq : p.1 + p.2 = q := Finset.mem_antidiagonal.mp hp
-  have hdeg : Finsupp.degree p.1 ≤ Finsupp.degree q := by
-    rw [← hpq, map_add]
-    exact Nat.le_add_right _ _
-  rw [hw p.1 (lt_of_le_of_lt hdeg hq), zero_mul]
-
-/-- The Euler vanishing principle: a power series all of whose first derivatives have
-  coefficients vanishing below degree `n` has vanishing coefficients in every nonzero degree
-  up to `n`, since `∑_ρ x_ρ ∂_ρ f` has the coefficient of `f` at `p` scaled by the degree
-  of `p`. -/
-lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
-    (hf : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
-      coeff q (pderiv ℂ ρ f) = 0)
-    {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 := by
-  have h1 := JetRing.coeff_sum_X_smul_pderiv f p
-  have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f) = 0 := by
-    rw [map_sum]
-    refine Finset.sum_eq_zero fun ρ _ => ?_
-    rw [JetRing.coeff_X_smul]
-    split_ifs with hle
-    · refine hf ρ _ ?_
-      have hd := congrArg Finsupp.degree (tsub_add_cancel_of_le hle)
-      rw [map_add, Finsupp.degree_single] at hd
-      omega
-    · rfl
-  rw [h2] at h1
-  have hne : ((Finsupp.degree p : ℕ) : ℂ) ≠ 0 :=
-    Nat.cast_ne_zero.mpr fun hc => hp ((Finsupp.degree_eq_zero_iff p).mp hc)
-  exact (mul_eq_zero.mp h1.symm).resolve_left hne
-
-/-- A power series satisfying a radial relation `∂_ρ f = x_ρ f`, with the `x_ρ` vanishing
-  below degree `n`, has no coefficients in nonzero degree up to `n`. -/
-lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin 3) → JetRing}
-    (hd : ∀ ρ, pderiv ℂ ρ f = x ρ * f)
-    (hx : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
-      coeff q (x ρ) = 0)
-    {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 :=
-  coeff_eq_zero_of_coeff_pderiv_eq_zero
-    (fun ρ q hq => by rw [hd ρ]; exact coeff_mul_eq_zero_of_lt (hx ρ) f hq) hp hpn
-
-/-- The matrix form of `coeff_eq_zero_of_pderiv_eq_mul`: the entries of a matrix of power
-  series satisfying `∂_ρ A = X_ρ A`, with the `X_ρ` vanishing below degree `n`, have no
-  coefficients in nonzero degree up to `n`. -/
-lemma coeff_entry_eq_zero_of_map_pderiv_eq_mul {κ : Type} [Fintype κ] [DecidableEq κ] {n : ℕ}
-    {A : Matrix κ κ JetRing} {X : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing}
-    (hd : ∀ ρ, A.map (pderiv ℂ ρ) = X ρ * A)
-    (hX : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
-      ∀ i j, coeff q (X ρ i j) = 0)
-    (i j : κ) {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) :
-    coeff p (A i j) = 0 := by
-  refine coeff_eq_zero_of_coeff_pderiv_eq_zero (fun ρ q hq => ?_) hp hpn
-  have h1 : pderiv ℂ ρ (A i j) = (X ρ * A) i j := by rw [← hd ρ, Matrix.map_apply]
-  rw [h1, Matrix.mul_apply, map_sum]
-  exact Finset.sum_eq_zero fun k _ => coeff_mul_eq_zero_of_lt (fun q' hq' => hX ρ q' hq' i k) _ hq
-
-/-- A matrix of power series with identity value and no coefficients in nonzero degree up
-  to `n` truncates to the identity. -/
-lemma matrix_map_truncation_eq_one {κ : Type} [Fintype κ] [DecidableEq κ] {n : ℕ}
-    {A : Matrix κ κ JetRing} (h0 : (constantCoeff : JetRing →+* ℂ).mapMatrix A = 1)
-    (hA : ∀ (i j : κ) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ), p ≠ 0 → Finsupp.degree p ≤ n →
-      coeff p (A i j) = 0) :
-    A.map (JetRing.truncation n) = (1 : Matrix κ κ JetRing).map (JetRing.truncation n) := by
-  ext i j : 1
-  simp only [Matrix.map_apply]
-  ext m
-  by_cases hm : Finsupp.degree m ≤ n
-  · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
-    rcases eq_or_ne m 0 with rfl | hm0
-    · have h3 := congrArg (fun N => N i j) h0
-      simpa [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.one_apply,
-        apply_ite constantCoeff, coeff_zero_eq_constantCoeff] using h3
-    · rw [hA i j m hm0 hm]
-      rcases eq_or_ne i j with rfl | hij
-      · rw [Matrix.one_apply_eq, coeff_one, if_neg hm0]
-      · rw [Matrix.one_apply_ne hij, map_zero]
-  · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
-      JetRing.coeff_truncation_of_gt (not_le.mp hm)]
-
-/-- A power series with value `1` and no coefficients in nonzero degree up to `n`
-  truncates to `1`. -/
-lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f = 1)
-    (hf : ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ, p ≠ 0 → Finsupp.degree p ≤ n → coeff p f = 0) :
-    JetRing.truncation n f = JetRing.truncation n (1 : JetRing) := by
-  ext m
-  by_cases hm : Finsupp.degree m ≤ n
-  · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
-    rcases eq_or_ne m 0 with rfl | hm0
-    · simpa [coeff_zero_eq_constantCoeff] using h0
-    · rw [hf m hm0 hm, coeff_one, if_neg hm0]
-  · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
-      JetRing.coeff_truncation_of_gt (not_le.mp hm)]
-
-/-!
-
-## C. The comparison with the Maurer–Cartan filtration
+## B. The comparison with the Maurer–Cartan filtration
 
 -/
 
 /-- The base-point Taylor data of the Maurer–Cartan form of a jet trivial to order `n`,
-  read as power-series coefficients of its `su(3)` entries: they vanish below degree `n`. -/
+  read as power-series coefficients of a scalar component `f` of the jet gauge algebra
+  through a scalar `ψ` of the gauge algebra computing evaluated iterated derivatives: they
+  vanish below degree `n`. -/
+lemma coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (ψ : GaugeAlgebra → ℂ)
+    (hψ : ψ 0 = 0) (f : JetGaugeAlgebra → JetRing)
+    (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
+      ψ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv s a)) =
+        constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
+    {U : JetGaugeGroupI} {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
+    {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) :
+    coeff m (f (maurerCartanForm U ρ)) = 0 := by
+  have h0 := hU.2 (Finsupp.toMultiset m) ρ (by
+    rw [← degree_toFinsupp_eq_card, Finsupp.toMultiset_toFinsupp]; exact hm)
+  have h1 := congrArg ψ h0
+  simp only [localGaugeData_evalLie, localGaugeData_iteratedDeriv, localGaugeData_maurerCartan,
+    hψ] at h1
+  rw [hf, constantCoeff_foldl_pderiv, Finsupp.toMultiset_toFinsupp] at h1
+  exact (mul_eq_zero.mp h1).resolve_left (Nat.cast_ne_zero.mpr
+    (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _))
+
+/-- The `su(3)` entries of `coeff_maurerCartanForm_eq_zero_of_mem_truncationKer`. -/
 lemma coeff_maurerCartanForm_toSU3Matrix_eq_zero_of_mem_truncationKer {U : JetGaugeGroupI}
     {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
     {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) (i j : Fin 3) :
-    coeff m ((maurerCartanForm U ρ).toSU3Matrix i j) = 0 := by
-  have h0 := hU.2 (Finsupp.toMultiset m) ρ (by
-    rw [← degree_toFinsupp_eq_card, Finsupp.toMultiset_toFinsupp]; exact hm)
-  have h1 := congrArg (fun a => GaugeAlgebra.toSU3Matrix a i j) h0
-  simp only [localGaugeData_evalLie, localGaugeData_iteratedDeriv, localGaugeData_maurerCartan,
-    GaugeAlgebra.zero_toSU3Matrix, Matrix.zero_apply] at h1
-  rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply,
-    constantCoeff_foldl_pderiv, Finsupp.toMultiset_toFinsupp] at h1
-  exact (mul_eq_zero.mp h1).resolve_left (Nat.cast_ne_zero.mpr
-    (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _))
+    coeff m ((maurerCartanForm U ρ).toSU3Matrix i j) = 0 :=
+  coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (fun a => a.toSU3Matrix i j) (by simp)
+    (fun a => a.toSU3Matrix i j)
+    (fun s a => by rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply])
+    hU ρ hm
 
-/-- The `su(2)` entries of `coeff_maurerCartanForm_toSU3Matrix_eq_zero_of_mem_truncationKer`. -/
+/-- The `su(2)` entries of `coeff_maurerCartanForm_eq_zero_of_mem_truncationKer`. -/
 lemma coeff_maurerCartanForm_toSU2Matrix_eq_zero_of_mem_truncationKer {U : JetGaugeGroupI}
     {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
     {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) (i j : Fin 2) :
-    coeff m ((maurerCartanForm U ρ).toSU2Matrix i j) = 0 := by
-  have h0 := hU.2 (Finsupp.toMultiset m) ρ (by
-    rw [← degree_toFinsupp_eq_card, Finsupp.toMultiset_toFinsupp]; exact hm)
-  have h1 := congrArg (fun a => GaugeAlgebra.toSU2Matrix a i j) h0
-  simp only [localGaugeData_evalLie, localGaugeData_iteratedDeriv, localGaugeData_maurerCartan,
-    GaugeAlgebra.zero_toSU2Matrix, Matrix.zero_apply] at h1
-  rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply,
-    constantCoeff_foldl_pderiv, Finsupp.toMultiset_toFinsupp] at h1
-  exact (mul_eq_zero.mp h1).resolve_left (Nat.cast_ne_zero.mpr
-    (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _))
+    coeff m ((maurerCartanForm U ρ).toSU2Matrix i j) = 0 :=
+  coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (fun a => a.toSU2Matrix i j) (by simp)
+    (fun a => a.toSU2Matrix i j)
+    (fun s a => by rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply])
+    hU ρ hm
 
-/-- The `u(1)` value of `coeff_maurerCartanForm_toSU3Matrix_eq_zero_of_mem_truncationKer`. -/
+/-- The `u(1)` value of `coeff_maurerCartanForm_eq_zero_of_mem_truncationKer`. -/
 lemma coeff_maurerCartanForm_toU1Value_eq_zero_of_mem_truncationKer {U : JetGaugeGroupI}
     {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
     {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) :
-    coeff m (maurerCartanForm U ρ).toU1Value = 0 := by
-  have h0 := hU.2 (Finsupp.toMultiset m) ρ (by
-    rw [← degree_toFinsupp_eq_card, Finsupp.toMultiset_toFinsupp]; exact hm)
-  have h1 := congrArg GaugeAlgebra.toU1Value h0
-  simp only [localGaugeData_evalLie, localGaugeData_iteratedDeriv, localGaugeData_maurerCartan,
-    GaugeAlgebra.zero_toU1Value] at h1
-  rw [eval_toU1Value_eq, iteratedDeriv_toU1Value, constantCoeff_foldl_pderiv,
-    Finsupp.toMultiset_toFinsupp] at h1
-  exact (mul_eq_zero.mp h1).resolve_left (Nat.cast_ne_zero.mpr
-    (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _))
+    coeff m (maurerCartanForm U ρ).toU1Value = 0 :=
+  coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (fun a => a.toU1Value) (by simp)
+    (fun a => a.toU1Value) (fun s a => by rw [eval_toU1Value_eq, iteratedDeriv_toU1Value]) hU ρ hm
 
 /-- Maurer–Cartan triangularity for the Standard Model: a jet trivial to order `n` in the
   sense of the Maurer–Cartan filtration truncates to the identity at order `n`. On each

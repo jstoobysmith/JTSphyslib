@@ -145,6 +145,15 @@ lemma coeff_single_one_pow (μ : Fin 1 ⊕ Fin 3) (f : JetRing) (n : ℕ) :
         push_cast
         linear_combination ((n : ℂ) * coeff (Finsupp.single μ 1) f) * hpow
 
+/-- The constant-coefficient evaluation of a jet, as a `ℂ`-linear map. -/
+noncomputable def constantCoeffₗ : JetRing →ₗ[ℂ] ℂ where
+  toFun := constantCoeff
+  map_add' f g := by simp
+  map_smul' c f := by simp [smul_eq_C_mul]
+
+@[simp]
+lemma constantCoeffₗ_apply (f : JetRing) : constantCoeffₗ f = constantCoeff f := rfl
+
 /-!
 
 ### A.2. The formal partial derivative on the jet ring
@@ -359,6 +368,20 @@ lemma truncation_one (n : ℕ) : truncation n (1 : JetRing) = 1 := by
   · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_one,
       if_neg (by rintro rfl; simp at hm)]
 
+/-- A power series with value `1` and no coefficients in nonzero degree up to `n`
+  truncates to `1`. -/
+lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f = 1)
+    (hf : ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ, p ≠ 0 → Finsupp.degree p ≤ n → coeff p f = 0) :
+    JetRing.truncation n f = JetRing.truncation n (1 : JetRing) := by
+  ext m
+  by_cases hm : Finsupp.degree m ≤ n
+  · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+    rcases eq_or_ne m 0 with rfl | hm0
+    · simpa [coeff_zero_eq_constantCoeff] using h0
+    · rw [hf m hm0 hm, coeff_one, if_neg hm0]
+  · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
+      JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+
 /-- Two jets have the same zeroth truncation exactly when they have the same
   value at the base point. -/
 lemma truncation_zero_eq_iff {f g : JetRing} :
@@ -433,6 +456,62 @@ lemma eq_zero_of_sum_X_smul_pderiv_eq_zero {f : JetRing} (h0 : constantCoeff f =
     have hne : ((Finsupp.degree p : ℕ) : ℂ) ≠ 0 :=
       Nat.cast_ne_zero.mpr fun hc => hp ((Finsupp.degree_eq_zero_iff p).mp hc)
     simpa using (mul_eq_zero.mp h).resolve_left hne
+
+/-!
+
+### The Euler vanishing principle by degree
+
+The graded form of `eq_zero_of_sum_X_smul_pderiv_eq_zero`: control of the first
+derivatives below degree `n` controls the coefficients up to degree `n`.
+
+-/
+
+/-- A product with a factor whose coefficients vanish below degree `n` has coefficients
+  vanishing below degree `n`. -/
+lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : JetRing}
+    (hw : ∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q w = 0) (v : JetRing)
+    {q : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hq : Finsupp.degree q < n) : coeff q (w * v) = 0 := by
+  rw [coeff_mul]
+  refine Finset.sum_eq_zero fun p hp => ?_
+  have hpq : p.1 + p.2 = q := Finset.mem_antidiagonal.mp hp
+  have hdeg : Finsupp.degree p.1 ≤ Finsupp.degree q := by
+    rw [← hpq, map_add]
+    exact Nat.le_add_right _ _
+  rw [hw p.1 (lt_of_le_of_lt hdeg hq), zero_mul]
+
+/-- The Euler vanishing principle: a power series all of whose first derivatives have
+  coefficients vanishing below degree `n` has vanishing coefficients in every nonzero degree
+  up to `n`, since `∑_ρ x_ρ ∂_ρ f` has the coefficient of `f` at `p` scaled by the degree
+  of `p`. -/
+lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
+    (hf : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
+      coeff q (pderiv ℂ ρ f) = 0)
+    {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 := by
+  have h1 := JetRing.coeff_sum_X_smul_pderiv f p
+  have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f) = 0 := by
+    rw [map_sum]
+    refine Finset.sum_eq_zero fun ρ _ => ?_
+    rw [JetRing.coeff_X_smul]
+    split_ifs with hle
+    · refine hf ρ _ ?_
+      have hd := congrArg Finsupp.degree (tsub_add_cancel_of_le hle)
+      rw [map_add, Finsupp.degree_single] at hd
+      omega
+    · rfl
+  rw [h2] at h1
+  have hne : ((Finsupp.degree p : ℕ) : ℂ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr fun hc => hp ((Finsupp.degree_eq_zero_iff p).mp hc)
+  exact (mul_eq_zero.mp h1.symm).resolve_left hne
+
+/-- A power series satisfying a radial relation `∂_ρ f = x_ρ f`, with the `x_ρ` vanishing
+  below degree `n`, has no coefficients in nonzero degree up to `n`. -/
+lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin 3) → JetRing}
+    (hd : ∀ ρ, pderiv ℂ ρ f = x ρ * f)
+    (hx : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
+      coeff q (x ρ) = 0)
+    {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 :=
+  coeff_eq_zero_of_coeff_pderiv_eq_zero
+    (fun ρ q hq => by rw [hd ρ]; exact coeff_mul_eq_zero_of_lt (hx ρ) f hq) hp hpn
 
 /-!
 

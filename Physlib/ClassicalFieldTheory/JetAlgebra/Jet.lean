@@ -36,16 +36,6 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 -/
 
-/-- The constant-coefficient evaluation of a jet, as a `ℂ`-linear map. -/
-noncomputable def _root_.JetRing.constantCoeffₗ : JetRing →ₗ[ℂ] ℂ where
-  toFun := constantCoeff
-  map_add' f g := by simp
-  map_smul' c f := by simp [smul_eq_C_mul]
-
-@[simp]
-lemma _root_.JetRing.constantCoeffₗ_apply (f : JetRing) :
-    JetRing.constantCoeffₗ f = constantCoeff f := rfl
-
 /-- The inclusion of constants into `V`-valued jets: `v ↦ 1 ⊗ v`. -/
 noncomputable def jetOfConstant : V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
   TensorProduct.mk ℂ JetRing V 1
