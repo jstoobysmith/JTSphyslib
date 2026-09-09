@@ -161,6 +161,18 @@ lemma add_toSU2Matrix (a b : JetGaugeAlgebra) :
 lemma add_toU1Value (a b : JetGaugeAlgebra) :
     (a + b).toU1Value = a.toU1Value + b.toU1Value := by rfl
 
+lemma toSU3Matrix_sum {ι : Type*} (t : Finset ι) (f : ι → JetGaugeAlgebra) :
+    (∑ i ∈ t, f i).toSU3Matrix = ∑ i ∈ t, (f i).toSU3Matrix :=
+  map_sum (AddMonoidHom.mk' toSU3Matrix add_toSU3Matrix) f t
+
+lemma toSU2Matrix_sum {ι : Type*} (t : Finset ι) (f : ι → JetGaugeAlgebra) :
+    (∑ i ∈ t, f i).toSU2Matrix = ∑ i ∈ t, (f i).toSU2Matrix :=
+  map_sum (AddMonoidHom.mk' toSU2Matrix add_toSU2Matrix) f t
+
+lemma toU1Value_sum {ι : Type*} (t : Finset ι) (f : ι → JetGaugeAlgebra) :
+    (∑ i ∈ t, f i).toU1Value = ∑ i ∈ t, (f i).toU1Value :=
+  map_sum (AddMonoidHom.mk' toU1Value add_toU1Value) f t
+
 @[simp]
 lemma zero_toSU3Matrix : (0 : JetGaugeAlgebra).toSU3Matrix = 0 := by rfl
 
@@ -300,6 +312,81 @@ lemma deriv_toSU2Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
 @[simp]
 lemma deriv_toU1Value (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
     (deriv μ a).toU1Value = pderiv ℂ μ a.toU1Value := rfl
+
+/-!
+
+## Multiplication by the coordinates
+
+-/
+
+/-- Multiplication by the spacetime coordinate `x_μ`, entrywise on each factor. It
+  preserves hermiticity since the coordinates are self-adjoint, and tracelessness since
+  it is a scalar. -/
+noncomputable def coord (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra where
+  toFun a := ofMatrixProd
+      ((X μ : JetRing) • a.toSU3Matrix, (X μ : JetRing) • a.toSU2Matrix,
+        (X μ : JetRing) * a.toU1Value)
+      ⟨by rw [star_smul, JetRing.star_X, show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1],
+        by rw [Matrix.trace_smul, show a.toSU3Matrix.trace = 0 from a.1.2.2, smul_zero]⟩
+      ⟨by rw [star_smul, JetRing.star_X, show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1],
+        by rw [Matrix.trace_smul, show a.toSU2Matrix.trace = 0 from a.2.1.2.2, smul_zero]⟩
+      (by rw [star_mul', JetRing.star_X, show star a.toU1Value = a.toU1Value from a.2.2.2])
+  map_add' a b := by
+    ext <;> simp [smul_add, mul_add]
+  map_smul' r a := by
+    refine ext_of_matrix ?_ ?_ ?_ <;>
+      simp only [ofMatrixProd_toSU3Matrix, ofMatrixProd_toSU2Matrix, ofMatrixProd_toU1Value,
+        smul_toSU3Matrix, smul_toSU2Matrix, smul_toU1Value, RingHom.id_apply, smul_comm r,
+        mul_smul_comm]
+
+@[simp]
+lemma coord_toSU3Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (coord μ a).toSU3Matrix = (X μ : JetRing) • a.toSU3Matrix := rfl
+
+@[simp]
+lemma coord_toSU2Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (coord μ a).toSU2Matrix = (X μ : JetRing) • a.toSU2Matrix := rfl
+
+@[simp]
+lemma coord_toU1Value (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    (coord μ a).toU1Value = (X μ : JetRing) * a.toU1Value := rfl
+
+/-- The Leibniz rule for a coordinate: `∂_μ (x_ν a) = x_ν ∂_μ a + δ_{μν} a`. -/
+lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
+    deriv μ (coord ν a) = coord ν (deriv μ a) + if μ = ν then a else 0 := by
+  by_cases h : μ = ν
+  · subst h
+    rw [if_pos rfl]
+    refine ext_of_matrix ?_ ?_ ?_
+    · ext i j
+      simp only [deriv_toSU3Matrix, coord_toSU3Matrix, add_toSU3Matrix, Matrix.map_apply,
+        Matrix.smul_apply, Matrix.add_apply, smul_eq_mul, Derivation.leibniz, pderiv_X_self]
+      ring
+    · ext i j
+      simp only [deriv_toSU2Matrix, coord_toSU2Matrix, add_toSU2Matrix, Matrix.map_apply,
+        Matrix.smul_apply, Matrix.add_apply, smul_eq_mul, Derivation.leibniz, pderiv_X_self]
+      ring
+    · simp only [deriv_toU1Value, coord_toU1Value, add_toU1Value, smul_eq_mul,
+        Derivation.leibniz, pderiv_X_self]
+      ring
+  · rw [if_neg h, add_zero]
+    refine ext_of_matrix ?_ ?_ ?_
+    · ext i j
+      simp only [deriv_toSU3Matrix, coord_toSU3Matrix, Matrix.map_apply, Matrix.smul_apply,
+        smul_eq_mul, Derivation.leibniz, pderiv_X_of_ne (Ne.symm h), mul_zero, add_zero]
+    · ext i j
+      simp only [deriv_toSU2Matrix, coord_toSU2Matrix, Matrix.map_apply, Matrix.smul_apply,
+        smul_eq_mul, Derivation.leibniz, pderiv_X_of_ne (Ne.symm h), mul_zero, add_zero]
+    · simp only [deriv_toU1Value, coord_toU1Value, smul_eq_mul, Derivation.leibniz,
+        pderiv_X_of_ne (Ne.symm h), mul_zero, add_zero]
+
+/-- The coordinates are central for the bracket. -/
+lemma coord_lie (μ : Fin 1 ⊕ Fin 3) (a b : JetGaugeAlgebra) :
+    ⁅coord μ a, b⁆ = coord μ ⁅a, b⁆ := by
+  refine ext_of_matrix ?_ ?_ ?_ <;>
+    simp only [bracket_toSU3Matrix, bracket_toSU2Matrix, bracket_toU1Value, coord_toSU3Matrix,
+      coord_toSU2Matrix, coord_toU1Value, Matrix.smul_mul, Matrix.mul_smul, smul_sub,
+      smul_comm (X μ : JetRing) Complex.I, mul_zero]
 
 /-- Formal derivatives on the jet gauge algebra commute. -/
 lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
@@ -582,6 +669,15 @@ lemma eval_toU1Value_eq (a : JetGaugeAlgebra) :
   rw [show eval a = taylorCoeff 0 a from rfl, taylorCoeff_toU1Value,
     show Multiset.toFinsupp (0 : Multiset (Fin 1 ⊕ Fin 3)) = 0 from map_zero _,
     coeff_zero_eq_constantCoeff]
+
+/-- A coordinate multiple vanishes at the base point. -/
+lemma eval_coord (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) : eval (coord μ a) = 0 := by
+  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+  · ext i j
+    simp [eval_toSU3Matrix_apply]
+  · ext i j
+    simp [eval_toSU2Matrix_apply]
+  · simp [eval_toU1Value_eq]
 
 /-- The `su(3)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toSU3Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :

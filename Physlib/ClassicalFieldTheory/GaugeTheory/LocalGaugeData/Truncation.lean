@@ -46,7 +46,11 @@ most `n` derivatives by a pure translation.
   Maurer–Cartan data.
 - `LocalGaugeData.mem_truncationKer_iff_symmetrizedMaurerCartanCoeff_eq_zero` : the
   filtration through the symmetrized data.
-- `LocalGaugeData.Free` : the symmetrized data are free coordinates on the pure jets.
+- `LocalGaugeData.radial` : the radial component `∑_μ x_μ ω_μ` of the Maurer–Cartan form,
+  whose Taylor data are the symmetrized data.
+- `LocalGaugeData.Free` : Taylor completeness and radial integrability, which make the
+  symmetrized data free coordinates on the pure jets,
+  `LocalGaugeData.symmetrizedMaurerCartanCoeff_surjective`.
 
 ## iii. Table of contents
 
@@ -55,7 +59,8 @@ most `n` derivatives by a pure translation.
 - C. Normality
 - D. The projection onto the pure jets
 - E. Pure jets and their Maurer–Cartan data
-- F. Free packages
+- F. The radial component of the Maurer–Cartan form
+- G. Free packages
 
 -/
 
@@ -366,26 +371,84 @@ end Faithful
 
 /-!
 
-## F. Free packages
+## F. The radial component of the Maurer–Cartan form
+
+The symmetrized Maurer–Cartan data of a pure jet are, up to the normalization by the
+order, the base-point Taylor data of a single element of `𝔤J`: the radial component
+`ρ(U) = ∑_μ x_μ ω_μ(U)` of the Maurer–Cartan form. This is the Euler identity applied
+to each summand.
 
 -/
 
-/-- A package is free when it is faithful and, moreover, every family of gauge-algebra
-  elements indexed by nonempty multisets of directions is the symmetrized Maurer–Cartan
-  data of some pure jet. The symmetrized data are then free coordinates on the pure jets.
-  This holds for the full jet group of any matrix group, by integrating the radial
-  equation; like `Faithful` it is recorded separately from the structure because the
-  covariance theory does not need it, only the classification of invariants does. -/
+/-- The radial component `∑_μ x_μ ω_μ(U)` of the Maurer–Cartan form of a jet. -/
+noncomputable def radial (U : G) : 𝔤J :=
+  ∑ μ, jets.coord μ (jets.maurerCartan U μ)
+
+/-- The symmetrized Maurer–Cartan data are the Taylor data of the radial component:
+  `sym(ω(U))_r|₀ = (1/|r|) (∂_r ρ(U))|₀`. -/
+lemma symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial (U : jets.truncationKer 0)
+    (r : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0}) :
+    jets.symmetrizedMaurerCartanCoeff U r =
+      (1 / (r.1.card : ℝ)) • jets.evalLie (jets.iteratedDeriv r.1 (jets.radial U.1)) := by
+  classical
+  rw [symmetrizedMaurerCartanCoeff_apply, symmetrizedMaurerCartanForm, map_smul,
+    map_multiset_sum, Multiset.map_map, radial, map_sum, map_sum,
+    Finset.sum_congr rfl fun μ _ => jets.evalLie_iteratedDeriv_coord μ r.1 _,
+    Finset.sum_multiset_map_count,
+    Finset.sum_subset (Finset.subset_univ r.1.toFinset) fun μ _ hμ => by
+      rw [Multiset.count_eq_zero.mpr fun h => hμ (Multiset.mem_toFinset.mpr h), zero_smul]]
+  exact congrArg _ (Finset.sum_congr rfl fun μ _ => by
+    rw [Function.comp_apply, Multiset.sub_singleton])
+
+/-!
+
+## G. Free packages
+
+-/
+
+/-- A package is free when it is faithful and its jets are honest formal power series in
+  the coordinates: every family of base-point Taylor data is realized by an element of
+  `𝔤J` (Taylor completeness), and every element vanishing at the base point is the radial
+  component of the Maurer–Cartan form of a pure jet (radial integrability, the solution of
+  the Euler equation `∑_μ x_μ ∂_μ U = −i ρ U` with `U(0) = 1`). Both hold for the full jet
+  group of any matrix group. Freeness makes the symmetrized Maurer–Cartan data free
+  coordinates on the pure jets, `symmetrizedMaurerCartanCoeff_bijective`; like `Faithful`
+  it is recorded separately from the structure because the covariance theory does not
+  need it, only the classification of invariants does. -/
 class Free (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) : Prop extends Faithful jets where
-  symmetrizedMaurerCartanCoeff_surjective : Function.Surjective jets.symmetrizedMaurerCartanCoeff
+  exists_evalLie_iteratedDeriv_eq : ∀ c : Multiset (Fin 1 ⊕ Fin 3) → 𝔤,
+    ∃ Y : 𝔤J, ∀ s, jets.evalLie (jets.iteratedDeriv s Y) = c s
+  exists_radial_eq : ∀ ρ : 𝔤J, jets.evalLie ρ = 0 → ∃ U : jets.truncationKer 0, jets.radial U.1 = ρ
 
 section Free
 
 variable [jets.Free]
 
-lemma symmetrizedMaurerCartanCoeff_surjective :
-    Function.Surjective jets.symmetrizedMaurerCartanCoeff :=
-  Free.symmetrizedMaurerCartanCoeff_surjective
+/-- Taylor completeness of a free package. -/
+lemma exists_evalLie_iteratedDeriv_eq (c : Multiset (Fin 1 ⊕ Fin 3) → 𝔤) :
+    ∃ Y : 𝔤J, ∀ s, jets.evalLie (jets.iteratedDeriv s Y) = c s :=
+  Free.exists_evalLie_iteratedDeriv_eq c
+
+/-- Radial integrability of a free package. -/
+lemma exists_radial_eq {ρ : 𝔤J} (hρ : jets.evalLie ρ = 0) :
+    ∃ U : jets.truncationKer 0, jets.radial U.1 = ρ :=
+  Free.exists_radial_eq ρ hρ
+
+/-- Every family of symmetrized Maurer–Cartan data is realized by a pure jet: realize the
+  data, rescaled by the order, as the Taylor data of an element `ρ` vanishing at the base
+  point, and integrate `ρ` to a pure jet. -/
+theorem symmetrizedMaurerCartanCoeff_surjective :
+    Function.Surjective jets.symmetrizedMaurerCartanCoeff := by
+  intro c
+  obtain ⟨ρ, hρ⟩ := jets.exists_evalLie_iteratedDeriv_eq fun s =>
+    if hs : s = 0 then 0 else (s.card : ℝ) • c ⟨s, hs⟩
+  obtain ⟨U, hU⟩ := jets.exists_radial_eq (ρ := ρ) (by
+    simpa [iteratedDeriv_zero] using hρ 0)
+  refine ⟨U, funext fun r => ?_⟩
+  have hcard : (r.1.card : ℝ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr fun h => r.2 (Multiset.card_eq_zero.mp h)
+  rw [symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial, hU, hρ, dif_neg r.2,
+    smul_smul, one_div, inv_mul_cancel₀ hcard, one_smul]
 
 /-- The symmetrized Maurer–Cartan data are free coordinates on the pure jets of a free
   package. -/

@@ -62,6 +62,7 @@ depends on that choice.
 - `LocalGaugeData.iteratedDeriv` : the iterated derivative `∂_s` on `𝔤J` along a multiset
   of directions, with `iteratedDeriv_cons`, `iteratedDeriv_add` and the iterated Leibniz
   rule `iteratedDeriv_bracket`.
+- `LocalGaugeData.evalLie_iteratedDeriv_coord` : the Euler identity for the coordinates.
 - `LocalGaugeData.Faithful` : the jets are determined by their base-point Taylor data.
 
 ## iii. Table of contents
@@ -108,6 +109,15 @@ structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieA
   deriv_bracket : ∀ (μ : Fin 1 ⊕ Fin 3) (x y : 𝔤J),
     deriv μ ⁅x, y⁆ = ⁅deriv μ x, y⁆ + ⁅x, deriv μ y⁆
   deriv_ofConstantLie : ∀ (μ : Fin 1 ⊕ Fin 3) (a : 𝔤), deriv μ (ofConstantLie a) = 0
+  /-- Multiplication of a jet by the spacetime coordinate `x_μ`. -/
+  coord : (Fin 1 ⊕ Fin 3) → 𝔤J →ₗ[ℝ] 𝔤J
+  /-- The Leibniz rule for a coordinate: `∂_μ (x_ν a) = x_ν ∂_μ a + δ_{μν} a`. -/
+  deriv_coord : ∀ (μ ν : Fin 1 ⊕ Fin 3) (a : 𝔤J),
+    deriv μ (coord ν a) = coord ν (deriv μ a) + if μ = ν then a else 0
+  /-- A coordinate vanishes at the base point. -/
+  evalLie_coord : ∀ (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J), evalLie (coord μ a) = 0
+  /-- The coordinates are central for the bracket. -/
+  coord_lie : ∀ (μ : Fin 1 ⊕ Fin 3) (a b : 𝔤J), ⁅coord μ a, b⁆ = coord μ ⁅a, b⁆
   /-- The adjoint action of the jet group on the jet Lie algebra. -/
   adjoint : Representation ℝ G 𝔤J
   adjoint_lie : ∀ (U : G) (x y : 𝔤J), adjoint U ⁅x, y⁆ = ⁅adjoint U x, adjoint U y⁆
@@ -311,6 +321,29 @@ lemma iteratedDeriv_ofConstantLie_of_ne_zero {p : Multiset (Fin 1 ⊕ Fin 3)} (h
     · rw [ih ht, map_zero]
 
 TODO "Add product of LocalGaugeData."
+
+/-- The Euler identity: at the base point, `x_μ` acts on the `s`-th derivative by
+  removing one `μ` and counting how many there were. With `∂_s` the derivatives in `s`,
+  `(∂_s (x_μ a))|₀ = s(μ) · (∂_{s − μ} a)|₀`. -/
+lemma evalLie_iteratedDeriv_coord (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
+    jets.evalLie (jets.iteratedDeriv s (jets.coord μ a)) =
+      s.count μ • jets.evalLie (jets.iteratedDeriv (s.erase μ) a) := by
+  induction s using Multiset.induction_on generalizing a with
+  | empty => simp [jets.evalLie_coord]
+  | cons ν s ih =>
+      rw [iteratedDeriv_cons_eq_comp_deriv, LinearMap.comp_apply, jets.deriv_coord, map_add,
+        map_add, ih]
+      by_cases hνμ : ν = μ
+      · subst hνμ
+        rw [if_pos rfl, Multiset.count_cons_self, Multiset.erase_cons_head, add_smul, one_smul,
+          ← LinearMap.comp_apply (jets.iteratedDeriv (s.erase ν)),
+          ← iteratedDeriv_cons_eq_comp_deriv]
+        by_cases hμ : ν ∈ s
+        · rw [Multiset.cons_erase hμ]
+        · rw [Multiset.count_eq_zero.mpr hμ, zero_smul, zero_smul]
+      · rw [if_neg hνμ, map_zero, map_zero, add_zero, Multiset.count_cons_of_ne (Ne.symm hνμ),
+          Multiset.erase_cons_tail s hνμ, ← LinearMap.comp_apply (jets.iteratedDeriv (s.erase μ)),
+          ← iteratedDeriv_cons_eq_comp_deriv]
 
 /-!
 

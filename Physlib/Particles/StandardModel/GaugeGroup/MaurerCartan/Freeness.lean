@@ -8,40 +8,41 @@ module
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Relativity.JetRing.Matrix
 /-!
-# Freeness of the Maurer–Cartan data of the Standard Model jets
+# Freeness of the Standard Model jets
 
 ## i. Overview
 
-For any faithful local-gauge-data package, a pure jet (one with identity value) is
-determined by its symmetrized Maurer–Cartan data, the base-point values of the symmetrized
-Maurer–Cartan form indexed by nonempty multisets of directions:
-`LocalGaugeData.symmetrizedMaurerCartanCoeff` is injective. For the Standard Model jets it
-is also *surjective*: every family of gauge-algebra elements indexed by nonempty multisets
-is the symmetrized Maurer–Cartan data of some pure jet. Together, the symmetrized data are
-free coordinates on the pure jets.
+A local-gauge-data package is `Free` when its jets are honest formal power series in the
+spacetime coordinates: every family of base-point Taylor data is realized by an element of
+the jet Lie algebra (Taylor completeness), and every element vanishing at the base point
+is the radial component `∑_μ x_μ ω_μ(U)` of the Maurer–Cartan form of some pure jet
+(radial integrability). The general theory then makes the symmetrized Maurer–Cartan data
+free coordinates on the pure jets, `LocalGaugeData.symmetrizedMaurerCartanCoeff_bijective`,
+which is what the classification of gauge invariants uses.
 
-Surjectivity is a statement about power series, proved here from the matrix definitions.
-The radial component `ρ = ∑_μ x_μ ω_μ` of the Maurer–Cartan form carries exactly the
-symmetrized data, so it suffices to solve the Euler system `E U = −i ρ U`, `U(0) = 1` for
-a prescribed `ρ`; this is done factor by factor by `JetRing.exists_matrix_eulerTransport`,
-with unitarity and unit determinant from the Euler vanishing principle. The same
-integration technique, applied to the full structural equation, shows that every flat jet
-1-form is the Maurer–Cartan form of a pure jet, `exists_maurerCartanForm_eq_of_structure`.
+Both properties are statements about power series, proved here from the matrix
+definitions. Taylor completeness is the construction of a power series from its Taylor
+coefficients, entry by entry. Radial integrability is the solution of the Euler system
+`E U = −i ρ U`, `U(0) = 1` for a prescribed `ρ`, factor by factor by
+`JetRing.exists_matrix_eulerTransport`, with unitarity and unit determinant from the Euler
+vanishing principle; then `∑_μ x_μ · i (∂_μ U) U† = ρ`. The same integration technique,
+applied to the full structural equation, shows that every flat jet 1-form is the
+Maurer–Cartan form of a pure jet, `exists_maurerCartanForm_eq_of_structure`.
 
 ## ii. Key results
 
 - `StandardModel.exists_maurerCartanForm_eq_of_structure` : every flat jet 1-form is the
   Maurer–Cartan form of a pure jet.
-- `StandardModel.symmetrizedMaurerCartanCoeff_surjective` : every family of symmetrized
-  data is realized by a pure jet.
-- `StandardModel.instFreeLocalGaugeData` : the package is free, so the symmetrized data are
-  free coordinates on the pure jets.
+- `StandardModel.taylorJet`, `StandardModel.eval_iteratedDeriv_taylorJet` : Taylor
+  completeness of the jet gauge algebra.
+- `StandardModel.exists_radial_eq` : radial integrability of the jet gauge group.
+- `StandardModel.instFreeLocalGaugeData` : the package is free.
 
 ## iii. Table of contents
 
 - A. Integrating the structural equation
-- B. The symmetrized Maurer–Cartan data in components
-- C. Surjectivity of the symmetrized Maurer–Cartan data
+- B. Taylor completeness
+- C. Radial integrability
 
 -/
 
@@ -93,152 +94,144 @@ lemma exists_maurerCartanForm_eq_of_structure
 
 /-!
 
-## B. The symmetrized Maurer–Cartan data in components
-
-The gauge algebra is a product of three matrix factors. Rather than argue factor by
-factor, the passage from the symmetrized Maurer–Cartan data to the radial component
-`∑_μ x_μ ω_μ` of the Maurer–Cartan form is proved once for an arbitrary real-linear scalar
-`ψ` of the gauge algebra that computes evaluated iterated derivatives as base-point values
-of power-series derivatives of a scalar entry `f`; the three factors are instances.
+## B. Taylor completeness
 
 -/
 
-/-- A scalar component of the evaluated symmetrized Maurer–Cartan form: the average over
-  `μ ∈ r` of the base-point values of the `r − μ` derivatives of the entry `f (ω_μ)`. -/
-lemma eval_symmetrizedMaurerCartanForm_comp (ψ : GaugeAlgebra →+ ℂ)
-    (hψ : ∀ (c : ℝ) (a : GaugeAlgebra), ψ (c • a) = c • ψ a) (f : JetGaugeAlgebra → JetRing)
-    (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
-      ψ (eval (iteratedDeriv s a)) = constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
-    (U : JetGaugeGroupI) (r : Multiset (Fin 1 ⊕ Fin 3)) :
-    ψ (eval (localGaugeData.symmetrizedMaurerCartanForm U r)) =
-      (1/(r.card : ℝ)) • (r.map fun μ => constantCoeff ((r.erase μ).foldl
-        (fun h ρ => pderiv ℂ ρ h) (f (maurerCartanForm U μ)))).sum := by
-  rw [LocalGaugeData.symmetrizedMaurerCartanForm]
-  simp only [localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-  rw [map_smul, hψ, map_multiset_sum, map_multiset_sum, Multiset.map_map, Multiset.map_map]
-  congr 1
-  refine congrArg Multiset.sum (Multiset.map_congr rfl fun μ _ => ?_)
-  rw [Function.comp_apply, Function.comp_apply, hf, Multiset.sub_singleton]
+/-- The power series with prescribed base-point Taylor data `f`: the coefficient at the
+  monomial `m` is `f` at the multiset of `m`, divided by the factorials of `m`. -/
+noncomputable def taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) : JetRing :=
+  fun m => ((∏ ν, Nat.factorial (m ν) : ℕ) : ℂ)⁻¹ * f (Finsupp.toMultiset m)
 
-/-- A scalar component of the symmetrized Maurer–Cartan data, through the radial component
-  `p = ∑_μ x_μ f(ω_μ)` of the Maurer–Cartan form: a coefficient of that component,
-  normalized by the factorials of the multiset. -/
-lemma symmetrizedMaurerCartanCoeff_comp (ψ : GaugeAlgebra →+ ℂ)
-    (hψ : ∀ (c : ℝ) (a : GaugeAlgebra), ψ (c • a) = c • ψ a) (f : JetGaugeAlgebra → JetRing)
-    (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
-      ψ (eval (iteratedDeriv s a)) = constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
-    (U : localGaugeData.truncationKer 0) (p : JetRing)
-    (hrad : ∑ μ, (X μ : JetRing) • f (maurerCartanForm U.1 μ) = p)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) :
-    ψ (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩) =
-      (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff (Multiset.toFinsupp r) p) := by
-  rw [LocalGaugeData.symmetrizedMaurerCartanCoeff_apply, localGaugeData_evalLie,
-    eval_symmetrizedMaurerCartanForm_comp ψ hψ f hf, sum_constantCoeff_foldl_erase, hrad]
+lemma coeff_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    coeff m (taylorSeries f) = ((∏ ν, Nat.factorial (m ν) : ℕ) : ℂ)⁻¹ * f (Finsupp.toMultiset m) :=
+  rfl
 
-/-- The `su(3)` entries of the symmetrized Maurer–Cartan data through the radial
-  component. -/
-lemma symmetrizedMaurerCartanCoeff_toSU3_eq (U : localGaugeData.truncationKer 0)
-    (P : Matrix (Fin 3) (Fin 3) JetRing)
-    (hrad : ∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toSU3Matrix = P)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) (i j : Fin 3) :
-    (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toSU3Matrix i j =
-      (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff (Multiset.toFinsupp r) (P i j)) := by
-  refine symmetrizedMaurerCartanCoeff_comp
-    (AddMonoidHom.mk' (fun a => a.toSU3Matrix i j) fun a b => by
-      simp [GaugeAlgebra.add_toSU3Matrix])
-    (fun c a => by simp [GaugeAlgebra.smul_toSU3Matrix]) (fun a => a.toSU3Matrix i j)
-    (fun s a => by
-      rw [AddMonoidHom.mk'_apply, eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix,
-        Matrix.map_apply])
-    U (P i j) ?_ r hr
-  rw [← hrad, Matrix.sum_apply]
-  exact Finset.sum_congr rfl fun μ _ => rfl
+lemma star_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) :
+    star (taylorSeries f) = taylorSeries fun s => star (f s) := by
+  ext m
+  rw [JetRing.coeff_star, coeff_taylorSeries, coeff_taylorSeries, star_mul', star_inv₀,
+    star_natCast]
 
-/-- The `su(2)` entries of the symmetrized Maurer–Cartan data through the radial
-  component. -/
-lemma symmetrizedMaurerCartanCoeff_toSU2_eq (U : localGaugeData.truncationKer 0)
-    (P : Matrix (Fin 2) (Fin 2) JetRing)
-    (hrad : ∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toSU2Matrix = P)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) (i j : Fin 2) :
-    (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toSU2Matrix i j =
-      (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff (Multiset.toFinsupp r) (P i j)) := by
-  refine symmetrizedMaurerCartanCoeff_comp
-    (AddMonoidHom.mk' (fun a => a.toSU2Matrix i j) fun a b => by
-      simp [GaugeAlgebra.add_toSU2Matrix])
-    (fun c a => by simp [GaugeAlgebra.smul_toSU2Matrix]) (fun a => a.toSU2Matrix i j)
-    (fun s a => by
-      rw [AddMonoidHom.mk'_apply, eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix,
-        Matrix.map_apply])
-    U (P i j) ?_ r hr
-  rw [← hrad, Matrix.sum_apply]
-  exact Finset.sum_congr rfl fun μ _ => rfl
+lemma taylorSeries_sum {ι : Type} (t : Finset ι) (f : ι → Multiset (Fin 1 ⊕ Fin 3) → ℂ) :
+    taylorSeries (fun s => ∑ i ∈ t, f i s) = ∑ i ∈ t, taylorSeries (f i) := by
+  ext m
+  simp only [coeff_taylorSeries, map_sum, Finset.mul_sum]
 
-/-- The `u(1)` value of the symmetrized Maurer–Cartan data through the radial
-  component. -/
-lemma symmetrizedMaurerCartanCoeff_toU1_eq (U : localGaugeData.truncationKer 0)
-    (p : JetRing)
-    (hrad : ∑ μ, (X μ : JetRing) • (maurerCartanForm U.1 μ).toU1Value = p)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) :
-    (localGaugeData.symmetrizedMaurerCartanCoeff U ⟨r, hr⟩).toU1Value =
-      (1/(Multiset.card r : ℝ)) • (((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff (Multiset.toFinsupp r) p) :=
-  symmetrizedMaurerCartanCoeff_comp
-    (AddMonoidHom.mk' (fun a => a.toU1Value) fun a b => by simp [GaugeAlgebra.add_toU1Value])
-    (fun c a => by simp [GaugeAlgebra.smul_toU1Value]) (fun a => a.toU1Value)
-    (fun s a => by rw [AddMonoidHom.mk'_apply, eval_toU1Value_eq, iteratedDeriv_toU1Value])
-    U p hrad r hr
+/-- The base-point Taylor data of `taylorSeries f` are `f`. -/
+lemma constantCoeff_foldl_pderiv_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (taylorSeries f)) = f s := by
+  have hfac : ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _)
+  rw [constantCoeff_foldl_pderiv, coeff_taylorSeries, Multiset.toFinsupp_toMultiset,
+    show (∏ ν, Nat.factorial (s.toFinsupp ν)) = ∏ ν, Nat.factorial (s.count ν) from
+      Finset.prod_congr rfl fun ν _ => by rw [Multiset.toFinsupp_apply],
+    ← mul_assoc, mul_inv_cancel₀ hfac, one_mul]
+
+/-- The matrix of jets with prescribed base-point Taylor data `M`, entrywise. -/
+noncomputable def taylorMatrix {κ : Type} (M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ) :
+    Matrix κ κ JetRing :=
+  Matrix.of fun i j => taylorSeries fun s => M s i j
+
+lemma taylorMatrix_apply {κ : Type} (M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ) (i j : κ) :
+    taylorMatrix M i j = taylorSeries fun s => M s i j :=
+  rfl
+
+lemma star_taylorMatrix {κ : Type} {M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ}
+    (hM : ∀ s, star (M s) = M s) : star (taylorMatrix M) = taylorMatrix M := by
+  ext i j : 1
+  rw [Matrix.star_apply, taylorMatrix_apply, taylorMatrix_apply, star_taylorSeries]
+  exact congrArg taylorSeries (funext fun s => by rw [← Matrix.star_apply, hM s])
+
+lemma trace_taylorMatrix {κ : Type} [Fintype κ] {M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ}
+    (hM : ∀ s, (M s).trace = 0) : (taylorMatrix M).trace = 0 := by
+  have h : ∀ s, ∑ i, M s i i = 0 := fun s => hM s
+  simp only [Matrix.trace, Matrix.diag_apply, taylorMatrix_apply, ← taylorSeries_sum, h]
+  ext m
+  simp [coeff_taylorSeries]
+
+/-- The jet gauge algebra element with prescribed base-point Taylor data `c`, built
+  entrywise from `taylorSeries`. Hermiticity and tracelessness are inherited from the
+  values of `c`. -/
+noncomputable def taylorJet (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra) : JetGaugeAlgebra :=
+  ofMatrixProd
+    (taylorMatrix fun s => (c s).toSU3Matrix, taylorMatrix fun s => (c s).toSU2Matrix,
+      taylorSeries fun s => (c s).toU1Value)
+    ⟨star_taylorMatrix fun s => (c s).1.2.1, trace_taylorMatrix fun s => (c s).1.2.2⟩
+    ⟨star_taylorMatrix fun s => (c s).2.1.2.1, trace_taylorMatrix fun s => (c s).2.1.2.2⟩
+    (by rw [star_taylorSeries]; exact congrArg taylorSeries (funext fun s => (c s).2.2.2))
+
+@[simp]
+lemma taylorJet_toSU3Matrix (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra) :
+    (taylorJet c).toSU3Matrix = taylorMatrix fun s => (c s).toSU3Matrix :=
+  rfl
+
+@[simp]
+lemma taylorJet_toSU2Matrix (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra) :
+    (taylorJet c).toSU2Matrix = taylorMatrix fun s => (c s).toSU2Matrix :=
+  rfl
+
+@[simp]
+lemma taylorJet_toU1Value (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra) :
+    (taylorJet c).toU1Value = taylorSeries fun s => (c s).toU1Value :=
+  rfl
+
+/-- Taylor completeness: the base-point Taylor data of `taylorJet c` are `c`. -/
+theorem eval_iteratedDeriv_taylorJet (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAlgebra)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) : eval (iteratedDeriv s (taylorJet c)) = c s := by
+  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
+  · ext i j
+    rw [eval_iteratedDeriv_toSU3Matrix, Matrix.map_apply, taylorJet_toSU3Matrix,
+      taylorMatrix_apply, constantCoeff_foldl_pderiv_taylorSeries]
+  · ext i j
+    rw [eval_iteratedDeriv_toSU2Matrix, Matrix.map_apply, taylorJet_toSU2Matrix,
+      taylorMatrix_apply, constantCoeff_foldl_pderiv_taylorSeries]
+  · rw [eval_iteratedDeriv_toU1Value, taylorJet_toU1Value, constantCoeff_foldl_pderiv_taylorSeries]
 
 /-!
 
-## C. Surjectivity of the symmetrized Maurer–Cartan data
+## C. Radial integrability
 
 -/
 
-/-- The factorwise construction behind surjectivity: for every hermitian family `E` of
-  matrices indexed by nonempty multisets there is a unitary Euler transport `V` based at
-  `1` whose radial Maurer–Cartan component `P = ∑_μ x_μ · i (∂_μ V) V†` has, at the
-  monomial `r`, the coefficient `|r| / ∏ (r.count ν)!` times `E r`; and `V` has unit
-  determinant when the `E r` are traceless. -/
-lemma exists_eulerTransport_of_symmetrized {κ : Type} [Fintype κ] [DecidableEq κ]
-    (E : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → Matrix κ κ ℂ)
-    (hEstar : ∀ x, star (E x) = E x) :
-    ∃ V P : Matrix κ κ JetRing,
+/-- The `su(3)` component of the radial Maurer–Cartan component `∑_μ x_μ ω_μ(U)`. -/
+lemma radial_toSU3Matrix (U : JetGaugeGroupI) :
+    (localGaugeData.radial U).toSU3Matrix =
+      ∑ μ, (X μ : JetRing) • (Complex.I • (U.1.1.map (pderiv ℂ μ) * star U.1.1)) := by
+  rw [LocalGaugeData.radial, toSU3Matrix_sum]
+  simp only [localGaugeData_coord, localGaugeData_maurerCartan,
+    coord_toSU3Matrix, maurerCartanForm_toSU3Matrix]
+
+/-- The `su(2)` component of the radial Maurer–Cartan component. -/
+lemma radial_toSU2Matrix (U : JetGaugeGroupI) :
+    (localGaugeData.radial U).toSU2Matrix =
+      ∑ μ, (X μ : JetRing) • (Complex.I • (U.2.1.1.map (pderiv ℂ μ) * star U.2.1.1)) := by
+  rw [LocalGaugeData.radial, toSU2Matrix_sum]
+  simp only [localGaugeData_coord, localGaugeData_maurerCartan,
+    coord_toSU2Matrix, maurerCartanForm_toSU2Matrix]
+
+/-- The `u(1)` component of the radial Maurer–Cartan component. -/
+lemma radial_toU1Value (U : JetGaugeGroupI) :
+    (localGaugeData.radial U).toU1Value =
+      ∑ μ, (X μ : JetRing) • (Complex.I • (pderiv ℂ μ U.2.2.1 * star U.2.2.1)) := by
+  rw [LocalGaugeData.radial, toU1Value_sum]
+  simp only [localGaugeData_coord, localGaugeData_maurerCartan,
+    coord_toU1Value, maurerCartanForm_toU1Value, smul_eq_mul]
+
+/-- The factorwise construction behind radial integrability: for every hermitian matrix
+  `P` of jets vanishing at the base point there is a unitary Euler transport `V` based at
+  `1` whose radial Maurer–Cartan component `∑_μ x_μ · i (∂_μ V) V†` is `P`; and `V` has
+  unit determinant when `P` is traceless. -/
+lemma exists_eulerTransport_of_radial {κ : Type} [Fintype κ] [DecidableEq κ]
+    (P : Matrix κ κ JetRing) (hP0 : ∀ i j, constantCoeff (P i j) = 0) (hPstar : star P = P) :
+    ∃ V : Matrix κ κ JetRing,
       (constantCoeff : JetRing →+* ℂ).mapMatrix V = 1 ∧
       V * star V = 1 ∧
-      (∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V)) = P) ∧
-      ((∀ x, (E x).trace = 0) →
+      (P.trace = 0 →
         (∀ (M : Matrix κ κ JetRing) (μ : Fin 1 ⊕ Fin 3),
           pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace) → V.det = 1) ∧
-      (∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0) (i j : κ),
-        coeff (Multiset.toFinsupp r) (P i j) =
-          (((Multiset.card r : ℕ) : ℂ) /
-            ((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ)) * E ⟨r, hr⟩ i j) := by
-  classical
-  set P : Matrix κ κ JetRing := Matrix.of fun i j =>
-    show JetRing from fun m =>
-      if h : Finsupp.toMultiset m = 0 then 0
-      else (((Finsupp.degree m : ℕ) : ℂ) / ((∏ ν, Nat.factorial (m ν) : ℕ) : ℂ)) *
-        E ⟨Finsupp.toMultiset m, h⟩ i j with hP
-  have hPcoeff : ∀ (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (i j : κ), coeff m (P i j) =
-      if h : Finsupp.toMultiset m = 0 then 0
-      else (((Finsupp.degree m : ℕ) : ℂ) / ((∏ ν, Nat.factorial (m ν) : ℕ) : ℂ)) *
-        E ⟨Finsupp.toMultiset m, h⟩ i j := fun _ _ _ => rfl
-  have hP0 : ∀ i j, constantCoeff (P i j) = 0 := fun i j => by
-    rw [← coeff_zero_eq_constantCoeff, hPcoeff, dif_pos (by simp)]
-  have hPstar : star P = P := by
-    ext i j : 1
-    ext m
-    rw [Matrix.star_apply, JetRing.coeff_star, hPcoeff, hPcoeff]
-    split_ifs with h
-    · simp
-    · rw [star_mul', show star (E ⟨Finsupp.toMultiset m, h⟩ j i)
-          = E ⟨Finsupp.toMultiset m, h⟩ i j from by
-        conv_rhs => rw [← hEstar ⟨Finsupp.toMultiset m, h⟩]
-        exact (Matrix.star_apply _ _ _).symm,
-        star_div₀, star_natCast, star_natCast]
+      ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V)) = P := by
   have hR0 : ∀ i j, constantCoeff (((-Complex.I) • P) i j) = 0 := fun i j => by
     rw [Matrix.smul_apply, ← coeff_zero_eq_constantCoeff, map_smul,
       coeff_zero_eq_constantCoeff, hP0, smul_zero]
@@ -247,70 +240,47 @@ lemma exists_eulerTransport_of_symmetrized {κ : Type} [Fintype κ] [DecidableEq
     simp
   obtain ⟨V, hV0, hEV⟩ := exists_matrix_eulerTransport ((-Complex.I) • P) hR0
   have hVu : V * star V = 1 := eulerTransport_mul_star hRstar hR0 hV0 hEV
-  refine ⟨V, P, hV0, hVu, ?_, ?_, ?_⟩
-  · calc ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V))
-        = Complex.I • ((∑ μ, (X μ : JetRing) • V.map (pderiv ℂ μ)) * star V) := by
-          rw [Finset.sum_mul, Finset.smul_sum]
-          exact Finset.sum_congr rfl fun μ _ => by
-            rw [Matrix.smul_mul, smul_comm Complex.I]
-      _ = P := by
-          rw [hEV, Matrix.smul_mul, Matrix.smul_mul, Matrix.mul_assoc, hVu, mul_one,
-            smul_smul]
-          simp
-  · intro hEtr hjac
-    have hPtr : P.trace = 0 := by
-      ext m
-      rw [show coeff m P.trace = ∑ i, coeff m (P i i) from by
-          rw [show P.trace = ∑ i, P i i from rfl, map_sum],
-        map_zero, Finset.sum_congr rfl fun i _ => hPcoeff m i i]
-      by_cases h : Finsupp.toMultiset m = 0
-      · simp [h]
-      · simp only [dif_neg h]
-        rw [← Finset.mul_sum,
-          show (∑ i, E ⟨Finsupp.toMultiset m, h⟩ i i) = (E ⟨Finsupp.toMultiset m, h⟩).trace
-            from rfl,
-          hEtr, mul_zero]
-    have hRtr : ((-Complex.I) • P).trace = 0 := by
-      rw [Matrix.trace_smul, hPtr, smul_zero]
-    exact eulerTransport_det hjac hRtr hV0 hEV
-  · intro r hr i j
-    have hround : Finsupp.toMultiset (Multiset.toFinsupp r) = r := by simp
-    rw [hPcoeff, dif_neg (show ¬Finsupp.toMultiset (Multiset.toFinsupp r) = 0 from by
-        rw [hround]; exact hr),
-      show (∏ ν, Nat.factorial ((Multiset.toFinsupp r) ν)) = ∏ ν, Nat.factorial (r.count ν)
-        from Finset.prod_congr rfl fun ν _ => by rw [Multiset.toFinsupp_apply],
-      degree_toFinsupp_eq_card]
-    exact congrArg (fun x => (((Multiset.card r : ℕ) : ℂ) /
-      ((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ)) * E x i j) (Subtype.ext hround)
+  refine ⟨V, hV0, hVu, fun hPtr hjac =>
+    eulerTransport_det hjac (by rw [Matrix.trace_smul, hPtr, smul_zero]) hV0 hEV, ?_⟩
+  calc ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V))
+      = Complex.I • ((∑ μ, (X μ : JetRing) • V.map (pderiv ℂ μ)) * star V) := by
+        rw [Finset.sum_mul, Finset.smul_sum]
+        exact Finset.sum_congr rfl fun μ _ => by
+          rw [Matrix.smul_mul, smul_comm Complex.I]
+    _ = P := by
+        rw [hEV, Matrix.smul_mul, Matrix.smul_mul, Matrix.mul_assoc, hVu, mul_one, smul_smul]
+        simp
 
-/-- Freeness, surjectivity half: every prescribed family of symmetrized Maurer–Cartan
-  data is realized by a pure jet, assembled factor by factor from
-  `exists_eulerTransport_of_symmetrized`. -/
-theorem symmetrizedMaurerCartanCoeff_surjective :
-    Function.Surjective localGaugeData.symmetrizedMaurerCartanCoeff := by
+/-- Radial integrability: every element of the jet gauge algebra vanishing at the base
+  point is the radial Maurer–Cartan component of a pure jet, assembled factor by factor
+  from `exists_eulerTransport_of_radial`. -/
+theorem exists_radial_eq (ρ : JetGaugeAlgebra) (hρ : eval ρ = 0) :
+    ∃ U : localGaugeData.truncationKer 0, localGaugeData.radial U.1 = ρ := by
   classical
-  intro c
-  obtain ⟨V₃, P₃, hV₃0, hV₃u, hrad₃, hdet₃, hcoeff₃⟩ :=
-    exists_eulerTransport_of_symmetrized (κ := Fin 3) (fun x => (c x).toSU3Matrix)
-      (fun x => show star (c x).toSU3Matrix = (c x).toSU3Matrix from (c x).1.2.1)
-  obtain ⟨V₂, P₂, hV₂0, hV₂u, hrad₂, hdet₂, hcoeff₂⟩ :=
-    exists_eulerTransport_of_symmetrized (κ := Fin 2) (fun x => (c x).toSU2Matrix)
-      (fun x => show star (c x).toSU2Matrix = (c x).toSU2Matrix from (c x).2.1.2.1)
-  obtain ⟨V₁, P₁, hV₁0, hV₁u, hrad₁, _, hcoeff₁⟩ :=
-    exists_eulerTransport_of_symmetrized (κ := Fin 1)
-      (fun x => Matrix.of fun _ _ => (c x).toU1Value)
-      (fun x => Matrix.ext fun _ _ => (c x).2.2.2)
-  have hd₃ : V₃.det = 1 := hdet₃
-    (fun x => show ((c x).toSU3Matrix).trace = 0 from (c x).1.2.2) jacobi_fin3
-  have hd₂ : V₂.det = 1 := hdet₂
-    (fun x => show ((c x).toSU2Matrix).trace = 0 from (c x).2.1.2.2) jacobi_fin2
+  have h₃ : ∀ i j, constantCoeff (ρ.toSU3Matrix i j) = 0 := fun i j => by
+    rw [← eval_toSU3Matrix_apply, hρ]
+    simp
+  have h₂ : ∀ i j, constantCoeff (ρ.toSU2Matrix i j) = 0 := fun i j => by
+    rw [← eval_toSU2Matrix_apply, hρ]
+    simp
+  have h₁ : constantCoeff ρ.toU1Value = 0 := by
+    rw [← eval_toU1Value_eq, hρ]
+    simp
+  obtain ⟨V₃, hV₃0, hV₃u, hdet₃, hrad₃⟩ :=
+    exists_eulerTransport_of_radial ρ.toSU3Matrix h₃ ρ.1.2.1
+  obtain ⟨V₂, hV₂0, hV₂u, hdet₂, hrad₂⟩ :=
+    exists_eulerTransport_of_radial ρ.toSU2Matrix h₂ ρ.2.1.2.1
+  obtain ⟨V₁, hV₁0, hV₁u, _, hrad₁⟩ :=
+    exists_eulerTransport_of_radial (κ := Fin 1) (Matrix.of fun _ _ => ρ.toU1Value)
+      (fun _ _ => h₁) (Matrix.ext fun _ _ => ρ.2.2.2)
+  have hd₃ : V₃.det = 1 := hdet₃ (show ρ.toSU3Matrix.trace = 0 from ρ.1.2.2) jacobi_fin3
+  have hd₂ : V₂.det = 1 := hdet₂ (show ρ.toSU2Matrix.trace = 0 from ρ.2.1.2.2) jacobi_fin2
   have hu1 : V₁ 0 0 * star (V₁ 0 0) = 1 := by
     simpa [Matrix.mul_apply] using congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) hV₁u
   have hu0 : constantCoeff (V₁ 0 0) = 1 := by
     simpa using congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) hV₁0
-  -- the scalar radial identity for the `U(1)` factor
   have hrad₁' : ∑ μ, (X μ : JetRing) •
-      (Complex.I • (pderiv ℂ μ (V₁ 0 0) * star (V₁ 0 0))) = P₁ 0 0 := by
+      (Complex.I • (pderiv ℂ μ (V₁ 0 0) * star (V₁ 0 0))) = ρ.toU1Value := by
     have h := congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) hrad₁
     simpa [Matrix.sum_apply, Matrix.mul_apply] using h
   refine ⟨⟨(⟨V₃, Matrix.mem_specialUnitaryGroup_iff.mpr
@@ -320,39 +290,21 @@ theorem symmetrizedMaurerCartanCoeff_surjective :
       ⟨V₁ 0 0, Unitary.mem_iff.mpr ⟨by rw [mul_comm]; exact hu1, hu1⟩⟩),
     localGaugeData.mem_truncationKer_zero_iff.mpr
       (Prod.ext (Subtype.ext hV₃0) (Prod.ext (Subtype.ext hV₂0) (Subtype.ext hu0)))⟩, ?_⟩
-  funext x
-  obtain ⟨r, hr⟩ := x
-  have hcard : ((Multiset.card r : ℕ) : ℂ) ≠ 0 :=
-    Nat.cast_ne_zero.mpr fun hc => hr (Multiset.card_eq_zero.mp hc)
-  have hfacne : ((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) ≠ 0 :=
-    Nat.cast_ne_zero.mpr (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _)
-  have hfacne' : (∏ ν, ((Nat.factorial (r.count ν) : ℕ) : ℂ)) ≠ 0 :=
-    Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.cast_ne_zero.mpr (Nat.factorial_ne_zero _)
-  refine GaugeAlgebra.ext_of_matrix ?_ ?_ ?_
-  · ext i j : 1
-    rw [symmetrizedMaurerCartanCoeff_toSU3_eq _ P₃
-        (by simp only [maurerCartanForm_toSU3Matrix]; exact hrad₃) r hr i j,
-      hcoeff₃ r hr i j, Complex.real_smul]
-    push_cast
-    field_simp
-  · ext i j : 1
-    rw [symmetrizedMaurerCartanCoeff_toSU2_eq _ P₂
-        (by simp only [maurerCartanForm_toSU2Matrix]; exact hrad₂) r hr i j,
-      hcoeff₂ r hr i j, Complex.real_smul]
-    push_cast
-    field_simp
-  · rw [symmetrizedMaurerCartanCoeff_toU1_eq _ (P₁ 0 0)
-        (by simp only [maurerCartanForm_toU1Value]; exact hrad₁') r hr,
-      hcoeff₁ r hr 0 0, Complex.real_smul, Matrix.of_apply]
-    push_cast
-    field_simp
+  refine ext_of_matrix ?_ ?_ ?_
+  · rw [radial_toSU3Matrix]
+    exact hrad₃
+  · rw [radial_toSU2Matrix]
+    exact hrad₂
+  · rw [radial_toU1Value]
+    exact hrad₁'
 
-/-- The Standard Model package is free: the symmetrized Maurer–Cartan data are free
-  coordinates on its pure jets. Injectivity is the general
-  `LocalGaugeData.symmetrizedMaurerCartanCoeff_injective` of a faithful package, and
-  surjectivity is `symmetrizedMaurerCartanCoeff_surjective`. -/
+/-- The Standard Model package is free: Taylor completeness is `eval_iteratedDeriv_taylorJet`
+  and radial integrability is `exists_radial_eq`. The symmetrized Maurer–Cartan data are
+  therefore free coordinates on its pure jets, by the general
+  `LocalGaugeData.symmetrizedMaurerCartanCoeff_bijective`. -/
 instance instFreeLocalGaugeData : localGaugeData.Free where
   toFaithful := inferInstance
-  symmetrizedMaurerCartanCoeff_surjective := symmetrizedMaurerCartanCoeff_surjective
+  exists_evalLie_iteratedDeriv_eq c := ⟨taylorJet c, eval_iteratedDeriv_taylorJet c⟩
+  exists_radial_eq ρ hρ := exists_radial_eq ρ hρ
 
 end StandardModel

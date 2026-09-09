@@ -29,7 +29,9 @@ package rather than a choice, so it is an instance.
 Everything the generic theory derives from a package is thereby available for the Standard
 Model: the Taylor–Leibniz theorem for the adjoint action, the truncation filtration of the
 jet gauge group by the Maurer–Cartan form, the covariance of the covariant derivative, and
-the determination of a pure jet by its symmetrized Maurer–Cartan data.
+the determination of a pure jet by its symmetrized Maurer–Cartan data. Its freeness, the
+remaining power-series input to the classification of invariants, is
+`instFreeLocalGaugeData` in `GaugeGroup/MaurerCartan/Freeness.lean`.
 
 ## ii. Key results
 
@@ -82,6 +84,10 @@ noncomputable def localGaugeData :
   deriv_comm := JetGaugeAlgebra.deriv_comm
   deriv_bracket := JetGaugeAlgebra.deriv_bracket
   deriv_ofConstantLie := JetGaugeAlgebra.deriv_ofConstant
+  coord := JetGaugeAlgebra.coord
+  deriv_coord := JetGaugeAlgebra.deriv_coord
+  evalLie_coord := JetGaugeAlgebra.eval_coord
+  coord_lie := JetGaugeAlgebra.coord_lie
   adjoint := JetGaugeAlgebra.adjoint
   adjoint_lie := JetGaugeAlgebra.adjointMap_lie
   adjointValue := GaugeAlgebra.adjoint
@@ -126,6 +132,10 @@ lemma localGaugeData_deriv (μ : Fin 1 ⊕ Fin 3) :
 @[simp]
 lemma localGaugeData_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) :
     localGaugeData.iteratedDeriv s = JetGaugeAlgebra.iteratedDeriv s := rfl
+
+@[simp]
+lemma localGaugeData_coord (μ : Fin 1 ⊕ Fin 3) :
+    localGaugeData.coord μ = JetGaugeAlgebra.coord μ := rfl
 
 @[simp]
 lemma localGaugeData_adjoint : localGaugeData.adjoint = JetGaugeAlgebra.adjoint := rfl
