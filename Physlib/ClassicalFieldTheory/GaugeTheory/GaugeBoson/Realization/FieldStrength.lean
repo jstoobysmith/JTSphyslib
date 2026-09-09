@@ -5,8 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 /-!
 

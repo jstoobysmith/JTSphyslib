@@ -5,7 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 /-!

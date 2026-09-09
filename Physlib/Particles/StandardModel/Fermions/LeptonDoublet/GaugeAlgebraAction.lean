@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.Analysis.Normed.Lp.Matrix
 public import Mathlib.RingTheory.TensorProduct.Maps

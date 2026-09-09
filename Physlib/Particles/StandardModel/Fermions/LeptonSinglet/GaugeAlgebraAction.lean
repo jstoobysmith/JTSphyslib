@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
 /-!
 # The gauge-algebra action on the charged-lepton singlet
 

@@ -5,9 +5,9 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.LinearAlgebra.Dimension.Free
 /-!

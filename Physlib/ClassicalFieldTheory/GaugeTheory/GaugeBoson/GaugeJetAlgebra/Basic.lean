@@ -22,8 +22,8 @@ lives — is the free commutative algebra on the component functions `∂_s A_μ
 built here in the same way as the `BBoson` jet algebra, but non-abelian and **without a
 basis of the gauge algebra**: the adjoint index is carried by an abstract covector
 `φ : Module.Dual ℝ GaugeAlgebra` throughout, following the dual-family formulation of
-`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField`. For the Standard Model, `𝔤` is
-`StandardModel.GaugeAlgebra`.
+`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization`. For the Standard Model,
+`𝔤` is `StandardModel.GaugeAlgebra`.
 
 Following the split promised for this directory, the structure is:
 1. this file — the target space, the jet component space, and the jet algebra with its

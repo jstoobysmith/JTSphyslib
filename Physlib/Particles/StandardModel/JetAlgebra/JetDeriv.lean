@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The total derivative on the jet algebra of the Standard Model

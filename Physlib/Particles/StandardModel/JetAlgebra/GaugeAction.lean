@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The jet gauge action on the jet algebra of the Standard Model

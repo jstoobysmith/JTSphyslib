@@ -1,15 +1,16 @@
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.IsGaugeField
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.JetDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LorentzAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.MassDim
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.FieldStrength
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Symmetrized
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.FieldStrength
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Invariants
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.MassDim
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction

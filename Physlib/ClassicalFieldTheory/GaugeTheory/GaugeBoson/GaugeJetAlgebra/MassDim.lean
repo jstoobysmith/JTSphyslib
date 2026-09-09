@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
 
 /-!
 # Mass dimension on the gauge-boson jet algebra

@@ -9,7 +9,7 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Symmetrized
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
@@ -246,27 +246,26 @@ barred families in the conjugate of it.
 
 -/
 
-/-- The law `repJet_A` of a Standard Model, obtained from the corresponding law of the
-  jet algebra by pushing it along the defining algebra map. -/
-lemma repJet_A : IsGaugeField localGaugeData repLorentz repJet h.A where
-  lorentz_apply := by
-    intro Λ n l μ φ
-    have key := congrArg h.toAlgHom (JetAlgebra.isGaugeField.lorentz_apply Λ n l μ φ)
-    rw [h.map_repLorentz] at key
-    refine key.trans ?_
-    rw [map_sum]
-    refine Finset.sum_congr rfl fun p _ => ?_
-    rw [map_smul, map_sum]
-    congr 1
-    exact Finset.sum_congr rfl fun a _ => map_smul h.toAlgHom _ _
-  gauge_apply_deriv := by
-    intro U s μ φ
-    have key := congrArg h.toAlgHom (JetAlgebra.isGaugeField.gauge_apply_deriv U s μ φ)
-    rw [h.map_repJet] at key
-    refine key.trans ?_
-    rw [map_add, map_multiset_sum, Multiset.map_map, AlgHom.commutes]
-    rfl
-  gauge_mul := h.repJet_mul
+/-- The gauge-boson part of a Standard Model: the realization of the gauge-boson jet
+  algebra in `B` through the gauge sector of the jet algebra. -/
+noncomputable def gaugeRealization :
+    GaugeAlgebraRealization localGaugeData B repJet repLorentz where
+  toAlgHom := h.toAlgHom.comp JetAlgebra.includeGauge
+  map_repJet U y := by
+    rw [AlgHom.comp_apply, AlgHom.comp_apply, ← JetAlgebra.repJetGaugeGroupI_includeGauge,
+      h.map_repJet]
+  map_repLorentz Λ y := by
+    rw [AlgHom.comp_apply, AlgHom.comp_apply, ← JetAlgebra.repLorentzGroup_includeGauge,
+      h.map_repLorentz]
+  repJet_mul := h.repJet_mul
+  repLorentz_mul := h.repLorentz_mul
+
+lemma gaugeRealization_A : h.gaugeRealization.A = h.A := rfl
+
+/-- The law `repJet_A` of a Standard Model: the gauge-field laws of the realization
+  `gaugeRealization`. -/
+lemma repJet_A : IsGaugeField localGaugeData repLorentz repJet h.A :=
+  h.gaugeRealization_A ▸ h.gaugeRealization.isGaugeField
 
 /-- The law `repJet_H` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/

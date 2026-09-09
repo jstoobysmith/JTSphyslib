@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # The jet algebra of the Standard Model

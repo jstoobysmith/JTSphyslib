@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.LorentzAction
 /-!
 # The Lorentz action on the jet algebra of the Standard Model
 

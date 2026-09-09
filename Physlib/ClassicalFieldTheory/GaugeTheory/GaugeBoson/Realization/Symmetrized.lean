@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.FieldStrength
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.LinearAlgebra.Dimension.Free

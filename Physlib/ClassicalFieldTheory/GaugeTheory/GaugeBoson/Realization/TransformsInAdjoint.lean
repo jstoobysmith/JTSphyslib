@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeField.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
 /-!
 
 # Adjoint gauge tensors and the covariant derivative
