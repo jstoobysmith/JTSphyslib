@@ -7,58 +7,74 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonMatterField
 /-!
-# The bosonic generators as the components of one scalar field
+# The bosonic generators of a gauge theory
 
 ## i. Overview
 
-`GaugeFieldData.BosonGenerators` is built species by species, as the direct sum
-`⨁ i, JetComponentSpace (T.boson i).V` of the component spaces of the several scalar
-multiplets. A physicist writing a theory down does not do this. They write one scalar
-field `φ`, valued in the whole bosonic module, and take its component functions
-`∂_s φ_α` — a single `JetComponentSpace`, indexed by a target index `α` that runs over all
-the multiplets at once. For the Standard Model, with its one Higgs doublet, the two
-descriptions are trivially the same; for a two-Higgs-doublet model or any theory with
-several scalars they are not, and the content below is what identifies them.
+The bosonic species of a `GaugeFieldData` — its scalars — each carry a component space, the
+span of the symbols `∂_s φ_α` and their conjugates for that multiplet. This file assembles them into
+the **bosonic generator space** of the theory,
 
-This file shows that the two agree. When the bosonic species share a mass weight — the
-condition under which `GaugeFieldData.bosonMatterField` exists, and the condition a theory
-whose scalars all have the same mass dimension satisfies — there is an isomorphism
+`T.BosonGenerators = ⨁ i, JetComponentSpace (T.boson i).V`,
+
+together with the transformation data the species supply: the Lorentz action, the action of
+the jets of gauge transformations, and the mass-weight scaling, each assembled species by
+species. These are the bosonic generators on which
+`GaugeFieldData.LocalFieldAlgebra` builds its symmetric algebra. The gauge bosons are not
+among them: their generator space is fixed by the gauge algebra alone.
+
+The direct sum, rather than a single component space on the product of the value spaces, is
+what lets the species carry different mass weights: the scaling of one component space is
+natural in the value space and so cannot tell the species apart.
+
+Section C shows what happens when the species *do* share a weight, which is the case in any
+theory whose scalars all have the same mass dimension. A physicist does not write each
+multiplet with its own component space; they write one scalar field `φ` valued in the whole
+bosonic module and take its component functions `∂_s φ_α`, a single `JetComponentSpace`
+whose target index `α` runs over everything. For the Standard Model, with its one Higgs
+doublet, the two are trivially the same; for a larger scalar sector they are not.
+
+The two descriptions agree: there is an isomorphism
 
 `T.BosonGenerators ≃ₗ[ℂ] JetComponentSpace T.BosonModule`,
 
-and under it the summand of a species is the pullback along the projection onto that
-species, `bosonGeneratorsEquiv_inclBoson`. So the generators of one multiplet sit
-inside the generators of the whole scalar field exactly as its target components sit
-inside the bosonic module, which is what a physicist means by writing `φ_α` with `α`
-ranging over everything.
-
-The isomorphism is not merely one of vector spaces: it intertwines the Lorentz action and
-the mass-weight scaling with those of the single matter field
-`T.bosonMatterField w h`. The mass weight is where the shared weight `w` is needed and
-where the species-by-species construction earns its keep — a family of *unequal* weights
-has no single `JetComponentSpace.massWeightScale` to be compared with, which is precisely
-the reason `SpeciesComponentSpace` was built as a direct sum in the first place. With one
-weight that obstruction is gone and the two descriptions coincide.
+under which the summand of a species is the pullback along the projection onto that
+species, `bosonGeneratorsEquiv_inclBoson`. So the generators of one multiplet sit inside
+the generators of the whole scalar field exactly as its target components sit inside the
+bosonic module. The isomorphism is not merely one of vector spaces: it intertwines the
+Lorentz action and the mass-weight scaling with those of the single matter field
+`T.bosonMatterField w h`, the shared weight `w` being needed for the second of these and
+for nothing else.
 
 The underlying identification is `JetComponentSpace.piEquiv`, composed with the
 identification of a direct sum over a finite index with the product.
 
 ## ii. Key results
 
-- `GaugeFieldData.bosonGeneratorsEquiv` : the bosonic generator space is the component
-  space of the bosonic matter field.
+- `GaugeFieldData.BosonGenerators` : the bosonic generator space.
+- `GaugeFieldData.inclBoson` : the inclusion of the component space of one species.
+- `GaugeFieldData.repLorentzBoson`, `GaugeFieldData.repJetBoson` : the Lorentz and jet
+  gauge actions assembled on it.
+- `GaugeFieldData.massWeightScaleBoson` : the mass-weight scaling carrying the weight of
+  each species.
+- `GaugeFieldData.bosonGeneratorsEquiv` : with one shared weight, the generator space is
+  the component space of the bosonic matter field.
 - `GaugeFieldData.bosonGeneratorsEquiv_inclBoson` : a species sits inside it as the
   pullback along the projection onto that species.
-- `GaugeFieldData.bosonGeneratorsEquiv_repLorentzBoson` : the identification is
-  Lorentz-equivariant.
-- `GaugeFieldData.bosonGeneratorsEquiv_massWeightScaleBoson` : it carries the
-  species-wise mass-weight scaling to the single scaling of weight `w`.
+- `GaugeFieldData.bosonGeneratorsEquiv_repLorentzBoson`,
+  `GaugeFieldData.bosonGeneratorsEquiv_massWeightScaleBoson` : the identification
+  carries the Lorentz action and the mass-weight scaling across.
 
 ## iii. Table of contents
 
-- A. The bosonic generators as one component space
-  - A.1. The species as pullbacks
-  - A.2. The transformation data
+- A. The bosonic generator space
+- B. The transformation data on the generator space
+  - B.1. The Lorentz action
+  - B.2. The jet gauge action
+  - B.3. The mass weights
+- C. The bosonic generators as one component space
+  - C.1. The species as pullbacks
+  - C.2. The identification of the transformation data
 
 -/
 
@@ -74,7 +90,122 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-!
 
-## A. The bosonic generators as one component space
+## A. The bosonic generator space
+
+-/
+
+/-- The bosonic generator space of the datum, holding the component functions `∂_s φ_α`
+  and their conjugates of every bosonic species at once, as a direct sum over the species.
+  The direct sum, rather than a single component space on the product of the value spaces,
+  is what lets the species carry different mass weights; when they do not, section C below
+  identifies the two. -/
+abbrev BosonGenerators : Type := SpeciesComponentSpace T.BosonValue
+
+/-- The inclusion of the component space of one bosonic species into the bosonic generator
+  space. -/
+abbrev inclBoson (i : T.BosonSpecies) :
+    JetComponentSpace (T.BosonValue i) →ₗ[ℂ] T.BosonGenerators :=
+  SpeciesComponentSpace.incl T.BosonValue i
+
+/-!
+
+## B. The transformation data on the generator space
+
+The datum supplies, per species, a Lorentz representation and a fibrewise action of the
+gauge jets. Both land on the generator space species by species, so both are assembled by
+`SpeciesComponentSpace.rep`. Nothing here asserts that the two actions commute, since
+Lorentz transformations act on nonconstant gauge jets, and nothing extends them to the
+algebra `J(T)`.
+
+### B.1. The Lorentz action
+
+-/
+
+/-- The Lorentz action on the bosonic generator space, acting on each species through the
+  Lorentz representation of its matter field. -/
+noncomputable def repLorentzBoson : Representation ℂ SL(2,ℂ) T.BosonGenerators :=
+  SpeciesComponentSpace.rep T.BosonValue fun i =>
+    JetComponentSpace.repLorentzGroup (T.boson i).repLorentz
+
+variable {T}
+
+@[simp]
+lemma repLorentzBoson_inclBoson (Λ : SL(2,ℂ)) (i : T.BosonSpecies)
+    (x : JetComponentSpace (T.BosonValue i)) :
+    T.repLorentzBoson Λ (T.inclBoson i x)
+      = T.inclBoson i (JetComponentSpace.repLorentzGroup (T.boson i).repLorentz Λ x) :=
+  SpeciesComponentSpace.rep_incl _ Λ i x
+
+variable (T)
+
+/-!
+
+### B.2. The jet gauge action
+
+-/
+
+/-- The action of the jet gauge group on the bosonic generator space, acting on each
+  species through the fibrewise jet action of its matter field. Both the fibrewise
+  hypothesis and the finite dimensionality of the value space that
+  `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
+noncomputable def repJetBoson : Representation ℂ G T.BosonGenerators :=
+  SpeciesComponentSpace.rep T.BosonValue fun i =>
+    JetComponentSpace.repJet (T.boson i).repJet (T.boson i).repJet_smul
+
+variable {T}
+
+@[simp]
+lemma repJetBoson_inclBoson (U : G) (i : T.BosonSpecies)
+    (x : JetComponentSpace (T.BosonValue i)) :
+    T.repJetBoson U (T.inclBoson i x)
+      = T.inclBoson i
+        (JetComponentSpace.repJet (T.boson i).repJet (T.boson i).repJet_smul U x) :=
+  SpeciesComponentSpace.rep_incl _ U i x
+
+variable (T)
+
+/-!
+
+### B.3. The mass weights
+
+-/
+
+/-- The mass-weight scaling on the bosonic generator space, with the weight of each species
+  taken from its matter field. Species of different weight scale differently, which is the
+  property the direct-sum generator space was chosen to have. -/
+noncomputable def massWeightScaleBoson (c : ℂ) :
+    T.BosonGenerators →ₗ[ℂ] T.BosonGenerators :=
+  SpeciesComponentSpace.massWeightScale T.BosonValue
+    (fun i => (T.boson i).massWeight) c
+
+variable {T}
+
+/-- On the summand of a species the scaling is that species' own mass-weight scaling, with
+  the weight recorded in its matter field. -/
+@[simp]
+lemma massWeightScaleBoson_inclBoson (c : ℂ) (i : T.BosonSpecies)
+    (x : JetComponentSpace (T.BosonValue i)) :
+    T.massWeightScaleBoson c (T.inclBoson i x)
+      = T.inclBoson i
+        (JetComponentSpace.massWeightScale (T.boson i).massWeight c x) :=
+  SpeciesComponentSpace.massWeightScale_incl _ c i x
+
+/-- A component function `∂_s φ_α` of a species scales by `c ^ (w + 2 |s|)`, where `w` is
+  the mass weight of that species. There is one factor of `c` per unit of mass dimension of
+  the field and two per derivative. -/
+lemma massWeightScaleBoson_inclBoson_basis_tmul (c : ℂ) (i : T.BosonSpecies)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.BosonValue i)) :
+    T.massWeightScaleBoson c (T.inclBoson i
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue i)))
+      = c ^ ((T.boson i).massWeight + 2 * Multiset.card s) • T.inclBoson i
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue i)) :=
+  SpeciesComponentSpace.massWeightScale_incl_basis_tmul _ c i s φ
+
+variable (T)
+
+/-!
+
+## C. The bosonic generators as one component space
 
 -/
 
@@ -91,7 +222,7 @@ noncomputable def bosonGeneratorsEquiv :
 
 /-!
 
-### A.1. The species as pullbacks
+### C.1. The species as pullbacks
 
 -/
 
@@ -130,7 +261,7 @@ lemma bosonGenerators_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
 
 /-!
 
-### A.2. The transformation data
+### C.2. The identification of the transformation data
 
 -/
 

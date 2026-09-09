@@ -5,11 +5,10 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.JetAlgebra.SpeciesGenerators
 /-!
-# The field data of a gauge theory and its generator spaces
+# The field data of a gauge theory
 
 ## i. Overview
 
@@ -21,61 +20,42 @@ matter content is a finite family of
 fermionic species and a finite family of bosonic species, each given by an existing
 `MatterField jets`.
 
-`GaugeFieldData jets` bundles the matter content over such a context. From it this file
-derives, with no further data,
+`GaugeFieldData jets` bundles the matter content over such a context. This file is the
+datum itself and the value spaces it names; everything derived from it lives in the sibling
+files of this directory:
 
-* the fermionic and bosonic generator spaces, as `SpeciesComponentSpace` of the families
-  of value spaces;
-* the connection generator space, as the existing `GaugeBoson.JetComponentSpace 𝔤`;
-* the Lorentz and jet gauge actions and the mass-weight scaling on those spaces,
-  assembled species by species.
+* `GaugeFieldData.FermionGenerators` and `GaugeFieldData.BosonGenerators` — the generator
+  spaces, as `SpeciesComponentSpace` of the families of value spaces, together with the
+  Lorentz and jet gauge actions and the mass-weight scaling assembled species by species,
+  and the identification of each with the component space of a single matter field;
+* `GaugeFieldData.FermionModule` and `GaugeFieldData.BosonModule` — the value spaces of all
+  the species at once;
+* `GaugeFieldData.FermionMatterField` and `GaugeFieldData.BosonMatterField` — those modules
+  carrying the structure of one matter field, when the species share a mass weight.
 
-The value spaces of the species assemble in a second, independent way: not into a direct
-sum of component spaces but into a single finite-dimensional module, the `FermionModule`
-and `BosonModule` of the sibling files, each carrying the structure of one `MatterField`
-in `FermionMatterField` and `BosonMatterField`. That assembly needs the species to share
-a mass weight, which is exactly what the generator spaces built here do not need, and the
-two are used for different purposes: one field for writing the theory, one graded
-generator space per species for grading its algebra. When the weights do agree the two
-presentations of the generators are the same, by
-`GaugeFieldData.fermionGeneratorsEquiv`.
+The connection generator space is not among them: it is the existing
+`GaugeBoson.JetComponentSpace 𝔤`, fixed by the gauge context alone.
 
 The algebra built on the three generator spaces, `GaugeFieldData.LocalFieldAlgebra`, and
 its mapping-out universal property are in
-`Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra`, which imports this file. The
-split is one of subject matter: here the datum and the spaces it determines, there the
-algebra of local expressions on them.
+`Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra`. The split is one of subject
+matter: here the datum and the spaces it determines, there the algebra of local expressions
+on them.
 
 It is field and transformation data before a Lagrangian, so packaging the species'
 representations separately certifies no physical compatibility between them, and no
 invariance is claimed here.
 
-The generator spaces carry derivative symbols of every order and are infinite-dimensional
-however few species there are. Finiteness of the species types and of the value spaces is
-not inherited by them.
-
 ## ii. Key results
 
 - `GaugeFieldData` : the matter content of a gauge theory over a gauge context.
-- `GaugeFieldData.FermionGenerators`, `GaugeFieldData.BosonGenerators` : the species
-  generator spaces.
-- `GaugeFieldData.inclFermion`, `GaugeFieldData.inclBoson` : the inclusion of the
-  component space of one species.
-- `GaugeFieldData.repLorentzFermion`, `GaugeFieldData.repJetFermion` : the Lorentz and jet
-  gauge actions assembled on the generator spaces.
-- `GaugeFieldData.massWeightScaleFermion` : the mass-weight scaling carrying the weight of
-  each species.
+- `GaugeFieldData.FermionValue`, `GaugeFieldData.BosonValue` : the value space of a
+  species.
 
 ## iii. Table of contents
 
 - A. The gauge context and the field datum
-- B. The generator spaces
-  - B.1. The species generator spaces
-  - B.2. The connection generator space
-- C. The transformation data on the generator spaces
-  - C.1. The Lorentz action
-  - C.2. The jet gauge action
-  - C.3. The mass weights
+- B. The value spaces of the species
 
 -/
 
@@ -141,9 +121,23 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-!
 
-## B. The generator spaces
+## B. The value spaces of the species
 
-### B.1. The species generator spaces
+The datum records one matter field per species, so the value space of a species is simply
+the value space of that matter field. Everything built on those value spaces is in the
+sibling files: the fermionic and bosonic generator spaces, with the Lorentz action, the jet
+gauge action and the mass-weight scaling on them, are in
+`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionGenerators` and
+`...BosonGenerators`, which also identify each with the component space of a single matter
+field; the value spaces themselves assemble into the `FermionModule` and `BosonModule` of
+the remaining siblings.
+
+The connection is not a species. It is fixed by the gauge context alone, and its component
+functions `∂_s A_μ^φ` are the existing `GaugeBoson.JetComponentSpace 𝔤`, used without a new
+name. They are real, a connection being a real object, which is why the third generator
+family of the local field algebra is a real vector space, complexified once inside the
+algebra. Finite dimensionality of `𝔤` is what makes `Module.Dual ℝ 𝔤` the span of the
+adjoint components, so that these generators really are the `A_μ^a`.
 
 -/
 
@@ -152,179 +146,5 @@ abbrev FermionValue (i : T.FermionSpecies) : Type := (T.fermion i).V
 
 /-- The value space of a bosonic species. -/
 abbrev BosonValue (j : T.BosonSpecies) : Type := (T.boson j).V
-
-/-- The fermionic generator space of the datum, holding the component functions `∂_s ψ_α`
-  and their conjugates of every fermionic species at once, as a direct sum over the
-  species. The direct sum, rather than a single component space on the product of the
-  value spaces, is what lets the species carry different mass weights. -/
-abbrev FermionGenerators : Type := SpeciesComponentSpace T.FermionValue
-
-/-- The bosonic generator space of the datum, assembled from the bosonic species in
-  the same way. -/
-abbrev BosonGenerators : Type := SpeciesComponentSpace T.BosonValue
-
-/-- The inclusion of the component space of one fermionic species into the fermionic
-  generator space. -/
-abbrev inclFermion (i : T.FermionSpecies) :
-    JetComponentSpace (T.FermionValue i) →ₗ[ℂ] T.FermionGenerators :=
-  SpeciesComponentSpace.incl T.FermionValue i
-
-/-- The inclusion of the component space of one bosonic species into the bosonic generator
-  space. -/
-abbrev inclBoson (j : T.BosonSpecies) :
-    JetComponentSpace (T.BosonValue j) →ₗ[ℂ] T.BosonGenerators :=
-  SpeciesComponentSpace.incl T.BosonValue j
-
-/-!
-
-### B.2. The connection generator space
-
-The connection is not a species. It is fixed by the gauge context alone, and its component
-functions `∂_s A_μ^φ` are the existing `GaugeBoson.JetComponentSpace 𝔤`, used below
-without a new name. They are real, a connection being a real object, which is why the
-third generator family of the local field algebra is a real vector space, complexified
-once inside the algebra. Finite dimensionality of `𝔤` is what makes `Module.Dual ℝ 𝔤` the
-span of the adjoint components, so that these generators really are the `A_μ^a`.
-
-## C. The transformation data on the generator spaces
-
-The datum supplies, per species, a Lorentz representation and a fibrewise action of the
-gauge jets. Both land on the generator spaces species by species, so both are assembled by
-`SpeciesComponentSpace.rep`. Nothing here asserts that the two actions commute, since
-Lorentz transformations act on nonconstant gauge jets, and nothing extends them to the
-algebra `J(T)`.
-
-### C.1. The Lorentz action
-
--/
-
-/-- The Lorentz action on the fermionic generator space, acting on each species through
-  the Lorentz representation of its matter field. -/
-noncomputable def repLorentzFermion : Representation ℂ SL(2,ℂ) T.FermionGenerators :=
-  SpeciesComponentSpace.rep T.FermionValue fun i =>
-    JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz
-
-/-- The Lorentz action on the bosonic generator space. -/
-noncomputable def repLorentzBoson : Representation ℂ SL(2,ℂ) T.BosonGenerators :=
-  SpeciesComponentSpace.rep T.BosonValue fun j =>
-    JetComponentSpace.repLorentzGroup (T.boson j).repLorentz
-
-variable {T}
-
-@[simp]
-lemma repLorentzFermion_inclFermion (Λ : SL(2,ℂ)) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
-    T.repLorentzFermion Λ (T.inclFermion i x)
-      = T.inclFermion i (JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz Λ x) :=
-  SpeciesComponentSpace.rep_incl _ Λ i x
-
-@[simp]
-lemma repLorentzBoson_inclBoson (Λ : SL(2,ℂ)) (j : T.BosonSpecies)
-    (y : JetComponentSpace (T.BosonValue j)) :
-    T.repLorentzBoson Λ (T.inclBoson j y)
-      = T.inclBoson j (JetComponentSpace.repLorentzGroup (T.boson j).repLorentz Λ y) :=
-  SpeciesComponentSpace.rep_incl _ Λ j y
-
-variable (T)
-
-/-!
-
-### C.2. The jet gauge action
-
--/
-
-/-- The action of the jet gauge group on the fermionic generator space, acting on each
-  species through the fibrewise jet action of its matter field. Both the fibrewise
-  hypothesis and the finite dimensionality of the value space that
-  `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
-noncomputable def repJetFermion : Representation ℂ G T.FermionGenerators :=
-  SpeciesComponentSpace.rep T.FermionValue fun i =>
-    JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul
-
-/-- The action of the jet gauge group on the bosonic generator space. -/
-noncomputable def repJetBoson : Representation ℂ G T.BosonGenerators :=
-  SpeciesComponentSpace.rep T.BosonValue fun j =>
-    JetComponentSpace.repJet (T.boson j).repJet (T.boson j).repJet_smul
-
-variable {T}
-
-@[simp]
-lemma repJetFermion_inclFermion (U : G) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
-    T.repJetFermion U (T.inclFermion i x)
-      = T.inclFermion i
-        (JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul U x) :=
-  SpeciesComponentSpace.rep_incl _ U i x
-
-@[simp]
-lemma repJetBoson_inclBoson (U : G) (j : T.BosonSpecies)
-    (y : JetComponentSpace (T.BosonValue j)) :
-    T.repJetBoson U (T.inclBoson j y)
-      = T.inclBoson j
-        (JetComponentSpace.repJet (T.boson j).repJet (T.boson j).repJet_smul U y) :=
-  SpeciesComponentSpace.rep_incl _ U j y
-
-variable (T)
-
-/-!
-
-### C.3. The mass weights
-
--/
-
-/-- The mass-weight scaling on the fermionic generator space, with the weight of each
-  species taken from its matter field. Species of different weight scale differently,
-  which is the property the direct-sum generator space was chosen to have. -/
-noncomputable def massWeightScaleFermion (c : ℂ) :
-    T.FermionGenerators →ₗ[ℂ] T.FermionGenerators :=
-  SpeciesComponentSpace.massWeightScale T.FermionValue
-    (fun i => (T.fermion i).massWeight) c
-
-/-- The mass-weight scaling on the bosonic generator space. -/
-noncomputable def massWeightScaleBoson (c : ℂ) :
-    T.BosonGenerators →ₗ[ℂ] T.BosonGenerators :=
-  SpeciesComponentSpace.massWeightScale T.BosonValue (fun j => (T.boson j).massWeight) c
-
-variable {T}
-
-/-- On the summand of a fermionic species the scaling is that species' own mass-weight
-  scaling, with the weight recorded in its matter field. -/
-@[simp]
-lemma massWeightScaleFermion_inclFermion (c : ℂ) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
-    T.massWeightScaleFermion c (T.inclFermion i x)
-      = T.inclFermion i
-        (JetComponentSpace.massWeightScale (T.fermion i).massWeight c x) :=
-  SpeciesComponentSpace.massWeightScale_incl _ c i x
-
-/-- On the summand of a bosonic species the scaling is that species' own mass-weight
-  scaling. -/
-@[simp]
-lemma massWeightScaleBoson_inclBoson (c : ℂ) (j : T.BosonSpecies)
-    (y : JetComponentSpace (T.BosonValue j)) :
-    T.massWeightScaleBoson c (T.inclBoson j y)
-      = T.inclBoson j (JetComponentSpace.massWeightScale (T.boson j).massWeight c y) :=
-  SpeciesComponentSpace.massWeightScale_incl _ c j y
-
-/-- A component function `∂_s ψ_α` of a fermionic species scales by `c ^ (w + 2 |s|)`,
-  where `w` is the mass weight of that species. There is one factor of `c` per unit of
-  mass dimension of the field and two per derivative. -/
-lemma massWeightScaleFermion_inclFermion_basis_tmul (c : ℂ) (i : T.FermionSpecies)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.FermionValue i)) :
-    T.massWeightScaleFermion c (T.inclFermion i
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)))
-      = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)) :=
-  SpeciesComponentSpace.massWeightScale_incl_basis_tmul _ c i s φ
-
-/-- A component function `∂_s φ_α` of a bosonic species scales by `c ^ (w + 2 |s|)`
-  with that species' own weight `w`. -/
-lemma massWeightScaleBoson_inclBoson_basis_tmul (c : ℂ) (j : T.BosonSpecies)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.BosonValue j)) :
-    T.massWeightScaleBoson c (T.inclBoson j
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue j)))
-      = c ^ ((T.boson j).massWeight + 2 * Multiset.card s) • T.inclBoson j
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue j)) :=
-  SpeciesComponentSpace.massWeightScale_incl_basis_tmul _ c j s φ
 
 end GaugeFieldData

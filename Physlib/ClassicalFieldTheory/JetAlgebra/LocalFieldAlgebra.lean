@@ -5,11 +5,9 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonGenerators
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionGenerators
 public import Physlib.Mathematics.AlgebraGeneration
-public import Physlib.Mathematics.SymmetricAlgebra
-public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
-public import Mathlib.LinearAlgebra.Complex.Module
 /-!
 # The local field algebra of a gauge theory and its universal property
 

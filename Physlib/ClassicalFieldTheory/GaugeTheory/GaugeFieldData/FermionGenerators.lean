@@ -7,56 +7,71 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMatterField
 /-!
-# The fermionic generators as the components of one fermion field
+# The fermionic generators of a gauge theory
 
 ## i. Overview
 
-`GaugeFieldData.FermionGenerators` is built species by species, as the direct sum
-`⨁ i, JetComponentSpace (T.fermion i).V` of the component spaces of the several fermionic
-multiplets. A physicist writing the Standard Model does not do this. They write one fermion
-field `ψ`, valued in the whole fermionic module, and take its component functions
-`∂_s ψ_α` — a single `JetComponentSpace`, indexed by a target index `α` that runs over all
-the multiplets at once.
+The fermionic species of a `GaugeFieldData` each carry a component space, the span of the
+symbols `∂_s ψ_α` and their conjugates for that multiplet. This file assembles them into
+the **fermionic generator space** of the theory,
 
-This file shows that the two agree. When the fermionic species share a mass weight — the
-condition under which `GaugeFieldData.fermionMatterField` exists, and the condition every
-theory of Weyl fermions satisfies — there is an isomorphism
+`T.FermionGenerators = ⨁ i, JetComponentSpace (T.fermion i).V`,
+
+together with the transformation data the species supply: the Lorentz action, the action of
+the jets of gauge transformations, and the mass-weight scaling, each assembled species by
+species. These are the fermionic generators on which
+`GaugeFieldData.LocalFieldAlgebra` builds its exterior algebra.
+
+The direct sum, rather than a single component space on the product of the value spaces, is
+what lets the species carry different mass weights: the scaling of one component space is
+natural in the value space and so cannot tell the species apart.
+
+Section C shows what happens when the species *do* share a weight, which is the case in
+every theory of Weyl fermions and in particular in the Standard Model. A physicist does not
+write fifteen multiplets with their own component spaces; they write one fermion field `ψ`
+valued in the whole fermionic module and take its component functions `∂_s ψ_α`, a single
+`JetComponentSpace` whose target index `α` runs over everything. The two agree: there is an
+isomorphism
 
 `T.FermionGenerators ≃ₗ[ℂ] JetComponentSpace T.FermionModule`,
 
-and under it the summand of a species is the pullback along the projection onto that
-species, `fermionGeneratorsEquiv_inclFermion`. So the generators of one multiplet sit
-inside the generators of the whole fermion field exactly as its target components sit
-inside the fermionic module, which is what a physicist means by writing `ψ_α` with `α`
-ranging over everything.
-
-The isomorphism is not merely one of vector spaces: it intertwines the Lorentz action and
-the mass-weight scaling with those of the single matter field
-`T.fermionMatterField w h`. The mass weight is where the shared weight `w` is needed and
-where the species-by-species construction earns its keep — a family of *unequal* weights
-has no single `JetComponentSpace.massWeightScale` to be compared with, which is precisely
-the reason `SpeciesComponentSpace` was built as a direct sum in the first place. With one
-weight that obstruction is gone and the two descriptions coincide.
+under which the summand of a species is the pullback along the projection onto that
+species, `fermionGeneratorsEquiv_inclFermion`. So the generators of one multiplet sit inside
+the generators of the whole fermion field exactly as its target components sit inside the
+fermionic module. The isomorphism is not merely one of vector spaces: it intertwines the
+Lorentz action and the mass-weight scaling with those of the single matter field
+`T.fermionMatterField w h`, the shared weight `w` being needed for the second of these and
+for nothing else.
 
 The underlying identification is `JetComponentSpace.piEquiv`, composed with the
 identification of a direct sum over a finite index with the product.
 
 ## ii. Key results
 
-- `GaugeFieldData.fermionGeneratorsEquiv` : the fermionic generator space is the component
-  space of the fermionic matter field.
+- `GaugeFieldData.FermionGenerators` : the fermionic generator space.
+- `GaugeFieldData.inclFermion` : the inclusion of the component space of one species.
+- `GaugeFieldData.repLorentzFermion`, `GaugeFieldData.repJetFermion` : the Lorentz and jet
+  gauge actions assembled on it.
+- `GaugeFieldData.massWeightScaleFermion` : the mass-weight scaling carrying the weight of
+  each species.
+- `GaugeFieldData.fermionGeneratorsEquiv` : with one shared weight, the generator space is
+  the component space of the fermionic matter field.
 - `GaugeFieldData.fermionGeneratorsEquiv_inclFermion` : a species sits inside it as the
   pullback along the projection onto that species.
-- `GaugeFieldData.fermionGeneratorsEquiv_repLorentzFermion` : the identification is
-  Lorentz-equivariant.
-- `GaugeFieldData.fermionGeneratorsEquiv_massWeightScaleFermion` : it carries the
-  species-wise mass-weight scaling to the single scaling of weight `w`.
+- `GaugeFieldData.fermionGeneratorsEquiv_repLorentzFermion`,
+  `GaugeFieldData.fermionGeneratorsEquiv_massWeightScaleFermion` : the identification
+  carries the Lorentz action and the mass-weight scaling across.
 
 ## iii. Table of contents
 
-- A. The fermionic generators as one component space
-  - A.1. The species as pullbacks
-  - A.2. The transformation data
+- A. The fermionic generator space
+- B. The transformation data on the generator space
+  - B.1. The Lorentz action
+  - B.2. The jet gauge action
+  - B.3. The mass weights
+- C. The fermionic generators as one component space
+  - C.1. The species as pullbacks
+  - C.2. The identification of the transformation data
 
 -/
 
@@ -72,7 +87,122 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-!
 
-## A. The fermionic generators as one component space
+## A. The fermionic generator space
+
+-/
+
+/-- The fermionic generator space of the datum, holding the component functions `∂_s ψ_α`
+  and their conjugates of every fermionic species at once, as a direct sum over the species.
+  The direct sum, rather than a single component space on the product of the value spaces,
+  is what lets the species carry different mass weights; when they do not, section C below
+  identifies the two. -/
+abbrev FermionGenerators : Type := SpeciesComponentSpace T.FermionValue
+
+/-- The inclusion of the component space of one fermionic species into the fermionic generator
+  space. -/
+abbrev inclFermion (i : T.FermionSpecies) :
+    JetComponentSpace (T.FermionValue i) →ₗ[ℂ] T.FermionGenerators :=
+  SpeciesComponentSpace.incl T.FermionValue i
+
+/-!
+
+## B. The transformation data on the generator space
+
+The datum supplies, per species, a Lorentz representation and a fibrewise action of the
+gauge jets. Both land on the generator space species by species, so both are assembled by
+`SpeciesComponentSpace.rep`. Nothing here asserts that the two actions commute, since
+Lorentz transformations act on nonconstant gauge jets, and nothing extends them to the
+algebra `J(T)`.
+
+### B.1. The Lorentz action
+
+-/
+
+/-- The Lorentz action on the fermionic generator space, acting on each species through the
+  Lorentz representation of its matter field. -/
+noncomputable def repLorentzFermion : Representation ℂ SL(2,ℂ) T.FermionGenerators :=
+  SpeciesComponentSpace.rep T.FermionValue fun i =>
+    JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz
+
+variable {T}
+
+@[simp]
+lemma repLorentzFermion_inclFermion (Λ : SL(2,ℂ)) (i : T.FermionSpecies)
+    (x : JetComponentSpace (T.FermionValue i)) :
+    T.repLorentzFermion Λ (T.inclFermion i x)
+      = T.inclFermion i (JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz Λ x) :=
+  SpeciesComponentSpace.rep_incl _ Λ i x
+
+variable (T)
+
+/-!
+
+### B.2. The jet gauge action
+
+-/
+
+/-- The action of the jet gauge group on the fermionic generator space, acting on each
+  species through the fibrewise jet action of its matter field. Both the fibrewise
+  hypothesis and the finite dimensionality of the value space that
+  `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
+noncomputable def repJetFermion : Representation ℂ G T.FermionGenerators :=
+  SpeciesComponentSpace.rep T.FermionValue fun i =>
+    JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul
+
+variable {T}
+
+@[simp]
+lemma repJetFermion_inclFermion (U : G) (i : T.FermionSpecies)
+    (x : JetComponentSpace (T.FermionValue i)) :
+    T.repJetFermion U (T.inclFermion i x)
+      = T.inclFermion i
+        (JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul U x) :=
+  SpeciesComponentSpace.rep_incl _ U i x
+
+variable (T)
+
+/-!
+
+### B.3. The mass weights
+
+-/
+
+/-- The mass-weight scaling on the fermionic generator space, with the weight of each species
+  taken from its matter field. Species of different weight scale differently, which is the
+  property the direct-sum generator space was chosen to have. -/
+noncomputable def massWeightScaleFermion (c : ℂ) :
+    T.FermionGenerators →ₗ[ℂ] T.FermionGenerators :=
+  SpeciesComponentSpace.massWeightScale T.FermionValue
+    (fun i => (T.fermion i).massWeight) c
+
+variable {T}
+
+/-- On the summand of a species the scaling is that species' own mass-weight scaling, with
+  the weight recorded in its matter field. -/
+@[simp]
+lemma massWeightScaleFermion_inclFermion (c : ℂ) (i : T.FermionSpecies)
+    (x : JetComponentSpace (T.FermionValue i)) :
+    T.massWeightScaleFermion c (T.inclFermion i x)
+      = T.inclFermion i
+        (JetComponentSpace.massWeightScale (T.fermion i).massWeight c x) :=
+  SpeciesComponentSpace.massWeightScale_incl _ c i x
+
+/-- A component function `∂_s ψ_α` of a species scales by `c ^ (w + 2 |s|)`, where `w` is
+  the mass weight of that species. There is one factor of `c` per unit of mass dimension of
+  the field and two per derivative. -/
+lemma massWeightScaleFermion_inclFermion_basis_tmul (c : ℂ) (i : T.FermionSpecies)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.FermionValue i)) :
+    T.massWeightScaleFermion c (T.inclFermion i
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)))
+      = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)) :=
+  SpeciesComponentSpace.massWeightScale_incl_basis_tmul _ c i s φ
+
+variable (T)
+
+/-!
+
+## C. The fermionic generators as one component space
 
 -/
 
@@ -89,7 +219,7 @@ noncomputable def fermionGeneratorsEquiv :
 
 /-!
 
-### A.1. The species as pullbacks
+### C.1. The species as pullbacks
 
 -/
 
@@ -128,7 +258,7 @@ lemma fermionGenerators_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
 
 /-!
 
-### A.2. The transformation data
+### C.2. The identification of the transformation data
 
 -/
 
