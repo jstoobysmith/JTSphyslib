@@ -67,7 +67,7 @@ namespace StandardModel
 /-- The fifteen fermion species of the Standard Model: each of the five fermion types in
   each of the three generations, the generation `i : Fin 3` carried by the constructor.
   Two generations of one type share a representation package but are distinct species. -/
-inductive FermionType (Extention : Type) where
+inductive FermionType where
   /-- The lepton doublet of generation `i`, `(1, 2)_{-3}`. -/
   | leptonDoublet (i : Fin 3) : FermionType
   /-- The charged-lepton singlet of generation `i`, `(1, 1)_{-6}`. -/
@@ -78,8 +78,7 @@ inductive FermionType (Extention : Type) where
   | upSinglet (i : Fin 3) : FermionType
   /-- The down-type quark singlet of generation `i`, `(3, 1)_{-2}`. -/
   | downSinglet (i : Fin 3) : FermionType
-  /-- Fermionic extensions of the standard model. -/
-  | extention (e : Extention) : FermionType
+
 deriving DecidableEq, Fintype
 
 namespace FermionType

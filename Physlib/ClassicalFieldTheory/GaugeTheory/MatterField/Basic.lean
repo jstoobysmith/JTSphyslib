@@ -152,4 +152,5 @@ lemma massWeightScale_ι (c : ℂ) (x : JetComponentSpace M.V) :
       FieldAlgebra.ι A (JetComponentSpace.massWeightScale M.massWeight c x) :=
   FieldAlgebra.massWeightScale_ι _ c x
 
+
 end MatterField

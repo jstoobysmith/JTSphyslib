@@ -9,6 +9,7 @@ module
 public import Physlib.Relativity.JetRing.Basic
 public import Physlib.Relativity.DerivAlgebra
 public import Mathlib.RingTheory.TensorProduct.Basic
+public import Mathlib.LinearAlgebra.TensorProduct.Prod
 public import Mathlib.LinearAlgebra.Basis.Defs
 public import Mathlib.LinearAlgebra.Dimension.Free
 /-!
@@ -125,3 +126,74 @@ lemma jetEval_tmul (f : JetRing) (v : V) :
 @[simp]
 lemma jetEval_jetOfConstant (v : V) : jetEval (jetOfConstant v) = v := by
   simp
+
+/-!
+
+## The jets of a product of value spaces
+
+A field valued in `V × W` is a pair of fields, one valued in `V` and one in `W`, and the
+identification `jetProdEquiv` of its jets with the pair of their jets intertwines every
+piece of the jet toolkit: the inclusion of constants, the formal derivative and the
+base-point evaluation all act componentwise.
+
+-/
+
+section Prod
+
+variable {W : Type} [AddCommGroup W] [Module ℂ W]
+
+/-- **The jets of a product are the product of the jets**: `JetRing ⊗ (V × W)` splits as
+  `(JetRing ⊗ V) × (JetRing ⊗ W)`, the jet-ring factor being shared. -/
+noncomputable abbrev jetProdEquiv :
+    JetRing ⊗[ℂ] (V × W) ≃ₗ[ℂ] (JetRing ⊗[ℂ] V) × (JetRing ⊗[ℂ] W) :=
+  TensorProduct.prodRight ℂ ℂ JetRing V W
+
+@[simp]
+lemma jetProdEquiv_jetOfConstant (v : V) (w : W) :
+    jetProdEquiv (jetOfConstant (v, w)) = (jetOfConstant v, jetOfConstant w) := rfl
+
+lemma jetProdEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (V × W)) :
+    jetProdEquiv (jetDeriv μ z) =
+      (jetDeriv μ (jetProdEquiv z).1, jetDeriv μ (jetProdEquiv z).2) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp [Prod.ext_iff]
+  | tmul f p => rw [jetDeriv_tmul]; rfl
+  | add a b ha hb =>
+      simp only [map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
+
+lemma jetProdEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
+    (z : JetRing ⊗[ℂ] (V × W)) :
+    jetProdEquiv (jetIteratedDeriv s z) =
+      (jetIteratedDeriv s (jetProdEquiv z).1, jetIteratedDeriv s (jetProdEquiv z).2) := by
+  induction s using Multiset.induction_on generalizing z with
+  | empty => rw [jetIteratedDeriv_zero, jetIteratedDeriv_zero, jetIteratedDeriv_zero]; rfl
+  | cons μ t ih =>
+      rw [jetIteratedDeriv_cons, LinearMap.comp_apply, jetProdEquiv_jetDeriv, ih,
+        jetIteratedDeriv_cons, jetIteratedDeriv_cons, LinearMap.comp_apply,
+        LinearMap.comp_apply]
+
+/-- The identification is `JetRing`-linear: multiplication by a scalar jet acts on both
+  components. -/
+lemma jetProdEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] (V × W)) :
+    jetProdEquiv (χ • z) = (χ • (jetProdEquiv z).1, χ • (jetProdEquiv z).2) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp [Prod.ext_iff]
+  | tmul f p => rw [TensorProduct.smul_tmul', smul_eq_mul]; rfl
+  | add a b ha hb =>
+      simp only [smul_add, map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
+
+lemma jetProdEquiv_symm_smul (χ : JetRing) (a : JetRing ⊗[ℂ] V) (b : JetRing ⊗[ℂ] W) :
+    (jetProdEquiv (V := V) (W := W)).symm (χ • a, χ • b)
+      = χ • (jetProdEquiv (V := V) (W := W)).symm (a, b) := by
+  refine (jetProdEquiv (V := V) (W := W)).injective ?_
+  rw [LinearEquiv.apply_symm_apply, jetProdEquiv_smul, LinearEquiv.apply_symm_apply]
+
+lemma jetEval_prod (z : JetRing ⊗[ℂ] (V × W)) :
+    jetEval z = (jetEval (jetProdEquiv z).1, jetEval (jetProdEquiv z).2) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp [Prod.ext_iff]
+  | tmul f p => rw [jetEval_tmul]; rfl
+  | add a b ha hb =>
+      simp only [map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
+
+end Prod

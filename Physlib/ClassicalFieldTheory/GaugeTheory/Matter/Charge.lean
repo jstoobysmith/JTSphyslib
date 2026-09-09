@@ -21,7 +21,8 @@ a mass weight into a matter field for the jet gauge group `unitary JetRing` of `
 
 - `MatterField.chargeRep` : the charge-`n` action of `U(1)` jets on the jets of a field.
 - `MatterField.chargeRep_smul` : the action is fibrewise.
-- `MatterField.charged` : the matter field of charge `n`.
+- `MatterField.charged` : the matter field of charge `n`, over a supplied
+  infinitesimal action of the gauge algebra.
 
 ## iii. Table of contents
 
@@ -100,24 +101,34 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
 
 /-- **The charged matter field**: a field with values in `V`, Lorentz representation
   `repLorentz`, electric charge `n` and mass weight `w`, as a matter field for the jets of
-  `U(1)`, in any gauge context `jets` whose jet group is `unitary JetRing`. None of the
-  data below depends on `jets` beyond that, so it is supplied polymorphically. -/
+  `U(1)`, in any gauge context `jets` whose jet group is `unitary JetRing`.
+
+  The infinitesimal action `act` of the gauge algebra is supplied, not constructed. For a
+  charge-`n` field it is `c ↦ (i n φ(c)) • id` for the functional `φ` reading off the
+  `u(1)` component of `c`, and no such functional is available: `jets` relates the gauge
+  algebra `𝔤` to the jets only through `evalLie` and `maurerCartan`, neither of which
+  identifies a `u(1)` direction in an arbitrary `𝔤`. The rest of the data does not depend
+  on `jets` beyond its jet group, so it is supplied polymorphically. -/
 noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
     (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
-    (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
+    (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
+    (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
     MatterField jets where
   V := V
   repLorentz := repLorentz
   repJet := chargeRep n V
+  repAlgebra := act
   repJet_smul := chargeRep_smul n
+  repAlgebra_isInfinitesimalAction := hact
   massWeight := w
 
 @[simp]
 lemma charged_V {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
     (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
-    (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (w : ℕ) :
-    (charged jets repLorentz n w).V = V := rfl
+    (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
+    (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
+    (charged jets repLorentz n act hact w).V = V := rfl
 
 end MatterField
