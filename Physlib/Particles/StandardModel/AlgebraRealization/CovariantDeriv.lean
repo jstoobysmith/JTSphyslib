@@ -21,7 +21,7 @@ a gauge jet acts through its base point alone, and shows that nothing is lost in
 exchange: the two sets of generators generate the same algebra.
 
 Sections A to E are the Lorentz machinery the towers need, stated for an arbitrary
-`IsGaugeField`. A Lorentz transformation mixes each derivative slot of a symbol through a
+`GaugeAlgebraRealization`. A Lorentz transformation mixes each derivative slot of a symbol through a
 column of the Lorentz matrix; the bare symbols are indexed by multisets of directions, so
 that mixing is written as an operator `lorentzMix` on multiset-indexed families, a morphism
 for the Leibniz convolution out of which the correction terms of a covariant derivative are
@@ -45,9 +45,9 @@ the theory consumes.
 - `StandardModel.lorentzMix` : the Lorentz mixing operator on multiset-indexed families of
   derivative symbols, a morphism for the Leibniz convolution (`lorentzMix_derivConv`).
 - `StandardModel.repLorentz_tower` : the Lorentz law of an abstract covariant tower.
-- `IsGaugeField.isLorentzCovDerivTransforms_covDerivIter` and
-  `IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength` : the Lorentz laws of the
-  covariant matter towers and of the covariant field-strength tower.
+- `GaugeAlgebraRealization.isLorentzCovDerivTransforms_covDerivIter` and
+  `GaugeAlgebraRealization.repLorentz_iteratedCovDerivAdjoint_fieldStrength` : the Lorentz
+  laws of the covariant matter towers and of the covariant field-strength tower.
 - `AlgebraRealization.fieldAlgebra` : the algebra the fields generate.
 - `AlgebraRealization.covDerivH`, `AlgebraRealization.covDerivFieldStrength` and their
   companions : the covariant derivative towers.
@@ -411,9 +411,9 @@ conjugate families.
 
 -/
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
-open _root_.IsGaugeField
+open _root_.GaugeAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V]
@@ -422,6 +422,7 @@ variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) →
 variable {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ JetGaugeGroupI B}
+variable (h : GaugeAlgebraRealization localGaugeData B repGauge repLorentz)
 
 /-- Rotating a triple sum so that the innermost index comes first. -/
 lemma sum_comm₃ {α β γ M : Type*} [Fintype α] [Fintype β] [Fintype γ] [AddCommMonoid M]
@@ -450,11 +451,11 @@ lemma repLorentz_eq_lorentzMix (Λ : SL(2,ℂ)) (f g : Multiset (Fin 1 ⊕ Fin 3
   exact Finset.sum_congr rfl fun p _ => by rw [add_zero]
 
 /-- The Lorentz law of the gauge-field symbols, in the multiset form. -/
-lemma repLorentz_apply_mix (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ))
+lemma repLorentz_apply_mix (Λ : SL(2,ℂ))
     (x : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (χ : Module.Dual ℝ GaugeAlgebra) :
-    repLorentz Λ (A x μ χ) = lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • A t a χ) x 0 :=
-  repLorentz_eq_lorentzMix Λ (fun x => A x μ χ) (fun t => ∑ a, L[Λ] a μ • A t a χ)
-    (fun n l => hA.lorentz_apply Λ n l μ χ) x
+    repLorentz Λ (h.A x μ χ) = lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • h.A t a χ) x 0 :=
+  repLorentz_eq_lorentzMix Λ (fun x => h.A x μ χ) (fun t => ∑ a, L[Λ] a μ • h.A t a χ)
+    (fun n l => h.lorentz_apply Λ n l μ χ) x
 
 omit [FiniteDimensional ℂ V] in
 /-- The Lorentz law of a family of derivative symbols, in the multiset form. -/
@@ -469,20 +470,19 @@ lemma isLorentzDerivTransforms_mix {rep : Representation ℂ SL(2,ℂ) V}
 /-- The Lorentz law of a scalar combination of convolutions against the gauge field: the
   direction of the gauge field mixes by its own column, the derivative slots by
   `lorentzMix`, and the right-hand families are replaced by their transforms. -/
-lemma repLorentz_sum_derivConv
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+lemma repLorentz_sum_derivConv (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     {ι κ : Type} [Fintype ι] [Fintype κ] (bg : Module.Basis ι ℝ GaugeAlgebra) (coef : ι → κ → ℂ)
     (g g' : κ → Multiset (Fin 1 ⊕ Fin 3) → B)
     (hg : ∀ k y, repLorentz Λ (g k y) = lorentzMix Λ (g' k) y 0) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    repLorentz Λ (∑ j, ∑ k, coef j k • derivConv (fun x => A x ρ (bg.coord j)) (g k) s) =
+    repLorentz Λ (∑ j, ∑ k, coef j k • derivConv (fun x => h.A x ρ (bg.coord j)) (g k) s) =
       ∑ a, L[Λ] a ρ • lorentzMix Λ
-        (fun t => ∑ j, ∑ k, coef j k • derivConv (fun x => A x a (bg.coord j)) (g' k) t) s 0 := by
-  have h1 : ∀ j k, repLorentz Λ (derivConv (fun x => A x ρ (bg.coord j)) (g k) s) =
-      ∑ a, L[Λ] a ρ • lorentzMix Λ (derivConv (fun x => A x a (bg.coord j)) (g' k)) s 0 := by
+        (fun t => ∑ j, ∑ k, coef j k • derivConv (fun x => h.A x a (bg.coord j)) (g' k) t) s 0 := by
+  have h1 : ∀ j k, repLorentz Λ (derivConv (fun x => h.A x ρ (bg.coord j)) (g k) s) =
+      ∑ a, L[Λ] a ρ • lorentzMix Λ (derivConv (fun x => h.A x a (bg.coord j)) (g' k)) s 0 := by
     intro j k
-    rw [repLorentz_derivConv hmul Λ _ (fun t => ∑ a, L[Λ] a ρ • A t a (bg.coord j)) _ (g' k)
-      (fun x => repLorentz_apply_mix hA Λ x ρ _) (hg k)]
+    rw [repLorentz_derivConv h.repLorentz_mul Λ _
+      (fun t => ∑ a, L[Λ] a ρ • h.A t a (bg.coord j)) _ (g' k)
+      (fun x => repLorentz_apply_mix h Λ x ρ _) (hg k)]
     simp only [← lorentzMix_smul_fam, ← lorentzMix_sum_fam]
     exact congrArg (fun G => lorentzMix Λ G s 0) (funext fun r => derivConv_sum_left _ _ _ r)
   simp only [map_sum, map_smul, h1, lorentzMix_sum_fam, lorentzMix_smul_fam, Finset.smul_sum,
@@ -524,19 +524,17 @@ lemma actionFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c :
 /-- The Lorentz law of the derived action family: the derivative slots mix, the direction
   of the gauge field mixes by its own column, and the value index is carried by the
   transformed matter family. -/
-lemma repLorentz_actionFamConv
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+lemma repLorentz_actionFamConv (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
-    repLorentz Λ (actionFamConv A act ρ G s φ) =
-      ∑ a, L[Λ] a ρ • lorentzMix Λ (fun t => actionFamConv A act a G' t φ) s 0 := by
+    repLorentz Λ (actionFamConv h.A act ρ G s φ) =
+      ∑ a, L[Λ] a ρ • lorentzMix Λ (fun t => actionFamConv h.A act a G' t φ) s 0 := by
   classical
   set bg := Module.finBasis ℝ GaugeAlgebra
   set bv := Module.finBasis ℂ V
   simp only [actionFamConv_eq_sum bg bv]
-  exact repLorentz_sum_derivConv hmul hA Λ ρ bg (fun j k => φ (act (bg j) (bv k)))
+  exact repLorentz_sum_derivConv h Λ ρ bg (fun j k => φ (act (bg j) (bv k)))
     (fun k y => G y (bv.coord k)) (fun k t => G' t (bv.coord k)) (fun k y => hG y _) s
 
 omit [FiniteDimensional ℂ V] in
@@ -579,19 +577,17 @@ lemma actionFamConv_comp_dual (T : V →ₗ[ℂ] V)
   covariant slots mix by their own columns and the multiset of plain derivative slots
   mixes by `lorentzMix`, while the value index transforms contragrediently. -/
 lemma repLorentz_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A)
     (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hF : IsLorentzDerivTransforms repLorentz rep F) (Λ : SL(2,ℂ))
     (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
-    repLorentz Λ (covDerivIter A act F n l s φ) = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+    repLorentz Λ (covDerivIter h.A act F n l s φ) = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
       (∏ i, L[Λ] (p i) (l i)) •
-        lorentzMix Λ (fun t => covDerivIter A act F n p t (rep.dual Λ φ)) s 0 :=
-  repLorentz_tower Λ (covDerivIter A act F) (covDerivIter A act F) (actionFamConv A act)
+        lorentzMix Λ (fun t => covDerivIter h.A act F n p t (rep.dual Λ φ)) s 0 :=
+  repLorentz_tower Λ (covDerivIter h.A act F) (covDerivIter h.A act F) (actionFamConv h.A act)
     (rep.dual Λ) (fun _ _ _ => rfl) (fun _ _ _ => rfl)
     (fun _ s φ => isLorentzDerivTransforms_mix hF Λ s φ)
-    (fun ρ G G' hG s φ => repLorentz_actionFamConv hmul hA Λ ρ G G' hG s φ)
+    (fun ρ G G' hG s φ => repLorentz_actionFamConv h Λ ρ G G' hG s φ)
     (fun ρ _ _ c G s φ => actionFamConv_sum_fam ρ c G s φ)
     (fun ρ G s φ => actionFamConv_comp_dual (rep Λ⁻¹) (fun c v => hcomm c Λ⁻¹ v) ρ G s φ)
     n l s φ
@@ -601,14 +597,12 @@ lemma repLorentz_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
   the Lorentz law of the gauge field, and the commutation of the infinitesimal gauge
   action with the Lorentz action on the value space. -/
 theorem isLorentzCovDerivTransforms_covDerivIter {rep : Representation ℂ SL(2,ℂ) V}
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A)
     (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
     (hF : IsLorentzDerivTransforms repLorentz rep F) :
-    IsLorentzCovDerivTransforms repLorentz rep (fun {n} l => covDerivIter A act F n l 0) := by
+    IsLorentzCovDerivTransforms repLorentz rep (fun {n} l => covDerivIter h.A act F n l 0) := by
   intro Λ n l φ
-  rw [repLorentz_covDerivIter hmul hA hcomm F hF Λ n l 0 φ]
+  rw [repLorentz_covDerivIter h hcomm F hF Λ n l 0 φ]
   simp only [lorentzMix_zero]
 
 omit [FiniteDimensional ℂ V] in
@@ -624,14 +618,12 @@ lemma actionConj_comm_repConj (rep : Representation ℂ SL(2,ℂ) V)
 /-- The Lorentz law of the covariant tower of a conjugate family, from the commutation of
   the gauge action with the Lorentz action of the unconjugated species. -/
 theorem isLorentzCovDerivTransforms_covDerivIter_conj {rep : Representation ℂ SL(2,ℂ) V}
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A)
     (hcomm : ∀ (c : GaugeAlgebra) (Λ : SL(2,ℂ)) (v : V), act c (rep Λ v) = rep Λ (act c v))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule V) →ₗ[ℂ] B)
     (hF : IsLorentzDerivTransforms repLorentz rep.conj F) :
     IsLorentzCovDerivTransforms repLorentz rep.conj
-      (fun {n} l => covDerivIter A (LocalGaugeData.actionConj act) F n l 0) :=
-  isLorentzCovDerivTransforms_covDerivIter hmul hA (actionConj_comm_repConj rep hcomm) F hF
+      (fun {n} l => covDerivIter h.A (LocalGaugeData.actionConj act) F n l 0) :=
+  isLorentzCovDerivTransforms_covDerivIter h (actionConj_comm_repConj rep hcomm) F hF
 
 /-!
 
@@ -670,35 +662,31 @@ lemma bracketFamConv_sum_fam {ι : Type} [Fintype ι] (ρ : Fin 1 ⊕ Fin 3) (c 
   exact sum_derivConv_sum_fam _ _ _ _ s
 
 /-- The Lorentz law of the derived bracket family. -/
-lemma repLorentz_bracketFamConv
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
+lemma repLorentz_bracketFamConv (Λ : SL(2,ℂ)) (ρ : Fin 1 ⊕ Fin 3)
     (G G' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (hG : ∀ y χ, repLorentz Λ (G y χ) = lorentzMix Λ (fun t => G' t χ) y 0)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
-    repLorentz Λ (bracketFamConv A ρ G s φ) =
-      ∑ a, L[Λ] a ρ • lorentzMix Λ (fun t => bracketFamConv A a G' t φ) s 0 := by
+    repLorentz Λ (bracketFamConv h.A ρ G s φ) =
+      ∑ a, L[Λ] a ρ • lorentzMix Λ (fun t => bracketFamConv h.A a G' t φ) s 0 := by
   set bg := Module.Free.chooseBasis ℝ GaugeAlgebra
   simp only [bracketFamConv_eq_sum]
-  exact repLorentz_sum_derivConv hmul hA Λ ρ bg (fun j k => ((φ ⁅bg j, bg k⁆ : ℝ) : ℂ))
+  exact repLorentz_sum_derivConv h Λ ρ bg (fun j k => ((φ ⁅bg j, bg k⁆ : ℝ) : ℂ))
     (fun k y => G y (bg.coord k)) (fun k t => G' t (bg.coord k)) (fun k y => hG y _) s
 
 /-- The Lorentz law of the iterated covariant derivative in the adjoint: the covariant
   slots mix by their own columns and the seed family is replaced by its transform. -/
-lemma repLorentz_iteratedCovDerivAdjoint
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ))
+lemma repLorentz_iteratedCovDerivAdjoint (Λ : SL(2,ℂ))
     (F F' : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B)
     (hF : ∀ x χ, repLorentz Λ (F x χ) = lorentzMix Λ (fun t => F' t χ) x 0)
     (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (x : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    repLorentz Λ (iteratedCovDerivAdjoint A (List.ofFn l) F x φ) = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+    repLorentz Λ (iteratedCovDerivAdjoint h.A (List.ofFn l) F x φ) = ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
       (∏ i, L[Λ] (p i) (l i)) •
-        lorentzMix Λ (fun t => iteratedCovDerivAdjoint A (List.ofFn p) F' t φ) x 0 := by
-  have := repLorentz_tower Λ (fun n l => iteratedCovDerivAdjoint A (List.ofFn l) F)
-    (fun n l => iteratedCovDerivAdjoint A (List.ofFn l) F') (bracketFamConv A) LinearMap.id
+        lorentzMix Λ (fun t => iteratedCovDerivAdjoint h.A (List.ofFn p) F' t φ) x 0 := by
+  have := repLorentz_tower Λ (fun n l => iteratedCovDerivAdjoint h.A (List.ofFn l) F)
+    (fun n l => iteratedCovDerivAdjoint h.A (List.ofFn l) F') (bracketFamConv h.A) LinearMap.id
     (fun _ l _ => by rw [List.ofFn_succ]; rfl) (fun _ l _ => by rw [List.ofFn_succ]; rfl)
-    (fun _ x φ => hF x φ) (fun ρ G G' hG s φ => repLorentz_bracketFamConv hmul hA Λ ρ G G' hG s φ)
+    (fun _ x φ => hF x φ) (fun ρ G G' hG s φ => repLorentz_bracketFamConv h Λ ρ G G' hG s φ)
     (fun ρ _ _ c G s φ => bracketFamConv_sum_fam ρ c G s φ)
     (fun _ _ _ _ => by simp only [LinearMap.comp_id, LinearMap.id_apply]) n l x φ
   simpa only [LinearMap.id_apply] using this
@@ -730,31 +718,29 @@ lemma iteratedCovDerivAdjoint_neg_fam
 
 /-- The Lorentz law of the field strength: both covector indices mix by their columns,
   and the derivative slots mix by `lorentzMix`. -/
-lemma repLorentz_fieldStrength_mix
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3)
+lemma repLorentz_fieldStrength_mix (Λ : SL(2,ℂ)) (μ ν : Fin 1 ⊕ Fin 3)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
-    repLorentz Λ (fieldStrength A μ ν x φ) =
-      lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • fieldStrength A a b t φ) x 0 := by
+    repLorentz Λ (fieldStrength h.A μ ν x φ) =
+      lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • fieldStrength h.A a b t φ) x 0 := by
   -- the derivative terms
-  have hder : ∀ κ σ, repLorentz Λ (A (κ ::ₘ x) σ φ) =
-      lorentzMix Λ (fun t => ∑ a, L[Λ] a κ • ∑ b, L[Λ] b σ • A (a ::ₘ t) b φ) x 0 := by
+  have hder : ∀ κ σ, repLorentz Λ (h.A (κ ::ₘ x) σ φ) =
+      lorentzMix Λ (fun t => ∑ a, L[Λ] a κ • ∑ b, L[Λ] b σ • h.A (a ::ₘ t) b φ) x 0 := by
     intro κ σ
-    simp only [repLorentz_apply_mix hA Λ (κ ::ₘ x) σ φ, lorentzMix_cons_zero, lorentzMix_sum_fam,
+    simp only [repLorentz_apply_mix h Λ (κ ::ₘ x) σ φ, lorentzMix_cons_zero, lorentzMix_sum_fam,
       lorentzMix_smul_fam]
   -- the commutator term
-  have hcomm : repLorentz Λ (commutatorFam A μ ν x φ) =
-      lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • commutatorFam A a b t φ) x 0 := by
-    have hG : ∀ y χ, repLorentz Λ (A y ν χ) =
-        lorentzMix Λ (fun t => (∑ b, L[Λ] b ν • A t b) χ) y 0 := fun y χ => by
-      simpa only [LinearMap.sum_apply, LinearMap.smul_apply] using repLorentz_apply_mix hA Λ y ν χ
-    rw [show commutatorFam A μ ν x = bracketFamConv A μ (fun r => A r ν) x from rfl,
-      repLorentz_bracketFamConv hmul hA Λ μ _ _ hG x φ]
+  have hcomm : repLorentz Λ (commutatorFam h.A μ ν x φ) =
+      lorentzMix Λ (fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • commutatorFam h.A a b t φ) x 0 := by
+    have hG : ∀ y χ, repLorentz Λ (h.A y ν χ) =
+        lorentzMix Λ (fun t => (∑ b, L[Λ] b ν • h.A t b) χ) y 0 := fun y χ => by
+      simpa only [LinearMap.sum_apply, LinearMap.smul_apply] using repLorentz_apply_mix h Λ y ν χ
+    rw [show commutatorFam h.A μ ν x = bracketFamConv h.A μ (fun r => h.A r ν) x from rfl,
+      repLorentz_bracketFamConv h Λ μ _ _ hG x φ]
     simp only [lorentzMix_sum_fam, lorentzMix_smul_fam, bracketFamConv_sum_fam]
     rfl
   -- the second derivative term, with its two sums exchanged
-  have hswap : (fun t => ∑ a, L[Λ] a ν • ∑ b, L[Λ] b μ • A (a ::ₘ t) b φ) =
-      fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • A (b ::ₘ t) a φ := by
+  have hswap : (fun t => ∑ a, L[Λ] a ν • ∑ b, L[Λ] b μ • h.A (a ::ₘ t) b φ) =
+      fun t => ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • h.A (b ::ₘ t) a φ := by
     funext t
     simp only [Finset.smul_sum, smul_smul]
     rw [Finset.sum_comm]
@@ -768,29 +754,28 @@ lemma repLorentz_fieldStrength_mix
 /-- The Lorentz law of the covariant tower of the field strength: the covariant slots
   mix by their own columns and the two covector indices of the field strength mix by
   theirs. -/
-lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength
-    (hmul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B), repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (hA : IsGaugeField localGaugeData repLorentz repGauge A) (Λ : SL(2,ℂ)) (n : ℕ)
+lemma repLorentz_iteratedCovDerivAdjoint_fieldStrength (Λ : SL(2,ℂ)) (n : ℕ)
     (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    repLorentz Λ (iteratedCovDerivAdjoint A (List.ofFn l) (fieldStrength A μ ν) 0 φ) =
+    repLorentz Λ (iteratedCovDerivAdjoint h.A (List.ofFn l) (fieldStrength h.A μ ν) 0 φ) =
       ∑ p : Fin n → (Fin 1 ⊕ Fin 3), (∏ i, L[Λ] (p i) (l i)) • ∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν •
-        iteratedCovDerivAdjoint A (List.ofFn p) (fieldStrength A a b) 0 φ := by
-  have hF' : ∀ y χ, repLorentz Λ (fieldStrength A μ ν y χ) =
-      lorentzMix Λ (fun t => (∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • fieldStrength A a b t) χ) y 0 :=
+        iteratedCovDerivAdjoint h.A (List.ofFn p) (fieldStrength h.A a b) 0 φ := by
+  have hF' : ∀ y χ, repLorentz Λ (fieldStrength h.A μ ν y χ) =
+      lorentzMix Λ (fun t => (∑ a, L[Λ] a μ • ∑ b, L[Λ] b ν • fieldStrength h.A a b t) χ) y 0 :=
     fun y χ => by simpa only [LinearMap.sum_apply, LinearMap.smul_apply] using
-      repLorentz_fieldStrength_mix hmul hA Λ μ ν y χ
-  rw [repLorentz_iteratedCovDerivAdjoint hmul hA Λ (fieldStrength A μ ν) _ hF' n l 0 φ]
+      repLorentz_fieldStrength_mix h Λ μ ν y χ
+  rw [repLorentz_iteratedCovDerivAdjoint h Λ (fieldStrength h.A μ ν) _ hF' n l 0 φ]
   simp only [lorentzMix_zero, iteratedCovDerivAdjoint_sum_fam]
 
-end IsGaugeField
+end GaugeAlgebraRealization
 
 /-!
 
 ## F. What a covariant tower inherits from its family
 
 Facts about the covariant tower of a single matter family, in the form the field algebra
-consumes. The span lemma `IsGaugeField.adjoin_symbols_eq_adjoin_covDerivIter` says that the
+consumes. The span lemma
+`GaugeAlgebraRealization.adjoin_symbols_eq_adjoin_covDerivIter` says that the
 bare symbols and the tower generate the same algebra over the gauge-field symbols, so each
 is a polynomial in the other; the tower commutes with the gauge-field symbols as soon as
 the bare symbols do; and a pure gauge jet acts trivially through the dual base-point
@@ -798,9 +783,9 @@ coefficient of a representation whose zeroth Taylor coefficient it fixes.
 
 -/
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
-open _root_.IsGaugeField
+open _root_.GaugeAlgebraRealization
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
@@ -853,7 +838,7 @@ lemma repDualCoeff_zero_of_mem_truncationKer_zero
   rw [show repDualCoeff rep U.1⁻¹ 0 = (repCoeff rep U.1⁻¹ 0).dualMap from rfl, hrep hU]
   rfl
 
-end IsGaugeField
+end GaugeAlgebraRealization
 
 /-!
 
@@ -871,7 +856,8 @@ split over them that the rest of the file runs.
 
 namespace AlgebraRealization
 
-open _root_.IsGaugeField _root_.StandardModel.IsGaugeField LocalGaugeData JetComponentSpace
+open _root_.GaugeAlgebraRealization _root_.StandardModel.GaugeAlgebraRealization
+open LocalGaugeData JetComponentSpace
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
   {repJet : Representation ℂ JetGaugeGroupI B}
@@ -1117,7 +1103,7 @@ lemma repJet_covDerivIter {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDime
     (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) :
     repJet U (covDerivIter h.A act F n l 0 φ) =
       covDerivIter h.A act F n l 0 (repDualCoeff rep U⁻¹ 0 φ) :=
-  (TransformsIn.covDerivIter h.repJet_A hF hact n l).repGauge_zero U φ
+  (TransformsIn.covDerivIter h.gaugeRealization hF hact n l).repGauge_zero U φ
 
 /-- The Higgs tower transforms through the base point of a gauge jet. -/
 lemma repJet_covDerivH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI)
@@ -1297,14 +1283,15 @@ lemma repJet_covDerivFieldStrength (U : JetGaugeGroupI) (l : List (Fin 1 ⊕ Fin
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repJet U (h.covDerivFieldStrength l μ ν φ) =
       h.covDerivFieldStrength l μ ν (localGaugeData.adjointDualCoeff U⁻¹ 0 φ) :=
-  (transformsInAdjoint_iteratedCovDerivAdjoint h.repJet_A l μ ν).repGauge_zero U φ
+  (transformsInAdjoint_iteratedCovDerivAdjoint h.gaugeRealization l μ ν).repGauge_zero U φ
 
 /-- A pure gauge jet fixes the covariant tower of the field strength. -/
 lemma repJet_covDerivFieldStrength_of_mem_truncationKer_zero
     (U : localGaugeData.truncationKer 0) (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     repJet U.1 (h.covDerivFieldStrength l μ ν φ) = h.covDerivFieldStrength l μ ν φ :=
-  repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero h.repJet_A U l μ ν φ
+  repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero h.gaugeRealization
+    U l μ ν φ
 
 /-!
 
@@ -1322,73 +1309,73 @@ Each species proves that commutation next to its `gaugeAlgebraAction`
 /-- The Higgs tower transforms as a Lorentz scalar. -/
 lemma repLorentz_covDerivH : IsLorentzCovDerivTransforms repLorentz
     (Representation.trivial ℂ SL(2,ℂ) HiggsVec) (fun {_n} l => h.covDerivH l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     HiggsVec.gaugeAlgebraAction_comm_repLorentz h.H h.repLorentz_H
 
 /-- The conjugate Higgs tower transforms as a Lorentz scalar. -/
 lemma repLorentz_covDerivBarH : IsLorentzCovDerivTransforms repLorentz
     (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj (fun {_n} l => h.covDerivBarH l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     HiggsVec.gaugeAlgebraAction_comm_repLorentz h.barH h.repLorentz_barH
 
 /-- The down-type quark tower transforms as a right-handed Weyl spinor. -/
 lemma repLorentz_covDerivD (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     DownSinglet.repLorentzGroup (fun {_n} l => h.covDerivD i l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.d i) (h.repLorentz_d i)
 
 /-- The conjugate down-type quark tower transforms in the conjugate Weyl representation. -/
 lemma repLorentz_covDerivBarD (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     DownSinglet.repLorentzGroup.conj (fun {_n} l => h.covDerivBarD i l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     DownSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.bard i) (h.repLorentz_bard i)
 
 /-- The up-type quark tower transforms as a right-handed Weyl spinor. -/
 lemma repLorentz_covDerivU (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     UpSinglet.repLorentzGroup (fun {_n} l => h.covDerivU i l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.u i) (h.repLorentz_u i)
 
 /-- The conjugate up-type quark tower transforms in the conjugate Weyl representation. -/
 lemma repLorentz_covDerivBarU (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     UpSinglet.repLorentzGroup.conj (fun {_n} l => h.covDerivBarU i l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     UpSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.baru i) (h.repLorentz_baru i)
 
 /-- The quark doublet tower transforms as a left-handed Weyl spinor. -/
 lemma repLorentz_covDerivQ (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     QuarkDoublet.repLorentzGroup (fun {_n} l => h.covDerivQ i l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.Q i) (h.repLorentz_Q i)
 
 /-- The conjugate quark doublet tower transforms in the conjugate Weyl representation. -/
 lemma repLorentz_covDerivBarQ (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     QuarkDoublet.repLorentzGroup.conj (fun {_n} l => h.covDerivBarQ i l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     QuarkDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.barQ i) (h.repLorentz_barQ i)
 
 /-- The lepton doublet tower transforms as a left-handed Weyl spinor. -/
 lemma repLorentz_covDerivL (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     LeptonDoublet.repLorentzGroup (fun {_n} l => h.covDerivL i l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.L i) (h.repLorentz_L i)
 
 /-- The conjugate lepton doublet tower transforms in the conjugate Weyl representation. -/
 lemma repLorentz_covDerivBarL (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     LeptonDoublet.repLorentzGroup.conj (fun {_n} l => h.covDerivBarL i l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     LeptonDoublet.gaugeAlgebraAction_comm_repLorentzGroup (h.barL i) (h.repLorentz_barL i)
 
 /-- The lepton singlet tower transforms as a right-handed Weyl spinor. -/
 lemma repLorentz_covDerivE (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     LeptonSinglet.repLorentzGroup (fun {_n} l => h.covDerivE i l) :=
-  isLorentzCovDerivTransforms_covDerivIter h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter h.gaugeRealization
     LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.e i) (h.repLorentz_e i)
 
 /-- The conjugate lepton singlet tower transforms in the conjugate Weyl representation. -/
 lemma repLorentz_covDerivBarE (i : Fin 3) : IsLorentzCovDerivTransforms repLorentz
     LeptonSinglet.repLorentzGroup.conj (fun {_n} l => h.covDerivBarE i l) :=
-  isLorentzCovDerivTransforms_covDerivIter_conj h.repLorentz_mul h.repJet_A
+  isLorentzCovDerivTransforms_covDerivIter_conj h.gaugeRealization
     LeptonSinglet.gaugeAlgebraAction_comm_repLorentzGroup (h.bare i) (h.repLorentz_bare i)
 
 end AlgebraRealization

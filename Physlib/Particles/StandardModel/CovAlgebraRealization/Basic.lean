@@ -793,7 +793,7 @@ lemma F_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3} {μ �
     (φ : Module.Dual ℝ GaugeAlgebra) (x : B) (hx : x ∈ k.fieldAlgebra) :
     k.covF l μ ν φ * x = x * k.covF l μ ν φ := by
   rw [fieldAlgebra] at hx
-  refine (IsGaugeField.commute_of_mem_adjoin (y := k.covF l μ ν φ) ?_ hx).symm
+  refine (GaugeAlgebraRealization.commute_of_mem_adjoin (y := k.covF l μ ν φ) ?_ hx).symm
   intro z hz
   simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
   obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
@@ -817,7 +817,7 @@ lemma H_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
     (φ : Module.Dual ℂ HiggsVec) (x : B) (hx : x ∈ k.fieldAlgebra) :
     k.covH l φ * x = x * k.covH l φ := by
   rw [fieldAlgebra] at hx
-  refine (IsGaugeField.commute_of_mem_adjoin (y := k.covH l φ) ?_ hx).symm
+  refine (GaugeAlgebraRealization.commute_of_mem_adjoin (y := k.covH l φ) ?_ hx).symm
   intro z hz
   simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
   obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
@@ -841,7 +841,7 @@ lemma barH_commute_mem_fieldAlgebra {n : ℕ} {l : Fin n → Fin 1 ⊕ Fin 3}
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) (x : B) (hx : x ∈ k.fieldAlgebra) :
     k.covBarH l φ * x = x * k.covBarH l φ := by
   rw [fieldAlgebra] at hx
-  refine (IsGaugeField.commute_of_mem_adjoin (y := k.covBarH l φ) ?_ hx).symm
+  refine (GaugeAlgebraRealization.commute_of_mem_adjoin (y := k.covBarH l φ) ?_ hx).symm
   intro z hz
   simp only [Set.mem_union, Set.mem_iUnion, Set.mem_range] at hz
   obtain ((⟨n', l', μ', ν', ψ, rfl⟩ | ⟨n', l', ⟨φ', rfl⟩ | ⟨φ', rfl⟩⟩) | ⟨i, n', l', hz⟩) := hz
@@ -868,8 +868,8 @@ end CovAlgebraRealization
 ## E. Naturality of the covariant derivative
 
 A covariant tower is built from the bare families by two operations only: the pairing of an
-adjoint family against a matter one (`IsGaugeField.actionFam`), and the bracket of two
-adjoint families (`IsGaugeField.bracketFam`). Each expands, in bases of the gauge algebra
+adjoint family against a matter one (`GaugeAlgebraRealization.actionFam`), and the bracket of two
+adjoint families (`GaugeAlgebraRealization.bracketFam`). Each expands, in bases of the gauge algebra
 and of the value space, as a finite double sum of scalar multiples of products of
 components, so each commutes with an algebra map. The whole recursion therefore does, and
 that is the content of this section: the covariant towers of a Standard Model are the jet
@@ -877,9 +877,9 @@ algebra's own covariant towers pushed along the defining map.
 
 -/
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
-open _root_.IsGaugeField
+open _root_.GaugeAlgebraRealization
 
 variable {B B' : Type} [Ring B] [Algebra ℂ B] [Ring B'] [Algebra ℂ B']
   {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Finite ℂ V]
@@ -1032,7 +1032,7 @@ lemma iteratedCovDerivAdjoint_map' (Φ : B →ₐ[ℂ] B') (hA : ∀ p ρ ψ, Φ
     covDerivAdjoint_map' Φ hA
     (fun s' χ => iteratedCovDerivAdjoint_map' Φ hA hF l s' χ) ρ s φ
 
-end IsGaugeField
+end GaugeAlgebraRealization
 
 /-!
 
@@ -1092,11 +1092,11 @@ lemma toCovAlgebraRealization_covF {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
   have hb : h.toCovAlgebraRealization.covF l μ ν φ
       = h.toAlgHom (AlgebraRealization.id.covF l μ ν φ) := rfl
   rw [hb]
-  exact IsGaugeField.iteratedCovDerivAdjoint_map' h.toAlgHom h.toAlgHom_id_A
-    (F := IsGaugeField.fieldStrength AlgebraRealization.id.A μ ν)
-    (F' := IsGaugeField.fieldStrength h.A μ ν)
-    (fun s χ => IsGaugeField.fieldStrength_map' (A := AlgebraRealization.id.A) (A' := h.A)
-      h.toAlgHom h.toAlgHom_id_A μ ν s χ)
+  exact GaugeAlgebraRealization.iteratedCovDerivAdjoint_map' h.toAlgHom h.toAlgHom_id_A
+    (F := GaugeAlgebraRealization.fieldStrength AlgebraRealization.id.A μ ν)
+    (F' := GaugeAlgebraRealization.fieldStrength h.A μ ν)
+    (fun s χ => GaugeAlgebraRealization.fieldStrength_map' (A := AlgebraRealization.id.A)
+      (A' := h.A) h.toAlgHom h.toAlgHom_id_A μ ν s χ)
     (List.ofFn l) 0 φ
 
 /-- The higgs tower of the covariant Standard Model carried by a Standard Model is its own. -/
@@ -1107,7 +1107,7 @@ lemma toCovAlgebraRealization_covH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
   have hb : h.toCovAlgebraRealization.covH l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivH l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.H ) (F' := h.H ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate higgs tower of the covariant Standard Model carried by a Standard Model is
@@ -1119,7 +1119,7 @@ lemma toCovAlgebraRealization_covBarH {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)
   have hb : h.toCovAlgebraRealization.covBarH l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarH l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.barH ) (F' := h.barH ) (fun s χ => rfl) n l 0 φ
 
 /-- The down-type quark tower of the covariant Standard Model carried by a Standard Model is
@@ -1131,7 +1131,7 @@ lemma toCovAlgebraRealization_covD (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 �
   have hb : h.toCovAlgebraRealization.covD i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivD i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.d i ) (F' := h.d i ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate down-type quark tower of the covariant Standard Model carried by a Standard
@@ -1143,7 +1143,7 @@ lemma toCovAlgebraRealization_covBarD (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 
   have hb : h.toCovAlgebraRealization.covBarD i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarD i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.bard i ) (F' := h.bard i ) (fun s χ => rfl) n l 0 φ
 
 /-- The up-type quark tower of the covariant Standard Model carried by a Standard Model is its
@@ -1155,7 +1155,7 @@ lemma toCovAlgebraRealization_covU (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 �
   have hb : h.toCovAlgebraRealization.covU i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivU i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.u i ) (F' := h.u i ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate up-type quark tower of the covariant Standard Model carried by a Standard
@@ -1167,7 +1167,7 @@ lemma toCovAlgebraRealization_covBarU (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 
   have hb : h.toCovAlgebraRealization.covBarU i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarU i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.baru i ) (F' := h.baru i ) (fun s χ => rfl) n l 0 φ
 
 /-- The quark doublet tower of the covariant Standard Model carried by a Standard Model is its
@@ -1179,7 +1179,7 @@ lemma toCovAlgebraRealization_covQ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 �
   have hb : h.toCovAlgebraRealization.covQ i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivQ i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.Q i ) (F' := h.Q i ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate quark doublet tower of the covariant Standard Model carried by a Standard
@@ -1191,7 +1191,7 @@ lemma toCovAlgebraRealization_covBarQ (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 
   have hb : h.toCovAlgebraRealization.covBarQ i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarQ i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.barQ i ) (F' := h.barQ i ) (fun s χ => rfl) n l 0 φ
 
 /-- The lepton doublet tower of the covariant Standard Model carried by a Standard Model is
@@ -1203,7 +1203,7 @@ lemma toCovAlgebraRealization_covL (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 �
   have hb : h.toCovAlgebraRealization.covL i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivL i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.L i ) (F' := h.L i ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate lepton doublet tower of the covariant Standard Model carried by a Standard
@@ -1215,7 +1215,7 @@ lemma toCovAlgebraRealization_covBarL (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 
   have hb : h.toCovAlgebraRealization.covBarL i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarL i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.barL i ) (F' := h.barL i ) (fun s χ => rfl) n l 0 φ
 
 /-- The charged-lepton singlet tower of the covariant Standard Model carried by a Standard
@@ -1227,7 +1227,7 @@ lemma toCovAlgebraRealization_covE (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 1 �
   have hb : h.toCovAlgebraRealization.covE i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivE i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.e i ) (F' := h.e i ) (fun s χ => rfl) n l 0 φ
 
 /-- The conjugate charged-lepton singlet tower of the covariant Standard Model carried by a
@@ -1239,7 +1239,7 @@ lemma toCovAlgebraRealization_covBarE (i : Fin 3) {n : ℕ} (l : Fin n → (Fin 
   have hb : h.toCovAlgebraRealization.covBarE i l φ
       = h.toAlgHom (AlgebraRealization.id.covDerivBarE i l φ) := rfl
   rw [hb]
-  exact IsGaugeField.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
+  exact GaugeAlgebraRealization.covDerivIter_map' h.toAlgHom h.toAlgHom_id_A
     (F := AlgebraRealization.id.bare i ) (F' := h.bare i ) (fun s χ => rfl) n l 0 φ
 
 end AlgebraRealization

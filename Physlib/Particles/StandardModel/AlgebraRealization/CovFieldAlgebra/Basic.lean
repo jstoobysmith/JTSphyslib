@@ -12,7 +12,7 @@ public import Physlib.Particles.StandardModel.AlgebraRealization.CovariantDeriv
 
 The matter towers of `AlgebraRealization.CovariantDeriv` commute with the gauge-field
 symbols and are fixed by pure gauge jets, so the abstract classification
-`IsGaugeField.invariant_mem_adjoin_fieldStrength` applies to the field algebra written in
+`GaugeAlgebraRealization.invariant_mem_adjoin_fieldStrength` applies to the field algebra written in
 terms of the covariant towers: a jet-gauge invariant is a polynomial in the covariant
 towers of the field strength and of the matter fields, gauge invariance having eliminated
 the bare gauge-field symbols. `covAlgebra` names the algebra those covariant towers
@@ -163,28 +163,29 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
     intro p μ ψ y hy
     refine h.matterTowers_induction (fun y => Commute y (h.A p μ ψ)) hy
       ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-    · exact fun n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A h.A_comm_H n l φ p μ ψ
     · exact fun n l φ =>
-        IsGaugeField.commute_covDerivIter _ _ h.A_comm_A h.A_comm_barH n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+        GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A h.A_comm_H n l φ p μ ψ
+    · exact fun n l φ =>
+        GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A h.A_comm_barH n l φ p μ ψ
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_d s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_bard s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_u s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_baru s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_Q s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_barQ s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_L s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_barL s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_e s μ ψ i s' φ) n l φ p μ ψ
-    · exact fun i n l φ => IsGaugeField.commute_covDerivIter _ _ h.A_comm_A
+    · exact fun i n l φ => GaugeAlgebraRealization.commute_covDerivIter _ _ h.A_comm_A
         (fun s μ ψ s' φ => h.A_comm_bare s μ ψ i s' φ) n l φ p μ ψ
   -- the matter towers are fixed by pure gauge jets
   have hS : ∀ y ∈ h.matterTowers, ∀ U : localGaugeData.truncationKer 0, repJet U.1 y = y := by
@@ -214,8 +215,9 @@ theorem invariant_mem_adjoin_covDeriv {x : B}
     · exact Or.inr hb
   -- the abstract classification
   rw [Set.union_assoc]
-  refine Algebra.adjoin_mono ?_ (IsGaugeField.invariant_mem_adjoin_fieldStrength h.repJet_A
-    h.A_comm_A h.matterTowers hcS hS hx' hinv)
+  refine Algebra.adjoin_mono ?_
+    (GaugeAlgebraRealization.invariant_mem_adjoin_fieldStrength h.gaugeRealization
+      h.matterTowers hcS hS hx' hinv)
   rintro b (⟨l, ν, lam, φ, rfl⟩ | hb)
   · exact Or.inl (Set.mem_iUnion_of_mem l (Set.mem_iUnion_of_mem ν
       (Set.mem_iUnion_of_mem lam ⟨φ, rfl⟩)))

@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.GaugeLaw
 public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
 public import Mathlib.LinearAlgebra.Basis.Defs
@@ -65,13 +65,14 @@ variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra �
 variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-!
 
@@ -288,11 +289,12 @@ lemma actionFam_sum_right (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
   | cons g S ih => simp [actionFam_add_right, ih]
 
 set_option maxHeartbeats 1000000 in
+include h in
 /-- The gauge transformation of the action of an affinely-transforming
   adjoint-indexed family on a linearly-transforming matter family: the action of the
   transformed families plus one `act`-type cross term. This is `repGauge_bracketFam`
   with a homogeneous second slot and the bracket replaced by a general action. -/
-lemma repGauge_actionFam (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_actionFam
     (U : G) {f f' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     {g g' : Module.Dual ℂ V →ₗ[ℂ] B} {cf : 𝔤}
     (hf : ∀ ψ : Module.Dual ℝ 𝔤,
@@ -303,7 +305,7 @@ lemma repGauge_actionFam (hA : IsGaugeField jets repLorentz repGauge A)
       actionFam act f' g' φ + g' (φ ∘ₗ act cf) := by
   set Φ : B →ₗ[ℂ] B := repGauge U with hΦdef
   have hΦmul : ∀ b₁ b₂ : B, Φ (b₁ * b₂) = Φ b₁ * Φ b₂ := fun b₁ b₂ =>
-    hA.gauge_mul U b₁ b₂
+    h.gauge_mul U b₁ b₂
   set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm f with hs
   set t : B ⊗[ℂ] V := dualPairEquivC.symm g with ht
   set s' : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm f' with hs'
@@ -634,6 +636,6 @@ theorem adjoin_symbols_eq_adjoin_covDerivIter (act : 𝔤 →ₗ[ℝ] V →ₗ[�
 end Action
 
 
-end IsGaugeField
+end GaugeAlgebraRealization
 
 

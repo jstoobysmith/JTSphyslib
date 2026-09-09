@@ -6,7 +6,9 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
+public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Mathematics.MultisetAntidiagonal
 
 /-!
@@ -34,7 +36,7 @@ gives the cocycle identity for the Maurer–Cartan shift.
 - `GaugeJetAlgebra.mcShift` : the Maurer–Cartan shift.
 - `GaugeJetAlgebra.repJet` : the action of the jet gauge group on the jet algebra.
 - `GaugeJetAlgebra.repJet_iteratedJetDeriv_ofA` : the transformation law of the derivative
-  generators, in the form used by `IsGaugeField`.
+  generators, in the form used by `GaugeAlgebraRealization`.
 - `GaugeJetAlgebra.complexRepJet` : the action on the complexified jet algebra.
 
 ## iii. Table of contents
@@ -490,7 +492,7 @@ lemma componentDual_dualBasis_mcBosonCoeff (W : G)
       (jets.maurerCartan W ν)))), if_pos (Finset.mem_univ μ)]
 
 /-- The transformation law of the derivative generators, in the form used by
-  `IsGaugeField`: a jet of gauge transformations acts on `∂_s A_μ^φ` by the all-orders
+  `GaugeAlgebraRealization`: a jet of gauge transformations acts on `∂_s A_μ^φ` by the all-orders
   Leibniz convolution of the adjoint Taylor coefficients of `U⁻¹` against lower
   generators, plus the Taylor coefficient of the Maurer–Cartan form of `U⁻¹`. -/
 theorem repJet_iteratedJetDeriv_ofA (U : G)
@@ -569,7 +571,7 @@ lemma one_tmul_algebraMap (r : ℝ) :
       (algebraMap_smul ℂ r _).symm, Algebra.TensorProduct.one_def]
 
 /-- The transformation law of the derivative generators on the complexification: the
-  form consumed by the `IsGaugeField` structure of the ambient Lagrangian theory. -/
+  form consumed by the laws of a `GaugeAlgebraRealization`. -/
 theorem complexRepJet_iteratedD_one_tmul_ofA (U : G)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     complexRepJet jets U (Lorentz.iteratedD (complexJetDeriv 𝔤) complexJetDeriv_comm s

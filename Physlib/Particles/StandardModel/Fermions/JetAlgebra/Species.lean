@@ -22,7 +22,7 @@ Everything rests on one fact: both actions on `FermionSpace` are species-diagona
 jet gauge action through `FermionSpace.jetActionMap`, the Lorentz action through
 `Representation.pi` and `Representation.prod`. So each projection
 `FermionSpace →ₗ[ℂ] Species` intertwines the total action with the species' own, and hence
-also the base-point Taylor coefficients `IsGaugeField.repCoeff` of the two.
+also the base-point Taylor coefficients `GaugeAlgebraRealization.repCoeff` of the two.
 
 The third bridge runs the other way. Component functions are covectors, and a covector on
 the species pulls back along the projection to a covector on `FermionSpace`; since
@@ -127,8 +127,8 @@ lemma repCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] 
     (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp (repV U)
       = (repW U).comp (LinearMap.lTensor JetRing p))
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    p.comp (IsGaugeField.repCoeff repV U s)
-      = (IsGaugeField.repCoeff repW U s).comp p := by
+    p.comp (GaugeAlgebraRealization.repCoeff repV U s)
+      = (GaugeAlgebraRealization.repCoeff repW U s).comp p := by
   refine LinearMap.ext fun v => ?_
   have h1 := LinearMap.congr_fun (lTensor_comp_jetOfConstant p) v
   have h2 := LinearMap.congr_fun (hp U) (jetOfConstant v)
@@ -137,7 +137,7 @@ lemma repCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] 
   have h4 := LinearMap.congr_fun (jetEval_comp_lTensor p)
     (jetIteratedDeriv s (repV U (jetOfConstant v)))
   simp only [LinearMap.comp_apply] at h1 h2 h3 h4 ⊢
-  simp only [IsGaugeField.repCoeff, LinearMap.comp_apply]
+  simp only [GaugeAlgebraRealization.repCoeff, LinearMap.comp_apply]
   rw [← h4, h3, h2, h1]
 
 /-- The transposed form of `repCoeff_comp`: the dual coefficients, which act on the
@@ -147,8 +147,8 @@ lemma repDualCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[�
     (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp (repV U)
       = (repW U).comp (LinearMap.lTensor JetRing p))
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (IsGaugeField.repDualCoeff repV U s).comp (Module.Dual.transpose p)
-      = (Module.Dual.transpose p).comp (IsGaugeField.repDualCoeff repW U s) :=
+    (GaugeAlgebraRealization.repDualCoeff repV U s).comp (Module.Dual.transpose p)
+      = (Module.Dual.transpose p).comp (GaugeAlgebraRealization.repDualCoeff repW U s) :=
   LinearMap.ext fun φ => LinearMap.ext fun v =>
     congrArg φ (LinearMap.congr_fun (repCoeff_comp p hp U s) v)
 
@@ -319,40 +319,45 @@ lemma lTensor_downSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI)
   the total jet gauge action with those of the lepton doublet's own. -/
 lemma leptonDoubletProj_comp_repCoeff (i : Fin 3) (U : JetGaugeGroupI)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (leptonDoubletProj i).comp (IsGaugeField.repCoeff repJetGaugeGroupI U s)
-      = (IsGaugeField.repCoeff LeptonDoublet.repJetGaugeGroupI U s).comp (leptonDoubletProj i) :=
+    (leptonDoubletProj i).comp (GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U s)
+      = (GaugeAlgebraRealization.repCoeff LeptonDoublet.repJetGaugeGroupI U s).comp
+          (leptonDoubletProj i) :=
   repCoeff_comp _ (lTensor_leptonDoubletProj_repJetGaugeGroupI i) U s
 
 /-- The charged-lepton-singlet projection intertwines the base-point Taylor coefficients of
   the total jet gauge action with those of the charged-lepton singlet's own. -/
 lemma leptonSingletProj_comp_repCoeff (i : Fin 3) (U : JetGaugeGroupI)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (leptonSingletProj i).comp (IsGaugeField.repCoeff repJetGaugeGroupI U s)
-      = (IsGaugeField.repCoeff LeptonSinglet.repJetGaugeGroupI U s).comp (leptonSingletProj i) :=
+    (leptonSingletProj i).comp (GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U s)
+      = (GaugeAlgebraRealization.repCoeff LeptonSinglet.repJetGaugeGroupI U s).comp
+          (leptonSingletProj i) :=
   repCoeff_comp _ (lTensor_leptonSingletProj_repJetGaugeGroupI i) U s
 
 /-- The quark-doublet projection intertwines the base-point Taylor coefficients of
   the total jet gauge action with those of the quark doublet's own. -/
 lemma quarkDoubletProj_comp_repCoeff (i : Fin 3) (U : JetGaugeGroupI)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (quarkDoubletProj i).comp (IsGaugeField.repCoeff repJetGaugeGroupI U s)
-      = (IsGaugeField.repCoeff QuarkDoublet.repJetGaugeGroupI U s).comp (quarkDoubletProj i) :=
+    (quarkDoubletProj i).comp (GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U s)
+      = (GaugeAlgebraRealization.repCoeff QuarkDoublet.repJetGaugeGroupI U s).comp
+          (quarkDoubletProj i) :=
   repCoeff_comp _ (lTensor_quarkDoubletProj_repJetGaugeGroupI i) U s
 
 /-- The up-type-quark-singlet projection intertwines the base-point Taylor coefficients of
   the total jet gauge action with those of the up-type quark singlet's own. -/
 lemma upSingletProj_comp_repCoeff (i : Fin 3) (U : JetGaugeGroupI)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (upSingletProj i).comp (IsGaugeField.repCoeff repJetGaugeGroupI U s)
-      = (IsGaugeField.repCoeff UpSinglet.repJetGaugeGroupI U s).comp (upSingletProj i) :=
+    (upSingletProj i).comp (GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U s)
+      = (GaugeAlgebraRealization.repCoeff UpSinglet.repJetGaugeGroupI U s).comp
+          (upSingletProj i) :=
   repCoeff_comp _ (lTensor_upSingletProj_repJetGaugeGroupI i) U s
 
 /-- The down-type-quark-singlet projection intertwines the base-point Taylor coefficients of
   the total jet gauge action with those of the down-type quark singlet's own. -/
 lemma downSingletProj_comp_repCoeff (i : Fin 3) (U : JetGaugeGroupI)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (downSingletProj i).comp (IsGaugeField.repCoeff repJetGaugeGroupI U s)
-      = (IsGaugeField.repCoeff DownSinglet.repJetGaugeGroupI U s).comp (downSingletProj i) :=
+    (downSingletProj i).comp (GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U s)
+      = (GaugeAlgebraRealization.repCoeff DownSinglet.repJetGaugeGroupI U s).comp
+          (downSingletProj i) :=
   repCoeff_comp _ (lTensor_downSingletProj_repJetGaugeGroupI i) U s
 
 /-!

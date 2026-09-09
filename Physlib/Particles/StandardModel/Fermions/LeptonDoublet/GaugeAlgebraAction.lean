@@ -113,7 +113,7 @@ noncomputable def actionMatrix (c : GaugeAlgebra) : Matrix (Fin 2) (Fin 2) ℂ :
 /-- **The infinitesimal action of the gauge algebra on the lepton doublet**: the
   derivative of the `(1, 2)_{-3}` action of the gauge group, real-linear in the
   algebra slot and complex-linear in the value slot — the form consumed by the
-  covariant derivative `IsGaugeField.covDerivIter` and by
+  covariant derivative `GaugeAlgebraRealization.covDerivIter` and by
   `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] LeptonDoublet →ₗ[ℂ] LeptonDoublet where
@@ -450,12 +450,12 @@ set_option maxHeartbeats 1000000 in
   doublet are the weak endomorphisms of the base-point Taylor coefficients of the
   weak matrix. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U x
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
       = weakEnd ((doubletMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by
   refine LinearMap.ext fun d => ?_
   apply valLinEquiv.injective
-  rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x d
+  rw [show GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x d
       = jetEval (jetIteratedDeriv x
           (repJetGaugeGroupI U (jetOfConstant d))) from rfl,
     valLinEquiv_jetEval, jetValLinEquiv_jetIteratedDeriv,
@@ -522,7 +522,7 @@ lemma weakEnd_one : weakEnd 1 = LinearMap.id := by
 /-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
   Taylor coefficient of the jet gauge action is the identity. -/
 lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
   have h2 : (constantCoeff : JetRing →+* ℂ).mapMatrix
       ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
         = 1 := Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.1) hU)

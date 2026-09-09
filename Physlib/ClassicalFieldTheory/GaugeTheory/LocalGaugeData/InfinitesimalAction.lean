@@ -57,11 +57,12 @@ variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 namespace LocalGaugeData
 
-open IsGaugeField
+open GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-!
 
@@ -206,27 +207,26 @@ set_option maxHeartbeats 2000000 in
   `TransformsInAdjoint.repGauge_bracketFamConv` with a matter field in the second
   slot. -/
 lemma TransformsIn.repGauge_actionFamConv
-    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf jets act rep)
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ V) :
-    repGauge U (actionFamConv A act ρ F s φ) =
+    repGauge U (actionFamConv h.A act ρ F s φ) =
       (s.antidiagonal.map fun p =>
-        actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
+        actionFamConv h.A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun r =>
             F r.2 (repDualCoeff rep U⁻¹ r.1
               (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv p.1
                 (jets.maurerCartan U⁻¹ ρ)))))).sum).sum := by
   have hAlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ 𝔤),
-      repGauge U (A u ρ ψ) =
-        ((u.antidiagonal.map fun q => A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum) ψ
+      repGauge U (h.A u ρ ψ) =
+        ((u.antidiagonal.map fun q => h.A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum) ψ
         + algebraMap ℂ B (ψ (jets.evalLie
             (jets.iteratedDeriv u (jets.maurerCartan U⁻¹ ρ)))) := by
     intro u ψ
-    rw [hA.gauge_apply_deriv U u ρ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
+    rw [h.gauge_apply_deriv U u ρ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
   have hFlaw : ∀ (u : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ V),
       repGauge U (F u ψ) =
@@ -236,13 +236,13 @@ lemma TransformsIn.repGauge_actionFamConv
     congr 1
   have hMa : (s.antidiagonal.map fun p =>
       actionFam act ((p.1.antidiagonal.map fun q =>
-          A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
+          h.A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
         ((p.2.antidiagonal.map fun r =>
           F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum) φ).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act (A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+            actionFam act (h.A q.2 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
               (F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [actionFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
@@ -254,20 +254,20 @@ lemma TransformsIn.repGauge_actionFamConv
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply]
   have hMc : (s.antidiagonal.map fun p =>
-      actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
+      actionFamConv h.A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            actionFam act (A r.1 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+            actionFam act (h.A r.1 ρ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
               (F r.2 ∘ₗ repDualCoeff rep U⁻¹ q.2) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_congr rfl (fun r hr => by
         rw [Function.comp_apply,
-          hact.actionFam_repDualCoeff U⁻¹ p.1 (A r.1 ρ) (F r.2) φ]),
+          hact.actionFam_repDualCoeff U⁻¹ p.1 (h.A r.1 ρ) (F r.2) φ]),
       Multiset.sum_map_sum_map]
   have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
-      actionFam act (A b ρ ∘ₗ jets.adjointDualCoeff U⁻¹ a)
+      actionFam act (h.A b ρ ∘ₗ jets.adjointDualCoeff U⁻¹ a)
         (F d ∘ₗ repDualCoeff rep U⁻¹ c) φ).trans hMc.symm)
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
       ((p.2.antidiagonal.map fun r => F r.2 ∘ₗ repDualCoeff rep U⁻¹ r.1).sum)
@@ -285,7 +285,7 @@ lemma TransformsIn.repGauge_actionFamConv
     Multiset.map_map,
     Multiset.map_congr rfl (fun p hp => by
       rw [Function.comp_apply, Function.comp_apply,
-        repGauge_actionFam hA U (hAlaw p.1) (hFlaw p.2) φ, hCg p]),
+        repGauge_actionFam h U (hAlaw p.1) (hFlaw p.2) φ, hCg p]),
     Multiset.sum_map_add, hM]
 
 set_option maxHeartbeats 2000000 in
@@ -296,24 +296,23 @@ set_option maxHeartbeats 2000000 in
   `A_ρ · F` through the coassociativity of the antidiagonal — the matter-field
   analogue of `TransformsInAdjoint.covDerivAdjoint`. -/
 theorem TransformsIn.covDerivAction
-    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf jets act rep) (ρ : Fin 1 ⊕ Fin 3) :
-    TransformsIn repGauge rep (IsGaugeField.covDerivAction A act F ρ) := by
+    TransformsIn repGauge rep (GaugeAlgebraRealization.covDerivAction h.A act F ρ) := by
   intro U φ s
-  have hL : repGauge U (IsGaugeField.covDerivAction A act F ρ s φ) =
-      repGauge U (F (ρ ::ₘ s) φ) + repGauge U (actionFamConv A act ρ F s φ) := by
-    rw [IsGaugeField.covDerivAction_apply, map_add]
+  have hL : repGauge U (GaugeAlgebraRealization.covDerivAction h.A act F ρ s φ) =
+      repGauge U (F (ρ ::ₘ s) φ) + repGauge U (actionFamConv h.A act ρ F s φ) := by
+    rw [GaugeAlgebraRealization.covDerivAction_apply, map_add]
   have hR : (s.antidiagonal.map fun p =>
-      IsGaugeField.covDerivAction A act F ρ p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
+      GaugeAlgebraRealization.covDerivAction h.A act F ρ p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
         F (ρ ::ₘ p.2) (repDualCoeff rep U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
-        actionFamConv A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum := by
+        actionFamConv h.A act ρ F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
-    rw [IsGaugeField.covDerivAction_apply]
+    rw [GaugeAlgebraRealization.covDerivAction_apply]
   have hcancel : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
         F p.2 (repDualCoeff rep U⁻¹ q.2
@@ -328,7 +327,7 @@ theorem TransformsIn.covDerivAction
       F c (repDualCoeff rep U⁻¹ b
         (φ ∘ₗ act (jets.evalLie (jets.iteratedDeriv a
           (jets.maurerCartan U⁻¹ ρ))))))
-  rw [hL, hF.repGauge_cons hact U ρ s φ, hF.repGauge_actionFamConv hA hact U s ρ φ,
+  rw [hL, hF.repGauge_cons hact U ρ s φ, hF.repGauge_actionFamConv h hact U s ρ φ,
     hR, hcancel]
   abel
 
@@ -337,16 +336,15 @@ theorem TransformsIn.covDerivAction
   `∇_{l 0} ⋯ ∇_{l (n-1)} F` transforms in `rep` — the recursion of
   `TransformsIn.covDerivAction` over the tuple of directions. -/
 theorem TransformsIn.covDerivIter
-    (hA : IsGaugeField jets repLorentz repGauge A)
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf jets act rep)
     (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
-    TransformsIn repGauge rep (IsGaugeField.covDerivIter A act F n l) := by
+    TransformsIn repGauge rep (GaugeAlgebraRealization.covDerivIter h.A act F n l) := by
   induction n with
   | zero => exact hF
   | succ n ih =>
-      exact TransformsIn.covDerivAction hA (ih fun i => l i.succ) hact (l 0)
+      exact TransformsIn.covDerivAction h (ih fun i => l i.succ) hact (l 0)
 
 end MatterCovariance
 

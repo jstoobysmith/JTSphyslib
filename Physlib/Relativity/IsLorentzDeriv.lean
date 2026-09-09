@@ -129,7 +129,7 @@ class IsLorentzDeriv {M : Type} [AddCommMonoid M] [Module ℂ M]
   symbols of a Lorentz-covariant field**: each ordered symbol mixes into all tuples of
   directions by the per-slot columns of the Lorentz matrix, while the value index
   transforms by the contragredient action `rep.dual` on the dual of `V`. This is the
-  general form of the `lorentz_apply` field of `IsGaugeField`, for a field valued in an
+  general form of the Lorentz law `GaugeAlgebraRealization.lorentz_apply`, for a field valued in an
   arbitrary Lorentz representation — the trivial representation for scalars, the Weyl
   representations for fermions, and their conjugates for the barred fields. At `n = 0`
   it reduces to the homogeneous law `Λ • F₀^φ = F₀^{Λ^{-⊤} φ}`. -/

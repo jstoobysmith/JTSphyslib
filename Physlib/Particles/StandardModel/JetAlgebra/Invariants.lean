@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.GaugeAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Invariants
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
 /-!
 # Gauge invariants of the jet algebra of the Standard Model
@@ -32,7 +32,8 @@ derivatives.
 ## ii. Key results
 
 - `JetAlgebra.gaugeField` : the gauge-field generators inside the full jet algebra.
-- `JetAlgebra.isGaugeField` : the jet algebra of the Standard Model is a gauge field.
+- `JetAlgebra.gaugeRealization` : the jet algebra of the Standard Model realizes the
+  gauge-boson jet algebra.
 - `JetAlgebra.invariant_mem_adjoin_fieldStrength` : the classification of gauge
   invariants.
 
@@ -42,7 +43,7 @@ derivatives.
   - A.1. The gauge-field generators
   - A.2. Iterated derivatives through the gauge inclusion
   - A.3. Centrality
-- B. The `IsGaugeField` instance
+- B. The gauge realization
 - C. The classification of gauge invariants
 
 -/
@@ -131,21 +132,14 @@ lemma includeGauge_mem_center (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) 
 noncomputable def gaugeRealization :
     GaugeAlgebraRealization localGaugeData JetAlgebra repJetGaugeGroupI repLorentzGroup where
   toAlgHom := includeGauge
+  A := gaugeField
+  A_eq _ _ _ := rfl
   map_repJet U y := (repJetGaugeGroupI_includeGauge U y).symm
   map_repLorentz Λ y := (repLorentzGroup_includeGauge Λ y).symm
   repJet_mul := repJetGaugeGroupI_apply_mul
   repLorentz_mul := repLorentzGroup_apply_mul
 
 lemma gaugeRealization_A : gaugeRealization.A = gaugeField := rfl
-
-/-- The jet algebra of the Standard Model is a gauge field: its gauge-field derivative
-  symbols are those of a Lorentz covector, transform under the jet gauge group by the
-  all-orders Leibniz convolution of the adjoint Taylor coefficients plus the Maurer–Cartan
-  shift, and the gauge action is multiplicative. All three laws transport from the gauge
-  sector through the realization `gaugeRealization`. -/
-theorem isGaugeField :
-    IsGaugeField localGaugeData (B := JetAlgebra) repLorentzGroup repJetGaugeGroupI gaugeField :=
-  gaugeRealization_A ▸ gaugeRealization.isGaugeField
 
 /-!
 
@@ -173,13 +167,9 @@ theorem invariant_mem_adjoin_fieldStrength (S : Set JetAlgebra)
     x ∈ Algebra.adjoin ℂ ({b : JetAlgebra |
       ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3)
         (φ : Module.Dual ℝ GaugeAlgebra),
-      b = IsGaugeField.iteratedCovDerivAdjoint gaugeField l
-        (IsGaugeField.fieldStrength gaugeField ν lam) 0 φ} ∪ S) :=
-  IsGaugeField.invariant_mem_adjoin_fieldStrength isGaugeField
-    (fun _ q _ ν _ ψ =>
-      Subring.mem_center_iff.mp
-        (includeGauge_mem_center ((GaugeJetAlgebra.gaugeField GaugeAlgebra) q ν ψ)) _)
-    S
+      b = GaugeAlgebraRealization.iteratedCovDerivAdjoint gaugeField l
+        (GaugeAlgebraRealization.fieldStrength gaugeField ν lam) 0 φ} ∪ S) :=
+  GaugeAlgebraRealization.invariant_mem_adjoin_fieldStrength gaugeRealization S
     (fun p μ φ y _ =>
       Subring.mem_center_iff.mp
         (includeGauge_mem_center ((GaugeJetAlgebra.gaugeField GaugeAlgebra) p μ φ)) y)

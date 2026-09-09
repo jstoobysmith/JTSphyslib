@@ -176,11 +176,11 @@ private lemma sum_map_smul_id {α : Type*} (m : Multiset α) (z : α → ℂ) :
   charged-lepton singlet are scalar: multiplication by the base-point Taylor
   coefficients of the hypercharge phase. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U x
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
       = constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
         • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
   refine LinearMap.ext fun l => ?_
-  rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x l
+  rw [show GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x l
       = jetEval (jetIteratedDeriv x
           (repJetGaugeGroupI U (jetOfConstant l))) from rfl,
     jetOfConstant_apply, repJetGaugeGroupI_tmul, mul_one,
@@ -190,7 +190,7 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
 /-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
   Taylor coefficient of the jet gauge action is the identity. -/
 lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
   have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
     Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
   rw [repCoeff_eq, Multiset.foldl_zero, jetPhase_eq, map_pow,
@@ -285,7 +285,7 @@ theorem isInfinitesimalActionOf :
     simp only [localGaugeData_adjointCoeff_apply]
     have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
         gaugeAlgebraAction (localGaugeData.adjointCoeff U p.1 c)
-            ∘ₗ IsGaugeField.repCoeff repJetGaugeGroupI U p.2
+            ∘ₗ GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U p.2
           = (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
                 (C c.toU1Value)))
               * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))

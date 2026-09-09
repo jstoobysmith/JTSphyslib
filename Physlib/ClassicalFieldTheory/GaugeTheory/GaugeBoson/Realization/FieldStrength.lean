@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.IsGaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.GaugeLaw
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.TransformsInAdjoint
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 /-!
@@ -40,11 +40,12 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- The field strength `F_μν = ∂_μ A_ν − ∂_ν A_μ + ⁅A_μ, A_ν⁆` of a family of
   gauge-field symbols, as a family of derivative symbols: the `s`-th derivative has
@@ -150,58 +151,58 @@ lemma fieldStrength_swap
   the commutator (`repGauge_commutatorFam`) through the coassociativity and swap of
   the antidiagonal, and the derived Maurer–Cartan shifts cancel the bracket-shift
   convolution through the all-orders structural equation. -/
-theorem repGauge_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
+theorem repGauge_fieldStrength
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (fieldStrength A μ ν s φ) =
+    repGauge U (fieldStrength h.A μ ν s φ) =
       (s.antidiagonal.map fun p =>
-        fieldStrength A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum := by
-  have hL : repGauge U (fieldStrength A μ ν s φ) =
-      repGauge U (A (μ ::ₘ s) ν φ) - repGauge U (A (ν ::ₘ s) μ φ)
-      + repGauge U (commutatorFam A μ ν s φ) := by
+        fieldStrength h.A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum := by
+  have hL : repGauge U (fieldStrength h.A μ ν s φ) =
+      repGauge U (h.A (μ ::ₘ s) ν φ) - repGauge U (h.A (ν ::ₘ s) μ φ)
+      + repGauge U (commutatorFam h.A μ ν s φ) := by
     rw [fieldStrength_apply, map_add, map_sub]
   have hR : (s.antidiagonal.map fun p =>
-      fieldStrength A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
+      fieldStrength h.A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
-        A (μ ::ₘ p.2) ν (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
+        h.A (μ ::ₘ p.2) ν (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       - (s.antidiagonal.map fun p =>
-        A (ν ::ₘ p.2) μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
+        h.A (ν ::ₘ p.2) μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
-        commutatorFam A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum := by
+        commutatorFam h.A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum := by
     rw [← Multiset.sum_map_sub, ← Multiset.sum_map_add]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [fieldStrength_apply]
   have hcancel₁ : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A p.2 ν (jets.adjointDualCoeff U⁻¹ q.2
+        h.A p.2 ν (jets.adjointDualCoeff U⁻¹ q.2
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.2.antidiagonal.map fun r =>
-        A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
+        h.A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum :=
     Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      A c ν (jets.adjointDualCoeff U⁻¹ b
+      h.A c ν (jets.adjointDualCoeff U⁻¹ b
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ μ))))))
   have hcancel₂ : (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A p.2 μ (jets.adjointDualCoeff U⁻¹ q.2
+        h.A p.2 μ (jets.adjointDualCoeff U⁻¹ q.2
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ ν)))))).sum).sum =
     (s.antidiagonal.map fun p =>
       (p.1.antidiagonal.map fun q =>
-        A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
+        h.A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum).sum := by
     refine (Multiset.sum_antidiagonal_assoc s (fun a b c =>
-      A c μ (jets.adjointDualCoeff U⁻¹ b
+      h.A c μ (jets.adjointDualCoeff U⁻¹ b
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ ν))))))).trans ?_
     exact Multiset.sum_antidiagonal_swap s (fun a b =>
       (b.antidiagonal.map fun q =>
-        A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
+        h.A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv a (jets.maurerCartan U⁻¹ ν)))))).sum)
   set Θ : 𝔤 →+ B := ((algebraMap ℂ B).toAddMonoidHom.comp
@@ -219,8 +220,8 @@ theorem repGauge_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
     rw [jets.evalLie_iteratedDeriv_maurerCartan_structure U⁻¹ s μ ν, map_sub, map_multiset_sum,
       Multiset.map_map]
     congr 1
-  rw [hL, repGauge_cons_apply hA U μ s ν φ, repGauge_cons_apply hA U ν s μ φ,
-    hA.repGauge_commutatorFam U s μ ν φ, hR]
+  rw [hL, repGauge_cons_apply h U μ s ν φ, repGauge_cons_apply h U ν s μ φ,
+    h.repGauge_commutatorFam U s μ ν φ, hR]
   simp only [hΘ]
   rw [hconst, hcancel₁, hcancel₂]
   abel
@@ -228,19 +229,19 @@ theorem repGauge_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
 /-- **The field strength is an adjoint gauge tensor**: the packaging of
   `repGauge_fieldStrength` as `TransformsInAdjoint` — the base case of the
   covariant-derivative recursion `TransformsInAdjoint.covDerivAdjoint`. -/
-theorem transformsInAdjoint_fieldStrength (hA : IsGaugeField jets repLorentz repGauge A)
-    (μ ν : Fin 1 ⊕ Fin 3) : TransformsInAdjoint jets repGauge (fieldStrength A μ ν) :=
-  fun U φ s => hA.repGauge_fieldStrength U s μ ν φ
+theorem transformsInAdjoint_fieldStrength
+    (μ ν : Fin 1 ⊕ Fin 3) : TransformsInAdjoint jets repGauge (fieldStrength h.A μ ν) :=
+  fun U φ s => h.repGauge_fieldStrength U s μ ν φ
 
 /-- The underived transformation law: at `s = 0` the Leibniz convolution collapses to
   the homogeneous law — the field strength transforms by the base-point dual adjoint
   action of `U⁻¹` on the adjoint index. -/
-lemma repGauge_fieldStrength_zero (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_fieldStrength_zero
     (U : G) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (fieldStrength A μ ν 0 φ) =
-      fieldStrength A μ ν 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
-  rw [hA.repGauge_fieldStrength U 0 μ ν φ, Multiset.antidiagonal_zero,
+    repGauge U (fieldStrength h.A μ ν 0 φ) =
+      fieldStrength h.A μ ν 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
+  rw [h.repGauge_fieldStrength U 0 μ ν φ, Multiset.antidiagonal_zero,
     Multiset.map_singleton, Multiset.sum_singleton]
 
-end IsGaugeField
+end GaugeAlgebraRealization
 

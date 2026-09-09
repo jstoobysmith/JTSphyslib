@@ -16,9 +16,10 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.JetComponentSpace.Transfor
 `BosonicAlgebra.repJetGaugeGroupI_ofField` records that the undifferentiated generator
 `ψ_φ` transforms by the value of the gauge transformation at the base point. Its derivatives
 do not: a jet of gauge transformations mixes `∂_s ψ_φ` with the lower generators
-`∂_{s₂} ψ_φ`, weighted by the base-point Taylor coefficients `IsGaugeField.repDualCoeff` of
-the gauge jet at the complementary multiset `s₁`. This file proves that all-orders Leibniz
-law, in the form `LocalGaugeData.TransformsIn` demands.
+`∂_{s₂} ψ_φ`, weighted by the base-point Taylor coefficients
+`GaugeAlgebraRealization.repDualCoeff` of the gauge jet at the complementary multiset `s₁`.
+This file proves that all-orders Leibniz law, in the form `LocalGaugeData.TransformsIn`
+demands.
 
 All the work is in `StandardModel.repDual_basis_tmul`, the corresponding statement on the
 jet component space. The symmetric algebra contributes only linearity: the generators are
@@ -117,7 +118,8 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
     (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     repJetGaugeGroupI rep hlin U (iteratedJetDeriv s (ofField φ)) =
       (s.antidiagonal.map fun p =>
-        iteratedJetDeriv p.2 (ofField (IsGaugeField.repDualCoeff rep U⁻¹ p.1 φ))).sum := by
+        iteratedJetDeriv p.2
+          (ofField (GaugeAlgebraRealization.repDualCoeff rep U⁻¹ p.1 φ))).sum := by
   rw [iteratedJetDeriv_ofField, repJetGaugeGroupI_ι,
     show JetComponentSpace.repJet rep hlin U
         ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V)
@@ -159,7 +161,8 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2
           (ofConjField
-            (IsGaugeField.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ p.1 φ))).sum := by
+            (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ p.1
+              φ))).sum := by
   rw [iteratedJetDeriv_ofConjField, repJetGaugeGroupI_ι,
     show JetComponentSpace.repJet rep hlin U
         ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace V)

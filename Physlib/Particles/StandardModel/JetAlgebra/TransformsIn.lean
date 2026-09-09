@@ -268,16 +268,18 @@ private lemma repDualCoeff_repConj_transpose {V W : Type} [AddCommGroup V] [Modu
     {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     {repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
     (hp : ∀ (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)),
-      p.comp (IsGaugeField.repCoeff repV U s) = (IsGaugeField.repCoeff repW U s).comp p)
+      p.comp (GaugeAlgebraRealization.repCoeff repV U s)
+        = (GaugeAlgebraRealization.repCoeff repW U s).comp p)
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule W)) :
-    IsGaugeField.repDualCoeff (JetComponentSpace.repConj repV) U s
+    GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj repV) U s
         (Module.Dual.transpose (ConjModule.map p) φ)
       = Module.Dual.transpose (ConjModule.map p)
-          (IsGaugeField.repDualCoeff (JetComponentSpace.repConj repW) U s φ) := by
+          (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj repW) U s φ) := by
   refine LinearMap.ext fun v => ?_
-  show φ (ConjModule.map p (IsGaugeField.repCoeff (JetComponentSpace.repConj repV) U s v))
-    = φ (IsGaugeField.repCoeff (JetComponentSpace.repConj repW) U s (ConjModule.map p v))
+  show φ (ConjModule.map p
+      (GaugeAlgebraRealization.repCoeff (JetComponentSpace.repConj repV) U s v))
+    = φ (GaugeAlgebraRealization.repCoeff (JetComponentSpace.repConj repW) U s (ConjModule.map p v))
   rw [LocalGaugeData.repCoeff_repConj, LocalGaugeData.repCoeff_repConj]
   exact congrArg φ (LinearMap.congr_fun (hp U s) v)
 

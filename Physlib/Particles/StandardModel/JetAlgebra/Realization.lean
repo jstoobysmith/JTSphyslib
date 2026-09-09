@@ -58,7 +58,7 @@ noncomputable def id : AlgebraRealization JetAlgebra JetAlgebra.repJetGaugeGroup
   map_repLorentz _ _ := rfl
   map_massWeight x := by
     simp [Polynomial.mapAlgHom]
-  repJet_mul := JetAlgebra.isGaugeField.gauge_mul
+  repJet_mul := JetAlgebra.repJetGaugeGroupI_apply_mul
   repLorentz_mul := JetAlgebra.repLorentzGroup_apply_mul
 
 end AlgebraRealization

@@ -14,8 +14,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
 
 `LocalGaugeData.TransformsIn` demands of a family of component functions that each
 derivative symbol transform by the all-orders Leibniz convolution of the base-point Taylor
-coefficients `IsGaugeField.repDualCoeff` of the gauge jet. What the gauge action on the jet
-component space is *built* from is `symbolAction`, the action of the coefficient
+coefficients `GaugeAlgebraRealization.repDualCoeff` of the gauge jet. What the gauge action
+on the jet component space is *built* from is `symbolAction`, the action of the coefficient
 `jetCoeff rep U⁻¹ : JetRing ⊗ End V` through `DerivAlgebraComplex.jetRingAction` on the
 derivative label. This file identifies the two, for any group `G` acting fibrewise on the
 jets of the field.
@@ -23,7 +23,7 @@ jets of the field.
 The bridge is `DerivAlgebraComplex.jetRingAction_basis_multiset`, which puts the action of
 a jet on a derivative monomial into the convolution form that `TransformsIn` wants. What
 remains is to recognise the scalars it produces — the base-point Taylor coefficients of the
-jet-ring factor of the gauge coefficient — as `IsGaugeField.repCoeff`. That is done by
+jet-ring factor of the gauge coefficient — as `GaugeAlgebraRealization.repCoeff`. That is done by
 `jetCoeffAt`, the base-point Taylor coefficient of a jet of endomorphisms, which on the
 gauge coefficient reproduces `repCoeff` because `jetCoeff` reproduces `rep U` on constant
 jets.
@@ -37,7 +37,7 @@ is an instance of the same lemma rather than a second proof.
 - `JetComponentSpace.jetCoeffAt` : the base-point Taylor coefficient of a jet of
   endomorphisms.
 - `JetComponentSpace.jetCoeffAt_jetCoeff` : on the gauge coefficient it is
-  `IsGaugeField.repCoeff`.
+  `GaugeAlgebraRealization.repCoeff`.
 - `JetComponentSpace.symbolAction_basis_tmul` : a coefficient acts on a derivative monomial
   by the Leibniz convolution of its base-point Taylor coefficients.
 - `JetComponentSpace.repDual_basis_tmul` : the transformation law of the derivative symbol
@@ -132,7 +132,7 @@ lemma jetCoeffAt_apply (x : Multiset (Fin 1 ⊕ Fin 3))
 lemma jetCoeffAt_jetCoeff [Module.Free ℂ V] [Module.Finite ℂ V]
     (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) (U : G)
     (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    jetCoeffAt x (jetCoeff rep U) = IsGaugeField.repCoeff rep U x := by
+    jetCoeffAt x (jetCoeff rep U) = GaugeAlgebraRealization.repCoeff rep U x := by
   refine LinearMap.ext fun v => ?_
   rw [jetCoeffAt_apply, jetCoeff_spec]
   rfl
@@ -214,7 +214,7 @@ lemma symbolAction_basis_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V)
 
 /-- The transformation law of the derivative symbol `∂_s ψ_φ` under the jet gauge group:
   the all-orders Leibniz convolution of the dual representation coefficients
-  `IsGaugeField.repDualCoeff` against lower symbols, with no inhomogeneous term. This is
+  `GaugeAlgebraRealization.repDualCoeff` against lower symbols, with no inhomogeneous term. This is
   the identity the `LocalGaugeData.TransformsIn` obligations of a matter field rest on.
 
   Nothing here is special to the unconjugated half of the component space: the conjugate
@@ -227,10 +227,10 @@ lemma repDual_basis_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
     repDual rep hlin U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
       = (s.antidiagonal.map fun p =>
           DerivAlgebraComplex.basis p.2 ⊗ₜ[ℂ]
-            IsGaugeField.repDualCoeff rep U⁻¹ p.1 φ).sum := by
+            GaugeAlgebraRealization.repDualCoeff rep U⁻¹ p.1 φ).sum := by
   rw [show repDual rep hlin U = symbolAction (jetCoeff rep U⁻¹) from rfl,
     symbolAction_basis_tmul]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => by
-    rw [jetCoeffAt_jetCoeff, IsGaugeField.repDualCoeff])
+    rw [jetCoeffAt_jetCoeff, GaugeAlgebraRealization.repDualCoeff])
 
 end JetComponentSpace

@@ -5,59 +5,38 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
-public import Physlib.Mathematics.MultisetAntidiagonal
-public import Physlib.Relativity.IsLorentzDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
 /-!
-# Algebra valued gauge bosons
+# The gauge law on brackets and iterated derivatives
 
-This file is stated for a supplied local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J`
-(jets of a gauge group `G₀` with Lie algebra `𝔤`), which every declaration below takes
-as an argument; the Standard Model package is `StandardModel.localGaugeData` in
-`Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData`.
+## i. Overview
 
-An algebra `B` (for instance a jet algebra of Lagrangian terms) may contain a family of
-elements playing the role of the gauge-field symbols `[∂_s A_μ^a]`. This file defines
-what it means for such a family to *be* a set of gauge bosons: the structure
-`IsGaugeField` records the transformation laws that the physicists' gauge field
-satisfies, with nothing postulated beyond them.
+The gauge law of a realization, `GaugeAlgebraRealization.gauge_apply_deriv`, gives the
+action of a jet `U` on a single derivative symbol `∂_s A_μ^φ`. This file works out what it
+does to the expressions built from the symbols: their brackets, the commutator families
+`[A_μ, A_ν]` and the derivatives of those. The tools are the tensor-level bookkeeping
+`dualPairEquiv` and `tensorBracket`, which let the adjoint index be contracted with a
+bracket of the gauge algebra, and the bracket of component families `bracketFam`, whose
+gauge transformation `repGauge_bracketFam` is the convolution of the transformations of the
+factors against the adjoint Taylor coefficients.
 
-## The physics
+Everything here is stated for a realization `h`; the definitions on families of symbols
+(`bracketFam`, `commutatorFam`) take an arbitrary family, so that they also apply to the
+covariant families built later.
 
-Let `A_μ^a` be a gauge field for the gauge group `G`, with `μ` a spacetime (covector)
-index and `a` an adjoint index. Under a gauge transformation `g` the field transforms as
+## ii. Key results
 
-  `A_μ ↦ Ad_g A_μ + maurerCartan(g)_μ`,
-
-where `maurerCartan(g)_μ = i (∂_μ g) g⁻¹` is the Maurer–Cartan form. The symbols `[∂_s A_μ^a]`
-are coordinate functions on the space of field configurations, so the induced (left)
-action is the pullback along `g⁻¹`: one substitutes `g⁻¹` into the field law and
-differentiates `s` times with the Leibniz rule:
-
-  `g • [∂_s A_μ^a] = ∑_{x+y=s} C(x,y) (∂_x (Ad_{g⁻¹})^a_b)| [∂_y A_μ^b]`
-  `                  + (∂_s maurerCartan(g⁻¹)_μ^a)|`,
-
-where `C(x,y)` is the multinomial coefficient of the splitting and `|` denotes
-evaluation at the base point. All the data on the right is carried by the *jet* of the
-gauge transformation, which is why the gauge representation below is a representation
-of the jet group `G` and not merely of its value group `G₀`.
-
-## The formalization dictionary
-
-* `A μ φ` is the symbol `A_μ^a` contracted with a dual adjoint vector `φ`; the
-  derivative symbols `[∂_s A_μ^a]` are its images `iteratedD D deriv_comm s (A μ φ)` under the
-  total derivative `D`.
-* `∂_x (Ad_{g⁻¹})^a_b|` acting on the dual index is `jets.adjointDualCoeff g⁻¹ x φ`:
-  include the constant algebra element into jets, act by the adjoint of `g⁻¹`,
-  differentiate `x` times, evaluate at the base point, and pair with `φ`.
-* The sum `∑_{x+y=s} C(x,y)` is the sum over `s.antidiagonal`: a splitting `(x, y)`
-  occurs in the antidiagonal of the multiset `s` with multiplicity exactly `C(x,y)`.
-* `(∂_s maurerCartan(g⁻¹)_μ)|` is `JetGaugeAlgebra.eval (iteratedDeriv s (maurerCartanForm g⁻¹ μ))`,
-  a constant algebra element, paired with `φ` and embedded in `B` as a scalar.
+- `GaugeAlgebraRealization.dualPairEquiv`, `GaugeAlgebraRealization.tensorBracket` : the
+  tensor bookkeeping of the adjoint index.
+- `GaugeAlgebraRealization.bracketFam`, `GaugeAlgebraRealization.commutatorFam` : the
+  bracket of two component families, and the derived commutators `∂_s [A_μ, A_ν]`.
+- `GaugeAlgebraRealization.repGauge_bracketFam` : the gauge transformation of a bracket.
+- `GaugeAlgebraRealization.repGauge_commutatorFam` : the gauge transformation of the derived
+  commutators.
 
 -/
 
@@ -74,51 +53,12 @@ variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 open Lorentz
 
-variable (jets) in
-/-- The family `A` of symbols in the algebra `B` is a gauge field for the total
-  derivative `D`, the Lorentz representation `repLorentz` and the gauge representation
-  `repGauge`, when it satisfies the transformation laws of the physicists' gauge field:
-
-  * it presupposes (as arguments, not fields) that `D` is a Lorentz derivative — the
-    instance `Lorentz.IsLorentzDeriv repLorentz D` — and that its components commute
-    (`deriv_comm`), as total derivatives do;
-  * the symbol `A_μ^a` carries one covector index, transforming through the columns of
-    the Lorentz matrix (`lorentz_A`);
-  * under a gauge jet `U` the derivative symbols `[∂_s A_μ^a]` transform by the
-    Leibniz expansion of `A_μ ↦ Ad_{U⁻¹} A_μ + maurerCartan(U⁻¹)_μ` (`gauge_A`) — the adjoint
-    convolution plus the inhomogeneous Maurer–Cartan shift. The inverse makes the
-    action a left action, exactly as in `φ'(x) = φ(Λ⁻¹ x)`. -/
-structure IsGaugeField (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (repGauge : Representation ℂ G B)
-    (A : Multiset (Fin 1 ⊕ Fin 3)  → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) : Prop where
-  /-- The gauge-field symbol carries one covector Lorentz index. -/
-  lorentz_apply : ∀ (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-    (φ : Module.Dual ℝ 𝔤),
-    repLorentz Λ (A (List.ofFn l) μ φ) =
-      ∑ (p : Fin n → (Fin 1 ⊕ Fin 3)),
-        (∏ (i : Fin n), (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ))  •
-      ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • A (List.ofFn p) a φ
-  /-- The gauge transformation of the derivative symbols `[∂_s A_μ^a]`: the Leibniz
-    convolution of the dual adjoint action of `U⁻¹` against lower derivative symbols
-    (the multiset antidiagonal carries the multinomial coefficients), plus the
-    base-point value of the `s`-th derivative of the Maurer–Cartan form of `U⁻¹`. -/
-  gauge_apply_deriv : ∀ (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤),
-    repGauge U (A s μ φ) =
-      (s.antidiagonal.map fun p => (A p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ))).sum
-      + algebraMap ℂ B
-          (φ (jets.evalLie (jets.iteratedDeriv s
-            (jets.maurerCartan U⁻¹ μ))))
-  /-- The gauge action preserves products: gauge transformations act on the algebra of
-    local expressions as algebra homomorphisms. -/
-  gauge_mul : ∀ (U : G) (b₁ b₂ : B),
-    repGauge U (b₁ * b₂) = repGauge U b₁ * repGauge U b₂
-
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- The canonical equivalence, through finite-dimensional duality, between
   algebra-valued fields `B ⊗ 𝔤` and their component families `φ ↦ A^φ`: the element
@@ -153,21 +93,21 @@ noncomputable def commutator
 /-- The gauge transformation of the underived symbol `A_μ^φ`: the special case `s = 0`
   of `gauge_apply_deriv`, with no Leibniz convolution left over — the dual adjoint
   action of the value of `U⁻¹` plus the Maurer–Cartan shift. -/
-lemma repGauge_apply (hA : IsGaugeField jets repLorentz repGauge A) (U : G)
+lemma repGauge_apply (U : G)
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (A 0 μ φ) = A 0 μ (jets.adjointDualCoeff U⁻¹ ∅ φ) +
+    repGauge U (h.A 0 μ φ) = h.A 0 μ (jets.adjointDualCoeff U⁻¹ ∅ φ) +
       algebraMap ℂ B (φ (jets.evalLie (jets.maurerCartan U⁻¹ μ))) := by
   simpa [show (∅ : Multiset (Fin 1 ⊕ Fin 3)) = 0 from rfl] using
-    hA.gauge_apply_deriv U 0 μ φ
+    h.gauge_apply_deriv U 0 μ φ
 
 
 /-- The gauge transformation of the once-derived symbol `∂_ρ A_σ`: the case `s = {ρ}`
   of `gauge_apply_deriv` — the two Leibniz splittings of one derivative, plus the
   base-point value of the derived Maurer–Cartan form. -/
-lemma repGauge_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_deriv_apply
     (U : G) (ρ σ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (A {ρ} σ φ) =
-      A {ρ} σ (jets.adjointDualCoeff U⁻¹ 0 φ) + A 0 σ (jets.adjointDualCoeff U⁻¹ {ρ} φ) +
+    repGauge U (h.A {ρ} σ φ) =
+      h.A {ρ} σ (jets.adjointDualCoeff U⁻¹ 0 φ) + h.A 0 σ (jets.adjointDualCoeff U⁻¹ {ρ} φ) +
       algebraMap ℂ B (φ (jets.evalLie
         (jets.deriv ρ (jets.maurerCartan U⁻¹ σ)))) := by
   have hanti : ({ρ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
@@ -176,7 +116,7 @@ lemma repGauge_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
     rw [show ({ρ} : Multiset (Fin 1 ⊕ Fin 3)) = ρ ::ₘ 0 from rfl,
       Multiset.antidiagonal_cons, Multiset.antidiagonal_zero]
     simp
-  have h := hA.gauge_apply_deriv U {ρ} σ φ
+  have h := h.gauge_apply_deriv U {ρ} σ φ
   rw [hanti] at h
   simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
     Multiset.sum_cons, Multiset.sum_singleton,
@@ -313,13 +253,13 @@ set_option maxHeartbeats 1000000 in
   commutator of the two Maurer–Cartan shifts. Uses that the gauge action is by
   algebra homomorphisms (`gauge_mul`) and that the base-point adjoint transport is a
   morphism of Lie algebras. -/
-lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_commutator
     (U : G) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (commutator A μ ν φ) =
-      commutator A μ ν (jets.adjointDualCoeff U⁻¹ 0 φ)
-      - A 0 μ (jets.adjointDualCoeff U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
+    repGauge U (commutator h.A μ ν φ) =
+      commutator h.A μ ν (jets.adjointDualCoeff U⁻¹ 0 φ)
+      - h.A 0 μ (jets.adjointDualCoeff U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
           (jets.evalLie (jets.maurerCartan U⁻¹ ν))))
-      + A 0 ν (jets.adjointDualCoeff U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
+      + h.A 0 ν (jets.adjointDualCoeff U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
           (jets.evalLie (jets.maurerCartan U⁻¹ μ))))
       + algebraMap ℂ B (φ ⁅jets.evalLie (jets.maurerCartan U⁻¹ μ),
           jets.evalLie (jets.maurerCartan U⁻¹ ν)⁆) := by
@@ -330,8 +270,8 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
       jets.adjoint U⁻¹ ∘ₗ jets.ofConstantLie with hT₀def
   set cμ : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ μ) with hcμ
   set cν : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ ν) with hcν
-  set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (A 0 μ) with hs
-  set t : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (A 0 ν) with ht
+  set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (h.A 0 μ) with hs
+  set t : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (h.A 0 ν) with ht
   have hcoeff : jets.adjointDualCoeff U⁻¹ 0 = T₀.dualMap := by rw [hT₀def]; rfl
   -- the base-point adjoint transport is a Lie algebra morphism
   have hT₀lie : ∀ a b : 𝔤, T₀ ⁅a, b⁆ = ⁅T₀ a, T₀ b⁆ := by
@@ -341,14 +281,14 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
       LieHom.map_lie]
   -- the transformed component families in tensor form
   have hfam : ∀ (ρ : Fin 1 ⊕ Fin 3),
-      Φ ∘ₗ A 0 ρ = A 0 ρ ∘ₗ T₀.dualMap +
+      Φ ∘ₗ h.A 0 ρ = h.A 0 ρ ∘ₗ T₀.dualMap +
         dualPairEquiv ((1 : B) ⊗ₜ[ℝ] jets.evalLie
           (jets.maurerCartan U⁻¹ ρ)) := by
     intro ρ
     refine LinearMap.ext fun ψ => ?_
     simp only [LinearMap.comp_apply, LinearMap.add_apply, hΦdef,
       LinearMap.restrictScalars_apply]
-    rw [hA.repGauge_apply U ρ ψ, dualPairEquiv_one_tmul, ← hcoeff]
+    rw [h.repGauge_apply U ρ ψ, dualPairEquiv_one_tmul, ← hcoeff]
     rfl
   have hsμ : (TensorProduct.map Φ LinearMap.id) s =
       (TensorProduct.map LinearMap.id T₀) s + (1 : B) ⊗ₜ[ℝ] cμ := by
@@ -359,14 +299,14 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
     rw [ht, ← symm_comp_left, hfam ν, map_add, symm_comp_right,
       LinearEquiv.symm_apply_apply, hcν]
   -- record the pairing identities, then make the local definitions opaque
-  have hcomm_pair : dualPairEquiv (tensorBracket s t) = commutator A μ ν := by
+  have hcomm_pair : dualPairEquiv (tensorBracket s t) = commutator h.A μ ν := by
     rw [hs, ht]; rfl
-  have hπs : dualPairEquiv s = A 0 μ := by
+  have hπs : dualPairEquiv s = h.A 0 μ := by
     rw [hs]; exact dualPairEquiv.apply_symm_apply _
-  have hπt : dualPairEquiv t = A 0 ν := by
+  have hπt : dualPairEquiv t = h.A 0 ν := by
     rw [ht]; exact dualPairEquiv.apply_symm_apply _
   have hΦmul : ∀ b₁ b₂ : B, Φ (b₁ * b₂) = Φ b₁ * Φ b₂ := fun b₁ b₂ =>
-    hA.gauge_mul U b₁ b₂
+    h.gauge_mul U b₁ b₂
   clear_value Φ T₀ cμ cν s t
   -- the tensor-level transformation of the bracket
   have htensor : (TensorProduct.map Φ LinearMap.id) (tensorBracket s t) =
@@ -387,7 +327,7 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
   simp only [map_add, map_sub, LinearMap.add_apply, LinearMap.sub_apply,
     dualPairEquiv_map_left, dualPairEquiv_map_right,
     dualPairEquiv_one_tmul] at hread
-  rw [show repGauge U (commutator A μ ν φ) = Φ (dualPairEquiv (tensorBracket s t) φ) from by
+  rw [show repGauge U (commutator h.A μ ν φ) = Φ (dualPairEquiv (tensorBracket s t) φ) from by
       rw [← hcomm_pair, hΦdef]; rfl,
     hread, hcoeff, hcomm_pair, hπs, hπt]
   rfl
@@ -401,13 +341,13 @@ lemma repGauge_commutator (hA : IsGaugeField jets repLorentz repGauge A)
 /-- The gauge transformation of the twice-derived symbol `∂_ρ ∂_σ A_τ`: the case
   `s = ρ ::ₘ {σ}` of `gauge_apply_deriv` — the four Leibniz splittings of two
   derivatives, plus the base-point value of the twice-derived Maurer–Cartan form. -/
-lemma repGauge_deriv_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_deriv_deriv_apply
     (U : G) (ρ σ τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (A (ρ ::ₘ {σ}) τ φ) =
-      A (ρ ::ₘ {σ}) τ (jets.adjointDualCoeff U⁻¹ 0 φ)
-      + A {ρ} τ (jets.adjointDualCoeff U⁻¹ {σ} φ)
-      + A {σ} τ (jets.adjointDualCoeff U⁻¹ {ρ} φ)
-      + A 0 τ (jets.adjointDualCoeff U⁻¹ (ρ ::ₘ {σ}) φ)
+    repGauge U (h.A (ρ ::ₘ {σ}) τ φ) =
+      h.A (ρ ::ₘ {σ}) τ (jets.adjointDualCoeff U⁻¹ 0 φ)
+      + h.A {ρ} τ (jets.adjointDualCoeff U⁻¹ {σ} φ)
+      + h.A {σ} τ (jets.adjointDualCoeff U⁻¹ {ρ} φ)
+      + h.A 0 τ (jets.adjointDualCoeff U⁻¹ (ρ ::ₘ {σ}) φ)
       + algebraMap ℂ B (φ (jets.evalLie (jets.deriv ρ
           (jets.deriv σ (jets.maurerCartan U⁻¹ τ))))) := by
   have hanti₁ : ({σ} : Multiset (Fin 1 ⊕ Fin 3)).antidiagonal =
@@ -423,7 +363,7 @@ lemma repGauge_deriv_deriv_apply (hA : IsGaugeField jets repLorentz repGauge A)
         (ρ ::ₘ ({σ} : Multiset (Fin 1 ⊕ Fin 3)), (0 : Multiset (Fin 1 ⊕ Fin 3)))} := by
     rw [Multiset.antidiagonal_cons, hanti₁]
     simp [Multiset.insert_eq_cons]
-  have h := hA.gauge_apply_deriv U (ρ ::ₘ {σ}) τ φ
+  have h := h.gauge_apply_deriv U (ρ ::ₘ {σ}) τ φ
   rw [hanti] at h
   simp only [Multiset.insert_eq_cons, Multiset.map_cons, Multiset.map_singleton,
     Multiset.sum_cons, Multiset.sum_singleton, LocalGaugeData.iteratedDeriv_cons,
@@ -583,13 +523,14 @@ lemma bracketFam_dualMap_derivation (T₀ T₁ : 𝔤 →ₗ[ℝ] 𝔤)
     dualPairEquiv_map_right]
   rfl
 
+include h in
 set_option maxHeartbeats 1000000 in
 /-- The gauge transformation of the bracket of two component families with affine
   transformation laws `f ↦ f' + φ(c_f)·1` and `g ↦ g' + φ(c_g)·1`: the bracket of the
   transformed families, two `ad` cross terms, and the constant bracket `⁅c_f, c_g⁆`.
   Pure bilinearity, with `tensorBracket_one_left/right` computing the cross terms;
   `repGauge_commutator` is the special case of two field symbols. -/
-lemma repGauge_bracketFam (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_bracketFam
     (U : G) {f g f' g' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     {cf cg : 𝔤}
     (hf : ∀ ψ : Module.Dual ℝ 𝔤,
@@ -604,7 +545,7 @@ lemma repGauge_bracketFam (hA : IsGaugeField jets repLorentz repGauge A)
       + algebraMap ℂ B (φ ⁅cf, cg⁆) := by
   set Φ : B →ₗ[ℝ] B := (repGauge U).restrictScalars ℝ with hΦdef
   have hΦmul : ∀ b₁ b₂ : B, Φ (b₁ * b₂) = Φ b₁ * Φ b₂ := fun b₁ b₂ =>
-    hA.gauge_mul U b₁ b₂
+    h.gauge_mul U b₁ b₂
   set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm f with hs
   set t : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm g with ht
   set s' : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm f' with hs'
@@ -790,28 +731,28 @@ lemma bracketFam_adjointDualCoeff (U : G) (x : Multiset (Fin 1 ⊕ Fin 3))
   the Leibniz splittings where `κ` stays a derivative, minus (by
   `LocalGaugeData.adjointDualCoeff_cons`) the splittings where `κ` hits the adjoint — an `ad` of the
   derived Maurer–Cartan form — plus the derived Maurer–Cartan shift. -/
-lemma repGauge_cons_apply (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_cons_apply
     (U : G) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (A (κ ::ₘ s) τ φ) =
+    repGauge U (h.A (κ ::ₘ s) τ φ) =
       (s.antidiagonal.map fun p =>
-        A (κ ::ₘ p.2) τ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
+        h.A (κ ::ₘ p.2) τ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            A p.2 τ (jets.adjointDualCoeff U⁻¹ q.2
+            h.A p.2 τ (jets.adjointDualCoeff U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ κ)))))).sum).sum
       + algebraMap ℂ B (φ (jets.evalLie (jets.iteratedDeriv (κ ::ₘ s)
           (jets.maurerCartan U⁻¹ τ)))) := by
-  rw [hA.gauge_apply_deriv U (κ ::ₘ s) τ φ]
+  rw [h.gauge_apply_deriv U (κ ::ₘ s) τ φ]
   congr 1
   simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
     Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
   have hsec : (Multiset.map (fun p =>
-        A p.2 τ (jets.adjointDualCoeff U⁻¹ (κ ::ₘ p.1) φ)) s.antidiagonal).sum =
+        h.A p.2 τ (jets.adjointDualCoeff U⁻¹ (κ ::ₘ p.1) φ)) s.antidiagonal).sum =
       -(s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            A p.2 τ (jets.adjointDualCoeff U⁻¹ q.2
+            h.A p.2 τ (jets.adjointDualCoeff U⁻¹ q.2
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv q.1 (jets.maurerCartan U⁻¹ κ)))))).sum).sum := by
     rw [← Multiset.sum_map_neg'']
@@ -826,20 +767,20 @@ set_option maxHeartbeats 2000000 in
   and the convolution of Maurer–Cartan bracket shifts. This is `repGauge_commutator`
   at every derivative order simultaneously; the regrouping of the four-fold splitting
   is `Multiset.sum_antidiagonal_exchange`. -/
-lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_commutatorFam
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (commutatorFam A μ ν s φ) =
+    repGauge U (commutatorFam h.A μ ν s φ) =
       (s.antidiagonal.map fun p =>
-        commutatorFam A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
+        commutatorFam h.A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
       + (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun r =>
-            A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
+            h.A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum).sum
       - (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
+            h.A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
               (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
                 (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum).sum
       + (s.antidiagonal.map fun p =>
@@ -850,22 +791,22 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
   -- the affine transformation law of the derived symbols, with the Leibniz sum as a map
   have hAlaw : ∀ (τ : Fin 1 ⊕ Fin 3) (u : Multiset (Fin 1 ⊕ Fin 3))
       (ψ : Module.Dual ℝ 𝔤),
-      repGauge U (A u τ ψ) =
-        ((u.antidiagonal.map fun q => A q.2 τ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum) ψ
+      repGauge U (h.A u τ ψ) =
+        ((u.antidiagonal.map fun q => h.A q.2 τ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum) ψ
         + algebraMap ℂ B (ψ (jets.evalLie
             (jets.iteratedDeriv u (jets.maurerCartan U⁻¹ τ)))) := by
     intro τ u ψ
-    rw [hA.gauge_apply_deriv U u τ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
+    rw [h.gauge_apply_deriv U u τ ψ, Multiset.sum_linearMap_apply, Multiset.map_map]
     congr 1
   -- the convolution triple sum in its two groupings
   have hMa : (s.antidiagonal.map fun p =>
-      bracketFam ((p.1.antidiagonal.map fun q => A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
-        ((p.2.antidiagonal.map fun r => A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum) φ).sum =
+      bracketFam ((p.1.antidiagonal.map fun q => h.A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
+        ((p.2.antidiagonal.map fun r => h.A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum) φ).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            bracketFam (A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
-              (A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1) φ).sum).sum).sum := by
+            bracketFam (h.A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+              (h.A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [bracketFam_sum_left, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_map]
@@ -876,28 +817,28 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply]
   have hMc : (s.antidiagonal.map fun p =>
-      commutatorFam A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
+      commutatorFam h.A μ ν p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum =
       (s.antidiagonal.map fun p =>
         (p.1.antidiagonal.map fun q =>
           (p.2.antidiagonal.map fun r =>
-            bracketFam (A r.1 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
-              (A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ q.2) φ).sum).sum).sum := by
+            bracketFam (h.A r.1 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1)
+              (h.A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ q.2) φ).sum).sum).sum := by
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
     rw [commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map,
       Multiset.map_congr rfl (fun r hr => by
         rw [Function.comp_apply,
-          bracketFam_adjointDualCoeff U⁻¹ p.1 (A r.1 μ) (A r.2 ν) φ]),
+          bracketFam_adjointDualCoeff U⁻¹ p.1 (h.A r.1 μ) (h.A r.2 ν) φ]),
       Multiset.sum_map_sum_map]
   have hM := hMa.trans ((Multiset.sum_antidiagonal_exchange s fun a b c d =>
-      bracketFam (A b μ ∘ₗ jets.adjointDualCoeff U⁻¹ a)
-        (A d ν ∘ₗ jets.adjointDualCoeff U⁻¹ c) φ).trans hMc.symm)
+      bracketFam (h.A b μ ∘ₗ jets.adjointDualCoeff U⁻¹ a)
+        (h.A d ν ∘ₗ jets.adjointDualCoeff U⁻¹ c) φ).trans hMc.symm)
   -- the cross-term sums, applied
   have hCg : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-      ((p.2.antidiagonal.map fun r => A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum)
+      ((p.2.antidiagonal.map fun r => h.A r.2 ν ∘ₗ jets.adjointDualCoeff U⁻¹ r.1).sum)
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))) =
       (p.2.antidiagonal.map fun r =>
-        A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
+        h.A r.2 ν (jets.adjointDualCoeff U⁻¹ r.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.1 (jets.maurerCartan U⁻¹ μ)))))).sum := by
     intro p
@@ -905,11 +846,11 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun r hr => ?_)
     simp only [Function.comp_apply, LinearMap.coe_comp]
   have hCf : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
-      ((p.1.antidiagonal.map fun q => A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
+      ((p.1.antidiagonal.map fun q => h.A q.2 μ ∘ₗ jets.adjointDualCoeff U⁻¹ q.1).sum)
         (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
           (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))) =
       (p.1.antidiagonal.map fun q =>
-        A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
+        h.A q.2 μ (jets.adjointDualCoeff U⁻¹ q.1
           (φ ∘ₗ LieAlgebra.ad ℝ 𝔤 (jets.evalLie
             (jets.iteratedDeriv p.2 (jets.maurerCartan U⁻¹ ν)))))).sum := by
     intro p
@@ -921,8 +862,8 @@ lemma repGauge_commutatorFam (hA : IsGaugeField jets repLorentz repGauge A)
     Multiset.map_map,
     Multiset.map_congr rfl (fun p hp => by
       rw [Function.comp_apply, Function.comp_apply,
-        hA.repGauge_bracketFam U (hAlaw μ p.1) (hAlaw ν p.2) φ, hCg p, hCf p]),
+        h.repGauge_bracketFam U (hAlaw μ p.1) (hAlaw ν p.2) φ, hCg p, hCf p]),
     Multiset.sum_map_add, Multiset.sum_map_sub, Multiset.sum_map_add, hM]
 
-end IsGaugeField
+end GaugeAlgebraRealization
 

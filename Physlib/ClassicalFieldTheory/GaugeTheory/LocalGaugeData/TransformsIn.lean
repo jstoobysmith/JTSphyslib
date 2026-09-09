@@ -47,7 +47,7 @@ variable {G : Type} [Group G]
 
 namespace LocalGaugeData
 
-open IsGaugeField
+open GaugeAlgebraRealization
 
 /-- A component family `F`, valued in `B` and indexed by the complex dual of the
   representation space `V`, *transforms in* the representation `rep` of the jet gauge

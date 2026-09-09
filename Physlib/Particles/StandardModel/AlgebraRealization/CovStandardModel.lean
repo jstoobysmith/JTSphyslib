@@ -122,13 +122,13 @@ include h in
   and the jet action is an algebra map. -/
 lemma repGlobal_mul (g : GaugeGroupI) (b₁ b₂ : B) :
     repGlobal repJet g (b₁ * b₂) = repGlobal repJet g b₁ * repGlobal repJet g b₂ :=
-  h.repJet_A.gauge_mul _ b₁ b₂
+  h.gaugeRealization.gauge_mul _ b₁ b₂
 
 /-!
 
 ## B. The twelve matter species
 
-Every matter tower is `IsGaugeField.covDerivIter h.A act F n l 0` for the gauge-algebra
+Every matter tower is `GaugeAlgebraRealization.covDerivIter h.A act F n l 0` for the gauge-algebra
 action `act` of its species and its bare family `F`, and every law proved below for a
 matter tower uses only two facts about that family: its symbols commute with the
 gauge-field symbols, and they are mass-weight eigenvectors of weight `c + 2 * |t|` at the
@@ -165,13 +165,13 @@ variable {h} {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V
 /-- The covariant tower of the species, in the ordered-tuple indexing of the covariant
   form of the theory. -/
 noncomputable def tower {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) : Module.Dual ℂ V →ₗ[ℂ] B :=
-  IsGaugeField.covDerivIter h.A S.act S.F n l 0
+  GaugeAlgebraRealization.covDerivIter h.A S.act S.F n l 0
 
 /-- The tower commutes with the gauge-field symbols: it is a polynomial in symbols that do. -/
 lemma comm_A {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V)
     (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra) :
     Commute (S.tower l φ) (h.A p μ ψ) :=
-  IsGaugeField.commute_covDerivIter S.act S.F h.A_comm_A S.A_comm n l φ p μ ψ
+  GaugeAlgebraRealization.commute_covDerivIter S.act S.F h.A_comm_A S.A_comm n l φ p μ ψ
 
 end Species
 
@@ -268,7 +268,7 @@ include h in
   complex-linear. -/
 lemma repJet_algebraMap (U : JetGaugeGroupI) (c : ℂ) :
     repJet U (algebraMap ℂ B c) = algebraMap ℂ B c := by
-  have hone := h.repJet_A.gauge_mul U (repJet U⁻¹ 1) 1
+  have hone := h.gaugeRealization.gauge_mul U (repJet U⁻¹ 1) 1
   rw [mul_one, ← Module.End.mul_apply, ← map_mul, mul_inv_cancel, map_one repJet,
     Module.End.one_apply, one_mul] at hone
   rw [Algebra.algebraMap_eq_smul_one, map_smul, ← hone]
@@ -303,7 +303,7 @@ lemma repJet_eq_of_mem_covAlgebra_of_mem_truncationKer_zero
   | mem b hb => exact h.repJet_eq_of_mem_covGenerators_of_mem_truncationKer_zero U hb
   | algebraMap c => exact h.repJet_algebraMap U.1 c
   | add a b _ _ iha ihb => rw [map_add, iha, ihb]
-  | mul a b _ _ iha ihb => rw [h.repJet_A.gauge_mul, iha, ihb]
+  | mul a b _ _ iha ihb => rw [h.gaugeRealization.gauge_mul, iha, ihb]
 
 /-!
 
@@ -360,9 +360,9 @@ lemma repCoeff_zero_ofConstant {V : Type} [AddCommGroup V] [Module ℂ V]
     {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {g : GaugeGroupI}
     (hg : rep (JetGaugeGroupI.ofConstant g) = TensorProduct.map LinearMap.id (repG g)) :
-    IsGaugeField.repCoeff rep (JetGaugeGroupI.ofConstant g) 0 = repG g := by
+    GaugeAlgebraRealization.repCoeff rep (JetGaugeGroupI.ofConstant g) 0 = repG g := by
   refine LinearMap.ext fun v => ?_
-  simp only [IsGaugeField.repCoeff, LinearMap.coe_comp, Function.comp_apply,
+  simp only [GaugeAlgebraRealization.repCoeff, LinearMap.coe_comp, Function.comp_apply,
     jetIteratedDeriv_zero, LinearMap.id_coe, id_eq, jetOfConstant_apply, hg,
     TensorProduct.map_tmul, LinearMap.id_apply, jetEval_tmul, map_one, one_smul]
 
@@ -373,12 +373,13 @@ lemma repGlobal_of_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
     {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {T : Module.Dual ℂ V →ₗ[ℂ] B}
     (hT : ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℂ V),
-      repJet U (T φ) = T (IsGaugeField.repDualCoeff rep U⁻¹ 0 φ))
+      repJet U (T φ) = T (GaugeAlgebraRealization.repDualCoeff rep U⁻¹ 0 φ))
     (hg : ∀ g : GaugeGroupI,
       rep (JetGaugeGroupI.ofConstant g) = TensorProduct.map LinearMap.id (repG g))
     (g : GaugeGroupI) (φ : Module.Dual ℂ V) :
     repGlobal repJet g (T φ) = T (repG.dual g φ) := by
-  rw [repGlobal_apply, hT, ← map_inv JetGaugeGroupI.ofConstant, IsGaugeField.repDualCoeff,
+  rw [repGlobal_apply, hT, ← map_inv JetGaugeGroupI.ofConstant,
+    GaugeAlgebraRealization.repDualCoeff,
     repCoeff_zero_ofConstant (hg g⁻¹)]
   rfl
 
@@ -388,12 +389,13 @@ lemma repGlobal_of_repJet_conj {V : Type} [AddCommGroup V] [Module ℂ V]
     {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {T : Module.Dual ℂ (ConjModule V) →ₗ[ℂ] B}
     (hT : ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)), repJet U (T φ) =
-      T (IsGaugeField.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ 0 φ))
+      T (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ 0 φ))
     (hg : ∀ g : GaugeGroupI,
       rep (JetGaugeGroupI.ofConstant g) = TensorProduct.map LinearMap.id (repG g))
     (g : GaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)) :
     repGlobal repJet g (T φ) = T (repG.conj.dual g φ) := by
-  rw [repGlobal_apply, hT, ← map_inv JetGaugeGroupI.ofConstant, IsGaugeField.repDualCoeff,
+  rw [repGlobal_apply, hT, ← map_inv JetGaugeGroupI.ofConstant,
+    GaugeAlgebraRealization.repDualCoeff,
     LocalGaugeData.repCoeff_repConj, repCoeff_zero_ofConstant (hg g⁻¹)]
   rfl
 
@@ -499,7 +501,7 @@ lemma covF_mem_adjoin_gaugeSymbols {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra) :
     h.covF l μ ν φ ∈ Algebra.adjoin ℂ {b : B | ∃ (s : Multiset (Fin 1 ⊕ Fin 3))
       (ρ : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra), b = h.A s ρ ψ} :=
-  IsGaugeField.iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols
+  GaugeAlgebraRealization.iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols
     (List.ofFn l) μ ν φ
 
 /-- The field-strength tower commutes with anything the gauge-field symbols commute
@@ -508,7 +510,7 @@ lemma covF_comm_of_comm_A {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : F
     (ψ : Module.Dual ℝ GaugeAlgebra) {y : B}
     (hy : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3) (ψ' : Module.Dual ℝ GaugeAlgebra),
       Commute (h.A p ρ ψ') y) : Commute (h.covF l μ ν ψ) y := by
-  refine IsGaugeField.commute_of_mem_adjoin ?_ (h.covF_mem_adjoin_gaugeSymbols l μ ν ψ)
+  refine GaugeAlgebraRealization.commute_of_mem_adjoin ?_ (h.covF_mem_adjoin_gaugeSymbols l μ ν ψ)
   rintro x ⟨p, ρ, ψ', rfl⟩
   exact hy p ρ ψ'
 
@@ -527,7 +529,8 @@ lemma commute_gaugeSymbol_of_mem_covGenerators (p : Multiset (Fin 1 ⊕ Fin 3))
 lemma covF_commute_of_mem_covAlgebra {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (ψ : Module.Dual ℝ GaugeAlgebra) {x : B}
     (hx : x ∈ h.covAlgebra) : Commute (h.covF l μ ν ψ) x :=
-  (IsGaugeField.commute_of_mem_adjoin (fun _ hb => (h.covF_comm_of_comm_A l μ ν ψ fun p ρ ψ' =>
+  (GaugeAlgebraRealization.commute_of_mem_adjoin (fun _ hb =>
+    (h.covF_comm_of_comm_A l μ ν ψ fun p ρ ψ' =>
     (h.commute_gaugeSymbol_of_mem_covGenerators p ρ ψ' hb).symm).symm) hx).symm
 
 /-!
@@ -547,12 +550,12 @@ lemma actionFam_apply_mem_submodule {V : Type} [AddCommGroup V] [Module ℂ V]
     [FiniteDimensional ℂ V] {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V} {M : Submodule ℂ B}
     {f : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B} {g : Module.Dual ℂ V →ₗ[ℂ] B}
     (hfg : ∀ ψ χ, f ψ * g χ ∈ M) (φ : Module.Dual ℂ V) :
-    IsGaugeField.actionFam act f g φ ∈ M := by
-  rw [IsGaugeField.actionFam,
-    IsGaugeField.dualPairEquiv_symm_eq_sum (Module.finBasis ℝ GaugeAlgebra) f,
-    IsGaugeField.dualPairEquivC_symm_eq_sum (Module.finBasis ℂ V) g]
-  simp only [map_sum, LinearMap.sum_apply, IsGaugeField.tensorAction_tmul,
-    IsGaugeField.dualPairEquivC_tmul]
+    GaugeAlgebraRealization.actionFam act f g φ ∈ M := by
+  rw [GaugeAlgebraRealization.actionFam,
+    GaugeAlgebraRealization.dualPairEquiv_symm_eq_sum (Module.finBasis ℝ GaugeAlgebra) f,
+    GaugeAlgebraRealization.dualPairEquivC_symm_eq_sum (Module.finBasis ℂ V) g]
+  simp only [map_sum, LinearMap.sum_apply, GaugeAlgebraRealization.tensorAction_tmul,
+    GaugeAlgebraRealization.dualPairEquivC_tmul]
   exact sum_mem fun i _ => sum_mem fun j _ => M.smul_mem _ (hfg _ _)
 
 /-- The bracket pairing of two adjoint families lands in any submodule containing the
@@ -560,8 +563,8 @@ lemma actionFam_apply_mem_submodule {V : Type} [AddCommGroup V] [Module ℂ V]
 lemma bracketFam_apply_mem_submodule {M : Submodule ℂ B}
     {f g : Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] B}
     (hfg : ∀ ψ χ, f ψ * g χ ∈ M) (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsGaugeField.bracketFam f g φ ∈ M := by
-  rw [IsGaugeField.bracketFam_apply_eq_sum]
+    GaugeAlgebraRealization.bracketFam f g φ ∈ M := by
+  rw [GaugeAlgebraRealization.bracketFam_apply_eq_sum]
   refine sum_mem fun j _ => sum_mem fun k _ => ?_
   rw [← algebraMap_smul ℂ]
   exact M.smul_mem _ (hfg _ _)
@@ -619,19 +622,19 @@ variable {h} {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V
   gauge-field factor. -/
 lemma covDerivIter_mem_massWeightEigenspace {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
-    IsGaugeField.covDerivIter h.A S.act S.F n l s φ ∈
+    GaugeAlgebraRealization.covDerivIter h.A S.act S.F n l s φ ∈
       massWeightEigenspace massWeightPoly (S.c + 2 * n + 2 * Multiset.card s) := by
   induction n generalizing s φ with
   | zero =>
-      rw [IsGaugeField.covDerivIter_zero]
+      rw [GaugeAlgebraRealization.covDerivIter_zero]
       simpa using mem_massWeightEigenspace_iff.mpr (S.massWeight s φ)
   | succ n ih =>
-      rw [IsGaugeField.covDerivIter_succ, IsGaugeField.covDerivAction_apply]
+      rw [GaugeAlgebraRealization.covDerivIter_succ, GaugeAlgebraRealization.covDerivAction_apply]
       refine add_mem ?_ ?_
       · have hstep := ih (fun i => l i.succ) (l 0 ::ₘ s) φ
         rwa [Multiset.card_cons, show S.c + 2 * n + 2 * (Multiset.card s + 1)
             = S.c + 2 * (n + 1) + 2 * Multiset.card s by ring] at hstep
-      · rw [IsGaugeField.actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      · rw [GaugeAlgebraRealization.actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
         refine multiset_sum_mem _ fun x hx => ?_
         obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
         have hle : Multiset.card p.1 + Multiset.card p.2 = Multiset.card s := by
@@ -656,9 +659,9 @@ end Species
   extra derivative, in either case weight `4 + 2 * |s|`. -/
 lemma fieldStrength_mem_massWeightEigenspace (μ ν : Fin 1 ⊕ Fin 3)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsGaugeField.fieldStrength h.A μ ν s φ ∈
+    GaugeAlgebraRealization.fieldStrength h.A μ ν s φ ∈
       massWeightEigenspace massWeightPoly (4 + 2 * Multiset.card s) := by
-  rw [IsGaugeField.fieldStrength_apply]
+  rw [GaugeAlgebraRealization.fieldStrength_apply]
   refine add_mem (sub_mem ?_ ?_) ?_
   · have hstep := h.A_mem_massWeightEigenspace (μ ::ₘ s) ν φ
     rwa [Multiset.card_cons,
@@ -666,7 +669,7 @@ lemma fieldStrength_mem_massWeightEigenspace (μ ν : Fin 1 ⊕ Fin 3)
   · have hstep := h.A_mem_massWeightEigenspace (ν ::ₘ s) μ φ
     rwa [Multiset.card_cons,
       show 2 * (1 + (Multiset.card s + 1)) = 4 + 2 * Multiset.card s by ring] at hstep
-  · rw [IsGaugeField.commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map]
+  · rw [GaugeAlgebraRealization.commutatorFam, Multiset.sum_linearMap_apply, Multiset.map_map]
     refine multiset_sum_mem _ fun x hx => ?_
     obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
     have hle : Multiset.card p.1 + Multiset.card p.2 = Multiset.card s := by
@@ -687,22 +690,23 @@ lemma iteratedCovDerivAdjoint_mem_massWeightEigenspace (c : ℕ)
       G t χ ∈ massWeightEigenspace massWeightPoly (c + 2 * Multiset.card t))
     (l : List (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsGaugeField.iteratedCovDerivAdjoint h.A l G s φ ∈
+    GaugeAlgebraRealization.iteratedCovDerivAdjoint h.A l G s φ ∈
       massWeightEigenspace massWeightPoly (c + 2 * l.length + 2 * Multiset.card s) := by
   induction l generalizing s φ with
   | nil =>
-      rw [show IsGaugeField.iteratedCovDerivAdjoint h.A ([] : List (Fin 1 ⊕ Fin 3)) G = G
+      rw [show GaugeAlgebraRealization.iteratedCovDerivAdjoint h.A ([] : List (Fin 1 ⊕ Fin 3)) G = G
         from rfl]
       simpa using hG s φ
   | cons ρ l ih =>
-      rw [show IsGaugeField.iteratedCovDerivAdjoint h.A (ρ :: l) G
-          = IsGaugeField.covDerivAdjoint h.A (IsGaugeField.iteratedCovDerivAdjoint h.A l G) ρ
-        from rfl, IsGaugeField.covDerivAdjoint_apply, List.length_cons]
+      rw [show GaugeAlgebraRealization.iteratedCovDerivAdjoint h.A (ρ :: l) G
+          = GaugeAlgebraRealization.covDerivAdjoint h.A
+              (GaugeAlgebraRealization.iteratedCovDerivAdjoint h.A l G) ρ
+        from rfl, GaugeAlgebraRealization.covDerivAdjoint_apply, List.length_cons]
       refine add_mem ?_ ?_
       · have hstep := ih (ρ ::ₘ s) φ
         rwa [Multiset.card_cons, show c + 2 * l.length + 2 * (Multiset.card s + 1)
             = c + 2 * (l.length + 1) + 2 * Multiset.card s by ring] at hstep
-      · rw [IsGaugeField.bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      · rw [GaugeAlgebraRealization.bracketFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
         refine multiset_sum_mem _ fun x hx => ?_
         obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hx
         have hle : Multiset.card p.1 + Multiset.card p.2 = Multiset.card s := by
@@ -849,8 +853,8 @@ lemma commute_tower {y : B}
       Commute (h.A p μ ψ) y)
     (hyF : ∀ (t : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ V), Commute (S.F t χ) y)
     {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) : Commute (S.tower l φ) y := by
-  refine IsGaugeField.commute_of_mem_adjoin ?_
-    (IsGaugeField.covDerivIter_mem_adjoin_symbols S.act S.F n l 0 φ)
+  refine GaugeAlgebraRealization.commute_of_mem_adjoin ?_
+    (GaugeAlgebraRealization.covDerivIter_mem_adjoin_symbols S.act S.F n l 0 φ)
   rintro x (⟨p, μ, ψ, rfl⟩ | ⟨t, χ, rfl⟩)
   exacts [hyA p μ ψ, hyF t χ]
 
@@ -877,15 +881,16 @@ lemma anticomm_tower {x : B}
     x * S.tower l φ = -(S.tower l φ * x) := by
   suffices key : ∀ (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ V),
-      IsGaugeField.covDerivIter h.A S.act S.F n l s φ ∈ anticommuteSubmodule x from key n l 0 φ
+      GaugeAlgebraRealization.covDerivIter h.A S.act S.F n l s φ ∈ anticommuteSubmodule x
+    from key n l 0 φ
   intro n
   induction n with
   | zero => exact fun l s φ => hxF s φ
   | succ n ih =>
       intro l s φ
-      rw [IsGaugeField.covDerivIter_succ, IsGaugeField.covDerivAction_apply]
+      rw [GaugeAlgebraRealization.covDerivIter_succ, GaugeAlgebraRealization.covDerivAction_apply]
       refine add_mem (ih _ _ _) ?_
-      rw [IsGaugeField.actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
+      rw [GaugeAlgebraRealization.actionFamConv, Multiset.sum_linearMap_apply, Multiset.map_map]
       refine multiset_sum_mem _ fun z hz => ?_
       obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hz
       simp only [Function.comp_apply]
@@ -1377,7 +1382,7 @@ end
 The Lorentz laws of the matter towers are section L of
 [`CovariantDeriv.lean`](CovariantDeriv.lean); the one for the field-strength tower is
 `repLorentz_covF` just below, which is
-`IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength` read in the
+`GaugeAlgebraRealization.repLorentz_iteratedCovDerivAdjoint_fieldStrength` read in the
 ordered-tuple indexing.
 
 -/
@@ -1392,8 +1397,8 @@ lemma repLorentz_covF (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3
         (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
       ∑ a, (((SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
       ∑ b, (((SL2C.toLorentzGroup Λ).1 b ν : ℝ) : ℂ) • h.covF p a b φ :=
-  IsGaugeField.repLorentz_iteratedCovDerivAdjoint_fieldStrength h.repLorentz_mul
-    h.repJet_A Λ n l μ ν φ
+  GaugeAlgebraRealization.repLorentz_iteratedCovDerivAdjoint_fieldStrength h.gaugeRealization
+    Λ n l μ ν φ
 
 end AlgebraRealization
 

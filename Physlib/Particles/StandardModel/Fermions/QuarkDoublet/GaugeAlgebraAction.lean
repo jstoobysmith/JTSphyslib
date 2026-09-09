@@ -133,7 +133,7 @@ noncomputable def actionMatrix (c : GaugeAlgebra) :
 /-- **The infinitesimal action of the gauge algebra on the quark doublet**: the
   derivative of the `(3, 2)_{1}` action of the gauge group, real-linear in the
   algebra slot and complex-linear in the value slot — the form consumed by the
-  covariant derivative `IsGaugeField.covDerivIter` and by
+  covariant derivative `GaugeAlgebraRealization.covDerivIter` and by
   `LocalGaugeData.IsInfinitesimalActionOf`. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] QuarkDoublet →ₗ[ℂ] QuarkDoublet where
@@ -524,12 +524,12 @@ set_option maxHeartbeats 1000000 in
   doublet are the colour–weak endomorphisms of the base-point Taylor coefficients of
   the colour–weak matrix. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U x
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
       = colourWeakEnd ((jetGaugeMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by
   refine LinearMap.ext fun d => ?_
   apply colourWeakValLinEquiv.injective
-  rw [show IsGaugeField.repCoeff repJetGaugeGroupI U x d
+  rw [show GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x d
       = jetEval (jetIteratedDeriv x
           (repJetGaugeGroupI U (jetOfConstant d))) from rfl,
     colourWeakValLinEquiv_jetEval, jetValLinEquiv_jetIteratedDeriv,
@@ -625,7 +625,7 @@ lemma colourWeakEnd_one : colourWeakEnd 1 = LinearMap.id := by
 /-- At the base point, a gauge jet with trivial value acts trivially: the zeroth
   Taylor coefficient of the jet gauge action is the identity. -/
 lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
-    IsGaugeField.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
+    GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
   have h1 : (constantCoeff : JetRing →+* ℂ).mapMatrix
       ((U.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
         = 1 := Subtype.ext_iff.mp (congrArg Prod.fst hU)

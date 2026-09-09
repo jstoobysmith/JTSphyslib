@@ -43,16 +43,18 @@ symbols commute with each other and with the further generators.
 
 ## ii. Key results
 
-- `IsGaugeField.symmetrizedDeriv` : the symmetrized derivative symbols.
-- `IsGaugeField.iteratedCovDerivAdjoint` : the iterated covariant derivative of an adjoint
-  family along a list of directions.
-- `IsGaugeField.symbolsLE`, `IsGaugeField.symSymbolsLE`, `IsGaugeField.towerLT` : the
-  generating sets of the three towers, filtered by order.
-- `IsGaugeField.symbolAdjoin_eq_symFieldAdjoin` : the generation theorem.
-- `IsGaugeField.repGauge_symmetrizedDeriv` : the gauge action on the symmetrized symbols.
-- `IsGaugeField.repGauge_symmetrizedDeriv_translation` : deep jets act by pure translations.
-- `IsGaugeField.mem_of_translationInvariant` : the ring-theoretic extraction principle.
-- `IsGaugeField.invariant_mem_adjoin_fieldStrength` : the classification of invariants.
+- `GaugeAlgebraRealization.symmetrizedDeriv` : the symmetrized derivative symbols.
+- `GaugeAlgebraRealization.iteratedCovDerivAdjoint` : the iterated covariant derivative of
+  an adjoint family along a list of directions.
+- `GaugeAlgebraRealization.symbolsLE`, `GaugeAlgebraRealization.symSymbolsLE`,
+  `GaugeAlgebraRealization.towerLT` : the generating sets of the three towers, filtered by
+  order.
+- `GaugeAlgebraRealization.symbolAdjoin_eq_symFieldAdjoin` : the generation theorem.
+- `GaugeAlgebraRealization.repGauge_symmetrizedDeriv` : the gauge action on the symmetrized symbols.
+- `GaugeAlgebraRealization.repGauge_symmetrizedDeriv_translation` : deep jets act by pure
+  translations.
+- `GaugeAlgebraRealization.mem_of_translationInvariant` : the ring-theoretic extraction principle.
+- `GaugeAlgebraRealization.invariant_mem_adjoin_fieldStrength` : the classification of invariants.
 
 ## iii. Table of contents
 
@@ -63,6 +65,7 @@ symbols commute with each other and with the further generators.
 - E. Centrality, and invariance under the pure jets
 - F. Translation invariance in a ring
 - G. The classification of invariants
+- H. The classification for the jet algebra itself
 
 -/
 
@@ -77,11 +80,12 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
-namespace IsGaugeField
+namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
 variable {repGauge : Representation ℂ G B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-!
 
@@ -481,21 +485,21 @@ lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
   Maurer–Cartan shifts average to exactly the base-point value of the symmetrized
   Maurer–Cartan form of `U⁻¹`:
 
-  `U • sym(∂_s A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} ∂_y A_μ^{∂_x Ad*(U⁻¹) φ}`
+  `U • sym(∂_s h.A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} ∂_y A_μ^{∂_x Ad*(U⁻¹) φ}`
   `                   + φ( sym(ω(U⁻¹))_s |₀ )`. -/
-lemma repGauge_symmetrizedDeriv (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_symmetrizedDeriv
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U (symmetrizedDeriv s A φ) =
+    repGauge U (symmetrizedDeriv s h.A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
-          A p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum).sum
+          h.A p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum).sum
       + algebraMap ℂ B (φ (jets.evalLie (jets.symmetrizedMaurerCartanForm U⁻¹ s))) := by
   set L : 𝔤J →ₗ[ℝ] B :=
     (Algebra.linearMap ℂ B).restrictScalars ℝ ∘ₗ Algebra.linearMap ℝ ℂ ∘ₗ
       φ ∘ₗ jets.evalLie.toLinearMap with hL
   rw [symmetrizedDeriv, LinearMap.map_smul_of_tower, map_multiset_sum, Multiset.map_map]
   simp only [Function.comp_def]
-  rw [Multiset.map_congr rfl (fun μ _ => hA.gauge_apply_deriv U (s - {μ}) μ φ),
+  rw [Multiset.map_congr rfl (fun μ _ => h.gauge_apply_deriv U (s - {μ}) μ φ),
     Multiset.sum_map_add, smul_add]
   congr 1
   calc (1/(s.card : ℝ)) • (s.map fun μ => algebraMap ℂ B (φ (jets.evalLie
@@ -512,17 +516,17 @@ lemma repGauge_symmetrizedDeriv (hA : IsGaugeField jets repLorentz repGauge A)
 
 /-- The action of a pure jet on the symmetrized derivatives is through the symmetrized
   Maurer–Cartan data: for a gauge jet `U` with identity value, the inhomogeneous shift of
-  `sym(∂_s A)^φ` is the pairing of `φ` with the symmetrized Maurer–Cartan coefficient of
+  `sym(∂_s h.A)^φ` is the pairing of `φ` with the symmetrized Maurer–Cartan coefficient of
   `U⁻¹` at `s`, the very data that classifies pure jets. -/
-lemma repGauge_symmetrizedDeriv_truncationKer (hA : IsGaugeField jets repLorentz repGauge A)
+lemma repGauge_symmetrizedDeriv_truncationKer
     (U : jets.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (φ : Module.Dual ℝ 𝔤) :
-    repGauge U.1 (symmetrizedDeriv s A φ) =
+    repGauge U.1 (symmetrizedDeriv s h.A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
-          A p.2 μ (jets.adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
+          h.A p.2 μ (jets.adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
       + algebraMap ℂ B (φ (jets.symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
-  rw [repGauge_symmetrizedDeriv hA U.1 s φ]
+  rw [repGauge_symmetrizedDeriv h U.1 s φ]
   rfl
 
 /-- The pure jets realize arbitrary translations of the symmetrized derivative
@@ -530,32 +534,31 @@ lemma repGauge_symmetrizedDeriv_truncationKer (hA : IsGaugeField jets repLorentz
   `U` whose action shifts every symmetrized symbol by exactly `φ (c s)`, by the freeness of
   the symmetrized Maurer–Cartan data. -/
 lemma exists_repGauge_symmetrizedDeriv_shift [jets.Free]
-    (hA : IsGaugeField jets repLorentz repGauge A)
     (c : {r : Multiset (Fin 1 ⊕ Fin 3) // r ≠ 0} → 𝔤) :
     ∃ U : jets.truncationKer 0,
       ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0) (φ : Module.Dual ℝ 𝔤),
-        repGauge U.1 (symmetrizedDeriv s A φ) =
+        repGauge U.1 (symmetrizedDeriv s h.A φ) =
           (1/(s.card : ℝ)) • (s.map fun μ =>
             ((s - {μ}).antidiagonal.map fun p =>
-              A p.2 μ (jets.adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
+              h.A p.2 μ (jets.adjointDualCoeff (U.1)⁻¹ p.1 φ)).sum).sum
           + algebraMap ℂ B (φ (c ⟨s, hs⟩)) := by
   obtain ⟨V, hV⟩ := jets.symmetrizedMaurerCartanCoeff_surjective c
   refine ⟨V⁻¹, fun s hs φ => ?_⟩
-  rw [repGauge_symmetrizedDeriv_truncationKer hA V⁻¹ s hs φ, inv_inv, hV]
+  rw [repGauge_symmetrizedDeriv_truncationKer h V⁻¹ s hs φ, inv_inv, hV]
 
 /-- Pure translation: when all positive dual adjoint coefficients of `U⁻¹` below the order
   of `s` vanish, the adjoint convolution in the transformation of the symmetrized symbol
   collapses to the symbol itself, and the action is an honest translation by the
   symmetrized Maurer–Cartan coefficient. -/
-theorem repGauge_symmetrizedDeriv_translation (hA : IsGaugeField jets repLorentz repGauge A)
+theorem repGauge_symmetrizedDeriv_translation
     (U : jets.truncationKer 0) (s : Multiset (Fin 1 ⊕ Fin 3)) (hs : s ≠ 0)
     (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < s.card →
       jets.adjointDualCoeff (U.1)⁻¹ x = 0)
     (φ : Module.Dual ℝ 𝔤) :
-    repGauge U.1 (symmetrizedDeriv s A φ) =
-      symmetrizedDeriv s A φ +
+    repGauge U.1 (symmetrizedDeriv s h.A φ) =
+      symmetrizedDeriv s h.A φ +
         algebraMap ℂ B (φ (jets.symmetrizedMaurerCartanCoeff U⁻¹ ⟨s, hs⟩)) := by
-  rw [repGauge_symmetrizedDeriv_truncationKer hA U s hs φ]
+  rw [repGauge_symmetrizedDeriv_truncationKer h U s hs φ]
   congr 1
   have hid : jets.adjointDualCoeff (U.1)⁻¹ 0 = LinearMap.id :=
     jets.adjointDualCoeff_zero_of_eval_eq_one
@@ -672,47 +675,48 @@ lemma TransformsInAdjoint.repGauge_eq_of_mem_truncationKer_zero
 /-- Every iterated covariant derivative of the field strength is an adjoint gauge tensor:
   the recursion of `TransformsInAdjoint.covDerivAdjoint` over the list of directions, from
   the base case `transformsInAdjoint_fieldStrength`. -/
-theorem transformsInAdjoint_iteratedCovDerivAdjoint
-    (hA : IsGaugeField jets repLorentz repGauge A) (l : List (Fin 1 ⊕ Fin 3))
+theorem transformsInAdjoint_iteratedCovDerivAdjoint (l : List (Fin 1 ⊕ Fin 3))
     (ν lam : Fin 1 ⊕ Fin 3) :
-    TransformsInAdjoint jets repGauge (iteratedCovDerivAdjoint A l (fieldStrength A ν lam)) := by
+    TransformsInAdjoint jets repGauge
+      (iteratedCovDerivAdjoint h.A l (fieldStrength h.A ν lam)) := by
   induction l with
-  | nil => exact transformsInAdjoint_fieldStrength hA ν lam
-  | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint hA ih ρ
+  | nil => exact transformsInAdjoint_fieldStrength h ν lam
+  | cons ρ l ih => exact TransformsInAdjoint.covDerivAdjoint h ih ρ
 
 /-- The covariant derivatives of the field strength are invariant under the pure jets. -/
 lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-    (hA : IsGaugeField jets repLorentz repGauge A) (U : jets.truncationKer 0)
+    (U : jets.truncationKer 0)
     (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    repGauge U.1 (iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ) =
-      iteratedCovDerivAdjoint A l (fieldStrength A ν lam) 0 φ :=
-  (transformsInAdjoint_iteratedCovDerivAdjoint hA l ν lam).repGauge_eq_of_mem_truncationKer_zero
+    repGauge U.1 (iteratedCovDerivAdjoint h.A l (fieldStrength h.A ν lam) 0 φ) =
+      iteratedCovDerivAdjoint h.A l (fieldStrength h.A ν lam) 0 φ :=
+  (transformsInAdjoint_iteratedCovDerivAdjoint h l ν lam).repGauge_eq_of_mem_truncationKer_zero
     U φ
 
+include h in
 /-- The gauge action fixes the unit, being multiplicative and invertible. -/
-lemma repGauge_one (hA : IsGaugeField jets repLorentz repGauge A) (U : G) :
+lemma repGauge_one (U : G) :
     repGauge U (1 : B) = 1 := by
   have h2 : repGauge U (repGauge U⁻¹ (1 : B)) = 1 := by
     have h3 : repGauge U * repGauge U⁻¹ = 1 := by
       rw [← map_mul, mul_inv_cancel, map_one]
     calc repGauge U (repGauge U⁻¹ (1 : B)) = (repGauge U * repGauge U⁻¹) (1 : B) := rfl
       _ = 1 := by rw [h3]; rfl
-  have h1 := hA.gauge_mul U (repGauge U⁻¹ (1 : B)) 1
+  have h1 := h.gauge_mul U (repGauge U⁻¹ (1 : B)) 1
   rw [mul_one, h2, one_mul] at h1
   exact h1.symm
 
 /-- The gauge action of a jet as a ring endomorphism of the algebra of local
   expressions. -/
-def repGaugeRingHom (hA : IsGaugeField jets repLorentz repGauge A) (U : G) : B →+* B where
+def repGaugeRingHom (U : G) : B →+* B where
   toFun := repGauge U
-  map_one' := repGauge_one hA U
-  map_mul' := hA.gauge_mul U
+  map_one' := repGauge_one h U
+  map_mul' := h.gauge_mul U
   map_zero' := map_zero _
   map_add' := map_add _
 
 @[simp]
-lemma repGaugeRingHom_apply (hA : IsGaugeField jets repLorentz repGauge A) (U : G) (x : B) :
-    repGaugeRingHom hA U x = repGauge U x := rfl
+lemma repGaugeRingHom_apply (U : G) (x : B) :
+    repGaugeRingHom h U x = repGauge U x := rfl
 
 /-!
 
@@ -984,12 +988,10 @@ The strategy, by downward induction on the top symmetrized order `m + 1` present
 
 section Descent
 
-variable (hA : IsGaugeField jets repLorentz repGauge A)
-  (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
-    (φ ψ : Module.Dual ℝ 𝔤), Commute (A p μ φ) (A q ν ψ))
+variable
   (S : Set B)
   (hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
-    ∀ y ∈ S, Commute y (A p μ φ))
+    ∀ y ∈ S, Commute y (h.A p μ φ))
   (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, repGauge U.1 y = y)
   (m : ℕ)
 
@@ -1003,42 +1005,42 @@ with every symmetrized symbol.
 
 -/
 
-include hA hS in
-/-- A pure jet trivial to order `m` fixes every generator of order at most `m`: the
+include hS in
+/-- h.A pure jet trivial to order `m` fixes every generator of order at most `m`: the
   symmetrized symbols with at most `m` derivatives, the covariant tower and `S`. -/
 lemma repGauge_eq_of_mem_adjoin_symSymbolsLE {U : jets.truncationKer 0}
     (hU : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card ≤ m →
       jets.adjointDualCoeff (U.1)⁻¹ x = 0)
     (hUsym : ∀ (r : Multiset (Fin 1 ⊕ Fin 3)) (hr : r ≠ 0), r.card ≤ m →
       jets.symmetrizedMaurerCartanCoeff U⁻¹ ⟨r, hr⟩ = 0)
-    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S))) :
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A m ∪ (tower h.A ∪ S))) :
     repGauge U.1 z = z := by
   induction hz using Algebra.adjoin_induction with
   | mem b hb =>
       rcases hb with ⟨r, φ, hr0, hrm, rfl⟩ | ⟨l, ν, lam, φ, rfl⟩ | hb'
-      · rw [repGauge_symmetrizedDeriv_translation hA U r hr0
+      · rw [repGauge_symmetrizedDeriv_translation h U r hr0
           (fun x hx hxc => hU x hx (by omega)) φ, hUsym r hr0 hrm, map_zero, Complex.ofReal_zero,
           map_zero, add_zero]
       · exact repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
-          hA U l ν lam φ
+          h U l ν lam φ
       · exact hS b hb' U
-  | algebraMap c => rw [Algebra.algebraMap_eq_smul_one, map_smul, repGauge_one hA]
+  | algebraMap c => rw [Algebra.algebraMap_eq_smul_one, map_smul, repGauge_one h]
   | add a b _ _ iha ihb => rw [map_add, iha, ihb]
-  | mul a b _ _ iha ihb => rw [hA.gauge_mul, iha, ihb]
+  | mul a b _ _ iha ihb => rw [h.gauge_mul, iha, ihb]
 
-include hcomm hcS in
+include hcS in
 /-- Every element of the order-`m` subalgebra commutes with every symmetrized symbol. -/
 lemma commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE
-    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)))
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A m ∪ (tower h.A ∪ S)))
     (r : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
-    Commute z (symmetrizedDeriv r A φ) := by
+    Commute z (symmetrizedDeriv r h.A φ) := by
   refine commute_of_mem_adjoin ?_ hz
   rintro b (⟨r', φ', _, _, rfl⟩ | ⟨l, ν, lam, φ', rfl⟩ | hbS)
-  · exact commute_symmetrizedDeriv hcomm r' r φ' φ
+  · exact commute_symmetrizedDeriv h.commute_A r' r φ' φ
   · refine commute_of_mem_adjoin (fun x hx => ?_)
       (iteratedCovDerivAdjoint_fieldStrength_mem_adjoin_symbols l ν lam φ')
     obtain ⟨a, b2, c, rfl⟩ := hx
-    exact commute_symmetrizedDeriv_right (fun p' μ' φ'' => hcomm a p' b2 μ' c φ'') r φ
+    exact commute_symmetrizedDeriv_right (fun p' μ' φ'' => h.commute_A a p' b2 μ' c φ'') r φ
   · exact commute_symmetrizedDeriv_right (fun p' μ' φ' => hcS p' μ' φ' b hbS) r φ
 
 /-!
@@ -1046,7 +1048,7 @@ lemma commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE
 ### G.2. The top-order coordinates and their translations
 
 The symmetrized symbols of order exactly `m + 1` are indexed, in a basis `bv` of the gauge
-algebra, by a multiset of `m + 1` directions and a basis index. A real function `t` on that
+algebra, by a multiset of `m + 1` directions and a basis index. h.A real function `t` on that
 index set prescribes a shift family supported at order `m + 1`, hence a pure jet
 translating each coordinate by the corresponding value of `t`.
 
@@ -1079,19 +1081,19 @@ lemma coord_shiftFamily (t : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι → ℝ)
     smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]
   rfl
 
-include hcomm S hcS in
+include S hcS in
 /-- The top-order coordinates commute with the order-`m` subalgebra. -/
 lemma commute_topCoord_of_mem_adjoin_symSymbolsLE (p : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι)
-    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S))) :
-    Commute z (topCoord A m bv p) :=
-  commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE hcomm S hcS m hz _ _
+    {z : B} (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A m ∪ (tower h.A ∪ S))) :
+    Commute z (topCoord h.A m bv p) :=
+  commute_symmetrizedDeriv_of_mem_adjoin_symSymbolsLE h S hcS m hz _ _
 
 /-- An element of the order-`m + 1` subalgebra lies in the sup of the order-`m` subalgebra
   and the subalgebra generated by the top-order coordinates. -/
 lemma mem_sup_adjoin_range_topCoord {z : B}
-    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A (m + 1) ∪ (tower A ∪ S))) :
-    z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)) ⊔
-      Algebra.adjoin ℂ (Set.range (topCoord A m bv)) := by
+    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A (m + 1) ∪ (tower h.A ∪ S))) :
+    z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A m ∪ (tower h.A ∪ S)) ⊔
+      Algebra.adjoin ℂ (Set.range (topCoord h.A m bv)) := by
   refine Algebra.adjoin_le ?_ hz
   rintro b (⟨r, φ, hr0, hrm1, rfl⟩ | hb)
   · by_cases hcm : r.card ≤ m
@@ -1100,10 +1102,9 @@ lemma mem_sup_adjoin_range_topCoord {z : B}
       refine Subalgebra.sum_mem _ fun j _ => ?_
       rw [← algebraMap_smul ℂ (φ (bv j))]
       exact Subalgebra.smul_mem _ (SetLike.le_def.mp le_sup_right (Algebra.subset_adjoin
-        (Set.mem_range_self (f := topCoord A m bv) (⟨r, by omega⟩, j)))) _
+        (Set.mem_range_self (f := topCoord h.A m bv) (⟨r, by omega⟩, j)))) _
   · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inr hb))
 
-include hA in
 /-- The pure jet realizing the shift family `t` translates each top-order coordinate by
   the corresponding value of `t`. -/
 lemma repGauge_topCoord {U : jets.truncationKer 0}
@@ -1112,12 +1113,12 @@ lemma repGauge_topCoord {U : jets.truncationKer 0}
     (hU2 : ∀ x : Multiset (Fin 1 ⊕ Fin 3), x ≠ 0 → x.card < m + 1 →
       jets.adjointDualCoeff (U.1)⁻¹ x = 0)
     (p : Sym (Fin 1 ⊕ Fin 3) (m + 1) × ι) :
-    repGauge U.1 (topCoord A m bv p) = topCoord A m bv p + algebraMap ℂ B ((t p : ℝ) : ℂ) := by
+    repGauge U.1 (topCoord h.A m bv p) = topCoord h.A m bv p + algebraMap ℂ B ((t p : ℝ) : ℂ) := by
   obtain ⟨ps, j⟩ := p
   have hps : Multiset.card (ps : Multiset (Fin 1 ⊕ Fin 3)) = m + 1 := Sym.card_coe (s := ps)
   have hp0 : (ps : Multiset (Fin 1 ⊕ Fin 3)) ≠ 0 := fun h => by simp [h] at hps
-  show repGauge U.1 (symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) A (bv.coord j)) = _
-  rw [repGauge_symmetrizedDeriv_translation hA U _ hp0
+  show repGauge U.1 (symmetrizedDeriv (ps : Multiset (Fin 1 ⊕ Fin 3)) h.A (bv.coord j)) = _
+  rw [repGauge_symmetrizedDeriv_translation h U _ hp0
     (fun x hx hxc => hU2 x hx (by omega)) (bv.coord j), hU1, coord_shiftFamily]
   rfl
 
@@ -1127,28 +1128,28 @@ lemma repGauge_topCoord {U : jets.truncationKer 0}
 
 -/
 
-include hA hcomm hcS hS in
+include hcS hS in
 /-- The descent: an element of the order-`m + 1` subalgebra fixed by all pure jets lies
   in the order-`m` subalgebra. The pure jets realizing the shift families at order
   `m + 1` fix the order-`m` subalgebra and translate the top-order coordinates by arbitrary
   real scalars, so `mem_of_translationInvariant` applies. -/
 lemma mem_adjoin_symSymbolsLE_of_repGauge_eq [jets.Free] {z : B}
-    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE A (m + 1) ∪ (tower A ∪ S)))
+    (hz : z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A (m + 1) ∪ (tower h.A ∪ S)))
     (hzinv : ∀ U : jets.truncationKer 0, repGauge U.1 z = z) :
-    z ∈ Algebra.adjoin ℂ (symSymbolsLE A m ∪ (tower A ∪ S)) := by
+    z ∈ Algebra.adjoin ℂ (symSymbolsLE h.A m ∪ (tower h.A ∪ S)) := by
   classical
   set bv := Module.Free.chooseBasis ℝ 𝔤 with hbv
   choose Ut hUt1 hUt2 using fun t : Sym (Fin 1 ⊕ Fin 3) (m + 1) ×
       Module.Free.ChooseBasisIndex ℝ 𝔤 → ℝ =>
     exists_translation_of_support (jets := jets) (m + 1) (shiftFamily m bv t)
       (shiftFamily_eq_zero_of_card_ne m bv t)
-  refine mem_of_translationInvariant _ (topCoord A m bv)
-    (fun p r hr => commute_topCoord_of_mem_adjoin_symSymbolsLE hcomm S hcS m bv p hr)
-    (fun p q => commute_symmetrizedDeriv hcomm _ _ _ _)
-    (fun t => repGaugeRingHom hA (Ut t).1) (fun t w hw => ?_)
-    (fun t p => repGauge_topCoord hA m bv t (hUt1 t) (hUt2 t) p)
-    (mem_sup_adjoin_range_topCoord S m bv hz) (fun t => hzinv (Ut t))
-  refine repGauge_eq_of_mem_adjoin_symSymbolsLE hA S hS m
+  refine mem_of_translationInvariant _ (topCoord h.A m bv)
+    (fun p r hr => commute_topCoord_of_mem_adjoin_symSymbolsLE h S hcS m bv p hr)
+    (fun p q => commute_symmetrizedDeriv h.commute_A _ _ _ _)
+    (fun t => repGaugeRingHom h (Ut t).1) (fun t w hw => ?_)
+    (fun t p => repGauge_topCoord h m bv t (hUt1 t) (hUt2 t) p)
+    (mem_sup_adjoin_range_topCoord h S m bv hz) (fun t => hzinv (Ut t))
+  refine repGauge_eq_of_mem_adjoin_symSymbolsLE h S hS m
     (fun x hx hxm => hUt2 t x hx (by omega)) (fun r hr hrm => ?_) hw
   rw [hUt1 t]
   exact shiftFamily_eq_zero_of_card_ne m bv t ⟨r, hr⟩ (by simp only; omega)
@@ -1167,29 +1168,25 @@ end Descent
   elements of `S`. Requires only that the gauge-field symbols commute with each other
   (the gauge field is bosonic) and with the elements of `S`, nothing about the rest
   of `B`, and no independence hypothesis. -/
-theorem invariant_mem_adjoin_fieldStrength [jets.Free]
-    (hA : IsGaugeField jets repLorentz repGauge A)
-    (hcomm : ∀ (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
-      (φ ψ : Module.Dual ℝ 𝔤), Commute (A p μ φ) (A q ν ψ))
-    (S : Set B)
+theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set B)
     (hcS : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
-      (φ : Module.Dual ℝ 𝔤), ∀ y ∈ S, Commute y (A p μ φ))
+      (φ : Module.Dual ℝ 𝔤), ∀ y ∈ S, Commute y (h.A p μ φ))
     (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, repGauge U.1 y = y)
-    {x : B} (hx : x ∈ Algebra.adjoin ℂ (symbols A ∪ S))
+    {x : B} (hx : x ∈ Algebra.adjoin ℂ (symbols h.A ∪ S))
     (hinv : ∀ U : G, repGauge U x = x) :
-    x ∈ Algebra.adjoin ℂ (tower A ∪ S) := by
+    x ∈ Algebra.adjoin ℂ (tower h.A ∪ S) := by
   -- bound the symbol order of the invariant, working relative to the full tower
-  obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union (tower A ∪ S)
+  obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union (tower h.A ∪ S)
     (Algebra.adjoin_mono (Set.union_subset_union_right _ Set.subset_union_right) hx)
   -- convert the bounded symbols to symmetrized symbols, absorbing the tower
-  have hconv : x ∈ Algebra.adjoin ℂ (symSymbolsLE A (n + 1) ∪ (tower A ∪ S)) := by
-    rw [symbolAdjoin_union_eq_symFieldAdjoin_union n (tower A ∪ S)] at hxn
+  have hconv : x ∈ Algebra.adjoin ℂ (symSymbolsLE h.A (n + 1) ∪ (tower h.A ∪ S)) := by
+    rw [symbolAdjoin_union_eq_symFieldAdjoin_union n (tower h.A ∪ S)] at hxn
     refine Algebra.adjoin_mono ?_ hxn
     rintro b ((hb | hb) | hb)
     exacts [Or.inl hb, Or.inr (Or.inl (towerLT_subset_tower n hb)), Or.inr hb]
   -- iterate the descent from the top order down to zero
-  suffices h : ∀ k, x ∈ Algebra.adjoin ℂ (symSymbolsLE A k ∪ (tower A ∪ S)) →
-      x ∈ Algebra.adjoin ℂ (tower A ∪ S) from h (n + 1) hconv
+  suffices h : ∀ k, x ∈ Algebra.adjoin ℂ (symSymbolsLE h.A k ∪ (tower h.A ∪ S)) →
+      x ∈ Algebra.adjoin ℂ (tower h.A ∪ S) from h (n + 1) hconv
   intro k
   induction k with
   | zero =>
@@ -1200,6 +1197,39 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free]
       · exact hb
   | succ k ih =>
       intro hk
-      exact ih (mem_adjoin_symSymbolsLE_of_repGauge_eq hA hcomm S hcS hS k hk fun U => hinv U.1)
+      exact ih (mem_adjoin_symSymbolsLE_of_repGauge_eq h S hcS hS k hk fun U => hinv U.1)
 
-end IsGaugeField
+end GaugeAlgebraRealization
+
+/-!
+
+## H. The classification for the jet algebra itself
+
+-/
+
+namespace GaugeJetAlgebra
+
+variable (jets) in
+/-- The classification of gauge invariants of the gauge-boson jet algebra: for a free
+  package, a gauge-invariant element of the subalgebra generated by the gauge-field symbols
+  `∂_s A_μ^φ` and a set `S` of elements fixed by the pure jets is a polynomial in the
+  covariant derivatives of the field strength and the elements of `S`. This is the case of
+  the identity realization; the commutation of `S` with the symbols is automatic in the
+  commutative jet algebra. -/
+theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤))
+    (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, complexRepJet jets U.1 y = y)
+    {x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤}
+    (hx : x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
+      ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      b = gaugeField 𝔤 p μ φ} ∪ S))
+    (hinv : ∀ U : G, complexRepJet jets U x = x) :
+    x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
+      ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      b = GaugeAlgebraRealization.iteratedCovDerivAdjoint (gaugeField 𝔤) l
+        (GaugeAlgebraRealization.fieldStrength (gaugeField 𝔤) ν lam) 0 φ} ∪ S) := by
+  have key := (GaugeAlgebraRealization.id jets).invariant_mem_adjoin_fieldStrength S
+    (fun _ _ _ _ _ => Commute.all _ _) hS (by rw [GaugeAlgebraRealization.id_A]; exact hx) hinv
+  rw [GaugeAlgebraRealization.id_A] at key
+  exact key
+
+end GaugeJetAlgebra

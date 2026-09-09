@@ -48,7 +48,7 @@ their gauge covariance and the classification of jet-gauge invariants.
   equivariant algebra map from the jet algebra.
 - `AlgebraRealization.A`, `AlgebraRealization.H` and their companions : the thirteen families of
   derivative symbols of a Standard Model.
-- `AlgebraRealization.repJet_A`, `AlgebraRealization.repLorentz_H`,
+- `AlgebraRealization.gaugeRealization`, `AlgebraRealization.repLorentz_H`,
   `AlgebraRealization.massWeight_d` and their companions : the transformation laws and mass
   weights of those families.
 
@@ -251,6 +251,8 @@ barred families in the conjugate of it.
 noncomputable def gaugeRealization :
     GaugeAlgebraRealization localGaugeData B repJet repLorentz where
   toAlgHom := h.toAlgHom.comp JetAlgebra.includeGauge
+  A := h.A
+  A_eq _ _ _ := rfl
   map_repJet U y := by
     rw [AlgHom.comp_apply, AlgHom.comp_apply, ← JetAlgebra.repJetGaugeGroupI_includeGauge,
       h.map_repJet]
@@ -261,11 +263,6 @@ noncomputable def gaugeRealization :
   repLorentz_mul := h.repLorentz_mul
 
 lemma gaugeRealization_A : h.gaugeRealization.A = h.A := rfl
-
-/-- The law `repJet_A` of a Standard Model: the gauge-field laws of the realization
-  `gaugeRealization`. -/
-lemma repJet_A : IsGaugeField localGaugeData repLorentz repJet h.A :=
-  h.gaugeRealization_A ▸ h.gaugeRealization.isGaugeField
 
 /-- The law `repJet_H` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/
