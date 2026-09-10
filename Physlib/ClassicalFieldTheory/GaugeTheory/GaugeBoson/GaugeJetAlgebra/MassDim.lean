@@ -17,8 +17,8 @@ The mass dimension of the gauge bosons is tracked multiplicatively through the
 `c ^ (2 + 2 |s|)` — the gauge field has mass dimension one, i.e. mass weight two, and each
 derivative adds mass weight two. A monomial of total mass weight `n` is scaled by `c ^ n`,
 so the scaling records the mass-weight grading of the jet algebra. This mirrors
-`Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.MassDim`, on the real, single-half
-component space of the gauge bosons.
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.MassDim`, on the
+real, single-half component space of the gauge bosons.
 
 ## ii. Key results
 

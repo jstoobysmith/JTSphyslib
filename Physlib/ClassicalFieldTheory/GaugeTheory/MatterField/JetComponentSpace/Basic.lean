@@ -34,6 +34,8 @@ is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Ga
 - `JetComponentSpace.jetDeriv_comm` : the shifts in different directions commute.
 - `JetComponentSpace.repLorentzGroup_jetDeriv` : the shift is a Lorentz vector.
 - `JetComponentSpace.comap` : functoriality, contravariant in the target space.
+- `JetComponentSpace.comapEquiv` : a relabelling of the target space relabels the
+  component functions.
 - `JetComponentSpace.massWeightScale` : the mass-weight scaling.
 - `JetComponentSpace.comap_comp_massWeightScale` : the scaling is natural in the target
   space, hence blind to which part of it a component function came from.
@@ -294,6 +296,26 @@ lemma JetComponentSpace.comap_comp {P : MatterField jets}
     LinearMap.prodMap_comp, ← TensorProduct.map_comp, ← TensorProduct.map_comp,
     LinearMap.id_comp]
   rfl
+
+/-- A relabelling of the target space relabels the component functions. An isomorphism
+  `e : M.V ≃ₗ N.V` of target spaces identifies the two component spaces, contravariantly: the
+  component functions of the field `N` become those of the field `M`. This is
+  `comap` upgraded to an equivalence, the two directions being mutually inverse by
+  functoriality. -/
+noncomputable def JetComponentSpace.comapEquiv (e : M.V ≃ₗ[ℂ] N.V) :
+    JetComponentSpace N ≃ₗ[ℂ] JetComponentSpace M :=
+  LinearEquiv.ofLinearMap (JetComponentSpace.comap e.toLinearMap)
+    (JetComponentSpace.comap e.symm.toLinearMap)
+    (by rw [← JetComponentSpace.comap_comp, show e.symm.toLinearMap.comp e.toLinearMap
+        = LinearMap.id from LinearMap.ext fun v => e.symm_apply_apply v,
+      JetComponentSpace.comap_id])
+    (by rw [← JetComponentSpace.comap_comp, show e.toLinearMap.comp e.symm.toLinearMap
+        = LinearMap.id from LinearMap.ext fun w => e.apply_symm_apply w,
+      JetComponentSpace.comap_id])
+
+@[simp]
+lemma JetComponentSpace.comapEquiv_apply (e : M.V ≃ₗ[ℂ] N.V) (x : JetComponentSpace N) :
+    JetComponentSpace.comapEquiv e x = JetComponentSpace.comap e.toLinearMap x := rfl
 
 /-- **An equivariant map of target spaces gives an equivariant pullback.** If `f : M.V →ₗ N.V`
   intertwines the two Lorentz representations then `comap f` intertwines the induced actions on

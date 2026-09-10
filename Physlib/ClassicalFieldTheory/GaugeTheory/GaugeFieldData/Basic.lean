@@ -37,7 +37,7 @@ The connection generator space is not among them: it is the existing
 
 The algebra built on the three generator spaces, `GaugeFieldData.LocalFieldAlgebra`, and
 its mapping-out universal property are in
-`Physlib.ClassicalFieldTheory.JetAlgebra.LocalFieldAlgebra`. The split is one of subject
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Basic`. The split is one of subject
 matter: here the datum and the spaces it determines, there the algebra of local expressions
 on them.
 

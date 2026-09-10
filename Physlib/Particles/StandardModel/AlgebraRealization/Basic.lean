@@ -219,9 +219,11 @@ private lemma map_family_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
     (hG : LocalGaugeData.TransformsIn (B := JetAlgebra) JetAlgebra.repJetGaugeGroupI rep G) :
     LocalGaugeData.TransformsIn repJet rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
   intro U φ s
-  show repJet U (h.toAlgHom _) = _
-  rw [← h.map_repJet, hG U φ s, map_multiset_sum, Multiset.map_map]
-  rfl
+  show repJet U (h.toAlgHom (G s φ)) = _
+  exact (h.map_repJet U (G s φ)).symm.trans
+    ((congrArg h.toAlgHom (hG U φ s)).trans
+      ((map_multiset_sum h.toAlgHom _).trans
+        (congrArg Multiset.sum (Multiset.map_map _ _ _))))
 
 /-- A Lorentz transformation law transports along the defining map: the slot mixing is a
   finite sum of scalar multiples, and the map is linear and equivariant. -/
@@ -231,9 +233,11 @@ private lemma map_family_repLorentz {V : Type} [AddCommGroup V] [Module ℂ V]
     (hG : IsLorentzDerivTransforms (A := JetAlgebra) JetAlgebra.repLorentzGroup rep G) :
     IsLorentzDerivTransforms repLorentz rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by
   intro Λ n l φ
-  show repLorentz Λ (h.toAlgHom _) = _
-  rw [← h.map_repLorentz, hG Λ n l φ, map_sum]
-  exact Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _
+  show repLorentz Λ (h.toAlgHom (G (List.ofFn l) φ)) = _
+  exact (h.map_repLorentz Λ (G (List.ofFn l) φ)).symm.trans
+    ((congrArg h.toAlgHom (hG Λ n l φ)).trans
+      ((map_sum h.toAlgHom _ _).trans
+        (Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _)))
 
 /-!
 
@@ -253,12 +257,12 @@ noncomputable def gaugeRealization :
   toAlgHom := h.toAlgHom.comp JetAlgebra.includeGauge
   A := h.A
   A_eq _ _ _ := rfl
-  map_repJet U y := by
-    rw [AlgHom.comp_apply, AlgHom.comp_apply, ← JetAlgebra.repJetGaugeGroupI_includeGauge,
-      h.map_repJet]
-  map_repLorentz Λ y := by
-    rw [AlgHom.comp_apply, AlgHom.comp_apply, ← JetAlgebra.repLorentzGroup_includeGauge,
-      h.map_repLorentz]
+  map_repJet U y :=
+    (congrArg h.toAlgHom (JetAlgebra.repJetGaugeGroupI_includeGauge U y)).symm.trans
+      (h.map_repJet U (JetAlgebra.includeGauge y))
+  map_repLorentz Λ y :=
+    (congrArg h.toAlgHom (JetAlgebra.repLorentzGroup_includeGauge Λ y)).symm.trans
+      (h.map_repLorentz Λ (JetAlgebra.includeGauge y))
   repJet_mul := h.repJet_mul
   repLorentz_mul := h.repLorentz_mul
 

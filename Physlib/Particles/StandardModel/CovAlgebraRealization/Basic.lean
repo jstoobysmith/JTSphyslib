@@ -244,26 +244,31 @@ of its own — it is `Commute.map`.
   the global gauge group. -/
 lemma map_repGauge_eq {g : GaugeGroupI} {x y : CovJetAlgebra}
     (hxy : CovJetAlgebra.repGaugeGroupI g x = y) :
-    repGauge g (k.toAlgHom x) = k.toAlgHom y := by
-  rw [← k.map_repGauge, hxy]
+    repGauge g (k.toAlgHom x) = k.toAlgHom y :=
+  (k.map_repGauge g x).symm.trans (congrArg k.toAlgHom hxy)
 
 /-- An anticommutation law transports along the defining map: the map preserves products and
   negation. -/
 lemma map_anticomm {x y : CovJetAlgebra} (hxy : x * y = -(y * x)) :
-    k.toAlgHom x * k.toAlgHom y = -(k.toAlgHom y * k.toAlgHom x) := by
-  rw [← map_mul, ← map_mul, hxy, map_neg]
+    k.toAlgHom x * k.toAlgHom y = -(k.toAlgHom y * k.toAlgHom x) :=
+  (map_mul k.toAlgHom x y).symm.trans
+    ((congrArg k.toAlgHom hxy).trans
+      ((map_neg k.toAlgHom _).trans
+        (congrArg Neg.neg (map_mul k.toAlgHom y x))))
 
 /-- An antisymmetry transports along the defining map: the map preserves negation. -/
 lemma map_neg_eq {x y : CovJetAlgebra} (hxy : x = -y) :
-    k.toAlgHom x = -k.toAlgHom y := by
-  rw [hxy, map_neg]
+    k.toAlgHom x = -k.toAlgHom y :=
+  (congrArg k.toAlgHom hxy).trans (map_neg k.toAlgHom y)
 
 /-- A mass-weight eigenvalue equation transports along the defining map: the map carries the
   grading of the covariant jet algebra to that of `B`. -/
 lemma map_massWeight_monomial {n : ℕ} {x : CovJetAlgebra}
     (hx : CovJetAlgebra.massWeightPoly x = Polynomial.monomial n x) :
-    massWeightPoly (k.toAlgHom x) = Polynomial.monomial n (k.toAlgHom x) := by
-  rw [k.map_massWeight, hx, Polynomial.mapAlgHom_monomial]
+    massWeightPoly (k.toAlgHom x) = Polynomial.monomial n (k.toAlgHom x) :=
+  (k.map_massWeight x).trans
+    ((congrArg (Polynomial.mapAlgHom k.toAlgHom) hx).trans
+      (Polynomial.mapAlgHom_monomial k.toAlgHom n x))
 
 /-- A Lorentz transformation law of a covariant tower transports along the defining map: the
   slot mixing is a finite sum of scalar multiples, and the map is linear and equivariant. -/
@@ -275,8 +280,10 @@ lemma map_lorentz {V : Type} [AddCommGroup V] [Module ℂ V]
     (fun {_n} l => k.toAlgHom.toLinearMap ∘ₗ G l) := by
   intro Λ n l φ
   show repLorentz Λ (k.toAlgHom (G l φ)) = _
-  rw [← k.map_repLorentz, hG Λ n l φ, map_sum]
-  exact Finset.sum_congr rfl fun p _ => map_smul k.toAlgHom _ _
+  exact (k.map_repLorentz Λ (G l φ)).symm.trans
+    ((congrArg k.toAlgHom (hG Λ n l φ)).trans
+      ((map_sum k.toAlgHom _ _).trans
+        (Finset.sum_congr rfl fun p _ => map_smul k.toAlgHom _ _)))
 
 /-!
 
@@ -301,8 +308,10 @@ noncomputable def isHiggsSector :
   map_repLorentz Λ x := k.map_repLorentz Λ (x : CovJetAlgebra)
   map_massWeight x := by
     show massWeightPoly (k.toAlgHom (x : CovJetAlgebra)) = _
-    rw [k.map_massWeight, ← Subalgebra.mapAlgHom_polyRestrict
-      CovJetAlgebra.massWeightPoly_mem_polyRange x]
+    refine (k.map_massWeight (x : CovJetAlgebra)).trans ?_
+    refine (congrArg (Polynomial.mapAlgHom k.toAlgHom)
+      (Subalgebra.mapAlgHom_polyRestrict
+        CovJetAlgebra.massWeightPoly_mem_polyRange x).symm).trans ?_
     exact AlgHom.congr_fun (Polynomial.mapAlgHom_comp _ k.toAlgHom
       CovJetAlgebra.higgsSubalgebra.val) _
   rep_mul := k.repGauge_mul
@@ -326,15 +335,15 @@ theorem isGaugeSector : IsGaugeSector B repGauge k.repGauge_mul repLorentz k.rep
     k.map_repGauge_eq (CovJetAlgebra.isGaugeSector.repGauge_F g l μ ν φ)
   repLorentz_F := fun Λ n l μ ν φ => by
     show repLorentz Λ (k.toAlgHom (CovJetAlgebra.fieldStrength l μ ν φ)) = _
-    rw [← k.map_repLorentz,
-      CovJetAlgebra.isGaugeSector.repLorentz_F Λ n l μ ν φ, map_sum]
-    refine Finset.sum_congr rfl fun p _ => ?_
-    rw [map_smul, map_sum]
-    congr 1
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [map_smul, map_sum]
-    congr 1
-    exact Finset.sum_congr rfl fun b _ => map_smul k.toAlgHom _ _
+    refine (k.map_repLorentz Λ _).symm.trans ?_
+    refine (congrArg k.toAlgHom
+      (CovJetAlgebra.isGaugeSector.repLorentz_F Λ n l μ ν φ)).trans ?_
+    refine (map_sum k.toAlgHom _ _).trans (Finset.sum_congr rfl fun p _ => ?_)
+    refine (map_smul k.toAlgHom _ _).trans (congrArg _ ?_)
+    refine (map_sum k.toAlgHom _ _).trans (Finset.sum_congr rfl fun a _ => ?_)
+    refine (map_smul k.toAlgHom _ _).trans (congrArg _ ?_)
+    exact (map_sum k.toAlgHom _ _).trans
+      (Finset.sum_congr rfl fun b _ => map_smul k.toAlgHom _ _)
   massWeight_F := fun {_n} l μ ν φ =>
     k.map_massWeight_monomial (CovJetAlgebra.isGaugeSector.massWeight_F l μ ν φ)
   F_comm_F := fun {_n _m} l μ ν ψ l' μ' ν' ψ' =>
@@ -1064,7 +1073,9 @@ noncomputable def toCovAlgebraRealization :
   map_repLorentz Λ x := h.map_repLorentz Λ (x : JetAlgebra)
   map_massWeight x := by
     show massWeightPoly (h.toAlgHom (x : JetAlgebra)) = _
-    rw [h.map_massWeight, ← AlgebraRealization.id.mapAlgHom_covMassWeightPoly x]
+    refine (h.map_massWeight (x : JetAlgebra)).trans ?_
+    refine (congrArg (Polynomial.mapAlgHom h.toAlgHom)
+      (AlgebraRealization.id.mapAlgHom_covMassWeightPoly x).symm).trans ?_
     exact AlgHom.congr_fun
       (Polynomial.mapAlgHom_comp _ h.toAlgHom AlgebraRealization.id.covAlgebra.val) _
   repGauge_mul := h.repGlobal_mul

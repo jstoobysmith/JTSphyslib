@@ -375,12 +375,4 @@ lemma ext_of_evalLie_iteratedDeriv [jets.Faithful] {x y : 𝔤J}
     x = y :=
   Faithful.ext_of_evalLie_iteratedDeriv h
 
-/-- In a faithful package, the Maurer–Cartan form vanishes exactly on the constant jets. -/
-lemma maurerCartan_eq_zero_iff [jets.Faithful] (U : G) :
-    jets.maurerCartan U = 0 ↔ U = jets.ofConstant (jets.eval U) := by
-  refine ⟨Faithful.eq_ofConstant_of_maurerCartan_eq_zero, fun h => ?_⟩
-  funext μ
-  rw [h, jets.maurerCartan_ofConstant]
-  rfl
-
 end LocalGaugeData

@@ -42,6 +42,8 @@ than the component space of this one field.
 
 - `GaugeFieldData.bosonMatterField` : the matter field of all the bosons of the
   theory.
+- `GaugeFieldData.repJetBosonModule` : the action of the jets of gauge transformations on
+  the jets of the bosonic module, needing no common mass weight.
 - `GaugeFieldData.bosonMatterField_repLorentz_inclBosonValue`,
   `GaugeFieldData.bosonMatterField_repAlgebra_inclBosonValue` : each species is a
   subrepresentation of it.
@@ -111,6 +113,34 @@ variable {T}
 @[simp]
 lemma repLorentzBosonModule_apply (Λ : SL(2,ℂ)) (v : T.BosonModule) (i : T.BosonSpecies) :
     T.repLorentzBosonModule Λ v i = (T.boson i).repLorentz Λ (v i) := rfl
+
+variable (T)
+
+/-- The action of the jets of gauge transformations on the jets of the bosonic
+  module, acting species by species, and typed on `T.BosonModule` itself so that it can
+  be spoken of without fixing a common mass weight. -/
+noncomputable def repJetBosonModule :
+    Representation ℂ G (JetRing ⊗[ℂ] T.BosonModule) :=
+  MatterField.repJetPi T.boson
+
+variable {T}
+
+/-- The jet gauge action on the bosonic module is fibrewise, as each species is. -/
+lemma repJetBosonModule_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] T.BosonModule) :
+    T.repJetBosonModule U (χ • z) = χ • T.repJetBosonModule U z :=
+  MatterField.repJetPi_smul T.boson U χ z
+
+/-- A bosonic species is a subrepresentation of the jet gauge action on the bosonic
+  module: the projection onto its value space intertwines the two actions on the jets. -/
+lemma lTensor_projBosonValue_repJetBosonModule (j : T.BosonSpecies) (U : G) :
+    (LinearMap.lTensor JetRing (T.projBosonValue j)).comp (T.repJetBosonModule U)
+      = ((T.boson j).repJet U).comp
+        (LinearMap.lTensor JetRing (T.projBosonValue j)) :=
+  MatterField.lTensor_proj_repJetPi T.boson j U
+
+/-- The jet gauge action of the bosonic matter field is that of the bosonic module. -/
+lemma bosonMatterField_repJet (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w) :
+    (T.bosonMatterField w h).repJet = T.repJetBosonModule := rfl
 
 /-- The Lorentz action of the bosonic matter field is that of the bosonic module. -/
 lemma bosonMatterField_repLorentz (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w) :

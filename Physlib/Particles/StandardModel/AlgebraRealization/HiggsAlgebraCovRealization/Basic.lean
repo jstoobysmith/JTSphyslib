@@ -168,8 +168,8 @@ noncomputable def covBarH (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
   defining map. -/
 lemma map_rep_eq {g : GaugeGroupI} {x y : CovHiggsJetAlgebra}
     (hxy : CovHiggsJetAlgebra.repGaugeGroupI g x = y) :
-    rep g (h.toAlgHom x) = h.toAlgHom y := by
-  rw [← h.map_rep, hxy]
+    rep g (h.toAlgHom x) = h.toAlgHom y :=
+  (h.map_rep g x).symm.trans (congrArg h.toAlgHom hxy)
 
 /-- The Higgs symbol carries the dual of the gauge representation on `HiggsVec`: the
   `SU(2)` index transforms contragrediently, and the hypercharge character by `u⁻³`. -/
@@ -212,8 +212,10 @@ lemma barH_comm_barH (φ ψ : Module.Dual ℂ (ConjModule HiggsVec)) (n1 n2 : �
 /-- A mass-weight eigenvalue equation transports along the defining map. -/
 lemma map_massWeight_monomial {n : ℕ} {x : CovHiggsJetAlgebra}
     (hx : CovHiggsJetAlgebra.massWeightPoly x = Polynomial.monomial n x) :
-    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) := by
-  rw [h.map_massWeight, hx, Polynomial.mapAlgHom_monomial]
+    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) :=
+  (h.map_massWeight x).trans
+    ((congrArg (Polynomial.mapAlgHom h.toAlgHom) hx).trans
+      (Polynomial.mapAlgHom_monomial h.toAlgHom n x))
 
 /-- The mass weight of the Higgs tower is `2 * (1 + n)`. -/
 lemma H_massWeight (φ : Module.Dual ℂ HiggsVec) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
@@ -243,8 +245,10 @@ lemma map_lorentz {V : Type} [AddCommGroup V] [Module ℂ V]
       (fun {_n} l => h.toAlgHom.toLinearMap ∘ₗ G l) := by
   intro Λ n l φ
   show repLorentz Λ (h.toAlgHom (G l φ)) = _
-  rw [← h.map_repLorentz, hG Λ n l φ, map_sum]
-  exact Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _
+  exact (h.map_repLorentz Λ (G l φ)).symm.trans
+    ((congrArg h.toAlgHom (hG Λ n l φ)).trans
+      ((map_sum h.toAlgHom _ _).trans
+        (Finset.sum_congr rfl fun p _ => map_smul h.toAlgHom _ _)))
 
 /-- The Higgs tower transforms under the Lorentz group as the covariant derivatives of a
   Lorentz scalar: each derivative slot mixes by the Lorentz matrix, and the value index is

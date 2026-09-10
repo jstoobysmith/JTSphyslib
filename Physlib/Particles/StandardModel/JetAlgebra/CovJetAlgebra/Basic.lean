@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
 module
+public import Physlib.Mathematics.AlgebraRepresentation
 public import Physlib.Particles.StandardModel.AlgebraRealization.CovStandardModel
 public import Physlib.Particles.StandardModel.JetAlgebra.Realization
 /-!
@@ -454,21 +455,9 @@ subalgebra itself; the identification is through the injection
 
 /-- The global gauge action on the covariant subalgebra: the ambient global gauge action,
   which section B shows preserves it. -/
-noncomputable def covRepGauge : Representation ℂ GaugeGroupI ↥h.covAlgebra where
-  toFun g :=
-    { toFun := fun x => ⟨repGlobal repJet g (x : B), h.repGlobal_mem_covAlgebra g x.2⟩
-      map_add' := fun x y => Subtype.ext (map_add _ _ _)
-      map_smul' := fun c x => Subtype.ext (map_smul _ _ _) }
-  map_one' := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show repGlobal repJet 1 (x : B) = (x : B)
-    rw [map_one]
-    rfl
-  map_mul' g₁ g₂ := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show repGlobal repJet (g₁ * g₂) (x : B) = repGlobal repJet g₁ (repGlobal repJet g₂ (x : B))
-    rw [map_mul]
-    rfl
+noncomputable def covRepGauge : Representation ℂ GaugeGroupI ↥h.covAlgebra :=
+  (repGlobal repJet).restrictSubalgebra h.covAlgebra
+    fun g _ hx => h.repGlobal_mem_covAlgebra g hx
 
 @[simp]
 lemma coe_covRepGauge (g : GaugeGroupI) (x : ↥h.covAlgebra) :
@@ -476,21 +465,9 @@ lemma coe_covRepGauge (g : GaugeGroupI) (x : ↥h.covAlgebra) :
 
 /-- The Lorentz action on the covariant subalgebra: the ambient Lorentz action, which
   section B shows preserves it. -/
-noncomputable def covRepLorentz : Representation ℂ SL(2,ℂ) ↥h.covAlgebra where
-  toFun Λ :=
-    { toFun := fun x => ⟨repLorentz Λ (x : B), h.repLorentz_mem_covAlgebra Λ x.2⟩
-      map_add' := fun x y => Subtype.ext (map_add _ _ _)
-      map_smul' := fun c x => Subtype.ext (map_smul _ _ _) }
-  map_one' := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show repLorentz 1 (x : B) = (x : B)
-    rw [map_one]
-    rfl
-  map_mul' Λ₁ Λ₂ := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show repLorentz (Λ₁ * Λ₂) (x : B) = repLorentz Λ₁ (repLorentz Λ₂ (x : B))
-    rw [map_mul]
-    rfl
+noncomputable def covRepLorentz : Representation ℂ SL(2,ℂ) ↥h.covAlgebra :=
+  repLorentz.restrictSubalgebra h.covAlgebra
+    fun Λ _ hx => h.repLorentz_mem_covAlgebra Λ hx
 
 @[simp]
 lemma coe_covRepLorentz (Λ : SL(2,ℂ)) (x : ↥h.covAlgebra) :

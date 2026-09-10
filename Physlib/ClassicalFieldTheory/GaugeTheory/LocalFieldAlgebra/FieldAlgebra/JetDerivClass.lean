@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Basic
 /-!
 # The total derivative on a field algebra: the interface
 
@@ -15,7 +15,8 @@ the statistics — a derivation of the symmetric algebra for bosons, an even der
 exterior algebra for fermions — but its *properties* do not: the Leibniz rule has the same
 form in both cases. This file records those properties as the class `HasJetDeriv`; the
 constructions are `BosonicAlgebra.jetDeriv` and `FermionicAlgebra.jetDeriv`, and everything
-built on them is in `Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.JetDeriv`.
+built on them is in
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDeriv`.
 -/
 
 @[expose] public section

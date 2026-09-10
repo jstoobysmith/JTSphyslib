@@ -57,13 +57,17 @@ identification of a direct sum over a finite index with the product.
   gauge actions assembled on it.
 - `GaugeFieldData.massWeightScaleFermion` : the mass-weight scaling carrying the weight of
   each species.
+- `GaugeFieldData.jetDerivFermion` : the ordinary derivative shift on the generator space.
 - `GaugeFieldData.fermionGeneratorsEquiv` : with one shared weight, the generator space is
   the component space of the fermionic matter field.
 - `GaugeFieldData.fermionGeneratorsEquiv_inclFermion` : a species sits inside it as the
   pullback along the projection onto that species.
 - `GaugeFieldData.fermionGeneratorsEquiv_repLorentzFermion`,
-  `GaugeFieldData.fermionGeneratorsEquiv_massWeightScaleFermion` : the identification
-  carries the Lorentz action and the mass-weight scaling across.
+  `GaugeFieldData.fermionGeneratorsEquiv_repJetFermion`,
+  `GaugeFieldData.fermionGeneratorsEquiv_massWeightScaleFermion`,
+  `GaugeFieldData.fermionGeneratorsEquiv_jetDerivFermion` : the identification carries the
+  Lorentz action, the jet gauge action, the mass-weight scaling and the derivative shift
+  across.
 
 ## iii. Table of contents
 
@@ -72,6 +76,7 @@ identification of a direct sum over a finite index with the product.
   - B.1. The Lorentz action
   - B.2. The jet gauge action
   - B.3. The mass weights
+  - B.4. The ordinary derivative
 - C. The fermionic generators as one component space
   - C.1. The species as pullbacks
   - C.2. The identification of the transformation data
@@ -266,6 +271,78 @@ variable (T)
 
 /-!
 
+### B.4. The ordinary derivative
+
+The formal total derivative shifts the derivative label of a component function,
+`∂_s ψ_α ↦ ∂_{s + {μ}} ψ_α`. Unlike the two actions it takes no data from the species at
+all, the label being blind to the value space, so on the generator space it too is
+species-diagonal and the same assembly serves. It is recorded here so that the generator
+space carries every operation the local field algebra is built from.
+
+-/
+
+/-- The ordinary derivative shift on the fermionic generator space, acting on each species'
+  component functions by appending `∂_μ` to the derivative label. -/
+noncomputable def jetDerivFermion (μ : Fin 1 ⊕ Fin 3) :
+    T.FermionGenerators →ₗ[ℂ] T.FermionGenerators :=
+  T.assembleFermion fun i => (T.inclFermion i).comp (JetComponentSpace.jetDeriv μ)
+
+variable {T}
+
+@[simp]
+lemma jetDerivFermion_inclFermion (μ : Fin 1 ⊕ Fin 3) (i : T.FermionSpecies)
+    (x : JetComponentSpace (T.FermionValue i)) :
+    T.jetDerivFermion μ (T.inclFermion i x)
+      = T.inclFermion i (JetComponentSpace.jetDeriv μ x) :=
+  assembleFermion_inclFermion _ i x
+
+/-- Mixed partials agree on the fermionic generator space, because they do on each
+  species. -/
+lemma jetDerivFermion_comm (μ ν : Fin 1 ⊕ Fin 3) :
+    (T.jetDerivFermion μ).comp (T.jetDerivFermion ν)
+      = (T.jetDerivFermion ν).comp (T.jetDerivFermion μ) :=
+  fermionGenerators_hom_ext fun i x => by
+    rw [LinearMap.comp_apply, LinearMap.comp_apply, jetDerivFermion_inclFermion,
+      jetDerivFermion_inclFermion, jetDerivFermion_inclFermion, jetDerivFermion_inclFermion]
+    exact congrArg (T.inclFermion i)
+      (LinearMap.congr_fun (JetComponentSpace.jetDeriv_comm (V := T.FermionValue i) μ ν) x)
+
+/-- The derivative shift is a Lorentz vector on the fermionic generator space: it is
+  one on each species, and both operations are species-diagonal. -/
+lemma repLorentzFermion_jetDerivFermion (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (x : T.FermionGenerators) :
+    T.repLorentzFermion Λ (T.jetDerivFermion μ x)
+      = ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          T.jetDerivFermion a (T.repLorentzFermion Λ x) := by
+  have key : (T.repLorentzFermion Λ).comp (T.jetDerivFermion μ)
+      = ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
+          (T.jetDerivFermion a).comp (T.repLorentzFermion Λ) :=
+    fermionGenerators_hom_ext fun i y => by
+      rw [LinearMap.comp_apply, jetDerivFermion_inclFermion, repLorentzFermion_inclFermion,
+        JetComponentSpace.repLorentzGroup_jetDeriv, map_sum, LinearMap.sum_apply]
+      refine Finset.sum_congr rfl fun a _ => ?_
+      rw [map_smul, LinearMap.smul_apply, LinearMap.comp_apply,
+        repLorentzFermion_inclFermion, jetDerivFermion_inclFermion]
+  rw [← LinearMap.comp_apply, key, LinearMap.sum_apply]
+  exact Finset.sum_congr rfl fun a _ => by rw [LinearMap.smul_apply, LinearMap.comp_apply]
+
+/-- The derivative carries mass weight two on the fermionic generator space, whatever
+  the weights of the species: the shift adds two units of mass dimension to every
+  component function alike. -/
+lemma massWeightScaleFermion_jetDerivFermion (c : ℂ) (μ : Fin 1 ⊕ Fin 3) :
+    (T.massWeightScaleFermion c).comp (T.jetDerivFermion μ)
+      = c ^ 2 • (T.jetDerivFermion μ).comp (T.massWeightScaleFermion c) :=
+  fermionGenerators_hom_ext fun i x => by
+    rw [LinearMap.comp_apply, jetDerivFermion_inclFermion,
+      massWeightScaleFermion_inclFermion, LinearMap.smul_apply, LinearMap.comp_apply,
+      massWeightScaleFermion_inclFermion, jetDerivFermion_inclFermion, ← map_smul]
+    exact congrArg (T.inclFermion i) (LinearMap.congr_fun
+      (JetComponentSpace.massWeightScale_jetDeriv (T.fermion i).massWeight c μ) x)
+
+variable (T)
+
+/-!
+
 ## C. The fermionic generators as one component space
 
 -/
@@ -356,6 +433,34 @@ lemma fermionGeneratorsEquiv_repLorentzFermion (w : ℕ) (h : ∀ i, (T.fermion 
       (fun _ => LinearMap.ext fun _ => rfl) Λ) x
   exact LinearMap.congr_fun key y
 
+/-- The identification is equivariant for the jet gauge action. The species-diagonal
+  action of the jets of gauge transformations on the generator space is the action on the
+  component functions of the single fermion field: each species is a subrepresentation of
+  the fermionic module, so pulling back along the projection onto it commutes with the two
+  actions.
+
+  No common mass weight is needed. The gauge action of the assembled field is
+  `repJetFermionModule`, which exists whatever the weights are; only its packaging as one
+  `MatterField` would require them to agree. Both halves of the component space are
+  covered, the conjugate one included, and every derivative label with them: this is
+  `JetComponentSpace.comap_comp_repJet` at the species projection. -/
+lemma fermionGeneratorsEquiv_repJetFermion (U : G) (y : T.FermionGenerators) :
+    T.fermionGeneratorsEquiv (T.repJetFermion U y)
+      = JetComponentSpace.repJet T.repJetFermionModule repJetFermionModule_smul U
+        (T.fermionGeneratorsEquiv y) := by
+  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.repJetFermion U)
+      = (JetComponentSpace.repJet T.repJetFermionModule repJetFermionModule_smul U).comp
+        T.fermionGeneratorsEquiv.toLinearMap := by
+    refine fermionGenerators_hom_ext fun i x => ?_
+    rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
+      repJetFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
+      fermionGeneratorsEquiv_inclFermion]
+    exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repJet
+      T.repJetFermionModule repJetFermionModule_smul (T.fermion i).repJet
+      (T.fermion i).repJet_smul (T.projFermionValue i)
+      (fun U' => lTensor_projFermionValue_repJetFermionModule i U') U) x
+  exact LinearMap.congr_fun key y
+
 /-- **The identification carries the species-wise mass-weight scaling to a single
   scaling.** With one weight `w` shared by every species, the scaling that acts on each
   species through its own weight is the scaling of weight `w` on the component functions of
@@ -374,6 +479,24 @@ lemma fermionGeneratorsEquiv_massWeightScaleFermion (w : ℕ)
       fermionGeneratorsEquiv_inclFermion, h i]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_massWeightScale
       (T.projFermionField w h i) w c) x
+  exact LinearMap.congr_fun key y
+
+/-- The identification carries the derivative shift across. The species-diagonal shift
+  of the derivative label on the generator space is the shift on the component functions of
+  the single fermion field: `comap` is natural in the value space, and the shift touches
+  only the derivative label, so neither operation sees which species a generator came from.
+  No common mass weight is needed. -/
+lemma fermionGeneratorsEquiv_jetDerivFermion (μ : Fin 1 ⊕ Fin 3) (y : T.FermionGenerators) :
+    T.fermionGeneratorsEquiv (T.jetDerivFermion μ y)
+      = JetComponentSpace.jetDeriv μ (T.fermionGeneratorsEquiv y) := by
+  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.jetDerivFermion μ)
+      = (JetComponentSpace.jetDeriv μ).comp T.fermionGeneratorsEquiv.toLinearMap := by
+    refine fermionGenerators_hom_ext fun i x => ?_
+    rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
+      jetDerivFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
+      fermionGeneratorsEquiv_inclFermion]
+    exact LinearMap.congr_fun
+      (JetComponentSpace.comap_jetDeriv (T.projFermionValue i) μ) x
   exact LinearMap.congr_fun key y
 
 end GaugeFieldData

@@ -169,13 +169,16 @@ open TensorProduct Matrix MatrixGroups Lorentz
   `algebraRealization_massWeightSubmodule`. -/
 noncomputable def massWeightSubmodule (n : ℕ) : Submodule ℂ JetAlgebra where
   carrier := {x | massWeightPoly x = Polynomial.monomial n x}
-  zero_mem' := by simp
-  add_mem' hx hy := by
-    simp only [Set.mem_setOf_eq] at hx hy ⊢
-    rw [map_add, hx, hy, map_add]
-  smul_mem' c x hx := by
-    simp only [Set.mem_setOf_eq] at hx ⊢
-    rw [map_smul, hx, ← Polynomial.smul_monomial]
+  zero_mem' :=
+    (map_zero massWeightPoly).trans (Polynomial.monomial_zero_right n).symm
+  add_mem' {x y} hx hy :=
+    (map_add massWeightPoly x y).trans
+      ((congrArg₂ (fun p q : Polynomial JetAlgebra => p + q) hx hy).trans
+        ((Polynomial.monomial n).map_add x y).symm)
+  smul_mem' c x hx :=
+    (map_smul massWeightPoly c x).trans
+      ((congrArg (fun p : Polynomial JetAlgebra => c • p) hx).trans
+        (Polynomial.smul_monomial c n x))
 
 /-- Membership of the weight-`n` piece is the eigenvalue equation. -/
 @[simp]
@@ -192,10 +195,15 @@ noncomputable def massWeightSubmoduleLE (w : ℕ) : Submodule ℂ JetAlgebra :=
   two differ only by the intersection with the field algebra, which is everything. -/
 lemma algebraRealization_massWeightSubmodule (n : ℕ) :
     AlgebraRealization.id.massWeightSubmodule n = massWeightSubmodule n := by
-  rw [AlgebraRealization.id.massWeightSubmodule_eq_ker algebraRealization_fieldAlgebra_eq_top]
-  ext x
-  rw [LinearMap.mem_ker, mem_massWeightSubmodule]
-  simp [sub_eq_zero]
+  refine (AlgebraRealization.id.massWeightSubmodule_eq_ker
+    algebraRealization_fieldAlgebra_eq_top n).trans (SetLike.ext fun x => ?_)
+  exact LinearMap.mem_ker.trans sub_eq_zero
+
+/-- Membership of two equal submodules of the jet algebra agree. It is stated at variable
+  endpoints so that the substitution never abstracts a pattern out of a goal mentioning the
+  jet algebra. -/
+private lemma mem_submodule_congr {S T : Submodule ℂ JetAlgebra} (h : S = T)
+    (x : JetAlgebra) : x ∈ S ↔ x ∈ T := h ▸ Iff.rfl
 
 /-- The filtration defined on the jet algebra is the filtration of the instance. -/
 lemma algebraRealization_massWeightSubmoduleLE (w : ℕ) :
@@ -258,8 +266,9 @@ theorem mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian (x : JetAlg
                 ⊔ AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.lorentzContractionEightSpan
               ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isFermionSector.kineticSpan
                 ⊔ AlgebraRealization.id.toCovAlgebraRealization.yukawaSpan))) := by
-  rw [← algebraRealization_massWeightSubmoduleLE]
-  exact AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian x
+  exact (and_congr_left'
+      (mem_submodule_congr (algebraRealization_massWeightSubmoduleLE 8).symm x)).trans
+    (AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian x)
 
 set_option maxHeartbeats 40000000 in
 /-- The same classification as
@@ -291,9 +300,12 @@ theorem mem_massWeightSubmoduleLE_eight_sup_and_invariant_iff_lagrangian
                   ⊔ AlgebraRealization.id.toCovAlgebraRealization.isHiggsSector.lorentzContractionEightSpan
                 ⊔ (AlgebraRealization.id.toCovAlgebraRealization.isFermionSector.kineticSpan
                   ⊔ AlgebraRealization.id.toCovAlgebraRealization.yukawaSpan))) := by
-  rw [← algebraRealization_massWeightSubmoduleLE]
-  exact AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_sup_and_invariant_iff_lagrangian
-    S hS hSL hScov x
+  exact (and_congr_left'
+      (mem_submodule_congr
+        (congrArg (fun T : Submodule ℂ JetAlgebra => T ⊔ S)
+          (algebraRealization_massWeightSubmoduleLE 8).symm) x)).trans
+    (AlgebraRealization.id.mem_massWeightSubmoduleLE_eight_sup_and_invariant_iff_lagrangian
+      S hS hSL hScov x)
 
 end JetAlgebra
 

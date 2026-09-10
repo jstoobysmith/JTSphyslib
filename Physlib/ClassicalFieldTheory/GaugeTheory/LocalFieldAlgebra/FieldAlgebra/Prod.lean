@@ -7,7 +7,7 @@ module
 
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Prod
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 /-!
 # The field algebras of a direct sum

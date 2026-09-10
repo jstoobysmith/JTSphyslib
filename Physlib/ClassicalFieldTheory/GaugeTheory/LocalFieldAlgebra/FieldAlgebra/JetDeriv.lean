@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.JetDerivClass
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDerivClass
 public import Physlib.Relativity.IsLorentzDeriv
 /-!
 # The formal total derivative on a field algebra

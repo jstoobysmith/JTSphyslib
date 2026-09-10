@@ -50,8 +50,10 @@ its mass dimension. The bosons have mass dimension `1 + |s|`, the fermions `3/2 
   the mass-weight polynomial to the mass-weight polynomial, and a monomial to a monomial. -/
 private lemma map_massWeight_monomial {x : JetAlgebra} {n : ℕ}
     (hx : JetAlgebra.massWeightPoly x = Polynomial.monomial n x) :
-    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) := by
-  rw [h.map_massWeight, hx, Polynomial.mapAlgHom_monomial]
+    massWeightPoly (h.toAlgHom x) = Polynomial.monomial n (h.toAlgHom x) :=
+  (h.map_massWeight x).trans
+    ((congrArg (Polynomial.mapAlgHom h.toAlgHom) hx).trans
+      (Polynomial.mapAlgHom_monomial h.toAlgHom n x))
 
 /-- The law `massWeight_H` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/

@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Prod
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Prod
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Prod
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
 /-!
