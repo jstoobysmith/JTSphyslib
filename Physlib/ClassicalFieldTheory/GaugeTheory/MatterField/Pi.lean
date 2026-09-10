@@ -38,6 +38,8 @@ value space, a field of `MatterField`, would fail for an infinite family in any 
   weight.
 - `MatterField.jetComponentSpacePiEquiv` : the component space of the direct sum is the
   family of the component spaces of the summands.
+- `MatterField.jetComponentSpacePiEquiv_symm_single` : a summand sits inside it as the
+  pullback along the projection onto that summand.
 
 ## iii. Table of contents
 
@@ -253,27 +255,46 @@ direct sum case of `JetComponentSpace.piEquiv`.
 
 -/
 
-/-- **The component space of a direct sum of matter fields splits**: a component function
-  of `MatterField.pi M w h` is a family, one component function per summand. The value
-  space of the direct sum is by construction the product of the value spaces, so this is
-  `JetComponentSpace.piEquiv` read on the matter field. -/
+/-- **The component space of a direct sum of matter fields splits.** A component function
+  of `MatterField.pi M w h` is exactly a family, one component function per summand. Both
+  halves split by `JetComponentSpace.fstPiEquiv` and `JetComponentSpace.sndPiEquiv`, and
+  the pair of families is reassembled into a family of pairs index by index. -/
 noncomputable def jetComponentSpacePiEquiv (w : ℕ) (h : ∀ i, (M i).massWeight = w) :
-    JetComponentSpace (pi M w h).V ≃ₗ[ℂ] ∀ i, JetComponentSpace (M i).V :=
-  JetComponentSpace.piEquiv fun i => (M i).V
+    JetComponentSpace (pi M w h) ≃ₗ[ℂ] ∀ i, JetComponentSpace (M i) :=
+  (LinearEquiv.prodCongr (JetComponentSpace.fstPiEquiv fun i => (M i).V)
+      (JetComponentSpace.sndPiEquiv fun i => (M i).V)).trans prodPiEquiv
 
-@[simp]
 lemma jetComponentSpacePiEquiv_apply (w : ℕ) (h : ∀ i, (M i).massWeight = w)
-    (x : JetComponentSpace (pi M w h).V) (i : ι) :
+    (x : JetComponentSpace (pi M w h)) (i : ι) :
     jetComponentSpacePiEquiv M w h x i =
       (JetComponentSpace.fstPiEquiv (fun i => (M i).V) x.1 i,
         JetComponentSpace.sndPiEquiv (fun i => (M i).V) x.2 i) := rfl
 
-@[simp]
-lemma jetComponentSpacePiEquiv_symm_apply (w : ℕ) (h : ∀ i, (M i).massWeight = w)
-    (y : ∀ i, JetComponentSpace (M i).V) :
-    (jetComponentSpacePiEquiv M w h).symm y =
-      ((JetComponentSpace.fstPiEquiv (fun i => (M i).V)).symm (fun i => (y i).1),
-        (JetComponentSpace.sndPiEquiv (fun i => (M i).V)).symm (fun i => (y i).2)) := rfl
+/-- **The summand of one species is the pullback along the projection onto it.** A
+  component function of the summand `i`, placed in the family and read back as a component
+  function of the direct sum, is that function precomposed with the projection onto the
+  summand. This is what identifies the splitting with the species inclusions of a direct
+  sum of component spaces. -/
+lemma jetComponentSpacePiEquiv_symm_single (w : ℕ) (h : ∀ i, (M i).massWeight = w)
+    (i : ι) (x : JetComponentSpace (M i)) :
+    (jetComponentSpacePiEquiv M w h).symm (Pi.single i x)
+      = JetComponentSpace.comap
+        (LinearMap.proj (φ := fun i => (M i).V) i : (pi M w h).V →ₗ[ℂ] (M i).V) x := by
+  have hfst : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (M j)) j).1)
+      = Pi.single i x.1 :=
+    funext fun j =>
+      Pi.apply_single (fun j (p : JetComponentSpace (M j)) => p.1) (fun _ => rfl) i x j
+  have hsnd : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (M j)) j).2)
+      = Pi.single i x.2 :=
+    funext fun j =>
+      Pi.apply_single (fun j (p : JetComponentSpace (M j)) => p.2) (fun _ => rfl) i x j
+  show ((JetComponentSpace.fstPiEquiv (fun i => (M i).V)).symm
+        (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (M j)) j).1),
+      (JetComponentSpace.sndPiEquiv (fun i => (M i).V)).symm
+        (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (M j)) j).2)) = _
+  rw [hfst, hsnd, JetComponentSpace.fstPiEquiv_symm_single,
+    JetComponentSpace.sndPiEquiv_symm_single]
+  rfl
 
 end Pi
 

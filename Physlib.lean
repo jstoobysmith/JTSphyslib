@@ -355,6 +355,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.EffectivePotential
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
+public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Algebra
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential

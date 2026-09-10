@@ -18,7 +18,7 @@ Two matter fields, valued in `V` and `W`, are jointly a single matter field valu
 `V × W`; its fermionic algebra is the **exterior product** of the two individual fermionic
 algebras. That is the content of `FermionicAlgebra.prodEquiv`: an algebra equivalence
 
-`FermionicAlgebra (V × W) ≃ₐ[ℂ] (evenOdd V ᵍ⊗[ℂ] evenOdd W)`
+`FermionicAlgebra (M.prod N h) ≃ₐ[ℂ] (evenOdd V ᵍ⊗[ℂ] evenOdd W)`
 
 onto the graded tensor product of the two algebras with respect to their Fermi-parity
 gradings. The graded — as opposed to ordinary — tensor product is what makes generators of
@@ -45,11 +45,14 @@ which is `CliffordAlgebra.prodEquiv` specialized to the zero quadratic form.
 
 @[expose] public section
 
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+
 open scoped TensorProduct
 
 namespace StandardModel
 
-variable {V W : Type} [AddCommGroup V] [Module ℂ V] [AddCommGroup W] [Module ℂ W]
 
 /-!
 
@@ -70,9 +73,9 @@ with the component space itself, in
 /-- **The Fermi-parity grading** of the fermionic algebra: the `ZMod 2` grading of the
   exterior algebra by the number of component functions in a monomial. An even element
   commutes with everything; two odd elements anticommute. -/
-abbrev FermionicAlgebra.evenOdd (V : Type) [AddCommGroup V] [Module ℂ V] :
-    ZMod 2 → Submodule ℂ (FermionicAlgebra V) :=
-  CliffordAlgebra.evenOdd (0 : QuadraticForm ℂ (JetComponentSpace V))
+abbrev FermionicAlgebra.evenOdd (M : MatterField jets) :
+    ZMod 2 → Submodule ℂ (FermionicAlgebra M) :=
+  CliffordAlgebra.evenOdd (0 : QuadraticForm ℂ (JetComponentSpace M))
 
 /-!
 
@@ -87,15 +90,15 @@ abbrev FermionicAlgebra.evenOdd (V : Type) [AddCommGroup V] [Module ℂ V] :
   The tensor product must be the *graded* one `ᵍ⊗`: an ordinary `⊗[ℂ]` would make a
   generator of the first field commute with a generator of the second, whereas fermionic
   generators anticommute across species just as they do within one. -/
-noncomputable def FermionicAlgebra.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    FermionicAlgebra (V × W) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd V ᵍ⊗[ℂ] FermionicAlgebra.evenOdd W) :=
-  (ExteriorAlgebra.congr (JetComponentSpace.prodEquiv V W)).trans <|
+noncomputable def FermionicAlgebra.prodEquiv (M N : MatterField jets)
+    (h : M.massWeight = N.massWeight) :
+    FermionicAlgebra (M.prod N h) ≃ₐ[ℂ]
+      (FermionicAlgebra.evenOdd M ᵍ⊗[ℂ] FermionicAlgebra.evenOdd N) :=
+  (ExteriorAlgebra.congr (JetComponentSpace.prodEquiv M N h)).trans <|
     (CliffordAlgebra.equivOfIsometry
-        (Q₁ := (0 : QuadraticForm ℂ (JetComponentSpace V × JetComponentSpace W)))
-        (Q₂ := (0 : QuadraticForm ℂ (JetComponentSpace V)).prod
-          (0 : QuadraticForm ℂ (JetComponentSpace W)))
+        (Q₁ := (0 : QuadraticForm ℂ (JetComponentSpace M × JetComponentSpace N)))
+        (Q₂ := (0 : QuadraticForm ℂ (JetComponentSpace M)).prod
+          (0 : QuadraticForm ℂ (JetComponentSpace N)))
         ⟨LinearEquiv.refl ℂ _, fun _ => by simp⟩).trans
       (CliffordAlgebra.prodEquiv _ _)
 

@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
-public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Algebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!

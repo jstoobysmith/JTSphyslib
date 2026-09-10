@@ -57,10 +57,10 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 -/
 
 /-- The bosonic jet algebra of a matter field. -/
-abbrev BosonicJetAlgebra : Type := BosonicAlgebra M.V
+abbrev BosonicJetAlgebra : Type := BosonicAlgebra M
 
 /-- The fermionic jet algebra of a matter field. -/
-abbrev FermionicJetAlgebra : Type := FermionicAlgebra M.V
+abbrev FermionicJetAlgebra : Type := FermionicAlgebra M
 
 /-!
 
@@ -68,39 +68,39 @@ abbrev FermionicJetAlgebra : Type := FermionicAlgebra M.V
 
 -/
 
-variable (A : Type) [Ring A] [Algebra ℂ A] [IsFieldAlgebra M.V A]
+variable (A : Type) [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-- The jet gauge action on a field algebra of the matter field. -/
 noncomputable def repJetAlgebra : Representation ℂ G A :=
-  FieldAlgebra.repJet M.repJet M.repJet_smul
+  FieldAlgebra.repJet M
 
 /-- The global gauge action on a field algebra of the matter field, along the canonical
   inclusion `jets.ofConstant : G₀ →* G` of the constant jets. -/
 noncomputable def repConstant : Representation ℂ G₀ A :=
-  FieldAlgebra.repConstant jets.ofConstant M.repJet M.repJet_smul
+  FieldAlgebra.repConstant M jets.ofConstant
 
 /-- The Lorentz action on a field algebra of the matter field. -/
 noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) A :=
-  FieldAlgebra.repLorentzGroup M.repLorentz
+  FieldAlgebra.repLorentzGroup M
 
 /-- The mass-weight scaling on a field algebra of the matter field. -/
 noncomputable def massWeightScale (c : ℂ) : A →ₐ[ℂ] A :=
   FieldAlgebra.massWeightScale M.massWeight c
 
-lemma repJetAlgebra_ι (U : G) (x : JetComponentSpace M.V) :
+lemma repJetAlgebra_ι (U : G) (x : JetComponentSpace M) :
     M.repJetAlgebra A U (FieldAlgebra.ι A x) =
-      FieldAlgebra.ι A (JetComponentSpace.repJet M.repJet M.repJet_smul U x) :=
-  FieldAlgebra.repJet_ι _ _ U x
+      FieldAlgebra.ι A (JetComponentSpace.repJet M U x) :=
+  FieldAlgebra.repJet_ι M U x
 
 lemma repConstant_apply (g : G₀) :
     M.repConstant A g = M.repJetAlgebra A (jets.ofConstant g) := rfl
 
-lemma repLorentzGroup_ι (Λ : SL(2,ℂ)) (x : JetComponentSpace M.V) :
+lemma repLorentzGroup_ι (Λ : SL(2,ℂ)) (x : JetComponentSpace M) :
     M.repLorentzGroup A Λ (FieldAlgebra.ι A x) =
-      FieldAlgebra.ι A (JetComponentSpace.repLorentzGroup M.repLorentz Λ x) :=
-  FieldAlgebra.repLorentzGroup_ι _ Λ x
+      FieldAlgebra.ι A (JetComponentSpace.repLorentzGroup M Λ x) :=
+  FieldAlgebra.repLorentzGroup_ι M Λ x
 
-lemma massWeightScale_ι (c : ℂ) (x : JetComponentSpace M.V) :
+lemma massWeightScale_ι (c : ℂ) (x : JetComponentSpace M) :
     M.massWeightScale A c (FieldAlgebra.ι A x) =
       FieldAlgebra.ι A (JetComponentSpace.massWeightScale M.massWeight c x) :=
   FieldAlgebra.massWeightScale_ι _ c x

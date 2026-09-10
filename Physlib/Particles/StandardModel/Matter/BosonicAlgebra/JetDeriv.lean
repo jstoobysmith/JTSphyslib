@@ -50,7 +50,9 @@ namespace BosonicAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -62,40 +64,40 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
   field in the direction `μ`: the derivation extending the shift
   `∂_s φ_α ↦ ∂_{s + {μ}} φ_α` of the component functions. -/
 noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) :
-    BosonicAlgebra V →ₗ[ℂ] BosonicAlgebra V :=
+    BosonicAlgebra M →ₗ[ℂ] BosonicAlgebra M :=
   SymmetricAlgebra.derivationOfLinear (JetComponentSpace.jetDeriv μ)
 
 /-- On a component function the total derivative is the shift of the derivative label. -/
 @[simp]
-lemma jetDeriv_ι (μ : Fin 1 ⊕ Fin 3) (x : JetComponentSpace V) :
+lemma jetDeriv_ι (μ : Fin 1 ⊕ Fin 3) (x : JetComponentSpace M) :
     jetDeriv μ (SymmetricAlgebra.ι ℂ _ x) =
       SymmetricAlgebra.ι ℂ _ (JetComponentSpace.jetDeriv μ x) :=
   SymmetricAlgebra.derivationOfLinear_ι _ x
 
 @[simp]
-lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv (V := V) μ (1 : BosonicAlgebra V) = 0 :=
+lemma jetDeriv_one (μ : Fin 1 ⊕ Fin 3) : jetDeriv (M := M) μ (1 : BosonicAlgebra M) = 0 :=
   SymmetricAlgebra.derivationOfLinear_one _
 
 @[simp]
 lemma jetDeriv_algebraMap (μ : Fin 1 ⊕ Fin 3) (r : ℂ) :
-    jetDeriv (V := V) μ (algebraMap ℂ (BosonicAlgebra V) r) = 0 :=
+    jetDeriv (M := M) μ (algebraMap ℂ (BosonicAlgebra M) r) = 0 :=
   SymmetricAlgebra.derivationOfLinear_algebraMap _ r
 
 /-- The total derivative is a derivation: the Leibniz rule holds on the bosonic
   algebra. -/
-lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : BosonicAlgebra V) :
+lemma jetDeriv_mul (μ : Fin 1 ⊕ Fin 3) (x y : BosonicAlgebra M) :
     jetDeriv μ (x * y) = jetDeriv μ x * y + x * jetDeriv μ y :=
   SymmetricAlgebra.derivationOfLinear_mul _ x y
 
 /-- **Mixed partials agree.** The derivative labels live in a *symmetric* algebra, so the
   total derivatives in different directions commute. -/
-lemma jetDeriv_comm_apply (μ ν : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra V) :
+lemma jetDeriv_comm_apply (μ ν : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra M) :
     jetDeriv μ (jetDeriv ν x) = jetDeriv ν (jetDeriv μ x) :=
   SymmetricAlgebra.derivationOfLinear_comm_apply
     (JetComponentSpace.jetDeriv_comm μ ν) x
 
 lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
-    (jetDeriv (V := V) μ).comp (jetDeriv ν) = (jetDeriv (V := V) ν).comp (jetDeriv μ) :=
+    (jetDeriv (M := M) μ).comp (jetDeriv ν) = (jetDeriv (M := M) ν).comp (jetDeriv μ) :=
   LinearMap.ext fun x => jetDeriv_comm_apply μ ν x
 
 /-!
@@ -108,40 +110,40 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
   directions. It is well defined on a multiset — i.e. independent of the order in which the
   directions are listed — because the directional derivatives commute. -/
 noncomputable def iteratedJetDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    BosonicAlgebra V →ₗ[ℂ] BosonicAlgebra V :=
+    BosonicAlgebra M →ₗ[ℂ] BosonicAlgebra M :=
   Lorentz.iteratedD jetDeriv jetDeriv_comm s
 
 @[simp]
 lemma iteratedJetDeriv_zero :
     iteratedJetDeriv (0 : Multiset (Fin 1 ⊕ Fin 3))
-      = LinearMap.id (R := ℂ) (M := BosonicAlgebra V) :=
+      = LinearMap.id (R := ℂ) (M := BosonicAlgebra M) :=
   Lorentz.iteratedD_zero jetDeriv jetDeriv_comm
 
 lemma iteratedJetDeriv_cons (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    iteratedJetDeriv (V := V) (μ ::ₘ s) = (jetDeriv μ).comp (iteratedJetDeriv s) :=
+    iteratedJetDeriv (M := M) (μ ::ₘ s) = (jetDeriv μ).comp (iteratedJetDeriv s) :=
   Lorentz.iteratedD_cons jetDeriv jetDeriv_comm μ s
 
 /-- The companion of `iteratedJetDeriv_cons`, peeling the extra derivative on the inside. -/
 lemma iteratedJetDeriv_cons' (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    iteratedJetDeriv (V := V) (μ ::ₘ s) = (iteratedJetDeriv s).comp (jetDeriv μ) :=
+    iteratedJetDeriv (M := M) (μ ::ₘ s) = (iteratedJetDeriv s).comp (jetDeriv μ) :=
   Lorentz.iteratedD_cons' jetDeriv jetDeriv_comm μ s
 
 @[simp]
 lemma iteratedJetDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
-    iteratedJetDeriv (V := V) {μ} = jetDeriv μ :=
+    iteratedJetDeriv (M := M) {μ} = jetDeriv μ :=
   Lorentz.iteratedD_singleton jetDeriv jetDeriv_comm μ
 
 /-- The iterated derivative is additive in the multiset of directions: differentiating
   along `s + t` is differentiating along `t` and then along `s`. -/
 lemma iteratedJetDeriv_add (s t : Multiset (Fin 1 ⊕ Fin 3)) :
-    iteratedJetDeriv (V := V) (s + t)
+    iteratedJetDeriv (M := M) (s + t)
       = (iteratedJetDeriv s).comp (iteratedJetDeriv t) :=
   Lorentz.iteratedD_add jetDeriv jetDeriv_comm s t
 
 /-- **The all-orders Leibniz rule.** The iterated derivative of a product distributes over
   the antidiagonal of the multiset of directions: each way of splitting the derivatives
   between the two factors contributes one term. -/
-lemma iteratedJetDeriv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (x y : BosonicAlgebra V) :
+lemma iteratedJetDeriv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (x y : BosonicAlgebra M) :
     iteratedJetDeriv s (x * y) =
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.1 x * iteratedJetDeriv p.2 y).sum :=
@@ -149,7 +151,7 @@ lemma iteratedJetDeriv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (x y : BosonicAlgebr
 
 /-- A nonempty iterated derivative kills the constants. -/
 lemma iteratedJetDeriv_one_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) :
-    iteratedJetDeriv (V := V) s (1 : BosonicAlgebra V) = 0 := by
+    iteratedJetDeriv (M := M) s (1 : BosonicAlgebra M) = 0 := by
   obtain ⟨μ, hμ⟩ := Multiset.exists_mem_of_ne_zero hs
   obtain ⟨t, rfl⟩ := Multiset.exists_cons_of_mem hμ
   rw [iteratedJetDeriv_cons', LinearMap.comp_apply, jetDeriv_one, map_zero]
@@ -158,7 +160,7 @@ lemma iteratedJetDeriv_one_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s �
   Both halves of the component space — the field and its conjugate — are multiplied by the
   degree-`|s|` element `∂_s` of `DerivAlgebraComplex` in their derivative-label factor,
   with the target index untouched. -/
-lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpace V) :
+lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpace M) :
     iteratedJetDeriv s (SymmetricAlgebra.ι ℂ _ x) =
       SymmetricAlgebra.ι ℂ _
         (TensorProduct.map (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis s))
@@ -200,10 +202,10 @@ lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpac
 /-- The iterated derivative of the field is the generator carrying the derivative symbol
   `∂_s`: applying `∂_s` to `ψ_φ` writes the label `s` into the derivative factor. -/
 @[simp]
-lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V) :
     iteratedJetDeriv s (ofField φ) =
       SymmetricAlgebra.ι ℂ _
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V) := by
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := by
   rw [ofField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -214,10 +216,10 @@ lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dua
   derivative symbol `∂_s`. -/
 @[simp]
 lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
-    (φ : Module.Dual ℂ (ConjModule V)) :
+    (φ : Module.Dual ℂ (ConjModule M.V)) :
     iteratedJetDeriv s (ofConjField φ) =
       SymmetricAlgebra.ι ℂ _
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace V) := by
+        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) := by
   rw [ofConjField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -225,7 +227,7 @@ lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
   · rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, one_mul, LinearMap.id_apply]
 
 /-- **The bosonic algebra is generated by the field, its conjugate, and their
-  derivatives.** As a `ℂ`-algebra, `BosonicAlgebra V` is the algebra adjoined by the
+  derivatives.** As a `ℂ`-algebra, `BosonicAlgebra M` is the algebra adjoined by the
   iterated total derivatives `∂_s ψ_φ` and `∂_s ψ̄_φ` of the undifferentiated component
   functions. Physically: every Lagrangian term for a `V`-valued bosonic matter field is a
   polynomial in the field, its conjugate, and their spacetime derivatives — nothing else is
@@ -233,30 +235,30 @@ lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
 theorem adjoin_iteratedJetDeriv_eq_top :
     Algebra.adjoin ℂ
       (⋃ s : Multiset (Fin 1 ⊕ Fin 3),
-        Set.range (fun φ : Module.Dual ℂ V => iteratedJetDeriv s (ofField φ)) ∪
-          Set.range (fun φ : Module.Dual ℂ (ConjModule V) =>
+        Set.range (fun φ : Module.Dual ℂ M.V => iteratedJetDeriv s (ofField φ)) ∪
+          Set.range (fun φ : Module.Dual ℂ (ConjModule M.V) =>
             iteratedJetDeriv s (ofConjField φ)))
-      = (⊤ : Subalgebra ℂ (BosonicAlgebra V)) := by
-  set S : Set (BosonicAlgebra V) :=
+      = (⊤ : Subalgebra ℂ (BosonicAlgebra M)) := by
+  set S : Set (BosonicAlgebra M) :=
     ⋃ s : Multiset (Fin 1 ⊕ Fin 3),
-      Set.range (fun φ : Module.Dual ℂ V => iteratedJetDeriv s (ofField φ)) ∪
-        Set.range (fun φ : Module.Dual ℂ (ConjModule V) =>
+      Set.range (fun φ : Module.Dual ℂ M.V => iteratedJetDeriv s (ofField φ)) ∪
+        Set.range (fun φ : Module.Dual ℂ (ConjModule M.V) =>
           iteratedJetDeriv s (ofConjField φ)) with hS
   /- The two half-inclusions of the component space into the bosonic algebra. -/
-  let gField : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] BosonicAlgebra V :=
+  let gField : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
     (SymmetricAlgebra.ι ℂ _).comp (LinearMap.inl ℂ _ _)
-  let gConj : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V) →ₗ[ℂ]
-      BosonicAlgebra V :=
+  let gConj : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ]
+      BosonicAlgebra M :=
     (SymmetricAlgebra.ι ℂ _).comp (LinearMap.inr ℂ _ _)
   /- On a derivative monomial each half-inclusion is one of the adjoined generators. -/
-  have hbasisField : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+  have hbasisField : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V),
       gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
     have h : gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) = iteratedJetDeriv s (ofField φ) :=
       (iteratedJetDeriv_ofField s φ).symm
     rw [h, hS]
     exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨s, Or.inl ⟨φ, rfl⟩⟩)
-  have hbasisConj : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule V)),
+  have hbasisConj : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule M.V)),
       gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
     have h : gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
@@ -265,7 +267,7 @@ theorem adjoin_iteratedJetDeriv_eq_top :
     exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨s, Or.inr ⟨φ, rfl⟩⟩)
   /- The derivative monomials span, so each half-inclusion lands in the adjoined algebra. -/
   have hhalf : ∀ {W : Type} [AddCommGroup W] [Module ℂ W]
-      (g : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra V),
+      (g : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M),
       (∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (w : W),
         g (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] w) ∈ Algebra.adjoin ℂ S) →
       ∀ y, g y ∈ Algebra.adjoin ℂ S := by
@@ -285,7 +287,7 @@ theorem adjoin_iteratedJetDeriv_eq_top :
         exact Subalgebra.smul_mem _ hb c
   /- Every component function is a sum of its two halves. -/
   refine top_le_iff.mp ?_
-  rw [← adjoin_ι_eq_top (V := V)]
+  rw [← adjoin_ι_eq_top (M := M)]
   refine Algebra.adjoin_le ?_
   rintro _ ⟨x, rfl⟩
   have hx : x = LinearMap.inl ℂ _ _ x.1 + LinearMap.inr ℂ _ _ x.2 := by
@@ -299,12 +301,12 @@ theorem adjoin_iteratedJetDeriv_eq_top :
 
 -/
 
-variable {W : Type} [AddCommGroup W] [Module ℂ W]
+variable {N : MatterField jets}
 
 /-- **The inclusion of a species is a map of differential algebras.** Pulling back along a
   map of target spaces commutes with the total derivative: the two act on different labels
   of a component function. -/
-lemma comap_jetDeriv (f : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra W) :
+lemma comap_jetDeriv (f : M.V →ₗ[ℂ] N.V) (μ : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra N) :
     comap f (jetDeriv μ x) = jetDeriv μ (comap f x) := by
   induction x using SymmetricAlgebra.induction with
   | algebraMap r =>
@@ -317,8 +319,8 @@ lemma comap_jetDeriv (f : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin 3) (x : BosonicAl
   | add a b ha hb => simp only [map_add, ha, hb]
 
 /-- The inclusion of a species commutes with the iterated total derivative. -/
-lemma comap_iteratedJetDeriv (f : V →ₗ[ℂ] W) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (x : BosonicAlgebra W) :
+lemma comap_iteratedJetDeriv (f : M.V →ₗ[ℂ] N.V) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (x : BosonicAlgebra N) :
     comap f (iteratedJetDeriv s x) = iteratedJetDeriv s (comap f x) := by
   induction s using Multiset.induction_on generalizing x with
   | empty => rw [iteratedJetDeriv_zero, LinearMap.id_apply, iteratedJetDeriv_zero,

@@ -80,8 +80,8 @@ lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
     repJetGaugeGroupI U (x * y) = repJetGaugeGroupI U x * repJetGaugeGroupI U y :=
   Representation.tprod_apply_mul _ _
     (Representation.tprod_apply_mul _ _
-      (FermionicAlgebra.repJetGaugeGroupI_apply_mul _ _)
-      (BosonicAlgebra.repJetGaugeGroupI_apply_mul _ _))
+      (FermionicAlgebra.repJetGaugeGroupI_apply_mul fermionMatterField)
+      (BosonicAlgebra.repJetGaugeGroupI_apply_mul HiggsVec.matterField))
     GaugeJetAlgebra.complexRepJet_apply_mul U x y
 
 /-!
@@ -95,17 +95,16 @@ lemma repJetGaugeGroupI_includeGauge (U : JetGaugeGroupI)
     (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     repJetGaugeGroupI U (includeGauge y)
       = includeGauge ((GaugeJetAlgebra.complexRepJet localGaugeData) U y) := by
-  rw [includeGauge_apply, repJetGaugeGroupI_tmul,
-    show (FermionJetAlgebra.repJetGaugeGroupI.tprod
+  have hF : FermionJetAlgebra.repJetGaugeGroupI U 1 = 1 :=
+    FermionicAlgebra.repJetGaugeGroupI_apply_one fermionMatterField U
+  have hH : HiggsJetAlgebra.repJetGaugeGroupI U 1 = 1 :=
+    BosonicAlgebra.repJetGaugeGroupI_apply_one HiggsVec.matterField U
+  have htp : (FermionJetAlgebra.repJetGaugeGroupI.tprod
         HiggsJetAlgebra.repJetGaugeGroupI) U
         ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
-      = (FermionJetAlgebra.repJetGaugeGroupI U (1 : FermionJetAlgebra)) ⊗ₜ[ℂ]
-        (HiggsJetAlgebra.repJetGaugeGroupI U (1 : HiggsJetAlgebra)) from rfl,
-    show HiggsJetAlgebra.repJetGaugeGroupI U (1 : HiggsJetAlgebra) = 1 from
-      BosonicAlgebra.repJetGaugeGroupI_apply_one _ _ U,
-    show FermionJetAlgebra.repJetGaugeGroupI U (1 : FermionJetAlgebra) = 1 from
-      FermionicAlgebra.repJetGaugeGroupI_apply_one _ _ U,
-    includeGauge_apply]
+      = (FermionJetAlgebra.repJetGaugeGroupI U 1) ⊗ₜ[ℂ]
+        (HiggsJetAlgebra.repJetGaugeGroupI U 1) := rfl
+  rw [includeGauge_apply, repJetGaugeGroupI_tmul, htp, hF, hH]
 
 end JetAlgebra
 

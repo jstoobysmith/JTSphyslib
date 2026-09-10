@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 /-!
 # The direct sum of two matter fields
 
@@ -32,10 +32,12 @@ infinitesimal action still generates the componentwise jet action.
 - `MatterField.repCoeff_repJetProd` : its base-point Taylor coefficients are the pair of
   those of the summands.
 - `MatterField.prod` : the direct sum of two matter fields of the same mass weight.
+- `JetComponentSpace.prodEquiv` : the component space of a direct sum splits.
 
 ## iii. Table of contents
 
 - A. The direct sum of two matter fields
+- B. The component space of a direct sum
 
 -/
 
@@ -182,5 +184,28 @@ lemma prod_massWeight_right (h : M.massWeight = N.massWeight) :
     (prod M N h).massWeight = N.massWeight := h
 
 end Prod
+
+/-!
+
+## B. The component space of a direct sum
+
+-/
+
+/-- **The component space of a direct sum splits.** The component functions of the direct
+  sum `M.prod N h` are those of `M` together with those of `N`: the dual and the conjugate
+  both distribute over the finite product, and the derivative label is untouched. Only the
+  value spaces enter, so the shared mass weight `h` is carried along and not used. -/
+noncomputable def _root_.JetComponentSpace.prodEquiv (M N : MatterField jets)
+    (h : M.massWeight = N.massWeight) :
+    JetComponentSpace (M.prod N h) ≃ₗ[ℂ] JetComponentSpace M × JetComponentSpace N :=
+  (LinearEquiv.prodCongr
+      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+        (Module.dualProdDualEquivDual ℂ M.V N.V).symm)
+      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+        (((ConjModule.prodEquiv (k := ℂ) (M := M.V) (N := N.V)).symm.dualMap).trans
+          (Module.dualProdDualEquivDual ℂ (ConjModule M.V) (ConjModule N.V)).symm))).trans <|
+    (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)
+        (TensorProduct.prodRight ℂ ℂ _ _ _)).trans
+      (LinearEquiv.prodProdProdComm ℂ _ _ _ _)
 
 end MatterField

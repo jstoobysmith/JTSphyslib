@@ -44,8 +44,11 @@ namespace FieldAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
-variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A] [HasJetDeriv V A]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
+variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
+  [HasJetDeriv (JetComponentSpace M) (JetComponentSpace.jetDeriv (M := M)) A]
 
 /-!
 
@@ -62,7 +65,7 @@ lemma jetDeriv_comm_apply (μ ν : Fin 1 ⊕ Fin 3) (x : A) :
   | ι v =>
     rw [jetDeriv_ι, jetDeriv_ι, jetDeriv_ι, jetDeriv_ι]
     exact congrArg (ι A)
-      (DFunLike.congr_fun (JetComponentSpace.jetDeriv_comm (V := V) μ ν) v)
+      (DFunLike.congr_fun (JetComponentSpace.jetDeriv_comm (M := M) μ ν) v)
   | mul x y hx hy =>
     simp only [jetDeriv_mul, map_add, hx, hy]
     abel
@@ -132,7 +135,7 @@ lemma iteratedJetDeriv_one_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s �
   Both halves of the component space — the field and its conjugate — are multiplied by the
   degree-`|s|` element `∂_s` of `DerivAlgebraComplex` in their derivative-label factor,
   with the target index untouched. -/
-lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpace V) :
+lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpace M) :
     iteratedJetDeriv s (ι A x) =
       ι A
         (TensorProduct.map (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis s))
@@ -174,10 +177,10 @@ lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpac
 /-- The iterated derivative of the field is the generator carrying the derivative symbol
   `∂_s`: applying `∂_s` to `ψ_φ` writes the label `s` into the derivative factor. -/
 @[simp]
-lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
+lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V) :
     iteratedJetDeriv s (ofField A φ) =
       ι A
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V) := by
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := by
   rw [ofField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -188,10 +191,10 @@ lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dua
   derivative symbol `∂_s`. -/
 @[simp]
 lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
-    (φ : Module.Dual ℂ (ConjModule V)) :
+    (φ : Module.Dual ℂ (ConjModule M.V)) :
     iteratedJetDeriv s (ofConjField A φ) =
       ι A
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace V) := by
+        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) := by
   rw [ofConjField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -207,30 +210,30 @@ lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
 theorem adjoin_iteratedJetDeriv_eq_top :
     Algebra.adjoin ℂ
       (⋃ s : Multiset (Fin 1 ⊕ Fin 3),
-        Set.range (fun φ : Module.Dual ℂ V => iteratedJetDeriv s (ofField A φ)) ∪
-          Set.range (fun φ : Module.Dual ℂ (ConjModule V) =>
+        Set.range (fun φ : Module.Dual ℂ M.V => iteratedJetDeriv s (ofField A φ)) ∪
+          Set.range (fun φ : Module.Dual ℂ (ConjModule M.V) =>
             iteratedJetDeriv s (ofConjField A φ)))
       = (⊤ : Subalgebra ℂ (A)) := by
   set S : Set (A) :=
     ⋃ s : Multiset (Fin 1 ⊕ Fin 3),
-      Set.range (fun φ : Module.Dual ℂ V => iteratedJetDeriv s (ofField A φ)) ∪
-        Set.range (fun φ : Module.Dual ℂ (ConjModule V) =>
+      Set.range (fun φ : Module.Dual ℂ M.V => iteratedJetDeriv s (ofField A φ)) ∪
+        Set.range (fun φ : Module.Dual ℂ (ConjModule M.V) =>
           iteratedJetDeriv s (ofConjField A φ)) with hS
   /- The two half-inclusions of the component space into the field algebra. -/
-  let gField : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] A :=
+  let gField : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] A :=
     (ι A).comp (LinearMap.inl ℂ _ _)
-  let gConj : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V) →ₗ[ℂ]
+  let gConj : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ]
       A :=
     (ι A).comp (LinearMap.inr ℂ _ _)
   /- On a derivative monomial each half-inclusion is one of the adjoined generators. -/
-  have hbasisField : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V),
+  have hbasisField : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V),
       gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
     have h : gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) = iteratedJetDeriv s (ofField A φ) :=
       (iteratedJetDeriv_ofField s φ).symm
     rw [h, hS]
     exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨s, Or.inl ⟨φ, rfl⟩⟩)
-  have hbasisConj : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule V)),
+  have hbasisConj : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule M.V)),
       gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
     have h : gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
@@ -259,7 +262,7 @@ theorem adjoin_iteratedJetDeriv_eq_top :
         exact Subalgebra.smul_mem _ hb c
   /- Every component function is a sum of its two halves. -/
   refine top_le_iff.mp ?_
-  rw [← adjoin_ι_eq_top (V := V)]
+  rw [← adjoin_ι_eq_top (C := JetComponentSpace M)]
   refine Algebra.adjoin_le ?_
   rintro _ ⟨x, rfl⟩
   have hx : x = LinearMap.inl ℂ _ _ x.1 + LinearMap.inr ℂ _ _ x.2 := by
@@ -274,8 +277,9 @@ theorem adjoin_iteratedJetDeriv_eq_top :
 
 -/
 
-variable {W : Type} [AddCommGroup W] [Module ℂ W]
-variable {B : Type} [Ring B] [Algebra ℂ B] [IsFieldAlgebra W B] [HasJetDeriv W B]
+variable {N : MatterField jets}
+variable {B : Type} [Ring B] [Algebra ℂ B] [IsFieldAlgebra (JetComponentSpace N) B]
+  [HasJetDeriv (JetComponentSpace N) (JetComponentSpace.jetDeriv (M := N)) B]
 
 /-- **An algebra homomorphism commuting with the total derivatives commutes with the
   iterated total derivatives.** This is what makes the inclusion of a species

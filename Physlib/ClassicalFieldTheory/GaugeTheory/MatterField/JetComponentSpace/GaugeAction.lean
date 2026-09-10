@@ -47,7 +47,9 @@ namespace JetComponentSpace
 open Matrix MatrixGroups TensorProduct
 
 variable {V : Type _} [AddCommGroup V] [Module ℂ V]
-variable {G : Type*} [Group G]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 /-- **The action of a coefficient on the symbols.** A coefficient `g ⊗ T` acts by
 `jetRingAction g` on the derivative label — the Leibniz convolution redistributing
@@ -161,37 +163,32 @@ lemma repDual_one_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
     symbolAction_one_tmul, h]
 
 
-/-- **The gauge action on the jet component space.** Given a fibrewise gauge action on the
-jets of a `V`-valued field, this is the induced action on the full space of component
-functions — the symbols `∂_s ψ_α` together with their conjugates `∂_s ψ̄_α`.
+/-- **The gauge action on the jet component space.** The induced action of the jets of
+gauge transformations on the full space of component functions of the matter field `M` —
+the symbols `∂_s ψ_α` together with their conjugates `∂_s ψ̄_α`.
 
-The unconjugated half is `repDual rep`, the contragredient action on the symbols. The
-conjugate half is the *same* construction applied to `repConj rep`, the action on the jets
-of the conjugate field; `repConj_smul_comm` supplies the fibrewise-linearity it needs. The
-conjugate half therefore carries `star` of the gauge matrix, which is the physicists'
-`ψ̄ ↦ ψ̄ U†`. -/
-noncomputable def repJet [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
-    Representation ℂ G (JetComponentSpace V) :=
-  (repDual rep hlin).prod (repDual (repConj rep) (repConj_smul_comm hlin))
+The unconjugated half is `repDual M.repJet`, the contragredient action on the symbols. The
+conjugate half is the *same* construction applied to `repConj M.repJet`, the action on the
+jets of the conjugate field; `repConj_smul_comm` supplies the fibrewise-linearity it needs.
+The conjugate half therefore carries `star` of the gauge matrix, which is the physicists'
+`ψ̄ ↦ ψ̄ U†`.
 
-@[simp]
-lemma repJet_fst [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (x : JetComponentSpace V) :
-    (repJet rep hlin U x).1 = repDual rep hlin U x.1 := rfl
+Everything the construction needs is a field of `MatterField`: the jet action `M.repJet`,
+its fibrewise linearity `M.repJet_smul`, and the freeness and finiteness of `M.V`. Taking
+the matter field rather than a bare value space is what removes all three from the
+argument list. -/
+noncomputable def repJet (M : MatterField jets) :
+    Representation ℂ G (JetComponentSpace M) :=
+  (repDual M.repJet M.repJet_smul).prod
+    (repDual (repConj M.repJet) (repConj_smul_comm M.repJet_smul))
 
 @[simp]
-lemma repJet_snd [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (x : JetComponentSpace V) :
-    (repJet rep hlin U x).2
-      = repDual (repConj rep) (repConj_smul_comm hlin) U x.2 := rfl
+lemma repJet_fst (M : MatterField jets) (U : G) (x : JetComponentSpace M) :
+    (repJet M U x).1 = repDual M.repJet M.repJet_smul U x.1 := rfl
+
+@[simp]
+lemma repJet_snd (M : MatterField jets) (U : G) (x : JetComponentSpace M) :
+    (repJet M U x).2
+      = repDual (repConj M.repJet) (repConj_smul_comm M.repJet_smul) U x.2 := rfl
 
 end JetComponentSpace

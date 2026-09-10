@@ -43,9 +43,10 @@ namespace FieldAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.Finite ℂ V]
-variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A]
-variable {G : Type*} [Group G]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-!
 
@@ -53,73 +54,49 @@ variable {G : Type*} [Group G]
 
 -/
 
-/-- **The jet gauge action on the field algebra** of a `V`-valued matter field, induced
-  from a fibrewise action `rep` on the jets of the field: the algebra functor
-  applied to the gauge action on the jet component space. The hypothesis `hlin` is the
-  statement that a gauge transformation acts on the *values* of the field, over the
-  identity on spacetime. -/
-noncomputable def repJet
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
+/-- **The jet gauge action on the field algebra** of the matter field `M`: the algebra
+  functor applied to the gauge action on its jet component space. The fibrewise action on
+  the jets and its fibrewise-linearity are fields of `M`, so neither has to be supplied
+  here. -/
+noncomputable def repJet :
     Representation ℂ G (A) where
   toFun U :=
-    (map A (JetComponentSpace.repJet rep hlin U)).toLinearMap
+    (map A (JetComponentSpace.repJet M U)).toLinearMap
   map_one' := by
     simp only [map_one, Module.End.one_eq_id, map_id, AlgHom.toLinearMap_id]
   map_mul' U W := by
     simp only [map_mul, Module.End.mul_eq_comp, ← map_comp_map,
       AlgHom.comp_toLinearMap]
 
-lemma repJet_apply
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (x : A) :
-    repJet rep hlin U x =
-      map A (JetComponentSpace.repJet rep hlin U) x := rfl
+lemma repJet_apply (U : G) (x : A) :
+    repJet M U x =
+      map A (JetComponentSpace.repJet M U) x := rfl
 
 @[simp]
-lemma repJet_apply_one
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) :
-    repJet rep hlin U (1 : A) = 1 := by
+lemma repJet_apply_one (U : G) :
+    repJet M U (1 : A) = 1 := by
   simp [repJet_apply]
 
-lemma repJet_apply_mul
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (x y : A) :
-    repJet rep hlin U (x * y) =
-      repJet rep hlin U x * repJet rep hlin U y := by
+lemma repJet_apply_mul (U : G) (x y : A) :
+    repJet M U (x * y) =
+      repJet M U x * repJet M U y := by
   simp [repJet_apply]
 
 /-- On a component function the jet gauge action is the action on the component space. -/
 @[simp]
-lemma repJet_ι
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (v : JetComponentSpace V) :
-    repJet rep hlin U (ι A v) =
-      ι A (JetComponentSpace.repJet rep hlin U v) := by
+lemma repJet_ι (U : G) (v : JetComponentSpace M) :
+    repJet M U (ι A v) =
+      ι A (JetComponentSpace.repJet M U v) := by
   rw [repJet_apply, map_ι]
 
 /-- The jet gauge action as an algebra homomorphism: a gauge transformation acts on a
   Lagrangian term factor by factor. -/
-noncomputable def repJetAlgHom
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) : A →ₐ[ℂ] A where
-  toFun := repJet rep hlin U
+noncomputable def repJetAlgHom (U : G) : A →ₐ[ℂ] A where
+  toFun := repJet M U
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
-  map_one' := repJet_apply_one rep hlin U
-  map_mul' := repJet_apply_mul rep hlin U
+  map_one' := repJet_apply_one M U
+  map_mul' := repJet_apply_mul M U
   commutes' r := by simp [repJet_apply]
 
 /-!
@@ -137,35 +114,29 @@ the *value* of the gauge transformation at the base point alone. So `ofField` an
   by the contragredient of the value of the gauge transformation at the base point; no
   derivative of the gauge jet contributes. -/
 lemma repJet_ofField
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (φ : Module.Dual ℂ V) :
-    repJet rep hlin U (ofField A φ) =
-      ofField A (Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ) := by
+    (U : G) (φ : Module.Dual ℂ M.V) :
+    repJet M U (ofField A φ) =
+      ofField A (Module.Dual.transpose (jetEval ∘ₗ (M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofField_apply, repJet_ι, ofField_apply]
   congr 1
   refine Prod.ext ?_ ?_
-  · exact JetComponentSpace.repDual_one_tmul rep hlin U φ
+  · exact JetComponentSpace.repDual_one_tmul M.repJet M.repJet_smul U φ
   · rw [JetComponentSpace.repJet_snd]
     exact map_zero _
 
-/-- **`ofConjField` is gauge equivariant**, for the conjugate action `repConj rep` on the
+/-- **`ofConjField` is gauge equivariant**, for the conjugate action `repConj M.repJet` on the
   jets of the conjugate field — which is the physicists' `φ̄ ↦ φ̄ U†`. -/
 lemma repJet_ofConjField
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : G) (φ : Module.Dual ℂ (ConjModule V)) :
-    repJet rep hlin U (ofConjField A φ) =
+    (U : G) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    repJet M U (ofConjField A φ) =
       ofConjField A (Module.Dual.transpose
-        (jetEval ∘ₗ (JetComponentSpace.repConj rep U⁻¹).comp jetOfConstant) φ) := by
+        (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofConjField_apply, repJet_ι, ofConjField_apply]
   congr 1
   refine Prod.ext ?_ ?_
   · rw [JetComponentSpace.repJet_fst]
     exact map_zero _
-  · exact JetComponentSpace.repDual_one_tmul (JetComponentSpace.repConj rep)
-      (JetComponentSpace.repConj_smul_comm hlin) U φ
+  · exact JetComponentSpace.repDual_one_tmul (JetComponentSpace.repConj M.repJet)
+      (JetComponentSpace.repConj_smul_comm M.repJet_smul) U φ
 
 end FieldAlgebra

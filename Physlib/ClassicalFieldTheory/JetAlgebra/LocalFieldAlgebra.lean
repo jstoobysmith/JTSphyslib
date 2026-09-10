@@ -170,12 +170,12 @@ noncomputable def ιConnection :
 
 /-- The generators of one fermionic species inside the local field algebra. -/
 noncomputable def ιFermion (i : T.FermionSpecies) :
-    JetComponentSpace (T.FermionValue i) →ₗ[ℂ] T.LocalFieldAlgebra :=
+    JetComponentSpace (T.fermion i) →ₗ[ℂ] T.LocalFieldAlgebra :=
   T.ιFermionTotal ∘ₗ T.inclFermion i
 
 /-- The generators of one bosonic species inside the local field algebra. -/
 noncomputable def ιBoson (j : T.BosonSpecies) :
-    JetComponentSpace (T.BosonValue j) →ₗ[ℂ] T.LocalFieldAlgebra :=
+    JetComponentSpace (T.boson j) →ₗ[ℂ] T.LocalFieldAlgebra :=
   T.ιBosonTotal ∘ₗ T.inclBoson j
 
 variable {T}
@@ -197,10 +197,10 @@ lemma ιConnection_apply (v : GaugeBoson.JetComponentSpace 𝔤) :
           ⊗ₜ[ℂ] ((1 : ℂ) ⊗ₜ[ℝ]
             SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace 𝔤) v) := rfl
 
-lemma ιFermion_apply (i : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i)) :
+lemma ιFermion_apply (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     T.ιFermion i x = T.ιFermionTotal (T.inclFermion i x) := rfl
 
-lemma ιBoson_apply (j : T.BosonSpecies) (y : JetComponentSpace (T.BosonValue j)) :
+lemma ιBoson_apply (j : T.BosonSpecies) (y : JetComponentSpace (T.boson j)) :
     T.ιBoson j y = T.ιBosonTotal (T.inclBoson j y) := rfl
 
 /-!
@@ -264,7 +264,7 @@ lemma ιConnection_commute_ιFermionTotal (v : GaugeBoson.JetComponentSpace 𝔤
 
 /-- A fermionic generator of a species squares to zero. -/
 @[simp]
-lemma ιFermion_mul_self (i : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i)) :
+lemma ιFermion_mul_self (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     T.ιFermion i x * T.ιFermion i x = 0 :=
   ιFermionTotal_mul_self (T.inclFermion i x)
 
@@ -272,32 +272,32 @@ lemma ιFermion_mul_self (i : T.FermionSpecies) (x : JetComponentSpace (T.Fermio
   one exterior algebra through different summands of the fermionic generator space, so this
   is ordinary exterior anticommutation and not an extra relation; it is what separate
   exterior algebras joined by an ordinary tensor product would lose. -/
-lemma ιFermion_mul_swap (i j : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i))
-    (y : JetComponentSpace (T.FermionValue j)) :
+lemma ιFermion_mul_swap (i j : T.FermionSpecies) (x : JetComponentSpace (T.fermion i))
+    (y : JetComponentSpace (T.fermion j)) :
     T.ιFermion i x * T.ιFermion j y = -(T.ιFermion j y * T.ιFermion i x) :=
   ιFermionTotal_mul_swap (T.inclFermion i x) (T.inclFermion j y)
 
 /-- Bosonic generators commute, across species as well as within one. -/
-lemma ιBoson_commute (i j : T.BosonSpecies) (x : JetComponentSpace (T.BosonValue i))
-    (y : JetComponentSpace (T.BosonValue j)) :
+lemma ιBoson_commute (i j : T.BosonSpecies) (x : JetComponentSpace (T.boson i))
+    (y : JetComponentSpace (T.boson j)) :
     Commute (T.ιBoson i x) (T.ιBoson j y) :=
   ιBosonTotal_commute (T.inclBoson i x) (T.inclBoson j y)
 
 /-- A bosonic generator commutes with a fermionic one, bosons being even. -/
 lemma ιBoson_commute_ιFermion (j : T.BosonSpecies) (i : T.FermionSpecies)
-    (y : JetComponentSpace (T.BosonValue j)) (x : JetComponentSpace (T.FermionValue i)) :
+    (y : JetComponentSpace (T.boson j)) (x : JetComponentSpace (T.fermion i)) :
     Commute (T.ιBoson j y) (T.ιFermion i x) :=
   ιBosonTotal_commute_ιFermionTotal (T.inclBoson j y) (T.inclFermion i x)
 
 /-- A bosonic generator commutes with a connection generator. -/
 lemma ιBoson_commute_ιConnection (j : T.BosonSpecies)
-    (y : JetComponentSpace (T.BosonValue j)) (v : GaugeBoson.JetComponentSpace 𝔤) :
+    (y : JetComponentSpace (T.boson j)) (v : GaugeBoson.JetComponentSpace 𝔤) :
     Commute (T.ιBoson j y) (T.ιConnection v) :=
   ιBosonTotal_commute_ιConnection (T.inclBoson j y) v
 
 /-- A connection generator commutes with a fermionic one, the connection being even. -/
 lemma ιConnection_commute_ιFermion (v : GaugeBoson.JetComponentSpace 𝔤)
-    (i : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i)) :
+    (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     Commute (T.ιConnection v) (T.ιFermion i x) :=
   ιConnection_commute_ιFermionTotal v (T.inclFermion i x)
 
@@ -408,9 +408,9 @@ variable (T)
 @[ext]
 structure Assignment (B : Type*) [Ring B] [Algebra ℂ B] where
   /-- The images of the generators of each fermionic species. -/
-  fermion : ∀ i, JetComponentSpace (T.FermionValue i) →ₗ[ℂ] B
+  fermion : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] B
   /-- The images of the generators of each bosonic species. -/
-  boson : ∀ j, JetComponentSpace (T.BosonValue j) →ₗ[ℂ] B
+  boson : ∀ j, JetComponentSpace (T.boson j) →ₗ[ℂ] B
   /-- The images of the connection generators; only real-linear, as the connection
     generator space is real. -/
   connection : GaugeBoson.JetComponentSpace 𝔤 →ₗ[ℝ] B
@@ -436,7 +436,7 @@ variable {T}
   `Assignment.fermion_mul_self` and `Assignment.fermion_mul_swap` together; the second is
   vacuous only for a family with at most one species. -/
 lemma assemble_mul_self_iff {B : Type*} [Ring B] [Algebra ℂ B]
-    (f : ∀ i, JetComponentSpace (T.FermionValue i) →ₗ[ℂ] B) :
+    (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] B) :
     (∀ v, T.assembleFermion f v * T.assembleFermion f v = 0)
       ↔ ((∀ i x, f i x * f i x = 0) ∧
         ∀ i j x y, f i x * f j y = -(f j y * f i x)) := by
@@ -468,12 +468,12 @@ def bosonTotal : T.BosonGenerators →ₗ[ℂ] B :=
 
 @[simp]
 lemma fermionTotal_inclFermion (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
+    (x : JetComponentSpace (T.fermion i)) :
     d.fermionTotal (T.inclFermion i x) = d.fermion i x :=
   assembleFermion_inclFermion d.fermion i x
 
 @[simp]
-lemma bosonTotal_inclBoson (j : T.BosonSpecies) (y : JetComponentSpace (T.BosonValue j)) :
+lemma bosonTotal_inclBoson (j : T.BosonSpecies) (y : JetComponentSpace (T.boson j)) :
     d.bosonTotal (T.inclBoson j y) = d.boson j y :=
   assembleBoson_inclBoson d.boson j y
 
@@ -705,12 +705,12 @@ lemma lift_ιConnection (v : GaugeBoson.JetComponentSpace 𝔤) :
   simp [lift, ιConnection_apply, matterHom]
 
 @[simp]
-lemma lift_ιFermion (i : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i)) :
+lemma lift_ιFermion (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     d.lift (T.ιFermion i x) = d.fermion i x := by
   rw [ιFermion_apply, d.lift_ιFermionTotal, d.fermionTotal_inclFermion]
 
 @[simp]
-lemma lift_ιBoson (j : T.BosonSpecies) (y : JetComponentSpace (T.BosonValue j)) :
+lemma lift_ιBoson (j : T.BosonSpecies) (y : JetComponentSpace (T.boson j)) :
     d.lift (T.ιBoson j y) = d.boson j y := by
   rw [ιBoson_apply, d.lift_ιBosonTotal, d.bosonTotal_inclBoson]
 

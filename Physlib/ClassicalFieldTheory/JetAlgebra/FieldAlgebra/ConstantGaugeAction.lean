@@ -32,56 +32,43 @@ namespace FieldAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.Finite ℂ V]
-variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A]
-variable {G : Type} [Group G] {G₀ : Type} [Group G₀] (ι : G₀ →* G)
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
+variable (ι : G₀ →* G)
 
 /-- The action of the constant — that is, global — gauge transformations on the field
   algebra: the restriction of the jet gauge action along the inclusion `ι : G₀ →* G` of the
   constant jets. -/
-noncomputable def repConstant
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
+noncomputable def repConstant :
     Representation ℂ G₀ A :=
-  (repJet rep hlin).comp ι
+  (repJet M).comp ι
 
 lemma repConstant_apply
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
     (g : G₀) (x : A) :
-    repConstant ι rep hlin g x =
-      repJet rep hlin (ι g) x := rfl
+    repConstant M ι g x =
+      repJet M (ι g) x := rfl
 
 @[simp]
 lemma repConstant_apply_one
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
     (g : G₀) :
-    repConstant ι rep hlin g (1 : A) = 1 :=
-  repJet_apply_one rep hlin _
+    repConstant M ι g (1 : A) = 1 :=
+  repJet_apply_one M _
 
 lemma repConstant_apply_mul
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
     (g : G₀) (x y : A) :
-    repConstant ι rep hlin g (x * y) =
-      repConstant ι rep hlin g x * repConstant ι rep hlin g y :=
-  repJet_apply_mul rep hlin _ x y
+    repConstant M ι g (x * y) =
+      repConstant M ι g x * repConstant M ι g y :=
+  repJet_apply_mul M _ x y
 
 /-- A constant gauge transformation acts on the undifferentiated field by the
   contragredient of its value — which for a constant jet is the transformation itself. -/
 lemma repConstant_ofField
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : G₀) (φ : Module.Dual ℂ V) :
-    repConstant ι rep hlin g (ofField A φ) =
+    (g : G₀) (φ : Module.Dual ℂ M.V) :
+    repConstant M ι g (ofField A φ) =
       ofField A (Module.Dual.transpose
-        (jetEval ∘ₗ (rep (ι g⁻¹)).comp jetOfConstant) φ) := by
+        (jetEval ∘ₗ (M.repJet (ι g⁻¹)).comp jetOfConstant) φ) := by
   have h : (ι g)⁻¹ = ι g⁻¹ :=
     (map_inv ι g).symm
   rw [repConstant_apply, repJet_ofField, h]
@@ -89,13 +76,10 @@ lemma repConstant_ofField
 /-- A constant gauge transformation acts on the undifferentiated conjugate field by the
   conjugate contragredient of its value. -/
 lemma repConstant_ofConjField
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : G₀) (φ : Module.Dual ℂ (ConjModule V)) :
-    repConstant ι rep hlin g (ofConjField A φ) =
+    (g : G₀) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    repConstant M ι g (ofConjField A φ) =
       ofConjField A (Module.Dual.transpose
-        (jetEval ∘ₗ (JetComponentSpace.repConj rep (ι g⁻¹)).comp
+        (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet (ι g⁻¹)).comp
           jetOfConstant) φ) := by
   have h : (ι g)⁻¹ = ι g⁻¹ :=
     (map_inv ι g).symm

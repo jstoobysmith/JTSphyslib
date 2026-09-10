@@ -14,7 +14,7 @@ public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 ## i. Overview
 
 For a matter field valued in a complex vector space `V`, the *fermionic algebra* is the
-exterior algebra on the jet component space `JetComponentSpace V`. It is the algebra in
+exterior algebra on the jet component space `JetComponentSpace M`. It is the algebra in
 which the `V`-part of a Lagrangian lives: the generators are the component functions
 `∂_s ψ_α` and their conjugates `∂_s ψ̄_α`, and the exterior product implements the
 anticommutativity of fermionic fields.
@@ -48,7 +48,9 @@ namespace StandardModel
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -56,11 +58,11 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 -/
 
-/-- The fermionic algebra of a `V`-valued matter field: the exterior algebra on the space
+/-- The fermionic algebra of the matter field `M`: the exterior algebra on the space
   of component functions `∂_s ψ_α` and `∂_s ψ̄_α`. The exterior product is the product of
   fermionic fields, its anticommutativity the Fermi statistics. -/
-abbrev FermionicAlgebra (V : Type) [AddCommGroup V] [Module ℂ V] : Type :=
-  ExteriorAlgebra ℂ (JetComponentSpace V)
+abbrev FermionicAlgebra (M : MatterField jets) : Type :=
+  ExteriorAlgebra ℂ (JetComponentSpace M)
 
 namespace FermionicAlgebra
 
@@ -76,17 +78,17 @@ namespace FermionicAlgebra
   functions". -/
 @[simp]
 lemma adjoin_ι_eq_top :
-    Algebra.adjoin ℂ (Set.range (ExteriorAlgebra.ι ℂ (M := JetComponentSpace V))) = ⊤ :=
+    Algebra.adjoin ℂ (Set.range (ExteriorAlgebra.ι ℂ (M := JetComponentSpace M))) = ⊤ :=
   CliffordAlgebra.adjoin_range_ι
 
 /-- A component function squares to zero: no fermionic field appears twice. -/
-lemma ι_sq_zero (x : JetComponentSpace V) :
-    ExteriorAlgebra.ι ℂ x * ExteriorAlgebra.ι ℂ x = (0 : FermionicAlgebra V) :=
+lemma ι_sq_zero (x : JetComponentSpace M) :
+    ExteriorAlgebra.ι ℂ x * ExteriorAlgebra.ι ℂ x = (0 : FermionicAlgebra M) :=
   ExteriorAlgebra.ι_sq_zero x
 
 /-- Two component functions anticommute. -/
-lemma ι_mul_ι_swap (x y : JetComponentSpace V) :
-    (ExteriorAlgebra.ι ℂ x * ExteriorAlgebra.ι ℂ y : FermionicAlgebra V)
+lemma ι_mul_ι_swap (x y : JetComponentSpace M) :
+    (ExteriorAlgebra.ι ℂ x * ExteriorAlgebra.ι ℂ y : FermionicAlgebra M)
       = - (ExteriorAlgebra.ι ℂ y * ExteriorAlgebra.ι ℂ x) :=
   eq_neg_of_add_eq_zero_left (ExteriorAlgebra.ι_add_mul_swap (R := ℂ) x y)
 
@@ -97,7 +99,7 @@ lemma ι_mul_ι_swap (x y : JetComponentSpace V) :
 The undifferentiated component functions sit inside the fermionic algebra as the two
 inclusions below. A component function is a *covector* on the target space: `ofField φ` is
 the component of the field `ψ` along `φ`, the element written `ψ_α` when `φ` is the `α`-th
-coordinate. The conjugate field is a covector on `ConjModule V`, whose scalar action is
+coordinate. The conjugate field is a covector on `ConjModule M.V`, whose scalar action is
 twisted by complex conjugation — that twist is exactly the statement that `ψ̄` transforms
 by the conjugate of the representation carried by `ψ`.
 
@@ -109,28 +111,28 @@ the content of `FermionicAlgebra.adjoin_iteratedJetDeriv_eq_top`.
 /-- **The component function `ψ_φ` of the matter field** along the covector `φ` on `V`: the
   undifferentiated generator, sitting at the empty derivative label in the unconjugated half
   of the component space. -/
-noncomputable def ofField : Module.Dual ℂ V →ₗ[ℂ] FermionicAlgebra V :=
+noncomputable def ofField : Module.Dual ℂ M.V →ₗ[ℂ] FermionicAlgebra M :=
   (ExteriorAlgebra.ι ℂ).comp
-    ((LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)
-        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V))).comp
-      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ V) 1))
+    ((LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
+        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
+      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ M.V) 1))
 
 /-- **The component function `ψ̄_φ` of the conjugate matter field** along the covector `φ` on
-  `ConjModule V`: the undifferentiated generator in the conjugate half of the component
+  `ConjModule M.V`: the undifferentiated generator in the conjugate half of the component
   space. -/
-noncomputable def ofConjField : Module.Dual ℂ (ConjModule V) →ₗ[ℂ] FermionicAlgebra V :=
+noncomputable def ofConjField : Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] FermionicAlgebra M :=
   (ExteriorAlgebra.ι ℂ).comp
-    ((LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)
-        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V))).comp
-      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ (ConjModule V)) 1))
+    ((LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
+        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
+      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ (ConjModule M.V)) 1))
 
-lemma ofField_apply (φ : Module.Dual ℂ V) :
+lemma ofField_apply (φ : Module.Dual ℂ M.V) :
     ofField φ = ExteriorAlgebra.ι ℂ
-      (((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V) := rfl
+      (((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := rfl
 
-lemma ofConjField_apply (φ : Module.Dual ℂ (ConjModule V)) :
+lemma ofConjField_apply (φ : Module.Dual ℂ (ConjModule M.V)) :
     ofConjField φ = ExteriorAlgebra.ι ℂ
-      ((0, (1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ) : JetComponentSpace V) := rfl
+      ((0, (1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ) : JetComponentSpace M) := rfl
 
 /-!
 
@@ -144,34 +146,34 @@ functorial and compatible with everything the algebra carries.
 
 -/
 
-variable {W : Type} [AddCommGroup W] [Module ℂ W]
+variable {N : MatterField jets}
 
 /-- **The fermionic algebra is contravariant in the target space.** A linear map
-  `f : V →ₗ[ℂ] W` induces an algebra homomorphism `FermionicAlgebra W →ₐ[ℂ] FermionicAlgebra V`
+  `f : V →ₗ[ℂ] W` induces an algebra homomorphism `FermionicAlgebra N →ₐ[ℂ] FermionicAlgebra M`
   by pulling back component functions. Applied to a *projection* out of a multi-species target
   space, this is the inclusion of one species' algebra into the whole. -/
-noncomputable def comap (f : V →ₗ[ℂ] W) : FermionicAlgebra W →ₐ[ℂ] FermionicAlgebra V :=
+noncomputable def comap (f : M.V →ₗ[ℂ] N.V) : FermionicAlgebra N →ₐ[ℂ] FermionicAlgebra M :=
   ExteriorAlgebra.map (JetComponentSpace.comap f)
 
 @[simp]
-lemma comap_ι (f : V →ₗ[ℂ] W) (x : JetComponentSpace W) :
+lemma comap_ι (f : M.V →ₗ[ℂ] N.V) (x : JetComponentSpace N) :
     comap f (ExteriorAlgebra.ι ℂ x)
       = ExteriorAlgebra.ι ℂ (JetComponentSpace.comap f x) := by
   rw [comap, ExteriorAlgebra.map_apply_ι]
 
 @[simp]
-lemma comap_id : comap (LinearMap.id : V →ₗ[ℂ] V) = AlgHom.id ℂ (FermionicAlgebra V) := by
+lemma comap_id : comap (LinearMap.id : M.V →ₗ[ℂ] M.V) = AlgHom.id ℂ (FermionicAlgebra M) := by
   rw [comap, JetComponentSpace.comap_id, ExteriorAlgebra.map_id]
 
 /-- Functoriality: the order reverses, as it must for a contravariant construction. -/
-lemma comap_comp {U : Type} [AddCommGroup U] [Module ℂ U] (f : V →ₗ[ℂ] W) (g : W →ₗ[ℂ] U) :
+lemma comap_comp {P : MatterField jets} (f : M.V →ₗ[ℂ] N.V) (g : N.V →ₗ[ℂ] P.V) :
     comap (g.comp f) = (comap f).comp (comap g) := by
   rw [comap, comap, comap, JetComponentSpace.comap_comp, ← ExteriorAlgebra.map_comp_map]
 
 /-- The inclusion sends a component function of the species to the corresponding component
   function of the whole. -/
 @[simp]
-lemma comap_ofField (f : V →ₗ[ℂ] W) (φ : Module.Dual ℂ W) :
+lemma comap_ofField (f : M.V →ₗ[ℂ] N.V) (φ : Module.Dual ℂ N.V) :
     comap f (ofField φ) = ofField (φ ∘ₗ f) := by
   rw [ofField_apply, comap_ι, ofField_apply]
   congr 1
@@ -179,7 +181,7 @@ lemma comap_ofField (f : V →ₗ[ℂ] W) (φ : Module.Dual ℂ W) :
 /-- The inclusion sends a conjugate component function of the species to the corresponding
   conjugate component function of the whole. -/
 @[simp]
-lemma comap_ofConjField (f : V →ₗ[ℂ] W) (φ : Module.Dual ℂ (ConjModule W)) :
+lemma comap_ofConjField (f : M.V →ₗ[ℂ] N.V) (φ : Module.Dual ℂ (ConjModule N.V)) :
     comap f (ofConjField φ) = ofConjField (φ ∘ₗ ConjModule.map f) := by
   rw [ofConjField_apply, comap_ι, ofConjField_apply]
   congr 1

@@ -44,8 +44,10 @@ namespace FieldAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
-variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-!
 
@@ -53,51 +55,51 @@ variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A]
 
 -/
 
-/-- **The Lorentz action on the field algebra** of a `V`-valued matter field, induced
-  from a representation `repV` of `SL(2,ℂ)` on `V`: the algebra functor applied
-  to the Lorentz action on the jet component space. -/
-noncomputable def repLorentzGroup (repV : Representation ℂ SL(2,ℂ) V) :
+/-- **The Lorentz action on the field algebra** of the matter field `M`: the algebra
+  functor applied to the Lorentz action on its jet component space. The representation of
+  `SL(2,ℂ)` on the target space is a field of `M`, so it need not be supplied here. -/
+noncomputable def repLorentzGroup :
     Representation ℂ SL(2,ℂ) (A) where
-  toFun Λ := (map A (JetComponentSpace.repLorentzGroup repV Λ)).toLinearMap
+  toFun Λ := (map A (JetComponentSpace.repLorentzGroup M Λ)).toLinearMap
   map_one' := by
     simp only [map_one, Module.End.one_eq_id, map_id, AlgHom.toLinearMap_id]
   map_mul' Λ₁ Λ₂ := by
     simp only [map_mul, Module.End.mul_eq_comp, ← map_comp_map,
       AlgHom.comp_toLinearMap]
 
-lemma repLorentzGroup_apply (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
+lemma repLorentzGroup_apply (Λ : SL(2,ℂ))
     (x : A) :
-    repLorentzGroup repV Λ x =
-      map A (JetComponentSpace.repLorentzGroup repV Λ) x := rfl
+    repLorentzGroup M Λ x =
+      map A (JetComponentSpace.repLorentzGroup M Λ) x := rfl
 
 @[simp]
-lemma repLorentzGroup_apply_one (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ)) :
-    repLorentzGroup repV Λ (1 : A) = 1 := by
+lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
+    repLorentzGroup M Λ (1 : A) = 1 := by
   simp [repLorentzGroup_apply]
 
-lemma repLorentzGroup_apply_mul (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ))
     (x y : A) :
-    repLorentzGroup repV Λ (x * y)
-      = repLorentzGroup repV Λ x * repLorentzGroup repV Λ y := by
+    repLorentzGroup M Λ (x * y)
+      = repLorentzGroup M Λ x * repLorentzGroup M Λ y := by
   simp [repLorentzGroup_apply]
 
 /-- On a component function the Lorentz action is the action on the component space. -/
 @[simp]
-lemma repLorentzGroup_ι (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
-    (v : JetComponentSpace V) :
-    repLorentzGroup repV Λ (ι A v) =
-      ι A (JetComponentSpace.repLorentzGroup repV Λ v) := by
+lemma repLorentzGroup_ι (Λ : SL(2,ℂ))
+    (v : JetComponentSpace M) :
+    repLorentzGroup M Λ (ι A v) =
+      ι A (JetComponentSpace.repLorentzGroup M Λ v) := by
   rw [repLorentzGroup_apply, map_ι]
 
 /-- The Lorentz action as an algebra homomorphism: it preserves the product, so a
   Lorentz transformation acts on a Lagrangian term factor by factor. -/
-noncomputable def repLorentzGroupAlgHom (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ)) :
+noncomputable def repLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
     A →ₐ[ℂ] A where
-  toFun := repLorentzGroup repV Λ
+  toFun := repLorentzGroup M Λ
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
-  map_one' := repLorentzGroup_apply_one repV Λ
-  map_mul' := repLorentzGroup_apply_mul repV Λ
+  map_one' := repLorentzGroup_apply_one M Λ
+  map_mul' := repLorentzGroup_apply_mul M Λ
   commutes' r := by simp [repLorentzGroup_apply]
 
 /-!
@@ -108,12 +110,12 @@ noncomputable def repLorentzGroupAlgHom (repV : Representation ℂ SL(2,ℂ) V) 
 
 /-- **`ofField` is `SL(2,ℂ)`-equivariant.** The undifferentiated component functions carry
   the contragredient of the representation on the target space, and no derivative labels
-  are generated: `ofField` intertwines `repV.dual` with the action on the field
+  are generated: `ofField` intertwines `M.repLorentz.dual` with the action on the field
   algebra. -/
 @[simp]
-lemma repLorentzGroup_ofField (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
-    (φ : Module.Dual ℂ V) :
-    repLorentzGroup repV Λ (ofField A φ) = ofField A (repV.dual Λ φ) := by
+lemma repLorentzGroup_ofField (Λ : SL(2,ℂ))
+    (φ : Module.Dual ℂ M.V) :
+    repLorentzGroup M Λ (ofField A φ) = ofField A (M.repLorentz.dual Λ φ) := by
   rw [ofField_apply, repLorentzGroup_ι, ofField_apply]
   congr 1
   refine Prod.ext ?_ ?_
@@ -127,16 +129,16 @@ lemma repLorentzGroup_ofField (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2
   the target space: the conjugate component functions transform by `star` of the spinor
   matrix. -/
 @[simp]
-lemma repLorentzGroup_ofConjField (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
-    (φ : Module.Dual ℂ (ConjModule V)) :
-    repLorentzGroup repV Λ (ofConjField A φ) = ofConjField A (repV.conj.dual Λ φ) := by
+lemma repLorentzGroup_ofConjField (Λ : SL(2,ℂ))
+    (φ : Module.Dual ℂ (ConjModule M.V)) :
+    repLorentzGroup M Λ (ofConjField A φ) = ofConjField A (M.repLorentz.conj.dual Λ φ) := by
   rw [ofConjField_apply, repLorentzGroup_ι, ofConjField_apply]
   congr 1
   refine Prod.ext ?_ ?_
   · rw [JetComponentSpace.repLorentzGroup_fst]
     exact map_zero _
   · rw [JetComponentSpace.repLorentzGroup_snd]
-    show (DerivAlgebraComplex.repLorentzGroup Λ 1) ⊗ₜ[ℂ] (repV.conj.dual Λ φ) = _
+    show (DerivAlgebraComplex.repLorentzGroup Λ 1) ⊗ₜ[ℂ] (M.repLorentz.conj.dual Λ φ) = _
     rw [DerivAlgebraComplex.repLorentzGroup_apply_one]
 
 /-!
@@ -145,17 +147,17 @@ lemma repLorentzGroup_ofConjField (repV : Representation ℂ SL(2,ℂ) V) (Λ : 
 
 -/
 
-variable [HasJetDeriv V A]
+variable [HasJetDeriv (JetComponentSpace M) (JetComponentSpace.jetDeriv (M := M)) A]
 
 set_option maxHeartbeats 4000000 in
 /-- **The total derivative on the field algebra is a Lorentz vector.** The four
   derivations `∂_μ` transform into each other by the columns of the Lorentz matrix of `Λ`,
   exactly as the covector index `μ` should. -/
-lemma repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(2,ℂ))
+lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ))
     (μ : Fin 1 ⊕ Fin 3) (x : A) :
-    repLorentzGroup repV Λ (jetDeriv μ x) =
+    repLorentzGroup M Λ (jetDeriv μ x) =
       ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
-        jetDeriv a (repLorentzGroup repV Λ x) := by
+        jetDeriv a (repLorentzGroup M Λ x) := by
   induction x using FieldAlgebra.induction with
   | algebraMap r =>
     rw [jetDeriv_algebraMap, map_zero]
@@ -177,8 +179,8 @@ lemma repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2,ℂ) V) (Λ : SL(
 
 /-- The total derivatives on the field algebra form a Lorentz derivative, giving access
   to the boost-weight machinery of `Physlib.Relativity.IsLorentzDeriv`. -/
-instance instIsLorentzDeriv (repV : Representation ℂ SL(2,ℂ) V) :
-    Lorentz.IsLorentzDeriv (repLorentzGroup repV) (jetDeriv (A := A)) where
-  rep_deriv := repLorentzGroup_jetDeriv repV _ _ _
+instance instIsLorentzDeriv :
+    Lorentz.IsLorentzDeriv (repLorentzGroup M) (jetDeriv (A := A)) where
+  rep_deriv := repLorentzGroup_jetDeriv M _ _ _
 
 end FieldAlgebra

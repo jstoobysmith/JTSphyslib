@@ -40,8 +40,10 @@ namespace FieldAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
-variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra V A]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
+variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-!
 
@@ -56,7 +58,7 @@ noncomputable def massWeightScale (w : ℕ) (c : ℂ) : A →ₐ[ℂ] A :=
   map A (JetComponentSpace.massWeightScale w c)
 
 @[simp]
-lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
+lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace M) :
     massWeightScale w c (ι A x)
       = ι A (JetComponentSpace.massWeightScale w c x) :=
   map_ι A _ x
@@ -69,7 +71,7 @@ lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
 
 /-- The undifferentiated field carries its own mass weight. -/
 @[simp]
-lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
+lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ M.V) :
     massWeightScale w c (ofField A φ) = c ^ w • ofField A φ := by
   rw [ofField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -82,7 +84,7 @@ lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
 
 /-- The undifferentiated conjugate field carries the same mass weight as the field. -/
 @[simp]
-lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule V)) :
+lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     massWeightScale w c (ofConjField A φ) = c ^ w • ofConjField A φ := by
   rw [ofConjField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -93,7 +95,7 @@ lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (Con
     simp only [TensorProduct.map_tmul, AlgHom.toLinearMap_apply, map_one,
       LinearMap.id_apply, Prod.smul_snd, TensorProduct.smul_tmul']
 
-variable [HasJetDeriv V A]
+variable [HasJetDeriv (JetComponentSpace M) (JetComponentSpace.jetDeriv (M := M)) A]
 
 /-- **A total derivative adds mass weight two**: the scaling intertwines the total
   derivative up to a factor `c ^ 2`. -/

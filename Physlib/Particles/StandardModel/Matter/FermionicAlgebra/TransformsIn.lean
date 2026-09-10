@@ -27,7 +27,7 @@ the image of the component space under `ExteriorAlgebra.ι`, and a multiset sum 
 through a linear map.
 
 The conjugate generators are the same statement for the conjugate action
-`JetComponentSpace.repConj rep` on
+`JetComponentSpace.repConj M.repJet` on
 the jets of the conjugate field, which is what the conjugate half of the component space
 carries; so they are an instance of the same lemma, not a second proof.
 
@@ -58,7 +58,9 @@ namespace FermionicAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -68,25 +70,25 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 /-- A multiset sum in the unconjugated half of the component space passes through the
   inclusion of the generators. -/
-private lemma sum_inl (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)) :
-    ExteriorAlgebra.ι ℂ ((m.sum, 0) : JetComponentSpace V)
-      = (m.map fun a => ExteriorAlgebra.ι ℂ ((a, 0) : JetComponentSpace V)).sum := by
-  rw [show ExteriorAlgebra.ι ℂ ((m.sum, 0) : JetComponentSpace V)
+private lemma sum_inl (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)) :
+    ExteriorAlgebra.ι ℂ ((m.sum, 0) : JetComponentSpace M)
+      = (m.map fun a => ExteriorAlgebra.ι ℂ ((a, 0) : JetComponentSpace M)).sum := by
+  rw [show ExteriorAlgebra.ι ℂ ((m.sum, 0) : JetComponentSpace M)
       = ((ExteriorAlgebra.ι ℂ).comp
-          (LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)
-            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)))) m.sum from rfl,
+          (LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
+            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
     map_multiset_sum]
   rfl
 
 /-- A multiset sum in the conjugate half of the component space passes through the
   inclusion of the generators. -/
-private lemma sum_inr (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V))) :
-    ExteriorAlgebra.ι ℂ ((0, m.sum) : JetComponentSpace V)
-      = (m.map fun a => ExteriorAlgebra.ι ℂ ((0, a) : JetComponentSpace V)).sum := by
-  rw [show ExteriorAlgebra.ι ℂ ((0, m.sum) : JetComponentSpace V)
+private lemma sum_inr (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))) :
+    ExteriorAlgebra.ι ℂ ((0, m.sum) : JetComponentSpace M)
+      = (m.map fun a => ExteriorAlgebra.ι ℂ ((0, a) : JetComponentSpace M)).sum := by
+  rw [show ExteriorAlgebra.ι ℂ ((0, m.sum) : JetComponentSpace M)
       = ((ExteriorAlgebra.ι ℂ).comp
-          (LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)
-            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)))) m.sum from rfl,
+          (LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
+            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
     map_multiset_sum]
   rfl
 
@@ -96,7 +98,6 @@ private lemma sum_inr (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual �
 
 -/
 
-variable [Module.Free ℂ V] [Module.Finite ℂ V]
 
 /-!
 
@@ -110,18 +111,15 @@ variable [Module.Free ℂ V] [Module.Finite ℂ V]
   `s₁` acting on the target index of `∂_{s₂} ψ_φ`. There is no inhomogeneous term: unlike a
   gauge field, a matter field transforms linearly. -/
 lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    repJetGaugeGroupI rep hlin U (iteratedJetDeriv s (ofField φ)) =
+    (U : G) (φ : Module.Dual ℂ M.V) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    repJetGaugeGroupI M U (iteratedJetDeriv s (ofField φ)) =
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2
-          (ofField (GaugeAlgebraRealization.repDualCoeff rep U⁻¹ p.1 φ))).sum := by
+          (ofField (GaugeAlgebraRealization.repDualCoeff M.repJet U⁻¹ p.1 φ))).sum := by
   rw [iteratedJetDeriv_ofField, repJetGaugeGroupI_ι,
-    show JetComponentSpace.repJet rep hlin U
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace V)
-      = (JetComponentSpace.repDual rep hlin U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ), 0) from by
+    show JetComponentSpace.repJet M U
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)
+      = (JetComponentSpace.repDual M.repJet M.repJet_smul U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ), 0) from by
       refine Prod.ext rfl ?_
       rw [JetComponentSpace.repJet_snd]
       exact map_zero _,
@@ -131,13 +129,10 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
 
 /-- The derivative generators of a matter field transform in the representation `rep`
   carried by its jets, in the sense demanded by `LocalGaugeData.TransformsIn`. -/
-theorem transformsIn_iteratedJetDeriv_ofField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
-    LocalGaugeData.TransformsIn (repJetGaugeGroupI rep hlin) rep
-      fun s => (iteratedJetDeriv s).comp (ofField (V := V)) :=
-  fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofField rep hlin U φ s
+theorem transformsIn_iteratedJetDeriv_ofField :
+    LocalGaugeData.TransformsIn (repJetGaugeGroupI M) M.repJet
+      fun s => (iteratedJetDeriv s).comp (ofField (M := M)) :=
+  fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofField (M := M) U φ s
 
 /-!
 
@@ -146,26 +141,23 @@ theorem transformsIn_iteratedJetDeriv_ofField
 -/
 
 /-- The transformation law of the derivative generators of the conjugate matter field. It
-  is the law of the field itself for the conjugate action `JetComponentSpace.repConj rep` on
+  is the law of the field itself for the conjugate action `JetComponentSpace.repConj M.repJet` on
   the jets of the
   conjugate field — the physicists' `ψ̄ ↦ ψ̄ U†` and its derivatives. -/
 lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (φ : Module.Dual ℂ (ConjModule V))
+    (U : G) (φ : Module.Dual ℂ (ConjModule M.V))
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    repJetGaugeGroupI rep hlin U (iteratedJetDeriv s (ofConjField φ)) =
+    repJetGaugeGroupI M U (iteratedJetDeriv s (ofConjField φ)) =
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2
           (ofConjField
-            (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ p.1
+            (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj M.repJet) U⁻¹ p.1
               φ))).sum := by
   rw [iteratedJetDeriv_ofConjField, repJetGaugeGroupI_ι,
-    show JetComponentSpace.repJet rep hlin U
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace V)
-      = (0, JetComponentSpace.repDual (JetComponentSpace.repConj rep)
-          (JetComponentSpace.repConj_smul_comm hlin) U
+    show JetComponentSpace.repJet M U
+        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)
+      = (0, JetComponentSpace.repDual (JetComponentSpace.repConj M.repJet)
+          (JetComponentSpace.repConj_smul_comm M.repJet_smul) U
           (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)) from by
       refine Prod.ext ?_ rfl
       rw [JetComponentSpace.repJet_fst]
@@ -175,15 +167,12 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
   rw [Function.comp_apply, iteratedJetDeriv_ofConjField]
 
 /-- The derivative generators of the conjugate matter field transform in the conjugate
-  representation `JetComponentSpace.repConj rep`, in the sense demanded by
+  representation `JetComponentSpace.repConj M.repJet`, in the sense demanded by
   `LocalGaugeData.TransformsIn`. -/
-theorem transformsIn_iteratedJetDeriv_ofConjField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
-    LocalGaugeData.TransformsIn (repJetGaugeGroupI rep hlin) (JetComponentSpace.repConj rep)
-      fun s => (iteratedJetDeriv s).comp (ofConjField (V := V)) :=
-  fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofConjField rep hlin U φ s
+theorem transformsIn_iteratedJetDeriv_ofConjField :
+    LocalGaugeData.TransformsIn (repJetGaugeGroupI M) (JetComponentSpace.repConj M.repJet)
+      fun s => (iteratedJetDeriv s).comp (ofConjField (M := M)) :=
+  fun U φ s => repJetGaugeGroupI_iteratedJetDeriv_ofConjField (M := M) U φ s
 
 end FermionicAlgebra
 

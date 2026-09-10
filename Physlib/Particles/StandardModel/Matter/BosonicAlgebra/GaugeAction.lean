@@ -45,7 +45,9 @@ namespace BosonicAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.Finite ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
 
 /-!
 
@@ -53,18 +55,13 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.
 
 -/
 
-/-- **The jet gauge action on the bosonic algebra** of a `V`-valued matter field, induced
-  from a fibrewise action `rep` on the jets of the field: the symmetric-algebra functor
-  applied to the gauge action on the jet component space. The hypothesis `hlin` is the
-  statement that a gauge transformation acts on the *values* of the field, over the
-  identity on spacetime. -/
-noncomputable def repJetGaugeGroupI
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
-    Representation ℂ JetGaugeGroupI (BosonicAlgebra V) where
+/-- **The jet gauge action on the bosonic algebra** of the matter field `M`: the symmetric-algebra functor
+  applied to the gauge action on the jet component space. The fibrewise action on the jets and its
+  fibrewise-linearity are fields of `M`. -/
+noncomputable def repJetGaugeGroupI :
+    Representation ℂ G (BosonicAlgebra M) where
   toFun U :=
-    (SymmetricAlgebra.map (JetComponentSpace.repJet rep hlin U)).toLinearMap
+    (SymmetricAlgebra.map (JetComponentSpace.repJet M U)).toLinearMap
   map_one' := by
     simp only [map_one, Module.End.one_eq_id, SymmetricAlgebra.map_id, AlgHom.toLinearMap_id]
   map_mul' U W := by
@@ -72,54 +69,39 @@ noncomputable def repJetGaugeGroupI
       AlgHom.comp_toLinearMap]
 
 lemma repJetGaugeGroupI_apply
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (x : BosonicAlgebra V) :
-    repJetGaugeGroupI rep hlin U x =
-      SymmetricAlgebra.map (JetComponentSpace.repJet rep hlin U) x := rfl
+    (U : G) (x : BosonicAlgebra M) :
+    repJetGaugeGroupI M U x =
+      SymmetricAlgebra.map (JetComponentSpace.repJet M U) x := rfl
 
 @[simp]
 lemma repJetGaugeGroupI_apply_one
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) :
-    repJetGaugeGroupI rep hlin U (1 : BosonicAlgebra V) = 1 := by
+    (U : G) :
+    repJetGaugeGroupI M U (1 : BosonicAlgebra M) = 1 := by
   simp [repJetGaugeGroupI_apply]
 
 lemma repJetGaugeGroupI_apply_mul
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (x y : BosonicAlgebra V) :
-    repJetGaugeGroupI rep hlin U (x * y) =
-      repJetGaugeGroupI rep hlin U x * repJetGaugeGroupI rep hlin U y := by
+    (U : G) (x y : BosonicAlgebra M) :
+    repJetGaugeGroupI M U (x * y) =
+      repJetGaugeGroupI M U x * repJetGaugeGroupI M U y := by
   simp [repJetGaugeGroupI_apply]
 
 /-- On a component function the jet gauge action is the action on the component space. -/
 @[simp]
 lemma repJetGaugeGroupI_ι
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (v : JetComponentSpace V) :
-    repJetGaugeGroupI rep hlin U (SymmetricAlgebra.ι ℂ _ v) =
-      SymmetricAlgebra.ι ℂ _ (JetComponentSpace.repJet rep hlin U v) := by
+    (U : G) (v : JetComponentSpace M) :
+    repJetGaugeGroupI M U (SymmetricAlgebra.ι ℂ _ v) =
+      SymmetricAlgebra.ι ℂ _ (JetComponentSpace.repJet M U v) := by
   rw [repJetGaugeGroupI_apply, SymmetricAlgebra.map_apply_ι]
 
 /-- The jet gauge action as an algebra homomorphism: a gauge transformation acts on a
   Lagrangian term factor by factor. -/
 noncomputable def repJetGaugeGroupIAlgHom
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) : BosonicAlgebra V →ₐ[ℂ] BosonicAlgebra V where
-  toFun := repJetGaugeGroupI rep hlin U
+    (U : G) : BosonicAlgebra M →ₐ[ℂ] BosonicAlgebra M where
+  toFun := repJetGaugeGroupI M U
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
-  map_one' := repJetGaugeGroupI_apply_one rep hlin U
-  map_mul' := repJetGaugeGroupI_apply_mul rep hlin U
+  map_one' := repJetGaugeGroupI_apply_one M U
+  map_mul' := repJetGaugeGroupI_apply_mul M U
   commutes' r := by simp [repJetGaugeGroupI_apply]
 
 /-!
@@ -137,16 +119,13 @@ the *value* of the gauge transformation at the base point alone. So `ofField` an
   by the contragredient of the value of the gauge transformation at the base point; no
   derivative of the gauge jet contributes. -/
 lemma repJetGaugeGroupI_ofField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) :
-    repJetGaugeGroupI rep hlin U (ofField φ) =
-      ofField (Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ) := by
+    (U : G) (φ : Module.Dual ℂ M.V) :
+    repJetGaugeGroupI M U (ofField φ) =
+      ofField (Module.Dual.transpose (jetEval ∘ₗ (M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofField_apply, repJetGaugeGroupI_ι, ofField_apply]
   congr 1
   refine Prod.ext ?_ ?_
-  · exact JetComponentSpace.repDual_one_tmul rep hlin U φ
+  · exact JetComponentSpace.repDual_one_tmul M.repJet M.repJet_smul U φ
   · rw [JetComponentSpace.repJet_snd]
     exact map_zero _
 
@@ -154,20 +133,17 @@ lemma repJetGaugeGroupI_ofField
   `JetComponentSpace.repConj rep` on the
   jets of the conjugate field — which is the physicists' `φ̄ ↦ φ̄ U†`. -/
 lemma repJetGaugeGroupI_ofConjField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (U : JetGaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)) :
-    repJetGaugeGroupI rep hlin U (ofConjField φ) =
+    (U : G) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    repJetGaugeGroupI M U (ofConjField φ) =
       ofConjField (Module.Dual.transpose
-        (jetEval ∘ₗ (JetComponentSpace.repConj rep U⁻¹).comp jetOfConstant) φ) := by
+        (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofConjField_apply, repJetGaugeGroupI_ι, ofConjField_apply]
   congr 1
   refine Prod.ext ?_ ?_
   · rw [JetComponentSpace.repJet_fst]
     exact map_zero _
-  · exact JetComponentSpace.repDual_one_tmul (JetComponentSpace.repConj rep)
-      (JetComponentSpace.repConj_smul_comm hlin) U φ
+  · exact JetComponentSpace.repDual_one_tmul (JetComponentSpace.repConj M.repJet)
+      (JetComponentSpace.repConj_smul_comm M.repJet_smul) U φ
 
 /-!
 
@@ -177,66 +153,48 @@ lemma repJetGaugeGroupI_ofConjField
 
 /-- The action of the constant — that is, global — gauge transformations on the bosonic
   algebra, obtained by including a gauge transformation as a constant gauge jet. -/
-noncomputable def repGaugeGroupI
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z) :
-    Representation ℂ GaugeGroupI (BosonicAlgebra V) :=
-  (repJetGaugeGroupI rep hlin).comp JetGaugeGroupI.ofConstant
+noncomputable def repGaugeGroupI :
+    Representation ℂ G₀ (BosonicAlgebra M) :=
+  (repJetGaugeGroupI M).comp jets.ofConstant
 
 lemma repGaugeGroupI_apply
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : GaugeGroupI) (x : BosonicAlgebra V) :
-    repGaugeGroupI rep hlin g x =
-      repJetGaugeGroupI rep hlin (JetGaugeGroupI.ofConstant g) x := rfl
+    (g : G₀) (x : BosonicAlgebra M) :
+    repGaugeGroupI M g x =
+      repJetGaugeGroupI M (jets.ofConstant g) x := rfl
 
 @[simp]
 lemma repGaugeGroupI_apply_one
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : GaugeGroupI) :
-    repGaugeGroupI rep hlin g (1 : BosonicAlgebra V) = 1 :=
-  repJetGaugeGroupI_apply_one rep hlin _
+    (g : G₀) :
+    repGaugeGroupI M g (1 : BosonicAlgebra M) = 1 :=
+  repJetGaugeGroupI_apply_one M _
 
 lemma repGaugeGroupI_apply_mul
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : GaugeGroupI) (x y : BosonicAlgebra V) :
-    repGaugeGroupI rep hlin g (x * y) =
-      repGaugeGroupI rep hlin g x * repGaugeGroupI rep hlin g y :=
-  repJetGaugeGroupI_apply_mul rep hlin _ x y
+    (g : G₀) (x y : BosonicAlgebra M) :
+    repGaugeGroupI M g (x * y) =
+      repGaugeGroupI M g x * repGaugeGroupI M g y :=
+  repJetGaugeGroupI_apply_mul M _ x y
 
 /-- A constant gauge transformation acts on the undifferentiated field by the
   contragredient of its value — which for a constant jet is the transformation itself. -/
 lemma repGaugeGroupI_ofField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : GaugeGroupI) (φ : Module.Dual ℂ V) :
-    repGaugeGroupI rep hlin g (ofField φ) =
+    (g : G₀) (φ : Module.Dual ℂ M.V) :
+    repGaugeGroupI M g (ofField φ) =
       ofField (Module.Dual.transpose
-        (jetEval ∘ₗ (rep (JetGaugeGroupI.ofConstant g⁻¹)).comp jetOfConstant) φ) := by
-  have h : (JetGaugeGroupI.ofConstant g)⁻¹ = JetGaugeGroupI.ofConstant g⁻¹ :=
-    (map_inv JetGaugeGroupI.ofConstant g).symm
+        (jetEval ∘ₗ (M.repJet (jets.ofConstant g⁻¹)).comp jetOfConstant) φ) := by
+  have h : (jets.ofConstant g)⁻¹ = jets.ofConstant g⁻¹ :=
+    (map_inv jets.ofConstant g).symm
   rw [repGaugeGroupI_apply, repJetGaugeGroupI_ofField, h]
 
 /-- A constant gauge transformation acts on the undifferentiated conjugate field by the
   conjugate contragredient of its value. -/
 lemma repGaugeGroupI_ofConjField
-    (rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : JetGaugeGroupI) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
-      rep U (χ • z) = χ • rep U z)
-    (g : GaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)) :
-    repGaugeGroupI rep hlin g (ofConjField φ) =
+    (g : G₀) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    repGaugeGroupI M g (ofConjField φ) =
       ofConjField (Module.Dual.transpose
-        (jetEval ∘ₗ (JetComponentSpace.repConj rep (JetGaugeGroupI.ofConstant g⁻¹)).comp
+        (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet (jets.ofConstant g⁻¹)).comp
           jetOfConstant) φ) := by
-  have h : (JetGaugeGroupI.ofConstant g)⁻¹ = JetGaugeGroupI.ofConstant g⁻¹ :=
-    (map_inv JetGaugeGroupI.ofConstant g).symm
+  have h : (jets.ofConstant g)⁻¹ = jets.ofConstant g⁻¹ :=
+    (map_inv jets.ofConstant g).symm
   rw [repGaugeGroupI_apply, repJetGaugeGroupI_ofConjField, h]
 
 end BosonicAlgebra

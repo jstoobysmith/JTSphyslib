@@ -185,4 +185,12 @@ lemma finrank_bosonMatterField (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
       = ∑ i, Module.finrank ℂ (T.BosonValue i) :=
   T.finrank_bosonModule
 
+/-- The projection of the bosonic matter field onto one species, typed as a map out of
+  `(T.bosonMatterField w h).V` rather than out of `T.BosonModule`. The two are the same
+  type by definition, but naming the first keeps unification from having to unfold the
+  direct sum every time the projection meets the matter field. -/
+noncomputable abbrev projBosonField (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    (i : T.BosonSpecies) : (T.bosonMatterField w h).V →ₗ[ℂ] (T.boson i).V :=
+  LinearMap.proj i
+
 end GaugeFieldData

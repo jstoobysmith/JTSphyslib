@@ -181,4 +181,12 @@ lemma finrank_fermionMatterField (w : ℕ) (h : ∀ i, (T.fermion i).massWeight 
       = ∑ i, Module.finrank ℂ (T.FermionValue i) :=
   T.finrank_fermionModule
 
+/-- The projection of the fermionic matter field onto one species, typed as a map out of
+  `(T.fermionMatterField w h).V` rather than out of `T.FermionModule`. The two are the same
+  type by definition, but naming the first keeps unification from having to unfold the
+  direct sum every time the projection meets the matter field. -/
+noncomputable abbrev projFermionField (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    (i : T.FermionSpecies) : (T.fermionMatterField w h).V →ₗ[ℂ] (T.fermion i).V :=
+  LinearMap.proj i
+
 end GaugeFieldData

@@ -14,6 +14,8 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic
+public import Physlib.Particles.StandardModel.Fermions.MatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Pi
 /-!
 # The fermionic jet algebra of the Standard Model
 
@@ -93,6 +95,24 @@ open TensorProduct
 abbrev FermionSpace : Type :=
   (Fin 3 → LeptonDoublet) × (Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
     (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)
+
+/-- The matter field of three generations of one fermion species: the direct sum of three
+  copies of it, which all carry the same mass weight. -/
+noncomputable def generations (M : MatterField localGaugeData) : MatterField localGaugeData :=
+  MatterField.pi (fun _ : Fin 3 => M) M.massWeight fun _ => rfl
+
+/-- **The fermionic matter field of the Standard Model**: the direct sum of three
+  generations of each of the five species, in the order in which `FermionSpace` lists them.
+  Its value space is `FermionSpace` by definition, and every summand carries mass weight
+  three, which is what lets the direct sums be formed. -/
+noncomputable def fermionMatterField : MatterField localGaugeData :=
+  (generations LeptonDoublet.matterField).prod
+    ((generations LeptonSinglet.matterField).prod
+      ((generations QuarkDoublet.matterField).prod
+        ((generations UpSinglet.matterField).prod
+          (generations DownSinglet.matterField) rfl) rfl) rfl) rfl
+
+lemma fermionMatterField_V : fermionMatterField.V = FermionSpace := rfl
 
 namespace FermionSpace
 
@@ -387,7 +407,7 @@ end FermionSpace
 
   This is the fermionic factor of the full Standard Model jet algebra; the gauge and Higgs
   factors are bosonic and commute with it. -/
-abbrev FermionJetAlgebra : Type := FermionicAlgebra FermionSpace
+abbrev FermionJetAlgebra : Type := FermionicAlgebra fermionMatterField
 
 namespace FermionJetAlgebra
 
@@ -476,34 +496,34 @@ open scoped TensorProduct
 /-- The fermionic jet algebra as the exterior product of the three-generation
   lepton-doublet algebra with the algebra of the remaining four species. -/
 noncomputable def exteriorProductLeptonDoublet :
-    FermionJetAlgebra ≃ₐ[ℂ] (FermionicAlgebra.evenOdd (Fin 3 → LeptonDoublet) ᵍ⊗[ℂ]
-      FermionicAlgebra.evenOdd ((Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
-        (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
+    FermionJetAlgebra ≃ₐ[ℂ] (FermionicAlgebra.evenOdd (generations LeptonDoublet.matterField) ᵍ⊗[ℂ]
+      FermionicAlgebra.evenOdd ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl)) :=
+  FermionicAlgebra.prodEquiv (generations LeptonDoublet.matterField)
+    ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl) rfl
 
 /-- The charged-lepton singlets split off the remaining three species. -/
 noncomputable def exteriorProductLeptonSinglet :
-    FermionicAlgebra ((Fin 3 → LeptonSinglet) × (Fin 3 → QuarkDoublet) ×
-        (Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → LeptonSinglet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((Fin 3 → QuarkDoublet) × (Fin 3 → UpSinglet) ×
-          (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
+    FermionicAlgebra ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl) ≃ₐ[ℂ]
+      (FermionicAlgebra.evenOdd (generations LeptonSinglet.matterField) ᵍ⊗[ℂ]
+        FermionicAlgebra.evenOdd ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl)) :=
+  FermionicAlgebra.prodEquiv (generations LeptonSinglet.matterField)
+    ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl
 
 /-- The quark doublets split off the two quark singlets. -/
 noncomputable def exteriorProductQuarkDoublet :
-    FermionicAlgebra ((Fin 3 → QuarkDoublet) × (Fin 3 → UpSinglet) ×
-        (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → QuarkDoublet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((Fin 3 → UpSinglet) × (Fin 3 → DownSinglet))) :=
-  FermionicAlgebra.prodEquiv _ _
+    FermionicAlgebra ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) ≃ₐ[ℂ]
+      (FermionicAlgebra.evenOdd (generations QuarkDoublet.matterField) ᵍ⊗[ℂ]
+        FermionicAlgebra.evenOdd ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl)) :=
+  FermionicAlgebra.prodEquiv (generations QuarkDoublet.matterField)
+    ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl
 
 /-- The two quark singlets as an exterior product. -/
 noncomputable def exteriorProductUpSinglet :
-    FermionicAlgebra ((Fin 3 → UpSinglet) × (Fin 3 → DownSinglet)) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd (Fin 3 → UpSinglet) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd (Fin 3 → DownSinglet)) :=
-  FermionicAlgebra.prodEquiv _ _
+    FermionicAlgebra ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) ≃ₐ[ℂ]
+      (FermionicAlgebra.evenOdd (generations UpSinglet.matterField) ᵍ⊗[ℂ]
+        FermionicAlgebra.evenOdd (generations DownSinglet.matterField)) :=
+  FermionicAlgebra.prodEquiv (generations UpSinglet.matterField)
+    (generations DownSinglet.matterField) rfl
 
 /-!
 
@@ -514,17 +534,15 @@ noncomputable def exteriorProductUpSinglet :
 open Matrix MatrixGroups in
 /-- The Lorentz action on the fermionic jet algebra of the Standard Model. -/
 noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) FermionJetAlgebra :=
-  FermionicAlgebra.repLorentzGroup FermionSpace.repLorentzGroup
+  FermionicAlgebra.repLorentzGroup fermionMatterField
 
 /-- The jet gauge action on the fermionic jet algebra of the Standard Model. -/
 noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI FermionJetAlgebra :=
-  FermionicAlgebra.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI
-    FermionSpace.repJetGaugeGroupI_smul
+  FermionicAlgebra.repJetGaugeGroupI fermionMatterField
 
 /-- The global gauge action on the fermionic jet algebra of the Standard Model. -/
 noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI FermionJetAlgebra :=
-  FermionicAlgebra.repGaugeGroupI FermionSpace.repJetGaugeGroupI
-    FermionSpace.repJetGaugeGroupI_smul
+  FermionicAlgebra.repGaugeGroupI fermionMatterField
 
 /-!
 
@@ -536,7 +554,7 @@ noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI FermionJetAlge
   has mass dimension `3/2`, that is mass weight three, and each derivative adds mass
   weight two. -/
 noncomputable def massWeightScale (c : ℂ) : FermionJetAlgebra →ₐ[ℂ] FermionJetAlgebra :=
-  FermionicAlgebra.massWeightScale 3 c
+  FermionicAlgebra.massWeightScale (M := fermionMatterField) 3 c
 
 end FermionJetAlgebra
 

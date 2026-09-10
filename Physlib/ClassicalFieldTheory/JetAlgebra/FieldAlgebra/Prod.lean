@@ -8,6 +8,7 @@ module
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Prod
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
 public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 /-!
 # The field algebras of a direct sum
 
@@ -23,13 +24,17 @@ anticommute.
 ## ii. Key results
 
 - `BosonicAlgebra.prodEquiv` :
-  `BosonicAlgebra (V × W) ≃ₐ[ℂ] BosonicAlgebra V ⊗[ℂ] BosonicAlgebra W`.
+  `BosonicAlgebra (V × W) ≃ₐ[ℂ] BosonicAlgebra M ⊗[ℂ] BosonicAlgebra N`.
 - `FermionicAlgebra.evenOdd` : the Fermi-parity grading.
 - `FermionicAlgebra.prodEquiv` : the graded tensor product decomposition.
 
 -/
 
 @[expose] public section
+
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
 
 section Bosonic
 
@@ -43,14 +48,16 @@ open scoped TensorProduct
 -/
 
 /-- **The bosonic algebra of a direct sum is the tensor product of the bosonic algebras.**
-  Two bosonic matter fields taken together are one field valued in the direct sum of their
-  target spaces, and its bosonic algebra is the tensor product of theirs. The ordinary —
+  Two bosonic matter fields of the same mass weight taken together are one field valued in
+  the direct sum of their target spaces, and its bosonic algebra is the tensor product of
+  theirs. The shared weight is what `MatterField.prod` needs to exist; the equivalence
+  itself does not use it. The ordinary —
   rather than the graded — tensor product is correct here: bosonic generators commute
   across species just as they do within one. -/
-noncomputable def BosonicAlgebra.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    BosonicAlgebra (V × W) ≃ₐ[ℂ] BosonicAlgebra V ⊗[ℂ] BosonicAlgebra W :=
-  (SymmetricAlgebra.congr (JetComponentSpace.prodEquiv V W)).trans
+noncomputable def BosonicAlgebra.prodEquiv (M N : MatterField jets)
+    (h : M.massWeight = N.massWeight) :
+    BosonicAlgebra (M.prod N h) ≃ₐ[ℂ] BosonicAlgebra M ⊗[ℂ] BosonicAlgebra N :=
+  (SymmetricAlgebra.congr (JetComponentSpace.prodEquiv M N h)).trans
     SymmetricAlgebra.prodEquiv
 
 end Bosonic
@@ -66,7 +73,6 @@ noncomputable def ExteriorAlgebra.congr {R A B : Type*} [CommRing R] [AddCommGro
   CliffordAlgebra.equivOfIsometry ⟨e, fun _ => rfl⟩
 
 
-variable {V W : Type} [AddCommGroup V] [Module ℂ V] [AddCommGroup W] [Module ℂ W]
 
 /-!
 
@@ -87,9 +93,9 @@ with the component space itself, in
 /-- **The Fermi-parity grading** of the fermionic algebra: the `ZMod 2` grading of the
   exterior algebra by the number of component functions in a monomial. An even element
   commutes with everything; two odd elements anticommute. -/
-abbrev FermionicAlgebra.evenOdd (V : Type) [AddCommGroup V] [Module ℂ V] :
-    ZMod 2 → Submodule ℂ (FermionicAlgebra V) :=
-  CliffordAlgebra.evenOdd (0 : QuadraticForm ℂ (JetComponentSpace V))
+abbrev FermionicAlgebra.evenOdd (M : MatterField jets) :
+    ZMod 2 → Submodule ℂ (FermionicAlgebra M) :=
+  CliffordAlgebra.evenOdd (0 : QuadraticForm ℂ (JetComponentSpace M))
 
 /-!
 
@@ -98,21 +104,22 @@ abbrev FermionicAlgebra.evenOdd (V : Type) [AddCommGroup V] [Module ℂ V] :
 -/
 
 /-- **The fermionic algebra of a direct sum is the exterior product of the fermionic
-  algebras.** Two matter fields taken together are one field valued in the direct sum of
-  their target spaces, and its fermionic algebra is the graded tensor product of theirs.
+  algebras.** Two matter fields of the same mass weight taken together are one field valued
+  in the direct sum of their target spaces, and its fermionic algebra is the graded tensor
+  product of theirs.
 
   The tensor product must be the *graded* one `ᵍ⊗`: an ordinary `⊗[ℂ]` would make a
   generator of the first field commute with a generator of the second, whereas fermionic
   generators anticommute across species just as they do within one. -/
-noncomputable def FermionicAlgebra.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    FermionicAlgebra (V × W) ≃ₐ[ℂ]
-      (FermionicAlgebra.evenOdd V ᵍ⊗[ℂ] FermionicAlgebra.evenOdd W) :=
-  (ExteriorAlgebra.congr (JetComponentSpace.prodEquiv V W)).trans <|
+noncomputable def FermionicAlgebra.prodEquiv (M N : MatterField jets)
+    (h : M.massWeight = N.massWeight) :
+    FermionicAlgebra (M.prod N h) ≃ₐ[ℂ]
+      (FermionicAlgebra.evenOdd M ᵍ⊗[ℂ] FermionicAlgebra.evenOdd N) :=
+  (ExteriorAlgebra.congr (JetComponentSpace.prodEquiv M N h)).trans <|
     (CliffordAlgebra.equivOfIsometry
-        (Q₁ := (0 : QuadraticForm ℂ (JetComponentSpace V × JetComponentSpace W)))
-        (Q₂ := (0 : QuadraticForm ℂ (JetComponentSpace V)).prod
-          (0 : QuadraticForm ℂ (JetComponentSpace W)))
+        (Q₁ := (0 : QuadraticForm ℂ (JetComponentSpace M × JetComponentSpace N)))
+        (Q₂ := (0 : QuadraticForm ℂ (JetComponentSpace M)).prod
+          (0 : QuadraticForm ℂ (JetComponentSpace N)))
         ⟨LinearEquiv.refl ℂ _, fun _ => by simp⟩).trans
       (CliffordAlgebra.prodEquiv _ _)
 

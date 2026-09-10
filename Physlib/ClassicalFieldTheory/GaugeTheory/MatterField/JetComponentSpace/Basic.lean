@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.RepresentationTheory.Basic
@@ -37,8 +37,8 @@ is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Ga
 - `JetComponentSpace.massWeightScale` : the mass-weight scaling.
 - `JetComponentSpace.comap_comp_massWeightScale` : the scaling is natural in the target
   space, hence blind to which part of it a component function came from.
-- `JetComponentSpace.prodEquiv` : the component space of a direct sum.
-- `JetComponentSpace.piEquiv` : the component space of a finite direct sum.
+- `JetComponentSpace.fstPiEquiv`, `JetComponentSpace.sndPiEquiv` : the two halves of the
+  component space of a finite product of target spaces split.
 
 -/
 
@@ -46,16 +46,24 @@ is in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Ga
 
 open Matrix MatrixGroups TensorProduct
 
-variable {V : Type _} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 
-/-- The space of component functions of a `V`-valued matter field: the span of the
-symbols `∂_s ψ_α` and their conjugates `∂_s ψ̄_α`. The first factor holds the
-unconjugated symbols, the second the conjugate ones; in each, `DerivAlgebraComplex`
-carries the derivative label `s` and the dual factor the target component `α`. -/
-abbrev JetComponentSpace (V : Type _) [AddCommGroup V] [Module ℂ V]  :=
-  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V) ×
-  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V))
+/-- The space of component functions of the matter field `M`: the span of the symbols
+`∂_s ψ_α` and their conjugates `∂_s ψ̄_α`, where `α` runs over the target space `M.V`. The
+first factor holds the unconjugated symbols, the second the conjugate ones; in each,
+`DerivAlgebraComplex` carries the derivative label `s` and the dual factor the target
+component `α`.
+
+Only `M.V` enters the space itself; the field's Lorentz and gauge representations and its
+mass weight enter the structure carried on it below. Taking the whole matter field rather
+than its value space is what lets that structure be read off `M` instead of being supplied
+by hand at each use. -/
+abbrev JetComponentSpace (M : MatterField jets) : Type :=
+  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V) ×
+  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))
 
 /-!
 
@@ -73,32 +81,29 @@ Unlike the gauge action, this needs no fibrewise-linearity or finite-dimensional
 hypothesis: the two labels transform independently, so the action is simply a tensor
 product of representations. The conjugate half is the same with `ρ` replaced by its
 conjugate, the symbols `∂_s ψ̄_α` transforming by `star` of the spinor matrix. -/
-noncomputable def JetComponentSpace.repLorentzGroup
-    (repV : Representation ℂ SL(2,ℂ) V) :
-    Representation ℂ SL(2,ℂ) (JetComponentSpace V) :=
-  (DerivAlgebraComplex.repLorentzGroup.tprod repV.dual).prod
-    (DerivAlgebraComplex.repLorentzGroup.tprod repV.conj.dual)
+noncomputable def JetComponentSpace.repLorentzGroup (M : MatterField jets) :
+    Representation ℂ SL(2,ℂ) (JetComponentSpace M) :=
+  (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.dual).prod
+    (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.conj.dual)
 
 @[simp]
-lemma JetComponentSpace.repLorentzGroup_fst (repV : Representation ℂ SL(2,ℂ) V)
-    (Λ : SL(2,ℂ)) (x : JetComponentSpace V) :
-    (JetComponentSpace.repLorentzGroup repV Λ x).1
-      = (DerivAlgebraComplex.repLorentzGroup.tprod repV.dual) Λ x.1 := rfl
+lemma JetComponentSpace.repLorentzGroup_fst (Λ : SL(2,ℂ)) (x : JetComponentSpace M) :
+    (JetComponentSpace.repLorentzGroup M Λ x).1
+      = (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.dual) Λ x.1 := rfl
 
 @[simp]
-lemma JetComponentSpace.repLorentzGroup_snd (repV : Representation ℂ SL(2,ℂ) V)
-    (Λ : SL(2,ℂ)) (x : JetComponentSpace V) :
-    (JetComponentSpace.repLorentzGroup repV Λ x).2
-      = (DerivAlgebraComplex.repLorentzGroup.tprod repV.conj.dual) Λ x.2 := rfl
+lemma JetComponentSpace.repLorentzGroup_snd (Λ : SL(2,ℂ)) (x : JetComponentSpace M) :
+    (JetComponentSpace.repLorentzGroup M Λ x).2
+      = (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.conj.dual) Λ x.2 := rfl
 
 /-- On a pure symbol the Lorentz action is diagonal in the two labels: the derivative
 label transforms in `DerivAlgebraComplex`, the target index contragrediently. -/
 @[simp]
-lemma JetComponentSpace.repLorentzGroup_fst_tmul (repV : Representation ℂ SL(2,ℂ) V)
-    (Λ : SL(2,ℂ)) (a : DerivAlgebraComplex) (φ : Module.Dual ℂ V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)) :
-    (JetComponentSpace.repLorentzGroup repV Λ (a ⊗ₜ[ℂ] φ, y)).1
-      = DerivAlgebraComplex.repLorentzGroup Λ a ⊗ₜ[ℂ] (φ ∘ₗ repV Λ⁻¹) := rfl
+lemma JetComponentSpace.repLorentzGroup_fst_tmul (Λ : SL(2,ℂ)) (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ M.V)
+    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
+    (JetComponentSpace.repLorentzGroup M Λ (a ⊗ₜ[ℂ] φ, y)).1
+      = DerivAlgebraComplex.repLorentzGroup Λ a ⊗ₜ[ℂ] (φ ∘ₗ M.repLorentz Λ⁻¹) := rfl
 
 /-!
 
@@ -114,7 +119,7 @@ lemma JetComponentSpace.repLorentzGroup_fst_tmul (repV : Representation ℂ SL(2
   `DerivAlgebraComplex` factor, leaving the target index untouched. It uses a basis of
   the Lorentz covectors — that is what the index `μ` is — but no basis of `V`. -/
 noncomputable def JetComponentSpace.jetDeriv (μ : Fin 1 ⊕ Fin 3) :
-    JetComponentSpace V →ₗ[ℂ] JetComponentSpace V :=
+    JetComponentSpace M →ₗ[ℂ] JetComponentSpace M :=
   LinearMap.prodMap
     (TensorProduct.map
       (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
@@ -125,23 +130,23 @@ noncomputable def JetComponentSpace.jetDeriv (μ : Fin 1 ⊕ Fin 3) :
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_fst_tmul (μ : Fin 1 ⊕ Fin 3)
-    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)) :
+    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ M.V)
+    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.jetDeriv μ (a ⊗ₜ[ℂ] φ, y)).1
       = (a * DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_snd_tmul (μ : Fin 1 ⊕ Fin 3)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)
-    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ (ConjModule V)) :
+    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
+    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.jetDeriv μ (x, a ⊗ₜ[ℂ] φ)).2
       = (a * DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
 
 /-- **Total derivatives commute.** Mixed partials agree because the derivative labels
   live in a *symmetric* algebra; no basis of `V` is involved. -/
 lemma JetComponentSpace.jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
-    (JetComponentSpace.jetDeriv (V := V) μ).comp (JetComponentSpace.jetDeriv ν)
-      = (JetComponentSpace.jetDeriv (V := V) ν).comp (JetComponentSpace.jetDeriv μ) := by
+    (JetComponentSpace.jetDeriv (M := M) μ).comp (JetComponentSpace.jetDeriv ν)
+      = (JetComponentSpace.jetDeriv (M := M) ν).comp (JetComponentSpace.jetDeriv μ) := by
   have hmul : ∀ b c : DerivAlgebraComplex,
       (LinearMap.mulRight ℂ b).comp (LinearMap.mulRight ℂ c)
         = LinearMap.mulRight ℂ (c * b) :=
@@ -154,7 +159,7 @@ lemma JetComponentSpace.jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
 /-- The element being multiplied in is the degree-one derivative symbol `∂_μ`, the image
   of the dual basis covector under `SymmetricAlgebra.ι`. -/
 lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
-    JetComponentSpace.jetDeriv (V := V) μ
+    JetComponentSpace.jetDeriv (M := M) μ
       = LinearMap.prodMap
         (TensorProduct.map
           (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
@@ -165,14 +170,14 @@ lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
   rw [JetComponentSpace.jetDeriv, DerivAlgebraComplex.basis_singleton]
 
 @[simp]
-lemma JetComponentSpace.jetDeriv_fst (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
+lemma JetComponentSpace.jetDeriv_fst (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace M) :
     (JetComponentSpace.jetDeriv μ v).1
       = TensorProduct.map
         (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
         LinearMap.id v.1 := rfl
 
 @[simp]
-lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
+lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace M) :
     (JetComponentSpace.jetDeriv μ v).2
       = TensorProduct.map
         (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
@@ -225,12 +230,12 @@ private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup
   then acting is acting and then appending the transformed `∂_μ`, which is a combination of
   the `∂_a`. Both halves of the component space are covered by the same argument: the
   derivative label lives in the first tensor factor, and what sits in the second factor —
-  `repV.dual` or `repV.conj.dual` — plays no role. -/
-lemma JetComponentSpace.repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2,ℂ) V)
-    (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace V) :
-    JetComponentSpace.repLorentzGroup repV Λ (JetComponentSpace.jetDeriv μ v) =
+  `M.repLorentz.dual` or `M.repLorentz.conj.dual` — plays no role. -/
+lemma JetComponentSpace.repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
+    (v : JetComponentSpace M) :
+    JetComponentSpace.repLorentzGroup M Λ (JetComponentSpace.jetDeriv μ v) =
       ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
-        JetComponentSpace.jetDeriv a (JetComponentSpace.repLorentzGroup repV Λ v) := by
+        JetComponentSpace.jetDeriv a (JetComponentSpace.repLorentzGroup M Λ v) := by
   refine Prod.ext ?_ ?_
   · simp only [Prod.fst_sum, Prod.smul_fst, JetComponentSpace.repLorentzGroup_fst,
       JetComponentSpace.jetDeriv_fst]
@@ -245,44 +250,44 @@ lemma JetComponentSpace.repLorentzGroup_jetDeriv (repV : Representation ℂ SL(2
 
 -/
 
-variable {W : Type _} [AddCommGroup W] [Module ℂ W]
+variable {N : MatterField jets}
 
-/-- **The component space is contravariant in the target space.** A linear map `f : V →ₗ W`
-  of target spaces pulls the component functions of a `W`-valued field back to component
-  functions of a `V`-valued field: a component function is a *covector* on the target, so it
+/-- **The component space is contravariant in the target space.** A linear map `f : M.V →ₗ N.V`
+  of target spaces pulls the component functions of the field `N` back to component
+  functions of the field `M`: a component function is a *covector* on the target, so it
   transposes. The derivative label is untouched, and the conjugate half transposes the
   conjugate of `f`. -/
-noncomputable def JetComponentSpace.comap (f : V →ₗ[ℂ] W) :
-    JetComponentSpace W →ₗ[ℂ] JetComponentSpace V :=
+noncomputable def JetComponentSpace.comap (f : M.V →ₗ[ℂ] N.V) :
+    JetComponentSpace N →ₗ[ℂ] JetComponentSpace M :=
   LinearMap.prodMap
     (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
     (TensorProduct.map LinearMap.id (Module.Dual.transpose (ConjModule.map f)))
 
 @[simp]
-lemma JetComponentSpace.comap_fst_tmul (f : V →ₗ[ℂ] W) (a : DerivAlgebraComplex)
-    (φ : Module.Dual ℂ W) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule W)) :
+lemma JetComponentSpace.comap_fst_tmul (f : M.V →ₗ[ℂ] N.V) (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ N.V) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
     (JetComponentSpace.comap f (a ⊗ₜ[ℂ] φ, y)).1 = a ⊗ₜ[ℂ] (φ ∘ₗ f) := rfl
 
 @[simp]
-lemma JetComponentSpace.comap_snd_tmul (f : V →ₗ[ℂ] W)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ W) (a : DerivAlgebraComplex)
-    (φ : Module.Dual ℂ (ConjModule W)) :
+lemma JetComponentSpace.comap_snd_tmul (f : M.V →ₗ[ℂ] N.V)
+    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) (a : DerivAlgebraComplex)
+    (φ : Module.Dual ℂ (ConjModule N.V)) :
     (JetComponentSpace.comap f (x, a ⊗ₜ[ℂ] φ)).2 = a ⊗ₜ[ℂ] (φ ∘ₗ ConjModule.map f) := rfl
 
 @[simp]
 lemma JetComponentSpace.comap_id :
-    JetComponentSpace.comap (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id := by
+    JetComponentSpace.comap (LinearMap.id : M.V →ₗ[ℂ] M.V) = LinearMap.id := by
   rw [JetComponentSpace.comap,
-    show Module.Dual.transpose (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id from rfl,
-    show ConjModule.map (LinearMap.id : V →ₗ[ℂ] V) = LinearMap.id from rfl,
-    show Module.Dual.transpose (LinearMap.id : ConjModule V →ₗ[ℂ] ConjModule V)
+    show Module.Dual.transpose (LinearMap.id : M.V →ₗ[ℂ] M.V) = LinearMap.id from rfl,
+    show ConjModule.map (LinearMap.id : M.V →ₗ[ℂ] M.V) = LinearMap.id from rfl,
+    show Module.Dual.transpose (LinearMap.id : ConjModule M.V →ₗ[ℂ] ConjModule M.V)
       = LinearMap.id from rfl, TensorProduct.map_id, TensorProduct.map_id]
   rfl
 
 /-- Functoriality: pulling back along `g ∘ f` is pulling back along `g` and then along `f`.
   The order reverses, as it must for a contravariant construction. -/
-lemma JetComponentSpace.comap_comp {U : Type _} [AddCommGroup U] [Module ℂ U]
-    (f : V →ₗ[ℂ] W) (g : W →ₗ[ℂ] U) :
+lemma JetComponentSpace.comap_comp {P : MatterField jets}
+    (f : M.V →ₗ[ℂ] N.V) (g : N.V →ₗ[ℂ] P.V) :
     JetComponentSpace.comap (g.comp f)
       = (JetComponentSpace.comap f).comp (JetComponentSpace.comap g) := by
   rw [JetComponentSpace.comap, JetComponentSpace.comap, JetComponentSpace.comap,
@@ -290,36 +295,36 @@ lemma JetComponentSpace.comap_comp {U : Type _} [AddCommGroup U] [Module ℂ U]
     LinearMap.id_comp]
   rfl
 
-/-- **An equivariant map of target spaces gives an equivariant pullback.** If `f : V →ₗ W`
-  intertwines two Lorentz representations then `comap f` intertwines the induced actions on
+/-- **An equivariant map of target spaces gives an equivariant pullback.** If `f : M.V →ₗ N.V`
+  intertwines the two Lorentz representations then `comap f` intertwines the induced actions on
   the component spaces, in the opposite direction. Component functions are covectors, so
   the unconjugated half transposes `f` against the contragredient action and the conjugate
   half against its conjugate; both reduce to equivariance of `f` at `Λ⁻¹`. -/
-lemma JetComponentSpace.comap_comp_repLorentzGroup (repV : Representation ℂ SL(2,ℂ) V)
-    (repW : Representation ℂ SL(2,ℂ) W) (f : V →ₗ[ℂ] W)
-    (hf : ∀ Λ : SL(2,ℂ), f.comp (repV Λ) = (repW Λ).comp f) (Λ : SL(2,ℂ)) :
-    (JetComponentSpace.comap f).comp (JetComponentSpace.repLorentzGroup repW Λ)
-      = (JetComponentSpace.repLorentzGroup repV Λ).comp (JetComponentSpace.comap f) := by
-  have hdual : (Module.Dual.transpose (R := ℂ) f).comp (repW.dual Λ)
-      = (repV.dual Λ).comp (Module.Dual.transpose f) :=
+lemma JetComponentSpace.comap_comp_repLorentzGroup (f : M.V →ₗ[ℂ] N.V)
+    (hf : ∀ Λ : SL(2,ℂ), f.comp (M.repLorentz Λ) = (N.repLorentz Λ).comp f)
+    (Λ : SL(2,ℂ)) :
+    (JetComponentSpace.comap f).comp (JetComponentSpace.repLorentzGroup N Λ)
+      = (JetComponentSpace.repLorentzGroup M Λ).comp (JetComponentSpace.comap f) := by
+  have hdual : (Module.Dual.transpose (R := ℂ) f).comp (N.repLorentz.dual Λ)
+      = (M.repLorentz.dual Λ).comp (Module.Dual.transpose f) :=
     LinearMap.ext fun ψ =>
       LinearMap.ext fun v => (congrArg ψ (LinearMap.congr_fun (hf Λ⁻¹) v)).symm
   have hconj : (Module.Dual.transpose (R := ℂ) (ConjModule.map (k := ℂ) f)).comp
-        (repW.conj.dual Λ)
-      = (repV.conj.dual Λ).comp
+        (N.repLorentz.conj.dual Λ)
+      = (M.repLorentz.conj.dual Λ).comp
         (Module.Dual.transpose (ConjModule.map (k := ℂ) f)) :=
     LinearMap.ext fun ψ => LinearMap.ext fun v =>
       (congrArg ψ (LinearMap.congr_fun (hf Λ⁻¹)
-        ((conjEquiv (k := ℂ) (M := V)).symm v))).symm
+        ((conjEquiv (k := ℂ) (M := M.V)).symm v))).symm
   show (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
         (TensorProduct.map LinearMap.id
           (Module.Dual.transpose (ConjModule.map (k := ℂ) f)))).comp
       (LinearMap.prodMap
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repW.dual Λ))
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repW.conj.dual Λ)))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (N.repLorentz.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (N.repLorentz.conj.dual Λ)))
     = (LinearMap.prodMap
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repV.dual Λ))
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (repV.conj.dual Λ))).comp
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (M.repLorentz.dual Λ))
+        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (M.repLorentz.conj.dual Λ))).comp
       (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
         (TensorProduct.map LinearMap.id
           (Module.Dual.transpose (ConjModule.map (k := ℂ) f))))
@@ -330,7 +335,7 @@ lemma JetComponentSpace.comap_comp_repLorentzGroup (repV : Representation ℂ SL
 /-- **The pullback commutes with the jet derivative.** The two act on different tensor
   factors — the derivative label and the target index — so an inclusion of species is a map
   of differential algebras. -/
-lemma JetComponentSpace.comap_jetDeriv (f : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin 3) :
+lemma JetComponentSpace.comap_jetDeriv (f : M.V →ₗ[ℂ] N.V) (μ : Fin 1 ⊕ Fin 3) :
     (JetComponentSpace.comap f).comp (JetComponentSpace.jetDeriv μ)
       = (JetComponentSpace.jetDeriv μ).comp (JetComponentSpace.comap f) := by
   rw [JetComponentSpace.comap, JetComponentSpace.jetDeriv, JetComponentSpace.jetDeriv,
@@ -355,7 +360,7 @@ the bosonic and fermionic algebras, where it defines their mass-dimension gradin
   `c ^ (w + 2 |s|)`, through the derivative-degree scaling `DerivAlgebraComplex.gradeScale`
   on the derivative label. -/
 noncomputable def JetComponentSpace.massWeightScale (w : ℕ) (c : ℂ) :
-    JetComponentSpace V →ₗ[ℂ] JetComponentSpace V :=
+    JetComponentSpace M →ₗ[ℂ] JetComponentSpace M :=
   c ^ w • LinearMap.prodMap
     (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
     (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
@@ -363,10 +368,10 @@ noncomputable def JetComponentSpace.massWeightScale (w : ℕ) (c : ℂ) :
 /-- On an unconjugated component function `∂_s φ_α` the mass-weight scaling is
   multiplication by `c ^ (w + 2 |s|)`. -/
 lemma JetComponentSpace.massWeightScale_fst_basis_tmul (w : ℕ) (c : ℂ)
-    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V)) :
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V)
+    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.massWeightScale w c
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, y) : JetComponentSpace V)).1
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, y) : JetComponentSpace M)).1
       = c ^ (w + 2 * Multiset.card s) • (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) := by
   simp only [massWeightScale, LinearMap.smul_apply, Prod.smul_fst, LinearMap.prodMap_apply,
     TensorProduct.map_tmul, AlgHom.toLinearMap_apply, DerivAlgebraComplex.gradeScale_basis,
@@ -374,13 +379,13 @@ lemma JetComponentSpace.massWeightScale_fst_basis_tmul (w : ℕ) (c : ℂ)
     mul_comm 2 (Multiset.card s)]
 
 @[simp]
-lemma JetComponentSpace.massWeightScale_fst (w : ℕ) (c : ℂ) (v : JetComponentSpace V) :
+lemma JetComponentSpace.massWeightScale_fst (w : ℕ) (c : ℂ) (v : JetComponentSpace M) :
     (JetComponentSpace.massWeightScale w c v).1
       = c ^ w • TensorProduct.map
           (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.1 := rfl
 
 @[simp]
-lemma JetComponentSpace.massWeightScale_snd (w : ℕ) (c : ℂ) (v : JetComponentSpace V) :
+lemma JetComponentSpace.massWeightScale_snd (w : ℕ) (c : ℂ) (v : JetComponentSpace M) :
     (JetComponentSpace.massWeightScale w c v).2
       = c ^ w • TensorProduct.map
           (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.2 := rfl
@@ -408,7 +413,7 @@ private lemma gradeScale_map_mulRight_basis {W : Type*} [AddCommGroup W] [Module
 /-- **The total derivative carries mass weight two** on the component space: the scaling
   intertwines the derivative shift up to a factor `c ^ 2`. -/
 lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3) :
-    (JetComponentSpace.massWeightScale (V := V) w c).comp (JetComponentSpace.jetDeriv μ)
+    (JetComponentSpace.massWeightScale (M := M) w c).comp (JetComponentSpace.jetDeriv μ)
       = c ^ 2 • (JetComponentSpace.jetDeriv μ).comp
           (JetComponentSpace.massWeightScale w c) := by
   have key := fun {W : Type _} [AddCommGroup W] [Module ℂ W]
@@ -416,11 +421,11 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1
   refine LinearMap.ext fun v => Prod.ext ?_ ?_
   · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_fst,
       JetComponentSpace.massWeightScale_fst, JetComponentSpace.jetDeriv_fst, map_smul]
-    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V => c ^ w • z)
+    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V => c ^ w • z)
       (key v.1)).trans (smul_comm _ _ _)
   · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_snd,
       JetComponentSpace.massWeightScale_snd, JetComponentSpace.jetDeriv_snd, map_smul]
-    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule V) =>
+    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) =>
       c ^ w • z) (key v.2)).trans (smul_comm _ _ _)
 
 /-- **The mass-weight scaling is natural in the target space.** It commutes with every
@@ -431,7 +436,7 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1
   generator space of a multi-species theory, `GaugeFieldData.FermionGenerators`, records
   the weights on a direct sum, one per species, rather than on a single component space of
   the product. -/
-lemma JetComponentSpace.comap_comp_massWeightScale (f : V →ₗ[ℂ] W) (w : ℕ) (c : ℂ) :
+lemma JetComponentSpace.comap_comp_massWeightScale (f : M.V →ₗ[ℂ] N.V) (w : ℕ) (c : ℂ) :
     (JetComponentSpace.comap f).comp (JetComponentSpace.massWeightScale w c)
       = (JetComponentSpace.massWeightScale w c).comp (JetComponentSpace.comap f) := by
   simp only [JetComponentSpace.comap, JetComponentSpace.massWeightScale,
@@ -440,42 +445,15 @@ lemma JetComponentSpace.comap_comp_massWeightScale (f : V →ₗ[ℂ] W) (w : �
 
 /-!
 
-## The component space of a direct sum
+## The dual and the conjugate of a finite product
 
--/
-
-/-- **The component space of a direct sum splits.** The component functions of a
-  `(V × W)`-valued field are those of a `V`-valued field together with those of a
-  `W`-valued field: the dual and the conjugate both distribute over the finite product, and
-  the derivative label is untouched. -/
-noncomputable def JetComponentSpace.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    JetComponentSpace (V × W) ≃ₗ[ℂ] JetComponentSpace V × JetComponentSpace W :=
-  (LinearEquiv.prodCongr
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
-        (Module.dualProdDualEquivDual ℂ V W).symm)
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
-        (((ConjModule.prodEquiv (k := ℂ) (M := V) (N := W)).symm.dualMap).trans
-          (Module.dualProdDualEquivDual ℂ (ConjModule V) (ConjModule W)).symm))).trans <|
-    (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)
-        (TensorProduct.prodRight ℂ ℂ _ _ _)).trans
-      (LinearEquiv.prodProdProdComm ℂ _ _ _ _)
-
-/-!
-
-## The component space of a finite direct sum
-
-The binary splitting above extends to a finite family. Both halves of the component space
-split for the same two reasons as before — the dual of a finite product is the product of
-the duals, and conjugation commutes with products — and the derivative label, carried by
-the `DerivAlgebraComplex` factor, is untouched by either. The index type must be finite:
-the dual of an infinite product is strictly larger than the product of the duals, and
-`TensorProduct.piRight` is an equivalence only in the finite case.
-
-This is the component-space counterpart of `MatterField.pi`: the component functions of
-the direct sum of a finite family of matter fields are the families of component
-functions of the summands, so nothing is lost or gained by assembling the species into
-one field before taking components.
+The component space of a direct sum of matter fields splits, and both halves split for the
+same two reasons: the dual of a finite product is the product of the duals, and conjugation
+commutes with products. Neither statement mentions a matter field, so both are recorded
+here, on a bare family of modules; the splitting they add up to is
+`MatterField.jetComponentSpacePiEquiv`, downstream where `MatterField.pi` is available. The
+index type must be finite — the dual of an infinite product is strictly larger than the
+product of the duals, and `TensorProduct.piRight` is an equivalence only in the finite case.
 
 -/
 
@@ -483,6 +461,20 @@ section Pi
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι] (E : ι → Type)
   [∀ i, AddCommGroup (E i)] [∀ i, Module ℂ (E i)]
+
+/-- A pair of families is the same thing as a family of pairs. This is the last step of
+  the splitting of a component space over a product of target spaces: the two halves split
+  separately into families, and this puts the two families back together index by index.
+  Everything is the identity on underlying data, so every law is `rfl`. -/
+def prodPiEquiv {A B : ι → Type*} [∀ i, AddCommGroup (A i)] [∀ i, Module ℂ (A i)]
+    [∀ i, AddCommGroup (B i)] [∀ i, Module ℂ (B i)] :
+    ((∀ i, A i) × (∀ i, B i)) ≃ₗ[ℂ] ∀ i, (A i × B i) where
+  toFun p i := (p.1 i, p.2 i)
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  invFun f := (fun i => (f i).1, fun i => (f i).2)
+  left_inv _ := rfl
+  right_inv _ := rfl
 
 /-- **The unconjugated half of the component space of a finite direct sum splits.** The
   symbols `∂_s ψ_α` of a `(∀ i, E i)`-valued field are the families, over the index, of
@@ -572,45 +564,4 @@ lemma JetComponentSpace.sndPiEquiv_symm_single (i : ι)
         rw [Pi.single_eq_of_ne (Ne.symm hij), h0, TensorProduct.tmul_zero]
   | add x y hx hy =>
       simp only [Pi.single_add, Pi.add_apply, map_add, hx, hy]
-
-/-- **The component space of a finite direct sum splits.** The component functions of a
-  `(∀ i, E i)`-valued field are exactly the families, over the index, of the component
-  functions of the summands. Both halves split by `fstPiEquiv` and `sndPiEquiv`, and the
-  pair of families is reassembled into a family of pairs index by index. -/
-noncomputable def JetComponentSpace.piEquiv :
-    JetComponentSpace (∀ i, E i) ≃ₗ[ℂ] ∀ i, JetComponentSpace (E i) where
-  toFun x i := (fstPiEquiv E x.1 i, sndPiEquiv E x.2 i)
-  map_add' x y := funext fun i => Prod.ext (by simp) (by simp)
-  map_smul' c x := funext fun i => Prod.ext (by simp) (by simp)
-  invFun y := ((fstPiEquiv E).symm (fun i => (y i).1), (sndPiEquiv E).symm (fun i => (y i).2))
-  left_inv x := Prod.ext (by simp) (by simp)
-  right_inv y := funext fun i => Prod.ext (by simp) (by simp)
-
-@[simp]
-lemma JetComponentSpace.piEquiv_apply (x : JetComponentSpace (∀ i, E i)) (i : ι) :
-    piEquiv E x i = (fstPiEquiv E x.1 i, sndPiEquiv E x.2 i) := rfl
-
-@[simp]
-lemma JetComponentSpace.piEquiv_symm_apply (y : ∀ i, JetComponentSpace (E i)) :
-    (piEquiv E).symm y =
-      ((fstPiEquiv E).symm (fun i => (y i).1), (sndPiEquiv E).symm (fun i => (y i).2)) := rfl
-
-/-- **The summand of one species is the pullback along the projection onto it.** A
-  component function of the summand `i`, placed in the family and read back as a component
-  function of the whole `(∀ i, E i)`-valued field, is that function precomposed with the
-  projection `∀ i, E i → E i`. This is what identifies the splitting with the species
-  inclusions of a direct sum of component spaces. -/
-lemma JetComponentSpace.piEquiv_symm_single (i : ι) (x : JetComponentSpace (E i)) :
-    (piEquiv E).symm (Pi.single i x) = comap (LinearMap.proj i) x := by
-  have hfst : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (E j)) j).1)
-      = Pi.single i x.1 :=
-    funext fun j =>
-      Pi.apply_single (fun j (p : JetComponentSpace (E j)) => p.1) (fun _ => rfl) i x j
-  have hsnd : (fun j => ((Pi.single i x : ∀ j, JetComponentSpace (E j)) j).2)
-      = Pi.single i x.2 :=
-    funext fun j =>
-      Pi.apply_single (fun j (p : JetComponentSpace (E j)) => p.2) (fun _ => rfl) i x j
-  rw [piEquiv_symm_apply, hfst, hsnd, fstPiEquiv_symm_single, sndPiEquiv_symm_single]
-  rfl
-
 end Pi

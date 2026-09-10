@@ -41,7 +41,9 @@ namespace BosonicAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -52,11 +54,11 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
 /-- **The mass-weight scaling on the bosonic algebra** of a field of mass weight `w`:
   the algebra endomorphism scaling the generator `∂_s φ_α` by `c ^ (w + 2 |s|)`, the
   functorial lift of the scaling on the jet component space. -/
-noncomputable def massWeightScale (w : ℕ) (c : ℂ) : BosonicAlgebra V →ₐ[ℂ] BosonicAlgebra V :=
+noncomputable def massWeightScale (w : ℕ) (c : ℂ) : BosonicAlgebra M →ₐ[ℂ] BosonicAlgebra M :=
   SymmetricAlgebra.map (JetComponentSpace.massWeightScale w c)
 
 @[simp]
-lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
+lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace M) :
     massWeightScale w c (SymmetricAlgebra.ι ℂ _ x)
       = SymmetricAlgebra.ι ℂ _ (JetComponentSpace.massWeightScale w c x) :=
   SymmetricAlgebra.map_apply_ι _ x
@@ -69,7 +71,7 @@ lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
 
 /-- The undifferentiated field carries its own mass weight. -/
 @[simp]
-lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
+lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ M.V) :
     massWeightScale w c (ofField φ) = c ^ w • ofField φ := by
   rw [ofField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -82,7 +84,7 @@ lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
 
 /-- The undifferentiated conjugate field carries the same mass weight as the field. -/
 @[simp]
-lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule V)) :
+lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     massWeightScale w c (ofConjField φ) = c ^ w • ofConjField φ := by
   rw [ofConjField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -95,7 +97,7 @@ lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (Con
 
 /-- **A total derivative adds mass weight two**: the scaling intertwines the total
   derivative up to a factor `c ^ 2`. -/
-lemma massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra V) :
+lemma massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : BosonicAlgebra M) :
     massWeightScale w c (jetDeriv μ x) = c ^ 2 • jetDeriv μ (massWeightScale w c x) := by
   induction x using SymmetricAlgebra.induction with
   | algebraMap r => rw [jetDeriv_algebraMap, map_zero, AlgHom.commutes, jetDeriv_algebraMap,
@@ -111,7 +113,7 @@ lemma massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : B
 
 /-- **The iterated derivative `∂_s` adds mass weight `2 |s|`.** -/
 lemma massWeightScale_iteratedJetDeriv (w : ℕ) (c : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (x : BosonicAlgebra V) :
+    (x : BosonicAlgebra M) :
     massWeightScale w c (iteratedJetDeriv s x)
       = c ^ (2 * Multiset.card s) • iteratedJetDeriv s (massWeightScale w c x) := by
   induction s using Multiset.induction_on generalizing x with

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonMatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 /-!
 # The bosonic generators of a gauge theory
 
@@ -106,13 +107,13 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   is natural in the value space — `JetComponentSpace.comap_comp_massWeightScale` — and so
   cannot tell the species apart. When the weights do agree the two descriptions coincide,
   which is section C below. -/
-abbrev BosonGenerators : Type := ⨁ i, JetComponentSpace (T.BosonValue i)
+abbrev BosonGenerators : Type := ⨁ i, JetComponentSpace (T.boson i)
 
 /-- The inclusion of the component space of one bosonic species into the bosonic generator
   space. -/
 abbrev inclBoson (i : T.BosonSpecies) :
-    JetComponentSpace (T.BosonValue i) →ₗ[ℂ] T.BosonGenerators :=
-  DirectSum.lof ℂ T.BosonSpecies (fun i => JetComponentSpace (T.BosonValue i)) i
+    JetComponentSpace (T.boson i) →ₗ[ℂ] T.BosonGenerators :=
+  DirectSum.lof ℂ T.BosonSpecies (fun i => JetComponentSpace (T.boson i)) i
 
 section Assemble
 
@@ -120,16 +121,16 @@ variable {N : Type*} [AddCommMonoid N] [Module ℂ N]
 
 /-- The assembly of a species-wise family of linear maps out of the bosonic generator space
   into a common target. -/
-abbrev assembleBoson (f : ∀ i, JetComponentSpace (T.BosonValue i) →ₗ[ℂ] N) :
+abbrev assembleBoson (f : ∀ i, JetComponentSpace (T.boson i) →ₗ[ℂ] N) :
     T.BosonGenerators →ₗ[ℂ] N :=
   DirectSum.toModule ℂ T.BosonSpecies N f
 
 variable {T}
 
-lemma assembleBoson_inclBoson (f : ∀ i, JetComponentSpace (T.BosonValue i) →ₗ[ℂ] N)
-    (i : T.BosonSpecies) (x : JetComponentSpace (T.BosonValue i)) :
+lemma assembleBoson_inclBoson (f : ∀ i, JetComponentSpace (T.boson i) →ₗ[ℂ] N)
+    (i : T.BosonSpecies) (x : JetComponentSpace (T.boson i)) :
     T.assembleBoson f (T.inclBoson i x) = f i x :=
-  DirectSum.toModule_lof (M := fun i => JetComponentSpace (T.BosonValue i)) ℂ i x
+  DirectSum.toModule_lof (M := fun i => JetComponentSpace (T.boson i)) ℂ i x
 
 /-- Two linear maps out of the bosonic generator space agreeing on every species are
   equal. -/
@@ -160,7 +161,7 @@ gauge jets, and nothing extends them to the algebra `J(T)`.
   Lorentz representation of its matter field. -/
 noncomputable def repLorentzBoson : Representation ℂ SL(2,ℂ) T.BosonGenerators where
   toFun Λ := T.assembleBoson fun i =>
-    (T.inclBoson i).comp (JetComponentSpace.repLorentzGroup (T.boson i).repLorentz Λ)
+    (T.inclBoson i).comp (JetComponentSpace.repLorentzGroup (T.boson i) Λ)
   map_one' := bosonGenerators_hom_ext fun i x => by simp
   map_mul' Λ Λ' := bosonGenerators_hom_ext fun i x => by simp
 
@@ -168,9 +169,9 @@ variable {T}
 
 @[simp]
 lemma repLorentzBoson_inclBoson (Λ : SL(2,ℂ)) (i : T.BosonSpecies)
-    (x : JetComponentSpace (T.BosonValue i)) :
+    (x : JetComponentSpace (T.boson i)) :
     T.repLorentzBoson Λ (T.inclBoson i x)
-      = T.inclBoson i (JetComponentSpace.repLorentzGroup (T.boson i).repLorentz Λ x) :=
+      = T.inclBoson i (JetComponentSpace.repLorentzGroup (T.boson i) Λ x) :=
   assembleBoson_inclBoson _ i x
 
 variable (T)
@@ -187,7 +188,7 @@ variable (T)
   `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
 noncomputable def repJetBoson : Representation ℂ G T.BosonGenerators where
   toFun U := T.assembleBoson fun i => (T.inclBoson i).comp
-    (JetComponentSpace.repJet (T.boson i).repJet (T.boson i).repJet_smul U)
+    (JetComponentSpace.repJet (T.boson i) U)
   map_one' := bosonGenerators_hom_ext fun i x => by simp
   map_mul' U W := bosonGenerators_hom_ext fun i x => by simp
 
@@ -195,10 +196,10 @@ variable {T}
 
 @[simp]
 lemma repJetBoson_inclBoson (U : G) (i : T.BosonSpecies)
-    (x : JetComponentSpace (T.BosonValue i)) :
+    (x : JetComponentSpace (T.boson i)) :
     T.repJetBoson U (T.inclBoson i x)
       = T.inclBoson i
-        (JetComponentSpace.repJet (T.boson i).repJet (T.boson i).repJet_smul U x) :=
+        (JetComponentSpace.repJet (T.boson i) U x) :=
   assembleBoson_inclBoson _ i x
 
 variable (T)
@@ -227,7 +228,7 @@ variable {T}
   the weight recorded in its matter field. -/
 @[simp]
 lemma massWeightScaleBoson_inclBoson (c : ℂ) (i : T.BosonSpecies)
-    (x : JetComponentSpace (T.BosonValue i)) :
+    (x : JetComponentSpace (T.boson i)) :
     T.massWeightScaleBoson c (T.inclBoson i x)
       = T.inclBoson i
         (JetComponentSpace.massWeightScale (T.boson i).massWeight c x) :=
@@ -239,9 +240,9 @@ lemma massWeightScaleBoson_inclBoson (c : ℂ) (i : T.BosonSpecies)
 lemma massWeightScaleBoson_inclBoson_basis_tmul (c : ℂ) (i : T.BosonSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.BosonValue i)) :
     T.massWeightScaleBoson c (T.inclBoson i
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue i)))
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)))
       = c ^ ((T.boson i).massWeight + 2 * Multiset.card s) • T.inclBoson i
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.BosonValue i)) := by
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)) := by
   rw [massWeightScaleBoson_inclBoson, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact JetComponentSpace.massWeightScale_fst_basis_tmul (T.boson i).massWeight c s φ 0
@@ -253,9 +254,9 @@ lemma massWeightScaleBoson_inclBoson_basis_tmul_conj (c : ℂ) (i : T.BosonSpeci
     (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.BosonValue i))) :
     T.massWeightScaleBoson c (T.inclBoson i
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.BosonValue i)))
+        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)))
       = c ^ ((T.boson i).massWeight + 2 * Multiset.card s) • T.inclBoson i
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.BosonValue i)) := by
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)) := by
   rw [massWeightScaleBoson_inclBoson, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · simp
@@ -272,16 +273,18 @@ variable (T)
 
 -/
 
-/-- **The bosonic generator space is the component space of the bosonic module.** The
+/-- **The bosonic generator space is the component space of the bosonic matter field.** The
   direct sum over the species of their component spaces is, the species type being finite,
-  the same thing as the space of component functions `∂_s φ_α` of a single field valued in
-  the whole bosonic module — the presentation of the boson content used in writing a
-  theory down. -/
-noncomputable def bosonGeneratorsEquiv :
-    T.BosonGenerators ≃ₗ[ℂ] JetComponentSpace T.BosonModule :=
+  the same thing as the space of component functions of the single field
+  `T.bosonMatterField w h` — the presentation of the boson content used in writing a theory
+  down. The shared weight `w` enters only because a component space is now taken of a
+  matter field, and the only matter field on `T.BosonModule` is that one; the underlying
+  identification does not use it. -/
+noncomputable def bosonGeneratorsEquiv (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w) :
+    T.BosonGenerators ≃ₗ[ℂ] JetComponentSpace (T.bosonMatterField w h) :=
   (DirectSum.linearEquivFunOnFintype ℂ T.BosonSpecies
-      fun i => JetComponentSpace (T.BosonValue i)).trans
-    (JetComponentSpace.piEquiv T.BosonValue).symm
+      fun i => JetComponentSpace (T.boson i)).trans
+    (MatterField.jetComponentSpacePiEquiv T.boson w h).symm
 
 /-!
 
@@ -292,36 +295,42 @@ noncomputable def bosonGeneratorsEquiv :
 variable {T}
 
 /-- **A species sits inside the bosonic generators as the pullback along the projection
-  onto it.** A component function `∂_s φ_α` of the multiplet `i` becomes the component
-  function of the whole scalar field whose target covector is supported on that
-  multiplet. -/
+  onto it.** A component function of the multiplet `i` becomes the component function of
+  the whole field whose target covector is supported on that multiplet. -/
 @[simp]
-lemma bosonGeneratorsEquiv_inclBoson (i : T.BosonSpecies)
-    (x : JetComponentSpace (T.BosonValue i)) :
-    T.bosonGeneratorsEquiv (T.inclBoson i x)
-      = JetComponentSpace.comap (T.projBosonValue i) x := by
-  rw [bosonGeneratorsEquiv, LinearEquiv.trans_apply,
-    show (DirectSum.linearEquivFunOnFintype ℂ T.BosonSpecies
-        fun i => JetComponentSpace (T.BosonValue i)) (T.inclBoson i x)
-      = Pi.single i x from DirectSum.linearEquivFunOnFintype_lof
-      (M := fun i => JetComponentSpace (T.BosonValue i)) ℂ i x,
-    JetComponentSpace.piEquiv_symm_single]
+lemma bosonGeneratorsEquiv_inclBoson (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    (i : T.BosonSpecies) (x : JetComponentSpace (T.boson i)) :
+    T.bosonGeneratorsEquiv w h (T.inclBoson i x)
+      = JetComponentSpace.comap
+        (T.projBosonField w h i) x := by
+  have hlof : (DirectSum.linearEquivFunOnFintype ℂ T.BosonSpecies
+      fun i => JetComponentSpace (T.boson i)) (T.inclBoson i x) = Pi.single i x :=
+    DirectSum.linearEquivFunOnFintype_lof
+      (M := fun i => JetComponentSpace (T.boson i)) ℂ i x
+  show (MatterField.jetComponentSpacePiEquiv T.boson w h).symm
+      ((DirectSum.linearEquivFunOnFintype ℂ T.BosonSpecies
+        fun i => JetComponentSpace (T.boson i)) (T.inclBoson i x)) = _
+  rw [hlof, MatterField.jetComponentSpacePiEquiv_symm_single]
+  rfl
 
-/-- Two linear maps out of the component space of the bosonic module agree as soon as they
-  agree on every species, the species pullbacks spanning it. This is the counterpart, on
-  the single-field side of the identification, of `bosonGenerators_hom_ext`. -/
-lemma bosonModuleComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
-    {F F' : JetComponentSpace T.BosonModule →ₗ[ℂ] N}
-    (h : ∀ i x, F (JetComponentSpace.comap (T.projBosonValue i) x)
-      = F' (JetComponentSpace.comap (T.projBosonValue i) x)) : F = F' := by
-  have key : F.comp T.bosonGeneratorsEquiv.toLinearMap
-      = F'.comp T.bosonGeneratorsEquiv.toLinearMap :=
+/-- Two linear maps out of the component space of the bosonic matter field agree as soon as
+  they agree on every species, the species pullbacks spanning it. This is the counterpart,
+  on the single-field side of the identification, of `bosonGenerators_hom_ext`. -/
+lemma bosonFieldComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
+    (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    {F F' : JetComponentSpace (T.bosonMatterField w h) →ₗ[ℂ] N}
+    (hs : ∀ i x, F (JetComponentSpace.comap
+        (T.projBosonField w h i) x)
+      = F' (JetComponentSpace.comap
+        (T.projBosonField w h i) x)) : F = F' := by
+  have key : F.comp (T.bosonGeneratorsEquiv w h).toLinearMap
+      = F'.comp (T.bosonGeneratorsEquiv w h).toLinearMap :=
     bosonGenerators_hom_ext fun i x => by
       simp only [LinearMap.comp_apply, LinearEquiv.coe_coe,
         bosonGeneratorsEquiv_inclBoson]
-      exact h i x
+      exact hs i x
   refine LinearMap.ext fun z => ?_
-  simpa using LinearMap.congr_fun key (T.bosonGeneratorsEquiv.symm z)
+  simpa using LinearMap.congr_fun key ((T.bosonGeneratorsEquiv w h).symm z)
 
 /-!
 
@@ -330,44 +339,44 @@ lemma bosonModuleComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
 -/
 
 /-- **The identification is Lorentz-equivariant.** The species-diagonal Lorentz action on
-  the generator space is the Lorentz action on the component functions of the single
-  scalar field: each species is a subrepresentation of the bosonic module, so pulling
-  back along the projection onto it commutes with the two actions. No common mass weight
-  is needed here — the Lorentz action does not see it. -/
-lemma bosonGeneratorsEquiv_repLorentzBoson (Λ : SL(2,ℂ)) (y : T.BosonGenerators) :
-    T.bosonGeneratorsEquiv (T.repLorentzBoson Λ y)
-      = JetComponentSpace.repLorentzGroup T.repLorentzBosonModule Λ
-        (T.bosonGeneratorsEquiv y) := by
-  have key : T.bosonGeneratorsEquiv.toLinearMap.comp (T.repLorentzBoson Λ)
-      = (JetComponentSpace.repLorentzGroup T.repLorentzBosonModule Λ).comp
-        T.bosonGeneratorsEquiv.toLinearMap := by
+  the generator space is the Lorentz action on the component functions of the single field:
+  each species is a subrepresentation of the bosonic matter field, so pulling back along the
+  projection onto it commutes with the two actions. -/
+lemma bosonGeneratorsEquiv_repLorentzBoson (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    (Λ : SL(2,ℂ)) (y : T.BosonGenerators) :
+    T.bosonGeneratorsEquiv w h (T.repLorentzBoson Λ y)
+      = JetComponentSpace.repLorentzGroup (T.bosonMatterField w h) Λ
+        (T.bosonGeneratorsEquiv w h y) := by
+  have key : (T.bosonGeneratorsEquiv w h).toLinearMap.comp (T.repLorentzBoson Λ)
+      = (JetComponentSpace.repLorentzGroup (T.bosonMatterField w h) Λ).comp
+        (T.bosonGeneratorsEquiv w h).toLinearMap := by
     refine bosonGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       repLorentzBoson_inclBoson, bosonGeneratorsEquiv_inclBoson,
       bosonGeneratorsEquiv_inclBoson]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repLorentzGroup
-      T.repLorentzBosonModule (T.boson i).repLorentz
-      (T.projBosonValue i) (fun _ => LinearMap.ext fun _ => rfl) Λ) x
+      (T.projBosonField w h i)
+      (fun _ => LinearMap.ext fun _ => rfl) Λ) x
   exact LinearMap.congr_fun key y
 
 /-- **The identification carries the species-wise mass-weight scaling to a single
-  scaling.** With one weight `w` shared by every bosonic species, the scaling that acts
-  on each species through its own weight is the scaling of weight `w` on the component
-  functions of the one scalar field: `comap` is natural in the value space, so it does
-  not see which species a generator came from. -/
+  scaling.** With one weight `w` shared by every species, the scaling that acts on each
+  species through its own weight is the scaling of weight `w` on the component functions of
+  the one field: `comap` is natural in the value space, so it does not see which species a
+  generator came from. -/
 lemma bosonGeneratorsEquiv_massWeightScaleBoson (w : ℕ)
     (h : ∀ i, (T.boson i).massWeight = w) (c : ℂ) (y : T.BosonGenerators) :
-    T.bosonGeneratorsEquiv (T.massWeightScaleBoson c y)
-      = JetComponentSpace.massWeightScale w c (T.bosonGeneratorsEquiv y) := by
-  have key : T.bosonGeneratorsEquiv.toLinearMap.comp (T.massWeightScaleBoson c)
+    T.bosonGeneratorsEquiv w h (T.massWeightScaleBoson c y)
+      = JetComponentSpace.massWeightScale w c (T.bosonGeneratorsEquiv w h y) := by
+  have key : (T.bosonGeneratorsEquiv w h).toLinearMap.comp (T.massWeightScaleBoson c)
       = (JetComponentSpace.massWeightScale w c).comp
-        T.bosonGeneratorsEquiv.toLinearMap := by
+        (T.bosonGeneratorsEquiv w h).toLinearMap := by
     refine bosonGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       massWeightScaleBoson_inclBoson, bosonGeneratorsEquiv_inclBoson,
       bosonGeneratorsEquiv_inclBoson, h i]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_massWeightScale
-      (T.projBosonValue i) w c) x
+      (T.projBosonField w h i) w c) x
   exact LinearMap.congr_fun key y
 
 end GaugeFieldData

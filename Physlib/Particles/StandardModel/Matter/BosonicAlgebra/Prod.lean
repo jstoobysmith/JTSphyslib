@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 /-!
 # The bosonic algebra of a direct sum
 
@@ -15,7 +16,7 @@ Two bosonic matter fields, valued in `V` and `W`, are jointly a single matter fi
 in `V × W`; its bosonic algebra is the **tensor product** of the two individual bosonic
 algebras. That is the content of `BosonicAlgebra.prodEquiv`: an algebra equivalence
 
-`BosonicAlgebra (V × W) ≃ₐ[ℂ] BosonicAlgebra V ⊗[ℂ] BosonicAlgebra W`.
+`BosonicAlgebra (M.prod N h) ≃ₐ[ℂ] BosonicAlgebra M ⊗[ℂ] BosonicAlgebra N`.
 
 Unlike the fermionic analogue `FermionicAlgebra.prodEquiv`, the *ordinary* tensor product
 suffices: bosonic generators of different species commute, so no grading is needed.
@@ -38,6 +39,10 @@ sum is the tensor product of the symmetric algebras, which is
 
 @[expose] public section
 
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+
 open scoped TensorProduct
 
 namespace StandardModel
@@ -53,10 +58,10 @@ namespace StandardModel
   target spaces, and its bosonic algebra is the tensor product of theirs. The ordinary —
   rather than the graded — tensor product is correct here: bosonic generators commute
   across species just as they do within one. -/
-noncomputable def BosonicAlgebra.prodEquiv (V W : Type) [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] :
-    BosonicAlgebra (V × W) ≃ₐ[ℂ] BosonicAlgebra V ⊗[ℂ] BosonicAlgebra W :=
-  (SymmetricAlgebra.congr (JetComponentSpace.prodEquiv V W)).trans
+noncomputable def BosonicAlgebra.prodEquiv (M N : MatterField jets)
+    (h : M.massWeight = N.massWeight) :
+    BosonicAlgebra (M.prod N h) ≃ₐ[ℂ] BosonicAlgebra M ⊗[ℂ] BosonicAlgebra N :=
+  (SymmetricAlgebra.congr (JetComponentSpace.prodEquiv M N h)).trans
     SymmetricAlgebra.prodEquiv
 
 end StandardModel

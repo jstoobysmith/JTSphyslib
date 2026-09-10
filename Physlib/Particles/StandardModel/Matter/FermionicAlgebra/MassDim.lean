@@ -42,7 +42,9 @@ namespace FermionicAlgebra
 
 open TensorProduct
 
-variable {V : Type} [AddCommGroup V] [Module ℂ V]
+variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -54,11 +56,11 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
   the algebra endomorphism scaling the generator `∂_s ψ_α` by `c ^ (w + 2 |s|)`, the
   functorial lift of the scaling on the jet component space. -/
 noncomputable def massWeightScale (w : ℕ) (c : ℂ) :
-    FermionicAlgebra V →ₐ[ℂ] FermionicAlgebra V :=
+    FermionicAlgebra M →ₐ[ℂ] FermionicAlgebra M :=
   ExteriorAlgebra.map (JetComponentSpace.massWeightScale w c)
 
 @[simp]
-lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
+lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace M) :
     massWeightScale w c (ExteriorAlgebra.ι ℂ x)
       = ExteriorAlgebra.ι ℂ (JetComponentSpace.massWeightScale w c x) := by
   rw [massWeightScale, ExteriorAlgebra.map_apply_ι]
@@ -71,7 +73,7 @@ lemma massWeightScale_ι (w : ℕ) (c : ℂ) (x : JetComponentSpace V) :
 
 /-- The undifferentiated field carries its own mass weight. -/
 @[simp]
-lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
+lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ M.V) :
     massWeightScale w c (ofField φ) = c ^ w • ofField φ := by
   rw [ofField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -84,7 +86,7 @@ lemma massWeightScale_ofField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ V) :
 
 /-- The undifferentiated conjugate field carries the same mass weight as the field. -/
 @[simp]
-lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule V)) :
+lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     massWeightScale w c (ofConjField φ) = c ^ w • ofConjField φ := by
   rw [ofConjField_apply, massWeightScale_ι, ← map_smul]
   congr 1
@@ -98,7 +100,7 @@ lemma massWeightScale_ofConjField (w : ℕ) (c : ℂ) (φ : Module.Dual ℂ (Con
 /-- **A total derivative adds mass weight two**: the scaling intertwines the total
   derivative up to a factor `c ^ 2`. -/
 lemma massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3)
-    (x : FermionicAlgebra V) :
+    (x : FermionicAlgebra M) :
     massWeightScale w c (jetDeriv μ x) = c ^ 2 • jetDeriv μ (massWeightScale w c x) := by
   induction x using ExteriorAlgebra.induction with
   | algebraMap r => rw [jetDeriv_algebraMap, map_zero, AlgHom.commutes, jetDeriv_algebraMap,
@@ -114,7 +116,7 @@ lemma massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1 ⊕ Fin 3)
 
 /-- **The iterated derivative `∂_s` adds mass weight `2 |s|`.** -/
 lemma massWeightScale_iteratedJetDeriv (w : ℕ) (c : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (x : FermionicAlgebra V) :
+    (x : FermionicAlgebra M) :
     massWeightScale w c (iteratedJetDeriv s x)
       = c ^ (2 * Multiset.card s) • iteratedJetDeriv s (massWeightScale w c x) := by
   induction s using Multiset.induction_on generalizing x with

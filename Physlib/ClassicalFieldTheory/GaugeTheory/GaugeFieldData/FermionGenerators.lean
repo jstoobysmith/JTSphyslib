@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMatterField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 /-!
 # The fermionic generators of a gauge theory
 
@@ -103,13 +104,13 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   is natural in the value space — `JetComponentSpace.comap_comp_massWeightScale` — and so
   cannot tell the species apart. When the weights do agree the two descriptions coincide,
   which is section C below. -/
-abbrev FermionGenerators : Type := ⨁ i, JetComponentSpace (T.FermionValue i)
+abbrev FermionGenerators : Type := ⨁ i, JetComponentSpace (T.fermion i)
 
 /-- The inclusion of the component space of one fermionic species into the fermionic generator
   space. -/
 abbrev inclFermion (i : T.FermionSpecies) :
-    JetComponentSpace (T.FermionValue i) →ₗ[ℂ] T.FermionGenerators :=
-  DirectSum.lof ℂ T.FermionSpecies (fun i => JetComponentSpace (T.FermionValue i)) i
+    JetComponentSpace (T.fermion i) →ₗ[ℂ] T.FermionGenerators :=
+  DirectSum.lof ℂ T.FermionSpecies (fun i => JetComponentSpace (T.fermion i)) i
 
 section Assemble
 
@@ -117,16 +118,16 @@ variable {N : Type*} [AddCommMonoid N] [Module ℂ N]
 
 /-- The assembly of a species-wise family of linear maps out of the fermionic generator space
   into a common target. -/
-abbrev assembleFermion (f : ∀ i, JetComponentSpace (T.FermionValue i) →ₗ[ℂ] N) :
+abbrev assembleFermion (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] N) :
     T.FermionGenerators →ₗ[ℂ] N :=
   DirectSum.toModule ℂ T.FermionSpecies N f
 
 variable {T}
 
-lemma assembleFermion_inclFermion (f : ∀ i, JetComponentSpace (T.FermionValue i) →ₗ[ℂ] N)
-    (i : T.FermionSpecies) (x : JetComponentSpace (T.FermionValue i)) :
+lemma assembleFermion_inclFermion (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] N)
+    (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     T.assembleFermion f (T.inclFermion i x) = f i x :=
-  DirectSum.toModule_lof (M := fun i => JetComponentSpace (T.FermionValue i)) ℂ i x
+  DirectSum.toModule_lof (M := fun i => JetComponentSpace (T.fermion i)) ℂ i x
 
 /-- Two linear maps out of the fermionic generator space agreeing on every species are
   equal. -/
@@ -157,7 +158,7 @@ gauge jets, and nothing extends them to the algebra `J(T)`.
   Lorentz representation of its matter field. -/
 noncomputable def repLorentzFermion : Representation ℂ SL(2,ℂ) T.FermionGenerators where
   toFun Λ := T.assembleFermion fun i =>
-    (T.inclFermion i).comp (JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz Λ)
+    (T.inclFermion i).comp (JetComponentSpace.repLorentzGroup (T.fermion i) Λ)
   map_one' := fermionGenerators_hom_ext fun i x => by simp
   map_mul' Λ Λ' := fermionGenerators_hom_ext fun i x => by simp
 
@@ -165,9 +166,9 @@ variable {T}
 
 @[simp]
 lemma repLorentzFermion_inclFermion (Λ : SL(2,ℂ)) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
+    (x : JetComponentSpace (T.fermion i)) :
     T.repLorentzFermion Λ (T.inclFermion i x)
-      = T.inclFermion i (JetComponentSpace.repLorentzGroup (T.fermion i).repLorentz Λ x) :=
+      = T.inclFermion i (JetComponentSpace.repLorentzGroup (T.fermion i) Λ x) :=
   assembleFermion_inclFermion _ i x
 
 variable (T)
@@ -184,7 +185,7 @@ variable (T)
   `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
 noncomputable def repJetFermion : Representation ℂ G T.FermionGenerators where
   toFun U := T.assembleFermion fun i => (T.inclFermion i).comp
-    (JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul U)
+    (JetComponentSpace.repJet (T.fermion i) U)
   map_one' := fermionGenerators_hom_ext fun i x => by simp
   map_mul' U W := fermionGenerators_hom_ext fun i x => by simp
 
@@ -192,10 +193,10 @@ variable {T}
 
 @[simp]
 lemma repJetFermion_inclFermion (U : G) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
+    (x : JetComponentSpace (T.fermion i)) :
     T.repJetFermion U (T.inclFermion i x)
       = T.inclFermion i
-        (JetComponentSpace.repJet (T.fermion i).repJet (T.fermion i).repJet_smul U x) :=
+        (JetComponentSpace.repJet (T.fermion i) U x) :=
   assembleFermion_inclFermion _ i x
 
 variable (T)
@@ -224,7 +225,7 @@ variable {T}
   the weight recorded in its matter field. -/
 @[simp]
 lemma massWeightScaleFermion_inclFermion (c : ℂ) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
+    (x : JetComponentSpace (T.fermion i)) :
     T.massWeightScaleFermion c (T.inclFermion i x)
       = T.inclFermion i
         (JetComponentSpace.massWeightScale (T.fermion i).massWeight c x) :=
@@ -236,9 +237,9 @@ lemma massWeightScaleFermion_inclFermion (c : ℂ) (i : T.FermionSpecies)
 lemma massWeightScaleFermion_inclFermion_basis_tmul (c : ℂ) (i : T.FermionSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.FermionValue i)) :
     T.massWeightScaleFermion c (T.inclFermion i
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)))
+        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)))
       = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.FermionValue i)) := by
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)) := by
   rw [massWeightScaleFermion_inclFermion, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact JetComponentSpace.massWeightScale_fst_basis_tmul (T.fermion i).massWeight c s φ 0
@@ -250,9 +251,9 @@ lemma massWeightScaleFermion_inclFermion_basis_tmul_conj (c : ℂ) (i : T.Fermio
     (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.FermionValue i))) :
     T.massWeightScaleFermion c (T.inclFermion i
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.FermionValue i)))
+        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)))
       = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.FermionValue i)) := by
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)) := by
   rw [massWeightScaleFermion_inclFermion, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · simp
@@ -269,16 +270,18 @@ variable (T)
 
 -/
 
-/-- **The fermionic generator space is the component space of the fermionic module.** The
+/-- **The fermionic generator space is the component space of the fermionic matter field.** The
   direct sum over the species of their component spaces is, the species type being finite,
-  the same thing as the space of component functions `∂_s ψ_α` of a single field valued in
-  the whole fermionic module — the presentation of the fermion content used in writing a
-  theory down. -/
-noncomputable def fermionGeneratorsEquiv :
-    T.FermionGenerators ≃ₗ[ℂ] JetComponentSpace T.FermionModule :=
+  the same thing as the space of component functions of the single field
+  `T.fermionMatterField w h` — the presentation of the fermion content used in writing a theory
+  down. The shared weight `w` enters only because a component space is now taken of a
+  matter field, and the only matter field on `T.FermionModule` is that one; the underlying
+  identification does not use it. -/
+noncomputable def fermionGeneratorsEquiv (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w) :
+    T.FermionGenerators ≃ₗ[ℂ] JetComponentSpace (T.fermionMatterField w h) :=
   (DirectSum.linearEquivFunOnFintype ℂ T.FermionSpecies
-      fun i => JetComponentSpace (T.FermionValue i)).trans
-    (JetComponentSpace.piEquiv T.FermionValue).symm
+      fun i => JetComponentSpace (T.fermion i)).trans
+    (MatterField.jetComponentSpacePiEquiv T.fermion w h).symm
 
 /-!
 
@@ -289,36 +292,42 @@ noncomputable def fermionGeneratorsEquiv :
 variable {T}
 
 /-- **A species sits inside the fermionic generators as the pullback along the projection
-  onto it.** A component function `∂_s ψ_α` of the multiplet `i` becomes the component
-  function of the whole fermion field whose target covector is supported on that
-  multiplet. -/
+  onto it.** A component function of the multiplet `i` becomes the component function of
+  the whole field whose target covector is supported on that multiplet. -/
 @[simp]
-lemma fermionGeneratorsEquiv_inclFermion (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
-    T.fermionGeneratorsEquiv (T.inclFermion i x)
-      = JetComponentSpace.comap (T.projFermionValue i) x := by
-  rw [fermionGeneratorsEquiv, LinearEquiv.trans_apply,
-    show (DirectSum.linearEquivFunOnFintype ℂ T.FermionSpecies
-        fun i => JetComponentSpace (T.FermionValue i)) (T.inclFermion i x)
-      = Pi.single i x from DirectSum.linearEquivFunOnFintype_lof
-      (M := fun i => JetComponentSpace (T.FermionValue i)) ℂ i x,
-    JetComponentSpace.piEquiv_symm_single]
+lemma fermionGeneratorsEquiv_inclFermion (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
+    T.fermionGeneratorsEquiv w h (T.inclFermion i x)
+      = JetComponentSpace.comap
+        (T.projFermionField w h i) x := by
+  have hlof : (DirectSum.linearEquivFunOnFintype ℂ T.FermionSpecies
+      fun i => JetComponentSpace (T.fermion i)) (T.inclFermion i x) = Pi.single i x :=
+    DirectSum.linearEquivFunOnFintype_lof
+      (M := fun i => JetComponentSpace (T.fermion i)) ℂ i x
+  show (MatterField.jetComponentSpacePiEquiv T.fermion w h).symm
+      ((DirectSum.linearEquivFunOnFintype ℂ T.FermionSpecies
+        fun i => JetComponentSpace (T.fermion i)) (T.inclFermion i x)) = _
+  rw [hlof, MatterField.jetComponentSpacePiEquiv_symm_single]
+  rfl
 
-/-- Two linear maps out of the component space of the fermionic module agree as soon as they
-  agree on every species, the species pullbacks spanning it. This is the counterpart, on
-  the single-field side of the identification, of `fermionGenerators_hom_ext`. -/
-lemma fermionModuleComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
-    {F F' : JetComponentSpace T.FermionModule →ₗ[ℂ] N}
-    (h : ∀ i x, F (JetComponentSpace.comap (T.projFermionValue i) x)
-      = F' (JetComponentSpace.comap (T.projFermionValue i) x)) : F = F' := by
-  have key : F.comp T.fermionGeneratorsEquiv.toLinearMap
-      = F'.comp T.fermionGeneratorsEquiv.toLinearMap :=
+/-- Two linear maps out of the component space of the fermionic matter field agree as soon as
+  they agree on every species, the species pullbacks spanning it. This is the counterpart,
+  on the single-field side of the identification, of `fermionGenerators_hom_ext`. -/
+lemma fermionFieldComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
+    (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    {F F' : JetComponentSpace (T.fermionMatterField w h) →ₗ[ℂ] N}
+    (hs : ∀ i x, F (JetComponentSpace.comap
+        (T.projFermionField w h i) x)
+      = F' (JetComponentSpace.comap
+        (T.projFermionField w h i) x)) : F = F' := by
+  have key : F.comp (T.fermionGeneratorsEquiv w h).toLinearMap
+      = F'.comp (T.fermionGeneratorsEquiv w h).toLinearMap :=
     fermionGenerators_hom_ext fun i x => by
       simp only [LinearMap.comp_apply, LinearEquiv.coe_coe,
         fermionGeneratorsEquiv_inclFermion]
-      exact h i x
+      exact hs i x
   refine LinearMap.ext fun z => ?_
-  simpa using LinearMap.congr_fun key (T.fermionGeneratorsEquiv.symm z)
+  simpa using LinearMap.congr_fun key ((T.fermionGeneratorsEquiv w h).symm z)
 
 /-!
 
@@ -327,44 +336,44 @@ lemma fermionModuleComponents_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
 -/
 
 /-- **The identification is Lorentz-equivariant.** The species-diagonal Lorentz action on
-  the generator space is the Lorentz action on the component functions of the single
-  fermion field: each species is a subrepresentation of the fermionic module, so pulling
-  back along the projection onto it commutes with the two actions. No common mass weight
-  is needed here — the Lorentz action does not see it. -/
-lemma fermionGeneratorsEquiv_repLorentzFermion (Λ : SL(2,ℂ)) (y : T.FermionGenerators) :
-    T.fermionGeneratorsEquiv (T.repLorentzFermion Λ y)
-      = JetComponentSpace.repLorentzGroup T.repLorentzFermionModule Λ
-        (T.fermionGeneratorsEquiv y) := by
-  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.repLorentzFermion Λ)
-      = (JetComponentSpace.repLorentzGroup T.repLorentzFermionModule Λ).comp
-        T.fermionGeneratorsEquiv.toLinearMap := by
+  the generator space is the Lorentz action on the component functions of the single field:
+  each species is a subrepresentation of the fermionic matter field, so pulling back along the
+  projection onto it commutes with the two actions. -/
+lemma fermionGeneratorsEquiv_repLorentzFermion (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    (Λ : SL(2,ℂ)) (y : T.FermionGenerators) :
+    T.fermionGeneratorsEquiv w h (T.repLorentzFermion Λ y)
+      = JetComponentSpace.repLorentzGroup (T.fermionMatterField w h) Λ
+        (T.fermionGeneratorsEquiv w h y) := by
+  have key : (T.fermionGeneratorsEquiv w h).toLinearMap.comp (T.repLorentzFermion Λ)
+      = (JetComponentSpace.repLorentzGroup (T.fermionMatterField w h) Λ).comp
+        (T.fermionGeneratorsEquiv w h).toLinearMap := by
     refine fermionGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       repLorentzFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
       fermionGeneratorsEquiv_inclFermion]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repLorentzGroup
-      T.repLorentzFermionModule (T.fermion i).repLorentz
-      (T.projFermionValue i) (fun _ => LinearMap.ext fun _ => rfl) Λ) x
+      (T.projFermionField w h i)
+      (fun _ => LinearMap.ext fun _ => rfl) Λ) x
   exact LinearMap.congr_fun key y
 
 /-- **The identification carries the species-wise mass-weight scaling to a single
-  scaling.** With one weight `w` shared by every fermionic species, the scaling that acts
-  on each species through its own weight is the scaling of weight `w` on the component
-  functions of the one fermion field: `comap` is natural in the value space, so it does
-  not see which species a generator came from. -/
+  scaling.** With one weight `w` shared by every species, the scaling that acts on each
+  species through its own weight is the scaling of weight `w` on the component functions of
+  the one field: `comap` is natural in the value space, so it does not see which species a
+  generator came from. -/
 lemma fermionGeneratorsEquiv_massWeightScaleFermion (w : ℕ)
     (h : ∀ i, (T.fermion i).massWeight = w) (c : ℂ) (y : T.FermionGenerators) :
-    T.fermionGeneratorsEquiv (T.massWeightScaleFermion c y)
-      = JetComponentSpace.massWeightScale w c (T.fermionGeneratorsEquiv y) := by
-  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.massWeightScaleFermion c)
+    T.fermionGeneratorsEquiv w h (T.massWeightScaleFermion c y)
+      = JetComponentSpace.massWeightScale w c (T.fermionGeneratorsEquiv w h y) := by
+  have key : (T.fermionGeneratorsEquiv w h).toLinearMap.comp (T.massWeightScaleFermion c)
       = (JetComponentSpace.massWeightScale w c).comp
-        T.fermionGeneratorsEquiv.toLinearMap := by
+        (T.fermionGeneratorsEquiv w h).toLinearMap := by
     refine fermionGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       massWeightScaleFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
       fermionGeneratorsEquiv_inclFermion, h i]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_massWeightScale
-      (T.projFermionValue i) w c) x
+      (T.projFermionField w h i) w c) x
   exact LinearMap.congr_fun key y
 
 end GaugeFieldData
