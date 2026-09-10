@@ -45,6 +45,8 @@ because they are degree-one elements of an exterior algebra.
 - `JetAlgebra.MemHiggsSector.commute`, `MemHiggsSector.commute_of_memFermionSector` : the
   Higgs symbols commute with the Higgs and with the fermions.
 - `JetAlgebra.IsFermionGenerator.anticomm` : two fermion symbols anticommute.
+- `JetAlgebra.leptonDoubletField_eq_ιFermion`, … : each named matter family is a generic
+  generator of the field datum.
 
 ## iii. Table of contents
 
@@ -57,6 +59,7 @@ because they are degree-one elements of an exterior algebra.
   - C.1. The gauge symbols are central
   - C.2. The Higgs sector
   - C.3. The fermionic sector
+- D. The generators of the field datum
 
 -/
 
@@ -104,11 +107,9 @@ noncomputable def conjHiggsField (s : Multiset (Fin 1 ⊕ Fin 3)) :
   space. -/
 lemma higgsField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) :
     higgsField s φ = includeHiggs (SymmetricAlgebra.ι ℂ _
-      ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace HiggsVec)) := by
-  rw [higgsField, LinearMap.comp_apply, LinearMap.comp_apply,
-    show includeHiggs.toLinearMap (HiggsJetAlgebra.ofHiggs φ)
-      = includeHiggs (BosonicAlgebra.ofField φ) from rfl,
-    iteratedD_includeHiggs, BosonicAlgebra.iteratedJetDeriv_ofField]
+      ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace HiggsVec)) :=
+  (iteratedD_includeHiggs s (HiggsJetAlgebra.ofHiggs φ)).trans
+    (congrArg includeHiggs (BosonicAlgebra.iteratedJetDeriv_ofField s φ))
 
 /-- A conjugate Higgs symbol is a single generator of the Higgs sector, included: the
   derivative label `s` sits in the derivative factor of the conjugate half of the component
@@ -116,11 +117,9 @@ lemma higgsField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ Hi
 lemma conjHiggsField_apply (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     conjHiggsField s φ = includeHiggs (SymmetricAlgebra.ι ℂ _
-      ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace HiggsVec)) := by
-  rw [conjHiggsField, LinearMap.comp_apply, LinearMap.comp_apply,
-    show includeHiggs.toLinearMap (HiggsJetAlgebra.ofConjHiggs φ)
-      = includeHiggs (BosonicAlgebra.ofConjField φ) from rfl,
-    iteratedD_includeHiggs, BosonicAlgebra.iteratedJetDeriv_ofConjField]
+      ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace HiggsVec)) :=
+  (iteratedD_includeHiggs s (HiggsJetAlgebra.ofConjHiggs φ)).trans
+    (congrArg includeHiggs (BosonicAlgebra.iteratedJetDeriv_ofConjField s φ))
 
 /-!
 
@@ -159,11 +158,9 @@ noncomputable def conjFermionSymbol (s : Multiset (Fin 1 ⊕ Fin 3)) :
 lemma fermionSymbol_apply (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ FermionSpace) :
     fermionSymbol s φ = includeFermion (ExteriorAlgebra.ι ℂ
-      ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace FermionSpace)) := by
-  rw [fermionSymbol, LinearMap.comp_apply, LinearMap.comp_apply,
-    show includeFermion.toLinearMap (FermionicAlgebra.ofField φ)
-      = includeFermion (FermionicAlgebra.ofField φ) from rfl,
-    iteratedD_includeFermion, FermionicAlgebra.iteratedJetDeriv_ofField]
+      ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace FermionSpace)) :=
+  (iteratedD_includeFermion s (FermionicAlgebra.ofField φ)).trans
+    (congrArg includeFermion (FermionicAlgebra.iteratedJetDeriv_ofField s φ))
 
 /-- A conjugate fermionic symbol is a single generator of the fermionic sector, included:
   the derivative label `s` sits in the derivative factor of the conjugate half of the
@@ -171,11 +168,9 @@ lemma fermionSymbol_apply (s : Multiset (Fin 1 ⊕ Fin 3))
 lemma conjFermionSymbol_apply (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule FermionSpace)) :
     conjFermionSymbol s φ = includeFermion (ExteriorAlgebra.ι ℂ
-      ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace FermionSpace)) := by
-  rw [conjFermionSymbol, LinearMap.comp_apply, LinearMap.comp_apply,
-    show includeFermion.toLinearMap (FermionicAlgebra.ofConjField φ)
-      = includeFermion (FermionicAlgebra.ofConjField φ) from rfl,
-    iteratedD_includeFermion, FermionicAlgebra.iteratedJetDeriv_ofConjField]
+      ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace FermionSpace)) :=
+  (iteratedD_includeFermion s (FermionicAlgebra.ofConjField φ)).trans
+    (congrArg includeFermion (FermionicAlgebra.iteratedJetDeriv_ofConjField s φ))
 
 /-!
 
@@ -482,8 +477,8 @@ lemma MemHiggsSector.commute {x y : JetAlgebra} (hx : MemHiggsSector x)
     (hy : MemHiggsSector y) : Commute x y := by
   obtain ⟨h, rfl⟩ := hx
   obtain ⟨h', rfl⟩ := hy
-  show includeHiggs h * includeHiggs h' = includeHiggs h' * includeHiggs h
-  rw [← map_mul, ← map_mul, mul_comm]
+  exact (map_mul includeHiggs h h').symm.trans
+    ((congrArg includeHiggs (mul_comm h h')).trans (map_mul includeHiggs h' h))
 
 /-- The right factor of a tensor product commutes with the left: the abstract statement,
   proved at abstract types so that it can be instantiated on the jet algebra without
@@ -504,7 +499,14 @@ lemma MemHiggsSector.commute_of_memFermionSector {x y : JetAlgebra}
     (hx : MemHiggsSector x) (hy : MemFermionSector y) : Commute x y := by
   obtain ⟨h, rfl⟩ := hx
   obtain ⟨f, rfl⟩ := hy
-  exact tensor_left_comm_right (C := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) f h
+  exact (congrArg₂ (fun a b : JetAlgebra => a * b)
+      (GaugeFieldData.includeBoson_apply (higgsAlgebraEquiv h))
+      (GaugeFieldData.includeFermion_apply (fermionAlgebraEquiv f))).trans
+    ((tensor_left_comm_right (C := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
+        (fermionAlgebraEquiv f) (higgsAlgebraEquiv h)).trans
+      (congrArg₂ (fun a b : JetAlgebra => a * b)
+        (GaugeFieldData.includeFermion_apply (fermionAlgebraEquiv f)).symm
+        (GaugeFieldData.includeBoson_apply (higgsAlgebraEquiv h)).symm))
 
 /-!
 
@@ -531,7 +533,11 @@ lemma IsFermionGenerator.anticomm {x y : JetAlgebra} (hx : IsFermionGenerator x)
     (hy : IsFermionGenerator y) : x * y = -(y * x) := by
   obtain ⟨v, rfl⟩ := hx
   obtain ⟨w, rfl⟩ := hy
-  rw [← map_mul, FermionicAlgebra.ι_mul_ι_swap, map_neg, map_mul]
+  exact (map_mul includeFermion (ExteriorAlgebra.ι ℂ v) (ExteriorAlgebra.ι ℂ w)).symm.trans
+    ((congrArg includeFermion (FermionicAlgebra.ι_mul_ι_swap v w)).trans
+      ((map_neg includeFermion _).trans
+        (congrArg Neg.neg (map_mul includeFermion (ExteriorAlgebra.ι ℂ w)
+          (ExteriorAlgebra.ι ℂ v)))))
 
 /-- The symbols of the `i`-th generation lepton doublet are fermionic generators. -/
 lemma isFermionGenerator_leptonDoubletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
@@ -592,6 +598,170 @@ lemma isFermionGenerator_conjDownSingletField (i : Fin 3)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
     IsFermionGenerator (conjDownSingletField i s φ) :=
   ⟨_, conjDownSingletField_apply i s φ⟩
+
+/-!
+
+## D. The generators of the field datum
+
+Every named family is a single included generator, by the reductions of sections A and B,
+and each included generator is a generic generator of the field datum, by the sector
+lemmas of `Physlib.Particles.StandardModel.JetAlgebra.Basic`. Composing the two computes
+each family directly on `fieldData`: the species, the generation, the derivative label and
+the conjugate half are all read off, with no comparison carrier in between.
+
+-/
+/-- The symbols `∂_s ψ_φ` of the `i`-th generation lepton doublet are the generators of that
+  species in the field datum. -/
+@[simp]
+lemma leptonDoubletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonDoublet) :
+    leptonDoubletField i s φ
+      = fieldData.ιFermion (.leptonDoublet i)
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+            JetComponentSpace (fieldData.FermionValue (.leptonDoublet i))) :=
+  ((leptonDoubletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul (.leptonDoublet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+
+/-- The conjugate symbols `∂_s ψ̄_φ` of the `i`-th generation lepton doublet are the conjugate
+  generators of that species in the field datum. -/
+@[simp]
+lemma conjLeptonDoubletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) :
+    conjLeptonDoubletField i s φ
+      = fieldData.ιFermion (.leptonDoublet i)
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+            JetComponentSpace (fieldData.FermionValue (.leptonDoublet i))) :=
+  ((conjLeptonDoubletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul_conj (.leptonDoublet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+/-- The symbols `∂_s ψ_φ` of the `i`-th generation charged-lepton singlet are the generators of that
+  species in the field datum. -/
+@[simp]
+lemma leptonSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ LeptonSinglet) :
+    leptonSingletField i s φ
+      = fieldData.ιFermion (.leptonSinglet i)
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+            JetComponentSpace (fieldData.FermionValue (.leptonSinglet i))) :=
+  ((leptonSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul (.leptonSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+
+/-- The conjugate symbols `∂_s ψ̄_φ` of the `i`-th generation charged-lepton singlet are
+  the conjugate generators of that species in the field datum. -/
+@[simp]
+lemma conjLeptonSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
+    conjLeptonSingletField i s φ
+      = fieldData.ιFermion (.leptonSinglet i)
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+            JetComponentSpace (fieldData.FermionValue (.leptonSinglet i))) :=
+  ((conjLeptonSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul_conj (.leptonSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+/-- The symbols `∂_s ψ_φ` of the `i`-th generation quark doublet are the generators of that
+  species in the field datum. -/
+@[simp]
+lemma quarkDoubletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ QuarkDoublet) :
+    quarkDoubletField i s φ
+      = fieldData.ιFermion (.quarkDoublet i)
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+            JetComponentSpace (fieldData.FermionValue (.quarkDoublet i))) :=
+  ((quarkDoubletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul (.quarkDoublet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+
+/-- The conjugate symbols `∂_s ψ̄_φ` of the `i`-th generation quark doublet are the conjugate
+  generators of that species in the field datum. -/
+@[simp]
+lemma conjQuarkDoubletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) :
+    conjQuarkDoubletField i s φ
+      = fieldData.ιFermion (.quarkDoublet i)
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+            JetComponentSpace (fieldData.FermionValue (.quarkDoublet i))) :=
+  ((conjQuarkDoubletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul_conj (.quarkDoublet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+/-- The symbols `∂_s ψ_φ` of the `i`-th generation up-type quark singlet are the generators of that
+  species in the field datum. -/
+@[simp]
+lemma upSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ UpSinglet) :
+    upSingletField i s φ
+      = fieldData.ιFermion (.upSinglet i)
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+            JetComponentSpace (fieldData.FermionValue (.upSinglet i))) :=
+  ((upSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul (.upSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+
+/-- The conjugate symbols `∂_s ψ̄_φ` of the `i`-th generation up-type quark singlet are
+  the conjugate generators of that species in the field datum. -/
+@[simp]
+lemma conjUpSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule UpSinglet)) :
+    conjUpSingletField i s φ
+      = fieldData.ιFermion (.upSinglet i)
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+            JetComponentSpace (fieldData.FermionValue (.upSinglet i))) :=
+  ((conjUpSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul_conj (.upSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+/-- The symbols `∂_s ψ_φ` of the `i`-th generation down-type quark singlet are the
+  generators of that species in the field datum. -/
+@[simp]
+lemma downSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ DownSinglet) :
+    downSingletField i s φ
+      = fieldData.ιFermion (.downSinglet i)
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+            JetComponentSpace (fieldData.FermionValue (.downSinglet i))) :=
+  ((downSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul (.downSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+
+/-- The conjugate symbols `∂_s ψ̄_φ` of the `i`-th generation down-type quark singlet are
+  the conjugate generators of that species in the field datum. -/
+@[simp]
+lemma conjDownSingletField_eq_ιFermion (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
+    conjDownSingletField i s φ
+      = fieldData.ιFermion (.downSinglet i)
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+            JetComponentSpace (fieldData.FermionValue (.downSinglet i))) :=
+  ((conjDownSingletField_apply i s φ).trans (includeFermion_ι _)).trans
+    ((congrArg (fun w : fieldData.FermionGenerators => fieldData.ιFermionTotal w)
+        (fermionGeneratorsEquiv_symm_basis_tmul_conj (.downSinglet i) s φ)).trans
+      (ιFermionTotal_inclFermion _ _))
+/-- The Higgs symbols `∂_s H_φ` are the generators of the one bosonic species. -/
+@[simp]
+lemma higgsField_eq_ιBoson (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec) :
+    higgsField s φ
+      = fieldData.ιBoson ()
+          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace HiggsVec) :=
+  (higgsField_apply s φ).trans (includeHiggs_ι _)
+
+/-- The conjugate Higgs symbols `∂_s H̄_φ` are the conjugate generators of the one bosonic
+  species. -/
+@[simp]
+lemma conjHiggsField_eq_ιBoson (s : Multiset (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
+    conjHiggsField s φ
+      = fieldData.ιBoson ()
+          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace HiggsVec) :=
+  (conjHiggsField_apply s φ).trans (includeHiggs_ι _)
 
 end JetAlgebra
 

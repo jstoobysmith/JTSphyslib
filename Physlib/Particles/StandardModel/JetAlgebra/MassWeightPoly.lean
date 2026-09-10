@@ -26,12 +26,15 @@ and computes it on every generating family.
 
 The assembly is two applications of the universal property of the tensor product of
 algebras. Each sector grading is first transported into `Polynomial JetAlgebra` along
-`Polynomial.mapAlgHom` of that sector's inclusion; the two matter gradings are then lifted
-over `FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra`, and that lift over the whole algebra. Both
-lifts need a commutation side condition, and both reduce to the statistics already proved
-in `Physlib.Particles.StandardModel.JetAlgebra.Generators`: two polynomials commute as soon
-as their coefficients do, the Higgs sector commutes with the fermionic sector, and the
-gauge sector is central.
+`Polynomial.mapAlgHom` of that sector's inclusion; the two matter gradings are then read on
+the two matter factors of the carrier through the sector equivalences of
+`Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Basic`, lifted over the matter
+factor `GaugeFieldData.MatterAlgebra`, and that lift over the whole algebra. The connection
+factor needs no equivalence, being the gauge sector itself. Both lifts need a commutation
+side condition, and both reduce to the statistics already proved in
+`Physlib.Particles.StandardModel.JetAlgebra.Generators`: two polynomials commute as soon as
+their coefficients do, the Higgs sector commutes with the fermionic sector, and the gauge
+sector is central.
 
 Because each sector's generator lemma has the shape `massWeightPoly g = monomial n g` — the
 generator *itself* as the coefficient — transporting it along `Polynomial.mapAlgHom` is a
@@ -43,6 +46,8 @@ algebra is again a monomial eigenvector, of exactly the weight `AlgebraRealizati
 
 - `JetAlgebra.massWeightPoly` : the mass-weight grading on the jet algebra of the Standard
   Model.
+- `JetAlgebra.fermionFactorMassWeightPoly`, `bosonFactorMassWeightPoly` : the two matter
+  sector gradings read on the two matter factors of the carrier.
 - `JetAlgebra.massWeightPoly_includeFermion`, `massWeightPoly_includeHiggs`,
   `massWeightPoly_includeGauge` : the grading restricted to each sector.
 - `JetAlgebra.massWeightPoly_higgsField`, `massWeightPoly_gaugeField`,
@@ -154,17 +159,42 @@ noncomputable def gaugeMassWeightPoly :
     (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₐ[ℂ] Polynomial JetAlgebra :=
   (Polynomial.mapAlgHom includeGauge).comp GaugeJetAlgebra.complexMassWeightPoly
 
+/-- The fermionic grading read on the fermionic factor of the carrier: the fermionic sector
+  grading, precomposed with the sector equivalence. The sector helper above keeps its own
+  domain, the fermionic sector algebra; this is the map the carrier's factor needs. -/
+noncomputable def fermionFactorMassWeightPoly :
+    ExteriorAlgebra ℂ fieldData.FermionGenerators →ₐ[ℂ] Polynomial JetAlgebra :=
+  fermionMassWeightPoly.comp fermionAlgebraEquiv.symm.toAlgHom
+
+/-- The Higgs grading read on the bosonic factor of the carrier. -/
+noncomputable def bosonFactorMassWeightPoly :
+    SymmetricAlgebra ℂ fieldData.BosonGenerators →ₐ[ℂ] Polynomial JetAlgebra :=
+  higgsMassWeightPoly.comp higgsAlgebraEquiv.symm.toAlgHom
+
+lemma fermionFactorMassWeightPoly_apply (a : ExteriorAlgebra ℂ fieldData.FermionGenerators) :
+    fermionFactorMassWeightPoly a
+      = Polynomial.mapAlgHom includeFermion
+        (FermionicAlgebra.massWeightPoly 3 (fermionAlgebraEquiv.symm a)) := rfl
+
+lemma bosonFactorMassWeightPoly_apply (b : SymmetricAlgebra ℂ fieldData.BosonGenerators) :
+    bosonFactorMassWeightPoly b
+      = Polynomial.mapAlgHom includeHiggs
+        (BosonicAlgebra.massWeightPoly 2 (higgsAlgebraEquiv.symm b)) := rfl
+
 /-- The mass-weight grading on the matter factor of the jet algebra: the fermionic and
-  Higgs gradings, lifted over their tensor product. The side condition is that the two
-  images commute, which they do because the Higgs sector commutes with the fermionic
-  sector. -/
+  Higgs gradings, lifted over the tensor product of the two matter factors of the carrier.
+  The side condition is that the two images commute, which they do because the Higgs sector
+  commutes with the fermionic sector. -/
 noncomputable def matterMassWeightPoly :
-    (FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) →ₐ[ℂ] Polynomial JetAlgebra :=
-  Algebra.TensorProduct.lift (R := ℂ) (S := ℂ) (A := FermionJetAlgebra)
-    (B := HiggsJetAlgebra) (C := Polynomial JetAlgebra)
-    fermionMassWeightPoly higgsMassWeightPoly fun _ _ =>
-      commute_mapAlgHom _ _ (fun a b =>
-        (MemHiggsSector.commute_of_memFermionSector ⟨b, rfl⟩ ⟨a, rfl⟩).symm) _ _
+    fieldData.MatterAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
+  Algebra.TensorProduct.lift (R := ℂ) (S := ℂ)
+    (A := ExteriorAlgebra ℂ fieldData.FermionGenerators)
+    (B := SymmetricAlgebra ℂ fieldData.BosonGenerators) (C := Polynomial JetAlgebra)
+    fermionFactorMassWeightPoly bosonFactorMassWeightPoly fun a b =>
+      commute_mapAlgHom includeFermion includeHiggs
+        (fun x y => (MemHiggsSector.commute_of_memFermionSector ⟨y, rfl⟩ ⟨x, rfl⟩).symm)
+        (FermionicAlgebra.massWeightPoly 3 (fermionAlgebraEquiv.symm a))
+        (BosonicAlgebra.massWeightPoly 2 (higgsAlgebraEquiv.symm b))
 
 /-- The mass-weight polynomial on the jet algebra of the Standard Model: the `ℂ`-algebra
   map sending a generator of mass weight `n` to `X ^ n` times itself, so that the
@@ -173,7 +203,7 @@ noncomputable def matterMassWeightPoly :
   outer lift being the centrality of the gauge sector. -/
 noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
   Algebra.TensorProduct.lift (R := ℂ) (S := ℂ)
-    (A := FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
+    (A := fieldData.MatterAlgebra) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
     (C := Polynomial JetAlgebra) matterMassWeightPoly gaugeMassWeightPoly
     fun _ _ => commute_mapAlgHom_includeGauge _ _
 
@@ -189,46 +219,89 @@ generator computation below is one of them followed by a sector generator lemma.
 -/
 
 /-- On a pure tensor the grading is the product of the matter and gauge gradings. -/
-lemma massWeightPoly_tmul (x : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra)
+lemma massWeightPoly_tmul (x : fieldData.MatterAlgebra)
     (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     massWeightPoly (x ⊗ₜ[ℂ] y) = matterMassWeightPoly x * gaugeMassWeightPoly y := rfl
 
-/-- On a pure tensor the matter grading is the product of the fermionic and Higgs
+/-- On a pure tensor the matter grading is the product of the fermionic and bosonic factor
   gradings. -/
-lemma matterMassWeightPoly_tmul (a : FermionJetAlgebra) (h : HiggsJetAlgebra) :
-    matterMassWeightPoly (a ⊗ₜ[ℂ] h) = fermionMassWeightPoly a * higgsMassWeightPoly h :=
-  rfl
+lemma matterMassWeightPoly_tmul (a : ExteriorAlgebra ℂ fieldData.FermionGenerators)
+    (b : SymmetricAlgebra ℂ fieldData.BosonGenerators) :
+    matterMassWeightPoly (a ⊗ₜ[ℂ] b)
+      = fermionFactorMassWeightPoly a * bosonFactorMassWeightPoly b := rfl
+
+/-- On the fermionic factor the grading is that factor's own grading. Like every step
+  below it is written as an equation chain, which never abstracts a pattern out of a goal
+  mentioning the jet algebra. -/
+lemma massWeightPoly_includeFermionFactor
+    (a : ExteriorAlgebra ℂ fieldData.FermionGenerators) :
+    massWeightPoly (fieldData.includeFermion a) = fermionFactorMassWeightPoly a :=
+  (congrArg massWeightPoly (GaugeFieldData.includeFermion_apply a)).trans
+    ((massWeightPoly_tmul _ _).trans
+      ((congrArg₂ (fun p q : Polynomial JetAlgebra => p * q)
+            ((matterMassWeightPoly_tmul a 1).trans
+              (congrArg (fun q : Polynomial JetAlgebra =>
+                  fermionFactorMassWeightPoly a * q)
+                (map_one bosonFactorMassWeightPoly)))
+            (map_one gaugeMassWeightPoly)).trans
+        ((mul_one _).trans (mul_one _))))
+
+/-- On the bosonic factor the grading is that factor's own grading. -/
+lemma massWeightPoly_includeBosonFactor
+    (b : SymmetricAlgebra ℂ fieldData.BosonGenerators) :
+    massWeightPoly (fieldData.includeBoson b) = bosonFactorMassWeightPoly b :=
+  (congrArg massWeightPoly (GaugeFieldData.includeBoson_apply b)).trans
+    ((massWeightPoly_tmul _ _).trans
+      ((congrArg₂ (fun p q : Polynomial JetAlgebra => p * q)
+            ((matterMassWeightPoly_tmul 1 b).trans
+              (congrArg (fun q : Polynomial JetAlgebra =>
+                  q * bosonFactorMassWeightPoly b)
+                (map_one fermionFactorMassWeightPoly)))
+            (map_one gaugeMassWeightPoly)).trans
+        ((mul_one _).trans (one_mul _))))
+
+/-- On the connection factor the grading is the generic gauge-boson grading. -/
+lemma massWeightPoly_includeConnection (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    massWeightPoly (fieldData.includeConnection y) = gaugeMassWeightPoly y :=
+  (congrArg massWeightPoly (GaugeFieldData.includeConnection_apply y)).trans
+    ((massWeightPoly_tmul _ _).trans
+      ((congrArg (fun p : Polynomial JetAlgebra => p * gaugeMassWeightPoly y)
+          (map_one matterMassWeightPoly)).trans (one_mul _)))
 
 /-- On the fermionic sector the grading is the fermionic sector's own grading, pushed
   forward along the fermionic inclusion. -/
 lemma massWeightPoly_includeFermion (a : FermionJetAlgebra) :
     massWeightPoly (includeFermion a)
-      = Polynomial.mapAlgHom includeFermion (FermionicAlgebra.massWeightPoly 3 a) := by
-  rw [show includeFermion a = (a ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) from rfl, massWeightPoly_tmul,
-    matterMassWeightPoly_tmul, map_one, map_one, mul_one, mul_one]
-  rfl
+      = Polynomial.mapAlgHom includeFermion (FermionicAlgebra.massWeightPoly 3 a) :=
+  (massWeightPoly_includeFermionFactor (fermionAlgebraEquiv a)).trans
+    (congrArg (fun x : FermionJetAlgebra =>
+        Polynomial.mapAlgHom includeFermion (FermionicAlgebra.massWeightPoly 3 x))
+      (fermionAlgebraEquiv.symm_apply_apply a))
 
 /-- On the Higgs sector the grading is the Higgs sector's own grading, pushed forward along
   the Higgs inclusion. -/
 lemma massWeightPoly_includeHiggs (h : HiggsJetAlgebra) :
     massWeightPoly (includeHiggs h)
-      = Polynomial.mapAlgHom includeHiggs (BosonicAlgebra.massWeightPoly 2 h) := by
-  rw [show includeHiggs h = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) from rfl, massWeightPoly_tmul,
-    matterMassWeightPoly_tmul, map_one, map_one, mul_one, one_mul]
-  rfl
+      = Polynomial.mapAlgHom includeHiggs (BosonicAlgebra.massWeightPoly 2 h) :=
+  (massWeightPoly_includeBosonFactor (higgsAlgebraEquiv h)).trans
+    (congrArg (fun x : HiggsJetAlgebra =>
+        Polynomial.mapAlgHom includeHiggs (BosonicAlgebra.massWeightPoly 2 x))
+      (higgsAlgebraEquiv.symm_apply_apply h))
 
 /-- On the gauge sector the grading is the gauge sector's own grading, pushed forward along
-  the gauge inclusion. -/
+  the gauge inclusion. The gauge sector inclusion is the connection inclusion of the datum,
+  so there is nothing to transport here. -/
 lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
     massWeightPoly (includeGauge y)
-      = Polynomial.mapAlgHom includeGauge (GaugeJetAlgebra.complexMassWeightPoly y) := by
-  rw [show includeGauge y = ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
-      ⊗ₜ[ℂ] y from rfl, massWeightPoly_tmul,
-    show ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
-      = (1 : FermionJetAlgebra ⊗[ℂ] HiggsJetAlgebra) from rfl, map_one, one_mul]
-  rfl
+      = Polynomial.mapAlgHom includeGauge (GaugeJetAlgebra.complexMassWeightPoly y) :=
+  massWeightPoly_includeConnection y
+
+/-- The mass-weight exponent of a symbol of mass dimension one, in the two forms the
+  statements below use: `AlgebraRealization` asks for `2 * (1 + |s|)`, and each sector
+  grading produces `2 + 2 * |s|`. -/
+private lemma monomial_two_mul_one_add (n : ℕ) (x : JetAlgebra) :
+    Polynomial.monomial (2 + 2 * n) x = Polynomial.monomial (2 * (1 + n)) x :=
+  congrArg (fun m => (Polynomial.monomial m) x) (by ring)
 
 /-!
 
@@ -245,20 +318,32 @@ The Higgs field has mass dimension one, so the symbol `∂_s H_φ` has mass dime
 lemma massWeightPoly_higgsField (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ HiggsVec) :
     massWeightPoly (higgsField s φ)
-      = Polynomial.monomial (2 * (1 + Multiset.card s)) (higgsField s φ) := by
-  rw [show 2 * (1 + Multiset.card s) = 2 + 2 * Multiset.card s from by ring,
-    higgsField_apply, massWeightPoly_includeHiggs, BosonicAlgebra.massWeightPoly_ι,
-    BosonicAlgebra.jetComponentPoly_inl, Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (2 * (1 + Multiset.card s)) (higgsField s φ) :=
+  (congrArg massWeightPoly (higgsField_apply s φ)).trans
+    ((massWeightPoly_includeHiggs _).trans
+      ((congrArg (Polynomial.mapAlgHom includeHiggs)
+            ((BosonicAlgebra.massWeightPoly_ι 2 _).trans
+              (BosonicAlgebra.jetComponentPoly_inl 2 s φ))).trans
+        ((Polynomial.mapAlgHom_monomial includeHiggs _ _).trans
+          ((monomial_two_mul_one_add _ _).trans
+            (congrArg (Polynomial.monomial (2 * (1 + Multiset.card s)))
+              (higgsField_apply s φ).symm)))))
 
 /-- The conjugate Higgs symbol `∂_s H̄_φ` is a monomial eigenvector of the same mass weight
   `2 * (1 + |s|)` as the symbol it conjugates. -/
 lemma massWeightPoly_conjHiggsField (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     massWeightPoly (conjHiggsField s φ)
-      = Polynomial.monomial (2 * (1 + Multiset.card s)) (conjHiggsField s φ) := by
-  rw [show 2 * (1 + Multiset.card s) = 2 + 2 * Multiset.card s from by ring,
-    conjHiggsField_apply, massWeightPoly_includeHiggs, BosonicAlgebra.massWeightPoly_ι,
-    BosonicAlgebra.jetComponentPoly_inr, Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (2 * (1 + Multiset.card s)) (conjHiggsField s φ) :=
+  (congrArg massWeightPoly (conjHiggsField_apply s φ)).trans
+    ((massWeightPoly_includeHiggs _).trans
+      ((congrArg (Polynomial.mapAlgHom includeHiggs)
+            ((BosonicAlgebra.massWeightPoly_ι 2 _).trans
+              (BosonicAlgebra.jetComponentPoly_inr 2 s φ))).trans
+        ((Polynomial.mapAlgHom_monomial includeHiggs _ _).trans
+          ((monomial_two_mul_one_add _ _).trans
+            (congrArg (Polynomial.monomial (2 * (1 + Multiset.card s)))
+              (conjHiggsField_apply s φ).symm)))))
 
 /-!
 
@@ -276,12 +361,22 @@ computation passes through the complexified grading of that sector.
 lemma massWeightPoly_gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
     massWeightPoly (gaugeField s μ φ)
-      = Polynomial.monomial (2 * (1 + Multiset.card s)) (gaugeField s μ φ) := by
-  rw [show 2 * (1 + Multiset.card s) = 2 + 2 * Multiset.card s from by ring,
-    gaugeField_apply, GaugeJetAlgebra.gaugeField_apply,
-    GaugeJetAlgebra.iteratedD_complexJetDeriv_one_tmul, massWeightPoly_includeGauge,
-    GaugeJetAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (2 * (1 + Multiset.card s)) (gaugeField s μ φ) :=
+  have hg : gaugeField s μ φ
+      = includeGauge ((1 : ℂ) ⊗ₜ[ℝ] GaugeJetAlgebra.iteratedJetDeriv GaugeAlgebra s
+        (GaugeJetAlgebra.ofA GaugeAlgebra μ φ)) :=
+    (gaugeField_apply s μ φ).trans
+      (congrArg includeGauge
+        (_root_.GaugeJetAlgebra.iteratedD_complexJetDeriv_one_tmul s
+          (_root_.GaugeJetAlgebra.ofA GaugeAlgebra μ φ)))
+  (congrArg massWeightPoly hg).trans
+    ((massWeightPoly_includeGauge _).trans
+      ((congrArg (Polynomial.mapAlgHom includeGauge)
+            (GaugeJetAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA
+              1 s μ φ)).trans
+        ((Polynomial.mapAlgHom_monomial includeGauge _ _).trans
+          ((monomial_two_mul_one_add _ _).trans
+            (congrArg (Polynomial.monomial (2 * (1 + Multiset.card s))) hg.symm)))))
 
 /-!
 
@@ -291,8 +386,8 @@ Every fermion of the Standard Model has mass dimension `3/2`, so a fermionic sym
 `∂_s ψ_φ` has mass dimension `3/2 + |s|` and mass weight `3 + 2 |s|` — the exponent form
 `AlgebraRealization` asks for. The computation is the same for all ten species families,
 because each of them reduces, by the lemmas of
-`Physlib.Particles.StandardModel.JetAlgebra.Generators`, to a single included generator of
-the fermionic sector.
+`Physlib.Particles.StandardModel.JetAlgebra.Generators`, to a fermionic symbol on the total
+target space; so section F.2 is ten instantiations of section F.1 and nothing more.
 
 -/
 
@@ -308,20 +403,30 @@ the fermionic sector.
 lemma massWeightPoly_fermionSymbol (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ FermionSpace) :
     massWeightPoly (fermionSymbol s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (fermionSymbol s φ) := by
-  rw [fermionSymbol_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (fermionSymbol s φ) :=
+  (congrArg massWeightPoly (fermionSymbol_apply s φ)).trans
+    ((massWeightPoly_includeFermion _).trans
+      ((congrArg (Polynomial.mapAlgHom includeFermion)
+            ((FermionicAlgebra.massWeightPoly_ι 3 _).trans
+              (FermionicAlgebra.jetComponentPoly_inl 3 s φ))).trans
+        ((Polynomial.mapAlgHom_monomial includeFermion _ _).trans
+          (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+            (fermionSymbol_apply s φ).symm))))
 
 /-- A conjugate fermionic symbol `∂_s ψ̄_φ` on the total fermionic target space is a
   monomial eigenvector of the same mass weight `3 + 2 |s|` as the symbol it conjugates. -/
 lemma massWeightPoly_conjFermionSymbol (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule FermionSpace)) :
     massWeightPoly (conjFermionSymbol s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjFermionSymbol s φ) := by
-  rw [conjFermionSymbol_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjFermionSymbol s φ) :=
+  (congrArg massWeightPoly (conjFermionSymbol_apply s φ)).trans
+    ((massWeightPoly_includeFermion _).trans
+      ((congrArg (Polynomial.mapAlgHom includeFermion)
+            ((FermionicAlgebra.massWeightPoly_ι 3 _).trans
+              (FermionicAlgebra.jetComponentPoly_inr 3 s φ))).trans
+        ((Polynomial.mapAlgHom_monomial includeFermion _ _).trans
+          (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+            (conjFermionSymbol_apply s φ).symm))))
 
 /-!
 
@@ -334,101 +439,110 @@ lemma massWeightPoly_conjFermionSymbol (s : Multiset (Fin 1 ⊕ Fin 3))
 lemma massWeightPoly_leptonDoubletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ LeptonDoublet) :
     massWeightPoly (leptonDoubletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (leptonDoubletField i s φ) := by
-  rw [leptonDoubletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (leptonDoubletField i s φ) :=
+  (congrArg massWeightPoly (leptonDoubletField_eq_fermionSymbol i s φ)).trans
+    ((massWeightPoly_fermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (leptonDoubletField_eq_fermionSymbol i s φ).symm))
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of the `i`-th generation lepton doublet is a monomial
   eigenvector of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_conjLeptonDoubletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) :
     massWeightPoly (conjLeptonDoubletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjLeptonDoubletField i s φ) := by
-  rw [conjLeptonDoubletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjLeptonDoubletField i s φ) :=
+  (congrArg massWeightPoly (conjLeptonDoubletField_eq_conjFermionSymbol i s φ)).trans
+    ((massWeightPoly_conjFermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (conjLeptonDoubletField_eq_conjFermionSymbol i s φ).symm))
 
 /-- The symbol `∂_s ψ_φ` of the `i`-th generation charged-lepton singlet is a monomial eigenvector
   of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_leptonSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ LeptonSinglet) :
     massWeightPoly (leptonSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (leptonSingletField i s φ) := by
-  rw [leptonSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (leptonSingletField i s φ) :=
+  (congrArg massWeightPoly (leptonSingletField_eq_fermionSymbol i s φ)).trans
+    ((massWeightPoly_fermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (leptonSingletField_eq_fermionSymbol i s φ).symm))
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of the `i`-th generation charged-lepton singlet is a monomial
   eigenvector of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_conjLeptonSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) :
     massWeightPoly (conjLeptonSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjLeptonSingletField i s φ) := by
-  rw [conjLeptonSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjLeptonSingletField i s φ) :=
+  (congrArg massWeightPoly (conjLeptonSingletField_eq_conjFermionSymbol i s φ)).trans
+    ((massWeightPoly_conjFermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (conjLeptonSingletField_eq_conjFermionSymbol i s φ).symm))
 
 /-- The symbol `∂_s ψ_φ` of the `i`-th generation quark doublet is a monomial eigenvector
   of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_quarkDoubletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ QuarkDoublet) :
     massWeightPoly (quarkDoubletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (quarkDoubletField i s φ) := by
-  rw [quarkDoubletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (quarkDoubletField i s φ) :=
+  (congrArg massWeightPoly (quarkDoubletField_eq_fermionSymbol i s φ)).trans
+    ((massWeightPoly_fermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (quarkDoubletField_eq_fermionSymbol i s φ).symm))
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of the `i`-th generation quark doublet is a monomial
   eigenvector of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_conjQuarkDoubletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) :
     massWeightPoly (conjQuarkDoubletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjQuarkDoubletField i s φ) := by
-  rw [conjQuarkDoubletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjQuarkDoubletField i s φ) :=
+  (congrArg massWeightPoly (conjQuarkDoubletField_eq_conjFermionSymbol i s φ)).trans
+    ((massWeightPoly_conjFermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (conjQuarkDoubletField_eq_conjFermionSymbol i s φ).symm))
 
 /-- The symbol `∂_s ψ_φ` of the `i`-th generation up-type quark singlet is a monomial eigenvector
   of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_upSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ UpSinglet) :
     massWeightPoly (upSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (upSingletField i s φ) := by
-  rw [upSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (upSingletField i s φ) :=
+  (congrArg massWeightPoly (upSingletField_eq_fermionSymbol i s φ)).trans
+    ((massWeightPoly_fermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (upSingletField_eq_fermionSymbol i s φ).symm))
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of the `i`-th generation up-type quark singlet is a monomial
   eigenvector of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_conjUpSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) :
     massWeightPoly (conjUpSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjUpSingletField i s φ) := by
-  rw [conjUpSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjUpSingletField i s φ) :=
+  (congrArg massWeightPoly (conjUpSingletField_eq_conjFermionSymbol i s φ)).trans
+    ((massWeightPoly_conjFermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (conjUpSingletField_eq_conjFermionSymbol i s φ).symm))
 
 /-- The symbol `∂_s ψ_φ` of the `i`-th generation down-type quark singlet is a monomial eigenvector
   of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_downSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ DownSinglet) :
     massWeightPoly (downSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (downSingletField i s φ) := by
-  rw [downSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inl,
-    Polynomial.mapAlgHom_monomial]
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (downSingletField i s φ) :=
+  (congrArg massWeightPoly (downSingletField_eq_fermionSymbol i s φ)).trans
+    ((massWeightPoly_fermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (downSingletField_eq_fermionSymbol i s φ).symm))
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of the `i`-th generation down-type quark singlet is a monomial
   eigenvector of mass weight `3 + 2 |s|`. -/
 lemma massWeightPoly_conjDownSingletField (i : Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) :
     massWeightPoly (conjDownSingletField i s φ)
-      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjDownSingletField i s φ) := by
-  rw [conjDownSingletField_apply, massWeightPoly_includeFermion,
-    FermionicAlgebra.massWeightPoly_ι, FermionicAlgebra.jetComponentPoly_inr,
-    Polynomial.mapAlgHom_monomial]
-
+      = Polynomial.monomial (3 + 2 * Multiset.card s) (conjDownSingletField i s φ) :=
+  (congrArg massWeightPoly (conjDownSingletField_eq_conjFermionSymbol i s φ)).trans
+    ((massWeightPoly_conjFermionSymbol s _).trans
+      (congrArg (Polynomial.monomial (3 + 2 * Multiset.card s))
+        (conjDownSingletField_eq_conjFermionSymbol i s φ).symm))
 end JetAlgebra
 
 end StandardModel

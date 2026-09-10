@@ -86,6 +86,16 @@ lemma conjHiggsField_mem_higgsSubalgebra {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin
   Algebra.subset_adjoin <| Set.mem_iUnion_of_mem n <| Set.mem_iUnion_of_mem l <|
     Or.inr ⟨φ, rfl⟩
 
+/-- Membership of the Higgs subalgebra transported along an equation, stated at variable
+  endpoints so that the substitution never abstracts a pattern out of a goal mentioning the
+  covariant jet algebra. -/
+private lemma mem_higgsSubalgebra_of_eq {x y : CovJetAlgebra} (h : x = y)
+    (hx : x ∈ higgsSubalgebra) : y ∈ higgsSubalgebra := h ▸ hx
+
+/-- The same, for the polynomials over the Higgs subalgebra. -/
+private lemma mem_polyRange_of_eq {p q : Polynomial CovJetAlgebra} (h : p = q)
+    (hp : p ∈ higgsSubalgebra.polyRange) : q ∈ higgsSubalgebra.polyRange := h ▸ hp
+
 /-- A property that holds of both Higgs towers holds of every Higgs generator. -/
 lemma higgsGenerators_induction {P : CovJetAlgebra → Prop}
     (hH : ∀ {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ HiggsVec),
@@ -116,10 +126,14 @@ lemma mapsTo_higgsSubalgebra {f : CovJetAlgebra →ₗ[ℂ] CovJetAlgebra} (hone
   induction hx using Algebra.adjoin_induction with
   | mem b hb => exact hgen b hb
   | algebraMap c =>
-    rw [Algebra.algebraMap_eq_smul_one, map_smul, hone]
-    exact Subalgebra.smul_mem _ (one_mem _) c
-  | add a b _ _ iha ihb => rw [map_add]; exact add_mem iha ihb
-  | mul a b _ _ iha ihb => rw [hmul]; exact mul_mem iha ihb
+    exact mem_higgsSubalgebra_of_eq
+      ((congrArg f (Algebra.algebraMap_eq_smul_one c)).trans
+        ((map_smul f c 1).trans (congrArg (fun z : CovJetAlgebra => c • z) hone))).symm
+      (Subalgebra.smul_mem _ (one_mem _) c)
+  | add a b _ _ iha ihb =>
+    exact mem_higgsSubalgebra_of_eq (map_add f a b).symm (add_mem iha ihb)
+  | mul a b _ _ iha ihb =>
+    exact mem_higgsSubalgebra_of_eq (hmul a b).symm (mul_mem iha ihb)
 
 /-- A Lorentz slot-mixing sum of Higgs towers lies in the Higgs subalgebra. -/
 lemma sum_smul_mem_higgsSubalgebra {n : ℕ} {c : (Fin n → (Fin 1 ⊕ Fin 3)) → ℂ}
@@ -133,12 +147,12 @@ lemma repGaugeGroupI_mem_higgsSubalgebra (g : GaugeGroupI) {x : CovJetAlgebra}
   refine mapsTo_higgsSubalgebra ?_ (repGaugeGroupI_mul g) ?_ hx
   · exact Subtype.ext (AlgebraRealization.id.repGlobal_one g)
   · refine higgsGenerators_induction (fun l φ => ?_) (fun l φ => ?_)
-    · rw [show repGaugeGroupI g (higgsField l φ) = higgsField l _ from
-        Subtype.ext (AlgebraRealization.id.repGlobal_covDerivH g l φ)]
-      exact higgsField_mem_higgsSubalgebra _ _
-    · rw [show repGaugeGroupI g (conjHiggsField l φ) = conjHiggsField l _ from
-        Subtype.ext (AlgebraRealization.id.repGlobal_covDerivBarH g l φ)]
-      exact conjHiggsField_mem_higgsSubalgebra _ _
+    · exact mem_higgsSubalgebra_of_eq
+        (Subtype.ext (AlgebraRealization.id.repGlobal_covDerivH g l φ)).symm
+        (higgsField_mem_higgsSubalgebra _ _)
+    · exact mem_higgsSubalgebra_of_eq
+        (Subtype.ext (AlgebraRealization.id.repGlobal_covDerivBarH g l φ)).symm
+        (conjHiggsField_mem_higgsSubalgebra _ _)
 
 /-- The Lorentz action preserves the Higgs subalgebra. -/
 lemma repLorentzGroup_mem_higgsSubalgebra (Λ : SL(2,ℂ)) {x : CovJetAlgebra}
@@ -146,12 +160,13 @@ lemma repLorentzGroup_mem_higgsSubalgebra (Λ : SL(2,ℂ)) {x : CovJetAlgebra}
   refine mapsTo_higgsSubalgebra ?_ (repLorentzGroup_mul Λ) ?_ hx
   · exact Subtype.ext (AlgebraRealization.id.repLorentz_one Λ)
   · refine higgsGenerators_induction (fun l φ => ?_) (fun l φ => ?_)
-    · rw [isLorentzCovDerivTransforms_of
-        (fun Λ n l φ => AlgebraRealization.id.repLorentz_covDerivH Λ n l φ) Λ _ l φ]
-      exact sum_smul_mem_higgsSubalgebra fun p => higgsField_mem_higgsSubalgebra _ _
-    · rw [isLorentzCovDerivTransforms_of
-        (fun Λ n l φ => AlgebraRealization.id.repLorentz_covDerivBarH Λ n l φ) Λ _ l φ]
-      exact sum_smul_mem_higgsSubalgebra fun p => conjHiggsField_mem_higgsSubalgebra _ _
+    · exact mem_higgsSubalgebra_of_eq (isLorentzCovDerivTransforms_of
+          (fun Λ n l φ => AlgebraRealization.id.repLorentz_covDerivH Λ n l φ) Λ _ l φ).symm
+        (sum_smul_mem_higgsSubalgebra fun _ => higgsField_mem_higgsSubalgebra _ _)
+    · exact mem_higgsSubalgebra_of_eq (isLorentzCovDerivTransforms_of
+          (fun Λ n l φ => AlgebraRealization.id.repLorentz_covDerivBarH Λ n l φ)
+          Λ _ l φ).symm
+        (sum_smul_mem_higgsSubalgebra fun _ => conjHiggsField_mem_higgsSubalgebra _ _)
 
 /-!
 
@@ -166,12 +181,14 @@ lemma massWeightPoly_mem_polyRange (x : higgsSubalgebra) :
     massWeightPoly (x : CovJetAlgebra) ∈ higgsSubalgebra.polyRange :=
   higgsSubalgebra.mem_range_mapAlgHom_of_adjoin
     (higgsGenerators_induction
-      (fun l φ => by
-        rw [massWeightPoly_eq_monomial (AlgebraRealization.id.massWeight_covDerivH l φ)]
-        exact Subalgebra.monomial_mem_polyRange (higgsField_mem_higgsSubalgebra l φ))
-      (fun l φ => by
-        rw [massWeightPoly_eq_monomial (AlgebraRealization.id.massWeight_covDerivBarH l φ)]
-        exact Subalgebra.monomial_mem_polyRange (conjHiggsField_mem_higgsSubalgebra l φ)))
+      (fun l φ => mem_polyRange_of_eq
+        (massWeightPoly_eq_monomial
+          (AlgebraRealization.id.massWeight_covDerivH l φ)).symm
+        (Subalgebra.monomial_mem_polyRange (higgsField_mem_higgsSubalgebra l φ)))
+      (fun l φ => mem_polyRange_of_eq
+        (massWeightPoly_eq_monomial
+          (AlgebraRealization.id.massWeight_covDerivBarH l φ)).symm
+        (Subalgebra.monomial_mem_polyRange (conjHiggsField_mem_higgsSubalgebra l φ))))
     x.2
 
 /-!
@@ -205,23 +222,9 @@ open CovJetAlgebra
 
 /-- The action of the global gauge group on the covariant jet algebra of the Higgs
   field. -/
-noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI CovHiggsJetAlgebra where
-  toFun g :=
-    { toFun := fun x => ⟨CovJetAlgebra.repGaugeGroupI g (x : CovJetAlgebra),
-        repGaugeGroupI_mem_higgsSubalgebra g x.2⟩
-      map_add' := fun x y => Subtype.ext (map_add _ _ _)
-      map_smul' := fun c x => Subtype.ext (map_smul _ _ _) }
-  map_one' := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show CovJetAlgebra.repGaugeGroupI 1 (x : CovJetAlgebra) = (x : CovJetAlgebra)
-    rw [map_one]
-    rfl
-  map_mul' g₁ g₂ := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show CovJetAlgebra.repGaugeGroupI (g₁ * g₂) (x : CovJetAlgebra)
-      = CovJetAlgebra.repGaugeGroupI g₁ (CovJetAlgebra.repGaugeGroupI g₂ (x : CovJetAlgebra))
-    rw [map_mul]
-    rfl
+noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI CovHiggsJetAlgebra :=
+  CovJetAlgebra.repGaugeGroupI.restrictSubalgebra CovJetAlgebra.higgsSubalgebra
+    fun g _ hx => CovJetAlgebra.repGaugeGroupI_mem_higgsSubalgebra g hx
 
 @[simp]
 lemma coe_repGaugeGroupI (g : GaugeGroupI) (x : CovHiggsJetAlgebra) :
@@ -229,23 +232,9 @@ lemma coe_repGaugeGroupI (g : GaugeGroupI) (x : CovHiggsJetAlgebra) :
   rfl
 
 /-- The action of the Lorentz group on the covariant jet algebra of the Higgs field. -/
-noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) CovHiggsJetAlgebra where
-  toFun Λ :=
-    { toFun := fun x => ⟨CovJetAlgebra.repLorentzGroup Λ (x : CovJetAlgebra),
-        repLorentzGroup_mem_higgsSubalgebra Λ x.2⟩
-      map_add' := fun x y => Subtype.ext (map_add _ _ _)
-      map_smul' := fun c x => Subtype.ext (map_smul _ _ _) }
-  map_one' := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show CovJetAlgebra.repLorentzGroup 1 (x : CovJetAlgebra) = (x : CovJetAlgebra)
-    rw [map_one]
-    rfl
-  map_mul' Λ₁ Λ₂ := by
-    refine LinearMap.ext fun x => Subtype.ext ?_
-    show CovJetAlgebra.repLorentzGroup (Λ₁ * Λ₂) (x : CovJetAlgebra)
-      = CovJetAlgebra.repLorentzGroup Λ₁ (CovJetAlgebra.repLorentzGroup Λ₂ (x : CovJetAlgebra))
-    rw [map_mul]
-    rfl
+noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) CovHiggsJetAlgebra :=
+  CovJetAlgebra.repLorentzGroup.restrictSubalgebra CovJetAlgebra.higgsSubalgebra
+    fun Λ _ hx => CovJetAlgebra.repLorentzGroup_mem_higgsSubalgebra Λ hx
 
 @[simp]
 lemma coe_repLorentzGroup (Λ : SL(2,ℂ)) (x : CovHiggsJetAlgebra) :

@@ -264,4 +264,27 @@ lemma jetEval_pi (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
   | tmul f p => rfl
   | add a b ha hb => simp only [map_add, Pi.add_apply, ha, hb]
 
+/-- The component of the splitting is the projection on the value factor. Reading off
+  the summand `i` of a jet of a `(∀ i, E i)`-valued field is applying the projection onto
+  that summand to the value factor, the jet-ring factor being untouched. This is the form
+  in which the splitting meets the naturality statements, which are all phrased in terms of
+  linear maps of value spaces. -/
+lemma jetPiEquiv_eq_lTensor_proj (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetPiEquiv E z i = LinearMap.lTensor JetRing (LinearMap.proj i) z := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul f p => rfl
+  | add a b ha hb => simp only [map_add, Pi.add_apply, ha, hb]
+
+/-- Two maps into the jets of a product agree as soon as their species components do.
+  The splitting is an equivalence, so a jet of a `(∀ i, E i)`-valued field is determined by
+  its summands. -/
+lemma jetPi_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
+    {A B : N →ₗ[ℂ] JetRing ⊗[ℂ] (∀ i, E i)}
+    (h : ∀ i, (LinearMap.lTensor JetRing (LinearMap.proj i)).comp A
+      = (LinearMap.lTensor JetRing (LinearMap.proj i)).comp B) : A = B := by
+  refine LinearMap.ext fun n => (jetPiEquiv E).injective (funext fun i => ?_)
+  rw [jetPiEquiv_eq_lTensor_proj, jetPiEquiv_eq_lTensor_proj]
+  exact LinearMap.congr_fun (h i) n
+
 end Pi

@@ -19,21 +19,17 @@ carry two group actions: the jet gauge action `JetAlgebra.repJetGaugeGroupI` and
 Lorentz action `JetAlgebra.repLorentzGroup`. This file establishes how each family
 transforms under each of them.
 
-The work is mechanical but for one point, which is the content of section A. The three
-sector inclusions `includeFermion`, `includeHiggs`, `includeGauge` are equivariant for the
-jet gauge action and for the Lorentz action, because both actions are tensor products of
-the sector actions and each sector action fixes the unit. `includeGauge` was treated when
-the gauge sector was shown to be a gauge field; the other two are proved here, and with
-them every transformation law of a matter symbol is its sector's own law, pushed through an
-algebra map.
+The work is mechanical. The six sector restriction lemmas it rests on — the three sector
+inclusions being equivariant for each of the two actions — are proved where the two actions
+are defined, in `Physlib.Particles.StandardModel.JetAlgebra.GaugeAction` and
+`Physlib.Particles.StandardModel.JetAlgebra.LorentzAction`; with them every transformation
+law of a matter symbol is its sector's own law, pushed through an algebra map.
 
 These are the facts from which the transformation laws of an arbitrary Standard Model
 are obtained, by pushing them along the defining algebra map out of the jet algebra.
 
 ## ii. Key results
 
-- `JetAlgebra.repJetGaugeGroupI_includeHiggs`, `JetAlgebra.repLorentzGroup_includeFermion`
-  and their companions : the sector inclusions are equivariant.
 - `JetAlgebra.transformsIn_higgsField` and its companions : the jet gauge transformation
   of the thirteen families.
 - `JetAlgebra.isLorentzDerivTransforms_higgsField` and its companions : the Lorentz
@@ -41,11 +37,6 @@ are obtained, by pushing them along the defining algebra map out of the jet alge
 
 ## iii. Table of contents
 
-- A. The sector inclusions are equivariant
-  - A.1. The sector inclusions on pure tensors
-  - A.2. The unit of the gauge sector
-  - A.3. Equivariance for the jet gauge action
-  - A.4. Equivariance for the Lorentz action
 - B. The jet gauge transformation of the field symbols
   - B.1. The Higgs families
   - B.2. The fermion families
@@ -67,117 +58,6 @@ namespace StandardModel
 namespace JetAlgebra
 
 open TensorProduct Matrix MatrixGroups Lorentz
-
-/-!
-
-## A. The sector inclusions are equivariant
-
-Both the jet gauge action and the Lorentz action on the jet algebra are tensor products of
-the three sector actions. A sector inclusion puts the unit in the other two factors, so
-equivariance is exactly the statement that the other two actions fix their units, which
-they do — they are actions by algebra maps.
-
--/
-
-/-!
-
-### A.1. The sector inclusions on pure tensors
-
--/
-
-/-- The fermionic inclusion puts the unit in the Higgs and gauge factors. -/
-lemma includeFermion_apply (f : FermionJetAlgebra) :
-    includeFermion f = ((f ⊗ₜ[ℂ] (1 : HiggsJetAlgebra)) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) := rfl
-
-/-- The Higgs inclusion puts the unit in the fermionic and gauge factors. -/
-lemma includeHiggs_apply (h : HiggsJetAlgebra) :
-    includeHiggs h = (((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h) ⊗ₜ[ℂ]
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) := rfl
-
-/-!
-
-### A.2. The unit of the gauge sector
-
--/
-
-/-- The jet gauge action on the complexified gauge sector fixes the unit. -/
-lemma complexRepJetGaugeGroupI_apply_one (U : JetGaugeGroupI) :
-    (GaugeJetAlgebra.complexRepJet localGaugeData) U
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
-  rw [Algebra.TensorProduct.one_def, GaugeJetAlgebra.complexRepJet_tmul,
-    GaugeJetAlgebra.repJet_apply_one]
-
-/-- The Lorentz action on the complexified gauge sector fixes the unit. -/
-lemma complexRepLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    (GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
-  rw [Algebra.TensorProduct.one_def, GaugeJetAlgebra.complexRepLorentzGroup_tmul,
-    GaugeJetAlgebra.repLorentzGroup_apply_one]
-
-/-!
-
-### A.3. Equivariance for the jet gauge action
-
--/
-
-/-- The jet gauge action restricts to the fermionic sector's own action. -/
-lemma repJetGaugeGroupI_includeFermion (U : JetGaugeGroupI) (f : FermionJetAlgebra) :
-    repJetGaugeGroupI U (includeFermion f)
-      = includeFermion (FermionJetAlgebra.repJetGaugeGroupI U f) := by
-  rw [includeFermion_apply, repJetGaugeGroupI_tmul,
-    show (FermionJetAlgebra.repJetGaugeGroupI.tprod HiggsJetAlgebra.repJetGaugeGroupI) U
-        (f ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
-      = (FermionJetAlgebra.repJetGaugeGroupI U f) ⊗ₜ[ℂ]
-        (HiggsJetAlgebra.repJetGaugeGroupI U (1 : HiggsJetAlgebra)) from rfl,
-    show HiggsJetAlgebra.repJetGaugeGroupI U (1 : HiggsJetAlgebra) = 1 from
-      BosonicAlgebra.repJetGaugeGroupI_apply_one _ _ U,
-    complexRepJetGaugeGroupI_apply_one, includeFermion_apply]
-
-/-- The jet gauge action restricts to the Higgs sector's own action. -/
-lemma repJetGaugeGroupI_includeHiggs (U : JetGaugeGroupI) (h : HiggsJetAlgebra) :
-    repJetGaugeGroupI U (includeHiggs h)
-      = includeHiggs (HiggsJetAlgebra.repJetGaugeGroupI U h) := by
-  rw [includeHiggs_apply, repJetGaugeGroupI_tmul,
-    show (FermionJetAlgebra.repJetGaugeGroupI.tprod HiggsJetAlgebra.repJetGaugeGroupI) U
-        ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h)
-      = (FermionJetAlgebra.repJetGaugeGroupI U (1 : FermionJetAlgebra)) ⊗ₜ[ℂ]
-        (HiggsJetAlgebra.repJetGaugeGroupI U h) from rfl,
-    show FermionJetAlgebra.repJetGaugeGroupI U (1 : FermionJetAlgebra) = 1 from
-      FermionicAlgebra.repJetGaugeGroupI_apply_one _ _ U,
-    complexRepJetGaugeGroupI_apply_one, includeHiggs_apply]
-
-/-!
-
-### A.4. Equivariance for the Lorentz action
-
--/
-
-/-- The Lorentz action restricts to the fermionic sector's own action. -/
-lemma repLorentzGroup_includeFermion (Λ : SL(2,ℂ)) (f : FermionJetAlgebra) :
-    repLorentzGroup Λ (includeFermion f)
-      = includeFermion (FermionJetAlgebra.repLorentzGroup Λ f) := by
-  rw [includeFermion_apply, repLorentzGroup_tmul,
-    show (FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup) Λ
-        (f ⊗ₜ[ℂ] (1 : HiggsJetAlgebra))
-      = (FermionJetAlgebra.repLorentzGroup Λ f) ⊗ₜ[ℂ]
-        (HiggsJetAlgebra.repLorentzGroup Λ (1 : HiggsJetAlgebra)) from rfl,
-    show HiggsJetAlgebra.repLorentzGroup Λ (1 : HiggsJetAlgebra) = 1 from
-      BosonicAlgebra.repLorentzGroup_apply_one _ Λ,
-    complexRepLorentzGroup_apply_one, includeFermion_apply]
-
-/-- The Lorentz action restricts to the Higgs sector's own action. -/
-lemma repLorentzGroup_includeHiggs (Λ : SL(2,ℂ)) (h : HiggsJetAlgebra) :
-    repLorentzGroup Λ (includeHiggs h)
-      = includeHiggs (HiggsJetAlgebra.repLorentzGroup Λ h) := by
-  rw [includeHiggs_apply, repLorentzGroup_tmul,
-    show (FermionJetAlgebra.repLorentzGroup.tprod HiggsJetAlgebra.repLorentzGroup) Λ
-        ((1 : FermionJetAlgebra) ⊗ₜ[ℂ] h)
-      = (FermionJetAlgebra.repLorentzGroup Λ (1 : FermionJetAlgebra)) ⊗ₜ[ℂ]
-        (HiggsJetAlgebra.repLorentzGroup Λ h) from rfl,
-    show FermionJetAlgebra.repLorentzGroup Λ (1 : FermionJetAlgebra) = 1 from
-      FermionicAlgebra.repLorentzGroup_apply_one _ Λ,
-    complexRepLorentzGroup_apply_one, includeHiggs_apply]
 
 /-!
 
@@ -204,14 +84,15 @@ theorem transformsIn_higgsField :
     LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI HiggsVec.repJetGaugeGroupI
       higgsField := by
   intro U φ s
-  rw [higgsField_eq_includeHiggs, repJetGaugeGroupI_includeHiggs,
-    show HiggsJetAlgebra.repJetGaugeGroupI U
-        (BosonicAlgebra.iteratedJetDeriv s (BosonicAlgebra.ofField φ))
-      = _ from BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
-        HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s,
-    map_multiset_sum, Multiset.map_map]
-  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
-  rw [Function.comp_apply, ← higgsField_eq_includeHiggs]
+  refine (congrArg (repJetGaugeGroupI U) (higgsField_eq_includeHiggs s φ)).trans ?_
+  refine (repJetGaugeGroupI_includeHiggs U _).trans ?_
+  refine (congrArg includeHiggs
+    (BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
+      HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s)).trans ?_
+  refine (map_multiset_sum includeHiggs _).trans ?_
+  refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
+  exact congrArg Multiset.sum
+    (Multiset.map_congr rfl fun q _ => (higgsField_eq_includeHiggs q.2 _).symm)
 
 /-- The conjugate Higgs symbols transform in the conjugate of the jet gauge representation
   carried by the jets of the Higgs field. -/
@@ -220,14 +101,15 @@ theorem transformsIn_conjHiggsField :
       (JetComponentSpace.repConj HiggsVec.repJetGaugeGroupI)
       conjHiggsField := by
   intro U φ s
-  rw [conjHiggsField_eq_includeHiggs, repJetGaugeGroupI_includeHiggs,
-    show HiggsJetAlgebra.repJetGaugeGroupI U
-        (BosonicAlgebra.iteratedJetDeriv s (BosonicAlgebra.ofConjField φ))
-      = _ from BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-        HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s,
-    map_multiset_sum, Multiset.map_map]
-  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
-  rw [Function.comp_apply, ← conjHiggsField_eq_includeHiggs]
+  refine (congrArg (repJetGaugeGroupI U) (conjHiggsField_eq_includeHiggs s φ)).trans ?_
+  refine (repJetGaugeGroupI_includeHiggs U _).trans ?_
+  refine (congrArg includeHiggs
+    (BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
+      HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s)).trans ?_
+  refine (map_multiset_sum includeHiggs _).trans ?_
+  refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
+  exact congrArg Multiset.sum
+    (Multiset.map_congr rfl fun q _ => (conjHiggsField_eq_includeHiggs q.2 _).symm)
 
 /-!
 
@@ -247,17 +129,21 @@ private lemma transformsIn_species {W : Type} [AddCommGroup W] [Module ℂ W]
     (hF : ∀ s φ, F s φ = fermionSymbol s (Module.Dual.transpose p φ)) :
     LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI repW F := by
   intro U φ s
-  rw [hF, fermionSymbol_eq_includeFermion, repJetGaugeGroupI_includeFermion,
-    show FermionJetAlgebra.repJetGaugeGroupI U
-        (FermionicAlgebra.iteratedJetDeriv s
-          (FermionicAlgebra.ofField (Module.Dual.transpose p φ)))
-      = _ from FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
-        FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s,
-    map_multiset_sum, Multiset.map_map]
+  refine (congrArg (repJetGaugeGroupI U)
+    ((hF s φ).trans (fermionSymbol_eq_includeFermion s _))).trans ?_
+  refine (repJetGaugeGroupI_includeFermion U _).trans ?_
+  refine (congrArg includeFermion
+    (FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
+      FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s)).trans ?_
+  refine (map_multiset_sum includeFermion _).trans ?_
+  refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun q _ => ?_)
-  rw [Function.comp_apply, ← fermionSymbol_eq_includeFermion, hF]
-  exact congrArg (fermionSymbol q.2)
-    (LinearMap.congr_fun (repDualCoeff_comp p hp U⁻¹ q.1) φ)
+  exact (congrArg (fun χ : Module.Dual ℂ FermionSpace =>
+        includeFermion (FermionicAlgebra.iteratedJetDeriv q.2
+          (FermionicAlgebra.ofField χ)))
+      (LinearMap.congr_fun (repDualCoeff_comp p hp U⁻¹ q.1) φ)).trans
+    ((fermionSymbol_eq_includeFermion q.2 _).symm.trans
+      (hF q.2 (GaugeAlgebraRealization.repDualCoeff repW U⁻¹ q.1 φ)).symm)
 
 /-- The base-point Taylor coefficients of two conjugate jet gauge actions are intertwined,
   on the component-function index, by the conjugate of any map of value spaces intertwining
@@ -296,17 +182,23 @@ private lemma transformsIn_conjSpecies {W : Type} [AddCommGroup W] [Module ℂ W
     LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI
       (JetComponentSpace.repConj repW) F := by
   intro U φ s
-  rw [hF, conjFermionSymbol_eq_includeFermion, repJetGaugeGroupI_includeFermion,
-    show FermionJetAlgebra.repJetGaugeGroupI U
-        (FermionicAlgebra.iteratedJetDeriv s
-          (FermionicAlgebra.ofConjField (Module.Dual.transpose (ConjModule.map p) φ)))
-      = _ from FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-        FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s,
-    map_multiset_sum, Multiset.map_map]
+  refine (congrArg (repJetGaugeGroupI U)
+    ((hF s φ).trans (conjFermionSymbol_eq_includeFermion s _))).trans ?_
+  refine (repJetGaugeGroupI_includeFermion U _).trans ?_
+  refine (congrArg includeFermion
+    (FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
+      FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s)).trans ?_
+  refine (map_multiset_sum includeFermion _).trans ?_
+  refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun q _ => ?_)
-  rw [Function.comp_apply, ← conjFermionSymbol_eq_includeFermion, hF]
-  exact congrArg (conjFermionSymbol q.2)
-    (repDualCoeff_repConj_transpose p (fun U' s' => repCoeff_comp p hp U' s') U⁻¹ q.1 φ)
+  exact (congrArg (fun χ : Module.Dual ℂ (ConjModule FermionSpace) =>
+        includeFermion (FermionicAlgebra.iteratedJetDeriv q.2
+          (FermionicAlgebra.ofConjField χ)))
+      (repDualCoeff_repConj_transpose p (fun U' s' => repCoeff_comp p hp U' s')
+        U⁻¹ q.1 φ)).trans
+    ((conjFermionSymbol_eq_includeFermion q.2 _).symm.trans
+      (hF q.2 (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj repW)
+        U⁻¹ q.1 φ)).symm)
 
 
 /-- The symbols of the `i`-th generation down-type quark singlet transform in the jet gauge
@@ -419,14 +311,23 @@ theorem isLorentzDerivTransforms_higgsField :
     IsLorentzDerivTransforms (A := JetAlgebra) repLorentzGroup
       (Representation.trivial ℂ SL(2,ℂ) HiggsVec) higgsField := by
   intro Λ n l φ
+  have hstart : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ HiggsVec),
+      Lorentz.iteratedD jetDeriv jetDeriv_comm m
+          (includeHiggs (BosonicAlgebra.ofField χ)) = higgsField m χ :=
+    fun m χ => (iteratedD_includeHiggs m (BosonicAlgebra.ofField χ)).trans
+      (higgsField_eq_includeHiggs m χ).symm
+  refine (congrArg (repLorentzGroup Λ) (hstart (List.ofFn l) φ).symm).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
     (includeHiggs (BosonicAlgebra.ofField φ))).trans ?_
   refine Finset.sum_congr rfl fun p _ => ?_
-  rw [repLorentzGroup_includeHiggs,
-    show HiggsJetAlgebra.repLorentzGroup Λ (BosonicAlgebra.ofField φ)
-      = BosonicAlgebra.ofField ((Representation.trivial ℂ SL(2,ℂ) HiggsVec).dual Λ φ) from
-      BosonicAlgebra.repLorentzGroup_ofField _ Λ φ]
-  rfl
+  refine congrArg (fun z : JetAlgebra =>
+    (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • z) ?_
+  exact (congrArg (fun z : JetAlgebra =>
+      Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn p) z)
+    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofField φ)).trans
+      (congrArg includeHiggs
+        (BosonicAlgebra.repLorentzGroup_ofField _ Λ φ)))).trans
+    (hstart (List.ofFn p) _)
 
 /-- The conjugate Higgs symbols transform as the derivative symbols of the conjugate of a
   Lorentz scalar. -/
@@ -434,15 +335,24 @@ theorem isLorentzDerivTransforms_conjHiggsField :
     IsLorentzDerivTransforms (A := JetAlgebra) repLorentzGroup
       (Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj conjHiggsField := by
   intro Λ n l φ
+  have hstart : ∀ (m : Multiset (Fin 1 ⊕ Fin 3))
+      (χ : Module.Dual ℂ (ConjModule HiggsVec)),
+      Lorentz.iteratedD jetDeriv jetDeriv_comm m
+          (includeHiggs (BosonicAlgebra.ofConjField χ)) = conjHiggsField m χ :=
+    fun m χ => (iteratedD_includeHiggs m (BosonicAlgebra.ofConjField χ)).trans
+      (conjHiggsField_eq_includeHiggs m χ).symm
+  refine (congrArg (repLorentzGroup Λ) (hstart (List.ofFn l) φ).symm).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
     (includeHiggs (BosonicAlgebra.ofConjField φ))).trans ?_
   refine Finset.sum_congr rfl fun p _ => ?_
-  rw [repLorentzGroup_includeHiggs,
-    show HiggsJetAlgebra.repLorentzGroup Λ (BosonicAlgebra.ofConjField φ)
-      = BosonicAlgebra.ofConjField
-        ((Representation.trivial ℂ SL(2,ℂ) HiggsVec).conj.dual Λ φ) from
-      BosonicAlgebra.repLorentzGroup_ofConjField _ Λ φ]
-  rfl
+  refine congrArg (fun z : JetAlgebra =>
+    (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • z) ?_
+  exact (congrArg (fun z : JetAlgebra =>
+      Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn p) z)
+    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofConjField φ)).trans
+      (congrArg includeHiggs
+        (BosonicAlgebra.repLorentzGroup_ofConjField _ Λ φ)))).trans
+    (hstart (List.ofFn p) _)
 
 /-!
 
@@ -467,18 +377,25 @@ private lemma isLorentzDerivTransforms_species {W : Type} [AddCommGroup W] [Modu
     (hF : ∀ s φ, F s φ = fermionSymbol s (Module.Dual.transpose p φ)) :
     IsLorentzDerivTransforms (A := JetAlgebra) repLorentzGroup repW F := by
   intro Λ n l φ
-  rw [hF]
+  have hstart : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)) (χ : Module.Dual ℂ FermionSpace),
+      Lorentz.iteratedD jetDeriv jetDeriv_comm m
+          (includeFermion (FermionicAlgebra.ofField χ)) = fermionSymbol m χ :=
+    fun m χ => (iteratedD_includeFermion m (FermionicAlgebra.ofField χ)).trans
+      (fermionSymbol_eq_includeFermion m χ).symm
+  refine (congrArg (repLorentzGroup Λ)
+    ((hF (List.ofFn l) φ).trans (hstart (List.ofFn l) _).symm)).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
     (includeFermion (FermionicAlgebra.ofField (Module.Dual.transpose p φ)))).trans ?_
   refine Finset.sum_congr rfl fun q _ => ?_
-  rw [repLorentzGroup_includeFermion,
-    show FermionJetAlgebra.repLorentzGroup Λ
-        (FermionicAlgebra.ofField (Module.Dual.transpose p φ))
-      = FermionicAlgebra.ofField
-        (FermionSpace.repLorentzGroup.dual Λ (Module.Dual.transpose p φ)) from
-      FermionicAlgebra.repLorentzGroup_ofField _ Λ _,
-    hdual, hF]
-  rfl
+  refine congrArg (fun z : JetAlgebra =>
+    (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (q i) (l i) : ℝ) : ℂ)) • z) ?_
+  exact (congrArg (fun z : JetAlgebra =>
+      Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn q) z)
+    ((repLorentzGroup_includeFermion Λ _).trans
+      (congrArg includeFermion
+        ((FermionicAlgebra.repLorentzGroup_ofField _ Λ _).trans
+          (congrArg FermionicAlgebra.ofField (hdual Λ φ)))))).trans
+    ((hstart (List.ofFn q) _).trans (hF (List.ofFn q) (repW.dual Λ φ)).symm)
 
 /-- The Lorentz transformation law of the conjugate symbols of a fermion species: the law
   of the species itself, read on the conjugate representations. -/
@@ -493,19 +410,27 @@ private lemma isLorentzDerivTransforms_conjSpecies {W : Type} [AddCommGroup W]
       (Module.Dual.transpose (ConjModule.map p) φ)) :
     IsLorentzDerivTransforms (A := JetAlgebra) repLorentzGroup repW.conj F := by
   intro Λ n l φ
-  rw [hF]
+  have hstart : ∀ (m : Multiset (Fin 1 ⊕ Fin 3))
+      (χ : Module.Dual ℂ (ConjModule FermionSpace)),
+      Lorentz.iteratedD jetDeriv jetDeriv_comm m
+          (includeFermion (FermionicAlgebra.ofConjField χ)) = conjFermionSymbol m χ :=
+    fun m χ => (iteratedD_includeFermion m (FermionicAlgebra.ofConjField χ)).trans
+      (conjFermionSymbol_eq_includeFermion m χ).symm
+  refine (congrArg (repLorentzGroup Λ)
+    ((hF (List.ofFn l) φ).trans (hstart (List.ofFn l) _).symm)).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
     (includeFermion (FermionicAlgebra.ofConjField
       (Module.Dual.transpose (ConjModule.map p) φ)))).trans ?_
   refine Finset.sum_congr rfl fun q _ => ?_
-  rw [repLorentzGroup_includeFermion,
-    show FermionJetAlgebra.repLorentzGroup Λ
-        (FermionicAlgebra.ofConjField (Module.Dual.transpose (ConjModule.map p) φ))
-      = FermionicAlgebra.ofConjField (FermionSpace.repLorentzGroup.conj.dual Λ
-          (Module.Dual.transpose (ConjModule.map p) φ)) from
-      FermionicAlgebra.repLorentzGroup_ofConjField _ Λ _,
-    hdual, hF]
-  rfl
+  refine congrArg (fun z : JetAlgebra =>
+    (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (q i) (l i) : ℝ) : ℂ)) • z) ?_
+  exact (congrArg (fun z : JetAlgebra =>
+      Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn q) z)
+    ((repLorentzGroup_includeFermion Λ _).trans
+      (congrArg includeFermion
+        ((FermionicAlgebra.repLorentzGroup_ofConjField _ Λ _).trans
+          (congrArg FermionicAlgebra.ofConjField (hdual Λ φ)))))).trans
+    ((hstart (List.ofFn q) _).trans (hF (List.ofFn q) (repW.conj.dual Λ φ)).symm)
 
 
 /-- The symbols of the `i`-th generation down-type quark singlet transform as the derivative

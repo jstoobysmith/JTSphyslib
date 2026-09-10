@@ -31,6 +31,9 @@ value space, a field of `MatterField`, would fail for an infinite family in any 
 ## ii. Key results
 
 - `MatterField.repJetPi` : the jet gauge action of an indexed direct sum.
+- `MatterField.repJetPi_smul` : it is fibrewise, as each summand is.
+- `MatterField.lTensor_proj_repJetPi` : the projection onto a summand intertwines it with
+  that summand's own action.
 - `MatterField.repAlgebraPi` : the infinitesimal gauge action of an indexed direct sum.
 - `MatterField.repCoeff_repJetPi` : its base-point Taylor coefficients are the family of
   those of the summands.
@@ -139,6 +142,29 @@ lemma repJetPi_apply (U : G) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
     repJetPi M U z = (jetPiEquiv fun i => (M i).V).symm
       (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) z i)) := rfl
 
+/-- The jet gauge action of an indexed direct sum is fibrewise. It acts index by
+  index, and each summand is fibrewise, so multiplication by a scalar jet passes through
+  the splitting untouched. This is the field `repJet_smul` of `MatterField.pi`, stated
+  separately so that it can be used without fixing a common mass weight. -/
+lemma repJetPi_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
+    repJetPi M U (χ • z) = χ • repJetPi M U z := by
+  rw [repJetPi_apply, repJetPi_apply,
+    show (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) (χ • z) i))
+        = fun i => χ • (M i).repJet U (jetPiEquiv (fun i => (M i).V) z i) from
+      funext fun i => by rw [jetPiEquiv_smul, (M i).repJet_smul],
+    jetPiEquiv_symm_smul]
+
+/-- A summand is a subrepresentation of the jet gauge action of the direct sum. The
+  projection onto the value space of one summand, applied to the jets, intertwines the
+  summed action with that summand's own: the summed action is the family of the actions,
+  and reading off a summand of the jets is the projection on the value factor. -/
+lemma lTensor_proj_repJetPi (i : ι) (U : G) :
+    (LinearMap.lTensor JetRing (LinearMap.proj i)).comp (repJetPi M U)
+      = ((M i).repJet U).comp (LinearMap.lTensor JetRing (LinearMap.proj i)) := by
+  refine LinearMap.ext fun z => ?_
+  rw [LinearMap.comp_apply, LinearMap.comp_apply, ← jetPiEquiv_eq_lTensor_proj,
+    ← jetPiEquiv_eq_lTensor_proj, repJetPi_apply, LinearEquiv.apply_symm_apply]
+
 /-- **The infinitesimal action of an indexed direct sum**: the family of actions, one on
   each summand. -/
 noncomputable def repAlgebraPi : 𝔤 →ₗ[ℝ] (∀ i, (M i).V) →ₗ[ℂ] (∀ i, (M i).V) where
@@ -211,12 +237,7 @@ noncomputable def pi (w : ℕ) (_h : ∀ i, (M i).massWeight = w) : MatterField 
   repLorentz := repPi fun i => (M i).repLorentz
   repJet := repJetPi M
   repAlgebra := repAlgebraPi M
-  repJet_smul U χ z := by
-    rw [repJetPi_apply, repJetPi_apply,
-      show (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) (χ • z) i))
-          = fun i => χ • (M i).repJet U (jetPiEquiv (fun i => (M i).V) z i) from
-        funext fun i => by rw [jetPiEquiv_smul, (M i).repJet_smul],
-      jetPiEquiv_symm_smul]
+  repJet_smul := repJetPi_smul M
   repAlgebra_isInfinitesimalAction := isInfinitesimalActionOf_repAlgebraPi M
   massWeight := w
 

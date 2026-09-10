@@ -78,8 +78,11 @@ preserves products and negation, so an anticommutation in the jet algebra is one
 /-- An anticommutation transports along the defining map: the map preserves products and
   negation. -/
 private lemma map_anticomm {x y : JetAlgebra} (hxy : x * y = -(y * x)) :
-    h.toAlgHom x * h.toAlgHom y = -(h.toAlgHom y * h.toAlgHom x) := by
-  rw [← map_mul h.toAlgHom, hxy, map_neg h.toAlgHom, map_mul h.toAlgHom]
+    h.toAlgHom x * h.toAlgHom y = -(h.toAlgHom y * h.toAlgHom x) :=
+  (map_mul h.toAlgHom x y).symm.trans
+    ((congrArg h.toAlgHom hxy).trans
+      ((map_neg h.toAlgHom _).trans
+        (congrArg Neg.neg (map_mul h.toAlgHom y x))))
 
 /-- The law `A_comm_A` of a Standard Model, obtained from the corresponding law of the
   jet algebra by pushing it along the defining algebra map. -/

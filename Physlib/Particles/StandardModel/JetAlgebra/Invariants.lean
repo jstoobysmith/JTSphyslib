@@ -32,6 +32,8 @@ derivatives.
 ## ii. Key results
 
 - `JetAlgebra.gaugeField` : the gauge-field generators inside the full jet algebra.
+- `JetAlgebra.gaugeField_eq_ιConnection` : they are the connection generators of the field
+  datum.
 - `JetAlgebra.gaugeRealization` : the jet algebra of the Standard Model realizes the
   gauge-boson jet algebra.
 - `JetAlgebra.invariant_mem_adjoin_fieldStrength` : the classification of gauge
@@ -41,8 +43,7 @@ derivatives.
 
 - A. The gauge field inside the jet algebra
   - A.1. The gauge-field generators
-  - A.2. Iterated derivatives through the gauge inclusion
-  - A.3. Centrality
+  - A.2. Centrality
 - B. The gauge realization
 - C. The classification of gauge invariants
 
@@ -74,44 +75,46 @@ open TensorProduct Matrix MatrixGroups
 -/
 
 /-- The gauge-field derivative symbols of the jet algebra of the Standard Model: the
-  gauge sector's symbols, included into the full algebra. -/
+  gauge sector's symbols, included into the full algebra. It is written as a composite of
+  two existing linear maps rather than as an anonymous constructor, so that its real
+  linearity is inherited rather than proved by rewriting inside the jet algebra. -/
 noncomputable def gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
-    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] JetAlgebra where
-  toFun φ := includeGauge ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ)
-  map_add' φ ψ := by rw [map_add, map_add]
-  map_smul' r φ := by
-    rw [map_smul, ← algebraMap_smul ℂ r ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ), map_smul,
-      algebraMap_smul, RingHom.id_apply]
+    Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] JetAlgebra :=
+  (includeGauge.toLinearMap.restrictScalars ℝ).comp
+    ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ)
 
 @[simp]
 lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
     gaugeField s μ φ = includeGauge ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ) := rfl
 
+/-- The gauge-field symbols `∂_s A_μ^φ` are the connection generators of the field datum:
+  the derivative label, the spacetime index and the adjoint covector are unchanged, and the
+  real generator enters the complexification with the scalar one. -/
+@[simp]
+lemma gaugeField_eq_ιConnection (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ GaugeAlgebra) :
+    gaugeField s μ φ
+      = fieldData.ιConnection (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
+          GaugeBoson.componentDual GaugeAlgebra
+            (Lorentz.CoVector.basis.dualBasis μ) φ) := by
+  have hsector : (GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ
+      = (1 : ℂ) ⊗ₜ[ℝ] SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace GaugeAlgebra)
+          (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
+            GaugeBoson.componentDual GaugeAlgebra
+              (Lorentz.CoVector.basis.dualBasis μ) φ) :=
+    (GaugeJetAlgebra.gaugeField_apply s μ φ).trans
+      ((GaugeJetAlgebra.iteratedD_complexJetDeriv_one_tmul s
+            ((GaugeJetAlgebra.ofA GaugeAlgebra) μ φ)).trans
+        (congrArg (fun g : GaugeJetAlgebra GaugeAlgebra => (1 : ℂ) ⊗ₜ[ℝ] g)
+          (GaugeJetAlgebra.iteratedJetDeriv_ofA s μ φ)))
+  exact ((gaugeField_apply s μ φ).trans
+      (congrArg (fun y : ℂ ⊗[ℝ] GaugeJetAlgebra GaugeAlgebra => includeGauge y) hsector)).trans
+    (includeGauge_one_tmul_ι _)
+
 /-!
 
-### A.2. Iterated derivatives through the gauge inclusion
-
--/
-
-/-- The iterated total derivative acts on the gauge sector through the gauge sector's
-  own iterated derivative. -/
-lemma iteratedD_includeGauge (s : Multiset (Fin 1 ⊕ Fin 3))
-    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
-    Lorentz.iteratedD jetDeriv jetDeriv_comm s (includeGauge y)
-      = includeGauge (Lorentz.iteratedD (GaugeJetAlgebra.complexJetDeriv GaugeAlgebra)
-          GaugeJetAlgebra.complexJetDeriv_comm s y) := by
-  induction s using Multiset.induction_on with
-  | empty =>
-    rw [Lorentz.iteratedD_zero, Lorentz.iteratedD_zero, LinearMap.id_apply,
-      LinearMap.id_apply]
-  | cons κ s ih =>
-    rw [Lorentz.iteratedD_cons, Lorentz.iteratedD_cons, LinearMap.comp_apply,
-      LinearMap.comp_apply, ih, jetDeriv_includeGauge]
-
-/-!
-
-### A.3. Centrality
+### A.2. Centrality
 
 -/
 

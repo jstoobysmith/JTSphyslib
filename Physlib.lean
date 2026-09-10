@@ -157,6 +157,7 @@ public import Physlib.FluidDynamics.ThermodynamicCauchyFlow.Bernoulli
 public import Physlib.FluidDynamics.ThermodynamicCauchyFlow.Isentropic
 public import Physlib.LatticeQFT.Basic
 public import Physlib.Mathematics.AlgebraGeneration
+public import Physlib.Mathematics.AlgebraRepresentation
 public import Physlib.Mathematics.Calculus.AdjFDeriv
 public import Physlib.Mathematics.Calculus.Divergence
 public import Physlib.Mathematics.Calculus.Gradient
@@ -171,6 +172,7 @@ public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
 public import Physlib.Mathematics.Distribution.Basic
 public import Physlib.Mathematics.Distribution.PowMul
+public import Physlib.Mathematics.ExteriorAlgebra
 public import Physlib.Mathematics.FDerivCurry
 public import Physlib.Mathematics.Fin
 public import Physlib.Mathematics.Fin.Involutions
@@ -388,6 +390,8 @@ public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.JetAlgebra.Realization
+public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Basic
+public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Structure
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction

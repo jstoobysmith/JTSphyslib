@@ -148,6 +148,46 @@ noncomputable def includeConnection :
       T.LocalFieldAlgebra :=
   Algebra.TensorProduct.includeRight
 
+/-- The matter factor of the local field algebra, on which the two matter inclusions
+  land. -/
+abbrev MatterAlgebra : Type :=
+  ExteriorAlgebra ℂ T.FermionGenerators ⊗[ℂ] SymmetricAlgebra ℂ T.BosonGenerators
+
+variable {T}
+
+/-- The unit of the matter factor is the tensor of the two units. It is recorded here, at
+  an abstract datum, because unfolding it at a concrete one has to see through the
+  symmetric algebra's ring congruence, which is not exposed, and is prohibitively slow. -/
+lemma one_matterAlgebra :
+    (1 : T.MatterAlgebra)
+      = (1 : ExteriorAlgebra ℂ T.FermionGenerators) ⊗ₜ[ℂ]
+        (1 : SymmetricAlgebra ℂ T.BosonGenerators) :=
+  Algebra.TensorProduct.one_def
+
+/-- The fermionic inclusion, written out as a pure tensor with units in the other two
+  factors. Recorded at an abstract datum for the same reason. -/
+lemma includeFermion_apply (a : ExteriorAlgebra ℂ T.FermionGenerators) :
+    T.includeFermion a
+      = ((a ⊗ₜ[ℂ] (1 : SymmetricAlgebra ℂ T.BosonGenerators))
+          ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤))
+        : T.LocalFieldAlgebra) := rfl
+
+/-- The bosonic inclusion, written out as a pure tensor. -/
+lemma includeBoson_apply (b : SymmetricAlgebra ℂ T.BosonGenerators) :
+    T.includeBoson b
+      = (((1 : ExteriorAlgebra ℂ T.FermionGenerators) ⊗ₜ[ℂ] b)
+          ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤))
+        : T.LocalFieldAlgebra) := rfl
+
+/-- The connection inclusion, written out as a pure tensor. -/
+lemma includeConnection_apply
+    (c : ℂ ⊗[ℝ] SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤)) :
+    T.includeConnection c
+      = ((1 : T.MatterAlgebra) ⊗ₜ[ℂ] c : T.LocalFieldAlgebra) :=
+  Algebra.TensorProduct.includeRight_apply c
+
+variable (T)
+
 /-- All the fermionic generators of the datum at once, the whole fermionic generator space
   inside the algebra. Fermi statistics is a condition on this map, not on the species maps
   separately. -/

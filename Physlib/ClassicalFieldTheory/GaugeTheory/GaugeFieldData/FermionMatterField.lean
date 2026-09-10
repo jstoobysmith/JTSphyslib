@@ -38,6 +38,8 @@ than the component space of this one field.
 
 - `GaugeFieldData.fermionMatterField` : the matter field of all the fermions of the
   theory.
+- `GaugeFieldData.repJetFermionModule` : the action of the jets of gauge transformations
+  on the jets of the fermionic module, needing no common mass weight.
 - `GaugeFieldData.fermionMatterField_repLorentz_inclFermionValue`,
   `GaugeFieldData.fermionMatterField_repAlgebra_inclFermionValue` : each species is a
   subrepresentation of it.
@@ -107,6 +109,36 @@ variable {T}
 @[simp]
 lemma repLorentzFermionModule_apply (Λ : SL(2,ℂ)) (v : T.FermionModule) (i : T.FermionSpecies) :
     T.repLorentzFermionModule Λ v i = (T.fermion i).repLorentz Λ (v i) := rfl
+
+variable (T)
+
+/-- The action of the jets of gauge transformations on the jets of the fermionic
+  module, acting species by species. Like `repLorentzFermionModule` it is typed on
+  `T.FermionModule` itself, so that it can be spoken of without fixing a common mass
+  weight; the gauge action of a theory whose fermions carry different mass dimensions is
+  perfectly well defined, only its packaging as one `MatterField` is not. -/
+noncomputable def repJetFermionModule :
+    Representation ℂ G (JetRing ⊗[ℂ] T.FermionModule) :=
+  MatterField.repJetPi T.fermion
+
+variable {T}
+
+/-- The jet gauge action on the fermionic module is fibrewise, as each species is. -/
+lemma repJetFermionModule_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] T.FermionModule) :
+    T.repJetFermionModule U (χ • z) = χ • T.repJetFermionModule U z :=
+  MatterField.repJetPi_smul T.fermion U χ z
+
+/-- A fermionic species is a subrepresentation of the jet gauge action on the fermionic
+  module: the projection onto its value space intertwines the two actions on the jets. -/
+lemma lTensor_projFermionValue_repJetFermionModule (i : T.FermionSpecies) (U : G) :
+    (LinearMap.lTensor JetRing (T.projFermionValue i)).comp (T.repJetFermionModule U)
+      = ((T.fermion i).repJet U).comp
+        (LinearMap.lTensor JetRing (T.projFermionValue i)) :=
+  MatterField.lTensor_proj_repJetPi T.fermion i U
+
+/-- The jet gauge action of the fermionic matter field is that of the fermionic module. -/
+lemma fermionMatterField_repJet (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w) :
+    (T.fermionMatterField w h).repJet = T.repJetFermionModule := rfl
 
 /-- The Lorentz action of the fermionic matter field is that of the fermionic module. -/
 lemma fermionMatterField_repLorentz (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w) :
