@@ -6,10 +6,11 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.ConstantGaugeAction
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.LorentzAction
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.MassDim
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.ConstantAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.MassDim
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
+public import Physlib.QFT.PerturbationTheory.FieldStatistics.Basic
 /-!
 # The field algebras of a matter field
 
@@ -26,8 +27,9 @@ from the file carrying the structure itself.
 
 ## ii. Key results
 
-- `MatterField.BosonicJetAlgebra`, `MatterField.FermionicJetAlgebra` : the two canonical
-  field algebras of a matter field.
+- `MatterField.FieldAlgebra` : the field algebra of a matter field of a given statistics —
+  the bosonic algebra for `FieldStatistic.bosonic`, the fermionic algebra for
+  `FieldStatistic.fermionic`.
 - `MatterField.repJetAlgebra` : the jet gauge action on a field algebra of the field.
 - `MatterField.repConstant` : the global gauge action, along `jets.ofConstant`.
 - `MatterField.repLorentzGroup` : the Lorentz action on a field algebra of the field.
@@ -35,7 +37,7 @@ from the file carrying the structure itself.
 
 ## iii. Table of contents
 
-- A. The bosonic and fermionic jet algebras
+- A. The field algebra
 - B. The actions on a field algebra of the matter field
 
 -/
@@ -52,15 +54,17 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-!
 
-## A. The bosonic and fermionic jet algebras
+## A. The field algebra
 
 -/
 
-/-- The bosonic jet algebra of a matter field. -/
-abbrev BosonicJetAlgebra : Type := BosonicAlgebra M.V
-
-/-- The fermionic jet algebra of a matter field. -/
-abbrev FermionicJetAlgebra : Type := FermionicAlgebra M.V
+open FieldStatistic in
+/-- The field algebra of a matter field of a given statistics: the bosonic algebra
+  `BosonicAlgebra M.V` for `bosonic`, the exterior algebra `FermionicAlgebra M.V` for
+  `fermionic`. -/
+abbrev FieldAlgebra : FieldStatistic → Type
+  | bosonic => BosonicAlgebra M.V
+  | fermionic => FermionicAlgebra M.V
 
 /-!
 

@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational

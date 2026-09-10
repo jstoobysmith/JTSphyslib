@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDeriv
 /-!
 # The Lorentz action on the field algebra
 

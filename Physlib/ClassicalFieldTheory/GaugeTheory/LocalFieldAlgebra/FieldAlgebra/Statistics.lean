@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Basic
 public import Physlib.Mathematics.SymmetricAlgebra
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 /-!
@@ -22,8 +22,9 @@ field:
   space — the component functions anticommute.
 
 Both are instances of `IsFieldAlgebra`, so the gauge and Lorentz actions, the total
-derivative and the mass-weight scaling of `Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra`
-apply to both. This file contains only what is specific to each: the definition, the
+derivative and the mass-weight scaling of
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra` apply to both.
+This file contains only what is specific to each: the definition, the
 `IsFieldAlgebra` instance, the commutation relations of the generators, and the inclusion
 of a species `comap` (contravariant in the target space, hence not part of the
 single-space interface).

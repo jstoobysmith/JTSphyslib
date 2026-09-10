@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.GaugeAction
 /-!
 # Constant gauge transformations on a field algebra
 

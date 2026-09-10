@@ -7,7 +7,7 @@ module
 
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.JetRep
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 /-!
 # The gauge action on the jet component space
 

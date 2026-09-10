@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.Jet
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Jet
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.RepresentationTheory.Basic

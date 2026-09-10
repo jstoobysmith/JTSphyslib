@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.Matter.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 /-!
 # Gauge tensors in a representation

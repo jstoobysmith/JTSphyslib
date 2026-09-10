@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 /-!
 # The `SU(2)` Weyl element

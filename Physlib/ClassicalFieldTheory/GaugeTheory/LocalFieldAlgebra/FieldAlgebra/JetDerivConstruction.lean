@@ -5,10 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.JetDerivClass
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDerivClass
 public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.Algebra.TrivSqZeroExt.Basic
-public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
 /-!
 # The total derivative on the bosonic and fermionic algebras: constructions
 
@@ -16,7 +16,7 @@ public import Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.Statistics
 
 The construction of the formal total derivative `∂_μ` on the two concrete field algebras,
 and the proof that each is a `HasJetDeriv` — after which everything in
-`Physlib.ClassicalFieldTheory.JetAlgebra.FieldAlgebra.JetDeriv` applies to both.
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDeriv` applies to both.
 
 * On the bosonic algebra it is the derivation of the symmetric algebra extending the shift
   `∂_s φ_α ↦ ∂_{s + {μ}} φ_α` of the component functions.

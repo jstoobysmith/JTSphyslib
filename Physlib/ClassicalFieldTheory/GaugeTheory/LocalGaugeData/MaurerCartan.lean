@@ -44,12 +44,15 @@ jet, and the truncation filtration it defines, is the subject of
   symmetrized data determines the base-point Taylor data of `ω`.
 - `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero` : the
   base-point half of Maurer–Cartan triangularity.
+- `LocalGaugeData.maurerCartan_eq_zero_iff` : in a faithful package, the Maurer–Cartan form
+  vanishes exactly on the constant jets.
 
 ## iii. Table of contents
 
 - A. The structural equation at the base point
 - B. The symmetrized Maurer–Cartan form
 - C. Determination of the Maurer–Cartan form by its symmetrized coefficients
+- D. Faithful packages and the Maurer–Cartan form
 
 -/
 
@@ -275,5 +278,19 @@ lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : G) (n : ℕ
     omega
   exact jets.evalLie_iteratedDeriv_bracket_congr (s.erase ν) _ _ _ _
     (fun p hp => ih p μ (hlt p hp)) (fun p hp => ih p ν (hlt p hp))
+
+/-!
+
+## D. Faithful packages and the Maurer–Cartan form
+
+-/
+
+/-- In a faithful package, the Maurer–Cartan form vanishes exactly on the constant jets. -/
+lemma maurerCartan_eq_zero_iff [jets.Faithful] (U : G) :
+    jets.maurerCartan U = 0 ↔ U = jets.ofConstant (jets.eval U) := by
+  refine ⟨Faithful.eq_ofConstant_of_maurerCartan_eq_zero, fun h => ?_⟩
+  funext μ
+  rw [h, jets.maurerCartan_ofConstant]
+  rfl
 
 end LocalGaugeData

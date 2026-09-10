@@ -181,4 +181,6 @@ include h in
 lemma gauge_mul (U : G) (b₁ b₂ : B) : repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂ :=
   h.repJet_mul U b₁ b₂
 
+TODO (lines := 177-182) (date := 2026-09-10) "This lemma can be removed."
+
 end GaugeAlgebraRealization

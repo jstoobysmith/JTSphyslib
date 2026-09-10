@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Physlib.Relativity.DerivAlgebra
 public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
