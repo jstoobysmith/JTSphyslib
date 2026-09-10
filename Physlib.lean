@@ -7,6 +7,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebr
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.LorentzAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.MassDim
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.MassWeightPoly
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.GaugeLaw
@@ -332,7 +333,6 @@ public import Physlib.Particles.StandardModel.GaugeAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeAlgebra.Basis
 public import Physlib.Particles.StandardModel.GaugeAlgebra.JetGaugeAlgebra
 public import Physlib.Particles.StandardModel.GaugeAlgebra.RootDecomposition
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint

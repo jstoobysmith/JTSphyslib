@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Generators
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassWeightPoly
-public import Physlib.Particles.StandardModel.GaugeBosons.GaugeJetAlgebra.MassWeightPoly
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.MassWeightPoly
 /-!
 # The mass-weight polynomial on the jet algebra of the Standard Model
 
