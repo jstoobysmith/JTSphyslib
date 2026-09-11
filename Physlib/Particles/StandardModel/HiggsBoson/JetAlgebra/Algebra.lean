@@ -60,6 +60,10 @@ namespace StandardModel
   they commute — the Higgs is a boson. -/
 abbrev HiggsJetAlgebra : Type := BosonicAlgebra HiggsVec.matterField
 
+TODO (lines := 56-62) (date := 2026-09-11) "We should no longer
+  need this result, we should just be able to use the general results
+  from gauge Theory."
+
 namespace HiggsJetAlgebra
 
 /-!

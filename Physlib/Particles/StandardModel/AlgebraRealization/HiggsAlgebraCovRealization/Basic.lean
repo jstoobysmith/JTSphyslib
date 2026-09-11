@@ -129,6 +129,10 @@ structure HiggsAlgebraCovRealization (B : Type) [Ring B] [Algebra ℂ B]
   repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
     repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
 
+TODO (lines := 96-131) (date := 2026-09-11) "Should be generalized
+  to a general gauge theory to `ScalarAlgebraCovRealization`,
+  and that instance used here."
+
 set_option linter.unusedVariables false
 namespace HiggsAlgebraCovRealization
 

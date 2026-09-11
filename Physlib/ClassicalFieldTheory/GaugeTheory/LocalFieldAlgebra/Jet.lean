@@ -32,6 +32,10 @@ provides the basic toolkit for them, independent of any gauge group:
 open TensorProduct MvPowerSeries
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
+
+TODO (date := 2026-09-11) "If we actually need anything in this file, it should
+  be related to `JetComponentSpace` of a `MatterField` and it should appear in there."
+
 /-!
 
 ## `V`-valued jets

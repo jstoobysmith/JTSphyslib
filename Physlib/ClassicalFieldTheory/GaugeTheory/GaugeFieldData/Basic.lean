@@ -146,4 +146,7 @@ abbrev FermionValue (i : T.FermionSpecies) : Type := (T.fermion i).V
 /-- The value space of a bosonic species. -/
 abbrev BosonValue (j : T.BosonSpecies) : Type := (T.boson j).V
 
+TODO (lines := 143-148) (date := 2026-09-11) "I think these names should likely be
+  changed to something more descriptive."
+
 end GaugeFieldData

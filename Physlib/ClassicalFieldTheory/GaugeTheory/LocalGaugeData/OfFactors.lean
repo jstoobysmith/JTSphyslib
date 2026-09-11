@@ -164,6 +164,9 @@ def 𝔤J : List FactorSpec → Type
   | [f] => f.𝔤J
   | f :: g :: gs => f.𝔤J × 𝔤J (g :: gs)
 
+TODO (lines := 142-166) (date := 2026-09-11) "These could all
+  likely be defined with the typical List.foldr construction, or List.prod of similar."
+
 instance : Bracket Unit Unit := ⟨fun _ _ => ()⟩
 
 instance : LieRing Unit where
