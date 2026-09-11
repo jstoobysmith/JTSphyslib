@@ -21,71 +21,60 @@ Of course, there is no question of the actual correctness of these theorems. Thu
 
 ## 2. Overview
 
-In this paper we formalize the Standard Model Lagrangian. To do that we must first say what a Lagrangian is, and it is worth building that up from what is actually in front of us.
 
-At the point `x` we have the fields: the gauge bosons, the fermions and the Higgs. We also have their conjugates, and all of their derivatives — `∂_μ H`, `∂_μ∂_ν H`, and so on. These are the ingredients, and a Lagrangian is built from nothing else.
+The basic ingredient of a gauge theory is the
+underlying gauge group. The full gauge group
+of a theory is usually encoded by some class
+of functions from spacetime to the global
+gauge group `G₀`. Physicists are usually agnostic
+about precisely what 'class' should to be considered.
+The reason for this, is that physicists usually only
+care about the local action of the full gauge group on the fields.
+For such a local action, one only needs certain bits of information
+about the whole gauge group, and in particular only
+can be pretty agnostic about the class of functions used.
 
-To build one we add these ingredients, scale them by complex numbers, and multiply them together. Those three operations are exactly what an associative algebra over `ℂ` provides — so whatever the fields are, they are elements of such an algebra, which we call `B`.
+The primiary role of the type `LocalGaugeData G 𝔤 G₀ 𝔤J` is to encode exactly this
+local gauge data needed. Starting with the input data.
+The group `G₀` represents the global gauge group of the theory.
+The the Standard Model, this is `SU(3) × SU(2) × U(1)` (here we ignore
+the possibility of discrete quotients).  The Lie algebra `𝔤`
+is the Lie algebra of the global gauge group `G₀`.
 
-Nothing further about B is ever used: no norm, no topology, no involution, and no commitment as to what its elements are. We therefore do not fix it. B is an arbitrary `ℂ`-algebra, and the fields are an arbitrary family of its elements, labelled the way the Standard Model fields are labelled.
+The group `GJ` is slightly more complicated. Locally, at
+a point `x` in spacetime, the
+full gauge group appears through its action on fields
+and finite-order derivatives. This action only
+depends on the value of a gauge transformation
+and its finite derivatives at the point `x`. In
+otherwords, the possible taylor series at the point `x`.
+If we assume that all smooth functions are valid gauge transformations
+(the only time we make an assumption about the underlying class
+of fields), then Borel's theorem tells us that every
+possible taylor series (within the
+constraints of the group) can arise from some smooth gauge transformation
+(even if they have convergence zero). All such taylor
+series form a group, which is precisely the local gauge group `GJ`.
+How best to define `GJ` best depends on the group `G₀` and thus,
+we include it here as input data.
 
-What we do need to know is how those elements behave inside `B`:
+The Lie algebra `𝔤J` is to `𝔤` what `GJ` is to `G₀`.
 
-- how they multiply past one another — the fermionic ones anticommute, the bosonic ones commute;
-- how the gauge group acts on them;
-- how the Lorentz group acts on them;
-- what mass dimension each one carries.
-
-`IsStandardModel` is precisely this package: an algebra `B`, a family of elements in it, an action of the gauge group and an action of the Lorentz group, together with the requirement that they fit together as the Standard Model fields do.
-
-
-
-
-**The data structures**
-
-The main story is carried by three data structures. The first two are predicates — conditions on an arbitrary algebra B and a family of operators in it — while the third is a concrete algebra.
-
-- `IsStandardModel`: the condition that a family of operators in an algebra `B` behaves like the Standard Model fields — the gauge bosons, fermions and Higgs, together with their conjugates and all their derivatives, at a single implicit space-time point. It records how these operators commute, and how the full gauge group and the Lorentz group act on them.
-- `IsCovStandardModel`: the same in covariant form. The gauge bosons are replaced by their field strengths, every derivative by a covariant derivative, and correspondingly only the global gauge group acts rather than the full one.
-- `JetAlgebra`: the smallest concrete `B` containing all of these operators, subject to no relations beyond their statistics — bosonic generators commute, fermionic ones anticommute.
-
-**The connecting theorems**
-
-These three structures are interconnected to one another through a series of theorems:
-1. `IsStandardModel.isCovStandardModel` — Every `IsStandardModel` defines a `IsCovStandardModel`, through the field strengths and the covariant derivatives.
-2. `JetAlgebra.isStandardModel` — Within `JetAlgebra` there is an instance of `IsStandardModel`.
-3. `JetAlgebra.isStandardModel_fieldAlgebra_eq_top` — Furthermore, the adjoin of the fields in `IsStandardModel` fully describe `JetAlgebra`.
-
-
-**The reduction of invariants**
-
-These connecting theorems can be used
-to form a reduction in the invariances:
-1. `IsStandardModel.forall_repJet_and_repLorentz_eq_iff` — Every invariant under the full gauge group and the Lorentz group defined through the fields in `IsStandardModel` descends from an invariant of `IsCovStandardModel` under the global gauge group and the Lorentz group. This means we only have to deal with covariant derivatives, the field strengths, the global gauge group, and the Lorentz group when looking for invariants.
-2. `JetAlgebra.isStandardModel_fieldAlgebra_eq_top`(corollary of this) — Every invariant of `JetAlgebra` is an invariant defined through `IsStandardModel`.
-
-
-**The invariants theorems**
-
-Working back up the chain, we get an explict form of the invariants. Each of these give the explicit classification of the terms in the SM lagrangian up to total-derivatives, in the corresponding (general) contexts.
-1. `IsCovStandardModel.mem_massWeightSubmoduleLE_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian` — The full classification of the invariants of `IsCovStandardModel` up to mass-dimension 4. They are spanned by
-    - the constant `1`;
-    - the Higgs mass term `H†H`;
-    - the Higgs quartic `(H†H)²`, the Higgs kinetic term `∂^μH† ∂_μH`, and the two box terms `(□H†)H` and `H†□H`;
-    - the gauge kinetic terms `G^a_μν G^a^μν`, `W^a_μν W^a^μν`, `B_μν B^μν`, the corresponding θ-terms `ε^μνρσ G^a_μν G^a_ρσ` and its `W`, `B` analogues, and the contractions of the twice-derived hypercharge field `∂_μ∂_ν B_ρσ`;
-    - the fermion kinetic terms `ψ̄ σ̄^μ ∂_μ ψ`, one for each of the ten species and each pair of generations;
-    - the Yukawa couplings `H†Q d̄`, `ε H Q ū`, `H†L ē` and their conjugates, over each pair of generations.
-2. `IsStandardModel.mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian` — From this, the full classification of the invariants of `IsStandardModel` up to mass-dimension 4.
-3. `JetAlgebra.mem_massWeightSubmoduleLE_eight_and_invariant_iff_lagrangian` — Then, from this, the full classification of the invariants of `JetAlgebra`.
+Let `G₀` be `SU(2)`, so that `𝔤` is the traceless self-adjoint matrices.
+Because `SU(2)` is a matrix Lie group, a gauge transformation is a
+matrix of functions on spacetime, and its Taylor series at `x` is just
+the Taylor series of each of its four entries. The type of all
+such (formal) Taylor series is what we call `JetRing`.
+Since a Taylor series of a product of functions is the
+product of their Taylor series, the traditional group law
+carries over unchanged: it is still matrix multiplication, only now
+with entries in `JetRing` rather than in `ℂ`. The same goes for the
+equations `U† U = 1` and `det U = 1` which cut `SU(2)` out, and reading
+them over `JetRing` is what gives us `GJ`. Likewise `𝔤J` is the
+traceless self-adjoint matrices over `JetRing`.
 
 
-**Supporting API**
-All of the above are supported by API around the Gauge group, the Lorentz group, and the individual matter fields. We discuss the main API here:
-- *Lorentz group invariants*: Explicit classification of the full-group invariants in an algebra of terms which transform in certain representations.
-- *Global gauge group invariants*: Explicit classification of the full-group invariants in an algebra of terms which transform in certain representations.
-- *Fermions*: Specification of the underlying vector spaces, the Lorentz group action, the local and global gauge group actions on them.
-- *Higgs*: Specification of the underlying vector space of the Higgs, the Lorentz group action, the local and global gauge group actions on it.
-- *Gauge boson*: Specification of the Gauge algebra, the adjoint action, Maurer-Cartan terms etc, in this specific setting.
+
 
 ## 3. The details
 
