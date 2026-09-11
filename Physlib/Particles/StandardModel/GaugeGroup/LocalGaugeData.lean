@@ -14,7 +14,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 ## i. Overview
 
 The generic theory of gauge and matter fields is stated against a supplied local-gauge-data
-package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J`. The Standard Model already carries all of its
+package `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J`. The Standard Model already carries all of its
 data, for the jet gauge group `JetGaugeGroupI` of `SU(3) × SU(2) × U(1)` with jet Lie algebra
 `JetGaugeAlgebra`, global group `GaugeGroupI` and gauge algebra `GaugeAlgebra`.
 
@@ -72,7 +72,7 @@ is registered globally.
   is an existing Standard Model construction and every proof field an existing Standard
   Model lemma. -/
 noncomputable def localGaugeData :
-    LocalGaugeData JetGaugeGroupI GaugeAlgebra GaugeGroupI JetGaugeAlgebra where
+    LocalGaugeData GaugeGroupI GaugeAlgebra JetGaugeGroupI JetGaugeAlgebra where
   eval := JetGaugeGroupI.eval
   ofConstant := JetGaugeGroupI.ofConstant
   eval_ofConstant := JetGaugeGroupI.eval_ofConstant

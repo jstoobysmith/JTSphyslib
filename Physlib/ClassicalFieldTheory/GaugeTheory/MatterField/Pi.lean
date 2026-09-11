@@ -58,9 +58,9 @@ open Matrix MatrixGroups TensorProduct
 
 namespace MatterField
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 /-!
 
@@ -119,8 +119,8 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι] (M : ι → MatterField jets)
   indexed analogue of `Representation.prod`, which Mathlib provides only in the binary
   case. -/
 noncomputable def repPi {W : ι → Type} [∀ i, AddCommGroup (W i)]
-    [∀ i, Module ℂ (W i)] (ρ : ∀ i, Representation ℂ G (W i)) :
-    Representation ℂ G (∀ i, W i) where
+    [∀ i, Module ℂ (W i)] (ρ : ∀ i, Representation ℂ GJ (W i)) :
+    Representation ℂ GJ (∀ i, W i) where
   toFun U := LinearMap.piMap fun i => ρ i U
   map_one' := by
     refine LinearMap.ext fun x => funext fun i => ?_
@@ -134,13 +134,13 @@ noncomputable def repPi {W : ι → Type} [∀ i, AddCommGroup (W i)]
 
 /-- **The jet gauge action of an indexed direct sum**: the family of actions, read
   through the identification of the jets of `∀ i, (M i).V` with the family of jets. -/
-noncomputable def repJetPi : Representation ℂ G (JetRing ⊗[ℂ] (∀ i, (M i).V)) where
+noncomputable def repJetPi : Representation ℂ GJ (JetRing ⊗[ℂ] (∀ i, (M i).V)) where
   toFun U := LinearEquiv.conjRingEquiv (jetPiEquiv fun i => (M i).V).symm
     (repPi (fun i => (M i).repJet) U)
   map_one' := by rw [map_one, map_one]
   map_mul' U W := by rw [map_mul, map_mul]
 
-lemma repJetPi_apply (U : G) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
+lemma repJetPi_apply (U : GJ) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
     repJetPi M U z = (jetPiEquiv fun i => (M i).V).symm
       (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) z i)) := rfl
 
@@ -148,7 +148,7 @@ lemma repJetPi_apply (U : G) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
   index, and each summand is fibrewise, so multiplication by a scalar jet passes through
   the splitting untouched. This is the field `repJet_smul` of `MatterField.pi`, stated
   separately so that it can be used without fixing a common mass weight. -/
-lemma repJetPi_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
+lemma repJetPi_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
     repJetPi M U (χ • z) = χ • repJetPi M U z := by
   rw [repJetPi_apply, repJetPi_apply,
     show (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) (χ • z) i))
@@ -160,7 +160,7 @@ lemma repJetPi_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).V
   projection onto the value space of one summand, applied to the jets, intertwines the
   summed action with that summand's own: the summed action is the family of the actions,
   and reading off a summand of the jets is the projection on the value factor. -/
-lemma lTensor_proj_repJetPi (i : ι) (U : G) :
+lemma lTensor_proj_repJetPi (i : ι) (U : GJ) :
     (LinearMap.lTensor JetRing (LinearMap.proj i)).comp (repJetPi M U)
       = ((M i).repJet U).comp (LinearMap.lTensor JetRing (LinearMap.proj i)) := by
   refine LinearMap.ext fun z => ?_
@@ -188,7 +188,7 @@ lemma repAlgebraPi_apply (c : 𝔤) :
 /-- The base-point Taylor coefficients of the summed jet action are the family of the
   coefficients of the summands: `jetOfConstant`, `jetIteratedDeriv` and `jetEval` all act
   index by index through `jetPiEquiv`. -/
-lemma repCoeff_repJetPi (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+lemma repCoeff_repJetPi (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (repJetPi M) U x =
       LinearMap.piMap fun i => GaugeAlgebraRealization.repCoeff (M i).repJet U x := by
   refine LinearMap.ext fun p => funext fun i => ?_

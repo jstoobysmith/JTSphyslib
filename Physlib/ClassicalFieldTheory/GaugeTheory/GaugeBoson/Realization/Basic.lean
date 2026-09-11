@@ -45,7 +45,7 @@ differentiates `s` times with the Leibniz rule:
 where `C(x,y)` is the multinomial coefficient of the splitting and `|` denotes
 evaluation at the base point. All the data on the right is carried by the *jet* of the
 gauge transformation, which is why the gauge representation is a representation of the
-jet group `G` and not merely of its value group `G₀`.
+jet group `GJ` and not merely of its value group `G₀`.
 
 In the formalization, `h.A s μ φ` is the symbol `∂_s A_μ^a` contracted with a dual adjoint
 vector `φ`; `∂_x (Ad_{g⁻¹})^a_b|` acting on the dual index is `jets.adjointDualCoeff g⁻¹ x φ`;
@@ -70,9 +70,9 @@ covector index and that each derivative slot transforms as a covector.
 
 set_option linter.unusedSectionVars false
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
@@ -81,8 +81,8 @@ open TensorProduct Matrix MatrixGroups Lorentz
   Lorentz group, with both groups acting on the whole of `B` by algebra endomorphisms.
   The gauge-field symbols of `B` are the images of the jet algebra's symbols,
   `GaugeAlgebraRealization.A`, and they satisfy the jet algebra's laws by transport. -/
-structure GaugeAlgebraRealization (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (B : Type) [Ring B]
-    [Algebra ℂ B] (repJet : Representation ℂ G B) (repLorentz : Representation ℂ SL(2,ℂ) B)
+structure GaugeAlgebraRealization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B : Type) [Ring B]
+    [Algebra ℂ B] (repJet : Representation ℂ GJ B) (repLorentz : Representation ℂ SL(2,ℂ) B)
     where
   /-- The algebra map out of the gauge-boson jet algebra: it places the gauge-boson
     symbols, and every polynomial expression in them, inside `B`. -/
@@ -96,13 +96,13 @@ structure GaugeAlgebraRealization (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (B :
   A_eq : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
     A s μ φ = toAlgHom (GaugeJetAlgebra.gaugeField 𝔤 s μ φ)
   /-- The map is equivariant for the jet gauge group. -/
-  map_repJet : ∀ (U : G) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤),
+  map_repJet : ∀ (U : GJ) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤),
     toAlgHom (GaugeJetAlgebra.complexRepJet jets U x) = repJet U (toAlgHom x)
   /-- The map is equivariant for the Lorentz group. -/
   map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤),
     toAlgHom (GaugeJetAlgebra.complexRepLorentzGroup 𝔤 Λ x) = repLorentz Λ (toAlgHom x)
   /-- The jet gauge group acts on the whole of `B` by algebra endomorphisms. -/
-  repJet_mul : ∀ (U : G) (b₁ b₂ : B), repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂
+  repJet_mul : ∀ (U : GJ) (b₁ b₂ : B), repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂
   /-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
   repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
     repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
@@ -111,7 +111,7 @@ namespace GaugeAlgebraRealization
 
 open GaugeJetAlgebra
 
-variable {B : Type} [Ring B] [Algebra ℂ B] {repJet : Representation ℂ G B}
+variable {B : Type} [Ring B] [Algebra ℂ B] {repJet : Representation ℂ GJ B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
 
 variable (jets) in
@@ -163,7 +163,7 @@ lemma lorentz_apply (Λ : SL(2,ℂ)) (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3))
   convolution of the dual adjoint Taylor coefficients of `U⁻¹` against lower symbols (the
   multiset antidiagonal carrying the multinomial coefficients), plus the base-point value of
   the `s`-th derivative of the Maurer–Cartan form of `U⁻¹`. -/
-lemma gauge_apply_deriv (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+lemma gauge_apply_deriv (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repJet U (h.A s μ φ) =
       (s.antidiagonal.map fun p => h.A p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
@@ -178,7 +178,7 @@ lemma gauge_apply_deriv (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕
 include h in
 /-- The gauge action preserves products: gauge transformations act on the algebra of local
   expressions as algebra homomorphisms. -/
-lemma gauge_mul (U : G) (b₁ b₂ : B) : repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂ :=
+lemma gauge_mul (U : GJ) (b₁ b₂ : B) : repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂ :=
   h.repJet_mul U b₁ b₂
 
 TODO (lines := 177-182) (date := 2026-09-10) "This lemma can be removed."

@@ -45,9 +45,9 @@ namespace BosonicAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
 
 /-!
 
@@ -59,7 +59,7 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   applied to the gauge action on the jet component space. The fibrewise action on the jets and its
   fibrewise-linearity are fields of `M`. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ G (BosonicAlgebra M) where
+    Representation ℂ GJ (BosonicAlgebra M) where
   toFun U :=
     (SymmetricAlgebra.map (JetComponentSpace.repJet M U)).toLinearMap
   map_one' := by
@@ -69,18 +69,18 @@ noncomputable def repJetGaugeGroupI :
       AlgHom.comp_toLinearMap]
 
 lemma repJetGaugeGroupI_apply
-    (U : G) (x : BosonicAlgebra M) :
+    (U : GJ) (x : BosonicAlgebra M) :
     repJetGaugeGroupI M U x =
       SymmetricAlgebra.map (JetComponentSpace.repJet M U) x := rfl
 
 @[simp]
 lemma repJetGaugeGroupI_apply_one
-    (U : G) :
+    (U : GJ) :
     repJetGaugeGroupI M U (1 : BosonicAlgebra M) = 1 := by
   simp [repJetGaugeGroupI_apply]
 
 lemma repJetGaugeGroupI_apply_mul
-    (U : G) (x y : BosonicAlgebra M) :
+    (U : GJ) (x y : BosonicAlgebra M) :
     repJetGaugeGroupI M U (x * y) =
       repJetGaugeGroupI M U x * repJetGaugeGroupI M U y := by
   simp [repJetGaugeGroupI_apply]
@@ -88,7 +88,7 @@ lemma repJetGaugeGroupI_apply_mul
 /-- On a component function the jet gauge action is the action on the component space. -/
 @[simp]
 lemma repJetGaugeGroupI_ι
-    (U : G) (v : JetComponentSpace M) :
+    (U : GJ) (v : JetComponentSpace M) :
     repJetGaugeGroupI M U (SymmetricAlgebra.ι ℂ _ v) =
       SymmetricAlgebra.ι ℂ _ (JetComponentSpace.repJet M U v) := by
   rw [repJetGaugeGroupI_apply, SymmetricAlgebra.map_apply_ι]
@@ -96,7 +96,7 @@ lemma repJetGaugeGroupI_ι
 /-- The jet gauge action as an algebra homomorphism: a gauge transformation acts on a
   Lagrangian term factor by factor. -/
 noncomputable def repJetGaugeGroupIAlgHom
-    (U : G) : BosonicAlgebra M →ₐ[ℂ] BosonicAlgebra M where
+    (U : GJ) : BosonicAlgebra M →ₐ[ℂ] BosonicAlgebra M where
   toFun := repJetGaugeGroupI M U
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
@@ -119,7 +119,7 @@ the *value* of the gauge transformation at the base point alone. So `ofField` an
   by the contragredient of the value of the gauge transformation at the base point; no
   derivative of the gauge jet contributes. -/
 lemma repJetGaugeGroupI_ofField
-    (U : G) (φ : Module.Dual ℂ M.V) :
+    (U : GJ) (φ : Module.Dual ℂ M.V) :
     repJetGaugeGroupI M U (ofField φ) =
       ofField (Module.Dual.transpose (jetEval ∘ₗ (M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofField_apply, repJetGaugeGroupI_ι, ofField_apply]
@@ -133,7 +133,7 @@ lemma repJetGaugeGroupI_ofField
   `JetComponentSpace.repConj rep` on the
   jets of the conjugate field — which is the physicists' `φ̄ ↦ φ̄ U†`. -/
 lemma repJetGaugeGroupI_ofConjField
-    (U : G) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    (U : GJ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     repJetGaugeGroupI M U (ofConjField φ) =
       ofConjField (Module.Dual.transpose
         (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet U⁻¹).comp jetOfConstant) φ) := by

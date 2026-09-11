@@ -11,8 +11,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAl
 
 ## i. Overview
 
-A jet gauge group `G` contains the constant — that is, global — gauge transformations as
-the image of a homomorphism `ι : G₀ →* G` from the value group `G₀` (for the Standard Model,
+A jet gauge group `GJ` contains the constant — that is, global — gauge transformations as
+the image of a homomorphism `ι : G₀ →* GJ` from the value group `G₀` (for the Standard Model,
 `JetGaugeGroupI.ofConstant`). Restricting the jet gauge action `FieldAlgebra.repJet` along
 `ι` gives the action of the global gauge group on the field algebra, which is diagonal in
 the derivative label: it is the action whose invariants the classification theorems
@@ -32,14 +32,14 @@ namespace FieldAlgebra
 
 open TensorProduct
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
 variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
-variable (ι : G₀ →* G)
+variable (ι : G₀ →* GJ)
 
 /-- The action of the constant — that is, global — gauge transformations on the field
-  algebra: the restriction of the jet gauge action along the inclusion `ι : G₀ →* G` of the
+  algebra: the restriction of the jet gauge action along the inclusion `ι : G₀ →* GJ` of the
   constant jets. -/
 noncomputable def repConstant :
     Representation ℂ G₀ A :=

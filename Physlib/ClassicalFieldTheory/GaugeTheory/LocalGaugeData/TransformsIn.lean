@@ -21,7 +21,7 @@ lower symbols, with no inhomogeneous term. This is the generalization of
 property preserved by the covariant derivative in
 `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction`.
 
-Nothing here depends on the local gauge data beyond the group `G` acting; the definition
+Nothing here depends on the local gauge data beyond the group `GJ` acting; the definition
 lives in the `LocalGaugeData` namespace with the transformation laws that consume it.
 
 ## ii. Key results
@@ -43,7 +43,7 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
-variable {G : Type} [Group G]
+variable {GJ : Type} [Group GJ]
 
 namespace LocalGaugeData
 
@@ -56,21 +56,21 @@ open GaugeAlgebraRealization
   coefficients against lower symbols, with no inhomogeneous term — the generalization
   of `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and
   the form consumed by `AlgebraRealization`. -/
-def TransformsIn (repGauge : Representation ℂ G B)
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
+def TransformsIn (repGauge : Representation ℂ GJ B)
+    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) : Prop :=
-  ∀ (U : G) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
+  ∀ (U : GJ) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
     repGauge U (F s φ) =
       (s.antidiagonal.map fun p => F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
 
-variable {repGauge : Representation ℂ G B}
-  {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+variable {repGauge : Representation ℂ GJ B}
+  {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
   {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
 
 /-- A matter gauge tensor transforms at the base point through the dual coefficient of the
   base-point value of the gauge jet alone: the antidiagonal of the empty multiset has a
   single term. -/
-lemma TransformsIn.repGauge_zero (hF : TransformsIn repGauge rep F) (U : G)
+lemma TransformsIn.repGauge_zero (hF : TransformsIn repGauge rep F) (U : GJ)
     (φ : Module.Dual ℂ V) :
     repGauge U (F 0 φ) = F 0 (repDualCoeff rep U⁻¹ 0 φ) := by
   simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton,
@@ -82,9 +82,9 @@ lemma TransformsIn.repGauge_zero (hF : TransformsIn repGauge rep F) (U : G)
   representation's zeroth Taylor coefficient is the identity on such jets. -/
 lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (hF : TransformsIn repGauge rep F)
-    (hrep : ∀ {W : G}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
-    {U : G} (hU : jets.eval U = 1) (φ : Module.Dual ℂ V) :
+    {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (hF : TransformsIn repGauge rep F)
+    (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
+    {U : GJ} (hU : jets.eval U = 1) (φ : Module.Dual ℂ V) :
     repGauge U (F 0 φ) = F 0 φ := by
   have hinv : jets.eval U⁻¹ = 1 := by rw [map_inv, hU, inv_one]
   rw [hF.repGauge_zero U φ,
@@ -95,8 +95,8 @@ lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieA
   are the jets with trivial base-point value, so `repGauge_eq_of_eval_eq_one` applies. -/
 lemma TransformsIn.repGauge_eq_of_mem_truncationKer_zero {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (hF : TransformsIn repGauge rep F)
-    (hrep : ∀ {W : G}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
+    {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (hF : TransformsIn repGauge rep F)
+    (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
     (U : jets.truncationKer 0) (φ : Module.Dual ℂ V) :
     repGauge U.1 (F 0 φ) = F 0 φ :=
   hF.repGauge_eq_of_eval_eq_one hrep (jets.mem_truncationKer_zero_iff.mp U.2) φ

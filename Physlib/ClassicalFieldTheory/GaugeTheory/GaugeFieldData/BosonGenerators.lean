@@ -92,9 +92,9 @@ open Matrix MatrixGroups TensorProduct DirectSum
 
 namespace GaugeFieldData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 
@@ -191,7 +191,7 @@ variable (T)
   species through the fibrewise jet action of its matter field. Both the fibrewise
   hypothesis and the finite dimensionality of the value space that
   `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
-noncomputable def repJetBoson : Representation ℂ G T.BosonGenerators where
+noncomputable def repJetBoson : Representation ℂ GJ T.BosonGenerators where
   toFun U := T.assembleBoson fun i => (T.inclBoson i).comp
     (JetComponentSpace.repJet (T.boson i) U)
   map_one' := bosonGenerators_hom_ext fun i x => by simp
@@ -200,7 +200,7 @@ noncomputable def repJetBoson : Representation ℂ G T.BosonGenerators where
 variable {T}
 
 @[simp]
-lemma repJetBoson_inclBoson (U : G) (i : T.BosonSpecies)
+lemma repJetBoson_inclBoson (U : GJ) (i : T.BosonSpecies)
     (x : JetComponentSpace (T.boson i)) :
     T.repJetBoson U (T.inclBoson i x)
       = T.inclBoson i
@@ -294,7 +294,7 @@ variable {T}
 
 @[simp]
 lemma jetDerivBoson_inclBoson (μ : Fin 1 ⊕ Fin 3) (i : T.BosonSpecies)
-    (x : JetComponentSpace (T.BosonValue i)) :
+    (x : JetComponentSpace (T.boson i)) :
     T.jetDerivBoson μ (T.inclBoson i x)
       = T.inclBoson i (JetComponentSpace.jetDeriv μ x) :=
   assembleBoson_inclBoson _ i x
@@ -308,7 +308,7 @@ lemma jetDerivBoson_comm (μ ν : Fin 1 ⊕ Fin 3) :
     rw [LinearMap.comp_apply, LinearMap.comp_apply, jetDerivBoson_inclBoson,
       jetDerivBoson_inclBoson, jetDerivBoson_inclBoson, jetDerivBoson_inclBoson]
     exact congrArg (T.inclBoson i)
-      (LinearMap.congr_fun (JetComponentSpace.jetDeriv_comm (V := T.BosonValue i) μ ν) x)
+      (LinearMap.congr_fun (JetComponentSpace.jetDeriv_comm (M := T.boson i) μ ν) x)
 
 /-- The derivative shift is a Lorentz vector on the bosonic generator space: it is one
   on each species, and both operations are species-diagonal. -/
@@ -439,23 +439,23 @@ lemma bosonGeneratorsEquiv_repLorentzBoson (w : ℕ) (h : ∀ i, (T.boson i).mas
 /-- The identification is equivariant for the jet gauge action. The species-diagonal
   action of the jets of gauge transformations on the generator space is the action on the
   component functions of the single boson field, for the same reason as in the fermionic
-  case: each species is a subrepresentation of the bosonic module. No common mass weight is
-  needed, and both halves of the component space, with every derivative label, are
-  covered. -/
-lemma bosonGeneratorsEquiv_repJetBoson (U : G) (y : T.BosonGenerators) :
-    T.bosonGeneratorsEquiv (T.repJetBoson U y)
-      = JetComponentSpace.repJet T.repJetBosonModule repJetBosonModule_smul U
-        (T.bosonGeneratorsEquiv y) := by
-  have key : T.bosonGeneratorsEquiv.toLinearMap.comp (T.repJetBoson U)
-      = (JetComponentSpace.repJet T.repJetBosonModule repJetBosonModule_smul U).comp
-        T.bosonGeneratorsEquiv.toLinearMap := by
+  case: each species is a subrepresentation of the bosonic module. The common mass weight
+  enters only through the packaging of the bosonic module as a matter field; both halves
+  of the component space, with every derivative label, are covered. -/
+lemma bosonGeneratorsEquiv_repJetBoson (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    (U : GJ) (y : T.BosonGenerators) :
+    T.bosonGeneratorsEquiv w h (T.repJetBoson U y)
+      = JetComponentSpace.repJet (T.bosonMatterField w h) U
+        (T.bosonGeneratorsEquiv w h y) := by
+  have key : (T.bosonGeneratorsEquiv w h).toLinearMap.comp (T.repJetBoson U)
+      = (JetComponentSpace.repJet (T.bosonMatterField w h) U).comp
+        (T.bosonGeneratorsEquiv w h).toLinearMap := by
     refine bosonGenerators_hom_ext fun j x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       repJetBoson_inclBoson, bosonGeneratorsEquiv_inclBoson,
       bosonGeneratorsEquiv_inclBoson]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repJet
-      T.repJetBosonModule repJetBosonModule_smul (T.boson j).repJet
-      (T.boson j).repJet_smul (T.projBosonValue j)
+      (T.projBosonField w h j)
       (fun U' => lTensor_projBosonValue_repJetBosonModule j U') U) x
   exact LinearMap.congr_fun key y
 
@@ -482,19 +482,21 @@ lemma bosonGeneratorsEquiv_massWeightScaleBoson (w : ℕ)
 /-- The identification carries the derivative shift across. The species-diagonal shift
   of the derivative label on the generator space is the shift on the component functions of
   the single boson field: `comap` is natural in the value space, and the shift touches only
-  the derivative label, so neither operation sees which species a generator came from. No
-  common mass weight is needed. -/
-lemma bosonGeneratorsEquiv_jetDerivBoson (μ : Fin 1 ⊕ Fin 3) (y : T.BosonGenerators) :
-    T.bosonGeneratorsEquiv (T.jetDerivBoson μ y)
-      = JetComponentSpace.jetDeriv μ (T.bosonGeneratorsEquiv y) := by
-  have key : T.bosonGeneratorsEquiv.toLinearMap.comp (T.jetDerivBoson μ)
-      = (JetComponentSpace.jetDeriv μ).comp T.bosonGeneratorsEquiv.toLinearMap := by
+  the derivative label, so neither operation sees which species a generator came from. The
+  common mass weight enters only through the packaging of the bosonic module as a matter
+  field. -/
+lemma bosonGeneratorsEquiv_jetDerivBoson (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w)
+    (μ : Fin 1 ⊕ Fin 3) (y : T.BosonGenerators) :
+    T.bosonGeneratorsEquiv w h (T.jetDerivBoson μ y)
+      = JetComponentSpace.jetDeriv μ (T.bosonGeneratorsEquiv w h y) := by
+  have key : (T.bosonGeneratorsEquiv w h).toLinearMap.comp (T.jetDerivBoson μ)
+      = (JetComponentSpace.jetDeriv μ).comp (T.bosonGeneratorsEquiv w h).toLinearMap := by
     refine bosonGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       jetDerivBoson_inclBoson, bosonGeneratorsEquiv_inclBoson,
       bosonGeneratorsEquiv_inclBoson]
     exact LinearMap.congr_fun
-      (JetComponentSpace.comap_jetDeriv (T.projBosonValue i) μ) x
+      (JetComponentSpace.comap_jetDeriv (T.projBosonField w h i) μ) x
   exact LinearMap.congr_fun key y
 
 end GaugeFieldData

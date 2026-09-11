@@ -76,14 +76,14 @@ set_option linter.unusedSectionVars false
 open Matrix MatrixGroups TensorProduct MvPowerSeries
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -488,7 +488,7 @@ lemma exists_le_of_mem_adjoin_symbols_union (S : Set B) {x : B}
   `U • sym(∂_s h.A)^φ = (1/|s|) ∑_{μ ∈ s} ∑_{x+y=s−μ} ∂_y A_μ^{∂_x Ad*(U⁻¹) φ}`
   `                   + φ( sym(ω(U⁻¹))_s |₀ )`. -/
 lemma repGauge_symmetrizedDeriv
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (symmetrizedDeriv s h.A φ) =
       (1/(s.card : ℝ)) • (s.map fun μ =>
         ((s - {μ}).antidiagonal.map fun p =>
@@ -694,7 +694,7 @@ lemma repGauge_iteratedCovDerivAdjoint_fieldStrength_of_mem_truncationKer_zero
 
 include h in
 /-- The gauge action fixes the unit, being multiplicative and invertible. -/
-lemma repGauge_one (U : G) :
+lemma repGauge_one (U : GJ) :
     repGauge U (1 : B) = 1 := by
   have h2 : repGauge U (repGauge U⁻¹ (1 : B)) = 1 := by
     have h3 : repGauge U * repGauge U⁻¹ = 1 := by
@@ -707,7 +707,7 @@ lemma repGauge_one (U : G) :
 
 /-- The gauge action of a jet as a ring endomorphism of the algebra of local
   expressions. -/
-def repGaugeRingHom (U : G) : B →+* B where
+def repGaugeRingHom (U : GJ) : B →+* B where
   toFun := repGauge U
   map_one' := repGauge_one h U
   map_mul' := h.gauge_mul U
@@ -715,7 +715,7 @@ def repGaugeRingHom (U : G) : B →+* B where
   map_add' := map_add _
 
 @[simp]
-lemma repGaugeRingHom_apply (U : G) (x : B) :
+lemma repGaugeRingHom_apply (U : GJ) (x : B) :
     repGaugeRingHom h U x = repGauge U x := rfl
 
 /-!
@@ -1173,7 +1173,7 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set B)
       (φ : Module.Dual ℝ 𝔤), ∀ y ∈ S, Commute y (h.A p μ φ))
     (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, repGauge U.1 y = y)
     {x : B} (hx : x ∈ Algebra.adjoin ℂ (symbols h.A ∪ S))
-    (hinv : ∀ U : G, repGauge U x = x) :
+    (hinv : ∀ U : GJ, repGauge U x = x) :
     x ∈ Algebra.adjoin ℂ (tower h.A ∪ S) := by
   -- bound the symbol order of the invariant, working relative to the full tower
   obtain ⟨n, hxn⟩ := exists_le_of_mem_adjoin_symbols_union (tower h.A ∪ S)
@@ -1222,7 +1222,7 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set (ℂ ⊗[ℝ] Ga
     (hx : x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
       ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
       b = gaugeField 𝔤 p μ φ} ∪ S))
-    (hinv : ∀ U : G, complexRepJet jets U x = x) :
+    (hinv : ∀ U : GJ, complexRepJet jets U x = x) :
     x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
       ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
       b = GaugeAlgebraRealization.iteratedCovDerivAdjoint (gaugeField 𝔤) l

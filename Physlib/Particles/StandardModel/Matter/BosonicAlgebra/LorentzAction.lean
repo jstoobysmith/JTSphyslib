@@ -45,9 +45,9 @@ namespace BosonicAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
 
 /-!
 

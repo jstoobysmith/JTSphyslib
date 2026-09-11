@@ -36,14 +36,14 @@ set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -152,7 +152,7 @@ lemma fieldStrength_swap
   the antidiagonal, and the derived Maurer–Cartan shifts cancel the bracket-shift
   convolution through the all-orders structural equation. -/
 theorem repGauge_fieldStrength
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (fieldStrength h.A μ ν s φ) =
       (s.antidiagonal.map fun p =>
@@ -237,7 +237,7 @@ theorem transformsInAdjoint_fieldStrength
   the homogeneous law — the field strength transforms by the base-point dual adjoint
   action of `U⁻¹` on the adjoint index. -/
 lemma repGauge_fieldStrength_zero
-    (U : G) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (U : GJ) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (fieldStrength h.A μ ν 0 φ) =
       fieldStrength h.A μ ν 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
   rw [h.repGauge_fieldStrength U 0 μ ν φ, Multiset.antidiagonal_zero,

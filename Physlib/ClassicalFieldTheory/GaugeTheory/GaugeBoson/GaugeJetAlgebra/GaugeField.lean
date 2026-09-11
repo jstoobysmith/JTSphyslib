@@ -33,9 +33,9 @@ realization of the jet algebra in another algebra inherits.
 
 set_option linter.unusedSectionVars false
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
@@ -83,7 +83,7 @@ variable (jets) in
 /-- The gauge law of the jet algebra: a jet `U` acts on `∂_s A_μ^φ` by the Leibniz
   convolution of the dual adjoint Taylor coefficients of `U⁻¹` against lower symbols, plus
   the base-point value of the `s`-th derivative of the Maurer–Cartan form of `U⁻¹`. -/
-lemma repJet_gaugeField (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+lemma repJet_gaugeField (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     complexRepJet jets U (gaugeField 𝔤 s μ φ) =
       (s.antidiagonal.map fun p => gaugeField 𝔤 p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum

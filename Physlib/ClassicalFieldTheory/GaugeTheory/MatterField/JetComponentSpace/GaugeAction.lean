@@ -13,9 +13,9 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 
 ## i. Overview
 
-For a matter field valued in `V` with an action of a group `G` on its jets
-`JetRing ⊗[ℂ] V`, this file constructs the induced action of `G` on the jet component
-space. Here `G` is any group — for the Standard Model it is the jet gauge group
+For a matter field valued in `V` with an action of a group `GJ` on its jets
+`JetRing ⊗[ℂ] V`, this file constructs the induced action of `GJ` on the jet component
+space. Here `GJ` is any group — for the Standard Model it is the jet gauge group
 `JetGaugeGroupI`, but nothing here depends on that.
 
 The construction needs two hypotheses on the jet action `rep`:
@@ -50,9 +50,9 @@ open Matrix MatrixGroups TensorProduct
 
 variable {V : Type _} [AddCommGroup V] [Module ℂ V]
 variable {W : Type _} [AddCommGroup W] [Module ℂ W]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 /-- **The action of a coefficient on the symbols.** A coefficient `g ⊗ T` acts by
 `jetRingAction g` on the derivative label — the Leibniz convolution redistributing
@@ -126,16 +126,16 @@ Multiplicativity is bookkeeping: `coeff_mul_of_smul_comm` makes the coefficient
 multiplicative, `symbolAction_mul` makes its action an anti-homomorphism, and the inverse
 flips that back. -/
 noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z) :
-    Representation ℂ G (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V) where
+    Representation ℂ GJ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V) where
   toFun U := symbolAction (jetCoeff rep U⁻¹)
   map_one' := by
-    have h1 : jetCoeff rep (1 : G)⁻¹ = 1 := by
+    have h1 : jetCoeff rep (1 : GJ)⁻¹ = 1 := by
       refine lift_injective fun v => ?_
       rw [jetCoeff_spec rep]
-      show rep (1 : G)⁻¹ ((1 : JetRing) ⊗ₜ[ℂ] v) = (1 : JetRing) ⊗ₜ[ℂ] v
+      show rep (1 : GJ)⁻¹ ((1 : JetRing) ⊗ₜ[ℂ] v) = (1 : JetRing) ⊗ₜ[ℂ] v
       rw [inv_one, map_one]
       rfl
     rw [h1, Algebra.TensorProduct.one_def, symbolAction_tmul,
@@ -157,10 +157,10 @@ the base point.** No derivative of the gauge jet contributes: the symbol `ψ_φ`
 by the contragredient of `rep U⁻¹` restricted to constant jets and evaluated at the base
 point. -/
 lemma repDual_one_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
-    (U : G) (φ : Module.Dual ℂ V) :
+    (U : GJ) (φ : Module.Dual ℂ V) :
     repDual rep hlin U ((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ)
       = (1 : DerivAlgebraComplex) ⊗ₜ[ℂ]
         Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ := by
@@ -187,16 +187,16 @@ its fibrewise linearity `M.repJet_smul`, and the freeness and finiteness of `M.V
 the matter field rather than a bare value space is what removes all three from the
 argument list. -/
 noncomputable def repJet (M : MatterField jets) :
-    Representation ℂ G (JetComponentSpace M) :=
+    Representation ℂ GJ (JetComponentSpace M) :=
   (repDual M.repJet M.repJet_smul).prod
     (repDual (repConj M.repJet) (repConj_smul_comm M.repJet_smul))
 
 @[simp]
-lemma repJet_fst (M : MatterField jets) (U : G) (x : JetComponentSpace M) :
+lemma repJet_fst (M : MatterField jets) (U : GJ) (x : JetComponentSpace M) :
     (repJet M U x).1 = repDual M.repJet M.repJet_smul U x.1 := rfl
 
 @[simp]
-lemma repJet_snd (M : MatterField jets) (U : G) (x : JetComponentSpace M) :
+lemma repJet_snd (M : MatterField jets) (U : GJ) (x : JetComponentSpace M) :
     (repJet M U x).2
       = repDual (repConj M.repJet) (repConj_smul_comm M.repJet_smul) U x.2 := rfl
 
@@ -255,13 +255,13 @@ action; the group element is inverted on both sides alike, so no convention is d
 by it. -/
 lemma comap_comp_repDual [Module.Free ℂ V] [Module.Finite ℂ V]
     [Module.Free ℂ W] [Module.Finite ℂ W]
-    (repV : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hV : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V), repV U (χ • z) = χ • repV U z)
-    (repW : Representation ℂ G (JetRing ⊗[ℂ] W))
-    (hW : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] W), repW U (χ • z) = χ • repW U z)
+    (repV : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hV : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), repV U (χ • z) = χ • repV U z)
+    (repW : Representation ℂ GJ (JetRing ⊗[ℂ] W))
+    (hW : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] W), repW U (χ • z) = χ • repW U z)
     (f : V →ₗ[ℂ] W)
-    (hf : ∀ U : G, (LinearMap.lTensor JetRing f).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing f)) (U : G) :
+    (hf : ∀ U : GJ, (LinearMap.lTensor JetRing f).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor JetRing f)) (U : GJ) :
     (TensorProduct.map LinearMap.id (Module.Dual.transpose f)).comp (repDual repW hW U)
       = (repDual repV hV U).comp
         (TensorProduct.map LinearMap.id (Module.Dual.transpose f)) := by
@@ -281,8 +281,8 @@ of linear maps on the whole component space, not a statement about undifferentia
 symbols. The conjugate half is the unconjugated argument applied to `repConj M.repJet` and
 `repConj N.repJet`, whose intertwining is `JetComponentSpace.lTensor_comp_repConj`. -/
 lemma comap_comp_repJet {M N : MatterField jets} (f : M.V →ₗ[ℂ] N.V)
-    (hf : ∀ U : G, (LinearMap.lTensor JetRing f).comp (M.repJet U)
-      = (N.repJet U).comp (LinearMap.lTensor JetRing f)) (U : G) :
+    (hf : ∀ U : GJ, (LinearMap.lTensor JetRing f).comp (M.repJet U)
+      = (N.repJet U).comp (LinearMap.lTensor JetRing f)) (U : GJ) :
     (comap f).comp (repJet N U) = (repJet M U).comp (comap f) := by
   show (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
       (TensorProduct.map LinearMap.id

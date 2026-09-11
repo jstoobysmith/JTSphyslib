@@ -12,7 +12,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 ## i. Overview
 
 The Maurer–Cartan form `ω_μ(U) = i (∂_μ U) U⁻¹` of a package
-`jets : LocalGaugeData G 𝔤 G₀ 𝔤J` is the field `jets.maurerCartan`, subject to the cocycle
+`jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J` is the field `jets.maurerCartan`, subject to the cocycle
 law `maurerCartan_cocycle`, its value `maurerCartan_ofConstant` on constants, and the
 flatness (structural) equation `maurerCartan_structure`. This file develops what follows
 from those laws alone, for any package: nothing here mentions a particular gauge group.
@@ -60,9 +60,9 @@ jet, and the truncation filtration it defines, is the subject of
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
 
 /-!
 
@@ -74,7 +74,7 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   the `s`-th derivative of `∂_μ ω_ν − ∂_ν ω_μ + ⁅ω_μ, ω_ν⁆ = 0`, with the bracket
   expanded by the iterated Leibniz rule. -/
 lemma evalLie_iteratedDeriv_maurerCartan_structure
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
     jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.maurerCartan U ν)) =
       jets.evalLie (jets.iteratedDeriv (ν ::ₘ s) (jets.maurerCartan U μ))
       - (s.antidiagonal.map fun p =>
@@ -98,12 +98,12 @@ lemma evalLie_iteratedDeriv_maurerCartan_structure
 /-- The symmetrized Maurer–Cartan form `ω̄_r(U) = (1/|r|) ∑_{μ ∈ r} ∂_{r − {μ}} ω_μ(U)`:
   the average, over the directions of `r`, of the Maurer–Cartan form in one direction
   differentiated along the remaining ones. -/
-noncomputable def symmetrizedMaurerCartanForm (U : G) (r : Multiset (Fin 1 ⊕ Fin 3)) : 𝔤J :=
+noncomputable def symmetrizedMaurerCartanForm (U : GJ) (r : Multiset (Fin 1 ⊕ Fin 3)) : 𝔤J :=
   ((1/(r.card : ℝ) : ℝ) • (r.map fun μ =>
     (jets.iteratedDeriv (r - {μ}) (jets.maurerCartan U μ))).sum)
 
 @[simp]
-lemma symmetrizedMaurerCartanForm_apply_zero (U : G) :
+lemma symmetrizedMaurerCartanForm_apply_zero (U : GJ) :
     jets.symmetrizedMaurerCartanForm U 0 = 0 := by
   simp [symmetrizedMaurerCartanForm]
 
@@ -119,13 +119,13 @@ lemma symmetrizedMaurerCartanForm_ofConstant (g : G₀) :
   simp [symmetrizedMaurerCartanForm, jets.maurerCartan_ofConstant]
 
 @[simp]
-lemma symmetrizedMaurerCartanForm_singleton (U : G) (μ : Fin 1 ⊕ Fin 3) :
+lemma symmetrizedMaurerCartanForm_singleton (U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     jets.symmetrizedMaurerCartanForm U {μ} = jets.maurerCartan U μ := by
   simp [symmetrizedMaurerCartanForm, iteratedDeriv_zero]
 
 /-- The recursion for the symmetrized Maurer–Cartan form: peeling one direction off the
   multiset. -/
-lemma symmetrizedMaurerCartanForm_cons (U : G) (μ : Fin 1 ⊕ Fin 3)
+lemma symmetrizedMaurerCartanForm_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3)
     (r : Multiset (Fin 1 ⊕ Fin 3)) : jets.symmetrizedMaurerCartanForm U (μ ::ₘ r) =
     (1/(r.card + 1 : ℝ) : ℝ) • (jets.iteratedDeriv r (jets.maurerCartan U μ))
     + ((r.card : ℝ)/(r.card + 1 : ℝ)) •
@@ -165,7 +165,7 @@ lemma symmetrizedMaurerCartanForm_cons (U : G) (μ : Fin 1 ⊕ Fin 3)
   `ω` is the corresponding symmetrized form plus an average of iterated derivatives
   of brackets of `ω` in strictly fewer directions. This is the structural equation
   `maurerCartan_structure` used to trade the antisymmetric part for lower-order data. -/
-lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : G)
+lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : GJ)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
     jets.iteratedDeriv s (jets.maurerCartan U μ) =
       jets.symmetrizedMaurerCartanForm U (μ ::ₘ s) +
@@ -214,7 +214,7 @@ lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : G)
   symmetrized form, which vanishes by hypothesis, and brackets of `ω`s differentiated
   strictly fewer times, which vanish by the inductive hypothesis through
   `evalLie_iteratedDeriv_bracket_congr`. -/
-lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero (U : G) {n : ℕ}
+lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero (U : GJ) {n : ℕ}
     (h : ∀ r : Multiset (Fin 1 ⊕ Fin 3), r ≠ 0 → r.card ≤ n →
       jets.evalLie (jets.symmetrizedMaurerCartanForm U r) = 0)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (hs : s.card < n) :
@@ -255,7 +255,7 @@ lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero (U : G) 
 /-- Determination step: if the base-point symmetrized Maurer–Cartan data of `U` and
   `V` agree, and their Maurer–Cartan Taylor data agree in fewer than `n` directions,
   then they agree in `n` directions. -/
-lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : G) (n : ℕ)
+lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : GJ) (n : ℕ)
     (hsym : ∀ r, jets.evalLie (jets.symmetrizedMaurerCartanForm U r) =
       jets.evalLie (jets.symmetrizedMaurerCartanForm V r))
     (ih : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card < n →
@@ -286,7 +286,7 @@ lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : G) (n : ℕ
 -/
 
 /-- In a faithful package, the Maurer–Cartan form vanishes exactly on the constant jets. -/
-lemma maurerCartan_eq_zero_iff [jets.Faithful] (U : G) :
+lemma maurerCartan_eq_zero_iff [jets.Faithful] (U : GJ) :
     jets.maurerCartan U = 0 ↔ U = jets.ofConstant (jets.eval U) := by
   refine ⟨Faithful.eq_ofConstant_of_maurerCartan_eq_zero, fun h => ?_⟩
   funext μ

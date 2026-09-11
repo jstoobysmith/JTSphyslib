@@ -89,9 +89,9 @@ open Matrix MatrixGroups TensorProduct DirectSum
 
 namespace GaugeFieldData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 
@@ -188,7 +188,7 @@ variable (T)
   species through the fibrewise jet action of its matter field. Both the fibrewise
   hypothesis and the finite dimensionality of the value space that
   `JetComponentSpace.repJet` needs are already fields of `MatterField`. -/
-noncomputable def repJetFermion : Representation ℂ G T.FermionGenerators where
+noncomputable def repJetFermion : Representation ℂ GJ T.FermionGenerators where
   toFun U := T.assembleFermion fun i => (T.inclFermion i).comp
     (JetComponentSpace.repJet (T.fermion i) U)
   map_one' := fermionGenerators_hom_ext fun i x => by simp
@@ -197,7 +197,7 @@ noncomputable def repJetFermion : Representation ℂ G T.FermionGenerators where
 variable {T}
 
 @[simp]
-lemma repJetFermion_inclFermion (U : G) (i : T.FermionSpecies)
+lemma repJetFermion_inclFermion (U : GJ) (i : T.FermionSpecies)
     (x : JetComponentSpace (T.fermion i)) :
     T.repJetFermion U (T.inclFermion i x)
       = T.inclFermion i
@@ -291,7 +291,7 @@ variable {T}
 
 @[simp]
 lemma jetDerivFermion_inclFermion (μ : Fin 1 ⊕ Fin 3) (i : T.FermionSpecies)
-    (x : JetComponentSpace (T.FermionValue i)) :
+    (x : JetComponentSpace (T.fermion i)) :
     T.jetDerivFermion μ (T.inclFermion i x)
       = T.inclFermion i (JetComponentSpace.jetDeriv μ x) :=
   assembleFermion_inclFermion _ i x
@@ -305,7 +305,7 @@ lemma jetDerivFermion_comm (μ ν : Fin 1 ⊕ Fin 3) :
     rw [LinearMap.comp_apply, LinearMap.comp_apply, jetDerivFermion_inclFermion,
       jetDerivFermion_inclFermion, jetDerivFermion_inclFermion, jetDerivFermion_inclFermion]
     exact congrArg (T.inclFermion i)
-      (LinearMap.congr_fun (JetComponentSpace.jetDeriv_comm (V := T.FermionValue i) μ ν) x)
+      (LinearMap.congr_fun (JetComponentSpace.jetDeriv_comm (M := T.fermion i) μ ν) x)
 
 /-- The derivative shift is a Lorentz vector on the fermionic generator space: it is
   one on each species, and both operations are species-diagonal. -/
@@ -439,25 +439,25 @@ lemma fermionGeneratorsEquiv_repLorentzFermion (w : ℕ) (h : ∀ i, (T.fermion 
   the fermionic module, so pulling back along the projection onto it commutes with the two
   actions.
 
-  No common mass weight is needed. The gauge action of the assembled field is
-  `repJetFermionModule`, which exists whatever the weights are; only its packaging as one
-  `MatterField` would require them to agree. Both halves of the component space are
-  covered, the conjugate one included, and every derivative label with them: this is
+  The common mass weight enters only through the packaging of the fermionic module as the
+  matter field `T.fermionMatterField w h`; the gauge action itself is `repJetFermionModule`,
+  which exists whatever the weights are. Both halves of the component space are covered,
+  the conjugate one included, and every derivative label with them: this is
   `JetComponentSpace.comap_comp_repJet` at the species projection. -/
-lemma fermionGeneratorsEquiv_repJetFermion (U : G) (y : T.FermionGenerators) :
-    T.fermionGeneratorsEquiv (T.repJetFermion U y)
-      = JetComponentSpace.repJet T.repJetFermionModule repJetFermionModule_smul U
-        (T.fermionGeneratorsEquiv y) := by
-  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.repJetFermion U)
-      = (JetComponentSpace.repJet T.repJetFermionModule repJetFermionModule_smul U).comp
-        T.fermionGeneratorsEquiv.toLinearMap := by
+lemma fermionGeneratorsEquiv_repJetFermion (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    (U : GJ) (y : T.FermionGenerators) :
+    T.fermionGeneratorsEquiv w h (T.repJetFermion U y)
+      = JetComponentSpace.repJet (T.fermionMatterField w h) U
+        (T.fermionGeneratorsEquiv w h y) := by
+  have key : (T.fermionGeneratorsEquiv w h).toLinearMap.comp (T.repJetFermion U)
+      = (JetComponentSpace.repJet (T.fermionMatterField w h) U).comp
+        (T.fermionGeneratorsEquiv w h).toLinearMap := by
     refine fermionGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       repJetFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
       fermionGeneratorsEquiv_inclFermion]
     exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repJet
-      T.repJetFermionModule repJetFermionModule_smul (T.fermion i).repJet
-      (T.fermion i).repJet_smul (T.projFermionValue i)
+      (T.projFermionField w h i)
       (fun U' => lTensor_projFermionValue_repJetFermionModule i U') U) x
   exact LinearMap.congr_fun key y
 
@@ -485,18 +485,20 @@ lemma fermionGeneratorsEquiv_massWeightScaleFermion (w : ℕ)
   of the derivative label on the generator space is the shift on the component functions of
   the single fermion field: `comap` is natural in the value space, and the shift touches
   only the derivative label, so neither operation sees which species a generator came from.
-  No common mass weight is needed. -/
-lemma fermionGeneratorsEquiv_jetDerivFermion (μ : Fin 1 ⊕ Fin 3) (y : T.FermionGenerators) :
-    T.fermionGeneratorsEquiv (T.jetDerivFermion μ y)
-      = JetComponentSpace.jetDeriv μ (T.fermionGeneratorsEquiv y) := by
-  have key : T.fermionGeneratorsEquiv.toLinearMap.comp (T.jetDerivFermion μ)
-      = (JetComponentSpace.jetDeriv μ).comp T.fermionGeneratorsEquiv.toLinearMap := by
+  The common mass weight enters only through the packaging of the fermionic module as a
+  matter field. -/
+lemma fermionGeneratorsEquiv_jetDerivFermion (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w)
+    (μ : Fin 1 ⊕ Fin 3) (y : T.FermionGenerators) :
+    T.fermionGeneratorsEquiv w h (T.jetDerivFermion μ y)
+      = JetComponentSpace.jetDeriv μ (T.fermionGeneratorsEquiv w h y) := by
+  have key : (T.fermionGeneratorsEquiv w h).toLinearMap.comp (T.jetDerivFermion μ)
+      = (JetComponentSpace.jetDeriv μ).comp (T.fermionGeneratorsEquiv w h).toLinearMap := by
     refine fermionGenerators_hom_ext fun i x => ?_
     rw [LinearMap.comp_apply, LinearMap.comp_apply, LinearEquiv.coe_coe,
       jetDerivFermion_inclFermion, fermionGeneratorsEquiv_inclFermion,
       fermionGeneratorsEquiv_inclFermion]
     exact LinearMap.congr_fun
-      (JetComponentSpace.comap_jetDeriv (T.projFermionValue i) μ) x
+      (JetComponentSpace.comap_jetDeriv (T.projFermionField w h i) μ) x
   exact LinearMap.congr_fun key y
 
 end GaugeFieldData

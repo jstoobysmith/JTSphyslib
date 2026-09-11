@@ -60,9 +60,9 @@ open Matrix MatrixGroups TensorProduct
 
 namespace GaugeFieldData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 
@@ -118,19 +118,19 @@ variable (T)
   weight; the gauge action of a theory whose fermions carry different mass dimensions is
   perfectly well defined, only its packaging as one `MatterField` is not. -/
 noncomputable def repJetFermionModule :
-    Representation ℂ G (JetRing ⊗[ℂ] T.FermionModule) :=
+    Representation ℂ GJ (JetRing ⊗[ℂ] T.FermionModule) :=
   MatterField.repJetPi T.fermion
 
 variable {T}
 
 /-- The jet gauge action on the fermionic module is fibrewise, as each species is. -/
-lemma repJetFermionModule_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] T.FermionModule) :
+lemma repJetFermionModule_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] T.FermionModule) :
     T.repJetFermionModule U (χ • z) = χ • T.repJetFermionModule U z :=
   MatterField.repJetPi_smul T.fermion U χ z
 
 /-- A fermionic species is a subrepresentation of the jet gauge action on the fermionic
   module: the projection onto its value space intertwines the two actions on the jets. -/
-lemma lTensor_projFermionValue_repJetFermionModule (i : T.FermionSpecies) (U : G) :
+lemma lTensor_projFermionValue_repJetFermionModule (i : T.FermionSpecies) (U : GJ) :
     (LinearMap.lTensor JetRing (T.projFermionValue i)).comp (T.repJetFermionModule U)
       = ((T.fermion i).repJet U).comp
         (LinearMap.lTensor JetRing (T.projFermionValue i)) :=
@@ -162,7 +162,7 @@ lemma fermionMatterField_repAlgebra_apply (w : ℕ)
   species, through the identification `jetPiEquiv` of the jets of the fermionic module
   with the family of the jets of the species. -/
 lemma fermionMatterField_repJet_apply (w : ℕ)
-    (h : ∀ i, (T.fermion i).massWeight = w) (U : G)
+    (h : ∀ i, (T.fermion i).massWeight = w) (U : GJ)
     (z : JetRing ⊗[ℂ] T.FermionModule) :
     (T.fermionMatterField w h).repJet U z =
       (jetPiEquiv T.FermionValue).symm
@@ -170,7 +170,7 @@ lemma fermionMatterField_repJet_apply (w : ℕ)
 
 /-- The base-point Taylor coefficients of the fermionic jet action are those of the
   species, index by index. -/
-lemma repCoeff_fermionMatterField (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w) (U : G)
+lemma repCoeff_fermionMatterField (w : ℕ) (h : ∀ i, (T.fermion i).massWeight = w) (U : GJ)
     (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (T.fermionMatterField w h).repJet U x =
       LinearMap.piMap fun i =>

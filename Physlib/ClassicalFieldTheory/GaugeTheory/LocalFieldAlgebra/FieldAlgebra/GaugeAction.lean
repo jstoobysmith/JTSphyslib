@@ -12,14 +12,14 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentS
 
 ## i. Overview
 
-Given a fibrewise action of a group `G` on the jets `JetRing ⊗[ℂ] V` of a matter
-field, the group `G` acts on the field algebra by the algebra
+Given a fibrewise action of a group `GJ` on the jets `JetRing ⊗[ℂ] V` of a matter
+field, the group `GJ` acts on the field algebra by the algebra
 functor applied to the induced action on the jet component space. On a component function
 `∂_s φ_α` the action is the all-orders Leibniz rule: each splitting of the derivative
 multiset contributes a Taylor coefficient of the gauge jet against a lower component
 function.
 
-Here `G` is any group acting fibrewise on the jets. For the Standard Model, `G` is the jet
+Here `GJ` is any group acting fibrewise on the jets. For the Standard Model, `GJ` is the jet
 gauge group `JetGaugeGroupI`, and the restriction to constant gauge transformations is in
 `Physlib.Particles.StandardModel.Matter.FieldAlgebra.GaugeAction`.
 
@@ -32,7 +32,7 @@ gauge group `JetGaugeGroupI`, and the restriction to constant gauge transformati
 
 ## iii. Table of contents
 
-- A. The action of the group `G`
+- A. The action of the group `GJ`
   - A.1. Equivariance of the field and its conjugate
 
 -/
@@ -43,14 +43,14 @@ namespace FieldAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
 variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-!
 
-## A. The action of the group `G`
+## A. The action of the group `GJ`
 
 -/
 
@@ -59,7 +59,7 @@ variable {A : Type} [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace 
   the jets and its fibrewise-linearity are fields of `M`, so neither has to be supplied
   here. -/
 noncomputable def repJet :
-    Representation ℂ G (A) where
+    Representation ℂ GJ (A) where
   toFun U :=
     (map A (JetComponentSpace.repJet M U)).toLinearMap
   map_one' := by
@@ -68,30 +68,30 @@ noncomputable def repJet :
     simp only [map_mul, Module.End.mul_eq_comp, ← map_comp_map,
       AlgHom.comp_toLinearMap]
 
-lemma repJet_apply (U : G) (x : A) :
+lemma repJet_apply (U : GJ) (x : A) :
     repJet M U x =
       map A (JetComponentSpace.repJet M U) x := rfl
 
 @[simp]
-lemma repJet_apply_one (U : G) :
+lemma repJet_apply_one (U : GJ) :
     repJet M U (1 : A) = 1 := by
   simp [repJet_apply]
 
-lemma repJet_apply_mul (U : G) (x y : A) :
+lemma repJet_apply_mul (U : GJ) (x y : A) :
     repJet M U (x * y) =
       repJet M U x * repJet M U y := by
   simp [repJet_apply]
 
 /-- On a component function the jet gauge action is the action on the component space. -/
 @[simp]
-lemma repJet_ι (U : G) (v : JetComponentSpace M) :
+lemma repJet_ι (U : GJ) (v : JetComponentSpace M) :
     repJet M U (ι A v) =
       ι A (JetComponentSpace.repJet M U v) := by
   rw [repJet_apply, map_ι]
 
 /-- The jet gauge action as an algebra homomorphism: a gauge transformation acts on a
   Lagrangian term factor by factor. -/
-noncomputable def repJetAlgHom (U : G) : A →ₐ[ℂ] A where
+noncomputable def repJetAlgHom (U : GJ) : A →ₐ[ℂ] A where
   toFun := repJet M U
   map_add' := LinearMap.map_add _
   map_zero' := LinearMap.map_zero _
@@ -114,7 +114,7 @@ the *value* of the gauge transformation at the base point alone. So `ofField` an
   by the contragredient of the value of the gauge transformation at the base point; no
   derivative of the gauge jet contributes. -/
 lemma repJet_ofField
-    (U : G) (φ : Module.Dual ℂ M.V) :
+    (U : GJ) (φ : Module.Dual ℂ M.V) :
     repJet M U (ofField A φ) =
       ofField A (Module.Dual.transpose (jetEval ∘ₗ (M.repJet U⁻¹).comp jetOfConstant) φ) := by
   rw [ofField_apply, repJet_ι, ofField_apply]
@@ -127,7 +127,7 @@ lemma repJet_ofField
 /-- **`ofConjField` is gauge equivariant**, for the conjugate action `repConj M.repJet` on the
   jets of the conjugate field — which is the physicists' `φ̄ ↦ φ̄ U†`. -/
 lemma repJet_ofConjField
-    (U : G) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    (U : GJ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     repJet M U (ofConjField A φ) =
       ofConjField A (Module.Dual.transpose
         (jetEval ∘ₗ (JetComponentSpace.repConj M.repJet U⁻¹).comp jetOfConstant) φ) := by

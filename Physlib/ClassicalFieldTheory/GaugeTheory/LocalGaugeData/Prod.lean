@@ -66,7 +66,7 @@ variable {G₁ : Type} [Group G₁] {𝔤₁ : Type} [LieRing 𝔤₁] [LieAlgeb
   {G₀₁ : Type} [Group G₀₁] {𝔤J₁ : Type} [LieRing 𝔤J₁] [LieAlgebra ℝ 𝔤J₁]
   {G₂ : Type} [Group G₂] {𝔤₂ : Type} [LieRing 𝔤₂] [LieAlgebra ℝ 𝔤₂]
   {G₀₂ : Type} [Group G₀₂] {𝔤J₂ : Type} [LieRing 𝔤J₂] [LieAlgebra ℝ 𝔤J₂]
-  (j₁ : LocalGaugeData G₁ 𝔤₁ G₀₁ 𝔤J₁) (j₂ : LocalGaugeData G₂ 𝔤₂ G₀₂ 𝔤J₂)
+  (j₁ : LocalGaugeData G₀₁ 𝔤₁ G₁ 𝔤J₁) (j₂ : LocalGaugeData G₀₂ 𝔤₂ G₂ 𝔤J₂)
 
 /-!
 
@@ -75,7 +75,7 @@ variable {G₁ : Type} [Group G₁] {𝔤₁ : Type} [LieRing 𝔤₁] [LieAlgeb
 -/
 
 /-- **The product of two local gauge data**: every structure map acts componentwise. -/
-noncomputable def prod : LocalGaugeData (G₁ × G₂) (𝔤₁ × 𝔤₂) (G₀₁ × G₀₂) (𝔤J₁ × 𝔤J₂) where
+noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂) (G₁ × G₂) (𝔤J₁ × 𝔤J₂) where
   eval := j₁.eval.prodMap j₂.eval
   ofConstant := j₁.ofConstant.prodMap j₂.ofConstant
   eval_ofConstant g := Prod.ext (j₁.eval_ofConstant g.1) (j₂.eval_ofConstant g.2)

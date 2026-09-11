@@ -249,7 +249,7 @@ namespace LocalGaugeData
 /-- **The local gauge data of `U(1)`**: unitary jets, self-adjoint scalar jets with
   vanishing bracket and trivial adjoint action, and the Maurer–Cartan form
   `i (∂_μ u) u⁻¹`. -/
-noncomputable def u1 : LocalGaugeData JetU1 U1Algebra U1 JetU1Algebra where
+noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra where
   eval := JetU1.eval
   ofConstant := JetU1.ofConstant
   eval_ofConstant := JetU1.eval_ofConstant

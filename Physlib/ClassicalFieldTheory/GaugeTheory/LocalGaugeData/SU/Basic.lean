@@ -488,7 +488,7 @@ namespace LocalGaugeData
 /-- **The local gauge data of `SU(n)`**: special unitary jets, traceless hermitian jets
   with the bracket `i (a b − b a)` and the conjugation action, and the Maurer–Cartan form
   `i (∂_μ U) U⁻¹`. -/
-noncomputable def su (n : ℕ) : LocalGaugeData (JetSU n) (SUAlgebra n) (SU n) (JetSUAlgebra n)
+noncomputable def su (n : ℕ) : LocalGaugeData (SU n) (SUAlgebra n) (JetSU n) (JetSUAlgebra n)
     where
   eval := JetSU.eval
   ofConstant := JetSU.ofConstant

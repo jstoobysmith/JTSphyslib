@@ -46,9 +46,9 @@ set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 
 open Lorentz
@@ -56,7 +56,7 @@ open Lorentz
 namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -93,7 +93,7 @@ noncomputable def commutator
 /-- The gauge transformation of the underived symbol `A_μ^φ`: the special case `s = 0`
   of `gauge_apply_deriv`, with no Leibniz convolution left over — the dual adjoint
   action of the value of `U⁻¹` plus the Maurer–Cartan shift. -/
-lemma repGauge_apply (U : G)
+lemma repGauge_apply (U : GJ)
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (h.A 0 μ φ) = h.A 0 μ (jets.adjointDualCoeff U⁻¹ ∅ φ) +
       algebraMap ℂ B (φ (jets.evalLie (jets.maurerCartan U⁻¹ μ))) := by
@@ -105,7 +105,7 @@ lemma repGauge_apply (U : G)
   of `gauge_apply_deriv` — the two Leibniz splittings of one derivative, plus the
   base-point value of the derived Maurer–Cartan form. -/
 lemma repGauge_deriv_apply
-    (U : G) (ρ σ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (U : GJ) (ρ σ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (h.A {ρ} σ φ) =
       h.A {ρ} σ (jets.adjointDualCoeff U⁻¹ 0 φ) + h.A 0 σ (jets.adjointDualCoeff U⁻¹ {ρ} φ) +
       algebraMap ℂ B (φ (jets.evalLie
@@ -254,7 +254,7 @@ set_option maxHeartbeats 1000000 in
   algebra homomorphisms (`gauge_mul`) and that the base-point adjoint transport is a
   morphism of Lie algebras. -/
 lemma repGauge_commutator
-    (U : G) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (U : GJ) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (commutator h.A μ ν φ) =
       commutator h.A μ ν (jets.adjointDualCoeff U⁻¹ 0 φ)
       - h.A 0 μ (jets.adjointDualCoeff U⁻¹ 0 (φ ∘ₗ LieAlgebra.ad ℝ 𝔤
@@ -342,7 +342,7 @@ lemma repGauge_commutator
   `s = ρ ::ₘ {σ}` of `gauge_apply_deriv` — the four Leibniz splittings of two
   derivatives, plus the base-point value of the twice-derived Maurer–Cartan form. -/
 lemma repGauge_deriv_deriv_apply
-    (U : G) (ρ σ τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (U : GJ) (ρ σ τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (h.A (ρ ::ₘ {σ}) τ φ) =
       h.A (ρ ::ₘ {σ}) τ (jets.adjointDualCoeff U⁻¹ 0 φ)
       + h.A {ρ} τ (jets.adjointDualCoeff U⁻¹ {σ} φ)
@@ -531,7 +531,7 @@ set_option maxHeartbeats 1000000 in
   Pure bilinearity, with `tensorBracket_one_left/right` computing the cross terms;
   `repGauge_commutator` is the special case of two field symbols. -/
 lemma repGauge_bracketFam
-    (U : G) {f g f' g' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (U : GJ) {f g f' g' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     {cf cg : 𝔤}
     (hf : ∀ ψ : Module.Dual ℝ 𝔤,
       repGauge U (f ψ) = f' ψ + algebraMap ℂ B (ψ cf))
@@ -701,7 +701,7 @@ lemma tensorBracket_map_right_antidiagonal
 /-- The bracket of families against an iterated dual adjoint coefficient: the
   antidiagonal convolution — the all-orders form of `bracketFam_comp_dualMap` and
   `bracketFam_dualMap_derivation`. -/
-lemma bracketFam_adjointDualCoeff (U : G) (x : Multiset (Fin 1 ⊕ Fin 3))
+lemma bracketFam_adjointDualCoeff (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3))
     (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) (φ : Module.Dual ℝ 𝔤) :
     bracketFam f g (jets.adjointDualCoeff U x φ) =
       (x.antidiagonal.map fun p =>
@@ -732,7 +732,7 @@ lemma bracketFam_adjointDualCoeff (U : G) (x : Multiset (Fin 1 ⊕ Fin 3))
   `LocalGaugeData.adjointDualCoeff_cons`) the splittings where `κ` hits the adjoint — an `ad` of the
   derived Maurer–Cartan form — plus the derived Maurer–Cartan shift. -/
 lemma repGauge_cons_apply
-    (U : G) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (U : GJ) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (τ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (h.A (κ ::ₘ s) τ φ) =
       (s.antidiagonal.map fun p =>
@@ -768,7 +768,7 @@ set_option maxHeartbeats 2000000 in
   at every derivative order simultaneously; the regrouping of the four-fold splitting
   is `Multiset.sum_antidiagonal_exchange`. -/
 lemma repGauge_commutatorFam
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (commutatorFam h.A μ ν s φ) =
       (s.antidiagonal.map fun p =>

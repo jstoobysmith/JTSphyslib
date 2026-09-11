@@ -111,7 +111,7 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
   on `jets` beyond its jet group, so it is supplied polymorphically. -/
 noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData G₀ 𝔤 (unitary JetRing) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
     (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
     MatterField jets where
@@ -126,7 +126,7 @@ noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 @[simp]
 lemma charged_V {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData (unitary JetRing) 𝔤 G₀ 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData G₀ 𝔤 (unitary JetRing) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
     (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
     (charged jets repLorentz n act hact w).V = V := rfl

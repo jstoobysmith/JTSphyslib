@@ -48,9 +48,9 @@ open Matrix MatrixGroups TensorProduct
 
 namespace MatterField
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (M : MatterField jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
 
 /-!
 
@@ -75,11 +75,11 @@ abbrev FieldAlgebra : FieldStatistic → Type
 variable (A : Type) [Ring A] [Algebra ℂ A] [IsFieldAlgebra (JetComponentSpace M) A]
 
 /-- The jet gauge action on a field algebra of the matter field. -/
-noncomputable def repJetAlgebra : Representation ℂ G A :=
+noncomputable def repJetAlgebra : Representation ℂ GJ A :=
   FieldAlgebra.repJet M
 
 /-- The global gauge action on a field algebra of the matter field, along the canonical
-  inclusion `jets.ofConstant : G₀ →* G` of the constant jets. -/
+  inclusion `jets.ofConstant : G₀ →* GJ` of the constant jets. -/
 noncomputable def repConstant : Representation ℂ G₀ A :=
   FieldAlgebra.repConstant M jets.ofConstant
 
@@ -91,7 +91,7 @@ noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) A :=
 noncomputable def massWeightScale (c : ℂ) : A →ₐ[ℂ] A :=
   FieldAlgebra.massWeightScale M.massWeight c
 
-lemma repJetAlgebra_ι (U : G) (x : JetComponentSpace M) :
+lemma repJetAlgebra_ι (U : GJ) (x : JetComponentSpace M) :
     M.repJetAlgebra A U (FieldAlgebra.ι A x) =
       FieldAlgebra.ι A (JetComponentSpace.repJet M U x) :=
   FieldAlgebra.repJet_ι M U x

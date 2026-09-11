@@ -22,7 +22,7 @@ proves the theorem it exists for: the covariant derivative preserves the gauge t
 `TransformsIn.covDerivAction`.
 
 Everything is stated over a supplied local-gauge-data package
-`jets : LocalGaugeData G 𝔤 G₀ 𝔤J`; nothing depends on the Standard Model choice of it.
+`jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J`; nothing depends on the Standard Model choice of it.
 
 ## ii. Key results
 
@@ -51,16 +51,16 @@ open Matrix MatrixGroups TensorProduct MvPowerSeries
 
 variable {B : Type} [Ring B] [Algebra ℂ B]
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace LocalGaugeData
 
 open GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -86,15 +86,15 @@ variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
   These are exactly the identities consumed by the proof that the covariant
   derivative `covDerivAction` preserves `TransformsIn`. -/
-structure IsInfinitesimalActionOf (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+structure IsInfinitesimalActionOf (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
     (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) : Prop where
-  repCoeff_cons : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)),
+    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)) : Prop where
+  repCoeff_cons : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)),
     repCoeff rep U (μ ::ₘ x) =
       -((x.antidiagonal.map fun p =>
         act (jets.evalLie (jets.iteratedDeriv p.1 (jets.maurerCartan U μ))) ∘ₗ
           repCoeff rep U p.2).sum)
-  repCoeff_act : ∀ (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) (c : 𝔤),
+  repCoeff_act : ∀ (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (c : 𝔤),
     repCoeff rep U x ∘ₗ act c =
       ((x.antidiagonal.map fun p =>
         act (jets.adjointCoeff U p.1 c) ∘ₗ repCoeff rep U p.2).sum)
@@ -104,8 +104,8 @@ structure IsInfinitesimalActionOf (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
   derived Maurer–Cartan form — the analogue of `LocalGaugeData.adjointDualCoeff_cons`. -/
 lemma IsInfinitesimalActionOf.repDualCoeff_cons
     {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
-    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
-    (h : IsInfinitesimalActionOf jets act rep) (U : G) (μ : Fin 1 ⊕ Fin 3)
+    {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
+    (h : IsInfinitesimalActionOf jets act rep) (U : GJ) (μ : Fin 1 ⊕ Fin 3)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     repDualCoeff rep U (μ ::ₘ x) φ =
       -((x.antidiagonal.map fun p =>
@@ -129,7 +129,7 @@ lemma IsInfinitesimalActionOf.repDualCoeff_cons
 
 section MatterCovariance
 
-variable {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+variable {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
 variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 variable [FiniteDimensional ℂ V]
 
@@ -139,7 +139,7 @@ variable [FiniteDimensional ℂ V]
   `IsInfinitesimalActionOf.repCoeff_act`, and the analogue of
   `bracketFam_adjointDualCoeff`. -/
 lemma IsInfinitesimalActionOf.actionFam_repDualCoeff
-    (h : IsInfinitesimalActionOf jets act rep) (U : G)
+    (h : IsInfinitesimalActionOf jets act rep) (U : GJ)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
     (g : Module.Dual ℂ V →ₗ[ℂ] B) (φ : Module.Dual ℂ V) :
     actionFam act f g (repDualCoeff rep U x φ) =
@@ -174,7 +174,7 @@ lemma TransformsIn.repGauge_cons
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf jets act rep)
-    (U : G) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (U : GJ) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ V) :
     repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
@@ -210,7 +210,7 @@ lemma TransformsIn.repGauge_actionFamConv
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
     (hF : TransformsIn repGauge rep F)
     (hact : IsInfinitesimalActionOf jets act rep)
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ V) :
     repGauge U (actionFamConv h.A act ρ F s φ) =
       (s.antidiagonal.map fun p =>
@@ -386,12 +386,12 @@ lemma conjJetEquiv_conjEquiv_tmul (g : JetRing) (u : V) :
 
 section ConjRep
 
-variable {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
+variable {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
 variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 
 /-- The conjugate representation acts through `conjJetEquiv` by the original maps. -/
-lemma repConj_conjJetEquiv (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (U : G) (w : JetRing ⊗[ℂ] V) :
+lemma repConj_conjJetEquiv (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (U : GJ) (w : JetRing ⊗[ℂ] V) :
     JetComponentSpace.repConj rep U
         (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
       = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U w)) := by
@@ -403,8 +403,8 @@ lemma repConj_conjJetEquiv (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
 /-- The base-point Taylor coefficients of the conjugate representation are the
   conjugated coefficients: the derivative directions are real, so conjugation passes
   through `∂_x` and the base-point evaluation untouched. -/
-lemma repCoeff_repConj (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+lemma repCoeff_repConj (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     repCoeff (JetComponentSpace.repConj rep) U x
       = ConjModule.endConj (repCoeff rep U x) := by
   have hE_tmul := conjJetEquiv_conjEquiv_tmul (V := V)
@@ -453,7 +453,7 @@ lemma repCoeff_repConj (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
 
 /-- The base-point triviality of the zeroth Taylor coefficient passes to the
   conjugate representation. -/
-lemma repCoeff_repConj_zero_eq_id {W : G}
+lemma repCoeff_repConj_zero_eq_id {W : GJ}
     (hrep : repCoeff rep W 0 = LinearMap.id) :
     repCoeff (JetComponentSpace.repConj rep) W 0 = LinearMap.id := by
   rw [repCoeff_repConj, hrep, ConjModule.endConj_id]

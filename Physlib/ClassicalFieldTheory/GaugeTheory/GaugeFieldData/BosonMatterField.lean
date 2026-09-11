@@ -64,9 +64,9 @@ open Matrix MatrixGroups TensorProduct
 
 namespace GaugeFieldData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 
@@ -120,19 +120,19 @@ variable (T)
   module, acting species by species, and typed on `T.BosonModule` itself so that it can
   be spoken of without fixing a common mass weight. -/
 noncomputable def repJetBosonModule :
-    Representation ℂ G (JetRing ⊗[ℂ] T.BosonModule) :=
+    Representation ℂ GJ (JetRing ⊗[ℂ] T.BosonModule) :=
   MatterField.repJetPi T.boson
 
 variable {T}
 
 /-- The jet gauge action on the bosonic module is fibrewise, as each species is. -/
-lemma repJetBosonModule_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] T.BosonModule) :
+lemma repJetBosonModule_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] T.BosonModule) :
     T.repJetBosonModule U (χ • z) = χ • T.repJetBosonModule U z :=
   MatterField.repJetPi_smul T.boson U χ z
 
 /-- A bosonic species is a subrepresentation of the jet gauge action on the bosonic
   module: the projection onto its value space intertwines the two actions on the jets. -/
-lemma lTensor_projBosonValue_repJetBosonModule (j : T.BosonSpecies) (U : G) :
+lemma lTensor_projBosonValue_repJetBosonModule (j : T.BosonSpecies) (U : GJ) :
     (LinearMap.lTensor JetRing (T.projBosonValue j)).comp (T.repJetBosonModule U)
       = ((T.boson j).repJet U).comp
         (LinearMap.lTensor JetRing (T.projBosonValue j)) :=
@@ -164,7 +164,7 @@ lemma bosonMatterField_repAlgebra_apply (w : ℕ)
   species, through the identification `jetPiEquiv` of the jets of the bosonic module
   with the family of the jets of the species. -/
 lemma bosonMatterField_repJet_apply (w : ℕ)
-    (h : ∀ i, (T.boson i).massWeight = w) (U : G)
+    (h : ∀ i, (T.boson i).massWeight = w) (U : GJ)
     (z : JetRing ⊗[ℂ] T.BosonModule) :
     (T.bosonMatterField w h).repJet U z =
       (jetPiEquiv T.BosonValue).symm
@@ -172,7 +172,7 @@ lemma bosonMatterField_repJet_apply (w : ℕ)
 
 /-- The base-point Taylor coefficients of the bosonic jet action are those of the
   species, index by index. -/
-lemma repCoeff_bosonMatterField (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w) (U : G)
+lemma repCoeff_bosonMatterField (w : ℕ) (h : ∀ i, (T.boson i).massWeight = w) (U : GJ)
     (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (T.bosonMatterField w h).repJet U x =
       LinearMap.piMap fun i =>

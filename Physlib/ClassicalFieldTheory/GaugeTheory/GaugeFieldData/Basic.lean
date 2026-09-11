@@ -13,8 +13,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 
 A gauge theory is fixed, before any Lagrangian is chosen, by a gauge context and a matter
 content. The gauge context is the existing jet data of the gauge group, namely a global
-group `G₀` with finite-dimensional real Lie algebra `𝔤`, a jet group `G` with jet Lie
-algebra `𝔤J`, and a local-gauge-data package `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` relating them. The
+group `G₀` with finite-dimensional real Lie algebra `𝔤`, a jet group `GJ` with jet Lie
+algebra `𝔤J`, and a local-gauge-data package `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J` relating them. The
 matter content is a finite family of
 fermionic species and a finite family of bosonic species, each given by an existing
 `MatterField jets`.
@@ -68,13 +68,13 @@ open Matrix MatrixGroups TensorProduct
 
 The gauge context is the parameter list of the structure below, namely the two groups, the
 two Lie algebras, the supplied local-gauge-data package `jets` and its Taylor–Leibniz law. It is
-`jets` that makes `𝔤` the gauge algebra of `G` rather than an unrelated Lie algebra, and
+`jets` that makes `𝔤` the gauge algebra of `GJ` rather than an unrelated Lie algebra, and
 it is supplied rather than inferred, so a second package over the same carriers is a
 different context. `GaugeFieldData` adds only the matter content on top of it.
 
 -/
 
-/-- The field data of a gauge theory. Over a gauge context, given by a jet gauge group `G`
+/-- The field data of a gauge theory. Over a gauge context, given by a jet gauge group `GJ`
   with global group `G₀`, a finite-dimensional real gauge algebra `𝔤` with jet algebra
   `𝔤J` and a local-gauge-data package `jets` over them, it records a finite family of fermionic
   species and a finite family of bosonic species, each given by an existing
@@ -92,9 +92,9 @@ different context. `GaugeFieldData` adds only the matter content on top of it.
   not assert that they are jointly consistent. Gauge-Lorentz compatibility, factorization
   of the jet action through its global value, and richness of the jet group are separate
   conditions, none of them imposed here. -/
-structure GaugeFieldData {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    [Module.Finite ℝ 𝔤] {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
+structure GaugeFieldData {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    [Module.Finite ℝ 𝔤] {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   /-- The index type of the fermionic species. -/
   FermionSpecies : Type
   [decidableEqFermionSpecies : DecidableEq FermionSpecies]
@@ -114,9 +114,9 @@ attribute [instance] GaugeFieldData.decidableEqFermionSpecies
 
 namespace GaugeFieldData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (T : GaugeFieldData jets)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (T : GaugeFieldData jets)
 
 /-!
 

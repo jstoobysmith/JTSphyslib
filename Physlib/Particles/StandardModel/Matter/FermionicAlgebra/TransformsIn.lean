@@ -58,9 +58,9 @@ namespace FermionicAlgebra
 
 open Matrix MatrixGroups TensorProduct
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {M : MatterField jets}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {M : MatterField jets}
 
 /-!
 
@@ -111,7 +111,7 @@ private lemma sum_inr (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual �
   `s₁` acting on the target index of `∂_{s₂} ψ_φ`. There is no inhomogeneous term: unlike a
   gauge field, a matter field transforms linearly. -/
 lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
-    (U : G) (φ : Module.Dual ℂ M.V) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    (U : GJ) (φ : Module.Dual ℂ M.V) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     repJetGaugeGroupI M U (iteratedJetDeriv s (ofField φ)) =
       (s.antidiagonal.map fun p =>
         iteratedJetDeriv p.2
@@ -145,7 +145,7 @@ theorem transformsIn_iteratedJetDeriv_ofField :
   the jets of the
   conjugate field — the physicists' `ψ̄ ↦ ψ̄ U†` and its derivatives. -/
 lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-    (U : G) (φ : Module.Dual ℂ (ConjModule M.V))
+    (U : GJ) (φ : Module.Dual ℂ (ConjModule M.V))
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
     repJetGaugeGroupI M U (iteratedJetDeriv s (ofConjField φ)) =
       (s.antidiagonal.map fun p =>

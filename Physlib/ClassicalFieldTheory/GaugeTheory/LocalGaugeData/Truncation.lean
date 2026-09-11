@@ -18,7 +18,7 @@ Taylor coefficients of matrix entries; for an abstract package `jets` it is phra
 the two things the package provides at the base point, the value `eval U` and the
 Maurer–Cartan form: `U` is trivial to order `n` when `eval U = 1` and the base-point Taylor
 coefficients of `ω_μ(U)` vanish below order `n`. The Taylor–Leibniz theorem makes these
-jets a subgroup `truncationKer n`, normal in `G`, and the subgroups decrease with `n`.
+jets a subgroup `truncationKer n`, normal in `GJ`, and the subgroups decrease with `n`.
 
 The zeroth member, the *pure jets* with `eval U = 1`, is the complement of the constant
 jets: every jet factors uniquely as a pure jet times the constant jet of its value,
@@ -68,9 +68,9 @@ most `n` derivatives by a pure translation.
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
 
 /-!
 
@@ -81,7 +81,7 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 /-- The jets trivial to order `n`: value the identity, and base-point Taylor coefficients
   of the Maurer–Cartan form vanishing below order `n`. Closure under products and inverses
   is the cocycle law together with the Taylor–Leibniz theorem for the adjoint action. -/
-noncomputable def truncationKer (n : ℕ) : Subgroup G where
+noncomputable def truncationKer (n : ℕ) : Subgroup GJ where
   carrier := {U | jets.eval U = 1 ∧ ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3),
     s.card < n → jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0}
   one_mem' := ⟨map_one _, fun s μ _ => by rw [maurerCartan_one, map_zero, map_zero]⟩
@@ -98,15 +98,15 @@ noncomputable def truncationKer (n : ℕ) : Subgroup G where
     exact jets.evalLie_iteratedDeriv_adjoint_eq_zero U⁻¹ fun q hq =>
       hU.2 q μ (lt_of_le_of_lt (Multiset.card_le_card hq) hs)
 
-lemma mem_truncationKer_iff {n : ℕ} {U : G} :
+lemma mem_truncationKer_iff {n : ℕ} {U : GJ} :
     U ∈ jets.truncationKer n ↔ jets.eval U = 1 ∧
       ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card < n →
         jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 := Iff.rfl
 
-lemma eval_eq_one_of_mem_truncationKer {n : ℕ} {U : G} (hU : U ∈ jets.truncationKer n) :
+lemma eval_eq_one_of_mem_truncationKer {n : ℕ} {U : GJ} (hU : U ∈ jets.truncationKer n) :
     jets.eval U = 1 := hU.1
 
-lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_mem_truncationKer {n : ℕ} {U : G}
+lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_mem_truncationKer {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s.card < n)
     (μ : Fin 1 ⊕ Fin 3) : jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 :=
   hU.2 s μ hs
@@ -116,7 +116,7 @@ lemma truncationKer_antitone : Antitone jets.truncationKer :=
   fun _ _ hmn _ hU => ⟨hU.1, fun s μ hs => hU.2 s μ (lt_of_lt_of_le hs hmn)⟩
 
 /-- The zeroth truncation kernel is the group of pure jets, those with identity value. -/
-lemma mem_truncationKer_zero_iff {U : G} : U ∈ jets.truncationKer 0 ↔ jets.eval U = 1 :=
+lemma mem_truncationKer_zero_iff {U : GJ} : U ∈ jets.truncationKer 0 ↔ jets.eval U = 1 :=
   ⟨fun h => h.1, fun h => ⟨h, fun _ _ hs => absurd hs (Nat.not_lt_zero _)⟩⟩
 
 /-!
@@ -128,7 +128,7 @@ lemma mem_truncationKer_zero_iff {U : G} : U ∈ jets.truncationKer 0 ↔ jets.e
 /-- Deep jets kill the positive adjoint coefficients: for a jet trivial to order `n`, the
   adjoint coefficients of order between `1` and `n` vanish. One derivative of the adjoint
   is `ad` of the Maurer–Cartan form, whose base-point data vanish below order `n`. -/
-lemma adjointCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : G} (hU : U ∈ jets.truncationKer n)
+lemma adjointCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : GJ} (hU : U ∈ jets.truncationKer n)
     {x : Multiset (Fin 1 ⊕ Fin 3)} (hx : x ≠ 0) (hxn : x.card ≤ n) :
     jets.adjointCoeff U x = 0 := by
   obtain ⟨μ, hμ⟩ := Multiset.card_pos_iff_exists_mem.mp (Multiset.card_pos.mpr hx)
@@ -140,7 +140,7 @@ lemma adjointCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : G} (hU : U ∈ je
   rw [hU.2 p.1 μ (by omega), map_zero, LinearMap.zero_comp]
 
 /-- The dual form of `adjointCoeff_eq_zero_of_mem_truncationKer`. -/
-lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : G}
+lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hx : x ≠ 0)
     (hxn : x.card ≤ n) : jets.adjointDualCoeff U x = 0 := by
   rw [adjointDualCoeff, jets.adjointCoeff_eq_zero_of_mem_truncationKer hU hx hxn]
@@ -148,7 +148,7 @@ lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : G}
 
 /-- Up to order `n`, a jet trivial to order `n` has the adjoint coefficients of the
   identity. -/
-lemma adjointCoeff_eq_one_of_mem_truncationKer {n : ℕ} {U : G} (hU : U ∈ jets.truncationKer n)
+lemma adjointCoeff_eq_one_of_mem_truncationKer {n : ℕ} {U : GJ} (hU : U ∈ jets.truncationKer n)
     {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
     jets.adjointCoeff U x = jets.adjointCoeff 1 x := by
   rw [adjointCoeff_one]
@@ -158,7 +158,7 @@ lemma adjointCoeff_eq_one_of_mem_truncationKer {n : ℕ} {U : G} (hU : U ∈ jet
   · exact jets.adjointCoeff_eq_zero_of_mem_truncationKer hU h hxn
 
 /-- Up to order `n`, a jet trivial to order `n` is invisible on the right of a product. -/
-lemma adjointCoeff_mul_of_mem_truncationKer_right (g : G) {n : ℕ} {U : G}
+lemma adjointCoeff_mul_of_mem_truncationKer_right (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
     jets.adjointCoeff (g * U) x = jets.adjointCoeff g x := by
   rw [adjointCoeff_mul, Multiset.sum_antidiagonal_eq_of_snd_ne_zero x _ fun p hp hp2 => ?_]
@@ -168,7 +168,7 @@ lemma adjointCoeff_mul_of_mem_truncationKer_right (g : G) {n : ℕ} {U : G}
       LinearMap.comp_zero]
 
 /-- Up to order `n`, a jet trivial to order `n` is invisible on the left of a product. -/
-lemma adjointCoeff_mul_of_mem_truncationKer_left (g : G) {n : ℕ} {U : G}
+lemma adjointCoeff_mul_of_mem_truncationKer_left (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
     jets.adjointCoeff (U * g) x = jets.adjointCoeff g x := by
   rw [adjointCoeff_mul, Multiset.sum_antidiagonal_eq_of_fst_ne_zero x _ fun p hp hp1 => ?_]
@@ -179,7 +179,7 @@ lemma adjointCoeff_mul_of_mem_truncationKer_left (g : G) {n : ℕ} {U : G}
 
 /-- Up to order `n`, a conjugate of a jet trivial to order `n` has the adjoint
   coefficients of the identity. -/
-lemma adjointCoeff_conj_of_mem_truncationKer (g : G) {n : ℕ} {U : G}
+lemma adjointCoeff_conj_of_mem_truncationKer (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
     jets.adjointCoeff (g * U * g⁻¹) x = jets.adjointCoeff 1 x := by
   rw [adjointCoeff_mul, Multiset.map_congr rfl (fun p hp => by
@@ -189,7 +189,7 @@ lemma adjointCoeff_conj_of_mem_truncationKer (g : G) {n : ℕ} {U : G}
 
 /-- Up to order `n`, a conjugate of a jet trivial to order `n` acts trivially on the
   base-point Taylor data of the jet Lie algebra. -/
-lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : G) {n : ℕ} {U : G}
+lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s.card ≤ n)
     (Y : 𝔤J) : jets.evalLie (jets.iteratedDeriv s (jets.adjoint (g * U * g⁻¹) Y)) =
       jets.evalLie (jets.iteratedDeriv s Y) := by
@@ -209,7 +209,7 @@ lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : G) {n : ℕ} 
 
 /-- The Maurer–Cartan form of a conjugate, by the cocycle law: the conjugating jet
   contributes its own form and its transport by the conjugate. -/
-lemma maurerCartan_conj (g U : G) (μ : Fin 1 ⊕ Fin 3) :
+lemma maurerCartan_conj (g U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     jets.maurerCartan (g * U * g⁻¹) μ =
       jets.maurerCartan g μ + jets.adjoint g (jets.maurerCartan U μ)
         - jets.adjoint (g * U * g⁻¹) (jets.maurerCartan g μ) := by
@@ -234,18 +234,18 @@ instance truncationKer_normal (n : ℕ) : (jets.truncationKer n).Normal where
 -/
 
 /-- The projection of a jet onto the pure jets, stripping its value: `U ↦ U · (U₀)⁻¹`.
-  This is not a group homomorphism; it is the cocycle of the splitting of `G` by the
+  This is not a group homomorphism; it is the cocycle of the splitting of `GJ` by the
   constant jets. -/
-noncomputable def truncationProjZero (U : G) : jets.truncationKer 0 :=
+noncomputable def truncationProjZero (U : GJ) : jets.truncationKer 0 :=
   ⟨U * (jets.ofConstant (jets.eval U))⁻¹, jets.mem_truncationKer_zero_iff.mpr
     (by rw [map_mul, map_inv, eval_ofConstant, mul_inv_cancel])⟩
 
 @[simp]
-lemma coe_truncationProjZero (U : G) :
-    (jets.truncationProjZero U : G) = U * (jets.ofConstant (jets.eval U))⁻¹ := rfl
+lemma coe_truncationProjZero (U : GJ) :
+    (jets.truncationProjZero U : GJ) = U * (jets.ofConstant (jets.eval U))⁻¹ := rfl
 
 /-- Every jet is its pure part times the constant jet of its value. -/
-lemma eq_truncationProjZero_mul_ofConstant (U : G) :
+lemma eq_truncationProjZero_mul_ofConstant (U : GJ) :
     U = jets.truncationProjZero U * jets.ofConstant (jets.eval U) := by
   simp
 
@@ -256,7 +256,7 @@ lemma truncationProjZero_surjective : Function.Surjective jets.truncationProjZer
     mul_one]
 
 /-- The pure part of a jet is trivial exactly when the jet is constant. -/
-lemma truncationProjZero_eq_one_iff {U : G} :
+lemma truncationProjZero_eq_one_iff {U : GJ} :
     jets.truncationProjZero U = 1 ↔ U = jets.ofConstant (jets.eval U) := by
   rw [← Subtype.coe_inj, coe_truncationProjZero, Subgroup.coe_one, mul_inv_eq_one]
 
@@ -268,7 +268,7 @@ lemma truncationProjZero_ofConstant (g : G₀) :
 /-- Stripping the value of a jet does not change its Maurer–Cartan form: by the cocycle
   law, right multiplication by a constant jet drops out. -/
 @[simp]
-lemma maurerCartan_truncationProjZero (U : G) (μ : Fin 1 ⊕ Fin 3) :
+lemma maurerCartan_truncationProjZero (U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     jets.maurerCartan (jets.truncationProjZero U) μ = jets.maurerCartan U μ := by
   rw [coe_truncationProjZero, ← map_inv, maurerCartan_cocycle, maurerCartan_ofConstant,
     map_zero, add_zero]
@@ -331,7 +331,7 @@ variable [jets.Faithful]
 /-- A pure jet of a faithful package is determined by its Maurer–Cartan form. By the
   cocycle and inverse laws `ω(V⁻¹ U) = Ad_{V⁻¹}(ω(U) − ω(V)) = 0`, so `V⁻¹ U` is the
   constant jet of its value, which is the identity. -/
-lemma maurerCartan_injOn_truncationKer_zero {U V : G} (hU : U ∈ jets.truncationKer 0)
+lemma maurerCartan_injOn_truncationKer_zero {U V : GJ} (hU : U ∈ jets.truncationKer 0)
     (hV : V ∈ jets.truncationKer 0) (h : jets.maurerCartan U = jets.maurerCartan V) :
     U = V := by
   have h1 : jets.maurerCartan (V⁻¹ * U) = 0 := by
@@ -381,7 +381,7 @@ to each summand.
 -/
 
 /-- The radial component `∑_μ x_μ ω_μ(U)` of the Maurer–Cartan form of a jet. -/
-noncomputable def radial (U : G) : 𝔤J :=
+noncomputable def radial (U : GJ) : 𝔤J :=
   ∑ μ, jets.coord μ (jets.maurerCartan U μ)
 
 /-- The symmetrized Maurer–Cartan data are the Taylor data of the radial component:
@@ -415,7 +415,7 @@ lemma symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial (U : jets.tru
   coordinates on the pure jets, `symmetrizedMaurerCartanCoeff_bijective`; like `Faithful`
   it is recorded separately from the structure because the covariance theory does not
   need it, only the classification of invariants does. -/
-class Free (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) : Prop extends Faithful jets where
+class Free (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) : Prop extends Faithful jets where
   exists_evalLie_iteratedDeriv_eq : ∀ c : Multiset (Fin 1 ⊕ Fin 3) → 𝔤,
     ∃ Y : 𝔤J, ∀ s, jets.evalLie (jets.iteratedDeriv s Y) = c s
   exists_radial_eq : ∀ ρ : 𝔤J, jets.evalLie ρ = 0 → ∃ U : jets.truncationKer 0, jets.radial U.1 = ρ

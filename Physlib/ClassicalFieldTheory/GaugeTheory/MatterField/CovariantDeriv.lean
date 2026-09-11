@@ -60,17 +60,17 @@ set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct MvPowerSeries
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
 namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -84,8 +84,8 @@ variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
   vector into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at
   the base point. The composite is complex-linear: the physicists'
   `∂_x (rep U)^i_j|₀` as a ℂ-linear map on the value space. -/
-noncomputable def repCoeff (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) : V →ₗ[ℂ] V :=
+noncomputable def repCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) : V →ₗ[ℂ] V :=
   jetEval ∘ₗ jetIteratedDeriv x ∘ₗ rep U ∘ₗ jetOfConstant
 
 /-- The physicists' `∂_x (rep U)^i_j|₀` acting on the complex dual index of a
@@ -93,8 +93,8 @@ noncomputable def repCoeff (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
   `adjointDualCoeff` for a general representation of the jet gauge group; for `x = 0`
   it is the dual (contragredient) action of the value of `U`, and for `x ≠ 0` it sees
   the derivatives of the gauge transformation. -/
-noncomputable def repDualCoeff (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+noncomputable def repDualCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ V →ₗ[ℂ] Module.Dual ℂ V :=
   (repCoeff rep U x).dualMap
 
@@ -295,7 +295,7 @@ include h in
   transformed families plus one `act`-type cross term. This is `repGauge_bracketFam`
   with a homogeneous second slot and the bracket replaced by a general action. -/
 lemma repGauge_actionFam
-    (U : G) {f f' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+    (U : GJ) {f f' : Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     {g g' : Module.Dual ℂ V →ₗ[ℂ] B} {cf : 𝔤}
     (hf : ∀ ψ : Module.Dual ℝ 𝔤,
       repGauge U (f ψ) = f' ψ + algebraMap ℂ B (ψ cf))

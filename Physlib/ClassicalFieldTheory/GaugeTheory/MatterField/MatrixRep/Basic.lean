@@ -60,8 +60,8 @@ open TensorProduct MvPowerSeries MatrixGroups
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 
 /-!
 
@@ -74,10 +74,10 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   and the jets of the gauge algebra by the matrix of jets `jetAct a`, subject to the
   derivative identity and the equivariance identity that make `act` the infinitesimal
   action underlying `mat`. -/
-structure MatrixRep (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (ι : Type) [Fintype ι] [DecidableEq ι]
+structure MatrixRep (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (ι : Type) [Fintype ι] [DecidableEq ι]
     where
   /-- The matrix of jets by which a jet of gauge transformations acts. -/
-  mat : G → Matrix ι ι JetRing
+  mat : GJ → Matrix ι ι JetRing
   mat_one : mat 1 = 1
   mat_mul : ∀ U V, mat (U * V) = mat U * mat V
   /-- The matrix by which an element of the gauge algebra acts. -/
@@ -92,17 +92,17 @@ structure MatrixRep (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (ι : Type) [Finty
       = act (jets.evalLie (jets.iteratedDeriv p a))
   /-- The derivative identity: the formal derivative of the matrix of a gauge jet is minus
     the jet action of its Maurer–Cartan form times the matrix. -/
-  mat_map_pderiv : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3),
+  mat_map_pderiv : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     (mat U).map (fun f => pderiv ℂ μ f) = -(jetAct (jets.maurerCartan U μ) * mat U)
   /-- The equivariance identity: the matrix of a gauge jet intertwines the constant jet
     action with its adjoint transform. -/
-  mat_mul_jetAct : ∀ (U : G) (c : 𝔤),
+  mat_mul_jetAct : ∀ (U : GJ) (c : 𝔤),
     mat U * jetAct (jets.ofConstantLie c)
       = jetAct (jets.adjoint U (jets.ofConstantLie c)) * mat U
 
 namespace MatrixRep
 
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {ι : Type}
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {ι : Type}
 
 /-!
 
@@ -415,16 +415,16 @@ variable (R : MatrixRep jets ι)
 /-- **The jet gauge action** of a matrix representation on the jets of a `V`-valued
   field: the matrix of jets acts on the internal index by matrix–vector multiplication,
   with the Lorentz factor untouched. -/
-noncomputable def repJet : Representation ℂ G (JetRing ⊗[ℂ] V) where
+noncomputable def repJet : Representation ℂ GJ (JetRing ⊗[ℂ] V) where
   toFun U := matEnd e (R.mat U)
   map_one' := by rw [R.mat_one, matEnd_one]; rfl
   map_mul' U V := by rw [R.mat_mul, matEnd_mul]; rfl
 
-lemma repJet_apply (U : G) : R.repJet e U = matEnd e (R.mat U) := rfl
+lemma repJet_apply (U : GJ) : R.repJet e U = matEnd e (R.mat U) := rfl
 
 /-- **The jet gauge action is fibrewise**: it commutes with multiplication by scalar
   jets. -/
-lemma repJet_smul (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma repJet_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
     R.repJet e U (χ • z) = χ • R.repJet e U z := by
   rw [repJet_apply, matEnd_smul]
 
@@ -450,7 +450,7 @@ lemma repAlgebra_apply (c : 𝔤) : R.repAlgebra e c = valEnd e (R.act c) := rfl
 
 /-- **The base-point Taylor coefficients of the jet gauge action** are the endomorphisms
   of the base-point Taylor coefficients of the matrix of jets. -/
-lemma repCoeff_eq (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+lemma repCoeff_eq (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (R.repJet e) U x
       = valEnd e ((R.mat U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by

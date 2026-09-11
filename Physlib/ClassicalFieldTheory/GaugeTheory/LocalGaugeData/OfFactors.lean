@@ -111,7 +111,7 @@ noncomputable instance instFinite𝔤 : (f : FactorSpec) → Module.Finite ℝ f
   | .SU n => inferInstanceAs (Module.Finite ℝ (SUAlgebra n))
 
 /-- The local gauge data of a factor. -/
-noncomputable abbrev data : (f : FactorSpec) → LocalGaugeData f.G f.𝔤 f.G₀ f.𝔤J
+noncomputable abbrev data : (f : FactorSpec) → LocalGaugeData f.G₀ f.𝔤 f.G f.𝔤J
   | .U1 => u1
   | .SU n => su n
 
@@ -291,7 +291,7 @@ instance instFaithfulTrivial : trivial.Faithful where
 open Factors in
 /-- **The local gauge data of a list of factors**: the product, in the order of the list,
   of the local gauge data of the factors. -/
-noncomputable def ofFactors : (Γ : List FactorSpec) → LocalGaugeData (G Γ) (𝔤 Γ) (G₀ Γ) (𝔤J Γ)
+noncomputable def ofFactors : (Γ : List FactorSpec) → LocalGaugeData (G₀ Γ) (𝔤 Γ) (G Γ) (𝔤J Γ)
   | [] => trivial
   | [f] => f.data
   | f :: g :: gs => f.data.prod (ofFactors (g :: gs))
@@ -324,7 +324,7 @@ variable {G₁ : Type} [Group G₁] {𝔤₁ : Type} [LieRing 𝔤₁] [LieAlgeb
   {G₀₁ : Type} [Group G₀₁] {𝔤J₁ : Type} [LieRing 𝔤J₁] [LieAlgebra ℝ 𝔤J₁]
   {G₂ : Type} [Group G₂] {𝔤₂ : Type} [LieRing 𝔤₂] [LieAlgebra ℝ 𝔤₂]
   {G₀₂ : Type} [Group G₀₂] {𝔤J₂ : Type} [LieRing 𝔤J₂] [LieAlgebra ℝ 𝔤J₂]
-  {j₁ : LocalGaugeData G₁ 𝔤₁ G₀₁ 𝔤J₁} {j₂ : LocalGaugeData G₂ 𝔤₂ G₀₂ 𝔤J₂}
+  {j₁ : LocalGaugeData G₀₁ 𝔤₁ G₁ 𝔤J₁} {j₂ : LocalGaugeData G₀₂ 𝔤₂ G₂ 𝔤J₂}
 
 /-- A factor of the first gauge data, as a factor of the product. -/
 noncomputable abbrev Factor.inl : Factor j₁ → Factor (j₁.prod j₂)

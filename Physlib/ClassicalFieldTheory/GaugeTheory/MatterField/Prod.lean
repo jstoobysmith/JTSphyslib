@@ -47,9 +47,9 @@ open Matrix MatrixGroups TensorProduct
 
 namespace MatterField
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 /-!
 
@@ -86,12 +86,12 @@ private lemma prodMap_multiset_sum {ι V₁ V₂ : Type} [AddCommGroup V₁] [Mo
 /-- **The jet gauge action of a direct sum**: the two actions, read through the
   identification of the jets of `M.V × N.V` with the pair of jets. -/
 noncomputable def repJetProd :
-    Representation ℂ G (JetRing ⊗[ℂ] (M.V × N.V)) where
+    Representation ℂ GJ (JetRing ⊗[ℂ] (M.V × N.V)) where
   toFun U := LinearEquiv.conjRingEquiv jetProdEquiv.symm ((M.repJet.prod N.repJet) U)
   map_one' := by rw [map_one, map_one]
   map_mul' U W := by rw [map_mul, map_mul]
 
-lemma repJetProd_apply (U : G) (z : JetRing ⊗[ℂ] (M.V × N.V)) :
+lemma repJetProd_apply (U : GJ) (z : JetRing ⊗[ℂ] (M.V × N.V)) :
     repJetProd M N U z =
       jetProdEquiv.symm (M.repJet U (jetProdEquiv z).1, N.repJet U (jetProdEquiv z).2) := rfl
 
@@ -110,7 +110,7 @@ lemma repAlgebraProd_apply (c : 𝔤) :
 /-- The base-point Taylor coefficients of the summed jet action are the pair of the
   coefficients of the summands: `jetOfConstant`, `jetIteratedDeriv` and `jetEval` all act
   componentwise through `jetProdEquiv`. -/
-lemma repCoeff_repJetProd (U : G) (x : Multiset (Fin 1 ⊕ Fin 3)) :
+lemma repCoeff_repJetProd (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (repJetProd M N) U x =
       (GaugeAlgebraRealization.repCoeff M.repJet U x).prodMap
         (GaugeAlgebraRealization.repCoeff N.repJet U x) := by

@@ -17,36 +17,36 @@ public import Physlib.Relativity.DerivAlgebra
 
 A gauge transformation is a spacetime-dependent element of the gauge group `G₀`; what a
 local Lagrangian sees of it is its *jet* at the base point. The jet gauge transformations
-form a group `G`, and their infinitesimal counterparts a Lie algebra `𝔤J` over `ℝ`, with the
-value at the base point given by `eval : G →* G₀` and `evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤`.
+form a group `GJ`, and their infinitesimal counterparts a Lie algebra `𝔤J` over `ℝ`, with the
+value at the base point given by `eval : GJ →* G₀` and `evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤`.
 
-This file records, as the structure `LocalGaugeData G 𝔤 G₀ 𝔤J`, exactly the structure of
+This file records, as the structure `LocalGaugeData G₀ 𝔤 GJ 𝔤J`, exactly the structure of
 this situation that the transformation laws of gauge fields and matter fields use:
 
 * the inclusion of constants and evaluation at the base point, on the group and on the
   Lie algebra;
 * the formal spacetime derivatives `deriv μ` on `𝔤J`, commuting, satisfying the Leibniz
   rule for the bracket, and killing constants;
-* the adjoint action of `G` on `𝔤J`, by Lie algebra automorphisms, evaluating at the base
+* the adjoint action of `GJ` on `𝔤J`, by Lie algebra automorphisms, evaluating at the base
   point to the adjoint action of `G₀` on `𝔤`;
 * the Maurer–Cartan form `maurerCartan U μ = i (∂_μ U) U⁻¹`, with its cocycle law, its
   flatness equation `maurerCartan_structure` and the Leibniz rule `deriv_adjoint` for the
   adjoint action.
 
 Everything else — the Taylor coefficients of the adjoint action, the truncation filtration
-of `G`, the symmetrized Maurer–Cartan form — is *derived* from these laws in the sibling
+of `GJ`, the symmetrized Maurer–Cartan form — is *derived* from these laws in the sibling
 files of this folder. Two further properties, which are true of any honest jet group but are
 not consequences of the transformation laws, are collected in the mixin `Faithful`: an
 element of `𝔤J` is determined by its base-point Taylor data, and a jet with vanishing
 Maurer–Cartan form is constant.
 
-A term `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` is supplied, not inferred: every construction
+A term `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J` is supplied, not inferred: every construction
 below, and every construction downstream, takes the package it works over as an ordinary
 argument. The four carriers do not determine it — a truncated jet group beside the full
 one is the same four carriers with different data — so there is nothing canonical for
 instance search to choose.
 
-For the Standard Model, `G₀ = SU(3) × SU(2) × U(1)` and `G` is the same group with
+For the Standard Model, `G₀ = SU(3) × SU(2) × U(1)` and `GJ` is the same group with
 coefficients in the ring of formal power series in the spacetime coordinates
 (`StandardModel.JetGaugeGroupI`), packaged as `StandardModel.localGaugeData`; nothing here
 depends on that choice.
@@ -82,20 +82,20 @@ depends on that choice.
 
 -/
 
-/-- Local gauge data. A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `G` with
+/-- Local gauge data. A gauge group `G₀` with Lie algebra `𝔤`, its group of jets `GJ` with
   Lie algebra of jets `𝔤J`, evaluation at the base point, formal derivatives, the adjoint
   action and the Maurer–Cartan form, subject to the identities used by the transformation
   laws of gauge and matter fields.
 
   This is data attached to the four carriers, not a property of them, and it is passed
-  explicitly: the generic theory takes `jets : LocalGaugeData G 𝔤 G₀ 𝔤J` as an argument rather
+  explicitly: the generic theory takes `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J` as an argument rather
   than searching for it. -/
-structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-    (G₀ : Type) [Group G₀] (𝔤J : Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J] where
+structure LocalGaugeData (G₀ : Type) [Group G₀] (𝔤 : Type) [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    (GJ : Type) [Group GJ] (𝔤J : Type) [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J] where
   /-- Evaluation of a gauge jet at the base point. -/
-  eval : G →* G₀
+  eval : GJ →* G₀
   /-- A constant gauge transformation as a jet. -/
-  ofConstant : G₀ →* G
+  ofConstant : G₀ →* GJ
   eval_ofConstant : ∀ g, eval (ofConstant g) = g
   /-- Evaluation of a Lie algebra jet at the base point. -/
   evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤
@@ -119,33 +119,33 @@ structure LocalGaugeData (G : Type) [Group G] (𝔤 : Type) [LieRing 𝔤] [LieA
   /-- The coordinates are central for the bracket. -/
   coord_lie : ∀ (μ : Fin 1 ⊕ Fin 3) (a b : 𝔤J), ⁅coord μ a, b⁆ = coord μ ⁅a, b⁆
   /-- The adjoint action of the jet group on the jet Lie algebra. -/
-  adjoint : Representation ℝ G 𝔤J
-  adjoint_lie : ∀ (U : G) (x y : 𝔤J), adjoint U ⁅x, y⁆ = ⁅adjoint U x, adjoint U y⁆
+  adjoint : Representation ℝ GJ 𝔤J
+  adjoint_lie : ∀ (U : GJ) (x y : 𝔤J), adjoint U ⁅x, y⁆ = ⁅adjoint U x, adjoint U y⁆
   /-- The adjoint representation of the value group on its Lie algebra. -/
   adjointValue : Representation ℝ G₀ 𝔤
   /-- At the base point the adjoint action of a jet is the adjoint action of its value. -/
-  evalLie_adjoint : ∀ (U : G) (x : 𝔤J), evalLie (adjoint U x) = adjointValue (eval U) (evalLie x)
+  evalLie_adjoint : ∀ (U : GJ) (x : 𝔤J), evalLie (adjoint U x) = adjointValue (eval U) (evalLie x)
   /-- The Maurer–Cartan form `i (∂_μ U) U⁻¹` of a gauge jet. -/
-  maurerCartan : G → (Fin 1 ⊕ Fin 3) → 𝔤J
+  maurerCartan : GJ → (Fin 1 ⊕ Fin 3) → 𝔤J
   /-- A constant gauge transformation has vanishing Maurer–Cartan form: it has no
     spacetime dependence to differentiate. -/
   maurerCartan_ofConstant : ∀ (g : G₀) (μ : Fin 1 ⊕ Fin 3), maurerCartan (ofConstant g) μ = 0
   /-- The Maurer–Cartan form is a cocycle for the adjoint action. -/
-  maurerCartan_cocycle : ∀ (U V : G) (μ : Fin 1 ⊕ Fin 3),
+  maurerCartan_cocycle : ∀ (U V : GJ) (μ : Fin 1 ⊕ Fin 3),
     maurerCartan (U * V) μ = maurerCartan U μ + adjoint U (maurerCartan V μ)
   /-- The Maurer–Cartan form is flat. -/
-  maurerCartan_structure : ∀ (U : G) (μ ν : Fin 1 ⊕ Fin 3),
+  maurerCartan_structure : ∀ (U : GJ) (μ ν : Fin 1 ⊕ Fin 3),
     deriv μ (maurerCartan U ν) - deriv ν (maurerCartan U μ)
       + ⁅maurerCartan U μ, maurerCartan U ν⁆ = 0
   /-- The Leibniz rule for the adjoint action. -/
-  deriv_adjoint : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J),
+  deriv_adjoint : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J),
     deriv μ (adjoint U x) = adjoint U (deriv μ x) - ⁅maurerCartan U μ, adjoint U x⁆
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-  (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+  (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
 
 /-!
 
@@ -162,7 +162,7 @@ lemma maurerCartan_one (μ : Fin 1 ⊕ Fin 3) : jets.maurerCartan 1 μ = 0 := by
 
 /-- The Maurer–Cartan form of an inverse: `ω_μ(U⁻¹) = − Ad_{U⁻¹} ω_μ(U)`, the cocycle
   law applied to `U⁻¹ U = 1`. -/
-lemma maurerCartan_inv (U : G) (μ : Fin 1 ⊕ Fin 3) :
+lemma maurerCartan_inv (U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     jets.maurerCartan U⁻¹ μ = - jets.adjoint U⁻¹ (jets.maurerCartan U μ) := by
   have h := jets.maurerCartan_cocycle U⁻¹ U μ
   rw [inv_mul_cancel, jets.maurerCartan_one] at h
@@ -170,12 +170,12 @@ lemma maurerCartan_inv (U : G) (μ : Fin 1 ⊕ Fin 3) :
 
 /-- At the base point, the adjoint action of a jet on a constant is the adjoint action of
   its value. -/
-lemma evalLie_adjoint_ofConstantLie (U : G) (a : 𝔤) :
+lemma evalLie_adjoint_ofConstantLie (U : GJ) (a : 𝔤) :
     jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = jets.adjointValue (jets.eval U) a := by
   rw [jets.evalLie_adjoint, jets.evalLie_ofConstantLie]
 
 /-- A jet with trivial value acts trivially on constants at the base point. -/
-lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : jets.eval U = 1) (a : 𝔤) :
+lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : GJ} (hU : jets.eval U = 1) (a : 𝔤) :
     jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = a := by
   rw [evalLie_adjoint_ofConstantLie, hU, map_one, Module.End.one_apply]
 
@@ -189,8 +189,8 @@ lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : G} (hU : jets.eval U = 1
   structure rather than a construction from the rest of it. -/
 lemma maurerCartan_eq_of_deriv_adjoint
     (hfaithful : ∀ x y : 𝔤J, (∀ z : 𝔤J, ⁅x, z⁆ = ⁅y, z⁆) → x = y)
-    (ω : G → (Fin 1 ⊕ Fin 3) → 𝔤J)
-    (hω : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J),
+    (ω : GJ → (Fin 1 ⊕ Fin 3) → 𝔤J)
+    (hω : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J),
       jets.deriv μ (jets.adjoint U x)
         = jets.adjoint U (jets.deriv μ x) - ⁅ω U μ, jets.adjoint U x⁆) :
     ω = jets.maurerCartan := by
@@ -361,11 +361,11 @@ recorded separately from the structure because the covariance theory does not ne
 /-- A package is faithful when an element of `𝔤J` is determined by the base-point values
   of its iterated derivatives (Taylor determinacy) and a jet with vanishing Maurer–Cartan
   form is the constant jet of its value. -/
-class Faithful (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) : Prop where
+class Faithful (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) : Prop where
   ext_of_evalLie_iteratedDeriv : ∀ {x y : 𝔤J},
     (∀ s : Multiset (Fin 1 ⊕ Fin 3),
       jets.evalLie (jets.iteratedDeriv s x) = jets.evalLie (jets.iteratedDeriv s y)) → x = y
-  eq_ofConstant_of_maurerCartan_eq_zero : ∀ {U : G},
+  eq_ofConstant_of_maurerCartan_eq_zero : ∀ {U : GJ},
     jets.maurerCartan U = 0 → U = jets.ofConstant (jets.eval U)
 
 /-- Taylor determinacy of a faithful package, in the form of an extensionality lemma. -/

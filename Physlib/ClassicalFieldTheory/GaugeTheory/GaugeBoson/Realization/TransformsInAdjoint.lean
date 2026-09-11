@@ -31,14 +31,14 @@ set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct
 variable {B : Type} [Ring B] [Algebra ℂ B]
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
-variable {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
+variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
 variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ G B}
+variable {repGauge : Representation ℂ GJ B}
 variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
@@ -48,9 +48,9 @@ variable (jets) in
   transforms by the Leibniz convolution of the dual adjoint coefficients against lower
   symbols — the shape of `gauge_apply_deriv` with no Maurer–Cartan shift. At `s = 0`
   this is the homogeneous law `U • F^φ = F^{Ad₀^* φ}`. -/
-def TransformsInAdjoint (repGauge : Representation ℂ G B)
+def TransformsInAdjoint (repGauge : Representation ℂ GJ B)
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) : Prop :=
-  ∀ (U : G) (φ : Module.Dual ℝ 𝔤) (s : Multiset (Fin 1 ⊕ Fin 3)),
+  ∀ (U : GJ) (φ : Module.Dual ℝ 𝔤) (s : Multiset (Fin 1 ⊕ Fin 3)),
     repGauge U (F s φ) =
       (s.antidiagonal.map fun p => F p.2 (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
 
@@ -59,7 +59,7 @@ def TransformsInAdjoint (repGauge : Representation ℂ G B)
   has a single term. -/
 lemma TransformsInAdjoint.repGauge_zero
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-    (hF : TransformsInAdjoint jets repGauge F) (U : G) (φ : Module.Dual ℝ 𝔤) :
+    (hF : TransformsInAdjoint jets repGauge F) (U : GJ) (φ : Module.Dual ℝ 𝔤) :
     repGauge U (F 0 φ) = F 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
   simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton, Multiset.sum_singleton]
     using hF U φ 0
@@ -107,7 +107,7 @@ lemma covDerivAdjoint_apply
 lemma TransformsInAdjoint.repGauge_cons
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     (hF : TransformsInAdjoint jets repGauge F)
-    (U : G) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (U : GJ) (κ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (F (κ ::ₘ s) φ) =
       (s.antidiagonal.map fun p =>
@@ -143,7 +143,7 @@ set_option maxHeartbeats 2000000 in
 lemma TransformsInAdjoint.repGauge_bracketFamConv
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
     (hF : TransformsInAdjoint jets repGauge F)
-    (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
+    (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (ρ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge U (bracketFamConv h.A ρ F s φ) =
       (s.antidiagonal.map fun p =>

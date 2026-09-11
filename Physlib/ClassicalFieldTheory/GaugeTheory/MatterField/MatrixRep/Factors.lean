@@ -85,8 +85,8 @@ end MatterField
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 
 /-!
 
@@ -98,9 +98,9 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   jet, with the corresponding components `φ c` of the gauge algebra and `φJ a` of its jets,
   related by the Maurer–Cartan form `φJ (ω_μ U) = i (∂_μ u) u⁻¹` and invariant under the
   adjoint action. -/
-structure U1Factor (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
+structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   /-- The unitary jet of a gauge jet. -/
-  u : G →* unitary JetRing
+  u : GJ →* unitary JetRing
   /-- The `u(1)` component of a gauge algebra element. -/
   φ : 𝔤 →ₗ[ℝ] ℂ
   /-- The `u(1)` component of a jet of gauge algebra elements. -/
@@ -109,22 +109,22 @@ structure U1Factor (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
     constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) (φJ a))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
-  φJ_maurerCartan : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3),
+  φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
       = Complex.I • (pderiv ℂ μ (u U : JetRing) * star (u U : JetRing))
-  φJ_adjoint : ∀ (U : G) (c : 𝔤),
+  φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
     φJ (jets.adjoint U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
 
 namespace U1Factor
 
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} (F : U1Factor jets)
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (F : U1Factor jets)
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 open MatterField
 
 /-- The derivative of the charge-`n` power of the unitary jet of a gauge jet, in terms of
   the Maurer–Cartan form: `∂_μ (u ^ n) = -(i n) φJ (ω_μ U) · u ^ n`. -/
-lemma pderiv_chargePow_u (n : ℤ) (U : G) (μ : Fin 1 ⊕ Fin 3) :
+lemma pderiv_chargePow_u (n : ℤ) (U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     pderiv ℂ μ (chargePow n (F.u U))
       = -(((Complex.I * n) • F.φJ (jets.maurerCartan U μ)) * chargePow n (F.u U)) := by
   rw [pderiv_chargePow, F.φJ_maurerCartan, smul_smul,
@@ -209,10 +209,10 @@ end U1Factor
   to each gauge jet, with the corresponding matrix components `φ c` of the gauge algebra
   and `φJ a` of its jets, related by the Maurer–Cartan form `φJ (ω_μ U) = i (∂_μ u) u⁻¹`
   and transforming by conjugation under the adjoint action. -/
-structure SUFactor (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (n : Type) [Fintype n] [DecidableEq n]
+structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintype n] [DecidableEq n]
     where
   /-- The unitary matrix of jets of a gauge jet. -/
-  u : G → Matrix n n JetRing
+  u : GJ → Matrix n n JetRing
   u_one : u 1 = 1
   u_mul : ∀ U V, u (U * V) = u U * u V
   u_unitary : ∀ U, star (u U) * u U = 1
@@ -224,15 +224,15 @@ structure SUFactor (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) (n : Type) [Fintype
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
     ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) f))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
-  φJ_maurerCartan : ∀ (U : G) (μ : Fin 1 ⊕ Fin 3),
+  φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
       = Complex.I • (((u U).map fun f => pderiv ℂ μ f) * star (u U))
-  φJ_adjoint : ∀ (U : G) (c : 𝔤),
+  φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
     φJ (jets.adjoint U (jets.ofConstantLie c)) = u U * φJ (jets.ofConstantLie c) * star (u U)
 
 namespace SUFactor
 
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J} {n : Type} [Fintype n] [DecidableEq n]
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {n : Type} [Fintype n] [DecidableEq n]
   (F : SUFactor jets n)
 
 /-- **The fundamental representation** of an `SU(n)` factor: the gauge jets act by their

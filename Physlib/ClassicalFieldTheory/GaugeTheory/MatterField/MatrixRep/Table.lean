@@ -50,8 +50,8 @@ open Matrix MatrixGroups TensorProduct
 
 namespace LocalGaugeData
 
-variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
-  {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+  {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 
 /-!
 
@@ -61,14 +61,14 @@ variable {G : Type} [Group G] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 
 /-- **A factor of the gauge group**, presented in the local gauge data: a `U(1)` factor or
   an `SU(n)` factor. -/
-inductive Factor (jets : LocalGaugeData G 𝔤 G₀ 𝔤J)
+inductive Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
   /-- A `U(1)` factor. -/
   | U1 (F : U1Factor jets)
   /-- An `SU(n)` factor. -/
   | SU {n : ℕ} (F : SUFactor jets (Fin n))
 
 /-- **A gauge group presented by its factors.** -/
-abbrev Factors (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) : Type := List (Factor jets)
+abbrev Factors (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) : Type := List (Factor jets)
 
 /-- **A representation label under `SU(n)`.** -/
 inductive SURep
@@ -86,7 +86,7 @@ abbrev SURep.dim (n : ℕ) : SURep → ℕ
   | .fund => n
   | .antifund => n
 
-variable {jets : LocalGaugeData G 𝔤 G₀ 𝔤J}
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 /-- The matrix representation of an `SU(n)` factor named by a label. -/
 noncomputable def SURep.rep {n : ℕ} (F : SUFactor jets (Fin n)) :
@@ -250,7 +250,7 @@ lemma ScalarRow.matterField_massWeight (r : ScalarRow Γ) :
 
 /-- **A model table**: the gauge group as a list of factors, the fermion rows and the
   scalar rows. -/
-structure Table (jets : LocalGaugeData G 𝔤 G₀ 𝔤J) where
+structure Table (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   /-- The gauge group. -/
   gauge : Factors jets
   /-- The fermion rows. -/
