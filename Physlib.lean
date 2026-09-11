@@ -37,8 +37,13 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoe
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeriv
@@ -46,6 +51,10 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Constructions
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Factors
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Pi
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
 public import Physlib.ClassicalFieldTheory.Local.Variation
@@ -298,6 +307,7 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.Basic
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lemmas
 public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.LinearParameterization
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
+public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.MassWeight
@@ -410,6 +420,7 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassDim
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.TransformsIn
+public import Physlib.Particles.StandardModel.Model.Consistency
 public import Physlib.Particles.StandardModel.Peeling
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
@@ -580,7 +591,9 @@ public import Physlib.Relativity.Fermions.Weyl.Two
 public import Physlib.Relativity.Fermions.Weyl.Unit
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.JetRing.Basic
+public import Physlib.Relativity.JetRing.Jacobi
 public import Physlib.Relativity.JetRing.Matrix
+public import Physlib.Relativity.JetRing.Taylor
 public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Relativity.LorentzAlgebra.Basic
 public import Physlib.Relativity.LorentzAlgebra.Basis
