@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.JetDeriv
 public import Physlib.Relativity.IsLorentzDeriv
 
 /-!
@@ -24,10 +24,10 @@ the boost-weight machinery.
 
 - `GaugeBoson.JetComponentSpace.repLorentzGroup` : the Lorentz action on the component
   space.
-- `GaugeJetAlgebra.repLorentzGroup` : the Lorentz action on the jet algebra.
-- `GaugeJetAlgebra.repLorentzGroup_jetDeriv` : the total derivative is a Lorentz vector.
-- `GaugeJetAlgebra.complexRepLorentzGroup` : the action on the complexification.
-- `GaugeJetAlgebra.instIsLorentzDeriv` : the `Lorentz.IsLorentzDeriv` instance.
+- `LocalGaugeFieldAlgebra.repLorentzGroup` : the Lorentz action on the jet algebra.
+- `LocalGaugeFieldAlgebra.repLorentzGroup_jetDeriv` : the total derivative is a Lorentz vector.
+- `LocalGaugeFieldAlgebra.complexRepLorentzGroup` : the action on the complexification.
+- `LocalGaugeFieldAlgebra.instIsLorentzDeriv` : the `Lorentz.IsLorentzDeriv` instance.
 
 ## iii. Table of contents
 
@@ -118,7 +118,7 @@ lemma JetComponentSpace.repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 �
 
 end GaugeBoson
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 /-!
 
@@ -129,7 +129,7 @@ namespace GaugeJetAlgebra
 variable (𝔤) in
 /-- **The Lorentz action on the gauge-boson jet algebra**: the symmetric-algebra functor
   applied to the Lorentz action on the jet component space. -/
-noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) (GaugeJetAlgebra 𝔤) where
+noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) (LocalGaugeFieldAlgebra 𝔤) where
   toFun Λ :=
     (SymmetricAlgebra.map ((GaugeBoson.JetComponentSpace.repLorentzGroup 𝔤) Λ)).toLinearMap
   map_one' := by
@@ -138,16 +138,16 @@ noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) (GaugeJetAlgebr
     simp only [map_mul, Module.End.mul_eq_comp, ← SymmetricAlgebra.map_comp_map,
       AlgHom.comp_toLinearMap]
 
-lemma repLorentzGroup_apply (Λ : SL(2,ℂ)) (x : (GaugeJetAlgebra 𝔤)) :
+lemma repLorentzGroup_apply (Λ : SL(2,ℂ)) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (repLorentzGroup 𝔤) Λ x =
       SymmetricAlgebra.map ((GaugeBoson.JetComponentSpace.repLorentzGroup 𝔤) Λ) x := rfl
 
 @[simp]
 lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    (repLorentzGroup 𝔤) Λ (1 : (GaugeJetAlgebra 𝔤)) = 1 := by
+    (repLorentzGroup 𝔤) Λ (1 : (LocalGaugeFieldAlgebra 𝔤)) = 1 := by
   simp [repLorentzGroup_apply]
 
-lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : (GaugeJetAlgebra 𝔤)) :
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : (LocalGaugeFieldAlgebra 𝔤)) :
     (repLorentzGroup 𝔤) Λ (x * y) = (repLorentzGroup 𝔤) Λ x * (repLorentzGroup 𝔤) Λ y := by
   simp [repLorentzGroup_apply]
 
@@ -164,7 +164,7 @@ lemma repLorentzGroup_ι (Λ : SL(2,ℂ)) (v : (GaugeBoson.JetComponentSpace �
 -/
 
 /-- **The total derivative on the gauge-boson jet algebra is a Lorentz vector.** -/
-lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : (GaugeJetAlgebra 𝔤)) :
+lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (repLorentzGroup 𝔤) Λ ((jetDeriv 𝔤) μ x) =
       ∑ a, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ) •
         (jetDeriv 𝔤) a ((repLorentzGroup 𝔤) Λ x) := by
@@ -196,7 +196,7 @@ lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : (Gau
 variable (𝔤) in
 /-- The Lorentz action on the complexified gauge-boson jet algebra, by base change. -/
 noncomputable def complexRepLorentzGroup :
-    Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) where
+    Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) where
   toFun Λ := LinearMap.baseChange ℂ ((repLorentzGroup 𝔤) Λ)
   map_one' := by
     rw [map_one, Module.End.one_eq_id, LinearMap.baseChange_id, Module.End.one_eq_id]
@@ -204,10 +204,10 @@ noncomputable def complexRepLorentzGroup :
     rw [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp, Module.End.mul_eq_comp]
 
 @[simp]
-lemma complexRepLorentzGroup_tmul (Λ : SL(2,ℂ)) (z : ℂ) (x : (GaugeJetAlgebra 𝔤)) :
+lemma complexRepLorentzGroup_tmul (Λ : SL(2,ℂ)) (z : ℂ) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (complexRepLorentzGroup 𝔤) Λ (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] (repLorentzGroup 𝔤) Λ x := rfl
 
-lemma complexRepLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) :
+lemma complexRepLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
     (complexRepLorentzGroup 𝔤) Λ (x * y)
       = (complexRepLorentzGroup 𝔤) Λ x * (complexRepLorentzGroup 𝔤) Λ y := by
   induction x using TensorProduct.induction_on with
@@ -224,7 +224,7 @@ lemma complexRepLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : ℂ ⊗[ℝ] (Gau
 
 /-- **The complexified total derivative is a Lorentz vector.** -/
 lemma complexRepLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
-    (x : ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) :
+    (x : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
     (complexRepLorentzGroup 𝔤) Λ ((complexJetDeriv 𝔤) μ x) =
       ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
         (complexJetDeriv 𝔤) a ((complexRepLorentzGroup 𝔤) Λ x) := by
@@ -309,5 +309,5 @@ lemma complexRepLorentzGroup_one_tmul_ofA (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3
       = algebraMap ℝ ℂ ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ) from rfl,
     algebraMap_smul]
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
 

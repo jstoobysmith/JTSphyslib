@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Structure
 /-!
 # The Lorentz action on the jet algebra of the Standard Model
@@ -84,16 +84,16 @@ noncomputable abbrev repLorentzGroupBoson :
   transform independently. -/
 noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) JetAlgebra :=
   (repLorentzGroupFermion.tprod repLorentzGroupBoson).tprod
-    (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra)
+    (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra)
 
 @[simp]
 lemma repLorentzGroup_tmul (Λ : SL(2,ℂ))
     (w : ExteriorAlgebra ℂ fieldData.FermionGenerators ⊗[ℂ]
       SymmetricAlgebra ℂ fieldData.BosonGenerators)
-    (g : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra) :
+    (g : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra) :
     repLorentzGroup Λ (w ⊗ₜ[ℂ] g)
       = ((repLorentzGroupFermion.tprod repLorentzGroupBoson) Λ w)
-          ⊗ₜ[ℂ] (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra Λ g) := rfl
+          ⊗ₜ[ℂ] (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra Λ g) := rfl
 
 /-!
 
@@ -109,7 +109,7 @@ lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : JetAlgebra) :
       (fun Λ' a b => Representation.exteriorAlgebra_apply_mul _ Λ' a b)
       (fun Λ' a b => Representation.symmetricAlgebra_apply_mul _ Λ' a b))
     (fun Λ' a b =>
-      _root_.GaugeJetAlgebra.complexRepLorentzGroup_apply_mul Λ' a b) Λ x y
+      _root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup_apply_mul Λ' a b) Λ x y
 
 /-!
 
@@ -119,11 +119,11 @@ lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : JetAlgebra) :
 
 /-- The Lorentz action on the complexified gauge sector fixes the unit. -/
 lemma complexRepLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
+    (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra) Λ
+      (1 : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) = 1 := by
   rw [Algebra.TensorProduct.one_def,
-    _root_.GaugeJetAlgebra.complexRepLorentzGroup_tmul,
-    _root_.GaugeJetAlgebra.repLorentzGroup_apply_one]
+    _root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup_tmul,
+    _root_.LocalGaugeFieldAlgebra.repLorentzGroup_apply_one]
 
 /-- The matter factor of the Lorentz action fixes the unit, by the same abstract
   instantiation as in the gauge action. -/
@@ -136,14 +136,14 @@ lemma repLorentzGroup_matter_one (Λ : SL(2,ℂ)) :
 
 /-- The Lorentz action restricts to the generic connection factor. -/
 lemma repLorentzGroup_includeConnection (Λ : SL(2,ℂ))
-    (y : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra) :
+    (y : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra) :
     repLorentzGroup Λ (fieldData.includeConnection y)
       = fieldData.includeConnection
-          (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y) :=
+          (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y) :=
   (congrArg (repLorentzGroup Λ) (GaugeFieldData.includeConnection_apply y)).trans
     ((Representation.tprod_apply_one_tmul _ _ Λ (repLorentzGroup_matter_one Λ) y).trans
       (GaugeFieldData.includeConnection_apply
-        (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y)).symm)
+        (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y)).symm)
 
 /-- The Lorentz action restricts to the fermionic factor, where it is the
   exterior-algebra functor applied to the species-wise action of the datum. -/
@@ -155,7 +155,7 @@ lemma repLorentzGroup_includeFermionFactor (Λ : SL(2,ℂ))
     ((Representation.tprod_apply_tmul_one _ _ Λ _
         (complexRepLorentzGroup_apply_one Λ)).trans
       ((congrArg (fun w : fieldData.MatterAlgebra =>
-            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra)) : JetAlgebra))
+            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra)) : JetAlgebra))
           (Representation.tprod_apply_tmul_one _ _ Λ a
             (Representation.symmetricAlgebra_apply_one _ Λ))).trans
         (GaugeFieldData.includeFermion_apply (repLorentzGroupFermion Λ a)).symm))
@@ -170,7 +170,7 @@ lemma repLorentzGroup_includeBosonFactor (Λ : SL(2,ℂ))
     ((Representation.tprod_apply_tmul_one _ _ Λ _
         (complexRepLorentzGroup_apply_one Λ)).trans
       ((congrArg (fun w : fieldData.MatterAlgebra =>
-            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra)) : JetAlgebra))
+            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra)) : JetAlgebra))
           (Representation.tprod_apply_one_tmul _ _ Λ
             (Representation.exteriorAlgebra_apply_one _ Λ) b)).trans
         (GaugeFieldData.includeBoson_apply (repLorentzGroupBoson Λ b)).symm))
@@ -185,9 +185,9 @@ lemma repLorentzGroup_includeBosonFactor (Λ : SL(2,ℂ))
   inclusion is the connection inclusion of the datum, the Standard Model gauge bosons being
   the generic ones at `GaugeAlgebra`. -/
 lemma repLorentzGroup_includeGauge (Λ : SL(2,ℂ))
-    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     repLorentzGroup Λ (includeGauge y)
-      = includeGauge (_root_.GaugeJetAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y) :=
+      = includeGauge (_root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup GaugeAlgebra Λ y) :=
   repLorentzGroup_includeConnection Λ y
 
 /-- The Lorentz action restricts to the fermionic sector's own action. -/
@@ -253,12 +253,12 @@ lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetA
   have e : ∀ ν, TensorProduct.map
       (TensorProduct.map (jetDerivFermionFactor ν) LinearMap.id
         + TensorProduct.map LinearMap.id (jetDerivBosonFactor ν))
-      (LinearMap.id (M := ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra))
+      (LinearMap.id (M := ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra))
       + TensorProduct.map LinearMap.id
-        (_root_.GaugeJetAlgebra.complexJetDeriv GaugeAlgebra ν)
+        (_root_.LocalGaugeFieldAlgebra.complexJetDeriv GaugeAlgebra ν)
       = jetDeriv ν := fun ν =>
     congrArg (fun m => m + TensorProduct.map LinearMap.id
-      (_root_.GaugeJetAlgebra.complexJetDeriv GaugeAlgebra ν))
+      (_root_.LocalGaugeFieldAlgebra.complexJetDeriv GaugeAlgebra ν))
       (TensorProduct.map_add_left _ _ _)
   -- The two factor covariances are stated without a type ascription: instantiating the
   -- abstract lemma against an expected type leaves the family and the coefficients as
@@ -293,7 +293,7 @@ lemma repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (x : JetA
     tprod_deriv_sum _ _ _ _ _ Λ ν (fun κ z => hFermion κ z) (fun κ z => hBoson κ z) w
   refine (congrArg (fun (L : JetAlgebra →ₗ[ℂ] JetAlgebra) => repLorentzGroup Λ (L x))
     (e μ).symm).trans ((tprod_deriv_sum _ _ _ _ _ Λ μ hFH
-      (fun κ z => _root_.GaugeJetAlgebra.complexRepLorentzGroup_jetDeriv Λ κ z) x).trans
+      (fun κ z => _root_.LocalGaugeFieldAlgebra.complexRepLorentzGroup_jetDeriv Λ κ z) x).trans
     (Finset.sum_congr rfl fun a _ => congrArg
       (fun (L : JetAlgebra →ₗ[ℂ] JetAlgebra) =>
         (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) • L (repLorentzGroup Λ x))

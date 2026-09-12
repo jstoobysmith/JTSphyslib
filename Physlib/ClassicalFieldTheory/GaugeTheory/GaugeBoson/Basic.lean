@@ -21,7 +21,7 @@ throughout.
 This file is the target space alone — its linear structure, the Lorentz action, the
 global gauge action, and the jet component space spanned by the component functions
 `∂_s A_μ^φ`. The jet algebra built on it, and the actions and gradings it carries, are in
-`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra`. For the Standard
+`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra`. For the Standard
 Model, `𝔤` is `StandardModel.GaugeAlgebra`.
 
 ## ii. Key results

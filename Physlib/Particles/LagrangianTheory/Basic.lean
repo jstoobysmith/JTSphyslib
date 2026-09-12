@@ -32,7 +32,7 @@ public import Physlib.Relativity.SL2C.Basic
 `LagrangianTheory.dualRealJetAlgebraBasis` is the basis of the symmetric algebra of dual real
 jet slots `SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)`, indexed by multisets of
 spacetime indices. It is the multiset-indexed basis used throughout the gauge-boson jet
-algebra (`GaugeBosons/GaugeJetAlgebra`) to name a monomial in the derivative slots by the
+algebra (`GaugeBoson/LocalGaugeFieldAlgebra`) to name a monomial in the derivative slots by the
 multiset of spacetime indices it carries.
 
 -/

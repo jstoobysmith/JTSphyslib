@@ -5,6 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Algebra.Module.Defs
 public import Mathlib.Algebra.Order.Group.Nat
 public import Mathlib.Algebra.Order.Monoid.NatCast
 public import Mathlib.Logic.Equiv.Fin.Basic
@@ -281,5 +283,17 @@ lemma equivCons_symm_succ {n m : ℕ} (e : Fin n ≃ Fin m) (i : ℕ) (hi : i + 
 @[simp]
 lemma equivCons_succ {n m : ℕ} (e : Fin n ≃ Fin m) (i : ℕ) (hi : i + 1 < n.succ) :
     (Fin.equivCons e) ⟨i + 1, hi⟩ = (e ⟨i, Nat.succ_lt_succ_iff.mp hi⟩).succ := rfl
+
+/-- A sum over tuples of indices, weighted by one scalar factor per slot, split into the
+  first slot and the remaining ones. -/
+lemma sum_pi_succ_prod_smul {R M ι : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+    [Fintype ι] {n : ℕ} (c : Fin (n + 1) → ι → R) (X : (Fin (n + 1) → ι) → M) :
+    ∑ q : Fin (n + 1) → ι, (∏ i, c i (q i)) • X q =
+      ∑ b : ι, ∑ p : Fin n → ι, (c 0 b * ∏ i, c i.succ (p i)) • X (Fin.cons b p) := by
+  rw [← (Fin.consEquiv fun _ : Fin (n + 1) => ι).sum_comp, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun b _ => Finset.sum_congr rfl fun p _ => ?_
+  show (∏ i, c i ((Fin.cons b p : Fin (n + 1) → ι) i)) • X (Fin.cons b p) = _
+  rw [Fin.prod_univ_succ]
+  simp only [Fin.cons_zero, Fin.cons_succ]
 
 end Physlib.Fin

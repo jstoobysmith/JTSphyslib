@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.JetDeriv
 
 /-!
 # Mass dimension on the gauge-boson jet algebra
@@ -23,10 +23,10 @@ real, single-half component space of the gauge bosons.
 ## ii. Key results
 
 - `GaugeBoson.JetComponentSpace.massWeightScale` : the scaling on the component space.
-- `GaugeJetAlgebra.massWeightScale` : the mass-weight scaling.
-- `GaugeJetAlgebra.massWeightScale_ofA` : the gauge field carries mass weight two.
-- `GaugeJetAlgebra.massWeightScale_jetDeriv` : a derivative adds mass weight two.
-- `GaugeJetAlgebra.massWeightScale_iteratedJetDeriv` : `∂_s` adds mass weight `2 |s|`.
+- `LocalGaugeFieldAlgebra.massWeightScale` : the mass-weight scaling.
+- `LocalGaugeFieldAlgebra.massWeightScale_ofA` : the gauge field carries mass weight two.
+- `LocalGaugeFieldAlgebra.massWeightScale_jetDeriv` : a derivative adds mass weight two.
+- `LocalGaugeFieldAlgebra.massWeightScale_iteratedJetDeriv` : `∂_s` adds mass weight `2 |s|`.
 
 ## iii. Table of contents
 
@@ -84,7 +84,7 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3
 
 end GaugeBoson
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 /-!
 
@@ -96,7 +96,8 @@ variable (𝔤) in
 /-- **The mass-weight scaling on the gauge-boson jet algebra**: the algebra endomorphism
   scaling the generator `∂_s A_μ^φ` by `c ^ (2 + 2 |s|)`, the functorial lift of the
   scaling on the jet component space. -/
-noncomputable def massWeightScale (c : ℝ) : (GaugeJetAlgebra 𝔤) →ₐ[ℝ] (GaugeJetAlgebra 𝔤) :=
+noncomputable def massWeightScale (c : ℝ) :
+    (LocalGaugeFieldAlgebra 𝔤) →ₐ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   SymmetricAlgebra.map ((GaugeBoson.JetComponentSpace.massWeightScale 𝔤) c)
 
 @[simp]
@@ -119,7 +120,7 @@ lemma massWeightScale_ofA (c : ℝ) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ
     GaugeBoson.JetComponentSpace.massWeightScale_tmul, map_one, map_smul]
 
 /-- **A total derivative adds mass weight two.** -/
-lemma massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3) (x : (GaugeJetAlgebra 𝔤)) :
+lemma massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (massWeightScale 𝔤) c ((jetDeriv 𝔤) μ x) = c ^ 2 • (jetDeriv 𝔤) μ
       ((massWeightScale 𝔤) c x) := by
   induction x using SymmetricAlgebra.induction with
@@ -136,7 +137,7 @@ lemma massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3) (x : (GaugeJetAl
 
 /-- **The iterated derivative `∂_s` adds mass weight `2 |s|`.** -/
 lemma massWeightScale_iteratedJetDeriv (c : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3))
-    (x : (GaugeJetAlgebra 𝔤)) :
+    (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (massWeightScale 𝔤) c ((iteratedJetDeriv 𝔤) s x)
       = c ^ (2 * Multiset.card s) • (iteratedJetDeriv 𝔤) s ((massWeightScale 𝔤) c x) := by
   induction s using Multiset.induction_on generalizing x with
@@ -150,5 +151,5 @@ lemma massWeightScale_iteratedJetDeriv (c : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3)
     rw [Multiset.card_cons]
     ring
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
 

@@ -45,7 +45,7 @@ covariant families built later.
 set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct MvPowerSeries
-variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {B : Type} [Ring B]
 variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
@@ -55,10 +55,9 @@ open Lorentz
 
 namespace GaugeAlgebraRealization
 
-variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ GJ B}
-variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 /-- The canonical equivalence, through finite-dimensional duality, between
   algebra-valued fields `B ⊗ 𝔤` and their component families `φ ↦ A^φ`: the element
@@ -89,6 +88,15 @@ noncomputable def commutator
     (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
     (μ ν : Fin 1 ⊕ Fin 3) : Module.Dual ℝ 𝔤 →ₗ[ℝ] B :=
   dualPairEquiv (tensorBracket (dualPairEquiv.symm (A 0 μ)) (dualPairEquiv.symm (A 0 ν)))
+
+end RealScalars
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- The gauge transformation of the underived symbol `A_μ^φ`: the special case `s = 0`
   of `gauge_apply_deriv`, with no Leibniz convolution left over — the dual adjoint
@@ -124,11 +132,17 @@ lemma repGauge_deriv_apply
   refine h.trans ?_
   abel
 
+end ComplexScalars
+
 /-!
 
 ## Pure-tensor computations for `dualPairEquiv` and `tensorBracket`
 
 -/
+
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 @[simp]
 lemma dualPairEquiv_tmul (b : B) (a : 𝔤) (φ : Module.Dual ℝ 𝔤) :
@@ -156,11 +170,6 @@ lemma dualPairEquiv_map_right (T : 𝔤 →ₗ[ℝ] 𝔤)
   | zero => simp
   | tmul b a => simp
   | add x y hx hy => simp [hx, hy]
-
-lemma dualPairEquiv_one_tmul (c : 𝔤) (φ : Module.Dual ℝ 𝔤) :
-    dualPairEquiv ((1 : B) ⊗ₜ[ℝ] c) φ = algebraMap ℂ B (φ c) := by
-  rw [dualPairEquiv_tmul, Algebra.algebraMap_eq_smul_one,
-    show ((φ c : ℝ) : ℂ) = algebraMap ℝ ℂ (φ c) from rfl, algebraMap_smul]
 
 lemma symm_comp_left (Φ : B →ₗ[ℝ] B) (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
     dualPairEquiv.symm (Φ ∘ₗ f) =
@@ -234,11 +243,25 @@ lemma tensorBracket_one_left (c : 𝔤) (t : B ⊗[ℝ] 𝔤) :
   | tmul b a => simp
   | add x y hx hy => simp [hx, hy]
 
+end RealScalars
+
 /-!
 
 ## The gauge transformation of the commutator
 
 -/
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
+
+lemma dualPairEquiv_one_tmul (c : 𝔤) (φ : Module.Dual ℝ 𝔤) :
+    dualPairEquiv ((1 : B) ⊗ₜ[ℝ] c) φ = algebraMap ℂ B (φ c) := by
+  rw [dualPairEquiv_tmul, Algebra.algebraMap_eq_smul_one,
+    show ((φ c : ℝ) : ℂ) = algebraMap ℝ ℂ (φ c) from rfl, algebraMap_smul]
 
 set_option maxHeartbeats 1000000 in
 /-- The gauge transformation law of the commutator term: writing the field law as
@@ -371,11 +394,17 @@ lemma repGauge_deriv_deriv_apply
   refine h.trans ?_
   abel
 
+end ComplexScalars
+
 /-!
 
 ## The bracket of general component families
 
 -/
+
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 /-- The bracket of two arbitrary component families, generalizing `commutator` (which
   is the case of two field symbols): assemble into `B ⊗ 𝔤` by `dualPairEquiv.symm`,
@@ -412,6 +441,14 @@ lemma bracketFam_add_right (f g₁ g₂ : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
     bracketFam f (g₁ + g₂) = bracketFam f g₁ + bracketFam f g₂ := by
   simp only [bracketFam, map_add]
 
+lemma bracketFam_smul_left (c : ℝ) (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam (c • f) g = c • bracketFam f g := by
+  simp only [bracketFam, map_smul, LinearMap.smul_apply]
+
+lemma bracketFam_smul_right (c : ℝ) (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam f (c • g) = c • bracketFam f g := by
+  simp only [bracketFam, map_smul]
+
 /-- The bracket of two component families expanded through a basis of the gauge
   algebra: the physicists' `f^a_{bc} f^b g^c`, with `φ⁅e_j, e_k⁆` the structure
   constants contracted with the dual vector. -/
@@ -446,6 +483,35 @@ lemma bracketFam_apply_eq_sum (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
   simp [tensorBracket_tmul, dualPairEquiv_tmul]
   rw [Finset.sum_comm]
 
+/-- The bracket of families is natural in the algebra: a multiplicative linear map carries
+  the bracket of two families to the bracket of their images. -/
+lemma bracketFam_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam (Φ ∘ₗ f) (Φ ∘ₗ g) = Φ ∘ₗ bracketFam f g := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.comp_apply, bracketFam_apply_eq_sum, bracketFam_apply_eq_sum, map_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [map_smul, hΦ]
+  rfl
+
+/-- The derived commutator family is natural in the algebra. -/
+lemma commutatorFam_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    commutatorFam (fun p ρ => Φ ∘ₗ A p ρ) μ ν s = Φ ∘ₗ commutatorFam A μ ν s := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.comp_apply, commutatorFam, commutatorFam, Multiset.sum_linearMap_apply,
+    Multiset.sum_linearMap_apply, Multiset.map_map, Multiset.map_map, map_multiset_sum,
+    Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
+  simp only [Function.comp_apply]
+  rw [bracketFam_map Φ hΦ]
+  rfl
+
 /-- The bracket of families against a common Lie-algebra morphism on the dual index. -/
 lemma bracketFam_comp_dualMap (T : 𝔤 →ₗ[ℝ] 𝔤)
     (hT : ∀ a b, T ⁅a, b⁆ = ⁅T a, T b⁆) (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
@@ -477,6 +543,17 @@ lemma tensorBracket_map_left_derivation (Δ : B →ₗ[ℝ] B)
   | add x y hx hy =>
       simp only [map_add, LinearMap.add_apply, hx, hy]
       abel
+
+/-- The bracket of families under a derivation of the algebra: the Leibniz rule, in
+  family form. -/
+lemma bracketFam_derivation (Δ : B →ₗ[ℝ] B)
+    (hΔ : ∀ b₁ b₂, Δ (b₁ * b₂) = Δ b₁ * b₂ + b₁ * Δ b₂) (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    Δ ∘ₗ bracketFam f g = bracketFam (Δ ∘ₗ f) g + bracketFam f (Δ ∘ₗ g) := by
+  refine LinearMap.ext fun φ => ?_
+  show Δ (dualPairEquiv (tensorBracket (dualPairEquiv.symm f) (dualPairEquiv.symm g)) φ) = _
+  rw [← dualPairEquiv_map_left, tensorBracket_map_left_derivation Δ hΔ, map_add,
+    LinearMap.add_apply, ← symm_comp_left, ← symm_comp_left]
+  rfl
 
 /-- `tensorBracket` under a relative derivation on the Lie factor: if
   `T₁ ⁅a, b⁆ = ⁅T₁ a, T₀ b⁆ + ⁅T₀ a, T₁ b⁆`, the two mixed brackets sum to the
@@ -522,6 +599,15 @@ lemma bracketFam_dualMap_derivation (T₀ T₁ : 𝔤 →ₗ[ℝ] 𝔤)
     ← LinearMap.add_apply, ← map_add, tensorBracket_map_right_derivation T₀ T₁ hT,
     dualPairEquiv_map_right]
   rfl
+
+end RealScalars
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 include h in
 set_option maxHeartbeats 1000000 in
@@ -632,12 +718,17 @@ lemma commutatorFam_mem
   · exact hle ▸ Multiset.card_le_card (Multiset.le_add_right _ _)
   · exact hle ▸ Multiset.card_le_card (Multiset.le_add_left _ _)
 
+end ComplexScalars
 
 /-!
 
 ## Iterated Leibniz expansions
 
 -/
+
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 lemma bracketFam_zero_left (g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
     bracketFam 0 g = 0 := by
@@ -660,6 +751,16 @@ lemma bracketFam_sum_right (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
   induction S using Multiset.induction_on with
   | empty => simp [bracketFam_zero_right]
   | cons g S ih => simp [bracketFam_add_right, ih]
+
+lemma bracketFam_finset_sum_left {ι : Type*} (S : Finset ι)
+    (f : ι → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) (g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam (∑ i ∈ S, f i) g = ∑ i ∈ S, bracketFam (f i) g := by
+  simp only [bracketFam, map_sum, LinearMap.sum_apply]
+
+lemma bracketFam_finset_sum_right {ι : Type*} (S : Finset ι)
+    (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) (g : ι → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam f (∑ i ∈ S, g i) = ∑ i ∈ S, bracketFam f (g i) := by
+  simp only [bracketFam, map_sum]
 
 /-!
 
@@ -721,11 +822,20 @@ lemma bracketFam_adjointDualCoeff (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3))
   rw [← symm_comp_right, ← symm_comp_right, hcoeff p.1, hcoeff p.2]
   rfl
 
+end RealScalars
+
 /-!
 
 ## The gauge transformation of iterated derivatives
 
 -/
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- The `κ ::ₘ s` case of `gauge_apply_deriv` with the extra derivative traced through:
   the Leibniz splittings where `κ` stays a derivative, minus (by
@@ -864,6 +974,8 @@ lemma repGauge_commutatorFam
       rw [Function.comp_apply, Function.comp_apply,
         h.repGauge_bracketFam U (hAlaw μ p.1) (hAlaw ν p.2) φ, hCg p, hCf p]),
     Multiset.sum_map_add, Multiset.sum_map_sub, Multiset.sum_map_add, hM]
+
+end ComplexScalars
 
 end GaugeAlgebraRealization
 

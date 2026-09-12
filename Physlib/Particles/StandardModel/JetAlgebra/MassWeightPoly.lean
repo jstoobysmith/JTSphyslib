@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Generators
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.MassWeightPoly
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassWeightPoly
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.MassWeightPoly
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.MassWeightPoly
 /-!
 # The mass-weight polynomial on the jet algebra of the Standard Model
 
@@ -17,7 +17,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebr
 Each of the three sectors of the jet algebra of the Standard Model carries its own
 mass-weight grading: `FermionicAlgebra.massWeightPoly 3` on the fermions, whose symbols have
 mass dimension `3/2`, `BosonicAlgebra.massWeightPoly 2` on the Higgs and
-`GaugeJetAlgebra.complexMassWeightPoly` on the gauge bosons, whose symbols have mass
+`LocalGaugeFieldAlgebra.complexMassWeightPoly` on the gauge bosons, whose symbols have mass
 dimension one. This file assembles them into a single grading
 
 `massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra`
@@ -119,7 +119,7 @@ lemma commute_mapAlgHom {A B C : Type*} [Semiring A] [Algebra ℂ A] [Semiring B
   in the gauge sector: the gauge sector is central, so the commutation holds coefficient by
   coefficient. -/
 lemma commute_mapAlgHom_includeGauge (p : Polynomial JetAlgebra)
-    (q : Polynomial (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))) :
+    (q : Polynomial (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra))) :
     Commute p (Polynomial.mapAlgHom includeGauge q) := by
   induction q using Polynomial.induction_on' with
   | add q₁ q₂ h₁ h₂ => rw [map_add]; exact h₁.add_right h₂
@@ -156,8 +156,8 @@ noncomputable def higgsMassWeightPoly : HiggsJetAlgebra →ₐ[ℂ] Polynomial J
 /-- The gauge-boson mass-weight grading, transported into the full jet algebra. The gauge
   symbols have mass dimension one, hence mass weight two. -/
 noncomputable def gaugeMassWeightPoly :
-    (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₐ[ℂ] Polynomial JetAlgebra :=
-  (Polynomial.mapAlgHom includeGauge).comp GaugeJetAlgebra.complexMassWeightPoly
+    (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) →ₐ[ℂ] Polynomial JetAlgebra :=
+  (Polynomial.mapAlgHom includeGauge).comp LocalGaugeFieldAlgebra.complexMassWeightPoly
 
 /-- The fermionic grading read on the fermionic factor of the carrier: the fermionic sector
   grading, precomposed with the sector equivalence. The sector helper above keeps its own
@@ -203,7 +203,7 @@ noncomputable def matterMassWeightPoly :
   outer lift being the centrality of the gauge sector. -/
 noncomputable def massWeightPoly : JetAlgebra →ₐ[ℂ] Polynomial JetAlgebra :=
   Algebra.TensorProduct.lift (R := ℂ) (S := ℂ)
-    (A := fieldData.MatterAlgebra) (B := ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
+    (A := fieldData.MatterAlgebra) (B := ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra))
     (C := Polynomial JetAlgebra) matterMassWeightPoly gaugeMassWeightPoly
     fun _ _ => commute_mapAlgHom_includeGauge _ _
 
@@ -220,7 +220,7 @@ generator computation below is one of them followed by a sector generator lemma.
 
 /-- On a pure tensor the grading is the product of the matter and gauge gradings. -/
 lemma massWeightPoly_tmul (x : fieldData.MatterAlgebra)
-    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     massWeightPoly (x ⊗ₜ[ℂ] y) = matterMassWeightPoly x * gaugeMassWeightPoly y := rfl
 
 /-- On a pure tensor the matter grading is the product of the fermionic and bosonic factor
@@ -261,7 +261,7 @@ lemma massWeightPoly_includeBosonFactor
         ((mul_one _).trans (one_mul _))))
 
 /-- On the connection factor the grading is the generic gauge-boson grading. -/
-lemma massWeightPoly_includeConnection (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+lemma massWeightPoly_includeConnection (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     massWeightPoly (fieldData.includeConnection y) = gaugeMassWeightPoly y :=
   (congrArg massWeightPoly (GaugeFieldData.includeConnection_apply y)).trans
     ((massWeightPoly_tmul _ _).trans
@@ -291,9 +291,9 @@ lemma massWeightPoly_includeHiggs (h : HiggsJetAlgebra) :
 /-- On the gauge sector the grading is the gauge sector's own grading, pushed forward along
   the gauge inclusion. The gauge sector inclusion is the connection inclusion of the datum,
   so there is nothing to transport here. -/
-lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+lemma massWeightPoly_includeGauge (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     massWeightPoly (includeGauge y)
-      = Polynomial.mapAlgHom includeGauge (GaugeJetAlgebra.complexMassWeightPoly y) :=
+      = Polynomial.mapAlgHom includeGauge (LocalGaugeFieldAlgebra.complexMassWeightPoly y) :=
   massWeightPoly_includeConnection y
 
 /-- The mass-weight exponent of a symbol of mass dimension one, in the two forms the
@@ -363,16 +363,16 @@ lemma massWeightPoly_gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕
     massWeightPoly (gaugeField s μ φ)
       = Polynomial.monomial (2 * (1 + Multiset.card s)) (gaugeField s μ φ) :=
   have hg : gaugeField s μ φ
-      = includeGauge ((1 : ℂ) ⊗ₜ[ℝ] GaugeJetAlgebra.iteratedJetDeriv GaugeAlgebra s
-        (GaugeJetAlgebra.ofA GaugeAlgebra μ φ)) :=
+      = includeGauge ((1 : ℂ) ⊗ₜ[ℝ] LocalGaugeFieldAlgebra.iteratedJetDeriv GaugeAlgebra s
+        (LocalGaugeFieldAlgebra.ofA GaugeAlgebra μ φ)) :=
     (gaugeField_apply s μ φ).trans
       (congrArg includeGauge
-        (_root_.GaugeJetAlgebra.iteratedD_complexJetDeriv_one_tmul s
-          (_root_.GaugeJetAlgebra.ofA GaugeAlgebra μ φ)))
+        (_root_.LocalGaugeFieldAlgebra.iteratedD_complexJetDeriv_one_tmul s
+          (_root_.LocalGaugeFieldAlgebra.ofA GaugeAlgebra μ φ)))
   (congrArg massWeightPoly hg).trans
     ((massWeightPoly_includeGauge _).trans
       ((congrArg (Polynomial.mapAlgHom includeGauge)
-            (GaugeJetAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA
+            (LocalGaugeFieldAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA
               1 s μ φ)).trans
         ((Polynomial.mapAlgHom_monomial includeGauge _ _).trans
           ((monomial_two_mul_one_add _ _).trans

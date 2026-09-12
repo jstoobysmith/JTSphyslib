@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.JetDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.Relativity.IsLorentzDeriv
@@ -31,13 +31,13 @@ gives the cocycle identity for the Maurer–Cartan shift.
 ## ii. Key results
 
 - `GaugeBoson.adjointTransport` : the adjoint Taylor coefficients on the target space.
-- `GaugeJetAlgebra.transport` : the linear part of the gauge action on the component
+- `LocalGaugeFieldAlgebra.transport` : the linear part of the gauge action on the component
   space.
-- `GaugeJetAlgebra.mcShift` : the Maurer–Cartan shift.
-- `GaugeJetAlgebra.repJet` : the action of the jet gauge group on the jet algebra.
-- `GaugeJetAlgebra.repJet_iteratedJetDeriv_ofA` : the transformation law of the derivative
+- `LocalGaugeFieldAlgebra.mcShift` : the Maurer–Cartan shift.
+- `LocalGaugeFieldAlgebra.repJet` : the action of the jet gauge group on the jet algebra.
+- `LocalGaugeFieldAlgebra.repJet_iteratedJetDeriv_ofA` : the transformation law of the derivative
   generators, in the form used by `GaugeAlgebraRealization`.
-- `GaugeJetAlgebra.complexRepJet` : the action on the complexified jet algebra.
+- `LocalGaugeFieldAlgebra.complexRepJet` : the action on the complexified jet algebra.
 
 ## iii. Table of contents
 
@@ -153,7 +153,7 @@ lemma dualMap_adjointTransport_componentDual (U : GJ)
 
 end GaugeBoson
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 variable (jets) in
 /-- The value of the transport on the derivative symbol at `s`: the all-orders Leibniz
@@ -264,7 +264,7 @@ lemma transport_mul (U V : GJ) :
       (GaugeBoson.adjointTransport jets V b).dualMap
         ((GaugeBoson.adjointTransport jets U a).dualMap ψ)
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
 
 /-!
 
@@ -272,7 +272,7 @@ end GaugeJetAlgebra
 
 -/
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 variable (jets) in
 /-- The Taylor coefficient of the Maurer–Cartan form of `U` at the derivative multiset
@@ -389,26 +389,26 @@ variable (jets) in
   algebra: the transported component plus the Maurer–Cartan shift, both of `U⁻¹` — the
   contragredient convention for an action on component functions. -/
 noncomputable def gaugeGen (U : GJ) :
-    (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] (GaugeJetAlgebra 𝔤) :=
+    (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   (SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace 𝔤)).comp (transport jets U⁻¹)
-    + (Algebra.linearMap ℝ (GaugeJetAlgebra 𝔤)).comp (mcShift jets U⁻¹)
+    + (Algebra.linearMap ℝ (LocalGaugeFieldAlgebra 𝔤)).comp (mcShift jets U⁻¹)
 
 lemma gaugeGen_apply (U : GJ) (x : (GaugeBoson.JetComponentSpace 𝔤)) :
     gaugeGen jets U x = SymmetricAlgebra.ι ℝ _ (transport jets U⁻¹ x)
-      + algebraMap ℝ (GaugeJetAlgebra 𝔤) (mcShift jets U⁻¹ x) := rfl
+      + algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) (mcShift jets U⁻¹ x) := rfl
 
 variable (jets) in
 /-- The action of the jet gauge group on the gauge-boson jet algebra: the substitution
   homomorphism determined by the affine action on the generators, `∂_s A^ψ` going to its
   transported convolution plus the Maurer–Cartan shift of `U⁻¹`. -/
-noncomputable def repJet : Representation ℝ GJ (GaugeJetAlgebra 𝔤) where
+noncomputable def repJet : Representation ℝ GJ (LocalGaugeFieldAlgebra 𝔤) where
   toFun U := (SymmetricAlgebra.lift (gaugeGen jets U)).toLinearMap
   map_one' := by
-    suffices h : SymmetricAlgebra.lift (gaugeGen jets 1) = AlgHom.id ℝ (GaugeJetAlgebra 𝔤) by
+    suffices h : SymmetricAlgebra.lift (gaugeGen jets 1) = AlgHom.id ℝ (LocalGaugeFieldAlgebra 𝔤) by
       rw [h]; rfl
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun x => ?_)
     show SymmetricAlgebra.lift (gaugeGen jets 1) (SymmetricAlgebra.ι ℝ _ x)
-      = AlgHom.id ℝ (GaugeJetAlgebra 𝔤) (SymmetricAlgebra.ι ℝ _ x)
+      = AlgHom.id ℝ (LocalGaugeFieldAlgebra 𝔤) (SymmetricAlgebra.ι ℝ _ x)
     rw [SymmetricAlgebra.lift_ι_apply, gaugeGen_apply, inv_one, transport_one,
       mcShift_one, LinearMap.id_apply, LinearMap.zero_apply, map_zero, add_zero]
     rfl
@@ -431,25 +431,25 @@ variable (jets) in
 /-- The action of `U` as an algebra homomorphism: a jet of gauge transformations acts on
   a Lagrangian term factor by factor. -/
 noncomputable def repJetAlgHom (U : GJ) :
-    (GaugeJetAlgebra 𝔤) →ₐ[ℝ] (GaugeJetAlgebra 𝔤) :=
+    (LocalGaugeFieldAlgebra 𝔤) →ₐ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   SymmetricAlgebra.lift (gaugeGen jets U)
 
 @[simp]
 lemma repJet_ι (U : GJ) (x : (GaugeBoson.JetComponentSpace 𝔤)) :
     repJet jets U (SymmetricAlgebra.ι ℝ _ x)
       = SymmetricAlgebra.ι ℝ _ (transport jets U⁻¹ x)
-        + algebraMap ℝ (GaugeJetAlgebra 𝔤) (mcShift jets U⁻¹ x) := by
+        + algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) (mcShift jets U⁻¹ x) := by
   rw [show repJet jets U (SymmetricAlgebra.ι ℝ _ x)
       = SymmetricAlgebra.lift (gaugeGen jets U) (SymmetricAlgebra.ι ℝ _ x) from rfl,
     SymmetricAlgebra.lift_ι_apply, gaugeGen_apply]
 
 @[simp]
 lemma repJet_apply_one (U : GJ) :
-    repJet jets U (1 : (GaugeJetAlgebra 𝔤)) = 1 := by
-  rw [show repJet jets U (1 : (GaugeJetAlgebra 𝔤))
+    repJet jets U (1 : (LocalGaugeFieldAlgebra 𝔤)) = 1 := by
+  rw [show repJet jets U (1 : (LocalGaugeFieldAlgebra 𝔤))
     = SymmetricAlgebra.lift (gaugeGen jets U) 1 from rfl, map_one]
 
-lemma repJet_apply_mul (U : GJ) (x y : (GaugeJetAlgebra 𝔤)) :
+lemma repJet_apply_mul (U : GJ) (x y : (LocalGaugeFieldAlgebra 𝔤)) :
     repJet jets U (x * y) = repJet jets U x * repJet jets U y := by
   rw [show repJet jets U (x * y)
     = SymmetricAlgebra.lift (gaugeGen jets U) (x * y) from rfl, map_mul]
@@ -457,10 +457,10 @@ lemma repJet_apply_mul (U : GJ) (x y : (GaugeJetAlgebra 𝔤)) :
 
 @[simp]
 lemma repJet_algebraMap (U : GJ) (r : ℝ) :
-    repJet jets U (algebraMap ℝ (GaugeJetAlgebra 𝔤) r)
-      = algebraMap ℝ (GaugeJetAlgebra 𝔤) r := by
-  rw [show repJet jets U (algebraMap ℝ (GaugeJetAlgebra 𝔤) r)
-    = SymmetricAlgebra.lift (gaugeGen jets U) (algebraMap ℝ (GaugeJetAlgebra 𝔤) r) from rfl,
+    repJet jets U (algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) r)
+      = algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) r := by
+  rw [show repJet jets U (algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) r)
+    = SymmetricAlgebra.lift (gaugeGen jets U) (algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) r) from rfl,
     AlgHom.commutes]
 
 /-!
@@ -500,7 +500,7 @@ theorem repJet_iteratedJetDeriv_ofA (U : GJ)
     repJet jets U ((iteratedJetDeriv 𝔤) s ((ofA 𝔤) μ φ))
       = (s.antidiagonal.map fun p =>
           (iteratedJetDeriv 𝔤) p.2 ((ofA 𝔤) μ (jets.adjointDualCoeff U⁻¹ p.1 φ))).sum
-        + algebraMap ℝ (GaugeJetAlgebra 𝔤)
+        + algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤)
             (φ (jets.evalLie (jets.iteratedDeriv s
               (jets.maurerCartan U⁻¹ μ)))) := by
   rw [iteratedJetDeriv_ofA, repJet_ι, transport_basis_tmul, mcShift_basis_tmul,
@@ -521,7 +521,7 @@ variable (jets) in
 /-- The action of the jet gauge group on the complexified gauge-boson jet algebra, by
   base change. -/
 noncomputable def complexRepJet :
-    Representation ℂ GJ (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) where
+    Representation ℂ GJ (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) where
   toFun U := LinearMap.baseChange ℂ (repJet jets U)
   map_one' := by
     rw [map_one, Module.End.one_eq_id, LinearMap.baseChange_id, Module.End.one_eq_id]
@@ -529,11 +529,11 @@ noncomputable def complexRepJet :
     rw [map_mul, Module.End.mul_eq_comp, LinearMap.baseChange_comp, Module.End.mul_eq_comp]
 
 @[simp]
-lemma complexRepJet_tmul (U : GJ) (z : ℂ) (x : (GaugeJetAlgebra 𝔤)) :
+lemma complexRepJet_tmul (U : GJ) (z : ℂ) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     complexRepJet jets U (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] repJet jets U x := rfl
 
 lemma complexRepJet_apply_mul (U : GJ)
-    (x y : ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) :
+    (x y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
     complexRepJet jets U (x * y)
       = complexRepJet jets U x * complexRepJet jets U y := by
   induction x using TensorProduct.induction_on with
@@ -551,7 +551,7 @@ lemma complexRepJet_apply_mul (U : GJ)
 /-- The iterated complexified derivative of a real element is the complexification of the
   iterated real derivative. -/
 lemma iteratedD_complexJetDeriv_one_tmul (s : Multiset (Fin 1 ⊕ Fin 3))
-    (x : (GaugeJetAlgebra 𝔤)) :
+    (x : (LocalGaugeFieldAlgebra 𝔤)) :
     Lorentz.iteratedD (complexJetDeriv 𝔤) complexJetDeriv_comm s ((1 : ℂ) ⊗ₜ[ℝ] x)
       = (1 : ℂ) ⊗ₜ[ℝ] (iteratedJetDeriv 𝔤) s x := by
   induction s using Multiset.induction_on generalizing x with
@@ -562,12 +562,12 @@ lemma iteratedD_complexJetDeriv_one_tmul (s : Multiset (Fin 1 ⊕ Fin 3))
 
 /-- A real scalar in the complexified jet algebra is the corresponding complex scalar. -/
 lemma one_tmul_algebraMap (r : ℝ) :
-    (1 : ℂ) ⊗ₜ[ℝ] (algebraMap ℝ (GaugeJetAlgebra 𝔤) r)
-      = algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤)) ((r : ℝ) : ℂ) := by
+    (1 : ℂ) ⊗ₜ[ℝ] (algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤) r)
+      = algebraMap ℂ (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) ((r : ℝ) : ℂ) := by
   rw [Algebra.algebraMap_eq_smul_one, TensorProduct.tmul_smul,
     Algebra.algebraMap_eq_smul_one,
-    show ((r : ℝ) • ((1 : ℂ) ⊗ₜ[ℝ] (1 : (GaugeJetAlgebra 𝔤))))
-      = (((r : ℝ) : ℂ)) • ((1 : ℂ) ⊗ₜ[ℝ] (1 : (GaugeJetAlgebra 𝔤))) from
+    show ((r : ℝ) • ((1 : ℂ) ⊗ₜ[ℝ] (1 : (LocalGaugeFieldAlgebra 𝔤))))
+      = (((r : ℝ) : ℂ)) • ((1 : ℂ) ⊗ₜ[ℝ] (1 : (LocalGaugeFieldAlgebra 𝔤))) from
       (algebraMap_smul ℂ r _).symm, Algebra.TensorProduct.one_def]
 
 /-- The transformation law of the derivative generators on the complexification: the
@@ -579,7 +579,7 @@ theorem complexRepJet_iteratedD_one_tmul_ofA (U : GJ)
       = (s.antidiagonal.map fun p =>
           Lorentz.iteratedD (complexJetDeriv 𝔤) complexJetDeriv_comm p.2
             ((1 : ℂ) ⊗ₜ[ℝ] (ofA 𝔤) μ (jets.adjointDualCoeff U⁻¹ p.1 φ))).sum
-        + algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤))
+        + algebraMap ℂ (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤))
             (((φ (jets.evalLie (jets.iteratedDeriv s
               (jets.maurerCartan U⁻¹ μ))) : ℝ)) : ℂ) := by
   rw [iteratedD_complexJetDeriv_one_tmul, complexRepJet_tmul,
@@ -589,5 +589,5 @@ theorem complexRepJet_iteratedD_one_tmul_ofA (U : GJ)
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
     rw [Function.comp_apply, iteratedD_complexJetDeriv_one_tmul])
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
 

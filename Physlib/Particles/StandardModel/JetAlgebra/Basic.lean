@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Algebra
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Mathematics.AlgebraRepresentation
 public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Basic
@@ -26,7 +26,7 @@ anticommutativity of the fermions lives entirely inside the fermionic factor, wh
 fifteen species share one exterior algebra.
 
 The three sector inclusions keep their old names and their old sources — the sector
-algebras `FermionJetAlgebra`, `HiggsJetAlgebra` and `GaugeJetAlgebra GaugeAlgebra` — so
+algebras `FermionJetAlgebra`, `HiggsJetAlgebra` and `LocalGaugeFieldAlgebra GaugeAlgebra` — so
 that every downstream family of field symbols is unchanged. The two matter inclusions
 factor through the sector equivalences of
 `Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Basic`; the connection sector needs
@@ -93,10 +93,10 @@ noncomputable def includeHiggs : HiggsJetAlgebra →ₐ[ℂ] JetAlgebra :=
 /-- The inclusion of the gauge sector. The Standard Model gauge bosons are the generic
   ones at `GaugeAlgebra`, so this is the connection inclusion of the datum itself. -/
 noncomputable def includeGauge :
-    (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) →ₐ[ℂ] JetAlgebra :=
+    (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) →ₐ[ℂ] JetAlgebra :=
   fieldData.includeConnection
 
-lemma includeGauge_apply (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+lemma includeGauge_apply (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     includeGauge y = ((1 : fieldData.MatterAlgebra) ⊗ₜ[ℂ] y : JetAlgebra) :=
   GaugeFieldData.includeConnection_apply y
 
@@ -169,7 +169,7 @@ private lemma tensor_includeRight_comm {A B : Type*} [Ring A] [Algebra ℂ A]
 
 /-- The image of the gauge sector is central: gauge-boson symbols commute with
   everything, as bosons must. -/
-lemma includeGauge_commute (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) (x : JetAlgebra) :
+lemma includeGauge_commute (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) (x : JetAlgebra) :
     x * includeGauge y = includeGauge y * x :=
   tensor_includeRight_comm y x
 

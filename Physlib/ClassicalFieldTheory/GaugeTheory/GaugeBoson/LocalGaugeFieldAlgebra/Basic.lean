@@ -12,18 +12,18 @@ public import Physlib.Mathematics.SymmetricAlgebra
 public import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
-# The jet algebra of the gauge bosons of a gauge theory
+# The local gauge field algebra of a gauge theory
 
 ## i. Overview
 
 The gauge bosons of a gauge theory with Lie algebra `𝔤` are jointly one bosonic field
 valued in `Lorentz.CoVector ⊗[ℝ] 𝔤`, the target space `GaugeBoson 𝔤` of
-`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic`. Its *jet algebra* — the
-algebra in which the gauge-boson part of a Lagrangian lives — is the free commutative
-algebra on the component functions `∂_s A_μ^φ`, built here in the same way as the
-`BBoson` jet algebra, but non-abelian and **without a basis of the gauge algebra**: the
-adjoint index is carried by an abstract covector `φ : Module.Dual ℝ 𝔤` throughout,
-following the dual-family formulation of
+`Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic`. Its *local gauge field
+algebra* `LocalGaugeFieldAlgebra 𝔤` — the jet algebra in which the gauge-boson part of a
+Lagrangian lives — is the free commutative algebra on the component functions `∂_s A_μ^φ`,
+built here in the same way as the `BBoson` jet algebra, but non-abelian and without a
+basis of the gauge algebra: the adjoint index is carried by an abstract covector
+`φ : Module.Dual ℝ 𝔤` throughout, following the dual-family formulation of
 `Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization`. For the Standard Model,
 `𝔤` is `StandardModel.GaugeAlgebra`.
 
@@ -33,12 +33,15 @@ Following the split promised for this directory, the structure is:
 2. `LorentzAction` — the action of the Lorentz group;
 3. `GaugeAction` — the action of the jet gauge group;
 4. `JetDeriv` — the formal total derivative;
-5. `MassDim` — the mass-dimension grading.
+5. `MassDim` and `MassWeightPoly` — the mass-dimension grading;
+6. `FieldStrength` — the field strength and its covariant derivatives, out of which the
+   covariant subalgebra `LocalGaugeCovFieldAlgebra` is generated.
 
 ## ii. Key results
 
-- `GaugeJetAlgebra` : the jet algebra of the gauge bosons.
-- `GaugeJetAlgebra.ofComponent`, `GaugeJetAlgebra.ofA` : the generators.
+- `LocalGaugeFieldAlgebra` : the local gauge field algebra, the jet algebra of the gauge
+  bosons.
+- `LocalGaugeFieldAlgebra.ofComponent`, `LocalGaugeFieldAlgebra.ofA` : the generators.
 
 ## iii. Table of contents
 
@@ -64,13 +67,13 @@ open TensorProduct
 -/
 
 variable (𝔤) in
-/-- **The jet algebra of the gauge bosons**: the free commutative algebra
-  on the component functions `∂_s A_μ^φ` of the gauge-boson field, realized as the
-  symmetric algebra on the jet component space. The commutativity of the product is the
-  Bose statistics of the gauge fields. -/
-abbrev GaugeJetAlgebra : Type := SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤)
+/-- The local gauge field algebra, the jet algebra of the gauge bosons: the free
+  commutative algebra on the component functions `∂_s A_μ^φ` of the gauge-boson field,
+  realized as the symmetric algebra on the jet component space. The commutativity of the
+  product is the Bose statistics of the gauge fields. -/
+abbrev LocalGaugeFieldAlgebra : Type := SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤)
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 /-!
 
@@ -81,7 +84,7 @@ namespace GaugeJetAlgebra
 variable (𝔤) in
 /-- The undifferentiated component function `A^φ` of the gauge-boson field along a
   covector `φ` on the target space. -/
-noncomputable def ofComponent : Module.Dual ℝ (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeJetAlgebra 𝔤) :=
+noncomputable def ofComponent : Module.Dual ℝ (GaugeBoson 𝔤) →ₗ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   (SymmetricAlgebra.ι ℝ _).comp
     (TensorProduct.mk ℝ DerivAlgebraReal (Module.Dual ℝ (GaugeBoson 𝔤)) 1)
 
@@ -94,7 +97,7 @@ variable (𝔤) in
   covector `φ` on the gauge algebra. These are the generators the ambient theory sees;
   no basis of the gauge algebra is involved. -/
 noncomputable def ofA (μ : Fin 1 ⊕ Fin 3) :
-    Module.Dual ℝ 𝔤 →ₗ[ℝ] (GaugeJetAlgebra 𝔤) :=
+    Module.Dual ℝ 𝔤 →ₗ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   (ofComponent 𝔤).comp ((GaugeBoson.componentDual 𝔤) (Lorentz.CoVector.basis.dualBasis μ))
 
 lemma ofA_apply (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
@@ -107,5 +110,5 @@ lemma adjoin_ι_eq_top :
     Algebra.adjoin ℝ (Set.range (SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace 𝔤))) = ⊤ :=
   SymmetricAlgebra.adjoin_range_ι
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
 

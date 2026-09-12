@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.GaugeAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Structure
 /-!
@@ -19,7 +19,7 @@ public import Physlib.Particles.StandardModel.JetAlgebra.SectorEquiv.Structure
 The jet gauge group acts on the jet algebra of the Standard Model factor by factor. On the
 two matter factors it is the free-algebra functor applied to the species-wise action
 `fieldData.repJetFermion`, `fieldData.repJetBoson` on the generator spaces; on the
-connection factor it is the generic affine action `GaugeJetAlgebra.complexRepJet` of the
+connection factor it is the generic affine action `LocalGaugeFieldAlgebra.complexRepJet` of the
 Standard Model's local gauge data, whose linear part is the all-orders Leibniz convolution
 of the adjoint Taylor coefficients and whose constant part is the Maurer–Cartan shift. The
 action is multiplicative — a jet of gauge transformations acts on a Lagrangian term factor
@@ -80,19 +80,19 @@ noncomputable abbrev repJetGaugeGroupIBoson :
 
 /-- The jet gauge action on the jet algebra of the Standard Model. Matter is acted on
   species by species from `fieldData`; the connection factor carries the generic affine
-  `GaugeJetAlgebra.complexRepJet` action of the Standard Model local gauge data. -/
+  `LocalGaugeFieldAlgebra.complexRepJet` action of the Standard Model local gauge data. -/
 noncomputable def repJetGaugeGroupI : Representation ℂ JetGaugeGroupI JetAlgebra :=
   (repJetGaugeGroupIFermion.tprod repJetGaugeGroupIBoson).tprod
-    (_root_.GaugeJetAlgebra.complexRepJet localGaugeData)
+    (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData)
 
 @[simp]
 lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI)
     (w : ExteriorAlgebra ℂ fieldData.FermionGenerators ⊗[ℂ]
       SymmetricAlgebra ℂ fieldData.BosonGenerators)
-    (g : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra) :
+    (g : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra) :
     repJetGaugeGroupI U (w ⊗ₜ[ℂ] g)
       = ((repJetGaugeGroupIFermion.tprod repJetGaugeGroupIBoson) U w)
-          ⊗ₜ[ℂ] (_root_.GaugeJetAlgebra.complexRepJet localGaugeData U g) := rfl
+          ⊗ₜ[ℂ] (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData U g) := rfl
 
 /-!
 
@@ -108,7 +108,7 @@ lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
     (Representation.tprod_apply_mul _ _
       (fun V a b => Representation.exteriorAlgebra_apply_mul _ V a b)
       (fun V a b => Representation.symmetricAlgebra_apply_mul _ V a b))
-    (fun V a b => _root_.GaugeJetAlgebra.complexRepJet_apply_mul (jets := localGaugeData)
+    (fun V a b => _root_.LocalGaugeFieldAlgebra.complexRepJet_apply_mul (jets := localGaugeData)
       V a b) U x y
 
 /-!
@@ -119,10 +119,10 @@ lemma repJetGaugeGroupI_apply_mul (U : JetGaugeGroupI) (x y : JetAlgebra) :
 
 /-- The jet gauge action on the complexified gauge sector fixes the unit. -/
 lemma complexRepJetGaugeGroupI_apply_one (U : JetGaugeGroupI) :
-    (_root_.GaugeJetAlgebra.complexRepJet localGaugeData) U
-      (1 : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) = 1 := by
-  rw [Algebra.TensorProduct.one_def, _root_.GaugeJetAlgebra.complexRepJet_tmul,
-    _root_.GaugeJetAlgebra.repJet_apply_one]
+    (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData) U
+      (1 : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) = 1 := by
+  rw [Algebra.TensorProduct.one_def, _root_.LocalGaugeFieldAlgebra.complexRepJet_tmul,
+    _root_.LocalGaugeFieldAlgebra.repJet_apply_one]
 
 /-- The matter factor of the jet gauge action fixes the unit. The proof instantiates the
   abstract `Representation.tprod_apply_one`, so that the unit of the matter factor is never
@@ -137,14 +137,14 @@ lemma repJetGaugeGroupI_matter_one (U : JetGaugeGroupI) :
 /-- The jet gauge action restricts to the generic connection factor, where it is the
   generic affine action of the Standard Model local gauge data. -/
 lemma repJetGaugeGroupI_includeConnection (U : JetGaugeGroupI)
-    (y : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra) :
+    (y : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra) :
     repJetGaugeGroupI U (fieldData.includeConnection y)
       = fieldData.includeConnection
-          (_root_.GaugeJetAlgebra.complexRepJet localGaugeData U y) :=
+          (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData U y) :=
   (congrArg (repJetGaugeGroupI U) (GaugeFieldData.includeConnection_apply y)).trans
     ((Representation.tprod_apply_one_tmul _ _ U (repJetGaugeGroupI_matter_one U) y).trans
       (GaugeFieldData.includeConnection_apply
-        (_root_.GaugeJetAlgebra.complexRepJet localGaugeData U y)).symm)
+        (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData U y)).symm)
 
 /-- The jet gauge action restricts to the fermionic factor, where it is the
   exterior-algebra functor applied to the species-wise action of the datum. The factor
@@ -159,7 +159,7 @@ lemma repJetGaugeGroupI_includeFermionFactor (U : JetGaugeGroupI)
     ((Representation.tprod_apply_tmul_one _ _ U _
         (complexRepJetGaugeGroupI_apply_one U)).trans
       ((congrArg (fun w : fieldData.MatterAlgebra =>
-            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra)) : JetAlgebra))
+            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra)) : JetAlgebra))
           (Representation.tprod_apply_tmul_one _ _ U a
             (Representation.symmetricAlgebra_apply_one _ U))).trans
         (GaugeFieldData.includeFermion_apply (repJetGaugeGroupIFermion U a)).symm))
@@ -174,7 +174,7 @@ lemma repJetGaugeGroupI_includeBosonFactor (U : JetGaugeGroupI)
     ((Representation.tprod_apply_tmul_one _ _ U _
         (complexRepJetGaugeGroupI_apply_one U)).trans
       ((congrArg (fun w : fieldData.MatterAlgebra =>
-            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.GaugeJetAlgebra GaugeAlgebra)) : JetAlgebra))
+            ((w ⊗ₜ[ℂ] (1 : ℂ ⊗[ℝ] _root_.LocalGaugeFieldAlgebra GaugeAlgebra)) : JetAlgebra))
           (Representation.tprod_apply_one_tmul _ _ U
             (Representation.exteriorAlgebra_apply_one _ U) b)).trans
         (GaugeFieldData.includeBoson_apply (repJetGaugeGroupIBoson U b)).symm))
@@ -194,9 +194,9 @@ to each sector's own action under its existing name.
   inclusion is the connection inclusion of the datum, the Standard Model gauge bosons being
   the generic ones at `GaugeAlgebra`. -/
 lemma repJetGaugeGroupI_includeGauge (U : JetGaugeGroupI)
-    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     repJetGaugeGroupI U (includeGauge y)
-      = includeGauge (_root_.GaugeJetAlgebra.complexRepJet localGaugeData U y) :=
+      = includeGauge (_root_.LocalGaugeFieldAlgebra.complexRepJet localGaugeData U y) :=
   repJetGaugeGroupI_includeConnection U y
 
 /-- The jet gauge action restricts to the fermionic sector's own action. -/

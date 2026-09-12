@@ -27,16 +27,15 @@ reduces the whole algebra to its pure tensors, and a pure tensor is the product 
 three sector inclusions applied to its factors; so it is enough that each sector inclusion
 lands in the adjoined algebra. Each of those is the sector's own generation theorem —
 `FermionicAlgebra.adjoin_iteratedJetDeriv_eq_top`, its bosonic counterpart, and
-`GaugeJetAlgebra.adjoin_iteratedJetDeriv_eq_top` — pushed through the inclusion.
+`LocalGaugeFieldAlgebra.adjoin_iteratedJetDeriv_eq_top` — pushed through the inclusion.
 
 Two things do not come for free. The fermion families are indexed by covectors on the
 *individual species*, while the fermionic generation theorem produces every covector on the
 total target space `FermionSpace`; the gap is closed by
 `FermionSpace.span_speciesDual_eq_top`, which says the pulled-back covectors span. And the
-gauge sector's generation theorem is a statement over `ℝ` about `GaugeJetAlgebra GaugeAlgebra`,
-whereas
-the gauge tensor factor is the complexification `ℂ ⊗[ℝ] GaugeJetAlgebra GaugeAlgebra`; the extra
-complex
+gauge sector's generation theorem is a statement over `ℝ` about
+`LocalGaugeFieldAlgebra GaugeAlgebra`, whereas the gauge tensor factor is the complexification
+`ℂ ⊗[ℝ] LocalGaugeFieldAlgebra GaugeAlgebra`; the extra complex
 scalar is supplied by the algebra map, since `z ⊗ₜ x = (z ⊗ₜ 1) * (1 ⊗ₜ x)` and the first
 factor is the image of `z` under `algebraMap`.
 
@@ -368,9 +367,9 @@ lemma includeFermion_mem_adjoin_generators (f : FermionJetAlgebra) :
 
 ### B.4. The gauge sector
 
-The gauge tensor factor is the complexification `ℂ ⊗[ℝ] GaugeJetAlgebra GaugeAlgebra`,
+The gauge tensor factor is the complexification `ℂ ⊗[ℝ] LocalGaugeFieldAlgebra GaugeAlgebra`,
 while the gauge sector's generation theorem is a statement over `ℝ` about
-`GaugeJetAlgebra GaugeAlgebra` itself. The real part of the factor is handled by that
+`LocalGaugeFieldAlgebra GaugeAlgebra` itself. The real part of the factor is handled by that
 theorem transported along the real algebra map `x ↦ 1 ⊗ₜ x`; the complex scalar is then
 supplied by `z ⊗ₜ x = (z ⊗ₜ 1) * (1 ⊗ₜ x)`, whose first factor is the image of `z` under
 `algebraMap` and so lies in every subalgebra.
@@ -380,32 +379,32 @@ supplied by `z ⊗ₜ x = (z ⊗ₜ 1) * (1 ⊗ₜ x)`, whose first factor is th
 /-- The iterated derivative of the complexification acts on a pure tensor through the
   gauge sector's own iterated derivative. -/
 lemma iteratedD_complexJetDeriv_tmul (s : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ)
-    (x : (GaugeJetAlgebra GaugeAlgebra)) :
-    Lorentz.iteratedD (GaugeJetAlgebra.complexJetDeriv GaugeAlgebra)
-        GaugeJetAlgebra.complexJetDeriv_comm s (z ⊗ₜ[ℝ] x)
-      = z ⊗ₜ[ℝ] (GaugeJetAlgebra.iteratedJetDeriv GaugeAlgebra) s x := by
+    (x : (LocalGaugeFieldAlgebra GaugeAlgebra)) :
+    Lorentz.iteratedD (LocalGaugeFieldAlgebra.complexJetDeriv GaugeAlgebra)
+        LocalGaugeFieldAlgebra.complexJetDeriv_comm s (z ⊗ₜ[ℝ] x)
+      = z ⊗ₜ[ℝ] (LocalGaugeFieldAlgebra.iteratedJetDeriv GaugeAlgebra) s x := by
   induction s using Multiset.induction_on with
   | empty =>
-    rw [Lorentz.iteratedD_zero, GaugeJetAlgebra.iteratedJetDeriv_zero, LinearMap.id_apply,
+    rw [Lorentz.iteratedD_zero, LocalGaugeFieldAlgebra.iteratedJetDeriv_zero, LinearMap.id_apply,
       LinearMap.id_apply]
   | cons μ s ih =>
-    rw [Lorentz.iteratedD_cons, GaugeJetAlgebra.iteratedJetDeriv_cons,
+    rw [Lorentz.iteratedD_cons, LocalGaugeFieldAlgebra.iteratedJetDeriv_cons,
       LinearMap.comp_apply, LinearMap.comp_apply, ih,
-      GaugeJetAlgebra.complexJetDeriv_tmul]
+      LocalGaugeFieldAlgebra.complexJetDeriv_tmul]
 
 /-- The real gauge-boson jet algebra inside the jet algebra of the Standard Model: the
   inclusion of the gauge sector precomposed with the inclusion of the real part of the
   complexification. It is a map of `ℝ`-algebras, which is the level at which the gauge
   sector's generation theorem is stated. -/
-noncomputable def includeGaugeReal : (GaugeJetAlgebra GaugeAlgebra) →ₐ[ℝ] JetAlgebra :=
+noncomputable def includeGaugeReal : (LocalGaugeFieldAlgebra GaugeAlgebra) →ₐ[ℝ] JetAlgebra :=
   (AlgHom.restrictScalars ℝ includeGauge).comp
     (Algebra.TensorProduct.includeRight (R := ℝ) (A := ℂ)
-      (B := (GaugeJetAlgebra GaugeAlgebra)))
+      (B := (LocalGaugeFieldAlgebra GaugeAlgebra)))
 
 /-- The real gauge inclusion is the gauge inclusion of the pure tensor with complex part
   one. -/
 @[simp]
-lemma includeGaugeReal_apply (x : (GaugeJetAlgebra GaugeAlgebra)) :
+lemma includeGaugeReal_apply (x : (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     includeGaugeReal x = includeGauge ((1 : ℂ) ⊗ₜ[ℝ] x) := rfl
 
 /-- A gauge-field symbol is the gauge sector's own derivative symbol, included through the
@@ -413,21 +412,21 @@ lemma includeGaugeReal_apply (x : (GaugeJetAlgebra GaugeAlgebra)) :
 lemma gaugeField_eq_includeGaugeReal (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
     gaugeField s μ φ
-      = includeGaugeReal ((GaugeJetAlgebra.iteratedJetDeriv GaugeAlgebra) s
-          ((GaugeJetAlgebra.ofA GaugeAlgebra) μ φ)) :=
+      = includeGaugeReal ((LocalGaugeFieldAlgebra.iteratedJetDeriv GaugeAlgebra) s
+          ((LocalGaugeFieldAlgebra.ofA GaugeAlgebra) μ φ)) :=
   (gaugeField_apply s μ φ).trans
     ((congrArg includeGauge
-        (iteratedD_complexJetDeriv_tmul s 1 (GaugeJetAlgebra.ofA GaugeAlgebra μ φ))).trans
+        (iteratedD_complexJetDeriv_tmul s 1 (LocalGaugeFieldAlgebra.ofA GaugeAlgebra μ φ))).trans
       (includeGaugeReal_apply _).symm)
 
 /-- Every element of the real gauge sector lies in the algebra generated by the symbols:
   the gauge-boson jet algebra is generated over `ℝ` by the derivative symbols of the gauge
   field, and those are the gauge family. -/
-lemma includeGaugeReal_mem_adjoin_generators (x : (GaugeJetAlgebra GaugeAlgebra)) :
+lemma includeGaugeReal_mem_adjoin_generators (x : (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     includeGaugeReal x ∈ Algebra.adjoin ℂ generators := by
   have h : includeGaugeReal x ∈ (Algebra.adjoin ℂ generators).restrictScalars ℝ := by
     refine mem_of_adjoin_eq_top includeGaugeReal
-      GaugeJetAlgebra.adjoin_iteratedJetDeriv_eq_top ?_ x
+      LocalGaugeFieldAlgebra.adjoin_iteratedJetDeriv_eq_top ?_ x
     rintro _ ⟨y, hy, rfl⟩
     simp only [Set.mem_iUnion, Set.mem_range] at hy
     obtain ⟨s, μ, φ, rfl⟩ := hy
@@ -437,17 +436,17 @@ lemma includeGaugeReal_mem_adjoin_generators (x : (GaugeJetAlgebra GaugeAlgebra)
 
 /-- Every element of the complexified gauge sector lies in the algebra generated by the
   symbols: a pure tensor splits as a complex scalar times the image of its real part. -/
-lemma includeGauge_mem_adjoin_generators (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+lemma includeGauge_mem_adjoin_generators (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     includeGauge y ∈ Algebra.adjoin ℂ generators := by
   induction y using TensorProduct.induction_on with
   | zero => exact mem_adjoin_generators_of_eq (map_zero includeGauge).symm (zero_mem _)
   | add a b ha hb =>
     exact mem_adjoin_generators_of_eq (map_add includeGauge a b).symm (add_mem ha hb)
   | tmul z x =>
-    have hsplit : (z ⊗ₜ[ℝ] x : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))
-        = algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) z * ((1 : ℂ) ⊗ₜ[ℝ] x) := by
-      rw [show algebraMap ℂ (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) z
-          = z ⊗ₜ[ℝ] (1 : (GaugeJetAlgebra GaugeAlgebra)) from rfl,
+    have hsplit : (z ⊗ₜ[ℝ] x : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra))
+        = algebraMap ℂ (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) z * ((1 : ℂ) ⊗ₜ[ℝ] x) := by
+      rw [show algebraMap ℂ (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) z
+          = z ⊗ₜ[ℝ] (1 : (LocalGaugeFieldAlgebra GaugeAlgebra)) from rfl,
         Algebra.TensorProduct.tmul_mul_tmul, mul_one, one_mul]
     refine mem_adjoin_generators_of_eq (congrArg includeGauge hsplit).symm ?_
     exact mem_adjoin_generators_of_eq (map_mul includeGauge _ _).symm
@@ -505,7 +504,7 @@ private lemma tensor_tmul_tmul {A B C : Type*} [Ring A] [Algebra ℂ A] [Ring B]
 lemma includeFermionFactor_mul_includeBosonFactor_mul_includeConnection
     (a : ExteriorAlgebra ℂ fieldData.FermionGenerators)
     (b : SymmetricAlgebra ℂ fieldData.BosonGenerators)
-    (c : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    (c : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     fieldData.includeFermion a * fieldData.includeBoson b * fieldData.includeConnection c
       = ((a ⊗ₜ[ℂ] b) ⊗ₜ[ℂ] c : JetAlgebra) :=
   (congrArg₂ (fun x y : JetAlgebra => x * y)
@@ -518,7 +517,7 @@ lemma includeFermionFactor_mul_includeBosonFactor_mul_includeConnection
 
 /-- Every pure tensor of the jet algebra lies in the algebra generated by the symbols. -/
 lemma tmul_mem_adjoin_generators (w : fieldData.MatterAlgebra)
-    (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+    (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     (w ⊗ₜ[ℂ] y : JetAlgebra) ∈ Algebra.adjoin ℂ generators := by
   induction w using TensorProduct.induction_on with
   | zero =>
@@ -547,7 +546,7 @@ theorem adjoin_generators_eq_top :
     Algebra.adjoin ℂ generators = (⊤ : Subalgebra ℂ JetAlgebra) := by
   refine top_le_iff.mp ?_
   rw [← Algebra.TensorProduct.adjoin_tmul_eq_top ℂ fieldData.MatterAlgebra
-    (ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra))]
+    (ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra))]
   refine Algebra.adjoin_le ?_
   rintro _ ⟨w, y, rfl⟩
   exact tmul_mem_adjoin_generators w y

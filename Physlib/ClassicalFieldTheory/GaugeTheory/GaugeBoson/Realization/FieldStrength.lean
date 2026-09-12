@@ -35,17 +35,16 @@ derivative order simultaneously (`repGauge_fieldStrength`,
 set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct
-variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {B : Type} [Ring B]
 variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
-variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ GJ B}
-variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 /-- The field strength `F_μν = ∂_μ A_ν − ∂_ν A_μ + ⁅A_μ, A_ν⁆` of a family of
   gauge-field symbols, as a family of derivative symbols: the `s`-th derivative has
@@ -141,6 +140,25 @@ lemma fieldStrength_swap
     fieldStrength A ν μ s = - fieldStrength A μ ν s := by
   rw [fieldStrength, fieldStrength, commutatorFam_swap A hA μ ν s]
   abel
+
+/-- The field strength is natural in the algebra: a multiplicative linear map carries the
+  field strength of a family to the field strength of its image. -/
+lemma fieldStrength_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (μ ν : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    fieldStrength (fun p ρ => Φ ∘ₗ A p ρ) μ ν s = Φ ∘ₗ fieldStrength A μ ν s := by
+  rw [fieldStrength, fieldStrength, commutatorFam_map Φ hΦ, LinearMap.comp_add,
+    LinearMap.comp_sub]
+
+end RealScalars
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- **The field strength transforms in the adjoint, at every derivative order**: under
   a gauge jet `U` every derivative symbol of `F_μν` transforms by the pure Leibniz
@@ -242,6 +260,8 @@ lemma repGauge_fieldStrength_zero
       fieldStrength h.A μ ν 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
   rw [h.repGauge_fieldStrength U 0 μ ν φ, Multiset.antidiagonal_zero,
     Multiset.map_singleton, Multiset.sum_singleton]
+
+end ComplexScalars
 
 end GaugeAlgebraRealization
 

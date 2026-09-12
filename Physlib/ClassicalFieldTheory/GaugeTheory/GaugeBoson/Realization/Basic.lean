@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.GaugeField
 /-!
 # Realizations of the gauge-boson jet algebra
 
@@ -14,7 +14,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebr
 An algebra `B` carries the gauge bosons of a gauge theory when the gauge-boson jet algebra,
 the universal algebra on the symbols `∂_s A_μ^φ`, maps into it compatibly with the actions
 of the jet gauge group and of the Lorentz group. That is the structure
-`GaugeAlgebraRealization`: an algebra map `ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 →ₐ[ℂ] B` equivariant for
+`GaugeAlgebraRealization`: an algebra map `ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 →ₐ[ℂ] B` equivariant for
 the two groups, together with the demands that both groups act on the whole of `B` by
 algebra endomorphisms. It is the gauge-boson part of the Standard Model's
 `AlgebraRealization`, for any local-gauge-data package `jets`, and every result about a
@@ -25,7 +25,7 @@ the map, `GaugeAlgebraRealization.A`, and their transformation laws are the jet 
 own laws pushed along it. The base case is the jet algebra realized in itself,
 `GaugeAlgebraRealization.id`: its Lorentz law is that of a Lorentz derivative, and its gauge
 law is the substitution action of the jet gauge group constructed in
-`GaugeJetAlgebra.GaugeAction`.
+`LocalGaugeFieldAlgebra.GaugeAction`.
 
 ## ii. The physics
 
@@ -86,7 +86,7 @@ structure GaugeAlgebraRealization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B 
     where
   /-- The algebra map out of the gauge-boson jet algebra: it places the gauge-boson
     symbols, and every polynomial expression in them, inside `B`. -/
-  toAlgHom : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 →ₐ[ℂ] B
+  toAlgHom : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 →ₐ[ℂ] B
   /-- The gauge-field symbols `∂_s A_μ^φ` of `B`. They are determined by the map, as the
     images of the jet algebra's symbols (`A_eq`), and are recorded as data so that the
     theory can treat them as opaque symbols and a concrete realization can present the
@@ -94,13 +94,13 @@ structure GaugeAlgebraRealization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B 
   A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B
   /-- The symbols are the images of the jet algebra's symbols. -/
   A_eq : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
-    A s μ φ = toAlgHom (GaugeJetAlgebra.gaugeField 𝔤 s μ φ)
+    A s μ φ = toAlgHom (LocalGaugeFieldAlgebra.gaugeField 𝔤 s μ φ)
   /-- The map is equivariant for the jet gauge group. -/
-  map_repJet : ∀ (U : GJ) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤),
-    toAlgHom (GaugeJetAlgebra.complexRepJet jets U x) = repJet U (toAlgHom x)
+  map_repJet : ∀ (U : GJ) (x : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤),
+    toAlgHom (LocalGaugeFieldAlgebra.complexRepJet jets U x) = repJet U (toAlgHom x)
   /-- The map is equivariant for the Lorentz group. -/
-  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤),
-    toAlgHom (GaugeJetAlgebra.complexRepLorentzGroup 𝔤 Λ x) = repLorentz Λ (toAlgHom x)
+  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤),
+    toAlgHom (LocalGaugeFieldAlgebra.complexRepLorentzGroup 𝔤 Λ x) = repLorentz Λ (toAlgHom x)
   /-- The jet gauge group acts on the whole of `B` by algebra endomorphisms. -/
   repJet_mul : ∀ (U : GJ) (b₁ b₂ : B), repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂
   /-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
@@ -109,14 +109,14 @@ structure GaugeAlgebraRealization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B 
 
 namespace GaugeAlgebraRealization
 
-open GaugeJetAlgebra
+open LocalGaugeFieldAlgebra
 
 variable {B : Type} [Ring B] [Algebra ℂ B] {repJet : Representation ℂ GJ B}
   {repLorentz : Representation ℂ SL(2,ℂ) B}
 
 variable (jets) in
 /-- The gauge-boson jet algebra realized in itself, by the identity. -/
-noncomputable def id : GaugeAlgebraRealization jets (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)
+noncomputable def id : GaugeAlgebraRealization jets (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)
     (complexRepJet jets) (complexRepLorentzGroup 𝔤) where
   toAlgHom := AlgHom.id ℂ _
   A := gaugeField 𝔤

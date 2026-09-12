@@ -5,8 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.LorentzAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.GaugeAction
 public import Physlib.Relativity.SL2C.Basic
 /-!
 # The gauge-field symbols of the jet algebra and their laws
@@ -15,7 +15,7 @@ public import Physlib.Relativity.SL2C.Basic
 
 The derivative symbols `∂_s A_μ^φ` of the complexified gauge-boson jet algebra, packaged as
 a family over the derivative multiset, the spacetime index and the dual of the gauge
-algebra, `GaugeJetAlgebra.gaugeField`, and the two transformation laws they satisfy: the
+algebra, `LocalGaugeFieldAlgebra.gaugeField`, and the two transformation laws they satisfy: the
 Lorentz law, in which the symbol carries one covector index and each derivative slot
 transforms as a covector, and the gauge law, in which a jet acts by the Leibniz convolution
 of its adjoint Taylor coefficients plus the Maurer–Cartan shift. These are the laws that a
@@ -23,9 +23,9 @@ realization of the jet algebra in another algebra inherits.
 
 ## ii. Key results
 
-- `GaugeJetAlgebra.gaugeField` : the gauge-field symbols of the jet algebra.
-- `GaugeJetAlgebra.repLorentz_gaugeField` : the Lorentz law.
-- `GaugeJetAlgebra.repJet_gaugeField` : the gauge law.
+- `LocalGaugeFieldAlgebra.gaugeField` : the gauge-field symbols of the jet algebra.
+- `LocalGaugeFieldAlgebra.repLorentz_gaugeField` : the Lorentz law.
+- `LocalGaugeFieldAlgebra.repJet_gaugeField` : the gauge law.
 
 -/
 
@@ -39,16 +39,16 @@ variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 open TensorProduct Matrix MatrixGroups Lorentz
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 variable (𝔤) in
 /-- The gauge-field derivative symbols of the complexified gauge-boson jet algebra, as a
   family over the derivative multiset, the spacetime index and the dual of the gauge
   algebra — the form consumed by the abstract covariance machinery. -/
 noncomputable def gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
-    Module.Dual ℝ 𝔤 →ₗ[ℝ] ℂ ⊗[ℝ] (GaugeJetAlgebra 𝔤) :=
+    Module.Dual ℝ 𝔤 →ₗ[ℝ] ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   (Lorentz.iteratedD (complexJetDeriv 𝔤) complexJetDeriv_comm s).restrictScalars ℝ ∘ₗ
-    (TensorProduct.mk ℝ ℂ (GaugeJetAlgebra 𝔤) 1).comp ((ofA 𝔤) μ)
+    (TensorProduct.mk ℝ ℂ (LocalGaugeFieldAlgebra 𝔤) 1).comp ((ofA 𝔤) μ)
 
 @[simp]
 lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
@@ -87,8 +87,8 @@ lemma repJet_gaugeField (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 �
     (φ : Module.Dual ℝ 𝔤) :
     complexRepJet jets U (gaugeField 𝔤 s μ φ) =
       (s.antidiagonal.map fun p => gaugeField 𝔤 p.2 μ (jets.adjointDualCoeff U⁻¹ p.1 φ)).sum
-      + algebraMap ℂ (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)
+      + algebraMap ℂ (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)
           (φ (jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U⁻¹ μ)))) :=
   complexRepJet_iteratedD_one_tmul_ofA U s μ φ
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra

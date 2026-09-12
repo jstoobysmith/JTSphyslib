@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joseph Tooby-Smith
 -/
 module
+public import Physlib.Mathematics.Fin
 public import Physlib.Particles.StandardModel.AlgebraRealization.Commutations
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
@@ -189,13 +190,8 @@ lemma sum_fin_succ_prod_smul {n : ℕ} (l : Fin (n + 1) → (Fin 1 ⊕ Fin 3))
     (X : (Fin (n + 1) → (Fin 1 ⊕ Fin 3)) → M) :
     ∑ q : Fin (n + 1) → (Fin 1 ⊕ Fin 3), (∏ i, L[Λ] (q i) (l i)) • X q =
       ∑ b, ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
-        (L[Λ] b (l 0) * ∏ i, L[Λ] (p i) (l i.succ)) • X (Fin.cons b p) := by
-  rw [← (Fin.consEquiv fun _ : Fin (n + 1) => Fin 1 ⊕ Fin 3).sum_comp, Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl fun b _ => Finset.sum_congr rfl fun p _ => ?_
-  show (∏ i, L[Λ] ((Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3)) i) (l i)) •
-    X (Fin.cons b p) = _
-  rw [Fin.prod_univ_succ]
-  simp only [Fin.cons_zero, Fin.cons_succ]
+        (L[Λ] b (l 0) * ∏ i, L[Λ] (p i) (l i.succ)) • X (Fin.cons b p) :=
+  Physlib.Fin.sum_pi_succ_prod_smul (fun i b => L[Λ] b (l i)) X
 
 /-- The mixing operator agrees with the tuple form of the Lorentz law: along an ordered
   tuple of directions it is the sum over all tuples with one Lorentz matrix factor per

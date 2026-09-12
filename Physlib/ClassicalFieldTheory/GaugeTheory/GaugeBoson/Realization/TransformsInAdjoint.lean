@@ -30,17 +30,19 @@ derivative of the field strength is an adjoint gauge tensor.
 set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct
-variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {B : Type} [Ring B]
 variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
-variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ GJ B}
-variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 variable (jets) in
 /-- A family of derivative symbols `F` *transforms in the adjoint* (is an adjoint gauge
@@ -63,6 +65,12 @@ lemma TransformsInAdjoint.repGauge_zero
     repGauge U (F 0 φ) = F 0 (jets.adjointDualCoeff U⁻¹ 0 φ) := by
   simpa only [Multiset.antidiagonal_zero, Multiset.map_singleton, Multiset.sum_singleton]
     using hF U φ 0
+
+end ComplexScalars
+
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
 
 /-- **The derived bracket family** `⁅A_ρ, F⁆`: the `s`-derivative of the bracket of the
   gauge field against a family, given by the Leibniz convolution of the derivative
@@ -94,11 +102,47 @@ lemma covDerivAdjoint_apply
     (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
     covDerivAdjoint A F ρ s φ = F (ρ ::ₘ s) φ + bracketFamConv A ρ F s φ := rfl
 
+/-- The derived bracket family is natural in the algebra. -/
+lemma bracketFamConv_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    bracketFamConv (fun p σ => Φ ∘ₗ A p σ) ρ (fun p => Φ ∘ₗ F p) s =
+      Φ ∘ₗ bracketFamConv A ρ F s := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.comp_apply, bracketFamConv, bracketFamConv, Multiset.sum_linearMap_apply,
+    Multiset.sum_linearMap_apply, Multiset.map_map, Multiset.map_map, map_multiset_sum,
+    Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
+  simp only [Function.comp_apply]
+  rw [bracketFam_map Φ hΦ]
+  rfl
+
+/-- The covariant derivative is natural in the algebra. -/
+lemma covDerivAdjoint_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    covDerivAdjoint (fun p σ => Φ ∘ₗ A p σ) (fun p => Φ ∘ₗ F p) ρ s =
+      Φ ∘ₗ covDerivAdjoint A F ρ s := by
+  rw [covDerivAdjoint, covDerivAdjoint, bracketFamConv_map Φ hΦ, LinearMap.comp_add]
+
+end RealScalars
+
 /-!
 
 ## The iterated covariance of the covariant derivative
 
 -/
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- If `F` transforms in the adjoint, so do its `κ ::ₘ s`-derived symbols with the
   extra derivative traced through `LocalGaugeData.adjointDualCoeff_cons`: the Leibniz splittings
@@ -269,6 +313,8 @@ theorem TransformsInAdjoint.covDerivAdjoint
   rw [hL, hF.repGauge_cons U ρ s φ, hF.repGauge_bracketFamConv h U s ρ φ,
     hR, hcancel]
   abel
+
+end ComplexScalars
 
 end GaugeAlgebraRealization
 

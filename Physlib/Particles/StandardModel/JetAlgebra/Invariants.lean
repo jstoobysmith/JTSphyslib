@@ -81,12 +81,12 @@ open TensorProduct Matrix MatrixGroups
 noncomputable def gaugeField (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
     Module.Dual ℝ GaugeAlgebra →ₗ[ℝ] JetAlgebra :=
   (includeGauge.toLinearMap.restrictScalars ℝ).comp
-    ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ)
+    ((LocalGaugeFieldAlgebra.gaugeField GaugeAlgebra) s μ)
 
 @[simp]
 lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
-    gaugeField s μ φ = includeGauge ((GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ) := rfl
+    gaugeField s μ φ = includeGauge ((LocalGaugeFieldAlgebra.gaugeField GaugeAlgebra) s μ φ) := rfl
 
 /-- The gauge-field symbols `∂_s A_μ^φ` are the connection generators of the field datum:
   the derivative label, the spacetime index and the adjoint covector are unchanged, and the
@@ -98,18 +98,19 @@ lemma gaugeField_eq_ιConnection (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 �
       = fieldData.ιConnection (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
           GaugeBoson.componentDual GaugeAlgebra
             (Lorentz.CoVector.basis.dualBasis μ) φ) := by
-  have hsector : (GaugeJetAlgebra.gaugeField GaugeAlgebra) s μ φ
+  have hsector : (LocalGaugeFieldAlgebra.gaugeField GaugeAlgebra) s μ φ
       = (1 : ℂ) ⊗ₜ[ℝ] SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace GaugeAlgebra)
           (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
             GaugeBoson.componentDual GaugeAlgebra
               (Lorentz.CoVector.basis.dualBasis μ) φ) :=
-    (GaugeJetAlgebra.gaugeField_apply s μ φ).trans
-      ((GaugeJetAlgebra.iteratedD_complexJetDeriv_one_tmul s
-            ((GaugeJetAlgebra.ofA GaugeAlgebra) μ φ)).trans
-        (congrArg (fun g : GaugeJetAlgebra GaugeAlgebra => (1 : ℂ) ⊗ₜ[ℝ] g)
-          (GaugeJetAlgebra.iteratedJetDeriv_ofA s μ φ)))
+    (LocalGaugeFieldAlgebra.gaugeField_apply s μ φ).trans
+      ((LocalGaugeFieldAlgebra.iteratedD_complexJetDeriv_one_tmul s
+            ((LocalGaugeFieldAlgebra.ofA GaugeAlgebra) μ φ)).trans
+        (congrArg (fun g : LocalGaugeFieldAlgebra GaugeAlgebra => (1 : ℂ) ⊗ₜ[ℝ] g)
+          (LocalGaugeFieldAlgebra.iteratedJetDeriv_ofA s μ φ)))
   exact ((gaugeField_apply s μ φ).trans
-      (congrArg (fun y : ℂ ⊗[ℝ] GaugeJetAlgebra GaugeAlgebra => includeGauge y) hsector)).trans
+      (congrArg (fun y : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra GaugeAlgebra => includeGauge y)
+        hsector)).trans
     (includeGauge_one_tmul_ι _)
 
 /-!
@@ -119,7 +120,7 @@ lemma gaugeField_eq_ιConnection (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 �
 -/
 
 /-- The gauge sector lands in the centre of the jet algebra. -/
-lemma includeGauge_mem_center (y : ℂ ⊗[ℝ] (GaugeJetAlgebra GaugeAlgebra)) :
+lemma includeGauge_mem_center (y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra GaugeAlgebra)) :
     includeGauge y ∈ Subring.center JetAlgebra :=
   Subring.mem_center_iff.mpr fun z => includeGauge_commute y z
 
@@ -175,7 +176,7 @@ theorem invariant_mem_adjoin_fieldStrength (S : Set JetAlgebra)
   GaugeAlgebraRealization.invariant_mem_adjoin_fieldStrength gaugeRealization S
     (fun p μ φ y _ =>
       Subring.mem_center_iff.mp
-        (includeGauge_mem_center ((GaugeJetAlgebra.gaugeField GaugeAlgebra) p μ φ)) y)
+        (includeGauge_mem_center ((LocalGaugeFieldAlgebra.gaugeField GaugeAlgebra) p μ φ)) y)
     hS hx hinv
 
 end JetAlgebra

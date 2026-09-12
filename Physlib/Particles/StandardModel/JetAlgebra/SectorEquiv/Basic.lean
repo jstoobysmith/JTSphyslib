@@ -10,7 +10,7 @@ public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.GaugeField
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.GaugeField
 public import Physlib.Mathematics.ExteriorAlgebra
 public import Physlib.Mathematics.SymmetricAlgebra
 /-!

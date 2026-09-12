@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.GaugeJetAlgebra.JetDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.JetDeriv
 /-!
 # The mass-weight polynomial on the gauge-boson jet algebra
 
@@ -16,21 +16,21 @@ grading: the generator `∂_s A_μ^φ` is sent to `X ^ (2 + 2 |s|)` times itself
 carrying mass weight two and each derivative two more.
 
 The gauge-boson jet algebra is real, but the jet algebra of the Standard Model uses its
-complexification `ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤`. So the grading is built in two steps:
+complexification `ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤`. So the grading is built in two steps:
 the universal property of the symmetric algebra gives a real algebra map landing in
-`Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)` — a commutative target, so there is no
+`Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)` — a commutative target, so there is no
 side condition — and the universal property of the tensor product extends it along the scalars
 to `complexMassWeightPoly`, which is what the ambient theory sees.
 
 ## ii. Key results
 
-- `GaugeJetAlgebra.massWeightPoly` : the mass-weight grading on the real jet algebra.
-- `GaugeJetAlgebra.massWeightPoly_iteratedJetDeriv_ofA` : `∂_s A_μ^φ` is a monomial
+- `LocalGaugeFieldAlgebra.massWeightPoly` : the mass-weight grading on the real jet algebra.
+- `LocalGaugeFieldAlgebra.massWeightPoly_iteratedJetDeriv_ofA` : `∂_s A_μ^φ` is a monomial
   eigenvector of weight `2 + 2 |s|`.
-- `GaugeJetAlgebra.complexMassWeightPoly` : the grading on the complexification.
-- `GaugeJetAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA` : the generator lemma
+- `LocalGaugeFieldAlgebra.complexMassWeightPoly` : the grading on the complexification.
+- `LocalGaugeFieldAlgebra.complexMassWeightPoly_tmul_iteratedJetDeriv_ofA` : the generator lemma
   on the complexification.
-- `GaugeJetAlgebra.complexMassWeightPoly_eval_one` : setting the variable to one recovers
+- `LocalGaugeFieldAlgebra.complexMassWeightPoly_eval_one` : setting the variable to one recovers
   the element.
 
 ## iii. Table of contents
@@ -48,7 +48,7 @@ set_option linter.unusedSectionVars false
 
 variable {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 open TensorProduct
 
@@ -61,18 +61,18 @@ open TensorProduct
 /-- The monomial map into polynomials over the complexified jet algebra, as a map of
   `ℝ`-modules rather than of modules over the complexified jet algebra. -/
 noncomputable def monomialₗ (n : ℕ) :
-    (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) →ₗ[ℝ]
-      Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) :=
+    (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) →ₗ[ℝ]
+      Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) :=
   (Polynomial.monomial n).restrictScalars ℝ
 
 @[simp]
-lemma monomialₗ_apply (n : ℕ) (x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) :
+lemma monomialₗ_apply (n : ℕ) (x : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) :
     (monomialₗ (𝔤 := 𝔤)) n x = Polynomial.monomial n x := rfl
 
 /-- A component function, viewed inside the complexified jet algebra: the generator
   `∂_s A_μ^φ` tensored with the scalar one. -/
 noncomputable def ιComplex :
-    (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 :=
+    (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 :=
   Algebra.TensorProduct.includeRight.toLinearMap.comp
     (SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace 𝔤))
 
@@ -86,7 +86,7 @@ lemma ιComplex_apply (x : (GaugeBoson.JetComponentSpace 𝔤)) :
   derivative symbols. -/
 noncomputable def jetComponentPoly :
     (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ]
-      Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) :=
+      Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) :=
   TensorProduct.lift (DerivAlgebraReal.basisMultiset.constr ℝ fun s =>
     (monomialₗ (2 + 2 * Multiset.card s)).comp
       (ιComplex.comp (TensorProduct.mk ℝ DerivAlgebraReal
@@ -112,10 +112,10 @@ lemma jetComponentPoly_basisMultiset_tmul (s : Multiset (Fin 1 ⊕ Fin 3))
   a generator of mass weight `n` to `X ^ n` times its image in the complexification. It
   needs no side condition because the target is commutative. -/
 noncomputable def massWeightPoly :
-    GaugeJetAlgebra 𝔤 →ₐ[ℝ]
-      Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) := by
+    LocalGaugeFieldAlgebra 𝔤 →ₐ[ℝ]
+      Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) := by
   exact SymmetricAlgebra.lift (R := ℝ) (M := (GaugeBoson.JetComponentSpace 𝔤))
-    (A := Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)) jetComponentPoly
+    (A := Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)) jetComponentPoly
 
 /-- On a component function the mass-weight polynomial is the component-function map. -/
 @[simp]
@@ -128,20 +128,20 @@ lemma massWeightPoly_ι (x : (GaugeBoson.JetComponentSpace 𝔤)) :
 @[simp]
 lemma massWeightPoly_iteratedJetDeriv_ofA (s : Multiset (Fin 1 ⊕ Fin 3))
     (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    (massWeightPoly (𝔤 := 𝔤)) (GaugeJetAlgebra.iteratedJetDeriv 𝔤 s
-        (GaugeJetAlgebra.ofA 𝔤 μ φ)) =
+    (massWeightPoly (𝔤 := 𝔤)) (LocalGaugeFieldAlgebra.iteratedJetDeriv 𝔤 s
+        (LocalGaugeFieldAlgebra.ofA 𝔤 μ φ)) =
       Polynomial.monomial (2 + 2 * Multiset.card s) ((1 : ℂ) ⊗ₜ[ℝ]
-        GaugeJetAlgebra.iteratedJetDeriv 𝔤 s
-          (GaugeJetAlgebra.ofA 𝔤 μ φ)) := by
-  rw [GaugeJetAlgebra.iteratedJetDeriv_ofA, massWeightPoly_ι, jetComponentPoly_basisMultiset_tmul,
-    ιComplex_apply]
+        LocalGaugeFieldAlgebra.iteratedJetDeriv 𝔤 s
+          (LocalGaugeFieldAlgebra.ofA 𝔤 μ φ)) := by
+  rw [LocalGaugeFieldAlgebra.iteratedJetDeriv_ofA, massWeightPoly_ι,
+    jetComponentPoly_basisMultiset_tmul, ιComplex_apply]
 
 /-- The undifferentiated gauge field has mass weight two — mass dimension one. -/
 lemma massWeightPoly_ofA (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    (massWeightPoly (𝔤 := 𝔤)) (GaugeJetAlgebra.ofA 𝔤 μ φ) =
-      Polynomial.monomial 2 ((1 : ℂ) ⊗ₜ[ℝ] GaugeJetAlgebra.ofA 𝔤 μ φ) := by
+    (massWeightPoly (𝔤 := 𝔤)) (LocalGaugeFieldAlgebra.ofA 𝔤 μ φ) =
+      Polynomial.monomial 2 ((1 : ℂ) ⊗ₜ[ℝ] LocalGaugeFieldAlgebra.ofA 𝔤 μ φ) := by
   have h := massWeightPoly_iteratedJetDeriv_ofA (𝔤 := 𝔤) (0 : Multiset (Fin 1 ⊕ Fin 3)) μ φ
-  rwa [GaugeJetAlgebra.iteratedJetDeriv_zero, LinearMap.id_apply, Multiset.card_zero,
+  rwa [LocalGaugeFieldAlgebra.iteratedJetDeriv_zero, LinearMap.id_apply, Multiset.card_zero,
     Nat.mul_zero,
     Nat.add_zero] at h
 
@@ -155,19 +155,19 @@ lemma massWeightPoly_ofA (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
   map obtained from the real one by extending the scalars, the grading the jet algebra of
   the Standard Model sees on its gauge sector. -/
 noncomputable def complexMassWeightPoly :
-    (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) →ₐ[ℂ]
-      Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) := by
+    (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) →ₐ[ℂ]
+      Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) := by
   refine Algebra.TensorProduct.lift (R := ℝ) (S := ℂ) (A := ℂ)
-    (B := GaugeJetAlgebra 𝔤)
-    (C := Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤))
-    (Algebra.ofId ℂ (Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤))) massWeightPoly ?_
+    (B := LocalGaugeFieldAlgebra 𝔤)
+    (C := Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤))
+    (Algebra.ofId ℂ (Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤))) massWeightPoly ?_
   intro x y
-  exact Commute.all (S := Polynomial (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)) _ _
+  exact Commute.all (S := Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)) _ _
 
 /-- On a pure tensor the complexified grading is the scalar times the real grading. -/
-lemma complexMassWeightPoly_tmul (z : ℂ) (x : GaugeJetAlgebra 𝔤) :
+lemma complexMassWeightPoly_tmul (z : ℂ) (x : LocalGaugeFieldAlgebra 𝔤) :
     (complexMassWeightPoly (𝔤 := 𝔤)) (z ⊗ₜ[ℝ] x) =
-      Polynomial.C (z ⊗ₜ[ℝ] (1 : GaugeJetAlgebra 𝔤)) * massWeightPoly x := by
+      Polynomial.C (z ⊗ₜ[ℝ] (1 : LocalGaugeFieldAlgebra 𝔤)) * massWeightPoly x := by
   rw [complexMassWeightPoly, Algebra.TensorProduct.lift_tmul]
   congr 1
 
@@ -177,11 +177,11 @@ set_option maxHeartbeats 400000 in
 @[simp]
 lemma complexMassWeightPoly_tmul_iteratedJetDeriv_ofA (z : ℂ)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
-    (complexMassWeightPoly (𝔤 := 𝔤)) (z ⊗ₜ[ℝ] GaugeJetAlgebra.iteratedJetDeriv 𝔤 s
-        (GaugeJetAlgebra.ofA 𝔤 μ φ)) =
+    (complexMassWeightPoly (𝔤 := 𝔤)) (z ⊗ₜ[ℝ] LocalGaugeFieldAlgebra.iteratedJetDeriv 𝔤 s
+        (LocalGaugeFieldAlgebra.ofA 𝔤 μ φ)) =
       Polynomial.monomial (2 + 2 * Multiset.card s) (z ⊗ₜ[ℝ]
-        GaugeJetAlgebra.iteratedJetDeriv 𝔤 s
-          (GaugeJetAlgebra.ofA 𝔤 μ φ)) := by
+        LocalGaugeFieldAlgebra.iteratedJetDeriv 𝔤 s
+          (LocalGaugeFieldAlgebra.ofA 𝔤 μ φ)) := by
   rw [complexMassWeightPoly_tmul, massWeightPoly_iteratedJetDeriv_ofA,
     ← Polynomial.monomial_zero_left, Polynomial.monomial_mul_monomial, Nat.zero_add,
     Algebra.TensorProduct.tmul_mul_tmul, mul_one, one_mul]
@@ -217,14 +217,14 @@ lemma jetComponentPoly_eval_one (x : (GaugeBoson.JetComponentSpace 𝔤)) :
 set_option maxHeartbeats 400000 in
 /-- Setting the formal variable to one recovers the original element, viewed in the
   complexification. -/
-lemma massWeightPoly_eval_one (x : GaugeJetAlgebra 𝔤) :
+lemma massWeightPoly_eval_one (x : LocalGaugeFieldAlgebra 𝔤) :
     ((massWeightPoly (𝔤 := 𝔤)) x).eval 1 =
       Algebra.TensorProduct.includeRight (R := ℝ) (A := ℂ)
-        (B := GaugeJetAlgebra 𝔤) x := by
-  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℝ (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤)) 1
+        (B := LocalGaugeFieldAlgebra 𝔤) x := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℝ (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)) 1
       fun b => Commute.one_right b).comp massWeightPoly =
       (Algebra.TensorProduct.includeRight :
-        GaugeJetAlgebra 𝔤 →ₐ[ℝ] ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) := by
+        LocalGaugeFieldAlgebra 𝔤 →ₐ[ℝ] ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) := by
     refine SymmetricAlgebra.algHom_ext (LinearMap.ext fun y => ?_)
     simp
     change Polynomial.eval₂ (RingHom.id _) 1 (jetComponentPoly y) = _
@@ -234,7 +234,7 @@ lemma massWeightPoly_eval_one (x : GaugeJetAlgebra 𝔤) :
 
 /-- Setting the formal variable to one recovers the original element of the complexified
   jet algebra: the mass-weight pieces sum back to it. -/
-lemma complexMassWeightPoly_eval_one (y : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤) :
+lemma complexMassWeightPoly_eval_one (y : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) :
     ((complexMassWeightPoly (𝔤 := 𝔤)) y).eval 1 = y := by
   induction y using TensorProduct.induction_on with
   | zero => rw [map_zero, Polynomial.eval_zero]
@@ -250,4 +250,4 @@ lemma complexMassWeightPoly_injective : Function.Injective (complexMassWeightPol
   intro x y h
   rw [← complexMassWeightPoly_eval_one x, ← complexMassWeightPoly_eval_one y, h]
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra

@@ -75,17 +75,17 @@ set_option linter.unusedSectionVars false
 
 open Matrix MatrixGroups TensorProduct MvPowerSeries
 
-variable {B : Type} [Ring B] [Algebra ℂ B]
+variable {B : Type} [Ring B]
 variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤] [Module.Finite ℝ 𝔤]
 variable {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
 variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J}
 
 namespace GaugeAlgebraRealization
 
-variable {repLorentz : Representation ℂ SL(2,ℂ) B}
-variable {repGauge : Representation ℂ GJ B}
-variable {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
-variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
+section RealScalars
+
+variable [Module ℝ B] [SMulCommClass ℝ B B] [IsScalarTower ℝ B B]
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
 
 /-!
 
@@ -178,6 +178,22 @@ noncomputable def iteratedCovDerivAdjoint
   | [], F => F
   | ρ :: l, F => covDerivAdjoint A (iteratedCovDerivAdjoint A l F) ρ
 
+/-- The iterated covariant derivative is natural in the algebra. -/
+lemma iteratedCovDerivAdjoint_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
+    [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (l : List (Fin 1 ⊕ Fin 3)) (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    iteratedCovDerivAdjoint (fun p σ => Φ ∘ₗ A p σ) l (fun p => Φ ∘ₗ F p) =
+      fun p => Φ ∘ₗ iteratedCovDerivAdjoint A l F p := by
+  induction l with
+  | nil => rfl
+  | cons ρ l ih =>
+    funext s
+    show covDerivAdjoint (fun p σ => Φ ∘ₗ A p σ)
+        (iteratedCovDerivAdjoint (fun p σ => Φ ∘ₗ A p σ) l (fun p => Φ ∘ₗ F p)) ρ s =
+      Φ ∘ₗ covDerivAdjoint A (iteratedCovDerivAdjoint A l F) ρ s
+    rw [ih, covDerivAdjoint_map Φ hΦ]
+
 variable (A) in
 /-- The derivative symbols `∂_p A_μ^φ` with at most `n` derivatives. -/
 abbrev symbolsLE (n : ℕ) : Set B :=
@@ -228,6 +244,15 @@ lemma towerLT_mono {n m : ℕ} (hnm : n ≤ m) : towerLT A n ⊆ towerLT A m := 
 lemma towerLT_subset_tower (n : ℕ) : towerLT A n ⊆ tower A := by
   rintro b ⟨l, ν, lam, φ, _, rfl⟩
   exact ⟨l, ν, lam, φ, rfl⟩
+
+end RealScalars
+
+section ComplexScalars
+
+variable [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
+  {repGauge : Representation ℂ GJ B}
+  {A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B}
+  (h : GaugeAlgebraRealization jets B repGauge repLorentz)
 
 /-- Symbol subalgebras are monotone in the order bound. -/
 lemma adjoin_symbols_mono {n m : ℕ} (hnm : n ≤ m) :
@@ -1199,6 +1224,8 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set B)
       intro hk
       exact ih (mem_adjoin_symSymbolsLE_of_repGauge_eq h S hcS hS k hk fun U => hinv U.1)
 
+end ComplexScalars
+
 end GaugeAlgebraRealization
 
 /-!
@@ -1207,7 +1234,7 @@ end GaugeAlgebraRealization
 
 -/
 
-namespace GaugeJetAlgebra
+namespace LocalGaugeFieldAlgebra
 
 variable (jets) in
 /-- The classification of gauge invariants of the gauge-boson jet algebra: for a free
@@ -1216,14 +1243,14 @@ variable (jets) in
   covariant derivatives of the field strength and the elements of `S`. This is the case of
   the identity realization; the commutation of `S` with the symbols is automatic in the
   commutative jet algebra. -/
-theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set (ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤))
+theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤))
     (hS : ∀ y ∈ S, ∀ U : jets.truncationKer 0, complexRepJet jets U.1 y = y)
-    {x : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤}
-    (hx : x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
+    {x : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤}
+    (hx : x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 |
       ∃ (p : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
       b = gaugeField 𝔤 p μ φ} ∪ S))
     (hinv : ∀ U : GJ, complexRepJet jets U x = x) :
-    x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] GaugeJetAlgebra 𝔤 |
+    x ∈ Algebra.adjoin ℂ ({b : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 |
       ∃ (l : List (Fin 1 ⊕ Fin 3)) (ν lam : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
       b = GaugeAlgebraRealization.iteratedCovDerivAdjoint (gaugeField 𝔤) l
         (GaugeAlgebraRealization.fieldStrength (gaugeField 𝔤) ν lam) 0 φ} ∪ S) := by
@@ -1232,4 +1259,4 @@ theorem invariant_mem_adjoin_fieldStrength [jets.Free] (S : Set (ℂ ⊗[ℝ] Ga
   rw [GaugeAlgebraRealization.id_A] at key
   exact key
 
-end GaugeJetAlgebra
+end LocalGaugeFieldAlgebra
