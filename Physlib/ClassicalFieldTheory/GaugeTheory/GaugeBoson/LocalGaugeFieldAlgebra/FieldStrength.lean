@@ -94,6 +94,15 @@ lemma gaugeField_eq_one_tmul_derivA (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1
   rw [gaugeField_apply, iteratedD_complexJetDeriv_one_tmul]
   rfl
 
+/-- Two algebra maps out of the local gauge field algebra agreeing on the derivative
+  symbols `∂_s A_μ^φ` are equal. -/
+lemma algHom_ext {B : Type} [Semiring B] [Algebra ℝ B] {f g : LocalGaugeFieldAlgebra 𝔤 →ₐ[ℝ] B}
+    (h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      f (derivA 𝔤 s μ φ) = g (derivA 𝔤 s μ φ)) : f = g := by
+  refine AlgHom.ext_of_adjoin_eq_top adjoin_iteratedJetDeriv_eq_top fun x hx => ?_
+  obtain ⟨_, ⟨s, rfl⟩, _, ⟨μ, rfl⟩, φ, rfl⟩ := hx
+  exact h s μ φ
+
 /-!
 
 ## B. The field strength and its covariant derivatives
@@ -352,6 +361,26 @@ lemma repLorentzGroup_comp_ofA (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
   LinearMap.ext fun φ => by
     simp only [LinearMap.comp_apply, repLorentzGroup_ofA, LinearMap.sum_apply,
       LinearMap.smul_apply]
+
+/-- The Lorentz law of the derivative symbols, read off the complexified law
+  `repLorentz_gaugeField` along the injective `x ↦ 1 ⊗ₜ x`. -/
+lemma repLorentzGroup_derivA (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (μ : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    repLorentzGroup 𝔤 Λ (derivA 𝔤 (List.ofFn l) μ φ)
+      = ∑ p : Fin n → (Fin 1 ⊕ Fin 3), (∏ i, L[Λ] (p i) (l i)) •
+          ∑ a, L[Λ] a μ • derivA 𝔤 (List.ofFn p) a φ := by
+  -- `x ↦ 1 ⊗ₜ x` is injective: `ℝ → ℂ` is injective and every real module is flat.
+  apply Module.Flat.tensorProduct_mk_injective ℝ _ ℂ
+  simp only [TensorProduct.mk_apply]
+  rw [← complexRepLorentzGroup_tmul, ← gaugeField_eq_one_tmul_derivA, repLorentz_gaugeField,
+    TensorProduct.tmul_sum]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  rw [TensorProduct.tmul_smul, TensorProduct.tmul_sum, ← Complex.ofReal_prod,
+    show (((∏ i, L[Λ] (p i) (l i) : ℝ)) : ℂ) = algebraMap ℝ ℂ (∏ i, L[Λ] (p i) (l i)) from rfl,
+    algebraMap_smul]
+  refine congrArg _ (Finset.sum_congr rfl fun a _ => ?_)
+  rw [TensorProduct.tmul_smul, gaugeField_eq_one_tmul_derivA,
+    show ((L[Λ] a μ : ℝ) : ℂ) = algebraMap ℝ ℂ (L[Λ] a μ) from rfl, algebraMap_smul]
 
 /-- The Lorentz action passes through the bracket of a gauge-field generator against a
   family, mixing the covector index of the generator. -/

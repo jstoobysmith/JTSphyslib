@@ -2,6 +2,7 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeCovFieldAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeCovFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.GaugeAction
@@ -10,6 +11,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFiel
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.LorentzAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.MassDim
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.MassWeightPoly
+public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.LocalGaugeFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.FieldStrength
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.GaugeLaw

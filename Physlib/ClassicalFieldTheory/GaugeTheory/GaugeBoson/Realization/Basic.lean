@@ -135,6 +135,18 @@ lemma A_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (φ : Modu
 @[simp]
 lemma id_A : (GaugeAlgebraRealization.id jets).A = gaugeField 𝔤 := rfl
 
+/-- A realization is determined by its algebra map. -/
+lemma ext {h₁ h₂ : GaugeAlgebraRealization jets B repJet repLorentz}
+    (h : h₁.toAlgHom = h₂.toAlgHom) : h₁ = h₂ := by
+  obtain ⟨f₁, A₁, hA₁, _, _, _, _⟩ := h₁
+  obtain ⟨f₂, A₂, hA₂, _, _, _, _⟩ := h₂
+  dsimp only at h
+  subst h
+  have hA : A₁ = A₂ := funext fun s => funext fun μ => LinearMap.ext fun φ =>
+    (hA₁ s μ φ).trans (hA₂ s μ φ).symm
+  subst hA
+  rfl
+
 /-- The gauge-field symbols of a realization commute, being images of a commutative
   algebra. -/
 lemma commute_A (p q : Multiset (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)

@@ -27,8 +27,10 @@ restricted actions are built with `Representation.restrictSubalgebra`.
 ## ii. Key results
 
 - `LocalGaugeCovFieldAlgebra` : the covariant field algebra, with
-  `LocalGaugeCovFieldAlgebra.induction` and `LocalGaugeCovFieldAlgebra.mapsTo` as its
-  generation API.
+  `LocalGaugeCovFieldAlgebra.induction`, `LocalGaugeCovFieldAlgebra.mapsTo` and
+  `LocalGaugeCovFieldAlgebra.algHom_ext` as its generation API.
+- `LocalGaugeCovFieldAlgebra.covF` : the generators `∇_l F_μν^φ` as elements of the
+  covariant field algebra.
 - `LocalGaugeCovFieldAlgebra.repJet`, `LocalGaugeCovFieldAlgebra.repValue`,
   `LocalGaugeCovFieldAlgebra.repLorentzGroup` : the restricted actions of the jet gauge
   group, of the ordinary gauge group and of the Lorentz group.
@@ -39,9 +41,11 @@ restricted actions are built with `Representation.restrictSubalgebra`.
 
 - A. The covariant field algebra
   - A.1. Generation
+  - A.2. The generators as elements of the covariant field algebra
 - B. Stability under the actions
 - C. The restricted actions
   - C.1. The action of the ordinary gauge group
+  - C.2. The actions on the generators
 
 -/
 
@@ -128,6 +132,42 @@ lemma mapsTo (f : LocalGaugeFieldAlgebra 𝔤 →ₐ[ℝ] LocalGaugeFieldAlgebra
 
 /-!
 
+### A.2. The generators as elements of the covariant field algebra
+
+-/
+
+variable (𝔤) in
+/-- The generators `∇_l F_μν^φ` of the covariant field algebra, as elements of it. -/
+noncomputable def covF (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    Module.Dual ℝ 𝔤 →ₗ[ℝ] LocalGaugeCovFieldAlgebra 𝔤 where
+  toFun φ := ⟨covDerivFieldStrength 𝔤 l μ ν φ, covDerivFieldStrength_mem l μ ν φ⟩
+  map_add' _ _ := Subtype.ext (map_add _ _ _)
+  map_smul' _ _ := Subtype.ext (map_smul _ _ _)
+
+@[simp]
+lemma coe_covF (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (covF 𝔤 l μ ν φ : LocalGaugeFieldAlgebra 𝔤) = covDerivFieldStrength 𝔤 l μ ν φ := rfl
+
+lemma coe_covF_nil (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    (covF 𝔤 [] μ ν φ : LocalGaugeFieldAlgebra 𝔤) = fieldStrength 𝔤 μ ν φ := rfl
+
+lemma val_comp_covF (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    (LocalGaugeCovFieldAlgebra 𝔤).val.toLinearMap ∘ₗ covF 𝔤 l μ ν
+      = covDerivFieldStrength 𝔤 l μ ν := rfl
+
+/-- Two algebra maps out of the covariant field algebra agreeing on the generators are
+  equal. This is uniqueness only: the covariant field algebra is not free on the generators,
+  so an assignment of their images does not by itself define a map. -/
+lemma algHom_ext {B : Type} [Semiring B] [Algebra ℝ B]
+    {f g : LocalGaugeCovFieldAlgebra 𝔤 →ₐ[ℝ] B}
+    (h : ∀ (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      f (covF 𝔤 l μ ν φ) = g (covF 𝔤 l μ ν φ)) : f = g :=
+  AlgHom.ext_of_eq_adjoin rfl fun x hx => by
+    obtain ⟨l, μ, ν, φ, rfl⟩ := hx
+    exact h l μ ν φ
+
+/-!
+
 ## B. Stability under the actions
 
 -/
@@ -174,6 +214,10 @@ noncomputable def repJet : Representation ℝ GJ (LocalGaugeCovFieldAlgebra 𝔤
 lemma coe_repJet (U : GJ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
     (repJet jets U x : LocalGaugeFieldAlgebra 𝔤) = LocalGaugeFieldAlgebra.repJet jets U x := rfl
 
+lemma repJet_apply_mul (U : GJ) (x y : LocalGaugeCovFieldAlgebra 𝔤) :
+    repJet jets U (x * y) = repJet jets U x * repJet jets U y :=
+  Subtype.ext (LocalGaugeFieldAlgebra.repJet_apply_mul U (x : LocalGaugeFieldAlgebra 𝔤) y)
+
 variable (𝔤) in
 /-- The action of the Lorentz group on the covariant field algebra, restricted from the
   local gauge field algebra. -/
@@ -185,6 +229,11 @@ noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) (LocalGaugeCovF
 lemma coe_repLorentzGroup (Λ : SL(2,ℂ)) (x : LocalGaugeCovFieldAlgebra 𝔤) :
     (repLorentzGroup 𝔤 Λ x : LocalGaugeFieldAlgebra 𝔤)
       = LocalGaugeFieldAlgebra.repLorentzGroup 𝔤 Λ x := rfl
+
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : LocalGaugeCovFieldAlgebra 𝔤) :
+    repLorentzGroup 𝔤 Λ (x * y) = repLorentzGroup 𝔤 Λ x * repLorentzGroup 𝔤 Λ y :=
+  Subtype.ext
+    (LocalGaugeFieldAlgebra.repLorentzGroup_apply_mul Λ (x : LocalGaugeFieldAlgebra 𝔤) y)
 
 /-!
 
@@ -203,6 +252,10 @@ lemma coe_repValue (g : G₀) (x : LocalGaugeCovFieldAlgebra 𝔤) :
     (repValue jets g x : LocalGaugeFieldAlgebra 𝔤)
       = LocalGaugeFieldAlgebra.repJet jets (jets.ofConstant g) x := rfl
 
+lemma repValue_apply_mul (g : G₀) (x y : LocalGaugeCovFieldAlgebra 𝔤) :
+    repValue jets g (x * y) = repValue jets g x * repValue jets g y :=
+  repJet_apply_mul (jets.ofConstant g) x y
+
 /-- The action of the jet gauge group on the covariant field algebra factors through
   evaluation: a jet acts as the constant jet of its value. The derivatives of a gauge
   transformation act trivially on covariant expressions. -/
@@ -220,6 +273,40 @@ theorem repJet_eq_repValue_eval (U : GJ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
   · intro x y hx hy
     rw [map_add, map_add, hx, hy]
   · intro x y hx hy
-    rw [repJet_apply_mul, repJet_apply_mul, hx, hy]
+    rw [LocalGaugeFieldAlgebra.repJet_apply_mul, LocalGaugeFieldAlgebra.repJet_apply_mul, hx, hy]
+
+/-!
+
+### C.2. The actions on the generators
+
+-/
+
+/-- The ordinary gauge group rotates the adjoint index of a generator through the dual
+  adjoint action of the inverse. -/
+lemma repValue_covF (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ 𝔤) :
+    repValue jets g (covF 𝔤 l μ ν φ) = covF 𝔤 l μ ν ((jets.adjointValue g⁻¹).dualMap φ) := by
+  refine Subtype.ext ?_
+  rw [coe_repValue, coe_covF, coe_covF, repJet_covDerivFieldStrength_eval, map_inv jets.eval,
+    jets.eval_ofConstant]
+
+/-- A jet acts on a generator through the value of its inverse alone. -/
+lemma repJet_covF (U : GJ) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
+    (φ : Module.Dual ℝ 𝔤) :
+    repJet jets U (covF 𝔤 l μ ν φ)
+      = covF 𝔤 l μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) := by
+  rw [repJet_eq_repValue_eval, repValue_covF, map_inv jets.eval]
+
+/-- The Lorentz law of the generators: every covariant slot and both covector indices mix
+  by the columns of the Lorentz matrix. -/
+lemma repLorentzGroup_covF (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    repLorentzGroup 𝔤 Λ (covF 𝔤 (List.ofFn l) μ ν φ)
+      = ∑ p : Fin n → (Fin 1 ⊕ Fin 3), (∏ i, ((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ)) •
+          ∑ a, ((SL2C.toLorentzGroup Λ).1 a μ : ℝ) • ∑ b, ((SL2C.toLorentzGroup Λ).1 b ν : ℝ) •
+            covF 𝔤 (List.ofFn p) a b φ := by
+  refine Subtype.ext ?_
+  rw [coe_repLorentzGroup, coe_covF, repLorentzGroup_covDerivFieldStrength]
+  simp only [AddSubmonoidClass.coe_finsetSum, Subalgebra.coe_smul, coe_covF]
 
 end LocalGaugeCovFieldAlgebra

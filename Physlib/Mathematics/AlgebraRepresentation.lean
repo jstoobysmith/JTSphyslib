@@ -26,17 +26,22 @@ algebra presented as a quotient can be reduced cheaply.
 Section B restricts a representation to a subalgebra it preserves. The invariance
 hypothesis is stated pointwise, in the form the ambient invariance lemmas produce.
 
+Section C restricts the scalars of a representation: a representation on a complex vector
+space is in particular a representation on the underlying real vector space.
+
 ## ii. Key results
 
 - `Representation.tprod_apply_one`, `Representation.tprod_apply_one_tmul`,
   `Representation.tprod_apply_tmul_one` : the unit laws on a tensor product.
 - `Representation.tprod_apply_mul` : multiplicativity on a tensor product.
 - `Representation.restrictSubalgebra` : the restriction to an invariant subalgebra.
+- `Representation.restrictScalars` : the restriction of scalars.
 
 ## iii. Table of contents
 
 - A. Tensor products of multiplicative representations
 - B. Restriction to an invariant subalgebra
+- C. Restriction of scalars
 
 -/
 
@@ -124,5 +129,25 @@ lemma coe_restrictSubalgebra {k A G : Type*} [CommSemiring k]
     [Monoid G] [Semiring A] [Algebra k A] (ρ : Representation k G A) (S : Subalgebra k A)
     (hS : ∀ (g : G) {x : A}, x ∈ S → ρ g x ∈ S) (g : G) (x : S) :
     (ρ.restrictSubalgebra S hS g x : A) = ρ g (x : A) := rfl
+
+/-!
+
+## C. Restriction of scalars
+
+-/
+
+/-- The restriction of scalars of a representation: a representation on an `S`-module is a
+  representation on the same space as an `R`-module, for `R` acting through `S`. -/
+def restrictScalars (R : Type*) {S G V : Type*} [CommSemiring R] [CommSemiring S] [Monoid G]
+    [AddCommMonoid V] [Module R V] [Module S V] [LinearMap.CompatibleSMul V V R S]
+    (ρ : Representation S G V) : Representation R G V where
+  toFun g := (ρ g).restrictScalars R
+  map_one' := LinearMap.ext fun x => LinearMap.congr_fun (map_one ρ) x
+  map_mul' g₁ g₂ := LinearMap.ext fun x => LinearMap.congr_fun (map_mul ρ g₁ g₂) x
+
+@[simp]
+lemma restrictScalars_apply (R : Type*) {S G V : Type*} [CommSemiring R] [CommSemiring S]
+    [Monoid G] [AddCommMonoid V] [Module R V] [Module S V] [LinearMap.CompatibleSMul V V R S]
+    (ρ : Representation S G V) (g : G) (x : V) : ρ.restrictScalars R g x = ρ g x := rfl
 
 end Representation
