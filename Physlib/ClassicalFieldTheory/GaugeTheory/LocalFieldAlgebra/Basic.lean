@@ -480,8 +480,9 @@ lemma assemble_mul_self_iff {B : Type*} [Ring B] [Algebra ℂ B]
     (∀ v, T.assembleFermion f v * T.assembleFermion f v = 0)
       ↔ ((∀ i x, f i x * f i x = 0) ∧
         ∀ i j x y, f i x * f j y = -(f j y * f i x)) := by
-  rw [DirectSum.mul_self_iff_lof]
-  simp
+  have h := DirectSum.mul_self_iff_lof (F := DirectSum.toModule ℂ T.FermionSpecies B f)
+  simp only [DirectSum.toModule_lof] at h
+  exact h
 
 namespace Assignment
 
@@ -534,24 +535,29 @@ lemma fermionTotal_mul_swap (v w : T.FermionGenerators) :
 /-- The assembled bosonic images commute pairwise. -/
 lemma bosonTotal_commute (v w : T.BosonGenerators) :
     Commute (d.bosonTotal v) (d.bosonTotal w) :=
-  DirectSum.commute_of_lof (fun i j x y => by simpa using d.boson_commute i j x y) v w
+  DirectSum.commute_of_lof (fun i j x y => by
+    show Commute (d.bosonTotal (T.inclBoson i x)) (d.bosonTotal (T.inclBoson j y))
+    simpa using d.boson_commute i j x y) v w
 
 /-- The assembled bosonic images commute with the connection images. -/
 lemma bosonTotal_commute_connection (v : T.BosonGenerators)
     (w : GaugeBoson.JetComponentSpace 𝔤) : Commute (d.bosonTotal v) (d.connection w) :=
   DirectSum.commute_of_lof_left (fun j y => by
+    show Commute (d.bosonTotal (T.inclBoson j y)) (d.connection w)
     simpa using d.boson_commute_connection j y w) v
 
 /-- The assembled bosonic images commute with the assembled fermionic images. -/
 lemma bosonTotal_commute_fermionTotal (v : T.BosonGenerators) (w : T.FermionGenerators) :
     Commute (d.bosonTotal v) (d.fermionTotal w) :=
   DirectSum.commute_of_lof (fun j i y x => by
+    show Commute (d.bosonTotal (T.inclBoson j y)) (d.fermionTotal (T.inclFermion i x))
     simpa using d.boson_commute_fermion j i y x) v w
 
 /-- The connection images commute with the assembled fermionic images. -/
 lemma connection_commute_fermionTotal (v : GaugeBoson.JetComponentSpace 𝔤)
     (w : T.FermionGenerators) : Commute (d.connection v) (d.fermionTotal w) :=
   (DirectSum.commute_of_lof_left (fun i x => by
+    show Commute (d.fermionTotal (T.inclFermion i x)) (d.connection v)
     simpa using (d.connection_commute_fermion v i x).symm) w).symm
 
 /-!
@@ -855,12 +861,13 @@ lemma range_lift :
     rintro _ ((⟨v, rfl⟩ | ⟨v, rfl⟩) | ⟨v, rfl⟩)
     · rw [d.lift_ιFermionTotal]
       refine DirectSum.mem_of_lof (fun i x => ?_) v
-      rw [show DirectSum.lof ℂ _ _ i x = T.inclFermion i x from rfl,
-        d.fermionTotal_inclFermion]
+      show d.fermionTotal (T.inclFermion i x) ∈ _
+      rw [d.fermionTotal_inclFermion]
       exact Algebra.subset_adjoin (Or.inl (Or.inl (Set.mem_iUnion.mpr ⟨i, x, rfl⟩)))
     · rw [d.lift_ιBosonTotal]
       refine DirectSum.mem_of_lof (fun j y => ?_) v
-      rw [show DirectSum.lof ℂ _ _ j y = T.inclBoson j y from rfl, d.bosonTotal_inclBoson]
+      show d.bosonTotal (T.inclBoson j y) ∈ _
+      rw [d.bosonTotal_inclBoson]
       exact Algebra.subset_adjoin (Or.inl (Or.inr (Set.mem_iUnion.mpr ⟨j, y, rfl⟩)))
     · exact d.lift_ιConnection v ▸ Algebra.subset_adjoin (Or.inr ⟨v, rfl⟩)
   · rintro y hy

@@ -108,12 +108,22 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
   is what lets the species carry different mass weights: the scaling of one component space
   is natural in the value space — `JetComponentSpace.comap_comp_massWeightScale` — and so
   cannot tell the species apart. When the weights do agree the two descriptions coincide,
-  which is section C below. -/
-abbrev FermionGenerators : Type := ⨁ i, JetComponentSpace (T.fermion i)
+  which is section C below.
+
+  This `def` and its explicit instances reduce instance-term expansion in the exterior
+  algebra and tensor products built on it. Use the inclusion, assembly and extensionality
+  API in downstream proofs; unfold the direct-sum representation explicitly when necessary. -/
+def FermionGenerators : Type := ⨁ i, JetComponentSpace (T.fermion i)
+
+instance : AddCommGroup T.FermionGenerators :=
+  inferInstanceAs (AddCommGroup (⨁ i, JetComponentSpace (T.fermion i)))
+
+instance : Module ℂ T.FermionGenerators :=
+  inferInstanceAs (Module ℂ (⨁ i, JetComponentSpace (T.fermion i)))
 
 /-- The inclusion of the component space of one fermionic species into the fermionic generator
   space. -/
-abbrev inclFermion (i : T.FermionSpecies) :
+def inclFermion (i : T.FermionSpecies) :
     JetComponentSpace (T.fermion i) →ₗ[ℂ] T.FermionGenerators :=
   DirectSum.lof ℂ T.FermionSpecies (fun i => JetComponentSpace (T.fermion i)) i
 
@@ -123,12 +133,13 @@ variable {N : Type*} [AddCommMonoid N] [Module ℂ N]
 
 /-- The assembly of a species-wise family of linear maps out of the fermionic generator space
   into a common target. -/
-abbrev assembleFermion (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] N) :
+def assembleFermion (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] N) :
     T.FermionGenerators →ₗ[ℂ] N :=
   DirectSum.toModule ℂ T.FermionSpecies N f
 
 variable {T}
 
+@[simp]
 lemma assembleFermion_inclFermion (f : ∀ i, JetComponentSpace (T.fermion i) →ₗ[ℂ] N)
     (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
     T.assembleFermion f (T.inclFermion i x) = f i x :=

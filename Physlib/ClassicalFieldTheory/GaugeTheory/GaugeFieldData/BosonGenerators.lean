@@ -111,12 +111,22 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
   is what lets the species carry different mass weights: the scaling of one component space
   is natural in the value space — `JetComponentSpace.comap_comp_massWeightScale` — and so
   cannot tell the species apart. When the weights do agree the two descriptions coincide,
-  which is section C below. -/
-abbrev BosonGenerators : Type := ⨁ i, JetComponentSpace (T.boson i)
+  which is section C below.
+
+  This `def` and its explicit instances reduce instance-term expansion in the symmetric
+  algebra and tensor products built on it. Use the inclusion, assembly and extensionality
+  API in downstream proofs; unfold the direct-sum representation explicitly when necessary. -/
+def BosonGenerators : Type := ⨁ i, JetComponentSpace (T.boson i)
+
+instance : AddCommGroup T.BosonGenerators :=
+  inferInstanceAs (AddCommGroup (⨁ i, JetComponentSpace (T.boson i)))
+
+instance : Module ℂ T.BosonGenerators :=
+  inferInstanceAs (Module ℂ (⨁ i, JetComponentSpace (T.boson i)))
 
 /-- The inclusion of the component space of one bosonic species into the bosonic generator
   space. -/
-abbrev inclBoson (i : T.BosonSpecies) :
+def inclBoson (i : T.BosonSpecies) :
     JetComponentSpace (T.boson i) →ₗ[ℂ] T.BosonGenerators :=
   DirectSum.lof ℂ T.BosonSpecies (fun i => JetComponentSpace (T.boson i)) i
 
@@ -126,12 +136,13 @@ variable {N : Type*} [AddCommMonoid N] [Module ℂ N]
 
 /-- The assembly of a species-wise family of linear maps out of the bosonic generator space
   into a common target. -/
-abbrev assembleBoson (f : ∀ i, JetComponentSpace (T.boson i) →ₗ[ℂ] N) :
+def assembleBoson (f : ∀ i, JetComponentSpace (T.boson i) →ₗ[ℂ] N) :
     T.BosonGenerators →ₗ[ℂ] N :=
   DirectSum.toModule ℂ T.BosonSpecies N f
 
 variable {T}
 
+@[simp]
 lemma assembleBoson_inclBoson (f : ∀ i, JetComponentSpace (T.boson i) →ₗ[ℂ] N)
     (i : T.BosonSpecies) (x : JetComponentSpace (T.boson i)) :
     T.assembleBoson f (T.inclBoson i x) = f i x :=
