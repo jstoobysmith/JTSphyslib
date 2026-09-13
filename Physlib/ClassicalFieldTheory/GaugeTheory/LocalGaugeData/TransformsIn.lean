@@ -91,6 +91,38 @@ lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieA
     show repDualCoeff rep U⁻¹ 0 = (repCoeff rep U⁻¹ 0).dualMap from rfl, hrep hinv]
   rfl
 
+/-- If pure jets act trivially at the base point, the zeroth Taylor coefficient of a jet
+  is that of the constant jet of its value: every jet is a pure jet times the constant jet
+  of its value, and the zeroth coefficients are multiplicative for a fibrewise
+  representation. -/
+lemma repCoeff_zero_eq_ofConstant_eval {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id) (U : GJ) :
+    repCoeff rep U 0 = repCoeff rep (jets.ofConstant (jets.eval U)) 0 := by
+  have hW : jets.eval (U * (jets.ofConstant (jets.eval U))⁻¹) = 1 := by
+    rw [map_mul, map_inv, jets.eval_ofConstant, mul_inv_cancel]
+  calc repCoeff rep U 0
+      = repCoeff rep (U * (jets.ofConstant (jets.eval U))⁻¹ * jets.ofConstant (jets.eval U)) 0 := by
+        rw [inv_mul_cancel_right]
+    _ = repCoeff rep (jets.ofConstant (jets.eval U)) 0 := by
+        rw [repCoeff_zero_mul rep hlin, hrep hW, LinearMap.id_comp]
+
+/-- If pure jets act trivially at the base point, a matter gauge tensor transforms at the
+  base point as under the constant jet of the value of the gauge jet: the jet action on
+  underived symbols factors through evaluation. -/
+lemma TransformsIn.repGauge_zero_eq_ofConstant_eval {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (hF : TransformsIn repGauge rep F)
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id) (U : GJ)
+    (φ : Module.Dual ℂ V) :
+    repGauge U (F 0 φ) = repGauge (jets.ofConstant (jets.eval U)) (F 0 φ) := by
+  rw [hF.repGauge_zero, hF.repGauge_zero, repDualCoeff, repDualCoeff,
+    repCoeff_zero_eq_ofConstant_eval jets rep hlin hrep U⁻¹, map_inv jets.eval,
+    ← map_inv jets.ofConstant]
+
 /-- Matter gauge tensors are fixed by pure jets: the members of the zeroth truncation kernel
   are the jets with trivial base-point value, so `repGauge_eq_of_eval_eq_one` applies. -/
 lemma TransformsIn.repGauge_eq_of_mem_truncationKer_zero {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]

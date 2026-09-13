@@ -302,6 +302,13 @@ lemma ιConnection_commute_ιFermionTotal (v : GaugeBoson.JetComponentSpace 𝔤
   simp [Commute, SemiconjBy, ιConnection_apply, ιFermionTotal_apply,
     Algebra.TensorProduct.tmul_mul_tmul, mul_comm]
 
+/-- The connection factor is central: its elements commute with the whole algebra, the
+  factor being commutative and tensored in as the right factor. -/
+lemma includeConnection_commute
+    (c : ℂ ⊗[ℝ] SymmetricAlgebra ℝ (GaugeBoson.JetComponentSpace 𝔤)) (x : T.LocalFieldAlgebra) :
+    Commute (T.includeConnection c) x :=
+  (Algebra.TensorProduct.includeRight_mul_comm c x).symm
+
 /-- A fermionic generator of a species squares to zero. -/
 @[simp]
 lemma ιFermion_mul_self (i : T.FermionSpecies) (x : JetComponentSpace (T.fermion i)) :
@@ -397,7 +404,7 @@ lemma adjoin_generators_eq_top : Algebra.adjoin ℂ T.generators = ⊤ := by
 /-- Two algebra maps out of the local field algebra agreeing on the whole of the three
   generator spaces are equal. The target is not assumed commutative, so this cannot be
   deduced from `SymmetricAlgebra.algHom_ext`; it comes from generation. -/
-lemma algHom_ext_generators {B : Type*} [Ring B] [Algebra ℂ B]
+lemma algHom_ext_generators {B : Type*} [Semiring B] [Algebra ℂ B]
     {Φ Ψ : T.LocalFieldAlgebra →ₐ[ℂ] B}
     (hf : ∀ v, Φ (T.ιFermionTotal v) = Ψ (T.ιFermionTotal v))
     (hb : ∀ v, Φ (T.ιBosonTotal v) = Ψ (T.ιBosonTotal v))
@@ -412,7 +419,7 @@ variable {T}
   every species and on the connection generators. A linear map out of the fermionic
   generator space is determined by its restrictions to the species, so the species-wise
   hypotheses already give the hypotheses of `algHom_ext_generators`. -/
-lemma algHom_ext {B : Type*} [Ring B] [Algebra ℂ B] {Φ Ψ : T.LocalFieldAlgebra →ₐ[ℂ] B}
+lemma algHom_ext {B : Type*} [Semiring B] [Algebra ℂ B] {Φ Ψ : T.LocalFieldAlgebra →ₐ[ℂ] B}
     (hf : ∀ i x, Φ (T.ιFermion i x) = Ψ (T.ιFermion i x))
     (hb : ∀ j y, Φ (T.ιBoson j y) = Ψ (T.ιBoson j y))
     (ha : ∀ v, Φ (T.ιConnection v) = Ψ (T.ιConnection v)) : Φ = Ψ :=

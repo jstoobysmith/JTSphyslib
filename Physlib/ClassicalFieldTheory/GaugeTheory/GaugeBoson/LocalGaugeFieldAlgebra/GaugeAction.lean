@@ -532,6 +532,20 @@ noncomputable def complexRepJet :
 lemma complexRepJet_tmul (U : GJ) (z : ℂ) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     complexRepJet jets U (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] repJet jets U x := rfl
 
+variable (jets) in
+/-- The action of a jet on the complexified gauge-boson jet algebra, as an algebra
+  endomorphism: the base change of `repJetAlgHom`. -/
+noncomputable def complexRepJetAlgHom (U : GJ) :
+    ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤) →ₐ[ℂ] ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
+  Algebra.TensorProduct.map (AlgHom.id ℂ ℂ) (repJetAlgHom jets U)
+
+lemma complexRepJet_apply (U : GJ) (x : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
+    complexRepJet jets U x = complexRepJetAlgHom jets U x := by
+  induction x using TensorProduct.induction_on with
+  | zero => rw [map_zero, map_zero]
+  | add x₁ x₂ h₁ h₂ => rw [map_add, map_add, h₁, h₂]
+  | tmul z a => rfl
+
 lemma complexRepJet_apply_mul (U : GJ)
     (x y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
     complexRepJet jets U (x * y)

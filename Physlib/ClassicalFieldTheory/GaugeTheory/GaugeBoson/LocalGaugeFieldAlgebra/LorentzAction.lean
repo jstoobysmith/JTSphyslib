@@ -207,6 +207,22 @@ noncomputable def complexRepLorentzGroup :
 lemma complexRepLorentzGroup_tmul (Λ : SL(2,ℂ)) (z : ℂ) (x : (LocalGaugeFieldAlgebra 𝔤)) :
     (complexRepLorentzGroup 𝔤) Λ (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] (repLorentzGroup 𝔤) Λ x := rfl
 
+variable (𝔤) in
+/-- The action of a Lorentz transformation on the complexified gauge-boson jet algebra, as
+  an algebra endomorphism: the base change of the symmetric-algebra functor applied to the
+  action on the jet component space. -/
+noncomputable def complexRepLorentzGroupAlgHom (Λ : SL(2,ℂ)) :
+    ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤) →ₐ[ℂ] ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
+  Algebra.TensorProduct.map (AlgHom.id ℂ ℂ)
+    (SymmetricAlgebra.map ((GaugeBoson.JetComponentSpace.repLorentzGroup 𝔤) Λ))
+
+lemma complexRepLorentzGroup_apply (Λ : SL(2,ℂ)) (x : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
+    (complexRepLorentzGroup 𝔤) Λ x = complexRepLorentzGroupAlgHom 𝔤 Λ x := by
+  induction x using TensorProduct.induction_on with
+  | zero => rw [map_zero, map_zero]
+  | add x₁ x₂ h₁ h₂ => rw [map_add, map_add, h₁, h₂]
+  | tmul z a => rfl
+
 lemma complexRepLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (x y : ℂ ⊗[ℝ] (LocalGaugeFieldAlgebra 𝔤)) :
     (complexRepLorentzGroup 𝔤) Λ (x * y)
       = (complexRepLorentzGroup 𝔤) Λ x * (complexRepLorentzGroup 𝔤) Λ y := by

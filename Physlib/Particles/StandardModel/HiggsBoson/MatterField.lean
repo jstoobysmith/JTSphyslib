@@ -28,6 +28,9 @@ scalar, and mass weight two is the weight already fixed by
 
 - `StandardModel.HiggsVec.matterField` : the Higgs field as a matter field, with the four
   projection rules identifying its fields with the existing definitions.
+- `StandardModel.HiggsVec.matterField_pureJetsActTrivially`,
+  `StandardModel.HiggsVec.matterField_gaugeLorentzCompatible` : the two conditions consumed
+  by the covariant derivative theory, restated from the Higgs files.
 
 ## iii. Table of contents
 
@@ -76,6 +79,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 2 := rfl
+
+/-- Pure gauge jets act trivially on the Higgs at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge action on the Higgs commutes with its (trivial) Lorentz action. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentz
 
 end HiggsVec
 

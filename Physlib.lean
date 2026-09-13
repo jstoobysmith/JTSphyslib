@@ -24,7 +24,9 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.BosonModul
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionGenerators
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMatterField
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionModule
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.ConstantAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.GaugeAction
@@ -35,8 +37,11 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAl
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.MassDim
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Prod
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
@@ -55,6 +60,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.LorentzCovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Constructions
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Factors
@@ -623,6 +629,7 @@ public import Physlib.Relativity.LorentzGroup.Restricted.Basic
 public import Physlib.Relativity.LorentzGroup.Restricted.FromBoostRotation
 public import Physlib.Relativity.LorentzGroup.Rotations
 public import Physlib.Relativity.LorentzGroup.ToVector
+public import Physlib.Relativity.LorentzMix
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Relativity.PauliMatrices.AsTensor
 public import Physlib.Relativity.PauliMatrices.Basic

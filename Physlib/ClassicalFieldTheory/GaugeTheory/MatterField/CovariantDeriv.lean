@@ -98,6 +98,33 @@ noncomputable def repDualCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)
     Module.Dual ℂ V →ₗ[ℂ] Module.Dual ℂ V :=
   (repCoeff rep U x).dualMap
 
+/-- For a fibrewise representation, evaluating the transform of a jet at the base point
+  is the zeroth Taylor coefficient of the transform of its base-point value: the jet ring
+  factor passes through the action and is then evaluated. -/
+lemma jetEval_rep_of_smul (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (U : GJ) (z : JetRing ⊗[ℂ] V) :
+    jetEval (rep U z) = repCoeff rep U 0 (jetEval z) := by
+  induction z using TensorProduct.induction_on with
+  | zero => simp only [map_zero]
+  | add a b ha hb => rw [map_add, map_add, ha, hb, map_add, map_add]
+  | tmul f v =>
+    rw [show f ⊗ₜ[ℂ] v = f • jetOfConstant v from by
+        rw [jetOfConstant_apply, TensorProduct.smul_tmul', smul_eq_mul, mul_one],
+      hlin, jetEval_smul, jetEval_smul, jetEval_jetOfConstant, map_smul]
+    simp only [repCoeff, LinearMap.comp_apply, jetIteratedDeriv_zero, LinearMap.id_apply]
+
+/-- The zeroth Taylor coefficients of a fibrewise representation are multiplicative: they
+  form a representation of the jet gauge group on the value space. -/
+lemma repCoeff_zero_mul (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (U W : GJ) : repCoeff rep (U * W) 0 = repCoeff rep U 0 ∘ₗ repCoeff rep W 0 := by
+  refine LinearMap.ext fun v => ?_
+  have h := jetEval_rep_of_smul rep hlin U (rep W (jetOfConstant v))
+  simp only [repCoeff, LinearMap.comp_apply, jetIteratedDeriv_zero, LinearMap.id_apply, map_mul,
+    Module.End.mul_apply] at h ⊢
+  exact h
+
 /-!
 
 ## The covariant derivative through an infinitesimal action

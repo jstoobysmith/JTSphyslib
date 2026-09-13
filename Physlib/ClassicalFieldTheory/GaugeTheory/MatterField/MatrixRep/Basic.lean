@@ -41,6 +41,10 @@ compilation `MatrixRep.matterField` then produces a `MatterField`.
 - `MatrixRep.isInfinitesimalActionOf` : the gauge-algebra action is the infinitesimal
   action underlying the jet gauge action.
 - `MatrixRep.matterField` : the matter field of a matrix representation.
+- `MatrixRep.matterField_gaugeLorentzCompatible` : its gauge and Lorentz actions commute,
+  acting on different tensor factors.
+- `MatrixRep.matterField_pureJetsActTrivially` : pure jets act trivially on it at the base
+  point, when their matrices have identity constant term.
 
 ## iii. Table of contents
 
@@ -586,6 +590,43 @@ lemma matterField_repAlgebra : (R.matterField e ρ w).repAlgebra = R.repAlgebra 
 
 @[simp]
 lemma matterField_massWeight : (R.matterField e ρ w).massWeight = w := rfl
+
+omit [Fintype ι] [DecidableEq ι] [Module.Free ℂ V] [Module.Finite ℂ V] in
+lemma repLorentz_apply_symm_tmul (Λ : SL(2,ℂ)) (s : S) (v : ι → ℂ) :
+    repLorentz e ρ Λ (e.symm (s ⊗ₜ[ℂ] v)) = e.symm (ρ Λ s ⊗ₜ[ℂ] v) := by
+  simp [repLorentz, Representation.tprod_apply]
+
+omit [Module.Free ℂ V] [Module.Finite ℂ V] in
+/-- The gauge algebra acts on the internal index and the Lorentz group on the Lorentz
+  factor, so the two actions commute. -/
+lemma repAlgebra_comm_repLorentz (c : 𝔤) (Λ : SL(2,ℂ)) (v : V) :
+    R.repAlgebra e c (repLorentz e ρ Λ v) = repLorentz e ρ Λ (R.repAlgebra e c v) := by
+  obtain ⟨t, rfl⟩ : ∃ t, v = e.symm t := ⟨e v, (e.symm_apply_apply v).symm⟩
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | add a b ha hb => rw [map_add, map_add, map_add, ha, hb, map_add, map_add]
+  | tmul s w =>
+    rw [repAlgebra_apply, repLorentz_apply_symm_tmul, valEnd_apply_symm_tmul,
+      valEnd_apply_symm_tmul, repLorentz_apply_symm_tmul]
+
+/-- The matter field of a matrix representation satisfies `MatterField.GaugeLorentzCompatible`,
+  for every matrix representation and Lorentz factor: the two actions live on different
+  tensor factors. -/
+lemma matterField_gaugeLorentzCompatible : (R.matterField e ρ w).GaugeLorentzCompatible :=
+  fun c Λ v => repAlgebra_comm_repLorentz e R ρ c Λ v
+
+/-- The matter field of a matrix representation satisfies `MatterField.PureJetsActTrivially`
+  as soon as the matrix of every jet with trivial value has identity constant term. This
+  hypothesis is not a consequence of the axioms of `MatrixRep`, which fix the constant term
+  of `mat` on pure jets only up to a scalar character. -/
+lemma matterField_pureJetsActTrivially
+    (hmat : ∀ {W : GJ}, jets.eval W = 1 → (R.mat W).map (constantCoeff : JetRing → ℂ) = 1) :
+    (R.matterField e ρ w).PureJetsActTrivially := by
+  intro W hW
+  show GaugeAlgebraRealization.repCoeff (R.repJet e) W 0 = LinearMap.id
+  rw [repCoeff_eq]
+  simp only [Multiset.foldl_zero]
+  rw [hmat hW, valEnd_one]
 
 end MatrixRep
 

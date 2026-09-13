@@ -40,6 +40,10 @@ further Standard Model input.
 - `StandardModel.fieldData` : the field data of the Standard Model.
 - `StandardModel.card_fieldData_fermionSpecies`,
   `StandardModel.card_fieldData_bosonSpecies` : fifteen fermionic multiplets, one Higgs.
+- `StandardModel.fieldData_pureJetsActTrivially`,
+  `StandardModel.fieldData_gaugeLorentzCompatible` : the datum satisfies the two
+  conditions of the covariant derivative theory, assembled from the species-wise lemmas
+  `StandardModel.fieldData_fermion_pureJetsActTrivially` and companions.
 - `StandardModel.fieldData_massWeightScaleFermion_inclFermion_basis_tmul` : a fermionic
   component function `∂_s ψ_α` scales by `c ^ (3 + 2 |s|)`.
 
@@ -47,7 +51,8 @@ further Standard Model input.
 
 - A. The fermion species
 - B. The field datum
-- C. The mass weights
+- C. The conditions of the covariant derivative theory
+- D. The mass weights
 
 -/
 
@@ -116,6 +121,26 @@ lemma matterField_downSinglet (i : Fin 3) :
 lemma matterField_massWeight (t : FermionType) : (matterField t).massWeight = 3 := by
   cases t <;> rfl
 
+/-- Pure gauge jets act trivially on every Standard Model fermion at the base point. -/
+lemma matterField_pureJetsActTrivially (t : FermionType) :
+    (matterField t).PureJetsActTrivially := by
+  cases t
+  · exact LeptonDoublet.matterField_pureJetsActTrivially
+  · exact LeptonSinglet.matterField_pureJetsActTrivially
+  · exact QuarkDoublet.matterField_pureJetsActTrivially
+  · exact UpSinglet.matterField_pureJetsActTrivially
+  · exact DownSinglet.matterField_pureJetsActTrivially
+
+/-- The gauge and Lorentz actions on every Standard Model fermion commute. -/
+lemma matterField_gaugeLorentzCompatible (t : FermionType) :
+    (matterField t).GaugeLorentzCompatible := by
+  cases t
+  · exact LeptonDoublet.matterField_gaugeLorentzCompatible
+  · exact LeptonSinglet.matterField_gaugeLorentzCompatible
+  · exact QuarkDoublet.matterField_gaugeLorentzCompatible
+  · exact UpSinglet.matterField_gaugeLorentzCompatible
+  · exact DownSinglet.matterField_gaugeLorentzCompatible
+
 end FermionType
 
 /-!
@@ -161,7 +186,47 @@ lemma card_fieldData_bosonSpecies : Nat.card fieldData.BosonSpecies = 1 := by
 
 /-!
 
-## C. The mass weights
+## C. The conditions of the covariant derivative theory
+
+Every species of the Standard Model satisfies the two conditions
+`MatterField.PureJetsActTrivially` and `MatterField.GaugeLorentzCompatible`, species by
+species, and the datum therefore satisfies the conjunctions
+`GaugeFieldData.PureJetsActTrivially` and `GaugeFieldData.GaugeLorentzCompatible`.
+
+-/
+
+/-- Pure gauge jets act trivially on every fermionic species of the Standard Model. -/
+lemma fieldData_fermion_pureJetsActTrivially (t : FermionType) :
+    (fieldData.fermion t).PureJetsActTrivially :=
+  t.matterField_pureJetsActTrivially
+
+/-- Pure gauge jets act trivially on the bosonic species of the Standard Model. -/
+lemma fieldData_boson_pureJetsActTrivially (j : fieldData.BosonSpecies) :
+    (fieldData.boson j).PureJetsActTrivially :=
+  HiggsVec.matterField_pureJetsActTrivially
+
+/-- The gauge and Lorentz actions commute on every fermionic species of the Standard
+  Model. -/
+lemma fieldData_fermion_gaugeLorentzCompatible (t : FermionType) :
+    (fieldData.fermion t).GaugeLorentzCompatible :=
+  t.matterField_gaugeLorentzCompatible
+
+/-- The gauge and Lorentz actions commute on the bosonic species of the Standard Model. -/
+lemma fieldData_boson_gaugeLorentzCompatible (j : fieldData.BosonSpecies) :
+    (fieldData.boson j).GaugeLorentzCompatible :=
+  HiggsVec.matterField_gaugeLorentzCompatible
+
+/-- Pure gauge jets act trivially on every species of the Standard Model. -/
+lemma fieldData_pureJetsActTrivially : fieldData.PureJetsActTrivially :=
+  ⟨fieldData_fermion_pureJetsActTrivially, fieldData_boson_pureJetsActTrivially⟩
+
+/-- The gauge and Lorentz actions commute on every species of the Standard Model. -/
+lemma fieldData_gaugeLorentzCompatible : fieldData.GaugeLorentzCompatible :=
+  ⟨fieldData_fermion_gaugeLorentzCompatible, fieldData_boson_gaugeLorentzCompatible⟩
+
+/-!
+
+## D. The mass weights
 
 A Standard Model fermion carries mass weight three and the Higgs weight two, in the units
 in which a derivative has weight two. The first two are read off the matter fields, the

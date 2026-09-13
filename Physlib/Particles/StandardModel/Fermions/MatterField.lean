@@ -41,7 +41,9 @@ Mass weight three is the fermionic weight already fixed by
 
 Each comes with the four projection rules `…matterField_V`, `…matterField_repLorentz`,
 `…matterField_repJet` and `…matterField_massWeight` identifying its fields with the
-existing Standard Model definitions.
+existing Standard Model definitions, and with the two conditions
+`…matterField_pureJetsActTrivially` and `…matterField_gaugeLorentzCompatible` consumed by
+the covariant derivative theory, restated from the species files.
 
 ## iii. Table of contents
 
@@ -95,6 +97,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
 
+/-- Pure gauge jets act trivially on the lepton doublet at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge and Lorentz actions on the lepton doublet commute. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentzGroup
+
 end LeptonDoublet
 
 /-!
@@ -130,6 +140,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
+
+/-- Pure gauge jets act trivially on the charged-lepton singlet at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge and Lorentz actions on the charged-lepton singlet commute. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentzGroup
 
 end LeptonSinglet
 
@@ -169,6 +187,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
 
+/-- Pure gauge jets act trivially on the quark doublet at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge and Lorentz actions on the quark doublet commute. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentzGroup
+
 end QuarkDoublet
 
 /-!
@@ -205,6 +231,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
 
+/-- Pure gauge jets act trivially on the up-type singlet at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge and Lorentz actions on the up-type singlet commute. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentzGroup
+
 end UpSinglet
 
 /-!
@@ -240,6 +274,14 @@ lemma matterField_repAlgebra : matterField.repAlgebra = gaugeAlgebraAction := rf
 
 @[simp]
 lemma matterField_massWeight : matterField.massWeight = 3 := rfl
+
+/-- Pure gauge jets act trivially on the down-type singlet at the base point. -/
+lemma matterField_pureJetsActTrivially : matterField.PureJetsActTrivially :=
+  fun hW => repCoeff_zero_of_eval_eq_one hW
+
+/-- The gauge and Lorentz actions on the down-type singlet commute. -/
+lemma matterField_gaugeLorentzCompatible : matterField.GaugeLorentzCompatible :=
+  gaugeAlgebraAction_comm_repLorentzGroup
 
 end DownSinglet
 

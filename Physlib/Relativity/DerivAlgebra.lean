@@ -22,6 +22,7 @@ public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Relativity.JetRing.Matrix
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
+public import Physlib.Mathematics.Fin
 /-!
 # Derivative algebras
 
@@ -575,6 +576,31 @@ lemma repLorentzGroup_basis_singleton (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
     Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [map_smul, basis_singleton]
+
+/-- The Lorentz action on the derivative monomial of an ordered tuple of directions: every
+  slot mixes by the columns of the Lorentz matrix, one factor per slot. -/
+lemma repLorentzGroup_basis_ofFn (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    repLorentzGroup Λ (basis (List.ofFn l)) =
+      ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
+        (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • basis (List.ofFn p) := by
+  induction n with
+  | zero =>
+    rw [Fintype.sum_unique, Finset.univ_eq_empty, Finset.prod_empty, one_smul]
+    simp only [List.ofFn_zero, Multiset.coe_nil]
+    rw [show (0 : Multiset (Fin 1 ⊕ Fin 3)) = {} from rfl, basis_nil, repLorentzGroup_apply_one]
+  | succ n ih =>
+    have hcons : ∀ (b : Fin 1 ⊕ Fin 3) (p : Fin n → (Fin 1 ⊕ Fin 3)),
+        basis (List.ofFn (Fin.cons b p : Fin (n + 1) → (Fin 1 ⊕ Fin 3))) =
+          basis ({b} : Multiset (Fin 1 ⊕ Fin 3)) * basis (List.ofFn p) := by
+      intro b p
+      rw [basis_mul, Multiset.singleton_add, List.ofFn_succ, ← Multiset.cons_coe]
+      simp only [Fin.cons_zero, Fin.cons_succ]
+    rw [List.ofFn_succ, ← Multiset.cons_coe, ← Multiset.singleton_add, ← basis_mul,
+      repLorentzGroup_apply_mul, repLorentzGroup_basis_singleton, ih, Finset.sum_mul_sum,
+      Physlib.Fin.sum_pi_succ_prod_smul
+        (fun i b => (((Lorentz.SL2C.toLorentzGroup Λ).1 b (l i) : ℝ) : ℂ))]
+    refine Finset.sum_congr rfl fun b _ => Finset.sum_congr rfl fun p _ => ?_
+    rw [smul_mul_smul_comm, hcons]
 
 /-!
 

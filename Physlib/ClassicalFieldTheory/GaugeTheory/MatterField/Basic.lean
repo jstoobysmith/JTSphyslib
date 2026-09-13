@@ -33,10 +33,13 @@ component space this file's data indexes. A concrete theory therefore only has t
 ## ii. Key results
 
 - `MatterField` : the data of a matter field.
+- `MatterField.PureJetsActTrivially`, `MatterField.GaugeLorentzCompatible` : two conditions
+  on a matter field used by the covariant derivative theory.
 
 ## iii. Table of contents
 
 - A. The data of a matter field
+- B. Conditions on a matter field
 
 
 -/
@@ -89,5 +92,32 @@ namespace MatterField
 variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
   {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
   {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (M : MatterField jets)
+
+/-!
+
+## B. Conditions on a matter field
+
+Two properties the data of a matter field does not in general imply: the transformation
+laws constrain the base-point coefficient of a pure jet only to commute with the
+infinitesimal action (a scalar twist by a character of the jet group nontrivial on pure
+jets preserves every field of the structure), and they do not relate the gauge and Lorentz
+actions at all. Both hold for the matter fields of the physical theories, and they are
+recorded as conditions rather than as fields, to be assumed where the covariant derivative
+theory needs them: the first for the factorization of the jet action through evaluation,
+the second for the Lorentz law of the covariant derivatives.
+
+-/
+
+/-- Pure gauge jets act trivially at the base point: a jet with trivial value has identity
+  zeroth Taylor coefficient on the value space. With the fibrewise law, the base-point
+  value of the jet action is then a function of the value of the jet. -/
+def PureJetsActTrivially : Prop :=
+  ∀ {W : GJ}, jets.eval W = 1 → GaugeAlgebraRealization.repCoeff M.repJet W 0 = LinearMap.id
+
+/-- The infinitesimal gauge action commutes with the Lorentz representation on the value
+  space. -/
+def GaugeLorentzCompatible : Prop :=
+  ∀ (c : 𝔤) (Λ : SL(2,ℂ)) (v : M.V),
+    M.repAlgebra c (M.repLorentz Λ v) = M.repLorentz Λ (M.repAlgebra c v)
 
 end MatterField

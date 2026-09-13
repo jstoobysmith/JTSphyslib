@@ -131,6 +131,24 @@ lemma eq_top_of_tmul_one_of_one_tmul {S : Subalgebra R (A ⊗[R] B)}
 
 end Factors
 
+section Central
+
+variable {R A B : Type*} [CommSemiring R] [Semiring A] [Algebra R A] [CommSemiring B]
+  [Algebra R B]
+
+/-- A commutative right factor is central in the tensor product. Stated as an equation of
+  products at abstract types, so that it can be instantiated on a concrete tensor product
+  without unifying its multiplication instances. -/
+lemma includeRight_mul_comm (b : B) (x : A ⊗[R] B) :
+    x * includeRight (R := R) (A := A) b = includeRight (R := R) (A := A) b * x := by
+  induction x using _root_.TensorProduct.induction_on with
+  | zero => rw [zero_mul, mul_zero]
+  | add u v hu hv => rw [add_mul, mul_add, hu, hv]
+  | tmul a c =>
+    rw [includeRight_apply, tmul_mul_tmul, tmul_mul_tmul, mul_one, one_mul, mul_comm c b]
+
+end Central
+
 /-!
 
 ### B.2. Generation after an extension of scalars

@@ -50,11 +50,14 @@ invariance is claimed here.
 - `GaugeFieldData` : the matter content of a gauge theory over a gauge context.
 - `GaugeFieldData.FermionValue`, `GaugeFieldData.BosonValue` : the value space of a
   species.
+- `GaugeFieldData.PureJetsActTrivially`, `GaugeFieldData.GaugeLorentzCompatible` : the two
+  conditions of `MatterField`, imposed on every species of the datum.
 
 ## iii. Table of contents
 
 - A. The gauge context and the field datum
 - B. The value spaces of the species
+- C. Conditions on the species of a datum
 
 -/
 
@@ -148,5 +151,25 @@ abbrev BosonValue (j : T.BosonSpecies) : Type := (T.boson j).V
 
 TODO (lines := 143-148) (date := 2026-09-11) "I think these names should likely be
   changed to something more descriptive."
+
+/-!
+
+## C. Conditions on the species of a datum
+
+The two conditions of `MatterField` (section B of
+`Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic`), imposed species by species.
+They are stated on the datum alone so that a concrete theory can record them next to its
+field data; the covariant derivative theory assumes them where it needs them.
+
+-/
+
+/-- Pure gauge jets act trivially at the base point on every species of the datum. -/
+def PureJetsActTrivially : Prop :=
+  (∀ i, (T.fermion i).PureJetsActTrivially) ∧ (∀ j, (T.boson j).PureJetsActTrivially)
+
+/-- The infinitesimal gauge action of every species of the datum commutes with its Lorentz
+  representation. -/
+def GaugeLorentzCompatible : Prop :=
+  (∀ i, (T.fermion i).GaugeLorentzCompatible) ∧ (∀ j, (T.boson j).GaugeLorentzCompatible)
 
 end GaugeFieldData

@@ -132,6 +132,16 @@ lemma jetEval_tmul (f : JetRing) (v : V) :
 lemma jetEval_jetOfConstant (v : V) : jetEval (jetOfConstant v) = v := by
   simp
 
+/-- Evaluation at the base point is semilinear over the jet ring: a scalar jet acts through
+  its constant coefficient. -/
+lemma jetEval_smul (f : JetRing) (z : JetRing ⊗[ℂ] V) :
+    jetEval (f • z) = constantCoeff f • jetEval z := by
+  induction z using TensorProduct.induction_on with
+  | zero => rw [smul_zero, map_zero, smul_zero]
+  | add a b ha hb => rw [smul_add, map_add, ha, hb, map_add, smul_add]
+  | tmul g v => rw [TensorProduct.smul_tmul', smul_eq_mul, jetEval_tmul, jetEval_tmul, map_mul,
+      mul_smul]
+
 /-!
 
 ## The jets of a product of value spaces

@@ -33,6 +33,10 @@ compiles to a `MatterField` and a table to a `GaugeFieldData`.
 - `Charges.rep` : the matrix representation named by a charge tuple.
 - `FermionRow`, `ScalarRow`, `Table` : the rows and the table.
 - `FermionRow.matterField`, `ScalarRow.matterField`, `Table.fieldData` : the compilation.
+- `Table.fieldData_gaugeLorentzCompatible` : the field content of a table satisfies
+  `GaugeFieldData.GaugeLorentzCompatible`, species by species through
+  `Table.fieldData_fermion_gaugeLorentzCompatible` and
+  `Table.fieldData_boson_gaugeLorentzCompatible`.
 
 ## iii. Table of contents
 
@@ -242,6 +246,18 @@ lemma FermionRow.matterField_massWeight (r : FermionRow Γ) :
 lemma ScalarRow.matterField_massWeight (r : ScalarRow Γ) :
     r.matterField.massWeight = scalarMassWeight := rfl
 
+/-- The gauge and Lorentz actions of a fermion row commute: the row is a matrix
+  representation on the internal index tensored with a Weyl spinor. -/
+lemma FermionRow.matterField_gaugeLorentzCompatible (r : FermionRow Γ) :
+    r.matterField.GaugeLorentzCompatible := by
+  cases h : r.chirality <;> simp only [FermionRow.matterField, h] <;>
+    exact MatrixRep.matterField_gaugeLorentzCompatible _ _ _ _
+
+/-- The gauge and Lorentz actions of a scalar row commute. -/
+lemma ScalarRow.matterField_gaugeLorentzCompatible (r : ScalarRow Γ) :
+    r.matterField.GaugeLorentzCompatible :=
+  MatrixRep.matterField_gaugeLorentzCompatible _ _ _ _
+
 /-!
 
 ## E. The table and its field content
@@ -298,6 +314,21 @@ lemma fieldData_fermion_massWeight (s : T.FermionSpecies) :
 /-- Every bosonic species of a table has mass weight `2`. -/
 lemma fieldData_boson_massWeight (s : T.BosonSpecies) :
     (T.fieldData.boson s).massWeight = scalarMassWeight := by simp
+
+/-- Every fermionic species of a table satisfies `MatterField.GaugeLorentzCompatible`. -/
+lemma fieldData_fermion_gaugeLorentzCompatible (s : T.FermionSpecies) :
+    (T.fieldData.fermion s).GaugeLorentzCompatible :=
+  FermionRow.matterField_gaugeLorentzCompatible _
+
+/-- Every bosonic species of a table satisfies `MatterField.GaugeLorentzCompatible`. -/
+lemma fieldData_boson_gaugeLorentzCompatible (s : T.BosonSpecies) :
+    (T.fieldData.boson s).GaugeLorentzCompatible :=
+  ScalarRow.matterField_gaugeLorentzCompatible _
+
+/-- The field content of a table satisfies `GaugeFieldData.GaugeLorentzCompatible`: every
+  row is a matrix representation on the internal index tensored with a Lorentz factor. -/
+lemma fieldData_gaugeLorentzCompatible : T.fieldData.GaugeLorentzCompatible :=
+  ⟨T.fieldData_fermion_gaugeLorentzCompatible, T.fieldData_boson_gaugeLorentzCompatible⟩
 
 end Table
 
