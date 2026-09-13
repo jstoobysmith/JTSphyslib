@@ -39,7 +39,9 @@ and unconditionally for the field strength.
 - `GaugeFieldData.repJet_covDerivFermion` and companions : the gauge laws;
   `GaugeFieldData.repJet_covDerivFermion_ofConstant_eval` and companions : the
   factorization through evaluation.
-- `GaugeFieldData.repLorentzGroup_covDerivFermion` and companions : the Lorentz laws.
+- `GaugeFieldData.repLorentzGroup_covDerivFermion` and companions : the Lorentz laws;
+  `GaugeFieldData.repLorentzGroup_covDerivFermion_mem` and companions : a Lorentz
+  transformation of a tower element lies in any subalgebra containing the tower.
 
 ## iii. Table of contents
 
@@ -47,6 +49,7 @@ and unconditionally for the field strength.
 - B. The included field-strength tower
 - C. The gauge laws
 - D. The Lorentz laws
+  - D.1. Transformed tower elements in a subalgebra containing the tower
 
 -/
 
@@ -402,6 +405,72 @@ theorem repLorentzGroup_covDerivFieldStrength {n : ℕ} (l : Fin n → (Fin 1 �
   refine congrArg _ (Finset.sum_congr rfl fun b _ => ?_)
   rw [includeConnection_one_tmul_real_smul]
   rfl
+
+/-!
+
+### D.1. Transformed tower elements in a subalgebra containing the tower
+
+The Lorentz laws mix a tower element only with elements of the same tower, so its Lorentz
+transformation lies in any subalgebra containing the required tower elements. This says
+nothing about the other elements of such a subalgebra; the covariant field algebra and its
+sector subalgebras obtain their stability from it by generation.
+
+-/
+
+variable {S : Subalgebra ℂ T.LocalFieldAlgebra}
+
+/-- Under `MatterField.GaugeLorentzCompatible` for the species, a Lorentz transformation
+  carries an element of the covariant tower of a fermionic species into any subalgebra
+  containing the tower of that length. -/
+lemma repLorentzGroup_covDerivFermion_mem (i : T.FermionSpecies)
+    (hi : (T.fermion i).GaugeLorentzCompatible) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (T.FermionValue i))
+    (hS : ∀ (p : Fin n → (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ (T.FermionValue i)),
+      T.covDerivFermion i p ψ ∈ S) :
+    T.repLorentzGroup Λ (T.covDerivFermion i l φ) ∈ S := by
+  rw [repLorentzGroup_covDerivFermion Λ i hi l φ]
+  exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (hS p _) _
+
+lemma repLorentzGroup_covDerivConjFermion_mem (i : T.FermionSpecies)
+    (hi : (T.fermion i).GaugeLorentzCompatible) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule (T.FermionValue i)))
+    (hS : ∀ (p : Fin n → (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ (ConjModule (T.FermionValue i))),
+      T.covDerivConjFermion i p ψ ∈ S) :
+    T.repLorentzGroup Λ (T.covDerivConjFermion i l φ) ∈ S := by
+  rw [repLorentzGroup_covDerivConjFermion Λ i hi l φ]
+  exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (hS p _) _
+
+lemma repLorentzGroup_covDerivBoson_mem (j : T.BosonSpecies)
+    (hj : (T.boson j).GaugeLorentzCompatible) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (T.BosonValue j))
+    (hS : ∀ (p : Fin n → (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ (T.BosonValue j)),
+      T.covDerivBoson j p ψ ∈ S) :
+    T.repLorentzGroup Λ (T.covDerivBoson j l φ) ∈ S := by
+  rw [repLorentzGroup_covDerivBoson Λ j hj l φ]
+  exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (hS p _) _
+
+lemma repLorentzGroup_covDerivConjBoson_mem (j : T.BosonSpecies)
+    (hj : (T.boson j).GaugeLorentzCompatible) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+    (φ : Module.Dual ℂ (ConjModule (T.BosonValue j)))
+    (hS : ∀ (p : Fin n → (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℂ (ConjModule (T.BosonValue j))),
+      T.covDerivConjBoson j p ψ ∈ S) :
+    T.repLorentzGroup Λ (T.covDerivConjBoson j l φ) ∈ S := by
+  rw [repLorentzGroup_covDerivConjBoson Λ j hj l φ]
+  exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (hS p _) _
+
+/-- A Lorentz transformation carries an element of the field-strength tower into any
+  subalgebra containing the whole tower of its adjoint covector, with no condition. -/
+lemma repLorentzGroup_covDerivFieldStrength_mem (l : List (Fin 1 ⊕ Fin 3))
+    (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤)
+    (hS : ∀ (l' : List (Fin 1 ⊕ Fin 3)) (a b : Fin 1 ⊕ Fin 3),
+      T.covDerivFieldStrength l' a b φ ∈ S) :
+    T.repLorentzGroup Λ (T.covDerivFieldStrength l μ ν φ) ∈ S := by
+  obtain ⟨n, l', rfl⟩ : ∃ (n : ℕ) (l' : Fin n → (Fin 1 ⊕ Fin 3)), l = List.ofFn l' :=
+    ⟨_, l.get, (List.ofFn_get l).symm⟩
+  rw [repLorentzGroup_covDerivFieldStrength]
+  exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _
+    (Subalgebra.sum_mem _ fun a _ => Subalgebra.smul_mem _
+      (Subalgebra.sum_mem _ fun b _ => Subalgebra.smul_mem _ (hS _ a b) _) _) _
 
 end LorentzLaws
 

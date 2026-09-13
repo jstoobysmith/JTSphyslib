@@ -37,7 +37,8 @@ inclusion `Subalgebra.val` by construction.
   companions : the generators as elements of the covariant field algebra.
 - `LocalCovFieldAlgebra.repJet`, `LocalCovFieldAlgebra.repValue`,
   `LocalCovFieldAlgebra.repLorentzGroup` : the restricted actions.
-- `LocalCovFieldAlgebra.repJet_eq_repValue_eval` : the factorization through evaluation.
+- `LocalCovFieldAlgebra.repJet_eq_ofConstant_eval_of_mem`,
+  `LocalCovFieldAlgebra.repJet_eq_repValue_eval` : the factorization through evaluation.
 
 ## iii. Table of contents
 
@@ -194,13 +195,8 @@ lemma induction {P : T.LocalFieldAlgebra → Prop} {x : T.LocalFieldAlgebra}
 lemma mapsTo (f : T.LocalFieldAlgebra →ₐ[ℂ] T.LocalFieldAlgebra)
     (hgen : ∀ b ∈ T.covGenerators, f b ∈ T.LocalCovFieldAlgebra)
     {x : T.LocalFieldAlgebra} (hx : x ∈ T.LocalCovFieldAlgebra) :
-    f x ∈ T.LocalCovFieldAlgebra := by
-  have hle : T.LocalCovFieldAlgebra.map f ≤ T.LocalCovFieldAlgebra := by
-    rw [LocalCovFieldAlgebra, ← Algebra.adjoin_image]
-    refine Algebra.adjoin_le ?_
-    rintro _ ⟨b, hb, rfl⟩
-    exact hgen b hb
-  exact hle ⟨x, hx, rfl⟩
+    f x ∈ T.LocalCovFieldAlgebra :=
+  Algebra.apply_mem_of_mem_adjoin f hgen hx
 
 /-- Two algebra maps out of the covariant field algebra agreeing on the covariant
   generators are equal. This is uniqueness only: the covariant field algebra is not free on
@@ -350,23 +346,16 @@ lemma repLorentzGroup_mem (hGL : T.GaugeLorentzCompatible) (Λ : SL(2,ℂ))
   refine covGenerators_cases (P := fun b => T.repLorentzAlgHom Λ b ∈ T.LocalCovFieldAlgebra) hb
     (fun l μ ν φ => ?_) (fun i n l φ => ?_) (fun i n l φ => ?_)
     (fun j n l φ => ?_) (fun j n l φ => ?_)
-  · obtain ⟨n, l', rfl⟩ : ∃ (n : ℕ) (l' : Fin n → (Fin 1 ⊕ Fin 3)), l = List.ofFn l' :=
-      ⟨_, l.get, (List.ofFn_get l).symm⟩
-    rw [← repLorentzGroup_apply, repLorentzGroup_covDerivFieldStrength]
-    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _
-      (Subalgebra.sum_mem _ fun a _ => Subalgebra.smul_mem _
-        (Subalgebra.sum_mem _ fun b _ => Subalgebra.smul_mem _
-          (covDerivFieldStrength_mem _ a b φ) _) _) _
-  · rw [← repLorentzGroup_apply, repLorentzGroup_covDerivFermion Λ i (hGL.1 i)]
-    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (covDerivFermion_mem i p _) _
-  · rw [← repLorentzGroup_apply, repLorentzGroup_covDerivConjFermion Λ i (hGL.1 i)]
-    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _
-      (covDerivConjFermion_mem i p _) _
-  · rw [← repLorentzGroup_apply, repLorentzGroup_covDerivBoson Λ j (hGL.2 j)]
-    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _ (covDerivBoson_mem j p _) _
-  · rw [← repLorentzGroup_apply, repLorentzGroup_covDerivConjBoson Λ j (hGL.2 j)]
-    exact Subalgebra.sum_mem _ fun p _ => Subalgebra.smul_mem _
-      (covDerivConjBoson_mem j p _) _
+  · exact repLorentzGroup_covDerivFieldStrength_mem Λ l μ ν φ
+      fun l' a b => covDerivFieldStrength_mem l' a b φ
+  · exact repLorentzGroup_covDerivFermion_mem Λ i (hGL.1 i) l φ
+      fun p ψ => covDerivFermion_mem i p ψ
+  · exact repLorentzGroup_covDerivConjFermion_mem Λ i (hGL.1 i) l φ
+      fun p ψ => covDerivConjFermion_mem i p ψ
+  · exact repLorentzGroup_covDerivBoson_mem Λ j (hGL.2 j) l φ
+      fun p ψ => covDerivBoson_mem j p ψ
+  · exact repLorentzGroup_covDerivConjBoson_mem Λ j (hGL.2 j) l φ
+      fun p ψ => covDerivConjBoson_mem j p ψ
 
 /-!
 
@@ -435,16 +424,14 @@ lemma repValue_apply_mul (g : G₀) (x y : T.LocalCovFieldAlgebra) :
     repValue T g (x * y) = repValue T g x * repValue T g y :=
   repJet_apply_mul (jets.ofConstant g) x y
 
-/-- Under `GaugeFieldData.PureJetsActTrivially`, the action of the jet gauge group on the
-  covariant field algebra factors through evaluation: a jet acts as the constant jet of its
-  value, so the derivatives of a gauge transformation act trivially on covariant
-  expressions. -/
-theorem repJet_eq_repValue_eval (hP : T.PureJetsActTrivially) (U : GJ)
-    (x : T.LocalCovFieldAlgebra) : repJet T U x = repValue T (jets.eval U) x := by
-  refine Subtype.ext ?_
-  show T.repJet U x = T.repJet (jets.ofConstant (jets.eval U)) x
+/-- Under `GaugeFieldData.PureJetsActTrivially`, a jet acts on every element of the
+  covariant field algebra as the constant jet of its value, stated in the local field
+  algebra. -/
+lemma repJet_eq_ofConstant_eval_of_mem (hP : T.PureJetsActTrivially) (U : GJ)
+    {x : T.LocalFieldAlgebra} (hx : x ∈ T.LocalCovFieldAlgebra) :
+    T.repJet U x = T.repJet (jets.ofConstant (jets.eval U)) x := by
   refine induction (P := fun y => T.repJet U y = T.repJet (jets.ofConstant (jets.eval U)) y)
-    x.2 ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    hx ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · intro l μ ν φ
     exact repJet_covDerivFieldStrength_ofConstant_eval U l μ ν φ
   · intro i n l φ
@@ -467,6 +454,14 @@ theorem repJet_eq_repValue_eval (hP : T.PureJetsActTrivially) (U : GJ)
   · intro x y hx hy
     exact (GaugeFieldData.repJet_apply_mul U x y).trans
       ((congrArg₂ (· * ·) hx hy).trans (GaugeFieldData.repJet_apply_mul _ x y).symm)
+
+/-- Under `GaugeFieldData.PureJetsActTrivially`, the action of the jet gauge group on the
+  covariant field algebra factors through evaluation: a jet acts as the constant jet of its
+  value, so the derivatives of a gauge transformation act trivially on covariant
+  expressions. -/
+theorem repJet_eq_repValue_eval (hP : T.PureJetsActTrivially) (U : GJ)
+    (x : T.LocalCovFieldAlgebra) : repJet T U x = repValue T (jets.eval U) x :=
+  Subtype.ext (repJet_eq_ofConstant_eval_of_mem hP U x.2)
 
 /-!
 

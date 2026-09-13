@@ -42,7 +42,8 @@ for when a representation acts on generators by a shift.
 - `Representation.tprod_apply_one`, `Representation.tprod_apply_one_tmul`,
   `Representation.tprod_apply_tmul_one` : the unit laws on a tensor product.
 - `Representation.tprod_apply_mul` : multiplicativity on a tensor product.
-- `Representation.restrictSubalgebra` : the restriction to an invariant subalgebra.
+- `Representation.restrictSubalgebra` : the restriction to an invariant subalgebra, with
+  `Representation.inclusion_restrictSubalgebra` for two nested ones.
 - `Representation.restrictScalars` : the restriction of scalars.
 - `Representation.toAlgHom` : a multiplicative representation of a group as algebra maps.
 - `Representation.EquivariantAlgHom` : an algebra map intertwining two pairs of
@@ -147,6 +148,15 @@ lemma coe_restrictSubalgebra {k A G : Type*} [CommSemiring k]
     [Monoid G] [Semiring A] [Algebra k A] (ρ : Representation k G A) (S : Subalgebra k A)
     (hS : ∀ (g : G) {x : A}, x ∈ S → ρ g x ∈ S) (g : G) (x : S) :
     (ρ.restrictSubalgebra S hS g x : A) = ρ g (x : A) := rfl
+
+/-- The restrictions to two nested invariant subalgebras agree along the inclusion of the
+  smaller into the larger. -/
+lemma inclusion_restrictSubalgebra {k A G : Type*} [CommSemiring k]
+    [Monoid G] [Semiring A] [Algebra k A] (ρ : Representation k G A) {S S' : Subalgebra k A}
+    (h : S ≤ S') (hS : ∀ (g : G) {x : A}, x ∈ S → ρ g x ∈ S)
+    (hS' : ∀ (g : G) {x : A}, x ∈ S' → ρ g x ∈ S') (g : G) (x : S) :
+    Subalgebra.inclusion h (ρ.restrictSubalgebra S hS g x)
+      = ρ.restrictSubalgebra S' hS' g (Subalgebra.inclusion h x) := rfl
 
 /-!
 
