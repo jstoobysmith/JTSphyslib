@@ -329,6 +329,9 @@ noncomputable def restrict :
     (fun U _ hx => LocalCovFieldAlgebra.repJet_mem U hx)
     (fun Λ _ hx => LocalCovFieldAlgebra.repLorentzGroup_mem hGL Λ hx)).compFst jets.ofConstant
 
+lemma restrict_toAlgHom : (h.restrict hGL).toAlgHom = h.toAlgHom.comp T.LocalCovFieldAlgebra.val :=
+  rfl
+
 @[simp]
 lemma restrict_toAlgHom_apply (x : ↥T.LocalCovFieldAlgebra) :
     (h.restrict hGL).toAlgHom x = h.toAlgHom x := rfl

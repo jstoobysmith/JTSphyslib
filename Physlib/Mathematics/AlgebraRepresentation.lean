@@ -47,8 +47,8 @@ for when a representation acts on generators by a shift.
 - `Representation.restrictScalars` : the restriction of scalars.
 - `Representation.toAlgHom` : a multiplicative representation of a group as algebra maps.
 - `Representation.EquivariantAlgHom` : an algebra map intertwining two pairs of
-  representations, with `EquivariantAlgHom.id`, `EquivariantAlgHom.restrictSubalgebra` and
-  `EquivariantAlgHom.compFst`.
+  representations, with `EquivariantAlgHom.id`, `EquivariantAlgHom.comp`,
+  `EquivariantAlgHom.restrictSubalgebra` and `EquivariantAlgHom.compFst`.
 - `Representation.liftEquiv_baseChange` : base change preserves equivariance.
 - `AlgHom.map_add_smul_one` : an algebra map on an affine combination `x + z • 1`.
 
@@ -270,17 +270,34 @@ lemma id_toAlgHom (h₁ : ∀ (g : G₁) (x y : A), ρ₁ g (x * y) = ρ₁ g x 
     (h₂ : ∀ (g : G₂) (x y : A), ρ₂ g (x * y) = ρ₂ g x * ρ₂ g y) :
     (EquivariantAlgHom.id ρ₁ ρ₂ h₁ h₂).toAlgHom = AlgHom.id k A := rfl
 
+/-- The precomposition with an algebra map into the source intertwining two representations
+  on its own source with the two source representations; the target and its two actions are
+  unchanged. -/
+def comp {A' : Type*} [Semiring A'] [Algebra k A'] {ρ₁' : Representation k G₁ A'}
+    {ρ₂' : Representation k G₂ A'} (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (φ : A' →ₐ[k] A)
+    (hφ₁ : ∀ (g : G₁) (x : A'), φ (ρ₁' g x) = ρ₁ g (φ x))
+    (hφ₂ : ∀ (g : G₂) (x : A'), φ (ρ₂' g x) = ρ₂ g (φ x)) :
+    EquivariantAlgHom ρ₁' σ₁ ρ₂' σ₂ where
+  toAlgHom := f.toAlgHom.comp φ
+  map_fst g x := (congrArg f.toAlgHom (hφ₁ g x)).trans (f.map_fst g (φ x))
+  map_snd g x := (congrArg f.toAlgHom (hφ₂ g x)).trans (f.map_snd g (φ x))
+  fst_mul := f.fst_mul
+  snd_mul := f.snd_mul
+
+@[simp]
+lemma comp_toAlgHom {A' : Type*} [Semiring A'] [Algebra k A'] {ρ₁' : Representation k G₁ A'}
+    {ρ₂' : Representation k G₂ A'} (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (φ : A' →ₐ[k] A)
+    (hφ₁ : ∀ (g : G₁) (x : A'), φ (ρ₁' g x) = ρ₁ g (φ x))
+    (hφ₂ : ∀ (g : G₂) (x : A'), φ (ρ₂' g x) = ρ₂ g (φ x)) :
+    (f.comp φ hφ₁ hφ₂).toAlgHom = f.toAlgHom.comp φ := rfl
+
 /-- The restriction to a subalgebra of the source preserved by both source representations,
   along its inclusion; the target and its two actions are unchanged. -/
 noncomputable def restrictSubalgebra (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (S : Subalgebra k A)
     (hS₁ : ∀ (g : G₁) {x : A}, x ∈ S → ρ₁ g x ∈ S)
     (hS₂ : ∀ (g : G₂) {x : A}, x ∈ S → ρ₂ g x ∈ S) :
-    EquivariantAlgHom (ρ₁.restrictSubalgebra S hS₁) σ₁ (ρ₂.restrictSubalgebra S hS₂) σ₂ where
-  toAlgHom := f.toAlgHom.comp S.val
-  map_fst g x := f.map_fst g x
-  map_snd g x := f.map_snd g x
-  fst_mul := f.fst_mul
-  snd_mul := f.snd_mul
+    EquivariantAlgHom (ρ₁.restrictSubalgebra S hS₁) σ₁ (ρ₂.restrictSubalgebra S hS₂) σ₂ :=
+  f.comp S.val (fun _ _ => rfl) (fun _ _ => rfl)
 
 @[simp]
 lemma restrictSubalgebra_toAlgHom_apply (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (S : Subalgebra k A)

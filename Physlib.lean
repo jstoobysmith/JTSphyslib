@@ -27,6 +27,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMod
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Sector
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.SectorRealization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.CovariantDeriv
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Basic
@@ -45,6 +46,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.LorentzAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Sector
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.SectorRealization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
