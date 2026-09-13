@@ -27,6 +27,7 @@ uniqueness, without unfolding the tensor-product carrier.
   `repJet_ιConnection` on the generators.
 - `GaugeFieldData.repJet_includeConnection` : on the connection factor the action is the
   complexified gauge-only action.
+- `GaugeFieldData.repJet_ιConnection_affine` : the affine law of the connection generators.
 
 ## iii. Table of contents
 
@@ -214,5 +215,24 @@ lemma repJet_includeConnection (U : GJ) (y : ℂ ⊗[ℝ] LocalGaugeFieldAlgebra
     T.repJet U (T.includeConnection y)
       = T.includeConnection (LocalGaugeFieldAlgebra.complexRepJet jets U y) :=
   repJetAlgHom_includeConnection U y
+
+/-- The affine gauge law of the connection generators: a jet carries a connection
+  generator to the transported generator of its inverse plus the Maurer–Cartan shift, the
+  gauge field being a connection and not a tensor. This is the generator-level form of
+  `GaugeFieldData.repJet_ιConnection`, with no reference to the connection factor. -/
+lemma repJet_ιConnection_affine (U : GJ) (v : GaugeBoson.JetComponentSpace 𝔤) :
+    T.repJet U (T.ιConnection v)
+      = T.ιConnection (LocalGaugeFieldAlgebra.transport jets U⁻¹ v)
+        + (LocalGaugeFieldAlgebra.mcShift jets U⁻¹ v : ℂ) • (1 : T.LocalFieldAlgebra) := by
+  rw [repJet_ιConnection, LocalGaugeFieldAlgebra.repJet_ι, TensorProduct.tmul_add, map_add,
+    show ((1 : ℂ) ⊗ₜ[ℝ] algebraMap ℝ (LocalGaugeFieldAlgebra 𝔤)
+        (LocalGaugeFieldAlgebra.mcShift jets U⁻¹ v))
+      = algebraMap ℝ (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤)
+          (LocalGaugeFieldAlgebra.mcShift jets U⁻¹ v) from
+      (Algebra.TensorProduct.includeRight_apply _).symm.trans
+        (AlgHom.commutes Algebra.TensorProduct.includeRight _),
+    IsScalarTower.algebraMap_apply ℝ ℂ (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤), AlgHom.commutes,
+    Algebra.algebraMap_eq_smul_one]
+  rfl
 
 end GaugeFieldData

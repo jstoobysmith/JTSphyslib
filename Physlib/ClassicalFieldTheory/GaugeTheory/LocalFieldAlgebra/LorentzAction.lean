@@ -28,6 +28,7 @@ compatible assignment, with the representation laws from uniqueness.
   generators.
 - `GaugeFieldData.repLorentzGroup_includeConnection` : on the connection factor the action
   is the complexified gauge-only action.
+- `GaugeFieldData.repLorentzGroup_ιConnection_eq` : the law of the connection generators.
 
 ## iii. Table of contents
 
@@ -223,5 +224,15 @@ lemma repLorentzGroup_includeConnection (Λ : SL(2,ℂ)) (y : ℂ ⊗[ℝ] Local
     T.repLorentzGroup Λ (T.includeConnection y)
       = T.includeConnection (LocalGaugeFieldAlgebra.complexRepLorentzGroup 𝔤 Λ y) :=
   repLorentzAlgHom_includeConnection Λ y
+
+/-- The Lorentz law of the connection generators: a transformation carries a connection
+  generator to the generator of the transformed component, with no shift. This is the
+  generator-level form of `GaugeFieldData.repLorentzGroup_ιConnection`, with no reference
+  to the connection factor. -/
+lemma repLorentzGroup_ιConnection_eq (Λ : SL(2,ℂ)) (v : GaugeBoson.JetComponentSpace 𝔤) :
+    T.repLorentzGroup Λ (T.ιConnection v)
+      = T.ιConnection (GaugeBoson.JetComponentSpace.repLorentzGroup 𝔤 Λ v) := by
+  rw [repLorentzGroup_ιConnection, LocalGaugeFieldAlgebra.repLorentzGroup_ι]
+  rfl
 
 end GaugeFieldData

@@ -31,8 +31,8 @@ inclusion `Subalgebra.val` by construction.
 ## ii. Key results
 
 - `GaugeFieldData.LocalCovFieldAlgebra` : the covariant field algebra, with
-  `LocalCovFieldAlgebra.induction`, `LocalCovFieldAlgebra.mapsTo` and
-  `LocalCovFieldAlgebra.algHom_ext`.
+  `LocalCovFieldAlgebra.induction`, `LocalCovFieldAlgebra.mapsTo`,
+  `LocalCovFieldAlgebra.algHom_ext` and `LocalCovFieldAlgebra.algHom_ext_towers`.
 - `LocalCovFieldAlgebra.covFermion`, `LocalCovFieldAlgebra.covFieldStrength` and
   companions : the generators as elements of the covariant field algebra.
 - `LocalCovFieldAlgebra.repJet`, `LocalCovFieldAlgebra.repValue`,
@@ -283,6 +283,38 @@ lemma coe_covBoson (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 
 lemma coe_covConjBoson (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.BosonValue j))) :
     (covConjBoson T j l φ : T.LocalFieldAlgebra) = T.covDerivConjBoson j l φ := rfl
+
+/-- Two algebra maps out of the covariant field algebra agreeing on the five towers are
+  equal. Like `GaugeFieldData.LocalCovFieldAlgebra.algHom_ext` this is uniqueness only. -/
+lemma algHom_ext_towers {B : Type} [Semiring B] [Algebra ℂ B]
+    {f g : ↥T.LocalCovFieldAlgebra →ₐ[ℂ] B}
+    (hF : ∀ (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
+      f (covFieldStrength T l μ ν φ) = g (covFieldStrength T l μ ν φ))
+    (hψ : ∀ (i : T.FermionSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (T.FermionValue i)),
+      f (covFermion T i l φ) = g (covFermion T i l φ))
+    (hψc : ∀ (i : T.FermionSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule (T.FermionValue i))),
+      f (covConjFermion T i l φ) = g (covConjFermion T i l φ))
+    (hφ : ∀ (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (T.BosonValue j)),
+      f (covBoson T j l φ) = g (covBoson T j l φ))
+    (hφc : ∀ (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
+      (φ : Module.Dual ℂ (ConjModule (T.BosonValue j))),
+      f (covConjBoson T j l φ) = g (covConjBoson T j l φ)) : f = g := by
+  refine algHom_ext fun b hb => ?_
+  refine covGenerators_cases (P := fun b => ∀ hb' : b ∈ T.LocalCovFieldAlgebra,
+    f ⟨b, hb'⟩ = g ⟨b, hb'⟩) hb ?_ ?_ ?_ ?_ ?_ (Algebra.subset_adjoin hb)
+  · intro l μ ν φ _
+    exact hF l μ ν φ
+  · intro i n l φ _
+    exact hψ i l φ
+  · intro i n l φ _
+    exact hψc i l φ
+  · intro j n l φ _
+    exact hφ j l φ
+  · intro j n l φ _
+    exact hφc j l φ
 
 /-!
 

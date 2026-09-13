@@ -660,6 +660,88 @@ theorem adjoin_symbols_eq_adjoin_covDerivIter (act : 𝔤 →ₗ[ℝ] V →ₗ[�
     · exact Algebra.subset_adjoin (Or.inl ⟨s, μ, ψ, rfl⟩)
     · exact covDerivIter_mem_adjoin_symbols act F n l 0 φ
 
+/-!
+
+## Naturality in the algebra
+
+The matter analogue of `bracketFam_map` and `iteratedCovDerivAdjoint_map`: a
+multiplicative linear map into another algebra carries the derived action, and hence
+the whole covariant matter tower, to the tower of the image families. The derived
+action is a finite sum of products of components, so only multiplicativity is needed;
+no derivative operator on the target is involved.
+
+-/
+
+section Naturality
+
+variable {B' : Type} [Ring B'] [Algebra ℂ B'] (Φ : B →ₗ[ℂ] B')
+  (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+
+include hΦ
+
+/-- The action of an adjoint-indexed family on a matter family is natural in the
+  algebra. -/
+lemma actionFam_map (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V) (f : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (g : Module.Dual ℂ V →ₗ[ℂ] B) :
+    actionFam act (Φ.restrictScalars ℝ ∘ₗ f) (Φ ∘ₗ g) = Φ ∘ₗ actionFam act f g := by
+  refine LinearMap.ext fun φ => ?_
+  rw [actionFam, actionFam,
+    dualPairEquiv_symm_eq_sum (Module.finBasis ℝ 𝔤) (Φ.restrictScalars ℝ ∘ₗ f),
+    dualPairEquivC_symm_eq_sum (Module.finBasis ℂ V) (Φ ∘ₗ g),
+    dualPairEquiv_symm_eq_sum (Module.finBasis ℝ 𝔤) f,
+    dualPairEquivC_symm_eq_sum (Module.finBasis ℂ V) g]
+  simp only [map_sum, LinearMap.sum_apply, tensorAction_tmul, dualPairEquivC_tmul,
+    LinearMap.comp_apply, LinearMap.coe_restrictScalars, map_smul, hΦ]
+
+/-- The derived action family is natural in the algebra. -/
+lemma actionFamConv_map
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V) (ρ : Fin 1 ⊕ Fin 3)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    actionFamConv (fun p σ => Φ.restrictScalars ℝ ∘ₗ A p σ) act ρ (fun p => Φ ∘ₗ F p) s
+      = Φ ∘ₗ actionFamConv A act ρ F s := by
+  refine LinearMap.ext fun φ => ?_
+  rw [LinearMap.comp_apply, actionFamConv, actionFamConv, Multiset.sum_linearMap_apply,
+    Multiset.sum_linearMap_apply, Multiset.map_map, Multiset.map_map, map_multiset_sum,
+    Multiset.map_map]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
+  simp only [Function.comp_apply]
+  rw [actionFam_map Φ hΦ]
+  rfl
+
+/-- The covariant derivative of a matter family is natural in the algebra. -/
+lemma covDerivAction_map
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    covDerivAction (fun p σ => Φ.restrictScalars ℝ ∘ₗ A p σ) act (fun p => Φ ∘ₗ F p) ρ s
+      = Φ ∘ₗ covDerivAction A act F ρ s := by
+  rw [covDerivAction, covDerivAction, actionFamConv_map Φ hΦ, LinearMap.comp_add]
+
+/-- The iterated covariant derivative of a matter family is natural in the algebra: the
+  image of the tower is the tower of the image families, at every ordered tuple of
+  directions and every derivative multiset. -/
+lemma covDerivIter_map
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B)
+    (n : ℕ) (l : Fin n → (Fin 1 ⊕ Fin 3)) :
+    covDerivIter (fun p σ => Φ.restrictScalars ℝ ∘ₗ A p σ) act (fun p => Φ ∘ₗ F p) n l
+      = fun s => Φ ∘ₗ covDerivIter A act F n l s := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    funext s
+    show covDerivAction (fun p σ => Φ.restrictScalars ℝ ∘ₗ A p σ) act
+        (covDerivIter (fun p σ => Φ.restrictScalars ℝ ∘ₗ A p σ) act (fun p => Φ ∘ₗ F p) n
+          fun i => l i.succ) (l 0) s
+      = Φ ∘ₗ covDerivAction A act (covDerivIter A act F n fun i => l i.succ) (l 0) s
+    rw [ih, covDerivAction_map Φ hΦ]
+
+end Naturality
+
 end Action
 
 

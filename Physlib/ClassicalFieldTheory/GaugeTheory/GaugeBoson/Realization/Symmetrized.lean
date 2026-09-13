@@ -194,6 +194,21 @@ lemma iteratedCovDerivAdjoint_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCom
       Φ ∘ₗ covDerivAdjoint A (iteratedCovDerivAdjoint A l F) ρ s
     rw [ih, covDerivAdjoint_map Φ hΦ]
 
+/-- The covariant tower of the field strength is natural in the algebra: the tower of the
+  image family is the image of the tower. -/
+lemma iteratedCovDerivAdjoint_fieldStrength_map {B' : Type} [Ring B'] [Module ℝ B']
+    [SMulCommClass ℝ B' B'] [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B')
+    (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
+    iteratedCovDerivAdjoint (fun p σ => Φ ∘ₗ A p σ) l
+        (fieldStrength (fun p σ => Φ ∘ₗ A p σ) μ ν) 0 φ
+      = Φ (iteratedCovDerivAdjoint A l (fieldStrength A μ ν) 0 φ) := by
+  have key := congrFun (iteratedCovDerivAdjoint_map Φ hΦ A l (fieldStrength A μ ν)) 0
+  rw [show (fun p => Φ ∘ₗ fieldStrength A μ ν p) = fieldStrength (fun p σ => Φ ∘ₗ A p σ) μ ν
+      from funext fun p => (fieldStrength_map Φ hΦ A μ ν p).symm] at key
+  exact LinearMap.congr_fun key φ
+
 variable (A) in
 /-- The derivative symbols `∂_p A_μ^φ` with at most `n` derivatives. -/
 abbrev symbolsLE (n : ℕ) : Set B :=

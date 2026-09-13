@@ -36,12 +36,14 @@ space is in particular a representation on the underlying real vector space.
 - `Representation.tprod_apply_mul` : multiplicativity on a tensor product.
 - `Representation.restrictSubalgebra` : the restriction to an invariant subalgebra.
 - `Representation.restrictScalars` : the restriction of scalars.
+- `Representation.toAlgHom` : a multiplicative representation of a group as algebra maps.
 
 ## iii. Table of contents
 
 - A. Tensor products of multiplicative representations
 - B. Restriction to an invariant subalgebra
 - C. Restriction of scalars
+- D. Multiplicative representations as algebra maps
 
 -/
 
@@ -149,5 +151,44 @@ def restrictScalars (R : Type*) {S G V : Type*} [CommSemiring R] [CommSemiring S
 lemma restrictScalars_apply (R : Type*) {S G V : Type*} [CommSemiring R] [CommSemiring S]
     [Monoid G] [AddCommMonoid V] [Module R V] [Module S V] [LinearMap.CompatibleSMul V V R S]
     (ρ : Representation S G V) (g : G) (x : V) : ρ.restrictScalars R g x = ρ g x := rfl
+
+/-!
+
+## D. Multiplicative representations as algebra maps
+
+-/
+
+section Multiplicative
+
+variable {k G A : Type*} [CommSemiring k] [Group G] [Ring A] [Algebra k A]
+  (ρ : Representation k G A) (hρ : ∀ (g : G) (x y : A), ρ g (x * y) = ρ g x * ρ g y)
+
+include hρ in
+/-- A representation of a group acting by multiplicative maps preserves the unit. The
+  action of `g` is surjective, its inverse being the action of `g⁻¹`, so `ρ g 1` is a left
+  unit on the whole algebra. -/
+lemma apply_one_of_mul (g : G) : ρ g 1 = 1 := by
+  have hsurj (b : A) : ρ g (ρ g⁻¹ b) = b := by
+    rw [← Module.End.mul_apply, ← map_mul ρ, mul_inv_cancel, map_one, Module.End.one_apply]
+  have key (b : A) : ρ g 1 * b = b := by
+    conv_lhs => rw [← hsurj b, ← hρ, one_mul]
+    rw [hsurj]
+  simpa using key 1
+
+/-- A representation of a group acting by multiplicative maps acts by algebra
+  endomorphisms. -/
+noncomputable def toAlgHom (g : G) : A →ₐ[k] A where
+  toFun := ρ g
+  map_one' := apply_one_of_mul ρ hρ g
+  map_mul' := hρ g
+  map_zero' := map_zero (ρ g)
+  map_add' := map_add (ρ g)
+  commutes' r := by
+    rw [Algebra.algebraMap_eq_smul_one, map_smul, apply_one_of_mul ρ hρ g]
+
+@[simp]
+lemma toAlgHom_apply (g : G) (x : A) : ρ.toAlgHom hρ g x = ρ g x := rfl
+
+end Multiplicative
 
 end Representation
