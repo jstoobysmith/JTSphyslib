@@ -29,6 +29,14 @@ hypothesis is stated pointwise, in the form the ambient invariance lemmas produc
 Section C restricts the scalars of a representation: a representation on a complex vector
 space is in particular a representation on the underlying real vector space.
 
+Section E bundles an algebra map together with equivariance for two independently supplied
+pairs of representations of two monoids, the two target representations being multiplicative
+on the whole target: `Representation.EquivariantAlgHom`. Nothing relates the two pairs, the
+target actions are not assumed to commute, and they are not assumed unital, which over a
+monoid does not follow from multiplicativity. Section F base changes such a map along an
+extension of scalars, and section G records the one affine identity an algebra map is used
+for when a representation acts on generators by a shift.
+
 ## ii. Key results
 
 - `Representation.tprod_apply_one`, `Representation.tprod_apply_one_tmul`,
@@ -37,6 +45,11 @@ space is in particular a representation on the underlying real vector space.
 - `Representation.restrictSubalgebra` : the restriction to an invariant subalgebra.
 - `Representation.restrictScalars` : the restriction of scalars.
 - `Representation.toAlgHom` : a multiplicative representation of a group as algebra maps.
+- `Representation.EquivariantAlgHom` : an algebra map intertwining two pairs of
+  representations, with `EquivariantAlgHom.id`, `EquivariantAlgHom.restrictSubalgebra` and
+  `EquivariantAlgHom.compFst`.
+- `Representation.liftEquiv_baseChange` : base change preserves equivariance.
+- `AlgHom.map_add_smul_one` : an algebra map on an affine combination `x + z • 1`.
 
 ## iii. Table of contents
 
@@ -44,6 +57,9 @@ space is in particular a representation on the underlying real vector space.
 - B. Restriction to an invariant subalgebra
 - C. Restriction of scalars
 - D. Multiplicative representations as algebra maps
+- E. Equivariant algebra maps
+- F. Base change of an equivariant algebra map
+- G. Affine combinations under an algebra map
 
 -/
 
@@ -191,4 +207,129 @@ lemma toAlgHom_apply (g : G) (x : A) : ρ.toAlgHom hρ g x = ρ g x := rfl
 
 end Multiplicative
 
+/-!
+
+## E. Equivariant algebra maps
+
+-/
+
+section Equivariant
+
+variable {k : Type*} [CommSemiring k] {G₁ G₂ : Type*} [Monoid G₁] [Monoid G₂]
+  {A B : Type*} [Semiring A] [Algebra k A] [Semiring B] [Algebra k B]
+
+/-- An algebra map `A →ₐ[k] B` intertwining two pairs of representations, `ρ₁, σ₁` of the
+  monoid `G₁` and `ρ₂, σ₂` of the monoid `G₂`, with both target representations multiplicative
+  on the whole of `B`. The two pairs are independent: the actions of `G₁` and `G₂` are not
+  assumed to commute, and no relation between them is used. Unit preservation is not a field
+  and does not follow from multiplicativity over a monoid; when the acting monoid is a group
+  and the target is a ring it does (`Representation.apply_one_of_mul`), and the target action
+  is then by algebra endomorphisms. -/
+@[ext]
+structure EquivariantAlgHom (ρ₁ : Representation k G₁ A) (σ₁ : Representation k G₁ B)
+    (ρ₂ : Representation k G₂ A) (σ₂ : Representation k G₂ B) where
+  /-- The underlying algebra map. -/
+  toAlgHom : A →ₐ[k] B
+  /-- The map is equivariant for the first pair of representations. -/
+  map_fst : ∀ (g : G₁) (x : A), toAlgHom (ρ₁ g x) = σ₁ g (toAlgHom x)
+  /-- The map is equivariant for the second pair of representations. -/
+  map_snd : ∀ (g : G₂) (x : A), toAlgHom (ρ₂ g x) = σ₂ g (toAlgHom x)
+  /-- The first target action is multiplicative on the whole of `B`. -/
+  fst_mul : ∀ (g : G₁) (b₁ b₂ : B), σ₁ g (b₁ * b₂) = σ₁ g b₁ * σ₁ g b₂
+  /-- The second target action is multiplicative on the whole of `B`. -/
+  snd_mul : ∀ (g : G₂) (b₁ b₂ : B), σ₂ g (b₁ * b₂) = σ₂ g b₁ * σ₂ g b₂
+
+namespace EquivariantAlgHom
+
+variable {ρ₁ : Representation k G₁ A} {σ₁ : Representation k G₁ B}
+  {ρ₂ : Representation k G₂ A} {σ₂ : Representation k G₂ B}
+
+variable (ρ₁ ρ₂) in
+/-- The identity map of an algebra carrying two multiplicative representations. -/
+def id (h₁ : ∀ (g : G₁) (x y : A), ρ₁ g (x * y) = ρ₁ g x * ρ₁ g y)
+    (h₂ : ∀ (g : G₂) (x y : A), ρ₂ g (x * y) = ρ₂ g x * ρ₂ g y) :
+    EquivariantAlgHom ρ₁ ρ₁ ρ₂ ρ₂ where
+  toAlgHom := AlgHom.id k A
+  map_fst _ _ := rfl
+  map_snd _ _ := rfl
+  fst_mul := h₁
+  snd_mul := h₂
+
+@[simp]
+lemma id_toAlgHom (h₁ : ∀ (g : G₁) (x y : A), ρ₁ g (x * y) = ρ₁ g x * ρ₁ g y)
+    (h₂ : ∀ (g : G₂) (x y : A), ρ₂ g (x * y) = ρ₂ g x * ρ₂ g y) :
+    (EquivariantAlgHom.id ρ₁ ρ₂ h₁ h₂).toAlgHom = AlgHom.id k A := rfl
+
+/-- The restriction to a subalgebra of the source preserved by both source representations,
+  along its inclusion; the target and its two actions are unchanged. -/
+noncomputable def restrictSubalgebra (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (S : Subalgebra k A)
+    (hS₁ : ∀ (g : G₁) {x : A}, x ∈ S → ρ₁ g x ∈ S)
+    (hS₂ : ∀ (g : G₂) {x : A}, x ∈ S → ρ₂ g x ∈ S) :
+    EquivariantAlgHom (ρ₁.restrictSubalgebra S hS₁) σ₁ (ρ₂.restrictSubalgebra S hS₂) σ₂ where
+  toAlgHom := f.toAlgHom.comp S.val
+  map_fst g x := f.map_fst g x
+  map_snd g x := f.map_snd g x
+  fst_mul := f.fst_mul
+  snd_mul := f.snd_mul
+
+@[simp]
+lemma restrictSubalgebra_toAlgHom_apply (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (S : Subalgebra k A)
+    (hS₁ : ∀ (g : G₁) {x : A}, x ∈ S → ρ₁ g x ∈ S)
+    (hS₂ : ∀ (g : G₂) {x : A}, x ∈ S → ρ₂ g x ∈ S) (x : S) :
+    (f.restrictSubalgebra S hS₁ hS₂).toAlgHom x = f.toAlgHom x := rfl
+
+/-- The precomposition of the first pair of representations with a monoid map; the algebra
+  map is unchanged. -/
+def compFst {H : Type*} [Monoid H] (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (φ : H →* G₁) :
+    EquivariantAlgHom (ρ₁.comp φ) (σ₁.comp φ) ρ₂ σ₂ where
+  toAlgHom := f.toAlgHom
+  map_fst h x := f.map_fst (φ h) x
+  map_snd := f.map_snd
+  fst_mul h := f.fst_mul (φ h)
+  snd_mul := f.snd_mul
+
+@[simp]
+lemma compFst_toAlgHom {H : Type*} [Monoid H] (f : EquivariantAlgHom ρ₁ σ₁ ρ₂ σ₂) (φ : H →* G₁) :
+    (f.compFst φ).toAlgHom = f.toAlgHom := rfl
+
+end EquivariantAlgHom
+
+end Equivariant
+
+/-!
+
+## F. Base change of an equivariant algebra map
+
+-/
+
+/-- Base change along `R → S` preserves equivariance: the `S`-algebra map out of `S ⊗[R] A`
+  corresponding to an equivariant `R`-algebra map `f` intertwines the base change of the
+  source action with the target action. -/
+lemma liftEquiv_baseChange {R S A B G : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
+    [Semiring A] [Algebra R A] [Semiring B] [Algebra S B] [Algebra R B] [IsScalarTower R S B]
+    [Monoid G] (f : A →ₐ[R] B) (ρ : Representation R G A) (σ : Representation S G B)
+    (hf : ∀ (g : G) (x : A), f (ρ g x) = σ g (f x)) (g : G) (x : S ⊗[R] A) :
+    AlgHom.liftEquiv R S A B f (LinearMap.baseChange S (ρ g) x)
+      = σ g (AlgHom.liftEquiv R S A B f x) := by
+  induction x using TensorProduct.induction_on with
+  | zero => rw [map_zero, map_zero, map_zero]
+  | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, map_add]
+  | tmul z a =>
+    rw [LinearMap.baseChange_tmul, AlgHom.liftEquiv_tmul, AlgHom.liftEquiv_tmul,
+      map_smul (σ g), hf]
+
 end Representation
+
+/-!
+
+## G. Affine combinations under an algebra map
+
+-/
+
+/-- An algebra map carries an affine combination `x + z • 1` to the same combination of the
+  image, the shift being the image of a scalar. -/
+lemma AlgHom.map_add_smul_one {k A B : Type*} [CommSemiring k] [Semiring A] [Algebra k A]
+    [Semiring B] [Algebra k B] (f : A →ₐ[k] B) (x : A) (z : k) :
+    f (x + z • (1 : A)) = f x + z • (1 : B) := by
+  rw [← Algebra.algebraMap_eq_smul_one, map_add, AlgHom.commutes,
+    Algebra.algebraMap_eq_smul_one]

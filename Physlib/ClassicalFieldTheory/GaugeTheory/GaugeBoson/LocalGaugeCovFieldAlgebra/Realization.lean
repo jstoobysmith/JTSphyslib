@@ -61,23 +61,13 @@ namespace LocalGaugeCovFieldAlgebra
 
 /-- A real algebra `B` carrying the covariant gauge-boson tower of the package `jets`: a
   real algebra map out of the covariant field algebra, equivariant for the ordinary gauge
-  group and the Lorentz group, both acting on the whole of `B` by algebra endomorphisms. -/
-@[ext]
-structure Realization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B : Type) [Ring B] [Algebra ℝ B]
-    (repGauge : Representation ℝ G₀ B) (repLorentz : Representation ℝ SL(2,ℂ) B) where
-  /-- The algebra map out of the covariant field algebra. -/
-  toAlgHom : LocalGaugeCovFieldAlgebra 𝔤 →ₐ[ℝ] B
-  /-- The map is equivariant for the ordinary gauge group. -/
-  map_repValue : ∀ (g : G₀) (x : LocalGaugeCovFieldAlgebra 𝔤),
-    toAlgHom (repValue jets g x) = repGauge g (toAlgHom x)
-  /-- The map is equivariant for the Lorentz group. -/
-  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : LocalGaugeCovFieldAlgebra 𝔤),
-    toAlgHom (repLorentzGroup 𝔤 Λ x) = repLorentz Λ (toAlgHom x)
-  /-- The ordinary gauge group acts on the whole of `B` by algebra endomorphisms. -/
-  repGauge_mul : ∀ (g : G₀) (b₁ b₂ : B), repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂
-  /-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
-  repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
+  group and the Lorentz group, both acting on the whole of `B` by algebra endomorphisms. It
+  is built from the fields `toAlgHom`, `map_fst`, `map_snd`, `fst_mul`, `snd_mul` of
+  `Representation.EquivariantAlgHom`, which the lemmas `map_repValue`, `map_repLorentz`,
+  `repGauge_mul` and `repLorentz_mul` name. -/
+abbrev Realization (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (B : Type) [Ring B] [Algebra ℝ B]
+    (repGauge : Representation ℝ G₀ B) (repLorentz : Representation ℝ SL(2,ℂ) B) :=
+  Representation.EquivariantAlgHom (repValue jets) repGauge (repLorentzGroup 𝔤) repLorentz
 
 namespace Realization
 
@@ -87,17 +77,35 @@ variable {B : Type} [Ring B] [Algebra ℝ B] {repGauge : Representation ℝ G₀
 variable (jets) in
 /-- The covariant field algebra realized in itself, by the identity. -/
 noncomputable def id : Realization jets (LocalGaugeCovFieldAlgebra 𝔤) (repValue jets)
-    (repLorentzGroup 𝔤) where
-  toAlgHom := AlgHom.id ℝ _
-  map_repValue _ _ := rfl
-  map_repLorentz _ _ := rfl
-  repGauge_mul := repValue_apply_mul
-  repLorentz_mul := repLorentzGroup_apply_mul
+    (repLorentzGroup 𝔤) :=
+  Representation.EquivariantAlgHom.id _ _ repValue_apply_mul repLorentzGroup_apply_mul
 
 @[simp]
 lemma id_toAlgHom : (id jets).toAlgHom = AlgHom.id ℝ (LocalGaugeCovFieldAlgebra 𝔤) := rfl
 
 variable (k : Realization jets B repGauge repLorentz)
+
+/-- The map is equivariant for the ordinary gauge group. -/
+lemma map_repValue (g : G₀) (x : LocalGaugeCovFieldAlgebra 𝔤) :
+    k.toAlgHom (repValue jets g x) = repGauge g (k.toAlgHom x) :=
+  k.map_fst g x
+
+/-- The map is equivariant for the Lorentz group. -/
+lemma map_repLorentz (Λ : SL(2,ℂ)) (x : LocalGaugeCovFieldAlgebra 𝔤) :
+    k.toAlgHom (repLorentzGroup 𝔤 Λ x) = repLorentz Λ (k.toAlgHom x) :=
+  k.map_snd Λ x
+
+include k in
+/-- The ordinary gauge group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repGauge_mul (g : G₀) (b₁ b₂ : B) :
+    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂ :=
+  k.fst_mul g b₁ b₂
+
+include k in
+/-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repLorentz_mul (Λ : SL(2,ℂ)) (b₁ b₂ : B) :
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂ :=
+  k.snd_mul Λ b₁ b₂
 
 /-!
 
@@ -129,7 +137,7 @@ lemma commute_F (l l' : List (Fin 1 ⊕ Fin 3)) (μ ν μ' ν' : Fin 1 ⊕ Fin 3
 lemma ext_F {k₁ k₂ : Realization jets B repGauge repLorentz}
     (hF : ∀ (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤),
       k₁.F l μ ν φ = k₂.F l μ ν φ) : k₁ = k₂ :=
-  Realization.ext (algHom_ext hF)
+  Representation.EquivariantAlgHom.ext (algHom_ext hF)
 
 /-- The gauge law of the covariant tower: the adjoint index rotates through the dual
   adjoint action of the inverse. -/
@@ -179,12 +187,10 @@ variable {B : Type} [Ring B] [Algebra ℝ B] {repJet : Representation ℝ GJ B}
   field algebra, along the inclusion; the ordinary gauge group acts on the target as the
   constant jets. -/
 noncomputable def restrict :
-    LocalGaugeCovFieldAlgebra.Realization jets B (repJet.comp jets.ofConstant) repLorentz where
-  toAlgHom := h.toAlgHom.comp (LocalGaugeCovFieldAlgebra 𝔤).val
-  map_repValue g x := h.map_repJet (jets.ofConstant g) x
-  map_repLorentz Λ x := h.map_repLorentz Λ x
-  repGauge_mul g := h.repJet_mul (jets.ofConstant g)
-  repLorentz_mul := h.repLorentz_mul
+    LocalGaugeCovFieldAlgebra.Realization jets B (repJet.comp jets.ofConstant) repLorentz :=
+  (h.restrictSubalgebra (LocalGaugeCovFieldAlgebra 𝔤)
+    (fun U _ hx => LocalGaugeCovFieldAlgebra.repJet_mem U hx)
+    (fun Λ _ hx => LocalGaugeCovFieldAlgebra.repLorentzGroup_mem Λ hx)).compFst jets.ofConstant
 
 @[simp]
 lemma restrict_toAlgHom_apply (x : LocalGaugeCovFieldAlgebra 𝔤) :

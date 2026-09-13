@@ -81,24 +81,13 @@ namespace LocalCovFieldAlgebra
   algebra map out of the covariant field algebra, equivariant for the ordinary gauge group
   and the Lorentz group, both acting on the whole of `B` by algebra endomorphisms. The
   Lorentz action of the source needs `GaugeFieldData.GaugeLorentzCompatible`, which is a
-  parameter; no other species condition is used. -/
-@[ext]
-structure Realization (T : GaugeFieldData jets) (hGL : T.GaugeLorentzCompatible) (B : Type)
+  parameter; no other species condition is used. It is built from the fields `toAlgHom`,
+  `map_fst`, `map_snd`, `fst_mul`, `snd_mul` of `Representation.EquivariantAlgHom`, which
+  the lemmas `map_repValue`, `map_repLorentz`, `repGauge_mul` and `repLorentz_mul` name. -/
+abbrev Realization (T : GaugeFieldData jets) (hGL : T.GaugeLorentzCompatible) (B : Type)
     [Semiring B] [Algebra ℂ B] (repGauge : Representation ℂ G₀ B)
-    (repLorentz : Representation ℂ SL(2,ℂ) B) where
-  /-- The algebra map out of the covariant field algebra. -/
-  toAlgHom : ↥T.LocalCovFieldAlgebra →ₐ[ℂ] B
-  /-- The map is equivariant for the ordinary gauge group. -/
-  map_repValue : ∀ (g : G₀) (x : ↥T.LocalCovFieldAlgebra),
-    toAlgHom (repValue T g x) = repGauge g (toAlgHom x)
-  /-- The map is equivariant for the Lorentz group. -/
-  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : ↥T.LocalCovFieldAlgebra),
-    toAlgHom (repLorentzGroup T hGL Λ x) = repLorentz Λ (toAlgHom x)
-  /-- The ordinary gauge group acts on the whole of `B` by algebra endomorphisms. -/
-  repGauge_mul : ∀ (g : G₀) (b₁ b₂ : B), repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂
-  /-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
-  repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
+    (repLorentz : Representation ℂ SL(2,ℂ) B) :=
+  Representation.EquivariantAlgHom (repValue T) repGauge (repLorentzGroup T hGL) repLorentz
 
 namespace Realization
 
@@ -108,17 +97,35 @@ variable {B : Type} [Semiring B] [Algebra ℂ B] {repGauge : Representation ℂ 
 variable (T hGL) in
 /-- The covariant field algebra realized in itself, by the identity. -/
 noncomputable def id : Realization T hGL (↥T.LocalCovFieldAlgebra) (repValue T)
-    (repLorentzGroup T hGL) where
-  toAlgHom := AlgHom.id ℂ _
-  map_repValue _ _ := rfl
-  map_repLorentz _ _ := rfl
-  repGauge_mul := repValue_apply_mul
-  repLorentz_mul := repLorentzGroup_apply_mul hGL
+    (repLorentzGroup T hGL) :=
+  Representation.EquivariantAlgHom.id _ _ repValue_apply_mul (repLorentzGroup_apply_mul hGL)
 
 @[simp]
 lemma id_toAlgHom : (id T hGL).toAlgHom = AlgHom.id ℂ ↥T.LocalCovFieldAlgebra := rfl
 
 variable (k : Realization T hGL B repGauge repLorentz)
+
+/-- The map is equivariant for the ordinary gauge group. -/
+lemma map_repValue (g : G₀) (x : ↥T.LocalCovFieldAlgebra) :
+    k.toAlgHom (repValue T g x) = repGauge g (k.toAlgHom x) :=
+  k.map_fst g x
+
+/-- The map is equivariant for the Lorentz group. -/
+lemma map_repLorentz (Λ : SL(2,ℂ)) (x : ↥T.LocalCovFieldAlgebra) :
+    k.toAlgHom (repLorentzGroup T hGL Λ x) = repLorentz Λ (k.toAlgHom x) :=
+  k.map_snd Λ x
+
+include k in
+/-- The ordinary gauge group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repGauge_mul (g : G₀) (b₁ b₂ : B) :
+    repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂ :=
+  k.fst_mul g b₁ b₂
+
+include k in
+/-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repLorentz_mul (Λ : SL(2,ℂ)) (b₁ b₂ : B) :
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂ :=
+  k.snd_mul Λ b₁ b₂
 
 /-!
 
@@ -191,7 +198,7 @@ lemma ext_towers {k₁ k₂ : Realization T hGL B repGauge repLorentz}
     (hφc : ∀ (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3))
       (φ : Module.Dual ℂ (ConjModule (T.BosonValue j))),
       k₁.conjBoson j l φ = k₂.conjBoson j l φ) : k₁ = k₂ :=
-  Realization.ext (algHom_ext_towers hF hψ hψc hφ hφc)
+  Representation.EquivariantAlgHom.ext (algHom_ext_towers hF hψ hψc hφ hφc)
 
 /-- The gauge law of the realized field-strength tower: the adjoint index rotates through
   the dual adjoint action of the inverse. -/
@@ -317,12 +324,10 @@ variable {B : Type} [Ring B] [Algebra ℂ B] {repJet : Representation ℂ GJ B}
   algebra, along the inclusion; the ordinary gauge group acts on the target through the
   constant jets. No species condition beyond `hGL` is used. -/
 noncomputable def restrict :
-    LocalCovFieldAlgebra.Realization T hGL B (repJet.comp jets.ofConstant) repLorentz where
-  toAlgHom := h.toAlgHom.comp T.LocalCovFieldAlgebra.val
-  map_repValue g x := h.map_repJet (jets.ofConstant g) x
-  map_repLorentz Λ x := h.map_repLorentz Λ x
-  repGauge_mul g := h.repJet_mul (jets.ofConstant g)
-  repLorentz_mul := h.repLorentz_mul
+    LocalCovFieldAlgebra.Realization T hGL B (repJet.comp jets.ofConstant) repLorentz :=
+  (h.restrictSubalgebra T.LocalCovFieldAlgebra
+    (fun U _ hx => LocalCovFieldAlgebra.repJet_mem U hx)
+    (fun Λ _ hx => LocalCovFieldAlgebra.repLorentzGroup_mem hGL Λ hx)).compFst jets.ofConstant
 
 @[simp]
 lemma restrict_toAlgHom_apply (x : ↥T.LocalCovFieldAlgebra) :

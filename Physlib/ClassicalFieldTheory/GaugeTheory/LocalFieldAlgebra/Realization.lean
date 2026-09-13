@@ -66,23 +66,14 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 /-- A complex algebra `B` carrying the fields of the datum `T`: a complex algebra map out
   of the local field algebra, equivariant for the jet gauge group and the Lorentz group,
   both acting on the whole of `B` by algebra endomorphisms. No commutativity, injectivity
-  or surjectivity is assumed, and no derivative operator on `B` is involved. -/
-@[ext]
-structure Realization (T : GaugeFieldData jets) (B : Type) [Ring B] [Algebra ℂ B]
-    (repJet : Representation ℂ GJ B) (repLorentz : Representation ℂ SL(2,ℂ) B) where
-  /-- The algebra map out of the local field algebra. -/
-  toAlgHom : T.LocalFieldAlgebra →ₐ[ℂ] B
-  /-- The map is equivariant for the jet gauge group. -/
-  map_repJet : ∀ (U : GJ) (x : T.LocalFieldAlgebra),
-    toAlgHom (T.repJet U x) = repJet U (toAlgHom x)
-  /-- The map is equivariant for the Lorentz group. -/
-  map_repLorentz : ∀ (Λ : SL(2,ℂ)) (x : T.LocalFieldAlgebra),
-    toAlgHom (T.repLorentzGroup Λ x) = repLorentz Λ (toAlgHom x)
-  /-- The jet gauge group acts on the whole of `B` by algebra endomorphisms. -/
-  repJet_mul : ∀ (U : GJ) (b₁ b₂ : B), repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂
-  /-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
-  repLorentz_mul : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂
+  or surjectivity is assumed, and no derivative operator on `B` is involved. It is built
+  from the fields `toAlgHom`, `map_fst`, `map_snd`, `fst_mul`, `snd_mul` of
+  `Representation.EquivariantAlgHom`, which the lemmas `map_repJet`, `map_repLorentz`,
+  `repJet_mul` and `repLorentz_mul` name. -/
+abbrev Realization (T : GaugeFieldData jets) (B : Type) [Ring B] [Algebra ℂ B]
+    (repJet : Representation ℂ GJ B) (repLorentz : Representation ℂ SL(2,ℂ) B) :=
+  Representation.EquivariantAlgHom (A := T.LocalFieldAlgebra) T.repJet repJet
+    T.repLorentzGroup repLorentz
 
 namespace Realization
 
@@ -91,12 +82,9 @@ variable {B : Type} [Ring B] [Algebra ℂ B] {repJet : Representation ℂ GJ B}
 
 variable (T) in
 /-- The local field algebra realized in itself, by the identity. -/
-noncomputable def id : Realization T T.LocalFieldAlgebra T.repJet T.repLorentzGroup where
-  toAlgHom := AlgHom.id ℂ _
-  map_repJet _ _ := rfl
-  map_repLorentz _ _ := rfl
-  repJet_mul := GaugeFieldData.repJet_apply_mul
-  repLorentz_mul := GaugeFieldData.repLorentzGroup_apply_mul
+noncomputable def id : Realization T T.LocalFieldAlgebra T.repJet T.repLorentzGroup :=
+  Representation.EquivariantAlgHom.id _ _ GaugeFieldData.repJet_apply_mul
+    GaugeFieldData.repLorentzGroup_apply_mul
 
 @[simp]
 lemma id_toAlgHom : (id T).toAlgHom = AlgHom.id ℂ T.LocalFieldAlgebra := rfl
@@ -107,9 +95,30 @@ lemma ext_generators {h₁ h₂ : Realization T B repJet repLorentz}
     (hf : ∀ i x, h₁.toAlgHom (T.ιFermion i x) = h₂.toAlgHom (T.ιFermion i x))
     (hb : ∀ j y, h₁.toAlgHom (T.ιBoson j y) = h₂.toAlgHom (T.ιBoson j y))
     (ha : ∀ v, h₁.toAlgHom (T.ιConnection v) = h₂.toAlgHom (T.ιConnection v)) : h₁ = h₂ :=
-  Realization.ext (algHom_ext hf hb ha)
+  Representation.EquivariantAlgHom.ext (algHom_ext hf hb ha)
 
 variable (h : Realization T B repJet repLorentz)
+
+/-- The map is equivariant for the jet gauge group. -/
+lemma map_repJet (U : GJ) (x : T.LocalFieldAlgebra) :
+    h.toAlgHom (T.repJet U x) = repJet U (h.toAlgHom x) :=
+  h.map_fst U x
+
+/-- The map is equivariant for the Lorentz group. -/
+lemma map_repLorentz (Λ : SL(2,ℂ)) (x : T.LocalFieldAlgebra) :
+    h.toAlgHom (T.repLorentzGroup Λ x) = repLorentz Λ (h.toAlgHom x) :=
+  h.map_snd Λ x
+
+include h in
+/-- The jet gauge group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repJet_mul (U : GJ) (b₁ b₂ : B) : repJet U (b₁ * b₂) = repJet U b₁ * repJet U b₂ :=
+  h.fst_mul U b₁ b₂
+
+include h in
+/-- The Lorentz group acts on the whole of `B` by algebra endomorphisms. -/
+lemma repLorentz_mul (Λ : SL(2,ℂ)) (b₁ b₂ : B) :
+    repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂ :=
+  h.snd_mul Λ b₁ b₂
 
 /-!
 
@@ -246,13 +255,6 @@ end Realization
 
 -/
 
-/-- An algebra map carries an affine combination `x + z • 1` to the same combination of
-  the image, the scalar shift of the connection law being an algebra element. -/
-lemma map_add_smul_one {A B : Type*} [Semiring A] [Algebra ℂ A] [Semiring B] [Algebra ℂ B]
-    (f : A →ₐ[ℂ] B) (x : A) (z : ℂ) : f (x + z • (1 : A)) = f x + z • (1 : B) := by
-  rw [← Algebra.algebraMap_eq_smul_one, map_add, AlgHom.commutes,
-    Algebra.algebraMap_eq_smul_one]
-
 /-- The generator-level transformation laws of an assignment: each matter species
   transforms by the jet action of its own component space, and the connection generators
   transform affinely, by the transport of the inverse jet plus its Maurer–Cartan shift.
@@ -305,7 +307,7 @@ lemma _root_.GaugeFieldData.Realization.toAssignment_isEquivariant
   repJet_connection U v :=
     (h.map_repJet U (T.ιConnection v)).symm.trans
       ((congrArg h.toAlgHom (repJet_ιConnection_affine U v)).trans
-        (map_add_smul_one h.toAlgHom _ _))
+        (AlgHom.map_add_smul_one h.toAlgHom _ _))
   repLorentz_fermion Λ i x :=
     (h.map_repLorentz Λ (T.ιFermion i x)).symm.trans
       (congrArg h.toAlgHom (repLorentzGroup_ιFermion Λ i x))
@@ -329,7 +331,7 @@ lemma IsEquivariant.lift_comp_repJetAlgHom {d : T.Assignment B}
   · rw [AlgHom.comp_apply, repJetAlgHom_ιBoson, lift_ιBoson, AlgHom.comp_apply,
       lift_ιBoson, Representation.toAlgHom_apply, hd.repJet_boson]
   · show d.lift (T.repJet U (T.ιConnection v)) = repJet U (d.lift (T.ιConnection v))
-    rw [repJet_ιConnection_affine, map_add_smul_one d.lift, lift_ιConnection,
+    rw [repJet_ιConnection_affine, AlgHom.map_add_smul_one d.lift, lift_ιConnection,
       lift_ιConnection, hd.repJet_connection]
 
 /-- The lift of an equivariant assignment intertwines the Lorentz actions, as an equality of
@@ -359,10 +361,10 @@ noncomputable def IsEquivariant.toRealization {d : T.Assignment B}
       repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂) :
     Realization T B repJet repLorentz where
   toAlgHom := d.lift
-  map_repJet U x := AlgHom.congr_fun (hd.lift_comp_repJetAlgHom hJ U) x
-  map_repLorentz Λ x := AlgHom.congr_fun (hd.lift_comp_repLorentzAlgHom hL Λ) x
-  repJet_mul := hJ
-  repLorentz_mul := hL
+  map_fst U x := AlgHom.congr_fun (hd.lift_comp_repJetAlgHom hJ U) x
+  map_snd Λ x := AlgHom.congr_fun (hd.lift_comp_repLorentzAlgHom hL Λ) x
+  fst_mul := hJ
+  snd_mul := hL
 
 @[simp]
 lemma IsEquivariant.toRealization_toAlgHom {d : T.Assignment B}
@@ -388,6 +390,7 @@ noncomputable def realizationEquivAssignment {B : Type} [Ring B] [Algebra ℂ B]
   toFun d := d.2.toRealization hJ hL
   invFun h := ⟨h.toAssignment, h.toAssignment_isEquivariant⟩
   left_inv d := Subtype.ext ((liftEquiv T B).symm_apply_apply d.1)
-  right_inv h := Realization.ext ((liftEquiv T B).apply_symm_apply h.toAlgHom)
+  right_inv h :=
+    Representation.EquivariantAlgHom.ext ((liftEquiv T B).apply_symm_apply h.toAlgHom)
 
 end GaugeFieldData
