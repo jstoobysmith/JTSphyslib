@@ -36,6 +36,8 @@ restricted actions are built with `Representation.restrictSubalgebra`.
   group, of the ordinary gauge group and of the Lorentz group.
 - `LocalGaugeCovFieldAlgebra.repJet_eq_repValue_eval` : the jet action factors through
   evaluation.
+- `LocalGaugeCovFieldAlgebra.complexVal` : the complexified inclusion, injective by
+  flatness, with the complexified actions `complexRepValue` and `complexRepLorentzGroup`.
 
 ## iii. Table of contents
 
@@ -46,6 +48,7 @@ restricted actions are built with `Representation.restrictSubalgebra`.
 - C. The restricted actions
   - C.1. The action of the ordinary gauge group
   - C.2. The actions on the generators
+- D. The complexification
 
 -/
 
@@ -97,6 +100,13 @@ lemma covDerivFieldStrength_mem (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ 
 lemma fieldStrength_mem (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     fieldStrength 𝔤 μ ν φ ∈ LocalGaugeCovFieldAlgebra 𝔤 :=
   covDerivFieldStrength_mem [] μ ν φ
+
+/-- Inside the covariant field algebra, the preimage of the generating tower under the
+  inclusion generates the whole real subalgebra. -/
+lemma adjoin_preimage_tower_eq_top :
+    Algebra.adjoin ℝ ((Subtype.val : LocalGaugeCovFieldAlgebra 𝔤 → LocalGaugeFieldAlgebra 𝔤)
+      ⁻¹' GaugeAlgebraRealization.tower (derivA 𝔤)) = ⊤ :=
+  Algebra.adjoin_adjoin_coe_preimage
 
 /-- The generation principle: a property holding on the covariant derivatives of the
   field strength and on the scalars, and closed under sums and products, holds on the
@@ -308,5 +318,66 @@ lemma repLorentzGroup_covF (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 1 ⊕ 
   refine Subtype.ext ?_
   rw [coe_repLorentzGroup, coe_covF, repLorentzGroup_covDerivFieldStrength]
   simp only [AddSubmonoidClass.coe_finsetSum, Subalgebra.coe_smul, coe_covF]
+
+/-!
+
+## D. The complexification
+
+The real covariant field algebra base changed along `ℝ → ℂ`, for the comparison with the
+covariant gauge sector of a field datum; the complexified inclusion is injective by
+flatness of `ℂ` over `ℝ`.
+
+-/
+
+variable (𝔤) in
+/-- The complexified covariant field algebra inside the complexified local gauge field
+  algebra: the base change of `Subalgebra.val` along `ℝ → ℂ`. -/
+noncomputable def complexVal :
+    (ℂ ⊗[ℝ] LocalGaugeCovFieldAlgebra 𝔤) →ₐ[ℂ] ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤 :=
+  Algebra.TensorProduct.map (AlgHom.id ℂ ℂ) (LocalGaugeCovFieldAlgebra 𝔤).val
+
+@[simp]
+lemma complexVal_tmul (z : ℂ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
+    complexVal 𝔤 (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] (x : LocalGaugeFieldAlgebra 𝔤) := rfl
+
+lemma complexVal_injective : Function.Injective (complexVal 𝔤) :=
+  Module.Flat.lTensor_preserves_injective_linearMap
+    (LocalGaugeCovFieldAlgebra 𝔤).val.toLinearMap Subtype.val_injective
+
+variable (jets) in
+/-- The action of the ordinary gauge group on the complexified covariant field algebra, by
+  base change. -/
+noncomputable def complexRepValue :
+    Representation ℂ G₀ (ℂ ⊗[ℝ] LocalGaugeCovFieldAlgebra 𝔤) :=
+  Representation.baseChange ℂ (repValue jets)
+
+@[simp]
+lemma complexRepValue_tmul (g : G₀) (z : ℂ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
+    complexRepValue jets g (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] repValue jets g x := rfl
+
+variable (𝔤) in
+/-- The Lorentz action on the complexified covariant field algebra, by base change. -/
+noncomputable def complexRepLorentzGroup :
+    Representation ℂ SL(2,ℂ) (ℂ ⊗[ℝ] LocalGaugeCovFieldAlgebra 𝔤) :=
+  Representation.baseChange ℂ (repLorentzGroup 𝔤)
+
+@[simp]
+lemma complexRepLorentzGroup_tmul (Λ : SL(2,ℂ)) (z : ℂ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
+    complexRepLorentzGroup 𝔤 Λ (z ⊗ₜ[ℝ] x) = z ⊗ₜ[ℝ] repLorentzGroup 𝔤 Λ x := rfl
+
+/-- Along the complexified inclusion the ordinary gauge group acts as the constant jets. -/
+lemma complexVal_complexRepValue (g : G₀) (y : ℂ ⊗[ℝ] LocalGaugeCovFieldAlgebra 𝔤) :
+    complexVal 𝔤 (complexRepValue jets g y)
+      = LocalGaugeFieldAlgebra.complexRepJet jets (jets.ofConstant g) (complexVal 𝔤 y) :=
+  Representation.baseChange_naturality (σ := (LocalGaugeFieldAlgebra.repJet jets).comp
+    jets.ofConstant) ℂ (LocalGaugeCovFieldAlgebra 𝔤).val.toLinearMap coe_repValue g y
+
+/-- Along the complexified inclusion the Lorentz action is the ambient one. -/
+lemma complexVal_complexRepLorentzGroup (Λ : SL(2,ℂ))
+    (y : ℂ ⊗[ℝ] LocalGaugeCovFieldAlgebra 𝔤) :
+    complexVal 𝔤 (complexRepLorentzGroup 𝔤 Λ y)
+      = LocalGaugeFieldAlgebra.complexRepLorentzGroup 𝔤 Λ (complexVal 𝔤 y) :=
+  Representation.baseChange_naturality (σ := LocalGaugeFieldAlgebra.repLorentzGroup 𝔤) ℂ
+    (LocalGaugeCovFieldAlgebra 𝔤).val.toLinearMap coe_repLorentzGroup Λ y
 
 end LocalGaugeCovFieldAlgebra

@@ -25,6 +25,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionGen
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionMatterField
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeFieldData.FermionModule
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.GaugeSector
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.GaugeSectorRealization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Sector
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.SectorRealization
@@ -41,6 +43,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAl
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Prod
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeSector
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeSectorRealization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.LorentzAction
