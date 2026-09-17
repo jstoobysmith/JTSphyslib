@@ -118,58 +118,110 @@ abbrev Charges : Factors jets → Type
   | [f] => f.Charge
   | f :: g :: gs => f.Charge × Charges (g :: gs)
 
+/-- **The internal index of a list of dimensions**: the product of the `Fin n` over the
+  list, with `Fin 1` for the empty list and no trailing factor for a one-element list. -/
+def IdxOfDims : List ℕ → Type
+  | [] => Fin 1
+  | [n] => Fin n
+  | n :: m :: ms => Fin n × IdxOfDims (m :: ms)
+
+/-- The index of a list of dimensions is finite. -/
+@[instance_reducible]
+def IdxOfDims.fintype : (ds : List ℕ) → Fintype (IdxOfDims ds)
+  | [] => inferInstanceAs (Fintype (Fin 1))
+  | [n] => inferInstanceAs (Fintype (Fin n))
+  | n :: m :: ms =>
+    letI := IdxOfDims.fintype (m :: ms)
+    inferInstanceAs (Fintype (Fin n × IdxOfDims (m :: ms)))
+
+/-- The index of a list of dimensions has decidable equality. -/
+@[instance_reducible]
+def IdxOfDims.decidableEq : (ds : List ℕ) → DecidableEq (IdxOfDims ds)
+  | [] => inferInstanceAs (DecidableEq (Fin 1))
+  | [n] => inferInstanceAs (DecidableEq (Fin n))
+  | n :: m :: ms =>
+    letI := IdxOfDims.decidableEq (m :: ms)
+    inferInstanceAs (DecidableEq (Fin n × IdxOfDims (m :: ms)))
+
+instance (ds : List ℕ) : Fintype (IdxOfDims ds) := IdxOfDims.fintype ds
+
+instance (ds : List ℕ) : DecidableEq (IdxOfDims ds) := IdxOfDims.decidableEq ds
+
+/-- The dimensions an `SU(n)` label contributes to the internal index: none for the
+  singlet, `n` for the fundamental and the antifundamental. -/
+def SURep.dims (n : ℕ) : SURep → List ℕ
+  | .singlet => []
+  | .fund => [n]
+  | .antifund => [n]
+
+/-- **The dimensions of the internal index** of a charge tuple: the sizes of the
+  nontrivial `SU(n)` representations it names, in the order of the factors. `U(1)` factors
+  and singlets contribute nothing, so that a field charged under a single `SU(n)` factor is
+  indexed by `Fin n` alone. -/
+def Charges.dims : (Γ : Factors jets) → Charges Γ → List ℕ
+  | [], _ => []
+  | [.U1 _], _ => []
+  | [.SU (n := n) _], r => SURep.dims n r
+  | .U1 _ :: g :: gs, c => Charges.dims (g :: gs) c.2
+  | .SU (n := n) _ :: g :: gs, c => SURep.dims n c.1 ++ Charges.dims (g :: gs) c.2
+
 /-- **The internal index** of a field with the given charges: the product of the
-  `SU(n)`-representation indices; `U(1)` factors contribute no index. (A definition rather
-  than an abbreviation, so that instance search on `Idx Γ c` finds the instances below
-  instead of unfolding into a stuck match on `Γ`.) -/
-def Idx : (Γ : Factors jets) → Charges Γ → Type
-  | [], _ => Fin 1
-  | [.U1 _], _ => Fin 1
-  | [.SU (n := n) _], r => Fin (r.dim n)
-  | .U1 _ :: g :: gs, c => Idx (g :: gs) c.2
-  | .SU (n := n) _ :: g :: gs, c => Fin (c.1.dim n) × Idx (g :: gs) c.2
-
-/-- The index of a charge tuple is finite. -/
-@[instance_reducible]
-def Idx.fintype : (Γ : Factors jets) → (c : Charges Γ) → Fintype (Idx Γ c)
-  | [], _ => inferInstanceAs (Fintype (Fin 1))
-  | [.U1 _], _ => inferInstanceAs (Fintype (Fin 1))
-  | [.SU (n := n) _], r => inferInstanceAs (Fintype (Fin (r.dim n)))
-  | .U1 _ :: g :: gs, c => Idx.fintype (g :: gs) c.2
-  | .SU (n := n) _ :: g :: gs, c =>
-    letI := Idx.fintype (g :: gs) c.2
-    inferInstanceAs (Fintype (Fin (c.1.dim n) × Idx (g :: gs) c.2))
-
-/-- The index of a charge tuple has decidable equality. -/
-@[instance_reducible]
-def Idx.decidableEq : (Γ : Factors jets) → (c : Charges Γ) → DecidableEq (Idx Γ c)
-  | [], _ => inferInstanceAs (DecidableEq (Fin 1))
-  | [.U1 _], _ => inferInstanceAs (DecidableEq (Fin 1))
-  | [.SU (n := n) _], r => inferInstanceAs (DecidableEq (Fin (r.dim n)))
-  | .U1 _ :: g :: gs, c => Idx.decidableEq (g :: gs) c.2
-  | .SU (n := n) _ :: g :: gs, c =>
-    letI := Idx.decidableEq (g :: gs) c.2
-    inferInstanceAs (DecidableEq (Fin (c.1.dim n) × Idx (g :: gs) c.2))
-
-instance (Γ : Factors jets) (c : Charges Γ) : Fintype (Idx Γ c) := Idx.fintype Γ c
-
-instance (Γ : Factors jets) (c : Charges Γ) : DecidableEq (Idx Γ c) := Idx.decidableEq Γ c
+  nontrivial `SU(n)`-representation indices. -/
+abbrev Idx (Γ : Factors jets) (c : Charges Γ) : Type := IdxOfDims (Charges.dims Γ c)
 
 /-!
 
 ## C. The representation named by a charge tuple
 
+The representation is assembled in two steps. The `SU(n)` labels give a Kronecker product
+of fundamental and antifundamental representations over the nontrivial dimensions,
+`Charges.suRep`, in which a singlet contributes no factor and the trivial representation is
+dropped rather than tensored in; the `U(1)` charges then twist the result, `Charges.twist`.
+
 -/
 
-/-- **The matrix representation named by a charge tuple**: the Kronecker product of the
-  `SU(n)` representations the labels name, twisted by the charge powers of the `U(1)`
-  jets. -/
-noncomputable def Charges.rep : (Γ : Factors jets) → (c : Charges Γ) → MatrixRep jets (Idx Γ c)
+/-- The Kronecker product with the representation on the remaining dimensions, with the
+  trivial representation dropped when there are none. -/
+noncomputable def MatrixRep.kronDims {n : ℕ} (R₁ : MatrixRep jets (Fin n)) :
+    (ds : List ℕ) → MatrixRep jets (IdxOfDims ds) → MatrixRep jets (IdxOfDims (n :: ds))
+  | [], _ => R₁
+  | _ :: _, R₂ => R₁.kron R₂
+
+/-- The matrix representation of an `SU(n)` factor named by a label, on the index of the
+  dimensions the label contributes. -/
+noncomputable def SURep.repDims {n : ℕ} (F : SUFactor jets (Fin n)) :
+    (r : SURep) → MatrixRep jets (IdxOfDims (r.dims n))
+  | .singlet => MatrixRep.trivial
+  | .fund => F.fund
+  | .antifund => F.fund.conj
+
+/-- The `SU(n)` part of the representation named by a charge tuple: the Kronecker product
+  of the nontrivial representations the labels name. -/
+noncomputable def Charges.suRep :
+    (Γ : Factors jets) → (c : Charges Γ) → MatrixRep jets (IdxOfDims (Charges.dims Γ c))
   | [], _ => MatrixRep.trivial
-  | [.U1 F], q => F.charge q MatrixRep.trivial
-  | [.SU F], r => SURep.rep F r
-  | .U1 F :: g :: gs, c => F.charge c.1 (Charges.rep (g :: gs) c.2)
-  | .SU F :: g :: gs, c => (SURep.rep F c.1).kron (Charges.rep (g :: gs) c.2)
+  | [.U1 _], _ => MatrixRep.trivial
+  | [.SU F], r => SURep.repDims F r
+  | .U1 _ :: g :: gs, c => Charges.suRep (g :: gs) c.2
+  | .SU _ :: g :: gs, (.singlet, c) => Charges.suRep (g :: gs) c
+  | .SU F :: g :: gs, (.fund, c) => F.fund.kronDims _ (Charges.suRep (g :: gs) c)
+  | .SU F :: g :: gs, (.antifund, c) => F.fund.conj.kronDims _ (Charges.suRep (g :: gs) c)
+
+/-- The `U(1)` part of the representation named by a charge tuple: the charge twists of
+  all the `U(1)` factors, applied to a given representation. -/
+noncomputable def Charges.twist {ι : Type} [Fintype ι] [DecidableEq ι] :
+    (Γ : Factors jets) → Charges Γ → MatrixRep jets ι → MatrixRep jets ι
+  | [], _, R => R
+  | [.U1 F], q, R => F.charge q R
+  | [.SU _], _, R => R
+  | .U1 F :: g :: gs, c, R => F.charge c.1 (Charges.twist (g :: gs) c.2 R)
+  | .SU _ :: g :: gs, c, R => Charges.twist (g :: gs) c.2 R
+
+/-- **The matrix representation named by a charge tuple**: the Kronecker product of the
+  nontrivial `SU(n)` representations the labels name, twisted by the charge powers of the
+  `U(1)` jets. -/
+noncomputable def Charges.rep (Γ : Factors jets) (c : Charges Γ) : MatrixRep jets (Idx Γ c) :=
+  Charges.twist Γ c (Charges.suRep Γ c)
 
 /-!
 
