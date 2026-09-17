@@ -15,36 +15,38 @@ public import Physlib.Relativity.Fermions.Weyl.RightHanded
 ## i. Overview
 
 A gauge-theory model is written down, as in a model-building tool, as a *table*: the gauge
-group as a list of factors, and one row per field recording its number of generations,
-its Lorentz character and one charge per factor — an integer charge under a `U(1)` factor,
-a representation label under an `SU(n)` factor.
+group as a list of factors, and for each field its number of generations, its Lorentz
+label and one charge per factor — an integer charge under a `U(1)` factor, a
+representation label under an `SU(n)` factor.
 
 This file defines the tables over any local gauge data and compiles them into the general
 theory. A gauge group is a list of `Factor`s, each a `U1Factor` or an `SUFactor` of the
-local gauge data; the charges of a row form the tuple `Charges Γ` over the list, so that a
-row reads `(1, .fund, .fund)`; the charges name a matrix representation `Charges.rep`,
-assembled from the factors by the hypercharge twist and the Kronecker product; a row
-compiles to a `MatterField` and a table to a `GaugeFieldData`.
+local gauge data; the charges of a field form the tuple `Charges Γ` over the list; the
+charges name a matrix representation `Charges.rep`, assembled from the factors by the
+hypercharge twist and the Kronecker product; a field is its Lorentz label and its charges,
+`MatterFieldData Γ`, so that it reads `(.L, .singlet, .fund, -3)`, and compiles to a
+`MatterField`; the field data of a model, `FieldData Γ Fields`, assigns each field its
+number of generations and its data, and compiles to a `GaugeFieldData`.
 
 ## ii. Key results
 
 - `LocalGaugeData.Factor`, `Factors` : a gauge group presented as a list of factors.
 - `SURep`, `Charges` : the charge labels of a row and the charge tuple.
 - `Charges.rep` : the matrix representation named by a charge tuple.
-- `FermionRow`, `ScalarRow`, `Table` : the rows and the table.
-- `FermionRow.matterField`, `ScalarRow.matterField`, `Table.fieldData` : the compilation.
-- `Table.fieldData_gaugeLorentzCompatible` : the field content of a table satisfies
-  `GaugeFieldData.GaugeLorentzCompatible`, species by species through
-  `Table.fieldData_fermion_gaugeLorentzCompatible` and
-  `Table.fieldData_boson_gaugeLorentzCompatible`.
+- `LorentzLabel`, `MatterFieldData` : the Lorentz label and the data of a field.
+- `MatterFieldData.toMatterField`, `toMatterFieldOn` : the matter field of a datum, on the
+  tensor-product target space or on any target space presented as one.
+- `FieldData`, `FieldData.toGaugeFieldData` : the field data of a model and its compilation.
+- `FieldData.toGaugeFieldData_gaugeLorentzCompatible` : the field content of a model
+  satisfies `GaugeFieldData.GaugeLorentzCompatible`.
 
 ## iii. Table of contents
 
 - A. Factors and charge labels
 - B. Charge tuples and their internal index
 - C. The representation named by a charge tuple
-- D. The rows and their matter fields
-- E. The table and its field content
+- D. Matter field data and its matter field
+- E. The field data of a model and its field content
 
 -/
 
@@ -120,7 +122,7 @@ abbrev Charges : Factors jets → Type
 
 /-- **The internal index of a list of dimensions**: the product of the `Fin n` over the
   list, with `Fin 1` for the empty list and no trailing factor for a one-element list. -/
-def IdxOfDims : List ℕ → Type
+abbrev IdxOfDims : List ℕ → Type
   | [] => Fin 1
   | [n] => Fin n
   | n :: m :: ms => Fin n × IdxOfDims (m :: ms)
@@ -149,7 +151,7 @@ instance (ds : List ℕ) : DecidableEq (IdxOfDims ds) := IdxOfDims.decidableEq d
 
 /-- The dimensions an `SU(n)` label contributes to the internal index: none for the
   singlet, `n` for the fundamental and the antifundamental. -/
-def SURep.dims (n : ℕ) : SURep → List ℕ
+abbrev SURep.dims (n : ℕ) : SURep → List ℕ
   | .singlet => []
   | .fund => [n]
   | .antifund => [n]
@@ -158,7 +160,7 @@ def SURep.dims (n : ℕ) : SURep → List ℕ
   nontrivial `SU(n)` representations it names, in the order of the factors. `U(1)` factors
   and singlets contribute nothing, so that a field charged under a single `SU(n)` factor is
   indexed by `Fin n` alone. -/
-def Charges.dims : (Γ : Factors jets) → Charges Γ → List ℕ
+abbrev Charges.dims : (Γ : Factors jets) → Charges Γ → List ℕ
   | [], _ => []
   | [.U1 _], _ => []
   | [.SU (n := n) _], r => SURep.dims n r
@@ -225,39 +227,39 @@ noncomputable def Charges.rep (Γ : Factors jets) (c : Charges Γ) : MatrixRep j
 
 /-!
 
-## D. The rows and their matter fields
+## D. Matter field data and its matter field
+
+A field of a model is written down as its Lorentz label and its charge tuple, so that
+`(.L, .singlet, .fund, -3)` is a left-handed doublet of hypercharge `-3`. The datum
+compiles to a `MatterField` on the target space `S ⊗ (Idx → ℂ)` of the label's Lorentz
+factor and the internal index of the charges, or, through an identification `e`, on any
+target space presented as such a tensor product.
 
 -/
 
-/-- The chirality of a fermion row: a left- or right-handed Weyl spinor. -/
-inductive Chirality
+/-- **The Lorentz label of a field**: a left- or right-handed Weyl spinor or a scalar. -/
+inductive LorentzLabel
   /-- A left-handed Weyl spinor. -/
   | L
   /-- A right-handed Weyl spinor. -/
   | R
+  /-- A Lorentz scalar. -/
+  | scalar
   deriving DecidableEq, Repr
 
-/-- **A fermion row** of a table: the name of the field, its number of generations, its
-  chirality and its charges. -/
-structure FermionRow (Γ : Factors jets) where
-  /-- The name of the field. -/
-  name : String
-  /-- The number of generations. -/
-  generations : ℕ
-  /-- The chirality. -/
-  chirality : Chirality
-  /-- The charges, one per factor. -/
-  charges : Charges Γ
+namespace LorentzLabel
 
-/-- **A scalar row** of a table: the name of the field, its number of generations and its
-  charges. -/
-structure ScalarRow (Γ : Factors jets) where
-  /-- The name of the field. -/
-  name : String
-  /-- The number of generations. -/
-  generations : ℕ
-  /-- The charges, one per factor. -/
-  charges : Charges Γ
+/-- Whether the label is fermionic. -/
+def isFermion : LorentzLabel → Bool
+  | .L => true
+  | .R => true
+  | .scalar => false
+
+/-- The Lorentz factor of the target space of a field with the given label. -/
+abbrev Space : LorentzLabel → Type
+  | .L => Fermion.LeftHandedWeyl
+  | .R => Fermion.RightHandedWeyl
+  | .scalar => ℂ
 
 instance : Module.Finite ℂ Fermion.LeftHandedWeyl :=
   Module.Finite.of_basis Fermion.LeftHandedWeyl.basis
@@ -265,123 +267,174 @@ instance : Module.Finite ℂ Fermion.LeftHandedWeyl :=
 instance : Module.Finite ℂ Fermion.RightHandedWeyl :=
   Module.Finite.of_basis Fermion.RightHandedWeyl.basis
 
-/-- The mass weight of a fermion, in the units in which a derivative has weight `2`. -/
-def fermionMassWeight : ℕ := 3
+instance instAddCommGroupSpace : (l : LorentzLabel) → AddCommGroup l.Space
+  | .L => inferInstanceAs (AddCommGroup Fermion.LeftHandedWeyl)
+  | .R => inferInstanceAs (AddCommGroup Fermion.RightHandedWeyl)
+  | .scalar => inferInstanceAs (AddCommGroup ℂ)
 
-/-- The mass weight of a scalar, in the units in which a derivative has weight `2`. -/
-def scalarMassWeight : ℕ := 2
+instance instModuleSpace : (l : LorentzLabel) → Module ℂ l.Space
+  | .L => inferInstanceAs (Module ℂ Fermion.LeftHandedWeyl)
+  | .R => inferInstanceAs (Module ℂ Fermion.RightHandedWeyl)
+  | .scalar => inferInstanceAs (Module ℂ ℂ)
 
-variable {Γ : Factors jets}
+instance instFreeSpace : (l : LorentzLabel) → Module.Free ℂ l.Space
+  | .L => inferInstanceAs (Module.Free ℂ Fermion.LeftHandedWeyl)
+  | .R => inferInstanceAs (Module.Free ℂ Fermion.RightHandedWeyl)
+  | .scalar => inferInstanceAs (Module.Free ℂ ℂ)
 
-/-- **The matter field of a fermion row**: a Weyl spinor of the row's chirality tensored
-  with the internal index of its charges, transforming in the representation the charges
-  name, of mass weight `3`. -/
-noncomputable def FermionRow.matterField (r : FermionRow Γ) : MatterField jets :=
-  match r.chirality with
-  | .L => (Charges.rep Γ r.charges).matterField (LinearEquiv.refl ℂ _)
-      Fermion.LeftHandedWeyl.rep fermionMassWeight
-  | .R => (Charges.rep Γ r.charges).matterField (LinearEquiv.refl ℂ _)
-      Fermion.RightHandedWeyl.rep fermionMassWeight
+instance instFiniteSpace : (l : LorentzLabel) → Module.Finite ℂ l.Space
+  | .L => inferInstanceAs (Module.Finite ℂ Fermion.LeftHandedWeyl)
+  | .R => inferInstanceAs (Module.Finite ℂ Fermion.RightHandedWeyl)
+  | .scalar => inferInstanceAs (Module.Finite ℂ ℂ)
 
-/-- **The matter field of a scalar row**: a Lorentz scalar with the internal index of its
-  charges, transforming in the representation the charges name, of mass weight `2`. -/
-noncomputable def ScalarRow.matterField (r : ScalarRow Γ) : MatterField jets :=
-  (Charges.rep Γ r.charges).matterField (LinearEquiv.refl ℂ _)
-    (Representation.trivial ℂ SL(2,ℂ) ℂ) scalarMassWeight
+/-- The representation of the Lorentz group on the Lorentz factor of a label. -/
+noncomputable def rep : (l : LorentzLabel) → Representation ℂ SL(2,ℂ) l.Space
+  | .L => Fermion.LeftHandedWeyl.rep
+  | .R => Fermion.RightHandedWeyl.rep
+  | .scalar => Representation.trivial ℂ SL(2,ℂ) ℂ
+
+/-- The mass weight of a field with the given label, in the units in which a derivative
+  has weight `2`: `3` for a Weyl spinor, `2` for a scalar. -/
+def massWeight : LorentzLabel → ℕ
+  | .L => 3
+  | .R => 3
+  | .scalar => 2
+
+end LorentzLabel
+
+/-- **The data of a matter field**: its Lorentz label and its charge tuple, so that a
+  field reads `(.L, .singlet, .fund, -3)`. -/
+abbrev MatterFieldData (Γ : Factors jets) : Type := LorentzLabel × Charges Γ
+
+namespace MatterFieldData
+
+variable {Γ : Factors jets} (M : MatterFieldData Γ)
+
+/-- The Lorentz label of the field. -/
+abbrev lorentz : LorentzLabel := M.1
+
+/-- The charges of the field. -/
+abbrev charges : Charges Γ := M.2
+
+/-- The internal index of the field. -/
+abbrev Idx : Type := LocalGaugeData.Idx Γ M.charges
+
+/-- The matrix representation named by the charges of the field. -/
+noncomputable abbrev rep : MatrixRep jets M.Idx := Charges.rep Γ M.charges
+
+/-- The mass weight of the field. -/
+abbrev massWeight : ℕ := M.lorentz.massWeight
+
+/-- **The matter field of a datum on a presented target space**: a target space `V`
+  identified with the Lorentz factor of the label tensored with the internal index of the
+  charges, transforming in the representation the charges name. -/
+noncomputable def toMatterFieldOn {V : Type} [AddCommGroup V] [Module ℂ V]
+    [Module.Free ℂ V] [Module.Finite ℂ V]
+    (e : V ≃ₗ[ℂ] M.lorentz.Space ⊗[ℂ] (M.Idx → ℂ)) : MatterField jets :=
+  M.rep.matterField e M.lorentz.rep M.massWeight
+
+/-- **The matter field of a datum**: the target space is the Lorentz factor of the label
+  tensored with the internal index of the charges. -/
+noncomputable def toMatterField : MatterField jets :=
+  M.toMatterFieldOn (LinearEquiv.refl ℂ _)
+
+variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.Finite ℂ V]
+  (e : V ≃ₗ[ℂ] M.lorentz.Space ⊗[ℂ] (M.Idx → ℂ))
 
 @[simp]
-lemma FermionRow.matterField_massWeight (r : FermionRow Γ) :
-    r.matterField.massWeight = fermionMassWeight := by
-  cases h : r.chirality <;> simp [FermionRow.matterField, h]
+lemma toMatterFieldOn_V : (M.toMatterFieldOn e).V = V := rfl
 
 @[simp]
-lemma ScalarRow.matterField_massWeight (r : ScalarRow Γ) :
-    r.matterField.massWeight = scalarMassWeight := rfl
+lemma toMatterFieldOn_repJet : (M.toMatterFieldOn e).repJet = M.rep.repJet e := rfl
 
-/-- The gauge and Lorentz actions of a fermion row commute: the row is a matrix
-  representation on the internal index tensored with a Weyl spinor. -/
-lemma FermionRow.matterField_gaugeLorentzCompatible (r : FermionRow Γ) :
-    r.matterField.GaugeLorentzCompatible := by
-  cases h : r.chirality <;> simp only [FermionRow.matterField, h] <;>
-    exact MatrixRep.matterField_gaugeLorentzCompatible _ _ _ _
+@[simp]
+lemma toMatterFieldOn_repAlgebra : (M.toMatterFieldOn e).repAlgebra = M.rep.repAlgebra e :=
+  rfl
 
-/-- The gauge and Lorentz actions of a scalar row commute. -/
-lemma ScalarRow.matterField_gaugeLorentzCompatible (r : ScalarRow Γ) :
-    r.matterField.GaugeLorentzCompatible :=
+@[simp]
+lemma toMatterFieldOn_repLorentz :
+    (M.toMatterFieldOn e).repLorentz = MatrixRep.repLorentz e M.lorentz.rep := rfl
+
+@[simp]
+lemma toMatterFieldOn_massWeight : (M.toMatterFieldOn e).massWeight = M.massWeight := rfl
+
+@[simp]
+lemma toMatterField_massWeight : M.toMatterField.massWeight = M.massWeight := rfl
+
+/-- The gauge and Lorentz actions of the matter field of a datum commute. -/
+lemma toMatterFieldOn_gaugeLorentzCompatible :
+    (M.toMatterFieldOn e).GaugeLorentzCompatible :=
   MatrixRep.matterField_gaugeLorentzCompatible _ _ _ _
+
+/-- The gauge and Lorentz actions of the matter field of a datum commute. -/
+lemma toMatterField_gaugeLorentzCompatible : M.toMatterField.GaugeLorentzCompatible :=
+  M.toMatterFieldOn_gaugeLorentzCompatible _
+
+end MatterFieldData
 
 /-!
 
-## E. The table and its field content
+## E. The field data of a model and its field content
 
 -/
 
-/-- **A model table**: the gauge group as a list of factors, the fermion rows and the
-  scalar rows. -/
-structure Table (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
-  /-- The gauge group. -/
-  gauge : Factors jets
-  /-- The fermion rows. -/
-  fermions : List (FermionRow gauge)
-  /-- The scalar rows. -/
-  scalars : List (ScalarRow gauge)
+/-- **The field data of a model**: for each field of the model, its number of generations
+  and its matter field data. -/
+abbrev FieldData (Γ : Factors jets) (Fields : Type) : Type := Fields → ℕ × MatterFieldData Γ
 
-namespace Table
+namespace FieldData
 
-variable [Module.Finite ℝ 𝔤] (T : Table jets)
+variable [Module.Finite ℝ 𝔤] {Γ : Factors jets} {Fields : Type} [Fintype Fields]
+  [DecidableEq Fields] (D : FieldData Γ Fields)
 
-/-- The fermionic species of a table: a fermion row together with a generation. -/
-abbrev FermionSpecies : Type :=
-  Σ i : Fin T.fermions.length, Fin (T.fermions.get i).generations
+/-- The number of generations of a field. -/
+abbrev generations (f : Fields) : ℕ := (D f).1
 
-/-- The bosonic species of a table: a scalar row together with a generation. -/
-abbrev BosonSpecies : Type :=
-  Σ i : Fin T.scalars.length, Fin (T.scalars.get i).generations
+/-- The matter field data of a field. -/
+abbrev data (f : Fields) : MatterFieldData Γ := (D f).2
 
-/-- **The field content of a table**: one matter field per species. -/
-noncomputable def fieldData : GaugeFieldData jets where
-  FermionSpecies := T.FermionSpecies
-  fermion s := (T.fermions.get s.1).matterField
-  BosonSpecies := T.BosonSpecies
-  boson s := (T.scalars.get s.1).matterField
+/-- The fermionic fields of the model. -/
+abbrev Fermions : Type := {f : Fields // (D.data f).lorentz.isFermion = true}
 
-@[simp]
-lemma fieldData_FermionSpecies : T.fieldData.FermionSpecies = T.FermionSpecies := rfl
+/-- The bosonic fields of the model. -/
+abbrev Bosons : Type := {f : Fields // (D.data f).lorentz.isFermion = false}
 
-@[simp]
-lemma fieldData_fermion (s : T.FermionSpecies) :
-    T.fieldData.fermion s = (T.fermions.get s.1).matterField := rfl
+/-- The fermionic species of the model: a fermionic field together with a generation. -/
+abbrev FermionSpecies : Type := Σ f : D.Fermions, Fin (D.generations f.1)
 
-@[simp]
-lemma fieldData_BosonSpecies : T.fieldData.BosonSpecies = T.BosonSpecies := rfl
+/-- The bosonic species of the model: a bosonic field together with a generation. -/
+abbrev BosonSpecies : Type := Σ f : D.Bosons, Fin (D.generations f.1)
+
+/-- **The field content of a model**: one matter field per species, the matter field of the
+  species' data. -/
+noncomputable def toGaugeFieldData : GaugeFieldData jets where
+  FermionSpecies := D.FermionSpecies
+  fermion s := (D.data s.1.1).toMatterField
+  BosonSpecies := D.BosonSpecies
+  boson s := (D.data s.1.1).toMatterField
 
 @[simp]
-lemma fieldData_boson (s : T.BosonSpecies) :
-    T.fieldData.boson s = (T.scalars.get s.1).matterField := rfl
+lemma toGaugeFieldData_FermionSpecies :
+    D.toGaugeFieldData.FermionSpecies = D.FermionSpecies := rfl
 
-/-- Every fermionic species of a table has mass weight `3`. -/
-lemma fieldData_fermion_massWeight (s : T.FermionSpecies) :
-    (T.fieldData.fermion s).massWeight = fermionMassWeight := by simp
+@[simp]
+lemma toGaugeFieldData_fermion (s : D.FermionSpecies) :
+    D.toGaugeFieldData.fermion s = (D.data s.1.1).toMatterField := rfl
 
-/-- Every bosonic species of a table has mass weight `2`. -/
-lemma fieldData_boson_massWeight (s : T.BosonSpecies) :
-    (T.fieldData.boson s).massWeight = scalarMassWeight := by simp
+@[simp]
+lemma toGaugeFieldData_BosonSpecies : D.toGaugeFieldData.BosonSpecies = D.BosonSpecies := rfl
 
-/-- Every fermionic species of a table satisfies `MatterField.GaugeLorentzCompatible`. -/
-lemma fieldData_fermion_gaugeLorentzCompatible (s : T.FermionSpecies) :
-    (T.fieldData.fermion s).GaugeLorentzCompatible :=
-  FermionRow.matterField_gaugeLorentzCompatible _
+@[simp]
+lemma toGaugeFieldData_boson (s : D.BosonSpecies) :
+    D.toGaugeFieldData.boson s = (D.data s.1.1).toMatterField := rfl
 
-/-- Every bosonic species of a table satisfies `MatterField.GaugeLorentzCompatible`. -/
-lemma fieldData_boson_gaugeLorentzCompatible (s : T.BosonSpecies) :
-    (T.fieldData.boson s).GaugeLorentzCompatible :=
-  ScalarRow.matterField_gaugeLorentzCompatible _
+/-- The field content of a model satisfies `GaugeFieldData.GaugeLorentzCompatible`: every
+  species is a matrix representation on the internal index tensored with a Lorentz
+  factor. -/
+lemma toGaugeFieldData_gaugeLorentzCompatible : D.toGaugeFieldData.GaugeLorentzCompatible :=
+  ⟨fun _ => MatterFieldData.toMatterField_gaugeLorentzCompatible _,
+    fun _ => MatterFieldData.toMatterField_gaugeLorentzCompatible _⟩
 
-/-- The field content of a table satisfies `GaugeFieldData.GaugeLorentzCompatible`: every
-  row is a matrix representation on the internal index tensored with a Lorentz factor. -/
-lemma fieldData_gaugeLorentzCompatible : T.fieldData.GaugeLorentzCompatible :=
-  ⟨T.fieldData_fermion_gaugeLorentzCompatible, T.fieldData_boson_gaugeLorentzCompatible⟩
-
-end Table
+end FieldData
 
 end LocalGaugeData

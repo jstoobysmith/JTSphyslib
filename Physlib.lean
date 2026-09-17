@@ -442,6 +442,7 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.MassWeight
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Model.Consistency
+public import Physlib.Particles.StandardModel.Model.LeptonDoublet
 public import Physlib.Particles.StandardModel.Peeling
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3

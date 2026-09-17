@@ -12,17 +12,17 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
 ## i. Overview
 
 The Standard Model as a model table: the gauge group `SU(3) × SU(2) × U(1)` named by its
-factors, one row per fermion field and one row per scalar field. Everything else is
-derived: the local gauge data of the gauge group is assembled from the factors by
-`LocalGaugeData.ofFactors`, and the table compiles, through
-`Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table`, to the field
-content `StandardModel.Model.fieldData : GaugeFieldData gaugeData`, from which the general
-theory derives the algebra of field operators and the gauge and Lorentz actions.
+factors, each field as its Lorentz label and its charges, and the table assigning each
+field its number of generations. Everything else is derived: the local gauge data of the
+gauge group is assembled from the factors by `LocalGaugeData.ofFactors`, and the table
+compiles, through `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table`,
+to the field content `StandardModel.Model.fieldData : GaugeFieldData gaugeData`, from
+which the general theory derives the algebra of field operators and the gauge and Lorentz
+actions.
 
-Each row lists the name of the field, its number of generations, its chirality, and its
-charges in the order of the factors: the `SU(3)` label, the `SU(2)` label and the
-hypercharge. Hypercharges are integers, six times the conventional `Y`, so that the gauge
-group acting is the honest `U(1)` of unitary jets. The right-handed singlets are
+The charges are listed in the order of the factors: the `SU(3)` label, the `SU(2)` label
+and the hypercharge. Hypercharges are integers, six times the conventional `Y`, so that
+the gauge group acting is the honest `U(1)` of unitary jets. The right-handed singlets are
 right-handed Weyl spinors in the fundamental of colour rather than conjugate left-handed
 fields.
 
@@ -30,7 +30,9 @@ fields.
 
 - `StandardModel.Model.gauge` : the gauge group, as a list of factors.
 - `StandardModel.Model.gaugeData` : its local gauge data.
-- `StandardModel.Model.fermions`, `scalars` : the field tables.
+- `StandardModel.Model.quarkDoublet`, `leptonDoublet`, `upSinglet`, `downSinglet`,
+  `leptonSinglet`, `higgs` : the fields, as their Lorentz label and charges.
+- `StandardModel.Model.table` : the table, each field with its number of generations.
 - `StandardModel.Model.fieldData` : the field content of the Standard Model.
 
 ## iii. Table of contents
@@ -69,19 +71,46 @@ noncomputable abbrev factors : Factors gaugeData := Factors.factors gauge
 
 ## B. The fields
 
+Each field is its Lorentz label and its charges in the order of the factors: the `SU(3)`
+label, the `SU(2)` label and the hypercharge.
+
 -/
 
-/-- The fermion fields: `q ∼ (3, 2)_{1}`, `l ∼ (1, 2)_{-3}`, `u ∼ (3, 1)_{4}`,
-  `d ∼ (3, 1)_{-2}`, `e ∼ (1, 1)_{-6}`, three generations each. -/
-def fermions : List (FermionRow factors) :=
-  [ ⟨"q", 3, .L, (.fund, .fund, 1)⟩,
-    ⟨"l", 3, .L, (.singlet, .fund, -3)⟩,
-    ⟨"u", 3, .R, (.fund, .singlet, 4)⟩,
-    ⟨"d", 3, .R, (.fund, .singlet, -2)⟩,
-    ⟨"e", 3, .R, (.singlet, .singlet, -6)⟩ ]
+/-- The quark doublet `q ∼ (3, 2)_{1}`. -/
+abbrev quarkDoublet : MatterFieldData factors := (.L, .fund, .fund, 1)
 
-/-- The scalar fields: the Higgs `H ∼ (1, 2)_{3}`. -/
-def scalars : List (ScalarRow factors) := [⟨"H", 1, (.singlet, .fund, 3)⟩]
+/-- The lepton doublet `l ∼ (1, 2)_{-3}`. -/
+abbrev leptonDoublet : MatterFieldData factors := (.L, .singlet, .fund, -3)
+
+/-- The up-type quark singlet `u ∼ (3, 1)_{4}`. -/
+abbrev upSinglet : MatterFieldData factors := (.R, .fund, .singlet, 4)
+
+/-- The down-type quark singlet `d ∼ (3, 1)_{-2}`. -/
+abbrev downSinglet : MatterFieldData factors := (.R, .fund, .singlet, -2)
+
+/-- The charged-lepton singlet `e ∼ (1, 1)_{-6}`. -/
+abbrev leptonSinglet : MatterFieldData factors := (.R, .singlet, .singlet, -6)
+
+/-- The Higgs `H ∼ (1, 2)_{3}`. -/
+abbrev higgs : MatterFieldData factors := (.scalar, .singlet, .fund, 3)
+
+/-- The fields of the Standard Model. -/
+inductive Fields
+  /-- The quark doublet. -/
+  | q
+  /-- The lepton doublet. -/
+  | l
+  /-- The up-type quark singlet. -/
+  | u
+  /-- The down-type quark singlet. -/
+  | d
+  /-- The charged-lepton singlet. -/
+  | e
+  /-- The Higgs. -/
+  | H
+  deriving DecidableEq, Repr
+
+instance : Fintype Fields := ⟨{.q, .l, .u, .d, .e, .H}, fun x => by cases x <;> decide⟩
 
 /-!
 
@@ -89,12 +118,19 @@ def scalars : List (ScalarRow factors) := [⟨"H", 1, (.singlet, .fund, 3)⟩]
 
 -/
 
-/-- **The Standard Model table.** -/
-noncomputable def table : Table gaugeData := ⟨factors, fermions, scalars⟩
+/-- **The Standard Model table**: each field with its number of generations, three for the
+  fermions and one for the Higgs. -/
+def table : FieldData factors Fields
+  | .q => (3, quarkDoublet)
+  | .l => (3, leptonDoublet)
+  | .u => (3, upSinglet)
+  | .d => (3, downSinglet)
+  | .e => (3, leptonSinglet)
+  | .H => (1, higgs)
 
-/-- **The field content of the Standard Model**: the fifteen fermionic species (five rows
+/-- **The field content of the Standard Model**: the fifteen fermionic species (five fields
   in three generations) and the Higgs, as matter fields of `gaugeData`. -/
-noncomputable def fieldData : GaugeFieldData gaugeData := table.fieldData
+noncomputable def fieldData : GaugeFieldData gaugeData := table.toGaugeFieldData
 
 /-- The Standard Model has fifteen fermionic species. -/
 lemma card_fermionSpecies : Fintype.card fieldData.FermionSpecies = 15 := by decide
