@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
+public import Physlib.Particles.StandardModel.Basic
 /-!
 # The Standard Model gauge group as local gauge data
 
@@ -68,9 +69,20 @@ is registered globally.
 
 /-- The Standard Model gauge group as local gauge data, for the jet gauge group
   `JetGaugeGroupI` and its Lie algebra `JetGaugeAlgebra` over the global group
-  `GaugeGroupI` and gauge algebra `GaugeAlgebra`. Nothing is redefined. Every data field
-  is an existing Standard Model construction and every proof field an existing Standard
-  Model lemma. -/
+  `GaugeGroupI` and gauge algebra `GaugeAlgebra`. It is the gauge data
+  `StandardModel.Model.gaugeData` that the model table assembles from the factor list
+  `[.SU 3, .SU 2, .U1]` by `LocalGaugeData.ofFactors`; the carriers of that assembly are
+  `JetGaugeGroupI` and `JetGaugeAlgebra` on the nose, and each data field is definitionally
+  the existing Standard Model construction (the rules of section B are all `rfl`). -/
+noncomputable def localGaugeData :
+    LocalGaugeData GaugeGroupI GaugeAlgebra JetGaugeGroupI JetGaugeAlgebra :=
+  Model.gaugeData
+
+/- The hand-built package this definition replaces. Every field below is definitionally
+equal to the corresponding field of `Model.gaugeData`, which is why the rules of section B
+still hold by `rfl`; the literal is kept here for reference until the hand-built gauge
+group is retired.
+
 noncomputable def localGaugeData :
     LocalGaugeData GaugeGroupI GaugeAlgebra JetGaugeGroupI JetGaugeAlgebra where
   eval := JetGaugeGroupI.eval
@@ -97,6 +109,7 @@ noncomputable def localGaugeData :
   maurerCartan_cocycle := maurerCartanForm_cocycle
   maurerCartan_structure := maurerCartanForm_structure
   deriv_adjoint := deriv_adjointMap
+-/
 
 /-!
 
@@ -192,10 +205,16 @@ lemma localGaugeData_adjointCoeff_toU1Value (U : JetGaugeGroupI)
   `JetGaugeAlgebra.ext_of_eval_iteratedDeriv` and `maurerCartanForm_eq_zero_iff_ofConstant`.
   Unlike the package itself this is a property of it and not a choice, so it is an
   instance. -/
+instance instFaithfulLocalGaugeData : localGaugeData.Faithful :=
+  inferInstanceAs Model.gaugeData.Faithful
+
+/- The hand-built proof this instance replaces:
+
 instance instFaithfulLocalGaugeData : localGaugeData.Faithful where
   ext_of_evalLie_iteratedDeriv h := JetGaugeAlgebra.ext_of_eval_iteratedDeriv h
   eq_ofConstant_of_maurerCartan_eq_zero h := by
     obtain ⟨c, hc⟩ := (maurerCartanForm_eq_zero_iff_ofConstant _).mp h
     rw [hc, localGaugeData_eval, localGaugeData_ofConstant, JetGaugeGroupI.eval_ofConstant]
+-/
 
 end StandardModel
