@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 /-!
 # Lorentz invariants of a left-handed and a right-handed Weyl index
@@ -44,7 +44,6 @@ its classification, still that there is no invariant, hence no Dirac mass term, 
 namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C Invariants
-open IsQuadLorentz (quotRep quotRep_mkQ)
 
 /-!
 
@@ -442,12 +441,12 @@ classification applies there and lifts back with an error term in `S`.
 include hT in
 /-- The images of the components in the quotient by a Lorentz-stable submodule again
   form a left-right bispinor. -/
-lemma isLeftRightWeyl_quotRep (S : Submodule ℂ B)
+lemma isLeftRightWeyl_quotient (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsLeftRightWeyl (B ⧸ S) (quotRep (repLorentz := repLorentz) S hS)
+    IsLeftRightWeyl (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
       (fun l => S.mkQ (T l)) where
   repLorentz_T g l := by
-    rw [quotRep_mkQ, hT.repLorentz_T g l, map_sum]
+    rw [quotient_apply_mkQ, hT.repLorentz_T g l, map_sum]
     exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 include hT in
@@ -456,7 +455,7 @@ include hT in
 lemma mem_of_invariant_of_mem_sup {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have hT' := hT.isLeftRightWeyl_quotRep S hS
+  have hT' := hT.isLeftRightWeyl_quotient S hS
   have hmk : S.mkQ x ∈ hT'.span := by
     obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
     obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
@@ -465,9 +464,9 @@ lemma mem_of_invariant_of_mem_sup {x : B} (S : Submodule ℂ B)
       add_zero, hc, map_sum]
     exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
   have hinv' : ∀ g : SL(2,ℂ),
-      quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x := by
+      (repLorentz.quotient S fun g y hy => hS g y hy) g (S.mkQ x) = S.mkQ x := by
     intro g
-    rw [quotRep_mkQ, hinv g]
+    rw [quotient_apply_mkQ, hinv g]
   have hzero := hT'.eq_zero_of_invariant hmk hinv'
   rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
 

@@ -27,7 +27,7 @@ representation, which is the four-vector representation, so the three indices ar
 four-vector indices, and two of those admit only the metric trace. The proof makes that
 literal. The covariant Pauli matrices intertwine the two index laws (A), so contracting
 the Weyl pair against them turns `T` into a bi-Lorentz tensor, invertibly by Fierz
-completeness, leaving the span unchanged (C); `IsBiLorentz` then supplies the
+completeness, leaving the span unchanged (C); `BiLorentz` then supplies the
 classification (D), its metric trace being the Pauli contraction of `T`. Section E gives
 the model family, whose Pauli contraction is `PauliMatrix.asTensor`.
 
@@ -49,7 +49,7 @@ there is no Dirac mass term.
 namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C
-open IsQuadLorentz (sum_minkowskiMatrixZ_mul quotRep quotRep_mkQ)
+open LorentzGroup (sum_minkowskiMatrixZ_mul)
 
 /-!
 
@@ -193,8 +193,9 @@ noncomputable def vectorPair : (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
 
 include hT in
 /-- The Pauli contraction of the Weyl pair carries the two spinor indices into a second
-  four-vector index: the resulting family is a bi-Lorentz tensor. -/
-lemma isBiLorentz_vectorPair : IsBiLorentz B repLorentz (vectorPair (T := T)) where
+  four-vector index: the resulting family is a rank-two Lorentz tensor family. -/
+lemma isLorentzTensorFamily_vectorPair :
+    IsLorentzTensorFamily 2 B repLorentz (vectorPair (T := T)) where
   repLorentz_T g l := by
     have hstep : ∀ p : Fin 2 × Fin 2,
         pauliLower (l 1) p.1 p.2 • repLorentz g (T (l 0, p))
@@ -292,7 +293,8 @@ lemma mem_span_vectorPair (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
 
 include hT in
 /-- The reduction does not change the span of the components. -/
-lemma iSup_span_vectorPair : (⨆ e, ℂ ∙ vectorPair (T := T) e) = hT.span := by
+lemma componentSpan_vectorPair : componentSpan (vectorPair (T := T)) = hT.span := by
+  rw [componentSpan]
   refine le_antisymm (iSup_le fun e => ?_) (iSup_le fun d => ?_)
   · rw [Submodule.span_singleton_le_iff_mem]
     exact hT.vectorPair_mem_span e
@@ -302,8 +304,8 @@ lemma iSup_span_vectorPair : (⨆ e, ℂ ∙ vectorPair (T := T) e) = hT.span :=
 /-- The metric trace of the reduced family is exactly the Pauli contraction of `T`: the
   two lowerings of the vector index cancel, so no sign and no scalar appear. -/
 lemma metricContraction_vectorPair :
-    IsBiLorentz.metricContraction (T := vectorPair (T := T)) = pauliContraction (T := T) := by
-  rw [IsBiLorentz.metricContraction, sum_pi_fin_two, pauliContraction]
+    BiLorentz.metricContraction (T := vectorPair (T := T)) = pauliContraction (T := T) := by
+  rw [BiLorentz.metricContraction, sum_pi_fin_two, pauliContraction]
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [Finset.sum_eq_single ν (fun ρ _ hρ => ?_) (fun hν => absurd (Finset.mem_univ ν) hν)]
   · simp only [vectorPair, Matrix.cons_val_zero, Matrix.cons_val_one, Finset.smul_sum,
@@ -321,7 +323,7 @@ lemma metricContraction_vectorPair :
 
 ## D. The classification of the Lorentz invariants
 
-`IsBiLorentz` classifies the invariants of `vectorPair`, and its metric trace is the Pauli
+`BiLorentz` classifies the invariants of `vectorPair`, and its metric trace is the Pauli
 contraction of `T`, so every invariant of the span is a multiple of `pauliContraction`.
 
 -/
@@ -331,7 +333,7 @@ include hT in
   `Λ η Λᵀ = η` read through the reduction of section C. -/
 lemma repLorentz_pauliContraction (g : SL(2,ℂ)) :
     repLorentz g (pauliContraction (T := T)) = pauliContraction (T := T) := by
-  have hV := hT.isBiLorentz_vectorPair
+  have hV := hT.isLorentzTensorFamily_vectorPair
   have hstep : ∀ d : Fin 2 → Fin 1 ⊕ Fin 3,
       repLorentz g (((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • vectorPair (T := T) d)
         = ∑ a : Fin 2 → Fin 1 ⊕ Fin 3,
@@ -341,7 +343,7 @@ lemma repLorentz_pauliContraction (g : SL(2,ℂ)) :
     intro d
     rw [map_smul, hV.repLorentz_T g d, Finset.smul_sum]
     exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
-  rw [← metricContraction_vectorPair (T := T), IsBiLorentz.metricContraction, map_sum]
+  rw [← metricContraction_vectorPair (T := T), BiLorentz.metricContraction, map_sum]
   calc ∑ d : Fin 2 → Fin 1 ⊕ Fin 3,
         repLorentz g (((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • vectorPair (T := T) d)
       = ∑ a : Fin 2 → Fin 1 ⊕ Fin 3, (∑ d : Fin 2 → Fin 1 ⊕ Fin 3,
@@ -365,11 +367,11 @@ include hT in
 theorem exists_smul_pauliContraction_of_invariant {x : B} (hx : x ∈ hT.span)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • pauliContraction (T := T) := by
-  have hV := hT.isBiLorentz_vectorPair
-  have hx' : x ∈ hV.span := by
-    rw [IsBiLorentz.span, hT.iSup_span_vectorPair]
+  have hV := hT.isLorentzTensorFamily_vectorPair
+  have hx' : x ∈ componentSpan (vectorPair (T := T)) := by
+    rw [hT.componentSpan_vectorPair]
     exact hx
-  obtain ⟨a, ha⟩ := hV.exists_smul_metricContraction_of_invariant hx' hinv
+  obtain ⟨a, ha⟩ := BiLorentz.exists_smul_metricContraction_of_invariant hV hx' hinv
   exact ⟨a, by rwa [metricContraction_vectorPair] at ha⟩
 
 include hT in
@@ -379,12 +381,12 @@ lemma exists_smul_pauliContraction_of_invariant_subset {x : B} (S : Submodule �
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • pauliContraction (T := T) + y := by
-  have hV := hT.isBiLorentz_vectorPair
-  have hx' : x ∈ hV.span ⊔ S := by
-    rw [IsBiLorentz.span, hT.iSup_span_vectorPair]
+  have hV := hT.isLorentzTensorFamily_vectorPair
+  have hx' : x ∈ componentSpan (vectorPair (T := T)) ⊔ S := by
+    rw [hT.componentSpan_vectorPair]
     exact hx
   obtain ⟨a, y, hy, ha⟩ :=
-    hV.exists_smul_metricContraction_of_invariant_subset S hS hx' hinv
+    BiLorentz.exists_smul_metricContraction_of_invariant_subset hV S hS hx' hinv
   exact ⟨a, y, hy, by rwa [metricContraction_vectorPair] at ha⟩
 
 end IsVectorLeftRightWeyl

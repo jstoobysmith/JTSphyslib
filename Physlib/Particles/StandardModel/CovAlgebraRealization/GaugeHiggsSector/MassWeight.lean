@@ -66,49 +66,39 @@ A family transforming as a Lorentz tensor stays one when multiplied by an elemen
 Lorentz group fixes, and its metric trace is multiplied by that element too. So a field
 strength against an underived Higgs is a tensor of the same two or three indices as the
 field strength alone. A once-derived Higgs contributes an index of its own, and a
-bi-Lorentz family against a Lorentz vector is a triple Lorentz family.
+rank-two family against a Lorentz vector is a rank-three family.
 
 -/
 
-/-- Multiplying a bi-Lorentz family by a Lorentz-inert element gives a bi-Lorentz family:
-  the element rides through the transformation law untouched. -/
-lemma IsBiLorentz.mul_fixed
+/-- Multiplying a Lorentz tensor family by a Lorentz-inert element gives a family of the
+  same rank: the element rides through the transformation law untouched. -/
+lemma IsLorentzTensorFamily.mul_fixed {n : ℕ}
     (hmul : ∀ (Λ : SL(2,ℂ)) (x y : B), repLorentz Λ (x * y) = repLorentz Λ x * repLorentz Λ y)
-    {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : IsBiLorentz B repLorentz T) {y : B}
+    {T : (Fin n → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzTensorFamily n B repLorentz T) {y : B}
     (hy : ∀ g : SL(2,ℂ), repLorentz g y = y) :
-    IsBiLorentz B repLorentz fun d => T d * y where
+    IsLorentzTensorFamily n B repLorentz fun d => T d * y where
   repLorentz_T g l := by
     rw [hmul, hT.repLorentz_T g l, hy g, Finset.sum_mul]
     exact Finset.sum_congr rfl fun a _ => smul_mul_assoc _ _ _
 
 /-- The metric trace of a family multiplied on the right by a fixed element is the metric
   trace of the family, multiplied by that element. -/
-lemma IsBiLorentz.metricContraction_mul (T : (Fin 2 → Fin 1 ⊕ Fin 3) → B) (y : B) :
-    IsBiLorentz.metricContraction (T := fun d => T d * y)
-      = IsBiLorentz.metricContraction (T := T) * y := by
-  rw [IsBiLorentz.metricContraction, IsBiLorentz.metricContraction, Finset.sum_mul]
+lemma BiLorentz.metricContraction_mul (T : (Fin 2 → Fin 1 ⊕ Fin 3) → B) (y : B) :
+    BiLorentz.metricContraction (T := fun d => T d * y)
+      = BiLorentz.metricContraction (T := T) * y := by
+  rw [BiLorentz.metricContraction, BiLorentz.metricContraction, Finset.sum_mul]
   exact Finset.sum_congr rfl fun d _ => (smul_mul_assoc _ _ _).symm
 
-/-- Multiplying a triple Lorentz family by a Lorentz-inert element gives a triple Lorentz
-  family. -/
-lemma IsTriLorentz.mul_fixed
+/-- A rank-two family against a Lorentz vector is a rank-three family: the two covector
+  indices of the first factor and the single index of the second make three. -/
+lemma IsLorentzTensorFamily.mul_vector
     (hmul : ∀ (Λ : SL(2,ℂ)) (x y : B), repLorentz Λ (x * y) = repLorentz Λ x * repLorentz Λ y)
-    {T : (Fin 3 → Fin 1 ⊕ Fin 3) → B} (hT : IsTriLorentz B repLorentz T) {y : B}
-    (hy : ∀ g : SL(2,ℂ), repLorentz g y = y) :
-    IsTriLorentz B repLorentz fun d => T d * y where
-  repLorentz_T g l := by
-    rw [hmul, hT.repLorentz_T g l, hy g, Finset.sum_mul]
-    exact Finset.sum_congr rfl fun a _ => smul_mul_assoc _ _ _
-
-/-- A bi-Lorentz family against a Lorentz vector is a triple Lorentz family: the two
-  covector indices of the first factor and the single index of the second make three. -/
-lemma IsBiLorentz.isTriLorentz_mul_vector
-    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : B), repLorentz Λ (x * y) = repLorentz Λ x * repLorentz Λ y)
-    {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : IsBiLorentz B repLorentz T)
+    {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzTensorFamily 2 B repLorentz T)
     {U : (Fin 1 ⊕ Fin 3) → B}
     (hU : ∀ (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3), repLorentz g (U μ)
       = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ) • U ν) :
-    IsTriLorentz B repLorentz fun d : Fin 3 → Fin 1 ⊕ Fin 3 => T ![d 0, d 1] * U (d 2) where
+    IsLorentzTensorFamily 3 B repLorentz
+      fun d : Fin 3 → Fin 1 ⊕ Fin 3 => T ![d 0, d 1] * U (d 2) where
   repLorentz_T g l := by
     rw [hmul, hT.repLorentz_T g ![l 0, l 1], hU g (l 2),
       StandardModel.IsGaugeSector.sum_cov_two, StandardModel.IsGaugeSector.sum_cov_three,
@@ -150,10 +140,11 @@ and the inertness of products and joins that the peeling consumes.
   modulo. An element of a join lies in a join over finitely many of the summands, so the
   finite peeling of the gauge sector suffices. -/
 lemma mem_of_lorentz_invariant_iSup_isBiLorentz_span {ι : Type}
-    {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : ∀ i, IsBiLorentz B repLorentz (T i))
-    (hzero : ∀ i, IsBiLorentz.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
+    {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+    (hT : ∀ i, IsLorentzTensorFamily 2 B repLorentz (T i))
+    (hzero : ∀ i, BiLorentz.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ (⨆ i, (hT i).span) ⊔ S)
+    (hx : x ∈ (⨆ i, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   classical
   obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
@@ -165,9 +156,10 @@ lemma mem_of_lorentz_invariant_iSup_isBiLorentz_span {ι : Type}
   Lorentz families lies in the stable submodule it is taken modulo: three covector indices
   admit no invariant contraction at all. -/
 lemma mem_of_lorentz_invariant_iSup_isTriLorentz_span {ι : Type}
-    {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B} (hT : ∀ i, IsTriLorentz B repLorentz (T i))
+    {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
+    (hT : ∀ i, IsLorentzTensorFamily 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ (⨆ i, (hT i).span) ⊔ S)
+    (hx : x ∈ (⨆ i, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   classical
   obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
@@ -284,22 +276,21 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_fixed_sup (C : Submodul
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.isGaugeSector.derivSubmodule 0 * C ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have hT : ∀ i : Module.Dual ℝ GaugeAlgebra × C, IsBiLorentz B repLorentz
-      (fun l : Fin 2 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)) :=
+  let T : Module.Dual ℝ GaugeAlgebra × C → (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
+    fun i l => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)
+  have hT : ∀ i, IsLorentzTensorFamily 2 B repLorentz (T i) :=
     fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
-  have hzero : ∀ i : Module.Dual ℝ GaugeAlgebra × C,
-      IsBiLorentz.metricContraction
-        (T := fun l : Fin 2 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)) = 0 := by
+  have hzero : ∀ i, BiLorentz.metricContraction (T := T i) = 0 := by
     intro i
     refine IsGaugeSector.metricContraction_eq_zero_of_antisymm fun a b => ?_
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+    simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one]
     rw [h.isGaugeSector.F_antisymm ![] a b i.1, neg_mul]
   refine mem_of_lorentz_invariant_iSup_isBiLorentz_span hT hzero S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : h.isGaugeSector.derivSubmodule 0
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, (hT i).span) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]
@@ -307,7 +298,7 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_fixed_sup (C : Submodul
     simp only [SetLike.mem_coe, Submodule.mem_comap, LinearMap.mulRight_apply]
     rw [Subsingleton.elim l ![]]
     refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.mem_iSup_of_mem ![μ, ν] ?_)
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+    simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one]
     exact Submodule.mem_span_singleton_self _
   exact key ha
 
@@ -318,22 +309,23 @@ theorem mem_of_lorentz_invariant_derivSubmodule_one_mul_fixed_sup (C : Submodule
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.isGaugeSector.derivSubmodule 1 * C ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have hT : ∀ i : Module.Dual ℝ GaugeAlgebra × C, IsTriLorentz B repLorentz
-      (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => h.covF ![l 0] (l 1) (l 2) i.1 * (i.2 : B)) :=
+  let T : Module.Dual ℝ GaugeAlgebra × C → (Fin 3 → Fin 1 ⊕ Fin 3) → B :=
+    fun i l => h.covF ![l 0] (l 1) (l 2) i.1 * (i.2 : B)
+  have hT : ∀ i, IsLorentzTensorFamily 3 B repLorentz (T i) :=
     fun i => (h.isGaugeSector.isTriLorentz_F_deriv_one i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
   refine mem_of_lorentz_invariant_iSup_isTriLorentz_span hT S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : h.isGaugeSector.derivSubmodule 1
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, (hT i).span) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]
     rintro _ ⟨φ, rfl⟩
     simp only [SetLike.mem_coe, Submodule.mem_comap, LinearMap.mulRight_apply]
     refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.mem_iSup_of_mem ![l 0, μ, ν] ?_)
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
       Matrix.cons_val_two, Matrix.tail_cons, IsGaugeSector.etaExpand_cov_one]
     exact Submodule.mem_span_singleton_self _
   exact key ha
@@ -356,18 +348,20 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
     · simp only [Sum.elim_inr, ← h.isHiggsSector_covBarH 1 ![μ]]
       rw [h.isHiggsSector.repLorentz_barH_apply g ψ 1 ![μ], IsGaugeSector.sum_cov_one]
       exact Finset.sum_congr rfl fun ν _ => by simp
-  have hT : ∀ i : Module.Dual ℝ GaugeAlgebra ×
-      (Module.Dual ℂ HiggsVec ⊕ Module.Dual ℂ (ConjModule HiggsVec)),
-      IsTriLorentz B repLorentz (fun l : Fin 3 → Fin 1 ⊕ Fin 3 => h.covF ![] (l 0) (l 1) i.1 *
-        Sum.elim (fun φ => h.covH ![l 2] φ) (fun ψ => h.covBarH ![l 2] ψ) i.2) :=
-    fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).isTriLorentz_mul_vector
+  let T : Module.Dual ℝ GaugeAlgebra ×
+      (Module.Dual ℂ HiggsVec ⊕ Module.Dual ℂ (ConjModule HiggsVec)) →
+      (Fin 3 → Fin 1 ⊕ Fin 3) → B :=
+    fun i l => h.covF ![] (l 0) (l 1) i.1 *
+      Sum.elim (fun φ => h.covH ![l 2] φ) (fun ψ => h.covBarH ![l 2] ψ) i.2
+  have hT : ∀ i, IsLorentzTensorFamily 3 B repLorentz (T i) :=
+    fun i => (h.isGaugeSector.isBiLorentz_F_underived i.1).mul_vector
       h.repLorentz_mul (hU i.2)
   refine mem_of_lorentz_invariant_iSup_isTriLorentz_span hT S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : ∀ (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
       h.isHiggsSector.derivSubmodule 1
-        ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ)) (⨆ i, (hT i).span) := by
+        ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ)) (⨆ i, componentSpan (T i)) := by
     intro μ ν φ
     rw [HiggsAlgebraCovRealization.derivSubmodule]
     refine sup_le ?_ ?_
@@ -378,7 +372,7 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       simp only [Submodule.mem_comap, LinearMap.mulLeft_apply]
       refine Submodule.mem_iSup_of_mem (φ, Sum.inl ψ)
         (Submodule.mem_iSup_of_mem ![μ, ν, ρ] ?_)
-      simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
         Matrix.tail_cons, Sum.elim_inl]
       exact Submodule.mem_span_singleton_self _
     · rw [HiggsAlgebraCovRealization.barHiggsSubmodule]
@@ -388,11 +382,11 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       simp only [Submodule.mem_comap, LinearMap.mulLeft_apply]
       refine Submodule.mem_iSup_of_mem (φ, Sum.inr ψ)
         (Submodule.mem_iSup_of_mem ![μ, ν, ρ] ?_)
-      simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+      simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
         Matrix.tail_cons, Sum.elim_inr]
       exact Submodule.mem_span_singleton_self _
   have hA : h.isGaugeSector.derivSubmodule 0
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, (hT i).span) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]

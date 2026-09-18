@@ -5,11 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.Basic
+public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
+public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
 public import Physlib.Mathematics.LeviCivita.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
--- Not used here; `Peeling` reaches it through this file.
-public import Physlib.Relativity.IsLorentzDeriv
 /-!
 # Lorentz invariants of a rank-four tensor
 
@@ -24,13 +23,13 @@ by every rotation and boost, the Lorentz transformations coming from `SL(2,ℂ)`
 There are no others. The fourth is a pseudoscalar, so it would drop out if reflections were
 allowed; independence is not proved, and for a given `T` the four may be dependent or zero. The
 components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, and `IsQuadLorentz B repLorentz T` says the group moves them with
-one factor of the Lorentz matrix per slot (A). A vector of `B` is invariant when every
-`repLorentz g` fixes it, and `hT.span` is the set of contractions `∑_d c_d • T d`. The theorem
-`mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace `S` beside the span, where
-the files using it park their other tensors: a vector of `hT.span ⊔ S`, the sums `u + y`, is
-invariant exactly when it is a combination of the four contractions plus an invariant `y` of
-`S`. For `S = ⊥` that is `exists_smul_contraction_of_invariant`.
+`repLorentz` of `SL(2,ℂ)`, and `IsLorentzTensorFamily 4 B repLorentz T` says the group moves
+them with one factor of the Lorentz matrix per slot (A). A vector of `B` is invariant when every
+`repLorentz g` fixes it, and `componentSpan T` is the set of contractions `∑_d c_d • T d`. The
+theorem `mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace `S` beside the span,
+where the files using it park their other tensors: a vector of `componentSpan T ⊔ S`, the sums
+`u + y`, is invariant exactly when it is a combination of the four contractions plus an
+invariant `y` of `S`. For `S = ⊥` that is `exists_smul_contraction_of_invariant`.
 
 The four coefficient tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant
 of the span is the contraction of an invariant one, by projecting off the tensors that contract
@@ -47,11 +46,12 @@ open Matrix MatrixGroups SL2C Invariants
 
 /-!
 
-## A. Quadruple Lorentz tensors, their span, and coefficient tensors
+## A. Rank-four families, their span, and coefficient tensors
 
 A direction is an element of `Fin 1 ⊕ Fin 3`, time or one of the three axes; an index vector
 `d : Fin 4 → Fin 1 ⊕ Fin 3` puts one in each slot, so `T d` is `T^{μνρσ}` at `(μ, ν, ρ, σ) = d`.
-The law is
+The predicate and the span are `IsLorentzTensorFamily 4` and `componentSpan`, both from
+`Invariants.TensorFamily`. The law is
 
 `repLorentz g (T l) = ∑_a Λ_{a₀ l₀} Λ_{a₁ l₁} Λ_{a₂ l₂} Λ_{a₃ l₃} • T a`,
 
@@ -64,37 +64,11 @@ play, kept apart by name: `x : B` is Lorentz invariant when `repLorentz g x = x`
 stated for any number of slots in `Invariants.Basic` and used here at four.
 -/
 
-/-- A family `T` of vectors of `B`, one per index vector, which `repLorentz` moves the way the
-  components of a rank-four tensor transform: one factor of the Lorentz matrix per slot, the
-  moved index second in each factor and the summed one first. -/
-structure IsQuadLorentz (B : Type*) [AddCommMonoid B] [Module ℂ B]
-    (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B) : Prop where
-  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
-    repLorentz g (T l) = ∑ (a : Fin 4 → Fin 1 ⊕ Fin 3),
-    (∏ (i : Fin 4), (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a
-
-namespace IsQuadLorentz
+namespace QuadLorentz
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B}
-  (hT : IsQuadLorentz B repLorentz T)
-
-set_option linter.unusedVariables false in
-/-- The span of the `256` components; `hT` is unused, and is present only so it reads `hT.span`. -/
-def span (hT : IsQuadLorentz B repLorentz T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
-
-/-- A vector lies in the span exactly when it is a contraction `∑ d, c d • T d`. -/
-lemma mem_span_iff (x : B) :
-    x ∈ hT.span ↔ ∃ c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ, x = ∑ d, c d • T d := by
-  rw [span, ← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-    LinearMap.mem_range]
-  simp only [Fintype.linearCombination_apply, eq_comm]
-
-/-- Every contraction of the components lies in their span. -/
-lemma sum_smul_mem_span (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) : ∑ d, c d • T d ∈ hT.span :=
-  (hT.mem_span_iff _).2 ⟨c, rfl⟩
 
 /-!
 
@@ -157,34 +131,38 @@ lemma sum_smul_contraction (a : Fin 4 → ℂ) :
   rfl
 
 /-- The outer contraction lies in the span of the components. -/
-lemma outerContraction_mem_span : outerContraction T ∈ hT.span := hT.sum_smul_mem_span _
+lemma outerContraction_mem_span : outerContraction T ∈ componentSpan T :=
+  sum_smul_mem_componentSpan T _
 
 /-- The inner contraction lies in the span of the components. -/
-lemma innerContraction_mem_span : innerContraction T ∈ hT.span := hT.sum_smul_mem_span _
+lemma innerContraction_mem_span : innerContraction T ∈ componentSpan T :=
+  sum_smul_mem_componentSpan T _
 
 /-- The split contraction lies in the span of the components. -/
-lemma splitContraction_mem_span : splitContraction T ∈ hT.span := hT.sum_smul_mem_span _
+lemma splitContraction_mem_span : splitContraction T ∈ componentSpan T :=
+  sum_smul_mem_componentSpan T _
 
 /-- The Levi-Civita contraction lies in the span of the components. -/
-lemma epsilonContraction_mem_span : epsilonContraction T ∈ hT.span := hT.sum_smul_mem_span _
+lemma epsilonContraction_mem_span : epsilonContraction T ∈ componentSpan T :=
+  sum_smul_mem_componentSpan T _
 
 /-- A combination of the four contractions lies in the span of the components. -/
 lemma smul_contraction_mem_span (a₁ a₂ a₃ a₄ : ℂ) :
     a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-      + a₄ • epsilonContraction T ∈ hT.span :=
-  add_mem (add_mem (add_mem (Submodule.smul_mem _ _ hT.outerContraction_mem_span)
-    (Submodule.smul_mem _ _ hT.innerContraction_mem_span))
-    (Submodule.smul_mem _ _ hT.splitContraction_mem_span))
-    (Submodule.smul_mem _ _ hT.epsilonContraction_mem_span)
+      + a₄ • epsilonContraction T ∈ componentSpan T :=
+  add_mem (add_mem (add_mem (Submodule.smul_mem _ _ (outerContraction_mem_span (T := T)))
+    (Submodule.smul_mem _ _ (innerContraction_mem_span (T := T))))
+    (Submodule.smul_mem _ _ (splitContraction_mem_span (T := T))))
+    (Submodule.smul_mem _ _ (epsilonContraction_mem_span (T := T)))
 
 /-!
 
 ## B.2. The four coefficient tensors are invariant
 
-`Λ η Λᵀ = η` defines the Lorentz group; entry by entry it is `sum_minkowskiMatrixZ_mul`, and
-a pair of metrics is two copies of it, one per pair of slots (`act_outerPair`). The inner and
-split
-pairings are the outer one with the slots permuted (`act_outerPair_comp`). The symbol against
+`Λ η Λᵀ = η` defines the Lorentz group; entry by entry it is
+`LorentzGroup.sum_minkowskiMatrixZ_mul`, and a pair of metrics is two copies of it, one per
+pair of slots (`act_outerPair`). The inner and split pairings are the outer one with the slots
+permuted (`act_outerPair_comp`). The symbol against
 four rows of `M` gives `det M` times the symbol of those rows (`sum_leviCivitaSymbol_mul_prod`),
 and `det Λ = 1` here: the only use of the determinant, and the reason there are four invariants
 and not three, a reflection having `det = -1`. `sum_pi_four` is bookkeeping.
@@ -208,26 +186,8 @@ lemma sum_pi_four {M : Type*} [AddCommMonoid M] (F : (Fin 4 → Fin 1 ⊕ Fin 3)
         fin_cases i <;> simp]
   simp only [Fintype.sum_prod_type]
 
-/-- The defining relation `Λ η Λᵀ = η`, read on the entry `(a, b)`. -/
-lemma sum_minkowskiMatrixZ_mul (Λ : LorentzGroup 3) (a b : Fin 1 ⊕ Fin 3) :
-    ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, ((minkowskiMatrixZ x y : ℤ) : ℂ)
-        * (((Λ.1 a x : ℝ) : ℂ) * ((Λ.1 b y : ℝ) : ℂ))
-      = ((minkowskiMatrixZ a b : ℤ) : ℂ) := by
-  have hR : ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3,
-      ((minkowskiMatrixZ x y : ℤ) : ℝ) * (Λ.1 a x * Λ.1 b y)
-        = ((minkowskiMatrixZ a b : ℤ) : ℝ) := by
-    have h := congrFun (congrFun
-      (LorentzGroup.mul_minkowskiMatrix_mul_transpose (Λ := Λ)) a) b
-    simp only [Matrix.mul_apply, Matrix.transpose_apply] at h
-    rw [minkowskiMatrixZ.cast_apply, ← h, Finset.sum_comm]
-    refine Finset.sum_congr rfl fun y _ => ?_
-    rw [Finset.sum_mul]
-    exact Finset.sum_congr rfl fun x _ => by rw [minkowskiMatrixZ.cast_apply]; ring
-  have hC := congrArg (fun r : ℝ => (r : ℂ)) hR
-  push_cast at hC ⊢
-  exact hC
-
-/-- The pairing of slots `(0,1)` and `(2,3)` is fixed: two copies of `sum_minkowskiMatrixZ_mul`. -/
+/-- The pairing of slots `(0,1)` and `(2,3)` is fixed: two copies of
+  `LorentzGroup.sum_minkowskiMatrixZ_mul`. -/
 lemma act_outerPair (Λ : LorentzGroup 3) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
     act Λ.1 (fun d => ((minkowskiMatrixZ (d 0) (d 1) * minkowskiMatrixZ (d 2) (d 3) : ℤ) : ℂ)) a
       = ((minkowskiMatrixZ (a 0) (a 1) * minkowskiMatrixZ (a 2) (a 3) : ℤ) : ℂ) := by
@@ -245,7 +205,7 @@ lemma act_outerPair (Λ : LorentzGroup 3) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
     push_cast
     ring
   rw [act, sum_pi_four]
-  simp only [h, ← Finset.mul_sum, ← Finset.sum_mul, sum_minkowskiMatrixZ_mul]
+  simp only [h, ← Finset.mul_sum, ← Finset.sum_mul, LorentzGroup.sum_minkowskiMatrixZ_mul]
   push_cast
   ring
 
@@ -302,47 +262,40 @@ Contracting with an invariant coefficient tensor gives an invariant vector, so e
 is invariant, as is any combination: with `smul_contraction_mem_span`, the easy direction.
 -/
 
-include hT in
 /-- Each of the four contractions is Lorentz invariant, its coefficient tensor being invariant. -/
-lemma repLorentz_contraction (i : Fin 4) (g : SL(2,ℂ)) :
-    repLorentz g (contraction T i) = contraction T i := by
-  rw [contraction_eq,
-    Invariants.repLorentz_sum_smul_of_isInvariantCoeff hT.repLorentz_T
-      (isInvariantCoeff_contractionCoeff i)]
+lemma repLorentz_contraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (i : Fin 4)
+    (g : SL(2,ℂ)) : repLorentz g (contraction T i) = contraction T i := by
+  rw [contraction_eq, hT.isInvariant_sum_smul (isInvariantCoeff_contractionCoeff i)]
 
-include hT in
 /-- The outer contraction is Lorentz invariant. -/
-lemma repLorentz_outerContraction (g : SL(2,ℂ)) :
+lemma repLorentz_outerContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (outerContraction T) = outerContraction T :=
-  hT.repLorentz_contraction 0 g
+  repLorentz_contraction hT 0 g
 
-include hT in
 /-- The inner contraction is Lorentz invariant. -/
-lemma repLorentz_innerContraction (g : SL(2,ℂ)) :
+lemma repLorentz_innerContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (innerContraction T) = innerContraction T :=
-  hT.repLorentz_contraction 1 g
+  repLorentz_contraction hT 1 g
 
-include hT in
 /-- The split contraction is Lorentz invariant. -/
-lemma repLorentz_splitContraction (g : SL(2,ℂ)) :
+lemma repLorentz_splitContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (splitContraction T) = splitContraction T :=
-  hT.repLorentz_contraction 2 g
+  repLorentz_contraction hT 2 g
 
-include hT in
 /-- The Levi-Civita contraction is Lorentz invariant. -/
-lemma repLorentz_epsilonContraction (g : SL(2,ℂ)) :
-    repLorentz g (epsilonContraction T) = epsilonContraction T :=
-  hT.repLorentz_contraction 3 g
+lemma repLorentz_epsilonContraction (hT : IsLorentzTensorFamily 4 B repLorentz T)
+    (g : SL(2,ℂ)) : repLorentz g (epsilonContraction T) = epsilonContraction T :=
+  repLorentz_contraction hT 3 g
 
-include hT in
 /-- A combination of the four contractions is Lorentz invariant. -/
-lemma repLorentz_smul_contraction (a₁ a₂ a₃ a₄ : ℂ) (g : SL(2,ℂ)) :
+lemma repLorentz_smul_contraction (hT : IsLorentzTensorFamily 4 B repLorentz T)
+    (a₁ a₂ a₃ a₄ : ℂ) (g : SL(2,ℂ)) :
     repLorentz g (a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T)
       = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T := by
-  simp only [map_add, map_smul, hT.repLorentz_outerContraction, hT.repLorentz_innerContraction,
-    hT.repLorentz_splitContraction, hT.repLorentz_epsilonContraction]
+  simp only [map_add, map_smul, repLorentz_outerContraction hT, repLorentz_innerContraction hT,
+    repLorentz_splitContraction hT, repLorentz_epsilonContraction hT]
 
 /-!
 
@@ -358,15 +311,9 @@ only move to and from the plain function type. The complement `Kᗮ` is preserve
 is again such a matrix, that of `g†`; the action is not unitary, and is not used to be. So keep
 the `Kᗮ` part of `c`: it still contracts to `x`, and acting on it changes it by an element of
 `K` and of `Kᗮ`, hence by `0`. The argument is the same for any number of slots and is carried
-out there, `exists_isInvariantCoeff_of_mem_span` below being the reading of it for four.
+out in `Invariants.Basic`, reached here through
+`IsLorentzTensorFamily.exists_isInvariantCoeff_of_mem_componentSpan`.
 -/
-
-include hT in
-/-- An invariant of the span is the contraction of an invariant coefficient tensor. -/
-theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
-  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-!
 
@@ -496,119 +443,12 @@ what they force is enough.
 ## E.2. The weight-zero projection
 
 Writing each coordinate direction in the light-cone basis recovers `c` from its light-cone
-components (`eq_sum_lightConeComponent`), and for an invariant `c` only weight zero survives:
-`16 * c d = ∑_e transitionZ i d e 0 * c e`. Time and the axis span the boost plane
-(`InBoostPlane`); a direction in it is a half-sum of `D₀ ∓ Dᵢ`, so `lightConeCoeffInvZ` carries
-twice the true coefficients and four slots give the `2 ^ 4 = 16`, bought for integer entries.
-`transitionZ i d e m` is `16` times the entry, at `d` and `e`, of the map keeping total weight
-`m`, built a slot at a time: a slot of `d` in the boost plane takes weight `2` or `-2`, leaving
-`m - 2` or `m + 2`, a transverse slot takes either weight `0` direction, which is why those two
-are added, and leaves `m` (`transitionZ_eq_sum` as one sum).
+components (`eq_sum_lightConeComponent`), and for an invariant `c` only weight zero survives.
+The projection that keeps total weight `m` is `Invariants.transitionZ`, built a slot at a time
+and stated at any number of slots in `Invariants.LightCone`; each slot carries the factor `2`
+of `lightConeCoeffInvZ`, so at four slots the projection is `2 ^ 4 = 16` times the true one.
+That is the only place the `16` comes from.
 -/
-
-/-- The four light-cone directions of axis `i`, as integers. -/
-def lightConeCoeffZ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) : ℤ :=
-  if κ = 0 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then -1 else 0)
-  else if κ = 1 then (if μ = Sum.inl 0 then 1 else if μ = Sum.inr i then 1 else 0)
-  else if κ = 2 then (if μ = Sum.inr (i + 1) then 1 else 0)
-  else (if μ = Sum.inr (i + 2) then 1 else 0)
-
-/-- The integer copy casts to `lightConeCoeff`. -/
-lemma coe_lightConeCoeffZ (i : Fin 3) (κ : Fin 4) (μ : Fin 1 ⊕ Fin 3) :
-    ((lightConeCoeffZ i κ μ : ℤ) : ℂ) = lightConeCoeff i κ μ := by
-  rw [lightConeCoeffZ, lightConeCoeff]
-  split_ifs <;> norm_num
-
-/-- Twice the coordinate directions in the light-cone basis, the `2` clearing the halves. -/
-def lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℤ :=
-  if μ = Sum.inl 0 then (if κ = 0 then 1 else if κ = 1 then 1 else 0)
-  else if μ = Sum.inr i then (if κ = 0 then -1 else if κ = 1 then 1 else 0)
-  else if μ = Sum.inr (i + 1) then (if κ = 2 then 2 else 0)
-  else (if κ = 3 then 2 else 0)
-
-/-- The integer copy is exactly twice `lightConeCoeffInv`. -/
-lemma coe_lightConeCoeffInvZ_eq_two_mul (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvZ i μ κ : ℤ) : ℂ) = 2 * lightConeCoeffInv i μ κ := by
-  rw [lightConeCoeffInvZ, lightConeCoeffInv]
-  split_ifs <;> norm_num
-
-/-- The boost plane of axis `i`: time and the axis, the two directions the boost moves. -/
-def InBoostPlane (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Prop := μ = Sum.inl 0 ∨ μ = Sum.inr i
-
-instance (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) : Decidable (InBoostPlane i μ) :=
-  inferInstanceAs (Decidable (_ ∨ _))
-
-/-- A direction in the boost plane has no transverse light-cone components. -/
-lemma lightConeCoeffInvZ_eq_zero_of_inBoostPlane {i : Fin 3} {μ : Fin 1 ⊕ Fin 3}
-    (hμ : InBoostPlane i μ) {κ : Fin 4} (hκ : κ = 2 ∨ κ = 3) :
-    lightConeCoeffInvZ i μ κ = 0 := by
-  rcases hμ with rfl | rfl <;> rcases hκ with rfl | rfl <;> simp [lightConeCoeffInvZ]
-
-/-- A transverse direction has no light-cone components in the boost plane. -/
-lemma lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane {i : Fin 3} {μ : Fin 1 ⊕ Fin 3}
-    (hμ : ¬InBoostPlane i μ) {κ : Fin 4} (hκ : κ = 0 ∨ κ = 1) :
-    lightConeCoeffInvZ i μ κ = 0 := by
-  simp only [InBoostPlane, not_or] at hμ
-  rcases hκ with rfl | rfl <;> simp [lightConeCoeffInvZ, hμ.1, hμ.2]
-
-/-- One slot's factor: twice the coefficient of `κ` in `μ`, times that of `ν` in `κ`. -/
-def slotZ (i : Fin 3) (κ : Fin 4) (μ ν : Fin 1 ⊕ Fin 3) : ℤ :=
-  lightConeCoeffInvZ i μ κ * lightConeCoeffZ i κ ν
-
-/-- Sixteen times the entry, at `d` and `e`, of the map keeping the light-cone components of total
-  weight `m` along axis `i`. A slot of `d` in the boost plane takes weight `2` or `-2`, leaving
-  `m - 2` or `m + 2`; a transverse slot takes weight `0` and leaves `m`. -/
-def transitionZ (i : Fin 3) : {n : ℕ} → (d e : Fin n → Fin 1 ⊕ Fin 3) → ℤ → ℤ
-  | 0, _, _, m => if m = 0 then 1 else 0
-  | _ + 1, d, e, m =>
-    if InBoostPlane i (d 0) then
-      slotZ i 0 (d 0) (e 0) * transitionZ i (Fin.tail d) (Fin.tail e) (m - 2)
-        + slotZ i 1 (d 0) (e 0) * transitionZ i (Fin.tail d) (Fin.tail e) (m + 2)
-    else (slotZ i 2 (d 0) (e 0) + slotZ i 3 (d 0) (e 0))
-      * transitionZ i (Fin.tail d) (Fin.tail e) m
-
-/-- The recursion unfolded, as a sum over the multi-indices of total weight `m`. -/
-lemma transitionZ_eq_sum (i : Fin 3) :
-    ∀ {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) (m : ℤ),
-    transitionZ i d e m
-      = ∑ κ ∈ Finset.univ.filter
-          (fun κ : Fin n → Fin 4 => (∑ s, lightConeWeight (κ s)) = m),
-        ∏ s, slotZ i (κ s) (d s) (e s)
-  | 0, d, e, m => by
-    rw [Finset.sum_filter, Fintype.sum_unique]
-    simp [transitionZ, eq_comm]
-  | n + 1, d, e, m => by
-    have hpeel : ∀ κ : Fin 4,
-        (∑ κ' : Fin n → Fin 4, if lightConeWeight κ + ∑ s, lightConeWeight (κ' s) = m then
-          slotZ i κ (d 0) (e 0) * ∏ s, slotZ i (κ' s) (d s.succ) (e s.succ) else 0)
-        = slotZ i κ (d 0) (e 0)
-          * transitionZ i (Fin.tail d) (Fin.tail e) (m - lightConeWeight κ) := by
-      intro κ
-      rw [transitionZ_eq_sum i (Fin.tail d) (Fin.tail e), Finset.sum_filter, Finset.mul_sum]
-      exact Finset.sum_congr rfl fun κ' _ => by
-        rw [mul_ite, mul_zero]
-        exact if_congr (by omega) rfl rfl
-    calc transitionZ i d e m
-        = ∑ κ : Fin 4, slotZ i κ (d 0) (e 0)
-            * transitionZ i (Fin.tail d) (Fin.tail e) (m - lightConeWeight κ) := by
-          rw [Fin.sum_univ_four, transitionZ]
-          simp only [show lightConeWeight 0 = 2 from rfl, show lightConeWeight 1 = -2 from rfl,
-            show lightConeWeight 2 = 0 from rfl, show lightConeWeight 3 = 0 from rfl,
-            sub_neg_eq_add, sub_zero]
-          by_cases h : InBoostPlane i (d 0)
-          · rw [if_pos h]
-            simp [slotZ, lightConeCoeffInvZ_eq_zero_of_inBoostPlane h]
-          · rw [if_neg h]
-            simp [slotZ, lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane h]
-            ring
-      _ = _ := by
-          rw [Finset.sum_filter,
-            ← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => Fin 4), Fintype.sum_prod_type]
-          refine Finset.sum_congr rfl fun κ _ => ?_
-          rw [← hpeel κ]
-          refine Finset.sum_congr rfl fun κ' _ => ?_
-          simp only [Fin.consEquiv_apply, Fin.sum_univ_succ, Fin.prod_univ_succ, Fin.cons_zero,
-            Fin.cons_succ]
 
 /-- An invariant coefficient tensor is its own weight-zero projection. -/
 lemma sixteen_mul_eq_sum_transitionZ {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
@@ -929,44 +769,24 @@ theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvarian
 C to G give `exists_smul_contraction_of_invariant`, the case `S = ⊥` of the theorem. For
 general `S`, right to left is immediate and does not use `hS`; left to right passes to the
 quotient `B ⧸ S`, that is `B` with `S` declared zero and `S.mkQ` the map to classes. Stability
-lets `repLorentz` act there (`quotRep`) and the classes of the components again form a
-quadruple Lorentz tensor (`isQuadLorentz_quotRep`), so back in `B` the difference between `x`
-and the matching combination of contractions has zero class, hence lies in `S`, and is
-invariant as a difference of invariants.
+lets `repLorentz` act there and the classes of the components again form a rank-four family,
+both by `IsLorentzTensorFamily.quotient`, so back in `B` the difference between `x` and the
+matching combination of contractions has zero class, hence lies in `S`, and is invariant as a
+difference of invariants.
 -/
 
-include hT in
 /-- Every Lorentz invariant of the span is a combination of the four contractions. -/
-theorem exists_smul_contraction_of_invariant {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+theorem exists_smul_contraction_of_invariant (hT : IsLorentzTensorFamily 4 B repLorentz T)
+    {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ,
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
   obtain ⟨a, rfl⟩ := exists_eq_sum hc
   refine ⟨a 0, a 1, a 2, a 3, ?_⟩
   rw [← sum_smul_contraction]
   simp only [contraction_eq, Finset.smul_sum, Finset.sum_smul, smul_smul]
   exact Finset.sum_comm
-
-/-- The representation induced on `B ⧸ S`, well defined because `S` is stable. -/
-noncomputable def quotRep (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    Representation ℂ SL(2,ℂ) (B ⧸ S) where
-  toFun g := S.mapQ S (repLorentz g) fun y hy => hS g y hy
-  map_one' := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_one, Module.End.one_apply]
-  map_mul' g₁ g₂ := by
-    ext y
-    simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.mkQ_apply,
-      Submodule.mapQ_apply, map_mul, Module.End.mul_apply]
-
-/-- `S.mkQ y` is the class of `y`, and the induced representation moves a class by any lift. -/
-lemma quotRep_mkQ (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (g : SL(2,ℂ)) (y : B) :
-    quotRep (repLorentz := repLorentz) S hS g (S.mkQ y) = S.mkQ (repLorentz g y) := rfl
 
 /-- Taking classes turns a contraction of the components into one of their classes. -/
 lemma mkQ_sum_smul (S : Submodule ℂ B) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) :
@@ -974,35 +794,17 @@ lemma mkQ_sum_smul (S : Submodule ℂ B) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → �
   rw [map_sum]
   exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
 
-include hT in
-/-- The classes of the components again form a quadruple Lorentz tensor. -/
-lemma isQuadLorentz_quotRep (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsQuadLorentz (B ⧸ S) (quotRep (repLorentz := repLorentz) S hS)
-      (fun l => S.mkQ (T l)) where
-  repLorentz_T g l := by
-    rw [quotRep_mkQ, hT.repLorentz_T g l, mkQ_sum_smul]
-
-include hT in
 /-- Left to right in `mem_span_sup_invariant_iff`, proved in the quotient by `S`. -/
-lemma exists_smul_contraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
+lemma exists_smul_contraction_of_invariant_subset
+    (hT : IsLorentzTensorFamily 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T + y
       ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
-  have hT' := hT.isQuadLorentz_quotRep S hS
-  have hmk : S.mkQ x ∈ hT'.span := by
-    obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
-    obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
-    rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
-      add_zero, hc, mkQ_sum_smul]
-    exact hT'.sum_smul_mem_span c
-  have hinv' : ∀ g : SL(2,ℂ),
-      quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x :=
-    fun g => by rw [quotRep_mkQ, hinv g]
-  obtain ⟨a₁, a₂, a₃, a₄, hcomb⟩ := hT'.exists_smul_contraction_of_invariant hmk hinv'
+  obtain ⟨a₁, a₂, a₃, a₄, hcomb⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
+    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
   simp only [outerContraction, innerContraction, splitContraction, epsilonContraction,
     ← mkQ_sum_smul] at hcomb
   refine ⟨a₁, a₂, a₃, a₄,
@@ -1012,104 +814,24 @@ lemma exists_smul_contraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
       innerContraction, splitContraction, epsilonContraction]
     simp only [map_add, map_smul]
     abel
-  · rw [map_sub, hinv g, hT.repLorentz_smul_contraction a₁ a₂ a₃ a₄ g]
+  · rw [map_sub, hinv g, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g]
 
-include hT in
-/-- A vector of `hT.span ⊔ S`, the sums `u + y` with `u` in the span and `y` in the Lorentz-stable
-  subspace `S`, is invariant exactly when it is a combination of the four contractions plus an
-  invariant `y` of `S`. `hS` is used only left to right. -/
-theorem mem_span_sup_invariant_iff (x : B) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    (x ∈ hT.span ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+/-- A vector of `componentSpan T ⊔ S`, the sums `u + y` with `u` in the span and `y` in the
+  Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four
+  contractions plus an invariant `y` of `S`. `hS` is used only left to right. -/
+theorem mem_span_sup_invariant_iff (hT : IsLorentzTensorFamily 4 B repLorentz T) (x : B)
+    (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
+    (x ∈ componentSpan T ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
         x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
           + a₄ • epsilonContraction T + y
         ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
-  refine ⟨fun h => hT.exists_smul_contraction_of_invariant_subset S hS h.1 h.2, ?_⟩
+  refine ⟨fun h => exists_smul_contraction_of_invariant_subset hT S hS h.1 h.2, ?_⟩
   rintro ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩
-  refine ⟨add_mem (Submodule.mem_sup_left (hT.smul_contraction_mem_span a₁ a₂ a₃ a₄))
+  refine ⟨add_mem (Submodule.mem_sup_left (smul_contraction_mem_span (T := T) a₁ a₂ a₃ a₄))
     (Submodule.mem_sup_right hyS), fun g => ?_⟩
-  rw [map_add, hT.repLorentz_smul_contraction a₁ a₂ a₃ a₄ g, hyinv g]
+  rw [map_add, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g, hyinv g]
 
-/-!
-
-## Aside: what other files import from here
-
-None of this is used above. It repeats E over `ℚ`, sorting the light-cone directions into
-sectors by weight, raising `2`, lowering `-2` and transverse `0`, which is the form
-`IsBiLorentz` needs.
--/
-
-/-- The inverse light-cone coefficients of section E over `ℚ`, with the halves kept as halves. -/
-def lightConeCoeffInvQ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℚ :=
-  if μ = Sum.inl 0 then (if κ = 0 then 2⁻¹ else if κ = 1 then 2⁻¹ else 0)
-  else if μ = Sum.inr i then (if κ = 0 then -2⁻¹ else if κ = 1 then 2⁻¹ else 0)
-  else if μ = Sum.inr (i + 1) then (if κ = 2 then 1 else 0)
-  else (if κ = 3 then 1 else 0)
-
-/-- The rational mirror casts to the inverse light-cone coefficients. -/
-lemma coe_lightConeCoeffInvQ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvQ i μ κ : ℚ) : ℂ) = lightConeCoeffInv i μ κ := by
-  rw [lightConeCoeffInvQ, lightConeCoeffInv]
-  split_ifs <;> norm_num
-
-/-- The integer mirror is twice the rational one. -/
-lemma coe_lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvZ i μ κ : ℤ) : ℚ) = 2 * lightConeCoeffInvQ i μ κ := by
-  rw [lightConeCoeffInvZ, lightConeCoeffInvQ]
-  split_ifs <;> norm_num
-
-/-- The sector of each light-cone direction: `0` raising, `1` lowering, `2` and `3` transverse. -/
-def sectorIndex : Fin 4 → Fin 3 := ![0, 1, 2, 2]
-
-/-- The boost weight of each sector: `2` raising, `-2` lowering, `0` transverse. -/
-def sectorWeight : Fin 3 → ℤ := ![2, -2, 0]
-
-/-- The light-cone weight of a direction is the weight of its sector. -/
-lemma lightConeWeight_eq_sectorWeight (κ : Fin 4) :
-    lightConeWeight κ = sectorWeight (sectorIndex κ) := by
-  fin_cases κ <;> rfl
-
-/-- The slot factor summed over the directions of one sector, over `ℚ`. -/
-def slotTransition (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℚ :=
-  ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
-    lightConeCoeffInvQ i μ κ' * (lightConeCoeffZ i κ' ν : ℚ)
-
-/-- The slot factor summed over one sector, in closed form over `ℤ`: on the boost plane the
-  raising sector carries `[[1, -1], [-1, 1]]` and the lowering sector the all-ones matrix, and
-  the transverse sector is twice the identity on the transverse directions. -/
-def slotTransitionZ (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℤ :=
-  if κ = 2 then (if μ = ν ∧ μ ≠ Sum.inl 0 ∧ μ ≠ Sum.inr i then 2 else 0)
-  else if (μ = Sum.inl 0 ∨ μ = Sum.inr i) ∧ (ν = Sum.inl 0 ∨ ν = Sum.inr i) then
-    (if κ = 0 then (if μ = Sum.inr i then -1 else 1) * (if ν = Sum.inr i then -1 else 1)
-    else 1)
-  else 0
-
-/-- The closed form is the sector sum of the slot factors. -/
-lemma slotTransitionZ_eq_sum (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
-    slotTransitionZ i κ μ ν
-      = ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
-        lightConeCoeffInvZ i μ κ' * lightConeCoeffZ i κ' ν := by
-  rw [Finset.sum_filter, Fin.sum_univ_four]
-  rcases μ with a | j <;> rcases ν with b | l
-  · simp only [Fin.fin_one_eq_zero a, Fin.fin_one_eq_zero b]
-    fin_cases κ <;> simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · simp only [Fin.fin_one_eq_zero a]
-    fin_cases κ <;> fin_cases i <;> fin_cases l <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · simp only [Fin.fin_one_eq_zero b]
-    fin_cases κ <;> fin_cases i <;> fin_cases j <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · fin_cases κ <;> fin_cases i <;> fin_cases j <;> fin_cases l <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-
-/-- The integer sector matrix is twice the rational one, which is what the two names promise. -/
-lemma coe_slotTransitionZ (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
-    ((slotTransitionZ i κ μ ν : ℤ) : ℚ) = 2 * slotTransition i κ μ ν := by
-  rw [slotTransitionZ_eq_sum, slotTransition, Finset.mul_sum]
-  push_cast
-  exact Finset.sum_congr rfl fun κ' _ => by rw [coe_lightConeCoeffInvZ]; ring
-
-end IsQuadLorentz
+end QuadLorentz
 
 end Lorentz

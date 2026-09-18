@@ -50,7 +50,6 @@ invariance is the same condition for both and the classification carries over (I
 namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C Invariants
-open IsQuadLorentz (quotRep quotRep_mkQ)
 
 /-!
 
@@ -355,12 +354,12 @@ the classification applies there and lifts back with an error term in `S`.
 include hT in
 /-- The images of the components in the quotient by a Lorentz-stable submodule again
   form a bi-left-handed Weyl tensor. -/
-lemma isBiLeftWeyl_quotRep (S : Submodule ℂ B)
+lemma isBiLeftWeyl_quotient (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsBiLeftWeyl (B ⧸ S) (quotRep (repLorentz := repLorentz) S hS)
+    IsBiLeftWeyl (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
       (fun l => S.mkQ (T l)) where
   repLorentz_T g l := by
-    rw [quotRep_mkQ, hT.repLorentz_T g l, map_sum]
+    rw [quotient_apply_mkQ, hT.repLorentz_T g l, map_sum]
     exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 /-- The quotient map carries the `ε` contraction to the `ε` contraction of the
@@ -378,7 +377,7 @@ lemma exists_smul_epsilonContraction_of_invariant_subset {x : B} (S : Submodule 
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • epsilonContraction (T := T) + y := by
-  have hT' := hT.isBiLeftWeyl_quotRep S hS
+  have hT' := hT.isBiLeftWeyl_quotient S hS
   have hmk : S.mkQ x ∈ hT'.span := by
     obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
     obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
@@ -387,9 +386,9 @@ lemma exists_smul_epsilonContraction_of_invariant_subset {x : B} (S : Submodule 
       add_zero, hc, map_sum]
     exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
   have hinv' : ∀ g : SL(2,ℂ),
-      quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x := by
+      (repLorentz.quotient S fun g y hy => hS g y hy) g (S.mkQ x) = S.mkQ x := by
     intro g
-    rw [quotRep_mkQ, hinv g]
+    rw [quotient_apply_mkQ, hinv g]
   obtain ⟨a, hcomb⟩ := hT'.exists_smul_epsilonContraction_of_invariant hmk hinv'
   rw [← mkQ_epsilonContraction] at hcomb
   refine ⟨a, x - a • epsilonContraction (T := T), ?_, by abel⟩

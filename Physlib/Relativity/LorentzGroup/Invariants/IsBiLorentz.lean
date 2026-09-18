@@ -5,7 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
+public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
@@ -22,19 +23,19 @@ symbol needing four. That is `exists_smul_metricContraction_of_invariant`, and
 Lorentz-stable subspace `S`, the form the Standard Model files use.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsBiLorentz` says the group
-moves them with one factor of the Lorentz matrix per slot (A). `hT.span` is the set of
-their combinations.
+`repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzTensorFamily 2` says the
+group moves them with one factor of the Lorentz matrix per slot. `componentSpan T` is the set
+of their combinations.
 
 An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
-matrices themselves fix (A, from `Invariants.Basic`), and the rest is the two-index case of the
-argument in `IsQuadLorentz`, reusing its light-cone coefficients and sector matrices. Along a
-spatial axis the four light-cone directions carry boost weights `2`, `-2`, `0`, `0`, and an
+matrices themselves fix (from `Invariants.Basic`), and the rest runs at two slots on the
+light-cone coefficients and sector matrices of `Invariants.LightCone`. Along a spatial axis
+the four light-cone directions carry boost weights `2`, `-2`, `0`, `0`, and an
 invariant `c` has no light-cone component of nonzero weight, so it is fixed by the weight-zero
-projection along each axis (B); averaging the three gives one linear map on the `16`
-coefficients, `12` times an integer matrix with a short closed form (C, D). Its eigenvalues are
+projection along each axis (A); averaging the three gives one linear map on the `16`
+coefficients, `12` times an integer matrix with a short closed form (B, C). Its eigenvalues are
 `12`, `10`, `4`, `0`, with `12` simple, so the cubic `λ (λ - 4) (λ - 10)` sends everything onto
-that one eigenvector, which is the metric (E). Section F draws the conclusion and G divides
+that one eigenvector, which is the metric (D). Section E draws the conclusion and F divides
 out `S`.
 
 No rotation averaging is needed here, unlike the four-index case: for two indices the
@@ -46,64 +47,20 @@ three weight-zero conditions already cut the `16` components down to a single li
 namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C Invariants
-open IsQuadLorentz (lightConeCoeffZ coe_lightConeCoeffZ lightConeCoeffInvQ
-  coe_lightConeCoeffInvQ lightConeCoeffInvZ coe_lightConeCoeffInvZ sectorIndex sectorWeight
-  lightConeWeight_eq_sectorWeight slotTransition slotTransitionZ slotTransitionZ_eq_sum quotRep
-  quotRep_mkQ)
 
-/-!
-
-## A. Bi-Lorentz tensors and the span of their components
-
-A direction is an element of `Fin 1 ⊕ Fin 3`, time or one of the three axes, and an index
-vector puts one in each of the two slots, so `T d` is `T^{μν}` at `(μ, ν) = d`.
-`IsBiLorentz B repLorentz T` says the group moves the components with one factor of the
-Lorentz matrix per slot, and `hT.span` is the set of combinations `∑ d, c d • T d`.
-
--/
-
-/-- A family `T` of elements of `B`, indexed by two four-vector indices, transforms as
-  a tensor `T^{μ₁ μ₂}` under the representation `repLorentz` of `SL(2,ℂ)`. -/
-structure IsBiLorentz (B : Type*) [AddCommMonoid B] [Module ℂ B]
-    (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (T : (Fin 2 → (Fin 1 ⊕ Fin 3)) → B) : Prop where
-  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
-    repLorentz g (T l) = ∑ (a : Fin 2 → Fin 1 ⊕ Fin 3),
-    (∏ (i : Fin 2), (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a
-
-namespace IsBiLorentz
+namespace BiLorentz
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
   {T : (Fin 2 → (Fin 1 ⊕ Fin 3)) → B}
-  (hT : IsBiLorentz B repLorentz T)
-
-set_option linter.unusedVariables false in
-/-- The span of the components; `hT` is unused, and is present only so it reads `hT.span`. -/
-def span (hT : IsBiLorentz B repLorentz T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
-
-/-- A vector lies in the span exactly when it is a combination `∑ d, c d • T d`. -/
-lemma mem_span_iff (x : B) :
-    x ∈ hT.span ↔ ∃ c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ, x = ∑ d, c d • T d := by
-  rw [span, ← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-    LinearMap.mem_range]
-  simp only [Fintype.linearCombination_apply, eq_comm]
-
-
-include hT in
-/-- An invariant of the span is the contraction of an invariant coefficient tensor. -/
-theorem exists_isInvariantCoeff_of_mem_span {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
-  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-!
 
-## B. The weight-zero transition along one axis
+## A. The weight-zero transition along one axis
 
 An invariant coefficient tensor keeps only its light-cone components of total weight zero, so
 writing it back on the coefficients it is fixed by one matrix per axis: a sum over the sector
-patterns of total weight zero of the per-slot sector matrices of `IsQuadLorentz`.
+patterns of total weight zero of the per-slot sector matrices of `Invariants.LightCone`.
 
 -/
 
@@ -193,7 +150,7 @@ lemma eq_sum_weightZeroTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
 
 /-!
 
-## C. The average over the axes
+## B. The average over the axes
 
 An invariant coefficient tensor is fixed by each of the three weight-zero transitions, hence
 by their average.
@@ -225,7 +182,7 @@ lemma eq_sum_boostAverageTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
 
 /-!
 
-## D. The average as an integer matrix
+## C. The average as an integer matrix
 
 Twelve times the average is an integer matrix on the `16` components, with a short closed
 form that the kernel can evaluate cheaply.
@@ -233,7 +190,7 @@ form that the kernel can evaluate cheaply.
 -/
 
 /-- Integer mirror of the weight-zero transition: four times its value, as the
-  balanced-sector convolution of the integer slot matrices of `IsQuadLorentz`. -/
+  balanced-sector convolution of the integer slot matrices of `Invariants.LightCone`. -/
 def weightZeroTransitionZ (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℤ :=
   ∑ w ∈ Finset.univ.filter (fun w : Fin 2 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
     ∏ s, slotTransitionZ i (w s) (e s) (d s)
@@ -310,7 +267,7 @@ lemma boostAverageZ_eq : boostAverageZ = Matrix.of boostAverageEntry := by
 
 /-!
 
-## E. The certificate polynomial and the trace projector
+## D. The certificate polynomial and the trace projector
 
 The average has eigenvalues `12`, `10`, `4` and `0` on the `16` components, with the
 invariant eigenvalue `12` simple, so the cubic `λ (λ - 4) (λ - 10)` sends the matrix to a
@@ -369,9 +326,9 @@ lemma boostAverageZ_symm (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
 
 /-!
 
-## F. The classification of the Lorentz invariants
+## E. The classification of the Lorentz invariants
 
-## F.1. The metric contraction
+## E.1. The metric contraction
 
 -/
 
@@ -382,7 +339,7 @@ noncomputable def metricContraction : B :=
 
 /-!
 
-## F.2. Iterating the averaged round on the coefficients
+## E.2. Iterating the averaged round on the coefficients
 
 -/
 
@@ -420,7 +377,7 @@ lemma pow_mul_eq_sum_pow_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
 
 /-!
 
-## F.3. The certificate round
+## E.3. The certificate round
 
 -/
 
@@ -457,17 +414,16 @@ lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : I
 
 /-!
 
-## F.4. The classification
+## E.4. The classification
 
 -/
 
-include hT in
 /-- Every Lorentz invariant in the span of the components is a multiple of the metric
   contraction. -/
-theorem exists_smul_metricContraction_of_invariant {x : B} (hx : x ∈ hT.span)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzTensorFamily 2 B repLorentz T)
+    {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • metricContraction (T := T) := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
   refine ⟨(4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e, ?_⟩
   rw [metricContraction, Finset.smul_sum]
   refine Finset.sum_congr rfl fun d _ => ?_
@@ -475,24 +431,13 @@ theorem exists_smul_metricContraction_of_invariant {x : B} (hx : x ∈ hT.span)
 
 /-!
 
-## G. The classification modulo a Lorentz-stable submodule
+## F. The classification modulo a Lorentz-stable submodule
 
 A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`, that is `B` with
 `S` declared zero: the classes of the components again form a bi-Lorentz tensor, so
-section F applies there and lifts back with an error term in `S`.
+section E applies there and lifts back with an error term in `S`.
 
 -/
-
-include hT in
-/-- The images of the components in the quotient by a Lorentz-stable submodule again
-  form a bi-Lorentz tensor. -/
-lemma isBiLorentz_quotRep (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsBiLorentz (B ⧸ S) (quotRep (repLorentz := repLorentz) S hS)
-      (fun l => S.mkQ (T l)) where
-  repLorentz_T g l := by
-    rw [quotRep_mkQ, hT.repLorentz_T g l, map_sum]
-    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 /-- The quotient map carries the metric contraction to the metric contraction of the
   images. -/
@@ -502,26 +447,15 @@ lemma mkQ_metricContraction (S : Submodule ℂ B) :
   rw [metricContraction, metricContraction, map_sum]
   exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
 
-include hT in
 /-- The same modulo a Lorentz-stable subspace `S`: a multiple of the metric contraction plus an
   error in `S`. -/
-lemma exists_smul_metricContraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
+lemma exists_smul_metricContraction_of_invariant_subset
+    (hT : IsLorentzTensorFamily 2 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • metricContraction (T := T) + y := by
-  have hT' := hT.isBiLorentz_quotRep S hS
-  have hmk : S.mkQ x ∈ hT'.span := by
-    obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
-    obtain ⟨c, hc⟩ := (hT.mem_span_iff u).1 hu
-    refine (hT'.mem_span_iff _).2 ⟨c, ?_⟩
-    rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
-      add_zero, hc, map_sum]
-    exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
-  have hinv' : ∀ g : SL(2,ℂ),
-      quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x := by
-    intro g
-    rw [quotRep_mkQ, hinv g]
-  obtain ⟨a, hcomb⟩ := hT'.exists_smul_metricContraction_of_invariant hmk hinv'
+  obtain ⟨a, hcomb⟩ := exists_smul_metricContraction_of_invariant (hT.quotient S hS)
+    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
   rw [← mkQ_metricContraction] at hcomb
   refine ⟨a, x - a • metricContraction (T := T), ?_, by abel⟩
   have hker : x - a • metricContraction (T := T) ∈ LinearMap.ker S.mkQ := by
@@ -529,6 +463,6 @@ lemma exists_smul_metricContraction_of_invariant_subset {x : B} (S : Submodule �
     abel
   rwa [Submodule.ker_mkQ] at hker
 
-end IsBiLorentz
+end BiLorentz
 
 end Lorentz

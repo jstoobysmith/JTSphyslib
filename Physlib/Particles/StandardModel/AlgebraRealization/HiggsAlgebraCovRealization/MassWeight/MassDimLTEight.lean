@@ -20,7 +20,7 @@ weight is neutral, which is the gauge classification of
 `mem_of_invariant_massWeightSubmodule_two_sup`.  Weight six dies on Lorentz counting.  Its
 gauge invariants are the isospin contractions with one derivative, `∂_μ H† H` and
 `H† ∂_μ H`, and a single covector index admits no invariant contraction at all — the metric
-ties two indices and the Levi-Civita symbol four — which is `IsSingleLorentz`.
+ties two indices and the Levi-Civita symbol four — which is `SingleLorentz`.
 
 Weight four survives because the Higgs is a Lorentz scalar.  Its gauge invariants are the
 multiples of `H† H`, and with no derivative slot there is no Lorentz index to contract, so
@@ -82,7 +82,7 @@ lemma sum_cov_zero {M : Type*} [AddCommMonoid M] (f : (Fin 0 → Fin 1 ⊕ Fin 3
 At mass weight six the gauge classification leaves the isospin contractions carrying one
 derivative, on either of the two towers.  The Higgs is a Lorentz scalar, so the only
 Lorentz index such a contraction has is that derivative slot, and read as a family indexed
-by it the contraction is a Lorentz vector.  `IsSingleLorentz` says that one covector index
+by it the contraction is a Lorentz vector.  `SingleLorentz` says that one covector index
 admits no invariant contraction, so a Lorentz invariant of the span together with a stable
 submodule already lies in the submodule; the spans are themselves stable, so the two of
 them peel off one after the other.
@@ -93,7 +93,7 @@ include h in
 /-- The isospin contraction of a once-derived Higgs tower against an underived conjugate
   tower, read as a family indexed by its derivative slot, is a Lorentz vector. -/
 lemma isSingleLorentz_dotGaugeHiggs_left :
-    IsSingleLorentz B repLorentz
+    IsLorentzTensorFamily 1 B repLorentz
       (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -104,7 +104,7 @@ include h in
 /-- The isospin contraction of an underived Higgs tower against a once-derived conjugate
   tower is a Lorentz vector in the same way. -/
 lemma isSingleLorentz_dotGaugeHiggs_right :
-    IsSingleLorentz B repLorentz
+    IsLorentzTensorFamily 1 B repLorentz
       (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
@@ -114,31 +114,19 @@ lemma isSingleLorentz_dotGaugeHiggs_right :
 /-- The span of the isospin contractions with one derivative on the Higgs tower is the
   span of the components of the corresponding Lorentz vector. -/
 lemma dotSpan_one_zero_eq :
-    h.dotSpan 1 0 = (h.isSingleLorentz_dotGaugeHiggs_left).span := by
-  rw [dotSpan, IsSingleLorentz.span]
+    h.dotSpan 1 0 = componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  rw [dotSpan, componentSpan]
   refine iSup_congr fun d => le_antisymm (iSup_le fun d' => ?_) (le_iSup_of_le ![] le_rfl)
   rw [Subsingleton.elim d' (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
 
 /-- The span of the isospin contractions with one derivative on the conjugate tower is the
   span of the components of the corresponding Lorentz vector. -/
 lemma dotSpan_zero_one_eq :
-    h.dotSpan 0 1 = (h.isSingleLorentz_dotGaugeHiggs_right).span := by
-  rw [dotSpan, IsSingleLorentz.span]
+    h.dotSpan 0 1 = componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  rw [dotSpan, componentSpan]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le d' ?_)
     (iSup_le fun d => le_iSup_of_le ![] (le_iSup_of_le d le_rfl))
   rw [Subsingleton.elim d (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
-
-/-- The span of the components of a Lorentz vector is stable under the Lorentz group:
-  each component goes to a combination of components. -/
-lemma isSingleLorentz_span_stable {T : (Fin 1 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsSingleLorentz B repLorentz T) (g : SL(2,ℂ)) {y : B} (hy : y ∈ hT.span) :
-    repLorentz g y ∈ hT.span := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff y).1 hy
-  rw [map_sum]
-  refine Submodule.sum_mem _ fun d _ => ?_
-  rw [map_smul, hT.repLorentz_T g d]
-  exact Submodule.smul_mem _ _ (Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _)))
 
 /-- A join of two Lorentz-stable submodules is Lorentz stable. -/
 lemma stable_sup_lorentz {S₁ S₂ : Submodule ℂ B}
@@ -240,14 +228,16 @@ theorem mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodul
       repLorentz g y ∈ h.dotSpan 0 1 ⊔ S := by
     refine stable_sup_lorentz (fun g y hy => ?_) hSL
     rw [h.dotSpan_zero_one_eq] at hy ⊢
-    exact isSingleLorentz_span_stable _ g hy
-  have hstep : x ∈ (h.isSingleLorentz_dotGaugeHiggs_left).span ⊔ (h.dotSpan 0 1 ⊔ S) := by
+    exact h.isSingleLorentz_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
+  have hstep : x ∈ componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
+      ⊔ (h.dotSpan 0 1 ⊔ S) := by
     rw [← h.dotSpan_one_zero_eq, ← sup_assoc]
     exact hxmem
-  have hnext := (h.isSingleLorentz_dotGaugeHiggs_left).mem_of_invariant_of_mem_sup _
-    hstab hstep hL
+  have hnext := SingleLorentz.mem_of_invariant_of_mem_sup
+    h.isSingleLorentz_dotGaugeHiggs_left _ hstab hstep hL
   rw [h.dotSpan_zero_one_eq] at hnext
-  exact (h.isSingleLorentz_dotGaugeHiggs_right).mem_of_invariant_of_mem_sup S hSL hnext hL
+  exact SingleLorentz.mem_of_invariant_of_mem_sup h.isSingleLorentz_dotGaugeHiggs_right S hSL
+    hnext hL
 
 /-!
 

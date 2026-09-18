@@ -17,7 +17,7 @@ underived contraction.  The Lorentz classification then contracts the derivative
 
 The Higgs is a Lorentz scalar, so the only covector indices at this weight are the two
 derivative slots, and two covector indices admit exactly one invariant contraction, the
-metric trace, which is `IsBiLorentz`.  Contracting the mixed family gives the kinetic term
+metric trace, which is `BiLorentz`.  Contracting the mixed family gives the kinetic term
 `∂^μ H† ∂_μ H`; contracting the two families carrying both derivatives on one tower gives
 `□H† H` and `H† □H`.  The square of the underived contraction has no index to contract and
 survives as it stands: it is the quartic potential `(H† H)²`.
@@ -106,7 +106,7 @@ include h in
 /-- Both derivatives on the Higgs tower: a bi-Lorentz tensor in the two derivative
   slots. -/
 lemma isBiLorentz_dotGaugeHiggs_left :
-    IsBiLorentz B repLorentz
+    IsLorentzTensorFamily 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -116,7 +116,7 @@ lemma isBiLorentz_dotGaugeHiggs_left :
 include h in
 /-- Both derivatives on the conjugate tower: a bi-Lorentz tensor in the same way. -/
 lemma isBiLorentz_dotGaugeHiggs_right :
-    IsBiLorentz B repLorentz
+    IsLorentzTensorFamily 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
@@ -127,7 +127,7 @@ include h in
 /-- One derivative on each tower: the family whose metric contraction is the kinetic
   term. -/
 lemma isBiLorentz_dotGaugeHiggs_mixed :
-    IsBiLorentz B repLorentz
+    IsLorentzTensorFamily 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g ![l 0] ![l 1], sum_cov_one, sum_cov_two]
@@ -140,16 +140,16 @@ lemma isBiLorentz_dotGaugeHiggs_mixed :
 /-- The span of the isospin contractions with both derivatives on the Higgs tower is the
   span of the components of the corresponding bi-Lorentz tensor. -/
 lemma dotSpan_two_zero_eq :
-    h.dotSpan 2 0 = (h.isBiLorentz_dotGaugeHiggs_left).span := by
-  rw [dotSpan, IsBiLorentz.span]
+    h.dotSpan 2 0 = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  rw [dotSpan, componentSpan]
   refine iSup_congr fun d => le_antisymm (iSup_le fun d' => ?_) (le_iSup_of_le ![] le_rfl)
   rw [Subsingleton.elim d' (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
 
 /-- The span of the isospin contractions with both derivatives on the conjugate tower is
   the span of the components of the corresponding bi-Lorentz tensor. -/
 lemma dotSpan_zero_two_eq :
-    h.dotSpan 0 2 = (h.isBiLorentz_dotGaugeHiggs_right).span := by
-  rw [dotSpan, IsBiLorentz.span]
+    h.dotSpan 0 2 = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  rw [dotSpan, componentSpan]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le d' ?_)
     (iSup_le fun d => le_iSup_of_le ![] (le_iSup_of_le d le_rfl))
   rw [Subsingleton.elim d (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -157,8 +157,9 @@ lemma dotSpan_zero_two_eq :
 /-- The span of the isospin contractions with one derivative on each tower is the span of
   the components of the mixed bi-Lorentz tensor. -/
 lemma dotSpan_one_one_eq :
-    h.dotSpan 1 1 = (h.isBiLorentz_dotGaugeHiggs_mixed).span := by
-  rw [dotSpan, IsBiLorentz.span]
+    h.dotSpan 1 1
+      = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) := by
+  rw [dotSpan, componentSpan]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le ![d 0, d' 0] ?_)
     (iSup_le fun d => le_iSup_of_le ![d 0] (le_iSup_of_le ![d 1] le_rfl))
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one, etaExpand_cov_one]
@@ -170,18 +171,18 @@ lemma dotSpan_one_one_eq :
 
 Two covector indices admit one invariant contraction, the metric trace, and the metric is
 carried to itself by a Lorentz matrix — that is the defining property of the Lorentz group,
-recorded as `sum_minkowskiMatrixZ_mul` — so the trace of a bi-Lorentz family is a Lorentz
-invariant.  It is a gauge invariant too whenever the components are, and the components
+recorded as `LorentzGroup.sum_minkowskiMatrixZ_mul` — so the trace of a bi-Lorentz family is a
+Lorentz invariant.  It is a gauge invariant too whenever the components are, and the components
 here are isospin contractions, which the gauge group fixes.
 
 -/
 
 /-- The metric trace of a bi-Lorentz family is a Lorentz invariant. -/
 lemma repLorentz_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsBiLorentz B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (IsBiLorentz.metricContraction (T := T))
-      = IsBiLorentz.metricContraction (T := T) := by
-  rw [IsBiLorentz.metricContraction, map_sum]
+    (hT : IsLorentzTensorFamily 2 B repLorentz T) (g : SL(2,ℂ)) :
+    repLorentz g (BiLorentz.metricContraction (T := T))
+      = BiLorentz.metricContraction (T := T) := by
+  rw [BiLorentz.metricContraction, map_sum]
   have step : ∀ d : Fin 2 → Fin 1 ⊕ Fin 3,
       repLorentz g (((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • T d)
         = ∑ a : Fin 2 → Fin 1 ⊕ Fin 3,
@@ -196,22 +197,22 @@ lemma repLorentz_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
   congr 1
   rw [sum_cov_two]
   simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
-  exact IsQuadLorentz.sum_minkowskiMatrixZ_mul (SL2C.toLorentzGroup g) (a 0) (a 1)
+  exact LorentzGroup.sum_minkowskiMatrixZ_mul (SL2C.toLorentzGroup g) (a 0) (a 1)
 
 /-- The metric trace of a family of gauge invariants is a gauge invariant. -/
 lemma rep_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hTG : ∀ (g : GaugeGroupI) (d : Fin 2 → Fin 1 ⊕ Fin 3), rep g (T d) = T d)
     (g : GaugeGroupI) :
-    rep g (IsBiLorentz.metricContraction (T := T))
-      = IsBiLorentz.metricContraction (T := T) := by
-  rw [IsBiLorentz.metricContraction, map_sum]
+    rep g (BiLorentz.metricContraction (T := T))
+      = BiLorentz.metricContraction (T := T) := by
+  rw [BiLorentz.metricContraction, map_sum]
   exact Finset.sum_congr rfl fun d _ => by rw [map_smul, hTG g d]
 
 /-!
 
 ## D. Peeling a bi-Lorentz span off a stable submodule
 
-`IsBiLorentz.exists_smul_metricContraction_of_invariant_subset` removes one family at a
+`BiLorentz.exists_smul_metricContraction_of_invariant_subset` removes one family at a
 time from a join, leaving a multiple of the metric trace and a remainder in the stable
 submodule.  Section C makes that multiple fixed by both groups, so the remainder inherits
 both invariances from the element peeled and the peeling can be iterated.  A submodule of
@@ -220,32 +221,20 @@ same bookkeeping.
 
 -/
 
-/-- The span of the components of a bi-Lorentz family is stable under the Lorentz group:
-  each component goes to a combination of components. -/
-lemma isBiLorentz_span_stable {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsBiLorentz B repLorentz T) (g : SL(2,ℂ)) {y : B} (hy : y ∈ hT.span) :
-    repLorentz g y ∈ hT.span := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff y).1 hy
-  rw [map_sum]
-  refine Submodule.sum_mem _ fun d _ => ?_
-  rw [map_smul, hT.repLorentz_T g d]
-  exact Submodule.smul_mem _ _ (Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _)))
-
 /-- Peeling one bi-Lorentz span off a Lorentz-stable submodule: an element of the span
   together with `S` fixed by both groups is a multiple of the metric trace plus a remainder
   in `S` fixed by both groups. -/
 lemma exists_mem_of_invariant_isBiLorentz_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsBiLorentz B repLorentz T)
+    (hT : IsLorentzTensorFamily 2 B repLorentz T)
     (hTG : ∀ (g : GaugeGroupI) (d : Fin 2 → Fin 1 ⊕ Fin 3), rep g (T d) = T d)
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ hT.span ⊔ S) (hL : ∀ g : SL(2,ℂ), repLorentz g x = x)
+    (hx : x ∈ componentSpan T ⊔ S) (hL : ∀ g : SL(2,ℂ), repLorentz g x = x)
     (hG : ∀ g : GaugeGroupI, rep g x = x) :
     ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ ℂ ∙ IsBiLorentz.metricContraction (T := T) := by
+      ∧ x - y ∈ ℂ ∙ BiLorentz.metricContraction (T := T) := by
   obtain ⟨a, y, hyS, hxy⟩ :=
-    hT.exists_smul_metricContraction_of_invariant_subset S hS hx hL
-  have hmem : x - y ∈ ℂ ∙ IsBiLorentz.metricContraction (T := T) := by
+    BiLorentz.exists_smul_metricContraction_of_invariant_subset hT S hS hx hL
+  have hmem : x - y ∈ ℂ ∙ BiLorentz.metricContraction (T := T) := by
     rw [hxy, add_sub_cancel_right]
     exact Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)
   refine ⟨y, hyS, fun g => ?_, fun g => ?_, hmem⟩
@@ -294,11 +283,11 @@ the kinetic term and the quartic potential.
 noncomputable def lorentzContractionEightSpan
     (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) :
     Submodule ℂ B :=
-  ℂ ∙ IsBiLorentz.metricContraction
+  ℂ ∙ BiLorentz.metricContraction
       (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
-    ⊔ (ℂ ∙ IsBiLorentz.metricContraction
+    ⊔ (ℂ ∙ BiLorentz.metricContraction
         (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d)
-      ⊔ (ℂ ∙ IsBiLorentz.metricContraction
+      ⊔ (ℂ ∙ BiLorentz.metricContraction
           (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1])
         ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])))
 
@@ -346,12 +335,12 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
   have hS₂L : ∀ g : SL(2,ℂ), ∀ y ∈ S₂, repLorentz g y ∈ S₂ := by
     refine stable_sup_lorentz (fun g y hy => ?_) hS₃L
     rw [h.dotSpan_one_one_eq] at hy ⊢
-    exact isBiLorentz_span_stable _ g hy
+    exact h.isBiLorentz_dotGaugeHiggs_mixed.repLorentz_mem_componentSpan g hy
   have hS₁L : ∀ g : SL(2,ℂ), ∀ y ∈ S₁, repLorentz g y ∈ S₁ := by
     refine stable_sup_lorentz (fun g y hy => ?_) hS₂L
     rw [h.dotSpan_zero_two_eq] at hy ⊢
-    exact isBiLorentz_span_stable _ g hy
-  have hx₁ : x ∈ (h.isBiLorentz_dotGaugeHiggs_left).span ⊔ S₁ := by
+    exact h.isBiLorentz_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
+  have hx₁ : x ∈ componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) ⊔ S₁ := by
     rw [← h.dotSpan_two_zero_eq, hS₁def, hS₂def, hS₃def]
     have hstep : x ∈ (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1 ⊔ Q) ⊔ S := by
       rw [show x = (x - y₀) + y₀ from by abel]
@@ -405,8 +394,8 @@ include h in
   eight. -/
 lemma metricContraction_mem_massWeightSubmodule {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ d, T d ∈ h.massWeightSubmodule 8) :
-    IsBiLorentz.metricContraction (T := T) ∈ h.massWeightSubmodule 8 := by
-  rw [IsBiLorentz.metricContraction]
+    BiLorentz.metricContraction (T := T) ∈ h.massWeightSubmodule 8 := by
+  rw [BiLorentz.metricContraction]
   exact Submodule.sum_mem _ fun d _ => Submodule.smul_mem _ _ (hT d)
 
 include h in

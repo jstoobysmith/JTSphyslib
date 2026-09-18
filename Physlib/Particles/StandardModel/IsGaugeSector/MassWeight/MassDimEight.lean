@@ -50,7 +50,7 @@ each of the four families.
 Both classifications are one-directional as stated, and the converse is that each span
 consists of invariants of mass weight eight already, the gauge one because its generators
 are fixed by the gauge group and carry the right mass weight, and the Lorentz one because
-it sits inside the gauge span and is spanned by contractions that `IsQuadLorentz` shows to
+it sits inside the gauge span and is spanned by contractions that `QuadLorentz` shows to
 be Lorentz invariant. Section J puts the two directions together as the equivalences
 `mem_massWeightSubmodule_eight_sup_and_invariant_iff` and
 `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`.
@@ -1061,7 +1061,7 @@ lemma traceContractionEightSpan_sup_hyperchargeDerivSpan_le :
 
 A product of two underived field-strength symbols carries four covector indices and
 nothing else, so as a family indexed by those four it is a quadruple Lorentz tensor in the
-sense of `IsQuadLorentz`: `repLorentz_F` at no covariant derivatives moves each covector
+sense of `IsLorentzTensorFamily 4`: `repLorentz_F` at no covariant derivatives moves each covector
 index by the Lorentz matrix of the `SL(2,ℂ)` element, and `hrepLorentz_mul` carries that
 through the product. The three trace contractions are sums of such products over a gauge
 index, and a finite sum of quadruple Lorentz tensors is one again. So is the twice-derived
@@ -1105,7 +1105,7 @@ lemma sum_mul_sum_eq_sum_pi_four (c c' : (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3)
     (∑ a, ∑ b, c a b • X a b) * (∑ x, ∑ y, c' x y • Y x y)
       = ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
         (c (d 0) (d 1) * c' (d 2) (d 3)) • (X (d 0) (d 1) * Y (d 2) (d 3)) := by
-  rw [IsQuadLorentz.sum_pi_four, Fintype.sum_mul_sum]
+  rw [QuadLorentz.sum_pi_four, Fintype.sum_mul_sum]
   refine Finset.sum_congr rfl fun a _ => ?_
   simp only [Fintype.sum_mul_sum, smul_mul_smul_comm, Matrix.cons_val_zero, Matrix.cons_val_one,
     Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons, Matrix.cons_val_three]
@@ -1115,7 +1115,7 @@ include h in
 /-- A product of two underived field-strength symbols, viewed as a family indexed by the
   four covector indices it carries, is a quadruple Lorentz tensor. -/
 lemma isQuadLorentz_F_mul (φ ψ : Module.Dual ℝ GaugeAlgebra) :
-    IsQuadLorentz B repLorentz
+    IsLorentzTensorFamily 4 B repLorentz
       (fun d : Fin 4 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ * F ![] (d 2) (d 3) ψ) where
   repLorentz_T g l := by
     rw [hrepLorentz_mul, h.repLorentz_F_underived g (l 0) (l 1) φ,
@@ -1126,8 +1126,8 @@ lemma isQuadLorentz_F_mul (φ ψ : Module.Dual ℝ GaugeAlgebra) :
 /-- A finite sum of quadruple Lorentz tensors is a quadruple Lorentz tensor: the
   transformation law is linear in the family. -/
 lemma isQuadLorentz_sum {ι : Type} [Fintype ι] {T : ι → (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsQuadLorentz B repLorentz (T i)) :
-    IsQuadLorentz B repLorentz (fun d => ∑ i, T i d) where
+    (hT : ∀ i, IsLorentzTensorFamily 4 B repLorentz (T i)) :
+    IsLorentzTensorFamily 4 B repLorentz (fun d => ∑ i, T i d) where
   repLorentz_T g l := by
     simp only [map_sum, fun i => (hT i).repLorentz_T g l, Finset.smul_sum]
     exact Finset.sum_comm
@@ -1138,24 +1138,25 @@ include h in
 lemma isQuadLorentz_of_eq_sum {ι : Type} [Fintype ι] {T : EightIdx → B}
     (φ : ι → Module.Dual ℝ GaugeAlgebra)
     (hT : ∀ d, T d = ∑ i, F ![] (d 0) (d 1) (φ i) * F ![] (d 2) (d 3) (φ i)) :
-    IsQuadLorentz B repLorentz T := by
+    IsLorentzTensorFamily 4 B repLorentz T := by
   rw [show T = fun d => ∑ i, F ![] (d 0) (d 1) (φ i) * F ![] (d 2) (d 3) (φ i) from funext hT]
   exact isQuadLorentz_sum fun _ => h.isQuadLorentz_F_mul _ _
 
 /-- The gluon trace contractions, read as a family of four four-vector indices, form a
   quadruple Lorentz tensor: a sum over the colour index of products of two underived
   field-strength symbols. -/
-lemma isQuadLorentz_gluonTrace : IsQuadLorentz B repLorentz h.gluonTrace :=
+lemma isQuadLorentz_gluonTrace : IsLorentzTensorFamily 4 B repLorentz h.gluonTrace :=
   h.isQuadLorentz_of_eq_sum (fun a : Fin 8 => GaugeAlgebra.stdBasis.coord (Sum.inl a))
     h.gluonTrace_eq
 
 /-- The `W`-boson trace contractions form a quadruple Lorentz tensor. -/
-lemma isQuadLorentz_wTrace : IsQuadLorentz B repLorentz h.wTrace :=
+lemma isQuadLorentz_wTrace : IsLorentzTensorFamily 4 B repLorentz h.wTrace :=
   h.isQuadLorentz_of_eq_sum (fun i : Fin 3 => GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inl i)))
     h.wTrace_eq
 
 /-- The hypercharge trace contractions form a quadruple Lorentz tensor. -/
-lemma isQuadLorentz_hyperchargeTrace : IsQuadLorentz B repLorentz h.hyperchargeTrace := by
+lemma isQuadLorentz_hyperchargeTrace :
+    IsLorentzTensorFamily 4 B repLorentz h.hyperchargeTrace := by
   rw [show h.hyperchargeTrace = fun d =>
       F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inr 0)))
         * F ![] (d 2) (d 3) (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inr 0))) from
@@ -1175,10 +1176,11 @@ lemma sum_pi_two_cov {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin
 /-- The twice-derived hypercharge field strengths, read as a family of four four-vector
   indices, form a quadruple Lorentz tensor: the two derivative slots and the two covector
   indices all rotate. This is the second shape of mass weight eight. -/
-lemma isQuadLorentz_hyperchargeDeriv : IsQuadLorentz B repLorentz h.hyperchargeDeriv where
+lemma isQuadLorentz_hyperchargeDeriv :
+    IsLorentzTensorFamily 4 B repLorentz h.hyperchargeDeriv where
   repLorentz_T g l := by
     simp only [hyperchargeDeriv, hyperchargeField]
-    rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_two_cov, IsQuadLorentz.sum_pi_four]
+    rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_two_cov, QuadLorentz.sum_pi_four]
     simp only [Finset.smul_sum, smul_smul, Fin.prod_univ_two, Fin.prod_univ_four, mul_assoc,
       Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
       Matrix.tail_cons, Matrix.cons_val_three]
@@ -1186,44 +1188,46 @@ lemma isQuadLorentz_hyperchargeDeriv : IsQuadLorentz B repLorentz h.hyperchargeD
 /-- The span of the components of a quadruple Lorentz tensor is stable under the Lorentz
   group. -/
 lemma isQuadLorentz_span_stable {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsQuadLorentz B repLorentz T) (g : SL(2,ℂ)) :
-    ∀ y ∈ hT.span, repLorentz g y ∈ hT.span :=
-  span_stable_of_map_eq_sum T _ (hT.repLorentz_T g)
+    (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
+    ∀ y ∈ componentSpan T, repLorentz g y ∈ componentSpan T :=
+  fun _ hy => hT.repLorentz_mem_componentSpan g hy
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the outer,
   inner and split metric contractions and the Levi-Civita contraction. -/
 noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Submodule ℂ B :=
-  ⨆ i : Fin 4, ℂ ∙ IsQuadLorentz.contraction T i
+  ⨆ i : Fin 4, ℂ ∙ QuadLorentz.contraction T i
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family lies in the
   span of its components: each contraction is a combination of components with constant
   coefficients. -/
-lemma quadContractionSpan_le_span {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsQuadLorentz B repLorentz T) : quadContractionSpan T ≤ hT.span :=
+lemma quadContractionSpan_le_span {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B} :
+    quadContractionSpan T ≤ componentSpan T :=
   iSup_span_singleton_le _ fun i => by
-    rw [IsQuadLorentz.contraction_eq]
-    exact hT.sum_smul_mem_span _
+    rw [QuadLorentz.contraction_eq]
+    exact sum_smul_mem_componentSpan T _
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family is a space of
-  Lorentz invariants, the four contractions being invariant by `IsQuadLorentz`. -/
+  Lorentz invariants, the four contractions being invariant by `QuadLorentz`. -/
 lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsQuadLorentz B repLorentz T) : quadContractionSpan T ≤ repLorentz.invariants :=
+    (hT : IsLorentzTensorFamily 4 B repLorentz T) :
+    quadContractionSpan T ≤ repLorentz.invariants :=
   iSup_span_singleton_le _ fun i =>
-    (Representation.mem_invariants _ _).2 (hT.repLorentz_contraction i)
+    (Representation.mem_invariants _ _).2 (QuadLorentz.repLorentz_contraction hT i)
 
 /-- Peeling the span of a quadruple Lorentz tensor off a Lorentz-stable submodule, in the
   form `exists_mem_of_invariant_iSup_sup` takes: the remainder is Lorentz invariant by the
-  sup lemma of `IsQuadLorentz`, and the difference is a combination of the four
+  sup lemma of `QuadLorentz`, and the difference is a combination of the four
   contractions. -/
 lemma exists_mem_of_invariant_isQuadLorentz_span_sup {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsQuadLorentz B repLorentz T) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B} (hx : x ∈ hT.span ⊔ S)
+    (hT : IsLorentzTensorFamily 4 B repLorentz T) (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
+    (hx : x ∈ componentSpan T ⊔ S)
     (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ x - y ∈ quadContractionSpan T := by
   obtain ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩ :=
-    (hT.mem_span_sup_invariant_iff x S hS).1 ⟨hx, hLinv⟩
-  have hmem := sum_smul_mem_iSup_span (IsQuadLorentz.contraction T) ![a₁, a₂, a₃, a₄]
-  rw [IsQuadLorentz.sum_smul_contraction] at hmem
+    (QuadLorentz.mem_span_sup_invariant_iff hT x S hS).1 ⟨hx, hLinv⟩
+  have hmem := sum_smul_mem_iSup_span (QuadLorentz.contraction T) ![a₁, a₂, a₃, a₄]
+  rw [QuadLorentz.sum_smul_contraction] at hmem
   exact ⟨y, hyS, hyinv, by rwa [add_sub_cancel_right]⟩
 
 /-- The span of the four Lorentz contractions of each of the three underived
@@ -1239,13 +1243,13 @@ noncomputable def lorentzContractionEightSpan : Submodule ℂ B :=
   the matching block of the gauge span. -/
 lemma lorentzContractionEightSpan_le_traceContractionEightSpan_sup :
     h.lorentzContractionEightSpan ≤ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan :=
-  sup_le ((quadContractionSpan_le_span h.isQuadLorentz_gluonTrace).trans
+  sup_le ((quadContractionSpan_le_span (T := h.gluonTrace)).trans
       (le_sup_of_le_left le_sup_left))
-    (sup_le ((quadContractionSpan_le_span h.isQuadLorentz_wTrace).trans
+    (sup_le ((quadContractionSpan_le_span (T := h.wTrace)).trans
         (le_sup_of_le_left (le_sup_of_le_right le_sup_left)))
-      (sup_le ((quadContractionSpan_le_span h.isQuadLorentz_hyperchargeTrace).trans
+      (sup_le ((quadContractionSpan_le_span (T := h.hyperchargeTrace)).trans
           (le_sup_of_le_left (le_sup_of_le_right le_sup_right)))
-        ((quadContractionSpan_le_span h.isQuadLorentz_hyperchargeDeriv).trans le_sup_right)))
+        ((quadContractionSpan_le_span (T := h.hyperchargeDeriv)).trans le_sup_right)))
 
 /-- The Lorentz contraction span is a space of gauge invariants: it lies in the gauge
   span, whose generators the gauge group fixes. -/
@@ -1276,9 +1280,9 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
   have hS₂ := fun g => sup_stable (isQuadLorentz_span_stable h.isQuadLorentz_hyperchargeTrace g)
     (hS₃ g)
   have hS₁ := fun g => sup_stable (isQuadLorentz_span_stable h.isQuadLorentz_wTrace g) (hS₂ g)
-  have hx₁ : x ∈ (h.isQuadLorentz_gluonTrace).span ⊔ ((h.isQuadLorentz_wTrace).span
-      ⊔ ((h.isQuadLorentz_hyperchargeTrace).span
-        ⊔ ((h.isQuadLorentz_hyperchargeDeriv).span ⊔ S))) := by
+  have hx₁ : x ∈ componentSpan h.gluonTrace ⊔ (componentSpan h.wTrace
+      ⊔ (componentSpan h.hyperchargeTrace
+        ⊔ (componentSpan h.hyperchargeDeriv ⊔ S))) := by
     have hmem := Submodule.mem_sup.2 ⟨x - y₀, hxy₀, y₀, hy₀S, sub_add_cancel x y₀⟩
     rwa [traceContractionEightSpan, sup_assoc, sup_assoc, sup_assoc] at hmem
   obtain ⟨y₁, hy₁, hy₁L, hxy₁⟩ :=
@@ -1311,7 +1315,7 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
 The converse of the Lorentz classification: the Lorentz contraction span is made of gauge
 and Lorentz invariants of mass weight eight. Its gauge invariance was already needed in
 section H, and its mass weight passes to it from the gauge span in the same way; Lorentz
-invariance comes from `IsQuadLorentz` directly, each block being spanned by the four
+invariance comes from `QuadLorentz` directly, each block being spanned by the four
 contractions of a quadruple Lorentz family.
 
 -/

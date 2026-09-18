@@ -209,6 +209,10 @@ lemma act_eq_actMat (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ)
 def IsInvariantCoeff (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) : Prop :=
   ∀ g : SL(2,ℂ), act (SL2C.toLorentzGroup g).1 c = c
 
+section Monoid
+
+variable {B : Type*} [AddCommMonoid B] [Module ℂ B]
+
 /-- Transforming a contraction is the same as contracting the transformed coefficient tensor. -/
 lemma repLorentz_sum_smul {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
     {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -218,6 +222,18 @@ lemma repLorentz_sum_smul {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
     repLorentz g (∑ d, c d • T d) = ∑ a, act (SL2C.toLorentzGroup g).1 c a • T a := by
   simp only [map_sum, map_smul, hT, Finset.smul_sum, smul_smul, act, Finset.sum_smul]
   exact Finset.sum_comm
+
+/-- Contracting the components with an invariant coefficient tensor gives a vector fixed by
+  the representation. -/
+lemma repLorentz_sum_smul_of_isInvariantCoeff {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
+    {repLorentz : Representation ℂ SL(2,ℂ) B}
+    (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
+      (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
+    {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
+    repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d := by
+  rw [repLorentz_sum_smul hT, hc g]
+
+end Monoid
 
 /-- An invariant of the span is the contraction of an invariant coefficient tensor: the
   adjoint of `act Λ` is the action of `Λᵀ`, which is the Lorentz matrix of `g†`. -/
@@ -233,16 +249,6 @@ theorem exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) →
       rw [toLorentzGroup_dagger]
       simp [Matrix.transpose_apply]⟩) hx hinv
   exact ⟨c, fun g => (act_eq_actMat _ c).trans (hc g), hx'⟩
-
-/-- Contracting the components with an invariant coefficient tensor gives a vector fixed by
-  the representation. -/
-lemma repLorentz_sum_smul_of_isInvariantCoeff {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
-    {repLorentz : Representation ℂ SL(2,ℂ) B}
-    (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
-      (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
-    {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
-    repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d := by
-  rw [repLorentz_sum_smul hT, hc g]
 
 /-- A light-cone component of a coefficient tensor along axis `i`: the multi-index `κ` picks
   one light-cone direction per slot and `c` is contracted against that choice. -/

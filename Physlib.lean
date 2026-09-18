@@ -633,6 +633,8 @@ public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsSingleLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsTriLorentz
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl
+public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
+public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
 public import Physlib.Relativity.LorentzGroup.Orthochronous.Basic
 public import Physlib.Relativity.LorentzGroup.Proper
 public import Physlib.Relativity.LorentzGroup.Restricted.Basic

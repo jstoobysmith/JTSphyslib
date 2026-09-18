@@ -160,7 +160,7 @@ include h in
 /-- An underived field-strength symbol, viewed as a family indexed by its two covector
   indices, is a bi-Lorentz tensor. -/
 lemma isBiLorentz_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsBiLorentz B repLorentz
+    IsLorentzTensorFamily 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) where
   repLorentz_T g l := by
     rw [h.repLorentz_F g 0 ![] (l 0) (l 1) φ,
@@ -178,7 +178,7 @@ include h in
 /-- A once-derived field-strength symbol, viewed as a family indexed by its derivative
   slot and its two covector indices, is a triple Lorentz tensor. -/
 lemma isTriLorentz_F_deriv_one (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsTriLorentz B repLorentz
+    IsLorentzTensorFamily 3 B repLorentz
       (fun d : Fin 3 → Fin 1 ⊕ Fin 3 => F ![d 0] (d 1) (d 2) φ) where
   repLorentz_T g l := by
     rw [h.repLorentz_F g 1 ![l 0] (l 1) (l 2) φ, sum_cov_one, sum_cov_three]
@@ -206,8 +206,8 @@ hence zero, and the trace vanishes with them.
   the metric is diagonal, and the diagonal components of such a family are zero. -/
 lemma metricContraction_eq_zero_of_antisymm {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hswap : ∀ x y : Fin 1 ⊕ Fin 3, T ![y, x] = - T ![x, y]) :
-    IsBiLorentz.metricContraction (T := T) = 0 := by
-  rw [IsBiLorentz.metricContraction]
+    BiLorentz.metricContraction (T := T) = 0 := by
+  rw [BiLorentz.metricContraction]
   refine Finset.sum_eq_zero fun d _ => ?_
   rcases eq_or_ne (d 0) (d 1) with heq | hne
   · have hs := hswap (d 0) (d 1)
@@ -236,64 +236,42 @@ peeled.
 
 -/
 
-/-- The span of the components of a bi-Lorentz family is stable under the Lorentz group:
-  each component goes to a combination of components. -/
-lemma isBiLorentz_span_stable {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsBiLorentz B repLorentz T) (g : SL(2,ℂ)) {y : B} (hy : y ∈ hT.span) :
-    repLorentz g y ∈ hT.span := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff y).1 hy
-  rw [map_sum]
-  refine Submodule.sum_mem _ fun d _ => ?_
-  rw [map_smul, hT.repLorentz_T g d]
-  exact Submodule.smul_mem _ _ (Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _)))
-
-/-- The span of the components of a triple Lorentz family is stable under the Lorentz
-  group. -/
-lemma isTriLorentz_span_stable {T : (Fin 3 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsTriLorentz B repLorentz T) (g : SL(2,ℂ)) {y : B} (hy : y ∈ hT.span) :
-    repLorentz g y ∈ hT.span := by
-  obtain ⟨c, rfl⟩ := (hT.mem_span_iff y).1 hy
-  rw [map_sum]
-  refine Submodule.sum_mem _ fun d _ => ?_
-  rw [map_smul, hT.repLorentz_T g d]
-  exact Submodule.smul_mem _ _ (Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _)))
-
 /-- A Lorentz invariant of the span of a bi-Lorentz family with vanishing metric trace,
   together with a Lorentz-stable submodule, already lies in that submodule. -/
 lemma mem_of_lorentz_invariant_isBiLorentz_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsBiLorentz B repLorentz T)
-    (hzero : IsBiLorentz.metricContraction (T := T) = 0) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B} (hx : x ∈ hT.span ⊔ S)
+    (hT : IsLorentzTensorFamily 2 B repLorentz T)
+    (hzero : BiLorentz.metricContraction (T := T) = 0) (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
+    (hx : x ∈ componentSpan T ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   obtain ⟨a, y, hy, hxy⟩ :=
-    hT.exists_smul_metricContraction_of_invariant_subset S hS hx hinv
+    BiLorentz.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
   rwa [hxy, hzero, smul_zero, zero_add]
 
 /-- Peeling a finite join of the spans of bi-Lorentz families with vanishing metric
   traces off a Lorentz-stable submodule: a Lorentz invariant of the join together with
   `S` lies in `S`. -/
 lemma mem_of_lorentz_invariant_biSup_isBiLorentz_span {ι : Type} [DecidableEq ι]
-    {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : ∀ i, IsBiLorentz B repLorentz (T i))
-    (hzero : ∀ i, IsBiLorentz.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
+    {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+    (hT : ∀ i, IsLorentzTensorFamily 2 B repLorentz (T i))
+    (hzero : ∀ i, BiLorentz.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι) {x : B}
-    (hx : x ∈ (⨆ i ∈ s, (hT i).span) ⊔ S)
+    (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), (hT i).span) = ⊥ from by simp, bot_sup_eq] at hx
+    rw [show (⨆ i ∈ (∅ : Finset ι), componentSpan (T i)) = ⊥ from by simp, bot_sup_eq] at hx
     exact hx
   | insert a s ha ih =>
     rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, (hT i).span) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, (hT i).span) ⊔ S := by
+    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S,
+        repLorentz g y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S := by
       intro g y hy
-      have key : ((⨆ i ∈ s, (hT i).span) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, (hT i).span) ⊔ S) :=
+      have key : ((⨆ i ∈ s, componentSpan (T i)) ⊔ S)
+          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, componentSpan (T i)) ⊔ S) :=
         sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
             Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi (isBiLorentz_span_stable (hT i) g hz))))
+              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
     exact ih (mem_of_lorentz_invariant_isBiLorentz_span_sup (hT a) (hzero a) _ hstab hx
@@ -303,27 +281,28 @@ lemma mem_of_lorentz_invariant_biSup_isBiLorentz_span {ι : Type} [DecidableEq �
   submodule: three covector indices carry no invariant contraction at all, so a Lorentz
   invariant of the join together with `S` lies in `S`. -/
 lemma mem_of_lorentz_invariant_biSup_isTriLorentz_span {ι : Type} [DecidableEq ι]
-    {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B} (hT : ∀ i, IsTriLorentz B repLorentz (T i))
+    {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
+    (hT : ∀ i, IsLorentzTensorFamily 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
-    {x : B} (hx : x ∈ (⨆ i ∈ s, (hT i).span) ⊔ S)
+    {x : B} (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), (hT i).span) = ⊥ from by simp, bot_sup_eq] at hx
+    rw [show (⨆ i ∈ (∅ : Finset ι), componentSpan (T i)) = ⊥ from by simp, bot_sup_eq] at hx
     exact hx
   | insert a s ha ih =>
     rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, (hT i).span) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, (hT i).span) ⊔ S := by
+    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S,
+        repLorentz g y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S := by
       intro g y hy
-      have key : ((⨆ i ∈ s, (hT i).span) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, (hT i).span) ⊔ S) :=
+      have key : ((⨆ i ∈ s, componentSpan (T i)) ⊔ S)
+          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, componentSpan (T i)) ⊔ S) :=
         sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
             Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi (isTriLorentz_span_stable (hT i) g hz))))
+              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
-    exact ih ((hT a).mem_of_invariant_of_mem_sup _ hstab hx hinv) hinv
+    exact ih (TriLorentz.mem_of_invariant_of_mem_sup (hT a) _ hstab hx hinv) hinv
 
 /-- A join over a finite index type is the join over its universal finite set. -/
 lemma iSup_eq_biSup_univ {ι : Type} [Fintype ι] (f : ι → Submodule ℂ B) :
@@ -345,7 +324,7 @@ include h in
 /-- The metric trace of the underived field-strength symbols at a fixed direction of the
   gauge algebra vanishes, the symbol being antisymmetric in its two covector indices. -/
 lemma metricContraction_F_underived_eq_zero (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsBiLorentz.metricContraction
+    BiLorentz.metricContraction
       (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) = 0 :=
   metricContraction_eq_zero_of_antisymm fun x y => by
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -357,7 +336,8 @@ include h in
   form. -/
 lemma derivSubmodule_zero_le_iSup_span :
     h.derivSubmodule 0 ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-      (h.isBiLorentz_F_underived (GaugeAlgebra.stdBasis.coord c)).span := by
+      componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
+        F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord c)) := by
   rw [derivSubmodule]
   refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
   rw [Submodule.span_le]
@@ -366,7 +346,8 @@ lemma derivSubmodule_zero_le_iSup_span :
   have hle : (⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
         ℂ ∙ F ![] μ ν (GaugeAlgebra.stdBasis.coord c))
       ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-        (h.isBiLorentz_F_underived (GaugeAlgebra.stdBasis.coord c)).span := by
+        componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
+        F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord c)) := by
     refine iSup_mono fun c => ?_
     rw [Submodule.span_singleton_le_iff_mem]
     refine Submodule.mem_iSup_of_mem ![μ, ν] ?_
@@ -395,8 +376,8 @@ theorem mem_of_lorentz_invariant_massWeightSubmodule_four_sup (S : Submodule ℂ
 
 Mass weight six is the once-derived field strength, a triple Lorentz family at each
 direction of the standard basis. Three covector indices carry no invariant contraction at
-all, so `IsTriLorentz` needs no antisymmetry and no gauge input either: the twelve spans
-peel off and the invariant is left in `S`.
+all, so the rank-three classification needs no antisymmetry and no gauge input either: the
+twelve spans peel off and the invariant is left in `S`.
 
 -/
 
@@ -412,7 +393,8 @@ include h in
   form. -/
 lemma derivSubmodule_one_le_iSup_span :
     h.derivSubmodule 1 ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-      (h.isTriLorentz_F_deriv_one (GaugeAlgebra.stdBasis.coord c)).span := by
+      componentSpan (fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
+        F ![d 0] (d 1) (d 2) (GaugeAlgebra.stdBasis.coord c)) := by
   rw [derivSubmodule]
   refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
   rw [Submodule.span_le]
@@ -421,7 +403,8 @@ lemma derivSubmodule_one_le_iSup_span :
   have hle : (⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
         ℂ ∙ F l μ ν (GaugeAlgebra.stdBasis.coord c))
       ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-        (h.isTriLorentz_F_deriv_one (GaugeAlgebra.stdBasis.coord c)).span := by
+        componentSpan (fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
+        F ![d 0] (d 1) (d 2) (GaugeAlgebra.stdBasis.coord c)) := by
     refine iSup_mono fun c => ?_
     rw [Submodule.span_singleton_le_iff_mem]
     refine Submodule.mem_iSup_of_mem ![l 0, μ, ν] ?_

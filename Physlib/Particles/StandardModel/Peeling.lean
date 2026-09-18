@@ -9,6 +9,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecompositio
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFundamental
+public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl
 /-!

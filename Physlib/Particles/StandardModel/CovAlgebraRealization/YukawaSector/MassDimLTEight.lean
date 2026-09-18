@@ -186,7 +186,7 @@ lemma mem_of_invariant_of_mem_sup_of_odd_supp {M : Type*} [AddCommGroup M] [Modu
     (hx : x ∈ V ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hzero : d.piece 0 = ⊥ := d.piece_eq_bot 0 fun hmem => hodd 0 hmem ⟨0, rfl⟩
   have hle : ∀ m : ℤ, (d.piece m).map S.mkQ
-      ≤ boostWeightSubmodule (IsQuadLorentz.quotRep (repLorentz := repLorentz) S hS) j m :=
+      ≤ boostWeightSubmodule (repLorentz.quotient S fun g y hy => hS g y hy) j m :=
     fun m => le_trans (Submodule.map_mono (d.piece_le m))
       (map_boostWeightSubmodule_le S.mkQ (fun _ _ => rfl) j m)
   have hmem : S.mkQ x ∈ ⨆ m : ℤ, (d.piece m).map S.mkQ := by
@@ -195,8 +195,8 @@ lemma mem_of_invariant_of_mem_sup_of_odd_supp {M : Type*} [AddCommGroup M] [Modu
       ← Submodule.map_iSup]
     exact Submodule.mem_map_of_mem (le_of_eq d.iSup_piece.symm hy)
   have hinv' : ∀ g : SL(2,ℂ),
-      IsQuadLorentz.quotRep (repLorentz := repLorentz) S hS g (S.mkQ x) = S.mkQ x :=
-    fun g => by rw [IsQuadLorentz.quotRep_mkQ, hinv g]
+      (repLorentz.quotient S fun g y hy => hS g y hy) g (S.mkQ x) = S.mkQ x :=
+    fun g => by rw [quotient_apply_mkQ, hinv g]
   have hx0 := mem_of_mem_iSup_of_boostWeight_zero hle hmem
     (mem_boostWeightSubmodule_zero_of_invariant hinv' j)
   rw [hzero, Submodule.map_bot, Submodule.mem_bot] at hx0
