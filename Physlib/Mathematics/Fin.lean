@@ -296,4 +296,23 @@ lemma sum_pi_succ_prod_smul {R M ι : Type*} [CommSemiring R] [AddCommMonoid M] 
   rw [Fin.prod_univ_succ]
   simp only [Fin.cons_zero, Fin.cons_succ]
 
+/-- Peeling the first slot off a sum over the tuples of a prescribed total weight: the first
+  slot takes its own weight `w b` and the remaining slots make up the rest. Each slot draws its
+  letter from the same alphabet `ι`, `w` gives a letter its weight and the weights of the slots
+  add; `f s` is the factor contributed by slot `s`. -/
+lemma sum_filter_weight_succ {R ι : Type*} [CommSemiring R] [Fintype ι] {n : ℕ} (w : ι → ℤ)
+    (f : Fin (n + 1) → ι → R) (m : ℤ) :
+    ∑ q ∈ Finset.univ.filter (fun q : Fin (n + 1) → ι => (∑ s, w (q s)) = m), ∏ s, f s (q s)
+      = ∑ b : ι, f 0 b
+          * ∑ q ∈ Finset.univ.filter (fun q : Fin n → ι => (∑ s, w (q s)) = m - w b),
+              ∏ s, f s.succ (q s) := by
+  rw [Finset.sum_filter, ← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => ι),
+    Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun b _ => ?_
+  rw [Finset.sum_filter, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun q _ => ?_
+  simp only [Fin.consEquiv_apply, Fin.sum_univ_succ, Fin.prod_univ_succ, Fin.cons_zero,
+    Fin.cons_succ, mul_ite, mul_zero]
+  exact if_congr (by omega) rfl rfl
+
 end Physlib.Fin

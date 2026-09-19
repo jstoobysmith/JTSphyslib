@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 /-!
 # Lorentz invariants of a left-handed and a right-handed Weyl index

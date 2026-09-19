@@ -6,8 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
-public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLorentz
-public import Physlib.Relativity.LorentzGroup.Invariants.IsTriLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.RankTwo
+public import Physlib.Relativity.LorentzGroup.Invariants.RankThree
 /-!
 # The invariants below mass weight eight
 
@@ -159,8 +159,8 @@ of `IsGaugeSector` moving every index by the Lorentz matrix of the `SL(2,ℂ)` e
 include h in
 /-- An underived field-strength symbol, viewed as a family indexed by its two covector
   indices, is a bi-Lorentz tensor. -/
-lemma isBiLorentz_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsLorentzTensorFamily 2 B repLorentz
+lemma isLorentzCovariant_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
+    IsLorentzCovariant 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) where
   repLorentz_T g l := by
     rw [h.repLorentz_F g 0 ![] (l 0) (l 1) φ,
@@ -177,8 +177,8 @@ lemma isBiLorentz_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
 include h in
 /-- A once-derived field-strength symbol, viewed as a family indexed by its derivative
   slot and its two covector indices, is a triple Lorentz tensor. -/
-lemma isTriLorentz_F_deriv_one (φ : Module.Dual ℝ GaugeAlgebra) :
-    IsLorentzTensorFamily 3 B repLorentz
+lemma isLorentzCovariant_F_deriv_one (φ : Module.Dual ℝ GaugeAlgebra) :
+    IsLorentzCovariant 3 B repLorentz
       (fun d : Fin 3 → Fin 1 ⊕ Fin 3 => F ![d 0] (d 1) (d 2) φ) where
   repLorentz_T g l := by
     rw [h.repLorentz_F g 1 ![l 0] (l 1) (l 2) φ, sum_cov_one, sum_cov_three]
@@ -206,8 +206,8 @@ hence zero, and the trace vanishes with them.
   the metric is diagonal, and the diagonal components of such a family are zero. -/
 lemma metricContraction_eq_zero_of_antisymm {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hswap : ∀ x y : Fin 1 ⊕ Fin 3, T ![y, x] = - T ![x, y]) :
-    BiLorentz.metricContraction (T := T) = 0 := by
-  rw [BiLorentz.metricContraction]
+    RankTwo.metricContraction (T := T) = 0 := by
+  rw [RankTwo.metricContraction]
   refine Finset.sum_eq_zero fun d _ => ?_
   rcases eq_or_ne (d 0) (d 1) with heq | hne
   · have hs := hswap (d 0) (d 1)
@@ -238,23 +238,23 @@ peeled.
 
 /-- A Lorentz invariant of the span of a bi-Lorentz family with vanishing metric trace,
   together with a Lorentz-stable submodule, already lies in that submodule. -/
-lemma mem_of_lorentz_invariant_isBiLorentz_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzTensorFamily 2 B repLorentz T)
-    (hzero : BiLorentz.metricContraction (T := T) = 0) (S : Submodule ℂ B)
+lemma mem_of_lorentz_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+    (hT : IsLorentzCovariant 2 B repLorentz T)
+    (hzero : RankTwo.metricContraction (T := T) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ componentSpan T ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   obtain ⟨a, y, hy, hxy⟩ :=
-    BiLorentz.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
+    RankTwo.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
   rwa [hxy, hzero, smul_zero, zero_add]
 
 /-- Peeling a finite join of the spans of bi-Lorentz families with vanishing metric
   traces off a Lorentz-stable submodule: a Lorentz invariant of the join together with
   `S` lies in `S`. -/
-lemma mem_of_lorentz_invariant_biSup_isBiLorentz_span {ι : Type} [DecidableEq ι]
+lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzTensorFamily 2 B repLorentz (T i))
-    (hzero : ∀ i, BiLorentz.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
+    (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
+    (hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι) {x : B}
     (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
@@ -274,15 +274,15 @@ lemma mem_of_lorentz_invariant_biSup_isBiLorentz_span {ι : Type} [DecidableEq �
               (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
-    exact ih (mem_of_lorentz_invariant_isBiLorentz_span_sup (hT a) (hzero a) _ hstab hx
+    exact ih (mem_of_lorentz_invariant_rankTwo_span_sup (hT a) (hzero a) _ hstab hx
       hinv) hinv
 
 /-- Peeling a finite join of the spans of triple Lorentz families off a Lorentz-stable
   submodule: three covector indices carry no invariant contraction at all, so a Lorentz
   invariant of the join together with `S` lies in `S`. -/
-lemma mem_of_lorentz_invariant_biSup_isTriLorentz_span {ι : Type} [DecidableEq ι]
+lemma mem_of_lorentz_invariant_biSup_rankThree_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzTensorFamily 3 B repLorentz (T i))
+    (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
@@ -302,7 +302,7 @@ lemma mem_of_lorentz_invariant_biSup_isTriLorentz_span {ι : Type} [DecidableEq 
               (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
-    exact ih (TriLorentz.mem_of_invariant_of_mem_sup (hT a) _ hstab hx hinv) hinv
+    exact ih (RankThree.mem_of_invariant_of_mem_sup (hT a) _ hstab hx hinv) hinv
 
 /-- A join over a finite index type is the join over its universal finite set. -/
 lemma iSup_eq_biSup_univ {ι : Type} [Fintype ι] (f : ι → Submodule ℂ B) :
@@ -324,7 +324,7 @@ include h in
 /-- The metric trace of the underived field-strength symbols at a fixed direction of the
   gauge algebra vanishes, the symbol being antisymmetric in its two covector indices. -/
 lemma metricContraction_F_underived_eq_zero (φ : Module.Dual ℝ GaugeAlgebra) :
-    BiLorentz.metricContraction
+    RankTwo.metricContraction
       (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) = 0 :=
   metricContraction_eq_zero_of_antisymm fun x y => by
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -362,8 +362,8 @@ theorem mem_of_lorentz_invariant_massWeightSubmodule_four_sup (S : Submodule ℂ
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.massWeightSubmodule 4 ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  refine mem_of_lorentz_invariant_biSup_isBiLorentz_span
-    (fun c => h.isBiLorentz_F_underived (GaugeAlgebra.stdBasis.coord c))
+  refine mem_of_lorentz_invariant_biSup_rankTwo_span
+    (fun c => h.isLorentzCovariant_F_underived (GaugeAlgebra.stdBasis.coord c))
     (fun c => h.metricContraction_F_underived_eq_zero _) S hSL Finset.univ ?_ hinv
   rw [h.massWeightSubmodule_four_eq] at hx
   refine sup_le_sup_right ?_ S hx
@@ -420,8 +420,8 @@ theorem mem_of_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodule ℂ 
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.massWeightSubmodule 6 ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  refine mem_of_lorentz_invariant_biSup_isTriLorentz_span
-    (fun c => h.isTriLorentz_F_deriv_one (GaugeAlgebra.stdBasis.coord c))
+  refine mem_of_lorentz_invariant_biSup_rankThree_span
+    (fun c => h.isLorentzCovariant_F_deriv_one (GaugeAlgebra.stdBasis.coord c))
     S hSL Finset.univ ?_ hinv
   rw [h.massWeightSubmodule_six_eq] at hx
   refine sup_le_sup_right ?_ S hx

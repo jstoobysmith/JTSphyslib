@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
-public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
@@ -23,7 +23,7 @@ symbol needing four. That is `exists_smul_metricContraction_of_invariant`, and
 Lorentz-stable subspace `S`, the form the Standard Model files use.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzTensorFamily 2` says the
+`repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzCovariant 2` says the
 group moves them with one factor of the Lorentz matrix per slot. `componentSpan T` is the set
 of their combinations.
 
@@ -48,7 +48,7 @@ namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C Invariants
 
-namespace BiLorentz
+namespace RankTwo
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -381,27 +381,34 @@ lemma pow_mul_eq_sum_pow_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
 
 -/
 
+/-- The certificate polynomial contracted against an invariant coefficient tensor. Each power of
+  the integer average contributes the matching power of `12`, and the cubic evaluates to
+  `12 ^ 3 - 14 * 12 ^ 2 + 40 * 12 = 192`. -/
+lemma sum_Q_mul_eq {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    ∑ e, ((Q d e : ℤ) : ℂ) * c e = (192 : ℂ) * c d := by
+  have h1 := pow_mul_eq_sum_pow_boostAverageZ hc 1 d
+  have h2 := pow_mul_eq_sum_pow_boostAverageZ hc 2 d
+  have h3 := pow_mul_eq_sum_pow_boostAverageZ hc 3 d
+  simp only [pow_one] at h1
+  rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
+      = (∑ e, (((boostAverageZ ^ 3) d e : ℤ) : ℂ) * c e)
+        - 14 * (∑ e, (((boostAverageZ ^ 2) d e : ℤ) : ℂ) * c e)
+        + 40 * (∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) from by
+    simp only [Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun e _ => ?_
+    rw [Q_eq_poly]
+    push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
+    ring, ← h1, ← h2, ← h3]
+  ring
+
 /-- The certificate applied to an invariant coefficient tensor: `192 c = 48 η (η ⬝ c)`, so
   every invariant coefficient tensor is a multiple of the metric. -/
 lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
     (d : Fin 2 → Fin 1 ⊕ Fin 3) :
     c d = ((4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e)
       * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
-  have hQ : ∑ e, ((Q d e : ℤ) : ℂ) * c e = (192 : ℂ) * c d := by
-    have h1 := pow_mul_eq_sum_pow_boostAverageZ hc 1 d
-    have h2 := pow_mul_eq_sum_pow_boostAverageZ hc 2 d
-    have h3 := pow_mul_eq_sum_pow_boostAverageZ hc 3 d
-    simp only [pow_one] at h1
-    rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
-        = (∑ e, (((boostAverageZ ^ 3) d e : ℤ) : ℂ) * c e)
-          - 14 * (∑ e, (((boostAverageZ ^ 2) d e : ℤ) : ℂ) * c e)
-          + 40 * (∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) from by
-      simp only [Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
-      refine Finset.sum_congr rfl fun e _ => ?_
-      rw [Q_eq_poly]
-      push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
-      ring, ← h1, ← h2, ← h3]
-    ring
+  have hQ := sum_Q_mul_eq hc d
   rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
       = 48 * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)
         * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e from by
@@ -420,7 +427,7 @@ lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : I
 
 /-- Every Lorentz invariant in the span of the components is a multiple of the metric
   contraction. -/
-theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzTensorFamily 2 B repLorentz T)
+theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzCovariant 2 B repLorentz T)
     {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • metricContraction (T := T) := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
@@ -450,7 +457,7 @@ lemma mkQ_metricContraction (S : Submodule ℂ B) :
 /-- The same modulo a Lorentz-stable subspace `S`: a multiple of the metric contraction plus an
   error in `S`. -/
 lemma exists_smul_metricContraction_of_invariant_subset
-    (hT : IsLorentzTensorFamily 2 B repLorentz T) {x : B} (S : Submodule ℂ B)
+    (hT : IsLorentzCovariant 2 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • metricContraction (T := T) + y := by
@@ -463,6 +470,6 @@ lemma exists_smul_metricContraction_of_invariant_subset
     abel
   rwa [Submodule.ker_mkQ] at hker
 
-end BiLorentz
+end RankTwo
 
 end Lorentz

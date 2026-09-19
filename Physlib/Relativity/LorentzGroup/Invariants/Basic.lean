@@ -255,6 +255,25 @@ theorem exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) →
 def lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) : ℂ :=
   ∑ a, (∏ s, lightConeCoeff i (κ s) (a s)) * c a
 
+/-- A light-cone multi-index that `Λ` reproduces up to a scalar `k` has its light-cone
+  component scaled by `k`. The hypothesis is the eigenvector equation for the covector
+  `∏ₛ lightConeCoeff i (κ s) (·)` under the transposed action, which is the form the light-cone
+  directions of an axis satisfy for the transformations diagonal in that basis: the boost along
+  the axis, with `k` a power of its parameter, and the half turn about it, with `k` the product
+  of the signs of the slots. -/
+lemma lightConeComponent_act (i : Fin 3) (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ)
+    (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) (k : ℂ)
+    (hΛ : ∀ d : Fin n → Fin 1 ⊕ Fin 3,
+      ∑ a : Fin n → Fin 1 ⊕ Fin 3, (∏ s, lightConeCoeff i (κ s) (a s))
+          * ∏ s, ((Λ (a s) (d s) : ℝ) : ℂ)
+        = k * ∏ s, lightConeCoeff i (κ s) (d s)) :
+    lightConeComponent i (act Λ c) κ = k * lightConeComponent i c κ := by
+  simp only [lightConeComponent, act, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  rw [← mul_assoc, mul_comm _ (c d), ← hΛ d, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun a _ => by ring
+
 /-- The Lorentz matrix of a boost is symmetric. -/
 lemma toLorentzGroup_boostAxis_symm (i : Fin 3) {t : ℝ} (ht : t ≠ 0) (a b : Fin 1 ⊕ Fin 3) :
     (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 a b
@@ -267,14 +286,9 @@ lemma toLorentzGroup_boostAxis_symm (i : Fin 3) {t : ℝ} (ht : t ≠ 0) (a b : 
 lemma lightConeComponent_act_boostAxis (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ)
     (κ : Fin n → Fin 4) {t : ℝ} (ht : t ≠ 0) :
     lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 c) κ
-      = ((t : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) * lightConeComponent i c κ := by
-  simp only [lightConeComponent, act, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  have h := sum_prod_lightConeCoeff i κ d ht
-  simp only [toLorentzGroup_boostAxis_symm i ht (d _)] at h
-  rw [← mul_assoc, mul_comm _ (c d), ← h, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun a _ => by ring
+      = ((t : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) * lightConeComponent i c κ :=
+  lightConeComponent_act i _ c κ _ fun d => by
+    simpa only [toLorentzGroup_boostAxis_symm i ht (d _)] using sum_prod_lightConeCoeff i κ d ht
 
 /-- An invariant coefficient tensor has no light-cone component of nonzero weight: the boost at
   `t = 2` would rescale such a component by a factor other than `1`. -/

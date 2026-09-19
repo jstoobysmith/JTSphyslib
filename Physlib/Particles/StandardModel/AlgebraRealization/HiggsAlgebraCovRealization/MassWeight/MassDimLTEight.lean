@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.GaugeWeightDecomposition
-public import Physlib.Relativity.LorentzGroup.Invariants.IsSingleLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.RankOne
 /-!
 # The Higgs invariants below mass weight eight
 
@@ -20,7 +20,7 @@ weight is neutral, which is the gauge classification of
 `mem_of_invariant_massWeightSubmodule_two_sup`.  Weight six dies on Lorentz counting.  Its
 gauge invariants are the isospin contractions with one derivative, `∂_μ H† H` and
 `H† ∂_μ H`, and a single covector index admits no invariant contraction at all — the metric
-ties two indices and the Levi-Civita symbol four — which is `SingleLorentz`.
+ties two indices and the Levi-Civita symbol four — which is `RankOne`.
 
 Weight four survives because the Higgs is a Lorentz scalar.  Its gauge invariants are the
 multiples of `H† H`, and with no derivative slot there is no Lorentz index to contract, so
@@ -82,7 +82,7 @@ lemma sum_cov_zero {M : Type*} [AddCommMonoid M] (f : (Fin 0 → Fin 1 ⊕ Fin 3
 At mass weight six the gauge classification leaves the isospin contractions carrying one
 derivative, on either of the two towers.  The Higgs is a Lorentz scalar, so the only
 Lorentz index such a contraction has is that derivative slot, and read as a family indexed
-by it the contraction is a Lorentz vector.  `SingleLorentz` says that one covector index
+by it the contraction is a Lorentz vector.  `RankOne` says that one covector index
 admits no invariant contraction, so a Lorentz invariant of the span together with a stable
 submodule already lies in the submodule; the spans are themselves stable, so the two of
 them peel off one after the other.
@@ -92,8 +92,8 @@ them peel off one after the other.
 include h in
 /-- The isospin contraction of a once-derived Higgs tower against an underived conjugate
   tower, read as a family indexed by its derivative slot, is a Lorentz vector. -/
-lemma isSingleLorentz_dotGaugeHiggs_left :
-    IsLorentzTensorFamily 1 B repLorentz
+lemma isLorentzCovariant_rankOne_dotGaugeHiggs_left :
+    IsLorentzCovariant 1 B repLorentz
       (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -103,8 +103,8 @@ lemma isSingleLorentz_dotGaugeHiggs_left :
 include h in
 /-- The isospin contraction of an underived Higgs tower against a once-derived conjugate
   tower is a Lorentz vector in the same way. -/
-lemma isSingleLorentz_dotGaugeHiggs_right :
-    IsLorentzTensorFamily 1 B repLorentz
+lemma isLorentzCovariant_rankOne_dotGaugeHiggs_right :
+    IsLorentzCovariant 1 B repLorentz
       (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) where
   repLorentz_T g l := by
     rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
@@ -228,16 +228,16 @@ theorem mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodul
       repLorentz g y ∈ h.dotSpan 0 1 ⊔ S := by
     refine stable_sup_lorentz (fun g y hy => ?_) hSL
     rw [h.dotSpan_zero_one_eq] at hy ⊢
-    exact h.isSingleLorentz_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
+    exact h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
   have hstep : x ∈ componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
       ⊔ (h.dotSpan 0 1 ⊔ S) := by
     rw [← h.dotSpan_one_zero_eq, ← sup_assoc]
     exact hxmem
-  have hnext := SingleLorentz.mem_of_invariant_of_mem_sup
-    h.isSingleLorentz_dotGaugeHiggs_left _ hstab hstep hL
+  have hnext := RankOne.mem_of_invariant_of_mem_sup
+    h.isLorentzCovariant_rankOne_dotGaugeHiggs_left _ hstab hstep hL
   rw [h.dotSpan_zero_one_eq] at hnext
-  exact SingleLorentz.mem_of_invariant_of_mem_sup h.isSingleLorentz_dotGaugeHiggs_right S hSL
-    hnext hL
+  exact RankOne.mem_of_invariant_of_mem_sup
+    h.isLorentzCovariant_rankOne_dotGaugeHiggs_right S hSL hnext hL
 
 /-!
 

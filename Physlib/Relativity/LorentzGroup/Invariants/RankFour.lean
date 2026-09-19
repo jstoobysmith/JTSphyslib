@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
-public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 public import Physlib.Mathematics.LeviCivita.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 /-!
@@ -23,7 +23,7 @@ by every rotation and boost, the Lorentz transformations coming from `SL(2,ℂ)`
 There are no others. The fourth is a pseudoscalar, so it would drop out if reflections were
 allowed; independence is not proved, and for a given `T` the four may be dependent or zero. The
 components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, and `IsLorentzTensorFamily 4 B repLorentz T` says the group moves
+`repLorentz` of `SL(2,ℂ)`, and `IsLorentzCovariant 4 B repLorentz T` says the group moves
 them with one factor of the Lorentz matrix per slot (A). A vector of `B` is invariant when every
 `repLorentz g` fixes it, and `componentSpan T` is the set of contractions `∑_d c_d • T d`. The
 theorem `mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace `S` beside the span,
@@ -50,8 +50,8 @@ open Matrix MatrixGroups SL2C Invariants
 
 A direction is an element of `Fin 1 ⊕ Fin 3`, time or one of the three axes; an index vector
 `d : Fin 4 → Fin 1 ⊕ Fin 3` puts one in each slot, so `T d` is `T^{μνρσ}` at `(μ, ν, ρ, σ) = d`.
-The predicate and the span are `IsLorentzTensorFamily 4` and `componentSpan`, both from
-`Invariants.TensorFamily`. The law is
+The predicate and the span are `IsLorentzCovariant 4` and `componentSpan`, both from
+`Invariants.LorentzCovariance`. The law is
 
 `repLorentz g (T l) = ∑_a Λ_{a₀ l₀} Λ_{a₁ l₁} Λ_{a₂ l₂} Λ_{a₃ l₃} • T a`,
 
@@ -64,7 +64,7 @@ play, kept apart by name: `x : B` is Lorentz invariant when `repLorentz g x = x`
 stated for any number of slots in `Invariants.Basic` and used here at four.
 -/
 
-namespace QuadLorentz
+namespace RankFour
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -263,32 +263,32 @@ is invariant, as is any combination: with `smul_contraction_mem_span`, the easy 
 -/
 
 /-- Each of the four contractions is Lorentz invariant, its coefficient tensor being invariant. -/
-lemma repLorentz_contraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (i : Fin 4)
+lemma repLorentz_contraction (hT : IsLorentzCovariant 4 B repLorentz T) (i : Fin 4)
     (g : SL(2,ℂ)) : repLorentz g (contraction T i) = contraction T i := by
   rw [contraction_eq, hT.isInvariant_sum_smul (isInvariantCoeff_contractionCoeff i)]
 
 /-- The outer contraction is Lorentz invariant. -/
-lemma repLorentz_outerContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
+lemma repLorentz_outerContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (outerContraction T) = outerContraction T :=
   repLorentz_contraction hT 0 g
 
 /-- The inner contraction is Lorentz invariant. -/
-lemma repLorentz_innerContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
+lemma repLorentz_innerContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (innerContraction T) = innerContraction T :=
   repLorentz_contraction hT 1 g
 
 /-- The split contraction is Lorentz invariant. -/
-lemma repLorentz_splitContraction (hT : IsLorentzTensorFamily 4 B repLorentz T) (g : SL(2,ℂ)) :
+lemma repLorentz_splitContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
     repLorentz g (splitContraction T) = splitContraction T :=
   repLorentz_contraction hT 2 g
 
 /-- The Levi-Civita contraction is Lorentz invariant. -/
-lemma repLorentz_epsilonContraction (hT : IsLorentzTensorFamily 4 B repLorentz T)
+lemma repLorentz_epsilonContraction (hT : IsLorentzCovariant 4 B repLorentz T)
     (g : SL(2,ℂ)) : repLorentz g (epsilonContraction T) = epsilonContraction T :=
   repLorentz_contraction hT 3 g
 
 /-- A combination of the four contractions is Lorentz invariant. -/
-lemma repLorentz_smul_contraction (hT : IsLorentzTensorFamily 4 B repLorentz T)
+lemma repLorentz_smul_contraction (hT : IsLorentzCovariant 4 B repLorentz T)
     (a₁ a₂ a₃ a₄ : ℂ) (g : SL(2,ℂ)) :
     repLorentz g (a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T)
@@ -302,17 +302,15 @@ lemma repLorentz_smul_contraction (hT : IsLorentzTensorFamily 4 B repLorentz T)
 ## C. An invariant of the span is the contraction of an invariant tensor
 
 The components may satisfy linear relations, so the `c` with `x = ∑ c_d • T d` is not
-determined by `x` and need not be invariant. Let `K` be the coefficient tensors contracting to
-`0`, a subspace of `ℂ^{256}` that the group preserves and that is the whole ambiguity in `c`.
-Give `ℂ^{256}` the standard inner product `∑_d conj(u_d) v_d`, positive definite and unrelated
-to `η`, written `EuclideanSpace ℂ (Fin 4 → Fin 1 ⊕ Fin 3)`, where `WithLp.toLp 2` and `.ofLp`
-only move to and from the plain function type. The complement `Kᗮ` is preserved too, since
-`act Λ` across the inner product becomes `act Λᵀ` (`Invariants.inner_actMat`) and `Λᵀ`
-is again such a matrix, that of `g†`; the action is not unitary, and is not used to be. So keep
-the `Kᗮ` part of `c`: it still contracts to `x`, and acting on it changes it by an element of
-`K` and of `Kᗮ`, hence by `0`. The argument is the same for any number of slots and is carried
-out in `Invariants.Basic`, reached here through
-`IsLorentzTensorFamily.exists_isInvariantCoeff_of_mem_componentSpan`.
+determined by `x` and need not be invariant. Replacing `c` by its part orthogonal to the
+coefficient tensors that contract to `0` repairs that without changing the vector; the argument
+is the same for any number of slots and is carried out in `Invariants.Basic`, reached here
+through `IsLorentzCovariant.exists_isInvariantCoeff_of_mem_componentSpan`.
+
+The inner product it uses is the standard one on the `ℂ^{256}` of coefficient tensors, positive
+definite and unrelated to `η`; `B` carries none, and the coefficient action is not unitary. All
+that is needed is that the adjoint of `act Λ` is `act Λᵀ`, which is again the action of a
+Lorentz matrix coming from `SL(2,ℂ)`, that of `g†`.
 -/
 
 /-!
@@ -657,8 +655,9 @@ and rows `w i = contractionWeight i`, so it sends any vector to a combination of
 Lean checks it by computing all `484` entries of each side. On a solution `b` every factor
 turns `M` into `48`, giving `48² - 44 * 48 + 192 = 384`, then `32`, `16`, `48`, so the left
 sends `b` to `48 * 16 * 32 * 384 = 9437184` times `b` and the right to `393216 • (projector b)`.
-As `9437184 = 393216 * 24` this leaves `projector b = 24 b`, writing `b`, and with it `c`, as a
-combination of the four; the `24` is `contractionWeight_mul_contractionOrbit`. The identity is
+As `9437184 = 393216 * 24` this leaves `projector b = 24 b` (`projector_mulVec`), writing `b`,
+and with it `c`, as a combination of the four; the `24` is
+`contractionWeight_mul_contractionOrbit`. The identity is
 `λ (3λ - 2) (3λ - 1) (12λ² - 11λ + 1) / 4` at `λ = M / 48` with denominators cleared, but that
 is only where it came from: the file proves nothing about the spectrum.
 -/
@@ -692,11 +691,14 @@ lemma certificate :
   revert k l
   decide +kernel
 
-/-- `24` times the orbit coordinates of an invariant tensor is `projector` applied to them. -/
-lemma orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
-    (k : Fin 22) :
-    24 * c (orbitRep k)
-      = ∑ i, (contractionOrbit i k : ℂ) * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l) := by
+/-- The integer projector matrix acts on invariant orbit coordinates by multiplication by `24`.
+  The `24` is the normalization of `projector`: each factor of the certificate acts on such a
+  vector as a scalar, `M` by `48`, `M - z` by `48 - z` and the quadratic factor by
+  `48 ^ 2 - 44 * 48 + 192 = 384`, so the left-hand side scales it by
+  `48 * 32 * 16 * 384 = 9437184`, and dividing by the `393216` on the right leaves `24`. -/
+lemma projector_mulVec {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
+    projector.map (Int.cast : ℤ → ℂ) *ᵥ (fun k => c (orbitRep k))
+      = (24 : ℂ) • fun k => c (orbitRep k) := by
   set b : Fin 22 → ℂ := fun k => c (orbitRep k) with hb
   set M : Matrix (Fin 22) (Fin 22) ℂ := orbitMatrix.map (Int.cast : ℤ → ℂ) with hM
   have hMb : M *ᵥ b = (48 : ℂ) • b := orbitMatrix_mulVec hc
@@ -728,19 +730,25 @@ lemma orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantC
     rw [hcert]
   rw [← Matrix.mulVec_mulVec, hquad, ← Matrix.mulVec_mulVec, h₂, ← Matrix.mulVec_mulVec, h₃, h₄,
     Matrix.smul_mulVec] at hpb
-  have hk := congrFun hpb k
+  refine smul_right_injective (Fin 22 → ℂ) (show (393216 : ℂ) ≠ 0 by norm_num) ?_
+  simp only [← hpb, smul_smul]
+  norm_num
+
+/-- `24` times an orbit coordinate of an invariant tensor, read entry by entry off the previous
+  lemma: `projector` is built from the columns `contractionOrbit i` and the rows
+  `contractionWeight i`. -/
+lemma orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    (k : Fin 22) :
+    24 * c (orbitRep k)
+      = ∑ i, (contractionOrbit i k : ℂ) * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l) := by
+  have hk := congrFun (projector_mulVec hc) k
   simp only [Pi.smul_apply, smul_eq_mul, Matrix.mulVec, dotProduct, Matrix.map_apply, projector,
-    Matrix.of_apply, Int.cast_sum, Int.cast_mul, Finset.sum_mul, hb] at hk
+    Matrix.of_apply, Int.cast_sum, Int.cast_mul, Finset.sum_mul] at hk
   rw [Finset.sum_comm] at hk
-  have hk' : (393216 : ℂ) * (24 * c (orbitRep k))
-      = (393216 : ℂ) * ∑ i, (contractionOrbit i k : ℂ)
-        * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l) := by
-    rw [← mul_assoc, show (393216 : ℂ) * 24 = 9437184 by norm_num, hk]
-    congr 1
-    exact Finset.sum_congr rfl fun i _ => by
-      rw [Finset.mul_sum]
-      exact Finset.sum_congr rfl fun l _ => by ring
-  exact mul_left_cancel₀ (by norm_num) hk'
+  rw [← hk]
+  exact Finset.sum_congr rfl fun i _ => by
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun l _ => by ring
 
 /-- An invariant coefficient tensor is a combination of the four. -/
 theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
@@ -770,13 +778,13 @@ C to G give `exists_smul_contraction_of_invariant`, the case `S = ⊥` of the th
 general `S`, right to left is immediate and does not use `hS`; left to right passes to the
 quotient `B ⧸ S`, that is `B` with `S` declared zero and `S.mkQ` the map to classes. Stability
 lets `repLorentz` act there and the classes of the components again form a rank-four family,
-both by `IsLorentzTensorFamily.quotient`, so back in `B` the difference between `x` and the
+both by `IsLorentzCovariant.quotient`, so back in `B` the difference between `x` and the
 matching combination of contractions has zero class, hence lies in `S`, and is invariant as a
 difference of invariants.
 -/
 
 /-- Every Lorentz invariant of the span is a combination of the four contractions. -/
-theorem exists_smul_contraction_of_invariant (hT : IsLorentzTensorFamily 4 B repLorentz T)
+theorem exists_smul_contraction_of_invariant (hT : IsLorentzCovariant 4 B repLorentz T)
     {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ,
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
@@ -788,15 +796,9 @@ theorem exists_smul_contraction_of_invariant (hT : IsLorentzTensorFamily 4 B rep
   simp only [contraction_eq, Finset.smul_sum, Finset.sum_smul, smul_smul]
   exact Finset.sum_comm
 
-/-- Taking classes turns a contraction of the components into one of their classes. -/
-lemma mkQ_sum_smul (S : Submodule ℂ B) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) :
-    S.mkQ (∑ d, c d • T d) = ∑ d, c d • S.mkQ (T d) := by
-  rw [map_sum]
-  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
-
 /-- Left to right in `mem_span_sup_invariant_iff`, proved in the quotient by `S`. -/
 lemma exists_smul_contraction_of_invariant_subset
-    (hT : IsLorentzTensorFamily 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
+    (hT : IsLorentzCovariant 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
@@ -805,21 +807,19 @@ lemma exists_smul_contraction_of_invariant_subset
       ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
   obtain ⟨a₁, a₂, a₃, a₄, hcomb⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
     (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
-  simp only [outerContraction, innerContraction, splitContraction, epsilonContraction,
-    ← mkQ_sum_smul] at hcomb
   refine ⟨a₁, a₂, a₃, a₄,
     x - (a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
       + a₄ • epsilonContraction T), ?_, by abel, fun g => ?_⟩
-  · rw [← Submodule.ker_mkQ S, LinearMap.mem_ker, map_sub, hcomb, outerContraction,
-      innerContraction, splitContraction, epsilonContraction]
-    simp only [map_add, map_smul]
+  · rw [← Submodule.ker_mkQ S, LinearMap.mem_ker, map_sub, hcomb]
+    simp only [outerContraction, innerContraction, splitContraction, epsilonContraction,
+      map_add, map_smul, map_sum]
     abel
   · rw [map_sub, hinv g, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g]
 
 /-- A vector of `componentSpan T ⊔ S`, the sums `u + y` with `u` in the span and `y` in the
   Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four
   contractions plus an invariant `y` of `S`. `hS` is used only left to right. -/
-theorem mem_span_sup_invariant_iff (hT : IsLorentzTensorFamily 4 B repLorentz T) (x : B)
+theorem mem_span_sup_invariant_iff (hT : IsLorentzCovariant 4 B repLorentz T) (x : B)
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
     (x ∈ componentSpan T ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
@@ -832,6 +832,6 @@ theorem mem_span_sup_invariant_iff (hT : IsLorentzTensorFamily 4 B repLorentz T)
     (Submodule.mem_sup_right hyS), fun g => ?_⟩
   rw [map_add, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g, hyinv g]
 
-end QuadLorentz
+end RankFour
 
 end Lorentz

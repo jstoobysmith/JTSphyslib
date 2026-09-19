@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
@@ -18,7 +18,7 @@ odd number is left over either way. That is `eq_zero_of_invariant`, and
 the form the Standard Model files use.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by three directions, and `IsLorentzTensorFamily 3` says the
+`repLorentz` of `SL(2,ℂ)`, indexed by three directions, and `IsLorentzCovariant 3` says the
 group moves them with one factor of the Lorentz matrix per slot. `componentSpan T` is the set
 of their combinations.
 
@@ -140,7 +140,7 @@ lemma prod_lightConeSign_of_sum_lightConeWeight_eq_zero (c : Fin 3 → Fin 4)
   revert c
   decide
 
-namespace TriLorentz
+namespace RankThree
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -169,14 +169,10 @@ lemma toLorentzGroup_halfTurn_symm (i : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
 lemma lightConeComponent_act_halfTurn {n : ℕ} (i : Fin 3)
     (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) :
     lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 c) κ
-      = ((∏ s, lightConeSign (κ s) : ℤ) : ℂ) * lightConeComponent i c κ := by
-  simp only [lightConeComponent, act, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  have h := sum_prod_halfTurn_lightConeCoeff i κ d
-  simp only [toLorentzGroup_halfTurn_symm i (d _)] at h
-  rw [← mul_assoc, mul_comm _ (c d), ← h, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun a _ => by ring
+      = ((∏ s, lightConeSign (κ s) : ℤ) : ℂ) * lightConeComponent i c κ :=
+  lightConeComponent_act i _ c κ _ fun d => by
+    simpa only [toLorentzGroup_halfTurn_symm i (d _)] using
+      sum_prod_halfTurn_lightConeCoeff i κ d
 
 /-- An invariant coefficient tensor has no weight-zero light-cone component either, the half
   turn negating those. -/
@@ -201,7 +197,7 @@ lemma eq_zero_of_isInvariantCoeff {c : (Fin 3 → Fin 1 ⊕ Fin 3) → ℂ}
 
 /-- Every Lorentz invariant in the span of the components is zero: three indices carry no
   invariant contraction. -/
-theorem eq_zero_of_invariant (hT : IsLorentzTensorFamily 3 B repLorentz T) {x : B}
+theorem eq_zero_of_invariant (hT : IsLorentzCovariant 3 B repLorentz T) {x : B}
     (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
   simp [eq_zero_of_isInvariantCoeff hc]
@@ -218,13 +214,13 @@ section B applies there and an invariant of `componentSpan T ⊔ S` lies in `S`.
 
 /-- A Lorentz invariant of `componentSpan T ⊔ S`, for a Lorentz-stable subspace `S`, already
   lies in `S`. -/
-lemma mem_of_invariant_of_mem_sup (hT : IsLorentzTensorFamily 3 B repLorentz T) {x : B}
+lemma mem_of_invariant_of_mem_sup (hT : IsLorentzCovariant 3 B repLorentz T) {x : B}
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hzero := eq_zero_of_invariant (hT.quotient S hS) (mkQ_mem_componentSpan T S hx)
     fun g => by rw [quotient_apply_mkQ, hinv g]
   rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
 
-end TriLorentz
+end RankThree
 
 end Lorentz

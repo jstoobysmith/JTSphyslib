@@ -7,7 +7,7 @@ module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 /-!
-# Families of components carrying four-vector indices
+# Lorentz covariance of component families
 
 A family `T` of vectors of a complex module `B`, indexed by `n` spacetime directions and moved
 by a representation of `SL(2,ℂ)` with one factor of the Lorentz matrix per index, is what the
@@ -39,8 +39,8 @@ open Matrix MatrixGroups SL2C Invariants
 ## A. The span of a family of components
 
 The span exists for any family, with no transformation law in sight, so it is defined on the
-family alone. `mem_componentSpan_iff` is the only thing ever asked of it: its elements are the
-combinations of the components.
+family alone. Its elements are exactly the combinations of the components, which is what
+`mem_componentSpan_iff` records and what everything below reads it through.
 
 -/
 
@@ -93,14 +93,14 @@ end SpanQuotient
   `repLorentz` moves the way the components of a rank-`n` tensor `T^{μ₁ ⋯ μₙ}` transform: one
   factor of the Lorentz matrix per slot, the moved index second in each factor and the summed
   one first. -/
-structure IsLorentzTensorFamily (n : ℕ) (B : Type*) [AddCommMonoid B] [Module ℂ B]
+structure IsLorentzCovariant (n : ℕ) (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B)
     (T : (Fin n → (Fin 1 ⊕ Fin 3)) → B) : Prop where
   repLorentz_T : ∀ (g : SL(2,ℂ)) l,
     repLorentz g (T l) = ∑ (a : Fin n → Fin 1 ⊕ Fin 3),
     (∏ (i : Fin n), (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a
 
-namespace IsLorentzTensorFamily
+namespace IsLorentzCovariant
 
 section Monoid
 
@@ -111,16 +111,16 @@ variable {n : ℕ} {B : Type*} [AddCommMonoid B] [Module ℂ B]
 /-- The image of the family under a linear map intertwining the two representations is again
   such a family. The map is not assumed injective or surjective. -/
 lemma map {B' : Type*} [AddCommMonoid B'] [Module ℂ B'] {rep' : Representation ℂ SL(2,ℂ) B'}
-    (hT : IsLorentzTensorFamily n B repLorentz T) (f : B →ₗ[ℂ] B')
+    (hT : IsLorentzCovariant n B repLorentz T) (f : B →ₗ[ℂ] B')
     (hf : ∀ (g : SL(2,ℂ)) (y : B), f (repLorentz g y) = rep' g (f y)) :
-    IsLorentzTensorFamily n B' rep' fun l => f (T l) where
+    IsLorentzCovariant n B' rep' fun l => f (T l) where
   repLorentz_T g l := by
     rw [← hf, hT.repLorentz_T g l, map_sum]
     exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 /-- The span of the components is Lorentz stable: each component goes to a combination of the
   components. -/
-lemma repLorentz_mem_componentSpan (hT : IsLorentzTensorFamily n B repLorentz T) (g : SL(2,ℂ))
+lemma repLorentz_mem_componentSpan (hT : IsLorentzCovariant n B repLorentz T) (g : SL(2,ℂ))
     {x : B} (hx : x ∈ componentSpan T) : repLorentz g x ∈ componentSpan T := by
   obtain ⟨c, rfl⟩ := (mem_componentSpan_iff T x).1 hx
   exact (mem_componentSpan_iff T _).2 ⟨_, repLorentz_sum_smul hT.repLorentz_T g c⟩
@@ -135,30 +135,30 @@ variable {n : ℕ} {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-- The classes of the components in the quotient by a Lorentz-stable submodule again form a
   Lorentz tensor family of the same rank, for Mathlib's quotient representation. -/
-lemma quotient (hT : IsLorentzTensorFamily n B repLorentz T) (S : Submodule ℂ B)
+lemma quotient (hT : IsLorentzCovariant n B repLorentz T) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsLorentzTensorFamily n (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
+    IsLorentzCovariant n (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
       fun l => S.mkQ (T l) :=
   hT.map S.mkQ fun _ _ => rfl
 
 /-- A Lorentz invariant lying in the span of the components is the contraction of a coefficient
   tensor that the Lorentz matrices themselves fix. -/
 theorem exists_isInvariantCoeff_of_mem_componentSpan
-    (hT : IsLorentzTensorFamily n B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+    (hT : IsLorentzCovariant n B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
   Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
 
 /-- Contracting the components with an invariant coefficient tensor gives a Lorentz
   invariant. -/
-lemma isInvariant_sum_smul (hT : IsLorentzTensorFamily n B repLorentz T)
+lemma isInvariant_sum_smul (hT : IsLorentzCovariant n B repLorentz T)
     {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
     repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d :=
   repLorentz_sum_smul_of_isInvariantCoeff hT.repLorentz_T hc g
 
 end Group
 
-end IsLorentzTensorFamily
+end IsLorentzCovariant
 
 /-!
 

@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Mathematics.Fin
 public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 /-!
 # The light-cone basis of a boost axis over the integers and the rationals
@@ -12,10 +13,11 @@ public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 `lightConeCoeff` and `lightConeCoeffInv` of `LightConeDeriv` change a spacetime index into the
 light-cone basis of a spatial axis `i`: the two directions `D₀ - Dᵢ` and `D₀ + Dᵢ` of the plane
 the boost along `i` moves, and the two transverse directions. Their entries are `0`, `±1` and
-`±1/2`, so both matrices have integer or rational mirrors, and every classification in this
-folder computes with a mirror rather than with `ℂ`: the kernel evaluates `ℤ` and `ℚ` and does
-not evaluate `ℂ`. This file holds the mirrors and what is proved about them at an arbitrary
-number of indices; the rank-specific files contract them against as many slots as they have.
+`±1/2`, so both matrices have integer or rational mirrors, and the rank-two and rank-four
+classifications compute with a mirror rather than with `ℂ`: the kernel evaluates `ℤ` and `ℚ`
+and does not evaluate `ℂ`. The Weyl classifications carry their own weight bases and use none
+of this. This file holds the mirrors and what is proved about them at an arbitrary number of
+indices; the rank-specific files contract them against as many slots as they have.
 
 The change of basis one way is `lightConeCoeffZ`, an exact integer copy. The other way needs
 the halves: `lightConeCoeffInvQ` keeps them, and `lightConeCoeffInvZ` clears them, so it is
@@ -193,6 +195,13 @@ gives `transitionZ`. The recursion follows B: a slot whose direction lies in the
 takes weight `2` or `-2` and leaves `m - 2` or `m + 2`, and a transverse slot takes either
 direction of weight `0`, which is why those two are added, and leaves `m`.
 
+Unfolding the recursion into a single sum splits into two independent steps. The case split of
+the recursion is the boost-plane support argument of B and nothing else: once it is resolved,
+one slot is a plain sum over the four directions, each taking its own weight out of `m`
+(`transitionZ_succ`). What is left has no light-cone content at all, the peeling of the first
+slot off a weight-constrained sum over tuples, which is `Physlib.Fin.sum_filter_weight_succ`.
+`transitionZ_eq_sum` is the induction that composes them.
+
 -/
 
 /-- One slot's factor: twice the coefficient of `κ` in `μ`, times that of `ν` in `κ`. -/
@@ -212,6 +221,25 @@ def transitionZ (i : Fin 3) : {n : ℕ} → (d e : Fin n → Fin 1 ⊕ Fin 3) �
     else (slotZ i 2 (d 0) (e 0) + slotZ i 3 (d 0) (e 0))
       * transitionZ i (Fin.tail d) (Fin.tail e) m
 
+/-- One slot of the transition, with the case split of the recursion resolved: the first slot
+  runs over all four light-cone directions, each taking its own weight out of `m`. The two
+  directions of the boost plane drop out of a transverse slot and the two transverse ones drop
+  out of a slot in the boost plane, which is what the two branches of `transitionZ` record. -/
+lemma transitionZ_succ (i : Fin 3) {n : ℕ} (d e : Fin (n + 1) → Fin 1 ⊕ Fin 3) (m : ℤ) :
+    transitionZ i d e m
+      = ∑ κ : Fin 4, slotZ i κ (d 0) (e 0)
+          * transitionZ i (Fin.tail d) (Fin.tail e) (m - lightConeWeight κ) := by
+  rw [Fin.sum_univ_four, transitionZ]
+  simp only [show lightConeWeight 0 = 2 from rfl, show lightConeWeight 1 = -2 from rfl,
+    show lightConeWeight 2 = 0 from rfl, show lightConeWeight 3 = 0 from rfl,
+    sub_neg_eq_add, sub_zero]
+  by_cases h : InBoostPlane i (d 0)
+  · rw [if_pos h]
+    simp [slotZ, lightConeCoeffInvZ_eq_zero_of_inBoostPlane h]
+  · rw [if_neg h]
+    simp [slotZ, lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane h]
+    ring
+
 /-- The recursion unfolded, as a sum over the multi-indices of total weight `m`. -/
 lemma transitionZ_eq_sum (i : Fin 3) :
     ∀ {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) (m : ℤ),
@@ -223,38 +251,11 @@ lemma transitionZ_eq_sum (i : Fin 3) :
     rw [Finset.sum_filter, Fintype.sum_unique]
     simp [transitionZ, eq_comm]
   | n + 1, d, e, m => by
-    have hpeel : ∀ κ : Fin 4,
-        (∑ κ' : Fin n → Fin 4, if lightConeWeight κ + ∑ s, lightConeWeight (κ' s) = m then
-          slotZ i κ (d 0) (e 0) * ∏ s, slotZ i (κ' s) (d s.succ) (e s.succ) else 0)
-        = slotZ i κ (d 0) (e 0)
-          * transitionZ i (Fin.tail d) (Fin.tail e) (m - lightConeWeight κ) := by
-      intro κ
-      rw [transitionZ_eq_sum i (Fin.tail d) (Fin.tail e), Finset.sum_filter, Finset.mul_sum]
-      exact Finset.sum_congr rfl fun κ' _ => by
-        rw [mul_ite, mul_zero]
-        exact if_congr (by omega) rfl rfl
-    calc transitionZ i d e m
-        = ∑ κ : Fin 4, slotZ i κ (d 0) (e 0)
-            * transitionZ i (Fin.tail d) (Fin.tail e) (m - lightConeWeight κ) := by
-          rw [Fin.sum_univ_four, transitionZ]
-          simp only [show lightConeWeight 0 = 2 from rfl, show lightConeWeight 1 = -2 from rfl,
-            show lightConeWeight 2 = 0 from rfl, show lightConeWeight 3 = 0 from rfl,
-            sub_neg_eq_add, sub_zero]
-          by_cases h : InBoostPlane i (d 0)
-          · rw [if_pos h]
-            simp [slotZ, lightConeCoeffInvZ_eq_zero_of_inBoostPlane h]
-          · rw [if_neg h]
-            simp [slotZ, lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane h]
-            ring
-      _ = _ := by
-          rw [Finset.sum_filter,
-            ← Equiv.sum_comp (Fin.consEquiv fun _ : Fin (n + 1) => Fin 4), Fintype.sum_prod_type]
-          refine Finset.sum_congr rfl fun κ _ => ?_
-          rw [← hpeel κ]
-          refine Finset.sum_congr rfl fun κ' _ => ?_
-          simp only [Fin.consEquiv_apply, Fin.sum_univ_succ, Fin.prod_univ_succ, Fin.cons_zero,
-            Fin.cons_succ]
-
+    rw [transitionZ_succ,
+      Physlib.Fin.sum_filter_weight_succ lightConeWeight fun s κ => slotZ i κ (d s) (e s)]
+    refine Finset.sum_congr rfl fun κ₀ _ => ?_
+    rw [transitionZ_eq_sum i (Fin.tail d) (Fin.tail e)]
+    rfl
 
 end Invariants
 

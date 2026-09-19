@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.TensorFamily
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 /-!
 # Lorentz invariants of a single four-vector index
 
@@ -15,7 +15,7 @@ is `eq_zero_of_invariant`, and `mem_of_invariant_of_mem_sup` is the same stateme
 Lorentz-stable subspace `S`, the form the Standard Model files use.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by one direction `d`, and `IsLorentzTensorFamily 1` says the
+`repLorentz` of `SL(2,ℂ)`, indexed by one direction `d`, and `IsLorentzCovariant 1` says the
 group moves them by the Lorentz matrix. `componentSpan T` is the set of their combinations.
 
 An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
@@ -32,7 +32,7 @@ namespace Lorentz
 
 open TensorProduct Matrix MatrixGroups SL2C Invariants
 
-namespace SingleLorentz
+namespace RankOne
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
@@ -108,7 +108,7 @@ lemma eq_zero_of_isInvariantCoeff {c : (Fin 1 → Fin 1 ⊕ Fin 3) → ℂ}
 
 /-- Every Lorentz invariant in the span of the components is zero: one index carries no
   invariant contraction. -/
-theorem eq_zero_of_invariant (hT : IsLorentzTensorFamily 1 B repLorentz T) {x : B}
+theorem eq_zero_of_invariant (hT : IsLorentzCovariant 1 B repLorentz T) {x : B}
     (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
   simp [eq_zero_of_isInvariantCoeff hc]
@@ -125,13 +125,13 @@ section B applies there and an invariant of `componentSpan T ⊔ S` lies in `S`.
 
 /-- A Lorentz invariant of `componentSpan T ⊔ S`, for a Lorentz-stable subspace `S`, already
   lies in `S`. -/
-lemma mem_of_invariant_of_mem_sup (hT : IsLorentzTensorFamily 1 B repLorentz T) {x : B}
+lemma mem_of_invariant_of_mem_sup (hT : IsLorentzCovariant 1 B repLorentz T) {x : B}
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hzero := eq_zero_of_invariant (hT.quotient S hS) (mkQ_mem_componentSpan T S hx)
     fun g => by rw [quotient_apply_mkQ, hinv g]
   rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
 
-end SingleLorentz
+end RankOne
 
 end Lorentz

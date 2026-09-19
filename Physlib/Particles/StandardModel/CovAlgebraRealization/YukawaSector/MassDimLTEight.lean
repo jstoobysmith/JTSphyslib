@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.BoostWeightDecomposition
-public import Physlib.Relativity.LorentzGroup.Invariants.IsQuadLorentz
+public import Physlib.Relativity.LorentzGroup.Invariants.RankFour
 -- The fermion boost weights enter only inside the proofs below, so this import is kept
 -- private: its public form is one character over the line-length limit.
 import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.BoostWeightDecomposition
