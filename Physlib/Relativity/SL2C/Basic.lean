@@ -38,6 +38,29 @@ lemma inverse_coe (M : SL(2, ℂ)) : M.1⁻¹ = (M⁻¹).1 := by
   simp
 
 lemma transpose_coe (M : SL(2, ℂ)) : M.1ᵀ = (M.transpose).1 := rfl
+
+/-- Entrywise complex conjugation as a monoid endomorphism of `SL(2,ℂ)`: Mathlib's
+  `SpecialLinearGroup.map` along `starRingEnd ℂ`. -/
+abbrev conjHom : SL(2,ℂ) →* SL(2,ℂ) := SpecialLinearGroup.map (starRingEnd ℂ)
+
+lemma conjHom_coe (g : SL(2,ℂ)) : (conjHom g).1 = g.1.map star := rfl
+
+/-- Conjugation is an involution, hence surjective. -/
+lemma conjHom_involutive : Function.Involutive conjHom := by
+  intro g
+  apply Subtype.ext
+  ext i j
+  simp
+
+/-- Conjugating the group argument undoes the conjugation of the entries: the inverse
+  conjugate transpose at `conjHom g` is the inverse transpose at `g`. -/
+lemma conjHom_inv_conjTranspose (g : SL(2,ℂ)) : (((conjHom g).1)⁻¹)ᴴ = (g.1⁻¹)ᵀ := by
+  have h1 : ((conjHom g).1)⁻¹ = (g.1⁻¹).map star := by
+    rw [inverse_coe, ← map_inv, inverse_coe]
+    rfl
+  rw [h1]
+  ext i j
+  simp [Matrix.conjTranspose_apply, Matrix.map_apply]
 /-!
 
 ## Representation of SL(2, ℂ) on spacetime
@@ -187,6 +210,25 @@ lemma toSelfAdjointMap_basis (i : Fin 1 ⊕ Fin 3) :
   nth_rewrite 1 [← (Basis.sum_repr PauliMatrix.pauliBasis'
     ((toSelfAdjointMap M) (PauliMatrix.pauliBasis' i)))]
   rfl
+
+/-- The intertwining identity `toSelfAdjointMap_basis` read entrywise: sandwiching the
+  covariant Pauli matrix `σ_μ` between `g` and `gᴴ` mixes the covariant Pauli matrices by the
+  column `μ` of the Lorentz matrix of `g`, the summed Lorentz index first. -/
+lemma sum_pauliLower_mul_sl2c (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (β β' : Fin 2) :
+    ∑ p : Fin 2 × Fin 2, PauliMatrix.pauliLower μ p.1 p.2 * (g.1 β p.1 * star (g.1 β' p.2))
+      = ∑ ν : Fin 1 ⊕ Fin 3, (((toLorentzGroup g).1 ν μ : ℝ) : ℂ)
+        * PauliMatrix.pauliLower ν β β' := by
+  have h := congrArg (fun A : selfAdjoint (Matrix (Fin 2) (Fin 2) ℂ) => A.1 β β')
+    (toSelfAdjointMap_basis (M := g) μ)
+  simp only [toSelfAdjointMap_apply_coe, AddSubmonoidClass.coe_finsetSum,
+    Matrix.sum_apply, selfAdjoint.val_smul, Matrix.smul_apply, Complex.real_smul,
+    PauliMatrix.pauliBasis'_coe] at h
+  rw [← h, Matrix.mul_apply, Fintype.sum_prod_type_right]
+  refine Finset.sum_congr rfl fun p₂ _ => ?_
+  rw [Matrix.mul_apply, Finset.sum_mul]
+  exact Finset.sum_congr rfl fun p₁ _ => by
+    rw [Matrix.conjTranspose_apply]
+    ring
 
 lemma toSelfAdjointMap_pauliBasis (i : Fin 1 ⊕ Fin 3) :
     toSelfAdjointMap M (PauliMatrix.pauliBasis i) =

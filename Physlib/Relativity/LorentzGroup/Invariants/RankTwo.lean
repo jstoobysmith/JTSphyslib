@@ -337,6 +337,22 @@ lemma boostAverageZ_symm (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
 noncomputable def metricContraction : B :=
   ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • T d
 
+/-- The Minkowski metric, as a coefficient tensor on two slots, is fixed by every Lorentz
+  matrix: `Λ η Λᵀ = η`, which is `LorentzGroup.sum_minkowskiMatrixZ_mul`. -/
+lemma isInvariantCoeff_minkowskiMatrixZ :
+    IsInvariantCoeff fun d : Fin 2 → Fin 1 ⊕ Fin 3 => ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
+  intro g
+  funext a
+  simp only [act]
+  rw [← (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3).symm.sum_comp, Fintype.sum_prod_type]
+  simp only [piFinTwoEquiv_symm_apply, Fin.prod_univ_two]
+  exact LorentzGroup.sum_minkowskiMatrixZ_mul (SL2C.toLorentzGroup g) (a 0) (a 1)
+
+/-- The metric contraction of a rank-two family is a Lorentz invariant. -/
+lemma repLorentz_metricContraction (hT : IsLorentzCovariant 2 B repLorentz T) (g : SL(2,ℂ)) :
+    repLorentz g (metricContraction (T := T)) = metricContraction (T := T) :=
+  hT.isInvariant_sum_smul isInvariantCoeff_minkowskiMatrixZ g
+
 /-!
 
 ## E.2. Iterating the averaged round on the coefficients

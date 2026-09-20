@@ -456,10 +456,7 @@ noncomputable def Step.ofVectorDualLeftRightWeyl {B : Type*} [AddCommGroup B] [M
     (hT : IsVectorDualLeftRightWeyl B repLorentz T) :
     Step (fun Λ : SL(2,ℂ) => repLorentz Λ) (⨆ q, ℂ ∙ T q) where
   contraction := IsVectorDualLeftRightWeyl.pauliBarContraction (T := T)
-  stable := isStableUnder_iSup_span_singleton_of_sum fun Λ q => by
-    refine ⟨fun a => ((((SL2C.toLorentzGroup Λ).1 a.1 q.1 : ℝ) : ℂ)
-      * ((Λ.1⁻¹)ᵀ a.2.1 q.2.1 * (Λ.1⁻¹)ᴴ a.2.2 q.2.2)), ?_⟩
-    rw [show q = (q.1, q.2) from rfl, hT.repLorentz_T, Fintype.sum_prod_type]
+  stable := isStableUnder_iSup_span_singleton_of_sum fun Λ q => ⟨_, hT.repLorentz_T' Λ q⟩
   contraction_fixed Λ := hT.repLorentz_pauliBarContraction Λ
   classify S hS _ hx hinv :=
     hT.exists_smul_pauliBarContraction_of_invariant_subset S hS hx hinv

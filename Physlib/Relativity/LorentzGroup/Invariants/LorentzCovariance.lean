@@ -51,6 +51,15 @@ variable {ι B : Type*} [AddCommMonoid B] [Module ℂ B]
 /-- The span of the components of a family `T`. -/
 def componentSpan (T : ι → B) : Submodule ℂ B := ⨆ i, ℂ ∙ T i
 
+/-- Every component lies in the component span. -/
+lemma mem_componentSpan_self (T : ι → B) (i : ι) : T i ∈ componentSpan T :=
+  Submodule.mem_iSup_of_mem i (Submodule.mem_span_singleton_self _)
+
+/-- The component span lies in a submodule exactly when every component does. -/
+lemma componentSpan_le_iff (T : ι → B) (N : Submodule ℂ B) :
+    componentSpan T ≤ N ↔ ∀ i, T i ∈ N :=
+  iSup_le_iff.trans (forall_congr' fun _ => Submodule.span_singleton_le_iff_mem _ _)
+
 variable [Fintype ι]
 
 /-- A vector lies in the component span exactly when it is a combination `∑ i, c i • T i`. -/

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LightConeDeriv
+public import Physlib.Mathematics.LinearCombination
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 /-!
 # Invariants of the span of a family of components
@@ -36,8 +37,8 @@ transpose is the same product for the transposed matrix, which is again a Lorent
 from `SL(2,ℂ)`, so `exists_isInvariantCoeff_of_mem_span` applies. Writing each slot of a
 coefficient tensor in the light-cone basis of an axis splits it into pieces that a boost
 scales by powers of its parameter, and an invariant keeps only the piece of weight zero:
-`IsInvariantCoeff.lightConeComponent_eq_zero`. The Weyl patterns have their own weight bases,
-built in the files that need them on top of the second step.
+`IsInvariantCoeff.lightConeComponent_eq_zero`. The Weyl patterns run the same argument on the
+second step with the Weyl weight bases of `Fermions.Weyl.BoostWeight`.
 -/
 
 @[expose] public section
@@ -125,6 +126,10 @@ The coefficients then move by `actMat M_g`, whose adjoint is the action of the c
 transpose of `M_g`. So the hypothesis of A reads: for every `g` some `g'` has `M_{g'}` the
 conjugate transpose of `M_g`. In every case below `g'` is `g†`.
 
+The weight argument is also generic: a covector that the transposed matrix reproduces up to a
+scalar reads off a component that `actMat M_g` scales by that scalar, so an invariant
+coefficient function has no such component unless the scalar is `1`.
+
 -/
 
 section Mat
@@ -164,14 +169,37 @@ theorem exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B)
     {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, (∀ g, actMat (M g) c = c) ∧ x = ∑ i, c i • T i := by
   obtain ⟨c, hc, hinvc⟩ := exists_invariantCoeff T φ (fun g => actMatₗ (M g))
-    (fun g c => by
-      simp only [map_sum, map_smul, hT, Finset.smul_sum, smul_smul, actMatₗ, LinearMap.coe_mk,
-        AddHom.coe_mk, actMat, Finset.sum_smul]
-      exact Finset.sum_comm)
+    (fun g c => (φ g).map_sum_smul_of_forall_eq T T (M g) (hT g) c)
     (fun g => by
       obtain ⟨g', hg'⟩ := hM g
       exact ⟨g', fun u v => inner_actMat (M g) (M g') hg' u v⟩) hx hinv
   exact ⟨c, hinvc, hc⟩
+
+/-- A covector `P` that the transposed matrix reproduces up to a scalar `k` reads off a
+  component of the coefficients that `actMat M` scales by `k`. -/
+lemma sum_mul_actMat (M : ι → ι → ℂ) (P c : ι → ℂ) (k : ℂ)
+    (hP : ∀ d, ∑ a, P a * M a d = k * P d) :
+    ∑ a, P a * actMat M c a = k * ∑ a, P a * c a := by
+  simp only [actMat, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  rw [← mul_assoc, mul_comm _ (c d), ← hP d, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun a _ => by ring
+
+/-- A coefficient function fixed by `actMat M` has no component along a covector that the
+  transposed matrix scales by an eigenvalue other than `1`. -/
+lemma sum_mul_eq_zero_of_actMat_eq (M : ι → ι → ℂ) {P c : ι → ℂ} (hc : actMat M c = c) {k : ℂ}
+    (hP : ∀ d, ∑ a, P a * M a d = k * P d) (hk : k ≠ 1) :
+    ∑ a, P a * c a = 0 := by
+  have h := sum_mul_actMat M P c k hP
+  rw [hc] at h
+  exact (mul_left_eq_self₀.1 h.symm).resolve_left hk
+
+/-- The boost with parameter `2` distinguishes every nonzero weight: `2 ^ w ≠ 1` for `w ≠ 0`. -/
+lemma two_zpow_ne_one {w : ℤ} (hw : w ≠ 0) : ((2 : ℝ) : ℂ) ^ w ≠ 1 := by
+  rw [← Complex.ofReal_zpow, Ne, Complex.ofReal_eq_one,
+    zpow_eq_one_iff_right₀ (by norm_num) (by norm_num)]
+  exact hw
 
 end Mat
 
@@ -219,9 +247,8 @@ lemma repLorentz_sum_smul {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
       (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
     (g : SL(2,ℂ)) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
-    repLorentz g (∑ d, c d • T d) = ∑ a, act (SL2C.toLorentzGroup g).1 c a • T a := by
-  simp only [map_sum, map_smul, hT, Finset.smul_sum, smul_smul, act, Finset.sum_smul]
-  exact Finset.sum_comm
+    repLorentz g (∑ d, c d • T d) = ∑ a, act (SL2C.toLorentzGroup g).1 c a • T a :=
+  (repLorentz g).map_sum_smul_of_forall_eq T T _ (hT g) c
 
 /-- Contracting the components with an invariant coefficient tensor gives a vector fixed by
   the representation. -/
@@ -267,12 +294,8 @@ lemma lightConeComponent_act (i : Fin 3) (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 �
       ∑ a : Fin n → Fin 1 ⊕ Fin 3, (∏ s, lightConeCoeff i (κ s) (a s))
           * ∏ s, ((Λ (a s) (d s) : ℝ) : ℂ)
         = k * ∏ s, lightConeCoeff i (κ s) (d s)) :
-    lightConeComponent i (act Λ c) κ = k * lightConeComponent i c κ := by
-  simp only [lightConeComponent, act, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  rw [← mul_assoc, mul_comm _ (c d), ← hΛ d, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun a _ => by ring
+    lightConeComponent i (act Λ c) κ = k * lightConeComponent i c κ :=
+  sum_mul_actMat _ _ c k hΛ
 
 /-- The Lorentz matrix of a boost is symmetric. -/
 lemma toLorentzGroup_boostAxis_symm (i : Fin 3) {t : ℝ} (ht : t ≠ 0) (a b : Fin 1 ⊕ Fin 3) :
@@ -295,14 +318,12 @@ lemma lightConeComponent_act_boostAxis (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin
 lemma IsInvariantCoeff.lightConeComponent_eq_zero {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ}
     (hc : IsInvariantCoeff c) (i : Fin 3) {κ : Fin n → Fin 4}
     (hκ : ∑ s, lightConeWeight (κ s) ≠ 0) :
-    lightConeComponent i c κ = 0 := by
-  have h := lightConeComponent_act_boostAxis i c κ (two_ne_zero (α := ℝ))
-  rw [hc] at h
-  have h2 : ((2 : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) ≠ 1 := by
-    rw [← Complex.ofReal_zpow, Ne, Complex.ofReal_eq_one,
-      zpow_eq_one_iff_right₀ (by norm_num) (by norm_num)]
-    exact hκ
-  exact (mul_left_eq_self₀.1 h.symm).resolve_left h2
+    lightConeComponent i c κ = 0 :=
+  sum_mul_eq_zero_of_actMat_eq _ (hc (SL2C.boostAxis i 2 two_ne_zero))
+    (fun d => by
+      simpa only [toLorentzGroup_boostAxis_symm i two_ne_zero (d _)] using
+        sum_prod_lightConeCoeff i κ d two_ne_zero)
+    (two_zpow_ne_one hκ)
 
 /-- A coefficient tensor is recovered from its light-cone components. -/
 lemma eq_sum_lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ)
