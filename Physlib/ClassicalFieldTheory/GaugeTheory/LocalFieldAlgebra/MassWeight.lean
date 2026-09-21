@@ -37,6 +37,8 @@ its datum.
   and the invariants of mass weight at most `w`.
 - `GaugeFieldData.bosonNormSq` : the contraction `φ† φ` of a bosonic species with its
   conjugate through a basis of its value space, the simplest invariant.
+- `GaugeFieldData.invariantsLE_map` : an isomorphism of local field algebras respecting the
+  actions and the scaling carries the invariants of one datum onto those of the other.
 
 ## iii. Table of contents
 
@@ -44,6 +46,7 @@ its datum.
 - B. The graded pieces and the filtration
 - C. The invariants
 - D. The contraction of a boson with its conjugate
+- E. Transport along an isomorphism
 
 -/
 
@@ -175,5 +178,93 @@ lemma mem_invariantsLE_iff {w : ℕ} {x : T.LocalFieldAlgebra} :
 noncomputable def bosonNormSq (j : T.BosonSpecies) {ι : Type} [Fintype ι] [DecidableEq ι]
     (b : Module.Basis ι ℂ (T.BosonValue j)) : T.LocalFieldAlgebra :=
   ∑ i, T.conjBosonSymbol j 0 (b.conj.dualBasis i) * T.bosonSymbol j 0 (b.dualBasis i)
+
+/-!
+
+## E. Transport along an isomorphism
+
+An isomorphism of local field algebras intertwining the jet gauge action, the Lorentz
+action and the mass-weight scaling carries the graded pieces, the filtration and the
+invariants of one datum onto those of the other. This is what relates two presentations
+of the same field content, such as a model's table and a hand-built datum.
+
+-/
+
+section Transport
+
+variable {T} {T' : GaugeFieldData jets} (e : T.LocalFieldAlgebra ≃ₐ[ℂ] T'.LocalFieldAlgebra)
+
+/-- The mass-weight scaling is respected: the weight-`n` piece is carried onto the
+  weight-`n` piece. -/
+lemma mem_massWeightSubmodule_apply_iff
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x))
+    (n : ℕ) (x : T.LocalFieldAlgebra) :
+    e x ∈ T'.massWeightSubmodule n ↔ x ∈ T.massWeightSubmodule n := by
+  simp only [mem_massWeightSubmodule_iff, ← hscale, ← map_smul, EmbeddingLike.apply_eq_iff_eq]
+
+lemma massWeightSubmodule_map
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x)) (n : ℕ) :
+    (T.massWeightSubmodule n).map (e : T.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
+      = T'.massWeightSubmodule n := by
+  ext y
+  obtain ⟨x, rfl⟩ := e.surjective y
+  rw [Submodule.mem_map_equiv (e := e.toLinearEquiv)]
+  simp [mem_massWeightSubmodule_apply_iff e hscale]
+
+lemma massWeightSubmoduleLE_map
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x)) (w : ℕ) :
+    (T.massWeightSubmoduleLE w).map (e : T.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
+      = T'.massWeightSubmoduleLE w := by
+  simp only [massWeightSubmoduleLE, Submodule.map_iSup, massWeightSubmodule_map e hscale]
+
+/-- The gauge invariants are carried onto the gauge invariants. -/
+lemma gaugeInvariants_map (hjet : ∀ (U : GJ) x, e (T.repJet U x) = T'.repJet U (e x)) :
+    T.gaugeInvariants.map (e : T.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
+      = T'.gaugeInvariants := by
+  ext y
+  obtain ⟨x, rfl⟩ := e.surjective y
+  rw [Submodule.mem_map_equiv (e := e.toLinearEquiv)]
+  simp [mem_gaugeInvariants_iff, ← hjet]
+
+/-- The Lorentz invariants are carried onto the Lorentz invariants. -/
+lemma lorentzInvariants_map
+    (hlor : ∀ (Λ : SL(2,ℂ)) x, e (T.repLorentzGroup Λ x) = T'.repLorentzGroup Λ (e x)) :
+    T.lorentzInvariants.map (e : T.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
+      = T'.lorentzInvariants := by
+  ext y
+  obtain ⟨x, rfl⟩ := e.surjective y
+  rw [Submodule.mem_map_equiv (e := e.toLinearEquiv)]
+  simp [mem_lorentzInvariants_iff, ← hlor]
+
+/-- The filtration is respected, element by element. -/
+lemma mem_massWeightSubmoduleLE_apply_iff
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x)) (w : ℕ)
+    (x : T.LocalFieldAlgebra) :
+    e x ∈ T'.massWeightSubmoduleLE w ↔ x ∈ T.massWeightSubmoduleLE w := by
+  rw [← massWeightSubmoduleLE_map e hscale w, Submodule.mem_map_equiv (e := e.toLinearEquiv)]
+  simp
+
+/-- The invariants of mass weight at most `w` are respected, element by element. -/
+lemma mem_invariantsLE_apply_iff (hjet : ∀ (U : GJ) x, e (T.repJet U x) = T'.repJet U (e x))
+    (hlor : ∀ (Λ : SL(2,ℂ)) x, e (T.repLorentzGroup Λ x) = T'.repLorentzGroup Λ (e x))
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x)) (w : ℕ)
+    (x : T.LocalFieldAlgebra) :
+    e x ∈ T'.invariantsLE w ↔ x ∈ T.invariantsLE w := by
+  simp only [mem_invariantsLE_iff, mem_massWeightSubmoduleLE_apply_iff e hscale, ← hjet, ← hlor,
+    EmbeddingLike.apply_eq_iff_eq]
+
+/-- **The invariants of mass weight at most `w` are carried onto the invariants of mass
+  weight at most `w`** by an isomorphism respecting the two actions and the scaling. -/
+lemma invariantsLE_map (hjet : ∀ (U : GJ) x, e (T.repJet U x) = T'.repJet U (e x))
+    (hlor : ∀ (Λ : SL(2,ℂ)) x, e (T.repLorentzGroup Λ x) = T'.repLorentzGroup Λ (e x))
+    (hscale : ∀ (c : ℝ) x, e (T.massWeightScale c x) = T'.massWeightScale c (e x)) (w : ℕ) :
+    (T.invariantsLE w).map (e : T.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
+      = T'.invariantsLE w := by
+  ext y
+  obtain ⟨x, rfl⟩ := e.surjective y
+  rw [Submodule.mem_map_equiv (e := e.toLinearEquiv), mem_invariantsLE_apply_iff e hjet hlor hscale]
+  simp
+
+end Transport
 
 end GaugeFieldData
