@@ -112,9 +112,16 @@ include hjet hlor hscale in
 /-- **The challenge at mass weight four, on another datum**: given the isomorphism,
   it is equivalent to the same statement with the Higgs mass term carried across. -/
 theorem invariantsLE_four_iff :
-    (fieldData.invariantsLE 4 = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
-      ↔ (T'.invariantsLE 4
-          = ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass) := by
+    (∀ x : fieldData.LocalFieldAlgebra,
+      (x ∈ fieldData.massWeightSubmoduleLE 4
+          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+        ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
+      ↔ ∀ y : T'.LocalFieldAlgebra,
+        (y ∈ T'.massWeightSubmoduleLE 4 ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
+          ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass := by
+  rw [← invariantsLE_eq_iff, ← invariantsLE_eq_iff]
   have hmap := invariantsLE_map e hjet hlor hscale 4
   have hspan := map_one_sup_span e higgsMass
   exact ⟨fun h => hmap.symm.trans ((congrArg (Submodule.map _) h).trans hspan),
@@ -123,9 +130,16 @@ theorem invariantsLE_four_iff :
 include hjet hlor hscale in
 /-- **The challenge at mass weight seven, on the hand-built datum.** -/
 theorem invariantsLE_seven_iff :
-    (fieldData.invariantsLE 7 = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
-      ↔ (T'.invariantsLE 7
-          = ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass) := by
+    (∀ x : fieldData.LocalFieldAlgebra,
+      (x ∈ fieldData.massWeightSubmoduleLE 7
+          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+        ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
+      ↔ ∀ y : T'.LocalFieldAlgebra,
+        (y ∈ T'.massWeightSubmoduleLE 7 ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
+          ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass := by
+  rw [← invariantsLE_eq_iff, ← invariantsLE_eq_iff]
   have hmap := invariantsLE_map e hjet hlor hscale 7
   have hspan := map_one_sup_span e higgsMass
   exact ⟨fun h => hmap.symm.trans ((congrArg (Submodule.map _) h).trans hspan),
@@ -138,12 +152,20 @@ theorem scalarSector_invariantsLE_eight_iff
     (hsec : (fieldData.SectorAlgebra {.scalar}).toSubmodule.map
         (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
       = (T'.SectorAlgebra {.scalar}).toSubmodule) :
-    (fieldData.invariantsLE 8 ⊓ (fieldData.SectorAlgebra {.scalar}).toSubmodule
-        = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass ⊔ ℂ ∙ (higgsMass * higgsMass))
-      ↔ (T'.invariantsLE 8
-            ⊓ (T'.SectorAlgebra {.scalar}).toSubmodule
-          = ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass
-            ⊔ ℂ ∙ (e higgsMass * e higgsMass)) := by
+    (∀ x : fieldData.LocalFieldAlgebra,
+      (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.scalar}
+          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+        ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass
+            ⊔ ℂ ∙ (higgsMass * higgsMass))
+      ↔ ∀ y : T'.LocalFieldAlgebra,
+        (y ∈ T'.massWeightSubmoduleLE 8 ∧ y ∈ T'.SectorAlgebra {.scalar}
+            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
+          ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass
+              ⊔ ℂ ∙ (e higgsMass * e higgsMass) := by
+  simp only [← Subalgebra.mem_toSubmodule]
+  rw [← invariantsLE_inf_eq_iff, ← invariantsLE_inf_eq_iff]
   have hinj : Function.Injective
       (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra) :=
     e.injective
@@ -169,11 +191,18 @@ theorem fermionSector_invariantsLE_eight_iff
     (hsec : (fieldData.SectorAlgebra {.fermion}).toSubmodule.map
         (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
       = (T'.SectorAlgebra {.fermion}).toSubmodule) :
-    (fieldData.invariantsLE 8 ⊓ (fieldData.SectorAlgebra {.fermion}).toSubmodule
-        = ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
-      ↔ (T'.invariantsLE 8
-            ⊓ (T'.SectorAlgebra {.fermion}).toSubmodule
-          = ℂ ∙ (1 : T'.LocalFieldAlgebra)) := by
+    (∀ x : fieldData.LocalFieldAlgebra,
+      (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.fermion}
+          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+        ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
+      ↔ ∀ y : T'.LocalFieldAlgebra,
+        (y ∈ T'.massWeightSubmoduleLE 8 ∧ y ∈ T'.SectorAlgebra {.fermion}
+            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
+          ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) := by
+  simp only [← Subalgebra.mem_toSubmodule]
+  rw [← invariantsLE_inf_eq_iff, ← invariantsLE_inf_eq_iff]
   have hinj : Function.Injective
       (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra) :=
     e.injective
@@ -196,11 +225,18 @@ theorem gaugeSector_invariantsLE_seven_iff
     (hsec : (fieldData.SectorAlgebra {.gauge}).toSubmodule.map
         (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra)
       = (T'.SectorAlgebra {.gauge}).toSubmodule) :
-    (fieldData.invariantsLE 7 ⊓ (fieldData.SectorAlgebra {.gauge}).toSubmodule
-        = ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
-      ↔ (T'.invariantsLE 7
-            ⊓ (T'.SectorAlgebra {.gauge}).toSubmodule
-          = ℂ ∙ (1 : T'.LocalFieldAlgebra)) := by
+    (∀ x : fieldData.LocalFieldAlgebra,
+      (x ∈ fieldData.massWeightSubmoduleLE 7 ∧ x ∈ fieldData.SectorAlgebra {.gauge}
+          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+        ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
+      ↔ ∀ y : T'.LocalFieldAlgebra,
+        (y ∈ T'.massWeightSubmoduleLE 7 ∧ y ∈ T'.SectorAlgebra {.gauge}
+            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
+          ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) := by
+  simp only [← Subalgebra.mem_toSubmodule]
+  rw [← invariantsLE_inf_eq_iff, ← invariantsLE_inf_eq_iff]
   have hinj : Function.Injective
       (e : fieldData.LocalFieldAlgebra →ₗ[ℂ] T'.LocalFieldAlgebra) :=
     e.injective

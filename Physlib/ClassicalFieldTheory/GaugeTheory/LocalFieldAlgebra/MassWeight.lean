@@ -166,6 +166,23 @@ lemma mem_invariantsLE_iff {w : ℕ} {x : T.LocalFieldAlgebra} :
       ∧ (∀ U : GJ, T.repJet U x = x) ∧ ∀ Λ : SL(2,ℂ), T.repLorentzGroup Λ x = x := by
   simp only [invariantsLE, Submodule.mem_inf, mem_gaugeInvariants_iff, mem_lorentzInvariants_iff]
 
+/-- A description of the invariants of mass weight at most `w`, element by element: an
+  element of the filtration fixed by both groups is exactly an element of `Q`. -/
+lemma invariantsLE_eq_iff (w : ℕ) (Q : Submodule ℂ T.LocalFieldAlgebra) :
+    T.invariantsLE w = Q ↔ ∀ x : T.LocalFieldAlgebra,
+      (x ∈ T.massWeightSubmoduleLE w ∧ (∀ U : GJ, T.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), T.repLorentzGroup Λ x = x) ↔ x ∈ Q := by
+  simp only [SetLike.ext_iff, mem_invariantsLE_iff]
+
+/-- A description of the invariants of mass weight at most `w` lying in a submodule `A`,
+  element by element. -/
+lemma invariantsLE_inf_eq_iff (w : ℕ) (A Q : Submodule ℂ T.LocalFieldAlgebra) :
+    T.invariantsLE w ⊓ A = Q ↔ ∀ x : T.LocalFieldAlgebra,
+      (x ∈ T.massWeightSubmoduleLE w ∧ x ∈ A ∧ (∀ U : GJ, T.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), T.repLorentzGroup Λ x = x) ↔ x ∈ Q := by
+  simp only [SetLike.ext_iff, Submodule.mem_inf, mem_invariantsLE_iff]
+  exact forall_congr' fun x => by tauto
+
 /-!
 
 ## D. The contraction of a boson with its conjugate

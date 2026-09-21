@@ -24,6 +24,10 @@ card's fields. The challenge is to prove the statements in this form, with no
 Standard-Model-specific definition entering the statement and, eventually, none entering
 the proof beyond theorems about the card.
 
+Each classification is stated element by element, as the existing theorems are: an element
+of the filtration `massWeightSubmoduleLE w` fixed by every jet of gauge transformations and
+by every Lorentz transformation is exactly a combination of the named terms.
+
 The classification is currently proved in `AlgebraRealization/MassWeight/Filtration.lean`
 in a form whose statement uses the hand-built realization, sector and span definitions of
 this folder. Bridging the two forms is the remaining work; the statements below are its
@@ -110,20 +114,27 @@ lemma higgsMass_mem_massWeightSubmodule :
 
 -/
 
-/-- **The challenge at mass weight four**: the gauge and Lorentz invariants of mass weight
-  at most four in the local field algebra of the Standard Model are spanned by the constant
-  term and the Higgs mass term `H† H`. -/
+/-- **The challenge at mass weight four**: an element of the local field algebra of the
+  Standard Model of mass weight at most four is fixed by every jet of gauge transformations
+  and by every Lorentz transformation exactly when it is a combination of the constant term
+  and the Higgs mass term `H† H`. -/
 @[sorryful]
-theorem invariantsLE_four :
-    fieldData.invariantsLE 4 = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
+theorem invariantsLE_four (x : fieldData.LocalFieldAlgebra) :
+    (x ∈ fieldData.massWeightSubmoduleLE 4
+        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+      ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
   sorry
 
 /-- **The challenge below mass weight eight**: no invariant of mass weight five, six or
-  seven exists, so the invariants of mass weight at most seven are still spanned by the
-  constant term and the Higgs mass term. -/
+  seven exists, so an element of mass weight at most seven fixed by both groups is still a
+  combination of the constant term and the Higgs mass term. -/
 @[sorryful]
-theorem invariantsLE_seven :
-    fieldData.invariantsLE 7 = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
+theorem invariantsLE_seven (x : fieldData.LocalFieldAlgebra) :
+    (x ∈ fieldData.massWeightSubmoduleLE 7
+        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+      ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
   sorry
 
 /-!
@@ -137,28 +148,36 @@ and the gauge sector nothing below the field strength squared at mass weight eig
 
 -/
 
-/-- **The scalar sector up to mass weight eight**: the invariants built from the Higgs
-  alone are spanned by `1`, `H† H` and `(H† H)²`. -/
+/-- **The scalar sector up to mass weight eight**: an element built from the Higgs alone,
+  of mass weight at most eight and fixed by both groups, is a combination of `1`, `H† H`
+  and `(H† H)²`. -/
 @[sorryful]
-theorem scalarSector_invariantsLE_eight :
-    fieldData.invariantsLE 8 ⊓ (fieldData.SectorAlgebra {.scalar}).toSubmodule
-      = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass ⊔ ℂ ∙ (higgsMass * higgsMass) := by
+theorem scalarSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
+    (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.scalar}
+        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+      ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass
+          ⊔ ℂ ∙ (higgsMass * higgsMass) := by
   sorry
 
-/-- **The fermion sector up to mass weight eight**: the invariants built from the fermions
-  alone are the constants. -/
+/-- **The fermion sector up to mass weight eight**: an element built from the fermions
+  alone, of mass weight at most eight and fixed by both groups, is a constant. -/
 @[sorryful]
-theorem fermionSector_invariantsLE_eight :
-    fieldData.invariantsLE 8 ⊓ (fieldData.SectorAlgebra {.fermion}).toSubmodule
-      = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
+theorem fermionSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
+    (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.fermion}
+        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+      ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
   sorry
 
-/-- **The gauge sector below mass weight eight**: the invariants built from the gauge
-  fields alone, of mass weight at most seven, are the constants. -/
+/-- **The gauge sector below mass weight eight**: an element built from the gauge fields
+  alone, of mass weight at most seven and fixed by both groups, is a constant. -/
 @[sorryful]
-theorem gaugeSector_invariantsLE_seven :
-    fieldData.invariantsLE 7 ⊓ (fieldData.SectorAlgebra {.gauge}).toSubmodule
-      = ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
+theorem gaugeSector_invariantsLE_seven (x : fieldData.LocalFieldAlgebra) :
+    (x ∈ fieldData.massWeightSubmoduleLE 7 ∧ x ∈ fieldData.SectorAlgebra {.gauge}
+        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
+      ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
   sorry
 
 /-!
