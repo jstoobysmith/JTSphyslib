@@ -450,7 +450,7 @@ abbrev BosonSpecies : Type := Σ f : D.Bosons, Fin (D.generations f.1)
 
 /-- **The field content of a model**: one matter field per species, the matter field of the
   species' data. -/
-noncomputable abbrev toGaugeFieldData : GaugeFieldData jets where
+noncomputable def toGaugeFieldData : GaugeFieldData jets where
   FermionSpecies := D.FermionSpecies
   fermion s := (D.data s.1.1).toMatterField
   BosonSpecies := D.BosonSpecies

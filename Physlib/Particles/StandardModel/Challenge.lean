@@ -98,7 +98,7 @@ lemma higgsMass_mem_massWeightSubmodule :
     LinearMap.inr_apply, Finset.smul_sum]
   refine Finset.sum_congr rfl fun i _ => ?_
   have hw : (fieldData.boson ⟨⟨.H, by decide⟩, ⟨0, by decide⟩⟩).massWeight = 2 := rfl
-  rw [massWeightScale_ιBoson, massWeightScale_ιBoson, hw]
+  erw [massWeightScale_ιBoson, massWeightScale_ιBoson, hw]
   simp only [JetComponentSpace.massWeightScale, LinearMap.smul_apply, LinearMap.prodMap_apply,
     TensorProduct.map_tmul, AlgHom.toLinearMap_apply, DerivAlgebraComplex.gradeScale_basis,
     Multiset.card_zero, pow_zero, one_smul, LinearMap.id_apply, map_zero, map_smul,
