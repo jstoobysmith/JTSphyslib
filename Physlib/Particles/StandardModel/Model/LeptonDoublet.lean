@@ -15,16 +15,15 @@ public import Physlib.Particles.StandardModel.Fermions.MatterField
 
 The lepton doublet of the Standard Model is the datum `StandardModel.Model.leptonDoublet`,
 `(.L, .singlet, .fund, -3)`, of `Physlib.Particles.StandardModel.Basic`. The species
-`StandardModel.LeptonDoublet` is defined from it: its weak matrix, action matrix, Lorentz,
-jet and gauge-algebra actions, and its matter field are the ones the general theory
-derives from the datum, transported to the target space `LeptonDoublet` along
-`LeptonDoublet.valIdx`. This file records the identities, all of which hold by
-definition.
+`StandardModel.LeptonDoublet` is its target space, and the species' weak matrix, action
+matrix, Lorentz, global gauge, jet and gauge-algebra actions and matter field are the ones
+the general theory derives from the datum. This file records the identities, all of which
+hold by definition.
 
 ## ii. Key results
 
-- `StandardModel.Model.leptonDoublet_toMatterFieldOn_eq` : on the target space
-  `LeptonDoublet`, the matter field of the datum is `LeptonDoublet.matterField`.
+- `StandardModel.Model.leptonDoublet_toMatterField_eq` : the matter field of the datum is
+  `LeptonDoublet.matterField`.
 
 -/
 
@@ -48,11 +47,13 @@ example (U : JetGaugeGroupI) : leptonDoublet.rep.mat U = LeptonDoublet.doubletMa
 /-- The action matrix of the species is the action matrix of the datum. -/
 example (c : GaugeAlgebra) : leptonDoublet.rep.act c = LeptonDoublet.actionMatrix c := rfl
 
-/-- **The matter field of the datum on `LeptonDoublet` is the matter field of the
-  species**: the table's description and the species' description of the lepton doublet
-  are one definition. -/
-lemma leptonDoublet_toMatterFieldOn_eq :
-    leptonDoublet.toMatterFieldOn LeptonDoublet.valIdx = LeptonDoublet.matterField := rfl
+/-- The target space of the species is the target space of the datum. -/
+example : LeptonDoublet = leptonDoublet.V := rfl
+
+/-- **The matter field of the datum is the matter field of the species**: the table's
+  description and the species' description of the lepton doublet are one definition. -/
+lemma leptonDoublet_toMatterField_eq :
+    leptonDoublet.toMatterField = LeptonDoublet.matterField := rfl
 
 end Model
 

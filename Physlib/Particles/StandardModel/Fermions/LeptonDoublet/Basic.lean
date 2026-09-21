@@ -14,9 +14,6 @@ public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
-public import Mathlib.LinearAlgebra.TensorProduct.Pi
-public import Mathlib.Analysis.Normed.Lp.Matrix
-public import Mathlib.RingTheory.TensorProduct.Maps
 /-!
 # Lepton doublets
 
@@ -26,30 +23,30 @@ The Standard Model lepton doublet is a left-handed Weyl spinor in the `(1, 2)_{-
 representation. Here charges are normalized as `6Y`, so `-3` is the usual hypercharge
 `Y = -1/2`.
 
-`LeptonDoublet` is the target vector space of one lepton multiplet. Its Weyl factor
-carries the Lorentz index and its two-dimensional factor carries the weak index.
-The absence of a colour factor makes it an `SU(3)` singlet.
+The lepton doublet is the datum `StandardModel.Model.leptonDoublet`,
+`(.L, .singlet, .fund, -3)`, of the Standard Model table. `LeptonDoublet` is its target
+space, a left-handed Weyl spinor tensored with the weak coordinates, and every action on
+it — Lorentz, global gauge, jet gauge — is the one the general theory derives from the
+datum. The hand-built definitions are kept in comments.
 
-The Lorentz and gauge actions are first defined separately. The gauge action is then
-computed on a basis, used to identify its kernel, and descended to each supported global
-form of the Standard Model gauge group.
+The gauge action is computed on a basis, used to identify its kernel, and descended to
+each supported global form of the Standard Model gauge group.
 
 ## ii. Key results
 
 - `LeptonDoublet` : the target space of the `(1, 2)_{-3}` multiplet.
-- `valIdx` : the identification with the target space of the table's datum
-  `StandardModel.Model.leptonDoublet`, from which every action below is derived.
 - `repLorentzGroup` : the left-handed Lorentz action.
 - `repGaugeGroupI` : the action of the unquotiented gauge group.
-- `repGaugeGroupI_tmul_basis_eq_sum` : the gauge action in a tensor-product basis.
+- `repGaugeGroupI_apply_basis` : the gauge action in the spinor–weak basis.
 - `mem_repGaugeGroupI_ker_iff_eq` : the kernel of the full-group action.
 - `gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI` : triviality of the central `ℤ₆`.
 - `repGaugeGroup` : the action descended to every supported gauge-group quotient.
+- `repJetGaugeGroupI` : the action of the jet gauge group on the jets of the doublet.
 
 ## iii. Table of contents
 
 - A. The lepton-doublet space
-- B. Linear structure
+- B. The basis
 - C. Lorentz action
 - D. Gauge action
 - E. Kernel of the gauge action
@@ -63,15 +60,25 @@ form of the Standard Model gauge group.
 
 namespace StandardModel
 
-open TensorProduct
+open TensorProduct MvPowerSeries
 
 /-!
 
 ## A. The lepton-doublet space
 
-The Weyl factor carries the left-handed Lorentz index, while
-`EuclideanSpace ℂ (Fin 2)` carries the weak index.
+The Weyl factor carries the left-handed Lorentz index, while the functions on `Fin 2`
+carry the weak index.
+
 -/
+
+/-- The target vector space of one Standard Model lepton doublet: the target space of the
+  datum `StandardModel.Model.leptonDoublet`, a left-handed Weyl spinor tensored with the
+  weak coordinates. It carries the `(1, 2)_{-3}` representation of the gauge group. -/
+abbrev LeptonDoublet : Type := Model.leptonDoublet.V
+
+namespace LeptonDoublet
+
+/- The hand-built wrapper, now an abbreviation of the datum's target space:
 
 /-- The target vector space of one Standard Model lepton doublet.
   It carries the `(1, 2)_{-3}` representation of the gauge group. -/
@@ -79,17 +86,6 @@ The Weyl factor carries the left-handed Lorentz index, while
 structure LeptonDoublet where
   /-- The left-handed Weyl spinor with its weak-doublet index. -/
   val : Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 2)
-
-namespace LeptonDoublet
-
-/-!
-
-## B. Linear structure
-
-The wrapper distinguishes lepton doublets from other isomorphic vector spaces.
-The following equivalences transfer the linear structure of the tensor product and expose
-that model when defining representations.
--/
 
 /-- Identifies a lepton doublet with its underlying tensor-product value. -/
 def valEquiv : LeptonDoublet ≃ Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 2) where
@@ -107,69 +103,45 @@ def valLinEquiv : LeptonDoublet ≃ₗ[ℂ]
   invFun := fun m => ⟨m⟩
   map_add' := by intros; rfl
   map_smul' := by intros; rfl
+-/
 
-@[simp]
-lemma valLinEquiv_apply (l : LeptonDoublet) : valLinEquiv l = l.val := rfl
-
-lemma valLinEquiv_symm_apply
-    (m : Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace ℂ (Fin 2)) :
-    valLinEquiv.symm m = ⟨m⟩ := rfl
-
-@[simp]
-lemma val_add (l₁ l₂ : LeptonDoublet) : (l₁ + l₂).val = l₁.val + l₂.val := rfl
-
-@[simp]
-lemma val_smul (r : ℂ) (l : LeptonDoublet) : (r • l).val = r • l.val := rfl
-
-/-- **The identification with the target space of the table's datum.** The lepton doublet
-  is the datum `StandardModel.Model.leptonDoublet`, `(.L, .singlet, .fund, -3)`, of the
-  Standard Model table; its target space is a left-handed Weyl spinor tensored with the
-  weak coordinates `Fin 2 → ℂ`, and forgetting the Euclidean norm on the weak index
-  identifies `LeptonDoublet` with it. Every action below is the one the general theory
-  derives from the datum, transported along this identification. -/
-noncomputable def valIdx : LeptonDoublet ≃ₗ[ℂ] Fermion.LeftHandedWeyl ⊗[ℂ] (Fin 2 → ℂ) :=
-  valLinEquiv.trans
-    (TensorProduct.congr (LinearEquiv.refl ℂ Fermion.LeftHandedWeyl)
-      (WithLp.linearEquiv 2 ℂ (Fin 2 → ℂ)))
-
-/-- The identification sends a pure tensor to the pure tensor of the weak coordinates. -/
-lemma valLinEquiv_symm_tmul (s : Fermion.LeftHandedWeyl) (w : EuclideanSpace ℂ (Fin 2)) :
-    valLinEquiv.symm (s ⊗ₜ w) = valIdx.symm (s ⊗ₜ (WithLp.ofLp w)) := by
-  simp [valIdx]
+/-- The target space is the datum's target space. -/
+example : LeptonDoublet = (Fermion.LeftHandedWeyl ⊗[ℂ] (Fin 2 → ℂ)) := rfl
 
 /-!
 
-## The basis of the lepton-doublet space
+## B. The basis
 
 -/
 
-/-- A basis on the lepton doublets. -/
+/-- A basis on the lepton doublets: the Weyl basis tensored with the coordinate basis of
+  the weak index. -/
 noncomputable def basis : Module.Basis (Fin 2 × Fin 2) ℂ LeptonDoublet :=
-  (Fermion.LeftHandedWeyl.basis.tensorProduct
-    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis).map valLinEquiv.symm
+  Model.leptonDoublet.basis
 
-instance : Module.Finite ℂ LeptonDoublet := Module.Finite.of_basis basis
-
-instance : Module.Free ℂ LeptonDoublet := Module.Free.of_basis basis
+/-- The lepton-doublet basis vector as an explicit spinor–weak tensor. -/
+lemma basis_apply (k j : Fin 2) :
+    basis (k, j) = Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] Pi.single j 1 :=
+  Model.leptonDoublet.basis_apply k j
 
 /-!
 
 ## C. Lorentz action
 
 The Lorentz group acts on the left-handed Weyl factor and leaves the weak index fixed.
+
 -/
 
 open Matrix MatrixGroups
 
 /-- The left-handed Lorentz representation on lepton doublets: the Lorentz action the
-  general theory derives from the datum, on the Weyl factor with the weak index fixed
-  (`repLorentzGroup_apply`). -/
+  general theory derives from the datum. -/
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) LeptonDoublet :=
-  LocalGaugeData.MatrixRep.repLorentz valIdx Fermion.LeftHandedWeyl.rep
+  Model.leptonDoublet.toMatterField.repLorentz
 
 /- The hand-built definition, now derived from the datum:
+
 open Representation in
-/-- The left-handed Lorentz representation on lepton doublets. -/
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) LeptonDoublet where
   toFun Λ := valLinEquiv.symm ∘ₗ
       (TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ)
@@ -183,19 +155,11 @@ noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) LeptonDoublet
     simp [TensorProduct.map_map, Module.End.mul_eq_comp]
 -/
 
-/-- The Lorentz action through the tensor-product value: the left-handed action on the
-  Weyl factor and the identity on the weak index. -/
-lemma repLorentzGroup_apply (Λ : SL(2,ℂ)) (v : LeptonDoublet) :
-    repLorentzGroup Λ v = valLinEquiv.symm
-      (TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ) LinearMap.id (valLinEquiv v)) := by
-  obtain ⟨t, rfl⟩ := valLinEquiv.symm.surjective v
-  induction t using TensorProduct.induction_on with
-  | zero => simp [-valLinEquiv_apply]
-  | tmul s w =>
-    rw [valLinEquiv_symm_tmul, repLorentzGroup,
-      LocalGaugeData.MatrixRep.repLorentz_apply_symm_tmul]
-    simp [valIdx]
-  | add x y hx hy => simp only [map_add, hx, hy]
+/-- The Lorentz action on a pure spinor–weak tensor: the left-handed action on the Weyl
+  factor, the weak index untouched. -/
+lemma repLorentzGroup_tmul (Λ : SL(2,ℂ)) (s : Fermion.LeftHandedWeyl) (v : Fin 2 → ℂ) :
+    repLorentzGroup Λ (s ⊗ₜ v) = Fermion.LeftHandedWeyl.rep Λ s ⊗ₜ v :=
+  LocalGaugeData.MatrixRep.repLorentz_apply_symm_tmul (LinearEquiv.refl ℂ _) _ Λ s v
 
 /-!
 
@@ -206,9 +170,58 @@ is `star z ^ 3`; since `z` is unitary, `star z = z⁻¹`, so this represents cha
 
 The tensor and basis formulas below expose the coefficients used to compare actions and
 compute the kernel.
+
 -/
 
-/-- The `(1, 2)_{-3}` action of the unquotiented Standard Model gauge group. -/
+/-- The `JetRing`-valued weak matrix of the jet gauge action on the lepton doublet: the
+  matrix of jets by which a gauge jet acts on the datum. -/
+noncomputable def doubletMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) JetRing :=
+  Model.leptonDoublet.rep.mat U
+
+open LocalGaugeData in
+/-- The weak matrix of a gauge jet is its `SU(2)` matrix carrying the `-3` hypercharge
+  phase `(star u) ^ 3`. -/
+lemma doubletMatrix_eq (U : JetGaugeGroupI) :
+    doubletMatrix U = ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 3) •
+      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) := by
+  show MatterField.chargePow (-3) U.2.2 • U.2.1.1 = _
+  congr 1
+
+/-- The constant term of the weak matrix of a constant gauge jet: the `SU(2)` matrix of
+  the gauge transformation carrying its `-3` hypercharge phase. -/
+lemma doubletMatrix_ofConstant_map_constantCoeff (g : GaugeGroupI) :
+    (doubletMatrix (JetGaugeGroupI.ofConstant g)).map (constantCoeff : JetRing → ℂ)
+      = (star g.toU1.1 ^ 3) • g.toSU2.1 := by
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+      = MvPowerSeries.C (g.toU1.1 : ℂ) := rfl
+  have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
+        specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
+      = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
+  rw [doubletMatrix_eq]
+  ext i j
+  simp [hu, hM]
+
+/-- The weak matrix of a constant gauge jet is constant. -/
+lemma doubletMatrix_ofConstant (g : GaugeGroupI) :
+    doubletMatrix (JetGaugeGroupI.ofConstant g)
+      = ((doubletMatrix (JetGaugeGroupI.ofConstant g)).map (constantCoeff : JetRing → ℂ)).map
+          (MvPowerSeries.C : ℂ → JetRing) := by
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+      = MvPowerSeries.C (g.toU1.1 : ℂ) := rfl
+  have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
+        specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
+      = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
+  rw [doubletMatrix_ofConstant_map_constantCoeff, doubletMatrix_eq]
+  ext i j
+  simp [hu, hM]
+
+/-- The `(1, 2)_{-3}` action of the unquotiented Standard Model gauge group: the global
+  action the general theory derives from the datum, the constant term of the jet action. -/
+noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI LeptonDoublet :=
+  Model.leptonDoublet.rep.repGlobal (LinearEquiv.refl ℂ LeptonDoublet)
+
+/- The hand-built definition, now derived from the datum:
+
 noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI LeptonDoublet where
   toFun g := valLinEquiv.symm ∘ₗ
         (TensorProduct.map
@@ -223,63 +236,46 @@ noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI LeptonDoublet 
     ext l
     simp [smul_smul, mul_comm, TensorProduct.map_map, valLinEquiv_symm_apply]
     ring_nf
+-/
 
-/-- The gauge action on a pure spinor–weak tensor. -/
-lemma repGaugeGroupI_tmul (g : GaugeGroupI) (v : Fermion.LeftHandedWeyl)
-    (w : EuclideanSpace ℂ (Fin 2)) :
-    repGaugeGroupI g ⟨v ⊗ₜ w⟩ =
-      ⟨(star g.toU1.1 ^ 3) • v ⊗ₜ (g.toSU2.1.toEuclideanLin w)⟩ := rfl
+/-- The gauge action on a pure spinor–weak tensor: the `SU(2)` matrix, scaled by the
+  hypercharge factor, acts on the weak index. -/
+lemma repGaugeGroupI_tmul (g : GaugeGroupI) (v : Fermion.LeftHandedWeyl) (w : Fin 2 → ℂ) :
+    repGaugeGroupI g (v ⊗ₜ w) = v ⊗ₜ ((star g.toU1.1 ^ 3) • g.toSU2.1).mulVec w := by
+  rw [← doubletMatrix_ofConstant_map_constantCoeff]
+  exact LocalGaugeData.MatrixRep.repGlobal_apply_symm_tmul (LinearEquiv.refl ℂ _) _ g v w
 
-open Fermion in
-/-- Expands the gauge action in the spinor–weak basis. -/
-lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k j : Fin 2) :
-    repGaugeGroupI g ⟨LeftHandedWeyl.basis k ⊗ₜ[ℂ]
-      EuclideanSpace.basisFun (Fin 2) ℂ j⟩ =
-      ∑ j' : Fin 2, (star g.toU1.1 ^ 3 * g.toSU2.1 j' j)
-      • (⟨LeftHandedWeyl.basis k ⊗ₜ[ℂ]
-          EuclideanSpace.basisFun (Fin 2) ℂ j'⟩ : LeptonDoublet) := by
-  apply valLinEquiv.injective
-  apply (((LeftHandedWeyl.basis).tensorProduct
-    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis)).repr.injective
-  ext ⟨⟨k, l⟩, m⟩
-  simp only [EuclideanSpace.basisFun_apply, repGaugeGroupI_tmul, valLinEquiv_apply, map_smul,
-    Finsupp.coe_smul, Pi.smul_apply,
-    Module.Basis.tensorProduct_repr_tmul_apply, OrthonormalBasis.coe_toBasis_repr_apply,
-    EuclideanSpace.basisFun_repr, ofLp_toLpLin, PiLp.ofLp_single, toLin'_apply, mulVec_single,
-    MulOpposite.op_one, col_apply, one_smul, Module.Basis.repr_self, smul_eq_mul, map_sum,
-    Finsupp.coe_finsetSum, Finset.sum_apply, PiLp.single_apply, ite_mul, one_mul, zero_mul,
-    mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
-  ring
+/-- The gauge action on the lepton-doublet basis: the spinor index is inert and the weak
+  index transforms by the `SU(2)` matrix, scaled by the hypercharge factor. -/
+lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
+    repGaugeGroupI g (basis j) =
+      ∑ w, (star g.toU1.1 ^ 3 * g.toSU2.1 w j.2) • basis (j.1, w) := by
+  obtain ⟨k, s⟩ := j
+  rw [basis_apply, repGaugeGroupI_tmul, Matrix.mulVec_single_one]
+  have hcol : ((star g.toU1.1 ^ 3) • g.toSU2.1).col s
+      = ∑ w, (star g.toU1.1 ^ 3 * g.toSU2.1 w s) • (Pi.single w 1 : Fin 2 → ℂ) := by
+    ext i
+    simp [Matrix.col_apply, Pi.single_apply, Finset.sum_apply]
+  rw [hcol, TensorProduct.tmul_sum]
+  refine Finset.sum_congr rfl fun w _ => ?_
+  rw [basis_apply, TensorProduct.tmul_smul]
 
-open Fermion in
-/-- Two gauge elements induce the same action exactly when their weak-basis coefficients agree. -/
+/-- Two gauge elements induce the same action exactly when their weak-basis coefficients
+  agree. -/
 lemma repGaugeGroupI_eq_iff_mul_eq {g₁ g₂ : GaugeGroupI} :
     repGaugeGroupI g₁ = repGaugeGroupI g₂ ↔ ∀ j j',
     star g₁.toU1.1 ^ 3 * g₁.toSU2.1 j' j =
       star g₂.toU1.1 ^ 3 * g₂.toSU2.1 j' j := by
-  let b := (LeftHandedWeyl.basis).tensorProduct
-    (EuclideanSpace.basisFun (Fin 2) ℂ).toBasis
   constructor
   · intro h j j'
-    have h' := congrFun (congrArg (fun f => f.1) h)
-      ⟨LeftHandedWeyl.basis 0 ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩
-    simp only [Fin.isValue, LinearMap.coe_toAddHom, repGaugeGroupI_tmul_basis_eq_sum] at h'
-    replace h' := congrArg b.repr (congrArg valLinEquiv h')
-    simpa [Module.Basis.tensorProduct_repr_tmul_apply, -Fin.sum_univ_two, b] using
-      congrArg (fun f => f (0, j')) h'
+    have h' : repGaugeGroupI g₁ (basis (0, j)) = repGaugeGroupI g₂ (basis (0, j)) := by rw [h]
+    rw [repGaugeGroupI_apply_basis, repGaugeGroupI_apply_basis] at h'
+    have h'' := congrArg (fun v => basis.repr v (0, j')) h'
+    fin_cases j' <;> simpa [Finsupp.single_apply] using h''
   · intro h
-    apply (valLinEquiv.symm.eq_comp_toLinearMap_iff
-      (repGaugeGroupI g₁) (repGaugeGroupI g₂)).mp
-    apply b.ext
-    rintro ⟨k, j⟩
-    have h₁ := repGaugeGroupI_tmul_basis_eq_sum g₁ k j
-    have h₂ := repGaugeGroupI_tmul_basis_eq_sum g₂ k j
-    simp only [EuclideanSpace.basisFun_apply] at h₁ h₂
-    have hj₀ : (starRingEnd ℂ) g₁.toU1.1 ^ 3 * g₁.toSU2.1 0 j =
-        (starRingEnd ℂ) g₂.toU1.1 ^ 3 * g₂.toSU2.1 0 j := h j 0
-    have hj₁ : (starRingEnd ℂ) g₁.toU1.1 ^ 3 * g₁.toSU2.1 1 j =
-        (starRingEnd ℂ) g₂.toU1.1 ^ 3 * g₂.toSU2.1 1 j := h j 1
-    simp [valLinEquiv_symm_apply, h₁, h₂, b, hj₀, hj₁]
+    refine basis.ext fun ⟨k, j⟩ => ?_
+    rw [repGaugeGroupI_apply_basis, repGaugeGroupI_apply_basis]
+    exact Finset.sum_congr rfl fun j' _ => by rw [h j j']
 
 /-!
 
@@ -336,9 +332,9 @@ sixth power and therefore act trivially.
 lemma gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI :
     GaugeGroupQuot.subgroup .ℤ₆ ≤ repGaugeGroupI.ker := by
   simp only [GaugeGroupQuot.subgroup, gaugeGroupℤ₆SubGroup, SetLike.le_def,
-    MonoidHom.mem_range, gaugeGroupℤ₆Hom_apply, Subtype.exists,
-    mem_repGaugeGroupI_ker_iff_eq, forall_exists_index]
+    MonoidHom.mem_range, gaugeGroupℤ₆Hom_apply, Subtype.exists, forall_exists_index]
   rintro g x hx ⟨rfl⟩
+  rw [mem_repGaugeGroupI_ker_iff_eq]
   use starRingEnd ℂ (x ^ 3)
   simp only [gaugeGroupℤ₆OfRoot_toSU2, gaugeGroupℤ₆SU2OfRoot_eq_mul_id,
     RCLike.star_def, Complex.conj_rootsOfUnity hx, Units.val_inv_eq_inv_val, inv_pow,
@@ -364,23 +360,22 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
 
 ## G. Jet gauge action
 
-The `(1, 2)_{-3}` representation extends verbatim to jets, in the same way as for the
-quark singlets: the jet ring is absorbed into the weak index, and the `SU(2)`
-power-series matrix of a jet of gauge transformations, scaled by the hypercharge power
-series `star u ^ 3`, acts `JetRing`-linearly on the weak factor. On jets of constant
-gauge transformations the action reduces to the global gauge action.
+The `(1, 2)_{-3}` representation extends to jets: the `SU(2)` power-series matrix of a
+jet of gauge transformations, scaled by the hypercharge power series `star u ^ 3`, acts
+`JetRing`-linearly on the weak factor. On jets of constant gauge transformations the
+action reduces to the global gauge action. Both are the general theory's, for the datum.
 
 -/
 
-@[simp]
-lemma mk_zero : (⟨0⟩ : LeptonDoublet) = 0 := rfl
+/-- The `(1, 2)_{-3}` action of the jet gauge group on the jet space of the lepton
+doublet: the jet action the general theory derives from the datum. -/
+noncomputable def repJetGaugeGroupI :
+    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonDoublet) :=
+  Model.leptonDoublet.toMatterField.repJet
 
-/-- Absorbs the jet ring into the weak index: a jet of a lepton doublet is the same
-thing as a left-handed Weyl spinor tensored with a `JetRing`-valued weak vector,
+/- The hand-built definition, now derived from the datum:
 
-  `JetRing ⊗[ℂ] LeptonDoublet ≃ LeftHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 2)`.
-
--/
+/-- Absorbs the jet ring into the weak index. -/
 noncomputable def jetValLinEquiv :
     JetRing ⊗[ℂ] LeptonDoublet ≃ₗ[ℂ]
       Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 2) :=
@@ -393,20 +388,6 @@ noncomputable def jetValLinEquiv :
           ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 2)).trans
             (WithLp.linearEquiv 2 JetRing (Fin 2 → JetRing)).symm).restrictScalars ℂ
 
-/-- The `(1, 2)_{-3}` action of the jet gauge group on the jet space of the lepton
-doublet: the jet action the general theory derives from the datum. Through
-`jetValLinEquiv` the weak matrix of the gauge jet, carrying the `-3` hypercharge phase
-`(star u) ^ 3`, acts `JetRing`-linearly on the weak factor by matrix-vector
-multiplication, while the Weyl factor is untouched (`repJetGaugeGroupI_eq_doubletMatrix`). -/
-noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonDoublet) :=
-  Model.leptonDoublet.rep.repJet valIdx
-
-/- The hand-built definition, now derived from the datum:
-/-- The `(1, 2)_{-3}` action of the jet gauge group on the jet space of the lepton
-doublet. Through `jetValLinEquiv` the weak matrix of the gauge jet, carrying the `-3`
-hypercharge phase `(star u) ^ 3`, acts `JetRing`-linearly on the weak factor by
-matrix-vector multiplication, while the Weyl factor is untouched. -/
 noncomputable def repJetGaugeGroupI :
     Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonDoublet) where
   toFun U :=
@@ -417,221 +398,25 @@ noncomputable def repJetGaugeGroupI :
               ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
                 Matrix (Fin 2) (Fin 2) JetRing))).restrictScalars ℂ) ∘ₗ
       jetValLinEquiv.toLinearMap
-  map_one' := by
-    have hres : (1 : Module.End JetRing (EuclideanSpace JetRing (Fin 2))).restrictScalars ℂ
-        = 1 := rfl
-    rw [show (((star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 3) •
-          (((1 : JetGaugeGroupI).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-            Matrix (Fin 2) (Fin 2) JetRing)) = 1 from by simp,
-      map_one, hres, map_one]
-    ext d x
-    simp [-valLinEquiv_apply]
-  map_mul' U₁ U₂ := by
-    have hres : ∀ f g : Module.End JetRing (EuclideanSpace JetRing (Fin 2)),
-        (f * g).restrictScalars ℂ = f.restrictScalars ℂ * g.restrictScalars ℂ :=
-      fun _ _ => rfl
-    have hM : (((star (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)) ^ 3) •
-          (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-            Matrix (Fin 2) (Fin 2) JetRing)) =
-        (((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-            ((U₁.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-              Matrix (Fin 2) (Fin 2) JetRing)) *
-          (((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-            ((U₂.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-              Matrix (Fin 2) (Fin 2) JetRing)) := by
-      rw [show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing) =
-            ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
-            from rfl,
-        show (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-              Matrix (Fin 2) (Fin 2) JetRing) =
-            ((U₁.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) *
-              ((U₂.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
-            from rfl,
-        star_mul', mul_pow, Matrix.smul_mul, Matrix.mul_smul, smul_smul]
-    rw [hM, map_mul, hres, map_mul]
-    ext d x
-    simp
+  map_one' := …
+  map_mul' U₁ U₂ := …
 -/
-
-/-- The `JetRing`-valued weak matrix of the jet gauge action on the lepton doublet: the
-  matrix of jets by which a gauge jet acts on the datum. -/
-noncomputable def doubletMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) JetRing :=
-  Model.leptonDoublet.rep.mat U
-
-open LocalGaugeData in
-/-- The weak matrix of a gauge jet is its `SU(2)` matrix carrying the `-3` hypercharge
-  phase `(star u) ^ 3`. -/
-lemma doubletMatrix_eq (U : JetGaugeGroupI) :
-    doubletMatrix U = ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) := by
-  show MatterField.chargePow (-3) U.2.2 • U.2.1.1 = _
-  congr 1
-
-/-- `jetValLinEquiv` on a scalar jet times a pure tensor. -/
-lemma jetValLinEquiv_tmul (χ : JetRing) (s : Fermion.LeftHandedWeyl) (v : Fin 2 → ℂ) :
-    jetValLinEquiv (χ ⊗ₜ valIdx.symm (s ⊗ₜ v)) = s ⊗ₜ WithLp.toLp 2 (fun i => v i • χ) := by
-  simp [jetValLinEquiv, valIdx, TensorProduct.piScalarRight_apply]
-
-/-- The jet identification of the datum and `jetValLinEquiv` agree on pure tensors. -/
-lemma jetEquiv_valIdx_symm_tmul (s : Fermion.LeftHandedWeyl) (y : Fin 2 → JetRing) :
-    (LocalGaugeData.MatrixRep.jetEquiv valIdx).symm (s ⊗ₜ y)
-      = jetValLinEquiv.symm (s ⊗ₜ WithLp.toLp 2 y) := by
-  obtain ⟨t, rfl⟩ := (TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 2)).surjective y
-  induction t using TensorProduct.induction_on with
-  | zero => simp
-  | tmul f v =>
-    simp [-TensorProduct.piScalarRight_apply, LocalGaugeData.MatrixRep.jetEquiv,
-      jetValLinEquiv, valIdx]
-  | add x y hx hy => simp only [map_add, WithLp.toLp_add, tmul_add, hx, hy]
-
-/-- The jet gauge action through `jetValLinEquiv`: the weak matrix of the gauge jet acts
-  `JetRing`-linearly on the weak coordinates. -/
-lemma repJetGaugeGroupI_eq_doubletMatrix (U : JetGaugeGroupI)
-    (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    repJetGaugeGroupI U z
-      = jetValLinEquiv.symm
-          (Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 2))
-            Fermion.LeftHandedWeyl
-            ((Matrix.toLpLinAlgEquiv 2 (doubletMatrix U)).restrictScalars ℂ)
-            (jetValLinEquiv z)) := by
-  change (LocalGaugeData.MatrixRep.jetEquiv valIdx).symm
-    (LocalGaugeData.MatrixRep.jetEnd Fermion.LeftHandedWeyl (doubletMatrix U)
-      (LocalGaugeData.MatrixRep.jetEquiv valIdx z)) = _
-  induction z using TensorProduct.induction_on with
-  | zero => simp
-  | tmul χ v =>
-    obtain ⟨t, rfl⟩ := valIdx.symm.surjective v
-    induction t using TensorProduct.induction_on with
-    | zero => simp
-    | tmul s w =>
-      rw [LocalGaugeData.MatrixRep.jetEquiv_tmul, LocalGaugeData.MatrixRep.jetEnd_tmul,
-        jetValLinEquiv_tmul, jetEquiv_valIdx_symm_tmul]
-      simp [Matrix.toLpLinAlgEquiv, Matrix.toLpLin_apply, TensorProduct.liftAux_tmul]
-    | add x y hx hy => simp only [tmul_add, map_add, hx, hy]
-  | add x y hx hy => simp only [map_add, hx, hy]
-
-/-- The identification of the jets of the lepton doublet intertwines multiplication by
-a scalar jet with the `JetRing`-scalar action on the weak coordinates. -/
-lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    jetValLinEquiv (χ • z)
-      = Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 2))
-          Fermion.LeftHandedWeyl
-          ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 2)) χ).restrictScalars ℂ)
-          (jetValLinEquiv z) := by
-  induction z using TensorProduct.induction_on with
-  | zero => simp
-  | add a b ha hb => rw [smul_add, map_add, ha, hb, map_add, map_add]
-  | tmul f x =>
-    obtain ⟨v⟩ := x
-    induction v using TensorProduct.induction_on with
-    | zero =>
-      rw [show ({ val := 0 } : LeptonDoublet) = 0 from rfl, TensorProduct.tmul_zero,
-        smul_zero, map_zero, map_zero]
-    | tmul ψ c =>
-      rw [TensorProduct.smul_tmul', smul_eq_mul,
-        show jetValLinEquiv ((χ * f) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
-          = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • (χ * f)) from rfl,
-        show jetValLinEquiv (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : LeptonDoublet))
-          = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f) from rfl,
-        show Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 2))
-            Fermion.LeftHandedWeyl
-            ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 2)) χ).restrictScalars ℂ)
-            (ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f))
-          = ψ ⊗ₜ[ℂ] (χ • WithLp.toLp 2 fun i => c.ofLp i • f) from rfl]
-      congr 1
-      refine WithLp.ofLp_injective 2 ?_
-      funext i
-      show c.ofLp i • (χ * f) = χ * (c.ofLp i • f)
-      rw [Algebra.mul_smul_comm]
-    | add a b ha hb =>
-      rw [show ({ val := a + b } : LeptonDoublet) = ⟨a⟩ + ⟨b⟩ from rfl,
-        TensorProduct.tmul_add, smul_add, map_add, ha, hb, map_add, map_add]
 
 /-- **The jet gauge action on the jets of the lepton doublet is fibrewise**: it commutes
 with multiplication by scalar jets. -/
 lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
     (z : JetRing ⊗[ℂ] LeptonDoublet) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z :=
-  Model.leptonDoublet.rep.repJet_smul valIdx U χ z
-
-/- The hand-built proof, now derived from the datum:
-/-- **The jet gauge action on the jets of the lepton doublet is fibrewise**: it commutes
-with multiplication by scalar jets. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] LeptonDoublet) :
-    repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
-  set S : Module.End JetRing (EuclideanSpace JetRing (Fin 2)) :=
-    LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 2)) χ with hS
-  set M : Module.End JetRing (EuclideanSpace JetRing (Fin 2)) :=
-    (Matrix.toLpLinAlgEquiv 2
-      (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-        ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-          Matrix (Fin 2) (Fin 2) JetRing)) :
-      Module.End JetRing (EuclideanSpace JetRing (Fin 2))) with hM
-  have hMS : M * S = S * M := LinearMap.ext fun e => by
-    simp only [Module.End.mul_apply, hS, LinearMap.lsmul_apply, map_smul]
-  apply jetValLinEquiv.injective
-  rw [show repJetGaugeGroupI U (χ • z)
-      = jetValLinEquiv.symm (Module.End.lTensorAlgHom ℂ _ Fermion.LeftHandedWeyl
-          (M.restrictScalars ℂ) (jetValLinEquiv (χ • z))) from rfl,
-    LinearEquiv.apply_symm_apply, jetValLinEquiv_smul,
-    show repJetGaugeGroupI U z
-      = jetValLinEquiv.symm (Module.End.lTensorAlgHom ℂ _ Fermion.LeftHandedWeyl
-          (M.restrictScalars ℂ) (jetValLinEquiv z)) from rfl,
-    jetValLinEquiv_smul, LinearEquiv.apply_symm_apply, ← Module.End.mul_apply,
-    ← Module.End.mul_apply, ← map_mul, ← map_mul,
-    show M.restrictScalars ℂ * S.restrictScalars ℂ = (M * S).restrictScalars ℂ from rfl,
-    show S.restrictScalars ℂ * M.restrictScalars ℂ = (S * M).restrictScalars ℂ from rfl,
-    hMS]
--/
+  Model.leptonDoublet.toMatterField.repJet_smul U χ z
 
 /-- On jets of constant gauge transformations the jet action reduces to the global
 gauge action on the fibre: the `(1, 2)_{-3}` action on the lepton-doublet factor, and
 the trivial action on the jet ring. -/
 lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
     repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
-      TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
-  ext d x
-  obtain ⟨v⟩ := x
-  induction v using TensorProduct.induction_on with
-  | zero => simp [show ({ val := 0 } : LeptonDoublet) = 0 from rfl]
-  | tmul psi c =>
-      apply jetValLinEquiv.injective
-      show jetValLinEquiv (repJetGaugeGroupI _ (d ⊗ₜ ⟨psi ⊗ₜ c⟩))
-        = jetValLinEquiv (TensorProduct.map LinearMap.id (repGaugeGroupI g) (d ⊗ₜ ⟨psi ⊗ₜ c⟩))
-      rw [repJetGaugeGroupI_eq_doubletMatrix, doubletMatrix_eq]
-      simp [jetValLinEquiv, repGaugeGroupI]
-      have hu : star (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
-          = MvPowerSeries.C ((starRingEnd ℂ) (g.toU1.1 : ℂ)) := by
-        rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
-          = MvPowerSeries.C ((g.toU1.1 : ℂ)) from rfl, JetRing.star_C]
-        rfl
-      have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
-            specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
-          = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
-      have halg : ∀ A : Matrix (Fin 2) (Fin 2) JetRing,
-          (Matrix.toLpLinAlgEquiv 2 A :
-              Module.End JetRing (EuclideanSpace JetRing (Fin 2)))
-            = Matrix.toLpLin 2 2 A := fun _ => rfl
-      have hvec : ∀ i : Fin 2,
-          (∑ x, MvPowerSeries.C ((g.toSU2.1) i x) * (MvPowerSeries.C (c.ofLp x) * d))
-            = MvPowerSeries.C (∑ x, (g.toSU2.1) i x * c.ofLp x) * d := by
-        intro i
-        rw [map_sum, Finset.sum_mul]
-        exact Finset.sum_congr rfl fun x _ => by rw [← mul_assoc, ← map_mul]
-      rw [TensorProduct.liftAux_tmul, ← TensorProduct.tmul_smul]
-      simp only [LinearMap.compl₂_apply, TensorProduct.mk_apply, LinearMap.smul_apply,
-        LinearMap.restrictScalars_apply, halg, Matrix.toLpLin_toLp]
-      congr 1
-      refine WithLp.ofLp_injective 2 ?_
-      funext i
-      simp only [WithLp.ofLp_smul, Pi.smul_apply, Matrix.toLin'_apply,
-        Matrix.mulVec_apply_eq_sum, hM, Algebra.smul_def, MvPowerSeries.algebraMap_apply,
-        hu, map_pow, Algebra.algebraMap_self_apply]
-      rw [hvec i]
-  | add a b ha hb =>
-      simp only [show ({ val := a + b } : LeptonDoublet) = ⟨a⟩ + ⟨b⟩ from rfl,
-        map_add, ha, hb]
+      TensorProduct.map LinearMap.id (repGaugeGroupI g) :=
+  Model.leptonDoublet.rep.repJet_ofConstant (LinearEquiv.refl ℂ LeptonDoublet)
+    doubletMatrix_ofConstant g
 
 /-!
 
@@ -645,24 +430,15 @@ combinations below are what a component of a lepton-doublet symbol needs.
 
 -/
 
-/-- The lepton-doublet basis vector as an explicit spinor–weak tensor. -/
-lemma basis_eq_mk (k j : Fin 2) : basis (k, j) =
-    ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ j⟩ := by
-  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
-    OrthonormalBasis.coe_toBasis]
-  rfl
-
 /-- The Lorentz action on the lepton-doublet basis: the weak index is inert and the
   spinor index transforms by the matrix itself. -/
 lemma repLorentzGroup_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) :
     repLorentzGroup Λ (basis j) = ∑ β, Λ.1 β j.1 • basis (β, j.2) := by
   obtain ⟨k, w⟩ := j
-  simp only [basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
-    repLorentzGroup_apply, LinearEquiv.apply_symm_apply, TensorProduct.map_tmul,
-    Fermion.LeftHandedWeyl.rep_apply_basis, LinearMap.id_apply, TensorProduct.sum_tmul,
-    map_sum]
-  refine Finset.sum_congr rfl fun x _ => ?_
-  rw [← TensorProduct.smul_tmul', map_smul]
+  rw [basis_apply, repLorentzGroup_tmul, Fermion.LeftHandedWeyl.rep_apply_basis,
+    TensorProduct.sum_tmul]
+  refine Finset.sum_congr rfl fun β _ => ?_
+  rw [basis_apply, TensorProduct.smul_tmul']
 
 /-- The lepton-doublet coordinate functionals transform contragrediently, by the
   inverse matrix. -/
@@ -699,15 +475,6 @@ lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 2) 
       simp [Fintype.sum_prod_type, ite_smul, eq_comm])
   rw [key]
   simp [Fintype.sum_prod_type, ite_smul]
-
-/-- The gauge action on the lepton-doublet basis: the spinor index is inert and the weak
-  index transforms by the `SU(2)` matrix, scaled by the hypercharge factor. -/
-lemma repGaugeGroupI_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 2) :
-    repGaugeGroupI g (basis j) =
-      ∑ w, (star g.toU1.1 ^ 3 * g.toSU2.1 w j.2) • basis (j.1, w) := by
-  obtain ⟨k, w⟩ := j
-  simp only [basis_eq_mk]
-  exact repGaugeGroupI_tmul_basis_eq_sum g k w
 
 /-- The lepton-doublet coordinate functionals carry the contragredient gauge action: the
   hypercharge and `SU(2)` factors of the inverse group element, transposed. -/
@@ -772,18 +539,12 @@ lemma LeptonDoublet.repGaugeGroupI_gaugeTorusGen_basis (i : Fin 4) (j : Fin 2 ×
       = ((expI : ℂ) ^ GaugeWeight.coord (LeptonDoublet.valueGaugeWeight j) i) •
         LeptonDoublet.basis j := by
   obtain ⟨k, s⟩ := j
-  have hb : LeptonDoublet.basis (k, s)
-      = ⟨Fermion.LeftHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 2) ℂ s⟩ := by
-    simp only [LeptonDoublet.basis, Module.Basis.map_apply, Module.Basis.tensorProduct_apply,
-      OrthonormalBasis.coe_toBasis]
-    rfl
-  rw [hb, LeptonDoublet.repGaugeGroupI_tmul_basis_eq_sum]
+  rw [LeptonDoublet.repGaugeGroupI_apply_basis]
   fin_cases i <;> fin_cases s <;>
     simp [gaugeTorusGen, GaugeGroupI.toU1, GaugeGroupI.toSU2, su2ExpI, Fin.sum_univ_two,
       Matrix.diagonal,
       LeptonDoublet.valueGaugeWeight, isoWeight, GaugeWeight.coord,
-      expI_inv_eq_star, starRingEnd_expI_pow] <;>
-  (try congr 1)
+      expI_inv_eq_star, starRingEnd_expI_pow]
 
 /-- The dual action of the gauge torus on the coordinate functionals of
   `LeptonDoublet`: the weights are negated. -/
@@ -820,8 +581,7 @@ lemma leptonDoublet_repLorentzGroup_boostAxis_two_basis (t : ℝ) (ht : t ≠ 0)
     LeptonDoublet.repLorentzGroup (SL2C.boostAxis 2 t ht) (LeptonDoublet.basis j)
       = ((t : ℝ) : ℂ) ^ (weylWeight j.1) • LeptonDoublet.basis j := by
   obtain ⟨k, a⟩ := j
-  simp [LeptonDoublet.basis, LeptonDoublet.repLorentzGroup_apply, Module.Basis.map_apply,
-    Module.Basis.tensorProduct_apply, leftHandedWeyl_rep_boostAxis_two_basis]
-  rw [← TensorProduct.smul_tmul', map_smul]
+  rw [LeptonDoublet.basis_apply, LeptonDoublet.repLorentzGroup_tmul,
+    leftHandedWeyl_rep_boostAxis_two_basis, ← TensorProduct.smul_tmul']
 
 end StandardModel

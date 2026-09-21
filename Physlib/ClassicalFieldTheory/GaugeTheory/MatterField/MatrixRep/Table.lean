@@ -300,6 +300,29 @@ def massWeight : LorentzLabel → ℕ
   | .R => 3
   | .scalar => 2
 
+/-- The index of the basis of the Lorentz factor of a label: the two spinor components of
+  a Weyl spinor, one component for a scalar. -/
+abbrev basisIndex : LorentzLabel → Type
+  | .L => Fin 2
+  | .R => Fin 2
+  | .scalar => Unit
+
+instance instFintypeBasisIndex : (l : LorentzLabel) → Fintype l.basisIndex
+  | .L => inferInstanceAs (Fintype (Fin 2))
+  | .R => inferInstanceAs (Fintype (Fin 2))
+  | .scalar => inferInstanceAs (Fintype Unit)
+
+instance instDecidableEqBasisIndex : (l : LorentzLabel) → DecidableEq l.basisIndex
+  | .L => inferInstanceAs (DecidableEq (Fin 2))
+  | .R => inferInstanceAs (DecidableEq (Fin 2))
+  | .scalar => inferInstanceAs (DecidableEq Unit)
+
+/-- The basis of the Lorentz factor of a label: the Weyl basis, or `1` for a scalar. -/
+noncomputable def basis : (l : LorentzLabel) → Module.Basis l.basisIndex ℂ l.Space
+  | .L => Fermion.LeftHandedWeyl.basis
+  | .R => Fermion.RightHandedWeyl.basis
+  | .scalar => Module.Basis.singleton Unit ℂ
+
 end LorentzLabel
 
 /-- **The data of a matter field**: its Lorentz label and its charge tuple, so that a
@@ -324,6 +347,22 @@ noncomputable abbrev rep : MatrixRep jets M.Idx := Charges.rep Γ M.charges
 
 /-- The mass weight of the field. -/
 abbrev massWeight : ℕ := M.lorentz.massWeight
+
+/-- **The target space of the field**: the Lorentz factor of its label tensored with the
+  functions on its internal index. -/
+abbrev V : Type := M.lorentz.Space ⊗[ℂ] (M.Idx → ℂ)
+
+/-- **The basis of the target space**: the basis of the Lorentz factor tensored with the
+  coordinate basis of the internal index. -/
+noncomputable def basis : Module.Basis (M.lorentz.basisIndex × M.Idx) ℂ M.V :=
+  M.lorentz.basis.tensorProduct (Pi.basisFun ℂ M.Idx)
+
+/-- A basis vector of the target space is a basis vector of the Lorentz factor tensored with
+  a coordinate vector of the internal index. -/
+@[simp]
+lemma basis_apply (a : M.lorentz.basisIndex) (i : M.Idx) :
+    M.basis (a, i) = M.lorentz.basis a ⊗ₜ Pi.single i 1 := by
+  rw [basis, Module.Basis.tensorProduct_apply, Pi.basisFun_apply]
 
 /-- **The matter field of a datum on a presented target space**: a target space `V`
   identified with the Lorentz factor of the label tensored with the internal index of the
@@ -360,6 +399,10 @@ lemma toMatterFieldOn_massWeight : (M.toMatterFieldOn e).massWeight = M.massWeig
 
 @[simp]
 lemma toMatterField_massWeight : M.toMatterField.massWeight = M.massWeight := rfl
+
+/-- The target space of the matter field of a datum is the target space of the datum. -/
+@[simp]
+lemma toMatterField_V : M.toMatterField.V = M.V := rfl
 
 /-- The gauge and Lorentz actions of the matter field of a datum commute. -/
 lemma toMatterFieldOn_gaugeLorentzCompatible :

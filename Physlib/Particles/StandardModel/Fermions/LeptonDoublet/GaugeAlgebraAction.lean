@@ -22,8 +22,8 @@ The infinitesimal `(1, 2)_{-3}` action of the gauge algebra on the lepton double
 weak part of the algebra element acts on the weak index and the hypercharge part scales,
 both through the physicists' factor of `i`, matching the group action
 `(star u) ^ 3 • U₂` infinitesimally. Every definition is the one the general theory
-derives from the table's datum `StandardModel.Model.leptonDoublet`, transported along
-`LeptonDoublet.valIdx`; the compatibility with the jet gauge action —
+derives from the table's datum `StandardModel.Model.leptonDoublet`; the compatibility with
+the jet gauge action —
 `LocalGaugeData.IsInfinitesimalActionOf` — is the generic
 `LocalGaugeData.MatrixRep.isInfinitesimalActionOf`. The hand-built definitions and the
 hand-written proof are kept in comments.
@@ -63,7 +63,7 @@ open Matrix MatrixGroups
   the weak index, with the Weyl factor untouched. -/
 noncomputable def weakEnd (A : Matrix (Fin 2) (Fin 2) ℂ) :
     LeptonDoublet →ₗ[ℂ] LeptonDoublet :=
-  LocalGaugeData.MatrixRep.valEnd valIdx A
+  LocalGaugeData.MatrixRep.valEnd (LinearEquiv.refl ℂ LeptonDoublet) A
 
 /- The hand-built definition, now derived from the datum:
 
@@ -76,44 +76,39 @@ noncomputable def weakEnd (A : Matrix (Fin 2) (Fin 2) ℂ) :
       (Matrix.toLpLinAlgEquiv 2 A) ∘ₗ valLinEquiv.toLinearMap
 -/
 
-/-- The weak endomorphism through the tensor-product value. -/
-lemma weakEnd_apply_mk (A : Matrix (Fin 2) (Fin 2) ℂ) (v : LeptonDoublet) :
-    weakEnd A v
-      = valLinEquiv.symm
-          (Module.End.lTensorAlgHom ℂ (EuclideanSpace ℂ (Fin 2)) Fermion.LeftHandedWeyl
-            (Matrix.toLpLinAlgEquiv 2 A) (valLinEquiv v)) := by
-  obtain ⟨t, rfl⟩ := valLinEquiv.symm.surjective v
-  induction t using TensorProduct.induction_on with
-  | zero => simp [-valLinEquiv_apply]
-  | tmul s w =>
-    rw [valLinEquiv_symm_tmul, weakEnd, LocalGaugeData.MatrixRep.valEnd_apply_symm_tmul]
-    simp [valIdx, Matrix.toLpLinAlgEquiv, Matrix.toLpLin_apply, TensorProduct.liftAux_tmul]
-  | add x y hx hy => simp only [map_add, hx, hy]
+/-- The weak endomorphism on a pure spinor–weak tensor: the matrix acts on the weak
+  coordinates. -/
+lemma weakEnd_tmul (A : Matrix (Fin 2) (Fin 2) ℂ) (s : Fermion.LeftHandedWeyl)
+    (v : Fin 2 → ℂ) :
+    weakEnd A (s ⊗ₜ v) = s ⊗ₜ A.mulVec v :=
+  LocalGaugeData.MatrixRep.valEnd_apply_symm_tmul (LinearEquiv.refl ℂ LeptonDoublet) A s v
 
 lemma weakEnd_add (A B : Matrix (Fin 2) (Fin 2) ℂ) :
     weakEnd (A + B) = weakEnd A + weakEnd B :=
-  LocalGaugeData.MatrixRep.valEnd_add valIdx A B
+  LocalGaugeData.MatrixRep.valEnd_add (LinearEquiv.refl ℂ LeptonDoublet) A B
 
 lemma weakEnd_smul (z : ℂ) (A : Matrix (Fin 2) (Fin 2) ℂ) :
     weakEnd (z • A) = z • weakEnd A :=
-  LocalGaugeData.MatrixRep.valEnd_smul valIdx z A
+  LocalGaugeData.MatrixRep.valEnd_smul (LinearEquiv.refl ℂ LeptonDoublet) z A
 
-lemma weakEnd_zero : weakEnd 0 = 0 := LocalGaugeData.MatrixRep.valEnd_zero valIdx
+lemma weakEnd_zero : weakEnd 0 = 0 :=
+  LocalGaugeData.MatrixRep.valEnd_zero (LinearEquiv.refl ℂ LeptonDoublet)
 
 lemma weakEnd_neg (A : Matrix (Fin 2) (Fin 2) ℂ) : weakEnd (-A) = -weakEnd A :=
-  LocalGaugeData.MatrixRep.valEnd_neg valIdx A
+  LocalGaugeData.MatrixRep.valEnd_neg (LinearEquiv.refl ℂ LeptonDoublet) A
 
 lemma weakEnd_multiset_sum (m : Multiset (Matrix (Fin 2) (Fin 2) ℂ)) :
     weakEnd m.sum = (m.map weakEnd).sum :=
-  LocalGaugeData.MatrixRep.valEnd_multiset_sum valIdx m
+  LocalGaugeData.MatrixRep.valEnd_multiset_sum (LinearEquiv.refl ℂ LeptonDoublet) m
 
 /-- The weak endomorphisms compose through matrix multiplication. -/
 lemma weakEnd_mul (A B : Matrix (Fin 2) (Fin 2) ℂ) :
     weakEnd (A * B) = weakEnd A ∘ₗ weakEnd B :=
-  LocalGaugeData.MatrixRep.valEnd_mul valIdx A B
+  LocalGaugeData.MatrixRep.valEnd_mul (LinearEquiv.refl ℂ LeptonDoublet) A B
 
 /-- The weak endomorphism of the identity matrix is the identity. -/
-lemma weakEnd_one : weakEnd 1 = LinearMap.id := LocalGaugeData.MatrixRep.valEnd_one valIdx
+lemma weakEnd_one : weakEnd 1 = LinearMap.id :=
+  LocalGaugeData.MatrixRep.valEnd_one (LinearEquiv.refl ℂ LeptonDoublet)
 
 /- The hand-built proofs, now derived from the datum:
 lemma weakEnd_apply_mk (A : Matrix (Fin 2) (Fin 2) ℂ) (v : LeptonDoublet) :
@@ -179,7 +174,7 @@ lemma actionMatrix_eq (c : GaugeAlgebra) :
   from the datum. -/
 noncomputable def gaugeAlgebraAction :
     GaugeAlgebra →ₗ[ℝ] LeptonDoublet →ₗ[ℂ] LeptonDoublet :=
-  Model.leptonDoublet.rep.repAlgebra valIdx
+  Model.leptonDoublet.toMatterField.repAlgebra
 
 /-- The gauge algebra acts by the weak endomorphism of its action matrix. -/
 lemma gaugeAlgebraAction_apply (c : GaugeAlgebra) :
@@ -567,7 +562,7 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
       = weakEnd ((doubletMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) :=
-  Model.leptonDoublet.rep.repCoeff_eq valIdx U x
+  Model.leptonDoublet.rep.repCoeff_eq (LinearEquiv.refl ℂ LeptonDoublet) U x
 
 /- The hand-written proof, now derived from the datum:
 set_option maxHeartbeats 1000000 in
@@ -669,9 +664,9 @@ lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
   coefficients obey the Maurer–Cartan Leibniz law and intertwine the action with the
   adjoint transports. This is the generic statement for the datum's matrix
   representation. -/
-theorem isInfinitesimalActionOf :
+lemma isInfinitesimalActionOf :
     localGaugeData.IsInfinitesimalActionOf gaugeAlgebraAction repJetGaugeGroupI :=
-  Model.leptonDoublet.rep.isInfinitesimalActionOf valIdx
+  Model.leptonDoublet.toMatterField.repAlgebra_isInfinitesimalAction
 
 /- The hand-written proof, now derived from the datum:
 set_option maxHeartbeats 1000000 in

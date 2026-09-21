@@ -127,25 +127,25 @@ Each projection takes a generation index `i : Fin 3`.
 -/
 
 /-- The projection onto the `i`-th generation of the lepton doublet. -/
-def leptonDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonDoublet :=
+noncomputable def leptonDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonDoublet :=
   (LinearMap.proj i).comp (LinearMap.fst ℂ _ _)
 
 /-- The projection onto the `i`-th generation of the charged-lepton singlet. -/
-def leptonSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonSinglet :=
+noncomputable def leptonSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] LeptonSinglet :=
   (LinearMap.proj i).comp ((LinearMap.fst ℂ _ _).comp (LinearMap.snd ℂ _ _))
 
 /-- The projection onto the `i`-th generation of the quark doublet. -/
-def quarkDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] QuarkDoublet :=
+noncomputable def quarkDoubletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] QuarkDoublet :=
   (LinearMap.proj i).comp
     ((LinearMap.fst ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _)))
 
 /-- The projection onto the `i`-th generation of the up-type quark singlet. -/
-def upSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] UpSinglet :=
+noncomputable def upSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] UpSinglet :=
   (LinearMap.proj i).comp ((LinearMap.fst ℂ _ _).comp
     ((LinearMap.snd ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _))))
 
 /-- The projection onto the `i`-th generation of the down-type quark singlet. -/
-def downSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] DownSinglet :=
+noncomputable def downSingletProj (i : Fin 3) : FermionSpace →ₗ[ℂ] DownSinglet :=
   (LinearMap.proj i).comp ((LinearMap.snd ℂ _ _).comp
     ((LinearMap.snd ℂ _ _).comp ((LinearMap.snd ℂ _ _).comp (LinearMap.snd ℂ _ _))))
 
@@ -160,28 +160,28 @@ identity, and every other composite of a projection with an inclusion vanishes.
 -/
 
 /-- The inclusion of the `i`-th generation lepton doublet as a summand. -/
-def leptonDoubletIncl (i : Fin 3) : LeptonDoublet →ₗ[ℂ] FermionSpace :=
+noncomputable def leptonDoubletIncl (i : Fin 3) : LeptonDoublet →ₗ[ℂ] FermionSpace :=
   (LinearMap.inl ℂ _ _).comp (LinearMap.single ℂ (fun _ : Fin 3 => LeptonDoublet) i)
 
 /-- The inclusion of the `i`-th generation charged-lepton singlet as a summand. -/
-def leptonSingletIncl (i : Fin 3) : LeptonSinglet →ₗ[ℂ] FermionSpace :=
+noncomputable def leptonSingletIncl (i : Fin 3) : LeptonSinglet →ₗ[ℂ] FermionSpace :=
   (LinearMap.inr ℂ _ _).comp ((LinearMap.inl ℂ _ _).comp
     (LinearMap.single ℂ (fun _ : Fin 3 => LeptonSinglet) i))
 
 /-- The inclusion of the `i`-th generation quark doublet as a summand. -/
-def quarkDoubletIncl (i : Fin 3) : QuarkDoublet →ₗ[ℂ] FermionSpace :=
+noncomputable def quarkDoubletIncl (i : Fin 3) : QuarkDoublet →ₗ[ℂ] FermionSpace :=
   (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
     ((LinearMap.inl ℂ _ _).comp
       (LinearMap.single ℂ (fun _ : Fin 3 => QuarkDoublet) i)))
 
 /-- The inclusion of the `i`-th generation up-type quark singlet as a summand. -/
-def upSingletIncl (i : Fin 3) : UpSinglet →ₗ[ℂ] FermionSpace :=
+noncomputable def upSingletIncl (i : Fin 3) : UpSinglet →ₗ[ℂ] FermionSpace :=
   (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
     ((LinearMap.inl ℂ _ _).comp
       (LinearMap.single ℂ (fun _ : Fin 3 => UpSinglet) i))))
 
 /-- The inclusion of the `i`-th generation down-type quark singlet as a summand. -/
-def downSingletIncl (i : Fin 3) : DownSinglet →ₗ[ℂ] FermionSpace :=
+noncomputable def downSingletIncl (i : Fin 3) : DownSinglet →ₗ[ℂ] FermionSpace :=
   (LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp ((LinearMap.inr ℂ _ _).comp
     ((LinearMap.inr ℂ _ _).comp
       (LinearMap.single ℂ (fun _ : Fin 3 => DownSinglet) i))))

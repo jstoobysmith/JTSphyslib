@@ -73,10 +73,9 @@ namespace LeptonDoublet
 
 /-- The lepton doublet as a matter field of `StandardModel.localGaugeData`, in the `(1, 2)_{-3}`
   representation with its left-handed Lorentz action: the matter field the general theory
-  derives from the table's datum `StandardModel.Model.leptonDoublet`, on the target space
-  `LeptonDoublet` through `valIdx`. -/
+  derives from the table's datum `StandardModel.Model.leptonDoublet`. -/
 noncomputable def matterField : MatterField localGaugeData :=
-  Model.leptonDoublet.toMatterFieldOn valIdx
+  Model.leptonDoublet.toMatterField
 
 /- The hand-built definition, now derived from the datum:
 /-- The lepton doublet as a matter field of `StandardModel.localGaugeData`, in the `(1, 2)_{-3}`

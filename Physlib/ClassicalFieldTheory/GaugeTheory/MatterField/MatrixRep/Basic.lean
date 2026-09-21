@@ -559,6 +559,75 @@ noncomputable def repLorentz (ρ : Representation ℂ SL(2,ℂ) S) :
   (MonoidHomClass.toMonoidHom (e.symm.conjAlgEquiv (R := ℂ))).comp
     (ρ.tprod (Representation.trivial ℂ SL(2,ℂ) (ι → ℂ)))
 
+/-!
+
+### The global action
+
+A matrix representation of jets restricts to the jets of constant gauge transformations;
+the constant terms of their matrices are the matrices of a representation of the global
+gauge group on the target space. When the matrices of constant jets are constant, the jet
+action on a constant jet is this global action on the value factor.
+
+-/
+
+section Global
+
+/-- **The global gauge action** of a matrix representation of jets: a global gauge
+  transformation acts by the constant term of the matrix of its constant jet. -/
+noncomputable def repGlobal : Representation ℂ G₀ V where
+  toFun g := valEnd e ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ))
+  map_one' := by
+    rw [map_one jets.ofConstant, R.mat_one,
+      ← RingHom.mapMatrix_apply (constantCoeff : JetRing →+* ℂ), map_one, valEnd_one]
+    rfl
+  map_mul' g h := by
+    rw [map_mul jets.ofConstant, R.mat_mul,
+      ← RingHom.mapMatrix_apply (constantCoeff : JetRing →+* ℂ), map_mul,
+      RingHom.mapMatrix_apply, RingHom.mapMatrix_apply, valEnd_mul]
+    rfl
+
+lemma repGlobal_apply (g : G₀) :
+    R.repGlobal e g = valEnd e ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)) :=
+  rfl
+
+/-- The global action on a pure tensor: the constant term of the matrix acts on the
+  internal index. -/
+lemma repGlobal_apply_symm_tmul (g : G₀) (s : S) (v : ι → ℂ) :
+    R.repGlobal e g (e.symm (s ⊗ₜ[ℂ] v))
+      = e.symm (s ⊗ₜ[ℂ] ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)).mulVec v) :=
+  valEnd_apply_symm_tmul e _ s v
+
+/-- A matrix of constant jets acts on a scalar jet times a constant vector through its
+  constant matrix. -/
+lemma map_C_mulVec_smul (B : Matrix ι ι ℂ) (v : ι → ℂ) (χ : JetRing) :
+    (B.map (C : ℂ → JetRing)).mulVec (fun i => v i • χ) = fun i => (B.mulVec v) i • χ := by
+  funext i
+  simp only [Matrix.mulVec, dotProduct, Matrix.map_apply, Finset.sum_smul, C_mul_eq_smul,
+    smul_smul]
+
+/-- **On jets of constant gauge transformations the jet action is the global action** on
+  the value factor, provided the matrices of constant jets are constant. -/
+lemma repJet_ofConstant
+    (hconst : ∀ g, R.mat (jets.ofConstant g)
+      = ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)).map (C : ℂ → JetRing))
+    (g : G₀) :
+    R.repJet e (jets.ofConstant g) = TensorProduct.map LinearMap.id (R.repGlobal e g) := by
+  refine LinearMap.ext fun z => ?_
+  induction z using TensorProduct.induction_on with
+  | zero => simp
+  | tmul χ v =>
+    obtain ⟨t, rfl⟩ := e.symm.surjective v
+    induction t using TensorProduct.induction_on with
+    | zero => simp
+    | tmul s w =>
+      rw [repJet_apply, matEnd_apply, jetEquiv_tmul, jetEnd_tmul, hconst, map_C_mulVec_smul,
+        ← jetEquiv_tmul e, LinearEquiv.symm_apply_apply, TensorProduct.map_tmul,
+        LinearMap.id_apply, repGlobal_apply_symm_tmul]
+    | add x y hx hy => simp only [tmul_add, map_add, hx, hy]
+  | add x y hx hy => simp only [map_add, hx, hy]
+
+end Global
+
 variable [Module.Free ℂ V] [Module.Finite ℂ V]
 
 /-- **The matter field of a matrix representation**: the target space `V ≃ S ⊗ (ι → ℂ)`
