@@ -597,6 +597,7 @@ lemma repGlobal_apply_symm_tmul (g : G₀) (s : S) (v : ι → ℂ) :
       = e.symm (s ⊗ₜ[ℂ] ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)).mulVec v) :=
   valEnd_apply_symm_tmul e _ s v
 
+omit [DecidableEq ι] in
 /-- A matrix of constant jets acts on a scalar jet times a constant vector through its
   constant matrix. -/
 lemma map_C_mulVec_smul (B : Matrix ι ι ℂ) (v : ι → ℂ) (χ : JetRing) :

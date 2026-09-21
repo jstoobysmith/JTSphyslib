@@ -48,6 +48,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeSe
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Jet
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.LorentzAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.MassWeight
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Realization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Sector
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.SectorRealization

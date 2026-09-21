@@ -130,7 +130,7 @@ def table : FieldData factors Fields
 
 /-- **The field content of the Standard Model**: the fifteen fermionic species (five fields
   in three generations) and the Higgs, as matter fields of `gaugeData`. -/
-noncomputable def fieldData : GaugeFieldData gaugeData := table.toGaugeFieldData
+noncomputable abbrev fieldData : GaugeFieldData gaugeData := table.toGaugeFieldData
 
 /-- The Standard Model has fifteen fermionic species. -/
 lemma card_fermionSpecies : Fintype.card fieldData.FermionSpecies = 15 := by decide
