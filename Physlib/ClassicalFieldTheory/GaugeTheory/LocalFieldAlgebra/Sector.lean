@@ -261,6 +261,11 @@ lemma union (S S' : Finset FieldCategory) :
   unfold SectorAlgebra
   rw [sectorGenerators_union, Algebra.adjoin_union]
 
+TODO (lines := 259-262) (date := 2026-09-22) "Add an `Add` instance on `GaugeFieldData`
+  and the companion of this lemma, here and for `CovSectorAlgebra`, for a sum of data: a
+  sector of `F + G` as the parts from `F`, from `G` and the words mixing the two, so that
+  `invariantsLE` of an extension reduces to the mixed part."
+
 variable {T}
 
 /-!
