@@ -55,8 +55,7 @@ This will be used to help define the Lorentz group in later files.
 
 ## iv. References
 
-No references are given here.
-
+* None.
 -/
 
 @[expose] public section

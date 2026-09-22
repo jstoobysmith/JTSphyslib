@@ -7,6 +7,7 @@ module
 
 public import Physlib.Mathematics.KroneckerDelta.Basic
 public import Mathlib.LinearAlgebra.Matrix.Permutation
+public import Mathlib.GroupTheory.Perm.Fin
 /-!
 
 # The Levi-Civita symbol in general dimension
@@ -35,6 +36,8 @@ permutation via `Matrix.det_permutation`.
 - `sum_leviCivitaSymbol_mul_prod` : contracted against the rows of a matrix `M` selected by
   `a`, the symbol gives `det M` times the symbol of `a`. This is the statement that `ε`
   transforms as a tensor density of weight one.
+- `leviCivitaSymbol_eq_prod_prod_Ioi` : on `Fin n` the symbol is the product over pairs
+  `i < j` of the sign of `g j - g i`.
 
 ## iii. Table of contents
 
@@ -43,11 +46,11 @@ permutation via `Matrix.det_permutation`.
 - C. Antisymmetry
 - D. Vanishing on repeated indices
 - E. Contraction against a matrix
+- E. Closed form on `Fin n`
 
 ## iv. References
 
-- https://en.wikipedia.org/wiki/Levi-Civita_symbol
-
+* https://en.wikipedia.org/wiki/Levi-Civita_symbol. [ref: wiki_levi_civita_symbol]
 -/
 
 @[expose] public section
@@ -211,3 +214,30 @@ lemma sum_leviCivitaSymbol_mul_prod (M : Matrix ι ι R) (a : ι → ι) :
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun σ _ => ?_
   rw [Finset.sum_ite_eq' Finset.univ, if_pos (Finset.mem_univ _)]
+## E. Closed form on `Fin n`
+
+-/
+
+/-- On `Fin n` the Levi-Civita symbol is the product over pairs `i < j` of the sign of
+`g j - g i`. Unlike the determinant defining `leviCivitaSymbol`, this product is cheap to
+evaluate, e.g. by `decide`. -/
+lemma leviCivitaSymbol_eq_prod_prod_Ioi {n : ℕ} (g : Fin n → Fin n) :
+    leviCivitaSymbol g =
+      ∏ i, ∏ j ∈ Finset.Ioi i, (if g i < g j then 1 else if g i = g j then 0 else -1) := by
+  by_cases hg : Function.Injective g
+  · obtain ⟨σ, rfl⟩ : ∃ σ : Equiv.Perm (Fin n), ⇑σ = g :=
+      ⟨Equiv.ofBijective g (Finite.injective_iff_bijective.mp hg), rfl⟩
+    rw [leviCivitaSymbol_perm, Equiv.Perm.sign_eq_prod_prod_Ioi]
+    simp only [Units.coe_prod]
+    refine Finset.prod_congr rfl fun i _ => Finset.prod_congr rfl fun j hj => ?_
+    have hij : σ i ≠ σ j := σ.injective.ne (Finset.mem_Ioi.mp hj).ne
+    split_ifs <;> simp
+  · rw [leviCivitaSymbol_eq_zero_of_not_injective hg]
+    simp only [Function.Injective, not_forall] at hg
+    obtain ⟨i, j, hgij, hij⟩ := hg
+    symm
+    rcases lt_or_gt_of_ne hij with h | h
+    · exact Finset.prod_eq_zero (Finset.mem_univ i)
+        (Finset.prod_eq_zero (Finset.mem_Ioi.mpr h) (by simp [hgij]))
+    · exact Finset.prod_eq_zero (Finset.mem_univ j)
+        (Finset.prod_eq_zero (Finset.mem_Ioi.mpr h) (by simp [hgij]))

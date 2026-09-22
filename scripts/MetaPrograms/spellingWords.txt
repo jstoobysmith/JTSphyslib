@@ -1216,6 +1216,7 @@ guillem
 gut
 h
 ha
+hax
 haar
 ham
 hamilton
@@ -1275,6 +1276,9 @@ hours
 hovering
 how
 however
+hsa
+hsi
+hte
 html
 htmlnote
 https

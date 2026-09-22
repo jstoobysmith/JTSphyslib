@@ -67,8 +67,8 @@ The following results exist for both `prodP` and `prodT` :
 
 ## iv. References
 
-- arXiv:2411.07667
-
+* Tooby-Smith, Formalization of physics index notation in Lean 4, arXiv:2411.07667.
+  [ref: tooby_smith_2024_index_notation]
 -/
 
 @[expose] public section
@@ -488,8 +488,7 @@ noncomputable def tensorEquivProd {n n2 : ℕ} {c : Fin n → C} {c1 : Fin n2 �
         (Tensor.basis c1) (ComponentIdx.prod b).2)
     let P (x : S.Tensor c ⊗[k] S.Tensor c1) := f (TensorProduct.lift prodT x) = x
     change P x
-    apply TensorProduct.induction_on
-    · simp [P]
+    apply TensorProduct.inductionOn
     · intro t1 t2
       apply induction_on_basis (t := t1)
       · intro b1

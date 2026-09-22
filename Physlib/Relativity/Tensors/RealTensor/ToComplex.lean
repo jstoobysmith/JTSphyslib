@@ -53,10 +53,9 @@ The main definitions and statements are:
 
 ## iv. References
 
-The general formalism of Lorentz tensors and their operations is developed in
-other parts of the library; here we only specialise to the passage from real to
-complex Lorentz tensors.
-
+* None — the general formalism of Lorentz tensors and their operations is
+  developed in other parts of the library; here we only specialise to the
+  passage from real to complex Lorentz tensors.
 -/
 
 @[expose] public section
@@ -182,7 +181,7 @@ lemma toComplex_repr {n} {c : Fin n → realLorentzTensor.Color}
   rw [toComplex_eq_sum_basis, map_sum]
   simp only [← Complex.coe_smul, map_smul, Finsupp.coe_finsetSum, Finset.sum_apply,
     Finsupp.smul_apply, Basis.repr_self, Finsupp.single_apply, smul_eq_mul, mul_ite, mul_one,
-    mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true, Equiv.symm_apply_apply]
+    mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ite_true, Equiv.symm_apply_apply]
 
 /-- `toComplex` sends basis elements to basis elements. -/
 @[simp]
@@ -409,7 +408,6 @@ Finally we record that `toComplex` is equivariant for the natural action of
 
 -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The map `toComplex` is equivariant. -/
 lemma toComplex_equivariant {n} {c : Fin n → realLorentzTensor.Color}
     (v : ℝT(3, c)) (Λ : SL(2, ℂ)) :

@@ -76,8 +76,7 @@ conditions.
 
 ## iv. References
 
-- https://arxiv.org/pdf/1912.04804.pdf
-
+* https://arxiv.org/pdf/1912.04804.pdf. [ref: arxiv_1912_04804]
 -/
 
 @[expose] public section
@@ -258,7 +257,7 @@ lemma basis_on_evenFst_other {k j : Fin n.succ} (h : k ≠ j) :
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_other {k : Fin n.succ} {j : Fin (2 * n.succ)} (h1 : j ≠ evenFst k)
     (h2 : j ≠ evenSnd k) : basisAsCharges k j = 0 := by
-  simp only [basisAsCharges, if_neg h1, if_neg h2]
+  simp only [basisAsCharges, ite_eq_right h1, ite_eq_right h2]
 
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_evenSnd_eq_neg_evenFst (j i : Fin n.succ) :
@@ -481,7 +480,7 @@ lemma basis_on_evenShiftFst_self (j : Fin n) : basisAsCharges j (evenShiftFst j)
 set_option backward.isDefEq.respectTransparency false in
 lemma basis_on_other {k : Fin n} {j : Fin (2 * n.succ)} (h1 : j ≠ evenShiftFst k)
     (h2 : j ≠ evenShiftSnd k) : basisAsCharges k j = 0 := by
-  simp only [basisAsCharges, if_neg h1, if_neg h2]
+  simp only [basisAsCharges, ite_eq_right h1, ite_eq_right h2]
 
 lemma basis_on_evenShiftFst_other {k j : Fin n} (h : k ≠ j) :
     basisAsCharges k (evenShiftFst j) = 0 := by
