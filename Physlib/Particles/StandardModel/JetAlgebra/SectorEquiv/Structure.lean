@@ -146,7 +146,7 @@ module is determined by its species components, so the relabelling too is equiva
   the fermionic target space with that species' own. -/
 lemma lTensor_fermionProj_repJetGaugeGroupI (t : fieldData.FermionSpecies)
     (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (fermionProj t)).comp (FermionSpace.repJetGaugeGroupI U)
+    (LinearMap.lTensor JetRing (fermionProj t)).comp (fermionMatterField.repJet U)
       = ((fieldData.fermion t).repJet U).comp
         (LinearMap.lTensor JetRing (fermionProj t)) := by
   cases t with
@@ -162,19 +162,33 @@ lemma lTensor_fermionProj_repJetGaugeGroupI (t : fieldData.FermionSpecies)
   product. -/
 lemma lTensor_fermionSpaceEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
     (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap).comp
-        (FermionSpace.repJetGaugeGroupI U)
-      = (fieldData.repJetFermionModule U).comp
+        (fermionMatterField.repJet U)
+      = ((fieldData.fermionMatterField 3 fieldData_fermion_massWeight).repJet U).comp
         (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap) := by
-  refine jetPi_hom_ext fieldData.FermionValue fun i => ?_
-  have h1 : (LinearMap.lTensor JetRing (fieldData.projFermionValue i)).comp
+  refine jetPi_hom_ext (fun i => (fieldData.fermion i).V) fun i => ?_
+  have h1 : (LinearMap.lTensor JetRing (fieldData.projFermionField 3 fieldData_fermion_massWeight i)).comp
       (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap)
       = LinearMap.lTensor JetRing (fermionProj i) := by
     rw [← LinearMap.lTensor_comp]
     rfl
-  rw [← LinearMap.comp_assoc, h1, lTensor_fermionProj_repJetGaugeGroupI i U,
-    ← LinearMap.comp_assoc,
-    GaugeFieldData.lTensor_projFermionValue_repJetFermionModule i U,
-    LinearMap.comp_assoc, h1]
+  refine LinearMap.ext fun x => ?_
+  have e1 := LinearMap.congr_fun h1 (fermionMatterField.repJet U x)
+  have e2 := LinearMap.congr_fun (lTensor_fermionProj_repJetGaugeGroupI i U) x
+  have e3 := LinearMap.congr_fun
+    (GaugeFieldData.lTensor_projFermionValue_repJetFermionModule i U)
+    (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap x)
+  have e4 := LinearMap.congr_fun h1 x
+  simp only [LinearMap.comp_apply] at e1 e2 e3 e4
+  -- `show` puts the goal in applied form up to defeq, which `simp only` cannot reach here
+  show (LinearMap.lTensor JetRing
+        (fieldData.projFermionField 3 fieldData_fermion_massWeight i))
+      ((LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap)
+        (fermionMatterField.repJet U x))
+    = (LinearMap.lTensor JetRing
+        (fieldData.projFermionField 3 fieldData_fermion_massWeight i))
+      (((fieldData.fermionMatterField 3 fieldData_fermion_massWeight).repJet U)
+        ((LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap) x))
+  exact e1.trans (e2.trans ((congrArg _ e4).symm.trans e3.symm))
 
 /-- The relabelling of the Higgs is equivariant for the jet gauge action. There is one
   bosonic species, and reading it off undoes the relabelling, so both sides are the Higgs
@@ -182,20 +196,34 @@ lemma lTensor_fermionSpaceEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
   exactly the Higgs representation. -/
 lemma lTensor_higgsModuleEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
     (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap).comp
-        (HiggsVec.repJetGaugeGroupI U)
-      = (fieldData.repJetBosonModule U).comp
+        (HiggsVec.matterField.repJet U)
+      = ((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U).comp
         (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) := by
-  refine jetPi_hom_ext fieldData.BosonValue fun j => LinearMap.ext fun z => ?_
-  have h1 : ∀ w : JetRing ⊗[ℂ] HiggsVec,
-      LinearMap.lTensor JetRing (fieldData.projBosonValue j)
+  refine jetPi_hom_ext (fun j => (fieldData.boson j).V) fun j => LinearMap.ext fun z => ?_
+  have h1 : ∀ w : JetRing ⊗[ℂ] HiggsVec.matterField.V,
+      LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
         (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap w) = w := fun w => by
     induction w using TensorProduct.induction_on with
     | zero => rw [map_zero, map_zero]; rfl
     | tmul f v => rfl
     | add a b ha hb => rw [map_add, map_add, ha, hb]; rfl
-  simp only [LinearMap.comp_apply, h1]
-  rw [← LinearMap.comp_apply,
-    GaugeFieldData.lTensor_projBosonValue_repJetBosonModule j U, LinearMap.comp_apply, h1]
+  -- `show` puts the goal in applied form up to defeq, which `simp only` cannot reach here
+  show LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+      ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap)
+        (HiggsVec.matterField.repJet U z))
+    = LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+      (((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U)
+        ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z))
+  have e3 : LinearMap.lTensor JetRing
+        (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+        (((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U)
+          ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z))
+      = ((fieldData.boson j).repJet U)
+        (LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+          ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z)) :=
+    LinearMap.congr_fun (GaugeFieldData.lTensor_projBosonValue_repJetBosonModule j U) _
+  rw [h1, e3, h1]
+  -- the one bosonic species is the Higgs, so the two actions are the same
   rfl
 
 /-!
@@ -217,20 +245,19 @@ content.
 lemma fermionGeneratorsEquiv_repLorentzFermion (Λ : SL(2,ℂ))
     (v : fieldData.FermionGenerators) :
     fermionGeneratorsEquiv (fieldData.repLorentzFermion Λ v)
-      = JetComponentSpace.repLorentzGroup FermionSpace.repLorentzGroup Λ
+      = JetComponentSpace.repLorentzGroup fermionMatterField Λ
         (fermionGeneratorsEquiv v) := by
   rw [fermionGeneratorsEquiv, LinearEquiv.trans_apply, LinearEquiv.trans_apply,
     JetComponentSpace.comapEquiv_apply, JetComponentSpace.comapEquiv_apply,
     GaugeFieldData.fermionGeneratorsEquiv_repLorentzFermion]
   exact LinearMap.congr_fun
-    (JetComponentSpace.comap_comp_repLorentzGroup FermionSpace.repLorentzGroup
-      fieldData.repLorentzFermionModule fermionSpaceEquiv.toLinearMap
+    (JetComponentSpace.comap_comp_repLorentzGroup fermionSpaceEquiv.toLinearMap
       fermionSpaceEquiv_comp_repLorentzGroup Λ) _
 
 /-- The composed form of `fermionGeneratorsEquiv_repLorentzFermion`. -/
 lemma fermionGeneratorsEquiv_comp_repLorentzFermion (Λ : SL(2,ℂ)) :
     fermionGeneratorsEquiv.toLinearMap.comp (fieldData.repLorentzFermion Λ)
-      = (JetComponentSpace.repLorentzGroup FermionSpace.repLorentzGroup Λ).comp
+      = (JetComponentSpace.repLorentzGroup fermionMatterField Λ).comp
         fermionGeneratorsEquiv.toLinearMap :=
   LinearMap.ext fun v => fermionGeneratorsEquiv_repLorentzFermion Λ v
 
@@ -241,45 +268,42 @@ lemma fermionGeneratorsEquiv_comp_repLorentzFermion (Λ : SL(2,ℂ)) :
 lemma bosonGeneratorsEquiv_repLorentzBoson (Λ : SL(2,ℂ))
     (w : fieldData.BosonGenerators) :
     bosonGeneratorsEquiv (fieldData.repLorentzBoson Λ w)
-      = JetComponentSpace.repLorentzGroup (Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ
+      = JetComponentSpace.repLorentzGroup HiggsVec.matterField Λ
         (bosonGeneratorsEquiv w) := by
   rw [bosonGeneratorsEquiv, LinearEquiv.trans_apply, LinearEquiv.trans_apply,
     JetComponentSpace.comapEquiv_apply, JetComponentSpace.comapEquiv_apply,
     GaugeFieldData.bosonGeneratorsEquiv_repLorentzBoson]
   exact LinearMap.congr_fun
-    (JetComponentSpace.comap_comp_repLorentzGroup
-      (Representation.trivial ℂ SL(2,ℂ) HiggsVec) fieldData.repLorentzBosonModule
-      higgsModuleEquiv.toLinearMap higgsModuleEquiv_comp_repLorentzGroup Λ) _
+    (JetComponentSpace.comap_comp_repLorentzGroup higgsModuleEquiv.toLinearMap
+      higgsModuleEquiv_comp_repLorentzGroup Λ) _
 
 /-- The composed form of `bosonGeneratorsEquiv_repLorentzBoson`. -/
 lemma bosonGeneratorsEquiv_comp_repLorentzBoson (Λ : SL(2,ℂ)) :
     bosonGeneratorsEquiv.toLinearMap.comp (fieldData.repLorentzBoson Λ)
-      = (JetComponentSpace.repLorentzGroup (Representation.trivial ℂ SL(2,ℂ) HiggsVec)
+      = (JetComponentSpace.repLorentzGroup HiggsVec.matterField
           Λ).comp bosonGeneratorsEquiv.toLinearMap :=
   LinearMap.ext fun w => bosonGeneratorsEquiv_repLorentzBoson Λ w
 
 /-- The inverse form of `fermionGeneratorsEquiv_repLorentzFermion`. -/
 lemma fermionGeneratorsEquiv_symm_repLorentzGroup (Λ : SL(2,ℂ))
-    (w : JetComponentSpace FermionSpace) :
+    (w : JetComponentSpace fermionMatterField) :
     fermionGeneratorsEquiv.symm
-        (JetComponentSpace.repLorentzGroup FermionSpace.repLorentzGroup Λ w)
+        (JetComponentSpace.repLorentzGroup fermionMatterField Λ w)
       = fieldData.repLorentzFermion Λ (fermionGeneratorsEquiv.symm w) :=
   fermionGeneratorsEquiv.injective <|
     (fermionGeneratorsEquiv.apply_symm_apply _).trans <|
-      ((congrArg (JetComponentSpace.repLorentzGroup FermionSpace.repLorentzGroup Λ)
+      ((congrArg (JetComponentSpace.repLorentzGroup fermionMatterField Λ)
           (fermionGeneratorsEquiv.apply_symm_apply w)).symm.trans
         (fermionGeneratorsEquiv_repLorentzFermion Λ _).symm)
 
 /-- The inverse form of `bosonGeneratorsEquiv_repLorentzBoson`. -/
 lemma bosonGeneratorsEquiv_symm_repLorentzGroup (Λ : SL(2,ℂ))
-    (w : JetComponentSpace HiggsVec) :
-    bosonGeneratorsEquiv.symm (JetComponentSpace.repLorentzGroup
-        (Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ w)
+    (w : JetComponentSpace HiggsVec.matterField) :
+    bosonGeneratorsEquiv.symm (JetComponentSpace.repLorentzGroup HiggsVec.matterField Λ w)
       = fieldData.repLorentzBoson Λ (bosonGeneratorsEquiv.symm w) :=
   bosonGeneratorsEquiv.injective <|
     (bosonGeneratorsEquiv.apply_symm_apply _).trans <|
-      ((congrArg (JetComponentSpace.repLorentzGroup
-            (Representation.trivial ℂ SL(2,ℂ) HiggsVec) Λ)
+      ((congrArg (JetComponentSpace.repLorentzGroup HiggsVec.matterField Λ)
           (bosonGeneratorsEquiv.apply_symm_apply w)).symm.trans
         (bosonGeneratorsEquiv_repLorentzBoson Λ _).symm)
 
@@ -302,26 +326,21 @@ consume.
 lemma fermionGeneratorsEquiv_repJetFermion (U : JetGaugeGroupI)
     (v : fieldData.FermionGenerators) :
     fermionGeneratorsEquiv (fieldData.repJetFermion U v)
-      = JetComponentSpace.repJet FermionSpace.repJetGaugeGroupI
-        FermionSpace.repJetGaugeGroupI_smul U (fermionGeneratorsEquiv v) := by
+      = JetComponentSpace.repJet fermionMatterField U (fermionGeneratorsEquiv v) := by
   rw [fermionGeneratorsEquiv, LinearEquiv.trans_apply, LinearEquiv.trans_apply,
     JetComponentSpace.comapEquiv_apply, JetComponentSpace.comapEquiv_apply,
-    GaugeFieldData.fermionGeneratorsEquiv_repJetFermion U v]
+    GaugeFieldData.fermionGeneratorsEquiv_repJetFermion 3 fieldData_fermion_massWeight U v]
   exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repJet
-    FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul
-    fieldData.repJetFermionModule GaugeFieldData.repJetFermionModule_smul
     fermionSpaceEquiv.toLinearMap lTensor_fermionSpaceEquiv_repJetGaugeGroupI U) _
 
 /-- The inverse form of `fermionGeneratorsEquiv_repJetFermion`. -/
 lemma fermionGeneratorsEquiv_symm_repJet (U : JetGaugeGroupI)
-    (w : JetComponentSpace FermionSpace) :
-    fermionGeneratorsEquiv.symm (JetComponentSpace.repJet FermionSpace.repJetGaugeGroupI
-        FermionSpace.repJetGaugeGroupI_smul U w)
+    (w : JetComponentSpace fermionMatterField) :
+    fermionGeneratorsEquiv.symm (JetComponentSpace.repJet fermionMatterField U w)
       = fieldData.repJetFermion U (fermionGeneratorsEquiv.symm w) :=
   fermionGeneratorsEquiv.injective <|
     (fermionGeneratorsEquiv.apply_symm_apply _).trans <|
-      ((congrArg (JetComponentSpace.repJet FermionSpace.repJetGaugeGroupI
-            FermionSpace.repJetGaugeGroupI_smul U)
+      ((congrArg (JetComponentSpace.repJet fermionMatterField U)
           (fermionGeneratorsEquiv.apply_symm_apply w)).symm.trans
         (fermionGeneratorsEquiv_repJetFermion U _).symm)
 
@@ -330,26 +349,21 @@ lemma fermionGeneratorsEquiv_symm_repJet (U : JetGaugeGroupI)
 lemma bosonGeneratorsEquiv_repJetBoson (U : JetGaugeGroupI)
     (v : fieldData.BosonGenerators) :
     bosonGeneratorsEquiv (fieldData.repJetBoson U v)
-      = JetComponentSpace.repJet HiggsVec.repJetGaugeGroupI
-        HiggsVec.repJetGaugeGroupI_smul U (bosonGeneratorsEquiv v) := by
+      = JetComponentSpace.repJet HiggsVec.matterField U (bosonGeneratorsEquiv v) := by
   rw [bosonGeneratorsEquiv, LinearEquiv.trans_apply, LinearEquiv.trans_apply,
     JetComponentSpace.comapEquiv_apply, JetComponentSpace.comapEquiv_apply,
-    GaugeFieldData.bosonGeneratorsEquiv_repJetBoson U v]
+    GaugeFieldData.bosonGeneratorsEquiv_repJetBoson 2 fieldData_boson_massWeight U v]
   exact LinearMap.congr_fun (JetComponentSpace.comap_comp_repJet
-    HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul
-    fieldData.repJetBosonModule GaugeFieldData.repJetBosonModule_smul
     higgsModuleEquiv.toLinearMap lTensor_higgsModuleEquiv_repJetGaugeGroupI U) _
 
 /-- The inverse form of `bosonGeneratorsEquiv_repJetBoson`. -/
 lemma bosonGeneratorsEquiv_symm_repJet (U : JetGaugeGroupI)
-    (w : JetComponentSpace HiggsVec) :
-    bosonGeneratorsEquiv.symm (JetComponentSpace.repJet HiggsVec.repJetGaugeGroupI
-        HiggsVec.repJetGaugeGroupI_smul U w)
+    (w : JetComponentSpace HiggsVec.matterField) :
+    bosonGeneratorsEquiv.symm (JetComponentSpace.repJet HiggsVec.matterField U w)
       = fieldData.repJetBoson U (bosonGeneratorsEquiv.symm w) :=
   bosonGeneratorsEquiv.injective <|
     (bosonGeneratorsEquiv.apply_symm_apply _).trans <|
-      ((congrArg (JetComponentSpace.repJet HiggsVec.repJetGaugeGroupI
-            HiggsVec.repJetGaugeGroupI_smul U)
+      ((congrArg (JetComponentSpace.repJet HiggsVec.matterField U)
           (bosonGeneratorsEquiv.apply_symm_apply w)).symm.trans
         (bosonGeneratorsEquiv_repJetBoson U _).symm)
 

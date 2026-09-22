@@ -6,7 +6,8 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Prod
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
+public import Physlib.Mathematics.ExteriorAlgebra
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Prod
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
 /-!
@@ -94,7 +95,7 @@ noncomputable def FermionicAlgebra.prodEquiv (M N : MatterField jets)
     (h : M.massWeight = N.massWeight) :
     FermionicAlgebra (M.prod N h) ≃ₐ[ℂ]
       (FermionicAlgebra.evenOdd M ᵍ⊗[ℂ] FermionicAlgebra.evenOdd N) :=
-  (ExteriorAlgebra.congr (JetComponentSpace.prodEquiv M N h)).trans <|
+  (ExteriorAlgebra.mapEquiv (JetComponentSpace.prodEquiv M N h)).trans <|
     (CliffordAlgebra.equivOfIsometry
         (Q₁ := (0 : QuadraticForm ℂ (JetComponentSpace M × JetComponentSpace N)))
         (Q₂ := (0 : QuadraticForm ℂ (JetComponentSpace M)).prod

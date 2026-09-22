@@ -88,7 +88,7 @@ theorem transformsIn_higgsField :
   refine (repJetGaugeGroupI_includeHiggs U _).trans ?_
   refine (congrArg includeHiggs
     (BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
-      HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s)).trans ?_
+      (M := HiggsVec.matterField) U φ s)).trans ?_
   refine (map_multiset_sum includeHiggs _).trans ?_
   refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   exact congrArg Multiset.sum
@@ -105,7 +105,7 @@ theorem transformsIn_conjHiggsField :
   refine (repJetGaugeGroupI_includeHiggs U _).trans ?_
   refine (congrArg includeHiggs
     (BosonicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-      HiggsVec.repJetGaugeGroupI HiggsVec.repJetGaugeGroupI_smul U φ s)).trans ?_
+      (M := HiggsVec.matterField) U φ s)).trans ?_
   refine (map_multiset_sum includeHiggs _).trans ?_
   refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   exact congrArg Multiset.sum
@@ -134,7 +134,7 @@ private lemma transformsIn_species {W : Type} [AddCommGroup W] [Module ℂ W]
   refine (repJetGaugeGroupI_includeFermion U _).trans ?_
   refine (congrArg includeFermion
     (FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofField
-      FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s)).trans ?_
+      (M := fermionMatterField) U _ s)).trans ?_
   refine (map_multiset_sum includeFermion _).trans ?_
   refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun q _ => ?_)
@@ -187,7 +187,7 @@ private lemma transformsIn_conjSpecies {W : Type} [AddCommGroup W] [Module ℂ W
   refine (repJetGaugeGroupI_includeFermion U _).trans ?_
   refine (congrArg includeFermion
     (FermionicAlgebra.repJetGaugeGroupI_iteratedJetDeriv_ofConjField
-      FermionSpace.repJetGaugeGroupI FermionSpace.repJetGaugeGroupI_smul U _ s)).trans ?_
+      (M := fermionMatterField) U _ s)).trans ?_
   refine (map_multiset_sum includeFermion _).trans ?_
   refine (congrArg Multiset.sum (Multiset.map_map _ _ _)).trans ?_
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun q _ => ?_)
@@ -318,15 +318,15 @@ theorem isLorentzDerivTransforms_higgsField :
       (higgsField_eq_includeHiggs m χ).symm
   refine (congrArg (repLorentzGroup Λ) (hstart (List.ofFn l) φ).symm).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
-    (includeHiggs (BosonicAlgebra.ofField φ))).trans ?_
+    (includeHiggs (BosonicAlgebra.ofField (M := HiggsVec.matterField) φ))).trans ?_
   refine Finset.sum_congr rfl fun p _ => ?_
   refine congrArg (fun z : JetAlgebra =>
     (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • z) ?_
   exact (congrArg (fun z : JetAlgebra =>
       Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn p) z)
-    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofField φ)).trans
+    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofField (M := HiggsVec.matterField) φ)).trans
       (congrArg includeHiggs
-        (BosonicAlgebra.repLorentzGroup_ofField _ Λ φ)))).trans
+        (BosonicAlgebra.repLorentzGroup_ofField (M := HiggsVec.matterField) Λ φ)))).trans
     (hstart (List.ofFn p) _)
 
 /-- The conjugate Higgs symbols transform as the derivative symbols of the conjugate of a
@@ -343,15 +343,15 @@ theorem isLorentzDerivTransforms_conjHiggsField :
       (conjHiggsField_eq_includeHiggs m χ).symm
   refine (congrArg (repLorentzGroup Λ) (hstart (List.ofFn l) φ).symm).trans ?_
   refine (Lorentz.IsLorentzDeriv.rep_iteratedD_ofFn jetDeriv_comm Λ l
-    (includeHiggs (BosonicAlgebra.ofConjField φ))).trans ?_
+    (includeHiggs (BosonicAlgebra.ofConjField (M := HiggsVec.matterField) φ))).trans ?_
   refine Finset.sum_congr rfl fun p _ => ?_
   refine congrArg (fun z : JetAlgebra =>
     (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • z) ?_
   exact (congrArg (fun z : JetAlgebra =>
       Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn p) z)
-    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofConjField φ)).trans
+    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofConjField (M := HiggsVec.matterField) φ)).trans
       (congrArg includeHiggs
-        (BosonicAlgebra.repLorentzGroup_ofConjField _ Λ φ)))).trans
+        (BosonicAlgebra.repLorentzGroup_ofConjField (M := HiggsVec.matterField) Λ φ)))).trans
     (hstart (List.ofFn p) _)
 
 /-!

@@ -23,11 +23,12 @@ unrelated group. Fixing `jets` rather than `GJ` alone is what lets the global ga
 `repConstant` below be taken along the *canonical* inclusion `jets.ofConstant`, instead of
 an arbitrary homomorphism supplied by hand.
 
-`MatterField jets` bundles this data. From it the general theory produces, on any field
-algebra `A` of the field (bosonic or fermionic), the jet gauge action, the global gauge
-action, the Lorentz action and the mass-weight scaling — all in
-`Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra`, downstream of the
-component space this file's data indexes. A concrete theory therefore only has to supply a
+`MatterField jets` bundles this data. From it the general theory produces, on the bosonic
+and fermionic algebras of the field, the jet gauge action, the global gauge action, the
+Lorentz action and the mass-weight scaling — in
+`Physlib.Particles.StandardModel.Matter.BosonicAlgebra` and
+`Physlib.Particles.StandardModel.Matter.FermionicAlgebra`, downstream of the component
+space this file's data indexes. A concrete theory therefore only has to supply a
 `MatterField` for each of its fields.
 
 ## ii. Key results

@@ -116,7 +116,7 @@ lemma includeGauge_eq_includeConnection :
 
 /-- A degree-one element of the fermionic sector, included, is a total fermionic generator
   of the field datum, read through the fermionic generator identification. -/
-lemma includeFermion_ι (v : JetComponentSpace FermionSpace) :
+lemma includeFermion_ι (v : JetComponentSpace fermionMatterField) :
     includeFermion (ExteriorAlgebra.ι ℂ v)
       = fieldData.ιFermionTotal (fermionGeneratorsEquiv.symm v) :=
   (includeFermion_apply_equiv (ExteriorAlgebra.ι ℂ v)).trans
@@ -126,10 +126,10 @@ lemma includeFermion_ι (v : JetComponentSpace FermionSpace) :
 
 /-- A degree-one element of the Higgs sector, included, is the generator of the one bosonic
   species of the field datum. -/
-lemma includeHiggs_ι (v : JetComponentSpace HiggsVec) :
-    includeHiggs (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec) v)
+lemma includeHiggs_ι (v : JetComponentSpace HiggsVec.matterField) :
+    includeHiggs (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec.matterField) v)
       = fieldData.ιBoson () v :=
-  (((includeHiggs_apply_equiv (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec) v)).trans
+  (((includeHiggs_apply_equiv (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec.matterField) v)).trans
         (congrArg (fun b : SymmetricAlgebra ℂ fieldData.BosonGenerators =>
           fieldData.includeBoson b) (higgsAlgebraEquiv_ι v))).trans
       (StandardModel.includeBoson_ι (bosonGeneratorsEquiv.symm v))).trans

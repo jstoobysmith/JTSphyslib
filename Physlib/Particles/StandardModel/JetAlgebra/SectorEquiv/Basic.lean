@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.FieldData
 public import Physlib.Particles.StandardModel.Fermions.JetAlgebra.Basic
+public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Algebra
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
@@ -100,7 +101,8 @@ two.
   product of five three-generation blocks that `FermionSpace` is, rearranged into a
   dependent function on the fifteen species. It is a relabelling: every component of a
   value on one side is a component of the corresponding value on the other. -/
-noncomputable def fermionSpaceEquiv : FermionSpace ≃ₗ[ℂ] fieldData.FermionModule where
+noncomputable def fermionSpaceEquiv :
+    fermionMatterField.V ≃ₗ[ℂ] (fieldData.fermionMatterField 3 fieldData_fermion_massWeight).V where
   toFun v t :=
     match t with
     | .leptonDoublet i => v.1 i
@@ -137,11 +139,13 @@ noncomputable def fermionSpaceEquiv : FermionSpace ≃ₗ[ℂ] fieldData.Fermion
 /-- The projection of the total fermionic target space onto the value space of a species
   of the datum: the relabelling followed by the projection of the module. -/
 noncomputable def fermionProj (t : fieldData.FermionSpecies) :
-    FermionSpace →ₗ[ℂ] fieldData.FermionValue t :=
-  (fieldData.projFermionValue t).comp fermionSpaceEquiv.toLinearMap
+    fermionMatterField.V →ₗ[ℂ] (fieldData.fermion t).V :=
+  (fieldData.projFermionField 3 fieldData_fermion_massWeight t).comp
+    fermionSpaceEquiv.toLinearMap
 
 lemma fermionProj_eq (t : fieldData.FermionSpecies) :
-    fermionProj t = (fieldData.projFermionValue t).comp fermionSpaceEquiv.toLinearMap := rfl
+    fermionProj t = (fieldData.projFermionField 3 fieldData_fermion_massWeight t).comp
+      fermionSpaceEquiv.toLinearMap := rfl
 
 @[simp]
 lemma fermionProj_leptonDoublet (i : Fin 3) :
@@ -171,7 +175,8 @@ lemma fermionProj_downSinglet (i : Fin 3) :
 
 /-- The Higgs multiplet is the bosonic module of the datum. There is one bosonic
   species, so the module of bosonic values is the constant family on it. -/
-noncomputable def higgsModuleEquiv : HiggsVec ≃ₗ[ℂ] fieldData.BosonModule where
+noncomputable def higgsModuleEquiv :
+    HiggsVec.matterField.V ≃ₗ[ℂ] (fieldData.bosonMatterField 2 fieldData_boson_massWeight).V where
   toFun v := fun _ => v
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
@@ -181,17 +186,18 @@ noncomputable def higgsModuleEquiv : HiggsVec ≃ₗ[ℂ] fieldData.BosonModule 
 
 /-- Reading off the one species undoes the relabelling. -/
 lemma projBosonValue_comp_higgsModuleEquiv (j : fieldData.BosonSpecies) :
-    (fieldData.projBosonValue j).comp higgsModuleEquiv.toLinearMap = LinearMap.id :=
+    (fieldData.projBosonField 2 fieldData_boson_massWeight j).comp
+        higgsModuleEquiv.toLinearMap = LinearMap.id :=
   LinearMap.ext fun _ => rfl
 
 /-- The pullback along the relabelling undoes the pullback along the one projection. -/
 lemma comap_projBosonValue_comp_comap_higgsModuleEquiv (j : fieldData.BosonSpecies) :
     (JetComponentSpace.comap higgsModuleEquiv.toLinearMap).comp
-        (JetComponentSpace.comap (fieldData.projBosonValue j))
+        (JetComponentSpace.comap (fieldData.projBosonField 2 fieldData_boson_massWeight j))
       = LinearMap.id :=
   ((JetComponentSpace.comap_comp higgsModuleEquiv.toLinearMap
-        (fieldData.projBosonValue j)).symm.trans
-      (congrArg (fun f : HiggsVec →ₗ[ℂ] fieldData.BosonValue j =>
+        (fieldData.projBosonField 2 fieldData_boson_massWeight j)).symm.trans
+      (congrArg (fun f : HiggsVec.matterField.V →ₗ[ℂ] (fieldData.boson j).V =>
         JetComponentSpace.comap f) (projBosonValue_comp_higgsModuleEquiv j))).trans
     JetComponentSpace.comap_id
 
@@ -211,61 +217,65 @@ by `comapEquiv` to a map *from* the component space of the module *to* that of
   fermionic target space. The generic presentation of the direct sum as the component
   space of the fermionic module, followed by the relabelling of the target space. -/
 noncomputable def fermionGeneratorsEquiv :
-    fieldData.FermionGenerators ≃ₗ[ℂ] JetComponentSpace FermionSpace :=
-  fieldData.fermionGeneratorsEquiv.trans (JetComponentSpace.comapEquiv fermionSpaceEquiv)
+    fieldData.FermionGenerators ≃ₗ[ℂ] JetComponentSpace fermionMatterField :=
+  (fieldData.fermionGeneratorsEquiv 3 fieldData_fermion_massWeight).trans
+    (JetComponentSpace.comapEquiv (M := fermionMatterField)
+      (N := fieldData.fermionMatterField 3 fieldData_fermion_massWeight) fermionSpaceEquiv)
 
 /-- A species sits inside the fermionic generators as the pullback along the projection
   onto that species. -/
 @[simp]
 lemma fermionGeneratorsEquiv_inclFermion (t : fieldData.FermionSpecies)
-    (x : JetComponentSpace (fieldData.FermionValue t)) :
+    (x : JetComponentSpace (fieldData.fermion t)) :
     fermionGeneratorsEquiv (fieldData.inclFermion t x)
       = JetComponentSpace.comap (fermionProj t) x := by
   rw [fermionProj_eq,
     JetComponentSpace.comap_comp fermionSpaceEquiv.toLinearMap
-      (fieldData.projFermionValue t),
+      (fieldData.projFermionField 3 fieldData_fermion_massWeight t),
     fermionGeneratorsEquiv, LinearEquiv.trans_apply,
-    GaugeFieldData.fermionGeneratorsEquiv_inclFermion,
+    GaugeFieldData.fermionGeneratorsEquiv_inclFermion 3 fieldData_fermion_massWeight,
     JetComponentSpace.comapEquiv_apply, LinearMap.comp_apply]
 
 @[simp]
 lemma fermionGeneratorsEquiv_symm_comap (t : fieldData.FermionSpecies)
-    (x : JetComponentSpace (fieldData.FermionValue t)) :
+    (x : JetComponentSpace (fieldData.fermion t)) :
     fermionGeneratorsEquiv.symm (JetComponentSpace.comap (fermionProj t) x)
       = fieldData.inclFermion t x := by
   rw [← fermionGeneratorsEquiv_inclFermion, LinearEquiv.symm_apply_apply]
 
 /-- The second half of a pullback of an unconjugated symbol vanishes. -/
-lemma _root_.JetComponentSpace.comap_snd_of_zero {V W : Type} [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] (f : V →ₗ[ℂ] W)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ W) :
-    (JetComponentSpace.comap f ((x, 0) : JetComponentSpace W)).2 = 0 := by
-  rw [show (JetComponentSpace.comap f ((x, 0) : JetComponentSpace W)).2
+lemma _root_.JetComponentSpace.comap_snd_of_zero {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {M N : MatterField jets}
+    (f : M.V →ₗ[ℂ] N.V) (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) :
+    (JetComponentSpace.comap f ((x, 0) : JetComponentSpace N)).2 = 0 := by
+  rw [show (JetComponentSpace.comap f ((x, 0) : JetComponentSpace N)).2
     = (TensorProduct.map LinearMap.id (Module.Dual.transpose (ConjModule.map f)))
-        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule W)) from rfl, map_zero]
+        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) from rfl, map_zero]
 
 /-- The first half of a pullback of a conjugate symbol vanishes. -/
-lemma _root_.JetComponentSpace.comap_fst_of_zero {V W : Type} [AddCommGroup V] [Module ℂ V]
-    [AddCommGroup W] [Module ℂ W] (f : V →ₗ[ℂ] W)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule W)) :
-    (JetComponentSpace.comap f ((0, y) : JetComponentSpace W)).1 = 0 := by
-  rw [show (JetComponentSpace.comap f ((0, y) : JetComponentSpace W)).1
+lemma _root_.JetComponentSpace.comap_fst_of_zero {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
+    {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
+    {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {M N : MatterField jets}
+    (f : M.V →ₗ[ℂ] N.V) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
+    (JetComponentSpace.comap f ((0, y) : JetComponentSpace N)).1 = 0 := by
+  rw [show (JetComponentSpace.comap f ((0, y) : JetComponentSpace N)).1
     = (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
-        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ W) from rfl, map_zero]
+        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) from rfl, map_zero]
 
 /-- The unconjugated symbol `∂_s ψ_φ` of a species, read on the total target space. -/
 lemma fermionGeneratorsEquiv_symm_basis_tmul (t : fieldData.FermionSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (fieldData.FermionValue t)) :
     fermionGeneratorsEquiv.symm ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
-        Module.Dual.transpose (fermionProj t) φ, 0) : JetComponentSpace FermionSpace)
+        Module.Dual.transpose (fermionProj t) φ, 0) : JetComponentSpace fermionMatterField)
       = fieldData.inclFermion t ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
-          JetComponentSpace (fieldData.FermionValue t)) := by
+          JetComponentSpace (fieldData.fermion t)) := by
   rw [← fermionGeneratorsEquiv_symm_comap t
     ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
-      JetComponentSpace (fieldData.FermionValue t))]
+      JetComponentSpace (fieldData.fermion t))]
   refine congrArg _ (Prod.ext ?_ ?_)
-  · exact (JetComponentSpace.comap_fst_tmul (fermionProj t) _ φ 0).symm
-  · exact (JetComponentSpace.comap_snd_of_zero (fermionProj t) _).symm
+  · exact (JetComponentSpace.comap_fst_tmul (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) _ φ 0).symm
+  · exact (JetComponentSpace.comap_snd_of_zero (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) _).symm
 
 /-- The conjugate symbol `∂_s ψ̄_φ` of a species, read on the total target space. -/
 lemma fermionGeneratorsEquiv_symm_basis_tmul_conj (t : fieldData.FermionSpecies)
@@ -273,34 +283,36 @@ lemma fermionGeneratorsEquiv_symm_basis_tmul_conj (t : fieldData.FermionSpecies)
     (φ : Module.Dual ℂ (ConjModule (fieldData.FermionValue t))) :
     fermionGeneratorsEquiv.symm ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
         Module.Dual.transpose (ConjModule.map (fermionProj t)) φ) :
-          JetComponentSpace FermionSpace)
+          JetComponentSpace fermionMatterField)
       = fieldData.inclFermion t ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
-          JetComponentSpace (fieldData.FermionValue t)) := by
+          JetComponentSpace (fieldData.fermion t)) := by
   rw [← fermionGeneratorsEquiv_symm_comap t
     ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
-      JetComponentSpace (fieldData.FermionValue t))]
+      JetComponentSpace (fieldData.fermion t))]
   refine congrArg _ (Prod.ext ?_ ?_)
-  · exact (JetComponentSpace.comap_fst_of_zero (fermionProj t) _).symm
-  · exact (JetComponentSpace.comap_snd_tmul (fermionProj t) 0 _ φ).symm
+  · exact (JetComponentSpace.comap_fst_of_zero (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) _).symm
+  · exact (JetComponentSpace.comap_snd_tmul (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) 0 _ φ).symm
 
 /-- The bosonic generator space of the datum is the component space of the Higgs.
   There is one bosonic species, so the direct sum has one summand and the relabelling of
   the target space is the identification of a one-element function space with its
   value. -/
 noncomputable def bosonGeneratorsEquiv :
-    fieldData.BosonGenerators ≃ₗ[ℂ] JetComponentSpace HiggsVec :=
-  fieldData.bosonGeneratorsEquiv.trans (JetComponentSpace.comapEquiv higgsModuleEquiv)
+    fieldData.BosonGenerators ≃ₗ[ℂ] JetComponentSpace HiggsVec.matterField :=
+  (fieldData.bosonGeneratorsEquiv 2 fieldData_boson_massWeight).trans
+    (JetComponentSpace.comapEquiv (M := HiggsVec.matterField)
+      (N := fieldData.bosonMatterField 2 fieldData_boson_massWeight) higgsModuleEquiv)
 
 @[simp]
 lemma bosonGeneratorsEquiv_inclBoson (j : fieldData.BosonSpecies)
-    (y : JetComponentSpace (fieldData.BosonValue j)) :
+    (y : JetComponentSpace (fieldData.boson j)) :
     bosonGeneratorsEquiv (fieldData.inclBoson j y) = y := by
   rw [bosonGeneratorsEquiv, LinearEquiv.trans_apply,
-    GaugeFieldData.bosonGeneratorsEquiv_inclBoson, JetComponentSpace.comapEquiv_apply]
+    GaugeFieldData.bosonGeneratorsEquiv_inclBoson 2 fieldData_boson_massWeight, JetComponentSpace.comapEquiv_apply]
   exact LinearMap.congr_fun (comap_projBosonValue_comp_comap_higgsModuleEquiv j) y
 
 @[simp]
-lemma bosonGeneratorsEquiv_symm_apply (y : JetComponentSpace HiggsVec) :
+lemma bosonGeneratorsEquiv_symm_apply (y : JetComponentSpace HiggsVec.matterField) :
     bosonGeneratorsEquiv.symm y = fieldData.inclBoson () y :=
   bosonGeneratorsEquiv.injective
     ((bosonGeneratorsEquiv.apply_symm_apply y).trans
@@ -326,18 +338,18 @@ noncomputable def fermionAlgebraEquiv :
   generator space. -/
 noncomputable def higgsAlgebraEquiv :
     HiggsJetAlgebra ≃ₐ[ℂ] SymmetricAlgebra ℂ fieldData.BosonGenerators :=
-  SymmetricAlgebra.congr (R := ℂ) (M := JetComponentSpace HiggsVec)
+  SymmetricAlgebra.congr (R := ℂ) (M := JetComponentSpace HiggsVec.matterField)
     (N := fieldData.BosonGenerators) bosonGeneratorsEquiv.symm
 
 @[simp]
-lemma fermionAlgebraEquiv_ι (v : JetComponentSpace FermionSpace) :
+lemma fermionAlgebraEquiv_ι (v : JetComponentSpace fermionMatterField) :
     fermionAlgebraEquiv (ExteriorAlgebra.ι ℂ v)
       = ExteriorAlgebra.ι ℂ (fermionGeneratorsEquiv.symm v) :=
   ExteriorAlgebra.map_apply_ι _ v
 
 @[simp]
-lemma higgsAlgebraEquiv_ι (v : JetComponentSpace HiggsVec) :
-    higgsAlgebraEquiv (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec) v)
+lemma higgsAlgebraEquiv_ι (v : JetComponentSpace HiggsVec.matterField) :
+    higgsAlgebraEquiv (SymmetricAlgebra.ι ℂ (JetComponentSpace HiggsVec.matterField) v)
       = SymmetricAlgebra.ι ℂ fieldData.BosonGenerators (bosonGeneratorsEquiv.symm v) :=
   SymmetricAlgebra.congr_apply_ι bosonGeneratorsEquiv.symm v
 
@@ -370,12 +382,12 @@ lemma includeConnection_one_tmul_ι (v : GaugeBoson.JetComponentSpace GaugeAlgeb
 
 /-- The total fermionic generator of a species summand is that species' generator. -/
 lemma ιFermionTotal_inclFermion (t : fieldData.FermionSpecies)
-    (x : JetComponentSpace (fieldData.FermionValue t)) :
+    (x : JetComponentSpace (fieldData.fermion t)) :
     fieldData.ιFermionTotal (fieldData.inclFermion t x) = fieldData.ιFermion t x := rfl
 
 /-- The total bosonic generator of a species summand is that species' generator. -/
 lemma ιBosonTotal_inclBoson (j : fieldData.BosonSpecies)
-    (y : JetComponentSpace (fieldData.BosonValue j)) :
+    (y : JetComponentSpace (fieldData.boson j)) :
     fieldData.ιBosonTotal (fieldData.inclBoson j y) = fieldData.ιBoson j y := rfl
 
 /-!
@@ -409,7 +421,7 @@ lemma fermionGeneratorsEquiv_jetDerivFermion (μ : Fin 1 ⊕ Fin 3)
 
 /-- The inverse form of `fermionGeneratorsEquiv_jetDerivFermion`. -/
 lemma fermionGeneratorsEquiv_symm_jetDeriv (μ : Fin 1 ⊕ Fin 3)
-    (v : JetComponentSpace FermionSpace) :
+    (v : JetComponentSpace fermionMatterField) :
     fermionGeneratorsEquiv.symm (JetComponentSpace.jetDeriv μ v)
       = fieldData.jetDerivFermion μ (fermionGeneratorsEquiv.symm v) :=
   fermionGeneratorsEquiv.injective <|
@@ -431,7 +443,7 @@ lemma bosonGeneratorsEquiv_jetDerivBoson (μ : Fin 1 ⊕ Fin 3)
 
 /-- The inverse form of `bosonGeneratorsEquiv_jetDerivBoson`. -/
 lemma bosonGeneratorsEquiv_symm_jetDeriv (μ : Fin 1 ⊕ Fin 3)
-    (v : JetComponentSpace HiggsVec) :
+    (v : JetComponentSpace HiggsVec.matterField) :
     bosonGeneratorsEquiv.symm (JetComponentSpace.jetDeriv μ v)
       = fieldData.jetDerivBoson μ (bosonGeneratorsEquiv.symm v) :=
   bosonGeneratorsEquiv.injective <|
@@ -446,9 +458,9 @@ lemma bosonGeneratorsEquiv_symm_jetDeriv (μ : Fin 1 ⊕ Fin 3)
   sector and once in general; the identification lets the general theory apply to the
   fermionic factor of the migrated carrier, whose generator space is a direct sum of
   component spaces rather than a single one. -/
-private lemma fermionicAlgebra_jetDeriv_eq {V : Type} [AddCommGroup V] [Module ℂ V]
+private lemma fermionicAlgebra_jetDeriv_eq (M : MatterField localGaugeData)
     (μ : Fin 1 ⊕ Fin 3) :
-    FermionicAlgebra.jetDeriv (V := V) μ
+    FermionicAlgebra.jetDeriv (M := M) μ
       = ExteriorAlgebra.derivationOfLinear (JetComponentSpace.jetDeriv μ) := rfl
 
 /-- The fermionic sector equivalence is a map of differential algebras: the exterior
@@ -458,7 +470,7 @@ lemma fermionAlgebraEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (f : FermionJetAlgebra
     fermionAlgebraEquiv (FermionicAlgebra.jetDeriv μ f)
       = ExteriorAlgebra.derivationOfLinear (fieldData.jetDerivFermion μ)
           (fermionAlgebraEquiv f) := by
-  rw [fermionicAlgebra_jetDeriv_eq]
+  rw [fermionicAlgebra_jetDeriv_eq fermionMatterField]
   exact ExteriorAlgebra.algHom_derivationOfLinear fermionAlgebraEquiv.toAlgHom
     (fun x => fermionAlgebraEquiv_ι x) (fun x => fermionGeneratorsEquiv_symm_jetDeriv μ x) f
 

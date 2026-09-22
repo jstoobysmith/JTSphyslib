@@ -32,16 +32,6 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.Sect
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalCovFieldAlgebra.SectorRealization
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.CovariantDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.ConstantAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.GaugeAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDerivClass
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.JetDerivConstruction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.LorentzAction
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.MassDim
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Prod
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.FieldAlgebra.Statistics
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeSector
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.GaugeSectorRealization
@@ -67,7 +57,6 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeriv
-public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.FieldAlgebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
