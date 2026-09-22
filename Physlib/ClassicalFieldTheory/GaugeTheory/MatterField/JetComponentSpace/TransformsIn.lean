@@ -77,7 +77,7 @@ variable {G : Type} [Group G]
 /-- The iterated formal derivative of a `V`-valued jet acts on the jet-ring factor of a
   pure tensor: the value factor carries no spacetime dependence. -/
 lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) (v : V) :
-    jetIteratedDeriv x (f ⊗ₜ[ℂ] v) = (x.foldl (fun h ρ => pderiv ℂ ρ h) f) ⊗ₜ[ℂ] v := by
+    jetIteratedDeriv x (f ⊗ₜ[ℂ] v) = (x.foldl (fun h ρ => pderiv ρ h) f) ⊗ₜ[ℂ] v := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rw [jetIteratedDeriv_zero]; rfl
   | cons μ t ih =>
@@ -105,7 +105,7 @@ noncomputable def jetCoeffAt (x : Multiset (Fin 1 ⊕ Fin 3)) :
 @[simp]
 lemma jetCoeffAt_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) (T : Module.End ℂ V) :
     jetCoeffAt x (f ⊗ₜ[ℂ] T)
-      = constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f) • T := by
+      = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) • T := by
   rw [jetCoeffAt, LinearMap.comp_apply, jetIteratedDeriv_tmul, jetEval_tmul]
 
 /-- The Taylor coefficient of a jet of endomorphisms, evaluated at a vector, is the Taylor

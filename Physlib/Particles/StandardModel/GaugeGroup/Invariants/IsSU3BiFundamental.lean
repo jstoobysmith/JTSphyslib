@@ -112,7 +112,7 @@ lemma su3Centre_apply (a b : Fin 3) :
 lemma map_su3Centre {f : B →ₗ[ℂ] B} (hf : IsSU3BiFundamentalMat su3Centre f T)
     (l : Fin 2 → Fin 3) : f (T l) = su3Omega ^ 2 • T l := by
   rw [hf l, Finset.sum_eq_single l]
-  · rw [Fin.prod_univ_two, su3Centre_apply, su3Centre_apply, if_pos rfl, if_pos rfl, sq]
+  · rw [Fin.prod_univ_two, su3Centre_apply, su3Centre_apply, ite_eq_left rfl, ite_eq_left rfl, sq]
   · intro a _ hal
     have h : a 0 ≠ l 0 ∨ a 1 ≠ l 1 := by
       by_contra hc
@@ -120,8 +120,8 @@ lemma map_su3Centre {f : B →ₗ[ℂ] B} (hf : IsSU3BiFundamentalMat su3Centre 
       exact hal (funext fun j => by fin_cases j <;> simp [hc.1, hc.2])
     rw [Fin.prod_univ_two, su3Centre_apply, su3Centre_apply]
     rcases h with h | h
-    · rw [if_neg h, zero_mul, zero_smul]
-    · rw [if_neg h, mul_zero, zero_smul]
+    · rw [ite_eq_right h, zero_mul, zero_smul]
+    · rw [ite_eq_right h, mul_zero, zero_smul]
   · intro hl
     exact absurd (Finset.mem_univ l) hl
 

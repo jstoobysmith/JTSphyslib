@@ -93,21 +93,21 @@ noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂
   deriv_coord μ ν a := by
     by_cases h : μ = ν
     · subst h
-      rw [if_pos rfl]
+      rw [ite_eq_left rfl]
       refine Prod.ext ?_ ?_
       · have := j₁.deriv_coord μ μ a.1
-        rw [if_pos rfl] at this
+        rw [ite_eq_left rfl] at this
         exact this
       · have := j₂.deriv_coord μ μ a.2
-        rw [if_pos rfl] at this
+        rw [ite_eq_left rfl] at this
         exact this
-    · rw [if_neg h, add_zero]
+    · rw [ite_eq_right h, add_zero]
       refine Prod.ext ?_ ?_
       · have := j₁.deriv_coord μ ν a.1
-        rw [if_neg h, add_zero] at this
+        rw [ite_eq_right h, add_zero] at this
         exact this
       · have := j₂.deriv_coord μ ν a.2
-        rw [if_neg h, add_zero] at this
+        rw [ite_eq_right h, add_zero] at this
         exact this
   evalLie_coord μ a := Prod.ext (j₁.evalLie_coord μ a.1) (j₂.evalLie_coord μ a.2)
   coord_lie μ a b := Prod.ext (j₁.coord_lie μ a.1 b.1) (j₂.coord_lie μ a.2 b.2)

@@ -204,26 +204,26 @@ and give some properties of it related to the Maurer–Cartan form.
   a product of matrices. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
-  (U.1.1.map (pderiv ℂ μ), U.2.1.1.map (pderiv ℂ μ), pderiv ℂ μ U.2.2.1)
+  (U.1.1.map (pderiv μ), U.2.1.1.map (pderiv μ), pderiv μ U.2.2.1)
 
 
 lemma deriv_mul (μ : Fin 1 ⊕ Fin 3) (U V : JetGaugeGroupI) :
     deriv μ (U * V) = deriv μ U * V.toVal + U.toVal * deriv μ V := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show (U.1.1 * V.1.1).map (pderiv ℂ μ) =
-      U.1.1.map (pderiv ℂ μ) * V.1.1 + U.1.1 * V.1.1.map (pderiv ℂ μ)
+  · show (U.1.1 * V.1.1).map (pderiv μ) =
+      U.1.1.map (pderiv μ) * V.1.1 + U.1.1 * V.1.1.map (pderiv μ)
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
       Derivation.leibniz, smul_eq_mul]
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
-  · show (U.2.1.1 * V.2.1.1).map (pderiv ℂ μ) =
-      U.2.1.1.map (pderiv ℂ μ) * V.2.1.1 + U.2.1.1 * V.2.1.1.map (pderiv ℂ μ)
+  · show (U.2.1.1 * V.2.1.1).map (pderiv μ) =
+      U.2.1.1.map (pderiv μ) * V.2.1.1 + U.2.1.1 * V.2.1.1.map (pderiv μ)
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
       Derivation.leibniz, smul_eq_mul]
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
-  · show pderiv ℂ μ (U.2.2.1 * V.2.2.1) =
-      pderiv ℂ μ U.2.2.1 * V.2.2.1 + U.2.2.1 * pderiv ℂ μ V.2.2.1
+  · show pderiv μ (U.2.2.1 * V.2.2.1) =
+      pderiv μ U.2.2.1 * V.2.2.1 + U.2.2.1 * pderiv μ V.2.2.1
     rw [Derivation.leibniz]
     simp only [smul_eq_mul]
     ring
@@ -231,27 +231,27 @@ lemma deriv_mul (μ : Fin 1 ⊕ Fin 3) (U V : JetGaugeGroupI) :
 @[simp]
 lemma deriv_one (μ : Fin 1 ⊕ Fin 3) : deriv μ (1 : JetGaugeGroupI) = 0 := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show (1 : Matrix (Fin 3) (Fin 3) JetRing).map (pderiv ℂ μ) = 0
+  · show (1 : Matrix (Fin 3) (Fin 3) JetRing).map (pderiv μ) = 0
     ext i j : 1
-    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ μ)]
-  · show (1 : Matrix (Fin 2) (Fin 2) JetRing).map (pderiv ℂ μ) = 0
+    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)]
+  · show (1 : Matrix (Fin 2) (Fin 2) JetRing).map (pderiv μ) = 0
     ext i j : 1
-    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ μ)]
-  · show pderiv ℂ μ (1 : JetRing) = 0
+    simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)]
+  · show pderiv μ (1 : JetRing) = 0
     exact pderiv_one
 
 lemma star_deriv (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     star (deriv μ U) = deriv μ (star U) := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show star (U.1.1.map (pderiv ℂ μ)) = (star U.1.1).map (pderiv ℂ μ)
+  · show star (U.1.1.map (pderiv μ)) = (star U.1.1).map (pderiv μ)
     ext i j : 1
     simp only [Matrix.star_apply, Matrix.map_apply]
     exact (JetRing.pderiv_star μ (U.1.1 j i)).symm
-  · show star (U.2.1.1.map (pderiv ℂ μ)) = (star U.2.1.1).map (pderiv ℂ μ)
+  · show star (U.2.1.1.map (pderiv μ)) = (star U.2.1.1).map (pderiv μ)
     ext i j : 1
     simp only [Matrix.star_apply, Matrix.map_apply]
     exact (JetRing.pderiv_star μ (U.2.1.1 j i)).symm
-  · show star (pderiv ℂ μ U.2.2.1) = pderiv ℂ μ (star U.2.2.1)
+  · show star (pderiv μ U.2.2.1) = pderiv μ (star U.2.2.1)
     exact (JetRing.pderiv_star μ U.2.2.1).symm
 
 lemma deriv_mul_inv_toVal_SU3_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
@@ -267,7 +267,7 @@ lemma deriv_mul_inv_toVal_SU3_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGrou
           rw [Matrix.mul_adjugate, hdet, one_smul, mul_one]
       _ = star A * A * A.adjugate := by rw [mul_assoc]
       _ = A.adjugate := by rw [h1, one_mul]
-  have jacobi : (A.map (pderiv ℂ μ) * A.adjugate).trace = pderiv ℂ μ A.det := by
+  have jacobi : (A.map (pderiv μ) * A.adjugate).trace = pderiv μ A.det := by
     rw [Matrix.det_fin_three]
     simp only [Matrix.trace_fin_three, Matrix.mul_apply, Fin.sum_univ_three,
       Matrix.map_apply, Matrix.adjugate_fin_three, Matrix.of_apply, Matrix.cons_val',
@@ -276,7 +276,7 @@ lemma deriv_mul_inv_toVal_SU3_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGrou
       map_sub, map_add, Derivation.leibniz, smul_eq_mul]
     ring
   rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 =
-      Complex.I • (A.map (pderiv ℂ μ) * star A) from rfl,
+      Complex.I • (A.map (pderiv μ) * star A) from rfl,
     Matrix.trace_smul, hadj, jacobi, hdet, pderiv_one, smul_zero]
 
 lemma deriv_mul_inv_toVal_SU2_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
@@ -292,14 +292,14 @@ lemma deriv_mul_inv_toVal_SU2_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGrou
           rw [Matrix.mul_adjugate, hdet, one_smul, mul_one]
       _ = star A * A * A.adjugate := by rw [mul_assoc]
       _ = A.adjugate := by rw [h1, one_mul]
-  have jacobi : (A.map (pderiv ℂ μ) * A.adjugate).trace = pderiv ℂ μ A.det := by
+  have jacobi : (A.map (pderiv μ) * A.adjugate).trace = pderiv μ A.det := by
     rw [Matrix.det_fin_two]
     simp only [adjugate_fin_two, trace_fin_two, Matrix.mul_apply, map_apply, of_apply, cons_val',
       cons_val_zero, empty_val', cons_val_fin_one, Fin.sum_univ_two, cons_val_one, map_sub,
       Derivation.leibniz, smul_eq_mul]
     ring
   rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 =
-      Complex.I • (A.map (pderiv ℂ μ) * star A) from rfl,
+      Complex.I • (A.map (pderiv μ) * star A) from rfl,
     Matrix.trace_smul, hadj, jacobi, hdet, pderiv_one, smul_zero]
 
 lemma star_deriv_mul_inv_toVal_SU3 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
@@ -309,15 +309,15 @@ lemma star_deriv_mul_inv_toVal_SU3 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
-  have hq : A * ((star A).map (pderiv ℂ μ)) = -(A.map (pderiv ℂ μ) * star A) :=
+  have hq : A * ((star A).map (pderiv μ)) = -(A.map (pderiv μ) * star A) :=
     congrArg (fun p => p.1) (eq_neg_of_add_eq_zero_right h.symm)
-  have hstarmap : star (A.map (pderiv ℂ μ)) = (star A).map (pderiv ℂ μ) :=
+  have hstarmap : star (A.map (pderiv μ)) = (star A).map (pderiv μ) :=
     congrArg (fun p => p.1) (star_deriv μ U)
   -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 =
-      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv ℂ μ) * star A) := by
+      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv μ) * star A) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 =
-        Complex.I • (A.map (pderiv ℂ μ) * star A) from rfl]
+        Complex.I • (A.map (pderiv μ) * star A) from rfl]
     ext i j
     simp only [Matrix.smul_apply, smul_eq_mul, Algebra.smul_def,
       MvPowerSeries.algebraMap_apply]
@@ -333,15 +333,15 @@ lemma star_deriv_mul_inv_toVal_SU2 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
-  have hq : A * ((star A).map (pderiv ℂ μ)) = -(A.map (pderiv ℂ μ) * star A) :=
+  have hq : A * ((star A).map (pderiv μ)) = -(A.map (pderiv μ) * star A) :=
     congrArg (fun p => p.2.1) (eq_neg_of_add_eq_zero_right h.symm)
-  have hstarmap : star (A.map (pderiv ℂ μ)) = (star A).map (pderiv ℂ μ) :=
+  have hstarmap : star (A.map (pderiv μ)) = (star A).map (pderiv μ) :=
     congrArg (fun p => p.2.1) (star_deriv μ U)
   -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 =
-      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv ℂ μ) * star A) := by
+      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv μ) * star A) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 =
-        Complex.I • (A.map (pderiv ℂ μ) * star A) from rfl]
+        Complex.I • (A.map (pderiv μ) * star A) from rfl]
     ext i j
     simp only [Matrix.smul_apply, smul_eq_mul, Algebra.smul_def,
       MvPowerSeries.algebraMap_apply]
@@ -357,13 +357,13 @@ lemma star_deriv_mul_inv_toVal_U1 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
-  have hq : pderiv ℂ μ (star u) * u = -(pderiv ℂ μ u * star u) :=
+  have hq : pderiv μ (star u) * u = -(pderiv μ u * star u) :=
     (mul_comm _ _).trans (congrArg (fun p => p.2.2) (eq_neg_of_add_eq_zero_right h.symm))
   -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2 =
-      (MvPowerSeries.C Complex.I : JetRing) * (pderiv ℂ μ u * star u) := by
+      (MvPowerSeries.C Complex.I : JetRing) * (pderiv μ u * star u) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2 =
-        Complex.I • (pderiv ℂ μ u * star u) from rfl,
+        Complex.I • (pderiv μ u * star u) from rfl,
       Algebra.smul_def, MvPowerSeries.algebraMap_apply]
     simp
   -- the star flips `i` to `-i` and the differentiated unitarity flips the product back
@@ -435,13 +435,13 @@ lemma eval_ofConstant (g : GaugeGroupI) : eval (ofConstant g) = g := by
 lemma deriv_ofConstant (μ : Fin 1 ⊕ Fin 3) (U₀ : GaugeGroupI) :
     deriv μ (JetGaugeGroupI.ofConstant U₀) = 0 := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show ((C : ℂ →+* JetRing).mapMatrix U₀.1.1).map (pderiv ℂ μ) = 0
+  · show ((C : ℂ →+* JetRing).mapMatrix U₀.1.1).map (pderiv μ) = 0
     ext i j : 1
     simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
-  · show ((C : ℂ →+* JetRing).mapMatrix U₀.2.1.1).map (pderiv ℂ μ) = 0
+  · show ((C : ℂ →+* JetRing).mapMatrix U₀.2.1.1).map (pderiv μ) = 0
     ext i j : 1
     simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
-  · show pderiv ℂ μ (C U₀.2.2.1 : JetRing) = 0
+  · show pderiv μ (C U₀.2.2.1 : JetRing) = 0
     simp [pderiv_C]
 
 end JetGaugeGroupI

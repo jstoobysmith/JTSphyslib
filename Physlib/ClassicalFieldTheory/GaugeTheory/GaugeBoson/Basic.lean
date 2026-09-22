@@ -83,7 +83,8 @@ def valEquiv : (GaugeBoson 𝔤) ≃ Lorentz.CoVector ⊗[ℝ] 𝔤 where
 
 noncomputable instance : AddCommGroup (GaugeBoson 𝔤) := Equiv.addCommGroup (valEquiv 𝔤)
 
-noncomputable instance : Module ℝ (GaugeBoson 𝔤) := Equiv.module ℝ (valEquiv 𝔤)
+noncomputable instance : Module ℝ (GaugeBoson 𝔤) :=
+  AddEquiv.module ℝ { valEquiv 𝔤 with map_add' _ _ := rfl }
 
 variable (𝔤) in
 /-- The linear identification with the underlying tensor product. -/

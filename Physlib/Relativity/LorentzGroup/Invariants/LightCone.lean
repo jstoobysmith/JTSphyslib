@@ -234,9 +234,9 @@ lemma transitionZ_succ (i : Fin 3) {n : ℕ} (d e : Fin (n + 1) → Fin 1 ⊕ Fi
     show lightConeWeight 2 = 0 from rfl, show lightConeWeight 3 = 0 from rfl,
     sub_neg_eq_add, sub_zero]
   by_cases h : InBoostPlane i (d 0)
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     simp [slotZ, lightConeCoeffInvZ_eq_zero_of_inBoostPlane h]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simp [slotZ, lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane h]
     ring
 

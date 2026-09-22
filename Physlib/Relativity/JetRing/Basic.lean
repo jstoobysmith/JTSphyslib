@@ -162,7 +162,7 @@ lemma constantCoeffₗ_apply (f : JetRing) : constantCoeffₗ f = constantCoeff 
 
 /-- The formal partial derivative commutes with the coefficientwise star. -/
 lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
-    pderiv ℂ ν (star f) = star (pderiv ℂ ν f) := by
+    pderiv ν (star f) = star (pderiv ν f) := by
   ext s
   rw [coeff_pderiv, coeff_star, coeff_star, coeff_pderiv, star_mul']
   congr 1
@@ -170,7 +170,7 @@ lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
 
 /-- Formal partial derivatives commute. -/
 lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
-    pderiv ℂ μ (pderiv ℂ ν f) = pderiv ℂ ν (pderiv ℂ μ f) := by
+    pderiv μ (pderiv ν f) = pderiv ν (pderiv μ f) := by
   classical
   ext s
   rw [coeff_pderiv, coeff_pderiv, coeff_pderiv, coeff_pderiv,
@@ -187,13 +187,13 @@ lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
 /-- Application of `pderiv` is right-commutative, since formal partial derivatives
   commute (`JetRing.pderiv_comm`). This allows iterating them over a `Multiset` of
   directions. -/
-instance : RightCommutative (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => pderiv ℂ μ f) where
+instance : RightCommutative (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => pderiv μ f) where
   right_comm f μ ν := JetRing.pderiv_comm ν μ f
 
 /-- Iterated formal derivatives over a multiset commute with a single derivative. -/
 lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (f : JetRing) :
-    s.foldl (fun f ρ => pderiv ℂ ρ f) (pderiv ℂ μ f) =
-      pderiv ℂ μ (s.foldl (fun f ρ => pderiv ℂ ρ f) f) := by
+    s.foldl (fun f ρ => pderiv ρ f) (pderiv μ f) =
+      pderiv μ (s.foldl (fun f ρ => pderiv ρ f) f) := by
   induction s using Multiset.induction_on generalizing f with
   | empty => simp
   | cons a t ih =>
@@ -207,8 +207,8 @@ lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3
 
 /-- The iterated formal derivative is additive. -/
 lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (f + g)
-      = s.foldl (fun h ρ => pderiv ℂ ρ h) f + s.foldl (fun h ρ => pderiv ℂ ρ h) g := by
+    s.foldl (fun h ρ => pderiv ρ h) (f + g)
+      = s.foldl (fun h ρ => pderiv ρ h) f + s.foldl (fun h ρ => pderiv ρ h) g := by
   induction s using Multiset.induction_on generalizing f g with
   | empty => rfl
   | cons μ t ih => rw [Multiset.foldl_cons, Multiset.foldl_cons, Multiset.foldl_cons,
@@ -217,7 +217,7 @@ lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
 /-- The iterated formal derivative of the zero jet vanishes. -/
 @[simp]
 lemma foldl_pderiv_zero (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (0 : JetRing) = 0 := by
+    s.foldl (fun h ρ => pderiv ρ h) (0 : JetRing) = 0 := by
   induction s using Multiset.induction_on with
   | empty => rfl
   | cons μ t ih => rw [Multiset.foldl_cons, map_zero, ih]
@@ -225,8 +225,8 @@ lemma foldl_pderiv_zero (s : Multiset (Fin 1 ⊕ Fin 3)) :
 /-- The iterated formal derivative of a finite sum. -/
 lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset κ)
     (f : κ → JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (∑ k ∈ t, f k)
-      = ∑ k ∈ t, s.foldl (fun h ρ => pderiv ℂ ρ h) (f k) := by
+    s.foldl (fun h ρ => pderiv ρ h) (∑ k ∈ t, f k)
+      = ∑ k ∈ t, s.foldl (fun h ρ => pderiv ρ h) (f k) := by
   classical
   induction t using Finset.induction_on with
   | empty => simp
@@ -237,30 +237,30 @@ lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset
   the derivative of a product distributes over the antidiagonal of the multiset of
   directions. -/
 lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (f * g)
+    s.foldl (fun h ρ => pderiv ρ h) (f * g)
       = (s.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ℂ ρ h) g).sum := by
+          p.1.foldl (fun h ρ => pderiv ρ h) f *
+            p.2.foldl (fun h ρ => pderiv ρ h) g).sum := by
   induction s using Multiset.induction_on generalizing f g with
   | empty => simp [Multiset.antidiagonal_zero]
   | cons μ t ih =>
     rw [Multiset.foldl_cons,
-      show pderiv ℂ μ (f * g) = pderiv ℂ μ f * g + f * pderiv ℂ μ g from by
+      show pderiv μ (f * g) = pderiv μ f * g + f * pderiv μ g from by
         rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g],
       foldl_pderiv_add, ih, ih,
       Multiset.map_congr rfl (fun p hp => by
-        rw [show p.1.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ f)
-            = (μ ::ₘ p.1).foldl (fun h ρ => pderiv ℂ ρ h) f from
+        rw [show p.1.foldl (fun h ρ => pderiv ρ h) (pderiv μ f)
+            = (μ ::ₘ p.1).foldl (fun h ρ => pderiv ρ h) f from
           (Multiset.foldl_cons _ _ _ _).symm]),
       show (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ g)).sum
+          p.1.foldl (fun h ρ => pderiv ρ h) f *
+            p.2.foldl (fun h ρ => pderiv ρ h) (pderiv μ g)).sum
         = (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ℂ ρ h) f *
-            (μ ::ₘ p.2).foldl (fun h ρ => pderiv ℂ ρ h) g).sum from
+          p.1.foldl (fun h ρ => pderiv ρ h) f *
+            (μ ::ₘ p.2).foldl (fun h ρ => pderiv ρ h) g).sum from
         congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
-          rw [show (μ ::ₘ p.2).foldl (fun h ρ => pderiv ℂ ρ h) g
-            = p.2.foldl (fun h ρ => pderiv ℂ ρ h) (pderiv ℂ μ g) from
+          rw [show (μ ::ₘ p.2).foldl (fun h ρ => pderiv ρ h) g
+            = p.2.foldl (fun h ρ => pderiv ρ h) (pderiv μ g) from
             Multiset.foldl_cons _ _ _ _])]
     simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
       Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
@@ -269,17 +269,17 @@ lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
 /-- The base-point Taylor coefficient of a product: the convolution of the base-point
   Taylor coefficients. -/
 lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
-    constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f * g))
+    constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f * g))
       = (s.antidiagonal.map fun p =>
-          constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f) *
-            constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) g)).sum := by
+          constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f) *
+            constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) g)).sum := by
   rw [foldl_pderiv_mul, map_multiset_sum, Multiset.map_map]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => map_mul _ _ _)
 
 /-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
   directions. -/
 lemma foldl_pderiv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) (c : ℂ) :
-    s.foldl (fun h ρ => pderiv ℂ ρ h) (C c : JetRing) = 0 := by
+    s.foldl (fun h ρ => pderiv ρ h) (C c : JetRing) = 0 := by
   obtain ⟨μ, hμ⟩ := Multiset.exists_mem_of_ne_zero hs
   obtain ⟨t, rfl⟩ := Multiset.exists_cons_of_mem hμ
   rw [Multiset.foldl_cons, pderiv_C, foldl_pderiv_zero]
@@ -297,12 +297,12 @@ noncomputable def truncation (n : ℕ) (f : JetRing) : JetRing :=
 @[simp]
 lemma coeff_truncation_of_le {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
     (h : Finsupp.degree m ≤ n) (f : JetRing) :
-    coeff m (truncation n f) = coeff m f := if_pos h
+    coeff m (truncation n f) = coeff m f := ite_eq_left h
 
 @[simp]
 lemma coeff_truncation_of_gt {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
     (h : n < Finsupp.degree m) (f : JetRing) :
-    coeff m (truncation n f) = 0 := if_neg (not_le.mpr h)
+    coeff m (truncation n f) = 0 := ite_eq_right (not_le.mpr h)
 
 lemma truncation_add (n : ℕ) (f g : JetRing) :
     truncation n (f + g) = truncation n f + truncation n g := by
@@ -366,7 +366,7 @@ lemma truncation_one (n : ℕ) : truncation n (1 : JetRing) = 1 := by
   by_cases hm : Finsupp.degree m ≤ n
   · rw [coeff_truncation_of_le hm]
   · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_one,
-      if_neg (by rintro rfl; simp at hm)]
+      ite_eq_right (by rintro rfl; simp at hm)]
 
 /-- A power series with value `1` and no coefficients in nonzero degree up to `n`
   truncates to `1`. -/
@@ -378,7 +378,7 @@ lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f =
   · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
     rcases eq_or_ne m 0 with rfl | hm0
     · simpa [coeff_zero_eq_constantCoeff] using h0
-    · rw [hf m hm0 hm, coeff_one, if_neg hm0]
+    · rw [hf m hm0 hm, coeff_one, ite_eq_right hm0]
   · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
       JetRing.coeff_truncation_of_gt (not_le.mp hm)]
 
@@ -423,23 +423,23 @@ lemma coeff_X_smul (ρ : Fin 1 ⊕ Fin 3) (f : JetRing) (p : (Fin 1 ⊕ Fin 3) �
 /-- The Euler (radial) operator acts on Taylor coefficients as multiplication by the
   total degree. -/
 lemma coeff_sum_X_smul_pderiv (f : JetRing) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    coeff p (∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f) =
+    coeff p (∑ ρ, (X ρ : JetRing) • pderiv ρ f) =
       ((Finsupp.degree p : ℕ) : ℂ) * coeff p f := by
   classical
   rw [map_sum]
-  have ht : ∀ ρ, coeff p ((X ρ : JetRing) • pderiv ℂ ρ f) = (p ρ : ℂ) * coeff p f := by
+  have ht : ∀ ρ, coeff p ((X ρ : JetRing) • pderiv ρ f) = (p ρ : ℂ) * coeff p f := by
     intro ρ
     rw [coeff_X_smul]
     by_cases h : Finsupp.single ρ 1 ≤ p
     · have hρ : 1 ≤ p ρ := by simpa using Finsupp.single_le_iff.mp h
-      rw [if_pos h, coeff_pderiv, tsub_add_cancel_of_le h, Finsupp.coe_tsub, Pi.sub_apply,
+      rw [ite_eq_left h, coeff_pderiv, tsub_add_cancel_of_le h, Finsupp.coe_tsub, Pi.sub_apply,
         Finsupp.single_eq_same, Nat.cast_sub hρ]
       push_cast
       ring
     · have hρ : p ρ = 0 := by
         by_contra hc
         exact h (Finsupp.single_le_iff.mpr (by omega))
-      rw [if_neg h, hρ]
+      rw [ite_eq_right h, hρ]
       simp
   rw [Finset.sum_congr rfl fun ρ _ => ht ρ, ← Finset.sum_mul, ← Nat.cast_sum,
     ← Finsupp.degree_eq_sum]
@@ -447,7 +447,7 @@ lemma coeff_sum_X_smul_pderiv (f : JetRing) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
 /-- The scalar vanishing principle for the Euler operator: a jet vanishing at the base
   point that is killed by the Euler operator is zero. -/
 lemma eq_zero_of_sum_X_smul_pderiv_eq_zero {f : JetRing} (h0 : constantCoeff f = 0)
-    (hf : ∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f = 0) : f = 0 := by
+    (hf : ∑ ρ, (X ρ : JetRing) • pderiv ρ f = 0) : f = 0 := by
   ext p
   rcases eq_or_ne p 0 with rfl | hp
   · simpa [coeff_zero_eq_constantCoeff] using h0
@@ -485,10 +485,10 @@ lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : JetRing}
   of `p`. -/
 lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
     (hf : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
-      coeff q (pderiv ℂ ρ f) = 0)
+      coeff q (pderiv ρ f) = 0)
     {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 := by
   have h1 := JetRing.coeff_sum_X_smul_pderiv f p
-  have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ℂ ρ f) = 0 := by
+  have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ρ f) = 0 := by
     rw [map_sum]
     refine Finset.sum_eq_zero fun ρ _ => ?_
     rw [JetRing.coeff_X_smul]
@@ -506,7 +506,7 @@ lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
 /-- A power series satisfying a radial relation `∂_ρ f = x_ρ f`, with the `x_ρ` vanishing
   below degree `n`, has no coefficients in nonzero degree up to `n`. -/
 lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin 3) → JetRing}
-    (hd : ∀ ρ, pderiv ℂ ρ f = x ρ * f)
+    (hd : ∀ ρ, pderiv ρ f = x ρ * f)
     (hx : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
       coeff q (x ρ) = 0)
     {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 :=
@@ -522,7 +522,7 @@ lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin
 /-- The base-point value of an iterated formal derivative is the corresponding Taylor
   coefficient with the factorial normalization. -/
 lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
-    constantCoeff (s.foldl (fun f ρ => pderiv ℂ ρ f) f) =
+    constantCoeff (s.foldl (fun f ρ => pderiv ρ f) f) =
       ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) * coeff s.toFinsupp f := by
   induction s using Multiset.induction_on generalizing f with
   | empty => simp [coeff_zero_eq_constantCoeff]
@@ -537,8 +537,8 @@ lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) 
             ∏ ν, ((if ν = a then t.count a + 1 else 1) * Nat.factorial (t.count ν)) from
           Finset.prod_congr rfl fun ν _ => by
             rcases eq_or_ne ν a with rfl | h
-            · rw [Multiset.count_cons_self, Nat.factorial_succ, if_pos rfl]
-            · rw [Multiset.count_cons_of_ne h, if_neg h, one_mul],
+            · rw [Multiset.count_cons_self, Nat.factorial_succ, ite_eq_left rfl]
+            · rw [Multiset.count_cons_of_ne h, ite_eq_right h, one_mul],
           Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ a]
         simp
       rw [hfin, hfac, Multiset.toFinsupp_apply]
@@ -551,7 +551,7 @@ lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) 
   radial contraction `∑ μ x_μ g_μ`. -/
 lemma sum_constantCoeff_foldl_erase (g : (Fin 1 ⊕ Fin 3) → JetRing)
     (r : Multiset (Fin 1 ⊕ Fin 3)) :
-    (r.map fun μ => constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ℂ ρ f) (g μ))).sum =
+    (r.map fun μ => constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ρ f) (g μ))).sum =
       ((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
         coeff r.toFinsupp (∑ μ, (X μ : JetRing) • g μ) := by
   classical
@@ -563,7 +563,7 @@ lemma sum_constantCoeff_foldl_erase (g : (Fin 1 ⊕ Fin 3) → JetRing)
   refine Finset.sum_congr rfl fun μ _ => ?_
   rw [coeff_X_smul, constantCoeff_foldl_pderiv]
   by_cases hμ : μ ∈ r
-  · rw [if_pos (Finsupp.single_le_iff.mpr (by
+  · rw [ite_eq_left (Finsupp.single_le_iff.mpr (by
       rw [Multiset.toFinsupp_apply]
       exact Multiset.one_le_count_iff_mem.mpr hμ))]
     have herase : (r.erase μ).toFinsupp = r.toFinsupp - Finsupp.single μ 1 := by
@@ -571,8 +571,8 @@ lemma sum_constantCoeff_foldl_erase (g : (Fin 1 ⊕ Fin 3) → JetRing)
       rw [Multiset.toFinsupp_apply, Finsupp.coe_tsub, Pi.sub_apply, Multiset.toFinsupp_apply,
         Finsupp.single_apply]
       rcases eq_or_ne μ ν with rfl | h
-      · rw [Multiset.count_erase_self, if_pos rfl]
-      · rw [Multiset.count_erase_of_ne h.symm, if_neg h, Nat.sub_zero]
+      · rw [Multiset.count_erase_self, ite_eq_left rfl]
+      · rw [Multiset.count_erase_of_ne h.symm, ite_eq_right h, Nat.sub_zero]
     have hfac : r.count μ * ∏ ν, Nat.factorial ((r.erase μ).count ν) =
         ∏ ν, Nat.factorial (r.count ν) := by
       rw [← Finset.mul_prod_erase Finset.univ
@@ -585,7 +585,7 @@ lemma sum_constantCoeff_foldl_erase (g : (Fin 1 ⊕ Fin 3) → JetRing)
             (Multiset.count_erase_of_ne (Finset.mem_erase.mp hν).1 r),
         ← mul_assoc, Nat.mul_factorial_pred (Multiset.count_pos.mpr hμ).ne']
     rw [herase, nsmul_eq_mul, ← mul_assoc, ← Nat.cast_mul, hfac]
-  · rw [if_neg fun hle => hμ (Multiset.one_le_count_iff_mem.mp (by
+  · rw [ite_eq_right fun hle => hμ (Multiset.one_le_count_iff_mem.mp (by
         simpa [Multiset.toFinsupp_apply] using Finsupp.single_le_iff.mp hle)),
       mul_zero, Multiset.count_eq_zero.mpr hμ, zero_smul]
 

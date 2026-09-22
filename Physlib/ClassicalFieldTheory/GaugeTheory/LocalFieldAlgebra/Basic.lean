@@ -584,10 +584,10 @@ def evenSubalgebra : Subalgebra ℂ B := Algebra.adjoin ℂ d.evenGenerators
 instance : IsMulCommutative d.evenSubalgebra := by
   refine Algebra.isMulCommutative_adjoin ℂ ?_
   rintro x (⟨v, rfl⟩ | ⟨v, rfl⟩) y (⟨w, rfl⟩ | ⟨w, rfl⟩)
-  · exact d.bosonTotal_commute v w
-  · exact d.bosonTotal_commute_connection v w
-  · exact (d.bosonTotal_commute_connection w v).symm
-  · exact d.connection_commute v w
+  · exact fun _ => d.bosonTotal_commute v w
+  · exact fun _ => d.bosonTotal_commute_connection v w
+  · exact fun _ => (d.bosonTotal_commute_connection w v).symm
+  · exact fun _ => d.connection_commute v w
 
 open scoped IsMulCommutative
 

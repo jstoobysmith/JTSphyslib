@@ -59,12 +59,12 @@ namespace MatterField
 /-- **The derivative of a power of a unitary jet**: `∂_μ (u ^ n) = n · u ^ n · (u⁻¹ ∂_μ u)`,
   for every integer `n`. -/
 lemma pderiv_chargePow (n : ℤ) (w : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
-    pderiv ℂ μ (chargePow n w)
-      = (n : ℂ) • (chargePow n w * (star (w : JetRing) * pderiv ℂ μ (w : JetRing))) := by
+    pderiv μ (chargePow n w)
+      = (n : ℂ) • (chargePow n w * (star (w : JetRing) * pderiv μ (w : JetRing))) := by
   have hws : (w : JetRing) * star (w : JetRing) = 1 := Unitary.mul_star_self_of_mem w.2
   have hsw : star (w : JetRing) * (w : JetRing) = 1 := Unitary.star_mul_self_of_mem w.2
-  have hD : pderiv ℂ μ (star (w : JetRing))
-      = -(star (w : JetRing)) ^ 2 • pderiv ℂ μ (w : JetRing) :=
+  have hD : pderiv μ (star (w : JetRing))
+      = -(star (w : JetRing)) ^ 2 • pderiv μ (w : JetRing) :=
     Derivation.leibniz_of_mul_eq_one _ hsw
   rcases n with k | k
   · rw [show chargePow (Int.ofNat k) w = (w : JetRing) ^ k from by simp [chargePow],
@@ -107,11 +107,11 @@ structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   φJ : 𝔤J → JetRing
   φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = C (φ c)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) (φJ a))
+    constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (φJ a))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
   φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
-      = Complex.I • (pderiv ℂ μ (u U : JetRing) * star (u U : JetRing))
+      = Complex.I • (pderiv μ (u U : JetRing) * star (u U : JetRing))
   φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
     φJ (jets.adjoint U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
 
@@ -125,7 +125,7 @@ open MatterField
 /-- The derivative of the charge-`n` power of the unitary jet of a gauge jet, in terms of
   the Maurer–Cartan form: `∂_μ (u ^ n) = -(i n) φJ (ω_μ U) · u ^ n`. -/
 lemma pderiv_chargePow_u (n : ℤ) (U : GJ) (μ : Fin 1 ⊕ Fin 3) :
-    pderiv ℂ μ (chargePow n (F.u U))
+    pderiv μ (chargePow n (F.u U))
       = -(((Complex.I * n) • F.φJ (jets.maurerCartan U μ)) * chargePow n (F.u U)) := by
   rw [pderiv_chargePow, F.φJ_maurerCartan, smul_smul,
     show Complex.I * n * Complex.I = -(n : ℂ) from by
@@ -180,9 +180,9 @@ noncomputable def charge (n : ℤ) (R : MatrixRep jets ι) : MatrixRep jets ι w
   mat_map_pderiv U μ := by
     show (chargePow n (F.u U) • R.mat U).map _
       = -((R.jetAct _ + ((Complex.I * n) • F.φJ _) • 1) * (chargePow n (F.u U) • R.mat U))
-    have hleib : (chargePow n (F.u U) • R.mat U).map (fun f => pderiv ℂ μ f)
-        = pderiv ℂ μ (chargePow n (F.u U)) • R.mat U
-          + chargePow n (F.u U) • ((R.mat U).map fun f => pderiv ℂ μ f) := by
+    have hleib : (chargePow n (F.u U) • R.mat U).map (fun f => pderiv μ f)
+        = pderiv μ (chargePow n (F.u U)) • R.mat U
+          + chargePow n (F.u U) • ((R.mat U).map fun f => pderiv μ f) := by
       refine Matrix.ext fun i j => ?_
       simp only [Matrix.map_apply, Matrix.smul_apply, Matrix.add_apply, smul_eq_mul]
       rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
@@ -222,11 +222,11 @@ structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintyp
   φJ : 𝔤J → Matrix n n JetRing
   φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = (φ c).map (C : ℂ → JetRing)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) f))
+    ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
   φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
-      = Complex.I • (((u U).map fun f => pderiv ℂ μ f) * star (u U))
+      = Complex.I • (((u U).map fun f => pderiv μ f) * star (u U))
   φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
     φJ (jets.adjoint U (jets.ofConstantLie c)) = u U * φJ (jets.ofConstantLie c) * star (u U)
 

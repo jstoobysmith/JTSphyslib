@@ -33,8 +33,8 @@ open MvPowerSeries
   derivatives are equal. -/
 lemma ext_of_constantCoeff_foldl_pderiv {f g : JetRing}
     (h : ∀ s : Multiset (Fin 1 ⊕ Fin 3),
-      constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) f)
-        = constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) g)) : f = g := by
+      constantCoeff (s.foldl (fun h ρ => pderiv ρ h) f)
+        = constantCoeff (s.foldl (fun h ρ => pderiv ρ h) g)) : f = g := by
   ext m
   obtain ⟨s, rfl⟩ : ∃ s : Multiset (Fin 1 ⊕ Fin 3), s.toFinsupp = m :=
     ⟨Multiset.toFinsupp.symm m, Multiset.toFinsupp.apply_symm_apply m⟩
@@ -44,7 +44,7 @@ lemma ext_of_constantCoeff_foldl_pderiv {f g : JetRing}
     (Finset.prod_ne_zero_iff.mpr fun _ _ => Nat.factorial_ne_zero _)) hs
 
 /-- A jet all of whose first derivatives vanish is the constant jet of its value. -/
-lemma eq_C_of_pderiv_eq_zero {f : JetRing} (hf : ∀ μ, pderiv ℂ μ f = 0) :
+lemma eq_C_of_pderiv_eq_zero {f : JetRing} (hf : ∀ μ, pderiv μ f = 0) :
     f = C (constantCoeff f) :=
   pderiv.ext (fun i => by rw [hf i, pderiv_C]) (by rw [constantCoeff_C])
 

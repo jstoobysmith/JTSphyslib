@@ -204,29 +204,29 @@ lemma derivSubmoduleGaugeWeight_piece_eq (n : ℕ) (w : GaugeWeight) :
 lemma derivSubmoduleGaugeWeight_piece_higgs_zero (n : ℕ) :
     (h.derivSubmoduleGaugeWeight n).piece (0, 0, -1, -3)
       = ⨆ d : Fin n → (Fin 1 ⊕ Fin 3), ℂ ∙ h.higgs d 0 := by
-  rw [h.derivSubmoduleGaugeWeight_piece_eq, if_pos rfl, if_neg (by decide),
-    if_neg (by decide), sup_bot_eq]
+  rw [h.derivSubmoduleGaugeWeight_piece_eq, ite_eq_left rfl, ite_eq_right (by decide),
+    ite_eq_right (by decide), sup_bot_eq]
 
 /-- The piece at the weight of the lower Higgs component. -/
 lemma derivSubmoduleGaugeWeight_piece_higgs_one (n : ℕ) :
     (h.derivSubmoduleGaugeWeight n).piece (0, 0, 1, -3)
       = ⨆ d : Fin n → (Fin 1 ⊕ Fin 3), ℂ ∙ h.higgs d 1 := by
-  rw [h.derivSubmoduleGaugeWeight_piece_eq, if_neg (by decide), if_pos rfl,
-    if_neg (by decide), if_neg (by decide), sup_bot_eq]
+  rw [h.derivSubmoduleGaugeWeight_piece_eq, ite_eq_right (by decide), ite_eq_left rfl,
+    ite_eq_right (by decide), ite_eq_right (by decide), sup_bot_eq]
 
 /-- The piece at the weight of the upper conjugate-Higgs component. -/
 lemma derivSubmoduleGaugeWeight_piece_barHiggs_zero (n : ℕ) :
     (h.derivSubmoduleGaugeWeight n).piece (0, 0, 1, 3)
       = ⨆ d : Fin n → (Fin 1 ⊕ Fin 3), ℂ ∙ h.barHiggs d 0 := by
-  rw [h.derivSubmoduleGaugeWeight_piece_eq, if_neg (by decide), if_neg (by decide),
-    if_pos rfl, bot_sup_eq]
+  rw [h.derivSubmoduleGaugeWeight_piece_eq, ite_eq_right (by decide), ite_eq_right (by decide),
+    ite_eq_left rfl, bot_sup_eq]
 
 /-- The piece at the weight of the lower conjugate-Higgs component. -/
 lemma derivSubmoduleGaugeWeight_piece_barHiggs_one (n : ℕ) :
     (h.derivSubmoduleGaugeWeight n).piece (0, 0, -1, 3)
       = ⨆ d : Fin n → (Fin 1 ⊕ Fin 3), ℂ ∙ h.barHiggs d 1 := by
-  rw [h.derivSubmoduleGaugeWeight_piece_eq, if_neg (by decide), if_neg (by decide),
-    if_neg (by decide), if_pos rfl, bot_sup_eq]
+  rw [h.derivSubmoduleGaugeWeight_piece_eq, ite_eq_right (by decide), ite_eq_right (by decide),
+    ite_eq_right (by decide), ite_eq_left rfl, bot_sup_eq]
 
 /-- A derivative submodule has no weight-zero content: every Higgs symbol carries
   hypercharge. -/
@@ -320,7 +320,7 @@ lemma derivSubmodule_zero_pow_four_piece_zero :
       = h.barHiggs ![] 0 * h.barHiggs ![] 1 := (h.barH_comm_barH _ _ _ _ _ _).eq
   simp +decide only [GaugeWeightDecomposition.mul_piece_eq_sub',
     h.derivSubmoduleGaugeWeight_supp 0, Finset.iSup_insert, Finset.iSup_singleton,
-    h.derivSubmoduleGaugeWeight_piece_eq, if_true, if_false, bot_sup_eq, sup_bot_eq,
+    h.derivSubmoduleGaugeWeight_piece_eq, ite_true, if_false, bot_sup_eq, sup_bot_eq,
     Submodule.bot_mul]
   simp only [Matrix.empty_eq, ciSup_unique, quarticSpan, Submodule.sup_mul,
     Submodule.span_mul_span, Set.singleton_mul_singleton, mul_assoc, hbh, hbh', hhh,

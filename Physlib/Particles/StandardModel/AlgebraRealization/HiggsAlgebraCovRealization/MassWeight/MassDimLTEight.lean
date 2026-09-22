@@ -314,7 +314,7 @@ theorem exists_mem_of_gauge_lorentz_invariant_massWeightSubmodule_lt_eight_sup (
   · obtain ⟨y, hyS, hyG, hxy⟩ :=
       h.exists_mem_of_invariant_massWeightSubmodule_four_sup S hS hx hG
     have hxy' : x - y ∈ h.lorentzContractionLTEightSpan 4 := by
-      rw [lorentzContractionLTEightSpan, if_pos rfl]
+      rw [lorentzContractionLTEightSpan, ite_eq_left rfl]
       exact hxy
     refine ⟨y, hyS, hyG, fun g => ?_, hxy'⟩
     have hfix : repLorentz g (x - y) = x - y :=

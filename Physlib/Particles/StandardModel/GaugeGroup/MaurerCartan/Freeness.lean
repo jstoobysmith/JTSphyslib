@@ -77,17 +77,17 @@ lemma exists_maurerCartanForm_eq_of_structure
   have hu1 : U.2.2.1 * star U.2.2.1 = 1 := (Unitary.mem_iff.mp U.2.2.2).2
   refine ext_of_matrix ?_ ?_ ?_
   · rw [maurerCartanForm_toSU3Matrix,
-      show U.1.1.map (pderiv ℂ μ) = (-Complex.I) • (ω μ).toSU3Matrix * U.1.1 from
+      show U.1.1.map (pderiv μ) = (-Complex.I) • (ω μ).toSU3Matrix * U.1.1 from
         congrArg (fun p => p.1) (hU μ),
       smul_mul_assoc, smul_mul_assoc, mul_assoc, hu3, mul_one, smul_smul]
     simp
   · rw [maurerCartanForm_toSU2Matrix,
-      show U.2.1.1.map (pderiv ℂ μ) = (-Complex.I) • (ω μ).toSU2Matrix * U.2.1.1 from
+      show U.2.1.1.map (pderiv μ) = (-Complex.I) • (ω μ).toSU2Matrix * U.2.1.1 from
         congrArg (fun p => p.2.1) (hU μ),
       smul_mul_assoc, smul_mul_assoc, mul_assoc, hu2, mul_one, smul_smul]
     simp
   · rw [maurerCartanForm_toU1Value,
-      show pderiv ℂ μ U.2.2.1 = (-Complex.I) • (ω μ).toU1Value * U.2.2.1 from
+      show pderiv μ U.2.2.1 = (-Complex.I) • (ω μ).toU1Value * U.2.2.1 from
         congrArg (fun p => p.2.2) (hU μ),
       smul_mul_assoc, smul_mul_assoc, mul_assoc, hu1, mul_one, smul_smul]
     simp
@@ -121,7 +121,7 @@ lemma taylorSeries_sum {ι : Type} (t : Finset ι) (f : ι → Multiset (Fin 1 �
 /-- The base-point Taylor data of `taylorSeries f` are `f`. -/
 lemma constantCoeff_foldl_pderiv_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ)
     (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (taylorSeries f)) = f s := by
+    constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (taylorSeries f)) = f s := by
   have hfac : ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) ≠ 0 :=
     Nat.cast_ne_zero.mpr (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _)
   rw [constantCoeff_foldl_pderiv, coeff_taylorSeries, Multiset.toFinsupp_toMultiset,
@@ -198,7 +198,7 @@ theorem eval_iteratedDeriv_taylorJet (c : Multiset (Fin 1 ⊕ Fin 3) → GaugeAl
 /-- The `su(3)` component of the radial Maurer–Cartan component `∑_μ x_μ ω_μ(U)`. -/
 lemma radial_toSU3Matrix (U : JetGaugeGroupI) :
     (localGaugeData.radial U).toSU3Matrix =
-      ∑ μ, (X μ : JetRing) • (Complex.I • (U.1.1.map (pderiv ℂ μ) * star U.1.1)) := by
+      ∑ μ, (X μ : JetRing) • (Complex.I • (U.1.1.map (pderiv μ) * star U.1.1)) := by
   rw [LocalGaugeData.radial, toSU3Matrix_sum]
   simp only [localGaugeData_coord, localGaugeData_maurerCartan,
     coord_toSU3Matrix, maurerCartanForm_toSU3Matrix]
@@ -206,7 +206,7 @@ lemma radial_toSU3Matrix (U : JetGaugeGroupI) :
 /-- The `su(2)` component of the radial Maurer–Cartan component. -/
 lemma radial_toSU2Matrix (U : JetGaugeGroupI) :
     (localGaugeData.radial U).toSU2Matrix =
-      ∑ μ, (X μ : JetRing) • (Complex.I • (U.2.1.1.map (pderiv ℂ μ) * star U.2.1.1)) := by
+      ∑ μ, (X μ : JetRing) • (Complex.I • (U.2.1.1.map (pderiv μ) * star U.2.1.1)) := by
   rw [LocalGaugeData.radial, toSU2Matrix_sum]
   simp only [localGaugeData_coord, localGaugeData_maurerCartan,
     coord_toSU2Matrix, maurerCartanForm_toSU2Matrix]
@@ -214,7 +214,7 @@ lemma radial_toSU2Matrix (U : JetGaugeGroupI) :
 /-- The `u(1)` component of the radial Maurer–Cartan component. -/
 lemma radial_toU1Value (U : JetGaugeGroupI) :
     (localGaugeData.radial U).toU1Value =
-      ∑ μ, (X μ : JetRing) • (Complex.I • (pderiv ℂ μ U.2.2.1 * star U.2.2.1)) := by
+      ∑ μ, (X μ : JetRing) • (Complex.I • (pderiv μ U.2.2.1 * star U.2.2.1)) := by
   rw [LocalGaugeData.radial, toU1Value_sum]
   simp only [localGaugeData_coord, localGaugeData_maurerCartan,
     coord_toU1Value, maurerCartanForm_toU1Value, smul_eq_mul]
@@ -230,8 +230,8 @@ lemma exists_eulerTransport_of_radial {κ : Type} [Fintype κ] [DecidableEq κ]
       V * star V = 1 ∧
       (P.trace = 0 →
         (∀ (M : Matrix κ κ JetRing) (μ : Fin 1 ⊕ Fin 3),
-          pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace) → V.det = 1) ∧
-      ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V)) = P := by
+          pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace) → V.det = 1) ∧
+      ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv μ) * star V)) = P := by
   have hR0 : ∀ i j, constantCoeff (((-Complex.I) • P) i j) = 0 := fun i j => by
     rw [Matrix.smul_apply, ← coeff_zero_eq_constantCoeff, map_smul,
       coeff_zero_eq_constantCoeff, hP0, smul_zero]
@@ -242,8 +242,8 @@ lemma exists_eulerTransport_of_radial {κ : Type} [Fintype κ] [DecidableEq κ]
   have hVu : V * star V = 1 := eulerTransport_mul_star hRstar hR0 hV0 hEV
   refine ⟨V, hV0, hVu, fun hPtr hjac =>
     eulerTransport_det hjac (by rw [Matrix.trace_smul, hPtr, smul_zero]) hV0 hEV, ?_⟩
-  calc ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv ℂ μ) * star V))
-      = Complex.I • ((∑ μ, (X μ : JetRing) • V.map (pderiv ℂ μ)) * star V) := by
+  calc ∑ μ, (X μ : JetRing) • (Complex.I • (V.map (pderiv μ) * star V))
+      = Complex.I • ((∑ μ, (X μ : JetRing) • V.map (pderiv μ)) * star V) := by
         rw [Finset.sum_mul, Finset.smul_sum]
         exact Finset.sum_congr rfl fun μ _ => by
           rw [Matrix.smul_mul, smul_comm Complex.I]
@@ -280,7 +280,7 @@ theorem exists_radial_eq (ρ : JetGaugeAlgebra) (hρ : eval ρ = 0) :
   have hu0 : constantCoeff (V₁ 0 0) = 1 := by
     simpa using congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) hV₁0
   have hrad₁' : ∑ μ, (X μ : JetRing) •
-      (Complex.I • (pderiv ℂ μ (V₁ 0 0) * star (V₁ 0 0))) = ρ.toU1Value := by
+      (Complex.I • (pderiv μ (V₁ 0 0) * star (V₁ 0 0))) = ρ.toU1Value := by
     have h := congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) hrad₁
     simpa [Matrix.sum_apply, Matrix.mul_apply] using h
   refine ⟨⟨(⟨V₃, Matrix.mem_specialUnitaryGroup_iff.mpr

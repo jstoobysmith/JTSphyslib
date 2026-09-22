@@ -61,7 +61,7 @@ The AddCommGroup and module instances are inherited from the underlying tensor p
 
 instance : AddCommGroup UpSinglet := Equiv.addCommGroup valEquiv
 
-instance : Module ℂ UpSinglet := Equiv.module ℂ valEquiv
+instance : Module ℂ UpSinglet := AddEquiv.module ℂ { valEquiv with map_add' _ _ := rfl }
 
 /-- The linear equivalence between `UpSinglet` and its underlying tensor product space. -/
 def valLinEquiv : UpSinglet ≃ₗ[ℂ]
@@ -382,7 +382,7 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
   | zero => simp [show ({ val := 0 } : UpSinglet) = 0 from rfl]
   | tmul psi c =>
       apply jetValLinEquiv.injective
-      simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI]
+      simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI, -TensorProduct.congr_symm]
       have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
           = MvPowerSeries.C ((g.toU1.1 : ℂ)) := rfl
       have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).1 :

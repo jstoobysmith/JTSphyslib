@@ -84,7 +84,7 @@ lemma coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (ψ : GaugeAlgebra →
     (hψ : ψ 0 = 0) (f : JetGaugeAlgebra → JetRing)
     (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
       ψ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv s a)) =
-        constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) (f a)))
+        constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f a)))
     {U : JetGaugeGroupI} {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
     {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) :
     coeff m (f (maurerCartanForm U ρ)) = 0 := by
@@ -140,15 +140,15 @@ theorem truncation_eq_one_of_mem_truncationKer {U : JetGaugeGroupI} {n : ℕ}
     rwa [Matrix.mem_unitaryGroup_iff'] at h1
   have hstar1 : star U.2.2.1 * U.2.2.1 = 1 := (Unitary.mem_iff.mp U.2.2.2).1
   -- the radial relation `∂_ρ U = (−i ω_ρ) U` on each factor
-  have hd3 : ∀ ρ, U.1.1.map (pderiv ℂ ρ) =
+  have hd3 : ∀ ρ, U.1.1.map (pderiv ρ) =
       ((-Complex.I) • (maurerCartanForm U ρ).toSU3Matrix) * U.1.1 := fun ρ => by
     rw [maurerCartanForm_toSU3Matrix, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
       one_smul, mul_assoc, hstar3, mul_one]
-  have hd2 : ∀ ρ, U.2.1.1.map (pderiv ℂ ρ) =
+  have hd2 : ∀ ρ, U.2.1.1.map (pderiv ρ) =
       ((-Complex.I) • (maurerCartanForm U ρ).toSU2Matrix) * U.2.1.1 := fun ρ => by
     rw [maurerCartanForm_toSU2Matrix, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
       one_smul, mul_assoc, hstar2, mul_one]
-  have hd1 : ∀ ρ, pderiv ℂ ρ U.2.2.1 =
+  have hd1 : ∀ ρ, pderiv ρ U.2.2.1 =
       ((-Complex.I) • (maurerCartanForm U ρ).toU1Value) * U.2.2.1 := fun ρ => by
     rw [maurerCartanForm_toU1Value, smul_smul, neg_mul, Complex.I_mul_I, neg_neg,
       one_smul, mul_assoc, hstar1, mul_one]

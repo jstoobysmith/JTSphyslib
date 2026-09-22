@@ -88,10 +88,10 @@ lemma adjointTransport_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
     adjointTransport jets 1 p = if p = 0 then LinearMap.id else 0 := by
   rw [adjointTransport, jets.adjointCoeff_one]
   rcases eq_or_ne p 0 with rfl | hp
-  · rw [if_pos rfl, if_pos rfl, TensorProduct.map_id]
+  · rw [ite_eq_left rfl, ite_eq_left rfl, TensorProduct.map_id]
     refine LinearMap.ext fun v => ?_
     simp
-  · rw [if_neg hp, if_neg hp]
+  · rw [ite_eq_right hp, ite_eq_right hp]
     refine LinearMap.ext fun v => ?_
     rw [show TensorProduct.map (LinearMap.id (M := Lorentz.CoVector))
         (0 : 𝔤 →ₗ[ℝ] 𝔤) = 0 from by
@@ -215,9 +215,9 @@ lemma transport_one : transport jets (1 : GJ) = LinearMap.id := by
         ((if p.1 = 0 then LinearMap.id else 0) :
           (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤)).dualMap ψ)
       (fun p _ hp => by
-        rw [if_neg hp, show ((0 : (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤))).dualMap ψ = 0 from
+        rw [ite_eq_right hp, show ((0 : (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤))).dualMap ψ = 0 from
             LinearMap.ext fun v => by simp, TensorProduct.tmul_zero]),
-    if_pos rfl, LinearMap.id_apply,
+    ite_eq_left rfl, LinearMap.id_apply,
     show (LinearMap.id : (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤)).dualMap ψ = ψ from
       LinearMap.ext fun v => rfl]
 
@@ -489,7 +489,7 @@ lemma componentDual_dualBasis_mcBosonCoeff (W : GJ)
     rw [Module.Basis.dualBasis_apply_self, ite_mul, one_mul, zero_mul]]
   rw [Finset.sum_ite_eq' Finset.univ μ
     (fun ν => φ (jets.evalLie (jets.iteratedDeriv s
-      (jets.maurerCartan W ν)))), if_pos (Finset.mem_univ μ)]
+      (jets.maurerCartan W ν)))), ite_eq_left (Finset.mem_univ μ)]
 
 /-- The transformation law of the derivative generators, in the form used by
   `GaugeAlgebraRealization`: a jet of gauge transformations acts on `∂_s A_μ^φ` by the all-orders

@@ -104,20 +104,20 @@ lemma standardModelSpan_eight :
     h.standardModelSpan 8 = h.isGaugeSector.lorentzContractionEightSpan
         ⊔ h.isHiggsSector.lorentzContractionEightSpan
       ⊔ (h.isFermionSector.kineticSpan ⊔ h.yukawaSpan) :=
-  if_pos rfl
+  ite_eq_left rfl
 
 /-- At mass weight four the span is the line through the Higgs mass term `H† H`, the one
   invariant of the Standard Model below mass dimension four. -/
 lemma standardModelSpan_four : h.standardModelSpan 4 = h.isHiggsSector.dotSpan 0 0 := by
-  rw [standardModelSpan, if_neg (by norm_num), HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
-    if_pos rfl]
+  rw [standardModelSpan, ite_eq_right (by norm_num), HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
+    ite_eq_left rfl]
 
 /-- At every mass weight other than four and eight the span is trivial: apart from the
   Higgs mass term there is no Standard-Model term below mass dimension four. -/
 lemma standardModelSpan_eq_bot {w : ℕ} (hw : w ≠ 8) (hw4 : w ≠ 4) :
     h.standardModelSpan w = ⊥ := by
-  rw [standardModelSpan, if_neg hw, HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
-    if_neg hw4]
+  rw [standardModelSpan, ite_eq_right hw, HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
+    ite_eq_right hw4]
 
 /-!
 
@@ -166,7 +166,7 @@ lemma standardModelSpan_le_massWeightSubmodule (w : ℕ) :
     · subst hw4
       exact (h.isHiggsSector.lorentzContractionLTEightSpan_le_massWeightSubmodule 4).trans
         (h.isHiggsSector_massWeightSubmodule_le (by norm_num))
-    · rw [HiggsAlgebraCovRealization.lorentzContractionLTEightSpan, if_neg hw4]
+    · rw [HiggsAlgebraCovRealization.lorentzContractionLTEightSpan, ite_eq_right hw4]
       exact bot_le
 
 /-- The span at weight `w` is fixed pointwise by the gauge and Lorentz groups together:
@@ -265,7 +265,7 @@ lemma peels_sectorMassWeight_higgs {w : ℕ} (hw0 : 0 < w) (hw : w ≤ 8) :
       h.isHiggsSector.exists_mem_of_gauge_lorentz_invariant_massWeightSubmodule_lt_eight_sup
         w hw0 hw8 S hSG hSL hx' hG hL
     refine Submodule.mem_sup.2 ⟨x - y, ?_, y, hyS, by abel⟩
-    rwa [standardModelSpan, if_neg (by omega)]
+    rwa [standardModelSpan, ite_eq_right (by omega)]
 
 /-- The fermion sector peels: at weight eight to the ten kinetic terms over the nine
   family pairs, below it to nothing — there is no Dirac mass term. -/

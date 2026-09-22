@@ -53,11 +53,11 @@ lemma jetOfConstant_apply (v : V) : jetOfConstant v = (1 : JetRing) ⊗ₜ[ℂ] 
   factor. -/
 noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) :
     JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
-  LinearMap.rTensor V (pderiv ℂ μ).toLinearMap
+  LinearMap.rTensor V (pderiv μ).toLinearMap
 
 @[simp]
 lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (f : JetRing) (v : V) :
-    jetDeriv μ (f ⊗ₜ[ℂ] v) = pderiv ℂ μ f ⊗ₜ[ℂ] v := rfl
+    jetDeriv μ (f ⊗ₜ[ℂ] v) = pderiv μ f ⊗ₜ[ℂ] v := rfl
 
 /-- Formal derivatives on `V`-valued jets commute, since the partial derivatives of
   jets do. -/

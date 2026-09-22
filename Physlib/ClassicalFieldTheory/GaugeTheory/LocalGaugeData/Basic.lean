@@ -335,13 +335,13 @@ lemma evalLie_iteratedDeriv_coord (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 �
         map_add, ih]
       by_cases hνμ : ν = μ
       · subst hνμ
-        rw [if_pos rfl, Multiset.count_cons_self, Multiset.erase_cons_head, add_smul, one_smul,
+        rw [ite_eq_left rfl, Multiset.count_cons_self, Multiset.erase_cons_head, add_smul, one_smul,
           ← LinearMap.comp_apply (jets.iteratedDeriv (s.erase ν)),
           ← iteratedDeriv_cons_eq_comp_deriv]
         by_cases hμ : ν ∈ s
         · rw [Multiset.cons_erase hμ]
         · rw [Multiset.count_eq_zero.mpr hμ, zero_smul, zero_smul]
-      · rw [if_neg hνμ, map_zero, map_zero, add_zero, Multiset.count_cons_of_ne (Ne.symm hνμ),
+      · rw [ite_eq_right hνμ, map_zero, map_zero, add_zero, Multiset.count_cons_of_ne (Ne.symm hνμ),
           Multiset.erase_cons_tail s hνμ, ← LinearMap.comp_apply (jets.iteratedDeriv (s.erase μ)),
           ← iteratedDeriv_cons_eq_comp_deriv]
 

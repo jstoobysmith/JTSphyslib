@@ -54,13 +54,13 @@ noncomputable def ofTrivialAction (rep : Representation K SL(2,ℂ) M)
   piece_le k := by
     by_cases hk : k = 0
     · subst hk
-      rw [if_pos rfl]
+      rw [ite_eq_left rfl]
       intro x _ t ht
       rw [htriv, zpow_zero, one_smul]
-    · rw [if_neg hk]
+    · rw [ite_eq_right hk]
       exact bot_le
-  piece_eq_bot k hk := if_neg (by simpa using hk)
-  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [if_pos rfl]))
+  piece_eq_bot k hk := ite_eq_right (by simpa using hk)
+  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [ite_eq_left rfl]))
 
 /-- The pieces of a trivial action: everything in weight zero, nothing elsewhere. -/
 @[simp]
@@ -245,8 +245,8 @@ lemma higgsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega, higgsValueWeight,
-      WeightDecomposition.ofTrivialAction_piece, if_pos rfl, Submodule.map_top, iSup_pos hc]
-  · rw [higgsValueWeight, WeightDecomposition.ofTrivialAction_piece, if_neg (by omega),
+      WeightDecomposition.ofTrivialAction_piece, ite_eq_left rfl, Submodule.map_top, iSup_pos hc]
+  · rw [higgsValueWeight, WeightDecomposition.ofTrivialAction_piece, ite_eq_right (by omega),
       Submodule.map_bot, iSup_neg hc]
 
 /-- The weight-`k` piece of the conjugate-Higgs submodule is the join of the light-cone
@@ -261,8 +261,8 @@ lemma barHiggsSubmoduleBoostWeight_piece (n : ℕ) (i : Fin 3) (k : ℤ) :
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega, barHiggsValueWeight,
-      WeightDecomposition.ofTrivialAction_piece, if_pos rfl, Submodule.map_top, iSup_pos hc]
-  · rw [barHiggsValueWeight, WeightDecomposition.ofTrivialAction_piece, if_neg (by omega),
+      WeightDecomposition.ofTrivialAction_piece, ite_eq_left rfl, Submodule.map_top, iSup_pos hc]
+  · rw [barHiggsValueWeight, WeightDecomposition.ofTrivialAction_piece, ite_eq_right (by omega),
       Submodule.map_bot, iSup_neg hc]
 
 /-!

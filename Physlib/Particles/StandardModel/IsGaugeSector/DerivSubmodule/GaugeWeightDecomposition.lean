@@ -359,7 +359,7 @@ lemma derivSubmoduleGaugeWeight_piece_zero' (n : ℕ) :
   have h2 : ∀ b : Fin 4, ¬ ((0 : GaugeWeight) = adjWeight (Sum.inr (Sum.inl b))) := by decide
   have h3 : ∀ c : Fin 4, ((0 : GaugeWeight) = adjWeight (Sum.inr (Sum.inr c))) := by decide
   simp only [h1, h2, if_false, iSup_bot, bot_sup_eq]
-  exact iSup_congr fun c => if_pos (h3 c)
+  exact iSup_congr fun c => ite_eq_left (h3 c)
 
 /-- Every other weight has a trivial piece. -/
 lemma derivSubmoduleGaugeWeight_piece_eq_bot (n : ℕ) {w : GaugeWeight}

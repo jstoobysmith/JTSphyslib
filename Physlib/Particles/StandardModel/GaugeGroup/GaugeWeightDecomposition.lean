@@ -509,9 +509,9 @@ noncomputable def spanSingleton (hmul : IsMulRep rep) (x : B) (w : GaugeWeight)
       simp
   piece_eq_bot := by
     intro w' hw'
-    rw [if_neg (by simpa using hw')]
+    rw [ite_eq_right (by simpa using hw')]
   iSup_piece := by
-    refine le_antisymm (iSup_le fun w' => ?_) (le_iSup_of_le w (by rw [if_pos rfl]))
+    refine le_antisymm (iSup_le fun w' => ?_) (le_iSup_of_le w (by rw [ite_eq_left rfl]))
     split_ifs
     · exact le_rfl
     · exact bot_le

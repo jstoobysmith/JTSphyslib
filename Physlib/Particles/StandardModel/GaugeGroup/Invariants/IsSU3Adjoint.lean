@@ -136,7 +136,7 @@ lemma act_star (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 8 → ℂ) :
 lemma rowAct_su3Parity_apply (k : Fin 3) (c : Fin 8 → ℂ) (a : Fin 8) :
     rowAct (su3Parity k) c a = ((paritySign k a : ℤ) : ℂ) * c a := by
   simp only [rowAct, su3AdjointMatrix_su3Parity, apply_ite (fun r : ℝ => (r : ℂ)),
-    Complex.ofReal_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, if_true,
+    Complex.ofReal_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true,
     Complex.ofReal_intCast]
 
 /-- A coefficient vector fixed by every colour rotation is zero: the parities confine it to

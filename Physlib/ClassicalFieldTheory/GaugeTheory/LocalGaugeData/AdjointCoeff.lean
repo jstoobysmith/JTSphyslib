@@ -91,9 +91,9 @@ lemma adjointCoeff_one (p : Multiset (Fin 1 ⊕ Fin 3)) :
   refine LinearMap.ext fun a => ?_
   rw [adjointCoeff_apply, map_one, Module.End.one_apply]
   rcases eq_or_ne p 0 with rfl | hp
-  · rw [iteratedDeriv_zero, LinearMap.id_apply, evalLie_ofConstantLie, if_pos rfl,
+  · rw [iteratedDeriv_zero, LinearMap.id_apply, evalLie_ofConstantLie, ite_eq_left rfl,
       LinearMap.id_apply]
-  · rw [jets.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, if_neg hp,
+  · rw [jets.iteratedDeriv_ofConstantLie_of_ne_zero hp, map_zero, ite_eq_right hp,
       LinearMap.zero_apply]
 
 /-- The coefficients are derivations of the bracket up to convolution, by the iterated

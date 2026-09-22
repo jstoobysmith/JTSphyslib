@@ -126,16 +126,16 @@ lemma eval_ofConstant (u : U1) : eval (ofConstant u) = u :=
 
 /-- The formal derivative of a `u(1)` jet. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra →ₗ[ℝ] JetU1Algebra where
-  toFun a := ⟨pderiv ℂ μ a.1, by
-    show star (pderiv ℂ μ a.1) = pderiv ℂ μ a.1
+  toFun a := ⟨pderiv μ a.1, by
+    show star (pderiv μ a.1) = pderiv μ a.1
     rw [← JetRing.pderiv_star, a.2]⟩
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
-    show pderiv ℂ μ (r • a.1) = r • pderiv ℂ μ a.1
+    show pderiv μ (r • a.1) = r • pderiv μ a.1
     rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul])
 
 @[simp]
-lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) : (deriv μ a : JetRing) = pderiv ℂ μ a :=
+lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) : (deriv μ a : JetRing) = pderiv μ a :=
   rfl
 
 /-- Multiplication of a `u(1)` jet by the coordinate `x_μ`. -/
@@ -185,23 +185,23 @@ lemma ofConstantLie_val (a : U1Algebra) : (ofConstantLie a : JetRing) = C (a : �
 
 /-- The Maurer–Cartan scalar `i (∂_μ u) u⁻¹` of a unitary jet is self-adjoint. -/
 lemma star_mcVal (u : JetU1) (μ : Fin 1 ⊕ Fin 3) :
-    star (Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing)))
-      = Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing)) := by
+    star (Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)))
+      = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) := by
   have hu : (u : JetRing) * star (u : JetRing) = 1 := Unitary.mul_star_self_of_mem u.2
-  have h0 : pderiv ℂ μ ((u : JetRing) * star (u : JetRing)) = 0 := by rw [hu, pderiv_one]
+  have h0 : pderiv μ ((u : JetRing) * star (u : JetRing)) = 0 := by rw [hu, pderiv_one]
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul] at h0
   rw [star_smul, star_mul', star_star, ← JetRing.pderiv_star, Complex.star_def, Complex.conj_I,
-    neg_smul, show pderiv ℂ μ (star (u : JetRing)) * (u : JetRing)
-      = -(pderiv ℂ μ (u : JetRing) * star (u : JetRing)) from by linear_combination h0,
+    neg_smul, show pderiv μ (star (u : JetRing)) * (u : JetRing)
+      = -(pderiv μ (u : JetRing) * star (u : JetRing)) from by linear_combination h0,
     smul_neg, neg_neg]
 
 /-- The Maurer–Cartan form `i (∂_μ u) u⁻¹` of a `U(1)` jet. -/
 noncomputable def mc (u : JetU1) (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra :=
-  ⟨Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing)), star_mcVal u μ⟩
+  ⟨Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)), star_mcVal u μ⟩
 
 @[simp]
 lemma mc_val (u : JetU1) (μ : Fin 1 ⊕ Fin 3) :
-    (mc u μ : JetRing) = Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing)) := rfl
+    (mc u μ : JetRing) = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) := rfl
 
 lemma mc_ofConstant (g : U1) (μ : Fin 1 ⊕ Fin 3) : mc (ofConstant g) μ = 0 :=
   Subtype.ext (by simp [pderiv_C])
@@ -211,27 +211,28 @@ lemma mc_mul (u v : JetU1) (μ : Fin 1 ⊕ Fin 3) : mc (u * v) μ = mc u μ + mc
   refine Subtype.ext ?_
   have hu : (u : JetRing) * star (u : JetRing) = 1 := Unitary.mul_star_self_of_mem u.2
   have hv : (v : JetRing) * star (v : JetRing) = 1 := Unitary.mul_star_self_of_mem v.2
-  show Complex.I • (pderiv ℂ μ ((u : JetRing) * v) * star ((u : JetRing) * v))
-    = Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing))
-      + Complex.I • (pderiv ℂ μ (v : JetRing) * star (v : JetRing))
+  show Complex.I • (pderiv μ ((u : JetRing) * (v : JetRing))
+      * star ((u : JetRing) * (v : JetRing)))
+    = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing))
+      + Complex.I • (pderiv μ (v : JetRing) * star (v : JetRing))
   rw [← smul_add, Derivation.leibniz, star_mul', smul_eq_mul, smul_eq_mul]
   congr 1
-  linear_combination (pderiv ℂ μ (u : JetRing) * star (u : JetRing)) * hv
-    + (pderiv ℂ μ (v : JetRing) * star (v : JetRing)) * hu
+  linear_combination (pderiv μ (u : JetRing) * star (u : JetRing)) * hv
+    + (pderiv μ (v : JetRing) * star (v : JetRing)) * hu
 
 /-- The Maurer–Cartan form of `U(1)` is flat: the derivatives of a phase commute. -/
 lemma pderiv_mcVal_comm (u : JetU1) (μ ν : Fin 1 ⊕ Fin 3) :
-    pderiv ℂ μ (pderiv ℂ ν (u : JetRing) * star (u : JetRing))
-      = pderiv ℂ ν (pderiv ℂ μ (u : JetRing) * star (u : JetRing)) := by
+    pderiv μ (pderiv ν (u : JetRing) * star (u : JetRing))
+      = pderiv ν (pderiv μ (u : JetRing) * star (u : JetRing)) := by
   have hu : (u : JetRing) * star (u : JetRing) = 1 := Unitary.mul_star_self_of_mem u.2
-  have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ℂ ρ (star (u : JetRing))
-      = -(star (u : JetRing) * pderiv ℂ ρ (u : JetRing) * star (u : JetRing)) := by
+  have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ρ (star (u : JetRing))
+      = -(star (u : JetRing) * pderiv ρ (u : JetRing) * star (u : JetRing)) := by
     intro ρ
-    have h0 : pderiv ℂ ρ ((u : JetRing) * star (u : JetRing)) = 0 := by rw [hu, pderiv_one]
+    have h0 : pderiv ρ ((u : JetRing) * star (u : JetRing)) = 0 := by rw [hu, pderiv_one]
     rw [Derivation.leibniz] at h0
     simp only [smul_eq_mul] at h0
     linear_combination star (u : JetRing) * h0
-      - pderiv ℂ ρ (star (u : JetRing)) * ((mul_comm _ _).trans hu)
+      - pderiv ρ (star (u : JetRing)) * ((mul_comm _ _).trans hu)
   simp only [Derivation.leibniz, smul_eq_mul]
   rw [hstar μ, hstar ν, JetRing.pderiv_comm μ ν]
   ring
@@ -266,12 +267,12 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra where
     refine Subtype.ext ?_
     by_cases h : μ = ν
     · subst h
-      rw [if_pos rfl]
-      show pderiv ℂ μ ((X μ : JetRing) * a.1) = (X μ : JetRing) * pderiv ℂ μ a.1 + a.1
+      rw [ite_eq_left rfl]
+      show pderiv μ ((X μ : JetRing) * a.1) = (X μ : JetRing) * pderiv μ a.1 + a.1
       rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, pderiv_X_self]
       ring
-    · rw [if_neg h, add_zero]
-      show pderiv ℂ μ ((X ν : JetRing) * a.1) = (X ν : JetRing) * pderiv ℂ μ a.1
+    · rw [ite_eq_right h, add_zero]
+      show pderiv μ ((X ν : JetRing) * a.1) = (X ν : JetRing) * pderiv μ a.1
       rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, pderiv_X_of_ne (Ne.symm h)]
       ring
   evalLie_coord μ a := Subtype.ext (by simp)
@@ -287,8 +288,8 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra where
     rfl
   maurerCartan_structure u μ ν := by
     refine Subtype.ext ?_
-    show pderiv ℂ μ (Complex.I • (pderiv ℂ ν (u : JetRing) * star (u : JetRing)))
-      - pderiv ℂ ν (Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing))) + 0 = 0
+    show pderiv μ (Complex.I • (pderiv ν (u : JetRing) * star (u : JetRing)))
+      - pderiv ν (Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing))) + 0 = 0
     rw [Derivation.map_smul, Derivation.map_smul, JetU1.pderiv_mcVal_comm, sub_self, add_zero]
   deriv_adjoint _ _ _ := by simp
 
@@ -302,7 +303,7 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra where
 
 /-- The iterated derivative on `u(1)` jets is the iterated formal derivative. -/
 lemma u1_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetU1Algebra) :
-    (u1.iteratedDeriv s a : JetRing) = s.foldl (fun h ρ => pderiv ℂ ρ h) (a : JetRing) := by
+    (u1.iteratedDeriv s a : JetRing) = s.foldl (fun h ρ => pderiv ρ h) (a : JetRing) := by
   induction s using Multiset.induction_on generalizing a with
   | empty => rw [iteratedDeriv_zero, LinearMap.id_apply, Multiset.foldl_zero]
   | cons μ t ih =>
@@ -325,7 +326,7 @@ noncomputable def u1Factor : U1Factor u1 where
   φJ a := (a : JetRing)
   φJ_ofConstantLie _ := rfl
   φJ_cc_foldl p a := by
-    show constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) (a : JetRing))
+    show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (a : JetRing))
       = constantCoeff (u1.iteratedDeriv p a : JetRing)
     rw [u1_iteratedDeriv_val]
   φJ_maurerCartan _ _ := rfl
@@ -339,14 +340,14 @@ instance instFaithfulU1 : u1.Faithful where
       simpa only [u1_evalLie, JetU1.evalLie_val, u1_iteratedDeriv_val] using hs
   eq_ofConstant_of_maurerCartan_eq_zero {u} h := by
     have hu : (u : JetRing) * star (u : JetRing) = 1 := Unitary.mul_star_self_of_mem u.2
-    have hd : ∀ μ, pderiv ℂ μ (u : JetRing) = 0 := fun μ => by
-      have h1 : Complex.I • (pderiv ℂ μ (u : JetRing) * star (u : JetRing)) = 0 :=
+    have hd : ∀ μ, pderiv μ (u : JetRing) = 0 := fun μ => by
+      have h1 : Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) = 0 :=
         congrArg Subtype.val (congrFun h μ)
-      have h2 : pderiv ℂ μ (u : JetRing) * star (u : JetRing) = 0 := by
+      have h2 : pderiv μ (u : JetRing) * star (u : JetRing) = 0 := by
         have := congrArg (fun z => (-Complex.I) • z) h1
         simpa [smul_smul, Complex.I_mul_I] using this
-      calc pderiv ℂ μ (u : JetRing)
-          = pderiv ℂ μ (u : JetRing) * ((u : JetRing) * star (u : JetRing)) := by
+      calc pderiv μ (u : JetRing)
+          = pderiv μ (u : JetRing) * ((u : JetRing) * star (u : JetRing)) := by
             rw [hu, mul_one]
         _ = 0 := by rw [mul_comm (u : JetRing), ← mul_assoc, h2, zero_mul]
     exact Subtype.ext (JetRing.eq_C_of_pderiv_eq_zero hd)

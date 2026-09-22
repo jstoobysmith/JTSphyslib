@@ -196,10 +196,10 @@ lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : GJ) {n : ℕ}
   rw [evalLie_iteratedDeriv_adjoint, Multiset.sum_antidiagonal_eq_of_fst_ne_zero s _
     fun p hp hp1 => ?_]
   · rw [jets.adjointCoeff_conj_of_mem_truncationKer g hU (by simp), adjointCoeff_one,
-      if_pos rfl, LinearMap.id_apply]
+      ite_eq_left rfl, LinearMap.id_apply]
   · rw [jets.adjointCoeff_conj_of_mem_truncationKer g hU
       ((Multiset.card_le_card (Multiset.fst_le_of_mem_antidiagonal hp)).trans hs),
-      adjointCoeff_one, if_neg hp1, LinearMap.zero_apply]
+      adjointCoeff_one, ite_eq_right hp1, LinearMap.zero_apply]
 
 /-!
 
@@ -447,7 +447,7 @@ theorem symmetrizedMaurerCartanCoeff_surjective :
   refine ⟨U, funext fun r => ?_⟩
   have hcard : (r.1.card : ℝ) ≠ 0 :=
     Nat.cast_ne_zero.mpr fun h => r.2 (Multiset.card_eq_zero.mp h)
-  rw [symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial, hU, hρ, dif_neg r.2,
+  rw [symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial, hU, hρ, dite_eq_right r.2,
     smul_smul, one_div, inv_mul_cancel₀ hcard, one_smul]
 
 /-- The symmetrized Maurer–Cartan data are free coordinates on the pure jets of a free

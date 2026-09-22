@@ -152,8 +152,8 @@ open Nat
   coefficients by a shift and a multiplication, and the two shifts commute. -/
 lemma _root_.MvPowerSeries.pderiv_comm {σ R : Type*} [CommSemiring R] (i j : σ)
     (f : MvPowerSeries σ R) :
-    MvPowerSeries.pderiv R i (MvPowerSeries.pderiv R j f) =
-      MvPowerSeries.pderiv R j (MvPowerSeries.pderiv R i f) := by
+    MvPowerSeries.pderiv i (MvPowerSeries.pderiv j f) =
+      MvPowerSeries.pderiv j (MvPowerSeries.pderiv i f) := by
   ext n
   rw [MvPowerSeries.coeff_pderiv, MvPowerSeries.coeff_pderiv, MvPowerSeries.coeff_pderiv,
     MvPowerSeries.coeff_pderiv, add_right_comm n (Finsupp.single i 1) (Finsupp.single j 1)]
@@ -167,7 +167,7 @@ lemma _root_.MvPowerSeries.pderiv_comm {σ R : Type*} [CommSemiring R] (i j : σ
 /-- Differentiating a jet along a multiset of directions is well defined: the partial
   derivatives commute, so the fold over a multiset does not depend on the order. -/
 instance : RightCommutative
-    (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => MvPowerSeries.pderiv ℂ μ f) where
+    (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => MvPowerSeries.pderiv μ f) where
   right_comm f μ ν := MvPowerSeries.pderiv_comm ν μ f
 
 /-- The evaluation map taking a function `f : JetRing` to `∂_μ f`. -/
@@ -213,9 +213,9 @@ lemma eval_injective {p q : DerivAlgebraComplex}
 /-- Adjointness: the shift of derivative symbols is the transpose of the formal
   partial derivative under the divided-power pairing. -/
 lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : DerivAlgebraComplex) (f : JetRing) :
-    eval (deriv ν p) f = eval p (MvPowerSeries.pderiv ℂ ν f) := by
+    eval (deriv ν p) f = eval p (MvPowerSeries.pderiv ν f) := by
   have h : (eval.flip f) ∘ₗ deriv ν =
-      eval.flip (MvPowerSeries.pderiv ℂ ν f) := by
+      eval.flip (MvPowerSeries.pderiv ν f) := by
     refine Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.ext fun m => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.flip_apply,
       deriv_basis, eval_basis, MvPowerSeries.coeff_pderiv]
@@ -226,8 +226,8 @@ lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : DerivAlgebraComplex) (f : JetRing) 
           ∏ ρ, ((if ρ = ν then m ν + 1 else 1) * (m ρ)!) from
         Finset.prod_congr rfl fun ρ _ => by
           rcases eq_or_ne ρ ν with rfl | h
-          · rw [Finsupp.add_apply, Finsupp.single_eq_same, Nat.factorial_succ, if_pos rfl]
-          · rw [Finsupp.add_apply, Finsupp.single_eq_of_ne h, add_zero, if_neg h, one_mul],
+          · rw [Finsupp.add_apply, Finsupp.single_eq_same, Nat.factorial_succ, ite_eq_left rfl]
+          · rw [Finsupp.add_apply, Finsupp.single_eq_of_ne h, add_zero, ite_eq_right h, one_mul],
         Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ ν]
       simp
     rw [nsmul_eq_mul, nsmul_eq_mul, hfac]
@@ -249,7 +249,7 @@ lemma eval_one (f : JetRing) :
   time. -/
 lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
     eval (basis s) f =
-      MvPowerSeries.constantCoeff (s.foldl (fun g μ => MvPowerSeries.pderiv ℂ μ g) f) := by
+      MvPowerSeries.constantCoeff (s.foldl (fun g μ => MvPowerSeries.pderiv μ g) f) := by
   induction s using Multiset.induction_on generalizing f with
   | empty =>
     rw [Multiset.foldl_zero, show (0 : Multiset (Fin 1 ⊕ Fin 3)) = {} from rfl, basis_nil,
@@ -322,16 +322,16 @@ lemma jetRingAction_basis_multiset (χ : JetRing) (s : Multiset (Fin 1 ⊕ Fin 3
     jetRingAction χ (basis s) =
       (s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-            (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum := by
+            (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum := by
   refine eval_injective fun f => ?_
   rw [eval_jetRingAction, eval_basis_eq_constantCoeff_foldl_pderiv,
     JetRing.constantCoeff_foldl_pderiv_mul,
     show eval ((s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum) f
+          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum) f
       = (eval.flip f) ((s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) χ) • basis p.2).sum) from rfl,
+          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum) from rfl,
     map_multiset_sum, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
   rw [Function.comp_apply, map_smul, LinearMap.flip_apply, smul_eq_mul,
@@ -454,7 +454,7 @@ lemma jetRingAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
   `∂_ν (χ f) = χ ∂_ν f + (∂_ν χ) f` under the divided-power pairing. -/
 lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : DerivAlgebraComplex) :
     jetRingAction χ (deriv ν a) =
-      deriv ν (jetRingAction χ a) + jetRingAction (MvPowerSeries.pderiv ℂ ν χ) a := by
+      deriv ν (jetRingAction χ a) + jetRingAction (MvPowerSeries.pderiv ν χ) a := by
   refine eval_injective fun f => ?_
   rw [eval_jetRingAction, eval_deriv, Derivation.leibniz, smul_eq_mul, smul_eq_mul,
     map_add, map_add, LinearMap.add_apply, eval_deriv, eval_jetRingAction,

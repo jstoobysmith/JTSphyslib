@@ -43,7 +43,7 @@ open MvPowerSeries
 /-- The Leibniz rule for a finite product. -/
 lemma pderiv_finset_prod {ι : Type*} [DecidableEq ι] (μ : Fin 1 ⊕ Fin 3) (s : Finset ι)
     (f : ι → JetRing) :
-    pderiv ℂ μ (∏ i ∈ s, f i) = ∑ i ∈ s, (∏ j ∈ s.erase i, f j) * pderiv ℂ μ (f i) := by
+    pderiv μ (∏ i ∈ s, f i) = ∑ i ∈ s, (∏ j ∈ s.erase i, f j) * pderiv μ (f i) := by
   induction s using Finset.induction_on with
   | empty => simp
   | insert a s ha ih =>
@@ -65,26 +65,26 @@ lemma pderiv_finset_prod {ι : Type*} [DecidableEq ι] (μ : Fin 1 ⊕ Fin 3) (s
   against the adjugate. -/
 lemma jacobi {κ : Type} [Fintype κ] [DecidableEq κ] (M : Matrix κ κ JetRing)
     (μ : Fin 1 ⊕ Fin 3) :
-    pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace := by
+    pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace := by
   have hcol : ∀ (σ : Equiv.Perm κ) (j : κ),
-      (∏ i ∈ Finset.univ.erase j, M (σ i) i) * pderiv ℂ μ (M (σ j) j)
-        = ∏ i, (M.updateCol j fun k => pderiv ℂ μ (M k j)) (σ i) i := by
+      (∏ i ∈ Finset.univ.erase j, M (σ i) i) * pderiv μ (M (σ j) j)
+        = ∏ i, (M.updateCol j fun k => pderiv μ (M k j)) (σ i) i := by
     intro σ j
     rw [← Finset.mul_prod_erase Finset.univ _ (Finset.mem_univ j), Matrix.updateCol_self,
       mul_comm]
     congr 1
     exact Finset.prod_congr rfl fun i hi => by
       rw [Matrix.updateCol_ne (Finset.ne_of_mem_erase hi)]
-  calc pderiv ℂ μ M.det
+  calc pderiv μ M.det
       = ∑ j, ∑ σ : Equiv.Perm κ, Equiv.Perm.sign σ •
-          ∏ i, (M.updateCol j fun k => pderiv ℂ μ (M k j)) (σ i) i := by
+          ∏ i, (M.updateCol j fun k => pderiv μ (M k j)) (σ i) i := by
         rw [Matrix.det_apply, map_sum]
         simp only [Units.smul_def, map_zsmul, pderiv_finset_prod, Finset.smul_sum, hcol]
         exact Finset.sum_comm
-    _ = ∑ j, Matrix.mulVec M.adjugate (fun k => pderiv ℂ μ (M k j)) j := by
+    _ = ∑ j, Matrix.mulVec M.adjugate (fun k => pderiv μ (M k j)) j := by
         refine Finset.sum_congr rfl fun j _ => ?_
         rw [← Matrix.det_apply, ← Matrix.cramer_apply, Matrix.cramer_eq_adjugate_mulVec]
-    _ = (M.map (pderiv ℂ μ) * M.adjugate).trace := by
+    _ = (M.map (pderiv μ) * M.adjugate).trace := by
         simp only [Matrix.mulVec, dotProduct, Matrix.trace, Matrix.diag, Matrix.mul_apply,
           Matrix.map_apply]
         rw [Finset.sum_comm]

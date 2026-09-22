@@ -46,7 +46,7 @@ permutation via `Matrix.det_permutation`.
 - C. Antisymmetry
 - D. Vanishing on repeated indices
 - E. Contraction against a matrix
-- E. Closed form on `Fin n`
+- F. Closed form on `Fin n`
 
 ## iv. References
 
@@ -213,8 +213,11 @@ lemma sum_leviCivitaSymbol_mul_prod (M : Matrix ι ι R) (a : ι → ι) :
     Fintype.prod_boole, hfun, mul_ite, mul_one, mul_zero, ite_mul, zero_mul]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun σ _ => ?_
-  rw [Finset.sum_ite_eq' Finset.univ, if_pos (Finset.mem_univ _)]
-## E. Closed form on `Fin n`
+  rw [Finset.sum_ite_eq' Finset.univ, ite_eq_left (Finset.mem_univ _)]
+
+/-!
+
+## F. Closed form on `Fin n`
 
 -/
 

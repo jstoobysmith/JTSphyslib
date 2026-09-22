@@ -478,8 +478,8 @@ exactly the multinomial weight of the Leibniz rule.
 lemma sum_map_antidiagonal_ite {M : Type*} [AddCommMonoid M]
     (t : Multiset (Fin 1 ⊕ Fin 3)) (f : Multiset (Fin 1 ⊕ Fin 3) → M) :
     ((t.antidiagonal).map fun p => if p.1 = 0 then f p.2 else 0).sum = f t := by
-  rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero t _ fun p _ hp => if_neg hp]
-  exact if_pos rfl
+  rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero t _ fun p _ hp => ite_eq_right hp]
+  exact ite_eq_left rfl
 
 /-- The Leibniz convolution of a phase family against a module-valued family
   of jets, over the antidiagonal of the derivative multiset: the formal
@@ -655,7 +655,7 @@ noncomputable def trivial (e : ℝ) : GaugeJet e where
   phase s := if s = 0 then 1 else 0
   phase_zero_unitary := by simp
   phase_deriv s μ := by
-    rw [if_neg (by simp)]
+    rw [ite_eq_right (by simp)]
     rw [show ((s.antidiagonal.map fun p =>
         ((0 : Multiset (Fin 1 ⊕ Fin 3) → ℝ) (p.1 + {μ}) : ℂ) *
           (if p.2 = 0 then (1 : ℂ) else 0)).sum) = 0 from

@@ -72,8 +72,8 @@ lemma eq_zero_of_forall_eval_algebraMap_eq_zero {k A : Type*} [Field k] [Infinit
     simp only [Polynomial.coeff_monomial]
     rw [Finset.sum_ite_eq' p.support m fun i => φ (p.coeff i)]
     by_cases hm : m ∈ p.support
-    · rw [if_pos hm]
-    · rw [if_neg hm, Polynomial.notMem_support_iff.mp hm, map_zero]
+    · rw [ite_eq_left hm]
+    · rw [ite_eq_right hm, Polynomial.notMem_support_iff.mp hm, map_zero]
   have hzero : s = 0 := by
     refine Polynomial.funext fun c => ?_
     have h1 := congrArg φ (h c)
@@ -117,8 +117,8 @@ lemma coeff_mapCoeffs {A : Type*} [Semiring A] {f : A → A} (hf0 : f 0 = 0)
   simp only [Polynomial.coeff_monomial]
   rw [Finset.sum_ite_eq' p.support n fun i => f (p.coeff i)]
   by_cases hn : n ∈ p.support
-  · rw [if_pos hn]
-  · rw [if_neg hn, Polynomial.notMem_support_iff.mp hn, hf0]
+  · rw [ite_eq_left hn]
+  · rw [ite_eq_right hn, Polynomial.notMem_support_iff.mp hn, hf0]
 
 @[simp]
 lemma mapCoeffs_zero {A : Type*} [Semiring A] (f : A → A) : mapCoeffs f 0 = 0 := by

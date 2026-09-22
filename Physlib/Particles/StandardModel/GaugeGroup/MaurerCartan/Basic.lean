@@ -69,17 +69,17 @@ noncomputable def maurerCartanForm (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
 @[simp]
 lemma maurerCartanForm_toSU3Matrix (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     (maurerCartanForm U μ).toSU3Matrix =
-      Complex.I • (U.1.1.map (pderiv ℂ μ) * star U.1.1) := rfl
+      Complex.I • (U.1.1.map (pderiv μ) * star U.1.1) := rfl
 
 @[simp]
 lemma maurerCartanForm_toSU2Matrix (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     (maurerCartanForm U μ).toSU2Matrix =
-      Complex.I • (U.2.1.1.map (pderiv ℂ μ) * star U.2.1.1) := rfl
+      Complex.I • (U.2.1.1.map (pderiv μ) * star U.2.1.1) := rfl
 
 @[simp]
 lemma maurerCartanForm_toU1Value (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     (maurerCartanForm U μ).toU1Value =
-      Complex.I • (pderiv ℂ μ U.2.2.1 * star U.2.2.1) := rfl
+      Complex.I • (pderiv μ U.2.2.1 * star U.2.2.1) := rfl
 
 @[simp]
 lemma maurerCartanForm_one : maurerCartanForm (1 : JetGaugeGroupI) = 0 := by
@@ -139,7 +139,7 @@ lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
     -- Step 1: all first derivatives of `U` vanish.
     have hderiv := deriv_zero_of_maurerCartanForm_zero U h
     -- Step 2: a jet with vanishing first derivatives is the constant jet of its value.
-    have hconst : ∀ f : JetRing, (∀ μ, pderiv ℂ μ f = 0) → f = C (constantCoeff f) := by
+    have hconst : ∀ f : JetRing, (∀ μ, pderiv μ f = 0) → f = C (constantCoeff f) := by
       intro f hf
       refine pderiv.ext (fun i => ?_) ?_
       · rw [hf i, pderiv_C]
@@ -183,18 +183,18 @@ lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) 
       ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ = 0 := by
   -- pulling the scalar `i` out of the entrywise formal derivative
   have hmap : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3) (c : ℂ)
-      (M : Matrix κ κ JetRing), (c • M).map (pderiv ℂ ρ) = c • M.map (pderiv ℂ ρ) :=
+      (M : Matrix κ κ JetRing), (c • M).map (pderiv ρ) = c • M.map (pderiv ρ) :=
     fun _ _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
   -- the matrix-level structural identity, generic in the size of the factor
   have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (A : Matrix κ κ JetRing),
       A * star A = 1 →
-      (A.map (pderiv ℂ ν) * star A).map (pderiv ℂ μ) -
-        (A.map (pderiv ℂ μ) * star A).map (pderiv ℂ ν) =
-      A.map (pderiv ℂ μ) * star A * (A.map (pderiv ℂ ν) * star A) -
-        A.map (pderiv ℂ ν) * star A * (A.map (pderiv ℂ μ) * star A) := by
+      (A.map (pderiv ν) * star A).map (pderiv μ) -
+        (A.map (pderiv μ) * star A).map (pderiv ν) =
+      A.map (pderiv μ) * star A * (A.map (pderiv ν) * star A) -
+        A.map (pderiv ν) * star A * (A.map (pderiv μ) * star A) := by
     intro κ _ _ A hU
     have hleib : ∀ (ρ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing),
-        (M * N).map (pderiv ℂ ρ) = M.map (pderiv ℂ ρ) * N + M * N.map (pderiv ℂ ρ) := by
+        (M * N).map (pderiv ρ) = M.map (pderiv ρ) * N + M * N.map (pderiv ρ) := by
       intro ρ M N
       ext i j : 1
       simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
@@ -202,35 +202,35 @@ lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) 
       exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
     -- the derivative of `A†` through differentiated unitarity
     have hq : ∀ ρ : Fin 1 ⊕ Fin 3,
-        (star A).map (pderiv ℂ ρ) = -(star A * A.map (pderiv ℂ ρ) * star A) := by
+        (star A).map (pderiv ρ) = -(star A * A.map (pderiv ρ) * star A) := by
       intro ρ
-      have h1 : A * (star A).map (pderiv ℂ ρ) = -(A.map (pderiv ℂ ρ) * star A) :=
+      have h1 : A * (star A).map (pderiv ρ) = -(A.map (pderiv ρ) * star A) :=
         eq_neg_of_add_eq_zero_right (by
           rw [← hleib ρ A (star A), hU]
           exact Matrix.ext fun i j => by
-            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ ρ)])
-      calc (star A).map (pderiv ℂ ρ)
-          = star A * A * (star A).map (pderiv ℂ ρ) := by
+            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ρ)])
+      calc (star A).map (pderiv ρ)
+          = star A * A * (star A).map (pderiv ρ) := by
             rw [mul_eq_one_comm.mp hU, one_mul]
-        _ = -(star A * A.map (pderiv ℂ ρ) * star A) := by
+        _ = -(star A * A.map (pderiv ρ) * star A) := by
             rw [mul_assoc, h1, mul_neg, ← mul_assoc]
-    rw [hleib μ (A.map (pderiv ℂ ν)) (star A), hleib ν (A.map (pderiv ℂ μ)) (star A),
-      show (A.map (pderiv ℂ ν)).map (pderiv ℂ μ) = (A.map (pderiv ℂ μ)).map (pderiv ℂ ν)
+    rw [hleib μ (A.map (pderiv ν)) (star A), hleib ν (A.map (pderiv μ)) (star A),
+      show (A.map (pderiv ν)).map (pderiv μ) = (A.map (pderiv μ)).map (pderiv ν)
         from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _, hq μ, hq ν]
     simp only [mul_neg, ← mul_assoc]
     abel
   -- the abelian `U(1)` identity: no commutator, pure symmetry of mixed partials
-  have keyU1 : pderiv ℂ μ (pderiv ℂ ν U.2.2.1 * star U.2.2.1) =
-      pderiv ℂ ν (pderiv ℂ μ U.2.2.1 * star U.2.2.1) := by
+  have keyU1 : pderiv μ (pderiv ν U.2.2.1 * star U.2.2.1) =
+      pderiv ν (pderiv μ U.2.2.1 * star U.2.2.1) := by
     have hu : U.2.2.1 * star U.2.2.1 = 1 := (Unitary.mem_iff.mp U.2.2.2).2
-    have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ℂ ρ (star U.2.2.1) =
-        -(star U.2.2.1 * pderiv ℂ ρ U.2.2.1 * star U.2.2.1) := by
+    have hstar : ∀ ρ : Fin 1 ⊕ Fin 3, pderiv ρ (star U.2.2.1) =
+        -(star U.2.2.1 * pderiv ρ U.2.2.1 * star U.2.2.1) := by
       intro ρ
-      have h0 : pderiv ℂ ρ (U.2.2.1 * star U.2.2.1) = 0 := by rw [hu, pderiv_one]
+      have h0 : pderiv ρ (U.2.2.1 * star U.2.2.1) = 0 := by rw [hu, pderiv_one]
       rw [Derivation.leibniz] at h0
       simp only [smul_eq_mul] at h0
       linear_combination star U.2.2.1 * h0 -
-        pderiv ℂ ρ (star U.2.2.1) * ((mul_comm _ _).trans hu)
+        pderiv ρ (star U.2.2.1) * ((mul_comm _ _).trans hu)
     simp only [Derivation.leibniz, smul_eq_mul]
     rw [hstar μ, hstar ν, JetRing.pderiv_comm μ ν]
     ring
@@ -268,24 +268,24 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
       JetGaugeGroupI.deriv μ U = (-Complex.I) • (ω μ).toVal * U.toVal := by
   -- entrywise toolkit: `pderiv` through scalars, products, stars; constancy of jets
   have hmap : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3) (c : ℂ)
-      (M : Matrix κ κ JetRing), (c • M).map (pderiv ℂ ρ) = c • M.map (pderiv ℂ ρ) :=
+      (M : Matrix κ κ JetRing), (c • M).map (pderiv ρ) = c • M.map (pderiv ρ) :=
     fun _ _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
   have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3)
       (M N : Matrix κ κ JetRing),
-      (M * N).map (pderiv ℂ ρ) = M.map (pderiv ℂ ρ) * N + M * N.map (pderiv ℂ ρ) := by
+      (M * N).map (pderiv ρ) = M.map (pderiv ρ) * N + M * N.map (pderiv ρ) := by
     intro κ _ _ ρ M N
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
       Derivation.leibniz, smul_eq_mul]
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
   have hstarmap : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3)
-      (M : Matrix κ κ JetRing), (star M).map (pderiv ℂ ρ) = star (M.map (pderiv ℂ ρ)) :=
+      (M : Matrix κ κ JetRing), (star M).map (pderiv ρ) = star (M.map (pderiv ρ)) :=
     fun _ _ _ ρ M => Matrix.ext fun i j => JetRing.pderiv_star ρ (M j i)
-  have hconst : ∀ f : JetRing, (∀ μ, pderiv ℂ μ f = 0) → f = C (constantCoeff f) :=
+  have hconst : ∀ f : JetRing, (∀ μ, pderiv μ f = 0) → f = C (constantCoeff f) :=
     fun f hf => pderiv.ext (fun i => by rw [hf i, pderiv_C]) (by rw [constantCoeff_C])
   have hconstM : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M : Matrix κ κ JetRing),
       (constantCoeff : JetRing →+* ℂ).mapMatrix M = 1 →
-      (∀ μ, M.map (pderiv ℂ μ) = 0) → M = 1 := by
+      (∀ μ, M.map (pderiv μ) = 0) → M = 1 := by
     intro κ _ _ M h1 hM
     ext i j
     rw [hconst (M i j) fun μ => congrArg (fun N => N i j) (hM μ),
@@ -294,16 +294,16 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
   -- generic integration: flat hermitian data has a unitary Wilson line based at `1`
   have hmain : ∀ (κ : Type) [Fintype κ] [DecidableEq κ]
       (X : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing), (∀ μ, star (X μ) = X μ) →
-      (∀ μ ν, (X ν).map (pderiv ℂ μ) - (X μ).map (pderiv ℂ ν) +
+      (∀ μ ν, (X ν).map (pderiv μ) - (X μ).map (pderiv ν) +
         Complex.I • (X μ * X ν - X ν * X μ) = 0) →
       ∃ F : Matrix κ κ JetRing, (constantCoeff : JetRing →+* ℂ).mapMatrix F = 1 ∧
-        F * star F = 1 ∧ ∀ μ, F.map (pderiv ℂ μ) = (-Complex.I) • X μ * F := by
+        F * star F = 1 ∧ ∀ μ, F.map (pderiv μ) = (-Complex.I) • X μ * F := by
     intro κ _ _ X hXstar hXflat
     obtain ⟨F, hF0, hF⟩ := JetRing.exists_parallelTransport (fun μ => (-Complex.I) • X μ)
       (fun μ ν => by
         simp only [hmap, smul_mul_smul_comm]
         linear_combination (norm := module) (-Complex.I) • hXflat μ ν)
-    replace hF : ∀ μ, F.map (pderiv ℂ μ) = (-Complex.I) • X μ * F := hF
+    replace hF : ∀ μ, F.map (pderiv μ) = (-Complex.I) • X μ * F := hF
     have hA : ∀ μ, star ((-Complex.I) • X μ) = -((-Complex.I) • X μ) := fun μ => by
       rw [star_smul, hXstar μ]
       simp
@@ -314,9 +314,9 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
   have hdet : ∀ (κ : Type) [Fintype κ] [DecidableEq κ]
       (X : (Fin 1 ⊕ Fin 3) → Matrix κ κ JetRing) (F : Matrix κ κ JetRing),
       (∀ (M : Matrix κ κ JetRing) (μ : Fin 1 ⊕ Fin 3),
-        pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace) →
+        pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace) →
       (∀ μ, (X μ).trace = 0) → (constantCoeff : JetRing →+* ℂ).mapMatrix F = 1 →
-      (∀ μ, F.map (pderiv ℂ μ) = (-Complex.I) • X μ * F) → F.det = 1 := by
+      (∀ μ, F.map (pderiv μ) = (-Complex.I) • X μ * F) → F.det = 1 := by
     intro κ _ _ X F hjac htr h0 hF
     rw [hconst F.det fun μ => by
         rw [hjac F μ, hF μ, Matrix.mul_assoc, Matrix.mul_adjugate, mul_smul_comm, mul_one,
@@ -324,7 +324,7 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
       RingHom.map_det, h0, Matrix.det_one, map_one]
   -- Jacobi's formula on each matrix factor
   have hjac3 : ∀ (M : Matrix (Fin 3) (Fin 3) JetRing) (μ : Fin 1 ⊕ Fin 3),
-      pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace := by
+      pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace := by
     intro M μ
     rw [Matrix.det_fin_three]
     simp only [Matrix.trace_fin_three, Matrix.mul_apply, Fin.sum_univ_three,
@@ -334,7 +334,7 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
       map_sub, map_add, Derivation.leibniz, smul_eq_mul]
     ring
   have hjac2 : ∀ (M : Matrix (Fin 2) (Fin 2) JetRing) (μ : Fin 1 ⊕ Fin 3),
-      pderiv ℂ μ M.det = (M.map (pderiv ℂ μ) * M.adjugate).trace := by
+      pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace := by
     intro M μ
     rw [Matrix.det_fin_two]
     simp only [Matrix.adjugate_fin_two, Matrix.trace_fin_two, Matrix.mul_apply,
@@ -379,7 +379,7 @@ lemma exists_deriv_eq_of_maurerCartanForm_structure
       ⟨F₁ 0 0, Unitary.mem_iff.mpr ⟨by rw [mul_comm]; exact hu1, hu1⟩⟩⟩,
     Prod.ext (Subtype.ext hF₃0) (Prod.ext (Subtype.ext hF₂0) (Subtype.ext hu0)),
     fun μ => Prod.ext (hF₃ μ) (Prod.ext (hF₂ μ) ?_)⟩
-  show pderiv ℂ μ (F₁ 0 0) = (-Complex.I) • (ω μ).toU1Value * F₁ 0 0
+  show pderiv μ (F₁ 0 0) = (-Complex.I) • (ω μ).toU1Value * F₁ 0 0
   simpa [Matrix.mul_apply] using congrArg (fun M => M (0 : Fin 1) (0 : Fin 1)) (hF₁ μ)
 
 /-!
@@ -404,7 +404,7 @@ lemma deriv_adjointMap (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetGauge
     deriv μ (adjointMap U x) =
       adjointMap U (deriv μ x) - ⁅maurerCartanForm U μ, adjointMap U x⁆ := by
   have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
-      (M * N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) * N + M * N.map (pderiv ℂ μ) := by
+      (M * N).map (pderiv μ) = M.map (pderiv μ) * N + M * N.map (pderiv μ) := by
     intro κ _ _ M N
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
@@ -412,26 +412,26 @@ lemma deriv_adjointMap (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetGauge
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
   have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (V X : Matrix κ κ JetRing),
       V * star V = 1 →
-      (V * X * star V).map (pderiv ℂ μ) =
-        V * X.map (pderiv ℂ μ) * star V -
-        Complex.I • (Complex.I • (V.map (pderiv ℂ μ) * star V) * (V * X * star V) -
-          (V * X * star V) * (Complex.I • (V.map (pderiv ℂ μ) * star V))) := by
+      (V * X * star V).map (pderiv μ) =
+        V * X.map (pderiv μ) * star V -
+        Complex.I • (Complex.I • (V.map (pderiv μ) * star V) * (V * X * star V) -
+          (V * X * star V) * (Complex.I • (V.map (pderiv μ) * star V))) := by
     intro κ _ _ V X hV
     have hVV : star V * V = 1 := mul_eq_one_comm.mp hV
-    have hq : (star V).map (pderiv ℂ μ) = -(star V * V.map (pderiv ℂ μ) * star V) := by
-      have h1 : V * (star V).map (pderiv ℂ μ) = -(V.map (pderiv ℂ μ) * star V) :=
+    have hq : (star V).map (pderiv μ) = -(star V * V.map (pderiv μ) * star V) := by
+      have h1 : V * (star V).map (pderiv μ) = -(V.map (pderiv μ) * star V) :=
         eq_neg_of_add_eq_zero_right (by
           rw [← hleib _ V (star V), hV]
           exact Matrix.ext fun i j => by
-            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ μ)])
-      calc (star V).map (pderiv ℂ μ)
-          = star V * V * (star V).map (pderiv ℂ μ) := by rw [hVV, one_mul]
-        _ = -(star V * V.map (pderiv ℂ μ) * star V) := by
+            simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)])
+      calc (star V).map (pderiv μ)
+          = star V * V * (star V).map (pderiv μ) := by rw [hVV, one_mul]
+        _ = -(star V * V.map (pderiv μ) * star V) := by
             rw [mul_assoc, h1, mul_neg, ← mul_assoc]
     rw [hleib _ (V * X) (star V), hleib _ V X, hq]
     simp only [smul_mul_assoc, mul_smul_comm, ← smul_sub, smul_smul, Complex.I_mul_I,
       neg_one_smul, sub_neg_eq_add, add_mul, mul_neg, ← mul_assoc]
-    rw [mul_assoc (V.map (pderiv ℂ μ)) (star V) V, hVV, mul_one]
+    rw [mul_assoc (V.map (pderiv μ)) (star V) V, hVV, mul_one]
     abel
   refine ext_of_matrix ?_ ?_ ?_
   · simpa only [deriv_toSU3Matrix, adjointMap_toSU3Matrix, sub_toSU3Matrix,

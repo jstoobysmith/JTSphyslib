@@ -66,7 +66,7 @@ The AddCommGroup and module instances are inherited from the underlying tensor p
 
 instance : AddCommGroup QuarkDoublet := Equiv.addCommGroup valEquiv
 
-instance : Module ℂ QuarkDoublet := Equiv.module ℂ valEquiv
+instance : Module ℂ QuarkDoublet := AddEquiv.module ℂ { valEquiv with map_add' _ _ := rfl }
 
 /-- The linear equivalence between `QuarkDoublet` and its underlying tensor product space. -/
 def valLinEquiv : QuarkDoublet ≃ₗ[ℂ]
@@ -489,7 +489,7 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
           simp
       | tmul psi c =>
           apply jetValLinEquiv.injective
-          simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI]
+          simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI, -TensorProduct.congr_symm]
           have halg : ∀ A : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) JetRing,
               (Matrix.toLpLinAlgEquiv 2 A :
                   Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)))

@@ -157,7 +157,7 @@ lemma su3Weyl_injective : Function.Injective su3Weyl := by
   simp [Equiv.Perm.permMatrix, PEquiv.toMatrix_apply, Matrix.one_apply] at hi
   by_cases h' : i = σ.symm i
   · simpa using congrArg σ h'
-  · rw [if_neg h'] at hi
+  · rw [ite_eq_right h'] at hi
     exact absurd hi hs
 
 /-- The cyclic element is the lift of the three-cycle `finRotate 3`, which is even and so

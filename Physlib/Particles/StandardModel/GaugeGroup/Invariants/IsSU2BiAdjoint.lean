@@ -230,7 +230,7 @@ lemma act_traceCoeff (U : specialUnitaryGroup (Fin 2) ℂ) : act U traceCoeff = 
     · subst h
       simp [traceCoeff, Fin.prod_univ_two]
     · simp [traceCoeff, Fin.prod_univ_two, h, Ne.symm h]
-  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, if_true, ← Complex.ofReal_sum,
+  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, ite_true, ← Complex.ofReal_sum,
     sum_su2AdjointMatrix_row_mul]
   by_cases h : a 0 = a 1 <;> simp [traceCoeff, h]
 
@@ -335,7 +335,7 @@ lemma act_su2Flip (k : Fin 3) (c : (Fin 2 → Fin 3) → ℂ) (a b : Fin 3) :
       = ((su2FlipSign k a : ℤ) : ℂ) * ((su2FlipSign k b : ℤ) : ℂ) * c ![a, b] := by
   rw [act_apply, sum_pi_two, Finset.sum_eq_single a, Finset.sum_eq_single b]
   · simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one,
-      su2AdjointMatrix_su2Flip, if_true, Complex.ofReal_intCast]
+      su2AdjointMatrix_su2Flip, ite_true, Complex.ofReal_intCast]
   · intro y _ hy
     simp [-su2AdjointMatrix_apply, su2AdjointMatrix_su2Flip, Ne.symm hy]
   · simp

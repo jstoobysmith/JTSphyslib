@@ -92,12 +92,12 @@ structure MatrixRep (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (ι : Type) [Fint
   /-- The base-point Taylor coefficients of the jet action matrix are the action matrices
     of the base-point Taylor coefficients. -/
   jetAct_map_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    ((jetAct a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) f))
+    ((jetAct a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
       = act (jets.evalLie (jets.iteratedDeriv p a))
   /-- The derivative identity: the formal derivative of the matrix of a gauge jet is minus
     the jet action of its Maurer–Cartan form times the matrix. -/
   mat_map_pderiv : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
-    (mat U).map (fun f => pderiv ℂ μ f) = -(jetAct (jets.maurerCartan U μ) * mat U)
+    (mat U).map (fun f => pderiv μ f) = -(jetAct (jets.maurerCartan U μ) * mat U)
   /-- The equivariance identity: the matrix of a gauge jet intertwines the constant jet
     action with its adjoint transform. -/
   mat_mul_jetAct : ∀ (U : GJ) (c : 𝔤),
@@ -120,17 +120,17 @@ jet ring into the internal index.
 
 /-- The entrywise formal derivative on `ι → JetRing`, as a `ℂ`-linear map. -/
 noncomputable def pderivPi (μ : Fin 1 ⊕ Fin 3) : (ι → JetRing) →ₗ[ℂ] (ι → JetRing) where
-  toFun w i := pderiv ℂ μ (w i)
+  toFun w i := pderiv μ (w i)
   map_add' _ _ := funext fun _ => map_add _ _ _
   map_smul' _ _ := funext fun _ => Derivation.map_smul _ _ _
 
 lemma pderivPi_apply (μ : Fin 1 ⊕ Fin 3) (w : ι → JetRing) (i : ι) :
-    pderivPi μ w i = pderiv ℂ μ (w i) := rfl
+    pderivPi μ w i = pderiv μ (w i) := rfl
 
 /-- The entrywise iterated formal derivative on `ι → JetRing`, as a `ℂ`-linear map. -/
 noncomputable def foldPi (x : Multiset (Fin 1 ⊕ Fin 3)) :
     (ι → JetRing) →ₗ[ℂ] (ι → JetRing) where
-  toFun w i := x.foldl (fun h ρ => pderiv ℂ ρ h) (w i)
+  toFun w i := x.foldl (fun h ρ => pderiv ρ h) (w i)
   map_add' v w := funext fun i => JetRing.foldl_pderiv_add x _ _
   map_smul' z v := funext fun i => by
     simp only [Pi.smul_apply, RingHom.id_apply]
@@ -138,10 +138,10 @@ noncomputable def foldPi (x : Multiset (Fin 1 ⊕ Fin 3)) :
     | empty => rfl
     | cons ν t ih =>
       rw [Multiset.foldl_cons, Multiset.foldl_cons, Derivation.map_smul]
-      exact ih (fun i => pderiv ℂ ν (v i))
+      exact ih (fun i => pderiv ν (v i))
 
 lemma foldPi_apply (x : Multiset (Fin 1 ⊕ Fin 3)) (w : ι → JetRing) (i : ι) :
-    foldPi x w i = x.foldl (fun h ρ => pderiv ℂ ρ h) (w i) := rfl
+    foldPi x w i = x.foldl (fun h ρ => pderiv ρ h) (w i) := rfl
 
 lemma foldPi_zero : foldPi (ι := ι) 0 = LinearMap.id := LinearMap.ext fun _ => rfl
 
@@ -163,16 +163,16 @@ lemma ccPi_apply (w : ι → JetRing) (i : ι) : ccPi w i = constantCoeff (w i) 
 
 /-- The iterated formal derivative is `ℂ`-homogeneous. -/
 lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing) :
-    x.foldl (fun h ρ => pderiv ℂ ρ h) (z • f)
-      = z • x.foldl (fun h ρ => pderiv ℂ ρ h) f := by
+    x.foldl (fun h ρ => pderiv ρ h) (z • f)
+      = z • x.foldl (fun h ρ => pderiv ρ h) f := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
 
 /-- The iterated formal derivative of a negation. -/
 lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
-    x.foldl (fun h ρ => pderiv ℂ ρ h) (-f)
-      = -(x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+    x.foldl (fun h ρ => pderiv ρ h) (-f)
+      = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
@@ -190,7 +190,7 @@ omit [DecidableEq ι] in
 lemma ccPi_foldPi_mulVec (x : Multiset (Fin 1 ⊕ Fin 3)) (A : Matrix ι ι JetRing)
     (v : ι → ℂ) :
     ccPi (foldPi x (A.mulVec fun k => (C (v k) : JetRing)))
-      = (A.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)).mulVec v := by
+      = (A.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)).mulVec v := by
   funext j
   simp only [ccPi_apply, foldPi_apply, Matrix.mulVec, dotProduct, Matrix.map_apply]
   rw [JetRing.foldl_pderiv_sum, map_sum]
@@ -457,7 +457,7 @@ lemma repAlgebra_apply (c : 𝔤) : R.repAlgebra e c = valEnd e (R.act c) := rfl
 lemma repCoeff_eq (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (R.repJet e) U x
       = valEnd e ((R.mat U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) := by
+          constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) := by
   refine LinearMap.ext fun d => ?_
   obtain ⟨t, rfl⟩ : ∃ t, d = e.symm t := ⟨e d, (e.symm_apply_apply d).symm⟩
   induction t using TensorProduct.induction_on with
@@ -487,15 +487,15 @@ theorem isInfinitesimalActionOf :
   constructor
   · intro U μ x
     have hMcons : ((R.mat U).map fun f =>
-        constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
+        constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) f))
         = -((x.antidiagonal.map fun p =>
             R.act (jets.evalLie (jets.iteratedDeriv p.1 (jets.maurerCartan U μ)))
             * ((R.mat U).map fun f =>
-                constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f))).sum) := by
+                constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) f))).sum) := by
       rw [show ((R.mat U).map fun f =>
-            constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) f))
-          = (((R.mat U).map fun f => pderiv ℂ μ f).map fun f =>
-              constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) from
+            constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) f))
+          = (((R.mat U).map fun f => pderiv μ f).map fun f =>
+              constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) from
           Matrix.ext fun i j => by
             rw [Matrix.map_apply, Matrix.map_apply, Matrix.map_apply, Multiset.foldl_cons],
         R.mat_map_pderiv,
@@ -511,7 +511,7 @@ theorem isInfinitesimalActionOf :
   · intro U x c
     have hcollapse : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)),
         (((R.act c).map (C : ℂ → JetRing)).map fun f =>
-          constantCoeff (m.foldl (fun h ρ => pderiv ℂ ρ h) f))
+          constantCoeff (m.foldl (fun h ρ => pderiv ρ h) f))
         = if m = 0 then R.act c else 0 := by
       intro m
       rcases eq_or_ne m 0 with rfl | hm
@@ -520,23 +520,23 @@ theorem isInfinitesimalActionOf :
       · refine Matrix.ext fun i j => ?_
         simp [Matrix.map_apply, JetRing.foldl_pderiv_C_of_ne_zero hm, hm]
     have hMact : ((R.mat U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) * R.act c
+          constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c
         = (x.antidiagonal.map fun p =>
             R.act (jets.adjointCoeff U p.1 c)
             * ((R.mat U).map fun f =>
-                constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) f))).sum := by
+                constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) f))).sum := by
       have h1 : ((R.mat U * R.jetAct (jets.ofConstantLie c)).map
-            fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f))
+            fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f))
           = ((R.mat U).map fun f =>
-              constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f)) * R.act c := by
+              constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c := by
         rw [R.jetAct_ofConstantLie, JetRing.matrix_constantCoeff_foldl_pderiv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((R.mat U).map fun f =>
-              constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h) f)) *
+              constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f)) *
                 (if p.2 = 0 then R.act c else 0))
-            (fun p _ hp => by rw [if_neg hp, Matrix.mul_zero]),
-          if_pos rfl]
+            (fun p _ hp => by rw [ite_eq_right hp, Matrix.mul_zero]),
+          ite_eq_left rfl]
       rw [← h1, R.mat_mul_jetAct, JetRing.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [R.jetAct_map_cc_foldl, jets.adjointCoeff_apply])

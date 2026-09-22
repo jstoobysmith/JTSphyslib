@@ -153,9 +153,9 @@ noncomputable def kron (R₁ : MatrixRep jets ι₁) (R₂ : MatrixRep jets ι�
       kronecker_one_map _ (by simp), one_kronecker_map _ (by simp),
       R₁.jetAct_map_cc_foldl, R₂.jetAct_map_cc_foldl]
   mat_map_pderiv U μ := by
-    have hleib : (R₁.mat U ⊗ₖ R₂.mat U).map (fun f => pderiv ℂ μ f)
-        = ((R₁.mat U).map fun f => pderiv ℂ μ f) ⊗ₖ R₂.mat U
-          + R₁.mat U ⊗ₖ ((R₂.mat U).map fun f => pderiv ℂ μ f) := by
+    have hleib : (R₁.mat U ⊗ₖ R₂.mat U).map (fun f => pderiv μ f)
+        = ((R₁.mat U).map fun f => pderiv μ f) ⊗ₖ R₂.mat U
+          + R₁.mat U ⊗ₖ ((R₂.mat U).map fun f => pderiv μ f) := by
       refine Matrix.ext fun i j => ?_
       simp only [Matrix.map_apply, Matrix.kroneckerMap_apply, Matrix.add_apply]
       rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
@@ -180,7 +180,7 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- The iterated formal derivative commutes with conjugation. -/
 lemma foldl_pderiv_star (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
-    x.foldl (fun h ρ => pderiv ℂ ρ h) (star f) = star (x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+    x.foldl (fun h ρ => pderiv ρ h) (star f) = star (x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, JetRing.pderiv_star, ih, Multiset.foldl_cons]
@@ -211,8 +211,8 @@ noncomputable def conj (R : MatrixRep jets ι) : MatrixRep jets ι where
     rw [← R.jetAct_map_cc_foldl, Matrix.map_map, Matrix.map_map]
     congr 1
     funext f
-    show constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) (star f))
-      = star (constantCoeff (p.foldl (fun h ρ => pderiv ℂ ρ h) f))
+    show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (star f))
+      = star (constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
     rw [foldl_pderiv_star, JetRing.constantCoeff_star]
   mat_map_pderiv U μ := by
     show ((R.mat U).map _).map _ = -((R.jetAct _).map _ * (R.mat U).map _)

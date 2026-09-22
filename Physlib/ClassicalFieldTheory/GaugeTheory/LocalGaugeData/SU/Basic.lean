@@ -155,7 +155,7 @@ lemma eval_ofConstant (g : SU n) : eval (ofConstant g) = g := by
 
 /-- The entrywise derivative commutes with the conjugate transpose. -/
 lemma star_map_pderiv {κ : Type} [Fintype κ] (μ : Fin 1 ⊕ Fin 3) (A : Matrix κ κ JetRing) :
-    star (A.map (pderiv ℂ μ)) = (star A).map (pderiv ℂ μ) := by
+    star (A.map (pderiv μ)) = (star A).map (pderiv μ) := by
   ext i j : 1
   simp only [Matrix.star_apply, Matrix.map_apply]
   exact (JetRing.pderiv_star μ (A j i)).symm
@@ -163,21 +163,21 @@ lemma star_map_pderiv {κ : Type} [Fintype κ] (μ : Fin 1 ⊕ Fin 3) (A : Matri
 /-- The entrywise derivative of the conjugate transpose of a unitary matrix, through the
   differentiated unitarity relation. -/
 lemma map_pderiv_star_val (μ : Fin 1 ⊕ Fin 3) (U : JetSU n) :
-    (star U.1).map (pderiv ℂ μ) = -(star U.1 * U.1.map (pderiv ℂ μ) * star U.1) := by
-  have h1 : U.1 * (star U.1).map (pderiv ℂ μ) = -(U.1.map (pderiv ℂ μ) * star U.1) :=
+    (star U.1).map (pderiv μ) = -(star U.1 * U.1.map (pderiv μ) * star U.1) := by
+  have h1 : U.1 * (star U.1).map (pderiv μ) = -(U.1.map (pderiv μ) * star U.1) :=
     eq_neg_of_add_eq_zero_right (by
       rw [← JetRing.matrix_map_pderiv_mul, val_mul_star]
       exact Matrix.ext fun i j => by
-        simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv ℂ μ)])
-  calc (star U.1).map (pderiv ℂ μ)
-      = star U.1 * U.1 * (star U.1).map (pderiv ℂ μ) := by rw [star_mul_val, one_mul]
-    _ = -(star U.1 * U.1.map (pderiv ℂ μ) * star U.1) := by
+        simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)])
+  calc (star U.1).map (pderiv μ)
+      = star U.1 * U.1 * (star U.1).map (pderiv μ) := by rw [star_mul_val, one_mul]
+    _ = -(star U.1 * U.1.map (pderiv μ) * star U.1) := by
         rw [mul_assoc, h1, mul_neg, ← mul_assoc]
 
 /-- The Maurer–Cartan matrix `i (∂_μ U) U†` is hermitian. -/
 lemma star_mcMatrix (μ : Fin 1 ⊕ Fin 3) (U : JetSU n) :
-    star (Complex.I • (U.1.map (pderiv ℂ μ) * star U.1))
-      = Complex.I • (U.1.map (pderiv ℂ μ) * star U.1) := by
+    star (Complex.I • (U.1.map (pderiv μ) * star U.1))
+      = Complex.I • (U.1.map (pderiv μ) * star U.1) := by
   rw [star_smul, star_mul, star_star, star_map_pderiv, map_pderiv_star_val, Complex.star_def,
     Complex.conj_I, neg_smul, mul_neg, smul_neg, neg_neg, ← mul_assoc, ← mul_assoc,
     val_mul_star, one_mul]
@@ -185,7 +185,7 @@ lemma star_mcMatrix (μ : Fin 1 ⊕ Fin 3) (U : JetSU n) :
 /-- The Maurer–Cartan matrix `i (∂_μ U) U†` is traceless, by Jacobi's formula and
   `det U = 1`. -/
 lemma trace_mcMatrix (μ : Fin 1 ⊕ Fin 3) (U : JetSU n) :
-    (Complex.I • (U.1.map (pderiv ℂ μ) * star U.1)).trace = 0 := by
+    (Complex.I • (U.1.map (pderiv μ) * star U.1)).trace = 0 := by
   rw [Matrix.trace_smul, star_val_eq_adjugate, ← JetRing.jacobi, det_val, pderiv_one,
     smul_zero]
 
@@ -203,7 +203,7 @@ variable {n : ℕ}
 
 /-- The formal derivative in the direction `μ`, entrywise. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n →ₗ[ℝ] JetSUAlgebra n where
-  toFun a := SUAlgebraOver.ofMatrix (a.1.map (pderiv ℂ μ))
+  toFun a := SUAlgebraOver.ofMatrix (a.1.map (pderiv μ))
     (by rw [JetSU.star_map_pderiv, a.star_val])
     (by rw [← AddMonoidHom.map_trace, a.trace_val, map_zero])
   map_add' a b := Subtype.ext (by
@@ -217,7 +217,7 @@ noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n →ₗ[ℝ] JetS
 
 @[simp]
 lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetSUAlgebra n) :
-    (deriv μ a).1 = a.1.map (pderiv ℂ μ) := rfl
+    (deriv μ a).1 = a.1.map (pderiv μ) := rfl
 
 /-- Multiplication by the coordinate `x_μ`, entrywise. -/
 noncomputable def coord (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n →ₗ[ℝ] JetSUAlgebra n where
@@ -340,12 +340,12 @@ lemma adjointValue_val (U : SU n) (a : SUAlgebra n) :
 
 /-- The Maurer–Cartan form `i (∂_μ U) U†` of an `SU(n)` gauge jet. -/
 noncomputable def mc (U : JetSU n) (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n :=
-  SUAlgebraOver.ofMatrix (Complex.I • (U.1.map (pderiv ℂ μ) * star U.1))
+  SUAlgebraOver.ofMatrix (Complex.I • (U.1.map (pderiv μ) * star U.1))
     (JetSU.star_mcMatrix μ U) (JetSU.trace_mcMatrix μ U)
 
 @[simp]
 lemma mc_val (U : JetSU n) (μ : Fin 1 ⊕ Fin 3) :
-    (mc U μ).1 = Complex.I • (U.1.map (pderiv ℂ μ) * star U.1) := rfl
+    (mc U μ).1 = Complex.I • (U.1.map (pderiv μ) * star U.1) := rfl
 
 lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetSUAlgebra n) :
     deriv μ (deriv ν a) = deriv ν (deriv μ a) := by
@@ -355,11 +355,11 @@ lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetSUAlgebra n) :
 
 /-- Pulling a complex scalar out of the entrywise derivative. -/
 lemma map_pderiv_smul {κ : Type} (μ : Fin 1 ⊕ Fin 3) (c : ℂ) (M : Matrix κ κ JetRing) :
-    (c • M).map (pderiv ℂ μ) = c • M.map (pderiv ℂ μ) :=
+    (c • M).map (pderiv μ) = c • M.map (pderiv μ) :=
   Matrix.ext fun _ _ => Derivation.map_smul _ _ _
 
 lemma map_pderiv_sub {κ : Type} (μ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing) :
-    (M - N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) - N.map (pderiv ℂ μ) := by
+    (M - N).map (pderiv μ) = M.map (pderiv μ) - N.map (pderiv μ) := by
   ext i j : 1
   simp only [Matrix.map_apply, Matrix.sub_apply, map_sub]
 
@@ -385,13 +385,13 @@ lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : JetSUAlgebra n) :
     deriv μ (coord ν a) = coord ν (deriv μ a) + if μ = ν then a else 0 := by
   by_cases h : μ = ν
   · subst h
-    rw [if_pos rfl]
+    rw [ite_eq_left rfl]
     refine Subtype.ext ?_
     ext i j
     simp only [deriv_val, coord_val, Submodule.coe_add, Matrix.map_apply, Matrix.smul_apply,
       Matrix.add_apply, smul_eq_mul, Derivation.leibniz, pderiv_X_self]
     ring
-  · rw [if_neg h, add_zero]
+  · rw [ite_eq_right h, add_zero]
     refine Subtype.ext ?_
     ext i j
     simp only [deriv_val, coord_val, Matrix.map_apply, Matrix.smul_apply, smul_eq_mul,
@@ -442,12 +442,12 @@ lemma mc_cocycle (U V : JetSU n) (μ : Fin 1 ⊕ Fin 3) :
 lemma mc_structure (U : JetSU n) (μ ν : Fin 1 ⊕ Fin 3) :
     deriv μ (mc U ν) - deriv ν (mc U μ) + ⁅mc U μ, mc U ν⁆ = 0 := by
   set A := U.1 with hA
-  have key : (A.map (pderiv ℂ ν) * star A).map (pderiv ℂ μ) -
-        (A.map (pderiv ℂ μ) * star A).map (pderiv ℂ ν) =
-      A.map (pderiv ℂ μ) * star A * (A.map (pderiv ℂ ν) * star A) -
-        A.map (pderiv ℂ ν) * star A * (A.map (pderiv ℂ μ) * star A) := by
+  have key : (A.map (pderiv ν) * star A).map (pderiv μ) -
+        (A.map (pderiv μ) * star A).map (pderiv ν) =
+      A.map (pderiv μ) * star A * (A.map (pderiv ν) * star A) -
+        A.map (pderiv ν) * star A * (A.map (pderiv μ) * star A) := by
     rw [JetRing.matrix_map_pderiv_mul, JetRing.matrix_map_pderiv_mul,
-      show (A.map (pderiv ℂ ν)).map (pderiv ℂ μ) = (A.map (pderiv ℂ μ)).map (pderiv ℂ ν)
+      show (A.map (pderiv ν)).map (pderiv μ) = (A.map (pderiv μ)).map (pderiv ν)
         from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _,
       JetSU.map_pderiv_star_val μ, JetSU.map_pderiv_star_val ν]
     simp only [mul_neg, ← mul_assoc]
@@ -465,14 +465,14 @@ lemma deriv_adjoint (U : JetSU n) (μ : Fin 1 ⊕ Fin 3) (x : JetSUAlgebra n) :
     deriv μ (adjoint U x) = adjoint U (deriv μ x) - ⁅mc U μ, adjoint U x⁆ := by
   set V := U.1 with hV
   have hVV : star V * V = 1 := JetSU.star_mul_val U
-  have hq : (star V).map (pderiv ℂ μ) = -(star V * V.map (pderiv ℂ μ) * star V) :=
+  have hq : (star V).map (pderiv μ) = -(star V * V.map (pderiv μ) * star V) :=
     JetSU.map_pderiv_star_val μ U
   refine Subtype.ext ?_
   simp only [deriv_val, adjoint_val, Submodule.coe_sub, SUAlgebraOver.bracket_val, mc_val]
   rw [JetRing.matrix_map_pderiv_mul, JetRing.matrix_map_pderiv_mul, hq]
   simp only [smul_mul_assoc, mul_smul_comm, ← smul_sub, smul_smul, Complex.I_mul_I,
     neg_one_smul, sub_neg_eq_add, add_mul, mul_neg, ← mul_assoc]
-  rw [mul_assoc (V.map (pderiv ℂ μ)) (star V) V, hVV, mul_one]
+  rw [mul_assoc (V.map (pderiv μ)) (star V) V, hVV, mul_one]
   abel
 
 end JetSUAlgebra
@@ -527,7 +527,7 @@ variable {n : ℕ}
 
 /-- The iterated derivative on `su(n)` jets is the entrywise iterated formal derivative. -/
 lemma su_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetSUAlgebra n) :
-    ((su n).iteratedDeriv s a).1 = a.1.map fun f => s.foldl (fun h ρ => pderiv ℂ ρ h) f := by
+    ((su n).iteratedDeriv s a).1 = a.1.map fun f => s.foldl (fun h ρ => pderiv ρ h) f := by
   induction s using Multiset.induction_on generalizing a with
   | empty =>
     rw [iteratedDeriv_zero, LinearMap.id_apply]
@@ -543,7 +543,7 @@ lemma su_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetSUAlgebra n)
 /-- The base-point value of the iterated derivative on `su(n)` jets, entrywise. -/
 lemma su_evalLie_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetSUAlgebra n) :
     ((su n).evalLie ((su n).iteratedDeriv s a)).1
-      = a.1.map fun f => constantCoeff (s.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+      = a.1.map fun f => constantCoeff (s.foldl (fun h ρ => pderiv ρ h) f) := by
   rw [su_evalLie, JetSUAlgebra.evalLie_val, su_iteratedDeriv_val, RingHom.mapMatrix_apply,
     Matrix.map_map]
   rfl
@@ -575,14 +575,14 @@ instance instFaithfulSU : (su n).Faithful where
     have hs := congrArg (fun a : SUAlgebra n => a.1 i j) (h s)
     simpa only [su_evalLie_iteratedDeriv_val, Matrix.map_apply] using hs
   eq_ofConstant_of_maurerCartan_eq_zero {U} h := by
-    have hd : ∀ μ, U.1.map (pderiv ℂ μ) = 0 := fun μ => by
-      have h1 : Complex.I • (U.1.map (pderiv ℂ μ) * star U.1) = 0 :=
+    have hd : ∀ μ, U.1.map (pderiv μ) = 0 := fun μ => by
+      have h1 : Complex.I • (U.1.map (pderiv μ) * star U.1) = 0 :=
         congrArg Subtype.val (congrFun h μ)
-      have h2 : U.1.map (pderiv ℂ μ) * star U.1 = 0 := by
+      have h2 : U.1.map (pderiv μ) * star U.1 = 0 := by
         have := congrArg (fun M => (-Complex.I) • M) h1
         simpa [smul_smul, Complex.I_mul_I] using this
-      calc U.1.map (pderiv ℂ μ)
-          = U.1.map (pderiv ℂ μ) * (star U.1 * U.1) := by rw [JetSU.star_mul_val, mul_one]
+      calc U.1.map (pderiv μ)
+          = U.1.map (pderiv μ) * (star U.1 * U.1) := by rw [JetSU.star_mul_val, mul_one]
         _ = 0 := by rw [← mul_assoc, h2, zero_mul]
     refine Subtype.ext (Matrix.ext fun i j => ?_)
     show U.1 i j = C (constantCoeff (U.1 i j))

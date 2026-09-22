@@ -491,9 +491,9 @@ lemma coeff_massWeightPoly_mem_sectorMassWeight {S : Finset GeneratorClass} {x :
     obtain ⟨gl, hS, rfl⟩ := hy
     rw [h.massWeightPoly_generatorVal_list_prod, Polynomial.coeff_monomial]
     by_cases hw : (gl.map Generators.weight).sum = w
-    · rw [if_pos hw]
+    · rw [ite_eq_left hw]
       exact Submodule.subset_span ⟨gl, hS, hw, rfl⟩
-    · rw [if_neg hw]
+    · rw [ite_eq_right hw]
       exact Submodule.zero_mem _
   | zero =>
     rw [map_zero, Polynomial.coeff_zero]
@@ -515,7 +515,7 @@ lemma sectorMassWeight_eq_inf (S : Finset GeneratorClass) (w : ℕ) :
   obtain ⟨hxS, hxw⟩ := Submodule.mem_inf.mp hx
   have h1 := h.massWeightPoly_of_mem_massWeightSubmodule hxw
   have h2 := h.coeff_massWeightPoly_mem_sectorMassWeight (h.mem_sector.mpr hxS) w
-  rwa [h1, Polynomial.coeff_monomial, if_pos rfl] at h2
+  rwa [h1, Polynomial.coeff_monomial, ite_eq_left rfl] at h2
 
 /-- **The decomposition of the mass-weight submodule into sectors**: the weight-`w`
   component of the field algebra is the join over the class sets `S` of the

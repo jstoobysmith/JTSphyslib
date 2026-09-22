@@ -357,11 +357,11 @@ lemma act_flipAxis (k : Fin 3) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (a : Fi
     push_cast
     congr 1
     exact Finset.prod_congr rfl fun s _ => by
-      rw [toLorentzGroup_flipAxis_apply, if_pos rfl, Complex.ofReal_intCast]
+      rw [toLorentzGroup_flipAxis_apply, ite_eq_left rfl, Complex.ofReal_intCast]
   · intro d _ hda
     obtain ⟨s, hs⟩ := Function.ne_iff.1 hda.symm
     rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
-    rw [toLorentzGroup_flipAxis_apply, if_neg hs, Complex.ofReal_zero]
+    rw [toLorentzGroup_flipAxis_apply, ite_eq_right hs, Complex.ofReal_zero]
   · exact fun h => absurd (Finset.mem_univ a) h
 
 /-- The sign a flip attaches to a coefficient is `1` or `-1`, being a product of such signs. -/
@@ -402,13 +402,13 @@ lemma act_rotationCycle (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin 4 →
     act (SL2C.toLorentzGroup rotationCycle).1 c a = c (cycIdx (cycIdx a)) := by
   rw [act, Finset.sum_eq_single (cycIdx (cycIdx a))]
   · rw [Finset.prod_eq_one fun s _ => ?_, mul_one]
-    rw [toLorentzGroup_rotationCycle_apply, if_pos, Complex.ofReal_one]
+    rw [toLorentzGroup_rotationCycle_apply, ite_eq_left, Complex.ofReal_one]
     exact (congrFun (cycIdx_cycIdx_cycIdx a) s).symm
   · intro d _ hda
     have hne : cycIdx d ≠ a := fun h => hda (by rw [← h, cycIdx_cycIdx_cycIdx])
     obtain ⟨s, hs⟩ := Function.ne_iff.1 hne
     rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
-    rw [toLorentzGroup_rotationCycle_apply, if_neg fun h : a s = cycDir (d s) => hs h.symm,
+    rw [toLorentzGroup_rotationCycle_apply, ite_eq_right fun h : a s = cycDir (d s) => hs h.symm,
       Complex.ofReal_zero]
   · exact fun h => absurd (Finset.mem_univ _) h
 
@@ -544,13 +544,13 @@ lemma eq_ofOrbitCoord {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvarian
   funext d
   by_cases hd : IsFlipFixed d
   · obtain ⟨k, hk⟩ := (isFlipFixed_iff_exists_mem_orbit d).1 hd
-    rw [ofOrbitCoord, Finset.sum_eq_single k, if_pos hk,
+    rw [ofOrbitCoord, Finset.sum_eq_single k, ite_eq_left hk,
       eq_orbitRep_of_mem_orbit (apply_cycIdx hc) hk]
-    · exact fun l _ hl => if_neg fun hdl => hl (eq_of_mem_orbit hdl hk)
+    · exact fun l _ hl => ite_eq_right fun hdl => hl (eq_of_mem_orbit hdl hk)
     · exact fun h => absurd (Finset.mem_univ k) h
   · rw [eq_zero_of_not_isFlipFixed hc hd]
     exact (Finset.sum_eq_zero fun k _ =>
-      if_neg fun hk => hd ((isFlipFixed_iff_exists_mem_orbit d).2 ⟨k, hk⟩)).symm
+      ite_eq_right fun hk => hd ((isFlipFixed_iff_exists_mem_orbit d).2 ⟨k, hk⟩)).symm
 
 /-- Contracting against such a tensor collects the `256` index vectors into the `22` orbits. -/
 lemma sum_mul_ofOrbitCoord (f : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (b : Fin 22 → ℂ) :
@@ -766,7 +766,7 @@ theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvarian
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun k _ => ?_
   by_cases hk : d ∈ orbit k
-  · simp only [hk, if_true, Finset.sum_mul]
+  · simp only [hk, ite_true, Finset.sum_mul]
     exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun l _ => by ring
   · simp [hk]
 

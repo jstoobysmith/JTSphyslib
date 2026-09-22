@@ -175,9 +175,9 @@ lemma sum_prod_lightConeCoeffInv (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 �
         by_cases hde : d = e
         · subst hde
           simp
-        · rw [if_neg hde]
+        · rw [ite_eq_right hde]
           obtain ⟨j, hj⟩ := Function.ne_iff.1 hde
-          exact Finset.prod_eq_zero (Finset.mem_univ j) (if_neg hj)
+          exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
 
 /-- **The coordinate symbols in the light-cone basis.** The change of basis is invertible,
   so the two families span the same submodule. -/
@@ -188,7 +188,7 @@ lemma eq_sum_lightConeDeriv {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →
   simp only [lightConeDeriv, Finset.smul_sum, smul_smul]
   rw [Finset.sum_comm]
   simp only [← Finset.sum_smul, sum_prod_lightConeCoeffInv i d, ite_smul, one_smul, zero_smul,
-    Finset.sum_ite_eq, Finset.mem_univ, if_true]
+    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
 /-- **The light-cone symbols have definite boost weight.** Each derivative slot contributes
   the weight of its light-cone direction, on top of the weight the argument carries in

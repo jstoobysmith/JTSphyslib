@@ -101,7 +101,7 @@ def valEquiv : DownSinglet ≃ Fermion.RightHandedWeyl ⊗[ℂ] EuclideanSpace �
 
 instance : AddCommGroup DownSinglet := Equiv.addCommGroup valEquiv
 
-instance : Module ℂ DownSinglet := Equiv.module ℂ valEquiv
+instance : Module ℂ DownSinglet := AddEquiv.module ℂ { valEquiv with map_add' _ _ := rfl }
 
 /-- The linear identification with the underlying tensor product. -/
 def valLinEquiv : DownSinglet ≃ₗ[ℂ]
@@ -479,7 +479,7 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
   | zero => simp [show ({ val := 0 } : DownSinglet) = 0 from rfl]
   | tmul psi c =>
       apply jetValLinEquiv.injective
-      simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI]
+      simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI, -TensorProduct.congr_symm]
       have hu : star (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
           = MvPowerSeries.C ((starRingEnd ℂ) (g.toU1.1 : ℂ)) := by
         rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)

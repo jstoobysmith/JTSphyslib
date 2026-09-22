@@ -144,6 +144,7 @@ lemma covGaugeSectorRealizationEquiv_symm_toAlgHom_covF
 
 -/
 
+set_option maxHeartbeats 400000 in
 /-- Restricting a realization of the local field algebra to the covariant gauge sector and
   passing to the gauge-only side gives the covariant restriction of its ordinary gauge-only
   realization. -/

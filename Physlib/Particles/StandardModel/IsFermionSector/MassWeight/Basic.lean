@@ -203,25 +203,25 @@ lemma massWeightSubmodule_eq (i : ℕ) (hi : 0 < i) :
         simp only [Set.mem_iUnion, Set.mem_union, Set.mem_range] at hy
         obtain ⟨j, k, dd, (((((((((⟨φ, rfl⟩ | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) |
         ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩) | ⟨φ, rfl⟩)⟩ := hy
-        · rw [h.massWeight_d, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_d, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_bard, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_bard, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_u, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_u, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_baru, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_baru, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_Q, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_Q, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_barQ, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_barQ, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_L, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_L, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_barL, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_barL, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_e, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_e, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
-        · rw [h.massWeight_bare, Polynomial.coeff_monomial, if_neg (by omega)]
+        · rw [h.massWeight_bare, Polynomial.coeff_monomial, ite_eq_right (by omega)]
           exact zero_mem _
       | algebraMap r =>
         rw [AlgHom.commutes]
@@ -439,7 +439,7 @@ lemma massWeightSubmodule_eq (i : ℕ) (hi : 0 < i) :
       | algebraMap r =>
         intro m hm
         rw [AlgHom.commutes]
-        simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C, if_neg (by omega : ¬ m = 0)]
+        simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C, ite_eq_right (by omega : ¬ m = 0)]
         exact zero_mem _
       | add x y hx hy ihx ihy =>
         intro m hm
@@ -470,7 +470,7 @@ lemma massWeightSubmodule_eq (i : ℕ) (hi : 0 < i) :
     rw [massWeightSubmodule, Submodule.mem_inf] at hb
     have hmain := main b hb.1 i hi
     rwa [h.massWeightPoly_of_mem_massWeightSubmodule hb', Polynomial.coeff_monomial,
-      if_pos rfl] at hmain
+      ite_eq_left rfl] at hmain
   · refine iSup_le fun k => iSup_le fun hk => ?_
     have hk' := (Finset.mem_filter.mp hk).2
     exact (h.derivSubmodule_le_massWeightSubmodule (k : ℕ)).trans (le_of_eq (by rw [hk']))

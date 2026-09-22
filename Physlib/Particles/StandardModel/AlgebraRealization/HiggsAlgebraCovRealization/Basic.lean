@@ -572,7 +572,7 @@ noncomputable def doubletGaugeWeight {ι : Type} (hmul : IsMulRep rep) (x : ι �
       simp
   piece_eq_bot w hw' := by
     simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hw'
-    rw [if_neg hw'.1, if_neg hw'.2]
+    rw [ite_eq_right hw'.1, ite_eq_right hw'.2]
   iSup_piece := by
     refine le_antisymm (iSup_le fun w => ?_) (iSup_le fun d => iSup_le fun j => ?_)
     · split_ifs
@@ -580,9 +580,9 @@ noncomputable def doubletGaugeWeight {ι : Type} (hmul : IsMulRep rep) (x : ι �
       · exact iSup_mono fun d => le_iSup (fun j => ℂ ∙ x d j) 1
       · exact bot_le
     · fin_cases j
-      · exact le_iSup_of_le w₀ (by rw [if_pos rfl]; exact le_iSup (fun d => ℂ ∙ x d 0) d)
+      · exact le_iSup_of_le w₀ (by rw [ite_eq_left rfl]; exact le_iSup (fun d => ℂ ∙ x d 0) d)
       · exact le_iSup_of_le w₁
-          (by rw [if_neg hw.symm, if_pos rfl]; exact le_iSup (fun d => ℂ ∙ x d 1) d)
+          (by rw [ite_eq_right hw.symm, ite_eq_left rfl]; exact le_iSup (fun d => ℂ ∙ x d 1) d)
 
 /-- The gauge weight decomposition of the Higgs submodule: `∇_d H⁰` spans the piece of
   weight `(0, 0, -1, -3)` and `∇_d H¹` that of weight `(0, 0, 1, -3)`. -/
@@ -777,10 +777,10 @@ lemma coeff_zero_mem_one {x : B} (hx : x ∈ h.higgsAlgebra) :
   refine h.higgsAlgebra_induction
     (P := fun x => (massWeightPoly x).coeff 0 ∈ (1 : Submodule ℂ B)) ?_ ?_ ?_ ?_ ?_ hx
   · intro n d φ
-    rw [h.H_massWeight, Polynomial.coeff_monomial, if_neg (by omega)]
+    rw [h.H_massWeight, Polynomial.coeff_monomial, ite_eq_right (by omega)]
     exact zero_mem _
   · intro n d φ
-    rw [h.barH_massWeight, Polynomial.coeff_monomial, if_neg (by omega)]
+    rw [h.barH_massWeight, Polynomial.coeff_monomial, ite_eq_right (by omega)]
     exact zero_mem _
   · intro r
     rw [AlgHom.commutes]
@@ -857,7 +857,7 @@ lemma coeff_mem_of_pos {x : B} (hx : x ∈ h.higgsAlgebra) (m : ℕ) (hm : 0 < m
     · exact zero_mem _
   · intro r m hm
     rw [AlgHom.commutes]
-    simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C, if_neg (by omega : ¬ m = 0)]
+    simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C, ite_eq_right (by omega : ¬ m = 0)]
     exact zero_mem _
   · intro x y _ _ ihx ihy m hm
     rw [map_add, Polynomial.coeff_add]
@@ -891,7 +891,7 @@ theorem massWeightSubmodule_eq (i : ℕ) (hi : 0 < i) :
   refine le_antisymm (fun b hb => ?_) (sup_le ?_ ?_)
   · have hmain := h.coeff_mem_of_pos (h.mem_higgsAlgebra_of_mem_massWeightSubmodule hb) i hi
     rwa [h.massWeightPoly_of_mem_massWeightSubmodule hb, Polynomial.coeff_monomial,
-      if_pos rfl] at hmain
+      ite_eq_left rfl] at hmain
   · refine iSup₂_le fun k hk => ?_
     exact (sup_le (h.massWeightSubmodule_higgsSubmodule_le (k : ℕ))
       (h.massWeightSubmodule_barHiggsSubmodule_le (k : ℕ))).trans
@@ -1217,13 +1217,13 @@ noncomputable def trivialWeightDecomposition (i : Fin 3) :
   piece_le k := by
     by_cases hk : k = 0
     · subst hk
-      rw [if_pos rfl]
+      rw [ite_eq_left rfl]
       intro x _ t ht
       simp
-    · rw [if_neg hk]
+    · rw [ite_eq_right hk]
       exact bot_le
-  piece_eq_bot k hk := if_neg (by simpa using hk)
-  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [if_pos rfl]))
+  piece_eq_bot k hk := ite_eq_right (by simpa using hk)
+  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [ite_eq_left rfl]))
 
 @[simp]
 lemma trivialWeightDecomposition_piece (i : Fin 3) (k : ℤ) :

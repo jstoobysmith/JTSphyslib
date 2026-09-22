@@ -309,12 +309,12 @@ lemma act_su2Cube (c : (Fin 4 → Fin 2) → ℂ) (l : Fin 4 → Fin 2) :
   rw [act_apply, Finset.sum_eq_single l]
   · congr 1
     rw [show (∏ i, su2Cube.1 (l i) (l i)) = ∏ i : Fin 4, cubeRoot ^ (1 + (l i : ℕ)) from
-      Finset.prod_congr rfl fun i _ => by rw [su2Cube_apply, if_pos rfl],
+      Finset.prod_congr rfl fun i _ => by rw [su2Cube_apply, ite_eq_left rfl],
       Finset.prod_pow_eq_pow_sum, Finset.sum_add_distrib]
     simp
   · intro m _ hm
     obtain ⟨i, hi⟩ := Function.ne_iff.1 hm
-    rw [Finset.prod_eq_zero (Finset.mem_univ i) (by rw [su2Cube_apply, if_neg (Ne.symm hi)]),
+    rw [Finset.prod_eq_zero (Finset.mem_univ i) (by rw [su2Cube_apply, ite_eq_right (Ne.symm hi)]),
       zero_mul]
   · simp
 

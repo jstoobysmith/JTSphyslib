@@ -134,7 +134,7 @@ lemma act_su2Flip (k : Fin 3) (c : Fin 3 → ℂ) (a : Fin 3) :
     act (su2Flip k) c a = ((su2FlipSign k a : ℤ) : ℂ) * c a := by
   rw [act_apply]
   simp only [su2AdjointMatrix_su2Flip, apply_ite (fun r : ℝ => (r : ℂ)),
-    Complex.ofReal_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, if_true,
+    Complex.ofReal_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true,
     Complex.ofReal_intCast]
 
 /-- A coefficient vector fixed by every isospin rotation is zero: the flip about the axis

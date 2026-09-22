@@ -165,7 +165,7 @@ lemma act_deltaCoeff (U : specialUnitaryGroup (Fin 3) ℂ) : act U deltaCoeff = 
     · subst h
       simp [deltaCoeff]
     · simp [deltaCoeff, h, Ne.symm h]
-  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, if_true, sum_mul_conj]
+  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, ite_true, sum_mul_conj]
   simp [deltaCoeff]
 
 /-- The delta contraction: the colour trace of the family. -/
@@ -244,7 +244,7 @@ theorem exists_smul_deltaCoeff_of_act_eq {c : (Fin 2 → Fin 3) → ℂ}
   have hoff : ∀ a b : Fin 3, a ≠ b → c ![a, b] = 0 := by
     intro a b hab
     have h := congrFun (hc (IsSU3BiAdjoint.su3Parity a)) ![a, b]
-    rw [act_su3Parity, if_pos rfl, if_neg (Ne.symm hab)] at h
+    rw [act_su3Parity, ite_eq_left rfl, ite_eq_right (Ne.symm hab)] at h
     linear_combination (-1 / 2 : ℂ) * h
   have hdiag : ∀ a : Fin 3, c ![a, a] = c ![0, 0] := by
     have h1 := congrFun (hc su3Perm) ![1, 1]

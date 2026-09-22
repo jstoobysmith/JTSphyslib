@@ -163,7 +163,7 @@ lemma toLorentzGroup_halfTurn_symm (i : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
   rw [SL2C.toLorentzGroup_halfTurn_apply, SL2C.toLorentzGroup_halfTurn_apply]
   by_cases h : a = b
   · rw [h]
-  · rw [if_neg h, if_neg (Ne.symm h)]
+  · rw [ite_eq_right h, ite_eq_right (Ne.symm h)]
 
 /-- The half turn multiplies a light-cone component by the product of the signs of its slots. -/
 lemma lightConeComponent_act_halfTurn {n : ℕ} (i : Fin 3)

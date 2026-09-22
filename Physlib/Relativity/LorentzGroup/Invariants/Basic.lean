@@ -332,7 +332,7 @@ lemma eq_sum_lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) →
   simp only [lightConeComponent, Finset.mul_sum, ← mul_assoc]
   rw [Finset.sum_comm]
   simp only [← Finset.sum_mul, sum_prod_lightConeCoeffInv, ite_mul, one_mul, zero_mul,
-    Finset.sum_ite_eq, Finset.mem_univ, if_true]
+    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
 end Spacetime
 

@@ -254,7 +254,7 @@ lemma act_traceCoeff (U : specialUnitaryGroup (Fin 3) ℂ) : act U traceCoeff = 
     · subst h
       simp [traceCoeff, Fin.prod_univ_two]
     · simp [traceCoeff, Fin.prod_univ_two, h, Ne.symm h]
-  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, if_true, ← Complex.ofReal_sum,
+  simp only [key, Finset.sum_ite_eq', Finset.mem_univ, ite_true, ← Complex.ofReal_sum,
     sum_su3AdjointMatrix_row_mul]
   by_cases h : a 0 = a 1 <;> simp [traceCoeff, h]
 
@@ -322,7 +322,7 @@ lemma rowAct_smul (U : specialUnitaryGroup (Fin 3) ℂ) (z : ℂ) (c : Fin 8 →
 lemma rowAct_unitVec (U : specialUnitaryGroup (Fin 3) ℂ) (b a : Fin 8) :
     rowAct U (unitVec b) a = ((su3AdjointMatrix U a b : ℝ) : ℂ) := by
   simp only [rowAct, unitVec, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
-    Finset.mem_univ, if_true]
+    Finset.mem_univ, ite_true]
 
 /-!
 

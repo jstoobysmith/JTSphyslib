@@ -127,16 +127,16 @@ lemma repJetGaugeGroupI_eq_jetPhase (U : JetGaugeGroupI) :
 
 /-- The iterated formal derivative is `ℂ`-homogeneous. -/
 private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing) :
-    x.foldl (fun h ρ => pderiv ℂ ρ h) (z • f)
-      = z • x.foldl (fun h ρ => pderiv ℂ ρ h) f := by
+    x.foldl (fun h ρ => pderiv ρ h) (z • f)
+      = z • x.foldl (fun h ρ => pderiv ρ h) f := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
 
 /-- The iterated formal derivative of a negation. -/
 private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
-    x.foldl (fun h ρ => pderiv ℂ ρ h) (-f)
-      = -(x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+    x.foldl (fun h ρ => pderiv ρ h) (-f)
+      = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
@@ -146,7 +146,7 @@ private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
 private lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing)
     (ψ : LeptonSinglet) :
     jetIteratedDeriv x (f ⊗ₜ[ℂ] ψ)
-      = (x.foldl (fun h ρ => pderiv ℂ ρ h) f) ⊗ₜ[ℂ] ψ := by
+      = (x.foldl (fun h ρ => pderiv ρ h) f) ⊗ₜ[ℂ] ψ := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rw [jetIteratedDeriv_zero]; rfl
   | cons μ t ih =>
@@ -177,7 +177,7 @@ private lemma sum_map_smul_id {α : Type*} (m : Multiset α) (z : α → ℂ) :
   coefficients of the hypercharge phase. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
-      = constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
+      = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U))
         • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
   refine LinearMap.ext fun l => ?_
   rw [show GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x l
@@ -207,41 +207,41 @@ lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
   formal derivative of the phase is minus `i` times `-6` times the `u(1)` value of the
   Maurer–Cartan form, times the phase. -/
 lemma jetPhase_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
-    pderiv ℂ μ (jetPhase U)
+    pderiv μ (jetPhase U)
       = -(((Complex.I * (-(6 : ℂ))) • (maurerCartanForm U μ).toU1Value)
           * jetPhase U) := by
   have hleib : ∀ f g : JetRing,
-      pderiv ℂ μ (f * g) = pderiv ℂ μ f * g + f * pderiv ℂ μ g := fun f g => by
+      pderiv μ (f * g) = pderiv μ f * g + f * pderiv μ g := fun f g => by
     rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g]
   have huu : ((U.2.2 : unitary JetRing) : JetRing)
       * star ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
     Unitary.mul_star_self_of_mem (U.2.2 : unitary JetRing).2
-  have h0 : pderiv ℂ μ ((U.2.2 : unitary JetRing) : JetRing)
+  have h0 : pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
         * star ((U.2.2 : unitary JetRing) : JetRing)
       + ((U.2.2 : unitary JetRing) : JetRing)
-        * pderiv ℂ μ (star ((U.2.2 : unitary JetRing) : JetRing)) = 0 := by
-    have h := congrArg (pderiv ℂ μ) huu
+        * pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing)) = 0 := by
+    have h := congrArg (pderiv μ) huu
     rw [hleib, Derivation.map_one_eq_zero] at h
     exact h
-  have hsu : pderiv ℂ μ (star ((U.2.2 : unitary JetRing) : JetRing))
-      = -(pderiv ℂ μ ((U.2.2 : unitary JetRing) : JetRing)
+  have hsu : pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing))
+      = -(pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
           * (star ((U.2.2 : unitary JetRing) : JetRing)
             * star ((U.2.2 : unitary JetRing) : JetRing))) := by
     have h1 : star ((U.2.2 : unitary JetRing) : JetRing)
-        * (pderiv ℂ μ ((U.2.2 : unitary JetRing) : JetRing)
+        * (pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
             * star ((U.2.2 : unitary JetRing) : JetRing)
           + ((U.2.2 : unitary JetRing) : JetRing)
-            * pderiv ℂ μ (star ((U.2.2 : unitary JetRing) : JetRing))) = 0 := by
+            * pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing))) = 0 := by
       rw [h0, mul_zero]
     linear_combination h1
-      - pderiv ℂ μ (star ((U.2.2 : unitary JetRing) : JetRing)) * huu
+      - pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing)) * huu
   have hiC : (algebraMap ℂ JetRing) Complex.I * (algebraMap ℂ JetRing) Complex.I
       = -1 := by
     rw [← map_mul, Complex.I_mul_I, map_neg, map_one]
   rw [jetPhase_eq, maurerCartanForm_toU1Value, pderiv_pow,
     show (6 : ℕ) - 1 = 5 from rfl, Nat.cast_ofNat, hsu,
     Algebra.smul_def, Algebra.smul_def, map_mul, map_neg, map_ofNat]
-  linear_combination (-(6 * pderiv ℂ μ ((U.2.2 : unitary JetRing) : JetRing)
+  linear_combination (-(6 * pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
     * (star ((U.2.2 : unitary JetRing) : JetRing)) ^ 7)) * hiC
 
 /-!
@@ -266,11 +266,11 @@ theorem isInfinitesimalActionOf :
   · intro U μ x
     simp only [localGaugeData_evalLie,
       localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-    have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
+    have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) (jetPhase U))
         = -((x.antidiagonal.map fun p =>
             Complex.I * (-(6 : ℂ) * (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv
                 p.1 (maurerCartanForm U μ))).toU1Value)
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))).sum) := by
+              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U))).sum) := by
       rw [Multiset.foldl_cons, jetPhase_pderiv, foldl_pderiv_neg, map_neg,
         JetRing.constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
@@ -286,41 +286,41 @@ theorem isInfinitesimalActionOf :
     have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
         gaugeAlgebraAction (localGaugeData.adjointCoeff U p.1 c)
             ∘ₗ GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U p.2
-          = (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
+          = (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
                 (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
+              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := fun p => by
       rw [gaugeAlgebraAction_apply, repCoeff_eq, smul_id_comp,
         localGaugeData_adjointCoeff_toU1Value]
     have hvan : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3), p.1 ≠ 0 →
-        (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
+        (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
               (C c.toU1Value)))
-            * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
+            * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
           • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) = 0 := by
       intro p hp
       rw [JetRing.foldl_pderiv_C_of_ne_zero hp, map_zero, mul_zero, mul_zero,
         zero_mul, zero_smul]
     have hcollapse : (x.antidiagonal.map fun p =>
-          (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ℂ ρ h)
+          (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
                 (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
+              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)).sum
         = (Complex.I * (-(6 : ℂ) * c.toU1Value)
-            * constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
+            * constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
           • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
       rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero x
           (fun p => (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl
-                (fun h ρ => pderiv ℂ ρ h) (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)))
+                (fun h ρ => pderiv ρ h) (C c.toU1Value)))
+              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)) (fun p _ hp => hvan p hp),
-        show ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ℂ ρ h)
+        show ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ρ h)
             (C c.toU1Value : JetRing)) = C c.toU1Value from rfl,
         constantCoeff_C]
     rw [repCoeff_eq, gaugeAlgebraAction_apply, smul_id_comp,
-      show constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U))
+      show constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U))
           * (Complex.I * (-(6 : ℂ) * c.toU1Value))
         = Complex.I * (-(6 : ℂ) * c.toU1Value)
-          * constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) (jetPhase U)) from
+          * constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U)) from
         mul_comm _ _,
       ← hcollapse]
     exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => (hterm p).symm)

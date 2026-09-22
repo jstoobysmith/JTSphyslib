@@ -308,7 +308,8 @@ lemma repConj_smul_comm
     ⟨(conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
       (M := JetRing) (N := V)).symm.trans
         (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ
-          (ConjModule V))))).symm z), by simp⟩
+          (ConjModule V))))).symm z),
+      by rw [LinearEquiv.apply_symm_apply, LinearEquiv.apply_symm_apply]⟩
   rw [← tensorEquiv_congr_conjEquiv_smul, repConj_apply_conjEquiv,
     repConj_apply_conjEquiv, hlin, tensorEquiv_congr_conjEquiv_smul]
 
@@ -351,7 +352,8 @@ lemma lTensor_comp_repConj (repV : Representation ℂ G (JetRing ⊗[ℂ] V))
     ⟨(conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
       (M := JetRing) (N := V)).symm.trans
         (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ
-          (ConjModule V))))).symm z), by simp⟩
+          (ConjModule V))))).symm z),
+      by rw [LinearEquiv.apply_symm_apply, LinearEquiv.apply_symm_apply]⟩
   rw [LinearMap.comp_apply, LinearMap.comp_apply, repConj_apply_conjEquiv,
     lTensor_conjEquiv_naturality, lTensor_conjEquiv_naturality, repConj_apply_conjEquiv,
     ← LinearMap.comp_apply, hf U, LinearMap.comp_apply]

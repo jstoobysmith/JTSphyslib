@@ -76,7 +76,7 @@ The evaluation map is defined in `Physlib.Particles.QED.Basic`; the concrete sid
 
 namespace QED
 
-open Electromagnetism SpaceTime minkowskiMatrix ContDiff
+open Electromagnetism SpaceTime minkowskiMatrix ContDiff TensorSpecies Tensor
 
 attribute [-simp] Fintype.sum_sum_type
 
@@ -113,9 +113,9 @@ lemma evalPotential_fieldStrength_zero_apply (A : ElectromagneticPotential 3)
 theorem evalPotential_fieldStrength_zero (A : ElectromagneticPotential 3)
     (hA : Differentiable ℝ A) (μ ν : Fin 1 ⊕ Fin 3) (x : SpaceTime 3) :
     evalPotential A (fieldStrength 0 μ ν) x =
-      η μ μ * η ν ν * A.fieldStrengthMatrix x (μ, ν) := by
+      η μ μ * η ν ν * toField {A.toFieldStrength x | [μ] [ν]}ᵀ := by
   rw [evalPotential_fieldStrength_zero_apply A hA μ ν x,
-    ElectromagneticPotential.toFieldStrength_basis_repr_apply_eq_single (μν := (μ, ν))]
+    ElectromagneticPotential.toFieldStrength_eval_apply_eq_single A x μ ν]
   rcases mul_self_eq_one_iff.mp (minkowskiMatrix.η_apply_mul_η_apply_diag μ) with h1 | h1 <;>
     rcases mul_self_eq_one_iff.mp (minkowskiMatrix.η_apply_mul_η_apply_diag ν) with h2 | h2 <;>
     rw [h1, h2] <;> ring
@@ -177,7 +177,7 @@ theorem electricField_eq_evalPotential_fieldStrength (c : SpeedOfLight)
       c * evalPotential A (fieldStrength 0 (Sum.inl 0) (Sum.inr i))
         ((toTimeAndSpace c).symm (t, x)) := by
   rw [evalPotential_fieldStrength_zero A hA,
-    ElectromagneticPotential.electricField_eq_fieldStrengthMatrix A t x i hA]
+    ElectromagneticPotential.electricField_eq_toFieldStrength_eval A t x i hA]
   simp only [inl_0_inl_0, inr_i_inr_i, one_mul, neg_mul]
   ring
 
@@ -190,7 +190,7 @@ theorem magneticField_eq_evalPotential_fieldStrength (c : SpeedOfLight)
       - evalPotential A (fieldStrength 0 (Sum.inr (i + 1)) (Sum.inr (i + 2)))
         ((toTimeAndSpace c).symm (t, x)) := by
   rw [evalPotential_fieldStrength_zero A hA,
-    ElectromagneticPotential.magneticField_coord_eq_fieldStrengthMatrix A t x hA]
+    ElectromagneticPotential.magneticField_coord_eq_toFieldStrength_eval A t x hA]
   simp only [inr_i_inr_i, neg_mul, one_mul, neg_neg]
 
 /-!
@@ -340,10 +340,10 @@ theorem isExtrema_iff_evalPotential_maxwellOperator (𝓕 : FreeSpace)
       simp only [zero_add, evalPotential_coord, derivMultiset_singleton]]
     exact (SpaceTime.differentiable_deriv _ _ (contDiff_coPotential h2 ν')).sub
       (SpaceTime.differentiable_deriv _ _ (contDiff_coPotential h2 μ'))
-  rw [ElectromagneticPotential.isExtrema_iff_fieldStrengthMatrix A hA J hJ]
+  rw [ElectromagneticPotential.isExtrema_iff_toFieldStrength_eval A hA J hJ]
   refine forall_congr' fun x => forall_congr' fun ν => Iff.of_eq ?_
   refine congrArg (· = 𝓕.μ₀ * J x ν) ?_
-  have hFmat : ∀ μ' : Fin 1 ⊕ Fin 3, (fun y => A.fieldStrengthMatrix y (μ', ν)) =
+  have hFmat : ∀ μ' : Fin 1 ⊕ Fin 3, (fun y => toField {A.toFieldStrength y | [μ'] [ν]}ᵀ) =
       fun y => (η μ' μ' * η ν ν) * evalPotential A (fieldStrength 0 μ' ν) y := by
     intro μ'
     funext y
@@ -353,10 +353,10 @@ theorem isExtrema_iff_evalPotential_maxwellOperator (𝓕 : FreeSpace)
       rcases mul_self_eq_one_iff.mp (minkowskiMatrix.η_apply_mul_η_apply_diag ν) with
         h2' | h2' <;>
       rw [h1, h2'] <;> ring
-  calc ∑ μ, ∂_ μ (A.fieldStrengthMatrix · (μ, ν)) x
+  calc ∑ μ, ∂_ μ (fun y => toField {A.toFieldStrength y | [μ] [ν]}ᵀ) x
       = ∑ μ, (η μ μ * η ν ν) * ∂_ μ (evalPotential A (fieldStrength 0 μ ν)) x := by
         refine Finset.sum_congr rfl fun μ _ => ?_
-        rw [show (fun y => A.fieldStrengthMatrix y (μ, ν)) =
+        rw [show (fun y => toField {A.toFieldStrength y | [μ] [ν]}ᵀ) =
             fun y => (η μ μ * η ν ν) * evalPotential A (fieldStrength 0 μ ν) y from
           hFmat μ, deriv_const_mul_apply _ _ (hdiffF μ ν)]
     _ = evalPotential A (maxwellOperator ν) x := by
@@ -393,7 +393,7 @@ theorem evalPotential_fieldStrength_lorentzAction (Λ : LorentzGroup 3)
   have hΛA : Differentiable ℝ (Λ • A) :=
     ElectromagneticPotential.differentiable_action Λ A hA
   rw [evalPotential_fieldStrength_zero _ hΛA μ ν x,
-    ElectromagneticPotential.fieldStrengthMatrix_equivariant A Λ hA,
+    ElectromagneticPotential.toFieldStrength_eval_equivariant A Λ hA,
     lorentzAction_fieldStrength_zero]
   simp only [map_sum, map_smul, Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
   simp only [evalPotential_fieldStrength_zero A hA]
@@ -428,7 +428,7 @@ theorem evalPotential_fieldStrength_gaugeTransform (A : ElectromagneticPotential
       evalPotential A (fieldStrength 0 μ ν) x := by
   rw [evalPotential_fieldStrength_zero _ (differentiable_gaugeTransform hA hχ),
     evalPotential_fieldStrength_zero A hA,
-    ElectromagneticPotential.fieldStrengthMatrix_gaugeTransform A χ hA hχ]
+    ElectromagneticPotential.toFieldStrength_eval_gaugeTransform A χ hA hχ]
 
 /-- The Maxwell Lagrangian is gauge invariant, as read off from the jet algebra. -/
 theorem evalPotential_maxwellTerm_gaugeTransform (A : ElectromagneticPotential 3)

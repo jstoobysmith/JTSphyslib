@@ -243,9 +243,9 @@ lemma symbolBoostWeight_piece {n : ℕ} (i : Fin 3) (φ : Module.Dual ℝ GaugeA
   refine iSup_congr fun c => ?_
   by_cases hc : (∑ j, lightConeWeight (c j)) = k
   · rw [show k - (∑ j, lightConeWeight (c j)) = 0 from by omega,
-      HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, if_pos rfl, Submodule.map_top,
+      HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, ite_eq_left rfl, Submodule.map_top,
       iSup_pos hc, h.range_lightConeDeriv_fieldStrengthSymbol i c φ]
-  · rw [HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, if_neg (by omega),
+  · rw [HiggsAlgebraCovRealization.trivialWeightDecomposition_piece, ite_eq_right (by omega),
       Submodule.map_bot, iSup_neg hc]
 
 /-- The packed symbol ranges, joined over the value index and the `n + 2` slots, recover the

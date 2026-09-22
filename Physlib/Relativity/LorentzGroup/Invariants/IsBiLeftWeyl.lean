@@ -176,7 +176,7 @@ lemma eq_sum_weightComponent (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ) (α : Fin 
   simp only [weightComponent, Finset.mul_sum, ← mul_assoc]
   rw [Finset.sum_comm]
   simp only [← Finset.sum_mul, sum_biLeftCoeffInv_mul, ite_mul, one_mul, zero_mul,
-    Finset.sum_ite_eq, Finset.mem_univ, if_true]
+    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
 /-!
 

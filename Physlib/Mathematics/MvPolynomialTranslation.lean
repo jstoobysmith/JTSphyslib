@@ -73,9 +73,9 @@ lemma notMem_vars_of_forall_aeval_add_eq (Q : MvPolynomial I R) (j : I)
         exact hjv)
   obtain ⟨i, hiQ, hji⟩ := Finset.mem_biUnion.mp h2
   by_cases hij : i = j
-  · rw [if_pos hij, vars_0] at hji
+  · rw [ite_eq_left hij, vars_0] at hji
     simp at hji
-  · rw [if_neg hij, vars_X] at hji
+  · rw [ite_eq_right hij, vars_X] at hji
     exact hij (Finset.mem_singleton.mp hji).symm
 
 /-- A multivariate polynomial over an infinite integral domain that is invariant
@@ -95,8 +95,8 @@ theorem mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq (π : I → I)
     intro i
     simp only [AlgHom.comp_apply, aeval_X, AlgHom.id_apply]
     by_cases hi : π i = i
-    · rw [if_pos hi, aeval_X, if_pos hi]
-    · rw [if_neg hi, map_add, aeval_X, aeval_X, if_neg hi, if_pos (hπ i)]
+    · rw [ite_eq_left hi, aeval_X, ite_eq_left hi]
+    · rw [ite_eq_right hi, map_add, aeval_X, aeval_X, ite_eq_right hi, ite_eq_left (hπ i)]
       ring
   have hcomp : ∀ p : MvPolynomial I R,
       aeval (fun i => if π i = i then (X i : MvPolynomial I R) else X i - X (π i))
@@ -122,13 +122,13 @@ theorem mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq (π : I → I)
       intro i
       simp only [AlgHom.comp_apply, aeval_X]
       by_cases hi : π i = i
-      · rw [if_pos hi]
+      · rw [ite_eq_left hi]
         simp only [map_add, aeval_X, aeval_C, algebraMap_eq]
-        rw [if_pos hi, if_congr (show (i = j) ↔ (π i = π j) from
+        rw [ite_eq_left hi, if_congr (show (i = j) ↔ (π i = π j) from
           ⟨fun h => by rw [h], fun h => by rw [← hi, h, hj]⟩) rfl rfl]
-      · rw [if_neg hi]
+      · rw [ite_eq_right hi]
         simp only [map_add, aeval_X, aeval_C, algebraMap_eq]
-        rw [if_neg hi, if_neg (show ¬i = j from fun h => hi (by rw [h, hj])),
+        rw [ite_eq_right hi, ite_eq_right (show ¬i = j from fun h => hi (by rw [h, hj])),
           if_congr (show (π i = j) ↔ (π i = π j) from by rw [hj]) rfl rfl, C_0]
         ring
     have h1 := DFunLike.congr_fun hkey P
@@ -151,6 +151,6 @@ theorem mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq (π : I → I)
   rintro _ ⟨_, ⟨i, hi, rfl⟩, rfl⟩
   refine ⟨i, ?_⟩
   simp only [aeval_X]
-  rw [if_neg (Set.mem_setOf.mp hi)]
+  rw [ite_eq_right (Set.mem_setOf.mp hi)]
 
 end MvPolynomial

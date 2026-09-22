@@ -109,9 +109,9 @@ lemma coeff_massWeightPoly_mem_span (w : ℕ) {x : B}
     obtain ⟨gl, rfl⟩ := h.exists_list_map_eq l₀ hl₀
     rw [h.massWeightPoly_generatorVal_list_prod, Polynomial.coeff_monomial]
     by_cases hw : (gl.map Generators.weight).sum = w
-    · rw [if_pos hw]
+    · rw [ite_eq_left hw]
       exact Submodule.subset_span ⟨gl, hw, rfl⟩
-    · rw [if_neg hw]
+    · rw [ite_eq_right hw]
       exact Submodule.zero_mem _
   | zero =>
     rw [map_zero, Polynomial.coeff_zero]
@@ -134,7 +134,7 @@ lemma massWeightSubmodule_eq_span (w : ℕ) :
   · have h1 := h.massWeightPoly_of_mem_massWeightSubmodule hx
     have h2 := h.coeff_massWeightPoly_mem_span w
       (h.mem_fieldAlgebra_of_mem_massWeightSubmodule hx)
-    rwa [h1, Polynomial.coeff_monomial, if_pos rfl] at h2
+    rwa [h1, Polynomial.coeff_monomial, ite_eq_left rfl] at h2
   · rintro x ⟨gl, hw, rfl⟩
     exact h.list_prod_mem_massWeightSubmodule hw
 /-!
@@ -521,8 +521,8 @@ lemma eq_zero_of_sum_massWeightSubmodule {n : ℕ} {w : Fin n → ℕ}
       rw [h.massWeightPoly_of_mem_massWeightSubmodule (hf i),
         Polynomial.coeff_monomial]),
     Finset.sum_eq_single i₀
-      (fun i _ hne => if_neg fun hcontra => hne (hw hcontra))
-      (by simp), if_pos rfl] at hpoly
+      (fun i _ hne => ite_eq_right fun hcontra => hne (hw hcontra))
+      (by simp), ite_eq_left rfl] at hpoly
   exact hpoly
 
 /-- An invariant element decomposes into invariant weight components: if a gauge-

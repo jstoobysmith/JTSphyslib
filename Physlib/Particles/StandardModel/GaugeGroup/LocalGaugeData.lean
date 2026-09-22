@@ -169,7 +169,7 @@ lemma localGaugeData_adjointCoeff_toSU3Matrix (U : JetGaugeGroupI)
     (p : Multiset (Fin 1 ⊕ Fin 3)) (b : GaugeAlgebra) :
     (localGaugeData.adjointCoeff U p b).toSU3Matrix
       = ((U.1.1 * b.toSU3Matrix.map (MvPowerSeries.C : ℂ → JetRing) * star U.1.1).map fun f =>
-          MvPowerSeries.constantCoeff (p.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) f)) := by
+          MvPowerSeries.constantCoeff (p.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) f)) := by
   rw [localGaugeData_adjointCoeff_apply, eval_iteratedDeriv_toSU3Matrix, adjointMap_toSU3Matrix,
     ofConstant_toSU3Matrix]
 
@@ -179,7 +179,7 @@ lemma localGaugeData_adjointCoeff_toSU2Matrix (U : JetGaugeGroupI)
     (localGaugeData.adjointCoeff U p b).toSU2Matrix
       = ((U.2.1.1 * b.toSU2Matrix.map (MvPowerSeries.C : ℂ → JetRing) * star U.2.1.1).map
           fun f => MvPowerSeries.constantCoeff
-            (p.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h) f)) := by
+            (p.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) f)) := by
   rw [localGaugeData_adjointCoeff_apply, eval_iteratedDeriv_toSU2Matrix, adjointMap_toSU2Matrix,
     ofConstant_toSU2Matrix]
 
@@ -187,7 +187,7 @@ lemma localGaugeData_adjointCoeff_toSU2Matrix (U : JetGaugeGroupI)
 lemma localGaugeData_adjointCoeff_toU1Value (U : JetGaugeGroupI)
     (p : Multiset (Fin 1 ⊕ Fin 3)) (b : GaugeAlgebra) :
     (localGaugeData.adjointCoeff U p b).toU1Value
-      = MvPowerSeries.constantCoeff (p.foldl (fun h ρ => MvPowerSeries.pderiv ℂ ρ h)
+      = MvPowerSeries.constantCoeff (p.foldl (fun h ρ => MvPowerSeries.pderiv ρ h)
           (MvPowerSeries.C b.toU1Value)) := by
   rw [localGaugeData_adjointCoeff_apply, eval_iteratedDeriv_toU1Value, adjointMap_toU1Value,
     ofConstant_toU1Value]

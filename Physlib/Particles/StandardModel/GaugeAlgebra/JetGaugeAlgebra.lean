@@ -272,18 +272,18 @@ noncomputable instance : LieAlgebra ℝ JetGaugeAlgebra where
   derivative of the trace. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra →ₗ[ℝ] JetGaugeAlgebra where
   toFun a := ofMatrixProd
-      (a.toSU3Matrix.map (pderiv ℂ μ), a.toSU2Matrix.map (pderiv ℂ μ),
-        pderiv ℂ μ a.toU1Value)
+      (a.toSU3Matrix.map (pderiv μ), a.toSU2Matrix.map (pderiv μ),
+        pderiv μ a.toU1Value)
       ⟨by
         ext i j : 1
         simpa [Matrix.star_apply, Matrix.map_apply, ← JetRing.pderiv_star] using
-          congrArg (fun M => pderiv ℂ μ (M i j))
+          congrArg (fun M => pderiv μ (M i j))
             (show star a.toSU3Matrix = a.toSU3Matrix from a.1.2.1),
         by rw [← AddMonoidHom.map_trace, show a.toSU3Matrix.trace = 0 from a.1.2.2, map_zero]⟩
       ⟨by
         ext i j : 1
         simpa [Matrix.star_apply, Matrix.map_apply, ← JetRing.pderiv_star] using
-          congrArg (fun M => pderiv ℂ μ (M i j))
+          congrArg (fun M => pderiv μ (M i j))
             (show star a.toSU2Matrix = a.toSU2Matrix from a.2.1.2.1),
         by rw [← AddMonoidHom.map_trace, show a.toSU2Matrix.trace = 0 from a.2.1.2.2, map_zero]⟩
       (by rw [← JetRing.pderiv_star, show star a.toU1Value = a.toU1Value from a.2.2.2])
@@ -303,15 +303,15 @@ noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetGaugeAlgebra →ₗ[ℝ] Jet
 
 @[simp]
 lemma deriv_toSU3Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
-    (deriv μ a).toSU3Matrix = a.toSU3Matrix.map (pderiv ℂ μ) := rfl
+    (deriv μ a).toSU3Matrix = a.toSU3Matrix.map (pderiv μ) := rfl
 
 @[simp]
 lemma deriv_toSU2Matrix (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
-    (deriv μ a).toSU2Matrix = a.toSU2Matrix.map (pderiv ℂ μ) := rfl
+    (deriv μ a).toSU2Matrix = a.toSU2Matrix.map (pderiv μ) := rfl
 
 @[simp]
 lemma deriv_toU1Value (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
-    (deriv μ a).toU1Value = pderiv ℂ μ a.toU1Value := rfl
+    (deriv μ a).toU1Value = pderiv μ a.toU1Value := rfl
 
 /-!
 
@@ -356,7 +356,7 @@ lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
     deriv μ (coord ν a) = coord ν (deriv μ a) + if μ = ν then a else 0 := by
   by_cases h : μ = ν
   · subst h
-    rw [if_pos rfl]
+    rw [ite_eq_left rfl]
     refine ext_of_matrix ?_ ?_ ?_
     · ext i j
       simp only [deriv_toSU3Matrix, coord_toSU3Matrix, add_toSU3Matrix, Matrix.map_apply,
@@ -369,7 +369,7 @@ lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
     · simp only [deriv_toU1Value, coord_toU1Value, add_toU1Value, smul_eq_mul,
         Derivation.leibniz, pderiv_X_self]
       ring
-  · rw [if_neg h, add_zero]
+  · rw [ite_eq_right h, add_zero]
     refine ext_of_matrix ?_ ?_ ?_
     · ext i j
       simp only [deriv_toSU3Matrix, coord_toSU3Matrix, Matrix.map_apply, Matrix.smul_apply,
@@ -403,17 +403,17 @@ lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
 lemma deriv_bracket (μ : Fin 1 ⊕ Fin 3) (x y : JetGaugeAlgebra) :
     deriv μ ⁅x, y⁆ = ⁅deriv μ x, y⁆ + ⁅x, deriv μ y⁆ := by
   have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
-      (M * N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) * N + M * N.map (pderiv ℂ μ) := by
+      (M * N).map (pderiv μ) = M.map (pderiv μ) * N + M * N.map (pderiv μ) := by
     intro κ _ _ M N
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
       Derivation.leibniz, smul_eq_mul]
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
   have hsmul : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (c : ℂ) (M : Matrix κ κ JetRing),
-      (c • M).map (pderiv ℂ μ) = c • M.map (pderiv ℂ μ) :=
+      (c • M).map (pderiv μ) = c • M.map (pderiv μ) :=
     fun _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
   have hsub : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
-      (M - N).map (pderiv ℂ μ) = M.map (pderiv ℂ μ) - N.map (pderiv ℂ μ) := by
+      (M - N).map (pderiv μ) = M.map (pderiv μ) - N.map (pderiv μ) := by
     intro κ _ _ M N
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.sub_apply, map_sub]
@@ -484,7 +484,7 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
 
 lemma iteratedDeriv_toSU3Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (iteratedDeriv s a).toSU3Matrix =
-      a.toSU3Matrix.map fun f => s.foldl (fun f ρ => pderiv ℂ ρ f) f := by
+      a.toSU3Matrix.map fun f => s.foldl (fun f ρ => pderiv ρ f) f := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
@@ -495,7 +495,7 @@ lemma iteratedDeriv_toSU3Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAl
 
 lemma iteratedDeriv_toSU2Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (iteratedDeriv s a).toSU2Matrix =
-      a.toSU2Matrix.map fun f => s.foldl (fun f ρ => pderiv ℂ ρ f) f := by
+      a.toSU2Matrix.map fun f => s.foldl (fun f ρ => pderiv ρ f) f := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
@@ -505,7 +505,7 @@ lemma iteratedDeriv_toSU2Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAl
       exact (JetRing.foldl_pderiv_pderiv t μ _).symm
 
 lemma iteratedDeriv_toU1Value (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
-    (iteratedDeriv s a).toU1Value = s.foldl (fun f ρ => pderiv ℂ ρ f) a.toU1Value := by
+    (iteratedDeriv s a).toU1Value = s.foldl (fun f ρ => pderiv ρ f) a.toU1Value := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
@@ -682,21 +682,21 @@ lemma eval_coord (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) : eval (coord μ a
 /-- The `su(3)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toSU3Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toSU3Matrix
-      = a.toSU3Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+      = a.toSU3Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) := by
   ext i j
   rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply, Matrix.map_apply]
 
 /-- The `su(2)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toSU2Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toSU2Matrix
-      = a.toSU2Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) f) := by
+      = a.toSU2Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) := by
   ext i j
   rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply, Matrix.map_apply]
 
 /-- The `u(1)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toU1Value (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toU1Value
-      = constantCoeff (x.foldl (fun h ρ => pderiv ℂ ρ h) a.toU1Value) := by
+      = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) a.toU1Value) := by
   rw [eval_toU1Value_eq, iteratedDeriv_toU1Value]
 
 
