@@ -13,7 +13,7 @@ public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
 public import Physlib.Mathematics.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
-public import Physlib.Particles.LagrangianTheory.Basic
+public import Physlib.Relativity.DerivAlgebra
 public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Mathematics.MvPolynomialTranslation
 public import Mathlib.Algebra.MvPolynomial.Derivation
