@@ -202,6 +202,18 @@ lemma toLorentzGroup_eq_pauliBasis' (M : SL(2, ℂ)) :
     PauliMatrix.pauliBasis' PauliMatrix.pauliBasis' (toSelfAdjointMap M) := by
   rfl
 
+/-- **The centre of `SL(2, ℂ)` covers the identity Lorentz transformation.** The covering
+  map sandwiches, `A ↦ M A Mᴴ`, so the two signs of `-1` cancel. Together with
+  `_root_.map_one` this says that the covering map is two-to-one. -/
+lemma toLorentzGroup_neg_one : toLorentzGroup (-1) = 1 := by
+  ext1
+  have h : toSelfAdjointMap (-1) = LinearMap.id := by
+    ext1 A
+    simp [toSelfAdjointMap]
+  show toMatrix (-1) = _
+  simp only [toMatrix, MonoidHom.coe_mk, OneHom.coe_mk, h, LinearMap.toMatrix_id]
+  rfl
+
 lemma toSelfAdjointMap_basis (i : Fin 1 ⊕ Fin 3) :
     toSelfAdjointMap M (PauliMatrix.pauliBasis' i) =
     ∑ j, (toLorentzGroup M).1 j i • PauliMatrix.pauliBasis' j := by

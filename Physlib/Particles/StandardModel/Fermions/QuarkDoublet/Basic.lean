@@ -601,6 +601,26 @@ lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3 �
   rw [key]
   simp [Fintype.sum_prod_type, ite_smul]
 
+/-- **The centre of `SL(2,ℂ)` acts on the quark-doublet space by `-1`**: the value space carries a
+  single Weyl-spinor index, and `-1` is not the identity on a half-integer spin. -/
+lemma repLorentzGroup_neg_one : repLorentzGroup (-1) = -LinearMap.id := by
+  apply basis.ext
+  intro j
+  obtain ⟨a, c, w⟩ := j
+  rw [repLorentzGroup_apply_basis]
+  fin_cases a <;>
+    simp [basis, Matrix.one_apply, Module.Basis.tensorProduct_apply]
+
+/-- The centre acts on the conjugate quark-doublet space by `-1` as well: conjugation does not
+  move a real sign. -/
+lemma repLorentzGroup_conj_neg_one : repLorentzGroup.conj (-1) = -LinearMap.id := by
+  apply basis.conj.ext
+  intro j
+  obtain ⟨a, c, w⟩ := j
+  rw [repLorentzGroup_conj_apply_basis]
+  fin_cases a <;>
+    simp [basis, Matrix.one_apply, Module.Basis.tensorProduct_apply]
+
 /-- The gauge action on the quark-doublet basis: the spinor index is inert, the colour
   index transforms by the `SU(3)` matrix and the weak index by the `SU(2)` matrix, scaled
   by the hypercharge factor. -/

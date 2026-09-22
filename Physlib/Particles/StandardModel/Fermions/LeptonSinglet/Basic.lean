@@ -177,6 +177,23 @@ lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (α : Fin 2) :
     (Matrix.of fun l j => (Λ⁻¹).1 l j)
     (fun j => repLorentzGroup_conj_apply_basis Λ⁻¹ j)
 
+/-- **The centre of `SL(2,ℂ)` acts on the charged-lepton-singlet space by `-1`**: the value
+  space carries a single Weyl-spinor index, and `-1` is not the identity on a half-integer
+  spin. -/
+lemma repLorentzGroup_neg_one : repLorentzGroup (-1) = -LinearMap.id := by
+  apply basis.ext
+  intro α
+  rw [repLorentzGroup_apply_basis]
+  fin_cases α <;> simp [Matrix.one_apply]
+
+/-- The centre acts on the conjugate charged-lepton-singlet space by `-1` as well:
+  conjugation does not move a real sign. -/
+lemma repLorentzGroup_conj_neg_one : repLorentzGroup.conj (-1) = -LinearMap.id := by
+  apply basis.conj.ext
+  intro α
+  rw [repLorentzGroup_conj_apply_basis]
+  fin_cases α <;> simp [Matrix.one_apply]
+
 /-!
 
 ## D. Global Gauge action

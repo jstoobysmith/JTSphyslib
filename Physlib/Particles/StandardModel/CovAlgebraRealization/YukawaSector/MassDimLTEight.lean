@@ -5,12 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Centre
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
-public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.BoostWeightDecomposition
+public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.Centre
 public import Physlib.Relativity.LorentzGroup.Invariants.RankFour
--- The fermion boost weights enter only inside the proofs below, so this import is kept
--- private: its public form is one character over the line-length limit.
-import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.BoostWeightDecomposition
 /-!
 # The Yukawa invariants below mass weight eight
 
@@ -20,27 +18,21 @@ empty — it vanishes outright below weight five and again at weight six — and
 that survives, at weights five and seven, is barred from carrying an invariant by a parity
 count.
 
-The count is on boost weight, not on the number of covector indices as in the gauge
-sector. Along a spatial axis every Higgs symbol carries even boost weight, its derivative
-slots contributing `±2` or `0` and its value index nothing, while every fermion symbol
-carries odd boost weight, the Weyl-spinor value index contributing the extra `±1`. Each of
-the four products surviving at weights five and seven has exactly one fermion factor, so
-its boost weight is odd along every axis; and an element of odd boost weight cannot be
-Lorentz invariant, since invariance forces boost weight zero and zero is even.
+The count is on spin, not on the number of covector indices as in the gauge sector. The
+Higgs is a Lorentz scalar and a fermion carries one Weyl-spinor index, so each of the four
+products surviving at weights five and seven, having exactly one fermion factor, is of
+half-integer spin; and a half-integer spin carries no Lorentz invariant.
 
-Running that argument needs the product of two weight decompositions, which
-`WeightGrading.lean` does not provide: multiplicativity of the Lorentz representation is by
-itself enough to convolve two decompositions, and section A builds the product from that
-alone. Section B turns an odd
-support into the absence of invariants, and does so modulo a Lorentz-stable submodule `S`
-by passing to the quotient, where the weight-zero piece of the pushed-forward
-decomposition is still trivial.
+The count is run at the centre of `SL(2,ℂ)`, where `Invariants/Centre.lean` puts it: the
+element `-1` covers the identity Lorentz transformation, so it acts by `+1` on the Higgs
+derivative submodules and by `-1` on the fermion ones, and the Lorentz action on `B` is by
+algebra maps, so the signs multiply over a product. Section A does that multiplication for
+the four products, and the peeling modulo a Lorentz-stable submodule `S` is
+`mem_of_invariant_of_mem_sup_centreEigenspace_neg_one`.
 
-- A. Convolving weight decompositions without a grading
-- B. Odd boost weight admits no invariant
-- C. Even Higgs against odd fermion
-- D. Mass weights five and seven
-- E. The classification below mass weight eight
+- A. Integer Higgs against half-integer fermion
+- B. Mass weights five and seven
+- C. The classification below mass weight eight
 
 Unlike the gauge-sector statement, the final theorem needs no `0 < w`: the Yukawa sector
 is a product of two non-empty sectors, so it already vanishes at weight zero and the
@@ -50,163 +42,9 @@ scalars never enter.
 
 @[expose] public section
 
-namespace Lorentz.BoostWeight.WeightDecomposition
-
-open MatrixGroups
-
-/-!
-
-## A. Convolving weight decompositions without a grading
-
-The weight-`m` piece of a product is the join, over the splittings `k + l = m`, of the
-products of the weight-`k` and weight-`l` pieces of the factors. That this is a weight
-decomposition of the product submodule needs nothing of the representation beyond
-multiplicativity: `mul_mem_boostWeightSubmodule` adds the two weights, and the pieces of
-the factors join to the factors themselves.
-
--/
-
-variable {K : Type*} [Field K] [Algebra ℝ K] {A : Type*} [Ring A] [Algebra K A]
-  {rep : Representation K SL(2,ℂ) A} {i : Fin 3} {V W : Submodule K A}
-
-omit [Algebra ℝ K] in
-/-- The bound behind the convolution: a product of two joins of pieces is contained in the
-  join, over the total weights, of the convolution. -/
-lemma mul_le_iSup_convolution (p q : ℤ → Submodule K A) :
-    (⨆ k, p k) * (⨆ l, q l) ≤ ⨆ (m : ℤ) (k : ℤ) (l : ℤ) (_ : k + l = m), p k * q l := by
-  rw [Submodule.iSup_mul]
-  refine iSup_le fun k => ?_
-  rw [Submodule.mul_iSup]
-  exact iSup_le fun l => le_iSup_of_le (k + l)
-    (le_iSup_of_le k (le_iSup_of_le l (le_iSup_of_le rfl le_rfl)))
-
-open scoped Pointwise in
-/-- The convolution of two weight decompositions along the same axis, built from
-  multiplicativity of the representation alone: the weight-`m` piece of the product is the
-  join over the splittings `k + l = m` of the products of the pieces. -/
-noncomputable def mulOfMul
-    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y)
-    (d₁ : WeightDecomposition rep i V) (d₂ : WeightDecomposition rep i W) :
-    WeightDecomposition rep i (V * W) where
-  piece m := ⨆ (k : ℤ) (l : ℤ) (_ : k + l = m), d₁.piece k * d₂.piece l
-  supp := d₁.supp + d₂.supp
-  piece_le m := iSup_le fun k => iSup_le fun l => iSup_le fun hkl =>
-    Submodule.mul_le.2 fun a ha b hb => by
-      rw [← hkl]
-      exact mul_mem_boostWeightSubmodule hmul (d₁.piece_le k ha) (d₂.piece_le l hb)
-  piece_eq_bot m hm := by
-    refine iSup_eq_bot.2 fun k => iSup_eq_bot.2 fun l => iSup_eq_bot.2 fun hkl => ?_
-    by_cases hk : k ∈ d₁.supp
-    · rw [d₂.piece_eq_bot l fun hl => hm (hkl ▸ Finset.add_mem_add hk hl), Submodule.mul_bot]
-    · rw [d₁.piece_eq_bot k hk, Submodule.bot_mul]
-  iSup_piece :=
-    le_antisymm (iSup_le fun m => iSup_le fun k => iSup_le fun l => iSup_le fun _ =>
-        Submodule.mul_le.2 fun a ha b hb => Submodule.mul_mem_mul
-          (le_of_le_of_eq (le_iSup d₁.piece k) d₁.iSup_piece ha)
-          (le_of_le_of_eq (le_iSup d₂.piece l) d₂.iSup_piece hb))
-      (le_trans (le_of_eq (show V * W = (⨆ k, d₁.piece k) * ⨆ l, d₂.piece l by
-        rw [d₁.iSup_piece, d₂.iSup_piece])) (mul_le_iSup_convolution _ _))
-
-open scoped Pointwise in
-/-- The weights occurring in a convolution are the sums of the weights occurring in the
-  two factors. -/
-@[simp]
-lemma mulOfMul_supp
-    (hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y)
-    (d₁ : WeightDecomposition rep i V) (d₂ : WeightDecomposition rep i W) :
-    (d₁.mulOfMul hmul d₂).supp = d₁.supp + d₂.supp := rfl
-
-/-- A weight of a convolution splits as a weight of the left factor plus a weight of the
-  right one. -/
-lemma exists_add_eq_of_mem_mulOfMul_supp
-    {hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y}
-    {d₁ : WeightDecomposition rep i V} {d₂ : WeightDecomposition rep i W} {m : ℤ}
-    (hm : m ∈ (d₁.mulOfMul hmul d₂).supp) :
-    ∃ k ∈ d₁.supp, ∃ l ∈ d₂.supp, k + l = m := by
-  rw [mulOfMul_supp] at hm
-  exact Finset.mem_add.1 hm
-
-/-- Even times even is even: a convolution of two decompositions of even support has even
-  support. -/
-lemma two_dvd_of_mem_mulOfMul_supp
-    {hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y}
-    {d₁ : WeightDecomposition rep i V} {d₂ : WeightDecomposition rep i W}
-    (h₁ : ∀ k ∈ d₁.supp, (2 : ℤ) ∣ k) (h₂ : ∀ k ∈ d₂.supp, (2 : ℤ) ∣ k) {m : ℤ}
-    (hm : m ∈ (d₁.mulOfMul hmul d₂).supp) : (2 : ℤ) ∣ m := by
-  obtain ⟨k, hk, l, hl, rfl⟩ := exists_add_eq_of_mem_mulOfMul_supp hm
-  exact dvd_add (h₁ k hk) (h₂ l hl)
-
-/-- Even times odd is odd: a convolution of a decomposition of even support with one of odd
-  support has odd support. -/
-lemma not_two_dvd_of_mem_mulOfMul_supp
-    {hmul : ∀ (Λ : SL(2,ℂ)) (x y : A), rep Λ (x * y) = rep Λ x * rep Λ y}
-    {d₁ : WeightDecomposition rep i V} {d₂ : WeightDecomposition rep i W}
-    (h₁ : ∀ k ∈ d₁.supp, (2 : ℤ) ∣ k) (h₂ : ∀ k ∈ d₂.supp, ¬ (2 : ℤ) ∣ k) {m : ℤ}
-    (hm : m ∈ (d₁.mulOfMul hmul d₂).supp) : ¬ (2 : ℤ) ∣ m := by
-  obtain ⟨k, hk, l, hl, rfl⟩ := exists_add_eq_of_mem_mulOfMul_supp hm
-  exact fun hdvd => h₂ l hl ((dvd_add_right (h₁ k hk)).1 hdvd)
-
-/-- The weights of a join of two decompositions are the weights of the two. -/
-@[simp]
-lemma sup_supp (d₁ : WeightDecomposition rep i V) (d₂ : WeightDecomposition rep i W) :
-    (d₁.sup d₂).supp = d₁.supp ∪ d₂.supp := rfl
-
-/-!
-
-## B. Odd boost weight admits no invariant
-
-A Lorentz invariant has boost weight zero along every axis, and zero is even. So a
-submodule all of whose weights are odd contains no invariant but `0`. The statement is
-wanted modulo a Lorentz-stable submodule `S`, and stability is exactly what is needed to
-divide `S` out: the quotient carries a representation intertwined by `S.mkQ`, the images
-of the pieces are again of pure weight, they join to the image of the submodule, and the
-weight-zero image is the image of the trivial weight-zero piece. So the invariant dies in
-the quotient, which is to say it lies in `S`.
-
--/
-
-/-- An equivariant linear map carries boost weight `m` to boost weight `m`: it commutes
-  with the boosts, and scaling is preserved. -/
-lemma map_boostWeightSubmodule_le {M N : Type*} [AddCommGroup M] [Module K M]
-    [AddCommGroup N] [Module K N] {repM : Representation K SL(2,ℂ) M}
-    {repN : Representation K SL(2,ℂ) N} (f : M →ₗ[K] N)
-    (hf : ∀ (g : SL(2,ℂ)) (y : M), f (repM g y) = repN g (f y)) (j : Fin 3) (m : ℤ) :
-    (boostWeightSubmodule repM j m).map f ≤ boostWeightSubmodule repN j m := by
-  rintro _ ⟨y, hy, rfl⟩
-  intro t ht
-  rw [← hf, hy t ht, map_smul]
-
-/-- A submodule whose boost weights are all odd carries no Lorentz invariant beyond a
-  Lorentz-stable submodule `S`: an invariant of the join with `S` already lies in `S`.
-  Invariance forces boost weight zero, and zero is not among the weights on offer. -/
-lemma mem_of_invariant_of_mem_sup_of_odd_supp {M : Type*} [AddCommGroup M] [Module ℂ M]
-    {repLorentz : Representation ℂ SL(2,ℂ) M} {j : Fin 3} {V : Submodule ℂ M}
-    (d : WeightDecomposition repLorentz j V) (hodd : ∀ k ∈ d.supp, ¬ (2 : ℤ) ∣ k)
-    (S : Submodule ℂ M) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : M}
-    (hx : x ∈ V ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have hzero : d.piece 0 = ⊥ := d.piece_eq_bot 0 fun hmem => hodd 0 hmem ⟨0, rfl⟩
-  have hle : ∀ m : ℤ, (d.piece m).map S.mkQ
-      ≤ boostWeightSubmodule (repLorentz.quotient S fun g y hy => hS g y hy) j m :=
-    fun m => le_trans (Submodule.map_mono (d.piece_le m))
-      (map_boostWeightSubmodule_le S.mkQ (fun _ _ => rfl) j m)
-  have hmem : S.mkQ x ∈ ⨆ m : ℤ, (d.piece m).map S.mkQ := by
-    obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
-    rw [map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz, add_zero,
-      ← Submodule.map_iSup]
-    exact Submodule.mem_map_of_mem (le_of_eq d.iSup_piece.symm hy)
-  have hinv' : ∀ g : SL(2,ℂ),
-      (repLorentz.quotient S fun g y hy => hS g y hy) g (S.mkQ x) = S.mkQ x :=
-    fun g => by rw [quotient_apply_mkQ, hinv g]
-  have hx0 := mem_of_mem_iSup_of_boostWeight_zero hle hmem
-    (mem_boostWeightSubmodule_zero_of_invariant hinv' j)
-  rw [hzero, Submodule.map_bot, Submodule.mem_bot] at hx0
-  rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
-
-end Lorentz.BoostWeight.WeightDecomposition
-
 namespace StandardModel
 
-open TensorProduct Matrix MatrixGroups Lorentz Lorentz.BoostWeight
+open TensorProduct Matrix MatrixGroups Lorentz Lorentz.Invariants
 
 namespace CovAlgebraRealization
 
@@ -218,105 +56,82 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-!
 
-## C. Even Higgs against odd fermion
+## A. Integer Higgs against half-integer fermion
 
-The two boost weight decompositions of the factors are already proved: the Higgs
-derivative submodules carry even weights, their derivative slots contributing `±2` or `0`
-and their value index nothing, and the fermion ones carry odd weights, the Weyl-spinor
-value index adding `±1`. Convolving them along section A gives a decomposition of each
-product surviving below weight eight, and the parity bookkeeping of that section makes
-every weight of such a product odd, since each carries exactly one fermion factor. The
-term with two Higgs factors is convolved twice, even against even staying even before the
-fermion turns the total odd.
+The signs the two factors carry at the centre are already proved: the Higgs derivative
+submodules carry `+1`, being Lorentz scalars with inert derivative slots, and the fermion
+ones carry `-1`, the Weyl-spinor value index doing the work. The Lorentz action on `B` is
+by algebra maps, so the sign of a product is the product of the signs, and each of the
+products surviving below weight eight has exactly one fermion factor. The term with two
+Higgs factors multiplies twice, `+1` against `+1` staying `+1` before the fermion turns the
+total `-1`.
 
 -/
 
-/-- The boost weight decomposition of a product of a Higgs and a fermion derivative
-  submodule, obtained by convolving the two factors' decompositions. -/
-private noncomputable def higgsFermionBoostWeight (a b : ℕ) (i : Fin 3) :
-    WeightDecomposition repLorentz i
-      (h.isHiggsSector.derivSubmodule a * h.isFermionSector.derivSubmodule b) :=
-  WeightDecomposition.mulOfMul h.repLorentz_mul
-    (h.isHiggsSector.derivSubmoduleBoostWeight a i)
-    (h.isFermionSector.derivSubmoduleBoostWeight b i)
+/-- A Higgs derivative submodule against a fermion one is of half-integer spin: `+1` times
+  `-1`. -/
+private lemma higgsFermion_le_centreEigenspace (a b : ℕ) :
+    h.isHiggsSector.derivSubmodule a * h.isFermionSector.derivSubmodule b
+      ≤ centreEigenspace repLorentz (-1) := by
+  simpa using mul_le_centreEigenspace h.repLorentz_mul
+    (h.isHiggsSector.derivSubmodule_le_centreEigenspace a)
+    (h.isFermionSector.derivSubmodule_le_centreEigenspace b)
 
-/-- One Higgs factor against one fermion factor is odd: even plus odd. -/
-private lemma odd_higgsFermionBoostWeight_supp (a b : ℕ) (i : Fin 3) :
-    ∀ k ∈ (h.higgsFermionBoostWeight a b i).supp, ¬ (2 : ℤ) ∣ k :=
-  fun _ hk => WeightDecomposition.not_two_dvd_of_mem_mulOfMul_supp
-    (fun _ hp => h.isHiggsSector.two_dvd_of_mem_derivSubmoduleBoostWeight_supp a i hp)
-    (fun _ hq => h.isFermionSector.not_two_dvd_of_mem_derivSubmoduleBoostWeight_supp b i hq) hk
-
-/-- The boost weight decomposition of a product of two Higgs and one fermion derivative
-  submodule, obtained by convolving the Higgs pair first. -/
-private noncomputable def higgsSqFermionBoostWeight (a b c : ℕ) (i : Fin 3) :
-    WeightDecomposition repLorentz i
-      (h.isHiggsSector.derivSubmodule a * h.isHiggsSector.derivSubmodule b
-        * h.isFermionSector.derivSubmodule c) :=
-  WeightDecomposition.mulOfMul h.repLorentz_mul
-    (WeightDecomposition.mulOfMul h.repLorentz_mul
-      (h.isHiggsSector.derivSubmoduleBoostWeight a i)
-      (h.isHiggsSector.derivSubmoduleBoostWeight b i))
-    (h.isFermionSector.derivSubmoduleBoostWeight c i)
-
-/-- Two Higgs factors against one fermion factor is odd: even plus even plus odd. -/
-private lemma odd_higgsSqFermionBoostWeight_supp (a b c : ℕ) (i : Fin 3) :
-    ∀ k ∈ (h.higgsSqFermionBoostWeight a b c i).supp, ¬ (2 : ℤ) ∣ k :=
-  fun _ hk => WeightDecomposition.not_two_dvd_of_mem_mulOfMul_supp
-    (fun _ hp => WeightDecomposition.two_dvd_of_mem_mulOfMul_supp
-      (fun _ hp' => h.isHiggsSector.two_dvd_of_mem_derivSubmoduleBoostWeight_supp a i hp')
-      (fun _ hp' => h.isHiggsSector.two_dvd_of_mem_derivSubmoduleBoostWeight_supp b i hp') hp)
-    (fun _ hq => h.isFermionSector.not_two_dvd_of_mem_derivSubmoduleBoostWeight_supp c i hq) hk
+/-- Two Higgs derivative submodules against a fermion one is of half-integer spin: `+1`
+  times `+1` times `-1`. -/
+private lemma higgsSqFermion_le_centreEigenspace (a b c : ℕ) :
+    h.isHiggsSector.derivSubmodule a * h.isHiggsSector.derivSubmodule b
+        * h.isFermionSector.derivSubmodule c
+      ≤ centreEigenspace repLorentz (-1) := by
+  simpa using mul_le_centreEigenspace h.repLorentz_mul
+    (mul_le_centreEigenspace h.repLorentz_mul
+      (h.isHiggsSector.derivSubmodule_le_centreEigenspace a)
+      (h.isHiggsSector.derivSubmodule_le_centreEigenspace b))
+    (h.isFermionSector.derivSubmodule_le_centreEigenspace c)
 
 /-!
 
-## D. Mass weights five and seven
+## B. Mass weights five and seven
 
 Weight five is a single product, the Higgs field against the underived fermion towers.
 Weight seven is a join of three: the Higgs field against the once-derived towers, the
 once-derived Higgs field against the underived ones, and two Higgs fields against the
-underived ones. Each of the four has exactly one fermion factor, so section C makes all of
-their boost weights odd, the join included, and section B leaves the invariant in `S`. The
-axis is immaterial; the first one will do.
+underived ones. Each of the four has exactly one fermion factor, so section A gives all of
+them the sign `-1`, the join included, and the invariant is left in `S`.
 
 -/
 
 /-- Mass weight five carries no Lorentz invariant modulo a Lorentz-stable submodule: a
   Lorentz invariant of `sectorMassWeight {higgs, fermion} 5 ⊔ S` lies in `S`. The weight is
-  one Higgs field against the underived fermion towers, of odd boost weight. -/
+  one Higgs field against the underived fermion towers, of half-integer spin. -/
 theorem mem_of_lorentz_invariant_sectorMassWeight_higgs_fermion_five_sup (S : Submodule ℂ B)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 5 ⊔ S)
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   rw [h.sectorMassWeight_higgs_fermion_five] at hx
-  exact WeightDecomposition.mem_of_invariant_of_mem_sup_of_odd_supp
-    (h.higgsFermionBoostWeight 0 0 0) (h.odd_higgsFermionBoostWeight_supp 0 0 0) S hSL hx hL
+  exact mem_of_invariant_of_mem_sup_centreEigenspace_neg_one
+    (h.higgsFermion_le_centreEigenspace 0 0) S hSL hx hL
 
 /-- Mass weight seven carries no Lorentz invariant modulo a Lorentz-stable submodule: a
   Lorentz invariant of `sectorMassWeight {higgs, fermion} 7 ⊔ S` lies in `S`. Each of the
-  three products making up the weight has a single fermion factor, so each is of odd boost
-  weight and so is their join. -/
+  three products making up the weight has a single fermion factor, so each is of
+  half-integer spin and so is their join. -/
 theorem mem_of_lorentz_invariant_sectorMassWeight_higgs_fermion_seven_sup
     (S : Submodule ℂ B) (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 7 ⊔ S)
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   rw [h.sectorMassWeight_higgs_fermion_seven] at hx
-  refine WeightDecomposition.mem_of_invariant_of_mem_sup_of_odd_supp
-    (((h.higgsFermionBoostWeight 0 1 0).sup (h.higgsFermionBoostWeight 1 0 0)).sup
-      (h.higgsSqFermionBoostWeight 0 0 0 0)) ?_ S hSL hx hL
-  intro k hk
-  simp only [WeightDecomposition.sup_supp, Finset.mem_union] at hk
-  rcases hk with (hk | hk) | hk
-  · exact h.odd_higgsFermionBoostWeight_supp 0 1 0 k hk
-  · exact h.odd_higgsFermionBoostWeight_supp 1 0 0 k hk
-  · exact h.odd_higgsSqFermionBoostWeight_supp 0 0 0 0 k hk
+  exact mem_of_invariant_of_mem_sup_centreEigenspace_neg_one
+    (sup_le (sup_le (h.higgsFermion_le_centreEigenspace 0 1)
+      (h.higgsFermion_le_centreEigenspace 1 0))
+      (h.higgsSqFermion_le_centreEigenspace 0 0 0)) S hSL hx hL
 
 /-!
 
-## E. The classification below mass weight eight
+## C. The classification below mass weight eight
 
 The eight weights below eight are now settled: the sector vanishes below weight five and
-at weight six, and weights five and seven are section D. So below weight eight the Yukawa
+at weight six, and weights five and seven are section B. So below weight eight the Yukawa
 sector supplies no invariant beyond what `S` already carries, and the equivalences record
 it.
 
@@ -330,7 +145,7 @@ scalars, which are what force `0 < w` there, never appear.
 /-- Below mass weight eight the Yukawa sector carries no Lorentz invariant: a Lorentz
   invariant of `sectorMassWeight {higgs, fermion} w ⊔ S` for `w < 8` lies in `S`. Weights
   below five and weight six are trivial submodules, and weights five and seven are section
-  D. -/
+  B. -/
 theorem mem_of_lorentz_invariant_sectorMassWeight_higgs_fermion_lt_eight_sup (w : ℕ)
     (hw : w < 8) (S : Submodule ℂ B)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
@@ -349,7 +164,7 @@ set_option linter.unusedVariables false in
   an element of `sectorMassWeight {higgs, fermion} w ⊔ S` for `w < 8` is fixed by both
   groups exactly when it is itself an element of `S` fixed by both groups. Gauge stability
   of `S` is not needed, and neither is gauge invariance of `x`: the forward direction is
-  the boost-weight parity argument, which uses the Lorentz group alone. -/
+  the spin parity argument, which uses the Lorentz group alone. -/
 theorem mem_sectorMassWeight_higgs_fermion_lt_eight_sup_and_gauge_lorentz_invariant_iff
     (w : ℕ) (hw : w < 8) (S : Submodule ℂ B)
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)

@@ -7,10 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.MassDimLTEight
-public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.BoostWeightDecomposition
--- The fermion boost weights enter only inside the proofs below, so this import is kept
--- private: its public form is one character over the line-length limit.
-import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.BoostWeightDecomposition
+public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.Centre
 /-!
 # The gauge-fermion invariants below mass weight nine
 
@@ -21,24 +18,20 @@ splittings that arithmetic allows are `4 + 4` and `6 + 2`, and the fermion secto
 trivial at both four and two, so weight eight vanishes too. That leaves weight seven, the
 single product `F ψ` of the underived field strength against the underived fermion towers.
 
-Weight seven is barred from carrying an invariant by a parity count on boost weight, the
-same one that empties the Yukawa sector at weights five and seven. Along a spatial axis a
-field-strength symbol carries even boost weight, its two covector indices and its
-derivative slots each contributing `±2` or `0` and its adjoint index nothing, while a
-fermion symbol carries odd boost weight, the Weyl-spinor value index contributing the
-extra `±1`. The one product at weight seven has exactly one fermion factor, so its boost
-weight is odd along every axis; and a Lorentz invariant has boost weight zero, which is
-even.
+Weight seven is barred from carrying an invariant by the same parity count on spin that
+empties the Yukawa sector at weights five and seven. The field strength is of integer spin,
+its two covector indices and its derivative slots all mixing by the Lorentz matrix and its
+adjoint index not seeing the Lorentz group at all, while a fermion carries one Weyl-spinor
+index. The one product at weight seven has exactly one fermion factor, so it is of
+half-integer spin; and a half-integer spin carries no Lorentz invariant.
 
-The machinery is the Yukawa sector's: `WeightDecomposition.mulOfMul` convolves the two
-factors' boost decompositions using multiplicativity of the Lorentz representation alone,
-`not_two_dvd_of_mem_mulOfMul_supp` does the parity bookkeeping, and
-`mem_of_invariant_of_mem_sup_of_odd_supp` turns an odd support into the absence of
-invariants modulo a Lorentz-stable submodule. Only the left-hand factor changes: the
-Higgs decomposition of even support is replaced by the gauge one, which is even for the
-same reason.
+The machinery is the Yukawa sector's: `mul_le_centreEigenspace` multiplies the signs the
+two factors carry at the centre of `SL(2,ℂ)`, and
+`mem_of_invariant_of_mem_sup_centreEigenspace_neg_one` turns the sign `-1` into the absence
+of invariants modulo a Lorentz-stable submodule. Only the left-hand factor changes: the
+Higgs sign `+1` is replaced by the gauge one, which is `+1` for the same reason.
 
-- A. Even field strength against odd fermion
+- A. Integer field strength against half-integer fermion
 - B. Mass weight seven
 - C. The classification below mass weight nine
 
@@ -51,7 +44,7 @@ seven, so nothing is gained by stopping short of the first weight the sector can
 
 namespace StandardModel
 
-open TensorProduct Matrix MatrixGroups Lorentz Lorentz.BoostWeight
+open TensorProduct Matrix MatrixGroups Lorentz Lorentz.Invariants
 
 namespace CovAlgebraRealization
 
@@ -63,54 +56,45 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-!
 
-## A. Even field strength against odd fermion
+## A. Integer field strength against half-integer fermion
 
-The two boost weight decompositions of the factors are already proved: the field-strength
-derivative submodules carry even weights, the covector and derivative slots contributing
-`±2` or `0` and the adjoint index nothing, and the fermion ones carry odd weights, the
-Weyl-spinor value index adding `±1`. Convolving them gives a boost weight decomposition of
-their product, and even plus odd is odd.
+The signs the two factors carry at the centre are already proved: the field-strength
+derivative submodules carry `+1`, every one of their indices being inert there, and the
+fermion ones carry `-1`, the Weyl-spinor value index doing the work. The Lorentz action on
+`B` is by algebra maps, so the product carries `+1` times `-1`.
 
 -/
 
-/-- The boost weight decomposition of a product of a field-strength and a fermion
-  derivative submodule, obtained by convolving the two factors' decompositions. -/
-private noncomputable def gaugeFermionBoostWeight (a b : ℕ) (i : Fin 3) :
-    WeightDecomposition repLorentz i
-      (h.isGaugeSector.derivSubmodule a * h.isFermionSector.derivSubmodule b) :=
-  WeightDecomposition.mulOfMul h.repLorentz_mul
-    (h.isGaugeSector.derivSubmoduleBoostWeight a i)
-    (h.isFermionSector.derivSubmoduleBoostWeight b i)
-
-/-- One field-strength factor against one fermion factor is odd: even plus odd. -/
-private lemma odd_gaugeFermionBoostWeight_supp (a b : ℕ) (i : Fin 3) :
-    ∀ k ∈ (h.gaugeFermionBoostWeight a b i).supp, ¬ (2 : ℤ) ∣ k :=
-  fun _ hk => WeightDecomposition.not_two_dvd_of_mem_mulOfMul_supp
-    (fun _ hp => h.isGaugeSector.two_dvd_of_mem_derivSubmoduleBoostWeight_supp a i hp)
-    (fun _ hq => h.isFermionSector.not_two_dvd_of_mem_derivSubmoduleBoostWeight_supp b i hq) hk
+/-- A field-strength derivative submodule against a fermion one is of half-integer spin:
+  `+1` times `-1`. -/
+private lemma gaugeFermion_le_centreEigenspace (a b : ℕ) :
+    h.isGaugeSector.derivSubmodule a * h.isFermionSector.derivSubmodule b
+      ≤ centreEigenspace repLorentz (-1) := by
+  simpa using mul_le_centreEigenspace h.repLorentz_mul
+    (h.isGaugeSector.derivSubmodule_le_centreEigenspace a)
+    (h.isFermionSector.derivSubmodule_le_centreEigenspace b)
 
 /-!
 
 ## B. Mass weight seven
 
 Weight seven is the single product `F ψ`, the underived field strength against the
-underived fermion towers. It has exactly one fermion factor, so section A makes every one
-of its boost weights odd, and an invariant of odd boost weight is zero modulo a
-Lorentz-stable submodule. The axis is immaterial; the first one will do.
+underived fermion towers. It has exactly one fermion factor, so section A gives it the sign
+`-1`, and a subspace of sign `-1` carries no invariant modulo a Lorentz-stable submodule.
 
 -/
 
 /-- Mass weight seven carries no Lorentz invariant modulo a Lorentz-stable submodule: a
   Lorentz invariant of `sectorMassWeight {gauge, fermion} 7 ⊔ S` lies in `S`. The weight is
-  the underived field strength against the underived fermion towers, of odd boost
-  weight. -/
+  the underived field strength against the underived fermion towers, of half-integer
+  spin. -/
 theorem mem_of_lorentz_invariant_sectorMassWeight_gauge_fermion_seven_sup (S : Submodule ℂ B)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.fermion} 7 ⊔ S)
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   rw [h.sectorMassWeight_gauge_fermion_seven] at hx
-  exact WeightDecomposition.mem_of_invariant_of_mem_sup_of_odd_supp
-    (h.gaugeFermionBoostWeight 0 0 0) (h.odd_gaugeFermionBoostWeight_supp 0 0 0) S hSL hx hL
+  exact mem_of_invariant_of_mem_sup_centreEigenspace_neg_one
+    (h.gaugeFermion_le_centreEigenspace 0 0) S hSL hx hL
 
 /-!
 

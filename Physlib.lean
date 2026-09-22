@@ -309,7 +309,7 @@ public import Physlib.Particles.StandardModel.AlgebraRealization.CovStandardMode
 public import Physlib.Particles.StandardModel.AlgebraRealization.CovariantDeriv
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Basic
-public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.BoostWeightDecomposition
+public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.Centre
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.GaugeWeightDecomposition
@@ -325,7 +325,6 @@ public import Physlib.Particles.StandardModel.AnomalyCancellation.NoGrav.One.Lin
 public import Physlib.Particles.StandardModel.AnomalyCancellation.Permutations
 public import Physlib.Particles.StandardModel.Basic
 public import Physlib.Particles.StandardModel.Challenge
-public import Physlib.Particles.StandardModel.Solution
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.Basic
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.FermionGaugeSector.MassWeight
@@ -391,7 +390,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
-public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.BoostWeightDecomposition
+public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.Centre
 public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
@@ -400,7 +399,7 @@ public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.Kinetic
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimEight
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.IsGaugeSector.Basic
-public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.BoostWeightDecomposition
+public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.Centre
 public import Physlib.Particles.StandardModel.IsGaugeSector.DerivSubmodule.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.Basic
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
@@ -442,6 +441,7 @@ public import Physlib.Particles.StandardModel.Model.Consistency
 public import Physlib.Particles.StandardModel.Model.LeptonDoublet
 public import Physlib.Particles.StandardModel.Peeling
 public import Physlib.Particles.StandardModel.Representations
+public import Physlib.Particles.StandardModel.Solution
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.Basic
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.HyperCharge
@@ -600,8 +600,8 @@ public import Physlib.Relativity.Bispinors.Basic
 public import Physlib.Relativity.CliffordAlgebra
 public import Physlib.Relativity.DerivAlgebra
 public import Physlib.Relativity.Fermions.Dirac.Basic
-public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Relativity.Fermions.Dirac.GammaMatrices
+public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Relativity.Fermions.Weyl.Contraction
 public import Physlib.Relativity.Fermions.Weyl.DualLeftHanded
 public import Physlib.Relativity.Fermions.Weyl.DualRightHanded
@@ -625,9 +625,9 @@ public import Physlib.Relativity.LorentzGroup.Boosts.Apply
 public import Physlib.Relativity.LorentzGroup.Boosts.Axis
 public import Physlib.Relativity.LorentzGroup.Boosts.Basic
 public import Physlib.Relativity.LorentzGroup.Boosts.Generalized
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Relativity.LorentzGroup.FermionicParity
 public import Physlib.Relativity.LorentzGroup.Invariants.Basic
+public import Physlib.Relativity.LorentzGroup.Invariants.Centre
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl

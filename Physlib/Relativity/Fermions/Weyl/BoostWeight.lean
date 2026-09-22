@@ -7,7 +7,7 @@ module
 
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
+public import Physlib.Relativity.LorentzGroup.Boosts.Axis
 /-!
 # The boost weights of a Weyl spinor
 

@@ -5,21 +5,22 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
+public import Physlib.Relativity.LorentzGroup.Boosts.Axis
 /-!
-# Light-cone derivative symbols
+# The light-cone basis of an axis
 
-A family of symbols indexed by tuples of spacetime directions can be re-read in the
-light-cone basis along a boost axis: `lightConeCoeff` gives the four light-cone
-directions `D₀ - Dᵢ`, `D₀ + Dᵢ` and the two transverse ones, `lightConeCoeffInv` the
-inverse change of basis, and `lightConeDeriv` the symbol read in that basis.  The point
-of the change of basis is `lightConeDeriv_mem`: a light-cone symbol is a boost
-eigenvector, of weight `∑ j, lightConeWeight (c j)` — `+2` for `D₀ - Dᵢ`, `-2` for
-`D₀ + Dᵢ`, and `0` for the transverse directions — on top of whatever weight its
-argument already carries.
+A tuple of spacetime directions can be re-read in the light-cone basis along a boost axis:
+`lightConeCoeff` gives the four light-cone directions `D₀ - Dᵢ`, `D₀ + Dᵢ` and the two
+transverse ones, and `lightConeCoeffInv` the inverse change of basis.  The point of the
+change of basis is `sum_boostAxis_lightConeCoeff`: the four directions are eigenvectors of
+the boost along the axis, of weight `lightConeWeight` — `+2` for `D₀ - Dᵢ`, `-2` for
+`D₀ + Dᵢ`, and `0` for the transverse directions.
 
-The hypothesis the development runs on is `RotatesIndices`: every index of the symbol
-map is a Lorentz vector index.
+On a tuple of slots the two coefficient matrices are still inverse to one another
+(`sum_prod_lightConeCoeff`, `sum_prod_lightConeCoeffInv`) and the weights add
+(`sum_prod_lightConeCoeff`).  That is what the classification of the Lorentz invariants in
+`LorentzGroup/Invariants` runs on: it writes a coefficient tensor in this basis and keeps
+only the piece of total weight zero.
 
 -/
 
@@ -27,20 +28,7 @@ map is a Lorentz vector index.
 
 namespace Lorentz
 
-open Matrix MatrixGroups Lorentz.BoostWeight
-
-variable {B : Type} [Ring B] [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {W : Type} [AddCommGroup W] [Module ℂ W] {repW : Representation ℂ SL(2,ℂ) W}
-
-/-- **One shape's worth of the rotation law**: every derivative index of `F` is a Lorentz
-  vector index. This is all the boost-weight development below uses, so it is taken as a
-  hypothesis; `IsDerivativeCollection.rotatesIndices` supplies it for each partition. -/
-abbrev RotatesIndices (repW : Representation ℂ SL(2,ℂ) W)
-    (repLorentz : Representation ℂ SL(2,ℂ) B) {n : ℕ}
-    (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) : Prop :=
-  ∀ (g : SL(2,ℂ)) (d : Fin n → Fin 1 ⊕ Fin 3) (w : W),
-    repLorentz g (F d w) = ∑ (a : Fin n → Fin 1 ⊕ Fin 3),
-      (∏ (j : Fin n), (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) • F a (repW g w)
+open Matrix MatrixGroups
 
 /-- The four light-cone directions along the `i`-th axis, written as coefficient vectors on
   the coordinate directions: `D₀ - Dᵢ`, `D₀ + Dᵢ`, and the two transverse directions. -/
@@ -149,16 +137,8 @@ lemma sum_prod_lightConeCoeff (i : Fin 3) {n : ℕ} (c : Fin n → Fin 4)
     _ = ((t : ℝ) : ℂ) ^ (∑ j, lightConeWeight (c j)) * ∏ j, lightConeCoeff i (c j) (a j) := by
         rw [hzpow]
 
-/-- **The symbol with its derivative indices in the light-cone basis.** Each slot `j` of the
-  multi-index carries a light-cone direction `c j` instead of a coordinate direction, so the
-  symbol is an eigenvector of the boost along the `i`-th axis, of weight
-  `∑ j, lightConeWeight (c j)`. -/
-noncomputable def lightConeDeriv {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
-    (i : Fin 3) (c : Fin n → Fin 4) : W →ₗ[ℂ] B :=
-  ∑ d : Fin n → Fin 1 ⊕ Fin 3, (∏ j, lightConeCoeff i (c j) (d j)) • F d
-
-/-- The scalar behind `f_eq_sum_lightConeDeriv`: the two coefficient matrices are inverse
-  slot by slot, hence inverse on multi-indices. -/
+/-- The two coefficient matrices are inverse slot by slot, hence inverse on multi-indices;
+  this is `sum_prod_lightConeCoeff` with the two factors the other way round. -/
 lemma sum_prod_lightConeCoeffInv (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 ⊕ Fin 3) :
     ∑ c : Fin n → Fin 4, (∏ j, lightConeCoeffInv i (d j) (c j)) *
         (∏ j, lightConeCoeff i (c j) (e j)) = if d = e then 1 else 0 := by
@@ -178,62 +158,5 @@ lemma sum_prod_lightConeCoeffInv (i : Fin 3) {n : ℕ} (d e : Fin n → Fin 1 �
         · rw [ite_eq_right hde]
           obtain ⟨j, hj⟩ := Function.ne_iff.1 hde
           exact Finset.prod_eq_zero (Finset.mem_univ j) (ite_eq_right hj)
-
-/-- **The coordinate symbols in the light-cone basis.** The change of basis is invertible,
-  so the two families span the same submodule. -/
-lemma eq_sum_lightConeDeriv {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B) (i : Fin 3)
-    (d : Fin n → Fin 1 ⊕ Fin 3) :
-    F d = ∑ c : Fin n → Fin 4,
-      (∏ j, lightConeCoeffInv i (d j) (c j)) • lightConeDeriv F i c := by
-  simp only [lightConeDeriv, Finset.smul_sum, smul_smul]
-  rw [Finset.sum_comm]
-  simp only [← Finset.sum_smul, sum_prod_lightConeCoeffInv i d, ite_smul, one_smul, zero_smul,
-    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
-
-/-- **The light-cone symbols have definite boost weight.** Each derivative slot contributes
-  the weight of its light-cone direction, on top of the weight the argument carries in
-  `W`. -/
-lemma lightConeDeriv_mem {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
-    (hF : RotatesIndices repW repLorentz F)
-    (i : Fin 3) (c : Fin n → Fin 4) {b : ℤ} {w : W}
-    (hwm : w ∈ boostWeightSubmodule repW i b) :
-    lightConeDeriv F i c w ∈
-      boostWeightSubmodule repLorentz i ((∑ j, lightConeWeight (c j)) + b) := by
-  intro t ht
-  have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  have key : repLorentz (SL2C.boostAxis i t ht) (lightConeDeriv F i c w)
-      = ((t : ℝ) : ℂ) ^ (∑ j, lightConeWeight (c j)) •
-        lightConeDeriv F i c (repW (SL2C.boostAxis i t ht) w) := by
-    have hstep : ∀ x : Fin n → Fin 1 ⊕ Fin 3,
-        (∏ j, lightConeCoeff i (c j) (x j)) • repLorentz (SL2C.boostAxis i t ht) (F x w)
-          = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
-            ((∏ j, lightConeCoeff i (c j) (x j)) *
-              (∏ j, (((SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 (a j) (x j) : ℝ) : ℂ))) •
-              F a (repW (SL2C.boostAxis i t ht) w) := by
-      intro x
-      rw [hF, Finset.smul_sum]
-      exact Finset.sum_congr rfl fun a _ => smul_smul _ _ _
-    simp only [lightConeDeriv, LinearMap.coe_sum, Finset.sum_apply, LinearMap.smul_apply,
-      map_sum, map_smul]
-    rw [Finset.smul_sum]
-    simp only [hstep]
-    rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [← Finset.sum_smul, smul_smul]
-    congr 1
-    exact sum_prod_lightConeCoeff i c a ht
-  rw [key, hwm t ht, map_smul, smul_smul,
-    show (algebraMap ℝ ℂ) t = ((t : ℝ) : ℂ) from rfl, ← zpow_add₀ htc]
-
-/-- The range of a light-cone symbol over a Lorentz-scalar argument lies in the
-  boost-weight space of its total slot weight. -/
-lemma range_lightConeDeriv_le {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → ℂ →ₗ[ℂ] B)
-    (hF : RotatesIndices (1 : Representation ℂ SL(2,ℂ) ℂ) repLorentz F)
-    (i : Fin 3) (c : Fin n → Fin 4) :
-    LinearMap.range (lightConeDeriv F i c) ≤
-      boostWeightSubmodule repLorentz i (∑ j, lightConeWeight (c j)) := by
-  rintro x ⟨w, rfl⟩
-  simpa using lightConeDeriv_mem F hF i c (b := 0) (w := w)
-    (mem_boostWeightSubmodule.2 fun t ht => by simp)
 
 end Lorentz

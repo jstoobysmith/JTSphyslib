@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
+public import Physlib.Relativity.LorentzGroup.Boosts.Axis
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.RingTheory.GradedAlgebra.Basic
 public import Mathlib.Algebra.DirectSum.Internal
@@ -158,6 +158,25 @@ def IsLorentzCovDerivTransforms {k V : Type*} [CommRing k] [AddCommGroup V]
       ∑ p : Fin n → (Fin 1 ⊕ Fin 3),
         (∏ i, (((SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) •
           F p (rep.dual Λ φ)
+
+/-- **At the centre the derivative slots do not mix.** The element `-1` of `SL(2,ℂ)` covers
+  the identity Lorentz transformation, so the sum over tuples collapses to the single term
+  `p = l` and only the value index moves. -/
+lemma IsLorentzCovDerivTransforms.neg_one_apply {k V : Type*} [CommRing k] [AddCommGroup V]
+    [Module k V] [Module k A] {repLorentz : Representation ℂ SL(2,ℂ) A}
+    {rep : Representation k SL(2,ℂ) V}
+    {F : {n : ℕ} → (Fin n → (Fin 1 ⊕ Fin 3)) → Module.Dual k V →ₗ[k] A}
+    (hF : IsLorentzCovDerivTransforms repLorentz rep F)
+    {n : ℕ} (l : Fin n → (Fin 1 ⊕ Fin 3)) (φ : Module.Dual k V) :
+    repLorentz (-1) (F l φ) = F l (rep.dual (-1) φ) := by
+  rw [hF (-1) n l φ, SL2C.toLorentzGroup_neg_one, Finset.sum_eq_single l]
+  · simp
+  · intro p _ hp
+    obtain ⟨i, hi⟩ := Function.ne_iff.1 hp
+    rw [Finset.prod_eq_zero (Finset.mem_univ i)]
+    · simp
+    · simp [hi]
+  · simp
 
 namespace IsLorentzDeriv
 

@@ -11,7 +11,6 @@ public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Relativity.SL2C.AxisRotations
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
-public import Physlib.Relativity.LorentzGroup.Boosts.WeightGrading
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
@@ -57,8 +56,6 @@ Lagrangian are assembled downstream.
   up to `massWeightSubmodule_eight_eq`.
 - `massWeightSubmoduleGaugeWeight` : the gauge weight decomposition of the mass-weight
   submodules.
-- `IsDerivativeCollection.boostDecomp` : the boost weight decomposition of the span of a
-  symbol whose derivative indices rotate as Lorentz vectors.
 
 ## iii. Table of contents
 
@@ -79,7 +76,6 @@ Lagrangian are assembled downstream.
   - F.4. The gauge weight decomposition
   - F.5. The low mass weights
 - G. Gauge invariants
-- Aside: derivative collections and boost weights
 
 -/
 
@@ -1115,119 +1111,6 @@ lemma massWeightSubmodule_eight_eq :
 /-- The gauge invariants of a given mass weight. -/
 noncomputable def gaugeInvariantOfMassDim (M : ℕ) : Submodule ℂ B :=
   h.massWeightSubmodule M ⊓ Representation.invariants rep
-
-/-!
-
-## Aside: derivative collections and boost weights
-
-A symbol map whose derivative indices rotate as Lorentz vectors (`RotatesIndices`) has a
-boost weight decomposition of its span along each spatial axis, read off in the light-cone
-basis: a slot of light-cone type `c j` contributes `lightConeWeight (c j)` on top of the
-weight of the argument. `IsDerivativeCollection` records the rotation law for a symbol with
-several groups of derivative indices, and `trivialWeightDecomposition` is the weight
-decomposition of a Lorentz-scalar argument. Both are used by the Higgs, fermion and gauge
-sectors alike, which is why they live here rather than in a sector file.
-
--/
-
-open Lorentz.BoostWeight
-
-/-- A symbol map with `α` groups of derivative indices whose every index rotates as a
-  Lorentz vector, the grouping being a spectator. -/
-structure IsDerivativeCollection {W} [AddCommGroup W] [Module ℂ W]
-    (repW : Representation ℂ SL(2,ℂ) W) (α : ℕ)
-    (f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B) where
-  /-- The symbol map intertwines the Lorentz action on `W` with the one on `B`, up to the
-    rotation of its derivative indices: each index is a Lorentz vector index. The partition
-    `num` of the indices among the `α` factors is a spectator — the rotation does not see
-    how the indices are grouped — so the law is one sum over one product. -/
-  repLorentz_equiv : ∀ (g : SL(2,ℂ)) (num : Fin α → ℕ)
-      (d : Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) (w : W),
-      repLorentz g (f num d w) = ∑ (a : Fin (∑ i, num i) → Fin 1 ⊕ Fin 3),
-        (∏ (j : Fin (∑ i, num i)), (((SL2C.toLorentzGroup g).1 (a j) (d j) : ℝ) : ℂ)) •
-          (f num a (repW g w))
-
-namespace IsDerivativeCollection
-
-variable {W} [AddCommGroup W] [Module ℂ W] {repW : Representation ℂ SL(2,ℂ) W}
-
-/-- The boost-weight decomposition of the symbols carrying `n` derivatives. The
-  multi-index is read in the light-cone basis: a slot of type `c j` contributes
-  `lightConeWeight (c j)` — `+2` for `D₀ - Dᵢ`, `-2` for `D₀ + Dᵢ`, `0` for the two
-  transverse directions — on top of the weight the argument already carries in `W`. -/
-noncomputable def boostDecomp {n : ℕ} (F : (Fin n → Fin 1 ⊕ Fin 3) → W →ₗ[ℂ] B)
-    (hF : RotatesIndices repW repLorentz F)
-    (i : Fin 3) (hw : WeightDecomposition (K := ℂ) repW i ⊤) :
-    WeightDecomposition repLorentz i (⨆ d : Fin n → Fin 1 ⊕ Fin 3, (F d).range) where
-  piece k := ⨆ c : Fin n → Fin 4,
-    (hw.piece (k - ∑ j, lightConeWeight (c j))).map (lightConeDeriv F i c)
-  supp := (Finset.univ ×ˢ hw.supp).image
-    fun p : (Fin n → Fin 4) × ℤ => (∑ j, lightConeWeight (p.1 j)) + p.2
-  piece_le k := by
-    refine iSup_le fun c => ?_
-    rintro _ ⟨w, hwmem, rfl⟩
-    have hmem := lightConeDeriv_mem F hF i c (hw.piece_le _ hwmem)
-    rwa [show (∑ j, lightConeWeight (c j)) + (k - ∑ j, lightConeWeight (c j)) = k from by ring]
-      at hmem
-  piece_eq_bot k hk := by
-    refine le_antisymm (iSup_le fun c => ?_) bot_le
-    have hb : k - (∑ j, lightConeWeight (c j)) ∉ hw.supp := fun hb =>
-      hk (Finset.mem_image.2 ⟨(c, k - ∑ j, lightConeWeight (c j)),
-        Finset.mem_product.2 ⟨Finset.mem_univ c, hb⟩, by dsimp only; ring⟩)
-    rw [hw.piece_eq_bot _ hb, Submodule.map_bot]
-  iSup_piece := by
-    have hc : ∀ c : Fin n → Fin 4,
-        (⨆ k : ℤ, hw.piece (k - ∑ j, lightConeWeight (c j))) = ⊤ := fun c =>
-      le_antisymm le_top (hw.iSup_piece.symm.le.trans (iSup_le fun b =>
-        le_iSup_of_le (b + ∑ j, lightConeWeight (c j)) (by rw [add_sub_cancel_right])))
-    rw [iSup_comm]
-    calc (⨆ c : Fin n → Fin 4, ⨆ k : ℤ,
-          (hw.piece (k - ∑ j, lightConeWeight (c j))).map (lightConeDeriv F i c))
-        = ⨆ c : Fin n → Fin 4, LinearMap.range (lightConeDeriv F i c) := by
-          refine iSup_congr fun c => ?_
-          rw [← Submodule.map_iSup, hc c, Submodule.map_top]
-      _ = ⨆ d : Fin n → Fin 1 ⊕ Fin 3, LinearMap.range (F d) := by
-          refine le_antisymm (iSup_le fun c => ?_) (iSup_le fun d => ?_)
-          · rintro _ ⟨w, rfl⟩
-            rw [lightConeDeriv, LinearMap.sum_apply]
-            refine Submodule.sum_mem _ fun d _ => ?_
-            rw [LinearMap.smul_apply]
-            exact Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem d ⟨w, rfl⟩)
-          · rintro _ ⟨w, rfl⟩
-            rw [eq_sum_lightConeDeriv F i d, LinearMap.sum_apply]
-            refine Submodule.sum_mem _ fun c _ => ?_
-            rw [LinearMap.smul_apply]
-            exact Submodule.smul_mem _ _ (Submodule.mem_iSup_of_mem c ⟨w, rfl⟩)
-
-/-- Each shape of a derivative collection rotates its indices. -/
-lemma rotatesIndices {α : ℕ}
-    {f : (num : Fin α → ℕ) → (Fin (∑ i, num i) → (Fin 1 ⊕ Fin 3)) → W →ₗ[ℂ] B}
-    (hD : IsDerivativeCollection (repLorentz := repLorentz) repW α f) (num : Fin α → ℕ) :
-    RotatesIndices repW repLorentz (f num) :=
-  fun g d w => hD.repLorentz_equiv g num d w
-
-end IsDerivativeCollection
-
-/-- The weight decomposition of `ℂ` under the trivial Lorentz action: every scalar has
-  boost weight zero. -/
-noncomputable def trivialWeightDecomposition (i : Fin 3) :
-    WeightDecomposition (1 : Representation ℂ SL(2,ℂ) ℂ) i ⊤ where
-  piece k := if k = 0 then ⊤ else ⊥
-  supp := {0}
-  piece_le k := by
-    by_cases hk : k = 0
-    · subst hk
-      rw [ite_eq_left rfl]
-      intro x _ t ht
-      simp
-    · rw [ite_eq_right hk]
-      exact bot_le
-  piece_eq_bot k hk := ite_eq_right (by simpa using hk)
-  iSup_piece := le_antisymm le_top (le_iSup_of_le 0 (by rw [ite_eq_left rfl]))
-
-@[simp]
-lemma trivialWeightDecomposition_piece (i : Fin 3) (k : ℤ) :
-    (trivialWeightDecomposition i).piece k = if k = 0 then ⊤ else ⊥ := rfl
 
 end HiggsAlgebraCovRealization
 

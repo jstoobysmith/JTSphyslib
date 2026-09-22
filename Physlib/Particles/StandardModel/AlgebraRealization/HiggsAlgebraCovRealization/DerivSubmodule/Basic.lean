@@ -14,8 +14,8 @@ the submodule `derivSubmodule n`.  The Higgs is bosonic, so these submodules com
 with one another, and since neither the gauge nor the Lorentz action changes the number
 of derivatives they are closed under both.
 
-The gauge and boost weight decompositions of these submodules live in
-`GaugeWeightDecomposition.lean` and `BoostWeightDecomposition.lean`.
+The gauge weight decomposition of these submodules lives in `GaugeWeightDecomposition.lean`,
+and the sign they carry at the centre of `SL(2,ℂ)` in `Centre.lean`.
 
 -/
 
