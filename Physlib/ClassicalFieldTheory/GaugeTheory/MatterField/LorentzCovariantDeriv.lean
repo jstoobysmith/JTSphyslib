@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith, Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction
 public import Physlib.Relativity.LorentzMix
 /-!
 # The Lorentz law of the covariant derivatives of a matter family

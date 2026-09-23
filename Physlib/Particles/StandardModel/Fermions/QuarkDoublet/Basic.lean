@@ -9,7 +9,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.RightHanded

@@ -5,7 +5,7 @@ Authors: Nathaneal Sajan
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
 public import Physlib.Particles.StandardModel.Basic

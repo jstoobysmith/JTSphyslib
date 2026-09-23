@@ -19,7 +19,7 @@ convolution of the base-point Taylor coefficients `repDualCoeff` of `rep` agains
 lower symbols, with no inhomogeneous term. This is the generalization of
 `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and the
 property preserved by the covariant derivative in
-`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction`.
+`Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction`.
 
 Nothing here depends on the local gauge data beyond the group `GJ` acting; the definition
 lives in the `LocalGaugeData` namespace with the transformation laws that consume it.

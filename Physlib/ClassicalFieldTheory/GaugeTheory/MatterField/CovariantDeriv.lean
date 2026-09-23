@@ -34,7 +34,7 @@ and with them
   of `V`, the analogue of `adjointDualCoeff` for a general representation;
 The gauge tensors of a representation themselves — `LocalGaugeData.TransformsIn`, the
 generalization of `TransformsInAdjoint` — are defined on top of `repDualCoeff` in
-`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn`.
+`Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.TransformsIn`.
 
 ## The covariant derivative
 
@@ -50,7 +50,7 @@ case `act = adAction` (the bracket as a bilinear map) literally specializes:
 
 The compatibility between `rep` and `act` — the structure `IsInfinitesimalActionOf` —
 and the theorem that under it the covariant derivative preserves the gauge tensors live
-in `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction`.
+in `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction`.
 
 -/
 

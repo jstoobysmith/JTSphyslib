@@ -45,18 +45,17 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.SectorR
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.TransformsIn
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Charge
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeriv
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.JetComponentSpace.TransformsIn
@@ -67,6 +66,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Fac
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Pi
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Prod
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.TransformsIn
 public import Physlib.ClassicalFieldTheory.Local.Variation
 public import Physlib.ClassicalMechanics.Basic
 public import Physlib.ClassicalMechanics.DampedHarmonicOscillator.Basic
