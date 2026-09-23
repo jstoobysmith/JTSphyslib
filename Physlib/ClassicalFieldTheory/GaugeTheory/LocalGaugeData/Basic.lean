@@ -320,8 +320,6 @@ lemma iteratedDeriv_ofConstantLie_of_ne_zero {p : Multiset (Fin 1 ⊕ Fin 3)} (h
     · rw [iteratedDeriv_zero, LinearMap.id_apply, deriv_ofConstantLie]
     · rw [ih ht, map_zero]
 
-TODO "Add product of LocalGaugeData."
-
 /-- The Euler identity: at the base point, `x_μ` acts on the `s`-th derivative by
   removing one `μ` and counting how many there were. With `∂_s` the derivatives in `s`,
   `(∂_s (x_μ a))|₀ = s(μ) · (∂_{s − μ} a)|₀`. -/
