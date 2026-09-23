@@ -5,6 +5,7 @@ Authors: Jinzheng Li
 -/
 module
 
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Constructions
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Charge
 /-!
@@ -14,33 +15,24 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Charge
 
 A model-building table assigns to each field one charge per factor of the gauge group: a
 rational charge under a `U(1)` factor, a representation label under an `SU(n)` factor.
-This file packages what a factor of the local gauge data must provide for its
-representations to be built as matrix representations:
-
-* `LocalGaugeData.U1Factor` : a unitary jet `u U` attached to each gauge jet, with the
-  matching components `φ`, `φJ` of the gauge algebra and its jets, related by the
-  Maurer–Cartan form `φJ (ω_μ U) = i (∂_μ u) u⁻¹` and invariant under the adjoint action;
-* `LocalGaugeData.SUFactor` : a unitary matrix of jets `u U` attached to each gauge jet,
-  with the matching matrix components `φ`, `φJ`, related by the Maurer–Cartan form
-  `φJ (ω_μ U) = i (∂_μ u) u⁻¹` and transforming by conjugation under the adjoint action.
-
-From these, `U1Factor.charge n R` twists a matrix representation `R` by the charge-`n`
-power of the unitary jet, and `SUFactor.fund` is the fundamental representation. Together
-with `MatrixRep.trivial`, `MatrixRep.kron` and `MatrixRep.conj`, every representation
-named in a table is assembled from these.
+The factors themselves, `LocalGaugeData.U1Factor` and `LocalGaugeData.SUFactor`, are part
+of the gauge data (`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor`). This
+file builds the representations they name: `U1Factor.charge n R` twists a matrix
+representation `R` by the charge-`n` power of the unitary jet, and `SUFactor.fund` is the
+fundamental representation. Together with `MatrixRep.trivial`, `MatrixRep.kron` and
+`MatrixRep.conj`, every representation named in a table is assembled from these.
 
 ## ii. Key results
 
-- `LocalGaugeData.U1Factor`, `U1Factor.charge` : a `U(1)` factor and the charge twist.
+- `U1Factor.charge` : the charge twist of a matrix representation by a `U(1)` factor.
 - `MatterField.pderiv_chargePow` : the derivative of a power of a unitary jet.
-- `LocalGaugeData.SUFactor`, `SUFactor.fund` : an `SU(n)` factor and its fundamental
-  representation.
+- `SUFactor.fund` : the fundamental representation of an `SU(n)` factor.
 
 ## iii. Table of contents
 
 - A. Powers of a unitary jet
-- B. `U(1)` factors and the charge twist
-- C. `SU(n)` factors and the fundamental representation
+- B. The charge twist of a `U(1)` factor
+- C. The fundamental representation of an `SU(n)` factor
 
 -/
 
@@ -90,30 +82,9 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 
 /-!
 
-## B. `U(1)` factors and the charge twist
+## B. The charge twist of a `U(1)` factor
 
 -/
-
-/-- **A `U(1)` factor** of the local gauge data: a unitary jet `u U` attached to each gauge
-  jet, with the corresponding components `φ c` of the gauge algebra and `φJ a` of its jets,
-  related by the Maurer–Cartan form `φJ (ω_μ U) = i (∂_μ u) u⁻¹` and invariant under the
-  adjoint action. -/
-structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
-  /-- The unitary jet of a gauge jet. -/
-  u : GJ →* unitary JetRing
-  /-- The `u(1)` component of a gauge algebra element. -/
-  φ : 𝔤 →ₗ[ℝ] ℂ
-  /-- The `u(1)` component of a jet of gauge algebra elements. -/
-  φJ : 𝔤J → JetRing
-  φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = C (φ c)
-  φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (φJ a))
-      = φ (jets.evalLie (jets.iteratedDeriv p a))
-  φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
-    φJ (jets.maurerCartan U μ)
-      = Complex.I • (pderiv μ (u U : JetRing) * star (u U : JetRing))
-  φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
-    φJ (jets.adjoint U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
 
 namespace U1Factor
 
@@ -201,34 +172,9 @@ end U1Factor
 
 /-!
 
-## C. `SU(n)` factors and the fundamental representation
+## C. The fundamental representation of an `SU(n)` factor
 
 -/
-
-/-- **An `SU(n)` factor** of the local gauge data: a unitary matrix of jets `u U` attached
-  to each gauge jet, with the corresponding matrix components `φ c` of the gauge algebra
-  and `φJ a` of its jets, related by the Maurer–Cartan form `φJ (ω_μ U) = i (∂_μ u) u⁻¹`
-  and transforming by conjugation under the adjoint action. -/
-structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintype n] [DecidableEq n]
-    where
-  /-- The unitary matrix of jets of a gauge jet. -/
-  u : GJ → Matrix n n JetRing
-  u_one : u 1 = 1
-  u_mul : ∀ U V, u (U * V) = u U * u V
-  u_unitary : ∀ U, star (u U) * u U = 1
-  /-- The matrix component of a gauge algebra element. -/
-  φ : 𝔤 →ₗ[ℝ] Matrix n n ℂ
-  /-- The matrix component of a jet of gauge algebra elements. -/
-  φJ : 𝔤J → Matrix n n JetRing
-  φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = (φ c).map (C : ℂ → JetRing)
-  φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
-      = φ (jets.evalLie (jets.iteratedDeriv p a))
-  φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
-    φJ (jets.maurerCartan U μ)
-      = Complex.I • (((u U).map fun f => pderiv μ f) * star (u U))
-  φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
-    φJ (jets.adjoint U (jets.ofConstantLie c)) = u U * φJ (jets.ofConstantLie c) * star (u U)
 
 namespace SUFactor
 

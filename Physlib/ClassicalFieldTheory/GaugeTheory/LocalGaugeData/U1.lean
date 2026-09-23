@@ -5,7 +5,7 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Factors
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
 public import Physlib.Relativity.JetRing.Taylor
 /-!
 # The local gauge data of `U(1)`

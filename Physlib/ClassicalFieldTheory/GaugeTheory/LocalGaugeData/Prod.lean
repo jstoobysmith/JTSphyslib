@@ -5,7 +5,7 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Factors
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
 public import Mathlib.Algebra.Lie.Prod
 /-!
 # The product of local gauge data

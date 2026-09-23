@@ -6,6 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
+public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table
 /-!
 # The Standard Model
 

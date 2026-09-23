@@ -20,17 +20,17 @@ label and one charge per factor — an integer charge under a `U(1)` factor, a
 representation label under an `SU(n)` factor.
 
 This file defines the tables over any local gauge data and compiles them into the general
-theory. A gauge group is a list of `Factor`s, each a `U1Factor` or an `SUFactor` of the
-local gauge data; the charges of a field form the tuple `Charges Γ` over the list; the
-charges name a matrix representation `Charges.rep`, assembled from the factors by the
-hypercharge twist and the Kronecker product; a field is its Lorentz label and its charges,
+theory. A gauge group is a list of `Factor`s of the local gauge data
+(`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor`); the charges of a field
+form the tuple `Charges Γ` over the list; the charges name a matrix representation
+`Charges.rep`, assembled from the factors by the hypercharge twist and the Kronecker
+product; a field is its Lorentz label and its charges,
 `MatterFieldData Γ`, so that it reads `(.L, .singlet, .fund, -3)`, and compiles to a
 `MatterField`; the field data of a model, `FieldData Γ Fields`, assigns each field its
 number of generations and its data, and compiles to a `GaugeFieldData`.
 
 ## ii. Key results
 
-- `LocalGaugeData.Factor`, `Factors` : a gauge group presented as a list of factors.
 - `SURep`, `Charges` : the charge labels of a row and the charge tuple.
 - `Charges.rep` : the matrix representation named by a charge tuple.
 - `LorentzLabel`, `MatterFieldData` : the Lorentz label and the data of a field.
@@ -42,7 +42,7 @@ number of generations and its data, and compiles to a `GaugeFieldData`.
 
 ## iii. Table of contents
 
-- A. Factors and charge labels
+- A. Charge labels
 - B. Charge tuples and their internal index
 - C. The representation named by a charge tuple
 - D. Matter field data and its matter field
@@ -61,20 +61,9 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 
 /-!
 
-## A. Factors and charge labels
+## A. Charge labels
 
 -/
-
-/-- **A factor of the gauge group**, presented in the local gauge data: a `U(1)` factor or
-  an `SU(n)` factor. -/
-inductive Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
-  /-- A `U(1)` factor. -/
-  | U1 (F : U1Factor jets)
-  /-- An `SU(n)` factor. -/
-  | SU {n : ℕ} (F : SUFactor jets (Fin n))
-
-/-- **A gauge group presented by its factors.** -/
-abbrev Factors (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) : Type := List (Factor jets)
 
 /-- **A representation label under `SU(n)`.** -/
 inductive SURep

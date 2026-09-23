@@ -8,7 +8,6 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
-public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Table
 /-!
 # Local gauge data from a list of factors
 
