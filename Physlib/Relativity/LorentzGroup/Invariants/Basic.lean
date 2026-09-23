@@ -7,23 +7,23 @@ module
 
 public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Mathematics.LinearCombination
-public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 /-!
 # Invariants of the span of a family of components
 
 Every file in this folder asks the same question of a different index pattern. A family `T` of
 vectors of a complex vector space `B`, indexed by a finite set `ι` and moved by a
 representation of `SL(2,ℂ)`, spans a subspace of `B`; which of its vectors does the group
-leave alone? This file holds the three steps of the answer that do not depend on the pattern.
+leave alone? The answer has three steps that do not depend on the pattern.
 
-The first turns the question into a finite one. A vector of the span is a contraction
-`∑ i, c i • T i` for a coefficient function `c : ι → ℂ`, and the group moves such a vector by
-moving `c`. The components may satisfy linear relations, so `c` is not determined by the
-vector and need not be invariant, but the coefficients contracting to `0` form a subspace `K`
-which the group preserves, and so does its orthogonal complement whenever the coefficient
-action is closed under taking adjoints. Replacing `c` by its part in `Kᗮ` keeps the vector and
-makes `c` invariant: `exists_invariantCoeff`. What is left is a question about `ι`-indexed
-tuples of complex numbers.
+The first, general linear algebra, turns the question into a finite one. A vector of the span
+is a contraction `∑ i, c i • T i` for a coefficient function `c : ι → ℂ`, and the group moves
+such a vector by moving `c`. The components may satisfy linear relations, so `c` is not
+determined by the vector and need not be invariant, but the coefficients contracting to `0` form
+a subspace `K` which the group preserves, and so does its orthogonal complement whenever the
+coefficient action is closed under taking adjoints. Replacing `c` by its part in `Kᗮ` keeps the
+vector and makes `c` invariant: `Fintype.exists_invariant_coeff_of_adjoint_mem`, in
+`Physlib.Mathematics.LinearCombination`. What is left is a question about `ι`-indexed tuples of
+complex numbers. This file holds the other two steps.
 
 The second reads that condition off the transformation law. Every family here is moved by a
 matrix, `repLorentz g (T l) = ∑_a M_g(a, l) • T a`, so the coefficients move by `actMat M_g`,
@@ -53,78 +53,14 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-!
 
-## A. An invariant of the span is the contraction of an invariant coefficient
-
--/
-
-section Complement
-
-variable {ι : Type} [Fintype ι] {G : Type*}
-
-/-- Contraction with the components, as a linear map on the coefficients carrying the standard
-  inner product; `WithLp.toLp 2` and `.ofLp` only translate to the plain function type. -/
-noncomputable def contractₗ (T : ι → B) : EuclideanSpace ℂ ι →ₗ[ℂ] B where
-  toFun c := ∑ i, c.ofLp i • T i
-  map_add' c c' := by
-    simp only [WithLp.ofLp_add, Pi.add_apply, add_smul, Finset.sum_add_distrib]
-  map_smul' z c := by
-    simp only [WithLp.ofLp_smul, Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.smul_sum,
-      smul_smul]
-
-open scoped InnerProductSpace in
-/-- An invariant of the span is the contraction of an invariant coefficient function, provided
-  the coefficient action `A` has all its adjoints inside the family: for every `g` some `g'`
-  acts as the adjoint of `g`. Nothing is claimed about uniqueness, the components being
-  possibly dependent. -/
-theorem exists_invariantCoeff (T : ι → B) (φ : G → B →ₗ[ℂ] B)
-    (A : G → (ι → ℂ) →ₗ[ℂ] (ι → ℂ))
-    (hφ : ∀ (g : G) (c : ι → ℂ), φ g (∑ i, c i • T i) = ∑ i, A g c i • T i)
-    (hA : ∀ g : G, ∃ g' : G, ∀ u v : EuclideanSpace ℂ ι,
-      ⟪u, WithLp.toLp 2 (A g v.ofLp)⟫_ℂ = ⟪WithLp.toLp 2 (A g' u.ofLp), v⟫_ℂ)
-    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
-    ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, A g c = c := by
-  classical
-  obtain ⟨c, rfl⟩ : ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-    rw [← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-      LinearMap.mem_range] at hx
-    simpa only [Fintype.linearCombination_apply, eq_comm] using hx
-  have hcontr : ∀ (g : G) (u : EuclideanSpace ℂ ι),
-      contractₗ T (WithLp.toLp 2 (A g u.ofLp)) = φ g (contractₗ T u) :=
-    fun g u => (hφ g u.ofLp).symm
-  set K := LinearMap.ker (contractₗ T) with hK
-  have hKstab : ∀ (g : G) (u : EuclideanSpace ℂ ι), u ∈ K →
-      WithLp.toLp 2 (A g u.ofLp) ∈ K := by
-    intro g u hu
-    rw [hK, LinearMap.mem_ker] at hu ⊢
-    rw [hcontr, hu, map_zero]
-  obtain ⟨k, hk, k', hk', hkk'⟩ := K.exists_add_mem_mem_orthogonal (WithLp.toLp 2 c)
-  have hx' : ∑ i, c i • T i = contractₗ T k' := by
-    have h := congrArg (contractₗ T) hkk'
-    rwa [map_add, LinearMap.mem_ker.1 hk, zero_add] at h
-  refine ⟨k'.ofLp, hx', fun g => ?_⟩
-  have h1 : WithLp.toLp 2 (A g k'.ofLp) - k' ∈ K := by
-    rw [hK, LinearMap.mem_ker, map_sub, hcontr, ← hx', hinv, hx', sub_self]
-  have h2 : WithLp.toLp 2 (A g k'.ofLp) ∈ Kᗮ := by
-    obtain ⟨g', hg'⟩ := hA g
-    refine (Submodule.mem_orthogonal _ _).2 fun u hu => ?_
-    rw [hg' u k']
-    exact Submodule.inner_right_of_mem_orthogonal (hKstab g' u hu) hk'
-  have h3 : WithLp.toLp 2 (A g k'.ofLp) - k' ∈ K ⊓ Kᗮ :=
-    ⟨h1, Submodule.sub_mem _ h2 hk'⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot, sub_eq_zero] at h3
-  exact congrArg WithLp.ofLp h3
-
-end Complement
-
-/-!
-
-## B. Coefficient functions moved by a matrix
+## A. Coefficient functions moved by a matrix
 
 Every family in this folder is moved by a matrix: `repLorentz g (T l) = ∑_a M_g(a, l) • T a`,
 with `M_g` built from the Lorentz matrix of `g`, from `g` itself on Weyl indices, or from both.
 The coefficients then move by `actMat M_g`, whose adjoint is the action of the conjugate
-transpose of `M_g`. So the hypothesis of A reads: for every `g` some `g'` has `M_{g'}` the
-conjugate transpose of `M_g`. In every case below `g'` is `g†`.
+transpose of `M_g`. So the adjoint hypothesis of `Fintype.exists_invariant_coeff_of_adjoint_mem`
+reads: for every `g` some `g'` has `M_{g'}` the conjugate transpose of `M_g`. In every case below
+`g'` is `g†`.
 
 The weight argument is also generic: a covector that the transposed matrix reproduces up to a
 scalar reads off a component that `actMat M_g` scales by that scalar, so an invariant
@@ -168,7 +104,8 @@ theorem exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B)
     (hM : ∀ g : G, ∃ g' : G, ∀ a d, M g' a d = star (M g d a))
     {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, (∀ g, actMat (M g) c = c) ∧ x = ∑ i, c i • T i := by
-  obtain ⟨c, hc, hinvc⟩ := exists_invariantCoeff T φ (fun g => actMatₗ (M g))
+  obtain ⟨c, hc, hinvc⟩ := Fintype.exists_invariant_coeff_of_adjoint_mem T φ
+    (fun g => actMatₗ (M g))
     (fun g c => (φ g).map_sum_smul_of_forall_eq T T (M g) (hT g) c)
     (fun g => by
       obtain ⟨g', hg'⟩ := hM g
@@ -205,7 +142,7 @@ end Mat
 
 /-!
 
-## C. Coefficient tensors on spacetime indices
+## B. Coefficient tensors on spacetime indices
 
 -/
 
