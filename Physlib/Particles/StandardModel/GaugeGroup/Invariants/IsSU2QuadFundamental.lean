@@ -464,7 +464,7 @@ theorem exists_smul_add_smul_of_su2_invariant {T : (Fin 4 → Fin 2) → B}
 ## F. The invariants modulo a stable submodule
 
 The law descends to the quotient by an isospin-stable `S`, so section E applies there, and
-`Family.exists_mem_add_of_mem_sup` lifts the result back, the invariants of the quotient
+`IsStableUnder.exists_add_of_quotient` lifts the result back, the invariants of the quotient
 family being the classes of the plane spanned by the two contractions.
 
 -/
@@ -501,14 +501,15 @@ theorem mem_span_sup_su2_invariant_iff {T : (Fin 4 → Fin 2) → B}
     ∃ c₁ c₂ : ℂ, ∃ y ∈ S,
       x = c₁ • epsilonContraction₁₂ T + c₂ • epsilonContraction₁₃ T + y
         ∧ ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) y = y := by
-  obtain ⟨w, hw, y, hyS, hxy, hyinv⟩ := Family.exists_mem_add_of_mem_sup T
-    (fun V => repGauge (1, V, 1)) S hS
-    (Submodule.span ℂ {epsilonContraction₁₂ T, epsilonContraction₁₃ T})
-    (fun w hw V => by
+  obtain ⟨w, hw, y, hyS, hxy, hyinv⟩ := IsStableUnder.exists_add_of_quotient
+    (σ := fun V => repGauge (1, V, 1)) (V := ⨆ i, ℂ ∙ T i)
+    (W := Submodule.span ℂ {epsilonContraction₁₂ T, epsilonContraction₁₃ T}) hS
+    (fun V w hw => by
       obtain ⟨c₁, c₂, rfl⟩ := Submodule.mem_span_pair.1 hw
       rw [map_add, map_smul, map_smul, repGauge_epsilonContraction₁₂ hT,
         repGauge_epsilonContraction₁₃ hT])
     (fun x hx hinv => by
+      rw [Submodule.map_iSup_span_singleton] at hx
       obtain ⟨c₁, c₂, hx'⟩ := exists_smul_add_smul_of_invariant'
         (fun V => isSU2QuadFundamentalMat_mapQ (hT.repGauge_T V) S (hS V)) hx hinv
       refine ⟨c₁ • epsilonContraction₁₂ T + c₂ • epsilonContraction₁₃ T,

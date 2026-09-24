@@ -95,6 +95,15 @@ lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 2) → M) :
     ∑ d : Fin 2 → Fin 2, F d = ∑ x : Fin 2, ∑ y : Fin 2, F ![x, y] :=
   Family.sum_pi_two F
 
+/-- A finite sum of bi-fundamental isospin families is such a family again. -/
+lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 2) → B}
+    (hT : ∀ i, IsSU2BiFundamental B repGauge (T i)) :
+    IsSU2BiFundamental B repGauge (fun l => ∑ i, T i l) where
+  repGauge_T V l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repGauge_T V l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
+
 /-!
 
 ## B. The antisymmetric symbol and the epsilon contraction
@@ -355,11 +364,25 @@ theorem mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
     (hinv : ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • epsilonContraction T + y
       ∧ ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) y = y := by
-  refine Family.exists_smul_add_of_mem_sup T (fun V => repGauge (1, V, 1)) S hS
-    (epsilonContraction T) (repGauge_epsilonContraction hT) (fun x hx hinv => ?_) hx hinv
+  refine IsStableUnder.exists_smul_add_of_quotient (σ := fun V => repGauge (1, V, 1))
+    (V := ⨆ i, ℂ ∙ T i) hS (repGauge_epsilonContraction hT) (fun x hx hinv => ?_) hx hinv
+  rw [Submodule.map_iSup_span_singleton] at hx
   obtain ⟨z, hz⟩ := exists_smul_epsilonContraction_of_invariant'
     (fun V => isSU2BiFundamentalMat_mapQ (hT.repGauge_T V) S (hS V)) hx hinv
   exact ⟨z, by rw [hz, epsilonContraction, epsilonContraction, map_sub]⟩
+
+/-- The isospin invariants of the component span reduce to the span of the epsilon
+  contraction. -/
+noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiFundamental B repGauge T) :
+    InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
+      (span T) where
+  spanningVector := epsilonContraction T
+  stable := isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩
+  spanningVector_fixed := repGauge_epsilonContraction hT
+  reduce S hS x hx hinv := by
+    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su2_invariant_iff x S hS hx hinv
+    exact ⟨c, y, hy, hxy⟩
 
 /-!
 

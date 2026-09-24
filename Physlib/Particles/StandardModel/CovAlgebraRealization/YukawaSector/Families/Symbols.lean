@@ -11,7 +11,7 @@ public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecompositio
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
-public import Physlib.Particles.StandardModel.Peeling
+public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
 # The symbols of the Yukawa blocks
 
@@ -27,7 +27,7 @@ the sums and differences a contraction performs.
 Two things here are easy to get wrong and are settled once. A gauge transformation is a
 triple and the three index laws each constrain one factor of it: colour, isospin and
 Lorentz between them say nothing about hypercharge, so hypercharge is a fourth step and not
-a corollary of the other three, and `forall_repGauge_eq_self`, in `StandardModel.Peeling`
+a corollary of the other three, and `forall_repGauge_eq_self`, in `StandardModel.InvariantReduction`
 with the rest of the shared framework, is what assembles the four into gauge invariance.
 And the twelve blocks come in two fermion orderings, but the fermion
 symbols anticommute, so the two orderings of a block span the same submodule and have the

@@ -177,7 +177,7 @@ lemma isBiDualLeftWeyl_barDownBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.barDownBlockIsospin f f' l.1 l.2) := by
   simp only [h.barDownBlockIsospin_eq]
-  exact isBiDualLeftWeyl_sum fun p =>
+  exact IsBiDualLeftWeyl.sum fun p =>
     h.isBiDualLeftWeyl_barDownBlock f f' p.1 p.2 p.2 p.1
 
 /-- The conjugate down-type Yukawa term of the family pair `(f, f')`. -/
@@ -376,9 +376,9 @@ lemma isBiDualRightWeyl_barUpBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.barUpBlockIsospin f f' l.1 l.2) := by
   simp only [h.barUpBlockIsospin_eq]
-  exact isBiDualRightWeyl_sub
-    (isBiDualRightWeyl_sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1)
-    (isBiDualRightWeyl_sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
+  exact IsBiDualRightWeyl.sub
+    (IsBiDualRightWeyl.sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1)
+    (IsBiDualRightWeyl.sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
 
 /-- The conjugate up-type Yukawa term of the family pair `(f, f')`. -/
 noncomputable def barUpYukawa (f f' : Fin 3) : B :=
@@ -549,7 +549,7 @@ lemma isBiDualLeftWeyl_barLeptonBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.barLeptonBlockIsospin f f' l.1 l.2) := by
   simp only [h.barLeptonBlockIsospin_eq]
-  exact isBiDualLeftWeyl_sum fun w => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
+  exact IsBiDualLeftWeyl.sum fun w => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
 
 /-- The conjugate charged-lepton Yukawa term of the family pair `(f, f')`. -/
 noncomputable def barLeptonYukawa (f f' : Fin 3) : B :=

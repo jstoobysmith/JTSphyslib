@@ -76,22 +76,6 @@ lemma sum_smul_mem_componentSpan (T : ι → B) (c : ι → ℂ) : ∑ i, c i �
 
 end Span
 
-section SpanQuotient
-
-variable {ι B : Type*} [Fintype ι] [AddCommGroup B] [Module ℂ B]
-
-/-- Taking classes modulo a submodule `S` carries `componentSpan T ⊔ S` into the span of the
-  classes of the components. -/
-lemma mkQ_mem_componentSpan (T : ι → B) (S : Submodule ℂ B) {x : B}
-    (hx : x ∈ componentSpan T ⊔ S) : S.mkQ x ∈ componentSpan fun i => S.mkQ (T i) := by
-  obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
-  obtain ⟨c, rfl⟩ := (mem_componentSpan_iff T u).1 hu
-  refine (mem_componentSpan_iff _ _).2 ⟨c, ?_⟩
-  rw [map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz, add_zero, map_sum]
-  exact Finset.sum_congr rfl fun i _ => map_smul _ _ _
-
-end SpanQuotient
-
 /-!
 
 ## B. Families transforming with one Lorentz matrix per index

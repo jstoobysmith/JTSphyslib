@@ -117,22 +117,25 @@ lemma repGauge_u1_dbardBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `d ∂ bard` block. -/
 noncomputable def dbardColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.dbardBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_dbardBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_dbardBlk f f' q l w w')
 
 /-- The colour contraction of the `d ∂ bard` block, written out. -/
 lemma dbardColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.dbardColourStep f f' q l w w').contraction
+    (h.dbardColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.dbardBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `d ∂ bard` block. -/
 noncomputable def dbardIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.dbardColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.dbardColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.dbardColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.dbardColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_dbardBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (IsSU3FunAntiFun.deltaContraction_mem_span _))
@@ -142,9 +145,9 @@ noncomputable def dbardIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_dbard (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.dbardIsospinStep f f' p.1 p.2).contraction) := by
+        (h.dbardIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.dbardIsospinStep f f' p.1 p.2).contraction
+      (h.dbardIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.dbardBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul_swap
@@ -153,10 +156,10 @@ lemma isVectorDualLeftRightWeyl_dbard (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `d ∂ bard` block. -/
 noncomputable def dbardLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.dbardIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_dbard f f')
+        ℂ ∙ (h.dbardIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_dbard f f')
 
 /-- The `d ∂ bard` block as a kinetic block. -/
 noncomputable def dbardKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -206,22 +209,25 @@ lemma repGauge_u1_barddBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `bard ∂ d` block. -/
 noncomputable def barddColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.barddBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_barddBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_barddBlk f f' q l w w')
 
 /-- The colour contraction of the `bard ∂ d` block, written out. -/
 lemma barddColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.barddColourStep f f' q l w w').contraction
+    (h.barddColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.barddBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `bard ∂ d` block. -/
 noncomputable def barddIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barddColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.barddColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barddColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.barddColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_barddBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (IsSU3FunAntiFun.deltaContraction_mem_span _))
@@ -231,9 +237,9 @@ noncomputable def barddIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_bardd (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.barddIsospinStep f f' p.1 p.2).contraction) := by
+        (h.barddIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.barddIsospinStep f f' p.1 p.2).contraction
+      (h.barddIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.barddBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul
@@ -242,10 +248,10 @@ lemma isVectorDualLeftRightWeyl_bardd (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `bard ∂ d` block. -/
 noncomputable def barddLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.barddIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_bardd f f')
+        ℂ ∙ (h.barddIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_bardd f f')
 
 /-- The `bard ∂ d` block as a kinetic block. -/
 noncomputable def barddKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -295,22 +301,25 @@ lemma repGauge_u1_ubaruBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `u ∂ baru` block. -/
 noncomputable def ubaruColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.ubaruBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_ubaruBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_ubaruBlk f f' q l w w')
 
 /-- The colour contraction of the `u ∂ baru` block, written out. -/
 lemma ubaruColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.ubaruColourStep f f' q l w w').contraction
+    (h.ubaruColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.ubaruBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `u ∂ baru` block. -/
 noncomputable def ubaruIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.ubaruColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.ubaruColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.ubaruColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.ubaruColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_ubaruBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (IsSU3FunAntiFun.deltaContraction_mem_span _))
@@ -320,9 +329,9 @@ noncomputable def ubaruIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_ubaru (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.ubaruIsospinStep f f' p.1 p.2).contraction) := by
+        (h.ubaruIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.ubaruIsospinStep f f' p.1 p.2).contraction
+      (h.ubaruIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.ubaruBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul_swap
@@ -331,10 +340,10 @@ lemma isVectorDualLeftRightWeyl_ubaru (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `u ∂ baru` block. -/
 noncomputable def ubaruLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.ubaruIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_ubaru f f')
+        ℂ ∙ (h.ubaruIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_ubaru f f')
 
 /-- The `u ∂ baru` block as a kinetic block. -/
 noncomputable def ubaruKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -384,22 +393,25 @@ lemma repGauge_u1_baruuBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `baru ∂ u` block. -/
 noncomputable def baruuColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.baruuBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_baruuBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_baruuBlk f f' q l w w')
 
 /-- The colour contraction of the `baru ∂ u` block, written out. -/
 lemma baruuColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.baruuColourStep f f' q l w w').contraction
+    (h.baruuColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.baruuBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `baru ∂ u` block. -/
 noncomputable def baruuIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.baruuColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.baruuColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.baruuColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.baruuColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_baruuBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (IsSU3FunAntiFun.deltaContraction_mem_span _))
@@ -409,9 +421,9 @@ noncomputable def baruuIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_baruu (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.baruuIsospinStep f f' p.1 p.2).contraction) := by
+        (h.baruuIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.baruuIsospinStep f f' p.1 p.2).contraction
+      (h.baruuIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.baruuBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul
@@ -420,10 +432,10 @@ lemma isVectorDualLeftRightWeyl_baruu (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `baru ∂ u` block. -/
 noncomputable def baruuLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.baruuIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_baruu f f')
+        ℂ ∙ (h.baruuIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_baruu f f')
 
 /-- The `baru ∂ u` block as a kinetic block. -/
 noncomputable def baruuKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -482,22 +494,24 @@ lemma repGauge_u1_QbarQBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `Q ∂ barQ` block. -/
 noncomputable def QbarQColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.QbarQBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_QbarQBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_QbarQBlk f f' q l w w')
 
 /-- The colour contraction of the `Q ∂ barQ` block, written out. -/
 lemma QbarQColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.QbarQColourStep f f' q l w w').contraction
+    (h.QbarQColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.QbarQBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `Q ∂ barQ` block. -/
 noncomputable def QbarQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.QbarQColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofSU2FunAntiFun (by
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.QbarQColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  IsSU2FunAntiFun.invariantReductionToSpan (by
     simp only [QbarQColourStep_contraction]
     exact IsSU2FunAntiFun.sum fun a : Fin 3 => h.isSU2FunAntiFun_QbarQBlk f f' q l a a)
 
@@ -506,9 +520,9 @@ noncomputable def QbarQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_QbarQ (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.QbarQIsospinStep f f' p.1 p.2).contraction) := by
+        (h.QbarQIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.QbarQIsospinStep f f' p.1 p.2).contraction
+      (h.QbarQIsospinStep f f' p.1 p.2).spanningVector
         = ∑ i : Fin 2 × Fin 3, h.QbarQBlk f f' p.1 p.2 i.2 i.2 i.1 i.1 := by
     intro p
     show (∑ a : Fin 3, h.QbarQBlk f f' p.1 p.2 a a 0 0)
@@ -521,10 +535,10 @@ lemma isVectorDualLeftRightWeyl_QbarQ (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `Q ∂ barQ` block. -/
 noncomputable def QbarQLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.QbarQIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_QbarQ f f')
+        ℂ ∙ (h.QbarQIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_QbarQ f f')
 
 /-- The `Q ∂ barQ` block as a kinetic block. -/
 noncomputable def QbarQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -574,22 +588,24 @@ lemma repGauge_u1_barQQBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `barQ ∂ Q` block. -/
 noncomputable def barQQColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.barQQBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofSU3FunAntiFun (h.isSU3FunAntiFun_barQQBlk f f' q l w w')
+  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_barQQBlk f f' q l w w')
 
 /-- The colour contraction of the `barQ ∂ Q` block, written out. -/
 lemma barQQColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.barQQColourStep f f' q l w w').contraction
+    (h.barQQColourStep f f' q l w w').spanningVector
       = ∑ a : Fin 3, h.barQQBlk f f' q l a a w w' := rfl
 
 /-- The isospin stage of the `barQ ∂ Q` block. -/
 noncomputable def barQQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barQQColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofSU2FunAntiFun (by
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barQQColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  IsSU2FunAntiFun.invariantReductionToSpan (by
     simp only [barQQColourStep_contraction]
     exact IsSU2FunAntiFun.sum fun a : Fin 3 => h.isSU2FunAntiFun_barQQBlk f f' q l a a)
 
@@ -598,9 +614,9 @@ noncomputable def barQQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_barQQ (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.barQQIsospinStep f f' p.1 p.2).contraction) := by
+        (h.barQQIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.barQQIsospinStep f f' p.1 p.2).contraction
+      (h.barQQIsospinStep f f' p.1 p.2).spanningVector
         = ∑ i : Fin 2 × Fin 3, h.barQQBlk f f' p.1 p.2 i.2 i.2 i.1 i.1 := by
     intro p
     show (∑ a : Fin 3, h.barQQBlk f f' p.1 p.2 a a 0 0)
@@ -613,10 +629,10 @@ lemma isVectorDualLeftRightWeyl_barQQ (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `barQ ∂ Q` block. -/
 noncomputable def barQQLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.barQQIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_barQQ f f')
+        ℂ ∙ (h.barQQIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_barQQ f f')
 
 /-- The `barQ ∂ Q` block as a kinetic block. -/
 noncomputable def barQQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -675,23 +691,25 @@ lemma repGauge_u1_LbarLBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `L ∂ barL` block. -/
 noncomputable def LbarLColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.LbarLBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofFixedFamily (h.LbarLBlk f f' q l 0 0 w w') (fun _ => rfl)
+  InvariantReductionToSpan.ofFixedFamily (h.LbarLBlk f f' q l 0 0 w w') (fun _ => rfl)
     (fun U => h.repGauge_su3_LbarLBlk U f f' q l 0 0 w w')
 
 /-- The colour contraction of the `L ∂ barL` block, written out. -/
 lemma LbarLColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.LbarLColourStep f f' q l w w').contraction
+    (h.LbarLColourStep f f' q l w w').spanningVector
       = h.LbarLBlk f f' q l 0 0 w w' := rfl
 
 /-- The isospin stage of the `L ∂ barL` block. -/
 noncomputable def LbarLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.LbarLColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofSU2FunAntiFun (by
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.LbarLColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  IsSU2FunAntiFun.invariantReductionToSpan (by
     simp only [LbarLColourStep_contraction]
     exact h.isSU2FunAntiFun_LbarLBlk f f' q l 0 0)
 
@@ -700,9 +718,9 @@ noncomputable def LbarLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_LbarL (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.LbarLIsospinStep f f' p.1 p.2).contraction) := by
+        (h.LbarLIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.LbarLIsospinStep f f' p.1 p.2).contraction
+      (h.LbarLIsospinStep f f' p.1 p.2).spanningVector
         = ∑ i : Fin 2, h.LbarLBlk f f' p.1 p.2 0 0 i i := by
     intro p
     show h.LbarLBlk f f' p.1 p.2 0 0 0 0 + h.LbarLBlk f f' p.1 p.2 0 0 1 1 = _
@@ -714,10 +732,10 @@ lemma isVectorDualLeftRightWeyl_LbarL (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `L ∂ barL` block. -/
 noncomputable def LbarLLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.LbarLIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_LbarL f f')
+        ℂ ∙ (h.LbarLIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_LbarL f f')
 
 /-- The `L ∂ barL` block as a kinetic block. -/
 noncomputable def LbarLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -767,23 +785,25 @@ lemma repGauge_u1_barLLBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `barL ∂ L` block. -/
 noncomputable def barLLColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.barLLBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofFixedFamily (h.barLLBlk f f' q l 0 0 w w') (fun _ => rfl)
+  InvariantReductionToSpan.ofFixedFamily (h.barLLBlk f f' q l 0 0 w w') (fun _ => rfl)
     (fun U => h.repGauge_su3_barLLBlk U f f' q l 0 0 w w')
 
 /-- The colour contraction of the `barL ∂ L` block, written out. -/
 lemma barLLColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.barLLColourStep f f' q l w w').contraction
+    (h.barLLColourStep f f' q l w w').spanningVector
       = h.barLLBlk f f' q l 0 0 w w' := rfl
 
 /-- The isospin stage of the `barL ∂ L` block. -/
 noncomputable def barLLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barLLColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofSU2FunAntiFun (by
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.barLLColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  IsSU2FunAntiFun.invariantReductionToSpan (by
     simp only [barLLColourStep_contraction]
     exact h.isSU2FunAntiFun_barLLBlk f f' q l 0 0)
 
@@ -792,9 +812,9 @@ noncomputable def barLLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_barLL (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.barLLIsospinStep f f' p.1 p.2).contraction) := by
+        (h.barLLIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.barLLIsospinStep f f' p.1 p.2).contraction
+      (h.barLLIsospinStep f f' p.1 p.2).spanningVector
         = ∑ i : Fin 2, h.barLLBlk f f' p.1 p.2 0 0 i i := by
     intro p
     show h.barLLBlk f f' p.1 p.2 0 0 0 0 + h.barLLBlk f f' p.1 p.2 0 0 1 1 = _
@@ -806,10 +826,10 @@ lemma isVectorDualLeftRightWeyl_barLL (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `barL ∂ L` block. -/
 noncomputable def barLLLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.barLLIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_barLL f f')
+        ℂ ∙ (h.barLLIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_barLL f f')
 
 /-- The `barL ∂ L` block as a kinetic block. -/
 noncomputable def barLLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -868,23 +888,26 @@ lemma repGauge_u1_ebareBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `e ∂ bare` block. -/
 noncomputable def ebareColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.ebareBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofFixedFamily (h.ebareBlk f f' q l 0 0 w w') (fun _ => rfl)
+  InvariantReductionToSpan.ofFixedFamily (h.ebareBlk f f' q l 0 0 w w') (fun _ => rfl)
     (fun U => h.repGauge_su3_ebareBlk U f f' q l 0 0 w w')
 
 /-- The colour contraction of the `e ∂ bare` block, written out. -/
 lemma ebareColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.ebareColourStep f f' q l w w').contraction
+    (h.ebareColourStep f f' q l w w').spanningVector
       = h.ebareBlk f f' q l 0 0 w w' := rfl
 
 /-- The isospin stage of the `e ∂ bare` block. -/
 noncomputable def ebareIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.ebareColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.ebareColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.ebareColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.ebareColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_ebareBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _)))
@@ -894,9 +917,9 @@ noncomputable def ebareIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_ebare (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.ebareIsospinStep f f' p.1 p.2).contraction) := by
+        (h.ebareIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.ebareIsospinStep f f' p.1 p.2).contraction
+      (h.ebareIsospinStep f f' p.1 p.2).spanningVector
         = h.ebareBlk f f' p.1 p.2 0 0 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_mul_swap
@@ -905,10 +928,10 @@ lemma isVectorDualLeftRightWeyl_ebare (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `e ∂ bare` block. -/
 noncomputable def ebareLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.ebareIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_ebare f f')
+        ℂ ∙ (h.ebareIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_ebare f f')
 
 /-- The `e ∂ bare` block as a kinetic block. -/
 noncomputable def ebareKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -958,23 +981,26 @@ lemma repGauge_u1_bareeBlk (t : unitary ℂ) (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3
 /-- The colour stage of the `bare ∂ e` block. -/
 noncomputable def bareeColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
+    InvariantReductionToSpan
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ h.bareeBlk f f' q l (n 0) (n 1) w w') :=
-  Step.ofFixedFamily (h.bareeBlk f f' q l 0 0 w w') (fun _ => rfl)
+  InvariantReductionToSpan.ofFixedFamily (h.bareeBlk f f' q l 0 0 w w') (fun _ => rfl)
     (fun U => h.repGauge_su3_bareeBlk U f f' q l 0 0 w w')
 
 /-- The colour contraction of the `bare ∂ e` block, written out. -/
 lemma bareeColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
     (w w' : Fin 2) :
-    (h.bareeColourStep f f' q l w w').contraction
+    (h.bareeColourStep f f' q l w w').spanningVector
       = h.bareeBlk f f' q l 0 0 w w' := rfl
 
 /-- The isospin stage of the `bare ∂ e` block. -/
 noncomputable def bareeIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (l : Fin 2 × Fin 2) :
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.bareeColourStep f f' q l (n 0) (n 1)).contraction) :=
-  Step.ofFixedFamily (h.bareeColourStep f f' q l 0 0).contraction (fun _ => rfl)
+    InvariantReductionToSpan
+      (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (h.bareeColourStep f f' q l (n 0) (n 1)).spanningVector) :=
+  InvariantReductionToSpan.ofFixedFamily (h.bareeColourStep f f' q l 0 0).spanningVector
+    (fun _ => rfl)
     (fun V => isFixedBy_iSup_span_singleton
       (fun n V' => h.repGauge_su2_bareeBlk V' f f' q l (n 0) (n 1) 0 0) V _
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _)))
@@ -984,9 +1010,9 @@ noncomputable def bareeIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
 lemma isVectorDualLeftRightWeyl_baree (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
       (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-        (h.bareeIsospinStep f f' p.1 p.2).contraction) := by
+        (h.bareeIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      (h.bareeIsospinStep f f' p.1 p.2).contraction
+      (h.bareeIsospinStep f f' p.1 p.2).spanningVector
         = h.bareeBlk f f' p.1 p.2 0 0 0 0 := fun _ => rfl
   simp only [hsum]
   exact isVectorDualLeftRightWeyl_mul
@@ -995,10 +1021,10 @@ lemma isVectorDualLeftRightWeyl_baree (f f' : Fin 3) :
 
 /-- The Lorentz stage of the `bare ∂ e` block. -/
 noncomputable def bareeLorentzStep (f f' : Fin 3) :
-    Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-        ℂ ∙ (h.bareeIsospinStep f f' p.1 p.2).contraction) :=
-  Step.ofVectorDualLeftRightWeyl (h.isVectorDualLeftRightWeyl_baree f f')
+        ℂ ∙ (h.bareeIsospinStep f f' p.1 p.2).spanningVector) :=
+  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_baree f f')
 
 /-- The `bare ∂ e` block as a kinetic block. -/
 noncomputable def bareeKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where

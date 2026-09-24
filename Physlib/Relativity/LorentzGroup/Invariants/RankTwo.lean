@@ -7,6 +7,7 @@ module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
+public import Physlib.Mathematics.InvariantReduction
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
@@ -477,14 +478,13 @@ lemma exists_smul_metricContraction_of_invariant_subset
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • metricContraction (T := T) + y := by
-  obtain ⟨a, hcomb⟩ := exists_smul_metricContraction_of_invariant (hT.quotient S hS)
-    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
-  rw [← mkQ_metricContraction] at hcomb
-  refine ⟨a, x - a • metricContraction (T := T), ?_, by abel⟩
-  have hker : x - a • metricContraction (T := T) ∈ LinearMap.ker S.mkQ := by
-    rw [LinearMap.mem_ker, map_sub, hcomb, map_smul]
-    abel
-  rwa [Submodule.ker_mkQ] at hker
+  obtain ⟨a, y, hy, rfl, -⟩ := IsStableUnder.exists_smul_add_of_quotient
+    (σ := fun g : SL(2,ℂ) => repLorentz g) hS (repLorentz_metricContraction hT)
+    (fun z hz hzinv => by
+      rw [mkQ_metricContraction]
+      exact exists_smul_metricContraction_of_invariant (hT.quotient S hS)
+        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv) hx hinv
+  exact ⟨a, y, hy, rfl⟩
 
 end RankTwo
 

@@ -208,6 +208,7 @@ public import Physlib.Mathematics.InnerProductSpace.Basic
 public import Physlib.Mathematics.InnerProductSpace.Calculus
 public import Physlib.Mathematics.InnerProductSpace.Gaussian
 public import Physlib.Mathematics.InnerProductSpace.Submodule
+public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Mathematics.KroneckerDelta.Basic
 public import Physlib.Mathematics.KroneckerDelta.Contraction
 public import Physlib.Mathematics.LeviCivita.Basic
@@ -387,6 +388,7 @@ public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Algebra
 public import Physlib.Particles.StandardModel.HiggsBoson.JetAlgebra.Basic
 public import Physlib.Particles.StandardModel.HiggsBoson.MatterField
 public import Physlib.Particles.StandardModel.HiggsBoson.Potential
+public import Physlib.Particles.StandardModel.InvariantReduction
 public import Physlib.Particles.StandardModel.IsFermionSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
 public import Physlib.Particles.StandardModel.IsFermionSector.DerivSubmodule.Centre
@@ -438,7 +440,6 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Prod
 public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.TransformsIn
 public import Physlib.Particles.StandardModel.Model.Consistency
 public import Physlib.Particles.StandardModel.Model.LeptonDoublet
-public import Physlib.Particles.StandardModel.Peeling
 public import Physlib.Particles.StandardModel.Representations
 public import Physlib.Particles.StandardModel.Solution
 public import Physlib.Particles.SuperSymmetry.MSSMNu.AnomalyCancellation.B3

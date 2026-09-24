@@ -7,6 +7,7 @@ module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
+public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Mathematics.LeviCivita.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 /-!
@@ -775,12 +776,11 @@ theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvarian
 ## H. The classification, and the classification modulo a stable submodule
 
 C to G give `exists_smul_contraction_of_invariant`, the case `S = ⊥` of the theorem. For
-general `S`, right to left is immediate and does not use `hS`; left to right passes to the
-quotient `B ⧸ S`, that is `B` with `S` declared zero and `S.mkQ` the map to classes. Stability
-lets `repLorentz` act there and the classes of the components again form a rank-four family,
-both by `IsLorentzCovariant.quotient`, so back in `B` the difference between `x` and the
-matching combination of contractions has zero class, hence lies in `S`, and is invariant as a
-difference of invariants.
+general `S`, right to left is immediate and does not use `hS`. Left to right passes to the
+quotient `B ⧸ S`: the classes of the components again form a rank-four family
+(`IsLorentzCovariant.quotient`), the classification applies there, and
+`IsStableUnder.exists_add_of_quotient` lifts it back. The four contractions are invariant, so
+the remainder in `S` is invariant.
 -/
 
 /-- Every Lorentz invariant of the span is a combination of the four contractions. -/
@@ -796,6 +796,12 @@ theorem exists_smul_contraction_of_invariant (hT : IsLorentzCovariant 4 B repLor
   simp only [contraction_eq, Finset.smul_sum, Finset.sum_smul, smul_smul]
   exact Finset.sum_comm
 
+/-- The quotient map carries each contraction to the same contraction of the images. -/
+lemma mkQ_contraction (S : Submodule ℂ B) (i : Fin 4) :
+    S.mkQ (contraction T i) = contraction (fun l => S.mkQ (T l)) i := by
+  rw [contraction_eq, contraction_eq, map_sum]
+  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+
 /-- Left to right in `mem_span_sup_invariant_iff`, proved in the quotient by `S`. -/
 lemma exists_smul_contraction_of_invariant_subset
     (hT : IsLorentzCovariant 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
@@ -805,16 +811,18 @@ lemma exists_smul_contraction_of_invariant_subset
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T + y
       ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
-  obtain ⟨a₁, a₂, a₃, a₄, hcomb⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
-    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
-  refine ⟨a₁, a₂, a₃, a₄,
-    x - (a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-      + a₄ • epsilonContraction T), ?_, by abel, fun g => ?_⟩
-  · rw [← Submodule.ker_mkQ S, LinearMap.mem_ker, map_sub, hcomb]
-    simp only [outerContraction, innerContraction, splitContraction, epsilonContraction,
-      map_add, map_smul, map_sum]
-    abel
-  · rw [map_sub, hinv g, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g]
+  obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := IsStableUnder.exists_add_of_quotient
+    (σ := fun g : SL(2,ℂ) => repLorentz g) hS
+    (isFixedBy_iSup_span_singleton fun i g => repLorentz_contraction hT i g)
+    (fun z hz hzinv => by
+      obtain ⟨a₁, a₂, a₃, a₄, hz'⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
+        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv
+      rw [hz', Submodule.map_iSup_span_singleton]
+      simp only [mkQ_contraction]
+      exact (mem_componentSpan_iff _ _).2 ⟨![a₁, a₂, a₃, a₄], by simp [sum_smul_contraction]⟩)
+    hx hinv
+  obtain ⟨a, rfl⟩ := (mem_componentSpan_iff (contraction T) w).1 hw
+  exact ⟨a 0, a 1, a 2, a 3, y, hy, by rw [sum_smul_contraction], hyinv⟩
 
 /-- A vector of `componentSpan T ⊔ S`, the sums `u + y` with `u` in the span and `y` in the
   Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four

@@ -7,6 +7,7 @@ module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.Fermions.Weyl.Metric
+public import Physlib.Mathematics.InvariantReduction
 /-!
 # Lorentz invariants of two left-handed Weyl indices
 
@@ -345,14 +346,13 @@ lemma exists_smul_epsilonContraction_of_invariant_subset {x : B} (S : Submodule 
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • epsilonContraction (T := T) + y := by
-  obtain ⟨a, hcomb⟩ := (hT.isBiLeftWeyl_quotient S hS).exists_smul_epsilonContraction_of_invariant
-    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
-  rw [← mkQ_epsilonContraction] at hcomb
-  refine ⟨a, x - a • epsilonContraction (T := T), ?_, by abel⟩
-  have hker : x - a • epsilonContraction (T := T) ∈ LinearMap.ker S.mkQ := by
-    rw [LinearMap.mem_ker, map_sub, hcomb, map_smul]
-    abel
-  rwa [Submodule.ker_mkQ] at hker
+  obtain ⟨a, y, hy, rfl, -⟩ := IsStableUnder.exists_smul_add_of_quotient
+    (σ := fun g : SL(2,ℂ) => repLorentz g) hS hT.repLorentz_epsilonContraction
+    (fun z hz hzinv => by
+      rw [mkQ_epsilonContraction]
+      exact (hT.isBiLeftWeyl_quotient S hS).exists_smul_epsilonContraction_of_invariant
+        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv) hx hinv
+  exact ⟨a, y, hy, rfl⟩
 
 end IsBiLeftWeyl
 
@@ -363,7 +363,8 @@ end IsBiLeftWeyl
 `IsBiDualLeftWeyl` and `IsBiDualRightWeyl` are the laws the Standard Model's fermion symbols
 carry: one factor of `(g⁻¹)ᵀ` per index for an undotted pair, one of `(g⁻¹)ᴴ` for a dotted
 pair; `isBiDualLeftWeyl_dualLeftHandedWeyl` and `isBiDualRightWeyl_dualRightHandedWeyl` pin
-them to the tensor squares of the repository's dual Weyl representations. The re-index
+them to the tensor squares of the repository's dual Weyl representations, and both laws are
+closed under finite sums and differences of families. The re-index
 `epsReindex` sends both slots through `ε`: it converts the undotted law into the fundamental
 one for the same representation, is an involution, leaves the span unchanged and leaves the
 `ε` contraction exactly as it was, with no sign or scalar. For a dotted family the same
@@ -421,6 +422,48 @@ lemma isBiDualRightWeyl_dualRightHandedWeyl :
       smul_smul, Fintype.sum_prod_type]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
       rw [mul_comm]
+
+/-- A finite sum of families carrying two dual left-handed Weyl indices is such a family
+  again. -/
+lemma IsBiDualLeftWeyl.sum {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {rep : Representation ℂ SL(2,ℂ) M} {ι : Type} [Fintype ι]
+    {T : ι → Fin 2 × Fin 2 → M} (hT : ∀ i, IsBiDualLeftWeyl M rep (T i)) :
+    IsBiDualLeftWeyl M rep (fun l => ∑ i, T i l) where
+  repLorentz_T Λ l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repLorentz_T Λ l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
+
+/-- A difference of two families carrying two dual left-handed Weyl indices is such a
+  family again. -/
+lemma IsBiDualLeftWeyl.sub {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {rep : Representation ℂ SL(2,ℂ) M} {T T' : Fin 2 × Fin 2 → M}
+    (hT : IsBiDualLeftWeyl M rep T) (hT' : IsBiDualLeftWeyl M rep T') :
+    IsBiDualLeftWeyl M rep (fun l => T l - T' l) where
+  repLorentz_T Λ l := by
+    rw [map_sub, hT.repLorentz_T Λ l, hT'.repLorentz_T Λ l, ← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun a _ => (smul_sub _ _ _).symm
+
+/-- A finite sum of families carrying two dual right-handed Weyl indices is such a family
+  again. -/
+lemma IsBiDualRightWeyl.sum {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {rep : Representation ℂ SL(2,ℂ) M} {ι : Type} [Fintype ι]
+    {T : ι → Fin 2 × Fin 2 → M} (hT : ∀ i, IsBiDualRightWeyl M rep (T i)) :
+    IsBiDualRightWeyl M rep (fun l => ∑ i, T i l) where
+  repLorentz_T Λ l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repLorentz_T Λ l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
+
+/-- A difference of two families carrying two dual right-handed Weyl indices is such a
+  family again. -/
+lemma IsBiDualRightWeyl.sub {M : Type*} [AddCommGroup M] [Module ℂ M]
+    {rep : Representation ℂ SL(2,ℂ) M} {T T' : Fin 2 × Fin 2 → M}
+    (hT : IsBiDualRightWeyl M rep T) (hT' : IsBiDualRightWeyl M rep T') :
+    IsBiDualRightWeyl M rep (fun l => T l - T' l) where
+  repLorentz_T Λ l := by
+    rw [map_sub, hT.repLorentz_T Λ l, hT'.repLorentz_T Λ l, ← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun a _ => (smul_sub _ _ _).symm
 
 /-- The `ε` re-index of a family indexed by two Weyl indices: both index slots are
   transported through the symplectic form. -/
@@ -603,6 +646,26 @@ theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant_subset
     ∃ a : ℂ, ∃ y ∈ S, x = a • IsBiLeftWeyl.epsilonContraction (T := T) + y :=
   hT.isBiDualLeftWeyl_comp.exists_smul_epsilonContraction_of_invariant_subset S
     (fun g y hy => hS (SL2C.conjHom g) y hy) hx fun g => hinv (SL2C.conjHom g)
+
+/-- For the undotted dual law, the Lorentz invariants of the component span reduce to the span
+  of the `ε` contraction. -/
+noncomputable def IsBiDualLeftWeyl.invariantReductionToSpan
+    (hT : IsBiDualLeftWeyl B repLorentz T) :
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ l, ℂ ∙ T l) where
+  spanningVector := IsBiLeftWeyl.epsilonContraction (T := T)
+  stable := isStableUnder_iSup_span_singleton_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
+  spanningVector_fixed := hT.repLorentz_epsilonContraction
+  reduce S hS _ hx hinv := hT.exists_smul_epsilonContraction_of_invariant_subset S hS hx hinv
+
+/-- For the dotted dual law, the Lorentz invariants of the component span reduce to the span
+  of the `ε` contraction. -/
+noncomputable def IsBiDualRightWeyl.invariantReductionToSpan
+    (hT : IsBiDualRightWeyl B repLorentz T) :
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ l, ℂ ∙ T l) where
+  spanningVector := IsBiLeftWeyl.epsilonContraction (T := T)
+  stable := isStableUnder_iSup_span_singleton_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
+  spanningVector_fixed := hT.repLorentz_epsilonContraction
+  reduce S hS _ hx hinv := hT.exists_smul_epsilonContraction_of_invariant_subset S hS hx hinv
 
 end DualClassification
 

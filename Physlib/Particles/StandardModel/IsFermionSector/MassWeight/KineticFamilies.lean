@@ -6,7 +6,9 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
-public import Physlib.Particles.StandardModel.Peeling
+public import Physlib.Particles.StandardModel.InvariantReduction
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
 /-!
 # The kinetic terms of the fermion sector
 
@@ -19,16 +21,16 @@ matrices. That last contraction is `ψ̄ σ̄^μ ∂_μ ψ`.
 
 Ten blocks arise, the five conjugate pairs each with the derivative on one factor or the
 other, and they differ only in which indices their symbols carry. So the work is done once,
-generically, in the shape `StandardModel.Peeling` consumes: a `KineticBlock` packages a
+generically, in terms of `InvariantReductionToSpan`: a `KineticBlock` packages a
 block together with its three classification steps — colour, isospin, Lorentz — and from
-that package alone come the contraction, its invariance under both groups, and the peeling
+that package alone come the contraction, its invariance under both groups, and the reduction
 of the block down to the line through it. The ten blocks are then ten instantiations.
 
 The three stages are the same three the Yukawa sector runs, in the same order, and for the
 same reason: each contraction is a spectator of the ones after it. Where a block's symbols
 carry no colour index — the two lepton-doublet blocks and the two lepton-singlet ones — the
-colour stage is `Step.ofFixedFamily` rather than a classification, and likewise for isospin
-where the symbols carry none. That keeps all ten blocks in one shape.
+colour stage is `InvariantReductionToSpan.ofFixedFamily` rather than a classification, and
+likewise for isospin where the symbols carry none. That keeps all ten blocks in one shape.
 
 The ten blocks themselves are built in `KineticTerms`, which instantiates the package.
 
@@ -675,14 +677,14 @@ lemma unitary_star_mul_coe (t : unitary ℂ) : star (t : ℂ) * (t : ℂ) = 1 :=
 A kinetic block is classified in three stages, and every block runs the same three: colour,
 then isospin, then Lorentz, each contraction a spectator of the ones after it. `KineticBlock`
 packages a block together with the three steps, and from the package alone come the kinetic
-term, its invariance under both groups, and the peeling of the block down to the line
+term, its invariance under both groups, and the reduction of the block to the line
 through it.
 
 The colour and isospin indices of the block are listed in the order the classifiers read
 them, fundamental first; a block whose symbols carry no colour, or no isospin, simply
-ignores the corresponding pair and supplies `Step.ofFixedFamily` for that stage. Each step
-comes with the fact that its contraction lies in the submodule it classifies, which is what
-carries the invariance of one stage through the stages after it.
+ignores the corresponding pair and supplies `InvariantReductionToSpan.ofFixedFamily` for that
+stage. Each step comes with the fact that its contraction lies in the submodule it classifies, which
+is what carries the invariance of one stage through the stages after it.
 
 -/
 
@@ -702,25 +704,25 @@ structure KineticBlock where
     classified, by the delta contraction if the block carries colour and trivially if it
     does not. -/
   colourStep : ∀ (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2) (w w' : Fin 2),
-    Step (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
+    InvariantReductionToSpan (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
       (⨆ n : Fin 2 → Fin 3, ℂ ∙ blk q l (n 0) (n 1) w w')
   /-- The colour contraction lies in the span of the components it contracts. -/
-  colourStep_mem : ∀ q l w w', (colourStep q l w w').contraction
+  colourStep_mem : ∀ q l w w', (colourStep q l w w').spanningVector
     ∈ ⨆ n : Fin 2 → Fin 3, ℂ ∙ blk q l (n 0) (n 1) w w'
   /-- The isospin stage, applied to the colour contraction. -/
   isospinStep : ∀ (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2),
-    Step (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).contraction)
+    InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
+      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).spanningVector)
   /-- The isospin contraction lies in the span of the colour contractions. -/
-  isospinStep_mem : ∀ q l, (isospinStep q l).contraction
-    ∈ ⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).contraction
+  isospinStep_mem : ∀ q l, (isospinStep q l).spanningVector
+    ∈ ⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).spanningVector
   /-- The Lorentz stage, applied to the doubly contracted block: one four-vector index
     against a dual dotted and a dual undotted spinor index. -/
-  lorentzStep : Step (fun Λ : SL(2,ℂ) => repLorentz Λ)
-    (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).contraction)
+  lorentzStep : InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
+    (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).spanningVector)
   /-- The Lorentz contraction lies in the span of the isospin contractions. -/
-  lorentzStep_mem : lorentzStep.contraction
-    ∈ ⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).contraction
+  lorentzStep_mem : lorentzStep.spanningVector
+    ∈ ⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).spanningVector
   /-- A hypercharge transformation fixes every component of the block, the hypercharges of
     a species and its conjugate cancelling. -/
   hyper : ∀ (t : unitary ℂ) q l c c' w w',
@@ -732,32 +734,31 @@ variable {repGauge repLorentz} (K : KineticBlock repGauge repLorentz)
 
 /-- The kinetic term of a block: the conjugate Pauli contraction of its doubly contracted
   form, which is `ψ̄ σ̄^μ ∂_μ ψ` with the colour and isospin indices already joined. -/
-noncomputable def kineticTerm : B := K.lorentzStep.contraction
+noncomputable def kineticTerm : B := K.lorentzStep.spanningVector
 
 /-- The join, over the derivative, spinor and isospin indices, of the colour spans of the
-  block: what the block submodule is peeled from. -/
+  block: what the block submodule is reduced from. -/
 noncomputable def blockSpan : Submodule ℂ B :=
   ⨆ k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) × (Fin 2 × Fin 2),
     ⨆ n : Fin 2 → Fin 3, ℂ ∙ K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2
 
-/-- The three stages in sequence: the block span peels to the line through the kinetic
-  term. -/
-lemma peels :
-    Peels (gaugeLorentzMaps repGauge repLorentz) K.blockSpan (ℂ ∙ K.kineticTerm) := by
+/-- The three stages in sequence: the block span reduces to the span of the kinetic term. -/
+lemma reducesInvariantsTo :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) K.blockSpan (ℂ ∙ K.kineticTerm) := by
   rw [blockSpan, kineticTerm]
-  have hc := Peels.iSup_step (σ := fun U : specialUnitaryGroup (Fin 3) ℂ =>
-    repGauge ((U, 1, 1) : GaugeGroupI))
+  have hc := InvariantReductionToSpan.reducesInvariantsTo_iSup
+    (σ := fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
     (V := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) × (Fin 2 × Fin 2) =>
       ⨆ n : Fin 2 → Fin 3, ℂ ∙ K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2)
     fun k => K.colourStep k.1 k.2.1 k.2.2.1 k.2.2.2
-  have hi := Peels.iSup_step (σ := fun V : specialUnitaryGroup (Fin 2) ℂ =>
-    repGauge ((1, V, 1) : GaugeGroupI))
+  have hi := InvariantReductionToSpan.reducesInvariantsTo_iSup
+    (σ := fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
     (V := fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-      ⨆ n : Fin 2 → Fin 2, ℂ ∙ (K.colourStep p.1 p.2 (n 0) (n 1)).contraction)
+      ⨆ n : Fin 2 → Fin 2, ℂ ∙ (K.colourStep p.1 p.2 (n 0) (n 1)).spanningVector)
     fun p => K.isospinStep p.1 p.2
-  have h1 := Peels.ofSU3 (repLorentz := repLorentz) hc
-  have h2 := Peels.ofSU2 (repLorentz := repLorentz) hi
-  have h3 := Peels.ofLorentz (repGauge := repGauge) K.lorentzStep.peels
+  have h1 := ReducesInvariantsTo.ofSU3 (repLorentz := repLorentz) hc
+  have h2 := ReducesInvariantsTo.ofSU2 (repLorentz := repLorentz) hi
+  have h3 := ReducesInvariantsTo.ofLorentz (repGauge := repGauge) K.lorentzStep.reducesInvariantsTo
   refine (h1.mono_right ?_).trans (h2.trans h3)
   refine iSup_le fun k => le_iSup_of_le (k.1, k.2.1) (le_iSup_of_le ![k.2.2.1, k.2.2.2] ?_)
   simp
@@ -766,10 +767,10 @@ lemma peels :
   contraction lies in the span of the objects of the stage before it. -/
 lemma kineticTerm_mem {V : Submodule ℂ B}
     (hV : ∀ q l c c' w w', K.blk q l c c' w w' ∈ V) : K.kineticTerm ∈ V := by
-  have hcol : ∀ q l w w', (K.colourStep q l w w').contraction ∈ V := fun q l w w' =>
+  have hcol : ∀ q l w w', (K.colourStep q l w w').spanningVector ∈ V := fun q l w w' =>
     (iSup_le fun n => (Submodule.span_singleton_le_iff_mem _ _).2 (hV _ _ _ _ _ _))
       (K.colourStep_mem q l w w')
-  have hiso : ∀ q l, (K.isospinStep q l).contraction ∈ V := fun q l =>
+  have hiso : ∀ q l, (K.isospinStep q l).spanningVector ∈ V := fun q l =>
     (iSup_le fun n => (Submodule.span_singleton_le_iff_mem _ _).2 (hcol _ _ _ _))
       (K.isospinStep_mem q l)
   exact (iSup_le fun p => (Submodule.span_singleton_le_iff_mem _ _).2 (hiso _ _))
@@ -780,10 +781,10 @@ lemma kineticTerm_mem {V : Submodule ℂ B}
 lemma repGauge_su3_kineticTerm (U : specialUnitaryGroup (Fin 3) ℂ) :
     repGauge ((U, 1, 1) : GaugeGroupI) K.kineticTerm = K.kineticTerm := by
   have hiso : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ∀ U',
-      repGauge ((U', 1, 1) : GaugeGroupI) (K.isospinStep p.1 p.2).contraction
-        = (K.isospinStep p.1 p.2).contraction := fun p U' =>
+      repGauge ((U', 1, 1) : GaugeGroupI) (K.isospinStep p.1 p.2).spanningVector
+        = (K.isospinStep p.1 p.2).spanningVector := fun p U' =>
     isFixedBy_iSup_span_singleton
-      (fun n U'' => (K.colourStep p.1 p.2 (n 0) (n 1)).contraction_fixed U'') U' _
+      (fun n U'' => (K.colourStep p.1 p.2 (n 0) (n 1)).spanningVector_fixed U'') U' _
       (K.isospinStep_mem p.1 p.2)
   exact isFixedBy_iSup_span_singleton (fun p U' => hiso p U') U _ K.lorentzStep_mem
 
@@ -791,20 +792,20 @@ lemma repGauge_su3_kineticTerm (U : specialUnitaryGroup (Fin 3) ℂ) :
 lemma repGauge_su2_kineticTerm (V : specialUnitaryGroup (Fin 2) ℂ) :
     repGauge ((1, V, 1) : GaugeGroupI) K.kineticTerm = K.kineticTerm :=
   isFixedBy_iSup_span_singleton
-    (fun p V' => (K.isospinStep p.1 p.2).contraction_fixed V') V _ K.lorentzStep_mem
+    (fun p V' => (K.isospinStep p.1 p.2).spanningVector_fixed V') V _ K.lorentzStep_mem
 
 /-- The kinetic term is fixed by the hypercharge factor, the hypercharges of a species and
   its conjugate cancelling on every component of the block. -/
 lemma repGauge_u1_kineticTerm (t : unitary ℂ) :
     repGauge ((1, 1, t) : GaugeGroupI) K.kineticTerm = K.kineticTerm := by
   have hcol : ∀ q l w w', ∀ t' : unitary ℂ,
-      repGauge ((1, 1, t') : GaugeGroupI) (K.colourStep q l w w').contraction
-        = (K.colourStep q l w w').contraction := fun q l w w' t' =>
+      repGauge ((1, 1, t') : GaugeGroupI) (K.colourStep q l w w').spanningVector
+        = (K.colourStep q l w w').spanningVector := fun q l w w' t' =>
     isFixedBy_iSup_span_singleton (fun n t'' => K.hyper t'' q l (n 0) (n 1) w w') t' _
       (K.colourStep_mem q l w w')
   have hiso : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ∀ t' : unitary ℂ,
-      repGauge ((1, 1, t') : GaugeGroupI) (K.isospinStep p.1 p.2).contraction
-        = (K.isospinStep p.1 p.2).contraction := fun p t' =>
+      repGauge ((1, 1, t') : GaugeGroupI) (K.isospinStep p.1 p.2).spanningVector
+        = (K.isospinStep p.1 p.2).spanningVector := fun p t' =>
     isFixedBy_iSup_span_singleton (fun n t'' => hcol p.1 p.2 (n 0) (n 1) t'') t' _
       (K.isospinStep_mem p.1 p.2)
   exact isFixedBy_iSup_span_singleton (fun p t' => hiso p t') t _ K.lorentzStep_mem
@@ -818,7 +819,7 @@ lemma repGauge_kineticTerm (g : GaugeGroupI) : repGauge g K.kineticTerm = K.kine
 /-- The kinetic term is Lorentz invariant, being the conjugate Pauli contraction of a
   vector dual left-right Weyl family. -/
 lemma repLorentz_kineticTerm (Λ : SL(2,ℂ)) :
-    repLorentz Λ K.kineticTerm = K.kineticTerm := K.lorentzStep.contraction_fixed Λ
+    repLorentz Λ K.kineticTerm = K.kineticTerm := K.lorentzStep.spanningVector_fixed Λ
 
 end KineticBlock
 

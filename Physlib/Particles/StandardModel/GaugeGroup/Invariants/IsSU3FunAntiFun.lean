@@ -92,6 +92,16 @@ lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 3) → M) :
     ∑ d : Fin 2 → Fin 3, F d = ∑ x : Fin 3, ∑ y : Fin 3, F ![x, y] :=
   Family.sum_pi_two F
 
+/-- A finite sum of families carrying one fundamental and one anti-fundamental colour index
+  is such a family again. -/
+lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 3) → B}
+    (hT : ∀ i, IsSU3FunAntiFun B repGauge (T i)) :
+    IsSU3FunAntiFun B repGauge (fun l => ∑ i, T i l) where
+  repGauge_T U l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repGauge_T U l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
+
 /-!
 
 ## B. The action on coefficients and the delta contraction
@@ -319,11 +329,25 @@ theorem mem_span_sup_su3_invariant_iff {T : (Fin 2 → Fin 3) → B}
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • deltaContraction T + y
       ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) y = y := by
-  refine Family.exists_smul_add_of_mem_sup T (fun U => repGauge (U, 1, 1)) S hS
-    (deltaContraction T) (repGauge_deltaContraction hT) (fun x hx hinv => ?_) hx hinv
+  refine IsStableUnder.exists_smul_add_of_quotient (σ := fun U => repGauge (U, 1, 1))
+    (V := ⨆ i, ℂ ∙ T i) hS (repGauge_deltaContraction hT) (fun x hx hinv => ?_) hx hinv
+  rw [Submodule.map_iSup_span_singleton] at hx
   obtain ⟨z, hz⟩ := exists_smul_deltaContraction_of_invariant'
     (fun U => isSU3FunAntiFunMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv
   exact ⟨z, by rw [hz, deltaContraction, deltaContraction, map_sum]⟩
+
+/-- The colour invariants of the component span reduce to the span of the delta
+  contraction. -/
+noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 3) → B}
+    (hT : IsSU3FunAntiFun B repGauge T) :
+    InvariantReductionToSpan (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
+      (span T) where
+  spanningVector := deltaContraction T
+  stable := isStableUnder_iSup_span_singleton_of_sum fun U l => ⟨_, hT.repGauge_T U l⟩
+  spanningVector_fixed := repGauge_deltaContraction hT
+  reduce S hS x hx hinv := by
+    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su3_invariant_iff x S hS hx hinv
+    exact ⟨c, y, hy, hxy⟩
 
 end IsSU3FunAntiFun
 

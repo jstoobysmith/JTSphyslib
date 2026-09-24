@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Mathematics.LinearCombination
 /-!
 # Families of components and their invariants
@@ -15,7 +16,7 @@ field strengths `F^a F^b` indexed by `ι = Fin 2 → Fin 8`. A gauge transformat
 components into one another by a fixed matrix, and the question is always the same: which
 linear combinations of the components does every transformation leave alone? The answer,
 file by file, is a specific contraction, the trace `∑ a, T ![a, a]` or an epsilon symbol,
-and this file holds the three steps of the argument that do not depend on the family.
+and this file holds the two steps of the argument that do not depend on the family.
 
 The first is bookkeeping: a vector lies in the span of the components precisely when it is a
 linear combination `∑ i, c i • T i`, so the span is described by coefficient functions
@@ -31,11 +32,10 @@ invariant coefficient, and classifying invariants of the span reduces to classif
 coefficient functions, a finite linear-algebra problem: `Family.exists_invariant_coeff`, the
 case `g' = g⁻¹` of `Fintype.exists_invariant_coeff_of_adjoint_mem`.
 
-The third is peeling. The Standard Model files handle many families at once and remove them
-one at a time modulo a stable submodule `S` in which the other families are parked. A
-classification of the invariants of a family, valid in every module, applies in the quotient
-`B ⧸ S`, and `Family.exists_smul_add_of_mem_sup` lifts it back: an invariant of the span
-joined with `S` is a multiple of the contraction up to an invariant remainder in `S`.
+The classifications are also needed modulo a stable submodule `S`. Each family file shows that
+its law descends to `B ⧸ S`, applies its classification there, and lifts the result back with
+`IsStableUnder.exists_smul_add_of_quotient` or `IsStableUnder.mem_sup_of_quotient` from
+`Physlib.Mathematics.InvariantReduction`.
 -/
 
 @[expose] public section
@@ -120,64 +120,6 @@ theorem exists_invariant_coeff
     exact Finset.sum_congr rfl fun i _ => mul_comm _ _⟩) hx hinv
 
 end Complement
-
-/-!
-
-## C. Peeling a family off a stable submodule
-
-A submodule `S` stable under the transformations carries the induced maps
-`S.mapQ S (φ g) _` on the quotient, and the classes of the components form a family in the
-quotient. When the invariants of that family are known to be the classes of a submodule `W`
-of invariant vectors, typically the multiples of one contraction `v`, an invariant of the
-span joined with `S` lies in `W` up to a remainder in `S`, and the remainder is invariant for
-free, being the difference of two invariants. Stability of `S` cannot be dropped: an unstable
-line has no invariant but `0`, while its sum with the span may well carry invariants outside
-the span.
-
--/
-
-/-- Peeling one family off a stable submodule, when its invariants in the quotient are
-  known to be the classes of a submodule `W` of invariant vectors. -/
-theorem exists_mem_add_of_mem_sup {G : Type*} (T : ι → B) (φ : G → B →ₗ[ℂ] B)
-    (S : Submodule ℂ B) (hS : ∀ g, ∀ y ∈ S, φ g y ∈ S) (W : Submodule ℂ B)
-    (hW : ∀ w ∈ W, ∀ g, φ g w = w)
-    (hclass : ∀ x : B ⧸ S, x ∈ (⨆ i, ℂ ∙ S.mkQ (T i)) →
-      (∀ g, S.mapQ S (φ g) (hS g) x = x) → x ∈ W.map S.mkQ)
-    {x : B} (hx : x ∈ (⨆ i, ℂ ∙ T i) ⊔ S) (hinv : ∀ g, φ g x = x) :
-    ∃ w ∈ W, ∃ y ∈ S, x = w + y ∧ ∀ g, φ g y = y := by
-  have hmk : S.mkQ x ∈ ⨆ i, ℂ ∙ S.mkQ (T i) := by
-    obtain ⟨u, hu, z, hz, huz⟩ := Submodule.mem_sup.1 hx
-    obtain ⟨c, hc⟩ := (mem_iSup_span_singleton_iff T u).1 hu
-    refine (mem_iSup_span_singleton_iff _ _).2 ⟨c, ?_⟩
-    rw [← huz, map_add, show S.mkQ z = 0 from (Submodule.Quotient.mk_eq_zero S).2 hz,
-      add_zero, hc, map_sum]
-    exact Finset.sum_congr rfl fun i _ => map_smul _ _ _
-  obtain ⟨w, hw, hwx⟩ := hclass _ hmk fun g => by
-    rw [Submodule.mkQ_apply, Submodule.mapQ_apply, hinv]
-  refine ⟨w, hw, x - w, ?_, by abel, fun g => ?_⟩
-  · have hker : x - w ∈ LinearMap.ker S.mkQ := by
-      rw [LinearMap.mem_ker, map_sub, hwx, sub_self]
-    rwa [Submodule.ker_mkQ] at hker
-  · rw [map_sub, hinv g, hW w hw g]
-
-/-- Peeling one family off a stable submodule, when its invariants in the quotient are
-  known to be the multiples of the class of an invariant vector `v`. -/
-theorem exists_smul_add_of_mem_sup {G : Type*} (T : ι → B) (φ : G → B →ₗ[ℂ] B)
-    (S : Submodule ℂ B) (hS : ∀ g, ∀ y ∈ S, φ g y ∈ S) (v : B) (hv : ∀ g, φ g v = v)
-    (hclass : ∀ x : B ⧸ S, x ∈ (⨆ i, ℂ ∙ S.mkQ (T i)) →
-      (∀ g, S.mapQ S (φ g) (hS g) x = x) → ∃ c : ℂ, x = c • S.mkQ v)
-    {x : B} (hx : x ∈ (⨆ i, ℂ ∙ T i) ⊔ S) (hinv : ∀ g, φ g x = x) :
-    ∃ c : ℂ, ∃ y ∈ S, x = c • v + y ∧ ∀ g, φ g y = y := by
-  obtain ⟨w, hw, y, hyS, hxy, hyinv⟩ := exists_mem_add_of_mem_sup T φ S hS (ℂ ∙ v)
-    (fun w hw g => by
-      obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hw
-      rw [map_smul, hv])
-    (fun x hx hinv => by
-      obtain ⟨c, hc⟩ := hclass x hx hinv
-      exact ⟨c • v, Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _),
-        by rw [map_smul, hc]⟩) hx hinv
-  obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hw
-  exact ⟨c, y, hyS, hxy, hyinv⟩
 
 end Family
 

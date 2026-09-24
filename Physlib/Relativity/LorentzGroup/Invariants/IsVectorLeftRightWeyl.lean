@@ -588,6 +588,15 @@ theorem exists_smul_pauliBarContraction_of_invariant_subset
       S hS (by rwa [componentSpan_vectorEpsReindex]) hinv
   exact ⟨a, y, hy, by rwa [pauliContraction_vectorEpsReindex] at ha⟩
 
+/-- For the mixed dual law, the Lorentz invariants of the component span reduce to the span
+  of the `pauliBar` contraction. -/
+noncomputable def invariantReductionToSpan (hT : IsVectorDualLeftRightWeyl B repLorentz T) :
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ q, ℂ ∙ T q) where
+  spanningVector := pauliBarContraction (T := T)
+  stable := isStableUnder_iSup_span_singleton_of_sum fun g q => ⟨_, hT.repLorentz_T' g q⟩
+  spanningVector_fixed := hT.repLorentz_pauliBarContraction
+  reduce S hS _ hx hinv := hT.exists_smul_pauliBarContraction_of_invariant_subset S hS hx hinv
+
 end IsVectorDualLeftRightWeyl
 
 end DualClassification

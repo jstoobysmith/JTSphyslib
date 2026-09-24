@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
+public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 /-!
 # Lorentz invariants of a left-handed and a right-handed Weyl index
@@ -322,9 +323,12 @@ include hT in
 lemma mem_of_invariant_of_mem_sup {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have hzero := (hT.isLeftRightWeyl_quotient S hS).eq_zero_of_invariant
-    (mkQ_mem_componentSpan T S hx) fun g => by rw [quotient_apply_mkQ, hinv g]
-  rwa [← Submodule.ker_mkQ S, LinearMap.mem_ker]
+  have h := IsStableUnder.mem_sup_of_quotient (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥) hS
+    (fun y hy hyinv => by
+      rw [Submodule.map_bot, Submodule.mem_bot]
+      exact (hT.isLeftRightWeyl_quotient S hS).eq_zero_of_invariant
+        ((Submodule.map_iSup_span_singleton S.mkQ T).le hy) hyinv) hx hinv
+  rwa [bot_sup_eq] at h
 
 end IsLeftRightWeyl
 

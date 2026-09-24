@@ -75,6 +75,16 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
   {U : specialUnitaryGroup (Fin 2) ℂ} {f : B →ₗ[ℂ] B}
 
+/-- A finite sum of families carrying one fundamental and one anti-fundamental isospin
+  index is such a family again. -/
+lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 2) → B}
+    (hT : ∀ i, IsSU2FunAntiFun B repGauge (T i)) :
+    IsSU2FunAntiFun B repGauge (fun l => ∑ i, T i l) where
+  repGauge_T V l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repGauge_T V l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
+
 /-!
 
 ## A.1. The epsilon re-index of the anti-fundamental slot
@@ -208,6 +218,19 @@ theorem mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
   refine ⟨-c, y, hyS, ?_, hyinv⟩
   rw [hxy, epsilonContraction_reindex, smul_neg, neg_smul]
 
+/-- The isospin invariants of the component span reduce to the span of the delta
+  contraction. -/
+noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2FunAntiFun B repGauge T) :
+    InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
+      (span T) where
+  spanningVector := deltaContraction T
+  stable := isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩
+  spanningVector_fixed := repGauge_deltaContraction hT
+  reduce S hS x hx hinv := by
+    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su2_invariant_iff x S hS hx hinv
+    exact ⟨c, y, hy, hxy⟩
+
 end IsSU2FunAntiFun
 
 /-!
@@ -244,6 +267,16 @@ open IsSU2BiFundamental
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
   {U : specialUnitaryGroup (Fin 2) ℂ} {f : B →ₗ[ℂ] B}
+
+/-- A finite sum of families carrying two anti-fundamental isospin indices is such a family
+  again. -/
+lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 2) → B}
+    (hT : ∀ i, IsSU2BiAntiFun B repGauge (T i)) :
+    IsSU2BiAntiFun B repGauge (fun l => ∑ i, T i l) where
+  repGauge_T V l := by
+    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repGauge_T V l,
+      Finset.sum_comm]
+    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
 
 /-!
 
@@ -373,6 +406,19 @@ theorem mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
     hT.isSU2BiFundamental_reindex.mem_span_sup_su2_invariant_iff x S hS
       (by rw [span_reindex]; exact hx) hinv
   exact ⟨c, y, hyS, by rw [hxy, epsilonContraction_reindex], hyinv⟩
+
+/-- The isospin invariants of the component span reduce to the span of the epsilon
+  contraction. -/
+noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2BiAntiFun B repGauge T) :
+    InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
+      (span T) where
+  spanningVector := epsilonContraction T
+  stable := isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩
+  spanningVector_fixed := repGauge_epsilonContraction hT
+  reduce S hS x hx hinv := by
+    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su2_invariant_iff x S hS hx hinv
+    exact ⟨c, y, hy, hxy⟩
 
 end IsSU2BiAntiFun
 

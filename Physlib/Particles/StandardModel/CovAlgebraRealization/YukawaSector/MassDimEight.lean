@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Families.BarHiggs
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.Peeling
+public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
 # The Yukawa sector at mass weight eight
 
@@ -27,21 +27,22 @@ that weight-zero piece modulo `S`, by `mem_sectorMassWeightEight_piece_zero_sup_
 And the six couplings, their index laws and their contractions are built in the `Families`
 files, together with `yukawaSpan_le_inf`, which is the easy direction of the equivalence.
 
-What is left is the peeling.  A block of the decomposition is a product of three symbol
+What is left is the reduction.  A block of the decomposition is a product of three symbol
 ranges, and the classification of its invariants is three classifications in a row —
 colour, then isospin, then Lorentz — each cutting the span down to the span of one
 contraction.  The three groups are different, and the fifty-four surviving blocks have to
-be peeled apart one at a time, so the argument is organised around a single relation
-`Peels σ V W`: a `σ`-invariant of `V ⊔ S` lies in `W ⊔ S` whenever `S` is `σ`-stable.  That
-relation composes — it is transitive, it is monotone in both arguments, and it is closed
-under joins in its source — and every classification theorem the `GaugeGroup` and
-`LorentzGroup` files provide is an instance of it, packaged as a `Step`.
+be reduced one at a time, so the argument is organised around a single relation
+`ReducesInvariantsTo σ V W`: a `σ`-invariant of `V ⊔ S` lies in `W ⊔ S` whenever `S` is
+`σ`-stable. That relation composes — it is transitive, antitone in its source, monotone in its
+target, and closed under joins of stable sources — and each `GaugeGroup` or `LorentzGroup`
+classification used here is an instance of it, packaged as an `InvariantReductionToSpan`.
 
 ## ii. Key results
 
 - `sectorMassWeightEightGaugeWeight_piece_zero_le` : the weight-zero piece inside the six
   surviving block submodules.
-- `peels_yukawaSpan` : the six blocks, over the nine family pairs, peel to the Yukawa span.
+- `reducesInvariantsTo_yukawaSpan` : the six blocks, over the nine family pairs, reduce to the
+  Yukawa span.
 - `mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant`,
   `exists_mem_of_gauge_and_lorentz_invariant` and
   `mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant_iff` : the
@@ -52,7 +53,7 @@ under joins in its source — and every classification theorem the `GaugeGroup` 
 - A. The symbol ranges as spans of components
 - B. The block submodules and their stability
 - C. The twelve surviving blocks as six submodules
-- D. The blocks peel to the Yukawa terms
+- D. The blocks reduce to the Yukawa terms
 - E. The classification of the invariants of mass weight eight
 
 -/
@@ -82,7 +83,8 @@ lemma higgsSubmodule_zero_le :
     h.isHiggsSector.higgsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.higgs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis (h.isHiggsSector.covH 0 ![])]
+    LinearMap.range_eq_iSup_span_basis HiggsVec.orthonormBasis.toBasis.dualBasis
+      (h.isHiggsSector.covH 0 ![])]
   exact le_rfl
 
 /-- The conjugate Higgs submodule without derivatives lies in the span of the conjugate
@@ -91,7 +93,7 @@ lemma barHiggsSubmodule_zero_le :
     h.isHiggsSector.barHiggsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.barHiggs ![] i := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    range_eq_iSup_span_dualBasis HiggsVec.orthonormBasis.toBasis.conj
+    LinearMap.range_eq_iSup_span_basis HiggsVec.orthonormBasis.toBasis.conj.dualBasis
       (h.isHiggsSector.covBarH 0 ![])]
   exact le_rfl
 
@@ -99,61 +101,61 @@ lemma barHiggsSubmodule_zero_le :
 lemma range_d_eq (f : Fin 3) :
     LinearMap.range (h.covD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.dComponent f ![] j :=
-  range_eq_iSup_span_dualBasis DownSinglet.basis (h.covD f ![])
+  LinearMap.range_eq_iSup_span_basis DownSinglet.basis.dualBasis (h.covD f ![])
 
 /-- The range of the conjugate down-singlet symbol map is the span of its components. -/
 lemma range_bard_eq (f : Fin 3) :
     LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.bardComponent f ![] j :=
-  range_eq_iSup_span_dualBasis DownSinglet.basis.conj (h.covBarD f ![])
+  LinearMap.range_eq_iSup_span_basis DownSinglet.basis.conj.dualBasis (h.covBarD f ![])
 
 /-- The range of the up-singlet symbol map is the span of its components. -/
 lemma range_u_eq (f : Fin 3) :
     LinearMap.range (h.covU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.uComponent f ![] j :=
-  range_eq_iSup_span_dualBasis UpSinglet.basis (h.covU f ![])
+  LinearMap.range_eq_iSup_span_basis UpSinglet.basis.dualBasis (h.covU f ![])
 
 /-- The range of the conjugate up-singlet symbol map is the span of its components. -/
 lemma range_baru_eq (f : Fin 3) :
     LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.baruComponent f ![] j :=
-  range_eq_iSup_span_dualBasis UpSinglet.basis.conj (h.covBarU f ![])
+  LinearMap.range_eq_iSup_span_basis UpSinglet.basis.conj.dualBasis (h.covBarU f ![])
 
 /-- The range of the quark-doublet symbol map is the span of its components. -/
 lemma range_Q_eq (f : Fin 3) :
     LinearMap.range (h.covQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.QComponent f ![] j :=
-  range_eq_iSup_span_dualBasis QuarkDoublet.basis (h.covQ f ![])
+  LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.dualBasis (h.covQ f ![])
 
 /-- The range of the conjugate quark-doublet symbol map is the span of its components. -/
 lemma range_barQ_eq (f : Fin 3) :
     LinearMap.range (h.covBarQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.barQComponent f ![] j :=
-  range_eq_iSup_span_dualBasis QuarkDoublet.basis.conj (h.covBarQ f ![])
+  LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.conj.dualBasis (h.covBarQ f ![])
 
 /-- The range of the lepton-doublet symbol map is the span of its components. -/
 lemma range_L_eq (f : Fin 3) :
     LinearMap.range (h.covL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.LComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonDoublet.basis (h.covL f ![])
+  LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.dualBasis (h.covL f ![])
 
 /-- The range of the conjugate lepton-doublet symbol map is the span of its components. -/
 lemma range_barL_eq (f : Fin 3) :
     LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.barLComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonDoublet.basis.conj (h.covBarL f ![])
+  LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.conj.dualBasis (h.covBarL f ![])
 
 /-- The range of the lepton-singlet symbol map is the span of its components. -/
 lemma range_e_eq (f : Fin 3) :
     LinearMap.range (h.covE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.eComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonSinglet.basis (h.covE f ![])
+  LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.dualBasis (h.covE f ![])
 
 /-- The range of the conjugate lepton-singlet symbol map is the span of its components. -/
 lemma range_bare_eq (f : Fin 3) :
     LinearMap.range (h.covBarE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = ⨆ j, ℂ ∙ h.isFermionSector.bareComponent f ![] j :=
-  range_eq_iSup_span_dualBasis LeptonSinglet.basis.conj (h.covBarE f ![])
+  LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.conj.dualBasis (h.covBarE f ![])
 
 /-!
 
@@ -164,7 +166,7 @@ ranges, and this is the submodule the classification of that block runs inside. 
 are carried into themselves by both groups, each factor being the range of an equivariant
 symbol map with no derivative slots for the Lorentz group to mix, and a product of stable
 submodules being stable.  That stability is what lets the six blocks — fifty-four of them
-once the family pairs are counted — be peeled apart one at a time, each in turn joining the
+once the family pairs are counted — be reduced one at a time, each in turn joining the
 error term of the others.
 
 -/
@@ -443,239 +445,265 @@ lemma sectorMassWeightEightGaugeWeight_piece_zero_le :
 
 /-!
 
-## D. The blocks peel to the Yukawa terms
+## D. The blocks reduce to the Yukawa terms
 
 Each block is classified in three stages, and each stage is the same move: one index law
 holds at every value of the indices it does not see, so a family of steps is applied at
-once by `Peels.iSup_step`, and what comes out is the span of the contractions, which is the
-source of the next stage.  Colour first, then isospin, then Lorentz — the order is forced,
-each contraction being a spectator of the ones after it.
+once by `InvariantReductionToSpan.reducesInvariantsTo_iSup`, and what comes out is the span of
+the contractions, which is the source of the next stage. Colour first, then isospin, then Lorentz —
+the order is forced, each contraction being a spectator of the ones after it.
 
-The two lepton blocks have no colour index at all, so their first stage is `Step.ofFixed`
-rather than a classification: the block is already fixed by the colour factor and the stage
-peels it to itself.  That keeps them in the same three-stage shape as the four quark
-blocks.
+The two lepton blocks have no colour index at all, so their first stage is
+`InvariantReductionToSpan.ofFixed` rather than a classification: the block is already fixed by the
+colour factor and the stage reduces it to itself. That keeps them in the same three-stage shape as
+the four quark blocks.
 
 -/
 
 include h in
-/-- The down-type block peels to the down-type Yukawa term. -/
-lemma peels_downYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.downBlockSubmodule f f')
+/-- The down-type block reduces to the down-type Yukawa term. -/
+lemma reducesInvariantsTo_downYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.downBlockSubmodule f f')
       (ℂ ∙ h.downYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz) (h.downBlockSubmodule f f')
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
+      (h.downBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofSU3FunAntiFun
-        (h.isSU3FunAntiFun_downBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        IsSU3FunAntiFun.invariantReductionToSpan
+          (h.isSU3FunAntiFun_downBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [downBlockSubmodule]
-    refine mul_mul_le_of_le h.higgsSubmodule_zero_le (le_of_eq (h.range_d_eq f))
-      (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+      (le_of_eq (h.range_d_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.dComponent f ![] j *
         h.isFermionSector.barQComponent f' ![] k)
         = h.downBlock f f' i j.1 (![k.2.1, j.2] 1) k.1 (![k.2.1, j.2] 0) k.2.2 from by
       simp [downBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.downBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2FunAntiFun (h.isSU2FunAntiFun_downBlockColour f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2FunAntiFun.invariantReductionToSpan
+          (h.isSU2FunAntiFun_downBlockColour f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
     rw [show h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.downBlockColour f f' (![k.2.2.2, k.1] 1) k.2.1 k.2.2.1 (![k.2.2.2, k.1] 0)
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualRightWeyl (h.isBiDualRightWeyl_downBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualRightWeyl.invariantReductionToSpan
+      (h.isBiDualRightWeyl_downBlockIsospin f f')).reducesInvariantsTo)
 
 include h in
-/-- The up-type block peels to the up-type Yukawa term. Isospin is contracted by the
+/-- The up-type block reduces to the up-type Yukawa term. Isospin is contracted by the
   antisymmetric symbol here, the Higgs symbol and the quark doublet both carrying the
   anti-fundamental. -/
-lemma peels_upYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.upBlockSubmodule f f')
+lemma reducesInvariantsTo_upYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.upBlockSubmodule f f')
       (ℂ ∙ h.upYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz) (h.upBlockSubmodule f f')
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
+      (h.upBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofSU3FunAntiFun
-        (h.isSU3FunAntiFun_upBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        IsSU3FunAntiFun.invariantReductionToSpan
+          (h.isSU3FunAntiFun_upBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [upBlockSubmodule]
-    refine mul_mul_le_of_le h.higgsSubmodule_zero_le (le_of_eq (h.range_baru_eq f))
-      (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+      (le_of_eq (h.range_baru_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.baruComponent f ![] j *
         h.isFermionSector.QComponent f' ![] k)
         = h.upBlock f f' i j.1 (![j.2, k.2.1] 0) k.1 (![j.2, k.2.1] 1) k.2.2 from by
       simp [upBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.upBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2BiAntiFun (h.isSU2BiAntiFun_upBlockColour f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2BiAntiFun.invariantReductionToSpan
+          (h.isSU2BiAntiFun_upBlockColour f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
     rw [show h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.upBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualLeftWeyl (h.isBiDualLeftWeyl_upBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualLeftWeyl.invariantReductionToSpan
+      (h.isBiDualLeftWeyl_upBlockIsospin f f')).reducesInvariantsTo)
 
 include h in
-/-- The charged-lepton block peels to the charged-lepton Yukawa term. Its colour stage is
+/-- The charged-lepton block reduces to the charged-lepton Yukawa term. Its colour stage is
   the trivial one: the three symbols carry no colour index between them, so the block is
-  fixed by the colour factor and the stage peels it to itself. -/
-lemma peels_leptonYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.leptonBlockSubmodule f f')
+  fixed by the colour factor and the stage reduces it to itself. -/
+lemma reducesInvariantsTo_leptonYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.leptonBlockSubmodule f f')
       (ℂ ∙ h.leptonYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz) (h.leptonBlockSubmodule f f')
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
+      (h.leptonBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofFixed (h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-        fun U => h.repGauge_su3_leptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        InvariantReductionToSpan.ofFixed (h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
+          fun U => h.repGauge_su3_leptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
     rw [leptonBlockSubmodule]
-    refine mul_mul_le_of_le h.higgsSubmodule_zero_le (le_of_eq (h.range_barL_eq f))
-      (le_of_eq (h.range_e_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+      (le_of_eq (h.range_barL_eq f)) (le_of_eq (h.range_e_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.barLComponent f ![] j *
         h.isFermionSector.eComponent f' ![] k)
         = h.leptonBlock f f' i j.1 j.2 k from by simp [leptonBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, j.2, k) (Submodule.mem_span_singleton_self _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.leptonBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2FunAntiFun (h.isSU2FunAntiFun_leptonBlock f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2FunAntiFun.invariantReductionToSpan
+          (h.isSU2FunAntiFun_leptonBlock f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_)
     rw [show h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.leptonBlock f f' (![k.2.2.1, k.1] 1) k.2.1 (![k.2.2.1, k.1] 0) k.2.2.2
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualRightWeyl (h.isBiDualRightWeyl_leptonBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualRightWeyl.invariantReductionToSpan
+      (h.isBiDualRightWeyl_leptonBlockIsospin f f')).reducesInvariantsTo)
 
 include h in
-/-- The conjugate down-type block peels to the conjugate down-type Yukawa term. -/
-lemma peels_barDownYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barDownBlockSubmodule f f')
+/-- The conjugate down-type block reduces to the conjugate down-type Yukawa term. -/
+lemma reducesInvariantsTo_barDownYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barDownBlockSubmodule f f')
       (ℂ ∙ h.barDownYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.barDownBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofSU3FunAntiFun
-        (h.isSU3FunAntiFun_barDownBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        IsSU3FunAntiFun.invariantReductionToSpan
+          (h.isSU3FunAntiFun_barDownBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [barDownBlockSubmodule]
-    refine mul_mul_le_of_le h.barHiggsSubmodule_zero_le (le_of_eq (h.range_bard_eq f))
-      (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+      (le_of_eq (h.range_bard_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.bardComponent f ![] j *
         h.isFermionSector.QComponent f' ![] k)
         = h.barDownBlock f f' i j.1 (![j.2, k.2.1] 0) k.1 (![j.2, k.2.1] 1) k.2.2 from by
       simp [barDownBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barDownBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2FunAntiFun
-        (h.isSU2FunAntiFun_barDownBlockColour f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2FunAntiFun.invariantReductionToSpan
+          (h.isSU2FunAntiFun_barDownBlockColour f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
     rw [show h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barDownBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualLeftWeyl (h.isBiDualLeftWeyl_barDownBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualLeftWeyl.invariantReductionToSpan
+      (h.isBiDualLeftWeyl_barDownBlockIsospin f f')).reducesInvariantsTo)
 
 include h in
-/-- The conjugate up-type block peels to the conjugate up-type Yukawa term. -/
-lemma peels_barUpYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barUpBlockSubmodule f f')
+/-- The conjugate up-type block reduces to the conjugate up-type Yukawa term. -/
+lemma reducesInvariantsTo_barUpYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barUpBlockSubmodule f f')
       (ℂ ∙ h.barUpYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz) (h.barUpBlockSubmodule f f')
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
+      (h.barUpBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofSU3FunAntiFun
-        (h.isSU3FunAntiFun_barUpBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        IsSU3FunAntiFun.invariantReductionToSpan
+          (h.isSU3FunAntiFun_barUpBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [barUpBlockSubmodule]
-    refine mul_mul_le_of_le h.barHiggsSubmodule_zero_le (le_of_eq (h.range_u_eq f))
-      (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+      (le_of_eq (h.range_u_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.uComponent f ![] j *
         h.isFermionSector.barQComponent f' ![] k)
         = h.barUpBlock f f' i j.1 (![k.2.1, j.2] 1) k.1 (![k.2.1, j.2] 0) k.2.2 from by
       simp [barUpBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barUpBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2BiFundamental
-        (h.isSU2BiFundamental_barUpBlockColour f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2BiFundamental.invariantReductionToSpan
+          (h.isSU2BiFundamental_barUpBlockColour f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
     rw [show h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barUpBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualRightWeyl (h.isBiDualRightWeyl_barUpBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualRightWeyl.invariantReductionToSpan
+      (h.isBiDualRightWeyl_barUpBlockIsospin f f')).reducesInvariantsTo)
 
 include h in
-/-- The conjugate charged-lepton block peels to the conjugate charged-lepton Yukawa term,
+/-- The conjugate charged-lepton block reduces to the conjugate charged-lepton Yukawa term,
   again with the trivial colour stage. -/
-lemma peels_barLeptonYukawa (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barLeptonBlockSubmodule f f')
+lemma reducesInvariantsTo_barLeptonYukawa (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barLeptonBlockSubmodule f f')
       (ℂ ∙ h.barLeptonYukawa f f') := by
-  have hcolour : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.barLeptonBlockSubmodule f f')
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
-    refine Peels.ofSU3 ((Peels.iSup_step fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-      Step.ofFixed (h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-        fun U =>
-          h.repGauge_su3_barLeptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        InvariantReductionToSpan.ofFixed (h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
+          fun U =>
+            h.repGauge_su3_barLeptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
     rw [barLeptonBlockSubmodule]
-    refine mul_mul_le_of_le h.barHiggsSubmodule_zero_le (le_of_eq (h.range_L_eq f))
-      (le_of_eq (h.range_bare_eq f')) fun i j k => ?_
+    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+      (le_of_eq (h.range_L_eq f)) (le_of_eq (h.range_bare_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.LComponent f ![] j *
         h.isFermionSector.bareComponent f' ![] k)
         = h.barLeptonBlock f f' i j.1 j.2 k from by simp [barLeptonBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, j.2, k) (Submodule.mem_span_singleton_self _)
-  have hisospin : Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
         ℂ ∙ h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
       (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barLeptonBlockIsospin f f' m.1 m.2) := by
-    refine Peels.ofSU2 ((Peels.iSup_step fun m : Fin 2 × Fin 2 =>
-      Step.ofSU2FunAntiFun (h.isSU2FunAntiFun_barLeptonBlock f f' m.1 m.2)).mono_left ?_)
+    refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
+      fun m : Fin 2 × Fin 2 =>
+        IsSU2FunAntiFun.invariantReductionToSpan
+          (h.isSU2FunAntiFun_barLeptonBlock f f' m.1 m.2)).mono_left ?_)
     refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
       (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_)
     rw [show h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barLeptonBlock f f' (![k.1, k.2.2.1] 0) k.2.1 (![k.1, k.2.2.1] 1) k.2.2.2
         from by simp]
     exact IsSU2BiFundamental.mem_span _
-  exact (hcolour.trans hisospin).trans (Peels.ofLorentz
-    (Step.ofBiDualLeftWeyl (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f')).peels)
+  exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
+    (IsBiDualLeftWeyl.invariantReductionToSpan
+      (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f')).reducesInvariantsTo)
 
 /-!
 
 ## E. The classification of the invariants of mass weight eight
 
 The two directions meet.  Forwards: a gauge invariant of the sector lies in the weight-zero
-piece modulo `S`, the piece lies in the six block submodules, and the peeling takes those to
+piece modulo `S`, the piece lies in the six block submodules, and the reduction takes those to
 the Yukawa span.  Backwards: `yukawaSpan_le_inf` says the Yukawa span is made of invariants
 of the right mass weight to begin with, so splitting `x` as `(x - y) + y` recovers the
 hypotheses.  Nothing but that splitting is needed for the converse, which is what makes the
@@ -740,28 +768,31 @@ lemma span_barLeptonYukawa_le_yukawaSpan (f f' : Fin 3) :
       (Submodule.mem_span_singleton_self _))))
 
 include h in
-/-- The join of the six block submodules over the nine family pairs peels to the Yukawa
+/-- The join of the six block submodules over the nine family pairs reduces to the Yukawa
   span: the fifty-four blocks are taken one at a time, each in turn joining the error term
   of the others, which is what their stability is for. -/
-lemma peels_yukawaSpan :
-    Peels (gaugeLorentzMaps repGauge repLorentz) h.blockSubmodule h.yukawaSpan := by
+lemma reducesInvariantsTo_yukawaSpan :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) h.blockSubmodule h.yukawaSpan := by
   have hW : IsStableUnder (gaugeLorentzMaps repGauge repLorentz) h.yukawaSpan :=
     h.isFixedBy_yukawaSpan.isStableUnder
-  have hblock : ∀ f f' : Fin 3, Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hblock : ∀ f f' : Fin 3, ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.downBlockSubmodule f f' ⊔ h.upBlockSubmodule f f' ⊔ h.leptonBlockSubmodule f f'
         ⊔ h.barDownBlockSubmodule f f' ⊔ h.barUpBlockSubmodule f f'
         ⊔ h.barLeptonBlockSubmodule f f') h.yukawaSpan := fun f f' =>
-    Peels.sup (Peels.sup (Peels.sup (Peels.sup (Peels.sup
-      ((h.peels_downYukawa f f').mono_right (h.span_downYukawa_le_yukawaSpan f f'))
-      ((h.peels_upYukawa f f').mono_right (h.span_upYukawa_le_yukawaSpan f f'))
+    ReducesInvariantsTo.sup (ReducesInvariantsTo.sup (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup (ReducesInvariantsTo.sup
+      ((h.reducesInvariantsTo_downYukawa f f').mono_right (h.span_downYukawa_le_yukawaSpan f f'))
+      ((h.reducesInvariantsTo_upYukawa f f').mono_right (h.span_upYukawa_le_yukawaSpan f f'))
       (h.isStableUnder_upBlockSubmodule f f') hW)
-      ((h.peels_leptonYukawa f f').mono_right (h.span_leptonYukawa_le_yukawaSpan f f'))
+      ((h.reducesInvariantsTo_leptonYukawa f f').mono_right
+        (h.span_leptonYukawa_le_yukawaSpan f f'))
       (h.isStableUnder_leptonBlockSubmodule f f') hW)
-      ((h.peels_barDownYukawa f f').mono_right (h.span_barDownYukawa_le_yukawaSpan f f'))
+      ((h.reducesInvariantsTo_barDownYukawa f f').mono_right
+        (h.span_barDownYukawa_le_yukawaSpan f f'))
       (h.isStableUnder_barDownBlockSubmodule f f') hW)
-      ((h.peels_barUpYukawa f f').mono_right (h.span_barUpYukawa_le_yukawaSpan f f'))
+      ((h.reducesInvariantsTo_barUpYukawa f f').mono_right (h.span_barUpYukawa_le_yukawaSpan f f'))
       (h.isStableUnder_barUpBlockSubmodule f f') hW)
-      ((h.peels_barLeptonYukawa f f').mono_right
+      ((h.reducesInvariantsTo_barLeptonYukawa f f').mono_right
         (h.span_barLeptonYukawa_le_yukawaSpan f f'))
       (h.isStableUnder_barLeptonBlockSubmodule f f') hW
   have hstable : ∀ f f' : Fin 3, IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
@@ -775,14 +806,14 @@ lemma peels_yukawaSpan :
       (h.isStableUnder_barUpBlockSubmodule f f') |>.sup
       (h.isStableUnder_barLeptonBlockSubmodule f f')
   rw [blockSubmodule]
-  exact Peels.iSup (fun f => Peels.iSup (hblock f) (hstable f) hW)
+  exact ReducesInvariantsTo.iSup (fun f => ReducesInvariantsTo.iSup (hblock f) (hstable f) hW)
     (fun f => isStableUnder_iSup (hstable f)) hW
 
 include h in
 /-- A gauge and Lorentz invariant of the Yukawa sector at mass weight eight, modulo a
   submodule `S` stable under both groups, lies in the Yukawa span joined with `S`.
   Hypercharge puts it in the weight-zero piece, the piece lies in the six block submodules,
-  and colour, isospin and Lorentz peel each block down to its Yukawa term. -/
+  and colour, isospin and Lorentz reduce each block to its Yukawa term. -/
 theorem mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
@@ -792,7 +823,7 @@ theorem mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
     x ∈ h.yukawaSpan ⊔ S := by
   have hpiece := h.mem_sectorMassWeightEight_piece_zero_sup_of_invariant
     (fun i y hy => hS (gaugeTorusGen i) y hy) hx hGinv
-  exact h.peels_yukawaSpan S (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x
+  exact h.reducesInvariantsTo_yukawaSpan S (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x
     (sup_le_sup_right h.sectorMassWeightEightGaugeWeight_piece_zero_le S hpiece)
     (forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hGinv, hLinv⟩)
 

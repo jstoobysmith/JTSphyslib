@@ -155,7 +155,7 @@ theorem eq_zero_of_su3_invariant (hT : IsSU3BiFundamental B repGauge T) {x : B}
 ## C. The invariants modulo a stable submodule
 
 The law descends to the quotient by a colour-stable submodule `S`, section B applies there,
-and `Family.exists_smul_add_of_mem_sup` lifts the result back: an invariant of the span
+and `IsStableUnder.mem_sup_of_quotient` lifts the result back: an invariant of the span
 joined with `S` lies in `S`, two fundamental colour indices contributing nothing.
 
 -/
@@ -177,13 +177,13 @@ theorem mem_of_mem_span_sup_su3_invariant (hT : IsSU3BiFundamental B repGauge T)
     (hx : x ∈ hT.span ⊔ S)
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     x ∈ S := by
-  obtain ⟨c, y, hyS, hxy, -⟩ := Family.exists_smul_add_of_mem_sup T
-    (fun U => repGauge (U, 1, 1)) S hS 0 (fun U => map_zero _)
-    (fun x hx hinv => ⟨0, by
-      rw [eq_zero_of_invariant'
-        (fun U => isSU3BiFundamentalMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv, zero_smul]⟩)
-    hx hinv
-  rwa [hxy, smul_zero, zero_add]
+  have h := IsStableUnder.mem_sup_of_quotient (σ := fun U => repGauge (U, 1, 1))
+    (V := ⨆ i, ℂ ∙ T i) (W := ⊥) hS (fun x hx hinv => by
+      rw [Submodule.map_iSup_span_singleton] at hx
+      rw [Submodule.map_bot, Submodule.mem_bot]
+      exact eq_zero_of_invariant'
+        (fun U => isSU3BiFundamentalMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv) hx hinv
+  rwa [bot_sup_eq] at h
 
 /-- The colour invariants of the span of the components joined with a colour-stable
   submodule are exactly the colour invariants of the submodule. -/

@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl
-public import Physlib.Particles.StandardModel.Peeling
+public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
 # The invariants below mass weight eight
 

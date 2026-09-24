@@ -198,7 +198,7 @@ lemma isBiDualRightWeyl_downBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.downBlockIsospin f f' l.1 l.2) := by
   simp only [h.downBlockIsospin_eq]
-  exact isBiDualRightWeyl_sum fun p => h.isBiDualRightWeyl_downBlock f f' p.1 p.2 p.2 p.1
+  exact IsBiDualRightWeyl.sum fun p => h.isBiDualRightWeyl_downBlock f f' p.1 p.2 p.2 p.1
 
 /-- The down-type Yukawa term of the family pair `(f, f')`: the down-singlet symbol of
   family `f` against the conjugate quark doublet of family `f'` and a Higgs symbol, with
@@ -398,9 +398,9 @@ lemma isBiDualLeftWeyl_upBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.upBlockIsospin f f' l.1 l.2) := by
   simp only [h.upBlockIsospin_eq]
-  exact isBiDualLeftWeyl_sub
-    (isBiDualLeftWeyl_sum fun a => h.isBiDualLeftWeyl_upBlock f f' 0 a a 1)
-    (isBiDualLeftWeyl_sum fun a => h.isBiDualLeftWeyl_upBlock f f' 1 a a 0)
+  exact IsBiDualLeftWeyl.sub
+    (IsBiDualLeftWeyl.sum fun a => h.isBiDualLeftWeyl_upBlock f f' 0 a a 1)
+    (IsBiDualLeftWeyl.sum fun a => h.isBiDualLeftWeyl_upBlock f f' 1 a a 0)
 
 /-- The up-type Yukawa term of the family pair `(f, f')`: the colour indices are joined by
   the Kronecker delta, the isospin indices by the antisymmetric symbol, and the two
@@ -570,7 +570,7 @@ lemma isBiDualRightWeyl_leptonBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz
       (fun l : Fin 2 × Fin 2 => h.leptonBlockIsospin f f' l.1 l.2) := by
   simp only [h.leptonBlockIsospin_eq]
-  exact isBiDualRightWeyl_sum fun w => h.isBiDualRightWeyl_leptonBlock f f' w w
+  exact IsBiDualRightWeyl.sum fun w => h.isBiDualRightWeyl_leptonBlock f f' w w
 
 /-- The charged-lepton Yukawa term of the family pair `(f, f')`: the isospin indices are
   joined by the Kronecker delta and the two right-handed spinor indices by the

@@ -583,8 +583,8 @@ noncomputable def wtCoeff : WeightIdx → Fin 8 → ℂ
 The Standard Model files handle many families at once and peel them off one at a time, so the
 classification is wanted modulo a submodule `S` in which the other families are parked. The
 law descends to the quotient by a stable `S`, section F applies there, and
-`Family.exists_smul_add_of_mem_sup` lifts the result back. Once the trace contraction is known
-to be gauge invariant, so is the remainder `y = x - c • traceContraction`.
+`IsStableUnder.exists_smul_add_of_quotient` lifts the result back. Once the trace contraction
+is known to be gauge invariant, so is the remainder `y = x - c • traceContraction`.
 
 -/
 
@@ -612,10 +612,11 @@ theorem mem_span_sup_invariant_iff {B : Type*} [Ring B] [Algebra ℂ B]
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
       ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
-  obtain ⟨c, y, hyS, hxy, -⟩ := Family.exists_smul_add_of_mem_sup T
-    (fun U => repGauge (U, 1, 1)) S (fun U => hS (U, 1, 1)) hT.traceContraction
+  obtain ⟨c, y, hyS, hxy, -⟩ := IsStableUnder.exists_smul_add_of_quotient
+    (σ := fun U => repGauge (U, 1, 1)) (V := ⨆ i, ℂ ∙ T i) (fun U => hS (U, 1, 1))
     (fun U => hT.map_traceContraction (hT.repGauge_T U))
     (fun x hx hinv => by
+      rw [Submodule.map_iSup_span_singleton] at hx
       obtain ⟨z, hz⟩ := exists_smul_sum_diag_of_invariant
         (fun U => isSU3BiAdjointMat_mapQ (hT.repGauge_T U) S (hS (U, 1, 1))) hx hinv
       exact ⟨z, by rw [hz, traceContraction, map_sum]⟩)

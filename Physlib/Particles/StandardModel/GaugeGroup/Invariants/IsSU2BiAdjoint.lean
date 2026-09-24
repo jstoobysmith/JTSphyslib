@@ -494,7 +494,7 @@ theorem exists_smul_traceContraction_of_su2_invariant (hT : IsSU2BiAdjoint B rep
 The Standard Model files handle many families at once and peel them off one at a time, so
 the classification is wanted modulo a submodule `S` in which the other families are parked.
 The law descends to the quotient by an isospin-stable `S`, so section E applies there, and
-`Family.exists_smul_add_of_mem_sup` lifts the result back.
+`IsStableUnder.exists_smul_add_of_quotient` lifts the result back.
 
 -/
 
@@ -517,8 +517,10 @@ theorem mem_span_sup_su2_invariant_iff (hT : IsSU2BiAdjoint B repGauge T) (x : B
     (hinv : ∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
       ∧ ∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) y = y := by
-  refine Family.exists_smul_add_of_mem_sup T (fun U => repGauge (1, U, 1)) S hS
-    hT.traceContraction hT.repGauge_traceContraction (fun x hx hinv => ?_) hx hinv
+  refine IsStableUnder.exists_smul_add_of_quotient (V := ⨆ i, ℂ ∙ T i)
+    (hS : IsStableUnder (fun U => repGauge (1, U, 1)) S) hT.repGauge_traceContraction
+    (fun x hx hinv => ?_) hx hinv
+  rw [Submodule.map_iSup_span_singleton] at hx
   obtain ⟨z, hz⟩ := exists_smul_sum_diag_of_invariant
     (fun U => isSU2BiAdjointMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv
   exact ⟨z, by rw [hz, traceContraction, map_sum]⟩

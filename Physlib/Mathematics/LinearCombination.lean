@@ -18,6 +18,10 @@ acting on the coefficients.
 Over `ℂ`, when linear maps on `B` move combinations by moving their coefficients, a combination
 fixed by all the maps is the combination of fixed coefficients, provided the coefficient maps
 have their adjoints among themselves: `Fintype.exists_invariant_coeff_of_adjoint_mem`.
+
+The span `⨆ i, R ∙ T i` of a family is bounded through its members: the range of a linear
+map is the span of the images of a basis, and a product of submodules lying in spans of
+families lies in any submodule containing the products of their members.
 -/
 
 @[expose] public section
@@ -85,3 +89,33 @@ lemma Fintype.exists_invariant_coeff_of_adjoint_mem {ι G B : Type*} [Fintype ι
   have h3 : WithLp.toLp 2 (A g k'.ofLp) - k' ∈ K ⊓ Kᗮ := ⟨h1, Submodule.sub_mem _ h2 hk'⟩
   rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot, sub_eq_zero] at h3
   exact congrArg WithLp.ofLp h3
+
+/-- The range of a linear map is the span of the images of a basis. -/
+lemma LinearMap.range_eq_iSup_span_basis {ι R M N : Type*} [Semiring R] [AddCommMonoid M]
+    [Module R M] [AddCommMonoid N] [Module R N] (b : Module.Basis ι R M) (f : M →ₗ[R] N) :
+    LinearMap.range f = ⨆ i, R ∙ f (b i) := by
+  rw [LinearMap.range_eq_map, ← b.span_eq, Submodule.map_span, ← Set.range_comp,
+    Submodule.span_range_eq_iSup]
+  rfl
+
+/-- A product of two submodules, each inside the span of a family, lies in any submodule
+  containing the products of the members of the two families. -/
+lemma Submodule.mul_le_of_le_iSup_span {ι κ R A : Type*} [CommSemiring R] [Semiring A]
+    [Algebra R A] {V V' X : Submodule R A} {a : ι → A} {b : κ → A}
+    (hV : V ≤ ⨆ i, R ∙ a i) (hV' : V' ≤ ⨆ j, R ∙ b j) (hX : ∀ i j, a i * b j ∈ X) :
+    V * V' ≤ X := by
+  refine (mul_le_mul' hV hV').trans ?_
+  rw [← Submodule.span_range_eq_iSup, ← Submodule.span_range_eq_iSup, Submodule.span_mul_span,
+    Submodule.span_le]
+  rintro _ ⟨_, ⟨i, rfl⟩, _, ⟨j, rfl⟩, rfl⟩
+  exact hX i j
+
+/-- The three-factor form of `Submodule.mul_le_of_le_iSup_span`. -/
+lemma Submodule.mul_mul_le_of_le_iSup_span {ι κ ν R A : Type*} [CommSemiring R] [Semiring A]
+    [Algebra R A] {V V' V'' X : Submodule R A} {a : ι → A} {b : κ → A} {c : ν → A}
+    (hV : V ≤ ⨆ i, R ∙ a i) (hV' : V' ≤ ⨆ j, R ∙ b j) (hV'' : V'' ≤ ⨆ k, R ∙ c k)
+    (hX : ∀ i j k, a i * (b j * c k) ∈ X) : V * (V' * V'') ≤ X :=
+  mul_le_of_le_iSup_span hV
+    (mul_le_of_le_iSup_span (X := ⨆ p : κ × ν, R ∙ (b p.1 * c p.2)) hV' hV''
+      fun j k => Submodule.mem_iSup_of_mem (j, k) (Submodule.mem_span_singleton_self _))
+    fun i p => hX i p.1 p.2

@@ -158,7 +158,7 @@ theorem eq_zero_of_act_eq {c : Fin 3 → ℂ}
 The action on coefficients is unitary, so `Family.exists_invariant_coeff` writes an
 invariant of the span as the contraction of an invariant coefficient vector, which section C
 makes zero. The statement is made for any family of linear maps obeying the law, so that it
-applies in a quotient, and `Family.exists_smul_add_of_mem_sup` then gives the form modulo a
+applies in a quotient, and `IsStableUnder.mem_sup_of_quotient` then gives the form modulo a
 stable submodule: an invariant of the span joined with `S` lies in `S`.
 
 -/
@@ -197,12 +197,13 @@ theorem mem_of_mem_span_sup_su2_invariant (hT : IsSU2Adjoint B repGauge T) (x : 
     (hx : x ∈ hT.span ⊔ S)
     (hinv : ∀ U : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, U, 1) x = x) :
     x ∈ S := by
-  obtain ⟨c, y, hyS, hxy, -⟩ := Family.exists_smul_add_of_mem_sup T
-    (fun U => repGauge (1, U, 1)) S hS 0 (fun U => map_zero _)
-    (fun x hx hinv => ⟨0, by
-      rw [eq_zero_of_invariant' (fun U => isSU2AdjointMat_mapQ (hT.repGauge_T U) S (hS U))
-        hx hinv, zero_smul]⟩) hx hinv
-  rwa [hxy, smul_zero, zero_add]
+  have h := IsStableUnder.mem_sup_of_quotient (σ := fun U => repGauge (1, U, 1))
+    (V := ⨆ i, ℂ ∙ T i) (W := ⊥) hS (fun x hx hinv => by
+      rw [Submodule.map_iSup_span_singleton] at hx
+      rw [Submodule.map_bot, Submodule.mem_bot]
+      exact eq_zero_of_invariant' (fun U => isSU2AdjointMat_mapQ (hT.repGauge_T U) S (hS U))
+        hx hinv) hx hinv
+  rwa [bot_sup_eq] at h
 
 /-- The isospin invariants of the span of the components joined with an isospin-stable
   submodule are exactly the isospin invariants of the submodule. -/

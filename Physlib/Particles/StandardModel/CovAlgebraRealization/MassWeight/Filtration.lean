@@ -27,11 +27,11 @@ Section B settles what the weight-zero piece is: the only word of total weight z
 empty word, every generator carrying positive weight, so `massWeightSubmodule 0` is exactly
 the scalars, and the unit is fixed by both groups because both act by algebra maps.
 
-The classification then runs as it does for the grading. `Peels` is closed under joins in
-its source, and the filtration is a join: each weight from one to eight peels to the
-Standard-Model span of that weight by `peels_massWeightSubmodule`, weight zero peels to
-itself, and the join of the nine is a peeling of the filtration. No independence of the
-sectors, and none of the weights, is used anywhere.
+The classification then runs as it does for the grading. `ReducesInvariantsTo` is closed under
+joins in its source, and the filtration is a join: each weight from one to eight reduces to
+the Standard-Model span of that weight by `reducesInvariantsTo_massWeightSubmodule`, weight
+zero reduces to itself, and the join of the nine is a reduction of the filtration. No independence
+of the sectors, and none of the weights, is used anywhere.
 
 The answer at bound eight is the whole of the Standard Model below and at mass dimension
 four: the constant term, the Higgs mass term `H† H`, and the dimension-four Lagrangian.
@@ -39,7 +39,7 @@ four: the constant term, the Higgs mass term `H† H`, and the dimension-four La
 - A. The mass-weight filtration
 - B. The constant term at weight zero
 - C. The span of the filtration
-- D. Peeling the filtration
+- D. Reducing the filtration
 - E. The classification up to mass dimension four
 - F. The Standard Model Lagrangian with its constant and mass terms
 
@@ -94,7 +94,7 @@ lemma massWeightSubmoduleLE_mono {w w' : ℕ} (hw : w ≤ w') :
     h.massWeightSubmodule_le_massWeightSubmoduleLE (hk.trans hw)
 
 /-- The filtration as a join over a finite index type, which is the form in which the
-  peeling of a join consumes it. -/
+  reduction of a join consumes it. -/
 lemma massWeightSubmoduleLE_eq_iSup (w : ℕ) :
     h.massWeightSubmoduleLE w = ⨆ k : Fin (w + 1), h.massWeightSubmodule (k : ℕ) :=
   le_antisymm
@@ -223,27 +223,27 @@ lemma standardModelSpanLE_eight :
 
 /-!
 
-## D. Peeling the filtration
+## D. Reducing the filtration
 
 -/
 
-/-- The filtration peels to its span, at every bound up to eight. The filtration is a
-  join of the graded pieces, each of them stable under both groups, and `Peels` is closed
-  under joins in its source: the weights are taken one at a time, each in turn joining the
-  error term of the others. At positive weight the graded peeling of `Invariants.lean` is
-  used; at weight zero a submodule peels to itself, the constant term being carried in the
+/-- The filtration reduces to its span, at every bound up to eight. The filtration is a
+  join of the graded pieces, each of them stable under both groups, and `ReducesInvariantsTo` is
+  closed under joins in its source: the weights are taken one at a time, each in turn joining the
+  error term of the others. At positive weight the graded reduction of `Invariants.lean` is
+  used; at weight zero a submodule reduces to itself, the constant term being carried in the
   span. -/
-lemma peels_massWeightSubmoduleLE {w : ℕ} (hw : w ≤ 8) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.massWeightSubmoduleLE w)
+lemma reducesInvariantsTo_massWeightSubmoduleLE {w : ℕ} (hw : w ≤ 8) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.massWeightSubmoduleLE w)
       (h.standardModelSpanLE w) := by
   rw [h.massWeightSubmoduleLE_eq_iSup]
-  refine Peels.iSup (fun k => ?_) (fun _ => ?_)
+  refine ReducesInvariantsTo.iSup (fun k => ?_) (fun _ => ?_)
     (h.isFixedBy_standardModelSpanLE w).isStableUnder
   · have hkw : (k : ℕ) ≤ w := Nat.lt_succ_iff.1 k.isLt
     rcases Nat.eq_zero_or_pos (k : ℕ) with hk0 | hk0
     · rw [hk0]
-      exact peels_of_le (h.massWeightSubmodule_zero_le_standardModelSpanLE w)
-    · exact (h.peels_massWeightSubmodule hk0 (hkw.trans hw)).mono_right
+      exact reducesInvariantsTo_of_le (h.massWeightSubmodule_zero_le_standardModelSpanLE w)
+    · exact (h.reducesInvariantsTo_massWeightSubmodule hk0 (hkw.trans hw)).mono_right
         (h.standardModelSpan_le_standardModelSpanLE hkw)
   · exact isStableUnder_gaugeLorentzMaps_iff.2
       ⟨fun g _ hy => h.repGauge_mem_massWeightSubmodule g hy,
@@ -271,8 +271,9 @@ theorem exists_mem_standardModelSpanLE_of_gauge_and_lorentz_invariant (w : ℕ) 
       ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
       ∧ x - y ∈ h.standardModelSpanLE w := by
   obtain ⟨z, hz, y, hy, rfl⟩ := Submodule.mem_sup.1
-    (h.peels_massWeightSubmoduleLE hw S (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩)
-      x hx (forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hG, hL⟩))
+    (h.reducesInvariantsTo_massWeightSubmoduleLE hw S
+      (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x hx
+      (forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hG, hL⟩))
   refine ⟨y, hy, fun g => ?_, fun g => ?_, by simpa using hz⟩
   · have hstep := hG g
     rw [map_add, h.repGauge_of_mem_standardModelSpanLE w g hz, add_right_inj] at hstep

@@ -22,15 +22,16 @@ The classification runs the four stages every sector runs. Hypercharge first, th
 gauge weight decomposition: `massWeightSubmoduleGaugeWeightEight_piece_zero` cuts the
 hundred pairings of two fermion symbols down to the ten conjugate ones, every other
 pairing having hypercharges that cannot cancel. Then colour, then isospin, then Lorentz,
-one classification each, chained by the `Peels` relation of `StandardModel.Peeling` and
-supplied by the `KineticBlock` packages of `KineticTerms`. What is left is the kinetic
-span: one term for each of the ten pairings and each of the nine pairs of generations.
+one classification each, chained by the `ReducesInvariantsTo` relation of
+`Physlib.Mathematics.InvariantReduction` and supplied by the `KineticBlock` packages of
+`KineticTerms`. What is left is the kinetic span: one term for each of the ten pairings and each of
+the nine pairs of generations.
 
 - A. Symbol ranges and their stability
 - B. The block submodules
 - C. The symbol ranges inside the derivative submodules, and the mass weight
 - D. The kinetic span
-- E. The blocks peel to the kinetic terms
+- E. The blocks reduce to the kinetic terms
 - F. The classification as an equivalence
 
 -/
@@ -73,7 +74,7 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 ## A. Symbol ranges and their stability
 
-The peeling asks two things of the submodule a block is read from: that the two groups
+The reduction asks two things of the submodule a block is read from: that the two groups
 carry it into itself, and that it lies in the span of the block's components. Both come
 from the symbol maps. A gauge transformation moves only the covector a symbol is evaluated
 at, so a symbol range is gauge stable at any number of derivative slots. The Lorentz group
@@ -153,7 +154,7 @@ Each of the ten conjugate pairings gives one submodule per pair of generations: 
 underived range of one species against the once-derived ranges of its conjugate, joined
 over the derivative direction so that the Lorentz group has somewhere to move it. Each is
 carried into itself by both groups and lies in the span of the components of the matching
-kinetic block, which is all the peeling asks.
+kinetic block, which is all the reduction asks.
 
 -/
 
@@ -183,23 +184,25 @@ include h in
 lemma dbardPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.dbardPairSubmodule f f' ≤ (h.dbardKineticBlock f f').blockSpan := by
   rw [dbardPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => d f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => d f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       bard f' ![k.1] (DownSinglet.basis.conj.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis DownSinglet.basis _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis DownSinglet.basis.conj (bard f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis DownSinglet.basis.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis DownSinglet.basis.conj.dualBasis (bard f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (0, 0))
       (Submodule.mem_iSup_of_mem ![j.2.2, i.2] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `d ∂ bard` block peels to its kinetic term. -/
-lemma peels_dbard (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.dbardPairSubmodule f f')
+/-- The `d ∂ bard` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_dbard (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.dbardPairSubmodule f f')
       (ℂ ∙ (h.dbardKineticBlock f f').kineticTerm) :=
-  ((h.dbardKineticBlock f f').peels).mono_left (h.dbardPairSubmodule_le_blockSpan f f')
+  (h.dbardKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.dbardPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `bard ∂ d` block of a generation pair: an underived
@@ -227,23 +230,25 @@ include h in
 lemma barddPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barddPairSubmodule f f' ≤ (h.barddKineticBlock f f').blockSpan := by
   rw [barddPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.conj.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.conj.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       d f' ![k.1] (DownSinglet.basis.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis DownSinglet.basis.conj _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis DownSinglet.basis (d f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis DownSinglet.basis.conj.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis DownSinglet.basis.dualBasis (d f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (0, 0))
       (Submodule.mem_iSup_of_mem ![i.2, j.2.2] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `bard ∂ d` block peels to its kinetic term. -/
-lemma peels_bardd (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barddPairSubmodule f f')
+/-- The `bard ∂ d` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_bardd (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barddPairSubmodule f f')
       (ℂ ∙ (h.barddKineticBlock f f').kineticTerm) :=
-  ((h.barddKineticBlock f f').peels).mono_left (h.barddPairSubmodule_le_blockSpan f f')
+  (h.barddKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.barddPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `u ∂ baru` block of a generation pair: an underived
@@ -271,23 +276,25 @@ include h in
 lemma ubaruPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.ubaruPairSubmodule f f' ≤ (h.ubaruKineticBlock f f').blockSpan := by
   rw [ubaruPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => u f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => u f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       baru f' ![k.1] (UpSinglet.basis.conj.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis UpSinglet.basis _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis UpSinglet.basis.conj (baru f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis UpSinglet.basis.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis UpSinglet.basis.conj.dualBasis (baru f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (0, 0))
       (Submodule.mem_iSup_of_mem ![j.2.2, i.2] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `u ∂ baru` block peels to its kinetic term. -/
-lemma peels_ubaru (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.ubaruPairSubmodule f f')
+/-- The `u ∂ baru` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_ubaru (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.ubaruPairSubmodule f f')
       (ℂ ∙ (h.ubaruKineticBlock f f').kineticTerm) :=
-  ((h.ubaruKineticBlock f f').peels).mono_left (h.ubaruPairSubmodule_le_blockSpan f f')
+  (h.ubaruKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.ubaruPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `baru ∂ u` block of a generation pair: an underived
@@ -315,23 +322,25 @@ include h in
 lemma baruuPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.baruuPairSubmodule f f' ≤ (h.baruuKineticBlock f f').blockSpan := by
   rw [baruuPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.conj.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.conj.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       u f' ![k.1] (UpSinglet.basis.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis UpSinglet.basis.conj _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis UpSinglet.basis (u f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis UpSinglet.basis.conj.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis UpSinglet.basis.dualBasis (u f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (0, 0))
       (Submodule.mem_iSup_of_mem ![i.2, j.2.2] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `baru ∂ u` block peels to its kinetic term. -/
-lemma peels_baruu (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.baruuPairSubmodule f f')
+/-- The `baru ∂ u` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_baruu (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.baruuPairSubmodule f f')
       (ℂ ∙ (h.baruuKineticBlock f f').kineticTerm) :=
-  ((h.baruuKineticBlock f f').peels).mono_left (h.baruuPairSubmodule_le_blockSpan f f')
+  (h.baruuKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.baruuPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `Q ∂ barQ` block of a generation pair: an underived
@@ -359,23 +368,25 @@ include h in
 lemma QbarQPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.QbarQPairSubmodule f f' ≤ (h.QbarQKineticBlock f f').blockSpan := by
   rw [QbarQPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => Q f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => Q f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
       barQ f' ![k.1] (QuarkDoublet.basis.conj.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis QuarkDoublet.basis _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis QuarkDoublet.basis.conj (barQ f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.conj.dualBasis (barQ f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (j.2.2.2, i.2.2))
       (Submodule.mem_iSup_of_mem ![j.2.2.1, i.2.1] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `Q ∂ barQ` block peels to its kinetic term. -/
-lemma peels_QbarQ (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.QbarQPairSubmodule f f')
+/-- The `Q ∂ barQ` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_QbarQ (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.QbarQPairSubmodule f f')
       (ℂ ∙ (h.QbarQKineticBlock f f').kineticTerm) :=
-  ((h.QbarQKineticBlock f f').peels).mono_left (h.QbarQPairSubmodule_le_blockSpan f f')
+  (h.QbarQKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.QbarQPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `barQ ∂ Q` block of a generation pair: an underived
@@ -403,23 +414,25 @@ include h in
 lemma barQQPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barQQPairSubmodule f f' ≤ (h.barQQKineticBlock f f').blockSpan := by
   rw [barQQPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.conj.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.conj.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
       Q f' ![k.1] (QuarkDoublet.basis.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis QuarkDoublet.basis.conj _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis QuarkDoublet.basis (Q f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.conj.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.dualBasis (Q f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (i.2.2, j.2.2.2))
       (Submodule.mem_iSup_of_mem ![i.2.1, j.2.2.1] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `barQ ∂ Q` block peels to its kinetic term. -/
-lemma peels_barQQ (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barQQPairSubmodule f f')
+/-- The `barQ ∂ Q` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_barQQ (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barQQPairSubmodule f f')
       (ℂ ∙ (h.barQQKineticBlock f f').kineticTerm) :=
-  ((h.barQQKineticBlock f f').peels).mono_left (h.barQQPairSubmodule_le_blockSpan f f')
+  (h.barQQKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.barQQPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `L ∂ barL` block of a generation pair: an underived
@@ -447,23 +460,25 @@ include h in
 lemma LbarLPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.LbarLPairSubmodule f f' ≤ (h.LbarLKineticBlock f f').blockSpan := by
   rw [LbarLPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => L f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => L f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
       barL f' ![k.1] (LeptonDoublet.basis.conj.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis LeptonDoublet.basis _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis LeptonDoublet.basis.conj (barL f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.conj.dualBasis (barL f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (j.2.2, i.2))
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `L ∂ barL` block peels to its kinetic term. -/
-lemma peels_LbarL (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.LbarLPairSubmodule f f')
+/-- The `L ∂ barL` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_LbarL (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.LbarLPairSubmodule f f')
       (ℂ ∙ (h.LbarLKineticBlock f f').kineticTerm) :=
-  ((h.LbarLKineticBlock f f').peels).mono_left (h.LbarLPairSubmodule_le_blockSpan f f')
+  (h.LbarLKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.LbarLPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `barL ∂ L` block of a generation pair: an underived
@@ -491,23 +506,25 @@ include h in
 lemma barLLPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barLLPairSubmodule f f' ≤ (h.barLLKineticBlock f f').blockSpan := by
   rw [barLLPairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.conj.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.conj.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
       L f' ![k.1] (LeptonDoublet.basis.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis LeptonDoublet.basis.conj _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis LeptonDoublet.basis (L f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.conj.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.dualBasis (L f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (i.2, j.2.2))
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `barL ∂ L` block peels to its kinetic term. -/
-lemma peels_barLL (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.barLLPairSubmodule f f')
+/-- The `barL ∂ L` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_barLL (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.barLLPairSubmodule f f')
       (ℂ ∙ (h.barLLKineticBlock f f').kineticTerm) :=
-  ((h.barLLKineticBlock f f').peels).mono_left (h.barLLPairSubmodule_le_blockSpan f f')
+  (h.barLLKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.barLLPairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `e ∂ bare` block of a generation pair: an underived
@@ -535,23 +552,25 @@ include h in
 lemma ebarePairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.ebarePairSubmodule f f' ≤ (h.ebareKineticBlock f f').blockSpan := by
   rw [ebarePairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => e f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => e f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
       bare f' ![k.1] (LeptonSinglet.basis.conj.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis LeptonSinglet.basis _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis LeptonSinglet.basis.conj (bare f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.conj.dualBasis (bare f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2, i), (0, 0))
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `e ∂ bare` block peels to its kinetic term. -/
-lemma peels_ebare (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.ebarePairSubmodule f f')
+/-- The `e ∂ bare` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_ebare (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.ebarePairSubmodule f f')
       (ℂ ∙ (h.ebareKineticBlock f f').kineticTerm) :=
-  ((h.ebareKineticBlock f f').peels).mono_left (h.ebarePairSubmodule_le_blockSpan f f')
+  (h.ebareKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.ebarePairSubmodule_le_blockSpan f f')
 
 set_option linter.unusedVariables false in
 /-- The submodule of the `bare ∂ e` block of a generation pair: an underived
@@ -579,23 +598,25 @@ include h in
 lemma bareePairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.bareePairSubmodule f f' ≤ (h.bareeKineticBlock f f').blockSpan := by
   rw [bareePairSubmodule, KineticBlock.blockSpan]
-  refine mul_le_of_le
-    (A := fun k => bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.conj.dualBasis k))
-    (C := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
+  refine Submodule.mul_le_of_le_iSup_span
+    (a := fun k => bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.conj.dualBasis k))
+    (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
       e f' ![k.1] (LeptonSinglet.basis.dualBasis k.2))
-    (le_of_eq (range_eq_iSup_span_dualBasis LeptonSinglet.basis.conj _)) (iSup_le fun μ => ?_) ?_
-  · rw [range_eq_iSup_span_dualBasis LeptonSinglet.basis (e f' ![μ])]
+    (le_of_eq (LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.conj.dualBasis _))
+    (iSup_le fun μ => ?_) ?_
+  · rw [LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.dualBasis (e f' ![μ])]
     exact iSup_le fun k => le_iSup_of_le (μ, k) le_rfl
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i, j.2), (0, 0))
       (Submodule.mem_iSup_of_mem ![0, 0] (Submodule.mem_span_singleton_self _))
 
 include h in
-/-- The `bare ∂ e` block peels to its kinetic term. -/
-lemma peels_baree (f f' : Fin 3) :
-    Peels (gaugeLorentzMaps repGauge repLorentz) (h.bareePairSubmodule f f')
+/-- The `bare ∂ e` block reduces to its kinetic term. -/
+lemma reducesInvariantsTo_baree (f f' : Fin 3) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.bareePairSubmodule f f')
       (ℂ ∙ (h.bareeKineticBlock f f').kineticTerm) :=
-  ((h.bareeKineticBlock f f').peels).mono_left (h.bareePairSubmodule_le_blockSpan f f')
+  (h.bareeKineticBlock f f').reducesInvariantsTo.mono_left
+    (h.bareePairSubmodule_le_blockSpan f f')
 
 /-!
 
@@ -1083,13 +1104,14 @@ lemma kineticSpan_le_lorentzInvariants : h.kineticSpan ≤ repLorentz.invariants
 
 /-!
 
-## E. The blocks peel to the kinetic terms
+## E. The blocks reduce to the kinetic terms
 
 The weight-zero piece of the gauge weight decomposition lies in the join of the ten block
 submodules, hypercharge having already cut the hundred pairings down to ten; and each
-block peels to its kinetic term, by the three stages its `KineticBlock` package supplies.
-Joining the ten and then the nine generation pairs is `Peels.sup` and `Peels.iSup`, which
-is where the stability of the blocks and of the kinetic span is spent.
+block reduces to its kinetic term, by the three stages its `KineticBlock` package supplies.
+Joining the ten and then the nine generation pairs is `ReducesInvariantsTo.sup` and
+`ReducesInvariantsTo.iSup`, which is where the stability of the blocks and of the kinetic span is
+spent.
 
 -/
 
@@ -1183,9 +1205,10 @@ lemma massWeightSubmoduleGaugeWeightEight_piece_zero_le :
       LinearMap.range (e f' ![ν])) μ))
 
 include h in
-/-- The join of the ten block submodules peels to the kinetic span. -/
-lemma peels_kineticBlockSubmodule :
-    Peels (gaugeLorentzMaps repGauge repLorentz) h.kineticBlockSubmodule h.kineticSpan := by
+/-- The join of the ten block submodules reduces to the kinetic span. -/
+lemma reducesInvariantsTo_kineticBlockSubmodule :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) h.kineticBlockSubmodule
+      h.kineticSpan := by
   have hW : IsStableUnder (gaugeLorentzMaps repGauge repLorentz) h.kineticSpan :=
     h.isFixedBy_kineticSpan.isStableUnder
   have hS : ∀ f f' : Fin 3, IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
@@ -1219,7 +1242,7 @@ lemma peels_kineticBlockSubmodule :
       (h.isStableUnder_barLLPairSubmodule f f'))
       (h.isStableUnder_ebarePairSubmodule f f'))
       (h.isStableUnder_bareePairSubmodule f f')
-  have hP : ∀ f f' : Fin 3, Peels (gaugeLorentzMaps repGauge repLorentz)
+  have hP : ∀ f f' : Fin 3, ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (
         h.dbardPairSubmodule f f'
           ⊔ h.barddPairSubmodule f f'
@@ -1231,36 +1254,36 @@ lemma peels_kineticBlockSubmodule :
           ⊔ h.barLLPairSubmodule f f'
           ⊔ h.ebarePairSubmodule f f'
           ⊔ h.bareePairSubmodule f f') h.kineticSpan := fun f f' =>
-    Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      (Peels.sup
-      ((h.peels_dbard f f').mono_right (h.span_dbard_le_kineticSpan f f'))
-      ((h.peels_bardd f f').mono_right (h.span_bardd_le_kineticSpan f f'))
+    ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      (ReducesInvariantsTo.sup
+      ((h.reducesInvariantsTo_dbard f f').mono_right (h.span_dbard_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_bardd f f').mono_right (h.span_bardd_le_kineticSpan f f'))
       (h.isStableUnder_barddPairSubmodule f f') hW)
-      ((h.peels_ubaru f f').mono_right (h.span_ubaru_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_ubaru f f').mono_right (h.span_ubaru_le_kineticSpan f f'))
       (h.isStableUnder_ubaruPairSubmodule f f') hW)
-      ((h.peels_baruu f f').mono_right (h.span_baruu_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_baruu f f').mono_right (h.span_baruu_le_kineticSpan f f'))
       (h.isStableUnder_baruuPairSubmodule f f') hW)
-      ((h.peels_QbarQ f f').mono_right (h.span_QbarQ_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_QbarQ f f').mono_right (h.span_QbarQ_le_kineticSpan f f'))
       (h.isStableUnder_QbarQPairSubmodule f f') hW)
-      ((h.peels_barQQ f f').mono_right (h.span_barQQ_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_barQQ f f').mono_right (h.span_barQQ_le_kineticSpan f f'))
       (h.isStableUnder_barQQPairSubmodule f f') hW)
-      ((h.peels_LbarL f f').mono_right (h.span_LbarL_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_LbarL f f').mono_right (h.span_LbarL_le_kineticSpan f f'))
       (h.isStableUnder_LbarLPairSubmodule f f') hW)
-      ((h.peels_barLL f f').mono_right (h.span_barLL_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_barLL f f').mono_right (h.span_barLL_le_kineticSpan f f'))
       (h.isStableUnder_barLLPairSubmodule f f') hW)
-      ((h.peels_ebare f f').mono_right (h.span_ebare_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_ebare f f').mono_right (h.span_ebare_le_kineticSpan f f'))
       (h.isStableUnder_ebarePairSubmodule f f') hW)
-      ((h.peels_baree f f').mono_right (h.span_baree_le_kineticSpan f f'))
+      ((h.reducesInvariantsTo_baree f f').mono_right (h.span_baree_le_kineticSpan f f'))
       (h.isStableUnder_bareePairSubmodule f f') hW
   rw [kineticBlockSubmodule]
-  exact Peels.iSup (fun f => Peels.iSup (hP f) (hS f) hW)
+  exact ReducesInvariantsTo.iSup (fun f => ReducesInvariantsTo.iSup (hP f) (hS f) hW)
     (fun f => isStableUnder_iSup fun f' => hS f f') hW
 
 /-!
@@ -1268,7 +1291,7 @@ lemma peels_kineticBlockSubmodule :
 ## F. The classification as an equivalence
 
 The two directions meet. Forwards: hypercharge puts a gauge invariant in the weight-zero
-piece, section E peels that down to the kinetic span, and what is left over is in `S` and
+piece, section E reduces that to the kinetic span, and what is left over is in `S` and
 is itself invariant, the kinetic span being made of invariants. Backwards: the kinetic
 span is a space of gauge and Lorentz invariants of mass weight eight, so splitting `x` as
 `(x - y) + y` puts it back together.
@@ -1302,7 +1325,7 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
   have hxinv : ∀ p, gaugeLorentzMaps repGauge repLorentz p x = x :=
     forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hG, hL⟩
   obtain ⟨z, hz, y, hy, hzy⟩ := Submodule.mem_sup.1
-    (h.peels_kineticBlockSubmodule S hSstab x hblk hxinv)
+    (h.reducesInvariantsTo_kineticBlockSubmodule S hSstab x hblk hxinv)
   have hzG := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_invariants hz)
   have hzL := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_lorentzInvariants hz)
   refine ⟨y, hy, fun g => ?_, fun g => ?_, ?_⟩
