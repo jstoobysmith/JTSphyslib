@@ -46,6 +46,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.Transfo
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.AdjointCoeff
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
