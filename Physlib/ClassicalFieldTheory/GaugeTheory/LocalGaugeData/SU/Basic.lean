@@ -134,7 +134,7 @@ noncomputable def ofConstant : SU n →* JetSU n where
     · rw [mem_unitaryGroup_iff] at h1 ⊢
       rw [show star ((C : ℂ →+* JetRing).mapMatrix u.1) =
           (C : ℂ →+* JetRing).mapMatrix (star u.1) from
-          (LocalGaugeData.mapMatrix_C_star u.1).symm, ← map_mul, h1, map_one]
+          (JetRing.mapMatrix_C_star u.1).symm, ← map_mul, h1, map_one]
     · rw [← RingHom.map_det, h2, map_one]⟩
   map_one' := Subtype.ext (map_one ((C : ℂ →+* JetRing).mapMatrix))
   map_mul' u v := Subtype.ext (map_mul ((C : ℂ →+* JetRing).mapMatrix) u.1 v.1)
@@ -164,7 +164,7 @@ variable {n : ℕ}
 /-- The formal derivative in the direction `μ`, entrywise. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n →ₗ[ℝ] JetSUAlgebra n where
   toFun a := SUAlgebraOver.ofMatrix (a.1.map (pderiv μ))
-    (by rw [LocalGaugeData.star_map_pderiv, a.star_val])
+    (by rw [JetRing.star_map_pderiv, a.star_val])
     (by rw [← AddMonoidHom.map_trace, a.trace_val, map_zero])
   map_add' a b := Subtype.ext (by
     ext i j : 1
@@ -222,7 +222,7 @@ lemma C_smul (r : ℝ) (x : ℂ) : (C (r • x) : JetRing) = r • C x := by
 
 lemma star_mapMatrix_C (a : SUAlgebra n) :
     star ((C : ℂ →+* JetRing).mapMatrix a.1) = (C : ℂ →+* JetRing).mapMatrix a.1 := by
-  rw [← LocalGaugeData.mapMatrix_C_star, a.star_val]
+  rw [← JetRing.mapMatrix_C_star, a.star_val]
 
 lemma trace_mapMatrix_C (a : SUAlgebra n) : ((C : ℂ →+* JetRing).mapMatrix a.1).trace = 0 := by
   rw [RingHom.mapMatrix_apply, ← AddMonoidHom.map_trace, a.trace_val, map_zero]
@@ -269,7 +269,7 @@ lemma adjointValue_val (U : SU n) (a : SUAlgebra n) :
 /-- The Maurer–Cartan form `i (∂_μ U) U†` of an `SU(n)` gauge jet. -/
 noncomputable def mc (U : JetSU n) (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n :=
   SUAlgebraOver.ofMatrix (Complex.I • (U.1.map (pderiv μ) * star U.1))
-    (LocalGaugeData.star_mcMatrix μ (JetSU.val_mul_star U) (JetSU.star_mul_val U))
+    (JetRing.star_mcMatrix μ (JetSU.val_mul_star U) (JetSU.star_mul_val U))
     (JetSU.trace_mcMatrix μ U)
 
 @[simp]

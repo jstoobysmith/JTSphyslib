@@ -35,11 +35,10 @@ the laws once, `MatrixJets.faithful` shows the package is faithful, and
 
 ## iii. Table of contents
 
-- A. Matrix identities over the jet ring
-- B. The presentation
-- C. The local gauge data
-- D. The iterated derivative and faithfulness
-- E. The canonical factor
+- A. The presentation
+- B. The local gauge data
+- C. The iterated derivative and faithfulness
+- D. The canonical factor
 
 -/
 
@@ -51,82 +50,7 @@ namespace LocalGaugeData
 
 /-!
 
-## A. Matrix identities over the jet ring
-
--/
-
-section Identities
-
-variable {κ : Type}
-
-/-- Entrywise inclusion of constants commutes with the conjugate transpose. -/
-lemma mapMatrix_C_star [Fintype κ] [DecidableEq κ] (A : Matrix κ κ ℂ) :
-    (C : ℂ →+* JetRing).mapMatrix (star A) = star ((C : ℂ →+* JetRing).mapMatrix A) := by
-  ext i j
-  simp [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.star_apply]
-
-/-- Entrywise inclusion of constants commutes with complex scalars. -/
-lemma mapMatrix_C_smul [Fintype κ] [DecidableEq κ] (c : ℂ) (M : Matrix κ κ ℂ) :
-    (C : ℂ →+* JetRing).mapMatrix (c • M) = c • (C : ℂ →+* JetRing).mapMatrix M := by
-  ext i j : 1
-  simp only [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.smul_apply,
-    MvPowerSeries.smul_eq_C_mul, smul_eq_mul, map_mul]
-
-/-- The entrywise constant coefficient commutes with complex scalars. -/
-lemma mapMatrix_constantCoeff_smul [Fintype κ] [DecidableEq κ] (c : ℂ)
-    (M : Matrix κ κ JetRing) :
-    (constantCoeff : JetRing →+* ℂ).mapMatrix (c • M)
-      = c • (constantCoeff : JetRing →+* ℂ).mapMatrix M := by
-  ext i j
-  simp [RingHom.mapMatrix_apply, Matrix.map_apply]
-
-/-- The entrywise derivative commutes with the conjugate transpose. -/
-lemma star_map_pderiv [Fintype κ] (μ : Fin 1 ⊕ Fin 3) (A : Matrix κ κ JetRing) :
-    star (A.map (pderiv μ)) = (star A).map (pderiv μ) := by
-  ext i j : 1
-  simp only [Matrix.star_apply, Matrix.map_apply]
-  exact (JetRing.pderiv_star μ (A j i)).symm
-
-/-- Pulling a complex scalar out of the entrywise derivative. -/
-lemma map_pderiv_smul (μ : Fin 1 ⊕ Fin 3) (c : ℂ) (M : Matrix κ κ JetRing) :
-    (c • M).map (pderiv μ) = c • M.map (pderiv μ) :=
-  Matrix.ext fun _ _ => Derivation.map_smul _ _ _
-
-/-- The entrywise derivative of a difference. -/
-lemma map_pderiv_sub (μ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing) :
-    (M - N).map (pderiv μ) = M.map (pderiv μ) - N.map (pderiv μ) := by
-  ext i j : 1
-  simp only [Matrix.map_apply, Matrix.sub_apply, map_sub]
-
-/-- The entrywise derivative of the conjugate transpose of a unitary matrix, through the
-  differentiated unitarity relation. -/
-lemma map_pderiv_star_of_unitary [Fintype κ] [DecidableEq κ] (μ : Fin 1 ⊕ Fin 3)
-    {U : Matrix κ κ JetRing}
-    (hU : U * star U = 1) (hU' : star U * U = 1) :
-    (star U).map (pderiv μ) = -(star U * U.map (pderiv μ) * star U) := by
-  have h1 : U * (star U).map (pderiv μ) = -(U.map (pderiv μ) * star U) :=
-    eq_neg_of_add_eq_zero_right (by
-      rw [← JetRing.matrix_map_pderiv_mul, hU]
-      exact Matrix.ext fun i j => by
-        simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)])
-  calc (star U).map (pderiv μ)
-      = star U * U * (star U).map (pderiv μ) := by rw [hU', one_mul]
-    _ = -(star U * U.map (pderiv μ) * star U) := by
-        rw [mul_assoc, h1, mul_neg, ← mul_assoc]
-
-/-- The Maurer–Cartan matrix `i (∂_μ U) U†` of a unitary matrix of jets is hermitian. -/
-lemma star_mcMatrix [Fintype κ] [DecidableEq κ] (μ : Fin 1 ⊕ Fin 3) {U : Matrix κ κ JetRing}
-    (hU : U * star U = 1) (hU' : star U * U = 1) :
-    star (Complex.I • (U.map (pderiv μ) * star U)) = Complex.I • (U.map (pderiv μ) * star U) := by
-  rw [star_smul, star_mul, star_star, star_map_pderiv, map_pderiv_star_of_unitary μ hU hU',
-    Complex.star_def, Complex.conj_I, neg_smul, mul_neg, smul_neg, neg_neg, ← mul_assoc,
-    ← mul_assoc, hU, one_mul]
-
-end Identities
-
-/-!
-
-## B. The presentation
+## A. The presentation
 
 -/
 
@@ -192,7 +116,7 @@ variable {κ : Type} [Fintype κ] [DecidableEq κ] (M : MatrixJets κ G₀ 𝔤 
 
 /-!
 
-## C. The local gauge data
+## B. The local gauge data
 
 Every law is an identity of matrices, read through the injective maps `lieJ` and `toMat₀`.
 
@@ -207,13 +131,13 @@ lemma eval_ofConstant (g : G₀) : M.eval (M.ofConstant g) = g := by
 lemma evalLie_lie (a b : 𝔤J) : M.evalLie ⁅a, b⁆ = ⁅M.evalLie a, M.evalLie b⁆ := by
   refine M.lie₀_injective ?_
   rw [M.lie₀_bracket, M.lie₀_evalLie, M.lie₀_evalLie, M.lie₀_evalLie, M.lieJ_bracket,
-    mapMatrix_constantCoeff_smul, map_sub, map_mul, map_mul]
+    JetRing.mapMatrix_constantCoeff_smul, map_sub, map_mul, map_mul]
 
 lemma ofConstantLie_lie (a b : 𝔤) :
     M.ofConstantLie ⁅a, b⁆ = ⁅M.ofConstantLie a, M.ofConstantLie b⁆ := by
   refine M.lieJ_injective ?_
   rw [M.lieJ_bracket, M.lieJ_ofConstantLie, M.lieJ_ofConstantLie, M.lieJ_ofConstantLie,
-    M.lie₀_bracket, mapMatrix_C_smul, map_sub, map_mul, map_mul]
+    M.lie₀_bracket, JetRing.mapMatrix_C_smul, map_sub, map_mul, map_mul]
 
 lemma evalLie_ofConstantLie (a : 𝔤) : M.evalLie (M.ofConstantLie a) = a := by
   refine M.lie₀_injective ?_
@@ -232,7 +156,7 @@ lemma deriv_bracket (μ : Fin 1 ⊕ Fin 3) (x y : 𝔤J) :
     M.deriv μ ⁅x, y⁆ = ⁅M.deriv μ x, y⁆ + ⁅x, M.deriv μ y⁆ := by
   refine M.lieJ_injective ?_
   rw [map_add, M.lieJ_deriv, M.lieJ_bracket, M.lieJ_bracket, M.lieJ_bracket, M.lieJ_deriv,
-    M.lieJ_deriv, map_pderiv_smul, map_pderiv_sub, JetRing.matrix_map_pderiv_mul,
+    M.lieJ_deriv, JetRing.map_pderiv_smul, JetRing.map_pderiv_sub, JetRing.matrix_map_pderiv_mul,
     JetRing.matrix_map_pderiv_mul, ← smul_add]
   congr 1
   abel
@@ -320,14 +244,15 @@ lemma maurerCartan_structure (U : GJ) (μ ν : Fin 1 ⊕ Fin 3) :
     rw [JetRing.matrix_map_pderiv_mul, JetRing.matrix_map_pderiv_mul,
       show (A.map (pderiv ν)).map (pderiv μ) = (A.map (pderiv μ)).map (pderiv ν)
         from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _,
-      map_pderiv_star_of_unitary μ hU hU', map_pderiv_star_of_unitary ν hU hU']
+      JetRing.map_pderiv_star_of_unitary μ hU hU', JetRing.map_pderiv_star_of_unitary ν hU hU']
     simp only [mul_neg, ← mul_assoc]
     abel
   have hcancel : ∀ P Q : Matrix κ κ JetRing, (P - Q) + (-P - -Q) = 0 :=
     fun P Q => by abel
   refine M.lieJ_injective ?_
   rw [map_add, map_sub, M.lieJ_deriv, M.lieJ_deriv, M.lieJ_bracket, M.lieJ_maurerCartan,
-    M.lieJ_maurerCartan, map_zero, map_pderiv_smul, map_pderiv_smul, ← smul_sub, ← hA, key]
+    M.lieJ_maurerCartan, map_zero, JetRing.map_pderiv_smul, JetRing.map_pderiv_smul, ← smul_sub,
+    ← hA, key]
   simp only [smul_mul_smul_comm, Complex.I_mul_I, neg_one_smul, ← smul_add, hcancel, smul_zero]
 
 lemma deriv_adjoint (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J) :
@@ -336,7 +261,7 @@ lemma deriv_adjoint (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J) :
   set V := M.toMatJ U with hV
   have hVV : star V * V = 1 := M.star_toMatJ_mul U
   have hq : (star V).map (pderiv μ) = -(star V * V.map (pderiv μ) * star V) :=
-    map_pderiv_star_of_unitary μ (M.toMatJ_mul_star U) hVV
+    JetRing.map_pderiv_star_of_unitary μ (M.toMatJ_mul_star U) hVV
   refine M.lieJ_injective ?_
   rw [map_sub, M.lieJ_deriv, M.lieJ_adjoint, M.lieJ_adjoint, M.lieJ_bracket,
     M.lieJ_maurerCartan, M.lieJ_adjoint, M.lieJ_deriv, JetRing.matrix_map_pderiv_mul,
@@ -399,7 +324,7 @@ noncomputable def toLocalGaugeData : LocalGaugeData G₀ 𝔤 GJ 𝔤J where
 
 /-!
 
-## D. The iterated derivative and faithfulness
+## C. The iterated derivative and faithfulness
 
 -/
 
@@ -430,7 +355,7 @@ lemma lie₀_evalLie_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) 
 /-- **A package presented by matrices is faithful**: a jet is determined entrywise by the
   constant coefficients of its derivatives, and a jet with vanishing Maurer–Cartan form has
   constant entries. -/
-theorem faithful : M.toLocalGaugeData.Faithful where
+lemma faithful : M.toLocalGaugeData.Faithful where
   ext_of_evalLie_iteratedDeriv {x y} h := by
     refine M.lieJ_injective (Matrix.ext fun i j => ?_)
     refine JetRing.ext_of_constantCoeff_foldl_pderiv fun s => ?_
@@ -457,7 +382,7 @@ theorem faithful : M.toLocalGaugeData.Faithful where
 
 /-!
 
-## E. The canonical factor
+## D. The canonical factor
 
 -/
 

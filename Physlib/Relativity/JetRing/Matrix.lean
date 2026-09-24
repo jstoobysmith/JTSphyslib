@@ -550,4 +550,79 @@ lemma matrix_constantCoeff_foldl_pderiv_mul {κ : Type} [Fintype κ] [DecidableE
   rw [Function.comp_apply, Matrix.mul_apply]
   exact Finset.sum_congr rfl fun k _ => by rw [Matrix.map_apply, Matrix.map_apply]
 
+/-!
+
+## Conjugation, scalars and derivatives of matrices of jets
+
+-/
+
+section MatrixIdentities
+
+variable {κ : Type}
+
+/-- Entrywise inclusion of constants commutes with the conjugate transpose. -/
+lemma mapMatrix_C_star [Fintype κ] [DecidableEq κ] (A : Matrix κ κ ℂ) :
+    (C : ℂ →+* JetRing).mapMatrix (star A) = star ((C : ℂ →+* JetRing).mapMatrix A) := by
+  ext i j
+  simp [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.star_apply]
+
+/-- Entrywise inclusion of constants commutes with complex scalars. -/
+lemma mapMatrix_C_smul [Fintype κ] [DecidableEq κ] (c : ℂ) (M : Matrix κ κ ℂ) :
+    (C : ℂ →+* JetRing).mapMatrix (c • M) = c • (C : ℂ →+* JetRing).mapMatrix M := by
+  ext i j : 1
+  simp only [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.smul_apply,
+    MvPowerSeries.smul_eq_C_mul, smul_eq_mul, map_mul]
+
+/-- The entrywise constant coefficient commutes with complex scalars. -/
+lemma mapMatrix_constantCoeff_smul [Fintype κ] [DecidableEq κ] (c : ℂ)
+    (M : Matrix κ κ JetRing) :
+    (constantCoeff : JetRing →+* ℂ).mapMatrix (c • M)
+      = c • (constantCoeff : JetRing →+* ℂ).mapMatrix M := by
+  ext i j
+  simp [RingHom.mapMatrix_apply, Matrix.map_apply]
+
+/-- The entrywise derivative commutes with the conjugate transpose. -/
+lemma star_map_pderiv [Fintype κ] (μ : Fin 1 ⊕ Fin 3) (A : Matrix κ κ JetRing) :
+    star (A.map (pderiv μ)) = (star A).map (pderiv μ) := by
+  ext i j : 1
+  simp only [Matrix.star_apply, Matrix.map_apply]
+  exact (JetRing.pderiv_star μ (A j i)).symm
+
+/-- Pulling a complex scalar out of the entrywise derivative. -/
+lemma map_pderiv_smul (μ : Fin 1 ⊕ Fin 3) (c : ℂ) (M : Matrix κ κ JetRing) :
+    (c • M).map (pderiv μ) = c • M.map (pderiv μ) :=
+  Matrix.ext fun _ _ => Derivation.map_smul _ _ _
+
+/-- The entrywise derivative of a difference. -/
+lemma map_pderiv_sub (μ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing) :
+    (M - N).map (pderiv μ) = M.map (pderiv μ) - N.map (pderiv μ) := by
+  ext i j : 1
+  simp only [Matrix.map_apply, Matrix.sub_apply, map_sub]
+
+/-- The entrywise derivative of the conjugate transpose of a unitary matrix, through the
+  differentiated unitarity relation. -/
+lemma map_pderiv_star_of_unitary [Fintype κ] [DecidableEq κ] (μ : Fin 1 ⊕ Fin 3)
+    {U : Matrix κ κ JetRing}
+    (hU : U * star U = 1) (hU' : star U * U = 1) :
+    (star U).map (pderiv μ) = -(star U * U.map (pderiv μ) * star U) := by
+  have h1 : U * (star U).map (pderiv μ) = -(U.map (pderiv μ) * star U) :=
+    eq_neg_of_add_eq_zero_right (by
+      rw [← JetRing.matrix_map_pderiv_mul, hU]
+      exact Matrix.ext fun i j => by
+        simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)])
+  calc (star U).map (pderiv μ)
+      = star U * U * (star U).map (pderiv μ) := by rw [hU', one_mul]
+    _ = -(star U * U.map (pderiv μ) * star U) := by
+        rw [mul_assoc, h1, mul_neg, ← mul_assoc]
+
+/-- The Maurer–Cartan matrix `i (∂_μ U) U†` of a unitary matrix of jets is hermitian. -/
+lemma star_mcMatrix [Fintype κ] [DecidableEq κ] (μ : Fin 1 ⊕ Fin 3) {U : Matrix κ κ JetRing}
+    (hU : U * star U = 1) (hU' : star U * U = 1) :
+    star (Complex.I • (U.map (pderiv μ) * star U)) = Complex.I • (U.map (pderiv μ) * star U) := by
+  rw [star_smul, star_mul, star_star, star_map_pderiv, map_pderiv_star_of_unitary μ hU hU',
+    Complex.star_def, Complex.conj_I, neg_smul, mul_neg, smul_neg, neg_neg, ← mul_assoc,
+    ← mul_assoc, hU, one_mul]
+
+end MatrixIdentities
+
 end JetRing
