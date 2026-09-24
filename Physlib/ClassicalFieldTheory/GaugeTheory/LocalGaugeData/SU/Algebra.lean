@@ -88,24 +88,16 @@ lemma ext {a b : SUAlgebraOver R n} (h : a.1 = b.1) : a = b := Subtype.ext h
 
 -/
 
-/-- Conjugation `a ↦ U a U†` by a unitary matrix, as a real-linear map of `su(n)`. -/
-noncomputable def conjMap (U : unitaryGroup (Fin n) R) :
-    SUAlgebraOver R n →ₗ[ℝ] SUAlgebraOver R n where
-  toFun a := ofMatrix (U.1 * a.1 * star U.1)
-    (by rw [star_mul, star_mul, star_star, a.star_val, mul_assoc])
-    (by
-      rw [Matrix.trace_mul_comm, ← mul_assoc, show star U.1 * U.1 = 1 from
-        (Unitary.mem_iff.mp U.2).1, one_mul, a.trace_val])
-  map_add' a b := Subtype.ext (by simp [mul_add, add_mul])
-  map_smul' r a := Subtype.ext (by simp)
-
-@[simp]
-lemma conjMap_val (U : unitaryGroup (Fin n) R) (a : SUAlgebraOver R n) :
-    (conjMap U a).1 = U.1 * a.1 * star U.1 := rfl
-
-/-- **The conjugation representation** of the unitary group on `su(n)`. -/
+/-- **The conjugation representation** of the unitary group on `su(n)`: `a ↦ U a U†`. -/
 noncomputable def conj : Representation ℝ (unitaryGroup (Fin n) R) (SUAlgebraOver R n) where
-  toFun := conjMap
+  toFun U :=
+    { toFun a := ofMatrix (U.1 * a.1 * star U.1)
+        (by rw [star_mul, star_mul, star_star, a.star_val, mul_assoc])
+        (by
+          rw [Matrix.trace_mul_comm, ← mul_assoc, show star U.1 * U.1 = 1 from
+            (Unitary.mem_iff.mp U.2).1, one_mul, a.trace_val])
+      map_add' a b := Subtype.ext (by simp [mul_add, add_mul])
+      map_smul' r a := Subtype.ext (by simp) }
   map_one' := LinearMap.ext fun a => Subtype.ext (by simp)
   map_mul' U V := LinearMap.ext fun a => Subtype.ext (by simp [star_mul, mul_assoc])
 
