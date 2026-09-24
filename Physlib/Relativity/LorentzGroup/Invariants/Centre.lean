@@ -28,9 +28,8 @@ The subspaces that arise there are spans of symbol families, so section B reads 
 such a span off the sign of the value space: the covariant-derivative slots of a family
 obeying `IsLorentzCovDerivTransforms` are inert at the centre, and only the value index moves.
 
-This replaces, for the Standard Model sectors, the boost-weight parity count: odd boost weight
-along a spatial axis and a sign of `-1` at the centre are the same statement about the same
-subspaces, and the centre needs neither a grading nor a light-cone basis to say it.
+The argument uses the central element alone: it needs neither a grading nor a light-cone
+basis.
 
 - A. The sign a subspace carries at the centre
 - B. The sign of a symbol family
@@ -116,8 +115,8 @@ lemma range_le_centreEigenspace_neg_one {repLorentz : Representation â„‚ SL(2,â„
 ## C. Signs multiply
 
 The Lorentz action on the field algebra is by algebra maps, so the sign a product carries is
-the product of the signs of its factors. This is the whole of the bookkeeping that the
-boost-weight convolution used to do: two Weyl indices cancel and an odd number does not.
+the product of the signs of its factors. This is the whole of the bookkeeping: two Weyl
+indices cancel and an odd number does not.
 
 -/
 

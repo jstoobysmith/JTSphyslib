@@ -65,10 +65,8 @@ variable [Fintype ι]
 /-- A vector lies in the component span exactly when it is a combination `∑ i, c i • T i`. -/
 lemma mem_componentSpan_iff (T : ι → B) (x : B) :
     x ∈ componentSpan T ↔ ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-  classical
-  rw [componentSpan, ← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-    LinearMap.mem_range]
-  simp only [Fintype.linearCombination_apply, eq_comm]
+  rw [componentSpan, ← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun]
+  exact exists_congr fun _ => eq_comm
 
 /-- Every combination of the components lies in their span. -/
 lemma sum_smul_mem_componentSpan (T : ι → B) (c : ι → ℂ) : ∑ i, c i • T i ∈ componentSpan T :=
@@ -136,7 +134,7 @@ lemma quotient (hT : IsLorentzCovariant n B repLorentz T) (S : Submodule ℂ B)
 
 /-- A Lorentz invariant lying in the span of the components is the contraction of a coefficient
   tensor that the Lorentz matrices themselves fix. -/
-theorem exists_isInvariantCoeff_of_mem_componentSpan
+lemma exists_isInvariantCoeff_of_mem_componentSpan
     (hT : IsLorentzCovariant n B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=

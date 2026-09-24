@@ -56,8 +56,8 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B] {ι : Type*} [Fintype ι]
   of them. -/
 lemma mem_iSup_span_singleton_iff (T : ι → B) (x : B) :
     x ∈ (⨆ i, ℂ ∙ T i) ↔ ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-  rw [← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination, LinearMap.mem_range]
-  simp only [Fintype.linearCombination_apply, eq_comm]
+  rw [← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun]
+  exact exists_congr fun _ => eq_comm
 
 omit [Fintype ι] in
 /-- Every component lies in the span. -/

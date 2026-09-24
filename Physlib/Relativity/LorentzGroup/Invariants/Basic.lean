@@ -37,8 +37,11 @@ transpose is the same product for the transposed matrix, which is again a Lorent
 from `SL(2,ℂ)`, so `exists_isInvariantCoeff_of_mem_span` applies. Writing each slot of a
 coefficient tensor in the light-cone basis of an axis splits it into pieces that a boost
 scales by powers of its parameter, and an invariant keeps only the piece of weight zero:
-`IsInvariantCoeff.lightConeComponent_eq_zero`. The Weyl patterns run the same argument on the
-second step with the Weyl weight bases of `Fermions.Weyl.BoostWeight`.
+`IsInvariantCoeff.lightConeComponent_eq_zero`. Section C records what the half turns about the
+axes and the cyclic rotation of the axes force on an invariant coefficient tensor, for any
+number of slots. The Weyl patterns need only the second step: there a boost and a half turn
+act diagonally or antidiagonally on the coefficients, and the rank-specific files read the
+constraints off directly.
 -/
 
 @[expose] public section
@@ -88,7 +91,7 @@ noncomputable def actMatₗ (M : ι → ι → ℂ) : (ι → ℂ) →ₗ[ℂ] (
 
 open scoped InnerProductSpace in
 /-- Across the standard inner product the action of `M` becomes that of its conjugate
-  transpose. The action is not unitary, and is not used to be. -/
+  transpose. The action is not unitary, and need not be. -/
 lemma inner_actMat (M N : ι → ι → ℂ) (hN : ∀ a d, N a d = star (M d a))
     (u v : EuclideanSpace ℂ ι) :
     ⟪u, WithLp.toLp 2 (actMat M v.ofLp)⟫_ℂ = ⟪WithLp.toLp 2 (actMat N u.ofLp), v⟫_ℂ := by
@@ -99,7 +102,7 @@ lemma inner_actMat (M N : ι → ι → ℂ) (hN : ∀ a d, N a d = star (M d a)
 
 /-- An invariant of the span is the contraction of a coefficient function that every `M g`
   fixes, provided the matrices are closed under conjugate transposition. -/
-theorem exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → ι → ι → ℂ)
+lemma exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → ι → ι → ℂ)
     (hT : ∀ (g : G) l, φ g (T l) = ∑ a, M g a l • T a)
     (hM : ∀ g : G, ∃ g' : G, ∀ a d, M g' a d = star (M g d a))
     {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
@@ -201,7 +204,7 @@ end Monoid
 
 /-- An invariant of the span is the contraction of an invariant coefficient tensor: the
   adjoint of `act Λ` is the action of `Λᵀ`, which is the Lorentz matrix of `g†`. -/
-theorem exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
+lemma exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
     {repLorentz : Representation ℂ SL(2,ℂ) B}
     (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
       (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
@@ -241,15 +244,6 @@ lemma toLorentzGroup_boostAxis_symm (i : Fin 3) {t : ℝ} (ht : t ≠ 0) (a b : 
   congrFun (congrFun
     (SL2C.toLorentzGroup_conjTranspose (SL2C.boostAxis_conjTranspose i t ht).symm) a) b
 
-/-- The boost with parameter `t` multiplies a light-cone component by `t` raised to the weight
-  of `κ`, the sum of the weights of the directions `κ` picks. -/
-lemma lightConeComponent_act_boostAxis (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ)
-    (κ : Fin n → Fin 4) {t : ℝ} (ht : t ≠ 0) :
-    lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.boostAxis i t ht)).1 c) κ
-      = ((t : ℝ) : ℂ) ^ (∑ s, lightConeWeight (κ s)) * lightConeComponent i c κ :=
-  lightConeComponent_act i _ c κ _ fun d => by
-    simpa only [toLorentzGroup_boostAxis_symm i ht (d _)] using sum_prod_lightConeCoeff i κ d ht
-
 /-- An invariant coefficient tensor has no light-cone component of nonzero weight: the boost at
   `t = 2` would rescale such a component by a factor other than `1`. -/
 lemma IsInvariantCoeff.lightConeComponent_eq_zero {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ}
@@ -270,6 +264,87 @@ lemma eq_sum_lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) →
   rw [Finset.sum_comm]
   simp only [← Finset.sum_mul, sum_prod_lightConeCoeffInv, ite_mul, one_mul, zero_mul,
     Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+
+/-!
+
+## C. The half turns and the cyclic rotation on coefficient tensors
+
+The half turn `SL2C.halfTurn k` has a diagonal Lorentz matrix with the signs `halfTurnSign k`,
+so it multiplies the coefficient at `d` by the product of the signs of the slots of `d`. That
+product is `1` or `-1`, and where it is `-1` invariance forces the coefficient to vanish.
+
+The cyclic rotation `SL2C.rotationCycle` has the permutation matrix of `cycDir`, so it moves
+coefficients rather than rescaling them, and invariance says that a coefficient tensor takes
+the same value at `d` and at `cycIdx d`, the index vector with every slot rotated.
+
+-/
+
+/-- The half turn about the axis `k` multiplies the coefficient at `a` by the product of the
+  signs `halfTurnSign k` of the slots of `a`. -/
+lemma act_halfTurn (k : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin n → Fin 1 ⊕ Fin 3) :
+    act (SL2C.toLorentzGroup (SL2C.halfTurn k)).1 c a
+      = ((∏ s, halfTurnSign k (a s) : ℤ) : ℂ) * c a := by
+  rw [act, Finset.sum_eq_single a]
+  · rw [mul_comm]
+    push_cast
+    congr 1
+    exact Finset.prod_congr rfl fun s _ => by
+      rw [SL2C.toLorentzGroup_halfTurn_apply, ite_eq_left rfl, Complex.ofReal_intCast]
+  · intro d _ hd
+    obtain ⟨s, hs⟩ := Function.ne_iff.1 hd.symm
+    rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
+    rw [SL2C.toLorentzGroup_halfTurn_apply, ite_eq_right hs, Complex.ofReal_zero]
+  · exact fun h => absurd (Finset.mem_univ a) h
+
+/-- The sign a half turn attaches to a coefficient is `1` or `-1`, being a product of such
+  signs. -/
+lemma prod_halfTurnSign_eq_one_or (k : Fin 3) (d : Fin n → Fin 1 ⊕ Fin 3) :
+    ∏ s, halfTurnSign k (d s) = 1 ∨ ∏ s, halfTurnSign k (d s) = -1 := by
+  refine Finset.prod_induction _ (fun m : ℤ => m = 1 ∨ m = -1) ?_ (Or.inl rfl) fun s _ => ?_
+  · rintro a b (rfl | rfl) (rfl | rfl) <;> norm_num
+  · unfold halfTurnSign
+    split_ifs <;> simp
+
+/-- An invariant coefficient tensor vanishes at every index vector that some half turn
+  negates. -/
+lemma IsInvariantCoeff.eq_zero_of_prod_halfTurnSign_ne_one {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) {k : Fin 3} {d : Fin n → Fin 1 ⊕ Fin 3}
+    (hd : ∏ s, halfTurnSign k (d s) ≠ 1) : c d = 0 := by
+  have h := congrFun (hc (SL2C.halfTurn k)) d
+  rw [act_halfTurn, (prod_halfTurnSign_eq_one_or k d).resolve_left hd] at h
+  push_cast at h
+  linear_combination (-2⁻¹ : ℂ) * h
+
+/-- The relabelling `cycDir`, which fixes time and sends `x → y → z → x`, applied in every
+  slot. -/
+def cycIdx (d : Fin n → Fin 1 ⊕ Fin 3) : Fin n → Fin 1 ⊕ Fin 3 := fun s => cycDir (d s)
+
+/-- Cycling the axes three times is the identity. -/
+lemma cycIdx_cycIdx_cycIdx (d : Fin n → Fin 1 ⊕ Fin 3) : cycIdx (cycIdx (cycIdx d)) = d :=
+  funext fun s => cycDir_cycDir_cycDir (d s)
+
+/-- The cyclic rotation permutes coefficients: the new coefficient at `a` is the old one at `a`
+  cycled back. -/
+lemma act_rotationCycle (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin n → Fin 1 ⊕ Fin 3) :
+    act (SL2C.toLorentzGroup SL2C.rotationCycle).1 c a = c (cycIdx (cycIdx a)) := by
+  rw [act, Finset.sum_eq_single (cycIdx (cycIdx a))]
+  · rw [Finset.prod_eq_one fun s _ => ?_, mul_one]
+    rw [SL2C.toLorentzGroup_rotationCycle_apply, ite_eq_left, Complex.ofReal_one]
+    exact (congrFun (cycIdx_cycIdx_cycIdx a) s).symm
+  · intro d _ hd
+    have hne : cycIdx d ≠ a := fun h => hd (by rw [← h, cycIdx_cycIdx_cycIdx])
+    obtain ⟨s, hs⟩ := Function.ne_iff.1 hne
+    rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
+    rw [SL2C.toLorentzGroup_rotationCycle_apply,
+      ite_eq_right fun h : a s = cycDir (d s) => hs h.symm, Complex.ofReal_zero]
+  · exact fun h => absurd (Finset.mem_univ _) h
+
+/-- An invariant coefficient tensor is constant on the orbits of the cyclic rotation. -/
+lemma IsInvariantCoeff.apply_cycIdx {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    (d : Fin n → Fin 1 ⊕ Fin 3) : c (cycIdx d) = c d := by
+  have h := congrFun (hc SL2C.rotationCycle) (cycIdx d)
+  rw [act_rotationCycle, cycIdx_cycIdx_cycIdx] at h
+  exact h.symm
 
 end Spacetime
 

@@ -45,53 +45,12 @@ open TensorProduct Matrix MatrixGroups SL2C Invariants
 
 ## A. The half turn about a spatial axis
 
-The half turn about the axis `i` is the rotation by `π` about it, `SL2C.halfTurn i`. Its
-Lorentz matrix is diagonal, fixing time and the axis and negating the two transverse
-directions, so on the light-cone directions of that axis it is `1` on the two of weight
-`±2` and `-1` on the two transverse ones (`lightConeSign`).
+The half turn about the axis `i` is the rotation by `π` about it, `SL2C.halfTurn i` from
+`SL2C.AxisRotations`. Its Lorentz matrix is diagonal, fixing time and the axis and negating
+the two transverse directions, so on the light-cone directions of that axis it is `1` on the
+two of weight `±2` and `-1` on the two transverse ones (`lightConeSign`).
 
 -/
-
-namespace SL2C
-
-/-- The half turn about the axis `i`: the rotation by `π` about the `i`-th spatial
-  axis, written in `SL(2,ℂ)`. -/
-noncomputable def halfTurn : Fin 3 → SL(2,ℂ)
-  | 0 => ⟨!![0, -Complex.I; -Complex.I, 0], by
-      rw [Matrix.det_fin_two_of]
-      simp [Complex.I_mul_I]⟩
-  | 1 => ⟨!![0, -1; 1, 0], by
-      rw [Matrix.det_fin_two_of]
-      simp⟩
-  | 2 => ⟨!![-Complex.I, 0; 0, Complex.I], by
-      rw [Matrix.det_fin_two_of]
-      simp [Complex.I_mul_I]⟩
-
-/-- The matrix entries of the half turn about the `x`-axis. -/
-@[simp] lemma halfTurn_zero_apply (j k : Fin 2) :
-    (halfTurn 0).1 j k = (!![0, -Complex.I; -Complex.I, 0]) j k := rfl
-
-/-- The matrix entries of the half turn about the `y`-axis. -/
-@[simp] lemma halfTurn_one_apply (j k : Fin 2) :
-    (halfTurn 1).1 j k = (!![0, -1; 1, 0] : Matrix (Fin 2) (Fin 2) ℂ) j k := rfl
-
-/-- The matrix entries of the half turn about the `z`-axis. -/
-@[simp] lemma halfTurn_two_apply (j k : Fin 2) :
-    (halfTurn 2).1 j k = (!![-Complex.I, 0; 0, Complex.I]) j k := rfl
-
-/-- The Lorentz matrix of the half turn about the axis `i` is diagonal: it fixes the
-  time direction and the axis, and negates the two transverse directions. -/
-lemma toLorentzGroup_halfTurn_apply (i : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
-    (toLorentzGroup (halfTurn i)).1 a b =
-      if a = b then (if b = Sum.inl 0 ∨ b = Sum.inr i then 1 else -1) else 0 := by
-  refine Complex.ofReal_injective ?_
-  rw [toLorentzGroup_eq_trace, PauliMatrix.trace_pauliSelfAdjoint'_mul_apply]
-  fin_cases i <;>
-    rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
-    simp [PauliMatrix.pauliSelfAdjoint', PauliMatrix.pauliMatrix, Matrix.mul_apply,
-      Matrix.conjTranspose_apply, Fin.sum_univ_two, Complex.ext_iff]
-
-end SL2C
 
 /-- The sign the half turn about an axis gives each light-cone direction of that axis: `1` on
   the two of weight `±2`, `-1` on the two transverse ones. -/
@@ -107,9 +66,9 @@ lemma sum_halfTurn_lightConeCoeff (i : Fin 3) (κ : Fin 4) (ν : Fin 1 ⊕ Fin 3
   rcases ν with a | j
   · rw [Subsingleton.elim a 0]
     fin_cases i <;> fin_cases κ <;>
-      simp [lightConeCoeff, lightConeSign, Fintype.sum_sum_type]
+      simp [lightConeCoeff, lightConeSign, halfTurnSign, Fintype.sum_sum_type]
   · fin_cases i <;> fin_cases j <;> fin_cases κ <;>
-      simp [lightConeCoeff, lightConeSign, Fintype.sum_sum_type]
+      simp [lightConeCoeff, lightConeSign, halfTurnSign, Fintype.sum_sum_type]
 
 /-- The scalar behind the action of the half turn on a light-cone multi-index: the half
   turn acts slot by slot, so the product of the per-slot signs factors out. -/
@@ -157,22 +116,13 @@ negates exactly those, so they vanish too and nothing is left.
 
 -/
 
-/-- The Lorentz matrix of the half turn is diagonal, hence symmetric. -/
-lemma toLorentzGroup_halfTurn_symm (i : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
-    (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 a b
-      = (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 b a := by
-  rw [SL2C.toLorentzGroup_halfTurn_apply, SL2C.toLorentzGroup_halfTurn_apply]
-  by_cases h : a = b
-  · rw [h]
-  · rw [ite_eq_right h, ite_eq_right (Ne.symm h)]
-
 /-- The half turn multiplies a light-cone component by the product of the signs of its slots. -/
 lemma lightConeComponent_act_halfTurn {n : ℕ} (i : Fin 3)
     (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) :
     lightConeComponent i (act (SL2C.toLorentzGroup (SL2C.halfTurn i)).1 c) κ
       = ((∏ s, lightConeSign (κ s) : ℤ) : ℂ) * lightConeComponent i c κ :=
   lightConeComponent_act i _ c κ _ fun d => by
-    simpa only [toLorentzGroup_halfTurn_symm i (d _)] using
+    simpa only [SL2C.toLorentzGroup_halfTurn_symm i (d _)] using
       sum_prod_halfTurn_lightConeCoeff i κ d
 
 /-- An invariant coefficient tensor has no weight-zero light-cone component either, the half

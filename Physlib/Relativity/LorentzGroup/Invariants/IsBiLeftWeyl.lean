@@ -24,15 +24,17 @@ invariant.
 
 The components are vectors `T a` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, and `IsBiLeftWeyl` says the group moves each index by the matrix
-of `g` (B). An invariant of `componentSpan T` is `∑_a c_a • T a` for a coefficient function `c`
-fixed by the action `act` (B, from `Invariants.Basic`), and the argument is the same-handedness
-twin of `IsLeftRightWeyl`: the coefficients move by the component matrix `g_{a₁ l₁} g_{a₂ l₂}`
-applied to `c`, whose left eigenvectors for an axis boost take the conjugated Weyl weight basis
-on both slots (A, C). An invariant is fixed by the weight-zero projection along each axis; the
-three projections sum to `2 - swap` (D), and `M c = 3 c` says exactly that `c` is antisymmetric,
-which is the `ε` symbol (E). Section F divides out `S`.
+of `g` (A). An invariant of `componentSpan T` is `∑_a c_a • T a` for a coefficient function `c`
+fixed by the action `act` (A, from `Invariants.Basic`), where `g` moves `c` by the component
+matrix `g_{a₁ d₁} g_{a₂ d₂}`, with no complex conjugation. Two elements of `SL(2,ℂ)` pin `c`
+down (C). The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²` and `c (1, 1)` by
+`t⁻²`, so these vanish. The half turn `!![0, -i; -i, 0]` about `x` swaps the two values of each
+index with a factor `-i`, so it sends `c (a₁, a₂)` to `(-i)² c (1 - a₁, 1 - a₂)`, and invariance
+gives `c (1, 0) = -c (0, 1)`. What is left is `c (0, 1)` times the `ε` symbol (B). Invariance
+under the whole group implies invariance under these two elements; nothing is claimed about
+the group they generate. Section D divides out `S`.
 
-Sections G and H transport the classification to dual Weyl indices, which transform by
+Sections E and F transport the classification to dual Weyl indices, which transform by
 `(g⁻¹)ᵀ` on an undotted slot and by `(g⁻¹)ᴴ` on a dotted one. The symplectic form `ε` of
 `Fermions.Weyl.Metric` satisfies `ε g⁻¹ = gᵀ ε`, so re-indexing both slots by `ε` turns a
 dual family into a fundamental one for the same representation. Entrywise conjugation is the
@@ -49,61 +51,7 @@ open TensorProduct Matrix MatrixGroups SL2C Invariants
 
 /-!
 
-## A. The weight basis of a pair of left-handed indices
-
-Both indices are graded by the Weyl weight basis of `Fermions.Weyl.BoostWeight`, so the weight
-basis of the pair is its tensor square and the weight is `pairWeight`. The axis boosts are
-Hermitian, so as left eigenvectors of the coefficient matrix both slots take the conjugated
-basis.
-
--/
-
-/-- The axis-`i` weight basis of the coefficients of a pair of left-handed indices. -/
-def biLeftCoeff (i : Fin 3) (κ α : Fin 2 × Fin 2) : ℂ :=
-  weylCoeffC i κ.1 α.1 * weylCoeffC i κ.2 α.2
-
-/-- The standard basis of the coefficients written back in the axis-`i` weight basis. -/
-noncomputable def biLeftCoeffInv (i : Fin 3) (α κ : Fin 2 × Fin 2) : ℂ :=
-  weylCoeffInvC i α.1 κ.1 * weylCoeffInvC i α.2 κ.2
-
-/-- The pair weight basis is a basis: the two coefficient matrices are inverse. -/
-lemma sum_biLeftCoeffInv_mul (i : Fin 3) (α β : Fin 2 × Fin 2) :
-    ∑ κ : Fin 2 × Fin 2, biLeftCoeffInv i α κ * biLeftCoeff i κ β
-      = if α = β then 1 else 0 := by
-  have hfac : (∑ κ₁, weylCoeffInvC i α.1 κ₁ * weylCoeffC i κ₁ β.1)
-      * (∑ κ₂, weylCoeffInvC i α.2 κ₂ * weylCoeffC i κ₂ β.2)
-      = ∑ κ : Fin 2 × Fin 2, biLeftCoeffInv i α κ * biLeftCoeff i κ β := by
-    rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
-    exact Finset.sum_congr rfl fun κ₁ _ => Finset.sum_congr rfl fun κ₂ _ => by
-      simp only [biLeftCoeff, biLeftCoeffInv]
-      ring
-  rw [← hfac, sum_weylCoeffInvC_mul, sum_weylCoeffInvC_mul]
-  obtain ⟨α₁, α₂⟩ := α
-  obtain ⟨β₁, β₂⟩ := β
-  by_cases h1 : α₁ = β₁ <;> by_cases h2 : α₂ = β₂ <;> simp [h1, h2, Prod.mk.injEq]
-
-/-- The pair weight basis consists of left eigenvectors of the coefficient matrix
-  `g_{a₁ l₁} g_{a₂ l₂}` of the axis-`i` boost, with eigenvalue `t ^ pairWeight κ`. -/
-lemma sum_boostAxis_biLeftCoeff (i : Fin 3) (κ l : Fin 2 × Fin 2) {t : ℝ} (ht : t ≠ 0) :
-    ∑ a : Fin 2 × Fin 2, biLeftCoeff i κ a
-        * ((SL2C.boostAxis i t ht).1 a.1 l.1 * (SL2C.boostAxis i t ht).1 a.2 l.2)
-      = ((t : ℝ) : ℂ) ^ (pairWeight κ) * biLeftCoeff i κ l := by
-  have htc : ((t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht
-  have hfac : (∑ a₁, star ((SL2C.boostAxis i t ht).1 l.1 a₁) * weylCoeffC i κ.1 a₁)
-      * (∑ a₂, star ((SL2C.boostAxis i t ht).1 l.2 a₂) * weylCoeffC i κ.2 a₂)
-      = ∑ a : Fin 2 × Fin 2, biLeftCoeff i κ a
-        * ((SL2C.boostAxis i t ht).1 a.1 l.1 * (SL2C.boostAxis i t ht).1 a.2 l.2) := by
-    rw [Finset.sum_mul_sum, Fintype.sum_prod_type]
-    refine Finset.sum_congr rfl fun a₁ _ => Finset.sum_congr rfl fun a₂ _ => ?_
-    simp only [biLeftCoeff, star_boostAxis_apply]
-    ring
-  rw [← hfac, sum_boostAxis_weylCoeffC i κ.1 l.1 ht, sum_boostAxis_weylCoeffC i κ.2 l.2 ht,
-    pairWeight, biLeftCoeff, zpow_add₀ htc]
-  ring
-
-/-!
-
-## B. Bi-left-handed Weyl tensors and their coefficient functions
+## A. Bi-left-handed Weyl tensors and their coefficient functions
 
 -/
 
@@ -134,7 +82,7 @@ def IsInvariantCoeff (c : Fin 2 × Fin 2 → ℂ) : Prop := ∀ g : SL(2,ℂ), a
 include hT in
 /-- An invariant of the span is the contraction of an invariant coefficient function: the
   adjoint of the action of `g` is the action of `g†`. -/
-theorem exists_isInvariantCoeff_of_mem_componentSpan {x : B} (hx : x ∈ componentSpan T)
+lemma exists_isInvariantCoeff_of_mem_componentSpan {x : B} (hx : x ∈ componentSpan T)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : Fin 2 × Fin 2 → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
   obtain ⟨c, hc, hx'⟩ := Invariants.exists_invariantCoeff_matrix T (fun g => repLorentz g)
@@ -146,88 +94,10 @@ theorem exists_isInvariantCoeff_of_mem_componentSpan {x : B} (hx : x ∈ compone
 
 /-!
 
-## C. The weight grading of the coefficients
+## B. The epsilon contraction
 
-The four covectors `biLeftCoeff i κ` read off the weight components of a coefficient function,
-and the axis-`i` boost multiplies the component at `κ` by `t ^ pairWeight κ`. An invariant
-function has no component of weight `±2`.
-
--/
-
-/-- The axis-`i` weight component of a coefficient function at the pair `κ`. -/
-def weightComponent (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ) (κ : Fin 2 × Fin 2) : ℂ :=
-  ∑ a : Fin 2 × Fin 2, biLeftCoeff i κ a * c a
-
-/-- The axis-`i` boost multiplies the weight component at `κ` by `t ^ pairWeight κ`. -/
-lemma weightComponent_act_boostAxis (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ)
-    (κ : Fin 2 × Fin 2) {t : ℝ} (ht : t ≠ 0) :
-    weightComponent i (act (SL2C.boostAxis i t ht) c) κ
-      = ((t : ℝ) : ℂ) ^ (pairWeight κ) * weightComponent i c κ :=
-  sum_mul_actMat _ _ c _ fun l => sum_boostAxis_biLeftCoeff i κ l ht
-
-/-- An invariant coefficient function has no weight component of nonzero weight. -/
-lemma weightComponent_eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) (i : Fin 3)
-    {κ : Fin 2 × Fin 2} (hκ : pairWeight κ ≠ 0) : weightComponent i c κ = 0 :=
-  sum_mul_eq_zero_of_actMat_eq _ (hc (SL2C.boostAxis i 2 two_ne_zero))
-    (fun l => sum_boostAxis_biLeftCoeff i κ l two_ne_zero) (two_zpow_ne_one hκ)
-
-/-- A coefficient function is recovered from its weight components. -/
-lemma eq_sum_weightComponent (i : Fin 3) (c : Fin 2 × Fin 2 → ℂ) (α : Fin 2 × Fin 2) :
-    c α = ∑ κ : Fin 2 × Fin 2, biLeftCoeffInv i α κ * weightComponent i c κ := by
-  simp only [weightComponent, Finset.mul_sum, ← mul_assoc]
-  rw [Finset.sum_comm]
-  simp only [← Finset.sum_mul, sum_biLeftCoeffInv_mul, ite_mul, one_mul, zero_mul,
-    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
-
-/-!
-
-## D. The weight-zero round and its average over the axes
-
-Keeping only the weight-zero components writes an invariant coefficient function as one matrix
-per axis applied to itself, and the three average to `2 - swap`.
-
--/
-
-/-- The matrix of the axis-`i` weight-zero projection on coefficient functions. -/
-noncomputable def weightZeroTransition (i : Fin 3) (α β : Fin 2 × Fin 2) : ℂ :=
-  ∑ κ ∈ Finset.univ.filter (fun κ : Fin 2 × Fin 2 => pairWeight κ = 0),
-    biLeftCoeffInv i α κ * biLeftCoeff i κ β
-
-/-- An invariant coefficient function is fixed by the axis-`i` weight-zero projection. -/
-lemma eq_sum_weightZeroTransition {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) (i : Fin 3)
-    (α : Fin 2 × Fin 2) : c α = ∑ β, weightZeroTransition i α β * c β := by
-  have hfil : ∀ κ ∈ Finset.univ.filter (fun κ : Fin 2 × Fin 2 => ¬ pairWeight κ = 0),
-      biLeftCoeffInv i α κ * weightComponent i c κ = 0 :=
-    fun κ hκ => by rw [weightComponent_eq_zero hc i (Finset.mem_filter.1 hκ).2, mul_zero]
-  rw [eq_sum_weightComponent i c α, ← Finset.sum_filter_add_sum_filter_not Finset.univ
-    (fun κ : Fin 2 × Fin 2 => pairWeight κ = 0), Finset.sum_eq_zero hfil, add_zero]
-  simp only [weightComponent, weightZeroTransition, Finset.mul_sum, Finset.sum_mul, ← mul_assoc]
-  rw [Finset.sum_comm]
-
-/-- The closed form of the summed weight-zero transition: twice the identity minus the
-  swap of the two indices. -/
-def transitionEntry (β α : Fin 2 × Fin 2) : ℂ :=
-  2 * (if β.1 = α.1 then 1 else 0) * (if β.2 = α.2 then 1 else 0)
-    - (if β.1 = α.2 then 1 else 0) * (if β.2 = α.1 then 1 else 0)
-
-/-- The sum over the three axes of the weight-zero transitions has the closed form
-  `transitionEntry`. -/
-lemma sum_weightZeroTransition_eq (β α : Fin 2 × Fin 2) :
-    ∑ i : Fin 3, weightZeroTransition i β α = transitionEntry β α := by
-  simp only [weightZeroTransition, sum_weightZeroFilter, Fin.sum_univ_three]
-  obtain ⟨β₁, β₂⟩ := β
-  obtain ⟨α₁, α₂⟩ := α
-  fin_cases β₁ <;> fin_cases β₂ <;> fin_cases α₁ <;> fin_cases α₂ <;>
-    simp [transitionEntry, biLeftCoeff, biLeftCoeffInv, weylCoeffC, weylCoeffInvC] <;>
-    norm_num [Complex.ext_iff]
-
-/-!
-
-## E. The epsilon contraction and the linear certificate
-
-The summed transition is `2 - swap`, so `M c = 3 c` says exactly that `c` is antisymmetric.
-An invariant coefficient function is therefore the `ε` symbol up to a scalar, and the invariant
-is that multiple of the `ε` contraction.
+The `ε` symbol, in the convention of `Fermion.metricRaw`, contracts the two indices
+antisymmetrically, and the contraction is invariant because `det g = 1`.
 
 -/
 
@@ -265,27 +135,55 @@ lemma repLorentz_epsilonContraction (g : SL(2,ℂ)) :
   · linear_combination -hdet
   · ring
 
-/-- The action of the summed transition matrix on a coefficient vector is twice the
-  vector minus its swap. -/
-lemma sum_transitionEntry_mul (c : Fin 2 × Fin 2 → ℂ) (β : Fin 2 × Fin 2) :
-    ∑ α, transitionEntry β α * c α = 2 * c β - c β.swap := by
-  obtain ⟨β₁, β₂⟩ := β
-  fin_cases β₁ <;> fin_cases β₂ <;>
-    simp [transitionEntry, Fintype.sum_prod_type, Fin.sum_univ_two] <;> ring
+/-!
 
-/-- An invariant coefficient function is antisymmetric: the summed transition is `2 - swap`,
-  and an invariant is its eigenvector for the eigenvalue `3`. -/
-lemma eq_neg_swap {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) (β : Fin 2 × Fin 2) :
-    c β = - c β.swap := by
-  have h3 : ∑ i : Fin 3, ∑ α, weightZeroTransition i β α * c α = 3 * c β := by
-    rw [Fin.sum_univ_three, ← eq_sum_weightZeroTransition hc 0 β,
-      ← eq_sum_weightZeroTransition hc 1 β, ← eq_sum_weightZeroTransition hc 2 β]
-    ring
-  rw [show (∑ i : Fin 3, ∑ α, weightZeroTransition i β α * c α) = 2 * c β - c β.swap from by
-    rw [Finset.sum_comm, ← sum_transitionEntry_mul c β]
-    exact Finset.sum_congr rfl fun α _ => by
-      rw [← Finset.sum_mul, sum_weightZeroTransition_eq]] at h3
-  linear_combination -h3
+## C. The boost along `z` and the half turn about `x` force the `ε` form
+
+The boost along `z` is diagonal, so `act` rescales each coefficient and kills the two diagonal
+ones. The half turn about `x` is antidiagonal, so `act` moves each coefficient to the opposite
+pair of index values with the factor `(-i)² = -1`, which makes the coefficients antisymmetric.
+
+-/
+
+/-- The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²` and `c (1, 1)` by `t⁻²`; at
+  `t = 2` invariance forces both to vanish. -/
+lemma IsInvariantCoeff.apply_self_eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
+    (k : Fin 2) : c (k, k) = 0 := by
+  have h := hc (SL2C.boostAxis 2 2 two_ne_zero)
+  revert k
+  refine Fin.forall_fin_two.2 ⟨?_, ?_⟩
+  · have h00 := congrFun h (0, 0)
+    simp [act, Fintype.sum_prod_type, Fin.sum_univ_two] at h00
+    linear_combination h00 / 3
+  · have h11 := congrFun h (1, 1)
+    simp [act, Fintype.sum_prod_type, Fin.sum_univ_two] at h11
+    linear_combination -(4 / 3 : ℂ) * h11
+
+/-- An invariant coefficient function is antisymmetric. The half turn `!![0, -i; -i, 0]` about
+  `x` sends `c (0, 1)` to `(-i)² c (1, 0) = -c (1, 0)`, and the diagonal coefficients vanish by
+  the boost. -/
+lemma IsInvariantCoeff.eq_neg_swap {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
+    (a : Fin 2 × Fin 2) : c a = -c a.swap := by
+  have h01 := congrFun (hc (SL2C.halfTurn 0)) (0, 1)
+  simp [act, Fintype.sum_prod_type, Fin.sum_univ_two] at h01
+  obtain ⟨a₁, a₂⟩ := a
+  fin_cases a₁ <;> fin_cases a₂
+  · simp [hc.apply_self_eq_zero 0]
+  · show c (0, 1) = -c (1, 0)
+    linear_combination -h01
+  · show c (1, 0) = -c (0, 1)
+    linear_combination -h01
+  · simp [hc.apply_self_eq_zero 1]
+
+/-- An invariant coefficient function is `c (0, 1)` times the `ε` symbol. -/
+lemma IsInvariantCoeff.eq_smul_epsZ {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
+    (a : Fin 2 × Fin 2) : c a = c (0, 1) * ((epsZ a : ℤ) : ℂ) := by
+  obtain ⟨a₁, a₂⟩ := a
+  fin_cases a₁ <;> fin_cases a₂
+  · simp [hc.apply_self_eq_zero 0, epsZ]
+  · simp [epsZ]
+  · simpa [epsZ] using hc.eq_neg_swap (1, 0)
+  · simp [hc.apply_self_eq_zero 1, epsZ]
 
 include hT in
 /-- The classification of the Lorentz invariants: every element of the span of the
@@ -294,25 +192,13 @@ theorem exists_smul_epsilonContraction_of_invariant {x : B} (hx : x ∈ componen
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • epsilonContraction (T := T) := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
-  have h00 : c (0, 0) = 0 := by
-    have h := eq_neg_swap hc (0, 0)
-    rw [Prod.swap_prod_mk] at h
-    linear_combination h / 2
-  have h11 : c (1, 1) = 0 := by
-    have h := eq_neg_swap hc (1, 1)
-    rw [Prod.swap_prod_mk] at h
-    linear_combination h / 2
-  have h10 : c (1, 0) = - c (0, 1) := by
-    have h := eq_neg_swap hc (1, 0)
-    rwa [Prod.swap_prod_mk] at h
   refine ⟨c (0, 1), ?_⟩
-  rw [epsilonContraction_eq]
-  simp only [Fintype.sum_prod_type, Fin.sum_univ_two, h00, h11, h10]
-  module
+  rw [epsilonContraction, Finset.smul_sum]
+  exact Finset.sum_congr rfl fun a _ => by rw [smul_smul, ← hc.eq_smul_epsZ a]
 
 /-!
 
-## F. The classification modulo a Lorentz-stable submodule
+## D. The classification modulo a Lorentz-stable submodule
 
 A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`: the classes of the
 components again form a bi-left-handed tensor, so the classification applies there and lifts
@@ -358,7 +244,7 @@ end IsBiLeftWeyl
 
 /-!
 
-## G. Dual-index families and the `ε` re-index
+## E. Dual-index families and the `ε` re-index
 
 `IsBiDualLeftWeyl` and `IsBiDualRightWeyl` are the laws the Standard Model's fermion symbols
 carry: one factor of `(g⁻¹)ᵀ` per index for an undotted pair, one of `(g⁻¹)ᴴ` for a dotted
@@ -575,7 +461,7 @@ lemma IsBiDualRightWeyl.isBiLeftWeyl_epsReindex {B : Type*} [AddCommGroup B]
 
 /-!
 
-## H. The classification of the invariants of a dual-index family
+## F. The classification of the invariants of a dual-index family
 
 The re-index leaves the `ε` contraction alone, so the contraction in the conclusions is that
 of the original family, `T (0, 1) - T (1, 0)`, with no sign or scalar attached. For the dotted

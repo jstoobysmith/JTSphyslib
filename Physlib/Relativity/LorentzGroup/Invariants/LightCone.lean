@@ -8,31 +8,26 @@ module
 public import Physlib.Mathematics.Fin
 public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 /-!
-# The light-cone basis of a boost axis over the integers and the rationals
+# The light-cone basis of a boost axis over the integers
 
 `lightConeCoeff` and `lightConeCoeffInv` of `LightConeDeriv` change a spacetime index into the
 light-cone basis of a spatial axis `i`: the two directions `D₀ - Dᵢ` and `D₀ + Dᵢ` of the plane
 the boost along `i` moves, and the two transverse directions. Their entries are `0`, `±1` and
-`±1/2`, so both matrices have integer or rational mirrors, and the rank-two and rank-four
-classifications compute with a mirror rather than with `ℂ`: the kernel evaluates `ℤ` and `ℚ`
-and does not evaluate `ℂ`. The Weyl classifications carry their own weight bases and use none
-of this. This file holds the mirrors and what is proved about them at an arbitrary number of
-indices; the rank-specific files contract them against as many slots as they have.
+`±1/2`, so both matrices have integer mirrors, and the rank-four classification computes with
+them in the kernel, which evaluates `ℤ` and does not evaluate `ℂ`. This file holds the mirrors
+and what is proved about them at an arbitrary number of indices.
 
 The change of basis one way is `lightConeCoeffZ`, an exact integer copy. The other way needs
-the halves: `lightConeCoeffInvQ` keeps them, and `lightConeCoeffInvZ` clears them, so it is
-twice the true inverse and a contraction over `n` slots carries a factor `2 ^ n` that the
-rank-specific file divides out. That is the only normalization in play, and
-`coe_lightConeCoeffInvZ_eq_two_mul` and `coe_lightConeCoeffInvZ` record it against `ℂ` and `ℚ`.
+the halves, and `lightConeCoeffInvZ` clears them, so it is twice the true inverse and a
+contraction over `n` slots carries a factor `2 ^ n` that the rank-four file divides out. That
+is the only normalization in play, and `coe_lightConeCoeffInvZ_eq_two_mul` records it against
+`ℂ`.
 
-Three groupings of the four light-cone directions are used. `InBoostPlane` separates the two
-directions of weight `±2` from the two transverse ones, one index at a time. `sectorIndex`
-sorts the four into the three sectors of distinct boost weight, raising, lowering and
-transverse, `sectorWeight` records those weights, and `slotTransition` and `slotTransitionZ`
-sum one slot of the change of basis over a sector. `slotZ` keeps the four directions apart
-instead, and `transitionZ` composes it over `n` slots into `2 ^ n` times the map keeping the
-light-cone components of total weight `m`; `transitionZ_eq_sum` unfolds that recursion into a
-single sum over the multi-indices of that weight.
+`InBoostPlane` separates the two directions of weight `±2` from the two transverse ones, one
+index at a time. `slotZ` is one slot of the change of basis, and `transitionZ` composes it over
+`n` slots into `2 ^ n` times the map keeping the light-cone components of total weight `m`;
+`transitionZ_eq_sum` unfolds that recursion into a single sum over the multi-indices of that
+weight.
 -/
 
 @[expose] public section
@@ -45,7 +40,7 @@ namespace Invariants
 
 /-!
 
-## A. The change of basis over the integers and the rationals
+## A. The change of basis over the integers
 
 -/
 
@@ -73,25 +68,6 @@ def lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℤ :=
 lemma coe_lightConeCoeffInvZ_eq_two_mul (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
     ((lightConeCoeffInvZ i μ κ : ℤ) : ℂ) = 2 * lightConeCoeffInv i μ κ := by
   rw [lightConeCoeffInvZ, lightConeCoeffInv]
-  split_ifs <;> norm_num
-
-/-- The inverse light-cone coefficients over `ℚ`, with the halves kept as halves. -/
-def lightConeCoeffInvQ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) : ℚ :=
-  if μ = Sum.inl 0 then (if κ = 0 then 2⁻¹ else if κ = 1 then 2⁻¹ else 0)
-  else if μ = Sum.inr i then (if κ = 0 then -2⁻¹ else if κ = 1 then 2⁻¹ else 0)
-  else if μ = Sum.inr (i + 1) then (if κ = 2 then 1 else 0)
-  else (if κ = 3 then 1 else 0)
-
-/-- The rational mirror casts to the inverse light-cone coefficients. -/
-lemma coe_lightConeCoeffInvQ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvQ i μ κ : ℚ) : ℂ) = lightConeCoeffInv i μ κ := by
-  rw [lightConeCoeffInvQ, lightConeCoeffInv]
-  split_ifs <;> norm_num
-
-/-- The integer mirror is twice the rational one. -/
-lemma coe_lightConeCoeffInvZ (i : Fin 3) (μ : Fin 1 ⊕ Fin 3) (κ : Fin 4) :
-    ((lightConeCoeffInvZ i μ κ : ℤ) : ℚ) = 2 * lightConeCoeffInvQ i μ κ := by
-  rw [lightConeCoeffInvZ, lightConeCoeffInvQ]
   split_ifs <;> norm_num
 
 /-!
@@ -125,75 +101,13 @@ lemma lightConeCoeffInvZ_eq_zero_of_not_inBoostPlane {i : Fin 3} {μ : Fin 1 ⊕
 
 /-!
 
-## C. The three sectors of the light-cone directions
+## C. The weight-keeping transition over any number of slots
 
-The four light-cone directions carry only three distinct boost weights, `2`, `-2` and `0` twice,
-and a sum over multi-indices of a given total weight only sees that much: `sectorIndex` sorts
-the directions accordingly, and summing one slot of the change of basis over a sector gives
-`slotTransition` over `ℚ` and `slotTransitionZ` over `ℤ`, again twice as large.
-
--/
-
-/-- The sector of each light-cone direction: `0` raising, `1` lowering, `2` and `3` transverse. -/
-def sectorIndex : Fin 4 → Fin 3 := ![0, 1, 2, 2]
-
-/-- The boost weight of each sector: `2` raising, `-2` lowering, `0` transverse. -/
-def sectorWeight : Fin 3 → ℤ := ![2, -2, 0]
-
-/-- The light-cone weight of a direction is the weight of its sector. -/
-lemma lightConeWeight_eq_sectorWeight (κ : Fin 4) :
-    lightConeWeight κ = sectorWeight (sectorIndex κ) := by
-  fin_cases κ <;> rfl
-
-/-- The slot factor summed over the directions of one sector, over `ℚ`. -/
-def slotTransition (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℚ :=
-  ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
-    lightConeCoeffInvQ i μ κ' * (lightConeCoeffZ i κ' ν : ℚ)
-
-/-- The slot factor summed over one sector, in closed form over `ℤ`: on the boost plane the
-  raising sector carries `[[1, -1], [-1, 1]]` and the lowering sector the all-ones matrix, and
-  the transverse sector is twice the identity on the transverse directions. -/
-def slotTransitionZ (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) : ℤ :=
-  if κ = 2 then (if μ = ν ∧ μ ≠ Sum.inl 0 ∧ μ ≠ Sum.inr i then 2 else 0)
-  else if (μ = Sum.inl 0 ∨ μ = Sum.inr i) ∧ (ν = Sum.inl 0 ∨ ν = Sum.inr i) then
-    (if κ = 0 then (if μ = Sum.inr i then -1 else 1) * (if ν = Sum.inr i then -1 else 1)
-    else 1)
-  else 0
-
-/-- The closed form is the sector sum of the slot factors. -/
-lemma slotTransitionZ_eq_sum (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
-    slotTransitionZ i κ μ ν
-      = ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = κ),
-        lightConeCoeffInvZ i μ κ' * lightConeCoeffZ i κ' ν := by
-  rw [Finset.sum_filter, Fin.sum_univ_four]
-  rcases μ with a | j <;> rcases ν with b | l
-  · simp only [Fin.fin_one_eq_zero a, Fin.fin_one_eq_zero b]
-    fin_cases κ <;> simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · simp only [Fin.fin_one_eq_zero a]
-    fin_cases κ <;> fin_cases i <;> fin_cases l <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · simp only [Fin.fin_one_eq_zero b]
-    fin_cases κ <;> fin_cases i <;> fin_cases j <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-  · fin_cases κ <;> fin_cases i <;> fin_cases j <;> fin_cases l <;>
-      simp [slotTransitionZ, lightConeCoeffInvZ, lightConeCoeffZ, sectorIndex]
-
-/-- The integer sector matrix is twice the rational one, which is what the two names promise. -/
-lemma coe_slotTransitionZ (i : Fin 3) (κ : Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
-    ((slotTransitionZ i κ μ ν : ℤ) : ℚ) = 2 * slotTransition i κ μ ν := by
-  rw [slotTransitionZ_eq_sum, slotTransition, Finset.mul_sum]
-  push_cast
-  exact Finset.sum_congr rfl fun κ' _ => by rw [coe_lightConeCoeffInvZ]; ring
-
-/-!
-
-## D. The weight-keeping transition over any number of slots
-
-Keeping the four directions apart instead of their three sectors, one slot of the change of
-basis is `slotZ`, and composing it over `n` slots while tracking the weight left to distribute
-gives `transitionZ`. The recursion follows B: a slot whose direction lies in the boost plane
-takes weight `2` or `-2` and leaves `m - 2` or `m + 2`, and a transverse slot takes either
-direction of weight `0`, which is why those two are added, and leaves `m`.
+One slot of the change of basis, keeping the four directions apart, is `slotZ`, and composing it
+over `n` slots while tracking the weight left to distribute gives `transitionZ`. The recursion
+follows B: a slot whose direction lies in the boost plane takes weight `2` or `-2` and leaves
+`m - 2` or `m + 2`, and a transverse slot takes either direction of weight `0`, which is why
+those two are added, and leaves `m`.
 
 Unfolding the recursion into a single sum splits into two independent steps. The case split of
 the recursion is the boost-plane support argument of B and nothing else: once it is resolved,

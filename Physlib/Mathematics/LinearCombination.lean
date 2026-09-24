@@ -61,10 +61,8 @@ lemma Fintype.exists_invariant_coeff_of_adjoint_mem {ι G B : Type*} [Fintype ι
     {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, A g c = c := by
   classical
-  obtain ⟨c, rfl⟩ : ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-    rw [← Submodule.span_range_eq_iSup, ← Fintype.range_linearCombination,
-      LinearMap.mem_range] at hx
-    simpa only [Fintype.linearCombination_apply, eq_comm] using hx
+  obtain ⟨c, rfl⟩ : ∃ c : ι → ℂ, ∑ i, c i • T i = x := by
+    rwa [← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun] at hx
   -- `K`: the coefficients contracting to `0`, stable under every `A g`.
   set q := Fintype.linearCombination ℂ T ∘ₗ (WithLp.linearEquiv 2 ℂ (ι → ℂ)).toLinearMap
   have hq : ∀ u, q u = ∑ i, u.ofLp i • T i := fun u => Fintype.linearCombination_apply ℂ T _

@@ -5,7 +5,6 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
 public import Physlib.Mathematics.InvariantReduction
 public meta import Mathlib.Data.Fintype.Sum
@@ -13,15 +12,16 @@ public meta import Mathlib.Data.Fintype.Pi
 /-!
 # Lorentz invariants among two four-vector indices
 
-A rank-two tensor `T^{μν}` has `16` components, and exactly one combination of them is
-fixed by every rotation and boost, the metric trace
+A rank-two tensor `T^{μν}` has `16` components, and the metric trace
 
-`metricContraction = η_{μν} T^{μν}`.
+`metricContraction = η_{μν} T^{μν}`
 
-Every other invariant is a multiple of it: nothing else ties two indices, the Levi-Civita
-symbol needing four. That is `exists_smul_metricContraction_of_invariant`, and
+is fixed by every rotation and boost. Every Lorentz invariant in the span of the components is
+a multiple of it: nothing else ties two indices, the Levi-Civita symbol needing four. That is
+`exists_smul_metricContraction_of_invariant`, and
 `exists_smul_metricContraction_of_invariant_subset` is the same statement modulo a
-Lorentz-stable subspace `S`, the form the Standard Model files use.
+Lorentz-stable subspace `S`, the form the Standard Model files use. The metric contraction is
+the only invariant up to scale; for a given `T` it may be zero.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzCovariant 2` says the
@@ -29,18 +29,15 @@ group moves them with one factor of the Lorentz matrix per slot. `componentSpan 
 of their combinations.
 
 An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
-matrices themselves fix (from `Invariants.Basic`), and the rest runs at two slots on the
-light-cone coefficients and sector matrices of `Invariants.LightCone`. Along a spatial axis
-the four light-cone directions carry boost weights `2`, `-2`, `0`, `0`, and an
-invariant `c` has no light-cone component of nonzero weight, so it is fixed by the weight-zero
-projection along each axis (A); averaging the three gives one linear map on the `16`
-coefficients, `12` times an integer matrix with a short closed form (B, C). Its eigenvalues are
-`12`, `10`, `4`, `0`, with `12` simple, so the cubic `λ (λ - 4) (λ - 10)` sends everything onto
-that one eigenvector, which is the metric (D). Section E draws the conclusion and F divides
-out `S`.
-
-No rotation averaging is needed here, unlike the four-index case: for two indices the
-three weight-zero conditions already cut the `16` components down to a single line.
+matrices themselves fix (from `Invariants.Basic`), and three kinds of transformation pin `c`
+down (B). The half turn about each axis has a diagonal Lorentz matrix with entries `±1`, and
+for `μ ≠ ν` one of the three negates `c_{μν}`, so the off-diagonal coefficients vanish. The
+cyclic rotation `x → y → z → x` permutes the spatial directions, so `c_xx = c_yy = c_zz`. The
+boost along `z` scales the light-cone component of `c` along `D₀ - D_z` in both slots by `t⁴`,
+so that component vanishes, and with the off-diagonal coefficients gone it is `c_tt + c_zz`.
+So `c` is `c_tt` times the Minkowski metric. Invariance under the whole group implies
+invariance under these elements; nothing is claimed about the group they generate. Section C
+divides out `S`.
 -/
 
 @[expose] public section
@@ -57,279 +54,7 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-!
 
-## A. The weight-zero transition along one axis
-
-An invariant coefficient tensor keeps only its light-cone components of total weight zero, so
-writing it back on the coefficients it is fixed by one matrix per axis: a sum over the sector
-patterns of total weight zero of the per-slot sector matrices of `Invariants.LightCone`.
-
--/
-
-/-- The weight-zero projection along axis `i`, as a matrix on the components: the sum over the
-  three sector patterns of weight zero of the products of the two per-slot sector matrices. -/
-def weightZeroTransition (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℚ :=
-  ∑ w ∈ Finset.univ.filter (fun w : Fin 2 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
-    ∏ s, slotTransition i (w s) (e s) (d s)
-
-/-- A weight-zero light-cone sum over two slots regroups as a sum over sector patterns of
-  weight zero of the products of the slotwise sector sums. -/
-lemma sum_weightZero_eq_sum_sector {R : Type*} [CommSemiring R] (f : Fin 2 → Fin 4 → R) :
-    ∑ c ∈ Finset.univ.filter (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-        ∏ s, f s (c s)
-      = ∑ w ∈ Finset.univ.filter (fun w : Fin 2 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
-          ∏ s, ∑ κ' ∈ Finset.univ.filter (fun κ' : Fin 4 => sectorIndex κ' = w s),
-            f s κ' := by
-  have hmaps : ∀ c ∈ Finset.univ.filter
-      (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-      (fun s => sectorIndex (c s)) ∈ Finset.univ.filter
-        (fun w : Fin 2 → Fin 3 => (∑ s, sectorWeight (w s)) = 0) := by
-    intro c hc
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hc ⊢
-    rw [← hc]
-    exact (Finset.sum_congr rfl fun s _ => lightConeWeight_eq_sectorWeight (c s)).symm
-  rw [← Finset.sum_fiberwise_of_maps_to hmaps]
-  refine Finset.sum_congr rfl fun w hw => ?_
-  have hw0 : (∑ s, sectorWeight (w s)) = 0 := (Finset.mem_filter.1 hw).2
-  have hfiber : (Finset.univ.filter
-        (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0)).filter
-      (fun c => (fun s => sectorIndex (c s)) = w)
-      = Fintype.piFinset
-          (fun s => Finset.univ.filter (fun κ : Fin 4 => sectorIndex κ = w s)) := by
-    ext c
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fintype.mem_piFinset,
-      funext_iff]
-    constructor
-    · rintro ⟨-, hcw⟩ s
-      exact hcw s
-    · intro hcw
-      refine ⟨?_, hcw⟩
-      rw [show (∑ s, lightConeWeight (c s)) = ∑ s, sectorWeight (w s) from
-        Finset.sum_congr rfl fun s _ => by rw [lightConeWeight_eq_sectorWeight, hcw s]]
-      exact hw0
-  rw [hfiber]
-  exact (Finset.prod_univ_sum
-    (fun s => Finset.univ.filter fun κ' : Fin 4 => sectorIndex κ' = w s)
-    (fun s κ' => f s κ')).symm
-
-/-- The weight-zero transition as a light-cone sum: the sector convolution expands to
-  the sum over weight-zero light-cone monomials of the composite slot coefficients. -/
-lemma weightZeroTransition_eq_sum_lightCone (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    weightZeroTransition i d e
-      = ∑ c ∈ Finset.univ.filter
-          (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-        ∏ s, lightConeCoeffInvQ i (e s) (c s) * (lightConeCoeffZ i (c s) (d s) : ℚ) := by
-  rw [weightZeroTransition]
-  exact (sum_weightZero_eq_sum_sector
-    (fun s κ => lightConeCoeffInvQ i (e s) κ * (lightConeCoeffZ i κ (d s) : ℚ))).symm
-
-/-- An invariant coefficient tensor is fixed by the axis-`i` weight-zero transition. -/
-lemma eq_sum_weightZeroTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (i : Fin 3) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    c d = ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e := by
-  have hfil : ∀ κ ∈ Finset.univ.filter
-      (fun κ : Fin 2 → Fin 4 => ¬ (∑ s, lightConeWeight (κ s)) = 0),
-      (∏ s, lightConeCoeffInv i (d s) (κ s)) * lightConeComponent i c κ = 0 :=
-    fun κ hκ => by
-      rw [hc.lightConeComponent_eq_zero i (Finset.mem_filter.1 hκ).2, mul_zero]
-  rw [eq_sum_lightConeComponent i c d, ← Finset.sum_filter_add_sum_filter_not Finset.univ
-    (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0), Finset.sum_eq_zero hfil,
-    add_zero]
-  calc ∑ κ ∈ Finset.univ.filter (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0),
-        (∏ s, lightConeCoeffInv i (d s) (κ s)) * lightConeComponent i c κ
-      = ∑ e, (∑ κ ∈ Finset.univ.filter
-          (fun κ : Fin 2 → Fin 4 => (∑ s, lightConeWeight (κ s)) = 0),
-          ∏ s, lightConeCoeffInv i (d s) (κ s) * lightConeCoeff i (κ s) (e s)) * c e := by
-        simp only [lightConeComponent, Finset.mul_sum, Finset.sum_mul, Finset.prod_mul_distrib]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun κ _ => by ring
-    _ = _ := by
-        refine Finset.sum_congr rfl fun e _ => ?_
-        congr 1
-        rw [weightZeroTransition_eq_sum_lightCone]
-        push_cast
-        simp only [coe_lightConeCoeffInvQ, coe_lightConeCoeffZ]
-
-/-!
-
-## B. The average over the axes
-
-An invariant coefficient tensor is fixed by each of the three weight-zero transitions, hence
-by their average.
-
--/
-
-/-- The average `M` of the three weight-zero transitions, as a matrix on the components. Its
-  powers drive the endgame. -/
-def boostAverageTransition :
-    Matrix (Fin 2 → Fin 1 ⊕ Fin 3) (Fin 2 → Fin 1 ⊕ Fin 3) ℚ :=
-  Matrix.of fun d e => (3⁻¹ : ℚ) * ∑ i : Fin 3, weightZeroTransition i d e
-
-/-- An invariant coefficient tensor is fixed by the average of the three transitions. -/
-lemma eq_sum_boostAverageTransition {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    c d = ∑ e, ((boostAverageTransition e d : ℚ) : ℂ) * c e := by
-  have h3 : (3 : ℂ) * c d = ∑ i : Fin 3, ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e := by
-    rw [Fin.sum_univ_three, ← eq_sum_weightZeroTransition hc 0 d,
-      ← eq_sum_weightZeroTransition hc 1 d, ← eq_sum_weightZeroTransition hc 2 d]
-    ring
-  rw [show (∑ e, ((boostAverageTransition e d : ℚ) : ℂ) * c e)
-      = (3 : ℂ)⁻¹ * ∑ i : Fin 3, ∑ e, ((weightZeroTransition i e d : ℚ) : ℂ) * c e from by
-    rw [Finset.sum_comm, Finset.mul_sum]
-    refine Finset.sum_congr rfl fun e _ => ?_
-    simp only [boostAverageTransition, Matrix.of_apply]
-    push_cast
-    rw [mul_assoc, Finset.sum_mul], ← h3]
-  ring
-
-/-!
-
-## C. The average as an integer matrix
-
-Twelve times the average is an integer matrix on the `16` components, with a short closed
-form that the kernel can evaluate cheaply.
-
--/
-
-/-- Integer mirror of the weight-zero transition: four times its value, as the
-  balanced-sector convolution of the integer slot matrices of `Invariants.LightCone`. -/
-def weightZeroTransitionZ (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℤ :=
-  ∑ w ∈ Finset.univ.filter (fun w : Fin 2 → Fin 3 => (∑ s, sectorWeight (w s)) = 0),
-    ∏ s, slotTransitionZ i (w s) (e s) (d s)
-
-/-- The integer weight-zero transition as a light-cone sum. -/
-lemma weightZeroTransitionZ_eq_sum_lightCone (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    weightZeroTransitionZ i d e
-      = ∑ c ∈ Finset.univ.filter
-          (fun c : Fin 2 → Fin 4 => (∑ s, lightConeWeight (c s)) = 0),
-        ∏ s, lightConeCoeffInvZ i (e s) (c s) * lightConeCoeffZ i (c s) (d s) := by
-  rw [weightZeroTransitionZ]
-  simp only [slotTransitionZ_eq_sum]
-  exact (sum_weightZero_eq_sum_sector
-    (fun s κ => lightConeCoeffInvZ i (e s) κ * lightConeCoeffZ i κ (d s))).symm
-
-/-- The integer mirror casts to four times the weight-zero transition. -/
-lemma coe_weightZeroTransitionZ (i : Fin 3) (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    ((weightZeroTransitionZ i d e : ℤ) : ℚ) = 4 * weightZeroTransition i d e := by
-  rw [weightZeroTransitionZ_eq_sum_lightCone, weightZeroTransition_eq_sum_lightCone]
-  push_cast
-  rw [Finset.mul_sum]
-  refine Finset.sum_congr rfl fun c _ => ?_
-  calc ∏ s, ((lightConeCoeffInvZ i (e s) (c s) : ℤ) : ℚ)
-        * ((lightConeCoeffZ i (c s) (d s) : ℤ) : ℚ)
-      = ∏ s, 2 * (lightConeCoeffInvQ i (e s) (c s)
-          * ((lightConeCoeffZ i (c s) (d s) : ℤ) : ℚ)) := by
-        refine Finset.prod_congr rfl fun s _ => ?_
-        rw [coe_lightConeCoeffInvZ]
-        ring
-    _ = 4 * ∏ s, lightConeCoeffInvQ i (e s) (c s)
-          * ((lightConeCoeffZ i (c s) (d s) : ℤ) : ℚ) := by
-        rw [Finset.prod_mul_distrib, Finset.prod_const]
-        norm_num [Finset.card_univ]
-
-/-- Twelve times the boost average, as an integer matrix on the sixteen components. -/
-def boostAverageZ : Matrix (Fin 2 → Fin 1 ⊕ Fin 3) (Fin 2 → Fin 1 ⊕ Fin 3) ℤ :=
-  Matrix.of fun d e => ∑ i : Fin 3, weightZeroTransitionZ i d e
-
-/-- The integer mirror casts to twelve times the boost average. -/
-lemma coe_boostAverageZ (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    ((boostAverageZ d e : ℤ) : ℚ) = 12 * boostAverageTransition d e := by
-  rw [boostAverageZ, boostAverageTransition, Matrix.of_apply, Matrix.of_apply]
-  push_cast
-  simp only [coe_weightZeroTransitionZ]
-  rw [← Finset.mul_sum]
-  ring
-
-/-- The closed form of the integer average. A pair of equal indices talks only to such pairs,
-  with time-time `6`, mixed time-space `-2` and space-space diagonal `10`; a pair with one
-  time index carries `2` on itself and `-2` on its transpose; a pair of distinct space
-  indices carries `4` on itself. -/
-def boostAverageEntry (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℤ :=
-  if d 0 = d 1 then
-    (if e 0 = e 1 then
-      (if d 0 = Sum.inl 0 then (if e 0 = Sum.inl 0 then 6 else -2)
-        else if e 0 = Sum.inl 0 then -2 else if d 0 = e 0 then 10 else 0)
-      else 0)
-  else if d 0 = Sum.inl 0 ∨ d 1 = Sum.inl 0 then
-    (if e 0 = d 0 ∧ e 1 = d 1 then 2 else if e 0 = d 1 ∧ e 1 = d 0 then -2 else 0)
-  else (if e 0 = d 0 ∧ e 1 = d 1 then 4 else 0)
-
-/-- Entrywise decidability for integer matrices; instance search does not see through the
-  `Matrix` synonym when both indices are bound. -/
-private instance decidableForallEntriesZ {ι : Type*} [Fintype ι] (f g : Matrix ι ι ℤ) :
-    Decidable (∀ k l, f k l = g k l) :=
-  @Fintype.decidableForallFintype ι _
-    (fun _ => @Fintype.decidableForallFintype ι _ (fun _ => Int.instDecidableEq _ _) _) _
-
-/-- The integer averaged round agrees with its closed form. -/
-lemma boostAverageZ_eq : boostAverageZ = Matrix.of boostAverageEntry := by
-  ext d e
-  revert d e
-  decide +kernel
-
-/-!
-
-## D. The certificate polynomial and the trace projector
-
-The average has eigenvalues `12`, `10`, `4` and `0` on the `16` components, with the
-invariant eigenvalue `12` simple, so the cubic `λ (λ - 4) (λ - 10)` sends the matrix to a
-rank-one one, the outer square of the metric. That identity is the certificate, checked
-entry by entry.
-
--/
-
-/-- The certificate polynomial applied to the integer averaged round. -/
-def Q : Matrix (Fin 2 → Fin 1 ⊕ Fin 3) (Fin 2 → Fin 1 ⊕ Fin 3) ℤ :=
-  boostAverageZ * (boostAverageZ - 4) * (boostAverageZ - 10)
-
-/-- The closed form of `M (M - 4)`: supported on the pairs of equal indices, where it is a
-  multiple of the metric outer square minus a multiple of the identity on the space block. -/
-def boostAverageSqEntry (d e : Fin 2 → Fin 1 ⊕ Fin 3) : ℤ :=
-  if d 0 = d 1 ∧ e 0 = e 1 then
-    (if d 0 = Sum.inl 0 then (if e 0 = Sum.inl 0 then 24 else -24)
-      else if e 0 = Sum.inl 0 then -24 else if d 0 = e 0 then 64 else 4)
-  else 0
-
-set_option maxRecDepth 20000 in
-/-- The certificate: the cubic at the integer average is `48` times the outer square of the
-  metric. Checked through a materialised intermediate product, so each kernel step is one
-  multiplication of matrices with cheap entries. -/
-lemma Q_explicit :
-    Q = Matrix.of fun d e : Fin 2 → Fin 1 ⊕ Fin 3 =>
-      48 * (minkowskiMatrixZ (d 0) (d 1) * minkowskiMatrixZ (e 0) (e 1)) := by
-  have h1 : boostAverageZ * (boostAverageZ - 4) = Matrix.of boostAverageSqEntry := by
-    rw [boostAverageZ_eq]
-    ext a b
-    revert a b
-    decide +kernel
-  rw [Q, h1, boostAverageZ_eq]
-  ext a b
-  revert a b
-  decide +kernel
-
-/-- The certificate polynomial expanded into powers. -/
-lemma Q_eq_poly : Q = boostAverageZ ^ 3 - (14 : ℤ) • boostAverageZ ^ 2
-    + (40 : ℤ) • boostAverageZ := by
-  rw [Q]
-  noncomm_ring
-
-/-- The integer averaged round is a symmetric matrix, a finite check. -/
-lemma boostAverageZ_transpose : boostAverageZᵀ = boostAverageZ := by
-  rw [boostAverageZ_eq]
-  ext d e
-  revert d e
-  decide +kernel
-
-/-- The same read on a pair of entries. -/
-lemma boostAverageZ_symm (d e : Fin 2 → Fin 1 ⊕ Fin 3) :
-    boostAverageZ d e = boostAverageZ e d := by
-  have h := congrFun (congrFun boostAverageZ_transpose e) d
-  rwa [Matrix.transpose_apply] at h
-
-/-!
-
-## E. The classification of the Lorentz invariants
-
-## E.1. The metric contraction
+## A. The metric contraction
 
 -/
 
@@ -356,91 +81,71 @@ lemma repLorentz_metricContraction (hT : IsLorentzCovariant 2 B repLorentz T) (g
 
 /-!
 
-## E.2. Iterating the averaged round on the coefficients
+## B. The classification of the Lorentz invariants
+
+The half turns kill the off-diagonal coefficients, the cyclic rotation equates the three
+spatial diagonal ones, and the boost along `z` relates the spatial diagonal to the time
+diagonal. Together these leave `c_tt` times the metric.
 
 -/
 
-/-- An invariant coefficient tensor is fixed by the integer averaged round, up to `12`. -/
-lemma twelve_mul_eq_sum_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    (12 : ℂ) * c d = ∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e := by
-  rw [show (12 : ℂ) * c d = ∑ e, (12 : ℂ) * (((boostAverageTransition e d : ℚ) : ℂ) * c e) from by
-    rw [← Finset.mul_sum, ← eq_sum_boostAverageTransition hc]]
-  refine Finset.sum_congr rfl fun e _ => ?_
-  have hb := congrArg (fun q : ℚ => (q : ℂ)) (coe_boostAverageZ e d)
-  push_cast at hb
-  rw [boostAverageZ_symm d e, hb]
-  ring
+/-- Two distinct directions are told apart by the half turn about some axis: it keeps one and
+  negates the other, a finite check. -/
+lemma exists_halfTurnSign_mul_ne_one :
+    ∀ μ ν : Fin 1 ⊕ Fin 3, μ ≠ ν → ∃ k, halfTurnSign k μ * halfTurnSign k ν ≠ 1 := by
+  decide
 
-/-- The same for `n` rounds: the `n`-th power of the integer matrix, up to `12 ^ n`. -/
-lemma pow_mul_eq_sum_pow_boostAverageZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) (n : ℕ) (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    ((12 : ℂ) ^ n) * c d = ∑ e, (((boostAverageZ ^ n) d e : ℤ) : ℂ) * c e := by
-  induction n generalizing d with
-  | zero => simp [Matrix.one_apply, apply_ite (fun q : ℤ => (q : ℂ)), ite_mul, Finset.sum_ite_eq]
-  | succ n ih =>
-    calc ((12 : ℂ) ^ (n + 1)) * c d
-        = (12 : ℂ) ^ n * ((12 : ℂ) * c d) := by ring
-      _ = ∑ f, ((boostAverageZ d f : ℤ) : ℂ) * ((12 : ℂ) ^ n * c f) := by
-          rw [twelve_mul_eq_sum_boostAverageZ hc, Finset.mul_sum]
-          exact Finset.sum_congr rfl fun f _ => by ring
-      _ = ∑ e, (((boostAverageZ ^ (n + 1)) d e : ℤ) : ℂ) * c e := by
-          simp only [ih, Finset.mul_sum, pow_succ' boostAverageZ n, Matrix.mul_apply]
-          rw [Finset.sum_comm]
-          refine Finset.sum_congr rfl fun e _ => ?_
-          push_cast
-          rw [Finset.sum_mul]
-          exact Finset.sum_congr rfl fun f _ => by ring
+/-- An invariant coefficient tensor has no off-diagonal coefficients: for `μ ≠ ν` some half
+  turn multiplies `c_{μν}` by `-1`. -/
+lemma eq_zero_of_ne {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    {d : Fin 2 → Fin 1 ⊕ Fin 3} (hd : d 0 ≠ d 1) : c d = 0 := by
+  obtain ⟨k, hk⟩ := exists_halfTurnSign_mul_ne_one _ _ hd
+  exact hc.eq_zero_of_prod_halfTurnSign_ne_one (k := k) (by rwa [Fin.prod_univ_two])
 
-/-!
+/-- The three spatial diagonal coefficients of an invariant coefficient tensor agree: the
+  cyclic rotation carries `c_xx` to `c_yy` to `c_zz`. -/
+lemma apply_inr_inr_eq {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
+    (j : Fin 3) : c ![Sum.inr j, Sum.inr j] = c ![Sum.inr 2, Sum.inr 2] := by
+  have hcyc (j : Fin 3) : c ![Sum.inr (j + 1), Sum.inr (j + 1)] = c ![Sum.inr j, Sum.inr j] := by
+    have h := hc.apply_cycIdx ![Sum.inr j, Sum.inr j]
+    rwa [show cycIdx ![Sum.inr j, Sum.inr j] = ![Sum.inr (j + 1), Sum.inr (j + 1)] from
+      cycDir_comp_two _ _] at h
+  fin_cases j
+  · exact hcyc 2
+  · exact (hcyc 0).trans (hcyc 2)
+  · rfl
 
-## E.3. The certificate round
+/-- The time and spatial diagonal coefficients of an invariant coefficient tensor are opposite.
+  The boost along `z` scales the light-cone component along `D₀ - D_z` in both slots by `t⁴`, so
+  that component, `c_tt - c_tz - c_zt + c_zz`, vanishes, and the mixed terms are `0`. -/
+lemma apply_inl_inl_add_apply_inr_inr {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) : c ![Sum.inl 0, Sum.inl 0] + c ![Sum.inr 2, Sum.inr 2] = 0 := by
+  have h := hc.lightConeComponent_eq_zero 2 (κ := ![0, 0]) (by decide)
+  rw [lightConeComponent, ← (finTwoArrowEquiv _).symm.sum_comp, Fintype.sum_prod_type] at h
+  simp [Fintype.sum_sum_type, Fin.sum_univ_three, lightConeCoeff] at h
+  rw [eq_zero_of_ne hc (d := ![Sum.inl 0, Sum.inr 2]) (by simp),
+    eq_zero_of_ne hc (d := ![Sum.inr 2, Sum.inl 0]) (by simp)] at h
+  linear_combination h
 
--/
-
-/-- The certificate polynomial contracted against an invariant coefficient tensor. Each power of
-  the integer average contributes the matching power of `12`, and the cubic evaluates to
-  `12 ^ 3 - 14 * 12 ^ 2 + 40 * 12 = 192`. -/
-lemma sum_Q_mul_eq {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
-    (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    ∑ e, ((Q d e : ℤ) : ℂ) * c e = (192 : ℂ) * c d := by
-  have h1 := pow_mul_eq_sum_pow_boostAverageZ hc 1 d
-  have h2 := pow_mul_eq_sum_pow_boostAverageZ hc 2 d
-  have h3 := pow_mul_eq_sum_pow_boostAverageZ hc 3 d
-  simp only [pow_one] at h1
-  rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
-      = (∑ e, (((boostAverageZ ^ 3) d e : ℤ) : ℂ) * c e)
-        - 14 * (∑ e, (((boostAverageZ ^ 2) d e : ℤ) : ℂ) * c e)
-        + 40 * (∑ e, ((boostAverageZ d e : ℤ) : ℂ) * c e) from by
-    simp only [Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
-    refine Finset.sum_congr rfl fun e _ => ?_
-    rw [Q_eq_poly]
-    push_cast [Matrix.sub_apply, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul]
-    ring, ← h1, ← h2, ← h3]
-  ring
-
-/-- The certificate applied to an invariant coefficient tensor: `192 c = 48 η (η ⬝ c)`, so
-  every invariant coefficient tensor is a multiple of the metric. -/
+/-- An invariant coefficient tensor is `c_tt` times the Minkowski metric. -/
 lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
     (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    c d = ((4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e)
-      * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
-  have hQ := sum_Q_mul_eq hc d
-  rw [show (∑ e, ((Q d e : ℤ) : ℂ) * c e)
-      = 48 * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)
-        * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e from by
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun e _ => ?_
-    rw [Q_explicit, Matrix.of_apply]
-    push_cast
-    ring] at hQ
-  linear_combination -hQ / 192
-
-/-!
-
-## E.4. The classification
-
--/
+    c d = c ![Sum.inl 0, Sum.inl 0] * ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
+  by_cases hd : d 0 = d 1
+  · have hd' : d = ![d 0, d 0] := by
+      funext s
+      fin_cases s
+      · rfl
+      · exact hd.symm
+    rw [hd', Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_zero]
+    rcases d 0 with a | j
+    · rw [Subsingleton.elim a 0]
+      simp [minkowskiMatrixZ]
+    · rw [apply_inr_inr_eq hc j]
+      simp [minkowskiMatrixZ]
+      linear_combination apply_inl_inl_add_apply_inr_inr hc
+  · rw [eq_zero_of_ne hc hd]
+    simp [minkowskiMatrixZ, Matrix.diagonal_apply_ne _ hd]
 
 /-- Every Lorentz invariant in the span of the components is a multiple of the metric
   contraction. -/
@@ -448,18 +153,17 @@ theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzCovariant 2 B 
     {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • metricContraction (T := T) := by
   obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
-  refine ⟨(4 : ℂ)⁻¹ * ∑ e, ((minkowskiMatrixZ (e 0) (e 1) : ℤ) : ℂ) * c e, ?_⟩
+  refine ⟨c ![Sum.inl 0, Sum.inl 0], ?_⟩
   rw [metricContraction, Finset.smul_sum]
-  refine Finset.sum_congr rfl fun d _ => ?_
-  rw [smul_smul, ← eq_smul_minkowskiMatrixZ hc d]
+  exact Finset.sum_congr rfl fun d _ => by rw [smul_smul, ← eq_smul_minkowskiMatrixZ hc d]
 
 /-!
 
-## F. The classification modulo a Lorentz-stable submodule
+## C. The classification modulo a Lorentz-stable submodule
 
 A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`, that is `B` with
-`S` declared zero: the classes of the components again form a bi-Lorentz tensor, so
-section E applies there and lifts back with an error term in `S`.
+`S` declared zero: the classes of the components again form a rank-two family, so
+section B applies there and lifts back with an error term in `S`.
 
 -/
 

@@ -318,107 +318,35 @@ Lorentz matrix coming from `SL(2,ℂ)`, that of `g†`.
 
 ## D. The rotations by `π` about the axes and the rotation `x → y → z → x`
 
-The rotation by `π` about the `k`-th axis is `i σ_k` (`flipAxis k`), with diagonal Lorentz
-matrix fixing time and that axis and negating the other two, so it multiplies `c d` by `-1`
-once per slot of `d` holding a negated direction (`act_flipAxis`), and where that sign is `-1`
-invariance forces `c d = 0`. Call `d` flip-fixed when all three signs are `1` (`IsFlipFixed`):
-with `n_t, n_x, n_y, n_z` the counts of each direction that says all four have the same parity,
-so `xxyy` and `txyz` survive, `tttx` does not, and `64` of `256` remain.
+The rotation by `π` about the `k`-th axis is `SL2C.halfTurn k`, with diagonal Lorentz matrix
+fixing time and that axis and negating the other two, so it multiplies `c d` by `-1` once per
+slot of `d` holding a negated direction (`act_halfTurn`), and where that sign is `-1`
+invariance forces `c d = 0`. Call `d` half-turn fixed when all three signs are `1`
+(`IsHalfTurnFixed`): with `n_t, n_x, n_y, n_z` the counts of each direction that says all four
+have the same parity, so `xxyy` and `txyz` survive, `tttx` does not, and `64` of `256` remain.
 
 The rotation `x → y → z → x` fixes time (`rotationCycle`) and permutes rather than rescales, so
 the new coefficient at `a` is the old one at `cycIdx (cycIdx a)` (`act_rotationCycle`) and
 invariance reads `c (cycIdx d) = c d`: `c` is constant on the orbit
-`{d, cycIdx d, cycIdx (cycIdx d)}`, of three members unless `d` is `tttt`.
+`{d, cycIdx d, cycIdx (cycIdx d)}`, of three members unless `d` is `tttt`. Both actions are
+stated for any number of slots in `Invariants.Basic`.
 -/
 
-/-- Rotation by `π` about the `k`-th axis: the matrices below are `i σ_x`, `i σ_y`, `i σ_z`. -/
-def flipAxis : Fin 3 → SL(2,ℂ)
-  | 0 => ⟨!![0, Complex.I; Complex.I, 0], by simp [Matrix.det_fin_two_of]⟩ -- `i σ_x`
-  | 1 => ⟨!![0, 1; -1, 0], by simp [Matrix.det_fin_two_of]⟩ -- `i σ_y`
-  | 2 => ⟨!![Complex.I, 0; 0, -Complex.I], by simp [Matrix.det_fin_two_of]⟩ -- `i σ_z`
+/-- All three half turns fix the coefficient at `d`, that is the sign product is `1` for each
+  axis. Equivalently, and not used below, all four directions occur an even number of times
+  among the slots, or all four an odd number. -/
+def IsHalfTurnFixed (d : Fin 4 → Fin 1 ⊕ Fin 3) : Prop :=
+  ∀ k : Fin 3, ∏ s, halfTurnSign k (d s) = 1
 
-/-- The sign the `k`-th flip gives a direction: `+1` on time and the axis, `-1` transverse. -/
-def flipSign (k : Fin 3) (μ : Fin 1 ⊕ Fin 3) : ℤ :=
-  if μ = Sum.inl 0 ∨ μ = Sum.inr k then 1 else -1
+instance : DecidablePred IsHalfTurnFixed := fun d =>
+  inferInstanceAs (Decidable (∀ k : Fin 3, ∏ s, halfTurnSign k (d s) = 1))
 
-/-- The Lorentz matrix of the `k`-th flip is diagonal, carrying `flipSign k`. -/
-lemma toLorentzGroup_flipAxis_apply (k : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
-    (SL2C.toLorentzGroup (flipAxis k)).1 a b = if a = b then (flipSign k a : ℝ) else 0 := by
-  refine Complex.ofReal_injective ?_
-  rw [SL2C.toLorentzGroup_eq_trace, PauliMatrix.trace_pauliSelfAdjoint'_mul_apply]
-  fin_cases k <;> rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
-    simp [flipAxis, flipSign, PauliMatrix.pauliSelfAdjoint', PauliMatrix.pauliMatrix,
-      Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two, Complex.ext_iff]
-
-/-- Being diagonal, the flip rescales each coefficient by the product of its four signs. -/
-lemma act_flipAxis (k : Fin 3) (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
-    act (SL2C.toLorentzGroup (flipAxis k)).1 c a = ((∏ s, flipSign k (a s) : ℤ) : ℂ) * c a := by
-  rw [act, Finset.sum_eq_single a]
-  · rw [mul_comm]
-    push_cast
-    congr 1
-    exact Finset.prod_congr rfl fun s _ => by
-      rw [toLorentzGroup_flipAxis_apply, ite_eq_left rfl, Complex.ofReal_intCast]
-  · intro d _ hda
-    obtain ⟨s, hs⟩ := Function.ne_iff.1 hda.symm
-    rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
-    rw [toLorentzGroup_flipAxis_apply, ite_eq_right hs, Complex.ofReal_zero]
-  · exact fun h => absurd (Finset.mem_univ a) h
-
-/-- The sign a flip attaches to a coefficient is `1` or `-1`, being a product of such signs. -/
-lemma prod_flipSign_eq_one_or (k : Fin 3) (d : Fin 4 → Fin 1 ⊕ Fin 3) :
-    ∏ s, flipSign k (d s) = 1 ∨ ∏ s, flipSign k (d s) = -1 := by
-  refine Finset.prod_induction _ (fun n : ℤ => n = 1 ∨ n = -1) ?_ (Or.inl rfl) fun s _ => ?_
-  · rintro a b (rfl | rfl) (rfl | rfl) <;> norm_num
-  · unfold flipSign
-    split_ifs <;> simp
-
-/-- All three flips fix the coefficient at `d`, that is the sign product is `1` for each axis.
-  Equivalently, and not used below, all four directions occur an even number of times among the
-  slots, or all four an odd number. -/
-def IsFlipFixed (d : Fin 4 → Fin 1 ⊕ Fin 3) : Prop :=
-  ∀ k : Fin 3, ∏ s, flipSign k (d s) = 1
-
-instance : DecidablePred IsFlipFixed := fun d =>
-  inferInstanceAs (Decidable (∀ k : Fin 3, ∏ s, flipSign k (d s) = 1))
-
-/-- An invariant coefficient tensor vanishes off the flip-fixed index vectors. -/
-lemma eq_zero_of_not_isFlipFixed {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
-    (hc : IsInvariantCoeff c) {d : Fin 4 → Fin 1 ⊕ Fin 3} (hd : ¬IsFlipFixed d) : c d = 0 := by
+/-- An invariant coefficient tensor vanishes off the half-turn fixed index vectors. -/
+lemma eq_zero_of_not_isHalfTurnFixed {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
+    (hc : IsInvariantCoeff c) {d : Fin 4 → Fin 1 ⊕ Fin 3} (hd : ¬IsHalfTurnFixed d) :
+    c d = 0 := by
   obtain ⟨k, hk⟩ := not_forall.1 hd
-  have h := congrFun (hc (flipAxis k)) d
-  rw [act_flipAxis, (prod_flipSign_eq_one_or k d).resolve_left hk] at h
-  push_cast at h
-  linear_combination (-2⁻¹ : ℂ) * h
-
-/-- The relabelling `cycDir`, which fixes time and sends `x → y → z → x`, applied in every slot. -/
-def cycIdx (d : Fin 4 → Fin 1 ⊕ Fin 3) : Fin 4 → Fin 1 ⊕ Fin 3 := fun s => cycDir (d s)
-
-/-- Cycling the axes three times is the identity. -/
-lemma cycIdx_cycIdx_cycIdx (d : Fin 4 → Fin 1 ⊕ Fin 3) : cycIdx (cycIdx (cycIdx d)) = d :=
-  funext fun s => cycDir_cycDir_cycDir (d s)
-
-/-- The cyclic rotation permutes entries: the new entry at `a` is the old one at `a` cycled back. -/
-lemma act_rotationCycle (c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (a : Fin 4 → Fin 1 ⊕ Fin 3) :
-    act (SL2C.toLorentzGroup rotationCycle).1 c a = c (cycIdx (cycIdx a)) := by
-  rw [act, Finset.sum_eq_single (cycIdx (cycIdx a))]
-  · rw [Finset.prod_eq_one fun s _ => ?_, mul_one]
-    rw [toLorentzGroup_rotationCycle_apply, ite_eq_left, Complex.ofReal_one]
-    exact (congrFun (cycIdx_cycIdx_cycIdx a) s).symm
-  · intro d _ hda
-    have hne : cycIdx d ≠ a := fun h => hda (by rw [← h, cycIdx_cycIdx_cycIdx])
-    obtain ⟨s, hs⟩ := Function.ne_iff.1 hne
-    rw [Finset.prod_eq_zero (Finset.mem_univ s), mul_zero]
-    rw [toLorentzGroup_rotationCycle_apply, ite_eq_right fun h : a s = cycDir (d s) => hs h.symm,
-      Complex.ofReal_zero]
-  · exact fun h => absurd (Finset.mem_univ _) h
-
-/-- An invariant coefficient tensor is constant on the orbits of the cyclic rotation. -/
-lemma apply_cycIdx {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c)
-    (d : Fin 4 → Fin 1 ⊕ Fin 3) : c (cycIdx d) = c d := by
-  have h := congrFun (hc rotationCycle) (cycIdx d)
-  rw [act_rotationCycle, cycIdx_cycIdx_cycIdx] at h
-  exact h.symm
+  exact hc.eq_zero_of_prod_halfTurnSign_ne_one hk
 
 /-!
 
@@ -475,10 +403,10 @@ lemma sixteen_mul_eq_sum_transitionZ {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
 
 Write an index vector as a word, `tttt` or `txxt`. Cycling the axes carries one to another and
 three cyclings return it, so they fall into orbits of at most three: `txxt`, `tyyt`, `tzzt`
-form one, and `tttt` is alone. By D an invariant tensor vanishes off the `64` flip-fixed
+form one, and `tttt` is alone. By D an invariant tensor vanishes off the `64` half-turn fixed
 vectors and is constant on each orbit, and those `64` make `22` orbits, `21` of size three plus
 `tttt`; `orbitRep` lists one from each, and the two lemmas below check at all `256` index
-vectors that these cover the flip-fixed ones without overlapping. So an invariant tensor is its
+vectors that these cover the half-turn fixed ones without overlapping. So an invariant tensor is its
 `22` values at the representatives, its orbit coordinates, which `ofOrbitCoord` inverts.
 -/
 
@@ -511,9 +439,9 @@ def orbitRep : Fin 22 → Fin 4 → Fin 1 ⊕ Fin 3 :=
 def orbit (k : Fin 22) : Finset (Fin 4 → Fin 1 ⊕ Fin 3) :=
   {orbitRep k, cycIdx (orbitRep k), cycIdx (cycIdx (orbitRep k))}
 
-/-- The vectors in one of the `22` orbits are exactly the flip-fixed ones, a finite check. -/
-lemma isFlipFixed_iff_exists_mem_orbit :
-    ∀ d, IsFlipFixed d ↔ ∃ k, d ∈ orbit k := by
+/-- The vectors in one of the `22` orbits are exactly the half-turn fixed ones, a finite check. -/
+lemma isHalfTurnFixed_iff_exists_mem_orbit :
+    ∀ d, IsHalfTurnFixed d ↔ ∃ k, d ∈ orbit k := by
   decide +kernel
 
 /-- Different orbits share no index vector, a finite check. -/
@@ -543,15 +471,15 @@ noncomputable def ofOrbitCoord (b : Fin 22 → ℂ) (d : Fin 4 → Fin 1 ⊕ Fin
 lemma eq_ofOrbitCoord {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
     c = ofOrbitCoord fun k => c (orbitRep k) := by
   funext d
-  by_cases hd : IsFlipFixed d
-  · obtain ⟨k, hk⟩ := (isFlipFixed_iff_exists_mem_orbit d).1 hd
+  by_cases hd : IsHalfTurnFixed d
+  · obtain ⟨k, hk⟩ := (isHalfTurnFixed_iff_exists_mem_orbit d).1 hd
     rw [ofOrbitCoord, Finset.sum_eq_single k, ite_eq_left hk,
-      eq_orbitRep_of_mem_orbit (apply_cycIdx hc) hk]
+      eq_orbitRep_of_mem_orbit hc.apply_cycIdx hk]
     · exact fun l _ hl => ite_eq_right fun hdl => hl (eq_of_mem_orbit hdl hk)
     · exact fun h => absurd (Finset.mem_univ k) h
-  · rw [eq_zero_of_not_isFlipFixed hc hd]
+  · rw [eq_zero_of_not_isHalfTurnFixed hc hd]
     exact (Finset.sum_eq_zero fun k _ =>
-      ite_eq_right fun hk => hd ((isFlipFixed_iff_exists_mem_orbit d).2 ⟨k, hk⟩)).symm
+      ite_eq_right fun hk => hd ((isHalfTurnFixed_iff_exists_mem_orbit d).2 ⟨k, hk⟩)).symm
 
 /-- Contracting against such a tensor collects the `256` index vectors into the `22` orbits. -/
 lemma sum_mul_ofOrbitCoord (f : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ) (b : Fin 22 → ℂ) :
@@ -635,8 +563,8 @@ lemma orbitMatrix_mulVec {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ}
   have h₀ := h (orbitRep k)
   have h₁ := h (cycIdx (orbitRep k))
   have h₂ := h (cycIdx (cycIdx (orbitRep k)))
-  rw [apply_cycIdx hc] at h₁
-  rw [apply_cycIdx hc, apply_cycIdx hc] at h₂
+  rw [hc.apply_cycIdx] at h₁
+  rw [hc.apply_cycIdx, hc.apply_cycIdx] at h₂
   simp only [Matrix.mulVec, dotProduct, Matrix.map_apply, orbitMatrix_apply, Pi.smul_apply,
     smul_eq_mul, Int.cast_sum, Int.cast_add, Finset.sum_add_distrib, add_mul]
   linear_combination -(h₀ + h₁ + h₂)
@@ -752,7 +680,7 @@ lemma orbitCoord_eq {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantC
     exact Finset.sum_congr rfl fun l _ => by ring
 
 /-- An invariant coefficient tensor is a combination of the four. -/
-theorem exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
+lemma exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) :
     ∃ a : Fin 4 → ℂ, c = fun d => ∑ i, a i * ((contractionCoeff i d : ℤ) : ℂ) := by
   refine ⟨fun i => 24⁻¹ * ∑ l, (contractionWeight i l : ℂ) * c (orbitRep l), funext fun d => ?_⟩
   have hfour : ∀ i d, ((contractionCoeff i d : ℤ) : ℂ)

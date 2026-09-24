@@ -25,7 +25,9 @@ The main declarations are:
 - `rotationZToAxis`, the indexed family of rotations;
 - `rotationZToAxis_zero_apply` and its companions, their matrix entries;
 - `rotationZToAxis_zero_mul_diagonal_mul_inv` and its companions, their action on a
-  diagonal matrix.
+  diagonal matrix;
+- `halfTurn`, the rotation by `π` about a coordinate axis, lifted as `-i σ_k`;
+- `toLorentzGroup_halfTurn_apply`, its diagonal Lorentz matrix with signs `halfTurnSign`.
 -/
 
 @[expose] public section
@@ -224,5 +226,76 @@ lemma rotationZToAxis_two_mul_diagonal_mul_inv (a b : ℂ) :
     simp [Matrix.one_apply]
 
 end Lorentz.SL2C
+
+/-!
+
+## C. Half turns about the coordinate axes
+
+The half turn about the axis `k` is the rotation by `π` about it. It has two lifts to
+`SL(2,ℂ)`, `-i σ_k` and `i σ_k`, which differ by the central element `-1` and have the same
+Lorentz matrix. The chosen lift `halfTurn k` is `-i σ_k`, the value at `θ = π` of
+`cos (θ / 2) - i sin (θ / 2) σ_k`, the convention `rotationCycle` also follows. Its Lorentz
+matrix is diagonal: it fixes time and the axis and negates the two transverse directions, with
+the signs recorded by `halfTurnSign`.
+
+-/
+
+namespace Lorentz
+
+/-- The sign the half turn about the axis `k` gives a direction: `1` on time and on the axis,
+`-1` on the two transverse directions. -/
+def halfTurnSign (k : Fin 3) (μ : Fin 1 ⊕ Fin 3) : ℤ :=
+  if μ = Sum.inl 0 ∨ μ = Sum.inr k then 1 else -1
+
+namespace SL2C
+
+open Matrix MatrixGroups
+
+/-- The half turn about the axis `k`, the rotation by `π` about it, as the element `-i σ_k` of
+`SL(2,ℂ)`. The other lift `i σ_k` is `-halfTurn k`. -/
+noncomputable def halfTurn : Fin 3 → SL(2,ℂ)
+  | 0 => ⟨!![0, -Complex.I; -Complex.I, 0], by
+      rw [Matrix.det_fin_two_of]
+      simp [Complex.I_mul_I]⟩
+  | 1 => ⟨!![0, -1; 1, 0], by
+      rw [Matrix.det_fin_two_of]
+      simp⟩
+  | 2 => ⟨!![-Complex.I, 0; 0, Complex.I], by
+      rw [Matrix.det_fin_two_of]
+      simp [Complex.I_mul_I]⟩
+
+/-- The matrix entries of the half turn about the `x`-axis, `-i σ_x`. -/
+@[simp] lemma halfTurn_zero_apply (j k : Fin 2) :
+    (halfTurn 0).1 j k = (!![0, -Complex.I; -Complex.I, 0]) j k := rfl
+
+/-- The matrix entries of the half turn about the `y`-axis, `-i σ_y`. -/
+@[simp] lemma halfTurn_one_apply (j k : Fin 2) :
+    (halfTurn 1).1 j k = (!![0, -1; 1, 0] : Matrix (Fin 2) (Fin 2) ℂ) j k := rfl
+
+/-- The matrix entries of the half turn about the `z`-axis, `-i σ_z`. -/
+@[simp] lemma halfTurn_two_apply (j k : Fin 2) :
+    (halfTurn 2).1 j k = (!![-Complex.I, 0; 0, Complex.I]) j k := rfl
+
+/-- The Lorentz matrix of the half turn about the axis `k` is diagonal, with the signs
+`halfTurnSign k`: it fixes time and the axis and negates the two transverse directions. -/
+lemma toLorentzGroup_halfTurn_apply (k : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
+    (toLorentzGroup (halfTurn k)).1 a b = if a = b then (halfTurnSign k a : ℝ) else 0 := by
+  refine Complex.ofReal_injective ?_
+  rw [toLorentzGroup_eq_trace, PauliMatrix.trace_pauliSelfAdjoint'_mul_apply]
+  fin_cases k <;> rcases a with a | a <;> rcases b with b | b <;> fin_cases a <;> fin_cases b <;>
+    simp [halfTurnSign, PauliMatrix.pauliSelfAdjoint', PauliMatrix.pauliMatrix,
+      Matrix.mul_apply, Matrix.conjTranspose_apply, Fin.sum_univ_two, Complex.ext_iff]
+
+/-- The Lorentz matrix of the half turn is diagonal, hence symmetric. -/
+lemma toLorentzGroup_halfTurn_symm (k : Fin 3) (a b : Fin 1 ⊕ Fin 3) :
+    (toLorentzGroup (halfTurn k)).1 a b = (toLorentzGroup (halfTurn k)).1 b a := by
+  rw [toLorentzGroup_halfTurn_apply, toLorentzGroup_halfTurn_apply]
+  by_cases h : a = b
+  · rw [h]
+  · rw [ite_eq_right h, ite_eq_right (Ne.symm h)]
+
+end SL2C
+
+end Lorentz
 
 end
