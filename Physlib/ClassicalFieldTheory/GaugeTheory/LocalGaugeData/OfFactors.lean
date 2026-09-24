@@ -137,7 +137,7 @@ found at every use site identical to those inside the gauge data.
 
 -/
 
-namespace Factors
+namespace OfFactors
 
 /-- The group of jets of a list of factors. -/
 def G : List FactorSpec → Type
@@ -248,7 +248,7 @@ instance instFinite𝔤 : (Γ : List FactorSpec) → Module.Finite ℝ (𝔤 Γ)
     letI := instFinite𝔤 (g :: gs)
     inferInstanceAs (Module.Finite ℝ (f.𝔤 × 𝔤 (g :: gs)))
 
-end Factors
+end OfFactors
 
 /-!
 
@@ -287,7 +287,7 @@ instance instFaithfulTrivial : trivial.Faithful where
   ext_of_evalLie_iteratedDeriv _ := rfl
   eq_ofConstant_of_maurerCartan_eq_zero _ := rfl
 
-open Factors in
+open OfFactors in
 /-- **The local gauge data of a list of factors**: the product, in the order of the list,
   of the local gauge data of the factors. -/
 noncomputable def ofFactors : (Γ : List FactorSpec) → LocalGaugeData (G₀ Γ) (𝔤 Γ) (G Γ) (𝔤J Γ)

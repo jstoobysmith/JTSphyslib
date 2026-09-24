@@ -121,7 +121,7 @@ lemma higgsMass_mem_massWeightSubmodule :
 @[sorryful]
 theorem invariantsLE_four (x : fieldData.LocalFieldAlgebra) :
     (x ∈ fieldData.massWeightSubmoduleLE 4
-        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
         ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
       ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
   sorry
@@ -132,7 +132,7 @@ theorem invariantsLE_four (x : fieldData.LocalFieldAlgebra) :
 @[sorryful]
 theorem invariantsLE_seven (x : fieldData.LocalFieldAlgebra) :
     (x ∈ fieldData.massWeightSubmoduleLE 7
-        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
         ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
       ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass := by
   sorry
@@ -154,7 +154,7 @@ and the gauge sector nothing below the field strength squared at mass weight eig
 @[sorryful]
 theorem scalarSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
     (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.scalar}
-        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
         ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
       ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass
           ⊔ ℂ ∙ (higgsMass * higgsMass) := by
@@ -165,7 +165,7 @@ theorem scalarSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
 @[sorryful]
 theorem fermionSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
     (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.fermion}
-        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
         ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
       ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
   sorry
@@ -175,7 +175,7 @@ theorem fermionSector_invariantsLE_eight (x : fieldData.LocalFieldAlgebra) :
 @[sorryful]
 theorem gaugeSector_invariantsLE_seven (x : fieldData.LocalFieldAlgebra) :
     (x ∈ fieldData.massWeightSubmoduleLE 7 ∧ x ∈ fieldData.SectorAlgebra {.gauge}
-        ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+        ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
         ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
       ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) := by
   sorry
@@ -191,7 +191,7 @@ theorem gaugeSector_invariantsLE_seven (x : fieldData.LocalFieldAlgebra) :
   of every fermionic and bosonic species, since the hypercharges are `6 Y` and every
   field has `2 · (colour triality) + 3 · (isospin duality) + 6 Y ≡ 0 (mod 6)`. -/
 @[sorryful]
-theorem repJet_ofConstant_eq_one_of_center (ζ : ℂ) (hζ : ζ ^ 6 = 1) (g : Factors.G₀ gauge)
+theorem repJet_ofConstant_eq_one_of_center (ζ : ℂ) (hζ : ζ ^ 6 = 1) (g : OfFactors.G₀ gauge)
     (h₃ : (g.1 : specialUnitaryGroup (Fin 3) ℂ).1 = ζ ^ 2 • (1 : Matrix (Fin 3) (Fin 3) ℂ))
     (h₂ : (g.2.1 : specialUnitaryGroup (Fin 2) ℂ).1 = ζ ^ 3 • (1 : Matrix (Fin 2) (Fin 2) ℂ))
     (h₁ : (g.2.2 : unitary ℂ).1 = ζ) :

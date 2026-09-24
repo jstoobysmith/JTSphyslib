@@ -85,7 +85,7 @@ section Transport
 
 variable {T' : GaugeFieldData gaugeData}
   (e : fieldData.LocalFieldAlgebra ≃ₐ[ℂ] T'.LocalFieldAlgebra)
-  (hjet : ∀ (U : Factors.G gauge) x, e (fieldData.repJet U x) = T'.repJet U (e x))
+  (hjet : ∀ (U : OfFactors.G gauge) x, e (fieldData.repJet U x) = T'.repJet U (e x))
   (hlor : ∀ (Λ : SL(2,ℂ)) x, e (fieldData.repLorentzGroup Λ x) = T'.repLorentzGroup Λ (e x))
   (hscale : ∀ (c : ℝ) x, e (fieldData.massWeightScale c x) = T'.massWeightScale c (e x))
 
@@ -114,11 +114,11 @@ include hjet hlor hscale in
 theorem invariantsLE_four_iff :
     (∀ x : fieldData.LocalFieldAlgebra,
       (x ∈ fieldData.massWeightSubmoduleLE 4
-          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
           ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
         ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
       ↔ ∀ y : T'.LocalFieldAlgebra,
-        (y ∈ T'.massWeightSubmoduleLE 4 ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+        (y ∈ T'.massWeightSubmoduleLE 4 ∧ (∀ U : OfFactors.G gauge, T'.repJet U y = y)
             ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
           ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass := by
   rw [← invariantsLE_eq_iff, ← invariantsLE_eq_iff]
@@ -132,11 +132,11 @@ include hjet hlor hscale in
 theorem invariantsLE_seven_iff :
     (∀ x : fieldData.LocalFieldAlgebra,
       (x ∈ fieldData.massWeightSubmoduleLE 7
-          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
           ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
         ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass)
       ↔ ∀ y : T'.LocalFieldAlgebra,
-        (y ∈ T'.massWeightSubmoduleLE 7 ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+        (y ∈ T'.massWeightSubmoduleLE 7 ∧ (∀ U : OfFactors.G gauge, T'.repJet U y = y)
             ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
           ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass := by
   rw [← invariantsLE_eq_iff, ← invariantsLE_eq_iff]
@@ -154,13 +154,13 @@ theorem scalarSector_invariantsLE_eight_iff
       = (T'.SectorAlgebra {.scalar}).toSubmodule) :
     (∀ x : fieldData.LocalFieldAlgebra,
       (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.scalar}
-          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
           ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
         ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra) ⊔ ℂ ∙ higgsMass
             ⊔ ℂ ∙ (higgsMass * higgsMass))
       ↔ ∀ y : T'.LocalFieldAlgebra,
         (y ∈ T'.massWeightSubmoduleLE 8 ∧ y ∈ T'.SectorAlgebra {.scalar}
-            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ (∀ U : OfFactors.G gauge, T'.repJet U y = y)
             ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
           ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) ⊔ ℂ ∙ e higgsMass
               ⊔ ℂ ∙ (e higgsMass * e higgsMass) := by
@@ -193,12 +193,12 @@ theorem fermionSector_invariantsLE_eight_iff
       = (T'.SectorAlgebra {.fermion}).toSubmodule) :
     (∀ x : fieldData.LocalFieldAlgebra,
       (x ∈ fieldData.massWeightSubmoduleLE 8 ∧ x ∈ fieldData.SectorAlgebra {.fermion}
-          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
           ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
         ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
       ↔ ∀ y : T'.LocalFieldAlgebra,
         (y ∈ T'.massWeightSubmoduleLE 8 ∧ y ∈ T'.SectorAlgebra {.fermion}
-            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ (∀ U : OfFactors.G gauge, T'.repJet U y = y)
             ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
           ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) := by
   simp only [← Subalgebra.mem_toSubmodule]
@@ -227,12 +227,12 @@ theorem gaugeSector_invariantsLE_seven_iff
       = (T'.SectorAlgebra {.gauge}).toSubmodule) :
     (∀ x : fieldData.LocalFieldAlgebra,
       (x ∈ fieldData.massWeightSubmoduleLE 7 ∧ x ∈ fieldData.SectorAlgebra {.gauge}
-          ∧ (∀ U : Factors.G gauge, fieldData.repJet U x = x)
+          ∧ (∀ U : OfFactors.G gauge, fieldData.repJet U x = x)
           ∧ ∀ Λ : SL(2,ℂ), fieldData.repLorentzGroup Λ x = x)
         ↔ x ∈ ℂ ∙ (1 : fieldData.LocalFieldAlgebra))
       ↔ ∀ y : T'.LocalFieldAlgebra,
         (y ∈ T'.massWeightSubmoduleLE 7 ∧ y ∈ T'.SectorAlgebra {.gauge}
-            ∧ (∀ U : Factors.G gauge, T'.repJet U y = y)
+            ∧ (∀ U : OfFactors.G gauge, T'.repJet U y = y)
             ∧ ∀ Λ : SL(2,ℂ), T'.repLorentzGroup Λ y = y)
           ↔ y ∈ ℂ ∙ (1 : T'.LocalFieldAlgebra) := by
   simp only [← Subalgebra.mem_toSubmodule]
