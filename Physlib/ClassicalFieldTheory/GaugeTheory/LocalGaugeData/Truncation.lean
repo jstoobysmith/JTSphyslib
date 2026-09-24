@@ -98,23 +98,6 @@ noncomputable def truncationKer (n : ℕ) : Subgroup GJ where
     exact jets.evalLie_iteratedDeriv_adjoint_eq_zero U⁻¹ fun q hq =>
       hU.2 q μ (lt_of_le_of_lt (Multiset.card_le_card hq) hs)
 
-lemma mem_truncationKer_iff {n : ℕ} {U : GJ} :
-    U ∈ jets.truncationKer n ↔ jets.eval U = 1 ∧
-      ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card < n →
-        jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 := Iff.rfl
-
-lemma eval_eq_one_of_mem_truncationKer {n : ℕ} {U : GJ} (hU : U ∈ jets.truncationKer n) :
-    jets.eval U = 1 := hU.1
-
-lemma evalLie_iteratedDeriv_maurerCartan_eq_zero_of_mem_truncationKer {n : ℕ} {U : GJ}
-    (hU : U ∈ jets.truncationKer n) {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s.card < n)
-    (μ : Fin 1 ⊕ Fin 3) : jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) = 0 :=
-  hU.2 s μ hs
-
-/-- The filtration decreases: a jet trivial to order `n` is trivial to every lower order. -/
-lemma truncationKer_antitone : Antitone jets.truncationKer :=
-  fun _ _ hmn _ hU => ⟨hU.1, fun s μ hs => hU.2 s μ (lt_of_lt_of_le hs hmn)⟩
-
 /-- The zeroth truncation kernel is the group of pure jets, those with identity value. -/
 lemma mem_truncationKer_zero_iff {U : GJ} : U ∈ jets.truncationKer 0 ↔ jets.eval U = 1 :=
   ⟨fun h => h.1, fun h => ⟨h, fun _ _ hs => absurd hs (Nat.not_lt_zero _)⟩⟩
@@ -146,17 +129,6 @@ lemma adjointDualCoeff_eq_zero_of_mem_truncationKer {n : ℕ} {U : GJ}
   rw [adjointDualCoeff, jets.adjointCoeff_eq_zero_of_mem_truncationKer hU hx hxn]
   exact LinearMap.ext fun φ => LinearMap.ext fun a => map_zero φ
 
-/-- Up to order `n`, a jet trivial to order `n` has the adjoint coefficients of the
-  identity. -/
-lemma adjointCoeff_eq_one_of_mem_truncationKer {n : ℕ} {U : GJ} (hU : U ∈ jets.truncationKer n)
-    {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
-    jets.adjointCoeff U x = jets.adjointCoeff 1 x := by
-  rw [adjointCoeff_one]
-  split_ifs with h
-  · subst h
-    exact jets.adjointCoeff_zero_of_eval_eq_one hU.1
-  · exact jets.adjointCoeff_eq_zero_of_mem_truncationKer hU h hxn
-
 /-- Up to order `n`, a jet trivial to order `n` is invisible on the right of a product. -/
 lemma adjointCoeff_mul_of_mem_truncationKer_right (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
@@ -166,16 +138,6 @@ lemma adjointCoeff_mul_of_mem_truncationKer_right (g : GJ) {n : ℕ} {U : GJ}
   · rw [jets.adjointCoeff_eq_zero_of_mem_truncationKer hU hp2
       ((Multiset.card_le_card (Multiset.snd_le_of_mem_antidiagonal hp)).trans hxn),
       LinearMap.comp_zero]
-
-/-- Up to order `n`, a jet trivial to order `n` is invisible on the left of a product. -/
-lemma adjointCoeff_mul_of_mem_truncationKer_left (g : GJ) {n : ℕ} {U : GJ}
-    (hU : U ∈ jets.truncationKer n) {x : Multiset (Fin 1 ⊕ Fin 3)} (hxn : x.card ≤ n) :
-    jets.adjointCoeff (U * g) x = jets.adjointCoeff g x := by
-  rw [adjointCoeff_mul, Multiset.sum_antidiagonal_eq_of_fst_ne_zero x _ fun p hp hp1 => ?_]
-  · rw [jets.adjointCoeff_zero_of_eval_eq_one hU.1, LinearMap.id_comp]
-  · rw [jets.adjointCoeff_eq_zero_of_mem_truncationKer hU hp1
-      ((Multiset.card_le_card (Multiset.fst_le_of_mem_antidiagonal hp)).trans hxn),
-      LinearMap.zero_comp]
 
 /-- Up to order `n`, a conjugate of a jet trivial to order `n` has the adjoint
   coefficients of the identity. -/
@@ -248,12 +210,6 @@ lemma coe_truncationProjZero (U : GJ) :
 lemma eq_truncationProjZero_mul_ofConstant (U : GJ) :
     U = jets.truncationProjZero U * jets.ofConstant (jets.eval U) := by
   simp
-
-lemma truncationProjZero_surjective : Function.Surjective jets.truncationProjZero := by
-  intro V
-  refine ⟨V, Subtype.ext ?_⟩
-  rw [coe_truncationProjZero, jets.mem_truncationKer_zero_iff.mp V.2, map_one, inv_one,
-    mul_one]
 
 /-- The pure part of a jet is trivial exactly when the jet is constant. -/
 lemma truncationProjZero_eq_one_iff {U : GJ} :

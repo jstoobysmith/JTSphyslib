@@ -174,11 +174,6 @@ lemma evalLie_adjoint_ofConstantLie (U : GJ) (a : 𝔤) :
     jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = jets.adjointValue (jets.eval U) a := by
   rw [jets.evalLie_adjoint, jets.evalLie_ofConstantLie]
 
-/-- A jet with trivial value acts trivially on constants at the base point. -/
-lemma evalLie_adjoint_ofConstantLie_of_eval_eq_one {U : GJ} (hU : jets.eval U = 1) (a : 𝔤) :
-    jets.evalLie (jets.adjoint U (jets.ofConstantLie a)) = a := by
-  rw [evalLie_adjoint_ofConstantLie, hU, map_one, Module.End.one_apply]
-
 /-- The Maurer–Cartan form is determined by the Leibniz rule, up to the centre. Since
   `adjoint U` is invertible, `deriv_adjoint` says exactly that the inner derivation
   `⁅maurerCartan U μ, ·⁆` is `adjoint U ∘ deriv μ ∘ adjoint U⁻¹ − deriv μ`; so any other
