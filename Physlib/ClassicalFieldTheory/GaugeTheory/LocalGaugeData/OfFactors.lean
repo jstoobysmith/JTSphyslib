@@ -163,8 +163,12 @@ def 𝔤J : List FactorSpec → Type
   | [f] => f.𝔤J
   | f :: g :: gs => f.𝔤J × 𝔤J (g :: gs)
 
-TODO (lines := 142-166) (date := 2026-09-11) "These could all
-  likely be defined with the typical List.foldr construction, or List.prod of similar."
+/-!
+The carriers are written by recursion on the list rather than as a fold, so that a single
+factor has its own carrier rather than `f.G × Unit`, and so that the carrier of a list
+unfolds to the literal product of the carriers of its factors, `JetSU 3 × JetSU 2 × JetU1`
+for the Standard Model. The same recursion gives the instances and the gauge data below.
+-/
 
 instance : Bracket Unit Unit := ⟨fun _ _ => ()⟩
 
