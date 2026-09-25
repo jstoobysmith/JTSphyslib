@@ -19,8 +19,8 @@ the list, of the local gauge data `LocalGaugeData.u1` and `LocalGaugeData.su n` 
 factors. The carriers are the corresponding products of `JetU1` and `JetSU n`, and of
 their Lie algebras, so that a model's gauge group is a concrete product of matrix groups.
 The list of factors of the product, in the sense of the table layer, is assembled from
-the canonical factors of the pieces (`Factors.factors`), and the product of faithful
-packages is faithful.
+the canonical factors of the pieces (`Factors.factors`), and the gauge data is faithful
+and free because each factor is and both properties pass to products.
 
 With this, a model on any gauge group built from `U(1)` and `SU(n)` factors is a table
 alone: `LocalGaugeData.ofFactors Γ` is its gauge data and `Factors.factors Γ` is what its
@@ -31,6 +31,7 @@ rows are charged under.
 - `LocalGaugeData.FactorSpec` : the symbols `U1` and `SU n`.
 - `LocalGaugeData.ofFactors` : the local gauge data of a list of factors.
 - `LocalGaugeData.Factors.factors` : the canonical factors of that gauge data.
+- `LocalGaugeData.instFreeOfFactors` : that gauge data is free.
 
 ## iii. Table of contents
 
@@ -122,6 +123,10 @@ noncomputable abbrev factor : (f : FactorSpec) → Factor f.data
 noncomputable instance instFaithfulData : (f : FactorSpec) → f.data.Faithful
   | .U1 => inferInstanceAs u1.Faithful
   | .SU n => inferInstanceAs (su n).Faithful
+
+noncomputable instance instFreeData : (f : FactorSpec) → f.data.Free
+  | .U1 => inferInstanceAs u1.Free
+  | .SU n => inferInstanceAs (su n).Free
 
 end FactorSpec
 
@@ -291,6 +296,10 @@ instance instFaithfulTrivial : trivial.Faithful where
   ext_of_evalLie_iteratedDeriv _ := rfl
   eq_ofConstant_of_maurerCartan_eq_zero _ := rfl
 
+instance instFreeTrivial : trivial.Free where
+  exists_evalLie_iteratedDeriv_eq _ := ⟨(), fun _ => rfl⟩
+  exists_radial_eq _ _ := ⟨1, rfl⟩
+
 open OfFactors in
 /-- **The local gauge data of a list of factors**: the product, in the order of the list,
   of the local gauge data of the factors. -/
@@ -316,6 +325,14 @@ noncomputable instance instFaithfulOfFactors : (Γ : List FactorSpec) → (ofFac
   | f :: g :: gs =>
     letI := instFaithfulOfFactors (g :: gs)
     inferInstanceAs (f.data.prod (ofFactors (g :: gs))).Faithful
+
+/-- The local gauge data of a list of factors is free. -/
+noncomputable instance instFreeOfFactors : (Γ : List FactorSpec) → (ofFactors Γ).Free
+  | [] => inferInstanceAs trivial.Free
+  | [f] => inferInstanceAs f.data.Free
+  | f :: g :: gs =>
+    letI := instFreeOfFactors (g :: gs)
+    inferInstanceAs (f.data.prod (ofFactors (g :: gs))).Free
 
 /-!
 

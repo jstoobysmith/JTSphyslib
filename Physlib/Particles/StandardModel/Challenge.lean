@@ -207,12 +207,11 @@ theorem repJet_ofConstant_eq_one_of_center (ζ : ℂ) (hζ : ζ ^ 6 = 1) (g : Of
 
 /-- **The gauge data of the Standard Model is free**: every Taylor family of gauge algebra
   elements is realised by a jet, and every jet of gauge algebra elements vanishing at the
-  base point is the radial Maurer–Cartan component of a pure jet. Proved by hand for the
-  hand-built gauge data in `GaugeGroup/MaurerCartan/Freeness.lean`; the challenge is the
-  generic proof, factor by factor, for `ofFactors`. -/
+  base point is the radial Maurer–Cartan component of a pure jet. This is the generic
+  `LocalGaugeData.instFreeOfFactors`: `U(1)` and `SU(n)` are free, and freeness passes to
+  products. -/
 @[sorryful]
-theorem gaugeData_free : gaugeData.Free := by
-  sorry
+theorem gaugeData_free : gaugeData.Free := sorry
 
 end Model
 

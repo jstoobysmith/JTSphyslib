@@ -34,6 +34,7 @@ supplies is the carriers and the structure maps on them.
 - `LocalGaugeData.su` : the local gauge data of `SU(n)`.
 - `LocalGaugeData.suFactor` : its canonical `SU(n)` factor.
 - `LocalGaugeData.instFaithfulSU` : the package is faithful.
+- `LocalGaugeData.instFreeSU` : the package is free.
 
 ## iii. Table of contents
 
@@ -343,5 +344,18 @@ noncomputable def suFactor (n : ℕ) : SUFactor (su n) (Fin n) := (suMatrixJets 
 
 /-- The local gauge data of `SU(n)` is faithful. -/
 instance instFaithfulSU : (su n).Faithful := (suMatrixJets n).faithful
+
+/-- The local gauge data of `SU(n)` is free. Traceless hermitian Taylor data give a
+  traceless hermitian matrix of jets, and the unitary Euler transport of a traceless
+  hermitian jet has unit determinant by Jacobi's formula. -/
+instance instFreeSU : (su n).Free :=
+  (suMatrixJets n).free
+    (fun c => ⟨SUAlgebraOver.ofMatrix _ (JetRing.star_taylorMatrix fun s => (c s).2.1)
+      (JetRing.trace_taylorMatrix fun s => (c s).2.2), rfl⟩)
+    (fun a => a.2.1)
+    (fun ρ V hV0 hVu hEV => ⟨⟨V, mem_specialUnitaryGroup_iff.mpr ⟨mem_unitaryGroup_iff.mpr hVu,
+      JetRing.eulerTransport_det JetRing.jacobi
+        (by rw [Matrix.trace_smul, show ((suMatrixJets n).lieJ ρ).trace = 0 from ρ.2.2,
+          smul_zero]) hV0 hEV⟩⟩, rfl⟩)
 
 end LocalGaugeData

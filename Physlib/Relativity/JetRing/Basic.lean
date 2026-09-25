@@ -126,25 +126,6 @@ lemma coeff_single_one_mul (μ : Fin 1 ⊕ Fin 3) (f g : JetRing) :
     Finsupp.single_zero, coeff_zero_eq_constantCoeff]
   ring
 
-/-- The first-order power rule: the degree-one Taylor coefficient, in the direction
-  `μ`, of a power of a jet. -/
-lemma coeff_single_one_pow (μ : Fin 1 ⊕ Fin 3) (f : JetRing) (n : ℕ) :
-    coeff (Finsupp.single μ 1) (f ^ n) =
-      (n : ℂ) * constantCoeff f ^ (n - 1) * coeff (Finsupp.single μ 1) f := by
-  classical
-  induction n with
-  | zero =>
-      simp [coeff_one, Finsupp.single_eq_zero]
-  | succ n ih =>
-      rw [pow_succ, coeff_single_one_mul, ih, map_pow, Nat.add_sub_cancel]
-      rcases Nat.eq_zero_or_pos n with hn | hn
-      · subst hn
-        simp
-      · have hpow : constantCoeff f ^ (n - 1) * constantCoeff f = constantCoeff f ^ n := by
-          rw [← pow_succ, Nat.sub_add_cancel hn]
-        push_cast
-        linear_combination ((n : ℂ) * coeff (Finsupp.single μ 1) f) * hpow
-
 /-- The constant-coefficient evaluation of a jet, as a `ℂ`-linear map. -/
 noncomputable def constantCoeffₗ : JetRing →ₗ[ℂ] ℂ where
   toFun := constantCoeff
@@ -313,44 +294,6 @@ lemma truncation_add (n : ℕ) (f g : JetRing) :
   · rw [coeff_truncation_of_gt (not_le.mp hm), map_add,
       coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm), add_zero]
 
-lemma truncation_sum {ι : Type} (n : ℕ) (s : Finset ι) (f : ι → JetRing) :
-    truncation n (∑ i ∈ s, f i) = ∑ i ∈ s, truncation n (f i) :=
-  map_sum (AddMonoidHom.mk' (truncation n) (truncation_add n)) f s
-
-/-- Truncation of a product only sees the factors through their truncations: the
-  coefficients of `f * g` in degree at most `n` involve only coefficients of `f`
-  and `g` in degree at most `n`. -/
-lemma truncation_mul (n : ℕ) (f g : JetRing) :
-    truncation n (f * g) = truncation n (truncation n f * truncation n g) := by
-  ext m
-  by_cases hm : Finsupp.degree m ≤ n
-  · rw [coeff_truncation_of_le hm, coeff_truncation_of_le hm, coeff_mul, coeff_mul]
-    refine Finset.sum_congr rfl fun p hp => ?_
-    have hpq : p.1 + p.2 = m := Finset.mem_antidiagonal.mp hp
-    have h1 : Finsupp.degree p.1 ≤ n := by
-      refine le_trans ?_ hm
-      rw [← hpq, map_add]
-      exact Nat.le_add_right _ _
-    have h2 : Finsupp.degree p.2 ≤ n := by
-      refine le_trans ?_ hm
-      rw [← hpq, map_add]
-      exact Nat.le_add_left _ _
-    rw [coeff_truncation_of_le h1, coeff_truncation_of_le h2]
-  · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm)]
-
-/-- The congruence principle for truncated products. -/
-lemma truncation_mul_congr {n : ℕ} {f f' g g' : JetRing}
-    (hf : truncation n f = truncation n f') (hg : truncation n g = truncation n g') :
-    truncation n (f * g) = truncation n (f' * g') := by
-  rw [truncation_mul, hf, hg, ← truncation_mul]
-
-lemma truncation_star (n : ℕ) (f : JetRing) :
-    truncation n (star f) = star (truncation n f) := by
-  ext m
-  by_cases hm : Finsupp.degree m ≤ n
-  · rw [coeff_truncation_of_le hm, coeff_star, coeff_star, coeff_truncation_of_le hm]
-  · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_star,
-      coeff_truncation_of_gt (not_le.mp hm), star_zero]
 @[simp]
 lemma truncation_zero (n : ℕ) : truncation n (0 : JetRing) = 0 := by
   ext m
@@ -381,22 +324,6 @@ lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f =
     · rw [hf m hm0 hm, coeff_one, ite_eq_right hm0]
   · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
       JetRing.coeff_truncation_of_gt (not_le.mp hm)]
-
-/-- Two jets have the same zeroth truncation exactly when they have the same
-  value at the base point. -/
-lemma truncation_zero_eq_iff {f g : JetRing} :
-    truncation 0 f = truncation 0 g ↔ constantCoeff f = constantCoeff g := by
-  constructor
-  · intro h
-    simpa using congrArg (coeff (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ)) h
-  · intro h
-    ext m
-    by_cases hm : Finsupp.degree m ≤ 0
-    · have hm0 : m = 0 := (Finsupp.degree_eq_zero_iff m).mp (Nat.le_zero.mp hm)
-      subst hm0
-      simpa using h
-    · rw [coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm)]
-
 
 /-!
 
@@ -544,50 +471,6 @@ lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) 
       rw [hfin, hfac, Multiset.toFinsupp_apply]
       push_cast
       ring
-
-/-- The key combinatorial identity behind the symmetrized Maurer–Cartan data: the sum
-  over a multiset `r` of base-point values of iterated derivatives of `g` in the
-  complementary directions is, up to factorials, the Taylor coefficient at `r` of the
-  radial contraction `∑ μ x_μ g_μ`. -/
-lemma sum_constantCoeff_foldl_erase (g : (Fin 1 ⊕ Fin 3) → JetRing)
-    (r : Multiset (Fin 1 ⊕ Fin 3)) :
-    (r.map fun μ => constantCoeff ((r.erase μ).foldl (fun f ρ => pderiv ρ f) (g μ))).sum =
-      ((∏ ν, Nat.factorial (r.count ν) : ℕ) : ℂ) *
-        coeff r.toFinsupp (∑ μ, (X μ : JetRing) • g μ) := by
-  classical
-  rw [Finset.sum_multiset_map_count,
-    Finset.sum_subset (Finset.subset_univ r.toFinset) (fun x _ hx => by
-      rw [Multiset.count_eq_zero.mpr fun hmem => hx (Multiset.mem_toFinset.mpr hmem),
-        zero_smul]),
-    map_sum, Finset.mul_sum]
-  refine Finset.sum_congr rfl fun μ _ => ?_
-  rw [coeff_X_smul, constantCoeff_foldl_pderiv]
-  by_cases hμ : μ ∈ r
-  · rw [ite_eq_left (Finsupp.single_le_iff.mpr (by
-      rw [Multiset.toFinsupp_apply]
-      exact Multiset.one_le_count_iff_mem.mpr hμ))]
-    have herase : (r.erase μ).toFinsupp = r.toFinsupp - Finsupp.single μ 1 := by
-      ext ν
-      rw [Multiset.toFinsupp_apply, Finsupp.coe_tsub, Pi.sub_apply, Multiset.toFinsupp_apply,
-        Finsupp.single_apply]
-      rcases eq_or_ne μ ν with rfl | h
-      · rw [Multiset.count_erase_self, ite_eq_left rfl]
-      · rw [Multiset.count_erase_of_ne h.symm, ite_eq_right h, Nat.sub_zero]
-    have hfac : r.count μ * ∏ ν, Nat.factorial ((r.erase μ).count ν) =
-        ∏ ν, Nat.factorial (r.count ν) := by
-      rw [← Finset.mul_prod_erase Finset.univ
-          (fun ν => Nat.factorial ((r.erase μ).count ν)) (Finset.mem_univ μ),
-        ← Finset.mul_prod_erase Finset.univ
-          (fun ν => Nat.factorial (r.count ν)) (Finset.mem_univ μ),
-        Multiset.count_erase_self,
-        Finset.prod_congr rfl fun ν hν =>
-          congrArg Nat.factorial
-            (Multiset.count_erase_of_ne (Finset.mem_erase.mp hν).1 r),
-        ← mul_assoc, Nat.mul_factorial_pred (Multiset.count_pos.mpr hμ).ne']
-    rw [herase, nsmul_eq_mul, ← mul_assoc, ← Nat.cast_mul, hfac]
-  · rw [ite_eq_right fun hle => hμ (Multiset.one_le_count_iff_mem.mp (by
-        simpa [Multiset.toFinsupp_apply] using Finsupp.single_le_iff.mp hle)),
-      mul_zero, Multiset.count_eq_zero.mpr hμ, zero_smul]
 
 lemma degree_toFinsupp_eq_card (r : Multiset (Fin 1 ⊕ Fin 3)) :
     Finsupp.degree (Multiset.toFinsupp r) = Multiset.card r := by

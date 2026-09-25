@@ -6,6 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.Relativity.JetRing.Matrix
 public import Physlib.Relativity.JetRing.Taylor
 /-!
@@ -22,8 +23,9 @@ over the jet ring.
 
 `MatrixJets` records such a presentation: injective maps of the four carriers into matrices,
 and what each structure map is in matrices. From it, `MatrixJets.toLocalGaugeData` proves
-the laws once, `MatrixJets.faithful` shows the package is faithful, and
-`MatrixJets.suFactor` is its canonical `SU`-type factor. The concrete packages `u1` and
+the laws once, `MatrixJets.faithful` shows the package is faithful, `MatrixJets.free`
+reduces its freeness to three conditions on the carriers, and `MatrixJets.suFactor` is its
+canonical `SU`-type factor. The concrete packages `u1` and
 `su n` are instances.
 
 ## ii. Key results
@@ -32,6 +34,7 @@ the laws once, `MatrixJets.faithful` shows the package is faithful, and
 - `LocalGaugeData.MatrixJets.toLocalGaugeData` : the local gauge data it presents.
 - `LocalGaugeData.MatrixJets.faithful` : that local gauge data is faithful.
 - `LocalGaugeData.MatrixJets.suFactor` : its canonical `SU`-type factor.
+- `LocalGaugeData.MatrixJets.free` : a criterion for that local gauge data to be free.
 
 ## iii. Table of contents
 
@@ -39,6 +42,7 @@ the laws once, `MatrixJets.faithful` shows the package is faithful, and
 - B. The local gauge data
 - C. The iterated derivative and faithfulness
 - D. The canonical factor
+- E. Freeness
 
 -/
 
@@ -399,6 +403,71 @@ noncomputable def suFactor : SUFactor M.toLocalGaugeData κ where
   φJ_cc_foldl p a := (M.lie₀_evalLie_iteratedDeriv p a).symm
   φJ_maurerCartan U μ := M.lieJ_maurerCartan U μ
   φJ_adjoint U c := M.lieJ_adjoint U (M.ofConstantLie c)
+
+/-!
+
+## E. Freeness
+
+A presentation by matrices is free when its carriers are large enough: the Lie algebra
+jets contain every matrix of jets with Taylor data in the Lie algebra, and the gauge jets
+contain the unitary fundamental solution `V` of the radial system `E V = −i P V` for every
+Lie algebra jet `P`. Taylor completeness and radial integrability then hold because they
+hold for matrices of jets.
+
+-/
+
+/-- The radial component of the Maurer–Cartan form, in matrices:
+  `∑_μ x_μ · i (∂_μ U) U†`. -/
+lemma lieJ_radial (U : GJ) :
+    M.lieJ (M.toLocalGaugeData.radial U) =
+      ∑ μ, (X μ : JetRing) • (Complex.I • ((M.toMatJ U).map (pderiv μ) * star (M.toMatJ U))) := by
+  simp only [radial, map_sum, toLocalGaugeData_coord, toLocalGaugeData_maurerCartan,
+    M.lieJ_coord, M.lieJ_maurerCartan]
+
+/-- A gauge jet is pure exactly when its matrix is the identity at the base point. -/
+lemma mem_truncationKer_zero_iff (U : GJ) :
+    U ∈ M.toLocalGaugeData.truncationKer 0 ↔
+      (constantCoeff : JetRing →+* ℂ).mapMatrix (M.toMatJ U) = 1 := by
+  rw [LocalGaugeData.mem_truncationKer_zero_iff, toLocalGaugeData_eval, ← M.toMat₀_eval,
+    ← map_one M.toMat₀]
+  exact M.toMat₀_injective.eq_iff.symm
+
+/-- **A criterion for freeness.** A presentation by matrices is free when every matrix of
+  jets built entrywise from Taylor data in `𝔤` is a Lie algebra jet, the Lie algebra jets
+  are hermitian, and every unitary solution `V` of `E V = −i P V`, `V(0) = 1`, for a Lie
+  algebra jet `P`, is a gauge jet. -/
+lemma free
+    (hTaylor : ∀ c : Multiset (Fin 1 ⊕ Fin 3) → 𝔤,
+      ∃ Y, M.lieJ Y = JetRing.taylorMatrix fun s => M.lie₀ (c s))
+    (hherm : ∀ a, star (M.lieJ a) = M.lieJ a)
+    (hlift : ∀ (ρ : 𝔤J) (V : Matrix κ κ JetRing),
+      (constantCoeff : JetRing →+* ℂ).mapMatrix V = 1 → V * star V = 1 →
+      ∑ μ, (X μ : JetRing) • V.map (pderiv μ) = ((-Complex.I) • M.lieJ ρ) * V →
+      ∃ U, M.toMatJ U = V) :
+    M.toLocalGaugeData.Free where
+  toFaithful := M.faithful
+  exists_evalLie_iteratedDeriv_eq c := by
+    obtain ⟨Y, hY⟩ := hTaylor c
+    refine ⟨Y, fun s => M.lie₀_injective ?_⟩
+    rw [M.lie₀_evalLie_iteratedDeriv, hY, JetRing.map_constantCoeff_foldl_pderiv_taylorMatrix]
+  exists_radial_eq ρ hρ := by
+    -- The matrix `R = −i P` of `P = lieJ ρ` is anti-hermitian and vanishes at the base point.
+    have hR0 : ∀ i j, constantCoeff (((-Complex.I) • M.lieJ ρ) i j) = 0 := fun i j => by
+      have h := congrArg (fun A => A i j) (congrArg M.lie₀ hρ)
+      simp only [toLocalGaugeData_evalLie_apply, M.lie₀_evalLie, map_zero] at h
+      rw [Matrix.smul_apply, ← coeff_zero_eq_constantCoeff, map_smul,
+        coeff_zero_eq_constantCoeff]
+      simpa using congrArg ((-Complex.I) • ·) h
+    have hRstar : star ((-Complex.I) • M.lieJ ρ) = -((-Complex.I) • M.lieJ ρ) := by
+      rw [star_smul, hherm]
+      simp
+    -- Its Euler transport is unitary, hence a pure gauge jet with radial component `P`.
+    obtain ⟨V, hV0, hEV⟩ := JetRing.exists_matrix_eulerTransport _ hR0
+    have hVu := JetRing.eulerTransport_mul_star hRstar hR0 hV0 hEV
+    obtain ⟨U, rfl⟩ := hlift ρ V hV0 hVu hEV
+    refine ⟨⟨U, (M.mem_truncationKer_zero_iff U).2 hV0⟩, M.lieJ_injective ?_⟩
+    rw [M.lieJ_radial]
+    exact JetRing.sum_X_smul_mcMatrix_of_eulerTransport hVu hEV
 
 end MatrixJets
 

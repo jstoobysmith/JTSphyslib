@@ -29,6 +29,7 @@ supplies is the carriers, the structure maps on them, and the canonical `U1Facto
 - `LocalGaugeData.u1` : the local gauge data of `U(1)`.
 - `LocalGaugeData.u1Factor` : its canonical `U(1)` factor.
 - `LocalGaugeData.instFaithfulU1` : the package is faithful.
+- `LocalGaugeData.instFreeU1` : the package is free.
 
 ## iii. Table of contents
 
@@ -345,6 +346,31 @@ lemma u1_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetU1Algebra) :
 
 /-- The local gauge data of `U(1)` is faithful. -/
 instance instFaithfulU1 : u1.Faithful := u1MatrixJets.faithful
+
+/-- A `1 × 1` matrix is the scalar matrix of its entry. -/
+lemma _root_.JetU1.eq_scalar {R : Type} [CommRing R] (A : Matrix (Fin 1) (Fin 1) R) :
+    A = Matrix.scalar (Fin 1) (A 0 0) := by
+  ext i j
+  rw [Fin.fin_one_eq_zero i, Fin.fin_one_eq_zero j]
+  simp
+
+/-- The local gauge data of `U(1)` is free. Real Taylor data give a self-adjoint jet, and
+  the unitary Euler transport of a `1 × 1` matrix is a unitary jet. -/
+instance instFreeU1 : u1.Free :=
+  u1MatrixJets.free
+    (fun c => ⟨⟨JetRing.taylorSeries fun s => ((c s : U1Algebra) : ℂ), by
+      rw [selfAdjoint.mem_iff, JetRing.star_taylorSeries]
+      exact congrArg _ (funext fun s => (c s).2)⟩, by
+      rw [JetU1.eq_scalar (JetRing.taylorMatrix _), JetRing.taylorMatrix_apply]
+      rfl⟩)
+    (fun a => by
+      show star (Matrix.scalar (Fin 1) a.1) = Matrix.scalar (Fin 1) a.1
+      rw [JetU1.scalar_star, a.2])
+    (fun ρ V hV0 hVu hEV => by
+      have hu : V 0 0 * star (V 0 0) = 1 := by
+        simpa [Matrix.mul_apply] using congrArg (fun A => A 0 0) hVu
+      exact ⟨⟨V 0 0, Unitary.mem_iff.mpr ⟨by rw [mul_comm]; exact hu, hu⟩⟩,
+        (JetU1.eq_scalar V).symm⟩)
 
 /-!
 

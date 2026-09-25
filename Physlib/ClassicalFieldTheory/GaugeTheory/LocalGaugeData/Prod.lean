@@ -6,6 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Mathlib.Algebra.Lie.Prod
 /-!
 # The product of local gauge data
@@ -14,8 +15,8 @@ public import Mathlib.Algebra.Lie.Prod
 
 The local gauge data of a product of gauge groups: every structure map acts
 componentwise, and every law holds componentwise. A `U(1)` or `SU(n)` factor of either
-side lifts to a factor of the product, and the product of two faithful packages is
-faithful.
+side lifts to a factor of the product, and the product of two faithful (free) packages
+is faithful (free).
 
 ## ii. Key results
 
@@ -23,6 +24,7 @@ faithful.
 - `U1Factor.inl`, `U1Factor.inr`, `SUFactor.inl`, `SUFactor.inr` : lifting factors to
   the product.
 - `LocalGaugeData.instFaithfulProd` : the product of faithful packages is faithful.
+- `LocalGaugeData.instFreeProd` : the product of free packages is free.
 
 ## iii. Table of contents
 
@@ -30,6 +32,7 @@ faithful.
 - B. The product
 - C. Lifting factors
 - D. Faithfulness
+- E. Freeness
 
 -/
 
@@ -228,6 +231,10 @@ noncomputable def _root_.LocalGaugeData.SUFactor.inr (F : SUFactor j₂ n) :
   φJ_maurerCartan U μ := F.φJ_maurerCartan U.2 μ
   φJ_adjoint U c := F.φJ_adjoint U.2 c.2
 
+TODO (lines := 168-230) (date := 2026-09-25) "These results
+  (the once directly above this TODO item)
+  should be moved to their appropriate file."
+
 /-!
 
 ## D. Faithfulness
@@ -249,5 +256,47 @@ instance instFaithfulProd [j₁.Faithful] [j₂.Faithful] : (j₁.prod j₂).Fai
         (funext fun μ => congrArg Prod.fst (congrFun h μ))
     · exact Faithful.eq_ofConstant_of_maurerCartan_eq_zero (jets := j₂)
         (funext fun μ => congrArg Prod.snd (congrFun h μ))
+
+/-!
+
+## E. Freeness
+
+-/
+
+@[simp]
+lemma prod_coord (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J₁ × 𝔤J₂) :
+    (j₁.prod j₂).coord μ a = (j₁.coord μ a.1, j₂.coord μ a.2) := rfl
+
+/-- The radial component of the Maurer–Cartan form of a product jet is the pair of the
+  radial components of its factors. -/
+@[simp]
+lemma prod_radial (U : G₁ × G₂) :
+    (j₁.prod j₂).radial U = (j₁.radial U.1, j₂.radial U.2) := by
+  ext <;> simp [radial, Prod.fst_sum, Prod.snd_sum]
+
+/-- A product jet lies in the `n`-th truncation kernel exactly when both of its factors do. -/
+lemma mem_prod_truncationKer_iff (n : ℕ) (U : G₁ × G₂) :
+    U ∈ (j₁.prod j₂).truncationKer n ↔
+      U.1 ∈ j₁.truncationKer n ∧ U.2 ∈ j₂.truncationKer n := by
+  simp only [truncationKer, Subgroup.mem_mk, prod_eval, Prod.mk_eq_one, prod_maurerCartan,
+    prod_iteratedDeriv, prod_evalLie, Prod.mk_eq_zero]
+  constructor
+  · rintro ⟨⟨h1, h2⟩, h⟩
+    exact ⟨⟨h1, fun s μ hs => (h s μ hs).1⟩, ⟨h2, fun s μ hs => (h s μ hs).2⟩⟩
+  · rintro ⟨⟨h1, h⟩, ⟨h2, h'⟩⟩
+    exact ⟨⟨h1, h2⟩, fun s μ hs => ⟨h s μ hs, h' s μ hs⟩⟩
+
+/-- The product of two free packages is free: Taylor data and radial components are
+  realized factor by factor and paired. -/
+instance instFreeProd [j₁.Free] [j₂.Free] : (j₁.prod j₂).Free where
+  exists_evalLie_iteratedDeriv_eq c := by
+    obtain ⟨Y₁, hY₁⟩ := j₁.exists_evalLie_iteratedDeriv_eq fun s => (c s).1
+    obtain ⟨Y₂, hY₂⟩ := j₂.exists_evalLie_iteratedDeriv_eq fun s => (c s).2
+    exact ⟨(Y₁, Y₂), fun s => by simp [hY₁, hY₂]⟩
+  exists_radial_eq ρ hρ := by
+    obtain ⟨U₁, hU₁⟩ := j₁.exists_radial_eq (congrArg Prod.fst hρ)
+    obtain ⟨U₂, hU₂⟩ := j₂.exists_radial_eq (congrArg Prod.snd hρ)
+    exact ⟨⟨(U₁.1, U₂.1), (mem_prod_truncationKer_iff 0 _).2 ⟨U₁.2, U₂.2⟩⟩,
+      by simp [hU₁, hU₂]⟩
 
 end LocalGaugeData

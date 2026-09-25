@@ -46,7 +46,8 @@ here until `JetAlgebra/SectorEquiv/Basic.lean`, which `JetAlgebra/Basic.lean` im
 builds again.
 
 **Freeness** needs no bridge: the gauge data of the card is the hand-built one by
-definition, so `instFreeLocalGaugeData` proves `gaugeData_free` outright. The centre
+definition, so `instFreeLocalGaugeData`, itself the generic
+`LocalGaugeData.instFreeOfFactors`, proves `gaugeData_free` outright. The centre
 challenge is stated on the card's species and is proved by computing the matrix of each
 charge tuple at a constant jet; it does not go through the hand-built species files.
 
@@ -57,7 +58,7 @@ charge tuple at a constant jet; it does not go through the hand-built species fi
   `gaugeSector_invariantsLE_seven_iff` : each classification challenge is equivalent to
   its form on another datum over the card's gauge data, given the isomorphism.
 - `StandardModel.Model.gaugeData_free_of_hand_built` : the freeness challenge, from the
-  hand-built proof.
+  instance on the hand-built gauge data.
 
 -/
 
@@ -257,13 +258,12 @@ end Transport
 
 /-!
 
-## B. Freeness, from the hand-built proof
+## B. Freeness, from the hand-built gauge data
 
 -/
 
 /-- **The freeness challenge holds**: the gauge data of the card is the hand-built local
-  gauge data by definition, whose freeness is proved factor by factor in
-  `GaugeGroup/MaurerCartan/Freeness.lean`. -/
+  gauge data by definition, whose freeness is `instFreeLocalGaugeData`. -/
 theorem gaugeData_free_of_hand_built : gaugeData.Free := instFreeLocalGaugeData
 
 end Model
