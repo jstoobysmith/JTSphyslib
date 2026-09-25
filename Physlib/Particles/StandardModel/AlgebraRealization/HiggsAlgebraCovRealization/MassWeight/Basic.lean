@@ -13,9 +13,9 @@ The mass-weight submodules of the Higgs sector are described in
 `HiggsAlgebraCovRealization.Basic` in terms of the Higgs and conjugate-Higgs submodules
 separately.  Since the two always occur together, the description is cleaner in terms
 of the derivative submodules `derivSubmodule n = higgsSubmodule n ⊔ barHiggsSubmodule n`:
-a Higgs tower with `n` derivatives has weight `2 * (1 + n)`, only even weights are
-non-zero, and the weights up to eight are the partitions of the weight into such
-towers.
+a Higgs tower with `n` derivatives has mass weight `2 * (1 + n)`, twice its mass dimension
+`1 + n`, only even weights are non-zero, and the mass weights up to eight (mass dimension
+at most four) are the partitions of the weight into such towers.
 
 -/
 
@@ -51,39 +51,47 @@ lemma massWeightSubmodule_eq_derivSubmodule (i : ℕ) (hi : 0 < i) :
             h.massWeightSubmodule (p.1 : ℕ) * h.massWeightSubmodule (p.2 : ℕ)) :=
   h.massWeightSubmodule_eq i hi
 
+/-- Removing the leftmost Higgs tower, written with the derivative submodules: a term of
+  positive weight `w` is a sum of products of a tower `derivSubmodule n`, of weight
+  `2 * (1 + n) ≤ w`, with a term of the remaining weight. -/
+lemma massWeightSubmodule_eq_iSup_derivSubmodule_mul (w : ℕ) (hw : 0 < w) :
+    h.massWeightSubmodule w
+      = ⨆ n ∈ (Finset.range (w + 1)).filter (fun n => 2 * (1 + n) ≤ w),
+          h.derivSubmodule n * h.massWeightSubmodule (w - 2 * (1 + n)) :=
+  h.massWeightSubmodule_eq_iSup_mul w hw
+
 /-- Weight two is the underived Higgs symbols. -/
 lemma massWeightSubmodule_two_eq_deriv :
     h.massWeightSubmodule 2 = h.derivSubmodule 0 :=
   h.massWeightSubmodule_two_eq
 
-/-- Weight four. -/
+/-- Weight four: the leftmost tower is underived, leaving weight two, which is an underived
+  tower, or once-derived, leaving weight zero. -/
 lemma massWeightSubmodule_four_eq_deriv :
     h.massWeightSubmodule 4
       = h.derivSubmodule 1 ⊔ h.derivSubmodule 0 * h.derivSubmodule 0 := by
-  rw [h.massWeightSubmodule_four_eq]
-  simp only [derivSubmodule, Submodule.sup_mul, Submodule.mul_sup,
-    h.barHiggsSubmodule_comm_higgsSubmodule 0 0]
-  simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
+  rw [h.massWeightSubmodule_eq_iSup_derivSubmodule_mul 4 (by decide),
+    show (Finset.range 5).filter (fun n => 2 * (1 + n) ≤ 4) = {0, 1} from by decide,
+    Finset.iSup_insert, Finset.iSup_singleton]
+  simp [h.massWeightSubmodule_two_eq_deriv, h.massWeightSubmodule_zero_eq, sup_comm]
 
-/-- Higgs and conjugate-Higgs submodules commute past a third factor. -/
-lemma barHiggs_higgs_left_comm (n1 n2 : ℕ) (C : Submodule ℂ B) :
-    h.barHiggsSubmodule n1 * (h.higgsSubmodule n2 * C)
-      = h.higgsSubmodule n2 * (h.barHiggsSubmodule n1 * C) :=
-  Commute.left_comm (h.barHiggsSubmodule_comm_higgsSubmodule n1 n2) C
-
-set_option maxHeartbeats 2000000 in
-/-- Weight six. -/
+/-- Weight six: the leftmost tower leaves weight four, two or zero. The product of an
+  underived tower with a once-derived one occurs in both orders, which agree by
+  `derivSubmodule_mul_comm`. -/
 lemma massWeightSubmodule_six_eq_deriv :
     h.massWeightSubmodule 6
       = h.derivSubmodule 2 ⊔ h.derivSubmodule 1 * h.derivSubmodule 0
         ⊔ h.derivSubmodule 0 * h.derivSubmodule 0 * h.derivSubmodule 0 := by
-  rw [h.massWeightSubmodule_six_eq]
-  simp only [derivSubmodule, Submodule.sup_mul, Submodule.mul_sup,
-    barHiggsSubmodule_comm_higgsSubmodule, mul_assoc, h.barHiggs_higgs_left_comm]
+  rw [h.massWeightSubmodule_eq_iSup_derivSubmodule_mul 6 (by decide),
+    show (Finset.range 7).filter (fun n => 2 * (1 + n) ≤ 6) = {0, 1, 2} from by decide,
+    Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_singleton]
+  simp only [Nat.reduceMul, Nat.reduceAdd, Nat.reduceSub, h.massWeightSubmodule_four_eq_deriv,
+    h.massWeightSubmodule_two_eq_deriv, h.massWeightSubmodule_zero_eq, mul_one,
+    Submodule.mul_sup, mul_assoc, h.derivSubmodule_mul_comm 0 1]
   simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
 
-set_option maxHeartbeats 4000000 in
-/-- Weight eight. -/
+/-- Weight eight: the leftmost tower leaves weight six, four, two or zero. Products that
+  differ only in the order of commuting towers agree by `derivSubmodule_mul_comm`. -/
 lemma massWeightSubmodule_eight_eq_deriv :
     h.massWeightSubmodule 8
       = h.derivSubmodule 3 ⊔ h.derivSubmodule 2 * h.derivSubmodule 0
@@ -91,9 +99,16 @@ lemma massWeightSubmodule_eight_eq_deriv :
         ⊔ h.derivSubmodule 1 * h.derivSubmodule 0 * h.derivSubmodule 0
         ⊔ h.derivSubmodule 0 * h.derivSubmodule 0 * h.derivSubmodule 0
           * h.derivSubmodule 0 := by
-  rw [h.massWeightSubmodule_eight_eq]
-  simp only [derivSubmodule, Submodule.sup_mul, Submodule.mul_sup,
-    barHiggsSubmodule_comm_higgsSubmodule, mul_assoc, h.barHiggs_higgs_left_comm]
+  rw [h.massWeightSubmodule_eq_iSup_derivSubmodule_mul 8 (by decide),
+    show (Finset.range 9).filter (fun n => 2 * (1 + n) ≤ 8) = {0, 1, 2, 3} from by decide,
+    Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_singleton]
+  have hlc (C : Submodule ℂ B) : h.derivSubmodule 0 * (h.derivSubmodule 1 * C)
+      = h.derivSubmodule 1 * (h.derivSubmodule 0 * C) :=
+    Commute.left_comm (h.derivSubmodule_mul_comm 0 1) C
+  simp only [Nat.reduceMul, Nat.reduceAdd, Nat.reduceSub, h.massWeightSubmodule_six_eq_deriv,
+    h.massWeightSubmodule_four_eq_deriv, h.massWeightSubmodule_two_eq_deriv,
+    h.massWeightSubmodule_zero_eq, mul_one, Submodule.mul_sup, mul_assoc, hlc,
+    h.derivSubmodule_mul_comm 0 2]
   simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
 
 end HiggsAlgebraCovRealization

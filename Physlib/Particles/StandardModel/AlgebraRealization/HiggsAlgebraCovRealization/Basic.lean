@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Mathematics.HomogeneousGenerators
 public import Physlib.Particles.StandardModel.HiggsBoson.Basic
 public import Physlib.Particles.StandardModel.JetAlgebra.CovJetAlgebra.Higgs
 public import Physlib.Relativity.IsLorentzDeriv
@@ -39,9 +40,10 @@ field pushed along the map, and every law they satisfy is that algebra's law pus
 it. From them the file builds the submodules `higgsSubmodule n` and `barHiggsSubmodule n`
 of terms linear in `∇_d H` and `∇_d H̄`, the algebra `higgsAlgebra` they generate, and its
 mass-weight submodules `massWeightSubmodule n`. Each of these carries a gauge weight
-decomposition, and the mass-weight submodules obey a recursion which is expanded at weights
-`2`, `4`, `6` and `8`. These are the pieces from which the Higgs terms of the Standard Model
-Lagrangian are assembled downstream.
+decomposition. The mass-weight submodules are described by the results of
+`Physlib.Mathematics.HomogeneousGenerators`, and removing the leftmost Higgs tower of each
+product gives them explicitly at weights `2`, `4`, `6` and `8`. These are the pieces from
+which the Higgs terms of the Standard Model Lagrangian are assembled downstream.
 
 ## ii. Key results
 
@@ -52,8 +54,9 @@ Lagrangian are assembled downstream.
   decompositions of the Higgs submodules.
 - `rep_dotGaugeHiggs_invariant`, `repLorentz_dotGaugeHiggs` : the gauge invariance and the
   Lorentz law of the inner product `H† H` with derivatives on the two factors.
-- `massWeightSubmodule_eq` : the weight recursion, expanded in `massWeightSubmodule_two_eq`
-  up to `massWeightSubmodule_eight_eq`.
+- `massWeightSubmodule_eq_iSup_mul`, `massWeightSubmodule_eq` : removing the leftmost Higgs
+  tower, and the binary weight recursion.
+- `massWeightSubmodule_two_eq` up to `massWeightSubmodule_eight_eq` : the mass weights up to eight.
 - `massWeightSubmoduleGaugeWeight` : the gauge weight decomposition of the mass-weight
   submodules.
 
@@ -71,10 +74,10 @@ Lagrangian are assembled downstream.
 - E. The Higgs inner product
 - F. The mass weight submodules
   - F.1. Membership and the grading
-  - F.2. The weight recursion
+  - F.2. The weight decompositions
   - F.3. The odd mass weights vanish
   - F.4. The gauge weight decomposition
-  - F.5. The low mass weights
+  - F.5. Mass weights up to eight
 - G. Gauge invariants
 
 -/
@@ -495,6 +498,13 @@ lemma barHiggsSubmodule_comm_barHiggsSubmodule (n1 n2 : ℕ) :
   h.mul_comm_of_le_higgsAlgebra (h.barHiggsSubmodule_le_higgsAlgebra n1)
     (h.barHiggsSubmodule_le_higgsAlgebra n2)
 
+/-- A conjugate Higgs submodule commutes past a Higgs submodule standing in front of a third
+  factor. -/
+lemma barHiggs_higgs_left_comm (n1 n2 : ℕ) (C : Submodule ℂ B) :
+    h.barHiggsSubmodule n1 * (h.higgsSubmodule n2 * C)
+      = h.higgsSubmodule n2 * (h.barHiggsSubmodule n1 * C) :=
+  Commute.left_comm (h.barHiggsSubmodule_comm_higgsSubmodule n1 n2) C
+
 /-!
 
 ## D. The gauge weight decomposition of the Higgs submodules
@@ -682,6 +692,9 @@ lemma repLorentz_dotGaugeHiggs {m n : ℕ} (g : SL(2,ℂ))
 
 ## F. The mass weight submodules
 
+A Higgs tower `∇ⁿH` or `∇ⁿH̄` has mass weight `2 * (1 + n)`, twice its mass dimension
+`1 + n`; a term of mass dimension four, as in the Lagrangian, has weight eight.
+
 -/
 
 /-- All terms built from the Higgs symbols and their derivatives which have mass weight
@@ -704,10 +717,8 @@ noncomputable def massWeightSubmodule
   scales it by `X ^ n`. -/
 lemma mem_massWeightSubmodule_iff {n : ℕ} {x : B} :
     x ∈ h.massWeightSubmodule n
-      ↔ x ∈ h.higgsAlgebra ∧ massWeightPoly x = Polynomial.monomial n x := by
-  simp only [massWeightSubmodule, Submodule.mem_inf, Subalgebra.mem_toSubmodule,
-    LinearMap.mem_ker, LinearMap.sub_apply, AlgHom.toLinearMap_apply,
-    LinearMap.coe_restrictScalars, sub_eq_zero]
+      ↔ x ∈ h.higgsAlgebra ∧ massWeightPoly x = Polynomial.monomial n x :=
+  Subalgebra.mem_homogeneousSubmodule_iff
 
 /-- The mass weight of an element of the weight-`n` submodule. -/
 lemma massWeightPoly_of_mem_massWeightSubmodule {n : ℕ} {x : B}
@@ -727,16 +738,12 @@ lemma massWeightSubmodule_mul_comm (n m : ℕ) :
 
 /-- The scalars have mass weight zero. -/
 lemma one_le_massWeightSubmodule_zero : (1 : Submodule ℂ B) ≤ h.massWeightSubmodule 0 :=
-  Submodule.one_le.mpr (h.mem_massWeightSubmodule_iff.mpr ⟨Subalgebra.one_mem _, by simp⟩)
+  Subalgebra.one_le_homogeneousSubmodule_zero
 
 /-- Mass weights add under multiplication. -/
 lemma massWeightSubmodule_mul_le (m n : ℕ) :
     h.massWeightSubmodule m * h.massWeightSubmodule n ≤ h.massWeightSubmodule (m + n) :=
-  Submodule.mul_le.mpr fun x hx y hy => by
-    obtain ⟨hxa, hxw⟩ := h.mem_massWeightSubmodule_iff.mp hx
-    obtain ⟨hya, hyw⟩ := h.mem_massWeightSubmodule_iff.mp hy
-    exact h.mem_massWeightSubmodule_iff.mpr ⟨Subalgebra.mul_mem _ hxa hya,
-      by rw [map_mul, hxw, hyw, Polynomial.monomial_mul_monomial]⟩
+  Subalgebra.homogeneousSubmodule_mul_le m n
 
 /-- The Higgs symbols with `n` derivatives have mass weight `2 * (1 + n)`. -/
 lemma massWeightSubmodule_higgsSubmodule_le (n : ℕ) :
@@ -757,124 +764,43 @@ lemma massWeightSubmodule_barHiggsSubmodule_le (n : ℕ) :
 
 /-!
 
-### F.2. The weight recursion
+### F.2. The weight decompositions
 
-An element of the Higgs algebra is a polynomial in the symbols, and `massWeightPoly` reads
-off its homogeneous components: the weight-`0` component is a scalar, the weight-`m`
-component has mass weight `m`, and a component of positive weight is a sum of symbols of
-that weight and of products of two components of lower positive weight. The last statement,
-applied to an element of pure weight, is the recursion `massWeightSubmodule_eq`.
+The Higgs algebra is generated by the towers `∇ⁿH ⊔ ∇ⁿH̄`, on which `massWeightPoly` is the
+monomial `X ^ (2 * (1 + n))`. The results of `Physlib.Mathematics.HomogeneousGenerators`
+then describe every mass weight submodule, as a join of products of towers in the order
+written.
 
 -/
 
-/-- The weight-zero component of an element of the Higgs algebra is a scalar. -/
-lemma coeff_zero_mem_one {x : B} (hx : x ∈ h.higgsAlgebra) :
-    (massWeightPoly x).coeff 0 ∈ (1 : Submodule ℂ B) := by
-  refine h.higgsAlgebra_induction
-    (P := fun x => (massWeightPoly x).coeff 0 ∈ (1 : Submodule ℂ B)) ?_ ?_ ?_ ?_ ?_ hx
-  · intro n d φ
-    rw [h.H_massWeight, Polynomial.coeff_monomial, ite_eq_right (by omega)]
-    exact zero_mem _
-  · intro n d φ
-    rw [h.barH_massWeight, Polynomial.coeff_monomial, ite_eq_right (by omega)]
-    exact zero_mem _
-  · intro r
-    rw [AlgHom.commutes]
-    simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C]
-    exact Submodule.mem_one.mpr ⟨r, rfl⟩
-  · intro x y _ _ ihx ihy
-    rw [map_add, Polynomial.coeff_add]
-    exact Submodule.add_mem _ ihx ihy
-  · intro x y _ _ ihx ihy
-    rw [map_mul, Polynomial.mul_coeff_zero]
-    simpa only [Submodule.one_mul] using Submodule.mul_mem_mul ihx ihy
+/-- The Higgs algebra is generated by the Higgs and conjugate Higgs towers of every
+  derivative order. -/
+lemma higgsAlgebra_eq_adjoin :
+    h.higgsAlgebra = Algebra.adjoin ℂ
+      (⋃ n, ((h.higgsSubmodule n ⊔ h.barHiggsSubmodule n : Submodule ℂ B) : Set B)) := by
+  refine le_antisymm (Algebra.adjoin_le fun y hy => ?_) (Algebra.adjoin_le fun y hy => ?_)
+  · simp only [Set.mem_iUnion, Set.mem_union, Set.mem_range] at hy
+    obtain ⟨n, d, ⟨φ, rfl⟩ | ⟨φ, rfl⟩⟩ := hy
+    · exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨n, Submodule.mem_sup_left
+        (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩)⟩)
+    · exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨n, Submodule.mem_sup_right
+        (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩)⟩)
+  · obtain ⟨n, hy⟩ := Set.mem_iUnion.mp hy
+    exact sup_le (h.higgsSubmodule_le_higgsAlgebra n) (h.barHiggsSubmodule_le_higgsAlgebra n) hy
 
-/-- The weight-`m` component of an element of the Higgs algebra has mass weight `m`. -/
-lemma coeff_mem_massWeightSubmodule {x : B} (hx : x ∈ h.higgsAlgebra) (m : ℕ) :
-    (massWeightPoly x).coeff m ∈ h.massWeightSubmodule m := by
-  refine h.higgsAlgebra_induction
-    (P := fun x => ∀ m, (massWeightPoly x).coeff m ∈ h.massWeightSubmodule m) ?_ ?_ ?_ ?_ ?_ hx m
-  · intro n d φ m
-    rw [h.H_massWeight, Polynomial.coeff_monomial]
-    split_ifs with hw
-    · subst hw
-      exact h.massWeightSubmodule_higgsSubmodule_le n (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩)
-    · exact zero_mem _
-  · intro n d φ m
-    rw [h.barH_massWeight, Polynomial.coeff_monomial]
-    split_ifs with hw
-    · subst hw
-      exact h.massWeightSubmodule_barHiggsSubmodule_le n
-        (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩)
-    · exact zero_mem _
-  · intro r m
-    rw [AlgHom.commutes]
-    simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C]
-    split_ifs with hm
-    · subst hm
-      exact h.one_le_massWeightSubmodule_zero (Submodule.mem_one.mpr ⟨r, rfl⟩)
-    · exact zero_mem _
-  · intro x y _ _ ihx ihy m
-    rw [map_add, Polynomial.coeff_add]
-    exact Submodule.add_mem _ (ihx m) (ihy m)
-  · intro x y _ _ ihx ihy m
-    rw [map_mul, Polynomial.coeff_mul]
-    refine Submodule.sum_mem _ fun p hp => ?_
-    rw [← Finset.mem_antidiagonal.mp hp]
-    exact h.massWeightSubmodule_mul_le _ _ (Submodule.mul_mem_mul (ihx p.1) (ihy p.2))
+/-- `massWeightPoly` is the monomial `X ^ (2 * (1 + n))` on the Higgs and conjugate Higgs
+  towers with `n` derivatives. -/
+lemma massWeightPoly_of_mem_higgsSubmodule_sup (n : ℕ) :
+    ∀ x ∈ h.higgsSubmodule n ⊔ h.barHiggsSubmodule n,
+      massWeightPoly x = Polynomial.monomial (2 * (1 + n)) x := fun _ hx =>
+  h.massWeightPoly_of_mem_massWeightSubmodule
+    (sup_le (h.massWeightSubmodule_higgsSubmodule_le n)
+      (h.massWeightSubmodule_barHiggsSubmodule_le n) hx)
 
-/-- A component of positive weight `m` of an element of the Higgs algebra is a sum of
-  symbols of weight `m` and of products of two components of lower positive weight. -/
-lemma coeff_mem_of_pos {x : B} (hx : x ∈ h.higgsAlgebra) (m : ℕ) (hm : 0 < m) :
-    (massWeightPoly x).coeff m
-      ∈ (⨆ k ∈ Finset.univ.filter (fun k : Fin m => 2 * (1 + (k : ℕ)) = m),
-          h.higgsSubmodule (k : ℕ) ⊔ h.barHiggsSubmodule (k : ℕ))
-        ⊔ (⨆ p ∈ Finset.univ.filter (fun p : Fin m × Fin m => (p.1 : ℕ) + (p.2 : ℕ) = m),
-            h.massWeightSubmodule (p.1 : ℕ) * h.massWeightSubmodule (p.2 : ℕ)) := by
-  refine h.higgsAlgebra_induction (P := fun x => ∀ m, 0 < m → (massWeightPoly x).coeff m
-      ∈ (⨆ k ∈ Finset.univ.filter (fun k : Fin m => 2 * (1 + (k : ℕ)) = m),
-          h.higgsSubmodule (k : ℕ) ⊔ h.barHiggsSubmodule (k : ℕ))
-        ⊔ (⨆ p ∈ Finset.univ.filter (fun p : Fin m × Fin m => (p.1 : ℕ) + (p.2 : ℕ) = m),
-            h.massWeightSubmodule (p.1 : ℕ) * h.massWeightSubmodule (p.2 : ℕ)))
-    ?_ ?_ ?_ ?_ ?_ hx m hm
-  · intro n d φ m _
-    rw [h.H_massWeight, Polynomial.coeff_monomial]
-    split_ifs with hw
-    · exact Submodule.mem_sup_left (Submodule.mem_iSup_of_mem ⟨n, by omega⟩
-        (Submodule.mem_iSup_of_mem (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hw⟩)
-          (Submodule.mem_sup_left (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩))))
-    · exact zero_mem _
-  · intro n d φ m _
-    rw [h.barH_massWeight, Polynomial.coeff_monomial]
-    split_ifs with hw
-    · exact Submodule.mem_sup_left (Submodule.mem_iSup_of_mem ⟨n, by omega⟩
-        (Submodule.mem_iSup_of_mem (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hw⟩)
-          (Submodule.mem_sup_right (Submodule.mem_iSup_of_mem d ⟨φ, rfl⟩))))
-    · exact zero_mem _
-  · intro r m hm
-    rw [AlgHom.commutes]
-    simp only [Polynomial.algebraMap_apply, Polynomial.coeff_C, ite_eq_right (by omega : ¬ m = 0)]
-    exact zero_mem _
-  · intro x y _ _ ihx ihy m hm
-    rw [map_add, Polynomial.coeff_add]
-    exact Submodule.add_mem _ (ihx m hm) (ihy m hm)
-  · intro x y hx hy ihx ihy m hm
-    rw [map_mul, Polynomial.coeff_mul]
-    refine Submodule.sum_mem _ fun p hp => ?_
-    have hsum := Finset.mem_antidiagonal.mp hp
-    rcases Nat.eq_zero_or_pos p.1 with h1 | h1
-    · rw [h1, show p.2 = m by omega]
-      simpa only [Submodule.one_mul] using
-        Submodule.mul_mem_mul (h.coeff_zero_mem_one hx) (ihy m hm)
-    · rcases Nat.eq_zero_or_pos p.2 with h2 | h2
-      · rw [h2, show p.1 = m by omega]
-        simpa only [Submodule.mul_one] using
-          Submodule.mul_mem_mul (ihx m hm) (h.coeff_zero_mem_one hy)
-      · refine Submodule.mem_sup_right (Submodule.mem_iSup_of_mem
-          ((⟨⟨p.1, by omega⟩, ⟨p.2, by omega⟩⟩ : Fin m × Fin m))
-          (Submodule.mem_iSup_of_mem (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hsum⟩) ?_))
-        exact Submodule.mul_mem_mul (h.coeff_mem_massWeightSubmodule hx p.1)
-          (h.coeff_mem_massWeightSubmodule hy p.2)
+/-- Weight zero is the scalars: every Higgs tower has positive weight. -/
+lemma massWeightSubmodule_zero_eq : h.massWeightSubmodule 0 = 1 :=
+  Subalgebra.homogeneousSubmodule_zero_eq_one h.higgsAlgebra_eq_adjoin
+    h.massWeightPoly_of_mem_higgsSubmodule_sup (fun n => by omega)
 
 /-- The weight recursion: a term of positive mass weight `i` is a sum of symbols of weight
   `i` and of products of two terms of lower positive weight adding up to `i`. -/
@@ -883,43 +809,35 @@ theorem massWeightSubmodule_eq (i : ℕ) (hi : 0 < i) :
       = (⨆ k ∈ Finset.univ.filter (fun k : Fin i => 2 * (1 + (k : ℕ)) = i),
           h.higgsSubmodule (k : ℕ) ⊔ h.barHiggsSubmodule (k : ℕ))
         ⊔ (⨆ p ∈ Finset.univ.filter (fun p : Fin i × Fin i => (p.1 : ℕ) + (p.2 : ℕ) = i),
-            h.massWeightSubmodule (p.1 : ℕ) * h.massWeightSubmodule (p.2 : ℕ)) := by
-  refine le_antisymm (fun b hb => ?_) (sup_le ?_ ?_)
-  · have hmain := h.coeff_mem_of_pos (h.mem_higgsAlgebra_of_mem_massWeightSubmodule hb) i hi
-    rwa [h.massWeightPoly_of_mem_massWeightSubmodule hb, Polynomial.coeff_monomial,
-      ite_eq_left rfl] at hmain
-  · refine iSup₂_le fun k hk => ?_
-    exact (sup_le (h.massWeightSubmodule_higgsSubmodule_le (k : ℕ))
-      (h.massWeightSubmodule_barHiggsSubmodule_le (k : ℕ))).trans
-      (le_of_eq (by rw [(Finset.mem_filter.mp hk).2]))
-  · refine iSup₂_le fun p hp => ?_
-    exact (h.massWeightSubmodule_mul_le (p.1 : ℕ) (p.2 : ℕ)).trans
-      (le_of_eq (by rw [(Finset.mem_filter.mp hp).2]))
+            h.massWeightSubmodule (p.1 : ℕ) * h.massWeightSubmodule (p.2 : ℕ)) :=
+  Subalgebra.homogeneousSubmodule_eq_sup_iSup_mul (deg := fun n => 2 * (1 + n))
+    h.higgsAlgebra_eq_adjoin h.massWeightPoly_of_mem_higgsSubmodule_sup
+    (fun n => by omega) i hi
+
+/-- Removing the leftmost Higgs tower: a term of positive weight `w` is a sum of products
+  of a tower `∇ⁿH` or `∇ⁿH̄`, of weight `2 * (1 + n) ≤ w`, with a term of the remaining
+  weight. -/
+lemma massWeightSubmodule_eq_iSup_mul (w : ℕ) (hw : 0 < w) :
+    h.massWeightSubmodule w
+      = ⨆ n ∈ (Finset.range (w + 1)).filter (fun n => 2 * (1 + n) ≤ w),
+          (h.higgsSubmodule n ⊔ h.barHiggsSubmodule n) * h.massWeightSubmodule (w - 2 * (1 + n)) :=
+  Subalgebra.homogeneousSubmodule_eq_iSup_mul (deg := fun n => 2 * (1 + n))
+    h.higgsAlgebra_eq_adjoin h.massWeightPoly_of_mem_higgsSubmodule_sup
+    (fun n => by omega) hw
 
 /-!
 
 ### F.3. The odd mass weights vanish
 
-Every symbol has even mass weight `2 * (1 + n)` and weights add under multiplication, so no
-term of the Higgs algebra has odd mass weight. The proof runs the recursion: at an odd
-weight the symbol part is empty, and each product has an odd factor of lower weight.
-
 -/
 
-/-- The odd mass weight submodules are trivial. -/
+/-- The odd mass weight submodules are trivial: every Higgs tower has even weight, and
+  weights add under products. -/
 lemma massWeightSubmodule_odd_eq_bot (n : ℕ) (hn : Odd n) :
-    h.massWeightSubmodule n = ⊥ := by
-  induction n using Nat.strongRecOn with
-  | _ n ih =>
-  rw [h.massWeightSubmodule_eq n hn.pos, eq_bot_iff, sup_le_iff]
-  obtain ⟨r, hr⟩ := hn
-  refine ⟨iSup₂_le fun k hk => ?_, iSup₂_le fun p hp => ?_⟩
-  · have := (Finset.mem_filter.mp hk).2
-    omega
-  · have hsum := (Finset.mem_filter.mp hp).2
-    rcases Nat.even_or_odd (p.1 : ℕ) with ⟨s, hs⟩ | ho
-    · rw [ih p.2 p.2.isLt ⟨r - s, by omega⟩, Submodule.mul_bot]
-    · rw [ih p.1 p.1.isLt ho, Submodule.bot_mul]
+    h.massWeightSubmodule n = ⊥ :=
+  Subalgebra.homogeneousSubmodule_eq_bot h.higgsAlgebra_eq_adjoin
+    h.massWeightPoly_of_mem_higgsSubmodule_sup (fun w => w % 2 = 0) rfl (fun n => by omega)
+    (fun a b ha hb => by omega) (by obtain ⟨r, rfl⟩ := hn; omega)
 
 /-!
 
@@ -960,42 +878,41 @@ noncomputable instance massWeightSubmoduleGaugeWeightOfNeZero (i : ℕ) [NeZero 
 
 /-!
 
-### F.5. The low mass weights
+### F.5. Mass weights up to eight
 
-The recursion expanded at weights `2`, `4`, `6` and `8`, with the products written in a
-fixed order using the commutation of the Higgs submodules. The odd weights vanish by
-`massWeightSubmodule_odd_eq_bot`, so only even splittings survive.
+Each case removes the leftmost tower. The towers with `0`, `1`, `2` and `3` derivatives
+have weights `2`, `4`, `6` and `8`, and the remaining weight is read off from a smaller weight.
+Expanding the joins gives the products of `H` and `H̄`; the Higgs algebra is commutative,
+so orders differing only by the position of commuting factors are merged, and the products
+are written in a fixed order.
 
 -/
 
 /-- Weight two: the underived Higgs and conjugate Higgs. -/
 lemma massWeightSubmodule_two_eq :
     h.massWeightSubmodule 2 = h.higgsSubmodule 0 ⊔ h.barHiggsSubmodule 0 := by
-  rw [h.massWeightSubmodule_eq 2 (by decide)]
-  rw [show (Finset.univ.filter (fun k : Fin 2 => 2 * (1 + (k : ℕ)) = 2)) = {0} from by decide,
-    show (Finset.univ.filter (fun p : Fin 2 × Fin 2 => (p.1 : ℕ) + (p.2 : ℕ) = 2)) = {(1, 1)}
-      from by decide]
-  simp only [Fin.isValue, Finset.mem_singleton, iSup_iSup_eq_left, Fin.coe_ofNat_eq_mod,
-    Nat.zero_mod, Nat.mod_succ, h.massWeightSubmodule_odd_eq_bot 1 (by decide),
-    Submodule.mul_bot, bot_le, sup_of_le_left]
+  rw [h.massWeightSubmodule_eq_iSup_mul 2 (by decide),
+    show (Finset.range 3).filter (fun n => 2 * (1 + n) ≤ 2) = {0} from by decide,
+    Finset.iSup_singleton]
+  simp [h.massWeightSubmodule_zero_eq]
 
-/-- Weight four: the once-derived symbols and the products of two underived ones. -/
+/-- Weight four: the once-derived symbols and the products of two underived ones. The
+  leftmost tower is underived, leaving weight two, or once-derived, leaving weight zero. -/
 lemma massWeightSubmodule_four_eq :
     h.massWeightSubmodule 4 = h.higgsSubmodule 1 ⊔ h.barHiggsSubmodule 1 ⊔
     h.higgsSubmodule 0 * h.higgsSubmodule 0 ⊔ h.higgsSubmodule 0 *
     h.barHiggsSubmodule 0 ⊔ h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0:= by
-  rw [h.massWeightSubmodule_eq 4 (by decide)]
-  rw [show (Finset.univ.filter (fun k : Fin 4 => 2 * (1 + (k : ℕ)) = 4)) = {1} from by decide,
-    show (Finset.univ.filter (fun p : Fin 4 × Fin 4 => (p.1 : ℕ) + (p.2 : ℕ) = 4)) =
-    {(1, 3), (3, 1), (2, 2)} from by decide]
-  simp [Fin.isValue, Finset.mem_singleton, iSup_iSup_eq_left, Fin.coe_ofNat_eq_mod,
-    Nat.one_mod, - Finset.mem_insert, Finset.iSup_insert,
-    h.massWeightSubmodule_odd_eq_bot 1 (by decide), massWeightSubmodule_two_eq]
-  simp [Submodule.sup_mul, Submodule.mul_sup, Submodule.mul_sup,
-    barHiggsSubmodule_comm_higgsSubmodule, ← sup_assoc]
+  rw [h.massWeightSubmodule_eq_iSup_mul 4 (by decide),
+    show (Finset.range 5).filter (fun n => 2 * (1 + n) ≤ 4) = {0, 1} from by decide,
+    Finset.iSup_insert, Finset.iSup_singleton]
+  simp only [Nat.reduceMul, Nat.reduceAdd, Nat.reduceSub, h.massWeightSubmodule_two_eq,
+    h.massWeightSubmodule_zero_eq, mul_one, Submodule.sup_mul, Submodule.mul_sup,
+    barHiggsSubmodule_comm_higgsSubmodule]
+  simp only [sup_assoc, sup_comm, sup_left_comm, sup_left_idem]
 
 /-- Weight six: the twice-derived symbols, a once-derived symbol against an underived one,
-  and the products of three underived ones. -/
+  and the products of three underived ones. The leftmost tower leaves weight four, two or
+  zero. -/
 lemma massWeightSubmodule_six_eq : h.massWeightSubmodule 6 =
     -- The derivative terms
     h.higgsSubmodule 2 ⊔ h.barHiggsSubmodule 2 ⊔
@@ -1008,25 +925,27 @@ lemma massWeightSubmodule_six_eq : h.massWeightSubmodule 6 =
     h.higgsSubmodule 0 * h.higgsSubmodule 0 * h.barHiggsSubmodule 0 ⊔
     h.higgsSubmodule 0 * h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 ⊔
     h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0  := by
-  rw [h.massWeightSubmodule_eq 6 (by decide)]
-  rw [show (Finset.univ.filter (fun k : Fin 6 => 2 * (1 + (k : ℕ)) = 6)) = {2} from by decide,
-    show (Finset.univ.filter (fun p : Fin 6 × Fin 6 => (p.1 : ℕ) + (p.2 : ℕ) = 6)) =
-    {(1, 5), (5, 1), (2, 4), (4, 2), (3, 3)} from by decide]
-  simp (disch := decide) [Fin.isValue, Finset.mem_singleton, iSup_iSup_eq_left,
-    Fin.coe_ofNat_eq_mod, Nat.one_mod, - Finset.mem_insert, Finset.iSup_insert,
-    h.massWeightSubmodule_odd_eq_bot, h.massWeightSubmodule_mul_comm,
-    bot_sup_eq, sup_bot_eq, sup_idem]
-  rw [massWeightSubmodule_two_eq, massWeightSubmodule_four_eq]
-  have hlc : ∀ (n1 n2 : ℕ) (C : Submodule ℂ B),
-      h.barHiggsSubmodule n1 * (h.higgsSubmodule n2 * C)
-      = h.higgsSubmodule n2 * (h.barHiggsSubmodule n1 * C) :=
-    fun n1 n2 C => Commute.left_comm (h.barHiggsSubmodule_comm_higgsSubmodule n1 n2) C
-  simp only [Submodule.sup_mul, Submodule.mul_sup, barHiggsSubmodule_comm_higgsSubmodule,
-    mul_assoc, hlc, h.higgsSubmodule_comm_higgsSubmodule 0 1,
-    h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1, ← sup_assoc, sup_right_idem]
+  rw [h.massWeightSubmodule_eq_iSup_mul 6 (by decide),
+    show (Finset.range 7).filter (fun n => 2 * (1 + n) ≤ 6) = {0, 1, 2} from by decide,
+    Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_singleton]
+  simp only [Nat.reduceMul, Nat.reduceAdd, Nat.reduceSub, h.massWeightSubmodule_four_eq,
+    h.massWeightSubmodule_two_eq, h.massWeightSubmodule_zero_eq, mul_one,
+    Submodule.sup_mul, Submodule.mul_sup, mul_assoc, barHiggsSubmodule_comm_higgsSubmodule,
+    h.barHiggs_higgs_left_comm, h.higgsSubmodule_comm_higgsSubmodule 0 1,
+    h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1]
+  -- the products are atoms for the final reordering of the join
+  generalize h.higgsSubmodule 2 = v1, h.barHiggsSubmodule 2 = v2,
+    h.higgsSubmodule 1 * h.higgsSubmodule 0 = v3, h.higgsSubmodule 1 * h.barHiggsSubmodule 0 = v4,
+    h.higgsSubmodule 0 * h.barHiggsSubmodule 1 = v5,
+    h.barHiggsSubmodule 1 * h.barHiggsSubmodule 0 = v6,
+    h.higgsSubmodule 0 * (h.higgsSubmodule 0 * h.higgsSubmodule 0) = v7,
+    h.higgsSubmodule 0 * (h.higgsSubmodule 0 * h.barHiggsSubmodule 0) = v8,
+    h.higgsSubmodule 0 * (h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0) = v9,
+    h.barHiggsSubmodule 0 * (h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0) = v10
+  ac_rfl
 
 /-- Weight eight: the derivative terms with up to three derivatives, and the products of
-  four underived symbols. -/
+  four underived symbols. The leftmost tower leaves weight six, four, two or zero. -/
 lemma massWeightSubmodule_eight_eq :
     h.massWeightSubmodule 8 =
       -- The derivative terms
@@ -1051,32 +970,20 @@ lemma massWeightSubmodule_eight_eq :
     h.higgsSubmodule 0 * h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 ⊔
     h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0 *
       h.barHiggsSubmodule 0 := by
-  rw [h.massWeightSubmodule_eq 8 (by decide)]
-  rw [show (Finset.univ.filter (fun k : Fin 8 => 2 * (1 + (k : ℕ)) = 8)) = {3} from by decide,
-    show (Finset.univ.filter (fun p : Fin 8 × Fin 8 => (p.1 : ℕ) + (p.2 : ℕ) = 8)) =
-    {(1, 7), (7, 1), (2, 6), (6, 2), (3, 5), (5, 3), (4, 4)} from by decide]
-  simp (disch := decide) [Fin.isValue, Finset.mem_singleton, iSup_iSup_eq_left,
-    Fin.coe_ofNat_eq_mod, Nat.one_mod, - Finset.mem_insert, Finset.iSup_insert,
-    h.massWeightSubmodule_odd_eq_bot, h.massWeightSubmodule_mul_comm,
-    bot_sup_eq, sup_left_idem]
-  rw [massWeightSubmodule_two_eq, massWeightSubmodule_four_eq, massWeightSubmodule_six_eq]
-  have hlc : ∀ (n1 n2 : ℕ) (C : Submodule ℂ B),
-      h.barHiggsSubmodule n1 * (h.higgsSubmodule n2 * C)
-      = h.higgsSubmodule n2 * (h.barHiggsSubmodule n1 * C) :=
-    fun n1 n2 C => Commute.left_comm (h.barHiggsSubmodule_comm_higgsSubmodule n1 n2) C
-  have hlcH : ∀ (C : Submodule ℂ B),
-      h.higgsSubmodule 0 * (h.higgsSubmodule 1 * C)
+  rw [h.massWeightSubmodule_eq_iSup_mul 8 (by decide),
+    show (Finset.range 9).filter (fun n => 2 * (1 + n) ≤ 8) = {0, 1, 2, 3} from by decide,
+    Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_insert, Finset.iSup_singleton]
+  have hlcH (C : Submodule ℂ B) : h.higgsSubmodule 0 * (h.higgsSubmodule 1 * C)
       = h.higgsSubmodule 1 * (h.higgsSubmodule 0 * C) :=
-    fun C => Commute.left_comm (h.higgsSubmodule_comm_higgsSubmodule 0 1) C
-  have hlcB : ∀ (C : Submodule ℂ B),
-      h.barHiggsSubmodule 0 * (h.barHiggsSubmodule 1 * C)
+    Commute.left_comm (h.higgsSubmodule_comm_higgsSubmodule 0 1) C
+  have hlcB (C : Submodule ℂ B) : h.barHiggsSubmodule 0 * (h.barHiggsSubmodule 1 * C)
       = h.barHiggsSubmodule 1 * (h.barHiggsSubmodule 0 * C) :=
-    fun C => Commute.left_comm (h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1) C
-  simp only [Submodule.sup_mul, Submodule.mul_sup, barHiggsSubmodule_comm_higgsSubmodule,
-    mul_assoc, hlc, hlcH, hlcB,
-    h.higgsSubmodule_comm_higgsSubmodule 0 1,
-    h.higgsSubmodule_comm_higgsSubmodule 0 2,
-    h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1,
+    Commute.left_comm (h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1) C
+  simp only [Nat.reduceMul, Nat.reduceAdd, Nat.reduceSub, h.massWeightSubmodule_six_eq,
+    h.massWeightSubmodule_four_eq, h.massWeightSubmodule_two_eq,
+    h.massWeightSubmodule_zero_eq, mul_one, Submodule.sup_mul, Submodule.mul_sup, mul_assoc,
+    barHiggsSubmodule_comm_higgsSubmodule, h.barHiggs_higgs_left_comm, hlcH, hlcB,
+    h.higgsSubmodule_comm_higgsSubmodule 0 2, h.barHiggsSubmodule_comm_barHiggsSubmodule 0 1,
     h.barHiggsSubmodule_comm_barHiggsSubmodule 0 2]
   -- the products are atoms for the final reordering of the join
   generalize h.higgsSubmodule 3 = v1, h.barHiggsSubmodule 3 = v2,
@@ -1100,7 +1007,7 @@ lemma massWeightSubmodule_eight_eq :
       = v19,
     h.barHiggsSubmodule 0 * (h.barHiggsSubmodule 0 *
       (h.barHiggsSubmodule 0 * h.barHiggsSubmodule 0)) = v20
-  simp only [sup_comm, sup_left_comm, sup_idem, sup_left_idem]
+  ac_rfl
 
 /-!
 
