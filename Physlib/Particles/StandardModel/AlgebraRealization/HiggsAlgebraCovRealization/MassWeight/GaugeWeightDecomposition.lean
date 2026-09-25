@@ -767,7 +767,7 @@ weight is seen by one of the four torus generators, which scales that part and f
 nothing else, so the part can be removed one weight at a time.
 
 The second is the peeling itself.  The weight-zero piece is a finite join of isospin family
-spans, and `IsSU2FunAntiFun.mem_span_sup_invariant_iff` removes one span at a time,
+spans, and `IsSU2FunAntiFun.exists_smul_add_of_gauge_invariant` removes one span at a time,
 each time with the spans not yet removed adjoined to `S`.  That is why the spans have to be
 gauge stable, which is `isoFamily_span_stable`, and why the enlargement is `isoSpan` rather
 than the pairing span of section C: the pairing span keeps only the diagonal components and
@@ -810,7 +810,7 @@ lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableE
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
     obtain ⟨c, y', hy', hxy', hy'inv⟩ :=
-      (hT a).mem_span_sup_invariant_iff x _ hstab' (hdc a) hx hinv
+      (hT a).exists_smul_add_of_gauge_invariant x _ hstab' (hdc a) hx hinv
     obtain ⟨y, hyS, hyinv, hy'y⟩ := ih hy' hy'inv
     refine ⟨y, hyS, hyinv, ?_⟩
     rw [Finset.iSup_insert,
@@ -1019,7 +1019,7 @@ theorem exists_mem_of_invariant_massWeightSubmodule_eight_sup (S : Submodule ℂ
         ((h.higgsBarHiggsSpan_le_isoSpan' 1 1 1).trans hA11)))
       (h.quarticSpan_le_quadFamily_span.trans hQ)) hSle hmem
   obtain ⟨c₁, c₂, y₁, hy₁, hxy₁, hy₁inv⟩ :=
-    h.isSU2QuadFundamental_quadFamily.mem_span_sup_invariant_iff x S₁ hS₁
+    h.isSU2QuadFundamental_quadFamily.exists_smul_add_smul_add_of_gauge_invariant x S₁ hS₁
       (fun g => by
         rw [epsilonContraction₁₂_quadFamily, h.rep_mul, h.rep_dotGaugeHiggs_invariant])
       (fun g => by rw [epsilonContraction₁₃_quadFamily, map_zero]) hquad hinv

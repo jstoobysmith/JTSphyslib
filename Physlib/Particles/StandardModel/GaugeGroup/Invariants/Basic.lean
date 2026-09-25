@@ -13,29 +13,34 @@ public import Physlib.Mathematics.LinearCombination
 Every file of this folder studies a family `T : ι → B` of vectors in a module `B`: the
 components of a tensor with a fixed set of gauge indices, such as a product of two gluon
 field strengths `F^a F^b` indexed by `ι = Fin 2 → Fin 8`. A gauge transformation moves the
-components into one another by a fixed matrix, and the question is always the same: which
-linear combinations of the components does every transformation leave alone? The answer,
-file by file, is a specific contraction, the trace `∑ a, T ![a, a]` or an epsilon symbol,
-and this file holds the two steps of the argument that do not depend on the family.
+components into one another by a matrix, `f (T l) = ∑ a, M a l • T a`, and the question is
+always which combinations of the components every transformation leaves alone.
 
-The first is bookkeeping: a vector lies in the span of the components precisely when it is a
-linear combination `∑ i, c i • T i`, so the span is described by coefficient functions
-`c : ι → ℂ`, on which the transformations act by the matrix of the law.
+Each file follows the same four steps.
 
-The second is the heart of the matter. An invariant vector of the span need not have an
-invariant coefficient function, because the components may be linearly dependent. But the
-coefficients contracting to zero form a subspace stable under the action, and when `A g⁻¹` is
-the adjoint of `A g` for the standard inner product, so is its orthogonal complement.
-Projecting the coefficient of an invariant vector onto that complement leaves the vector alone
-and makes the coefficient invariant. So an invariant of the span is the contraction of an
-invariant coefficient, and classifying invariants of the span reduces to classifying invariant
-coefficient functions, a finite linear-algebra problem: `Family.exists_invariant_coeff`, the
-case `g' = g⁻¹` of `Fintype.exists_invariant_coeff_of_adjoint_mem`.
+1. The transformation law and its coefficient matrix `M`. Two index conventions meet here.
+   On the family the law sums over the row index, `f (T l) = ∑ a, M a l • T a`. On
+   coefficient vectors `c : ι → ℂ` the matrix acts by `M *ᵥ c`, summing over the column index,
+   `(M *ᵥ c) a = ∑ l, M a l * c l`. The two agree: `f (∑ l, c l • T l) = ∑ a, (M *ᵥ c) a • T a`
+   (`LinearMap.map_sum_smul_eq_sum_mulVec_smul`). The conjugate transpose of the matrix of `U`
+   is the matrix of `U⁻¹`.
+2. The invariant contractions: coefficient vectors fixed by every matrix, such as the
+   Kronecker delta, whose combinations are therefore fixed.
+3. The classification: every fixed coefficient vector is a combination of those, a finite
+   computation with a few group elements.
+4. The reduction modulo a stable remainder, `reducesInvariantsTo_of_mulVec_eq` and its forms
+   in `Physlib.Mathematics.InvariantReduction`, which apply step 3 in every quotient `B ⧸ S`.
 
-The classifications are also needed modulo a stable submodule `S`. Each family file shows that
-its law descends to `B ⧸ S`, applies its classification there, and lifts the result back with
-`IsStableUnder.exists_smul_add_of_quotient` or `IsStableUnder.mem_sup_of_quotient` from
-`Physlib.Mathematics.InvariantReduction`.
+The conclusions are spanning statements: an invariant is a combination of the named
+contractions. Nothing here shows that the contractions are nonzero or independent.
+
+This file holds what the families share: the span, the matrices of laws with one factor per
+index (`powMatrix`, `pairMatrix`), and the Kronecker delta on two indices, which is fixed by a
+pair of matrices whose rows are orthonormal against each other.
+
+- A. The span of a family
+- B. Matrices of tensor laws
+- C. The Kronecker delta on two indices
 -/
 
 @[expose] public section
@@ -76,50 +81,84 @@ lemma sum_pi_two {n : ℕ} {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin n) 
 
 /-!
 
-## B. An invariant of the span is the contraction of an invariant coefficient
+## B. Matrices of tensor laws
 
-The transformations are a family of linear maps `φ g` on `B`, indexed by a group `G`, and
-the law says that `φ g` moves a contraction `∑ i, c i • T i` to the contraction against
-`A g c`, for a linear map `A g` on coefficient functions. One property of `A` is needed:
-`A g⁻¹` is the adjoint of `A g` for the standard inner product on coefficients. This is
-unitarity only when `A` is moreover a representation, which is not assumed. For real matrices
-it follows from `A g⁻¹` being the transpose of `A g` and `A g` commuting with conjugation,
-`sum_star_mul_of_transpose`.
+A law with one factor of a matrix per index acts on coefficient vectors by a Kronecker
+product. `powMatrix M k` has one factor of `M` for each of `k` indices, and `pairMatrix A C`
+has a factor of `A` on the first of two indices and a factor of `C` on the second, which is
+how a fundamental and an anti-fundamental index combine. In both the entry at `(a, l)` is the
+coefficient of `T a` in the image of `T l`: the family law sums over the row `a`, and
+`M *ᵥ c` over the column `l`.
 
 -/
 
-section Complement
+open Matrix
 
-variable {G : Type*} [Group G] (T : ι → B) (φ : G → B →ₗ[ℂ] B)
-  (A : G → (ι → ℂ) →ₗ[ℂ] (ι → ℂ))
+/-- The matrix of a law with one factor of `M` on each of `k` indices. -/
+def powMatrix {n : Type*} (M : Matrix n n ℂ) (k : ℕ) : Matrix (Fin k → n) (Fin k → n) ℂ :=
+  Matrix.of fun a l => ∏ i, M (a i) (l i)
 
-/-- For an action by real matrices, `A g⁻¹` being the transpose of `A g` and `A g`
-  commuting with conjugation make `A g⁻¹` the adjoint of `A g`. -/
-lemma sum_star_mul_of_transpose
-    (hA : ∀ g (c d : ι → ℂ), ∑ i, A g c i * d i = ∑ i, c i * A g⁻¹ d i)
-    (hstar : ∀ g (c : ι → ℂ), A g (star c) = star (A g c)) (g : G) (c d : ι → ℂ) :
-    ∑ i, star (c i) * A g d i = ∑ i, star (A g⁻¹ c i) * d i := by
-  have h := hA g d (star c)
-  rw [hstar] at h
-  simp only [Pi.star_apply] at h
-  calc ∑ i, star (c i) * A g d i = ∑ i, A g d i * star (c i) := by simp_rw [mul_comm]
-    _ = ∑ i, d i * star (A g⁻¹ c i) := h
-    _ = ∑ i, star (A g⁻¹ c i) * d i := by simp_rw [mul_comm]
+/-- The conjugate transpose of a Kronecker power is the power of the conjugate transpose. -/
+lemma powMatrix_conjTranspose {n : Type*} (M : Matrix n n ℂ) (k : ℕ) :
+    (powMatrix M k)ᴴ = powMatrix Mᴴ k := by
+  ext a l
+  simp [powMatrix, conjTranspose_apply]
 
-/-- An invariant of the span of a family is the contraction of an invariant coefficient
-  function, provided `A g⁻¹` is the adjoint of `A g` on coefficients. -/
-theorem exists_invariant_coeff
-    (hφ : ∀ g (c : ι → ℂ), φ g (∑ i, c i • T i) = ∑ i, A g c i • T i)
-    (hA : ∀ g (c d : ι → ℂ), ∑ i, star (c i) * A g d i = ∑ i, star (A g⁻¹ c i) * d i)
-    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
-    ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, A g c = c :=
-  Fintype.exists_invariant_coeff_of_adjoint_mem T φ A hφ (fun g => ⟨g⁻¹, fun u v => by
-    have h := hA g u.ofLp v.ofLp
-    simp only [PiLp.inner_apply, RCLike.inner_apply, Complex.star_def] at h ⊢
-    rw [Finset.sum_congr rfl fun i _ => mul_comm (A g v.ofLp i) _, h]
-    exact Finset.sum_congr rfl fun i _ => mul_comm _ _⟩) hx hinv
+/-- The matrix of a law with a factor of `A` on the first of two indices and a factor of `C`
+  on the second. -/
+def pairMatrix {n : Type*} (A C : Matrix n n ℂ) : Matrix (Fin 2 → n) (Fin 2 → n) ℂ :=
+  Matrix.of fun a l => A (a 0) (l 0) * C (a 1) (l 1)
 
-end Complement
+/-- The conjugate transpose of a pair matrix is the pair of the conjugate transposes. -/
+lemma pairMatrix_conjTranspose {n : Type*} (A C : Matrix n n ℂ) :
+    (pairMatrix A C)ᴴ = pairMatrix Aᴴ Cᴴ := by
+  ext a l
+  simp [pairMatrix, conjTranspose_apply]
+
+/-- The second Kronecker power is the pair matrix of `M` with itself. -/
+lemma powMatrix_two {n : Type*} (M : Matrix n n ℂ) : powMatrix M 2 = pairMatrix M M := by
+  ext a l
+  simp [powMatrix, pairMatrix, Fin.prod_univ_two]
+
+/-!
+
+## C. The Kronecker delta on two indices
+
+The Kronecker delta contracts two indices into the trace `∑ a, T ![a, a]`. It is fixed by
+`pairMatrix A C` exactly when the rows of `A` and `C` are orthonormal against each other,
+`A * Cᵀ = 1`: for two adjoint indices this is the orthogonality of the real adjoint matrix,
+and for a fundamental and an anti-fundamental index, with `C = conj U`, it is the unitarity
+`U * Uᴴ = 1`.
+
+-/
+
+/-- The Kronecker delta on a pair of indices. -/
+def deltaCoeff {n : ℕ} : (Fin 2 → Fin n) → ℂ := fun l => if l 0 = l 1 then 1 else 0
+
+/-- The combination with coefficients the Kronecker delta is the trace. -/
+lemma sum_deltaCoeff_smul {n : ℕ} (T : (Fin 2 → Fin n) → B) :
+    ∑ l, deltaCoeff l • T l = ∑ a : Fin n, T ![a, a] := by
+  rw [sum_pi_two]
+  simp [deltaCoeff, ite_smul]
+
+/-- The Kronecker delta is fixed by `pairMatrix A C` when `A * Cᵀ = 1`. -/
+lemma pairMatrix_mulVec_deltaCoeff {n : ℕ} {A C : Matrix (Fin n) (Fin n) ℂ} (h : A * Cᵀ = 1) :
+    pairMatrix A C *ᵥ deltaCoeff = deltaCoeff := by
+  funext a
+  have key : ∀ x y : Fin n, pairMatrix A C a ![x, y] * deltaCoeff ![x, y]
+      = if x = y then A (a 0) x * C (a 1) x else 0 := by
+    intro x y
+    by_cases hxy : x = y
+    · subst hxy
+      simp [pairMatrix, deltaCoeff]
+    · simp [deltaCoeff, hxy]
+  simp only [mulVec, dotProduct]
+  rw [sum_pi_two]
+  simp only [key, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+  have h' := congrFun (congrFun h (a 0)) (a 1)
+  simp only [mul_apply, transpose_apply, one_apply] at h'
+  rw [h']
+  rfl
 
 end Family
 

@@ -13,26 +13,23 @@ A single gluon field strength `F^a` carries one colour index, running over the e
 Gell-Mann directions of `su(3)`, and transforms in the adjoint representation `8`. That
 representation contains no singlet: no linear combination of the eight components is left
 alone by every colour rotation, which is why a Lagrangian never contains a term linear in a
-field strength. This file proves that fact in the form the Standard Model files consume,
-modulo a colour-stable submodule in which other families are parked.
+field strength. Modulo a colour-stable submodule `S`, every colour invariant of the span of the
+components lies in `S`.
 
-`IsSU3Adjoint B repGauge T` records the hypothesis. `T` is a family indexed by one colour
-index and valued in a module `B` carrying a representation of the gauge group, and a colour
-rotation `U ∈ SU(3)` moves its components by the adjoint matrix of `U`. Nothing is asked of
-the isospin and hypercharge factors.
+`IsSU3Adjoint B repGauge T` records the transformation law: a colour rotation `U ∈ SU(3)`
+moves the components by the adjoint matrix of `U`, the summed index in the row slot, so the
+law acts on coefficient vectors by `su3AdjointCoeffMatrix U` of `IsSU3BiAdjoint`. Nothing is
+asked of the isospin and hypercharge factors.
 
-The argument is the one of `IsSU3BiAdjoint` with one index instead of two. A colour
-invariant of the span is the contraction of an invariant coefficient vector, by
-`Family.exists_invariant_coeff`, since the adjoint matrix is orthogonal. Two colour
-rotations then kill the coefficient vector. The colour parities, diagonal sign matrices of
-`SU(3)`, reverse the six Gell-Mann directions that mix two colours and fix the two Cartan
-directions `λ₃` and `λ₈`, so an invariant coefficient lives in the Cartan plane. The cyclic
-permutation of the colours rotates that plane through a third of a turn, and a rotation of a
-plane fixes no nonzero vector.
+Two colour rotations show that no nonzero coefficient vector is fixed. The colour parities,
+diagonal sign matrices of `SU(3)`, reverse the six Gell-Mann directions that mix two colours
+and fix the two Cartan directions `λ₃` and `λ₈`, so a fixed coefficient vector lives in the
+Cartan plane. The cyclic permutation of the colours rotates that plane through a third of a
+turn, and a rotation of a plane fixes no nonzero vector.
 
-Section A gives the transformation law and the span, section B the action on coefficient
-vectors, section C the vanishing of an invariant coefficient vector, and section D the
-vanishing of the invariants of the span and its form modulo a stable submodule.
+- A. The transformation law
+- B. No coefficient vector is fixed
+- C. The reduction modulo a stable submodule
 -/
 
 @[expose] public section
@@ -43,7 +40,7 @@ open Matrix IsSU3BiAdjoint
 
 /-!
 
-## A. The transformation law and the span of the components
+## A. The transformation law
 
 The law carries one factor of the adjoint matrix, with the summed index in the row slot,
 exactly as each of the two indices of a bi-adjoint family does.
@@ -76,78 +73,28 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 @[nolint unusedArguments]
 def span (hT : IsSU3Adjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
-/-- A vector lies in the span precisely when it is a linear combination of the
-  components. -/
-lemma mem_span_iff (hT : IsSU3Adjoint B repGauge T) (x : B) :
-    x ∈ hT.span ↔ ∃ c : Fin 8 → ℂ, x = ∑ d, c d • T d :=
-  Family.mem_iSup_span_singleton_iff T x
-
 /-!
 
-## B. The action on coefficient vectors
-
-A vector of the span is a contraction `∑ a, c a • T a` against a coefficient vector
-`c : Fin 8 → ℂ`, and the law says that a colour rotation moves it by the row action
-`IsSU3BiAdjoint.rowAct U` on `c`, which is the adjoint matrix itself as a linear map. It is
-unitary for the standard inner product, the matrix being real and orthogonal.
-
--/
-
-/-- The row action of the adjoint matrix, as a linear map on coefficient vectors. -/
-noncomputable def act (U : specialUnitaryGroup (Fin 3) ℂ) : (Fin 8 → ℂ) →ₗ[ℂ] (Fin 8 → ℂ) :=
-  Matrix.toLin' (Matrix.of fun a x => ((su3AdjointMatrix U a x : ℝ) : ℂ))
-
-/-- The action on coefficient vectors is the row action. -/
-lemma act_apply (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 8 → ℂ) :
-    act U c = rowAct U c := by
-  funext a
-  simp [act, rowAct, Matrix.mulVec, dotProduct]
-
-/-- The transformation law in coefficient form. -/
-lemma map_sum_smul {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
-    (hf : IsSU3AdjointMat U f T) (c : Fin 8 → ℂ) :
-    f (∑ l, c l • T l) = ∑ a, act U c a • T a := by
-  simp only [map_sum, map_smul, act_apply, rowAct, Finset.sum_smul]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun l _ => ?_
-  rw [hf l, Finset.smul_sum]
-  exact Finset.sum_congr rfl fun a _ => by rw [smul_smul, mul_comm]
-
-/-- The action of `U⁻¹` is the transpose of the action of `U`. -/
-lemma sum_act_mul (U : specialUnitaryGroup (Fin 3) ℂ) (c d : Fin 8 → ℂ) :
-    ∑ a, act U c a * d a = ∑ l, c l * act U⁻¹ d l := by
-  simp only [act_apply, rowAct, su3AdjointMatrix_inv, Finset.sum_mul, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  exact Finset.sum_congr rfl fun l _ => Finset.sum_congr rfl fun a _ => by ring
-
-/-- The action on coefficient vectors commutes with complex conjugation. -/
-lemma act_star (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 8 → ℂ) :
-    act U (star c) = star (act U c) := by
-  funext a
-  simp [act_apply, rowAct, star_sum, star_mul', Complex.conj_ofReal]
-
-/-!
-
-## C. An invariant coefficient vector vanishes
+## B. No coefficient vector is fixed
 
 -/
 
 /-- A colour parity scales each coordinate by the sign of its Gell-Mann direction. -/
-lemma rowAct_su3Parity_apply (k : Fin 3) (c : Fin 8 → ℂ) (a : Fin 8) :
-    rowAct (su3Parity k) c a = ((paritySign k a : ℤ) : ℂ) * c a := by
-  simp only [rowAct, su3AdjointMatrix_su3Parity, apply_ite (fun r : ℝ => (r : ℂ)),
-    Complex.ofReal_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true,
-    Complex.ofReal_intCast]
+lemma su3Parity_mulVec_apply (k : Fin 3) (c : Fin 8 → ℂ) (a : Fin 8) :
+    (su3AdjointCoeffMatrix (su3Parity k) *ᵥ c) a = ((paritySign k a : ℤ) : ℂ) * c a := by
+  simp only [mulVec, dotProduct, su3AdjointCoeffMatrix, map_apply, su3AdjointMatrix_su3Parity,
+    apply_ite (fun r : ℝ => (r : ℂ)), Complex.ofReal_zero, ite_mul, zero_mul,
+    Finset.sum_ite_eq, Finset.mem_univ, ite_true, Complex.ofReal_intCast]
 
 /-- A coefficient vector fixed by every colour rotation is zero: the parities confine it to
   the Cartan plane, which the cyclic rotation turns through a third of a turn. -/
-theorem eq_zero_of_rowAct_eq {c : Fin 8 → ℂ}
-    (hc : ∀ U : specialUnitaryGroup (Fin 3) ℂ, rowAct U c = c) : c = 0 := by
+lemma eq_zero_of_forall_mulVec_eq {c : Fin 8 → ℂ}
+    (hc : ∀ U : specialUnitaryGroup (Fin 3) ℂ, su3AdjointCoeffMatrix U *ᵥ c = c) : c = 0 := by
   -- the parities: every direction outside the Cartan plane carries a sign `-1`
   have hpar : ∀ (k : Fin 3) (a : Fin 8), paritySign k a = -1 → c a = 0 := by
     intro k a hk
     have h := congrFun (hc (su3Parity k)) a
-    rw [rowAct_su3Parity_apply, hk] at h
+    rw [su3Parity_mulVec_apply, hk] at h
     push_cast at h
     linear_combination (-1 / 2 : ℂ) * h
   have hroot : ∀ a : Fin 8, a ≠ 2 → a ≠ 7 → c a = 0 := by
@@ -168,18 +115,15 @@ theorem eq_zero_of_rowAct_eq {c : Fin 8 → ℂ}
     · simp [unitVec]
     · simp [unitVec]
     · simp [unitVec, h2, h7, hroot a h2 h7]
-  have h3 : ((Real.sqrt 3 : ℝ) : ℂ) * ((Real.sqrt 3 : ℝ) : ℂ) = 3 := by
-    rw [← Complex.ofReal_mul, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 3)]
-    norm_num
   have h := hc su3Perm
-  rw [hcart, rowAct_add, rowAct_smul, rowAct_smul, rowAct_su3Perm_unitVec,
-    rowAct_su3Perm_unitVec] at h
+  rw [hcart, mulVec_add, mulVec_smul, mulVec_smul, su3Perm_mulVec_unitVec,
+    su3Perm_mulVec_unitVec] at h
   have h2 := congrFun h 2
   have h7 := congrFun h 7
   simp [permCol, unitVec] at h2 h7
   have hc7 : c 7 = 0 := by
     linear_combination (-((Real.sqrt 3 : ℝ) : ℂ) / 6) * h2 + (-(1 : ℂ) / 2) * h7
-      + (-(c 7) / 12) * h3
+      + (-(c 7) / 12) * sqrt_three_mul_self
   have hc2 : c 2 = 0 := by
     linear_combination (-(2 : ℂ) / 3) * h2 - (((Real.sqrt 3 : ℝ) : ℂ) / 3) * hc7
   rw [hcart, hc2, hc7]
@@ -187,67 +131,30 @@ theorem eq_zero_of_rowAct_eq {c : Fin 8 → ℂ}
 
 /-!
 
-## D. A single adjoint index carries no invariant
+## C. The reduction modulo a stable submodule
 
-The action on coefficients is unitary, so `Family.exists_invariant_coeff` writes an
-invariant of the span as the contraction of an invariant coefficient vector, which section C
-makes zero. The statement is made for any family of linear maps obeying the law, so that
-it applies in a quotient, and `IsStableUnder.mem_sup_of_quotient` then gives the form
-modulo a stable submodule: an invariant of the span joined with `S` lies in `S`.
+`reducesInvariantsTo_bot_of_mulVec_eq` applies section B in every quotient by a stable
+submodule: the span contributes nothing to the invariants.
 
 -/
 
-/-- An invariant of the span of a family obeying the law for a family of linear maps
-  `φ U` is zero: the adjoint representation of `SU(3)` contains no singlet. -/
-theorem eq_zero_of_invariant' {φ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B}
-    (hT : ∀ U, IsSU3AdjointMat U (φ U) T) {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d)
-    (hinv : ∀ U, φ U x = x) : x = 0 := by
-  obtain ⟨c, rfl, hc⟩ := Family.exists_invariant_coeff T φ act
-    (fun U c => map_sum_smul (hT U) c)
-    (Family.sum_star_mul_of_transpose act sum_act_mul act_star) hx hinv
-  have hc0 : c = 0 := eq_zero_of_rowAct_eq fun U => by rw [← act_apply, hc U]
-  simp [hc0]
-
-/-- A colour invariant in the span of the components is zero. -/
-theorem eq_zero_of_su3_invariant (hT : IsSU3Adjoint B repGauge T) {x : B}
-    (hx : x ∈ hT.span)
-    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) : x = 0 :=
-  eq_zero_of_invariant' hT.repGauge_T hx hinv
-
-/-- The law descends to the quotient by a submodule stable under the map. -/
-lemma isSU3AdjointMat_mapQ {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
-    (hf : IsSU3AdjointMat U f T) (S : Submodule ℂ B) (hS : ∀ y ∈ S, f y ∈ S) :
-    IsSU3AdjointMat U (S.mapQ S f hS) fun l => S.mkQ (T l) := by
-  intro l
-  dsimp only
-  rw [← LinearMap.comp_apply, Submodule.mapQ_mkQ, LinearMap.comp_apply, hf l, map_sum]
-  exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
+/-- For any family of maps `σ U` obeying the law, a `σ`-invariant of the span joined with a
+  `σ`-stable submodule `S` lies in `S`. -/
+lemma reducesInvariantsTo_bot (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B)
+    (hT : ∀ U, IsSU3AdjointMat U (σ U) T) :
+    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ :=
+  reducesInvariantsTo_bot_of_mulVec_eq T su3AdjointCoeffMatrix hT
+    (fun U => ⟨U⁻¹, su3AdjointCoeffMatrix_inv U⟩) fun _ hc => eq_zero_of_forall_mulVec_eq hc
 
 /-- A colour invariant of the span of the components joined with a colour-stable submodule
   `S` lies in `S`: an `su(3)` adjoint index contributes nothing to the invariants. -/
-theorem mem_of_mem_span_sup_su3_invariant (hT : IsSU3Adjoint B repGauge T) (x : B)
+lemma mem_of_mem_span_sup_su3_invariant (hT : IsSU3Adjoint B repGauge T) (x : B)
     (S : Submodule ℂ B)
     (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S)
     (hx : x ∈ hT.span ⊔ S)
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     x ∈ S := by
-  have h := IsStableUnder.mem_sup_of_quotient (σ := fun U => repGauge (U, 1, 1))
-    (V := ⨆ i, ℂ ∙ T i) (W := ⊥) hS (fun x hx hinv => by
-      rw [Submodule.map_iSup_span_singleton] at hx
-      rw [Submodule.map_bot, Submodule.mem_bot]
-      exact eq_zero_of_invariant' (fun U => isSU3AdjointMat_mapQ (hT.repGauge_T U) S (hS U))
-        hx hinv) hx hinv
-  rwa [bot_sup_eq] at h
-
-/-- The colour invariants of the span of the components joined with a colour-stable
-  submodule are exactly the colour invariants of the submodule. -/
-theorem mem_span_sup_su3_invariant_iff (hT : IsSU3Adjoint B repGauge T) (x : B)
-    (S : Submodule ℂ B)
-    (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S) :
-    (x ∈ hT.span ⊔ S ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
-      ↔ x ∈ S ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x :=
-  ⟨fun ⟨hx, hinv⟩ => ⟨hT.mem_of_mem_span_sup_su3_invariant x S hS hx hinv, hinv⟩,
-    fun ⟨hx, hinv⟩ => ⟨Submodule.mem_sup_right hx, hinv⟩⟩
+  simpa using reducesInvariantsTo_bot _ hT.repGauge_T S hS x hx hinv
 
 end IsSU3Adjoint
 

@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Algebra.Algebra.Operations
 public import Mathlib.LinearAlgebra.Quotient.Basic
+public import Physlib.Mathematics.LinearCombination
 /-!
 # Reducing invariants modulo a stable submodule
 
@@ -30,10 +31,17 @@ classification of the invariants of `V` alone, since the invariants of `B ⧸ S`
 `InvariantReductionToSpan σ V` packages a reduction of `V` to the span of one fixed vector,
 the form in which the classification theorems are applied.
 
+For a finite family moved by matrices, `σ g (T l) = ∑ a, M g a l • T a`, the quotient
+hypothesis reduces to a finite problem about coefficient vectors: the law holds again for the
+classes of the members in `B ⧸ S`, so an invariant there is the combination of a coefficient
+vector fixed by every `M g`, and any classification of the fixed coefficient vectors gives a
+reduction, `reducesInvariantsTo_of_mulVec_eq`.
+
 - A. Stable and fixed submodules
 - B. Reducing invariants
 - C. Reduction through a quotient
 - D. Reduction to the span of one vector
+- E. Families moved by matrices
 
 -/
 
@@ -348,6 +356,17 @@ lemma reducesInvariantsTo_iSup {κ : Type*} [Fintype κ] [DecidableEq κ]
     (fun k => (r k).stable)
     (isFixedBy_iSup_span_singleton fun k => (r k).spanningVector_fixed).isStableUnder
 
+/-- The reduction of a stable submodule to the span of a fixed vector. -/
+def ofReducesInvariantsTo (hV : IsStableUnder σ V) (v : B) (hv : ∀ g, σ g v = v)
+    (h : ReducesInvariantsTo σ V (R ∙ v)) : InvariantReductionToSpan σ V where
+  spanningVector := v
+  stable := hV
+  spanningVector_fixed := hv
+  reduce S hS x hx hinv := by
+    obtain ⟨w, hw, y, hy, rfl⟩ := Submodule.mem_sup.1 (h S hS x hx hinv)
+    obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hw
+    exact ⟨c, y, hy, rfl⟩
+
 /-- The span of a fixed vector reduces to itself. -/
 def ofFixed (b : B) (hb : ∀ g, σ g b = b) :
     InvariantReductionToSpan σ (R ∙ b) where
@@ -372,3 +391,72 @@ def ofFixedFamily {ι : Type*} [Nonempty ι] {T : ι → B} (b : B)
 end InvariantReductionToSpan
 
 end Span
+
+/-!
+
+## E. Families moved by matrices
+
+A finite family `T : ι → B` is moved by matrices when `σ g (T l) = ∑ a, M g a l • T a`, the
+summed index in the row slot. For a stable `S` the classes of the members in `B ⧸ S` obey the
+same law (`Submodule.mapQ_mkQ_eq_sum_smul`), and that law is all that
+`Fintype.exists_mulVec_eq_of_conjTranspose_mem` needs: an invariant of the image of the span in
+`B ⧸ S` is the combination of a coefficient vector fixed by every `M g`. A description of the
+fixed coefficient vectors, a submodule `E` containing them all, therefore reduces the span to
+the combinations of `E`. What is classified is coefficient vectors, which do not depend on `S`;
+no classification of invariants of `B` is assumed to descend to `B ⧸ S`.
+
+-/
+
+section Matrices
+
+open Matrix
+
+/-- A map moving each member of a family by a matrix moves their classes modulo a submodule
+  that it preserves by the same matrix. -/
+lemma Submodule.mapQ_mkQ_eq_sum_smul {R B ι : Type*} [Ring R] [AddCommGroup B] [Module R B]
+    [Fintype ι] (S : Submodule R B) {f : B →ₗ[R] B} (hS : ∀ y ∈ S, f y ∈ S) {T : ι → B}
+    {M : Matrix ι ι R} {l : ι} (hf : f (T l) = ∑ a, M a l • T a) :
+    S.mapQ S f hS (S.mkQ (T l)) = ∑ a, M a l • S.mkQ (T a) := by
+  rw [← LinearMap.comp_apply, Submodule.mapQ_mkQ, LinearMap.comp_apply, hf, map_sum]
+  exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
+
+variable {B G ι : Type*} [AddCommGroup B] [Module ℂ B] [Fintype ι] {σ : G → B →ₗ[ℂ] B}
+
+/-- A family moved by matrices whose conjugate transposes are among them reduces to the
+  combinations of any submodule `E` of coefficient vectors containing every vector fixed by
+  all the matrices. -/
+lemma reducesInvariantsTo_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
+    (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
+    (E : Submodule ℂ (ι → ℂ)) (hE : ∀ c, (∀ g, M g *ᵥ c = c) → c ∈ E) :
+    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) (E.map (Fintype.linearCombination ℂ T)) := by
+  refine reducesInvariantsTo_of_quotient fun S hS x hx hinv => ?_
+  -- the law for the classes of the members in `B ⧸ S`
+  have hTS : ∀ g l, S.mapQ S (σ g) (hS g) (S.mkQ (T l)) = ∑ a, M g a l • S.mkQ (T a) :=
+    fun g l => S.mapQ_mkQ_eq_sum_smul (hS g) (hT g l)
+  rw [Submodule.map_iSup_span_singleton] at hx
+  obtain ⟨c, rfl, hc⟩ := Fintype.exists_mulVec_eq_of_conjTranspose_mem (fun i => S.mkQ (T i))
+    (fun g => S.mapQ S (σ g) (hS g)) M hTS hM hx hinv
+  refine ⟨Fintype.linearCombination ℂ T c, ⟨c, hE c hc, rfl⟩, ?_⟩
+  simp [Fintype.linearCombination_apply]
+
+/-- The form of `reducesInvariantsTo_of_mulVec_eq` when no nonzero coefficient vector is
+  fixed: the span reduces to `⊥`. -/
+lemma reducesInvariantsTo_bot_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
+    (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
+    (hE : ∀ c, (∀ g, M g *ᵥ c = c) → c = 0) :
+    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ := by
+  simpa using reducesInvariantsTo_of_mulVec_eq T M hT hM ⊥ fun c hc =>
+    (Submodule.mem_bot ℂ).2 (hE c hc)
+
+/-- The form of `reducesInvariantsTo_of_mulVec_eq` when every fixed coefficient vector is a
+  multiple of `e`: the span reduces to the span of the combination with coefficients `e`. -/
+lemma reducesInvariantsTo_span_singleton_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
+    (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
+    (e : ι → ℂ) (hE : ∀ c, (∀ g, M g *ᵥ c = c) → ∃ z : ℂ, c = z • e) :
+    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) (ℂ ∙ ∑ i, e i • T i) := by
+  have h := reducesInvariantsTo_of_mulVec_eq T M hT hM (ℂ ∙ e) fun c hc => by
+    obtain ⟨z, rfl⟩ := hE c hc
+    exact Submodule.smul_mem _ z (Submodule.mem_span_singleton_self e)
+  rwa [Submodule.map_span, Set.image_singleton, Fintype.linearCombination_apply] at h
+
+end Matrices

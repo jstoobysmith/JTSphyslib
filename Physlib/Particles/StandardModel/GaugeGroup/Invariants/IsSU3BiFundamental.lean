@@ -12,22 +12,23 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 
 A quark carries one fundamental colour index, and a product of two quark fields carries two.
 There is no colour singlet in `3 ⊗ 3 = 6 ⊕ 3̄`: a colour singlet needs three quarks, or a
-quark and an antiquark, never two quarks. This file proves that fact in the form the
-Standard Model files consume, modulo a colour-stable submodule.
+quark and an antiquark, never two quarks. Modulo a colour-stable submodule `S`, every colour
+invariant of the span of the components lies in `S`.
 
-`IsSU3BiFundamental B repGauge T` records the hypothesis: `T` is a family indexed by two
-fundamental colour indices and valued in a module `B` carrying a representation of the gauge
-group, and a colour rotation `U ∈ SU(3)` moves its components by one factor of `U` per
-index. Nothing is asked of the isospin and hypercharge factors.
+`IsSU3BiFundamental B repGauge T` records the transformation law: a colour rotation
+`U ∈ SU(3)` moves the components by one factor of `U` per index, so the law acts on
+coefficient vectors by the Kronecker square of `U`. Nothing is asked of the isospin and
+hypercharge factors.
 
 The proof is triality. The scalar matrix `ω • 1`, with `ω` a primitive cube root of unity,
 lies in `SU(3)` because `ω ^ 3 = 1` is exactly the determinant condition, and it scales a
 tensor with `k` fundamental indices by `ω ^ k`. An invariant tensor therefore needs `3 ∣ k`,
-and `k = 2` fails: the centre alone scales every component of `T` by `ω ^ 2`, so a colour
-invariant of the span equals `ω ^ 2` times itself and vanishes.
+and `k = 2` fails: the centre alone scales every coefficient vector by `ω ^ 2 ≠ 1`, so no
+nonzero coefficient vector is fixed.
 
-Section A gives the transformation law and the span, section B the centre and the
-vanishing of the invariants of the span, and section C the form modulo a stable submodule.
+- A. The transformation law
+- B. The centre of `SU(3)` fixes no coefficient vector
+- C. The reduction modulo a stable submodule
 -/
 
 @[expose] public section
@@ -38,7 +39,7 @@ open Matrix
 
 /-!
 
-## A. The transformation law and the span of the components
+## A. The transformation law
 
 -/
 
@@ -71,129 +72,84 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 @[nolint unusedArguments]
 def span (hT : IsSU3BiFundamental B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
-/-- A vector lies in the span precisely when it is a linear combination of the
-  components. -/
-lemma mem_span_iff (hT : IsSU3BiFundamental B repGauge T) (x : B) :
-    x ∈ hT.span ↔ ∃ c : (Fin 2 → Fin 3) → ℂ, x = ∑ d, c d • T d :=
-  Family.mem_iSup_span_singleton_iff T x
+/-- The matrix by which the law acts on coefficient vectors: the Kronecker square of `U`.
+  The law says `f (T l) = ∑ a, coeffMatrix U a l • T a` by definition. -/
+noncomputable def coeffMatrix (U : specialUnitaryGroup (Fin 3) ℂ) :
+    Matrix (Fin 2 → Fin 3) (Fin 2 → Fin 3) ℂ :=
+  Family.powMatrix U.1 2
+
+/-- The coefficient matrix of `U⁻¹` is the conjugate transpose of that of `U`. -/
+lemma coeffMatrix_inv (U : specialUnitaryGroup (Fin 3) ℂ) :
+    coeffMatrix U⁻¹ = (coeffMatrix U)ᴴ := by
+  rw [coeffMatrix, coeffMatrix, Family.powMatrix_conjTranspose, ← star_eq_inv,
+    specialUnitaryGroup.coe_star, star_eq_conjTranspose]
 
 /-!
 
-## B. The centre of `SU(3)` forbids an invariant
+## B. The centre of `SU(3)` fixes no coefficient vector
 
 -/
-
-/-- The primitive cube root of unity has modulus one. -/
-lemma su3Omega_mul_star : su3Omega * star su3Omega = 1 := by
-  have hnorm : ‖su3Omega‖ = 1 :=
-    Complex.norm_eq_one_of_pow_eq_one su3Omega_pow_three (by norm_num)
-  rw [show star su3Omega = (starRingEnd ℂ) su3Omega from rfl, Complex.mul_conj]
-  simp [Complex.normSq_eq_norm_sq, hnorm]
 
 /-- The generator `ω • 1` of the centre `ℤ₃` of `SU(3)`: the determinant condition on a
   scalar matrix in three dimensions is exactly `ω ^ 3 = 1`. -/
 noncomputable def su3Centre : specialUnitaryGroup (Fin 3) ℂ :=
-  ⟨Matrix.diagonal fun _ => su3Omega, by
+  ⟨Matrix.diagonal fun _ => cubeRootOfUnity, by
     rw [Matrix.mem_specialUnitaryGroup_iff]
     refine ⟨?_, ?_⟩
     · rw [Matrix.mem_unitaryGroup_iff, Matrix.star_eq_conjTranspose,
         Matrix.diagonal_conjTranspose, Matrix.diagonal_mul_diagonal]
-      simp only [Pi.star_apply, su3Omega_mul_star, Matrix.diagonal_one]
+      simp only [Pi.star_apply, cubeRootOfUnity_mul_star, Matrix.diagonal_one]
     · rw [Matrix.det_diagonal]
       simp⟩
 
 /-- The central element is `ω` times the identity. -/
 lemma su3Centre_apply (a b : Fin 3) :
-    (su3Centre : specialUnitaryGroup (Fin 3) ℂ).1 a b = if a = b then su3Omega else 0 := by
+    (su3Centre : specialUnitaryGroup (Fin 3) ℂ).1 a b = if a = b then cubeRootOfUnity else 0 := by
   simp [su3Centre, Matrix.diagonal_apply]
 
-/-- A map moving the components by the central element scales every one of them by
-  `ω ^ 2`, one factor of `ω` for each index. -/
-lemma map_su3Centre {f : B →ₗ[ℂ] B} (hf : IsSU3BiFundamentalMat su3Centre f T)
-    (l : Fin 2 → Fin 3) : f (T l) = su3Omega ^ 2 • T l := by
-  rw [hf l, Finset.sum_eq_single l]
-  · rw [Fin.prod_univ_two, su3Centre_apply, su3Centre_apply, ite_eq_left rfl, ite_eq_left rfl, sq]
-  · intro a _ hal
-    have h : a 0 ≠ l 0 ∨ a 1 ≠ l 1 := by
+/-- The coefficient matrix of the central element is `ω ^ 2` times the identity, one factor
+  of `ω` for each index. -/
+lemma coeffMatrix_su3Centre : coeffMatrix su3Centre = cubeRootOfUnity ^ 2 • (1 : Matrix _ _ ℂ) := by
+  ext a l
+  simp only [coeffMatrix, Family.powMatrix, of_apply, Fin.prod_univ_two, su3Centre_apply,
+    Matrix.smul_apply, one_apply, smul_eq_mul]
+  by_cases hal : a = l
+  · subst hal
+    simp [sq]
+  · have h : a 0 ≠ l 0 ∨ a 1 ≠ l 1 := by
       by_contra hc
       simp only [not_or, ne_eq, not_not] at hc
       exact hal (funext fun j => by fin_cases j <;> simp [hc.1, hc.2])
-    rw [Fin.prod_univ_two, su3Centre_apply, su3Centre_apply]
-    rcases h with h | h
-    · rw [ite_eq_right h, zero_mul, zero_smul]
-    · rw [ite_eq_right h, mul_zero, zero_smul]
-  · intro hl
-    exact absurd (Finset.mem_univ l) hl
+    rcases h with h | h <;> simp [h, hal]
 
-/-- An invariant of the span of a family obeying the law for a family of linear maps
-  `φ U` is zero: the centre scales the whole span by `ω ^ 2 ≠ 1`. -/
-theorem eq_zero_of_invariant' {φ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B}
-    (hT : ∀ U, IsSU3BiFundamentalMat U (φ U) T) {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d)
-    (hinv : ∀ U, φ U x = x) : x = 0 := by
-  obtain ⟨c, rfl⟩ := (Family.mem_iSup_span_singleton_iff T x).1 hx
-  have hscale : φ su3Centre (∑ d, c d • T d) = su3Omega ^ 2 • ∑ d, c d • T d := by
-    rw [map_sum, Finset.smul_sum]
-    exact Finset.sum_congr rfl fun d _ => by
-      rw [map_smul, map_su3Centre (hT su3Centre) d, smul_comm]
-  have hne : su3Omega ^ 2 - 1 ≠ 0 :=
-    sub_ne_zero.2 (su3Omega_isPrimitiveRoot.pow_ne_one_of_pos_of_lt (by norm_num) (by norm_num))
-  have h0 : (su3Omega ^ 2 - 1) • ∑ d, c d • T d = 0 := by
-    rw [sub_smul, one_smul, ← hscale, hinv, sub_self]
-  have h := congrArg (fun y => (su3Omega ^ 2 - 1)⁻¹ • y) h0
-  simp only [smul_zero, inv_smul_smul₀ hne] at h
-  exact h
-
-/-- A colour invariant in the span of the components is zero: there is no colour singlet
-  in `3 ⊗ 3`. -/
-theorem eq_zero_of_su3_invariant (hT : IsSU3BiFundamental B repGauge T) {x : B}
-    (hx : x ∈ hT.span)
-    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) : x = 0 :=
-  eq_zero_of_invariant' hT.repGauge_T hx hinv
+/-- A coefficient vector fixed by every coefficient matrix is zero: the centre scales it by
+  `ω ^ 2 ≠ 1`. -/
+lemma eq_zero_of_forall_mulVec_eq {c : (Fin 2 → Fin 3) → ℂ}
+    (hc : ∀ U : specialUnitaryGroup (Fin 3) ℂ, coeffMatrix U *ᵥ c = c) : c = 0 := by
+  have h := hc su3Centre
+  rw [coeffMatrix_su3Centre, smul_mulVec, one_mulVec] at h
+  have hne : cubeRootOfUnity ^ 2 - 1 ≠ 0 :=
+    sub_ne_zero.2 (cubeRootOfUnity_isPrimitiveRoot.pow_ne_one_of_pos_of_lt (by norm_num)
+      (by norm_num))
+  have h0 : (cubeRootOfUnity ^ 2 - 1) • c = 0 := by rw [sub_smul, one_smul, h, sub_self]
+  exact (smul_eq_zero.1 h0).resolve_left hne
 
 /-!
 
-## C. The invariants modulo a stable submodule
+## C. The reduction modulo a stable submodule
 
-The law descends to the quotient by a colour-stable submodule `S`, section B applies there,
-and `IsStableUnder.mem_sup_of_quotient` lifts the result back: an invariant of the span
-joined with `S` lies in `S`, two fundamental colour indices contributing nothing.
+`reducesInvariantsTo_bot_of_mulVec_eq` applies section B in every quotient by a stable
+submodule: two fundamental colour indices contribute nothing to the invariants.
 
 -/
 
-/-- The law descends to the quotient by a submodule stable under the map. -/
-lemma isSU3BiFundamentalMat_mapQ {U : specialUnitaryGroup (Fin 3) ℂ} {f : B →ₗ[ℂ] B}
-    (hf : IsSU3BiFundamentalMat U f T) (S : Submodule ℂ B) (hS : ∀ y ∈ S, f y ∈ S) :
-    IsSU3BiFundamentalMat U (S.mapQ S f hS) fun l => S.mkQ (T l) := by
-  intro l
-  dsimp only
-  rw [← LinearMap.comp_apply, Submodule.mapQ_mkQ, LinearMap.comp_apply, hf l, map_sum]
-  exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
-
-/-- A colour invariant of the span of the components joined with a colour-stable submodule
-  `S` lies in `S`. -/
-theorem mem_of_mem_span_sup_su3_invariant (hT : IsSU3BiFundamental B repGauge T) (x : B)
-    (S : Submodule ℂ B)
-    (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S)
-    (hx : x ∈ hT.span ⊔ S)
-    (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
-    x ∈ S := by
-  have h := IsStableUnder.mem_sup_of_quotient (σ := fun U => repGauge (U, 1, 1))
-    (V := ⨆ i, ℂ ∙ T i) (W := ⊥) hS (fun x hx hinv => by
-      rw [Submodule.map_iSup_span_singleton] at hx
-      rw [Submodule.map_bot, Submodule.mem_bot]
-      exact eq_zero_of_invariant'
-        (fun U => isSU3BiFundamentalMat_mapQ (hT.repGauge_T U) S (hS U)) hx hinv) hx hinv
-  rwa [bot_sup_eq] at h
-
-/-- The colour invariants of the span of the components joined with a colour-stable
-  submodule are exactly the colour invariants of the submodule. -/
-theorem mem_span_sup_su3_invariant_iff (hT : IsSU3BiFundamental B repGauge T) (x : B)
-    (S : Submodule ℂ B)
-    (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S) :
-    (x ∈ hT.span ⊔ S ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x)
-      ↔ x ∈ S ∧ ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x :=
-  ⟨fun ⟨hx, hinv⟩ => ⟨hT.mem_of_mem_span_sup_su3_invariant x S hS hx hinv, hinv⟩,
-    fun ⟨hx, hinv⟩ => ⟨Submodule.mem_sup_right hx, hinv⟩⟩
+/-- For any family of maps `σ U` obeying the law, a `σ`-invariant of the span joined with a
+  `σ`-stable submodule `S` lies in `S`. -/
+lemma reducesInvariantsTo_bot (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B)
+    (hT : ∀ U, IsSU3BiFundamentalMat U (σ U) T) :
+    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ :=
+  reducesInvariantsTo_bot_of_mulVec_eq T coeffMatrix hT (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩)
+    fun _ hc => eq_zero_of_forall_mulVec_eq hc
 
 end IsSU3BiFundamental
 

@@ -17,7 +17,9 @@ acting on the coefficients.
 
 Over `ℂ`, when linear maps on `B` move combinations by moving their coefficients, a combination
 fixed by all the maps is the combination of fixed coefficients, provided the coefficient maps
-have their adjoints among themselves: `Fintype.exists_invariant_coeff_of_adjoint_mem`.
+have their adjoints among themselves: `Fintype.exists_invariant_coeff_of_adjoint_mem`. When the
+coefficient maps are matrices, the condition is that the conjugate transpose of each matrix is
+again one of them: `Fintype.exists_mulVec_eq_of_conjTranspose_mem`.
 
 The span `⨆ i, R ∙ T i` of a family is bounded through its members: the range of a linear
 map is the span of the images of a basis, and a product of submodules lying in spans of
@@ -43,6 +45,25 @@ lemma LinearMap.map_sum_smul_of_forall_eq (φ : B →ₗ[R] B') (T : ι → B) (
     φ (∑ l, c l • T l) = ∑ a, (∑ l, c l * M a l) • T' a := by
   rw [map_sum, Fintype.sum_sum_mul_smul]
   exact Finset.sum_congr rfl fun l _ => by rw [map_smul, hT]
+
+open Matrix in
+/-- The matrix form of `LinearMap.map_sum_smul_of_forall_eq`: a linear map moving `T l` to
+  `∑ a, M a l • T' a` moves the combination with coefficients `c` to the combination with
+  coefficients `M *ᵥ c`. -/
+lemma LinearMap.map_sum_smul_eq_sum_mulVec_smul (φ : B →ₗ[R] B') (T : ι → B) (T' : κ → B')
+    (M : Matrix κ ι R) (hT : ∀ l, φ (T l) = ∑ a, M a l • T' a) (c : ι → R) :
+    φ (∑ l, c l • T l) = ∑ a, (M *ᵥ c) a • T' a := by
+  rw [φ.map_sum_smul_of_forall_eq T T' M hT c]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  simp only [mulVec, dotProduct, mul_comm]
+
+open Matrix in
+/-- A linear map moving a family by `M` fixes the combination with coefficients fixed by
+  `M`. -/
+lemma LinearMap.map_sum_smul_eq_self_of_mulVec_eq (φ : B →ₗ[R] B) (T : ι → B)
+    (M : Matrix ι ι R) (hT : ∀ l, φ (T l) = ∑ a, M a l • T a) {c : ι → R} (hc : M *ᵥ c = c) :
+    φ (∑ i, c i • T i) = ∑ i, c i • T i := by
+  rw [φ.map_sum_smul_eq_sum_mulVec_smul T T M hT c, hc]
 
 open scoped InnerProductSpace in
 /-- A vector of the span of `T` fixed by every `φ g` is the combination of coefficients fixed
@@ -87,6 +108,26 @@ lemma Fintype.exists_invariant_coeff_of_adjoint_mem {ι G B : Type*} [Fintype ι
   have h3 : WithLp.toLp 2 (A g k'.ofLp) - k' ∈ K ⊓ Kᗮ := ⟨h1, Submodule.sub_mem _ h2 hk'⟩
   rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot, sub_eq_zero] at h3
   exact congrArg WithLp.ofLp h3
+
+open Matrix in
+/-- The matrix form of `Fintype.exists_invariant_coeff_of_adjoint_mem`: when each `φ g` moves
+  the family by a matrix `M g`, and the conjugate transpose of each `M g` is some `M g'`, a
+  vector of the span fixed by every `φ g` is the combination of a coefficient vector fixed by
+  every `M g`. -/
+lemma Fintype.exists_mulVec_eq_of_conjTranspose_mem {ι G B : Type*} [Fintype ι]
+    [AddCommGroup B] [Module ℂ B] (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → Matrix ι ι ℂ)
+    (hT : ∀ g l, φ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
+    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
+    ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, M g *ᵥ c = c :=
+  Fintype.exists_invariant_coeff_of_adjoint_mem T φ (fun g => (M g).mulVecLin)
+    (fun g c => (φ g).map_sum_smul_eq_sum_mulVec_smul T T (M g) (hT g) c)
+    (fun g => by
+      obtain ⟨g', hg'⟩ := hM g
+      refine ⟨g', fun u v => ?_⟩
+      -- `⟪u, M v⟫ = ⟪Mᴴ u, v⟫`, written with dot products
+      simp only [mulVecLin_apply, EuclideanSpace.inner_eq_star_dotProduct, hg', star_mulVec,
+        conjTranspose_conjTranspose]
+      rw [dotProduct_comm, dotProduct_mulVec, dotProduct_comm]) hx hinv
 
 /-- The range of a linear map is the span of the images of a basis. -/
 lemma LinearMap.range_eq_iSup_span_basis {ι R M N : Type*} [Semiring R] [AddCommMonoid M]

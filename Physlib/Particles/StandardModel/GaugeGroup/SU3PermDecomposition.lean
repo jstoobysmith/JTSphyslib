@@ -37,7 +37,7 @@ squares to `1`, and `t c t = c⁻¹` for `c` the three-cycle.
 
 `su3Perm` cubes to `1`, so it has order three in `SU(3)`, and its spectrum is contained in
 the cube roots of unity: `su3PermSign` is the character `k ↦ ω ^ k` on `ZMod 3` for
-`ω = su3Omega = exp (2 π i / 3)`, attaching the eigenvalue to each grade.
+`ω = cubeRootOfUnity = exp (2 π i / 3)`, attaching the eigenvalue to each grade.
 
 ## ii. Key results
 
@@ -45,14 +45,15 @@ the cube roots of unity: `su3PermSign` is the character `k ↦ ω ^ k` on `ZMod 
   `gaugeSU3Perm` its image in the gauge group.
 - `su3Weyl` : the Weyl group `S₃` as a subgroup of `SU(3)`, with `su3Transp` the lift of a
   transposition and `gaugeSU3Weyl` the version landing in the gauge group.
-- `su3Omega` : the primitive cube root of unity `exp (2 π i / 3)`.
 - `su3PermSign` : the character `k ↦ ω ^ k` on `ZMod 3`, injective and multiplicative.
+- `su3Parity` : the colour parities, the diagonal sign matrices of `SU(3)`.
 
 ## iii. Table of contents
 
 - A. The `SU(3)` cyclic Weyl element
 - B. The Weyl group `S₃` inside `SU(3)`
 - C. The cube-root character of `ZMod 3`
+- D. The colour parities
 
 -/
 @[expose] public section
@@ -241,51 +242,31 @@ lemma gaugeSU3Perm_mul_gaugeSU3Transp :
 
 -/
 
-/-- The primitive cube root of unity `ω = exp (2 π i / 3)`. -/
-noncomputable def su3Omega : ℂ := Complex.exp (2 * (Real.pi : ℂ) * Complex.I / 3)
-
-/-- `ω` is a primitive cube root of unity. -/
-lemma su3Omega_isPrimitiveRoot : IsPrimitiveRoot su3Omega 3 := by
-  have h := Complex.isPrimitiveRoot_exp 3 (by norm_num)
-  simpa [su3Omega] using h
-
-/-- `ω` cubes to one. -/
-@[simp] lemma su3Omega_pow_three : su3Omega ^ 3 = 1 :=
-  su3Omega_isPrimitiveRoot.pow_eq_one
-
-/-- `ω` is nonzero, being a value of the complex exponential. -/
-lemma su3Omega_ne_zero : su3Omega ≠ 0 := Complex.exp_ne_zero _
-
-/-- Powers of `ω` only see the exponent modulo three. -/
-lemma su3Omega_pow_mod (m : ℕ) : su3Omega ^ (m % 3) = su3Omega ^ m := by
-  conv_rhs => rw [← Nat.div_add_mod m 3]
-  rw [pow_add, pow_mul, su3Omega_pow_three, one_pow, one_mul]
-
 /-- The cube root of unity `ω ^ k` attached to a grade `k : ZMod 3`: the eigenvalue of the
   cyclic element on the `k` piece of a decomposition. -/
-noncomputable def su3PermSign (k : ZMod 3) : ℂ := su3Omega ^ k.val
+noncomputable def su3PermSign (k : ZMod 3) : ℂ := cubeRootOfUnity ^ k.val
 
 /-- The grade-zero sign is `1`. -/
 @[simp] lemma su3PermSign_zero : su3PermSign 0 = 1 := by
   rw [su3PermSign, show (0 : ZMod 3).val = 0 from by decide, pow_zero]
 
 /-- The grade-one sign is `ω`. -/
-@[simp] lemma su3PermSign_one : su3PermSign 1 = su3Omega := by
+@[simp] lemma su3PermSign_one : su3PermSign 1 = cubeRootOfUnity := by
   rw [su3PermSign, show (1 : ZMod 3).val = 1 from by decide, pow_one]
 
 /-- The grade-two sign is `ω ^ 2`. -/
-@[simp] lemma su3PermSign_two : su3PermSign 2 = su3Omega ^ 2 := by
+@[simp] lemma su3PermSign_two : su3PermSign 2 = cubeRootOfUnity ^ 2 := by
   rw [su3PermSign, show (2 : ZMod 3).val = 2 from by decide]
 
 /-- The sign is a character: grades add under multiplication because the cube roots of
   unity multiply. -/
 lemma su3PermSign_add (k l : ZMod 3) :
     su3PermSign (k + l) = su3PermSign k * su3PermSign l := by
-  rw [su3PermSign, su3PermSign, su3PermSign, ZMod.val_add, su3Omega_pow_mod, pow_add]
+  rw [su3PermSign, su3PermSign, su3PermSign, ZMod.val_add, cubeRootOfUnity_pow_mod, pow_add]
 
 /-- Every sign is nonzero, being a root of unity. -/
 lemma su3PermSign_ne_zero (k : ZMod 3) : su3PermSign k ≠ 0 :=
-  pow_ne_zero _ su3Omega_ne_zero
+  pow_ne_zero _ cubeRootOfUnity_ne_zero
 
 /-- The three cube roots of unity are distinct, so the pieces of a decomposition sit in
   eigenspaces at distinct eigenvalues and are automatically independent. -/
@@ -293,7 +274,7 @@ lemma su3PermSign_injective : Function.Injective su3PermSign := by
   intro k l hkl
   simp only [su3PermSign] at hkl
   exact ZMod.val_injective 3
-    (su3Omega_isPrimitiveRoot.pow_inj (ZMod.val_lt k) (ZMod.val_lt l) hkl)
+    (cubeRootOfUnity_isPrimitiveRoot.pow_inj (ZMod.val_lt k) (ZMod.val_lt l) hkl)
 
 /-- Negating a grade squares its sign, because `-k = k + k` in `ZMod 3`. The Weyl group acts
   on the grades by negation, so this is the sign seen after applying the transposition. -/
@@ -306,8 +287,8 @@ lemma su3PermSign_neg (k : ZMod 3) : su3PermSign (-k) = su3PermSign k * su3PermS
   cyclic subgroup kills everything of nonzero grade. -/
 lemma su3PermSign_symmetrizer {k : ZMod 3} (hk : k ≠ 0) :
     1 + su3PermSign k + su3PermSign k ^ 2 = 0 := by
-  have hω : 1 + su3Omega + su3Omega ^ 2 = 0 := by
-    have h := su3Omega_isPrimitiveRoot.geom_sum_eq_zero (by norm_num)
+  have hω : 1 + cubeRootOfUnity + cubeRootOfUnity ^ 2 = 0 := by
+    have h := cubeRootOfUnity_isPrimitiveRoot.geom_sum_eq_zero (by norm_num)
     simpa [Finset.sum_range_succ] using h
   have hcases : ∀ j : ZMod 3, j = 0 ∨ j = 1 ∨ j = 2 := by decide
   rcases hcases k with rfl | rfl | rfl
@@ -315,6 +296,30 @@ lemma su3PermSign_symmetrizer {k : ZMod 3} (hk : k ≠ 0) :
   · rw [su3PermSign_one]
     exact hω
   · rw [su3PermSign_two]
-    linear_combination hω + su3Omega * su3Omega_pow_three
+    linear_combination hω + cubeRootOfUnity * cubeRootOfUnity_pow_three
+
+/-!
+
+## D. The colour parities
+
+The diagonal sign matrices of `SU(3)`: fixing one colour and reversing the other two. With the
+cyclic element they are the colour rotations the gauge classifiers test invariance against.
+
+-/
+
+/-- The colour parity fixing the colour `k` and reversing the other two. -/
+noncomputable def su3Parity (k : Fin 3) : specialUnitaryGroup (Fin 3) ℂ :=
+  ⟨Matrix.diagonal fun i => if i = k then 1 else -1, by
+    rw [Matrix.mem_specialUnitaryGroup_iff, Matrix.mem_unitaryGroup_iff,
+      Matrix.star_eq_conjTranspose, Matrix.diagonal_conjTranspose,
+      Matrix.diagonal_mul_diagonal, Matrix.det_diagonal, ← Matrix.diagonal_one]
+    refine ⟨congrArg Matrix.diagonal (funext fun i => ?_), ?_⟩
+    · split_ifs with h <;> simp [h]
+    · fin_cases k <;> simp [Fin.prod_univ_three]⟩
+
+/-- The entries of a colour parity. -/
+lemma su3Parity_apply (k a b : Fin 3) :
+    (su3Parity k).1 a b = if a = b then (if a = k then 1 else -1) else 0 := by
+  simp [su3Parity, Matrix.diagonal_apply]
 
 end StandardModel

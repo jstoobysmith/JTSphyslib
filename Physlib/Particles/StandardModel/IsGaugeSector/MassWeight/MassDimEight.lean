@@ -911,7 +911,7 @@ lemma mem_of_invariant_unpaired_sup (S : Submodule ℂ B)
 A gauge invariant of mass weight eight lies in the zero-weight piece of the gauge weight
 decomposition, which section E bounds by the unpaired joins, the two non-abelian pair spans
 and the two hypercharge spans. Section F kills the unpaired joins. The two pair spans are
-peeled off one at a time by `IsSU3BiAdjoint.mem_span_sup_invariant_iff` and its `su(2)`
+peeled off one at a time by `IsSU3BiAdjoint.exists_smul_add_of_gauge_invariant` and its `su(2)`
 twin, each time with the spans not yet peeled off adjoined to the stable submodule `S`,
 which is why no independence of the parts is needed; each pair span is gauge stable, so
 the enlarged submodule stays stable. The two hypercharge spans are fixed pointwise by the
@@ -969,7 +969,7 @@ lemma exists_mem_of_invariant_gluonPairSpan_sup (S : Submodule ℂ B)
     (fun p => ℂ ∙ h.gluonTrace p)
     (fun p g => span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g))
     (fun p S hS x hx hinv => exists_sub_mem_span_singleton
-      ((h.isSU3BiAdjoint_gluonPair p).mem_span_sup_invariant_iff hrepGauge_mul x S hS
+      ((h.isSU3BiAdjoint_gluonPair p).exists_smul_add_of_gauge_invariant x S hS
         (h.repGauge_gluonTrace · p) hx hinv))
     S hS hx hinv
 
@@ -982,7 +982,7 @@ lemma exists_mem_of_invariant_wPairSpan_sup (S : Submodule ℂ B)
     (fun p => ℂ ∙ h.wTrace p)
     (fun p g => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g))
     (fun p S hS x hx hinv => exists_sub_mem_span_singleton
-      ((h.isSU2BiAdjoint_wPair p).mem_span_sup_invariant_iff hrepGauge_mul x S hS
+      ((h.isSU2BiAdjoint_wPair p).exists_smul_add_of_gauge_invariant x S hS
         (h.repGauge_wTrace · p) hx hinv))
     S hS hx hinv
 

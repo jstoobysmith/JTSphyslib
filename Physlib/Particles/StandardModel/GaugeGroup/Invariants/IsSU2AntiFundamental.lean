@@ -12,25 +12,26 @@ public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFunda
 The conjugate of an isospin doublet carries an anti-fundamental index, moved by the complex
 conjugate of the `SU(2)` matrix rather than by the matrix itself. A Yukawa coupling `H̄ Q d`
 carries one fundamental and one anti-fundamental index, `2 ⊗ 2̄`; the up-type coupling
-`ε H Q u` carries two anti-fundamental ones, `2̄ ⊗ 2̄`. This file classifies the isospin
-invariants in both cases, in the form the Standard Model files consume: modulo an
-isospin-stable submodule, the invariants of `2 ⊗ 2̄` are the multiples of the trace
-`T ![0, 0] + T ![1, 1]`, and those of `2̄ ⊗ 2̄` the multiples of the same epsilon contraction
-as for `2 ⊗ 2`.
+`ε H Q u` carries two anti-fundamental ones, `2̄ ⊗ 2̄`. Modulo an isospin-stable
+submodule, every isospin invariant of the span of the components is a multiple of the trace
+`T ![0, 0] + T ![1, 1]` for `2 ⊗ 2̄`, and a multiple of the same epsilon contraction as for
+`2 ⊗ 2` for `2̄ ⊗ 2̄`.
 
-Neither needs a classification of its own. `SU(2)` is pseudo-real: for `U ∈ SU(2)` the
-conjugate matrix is `ε U ε⁻¹`, with `ε` the antisymmetric symbol, so an anti-fundamental index
-is a fundamental index in another basis. Re-indexing each anti-fundamental slot by `ε` turns
-either law into the bi-fundamental law of `IsSU2BiFundamental`, for the very same
-representation, and the theorem of that file applies. The re-index is invertible, so it
-leaves the span of the components alone, and all that has to be tracked is which contraction
-of the original family the epsilon contraction of the re-indexed family is: minus the trace
-for `2 ⊗ 2̄`, and the epsilon contraction itself for `2̄ ⊗ 2̄`. `SU(3)` has no such identity,
-which is why the colour side needs a separate `IsSU3FunAntiFun`.
+An anti-fundamental index is moved by the entrywise conjugate `conj U`. For `U ∈ SU(2)` this
+is `(U⁻¹)ᵀ`, so the conjugate and the dual conventions agree, and `SU(2)` is moreover
+pseudo-real: the conjugate matrix is `ε U ε⁻¹`, with `ε` the antisymmetric symbol, by the four
+entry identities `IsSU2BiFundamental.conj_apply_*`. Neither case therefore needs a
+classification of its own. Re-indexing each anti-fundamental slot by `ε` turns either law into
+the bi-fundamental law of `IsSU2BiFundamental`, for the very same maps, and the reduction of
+that file applies. The re-index is invertible, so it leaves the span of the components alone,
+and all that has to be tracked is which contraction of the original family the epsilon
+contraction of the re-indexed family is: minus the trace for `2 ⊗ 2̄`, and the epsilon
+contraction itself for `2̄ ⊗ 2̄`. `SU(3)` has no such identity, which is why the colour side
+needs a separate `IsSU3FunAntiFun`.
 
 Section A treats one fundamental and one anti-fundamental index, section B two
-anti-fundamental ones; each gives the law, the re-index, the contraction and the theorem. An
-aside at the end holds the gauge form of the first theorem, which the Higgs sector uses.
+anti-fundamental ones; each gives the law, the re-index, the contraction and the reduction.
+Section A ends with the gauge form of its reduction, which the Higgs sector uses.
 -/
 
 @[expose] public section
@@ -197,39 +198,52 @@ lemma repGauge_deltaContraction {T : (Fin 2 → Fin 2) → B}
 
 /-!
 
-## A.3. The invariants modulo a stable submodule
+## A.3. The reduction modulo a stable submodule
+
+The reduction of `IsSU2BiFundamental` for the re-indexed family, transported along
+`span_reindex` and the sign of `epsilonContraction_reindex`. The gauge form, used by the
+Higgs sector, lets the other two factors act as well: once the delta contraction is known to
+be gauge invariant, so is the remainder.
 
 -/
 
-/-- An isospin invariant of the span of the components joined with an isospin-stable
-  submodule `S` is a multiple of the delta contraction up to an isospin-invariant remainder
-  in `S`: the theorem of `IsSU2BiFundamental` for the re-indexed family, read through the
-  sign of `epsilonContraction_reindex`. -/
-theorem mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
-    (hT : IsSU2FunAntiFun B repGauge T) (x : B) (S : Submodule ℂ B)
-    (hS : ∀ V : specialUnitaryGroup (Fin 2) ℂ, ∀ y ∈ S, repGauge (1, V, 1) y ∈ S)
-    (hx : x ∈ span T ⊔ S)
-    (hinv : ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) x = x) :
-    ∃ c : ℂ, ∃ y ∈ S, x = c • deltaContraction T + y
-      ∧ ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) y = y := by
-  obtain ⟨c, y, hyS, hxy, hyinv⟩ :=
-    hT.isSU2BiFundamental_reindex.mem_span_sup_su2_invariant_iff x S hS
-      (by rw [span_reindex]; exact hx) hinv
-  refine ⟨-c, y, hyS, ?_, hyinv⟩
-  rw [hxy, epsilonContraction_reindex, smul_neg, neg_smul]
+/-- For any family of maps `σ U` obeying the law, a `σ`-invariant of the span joined with a
+  `σ`-stable submodule `S` is a multiple of the delta contraction plus an element of `S`. -/
+lemma reducesInvariantsTo_span_deltaContraction
+    (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 2) → B}
+    (hT : ∀ U, IsSU2FunAntiFunMat U (σ U) T) :
+    ReducesInvariantsTo σ (span T) (ℂ ∙ deltaContraction T) := by
+  have h := reducesInvariantsTo_span_epsilonContraction σ fun U => map_reindex (hT U)
+  rwa [span_reindex, epsilonContraction_reindex, ← Set.neg_singleton, Submodule.span_neg] at h
 
 /-- The isospin invariants of the component span reduce to the span of the delta
   contraction. -/
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2FunAntiFun B repGauge T) :
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (span T) where
-  spanningVector := deltaContraction T
-  stable := isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩
-  spanningVector_fixed := repGauge_deltaContraction hT
-  reduce S hS x hx hinv := by
-    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su2_invariant_iff x S hS hx hinv
-    exact ⟨c, y, hy, hxy⟩
+      (span T) :=
+  InvariantReductionToSpan.ofReducesInvariantsTo
+    (isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
+    (deltaContraction T) (repGauge_deltaContraction hT)
+    (reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T)
+
+/-- A gauge invariant of the span joined with a gauge-stable submodule is a multiple of the
+  delta contraction plus a gauge-invariant remainder, once the delta contraction is known to
+  be gauge invariant. The hypothesis on the delta contraction cannot be dropped: the law says
+  nothing about the hypercharge factor, which may scale it. -/
+lemma exists_smul_add_of_gauge_invariant {T : (Fin 2 → Fin 2) → B}
+    (hT : IsSU2FunAntiFun B repGauge T) (x : B) (S : Submodule ℂ B)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hdc : ∀ g : GaugeGroupI, repGauge g (deltaContraction T) = deltaContraction T)
+    (hx : x ∈ span T ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    ∃ c : ℂ, ∃ y ∈ S, x = c • deltaContraction T + y
+      ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
+  have h := reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T S (fun V => hS (1, V, 1))
+    x hx fun V => hinv (1, V, 1)
+  obtain ⟨w, hw, y, hy, rfl, hyinv⟩ :=
+    IsFixedBy.exists_add_of_mem_sup (isFixedBy_span_singleton hdc) h hinv
+  obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hw
+  exact ⟨c, y, hy, rfl, hyinv⟩
 
 end IsSU2FunAntiFun
 
@@ -388,69 +402,31 @@ lemma repGauge_epsilonContraction {T : (Fin 2 → Fin 2) → B}
 
 /-!
 
-## B.3. The invariants modulo a stable submodule
+## B.3. The reduction modulo a stable submodule
 
 -/
 
-/-- An isospin invariant of the span of the components joined with an isospin-stable
-  submodule `S` is a multiple of the epsilon contraction up to an isospin-invariant
-  remainder in `S`. -/
-theorem mem_span_sup_su2_invariant_iff {T : (Fin 2 → Fin 2) → B}
-    (hT : IsSU2BiAntiFun B repGauge T) (x : B) (S : Submodule ℂ B)
-    (hS : ∀ V : specialUnitaryGroup (Fin 2) ℂ, ∀ y ∈ S, repGauge (1, V, 1) y ∈ S)
-    (hx : x ∈ span T ⊔ S)
-    (hinv : ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) x = x) :
-    ∃ c : ℂ, ∃ y ∈ S, x = c • epsilonContraction T + y
-      ∧ ∀ V : specialUnitaryGroup (Fin 2) ℂ, repGauge (1, V, 1) y = y := by
-  obtain ⟨c, y, hyS, hxy, hyinv⟩ :=
-    hT.isSU2BiFundamental_reindex.mem_span_sup_su2_invariant_iff x S hS
-      (by rw [span_reindex]; exact hx) hinv
-  exact ⟨c, y, hyS, by rw [hxy, epsilonContraction_reindex], hyinv⟩
+/-- For any family of maps `σ U` obeying the law, a `σ`-invariant of the span joined with a
+  `σ`-stable submodule `S` is a multiple of the epsilon contraction plus an element of `S`. -/
+lemma reducesInvariantsTo_span_epsilonContraction
+    (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 2) → B}
+    (hT : ∀ U, IsSU2BiAntiFunMat U (σ U) T) :
+    ReducesInvariantsTo σ (span T) (ℂ ∙ epsilonContraction T) := by
+  have h := IsSU2BiFundamental.reducesInvariantsTo_span_epsilonContraction σ
+    fun U => map_reindex (hT U)
+  rwa [span_reindex, epsilonContraction_reindex] at h
 
 /-- The isospin invariants of the component span reduce to the span of the epsilon
   contraction. -/
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiAntiFun B repGauge T) :
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (span T) where
-  spanningVector := epsilonContraction T
-  stable := isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩
-  spanningVector_fixed := repGauge_epsilonContraction hT
-  reduce S hS x hx hinv := by
-    obtain ⟨c, y, hy, hxy, -⟩ := hT.mem_span_sup_su2_invariant_iff x S hS hx hinv
-    exact ⟨c, y, hy, hxy⟩
+      (span T) :=
+  InvariantReductionToSpan.ofReducesInvariantsTo
+    (isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
+    (epsilonContraction T) (repGauge_epsilonContraction hT)
+    (reducesInvariantsTo_span_epsilonContraction _ hT.repGauge_T)
 
 end IsSU2BiAntiFun
-
-/-!
-
-## Aside: the gauge form of the theorem of section A, for the Higgs sector
-
--/
-
-namespace IsSU2FunAntiFun
-
-variable {B : Type*} [AddCommGroup B] [Module ℂ B]
-  {repGauge : Representation ℂ GaugeGroupI B}
-
-/-- A gauge invariant of the span joined with a gauge-stable submodule is a multiple of the
-  delta contraction up to a gauge-invariant remainder, once the delta contraction is known to
-  be gauge invariant. The hypothesis on the delta contraction cannot be dropped: the law says
-  nothing about the hypercharge factor, which may scale it. -/
-theorem mem_span_sup_invariant_iff {T : (Fin 2 → Fin 2) → B}
-    (hT : IsSU2FunAntiFun B repGauge T) (x : B) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hdc : ∀ g : GaugeGroupI, repGauge g (deltaContraction T) = deltaContraction T)
-    (hx : x ∈ IsSU2BiFundamental.span T ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    ∃ c : ℂ, ∃ y ∈ S, x = c • deltaContraction T + y
-      ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
-  obtain ⟨c, y, hyS, hxy, -⟩ :=
-    hT.mem_span_sup_su2_invariant_iff x S (fun V => hS (1, V, 1)) hx fun V => hinv (1, V, 1)
-  refine ⟨c, y, hyS, hxy, fun g => ?_⟩
-  rw [show y = x - c • deltaContraction T from by rw [hxy]; abel, map_sub, map_smul,
-    hinv g, hdc g]
-
-end IsSU2FunAntiFun
 
 end StandardModel
