@@ -25,8 +25,9 @@ the average over which direction of the multiset `r` is carried by the form itse
 than by a derivative. Its point is `iteratedDeriv_maurerCartan_eq_symmetrized_add`: an
 iterated derivative `∂_s ω_μ(U)` is the symmetrized form at `μ ::ₘ s` plus an average of
 iterated derivatives of *brackets* of Maurer–Cartan forms in strictly fewer directions —
-the structural equation used to trade an antisymmetric part for lower-order data. Iterating
-that gives `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq`: the base-point Taylor
+the structural equation used to trade an antisymmetric part for lower-order data. This gives
+the inductive step `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq`, and iterating
+it, `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq_all`: the base-point Taylor
 data of `ω` is determined by the base-point symmetrized data. How this determines a pure
 jet, and the truncation filtration it defines, is the subject of
 `Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation`.
@@ -40,8 +41,9 @@ jet, and the truncation filtration it defines, is the subject of
   `symmetrizedMaurerCartanForm_cons`.
 - `LocalGaugeData.iteratedDeriv_maurerCartan_eq_symmetrized_add` : the symmetrization
   defect is an average of brackets in fewer directions.
-- `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq` : the base-point
-  symmetrized data determines the base-point Taylor data of `ω`.
+- `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq_all` : the
+  base-point symmetrized data determine the base-point Taylor data of `ω`, with the
+  inductive step `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq`.
 - `LocalGaugeData.evalLie_iteratedDeriv_maurerCartan_eq_zero_of_symmetrized_eq_zero` : the
   base-point half of Maurer–Cartan triangularity.
 - `LocalGaugeData.maurerCartan_eq_zero_iff` : in a faithful package, the Maurer–Cartan form
@@ -135,15 +137,11 @@ lemma symmetrizedMaurerCartanForm_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3)
     simp
   · have hn : (r.card : ℝ) ≠ 0 :=
       Nat.cast_ne_zero.mpr fun h => hr (Multiset.card_eq_zero.mp h)
-    have herase : ∀ ν ∈ r, (μ ::ₘ r).erase ν = μ ::ₘ r.erase ν := by
-      intro ν hν
-      rcases eq_or_ne ν μ with rfl | h
-      · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
-      · rw [Multiset.erase_cons_tail _ h.symm]
     rw [symmetrizedMaurerCartanForm, symmetrizedMaurerCartanForm, Multiset.map_cons,
       Multiset.sum_cons, Multiset.card_cons, Multiset.sub_singleton, Multiset.erase_cons_head,
       Multiset.map_congr rfl fun ν hν => by
-        rw [Multiset.sub_singleton, herase ν hν, iteratedDeriv_cons, LinearMap.comp_apply,
+        rw [Multiset.sub_singleton, Multiset.erase_cons_tail_of_mem hν, iteratedDeriv_cons,
+          LinearMap.comp_apply,
           ← Multiset.sub_singleton],
       show (r.map fun ν =>
             jets.deriv μ (jets.iteratedDeriv (r - {ν}) (jets.maurerCartan U ν))) =
@@ -187,20 +185,12 @@ lemma iteratedDeriv_maurerCartan_eq_symmetrized_add (U : GJ)
     rw [hb, map_sub]
     congr 1
     · conv_rhs => rw [← Multiset.cons_erase hν]
-      rw [show (ν ::ₘ s.erase ν : Multiset (Fin 1 ⊕ Fin 3)) = s.erase ν + {ν} from by
-          rw [add_comm, Multiset.singleton_add],
-        iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
-    · rw [show (μ ::ₘ s.erase ν : Multiset (Fin 1 ⊕ Fin 3)) = s.erase ν + {μ} from by
-          rw [add_comm, Multiset.singleton_add],
-        iteratedDeriv_add, LinearMap.comp_apply, iteratedDeriv_singleton]
-  have herase : ∀ ν ∈ s, (μ ::ₘ s).erase ν = μ ::ₘ s.erase ν := by
-    intro ν hν
-    rcases eq_or_ne ν μ with rfl | hne
-    · rw [Multiset.erase_cons_head, Multiset.cons_erase hν]
-    · rw [Multiset.erase_cons_tail _ hne.symm]
+      rw [iteratedDeriv_cons_eq_comp_deriv, LinearMap.comp_apply]
+    · rw [iteratedDeriv_cons_eq_comp_deriv, LinearMap.comp_apply]
   rw [symmetrizedMaurerCartanForm, Multiset.map_cons, Multiset.sum_cons,
     Multiset.card_cons, Multiset.sub_singleton, Multiset.erase_cons_head,
-    Multiset.map_congr rfl fun ν hν => by rw [Multiset.sub_singleton, herase ν hν],
+    Multiset.map_congr rfl fun ν hν => by
+      rw [Multiset.sub_singleton, Multiset.erase_cons_tail_of_mem hν],
     Multiset.map_congr rfl hswap, Multiset.sum_map_sub, Multiset.map_const',
     Multiset.sum_replicate, ← Nat.cast_smul_eq_nsmul ℝ]
   push_cast
@@ -278,6 +268,27 @@ lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq (U V : GJ) (n : �
     omega
   exact jets.evalLie_iteratedDeriv_bracket_congr (s.erase ν) _ _ _ _
     (fun p hp => ih p μ (hlt p hp)) (fun p hp => ih p ν (hlt p hp))
+
+/-- **The symmetrized data determine the Maurer–Cartan Taylor data**: if the base-point
+  symmetrized Maurer–Cartan data of `U` and `V` agree, so do all base-point Taylor
+  coefficients of their Maurer–Cartan forms. Strong induction on the order, with
+  `evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq` as the step. -/
+lemma evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq_all (U V : GJ)
+    (hsym : ∀ r, jets.evalLie (jets.symmetrizedMaurerCartanForm U r) =
+      jets.evalLie (jets.symmetrizedMaurerCartanForm V r))
+    (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) :
+    jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) =
+      jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan V μ)) := by
+  have hall : ∀ (n : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card = n →
+      jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U μ)) =
+        jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan V μ)) := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+        intro s μ hs
+        exact jets.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq U V n hsym
+          (fun p ν hp => ih p.card hp p ν rfl) s μ hs
+  exact hall s.card s μ rfl
 
 /-!
 

@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
+public import Mathlib.Algebra.Lie.OfAssociative
 /-!
 # The Taylor coefficients of the adjoint action
 
@@ -199,7 +200,7 @@ lemma evalLie_iteratedDeriv_adjoint_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3)
   `Ad_U` with those of `Y`. For a matrix group this is the Leibniz rule for products of
   matrices of power series; here it follows from the single-derivative Leibniz rule
   `deriv_adjoint` by strong induction on the number of derivatives. -/
-theorem evalLie_iteratedDeriv_adjoint (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J) :
+lemma evalLie_iteratedDeriv_adjoint (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J) :
     jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y)) =
       (x.antidiagonal.map fun p =>
         jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv p.2 Y))).sum := by

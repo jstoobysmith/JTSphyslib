@@ -299,9 +299,9 @@ lemma maurerCartan_injOn_truncationKer_zero {U V : GJ} (hU : U ∈ jets.truncati
   exact (inv_mul_eq_one.mp h2).symm
 
 /-- A pure jet of a faithful package is determined by its symmetrized Maurer–Cartan data.
-  The symmetrized data determine all base-point Taylor data of the Maurer–Cartan form by
-  strong induction on the order, hence the form itself by Taylor determinacy, hence the
-  jet by `maurerCartan_injOn_truncationKer_zero`. -/
+  The symmetrized data determine all base-point Taylor data of the Maurer–Cartan form
+  (`evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq_all`), hence the form itself by
+  Taylor determinacy, hence the jet by `maurerCartan_injOn_truncationKer_zero`. -/
 lemma symmetrizedMaurerCartanCoeff_injective :
     Function.Injective jets.symmetrizedMaurerCartanCoeff := by
   intro U V h
@@ -311,17 +311,9 @@ lemma symmetrizedMaurerCartanCoeff_injective :
     rcases eq_or_ne r 0 with rfl | hr
     · simp
     · exact congrFun h ⟨r, hr⟩
-  have hall : ∀ (n : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3), s.card = n →
-      jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan U.1 μ)) =
-        jets.evalLie (jets.iteratedDeriv s (jets.maurerCartan V.1 μ)) := by
-    intro n
-    induction n using Nat.strong_induction_on with
-    | _ n ih =>
-        intro s μ hs
-        exact jets.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq U.1 V.1 n hsym
-          (fun p ν hp => ih p.card hp p ν rfl) s μ hs
   refine Subtype.ext (jets.maurerCartan_injOn_truncationKer_zero U.2 V.2 (funext fun μ => ?_))
-  exact jets.ext_of_evalLie_iteratedDeriv fun s => hall s.card s μ rfl
+  exact jets.ext_of_evalLie_iteratedDeriv fun s =>
+    jets.evalLie_iteratedDeriv_maurerCartan_eq_of_symmetrized_eq_all U.1 V.1 hsym s μ
 
 end Faithful
 
@@ -393,7 +385,7 @@ lemma exists_radial_eq {ρ : 𝔤J} (hρ : jets.evalLie ρ = 0) :
 /-- Every family of symmetrized Maurer–Cartan data is realized by a pure jet: realize the
   data, rescaled by the order, as the Taylor data of an element `ρ` vanishing at the base
   point, and integrate `ρ` to a pure jet. -/
-theorem symmetrizedMaurerCartanCoeff_surjective :
+lemma symmetrizedMaurerCartanCoeff_surjective :
     Function.Surjective jets.symmetrizedMaurerCartanCoeff := by
   intro c
   obtain ⟨ρ, hρ⟩ := jets.exists_evalLie_iteratedDeriv_eq fun s =>
