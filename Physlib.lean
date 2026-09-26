@@ -196,6 +196,7 @@ public import Physlib.Mathematics.CrossProductMatrix
 public import Physlib.Mathematics.DataStructures.FourTree.Basic
 public import Physlib.Mathematics.DataStructures.FourTree.UniqueMap
 public import Physlib.Mathematics.DataStructures.Matrix.LieTrace
+public import Physlib.Mathematics.DataStructures.Matrix.Scalar
 public import Physlib.Mathematics.Distribution.Basic
 public import Physlib.Mathematics.Distribution.PowMul
 public import Physlib.Mathematics.ExteriorAlgebra
@@ -215,6 +216,7 @@ public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Mathematics.KroneckerDelta.Basic
 public import Physlib.Mathematics.KroneckerDelta.Contraction
 public import Physlib.Mathematics.LeviCivita.Basic
+public import Physlib.Mathematics.LieAlgebraUnit
 public import Physlib.Mathematics.LinearCombination
 public import Physlib.Mathematics.LinearMaps
 public import Physlib.Mathematics.LinearPMap
@@ -229,6 +231,7 @@ public import Physlib.Mathematics.OrthogonalMatrix
 public import Physlib.Mathematics.PiTensorProduct
 public import Physlib.Mathematics.PolynomialEval
 public import Physlib.Mathematics.RatComplexNum
+public import Physlib.Mathematics.RepresentationProdMap
 public import Physlib.Mathematics.Resolvent
 public import Physlib.Mathematics.SO3.Basic
 public import Physlib.Mathematics.SchurTriangulation

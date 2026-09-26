@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
 public import Physlib.Relativity.JetRing.Jacobi
+public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 /-!
 # The local gauge data of `SU(n)`
 
@@ -68,19 +69,6 @@ abbrev SUAlgebra (n : ℕ) : Type := SUAlgebraOver ℂ n
 
 /-- Jets of the Lie algebra `su(n)`: traceless hermitian matrices of formal power series. -/
 abbrev JetSUAlgebra (n : ℕ) : Type := SUAlgebraOver JetRing n
-
-instance (n : ℕ) : Module.Finite ℝ (SUAlgebra n) := by infer_instance
-
-/-- The inclusion of the special unitary group into the unitary group. -/
-def specialUnitaryToUnitary (R : Type) [CommRing R] [StarRing R] (n : ℕ) :
-    specialUnitaryGroup (Fin n) R →* unitaryGroup (Fin n) R where
-  toFun U := ⟨U.1, (mem_specialUnitaryGroup_iff.mp U.2).1⟩
-  map_one' := rfl
-  map_mul' _ _ := rfl
-
-@[simp]
-lemma specialUnitaryToUnitary_val {R : Type} [CommRing R] [StarRing R] {n : ℕ}
-    (U : specialUnitaryGroup (Fin n) R) : (specialUnitaryToUnitary R n U).1 = U.1 := rfl
 
 namespace JetSU
 
@@ -174,7 +162,7 @@ noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetSUAlgebra n →ₗ[ℝ] JetS
     ext i j : 1
     simp only [SUAlgebraOver.ofMatrix_val, Submodule.coe_smul, Matrix.map_apply,
       Matrix.smul_apply, RingHom.id_apply]
-    rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul])
+    exact JetRing.pderiv_real_smul μ r _)
 
 @[simp]
 lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetSUAlgebra n) :
@@ -212,14 +200,11 @@ noncomputable def evalLie : JetSUAlgebra n →ₗ[ℝ] SUAlgebra n where
     simp only [SUAlgebraOver.ofMatrix_val, Submodule.coe_smul, RingHom.id_apply]
     ext i j
     simp only [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.smul_apply]
-    rw [← algebraMap_smul ℂ r, constantCoeff_smul, algebraMap_smul])
+    exact JetRing.constantCoeff_real_smul r _)
 
 @[simp]
 lemma evalLie_val (a : JetSUAlgebra n) :
     (evalLie a).1 = (constantCoeff : JetRing →+* ℂ).mapMatrix a.1 := rfl
-
-lemma C_smul (r : ℝ) (x : ℂ) : (C (r • x) : JetRing) = r • C x := by
-  rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply]
 
 lemma star_mapMatrix_C (a : SUAlgebra n) :
     star ((C : ℂ →+* JetRing).mapMatrix a.1) = (C : ℂ →+* JetRing).mapMatrix a.1 := by
@@ -239,7 +224,7 @@ noncomputable def ofConstantLie : SUAlgebra n →ₗ[ℝ] JetSUAlgebra n where
     simp only [SUAlgebraOver.ofMatrix_val, Submodule.coe_smul, RingHom.id_apply]
     ext i j : 1
     simp only [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.smul_apply]
-    exact C_smul r _)
+    exact JetRing.C_real_smul r _)
 
 @[simp]
 lemma ofConstantLie_val (a : SUAlgebra n) :
@@ -247,7 +232,8 @@ lemma ofConstantLie_val (a : SUAlgebra n) :
 
 /-- The adjoint action `a ↦ U a U†` of the jets of `SU(n)` on the jets of `su(n)`. -/
 noncomputable def adjoint : Representation ℝ (JetSU n) (JetSUAlgebra n) :=
-  (SUAlgebraOver.conj (R := JetRing)).comp (specialUnitaryToUnitary JetRing n)
+  (SUAlgebraOver.conj (R := JetRing)).comp
+    (Submonoid.inclusion specialUnitaryGroup_le_unitaryGroup)
 
 @[simp]
 lemma adjoint_val (U : JetSU n) (a : JetSUAlgebra n) :
@@ -255,7 +241,8 @@ lemma adjoint_val (U : JetSU n) (a : JetSUAlgebra n) :
 
 /-- The adjoint action `a ↦ U a U†` of `SU(n)` on `su(n)`. -/
 noncomputable def adjointValue : Representation ℝ (SU n) (SUAlgebra n) :=
-  (SUAlgebraOver.conj (R := ℂ)).comp (specialUnitaryToUnitary ℂ n)
+  (SUAlgebraOver.conj (R := ℂ)).comp
+    (Submonoid.inclusion specialUnitaryGroup_le_unitaryGroup)
 
 @[simp]
 lemma adjointValue_val (U : SU n) (a : SUAlgebra n) :

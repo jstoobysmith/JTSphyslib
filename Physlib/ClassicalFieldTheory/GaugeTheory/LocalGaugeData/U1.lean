@@ -6,6 +6,8 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
+public import Physlib.Mathematics.DataStructures.Matrix.Scalar
+public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 /-!
 # The local gauge data of `U(1)`
 
@@ -36,9 +38,8 @@ supplies is the carriers, the structure maps on them, and the canonical `U1Facto
 - A. The carriers
 - B. The structure maps
 - C. The Maurer–Cartan form
-- D. Scalars as `1 × 1` matrices
-- E. The presentation and the local gauge data
-- F. The canonical factor
+- D. The presentation and the local gauge data
+- E. The canonical factor
 
 -/
 
@@ -133,7 +134,7 @@ noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra →ₗ[ℝ] JetU1A
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
     show pderiv μ (r • a.1) = r • pderiv μ a.1
-    rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul])
+    exact JetRing.pderiv_real_smul μ r _)
 
 @[simp]
 lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) : (deriv μ a : JetRing) = pderiv μ a :=
@@ -159,7 +160,7 @@ noncomputable def evalLie : JetU1Algebra →ₗ[ℝ] U1Algebra where
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
     show constantCoeff (r • a.1) = r • constantCoeff a.1
-    rw [← algebraMap_smul ℂ r, constantCoeff_smul, algebraMap_smul])
+    exact JetRing.constantCoeff_real_smul r _)
 
 @[simp]
 lemma evalLie_val (a : JetU1Algebra) : (evalLie a : ℂ) = constantCoeff (a : JetRing) := rfl
@@ -172,7 +173,7 @@ noncomputable def ofConstantLie : U1Algebra →ₗ[ℝ] JetU1Algebra where
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
     show (C (r • a.1) : JetRing) = r • C a.1
-    rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply])
+    exact JetRing.C_real_smul r _)
 
 @[simp]
 lemma ofConstantLie_val (a : U1Algebra) : (ofConstantLie a : JetRing) = C (a : ℂ) := rfl
@@ -203,74 +204,14 @@ noncomputable def mc (u : JetU1) (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra :=
 lemma mc_val (u : JetU1) (μ : Fin 1 ⊕ Fin 3) :
     (mc u μ : JetRing) = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) := rfl
 
-/-!
-
-## D. Scalars as `1 × 1` matrices
-
-The presentation of `U(1)` by matrices reads a scalar as the `1 × 1` scalar matrix.
-
--/
-
-section Scalar
-
-variable {R : Type} [CommRing R] [StarRing R]
-
-lemma scalar_star (x : R) : star (Matrix.scalar (Fin 1) x) = Matrix.scalar (Fin 1) (star x) := by
-  rw [Matrix.scalar_apply, Matrix.scalar_apply, Matrix.star_eq_conjTranspose,
-    Matrix.diagonal_conjTranspose]
-  rfl
-
-omit [StarRing R] in
-lemma scalar_map {S : Type} [CommRing S] (f : R → S) (hf : f 0 = 0) (x : R) :
-    (Matrix.scalar (Fin 1) x).map f = Matrix.scalar (Fin 1) (f x) := by
-  rw [Matrix.scalar_apply, Matrix.scalar_apply, Matrix.diagonal_map hf]
-
-omit [StarRing R] in
-lemma scalar_smul {M : Type} [Monoid M] [DistribMulAction M R] (c : M) (x : R) :
-    Matrix.scalar (Fin 1) (c • x) = c • Matrix.scalar (Fin 1) x := by
-  rw [Matrix.scalar_apply, Matrix.scalar_apply, ← Matrix.diagonal_smul]
-  rfl
-
-omit [StarRing R] in
-/-- A `1 × 1` matrix is the scalar matrix of its entry. -/
-lemma eq_scalar (A : Matrix (Fin 1) (Fin 1) R) : A = Matrix.scalar (Fin 1) (A 0 0) := by
-  ext i j
-  rw [Fin.fin_one_eq_zero i, Fin.fin_one_eq_zero j]
-  simp
-
-omit [StarRing R] in
-/-- Scalar matrices commute. -/
-lemma scalar_commutator (x y : R) :
-    Matrix.scalar (Fin 1) x * Matrix.scalar (Fin 1) y
-      - Matrix.scalar (Fin 1) y * Matrix.scalar (Fin 1) x = 0 := by
-  rw [← map_mul, ← map_mul, mul_comm x y, sub_self]
-
-/-- Conjugation by a unitary scalar fixes a scalar matrix. -/
-lemma scalar_conj {u : R} (hu : u * star u = 1) (x : R) :
-    Matrix.scalar (Fin 1) x
-      = Matrix.scalar (Fin 1) u * Matrix.scalar (Fin 1) x * star (Matrix.scalar (Fin 1) u) := by
-  rw [scalar_star, ← map_mul, ← map_mul, mul_comm u, mul_assoc, hu, mul_one]
-
-/-- A self-adjoint element as a scalar matrix, real-linearly. -/
-noncomputable def scalarSelfAdjoint [Algebra ℝ R] [StarModule ℝ R] :
-    ↥(selfAdjoint R) →ₗ[ℝ] Matrix (Fin 1) (Fin 1) R where
-  toFun a := Matrix.scalar (Fin 1) a.1
-  map_add' a b := by rw [AddSubgroup.coe_add, map_add]
-  map_smul' r a := by rw [selfAdjoint.val_smul, scalar_smul, RingHom.id_apply]
-
-@[simp]
-lemma scalarSelfAdjoint_apply [Algebra ℝ R] [StarModule ℝ R] (a : ↥(selfAdjoint R)) :
-    scalarSelfAdjoint a = Matrix.scalar (Fin 1) a.1 := rfl
-
-end Scalar
-
-/-!
-
-## E. The presentation and the local gauge data
-
--/
 
 end JetU1
+
+/-!
+
+## D. The presentation and the local gauge data
+
+-/
 
 namespace LocalGaugeData
 
@@ -284,55 +225,47 @@ noncomputable def u1MatrixJets : MatrixJets (Fin 1) U1 U1Algebra JetU1 JetU1Alge
   toMatJ_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
   toMatJ_mul_star u := by
     show Matrix.scalar (Fin 1) u.1 * star (Matrix.scalar (Fin 1) u.1) = 1
-    rw [scalar_star, ← map_mul, Unitary.mul_star_self_of_mem u.2, map_one]
+    rw [Matrix.star_scalar, ← map_mul, Unitary.mul_star_self_of_mem u.2, map_one]
   star_toMatJ_mul u := by
     show star (Matrix.scalar (Fin 1) u.1) * Matrix.scalar (Fin 1) u.1 = 1
-    rw [scalar_star, ← map_mul, Unitary.star_mul_self_of_mem u.2, map_one]
-  lie₀ := scalarSelfAdjoint
+    rw [Matrix.star_scalar, ← map_mul, Unitary.star_mul_self_of_mem u.2, map_one]
+  lie₀ := Matrix.scalarSelfAdjoint
   lie₀_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
   lie₀_bracket a b := by
     show Matrix.scalar (Fin 1) ((0 : U1Algebra) : ℂ) = Complex.I • _
-    rw [scalarSelfAdjoint_apply, scalarSelfAdjoint_apply, scalar_commutator, smul_zero,
+    rw [Matrix.scalarSelfAdjoint_apply, Matrix.scalarSelfAdjoint_apply,
+      (Matrix.scalar_commute _ (fun _ => Commute.all _ _) _).eq, sub_self, smul_zero,
       ZeroMemClass.coe_zero, map_zero]
-  lieJ := scalarSelfAdjoint
+  lieJ := Matrix.scalarSelfAdjoint
   lieJ_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
   lieJ_bracket a b := by
     show Matrix.scalar (Fin 1) ((0 : JetU1Algebra) : JetRing) = Complex.I • _
-    rw [scalarSelfAdjoint_apply, scalarSelfAdjoint_apply, scalar_commutator, smul_zero,
+    rw [Matrix.scalarSelfAdjoint_apply, Matrix.scalarSelfAdjoint_apply,
+      (Matrix.scalar_commute _ (fun _ => Commute.all _ _) _).eq, sub_self, smul_zero,
       ZeroMemClass.coe_zero, map_zero]
   eval := JetU1.eval
-  toMat₀_eval u := by
-    show Matrix.scalar (Fin 1) (constantCoeff u.1) = (Matrix.scalar (Fin 1) u.1).map constantCoeff
-    rw [scalar_map _ (map_zero _)]
+  toMat₀_eval u := (Matrix.map_scalar constantCoeff (map_zero _) u.1).symm
   ofConstant := JetU1.ofConstant
-  toMatJ_ofConstant u := by
-    show Matrix.scalar (Fin 1) (C u.1) = (Matrix.scalar (Fin 1) u.1).map C
-    rw [scalar_map _ (map_zero _)]
+  toMatJ_ofConstant u := (Matrix.map_scalar C (map_zero _) u.1).symm
   evalLie := JetU1.evalLie
-  lie₀_evalLie a := by
-    show Matrix.scalar (Fin 1) (constantCoeff a.1) = (Matrix.scalar (Fin 1) a.1).map constantCoeff
-    rw [scalar_map _ (map_zero _)]
+  lie₀_evalLie a := (Matrix.map_scalar constantCoeff (map_zero _) a.1).symm
   ofConstantLie := JetU1.ofConstantLie
-  lieJ_ofConstantLie a := by
-    show Matrix.scalar (Fin 1) (C a.1) = (Matrix.scalar (Fin 1) a.1).map C
-    rw [scalar_map _ (map_zero _)]
+  lieJ_ofConstantLie a := (Matrix.map_scalar C (map_zero _) a.1).symm
   deriv := JetU1.deriv
-  lieJ_deriv μ a := by
-    show Matrix.scalar (Fin 1) (pderiv μ a.1) = (Matrix.scalar (Fin 1) a.1).map (pderiv μ)
-    rw [scalar_map _ (map_zero _)]
+  lieJ_deriv μ a := (Matrix.map_scalar (pderiv μ) (map_zero _) a.1).symm
   coord := JetU1.coord
   lieJ_coord μ a := by
     show Matrix.scalar (Fin 1) ((X μ : JetRing) * a.1) = (X μ : JetRing) • Matrix.scalar (Fin 1) a.1
-    rw [← smul_eq_mul, scalar_smul]
+    rw [← smul_eq_mul, Matrix.scalar_smul]
   adjoint := Representation.trivial ℝ JetU1 JetU1Algebra
-  lieJ_adjoint u a := scalar_conj (Unitary.mul_star_self_of_mem u.2) a.1
+  lieJ_adjoint u a := Matrix.scalar_eq_conj (Unitary.mul_star_self_of_mem u.2) a.1
   adjointValue := Representation.trivial ℝ U1 U1Algebra
-  lie₀_adjointValue u a := scalar_conj (Unitary.mul_star_self_of_mem u.2) a.1
+  lie₀_adjointValue u a := Matrix.scalar_eq_conj (Unitary.mul_star_self_of_mem u.2) a.1
   maurerCartan := JetU1.mc
   lieJ_maurerCartan u μ := by
     show Matrix.scalar (Fin 1) (Complex.I • (pderiv μ u.1 * star u.1))
       = Complex.I • ((Matrix.scalar (Fin 1) u.1).map (pderiv μ) * star (Matrix.scalar (Fin 1) u.1))
-    rw [scalar_smul, map_mul, scalar_star, scalar_map _ (map_zero _)]
+    rw [Matrix.scalar_smul, map_mul, Matrix.star_scalar, Matrix.map_scalar _ (map_zero _)]
 
 /-- **The local gauge data of `U(1)`**: unitary jets, self-adjoint scalar jets with
   vanishing bracket and trivial adjoint action, and the Maurer–Cartan form
@@ -367,20 +300,20 @@ instance instFreeU1 : u1.Free :=
     (fun c => ⟨⟨JetRing.taylorSeries fun s => ((c s : U1Algebra) : ℂ), by
       rw [selfAdjoint.mem_iff, JetRing.star_taylorSeries]
       exact congrArg _ (funext fun s => (c s).2)⟩, by
-      rw [JetU1.eq_scalar (JetRing.taylorMatrix _), JetRing.taylorMatrix_apply]
+      rw [Matrix.eq_scalar_fin_one (JetRing.taylorMatrix _), JetRing.taylorMatrix_apply]
       rfl⟩)
     (fun a => by
       show star (Matrix.scalar (Fin 1) a.1) = Matrix.scalar (Fin 1) a.1
-      rw [JetU1.scalar_star, a.2])
+      rw [Matrix.star_scalar, a.2])
     (fun ρ V hV0 hVu hEV => by
       have hu : V 0 0 * star (V 0 0) = 1 := by
         simpa [Matrix.mul_apply] using congrArg (fun A => A 0 0) hVu
       exact ⟨⟨V 0 0, Unitary.mem_iff.mpr ⟨by rw [mul_comm]; exact hu, hu⟩⟩,
-        (JetU1.eq_scalar V).symm⟩)
+        (Matrix.eq_scalar_fin_one V).symm⟩)
 
 /-!
 
-## F. The canonical factor
+## E. The canonical factor
 
 -/
 

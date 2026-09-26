@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
+public import Physlib.Mathematics.LieAlgebraUnit
 /-!
 # Local gauge data from a list of factors
 
@@ -175,17 +176,7 @@ unfolds to the literal product of the carriers of its factors, `JetSU 3 × JetSU
 for the Standard Model. The same recursion gives the instances and the gauge data below.
 -/
 
-instance : Bracket Unit Unit := ⟨fun _ _ => ()⟩
-
-instance : LieRing Unit where
-  add_lie _ _ _ := rfl
-  lie_add _ _ _ := rfl
-  lie_self _ := rfl
-  leibniz_lie _ _ _ := rfl
-
-instance : LieAlgebra ℝ Unit where
-  lie_smul _ _ _ := rfl
-
+/-- The group structure on the jets of a list of factors, by recursion on the list. -/
 @[instance_reducible]
 noncomputable def instGroupG : (Γ : List FactorSpec) → Group (G Γ)
   | [] => inferInstanceAs (Group Unit)
@@ -196,6 +187,7 @@ noncomputable def instGroupG : (Γ : List FactorSpec) → Group (G Γ)
 
 noncomputable instance (Γ : List FactorSpec) : Group (G Γ) := instGroupG Γ
 
+/-- The group structure on a list of factors, by recursion on the list. -/
 @[instance_reducible]
 noncomputable def instGroupG₀ : (Γ : List FactorSpec) → Group (G₀ Γ)
   | [] => inferInstanceAs (Group Unit)
@@ -206,6 +198,7 @@ noncomputable def instGroupG₀ : (Γ : List FactorSpec) → Group (G₀ Γ)
 
 noncomputable instance (Γ : List FactorSpec) : Group (G₀ Γ) := instGroupG₀ Γ
 
+/-- The Lie ring structure on the Lie algebra of a list of factors, by recursion. -/
 @[instance_reducible]
 noncomputable def instLieRing𝔤 : (Γ : List FactorSpec) → LieRing (𝔤 Γ)
   | [] => inferInstanceAs (LieRing Unit)
@@ -216,6 +209,7 @@ noncomputable def instLieRing𝔤 : (Γ : List FactorSpec) → LieRing (𝔤 Γ)
 
 noncomputable instance (Γ : List FactorSpec) : LieRing (𝔤 Γ) := instLieRing𝔤 Γ
 
+/-- The real Lie algebra structure on the Lie algebra of a list of factors, by recursion. -/
 @[instance_reducible]
 noncomputable def instLieAlgebra𝔤 : (Γ : List FactorSpec) → LieAlgebra ℝ (𝔤 Γ)
   | [] => inferInstanceAs (LieAlgebra ℝ Unit)
@@ -227,6 +221,7 @@ noncomputable def instLieAlgebra𝔤 : (Γ : List FactorSpec) → LieAlgebra ℝ
 
 noncomputable instance (Γ : List FactorSpec) : LieAlgebra ℝ (𝔤 Γ) := instLieAlgebra𝔤 Γ
 
+/-- The Lie ring structure on the jets of the Lie algebra of a list of factors, by recursion. -/
 @[instance_reducible]
 noncomputable def instLieRing𝔤J : (Γ : List FactorSpec) → LieRing (𝔤J Γ)
   | [] => inferInstanceAs (LieRing Unit)
@@ -237,6 +232,7 @@ noncomputable def instLieRing𝔤J : (Γ : List FactorSpec) → LieRing (𝔤J �
 
 noncomputable instance (Γ : List FactorSpec) : LieRing (𝔤J Γ) := instLieRing𝔤J Γ
 
+/-- The real Lie algebra structure on the jets of the Lie algebra of a list of factors. -/
 @[instance_reducible]
 noncomputable def instLieAlgebra𝔤J : (Γ : List FactorSpec) → LieAlgebra ℝ (𝔤J Γ)
   | [] => inferInstanceAs (LieAlgebra ℝ Unit)

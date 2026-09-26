@@ -479,4 +479,25 @@ lemma degree_toFinsupp_eq_card (r : Multiset (Fin 1 ⊕ Fin 3)) :
       Multiset.count_eq_zero.mpr fun hmem => hx (Multiset.mem_toFinset.mpr hmem)),
     Multiset.toFinset_sum_count_eq]
 
+/-!
+
+## Real scalars
+
+-/
+
+/-- Constants commute with real scalars. -/
+lemma C_real_smul (r : ℝ) (x : ℂ) :
+    (MvPowerSeries.C (r • x) : JetRing) = r • MvPowerSeries.C x := by
+  rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply]
+
+/-- The constant coefficient commutes with real scalars. -/
+lemma constantCoeff_real_smul (r : ℝ) (f : JetRing) :
+    MvPowerSeries.constantCoeff (r • f) = r • MvPowerSeries.constantCoeff f := by
+  rw [← algebraMap_smul ℂ r, MvPowerSeries.constantCoeff_smul, algebraMap_smul]
+
+/-- The formal derivatives commute with real scalars. -/
+lemma pderiv_real_smul (μ : Fin 1 ⊕ Fin 3) (r : ℝ) (f : JetRing) :
+    MvPowerSeries.pderiv μ (r • f) = r • MvPowerSeries.pderiv μ f := by
+  rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
+
 end JetRing

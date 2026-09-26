@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Mathlib.Algebra.Lie.Prod
+public import Physlib.Mathematics.RepresentationProdMap
 /-!
 # The product of local gauge data
 
@@ -28,40 +29,14 @@ is faithful (free).
 
 ## iii. Table of contents
 
-- A. Componentwise representations
-- B. The product
-- C. The projections
-- D. Faithfulness
-- E. Freeness
+- A. The product
+- B. The projections
+- C. Faithfulness
+- D. Freeness
 
 -/
 
 @[expose] public section
-
-/-!
-
-## A. Componentwise representations
-
--/
-
-/-- The componentwise representation of a product group on a product space. -/
-noncomputable def Representation.prodMap {k G₁ G₂ V₁ V₂ : Type*} [CommSemiring k]
-    [Monoid G₁] [Monoid G₂] [AddCommMonoid V₁] [Module k V₁] [AddCommMonoid V₂] [Module k V₂]
-    (ρ₁ : Representation k G₁ V₁) (ρ₂ : Representation k G₂ V₂) :
-    Representation k (G₁ × G₂) (V₁ × V₂) where
-  toFun p := (ρ₁ p.1).prodMap (ρ₂ p.2)
-  map_one' := by
-    refine LinearMap.ext fun v => ?_
-    simp
-  map_mul' p q := by
-    refine LinearMap.ext fun v => ?_
-    simp [Module.End.mul_apply]
-
-@[simp]
-lemma Representation.prodMap_apply {k G₁ G₂ V₁ V₂ : Type*} [CommSemiring k]
-    [Monoid G₁] [Monoid G₂] [AddCommMonoid V₁] [Module k V₁] [AddCommMonoid V₂] [Module k V₂]
-    (ρ₁ : Representation k G₁ V₁) (ρ₂ : Representation k G₂ V₂) (p : G₁ × G₂) (v : V₁ × V₂) :
-    Representation.prodMap ρ₁ ρ₂ p v = (ρ₁ p.1 v.1, ρ₂ p.2 v.2) := rfl
 
 namespace LocalGaugeData
 
@@ -73,7 +48,7 @@ variable {G₁ : Type} [Group G₁] {𝔤₁ : Type} [LieRing 𝔤₁] [LieAlgeb
 
 /-!
 
-## B. The product
+## A. The product
 
 -/
 
@@ -94,24 +69,7 @@ noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂
     Prod.ext (j₁.deriv_ofConstantLie μ a.1) (j₂.deriv_ofConstantLie μ a.2)
   coord μ := (j₁.coord μ).prodMap (j₂.coord μ)
   deriv_coord μ ν a := by
-    by_cases h : μ = ν
-    · subst h
-      rw [ite_eq_left rfl]
-      refine Prod.ext ?_ ?_
-      · have := j₁.deriv_coord μ μ a.1
-        rw [ite_eq_left rfl] at this
-        exact this
-      · have := j₂.deriv_coord μ μ a.2
-        rw [ite_eq_left rfl] at this
-        exact this
-    · rw [ite_eq_right h, add_zero]
-      refine Prod.ext ?_ ?_
-      · have := j₁.deriv_coord μ ν a.1
-        rw [ite_eq_right h, add_zero] at this
-        exact this
-      · have := j₂.deriv_coord μ ν a.2
-        rw [ite_eq_right h, add_zero] at this
-        exact this
+    ext <;> split_ifs <;> simp [j₁.deriv_coord, j₂.deriv_coord, *]
   evalLie_coord μ a := Prod.ext (j₁.evalLie_coord μ a.1) (j₂.evalLie_coord μ a.2)
   coord_lie μ a b := Prod.ext (j₁.coord_lie μ a.1 b.1) (j₂.coord_lie μ a.2 b.2)
   adjoint := Representation.prodMap j₁.adjoint j₂.adjoint
@@ -165,10 +123,10 @@ lemma prod_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J₁ × 𝔤J
 
 /-!
 
-## C. The projections
+## B. The projections
 
 The two projections of a product are morphisms of local gauge data, so a factor of either
-side pulls back to a factor of the product (`U1Factor.comap`, `SUFactor.comap`).
+side pulls back to a factor of the product (`Factor.comap`, `Factors.comap`).
 
 -/
 
@@ -198,7 +156,7 @@ noncomputable def Hom.snd : Hom (j₁.prod j₂) j₂ where
 
 /-!
 
-## D. Faithfulness
+## C. Faithfulness
 
 -/
 
@@ -220,7 +178,7 @@ instance instFaithfulProd [j₁.Faithful] [j₂.Faithful] : (j₁.prod j₂).Fai
 
 /-!
 
-## E. Freeness
+## D. Freeness
 
 -/
 
