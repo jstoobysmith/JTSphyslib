@@ -46,10 +46,9 @@ argument. The four carriers do not determine it — a truncated jet group beside
 one is the same four carriers with different data — so there is nothing canonical for
 instance search to choose.
 
-For the Standard Model, `G₀ = SU(3) × SU(2) × U(1)` and `GJ` is the same group with
-coefficients in the ring of formal power series in the spacetime coordinates
-(`StandardModel.JetGaugeGroupI`), packaged as `StandardModel.localGaugeData`; nothing here
-depends on that choice.
+Concrete packages are built in the sibling files: `U(1)` and `SU(n)` from a presentation by
+matrices of jets, products, and the gauge data `ofFactors Γ` of a list of factors such as
+`[.SU 3, .SU 2, .U1]`; nothing here depends on those choices.
 
 ## ii. Key results
 
