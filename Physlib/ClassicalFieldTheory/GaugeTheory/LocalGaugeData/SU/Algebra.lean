@@ -138,20 +138,6 @@ noncomputable instance : LieRing (SUAlgebraOver R n) where
       Complex.I_mul_I, smul_sub, mul_sub, sub_mul, mul_assoc]
     module)
 
-/-- Conjugation is an automorphism of the Lie algebra. -/
-lemma conj_lie (U : unitaryGroup (Fin n) R) (x y : SUAlgebraOver R n) :
-    conj U ⁅x, y⁆ = ⁅conj U x, conj U y⁆ := by
-  have hU : star U.1 * U.1 = 1 := (Unitary.mem_iff.mp U.2).1
-  have key : ∀ X Y : Matrix (Fin n) (Fin n) R,
-      (U.1 * X * star U.1) * (U.1 * Y * star U.1) = U.1 * (X * Y) * star U.1 := by
-    intro X Y
-    simp only [mul_assoc]
-    rw [show star U.1 * (U.1 * (Y * star U.1)) = Y * star U.1 from by
-      rw [← mul_assoc, hU, one_mul]]
-  refine Subtype.ext ?_
-  simp only [conj_apply_val, bracket_val, mul_smul_comm, smul_mul_assoc]
-  rw [key, key, mul_sub, sub_mul]
-
 variable [IsScalarTower ℝ ℂ R]
 
 noncomputable instance : LieAlgebra ℝ (SUAlgebraOver R n) where
