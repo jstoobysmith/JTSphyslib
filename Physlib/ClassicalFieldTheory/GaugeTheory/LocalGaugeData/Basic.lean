@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Lie.Basic
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.Algebra.Group.Subgroup.Basic
 public import Physlib.Mathematics.MultisetAntidiagonal
-public import Physlib.Relativity.DerivAlgebra
+public import Mathlib.Basic.Real.Basic
 /-!
 # Local gauge data
 
@@ -20,13 +20,17 @@ local Lagrangian sees of it is its *jet* at the base point. The jet gauge transf
 form a group `GJ`, and their infinitesimal counterparts a Lie algebra `𝔤J` over `ℝ`, with the
 value at the base point given by `eval : GJ →* G₀` and `evalLie : 𝔤J →ₗ⁅ℝ⁆ 𝔤`.
 
-This file records, as the structure `LocalGaugeData G₀ 𝔤 GJ 𝔤J`, exactly the structure of
-this situation that the transformation laws of gauge fields and matter fields use:
+This file records, as the structure `LocalGaugeData G₀ 𝔤 GJ 𝔤J`, the structure of this
+situation that the transformation laws of gauge fields and matter fields use, together with
+the coordinates that locate a jet around the base point:
 
 * the inclusion of constants and evaluation at the base point, on the group and on the
   Lie algebra;
 * the formal spacetime derivatives `deriv μ` on `𝔤J`, commuting, satisfying the Leibniz
   rule for the bracket, and killing constants;
+* multiplication by the coordinates `coord μ`, vanishing at the base point and central for
+  the bracket, with `∂_μ (x_ν a) = x_ν ∂_μ a + δ_{μν} a`; these are used for the Euler
+  identity and the radial Maurer–Cartan component, and hence for `Free`;
 * the adjoint action of `GJ` on `𝔤J`, by Lie algebra automorphisms, evaluating at the base
   point to the adjoint action of `G₀` on `𝔤`;
 * the Maurer–Cartan form `maurerCartan U μ = i (∂_μ U) U⁻¹`, with its cocycle law, its
@@ -38,7 +42,9 @@ of `GJ`, the symmetrized Maurer–Cartan form — is *derived* from these laws i
 files of this folder. Two further properties, which are true of any honest jet group but are
 not consequences of the transformation laws, are collected in the mixin `Faithful`: an
 element of `𝔤J` is determined by its base-point Taylor data, and a jet with vanishing
-Maurer–Cartan form is constant.
+Maurer–Cartan form is constant. The stronger mixin `Free`, in
+`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation`, adds that every
+Taylor family is realised.
 
 A term `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J` is supplied, not inferred: every construction
 below, and every construction downstream, takes the package it works over as an ordinary
@@ -63,6 +69,7 @@ matrices of jets, products, and the gauge data `ofFactors Γ` of a list of facto
   rule `iteratedDeriv_bracket`.
 - `LocalGaugeData.evalLie_iteratedDeriv_coord` : the Euler identity for the coordinates.
 - `LocalGaugeData.Faithful` : the jets are determined by their base-point Taylor data.
+- `LocalGaugeData.Hom` : a morphism of local gauge data.
 
 ## iii. Table of contents
 
@@ -70,6 +77,7 @@ matrices of jets, products, and the gauge data `ofFactors Γ` of a list of facto
 - B. First consequences of the laws
 - C. The iterated derivative
 - D. Faithful packages
+- E. Morphisms
 
 -/
 
@@ -366,5 +374,47 @@ lemma ext_of_evalLie_iteratedDeriv [jets.Faithful] {x y : 𝔤J}
       jets.evalLie (jets.iteratedDeriv s x) = jets.evalLie (jets.iteratedDeriv s y)) :
     x = y :=
   Faithful.ext_of_evalLie_iteratedDeriv h
+
+/-!
+
+## E. Morphisms
+
+-/
+
+variable {G₀' : Type} [Group G₀'] {𝔤' : Type} [LieRing 𝔤'] [LieAlgebra ℝ 𝔤']
+  {GJ' : Type} [Group GJ'] {𝔤J' : Type} [LieRing 𝔤J'] [LieAlgebra ℝ 𝔤J']
+
+/-- **A morphism of local gauge data**, in the minimal form along which structure pulls
+  back: a group map of the jets and real-linear maps of the Lie algebras and their jets,
+  compatible with evaluation and constants of Lie algebra elements, the derivatives, the
+  adjoint action and the Maurer–Cartan form. -/
+structure Hom (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (jets' : LocalGaugeData G₀' 𝔤' GJ' 𝔤J') where
+  /-- The map of jet groups. -/
+  grp : GJ →* GJ'
+  /-- The map of Lie algebras. -/
+  lie : 𝔤 →ₗ[ℝ] 𝔤'
+  /-- The map of Lie algebras of jets. -/
+  lieJ : 𝔤J →ₗ[ℝ] 𝔤J'
+  lieJ_ofConstantLie : ∀ c, lieJ (jets.ofConstantLie c) = jets'.ofConstantLie (lie c)
+  evalLie_lieJ : ∀ a, jets'.evalLie (lieJ a) = lie (jets.evalLie a)
+  lieJ_deriv : ∀ μ a, lieJ (jets.deriv μ a) = jets'.deriv μ (lieJ a)
+  lieJ_adjoint : ∀ U a, lieJ (jets.adjoint U a) = jets'.adjoint (grp U) (lieJ a)
+  lieJ_maurerCartan : ∀ U μ, lieJ (jets.maurerCartan U μ) = jets'.maurerCartan (grp U) μ
+
+namespace Hom
+
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {jets' : LocalGaugeData G₀' 𝔤' GJ' 𝔤J'}
+  (h : Hom jets jets')
+
+/-- A morphism commutes with iterated derivatives. -/
+lemma lieJ_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
+    h.lieJ (jets.iteratedDeriv s a) = jets'.iteratedDeriv s (h.lieJ a) := by
+  induction s using Multiset.induction_on generalizing a with
+  | empty => simp
+  | cons μ t ih =>
+    rw [iteratedDeriv_cons, iteratedDeriv_cons, LinearMap.comp_apply, LinearMap.comp_apply,
+      h.lieJ_deriv, ih]
+
+end Hom
 
 end LocalGaugeData

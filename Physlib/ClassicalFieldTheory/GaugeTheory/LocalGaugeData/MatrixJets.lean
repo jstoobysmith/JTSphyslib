@@ -394,8 +394,6 @@ lemma faithful : M.toLocalGaugeData.Faithful where
   jets themselves. -/
 noncomputable def suFactor : SUFactor M.toLocalGaugeData κ where
   u := M.toMatJ
-  u_one := map_one M.toMatJ
-  u_mul := map_mul M.toMatJ
   u_unitary := M.star_toMatJ_mul
   φ := M.lie₀
   φJ := M.lieJ

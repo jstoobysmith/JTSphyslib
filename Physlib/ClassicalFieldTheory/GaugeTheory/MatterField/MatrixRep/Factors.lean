@@ -185,8 +185,8 @@ variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {n : Type} [Fintype n] [Deci
   unitary matrices of jets, the gauge algebra by `i` times its matrix component. -/
 noncomputable def fund : MatrixRep jets n where
   mat := F.u
-  mat_one := F.u_one
-  mat_mul := F.u_mul
+  mat_one := map_one F.u
+  mat_mul := map_mul F.u
   act :=
     { toFun c := Complex.I • F.φ c
       map_add' a b := by rw [map_add, smul_add]
