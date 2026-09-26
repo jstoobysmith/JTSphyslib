@@ -24,9 +24,14 @@ reference to matter:
 * `LocalGaugeData.Factor`, `Factors` : a factor of either kind, and a gauge group as a
   list of factors.
 
+Factors pull back along a morphism of local gauge data, `LocalGaugeData.Hom`: a map of the
+jet groups and of the Lie algebras compatible with evaluation, derivatives, the adjoint
+action and the Maurer–Cartan form. The projections of a product are such morphisms
+(`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod`), which is how a factor of
+one side becomes a factor of the product.
+
 The canonical factors of the concrete packages are `LocalGaugeData.u1Factor` and
-`LocalGaugeData.suFactor`, the lifts of factors along a product are in
-`Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod`, and the representations
+`LocalGaugeData.suFactor`, and the representations
 a factor names (the charge twist, the fundamental) are built in
 `Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.MatrixRep.Factors`.
 
@@ -35,12 +40,15 @@ a factor names (the charge twist, the fundamental) are built in
 - `LocalGaugeData.U1Factor` : a `U(1)` factor of the local gauge data.
 - `LocalGaugeData.SUFactor` : an `SU(n)` factor of the local gauge data.
 - `LocalGaugeData.Factor`, `LocalGaugeData.Factors` : a gauge group presented by its factors.
+- `LocalGaugeData.Hom` : a morphism of local gauge data.
+- `LocalGaugeData.Factors.comap` : pulling factors back along a morphism.
 
 ## iii. Table of contents
 
 - A. `U(1)` factors
 - B. `SU(n)` factors
 - C. A gauge group as a list of factors
+- D. Pulling factors back along a morphism
 
 -/
 
@@ -127,5 +135,84 @@ inductive Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
 
 /-- **A gauge group presented by its factors.** -/
 abbrev Factors (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) : Type := List (Factor jets)
+
+/-!
+
+## D. Pulling factors back along a morphism
+
+-/
+
+variable {G₀' : Type} [Group G₀'] {𝔤' : Type} [LieRing 𝔤'] [LieAlgebra ℝ 𝔤']
+  {GJ' : Type} [Group GJ'] {𝔤J' : Type} [LieRing 𝔤J'] [LieAlgebra ℝ 𝔤J']
+
+/-- **A morphism of local gauge data**: maps of the jet groups and of the Lie algebras,
+  compatible with evaluation and constants, the derivatives, the adjoint action and the
+  Maurer–Cartan form. These are the compatibilities along which a factor pulls back. -/
+structure Hom (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (jets' : LocalGaugeData G₀' 𝔤' GJ' 𝔤J') where
+  /-- The map of jet groups. -/
+  grp : GJ →* GJ'
+  /-- The map of Lie algebras. -/
+  lie : 𝔤 →ₗ[ℝ] 𝔤'
+  /-- The map of Lie algebras of jets. -/
+  lieJ : 𝔤J →ₗ[ℝ] 𝔤J'
+  lieJ_ofConstantLie : ∀ c, lieJ (jets.ofConstantLie c) = jets'.ofConstantLie (lie c)
+  evalLie_lieJ : ∀ a, jets'.evalLie (lieJ a) = lie (jets.evalLie a)
+  lieJ_deriv : ∀ μ a, lieJ (jets.deriv μ a) = jets'.deriv μ (lieJ a)
+  lieJ_adjoint : ∀ U a, lieJ (jets.adjoint U a) = jets'.adjoint (grp U) (lieJ a)
+  lieJ_maurerCartan : ∀ U μ, lieJ (jets.maurerCartan U μ) = jets'.maurerCartan (grp U) μ
+
+namespace Hom
+
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {jets' : LocalGaugeData G₀' 𝔤' GJ' 𝔤J'}
+  (h : Hom jets jets')
+
+/-- A morphism commutes with iterated derivatives. -/
+lemma lieJ_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
+    h.lieJ (jets.iteratedDeriv s a) = jets'.iteratedDeriv s (h.lieJ a) := by
+  induction s using Multiset.induction_on generalizing a with
+  | empty => simp
+  | cons μ t ih =>
+    rw [iteratedDeriv_cons, iteratedDeriv_cons, LinearMap.comp_apply, LinearMap.comp_apply,
+      h.lieJ_deriv, ih]
+
+end Hom
+
+variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {jets' : LocalGaugeData G₀' 𝔤' GJ' 𝔤J'}
+
+/-- A `U(1)` factor pulled back along a morphism. -/
+noncomputable def U1Factor.comap (F : U1Factor jets') (h : Hom jets jets') : U1Factor jets where
+  u := F.u.comp h.grp
+  φ := F.φ.comp h.lie
+  φJ a := F.φJ (h.lieJ a)
+  φJ_ofConstantLie c := by rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply]
+  φJ_cc_foldl p a := by
+    rw [F.φJ_cc_foldl, LinearMap.comp_apply, ← h.evalLie_lieJ, h.lieJ_iteratedDeriv]
+  φJ_maurerCartan U μ := by rw [h.lieJ_maurerCartan, F.φJ_maurerCartan, MonoidHom.comp_apply]
+  φJ_adjoint U c := by rw [h.lieJ_adjoint, h.lieJ_ofConstantLie, F.φJ_adjoint]
+
+/-- An `SU(n)` factor pulled back along a morphism. -/
+noncomputable def SUFactor.comap {n : Type} [Fintype n] [DecidableEq n] (F : SUFactor jets' n)
+    (h : Hom jets jets') : SUFactor jets n where
+  u U := F.u (h.grp U)
+  u_one := by rw [map_one, F.u_one]
+  u_mul U V := by rw [map_mul, F.u_mul]
+  u_unitary U := F.u_unitary (h.grp U)
+  φ := F.φ.comp h.lie
+  φJ a := F.φJ (h.lieJ a)
+  φJ_ofConstantLie c := by rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply]
+  φJ_cc_foldl p a := by
+    rw [F.φJ_cc_foldl, LinearMap.comp_apply, ← h.evalLie_lieJ, h.lieJ_iteratedDeriv]
+  φJ_maurerCartan U μ := F.φJ_maurerCartan (h.grp U) μ ▸ by rw [h.lieJ_maurerCartan]
+  φJ_adjoint U c := by rw [h.lieJ_adjoint, h.lieJ_ofConstantLie, F.φJ_adjoint]
+
+/-- A factor pulled back along a morphism. -/
+noncomputable abbrev Factor.comap (h : Hom jets jets') : Factor jets' → Factor jets
+  | .U1 F => .U1 (F.comap h)
+  | .SU F => .SU (F.comap h)
+
+/-- A list of factors pulled back along a morphism. -/
+noncomputable abbrev Factors.comap (h : Hom jets jets') : Factors jets' → Factors jets
+  | [] => []
+  | F :: Fs => F.comap h :: Factors.comap h Fs
 
 end LocalGaugeData

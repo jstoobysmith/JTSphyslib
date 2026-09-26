@@ -14,15 +14,15 @@ public import Mathlib.Algebra.Lie.Prod
 ## i. Overview
 
 The local gauge data of a product of gauge groups: every structure map acts
-componentwise, and every law holds componentwise. A `U(1)` or `SU(n)` factor of either
-side lifts to a factor of the product, and the product of two faithful (free) packages
+componentwise, and every law holds componentwise. The projections are morphisms of local
+gauge data, so a factor of either side pulls back to the product, and the product of two
+faithful (free) packages
 is faithful (free).
 
 ## ii. Key results
 
 - `LocalGaugeData.prod` : the product of two local gauge data.
-- `U1Factor.inl`, `U1Factor.inr`, `SUFactor.inl`, `SUFactor.inr` : lifting factors to
-  the product.
+- `LocalGaugeData.Hom.fst`, `LocalGaugeData.Hom.snd` : the projections, as morphisms.
 - `LocalGaugeData.instFaithfulProd` : the product of faithful packages is faithful.
 - `LocalGaugeData.instFreeProd` : the product of free packages is free.
 
@@ -30,7 +30,7 @@ is faithful (free).
 
 - A. Componentwise representations
 - B. The product
-- C. Lifting factors
+- C. The projections
 - D. Faithfulness
 - E. Freeness
 
@@ -165,75 +165,36 @@ lemma prod_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J₁ × 𝔤J
 
 /-!
 
-## C. Lifting factors
+## C. The projections
+
+The two projections of a product are morphisms of local gauge data, so a factor of either
+side pulls back to a factor of the product (`U1Factor.comap`, `SUFactor.comap`).
 
 -/
 
 variable {j₁ j₂}
 
-/-- A `U(1)` factor of the first gauge data, as a factor of the product. -/
-noncomputable def _root_.LocalGaugeData.U1Factor.inl (F : U1Factor j₁) : U1Factor (j₁.prod j₂)
-    where
-  u := F.u.comp (MonoidHom.fst G₁ G₂)
-  φ := F.φ.comp (LinearMap.fst ℝ 𝔤₁ 𝔤₂)
-  φJ a := F.φJ a.1
-  φJ_ofConstantLie c := F.φJ_ofConstantLie c.1
-  φJ_cc_foldl p a := by
-    rw [prod_iteratedDeriv]
-    exact F.φJ_cc_foldl p a.1
-  φJ_maurerCartan U μ := F.φJ_maurerCartan U.1 μ
-  φJ_adjoint U c := F.φJ_adjoint U.1 c.1
+/-- The first projection, as a morphism of local gauge data. -/
+noncomputable def Hom.fst : Hom (j₁.prod j₂) j₁ where
+  grp := MonoidHom.fst G₁ G₂
+  lie := LinearMap.fst ℝ 𝔤₁ 𝔤₂
+  lieJ := LinearMap.fst ℝ 𝔤J₁ 𝔤J₂
+  lieJ_ofConstantLie _ := rfl
+  evalLie_lieJ _ := rfl
+  lieJ_deriv _ _ := rfl
+  lieJ_adjoint _ _ := rfl
+  lieJ_maurerCartan _ _ := rfl
 
-/-- A `U(1)` factor of the second gauge data, as a factor of the product. -/
-noncomputable def _root_.LocalGaugeData.U1Factor.inr (F : U1Factor j₂) : U1Factor (j₁.prod j₂)
-    where
-  u := F.u.comp (MonoidHom.snd G₁ G₂)
-  φ := F.φ.comp (LinearMap.snd ℝ 𝔤₁ 𝔤₂)
-  φJ a := F.φJ a.2
-  φJ_ofConstantLie c := F.φJ_ofConstantLie c.2
-  φJ_cc_foldl p a := by
-    rw [prod_iteratedDeriv]
-    exact F.φJ_cc_foldl p a.2
-  φJ_maurerCartan U μ := F.φJ_maurerCartan U.2 μ
-  φJ_adjoint U c := F.φJ_adjoint U.2 c.2
-
-variable {n : Type} [Fintype n] [DecidableEq n]
-
-/-- An `SU(n)` factor of the first gauge data, as a factor of the product. -/
-noncomputable def _root_.LocalGaugeData.SUFactor.inl (F : SUFactor j₁ n) :
-    SUFactor (j₁.prod j₂) n where
-  u U := F.u U.1
-  u_one := F.u_one
-  u_mul U V := F.u_mul U.1 V.1
-  u_unitary U := F.u_unitary U.1
-  φ := F.φ.comp (LinearMap.fst ℝ 𝔤₁ 𝔤₂)
-  φJ a := F.φJ a.1
-  φJ_ofConstantLie c := F.φJ_ofConstantLie c.1
-  φJ_cc_foldl p a := by
-    rw [prod_iteratedDeriv]
-    exact F.φJ_cc_foldl p a.1
-  φJ_maurerCartan U μ := F.φJ_maurerCartan U.1 μ
-  φJ_adjoint U c := F.φJ_adjoint U.1 c.1
-
-/-- An `SU(n)` factor of the second gauge data, as a factor of the product. -/
-noncomputable def _root_.LocalGaugeData.SUFactor.inr (F : SUFactor j₂ n) :
-    SUFactor (j₁.prod j₂) n where
-  u U := F.u U.2
-  u_one := F.u_one
-  u_mul U V := F.u_mul U.2 V.2
-  u_unitary U := F.u_unitary U.2
-  φ := F.φ.comp (LinearMap.snd ℝ 𝔤₁ 𝔤₂)
-  φJ a := F.φJ a.2
-  φJ_ofConstantLie c := F.φJ_ofConstantLie c.2
-  φJ_cc_foldl p a := by
-    rw [prod_iteratedDeriv]
-    exact F.φJ_cc_foldl p a.2
-  φJ_maurerCartan U μ := F.φJ_maurerCartan U.2 μ
-  φJ_adjoint U c := F.φJ_adjoint U.2 c.2
-
-TODO (lines := 168-230) (date := 2026-09-25) "These results
-  (the once directly above this TODO item)
-  should be moved to their appropriate file."
+/-- The second projection, as a morphism of local gauge data. -/
+noncomputable def Hom.snd : Hom (j₁.prod j₂) j₂ where
+  grp := MonoidHom.snd G₁ G₂
+  lie := LinearMap.snd ℝ 𝔤₁ 𝔤₂
+  lieJ := LinearMap.snd ℝ 𝔤J₁ 𝔤J₂
+  lieJ_ofConstantLie _ := rfl
+  evalLie_lieJ _ := rfl
+  lieJ_deriv _ _ := rfl
+  lieJ_adjoint _ _ := rfl
+  lieJ_maurerCartan _ _ := rfl
 
 /-!
 

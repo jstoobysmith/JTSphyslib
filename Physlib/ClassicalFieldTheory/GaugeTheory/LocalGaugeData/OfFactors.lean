@@ -340,31 +340,11 @@ noncomputable instance instFreeOfFactors : (Γ : List FactorSpec) → (ofFactors
 
 -/
 
-variable {G₁ : Type} [Group G₁] {𝔤₁ : Type} [LieRing 𝔤₁] [LieAlgebra ℝ 𝔤₁]
-  {G₀₁ : Type} [Group G₀₁] {𝔤J₁ : Type} [LieRing 𝔤J₁] [LieAlgebra ℝ 𝔤J₁]
-  {G₂ : Type} [Group G₂] {𝔤₂ : Type} [LieRing 𝔤₂] [LieAlgebra ℝ 𝔤₂]
-  {G₀₂ : Type} [Group G₀₂] {𝔤J₂ : Type} [LieRing 𝔤J₂] [LieAlgebra ℝ 𝔤J₂]
-  {j₁ : LocalGaugeData G₀₁ 𝔤₁ G₁ 𝔤J₁} {j₂ : LocalGaugeData G₀₂ 𝔤₂ G₂ 𝔤J₂}
-
-/-- A factor of the first gauge data, as a factor of the product. -/
-noncomputable abbrev Factor.inl : Factor j₁ → Factor (j₁.prod j₂)
-  | .U1 F => .U1 F.inl
-  | .SU F => .SU F.inl
-
-/-- A factor of the second gauge data, as a factor of the product. -/
-noncomputable abbrev Factor.inr : Factor j₂ → Factor (j₁.prod j₂)
-  | .U1 F => .U1 F.inr
-  | .SU F => .SU F.inr
-
-/-- The factors of the second gauge data, as factors of the product. -/
-noncomputable abbrev Factors.inr : Factors j₂ → Factors (j₁.prod j₂)
-  | [] => []
-  | F :: Fs => F.inr :: Factors.inr Fs
-
 /-- **The canonical factors** of the local gauge data of a list of factors. -/
 noncomputable abbrev Factors.factors : (Γ : List FactorSpec) → Factors (ofFactors Γ)
   | [] => []
   | [f] => [f.factor]
-  | f :: g :: gs => f.factor.inl :: Factors.inr (Factors.factors (g :: gs))
+  | f :: g :: gs =>
+    f.factor.comap Hom.fst :: (Factors.factors (g :: gs)).comap Hom.snd
 
 end LocalGaugeData
