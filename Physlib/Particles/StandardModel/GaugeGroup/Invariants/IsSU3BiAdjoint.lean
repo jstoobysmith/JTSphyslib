@@ -140,8 +140,7 @@ structure IsSU3BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
 
 namespace IsSU3BiAdjoint
 
-/- `span` and `traceContraction` take the hypothesis `hT` only to hang off it by dot
-notation. -/
+/- `traceContraction` takes the hypothesis `hT` only to hang off it by dot notation. -/
 set_option linter.unusedVariables false
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
@@ -157,10 +156,6 @@ of the adjoint matrix are orthonormal, so the trace contraction `∑ a, T ![a, a
 every rotation.
 
 -/
-
-/-- The span of the components. -/
-@[nolint unusedArguments]
-def span (hT : IsSU3BiAdjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
 /-- The matrix by which the law acts on coefficient vectors: one factor of the adjoint matrix
   per index. The law says `f (T l) = ∑ a, coeffMatrix U a l • T a` by definition. -/
@@ -519,7 +514,7 @@ well: once the trace contraction is known to be gauge invariant, so is the remai
   `σ`-stable submodule `S` is a multiple of the trace plus an element of `S`. -/
 lemma reducesInvariantsTo_span_trace (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B)
     (hT : ∀ U, IsSU3BiAdjointMat U (σ U) T) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) (ℂ ∙ ∑ a : Fin 8, T ![a, a]) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ ∑ a : Fin 8, T ![a, a]) := by
   have h := reducesInvariantsTo_span_singleton_of_mulVec_eq (σ := σ) T coeffMatrix hT
     (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩) Family.deltaCoeff fun _ hc =>
       exists_eq_smul_deltaCoeff_of_forall_mulVec_eq hc
@@ -531,7 +526,7 @@ lemma reducesInvariantsTo_span_trace (σ : specialUnitaryGroup (Fin 3) ℂ → B
 lemma exists_smul_add_of_gauge_invariant (hT : IsSU3BiAdjoint B repGauge T) (x : B)
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (htc : ∀ g : GaugeGroupI, repGauge g hT.traceContraction = hT.traceContraction)
-    (hx : x ∈ hT.span ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • hT.traceContraction + y
       ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
   have h := reducesInvariantsTo_span_trace _ hT.repGauge_T S (fun U => hS (U, 1, 1)) x hx

@@ -25,8 +25,8 @@ the only invariant up to scale; for a given `T` it may be zero.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzCovariant 2` says the
-group moves them with one factor of the Lorentz matrix per slot. `componentSpan T` is the set
-of their combinations.
+group moves them with one factor of the Lorentz matrix per slot. `Submodule.span ℂ (Set.range T)`
+is the set of their combinations.
 
 An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
 matrices themselves fix (from `Invariants.Basic`), and three kinds of transformation pin `c`
@@ -150,9 +150,9 @@ lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : I
 /-- Every Lorentz invariant in the span of the components is a multiple of the metric
   contraction. -/
 theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzCovariant 2 B repLorentz T)
-    {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • metricContraction (T := T) := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
   refine ⟨c ![Sum.inl 0, Sum.inl 0], ?_⟩
   rw [metricContraction, Finset.smul_sum]
   exact Finset.sum_congr rfl fun d _ => by rw [smul_smul, ← eq_smul_minkowskiMatrixZ hc d]
@@ -180,14 +180,14 @@ lemma mkQ_metricContraction (S : Submodule ℂ B) :
 lemma exists_smul_metricContraction_of_invariant_subset
     (hT : IsLorentzCovariant 2 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • metricContraction (T := T) + y := by
   obtain ⟨a, y, hy, rfl, -⟩ := IsStableUnder.exists_smul_add_of_quotient
     (σ := fun g : SL(2,ℂ) => repLorentz g) hS (repLorentz_metricContraction hT)
     (fun z hz hzinv => by
       rw [mkQ_metricContraction]
       exact exists_smul_metricContraction_of_invariant (hT.quotient S hS)
-        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv) hx hinv
+        ((Submodule.map_span_range S.mkQ T).le hz) hzinv) hx hinv
   exact ⟨a, y, hy, rfl⟩
 
 end RankTwo

@@ -114,16 +114,18 @@ lemma isLorentzCovariant_rankOne_dotGaugeHiggs_right :
 /-- The span of the isospin contractions with one derivative on the Higgs tower is the
   span of the components of the corresponding Lorentz vector. -/
 lemma dotSpan_one_zero_eq :
-    h.dotSpan 1 0 = componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
-  rw [dotSpan, componentSpan]
+    h.dotSpan 1 0
+      = Submodule.span ℂ (Set.range fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  rw [dotSpan, Submodule.span_range_eq_iSup]
   refine iSup_congr fun d => le_antisymm (iSup_le fun d' => ?_) (le_iSup_of_le ![] le_rfl)
   rw [Subsingleton.elim d' (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
 
 /-- The span of the isospin contractions with one derivative on the conjugate tower is the
   span of the components of the corresponding Lorentz vector. -/
 lemma dotSpan_zero_one_eq :
-    h.dotSpan 0 1 = componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
-  rw [dotSpan, componentSpan]
+    h.dotSpan 0 1
+      = Submodule.span ℂ (Set.range fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  rw [dotSpan, Submodule.span_range_eq_iSup]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le d' ?_)
     (iSup_le fun d => le_iSup_of_le ![] (le_iSup_of_le d le_rfl))
   rw [Subsingleton.elim d (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -228,9 +230,10 @@ theorem mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodul
       repLorentz g y ∈ h.dotSpan 0 1 ⊔ S := by
     refine stable_sup_lorentz (fun g y hy => ?_) hSL
     rw [h.dotSpan_zero_one_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
-  have hstep : x ∈ componentSpan (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
-      ⊔ (h.dotSpan 0 1 ⊔ S) := by
+    exact h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_span_range g hy
+  have hstep : x
+      ∈ Submodule.span ℂ (Set.range fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
+        ⊔ (h.dotSpan 0 1 ⊔ S) := by
     rw [← h.dotSpan_one_zero_eq, ← sup_assoc]
     exact hxmem
   have hnext := RankOne.mem_of_invariant_of_mem_sup

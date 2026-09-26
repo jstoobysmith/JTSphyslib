@@ -82,11 +82,13 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 ## A. Spans, stability and peeling
 
-Every subspace in this file is the span `⨆ i, ℂ ∙ T i` of a finite family, and the
-arguments about them reduce to a few facts about such spans. A span lies in a submodule as
-soon as its generators do; a linear map carrying each generator into a submodule carries
-the whole span there, and one fixing each generator fixes the span pointwise. Stability
-under a linear map, and being fixed pointwise by it, pass to joins.
+Every subspace in this file is spanned by a finite family. Where a classifier supplies or
+consumes it, it is written `Submodule.span ℂ (Set.range T)`; where peeling produces it, it is
+the join of lines `⨆ i, ℂ ∙ T i`, and `Submodule.span_range_eq_iSup` passes between the two.
+A join of lines lies in a submodule as soon as its generators do, and a linear map fixing
+each generator fixes it pointwise; a linear map moving each generator to a combination of
+the generators carries the span into itself. Stability under a linear map, and being fixed
+pointwise by it, pass to joins.
 
 Peeling is the induction that runs the classification. A family `V i` of stable
 submodules, each of which can be peeled off any stable submodule `S` leaving an invariant
@@ -108,24 +110,12 @@ lemma mem_iSup_span₃ {α β γ : Sort*} (T : α → β → γ → B) (a : α) 
   Submodule.mem_iSup_of_mem a (Submodule.mem_iSup_of_mem b
     (Submodule.mem_iSup_of_mem c (Submodule.mem_span_singleton_self _)))
 
-/-- A combination of the generators lies in the span. -/
-lemma sum_smul_mem_iSup_span {ι : Type} [Fintype ι] (T : ι → B) (c : ι → ℂ) :
-    ∑ i, c i • T i ∈ ⨆ i, ℂ ∙ T i :=
-  (Family.mem_iSup_span_singleton_iff T _).2 ⟨c, rfl⟩
-
-/-- A linear map carrying each generator into a submodule carries the span there. -/
-lemma map_mem_of_mem_iSup_span {ι : Sort*} (T : ι → B) (f : B →ₗ[ℂ] B) {V : Submodule ℂ B}
-    (hf : ∀ i, f (T i) ∈ V) : ∀ y ∈ ⨆ i, ℂ ∙ T i, f y ∈ V :=
-  fun _ hy => iSup_span_singleton_le T (V := V.comap f) hf hy
-
 /-- A linear map moving each generator to a combination of the generators carries the span
   into itself; the transformation laws of this file all have this shape. -/
 lemma span_stable_of_map_eq_sum {ι : Type} [Fintype ι] (T : ι → B) (f : B →ₗ[ℂ] B)
     {c : ι → ι → ℂ} (hf : ∀ l, f (T l) = ∑ a, c a l • T a) :
-    ∀ y ∈ ⨆ i, ℂ ∙ T i, f y ∈ ⨆ i, ℂ ∙ T i :=
-  map_mem_of_mem_iSup_span T f fun l => by
-    rw [hf l]
-    exact sum_smul_mem_iSup_span T _
+    ∀ y ∈ Submodule.span ℂ (Set.range T), f y ∈ Submodule.span ℂ (Set.range T) :=
+  isStableUnder_span_range_of_sum (σ := fun _ : Unit => f) (fun _ l => ⟨_, hf l⟩) ()
 
 /-- A linear map fixing each generator fixes the span pointwise. -/
 lemma map_eq_self_of_mem_iSup_span {ι : Sort*} (T : ι → B) (f : B →ₗ[ℂ] B)
@@ -570,24 +560,24 @@ lemma sum_wtCoeff_smul_wField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
   gluon pair family. -/
 lemma adjVec_mul_adjVec_mem_gluonPair_span (p : EightIdx) (k₀ k₁ : IsSU3BiAdjoint.WeightIdx) :
     h.adjVec ![] (p 0) (p 1) (su3AdjIdx k₀) * h.adjVec ![] (p 2) (p 3) (su3AdjIdx k₁)
-      ∈ (h.isSU3BiAdjoint_gluonPair p).span := by
+      ∈ Submodule.span ℂ (Set.range (h.gluonPair p)) := by
   rw [← h.sum_wtCoeff_smul_gluonField, ← h.sum_wtCoeff_smul_gluonField,
     sum_mul_sum_eq_sum_pi_two]
-  exact sum_smul_mem_iSup_span (h.gluonPair p) _
+  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- A product of two isospin weight vectors of the adjoint lies in the span of the matching
   `W`-boson pair family. -/
 lemma adjVec_mul_adjVec_mem_wPair_span (p : EightIdx) (k₀ k₁ : IsSU2BiAdjoint.WeightIdx) :
     h.adjVec ![] (p 0) (p 1) (su2AdjIdx k₀) * h.adjVec ![] (p 2) (p 3) (su2AdjIdx k₁)
-      ∈ (h.isSU2BiAdjoint_wPair p).span := by
+      ∈ Submodule.span ℂ (Set.range (h.wPair p)) := by
   rw [← h.sum_wtCoeff_smul_wField, ← h.sum_wtCoeff_smul_wField, sum_mul_sum_eq_sum_pi_two]
-  exact sum_smul_mem_iSup_span (h.wPair p) _
+  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The join, over all covector indices, of the spans of the gluon pair families. -/
-noncomputable def gluonPairSpan : Submodule ℂ B := ⨆ p, (h.isSU3BiAdjoint_gluonPair p).span
+noncomputable def gluonPairSpan : Submodule ℂ B := ⨆ p, Submodule.span ℂ (Set.range (h.gluonPair p))
 
 /-- The join, over all covector indices, of the spans of the `W`-boson pair families. -/
-noncomputable def wPairSpan : Submodule ℂ B := ⨆ p, (h.isSU2BiAdjoint_wPair p).span
+noncomputable def wPairSpan : Submodule ℂ B := ⨆ p, Submodule.span ℂ (Set.range (h.wPair p))
 
 /-- The gluon root part of the zero-weight piece, the three products of a colour raising
   vector against the matching lowering vector, lies in the gluon pair spans. -/
@@ -715,25 +705,27 @@ lemma repGauge_su3_isospinFamily (U : specialUnitaryGroup (Fin 3) ℂ) :
 
 /-- The join of the spans of the colour families. -/
 noncomputable def unpairedColourSpan : Submodule ℂ B :=
-  ⨆ i : ColourIdx, (h.isSU3Adjoint_colourFamily i).span
+  ⨆ i : ColourIdx, Submodule.span ℂ (Set.range (h.colourFamily i))
 
 /-- The join of the spans of the isospin families. -/
 noncomputable def unpairedIsospinSpan : Submodule ℂ B :=
-  ⨆ i : IsospinIdx, (h.isSU2Adjoint_isospinFamily i).span
+  ⨆ i : IsospinIdx, Submodule.span ℂ (Set.range (h.isospinFamily i))
 
 /-- A component of a colour family lies in the join of the colour spans. -/
 lemma colourFamily_mem (i : ColourIdx) (a : Fin 8) : h.colourFamily i a ∈ h.unpairedColourSpan :=
-  Submodule.mem_iSup_of_mem i (Family.mem_iSup_span_singleton (h.colourFamily i) a)
+  Submodule.mem_iSup_of_mem i (Submodule.subset_span ⟨a, rfl⟩)
 
 /-- A component of an isospin family lies in the join of the isospin spans. -/
 lemma isospinFamily_mem (i : IsospinIdx) (a : Fin 3) :
     h.isospinFamily i a ∈ h.unpairedIsospinSpan :=
-  Submodule.mem_iSup_of_mem i (Family.mem_iSup_span_singleton (h.isospinFamily i) a)
+  Submodule.mem_iSup_of_mem i (Submodule.subset_span ⟨a, rfl⟩)
 
 /-- The join of the isospin families is fixed pointwise by the colour factor. -/
 lemma repGauge_su3_of_mem_unpairedIsospinSpan (U : specialUnitaryGroup (Fin 3) ℂ) :
     ∀ y ∈ h.unpairedIsospinSpan, repGauge (U, 1, 1) y = y :=
-  fixed_iSup fun i => map_eq_self_of_mem_iSup_span _ _ (h.repGauge_su3_isospinFamily U i)
+  fixed_iSup fun i => by
+    rw [Submodule.span_range_eq_iSup]
+    exact map_eq_self_of_mem_iSup_span _ _ (h.repGauge_su3_isospinFamily U i)
 
 /-- The colour Cartan directions of the underived tower: the two weight-zero directions of
   the `su(3)` factor. -/
@@ -891,14 +883,14 @@ lemma mem_of_invariant_unpaired_sup (S : Submodule ℂ B)
   rw [sup_assoc] at hx
   have hx' := mem_of_invariant_iSup_sup
     (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
-    (fun i => (h.isSU3Adjoint_colourFamily i).span)
+    (fun i => Submodule.span ℂ (Set.range (h.colourFamily i)))
     (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU3Adjoint_colourFamily i).repGauge_T U))
     (fun i S hS x hx hinv =>
       (h.isSU3Adjoint_colourFamily i).mem_of_mem_span_sup_su3_invariant x S hS hx hinv)
     _ (fun U => sup_stable (stable_of_fixed (h.repGauge_su3_of_mem_unpairedIsospinSpan U))
       (hS (U, 1, 1))) hx fun U => hinv (U, 1, 1)
   exact mem_of_invariant_iSup_sup (fun U : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, U, 1))
-    (fun i => (h.isSU2Adjoint_isospinFamily i).span)
+    (fun i => Submodule.span ℂ (Set.range (h.isospinFamily i)))
     (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU2Adjoint_isospinFamily i).repGauge_T U))
     (fun i S hS x hx hinv =>
       (h.isSU2Adjoint_isospinFamily i).mem_of_mem_span_sup_su2_invariant x S hS hx hinv)
@@ -965,7 +957,7 @@ lemma exists_mem_of_invariant_gluonPairSpan_sup (S : Submodule ℂ B)
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B} (hx : x ∈ h.gluonPairSpan ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y) ∧ x - y ∈ h.gluonTraceSpan :=
-  exists_mem_of_invariant_iSup_sup repGauge (fun p => (h.isSU3BiAdjoint_gluonPair p).span)
+  exists_mem_of_invariant_iSup_sup repGauge (fun p => Submodule.span ℂ (Set.range (h.gluonPair p)))
     (fun p => ℂ ∙ h.gluonTrace p)
     (fun p g => span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g))
     (fun p S hS x hx hinv => exists_sub_mem_span_singleton
@@ -978,7 +970,7 @@ lemma exists_mem_of_invariant_wPairSpan_sup (S : Submodule ℂ B)
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B} (hx : x ∈ h.wPairSpan ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y) ∧ x - y ∈ h.wTraceSpan :=
-  exists_mem_of_invariant_iSup_sup repGauge (fun p => (h.isSU2BiAdjoint_wPair p).span)
+  exists_mem_of_invariant_iSup_sup repGauge (fun p => Submodule.span ℂ (Set.range (h.wPair p)))
     (fun p => ℂ ∙ h.wTrace p)
     (fun p g => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g))
     (fun p S hS x hx hinv => exists_sub_mem_span_singleton
@@ -1189,29 +1181,29 @@ lemma isLorentzCovariant_hyperchargeDeriv :
   group. -/
 lemma rankFour_span_stable {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
     (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
-    ∀ y ∈ componentSpan T, repLorentz g y ∈ componentSpan T :=
-  fun _ hy => hT.repLorentz_mem_componentSpan g hy
+    ∀ y ∈ Submodule.span ℂ (Set.range T), repLorentz g y ∈ Submodule.span ℂ (Set.range T) :=
+  fun _ hy => hT.repLorentz_mem_span_range g hy
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the outer,
   inner and split metric contractions and the Levi-Civita contraction. -/
 noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Submodule ℂ B :=
-  ⨆ i : Fin 4, ℂ ∙ RankFour.contraction T i
+  Submodule.span ℂ (Set.range (RankFour.contraction T))
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family lies in the
   span of its components: each contraction is a combination of components with constant
   coefficients. -/
 lemma quadContractionSpan_le_span {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B} :
-    quadContractionSpan T ≤ componentSpan T :=
-  iSup_span_singleton_le _ fun i => by
+    quadContractionSpan T ≤ Submodule.span ℂ (Set.range T) :=
+  Submodule.span_le.2 <| Set.range_subset_iff.2 fun i => by
     rw [RankFour.contraction_eq]
-    exact sum_smul_mem_componentSpan T _
+    exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family is a space of
   Lorentz invariants, the four contractions being invariant by `RankFour`. -/
 lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
     (hT : IsLorentzCovariant 4 B repLorentz T) :
     quadContractionSpan T ≤ repLorentz.invariants :=
-  iSup_span_singleton_le _ fun i =>
+  Submodule.span_le.2 <| Set.range_subset_iff.2 fun i =>
     (Representation.mem_invariants _ _).2 (RankFour.repLorentz_contraction hT i)
 
 /-- Peeling the span of a quadruple Lorentz tensor off a Lorentz-stable submodule, in the
@@ -1221,12 +1213,14 @@ lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) 
 lemma exists_mem_of_invariant_rankFour_span_sup {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
     (hT : IsLorentzCovariant 4 B repLorentz T) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ componentSpan T ⊔ S)
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
     (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ x - y ∈ quadContractionSpan T := by
   obtain ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩ :=
     (RankFour.mem_span_sup_invariant_iff hT x S hS).1 ⟨hx, hLinv⟩
-  have hmem := sum_smul_mem_iSup_span (RankFour.contraction T) ![a₁, a₂, a₃, a₄]
+  have hmem : ∑ i, ![a₁, a₂, a₃, a₄] i • RankFour.contraction T i
+      ∈ Submodule.span ℂ (Set.range (RankFour.contraction T)) :=
+    (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
   rw [RankFour.sum_smul_contraction] at hmem
   exact ⟨y, hyS, hyinv, by rwa [add_sub_cancel_right]⟩
 
@@ -1244,12 +1238,15 @@ noncomputable def lorentzContractionEightSpan : Submodule ℂ B :=
 lemma lorentzContractionEightSpan_le_traceContractionEightSpan_sup :
     h.lorentzContractionEightSpan ≤ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan :=
   sup_le ((quadContractionSpan_le_span (T := h.gluonTrace)).trans
-      (le_sup_of_le_left le_sup_left))
+      (Submodule.span_range_eq_iSup.trans_le (le_sup_of_le_left le_sup_left)))
     (sup_le ((quadContractionSpan_le_span (T := h.wTrace)).trans
-        (le_sup_of_le_left (le_sup_of_le_right le_sup_left)))
+        (Submodule.span_range_eq_iSup.trans_le
+          (le_sup_of_le_left (le_sup_of_le_right le_sup_left))))
       (sup_le ((quadContractionSpan_le_span (T := h.hyperchargeTrace)).trans
-          (le_sup_of_le_left (le_sup_of_le_right le_sup_right)))
-        ((quadContractionSpan_le_span (T := h.hyperchargeDeriv)).trans le_sup_right)))
+          (Submodule.span_range_eq_iSup.trans_le
+            (le_sup_of_le_left (le_sup_of_le_right le_sup_right))))
+        ((quadContractionSpan_le_span (T := h.hyperchargeDeriv)).trans
+          (Submodule.span_range_eq_iSup.trans_le le_sup_right))))
 
 /-- The Lorentz contraction span is a space of gauge invariants: it lies in the gauge
   span, whose generators the gauge group fixes. -/
@@ -1280,11 +1277,13 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
   have hS₂ := fun g => sup_stable (rankFour_span_stable h.isLorentzCovariant_hyperchargeTrace g)
     (hS₃ g)
   have hS₁ := fun g => sup_stable (rankFour_span_stable h.isLorentzCovariant_wTrace g) (hS₂ g)
-  have hx₁ : x ∈ componentSpan h.gluonTrace ⊔ (componentSpan h.wTrace
-      ⊔ (componentSpan h.hyperchargeTrace
-        ⊔ (componentSpan h.hyperchargeDeriv ⊔ S))) := by
+  have hx₁ : x ∈ Submodule.span ℂ (Set.range h.gluonTrace) ⊔ (Submodule.span ℂ (Set.range h.wTrace)
+      ⊔ (Submodule.span ℂ (Set.range h.hyperchargeTrace)
+        ⊔ (Submodule.span ℂ (Set.range h.hyperchargeDeriv) ⊔ S))) := by
     have hmem := Submodule.mem_sup.2 ⟨x - y₀, hxy₀, y₀, hy₀S, sub_add_cancel x y₀⟩
-    rwa [traceContractionEightSpan, sup_assoc, sup_assoc, sup_assoc] at hmem
+    simp only [traceContractionEightSpan, gluonTraceSpan, wTraceSpan, hyperchargeTraceSpan,
+      hyperchargeDerivSpan, ← Submodule.span_range_eq_iSup, sup_assoc] at hmem
+    exact hmem
   obtain ⟨y₁, hy₁, hy₁L, hxy₁⟩ :=
     exists_mem_of_invariant_rankFour_span_sup h.isLorentzCovariant_gluonTrace _ hS₁ hx₁ hLinv
   obtain ⟨y₂, hy₂, hy₂L, hxy₂⟩ :=

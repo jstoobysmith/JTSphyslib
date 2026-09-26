@@ -74,19 +74,6 @@ namespace IsSU2BiFundamental
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
 
-/-- The span of the components. -/
-def span (T : (Fin 2 → Fin 2) → B) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
-
-/-- A vector lies in the span precisely when it is a linear combination of the
-  components. -/
-lemma mem_span_iff {T : (Fin 2 → Fin 2) → B} (x : B) :
-    x ∈ span T ↔ ∃ (c : (Fin 2 → Fin 2) → ℂ), x = ∑ d, c d • T d :=
-  Family.mem_iSup_span_singleton_iff T x
-
-/-- Every component lies in the span. -/
-lemma mem_span {T : (Fin 2 → Fin 2) → B} (d : Fin 2 → Fin 2) : T d ∈ span T :=
-  Family.mem_iSup_span_singleton T d
-
 /-- A sum over pairs of fundamental indices is a double sum. -/
 lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 2) → M) :
     ∑ d : Fin 2 → Fin 2, F d = ∑ x : Fin 2, ∑ y : Fin 2, F ![x, y] :=
@@ -194,8 +181,8 @@ lemma sum_epsilonCoeff_smul (T : (Fin 2 → Fin 2) → B) :
 
 /-- The epsilon contraction lies in the span of the components. -/
 lemma epsilonContraction_mem_span (T : (Fin 2 → Fin 2) → B) :
-    epsilonContraction T ∈ span T :=
-  sub_mem (mem_span _) (mem_span _)
+    epsilonContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  sub_mem (Submodule.subset_span ⟨_, rfl⟩) (Submodule.subset_span ⟨_, rfl⟩)
 
 /-- Any map moving the components by an element of `SU(2)` fixes the epsilon
   contraction. -/
@@ -287,7 +274,7 @@ group, the form the Yukawa files consume.
 lemma reducesInvariantsTo_span_epsilonContraction
     (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 2) → B}
     (hT : ∀ U, IsSU2BiFundamentalMat U (σ U) T) :
-    ReducesInvariantsTo σ (span T) (ℂ ∙ epsilonContraction T) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ epsilonContraction T) := by
   have h := reducesInvariantsTo_span_singleton_of_mulVec_eq (σ := σ) T coeffMatrix hT
     (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩) epsilonCoeff fun _ hc =>
       exists_eq_smul_epsilonCoeff_of_forall_mulVec_eq hc
@@ -298,9 +285,9 @@ lemma reducesInvariantsTo_span_epsilonContraction
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiFundamental B repGauge T) :
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (span T) :=
+      (Submodule.span ℂ (Set.range T)) :=
   InvariantReductionToSpan.ofReducesInvariantsTo
-    (isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
+    (isStableUnder_span_range_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
     (epsilonContraction T) (repGauge_epsilonContraction hT)
     (reducesInvariantsTo_span_epsilonContraction _ hT.repGauge_T)
 

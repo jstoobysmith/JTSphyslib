@@ -9,8 +9,14 @@ public import Mathlib.Analysis.InnerProductSpace.PiL2
 /-!
 # Finite linear combinations under a linear map
 
-A family `T : ι → B` of vectors of a module, indexed by a finite type, has the combinations
-`∑ i, c i • T i` for coefficients `c : ι → R`. Two bookkeeping identities about them: contracting
+A family `T : ι → B` of vectors of an `R`-module spans Mathlib's
+`Submodule.span R (Set.range T)`. The index type is arbitrary and may be empty. When it is
+finite, the elements of the span are exactly the combinations `∑ i, c i • T i`, for
+coefficients `c : ι → R` that need not be unique (`Submodule.mem_span_range_iff_exists_fun`).
+The one fact added here is that a linear map carries this span to the span of the images of
+the family (`Submodule.map_span_range`).
+
+Two bookkeeping identities about these combinations: contracting
 against coefficients moved by a matrix regroups as the same combination of the matrix-moved
 components, and a linear map given on the family by a matrix moves a combination by that matrix
 acting on the coefficients.
@@ -21,12 +27,35 @@ have their adjoints among themselves: `Fintype.exists_invariant_coeff_of_adjoint
 coefficient maps are matrices, the condition is that the conjugate transpose of each matrix is
 again one of them: `Fintype.exists_mulVec_eq_of_conjTranspose_mem`.
 
-The span `⨆ i, R ∙ T i` of a family is bounded through its members: the range of a linear
-map is the span of the images of a basis, and a product of submodules lying in spans of
-families lies in any submodule containing the products of their members.
+Spans are bounded through their members: the range of a linear map is the span of the images
+of a basis, and a product of submodules lying in spans of families lies in any submodule
+containing the products of their members.
+
+- A. The image of the span of a family
+- B. Combinations moved by linear maps
+- C. Fixed vectors of the span
+- D. Spans bounded through their members
 -/
 
 @[expose] public section
+
+/-!
+
+## A. The image of the span of a family
+
+-/
+
+/-- The image of the span of a family is the span of the images. -/
+lemma Submodule.map_span_range {R B B' : Type*} [Semiring R] [AddCommMonoid B] [Module R B]
+    [AddCommMonoid B'] [Module R B'] {ι : Sort*} (f : B →ₗ[R] B') (T : ι → B) :
+    (Submodule.span R (Set.range T)).map f = Submodule.span R (Set.range fun i => f (T i)) := by
+  rw [Submodule.map_span, Set.range_comp']
+
+/-!
+
+## B. Combinations moved by linear maps
+
+-/
 
 variable {ι κ R B B' : Type*} [Fintype ι] [Fintype κ] [CommSemiring R]
   [AddCommMonoid B] [Module R B] [AddCommMonoid B'] [Module R B']
@@ -65,6 +94,12 @@ lemma LinearMap.map_sum_smul_eq_self_of_mulVec_eq (φ : B →ₗ[R] B) (T : ι �
     φ (∑ i, c i • T i) = ∑ i, c i • T i := by
   rw [φ.map_sum_smul_eq_sum_mulVec_smul T T M hT c, hc]
 
+/-!
+
+## C. Fixed vectors of the span
+
+-/
+
 open scoped InnerProductSpace in
 /-- A vector of the span of `T` fixed by every `φ g` is the combination of coefficients fixed
   by every `A g`, where `φ g` moves combinations by moving their coefficients with `A g`. The
@@ -79,11 +114,10 @@ lemma Fintype.exists_invariant_coeff_of_adjoint_mem {ι G B : Type*} [Fintype ι
     (hφ : ∀ (g : G) (c : ι → ℂ), φ g (∑ i, c i • T i) = ∑ i, A g c i • T i)
     (hA : ∀ g : G, ∃ g' : G, ∀ u v : EuclideanSpace ℂ ι,
       ⟪u, WithLp.toLp 2 (A g v.ofLp)⟫_ℂ = ⟪WithLp.toLp 2 (A g' u.ofLp), v⟫_ℂ)
-    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, A g c = c := by
   classical
-  obtain ⟨c, rfl⟩ : ∃ c : ι → ℂ, ∑ i, c i • T i = x := by
-    rwa [← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun] at hx
+  obtain ⟨c, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hx
   -- `K`: the coefficients contracting to `0`, stable under every `A g`.
   set q := Fintype.linearCombination ℂ T ∘ₗ (WithLp.linearEquiv 2 ℂ (ι → ℂ)).toLinearMap
   have hq : ∀ u, q u = ∑ i, u.ofLp i • T i := fun u => Fintype.linearCombination_apply ℂ T _
@@ -117,7 +151,7 @@ open Matrix in
 lemma Fintype.exists_mulVec_eq_of_conjTranspose_mem {ι G B : Type*} [Fintype ι]
     [AddCommGroup B] [Module ℂ B] (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → Matrix ι ι ℂ)
     (hT : ∀ g l, φ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
-    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, x = ∑ i, c i • T i ∧ ∀ g, M g *ᵥ c = c :=
   Fintype.exists_invariant_coeff_of_adjoint_mem T φ (fun g => (M g).mulVecLin)
     (fun g c => (φ g).map_sum_smul_eq_sum_mulVec_smul T T (M g) (hT g) c)
@@ -129,32 +163,36 @@ lemma Fintype.exists_mulVec_eq_of_conjTranspose_mem {ι G B : Type*} [Fintype ι
         conjTranspose_conjTranspose]
       rw [dotProduct_comm, dotProduct_mulVec, dotProduct_comm]) hx hinv
 
+/-!
+
+## D. Spans bounded through their members
+
+-/
+
 /-- The range of a linear map is the span of the images of a basis. -/
-lemma LinearMap.range_eq_iSup_span_basis {ι R M N : Type*} [Semiring R] [AddCommMonoid M]
+lemma LinearMap.range_eq_span_range_basis {ι R M N : Type*} [Semiring R] [AddCommMonoid M]
     [Module R M] [AddCommMonoid N] [Module R N] (b : Module.Basis ι R M) (f : M →ₗ[R] N) :
-    LinearMap.range f = ⨆ i, R ∙ f (b i) := by
-  rw [LinearMap.range_eq_map, ← b.span_eq, Submodule.map_span, ← Set.range_comp,
-    Submodule.span_range_eq_iSup]
-  rfl
+    LinearMap.range f = Submodule.span R (Set.range fun i => f (b i)) := by
+  rw [LinearMap.range_eq_map, ← b.span_eq, Submodule.map_span_range]
 
 /-- A product of two submodules, each inside the span of a family, lies in any submodule
   containing the products of the members of the two families. -/
-lemma Submodule.mul_le_of_le_iSup_span {ι κ R A : Type*} [CommSemiring R] [Semiring A]
+lemma Submodule.mul_le_of_le_span_range {ι κ R A : Type*} [CommSemiring R] [Semiring A]
     [Algebra R A] {V V' X : Submodule R A} {a : ι → A} {b : κ → A}
-    (hV : V ≤ ⨆ i, R ∙ a i) (hV' : V' ≤ ⨆ j, R ∙ b j) (hX : ∀ i j, a i * b j ∈ X) :
-    V * V' ≤ X := by
+    (hV : V ≤ Submodule.span R (Set.range a)) (hV' : V' ≤ Submodule.span R (Set.range b))
+    (hX : ∀ i j, a i * b j ∈ X) : V * V' ≤ X := by
   refine (mul_le_mul' hV hV').trans ?_
-  rw [← Submodule.span_range_eq_iSup, ← Submodule.span_range_eq_iSup, Submodule.span_mul_span,
-    Submodule.span_le]
+  rw [Submodule.span_mul_span, Submodule.span_le]
   rintro _ ⟨_, ⟨i, rfl⟩, _, ⟨j, rfl⟩, rfl⟩
   exact hX i j
 
-/-- The three-factor form of `Submodule.mul_le_of_le_iSup_span`. -/
-lemma Submodule.mul_mul_le_of_le_iSup_span {ι κ ν R A : Type*} [CommSemiring R] [Semiring A]
+/-- The three-factor form of `Submodule.mul_le_of_le_span_range`. -/
+lemma Submodule.mul_mul_le_of_le_span_range {ι κ ν R A : Type*} [CommSemiring R] [Semiring A]
     [Algebra R A] {V V' V'' X : Submodule R A} {a : ι → A} {b : κ → A} {c : ν → A}
-    (hV : V ≤ ⨆ i, R ∙ a i) (hV' : V' ≤ ⨆ j, R ∙ b j) (hV'' : V'' ≤ ⨆ k, R ∙ c k)
-    (hX : ∀ i j k, a i * (b j * c k) ∈ X) : V * (V' * V'') ≤ X :=
-  mul_le_of_le_iSup_span hV
-    (mul_le_of_le_iSup_span (X := ⨆ p : κ × ν, R ∙ (b p.1 * c p.2)) hV' hV''
-      fun j k => Submodule.mem_iSup_of_mem (j, k) (Submodule.mem_span_singleton_self _))
+    (hV : V ≤ Submodule.span R (Set.range a)) (hV' : V' ≤ Submodule.span R (Set.range b))
+    (hV'' : V'' ≤ Submodule.span R (Set.range c)) (hX : ∀ i j k, a i * (b j * c k) ∈ X) :
+    V * (V' * V'') ≤ X :=
+  mul_le_of_le_span_range hV
+    (mul_le_of_le_span_range (X := Submodule.span R (Set.range fun p : κ × ν => b p.1 * c p.2))
+      hV' hV'' fun j k => Submodule.subset_span ⟨(j, k), rfl⟩)
     fun i p => hX i p.1 p.2

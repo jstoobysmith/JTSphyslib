@@ -140,16 +140,18 @@ lemma isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed :
 /-- The span of the isospin contractions with both derivatives on the Higgs tower is the
   span of the components of the corresponding bi-Lorentz tensor. -/
 lemma dotSpan_two_zero_eq :
-    h.dotSpan 2 0 = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
-  rw [dotSpan, componentSpan]
+    h.dotSpan 2 0
+      = Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  rw [dotSpan, Submodule.span_range_eq_iSup]
   refine iSup_congr fun d => le_antisymm (iSup_le fun d' => ?_) (le_iSup_of_le ![] le_rfl)
   rw [Subsingleton.elim d' (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
 
 /-- The span of the isospin contractions with both derivatives on the conjugate tower is
   the span of the components of the corresponding bi-Lorentz tensor. -/
 lemma dotSpan_zero_two_eq :
-    h.dotSpan 0 2 = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
-  rw [dotSpan, componentSpan]
+    h.dotSpan 0 2
+      = Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  rw [dotSpan, Submodule.span_range_eq_iSup]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le d' ?_)
     (iSup_le fun d => le_iSup_of_le ![] (le_iSup_of_le d le_rfl))
   rw [Subsingleton.elim d (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
@@ -158,8 +160,9 @@ lemma dotSpan_zero_two_eq :
   the components of the mixed bi-Lorentz tensor. -/
 lemma dotSpan_one_one_eq :
     h.dotSpan 1 1
-      = componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) := by
-  rw [dotSpan, componentSpan]
+      = Submodule.span ℂ
+        (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) := by
+  rw [dotSpan, Submodule.span_range_eq_iSup]
   refine le_antisymm (iSup_le fun d => iSup_le fun d' => le_iSup_of_le ![d 0, d' 0] ?_)
     (iSup_le fun d => le_iSup_of_le ![d 0] (le_iSup_of_le ![d 1] le_rfl))
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one, etaExpand_cov_one]
@@ -228,7 +231,7 @@ lemma exists_mem_of_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) 
     (hT : IsLorentzCovariant 2 B repLorentz T)
     (hTG : ∀ (g : GaugeGroupI) (d : Fin 2 → Fin 1 ⊕ Fin 3), rep g (T d) = T d)
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ componentSpan T ⊔ S) (hL : ∀ g : SL(2,ℂ), repLorentz g x = x)
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hL : ∀ g : SL(2,ℂ), repLorentz g x = x)
     (hG : ∀ g : GaugeGroupI, rep g x = x) :
     ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ (∀ g : GaugeGroupI, rep g y = y)
       ∧ x - y ∈ ℂ ∙ RankTwo.metricContraction (T := T) := by
@@ -335,12 +338,13 @@ theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
   have hS₂L : ∀ g : SL(2,ℂ), ∀ y ∈ S₂, repLorentz g y ∈ S₂ := by
     refine stable_sup_lorentz (fun g y hy => ?_) hS₃L
     rw [h.dotSpan_one_one_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed.repLorentz_mem_componentSpan g hy
+    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed.repLorentz_mem_span_range g hy
   have hS₁L : ∀ g : SL(2,ℂ), ∀ y ∈ S₁, repLorentz g y ∈ S₁ := by
     refine stable_sup_lorentz (fun g y hy => ?_) hS₂L
     rw [h.dotSpan_zero_two_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right.repLorentz_mem_componentSpan g hy
-  have hx₁ : x ∈ componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) ⊔ S₁ := by
+    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right.repLorentz_mem_span_range g hy
+  have hx₁ : x ∈ Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
+      ⊔ S₁ := by
     rw [← h.dotSpan_two_zero_eq, hS₁def, hS₂def, hS₃def]
     have hstep : x ∈ (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1 ⊔ Q) ⊔ S := by
       rw [show x = (x - y₀) + y₀ from by abel]

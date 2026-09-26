@@ -656,12 +656,11 @@ lemma isVectorDualLeftRightWeyl_sum {ι : Type} [Fintype ι]
     exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
 
 /-- The conjugate Pauli contraction lies in the span of the components it contracts. -/
-lemma pauliBarContraction_mem_iSup_span (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) :
-    IsVectorDualLeftRightWeyl.pauliBarContraction (T := T) ∈ ⨆ q, ℂ ∙ T q := by
+lemma pauliBarContraction_mem_span (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) :
+    IsVectorDualLeftRightWeyl.pauliBarContraction (T := T) ∈ Submodule.span ℂ (Set.range T) := by
   rw [IsVectorDualLeftRightWeyl.pauliBarContraction]
   exact Submodule.sum_mem _ fun μ _ => Submodule.sum_mem _ fun a _ =>
-    Submodule.smul_mem _ _
-      (Submodule.mem_iSup_of_mem (μ, a) (Submodule.mem_span_singleton_self _))
+    Submodule.smul_mem _ _ (Submodule.subset_span ⟨(μ, a), rfl⟩)
 
 /-- A unitary scalar times its conjugate is one, in the order the hypercharge cancellation
   of a species against its conjugate needs. -/
@@ -705,24 +704,28 @@ structure KineticBlock where
     does not. -/
   colourStep : ∀ (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2) (w w' : Fin 2),
     InvariantReductionToSpan (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
-      (⨆ n : Fin 2 → Fin 3, ℂ ∙ blk q l (n 0) (n 1) w w')
+      (Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 3 => blk q l (n 0) (n 1) w w'))
   /-- The colour contraction lies in the span of the components it contracts. -/
   colourStep_mem : ∀ q l w w', (colourStep q l w w').spanningVector
-    ∈ ⨆ n : Fin 2 → Fin 3, ℂ ∙ blk q l (n 0) (n 1) w w'
+    ∈ Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 3 => blk q l (n 0) (n 1) w w')
   /-- The isospin stage, applied to the colour contraction. -/
   isospinStep : ∀ (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2),
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).spanningVector)
+      (Submodule.span ℂ
+        (Set.range fun n : Fin 2 → Fin 2 => (colourStep q l (n 0) (n 1)).spanningVector))
   /-- The isospin contraction lies in the span of the colour contractions. -/
   isospinStep_mem : ∀ q l, (isospinStep q l).spanningVector
-    ∈ ⨆ n : Fin 2 → Fin 2, ℂ ∙ (colourStep q l (n 0) (n 1)).spanningVector
+    ∈ Submodule.span ℂ
+      (Set.range fun n : Fin 2 → Fin 2 => (colourStep q l (n 0) (n 1)).spanningVector)
   /-- The Lorentz stage, applied to the doubly contracted block: one four-vector index
     against a dual dotted and a dual undotted spinor index. -/
   lorentzStep : InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
-    (⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).spanningVector)
+    (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (isospinStep p.1 p.2).spanningVector))
   /-- The Lorentz contraction lies in the span of the isospin contractions. -/
   lorentzStep_mem : lorentzStep.spanningVector
-    ∈ ⨆ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ℂ ∙ (isospinStep p.1 p.2).spanningVector
+    ∈ Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (isospinStep p.1 p.2).spanningVector)
   /-- A hypercharge transformation fixes every component of the block, the hypercharges of
     a species and its conjugate cancelling. -/
   hyper : ∀ (t : unitary ℂ) q l c c' w w',
@@ -740,7 +743,8 @@ noncomputable def kineticTerm : B := K.lorentzStep.spanningVector
   block: what the block submodule is reduced from. -/
 noncomputable def blockSpan : Submodule ℂ B :=
   ⨆ k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) × (Fin 2 × Fin 2),
-    ⨆ n : Fin 2 → Fin 3, ℂ ∙ K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2
+    Submodule.span ℂ
+      (Set.range fun n : Fin 2 → Fin 3 => K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2)
 
 /-- The three stages in sequence: the block span reduces to the span of the kinetic term. -/
 lemma reducesInvariantsTo :
@@ -749,32 +753,37 @@ lemma reducesInvariantsTo :
   have hc := InvariantReductionToSpan.reducesInvariantsTo_iSup
     (σ := fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
     (V := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) × (Fin 2 × Fin 2) =>
-      ⨆ n : Fin 2 → Fin 3, ℂ ∙ K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2)
+      Submodule.span ℂ
+        (Set.range fun n : Fin 2 → Fin 3 => K.blk k.1 k.2.1 (n 0) (n 1) k.2.2.1 k.2.2.2))
     fun k => K.colourStep k.1 k.2.1 k.2.2.1 k.2.2.2
   have hi := InvariantReductionToSpan.reducesInvariantsTo_iSup
     (σ := fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
     (V := fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
-      ⨆ n : Fin 2 → Fin 2, ℂ ∙ (K.colourStep p.1 p.2 (n 0) (n 1)).spanningVector)
+      Submodule.span ℂ
+        (Set.range fun n : Fin 2 → Fin 2 => (K.colourStep p.1 p.2 (n 0) (n 1)).spanningVector))
     fun p => K.isospinStep p.1 p.2
   have h1 := ReducesInvariantsTo.ofSU3 (repLorentz := repLorentz) hc
   have h2 := ReducesInvariantsTo.ofSU2 (repLorentz := repLorentz) hi
   have h3 := ReducesInvariantsTo.ofLorentz (repGauge := repGauge) K.lorentzStep.reducesInvariantsTo
   refine (h1.mono_right ?_).trans (h2.trans h3)
-  refine iSup_le fun k => le_iSup_of_le (k.1, k.2.1) (le_iSup_of_le ![k.2.2.1, k.2.2.2] ?_)
+  refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+    Submodule.mem_iSup_of_mem (k.1, k.2.1) (Submodule.subset_span ⟨![k.2.2.1, k.2.2.2], ?_⟩)
   simp
 
 /-- The kinetic term lies in any submodule containing every component of the block: each
   contraction lies in the span of the objects of the stage before it. -/
 lemma kineticTerm_mem {V : Submodule ℂ B}
     (hV : ∀ q l c c' w w', K.blk q l c c' w w' ∈ V) : K.kineticTerm ∈ V := by
-  have hcol : ∀ q l w w', (K.colourStep q l w w').spanningVector ∈ V := fun q l w w' =>
-    (iSup_le fun n => (Submodule.span_singleton_le_iff_mem _ _).2 (hV _ _ _ _ _ _))
-      (K.colourStep_mem q l w w')
-  have hiso : ∀ q l, (K.isospinStep q l).spanningVector ∈ V := fun q l =>
-    (iSup_le fun n => (Submodule.span_singleton_le_iff_mem _ _).2 (hcol _ _ _ _))
-      (K.isospinStep_mem q l)
-  exact (iSup_le fun p => (Submodule.span_singleton_le_iff_mem _ _).2 (hiso _ _))
-    K.lorentzStep_mem
+  have hcol : ∀ q l w w', (K.colourStep q l w w').spanningVector ∈ V := by
+    intro q l w w'
+    refine Submodule.span_le.2 ?_ (K.colourStep_mem q l w w')
+    exact Set.range_subset_iff.2 fun n => hV q l (n 0) (n 1) w w'
+  have hiso : ∀ q l, (K.isospinStep q l).spanningVector ∈ V := by
+    intro q l
+    refine Submodule.span_le.2 ?_ (K.isospinStep_mem q l)
+    exact Set.range_subset_iff.2 fun n => hcol q l (n 0) (n 1)
+  refine Submodule.span_le.2 ?_ K.lorentzStep_mem
+  exact Set.range_subset_iff.2 fun p => hiso p.1 p.2
 
 /-- The kinetic term is fixed by the colour factor: the colour contractions are, and every
   later stage stays inside their span. -/
@@ -783,15 +792,15 @@ lemma repGauge_su3_kineticTerm (U : specialUnitaryGroup (Fin 3) ℂ) :
   have hiso : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ∀ U',
       repGauge ((U', 1, 1) : GaugeGroupI) (K.isospinStep p.1 p.2).spanningVector
         = (K.isospinStep p.1 p.2).spanningVector := fun p U' =>
-    isFixedBy_iSup_span_singleton
+    isFixedBy_span_range
       (fun n U'' => (K.colourStep p.1 p.2 (n 0) (n 1)).spanningVector_fixed U'') U' _
       (K.isospinStep_mem p.1 p.2)
-  exact isFixedBy_iSup_span_singleton (fun p U' => hiso p U') U _ K.lorentzStep_mem
+  exact isFixedBy_span_range (fun p U' => hiso p U') U _ K.lorentzStep_mem
 
 /-- The kinetic term is fixed by the isospin factor. -/
 lemma repGauge_su2_kineticTerm (V : specialUnitaryGroup (Fin 2) ℂ) :
     repGauge ((1, V, 1) : GaugeGroupI) K.kineticTerm = K.kineticTerm :=
-  isFixedBy_iSup_span_singleton
+  isFixedBy_span_range
     (fun p V' => (K.isospinStep p.1 p.2).spanningVector_fixed V') V _ K.lorentzStep_mem
 
 /-- The kinetic term is fixed by the hypercharge factor, the hypercharges of a species and
@@ -801,14 +810,14 @@ lemma repGauge_u1_kineticTerm (t : unitary ℂ) :
   have hcol : ∀ q l w w', ∀ t' : unitary ℂ,
       repGauge ((1, 1, t') : GaugeGroupI) (K.colourStep q l w w').spanningVector
         = (K.colourStep q l w w').spanningVector := fun q l w w' t' =>
-    isFixedBy_iSup_span_singleton (fun n t'' => K.hyper t'' q l (n 0) (n 1) w w') t' _
+    isFixedBy_span_range (fun n t'' => K.hyper t'' q l (n 0) (n 1) w w') t' _
       (K.colourStep_mem q l w w')
   have hiso : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2, ∀ t' : unitary ℂ,
       repGauge ((1, 1, t') : GaugeGroupI) (K.isospinStep p.1 p.2).spanningVector
         = (K.isospinStep p.1 p.2).spanningVector := fun p t' =>
-    isFixedBy_iSup_span_singleton (fun n t'' => hcol p.1 p.2 (n 0) (n 1) t'') t' _
+    isFixedBy_span_range (fun n t'' => hcol p.1 p.2 (n 0) (n 1) t'') t' _
       (K.isospinStep_mem p.1 p.2)
-  exact isFixedBy_iSup_span_singleton (fun p t' => hiso p t') t _ K.lorentzStep_mem
+  exact isFixedBy_span_range (fun p t' => hiso p t') t _ K.lorentzStep_mem
 
 /-- The kinetic term is gauge invariant: a gauge transformation is the product of its
   colour, isospin and hypercharge parts, and each fixes it. -/

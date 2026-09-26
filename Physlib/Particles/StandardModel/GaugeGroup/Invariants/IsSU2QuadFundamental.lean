@@ -76,13 +76,6 @@ namespace IsSU2QuadFundamental
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
 
-/-- The span of the components. -/
-def span (T : (Fin 4 → Fin 2) → B) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
-
-/-- Every component lies in the span. -/
-lemma mem_span {T : (Fin 4 → Fin 2) → B} (d : Fin 4 → Fin 2) : T d ∈ span T :=
-  Family.mem_iSup_span_singleton T d
-
 /-- A sum over families of four fundamental indices is a fourfold sum. -/
 lemma sum_pi_four {M : Type*} [AddCommMonoid M] (F : (Fin 4 → Fin 2) → M) :
     ∑ d : Fin 4 → Fin 2, F d
@@ -386,7 +379,7 @@ contractions are known to be gauge invariant, so is the remainder.
 lemma reducesInvariantsTo_span_epsilonContractions
     (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 4 → Fin 2) → B}
     (hT : ∀ U, IsSU2QuadFundamentalMat U (σ U) T) :
-    ReducesInvariantsTo σ (span T)
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T))
       (Submodule.span ℂ {epsilonContraction₁₂ T, epsilonContraction₁₃ T}) := by
   have h := reducesInvariantsTo_of_mulVec_eq (σ := σ) T coeffMatrix hT
     (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩) (Submodule.span ℂ {epsilonPair₁₂, epsilonPair₁₃})
@@ -407,7 +400,7 @@ lemma exists_smul_add_smul_add_of_gauge_invariant {T : (Fin 4 → Fin 2) → B}
       repGauge g (epsilonContraction₁₂ T) = epsilonContraction₁₂ T)
     (hec₁₃ : ∀ g : GaugeGroupI,
       repGauge g (epsilonContraction₁₃ T) = epsilonContraction₁₃ T)
-    (hx : x ∈ span T ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ c₁ c₂ : ℂ, ∃ y ∈ S,
       x = c₁ • epsilonContraction₁₂ T + c₂ • epsilonContraction₁₃ T + y
         ∧ ∀ g : GaugeGroupI, repGauge g y = y := by

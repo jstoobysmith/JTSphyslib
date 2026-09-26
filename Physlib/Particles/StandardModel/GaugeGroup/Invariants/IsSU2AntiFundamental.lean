@@ -136,25 +136,25 @@ lemma isSU2BiFundamental_reindex {T : (Fin 2 → Fin 2) → B}
   repGauge_T g := map_reindex (hT.repGauge_T g)
 
 /-- Every component of the original family lies in the span of the re-indexed one. -/
-lemma self_mem_span_reindex (T : (Fin 2 → Fin 2) → B) (d : Fin 2 → Fin 2) :
-    T d ∈ span (reindex T) := by
+lemma mem_span_range_reindex (T : (Fin 2 → Fin 2) → B) (d : Fin 2 → Fin 2) :
+    T d ∈ Submodule.span ℂ (Set.range (reindex T)) := by
   have hl : ∀ a : Fin 2, a = 0 ∨ a = 1 := by decide
   have hd : T d = T ![d 0, d 1] := by rw [← eq_cons]
   rw [hd]
   rcases hl (d 1) with h1 | h1 <;> rw [h1]
   · rw [show T ![d 0, (0 : Fin 2)] = -reindex T ![d 0, 1] from by
       rw [reindex_apply_one, neg_neg]]
-    exact neg_mem (mem_span _)
+    exact neg_mem (Submodule.subset_span ⟨_, rfl⟩)
   · rw [← reindex_apply_zero T (d 0)]
-    exact mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
 
 /-- The re-index does not change the span of the components. -/
-lemma span_reindex (T : (Fin 2 → Fin 2) → B) : span (reindex T) = span T := by
-  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun d => ?_)
-  · rw [Submodule.span_singleton_le_iff_mem, reindex]
-    exact sum_mem fun m _ => Submodule.smul_mem _ _ (mem_span _)
-  · rw [Submodule.span_singleton_le_iff_mem]
-    exact self_mem_span_reindex T d
+lemma span_range_reindex (T : (Fin 2 → Fin 2) → B) :
+    Submodule.span ℂ (Set.range (reindex T)) = Submodule.span ℂ (Set.range T) := by
+  refine Submodule.span_eq_span (Set.range_subset_iff.2 fun d => ?_)
+    (Set.range_subset_iff.2 (mem_span_range_reindex T))
+  rw [reindex]
+  exact sum_mem fun m _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
 
 /-!
 
@@ -172,8 +172,8 @@ def deltaContraction (T : (Fin 2 → Fin 2) → B) : B := T ![0, 0] + T ![1, 1]
 
 /-- The delta contraction lies in the span of the components. -/
 lemma deltaContraction_mem_span (T : (Fin 2 → Fin 2) → B) :
-    deltaContraction T ∈ span T :=
-  add_mem (mem_span _) (mem_span _)
+    deltaContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  add_mem (Submodule.subset_span ⟨_, rfl⟩) (Submodule.subset_span ⟨_, rfl⟩)
 
 /-- The epsilon contraction of the re-indexed family is minus the delta contraction of the
   original one. -/
@@ -201,7 +201,7 @@ lemma repGauge_deltaContraction {T : (Fin 2 → Fin 2) → B}
 ## A.3. The reduction modulo a stable submodule
 
 The reduction of `IsSU2BiFundamental` for the re-indexed family, transported along
-`span_reindex` and the sign of `epsilonContraction_reindex`. The gauge form, used by the
+`span_range_reindex` and the sign of `epsilonContraction_reindex`. The gauge form, used by the
 Higgs sector, lets the other two factors act as well: once the delta contraction is known to
 be gauge invariant, so is the remainder.
 
@@ -212,18 +212,19 @@ be gauge invariant, so is the remainder.
 lemma reducesInvariantsTo_span_deltaContraction
     (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 2) → B}
     (hT : ∀ U, IsSU2FunAntiFunMat U (σ U) T) :
-    ReducesInvariantsTo σ (span T) (ℂ ∙ deltaContraction T) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ deltaContraction T) := by
   have h := reducesInvariantsTo_span_epsilonContraction σ fun U => map_reindex (hT U)
-  rwa [span_reindex, epsilonContraction_reindex, ← Set.neg_singleton, Submodule.span_neg] at h
+  rwa [span_range_reindex, epsilonContraction_reindex, ← Set.neg_singleton,
+    Submodule.span_neg] at h
 
 /-- The isospin invariants of the component span reduce to the span of the delta
   contraction. -/
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2FunAntiFun B repGauge T) :
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (span T) :=
+      (Submodule.span ℂ (Set.range T)) :=
   InvariantReductionToSpan.ofReducesInvariantsTo
-    (isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
+    (isStableUnder_span_range_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
     (deltaContraction T) (repGauge_deltaContraction hT)
     (reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T)
 
@@ -235,7 +236,7 @@ lemma exists_smul_add_of_gauge_invariant {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2FunAntiFun B repGauge T) (x : B) (S : Submodule ℂ B)
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hdc : ∀ g : GaugeGroupI, repGauge g (deltaContraction T) = deltaContraction T)
-    (hx : x ∈ span T ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     ∃ c : ℂ, ∃ y ∈ S, x = c • deltaContraction T + y
       ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
   have h := reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T S (fun V => hS (1, V, 1))
@@ -346,30 +347,31 @@ lemma isSU2BiFundamental_reindex {T : (Fin 2 → Fin 2) → B}
   repGauge_T g := map_reindex (hT.repGauge_T g)
 
 /-- Every component of the original family lies in the span of the re-indexed one. -/
-lemma self_mem_span_reindex (T : (Fin 2 → Fin 2) → B) (d : Fin 2 → Fin 2) :
-    T d ∈ span (reindex T) := by
+lemma mem_span_range_reindex (T : (Fin 2 → Fin 2) → B) (d : Fin 2 → Fin 2) :
+    T d ∈ Submodule.span ℂ (Set.range (reindex T)) := by
   have hl : ∀ a : Fin 2, a = 0 ∨ a = 1 := by decide
   have hd : T d = T ![d 0, d 1] := by rw [← eq_cons]
   rw [hd]
   rcases hl (d 0) with h0 | h0 <;> rcases hl (d 1) with h1 | h1 <;> rw [h0, h1]
   · rw [← reindex_one_one T]
-    exact mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   · rw [show T ![(0 : Fin 2), 1] = -reindex T ![1, 0] from by
       rw [reindex_one_zero, neg_neg]]
-    exact neg_mem (mem_span _)
+    exact neg_mem (Submodule.subset_span ⟨_, rfl⟩)
   · rw [show T ![(1 : Fin 2), 0] = -reindex T ![0, 1] from by
       rw [reindex_zero_one, neg_neg]]
-    exact neg_mem (mem_span _)
+    exact neg_mem (Submodule.subset_span ⟨_, rfl⟩)
   · rw [← reindex_zero_zero T]
-    exact mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
 
 /-- The re-index does not change the span of the components. -/
-lemma span_reindex (T : (Fin 2 → Fin 2) → B) : span (reindex T) = span T := by
-  refine le_antisymm (iSup_le fun d => ?_) (iSup_le fun d => ?_)
-  · rw [Submodule.span_singleton_le_iff_mem, reindex]
-    exact sum_mem fun m _ => sum_mem fun n _ => Submodule.smul_mem _ _ (mem_span _)
-  · rw [Submodule.span_singleton_le_iff_mem]
-    exact self_mem_span_reindex T d
+lemma span_range_reindex (T : (Fin 2 → Fin 2) → B) :
+    Submodule.span ℂ (Set.range (reindex T)) = Submodule.span ℂ (Set.range T) := by
+  refine Submodule.span_eq_span (Set.range_subset_iff.2 fun d => ?_)
+    (Set.range_subset_iff.2 (mem_span_range_reindex T))
+  rw [reindex]
+  exact sum_mem fun m _ => sum_mem fun n _ =>
+    Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
 
 /-!
 
@@ -411,19 +413,19 @@ lemma repGauge_epsilonContraction {T : (Fin 2 → Fin 2) → B}
 lemma reducesInvariantsTo_span_epsilonContraction
     (σ : specialUnitaryGroup (Fin 2) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 2) → B}
     (hT : ∀ U, IsSU2BiAntiFunMat U (σ U) T) :
-    ReducesInvariantsTo σ (span T) (ℂ ∙ epsilonContraction T) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ epsilonContraction T) := by
   have h := IsSU2BiFundamental.reducesInvariantsTo_span_epsilonContraction σ
     fun U => map_reindex (hT U)
-  rwa [span_reindex, epsilonContraction_reindex] at h
+  rwa [span_range_reindex, epsilonContraction_reindex] at h
 
 /-- The isospin invariants of the component span reduce to the span of the epsilon
   contraction. -/
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (hT : IsSU2BiAntiFun B repGauge T) :
     InvariantReductionToSpan (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, V, 1))
-      (span T) :=
+      (Submodule.span ℂ (Set.range T)) :=
   InvariantReductionToSpan.ofReducesInvariantsTo
-    (isStableUnder_iSup_span_singleton_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
+    (isStableUnder_span_range_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
     (epsilonContraction T) (repGauge_epsilonContraction hT)
     (reducesInvariantsTo_span_epsilonContraction _ hT.repGauge_T)
 

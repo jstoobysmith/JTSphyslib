@@ -72,13 +72,6 @@ namespace IsSU3FunAntiFun
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
 
-/-- The span of the components. -/
-def span (T : (Fin 2 → Fin 3) → B) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
-
-/-- Every component lies in the span. -/
-lemma mem_span {T : (Fin 2 → Fin 3) → B} (d : Fin 2 → Fin 3) : T d ∈ span T :=
-  Family.mem_iSup_span_singleton T d
-
 /-- A sum over pairs of colour indices is a double sum. -/
 lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 3) → M) :
     ∑ d : Fin 2 → Fin 3, F d = ∑ x : Fin 3, ∑ y : Fin 3, F ![x, y] :=
@@ -125,8 +118,8 @@ def deltaContraction (T : (Fin 2 → Fin 3) → B) : B := ∑ a : Fin 3, T ![a, 
 
 /-- The delta contraction lies in the span of the components. -/
 lemma deltaContraction_mem_span (T : (Fin 2 → Fin 3) → B) :
-    deltaContraction T ∈ span T :=
-  sum_mem fun _ _ => mem_span _
+    deltaContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  sum_mem fun _ _ => Submodule.subset_span ⟨_, rfl⟩
 
 /-- The Kronecker delta is fixed by every coefficient matrix: the rows of a unitary matrix
   are orthonormal, `U * (conj U)ᵀ = U * Uᴴ = 1`. -/
@@ -237,7 +230,7 @@ gauge group, the form the Yukawa and fermion kinetic files consume.
 lemma reducesInvariantsTo_span_deltaContraction
     (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 3) → B}
     (hT : ∀ U, IsSU3FunAntiFunMat U (σ U) T) :
-    ReducesInvariantsTo σ (span T) (ℂ ∙ deltaContraction T) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ deltaContraction T) := by
   have h := reducesInvariantsTo_span_singleton_of_mulVec_eq (σ := σ) T coeffMatrix hT
     (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩) Family.deltaCoeff fun _ hc =>
       exists_eq_smul_deltaCoeff_of_forall_mulVec_eq hc
@@ -248,9 +241,9 @@ lemma reducesInvariantsTo_span_deltaContraction
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 3) → B}
     (hT : IsSU3FunAntiFun B repGauge T) :
     InvariantReductionToSpan (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
-      (span T) :=
+      (Submodule.span ℂ (Set.range T)) :=
   InvariantReductionToSpan.ofReducesInvariantsTo
-    (isStableUnder_iSup_span_singleton_of_sum fun U l => ⟨_, hT.repGauge_T U l⟩)
+    (isStableUnder_span_range_of_sum fun U l => ⟨_, hT.repGauge_T U l⟩)
     (deltaContraction T) (repGauge_deltaContraction hT)
     (reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T)
 

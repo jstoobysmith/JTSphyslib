@@ -153,9 +153,9 @@ lemma isLorentzCovariant_vectorPair :
 
 omit hT in
 /-- Every component of the reduced family lies in the span of the components of `T`. -/
-lemma vectorPair_mem_componentSpan (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    vectorPair (T := T) d ∈ componentSpan T :=
-  sum_mem fun a _ => Submodule.smul_mem _ _ (mem_componentSpan_self T (d 0, a))
+lemma vectorPair_mem_span_range (d : Fin 2 → Fin 1 ⊕ Fin 3) :
+    vectorPair (T := T) d ∈ Submodule.span ℂ (Set.range T) :=
+  sum_mem fun a _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨(d 0, a), rfl⟩)
 
 omit hT in
 /-- The reduction is invertible: by the Fierz completeness relation each component of
@@ -188,16 +188,17 @@ lemma eq_sum_vectorPair (μ : Fin 1 ⊕ Fin 3) (b : Fin 2 × Fin 2) :
 
 omit hT in
 /-- Every component of `T` lies in the span of the components of the reduced family. -/
-lemma mem_componentSpan_vectorPair (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
-    T d ∈ componentSpan (vectorPair (T := T)) := by
+lemma mem_span_range_vectorPair (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
+    T d ∈ Submodule.span ℂ (Set.range (vectorPair (T := T))) := by
   rw [show T d = T (d.1, d.2) from rfl, eq_sum_vectorPair (T := T) d.1 d.2]
-  exact sum_mem fun ρ _ => Submodule.smul_mem _ _ (mem_componentSpan_self _ _)
+  exact sum_mem fun ρ _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
 
 omit hT in
 /-- The reduction does not change the span of the components. -/
-lemma componentSpan_vectorPair : componentSpan (vectorPair (T := T)) = componentSpan T :=
-  le_antisymm ((componentSpan_le_iff _ _).2 fun d => vectorPair_mem_componentSpan d)
-    ((componentSpan_le_iff _ _).2 fun d => mem_componentSpan_vectorPair d)
+lemma span_range_vectorPair :
+    Submodule.span ℂ (Set.range (vectorPair (T := T))) = Submodule.span ℂ (Set.range T) :=
+  Submodule.span_eq_span (Set.range_subset_iff.2 vectorPair_mem_span_range)
+    (Set.range_subset_iff.2 mem_span_range_vectorPair)
 
 omit hT in
 /-- The metric contraction of the reduced family is exactly the Pauli contraction of `T`: the
@@ -237,11 +238,11 @@ lemma repLorentz_pauliContraction (g : SL(2,ℂ)) :
 
 include hT in
 /-- Every Lorentz invariant in the span of the components is a multiple of `pauliContraction`. -/
-theorem exists_smul_pauliContraction_of_invariant {x : B} (hx : x ∈ componentSpan T)
+theorem exists_smul_pauliContraction_of_invariant {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • pauliContraction (T := T) := by
   obtain ⟨a, ha⟩ := RankTwo.exists_smul_metricContraction_of_invariant
-    hT.isLorentzCovariant_vectorPair (by rwa [componentSpan_vectorPair]) hinv
+    hT.isLorentzCovariant_vectorPair (by rwa [span_range_vectorPair]) hinv
   exact ⟨a, by rwa [metricContraction_vectorPair] at ha⟩
 
 include hT in
@@ -249,10 +250,11 @@ include hT in
   error in `S`. -/
 lemma exists_smul_pauliContraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • pauliContraction (T := T) + y := by
   obtain ⟨a, y, hy, ha⟩ := RankTwo.exists_smul_metricContraction_of_invariant_subset
-    hT.isLorentzCovariant_vectorPair S hS (by rwa [componentSpan_vectorPair]) hinv
+    hT.isLorentzCovariant_vectorPair S hS (by rwa [span_range_vectorPair]) hinv
   exact ⟨a, y, hy, by rwa [metricContraction_vectorPair] at ha⟩
 
 end IsVectorLeftRightWeyl
@@ -447,16 +449,16 @@ lemma vectorEpsReindex_vectorEpsReindex :
   rw [vectorEpsReindex_eq_epsReindex, h, epsReindex_epsReindex]
 
 /-- The re-index does not change the span of the components. -/
-lemma componentSpan_vectorEpsReindex :
-    componentSpan (vectorEpsReindex T) = componentSpan T := by
-  refine le_antisymm ((componentSpan_le_iff _ _).2 fun d => ?_)
-    ((componentSpan_le_iff _ _).2 fun d => ?_)
-  · exact sum_mem fun k _ => Submodule.smul_mem _ _ (mem_componentSpan_self T (d.1, k))
+lemma span_range_vectorEpsReindex :
+    Submodule.span ℂ (Set.range (vectorEpsReindex T)) = Submodule.span ℂ (Set.range T) := by
+  refine Submodule.span_eq_span (Set.range_subset_iff.2 fun d => ?_)
+    (Set.range_subset_iff.2 fun d => ?_)
+  · exact sum_mem fun k _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨(d.1, k), rfl⟩)
   · have h : T d = vectorEpsReindex (vectorEpsReindex T) d := by
       rw [vectorEpsReindex_vectorEpsReindex]
     rw [h]
     exact sum_mem fun k _ => Submodule.smul_mem _ _
-      (mem_componentSpan_self (vectorEpsReindex T) (d.1, k))
+      (Submodule.subset_span ⟨(d.1, k), rfl⟩)
 
 end VectorReindex
 
@@ -543,17 +545,18 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   four-vector representation, whose invariants need a second vector index, as in
   `IsVectorDualLeftRightWeyl`. -/
 theorem IsDualLeftRightWeyl.eq_zero_of_invariant {T : Fin 2 × Fin 2 → B}
-    (hT : IsDualLeftRightWeyl B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+    (hT : IsDualLeftRightWeyl B repLorentz T) {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 :=
-  hT.isLeftRightWeyl_epsReindex.eq_zero_of_invariant (by rwa [componentSpan_epsReindex]) hinv
+  hT.isLeftRightWeyl_epsReindex.eq_zero_of_invariant (by rwa [span_range_epsReindex]) hinv
 
 /-- The same modulo a Lorentz-stable subspace `S`: such an invariant already lies in `S`. -/
 theorem IsDualLeftRightWeyl.mem_of_invariant_of_mem_sup {T : Fin 2 × Fin 2 → B}
     (hT : IsDualLeftRightWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S :=
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S :=
   hT.isLeftRightWeyl_epsReindex.mem_of_invariant_of_mem_sup S hS
-    (by rwa [componentSpan_epsReindex]) hinv
+    (by rwa [span_range_epsReindex]) hinv
 
 namespace IsVectorDualLeftRightWeyl
 
@@ -569,31 +572,34 @@ lemma repLorentz_pauliBarContraction (hT : IsVectorDualLeftRightWeyl B repLorent
 /-- For the mixed dual law, every Lorentz invariant of the span is a multiple of the
   `pauliBar` contraction. This is the kinetic term of a Weyl fermion. -/
 theorem exists_smul_pauliBarContraction_of_invariant
-    (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+    (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B}
+    (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • pauliBarContraction (T := T) := by
   obtain ⟨a, ha⟩ :=
     hT.isVectorLeftRightWeyl_vectorEpsReindex.exists_smul_pauliContraction_of_invariant
-      (by rwa [componentSpan_vectorEpsReindex]) hinv
+      (by rwa [span_range_vectorEpsReindex]) hinv
   exact ⟨a, by rwa [pauliContraction_vectorEpsReindex] at ha⟩
 
 /-- The same modulo a Lorentz-stable submodule `S`. -/
 theorem exists_smul_pauliBarContraction_of_invariant_subset
     (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • pauliBarContraction (T := T) + y := by
   obtain ⟨a, y, hy, ha⟩ :=
     hT.isVectorLeftRightWeyl_vectorEpsReindex.exists_smul_pauliContraction_of_invariant_subset
-      S hS (by rwa [componentSpan_vectorEpsReindex]) hinv
+      S hS (by rwa [span_range_vectorEpsReindex]) hinv
   exact ⟨a, y, hy, by rwa [pauliContraction_vectorEpsReindex] at ha⟩
 
 /-- For the mixed dual law, the Lorentz invariants of the component span reduce to the span
   of the `pauliBar` contraction. -/
 noncomputable def invariantReductionToSpan (hT : IsVectorDualLeftRightWeyl B repLorentz T) :
-    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ q, ℂ ∙ T q) where
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g)
+      (Submodule.span ℂ (Set.range T)) where
   spanningVector := pauliBarContraction (T := T)
-  stable := isStableUnder_iSup_span_singleton_of_sum fun g q => ⟨_, hT.repLorentz_T' g q⟩
+  stable := isStableUnder_span_range_of_sum fun g q => ⟨_, hT.repLorentz_T' g q⟩
   spanningVector_fixed := hT.repLorentz_pauliBarContraction
   reduce S hS _ hx hinv := hT.exists_smul_pauliBarContraction_of_invariant_subset S hS hx hinv
 

@@ -105,7 +105,7 @@ lemma inner_actMat (M N : ι → ι → ℂ) (hN : ∀ a d, N a d = star (M d a)
 lemma exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → ι → ι → ℂ)
     (hT : ∀ (g : G) l, φ g (T l) = ∑ a, M g a l • T a)
     (hM : ∀ g : G, ∃ g' : G, ∀ a d, M g' a d = star (M g d a))
-    {x : B} (hx : x ∈ ⨆ i, ℂ ∙ T i) (hinv : ∀ g, φ g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g, φ g x = x) :
     ∃ c : ι → ℂ, (∀ g, actMat (M g) c = c) ∧ x = ∑ i, c i • T i := by
   obtain ⟨c, hc, hinvc⟩ := Fintype.exists_invariant_coeff_of_adjoint_mem T φ
     (fun g => actMatₗ (M g))
@@ -208,7 +208,7 @@ lemma exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) → B
     {repLorentz : Representation ℂ SL(2,ℂ) B}
     (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
       (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
-    {x : B} (hx : x ∈ ⨆ d, ℂ ∙ T d) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
   obtain ⟨c, hc, hx'⟩ := exists_invariantCoeff_matrix T (fun g => repLorentz g)
     (fun g a d => ∏ i, (((SL2C.toLorentzGroup g).1 (a i) (d i) : ℝ) : ℂ)) hT

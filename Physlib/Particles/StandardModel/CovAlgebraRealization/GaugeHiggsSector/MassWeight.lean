@@ -144,7 +144,7 @@ lemma mem_of_lorentz_invariant_iSup_rankTwo_span {ι : Type}
     (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
     (hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ (⨆ i, componentSpan (T i)) ⊔ S)
+    (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   classical
   obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
@@ -159,7 +159,7 @@ lemma mem_of_lorentz_invariant_iSup_rankThree_span {ι : Type}
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ (⨆ i, componentSpan (T i)) ⊔ S)
+    (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   classical
   obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
@@ -290,16 +290,15 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_fixed_sup (C : Submodul
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : h.isGaugeSector.derivSubmodule 0
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, Submodule.span ℂ (Set.range (T i))) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]
     rintro _ ⟨φ, rfl⟩
     simp only [SetLike.mem_coe, Submodule.mem_comap, LinearMap.mulRight_apply]
     rw [Subsingleton.elim l ![]]
-    refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.mem_iSup_of_mem ![μ, ν] ?_)
+    refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.subset_span ⟨![μ, ν], ?_⟩)
     simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one]
-    exact Submodule.mem_span_singleton_self _
   exact key ha
 
 /-- A once-derived field strength against Lorentz-inert material carries no Lorentz
@@ -318,16 +317,15 @@ theorem mem_of_lorentz_invariant_derivSubmodule_one_mul_fixed_sup (C : Submodule
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : h.isGaugeSector.derivSubmodule 1
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, Submodule.span ℂ (Set.range (T i))) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]
     rintro _ ⟨φ, rfl⟩
     simp only [SetLike.mem_coe, Submodule.mem_comap, LinearMap.mulRight_apply]
-    refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.mem_iSup_of_mem ![l 0, μ, ν] ?_)
+    refine Submodule.mem_iSup_of_mem (φ, ⟨b, hb⟩) (Submodule.subset_span ⟨![l 0, μ, ν], ?_⟩)
     simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
       Matrix.cons_val_two, Matrix.tail_cons, IsGaugeSector.etaExpand_cov_one]
-    exact Submodule.mem_span_singleton_self _
   exact key ha
 
 /-- An underived field strength against a once-derived Higgs carries no Lorentz invariant
@@ -361,7 +359,8 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
   refine Submodule.mul_le.mpr fun a ha b hb => ?_
   have key : ∀ (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ GaugeAlgebra),
       h.isHiggsSector.derivSubmodule 1
-        ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ)) (⨆ i, componentSpan (T i)) := by
+        ≤ Submodule.comap (LinearMap.mulLeft ℂ (h.covF ![] μ ν φ))
+          (⨆ i, Submodule.span ℂ (Set.range (T i))) := by
     intro μ ν φ
     rw [HiggsAlgebraCovRealization.derivSubmodule]
     refine sup_le ?_ ?_
@@ -371,22 +370,22 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       rintro _ ⟨ψ, rfl⟩
       simp only [Submodule.mem_comap, LinearMap.mulLeft_apply]
       refine Submodule.mem_iSup_of_mem (φ, Sum.inl ψ)
-        (Submodule.mem_iSup_of_mem ![μ, ν, ρ] ?_)
+        (Submodule.subset_span ⟨![μ, ν, ρ], ?_⟩)
       simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
         Matrix.tail_cons, Sum.elim_inl]
-      exact Submodule.mem_span_singleton_self _
+      rfl
     · rw [HiggsAlgebraCovRealization.barHiggsSubmodule]
       refine iSup_le fun dd => ?_
       obtain ⟨ρ, rfl⟩ : ∃ ρ, dd = ![ρ] := ⟨dd 0, (IsGaugeSector.etaExpand_cov_one dd).symm⟩
       rintro _ ⟨ψ, rfl⟩
       simp only [Submodule.mem_comap, LinearMap.mulLeft_apply]
       refine Submodule.mem_iSup_of_mem (φ, Sum.inr ψ)
-        (Submodule.mem_iSup_of_mem ![μ, ν, ρ] ?_)
+        (Submodule.subset_span ⟨![μ, ν, ρ], ?_⟩)
       simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
         Matrix.tail_cons, Sum.elim_inr]
-      exact Submodule.mem_span_singleton_self _
+      rfl
   have hA : h.isGaugeSector.derivSubmodule 0
-      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, componentSpan (T i)) := by
+      ≤ Submodule.comap (LinearMap.mulRight ℂ b) (⨆ i, Submodule.span ℂ (Set.range (T i))) := by
     rw [IsGaugeSector.derivSubmodule]
     refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
     rw [Submodule.span_le]

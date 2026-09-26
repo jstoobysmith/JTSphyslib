@@ -588,9 +588,9 @@ include h in
   component goes to a combination of the factors of components. -/
 lemma isoFamily_span_stable {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
     (d' : Fin m → (Fin 1 ⊕ Fin 3)) (g : GaugeGroupI) {y : B}
-    (hy : y ∈ IsSU2BiFundamental.span (h.isoFamily d d')) :
-    rep g y ∈ IsSU2BiFundamental.span (h.isoFamily d d') := by
-  obtain ⟨c, rfl⟩ := (IsSU2BiFundamental.mem_span_iff y).1 hy
+    (hy : y ∈ Submodule.span ℂ (Set.range (h.isoFamily d d'))) :
+    rep g y ∈ Submodule.span ℂ (Set.range (h.isoFamily d d')) := by
+  obtain ⟨c, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hy
   rw [map_sum]
   refine Submodule.sum_mem _ fun l _ => ?_
   rw [map_smul, isoFamily, h.rep_mul_pair g (X := fun a => h.barHiggs d' a)
@@ -598,24 +598,24 @@ lemma isoFamily_span_stable {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
     (h.rep_higgsComponent g d (l 1))]
   refine Submodule.smul_mem _ _ (Submodule.sum_mem _ fun a _ =>
     Submodule.sum_mem _ fun b _ => Submodule.smul_mem _ _ ?_)
-  exact Submodule.mem_iSup_of_mem ![a, b] (Submodule.mem_span_singleton_self _)
+  exact Submodule.subset_span ⟨![a, b], rfl⟩
 
 /-- The isospin-diagonal pairing spans of section C sit inside the span of the isospin
   family: a diagonal pairing is one of the four components, the two factors commuting. -/
 lemma higgsBarHiggsSpan_le_isoFamily_span (n m : ℕ) :
     h.higgsBarHiggsSpan n m 0 ⊔ h.higgsBarHiggsSpan n m 1
       ≤ ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
-        IsSU2BiFundamental.span (h.isoFamily d d') := by
+        Submodule.span ℂ (Set.range (h.isoFamily d d')) := by
   have key : ∀ (i : Fin 2), h.higgsBarHiggsSpan n m i
       ≤ ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
-        IsSU2BiFundamental.span (h.isoFamily d d') := by
+        Submodule.span ℂ (Set.range (h.isoFamily d d')) := by
     intro i
     rw [higgsBarHiggsSpan]
     refine iSup_le fun d => iSup_le fun d' => ?_
     rw [Submodule.span_singleton_le_iff_mem]
     refine Submodule.mem_iSup_of_mem d (Submodule.mem_iSup_of_mem d' ?_)
     rw [h.higgs_mul_barHiggs_comm d d' i i]
-    exact Submodule.mem_iSup_of_mem ![i, i] (Submodule.mem_span_singleton_self _)
+    exact Submodule.subset_span ⟨![i, i], rfl⟩
   exact sup_le (key 0) (key 1)
 
 /-- The re-index of an underived Higgs symbol by the antisymmetric symbol, `H̃⁰ = H¹` and
@@ -726,7 +726,7 @@ lemma epsilonContraction₁₃_quadFamily :
   quartic family, each being one of those components up to a sign. -/
 lemma quarticSpan_le_quadFamily_span :
     h.quarticSpan 0 0 ⊔ h.quarticSpan 0 1 ⊔ h.quarticSpan 1 1
-      ≤ IsSU2QuadFundamental.span h.quadFamily := by
+      ≤ Submodule.span ℂ (Set.range h.quadFamily) := by
   refine sup_le (sup_le ?_ ?_) ?_ <;>
     rw [quarticSpan, Submodule.span_singleton_le_iff_mem]
   · rw [show h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) 0 * h.barHiggs ![] 0 * h.higgs ![] 0
@@ -735,20 +735,20 @@ lemma quarticSpan_le_quadFamily_span :
         Matrix.cons_val_two, Matrix.tail_cons, Matrix.cons_val_three, tildeHiggs_one,
         neg_mul, mul_neg, neg_neg, mul_assoc, h.barHiggs_higgs_left_comm_zero,
         h.barHiggs_mul_higgs_comm_zero]]
-    exact IsSU2QuadFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   · rw [show h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) 0 * h.barHiggs ![] 0 * h.higgs ![] 1
         * h.barHiggs ![] 1 = -h.quadFamily ![0, 1, 1, 0] from by
       simp only [quadFamily, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
         Matrix.cons_val_two, Matrix.tail_cons, Matrix.cons_val_three, tildeHiggs_zero,
         tildeHiggs_one, neg_mul, mul_neg, neg_neg, mul_assoc,
         h.barHiggs_higgs_left_comm_zero, h.barHiggs_mul_higgs_comm_zero]]
-    exact neg_mem (IsSU2QuadFundamental.mem_span _)
+    exact neg_mem (Submodule.subset_span ⟨_, rfl⟩)
   · rw [show h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) 1 * h.barHiggs ![] 1 * h.higgs ![] 1
         * h.barHiggs ![] 1 = h.quadFamily ![1, 0, 1, 0] from by
       simp only [quadFamily, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
         Matrix.cons_val_two, Matrix.tail_cons, Matrix.cons_val_three, tildeHiggs_zero,
         mul_assoc, h.barHiggs_higgs_left_comm_zero, h.barHiggs_mul_higgs_comm_zero]]
-    exact IsSU2QuadFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
 
 end Quartic
 
@@ -781,29 +781,29 @@ a gauge transformation does not.
   gauge-invariant remainder in `S`. -/
 lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 2 → Fin 2) → B} (hT : ∀ i, IsSU2FunAntiFun B rep (T i))
-    (hstab : ∀ (i : ι) (g : GaugeGroupI), ∀ y ∈ IsSU2BiFundamental.span (T i),
-      rep g y ∈ IsSU2BiFundamental.span (T i))
+    (hstab : ∀ (i : ι) (g : GaugeGroupI), ∀ y ∈ Submodule.span ℂ (Set.range (T i)),
+      rep g y ∈ Submodule.span ℂ (Set.range (T i)))
     (hdc : ∀ (i : ι) (g : GaugeGroupI),
       rep g (IsSU2FunAntiFun.deltaContraction (T i))
         = IsSU2FunAntiFun.deltaContraction (T i))
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) (s : Finset ι)
-    {x : B} (hx : x ∈ (⨆ i ∈ s, IsSU2BiFundamental.span (T i)) ⊔ S)
+    {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : GaugeGroupI, rep g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
       ∧ x - y ∈ ⨆ i ∈ s, ℂ ∙ IsSU2FunAntiFun.deltaContraction (T i) := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), IsSU2BiFundamental.span (T i)) = ⊥ from by simp,
+    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
       bot_sup_eq] at hx
     exact ⟨x, hx, hinv, by simp⟩
   | insert a s ha ih =>
     rw [Finset.iSup_insert, sup_assoc] at hx
     have hstab' : ∀ g : GaugeGroupI,
-        ∀ y ∈ (⨆ i ∈ s, IsSU2BiFundamental.span (T i)) ⊔ S,
-        rep g y ∈ (⨆ i ∈ s, IsSU2BiFundamental.span (T i)) ⊔ S := by
+        ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
+        rep g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
       intro g y hy
-      have key : ((⨆ i ∈ s, IsSU2BiFundamental.span (T i)) ⊔ S)
-          ≤ Submodule.comap (rep g) ((⨆ i ∈ s, IsSU2BiFundamental.span (T i)) ⊔ S) :=
+      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
+          ≤ Submodule.comap (rep g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
         sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
             Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
               (Submodule.mem_iSup_of_mem hi (hstab i g z hz))))
@@ -827,7 +827,7 @@ lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableE
 noncomputable def isoSpan (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     (n m : ℕ) : Submodule ℂ B :=
   ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
-    IsSU2BiFundamental.span (h.isoFamily d d')
+    Submodule.span ℂ (Set.range (h.isoFamily d d'))
 
 include h in
 /-- The isospin span is stable under the gauge group. -/
@@ -847,7 +847,7 @@ lemma higgsBarHiggsSpan_le_isoSpan' (n m : ℕ) (i : Fin 2) :
   rw [Submodule.span_singleton_le_iff_mem]
   refine Submodule.mem_iSup_of_mem d (Submodule.mem_iSup_of_mem d' ?_)
   rw [h.higgs_mul_barHiggs_comm d d' i i]
-  exact Submodule.mem_iSup_of_mem ![i, i] (Submodule.mem_span_singleton_self _)
+  exact Submodule.subset_span ⟨![i, i], rfl⟩
 
 /-- The pairing span of section C sits inside the isospin span. -/
 lemma higgsBarHiggsSpan_le_isoSpan (n m : ℕ) :
@@ -872,7 +872,7 @@ lemma exists_mem_of_invariant_isoSpan_sup (n m : ℕ) (S : Submodule ℂ B)
       S hS Finset.univ (by
         rw [show (⨆ p ∈ (Finset.univ :
             Finset ((Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)))),
-              IsSU2BiFundamental.span (h.isoFamily p.1 p.2))
+              Submodule.span ℂ (Set.range (h.isoFamily p.1 p.2)))
             = h.isoSpan n m from by
           rw [isoSpan]
           simp only [Finset.mem_univ, iSup_pos]
@@ -999,17 +999,17 @@ theorem exists_mem_of_invariant_massWeightSubmodule_eight_sup (S : Submodule ℂ
     stable_sup (fun g y hy => h.isoSpan_stable 0 2 g hy) hS₃
   have hS₁ : ∀ g : GaugeGroupI, ∀ y ∈ S₁, rep g y ∈ S₁ :=
     stable_sup (fun g y hy => h.isoSpan_stable 2 0 g hy) hS₂
-  have hQ : IsSU2QuadFundamental.span h.quadFamily
-      ≤ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ := le_sup_left
-  have hA20 : h.isoSpan 2 0 ≤ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ :=
+  have hQ : Submodule.span ℂ (Set.range h.quadFamily)
+      ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ := le_sup_left
+  have hA20 : h.isoSpan 2 0 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
     le_sup_of_le_right le_sup_left
-  have hA02 : h.isoSpan 0 2 ≤ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ :=
+  have hA02 : h.isoSpan 0 2 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
     le_sup_of_le_right (le_sup_of_le_right le_sup_left)
-  have hA11 : h.isoSpan 1 1 ≤ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ :=
+  have hA11 : h.isoSpan 1 1 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
     le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_left))
-  have hSle : S ≤ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ :=
+  have hSle : S ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
     le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_right))
-  have hquad : x ∈ IsSU2QuadFundamental.span h.quadFamily ⊔ S₁ :=
+  have hquad : x ∈ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
     sup_le (sup_le (sup_le (sup_le (sup_le (sup_le
       ((h.higgsBarHiggsSpan_le_isoSpan' 2 0 0).trans hA20)
       ((h.higgsBarHiggsSpan_le_isoSpan' 2 0 1).trans hA20))

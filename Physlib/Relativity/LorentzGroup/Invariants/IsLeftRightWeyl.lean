@@ -19,8 +19,9 @@ a Lorentz-stable subspace `S`, the form the Standard Model files use.
 The components are vectors `T a` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, and `IsLeftRightWeyl` says the group moves the left index by the
 matrix of `g` and the right index by its complex conjugate (A). An invariant of
-`componentSpan T` is `∑_a c_a • T a` for a coefficient function `c` fixed by the action `act`
-(A, from `Invariants.Basic`), and two elements of `SL(2,ℂ)` already force such a `c` to vanish
+`Submodule.span ℂ (Set.range T)` is `∑_a c_a • T a` for a coefficient function `c` fixed by the
+action `act` (A, from `Invariants.Basic`), and two elements of `SL(2,ℂ)` already force such a `c`
+to vanish
 (B). Both are diagonal, and a diagonal `g = diag (λ₀, λ₁)` multiplies `c (a₁, a₂)` by
 `λ_{a₁} * conj λ_{a₂}`. The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²` and
 `c (1, 1)` by `t⁻²`, so these vanish, and the half turn `diag (-i, i)` about `z` multiplies
@@ -73,7 +74,7 @@ def IsInvariantCoeff (c : Fin 2 × Fin 2 → ℂ) : Prop := ∀ g : SL(2,ℂ), a
 include hT in
 /-- An invariant of the span is the contraction of an invariant coefficient function: the
   adjoint of the action of `g` is the action of `g†`. -/
-lemma exists_isInvariantCoeff_of_mem_componentSpan {x : B} (hx : x ∈ componentSpan T)
+lemma exists_isInvariantCoeff_of_mem_span_range {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : Fin 2 × Fin 2 → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
   obtain ⟨c, hc, hx'⟩ := Invariants.exists_invariantCoeff_matrix T (fun g => repLorentz g)
@@ -139,9 +140,9 @@ lemma IsInvariantCoeff.eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoe
 include hT in
 /-- Every Lorentz invariant in the span of the components is zero: the pair of indices carries
   the four-vector representation, which has no invariant contraction. -/
-theorem eq_zero_of_invariant {x : B} (hx : x ∈ componentSpan T)
+theorem eq_zero_of_invariant {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
   simp [hc.eq_zero]
 
 /-!
@@ -166,16 +167,17 @@ lemma isLeftRightWeyl_quotient (S : Submodule ℂ B)
     exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
 
 include hT in
-/-- A Lorentz invariant of `componentSpan T ⊔ S`, for a Lorentz-stable subspace `S`, already
-  lies in `S`. -/
+/-- A Lorentz invariant of `Submodule.span ℂ (Set.range T) ⊔ S`, for a Lorentz-stable
+  subspace `S`, already lies in `S`. -/
 lemma mem_of_invariant_of_mem_sup {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have h := IsStableUnder.mem_sup_of_quotient (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥) hS
     (fun y hy hyinv => by
       rw [Submodule.map_bot, Submodule.mem_bot]
       exact (hT.isLeftRightWeyl_quotient S hS).eq_zero_of_invariant
-        ((Submodule.map_iSup_span_singleton S.mkQ T).le hy) hyinv) hx hinv
+        ((Submodule.map_span_range S.mkQ T).le hy) hyinv) hx hinv
   rwa [bot_sup_eq] at h
 
 end IsLeftRightWeyl

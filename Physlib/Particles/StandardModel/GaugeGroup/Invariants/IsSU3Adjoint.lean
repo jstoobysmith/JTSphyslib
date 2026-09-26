@@ -63,15 +63,8 @@ structure IsSU3Adjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
 
 namespace IsSU3Adjoint
 
-/- `span` takes the hypothesis `hT` only to hang off it by dot notation. -/
-set_option linter.unusedVariables false
-
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B} {T : Fin 8 → B}
-
-/-- The span of the components. -/
-@[nolint unusedArguments]
-def span (hT : IsSU3Adjoint B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
 /-!
 
@@ -142,7 +135,7 @@ submodule: the span contributes nothing to the invariants.
   `σ`-stable submodule `S` lies in `S`. -/
 lemma reducesInvariantsTo_bot (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B)
     (hT : ∀ U, IsSU3AdjointMat U (σ U) T) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ :=
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) ⊥ :=
   reducesInvariantsTo_bot_of_mulVec_eq T su3AdjointCoeffMatrix hT
     (fun U => ⟨U⁻¹, su3AdjointCoeffMatrix_inv U⟩) fun _ hc => eq_zero_of_forall_mulVec_eq hc
 
@@ -151,7 +144,7 @@ lemma reducesInvariantsTo_bot (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ
 lemma mem_of_mem_span_sup_su3_invariant (hT : IsSU3Adjoint B repGauge T) (x : B)
     (S : Submodule ℂ B)
     (hS : ∀ U : specialUnitaryGroup (Fin 3) ℂ, ∀ y ∈ S, repGauge (U, 1, 1) y ∈ S)
-    (hx : x ∈ hT.span ⊔ S)
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
     (hinv : ∀ U : specialUnitaryGroup (Fin 3) ℂ, repGauge (U, 1, 1) x = x) :
     x ∈ S := by
   simpa using reducesInvariantsTo_bot _ hT.repGauge_T S hS x hx hinv

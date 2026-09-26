@@ -242,7 +242,7 @@ lemma mem_of_lorentz_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3)
     (hT : IsLorentzCovariant 2 B repLorentz T)
     (hzero : RankTwo.metricContraction (T := T) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ componentSpan T ⊔ S)
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   obtain ⟨a, y, hy, hxy⟩ :=
     RankTwo.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
@@ -256,22 +256,23 @@ lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
     (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
     (hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι) {x : B}
-    (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
+    (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), componentSpan (T i)) = ⊥ from by simp, bot_sup_eq] at hx
+    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
+      bot_sup_eq] at hx
     exact hx
   | insert a s ha ih =>
     rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S := by
+    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
+        repLorentz g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
       intro g y hy
-      have key : ((⨆ i ∈ s, componentSpan (T i)) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, componentSpan (T i)) ⊔ S) :=
+      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
+          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
         sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
             Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
+              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_span_range g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
     exact ih (mem_of_lorentz_invariant_rankTwo_span_sup (hT a) (hzero a) _ hstab hx
@@ -284,22 +285,23 @@ lemma mem_of_lorentz_invariant_biSup_rankThree_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
-    {x : B} (hx : x ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S)
+    {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), componentSpan (T i)) = ⊥ from by simp, bot_sup_eq] at hx
+    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
+      bot_sup_eq] at hx
     exact hx
   | insert a s ha ih =>
     rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, componentSpan (T i)) ⊔ S := by
+    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
+        repLorentz g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
       intro g y hy
-      have key : ((⨆ i ∈ s, componentSpan (T i)) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, componentSpan (T i)) ⊔ S) :=
+      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
+          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
         sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
             Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_componentSpan g hz))))
+              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_span_range g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
     exact ih (RankThree.mem_of_invariant_of_mem_sup (hT a) _ hstab hx hinv) hinv
@@ -336,7 +338,7 @@ include h in
   form. -/
 lemma derivSubmodule_zero_le_iSup_span :
     h.derivSubmodule 0 ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-      componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
+      Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
         F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord c)) := by
   rw [derivSubmodule]
   refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
@@ -346,13 +348,11 @@ lemma derivSubmodule_zero_le_iSup_span :
   have hle : (⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
         ℂ ∙ F ![] μ ν (GaugeAlgebra.stdBasis.coord c))
       ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-        componentSpan (fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
+        Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 =>
         F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord c)) := by
     refine iSup_mono fun c => ?_
     rw [Submodule.span_singleton_le_iff_mem]
-    refine Submodule.mem_iSup_of_mem ![μ, ν] ?_
-    simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-    exact Submodule.mem_span_singleton_self _
+    exact Submodule.subset_span ⟨![μ, ν], by simp⟩
   exact hle (F_mem_iSup_span_coord ![] μ ν φ)
 
 include h in
@@ -393,7 +393,7 @@ include h in
   form. -/
 lemma derivSubmodule_one_le_iSup_span :
     h.derivSubmodule 1 ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-      componentSpan (fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
+      Submodule.span ℂ (Set.range fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
         F ![d 0] (d 1) (d 2) (GaugeAlgebra.stdBasis.coord c)) := by
   rw [derivSubmodule]
   refine iSup_le fun l => iSup_le fun μ => iSup_le fun ν => ?_
@@ -403,14 +403,13 @@ lemma derivSubmodule_one_le_iSup_span :
   have hle : (⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
         ℂ ∙ F l μ ν (GaugeAlgebra.stdBasis.coord c))
       ≤ ⨆ c : Fin 8 ⊕ Fin 3 ⊕ Fin 1,
-        componentSpan (fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
+        Submodule.span ℂ (Set.range fun d : Fin 3 → Fin 1 ⊕ Fin 3 =>
         F ![d 0] (d 1) (d 2) (GaugeAlgebra.stdBasis.coord c)) := by
     refine iSup_mono fun c => ?_
     rw [Submodule.span_singleton_le_iff_mem]
-    refine Submodule.mem_iSup_of_mem ![l 0, μ, ν] ?_
+    refine Submodule.subset_span ⟨![l 0, μ, ν], ?_⟩
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
       Matrix.cons_val_two, Matrix.tail_cons, etaExpand_cov_one]
-    exact Submodule.mem_span_singleton_self _
   exact hle (F_mem_iSup_span_coord l μ ν φ)
 
 include h in

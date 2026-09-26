@@ -24,8 +24,9 @@ with `l` free and `a` summed, and the summed index first in each factor of the L
 move, and `Invariants.act` is the matching action on coefficients.
 
 Nothing here assumes the components independent or `B` finite dimensional: the span of the
-components is taken as it is, and a vector of it is written as a combination in a way that need
-not be unique. The rank-zero case is admitted and says that every component is invariant.
+components, Mathlib's `Submodule.span ℂ (Set.range T)`, is taken as it is, and a vector of it is
+written as a combination in a way that need not be unique. The rank-zero
+case is admitted and says that every component is invariant.
 -/
 
 @[expose] public section
@@ -36,47 +37,7 @@ open Matrix MatrixGroups SL2C Invariants
 
 /-!
 
-## A. The span of a family of components
-
-The span exists for any family, with no transformation law in sight, so it is defined on the
-family alone. Its elements are exactly the combinations of the components, which is what
-`mem_componentSpan_iff` records and what everything below reads it through.
-
--/
-
-section Span
-
-variable {ι B : Type*} [AddCommMonoid B] [Module ℂ B]
-
-/-- The span of the components of a family `T`. -/
-def componentSpan (T : ι → B) : Submodule ℂ B := ⨆ i, ℂ ∙ T i
-
-/-- Every component lies in the component span. -/
-lemma mem_componentSpan_self (T : ι → B) (i : ι) : T i ∈ componentSpan T :=
-  Submodule.mem_iSup_of_mem i (Submodule.mem_span_singleton_self _)
-
-/-- The component span lies in a submodule exactly when every component does. -/
-lemma componentSpan_le_iff (T : ι → B) (N : Submodule ℂ B) :
-    componentSpan T ≤ N ↔ ∀ i, T i ∈ N :=
-  iSup_le_iff.trans (forall_congr' fun _ => Submodule.span_singleton_le_iff_mem _ _)
-
-variable [Fintype ι]
-
-/-- A vector lies in the component span exactly when it is a combination `∑ i, c i • T i`. -/
-lemma mem_componentSpan_iff (T : ι → B) (x : B) :
-    x ∈ componentSpan T ↔ ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-  rw [componentSpan, ← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun]
-  exact exists_congr fun _ => eq_comm
-
-/-- Every combination of the components lies in their span. -/
-lemma sum_smul_mem_componentSpan (T : ι → B) (c : ι → ℂ) : ∑ i, c i • T i ∈ componentSpan T :=
-  (mem_componentSpan_iff T _).2 ⟨c, rfl⟩
-
-end Span
-
-/-!
-
-## B. Families transforming with one Lorentz matrix per index
+## A. Families transforming with one Lorentz matrix per index
 
 -/
 
@@ -111,10 +72,12 @@ lemma map {B' : Type*} [AddCommMonoid B'] [Module ℂ B'] {rep' : Representation
 
 /-- The span of the components is Lorentz stable: each component goes to a combination of the
   components. -/
-lemma repLorentz_mem_componentSpan (hT : IsLorentzCovariant n B repLorentz T) (g : SL(2,ℂ))
-    {x : B} (hx : x ∈ componentSpan T) : repLorentz g x ∈ componentSpan T := by
-  obtain ⟨c, rfl⟩ := (mem_componentSpan_iff T x).1 hx
-  exact (mem_componentSpan_iff T _).2 ⟨_, repLorentz_sum_smul hT.repLorentz_T g c⟩
+lemma repLorentz_mem_span_range (hT : IsLorentzCovariant n B repLorentz T) (g : SL(2,ℂ))
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) :
+    repLorentz g x ∈ Submodule.span ℂ (Set.range T) := by
+  obtain ⟨c, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hx
+  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2
+    ⟨_, (repLorentz_sum_smul hT.repLorentz_T g c).symm⟩
 
 end Monoid
 
@@ -134,8 +97,8 @@ lemma quotient (hT : IsLorentzCovariant n B repLorentz T) (S : Submodule ℂ B)
 
 /-- A Lorentz invariant lying in the span of the components is the contraction of a coefficient
   tensor that the Lorentz matrices themselves fix. -/
-lemma exists_isInvariantCoeff_of_mem_componentSpan
-    (hT : IsLorentzCovariant n B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+lemma exists_isInvariantCoeff_of_mem_span_range
+    (hT : IsLorentzCovariant n B repLorentz T) {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
   Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
@@ -153,7 +116,7 @@ end IsLorentzCovariant
 
 /-!
 
-## C. The quotient representation on classes
+## B. The quotient representation on classes
 
 Dividing out a Lorentz-stable submodule `S` uses Mathlib's `Representation.quotient`. The
 stability hypothesis is kept in the membership form the rest of the library uses, and converted

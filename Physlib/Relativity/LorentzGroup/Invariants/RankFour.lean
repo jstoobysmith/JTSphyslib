@@ -26,11 +26,12 @@ allowed; independence is not proved, and for a given `T` the four may be depende
 components are vectors `T d` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, and `IsLorentzCovariant 4 B repLorentz T` says the group moves
 them with one factor of the Lorentz matrix per slot (A). A vector of `B` is invariant when every
-`repLorentz g` fixes it, and `componentSpan T` is the set of contractions `∑_d c_d • T d`. The
-theorem `mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace `S` beside the span,
-where the files using it park their other tensors: a vector of `componentSpan T ⊔ S`, the sums
-`u + y`, is invariant exactly when it is a combination of the four contractions plus an
-invariant `y` of `S`. For `S = ⊥` that is `exists_smul_contraction_of_invariant`.
+`repLorentz g` fixes it, and `Submodule.span ℂ (Set.range T)` is the set of contractions
+`∑_d c_d • T d`. The theorem `mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace
+`S` beside the span, where the files using it park their other tensors: a vector of
+`Submodule.span ℂ (Set.range T) ⊔ S`, the sums `u + y`, is invariant exactly when it is a
+combination of the four contractions plus an invariant `y` of `S`. For `S = ⊥` that is
+`exists_smul_contraction_of_invariant`.
 
 The four coefficient tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant
 of the span is the contraction of an invariant one, by projecting off the tensors that contract
@@ -51,8 +52,8 @@ open Matrix MatrixGroups SL2C Invariants
 
 A direction is an element of `Fin 1 ⊕ Fin 3`, time or one of the three axes; an index vector
 `d : Fin 4 → Fin 1 ⊕ Fin 3` puts one in each slot, so `T d` is `T^{μνρσ}` at `(μ, ν, ρ, σ) = d`.
-The predicate and the span are `IsLorentzCovariant 4` and `componentSpan`, both from
-`Invariants.LorentzCovariance`. The law is
+The predicate is `IsLorentzCovariant 4` from `Invariants.LorentzCovariance`, and the span is
+Mathlib's `Submodule.span ℂ (Set.range T)`. The law is
 
 `repLorentz g (T l) = ∑_a Λ_{a₀ l₀} Λ_{a₁ l₁} Λ_{a₂ l₂} Λ_{a₃ l₃} • T a`,
 
@@ -132,25 +133,25 @@ lemma sum_smul_contraction (a : Fin 4 → ℂ) :
   rfl
 
 /-- The outer contraction lies in the span of the components. -/
-lemma outerContraction_mem_span : outerContraction T ∈ componentSpan T :=
-  sum_smul_mem_componentSpan T _
+lemma outerContraction_mem_span : outerContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The inner contraction lies in the span of the components. -/
-lemma innerContraction_mem_span : innerContraction T ∈ componentSpan T :=
-  sum_smul_mem_componentSpan T _
+lemma innerContraction_mem_span : innerContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The split contraction lies in the span of the components. -/
-lemma splitContraction_mem_span : splitContraction T ∈ componentSpan T :=
-  sum_smul_mem_componentSpan T _
+lemma splitContraction_mem_span : splitContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The Levi-Civita contraction lies in the span of the components. -/
-lemma epsilonContraction_mem_span : epsilonContraction T ∈ componentSpan T :=
-  sum_smul_mem_componentSpan T _
+lemma epsilonContraction_mem_span : epsilonContraction T ∈ Submodule.span ℂ (Set.range T) :=
+  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- A combination of the four contractions lies in the span of the components. -/
 lemma smul_contraction_mem_span (a₁ a₂ a₃ a₄ : ℂ) :
     a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-      + a₄ • epsilonContraction T ∈ componentSpan T :=
+      + a₄ • epsilonContraction T ∈ Submodule.span ℂ (Set.range T) :=
   add_mem (add_mem (add_mem (Submodule.smul_mem _ _ (outerContraction_mem_span (T := T)))
     (Submodule.smul_mem _ _ (innerContraction_mem_span (T := T))))
     (Submodule.smul_mem _ _ (splitContraction_mem_span (T := T))))
@@ -306,7 +307,7 @@ The components may satisfy linear relations, so the `c` with `x = ∑ c_d • T 
 determined by `x` and need not be invariant. Replacing `c` by its part orthogonal to the
 coefficient tensors that contract to `0` repairs that without changing the vector; the argument
 is the same for any number of slots and is carried out in `Invariants.Basic`, reached here
-through `IsLorentzCovariant.exists_isInvariantCoeff_of_mem_componentSpan`.
+through `IsLorentzCovariant.exists_isInvariantCoeff_of_mem_span_range`.
 
 The inner product it uses is the standard one on the `ℂ^{256}` of coefficient tensors, positive
 definite and unrelated to `η`; `B` carries none, and the coefficient action is not unitary. All
@@ -713,11 +714,11 @@ the remainder in `S` is invariant.
 
 /-- Every Lorentz invariant of the span is a combination of the four contractions. -/
 theorem exists_smul_contraction_of_invariant (hT : IsLorentzCovariant 4 B repLorentz T)
-    {x : B} (hx : x ∈ componentSpan T) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ,
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
   obtain ⟨a, rfl⟩ := exists_eq_sum hc
   refine ⟨a 0, a 1, a 2, a 3, ?_⟩
   rw [← sum_smul_contraction]
@@ -734,30 +735,31 @@ lemma mkQ_contraction (S : Submodule ℂ B) (i : Fin 4) :
 lemma exists_smul_contraction_of_invariant_subset
     (hT : IsLorentzCovariant 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
       x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
         + a₄ • epsilonContraction T + y
       ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
   obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := IsStableUnder.exists_add_of_quotient
     (σ := fun g : SL(2,ℂ) => repLorentz g) hS
-    (isFixedBy_iSup_span_singleton fun i g => repLorentz_contraction hT i g)
+    (isFixedBy_span_range fun i g => repLorentz_contraction hT i g)
     (fun z hz hzinv => by
       obtain ⟨a₁, a₂, a₃, a₄, hz'⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
-        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv
-      rw [hz', Submodule.map_iSup_span_singleton]
+        ((Submodule.map_span_range S.mkQ T).le hz) hzinv
+      rw [hz', Submodule.map_span_range]
       simp only [mkQ_contraction]
-      exact (mem_componentSpan_iff _ _).2 ⟨![a₁, a₂, a₃, a₄], by simp [sum_smul_contraction]⟩)
+      exact (Submodule.mem_span_range_iff_exists_fun ℂ).2
+        ⟨![a₁, a₂, a₃, a₄], by simp [sum_smul_contraction]⟩)
     hx hinv
-  obtain ⟨a, rfl⟩ := (mem_componentSpan_iff (contraction T) w).1 hw
+  obtain ⟨a, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hw
   exact ⟨a 0, a 1, a 2, a 3, y, hy, by rw [sum_smul_contraction], hyinv⟩
 
-/-- A vector of `componentSpan T ⊔ S`, the sums `u + y` with `u` in the span and `y` in the
-  Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four
+/-- A vector of `Submodule.span ℂ (Set.range T) ⊔ S`, the sums `u + y` with `u` in the span and
+  `y` in the Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four
   contractions plus an invariant `y` of `S`. `hS` is used only left to right. -/
 theorem mem_span_sup_invariant_iff (hT : IsLorentzCovariant 4 B repLorentz T) (x : B)
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    (x ∈ componentSpan T ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+    (x ∈ Submodule.span ℂ (Set.range T) ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
         x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
           + a₄ • epsilonContraction T + y

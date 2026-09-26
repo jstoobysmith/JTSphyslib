@@ -80,82 +80,84 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-- The Higgs submodule without derivatives lies in the span of the Higgs components. -/
 lemma higgsSubmodule_zero_le :
-    h.isHiggsSector.higgsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.higgs ![] i := by
+    h.isHiggsSector.higgsSubmodule 0
+      ≤ Submodule.span ℂ (Set.range (h.isHiggsSector.higgs ![])) := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    LinearMap.range_eq_iSup_span_basis HiggsVec.orthonormBasis.toBasis.dualBasis
+    LinearMap.range_eq_span_range_basis HiggsVec.orthonormBasis.toBasis.dualBasis
       (h.isHiggsSector.covH 0 ![])]
   exact le_rfl
 
 /-- The conjugate Higgs submodule without derivatives lies in the span of the conjugate
   Higgs components. -/
 lemma barHiggsSubmodule_zero_le :
-    h.isHiggsSector.barHiggsSubmodule 0 ≤ ⨆ i, ℂ ∙ h.isHiggsSector.barHiggs ![] i := by
+    h.isHiggsSector.barHiggsSubmodule 0
+      ≤ Submodule.span ℂ (Set.range (h.isHiggsSector.barHiggs ![])) := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    LinearMap.range_eq_iSup_span_basis HiggsVec.orthonormBasis.toBasis.conj.dualBasis
+    LinearMap.range_eq_span_range_basis HiggsVec.orthonormBasis.toBasis.conj.dualBasis
       (h.isHiggsSector.covBarH 0 ![])]
   exact le_rfl
 
 /-- The range of the down-singlet symbol map is the span of its components. -/
 lemma range_d_eq (f : Fin 3) :
     LinearMap.range (h.covD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.dComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis DownSinglet.basis.dualBasis (h.covD f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.dComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis DownSinglet.basis.dualBasis (h.covD f ![])
 
 /-- The range of the conjugate down-singlet symbol map is the span of its components. -/
 lemma range_bard_eq (f : Fin 3) :
     LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.bardComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis DownSinglet.basis.conj.dualBasis (h.covBarD f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.bardComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis DownSinglet.basis.conj.dualBasis (h.covBarD f ![])
 
 /-- The range of the up-singlet symbol map is the span of its components. -/
 lemma range_u_eq (f : Fin 3) :
     LinearMap.range (h.covU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.uComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis UpSinglet.basis.dualBasis (h.covU f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.uComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis UpSinglet.basis.dualBasis (h.covU f ![])
 
 /-- The range of the conjugate up-singlet symbol map is the span of its components. -/
 lemma range_baru_eq (f : Fin 3) :
     LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.baruComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis UpSinglet.basis.conj.dualBasis (h.covBarU f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.baruComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis UpSinglet.basis.conj.dualBasis (h.covBarU f ![])
 
 /-- The range of the quark-doublet symbol map is the span of its components. -/
 lemma range_Q_eq (f : Fin 3) :
     LinearMap.range (h.covQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.QComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.dualBasis (h.covQ f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.QComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis QuarkDoublet.basis.dualBasis (h.covQ f ![])
 
 /-- The range of the conjugate quark-doublet symbol map is the span of its components. -/
 lemma range_barQ_eq (f : Fin 3) :
     LinearMap.range (h.covBarQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.barQComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis QuarkDoublet.basis.conj.dualBasis (h.covBarQ f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.barQComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis QuarkDoublet.basis.conj.dualBasis (h.covBarQ f ![])
 
 /-- The range of the lepton-doublet symbol map is the span of its components. -/
 lemma range_L_eq (f : Fin 3) :
     LinearMap.range (h.covL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.LComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.dualBasis (h.covL f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.LComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis LeptonDoublet.basis.dualBasis (h.covL f ![])
 
 /-- The range of the conjugate lepton-doublet symbol map is the span of its components. -/
 lemma range_barL_eq (f : Fin 3) :
     LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.barLComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis LeptonDoublet.basis.conj.dualBasis (h.covBarL f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.barLComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis LeptonDoublet.basis.conj.dualBasis (h.covBarL f ![])
 
 /-- The range of the lepton-singlet symbol map is the span of its components. -/
 lemma range_e_eq (f : Fin 3) :
     LinearMap.range (h.covE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.eComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.dualBasis (h.covE f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.eComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis LeptonSinglet.basis.dualBasis (h.covE f ![])
 
 /-- The range of the conjugate lepton-singlet symbol map is the span of its components. -/
 lemma range_bare_eq (f : Fin 3) :
     LinearMap.range (h.covBarE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
-      = ⨆ j, ℂ ∙ h.isFermionSector.bareComponent f ![] j :=
-  LinearMap.range_eq_iSup_span_basis LeptonSinglet.basis.conj.dualBasis (h.covBarE f ![])
+      = Submodule.span ℂ (Set.range (h.isFermionSector.bareComponent f ![])) :=
+  LinearMap.range_eq_span_range_basis LeptonSinglet.basis.conj.dualBasis (h.covBarE f ![])
 
 /-!
 
@@ -467,34 +469,35 @@ lemma reducesInvariantsTo_downYukawa (f f' : Fin 3) :
       (ℂ ∙ h.downYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.downBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         IsSU3FunAntiFun.invariantReductionToSpan
           (h.isSU3FunAntiFun_downBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [downBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.higgsSubmodule_zero_le
       (le_of_eq (h.range_d_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.dComponent f ![] j *
         h.isFermionSector.barQComponent f' ![] k)
         = h.downBlock f f' i j.1 (![k.2.1, j.2] 1) k.1 (![k.2.1, j.2] 0) k.2.2 from by
       simp [downBlock]]
-    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
+    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (Submodule.subset_span ⟨_, rfl⟩)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.downBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.downBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2FunAntiFun.invariantReductionToSpan
           (h.isSU2FunAntiFun_downBlockColour f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.downBlockColour f f' (![k.2.2.2, k.1] 1) k.2.1 k.2.2.1 (![k.2.2.2, k.1] 0)
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_downBlockIsospin f f')).reducesInvariantsTo)
@@ -508,34 +511,35 @@ lemma reducesInvariantsTo_upYukawa (f f' : Fin 3) :
       (ℂ ∙ h.upYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.upBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         IsSU3FunAntiFun.invariantReductionToSpan
           (h.isSU3FunAntiFun_upBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [upBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.higgsSubmodule_zero_le
       (le_of_eq (h.range_baru_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.baruComponent f ![] j *
         h.isFermionSector.QComponent f' ![] k)
         = h.upBlock f f' i j.1 (![j.2, k.2.1] 0) k.1 (![j.2, k.2.1] 1) k.2.2 from by
       simp [upBlock]]
-    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
+    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (Submodule.subset_span ⟨_, rfl⟩)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.upBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.upBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2BiAntiFun.invariantReductionToSpan
           (h.isSU2BiAntiFun_upBlockColour f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.upBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_upBlockIsospin f f')).reducesInvariantsTo)
@@ -549,33 +553,34 @@ lemma reducesInvariantsTo_leptonYukawa (f f' : Fin 3) :
       (ℂ ∙ h.leptonYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.leptonBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         InvariantReductionToSpan.ofFixed (h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
           fun U => h.repGauge_su3_leptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
     rw [leptonBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.higgsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.higgsSubmodule_zero_le
       (le_of_eq (h.range_barL_eq f)) (le_of_eq (h.range_e_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.higgs ![] i * (h.isFermionSector.barLComponent f ![] j *
         h.isFermionSector.eComponent f' ![] k)
         = h.leptonBlock f f' i j.1 j.2 k from by simp [leptonBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, j.2, k) (Submodule.mem_span_singleton_self _)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.leptonBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.leptonBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2FunAntiFun.invariantReductionToSpan
           (h.isSU2FunAntiFun_leptonBlock f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_
     rw [show h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.leptonBlock f f' (![k.2.2.1, k.1] 1) k.2.1 (![k.2.2.1, k.1] 0) k.2.2.2
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_leptonBlockIsospin f f')).reducesInvariantsTo)
@@ -587,34 +592,35 @@ lemma reducesInvariantsTo_barDownYukawa (f f' : Fin 3) :
       (ℂ ∙ h.barDownYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.barDownBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         IsSU3FunAntiFun.invariantReductionToSpan
           (h.isSU3FunAntiFun_barDownBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [barDownBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.barHiggsSubmodule_zero_le
       (le_of_eq (h.range_bard_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.bardComponent f ![] j *
         h.isFermionSector.QComponent f' ![] k)
         = h.barDownBlock f f' i j.1 (![j.2, k.2.1] 0) k.1 (![j.2, k.2.1] 1) k.2.2 from by
       simp [barDownBlock]]
-    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
+    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (Submodule.subset_span ⟨_, rfl⟩)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barDownBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.barDownBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2FunAntiFun.invariantReductionToSpan
           (h.isSU2FunAntiFun_barDownBlockColour f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barDownBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_barDownBlockIsospin f f')).reducesInvariantsTo)
@@ -626,34 +632,35 @@ lemma reducesInvariantsTo_barUpYukawa (f f' : Fin 3) :
       (ℂ ∙ h.barUpYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.barUpBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         IsSU3FunAntiFun.invariantReductionToSpan
           (h.isSU3FunAntiFun_barUpBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [barUpBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.barHiggsSubmodule_zero_le
       (le_of_eq (h.range_u_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.uComponent f ![] j *
         h.isFermionSector.barQComponent f' ![] k)
         = h.barUpBlock f f' i j.1 (![k.2.1, j.2] 1) k.1 (![k.2.1, j.2] 0) k.2.2 from by
       simp [barUpBlock]]
-    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (IsSU3FunAntiFun.mem_span _)
+    exact Submodule.mem_iSup_of_mem (i, j.1, k.1, k.2.2) (Submodule.subset_span ⟨_, rfl⟩)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barUpBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.barUpBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2BiFundamental.invariantReductionToSpan
           (h.isSU2BiFundamental_barUpBlockColour f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barUpBlockColour f f' (![k.1, k.2.2.2] 0) k.2.1 k.2.2.1 (![k.1, k.2.2.2] 1)
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_barUpBlockIsospin f f')).reducesInvariantsTo)
@@ -666,34 +673,35 @@ lemma reducesInvariantsTo_barLeptonYukawa (f f' : Fin 3) :
       (ℂ ∙ h.barLeptonYukawa f f') := by
   have hcolour : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.barLeptonBlockSubmodule f f')
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
         InvariantReductionToSpan.ofFixed (h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
           fun U =>
             h.repGauge_su3_barLeptonBlock U f f' k.1 k.2.1 k.2.2.1 k.2.2.2).mono_left ?_)
     rw [barLeptonBlockSubmodule]
-    refine Submodule.mul_mul_le_of_le_iSup_span h.barHiggsSubmodule_zero_le
+    refine Submodule.mul_mul_le_of_le_span_range h.barHiggsSubmodule_zero_le
       (le_of_eq (h.range_L_eq f)) (le_of_eq (h.range_bare_eq f')) fun i j k => ?_
     rw [show h.isHiggsSector.barHiggs ![] i * (h.isFermionSector.LComponent f ![] j *
         h.isFermionSector.bareComponent f' ![] k)
         = h.barLeptonBlock f f' i j.1 j.2 k from by simp [barLeptonBlock]]
     exact Submodule.mem_iSup_of_mem (i, j.1, j.2, k) (Submodule.mem_span_singleton_self _)
   have hisospin : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
-      (⨆ k : Fin 2 × Fin 2 × Fin 2 × Fin 2,
-        ℂ ∙ h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)
-      (⨆ m : Fin 2 × Fin 2, ℂ ∙ h.barLeptonBlockIsospin f f' m.1 m.2) := by
+      (Submodule.span ℂ (Set.range fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
+        h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2))
+      (Submodule.span ℂ
+        (Set.range fun m : Fin 2 × Fin 2 => h.barLeptonBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
         IsSU2FunAntiFun.invariantReductionToSpan
           (h.isSU2FunAntiFun_barLeptonBlock f f' m.1 m.2)).mono_left ?_)
-    refine iSup_le fun k => (Submodule.span_singleton_le_iff_mem _ _).2
-      (Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_)
+    refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
+      Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_
     rw [show h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
         = h.barLeptonBlock f f' (![k.1, k.2.2.1] 0) k.2.1 (![k.1, k.2.2.1] 1) k.2.2.2
         from by simp]
-    exact IsSU2BiFundamental.mem_span _
+    exact Submodule.subset_span ⟨_, rfl⟩
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     (IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f')).reducesInvariantsTo)

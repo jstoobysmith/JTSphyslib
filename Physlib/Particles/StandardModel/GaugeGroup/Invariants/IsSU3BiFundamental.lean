@@ -62,15 +62,8 @@ structure IsSU3BiFundamental (B : Type*) [AddCommMonoid B] [Module ℂ B]
 
 namespace IsSU3BiFundamental
 
-/- `span` takes the hypothesis `hT` only to hang off it by dot notation. -/
-set_option linter.unusedVariables false
-
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B} {T : (Fin 2 → Fin 3) → B}
-
-/-- The span of the components. -/
-@[nolint unusedArguments]
-def span (hT : IsSU3BiFundamental B repGauge T) : Submodule ℂ B := ⨆ d, ℂ ∙ T d
 
 /-- The matrix by which the law acts on coefficient vectors: the Kronecker square of `U`.
   The law says `f (T l) = ∑ a, coeffMatrix U a l • T a` by definition. -/
@@ -147,7 +140,7 @@ submodule: two fundamental colour indices contribute nothing to the invariants.
   `σ`-stable submodule `S` lies in `S`. -/
 lemma reducesInvariantsTo_bot (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B)
     (hT : ∀ U, IsSU3BiFundamentalMat U (σ U) T) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ :=
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) ⊥ :=
   reducesInvariantsTo_bot_of_mulVec_eq T coeffMatrix hT (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩)
     fun _ hc => eq_zero_of_forall_mulVec_eq hc
 

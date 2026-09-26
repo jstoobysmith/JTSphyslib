@@ -121,29 +121,27 @@ lemma isFixedBy_iSup {ι : Sort*} {V : ι → Submodule R B} (hV : ∀ i, IsFixe
     (map_zero _) fun z z' hz hz' => by rw [map_add, hz, hz']
 
 /-- The span of a family of fixed vectors is pointwise fixed. -/
-lemma isFixedBy_iSup_span_singleton {ι : Sort*} {T : ι → B} (hT : ∀ i g, σ g (T i) = T i) :
-    IsFixedBy σ (⨆ i, R ∙ T i) :=
-  isFixedBy_iSup fun i => isFixedBy_span_singleton (hT i)
+lemma isFixedBy_span_range {ι : Sort*} {T : ι → B} (hT : ∀ i g, σ g (T i) = T i) :
+    IsFixedBy σ (Submodule.span R (Set.range T)) := fun g _ hy =>
+  (Submodule.span_le (p := LinearMap.eqLocus (σ g) LinearMap.id)).2
+    (Set.range_subset_iff.2 fun i => hT i g) hy
 
 /-- The span of a family is stable when each map sends each member into the span. -/
-lemma isStableUnder_iSup_span_singleton {ι : Type*} {T : ι → B}
-    (hT : ∀ g i, σ g (T i) ∈ ⨆ j, R ∙ T j) : IsStableUnder σ (⨆ i, R ∙ T i) :=
+lemma isStableUnder_span_range {ι : Sort*} {T : ι → B}
+    (hT : ∀ g i, σ g (T i) ∈ Submodule.span R (Set.range T)) :
+    IsStableUnder σ (Submodule.span R (Set.range T)) :=
   isStableUnder_iff_map.2 fun g => by
-    rw [Submodule.map_iSup]
-    exact iSup_le fun i => by
-      rw [Submodule.map_span, Set.image_singleton, Submodule.span_singleton_le_iff_mem]
-      exact hT g i
+    rw [Submodule.map_le_iff_le_comap, Submodule.span_le, Set.range_subset_iff]
+    exact hT g
 
 /-- The span of a finite family is stable when each map sends each member to a combination
   of the family. -/
-lemma isStableUnder_iSup_span_singleton_of_sum {ι : Type*} [Fintype ι] {T : ι → B}
+lemma isStableUnder_span_range_of_sum {ι : Type*} [Fintype ι] {T : ι → B}
     (hT : ∀ g i, ∃ c : ι → R, σ g (T i) = ∑ a, c a • T a) :
-    IsStableUnder σ (⨆ i, R ∙ T i) := by
-  refine isStableUnder_iSup_span_singleton fun g i => ?_
-  obtain ⟨c, hc⟩ := hT g i
-  rw [hc]
-  exact sum_mem fun a _ => Submodule.smul_mem _ _
-    (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _))
+    IsStableUnder σ (Submodule.span R (Set.range T)) :=
+  isStableUnder_span_range fun g i => by
+    obtain ⟨c, hc⟩ := hT g i
+    exact (Submodule.mem_span_range_iff_exists_fun R).2 ⟨c, hc.symm⟩
 
 /-- A product of two stable submodules of an algebra is stable under maps respecting
   multiplication. -/
@@ -246,12 +244,6 @@ every module is applied.
 
 -/
 
-/-- The image of the span of a family is the span of the images. -/
-lemma Submodule.map_iSup_span_singleton {R M M₂ ι : Type*} [Semiring R] [AddCommMonoid M]
-    [Module R M] [AddCommMonoid M₂] [Module R M₂] (f : M →ₗ[R] M₂) (T : ι → M) :
-    (⨆ i, R ∙ T i).map f = ⨆ i, R ∙ f (T i) := by
-  simp only [Submodule.map_iSup, Submodule.map_span, Set.image_singleton]
-
 section Quotient
 
 variable {R B G : Type*} [Ring R] [AddCommGroup B] [Module R B] {σ : G → B →ₗ[R] B}
@@ -349,12 +341,13 @@ lemma reducesInvariantsTo (r : InvariantReductionToSpan σ V) :
   the spanning vectors. -/
 lemma reducesInvariantsTo_iSup {κ : Type*} [Fintype κ] [DecidableEq κ]
     {V : κ → Submodule R B} (r : ∀ k, InvariantReductionToSpan σ (V k)) :
-    ReducesInvariantsTo σ (⨆ k, V k) (⨆ k, R ∙ (r k).spanningVector) :=
+    ReducesInvariantsTo σ (⨆ k, V k)
+      (Submodule.span R (Set.range fun k => (r k).spanningVector)) :=
   ReducesInvariantsTo.iSup
     (fun k => (r k).reducesInvariantsTo.mono_right
-      (le_iSup (fun k' => R ∙ (r k').spanningVector) k))
+      (Submodule.span_mono (Set.singleton_subset_iff.2 ⟨k, rfl⟩)))
     (fun k => (r k).stable)
-    (isFixedBy_iSup_span_singleton fun k => (r k).spanningVector_fixed).isStableUnder
+    (isFixedBy_span_range fun k => (r k).spanningVector_fixed).isStableUnder
 
 /-- The reduction of a stable submodule to the span of a fixed vector. -/
 def ofReducesInvariantsTo (hV : IsStableUnder σ V) (v : B) (hv : ∀ g, σ g v = v)
@@ -381,8 +374,10 @@ def ofFixed (b : B) (hb : ∀ g, σ g b = b) :
 /-- The span of a nonempty family whose members all equal one fixed vector reduces to the
   span of that vector. -/
 def ofFixedFamily {ι : Type*} [Nonempty ι] {T : ι → B} (b : B)
-    (hTb : ∀ i, T i = b) (hb : ∀ g, σ g b = b) : InvariantReductionToSpan σ (⨆ i, R ∙ T i) :=
-  have hspan : (⨆ i, R ∙ T i) = R ∙ b := by simp only [hTb, iSup_const]
+    (hTb : ∀ i, T i = b) (hb : ∀ g, σ g b = b) :
+    InvariantReductionToSpan σ (Submodule.span R (Set.range T)) :=
+  have hspan : Submodule.span R (Set.range T) = R ∙ b := by
+    rw [show T = fun _ => b from funext hTb, Set.range_const]
   { spanningVector := b
     stable := hspan ▸ (ofFixed b hb).stable
     spanningVector_fixed := hb
@@ -428,12 +423,13 @@ variable {B G ι : Type*} [AddCommGroup B] [Module ℂ B] [Fintype ι] {σ : G �
 lemma reducesInvariantsTo_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
     (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
     (E : Submodule ℂ (ι → ℂ)) (hE : ∀ c, (∀ g, M g *ᵥ c = c) → c ∈ E) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) (E.map (Fintype.linearCombination ℂ T)) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T))
+      (E.map (Fintype.linearCombination ℂ T)) := by
   refine reducesInvariantsTo_of_quotient fun S hS x hx hinv => ?_
   -- the law for the classes of the members in `B ⧸ S`
   have hTS : ∀ g l, S.mapQ S (σ g) (hS g) (S.mkQ (T l)) = ∑ a, M g a l • S.mkQ (T a) :=
     fun g l => S.mapQ_mkQ_eq_sum_smul (hS g) (hT g l)
-  rw [Submodule.map_iSup_span_singleton] at hx
+  rw [Submodule.map_span_range] at hx
   obtain ⟨c, rfl, hc⟩ := Fintype.exists_mulVec_eq_of_conjTranspose_mem (fun i => S.mkQ (T i))
     (fun g => S.mapQ S (σ g) (hS g)) M hTS hM hx hinv
   refine ⟨Fintype.linearCombination ℂ T c, ⟨c, hE c hc, rfl⟩, ?_⟩
@@ -444,7 +440,7 @@ lemma reducesInvariantsTo_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι �
 lemma reducesInvariantsTo_bot_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
     (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
     (hE : ∀ c, (∀ g, M g *ᵥ c = c) → c = 0) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) ⊥ := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) ⊥ := by
   simpa using reducesInvariantsTo_of_mulVec_eq T M hT hM ⊥ fun c hc =>
     (Submodule.mem_bot ℂ).2 (hE c hc)
 
@@ -453,7 +449,7 @@ lemma reducesInvariantsTo_bot_of_mulVec_eq (T : ι → B) (M : G → Matrix ι �
 lemma reducesInvariantsTo_span_singleton_of_mulVec_eq (T : ι → B) (M : G → Matrix ι ι ℂ)
     (hT : ∀ g l, σ g (T l) = ∑ a, M g a l • T a) (hM : ∀ g, ∃ g', M g' = (M g)ᴴ)
     (e : ι → ℂ) (hE : ∀ c, (∀ g, M g *ᵥ c = c) → ∃ z : ℂ, c = z • e) :
-    ReducesInvariantsTo σ (⨆ i, ℂ ∙ T i) (ℂ ∙ ∑ i, e i • T i) := by
+    ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ ∑ i, e i • T i) := by
   have h := reducesInvariantsTo_of_mulVec_eq T M hT hM (ℂ ∙ e) fun c hc => by
     obtain ⟨z, rfl⟩ := hE c hc
     exact Submodule.smul_mem _ z (Submodule.mem_span_singleton_self e)

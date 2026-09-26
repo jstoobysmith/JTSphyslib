@@ -235,7 +235,8 @@ lemma mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span {ι : Type} [Decidab
               (Submodule.mem_iSup_of_mem hi (isDualLeftRightWeyl_span_stable (hT i) g hz))))
           fun z hz => Submodule.mem_sup_right (hS g z hz)
       exact key hy
-    exact ih ((hT a).mem_of_invariant_of_mem_sup _ hstab hx hinv) hinv
+    exact ih ((hT a).mem_of_invariant_of_mem_sup _ hstab
+      (by rwa [Submodule.span_range_eq_iSup]) hinv) hinv
 
 /-- The version of `mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span` joining over a
   whole finite index type. -/

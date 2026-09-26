@@ -31,14 +31,15 @@ Each file follows the same four steps.
 4. The reduction modulo a stable remainder, `reducesInvariantsTo_of_mulVec_eq` and its forms
    in `Physlib.Mathematics.InvariantReduction`, which apply step 3 in every quotient `B ⧸ S`.
 
+The span of the components is Mathlib's `Submodule.span ℂ (Set.range T)`.
 The conclusions are spanning statements: an invariant is a combination of the named
 contractions. Nothing here shows that the contractions are nonzero or independent.
 
-This file holds what the families share: the span, the matrices of laws with one factor per
-index (`powMatrix`, `pairMatrix`), and the Kronecker delta on two indices, which is fixed by a
-pair of matrices whose rows are orthonormal against each other.
+This file holds what the families share: sums over pairs of indices, the matrices of laws with
+one factor per index (`powMatrix`, `pairMatrix`), and the Kronecker delta on two indices, which
+is fixed by a pair of matrices whose rows are orthonormal against each other.
 
-- A. The span of a family
+- A. Sums over pairs of indices
 - B. Matrices of tensor laws
 - C. The Kronecker delta on two indices
 -/
@@ -49,25 +50,13 @@ namespace StandardModel
 
 namespace Family
 
-variable {B : Type*} [AddCommGroup B] [Module ℂ B] {ι : Type*} [Fintype ι]
+variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-!
 
-## A. The span of a family
+## A. Sums over pairs of indices
 
 -/
-
-/-- A vector lies in the span of the components precisely when it is a linear combination
-  of them. -/
-lemma mem_iSup_span_singleton_iff (T : ι → B) (x : B) :
-    x ∈ (⨆ i, ℂ ∙ T i) ↔ ∃ c : ι → ℂ, x = ∑ i, c i • T i := by
-  rw [← Submodule.span_range_eq_iSup, Submodule.mem_span_range_iff_exists_fun]
-  exact exists_congr fun _ => eq_comm
-
-omit [Fintype ι] in
-/-- Every component lies in the span. -/
-lemma mem_iSup_span_singleton (T : ι → B) (i : ι) : T i ∈ ⨆ i, ℂ ∙ T i :=
-  Submodule.mem_iSup_of_mem i (Submodule.mem_span_singleton_self _)
 
 /-- A sum over pairs of indices is a double sum. -/
 lemma sum_pi_two {n : ℕ} {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin n) → M) :

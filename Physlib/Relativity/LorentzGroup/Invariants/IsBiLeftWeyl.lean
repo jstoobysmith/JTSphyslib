@@ -24,15 +24,15 @@ invariant.
 
 The components are vectors `T a` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, and `IsBiLeftWeyl` says the group moves each index by the matrix
-of `g` (A). An invariant of `componentSpan T` is `∑_a c_a • T a` for a coefficient function `c`
-fixed by the action `act` (A, from `Invariants.Basic`), where `g` moves `c` by the component
-matrix `g_{a₁ d₁} g_{a₂ d₂}`, with no complex conjugation. Two elements of `SL(2,ℂ)` pin `c`
-down (C). The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²` and `c (1, 1)` by
-`t⁻²`, so these vanish. The half turn `!![0, -i; -i, 0]` about `x` swaps the two values of each
-index with a factor `-i`, so it sends `c (a₁, a₂)` to `(-i)² c (1 - a₁, 1 - a₂)`, and invariance
-gives `c (1, 0) = -c (0, 1)`. What is left is `c (0, 1)` times the `ε` symbol (B). Invariance
-under the whole group implies invariance under these two elements; nothing is claimed about
-the group they generate. Section D divides out `S`.
+of `g` (A). An invariant of `Submodule.span ℂ (Set.range T)` is `∑_a c_a • T a` for a
+coefficient function `c` fixed by the action `act` (A, from `Invariants.Basic`), where `g` moves
+`c` by the component matrix `g_{a₁ d₁} g_{a₂ d₂}`, with no complex conjugation. Two elements
+of `SL(2,ℂ)` pin `c` down (C). The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²`
+and `c (1, 1)` by `t⁻²`, so these vanish. The half turn `!![0, -i; -i, 0]` about `x` swaps the
+two values of each index with a factor `-i`, so it sends `c (a₁, a₂)` to
+`(-i)² c (1 - a₁, 1 - a₂)`, and invariance gives `c (1, 0) = -c (0, 1)`. What is left is
+`c (0, 1)` times the `ε` symbol (B). Invariance under the whole group implies invariance under
+these two elements; nothing is claimed about the group they generate. Section D divides out `S`.
 
 Sections E and F transport the classification to dual Weyl indices, which transform by
 `(g⁻¹)ᵀ` on an undotted slot and by `(g⁻¹)ᴴ` on a dotted one. The symplectic form `ε` of
@@ -82,7 +82,7 @@ def IsInvariantCoeff (c : Fin 2 × Fin 2 → ℂ) : Prop := ∀ g : SL(2,ℂ), a
 include hT in
 /-- An invariant of the span is the contraction of an invariant coefficient function: the
   adjoint of the action of `g` is the action of `g†`. -/
-lemma exists_isInvariantCoeff_of_mem_componentSpan {x : B} (hx : x ∈ componentSpan T)
+lemma exists_isInvariantCoeff_of_mem_span_range {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ c : Fin 2 × Fin 2 → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
   obtain ⟨c, hc, hx'⟩ := Invariants.exists_invariantCoeff_matrix T (fun g => repLorentz g)
@@ -188,10 +188,11 @@ lemma IsInvariantCoeff.eq_smul_epsZ {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvaria
 include hT in
 /-- The classification of the Lorentz invariants: every element of the span of the
   components fixed by the Lorentz group is a scalar multiple of the `ε` contraction. -/
-theorem exists_smul_epsilonContraction_of_invariant {x : B} (hx : x ∈ componentSpan T)
+theorem exists_smul_epsilonContraction_of_invariant {x : B}
+    (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • epsilonContraction (T := T) := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_componentSpan hx hinv
+  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
   refine ⟨c (0, 1), ?_⟩
   rw [epsilonContraction, Finset.smul_sum]
   exact Finset.sum_congr rfl fun a _ => by rw [smul_smul, ← hc.eq_smul_epsZ a]
@@ -230,14 +231,14 @@ include hT in
   error in `S`. -/
 lemma exists_smul_epsilonContraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • epsilonContraction (T := T) + y := by
   obtain ⟨a, y, hy, rfl, -⟩ := IsStableUnder.exists_smul_add_of_quotient
     (σ := fun g : SL(2,ℂ) => repLorentz g) hS hT.repLorentz_epsilonContraction
     (fun z hz hzinv => by
       rw [mkQ_epsilonContraction]
       exact (hT.isBiLeftWeyl_quotient S hS).exists_smul_epsilonContraction_of_invariant
-        ((Submodule.map_iSup_span_singleton S.mkQ T).le hz) hzinv) hx hinv
+        ((Submodule.map_span_range S.mkQ T).le hz) hzinv) hx hinv
   exact ⟨a, y, hy, rfl⟩
 
 end IsBiLeftWeyl
@@ -395,12 +396,14 @@ lemma epsilonContraction_epsReindex :
   abel
 
 /-- The re-index does not change the span of the components. -/
-lemma componentSpan_epsReindex : componentSpan (epsReindex T) = componentSpan T := by
-  refine le_antisymm ((componentSpan_le_iff _ _).2 fun d => sum_smul_mem_componentSpan T _)
-    ((componentSpan_le_iff _ _).2 fun d => ?_)
+lemma span_range_epsReindex :
+    Submodule.span ℂ (Set.range (epsReindex T)) = Submodule.span ℂ (Set.range T) := by
+  refine Submodule.span_eq_span
+    (Set.range_subset_iff.2 fun d => (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩)
+    (Set.range_subset_iff.2 fun d => ?_)
   have h : T d = epsReindex (epsReindex T) d := by rw [epsReindex_epsReindex]
   rw [h]
-  exact sum_smul_mem_componentSpan (epsReindex T) _
+  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 end Reindex
 
@@ -497,28 +500,28 @@ lemma IsBiDualRightWeyl.repLorentz_epsilonContraction
 /-- For the undotted dual law, every Lorentz invariant of the span is a multiple of the `ε`
   contraction of that family. -/
 theorem IsBiDualLeftWeyl.exists_smul_epsilonContraction_of_invariant
-    (hT : IsBiDualLeftWeyl B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+    (hT : IsBiDualLeftWeyl B repLorentz T) {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • IsBiLeftWeyl.epsilonContraction (T := T) := by
   obtain ⟨a, ha⟩ := hT.isBiLeftWeyl_epsReindex.exists_smul_epsilonContraction_of_invariant
-    (by rwa [componentSpan_epsReindex]) hinv
+    (by rwa [span_range_epsReindex]) hinv
   exact ⟨a, by rwa [epsilonContraction_epsReindex] at ha⟩
 
 /-- The same modulo a Lorentz-stable submodule `S`. -/
 theorem IsBiDualLeftWeyl.exists_smul_epsilonContraction_of_invariant_subset
     (hT : IsBiDualLeftWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • IsBiLeftWeyl.epsilonContraction (T := T) + y := by
   obtain ⟨a, y, hy, ha⟩ :=
     hT.isBiLeftWeyl_epsReindex.exists_smul_epsilonContraction_of_invariant_subset S hS
-      (by rwa [componentSpan_epsReindex]) hinv
+      (by rwa [span_range_epsReindex]) hinv
   exact ⟨a, y, hy, by rwa [epsilonContraction_epsReindex] at ha⟩
 
 /-- For the dotted dual law, every Lorentz invariant of the span is a multiple of the `ε`
   contraction of that family. -/
 theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant
-    (hT : IsBiDualRightWeyl B repLorentz T) {x : B} (hx : x ∈ componentSpan T)
+    (hT : IsBiDualRightWeyl B repLorentz T) {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, x = a • IsBiLeftWeyl.epsilonContraction (T := T) :=
   hT.isBiDualLeftWeyl_comp.exists_smul_epsilonContraction_of_invariant hx
@@ -528,7 +531,7 @@ theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant
 theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant_subset
     (hT : IsBiDualRightWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ componentSpan T ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • IsBiLeftWeyl.epsilonContraction (T := T) + y :=
   hT.isBiDualLeftWeyl_comp.exists_smul_epsilonContraction_of_invariant_subset S
     (fun g y hy => hS (SL2C.conjHom g) y hy) hx fun g => hinv (SL2C.conjHom g)
@@ -537,9 +540,10 @@ theorem IsBiDualRightWeyl.exists_smul_epsilonContraction_of_invariant_subset
   of the `ε` contraction. -/
 noncomputable def IsBiDualLeftWeyl.invariantReductionToSpan
     (hT : IsBiDualLeftWeyl B repLorentz T) :
-    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ l, ℂ ∙ T l) where
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g)
+      (Submodule.span ℂ (Set.range T)) where
   spanningVector := IsBiLeftWeyl.epsilonContraction (T := T)
-  stable := isStableUnder_iSup_span_singleton_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
+  stable := isStableUnder_span_range_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
   spanningVector_fixed := hT.repLorentz_epsilonContraction
   reduce S hS _ hx hinv := hT.exists_smul_epsilonContraction_of_invariant_subset S hS hx hinv
 
@@ -547,9 +551,10 @@ noncomputable def IsBiDualLeftWeyl.invariantReductionToSpan
   of the `ε` contraction. -/
 noncomputable def IsBiDualRightWeyl.invariantReductionToSpan
     (hT : IsBiDualRightWeyl B repLorentz T) :
-    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (⨆ l, ℂ ∙ T l) where
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g)
+      (Submodule.span ℂ (Set.range T)) where
   spanningVector := IsBiLeftWeyl.epsilonContraction (T := T)
-  stable := isStableUnder_iSup_span_singleton_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
+  stable := isStableUnder_span_range_of_sum fun g l => ⟨_, hT.repLorentz_T g l⟩
   spanningVector_fixed := hT.repLorentz_epsilonContraction
   reduce S hS _ hx hinv := hT.exists_smul_epsilonContraction_of_invariant_subset S hS hx hinv
 
