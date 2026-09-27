@@ -33,8 +33,9 @@ the Standard-Model span of that weight by `reducesInvariantsTo_massWeightSubmodu
 zero reduces to itself, and the join of the nine is a reduction of the filtration. No independence
 of the sectors, and none of the weights, is used anywhere.
 
-The answer at bound eight is the whole of the Standard Model below and at mass dimension
-four: the constant term, the Higgs mass term `H† H`, and the dimension-four Lagrangian.
+The answer at bound eight is spanned by the constant term, the Higgs mass term `H† H`, and
+the dimension-four span of `Invariants.lean`, with the same scope: formal expressions,
+spanning generators, and no quotient by total derivatives or the equations of motion.
 
 - A. The mass-weight filtration
 - B. The constant term at weight zero
@@ -255,6 +256,25 @@ lemma reducesInvariantsTo_massWeightSubmoduleLE {w : ℕ} (hw : w ≤ 8) :
 
 -/
 
+/-- The classification of the Standard Model up to mass weight `w ≤ 8` as an equivalence,
+  in the shape every sector uses: an element of `massWeightSubmoduleLE w ⊔ S`, with `S`
+  stable under both groups, is fixed by both groups exactly when it is a combination of
+  the constant term and the Standard-Model terms of weight at most `w`, up to a remainder
+  in `S` fixed by both groups. -/
+theorem mem_massWeightSubmoduleLE_sup_and_gauge_lorentz_invariant_iff (w : ℕ) (hw : w ≤ 8)
+    (S : Submodule ℂ B)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
+    (x ∈ h.massWeightSubmoduleLE w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
+        ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
+          ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
+          ∧ x - y ∈ h.standardModelSpanLE w :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff
+    (h.reducesInvariantsTo_massWeightSubmoduleLE hw)
+    (h.standardModelSpanLE_le_massWeightSubmoduleLE w) (h.isFixedBy_standardModelSpanLE w) hS
+    hSL x
+
 /-- The gauge and Lorentz invariants of mass weight at most `w`, for `w ≤ 8`, modulo a
   submodule `S` stable under both groups: such an invariant is a combination of the
   constant term and the Standard-Model terms of weight at most `w`, plus a remainder in
@@ -269,48 +289,9 @@ theorem exists_mem_standardModelSpanLE_of_gauge_and_lorentz_invariant (w : ℕ) 
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
       ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.standardModelSpanLE w := by
-  obtain ⟨z, hz, y, hy, rfl⟩ := Submodule.mem_sup.1
-    (h.reducesInvariantsTo_massWeightSubmoduleLE hw S
-      (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x hx
-      (forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hG, hL⟩))
-  refine ⟨y, hy, fun g => ?_, fun g => ?_, by simpa using hz⟩
-  · have hstep := hG g
-    rw [map_add, h.repGauge_of_mem_standardModelSpanLE w g hz, add_right_inj] at hstep
-    exact hstep
-  · have hstep := hL g
-    rw [map_add, h.repLorentz_of_mem_standardModelSpanLE w g hz, add_right_inj] at hstep
-    exact hstep
-
-/-- The classification of the Standard Model up to mass weight `w ≤ 8` as an equivalence,
-  in the shape every sector uses: an element of `massWeightSubmoduleLE w ⊔ S`, with `S`
-  stable under both groups, is fixed by both groups exactly when it is a combination of
-  the constant term and the Standard-Model terms of weight at most `w`, up to a remainder
-  in `S` fixed by both groups. -/
-theorem mem_massWeightSubmoduleLE_sup_and_gauge_lorentz_invariant_iff (w : ℕ) (hw : w ≤ 8)
-    (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
-    (x ∈ h.massWeightSubmoduleLE w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
-        ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
-      ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-          ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.standardModelSpanLE w := by
-  refine ⟨fun hx => h.exists_mem_standardModelSpanLE_of_gauge_and_lorentz_invariant w hw
-    S hS hSL hx.1 hx.2.1 hx.2.2, ?_⟩
-  rintro ⟨y, hyS, hyG, hyL, hxy⟩
-  refine ⟨?_, fun g => ?_, fun g => ?_⟩
-  · have hsum : x - y + y ∈ h.massWeightSubmoduleLE w ⊔ S :=
-      Submodule.add_mem _
-        (Submodule.mem_sup_left (h.standardModelSpanLE_le_massWeightSubmoduleLE w hxy))
-        (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · have hstep : repGauge g (x - y + y) = x - y + y := by
-      rw [map_add, h.repGauge_of_mem_standardModelSpanLE w g hxy, hyG g]
-    simpa using hstep
-  · have hstep : repLorentz g (x - y + y) = x - y + y := by
-      rw [map_add, h.repLorentz_of_mem_standardModelSpanLE w g hxy, hyL g]
-    simpa using hstep
+      ∧ x - y ∈ h.standardModelSpanLE w :=
+  (h.mem_massWeightSubmoduleLE_sup_and_gauge_lorentz_invariant_iff w hw S hS hSL x).1
+    ⟨hx, hG, hL⟩
 
 /-- The same classification without the existential: at every bound up to eight an element
   of `massWeightSubmoduleLE w ⊔ S` fixed by both groups is an element of the span of the
@@ -322,17 +303,12 @@ theorem mem_massWeightSubmoduleLE_sup_and_gauge_lorentz_invariant_iff_mem (w : �
     (x ∈ h.massWeightSubmoduleLE w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ (x ∈ h.standardModelSpanLE w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
-          ∧ ∀ g : SL(2,ℂ), repLorentz g x = x) := by
-  constructor
-  · rintro ⟨hxm, hG, hL⟩
-    obtain ⟨y, hyS, -, -, hxy⟩ :=
-      h.exists_mem_standardModelSpanLE_of_gauge_and_lorentz_invariant w hw S hS hSL hxm hG hL
-    refine ⟨?_, hG, hL⟩
-    have hsum : x - y + y ∈ h.standardModelSpanLE w ⊔ S :=
-      Submodule.add_mem _ (Submodule.mem_sup_left hxy) (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · rintro ⟨hxm, hG, hL⟩
-    exact ⟨sup_le_sup_right (h.standardModelSpanLE_le_massWeightSubmoduleLE w) S hxm, hG, hL⟩
+          ∧ ∀ g : SL(2,ℂ), repLorentz g x = x) :=
+  ⟨fun hx => ⟨h.reducesInvariantsTo_massWeightSubmoduleLE hw S
+      (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x hx.1
+      (forall_gaugeLorentzMaps_eq_self_iff.2 hx.2), hx.2⟩,
+    fun hx => ⟨sup_le_sup_right (h.standardModelSpanLE_le_massWeightSubmoduleLE w) S hx.1,
+      hx.2⟩⟩
 
 /-!
 
@@ -369,13 +345,15 @@ theorem mem_massWeightSubmoduleLE_eight_sup_and_gauge_lorentz_invariant_iff_mem
   the gauge group and the Lorentz group exactly when it is a combination of
   the constant term, of mass dimension zero,
   the Higgs mass term `H† H`, of mass dimension two (`HiggsAlgebraCovRealization.dotSpan`),
-  and the Standard-Model Lagrangian of mass dimension four — the gauge kinetic and theta
-  terms of the three gauge groups (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs
+  and the dimension-four span — the four Lorentz contractions of the three `F·F` trace
+  families and of the twice-derived hypercharge field strength, among them the gauge
+  kinetic and theta terms (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs
   kinetic term, its quartic potential and its two box terms
   (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`), the kinetic terms of the ten fermion
   species over the nine family pairs (`IsFermionSector.kineticSpan`), and the six Yukawa
   couplings over the nine family pairs (`yukawaSpan`) —
-  up to a remainder in `S` fixed by both groups, and nothing else. -/
+  up to a remainder in `S` fixed by both groups, and nothing else. The generators span;
+  they are not shown to be independent, and no quotient by total derivatives is taken. -/
 theorem mem_massWeightSubmoduleLE_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :

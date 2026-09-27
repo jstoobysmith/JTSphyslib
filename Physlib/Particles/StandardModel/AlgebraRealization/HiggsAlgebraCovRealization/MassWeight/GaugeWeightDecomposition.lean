@@ -44,12 +44,12 @@ factors antisymmetrically.
 - D. The weight-zero pieces of the mass-weight submodules
 - E. The gauge sieve
 - F. The Higgs symbols as isospin families
-- G. Peeling the gauge invariants off a stable submodule
+- G. The isospin spans reduce to the isospin contractions
 - H. The gauge classification up to mass weight eight
 - I. The gauge-invariant submodules up to mass weight eight
 
-Everything from section G on is stated modulo a submodule `S` stable under the gauge
-group, which is what lets the other sectors be carried along; taking `S` trivial in
+Sections G and H are reductions for the gauge group, stated modulo any gauge-stable
+submodule `S`, which is what lets the other sectors be carried along; taking `S` trivial in
 section I recovers the statements about the mass-weight submodules themselves.
 
 -/
@@ -755,72 +755,22 @@ end Quartic
 
 /-!
 
-## G. Peeling the gauge invariants off a stable submodule
+## G. The isospin spans reduce to the isospin contractions
 
 The classification is wanted not for the mass-weight submodule alone but modulo a
-submodule `S` gathering the other sectors, so every step has to run for `x` in
-`M ⊔ S` rather than `x` in `M`.  Two things are needed for that.
+submodule `S` gathering the other sectors, so every step is a reduction in the sense of
+`ReducesInvariantsTo`: a gauge invariant of `V ⊔ S`, for `S` gauge stable, lies in `W ⊔ S`.
 
-The first is that a gauge invariant of `V ⊔ S` still lies in the weight-zero piece of `V`
-joined with `S`.  The weight-eight part of such an element need not itself be invariant, so
-nothing places it in the weight-zero piece directly; what does is that every non-zero
-weight is seen by one of the four torus generators, which scales that part and fixes
-nothing else, so the part can be removed one weight at a time.
-
-The second is the peeling itself.  The weight-zero piece is a finite join of isospin family
-spans, and `IsSU2FundamentalAntiFundamental.exists_smul_add_of_gauge_invariant` removes one
-span at a time, each time with the spans not yet removed adjoined to `S`.  That is why the
-spans have to be gauge stable, which is `isoFamily_span_stable`, and why the enlargement is
-`isoSpan` rather than the pairing span of section C: the pairing span keeps only the diagonal
-components and a gauge transformation does not.
+The weight-zero pieces of section D are joins of spans of isospin families.
+`IsSU2FundamentalAntiFundamental.reducesInvariantsTo_span_deltaContraction` reduces each
+span, for the isospin factor and hence for the gauge group, to the line through its delta
+contraction, and `ReducesInvariantsTo.iSup` joins the families. The join asks each span to
+be gauge stable, which is `isoFamily_span_stable` and is why the enlargement is `isoSpan`
+rather than the pairing span of section C: the pairing span keeps only the diagonal
+components and a gauge transformation does not. It asks the target to be gauge stable too,
+and the isospin contractions are gauge invariant.
 
 -/
-
-/-- Peeling a finite join of the spans of families with one fundamental and one
-  anti-fundamental isospin index off a gauge-stable submodule: a gauge invariant of the
-  join together with `S` is a combination of the delta contractions of the families plus a
-  gauge-invariant remainder in `S`. -/
-lemma exists_mem_of_invariant_biSup_isSU2FundamentalAntiFundamental_span {ι : Type} [DecidableEq ι]
-    {T : ι → (Fin 2 → Fin 2) → B} (hT : ∀ i, IsSU2FundamentalAntiFundamental B rep (T i))
-    (hstab : ∀ (i : ι) (g : GaugeGroupI), ∀ y ∈ Submodule.span ℂ (Set.range (T i)),
-      rep g y ∈ Submodule.span ℂ (Set.range (T i)))
-    (hdc : ∀ (i : ι) (g : GaugeGroupI),
-      rep g (IsSU2FundamentalAntiFundamental.deltaContraction (T i))
-        = IsSU2FundamentalAntiFundamental.deltaContraction (T i))
-    (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) (s : Finset ι)
-    {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ ⨆ i ∈ s, ℂ ∙ IsSU2FundamentalAntiFundamental.deltaContraction (T i) := by
-  induction s using Finset.induction_on generalizing x with
-  | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
-      bot_sup_eq] at hx
-    exact ⟨x, hx, hinv, by simp⟩
-  | insert a s ha ih =>
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab' : ∀ g : GaugeGroupI,
-        ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
-        rep g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
-      intro g y hy
-      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
-          ≤ Submodule.comap (rep g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
-        sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
-            Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi (hstab i g z hz))))
-          fun z hz => Submodule.mem_sup_right (hS g z hz)
-      exact key hy
-    obtain ⟨c, y', hy', hxy', hy'inv⟩ :=
-      (hT a).exists_smul_add_of_gauge_invariant x _ hstab' (hdc a) hx hinv
-    obtain ⟨y, hyS, hyinv, hy'y⟩ := ih hy' hy'inv
-    refine ⟨y, hyS, hyinv, ?_⟩
-    rw [Finset.iSup_insert,
-      show x - y = c • IsSU2FundamentalAntiFundamental.deltaContraction (T a) + (y' - y) from by
-        rw [hxy']; abel]
-    exact Submodule.add_mem _
-      (Submodule.mem_sup_left (Submodule.smul_mem _ _
-        (Submodule.mem_span_singleton_self _)))
-      (Submodule.mem_sup_right hy'y)
 
 /-- The span of the components of all the isospin families of a Higgs tower carrying `n`
   derivatives against a conjugate tower carrying `m`.  This is the gauge-stable
@@ -832,13 +782,17 @@ noncomputable def isoSpan (h : HiggsAlgebraCovRealization B rep repLorentz massW
 
 include h in
 /-- The isospin span is stable under the gauge group. -/
-lemma isoSpan_stable (n m : ℕ) (g : GaugeGroupI) {y : B} (hy : y ∈ h.isoSpan n m) :
-    rep g y ∈ h.isoSpan n m := by
-  have key : h.isoSpan n m ≤ Submodule.comap (rep g) (h.isoSpan n m) :=
-    iSup_le fun d => iSup_le fun d' => fun z hz =>
-      Submodule.mem_iSup_of_mem d (Submodule.mem_iSup_of_mem d'
-        (h.isoFamily_span_stable d d' g hz))
-  exact key hy
+lemma isStableUnder_isoSpan (n m : ℕ) :
+    IsStableUnder (fun g : GaugeGroupI => rep g) (h.isoSpan n m) :=
+  isStableUnder_iSup fun d => isStableUnder_iSup fun d' g _ hy =>
+    h.isoFamily_span_stable d d' g hy
+
+include h in
+/-- The span of the isospin contractions is fixed pointwise by the gauge group. -/
+lemma isFixedBy_dotSpan (n m : ℕ) :
+    IsFixedBy (fun g : GaugeGroupI => rep g) (h.dotSpan n m) :=
+  isFixedBy_iSup fun d => isFixedBy_iSup fun d' =>
+    isFixedBy_span_singleton fun g => h.rep_dotGaugeHiggs_invariant g d d'
 
 /-- Each isospin-diagonal pairing span of section C sits inside the isospin span. -/
 lemma higgsBarHiggsSpan_le_isoSpan' (n m : ℕ) (i : Fin 2) :
@@ -856,195 +810,125 @@ lemma higgsBarHiggsSpan_le_isoSpan (n m : ℕ) :
   h.higgsBarHiggsSpan_le_isoFamily_span n m
 
 include h in
-/-- A gauge invariant of the isospin span together with a gauge-stable submodule is a
-  combination of the isospin contractions plus a gauge-invariant remainder in `S`. -/
-lemma exists_mem_of_invariant_isoSpan_sup (n m : ℕ) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) {x : B} (hx : x ∈ h.isoSpan n m ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y) ∧ x - y ∈ h.dotSpan n m := by
-  obtain ⟨y, hyS, hyinv, hxy⟩ :=
-    exists_mem_of_invariant_biSup_isSU2FundamentalAntiFundamental_span
-      (T := fun p : (Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)) =>
-        h.isoFamily p.1 p.2)
-      (fun p => h.isSU2FundamentalAntiFundamental_isoFamily p.1 p.2)
-      (fun p g _ hy => h.isoFamily_span_stable p.1 p.2 g hy)
-      (fun p g => by
-        rw [h.deltaContraction_isoFamily p.1 p.2, h.rep_dotGaugeHiggs_invariant])
-      S hS Finset.univ (by
-        rw [show (⨆ p ∈ (Finset.univ :
-            Finset ((Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)))),
-              Submodule.span ℂ (Set.range (h.isoFamily p.1 p.2)))
-            = h.isoSpan n m from by
-          rw [isoSpan]
-          simp only [Finset.mem_univ, iSup_pos]
-          exact iSup_prod]
-        exact hx) hinv
-  refine ⟨y, hyS, hyinv, ?_⟩
-  rw [show h.dotSpan n m = ⨆ p ∈ (Finset.univ :
-      Finset ((Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)))),
-        ℂ ∙ IsSU2FundamentalAntiFundamental.deltaContraction (h.isoFamily p.1 p.2) from by
-    simp only [Finset.mem_univ, iSup_pos, h.deltaContraction_isoFamily]
-    rw [dotSpan, iSup_prod]]
-  exact hxy
+/-- The isospin span reduces, for the gauge group, to the span of the isospin contractions:
+  each family's span reduces to the line through its delta contraction, which is the
+  isospin contraction of the two towers. -/
+lemma reducesInvariantsTo_isoSpan (n m : ℕ) :
+    ReducesInvariantsTo (fun g : GaugeGroupI => rep g) (h.isoSpan n m) (h.dotSpan n m) := by
+  classical
+  have hW := (h.isFixedBy_dotSpan n m).isStableUnder
+  have hV : ∀ (d : Fin n → (Fin 1 ⊕ Fin 3)) (d' : Fin m → (Fin 1 ⊕ Fin 3)),
+      IsStableUnder (fun g : GaugeGroupI => rep g)
+        (Submodule.span ℂ (Set.range (h.isoFamily d d'))) :=
+    fun d d' g _ hy => h.isoFamily_span_stable d d' g hy
+  rw [isoSpan]
+  refine ReducesInvariantsTo.iSup (fun d => ReducesInvariantsTo.iSup (fun d' => ?_) (hV d) hW)
+    (fun d => isStableUnder_iSup (hV d)) hW
+  refine ((IsSU2FundamentalAntiFundamental.reducesInvariantsTo_span_deltaContraction _
+    (h.isSU2FundamentalAntiFundamental_isoFamily d d').repGauge_T).comp
+      (σ := fun g : GaugeGroupI => rep g) (fun V => (1, V, 1))).mono_right ?_
+  rw [h.deltaContraction_isoFamily]
+  exact le_iSup₂_of_le d d' le_rfl
 
 /-!
 
 ## H. The gauge classification up to mass weight eight
 
-Section G is now run at each weight in turn.  Weight two dies outright, its weight-zero
-piece being trivial: a single Higgs symbol carries hypercharge.  Weights four and six are
-joins of isospin spans and nothing else, so peeling leaves the isospin contractions of the
-towers occurring at that weight — the Higgs mass term at weight four, and its once-derived
-companions at weight six.
+Section G is now run at each weight in turn, after the torus has put a gauge invariant in
+the weight-zero piece (`GaugeWeightDecomposition.reducesInvariantsTo_piece_zero`). Weight
+two dies outright, its weight-zero piece being trivial: a single Higgs symbol carries
+hypercharge. Weights four and six are joins of isospin spans and nothing else, so what is
+left are the isospin contractions of the towers occurring at that weight: the Higgs mass
+term at weight four, and its once-derived companions at weight six.
 
-Weight eight adds the quartic.  It is peeled off first, so that the isospin spans not yet
-touched can serve as the stable submodule and no stability of the quartic span is needed;
-what it leaves is a multiple of the square of the underived isospin contraction, the
-second contraction of the quartic family being zero.  The three isospin spans then peel off
-one after another exactly as at the lower weights.
+Weight eight adds the quartic. `IsSU2QuadFundamental` reduces its span to the two epsilon
+contractions, the first the square of the underived isospin contraction and the second
+zero. The quartic span is joined with the three isospin spans by `ReducesInvariantsTo.sup`,
+which asks stability of the isospin spans only, not of the quartic span.
 
 -/
 
-/-- A join of two gauge-stable submodules is gauge stable. -/
-lemma stable_sup {S₁ S₂ : Submodule ℂ B}
-    (h₁ : ∀ g : GaugeGroupI, ∀ y ∈ S₁, rep g y ∈ S₁)
-    (h₂ : ∀ g : GaugeGroupI, ∀ y ∈ S₂, rep g y ∈ S₂) :
-    ∀ g : GaugeGroupI, ∀ y ∈ S₁ ⊔ S₂, rep g y ∈ S₁ ⊔ S₂ := by
-  intro g y hy
-  have key : (S₁ ⊔ S₂) ≤ Submodule.comap (rep g) (S₁ ⊔ S₂) :=
-    sup_le (fun z hz => Submodule.mem_sup_left (h₁ g z hz))
-      (fun z hz => Submodule.mem_sup_right (h₂ g z hz))
-  exact key hy
+include h in
+/-- Mass weight two reduces to `⊥` for the gauge group: a single Higgs symbol carries
+  hypercharge, so the weight-zero piece is trivial. -/
+lemma reducesInvariantsTo_massWeightSubmodule_two :
+    ReducesInvariantsTo (fun g : GaugeGroupI => rep g) (h.massWeightSubmodule 2) ⊥ := by
+  have h0 := ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => rep g) gaugeTorusGen
+    h.massWeightSubmoduleGaugeWeightTwo.reducesInvariantsTo_piece_zero
+  rwa [h.massWeightSubmoduleGaugeWeightTwo_piece_zero] at h0
 
 include h in
-/-- Mass weight two carries no gauge invariant modulo a gauge-stable submodule: a single
-  Higgs symbol carries hypercharge, so the weight-zero piece is trivial. -/
-theorem mem_of_invariant_massWeightSubmodule_two_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 2 ⊔ S) (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    x ∈ S := by
-  have hmem := GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
-    h.massWeightSubmoduleGaugeWeightTwo
-    (fun i y hy => hS (gaugeTorusGen i) y hy) hx hinv
-  rwa [h.massWeightSubmoduleGaugeWeightTwo_piece_zero, bot_sup_eq] at hmem
+/-- Mass weight four reduces, for the gauge group, to the underived isospin contraction,
+  the Higgs mass term. -/
+lemma reducesInvariantsTo_massWeightSubmodule_four :
+    ReducesInvariantsTo (fun g : GaugeGroupI => rep g) (h.massWeightSubmodule 4)
+      (h.dotSpan 0 0) :=
+  (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => rep g) gaugeTorusGen
+    h.massWeightSubmoduleGaugeWeightFour.reducesInvariantsTo_piece_zero).trans
+    ((h.reducesInvariantsTo_isoSpan 0 0).mono_left
+      (h.massWeightSubmoduleGaugeWeightFour_piece_zero.le.trans
+        (h.higgsBarHiggsSpan_le_isoSpan 0 0)))
 
 include h in
-/-- Mass weight four modulo a gauge-stable submodule: a gauge invariant is a multiple of
-  the underived isospin contraction, the Higgs mass term, plus a gauge-invariant remainder
-  in `S`. -/
-theorem exists_mem_of_invariant_massWeightSubmodule_four_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 4 ⊔ S) (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y) ∧ x - y ∈ h.dotSpan 0 0 := by
-  have hmem := GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
-    h.massWeightSubmoduleGaugeWeightFour
-    (fun i y hy => hS (gaugeTorusGen i) y hy) hx hinv
-  rw [h.massWeightSubmoduleGaugeWeightFour_piece_zero] at hmem
-  exact h.exists_mem_of_invariant_isoSpan_sup 0 0 S hS
-    (sup_le_sup_right (h.higgsBarHiggsSpan_le_isoSpan 0 0) S hmem) hinv
+/-- Mass weight six reduces, for the gauge group, to the isospin contractions carrying one
+  derivative, on either factor. -/
+lemma reducesInvariantsTo_massWeightSubmodule_six :
+    ReducesInvariantsTo (fun g : GaugeGroupI => rep g) (h.massWeightSubmodule 6)
+      (h.dotSpan 1 0 ⊔ h.dotSpan 0 1) := by
+  have hW := ((h.isFixedBy_dotSpan 1 0).sup (h.isFixedBy_dotSpan 0 1)).isStableUnder
+  have hiso := ((h.reducesInvariantsTo_isoSpan 1 0).mono_right le_sup_left).sup
+    ((h.reducesInvariantsTo_isoSpan 0 1).mono_right le_sup_right) (h.isStableUnder_isoSpan 0 1)
+    hW
+  refine (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => rep g) gaugeTorusGen
+    h.massWeightSubmoduleGaugeWeightSix.reducesInvariantsTo_piece_zero).trans
+    (hiso.mono_left ?_)
+  rw [h.massWeightSubmoduleGaugeWeightSix_piece_zero, sup_assoc]
+  exact sup_le_sup (h.higgsBarHiggsSpan_le_isoSpan 1 0) (h.higgsBarHiggsSpan_le_isoSpan 0 1)
 
 include h in
-/-- Mass weight six modulo a gauge-stable submodule: a gauge invariant is a combination of
-  the isospin contractions carrying one derivative, on either factor, plus a
-  gauge-invariant remainder in `S`. -/
-theorem exists_mem_of_invariant_massWeightSubmodule_six_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 6 ⊔ S) (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ h.dotSpan 1 0 ⊔ h.dotSpan 0 1 := by
-  have hmem := GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
-    h.massWeightSubmoduleGaugeWeightSix
-    (fun i y hy => hS (gaugeTorusGen i) y hy) hx hinv
-  rw [h.massWeightSubmoduleGaugeWeightSix_piece_zero] at hmem
-  have hle : h.higgsBarHiggsSpan 1 0 0 ⊔ h.higgsBarHiggsSpan 1 0 1
-      ⊔ h.higgsBarHiggsSpan 0 1 0 ⊔ h.higgsBarHiggsSpan 0 1 1
-      ≤ h.isoSpan 1 0 ⊔ h.isoSpan 0 1 := by
-    rw [show h.higgsBarHiggsSpan 1 0 0 ⊔ h.higgsBarHiggsSpan 1 0 1
-        ⊔ h.higgsBarHiggsSpan 0 1 0 ⊔ h.higgsBarHiggsSpan 0 1 1
-        = (h.higgsBarHiggsSpan 1 0 0 ⊔ h.higgsBarHiggsSpan 1 0 1)
-          ⊔ (h.higgsBarHiggsSpan 0 1 0 ⊔ h.higgsBarHiggsSpan 0 1 1) from by
-      rw [sup_assoc]]
-    exact sup_le_sup (h.higgsBarHiggsSpan_le_isoSpan 1 0) (h.higgsBarHiggsSpan_le_isoSpan 0 1)
-  obtain ⟨y₁, hy₁, hy₁inv, hxy₁⟩ :=
-    h.exists_mem_of_invariant_isoSpan_sup 1 0 (h.isoSpan 0 1 ⊔ S)
-      (stable_sup (fun g y hy => h.isoSpan_stable 0 1 g hy) hS)
-      (by
-        refine le_trans (sup_le_sup_right hle S) (le_of_eq (sup_assoc _ _ _)) hmem)
-      hinv
-  obtain ⟨y, hyS, hyinv, hy₁y⟩ :=
-    h.exists_mem_of_invariant_isoSpan_sup 0 1 S hS hy₁ hy₁inv
-  refine ⟨y, hyS, hyinv, ?_⟩
-  rw [show x - y = (x - y₁) + (y₁ - y) from by abel]
-  exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₁) (Submodule.mem_sup_right hy₁y)
-
-include h in
-/-- Mass weight eight modulo a gauge-stable submodule: a gauge invariant is a combination
-  of the isospin contractions carrying two derivatives and of the square of the underived
-  one — the quartic potential — plus a gauge-invariant remainder in `S`. -/
-theorem exists_mem_of_invariant_massWeightSubmodule_eight_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 8 ⊔ S) (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
-        ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
-  have hmem := GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
-    h.massWeightSubmoduleGaugeWeightEight
-    (fun i y hy => hS (gaugeTorusGen i) y hy) hx hinv
-  rw [h.massWeightSubmoduleGaugeWeightEight_piece_zero] at hmem
-  set S₃ := h.isoSpan 1 1 ⊔ S with hS₃def
-  set S₂ := h.isoSpan 0 2 ⊔ S₃ with hS₂def
-  set S₁ := h.isoSpan 2 0 ⊔ S₂ with hS₁def
-  have hS₃ : ∀ g : GaugeGroupI, ∀ y ∈ S₃, rep g y ∈ S₃ :=
-    stable_sup (fun g y hy => h.isoSpan_stable 1 1 g hy) hS
-  have hS₂ : ∀ g : GaugeGroupI, ∀ y ∈ S₂, rep g y ∈ S₂ :=
-    stable_sup (fun g y hy => h.isoSpan_stable 0 2 g hy) hS₃
-  have hS₁ : ∀ g : GaugeGroupI, ∀ y ∈ S₁, rep g y ∈ S₁ :=
-    stable_sup (fun g y hy => h.isoSpan_stable 2 0 g hy) hS₂
-  have hQ : Submodule.span ℂ (Set.range h.quadFamily)
-      ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ := le_sup_left
-  have hA20 : h.isoSpan 2 0 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
-    le_sup_of_le_right le_sup_left
-  have hA02 : h.isoSpan 0 2 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
-    le_sup_of_le_right (le_sup_of_le_right le_sup_left)
-  have hA11 : h.isoSpan 1 1 ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
-    le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_left))
-  have hSle : S ≤ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
-    le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_right))
-  have hquad : x ∈ Submodule.span ℂ (Set.range h.quadFamily) ⊔ S₁ :=
-    sup_le (sup_le (sup_le (sup_le (sup_le (sup_le
-      ((h.higgsBarHiggsSpan_le_isoSpan' 2 0 0).trans hA20)
-      ((h.higgsBarHiggsSpan_le_isoSpan' 2 0 1).trans hA20))
-      ((h.higgsBarHiggsSpan_le_isoSpan' 0 2 0).trans hA02))
-      ((h.higgsBarHiggsSpan_le_isoSpan' 0 2 1).trans hA02))
-      (sup_le ((h.higgsBarHiggsSpan_le_isoSpan' 1 1 0).trans hA11)
-        ((h.higgsBarHiggsSpan_le_isoSpan' 1 1 1).trans hA11)))
-      (h.quarticSpan_le_quadFamily_span.trans hQ)) hSle hmem
-  obtain ⟨c₁, c₂, y₁, hy₁, hxy₁, hy₁inv⟩ :=
-    h.isSU2QuadFundamental_quadFamily.exists_smul_add_smul_add_of_gauge_invariant x S₁ hS₁
-      (fun g => by
-        rw [epsilonContraction₁₂_quadFamily, h.rep_mul, h.rep_dotGaugeHiggs_invariant])
-      (fun g => by rw [epsilonContraction₁₃_quadFamily, map_zero]) hquad hinv
-  have hxy₁' : x - y₁ ∈ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
-    rw [show x - y₁ = c₁ • IsSU2QuadFundamental.epsilonContraction₁₂ h.quadFamily
-        + c₂ • IsSU2QuadFundamental.epsilonContraction₁₃ h.quadFamily from by
-      rw [hxy₁]; abel, epsilonContraction₁₂_quadFamily, epsilonContraction₁₃_quadFamily,
-      smul_zero, add_zero]
-    exact Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)
-  obtain ⟨y₂, hy₂, hy₂inv, hy₁y₂⟩ :=
-    h.exists_mem_of_invariant_isoSpan_sup 2 0 S₂ hS₂ hy₁ hy₁inv
-  obtain ⟨y₃, hy₃, hy₃inv, hy₂y₃⟩ :=
-    h.exists_mem_of_invariant_isoSpan_sup 0 2 S₃ hS₃ hy₂ hy₂inv
-  obtain ⟨y, hyS, hyinv, hy₃y⟩ :=
-    h.exists_mem_of_invariant_isoSpan_sup 1 1 S hS hy₃ hy₃inv
-  refine ⟨y, hyS, hyinv, ?_⟩
-  rw [show x - y = (y₁ - y₂) + ((y₂ - y₃) + ((y₃ - y) + (x - y₁))) from by abel]
-  exact Submodule.add_mem _
-    (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_left hy₁y₂)))
-    (Submodule.add_mem _
-      (Submodule.mem_sup_left (Submodule.mem_sup_left (Submodule.mem_sup_right hy₂y₃)))
-      (Submodule.add_mem _
-        (Submodule.mem_sup_left (Submodule.mem_sup_right hy₃y))
-        (Submodule.mem_sup_right hxy₁')))
+/-- Mass weight eight reduces, for the gauge group, to the isospin contractions carrying two
+  derivatives and the square of the underived one, the quartic potential. -/
+lemma reducesInvariantsTo_massWeightSubmodule_eight :
+    ReducesInvariantsTo (fun g : GaugeGroupI => rep g) (h.massWeightSubmodule 8)
+      (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
+        ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) := by
+  have hq : ∀ g : GaugeGroupI, rep g (h.dotGaugeHiggs (![] : Fin 0 → Fin 1 ⊕ Fin 3) ![]
+      * h.dotGaugeHiggs ![] ![]) = h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![] :=
+    fun g => by rw [h.rep_mul, h.rep_dotGaugeHiggs_invariant]
+  have hW := ((((h.isFixedBy_dotSpan 2 0).sup (h.isFixedBy_dotSpan 0 2)).sup
+    (h.isFixedBy_dotSpan 1 1)).sup (isFixedBy_span_singleton hq)).isStableUnder
+  -- the quartic span reduces to its two epsilon contractions, `(H† H)²` and `0`
+  have hquad := ((IsSU2QuadFundamental.reducesInvariantsTo_span_epsilonContractions _
+    h.isSU2QuadFundamental_quadFamily.repGauge_T).comp (σ := fun g : GaugeGroupI => rep g)
+      (fun V => (1, V, 1))).mono_right (W := h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
+        ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) (by
+      rw [epsilonContraction₁₂_quadFamily, epsilonContraction₁₃_quadFamily, Submodule.span_le,
+        Set.insert_subset_iff, Set.singleton_subset_iff]
+      exact ⟨Submodule.mem_sup_right (Submodule.mem_span_singleton_self _),
+        Submodule.zero_mem _⟩)
+  -- the three isospin spans reduce to their isospin contractions
+  have hiso := (((h.reducesInvariantsTo_isoSpan 2 0).mono_right
+      (le_sup_of_le_left (le_sup_of_le_left le_sup_left))).sup
+    ((h.reducesInvariantsTo_isoSpan 0 2).mono_right
+      (le_sup_of_le_left (le_sup_of_le_left le_sup_right))) (h.isStableUnder_isoSpan 0 2)
+    hW).sup ((h.reducesInvariantsTo_isoSpan 1 1).mono_right (le_sup_of_le_left le_sup_right))
+    (h.isStableUnder_isoSpan 1 1) hW
+  refine (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => rep g) gaugeTorusGen
+    h.massWeightSubmoduleGaugeWeightEight.reducesInvariantsTo_piece_zero).trans
+    ((hquad.sup hiso (((h.isStableUnder_isoSpan 2 0).sup (h.isStableUnder_isoSpan 0 2)).sup
+      (h.isStableUnder_isoSpan 1 1)) hW).mono_left ?_)
+  rw [h.massWeightSubmoduleGaugeWeightEight_piece_zero]
+  have h20 : h.isoSpan 2 0 ≤ Submodule.span ℂ (Set.range h.quadFamily)
+      ⊔ (h.isoSpan 2 0 ⊔ h.isoSpan 0 2 ⊔ h.isoSpan 1 1) :=
+    le_sup_of_le_right (le_sup_of_le_left le_sup_left)
+  have h02 : h.isoSpan 0 2 ≤ Submodule.span ℂ (Set.range h.quadFamily)
+      ⊔ (h.isoSpan 2 0 ⊔ h.isoSpan 0 2 ⊔ h.isoSpan 1 1) :=
+    le_sup_of_le_right (le_sup_of_le_left le_sup_right)
+  exact sup_le (sup_le (sup_le (sup_le ((h.higgsBarHiggsSpan_le_isoSpan 2 0).trans h20)
+    ((h.higgsBarHiggsSpan_le_isoSpan' 0 2 0).trans h02))
+    ((h.higgsBarHiggsSpan_le_isoSpan' 0 2 1).trans h02))
+    ((h.higgsBarHiggsSpan_le_isoSpan 1 1).trans (le_sup_of_le_right le_sup_right)))
+    (h.quarticSpan_le_quadFamily_span.trans le_sup_left)
 
 /-!
 
@@ -1065,11 +949,8 @@ include h in
 lemma mem_dotSpan_of_invariant_massWeightSubmodule_four {x : B}
     (hx : x ∈ h.massWeightSubmodule 4) (hg : ∀ g : GaugeGroupI, rep g x = x) :
     x ∈ h.dotSpan 0 0 := by
-  obtain ⟨y, hy, -, hxy⟩ := h.exists_mem_of_invariant_massWeightSubmodule_four_sup ⊥
-    (fun g z hz => by rw [Submodule.mem_bot] at hz; simp [hz])
+  simpa using h.reducesInvariantsTo_massWeightSubmodule_four ⊥ isStableUnder_bot x
     (Submodule.mem_sup_left hx) hg
-  rw [Submodule.mem_bot] at hy
-  rwa [hy, sub_zero] at hxy
 
 include h in
 /-- A gauge-invariant term of mass weight six is a combination of the isospin contractions
@@ -1077,11 +958,8 @@ include h in
 lemma mem_dotSpan_of_invariant_massWeightSubmodule_six {x : B}
     (hx : x ∈ h.massWeightSubmodule 6) (hg : ∀ g : GaugeGroupI, rep g x = x) :
     x ∈ h.dotSpan 1 0 ⊔ h.dotSpan 0 1 := by
-  obtain ⟨y, hy, -, hxy⟩ := h.exists_mem_of_invariant_massWeightSubmodule_six_sup ⊥
-    (fun g z hz => by rw [Submodule.mem_bot] at hz; simp [hz])
+  simpa using h.reducesInvariantsTo_massWeightSubmodule_six ⊥ isStableUnder_bot x
     (Submodule.mem_sup_left hx) hg
-  rw [Submodule.mem_bot] at hy
-  rwa [hy, sub_zero] at hxy
 
 include h in
 /-- A gauge-invariant term of mass weight eight is a combination of the isospin
@@ -1090,11 +968,8 @@ lemma mem_dotSpan_of_invariant_massWeightSubmodule_eight {x : B}
     (hx : x ∈ h.massWeightSubmodule 8) (hg : ∀ g : GaugeGroupI, rep g x = x) :
     x ∈ h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
       ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]) := by
-  obtain ⟨y, hy, -, hxy⟩ := h.exists_mem_of_invariant_massWeightSubmodule_eight_sup ⊥
-    (fun g z hz => by rw [Submodule.mem_bot] at hz; simp [hz])
+  simpa using h.reducesInvariantsTo_massWeightSubmodule_eight ⊥ isStableUnder_bot x
     (Submodule.mem_sup_left hx) hg
-  rw [Submodule.mem_bot] at hy
-  rwa [hy, sub_zero] at hxy
 
 include h in
 /-- An isospin contraction has the mass weight of its two towers together. -/

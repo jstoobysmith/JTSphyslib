@@ -667,8 +667,8 @@ lies in the weight-zero piece joined with `S`.  This is what turns the twelve bl
 section F into a statement about the invariants themselves, the remaining work being to
 peel the blocks apart, which is not done here.
 
-The statement is `GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant`, whose
-induction chooses the separating torus generator weight by weight.  That matters here: at
+The statement is `GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant`, which chooses
+the separating torus generator weight by weight.  That matters here: at
 mass weight eight the sector carries weights of vanishing hypercharge and nonzero colour or
 isospin — `H d bard` is one — so, unlike the fermion sector, no single generator sees every
 weight.
@@ -684,7 +684,7 @@ lemma mem_sectorMassWeightEight_piece_zero_sup_of_invariant {S : Submodule ℂ B
     (hx : x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
     x ∈ h.sectorMassWeightEightGaugeWeight.piece 0 ⊔ S :=
-  GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ hS hx hinv
+  GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ hS hx fun _ => hinv _
 
 end CovAlgebraRealization
 

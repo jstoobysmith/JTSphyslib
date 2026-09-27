@@ -11,7 +11,7 @@ public import Physlib.Relativity.LorentzGroup.Invariants.RankTwo
 # The Higgs invariants of mass weight eight
 
 Mass weight eight is where the Higgs sector says what it is for.  The gauge classification
-of `exists_mem_of_invariant_massWeightSubmodule_eight_sup` leaves four things: the isospin
+of `reducesInvariantsTo_massWeightSubmodule_eight` leaves four things: the isospin
 contractions carrying two derivatives on one tower or one on each, and the square of the
 underived contraction.  The Lorentz classification then contracts the derivative indices.
 
@@ -28,10 +28,9 @@ box terms, and `lorentzContractionEightSpan` is their span.
 - A. Sums over pairs of covector indices
 - B. The isospin contractions with two derivatives as bi-Lorentz tensors
 - C. The metric contraction is fixed by both groups
-- D. Peeling a bi-Lorentz span off a stable submodule
-- E. The invariants of mass weight eight
-- F. The span consists of invariants of mass weight eight
-- G. The classification as an equivalence
+- D. The invariants of mass weight eight
+- E. The span consists of invariants of mass weight eight
+- F. The classification
 
 Everything is stated modulo a submodule `S` stable under both groups, which is what lets
 the other sectors be carried along.
@@ -213,70 +212,15 @@ lemma rep_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
 
 /-!
 
-## D. Peeling a bi-Lorentz span off a stable submodule
+## D. The invariants of mass weight eight
 
-`RankTwo.exists_smul_metricContraction_of_invariant_subset` removes one family at a
-time from a join, leaving a multiple of the metric trace and a remainder in the stable
-submodule.  Section C makes that multiple fixed by both groups, so the remainder inherits
-both invariances from the element peeled and the peeling can be iterated.  A submodule of
-vectors already fixed by both groups needs no classification at all and is removed by the
-same bookkeeping.
-
--/
-
-/-- Peeling one bi-Lorentz span off a Lorentz-stable submodule: an element of the span
-  together with `S` fixed by both groups is a multiple of the metric trace plus a remainder
-  in `S` fixed by both groups. -/
-lemma exists_mem_of_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 2 B repLorentz T)
-    (hTG : ∀ (g : GaugeGroupI) (d : Fin 2 → Fin 1 ⊕ Fin 3), rep g (T d) = T d)
-    (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hL : ∀ g : SL(2,ℂ), repLorentz g x = x)
-    (hG : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ ℂ ∙ RankTwo.metricContraction (T := T) := by
-  obtain ⟨a, y, hyS, hxy⟩ :=
-    RankTwo.exists_smul_metricContraction_of_invariant_subset hT S hS hx hL
-  have hmem : x - y ∈ ℂ ∙ RankTwo.metricContraction (T := T) := by
-    rw [hxy, add_sub_cancel_right]
-    exact Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)
-  refine ⟨y, hyS, fun g => ?_, fun g => ?_, hmem⟩
-  · have hfix : repLorentz g (x - y) = x - y := by
-      rw [hxy, add_sub_cancel_right, map_smul, repLorentz_metricContraction hT]
-    rw [map_sub, hL g] at hfix
-    exact sub_right_injective hfix
-  · have hfix : rep g (x - y) = x - y := by
-      rw [hxy, add_sub_cancel_right, map_smul, rep_metricContraction hTG]
-    rw [map_sub, hG g] at hfix
-    exact sub_right_injective hfix
-
-/-- Peeling off a submodule of vectors already fixed by both groups: no classification is
-  needed, only the splitting of the join. -/
-lemma exists_mem_of_invariant_sup_fixed (V S : Submodule ℂ B)
-    (hVL : ∀ g : SL(2,ℂ), ∀ v ∈ V, repLorentz g v = v)
-    (hVG : ∀ g : GaugeGroupI, ∀ v ∈ V, rep g v = v) {x : B} (hx : x ∈ V ⊔ S)
-    (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) (hG : ∀ g : GaugeGroupI, rep g x = x) :
-    ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ V := by
-  obtain ⟨v, hv, s, hs, rfl⟩ := Submodule.mem_sup.1 hx
-  refine ⟨s, hs, fun g => ?_, fun g => ?_, by simpa using hv⟩
-  · have hg := hL g
-    rw [map_add, hVL g v hv, add_right_inj] at hg
-    exact hg
-  · have hg := hG g
-    rw [map_add, hVG g v hv, add_right_inj] at hg
-    exact hg
-
-/-!
-
-## E. The invariants of mass weight eight
-
-The gauge classification puts a gauge invariant of mass weight eight in the three spans of
-twice-derived isospin contractions and the line through the square of the underived one, up
-to a remainder in `S`.  Section D peels the three spans off in turn, each time with the
-spans not yet peeled adjoined to `S`, and the line through the square needs no peeling.
-What is left is a combination of the three metric traces and the square: the two box terms,
-the kinetic term and the quartic potential.
+The gauge classification reduces mass weight eight to the three spans of twice-derived
+isospin contractions and the line through the square of the underived one.  Each of the
+three spans is spanned by a bi-Lorentz tensor and reduces, for the Lorentz group, to the
+line through its metric trace (`RankTwo.reducesInvariantsTo_span_metricContraction`); the
+line through the square is fixed and reduces to itself.  What is left is a combination of
+the three metric traces and the square: the two box terms, the kinetic term and the quartic
+potential.
 
 -/
 
@@ -307,84 +251,11 @@ lemma invariant_dotGaugeHiggs_sq :
   ⟨fun g => by rw [h.repLorentz_mul, h.repLorentz_dotGaugeHiggs_zero],
     fun g => by rw [h.rep_mul, h.rep_dotGaugeHiggs_invariant]⟩
 
-include h in
-/-- The gauge and Lorentz invariants of mass weight eight, modulo a submodule `S` stable
-  under both groups: such an invariant is a combination of the two box terms, the kinetic
-  term and the quartic potential, plus a remainder in `S` fixed by both groups. -/
-theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 8 ⊔ S) (hG : ∀ g : GaugeGroupI, rep g x = x)
-    (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y) ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.lorentzContractionEightSpan := by
-  obtain ⟨y₀, hy₀S, hy₀G, hxy₀⟩ :=
-    h.exists_mem_of_invariant_massWeightSubmodule_eight_sup S hS hx hG
-  set Q : Submodule ℂ B := ℂ ∙ (h.dotGaugeHiggs (![] : Fin 0 → Fin 1 ⊕ Fin 3) ![]
-    * h.dotGaugeHiggs ![] ![]) with hQdef
-  have hQL : ∀ g : SL(2,ℂ), ∀ v ∈ Q, repLorentz g v = v := by
-    intro g v hv
-    obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hv
-    rw [map_smul, h.invariant_dotGaugeHiggs_sq.1 g]
-  have hQG : ∀ g : GaugeGroupI, ∀ v ∈ Q, rep g v = v := by
-    intro g v hv
-    obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hv
-    rw [map_smul, h.invariant_dotGaugeHiggs_sq.2 g]
-  set S₃ : Submodule ℂ B := Q ⊔ S with hS₃def
-  set S₂ : Submodule ℂ B := h.dotSpan 1 1 ⊔ S₃ with hS₂def
-  set S₁ : Submodule ℂ B := h.dotSpan 0 2 ⊔ S₂ with hS₁def
-  have hS₃L : ∀ g : SL(2,ℂ), ∀ y ∈ S₃, repLorentz g y ∈ S₃ :=
-    stable_sup_lorentz (fun g v hv => by rw [hQL g v hv]; exact hv) hSL
-  have hS₂L : ∀ g : SL(2,ℂ), ∀ y ∈ S₂, repLorentz g y ∈ S₂ := by
-    refine stable_sup_lorentz (fun g y hy => ?_) hS₃L
-    rw [h.dotSpan_one_one_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed.repLorentz_mem_span_range g hy
-  have hS₁L : ∀ g : SL(2,ℂ), ∀ y ∈ S₁, repLorentz g y ∈ S₁ := by
-    refine stable_sup_lorentz (fun g y hy => ?_) hS₂L
-    rw [h.dotSpan_zero_two_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right.repLorentz_mem_span_range g hy
-  have hx₁ : x ∈ Submodule.span ℂ (Set.range fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
-      ⊔ S₁ := by
-    rw [← h.dotSpan_two_zero_eq, hS₁def, hS₂def, hS₃def]
-    have hstep : x ∈ (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1 ⊔ Q) ⊔ S := by
-      rw [show x = (x - y₀) + y₀ from by abel]
-      exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₀)
-        (Submodule.mem_sup_right hy₀S)
-    have hle : (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1 ⊔ Q) ⊔ S
-        ≤ h.dotSpan 2 0 ⊔ (h.dotSpan 0 2 ⊔ (h.dotSpan 1 1 ⊔ (Q ⊔ S))) :=
-      sup_le (sup_le (sup_le (sup_le le_sup_left (le_sup_of_le_right le_sup_left))
-        (le_sup_of_le_right (le_sup_of_le_right le_sup_left)))
-        (le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_left))))
-        (le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_right)))
-    exact hle hstep
-  obtain ⟨y₁, hy₁, hy₁L, hy₁G, hxy₁⟩ :=
-    exists_mem_of_invariant_rankTwo_span_sup h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left
-      (fun g d => h.rep_dotGaugeHiggs_invariant g d ![]) S₁ hS₁L hx₁ hL hG
-  rw [hS₁def, h.dotSpan_zero_two_eq] at hy₁
-  obtain ⟨y₂, hy₂, hy₂L, hy₂G, hxy₂⟩ :=
-    exists_mem_of_invariant_rankTwo_span_sup h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right
-      (fun g d => h.rep_dotGaugeHiggs_invariant g ![] d) S₂ hS₂L hy₁ hy₁L hy₁G
-  rw [hS₂def, h.dotSpan_one_one_eq] at hy₂
-  obtain ⟨y₃, hy₃, hy₃L, hy₃G, hxy₃⟩ :=
-    exists_mem_of_invariant_rankTwo_span_sup h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed
-      (fun g d => h.rep_dotGaugeHiggs_invariant g ![d 0] ![d 1]) S₃ hS₃L hy₂ hy₂L hy₂G
-  obtain ⟨y, hyS, hyL, hyG, hxy⟩ :=
-    exists_mem_of_invariant_sup_fixed Q S hQL hQG hy₃ hy₃L hy₃G
-  refine ⟨y, hyS, hyG, hyL, ?_⟩
-  rw [show x - y = (x - y₁) + ((y₁ - y₂) + ((y₂ - y₃) + (y₃ - y))) from by abel,
-    lorentzContractionEightSpan]
-  exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₁)
-    (Submodule.add_mem _ (Submodule.mem_sup_right (Submodule.mem_sup_left hxy₂))
-      (Submodule.add_mem _ (Submodule.mem_sup_right (Submodule.mem_sup_right
-          (Submodule.mem_sup_left hxy₃)))
-        (Submodule.mem_sup_right (Submodule.mem_sup_right
-          (Submodule.mem_sup_right hxy)))))
-
 /-!
 
-## F. The span consists of invariants of mass weight eight
+## E. The span consists of invariants of mass weight eight
 
-The classification of section E is one-directional as stated, and the converse is easy:
+The reduction of section F is one-directional, and the converse is easy:
 each of the four generators is built from isospin contractions of the right mass weight,
 which both groups fix, so the span is made of invariants of mass weight eight already.
 The metric trace inherits the mass weight of the components and both invariances from
@@ -457,14 +328,59 @@ lemma repLorentz_of_mem_lorentzContractionEightSpan (g : SL(2,ℂ)) {y : B}
 
 /-!
 
-## G. The classification as an equivalence
+## F. The classification
 
-The two directions meet.  Forwards, section E puts an invariant of mass weight eight in the
-span up to a remainder in `S`; backwards, section F says the span is made of such
-invariants, so the remainder plus the span element is one again.  Splitting `x` as
-`(x - y) + y` is all the backward direction takes.
+The gauge classification and the Lorentz classification compose: the first reduces mass
+weight eight to the gauge invariants of section D, the second reduces those to the span,
+and neither step needs the intermediate span to be fixed by the other group. Section E
+says the span is made of invariants of mass weight eight, which turns the reduction into
+an equivalence.
 
 -/
+
+include h in
+/-- The weight-eight span is fixed pointwise by both groups. -/
+lemma isFixedBy_lorentzContractionEightSpan :
+    IsFixedBy (gaugeLorentzMaps rep repLorentz) h.lorentzContractionEightSpan :=
+  isFixedBy_gaugeLorentzMaps_iff.2
+    ⟨fun g _ hy => h.rep_of_mem_lorentzContractionEightSpan g hy,
+      fun Λ _ hy => h.repLorentz_of_mem_lorentzContractionEightSpan Λ hy⟩
+
+include h in
+/-- The Higgs sector at mass weight eight reduces, for the gauge and Lorentz groups
+  together, to the two box terms, the kinetic term and the quartic potential. The gauge group
+  leaves the isospin contractions with two derivatives and the square of the underived one;
+  the Lorentz group contracts the two derivative slots of each family with the metric, and
+  the square, which carries no index, is fixed. -/
+lemma reducesInvariantsTo_lorentzContractionEightSpan :
+    ReducesInvariantsTo (gaugeLorentzMaps rep repLorentz) (h.massWeightSubmodule 8)
+      h.lorentzContractionEightSpan := by
+  have hW : IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) h.lorentzContractionEightSpan :=
+    fun g _ hy => by rw [h.repLorentz_of_mem_lorentzContractionEightSpan g hy]; exact hy
+  have hst : ∀ {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 2 B repLorentz T →
+      IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) :=
+    fun hT g _ hy => hT.repLorentz_mem_span_range g hy
+  have hQ := (isFixedBy_span_singleton (σ := fun g : SL(2,ℂ) => repLorentz g)
+    fun g => h.invariant_dotGaugeHiggs_sq.1 g).isStableUnder
+  -- the Lorentz stage: each bi-Lorentz span to the line through its metric trace
+  have hlorentz : ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g)
+      (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
+        ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))
+      h.lorentzContractionEightSpan := by
+    rw [h.dotSpan_two_zero_eq, h.dotSpan_zero_two_eq, h.dotSpan_one_one_eq]
+    refine ((((RankTwo.reducesInvariantsTo_span_metricContraction
+      h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left).mono_right le_sup_left).sup
+      ((RankTwo.reducesInvariantsTo_span_metricContraction
+        h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right).mono_right
+          (le_sup_of_le_right le_sup_left))
+      (hst h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right) hW).sup
+      ((RankTwo.reducesInvariantsTo_span_metricContraction
+        h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed).mono_right
+          (le_sup_of_le_right (le_sup_of_le_right le_sup_left)))
+      (hst h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed) hW).sup
+      (reducesInvariantsTo_of_le (le_sup_of_le_right (le_sup_of_le_right le_sup_right))) hQ hW
+  exact (ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_massWeightSubmodule_eight).trans
+    (ReducesInvariantsTo.ofLorentz hlorentz)
 
 include h in
 /-- The gauge and Lorentz classification of mass weight eight as an equivalence: an element
@@ -478,22 +394,11 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
           ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.lorentzContractionEightSpan := by
-  refine ⟨fun hx =>
-    h.exists_mem_of_gauge_and_lorentz_invariant S hS hSL hx.1 hx.2.1 hx.2.2, ?_⟩
-  rintro ⟨y, hyS, hyG, hyL, hxy⟩
-  refine ⟨?_, fun g => ?_, fun g => ?_⟩
-  · have hsum : x - y + y ∈ h.massWeightSubmodule 8 ⊔ S :=
-      Submodule.add_mem _
-        (Submodule.mem_sup_left (h.lorentzContractionEightSpan_le_massWeightSubmodule hxy))
-        (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · have hstep : rep g (x - y + y) = x - y + y := by
-      rw [map_add, h.rep_of_mem_lorentzContractionEightSpan g hxy, hyG g]
-    simpa using hstep
-  · have hstep : repLorentz g (x - y + y) = x - y + y := by
-      rw [map_add, h.repLorentz_of_mem_lorentzContractionEightSpan g hxy, hyL g]
-    simpa using hstep
+          ∧ x - y ∈ h.lorentzContractionEightSpan :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff
+    h.reducesInvariantsTo_lorentzContractionEightSpan
+    h.lorentzContractionEightSpan_le_massWeightSubmodule h.isFixedBy_lorentzContractionEightSpan
+    hS hSL x
 
 end HiggsAlgebraCovRealization
 

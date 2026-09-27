@@ -461,7 +461,6 @@ theorem mem_of_lorentz_invariant_massWeightSubmodule_lt_eight_sup (w : ℕ) (hw0
   · exact h.mem_of_lorentz_invariant_massWeightSubmodule_six_sup S hSL hx hinv
   · rwa [h.massWeightSubmodule_seven_eq, bot_sup_eq] at hx
 
-set_option linter.unusedVariables false in
 /-- The classification below mass weight eight as an equivalence, in the shape of
   `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`: an element of
   `massWeightSubmodule w ⊔ S` for `0 < w < 8` is fixed by both groups exactly when it is
@@ -473,7 +472,6 @@ set_option linter.unusedVariables false in
   group alone. -/
 theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff (w : ℕ)
     (hw0 : 0 < w) (hw : w < 8) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.massWeightSubmodule w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
@@ -487,13 +485,11 @@ theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff (w 
   · rintro ⟨y, hyS, hyG, hyL, rfl⟩
     exact ⟨Submodule.mem_sup_right hyS, hyG, hyL⟩
 
-set_option linter.unusedVariables false in
 /-- The same classification without the existential: below mass weight eight an element
   of `massWeightSubmodule w ⊔ S` fixed by both groups is an element of `S` fixed by both
   groups, and conversely. -/
 theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff_mem (w : ℕ)
     (hw0 : 0 < w) (hw : w < 8) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.massWeightSubmodule w ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)

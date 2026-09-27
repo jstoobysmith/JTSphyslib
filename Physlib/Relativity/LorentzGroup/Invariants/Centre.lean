@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Relativity.IsLorentzDeriv
 /-!
 # Lorentz invariants of a half-integer spin
@@ -135,32 +136,22 @@ lemma mul_le_centreEigenspace {repLorentz : Representation ℂ SL(2,ℂ) A}
 ## D. The classification modulo a Lorentz-stable submodule
 
 A vector of a subspace of sign `-1` that the group fixes is negated by `-1` and fixed by it at
-once, so it is zero. Modulo a stable subspace `S` the same count leaves twice the vector inside
-`S`, and halving is allowed over `ℂ`; no quotient representation is needed.
+once, so it is zero. Modulo a stable subspace `S` this is the case `μ = -1` of
+`reducesInvariantsTo_bot_of_apply_eq_smul`: the invariance leaves `-2` times the vector inside
+`S`, and dividing by `-2` is allowed over `ℂ`; no quotient representation is needed.
 
 -/
 
-/-- **A subspace of half-integer spin carries no Lorentz invariant beyond a Lorentz-stable
-  submodule `S`**: an invariant of the join with `S` already lies in `S`. Writing the invariant
-  as `v + s`, invariance under the centre gives `2 • v = repLorentz (-1) s - s`, which lies in
-  `S`, and so does `v`. -/
+/-- A subspace of half-integer spin carries no Lorentz invariant beyond a Lorentz-stable
+  submodule `S`: an invariant of the join with `S` already lies in `S`. The centre acts on the
+  subspace by `-1 ≠ 1`, so it reduces to `⊥`. -/
 lemma mem_of_invariant_of_mem_sup_centreEigenspace_neg_one
     {repLorentz : Representation ℂ SL(2,ℂ) A} {W : Submodule ℂ A}
     (hW : W ≤ centreEigenspace repLorentz (-1)) (S : Submodule ℂ A)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : A} (hx : x ∈ W ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  obtain ⟨v, hv, s, hs, rfl⟩ := Submodule.mem_sup.1 hx
-  have hcentre : repLorentz (-1) (v + s) = -v + repLorentz (-1) s := by
-    rw [map_add, mem_centreEigenspace.1 (hW hv)]
-    module
-  have htwo : (2 : ℂ) • v = repLorentz (-1) s - s := by
-    have hfix := hinv (-1)
-    rw [hcentre] at hfix
-    linear_combination (norm := module) -hfix
-  have hvS : v ∈ S := by
-    have : (2 : ℂ) • v ∈ S := htwo ▸ S.sub_mem (hS (-1) s hs) hs
-    simpa using S.smul_mem (2 : ℂ)⁻¹ this
-  exact S.add_mem hvS hs
+  simpa using reducesInvariantsTo_bot_of_apply_eq_smul (σ := fun g => repLorentz g) (-1)
+    (by norm_num) (fun v hv => mem_centreEigenspace.1 (hW hv)) S hS x hx hinv
 
 end Invariants
 

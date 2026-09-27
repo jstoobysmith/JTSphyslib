@@ -992,7 +992,9 @@ submodule is a sum of sector pieces and each action carries one such sum to
 another. Reading off from that alone that the pieces are themselves invariant is
 not possible: it needs the pieces to be determined by their sum, that is, needs
 the family of weight parts to be independent, and that is the hypothesis of
-`sector_invariant_of_iSupIndep`.
+`sector_invariant_of_iSupIndep`. Independence does not follow from
+`CovAlgebraRealization`, and the classification of the invariants in
+`MassWeight/Invariants.lean` does not use it: it joins reductions of the sectors instead.
 
 -/
 
@@ -1026,21 +1028,6 @@ lemma sector_invariant_of_iSupIndep {w : ℕ}
       (x_gauge_invariant g) s,
     fun Λ => key (repLorentz Λ) (fun t => h.repLorentz_mem_sectorMassWeight Λ (hc t))
       (x_lorentz_invariant Λ) s⟩⟩
-
-/-- An element of the field algebra of weight `w` fixed by both actions is a sum of
-  weight-`w` sector pieces, each of them fixed by both actions. -/
-lemma sector_invariant {w : ℕ} (x : B) (hx : x ∈ h.fieldAlgebra)
-    (x_gauge_invariant : ∀ g, repGauge g x = x)
-    (x_lorentz_invariant : ∀ g, repLorentz g x = x)
-    (x_mass_dim : x ∈ h.massWeightSubmodule w) :
-    ∃ f : Finset GeneratorClass → B,
-      x = ∑ s, f s ∧  (∀ s, f s ∈ h.sectorMassWeight s w ∧
-      (∀ g, repGauge g (f s) = (f s)) ∧ (∀ g, repLorentz g (f s) = (f s))) := by
-  -- Open. `sector_invariant_of_iSupIndep` closes this given
-  -- `iSupIndep fun S => h.sectorMassWeight S w`, and that independence is the whole
-  -- of what is missing; it does not follow from `CovAlgebraRealization`, whose axioms
-  -- are all equations and so survive quotients that the independence does not.
-  sorry
 
 end CovAlgebraRealization
 

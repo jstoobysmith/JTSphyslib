@@ -43,10 +43,10 @@ classification used here is an instance of it, packaged as an `InvariantReductio
   surviving block submodules.
 - `reducesInvariantsTo_yukawaSpan` : the six blocks, over the nine family pairs, reduce to the
   Yukawa span.
-- `mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant`,
-  `exists_mem_of_gauge_and_lorentz_invariant` and
-  `mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant_iff` : the
-  classification, in the three forms the sibling sectors state it in.
+- `reducesInvariantsTo_sectorMassWeight_higgs_fermion_eight` : the sector at mass weight
+  eight reduces to the Yukawa span.
+- `mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant_iff` : the
+  classification as an equivalence, in the form the sibling sectors state it in.
 
 ## iii. Table of contents
 
@@ -713,12 +713,11 @@ lemma reducesInvariantsTo_barLeptonYukawa (f f' : Fin 3) :
 
 ## E. The classification of the invariants of mass weight eight
 
-The two directions meet.  Forwards: a gauge invariant of the sector lies in the weight-zero
-piece modulo `S`, the piece lies in the six block submodules, and the reduction takes those to
-the Yukawa span.  Backwards: `yukawaSpan_le_inf` says the Yukawa span is made of invariants
-of the right mass weight to begin with, so splitting `x` as `(x - y) + y` recovers the
-hypotheses.  Nothing but that splitting is needed for the converse, which is what makes the
-classification an equivalence rather than a one-way inclusion.
+The two directions meet.  Forwards: the torus reduces the sector to its weight-zero piece,
+the piece lies in the six block submodules, and the blocks reduce to the Yukawa span.
+Backwards: `yukawaSpan_le_inf` says the Yukawa span is made of invariants of the right mass
+weight to begin with, which turns the reduction into an equivalence rather than a one-way
+inclusion.
 
 -/
 
@@ -821,56 +820,22 @@ lemma reducesInvariantsTo_yukawaSpan :
     (fun f => isStableUnder_iSup (hstable f)) hW
 
 include h in
-/-- A gauge and Lorentz invariant of the Yukawa sector at mass weight eight, modulo a
-  submodule `S` stable under both groups, lies in the Yukawa span joined with `S`.
-  Hypercharge puts it in the weight-zero piece, the piece lies in the six block submodules,
-  and colour, isospin and Lorentz reduce each block to its Yukawa term. -/
-theorem mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 ⊔ S)
-    (hGinv : ∀ g : GaugeGroupI, repGauge g x = x)
-    (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    x ∈ h.yukawaSpan ⊔ S := by
-  have hpiece := h.mem_sectorMassWeightEight_piece_zero_sup_of_invariant
-    (fun i y hy => hS (gaugeTorusGen i) y hy) hx hGinv
-  exact h.reducesInvariantsTo_yukawaSpan S (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x
-    (sup_le_sup_right h.sectorMassWeightEightGaugeWeight_piece_zero_le S hpiece)
-    (forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hGinv, hLinv⟩)
-
-include h in
-/-- The gauge and Lorentz invariants of the Yukawa sector at mass weight eight, modulo a
-  submodule `S` stable under both groups: such an invariant is a combination of the six
-  Yukawa couplings over the nine family pairs plus a remainder in `S`, and the remainder is
-  invariant under both groups as well, being the difference of two invariants. -/
-theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 ⊔ S)
-    (hGinv : ∀ g : GaugeGroupI, repGauge g x = x)
-    (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-      ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.yukawaSpan := by
-  obtain ⟨z, hz, y, hy, rfl⟩ := Submodule.mem_sup.1
-    (h.mem_yukawaSpan_sup_of_gauge_and_lorentz_invariant S hS hSL hx hGinv hLinv)
-  refine ⟨y, hy, fun g => ?_, fun g => ?_, by simpa using hz⟩
-  · have hstep := hGinv g
-    rw [map_add, show repGauge g z = z from h.isFixedBy_yukawaSpan (Sum.inl g) z hz,
-      add_right_inj] at hstep
-    exact hstep
-  · have hstep := hLinv g
-    rw [map_add, show repLorentz g z = z from h.isFixedBy_yukawaSpan (Sum.inr g) z hz,
-      add_right_inj] at hstep
-    exact hstep
+/-- The Yukawa sector at mass weight eight reduces, for the gauge and Lorentz groups
+  together, to the Yukawa span. Hypercharge puts an invariant in the weight-zero piece, the
+  piece lies in the six block submodules, and colour, isospin and Lorentz reduce each block
+  to its Yukawa term. -/
+lemma reducesInvariantsTo_sectorMassWeight_higgs_fermion_eight :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
+      (h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8) h.yukawaSpan :=
+  (ReducesInvariantsTo.ofGauge (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => repGauge g)
+    gaugeTorusGen h.sectorMassWeightEightGaugeWeight.reducesInvariantsTo_piece_zero)).trans
+    (h.reducesInvariantsTo_yukawaSpan.mono_left h.sectorMassWeightEightGaugeWeight_piece_zero_le)
 
 include h in
 /-- The classification of the Yukawa sector at mass weight eight as an equivalence: an
   element of the sector joined with a submodule `S` stable under both groups is fixed by
   both groups exactly when it is a combination of the six Yukawa couplings over the nine
-  family pairs up to a remainder in `S` fixed by both groups. Forwards this is
-  `exists_mem_of_gauge_and_lorentz_invariant`; backwards it splits `x` as `(x - y) + y`, the
-  first summand being an invariant of the sector by `yukawaSpan_le_inf`. -/
+  family pairs up to a remainder in `S` fixed by both groups. -/
 theorem mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant_iff
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
@@ -879,23 +844,10 @@ theorem mem_sectorMassWeight_higgs_fermion_eight_sup_and_gauge_lorentz_invariant
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
           ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.yukawaSpan := by
-  refine ⟨fun hx =>
-    h.exists_mem_of_gauge_and_lorentz_invariant S hS hSL hx.1 hx.2.1 hx.2.2, ?_⟩
-  rintro ⟨y, hyS, hyG, hyL, hxy⟩
-  obtain ⟨hmem₀, hL⟩ := Submodule.mem_inf.1 (h.yukawaSpan_le_inf hxy)
-  obtain ⟨hmem, hG⟩ := Submodule.mem_inf.1 hmem₀
-  refine ⟨?_, fun g => ?_, fun g => ?_⟩
-  · have hsum : x - y + y
-        ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 ⊔ S :=
-      Submodule.add_mem _ (Submodule.mem_sup_left hmem) (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · have hstep : repGauge g (x - y + y) = x - y + y := by
-      rw [map_add, (Representation.mem_invariants _ _).1 hG g, hyG g]
-    simpa using hstep
-  · have hstep : repLorentz g (x - y + y) = x - y + y := by
-      rw [map_add, (Representation.mem_invariants _ _).1 hL g, hyL g]
-    simpa using hstep
+          ∧ x - y ∈ h.yukawaSpan :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff
+    h.reducesInvariantsTo_sectorMassWeight_higgs_fermion_eight
+    (h.yukawaSpan_le_inf.trans (inf_le_left.trans inf_le_left)) h.isFixedBy_yukawaSpan hS hSL x
 
 end CovAlgebraRealization
 

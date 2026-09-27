@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.InvariantReduction
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
@@ -50,8 +51,9 @@ this one; it is `GaugeAlgebra.adjointDecomposition` in
 - `GaugeWeightDecomposition.piece_eq_inf` : the pieces are cut out of `V` by the torus alone.
 - `GaugeWeightDecomposition.mem_zero_of_invariant` : a gauge-invariant element lies in the
   zero-weight piece.
-- `GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant` : the same relative to a
-  torus-stable submodule `S`, the form used to peel a sector one submodule at a time.
+- `GaugeWeightDecomposition.reducesInvariantsTo_piece_zero` : modulo a torus-stable
+  submodule `S`, an element fixed by the four torus generators lies in the zero-weight
+  piece; `mem_piece_zero_sup_of_invariant` is the unfolded form.
 
 ## iii. Table of contents
 
@@ -775,91 +777,50 @@ lemma mem_zero_of_invariant (d : GaugeWeightDecomposition rep V) {x : B} (hx : x
   rw [Module.End.mem_eigenspace_iff, GaugeWeight.zero_coord, zpow_zero, one_smul]
   exact hV _
 
-/-- A gauge-invariant element of a join of non-zero-weight pieces with a torus-stable `S`
-  lies in `S`. Let `S` be closed under the four torus generators and let `s` be a finite set
-  of gauge weights, each seen by some generator. Peeling one weight at a time, the generator
-  that sees `w₀` scales the weight-`w₀` component by a scalar other than one, and invariance
-  then forces that component into the rest. -/
-lemma mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero {S : Submodule ℂ B}
-    (dV : GaugeWeightDecomposition rep V)
-    (hS : ∀ (i : Fin 4) (y : B), y ∈ S → rep (gaugeTorusGen i) y ∈ S) :
-    ∀ (s : Finset GaugeWeight), (∀ w ∈ s, ∃ i, w.coord i ≠ 0) →
-      ∀ x ∈ (⨆ w ∈ s, dV.piece w) ⊔ S, (∀ g : GaugeGroupI, rep g x = x) → x ∈ S := by
-  intro s
-  induction s using Finset.induction_on with
-  | empty =>
-    intro _ x hx _
-    simpa using hx
-  | @insert w₀ s' hw₀ ih =>
-    intro hs x hx hinv
-    obtain ⟨i, hi⟩ := hs w₀ (Finset.mem_insert_self w₀ s')
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    obtain ⟨a, ha, y, hy, rfl⟩ := Submodule.mem_sup.mp hx
-    have hc1 : ((expI : ℂ) ^ w₀.coord i) ≠ 1 := by
-      intro hcc
-      exact hi (expI_zpow_injective
-        (show (expI : ℂ) ^ w₀.coord i = (expI : ℂ) ^ (0 : ℤ) by rw [zpow_zero]; exact hcc))
-    have hpiece : ∀ w, ∀ z ∈ dV.piece w, rep (gaugeTorusGen i) z ∈ dV.piece w := by
-      intro w z hz
+/-- The torus sieve as a reduction for the four torus generators: modulo a torus-stable
+  submodule, their invariants in `V` lie in the weight-zero piece. Every other weight in the
+  support is scaled by some generator by `(exp i) ^ n` with `n ≠ 0`, a scalar other than `1`,
+  so its piece reduces to `⊥` by `reducesInvariantsTo_bot_of_apply_eq_smul`; each piece is
+  carried into itself by the torus, and `ReducesInvariantsTo.iSup` joins the pieces. -/
+lemma reducesInvariantsTo_piece_zero (dV : GaugeWeightDecomposition rep V) :
+    ReducesInvariantsTo (fun i => rep (gaugeTorusGen i)) V (dV.piece 0) := by
+  classical
+  have hstab : ∀ w, IsStableUnder (fun i => rep (gaugeTorusGen i)) (dV.piece w) :=
+    fun w i z hz => by
       rw [dV.piece_le w z hz i]
       exact (dV.piece w).smul_mem _ hz
-    have hmap : Submodule.map (rep (gaugeTorusGen i)) ((⨆ w ∈ s', dV.piece w) ⊔ S)
-        ≤ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      rw [Submodule.map_sup]
-      refine sup_le (le_sup_of_le_left ?_) (le_sup_of_le_right ?_)
-      · simp only [Submodule.map_iSup]
-        exact iSup₂_le fun w hw => le_iSup₂_of_le w hw
-          (Submodule.map_le_iff_le_comap.mpr fun z hz => hpiece w z hz)
-      · exact Submodule.map_le_iff_le_comap.mpr fun z hz => hS i z hz
-    have hsum : ((expI : ℂ) ^ w₀.coord i) • a + rep (gaugeTorusGen i) y = a + y := by
-      have hg := hinv (gaugeTorusGen i)
-      rwa [map_add, dV.piece_le w₀ a ha i] at hg
-    have hkey : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y)
-        = ((expI : ℂ) ^ w₀.coord i) • y - rep (gaugeTorusGen i) y := by
-      rw [sub_smul, one_smul, smul_add, ← hsum]
-      abel
-    have hmem : (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-      have h1 : ((expI : ℂ) ^ w₀.coord i - 1) • (a + y) ∈ (⨆ w ∈ s', dV.piece w) ⊔ S := by
-        rw [hkey]
-        exact Submodule.sub_mem _ (Submodule.smul_mem _ _ hy) (hmap ⟨y, hy, rfl⟩)
-      have h2 := Submodule.smul_mem _ (((expI : ℂ) ^ w₀.coord i - 1)⁻¹) h1
-      rwa [smul_smul, inv_mul_cancel₀ (sub_ne_zero.mpr hc1), one_smul] at h2
-    exact ih (fun w hw => hs w (Finset.mem_insert_of_mem hw)) (a + y) hmem hinv
+  have hred : ∀ w : dV.supp,
+      ReducesInvariantsTo (fun i => rep (gaugeTorusGen i)) (dV.piece w) (dV.piece 0) := by
+    rintro ⟨w, -⟩
+    by_cases hw : w = 0
+    · subst hw
+      exact reducesInvariantsTo_of_le le_rfl
+    obtain ⟨i, hi⟩ : ∃ i, w.coord i ≠ 0 := by
+      by_contra hcon
+      exact hw (GaugeWeight.coord_injective (funext fun i => by
+        rw [not_not.mp (not_exists.mp hcon i), GaugeWeight.zero_coord]))
+    refine (reducesInvariantsTo_bot_of_apply_eq_smul i (fun h1 => hi (expI_zpow_injective ?_))
+      fun z hz => dV.piece_le w z hz i).mono_right bot_le
+    show (expI : ℂ) ^ w.coord i = (expI : ℂ) ^ (0 : ℤ)
+    rw [h1, zpow_zero]
+  refine (ReducesInvariantsTo.iSup hred (fun w => hstab w) (hstab 0)).mono_left
+    (dV.iSup_piece.symm.le.trans (iSup_le fun w => ?_))
+  by_cases hw : w ∈ dV.supp
+  · exact le_iSup_of_le ⟨w, hw⟩ le_rfl
+  · rw [dV.piece_eq_bot w hw]
+    exact bot_le
 
-/-- A gauge-invariant element of `V ⊔ S`, for `S` closed under the four torus generators,
-  lies in the weight-zero piece joined with `S`: every other weight is seen by some
-  generator and is scaled away by it. This is the form of `mem_zero_of_invariant` used to
-  peel a sector, with `S` the part already understood. -/
+/-- An element of `V ⊔ S` fixed by the four torus generators, for `S` closed under them,
+  lies in the weight-zero piece joined with `S`. This is `reducesInvariantsTo_piece_zero`
+  unfolded, the form used to sieve a sector with `S` the part already understood. Only the
+  torus is used, so gauge invariance of the element and gauge stability of `S` are more than
+  is needed. -/
 lemma mem_piece_zero_sup_of_invariant {S : Submodule ℂ B}
     (dV : GaugeWeightDecomposition rep V)
     (hS : ∀ (i : Fin 4) (y : B), y ∈ S → rep (gaugeTorusGen i) y ∈ S)
-    {x : B} (hx : x ∈ V ⊔ S) (hinv : ∀ g : GaugeGroupI, rep g x = x) :
-    x ∈ dV.piece 0 ⊔ S := by
-  refine mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero dV ?_ (dV.supp.erase 0) ?_ x ?_
-    hinv
-  · intro i y hy
-    rw [Submodule.mem_sup] at hy ⊢
-    obtain ⟨a, ha, b, hb, rfl⟩ := hy
-    refine ⟨rep (gaugeTorusGen i) a, ?_, rep (gaugeTorusGen i) b, hS i b hb, ?_⟩
-    · rw [dV.piece_le 0 a ha i]
-      exact (dV.piece 0).smul_mem _ ha
-    · rw [map_add]
-  · intro w hw
-    have hw0 : w ≠ 0 := (Finset.mem_erase.mp hw).1
-    by_contra hcon
-    refine hw0 (GaugeWeight.coord_injective (funext fun i => ?_))
-    have hi := not_not.mp (not_exists.mp hcon i)
-    rw [hi, GaugeWeight.zero_coord i]
-  · have hVle : V ≤ (⨆ w ∈ dV.supp.erase 0, dV.piece w) ⊔ dV.piece 0 := by
-      refine le_trans (le_of_eq dV.iSup_piece.symm) (iSup_le fun w => ?_)
-      by_cases hw0 : w = 0
-      · subst hw0
-        exact le_sup_right
-      · by_cases hw : w ∈ dV.supp
-        · exact le_sup_of_le_left (le_iSup₂_of_le w (Finset.mem_erase.mpr ⟨hw0, hw⟩) le_rfl)
-        · rw [dV.piece_eq_bot w hw]
-          exact bot_le
-    exact ((sup_le_sup_right hVle S).trans (le_of_eq (sup_assoc _ _ _))) hx
+    {x : B} (hx : x ∈ V ⊔ S) (hinv : ∀ i : Fin 4, rep (gaugeTorusGen i) x = x) :
+    x ∈ dV.piece 0 ⊔ S :=
+  dV.reducesInvariantsTo_piece_zero S hS x hx hinv
 
 end GaugeWeightDecomposition
 end StandardModel

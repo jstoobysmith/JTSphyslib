@@ -31,7 +31,8 @@ them with one factor of the Lorentz matrix per slot (A). A vector of `B` is inva
 `S` beside the span, where the files using it park their other tensors: a vector of
 `Submodule.span ℂ (Set.range T) ⊔ S`, the sums `u + y`, is invariant exactly when it is a
 combination of the four contractions plus an invariant `y` of `S`. For `S = ⊥` that is
-`exists_smul_contraction_of_invariant`.
+`exists_smul_contraction_of_invariant`, and `reducesInvariantsTo_span_contraction` reads the
+left-to-right direction as a reduction to the span of the four contractions.
 
 The four coefficient tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant
 of the span is the contraction of an invariant one, by projecting off the tensors that contract
@@ -769,6 +770,16 @@ theorem mem_span_sup_invariant_iff (hT : IsLorentzCovariant 4 B repLorentz T) (x
   refine ⟨add_mem (Submodule.mem_sup_left (smul_contraction_mem_span (T := T) a₁ a₂ a₃ a₄))
     (Submodule.mem_sup_right hyS), fun g => ?_⟩
   rw [map_add, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g, hyinv g]
+
+/-- The span of the components reduces to the span of the four contractions:
+  `exists_smul_contraction_of_invariant_subset` read as a reduction for the Lorentz group. -/
+lemma reducesInvariantsTo_span_contraction (hT : IsLorentzCovariant 4 B repLorentz T) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
+      (Submodule.span ℂ (Set.range (contraction T))) := fun S hS x hx hinv => by
+  obtain ⟨a₁, a₂, a₃, a₄, y, hy, rfl, -⟩ :=
+    exists_smul_contraction_of_invariant_subset hT S hS hx hinv
+  exact Submodule.add_mem_sup ((Submodule.mem_span_range_iff_exists_fun ℂ).2
+    ⟨![a₁, a₂, a₃, a₄], sum_smul_contraction _⟩) hy
 
 end RankFour
 

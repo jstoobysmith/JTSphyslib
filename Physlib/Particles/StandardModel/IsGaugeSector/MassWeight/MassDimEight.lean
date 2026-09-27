@@ -6,6 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
+public import Physlib.Particles.StandardModel.InvariantReduction
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
@@ -36,7 +37,7 @@ covector indices and no others, so both are quadruple Lorentz tensors, and the L
 classification cuts the combinations down further, to the four Lorentz contractions of
 each of the four families.
 
-- A. Spans, stability and peeling
+- A. Spans and stability
 - B. The gauge transformation of the gauge-factor field strengths
 - C. Products of two underived field strengths as bi-adjoint families
 - D. The weight vectors of mass weight eight inside the bi-adjoint spans
@@ -47,11 +48,12 @@ each of the four families.
 - I. The Lorentz contraction span as invariants of mass weight eight
 - J. The classifications as equivalences
 
-Both classifications are one-directional as stated, and the converse is that each span
-consists of invariants of mass weight eight already, the gauge one because its generators
-are fixed by the gauge group and carry the right mass weight, and the Lorentz one because
-it sits inside the gauge span and is spanned by contractions that `RankFour` shows to
-be Lorentz invariant. Section J puts the two directions together as the equivalences
+Both classifications are reductions in the sense of `ReducesInvariantsTo`, stated modulo
+any stable submodule. The converse is that each span consists of invariants of mass weight
+eight already, the gauge one because its generators are fixed by the gauge group and carry
+the right mass weight, and the Lorentz one because it sits inside the gauge span and is
+spanned by contractions that `RankFour` shows to be Lorentz invariant. Section J composes
+the two reductions and puts the two directions together as the equivalences
 `mem_massWeightSubmodule_eight_sup_and_invariant_iff` and
 `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`.
 
@@ -80,22 +82,19 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-!
 
-## A. Spans, stability and peeling
+## A. Spans and stability
 
 Every subspace in this file is spanned by a finite family. Where a classifier supplies or
-consumes it, it is written `Submodule.span ℂ (Set.range T)`; where peeling produces it, it is
-the join of lines `⨆ i, ℂ ∙ T i`, and `Submodule.span_range_eq_iSup` passes between the two.
-A join of lines lies in a submodule as soon as its generators do, and a linear map fixing
-each generator fixes it pointwise; a linear map moving each generator to a combination of
-the generators carries the span into itself. Stability under a linear map, and being fixed
-pointwise by it, pass to joins.
+consumes it, it is written `Submodule.span ℂ (Set.range T)`; where a family of lines is
+collected, it is the join `⨆ i, ℂ ∙ T i`, and `Submodule.span_range_eq_iSup` passes between
+the two. A join of lines lies in a submodule as soon as its generators do, and a linear map
+fixing each generator fixes it pointwise; a linear map moving each generator to a
+combination of the generators carries the span into itself.
 
-Peeling is the induction that runs the classification. A family `V i` of stable
-submodules, each of which can be peeled off any stable submodule `S` leaving an invariant
-remainder in `S` and a difference in `W i`, can be peeled off all at once: an invariant of
-`(⨆ i, V i) ⊔ S` is an invariant of `S` up to an element of `⨆ i, W i`. The bi-adjoint
-families are peeled with `W i` the line through the trace contraction, the adjoint
-families with `W i = ⊥`, and a submodule fixed pointwise is peeled with `W = V`.
+The classification runs through `ReducesInvariantsTo`. Each bi-adjoint family's span
+reduces, for its factor of the gauge group, to the line through its trace contraction, and
+each adjoint family's span to `⊥`; `ReducesInvariantsTo.iSup` joins the families of one
+kind, and `ReducesInvariantsTo.sup` joins the kinds.
 
 -/
 
@@ -122,94 +121,6 @@ lemma map_eq_self_of_mem_iSup_span {ι : Sort*} (T : ι → B) (f : B →ₗ[ℂ
     (hf : ∀ i, f (T i) = T i) : ∀ y ∈ ⨆ i, ℂ ∙ T i, f y = y := fun _ hy =>
   LinearMap.mem_eqLocus.1 (iSup_span_singleton_le T (V := LinearMap.eqLocus f LinearMap.id)
     (fun i => LinearMap.mem_eqLocus.2 (hf i)) hy)
-
-/-- Being fixed pointwise passes to a join. -/
-lemma fixed_sup {V S : Submodule ℂ B} {f : B →ₗ[ℂ] B} (hV : ∀ y ∈ V, f y = y)
-    (hS : ∀ y ∈ S, f y = y) : ∀ y ∈ V ⊔ S, f y = y := fun _ hy =>
-  LinearMap.mem_eqLocus.1 ((sup_le (fun _ hz => LinearMap.mem_eqLocus.2 (hV _ hz))
-    fun _ hz => LinearMap.mem_eqLocus.2 (hS _ hz) :
-      V ⊔ S ≤ LinearMap.eqLocus f LinearMap.id) hy)
-
-/-- Being fixed pointwise passes to the join of a family. -/
-lemma fixed_iSup {ι : Sort*} {V : ι → Submodule ℂ B} {f : B →ₗ[ℂ] B}
-    (hV : ∀ i, ∀ y ∈ V i, f y = y) : ∀ y ∈ ⨆ i, V i, f y = y := fun _ hy =>
-  LinearMap.mem_eqLocus.1 ((iSup_le fun i _ hz => LinearMap.mem_eqLocus.2 (hV i _ hz) :
-    (⨆ i, V i) ≤ LinearMap.eqLocus f LinearMap.id) hy)
-
-/-- A submodule fixed pointwise is stable. -/
-lemma stable_of_fixed {V : Submodule ℂ B} {f : B →ₗ[ℂ] B} (hV : ∀ y ∈ V, f y = y) :
-    ∀ y ∈ V, f y ∈ V := fun y hy => by rwa [hV y hy]
-
-/-- Stability passes to a join. -/
-lemma sup_stable {V S : Submodule ℂ B} {f : B →ₗ[ℂ] B} (hV : ∀ y ∈ V, f y ∈ V)
-    (hS : ∀ y ∈ S, f y ∈ S) : ∀ y ∈ V ⊔ S, f y ∈ V ⊔ S := fun _ hy =>
-  (sup_le (fun _ hz => Submodule.mem_sup_left (hV _ hz))
-    (fun _ hz => Submodule.mem_sup_right (hS _ hz)) : V ⊔ S ≤ (V ⊔ S).comap f) hy
-
-/-- Stability passes to the join of a family. -/
-lemma iSup_stable {ι : Sort*} {V : ι → Submodule ℂ B} {f : B →ₗ[ℂ] B}
-    (hV : ∀ i, ∀ y ∈ V i, f y ∈ V i) : ∀ y ∈ ⨆ i, V i, f y ∈ ⨆ i, V i := fun _ hy =>
-  (iSup_le fun i _ hz => Submodule.mem_iSup_of_mem i (hV i _ hz) :
-    (⨆ i, V i) ≤ (⨆ i, V i).comap f) hy
-
-/-- Splitting off a submodule fixed pointwise: the remainder is invariant for free, being
-  the difference of two invariants. -/
-lemma exists_mem_of_invariant_sup_fixed {G : Type} (φ : G → B →ₗ[ℂ] B) (V S : Submodule ℂ B)
-    (hV : ∀ g, ∀ v ∈ V, φ g v = v) {x : B} (hx : x ∈ V ⊔ S) (hinv : ∀ g, φ g x = x) :
-    ∃ y ∈ S, (∀ g, φ g y = y) ∧ x - y ∈ V := by
-  obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
-  refine ⟨z, hz, fun g => ?_, by simpa using hu⟩
-  have hg := hinv g
-  rwa [map_add, hV g u hu, add_right_inj] at hg
-
-/-- The form in which the bi-adjoint sup lemmas peel one family off: the remainder is what
-  is left after a multiple of the invariant vector `v` is taken away. -/
-lemma exists_sub_mem_span_singleton {G : Type} {φ : G → B →ₗ[ℂ] B} {S : Submodule ℂ B} {x v : B}
-    (hx : ∃ c : ℂ, ∃ y ∈ S, x = c • v + y ∧ ∀ g, φ g y = y) :
-    ∃ y ∈ S, (∀ g, φ g y = y) ∧ x - y ∈ ℂ ∙ v := by
-  obtain ⟨c, y, hyS, rfl, hyinv⟩ := hx
-  refine ⟨y, hyS, hyinv, ?_⟩
-  rw [add_sub_cancel_right]
-  exact Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)
-
-/-- Peeling a finite join of families off a stable submodule, one family at a time. Each
-  `V i` is stable and can be peeled off any stable submodule, leaving an invariant
-  remainder there and a difference in `W i`; the join is then peeled off all at once. -/
-lemma exists_mem_of_invariant_iSup_sup {G ι : Type} [Fintype ι] (φ : G → B →ₗ[ℂ] B)
-    (V W : ι → Submodule ℂ B) (hV : ∀ i g, ∀ y ∈ V i, φ g y ∈ V i)
-    (hpeel : ∀ (i : ι) (S : Submodule ℂ B), (∀ g, ∀ y ∈ S, φ g y ∈ S) → ∀ x ∈ V i ⊔ S,
-      (∀ g, φ g x = x) → ∃ y ∈ S, (∀ g, φ g y = y) ∧ x - y ∈ W i)
-    (S : Submodule ℂ B) (hS : ∀ g, ∀ y ∈ S, φ g y ∈ S) {x : B} (hx : x ∈ (⨆ i, V i) ⊔ S)
-    (hinv : ∀ g, φ g x = x) : ∃ y ∈ S, (∀ g, φ g y = y) ∧ x - y ∈ ⨆ i, W i := by
-  classical
-  suffices key : ∀ s : Finset ι, ∀ x ∈ (⨆ i ∈ s, V i) ⊔ S, (∀ g, φ g x = x) →
-      ∃ y ∈ S, (∀ g, φ g y = y) ∧ x - y ∈ ⨆ i ∈ s, W i by
-    simpa using key Finset.univ x (by simpa using hx) hinv
-  intro s
-  induction s using Finset.induction_on with
-  | empty => exact fun x hx hinv => ⟨x, by simpa using hx, hinv, by simp⟩
-  | insert a s _ ih =>
-    intro x hx hinv
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g, ∀ y ∈ (⨆ i ∈ s, V i) ⊔ S, φ g y ∈ (⨆ i ∈ s, V i) ⊔ S :=
-      fun g => sup_stable (iSup_stable fun i => iSup_stable fun _ => hV i g) (hS g)
-    obtain ⟨y', hy', hy'inv, hxy'⟩ := hpeel a _ hstab x hx hinv
-    obtain ⟨y, hyS, hyinv, hy'y⟩ := ih y' hy' hy'inv
-    refine ⟨y, hyS, hyinv, ?_⟩
-    rw [Finset.iSup_insert, show x - y = (x - y') + (y' - y) from by abel]
-    exact Submodule.add_mem _ (Submodule.mem_sup_left hxy') (Submodule.mem_sup_right hy'y)
-
-/-- Peeling families with no invariants at all off a stable submodule leaves nothing. -/
-lemma mem_of_invariant_iSup_sup {G ι : Type} [Fintype ι] (φ : G → B →ₗ[ℂ] B)
-    (V : ι → Submodule ℂ B) (hV : ∀ i g, ∀ y ∈ V i, φ g y ∈ V i)
-    (hpeel : ∀ (i : ι) (S : Submodule ℂ B), (∀ g, ∀ y ∈ S, φ g y ∈ S) → ∀ x ∈ V i ⊔ S,
-      (∀ g, φ g x = x) → x ∈ S)
-    (S : Submodule ℂ B) (hS : ∀ g, ∀ y ∈ S, φ g y ∈ S) {x : B} (hx : x ∈ (⨆ i, V i) ⊔ S)
-    (hinv : ∀ g, φ g x = x) : x ∈ S := by
-  obtain ⟨y, hyS, -, hxy⟩ := exists_mem_of_invariant_iSup_sup φ V (fun _ => ⊥) hV
-    (fun i S hS x hx hinv => ⟨x, hpeel i S hS x hx hinv, hinv, by simp⟩) S hS hx hinv
-  rw [iSup_bot, Submodule.mem_bot, sub_eq_zero] at hxy
-  exact hxy ▸ hyS
 
 /-- The product of two lines lies in a submodule as soon as the product of the two
   generators does. -/
@@ -726,9 +637,8 @@ lemma isospinFamily_mem (i : IsospinIdx) (a : Fin 3) :
 /-- The join of the isospin families is fixed pointwise by the colour factor. -/
 lemma repGauge_su3_of_mem_unpairedIsospinSpan (U : specialUnitaryGroup (Fin 3) ℂ) :
     ∀ y ∈ h.unpairedIsospinSpan, repGauge (U, 1, 1) y = y :=
-  fixed_iSup fun i => by
-    rw [Submodule.span_range_eq_iSup]
-    exact map_eq_self_of_mem_iSup_span _ _ (h.repGauge_su3_isospinFamily U i)
+  isFixedBy_iSup (σ := fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
+    (fun i => isFixedBy_span_range fun a U => h.repGauge_su3_isospinFamily U i a) U
 
 /-- The colour Cartan directions of the underived tower: the two weight-zero directions of
   the `su(3)` factor. -/
@@ -868,55 +778,54 @@ lemma massWeightSubmoduleGaugeWeightEight_piece_zero_le :
 
 A family carrying one unpaired adjoint index of a non-abelian factor has no gauge invariant
 in its span at all, the adjoint representations of `su(3)` and `su(2)` having no invariant
-vector: `IsSU3Adjoint.mem_of_mem_span_sup_su3_invariant` and its `su(2)` twin push a colour,
-or isospin, invariant of such a span joined with a stable submodule into the submodule.
-Peeling the joins of section E off with `mem_of_invariant_iSup_sup` therefore costs
-nothing. The colour families are killed first, with the isospin join held in the
-colour-stable tail, since the colour factor fixes every isospin family; the isospin
-families are killed after that.
+vector: `IsSU3Adjoint.reducesInvariantsTo_bot` and its `su(2)` twin reduce such a span to
+`⊥` for that factor. The colour families are reduced first, with the isospin join carried
+in the target, since the colour factor fixes every isospin family; the isospin families
+are reduced after that.
 
 -/
 
-/-- A gauge invariant of the join of the unpaired families together with a gauge-stable
-  submodule lies in the submodule. -/
-lemma mem_of_invariant_unpaired_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B}
-    (hx : x ∈ (h.unpairedColourSpan ⊔ h.unpairedIsospinSpan) ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) : x ∈ S := by
-  rw [sup_assoc] at hx
-  have hx' := mem_of_invariant_iSup_sup
-    (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
-    (fun i => Submodule.span ℂ (Set.range (h.colourFamily i)))
-    (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU3Adjoint_colourFamily i).repGauge_T U))
-    (fun i S hS x hx hinv =>
-      (h.isSU3Adjoint_colourFamily i).mem_of_mem_span_sup_su3_invariant x S hS hx hinv)
-    _ (fun U => sup_stable (stable_of_fixed (h.repGauge_su3_of_mem_unpairedIsospinSpan U))
-      (hS (U, 1, 1))) hx fun U => hinv (U, 1, 1)
-  exact mem_of_invariant_iSup_sup (fun U : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, U, 1))
-    (fun i => Submodule.span ℂ (Set.range (h.isospinFamily i)))
-    (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU2Adjoint_isospinFamily i).repGauge_T U))
-    (fun i S hS x hx hinv =>
-      (h.isSU2Adjoint_isospinFamily i).mem_of_mem_span_sup_su2_invariant x S hS hx hinv)
-    S (fun U => hS (1, U, 1)) hx' fun U => hinv (1, U, 1)
+/-- The joins of the unpaired families reduce to `⊥` for the gauge group: the colour
+  families for the colour factor, with the colour-fixed isospin join kept in the target, and
+  then the isospin families for the isospin factor. -/
+lemma reducesInvariantsTo_unpaired :
+    ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g)
+      (h.unpairedColourSpan ⊔ h.unpairedIsospinSpan) ⊥ := by
+  classical
+  have hfix : IsFixedBy (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
+      h.unpairedIsospinSpan := h.repGauge_su3_of_mem_unpairedIsospinSpan
+  have hcolour : ReducesInvariantsTo
+      (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
+      (h.unpairedColourSpan ⊔ h.unpairedIsospinSpan) h.unpairedIsospinSpan :=
+    ((ReducesInvariantsTo.iSup (fun i => IsSU3Adjoint.reducesInvariantsTo_bot _
+        (h.isSU3Adjoint_colourFamily i).repGauge_T)
+      (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU3Adjoint_colourFamily i).repGauge_T U))
+      isStableUnder_bot).mono_right bot_le).sup (reducesInvariantsTo_of_le le_rfl)
+      hfix.isStableUnder hfix.isStableUnder
+  have hisospin : ReducesInvariantsTo
+      (fun U : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, U, 1)) h.unpairedIsospinSpan ⊥ :=
+    ReducesInvariantsTo.iSup (fun i => IsSU2Adjoint.reducesInvariantsTo_bot _
+        (h.isSU2Adjoint_isospinFamily i).repGauge_T)
+      (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU2Adjoint_isospinFamily i).repGauge_T U))
+      isStableUnder_bot
+  exact (hcolour.comp (σ := fun g : GaugeGroupI => repGauge g) (fun U => (U, 1, 1))).trans
+    (hisospin.comp (σ := fun g : GaugeGroupI => repGauge g) (fun U => (1, U, 1)))
 
 /-!
 
 ## G. The gauge invariants of mass weight eight
 
-A gauge invariant of mass weight eight lies in the zero-weight piece of the gauge weight
-decomposition, which section E bounds by the unpaired joins, the two non-abelian pair spans
-and the two hypercharge spans. Section F kills the unpaired joins. The two pair spans are
-peeled off one at a time by `IsSU3BiAdjoint.exists_smul_add_of_gauge_invariant` and its `su(2)`
-twin, each time with the spans not yet peeled off adjoined to the stable submodule `S`,
-which is why no independence of the parts is needed; each pair span is gauge stable, so
-the enlarged submodule stays stable. The two hypercharge spans are fixed pointwise by the
-gauge group and are split off last.
+A gauge invariant of mass weight eight lies, modulo any gauge-stable submodule, in the
+zero-weight piece of the gauge weight decomposition
+(`GaugeWeightDecomposition.reducesInvariantsTo_piece_zero`), which section E bounds by the
+unpaired joins, the two non-abelian pair spans and the two hypercharge spans. Section F
+reduces the unpaired joins to `⊥`. Each pair span reduces to its trace contractions by
+`IsSU3BiAdjoint.reducesInvariantsTo_span_traceContraction` and its `su(2)` twin, and the two
+hypercharge spans are fixed pointwise by the gauge group and reduce to themselves.
+`ReducesInvariantsTo.sup` joins the parts, asking stability of every part but the first and
+of the target; no independence of the parts is needed.
 
-The hypothesis is membership of the zero-weight piece joined with `S`. An element of the
-mass-weight submodule joined with `S` need not have its mass-weight eight part invariant,
-and `GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant` supplies that step for any
-gauge-stable `S`, giving `exists_mem_of_invariant_massWeightSubmodule_eight_sup`. The
-section closes with the converse: the gauge span is made of gauge invariants of mass
+The section closes with the converse: the gauge span is made of gauge invariants of mass
 weight eight already.
 
 -/
@@ -933,14 +842,16 @@ noncomputable def traceContractionEightSpan : Submodule ℂ B :=
   h.gluonTraceSpan ⊔ (h.wTraceSpan ⊔ h.hyperchargeTraceSpan)
 
 /-- The gluon pair spans are stable under the gauge group. -/
-lemma gluonPairSpan_stable (g : GaugeGroupI) :
-    ∀ y ∈ h.gluonPairSpan, repGauge g y ∈ h.gluonPairSpan :=
-  iSup_stable fun p =>
+lemma isStableUnder_gluonPairSpan :
+    IsStableUnder (fun g : GaugeGroupI => repGauge g) h.gluonPairSpan :=
+  isStableUnder_iSup fun p g =>
     span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g)
 
 /-- The `W`-boson pair spans are stable under the gauge group. -/
-lemma wPairSpan_stable (g : GaugeGroupI) : ∀ y ∈ h.wPairSpan, repGauge g y ∈ h.wPairSpan :=
-  iSup_stable fun p => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g)
+lemma isStableUnder_wPairSpan :
+    IsStableUnder (fun g : GaugeGroupI => repGauge g) h.wPairSpan :=
+  isStableUnder_iSup fun p g =>
+    span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g)
 
 /-- The hypercharge trace contractions are fixed pointwise by the gauge group. -/
 lemma repGauge_of_mem_hyperchargeTraceSpan (g : GaugeGroupI) :
@@ -952,84 +863,6 @@ lemma repGauge_of_mem_hyperchargeTraceSpan (g : GaugeGroupI) :
 lemma repGauge_of_mem_hyperchargeDerivSpan (g : GaugeGroupI) :
     ∀ y ∈ h.hyperchargeDerivSpan, repGauge g y = y :=
   map_eq_self_of_mem_iSup_span _ _ (h.repGauge_hyperchargeDeriv g)
-
-/-- Peeling the gluon pair spans off a gauge-stable submodule: a gauge invariant of the
-  join together with `S` is a combination of the gluon trace contractions plus a
-  gauge-invariant remainder in `S`. -/
-lemma exists_mem_of_invariant_gluonPairSpan_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B} (hx : x ∈ h.gluonPairSpan ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y) ∧ x - y ∈ h.gluonTraceSpan :=
-  exists_mem_of_invariant_iSup_sup repGauge (fun p => Submodule.span ℂ (Set.range (h.gluonPair p)))
-    (fun p => ℂ ∙ h.gluonTrace p)
-    (fun p g => span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g))
-    (fun p S hS x hx hinv => exists_sub_mem_span_singleton
-      ((h.isSU3BiAdjoint_gluonPair p).exists_smul_add_of_gauge_invariant x S hS
-        (h.repGauge_gluonTrace · p) hx hinv))
-    S hS hx hinv
-
-/-- Peeling the `W`-boson pair spans off a gauge-stable submodule. -/
-lemma exists_mem_of_invariant_wPairSpan_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B} (hx : x ∈ h.wPairSpan ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y) ∧ x - y ∈ h.wTraceSpan :=
-  exists_mem_of_invariant_iSup_sup repGauge (fun p => Submodule.span ℂ (Set.range (h.wPair p)))
-    (fun p => ℂ ∙ h.wTrace p)
-    (fun p g => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g))
-    (fun p S hS x hx hinv => exists_sub_mem_span_singleton
-      ((h.isSU2BiAdjoint_wPair p).exists_smul_add_of_gauge_invariant x S hS
-        (h.repGauge_wTrace · p) hx hinv))
-    S hS hx hinv
-
-/-- The gauge invariants of mass weight eight modulo any gauge-stable submodule: such an
-  invariant is a combination of the three underived trace contractions and the
-  twice-derived hypercharge field strengths, plus a gauge-invariant remainder in `S`. -/
-theorem exists_mem_of_invariant_piece_zero_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B}
-    (hx : x ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-      ∧ x - y ∈ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan := by
-  have hH : ∀ g : GaugeGroupI, ∀ y ∈ h.hyperchargeTraceSpan ⊔ h.hyperchargeDerivSpan,
-      repGauge g y = y := fun g =>
-    fixed_sup (h.repGauge_of_mem_hyperchargeTraceSpan g) (h.repGauge_of_mem_hyperchargeDerivSpan g)
-  have hS₂ : ∀ g : GaugeGroupI, ∀ y ∈ (h.hyperchargeTraceSpan ⊔ h.hyperchargeDerivSpan) ⊔ S,
-      repGauge g y ∈ (h.hyperchargeTraceSpan ⊔ h.hyperchargeDerivSpan) ⊔ S :=
-    fun g => sup_stable (stable_of_fixed (hH g)) (hS g)
-  have hS₁ := fun g => sup_stable (h.wPairSpan_stable g) (hS₂ g)
-  have hS₀ := fun g => sup_stable (h.gluonPairSpan_stable g) (hS₁ g)
-  have hx₀ : x ∈ (h.unpairedColourSpan ⊔ h.unpairedIsospinSpan) ⊔ (h.gluonPairSpan
-      ⊔ (h.wPairSpan ⊔ ((h.hyperchargeTraceSpan ⊔ h.hyperchargeDerivSpan) ⊔ S))) :=
-    sup_le (h.massWeightSubmoduleGaugeWeightEight_piece_zero_le.trans (sup_le_sup_left
-        (sup_le_sup_left (sup_le_sup_left le_sup_left _) _) _))
-      (le_sup_of_le_right (le_sup_of_le_right (le_sup_of_le_right le_sup_right))) hx
-  obtain ⟨y₁, hy₁, hy₁inv, hxy₁⟩ := h.exists_mem_of_invariant_gluonPairSpan_sup _ hS₁
-    (h.mem_of_invariant_unpaired_sup _ hS₀ hx₀ hinv) hinv
-  obtain ⟨y₂, hy₂, hy₂inv, hy₁y₂⟩ := h.exists_mem_of_invariant_wPairSpan_sup _ hS₂ hy₁ hy₁inv
-  obtain ⟨y₃, hy₃, hy₃inv, hy₂y₃⟩ := exists_mem_of_invariant_sup_fixed repGauge _ S hH hy₂ hy₂inv
-  refine ⟨y₃, hy₃, hy₃inv, ?_⟩
-  rw [show x - y₃ = (x - y₁) + ((y₁ - y₂) + (y₂ - y₃)) from by abel, traceContractionEightSpan,
-    sup_assoc, sup_assoc]
-  exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₁) (Submodule.add_mem _
-    (Submodule.mem_sup_right (Submodule.mem_sup_left hy₁y₂))
-    (Submodule.mem_sup_right (Submodule.mem_sup_right hy₂y₃)))
-
-/-- The sup form at the mass-weight submodule: a gauge invariant of
-  `massWeightSubmodule 8 ⊔ S`, for `S` gauge stable, is a combination of the three
-  underived trace contractions and the twice-derived hypercharge field strengths plus a
-  gauge-invariant remainder in `S`. The weight-eight part of such an element need not
-  itself be invariant, and `mem_piece_zero_sup_of_invariant` is what places the element in
-  the zero-weight piece all the same. -/
-theorem exists_mem_of_invariant_massWeightSubmodule_eight_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 8 ⊔ S)
-    (hinv : ∀ g : GaugeGroupI, repGauge g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-      ∧ x - y ∈ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan :=
-  h.exists_mem_of_invariant_piece_zero_sup S hS
-    (GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
-      h.massWeightSubmoduleGaugeWeightEight (fun _ y hy => hS _ y hy) hx hinv)
-    hinv
 
 /-- The gauge span is a space of gauge invariants of mass weight eight: each generator is
   fixed by the gauge group and has mass weight eight by section C. This is the converse of
@@ -1050,6 +883,63 @@ lemma traceContractionEightSpan_sup_hyperchargeDerivSpan_le :
       ⟨h.hyperchargeDeriv_mem_massWeightSubmodule d,
         (Representation.mem_invariants _ _).2 (h.repGauge_hyperchargeDeriv · d)⟩)
 
+/-- The gauge span is fixed pointwise by the gauge group. -/
+lemma isFixedBy_traceContractionEightSpan_sup :
+    IsFixedBy (fun g : GaugeGroupI => repGauge g)
+      (h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan) := fun g _ hy =>
+  (Representation.mem_invariants _ _).1
+    (Submodule.mem_inf.1 (h.traceContractionEightSpan_sup_hyperchargeDerivSpan_le hy)).2 g
+
+/-- The gluon pair spans reduce, for the gauge group, to the gluon trace contractions: each
+  gluon pair family is bi-adjoint for the colour factor. -/
+lemma reducesInvariantsTo_gluonPairSpan :
+    ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) h.gluonPairSpan h.gluonTraceSpan := by
+  classical
+  exact ReducesInvariantsTo.iSup
+    (fun p => ((IsSU3BiAdjoint.reducesInvariantsTo_span_traceContraction _
+      (h.isSU3BiAdjoint_gluonPair p).repGauge_T).comp (σ := fun g : GaugeGroupI => repGauge g)
+        (fun U => (U, 1, 1))).mono_right (le_iSup (fun p => ℂ ∙ h.gluonTrace p) p))
+    (fun p g => span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g))
+    (isFixedBy_iSup fun p => isFixedBy_span_singleton (h.repGauge_gluonTrace · p)).isStableUnder
+
+/-- The `W`-boson pair spans reduce, for the gauge group, to the `W`-boson trace
+  contractions: each `W`-boson pair family is bi-adjoint for the isospin factor. -/
+lemma reducesInvariantsTo_wPairSpan :
+    ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) h.wPairSpan h.wTraceSpan := by
+  classical
+  exact ReducesInvariantsTo.iSup
+    (fun p => ((IsSU2BiAdjoint.reducesInvariantsTo_span_traceContraction _
+      (h.isSU2BiAdjoint_wPair p).repGauge_T).comp (σ := fun g : GaugeGroupI => repGauge g)
+        (fun U => (1, U, 1))).mono_right (le_iSup (fun p => ℂ ∙ h.wTrace p) p))
+    (fun p g => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g))
+    (isFixedBy_iSup fun p => isFixedBy_span_singleton (h.repGauge_wTrace · p)).isStableUnder
+
+/-- Mass weight eight reduces, for the gauge group, to the three underived trace
+  contractions and the twice-derived hypercharge field strengths. The torus puts a gauge
+  invariant in the zero-weight piece; of the parts bounding it, the unpaired joins reduce to
+  `⊥`, the pair spans to their trace contractions, and the hypercharge spans are already
+  fixed. -/
+lemma reducesInvariantsTo_traceContractionEightSpan_sup :
+    ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) (h.massWeightSubmodule 8)
+      (h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan) := by
+  have hW := h.isFixedBy_traceContractionEightSpan_sup.isStableUnder
+  have hH : IsFixedBy (fun g : GaugeGroupI => repGauge g)
+      (h.hyperchargeTraceSpan ⊔ h.hyperchargeDerivSpan) :=
+    IsFixedBy.sup (fun g => h.repGauge_of_mem_hyperchargeTraceSpan g)
+      (fun g => h.repGauge_of_mem_hyperchargeDerivSpan g)
+  -- the pair spans and the hypercharge spans, joined
+  have hrest := (h.reducesInvariantsTo_gluonPairSpan.mono_right
+      (le_sup_of_le_left le_sup_left)).sup ((h.reducesInvariantsTo_wPairSpan.mono_right
+        (le_sup_of_le_left (le_sup_of_le_right le_sup_left))).sup
+      (reducesInvariantsTo_of_le (sup_le (le_sup_of_le_left (le_sup_of_le_right le_sup_right))
+        le_sup_right)) hH.isStableUnder hW)
+    (h.isStableUnder_wPairSpan.sup hH.isStableUnder) hW
+  refine (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => repGauge g) gaugeTorusGen
+    h.massWeightSubmoduleGaugeWeightEight.reducesInvariantsTo_piece_zero).trans
+    (((h.reducesInvariantsTo_unpaired.mono_right bot_le).sup hrest
+      (h.isStableUnder_gluonPairSpan.sup (h.isStableUnder_wPairSpan.sup hH.isStableUnder))
+      hW).mono_left h.massWeightSubmoduleGaugeWeightEight_piece_zero_le)
+
 /-!
 
 ## H. The Lorentz classification of the mass-weight eight invariants
@@ -1062,17 +952,17 @@ through the product. The three trace contractions are sums of such products over
 index, and a finite sum of quadruple Lorentz tensors is one again. So is the twice-derived
 hypercharge field strength, whose two derivative slots and two covector indices are four
 four-vector indices as well. The four spans of section G are exactly the spans of these
-four families, so the gauge classification puts an invariant of mass weight eight into
-the join of the four spans together with `S`, and the Lorentz sup lemma peels those spans
-off one at a time, as the bi-adjoint sup lemmas did for the gauge group.
+four families, and `RankFour.reducesInvariantsTo_span_contraction` reduces each, for the
+Lorentz group, to the span of its four contractions.
 
-What is left is a combination of the four Lorentz contractions of each family: the outer,
-inner and split metric contractions and the Levi-Civita contraction. The physical
-expectation is that the first three collapse to one, the metric contraction of `F` with
-itself, because `F` is antisymmetric in its two covector indices. That collapse is not
-available here: `IsGaugeSector` does not assert the antisymmetry, its four fields being
-the gauge law, the Lorentz law, the mass weight and commutativity, and none of them
-relates `F l μ ν φ` to `F l ν μ φ`. All four contractions therefore survive.
+What is left is spanned by the four Lorentz contractions of each family, the outer, inner
+and split metric contractions and the Levi-Civita contraction: sixteen spanning vectors,
+twelve quadratic in the underived field strengths and four linear in the twice-derived
+hypercharge field strength. This is a spanning statement; no generator is shown to be
+nonzero and none is removed as redundant. `IsGaugeSector` does assert antisymmetry of `F`
+in its two covector indices (`F_antisymm`, used below mass weight eight), which is expected
+to make the outer metric contraction of each `F·F` family vanish and the inner and split
+ones agree up to sign; that reduction of the generators is not carried out here.
 
 -/
 
@@ -1180,13 +1070,6 @@ lemma isLorentzCovariant_hyperchargeDeriv :
       Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
       Matrix.tail_cons, Matrix.cons_val_three]
 
-/-- The span of the components of a quadruple Lorentz tensor is stable under the Lorentz
-  group. -/
-lemma rankFour_span_stable {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
-    ∀ y ∈ Submodule.span ℂ (Set.range T), repLorentz g y ∈ Submodule.span ℂ (Set.range T) :=
-  fun _ hy => hT.repLorentz_mem_span_range g hy
-
 /-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the outer,
   inner and split metric contractions and the Levi-Civita contraction. -/
 noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Submodule ℂ B :=
@@ -1208,24 +1091,6 @@ lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) 
     quadContractionSpan T ≤ repLorentz.invariants :=
   Submodule.span_le.2 <| Set.range_subset_iff.2 fun i =>
     (Representation.mem_invariants _ _).2 (RankFour.repLorentz_contraction hT i)
-
-/-- Peeling the span of a quadruple Lorentz tensor off a Lorentz-stable submodule, in the
-  form `exists_mem_of_invariant_iSup_sup` takes: the remainder is Lorentz invariant by the
-  sup lemma of `RankFour`, and the difference is a combination of the four
-  contractions. -/
-lemma exists_mem_of_invariant_rankFour_span_sup {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 4 B repLorentz T) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
-    (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ x - y ∈ quadContractionSpan T := by
-  obtain ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩ :=
-    (RankFour.mem_span_sup_invariant_iff hT x S hS).1 ⟨hx, hLinv⟩
-  have hmem : ∑ i, ![a₁, a₂, a₃, a₄] i • RankFour.contraction T i
-      ∈ Submodule.span ℂ (Set.range (RankFour.contraction T)) :=
-    (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
-  rw [RankFour.sum_smul_contraction] at hmem
-  exact ⟨y, hyS, hyinv, by rwa [add_sub_cancel_right]⟩
 
 /-- The span of the four Lorentz contractions of each of the three underived
   trace-contraction families and of the twice-derived hypercharge family: the gauge and
@@ -1258,67 +1123,14 @@ lemma lorentzContractionEightSpan_le_invariants :
   h.lorentzContractionEightSpan_le_traceContractionEightSpan_sup.trans
     (h.traceContractionEightSpan_sup_hyperchargeDerivSpan_le.trans inf_le_right)
 
-/-- The gauge and Lorentz invariants of mass weight eight, modulo a submodule `S` stable
-  under both groups. The gauge classification of section G puts such an invariant in the
-  join of the four spans together with `S`; each is the span of a quadruple Lorentz tensor,
-  so the Lorentz sup lemma peels them off one at a time, leaving a combination of the four
-  Lorentz contractions of each family. The remainder is gauge invariant because the
-  difference is, the Lorentz contraction span sitting inside the gauge span. -/
-theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 8 ⊔ S)
-    (hGinv : ∀ g : GaugeGroupI, repGauge g x = x)
-    (hLinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-      ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.lorentzContractionEightSpan := by
-  obtain ⟨y₀, hy₀S, -, hxy₀⟩ :=
-    h.exists_mem_of_invariant_massWeightSubmodule_eight_sup S hS hx hGinv
-  have hS₃ := fun g => sup_stable (rankFour_span_stable h.isLorentzCovariant_hyperchargeDeriv g)
-    (hSL g)
-  have hS₂ := fun g => sup_stable (rankFour_span_stable h.isLorentzCovariant_hyperchargeTrace g)
-    (hS₃ g)
-  have hS₁ := fun g => sup_stable (rankFour_span_stable h.isLorentzCovariant_wTrace g) (hS₂ g)
-  have hx₁ : x ∈ Submodule.span ℂ (Set.range h.gluonTrace) ⊔ (Submodule.span ℂ (Set.range h.wTrace)
-      ⊔ (Submodule.span ℂ (Set.range h.hyperchargeTrace)
-        ⊔ (Submodule.span ℂ (Set.range h.hyperchargeDeriv) ⊔ S))) := by
-    have hmem := Submodule.mem_sup.2 ⟨x - y₀, hxy₀, y₀, hy₀S, sub_add_cancel x y₀⟩
-    simp only [traceContractionEightSpan, gluonTraceSpan, wTraceSpan, hyperchargeTraceSpan,
-      hyperchargeDerivSpan, ← Submodule.span_range_eq_iSup, sup_assoc] at hmem
-    exact hmem
-  obtain ⟨y₁, hy₁, hy₁L, hxy₁⟩ :=
-    exists_mem_of_invariant_rankFour_span_sup h.isLorentzCovariant_gluonTrace _ hS₁ hx₁ hLinv
-  obtain ⟨y₂, hy₂, hy₂L, hxy₂⟩ :=
-    exists_mem_of_invariant_rankFour_span_sup h.isLorentzCovariant_wTrace _ hS₂ hy₁ hy₁L
-  obtain ⟨y₃, hy₃, hy₃L, hxy₃⟩ := exists_mem_of_invariant_rankFour_span_sup
-    h.isLorentzCovariant_hyperchargeTrace _ hS₃ hy₂ hy₂L
-  obtain ⟨y₄, hy₄, hy₄L, hxy₄⟩ := exists_mem_of_invariant_rankFour_span_sup
-    h.isLorentzCovariant_hyperchargeDeriv S hSL hy₃ hy₃L
-  have hxy : x - y₄ ∈ h.lorentzContractionEightSpan := by
-    rw [show x - y₄ = x - y₁ + (y₁ - y₂ + (y₂ - y₃ + (y₃ - y₄))) from by abel,
-      lorentzContractionEightSpan]
-    exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₁)
-      (Submodule.add_mem _ (Submodule.mem_sup_right (Submodule.mem_sup_left hxy₂))
-        (Submodule.add_mem _ (Submodule.mem_sup_right (Submodule.mem_sup_right
-            (Submodule.mem_sup_left hxy₃)))
-          (Submodule.mem_sup_right (Submodule.mem_sup_right
-            (Submodule.mem_sup_right hxy₄)))))
-  refine ⟨y₄, hy₄, fun g => ?_, hy₄L, hxy⟩
-  have hg := hGinv g
-  rwa [← sub_add_cancel x y₄, map_add,
-    (Representation.mem_invariants _ _).1 (h.lorentzContractionEightSpan_le_invariants hxy) g,
-    add_right_inj] at hg
-
 /-!
 
 ## I. The Lorentz contraction span as invariants of mass weight eight
 
 The converse of the Lorentz classification: the Lorentz contraction span is made of gauge
-and Lorentz invariants of mass weight eight. Its gauge invariance was already needed in
-section H, and its mass weight passes to it from the gauge span in the same way; Lorentz
-invariance comes from `RankFour` directly, each block being spanned by the four
-contractions of a quadruple Lorentz family.
+and Lorentz invariants of mass weight eight. Its gauge invariance and its mass weight pass
+to it from the gauge span, which contains it; Lorentz invariance comes from `RankFour`
+directly, each block being spanned by the four contractions of a quadruple Lorentz family.
 
 -/
 
@@ -1336,16 +1148,70 @@ lemma lorentzContractionEightSpan_le_lorentzInvariants :
       (sup_le (quadContractionSpan_le_lorentzInvariants h.isLorentzCovariant_hyperchargeTrace)
         (quadContractionSpan_le_lorentzInvariants h.isLorentzCovariant_hyperchargeDeriv)))
 
+/-- The Lorentz contraction span is fixed pointwise by both groups. -/
+lemma isFixedBy_lorentzContractionEightSpan :
+    IsFixedBy (gaugeLorentzMaps repGauge repLorentz) h.lorentzContractionEightSpan :=
+  isFixedBy_gaugeLorentzMaps_iff.2
+    ⟨fun g _ hy => (Representation.mem_invariants _ _).1
+      (h.lorentzContractionEightSpan_le_invariants hy) g,
+      fun Λ _ hy => (Representation.mem_invariants _ _).1
+        (h.lorentzContractionEightSpan_le_lorentzInvariants hy) Λ⟩
+
 /-!
 
 ## J. The classifications as equivalences
 
-The two directions meet. Forwards, sections G and H put an invariant of mass weight eight
-in the span up to a remainder in `S`; backwards, section I says the span is made of such
-invariants, so the remainder plus the span element is one again. Splitting `x` as
-`(x - y) + y` is all the backward direction takes.
+The gauge reduction of section G and the Lorentz reduction of section H compose, and the
+composite needs no stability or fixedness of the gauge span under the Lorentz group. The
+converse, sections G and I, turns each reduction into an equivalence through
+`ReducesInvariantsTo.mem_sup_and_forall_eq_self_iff`.
 
 -/
+
+/-- The gauge sector at mass weight eight reduces, for the gauge and Lorentz groups
+  together, to the four Lorentz contractions of each of the four families. The gauge group
+  leaves the trace contractions and the twice-derived hypercharge field strengths; each of
+  the four spans is spanned by a quadruple Lorentz tensor and reduces, for the Lorentz
+  group, to the span of its four contractions. -/
+lemma reducesInvariantsTo_lorentzContractionEightSpan :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.massWeightSubmodule 8)
+      h.lorentzContractionEightSpan := by
+  have hW : IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) h.lorentzContractionEightSpan :=
+    fun g _ hy => by
+      rw [(Representation.mem_invariants _ _).1
+        (h.lorentzContractionEightSpan_le_lorentzInvariants hy) g]
+      exact hy
+  have hst : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 4 B repLorentz T →
+      IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) :=
+    fun hT g _ hy => hT.repLorentz_mem_span_range g hy
+  have hred : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 4 B repLorentz T →
+      quadContractionSpan T ≤ h.lorentzContractionEightSpan →
+      ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
+        h.lorentzContractionEightSpan :=
+    fun hT hle => (RankFour.reducesInvariantsTo_span_contraction hT).mono_right hle
+  -- the Lorentz stage, on the four spans the gauge stage leaves
+  have hlorentz : ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g)
+      (h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan) h.lorentzContractionEightSpan := by
+    have hsrc : h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan
+        = Submodule.span ℂ (Set.range h.gluonTrace) ⊔ (Submodule.span ℂ (Set.range h.wTrace)
+          ⊔ (Submodule.span ℂ (Set.range h.hyperchargeTrace)
+            ⊔ Submodule.span ℂ (Set.range h.hyperchargeDeriv))) := by
+      simp only [traceContractionEightSpan, gluonTraceSpan, wTraceSpan, hyperchargeTraceSpan,
+        hyperchargeDerivSpan, ← Submodule.span_range_eq_iSup, sup_assoc]
+    rw [hsrc]
+    exact (hred h.isLorentzCovariant_gluonTrace le_sup_left).sup
+      ((hred h.isLorentzCovariant_wTrace (le_sup_of_le_right le_sup_left)).sup
+        ((hred h.isLorentzCovariant_hyperchargeTrace
+            (le_sup_of_le_right (le_sup_of_le_right le_sup_left))).sup
+          (hred h.isLorentzCovariant_hyperchargeDeriv
+            (le_sup_of_le_right (le_sup_of_le_right le_sup_right)))
+          (hst h.isLorentzCovariant_hyperchargeDeriv) hW)
+        ((hst h.isLorentzCovariant_hyperchargeTrace).sup
+          (hst h.isLorentzCovariant_hyperchargeDeriv)) hW)
+      ((hst h.isLorentzCovariant_wTrace).sup ((hst h.isLorentzCovariant_hyperchargeTrace).sup
+        (hst h.isLorentzCovariant_hyperchargeDeriv))) hW
+  exact (ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_traceContractionEightSpan_sup).trans
+    (ReducesInvariantsTo.ofLorentz hlorentz)
 
 /-- The gauge classification of mass weight eight as an equivalence: an element of
   `massWeightSubmodule 8 ⊔ S` is gauge invariant exactly when it is a combination of the
@@ -1355,15 +1221,10 @@ theorem mem_massWeightSubmodule_eight_sup_and_invariant_iff (S : Submodule ℂ B
     (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S) (x : B) :
     (x ∈ h.massWeightSubmodule 8 ⊔ S ∧ ∀ g : GaugeGroupI, repGauge g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-          ∧ x - y ∈ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan := by
-  refine ⟨fun hx =>
-    h.exists_mem_of_invariant_massWeightSubmodule_eight_sup S hS hx.1 hx.2, ?_⟩
-  rintro ⟨y, hyS, hyinv, hxy⟩
-  obtain ⟨hmem, hinv⟩ := Submodule.mem_inf.1
-    (h.traceContractionEightSpan_sup_hyperchargeDerivSpan_le hxy)
-  rw [← sub_add_cancel x y]
-  exact ⟨Submodule.add_mem _ (Submodule.mem_sup_left hmem) (Submodule.mem_sup_right hyS),
-    fun g => by rw [map_add, (Representation.mem_invariants _ _).1 hinv g, hyinv g]⟩
+          ∧ x - y ∈ h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan :=
+  h.reducesInvariantsTo_traceContractionEightSpan_sup.mem_sup_and_forall_eq_self_iff
+    (h.traceContractionEightSpan_sup_hyperchargeDerivSpan_le.trans inf_le_left)
+    h.isFixedBy_traceContractionEightSpan_sup hS x
 
 /-- The gauge and Lorentz classification of mass weight eight as an equivalence: an
   element of `massWeightSubmodule 8 ⊔ S` is fixed by both groups exactly when it is a
@@ -1376,19 +1237,11 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
           ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.lorentzContractionEightSpan := by
-  refine ⟨fun hx =>
-    h.exists_mem_of_gauge_and_lorentz_invariant S hS hSL hx.1 hx.2.1 hx.2.2, ?_⟩
-  rintro ⟨y, hyS, hyG, hyL, hxy⟩
-  have hG := (Representation.mem_invariants _ _).1
-    (h.lorentzContractionEightSpan_le_invariants hxy)
-  have hL := (Representation.mem_invariants _ _).1
-    (h.lorentzContractionEightSpan_le_lorentzInvariants hxy)
-  rw [← sub_add_cancel x y]
-  exact ⟨Submodule.add_mem _
-      (Submodule.mem_sup_left (h.lorentzContractionEightSpan_le_massWeightSubmodule hxy))
-      (Submodule.mem_sup_right hyS),
-    fun g => by rw [map_add, hG g, hyG g], fun g => by rw [map_add, hL g, hyL g]⟩
+          ∧ x - y ∈ h.lorentzContractionEightSpan :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff
+    h.reducesInvariantsTo_lorentzContractionEightSpan
+    h.lorentzContractionEightSpan_le_massWeightSubmodule h.isFixedBy_lorentzContractionEightSpan
+    hS hSL x
 
 end IsGaugeSector
 

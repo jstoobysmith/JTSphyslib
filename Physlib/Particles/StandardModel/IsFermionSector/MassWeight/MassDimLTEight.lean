@@ -485,9 +485,8 @@ lemma range_e_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 Gauge invariance is what selects the conjugate pairings. A gauge-invariant element lies
 in the weight-zero piece of the gauge weight decomposition, and modulo a gauge-stable
 submodule the same holds with the submodule joined on: the torus generators scale every
-other weight, and the induction of
-`GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero` deletes them
-one at a time. Unlike the single-tower case, the generator has to be chosen weight by
+other weight, and `GaugeWeightDecomposition.reducesInvariantsTo_piece_zero` deletes them
+one piece at a time. Unlike the single-tower case, the generator has to be chosen weight by
 weight: a product like `Q barQ` at two different colours has vanishing hypercharge and
 nonzero colour, so no one generator sees every weight.
 
@@ -623,7 +622,8 @@ theorem mem_of_invariant_of_mem_massWeightSubmoduleSix_sup {S : Submodule ℂ B}
     (hG : ∀ g : GaugeGroupI, repGauge g x = x)
     (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   have hzero : x ∈ (h.massWeightSubmoduleGaugeWeightSix).piece 0 ⊔ S :=
-    GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
+    GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx
+      fun _ => hG _
   refine mem_of_lorentz_invariant_iSup_dualLeftRightWeyl_span
     h.isDualLeftRightWeyl_sixFamily S hSL ?_ hL
   exact sup_le_sup_right h.massWeightSubmoduleGaugeWeightSix_piece_zero_le S hzero

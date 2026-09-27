@@ -223,13 +223,15 @@ group if and only if it is a combination of
 
 * the constant term, of mass dimension zero;
 * the Higgs mass term `H† H`, of mass dimension two;
-* and the dimension-four Standard Model Lagrangian — the gauge kinetic and theta terms of
-  the three gauge groups, the Higgs kinetic term, its quartic potential and its two box
+* and the dimension-four span — the four Lorentz contractions of the three `F·F` trace
+  families and of the twice-derived hypercharge field strength, among them the gauge
+  kinetic and theta terms, the Higgs kinetic term, its quartic potential and its two box
   terms, the kinetic terms of the ten fermion species over the nine family pairs, and the
   six Yukawa couplings over the nine family pairs —
 
-and nothing else. No further term of dimension four is invariant, and none of these is
-forced to vanish.
+and nothing else. This is a statement about formal expressions: the listed terms span, but
+they are not shown to be independent or nonzero, and nothing is identified modulo total
+derivatives or the equations of motion.
 
 The second theorem is the same classification with a submodule `S` set aside — the
 operators of mass dimension above four, for a reader who wants to work modulo them. It is
@@ -246,9 +248,9 @@ towers for the classification to say anything about it.
 /-- The invariant content of the Standard Model up to mass dimension four, on the jet
   algebra of the Standard Model itself, with nothing set aside. An element of mass weight
   at most eight is fixed by the jet gauge group and by the Lorentz group exactly when it is
-  a combination of the constant term, the Higgs mass term `H† H`, and the Standard Model
-  Lagrangian of mass dimension four: the gauge kinetic and theta terms
-  (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs kinetic term, quartic potential
+  a combination of the constant term, the Higgs mass term `H† H`, and the dimension-four
+  span: the Lorentz contractions of the gauge sector, among them the gauge kinetic and theta
+  terms (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs kinetic term, quartic potential
   and box terms (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`), the fermion kinetic terms
   (`IsFermionSector.kineticSpan`) and the Yukawa couplings (`yukawaSpan`) — and nothing
   else.

@@ -473,7 +473,6 @@ theorem mem_of_invariant_sectorMassWeight_gauge_higgs_lt_nine_sup (w : ℕ) (hw 
   · rwa [h.sectorMassWeight_gauge_higgs_seven, bot_sup_eq] at hx
   · exact h.mem_of_lorentz_invariant_sectorMassWeight_gauge_higgs_eight_sup S hSL hx hL
 
-set_option linter.unusedVariables false in
 /-- The classification below mass weight nine as an equivalence, in the shape of the gauge-
   and Yukawa-sector statements: an element of `sectorMassWeight {gauge, higgs} w ⊔ S` for
   `w < 9` is fixed by both groups exactly when it is itself an element of `S` fixed by both
@@ -481,7 +480,6 @@ set_option linter.unusedVariables false in
   forward direction is the index count, which uses the Lorentz group alone. -/
 theorem mem_sectorMassWeight_gauge_higgs_lt_nine_sup_and_gauge_lorentz_invariant_iff
     (w : ℕ) (hw : w < 9) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.higgs} w ⊔ S
         ∧ (∀ g : GaugeGroupI, repGauge g x = x) ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
@@ -495,13 +493,11 @@ theorem mem_sectorMassWeight_gauge_higgs_lt_nine_sup_and_gauge_lorentz_invariant
   · rintro ⟨y, hyS, hyG, hyL, rfl⟩
     exact ⟨Submodule.mem_sup_right hyS, hyG, hyL⟩
 
-set_option linter.unusedVariables false in
 /-- The same classification without the existential: below mass weight nine an element of
   `sectorMassWeight {gauge, higgs} w ⊔ S` fixed by both groups is an element of `S` fixed by
   both groups, and conversely. -/
 theorem mem_sectorMassWeight_gauge_higgs_lt_nine_sup_and_gauge_lorentz_invariant_iff_mem
     (w : ℕ) (hw : w < 9) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.sectorMassWeight {GeneratorClass.gauge, GeneratorClass.higgs} w ⊔ S
         ∧ (∀ g : GaugeGroupI, repGauge g x = x) ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)

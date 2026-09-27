@@ -158,7 +158,6 @@ theorem mem_of_lorentz_invariant_sectorMassWeight_higgs_fermion_lt_eight_sup (w 
   · rwa [h.sectorMassWeight_higgs_fermion_six, bot_sup_eq] at hx
   · exact h.mem_of_lorentz_invariant_sectorMassWeight_higgs_fermion_seven_sup S hSL hx hL
 
-set_option linter.unusedVariables false in
 /-- The classification below mass weight eight as an equivalence, in the shape of the
   gauge-sector statement `mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff`:
   an element of `sectorMassWeight {higgs, fermion} w ⊔ S` for `w < 8` is fixed by both
@@ -167,7 +166,6 @@ set_option linter.unusedVariables false in
   the spin parity argument, which uses the Lorentz group alone. -/
 theorem mem_sectorMassWeight_higgs_fermion_lt_eight_sup_and_gauge_lorentz_invariant_iff
     (w : ℕ) (hw : w < 8) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} w ⊔ S
         ∧ (∀ g : GaugeGroupI, repGauge g x = x) ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
@@ -181,13 +179,11 @@ theorem mem_sectorMassWeight_higgs_fermion_lt_eight_sup_and_gauge_lorentz_invari
   · rintro ⟨y, hyS, hyG, hyL, rfl⟩
     exact ⟨Submodule.mem_sup_right hyS, hyG, hyL⟩
 
-set_option linter.unusedVariables false in
 /-- The same classification without the existential: below mass weight eight an element of
   `sectorMassWeight {higgs, fermion} w ⊔ S` fixed by both groups is an element of `S` fixed
   by both groups, and conversely. -/
 theorem mem_sectorMassWeight_higgs_fermion_lt_eight_sup_and_gauge_lorentz_invariant_iff_mem
     (w : ℕ) (hw : w < 8) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
     (x ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} w ⊔ S
         ∧ (∀ g : GaugeGroupI, repGauge g x = x) ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)

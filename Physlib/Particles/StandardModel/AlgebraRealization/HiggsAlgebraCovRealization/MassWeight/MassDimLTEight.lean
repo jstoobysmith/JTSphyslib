@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.GaugeWeightDecomposition
 public import Physlib.Relativity.LorentzGroup.Invariants.RankOne
+public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
 # The Higgs invariants below mass weight eight
 
@@ -17,7 +18,7 @@ weight four.  Everything else below weight eight dies, and for three different r
 The odd weights are trivial submodules, every Higgs tower carrying even mass weight.
 Weight two dies on hypercharge: a single Higgs symbol carries `6Y = ∓3`, so nothing at that
 weight is neutral, which is the gauge classification of
-`mem_of_invariant_massWeightSubmodule_two_sup`.  Weight six dies on Lorentz counting.  Its
+`reducesInvariantsTo_massWeightSubmodule_two`.  Weight six dies on Lorentz counting.  Its
 gauge invariants are the isospin contractions with one derivative, `∂_μ H† H` and
 `H† ∂_μ H`, and a single covector index admits no invariant contraction at all — the metric
 ties two indices and the Levi-Civita symbol four — which is `RankOne`.
@@ -83,9 +84,9 @@ At mass weight six the gauge classification leaves the isospin contractions carr
 derivative, on either of the two towers.  The Higgs is a Lorentz scalar, so the only
 Lorentz index such a contraction has is that derivative slot, and read as a family indexed
 by it the contraction is a Lorentz vector.  `RankOne` says that one covector index
-admits no invariant contraction, so a Lorentz invariant of the span together with a stable
-submodule already lies in the submodule; the spans are themselves stable, so the two of
-them peel off one after the other.
+admits no invariant contraction, so the span of such a family reduces to `⊥`
+(`RankOne.reducesInvariantsTo_bot`); the spans are themselves stable, so
+`ReducesInvariantsTo.sup` joins the two.
 
 -/
 
@@ -130,17 +131,6 @@ lemma dotSpan_zero_one_eq :
     (iSup_le fun d => le_iSup_of_le ![] (le_iSup_of_le d le_rfl))
   rw [Subsingleton.elim d (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
 
-/-- A join of two Lorentz-stable submodules is Lorentz stable. -/
-lemma stable_sup_lorentz {S₁ S₂ : Submodule ℂ B}
-    (h₁ : ∀ g : SL(2,ℂ), ∀ y ∈ S₁, repLorentz g y ∈ S₁)
-    (h₂ : ∀ g : SL(2,ℂ), ∀ y ∈ S₂, repLorentz g y ∈ S₂) :
-    ∀ g : SL(2,ℂ), ∀ y ∈ S₁ ⊔ S₂, repLorentz g y ∈ S₁ ⊔ S₂ := by
-  intro g y hy
-  have key : (S₁ ⊔ S₂) ≤ Submodule.comap (repLorentz g) (S₁ ⊔ S₂) :=
-    sup_le (fun z hz => Submodule.mem_sup_left (h₁ g z hz))
-      (fun z hz => Submodule.mem_sup_right (h₂ g z hz))
-  exact key hy
-
 /-!
 
 ## C. The underived isospin contraction as a Lorentz scalar
@@ -181,16 +171,8 @@ lemma repLorentz_of_mem_dotSpan_zero_zero (g : SL(2,ℂ)) {y : B} (hy : y ∈ h.
 include h in
 /-- Every element of a span of isospin contractions is a gauge invariant. -/
 lemma rep_of_mem_dotSpan {n m : ℕ} (g : GaugeGroupI) {y : B} (hy : y ∈ h.dotSpan n m) :
-    rep g y = y := by
-  have key : h.dotSpan n m ≤ LinearMap.ker (rep g - LinearMap.id) := by
-    rw [dotSpan]
-    refine iSup_le fun d => iSup_le fun d' => ?_
-    rw [Submodule.span_singleton_le_iff_mem]
-    simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
-    exact h.rep_dotGaugeHiggs_invariant g d d'
-  have hy' := key hy
-  simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero] at hy'
-  exact hy'
+    rep g y = y :=
+  h.isFixedBy_dotSpan n m g y hy
 
 include h in
 /-- The line through the underived isospin contraction lies in mass weight four. -/
@@ -205,42 +187,23 @@ lemma dotSpan_zero_zero_le_massWeightSubmodule :
 
 ## D. Mass weight six
 
-The gauge classification puts a gauge invariant of mass weight six in the two spans of
-once-derived isospin contractions up to a remainder in `S`, so the element itself lies in
-those two spans joined with `S`.  Section B then peels them off one after the other, and
-since a single covector index carries no invariant contraction nothing is left behind: the
-invariant lies in `S`.
+The gauge classification leaves, at mass weight six, the two spans of once-derived isospin
+contractions (`reducesInvariantsTo_massWeightSubmodule_six`). Section B reduces each to `⊥`
+for the Lorentz group, since a single covector index carries no invariant contraction, and
+`ReducesInvariantsTo.sup` joins them: nothing is left behind.
 
 -/
 
 include h in
-/-- Mass weight six carries no gauge and Lorentz invariant modulo a stable submodule: such
-  an invariant of `massWeightSubmodule 6 ⊔ S` lies in `S`. -/
-theorem mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 6 ⊔ S) (hG : ∀ g : GaugeGroupI, rep g x = x)
-    (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  obtain ⟨y₀, hy₀S, hy₀G, hxy₀⟩ :=
-    h.exists_mem_of_invariant_massWeightSubmodule_six_sup S hS hx hG
-  have hxmem : x ∈ (h.dotSpan 1 0 ⊔ h.dotSpan 0 1) ⊔ S := by
-    rw [show x = (x - y₀) + y₀ from by abel]
-    exact Submodule.add_mem _ (Submodule.mem_sup_left hxy₀) (Submodule.mem_sup_right hy₀S)
-  have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ h.dotSpan 0 1 ⊔ S,
-      repLorentz g y ∈ h.dotSpan 0 1 ⊔ S := by
-    refine stable_sup_lorentz (fun g y hy => ?_) hSL
-    rw [h.dotSpan_zero_one_eq] at hy ⊢
-    exact h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_span_range g hy
-  have hstep : x
-      ∈ Submodule.span ℂ (Set.range fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
-        ⊔ (h.dotSpan 0 1 ⊔ S) := by
-    rw [← h.dotSpan_one_zero_eq, ← sup_assoc]
-    exact hxmem
-  have hnext := RankOne.mem_of_invariant_of_mem_sup
-    h.isLorentzCovariant_rankOne_dotGaugeHiggs_left _ hstab hstep hL
-  rw [h.dotSpan_zero_one_eq] at hnext
-  exact RankOne.mem_of_invariant_of_mem_sup
-    h.isLorentzCovariant_rankOne_dotGaugeHiggs_right S hSL hnext hL
+/-- The once-derived isospin contractions reduce to `⊥` for the Lorentz group: each span is
+  spanned by a Lorentz vector, and a single covector index carries no invariant. -/
+lemma reducesInvariantsTo_dotSpan_one_zero_sup_zero_one :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (h.dotSpan 1 0 ⊔ h.dotSpan 0 1) ⊥ := by
+  rw [h.dotSpan_one_zero_eq, h.dotSpan_zero_one_eq]
+  exact (RankOne.reducesInvariantsTo_bot h.isLorentzCovariant_rankOne_dotGaugeHiggs_left).sup
+    (RankOne.reducesInvariantsTo_bot h.isLorentzCovariant_rankOne_dotGaugeHiggs_right)
+    (fun g _ hy => h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_span_range g hy)
+    isStableUnder_bot
 
 /-!
 
@@ -249,9 +212,10 @@ theorem mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup (S : Submodul
 The seven weights between zero and eight are now settled: weights one, three, five and
 seven are trivial submodules, weight two is killed by hypercharge, weight six by section D,
 and weight four leaves the line through the mass term.  `lorentzContractionLTEightSpan`
-records that answer as a single submodule depending on the weight, so the statement has the
-shape of the weight-eight one and of the other sectors' below-eight ones, whose spans
-happen to be trivial.
+records that answer as a single submodule depending on the weight, and
+`reducesInvariantsTo_lorentzContractionLTEightSpan` reduces each weight to it, so the
+statement has the shape of the weight-eight one and of the other sectors' below-eight ones,
+whose spans happen to be trivial.
 
 -/
 
@@ -294,42 +258,40 @@ lemma repLorentz_of_mem_lorentzContractionLTEightSpan (w : ℕ) (g : SL(2,ℂ)) 
     rw [hy, map_zero]
 
 include h in
-/-- Below mass weight eight a gauge and Lorentz invariant of `massWeightSubmodule w ⊔ S`
-  is an element of the surviving span up to a remainder in `S` fixed by both groups.  The
-  four odd weights are trivial submodules, weight two dies on hypercharge, weight six is
-  section D, and weight four leaves the Higgs mass term. -/
-theorem exists_mem_of_gauge_lorentz_invariant_massWeightSubmodule_lt_eight_sup (w : ℕ)
-    (hw0 : 0 < w) (hw : w < 8) (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule w ⊔ S) (hG : ∀ g : GaugeGroupI, rep g x = x)
-    (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y) ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.lorentzContractionLTEightSpan w := by
-  have htriv : ∀ v : ℕ, x ∈ S → ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
-      ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-      ∧ x - y ∈ h.lorentzContractionLTEightSpan v := fun v hxS =>
-    ⟨x, hxS, hG, hL, by rw [sub_self]; exact Submodule.zero_mem _⟩
-  interval_cases w
-  · exact htriv 1 (by rwa [h.massWeightSubmodule_odd_eq_bot 1 (by decide), bot_sup_eq] at hx)
-  · exact htriv 2 (h.mem_of_invariant_massWeightSubmodule_two_sup S hS hx hG)
-  · exact htriv 3 (by rwa [h.massWeightSubmodule_odd_eq_bot 3 (by decide), bot_sup_eq] at hx)
-  · obtain ⟨y, hyS, hyG, hxy⟩ :=
-      h.exists_mem_of_invariant_massWeightSubmodule_four_sup S hS hx hG
-    have hxy' : x - y ∈ h.lorentzContractionLTEightSpan 4 := by
-      rw [lorentzContractionLTEightSpan, ite_eq_left rfl]
-      exact hxy
-    refine ⟨y, hyS, hyG, fun g => ?_, hxy'⟩
-    have hfix : repLorentz g (x - y) = x - y :=
-      h.repLorentz_of_mem_dotSpan_zero_zero g hxy
-    rw [map_sub, hL g] at hfix
-    exact sub_right_injective hfix
-  · exact htriv 5 (by rwa [h.massWeightSubmodule_odd_eq_bot 5 (by decide), bot_sup_eq] at hx)
-  · exact htriv 6
-      (h.mem_of_gauge_lorentz_invariant_massWeightSubmodule_six_sup S hS hSL hx hG hL)
-  · exact htriv 7 (by rwa [h.massWeightSubmodule_odd_eq_bot 7 (by decide), bot_sup_eq] at hx)
+/-- The surviving span below weight eight is fixed pointwise by both groups. -/
+lemma isFixedBy_lorentzContractionLTEightSpan (w : ℕ) :
+    IsFixedBy (gaugeLorentzMaps rep repLorentz) (h.lorentzContractionLTEightSpan w) :=
+  isFixedBy_gaugeLorentzMaps_iff.2
+    ⟨fun g _ hy => h.rep_of_mem_lorentzContractionLTEightSpan w g hy,
+      fun Λ _ hy => h.repLorentz_of_mem_lorentzContractionLTEightSpan w Λ hy⟩
 
-set_option linter.unusedVariables false in
+include h in
+/-- Below mass weight eight the Higgs sector reduces, for the gauge and Lorentz groups
+  together, to the surviving span. The four odd weights are trivial submodules, weight two
+  dies on hypercharge, weight four leaves the Higgs mass term, which the Lorentz group fixes,
+  and at weight six the gauge group leaves the once-derived contractions and the Lorentz
+  group nothing. -/
+lemma reducesInvariantsTo_lorentzContractionLTEightSpan {w : ℕ} (hw0 : 0 < w) (hw : w < 8) :
+    ReducesInvariantsTo (gaugeLorentzMaps rep repLorentz) (h.massWeightSubmodule w)
+      (h.lorentzContractionLTEightSpan w) := by
+  have hodd : ∀ n, Odd n → ReducesInvariantsTo (gaugeLorentzMaps rep repLorentz)
+      (h.massWeightSubmodule n) (h.lorentzContractionLTEightSpan n) := fun n hn => by
+    rw [h.massWeightSubmodule_odd_eq_bot n hn]
+    exact reducesInvariantsTo_of_le bot_le
+  interval_cases w
+  · exact hodd 1 (by decide)
+  · exact (ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_massWeightSubmodule_two).mono_right
+      bot_le
+  · exact hodd 3 (by decide)
+  · rw [lorentzContractionLTEightSpan, ite_eq_left rfl]
+    exact ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_massWeightSubmodule_four
+  · exact hodd 5 (by decide)
+  · refine ((ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_massWeightSubmodule_six).trans
+      (ReducesInvariantsTo.ofLorentz ?_)).mono_right bot_le
+    exact h.reducesInvariantsTo_dotSpan_one_zero_sup_zero_one
+  · exact hodd 7 (by decide)
+
+include h in
 /-- The classification below mass weight eight as an equivalence, in the shape of
   `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`: an element of
   `massWeightSubmodule w ⊔ S` for `0 < w < 8` is fixed by both groups exactly when it is an
@@ -344,27 +306,13 @@ theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff (w 
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
           ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.lorentzContractionLTEightSpan w := by
-  constructor
-  · rintro ⟨hxm, hG, hL⟩
-    exact h.exists_mem_of_gauge_lorentz_invariant_massWeightSubmodule_lt_eight_sup w hw0 hw
-      S hS hSL hxm hG hL
-  · rintro ⟨y, hyS, hyG, hyL, hxy⟩
-    refine ⟨?_, fun g => ?_, fun g => ?_⟩
-    · have hsum : x - y + y ∈ h.massWeightSubmodule w ⊔ S :=
-        Submodule.add_mem _
-          (Submodule.mem_sup_left (h.lorentzContractionLTEightSpan_le_massWeightSubmodule
-            w hxy))
-          (Submodule.mem_sup_right hyS)
-      simpa using hsum
-    · have hstep : rep g (x - y + y) = x - y + y := by
-        rw [map_add, h.rep_of_mem_lorentzContractionLTEightSpan w g hxy, hyG g]
-      simpa using hstep
-    · have hstep : repLorentz g (x - y + y) = x - y + y := by
-        rw [map_add, h.repLorentz_of_mem_lorentzContractionLTEightSpan w g hxy, hyL g]
-      simpa using hstep
+          ∧ x - y ∈ h.lorentzContractionLTEightSpan w :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff
+    (h.reducesInvariantsTo_lorentzContractionLTEightSpan hw0 hw)
+    (h.lorentzContractionLTEightSpan_le_massWeightSubmodule w)
+    (h.isFixedBy_lorentzContractionLTEightSpan w) hS hSL x
 
-set_option linter.unusedVariables false in
+include h in
 /-- The same classification without the existential: below mass weight eight an element of
   `massWeightSubmodule w ⊔ S` fixed by both groups is an element of the surviving span
   joined with `S` fixed by both groups, and conversely. -/
@@ -375,19 +323,12 @@ theorem mem_massWeightSubmodule_lt_eight_sup_and_gauge_lorentz_invariant_iff_mem
     (x ∈ h.massWeightSubmodule w ⊔ S ∧ (∀ g : GaugeGroupI, rep g x = x)
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ (x ∈ h.lorentzContractionLTEightSpan w ⊔ S ∧ (∀ g : GaugeGroupI, rep g x = x)
-          ∧ ∀ g : SL(2,ℂ), repLorentz g x = x) := by
-  constructor
-  · rintro ⟨hxm, hG, hL⟩
-    obtain ⟨y, hyS, -, -, hxy⟩ :=
-      h.exists_mem_of_gauge_lorentz_invariant_massWeightSubmodule_lt_eight_sup w hw0 hw S
-        hS hSL hxm hG hL
-    refine ⟨?_, hG, hL⟩
-    have hsum : x - y + y ∈ h.lorentzContractionLTEightSpan w ⊔ S :=
-      Submodule.add_mem _ (Submodule.mem_sup_left hxy) (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · rintro ⟨hxm, hG, hL⟩
-    exact ⟨sup_le_sup_right (h.lorentzContractionLTEightSpan_le_massWeightSubmodule w) S
-      hxm, hG, hL⟩
+          ∧ ∀ g : SL(2,ℂ), repLorentz g x = x) :=
+  ⟨fun hx => ⟨h.reducesInvariantsTo_lorentzContractionLTEightSpan hw0 hw S
+      (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x hx.1
+      (forall_gaugeLorentzMaps_eq_self_iff.2 hx.2), hx.2⟩,
+    fun hx => ⟨sup_le_sup_right (h.lorentzContractionLTEightSpan_le_massWeightSubmodule w) S
+      hx.1, hx.2⟩⟩
 
 end HiggsAlgebraCovRealization
 

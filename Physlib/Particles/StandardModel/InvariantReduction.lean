@@ -16,8 +16,8 @@ The Standard Model sectors are classified with `ReducesInvariantsTo` from
 The reductions for the individual laws are `invariantReductionToSpan` beside each
 classification theorem. This file supplies what the sectors share when combining them.
 
-- A. The family `gaugeLorentzMaps` indexed by `GaugeGroupI ⊕ SL(2,ℂ)`, and the transport of
-  colour, isospin and Lorentz reductions to it.
+- A. The family `gaugeLorentzMaps` indexed by `GaugeGroupI ⊕ SL(2,ℂ)`, the classification
+  endpoint for it, and the transport of gauge, colour, isospin and Lorentz reductions to it.
 - B. The colour, isospin and hypercharge factors of a gauge transformation; an element fixed
   by each factor is gauge invariant.
 - C. Stability of the range of a symbol map under the gauge and Lorentz groups.
@@ -35,7 +35,8 @@ open TensorProduct Matrix MatrixGroups Lorentz Pointwise ComplexConjugate
 
 The family indexed by the disjoint union of the two groups has as invariants the elements
 fixed by both groups, and as stable submodules those stable under both. A reduction for the
-colour, isospin or Lorentz factor is transported to it by `ReducesInvariantsTo.comp`.
+gauge group, its colour or isospin factor, or the Lorentz group is transported to it by
+`ReducesInvariantsTo.comp`.
 
 -/
 
@@ -73,6 +74,38 @@ lemma forall_gaugeLorentzMaps_eq_self_iff {x : B} :
   · rintro ⟨hg, hL⟩ (g | Λ)
     · exact hg g
     · exact hL Λ
+
+/-- A submodule fixed pointwise by both groups is fixed pointwise by the combined family, and
+  conversely. -/
+lemma isFixedBy_gaugeLorentzMaps_iff {V : Submodule ℂ B} :
+    IsFixedBy (gaugeLorentzMaps repGauge repLorentz) V
+      ↔ (∀ g : GaugeGroupI, ∀ y ∈ V, repGauge g y = y)
+        ∧ ∀ Λ : SL(2,ℂ), ∀ y ∈ V, repLorentz Λ y = y := by
+  constructor
+  · exact fun hV => ⟨fun g => hV (Sum.inl g), fun Λ => hV (Sum.inr Λ)⟩
+  · rintro ⟨hg, hL⟩ (g | Λ)
+    · exact hg g
+    · exact hL Λ
+
+/-- The classification endpoint `ReducesInvariantsTo.mem_sup_and_forall_eq_self_iff` for the
+  gauge and Lorentz groups together, with the two invariances and the two stabilities stated
+  separately. -/
+lemma ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff {V W S : Submodule ℂ B}
+    (hP : ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) V W) (hWV : W ≤ V)
+    (hW : IsFixedBy (gaugeLorentzMaps repGauge repLorentz) W)
+    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hSL : ∀ Λ : SL(2,ℂ), ∀ y ∈ S, repLorentz Λ y ∈ S) (x : B) :
+    (x ∈ V ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x) ∧ ∀ Λ : SL(2,ℂ), repLorentz Λ x = x)
+      ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
+          ∧ (∀ Λ : SL(2,ℂ), repLorentz Λ y = y) ∧ x - y ∈ W := by
+  simpa only [forall_gaugeLorentzMaps_eq_self_iff, and_assoc] using
+    hP.mem_sup_and_forall_eq_self_iff hWV hW (isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩) x
+
+/-- A gauge reduction is a reduction for the gauge and Lorentz groups together. -/
+lemma ReducesInvariantsTo.ofGauge {V W : Submodule ℂ B}
+    (hP : ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) V W) :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) V W :=
+  ReducesInvariantsTo.comp (Sum.inl (β := SL(2,ℂ))) hP
 
 /-- A reduction for the colour factor is a reduction for the gauge and Lorentz groups
   together. -/

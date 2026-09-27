@@ -20,7 +20,8 @@ is fixed by every rotation and boost. Every Lorentz invariant in the span of the
 a multiple of it: nothing else ties two indices, the Levi-Civita symbol needing four. That is
 `exists_smul_metricContraction_of_invariant`, and
 `exists_smul_metricContraction_of_invariant_subset` is the same statement modulo a
-Lorentz-stable subspace `S`, the form the Standard Model files use. The metric contraction is
+Lorentz-stable subspace `S`; `reducesInvariantsTo_span_metricContraction`, the form the
+Standard Model files use, reads it as a reduction. The metric contraction is
 the only invariant up to scale; for a given `T` it may be zero.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
@@ -189,6 +190,15 @@ lemma exists_smul_metricContraction_of_invariant_subset
       exact exists_smul_metricContraction_of_invariant (hT.quotient S hS)
         ((Submodule.map_span_range S.mkQ T).le hz) hzinv) hx hinv
   exact ⟨a, y, hy, rfl⟩
+
+/-- The span of the components reduces to the line through the metric contraction:
+  `exists_smul_metricContraction_of_invariant_subset` read as a reduction for the Lorentz
+  group. -/
+lemma reducesInvariantsTo_span_metricContraction (hT : IsLorentzCovariant 2 B repLorentz T) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
+      (ℂ ∙ metricContraction (T := T)) := fun S hS x hx hinv => by
+  obtain ⟨a, y, hy, rfl⟩ := exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
+  exact Submodule.add_mem_sup (Submodule.smul_mem _ a (Submodule.mem_span_singleton_self _)) hy
 
 end RankTwo
 

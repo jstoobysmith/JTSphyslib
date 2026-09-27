@@ -739,14 +739,10 @@ its fermionic part has to vanish and `x` already lies in `S`. The reason is the 
 `derivSubmoduleGaugeWeight_piece_zero`: every one of the ten species carries a fixed nonzero
 hypercharge, so no nonzero fermionic element is a gauge singlet.
 
-The argument runs one weight at a time. Split off a piece of weight `w`, so that `x = a + y`
-with `a` of pure weight `w` and `y` in the join of the remaining pieces with `S`. The
-hypercharge generator `g` fixes `x` and scales `a` by some `c ≠ 1`, so
-`(c - 1) • x = c • y - g y`, which lies in that smaller join because both the pieces and `S`
-are stable under `g`. Dividing by `c - 1` deletes the weight `w`, and the induction closes on
-the empty support. This is `GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero`,
-with the hypercharge generator chosen at every step, since it alone separates every fermion
-weight from zero.
+The argument is the torus sieve `GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant`:
+each piece of nonzero weight is scaled by a torus generator by a scalar other than one, so
+modulo `S` an invariant lies in the weight-zero piece, and the weight-zero piece of a single
+tower is trivial (`derivSubmoduleGaugeWeight_piece_zero`).
 
 This is the fermionic analogue of `exists_smul_contraction_of_invariant_subset` for the
 Lorentz group.
@@ -761,21 +757,9 @@ lemma mem_of_invariant_of_mem_derivSubmodule_sup {n : ℕ} {S : Submodule ℂ B}
     (hS : ∀ (g : GaugeGroupI) (y : B), y ∈ S → repGauge g y ∈ S)
     {x : B} (hx : x ∈ h.derivSubmodule n ⊔ S)
     (hinv : ∀ g : GaugeGroupI, repGauge g x = x) : x ∈ S := by
-  refine GaugeWeightDecomposition.mem_of_invariant_of_mem_biSup_piece_sup_of_ne_zero
-    (h.derivSubmoduleGaugeWeight n) (fun i y hy => hS _ y hy)
-    (h.derivSubmoduleGaugeWeight n).supp ?_ x ?_ hinv
-  · have hhc : ∀ w ∈ fermionGaugeWeights, w.2.2.2 ≠ 0 := by decide
-    intro w hw
-    refine ⟨3, ?_⟩
-    rw [GaugeWeight.coord_three]
-    exact hhc w (h.derivSubmoduleGaugeWeight_supp n ▸ hw)
-  · refine sup_le_sup_right
-      (le_trans (le_of_eq (h.derivSubmoduleGaugeWeight n).iSup_piece.symm) ?_) S hx
-    refine iSup_le fun w => ?_
-    by_cases hw : w ∈ (h.derivSubmoduleGaugeWeight n).supp
-    · exact le_iSup₂_of_le w hw le_rfl
-    · rw [(h.derivSubmoduleGaugeWeight n).piece_eq_bot w hw]
-      exact bot_le
+  have hx0 := GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant
+    (h.derivSubmoduleGaugeWeight n) (fun i y hy => hS _ y hy) hx fun _ => hinv _
+  rwa [h.derivSubmoduleGaugeWeight_piece_zero, bot_sup_eq] at hx0
 
 /-- Mass weight one contributes nothing to a join: the submodule is trivial, so no invariance
   hypothesis is needed. -/

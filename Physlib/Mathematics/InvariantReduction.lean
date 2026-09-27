@@ -19,14 +19,18 @@ The relation `ReducesInvariantsTo σ V W` says: for every stable submodule `S`, 
 of `V ⊔ S` lies in `W ⊔ S`. It is transitive, antitone in the source, monotone in the target
 and, for stable sources and a stable target, closed under finite joins of the source. A
 classification of the invariants of a family can therefore be applied one family at a time,
-the other families being kept in the stable remainder `S`.
+the other families being kept in the stable remainder `S`. A submodule on which one map of
+the family acts by a scalar other than `1` reduces to `⊥`:
+`reducesInvariantsTo_bot_of_apply_eq_smul`.
 
 Such a reduction is usually proved in the quotient `B ⧸ S`. If every invariant of the image of
 `V` in `B ⧸ S` lies in the image of `W`, then every invariant of `V ⊔ S` lies in `W ⊔ S`, and
 when `W` is pointwise fixed the remainder in `S` is itself invariant:
 `IsStableUnder.exists_add_of_quotient`. The quotient hypothesis is not implied by a
 classification of the invariants of `V` alone, since the invariants of `B ⧸ S` are the classes
-`x` with `σ g x - x ∈ S`.
+`x` with `σ g x - x ∈ S`. For a pointwise-fixed `W ≤ V` a reduction describes the invariants
+of `V ⊔ S` exactly, as the elements of `W` plus an invariant element of `S`:
+`ReducesInvariantsTo.mem_sup_and_forall_eq_self_iff`.
 
 `InvariantReductionToSpan σ V` packages a reduction of `V` to the span of one fixed vector,
 the form in which the classification theorems are applied.
@@ -234,6 +238,28 @@ lemma ReducesInvariantsTo.comp {G' : Type*} (ι : G' → G) {V W : Submodule R B
 
 end Reduction
 
+section Eigenvalue
+
+variable {K B G : Type*} [Field K] [AddCommGroup B] [Module K B] {σ : G → B →ₗ[K] B}
+
+/-- A submodule on which one map of the family acts by a scalar `μ ≠ 1` reduces to `⊥`. An
+  invariant `v + s` of `V ⊔ S` has `(μ - 1) • v = s - σ g s`, which lies in `S`, and so does
+  `v`. Of the stability of `S` only stability under `σ g` is used. -/
+lemma reducesInvariantsTo_bot_of_apply_eq_smul (g : G) {μ : K} (hμ : μ ≠ 1)
+    {V : Submodule K B} (hV : ∀ v ∈ V, σ g v = μ • v) : ReducesInvariantsTo σ V ⊥ := by
+  intro S hS x hx hinv
+  obtain ⟨v, hv, s, hs, rfl⟩ := Submodule.mem_sup.1 hx
+  have hkey : (μ - 1) • v = s - σ g s := by
+    have h := hinv g
+    rw [map_add, hV v hv] at h
+    linear_combination (norm := module) h
+  have hvS : v ∈ S := by
+    have h1 : (μ - 1) • v ∈ S := hkey ▸ S.sub_mem hs (hS g s hs)
+    simpa [smul_smul, inv_mul_cancel₀ (sub_ne_zero.2 hμ)] using S.smul_mem (μ - 1)⁻¹ h1
+  simpa using S.add_mem hvS hs
+
+end Eigenvalue
+
 /-!
 
 ## C. Reduction through a quotient
@@ -273,6 +299,20 @@ lemma IsFixedBy.exists_add_of_mem_sup (hW : IsFixedBy σ W) {x : B} (hx : x ∈ 
   refine ⟨w, hw, y, hy, rfl, fun g => add_left_cancel (a := w) ?_⟩
   have h := hinv g
   rwa [map_add, hW g w hw] at h
+
+/-- A reduction of `V` to a pointwise-fixed `W ≤ V` describes the invariants of `V ⊔ S`, for
+  `S` stable, exactly: they are the elements of `W` plus an invariant element of `S`. This is
+  the form in which a classification is stated. -/
+lemma ReducesInvariantsTo.mem_sup_and_forall_eq_self_iff (hP : ReducesInvariantsTo σ V W)
+    (hWV : W ≤ V) (hW : IsFixedBy σ W) (hS : IsStableUnder σ S) (x : B) :
+    (x ∈ V ⊔ S ∧ ∀ g, σ g x = x) ↔ ∃ y ∈ S, (∀ g, σ g y = y) ∧ x - y ∈ W := by
+  constructor
+  · rintro ⟨hx, hinv⟩
+    obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := hW.exists_add_of_mem_sup (hP S hS x hx hinv) hinv
+    exact ⟨y, hy, hyinv, by simpa using hw⟩
+  · rintro ⟨y, hy, hyinv, hxy⟩
+    refine ⟨by simpa using Submodule.add_mem_sup (hWV hxy) hy, fun g => ?_⟩
+    rw [← sub_add_cancel x y, map_add, hW g _ hxy, hyinv g]
 
 /-- Quotient to remainder: when every invariant of the image of `V` in `B ⧸ S` lies in the
   image of a pointwise-fixed `W`, an invariant of `V ⊔ S` is an element of `W` plus an

@@ -342,8 +342,9 @@ include h in
   is a combination of
   the constant term, of mass dimension zero,
   the Higgs mass term `H† H`, of mass dimension two (`HiggsAlgebraCovRealization.dotSpan`),
-  and the Standard-Model Lagrangian of mass dimension four — the gauge kinetic and theta
-  terms of the three gauge groups (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs
+  and the dimension-four span — the four Lorentz contractions of the three `F·F` trace
+  families and of the twice-derived hypercharge field strength, among them the gauge
+  kinetic and theta terms (`IsGaugeSector.lorentzContractionEightSpan`), the Higgs
   kinetic term, its quartic potential and its two box terms
   (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`), the kinetic terms of the ten fermion
   species over the nine family pairs (`IsFermionSector.kineticSpan`), and the six Yukawa

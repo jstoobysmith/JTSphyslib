@@ -1291,10 +1291,9 @@ lemma reducesInvariantsTo_kineticBlockSubmodule :
 ## F. The classification as an equivalence
 
 The two directions meet. Forwards: hypercharge puts a gauge invariant in the weight-zero
-piece, section E reduces that to the kinetic span, and what is left over is in `S` and
-is itself invariant, the kinetic span being made of invariants. Backwards: the kinetic
-span is a space of gauge and Lorentz invariants of mass weight eight, so splitting `x` as
-`(x - y) + y` puts it back together.
+piece (`GaugeWeightDecomposition.reducesInvariantsTo_piece_zero`), and section E reduces
+that to the kinetic span. Backwards: the kinetic span is a space of gauge and Lorentz
+invariants of mass weight eight (section D), which turns the reduction into an equivalence.
 
 So the fermion sector at mass weight eight carries exactly the kinetic terms — one for
 each species, each pair of generations and each placement of the derivative — and nothing
@@ -1305,46 +1304,22 @@ the Dirac mass term does not exist.
 -/
 
 include h in
-/-- The classification of the mass-weight eight invariants: an element of
-  `massWeightSubmodule 8 ⊔ S` fixed by both groups is a combination of the kinetic terms
-  up to a remainder in `S` that is itself fixed by both groups. -/
-theorem exists_mem_of_gauge_and_lorentz_invariant (S : Submodule ℂ B)
-    (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
-    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ h.massWeightSubmodule 8 ⊔ S)
-    (hG : ∀ g : GaugeGroupI, repGauge g x = x)
-    (hL : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
-      ∧ (∀ g : SL(2,ℂ), repLorentz g y = y) ∧ x - y ∈ h.kineticSpan := by
-  have hzero : x ∈ (h.massWeightSubmoduleGaugeWeightEight).piece 0 ⊔ S :=
-    GaugeWeightDecomposition.mem_piece_zero_sup_of_invariant _ (fun i y hy => hS _ y hy) hx hG
-  have hblk : x ∈ h.kineticBlockSubmodule ⊔ S :=
-    sup_le_sup_right h.massWeightSubmoduleGaugeWeightEight_piece_zero_le S hzero
-  have hSstab : IsStableUnder (gaugeLorentzMaps repGauge repLorentz) S :=
-    isStableUnder_gaugeLorentzMaps_iff.2 ⟨hS, hSL⟩
-  have hxinv : ∀ p, gaugeLorentzMaps repGauge repLorentz p x = x :=
-    forall_gaugeLorentzMaps_eq_self_iff.2 ⟨hG, hL⟩
-  obtain ⟨z, hz, y, hy, hzy⟩ := Submodule.mem_sup.1
-    (h.reducesInvariantsTo_kineticBlockSubmodule S hSstab x hblk hxinv)
-  have hzG := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_invariants hz)
-  have hzL := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_lorentzInvariants hz)
-  refine ⟨y, hy, fun g => ?_, fun g => ?_, ?_⟩
-  · have hxg := hG g
-    rw [← hzy, map_add, hzG g] at hxg
-    exact add_left_cancel hxg
-  · have hxg := hL g
-    rw [← hzy, map_add, hzL g] at hxg
-    exact add_left_cancel hxg
-  · rw [← hzy]
-    simpa using hz
+/-- The fermion sector at mass weight eight reduces, for the gauge and Lorentz groups
+  together, to the kinetic span: the torus puts an invariant in the weight-zero piece, which
+  lies in the ten block submodules, and those reduce to the kinetic terms. -/
+lemma reducesInvariantsTo_kineticSpan :
+    ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.massWeightSubmodule 8)
+      h.kineticSpan :=
+  (ReducesInvariantsTo.ofGauge (ReducesInvariantsTo.comp (σ := fun g : GaugeGroupI => repGauge g)
+    gaugeTorusGen h.massWeightSubmoduleGaugeWeightEight.reducesInvariantsTo_piece_zero)).trans
+    (h.reducesInvariantsTo_kineticBlockSubmodule.mono_left
+      h.massWeightSubmoduleGaugeWeightEight_piece_zero_le)
 
 include h in
 /-- The classification of mass weight eight as an equivalence, in the shape of the
   sibling sectors: an element of `massWeightSubmodule 8 ⊔ S` is fixed by both groups
   exactly when it is a combination of the kinetic terms up to a remainder in `S` fixed by
-  both groups. Forwards this is `exists_mem_of_gauge_and_lorentz_invariant`; backwards it
-  splits `x` as `(x - y) + y`, the first summand an invariant of mass weight eight by
-  section D. -/
+  both groups. -/
 theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
@@ -1352,22 +1327,9 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
         ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
       ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
           ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
-          ∧ x - y ∈ h.kineticSpan := by
-  refine ⟨fun hx =>
-    h.exists_mem_of_gauge_and_lorentz_invariant S hS hSL hx.1 hx.2.1 hx.2.2, ?_⟩
-  rintro ⟨y, hyS, hyG, hyL, hxy⟩
-  have hmem := h.kineticSpan_le_massWeightSubmodule hxy
-  have hzG := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_invariants hxy)
-  have hzL := (Representation.mem_invariants _ _).1 (h.kineticSpan_le_lorentzInvariants hxy)
-  refine ⟨?_, fun g => ?_, fun g => ?_⟩
-  · have hsum : x - y + y ∈ h.massWeightSubmodule 8 ⊔ S :=
-      Submodule.add_mem _ (Submodule.mem_sup_left hmem) (Submodule.mem_sup_right hyS)
-    simpa using hsum
-  · have hstep : repGauge g (x - y + y) = x - y + y := by rw [map_add, hzG g, hyG g]
-    simpa using hstep
-  · have hstep : repLorentz g (x - y + y) = x - y + y := by rw [map_add, hzL g, hyL g]
-    simpa using hstep
-
+          ∧ x - y ∈ h.kineticSpan :=
+  ReducesInvariantsTo.mem_sup_and_gauge_lorentz_invariant_iff h.reducesInvariantsTo_kineticSpan
+    h.kineticSpan_le_massWeightSubmodule h.isFixedBy_kineticSpan hS hSL x
 
 end IsFermionSector
 

@@ -13,7 +13,8 @@ public import Physlib.Mathematics.InvariantReduction
 A four-vector `T^{μ}` has no Lorentz invariant built from its four components but `0`. There is
 nothing to contract it with: the metric takes two indices and the Levi-Civita symbol four. That
 is `eq_zero_of_invariant`, and `mem_of_invariant_of_mem_sup` is the same statement modulo a
-Lorentz-stable subspace `S`, the form the Standard Model files use.
+Lorentz-stable subspace `S`; `reducesInvariantsTo_bot`, the form the Standard Model files use,
+reads it as a reduction.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, indexed by one direction `d`, and `IsLorentzCovariant 1` says the
@@ -138,6 +139,12 @@ lemma mem_of_invariant_of_mem_sup (hT : IsLorentzCovariant 1 B repLorentz T) {x 
       exact eq_zero_of_invariant (hT.quotient S hS)
         ((Submodule.map_span_range S.mkQ T).le hy) hyinv) hx hinv
   rwa [bot_sup_eq] at h
+
+/-- The span of the components reduces to `⊥`: `mem_of_invariant_of_mem_sup` read as a
+  reduction for the Lorentz group. -/
+lemma reducesInvariantsTo_bot (hT : IsLorentzCovariant 1 B repLorentz T) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) ⊥ :=
+  fun S hS _ hx hinv => Submodule.mem_sup_right (mem_of_invariant_of_mem_sup hT S hS hx hinv)
 
 end RankOne
 
