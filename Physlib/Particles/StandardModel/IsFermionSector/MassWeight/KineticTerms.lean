@@ -88,11 +88,11 @@ noncomputable def dbardBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `d ∂ bard` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_dbardBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_dbardBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.dbardBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_d U f ![] l.2 c)
+  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_d U f ![] l.2 c)
     (fun U c => h.repGauge_su3_bard U f' ![q] l.1 c)
 
 /-- An isospin transformation fixes the `d ∂ bard` block, neither symbol carrying
@@ -121,7 +121,8 @@ noncomputable def dbardColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.dbardBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_dbardBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_dbardBlk f f' q l w w')
 
 /-- The colour contraction of the `d ∂ bard` block, written out. -/
 lemma dbardColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -140,7 +141,7 @@ noncomputable def dbardIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (fun _ => rfl)
     (fun V => isFixedBy_span_range
       (fun n V' => h.repGauge_su2_dbardBlk V' f f' q l (n 0) (n 1) 0 0) V _
-      (IsSU3FunAntiFun.deltaContraction_mem_span _))
+      (IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _))
 
 /-- The doubly contracted `d ∂ bard` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -167,7 +168,7 @@ noncomputable def dbardLorentzStep (f f' : Fin 3) :
 noncomputable def dbardKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.dbardBlk f f'
   colourStep := h.dbardColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.dbardIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.dbardLorentzStep f f'
@@ -182,11 +183,11 @@ noncomputable def barddBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `bard ∂ d` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_barddBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_barddBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.barddBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul hrepGauge_mul (fun U c => h.repGauge_su3_bard U f ![] l.1 c)
+  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_bard U f ![] l.1 c)
     (fun U c => h.repGauge_su3_d U f' ![q] l.2 c)
 
 /-- An isospin transformation fixes the `bard ∂ d` block, neither symbol carrying
@@ -215,7 +216,8 @@ noncomputable def barddColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.barddBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_barddBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_barddBlk f f' q l w w')
 
 /-- The colour contraction of the `bard ∂ d` block, written out. -/
 lemma barddColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -234,7 +236,7 @@ noncomputable def barddIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (fun _ => rfl)
     (fun V => isFixedBy_span_range
       (fun n V' => h.repGauge_su2_barddBlk V' f f' q l (n 0) (n 1) 0 0) V _
-      (IsSU3FunAntiFun.deltaContraction_mem_span _))
+      (IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _))
 
 /-- The doubly contracted `bard ∂ d` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -261,7 +263,7 @@ noncomputable def barddLorentzStep (f f' : Fin 3) :
 noncomputable def barddKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.barddBlk f f'
   colourStep := h.barddColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.barddIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.barddLorentzStep f f'
@@ -276,11 +278,11 @@ noncomputable def ubaruBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `u ∂ baru` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_ubaruBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_ubaruBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.ubaruBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_u U f ![] l.2 c)
+  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_u U f ![] l.2 c)
     (fun U c => h.repGauge_su3_baru U f' ![q] l.1 c)
 
 /-- An isospin transformation fixes the `u ∂ baru` block, neither symbol carrying
@@ -309,7 +311,8 @@ noncomputable def ubaruColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.ubaruBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_ubaruBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_ubaruBlk f f' q l w w')
 
 /-- The colour contraction of the `u ∂ baru` block, written out. -/
 lemma ubaruColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -328,7 +331,7 @@ noncomputable def ubaruIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (fun _ => rfl)
     (fun V => isFixedBy_span_range
       (fun n V' => h.repGauge_su2_ubaruBlk V' f f' q l (n 0) (n 1) 0 0) V _
-      (IsSU3FunAntiFun.deltaContraction_mem_span _))
+      (IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _))
 
 /-- The doubly contracted `u ∂ baru` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -355,7 +358,7 @@ noncomputable def ubaruLorentzStep (f f' : Fin 3) :
 noncomputable def ubaruKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.ubaruBlk f f'
   colourStep := h.ubaruColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.ubaruIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.ubaruLorentzStep f f'
@@ -370,11 +373,11 @@ noncomputable def baruuBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `baru ∂ u` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_baruuBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_baruuBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.baruuBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul hrepGauge_mul (fun U c => h.repGauge_su3_baru U f ![] l.1 c)
+  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_baru U f ![] l.1 c)
     (fun U c => h.repGauge_su3_u U f' ![q] l.2 c)
 
 /-- An isospin transformation fixes the `baru ∂ u` block, neither symbol carrying
@@ -403,7 +406,8 @@ noncomputable def baruuColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.baruuBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_baruuBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_baruuBlk f f' q l w w')
 
 /-- The colour contraction of the `baru ∂ u` block, written out. -/
 lemma baruuColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -422,7 +426,7 @@ noncomputable def baruuIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
     (fun _ => rfl)
     (fun V => isFixedBy_span_range
       (fun n V' => h.repGauge_su2_baruuBlk V' f f' q l (n 0) (n 1) 0 0) V _
-      (IsSU3FunAntiFun.deltaContraction_mem_span _))
+      (IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _))
 
 /-- The doubly contracted `baru ∂ u` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -449,7 +453,7 @@ noncomputable def baruuLorentzStep (f f' : Fin 3) :
 noncomputable def baruuKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.baruuBlk f f'
   colourStep := h.baruuColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.baruuIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.baruuLorentzStep f f'
@@ -473,20 +477,22 @@ noncomputable def QbarQBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `Q ∂ barQ` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.QbarQBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_Q U f ![] l.1 c w')
+  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul
+    (fun U c => h.repGauge_su3_Q U f ![] l.1 c w')
     (fun U c => h.repGauge_su3_barQ U f' ![q] l.2 c w)
 
 /-- The two isospin indices of the `Q ∂ barQ` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU2FunAntiFun_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (c c' : Fin 3) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (c c' : Fin 3) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.QbarQBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FunAntiFun_mul_swap hrepGauge_mul (fun V w => h.repGauge_su2_Q V f ![] l.1 c' w)
+  isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul
+    (fun V w => h.repGauge_su2_Q V f ![] l.1 c' w)
     (fun V w => h.repGauge_su2_barQ V f' ![q] l.2 c w)
 
 /-- A hypercharge transformation fixes the `Q ∂ barQ` block, the hypercharges of a
@@ -506,7 +512,8 @@ noncomputable def QbarQColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.QbarQBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_QbarQBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_QbarQBlk f f' q l w w')
 
 /-- The colour contraction of the `Q ∂ barQ` block, written out. -/
 lemma QbarQColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -521,9 +528,10 @@ noncomputable def QbarQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
       (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
       (Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 2 =>
         (h.QbarQColourStep f f' q l (n 0) (n 1)).spanningVector)) :=
-  IsSU2FunAntiFun.invariantReductionToSpan (by
+  IsSU2FundamentalAntiFundamental.invariantReductionToSpan (by
     simp only [QbarQColourStep_contraction]
-    exact IsSU2FunAntiFun.sum fun a : Fin 3 => h.isSU2FunAntiFun_QbarQBlk f f' q l a a)
+    exact IsSU2FundamentalAntiFundamental.sum fun a : Fin 3 =>
+      h.isSU2FundamentalAntiFundamental_QbarQBlk f f' q l a a)
 
 /-- The doubly contracted `Q ∂ barQ` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -554,9 +562,9 @@ noncomputable def QbarQLorentzStep (f f' : Fin 3) :
 noncomputable def QbarQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.QbarQBlk f f'
   colourStep := h.QbarQColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.QbarQIsospinStep f f'
-  isospinStep_mem _ _ := IsSU2FunAntiFun.deltaContraction_mem_span _
+  isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.QbarQLorentzStep f f'
   lorentzStep_mem := pauliBarContraction_mem_span _
   hyper t q l c c' w w' := h.repGauge_u1_QbarQBlk t f f' q l c c' w w'
@@ -569,20 +577,20 @@ noncomputable def barQQBlk (f f' : Fin 3) :
 
 /-- The two colour indices of the `barQ ∂ Q` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU3FunAntiFun_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (w w' : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (w w' : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.barQQBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FunAntiFun_mul hrepGauge_mul (fun U c => h.repGauge_su3_barQ U f ![] l.2 c w)
+  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_barQ U f ![] l.2 c w)
     (fun U c => h.repGauge_su3_Q U f' ![q] l.1 c w')
 
 /-- The two isospin indices of the `barQ ∂ Q` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU2FunAntiFun_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (c c' : Fin 3) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (c c' : Fin 3) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.barQQBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FunAntiFun_mul hrepGauge_mul (fun V w => h.repGauge_su2_barQ V f ![] l.2 c w)
+  isSU2FundamentalAntiFundamental_mul hrepGauge_mul (fun V w => h.repGauge_su2_barQ V f ![] l.2 c w)
     (fun V w => h.repGauge_su2_Q V f' ![q] l.1 c' w)
 
 /-- A hypercharge transformation fixes the `barQ ∂ Q` block, the hypercharges of a
@@ -602,7 +610,8 @@ noncomputable def barQQColourStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge ((U, 1, 1) : GaugeGroupI))
       (Submodule.span ℂ
         (Set.range fun n : Fin 2 → Fin 3 => h.barQQBlk f f' q l (n 0) (n 1) w w')) :=
-  IsSU3FunAntiFun.invariantReductionToSpan (h.isSU3FunAntiFun_barQQBlk f f' q l w w')
+  IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+    (h.isSU3FundamentalAntiFundamental_barQQBlk f f' q l w w')
 
 /-- The colour contraction of the `barQ ∂ Q` block, written out. -/
 lemma barQQColourStep_contraction (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
@@ -617,9 +626,10 @@ noncomputable def barQQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
       (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
       (Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 2 =>
         (h.barQQColourStep f f' q l (n 0) (n 1)).spanningVector)) :=
-  IsSU2FunAntiFun.invariantReductionToSpan (by
+  IsSU2FundamentalAntiFundamental.invariantReductionToSpan (by
     simp only [barQQColourStep_contraction]
-    exact IsSU2FunAntiFun.sum fun a : Fin 3 => h.isSU2FunAntiFun_barQQBlk f f' q l a a)
+    exact IsSU2FundamentalAntiFundamental.sum fun a : Fin 3 =>
+      h.isSU2FundamentalAntiFundamental_barQQBlk f f' q l a a)
 
 /-- The doubly contracted `barQ ∂ Q` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -650,9 +660,9 @@ noncomputable def barQQLorentzStep (f f' : Fin 3) :
 noncomputable def barQQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
   blk := h.barQQBlk f f'
   colourStep := h.barQQColourStep f f'
-  colourStep_mem _ _ _ _ := IsSU3FunAntiFun.deltaContraction_mem_span _
+  colourStep_mem _ _ _ _ := IsSU3FundamentalAntiFundamental.deltaContraction_mem_span _
   isospinStep := h.barQQIsospinStep f f'
-  isospinStep_mem _ _ := IsSU2FunAntiFun.deltaContraction_mem_span _
+  isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.barQQLorentzStep f f'
   lorentzStep_mem := pauliBarContraction_mem_span _
   hyper t q l c c' w w' := h.repGauge_u1_barQQBlk t f f' q l c c' w w'
@@ -683,11 +693,11 @@ lemma repGauge_su3_LbarLBlk (U : specialUnitaryGroup (Fin 3) ℂ) (f f' : Fin 3)
 
 /-- The two isospin indices of the `L ∂ barL` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU2FunAntiFun_LbarLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (c c' : Fin 3) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_LbarLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (c c' : Fin 3) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.LbarLBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FunAntiFun_mul_swap hrepGauge_mul (fun V w => h.repGauge_su2_L V f ![] l.1 w)
+  isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun V w => h.repGauge_su2_L V f ![] l.1 w)
     (fun V w => h.repGauge_su2_barL V f' ![q] l.2 w)
 
 /-- A hypercharge transformation fixes the `L ∂ barL` block, the hypercharges of a
@@ -723,9 +733,9 @@ noncomputable def LbarLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
       (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
       (Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 2 =>
         (h.LbarLColourStep f f' q l (n 0) (n 1)).spanningVector)) :=
-  IsSU2FunAntiFun.invariantReductionToSpan (by
+  IsSU2FundamentalAntiFundamental.invariantReductionToSpan (by
     simp only [LbarLColourStep_contraction]
-    exact h.isSU2FunAntiFun_LbarLBlk f f' q l 0 0)
+    exact h.isSU2FundamentalAntiFundamental_LbarLBlk f f' q l 0 0)
 
 /-- The doubly contracted `L ∂ barL` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -757,7 +767,7 @@ noncomputable def LbarLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   colourStep := h.LbarLColourStep f f'
   colourStep_mem _ _ _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   isospinStep := h.LbarLIsospinStep f f'
-  isospinStep_mem _ _ := IsSU2FunAntiFun.deltaContraction_mem_span _
+  isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.LbarLLorentzStep f f'
   lorentzStep_mem := pauliBarContraction_mem_span _
   hyper t q l c c' w w' := h.repGauge_u1_LbarLBlk t f f' q l c c' w w'
@@ -779,11 +789,11 @@ lemma repGauge_su3_barLLBlk (U : specialUnitaryGroup (Fin 3) ℂ) (f f' : Fin 3)
 
 /-- The two isospin indices of the `barL ∂ L` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
-lemma isSU2FunAntiFun_barLLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2)
-    (c c' : Fin 3) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_barLLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
+    (l : Fin 2 × Fin 2) (c c' : Fin 3) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.barLLBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FunAntiFun_mul hrepGauge_mul (fun V w => h.repGauge_su2_barL V f ![] l.2 w)
+  isSU2FundamentalAntiFundamental_mul hrepGauge_mul (fun V w => h.repGauge_su2_barL V f ![] l.2 w)
     (fun V w => h.repGauge_su2_L V f' ![q] l.1 w)
 
 /-- A hypercharge transformation fixes the `barL ∂ L` block, the hypercharges of a
@@ -819,9 +829,9 @@ noncomputable def barLLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
       (fun V : specialUnitaryGroup (Fin 2) ℂ => repGauge ((1, V, 1) : GaugeGroupI))
       (Submodule.span ℂ (Set.range fun n : Fin 2 → Fin 2 =>
         (h.barLLColourStep f f' q l (n 0) (n 1)).spanningVector)) :=
-  IsSU2FunAntiFun.invariantReductionToSpan (by
+  IsSU2FundamentalAntiFundamental.invariantReductionToSpan (by
     simp only [barLLColourStep_contraction]
-    exact h.isSU2FunAntiFun_barLLBlk f f' q l 0 0)
+    exact h.isSU2FundamentalAntiFundamental_barLLBlk f f' q l 0 0)
 
 /-- The doubly contracted `barL ∂ L` block carries one four-vector index and a pair of
   dual opposite-chirality Weyl indices. -/
@@ -853,7 +863,7 @@ noncomputable def barLLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   colourStep := h.barLLColourStep f f'
   colourStep_mem _ _ _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   isospinStep := h.barLLIsospinStep f f'
-  isospinStep_mem _ _ := IsSU2FunAntiFun.deltaContraction_mem_span _
+  isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.barLLLorentzStep f f'
   lorentzStep_mem := pauliBarContraction_mem_span _
   hyper t q l c c' w w' := h.repGauge_u1_barLLBlk t f f' q l c c' w w'

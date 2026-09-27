@@ -7,21 +7,14 @@ module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.Basic
 /-!
-# Gauge tensors carrying two `u(1)` adjoint indices
+# Families with two `u(1)` adjoint indices
 
-The hypercharge field strength `B` carries one `u(1)` adjoint index, and a product of two
-field strengths carries two. The `u(1)` factor of the gauge group is abelian, so its adjoint
-action on its own Lie algebra is trivial: a hypercharge rotation leaves every component of
-such a product alone. This is the companion of `IsSU2BiAdjoint` and `IsSU3BiAdjoint` for the
-third factor of the gauge group, and it is the degenerate case: the index takes a single
-value, the adjoint matrix is the one by one matrix `1`, and the trace contraction is the one
-component.
-
-`IsU1BiAdjoint B repGauge T` records the transformation law, in the same shape as its
-companions so that the three factors can be treated alike: a hypercharge rotation `u ∈ U(1)`
-moves the components by two copies of the adjoint matrix of `u`, which is to say not at all
-(`isU1BiAdjointMat_iff`). Nothing is asked of the colour and isospin factors. The trace
-contraction is then fixed by every map obeying the law.
+The hypercharge factor is abelian, so its adjoint action on `u(1)` is trivial. A family
+`T : (Fin 2 → Fin 1) → B` obeys the `u(1)` bi-adjoint law when a hypercharge rotation moves
+it by one factor of the `1 × 1` adjoint matrix `1` per index, which is to say not at all
+(`isU1BiAdjointMat_iff`). The law has the same shape as `IsSU2BiAdjoint` and
+`IsSU3BiAdjoint`, so that the three factors can be treated alike. The trace contraction is the
+one component of the family, and every map obeying the law fixes it.
 
 - A. The adjoint matrix and the transformation law
 - B. The trace contraction
@@ -36,11 +29,6 @@ open Matrix
 /-!
 
 ## A. The adjoint matrix and the transformation law
-
-The `u(1)` factor is abelian, so it acts trivially on its own algebra and the adjoint matrix
-is the one by one matrix `1`, whatever the element of `U(1)`. The transformation law is
-recorded with one factor of that matrix per index, exactly as for the other two factors, and
-`isU1BiAdjointMat_iff` reads it as the statement that the map fixes every component.
 
 -/
 
@@ -88,9 +76,6 @@ structure IsU1BiAdjoint (B : Type*) [AddCommMonoid B] [Module ℂ B]
 
 namespace IsU1BiAdjoint
 
-/- `traceContraction` takes the hypothesis `hT` only to hang off it by dot notation. -/
-set_option linter.unusedVariables false
-
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B} {T : (Fin 2 → Fin 1) → B}
 
@@ -102,13 +87,11 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-- The trace contraction: the Kronecker contraction of the two `u(1)` indices, which is
   the one component of the family. -/
-@[nolint unusedArguments]
-def traceContraction (hT : IsU1BiAdjoint B repGauge T) : B := ∑ a : Fin 1, T ![a, a]
+def traceContraction (T : (Fin 2 → Fin 1) → B) : B := ∑ a : Fin 1, T ![a, a]
 
 /-- Any map obeying the `u(1)` law fixes the trace contraction. -/
-lemma map_traceContraction (hT : IsU1BiAdjoint B repGauge T)
-    {u : unitary ℂ} {f : B →ₗ[ℂ] B} (hf : IsU1BiAdjointMat u f T) :
-    f hT.traceContraction = hT.traceContraction := by
+lemma map_traceContraction {u : unitary ℂ} {f : B →ₗ[ℂ] B} (hf : IsU1BiAdjointMat u f T) :
+    f (traceContraction T) = traceContraction T := by
   rw [traceContraction, map_sum]
   exact Finset.sum_congr rfl fun a _ => hf.map_T _
 

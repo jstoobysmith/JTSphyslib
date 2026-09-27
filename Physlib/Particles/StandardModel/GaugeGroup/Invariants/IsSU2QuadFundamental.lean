@@ -5,25 +5,23 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.SU2Conjugation
+public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
-# Gauge tensors carrying four `su(2)` fundamental indices
+# Families with four `su(2)` fundamental indices
 
-The quartic Higgs coupling `(H†H)²` is a product of four isospin doublets, so it carries four
-fundamental `su(2)` indices. A doublet index can only be contracted against another through
-the antisymmetric symbol, so an invariant of four indices is a way of pairing them off, and
-there are three pairings: `(12)(34)`, `(13)(24)` and `(14)(23)`. They are not independent:
-antisymmetrizing three indices of a two-dimensional space gives zero, and written out that is
-the Schouten identity, one linear relation between the three. Modulo an isospin-stable
-submodule, every isospin invariant of the span of the components is a combination of the
-first two epsilon contractions. That the two are independent, which makes `2 ⊗ 2 ⊗ 2 ⊗ 2`
-contain exactly two singlets, is not formalized here; for particular families they may even
-vanish.
+A family `T : (Fin 4 → Fin 2) → B` obeys the `su(2)` quad-fundamental law when an isospin
+rotation `U` moves it by one factor of `U` per index. The Higgs sector builds such a family
+for the quartic `(H†H)²` from two conjugate Higgs symbols and two Higgs symbols re-indexed by
+`su2Epsilon`, which by the symbol convention of `Invariants.Basic` all carry fundamental
+indices.
 
-`IsSU2QuadFundamental B repGauge T` records the transformation law: an isospin rotation
-`U ∈ SU(2)` moves the components by one factor of `U` per index, so the law acts on
-coefficient vectors `c l`, with `l : Fin 4 → Fin 2`, by the fourth Kronecker power of `U`.
-Nothing is asked of the colour and hypercharge factors.
+Four fundamental indices can be paired off by the antisymmetric symbol in three ways,
+`(12)(34)`, `(13)(24)` and `(14)(23)`, and the Schouten identity is one linear relation
+between them. Modulo an isospin-stable submodule, every isospin invariant of the span of the
+family is a combination of the first two epsilon contractions. The two contractions are not
+shown to be nonzero or independent; for the Higgs quartic family the second vanishes.
 
 Three rotations pin the fixed coefficient vectors down. The diagonal matrix `diag(ζ, ζ²)`,
 with `ζ` a primitive cube root of unity, lies in `SU(2)` and scales `c l` by `ζ ^ (4 + k)`
@@ -45,7 +43,6 @@ three unknowns. Two remain, and they are the coefficients of the two pairings.
 namespace StandardModel
 
 open Matrix
-open IsSU2BiFundamental (epsilon sum_epsilon_mul)
 
 /-!
 
@@ -116,18 +113,18 @@ lemma coeffMatrix_inv (U : specialUnitaryGroup (Fin 2) ℂ) :
 
 The pairing `(12)(34)` has coefficient vector `ε (l 0) (l 1) * ε (l 2) (l 3)`, and the pairing
 `(13)(24)` has `ε (l 0) (l 2) * ε (l 1) (l 3)`. The third pairing is the difference of these
-two by the Schouten identity, so two contractions suffice: `epsilonContraction₁₂` and
-`epsilonContraction₁₃`, the contractions of `T` against the two coefficient vectors. Each
-pairing is fixed by every coefficient matrix, being a product of two invariant antisymmetric
-symbols.
+two by the Schouten identity, which the proof does not use: section C shows directly that the
+contractions `epsilonContraction₁₂` and `epsilonContraction₁₃` of `T` against the two
+coefficient vectors suffice. Each pairing is fixed by every coefficient matrix, being a
+product of two invariant antisymmetric symbols.
 
 -/
 
 /-- The coefficient vector of the pairing `(12)(34)`. -/
-def epsilonPair₁₂ (l : Fin 4 → Fin 2) : ℂ := epsilon (l 0) (l 1) * epsilon (l 2) (l 3)
+def epsilonPair₁₂ (l : Fin 4 → Fin 2) : ℂ := su2Epsilon (l 0) (l 1) * su2Epsilon (l 2) (l 3)
 
 /-- The coefficient vector of the pairing `(13)(24)`. -/
-def epsilonPair₁₃ (l : Fin 4 → Fin 2) : ℂ := epsilon (l 0) (l 2) * epsilon (l 1) (l 3)
+def epsilonPair₁₃ (l : Fin 4 → Fin 2) : ℂ := su2Epsilon (l 0) (l 2) * su2Epsilon (l 1) (l 3)
 
 /-- The contraction pairing the first index with the second and the third with the
   fourth. -/
@@ -159,28 +156,28 @@ lemma coeffMatrix_mulVec_epsilonPair₁₂ (U : specialUnitaryGroup (Fin 2) ℂ)
     coeffMatrix U *ᵥ epsilonPair₁₂ = epsilonPair₁₂ := by
   funext a
   have key : (coeffMatrix U *ᵥ epsilonPair₁₂) a
-      = (∑ x : Fin 2, ∑ y : Fin 2, epsilon x y * (U.1 (a 0) x * U.1 (a 1) y))
-        * (∑ z : Fin 2, ∑ w : Fin 2, epsilon z w * (U.1 (a 2) z * U.1 (a 3) w)) := by
+      = (∑ x : Fin 2, ∑ y : Fin 2, su2Epsilon x y * (U.1 (a 0) x * U.1 (a 1) y))
+        * (∑ z : Fin 2, ∑ w : Fin 2, su2Epsilon z w * (U.1 (a 2) z * U.1 (a 3) w)) := by
     rw [coeffMatrix_mulVec_apply, sum_pi_four]
     simp only [epsilonPair₁₂, Fin.prod_univ_four, Fin.sum_univ_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
       Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
     ring
-  rw [key, sum_epsilon_mul, sum_epsilon_mul, epsilonPair₁₂]
+  rw [key, sum_su2Epsilon_mul, sum_su2Epsilon_mul, epsilonPair₁₂]
 
 /-- The second pairing is fixed, by the same factorization with the indices interleaved. -/
 lemma coeffMatrix_mulVec_epsilonPair₁₃ (U : specialUnitaryGroup (Fin 2) ℂ) :
     coeffMatrix U *ᵥ epsilonPair₁₃ = epsilonPair₁₃ := by
   funext a
   have key : (coeffMatrix U *ᵥ epsilonPair₁₃) a
-      = (∑ x : Fin 2, ∑ z : Fin 2, epsilon x z * (U.1 (a 0) x * U.1 (a 2) z))
-        * (∑ y : Fin 2, ∑ w : Fin 2, epsilon y w * (U.1 (a 1) y * U.1 (a 3) w)) := by
+      = (∑ x : Fin 2, ∑ z : Fin 2, su2Epsilon x z * (U.1 (a 0) x * U.1 (a 2) z))
+        * (∑ y : Fin 2, ∑ w : Fin 2, su2Epsilon y w * (U.1 (a 1) y * U.1 (a 3) w)) := by
     rw [coeffMatrix_mulVec_apply, sum_pi_four]
     simp only [epsilonPair₁₃, Fin.prod_univ_four, Fin.sum_univ_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
       Matrix.cons_val_two, Matrix.cons_val_three, Matrix.tail_cons]
     ring
-  rw [key, sum_epsilon_mul, sum_epsilon_mul, epsilonPair₁₃]
+  rw [key, sum_su2Epsilon_mul, sum_su2Epsilon_mul, epsilonPair₁₃]
 
 /-- Any map moving the components by an element of `SU(2)` fixes the first
   contraction. -/
@@ -404,14 +401,14 @@ lemma exists_smul_add_smul_add_of_gauge_invariant {T : (Fin 4 → Fin 2) → B}
     ∃ c₁ c₂ : ℂ, ∃ y ∈ S,
       x = c₁ • epsilonContraction₁₂ T + c₂ • epsilonContraction₁₃ T + y
         ∧ ∀ g : GaugeGroupI, repGauge g y = y := by
-  have h := reducesInvariantsTo_span_epsilonContractions _ hT.repGauge_T S
-    (fun V => hS (1, V, 1)) x hx fun V => hinv (1, V, 1)
   have hfix : IsFixedBy (fun g : GaugeGroupI => repGauge g)
       (Submodule.span ℂ {epsilonContraction₁₂ T, epsilonContraction₁₃ T}) := by
     intro g w hw
     obtain ⟨c₁, c₂, rfl⟩ := Submodule.mem_span_pair.1 hw
     rw [map_add, map_smul, map_smul, hec₁₂ g, hec₁₃ g]
-  obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := hfix.exists_add_of_mem_sup h hinv
+  obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := hfix.exists_add_of_mem_sup
+    ((reducesInvariantsTo_span_epsilonContractions _ hT.repGauge_T).comp
+      (σ := fun g => repGauge g) (fun V => (1, V, 1)) S hS x hx hinv) hinv
   obtain ⟨c₁, c₂, rfl⟩ := Submodule.mem_span_pair.1 hw
   exact ⟨c₁, c₂, y, hy, rfl, hyinv⟩
 

@@ -35,6 +35,17 @@ The span of the components is Mathlib's `Submodule.span ℂ (Set.range T)`.
 The conclusions are spanning statements: an invariant is a combination of the named
 contractions. Nothing here shows that the contractions are nonzero or independent.
 
+A law is named by how the members of the family move as vectors of `B`. Under a fundamental
+law `f (T l) = ∑ a, U a l • T a`, so `T l` moves like the standard basis vector `e_l` of `ℂⁿ`;
+an anti-fundamental law has `conj U` in place of `U`. For unitary `U`, `conj U = (U⁻¹)ᵀ`, so
+the anti-fundamental law is also the dual law. The component symbols of a field are values of
+an equivariant map on dual vectors, so they obey the dual of the field's law: the symbols of a
+doublet or triplet field form an anti-fundamental family, and those of its conjugate a
+fundamental one. The Lorentz classifiers mark the same dual law with `Dual`, as in
+`IsBiDualLeftWeyl`. `SU(2)` is pseudo-real, but the anti-fundamental and fundamental laws are
+related here only through an explicit re-index by `su2Epsilon`. The adjoint matrices are real
+and orthogonal, so the adjoint laws are their own duals.
+
 This file holds what the families share: sums over pairs of indices, the matrices of laws with
 one factor per index (`powMatrix`, `pairMatrix`), and the Kronecker delta on two indices, which
 is fixed by a pair of matrices whose rows are orthonormal against each other.

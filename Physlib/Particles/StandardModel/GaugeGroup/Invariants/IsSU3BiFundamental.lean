@@ -8,23 +8,20 @@ module
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
-# Gauge tensors carrying two `su(3)` fundamental indices
+# Families with two `su(3)` fundamental indices
 
-A quark carries one fundamental colour index, and a product of two quark fields carries two.
-There is no colour singlet in `3 ⊗ 3 = 6 ⊕ 3̄`: a colour singlet needs three quarks, or a
-quark and an antiquark, never two quarks. Modulo a colour-stable submodule `S`, every colour
-invariant of the span of the components lies in `S`.
+A family `T : (Fin 2 → Fin 3) → B` obeys the `su(3)` bi-fundamental law when a colour rotation
+`U` moves it by one factor of `U` per index, the summed index in the row slot: the members
+move like the tensor products of standard basis vectors of `ℂ³`. See `Invariants.Basic` for
+how this relates to the component symbols of fields.
 
-`IsSU3BiFundamental B repGauge T` records the transformation law: a colour rotation
-`U ∈ SU(3)` moves the components by one factor of `U` per index, so the law acts on
-coefficient vectors by the Kronecker square of `U`. Nothing is asked of the isospin and
-hypercharge factors.
+Two fundamental colour indices have no invariant: modulo a colour-stable submodule `S`, every
+colour invariant of the span of the family lies in `S`.
 
-The proof is triality. The scalar matrix `ω • 1`, with `ω` a primitive cube root of unity,
-lies in `SU(3)` because `ω ^ 3 = 1` is exactly the determinant condition, and it scales a
-tensor with `k` fundamental indices by `ω ^ k`. An invariant tensor therefore needs `3 ∣ k`,
-and `k = 2` fails: the centre alone scales every coefficient vector by `ω ^ 2 ≠ 1`, so no
-nonzero coefficient vector is fixed.
+The proof uses the centre of `SU(3)`. The scalar matrix `ω • 1`, with `ω` a primitive cube
+root of unity, lies in `SU(3)` because `ω ^ 3 = 1` is exactly the determinant condition, and
+it scales every coefficient vector by `ω ^ 2 ≠ 1`, one factor of `ω` per index. So no nonzero
+coefficient vector is fixed.
 
 - A. The transformation law
 - B. The centre of `SU(3)` fixes no coefficient vector

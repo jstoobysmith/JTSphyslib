@@ -7,8 +7,8 @@ module
 
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
 public import Physlib.Particles.StandardModel.InvariantReduction
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FunAntiFun
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FundamentalAntiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2FundamentalAntiFundamental
 /-!
 # The kinetic terms of the fermion sector
 
@@ -554,7 +554,7 @@ two arrangements according to which factor is the barred one.
 
 /-- A product of a component with a fundamental colour index and one with an
   anti-fundamental colour index carries one colour index of each kind. -/
-lemma isSU3FunAntiFun_mul
+lemma isSU3FundamentalAntiFundamental_mul
     (hmul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
       repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
     {A C : Fin 3 → B}
@@ -562,15 +562,15 @@ lemma isSU3FunAntiFun_mul
       repGauge ((U, 1, 1) : GaugeGroupI) (A c) = ∑ a, U.1 a c • A a)
     (hC : ∀ (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 3),
       repGauge ((U, 1, 1) : GaugeGroupI) (C c) = ∑ a, conj (U.1 a c) • C a) :
-    IsSU3FunAntiFun B repGauge (fun l : Fin 2 → Fin 3 => A (l 0) * C (l 1)) where
+    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 0) * C (l 1)) where
   repGauge_T U l := by
-    rw [hmul, hA, hC, Finset.sum_mul_sum, IsSU3FunAntiFun.sum_pi_two]
+    rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ =>
       smul_mul_smul_comm _ _ _ _
 
 /-- The same with the two factors exchanged, the anti-fundamental one first. -/
-lemma isSU3FunAntiFun_mul_swap
+lemma isSU3FundamentalAntiFundamental_mul_swap
     (hmul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
       repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
     {A C : Fin 3 → B}
@@ -578,16 +578,16 @@ lemma isSU3FunAntiFun_mul_swap
       repGauge ((U, 1, 1) : GaugeGroupI) (A c) = ∑ a, conj (U.1 a c) • A a)
     (hC : ∀ (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 3),
       repGauge ((U, 1, 1) : GaugeGroupI) (C c) = ∑ a, U.1 a c • C a) :
-    IsSU3FunAntiFun B repGauge (fun l : Fin 2 → Fin 3 => A (l 1) * C (l 0)) where
+    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 1) * C (l 0)) where
   repGauge_T U l := by
-    rw [hmul, hA, hC, Finset.sum_mul_sum, IsSU3FunAntiFun.sum_pi_two, Finset.sum_comm]
+    rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two, Finset.sum_comm]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
     rw [smul_mul_smul_comm, mul_comm]
 
 /-- A product of a component with a fundamental isospin index and one with an
   anti-fundamental isospin index carries one isospin index of each kind. -/
-lemma isSU2FunAntiFun_mul
+lemma isSU2FundamentalAntiFundamental_mul
     (hmul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
       repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
     {A C : Fin 2 → B}
@@ -595,15 +595,15 @@ lemma isSU2FunAntiFun_mul
       repGauge ((1, V, 1) : GaugeGroupI) (A w) = ∑ a, V.1 a w • A a)
     (hC : ∀ (V : specialUnitaryGroup (Fin 2) ℂ) (w : Fin 2),
       repGauge ((1, V, 1) : GaugeGroupI) (C w) = ∑ a, conj (V.1 a w) • C a) :
-    IsSU2FunAntiFun B repGauge (fun l : Fin 2 → Fin 2 => A (l 0) * C (l 1)) where
+    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 0) * C (l 1)) where
   repGauge_T V l := by
-    rw [hmul, hA, hC, Finset.sum_mul_sum, IsSU2BiFundamental.sum_pi_two]
+    rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ =>
       smul_mul_smul_comm _ _ _ _
 
 /-- The same with the two factors exchanged, the anti-fundamental one first. -/
-lemma isSU2FunAntiFun_mul_swap
+lemma isSU2FundamentalAntiFundamental_mul_swap
     (hmul : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
       repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
     {A C : Fin 2 → B}
@@ -611,9 +611,9 @@ lemma isSU2FunAntiFun_mul_swap
       repGauge ((1, V, 1) : GaugeGroupI) (A w) = ∑ a, conj (V.1 a w) • A a)
     (hC : ∀ (V : specialUnitaryGroup (Fin 2) ℂ) (w : Fin 2),
       repGauge ((1, V, 1) : GaugeGroupI) (C w) = ∑ a, V.1 a w • C a) :
-    IsSU2FunAntiFun B repGauge (fun l : Fin 2 → Fin 2 => A (l 1) * C (l 0)) where
+    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 1) * C (l 0)) where
   repGauge_T V l := by
-    rw [hmul, hA, hC, Finset.sum_mul_sum, IsSU2BiFundamental.sum_pi_two, Finset.sum_comm]
+    rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two, Finset.sum_comm]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
     rw [smul_mul_smul_comm, mul_comm]

@@ -7,7 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2AntiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2FundamentalAntiFundamental
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
 /-!
 # The gauge weight decomposition of the Higgs mass-weight submodules
@@ -30,13 +30,13 @@ The gauge weight alone cannot finish the job: it cannot separate the isospin sin
 weight.  That separation is `SU(2)` mathematics and belongs to the isospin classifiers of
 `GaugeGroup.Invariants` rather than here.  What is left for this file is to present each
 surviving piece as a family those classifiers know.  A conjugate Higgs symbol against a
-Higgs symbol is an `IsSU2FunAntiFun` family — the conjugate symbol carries the fundamental
-isospin index and the Higgs symbol the anti-fundamental one, so it goes second — and the
-sole invariant of `2 ⊗ 2̄`, the delta contraction, is the isospin contraction
+Higgs symbol is an `IsSU2FundamentalAntiFundamental` family — the conjugate symbol carries
+the fundamental isospin index and the Higgs symbol the anti-fundamental one, so it goes
+second — and the delta contraction, which spans its invariants, is the isospin contraction
 `dotGaugeHiggs`.  The quartic is an `IsSU2QuadFundamental` family once its two Higgs
-symbols are re-indexed by the antisymmetric symbol, and of its two independent
-contractions one is the square of the isospin contraction and the other vanishes, pairing
-commuting factors antisymmetrically.
+symbols are re-indexed by the antisymmetric symbol, and of its two epsilon contractions
+one is the square of the isospin contraction and the other vanishes, pairing commuting
+factors antisymmetrically.
 
 - A. The decompositions
 - B. The pieces of a derivative submodule
@@ -470,15 +470,16 @@ transformation moves it by the matrix of the `SU(2)` element, with the summed in
 row slot — and a Higgs symbol carries an anti-fundamental one, moved by the conjugate
 matrix.  So the pairing span of section C is the span of the components of
 `fun l => h.barHiggs d' (l 0) * h.higgs d (l 1)`, conjugate symbol first, which is an
-`IsSU2FunAntiFun` family; and its delta contraction, the sole invariant of `2 ⊗ 2̄`, is the
-isospin contraction `dotGaugeHiggs`.  That identification is the whole point of the
-section: `dotSpan` is the span of delta contractions, and nothing else survives.
+`IsSU2FundamentalAntiFundamental` family; and its delta contraction, which spans its
+invariants, is the isospin contraction `dotGaugeHiggs`.  That identification is the whole
+point of the section: `dotSpan` is the span of delta contractions, and nothing else
+survives.
 
 The quartic needs four fundamental indices, so its two Higgs symbols must be re-indexed by
 the antisymmetric symbol first.  `tildeHiggs` is that re-index, `H̃⁰ = H¹` and
 `H̃¹ = -H⁰`, and it is fundamental because `SU(2)` is pseudo-real.  The quartic family is
 then a product of four fundamental families, and `IsSU2QuadFundamental` classifies it.  Its
-two independent contractions come out as the square of the isospin contraction and zero:
+two epsilon contractions come out as the square of the isospin contraction and zero:
 the second pairs the two conjugate symbols with each other and the two Higgs symbols with
 each other, and an antisymmetric contraction of two commuting factors vanishes.
 
@@ -560,19 +561,19 @@ noncomputable def isoFamily (h : HiggsAlgebraCovRealization B rep repLorentz mas
 
 include h in
 /-- The isospin family carries one fundamental and one anti-fundamental isospin index. -/
-lemma isSU2FunAntiFun_isoFamily {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
-    (d' : Fin m → (Fin 1 ⊕ Fin 3)) : IsSU2FunAntiFun B rep (h.isoFamily d d') where
+lemma isSU2FundamentalAntiFundamental_isoFamily {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
+    (d' : Fin m → (Fin 1 ⊕ Fin 3)) : IsSU2FundamentalAntiFundamental B rep (h.isoFamily d d') where
   repGauge_T V l := by
     rw [isoFamily, h.rep_mul_pair (1, V, 1) (h.rep_su2_barHiggs V d' (l 0))
-      (h.rep_su2_higgs V d (l 1)), IsSU2BiFundamental.sum_pi_two]
+      (h.rep_su2_higgs V d (l 1)), Family.sum_pi_two]
     simp only [isoFamily, Matrix.cons_val_zero, Matrix.cons_val_one]
 
-/-- The delta contraction of the isospin family is the isospin contraction: the sole
-  invariant of `2 ⊗ 2̄` is the Higgs mass term of the two towers. -/
+/-- The delta contraction of the isospin family, which spans its isospin invariants, is the
+  isospin contraction: the Higgs mass term of the two towers. -/
 lemma deltaContraction_isoFamily {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
     (d' : Fin m → (Fin 1 ⊕ Fin 3)) :
-    IsSU2FunAntiFun.deltaContraction (h.isoFamily d d') = h.dotGaugeHiggs d d' := by
-  rw [IsSU2FunAntiFun.deltaContraction, dotGaugeHiggs, isoFamily, isoFamily]
+    IsSU2FundamentalAntiFundamental.deltaContraction (h.isoFamily d d') = h.dotGaugeHiggs d d' := by
+  rw [IsSU2FundamentalAntiFundamental.deltaContraction, dotGaugeHiggs, isoFamily, isoFamily]
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
   rw [h.higgs_mul_barHiggs_comm d d' 0 0, h.higgs_mul_barHiggs_comm d d' 1 1]
 
@@ -622,7 +623,7 @@ lemma higgsBarHiggsSpan_le_isoFamily_span (n m : ℕ) :
   `H̃¹ = -H⁰`.  `SU(2)` is pseudo-real, so this turns the anti-fundamental index of a Higgs
   symbol into a fundamental one, which is what the quartic family needs. -/
 noncomputable def tildeHiggs (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) (i : Fin 2) : B :=
-  ∑ m : Fin 2, IsSU2BiFundamental.epsilon i m • h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) m
+  ∑ m : Fin 2, su2Epsilon i m • h.higgs (![] : Fin 0 → (Fin 1 ⊕ Fin 3)) m
 
 /-- The re-index at isospin zero is the Higgs symbol of isospin one. -/
 @[simp] lemma tildeHiggs_zero :
@@ -636,7 +637,7 @@ noncomputable def tildeHiggs (h : HiggsAlgebraCovRealization B rep repLorentz ma
 
 include h in
 /-- The re-indexed Higgs symbol carries a fundamental isospin index: the four entry
-  identities of `IsSU2BiFundamental` remove every complex conjugate. -/
+  identities of `GaugeGroup.SU2Conjugation` remove every complex conjugate. -/
 lemma rep_su2_tildeHiggs (V : specialUnitaryGroup (Fin 2) ℂ) (i : Fin 2) :
     rep ((1, V, 1) : GaugeGroupI) (h.tildeHiggs i)
       = ∑ a, V.1 a i • h.tildeHiggs a := by
@@ -644,13 +645,13 @@ lemma rep_su2_tildeHiggs (V : specialUnitaryGroup (Fin 2) ℂ) (i : Fin 2) :
   rcases hi i with rfl | rfl
   · rw [tildeHiggs_zero, h.rep_su2_higgs, Fin.sum_univ_two, Fin.sum_univ_two,
       tildeHiggs_zero, tildeHiggs_one]
-    simp only [IsSU2BiFundamental.conj_apply_zero_one,
-      IsSU2BiFundamental.conj_apply_one_one]
+    simp only [su2_conj_apply_zero_one,
+      su2_conj_apply_one_one]
     module
   · rw [tildeHiggs_one, map_neg, h.rep_su2_higgs, Fin.sum_univ_two, Fin.sum_univ_two,
       tildeHiggs_zero, tildeHiggs_one]
-    simp only [IsSU2BiFundamental.conj_apply_zero_zero,
-      IsSU2BiFundamental.conj_apply_one_zero]
+    simp only [su2_conj_apply_zero_zero,
+      su2_conj_apply_one_zero]
     module
 
 /-- The quartic isospin family: two conjugate Higgs symbols against two re-indexed Higgs
@@ -767,11 +768,11 @@ weight is seen by one of the four torus generators, which scales that part and f
 nothing else, so the part can be removed one weight at a time.
 
 The second is the peeling itself.  The weight-zero piece is a finite join of isospin family
-spans, and `IsSU2FunAntiFun.exists_smul_add_of_gauge_invariant` removes one span at a time,
-each time with the spans not yet removed adjoined to `S`.  That is why the spans have to be
-gauge stable, which is `isoFamily_span_stable`, and why the enlargement is `isoSpan` rather
-than the pairing span of section C: the pairing span keeps only the diagonal components and
-a gauge transformation does not.
+spans, and `IsSU2FundamentalAntiFundamental.exists_smul_add_of_gauge_invariant` removes one
+span at a time, each time with the spans not yet removed adjoined to `S`.  That is why the
+spans have to be gauge stable, which is `isoFamily_span_stable`, and why the enlargement is
+`isoSpan` rather than the pairing span of section C: the pairing span keeps only the diagonal
+components and a gauge transformation does not.
 
 -/
 
@@ -779,18 +780,18 @@ a gauge transformation does not.
   anti-fundamental isospin index off a gauge-stable submodule: a gauge invariant of the
   join together with `S` is a combination of the delta contractions of the families plus a
   gauge-invariant remainder in `S`. -/
-lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableEq ι]
-    {T : ι → (Fin 2 → Fin 2) → B} (hT : ∀ i, IsSU2FunAntiFun B rep (T i))
+lemma exists_mem_of_invariant_biSup_isSU2FundamentalAntiFundamental_span {ι : Type} [DecidableEq ι]
+    {T : ι → (Fin 2 → Fin 2) → B} (hT : ∀ i, IsSU2FundamentalAntiFundamental B rep (T i))
     (hstab : ∀ (i : ι) (g : GaugeGroupI), ∀ y ∈ Submodule.span ℂ (Set.range (T i)),
       rep g y ∈ Submodule.span ℂ (Set.range (T i)))
     (hdc : ∀ (i : ι) (g : GaugeGroupI),
-      rep g (IsSU2FunAntiFun.deltaContraction (T i))
-        = IsSU2FunAntiFun.deltaContraction (T i))
+      rep g (IsSU2FundamentalAntiFundamental.deltaContraction (T i))
+        = IsSU2FundamentalAntiFundamental.deltaContraction (T i))
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, rep g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : GaugeGroupI, rep g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y)
-      ∧ x - y ∈ ⨆ i ∈ s, ℂ ∙ IsSU2FunAntiFun.deltaContraction (T i) := by
+      ∧ x - y ∈ ⨆ i ∈ s, ℂ ∙ IsSU2FundamentalAntiFundamental.deltaContraction (T i) := by
   induction s using Finset.induction_on generalizing x with
   | empty =>
     rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
@@ -814,7 +815,7 @@ lemma exists_mem_of_invariant_biSup_isSU2FunAntiFun_span {ι : Type} [DecidableE
     obtain ⟨y, hyS, hyinv, hy'y⟩ := ih hy' hy'inv
     refine ⟨y, hyS, hyinv, ?_⟩
     rw [Finset.iSup_insert,
-      show x - y = c • IsSU2FunAntiFun.deltaContraction (T a) + (y' - y) from by
+      show x - y = c • IsSU2FundamentalAntiFundamental.deltaContraction (T a) + (y' - y) from by
         rw [hxy']; abel]
     exact Submodule.add_mem _
       (Submodule.mem_sup_left (Submodule.smul_mem _ _
@@ -862,10 +863,10 @@ lemma exists_mem_of_invariant_isoSpan_sup (n m : ℕ) (S : Submodule ℂ B)
     (hinv : ∀ g : GaugeGroupI, rep g x = x) :
     ∃ y ∈ S, (∀ g : GaugeGroupI, rep g y = y) ∧ x - y ∈ h.dotSpan n m := by
   obtain ⟨y, hyS, hyinv, hxy⟩ :=
-    exists_mem_of_invariant_biSup_isSU2FunAntiFun_span
+    exists_mem_of_invariant_biSup_isSU2FundamentalAntiFundamental_span
       (T := fun p : (Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)) =>
         h.isoFamily p.1 p.2)
-      (fun p => h.isSU2FunAntiFun_isoFamily p.1 p.2)
+      (fun p => h.isSU2FundamentalAntiFundamental_isoFamily p.1 p.2)
       (fun p g _ hy => h.isoFamily_span_stable p.1 p.2 g hy)
       (fun p g => by
         rw [h.deltaContraction_isoFamily p.1 p.2, h.rep_dotGaugeHiggs_invariant])
@@ -881,7 +882,7 @@ lemma exists_mem_of_invariant_isoSpan_sup (n m : ℕ) (S : Submodule ℂ B)
   refine ⟨y, hyS, hyinv, ?_⟩
   rw [show h.dotSpan n m = ⨆ p ∈ (Finset.univ :
       Finset ((Fin n → (Fin 1 ⊕ Fin 3)) × (Fin m → (Fin 1 ⊕ Fin 3)))),
-        ℂ ∙ IsSU2FunAntiFun.deltaContraction (h.isoFamily p.1 p.2) from by
+        ℂ ∙ IsSU2FundamentalAntiFundamental.deltaContraction (h.isoFamily p.1 p.2) from by
     simp only [Finset.mem_univ, iSup_pos, h.deltaContraction_isoFamily]
     rw [dotSpan, iSup_prod]]
   exact hxy

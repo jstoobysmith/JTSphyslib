@@ -5,38 +5,31 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Mathematics.LeviCivita.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.SU2Conjugation
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
-# Gauge tensors carrying two `su(2)` fundamental indices
+# Families with two `su(2)` fundamental indices
 
-The Higgs field and the left-handed fermions are isospin doublets: each carries one
-fundamental `su(2)` index, taking two values. A product of two doublets carries two, and the
-isospin invariant is the antisymmetric combination `ε_{ab} T^{ab} = T^{01} - T^{10}`: modulo
-an isospin-stable submodule, every isospin invariant of the span of the components is a
-multiple of this epsilon contraction. In representation theory `2 ⊗ 2 = 1 ⊕ 3`; only the
-spanning statement is formalized here.
+A family `T : (Fin 2 → Fin 2) → B` obeys the `su(2)` bi-fundamental law when an isospin
+rotation `U` moves it by one factor of `U` per index, the summed index in the row slot. The
+family moves like the tensor products of standard basis vectors of `ℂ²`. By the symbol
+convention of `Invariants.Basic`, the products of two conjugate doublet symbols form such a
+family, and so do two doublet symbols once each is re-indexed by `su2Epsilon`.
 
-`IsSU2BiFundamental B repGauge T` records the transformation law: an isospin rotation
-`U ∈ SU(2)` moves the components by one factor of `U` per index, so the law acts on
-coefficient vectors by the Kronecker square of `U`, whose conjugate transpose is the matrix
-of `U⁻¹`. Nothing is asked of the colour and hypercharge factors, which may well move the
-components: a product of two Higgs fields carries hypercharge.
+Modulo an isospin-stable submodule, every isospin invariant of the span of the family is a
+multiple of the epsilon contraction `T ![0, 1] - T ![1, 0]`.
 
-The antisymmetric symbol is Physlib's `leviCivitaSymbol` on `Fin 2`, normalized by
-`ε 0 1 = 1`. It is fixed because it transforms by the determinant
-(`sum_leviCivitaSymbol_mul_prod`), and the determinant of an element of `SU(2)` is one. Two
+The antisymmetric symbol is fixed because `det U = 1` (`GaugeGroup.SU2Conjugation`). Two
 rotations pin the fixed coefficient vectors down: the diagonal element `diag(i, -i)` scales
 each diagonal entry `c ![a, a]` by `i² = -1`, so the diagonal vanishes, and the Weyl element
-`su2Perm = !![0, -1; 1, 0]` carries `c ![1, 0]` to `-c ![0, 1]`, so the matrix is
+`su2Perm = !![0, -1; 1, 0]` carries `c ![1, 0]` to `-c ![0, 1]`, so the coefficients are
 antisymmetric.
 
 - A. The transformation law
 - B. The antisymmetric symbol and the epsilon contraction
 - C. An invariant coefficient is a multiple of the antisymmetric symbol
 - D. The reduction modulo a stable submodule
-- Aside: the entries of an `SU(2)` matrix under conjugation
 -/
 
 @[expose] public section
@@ -74,11 +67,6 @@ namespace IsSU2BiFundamental
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
 
-/-- A sum over pairs of fundamental indices is a double sum. -/
-lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 2) → M) :
-    ∑ d : Fin 2 → Fin 2, F d = ∑ x : Fin 2, ∑ y : Fin 2, F ![x, y] :=
-  Family.sum_pi_two F
-
 /-- A finite sum of bi-fundamental isospin families is such a family again. -/
 lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 2) → B}
     (hT : ∀ i, IsSU2BiFundamental B repGauge (T i)) :
@@ -110,9 +98,9 @@ lemma coeffMatrix_inv (U : specialUnitaryGroup (Fin 2) ℂ) :
 
 ## B. The antisymmetric symbol and the epsilon contraction
 
-The antisymmetric symbol on two indices is the Levi-Civita symbol of `Fin 2`. Its invariance
-under `SU(2)` is the determinant identity `sum_leviCivitaSymbol_mul_prod` at `det U = 1`, and
-it makes the epsilon contraction `T ![0, 1] - T ![1, 0]` invariant.
+The coefficient vector of the antisymmetric symbol is the Levi-Civita symbol of `Fin 2`. Its
+invariance is the determinant identity `sum_leviCivitaSymbol_mul_prod` at `det U = 1`, and it
+makes the epsilon contraction `T ![0, 1] - T ![1, 0]` invariant.
 
 -/
 
@@ -120,36 +108,8 @@ it makes the epsilon contraction `T ![0, 1] - T ![1, 0]` invariant.
   the Levi-Civita symbol of `Fin 2`. -/
 def epsilonCoeff : (Fin 2 → Fin 2) → ℂ := fun l => (leviCivitaSymbol l : ℤ)
 
-/-- The antisymmetric symbol `ε_{ab}` on two `su(2)` fundamental indices, normalized by
-  `ε 0 1 = 1`. -/
-def epsilon (a b : Fin 2) : ℂ := epsilonCoeff ![a, b]
-
 /-- The coefficient vector at a pair of indices is the antisymmetric symbol. -/
-@[simp] lemma epsilonCoeff_cons (a b : Fin 2) : epsilonCoeff ![a, b] = epsilon a b := rfl
-
-/-- The antisymmetric symbol vanishes on the repeated lower index. -/
-@[simp] lemma epsilon_zero_zero : epsilon 0 0 = 0 := by
-  simp [epsilon, epsilonCoeff, leviCivitaSymbol_eq_zero_of_eq (g := ![0, 0])
-    (i := 0) (j := 1) (by decide) rfl]
-
-/-- The antisymmetric symbol on the increasing pair. -/
-@[simp] lemma epsilon_zero_one : epsilon 0 1 = 1 := by
-  rw [epsilon, epsilonCoeff,
-    show (![0, 1] : Fin 2 → Fin 2) = id from funext fun i => by fin_cases i <;> rfl,
-    leviCivitaSymbol_id]
-  simp
-
-/-- The antisymmetric symbol on the decreasing pair. -/
-@[simp] lemma epsilon_one_zero : epsilon 1 0 = -1 := by
-  rw [epsilon, epsilonCoeff, show (![1, 0] : Fin 2 → Fin 2) = ⇑(Equiv.swap (0 : Fin 2) 1) from
-      funext fun i => by fin_cases i <;> rfl, leviCivitaSymbol_perm,
-    Equiv.Perm.sign_swap (by decide)]
-  simp
-
-/-- The antisymmetric symbol vanishes on the repeated upper index. -/
-@[simp] lemma epsilon_one_one : epsilon 1 1 = 0 := by
-  simp [epsilon, epsilonCoeff, leviCivitaSymbol_eq_zero_of_eq (g := ![1, 1])
-    (i := 0) (j := 1) (by decide) rfl]
+@[simp] lemma epsilonCoeff_cons (a b : Fin 2) : epsilonCoeff ![a, b] = su2Epsilon a b := rfl
 
 /-- The antisymmetric symbol is fixed by every coefficient matrix: contracted against two
   rows of `U` it gives `det U` times itself, and `det U = 1`. -/
@@ -161,14 +121,6 @@ lemma coeffMatrix_mulVec_epsilonCoeff (U : specialUnitaryGroup (Fin 2) ℂ) :
   rw [coeffMatrix_mulVec_apply]
   exact (Finset.sum_congr rfl fun l _ => mul_comm _ _).trans h
 
-/-- The invariance of the antisymmetric symbol as a double sum, the form the four-index
-  pairings use. -/
-lemma sum_epsilon_mul (U : specialUnitaryGroup (Fin 2) ℂ) (b c : Fin 2) :
-    ∑ x : Fin 2, ∑ y : Fin 2, epsilon x y * (U.1 b x * U.1 c y) = epsilon b c := by
-  have h := congrFun (coeffMatrix_mulVec_epsilonCoeff U) ![b, c]
-  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two] at h
-  simpa [Fin.prod_univ_two, mul_comm] using h
-
 /-- The epsilon contraction: the antisymmetric contraction of the two fundamental
   indices. -/
 def epsilonContraction (T : (Fin 2 → Fin 2) → B) : B := T ![0, 1] - T ![1, 0]
@@ -176,7 +128,7 @@ def epsilonContraction (T : (Fin 2 → Fin 2) → B) : B := T ![0, 1] - T ![1, 0
 /-- The epsilon contraction is the contraction against the antisymmetric symbol. -/
 lemma sum_epsilonCoeff_smul (T : (Fin 2 → Fin 2) → B) :
     ∑ l, epsilonCoeff l • T l = epsilonContraction T := by
-  rw [sum_pi_two]
+  rw [Family.sum_pi_two]
   simp [epsilonContraction, Fin.sum_univ_two, sub_eq_add_neg]
 
 /-- The epsilon contraction lies in the span of the components. -/
@@ -224,7 +176,7 @@ lemma su2Flip_two_apply (a b : Fin 2) :
 lemma coeffMatrix_su2Flip_two_mulVec (c : (Fin 2 → Fin 2) → ℂ) (a b : Fin 2) :
     (coeffMatrix (su2Flip 2) *ᵥ c) ![a, b]
       = ![Complex.I, -Complex.I] a * ![Complex.I, -Complex.I] b * c ![a, b] := by
-  rw [coeffMatrix_mulVec_apply, sum_pi_two, Finset.sum_eq_single a, Finset.sum_eq_single b]
+  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two, Finset.sum_eq_single a, Finset.sum_eq_single b]
   · simp [su2Flip_two_apply]
   · intro y _ hy
     simp [su2Flip_two_apply, Ne.symm hy]
@@ -236,7 +188,7 @@ lemma coeffMatrix_su2Flip_two_mulVec (c : (Fin 2 → Fin 2) → ℂ) (a b : Fin 
 /-- The Weyl element carries the lower mixed coefficient to minus the upper one. -/
 lemma coeffMatrix_su2Perm_mulVec_one_zero (c : (Fin 2 → Fin 2) → ℂ) :
     (coeffMatrix su2Perm *ᵥ c) ![1, 0] = -c ![0, 1] := by
-  rw [coeffMatrix_mulVec_apply, sum_pi_two]
+  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two]
   simp [su2Perm_coe, Fin.sum_univ_two, Fin.prod_univ_two]
 
 /-- A coefficient vector fixed by every coefficient matrix is a multiple of the antisymmetric
@@ -290,67 +242,6 @@ noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 2) → B}
     (isStableUnder_span_range_of_sum fun V l => ⟨_, hT.repGauge_T V l⟩)
     (epsilonContraction T) (repGauge_epsilonContraction hT)
     (reducesInvariantsTo_span_epsilonContraction _ hT.repGauge_T)
-
-/-!
-
-## Aside: the entries of an `SU(2)` matrix under conjugation
-
-Nothing from here on is used by the classification. `SU(2)` is pseudo-real: the conjugate of
-an `SU(2)` matrix is its conjugate by the antisymmetric symbol, so an anti-fundamental index
-is a fundamental index in another basis. `IsSU2AntiFundamental` reduces its two laws to the
-one above by that change of basis, and what it needs is the four identities
-`conj U₀₀ = U₁₁`, `conj U₁₁ = U₀₀`, `conj U₀₁ = -U₁₀`, `conj U₁₀ = -U₀₁`. They come from one
-computation: the determinant being one, the adjugate of `U` is its inverse, and `U` being
-unitary, so is its conjugate transpose. The Higgs sector uses the same four identities.
-
--/
-
-/-- An index pair is the pair of its own two entries. -/
-lemma eq_cons (d : Fin 2 → Fin 2) : d = ![d 0, d 1] :=
-  funext fun j => by fin_cases j <;> simp
-
-/-- The conjugate transpose of an `SU(2)` matrix is its adjugate. -/
-lemma star_eq_adjugate (U : specialUnitaryGroup (Fin 2) ℂ) :
-    star U.1 = Matrix.adjugate U.1 := by
-  have hmem := Matrix.mem_specialUnitaryGroup_iff.mp U.2
-  have hu : star U.1 * U.1 = 1 := Matrix.mem_unitaryGroup_iff'.mp hmem.1
-  calc star U.1 = star U.1 * (U.1 * Matrix.adjugate U.1) := by
-        rw [Matrix.mul_adjugate, hmem.2, one_smul, mul_one]
-    _ = star U.1 * U.1 * Matrix.adjugate U.1 := by rw [mul_assoc]
-    _ = Matrix.adjugate U.1 := by rw [hu, one_mul]
-
-/-- The conjugate of an entry of an `SU(2)` matrix is the transposed entry of its
-  adjugate. -/
-lemma conj_apply (U : specialUnitaryGroup (Fin 2) ℂ) (i j : Fin 2) :
-    conj (U.1 i j) = Matrix.adjugate U.1 j i := by
-  have := congrFun (congrFun (star_eq_adjugate U) j) i
-  simpa [Matrix.star_apply] using this
-
-/-- Conjugating the upper left entry of an `SU(2)` matrix gives the lower right one. -/
-@[simp] lemma conj_apply_zero_zero (U : specialUnitaryGroup (Fin 2) ℂ) :
-    conj (U.1 0 0) = U.1 1 1 := by
-  rw [conj_apply, Matrix.adjugate_fin_two]
-  simp
-
-/-- Conjugating the lower right entry of an `SU(2)` matrix gives the upper left one. -/
-@[simp] lemma conj_apply_one_one (U : specialUnitaryGroup (Fin 2) ℂ) :
-    conj (U.1 1 1) = U.1 0 0 := by
-  rw [conj_apply, Matrix.adjugate_fin_two]
-  simp
-
-/-- Conjugating the upper right entry of an `SU(2)` matrix gives minus the lower left
-  one. -/
-@[simp] lemma conj_apply_zero_one (U : specialUnitaryGroup (Fin 2) ℂ) :
-    conj (U.1 0 1) = -U.1 1 0 := by
-  rw [conj_apply, Matrix.adjugate_fin_two]
-  simp
-
-/-- Conjugating the lower left entry of an `SU(2)` matrix gives minus the upper right
-  one. -/
-@[simp] lemma conj_apply_one_zero (U : specialUnitaryGroup (Fin 2) ℂ) :
-    conj (U.1 1 0) = -U.1 0 1 := by
-  rw [conj_apply, Matrix.adjugate_fin_two]
-  simp
 
 end IsSU2BiFundamental
 

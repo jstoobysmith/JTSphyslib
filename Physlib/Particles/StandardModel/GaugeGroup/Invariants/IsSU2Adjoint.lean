@@ -5,25 +5,19 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.AdjointMatrix
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
-# Gauge tensors carrying one `su(2)` adjoint index
+# Families with one `su(2)` adjoint index
 
-A single `W`-boson field strength `W^a` carries one isospin index, running over the three Pauli
-directions of `su(2)`, and transforms in the adjoint representation, which is the vector
-representation `3` of the rotation group. That representation contains no singlet: no linear
-combination of the three components is left alone by every isospin rotation, which is why a
-Lagrangian never contains a term linear in a field strength. Modulo an isospin-stable
-submodule `S`, every isospin invariant of the span of the components lies in `S`.
+A family `T : Fin 3 → B` obeys the `su(2)` adjoint law when an isospin rotation `U` moves it by
+`su2AdjointMatrix U`, the summed index in the row slot. The adjoint matrix is real and
+orthogonal, so this law is its own dual.
 
-`IsSU2Adjoint B repGauge T` records the transformation law: an isospin rotation `U ∈ SU(2)`
-moves the components by the adjoint matrix of `U`, the summed index in the row slot, so the
-law acts on coefficient vectors by `su2AdjointCoeffMatrix U` of `IsSU2BiAdjoint`. Nothing is
-asked of the colour and hypercharge factors.
-
-The three isospin flips show that no nonzero coefficient vector is fixed: the half turn about
-the axis `a + 1` reverses the direction `a`, so a fixed coefficient vector is its own negative
-in every coordinate.
+A single adjoint index has no invariant: modulo an isospin-stable submodule `S`, every
+isospin invariant of the span of the family lies in `S`. The half turn about the axis `a + 1`
+reverses the direction `a`, so a fixed coefficient vector is its own negative in every
+coordinate.
 
 - A. The transformation law
 - B. No coefficient vector is fixed
@@ -34,14 +28,11 @@ in every coordinate.
 
 namespace StandardModel
 
-open Matrix IsSU2BiAdjoint
+open Matrix
 
 /-!
 
 ## A. The transformation law
-
-The law carries one factor of the adjoint matrix, with the summed index in the row slot,
-exactly as each of the two indices of a bi-adjoint family does.
 
 -/
 

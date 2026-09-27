@@ -1,33 +1,27 @@
 /-
 Copyright (c) 2026 Joseph Tooby-Smith. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Joseph Tooby-Smith
+Authors: Joseph Tooby-Smith, Nathaneal Sajan
 -/
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
-# Gauge tensors carrying a fundamental and an anti-fundamental `su(3)` index
+# Families with one fundamental and one anti-fundamental `su(3)` index
 
-A quark carries a fundamental colour index and an antiquark an anti-fundamental one, so a
-quark-antiquark bilinear, the colour structure of every Yukawa coupling and of every fermion
-kinetic term, carries one of each. The colour invariant is the Kronecker delta: modulo a
-colour-stable submodule, every colour invariant of the span of the components is a multiple
-of the delta contraction `∑ a, T ![a, a]`. In representation theory `3 ⊗ 3̄ = 8 ⊕ 1`; only
-the spanning statement is formalized here.
+A family `T : (Fin 2 → Fin 3) → B` obeys this law when a colour rotation `U` moves it by `U`
+on the first index and by the entrywise conjugate `conj U` on the second, the summed index in
+the row slot. For unitary `U`, `conj U = (U⁻¹)ᵀ`, so the anti-fundamental law is also the dual
+law. By the symbol convention of `Invariants.Basic`, a conjugate quark symbol supplies the
+first index and a quark symbol the second, as in the colour structure of the Yukawa and
+fermion kinetic blocks.
 
-`IsSU3FunAntiFun B repGauge T` records the transformation law: a colour rotation
-`U ∈ SU(3)` moves the components by `U` on the first index and by the entrywise conjugate
-`conj U` on the second. For unitary `U` the conjugate is `(U⁻¹)ᵀ`, so the conjugate and the
-dual conventions agree here. Nothing is asked of the isospin and hypercharge factors, which
-may well move the components: a quark-antiquark bilinear carries hypercharge.
+Modulo a colour-stable submodule, every colour invariant of the span of the family is a
+multiple of the delta contraction `∑ a, T ![a, a]`.
 
-The law acts on coefficient vectors by `coeffMatrix U`, the pair matrix of `U` and `conj U`,
-whose conjugate transpose is `coeffMatrix U⁻¹`. The delta is fixed because the rows of `U`
-are orthonormal; this uses only unitarity, so it is an invariant of `U(3)`, whereas the
-epsilon of `IsSU2BiFundamental` uses the determinant. Two rotations pin down the fixed
-coefficient vectors, as in `IsSU2BiAdjoint`: the colour parity fixing the colour `a` and
+The delta is fixed because the rows of `U` are orthonormal, which uses only unitarity. Two
+rotations pin the fixed coefficient vectors down: the colour parity fixing the colour `a` and
 reversing the other two changes the sign of every entry `c ![a, b]` with `b ≠ a`, and the
 cyclic permutation of the colours equates the diagonal entries.
 
@@ -52,7 +46,7 @@ open Matrix ComplexConjugate
 /-- The linear map `f` moves the components of `T` as `U ∈ SU(3)` moves a tensor with one
   fundamental and one anti-fundamental index: a factor of `U` for the first index and a
   factor of `conj U` for the second. -/
-def IsSU3FunAntiFunMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
+def IsSU3FundamentalAntiFundamentalMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
     (U : specialUnitaryGroup (Fin 3) ℂ) (f : B →ₗ[ℂ] B)
     (T : (Fin 2 → Fin 3) → B) : Prop :=
   ∀ l : Fin 2 → Fin 3,
@@ -61,27 +55,22 @@ def IsSU3FunAntiFunMat {B : Type*} [AddCommMonoid B] [Module ℂ B]
 /-- A family `T` of elements of `B`, indexed by one `su(3)` fundamental and one
   anti-fundamental index, transforms as a tensor `T^{a}{}_{b}` under the colour factor of
   the gauge group. Nothing is asked of the isospin and hypercharge factors. -/
-structure IsSU3FunAntiFun (B : Type*) [AddCommMonoid B] [Module ℂ B]
+structure IsSU3FundamentalAntiFundamental (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repGauge : Representation ℂ GaugeGroupI B)
     (T : (Fin 2 → Fin 3) → B) : Prop where
   repGauge_T : ∀ g : specialUnitaryGroup (Fin 3) ℂ,
-    IsSU3FunAntiFunMat g (repGauge (g, 1, 1)) T
+    IsSU3FundamentalAntiFundamentalMat g (repGauge (g, 1, 1)) T
 
-namespace IsSU3FunAntiFun
+namespace IsSU3FundamentalAntiFundamental
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repGauge : Representation ℂ GaugeGroupI B}
 
-/-- A sum over pairs of colour indices is a double sum. -/
-lemma sum_pi_two {M : Type*} [AddCommMonoid M] (F : (Fin 2 → Fin 3) → M) :
-    ∑ d : Fin 2 → Fin 3, F d = ∑ x : Fin 3, ∑ y : Fin 3, F ![x, y] :=
-  Family.sum_pi_two F
-
 /-- A finite sum of families carrying one fundamental and one anti-fundamental colour index
   is such a family again. -/
 lemma sum {ι : Type} [Fintype ι] {T : ι → (Fin 2 → Fin 3) → B}
-    (hT : ∀ i, IsSU3FunAntiFun B repGauge (T i)) :
-    IsSU3FunAntiFun B repGauge (fun l => ∑ i, T i l) where
+    (hT : ∀ i, IsSU3FundamentalAntiFundamental B repGauge (T i)) :
+    IsSU3FundamentalAntiFundamental B repGauge (fun l => ∑ i, T i l) where
   repGauge_T U l := by
     rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) => (hT i).repGauge_T U l,
       Finset.sum_comm]
@@ -134,7 +123,7 @@ lemma coeffMatrix_mulVec_deltaCoeff (U : specialUnitaryGroup (Fin 3) ℂ) :
 
 /-- Any map moving the components by an element of `SU(3)` fixes the delta contraction. -/
 lemma map_deltaContraction {T : (Fin 2 → Fin 3) → B} {U : specialUnitaryGroup (Fin 3) ℂ}
-    {f : B →ₗ[ℂ] B} (hf : IsSU3FunAntiFunMat U f T) :
+    {f : B →ₗ[ℂ] B} (hf : IsSU3FundamentalAntiFundamentalMat U f T) :
     f (deltaContraction T) = deltaContraction T := by
   have h := f.map_sum_smul_eq_self_of_mulVec_eq T (coeffMatrix U) hf
     (coeffMatrix_mulVec_deltaCoeff U)
@@ -143,7 +132,7 @@ lemma map_deltaContraction {T : (Fin 2 → Fin 3) → B} {U : specialUnitaryGrou
 /-- The delta contraction is colour invariant. Nothing constrains the isospin and
   hypercharge factors, which may well move it. -/
 lemma repGauge_deltaContraction {T : (Fin 2 → Fin 3) → B}
-    (hT : IsSU3FunAntiFun B repGauge T) (U : specialUnitaryGroup (Fin 3) ℂ) :
+    (hT : IsSU3FundamentalAntiFundamental B repGauge T) (U : specialUnitaryGroup (Fin 3) ℂ) :
     repGauge (U, 1, 1) (deltaContraction T) = deltaContraction T :=
   map_deltaContraction (hT.repGauge_T U)
 
@@ -163,7 +152,7 @@ diagonal. The cyclic permutation `su3Perm` of the colours carries `c ![a, a]` to
 lemma coeffMatrix_su3Parity_mulVec (k : Fin 3) (c : (Fin 2 → Fin 3) → ℂ) (a b : Fin 3) :
     (coeffMatrix (su3Parity k) *ᵥ c) ![a, b]
       = (if a = k then 1 else -1) * (if b = k then 1 else -1) * c ![a, b] := by
-  rw [coeffMatrix_mulVec_apply, sum_pi_two, Finset.sum_eq_single a, Finset.sum_eq_single b]
+  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two, Finset.sum_eq_single a, Finset.sum_eq_single b]
   · simp [su3Parity_apply, apply_ite conj]
   · intro y _ hy
     simp [su3Parity_apply, Ne.symm hy]
@@ -175,13 +164,13 @@ lemma coeffMatrix_su3Parity_mulVec (k : Fin 3) (c : (Fin 2 → Fin 3) → ℂ) (
 /-- The cyclic permutation carries the first diagonal entry to the second. -/
 lemma coeffMatrix_su3Perm_mulVec_one_one (c : (Fin 2 → Fin 3) → ℂ) :
     (coeffMatrix su3Perm *ᵥ c) ![1, 1] = c ![0, 0] := by
-  rw [coeffMatrix_mulVec_apply, sum_pi_two]
+  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two]
   simp [su3Perm_coe, Fin.sum_univ_three]
 
 /-- The cyclic permutation carries the second diagonal entry to the third. -/
 lemma coeffMatrix_su3Perm_mulVec_two_two (c : (Fin 2 → Fin 3) → ℂ) :
     (coeffMatrix su3Perm *ᵥ c) ![2, 2] = c ![1, 1] := by
-  rw [coeffMatrix_mulVec_apply, sum_pi_two]
+  rw [coeffMatrix_mulVec_apply, Family.sum_pi_two]
   simp [su3Perm_coe, Fin.sum_univ_three]
 
 /-- A coefficient vector fixed by every coefficient matrix is a multiple of the Kronecker
@@ -229,7 +218,7 @@ gauge group, the form the Yukawa and fermion kinetic files consume.
   `σ`-stable submodule `S` is a multiple of the delta contraction plus an element of `S`. -/
 lemma reducesInvariantsTo_span_deltaContraction
     (σ : specialUnitaryGroup (Fin 3) ℂ → B →ₗ[ℂ] B) {T : (Fin 2 → Fin 3) → B}
-    (hT : ∀ U, IsSU3FunAntiFunMat U (σ U) T) :
+    (hT : ∀ U, IsSU3FundamentalAntiFundamentalMat U (σ U) T) :
     ReducesInvariantsTo σ (Submodule.span ℂ (Set.range T)) (ℂ ∙ deltaContraction T) := by
   have h := reducesInvariantsTo_span_singleton_of_mulVec_eq (σ := σ) T coeffMatrix hT
     (fun U => ⟨U⁻¹, coeffMatrix_inv U⟩) Family.deltaCoeff fun _ hc =>
@@ -239,7 +228,7 @@ lemma reducesInvariantsTo_span_deltaContraction
 /-- The colour invariants of the component span reduce to the span of the delta
   contraction. -/
 noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 3) → B}
-    (hT : IsSU3FunAntiFun B repGauge T) :
+    (hT : IsSU3FundamentalAntiFundamental B repGauge T) :
     InvariantReductionToSpan (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
       (Submodule.span ℂ (Set.range T)) :=
   InvariantReductionToSpan.ofReducesInvariantsTo
@@ -247,6 +236,6 @@ noncomputable def invariantReductionToSpan {T : (Fin 2 → Fin 3) → B}
     (deltaContraction T) (repGauge_deltaContraction hT)
     (reducesInvariantsTo_span_deltaContraction _ hT.repGauge_T)
 
-end IsSU3FunAntiFun
+end IsSU3FundamentalAntiFundamental
 
 end StandardModel

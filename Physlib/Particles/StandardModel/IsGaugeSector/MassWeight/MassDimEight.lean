@@ -414,14 +414,14 @@ lemma isU1BiAdjoint_hyperchargePair (p : EightIdx) :
 
 /-- The gluon trace contraction at the covector indices `p`: the Kronecker contraction of
   the two colour indices of the gluon pair. -/
-noncomputable def gluonTrace (p : EightIdx) : B := (h.isSU3BiAdjoint_gluonPair p).traceContraction
+noncomputable def gluonTrace (p : EightIdx) : B := IsSU3BiAdjoint.traceContraction (h.gluonPair p)
 
 /-- The `W`-boson trace contraction at the covector indices `p`. -/
-noncomputable def wTrace (p : EightIdx) : B := (h.isSU2BiAdjoint_wPair p).traceContraction
+noncomputable def wTrace (p : EightIdx) : B := IsSU2BiAdjoint.traceContraction (h.wPair p)
 
 /-- The hypercharge trace contraction at the covector indices `p`. -/
 noncomputable def hyperchargeTrace (p : EightIdx) : B :=
-  (h.isU1BiAdjoint_hyperchargePair p).traceContraction
+  IsU1BiAdjoint.traceContraction (h.hyperchargePair p)
 
 /-- The gluon trace contraction is the kinetic pairing of two gluon field strengths. -/
 lemma gluonTrace_eq (p : EightIdx) :
@@ -445,17 +445,17 @@ lemma hyperchargeTrace_eq (p : EightIdx) :
 /-- The gluon trace contraction is fixed by the whole gauge group. -/
 lemma repGauge_gluonTrace (g : GaugeGroupI) (p : EightIdx) :
     repGauge g (h.gluonTrace p) = h.gluonTrace p :=
-  IsSU3BiAdjoint.map_traceContraction _ (h.isSU3BiAdjointMat_gluonPair p g)
+  IsSU3BiAdjoint.map_traceContraction (h.isSU3BiAdjointMat_gluonPair p g)
 
 /-- The `W`-boson trace contraction is fixed by the whole gauge group. -/
 lemma repGauge_wTrace (g : GaugeGroupI) (p : EightIdx) :
     repGauge g (h.wTrace p) = h.wTrace p :=
-  IsSU2BiAdjoint.map_traceContraction _ (h.isSU2BiAdjointMat_wPair p g)
+  IsSU2BiAdjoint.map_traceContraction (h.isSU2BiAdjointMat_wPair p g)
 
 /-- The hypercharge trace contraction is fixed by the whole gauge group. -/
 lemma repGauge_hyperchargeTrace (g : GaugeGroupI) (p : EightIdx) :
     repGauge g (h.hyperchargeTrace p) = h.hyperchargeTrace p :=
-  IsU1BiAdjoint.map_traceContraction _ (h.isU1BiAdjointMat_hyperchargePair p g)
+  IsU1BiAdjoint.map_traceContraction (h.isU1BiAdjointMat_hyperchargePair p g)
 
 /-- The twice-derived hypercharge field strength is fixed by the whole gauge group. -/
 lemma repGauge_hyperchargeDeriv (g : GaugeGroupI) (d : EightIdx) :
@@ -513,64 +513,67 @@ The gauge weight decomposition of the underived tower is built from the weight v
 `adjVec` of one adjoint index. On a colour direction such a vector is a combination of
 gluon field strengths, on the isospin directions a combination of `W`-boson field
 strengths, and on the hypercharge direction the hypercharge field strength itself, the
-combinations being the weight basis `wtCoeff` of the adjoint. A product of two of them is
-then a combination of the components of the matching pair family, so it lies in the span
-of that family. At mass weight eight this covers the gluon root part and the isospin root
-part of the zero-weight piece computed by `massWeightSubmoduleGaugeWeightEight_piece_zero`.
+combinations being the weight coordinates `GaugeAlgebra.su3WeightCoeff` and
+`GaugeAlgebra.su2WeightCoeff`. A product of two of them is then a combination of the
+components of the matching pair family, so it lies in the span of that family. At mass weight
+eight this covers the gluon root part and the isospin root part of the zero-weight piece
+computed by `massWeightSubmoduleGaugeWeightEight_piece_zero`.
 
 -/
 
 /-- The `su(3)` adjoint weight indices read as weight indices of the whole gauge
   algebra: the three colour roots and the two colour Cartan directions. -/
-def su3AdjIdx : IsSU3BiAdjoint.WeightIdx → Fin 4 ⊕ Fin 4 ⊕ Fin 4
+def su3AdjIdx : GaugeAlgebra.su3WeightIdx → Fin 4 ⊕ Fin 4 ⊕ Fin 4
   | Sum.inl r => Sum.inl r.castSucc
   | Sum.inr (Sum.inl r) => Sum.inr (Sum.inl r.castSucc)
   | Sum.inr (Sum.inr c) => Sum.inr (Sum.inr c.castSucc.castSucc)
 
 /-- The `su(2)` adjoint weight indices read as weight indices of the whole gauge
   algebra: the isospin root and the isospin Cartan direction. -/
-def su2AdjIdx : IsSU2BiAdjoint.WeightIdx → Fin 4 ⊕ Fin 4 ⊕ Fin 4
+def su2AdjIdx : GaugeAlgebra.su2WeightIdx → Fin 4 ⊕ Fin 4 ⊕ Fin 4
   | Sum.inl _ => Sum.inl 3
   | Sum.inr (Sum.inl _) => Sum.inr (Sum.inl 3)
   | Sum.inr (Sum.inr _) => Sum.inr (Sum.inr 2)
 
 /-- A weight vector of the colour part of the adjoint is the matching combination of
   gluon field strengths. -/
-lemma sum_wtCoeff_smul_gluonField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (μ ν : Fin 1 ⊕ Fin 3) (k : IsSU3BiAdjoint.WeightIdx) :
-    ∑ a : Fin 8, IsSU3BiAdjoint.wtCoeff k a • h.gluonField l μ ν a
+lemma sum_su3WeightCoeff_smul_gluonField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) (k : GaugeAlgebra.su3WeightIdx) :
+    ∑ a : Fin 8, GaugeAlgebra.su3WeightCoeff k a • h.gluonField l μ ν a
       = h.adjVec l μ ν (su3AdjIdx k) := by
   rcases k with r | r | c <;>
-    simp [IsSU3BiAdjoint.wtCoeff, su3AdjIdx, adjVec, IsSU3BiAdjoint.rootIdx_castSucc,
-      IsSU3BiAdjoint.cartanIdx_castSucc, gluonField, add_smul, sub_smul, ite_smul, mul_ite,
+    simp [GaugeAlgebra.su3WeightCoeff, su3AdjIdx, adjVec, GaugeAlgebra.rootIdx_castSucc,
+      GaugeAlgebra.cartanIdx_castSucc, gluonField, add_smul, sub_smul, ite_smul, mul_ite,
       Finset.sum_add_distrib, Finset.sum_sub_distrib]
 
 /-- A weight vector of the isospin part of the adjoint is the matching combination of
   `W`-boson field strengths. -/
-lemma sum_wtCoeff_smul_wField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
-    (μ ν : Fin 1 ⊕ Fin 3) (k : IsSU2BiAdjoint.WeightIdx) :
-    ∑ i : Fin 3, IsSU2BiAdjoint.wtCoeff k i • h.wField l μ ν i
+lemma sum_su2WeightCoeff_smul_wField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
+    (μ ν : Fin 1 ⊕ Fin 3) (k : GaugeAlgebra.su2WeightIdx) :
+    ∑ i : Fin 3, GaugeAlgebra.su2WeightCoeff k i • h.wField l μ ν i
       = h.adjVec l μ ν (su2AdjIdx k) := by
   rcases k with r | r | c <;>
-    simp [IsSU2BiAdjoint.wtCoeff, su2AdjIdx, adjVec, IsSU2BiAdjoint.rootIdx_three,
-      IsSU2BiAdjoint.cartanIdx_two, wField, add_smul, sub_smul, ite_smul, mul_ite,
+    simp [GaugeAlgebra.su2WeightCoeff, su2AdjIdx, adjVec, GaugeAlgebra.rootIdx_three,
+      GaugeAlgebra.cartanIdx_two, wField, add_smul, sub_smul, ite_smul, mul_ite,
       Finset.sum_add_distrib, Finset.sum_sub_distrib]
 
 /-- A product of two colour weight vectors of the adjoint lies in the span of the matching
   gluon pair family. -/
-lemma adjVec_mul_adjVec_mem_gluonPair_span (p : EightIdx) (k₀ k₁ : IsSU3BiAdjoint.WeightIdx) :
+lemma adjVec_mul_adjVec_mem_gluonPair_span (p : EightIdx)
+    (k₀ k₁ : GaugeAlgebra.su3WeightIdx) :
     h.adjVec ![] (p 0) (p 1) (su3AdjIdx k₀) * h.adjVec ![] (p 2) (p 3) (su3AdjIdx k₁)
       ∈ Submodule.span ℂ (Set.range (h.gluonPair p)) := by
-  rw [← h.sum_wtCoeff_smul_gluonField, ← h.sum_wtCoeff_smul_gluonField,
+  rw [← h.sum_su3WeightCoeff_smul_gluonField, ← h.sum_su3WeightCoeff_smul_gluonField,
     sum_mul_sum_eq_sum_pi_two]
   exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- A product of two isospin weight vectors of the adjoint lies in the span of the matching
   `W`-boson pair family. -/
-lemma adjVec_mul_adjVec_mem_wPair_span (p : EightIdx) (k₀ k₁ : IsSU2BiAdjoint.WeightIdx) :
+lemma adjVec_mul_adjVec_mem_wPair_span (p : EightIdx) (k₀ k₁ : GaugeAlgebra.su2WeightIdx) :
     h.adjVec ![] (p 0) (p 1) (su2AdjIdx k₀) * h.adjVec ![] (p 2) (p 3) (su2AdjIdx k₁)
       ∈ Submodule.span ℂ (Set.range (h.wPair p)) := by
-  rw [← h.sum_wtCoeff_smul_wField, ← h.sum_wtCoeff_smul_wField, sum_mul_sum_eq_sum_pi_two]
+  rw [← h.sum_su2WeightCoeff_smul_wField, ← h.sum_su2WeightCoeff_smul_wField,
+    sum_mul_sum_eq_sum_pi_two]
   exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
 
 /-- The join, over all covector indices, of the spans of the gluon pair families. -/
@@ -744,7 +747,7 @@ lemma adjVec_colourCartan {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin
     (c : Fin 2) :
     h.adjVec l μ ν (Sum.inr (Sum.inr c.castSucc.castSucc))
       = h.gluonField l μ ν (GaugeAlgebra.su3CartanId c) := by
-  simp only [adjVec, IsSU3BiAdjoint.cartanIdx_castSucc]
+  simp only [adjVec, GaugeAlgebra.cartanIdx_castSucc]
   rfl
 
 /-- The weight-zero directions of the adjoint are the colour Cartan directions and the

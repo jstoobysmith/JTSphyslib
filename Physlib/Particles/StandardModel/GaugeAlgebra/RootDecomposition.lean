@@ -187,8 +187,8 @@ trivially; the `u(1)` generator is also fixed.
 The Cartan directions are named one factor at a time first, by `su3CartanId` in the
 Gell-Mann indices and `su2CartanId` in the Pauli indices, and `cartanIdx` assembles those
 with the `u(1)` generator into the four weight-zero directions of the whole algebra. The
-factorwise names are the ones the bi-adjoint files use, each of which sees a single
-factor; they are reducible, so they behave exactly like the index literals they name.
+factorwise names are the ones section F uses; they are reducible, so they behave exactly
+like the index literals they name.
 
 -/
 
@@ -309,6 +309,9 @@ The pieces are the identification itself. `adjointDecomposition_piece_rootWeight
 nonzero weights, and `adjointDecomposition_piece_zero` gives the span of the four Cartan
 symbols at weight zero: the root directions are the nonzero-weight pieces and the Cartan
 directions are the zero-weight piece.
+
+Section F gives the Gell-Mann and Pauli coordinates of the vectors `adjVec` that belong to one
+non-abelian factor.
 
 -/
 
@@ -560,6 +563,76 @@ lemma adjointDecomposition_piece_eq_bot (hmul : IsMulRep rep)
     (hw : w ∉ (adjointDecomposition hmul hF).supp) :
     (adjointDecomposition hmul hF).piece w = ⊥ :=
   (adjointDecomposition hmul hF).piece_eq_bot w hw
+
+end GaugeAlgebra
+
+/-!
+
+## F. The weight coordinates of one factor
+
+The vectors `adjVec` that belong to the `su(3)` or the `su(2)` factor have Gell-Mann or Pauli
+coordinates `x₁ ± i x₂` on a root pair, and the Cartan coordinate itself on a Cartan
+direction. `su3WeightCoeff` and `su2WeightCoeff` record these coordinates, indexed by
+`su3WeightIdx` and `su2WeightIdx`. The lemmas `rootIdx_castSucc`, `cartanIdx_castSucc`,
+`rootIdx_three` and `cartanIdx_two` identify the root pairs and Cartan indices of one factor
+with those of the whole algebra.
+
+-/
+
+namespace GaugeAlgebra
+
+/-- The index type of the `su(3)` weight coordinates: three positive roots, three negative
+  roots and two Cartan directions. -/
+abbrev su3WeightIdx : Type := Fin 3 ⊕ Fin 3 ⊕ Fin 2
+
+/-- The pairs of Gell-Mann indices making up the three root directions of `su(3)`. -/
+def su3RootPair : Fin 3 → Fin 8 × Fin 8
+  | 0 => (0, 1)
+  | 1 => (3, 4)
+  | 2 => (5, 6)
+
+/-- The `su(3)` root pairs are the first three root pairs of the whole gauge algebra. -/
+lemma rootIdx_castSucc (r : Fin 3) :
+    rootIdx r.castSucc = (Sum.inl (su3RootPair r).1, Sum.inl (su3RootPair r).2) := by
+  fin_cases r <;> rfl
+
+/-- The `su(3)` Cartan indices are the first two Cartan indices of the whole gauge
+  algebra. -/
+lemma cartanIdx_castSucc (c : Fin 2) :
+    cartanIdx c.castSucc.castSucc = Sum.inl (su3CartanId c) := by
+  fin_cases c <;> rfl
+
+/-- The `su(3)` weight coordinates in Gell-Mann coordinates: `x₁ ± i x₂` on each root pair,
+  and the Cartan coordinates themselves. -/
+noncomputable def su3WeightCoeff : su3WeightIdx → Fin 8 → ℂ
+  | Sum.inl r, a => (if a = (su3RootPair r).1 then 1 else 0)
+      + Complex.I * (if a = (su3RootPair r).2 then 1 else 0)
+  | Sum.inr (Sum.inl r), a => (if a = (su3RootPair r).1 then 1 else 0)
+      - Complex.I * (if a = (su3RootPair r).2 then 1 else 0)
+  | Sum.inr (Sum.inr c), a => if a = su3CartanId c then 1 else 0
+
+/-- The index type of the `su(2)` weight coordinates: the positive root, the negative root
+  and the Cartan direction. -/
+abbrev su2WeightIdx : Type := Fin 1 ⊕ Fin 1 ⊕ Fin 1
+
+/-- The pair of Pauli indices making up the root direction of `su(2)`. -/
+def su2RootPair : Fin 3 × Fin 3 := (0, 1)
+
+/-- The `su(2)` root pair is the fourth root pair of the whole gauge algebra. -/
+lemma rootIdx_three :
+    rootIdx 3 = (Sum.inr (Sum.inl su2RootPair.1), Sum.inr (Sum.inl su2RootPair.2)) := rfl
+
+/-- The `su(2)` Cartan index is the third Cartan index of the whole gauge algebra. -/
+lemma cartanIdx_two : cartanIdx 2 = Sum.inr (Sum.inl su2CartanId) := rfl
+
+/-- The `su(2)` weight coordinates in Pauli coordinates: `x₁ ± i x₂` on the root pair, and
+  the Cartan coordinate itself. -/
+noncomputable def su2WeightCoeff : su2WeightIdx → Fin 3 → ℂ
+  | Sum.inl _, a => (if a = su2RootPair.1 then 1 else 0)
+      + Complex.I * (if a = su2RootPair.2 then 1 else 0)
+  | Sum.inr (Sum.inl _), a => (if a = su2RootPair.1 then 1 else 0)
+      - Complex.I * (if a = su2RootPair.2 then 1 else 0)
+  | Sum.inr (Sum.inr _), a => if a = su2CartanId then 1 else 0
 
 end GaugeAlgebra
 

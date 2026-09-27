@@ -26,8 +26,8 @@ minus these while by `mul_mul_piece_swap` their blocks are the same submodules.
 ## ii. Key results
 
 - `barDownYukawa`, `barUpYukawa`, `barLeptonYukawa` : the three conjugate Yukawa terms.
-- `isSU3FunAntiFun_barDownBlock`, `isSU2BiFundamental_barUpBlock` and the rest : the index
-  laws of the three conjugate blocks.
+- `isSU3FundamentalAntiFundamental_barDownBlock`, `isSU2BiFundamental_barUpBlock` and the
+  rest : the index laws of the three conjugate blocks.
 - `yukawaSpan` : the join of all six couplings over all nine family pairs.
 - `yukawaSpan_le_inf` : the Yukawa span lies inside the gauge- and Lorentz-invariants of
   the sector at mass weight eight.
@@ -80,8 +80,8 @@ noncomputable def barDownBlock (f f' : Fin 3) (i sbd : Fin 2) (cbd : Fin 3) (sQ 
 /-- The two colour indices of the conjugate down-type block carry one fundamental and one
   anti-fundamental `su(3)` index, the conjugate down singlet supplying the fundamental
   one. -/
-lemma isSU3FunAntiFun_barDownBlock (f f' : Fin 3) (i sbd sQ wQ : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_barDownBlock (f f' : Fin 3) (i sbd sQ wQ : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun l : Fin 2 → Fin 3 => h.barDownBlock f f' i sbd (l 0) sQ (l 1) wQ) where
   repGauge_T U l := by
     simp only [barDownBlock]
@@ -89,22 +89,22 @@ lemma isSU3FunAntiFun_barDownBlock (f f' : Fin 3) (i sbd sQ wQ : Fin 2) :
       (X := fun a => h.isFermionSector.bardComponent f ![] (sbd, a))
       (Y := fun a => h.isFermionSector.QComponent f' ![] (sQ, a, wQ))
       (h.repGauge_su3_barHiggs U ![] i) (h.repGauge_su3_bard U f ![] sbd (l 0))
-      (h.repGauge_su3_Q U f' ![] sQ (l 1) wQ), IsSU3FunAntiFun.sum_pi_two]
+      (h.repGauge_su3_Q U f' ![] sQ (l 1) wQ), Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
 
 /-- The two isospin indices of the conjugate down-type block carry one fundamental and one
   anti-fundamental `su(2)` index, the conjugate Higgs symbol supplying the fundamental
   one. -/
-lemma isSU2FunAntiFun_barDownBlock (f f' : Fin 3) (sbd : Fin 2) (cbd : Fin 3) (sQ : Fin 2)
-    (cQ : Fin 3) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_barDownBlock (f f' : Fin 3) (sbd : Fin 2) (cbd : Fin 3)
+    (sQ : Fin 2) (cQ : Fin 3) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun l : Fin 2 → Fin 2 => h.barDownBlock f f' (l 0) sbd cbd sQ cQ (l 1)) where
   repGauge_T V l := by
     simp only [barDownBlock]
     rw [h.repGauge_mul_fixed_mid (1, V, 1) (A := fun a => h.isHiggsSector.barHiggs ![] a)
       (Y := fun a => h.isFermionSector.QComponent f' ![] (sQ, cQ, a))
       (h.repGauge_su2_barHiggs V ![] (l 0)) (h.repGauge_su2_bard V f ![] (sbd, cbd))
-      (h.repGauge_su2_Q V f' ![] sQ cQ (l 1)), IsSU2BiFundamental.sum_pi_two]
+      (h.repGauge_su2_Q V f' ![] sQ cQ (l 1)), Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
 
 /-- The two spinor indices of the conjugate down-type block are both dual left-handed. -/
@@ -141,34 +141,35 @@ lemma repGauge_u1_barDownBlock (t : unitary ℂ) (f f' : Fin 3) (i sbd : Fin 2)
 
 /-- The colour contraction of the conjugate down-type block. -/
 noncomputable def barDownBlockColour (f f' : Fin 3) (i sbd sQ wQ : Fin 2) : B :=
-  IsSU3FunAntiFun.deltaContraction
+  IsSU3FundamentalAntiFundamental.deltaContraction
     (fun l : Fin 2 → Fin 3 => h.barDownBlock f f' i sbd (l 0) sQ (l 1) wQ)
 
 /-- The colour contraction of the conjugate down-type block written out. -/
 lemma barDownBlockColour_eq (f f' : Fin 3) (i sbd sQ wQ : Fin 2) :
     h.barDownBlockColour f f' i sbd sQ wQ
       = ∑ a : Fin 3, h.barDownBlock f f' i sbd a sQ a wQ := by
-  simp [barDownBlockColour, IsSU3FunAntiFun.deltaContraction]
+  simp [barDownBlockColour, IsSU3FundamentalAntiFundamental.deltaContraction]
 
 /-- The colour contraction of the conjugate down-type block still carries one fundamental
   and one anti-fundamental isospin index. -/
-lemma isSU2FunAntiFun_barDownBlockColour (f f' : Fin 3) (sbd sQ : Fin 2) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_barDownBlockColour (f f' : Fin 3) (sbd sQ : Fin 2) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun l : Fin 2 → Fin 2 => h.barDownBlockColour f f' (l 0) sbd sQ (l 1)) := by
   simp only [h.barDownBlockColour_eq]
-  exact IsSU2FunAntiFun.sum fun a => h.isSU2FunAntiFun_barDownBlock f f' sbd a sQ a
+  exact IsSU2FundamentalAntiFundamental.sum fun a =>
+    h.isSU2FundamentalAntiFundamental_barDownBlock f f' sbd a sQ a
 
 /-- The isospin contraction of the colour-contracted conjugate down-type block. -/
 noncomputable def barDownBlockIsospin (f f' : Fin 3) (sbd sQ : Fin 2) : B :=
-  IsSU2FunAntiFun.deltaContraction
+  IsSU2FundamentalAntiFundamental.deltaContraction
     (fun l : Fin 2 → Fin 2 => h.barDownBlockColour f f' (l 0) sbd sQ (l 1))
 
 /-- The doubly contracted conjugate down-type block written out. -/
 lemma barDownBlockIsospin_eq (f f' : Fin 3) (sbd sQ : Fin 2) :
     h.barDownBlockIsospin f f' sbd sQ
       = ∑ p : Fin 2 × Fin 3, h.barDownBlock f f' p.1 sbd p.2 sQ p.2 p.1 := by
-  rw [barDownBlockIsospin, IsSU2FunAntiFun.deltaContraction, h.barDownBlockColour_eq,
-    h.barDownBlockColour_eq, Fintype.sum_prod_type, Fin.sum_univ_two]
+  rw [barDownBlockIsospin, IsSU2FundamentalAntiFundamental.deltaContraction,
+    h.barDownBlockColour_eq, h.barDownBlockColour_eq, Fintype.sum_prod_type, Fin.sum_univ_two]
   simp
 
 /-- The doubly contracted conjugate down-type block carries two dual left-handed Weyl
@@ -197,15 +198,15 @@ lemma repGauge_su3_barDownBlockColour (U : specialUnitaryGroup (Fin 3) ℂ) (f f
     (i sbd sQ wQ : Fin 2) :
     repGauge ((U, 1, 1) : GaugeGroupI) (h.barDownBlockColour f f' i sbd sQ wQ)
       = h.barDownBlockColour f f' i sbd sQ wQ :=
-  IsSU3FunAntiFun.repGauge_deltaContraction
-    (h.isSU3FunAntiFun_barDownBlock f f' i sbd sQ wQ) U
+  IsSU3FundamentalAntiFundamental.repGauge_deltaContraction
+    (h.isSU3FundamentalAntiFundamental_barDownBlock f f' i sbd sQ wQ) U
 
 /-- The doubly contracted conjugate down-type block is fixed by the colour factor. -/
 lemma repGauge_su3_barDownBlockIsospin (U : specialUnitaryGroup (Fin 3) ℂ) (f f' : Fin 3)
     (sbd sQ : Fin 2) :
     repGauge ((U, 1, 1) : GaugeGroupI) (h.barDownBlockIsospin f f' sbd sQ)
       = h.barDownBlockIsospin f f' sbd sQ := by
-  rw [barDownBlockIsospin, IsSU2FunAntiFun.deltaContraction, map_add,
+  rw [barDownBlockIsospin, IsSU2FundamentalAntiFundamental.deltaContraction, map_add,
     h.repGauge_su3_barDownBlockColour, h.repGauge_su3_barDownBlockColour]
 
 /-- The doubly contracted conjugate down-type block is fixed by the isospin factor. -/
@@ -213,8 +214,8 @@ lemma repGauge_su2_barDownBlockIsospin (V : specialUnitaryGroup (Fin 2) ℂ) (f 
     (sbd sQ : Fin 2) :
     repGauge ((1, V, 1) : GaugeGroupI) (h.barDownBlockIsospin f f' sbd sQ)
       = h.barDownBlockIsospin f f' sbd sQ :=
-  IsSU2FunAntiFun.repGauge_deltaContraction
-    (h.isSU2FunAntiFun_barDownBlockColour f f' sbd sQ) V
+  IsSU2FundamentalAntiFundamental.repGauge_deltaContraction
+    (h.isSU2FundamentalAntiFundamental_barDownBlockColour f f' sbd sQ) V
 
 /-- The doubly contracted conjugate down-type block is fixed by the hypercharge factor. -/
 lemma repGauge_u1_barDownBlockIsospin (t : unitary ℂ) (f f' : Fin 3) (sbd sQ : Fin 2) :
@@ -278,8 +279,8 @@ noncomputable def barUpBlock (f f' : Fin 3) (i su : Fin 2) (cu : Fin 3) (sbQ : F
 /-- The two colour indices of the conjugate up-type block carry one fundamental and one
   anti-fundamental `su(3)` index, the conjugate quark doublet supplying the fundamental
   one. -/
-lemma isSU3FunAntiFun_barUpBlock (f f' : Fin 3) (i su sbQ wbQ : Fin 2) :
-    IsSU3FunAntiFun B repGauge
+lemma isSU3FundamentalAntiFundamental_barUpBlock (f f' : Fin 3) (i su sbQ wbQ : Fin 2) :
+    IsSU3FundamentalAntiFundamental B repGauge
       (fun l : Fin 2 → Fin 3 => h.barUpBlock f f' i su (l 1) sbQ (l 0) wbQ) where
   repGauge_T U l := by
     simp only [barUpBlock]
@@ -287,7 +288,7 @@ lemma isSU3FunAntiFun_barUpBlock (f f' : Fin 3) (i su sbQ wbQ : Fin 2) :
       (X := fun a => h.isFermionSector.uComponent f ![] (su, a))
       (Y := fun a => h.isFermionSector.barQComponent f' ![] (sbQ, a, wbQ))
       (h.repGauge_su3_barHiggs U ![] i) (h.repGauge_su3_u U f ![] su (l 1))
-      (h.repGauge_su3_barQ U f' ![] sbQ (l 0) wbQ), IsSU3FunAntiFun.sum_pi_two]
+      (h.repGauge_su3_barQ U f' ![] sbQ (l 0) wbQ), Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     rw [Finset.sum_comm]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by rw [mul_comm]
@@ -304,7 +305,7 @@ lemma isSU2BiFundamental_barUpBlock (f f' : Fin 3) (su : Fin 2) (cu : Fin 3)
     rw [h.repGauge_mul_fixed_mid (1, V, 1) (A := fun a => h.isHiggsSector.barHiggs ![] a)
       (Y := fun a => h.isFermionSector.barQComponent f' ![] (sbQ, cbQ, a))
       (h.repGauge_su2_barHiggs V ![] (l 0)) (h.repGauge_su2_u V f ![] (su, cu))
-      (h.repGauge_su2_barQ V f' ![] sbQ cbQ (l 1)), IsSU2BiFundamental.sum_pi_two]
+      (h.repGauge_su2_barQ V f' ![] sbQ cbQ (l 1)), Family.sum_pi_two]
     simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
 
 /-- The two spinor indices of the conjugate up-type block are both dual right-handed. -/
@@ -340,14 +341,14 @@ lemma repGauge_u1_barUpBlock (t : unitary ℂ) (f f' : Fin 3) (i su : Fin 2) (cu
 
 /-- The colour contraction of the conjugate up-type block. -/
 noncomputable def barUpBlockColour (f f' : Fin 3) (i su sbQ wbQ : Fin 2) : B :=
-  IsSU3FunAntiFun.deltaContraction
+  IsSU3FundamentalAntiFundamental.deltaContraction
     (fun l : Fin 2 → Fin 3 => h.barUpBlock f f' i su (l 1) sbQ (l 0) wbQ)
 
 /-- The colour contraction of the conjugate up-type block written out. -/
 lemma barUpBlockColour_eq (f f' : Fin 3) (i su sbQ wbQ : Fin 2) :
     h.barUpBlockColour f f' i su sbQ wbQ
       = ∑ a : Fin 3, h.barUpBlock f f' i su a sbQ a wbQ := by
-  simp [barUpBlockColour, IsSU3FunAntiFun.deltaContraction]
+  simp [barUpBlockColour, IsSU3FundamentalAntiFundamental.deltaContraction]
 
 /-- The colour contraction of the conjugate up-type block still carries two fundamental
   isospin indices. -/
@@ -396,8 +397,8 @@ lemma repGauge_su3_barUpBlockColour (U : specialUnitaryGroup (Fin 3) ℂ) (f f' 
     (i su sbQ wbQ : Fin 2) :
     repGauge ((U, 1, 1) : GaugeGroupI) (h.barUpBlockColour f f' i su sbQ wbQ)
       = h.barUpBlockColour f f' i su sbQ wbQ :=
-  IsSU3FunAntiFun.repGauge_deltaContraction
-    (h.isSU3FunAntiFun_barUpBlock f f' i su sbQ wbQ) U
+  IsSU3FundamentalAntiFundamental.repGauge_deltaContraction
+    (h.isSU3FundamentalAntiFundamental_barUpBlock f f' i su sbQ wbQ) U
 
 /-- The doubly contracted conjugate up-type block is fixed by the colour factor. -/
 lemma repGauge_su3_barUpBlockIsospin (U : specialUnitaryGroup (Fin 3) ℂ) (f f' : Fin 3)
@@ -490,8 +491,8 @@ lemma repGauge_su3_barLeptonBlock (U : specialUnitaryGroup (Fin 3) ℂ) (f f' : 
 /-- The two isospin indices of the conjugate lepton block carry one fundamental and one
   anti-fundamental `su(2)` index, the conjugate Higgs symbol supplying the fundamental
   one. -/
-lemma isSU2FunAntiFun_barLeptonBlock (f f' : Fin 3) (sL sbe : Fin 2) :
-    IsSU2FunAntiFun B repGauge
+lemma isSU2FundamentalAntiFundamental_barLeptonBlock (f f' : Fin 3) (sL sbe : Fin 2) :
+    IsSU2FundamentalAntiFundamental B repGauge
       (fun l : Fin 2 → Fin 2 => h.barLeptonBlock f f' (l 0) sL (l 1) sbe) where
   repGauge_T V l := by
     simp only [barLeptonBlock]
@@ -499,7 +500,7 @@ lemma isSU2FunAntiFun_barLeptonBlock (f f' : Fin 3) (sL sbe : Fin 2) :
       (A := fun a => h.isHiggsSector.barHiggs ![] a)
       (X := fun a => h.isFermionSector.LComponent f ![] (sL, a))
       (h.repGauge_su2_barHiggs V ![] (l 0)) (h.repGauge_su2_L V f ![] sL (l 1))
-      (h.repGauge_su2_bare V f' ![] sbe), IsSU2BiFundamental.sum_pi_two]
+      (h.repGauge_su2_bare V f' ![] sbe), Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
 
 /-- The two spinor indices of the conjugate lepton block are both dual left-handed. -/
@@ -534,14 +535,14 @@ lemma repGauge_u1_barLeptonBlock (t : unitary ℂ) (f f' : Fin 3) (i sL wL sbe :
 
 /-- The isospin contraction of the conjugate lepton block. -/
 noncomputable def barLeptonBlockIsospin (f f' : Fin 3) (sL sbe : Fin 2) : B :=
-  IsSU2FunAntiFun.deltaContraction
+  IsSU2FundamentalAntiFundamental.deltaContraction
     (fun l : Fin 2 → Fin 2 => h.barLeptonBlock f f' (l 0) sL (l 1) sbe)
 
 /-- The isospin contraction of the conjugate lepton block written out. -/
 lemma barLeptonBlockIsospin_eq (f f' : Fin 3) (sL sbe : Fin 2) :
     h.barLeptonBlockIsospin f f' sL sbe
       = ∑ w : Fin 2, h.barLeptonBlock f f' w sL w sbe := by
-  rw [barLeptonBlockIsospin, IsSU2FunAntiFun.deltaContraction, Fin.sum_univ_two]
+  rw [barLeptonBlockIsospin, IsSU2FundamentalAntiFundamental.deltaContraction, Fin.sum_univ_two]
   simp
 
 /-- The contracted conjugate lepton block carries two dual left-handed Weyl indices. -/
@@ -575,8 +576,8 @@ lemma repGauge_su2_barLeptonBlockIsospin (V : specialUnitaryGroup (Fin 2) ℂ)
     (f f' : Fin 3) (sL sbe : Fin 2) :
     repGauge ((1, V, 1) : GaugeGroupI) (h.barLeptonBlockIsospin f f' sL sbe)
       = h.barLeptonBlockIsospin f f' sL sbe :=
-  IsSU2FunAntiFun.repGauge_deltaContraction
-    (h.isSU2FunAntiFun_barLeptonBlock f f' sL sbe) V
+  IsSU2FundamentalAntiFundamental.repGauge_deltaContraction
+    (h.isSU2FundamentalAntiFundamental_barLeptonBlock f f' sL sbe) V
 
 /-- The contracted conjugate lepton block is fixed by the hypercharge factor. -/
 lemma repGauge_u1_barLeptonBlockIsospin (t : unitary ℂ) (f f' : Fin 3) (sL sbe : Fin 2) :

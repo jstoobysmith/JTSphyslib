@@ -473,8 +473,9 @@ lemma reducesInvariantsTo_downYukawa (f f' : Fin 3) :
         h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-        IsSU3FunAntiFun.invariantReductionToSpan
-          (h.isSU3FunAntiFun_downBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+        IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU3FundamentalAntiFundamental_downBlock f f' k.1 k.2.1 k.2.2.1
+            k.2.2.2)).mono_left ?_)
     rw [downBlockSubmodule]
     refine Submodule.mul_mul_le_of_le_span_range h.higgsSubmodule_zero_le
       (le_of_eq (h.range_d_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
@@ -490,8 +491,8 @@ lemma reducesInvariantsTo_downYukawa (f f' : Fin 3) :
         (Set.range fun m : Fin 2 × Fin 2 => h.downBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
-        IsSU2FunAntiFun.invariantReductionToSpan
-          (h.isSU2FunAntiFun_downBlockColour f f' m.1 m.2)).mono_left ?_)
+        IsSU2FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU2FundamentalAntiFundamental_downBlockColour f f' m.1 m.2)).mono_left ?_)
     refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
       Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.downBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
@@ -515,8 +516,8 @@ lemma reducesInvariantsTo_upYukawa (f f' : Fin 3) :
         h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-        IsSU3FunAntiFun.invariantReductionToSpan
-          (h.isSU3FunAntiFun_upBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+        IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU3FundamentalAntiFundamental_upBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
     rw [upBlockSubmodule]
     refine Submodule.mul_mul_le_of_le_span_range h.higgsSubmodule_zero_le
       (le_of_eq (h.range_baru_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
@@ -532,8 +533,8 @@ lemma reducesInvariantsTo_upYukawa (f f' : Fin 3) :
         (Set.range fun m : Fin 2 × Fin 2 => h.upBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
-        IsSU2BiAntiFun.invariantReductionToSpan
-          (h.isSU2BiAntiFun_upBlockColour f f' m.1 m.2)).mono_left ?_)
+        IsSU2BiAntiFundamental.invariantReductionToSpan
+          (h.isSU2BiAntiFundamental_upBlockColour f f' m.1 m.2)).mono_left ?_)
     refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
       Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.upBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
@@ -573,8 +574,8 @@ lemma reducesInvariantsTo_leptonYukawa (f f' : Fin 3) :
         (Set.range fun m : Fin 2 × Fin 2 => h.leptonBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
-        IsSU2FunAntiFun.invariantReductionToSpan
-          (h.isSU2FunAntiFun_leptonBlock f f' m.1 m.2)).mono_left ?_)
+        IsSU2FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU2FundamentalAntiFundamental_leptonBlock f f' m.1 m.2)).mono_left ?_)
     refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
       Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_
     rw [show h.leptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
@@ -596,8 +597,9 @@ lemma reducesInvariantsTo_barDownYukawa (f f' : Fin 3) :
         h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-        IsSU3FunAntiFun.invariantReductionToSpan
-          (h.isSU3FunAntiFun_barDownBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+        IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU3FundamentalAntiFundamental_barDownBlock f f' k.1 k.2.1 k.2.2.1
+            k.2.2.2)).mono_left ?_)
     rw [barDownBlockSubmodule]
     refine Submodule.mul_mul_le_of_le_span_range h.barHiggsSubmodule_zero_le
       (le_of_eq (h.range_bard_eq f)) (le_of_eq (h.range_Q_eq f')) fun i j k => ?_
@@ -613,8 +615,8 @@ lemma reducesInvariantsTo_barDownYukawa (f f' : Fin 3) :
         (Set.range fun m : Fin 2 × Fin 2 => h.barDownBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
-        IsSU2FunAntiFun.invariantReductionToSpan
-          (h.isSU2FunAntiFun_barDownBlockColour f f' m.1 m.2)).mono_left ?_)
+        IsSU2FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU2FundamentalAntiFundamental_barDownBlockColour f f' m.1 m.2)).mono_left ?_)
     refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
       Submodule.mem_iSup_of_mem (k.2.1, k.2.2.1) ?_
     rw [show h.barDownBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2
@@ -636,8 +638,9 @@ lemma reducesInvariantsTo_barUpYukawa (f f' : Fin 3) :
         h.barUpBlockColour f f' k.1 k.2.1 k.2.2.1 k.2.2.2)) := by
     refine ReducesInvariantsTo.ofSU3 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun k : Fin 2 × Fin 2 × Fin 2 × Fin 2 =>
-        IsSU3FunAntiFun.invariantReductionToSpan
-          (h.isSU3FunAntiFun_barUpBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2)).mono_left ?_)
+        IsSU3FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU3FundamentalAntiFundamental_barUpBlock f f' k.1 k.2.1 k.2.2.1
+            k.2.2.2)).mono_left ?_)
     rw [barUpBlockSubmodule]
     refine Submodule.mul_mul_le_of_le_span_range h.barHiggsSubmodule_zero_le
       (le_of_eq (h.range_u_eq f)) (le_of_eq (h.range_barQ_eq f')) fun i j k => ?_
@@ -694,8 +697,8 @@ lemma reducesInvariantsTo_barLeptonYukawa (f f' : Fin 3) :
         (Set.range fun m : Fin 2 × Fin 2 => h.barLeptonBlockIsospin f f' m.1 m.2)) := by
     refine ReducesInvariantsTo.ofSU2 ((InvariantReductionToSpan.reducesInvariantsTo_iSup
       fun m : Fin 2 × Fin 2 =>
-        IsSU2FunAntiFun.invariantReductionToSpan
-          (h.isSU2FunAntiFun_barLeptonBlock f f' m.1 m.2)).mono_left ?_)
+        IsSU2FundamentalAntiFundamental.invariantReductionToSpan
+          (h.isSU2FundamentalAntiFundamental_barLeptonBlock f f' m.1 m.2)).mono_left ?_)
     refine Submodule.span_le.2 <| Set.range_subset_iff.2 fun k =>
       Submodule.mem_iSup_of_mem (k.2.1, k.2.2.2) ?_
     rw [show h.barLeptonBlock f f' k.1 k.2.1 k.2.2.1 k.2.2.2
