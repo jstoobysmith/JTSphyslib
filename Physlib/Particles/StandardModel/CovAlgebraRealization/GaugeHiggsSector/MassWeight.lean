@@ -101,7 +101,7 @@ lemma IsLorentzCovariant.mul_vector
       fun d : Fin 3 → Fin 1 ⊕ Fin 3 => T ![d 0, d 1] * U (d 2) where
   repLorentz_T g l := by
     rw [hmul, hT.repLorentz_T g ![l 0, l 1], hU g (l 2),
-      StandardModel.IsGaugeSector.sum_cov_two, StandardModel.IsGaugeSector.sum_cov_three,
+      sum_pi_fin_two, StandardModel.IsGaugeSector.sum_cov_three,
       Finset.sum_mul]
     refine Finset.sum_congr rfl fun x _ => ?_
     rw [Finset.sum_mul]
@@ -126,19 +126,20 @@ variable {B : Type} [Ring B] [Algebra ℂ B] {repLorentz : Representation ℂ SL
 
 ## B. Peeling a join over an arbitrary index
 
-The gauge sector peels a join of spans indexed by a finite set, which is what its twelve
-directions of the gauge algebra need. Here the families are indexed by a covector of the
-gauge algebra together with a piece of Higgs material, and neither index is finite. Nothing
-is lost: an element of a join lies in the join over finitely many of the summands, so the
-finite peeling applies to it as it stands. The rest of the section collects the stability
-and the inertness of products and joins that the peeling consumes.
+The gauge sector combines the reductions of a join of spans indexed by a finite set, which
+is what its twelve directions of the gauge algebra need. Here the families are indexed by a
+covector of the gauge algebra together with a piece of Higgs material, and neither index is
+finite. Nothing is lost: an element of a join lies in the join over finitely many of the
+summands, so `ReducesInvariantsTo.iSup` combines the reductions over the whole join, by
+way of `ReducesInvariantsTo.iSup_of_biSup`. The rest of the section collects the
+stability and the inertness of products and joins that section E consumes.
 
 -/
 
 /-- A Lorentz invariant of a join, over an arbitrary index type, of the spans of
   bi-Lorentz families with vanishing metric traces lies in the stable submodule it is taken
-  modulo. An element of a join lies in a join over finitely many of the summands, so the
-  finite peeling of the gauge sector suffices. -/
+  modulo. Each span reduces to the line through its metric contraction, which is zero; the
+  reductions combine over every finite set of indices, and so over the whole join. -/
 lemma mem_of_lorentz_invariant_iSup_rankTwo_span {ι : Type}
     {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
@@ -146,26 +147,23 @@ lemma mem_of_lorentz_invariant_iSup_rankTwo_span {ι : Type}
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  classical
-  obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
-  obtain ⟨s, hs⟩ := Submodule.mem_iSup_iff_exists_finset.1 hu
-  exact IsGaugeSector.mem_of_lorentz_invariant_biSup_rankTwo_span hT hzero S hS s
-    (Submodule.mem_sup.2 ⟨u, hs, z, hz, rfl⟩) hinv
+  simpa using ReducesInvariantsTo.iSup
+    (fun i => (RankTwo.reducesInvariantsTo_span_metricContraction (hT i)).mono_right
+      (Submodule.span_singleton_eq_bot.2 (hzero i)).le)
+    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot S hS x hx hinv
 
 /-- A Lorentz invariant of a join, over an arbitrary index type, of the spans of triple
   Lorentz families lies in the stable submodule it is taken modulo: three covector indices
-  admit no invariant contraction at all. -/
+  admit no invariant contraction at all, so each span reduces to `⊥`, and the reductions
+  combine over every finite set of indices, and so over the whole join. -/
 lemma mem_of_lorentz_invariant_iSup_rankThree_span {ι : Type}
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  classical
-  obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
-  obtain ⟨s, hs⟩ := Submodule.mem_iSup_iff_exists_finset.1 hu
-  exact IsGaugeSector.mem_of_lorentz_invariant_biSup_rankThree_span hT S hS s
-    (Submodule.mem_sup.2 ⟨u, hs, z, hz, rfl⟩) hinv
+  simpa using ReducesInvariantsTo.iSup (fun i => RankThree.reducesInvariantsTo_bot (hT i))
+    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot S hS x hx hinv
 
 /-- A product of two pointwise Lorentz-inert submodules is pointwise Lorentz inert. -/
 lemma repLorentz_eq_self_of_mem_mul

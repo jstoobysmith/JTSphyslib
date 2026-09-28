@@ -102,8 +102,9 @@ lemma F_mem_iSup_span_coord {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : F
 ## B. Sums over tuples of covector indices
 
 A Lorentz family is indexed by a tuple of covector indices, while the transformation law
-of `IsGaugeSector` presents its sums one index at a time. These three lemmas turn a sum
-over tuples into an iterated sum and back.
+of `IsGaugeSector` presents its sums one index at a time. These two lemmas, with
+`Lorentz.sum_pi_fin_two` for two indices, turn a sum over tuples into an iterated sum and
+back.
 
 -/
 
@@ -115,18 +116,6 @@ lemma sum_cov_one {M : Type*} [AddCommMonoid M] (f : (Fin 1 → Fin 1 ⊕ Fin 3)
     funext i
     fin_cases i
     simp
-
-/-- A sum over families of two covector indices is a double sum. -/
-lemma sum_cov_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
-    ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d
-      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, f ![x, y] := by
-  rw [show (∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d)
-      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3), f ![p.1, p.2] from
-      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => by
-        congr 1
-        funext i
-        fin_cases i <;> simp,
-    Fintype.sum_prod_type]
 
 /-- A sum over families of three covector indices is a triple sum. -/
 lemma sum_cov_three {M : Type*} [AddCommMonoid M] (f : (Fin 3 → Fin 1 ⊕ Fin 3) → M) :
@@ -167,7 +156,7 @@ lemma isLorentzCovariant_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
       Finset.sum_eq_single (![] : Fin 0 → Fin 1 ⊕ Fin 3)
         (fun b _ hb => absurd (Subsingleton.elim b ![]) hb)
         (fun hb => absurd (Finset.mem_univ _) hb),
-      Fin.prod_univ_zero, one_smul, sum_cov_two]
+      Fin.prod_univ_zero, one_smul, sum_pi_fin_two]
     refine Finset.sum_congr rfl fun x _ => ?_
     rw [Finset.smul_sum]
     refine Finset.sum_congr rfl fun y _ => ?_
@@ -229,10 +218,10 @@ lemma metricContraction_eq_zero_of_antisymm {T : (Fin 2 → Fin 1 ⊕ Fin 3) →
 
 Both classifications come in a form relative to a Lorentz-stable submodule `S`: an
 invariant of the span of a family together with `S` is a contraction of the family up to
-a remainder in `S`. When the contraction vanishes, or when there is none, the invariant
-lies in `S` outright. The spans themselves are Lorentz stable, so a finite join of them
-can be peeled one summand at a time, each step enlarging `S` by the summands not yet
-peeled.
+a remainder in `S`. When the contraction vanishes, or when there is none, the span of the
+family reduces to `⊥`, and the invariant lies in `S` outright. The spans themselves are
+Lorentz stable, so `ReducesInvariantsTo.biSup` combines these reductions over a finite
+join of them.
 
 -/
 
@@ -248,9 +237,10 @@ lemma mem_of_lorentz_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3)
     RankTwo.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
   rwa [hxy, hzero, smul_zero, zero_add]
 
-/-- Peeling a finite join of the spans of bi-Lorentz families with vanishing metric
-  traces off a Lorentz-stable submodule: a Lorentz invariant of the join together with
-  `S` lies in `S`. -/
+/-- A finite join of the spans of bi-Lorentz families with vanishing metric traces carries
+  no Lorentz invariant modulo a Lorentz-stable submodule: a Lorentz invariant of the join
+  together with `S` lies in `S`. Each span reduces to the line through its metric
+  contraction, which is zero, and `ReducesInvariantsTo.biSup` combines the reductions. -/
 lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
@@ -258,53 +248,23 @@ lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι) {x : B}
     (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  induction s using Finset.induction_on generalizing x with
-  | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
-      bot_sup_eq] at hx
-    exact hx
-  | insert a s ha ih =>
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
-      intro g y hy
-      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
-        sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
-            Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_span_range g hz))))
-          fun z hz => Submodule.mem_sup_right (hS g z hz)
-      exact key hy
-    exact ih (mem_of_lorentz_invariant_rankTwo_span_sup (hT a) (hzero a) _ hstab hx
-      hinv) hinv
+  simpa using ReducesInvariantsTo.biSup
+    (fun i => (RankTwo.reducesInvariantsTo_span_metricContraction (hT i)).mono_right
+      (Submodule.span_singleton_eq_bot.2 (hzero i)).le)
+    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot s S hS x hx hinv
 
-/-- Peeling a finite join of the spans of triple Lorentz families off a Lorentz-stable
-  submodule: three covector indices carry no invariant contraction at all, so a Lorentz
-  invariant of the join together with `S` lies in `S`. -/
+/-- A finite join of the spans of triple Lorentz families carries no Lorentz invariant
+  modulo a Lorentz-stable submodule: three covector indices carry no invariant contraction
+  at all, so each span reduces to `⊥`, and `ReducesInvariantsTo.biSup` combines the
+  reductions. -/
 lemma mem_of_lorentz_invariant_biSup_rankThree_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  induction s using Finset.induction_on generalizing x with
-  | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), Submodule.span ℂ (Set.range (T i))) = ⊥ from by simp,
-      bot_sup_eq] at hx
-    exact hx
-  | insert a s ha ih =>
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S := by
-      intro g y hy
-      have key : ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S) :=
-        sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
-            Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi ((hT i).repLorentz_mem_span_range g hz))))
-          fun z hz => Submodule.mem_sup_right (hS g z hz)
-      exact key hy
-    exact ih (RankThree.mem_of_invariant_of_mem_sup (hT a) _ hstab hx hinv) hinv
+  simpa using ReducesInvariantsTo.biSup (fun i => RankThree.reducesInvariantsTo_bot (hT i))
+    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot s S hS x hx hinv
 
 /-- A join over a finite index type is the join over its universal finite set. -/
 lemma iSup_eq_biSup_univ {ι : Type} [Fintype ι] (f : ι → Submodule ℂ B) :

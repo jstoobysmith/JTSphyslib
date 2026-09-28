@@ -58,8 +58,8 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 ## A. Sums over pairs of covector indices
 
 A bi-Lorentz family is indexed by a pair of covector indices, while the transformation law
-of the Higgs tower presents its sums one derivative slot at a time.  These two lemmas turn
-a sum over pairs into an iterated sum and back.
+of the Higgs tower presents its sums one derivative slot at a time.  `sum_cov_one` and,
+for a pair, `Lorentz.sum_pi_fin_two` turn a sum over tuples into an iterated sum and back.
 
 -/
 
@@ -71,18 +71,6 @@ lemma sum_cov_one {M : Type*} [AddCommMonoid M] (f : (Fin 1 → Fin 1 ⊕ Fin 3)
     funext i
     fin_cases i
     simp
-
-/-- A sum over families of two covector indices is a double sum. -/
-lemma sum_cov_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
-    ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d
-      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, f ![x, y] := by
-  rw [show (∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d)
-      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3), f ![p.1, p.2] from
-      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => by
-        congr 1
-        funext i
-        fin_cases i <;> simp,
-    Fintype.sum_prod_type]
 
 /-- A family of one covector index is the tuple of its own entry. -/
 lemma etaExpand_cov_one (l : Fin 1 → Fin 1 ⊕ Fin 3) : ![l 0] = l := by
@@ -129,7 +117,7 @@ lemma isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed :
     IsLorentzCovariant 2 B repLorentz
       (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) where
   repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g ![l 0] ![l 1], sum_cov_one, sum_cov_two]
+    rw [h.repLorentz_dotGaugeHiggs g ![l 0] ![l 1], sum_cov_one, sum_pi_fin_two]
     refine Finset.sum_congr rfl fun x _ => ?_
     rw [sum_cov_one]
     refine Finset.sum_congr rfl fun y _ => ?_
@@ -174,32 +162,11 @@ lemma dotSpan_one_one_eq :
 Two covector indices admit one invariant contraction, the metric trace, and the metric is
 carried to itself by a Lorentz matrix — that is the defining property of the Lorentz group,
 recorded as `LorentzGroup.sum_minkowskiMatrixZ_mul` — so the trace of a bi-Lorentz family is a
-Lorentz invariant.  It is a gauge invariant too whenever the components are, and the components
-here are isospin contractions, which the gauge group fixes.
+Lorentz invariant, `RankTwo.repLorentz_metricContraction`.  It is a gauge invariant too whenever
+the components are, and the components here are isospin contractions, which the gauge group
+fixes.
 
 -/
-
-/-- The metric trace of a bi-Lorentz family is a Lorentz invariant. -/
-lemma repLorentz_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 2 B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (RankTwo.metricContraction (T := T))
-      = RankTwo.metricContraction (T := T) := by
-  rw [RankTwo.metricContraction, map_sum]
-  have step : ∀ d : Fin 2 → Fin 1 ⊕ Fin 3,
-      repLorentz g (((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • T d)
-        = ∑ a : Fin 2 → Fin 1 ⊕ Fin 3,
-          (((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)
-            * ∏ i : Fin 2, (((SL2C.toLorentzGroup g).1 (a i) (d i) : ℝ) : ℂ)) • T a := by
-    intro d
-    rw [map_smul, hT.repLorentz_T g d, Finset.smul_sum]
-    exact Finset.sum_congr rfl fun a _ => by rw [smul_smul]
-  rw [Finset.sum_congr rfl fun d _ => step d, Finset.sum_comm]
-  refine Finset.sum_congr rfl fun a _ => ?_
-  rw [← Finset.sum_smul]
-  congr 1
-  rw [sum_cov_two]
-  simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
-  exact LorentzGroup.sum_minkowskiMatrixZ_mul (SL2C.toLorentzGroup g) (a 0) (a 1)
 
 /-- The metric trace of a family of gauge invariants is a gauge invariant. -/
 lemma rep_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
@@ -318,9 +285,9 @@ lemma repLorentz_of_mem_lorentzContractionEightSpan (g : SL(2,ℂ)) {y : B}
     refine sup_le ?_ (sup_le ?_ (sup_le ?_ ?_)) <;>
       rw [Submodule.span_singleton_le_iff_mem] <;>
       simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
-    · exact repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left g
-    · exact repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right g
-    · exact repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed g
+    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left g
+    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right g
+    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed g
     · exact h.invariant_dotGaugeHiggs_sq.1 g
   have hy' := key hy
   simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero] at hy'

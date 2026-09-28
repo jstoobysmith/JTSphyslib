@@ -188,10 +188,10 @@ end ChiralFamilies
 
 ## C. Peeling the pair spans off a Lorentz-stable submodule
 
-A dual left-right Weyl family carries no invariant, so its span can be discarded from a
-Lorentz-stable submodule; iterating over a finite family of them discards a whole join.
-The induction is the same one the gauge sector runs in `IsGaugeSector`, the span of the
-components of each family being stable under the Lorentz group.
+A dual left-right Weyl family carries no invariant, so the span of its components, here the
+join of the lines through them, reduces to `⊥`. Each such span is stable under the Lorentz
+group, so `ReducesInvariantsTo.biSup` combines the reductions over a finite family of them,
+as in the gauge sector, and a whole join is discarded from a Lorentz-stable submodule.
 
 -/
 
@@ -211,32 +211,20 @@ lemma isDualLeftRightWeyl_span_stable {T : Fin 2 × Fin 2 → B}
       (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _))
   exact key hy
 
-/-- Peeling a finite join of the spans of dual left-right Weyl families off a
-  Lorentz-stable submodule: such a family has no invariant, so a Lorentz invariant of the
-  join together with `S` lies in `S`. -/
+/-- A finite join of the spans of dual left-right Weyl families carries no Lorentz
+  invariant modulo a Lorentz-stable submodule: such a family has no invariant, so each span
+  reduces to `⊥`, and `ReducesInvariantsTo.biSup` combines the reductions. A Lorentz
+  invariant of the join together with `S` lies in `S`. -/
 lemma mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span {ι : Type} [DecidableEq ι]
     {T : ι → Fin 2 × Fin 2 → B} (hT : ∀ i, IsDualLeftRightWeyl B repLorentz (T i))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  induction s using Finset.induction_on generalizing x with
-  | empty =>
-    rw [show (⨆ i ∈ (∅ : Finset ι), ⨆ l, ℂ ∙ T i l) = ⊥ from by simp, bot_sup_eq] at hx
-    exact hx
-  | insert a s ha ih =>
-    rw [Finset.iSup_insert, sup_assoc] at hx
-    have hstab : ∀ g : SL(2,ℂ), ∀ y ∈ (⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S,
-        repLorentz g y ∈ (⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S := by
-      intro g y hy
-      have key : ((⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S)
-          ≤ Submodule.comap (repLorentz g) ((⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S) :=
-        sup_le (iSup_le fun i => iSup_le fun hi => fun z hz =>
-            Submodule.mem_sup_left (Submodule.mem_iSup_of_mem i
-              (Submodule.mem_iSup_of_mem hi (isDualLeftRightWeyl_span_stable (hT i) g hz))))
-          fun z hz => Submodule.mem_sup_right (hS g z hz)
-      exact key hy
-    exact ih ((hT a).mem_of_invariant_of_mem_sup _ hstab
-      (by rwa [Submodule.span_range_eq_iSup]) hinv) hinv
+  simpa using ReducesInvariantsTo.biSup (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥)
+    (fun i S hS _ hx hinv => Submodule.mem_sup_right ((hT i).mem_of_invariant_of_mem_sup S hS
+      (by rwa [Submodule.span_range_eq_iSup]) hinv))
+    (fun i g _ hy => isDualLeftRightWeyl_span_stable (hT i) g hy)
+    isStableUnder_bot s S hS x hx hinv
 
 /-- The version of `mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span` joining over a
   whole finite index type. -/

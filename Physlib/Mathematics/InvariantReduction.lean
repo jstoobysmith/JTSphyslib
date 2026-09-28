@@ -17,11 +17,12 @@ a submodule is stable when every `σ g` carries it into itself.
 
 The relation `ReducesInvariantsTo σ V W` says: for every stable submodule `S`, every invariant
 of `V ⊔ S` lies in `W ⊔ S`. It is transitive, antitone in the source, monotone in the target
-and, for stable sources and a stable target, closed under finite joins of the source. A
-classification of the invariants of a family can therefore be applied one family at a time,
-the other families being kept in the stable remainder `S`. A submodule on which one map of
-the family acts by a scalar other than `1` reduces to `⊥`:
-`reducesInvariantsTo_bot_of_apply_eq_smul`.
+and, for stable sources and a stable target, closed under joins of the source. Since an element
+of a join lies in a join over finitely many summands, the index type need not be finite:
+`ReducesInvariantsTo.iSup_of_biSup`, and with it `ReducesInvariantsTo.iSup`. A classification
+of the invariants of a family can therefore be applied one family at a time, the other families
+being kept in the stable remainder `S`. A submodule on which one map of the family acts by a
+scalar other than `1` reduces to `⊥`: `reducesInvariantsTo_bot_of_apply_eq_smul`.
 
 Such a reduction is usually proved in the quotient `B ⧸ S`. If every invariant of the image of
 `V` in `B ⧸ S` lies in the image of `W`, then every invariant of `V ⊔ S` lies in `W ⊔ S`, and
@@ -221,14 +222,26 @@ lemma ReducesInvariantsTo.biSup {ι : Type*} [DecidableEq ι] {V : ι → Submod
     rw [Finset.iSup_insert]
     exact (hP a).sup ih (isStableUnder_iSup fun i => isStableUnder_iSup fun _ => hV i) hW
 
-/-- Reductions of stable submodules to a common stable target combine over a finite index
-  type. -/
-lemma ReducesInvariantsTo.iSup {ι : Type*} [Fintype ι] [DecidableEq ι]
-    {V : ι → Submodule R B} {W : Submodule R B} (hP : ∀ i, ReducesInvariantsTo σ (V i) W)
-    (hV : ∀ i, IsStableUnder σ (V i)) (hW : IsStableUnder σ W) :
-    ReducesInvariantsTo σ (⨆ i, V i) W :=
-  (ReducesInvariantsTo.biSup hP hV hW Finset.univ).mono_left
-    (iSup_le fun i => le_iSup₂_of_le i (Finset.mem_univ i) le_rfl)
+/-- A reduction of every join over a finite set of indices is a reduction of the join over the
+  whole index type, which may be infinite: an element of the join lies in the join over finitely
+  many of the summands. No stability is assumed of the summands or of the target; the remainder
+  is stable, as in every reduction. -/
+lemma ReducesInvariantsTo.iSup_of_biSup {ι : Type*} {V : ι → Submodule R B} {W : Submodule R B}
+    (hP : ∀ s : Finset ι, ReducesInvariantsTo σ (⨆ i ∈ s, V i) W) :
+    ReducesInvariantsTo σ (⨆ i, V i) W := by
+  intro S hS x hx hinv
+  obtain ⟨u, hu, z, hz, rfl⟩ := Submodule.mem_sup.1 hx
+  obtain ⟨s, hs⟩ := Submodule.mem_iSup_iff_exists_finset.1 hu
+  exact hP s S hS _ (Submodule.add_mem_sup hs hz) hinv
+
+/-- Reductions of stable submodules to a common stable target combine over any index type,
+  finite or not: `biSup` combines them over every finite set of indices, and
+  `iSup_of_biSup` passes to the whole join. -/
+lemma ReducesInvariantsTo.iSup {ι : Type*} {V : ι → Submodule R B} {W : Submodule R B}
+    (hP : ∀ i, ReducesInvariantsTo σ (V i) W) (hV : ∀ i, IsStableUnder σ (V i))
+    (hW : IsStableUnder σ W) : ReducesInvariantsTo σ (⨆ i, V i) W := by
+  classical
+  exact ReducesInvariantsTo.iSup_of_biSup (ReducesInvariantsTo.biSup hP hV hW)
 
 /-- A reduction for the subfamily `σ ∘ ι` is a reduction for `σ`: an invariant of `σ` is an
   invariant of the subfamily, and a `σ`-stable submodule is stable under the subfamily. -/
@@ -377,10 +390,10 @@ lemma reducesInvariantsTo (r : InvariantReductionToSpan σ V) :
   obtain ⟨c, y, hy, rfl⟩ := r.reduce S hS x hx hinv
   exact Submodule.add_mem_sup (Submodule.smul_mem _ c (Submodule.mem_span_singleton_self _)) hy
 
-/-- A finite family of reductions to spans reduces the join of the submodules to the span of
-  the spanning vectors. -/
-lemma reducesInvariantsTo_iSup {κ : Type*} [Fintype κ] [DecidableEq κ]
-    {V : κ → Submodule R B} (r : ∀ k, InvariantReductionToSpan σ (V k)) :
+/-- A family of reductions to spans, over any index type, reduces the join of the submodules to
+  the span of the spanning vectors. -/
+lemma reducesInvariantsTo_iSup {κ : Type*} {V : κ → Submodule R B}
+    (r : ∀ k, InvariantReductionToSpan σ (V k)) :
     ReducesInvariantsTo σ (⨆ k, V k)
       (Submodule.span R (Set.range fun k => (r k).spanningVector)) :=
   ReducesInvariantsTo.iSup

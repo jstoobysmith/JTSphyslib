@@ -15,8 +15,8 @@ public meta import Mathlib.Data.Fintype.Pi
 A rank-three tensor `T^{μνρ}` has no Lorentz invariant built from its components but `0`.
 Nothing ties three indices: the metric takes two and the Levi-Civita symbol four, and an
 odd number is left over either way. That is `eq_zero_of_invariant`, and
-`mem_of_invariant_of_mem_sup` is the same statement modulo a Lorentz-stable subspace `S`,
-the form the Standard Model files use.
+`mem_of_invariant_of_mem_sup` is the same statement modulo a Lorentz-stable subspace `S`;
+`reducesInvariantsTo_bot`, the form the Standard Model files use, reads it as a reduction.
 
 The components are vectors `T d` of a complex vector space `B` carrying a representation
 `repLorentz` of `SL(2,ℂ)`, indexed by three directions, and `IsLorentzCovariant 3` says the
@@ -176,6 +176,12 @@ lemma mem_of_invariant_of_mem_sup (hT : IsLorentzCovariant 3 B repLorentz T) {x 
       exact eq_zero_of_invariant (hT.quotient S hS)
         ((Submodule.map_span_range S.mkQ T).le hy) hyinv) hx hinv
   rwa [bot_sup_eq] at h
+
+/-- The span of the components reduces to `⊥`: `mem_of_invariant_of_mem_sup` read as a
+  reduction for the Lorentz group. -/
+lemma reducesInvariantsTo_bot (hT : IsLorentzCovariant 3 B repLorentz T) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) ⊥ :=
+  fun S hS _ hx hinv => Submodule.mem_sup_right (mem_of_invariant_of_mem_sup hT S hS hx hinv)
 
 end RankThree
 

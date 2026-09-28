@@ -84,21 +84,6 @@ derivative direction — which is why a block submodule carries that join.
 
 -/
 
-/-- The two groups read as one family of maps respect multiplication, each of the two
-  representations doing so. -/
-lemma gaugeLorentzMaps_mul
-    (hG : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
-      repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
-    (hL : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
-      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
-    (p : GaugeGroupI ⊕ SL(2,ℂ)) (a b : B) :
-    gaugeLorentzMaps repGauge repLorentz p (a * b)
-      = gaugeLorentzMaps repGauge repLorentz p a
-        * gaugeLorentzMaps repGauge repLorentz p b := by
-  cases p with
-  | inl g => exact hG g a b
-  | inr Λ => exact hL Λ a b
-
 /-- The join, over the derivative direction, of the ranges of a once-derived symbol map is
   carried into itself by the Lorentz group: a Lorentz transformation mixes the derivative
   slot into the other directions and moves the covector, and both stay inside the join. -/

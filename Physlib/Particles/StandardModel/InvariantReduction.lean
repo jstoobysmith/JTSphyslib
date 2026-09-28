@@ -17,7 +17,8 @@ The reductions for the individual laws are `invariantReductionToSpan` beside eac
 classification theorem. This file supplies what the sectors share when combining them.
 
 - A. The family `gaugeLorentzMaps` indexed by `GaugeGroupI ⊕ SL(2,ℂ)`, the classification
-  endpoint for it, and the transport of gauge, colour, isospin and Lorentz reductions to it.
+  endpoint for it, the transport of gauge, colour, isospin and Lorentz reductions to it, and
+  its multiplicativity.
 - B. The colour, isospin and hypercharge factors of a gauge transformation; an element fixed
   by each factor is gauge invariant.
 - C. Stability of the range of a symbol map under the gauge and Lorentz groups.
@@ -130,6 +131,28 @@ lemma ReducesInvariantsTo.ofLorentz {V W : Submodule ℂ B}
   ReducesInvariantsTo.comp (Sum.inr (α := GaugeGroupI)) hP
 
 end BothGroups
+
+section Multiplicative
+
+variable {B : Type*} [Ring B] [Algebra ℂ B] {repGauge : Representation ℂ GaugeGroupI B}
+  {repLorentz : Representation ℂ SL(2,ℂ) B}
+
+/-- The two groups read as one family of maps respect multiplication, each of the two
+  representations doing so. -/
+lemma gaugeLorentzMaps_mul
+    (hG : ∀ (g : GaugeGroupI) (b₁ b₂ : B),
+      repGauge g (b₁ * b₂) = repGauge g b₁ * repGauge g b₂)
+    (hL : ∀ (Λ : SL(2,ℂ)) (b₁ b₂ : B),
+      repLorentz Λ (b₁ * b₂) = repLorentz Λ b₁ * repLorentz Λ b₂)
+    (p : GaugeGroupI ⊕ SL(2,ℂ)) (a b : B) :
+    gaugeLorentzMaps repGauge repLorentz p (a * b)
+      = gaugeLorentzMaps repGauge repLorentz p a
+        * gaugeLorentzMaps repGauge repLorentz p b := by
+  cases p with
+  | inl g => exact hG g a b
+  | inr Λ => exact hL Λ a b
+
+end Multiplicative
 
 /-!
 

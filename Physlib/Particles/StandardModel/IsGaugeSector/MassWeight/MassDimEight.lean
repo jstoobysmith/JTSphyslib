@@ -729,11 +729,6 @@ lemma neutralCartanPart_le :
   · exact h.neutralSpan_mul_neutralSpan_le.trans
       (sup_le (le_sup_of_le_left le_sup_right) (le_sup_of_le_right le_sup_right))
 
-/-- A vector of two covector indices is the tuple of its own two entries. -/
-lemma etaExpand_two (l : Fin 2 → Fin 1 ⊕ Fin 3) : ![l 0, l 1] = l := by
-  funext i
-  fin_cases i <;> simp
-
 /-- The twice-derived symbols on the weight-zero directions: on a colour or isospin Cartan
   direction a component of an adjoint family, on hypercharge a twice-derived hypercharge
   field strength. -/
@@ -750,7 +745,7 @@ lemma derivCartanSpan_le :
       (h.colourFamily_mem (Sum.inl (l, μ, ν)) (GaugeAlgebra.su3CartanId 1)))
   · exact Submodule.mem_sup_left (Submodule.mem_sup_right
       (h.isospinFamily_mem (Sum.inl (l, μ, ν)) GaugeAlgebra.su2CartanId))
-  · rw [← etaExpand_two l]
+  · rw [← show ![l 0, l 1] = l from FinVec.etaExpand_eq l]
     exact Submodule.mem_sup_right (Submodule.mem_iSup_of_mem ![l 0, l 1, μ, ν]
       (Submodule.mem_span_singleton_self _))
 
@@ -1048,16 +1043,6 @@ lemma isLorentzCovariant_hyperchargeTrace :
     funext h.hyperchargeTrace_eq]
   exact h.isLorentzCovariant_F_mul _ _
 
-/-- A sum over families of two covector indices is a double sum. -/
-lemma sum_pi_two_cov {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
-    ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d
-      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, f ![x, y] := by
-  rw [show (∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d)
-      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3), f ![p.1, p.2] from
-      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => by
-        rw [piFinTwoEquiv_apply, etaExpand_two],
-    Fintype.sum_prod_type]
-
 /-- The twice-derived hypercharge field strengths, read as a family of four four-vector
   indices, form a quadruple Lorentz tensor: the two derivative slots and the two covector
   indices all rotate. This is the second shape of mass weight eight. -/
@@ -1065,7 +1050,7 @@ lemma isLorentzCovariant_hyperchargeDeriv :
     IsLorentzCovariant 4 B repLorentz h.hyperchargeDeriv where
   repLorentz_T g l := by
     simp only [hyperchargeDeriv, hyperchargeField]
-    rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_two_cov, RankFour.sum_pi_four]
+    rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_fin_two, RankFour.sum_pi_four]
     simp only [Finset.smul_sum, smul_smul, Fin.prod_univ_two, Fin.prod_univ_four, mul_assoc,
       Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
       Matrix.tail_cons, Matrix.cons_val_three]

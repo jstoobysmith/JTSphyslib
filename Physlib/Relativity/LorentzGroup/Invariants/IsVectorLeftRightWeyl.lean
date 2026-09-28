@@ -56,18 +56,6 @@ complex conjugate.
 
 -/
 
-/-- A sum over families of two four-vector indices is a double sum. -/
-lemma sum_pi_fin_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
-    ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d
-      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, f ![x, y] := by
-  rw [show (∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d)
-      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3), f ![p.1, p.2] from
-      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => by
-        congr 1
-        funext i
-        fin_cases i <;> simp,
-    Fintype.sum_prod_type]
-
 /-- A family `T` indexed by a four-vector index and a left- and a right-handed Weyl index,
   moved by `repLorentz` as `T^{μ α α'}`: the vector index by the Lorentz matrix, the left
   index by the matrix of `g` and the right index by its complex conjugate, the summed index

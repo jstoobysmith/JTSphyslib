@@ -13,7 +13,8 @@ A family `T` of vectors of a complex module `B`, indexed by `n` spacetime direct
 by a representation of `SL(2,ℂ)` with one factor of the Lorentz matrix per index, is what the
 rank-specific files of this folder classify the invariants of. This file holds the predicate
 saying so, at an arbitrary number of indices, together with the part of its interface that does
-not depend on that number.
+not depend on that number, and the bookkeeping `sum_pi_fin_two` that writes a sum over pairs of
+indices as a double sum.
 
 The transformation law is
 
@@ -51,6 +52,18 @@ structure IsLorentzCovariant (n : ℕ) (B : Type*) [AddCommMonoid B] [Module ℂ
   repLorentz_T : ∀ (g : SL(2,ℂ)) l,
     repLorentz g (T l) = ∑ (a : Fin n → Fin 1 ⊕ Fin 3),
     (∏ (i : Fin n), (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a
+
+/-- A sum over families of two four-vector indices is a double sum. -/
+lemma sum_pi_fin_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
+    ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d
+      = ∑ x : Fin 1 ⊕ Fin 3, ∑ y : Fin 1 ⊕ Fin 3, f ![x, y] := by
+  rw [show (∑ d : Fin 2 → Fin 1 ⊕ Fin 3, f d)
+      = ∑ p : (Fin 1 ⊕ Fin 3) × (Fin 1 ⊕ Fin 3), f ![p.1, p.2] from
+      Fintype.sum_equiv (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3) _ _ fun d => by
+        congr 1
+        funext i
+        fin_cases i <;> simp,
+    Fintype.sum_prod_type]
 
 namespace IsLorentzCovariant
 

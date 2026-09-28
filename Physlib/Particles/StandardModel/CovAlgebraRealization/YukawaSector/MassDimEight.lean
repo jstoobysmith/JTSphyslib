@@ -173,15 +173,6 @@ error term of the others.
 
 -/
 
-include h in
-/-- The two groups act on the algebra by algebra maps. -/
-lemma gaugeLorentzMaps_mul (p : GaugeGroupI ⊕ SL(2,ℂ)) (a b : B) :
-    gaugeLorentzMaps repGauge repLorentz p (a * b)
-      = gaugeLorentzMaps repGauge repLorentz p a * gaugeLorentzMaps repGauge repLorentz p b := by
-  cases p with
-  | inl g => exact h.isHiggsSector.rep_mul g a b
-  | inr Λ => exact h.isHiggsSector.repLorentz_mul Λ a b
-
 /-- The Higgs submodule without derivatives is carried into itself by both groups. -/
 lemma isStableUnder_higgsSubmodule_zero :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz)
@@ -344,44 +335,50 @@ noncomputable def barLeptonBlockSubmodule (f f' : Fin 3) : Submodule ℂ B :=
 /-- The down-type block submodule is carried into itself by both groups. -/
 lemma isStableUnder_downBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.downBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_higgsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_d f)
-      (h.isStableUnder_range_barQ f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_higgsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_d f) (h.isStableUnder_range_barQ f'))
 
 /-- The up-type block submodule is carried into itself by both groups. -/
 lemma isStableUnder_upBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.upBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_higgsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_baru f)
-      (h.isStableUnder_range_Q f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_higgsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_baru f) (h.isStableUnder_range_Q f'))
 
 /-- The charged-lepton block submodule is carried into itself by both groups. -/
 lemma isStableUnder_leptonBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.leptonBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_higgsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_barL f)
-      (h.isStableUnder_range_e f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_higgsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_barL f) (h.isStableUnder_range_e f'))
 
 /-- The conjugate down-type block submodule is carried into itself by both groups. -/
 lemma isStableUnder_barDownBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.barDownBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_barHiggsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_bard f)
-      (h.isStableUnder_range_Q f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_barHiggsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_bard f) (h.isStableUnder_range_Q f'))
 
 /-- The conjugate up-type block submodule is carried into itself by both groups. -/
 lemma isStableUnder_barUpBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.barUpBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_barHiggsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_u f)
-      (h.isStableUnder_range_barQ f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_barHiggsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_u f) (h.isStableUnder_range_barQ f'))
 
 /-- The conjugate charged-lepton block submodule is carried into itself by both groups. -/
 lemma isStableUnder_barLeptonBlockSubmodule (f f' : Fin 3) :
     IsStableUnder (gaugeLorentzMaps repGauge repLorentz) (h.barLeptonBlockSubmodule f f') :=
-  IsStableUnder.mul h.gaugeLorentzMaps_mul h.isStableUnder_barHiggsSubmodule_zero
-    (IsStableUnder.mul h.gaugeLorentzMaps_mul (h.isStableUnder_range_L f)
-      (h.isStableUnder_range_bare f'))
+  IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+    h.isStableUnder_barHiggsSubmodule_zero
+    (IsStableUnder.mul (gaugeLorentzMaps_mul h.repGauge_mul h.repLorentz_mul)
+      (h.isStableUnder_range_L f) (h.isStableUnder_range_bare f'))
 
 /-- The join of the six block submodules over the nine family pairs: what the weight-zero
   piece of the Yukawa sector at mass weight eight is contained in. -/
