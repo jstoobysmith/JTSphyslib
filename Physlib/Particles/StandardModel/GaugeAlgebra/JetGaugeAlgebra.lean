@@ -23,6 +23,7 @@ public import Mathlib.RingTheory.MvPowerSeries.PiTopology
 public import Mathlib.Topology.Instances.Matrix
 public import Mathlib.RingTheory.PowerSeries.Derivative
 public import Mathlib.RingTheory.PowerSeries.Basic
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 /-!
 # The jet gauge algebra
 

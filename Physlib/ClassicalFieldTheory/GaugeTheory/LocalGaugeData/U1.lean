@@ -8,6 +8,7 @@ module
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
 public import Physlib.Mathematics.DataStructures.Matrix.Scalar
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+public import Mathlib.Tactic.LinearCombination
 /-!
 # The local gauge data of `U(1)`
 

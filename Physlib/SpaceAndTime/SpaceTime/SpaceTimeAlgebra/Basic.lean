@@ -5,13 +5,6 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Mathlib.Data.Complex.Basic
-public import Mathlib.LinearAlgebra.Complex.Module
-public import Mathlib.Algebra.Star.BigOperators
-public import Mathlib.Tactic.LinearCombination
-public import Mathlib.RingTheory.MvPowerSeries.Basic
-public import Mathlib.Data.Finsupp.Multiset
-public import Mathlib.Data.Finsupp.Weight
 public import Mathlib.RingTheory.MvPowerSeries.Derivative
 public import Physlib.Mathematics.ConjModule
 /-!

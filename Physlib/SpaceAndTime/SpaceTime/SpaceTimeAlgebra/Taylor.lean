@@ -5,8 +5,8 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 # Taylor determinacy and completeness of jets
 

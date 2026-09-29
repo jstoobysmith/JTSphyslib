@@ -5,24 +5,11 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Mathlib.RingTheory.TensorProduct.Basic
-public import Physlib.Relativity.Tensors.ComplexTensor.Basic
-public import Physlib.Mathematics.ConjModule
-public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
-public import Mathlib.Algebra.TrivSqZeroExt.Basic
-public import Mathlib.Data.Finsupp.Multiset
-public import Mathlib.Data.Finsupp.Weight
-public import Mathlib.RingTheory.MvPowerSeries.Basic
-public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
-public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
-public import Mathlib.RepresentationTheory.Basic
-public import Mathlib.RingTheory.TensorProduct.Basic
-public import Mathlib.RingTheory.MvPowerSeries.Derivative
-public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
+public import Physlib.Mathematics.Fin
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
-public import Physlib.Mathematics.Fin
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 # Derivative algebras
 

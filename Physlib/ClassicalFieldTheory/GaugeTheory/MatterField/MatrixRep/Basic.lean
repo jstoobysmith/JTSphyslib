@@ -9,6 +9,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.InfinitesimalAction
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 public import Mathlib.LinearAlgebra.Matrix.ToLin
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 /-!
 # Matrix representations of a jet gauge group
 

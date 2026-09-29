@@ -5,11 +5,10 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
-public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.LinearAlgebra.Matrix.Adjugate
 public import Mathlib.LinearAlgebra.Matrix.Trace
 public import Physlib.Mathematics.MultisetAntidiagonal
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 # Matrices over the jet ring
 

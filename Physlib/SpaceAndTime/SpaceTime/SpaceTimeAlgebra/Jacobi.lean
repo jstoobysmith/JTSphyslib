@@ -5,8 +5,9 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 public import Mathlib.LinearAlgebra.Matrix.Adjugate
+public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 # Jacobi's formula for matrices of jets
 
