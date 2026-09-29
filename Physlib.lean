@@ -52,6 +52,8 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.GellMann
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.TensorSpecies
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.U1
 public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
@@ -692,6 +694,7 @@ public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
 public import Physlib.Relativity.Tensors.Contraction.UnitTensorContraction
 public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
+public import Physlib.Relativity.Tensors.Equivariant
 public import Physlib.Relativity.Tensors.Evaluation
 public import Physlib.Relativity.Tensors.LeviCivita.Basic
 public import Physlib.Relativity.Tensors.LeviCivita.Complex

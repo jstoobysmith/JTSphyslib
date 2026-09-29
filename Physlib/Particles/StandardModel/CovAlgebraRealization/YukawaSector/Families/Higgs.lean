@@ -200,7 +200,7 @@ lemma isBiDualRightWeyl_downBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz (ofPairComponents (h.downBlockIsospin f f')) := by
   rw [show h.downBlockIsospin f f' = _ from funext₂ (h.downBlockIsospin_eq f f'),
     ofPairComponents_sum]
-  exact IsLorentzEquivariant.sum _ fun p _ => h.isBiDualRightWeyl_downBlock f f' p.1 p.2 p.2 p.1
+  exact TensorSpecies.IsEquivariant.sum _ fun p _ => h.isBiDualRightWeyl_downBlock f f' p.1 p.2 p.2 p.1
 
 /-- The down-type Yukawa term of the family pair `(f, f')`: the down-singlet symbol of family `f`
   against the conjugate quark doublet of family `f'` and a Higgs symbol, with the colour indices
@@ -402,8 +402,8 @@ lemma isBiDualLeftWeyl_upBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz (ofPairComponents (h.upBlockIsospin f f')) := by
   rw [show h.upBlockIsospin f f' = _ from funext₂ (h.upBlockIsospin_eq f f'),
     ofPairComponents_sub, ofPairComponents_sum, ofPairComponents_sum]
-  exact (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualLeftWeyl_upBlock f f' 0 a a 1).sub
-    (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualLeftWeyl_upBlock f f' 1 a a 0)
+  exact (TensorSpecies.IsEquivariant.sum _ fun a _ => h.isBiDualLeftWeyl_upBlock f f' 0 a a 1).sub
+    (TensorSpecies.IsEquivariant.sum _ fun a _ => h.isBiDualLeftWeyl_upBlock f f' 1 a a 0)
 
 /-- The up-type Yukawa term of the family pair `(f, f')`: the colour indices are joined by the
   Kronecker delta, the isospin indices by the antisymmetric symbol, and the two left-handed spinor
@@ -575,7 +575,7 @@ lemma isBiDualRightWeyl_leptonBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz (ofPairComponents (h.leptonBlockIsospin f f')) := by
   rw [show h.leptonBlockIsospin f f' = _ from funext₂ (h.leptonBlockIsospin_eq f f'),
     ofPairComponents_sum]
-  exact IsLorentzEquivariant.sum _ fun w _ => h.isBiDualRightWeyl_leptonBlock f f' w w
+  exact TensorSpecies.IsEquivariant.sum _ fun w _ => h.isBiDualRightWeyl_leptonBlock f f' w w
 
 /-- The charged-lepton Yukawa term of the family pair `(f, f')`: the isospin indices are joined by
   the Kronecker delta and the two right-handed spinor indices by the antisymmetric symbol, colour

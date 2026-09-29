@@ -18,7 +18,7 @@ Lorentz-stable submodule `S`, and packaged for the reductions of the Standard Mo
 two right-handed, two dual left-handed and two dual right-handed indices are `IsBiLeftWeyl`,
 `IsBiRightWeyl`, `IsBiDualLeftWeyl` and `IsBiDualRightWeyl` (A).
 
-By `IsLorentzEquivariant.invariantReductionToSpan` it is enough to show that the invariant
+By `TensorSpecies.IsEquivariant.invariantReductionToSpan` it is enough to show that the invariant
 tensors of `ℂT[k, k]` are the multiples of `metricTensor k` (B). Two elements of `SL(2,ℂ)` pin
 the components `r` of an invariant tensor down. The first acts on the colour `k` by
 `diag (2, 2⁻¹)`, which scales `r (0, 0)` by `4` and `r (1, 1)` by `4⁻¹`, so these vanish. The
@@ -185,7 +185,7 @@ variable {k : complexLorentzTensor.Color} {B : Type*} [AddCommGroup B] [Module �
   invariant. -/
 lemma repLorentz_map_metricTensor (hf : IsLorentzEquivariant ![k, k] B repLorentz f)
     (g : SL(2,ℂ)) : repLorentz g (f (metricTensor k)) = f (metricTensor k) :=
-  hf.repLorentz_map_of_invariant (fun g => metricTensor_invariant g) g
+  hf.rep_map_of_invariant (fun g => metricTensor_invariant g) g
 
 /-- For a Weyl colour `k` and an equivariant map `f` out of `ℂT[k, k]`, the Lorentz invariants
   of the range of `f` reduce to the span of the image `f (metricTensor k)` of the metric. -/
@@ -193,7 +193,9 @@ noncomputable def invariantReductionToMetricTensor
     (hk : k = .upL ∨ k = .downL ∨ k = .upR ∨ k = .downR)
     (hf : IsLorentzEquivariant ![k, k] B repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  hf.invariantReductionToSpan (fun i => by fin_cases i <;> exact isDaggerCompatible_of_weyl hk)
+  hf.invariantReductionToSpan
+    (isAdjointClosed_of_isDaggerCompatible fun i => by
+      fin_cases i <;> exact isDaggerCompatible_of_weyl hk)
     (metricTensor k) (fun g => metricTensor_invariant g)
     (exists_eq_smul_metricTensor_of_invariant hk)
 
@@ -310,7 +312,7 @@ lemma isLorentzEquivariant_ofPairComponents {repLorentz : Representation ℂ SL(
         LinearMap.toMatrix (complexLorentzTensor.basis k) (complexLorentzTensor.basis k)
           (complexLorentzTensor.rep k g) y b) • T x y) :
     IsLorentzEquivariant ![k, k] B repLorentz (ofPairComponents T) :=
-  isLorentzEquivariant_constr _ fun g φ => (hT g (φ 0) (φ 1)).trans <| by
+  isEquivariant_constr _ fun g φ => (hT g (φ 0) (φ 1)).trans <| by
     rw [← (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).symm.sum_comp,
       Fintype.sum_prod_type]
     simp only [Fin.prod_univ_two]

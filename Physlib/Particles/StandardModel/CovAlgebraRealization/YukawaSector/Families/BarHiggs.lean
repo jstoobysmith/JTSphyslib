@@ -178,7 +178,7 @@ lemma isBiDualLeftWeyl_barDownBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz (ofPairComponents (h.barDownBlockIsospin f f')) := by
   rw [show h.barDownBlockIsospin f f' = _ from funext₂ (h.barDownBlockIsospin_eq f f'),
     ofPairComponents_sum]
-  exact IsLorentzEquivariant.sum _ fun p _ => h.isBiDualLeftWeyl_barDownBlock f f' p.1 p.2 p.2 p.1
+  exact TensorSpecies.IsEquivariant.sum _ fun p _ => h.isBiDualLeftWeyl_barDownBlock f f' p.1 p.2 p.2 p.1
 
 /-- The conjugate down-type Yukawa term of the family pair `(f, f')`. It is the image of the metric
   `εL'` under the map with the contracted block as its components. -/
@@ -376,8 +376,8 @@ lemma isBiDualRightWeyl_barUpBlockIsospin (f f' : Fin 3) :
     IsBiDualRightWeyl B repLorentz (ofPairComponents (h.barUpBlockIsospin f f')) := by
   rw [show h.barUpBlockIsospin f f' = _ from funext₂ (h.barUpBlockIsospin_eq f f'),
     ofPairComponents_sub, ofPairComponents_sum, ofPairComponents_sum]
-  exact (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1).sub
-    (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
+  exact (TensorSpecies.IsEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1).sub
+    (TensorSpecies.IsEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
 
 /-- The conjugate up-type Yukawa term of the family pair `(f, f')`. It is the image of the metric
   `εR'` under the map with the contracted block as its components. -/
@@ -548,7 +548,7 @@ lemma isBiDualLeftWeyl_barLeptonBlockIsospin (f f' : Fin 3) :
     IsBiDualLeftWeyl B repLorentz (ofPairComponents (h.barLeptonBlockIsospin f f')) := by
   rw [show h.barLeptonBlockIsospin f f' = _ from funext₂ (h.barLeptonBlockIsospin_eq f f'),
     ofPairComponents_sum]
-  exact IsLorentzEquivariant.sum _ fun w _ => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
+  exact TensorSpecies.IsEquivariant.sum _ fun w _ => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
 
 /-- The conjugate charged-lepton Yukawa term of the family pair `(f, f')`. It is the image of the
   metric `εL'` under the map with the contracted block as its components. -/

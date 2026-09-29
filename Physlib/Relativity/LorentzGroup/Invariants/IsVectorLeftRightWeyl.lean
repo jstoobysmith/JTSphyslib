@@ -83,7 +83,7 @@ lemma repLorentz_map_indexBasis (g : SL(2,ℂ)) (d : (Fin 1 ⊕ Fin 3) × Fin 2 
     repLorentz g (f (indexBasis d)) = ∑ e : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       ((((SL2C.toLorentzGroup g).1 e.1 d.1 : ℝ) : ℂ)
         * (g.1 e.2.1 d.2.1 * star (g.1 e.2.2 d.2.2))) • f (indexBasis e) := by
-  rw [indexBasis_apply, ← hf.equivariant, smul_basis_eq_sum, map_sum,
+  rw [indexBasis_apply, ← hf.equivariant, TensorSpecies.smul_basis_eq_sum, map_sum,
     ← indexEquiv.symm.sum_comp]
   refine Finset.sum_congr rfl fun e _ => ?_
   rw [map_smul, Fin.prod_univ_three, mul_assoc, indexBasis_apply]
@@ -213,7 +213,7 @@ metric contraction is `f σ^^^`.
 include hf in
 /-- The image `f σ^^^` of the Pauli tensor is Lorentz invariant. -/
 lemma repLorentz_map_pauliMatrix (g : SL(2,ℂ)) : repLorentz g (f σ^^^) = f σ^^^ :=
-  hf.repLorentz_map_of_invariant toTensor_smul_eq_self g
+  hf.rep_map_of_invariant toTensor_smul_eq_self g
 
 include hf in
 /-- Every Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is a
@@ -287,7 +287,7 @@ lemma isVectorLeftRightWeyl_ofVectorComponents {repLorentz : Representation ℂ 
       rw [Module.Basis.constr_basis, ← indexEquiv.symm_apply_apply φ, ← indexBasis_apply,
         ofVectorComponents_indexBasis, Equiv.apply_symm_apply]
   rw [h]
-  refine isLorentzEquivariant_constr _ fun g φ => ?_
+  refine TensorSpecies.isEquivariant_constr _ fun g φ => ?_
   obtain ⟨⟨μ, l⟩, rfl⟩ := indexEquiv.symm.surjective φ
   rw [Equiv.apply_symm_apply, hT, ← indexEquiv.symm.sum_comp, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun a _ => ?_
