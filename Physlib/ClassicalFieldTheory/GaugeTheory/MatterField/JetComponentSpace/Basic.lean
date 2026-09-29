@@ -56,7 +56,7 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 /-- The space of component functions of the matter field `M`: the span of the symbols
 `∂_s ψ_α` and their conjugates `∂_s ψ̄_α`, where `α` runs over the target space `M.V`. The
 first factor holds the unconjugated symbols, the second the conjugate ones; in each,
-`DerivAlgebraComplex` carries the derivative label `s` and the dual factor the target
+`SpaceTimeDerivAlgebraℂ` carries the derivative label `s` and the dual factor the target
 component `α`.
 
 Only `M.V` enters the space itself; the field's Lorentz and gauge representations and its
@@ -64,8 +64,8 @@ mass weight enter the structure carried on it below. Taking the whole matter fie
 than its value space is what lets that structure be read off `M` instead of being supplied
 by hand at each use. -/
 abbrev JetComponentSpace (M : MatterField jets) : Type :=
-  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V) ×
-  (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))
+  (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V) ×
+  (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))
 
 /-!
 
@@ -76,7 +76,7 @@ abbrev JetComponentSpace (M : MatterField jets) : Type :=
 /-- **The Lorentz action on the jet component space.** Under a Lorentz transformation a
 matter field transforms as `ψ(x) ↦ ρ(Λ) ψ(Λ⁻¹ x)`, so a derivative symbol `∂_s ψ_α` is
 acted on in *both* of its labels: the derivative multiset `s` by the Lorentz action on
-covectors, extended to `DerivAlgebraComplex`, and the target index `α` by the
+covectors, extended to `SpaceTimeDerivAlgebraℂ`, and the target index `α` by the
 contragredient of `ρ`.
 
 Unlike the gauge action, this needs no fibrewise-linearity or finite-dimensionality
@@ -85,27 +85,27 @@ product of representations. The conjugate half is the same with `ρ` replaced by
 conjugate, the symbols `∂_s ψ̄_α` transforming by `star` of the spinor matrix. -/
 noncomputable def JetComponentSpace.repLorentzGroup (M : MatterField jets) :
     Representation ℂ SL(2,ℂ) (JetComponentSpace M) :=
-  (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.dual).prod
-    (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.conj.dual)
+  (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod M.repLorentz.dual).prod
+    (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod M.repLorentz.conj.dual)
 
 @[simp]
 lemma JetComponentSpace.repLorentzGroup_fst (Λ : SL(2,ℂ)) (x : JetComponentSpace M) :
     (JetComponentSpace.repLorentzGroup M Λ x).1
-      = (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.dual) Λ x.1 := rfl
+      = (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod M.repLorentz.dual) Λ x.1 := rfl
 
 @[simp]
 lemma JetComponentSpace.repLorentzGroup_snd (Λ : SL(2,ℂ)) (x : JetComponentSpace M) :
     (JetComponentSpace.repLorentzGroup M Λ x).2
-      = (DerivAlgebraComplex.repLorentzGroup.tprod M.repLorentz.conj.dual) Λ x.2 := rfl
+      = (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod M.repLorentz.conj.dual) Λ x.2 := rfl
 
 /-- On a pure symbol the Lorentz action is diagonal in the two labels: the derivative
-label transforms in `DerivAlgebraComplex`, the target index contragrediently. -/
+label transforms in `SpaceTimeDerivAlgebraℂ`, the target index contragrediently. -/
 @[simp]
-lemma JetComponentSpace.repLorentzGroup_fst_tmul (Λ : SL(2,ℂ)) (a : DerivAlgebraComplex)
+lemma JetComponentSpace.repLorentzGroup_fst_tmul (Λ : SL(2,ℂ)) (a : SpaceTimeDerivAlgebraℂ)
     (φ : Module.Dual ℂ M.V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
+    (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.repLorentzGroup M Λ (a ⊗ₜ[ℂ] φ, y)).1
-      = DerivAlgebraComplex.repLorentzGroup Λ a ⊗ₜ[ℂ] (φ ∘ₗ M.repLorentz Λ⁻¹) := rfl
+      = SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ a ⊗ₜ[ℂ] (φ ∘ₗ M.repLorentz Λ⁻¹) := rfl
 
 /-!
 
@@ -118,38 +118,38 @@ lemma JetComponentSpace.repLorentzGroup_fst_tmul (Λ : SL(2,ℂ)) (a : DerivAlge
   and likewise on the conjugate components.
 
   This is right multiplication by the degree-one element `∂_μ` on the
-  `DerivAlgebraComplex` factor, leaving the target index untouched. It uses a basis of
+  `SpaceTimeDerivAlgebraℂ` factor, leaving the target index untouched. It uses a basis of
   the Lorentz covectors — that is what the index `μ` is — but no basis of `V`. -/
 noncomputable def JetComponentSpace.jetDeriv (μ : Fin 1 ⊕ Fin 3) :
     JetComponentSpace M →ₗ[ℂ] JetComponentSpace M :=
   LinearMap.prodMap
     (TensorProduct.map
-      (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+      (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
       LinearMap.id)
     (TensorProduct.map
-      (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+      (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
       LinearMap.id)
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_fst_tmul (μ : Fin 1 ⊕ Fin 3)
-    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ M.V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
+    (a : SpaceTimeDerivAlgebraℂ) (φ : Module.Dual ℂ M.V)
+    (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.jetDeriv μ (a ⊗ₜ[ℂ] φ, y)).1
-      = (a * DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
+      = (a * SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_snd_tmul (μ : Fin 1 ⊕ Fin 3)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-    (a : DerivAlgebraComplex) (φ : Module.Dual ℂ (ConjModule M.V)) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+    (a : SpaceTimeDerivAlgebraℂ) (φ : Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.jetDeriv μ (x, a ⊗ₜ[ℂ] φ)).2
-      = (a * DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
+      = (a * SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℂ] φ := rfl
 
 /-- **Total derivatives commute.** Mixed partials agree because the derivative labels
   live in a *symmetric* algebra; no basis of `V` is involved. -/
 lemma JetComponentSpace.jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
     (JetComponentSpace.jetDeriv (M := M) μ).comp (JetComponentSpace.jetDeriv ν)
       = (JetComponentSpace.jetDeriv (M := M) ν).comp (JetComponentSpace.jetDeriv μ) := by
-  have hmul : ∀ b c : DerivAlgebraComplex,
+  have hmul : ∀ b c : SpaceTimeDerivAlgebraℂ,
       (LinearMap.mulRight ℂ b).comp (LinearMap.mulRight ℂ c)
         = LinearMap.mulRight ℂ (c * b) :=
     fun b c => LinearMap.ext fun x => by
@@ -169,20 +169,20 @@ lemma JetComponentSpace.jetDeriv_eq_ι (μ : Fin 1 ⊕ Fin 3) :
         (TensorProduct.map
           (LinearMap.mulRight ℂ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
             (Lorentz.complexCoBasis.dualBasis μ))) LinearMap.id) := by
-  rw [JetComponentSpace.jetDeriv, DerivAlgebraComplex.basis_singleton]
+  rw [JetComponentSpace.jetDeriv, SpaceTimeDerivAlgebraℂ.basis_singleton]
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_fst (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace M) :
     (JetComponentSpace.jetDeriv μ v).1
       = TensorProduct.map
-        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
         LinearMap.id v.1 := rfl
 
 @[simp]
 lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpace M) :
     (JetComponentSpace.jetDeriv μ v).2
       = TensorProduct.map
-        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
         LinearMap.id v.2 := rfl
 
 /-!
@@ -195,26 +195,26 @@ lemma JetComponentSpace.jetDeriv_snd (μ : Fin 1 ⊕ Fin 3) (v : JetComponentSpa
   component space, for an arbitrary representation on the other factor. -/
 private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup W]
     [Module ℂ W] (ρ : Representation ℂ SL(2,ℂ) W) (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
-    (w : DerivAlgebraComplex ⊗[ℂ] W) :
-    (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ
+    (w : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W) :
+    (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod ρ) Λ
       (TensorProduct.map
-        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
+        (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))))
         LinearMap.id w) =
     ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
       TensorProduct.map
-        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3))))
-        LinearMap.id ((DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ w) := by
-  have hsym : DerivAlgebraComplex.repLorentzGroup Λ
-      (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+        (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis ({a} : Multiset (Fin 1 ⊕ Fin 3))))
+        LinearMap.id ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod ρ) Λ w) := by
+  have hsym : SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ
+      (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
       ∑ a, (((Lorentz.SL2C.toLorentzGroup Λ).1 a μ : ℝ) : ℂ) •
-        DerivAlgebraComplex.basis ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
-    rw [DerivAlgebraComplex.basis_singleton, DerivAlgebraComplex.repLorentzGroup_apply_ι,
+        SpaceTimeDerivAlgebraℂ.basis ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
+    rw [SpaceTimeDerivAlgebraℂ.basis_singleton, SpaceTimeDerivAlgebraℂ.repLorentzGroup_apply_ι,
       Lorentz.CoℂModule.SL2CRep_dual_dualBasis, map_sum]
     exact Finset.sum_congr rfl fun a _ => by
-      rw [map_smul, DerivAlgebraComplex.basis_singleton]
-  have hrep : ∀ (q : DerivAlgebraComplex) (f : W),
-      (DerivAlgebraComplex.repLorentzGroup.tprod ρ) Λ (q ⊗ₜ[ℂ] f) =
-        (DerivAlgebraComplex.repLorentzGroup Λ q) ⊗ₜ[ℂ] (ρ Λ f) := fun _ _ => rfl
+      rw [map_smul, SpaceTimeDerivAlgebraℂ.basis_singleton]
+  have hrep : ∀ (q : SpaceTimeDerivAlgebraℂ) (f : W),
+      (SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod ρ) Λ (q ⊗ₜ[ℂ] f) =
+        (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ q) ⊗ₜ[ℂ] (ρ Λ f) := fun _ _ => rfl
   induction w using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy =>
@@ -222,7 +222,7 @@ private lemma repLorentzGroup_tprod_mulRight_jetSymbol {W : Type*} [AddCommGroup
     exact Finset.sum_congr rfl fun a _ => by rw [map_add, smul_add]
   | tmul q f =>
     rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply, hrep, hrep,
-      DerivAlgebraComplex.repLorentzGroup_apply_mul, hsym, Finset.mul_sum,
+      SpaceTimeDerivAlgebraℂ.repLorentzGroup_apply_mul, hsym, Finset.mul_sum,
       TensorProduct.sum_tmul]
     exact Finset.sum_congr rfl fun a _ => by
       rw [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply,
@@ -266,13 +266,13 @@ noncomputable def JetComponentSpace.comap (f : M.V →ₗ[ℂ] N.V) :
     (TensorProduct.map LinearMap.id (Module.Dual.transpose (ConjModule.map f)))
 
 @[simp]
-lemma JetComponentSpace.comap_fst_tmul (f : M.V →ₗ[ℂ] N.V) (a : DerivAlgebraComplex)
-    (φ : Module.Dual ℂ N.V) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
+lemma JetComponentSpace.comap_fst_tmul (f : M.V →ₗ[ℂ] N.V) (a : SpaceTimeDerivAlgebraℂ)
+    (φ : Module.Dual ℂ N.V) (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
     (JetComponentSpace.comap f (a ⊗ₜ[ℂ] φ, y)).1 = a ⊗ₜ[ℂ] (φ ∘ₗ f) := rfl
 
 @[simp]
 lemma JetComponentSpace.comap_snd_tmul (f : M.V →ₗ[ℂ] N.V)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) (a : DerivAlgebraComplex)
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ N.V) (a : SpaceTimeDerivAlgebraℂ)
     (φ : Module.Dual ℂ (ConjModule N.V)) :
     (JetComponentSpace.comap f (x, a ⊗ₜ[ℂ] φ)).2 = a ⊗ₜ[ℂ] (φ ∘ₗ ConjModule.map f) := rfl
 
@@ -342,11 +342,11 @@ lemma JetComponentSpace.comap_comp_repLorentzGroup (f : M.V →ₗ[ℂ] N.V)
         (TensorProduct.map LinearMap.id
           (Module.Dual.transpose (ConjModule.map (k := ℂ) f)))).comp
       (LinearMap.prodMap
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (N.repLorentz.dual Λ))
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (N.repLorentz.conj.dual Λ)))
+        (TensorProduct.map (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ) (N.repLorentz.dual Λ))
+        (TensorProduct.map (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ) (N.repLorentz.conj.dual Λ)))
     = (LinearMap.prodMap
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (M.repLorentz.dual Λ))
-        (TensorProduct.map (DerivAlgebraComplex.repLorentzGroup Λ) (M.repLorentz.conj.dual Λ))).comp
+        (TensorProduct.map (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ) (M.repLorentz.dual Λ))
+        (TensorProduct.map (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ) (M.repLorentz.conj.dual Λ))).comp
       (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
         (TensorProduct.map LinearMap.id
           (Module.Dual.transpose (ConjModule.map (k := ℂ) f))))
@@ -379,24 +379,24 @@ the bosonic and fermionic algebras, where it defines their mass-dimension gradin
 
 /-- The mass-weight scaling on the jet component space of a field of mass weight `w`
   (twice the mass dimension): the generator `∂_s φ_α` and its conjugate are scaled by
-  `c ^ (w + 2 |s|)`, through the derivative-degree scaling `DerivAlgebraComplex.gradeScale`
+  `c ^ (w + 2 |s|)`, through the derivative-degree scaling `SpaceTimeDerivAlgebraℂ.gradeScale`
   on the derivative label. -/
 noncomputable def JetComponentSpace.massWeightScale (w : ℕ) (c : ℂ) :
     JetComponentSpace M →ₗ[ℂ] JetComponentSpace M :=
   c ^ w • LinearMap.prodMap
-    (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
-    (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
+    (TensorProduct.map (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
+    (TensorProduct.map (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap LinearMap.id)
 
 /-- On an unconjugated component function `∂_s φ_α` the mass-weight scaling is
   multiplication by `c ^ (w + 2 |s|)`. -/
 lemma JetComponentSpace.massWeightScale_fst_basis_tmul (w : ℕ) (c : ℂ)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V)
-    (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
+    (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)) :
     (JetComponentSpace.massWeightScale w c
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, y) : JetComponentSpace M)).1
-      = c ^ (w + 2 * Multiset.card s) • (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) := by
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, y) : JetComponentSpace M)).1
+      = c ^ (w + 2 * Multiset.card s) • (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) := by
   simp only [massWeightScale, LinearMap.smul_apply, Prod.smul_fst, LinearMap.prodMap_apply,
-    TensorProduct.map_tmul, AlgHom.toLinearMap_apply, DerivAlgebraComplex.gradeScale_basis,
+    TensorProduct.map_tmul, AlgHom.toLinearMap_apply, SpaceTimeDerivAlgebraℂ.gradeScale_basis,
     LinearMap.id_apply, TensorProduct.smul_tmul', ← pow_mul, pow_add, mul_smul,
     mul_comm 2 (Multiset.card s)]
 
@@ -404,32 +404,32 @@ lemma JetComponentSpace.massWeightScale_fst_basis_tmul (w : ℕ) (c : ℂ)
 lemma JetComponentSpace.massWeightScale_fst (w : ℕ) (c : ℂ) (v : JetComponentSpace M) :
     (JetComponentSpace.massWeightScale w c v).1
       = c ^ w • TensorProduct.map
-          (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.1 := rfl
+          (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.1 := rfl
 
 @[simp]
 lemma JetComponentSpace.massWeightScale_snd (w : ℕ) (c : ℂ) (v : JetComponentSpace M) :
     (JetComponentSpace.massWeightScale w c v).2
       = c ^ w • TensorProduct.map
-          (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.2 := rfl
+          (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap LinearMap.id v.2 := rfl
 
 /-- The derivative-degree scaling intertwines multiplication by a single derivative
   symbol up to one factor of the scaling parameter, on either half of the component
   space. -/
 private lemma gradeScale_map_mulRight_basis {W : Type*} [AddCommGroup W] [Module ℂ W]
-    (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : DerivAlgebraComplex ⊗[ℂ] W) :
-    TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap LinearMap.id
+    (c : ℂ) (μ : Fin 1 ⊕ Fin 3) (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W) :
+    TensorProduct.map (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap LinearMap.id
       (TensorProduct.map (LinearMap.mulRight ℂ
-        (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id x)
+        (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id x)
     = c ^ 2 • TensorProduct.map (LinearMap.mulRight ℂ
-        (DerivAlgebraComplex.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id
-        (TensorProduct.map (DerivAlgebraComplex.gradeScale (c ^ 2)).toLinearMap
+        (SpaceTimeDerivAlgebraℂ.basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) LinearMap.id
+        (TensorProduct.map (SpaceTimeDerivAlgebraℂ.gradeScale (c ^ 2)).toLinearMap
           LinearMap.id x) := by
   induction x using TensorProduct.induction_on with
   | zero => simp only [map_zero, smul_zero]
   | add a b ha hb => simp only [map_add, ha, hb, smul_add]
   | tmul a y =>
     simp only [TensorProduct.map_tmul, LinearMap.mulRight_apply, LinearMap.id_apply,
-      AlgHom.toLinearMap_apply, map_mul, DerivAlgebraComplex.gradeScale_basis,
+      AlgHom.toLinearMap_apply, map_mul, SpaceTimeDerivAlgebraℂ.gradeScale_basis,
       Multiset.card_singleton, pow_one, mul_smul_comm, TensorProduct.smul_tmul']
 
 /-- **The total derivative carries mass weight two** on the component space: the scaling
@@ -439,15 +439,15 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (w : ℕ) (c : ℂ) (μ : Fin 1
       = c ^ 2 • (JetComponentSpace.jetDeriv μ).comp
           (JetComponentSpace.massWeightScale w c) := by
   have key := fun {W : Type _} [AddCommGroup W] [Module ℂ W]
-      (x : DerivAlgebraComplex ⊗[ℂ] W) => gradeScale_map_mulRight_basis c μ x
+      (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W) => gradeScale_map_mulRight_basis c μ x
   refine LinearMap.ext fun v => Prod.ext ?_ ?_
   · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_fst,
       JetComponentSpace.massWeightScale_fst, JetComponentSpace.jetDeriv_fst, map_smul]
-    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V => c ^ w • z)
+    exact (congrArg (fun z : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V => c ^ w • z)
       (key v.1)).trans (smul_comm _ _ _)
   · simp only [LinearMap.comp_apply, LinearMap.smul_apply, Prod.smul_snd,
       JetComponentSpace.massWeightScale_snd, JetComponentSpace.jetDeriv_snd, map_smul]
-    exact (congrArg (fun z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) =>
+    exact (congrArg (fun z : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) =>
       c ^ w • z) (key v.2)).trans (smul_comm _ _ _)
 
 /-- **The mass-weight scaling is natural in the target space.** It commutes with every
@@ -503,17 +503,17 @@ def prodPiEquiv {A B : ι → Type*} [∀ i, AddCommGroup (A i)] [∀ i, Module 
   the symbols of the summands: the dual distributes over the finite product and the
   derivative label is untouched. -/
 noncomputable def JetComponentSpace.fstPiEquiv :
-    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (∀ i, E i))
-      ≃ₗ[ℂ] ∀ i, DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (E i) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+    (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (∀ i, E i))
+      ≃ₗ[ℂ] ∀ i, SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (E i) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeDerivAlgebraℂ)
       (LinearMap.lsum ℂ E ℂ).symm).trans
-    (TensorProduct.piRight ℂ ℂ DerivAlgebraComplex fun i => Module.Dual ℂ (E i))
+    (TensorProduct.piRight ℂ ℂ SpaceTimeDerivAlgebraℂ fun i => Module.Dual ℂ (E i))
 
 /-- On a pure symbol the splitting restricts the target index to one summand: the
   component `∂_s ψ_α` of the direct sum in the summand `i` is `∂_s` of the covector `φ`
   precomposed with the inclusion of that summand. -/
 @[simp]
-lemma JetComponentSpace.fstPiEquiv_tmul (a : DerivAlgebraComplex)
+lemma JetComponentSpace.fstPiEquiv_tmul (a : SpaceTimeDerivAlgebraℂ)
     (φ : Module.Dual ℂ (∀ i, E i)) (i : ι) :
     fstPiEquiv E (a ⊗ₜ[ℂ] φ) i = a ⊗ₜ[ℂ] (φ ∘ₗ LinearMap.single ℂ E i) := rfl
 
@@ -521,17 +521,17 @@ lemma JetComponentSpace.fstPiEquiv_tmul (a : DerivAlgebraComplex)
   same argument applied to the conjugate modules, using that conjugation commutes with
   products. -/
 noncomputable def JetComponentSpace.sndPiEquiv :
-    (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (∀ i, E i)))
-      ≃ₗ[ℂ] ∀ i, DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (E i)) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+    (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (∀ i, E i)))
+      ≃ₗ[ℂ] ∀ i, SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (E i)) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeDerivAlgebraℂ)
       (((ConjModule.piEquiv (k := ℂ) E).symm.dualMap).trans
         (LinearMap.lsum ℂ (fun i => ConjModule (E i)) ℂ).symm)).trans
-    (TensorProduct.piRight ℂ ℂ DerivAlgebraComplex fun i => Module.Dual ℂ (ConjModule (E i)))
+    (TensorProduct.piRight ℂ ℂ SpaceTimeDerivAlgebraℂ fun i => Module.Dual ℂ (ConjModule (E i)))
 
 /-- On a pure conjugate symbol the splitting again restricts the target index to one
   summand, the inclusion being read through the conjugation. -/
 @[simp]
-lemma JetComponentSpace.sndPiEquiv_tmul (a : DerivAlgebraComplex)
+lemma JetComponentSpace.sndPiEquiv_tmul (a : SpaceTimeDerivAlgebraℂ)
     (ψ : Module.Dual ℂ (ConjModule (∀ i, E i))) (i : ι) :
     sndPiEquiv E (a ⊗ₜ[ℂ] ψ) i
       = a ⊗ₜ[ℂ] (ψ ∘ₗ ConjModule.map (k := ℂ) (LinearMap.single ℂ E i)) := rfl
@@ -540,7 +540,7 @@ lemma JetComponentSpace.sndPiEquiv_tmul (a : DerivAlgebraComplex)
   the projection onto that summand: a component function of the summand `i`, read as a
   component function of the whole, is `φ ∘ proj i`. -/
 lemma JetComponentSpace.fstPiEquiv_symm_single (i : ι)
-    (z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (E i)) :
+    (z : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (E i)) :
     (fstPiEquiv E).symm (Pi.single i z)
       = TensorProduct.map LinearMap.id (Module.Dual.transpose (LinearMap.proj i)) z := by
   refine (fstPiEquiv E).injective (funext fun j => ?_)
@@ -564,7 +564,7 @@ lemma JetComponentSpace.fstPiEquiv_symm_single (i : ι)
 /-- The conjugate half of the splitting behaves in the same way, the projection read
   through the conjugation. -/
 lemma JetComponentSpace.sndPiEquiv_symm_single (i : ι)
-    (z : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (E i))) :
+    (z : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (E i))) :
     (sndPiEquiv E).symm (Pi.single i z)
       = TensorProduct.map LinearMap.id
           (Module.Dual.transpose (ConjModule.map (k := ℂ) (LinearMap.proj i))) z := by

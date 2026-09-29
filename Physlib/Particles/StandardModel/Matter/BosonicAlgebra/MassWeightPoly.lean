@@ -76,30 +76,30 @@ lemma monomialₗ_apply (n : ℕ) (x : BosonicAlgebra M) :
   image under `k`. The two halves of the component space differ only in the inclusion `k`
   of the symbols into the bosonic algebra, so both are instances of this map. -/
 noncomputable def halfPoly {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M) :
-    DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] Polynomial (BosonicAlgebra M) :=
-  TensorProduct.lift (DerivAlgebraComplex.basis.constr ℂ fun s =>
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M) :
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] Polynomial (BosonicAlgebra M) :=
+  TensorProduct.lift (SpaceTimeDerivAlgebraℂ.basis.constr ℂ fun s =>
     (monomialₗ (w + 2 * Multiset.card s)).comp
-      (k.comp (TensorProduct.mk ℂ DerivAlgebraComplex W (DerivAlgebraComplex.basis s))))
+      (k.comp (TensorProduct.mk ℂ SpaceTimeDerivAlgebraℂ W (SpaceTimeDerivAlgebraℂ.basis s))))
 
 /-- On the symbol `∂_s φ` the half mass-weight polynomial is the monomial of degree
   `w + 2 |s|`: the field contributes `w` and each derivative two. -/
 lemma halfPoly_basis_tmul {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M)
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (x : W) :
-    halfPoly w k (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] x) =
+    halfPoly w k (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] x) =
       Polynomial.monomial (w + 2 * Multiset.card s)
-        (k (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] x)) := by
+        (k (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] x)) := by
   rw [halfPoly, TensorProduct.lift.tmul, Module.Basis.constr_basis]
   rfl
 
 /-- The inclusion of the unconjugated symbols into the bosonic algebra. -/
-noncomputable def ιFst : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
+noncomputable def ιFst : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
   (SymmetricAlgebra.ι ℂ (JetComponentSpace M)).comp (LinearMap.inl ℂ _ _)
 
 /-- The inclusion of the conjugate symbols into the bosonic algebra. -/
 noncomputable def ιSnd :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] BosonicAlgebra M :=
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] BosonicAlgebra M :=
   (SymmetricAlgebra.ι ℂ (JetComponentSpace M)).comp (LinearMap.inr ℂ _ _)
 
 /-- The mass-weight polynomial of a component function of a field of mass weight `w`: the
@@ -115,10 +115,10 @@ lemma jetComponentPoly_apply (w : ℕ) (x : JetComponentSpace M) :
 /-- On an unconjugated derivative monomial the component map is a monomial eigenvector. -/
 @[simp]
 lemma jetComponentPoly_inl (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V) :
-    jetComponentPoly w ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) =
+    jetComponentPoly w ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) =
       Polynomial.monomial (w + 2 * Multiset.card s)
         (SymmetricAlgebra.ι ℂ (JetComponentSpace M)
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)) := by
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)) := by
   rw [jetComponentPoly_apply, halfPoly_basis_tmul, map_zero, add_zero]
   rfl
 
@@ -126,10 +126,10 @@ lemma jetComponentPoly_inl (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Modu
 @[simp]
 lemma jetComponentPoly_inr (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule M.V)) :
-    jetComponentPoly w ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) =
+    jetComponentPoly w ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) =
       Polynomial.monomial (w + 2 * Multiset.card s)
         (SymmetricAlgebra.ι ℂ (JetComponentSpace M)
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)) := by
+          ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)) := by
   rw [jetComponentPoly_apply, halfPoly_basis_tmul, map_zero, zero_add]
   rfl
 
@@ -201,14 +201,14 @@ lemma massWeightPoly_ofConjField (w : ℕ) (φ : Module.Dual ℂ (ConjModule M.V
   symbol it graded. The derivative monomials span, so it is enough to check this on the
   multiset basis. -/
 lemma halfPoly_eval_one {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M)
-    (y : DerivAlgebraComplex ⊗[ℂ] W) : (halfPoly w k y).eval 1 = k y := by
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M)
+    (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W) : (halfPoly w k y).eval 1 = k y := by
   induction y using TensorProduct.induction_on with
   | zero => rw [map_zero, Polynomial.eval_zero, map_zero]
   | add a b ha hb => rw [map_add, Polynomial.eval_add, ha, hb, map_add]
   | tmul a x =>
-    have ha : a ∈ Submodule.span ℂ (Set.range DerivAlgebraComplex.basis) := by
-      rw [DerivAlgebraComplex.basis.span_eq]
+    have ha : a ∈ Submodule.span ℂ (Set.range SpaceTimeDerivAlgebraℂ.basis) := by
+      rw [SpaceTimeDerivAlgebraℂ.basis.span_eq]
       trivial
     induction ha using Submodule.span_induction with
     | mem b hb =>

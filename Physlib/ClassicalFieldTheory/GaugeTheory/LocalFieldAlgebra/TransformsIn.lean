@@ -93,26 +93,26 @@ variable (T)
 /-- The unconjugated symbols of a fermionic species, as a linear map on the unconjugated
   half of its component space. -/
 noncomputable def fermionSymbolMap (i : T.FermionSpecies) :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.FermionValue i) →ₗ[ℂ] T.LocalFieldAlgebra :=
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.FermionValue i) →ₗ[ℂ] T.LocalFieldAlgebra :=
   T.ιFermion i ∘ₗ LinearMap.inl ℂ _ _
 
 /-- The conjugate symbols of a fermionic species, as a linear map on the conjugate half of
   its component space. -/
 noncomputable def conjFermionSymbolMap (i : T.FermionSpecies) :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i)) →ₗ[ℂ]
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i)) →ₗ[ℂ]
       T.LocalFieldAlgebra :=
   T.ιFermion i ∘ₗ LinearMap.inr ℂ _ _
 
 /-- The unconjugated symbols of a bosonic species, as a linear map on the unconjugated
   half of its component space. -/
 noncomputable def bosonSymbolMap (j : T.BosonSpecies) :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.BosonValue j) →ₗ[ℂ] T.LocalFieldAlgebra :=
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.BosonValue j) →ₗ[ℂ] T.LocalFieldAlgebra :=
   T.ιBoson j ∘ₗ LinearMap.inl ℂ _ _
 
 /-- The conjugate symbols of a bosonic species, as a linear map on the conjugate half of
   its component space. -/
 noncomputable def conjBosonSymbolMap (j : T.BosonSpecies) :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j)) →ₗ[ℂ]
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j)) →ₗ[ℂ]
       T.LocalFieldAlgebra :=
   T.ιBoson j ∘ₗ LinearMap.inr ℂ _ _
 
@@ -120,41 +120,41 @@ noncomputable def conjBosonSymbolMap (j : T.BosonSpecies) :
   derivative multiset `s`, indexed by the covectors of the value space. -/
 noncomputable def fermionSymbol (i : T.FermionSpecies) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (T.FermionValue i) →ₗ[ℂ] T.LocalFieldAlgebra :=
-  T.fermionSymbolMap i ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)
+  T.fermionSymbolMap i ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)
 
 /-- The conjugate derivative symbols `∂_s ψ̄^φ` of a fermionic species, indexed by the
   covectors of the conjugate value space. -/
 noncomputable def conjFermionSymbol (i : T.FermionSpecies) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule (T.FermionValue i)) →ₗ[ℂ] T.LocalFieldAlgebra :=
-  T.conjFermionSymbolMap i ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)
+  T.conjFermionSymbolMap i ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)
 
 /-- The derivative symbols `∂_s φ^χ` of a bosonic species. -/
 noncomputable def bosonSymbol (j : T.BosonSpecies) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (T.BosonValue j) →ₗ[ℂ] T.LocalFieldAlgebra :=
-  T.bosonSymbolMap j ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)
+  T.bosonSymbolMap j ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)
 
 /-- The conjugate derivative symbols `∂_s φ̄^χ` of a bosonic species. -/
 noncomputable def conjBosonSymbol (j : T.BosonSpecies) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ (ConjModule (T.BosonValue j)) →ₗ[ℂ] T.LocalFieldAlgebra :=
-  T.conjBosonSymbolMap j ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)
+  T.conjBosonSymbolMap j ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)
 
 variable {T}
 
 lemma fermionSymbol_apply (i : T.FermionSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (T.FermionValue i)) :
-    T.fermionSymbol i s φ = T.ιFermion i (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) := rfl
+    T.fermionSymbol i s φ = T.ιFermion i (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) := rfl
 
 lemma conjFermionSymbol_apply (i : T.FermionSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.FermionValue i))) :
-    T.conjFermionSymbol i s φ = T.ιFermion i (0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) := rfl
+    T.conjFermionSymbol i s φ = T.ιFermion i (0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) := rfl
 
 lemma bosonSymbol_apply (j : T.BosonSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (T.BosonValue j)) :
-    T.bosonSymbol j s φ = T.ιBoson j (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) := rfl
+    T.bosonSymbol j s φ = T.ιBoson j (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) := rfl
 
 lemma conjBosonSymbol_apply (j : T.BosonSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.BosonValue j))) :
-    T.conjBosonSymbol j s φ = T.ιBoson j (0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) := rfl
+    T.conjBosonSymbol j s φ = T.ιBoson j (0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) := rfl
 
 /-!
 
@@ -174,11 +174,11 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.
   jet gauge action with `JetComponentSpace.repDual`. -/
 private lemma transformsIn_of_repDual (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
     (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
-    (Φ : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] T.LocalFieldAlgebra)
-    (hΦ : ∀ (U : GJ) (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V),
+    (Φ : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] T.LocalFieldAlgebra)
+    (hΦ : ∀ (U : GJ) (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V),
       T.repJet U (Φ x) = Φ (JetComponentSpace.repDual rep hlin U x)) :
     LocalGaugeData.TransformsIn (B := T.LocalFieldAlgebra) T.repJet rep
-      (fun s => Φ ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)) := by
+      (fun s => Φ ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)) := by
   intro U φ s
   rw [LinearMap.comp_apply, TensorProduct.mk_apply, hΦ, JetComponentSpace.repDual_basis_tmul,
     map_multiset_sum, Multiset.map_map]
@@ -186,7 +186,7 @@ private lemma transformsIn_of_repDual (rep : Representation ℂ GJ (JetRing ⊗[
 
 /-- The unconjugated fermionic symbol map intertwines the jet gauge actions. -/
 lemma repJet_fermionSymbolMap (i : T.FermionSpecies) (U : GJ)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.FermionValue i)) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.FermionValue i)) :
     T.repJet U (T.fermionSymbolMap i x)
       = T.fermionSymbolMap i
         (JetComponentSpace.repDual (T.fermion i).repJet (T.fermion i).repJet_smul U x) := by
@@ -196,7 +196,7 @@ lemma repJet_fermionSymbolMap (i : T.FermionSpecies) (U : GJ)
 
 /-- The conjugate fermionic symbol map intertwines the jet gauge actions. -/
 lemma repJet_conjFermionSymbolMap (i : T.FermionSpecies) (U : GJ)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i))) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i))) :
     T.repJet U (T.conjFermionSymbolMap i x)
       = T.conjFermionSymbolMap i
         (JetComponentSpace.repDual (JetComponentSpace.repConj (T.fermion i).repJet)
@@ -207,7 +207,7 @@ lemma repJet_conjFermionSymbolMap (i : T.FermionSpecies) (U : GJ)
 
 /-- The unconjugated bosonic symbol map intertwines the jet gauge actions. -/
 lemma repJet_bosonSymbolMap (j : T.BosonSpecies) (U : GJ)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.BosonValue j)) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.BosonValue j)) :
     T.repJet U (T.bosonSymbolMap j x)
       = T.bosonSymbolMap j
         (JetComponentSpace.repDual (T.boson j).repJet (T.boson j).repJet_smul U x) := by
@@ -217,7 +217,7 @@ lemma repJet_bosonSymbolMap (j : T.BosonSpecies) (U : GJ)
 
 /-- The conjugate bosonic symbol map intertwines the jet gauge actions. -/
 lemma repJet_conjBosonSymbolMap (j : T.BosonSpecies) (U : GJ)
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j))) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j))) :
     T.repJet U (T.conjBosonSymbolMap j x)
       = T.conjBosonSymbolMap j
         (JetComponentSpace.repDual (JetComponentSpace.repConj (T.boson j).repJet)
@@ -263,7 +263,7 @@ end GaugeLaw
 Each symbol map intertwines the Lorentz action on `J(T)` with the tensor product of the
 action on derivative labels and the contragredient action on the value index, and the law
 of the symbols is that of the derivative monomials,
-`DerivAlgebraComplex.repLorentzGroup_basis_ofFn`.
+`SpaceTimeDerivAlgebraℂ.repLorentzGroup_basis_ofFn`.
 
 -/
 
@@ -275,15 +275,15 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
   action with the tensor product of the action on derivative labels and a representation on
   the covectors. -/
 private lemma isLorentzDerivTransforms_of_tprod (rep : Representation ℂ SL(2,ℂ) V)
-    (Φ : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] T.LocalFieldAlgebra)
-    (hΦ : ∀ (Λ : SL(2,ℂ)) (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V),
+    (Φ : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] T.LocalFieldAlgebra)
+    (hΦ : ∀ (Λ : SL(2,ℂ)) (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V),
       T.repLorentzGroup Λ (Φ x)
-        = Φ ((DerivAlgebraComplex.repLorentzGroup.tprod rep.dual) Λ x)) :
+        = Φ ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod rep.dual) Λ x)) :
     IsLorentzDerivTransforms (A := T.LocalFieldAlgebra) T.repLorentzGroup rep
-      (fun s => Φ ∘ₗ TensorProduct.mk ℂ _ _ (DerivAlgebraComplex.basis s)) := by
+      (fun s => Φ ∘ₗ TensorProduct.mk ℂ _ _ (SpaceTimeDerivAlgebraℂ.basis s)) := by
   intro Λ n l φ
   rw [LinearMap.comp_apply, TensorProduct.mk_apply, hΦ, Representation.tprod_apply,
-    TensorProduct.map_tmul, DerivAlgebraComplex.repLorentzGroup_basis_ofFn,
+    TensorProduct.map_tmul, SpaceTimeDerivAlgebraℂ.repLorentzGroup_basis_ofFn,
     TensorProduct.sum_tmul, map_sum]
   refine Finset.sum_congr rfl fun p _ => ?_
   rw [← TensorProduct.smul_tmul', map_smul]
@@ -291,20 +291,20 @@ private lemma isLorentzDerivTransforms_of_tprod (rep : Representation ℂ SL(2,�
 
 /-- The unconjugated fermionic symbol map intertwines the Lorentz actions. -/
 lemma repLorentzGroup_fermionSymbolMap (i : T.FermionSpecies) (Λ : SL(2,ℂ))
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.FermionValue i)) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.FermionValue i)) :
     T.repLorentzGroup Λ (T.fermionSymbolMap i x)
       = T.fermionSymbolMap i
-        ((DerivAlgebraComplex.repLorentzGroup.tprod (T.fermion i).repLorentz.dual) Λ x) := by
+        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod (T.fermion i).repLorentz.dual) Λ x) := by
   rw [fermionSymbolMap, LinearMap.comp_apply, LinearMap.comp_apply, repLorentzGroup_ιFermion]
   exact congrArg (T.ιFermion i) (Prod.ext (JetComponentSpace.repLorentzGroup_fst _ _)
     ((JetComponentSpace.repLorentzGroup_snd _ _).trans (map_zero _)))
 
 /-- The conjugate fermionic symbol map intertwines the Lorentz actions. -/
 lemma repLorentzGroup_conjFermionSymbolMap (i : T.FermionSpecies) (Λ : SL(2,ℂ))
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i))) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i))) :
     T.repLorentzGroup Λ (T.conjFermionSymbolMap i x)
       = T.conjFermionSymbolMap i
-        ((DerivAlgebraComplex.repLorentzGroup.tprod (T.fermion i).repLorentz.conj.dual) Λ x) := by
+        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod (T.fermion i).repLorentz.conj.dual) Λ x) := by
   rw [conjFermionSymbolMap, LinearMap.comp_apply, LinearMap.comp_apply, repLorentzGroup_ιFermion]
   exact congrArg (T.ιFermion i)
     (Prod.ext ((JetComponentSpace.repLorentzGroup_fst _ _).trans (map_zero _))
@@ -312,20 +312,20 @@ lemma repLorentzGroup_conjFermionSymbolMap (i : T.FermionSpecies) (Λ : SL(2,ℂ
 
 /-- The unconjugated bosonic symbol map intertwines the Lorentz actions. -/
 lemma repLorentzGroup_bosonSymbolMap (j : T.BosonSpecies) (Λ : SL(2,ℂ))
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (T.BosonValue j)) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (T.BosonValue j)) :
     T.repLorentzGroup Λ (T.bosonSymbolMap j x)
       = T.bosonSymbolMap j
-        ((DerivAlgebraComplex.repLorentzGroup.tprod (T.boson j).repLorentz.dual) Λ x) := by
+        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod (T.boson j).repLorentz.dual) Λ x) := by
   rw [bosonSymbolMap, LinearMap.comp_apply, LinearMap.comp_apply, repLorentzGroup_ιBoson]
   exact congrArg (T.ιBoson j) (Prod.ext (JetComponentSpace.repLorentzGroup_fst _ _)
     ((JetComponentSpace.repLorentzGroup_snd _ _).trans (map_zero _)))
 
 /-- The conjugate bosonic symbol map intertwines the Lorentz actions. -/
 lemma repLorentzGroup_conjBosonSymbolMap (j : T.BosonSpecies) (Λ : SL(2,ℂ))
-    (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j))) :
+    (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.BosonValue j))) :
     T.repLorentzGroup Λ (T.conjBosonSymbolMap j x)
       = T.conjBosonSymbolMap j
-        ((DerivAlgebraComplex.repLorentzGroup.tprod (T.boson j).repLorentz.conj.dual) Λ x) := by
+        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod (T.boson j).repLorentz.conj.dual) Λ x) := by
   rw [conjBosonSymbolMap, LinearMap.comp_apply, LinearMap.comp_apply, repLorentzGroup_ιBoson]
   exact congrArg (T.ιBoson j)
     (Prod.ext ((JetComponentSpace.repLorentzGroup_fst _ _).trans (map_zero _))

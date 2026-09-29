@@ -77,30 +77,30 @@ lemma monomialₗ_apply (n : ℕ) (x : FermionicAlgebra M) :
   under `k`. The two halves of the component space differ only in the inclusion `k` of the
   symbols into the fermionic algebra, so both are instances of this map. -/
 noncomputable def halfPoly {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M) :
-    DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] Polynomial (FermionicAlgebra M) :=
-  TensorProduct.lift (DerivAlgebraComplex.basis.constr ℂ fun s =>
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M) :
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] Polynomial (FermionicAlgebra M) :=
+  TensorProduct.lift (SpaceTimeDerivAlgebraℂ.basis.constr ℂ fun s =>
     (monomialₗ (w + 2 * Multiset.card s)).comp
-      (k.comp (TensorProduct.mk ℂ DerivAlgebraComplex W (DerivAlgebraComplex.basis s))))
+      (k.comp (TensorProduct.mk ℂ SpaceTimeDerivAlgebraℂ W (SpaceTimeDerivAlgebraℂ.basis s))))
 
 /-- On the symbol `∂_s ψ` the half mass-weight polynomial is the monomial of degree
   `w + 2 |s|`: the field contributes `w` and each derivative two. -/
 lemma halfPoly_basis_tmul {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M)
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (x : W) :
-    halfPoly w k (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] x) =
+    halfPoly w k (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] x) =
       Polynomial.monomial (w + 2 * Multiset.card s)
-        (k (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] x)) := by
+        (k (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] x)) := by
   rw [halfPoly, TensorProduct.lift.tmul, Module.Basis.constr_basis]
   rfl
 
 /-- The inclusion of the unconjugated symbols into the fermionic algebra. -/
-noncomputable def ιFst : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] FermionicAlgebra M :=
+noncomputable def ιFst : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] FermionicAlgebra M :=
   (ExteriorAlgebra.ι ℂ).comp (LinearMap.inl ℂ _ _)
 
 /-- The inclusion of the conjugate symbols into the fermionic algebra. -/
 noncomputable def ιSnd :
-    DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] FermionicAlgebra M :=
+    SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] FermionicAlgebra M :=
   (ExteriorAlgebra.ι ℂ).comp (LinearMap.inr ℂ _ _)
 
 /-- The mass-weight polynomial of a component function of a field of mass weight `w`: the
@@ -116,10 +116,10 @@ lemma jetComponentPoly_apply (w : ℕ) (x : JetComponentSpace M) :
 /-- On an unconjugated derivative monomial the component map is a monomial eigenvector. -/
 @[simp]
 lemma jetComponentPoly_inl (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V) :
-    jetComponentPoly w ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) =
+    jetComponentPoly w ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) =
       Polynomial.monomial (w + 2 * Multiset.card s)
         (ExteriorAlgebra.ι ℂ
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)) := by
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)) := by
   rw [jetComponentPoly_apply, halfPoly_basis_tmul, map_zero, add_zero]
   rfl
 
@@ -127,10 +127,10 @@ lemma jetComponentPoly_inl (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Modu
 @[simp]
 lemma jetComponentPoly_inr (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule M.V)) :
-    jetComponentPoly w ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) =
+    jetComponentPoly w ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) =
       Polynomial.monomial (w + 2 * Multiset.card s)
         (ExteriorAlgebra.ι ℂ
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)) := by
+          ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)) := by
   rw [jetComponentPoly_apply, halfPoly_basis_tmul, map_zero, zero_add]
   rfl
 
@@ -144,15 +144,15 @@ lemma jetComponentPoly_inr (w : ℕ) (s : Multiset (Fin 1 ⊕ Fin 3))
   spanning set on which the square-zero condition is checked. -/
 private lemma basisTmul_span_top {W : Type} [AddCommGroup W] [Module ℂ W] :
     Submodule.span ℂ (Set.range fun p : Multiset (Fin 1 ⊕ Fin 3) × W =>
-      DerivAlgebraComplex.basis p.1 ⊗ₜ[ℂ] p.2) = ⊤ := by
+      SpaceTimeDerivAlgebraℂ.basis p.1 ⊗ₜ[ℂ] p.2) = ⊤ := by
   rw [eq_top_iff]
   rintro y -
   induction y using TensorProduct.induction_on with
   | zero => exact Submodule.zero_mem _
   | add a b ha hb => exact Submodule.add_mem _ ha hb
   | tmul a x =>
-    have ha : a ∈ Submodule.span ℂ (Set.range DerivAlgebraComplex.basis) := by
-      rw [DerivAlgebraComplex.basis.span_eq]
+    have ha : a ∈ Submodule.span ℂ (Set.range SpaceTimeDerivAlgebraℂ.basis) := by
+      rw [SpaceTimeDerivAlgebraℂ.basis.span_eq]
       trivial
     induction ha using Submodule.span_induction with
     | mem b hb =>
@@ -166,9 +166,9 @@ private lemma basisTmul_span_top {W : Type} [AddCommGroup W] [Module ℂ W] :
   `∂_s ψ_φ` together with the conjugate symbols `∂_s ψ̄_φ`. -/
 def generators (M : MatterField jets) : Set (JetComponentSpace M) :=
   (Set.range fun p : Multiset (Fin 1 ⊕ Fin 3) × Module.Dual ℂ M.V =>
-      ((DerivAlgebraComplex.basis p.1 ⊗ₜ[ℂ] p.2, 0) : JetComponentSpace M)) ∪
+      ((SpaceTimeDerivAlgebraℂ.basis p.1 ⊗ₜ[ℂ] p.2, 0) : JetComponentSpace M)) ∪
     Set.range fun p : Multiset (Fin 1 ⊕ Fin 3) × Module.Dual ℂ (ConjModule M.V) =>
-      ((0, DerivAlgebraComplex.basis p.1 ⊗ₜ[ℂ] p.2) : JetComponentSpace M)
+      ((0, SpaceTimeDerivAlgebraℂ.basis p.1 ⊗ₜ[ℂ] p.2) : JetComponentSpace M)
 
 /-- The derivative monomials span the jet component space: every component function is the
   sum of its two halves, and each half is spanned by derivative monomials. -/
@@ -180,18 +180,18 @@ lemma span_generators_eq_top : Submodule.span ℂ (generators M) = ⊤ := by
   rw [hv]
   refine Submodule.add_mem _ ?_ ?_
   · have hle : Submodule.span ℂ (Set.range fun p : Multiset (Fin 1 ⊕ Fin 3) ×
-        Module.Dual ℂ M.V => DerivAlgebraComplex.basis p.1 ⊗ₜ[ℂ] p.2) ≤
-        Submodule.comap (LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-          (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))
+        Module.Dual ℂ M.V => SpaceTimeDerivAlgebraℂ.basis p.1 ⊗ₜ[ℂ] p.2) ≤
+        Submodule.comap (LinearMap.inl ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+          (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))
           (Submodule.span ℂ (generators M)) := by
       rw [Submodule.span_le]
       rintro _ ⟨p, rfl⟩
       exact Submodule.subset_span (Or.inl ⟨p, rfl⟩)
     exact hle (by rw [basisTmul_span_top]; trivial)
   · have hle : Submodule.span ℂ (Set.range fun p : Multiset (Fin 1 ⊕ Fin 3) ×
-        Module.Dual ℂ (ConjModule M.V) => DerivAlgebraComplex.basis p.1 ⊗ₜ[ℂ] p.2) ≤
-        Submodule.comap (LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-          (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))
+        Module.Dual ℂ (ConjModule M.V) => SpaceTimeDerivAlgebraℂ.basis p.1 ⊗ₜ[ℂ] p.2) ≤
+        Submodule.comap (LinearMap.inr ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+          (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))
           (Submodule.span ℂ (generators M)) := by
       rw [Submodule.span_le]
       rintro _ ⟨p, rfl⟩
@@ -303,14 +303,14 @@ lemma massWeightPoly_ofConjField (w : ℕ) (φ : Module.Dual ℂ (ConjModule M.V
   symbol it graded. The derivative monomials span, so it is enough to check this on the
   multiset basis. -/
 lemma halfPoly_eval_one {W : Type} [AddCommGroup W] [Module ℂ W] (w : ℕ)
-    (k : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M)
-    (y : DerivAlgebraComplex ⊗[ℂ] W) : (halfPoly w k y).eval 1 = k y := by
+    (k : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] FermionicAlgebra M)
+    (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W) : (halfPoly w k y).eval 1 = k y := by
   induction y using TensorProduct.induction_on with
   | zero => rw [map_zero, Polynomial.eval_zero, map_zero]
   | add a b ha hb => rw [map_add, Polynomial.eval_add, ha, hb, map_add]
   | tmul a x =>
-    have ha : a ∈ Submodule.span ℂ (Set.range DerivAlgebraComplex.basis) := by
-      rw [DerivAlgebraComplex.basis.span_eq]
+    have ha : a ∈ Submodule.span ℂ (Set.range SpaceTimeDerivAlgebraℂ.basis) := by
+      rw [SpaceTimeDerivAlgebraℂ.basis.span_eq]
       trivial
     induction ha using Submodule.span_induction with
     | mem b hb =>

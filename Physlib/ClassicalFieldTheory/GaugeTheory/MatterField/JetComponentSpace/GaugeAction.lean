@@ -61,31 +61,31 @@ the target index.
 
 A coefficient is allowed to change the value space, so that the symbol action of an
 endomorphism and the pullback along a map of value spaces are the same construction; at
-`W = V` this is the action on `Module.End ℂ (DerivAlgebraComplex ⊗ Module.Dual ℂ V)` that
+`W = V` this is the action on `Module.End ℂ (SpaceTimeDerivAlgebraℂ ⊗ Module.Dual ℂ V)` that
 `repDual` uses. -/
 noncomputable def symbolAction :
     (JetRing ⊗[ℂ] (V →ₗ[ℂ] W)) →ₗ[ℂ]
-      ((DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ W) →ₗ[ℂ]
-        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V)) :=
+      ((SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ W) →ₗ[ℂ]
+        (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V)) :=
   TensorProduct.lift
     { toFun := fun g =>
-        { toFun := fun T => TensorProduct.map (DerivAlgebraComplex.jetRingAction g)
+        { toFun := fun T => TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction g)
             (Module.Dual.transpose T)
           map_add' := fun T₁ T₂ => by rw [map_add, TensorProduct.map_add_right]
           map_smul' := fun c T => by
             rw [map_smul, TensorProduct.map_smul_right, RingHom.id_apply] }
       map_add' := fun g₁ g₂ => by
         refine LinearMap.ext fun T => ?_
-        show TensorProduct.map (DerivAlgebraComplex.jetRingAction (g₁ + g₂)) _ = _
-        rw [DerivAlgebraComplex.jetRingAction_add, TensorProduct.map_add_left]
+        show TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction (g₁ + g₂)) _ = _
+        rw [SpaceTimeDerivAlgebraℂ.jetRingAction_add, TensorProduct.map_add_left]
         rfl
       map_smul' := fun c g => by
         refine LinearMap.ext fun T => ?_
-        show TensorProduct.map (DerivAlgebraComplex.jetRingAction (c • g)) _ = _
-        rw [show DerivAlgebraComplex.jetRingAction (c • g)
-              = c • DerivAlgebraComplex.jetRingAction g from by
+        show TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction (c • g)) _ = _
+        rw [show SpaceTimeDerivAlgebraℂ.jetRingAction (c • g)
+              = c • SpaceTimeDerivAlgebraℂ.jetRingAction g from by
             rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
-              DerivAlgebraComplex.jetRingAction_mul, DerivAlgebraComplex.jetRingAction_C,
+              SpaceTimeDerivAlgebraℂ.jetRingAction_mul, SpaceTimeDerivAlgebraℂ.jetRingAction_C,
               LinearMap.smul_comp, LinearMap.id_comp, Algebra.algebraMap_self_apply],
           TensorProduct.map_smul_left]
         rfl }
@@ -93,7 +93,7 @@ noncomputable def symbolAction :
 @[simp]
 lemma symbolAction_tmul (g : JetRing) (T : V →ₗ[ℂ] W) :
     symbolAction (g ⊗ₜ[ℂ] T)
-      = TensorProduct.map (DerivAlgebraComplex.jetRingAction g) (Module.Dual.transpose T) :=
+      = TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction g) (Module.Dual.transpose T) :=
   rfl
 
 /-- **A coefficient acts on the undifferentiated symbol through its value at the base
@@ -101,8 +101,8 @@ point.** On `1 ⊗ φ` — the symbol `ψ_φ` carrying no derivatives — only t
 the power-series coefficient survives, so the result is again undifferentiated and the
 target index is acted on by the transpose of the base-point value. -/
 lemma symbolAction_one_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V) (φ : Module.Dual ℂ V) :
-    symbolAction c ((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ)
-      = (1 : DerivAlgebraComplex) ⊗ₜ[ℂ]
+    symbolAction c ((1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ)
+      = (1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ]
         Module.Dual.transpose (jetEval ∘ₗ TensorProduct.lift
           ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
             (TensorProduct.mk ℂ JetRing V)) c) φ := by
@@ -113,14 +113,14 @@ lemma symbolAction_one_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V) (φ : Module
       LinearMap.add_apply, TensorProduct.tmul_add]
   | tmul g T =>
     rw [symbolAction_tmul, TensorProduct.map_tmul,
-      DerivAlgebraComplex.jetRingAction_apply_one, TensorProduct.smul_tmul]
+      SpaceTimeDerivAlgebraℂ.jetRingAction_apply_one, TensorProduct.smul_tmul]
     congr 1
     refine LinearMap.ext fun v => ?_
     simp [Module.Dual.transpose]
 
 /-- **The gauge action on the symbols.** Given a fibrewise gauge action on the jets of a
 `V`-valued field, this is the induced (contragredient) action on the derivative symbols
-`∂_s ψ_α`, which span `DerivAlgebraComplex ⊗ Module.Dual ℂ V`.
+`∂_s ψ_α`, which span `SpaceTimeDerivAlgebraℂ ⊗ Module.Dual ℂ V`.
 
 Multiplicativity is bookkeeping: `coeff_mul_of_smul_comm` makes the coefficient
 multiplicative, `symbolAction_mul` makes its action an anti-homomorphism, and the inverse
@@ -129,7 +129,7 @@ noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
     (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
     (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z) :
-    Representation ℂ GJ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V) where
+    Representation ℂ GJ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V) where
   toFun U := symbolAction (jetCoeff rep U⁻¹)
   map_one' := by
     have h1 : jetCoeff rep (1 : GJ)⁻¹ = 1 := by
@@ -139,7 +139,7 @@ noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
       rw [inv_one, map_one]
       rfl
     rw [h1, Algebra.TensorProduct.one_def, symbolAction_tmul,
-      DerivAlgebraComplex.jetRingAction_one,
+      SpaceTimeDerivAlgebraℂ.jetRingAction_one,
       show Module.Dual.transpose (1 : Module.End ℂ V) = LinearMap.id from rfl,
       TensorProduct.map_id]
     rfl
@@ -161,8 +161,8 @@ lemma repDual_one_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
     (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
     (U : GJ) (φ : Module.Dual ℂ V) :
-    repDual rep hlin U ((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ)
-      = (1 : DerivAlgebraComplex) ⊗ₜ[ℂ]
+    repDual rep hlin U ((1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ)
+      = (1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ]
         Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ := by
   have h : jetEval ∘ₗ TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
         (TensorProduct.mk ℂ JetRing V)) (jetCoeff rep U⁻¹)

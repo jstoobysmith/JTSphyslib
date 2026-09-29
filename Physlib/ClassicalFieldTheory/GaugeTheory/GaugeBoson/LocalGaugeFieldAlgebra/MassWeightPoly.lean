@@ -87,18 +87,18 @@ lemma ιComplex_apply (x : (GaugeBoson.JetComponentSpace 𝔤)) :
 noncomputable def jetComponentPoly :
     (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ]
       Polynomial (ℂ ⊗[ℝ] LocalGaugeFieldAlgebra 𝔤) :=
-  TensorProduct.lift (DerivAlgebraReal.basisMultiset.constr ℝ fun s =>
+  TensorProduct.lift (SpaceTimeDerivAlgebraℝ.basisMultiset.constr ℝ fun s =>
     (monomialₗ (2 + 2 * Multiset.card s)).comp
-      (ιComplex.comp (TensorProduct.mk ℝ DerivAlgebraReal
-        (Module.Dual ℝ (GaugeBoson 𝔤)) (DerivAlgebraReal.basisMultiset s))))
+      (ιComplex.comp (TensorProduct.mk ℝ SpaceTimeDerivAlgebraℝ
+        (Module.Dual ℝ (GaugeBoson 𝔤)) (SpaceTimeDerivAlgebraℝ.basisMultiset s))))
 
 /-- On the symbol `∂_s A^φ` the component map is the monomial of degree `2 + 2 |s|`: the
   gauge field contributes two and each derivative two more. -/
 lemma jetComponentPoly_basisMultiset_tmul (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℝ (GaugeBoson 𝔤)) :
-    (jetComponentPoly (𝔤 := 𝔤)) (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] φ) =
+    (jetComponentPoly (𝔤 := 𝔤)) (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] φ) =
       Polynomial.monomial (2 + 2 * Multiset.card s)
-        (ιComplex (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] φ)) := by
+        (ιComplex (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] φ)) := by
   rw [jetComponentPoly, TensorProduct.lift.tmul, Module.Basis.constr_basis]
   rfl
 
@@ -201,8 +201,8 @@ lemma jetComponentPoly_eval_one (x : (GaugeBoson.JetComponentSpace 𝔤)) :
   | zero => rw [map_zero, Polynomial.eval_zero, map_zero]
   | add a b ha hb => rw [map_add, Polynomial.eval_add, ha, hb, map_add]
   | tmul a φ =>
-    have ha : a ∈ Submodule.span ℝ (Set.range DerivAlgebraReal.basisMultiset) := by
-      rw [DerivAlgebraReal.basisMultiset.span_eq]
+    have ha : a ∈ Submodule.span ℝ (Set.range SpaceTimeDerivAlgebraℝ.basisMultiset) := by
+      rw [SpaceTimeDerivAlgebraℝ.basisMultiset.span_eq]
       trivial
     induction ha using Submodule.span_induction with
     | mem b hb =>

@@ -256,9 +256,9 @@ lemma massWeightScaleBoson_inclBoson (c : ℂ) (i : T.BosonSpecies)
 lemma massWeightScaleBoson_inclBoson_basis_tmul (c : ℂ) (i : T.BosonSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.BosonValue i)) :
     T.massWeightScaleBoson c (T.inclBoson i
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)))
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)))
       = c ^ ((T.boson i).massWeight + 2 * Multiset.card s) • T.inclBoson i
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)) := by
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.boson i)) := by
   rw [massWeightScaleBoson_inclBoson, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact JetComponentSpace.massWeightScale_fst_basis_tmul (T.boson i).massWeight c s φ 0
@@ -270,15 +270,15 @@ lemma massWeightScaleBoson_inclBoson_basis_tmul_conj (c : ℂ) (i : T.BosonSpeci
     (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.BosonValue i))) :
     T.massWeightScaleBoson c (T.inclBoson i
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)))
+        ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)))
       = c ^ ((T.boson i).massWeight + 2 * Multiset.card s) • T.inclBoson i
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)) := by
+          ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.boson i)) := by
   rw [massWeightScaleBoson_inclBoson, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · simp
   · simp only [JetComponentSpace.massWeightScale_snd, Prod.smul_snd,
       TensorProduct.map_tmul, AlgHom.toLinearMap_apply,
-      DerivAlgebraComplex.gradeScale_basis, LinearMap.id_apply, TensorProduct.smul_tmul',
+      SpaceTimeDerivAlgebraℂ.gradeScale_basis, LinearMap.id_apply, TensorProduct.smul_tmul',
       ← pow_mul, ← smul_assoc, smul_eq_mul, ← pow_add, mul_comm 2 (Multiset.card s)]
 
 variable (T)

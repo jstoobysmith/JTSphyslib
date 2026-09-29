@@ -253,9 +253,9 @@ lemma massWeightScaleFermion_inclFermion (c : ℂ) (i : T.FermionSpecies)
 lemma massWeightScaleFermion_inclFermion_basis_tmul (c : ℂ) (i : T.FermionSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (T.FermionValue i)) :
     T.massWeightScaleFermion c (T.inclFermion i
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)))
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)))
       = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)) := by
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace (T.fermion i)) := by
   rw [massWeightScaleFermion_inclFermion, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact JetComponentSpace.massWeightScale_fst_basis_tmul (T.fermion i).massWeight c s φ 0
@@ -267,15 +267,15 @@ lemma massWeightScaleFermion_inclFermion_basis_tmul_conj (c : ℂ) (i : T.Fermio
     (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (T.FermionValue i))) :
     T.massWeightScaleFermion c (T.inclFermion i
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)))
+        ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)))
       = c ^ ((T.fermion i).massWeight + 2 * Multiset.card s) • T.inclFermion i
-          ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)) := by
+          ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace (T.fermion i)) := by
   rw [massWeightScaleFermion_inclFermion, ← LinearMap.map_smul]
   refine congrArg _ (Prod.ext ?_ ?_)
   · simp
   · simp only [JetComponentSpace.massWeightScale_snd, Prod.smul_snd,
       TensorProduct.map_tmul, AlgHom.toLinearMap_apply,
-      DerivAlgebraComplex.gradeScale_basis, LinearMap.id_apply, TensorProduct.smul_tmul',
+      SpaceTimeDerivAlgebraℂ.gradeScale_basis, LinearMap.id_apply, TensorProduct.smul_tmul',
       ← pow_mul, ← smul_assoc, smul_eq_mul, ← pow_add, mul_comm 2 (Multiset.card s)]
 
 variable (T)

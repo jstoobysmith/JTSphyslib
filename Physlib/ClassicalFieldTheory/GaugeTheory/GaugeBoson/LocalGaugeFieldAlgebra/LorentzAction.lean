@@ -15,7 +15,7 @@ public import Physlib.Relativity.IsLorentzDeriv
 
 The Lorentz group acts on the jet algebra of the gauge bosons by the symmetric-algebra
 functor applied to its action on the jet component space: the derivative labels transform
-in `DerivAlgebraReal` and the target index contragrediently through the covector action on
+in `SpaceTimeDerivAlgebraℝ` and the target index contragrediently through the covector action on
 `GaugeBoson`. The formal total derivative is a Lorentz vector for this action; on the
 complexification this is packaged as a `Lorentz.IsLorentzDeriv` instance, giving access to
 the boost-weight machinery.
@@ -60,10 +60,10 @@ namespace GaugeBoson
 
 variable (𝔤) in
 /-- The Lorentz action on the jet component space of the gauge bosons: the derivative
-  label transforms in `DerivAlgebraReal`, the target index contragrediently. -/
+  label transforms in `SpaceTimeDerivAlgebraℝ`, the target index contragrediently. -/
 noncomputable def JetComponentSpace.repLorentzGroup :
     Representation ℝ SL(2,ℂ) (JetComponentSpace 𝔤) :=
-  DerivAlgebraReal.repLorentzGroup.tprod (GaugeBoson.repLorentzGroup 𝔤).dual
+  SpaceTimeDerivAlgebraℝ.repLorentzGroup.tprod (GaugeBoson.repLorentzGroup 𝔤).dual
 
 /-!
 
@@ -73,17 +73,17 @@ noncomputable def JetComponentSpace.repLorentzGroup :
 
 /-- The Lorentz action on the singleton derivative symbol: the derivative slot transforms
   by the columns of the Lorentz matrix. -/
-lemma _root_.DerivAlgebraReal.repLorentzGroup_basis_singleton
+lemma _root_.SpaceTimeDerivAlgebraℝ.repLorentzGroup_basis_singleton
     (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
-    DerivAlgebraReal.repLorentzGroup Λ
-        (DerivAlgebraReal.basisMultiset ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
+    SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ
+        (SpaceTimeDerivAlgebraℝ.basisMultiset ({μ} : Multiset (Fin 1 ⊕ Fin 3))) =
       ∑ a, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ) •
-        DerivAlgebraReal.basisMultiset ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
-  rw [DerivAlgebraReal.basisMultiset_singleton,
-    DerivAlgebraReal.repLorentzGroup_apply_ι, Lorentz.CoVector.sl2Rep_dual_dualBasis,
+        SpaceTimeDerivAlgebraℝ.basisMultiset ({a} : Multiset (Fin 1 ⊕ Fin 3)) := by
+  rw [SpaceTimeDerivAlgebraℝ.basisMultiset_singleton,
+    SpaceTimeDerivAlgebraℝ.repLorentzGroup_apply_ι, Lorentz.CoVector.sl2Rep_dual_dualBasis,
     map_sum]
   exact Finset.sum_congr rfl fun a _ => by
-    rw [map_smul, DerivAlgebraReal.basisMultiset_singleton]
+    rw [map_smul, SpaceTimeDerivAlgebraℝ.basisMultiset_singleton]
 
 /-- **The derivative shift is a Lorentz vector on the component space**: appending `∂_μ`
   and then acting is acting and then appending the transformed `∂_μ`. -/
@@ -100,19 +100,19 @@ lemma JetComponentSpace.repLorentzGroup_jetDeriv (Λ : SL(2,ℂ)) (μ : Fin 1 �
   | tmul q f =>
     rw [JetComponentSpace.jetDeriv_tmul,
       show (JetComponentSpace.repLorentzGroup 𝔤) Λ
-          ((q * DerivAlgebraReal.basisMultiset
+          ((q * SpaceTimeDerivAlgebraℝ.basisMultiset
             ({μ} : Multiset (Fin 1 ⊕ Fin 3))) ⊗ₜ[ℝ] f)
-        = (DerivAlgebraReal.repLorentzGroup Λ
-            (q * DerivAlgebraReal.basisMultiset
+        = (SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ
+            (q * SpaceTimeDerivAlgebraℝ.basisMultiset
               ({μ} : Multiset (Fin 1 ⊕ Fin 3)))) ⊗ₜ[ℝ]
           ((GaugeBoson.repLorentzGroup 𝔤).dual Λ f) from rfl,
-      DerivAlgebraReal.repLorentzGroup_apply_mul,
-      DerivAlgebraReal.repLorentzGroup_basis_singleton, Finset.mul_sum,
+      SpaceTimeDerivAlgebraℝ.repLorentzGroup_apply_mul,
+      SpaceTimeDerivAlgebraℝ.repLorentzGroup_basis_singleton, Finset.mul_sum,
       TensorProduct.sum_tmul]
     refine Finset.sum_congr rfl fun a _ => ?_
     rw [mul_smul_comm, ← TensorProduct.smul_tmul',
       show (JetComponentSpace.repLorentzGroup 𝔤) Λ (q ⊗ₜ[ℝ] f)
-        = (DerivAlgebraReal.repLorentzGroup Λ q) ⊗ₜ[ℝ]
+        = (SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ q) ⊗ₜ[ℝ]
           ((GaugeBoson.repLorentzGroup 𝔤).dual Λ f) from rfl,
       JetComponentSpace.jetDeriv_tmul]
 
@@ -299,12 +299,12 @@ lemma repLorentzGroup_ofA (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3)
       = ∑ a, ((Lorentz.SL2C.toLorentzGroup Λ).1 a μ) • (ofA 𝔤) a φ := by
   rw [ofA_apply, ofComponent_apply, repLorentzGroup_ι,
     show (GaugeBoson.JetComponentSpace.repLorentzGroup 𝔤) Λ
-        ((1 : DerivAlgebraReal) ⊗ₜ[ℝ] (GaugeBoson.componentDual 𝔤)
+        ((1 : SpaceTimeDerivAlgebraℝ) ⊗ₜ[ℝ] (GaugeBoson.componentDual 𝔤)
           (Lorentz.CoVector.basis.dualBasis μ) φ)
-      = (DerivAlgebraReal.repLorentzGroup Λ (1 : DerivAlgebraReal)) ⊗ₜ[ℝ]
+      = (SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ (1 : SpaceTimeDerivAlgebraℝ)) ⊗ₜ[ℝ]
         ((GaugeBoson.repLorentzGroup 𝔤).dual Λ ((GaugeBoson.componentDual 𝔤)
           (Lorentz.CoVector.basis.dualBasis μ) φ)) from rfl,
-    DerivAlgebraReal.repLorentzGroup_apply_one,
+    SpaceTimeDerivAlgebraℝ.repLorentzGroup_apply_one,
     GaugeBoson.repLorentzGroup_dual_componentDual,
     Lorentz.CoVector.sl2Rep_dual_dualBasis, map_sum, LinearMap.sum_apply,
     TensorProduct.tmul_sum, map_sum]

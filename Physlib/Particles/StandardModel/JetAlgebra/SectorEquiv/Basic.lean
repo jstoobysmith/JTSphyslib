@@ -247,31 +247,31 @@ lemma fermionGeneratorsEquiv_symm_comap (t : fieldData.FermionSpecies)
 lemma _root_.JetComponentSpace.comap_snd_of_zero {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
     {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {M N : MatterField jets}
-    (f : M.V →ₗ[ℂ] N.V) (x : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) :
+    (f : M.V →ₗ[ℂ] N.V) (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ N.V) :
     (JetComponentSpace.comap f ((x, 0) : JetComponentSpace N)).2 = 0 := by
   rw [show (JetComponentSpace.comap f ((x, 0) : JetComponentSpace N)).2
     = (TensorProduct.map LinearMap.id (Module.Dual.transpose (ConjModule.map f)))
-        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) from rfl, map_zero]
+        (0 : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) from rfl, map_zero]
 
 /-- The first half of a pullback of a conjugate symbol vanishes. -/
 lemma _root_.JetComponentSpace.comap_fst_of_zero {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {GJ : Type} [Group GJ] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
     {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {M N : MatterField jets}
-    (f : M.V →ₗ[ℂ] N.V) (y : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
+    (f : M.V →ₗ[ℂ] N.V) (y : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule N.V)) :
     (JetComponentSpace.comap f ((0, y) : JetComponentSpace N)).1 = 0 := by
   rw [show (JetComponentSpace.comap f ((0, y) : JetComponentSpace N)).1
     = (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
-        (0 : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ N.V) from rfl, map_zero]
+        (0 : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ N.V) from rfl, map_zero]
 
 /-- The unconjugated symbol `∂_s ψ_φ` of a species, read on the total target space. -/
 lemma fermionGeneratorsEquiv_symm_basis_tmul (t : fieldData.FermionSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (fieldData.FermionValue t)) :
-    fermionGeneratorsEquiv.symm ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
+    fermionGeneratorsEquiv.symm ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ]
         Module.Dual.transpose (fermionProj t) φ, 0) : JetComponentSpace fermionMatterField)
-      = fieldData.inclFermion t ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+      = fieldData.inclFermion t ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
           JetComponentSpace (fieldData.fermion t)) := by
   rw [← fermionGeneratorsEquiv_symm_comap t
-    ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+    ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
       JetComponentSpace (fieldData.fermion t))]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact (JetComponentSpace.comap_fst_tmul (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) _ φ 0).symm
@@ -281,13 +281,13 @@ lemma fermionGeneratorsEquiv_symm_basis_tmul (t : fieldData.FermionSpecies)
 lemma fermionGeneratorsEquiv_symm_basis_tmul_conj (t : fieldData.FermionSpecies)
     (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule (fieldData.FermionValue t))) :
-    fermionGeneratorsEquiv.symm ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ]
+    fermionGeneratorsEquiv.symm ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ]
         Module.Dual.transpose (ConjModule.map (fermionProj t)) φ) :
           JetComponentSpace fermionMatterField)
-      = fieldData.inclFermion t ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+      = fieldData.inclFermion t ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) :
           JetComponentSpace (fieldData.fermion t)) := by
   rw [← fermionGeneratorsEquiv_symm_comap t
-    ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) :
+    ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) :
       JetComponentSpace (fieldData.fermion t))]
   refine congrArg _ (Prod.ext ?_ ?_)
   · exact (JetComponentSpace.comap_fst_of_zero (M := fermionMatterField) (N := fieldData.fermion t) (fermionProj t) _).symm

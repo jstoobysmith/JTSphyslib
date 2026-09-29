@@ -199,9 +199,9 @@ noncomputable def _root_.JetComponentSpace.prodEquiv (M N : MatterField jets)
     (h : M.massWeight = N.massWeight) :
     JetComponentSpace (M.prod N h) ≃ₗ[ℂ] JetComponentSpace M × JetComponentSpace N :=
   (LinearEquiv.prodCongr
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+      (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeDerivAlgebraℂ)
         (Module.dualProdDualEquivDual ℂ M.V N.V).symm)
-      (TensorProduct.congr (LinearEquiv.refl ℂ DerivAlgebraComplex)
+      (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeDerivAlgebraℂ)
         (((ConjModule.prodEquiv (k := ℂ) (M := M.V) (N := N.V)).symm.dualMap).trans
           (Module.dualProdDualEquivDual ℂ (ConjModule M.V) (ConjModule N.V)).symm))).trans <|
     (LinearEquiv.prodCongr (TensorProduct.prodRight ℂ ℂ _ _ _)

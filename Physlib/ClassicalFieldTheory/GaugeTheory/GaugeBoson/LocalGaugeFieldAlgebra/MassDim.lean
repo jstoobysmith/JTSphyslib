@@ -56,15 +56,15 @@ namespace GaugeBoson
 variable (𝔤) in
 /-- The mass-weight scaling on the jet component space of the gauge bosons: the generator
   `∂_s A_μ^φ` is scaled by `c ^ (2 + 2 |s|)`, through the derivative-degree scaling
-  `DerivAlgebraReal.gradeScale` on the derivative label. -/
+  `SpaceTimeDerivAlgebraℝ.gradeScale` on the derivative label. -/
 noncomputable def JetComponentSpace.massWeightScale (c : ℝ) :
     (JetComponentSpace 𝔤) →ₗ[ℝ] (JetComponentSpace 𝔤) :=
-  c ^ 2 • TensorProduct.map (DerivAlgebraReal.gradeScale (c ^ 2)).toLinearMap LinearMap.id
+  c ^ 2 • TensorProduct.map (SpaceTimeDerivAlgebraℝ.gradeScale (c ^ 2)).toLinearMap LinearMap.id
 
-lemma JetComponentSpace.massWeightScale_tmul (c : ℝ) (a : DerivAlgebraReal)
+lemma JetComponentSpace.massWeightScale_tmul (c : ℝ) (a : SpaceTimeDerivAlgebraℝ)
     (φ : Module.Dual ℝ (GaugeBoson 𝔤)) :
     (JetComponentSpace.massWeightScale 𝔤) c (a ⊗ₜ[ℝ] φ)
-      = c ^ 2 • (DerivAlgebraReal.gradeScale (c ^ 2) a ⊗ₜ[ℝ] φ) := rfl
+      = c ^ 2 • (SpaceTimeDerivAlgebraℝ.gradeScale (c ^ 2) a ⊗ₜ[ℝ] φ) := rfl
 
 /-- **The derivative shift carries mass weight two** on the component space. -/
 lemma JetComponentSpace.massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3)
@@ -76,8 +76,8 @@ lemma JetComponentSpace.massWeightScale_jetDeriv (c : ℝ) (μ : Fin 1 ⊕ Fin 3
   | add x y hx hy => simp only [map_add, hx, hy, smul_add]
   | tmul a φ =>
     rw [JetComponentSpace.jetDeriv_tmul, JetComponentSpace.massWeightScale_tmul, map_mul,
-      DerivAlgebraReal.basisMultiset_singleton,
-      DerivAlgebraReal.gradeScale_ι, ← DerivAlgebraReal.basisMultiset_singleton,
+      SpaceTimeDerivAlgebraℝ.basisMultiset_singleton,
+      SpaceTimeDerivAlgebraℝ.gradeScale_ι, ← SpaceTimeDerivAlgebraℝ.basisMultiset_singleton,
       JetComponentSpace.massWeightScale_tmul, map_smul, JetComponentSpace.jetDeriv_tmul,
       mul_smul_comm, TensorProduct.smul_tmul', smul_smul, smul_smul, mul_comm (c ^ 2)]
     rfl

@@ -95,12 +95,12 @@ lemma gaugeField_apply (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
 lemma gaugeField_eq_ιConnection (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ GaugeAlgebra) :
     gaugeField s μ φ
-      = fieldData.ιConnection (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
+      = fieldData.ιConnection (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ]
           GaugeBoson.componentDual GaugeAlgebra
             (Lorentz.CoVector.basis.dualBasis μ) φ) := by
   have hsector : (LocalGaugeFieldAlgebra.gaugeField GaugeAlgebra) s μ φ
       = (1 : ℂ) ⊗ₜ[ℝ] SymmetricAlgebra.ι ℝ (GaugeBoson.JetComponentSpace GaugeAlgebra)
-          (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ]
+          (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ]
             GaugeBoson.componentDual GaugeAlgebra
               (Lorentz.CoVector.basis.dualBasis μ) φ) :=
     (LocalGaugeFieldAlgebra.gaugeField_apply s μ φ).trans

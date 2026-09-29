@@ -18,7 +18,7 @@ shift `∂_s φ_α ↦ ∂_{s + {μ}} φ_α` on the jet component space.
 
 The four directional derivatives commute, so they iterate along a *multiset* of directions
 through `Lorentz.iteratedD`. On a component function the iterate is multiplication by the
-derivative symbol `∂_s` in the `DerivAlgebraComplex` factor, and on a product it obeys the
+derivative symbol `∂_s` in the `SpaceTimeDerivAlgebraℂ` factor, and on a product it obeys the
 all-orders Leibniz rule over the antidiagonal of the multiset.
 
 ## ii. Key results
@@ -158,26 +158,26 @@ lemma iteratedJetDeriv_one_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s �
 
 /-- **On a component function the iterated derivative is the derivative symbol `∂_s`.**
   Both halves of the component space — the field and its conjugate — are multiplied by the
-  degree-`|s|` element `∂_s` of `DerivAlgebraComplex` in their derivative-label factor,
+  degree-`|s|` element `∂_s` of `SpaceTimeDerivAlgebraℂ` in their derivative-label factor,
   with the target index untouched. -/
 lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpace M) :
     iteratedJetDeriv s (SymmetricAlgebra.ι ℂ _ x) =
       SymmetricAlgebra.ι ℂ _
-        (TensorProduct.map (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis s))
+        (TensorProduct.map (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis s))
             LinearMap.id x.1,
-          TensorProduct.map (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis s))
+          TensorProduct.map (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis s))
             LinearMap.id x.2) := by
   have hmul : ∀ t u : Multiset (Fin 1 ⊕ Fin 3),
-      (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis t)).comp
-        (LinearMap.mulRight ℂ (DerivAlgebraComplex.basis u))
-        = LinearMap.mulRight ℂ (DerivAlgebraComplex.basis (u + t)) := fun t u =>
+      (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis t)).comp
+        (LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis u))
+        = LinearMap.mulRight ℂ (SpaceTimeDerivAlgebraℂ.basis (u + t)) := fun t u =>
     LinearMap.ext fun a => by
       simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.mulRight_apply, mul_assoc,
-        DerivAlgebraComplex.basis_mul]
-  have hone : LinearMap.mulRight ℂ (1 : DerivAlgebraComplex) = LinearMap.id :=
+        SpaceTimeDerivAlgebraℂ.basis_mul]
+  have hone : LinearMap.mulRight ℂ (1 : SpaceTimeDerivAlgebraℂ) = LinearMap.id :=
     LinearMap.ext fun a => mul_one a
-  have hnil : DerivAlgebraComplex.basis (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 :=
-    DerivAlgebraComplex.basis_nil
+  have hnil : SpaceTimeDerivAlgebraℂ.basis (0 : Multiset (Fin 1 ⊕ Fin 3)) = 1 :=
+    SpaceTimeDerivAlgebraℂ.basis_nil
   induction s using Multiset.induction_on with
   | empty =>
     rw [iteratedJetDeriv_zero, LinearMap.id_apply, hnil, hone]
@@ -205,7 +205,7 @@ lemma iteratedJetDeriv_ι (s : Multiset (Fin 1 ⊕ Fin 3)) (x : JetComponentSpac
 lemma iteratedJetDeriv_ofField (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V) :
     iteratedJetDeriv s (ofField φ) =
       SymmetricAlgebra.ι ℂ _
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := by
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := by
   rw [ofField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -219,7 +219,7 @@ lemma iteratedJetDeriv_ofConjField (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (ConjModule M.V)) :
     iteratedJetDeriv s (ofConjField φ) =
       SymmetricAlgebra.ι ℂ _
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) := by
+        ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M) := by
   rw [ofConjField_apply, iteratedJetDeriv_ι]
   congr 1
   refine Prod.ext ?_ ?_
@@ -245,39 +245,39 @@ theorem adjoin_iteratedJetDeriv_eq_top :
         Set.range (fun φ : Module.Dual ℂ (ConjModule M.V) =>
           iteratedJetDeriv s (ofConjField φ)) with hS
   /- The two half-inclusions of the component space into the bosonic algebra. -/
-  let gField : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
+  let gField : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
     (SymmetricAlgebra.ι ℂ _).comp (LinearMap.inl ℂ _ _)
-  let gConj : DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ]
+  let gConj : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ]
       BosonicAlgebra M :=
     (SymmetricAlgebra.ι ℂ _).comp (LinearMap.inr ℂ _ _)
   /- On a derivative monomial each half-inclusion is one of the adjoined generators. -/
   have hbasisField : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ M.V),
-      gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
+      gField (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
-    have h : gField (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) = iteratedJetDeriv s (ofField φ) :=
+    have h : gField (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) = iteratedJetDeriv s (ofField φ) :=
       (iteratedJetDeriv_ofField s φ).symm
     rw [h, hS]
     exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨s, Or.inl ⟨φ, rfl⟩⟩)
   have hbasisConj : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ (ConjModule M.V)),
-      gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
+      gConj (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) ∈ Algebra.adjoin ℂ S := by
     intro s φ
-    have h : gConj (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
+    have h : gConj (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)
         = iteratedJetDeriv s (ofConjField φ) := (iteratedJetDeriv_ofConjField s φ).symm
     rw [h, hS]
     exact Algebra.subset_adjoin (Set.mem_iUnion.mpr ⟨s, Or.inr ⟨φ, rfl⟩⟩)
   /- The derivative monomials span, so each half-inclusion lands in the adjoined algebra. -/
   have hhalf : ∀ {W : Type} [AddCommGroup W] [Module ℂ W]
-      (g : DerivAlgebraComplex ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M),
+      (g : SpaceTimeDerivAlgebraℂ ⊗[ℂ] W →ₗ[ℂ] BosonicAlgebra M),
       (∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (w : W),
-        g (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] w) ∈ Algebra.adjoin ℂ S) →
+        g (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] w) ∈ Algebra.adjoin ℂ S) →
       ∀ y, g y ∈ Algebra.adjoin ℂ S := by
     intro W _ _ g hg y
     induction y using TensorProduct.induction_on with
     | zero => rw [map_zero]; exact zero_mem _
     | add y z hy hz => rw [map_add]; exact add_mem hy hz
     | tmul a w =>
-      have ha : a ∈ Submodule.span ℂ (Set.range DerivAlgebraComplex.basis) := by
-        rw [DerivAlgebraComplex.basis.span_eq]; trivial
+      have ha : a ∈ Submodule.span ℂ (Set.range SpaceTimeDerivAlgebraℂ.basis) := by
+        rw [SpaceTimeDerivAlgebraℂ.basis.span_eq]; trivial
       induction ha using Submodule.span_induction with
       | mem b hb => obtain ⟨s, rfl⟩ := hb; exact hg s w
       | zero => rw [TensorProduct.zero_tmul, map_zero]; exact zero_mem _

@@ -607,7 +607,6 @@ public import Physlib.QuantumMechanics.RectangularBarrier.Basic
 public import Physlib.QuantumMechanics.SpaceDQuantumSystem
 public import Physlib.Relativity.Bispinors.Basic
 public import Physlib.Relativity.CliffordAlgebra
-public import Physlib.Relativity.DerivAlgebra
 public import Physlib.Relativity.Fermions.Dirac.Basic
 public import Physlib.Relativity.Fermions.Dirac.GammaMatrices
 public import Physlib.Relativity.Fermions.Weyl.BoostWeight
@@ -767,6 +766,7 @@ public import Physlib.SpaceAndTime.SpaceTime.Basic
 public import Physlib.SpaceAndTime.SpaceTime.Boosts
 public import Physlib.SpaceAndTime.SpaceTime.Derivatives
 public import Physlib.SpaceAndTime.SpaceTime.LorentzAction
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
 public import Physlib.SpaceAndTime.Time.Basic
 public import Physlib.SpaceAndTime.Time.Derivatives

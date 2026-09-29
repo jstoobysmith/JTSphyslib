@@ -251,10 +251,10 @@ lemma fieldData_massWeightScaleFermion_inclFermion_basis_tmul (c : ℂ)
     (j : fieldData.FermionSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (fieldData.FermionValue j)) :
     fieldData.massWeightScaleFermion c (fieldData.inclFermion j
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
           JetComponentSpace (fieldData.fermion j)))
       = c ^ (3 + 2 * Multiset.card s) • fieldData.inclFermion j
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
             JetComponentSpace (fieldData.fermion j)) := by
   have h := GaugeFieldData.massWeightScaleFermion_inclFermion_basis_tmul
     (T := fieldData) c j s φ
@@ -265,10 +265,10 @@ lemma fieldData_massWeightScaleBoson_inclBoson_basis_tmul (c : ℂ)
     (j : fieldData.BosonSpecies) (s : Multiset (Fin 1 ⊕ Fin 3))
     (φ : Module.Dual ℂ (fieldData.BosonValue j)) :
     fieldData.massWeightScaleBoson c (fieldData.inclBoson j
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
           JetComponentSpace (fieldData.boson j)))
       = c ^ (2 + 2 * Multiset.card s) • fieldData.inclBoson j
-          ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) :
+          ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) :
             JetComponentSpace (fieldData.boson j)) := by
   have h := GaugeFieldData.massWeightScaleBoson_inclBoson_basis_tmul
     (T := fieldData) c j s φ

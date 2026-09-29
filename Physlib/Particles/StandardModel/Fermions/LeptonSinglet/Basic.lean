@@ -10,7 +10,7 @@ public import Physlib.Relativity.Fermions.Weyl.BoostWeight
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Relativity.Tensors.ComplexTensor.Basic
-public import Physlib.Relativity.DerivAlgebra
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Physlib.Mathematics.ConjModule
 /-!
 # Charged-lepton singlets

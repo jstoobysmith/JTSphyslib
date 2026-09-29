@@ -16,11 +16,11 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeri
 derivative symbol transform by the all-orders Leibniz convolution of the base-point Taylor
 coefficients `GaugeAlgebraRealization.repDualCoeff` of the gauge jet. What the gauge action
 on the jet component space is *built* from is `symbolAction`, the action of the coefficient
-`jetCoeff rep U⁻¹ : JetRing ⊗ End V` through `DerivAlgebraComplex.jetRingAction` on the
+`jetCoeff rep U⁻¹ : JetRing ⊗ End V` through `SpaceTimeDerivAlgebraℂ.jetRingAction` on the
 derivative label. This file identifies the two, for any group `G` acting fibrewise on the
 jets of the field.
 
-The bridge is `DerivAlgebraComplex.jetRingAction_basis_multiset`, which puts the action of
+The bridge is `SpaceTimeDerivAlgebraℂ.jetRingAction_basis_multiset`, which puts the action of
 a jet on a derivative monomial into the convolution form that `TransformsIn` wants. What
 remains is to recognise the scalars it produces — the base-point Taylor coefficients of the
 jet-ring factor of the gauge coefficient — as `GaugeAlgebraRealization.repCoeff`. That is done by
@@ -162,10 +162,10 @@ private lemma dualMap_smul_apply (c : ℂ) (T : Module.End ℂ V) (φ : Module.D
   simp
 
 /-- A multiset sum in the derivative label distributes out of a pure symbol. -/
-private lemma sum_tmul_right (m : Multiset DerivAlgebraComplex) (w : Module.Dual ℂ V) :
+private lemma sum_tmul_right (m : Multiset SpaceTimeDerivAlgebraℂ) (w : Module.Dual ℂ V) :
     m.sum ⊗ₜ[ℂ] w = (m.map fun a => a ⊗ₜ[ℂ] w).sum := by
   rw [show m.sum ⊗ₜ[ℂ] w
-      = ((TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ V)).flip w) m.sum from rfl,
+      = ((TensorProduct.mk ℂ SpaceTimeDerivAlgebraℂ (Module.Dual ℂ V)).flip w) m.sum from rfl,
     map_multiset_sum]
   rfl
 
@@ -180,14 +180,14 @@ private lemma sum_tmul_right (m : Multiset DerivAlgebraComplex) (w : Module.Dual
   derivative multiset contributes the Taylor coefficient at `s₁` acting on the target index
   of the lower symbol `∂_{s₂} ψ_φ`.
 
-  This is `DerivAlgebraComplex.jetRingAction_basis_multiset` in the derivative label,
+  This is `SpaceTimeDerivAlgebraℂ.jetRingAction_basis_multiset` in the derivative label,
   together with the identification of the scalars it produces as `jetCoeffAt`; both sides
   are additive in the coefficient, so it suffices to check it on a pure tensor. -/
 lemma symbolAction_basis_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
-    symbolAction c (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
+    symbolAction c (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)
       = (s.antidiagonal.map fun p =>
-          DerivAlgebraComplex.basis p.2 ⊗ₜ[ℂ] (jetCoeffAt p.1 c).dualMap φ).sum := by
+          SpaceTimeDerivAlgebraℂ.basis p.2 ⊗ₜ[ℂ] (jetCoeffAt p.1 c).dualMap φ).sum := by
   induction c using TensorProduct.induction_on with
   | zero =>
     rw [map_zero, LinearMap.zero_apply]
@@ -201,7 +201,7 @@ lemma symbolAction_basis_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V)
     rw [map_add, dualMap_add_apply, TensorProduct.tmul_add]
   | tmul f T =>
     rw [symbolAction_tmul, TensorProduct.map_tmul,
-      DerivAlgebraComplex.jetRingAction_basis_multiset, sum_tmul_right, Multiset.map_map]
+      SpaceTimeDerivAlgebraℂ.jetRingAction_basis_multiset, sum_tmul_right, Multiset.map_map]
     refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
     rw [Function.comp_apply, TensorProduct.smul_tmul, jetCoeffAt_tmul, dualMap_smul_apply]
     rfl
@@ -224,9 +224,9 @@ lemma repDual_basis_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
     (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
-    repDual rep hlin U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)
+    repDual rep hlin U (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)
       = (s.antidiagonal.map fun p =>
-          DerivAlgebraComplex.basis p.2 ⊗ₜ[ℂ]
+          SpaceTimeDerivAlgebraℂ.basis p.2 ⊗ₜ[ℂ]
             GaugeAlgebraRealization.repDualCoeff rep U⁻¹ p.1 φ).sum := by
   rw [show repDual rep hlin U = symbolAction (jetCoeff rep U⁻¹) from rfl,
     symbolAction_basis_tmul]

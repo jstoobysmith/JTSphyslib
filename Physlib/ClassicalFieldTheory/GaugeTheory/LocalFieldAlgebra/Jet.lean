@@ -7,7 +7,7 @@ module
 
 
 public import Physlib.Relativity.JetRing.Basic
-public import Physlib.Relativity.DerivAlgebra
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
 public import Mathlib.LinearAlgebra.TensorProduct.Pi

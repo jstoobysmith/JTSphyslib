@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.Basic
-public import Physlib.Relativity.DerivAlgebra
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.RingTheory.MvPowerSeries.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
@@ -113,8 +113,8 @@ open scoped Nat
 
 The ring `JetRing` of formal power series in the spacetime coordinates, in which
 jets of fields and of gauge transformations are valued, is defined in
-`Physlib.Relativity.DerivAlgebra`, together with the algebra of derivative
-symbols `DerivAlgebraComplex` and the action `DerivAlgebraComplex.jetRingAction`
+`Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra`, together with the algebra of derivative
+symbols `SpaceTimeDerivAlgebraℂ` and the action `SpaceTimeDerivAlgebraℂ.jetRingAction`
 of the jet ring on it.
 
 -/

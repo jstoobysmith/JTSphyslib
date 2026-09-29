@@ -120,7 +120,7 @@ lemma repLorentzGroup_ofField (Λ : SL(2,ℂ))
   congr 1
   refine Prod.ext ?_ ?_
   · rw [JetComponentSpace.repLorentzGroup_fst_tmul,
-      DerivAlgebraComplex.repLorentzGroup_apply_one]
+      SpaceTimeDerivAlgebraℂ.repLorentzGroup_apply_one]
     rfl
   · rw [JetComponentSpace.repLorentzGroup_snd]
     exact map_zero _
@@ -138,8 +138,8 @@ lemma repLorentzGroup_ofConjField (Λ : SL(2,ℂ))
   · rw [JetComponentSpace.repLorentzGroup_fst]
     exact map_zero _
   · rw [JetComponentSpace.repLorentzGroup_snd]
-    show (DerivAlgebraComplex.repLorentzGroup Λ 1) ⊗ₜ[ℂ] (M.repLorentz.conj.dual Λ φ) = _
-    rw [DerivAlgebraComplex.repLorentzGroup_apply_one]
+    show (SpaceTimeDerivAlgebraℂ.repLorentzGroup Λ 1) ⊗ₜ[ℂ] (M.repLorentz.conj.dual Λ φ) = _
+    rw [SpaceTimeDerivAlgebraℂ.repLorentzGroup_apply_one]
 
 /-!
 

@@ -70,27 +70,27 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 
 /-- A multiset sum in the unconjugated half of the component space passes through the
   inclusion of the generators. -/
-private lemma sum_inl (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)) :
+private lemma sum_inl (m : Multiset (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)) :
     SymmetricAlgebra.ι ℂ _ ((m.sum, 0) : JetComponentSpace M)
       = (m.map fun a =>
           SymmetricAlgebra.ι ℂ _ ((a, 0) : JetComponentSpace M)).sum := by
   rw [show SymmetricAlgebra.ι ℂ (JetComponentSpace M) ((m.sum, 0) : JetComponentSpace M)
       = ((SymmetricAlgebra.ι ℂ (JetComponentSpace M)).comp
-          (LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
+          (LinearMap.inl ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+            (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
     map_multiset_sum]
   rfl
 
 /-- A multiset sum in the conjugate half of the component space passes through the
   inclusion of the generators. -/
-private lemma sum_inr (m : Multiset (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))) :
+private lemma sum_inr (m : Multiset (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))) :
     SymmetricAlgebra.ι ℂ _ ((0, m.sum) : JetComponentSpace M)
       = (m.map fun a =>
           SymmetricAlgebra.ι ℂ _ ((0, a) : JetComponentSpace M)).sum := by
   rw [show SymmetricAlgebra.ι ℂ (JetComponentSpace M) ((0, m.sum) : JetComponentSpace M)
       = ((SymmetricAlgebra.ι ℂ (JetComponentSpace M)).comp
-          (LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-            (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
+          (LinearMap.inr ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+            (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V)))) m.sum from rfl,
     map_multiset_sum]
   rfl
 
@@ -120,8 +120,8 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofField
           (ofField (GaugeAlgebraRealization.repDualCoeff M.repJet U⁻¹ p.1 φ))).sum := by
   rw [iteratedJetDeriv_ofField, repJetGaugeGroupI_ι,
     show JetComponentSpace.repJet M U
-        ((DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)
-      = (JetComponentSpace.repDual M.repJet M.repJet_smul U (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ), 0) from by
+        ((SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M)
+      = (JetComponentSpace.repDual M.repJet M.repJet_smul U (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ), 0) from by
       refine Prod.ext rfl ?_
       rw [JetComponentSpace.repJet_snd]
       exact map_zero _,
@@ -157,10 +157,10 @@ lemma repJetGaugeGroupI_iteratedJetDeriv_ofConjField
               φ))).sum := by
   rw [iteratedJetDeriv_ofConjField, repJetGaugeGroupI_ι,
     show JetComponentSpace.repJet M U
-        ((0, DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)
+        ((0, SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ) : JetComponentSpace M)
       = (0, JetComponentSpace.repDual (JetComponentSpace.repConj M.repJet)
           (JetComponentSpace.repConj_smul_comm M.repJet_smul) U
-          (DerivAlgebraComplex.basis s ⊗ₜ[ℂ] φ)) from by
+          (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)) from by
       refine Prod.ext ?_ rfl
       rw [JetComponentSpace.repJet_fst]
       exact map_zero _,

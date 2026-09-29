@@ -146,16 +146,16 @@ lemma coeff_mul_of_smul_comm
 
 /-- **The symbol action of a coefficient is an anti-homomorphism.** Let `Θ` send a
 coefficient `g ⊗ T` in `JetRing ⊗ End V` to the endomorphism `jetRingAction g ⊗ Tᵀ` of
-the symbol space `DerivAlgebraComplex ⊗ Dual V`. Then `Θ` reverses products: the jet-ring
+the symbol space `SpaceTimeDerivAlgebraℂ ⊗ Dual V`. Then `Θ` reverses products: the jet-ring
 factor is multiplicative (`jetRingAction_mul`, and `JetRing` is commutative) while the
 target factor is contravariant (`Module.Dual.transpose_comp`). Composed with `U ↦ U⁻¹`
 this is exactly what makes the induced action a representation, with no induction over
 the antidiagonal. -/
 lemma symbolAction_mul
     (Θ : (JetRing ⊗[ℂ] Module.End ℂ V) →ₗ[ℂ]
-      Module.End ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ V))
+      Module.End ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V))
     (hΘ : ∀ (g : JetRing) (T : Module.End ℂ V),
-      Θ (g ⊗ₜ[ℂ] T) = TensorProduct.map (DerivAlgebraComplex.jetRingAction g)
+      Θ (g ⊗ₜ[ℂ] T) = TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction g)
         (Module.Dual.transpose T))
     (x y : JetRing ⊗[ℂ] Module.End ℂ V) :
     Θ (x * y) = Θ y ∘ₗ Θ x := by
@@ -173,7 +173,7 @@ lemma symbolAction_mul
           simp
       | tmul b T =>
           rw [Algebra.TensorProduct.tmul_mul_tmul, hΘ, hΘ, hΘ,
-            ← TensorProduct.map_comp, ← DerivAlgebraComplex.jetRingAction_mul,
+            ← TensorProduct.map_comp, ← SpaceTimeDerivAlgebraℂ.jetRingAction_mul,
             ← Module.Dual.transpose_comp, Module.End.mul_eq_comp, mul_comm a b]
       | add p q hp hq =>
           have hd : (a ⊗ₜ[ℂ] S) * (p + q) = (a ⊗ₜ[ℂ] S) * p + (a ⊗ₜ[ℂ] S) * q := by

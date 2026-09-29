@@ -7,7 +7,7 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
-public import Physlib.Relativity.DerivAlgebra
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Physlib.Mathematics.SymmetricAlgebra
 public import Mathlib.LinearAlgebra.Dual.Lemmas
 
@@ -86,10 +86,10 @@ variable (𝔤) in
   covector `φ` on the target space. -/
 noncomputable def ofComponent : Module.Dual ℝ (GaugeBoson 𝔤) →ₗ[ℝ] (LocalGaugeFieldAlgebra 𝔤) :=
   (SymmetricAlgebra.ι ℝ _).comp
-    (TensorProduct.mk ℝ DerivAlgebraReal (Module.Dual ℝ (GaugeBoson 𝔤)) 1)
+    (TensorProduct.mk ℝ SpaceTimeDerivAlgebraℝ (Module.Dual ℝ (GaugeBoson 𝔤)) 1)
 
 lemma ofComponent_apply (φ : Module.Dual ℝ (GaugeBoson 𝔤)) :
-    (ofComponent 𝔤) φ = SymmetricAlgebra.ι ℝ _ ((1 : DerivAlgebraReal) ⊗ₜ[ℝ] φ) := rfl
+    (ofComponent 𝔤) φ = SymmetricAlgebra.ι ℝ _ ((1 : SpaceTimeDerivAlgebraℝ) ⊗ₜ[ℝ] φ) := rfl
 
 variable (𝔤) in
 /-- **The component function `A_μ^φ` of the gauge-boson field**: the spacetime index `μ`

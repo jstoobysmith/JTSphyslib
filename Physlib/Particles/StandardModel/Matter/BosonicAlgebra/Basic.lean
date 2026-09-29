@@ -108,26 +108,26 @@ the content of `BosonicAlgebra.adjoin_iteratedJetDeriv_eq_top`.
   of the component space. -/
 noncomputable def ofField : Module.Dual ℂ M.V →ₗ[ℂ] BosonicAlgebra M :=
   (SymmetricAlgebra.ι ℂ _).comp
-    ((LinearMap.inl ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
-      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ M.V) 1))
+    ((LinearMap.inl ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+        (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
+      (TensorProduct.mk ℂ SpaceTimeDerivAlgebraℂ (Module.Dual ℂ M.V) 1))
 
 /-- **The component function `ψ̄_φ` of the conjugate matter field** along the covector `φ`
   on `ConjModule M.V`: the undifferentiated generator in the conjugate half of the component
   space. -/
 noncomputable def ofConjField : Module.Dual ℂ (ConjModule M.V) →ₗ[ℂ] BosonicAlgebra M :=
   (SymmetricAlgebra.ι ℂ _).comp
-    ((LinearMap.inr ℂ (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ M.V)
-        (DerivAlgebraComplex ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
-      (TensorProduct.mk ℂ DerivAlgebraComplex (Module.Dual ℂ (ConjModule M.V)) 1))
+    ((LinearMap.inr ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ M.V)
+        (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule M.V))).comp
+      (TensorProduct.mk ℂ SpaceTimeDerivAlgebraℂ (Module.Dual ℂ (ConjModule M.V)) 1))
 
 lemma ofField_apply (φ : Module.Dual ℂ M.V) :
     ofField φ = SymmetricAlgebra.ι ℂ _
-      (((1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := rfl
+      (((1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ, 0) : JetComponentSpace M) := rfl
 
 lemma ofConjField_apply (φ : Module.Dual ℂ (ConjModule M.V)) :
     ofConjField φ = SymmetricAlgebra.ι ℂ _
-      ((0, (1 : DerivAlgebraComplex) ⊗ₜ[ℂ] φ) : JetComponentSpace M) := rfl
+      ((0, (1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ) : JetComponentSpace M) := rfl
 
 /-!
 

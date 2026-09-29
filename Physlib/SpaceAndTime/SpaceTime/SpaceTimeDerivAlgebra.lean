@@ -36,9 +36,10 @@ public import Physlib.Mathematics.Fin
 
 -/
 
-abbrev DerivAlgebraComplex := SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)
+/-- The ℂ-algebra of derivative symbols in spacetime . -/
+abbrev SpaceTimeDerivAlgebraℂ := SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)
 
-namespace DerivAlgebraComplex
+namespace SpaceTimeDerivAlgebraℂ
 
 /-!
 
@@ -49,7 +50,7 @@ namespace DerivAlgebraComplex
 /-- The basis of the algebra of derivative symbols, indexed by multisets of
   spacetime indices: the multiset `s` labels the monomial `∂_s`. -/
 noncomputable def basis :
-    Module.Basis (Multiset (Fin 1 ⊕ Fin 3)) ℂ DerivAlgebraComplex :=
+    Module.Basis (Multiset (Fin 1 ⊕ Fin 3)) ℂ SpaceTimeDerivAlgebraℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.reindex Multiset.toFinsupp.toEquiv.symm
 
 /-- The basis vector at a multiset of derivative indices is the corresponding
@@ -105,9 +106,9 @@ lemma basis_mul (s t : Multiset (Fin 1 ⊕ Fin 3)) :
 
 -/
 
-/-- The derivative of an element in `DerivAlgebraComplex` taking e.g.
+/-- The derivative of an element in `SpaceTimeDerivAlgebraℂ` taking e.g.
   `∂_s` to `∂_μ ∂_s`. -/
-noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : DerivAlgebraComplex →ₗ[ℂ] DerivAlgebraComplex :=
+noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : SpaceTimeDerivAlgebraℂ →ₗ[ℂ] SpaceTimeDerivAlgebraℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
     Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (m + Finsupp.single μ 1)
 
@@ -116,7 +117,7 @@ lemma deriv_basis (μ : Fin 1 ⊕ Fin 3) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
       Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (m + Finsupp.single μ 1) := by
   rw [deriv, Module.Basis.constr_basis]
 
-lemma deriv_comm_apply (μ ν : Fin 1 ⊕ Fin 3) (x : DerivAlgebraComplex) :
+lemma deriv_comm_apply (μ ν : Fin 1 ⊕ Fin 3) (x : SpaceTimeDerivAlgebraℂ) :
     deriv μ (deriv ν x) = deriv ν (deriv μ x) := by
   have h : (deriv μ) ∘ₗ (deriv ν) = (deriv ν) ∘ₗ (deriv μ) := by
     refine Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.ext fun m => ?_
@@ -134,7 +135,7 @@ lemma deriv_basis_multiset (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3
 
 /-- The derivative operator is right multiplication by the first-order derivative
   symbol. -/
-lemma deriv_apply_eq_mul (μ : Fin 1 ⊕ Fin 3) (a : DerivAlgebraComplex) :
+lemma deriv_apply_eq_mul (μ : Fin 1 ⊕ Fin 3) (a : SpaceTimeDerivAlgebraℂ) :
     deriv μ a = a * basis ({μ} : Multiset (Fin 1 ⊕ Fin 3)) := by
   have h : deriv μ = LinearMap.mulRight ℂ (basis ({μ} : Multiset (Fin 1 ⊕ Fin 3))) := by
     refine basis.ext fun s => ?_
@@ -171,7 +172,7 @@ instance : RightCommutative
   right_comm f μ ν := MvPowerSeries.pderiv_comm ν μ f
 
 /-- The evaluation map taking a function `f : JetRing` to `∂_μ f`. -/
-noncomputable def eval : DerivAlgebraComplex →ₗ[ℂ] JetRing →ₗ[ℂ] ℂ :=
+noncomputable def eval : SpaceTimeDerivAlgebraℂ →ₗ[ℂ] JetRing →ₗ[ℂ] ℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
     (∏ μ, (m μ)! : ℕ) • MvPowerSeries.coeff m
 
@@ -183,7 +184,7 @@ lemma eval_basis (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : JetRing) :
   rw [eval, Module.Basis.constr_basis]
   rfl
 
-lemma eval_monomial (p : DerivAlgebraComplex) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+lemma eval_monomial (p : SpaceTimeDerivAlgebraℂ) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
     eval p (MvPowerSeries.monomial m 1) =
       ((∏ μ, (m μ)! : ℕ) : ℂ) * Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.repr p m := by
   classical
@@ -200,7 +201,7 @@ lemma eval_monomial (p : DerivAlgebraComplex) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ)
     rw [Finsupp.notMem_support_iff.mp hm]
     simp
 
-lemma eval_injective {p q : DerivAlgebraComplex}
+lemma eval_injective {p q : SpaceTimeDerivAlgebraℂ}
     (h : ∀ f, eval p f = eval q f) : p = q := by
   refine Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.ext_elem fun m => ?_
   have hf := h (MvPowerSeries.monomial m 1)
@@ -212,7 +213,7 @@ lemma eval_injective {p q : DerivAlgebraComplex}
 
 /-- Adjointness: the shift of derivative symbols is the transpose of the formal
   partial derivative under the divided-power pairing. -/
-lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : DerivAlgebraComplex) (f : JetRing) :
+lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : SpaceTimeDerivAlgebraℂ) (f : JetRing) :
     eval (deriv ν p) f = eval p (MvPowerSeries.pderiv ν f) := by
   have h : (eval.flip f) ∘ₗ deriv ν =
       eval.flip (MvPowerSeries.pderiv ν f) := by
@@ -238,8 +239,8 @@ lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : DerivAlgebraComplex) (f : JetRing) 
 /-- The pairing of the unit derivative symbol with a jet is its value at the base
   point: the empty derivative multiset reads off the constant term. -/
 lemma eval_one (f : JetRing) :
-    eval (1 : DerivAlgebraComplex) f = MvPowerSeries.constantCoeff f := by
-  rw [show (1 : DerivAlgebraComplex) = basis (0 : Multiset (Fin 1 ⊕ Fin 3)) from basis_nil.symm,
+    eval (1 : SpaceTimeDerivAlgebraℂ) f = MvPowerSeries.constantCoeff f := by
+  rw [show (1 : SpaceTimeDerivAlgebraℂ) = basis (0 : Multiset (Fin 1 ⊕ Fin 3)) from basis_nil.symm,
     basis_apply]
   simp
 
@@ -268,7 +269,8 @@ lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) 
 
 /-- The action of `χ` on the derivatives, this takes `∂_μ ·` to `∂_μ (χ ·)`,
   expanded out explicitly. -/
-noncomputable def jetRingAction (χ : JetRing) : DerivAlgebraComplex →ₗ[ℂ] DerivAlgebraComplex :=
+noncomputable def jetRingAction (χ : JetRing) :
+    SpaceTimeDerivAlgebraℂ →ₗ[ℂ] SpaceTimeDerivAlgebraℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
     ∑ p ∈ Finset.antidiagonal m,
       ((∏ μ, (m μ).descFactorial (p.1 μ) : ℕ) : ℂ) • MvPowerSeries.coeff p.1 χ •
@@ -281,7 +283,7 @@ lemma jetRingAction_basis (χ : JetRing) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
           Lorentz.complexCoBasis.dualBasis.symmetricAlgebra p.2 := by
   rw [jetRingAction, Module.Basis.constr_basis]
 
-lemma eval_jetRingAction (χ f : JetRing) (p : DerivAlgebraComplex) :
+lemma eval_jetRingAction (χ f : JetRing) (p : SpaceTimeDerivAlgebraℂ) :
     eval (jetRingAction χ p) f = eval p (χ * f) := by
   classical
   have h : (eval.flip f) ∘ₗ jetRingAction χ = eval.flip (χ * f) := by
@@ -379,7 +381,7 @@ lemma jetRingAction_add (χ ψ : JetRing) :
 /-- The derivative action as a ring homomorphism from the jet ring to the
   endomorphisms of the algebra of derivative symbols: the module structure of the
   jet ring on its graded dual. -/
-noncomputable def jetRingActionHom : JetRing →+* Module.End ℂ DerivAlgebraComplex where
+noncomputable def jetRingActionHom : JetRing →+* Module.End ℂ SpaceTimeDerivAlgebraℂ where
   toFun := jetRingAction
   map_one' := jetRingAction_one
   map_mul' χ ψ := jetRingAction_mul χ ψ
@@ -387,7 +389,7 @@ noncomputable def jetRingActionHom : JetRing →+* Module.End ℂ DerivAlgebraCo
   map_add' := jetRingAction_add
 
 /-- The actions of two jets commute: the jet ring is commutative. -/
-lemma jetRingAction_comm (χ ψ : JetRing) (a : DerivAlgebraComplex) :
+lemma jetRingAction_comm (χ ψ : JetRing) (a : SpaceTimeDerivAlgebraℂ) :
     jetRingAction χ (jetRingAction ψ a) = jetRingAction ψ (jetRingAction χ a) := by
   rw [← LinearMap.comp_apply, ← jetRingAction_mul, mul_comm, jetRingAction_mul,
     LinearMap.comp_apply]
@@ -396,14 +398,14 @@ lemma jetRingAction_comm (χ ψ : JetRing) (a : DerivAlgebraComplex) :
   value of the jet at the base point. -/
 @[simp]
 lemma jetRingAction_apply_one (χ : JetRing) :
-    jetRingAction χ (1 : DerivAlgebraComplex) =
+    jetRingAction χ (1 : SpaceTimeDerivAlgebraℂ) =
       MvPowerSeries.constantCoeff χ • 1 := by
   have h0 : Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) =
       1 := by
     rw [show (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) =
         Multiset.toFinsupp ({} : Multiset (Fin 1 ⊕ Fin 3)) by simp,
       ← basis_apply, basis_nil]
-  rw [show (1 : DerivAlgebraComplex) =
+  rw [show (1 : SpaceTimeDerivAlgebraℂ) =
       Lorentz.complexCoBasis.dualBasis.symmetricAlgebra 0 from h0.symm,
     jetRingAction, Module.Basis.constr_basis, Finsupp.antidiagonal_zero, Finset.sum_singleton]
   simp
@@ -452,7 +454,7 @@ lemma jetRingAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
   `χ` after differentiating equals differentiating after acting, plus the action
   of the derivative `∂_ν χ`. This is the operator form of the Leibniz rule
   `∂_ν (χ f) = χ ∂_ν f + (∂_ν χ) f` under the divided-power pairing. -/
-lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : DerivAlgebraComplex) :
+lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : SpaceTimeDerivAlgebraℂ) :
     jetRingAction χ (deriv ν a) =
       deriv ν (jetRingAction χ a) + jetRingAction (MvPowerSeries.pderiv ν χ) a := by
   refine eval_injective fun f => ?_
@@ -482,7 +484,7 @@ open Matrix MatrixGroups
 
 /-- The representation of the Lorentz group `SL(2,ℂ)` on the algebra of derivative
   symbols, extending the dual covector representation multiplicatively. -/
-noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) DerivAlgebraComplex where
+noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) SpaceTimeDerivAlgebraℂ where
   toFun Λ := (SymmetricAlgebra.lift
     (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)).toLinearMap
   map_one' := by
@@ -508,7 +510,7 @@ noncomputable def repLorentzGroup : Representation ℂ SL(2,ℂ) DerivAlgebraCom
 lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) : repLorentzGroup Λ 1 = 1:= by
   simp [repLorentzGroup]
 
-lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (a b : DerivAlgebraComplex) :
+lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ)) (a b : SpaceTimeDerivAlgebraℂ) :
     repLorentzGroup Λ (a * b) = repLorentzGroup Λ a * repLorentzGroup Λ b := by
   simp [repLorentzGroup, map_mul]
 
@@ -523,7 +525,7 @@ lemma repLorentzGroup_apply_ι (Λ : SL(2,ℂ)) (x : Module.Dual ℂ Lorentz.Co�
 /-- The Lorentz action on a derivative: the derivative symbol transforms as a
   covector, mixing the spacetime directions by the components of `Λ` in the dual
   covector representation. -/
-lemma repLorentzGroup_deriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (a : DerivAlgebraComplex) :
+lemma repLorentzGroup_deriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (a : SpaceTimeDerivAlgebraℂ) :
     repLorentzGroup Λ (deriv μ a) =
       ∑ ν, (Lorentz.CoℂModule.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ))
         (Lorentz.complexCoBasis ν) • deriv ν (repLorentzGroup Λ a) := by
@@ -611,7 +613,7 @@ lemma repLorentzGroup_basis_ofFn (Λ : SL(2,ℂ)) {n : ℕ} (l : Fin n → (Fin 
 /-- The derivative-degree scaling on the algebra of derivative symbols: the
   algebra map multiplying each generator by `t`, hence each degree-`n` monomial
   by `t ^ n`. -/
-noncomputable def gradeScale (t : ℂ) : DerivAlgebraComplex →ₐ[ℂ] DerivAlgebraComplex :=
+noncomputable def gradeScale (t : ℂ) : SpaceTimeDerivAlgebraℂ →ₐ[ℂ] SpaceTimeDerivAlgebraℂ :=
   SymmetricAlgebra.lift (t • SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule))
 
 @[simp]
@@ -635,7 +637,7 @@ lemma gradeScale_basis (t : ℂ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- The degree scaling commutes with the Lorentz action: the Lorentz action
   preserves the derivative degree. -/
-lemma gradeScale_repLorentzGroup (t : ℂ) (Λ : SL(2,ℂ)) (a : DerivAlgebraComplex) :
+lemma gradeScale_repLorentzGroup (t : ℂ) (Λ : SL(2,ℂ)) (a : SpaceTimeDerivAlgebraℂ) :
     gradeScale t (repLorentzGroup Λ a) = repLorentzGroup Λ (gradeScale t a) := by
   have h : (gradeScale t).comp (SymmetricAlgebra.lift
       (SymmetricAlgebra.ι ℂ _ ∘ₗ Lorentz.CoℂModule.SL2CRep.dual Λ)) =
@@ -660,7 +662,7 @@ coefficient of `X ^ n` in `gradePoly a` is the part of `a` of derivative degree 
 /-- The derivative-degree polynomial on the algebra of derivative symbols: the linear map
   sending the basis monomial `∂_s` to `X ^ |s|` times itself. It is `gradeScale` with the
   scalar replaced by the formal variable `X`. -/
-noncomputable def gradePoly : DerivAlgebraComplex →ₗ[ℂ] Polynomial DerivAlgebraComplex :=
+noncomputable def gradePoly : SpaceTimeDerivAlgebraℂ →ₗ[ℂ] Polynomial SpaceTimeDerivAlgebraℂ :=
   basis.constr ℂ fun s => Polynomial.monomial (Multiset.card s) (basis s)
 
 /-- The derivative-degree polynomial of a basis monomial is the monomial of degree `|s|`. -/
@@ -671,30 +673,30 @@ lemma gradePoly_basis (s : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- Evaluating the derivative-degree polynomial at a scalar is the derivative-degree
   scaling by that scalar: the two descriptions of the grading agree. -/
-lemma eval_algebraMap_gradePoly (t : ℂ) (a : DerivAlgebraComplex) :
-    (gradePoly a).eval (algebraMap ℂ DerivAlgebraComplex t) = gradeScale t a := by
-  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℂ DerivAlgebraComplex)
-      (algebraMap ℂ DerivAlgebraComplex t)
+lemma eval_algebraMap_gradePoly (t : ℂ) (a : SpaceTimeDerivAlgebraℂ) :
+    (gradePoly a).eval (algebraMap ℂ SpaceTimeDerivAlgebraℂ t) = gradeScale t a := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℂ SpaceTimeDerivAlgebraℂ)
+      (algebraMap ℂ SpaceTimeDerivAlgebraℂ t)
       (fun b => (Algebra.commutes t b).symm)).toLinearMap ∘ₗ gradePoly =
       (gradeScale t).toLinearMap := by
     refine basis.ext fun s => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply, gradePoly_basis,
       AlgHom.toLinearMap_apply, gradeScale_basis]
     show (Polynomial.monomial (Multiset.card s) (basis s)).eval
-      (algebraMap ℂ DerivAlgebraComplex t) = _
+      (algebraMap ℂ SpaceTimeDerivAlgebraℂ t) = _
     rw [Polynomial.eval_monomial, ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
   exact LinearMap.congr_fun h a
 
 /-- Setting the formal variable to one recovers the original element: the pieces of a
   graded decomposition sum to the element. -/
-lemma gradePoly_eval_one (a : DerivAlgebraComplex) : (gradePoly a).eval 1 = a := by
+lemma gradePoly_eval_one (a : SpaceTimeDerivAlgebraℂ) : (gradePoly a).eval 1 = a := by
   have h := eval_algebraMap_gradePoly 1 a
   rw [map_one] at h
   rw [h, gradeScale, show (1 : ℂ) • SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
     = SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule) from one_smul _ _,
     SymmetricAlgebra.lift_ι, AlgHom.id_apply]
 
-end DerivAlgebraComplex
+end SpaceTimeDerivAlgebraℂ
 
 
 /-!
@@ -703,9 +705,9 @@ end DerivAlgebraComplex
 
 -/
 
-abbrev DerivAlgebraReal := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
+abbrev SpaceTimeDerivAlgebraℝ := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
 
-namespace DerivAlgebraReal
+namespace SpaceTimeDerivAlgebraℝ
 open Matrix MatrixGroups
 
 /-- The representation of the Lorentz group on the real Lorentz-covector derivative
@@ -717,7 +719,7 @@ noncomputable def _root_.Lorentz.CoVector.sl2Rep : Representation ℝ SL(2,ℂ) 
 
 /-- The representation of the Lorentz group `SL(2,ℂ)` on the algebra of derivative
   symbols, extending the dual covector representation multiplicatively. -/
-noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) DerivAlgebraReal where
+noncomputable def repLorentzGroup : Representation ℝ SL(2,ℂ) SpaceTimeDerivAlgebraℝ where
   toFun Λ := (SymmetricAlgebra.lift
     (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)).toLinearMap
   map_one' := by
@@ -750,15 +752,15 @@ lemma repLorentzGroup_apply_ι (Λ : SL(2,ℂ)) (x : Module.Dual ℝ Lorentz.CoV
 /-- The real derivative-algebra representation is multiplicative: it is the lift of a linear
   map to the symmetric algebra. -/
 lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ))
-    (a b : DerivAlgebraReal) :
-    DerivAlgebraReal.repLorentzGroup Λ (a * b) =
-      DerivAlgebraReal.repLorentzGroup Λ a * DerivAlgebraReal.repLorentzGroup Λ b := by
-  simp [DerivAlgebraReal.repLorentzGroup]
+    (a b : SpaceTimeDerivAlgebraℝ) :
+    SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ (a * b) =
+      SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ a * SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ b := by
+  simp [SpaceTimeDerivAlgebraℝ.repLorentzGroup]
 
 @[simp]
 lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
-    DerivAlgebraReal.repLorentzGroup Λ 1 = 1 := by
-  simp [DerivAlgebraReal.repLorentzGroup]
+    SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ 1 = 1 := by
+  simp [SpaceTimeDerivAlgebraℝ.repLorentzGroup]
 
 /-- The components of the dual covector action on the dual basis: the dual
   derivative slots transform contravariantly, by the columns of the Lorentz
@@ -776,7 +778,7 @@ lemma _root_.Lorentz.CoVector.sl2Rep_dual_dualBasis (Λ : SL(2,ℂ)) (μ : Fin 1
 
 /-- The derivative-degree scaling on the real algebra of derivative symbols:
   the algebra map multiplying each generator by `t`. -/
-noncomputable def gradeScale (t : ℝ) : DerivAlgebraReal →ₐ[ℝ] DerivAlgebraReal :=
+noncomputable def gradeScale (t : ℝ) : SpaceTimeDerivAlgebraℝ →ₐ[ℝ] SpaceTimeDerivAlgebraℝ :=
   SymmetricAlgebra.lift (t • SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector))
 
 @[simp]
@@ -788,7 +790,7 @@ lemma gradeScale_ι (t : ℝ) (x : Module.Dual ℝ Lorentz.CoVector) :
 
 /-- The degree scaling commutes with the Lorentz action on the real derivative
   symbols. -/
-lemma gradeScale_repLorentzGroup (t : ℝ) (Λ : SL(2,ℂ)) (a : DerivAlgebraReal) :
+lemma gradeScale_repLorentzGroup (t : ℝ) (Λ : SL(2,ℂ)) (a : SpaceTimeDerivAlgebraℝ) :
     gradeScale t (repLorentzGroup Λ a) = repLorentzGroup Λ (gradeScale t a) := by
   have h : (gradeScale t).comp (SymmetricAlgebra.lift
       (SymmetricAlgebra.ι ℝ _ ∘ₗ Lorentz.CoVector.sl2Rep.dual Λ)) =
@@ -801,7 +803,7 @@ lemma gradeScale_repLorentzGroup (t : ℝ) (Λ : SL(2,ℂ)) (a : DerivAlgebraRea
 
 /-!
 
-## The multiset basis of `DerivAlgebraReal`
+## The multiset basis of `SpaceTimeDerivAlgebraℝ`
 
 -/
 
@@ -888,7 +890,7 @@ lemma gradeScale_basisMultiset (t : ℝ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- The derivative-degree polynomial on the real algebra of derivative symbols: the linear
   map sending the basis monomial `∂_s` to `X ^ |s|` times itself. -/
-noncomputable def gradePoly : DerivAlgebraReal →ₗ[ℝ] Polynomial DerivAlgebraReal :=
+noncomputable def gradePoly : SpaceTimeDerivAlgebraℝ →ₗ[ℝ] Polynomial SpaceTimeDerivAlgebraℝ :=
   basisMultiset.constr ℝ fun s => Polynomial.monomial (Multiset.card s) (basisMultiset s)
 
 /-- The derivative-degree polynomial of a real basis monomial is the monomial of degree
@@ -901,27 +903,27 @@ lemma gradePoly_basisMultiset (s : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- Evaluating the real derivative-degree polynomial at a scalar is the derivative-degree
   scaling by that scalar. -/
-lemma eval_algebraMap_gradePoly (t : ℝ) (a : DerivAlgebraReal) :
-    (gradePoly a).eval (algebraMap ℝ DerivAlgebraReal t) = gradeScale t a := by
-  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℝ DerivAlgebraReal)
-      (algebraMap ℝ DerivAlgebraReal t)
+lemma eval_algebraMap_gradePoly (t : ℝ) (a : SpaceTimeDerivAlgebraℝ) :
+    (gradePoly a).eval (algebraMap ℝ SpaceTimeDerivAlgebraℝ t) = gradeScale t a := by
+  have h : (Polynomial.eval₂AlgHom (AlgHom.id ℝ SpaceTimeDerivAlgebraℝ)
+      (algebraMap ℝ SpaceTimeDerivAlgebraℝ t)
       (fun b => (Algebra.commutes t b).symm)).toLinearMap ∘ₗ gradePoly =
       (gradeScale t).toLinearMap := by
     refine basisMultiset.ext fun s => ?_
     simp only [LinearMap.coe_comp, Function.comp_apply, gradePoly_basisMultiset,
       AlgHom.toLinearMap_apply, gradeScale_basisMultiset]
     show (Polynomial.monomial (Multiset.card s) (basisMultiset s)).eval
-      (algebraMap ℝ DerivAlgebraReal t) = _
+      (algebraMap ℝ SpaceTimeDerivAlgebraℝ t) = _
     rw [Polynomial.eval_monomial, ← map_pow, ← Algebra.commutes, ← Algebra.smul_def]
   exact LinearMap.congr_fun h a
 
 /-- Setting the formal variable to one recovers the original element of the real
   derivative algebra. -/
-lemma gradePoly_eval_one (a : DerivAlgebraReal) : (gradePoly a).eval 1 = a := by
+lemma gradePoly_eval_one (a : SpaceTimeDerivAlgebraℝ) : (gradePoly a).eval 1 = a := by
   have h := eval_algebraMap_gradePoly 1 a
   rw [map_one] at h
   rw [h, gradeScale, show (1 : ℝ) • SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector)
     = SymmetricAlgebra.ι ℝ (Module.Dual ℝ Lorentz.CoVector) from one_smul _ _,
     SymmetricAlgebra.lift_ι, AlgHom.id_apply]
 
-end DerivAlgebraReal
+end SpaceTimeDerivAlgebraℝ

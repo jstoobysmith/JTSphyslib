@@ -104,7 +104,7 @@ lemma higgsMass_mem_massWeightSubmodule :
   have hw : (fieldData.boson ⟨⟨.H, by decide⟩, ⟨0, by decide⟩⟩).massWeight = 2 := rfl
   erw [massWeightScale_ιBoson, massWeightScale_ιBoson, hw]
   simp only [JetComponentSpace.massWeightScale, LinearMap.smul_apply, LinearMap.prodMap_apply,
-    TensorProduct.map_tmul, AlgHom.toLinearMap_apply, DerivAlgebraComplex.gradeScale_basis,
+    TensorProduct.map_tmul, AlgHom.toLinearMap_apply, SpaceTimeDerivAlgebraℂ.gradeScale_basis,
     Multiset.card_zero, pow_zero, one_smul, LinearMap.id_apply, map_zero, map_smul,
     smul_mul_smul_comm, ← pow_add]
 

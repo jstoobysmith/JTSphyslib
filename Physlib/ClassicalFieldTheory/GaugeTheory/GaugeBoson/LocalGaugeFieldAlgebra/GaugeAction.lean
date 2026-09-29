@@ -161,8 +161,8 @@ variable (jets) in
 noncomputable def transportFun (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℝ (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson.JetComponentSpace 𝔤) :=
   (s.antidiagonal.map fun p =>
-    (TensorProduct.mk ℝ DerivAlgebraReal (Module.Dual ℝ (GaugeBoson 𝔤))
-        (DerivAlgebraReal.basisMultiset p.2)).comp
+    (TensorProduct.mk ℝ SpaceTimeDerivAlgebraℝ (Module.Dual ℝ (GaugeBoson 𝔤))
+        (SpaceTimeDerivAlgebraℝ.basisMultiset p.2)).comp
       ((GaugeBoson.adjointTransport jets U p.1).dualMap)).sum
 
 variable (jets) in
@@ -171,13 +171,13 @@ variable (jets) in
   of the adjoint action of `U` against the lower component functions. -/
 noncomputable def transport (U : GJ) :
     (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] (GaugeBoson.JetComponentSpace 𝔤) :=
-  TensorProduct.lift (DerivAlgebraReal.basisMultiset.constr ℝ (transportFun jets U))
+  TensorProduct.lift (SpaceTimeDerivAlgebraℝ.basisMultiset.constr ℝ (transportFun jets U))
 
 lemma transport_basis_tmul (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (ψ : Module.Dual ℝ (GaugeBoson 𝔤)) :
-    transport jets U (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)
+    transport jets U (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)
       = (s.antidiagonal.map fun p =>
-          DerivAlgebraReal.basisMultiset p.2 ⊗ₜ[ℝ]
+          SpaceTimeDerivAlgebraℝ.basisMultiset p.2 ⊗ₜ[ℝ]
             (GaugeBoson.adjointTransport jets U p.1).dualMap ψ).sum := by
   rw [transport, TensorProduct.lift.tmul, Module.Basis.constr_basis, transportFun,
     Multiset.sum_linearMap_apply, Multiset.map_map]
@@ -189,16 +189,16 @@ lemma _root_.GaugeBoson.JetComponentSpace.ext_of_basis
     {M : Type*} [AddCommMonoid M] [Module ℝ M]
     {F G : (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] M}
     (h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (ψ : Module.Dual ℝ (GaugeBoson 𝔤)),
-      F (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)
-        = G (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)) : F = G := by
+      F (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)
+        = G (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)) : F = G := by
   refine LinearMap.ext fun x => ?_
   induction x using TensorProduct.induction_on with
   | zero => rw [map_zero, map_zero]
   | add a b ha hb => rw [map_add, map_add, ha, hb]
   | tmul a ψ =>
     have ha : a ∈ Submodule.span ℝ
-        (Set.range DerivAlgebraReal.basisMultiset) := by
-      rw [DerivAlgebraReal.basisMultiset.span_eq]; trivial
+        (Set.range SpaceTimeDerivAlgebraℝ.basisMultiset) := by
+      rw [SpaceTimeDerivAlgebraℝ.basisMultiset.span_eq]; trivial
     induction ha using Submodule.span_induction with
     | mem b hb => obtain ⟨s, rfl⟩ := hb; exact h s ψ
     | zero => rw [TensorProduct.zero_tmul, map_zero, map_zero]
@@ -211,7 +211,7 @@ lemma transport_one : transport jets (1 : GJ) = LinearMap.id := by
   rw [transport_basis_tmul,
     Multiset.map_congr rfl (fun p hp => by rw [GaugeBoson.adjointTransport_one]),
     Multiset.sum_antidiagonal_eq_of_fst_ne_zero s
-      (fun p => DerivAlgebraReal.basisMultiset p.2 ⊗ₜ[ℝ]
+      (fun p => SpaceTimeDerivAlgebraℝ.basisMultiset p.2 ⊗ₜ[ℝ]
         ((if p.1 = 0 then LinearMap.id else 0) :
           (GaugeBoson 𝔤) →ₗ[ℝ] (GaugeBoson 𝔤)).dualMap ψ)
       (fun p _ hp => by
@@ -238,10 +238,10 @@ lemma transport_mul (U V : GJ) :
     rw [LinearMap.dualMap_apply, Multiset.sum_linearMap_apply, Multiset.map_map,
       map_multiset_sum, Multiset.map_map, Multiset.sum_linearMap_apply, Multiset.map_map]
     rfl
-  have hLHS : transport jets (U * V) (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)
+  have hLHS : transport jets (U * V) (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)
       = (s.antidiagonal.map fun p =>
           (p.1.antidiagonal.map fun q =>
-            DerivAlgebraReal.basisMultiset p.2 ⊗ₜ[ℝ]
+            SpaceTimeDerivAlgebraℝ.basisMultiset p.2 ⊗ₜ[ℝ]
               (GaugeBoson.adjointTransport jets V q.2).dualMap
                 ((GaugeBoson.adjointTransport jets U q.1).dualMap ψ)).sum).sum := by
     rw [transport_basis_tmul]
@@ -249,10 +249,10 @@ lemma transport_mul (U V : GJ) :
     rw [hdual p, Multiset.tmul_sum, Multiset.map_map]
     exact congrArg Multiset.sum (Multiset.map_congr rfl fun q hq => rfl)
   have hRHS : (transport jets V ∘ₗ transport jets U)
-        (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)
+        (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)
       = (s.antidiagonal.map fun p =>
           (p.2.antidiagonal.map fun q =>
-            DerivAlgebraReal.basisMultiset q.2 ⊗ₜ[ℝ]
+            SpaceTimeDerivAlgebraℝ.basisMultiset q.2 ⊗ₜ[ℝ]
               (GaugeBoson.adjointTransport jets V q.1).dualMap
                 ((GaugeBoson.adjointTransport jets U p.1).dualMap ψ)).sum).sum := by
     rw [LinearMap.comp_apply, transport_basis_tmul, map_multiset_sum, Multiset.map_map]
@@ -260,7 +260,7 @@ lemma transport_mul (U V : GJ) :
     exact transport_basis_tmul V p.2 _
   rw [hLHS, hRHS]
   exact Multiset.sum_antidiagonal_assoc s fun a b c =>
-    DerivAlgebraReal.basisMultiset c ⊗ₜ[ℝ]
+    SpaceTimeDerivAlgebraℝ.basisMultiset c ⊗ₜ[ℝ]
       (GaugeBoson.adjointTransport jets V b).dualMap
         ((GaugeBoson.adjointTransport jets U a).dualMap ψ)
 
@@ -349,12 +349,12 @@ variable (jets) in
   component `∂_s A^ψ` with the Taylor coefficient of the Maurer–Cartan form of `U`. It is
   the constant part of the affine gauge action. -/
 noncomputable def mcShift (U : GJ) : (GaugeBoson.JetComponentSpace 𝔤) →ₗ[ℝ] ℝ :=
-  TensorProduct.lift (DerivAlgebraReal.basisMultiset.constr ℝ fun s =>
+  TensorProduct.lift (SpaceTimeDerivAlgebraℝ.basisMultiset.constr ℝ fun s =>
     Module.Dual.eval ℝ (GaugeBoson 𝔤) (mcBosonCoeff jets U s))
 
 lemma mcShift_basis_tmul (U : GJ) (s : Multiset (Fin 1 ⊕ Fin 3))
     (ψ : Module.Dual ℝ (GaugeBoson 𝔤)) :
-    mcShift jets U (DerivAlgebraReal.basisMultiset s ⊗ₜ[ℝ] ψ)
+    mcShift jets U (SpaceTimeDerivAlgebraℝ.basisMultiset s ⊗ₜ[ℝ] ψ)
       = ψ (mcBosonCoeff jets U s) := by
   rw [mcShift, TensorProduct.lift.tmul, Module.Basis.constr_basis]
   rfl

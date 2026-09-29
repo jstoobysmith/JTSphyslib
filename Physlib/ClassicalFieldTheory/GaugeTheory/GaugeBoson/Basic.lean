@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.DerivAlgebra
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.LinearAlgebra.Dual.Lemmas
 /-!
 # The gauge-boson field of a gauge theory
@@ -167,12 +167,12 @@ noncomputable def repValue {G₀ : Type} [Monoid G₀] (ρ : Representation ℝ 
 
 variable (𝔤) in
 /-- The jet component space of the gauge-boson field: the span of the component functions
-  `∂_s A_μ^φ`. The `DerivAlgebraReal` factor carries the derivative label `s`, and the
+  `∂_s A_μ^φ`. The `SpaceTimeDerivAlgebraℝ` factor carries the derivative label `s`, and the
   dual factor the spacetime and adjoint indices — the latter as an abstract covector on
   the gauge algebra, with no basis chosen. Unlike a matter field, the gauge boson is real,
   so there is no conjugate half. -/
 abbrev JetComponentSpace : Type :=
-  DerivAlgebraReal ⊗[ℝ] Module.Dual ℝ (GaugeBoson 𝔤)
+  SpaceTimeDerivAlgebraℝ ⊗[ℝ] Module.Dual ℝ (GaugeBoson 𝔤)
 
 /-!
 
