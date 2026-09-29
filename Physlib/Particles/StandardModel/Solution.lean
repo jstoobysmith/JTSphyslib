@@ -6,7 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.Particles.StandardModel.Challenge
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 
 # The challenges and the existing theorems

@@ -32,11 +32,12 @@ Model: the Taylor–Leibniz theorem for the adjoint action, the truncation filtr
 jet gauge group by the Maurer–Cartan form, the covariance of the covariant derivative, and
 the determination of a pure jet by its symmetrized Maurer–Cartan data. Its freeness, the
 remaining power-series input to the classification of invariants, is
-`instFreeLocalGaugeData` in `GaugeGroup/MaurerCartan/Freeness.lean`.
+`instFreeLocalGaugeData`, the generic freeness of gauge data built from factors.
 
 ## ii. Key results
 
 - `StandardModel.localGaugeData` : the Standard Model gauge group as local gauge data.
+- `StandardModel.instFreeLocalGaugeData` : the package is free.
 - `StandardModel.localGaugeData_eval`, `StandardModel.localGaugeData_deriv`,
   `StandardModel.localGaugeData_maurerCartan`, `StandardModel.localGaugeData_adjointCoeff_apply`,
   … : the generic interface computed back to the Standard Model definitions.
@@ -77,6 +78,12 @@ is registered globally.
 noncomputable def localGaugeData :
     LocalGaugeData GaugeGroupI GaugeAlgebra JetGaugeGroupI JetGaugeAlgebra :=
   Model.gaugeData
+
+/-- The Standard Model package is free. It is the local gauge data of the factors
+  `SU(3)`, `SU(2)` and `U(1)`, each free, and freeness passes to products:
+  `LocalGaugeData.instFreeOfFactors`. The symmetrized Maurer–Cartan data are therefore free
+  coordinates on its pure jets, by `LocalGaugeData.symmetrizedMaurerCartanCoeff_bijective`. -/
+instance instFreeLocalGaugeData : localGaugeData.Free := LocalGaugeData.instFreeOfFactors _
 
 /- The hand-built package this definition replaces. Every field below is definitionally
 equal to the corresponding field of `Model.gaugeData`, which is why the rules of section B

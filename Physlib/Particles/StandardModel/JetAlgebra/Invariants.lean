@@ -8,7 +8,7 @@ module
 public import Physlib.Particles.StandardModel.JetAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.JetAlgebra.GaugeAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 /-!
 # Gauge invariants of the jet algebra of the Standard Model
 

@@ -10,7 +10,7 @@ public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.GaugeAlgebr
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.Fermions.UpSinglet.GaugeAlgebraAction
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
+public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.HiggsBoson.GaugeAlgebraAction
 public import Physlib.Particles.StandardModel.JetAlgebra.TransformsIn
 /-!

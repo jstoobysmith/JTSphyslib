@@ -387,7 +387,6 @@ public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Truncation
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
 public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Basic
-public import Physlib.Particles.StandardModel.GaugeGroup.MaurerCartan.Freeness
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2Conjugation
 public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.GaugeGroup.SU3PermDecomposition
