@@ -86,12 +86,12 @@ private lemma prodMap_multiset_sum {ι V₁ V₂ : Type} [AddCommGroup V₁] [Mo
 /-- **The jet gauge action of a direct sum**: the two actions, read through the
   identification of the jets of `M.V × N.V` with the pair of jets. -/
 noncomputable def repJetProd :
-    Representation ℂ GJ (JetRing ⊗[ℂ] (M.V × N.V)) where
+    Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] (M.V × N.V)) where
   toFun U := LinearEquiv.conjRingEquiv jetProdEquiv.symm ((M.repJet.prod N.repJet) U)
   map_one' := by rw [map_one, map_one]
   map_mul' U W := by rw [map_mul, map_mul]
 
-lemma repJetProd_apply (U : GJ) (z : JetRing ⊗[ℂ] (M.V × N.V)) :
+lemma repJetProd_apply (U : GJ) (z : SpaceTimeAlgebra ⊗[ℂ] (M.V × N.V)) :
     repJetProd M N U z =
       jetProdEquiv.symm (M.repJet U (jetProdEquiv z).1, N.repJet U (jetProdEquiv z).2) := rfl
 

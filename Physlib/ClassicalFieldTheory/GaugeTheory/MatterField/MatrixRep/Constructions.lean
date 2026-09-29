@@ -142,14 +142,15 @@ noncomputable def kron (R₁ : MatrixRep jets ι₁) (R₂ : MatrixRep jets ι�
       map_smul' r c := by
         simp only [map_smul, RingHom.id_apply]
         rw [Matrix.smul_kronecker, Matrix.kronecker_smul, smul_add] }
-  jetAct a := R₁.jetAct a ⊗ₖ (1 : Matrix ι₂ ι₂ JetRing) + (1 : Matrix ι₁ ι₁ JetRing) ⊗ₖ R₂.jetAct a
+  jetAct a := R₁.jetAct a ⊗ₖ (1 : Matrix ι₂ ι₂ SpaceTimeAlgebra) +
+      (1 : Matrix ι₁ ι₁ SpaceTimeAlgebra) ⊗ₖ R₂.jetAct a
   jetAct_ofConstantLie c := by
     show R₁.jetAct _ ⊗ₖ 1 + 1 ⊗ₖ R₂.jetAct _ = (R₁.act c ⊗ₖ 1 + 1 ⊗ₖ R₂.act c).map C
     rw [R₁.jetAct_ofConstantLie, R₂.jetAct_ofConstantLie, Matrix.map_add _ (map_add C),
       kronecker_one_map _ (map_zero C), one_kronecker_map _ (map_zero C)]
   jetAct_map_cc_foldl p a := by
     show (R₁.jetAct a ⊗ₖ 1 + 1 ⊗ₖ R₂.jetAct a).map _ = R₁.act _ ⊗ₖ 1 + 1 ⊗ₖ R₂.act _
-    rw [Matrix.map_add _ (fun x y => by rw [JetRing.foldl_pderiv_add, map_add]),
+    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.foldl_pderiv_add, map_add]),
       kronecker_one_map _ (by simp), one_kronecker_map _ (by simp),
       R₁.jetAct_map_cc_foldl, R₂.jetAct_map_cc_foldl]
   mat_map_pderiv U μ := by
@@ -179,16 +180,16 @@ noncomputable def kron (R₁ : MatrixRep jets ι₁) (R₂ : MatrixRep jets ι�
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- The iterated formal derivative commutes with conjugation. -/
-lemma foldl_pderiv_star (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+lemma foldl_pderiv_star (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (star f) = star (x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
-  | cons ν t ih => rw [Multiset.foldl_cons, JetRing.pderiv_star, ih, Multiset.foldl_cons]
+  | cons ν t ih => rw [Multiset.foldl_cons, SpaceTimeAlgebra.pderiv_star, ih, Multiset.foldl_cons]
 
 /-- **The conjugate representation**: the gauge jets act by the entrywise conjugate matrix
   of jets, the gauge algebra by the entrywise conjugate action matrix. -/
 noncomputable def conj (R : MatrixRep jets ι) : MatrixRep jets ι where
-  mat U := (R.mat U).map (starRingEnd JetRing)
+  mat U := (R.mat U).map (starRingEnd SpaceTimeAlgebra)
   mat_one := by rw [R.mat_one, Matrix.map_one _ (map_zero _) (map_one _)]
   mat_mul U V := by rw [R.mat_mul, Matrix.map_mul]
   act :=
@@ -199,13 +200,13 @@ noncomputable def conj (R : MatrixRep jets ι) : MatrixRep jets ι where
         exact Matrix.map_smul _ r (fun a => by
           show star (r • a) = r • star a
           rw [star_smul, star_trivial]) _ }
-  jetAct a := (R.jetAct a).map (starRingEnd JetRing)
+  jetAct a := (R.jetAct a).map (starRingEnd SpaceTimeAlgebra)
   jetAct_ofConstantLie c := by
     show ((R.jetAct _).map _) = ((R.act c).map _).map _
     rw [R.jetAct_ofConstantLie, Matrix.map_map, Matrix.map_map]
     congr 1
     funext z
-    exact JetRing.star_C z
+    exact SpaceTimeAlgebra.star_C z
   jetAct_map_cc_foldl p a := by
     show ((R.jetAct a).map _).map _ = (R.act _).map _
     rw [← R.jetAct_map_cc_foldl, Matrix.map_map, Matrix.map_map]
@@ -213,14 +214,14 @@ noncomputable def conj (R : MatrixRep jets ι) : MatrixRep jets ι where
     funext f
     show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (star f))
       = star (constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
-    rw [foldl_pderiv_star, JetRing.constantCoeff_star]
+    rw [foldl_pderiv_star, SpaceTimeAlgebra.constantCoeff_star]
   mat_map_pderiv U μ := by
     show ((R.mat U).map _).map _ = -((R.jetAct _).map _ * (R.mat U).map _)
     rw [← Matrix.map_mul, ← Matrix.map_neg _ (map_neg _), ← R.mat_map_pderiv, Matrix.map_map,
       Matrix.map_map]
     congr 1
     funext f
-    exact JetRing.pderiv_star μ f
+    exact SpaceTimeAlgebra.pderiv_star μ f
   mat_mul_jetAct U c := by
     show (R.mat U).map _ * (R.jetAct _).map _ = (R.jetAct _).map _ * (R.mat U).map _
     rw [← Matrix.map_mul, ← Matrix.map_mul, R.mat_mul_jetAct]

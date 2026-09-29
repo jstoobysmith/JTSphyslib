@@ -49,18 +49,18 @@ Basic rules of this outline:
 - A multiset is sufficient because ordinary partial derivatives commute, so only
   the multiplicity of each direction matters, not their order.
 - We model this derivative data by a formal power series in four spacetime variables.
-- We define `JetRing := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ`.
+- We define `SpaceTimeAlgebra := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ`.
 - The word "formal" means that the spacetime variables are indeterminates: they
   record spacetime directions and derivative orders but are not assigned numerical
   coordinate values.
 - A formal power series is therefore treated as an arbitrary family of coefficients
   equipped with algebraic operations, rather than as an infinite sum that must be
   evaluated.
-- Thus an element of `JetRing` records local Taylor data rather than a function
+- Thus an element of `SpaceTimeAlgebra` records local Taylor data rather than a function
   defined on all of spacetime.
 - Here "jet" means a formal Taylor jet at a point and is unrelated to the particle
   jets of collider physics.
-- The constant coefficient of `φ : JetRing` represents the value `φ(x₀)`.
+- The constant coefficient of `φ : SpaceTimeAlgebra` represents the value `φ(x₀)`.
 - The coefficient at a multi-index `s` records the corresponding Taylor-series
   coefficient.
 - For `s : Multiset (Fin 1 ⊕ Fin 3)`, let `∂_s| φ` denote the base-point value of
@@ -71,24 +71,24 @@ Basic rules of this outline:
   direction.
 - More precisely, differentiating in direction `μ` sends the derivative value
   indexed by `s` to the value indexed by `s + {μ}`.
-- The formal partial derivatives on `JetRing` commute, matching the multiset
+- The formal partial derivatives on `SpaceTimeAlgebra` commute, matching the multiset
   representation of ordinary derivatives introduced above.
-- Every smooth complex-valued field `f` determines an element of `JetRing` by taking
+- Every smooth complex-valued field `f` determines an element of `SpaceTimeAlgebra` by taking
   its formal Taylor series at `x₀`.
-- Borel's theorem states that every element of `JetRing` is the formal Taylor series
+- Borel's theorem states that every element of `SpaceTimeAlgebra` is the formal Taylor series
   at `x₀` of at least one smooth complex-valued field.
 - In the notation above, Borel's theorem states:
 
-  `∀ Φ : JetRing, ∃ f ∈ C∞(ℝ⁴, ℂ), ∀ s : Multiset (Fin 1 ⊕ Fin 3), ∂_s f(x₀) = ∂_s| Φ`.
+  `∀ Φ : SpaceTimeAlgebra, ∃ f ∈ C∞(ℝ⁴, ℂ), ∀ s : Multiset (Fin 1 ⊕ Fin 3), ∂_s f(x₀) = ∂_s| Φ`.
 
 - No convergence condition is required, so this includes formal Taylor series with
   radius of convergence zero.
-- Therefore, `JetRing` contains all possible derivative towers of smooth
+- Therefore, `SpaceTimeAlgebra` contains all possible derivative towers of smooth
   complex-valued fields at the base point.
 - Two fields with the same jet at `x₀` are indistinguishable to a local Lagrangian
   evaluated at `x₀`.
-- Addition in `JetRing` records addition of local Taylor data.
-- Multiplication in `JetRing` models multiplication of local functions at the level
+- Addition in `SpaceTimeAlgebra` records addition of local Taylor data.
+- Multiplication in `SpaceTimeAlgebra` models multiplication of local functions at the level
   of their Taylor data.
 - When a derivative indexed by `s` is applied to a product, the derivatives recorded
   by `s` are distributed between the two factors.
@@ -102,12 +102,12 @@ Basic rules of this outline:
   convolution product of formal power series.
 - When expressed in terms of the base-point derivative values `∂_s|`, each
   decomposition is weighted by the corresponding multinomial coefficient `C(s, p)`.
-- Thus multiplication in `JetRing` reproduces the usual higher-order Leibniz rule.
-- Complex conjugation acts coefficientwise on `JetRing`.
+- Thus multiplication in `SpaceTimeAlgebra` reproduces the usual higher-order Leibniz rule.
+- Complex conjugation acts coefficientwise on `SpaceTimeAlgebra`.
 - The formal spacetime variables are fixed by complex conjugation.
 - For `n : ℕ`, truncation at order `n` discards all coefficients of total derivative
   order greater than `n`.
-- Truncation is not a ring homomorphism into `JetRing`, because multiplying truncated
+- Truncation is not a ring homomorphism into `SpaceTimeAlgebra`, because multiplying truncated
   series can produce terms above order `n`.
 - Nevertheless, a product through order `n` depends only on its factors through
   order `n`.
@@ -120,7 +120,7 @@ Basic rules of this outline:
 
 ## Jet component spaces
 
-- For a vector space `V`, the space `JetRing ⊗[ℂ] V` describes the jets of all functions `f : SpaceTime → V`.
+- For a vector space `V`, the space `SpaceTimeAlgebra ⊗[ℂ] V` describes the jets of all functions `f : SpaceTime → V`.
 
 - As an example, consider a theory for a field valued in `V`.
 - A physicist writes the lagrangian as a polynomial in symbols such as
@@ -130,7 +130,7 @@ Basic rules of this outline:
 - The symbol `d_s ψ_α` is a machine which takes a field and returns a
   number: the `s`-th derivative of its `α`-th component at `x₀`.
 - A field enters only through its jet, so `d_s ψ_α` is a linear functional
-  on `JetRing ⊗[ℂ] V`: it sends the jet `f` to its Taylor coefficient
+  on `SpaceTimeAlgebra ⊗[ℂ] V`: it sends the jet `f` to its Taylor coefficient
   `∂_s| f_α`.
 - In other words, the symbols are the coordinate functions on the space of
   jets.
@@ -141,7 +141,7 @@ Basic rules of this outline:
   holomorphic.
 - The symbol `d_s ψ̄_α` sends the jet `f` to the complex conjugate of
   `∂_s| f_α`; it is conjugate-linear in `f`, i.e. a linear functional on
-  the conjugate space of `JetRing ⊗[ℂ] V`.
+  the conjugate space of `SpaceTimeAlgebra ⊗[ℂ] V`.
 - The physicists' practice of treating `ψ` and `ψ̄` as independent
   variables is exactly this: conjugation is not complex-linear, so the
   conjugate symbols cannot be built from the `d_s ψ_α` and enter as
@@ -149,13 +149,13 @@ Basic rules of this outline:
 - We define the jet component space `JetComponentSpace` to be the span of
   the symbols `d_s ψ_α` and `d_s ψ̄_α` together; they form a basis, indexed
   by the pairs `(s, α)` with a bar/no-bar tag.
-- This span is smaller than the full dual of `JetRing ⊗[ℂ] V`, which also
+- This span is smaller than the full dual of `SpaceTimeAlgebra ⊗[ℂ] V`, which also
   contains non-local functionals — e.g. evaluation of the field at a point
   other than `x₀` — depending on infinitely many derivatives at once;
   locality is precisely the restriction to the span of the symbols.
 - Formally, `JetComponentSpace = (DerivAlgebra ⊗[ℂ] Module.Dual ℂ V) ×
   (DerivAlgebra ⊗[ℂ] Module.Dual ℂ (ConjModule V))`, where `DerivAlgebra`
-  is the span of the functionals `∂_s|` on `JetRing`, and the second factor
+  is the span of the functionals `∂_s|` on `SpaceTimeAlgebra`, and the second factor
   is dropped when `V` is real (its conjugate is then not independent).
 - The lagrangian — a polynomial in the symbols — is then an element of the
   symmetric (for bosons) or exterior (for fermions) algebra over
@@ -198,7 +198,7 @@ Basic rules of this outline:
 - We let `f : κ → κ → κ → ℂ` be the structure constants of the Lie algebra
     with respect to the basis `T_a`, so that:
     `[T_a, T_b] = i ∑_c f^c_{a b} · T_c`
-- An element `X : JetLieAlgebra` has components `X^a : JetRing` with respect to the
+- An element `X : JetLieAlgebra` has components `X^a : SpaceTimeAlgebra` with respect to the
     basis `T_a`.
 - There is a derivative `∂ : Fin 1 ⊕ Fin 3 → JetLieAlgebra → JetLieAlgebra`, acting
     componentwise: `(∂_μ X)^a = ∂_μ (X^a)`.
@@ -277,7 +277,7 @@ Basic rules of this outline:
 ### Jet representations
 
 - We define a representation of `JetGaugeGroup` as the following data:
-  - a homomorphism `jρ : JetGaugeGroup → Matrix ι ι JetRing`
+  - a homomorphism `jρ : JetGaugeGroup → Matrix ι ι SpaceTimeAlgebra`
   - an `ℝ`-linear map `dρ : GaugeAlgebra →ₗ[ℝ] Matrix ι ι ℂ` such that:
     - Bracket: `dρ ⁅X, Y⁆ = i (dρ X · dρ Y − dρ Y · dρ X)`.
       Equivalently, `X ↦ i • dρ X` is a morphism of real Lie algebras into
@@ -285,8 +285,8 @@ Basic rules of this outline:
     - Equivariance: `ρ₀(U) · dρ X · ρ₀(U)⁻¹ = dρ (Ad(U₀) X)`
   such that
   - Compatibility: `∂_μ jρ(U) = -i · dρ̂(ω_μ(U)) · jρ(U)`
-- Here `dρ̂ : JetGaugeAlgebra → Matrix ι ι JetRing` is the coefficientwise
-  (`JetRing`-linear) extension of `dρ`, characterized by
+- Here `dρ̂ : JetGaugeAlgebra → Matrix ι ι SpaceTimeAlgebra` is the coefficientwise
+  (`SpaceTimeAlgebra`-linear) extension of `dρ`, characterized by
   `∂_r|(dρ̂ Z) = dρ (∂_r| Z)` for every multiset `r`. In the basis `T_a` it is
   `dρ̂ Z = ∑_a Z^a • dρ_a` with `dρ_a := dρ T_a`, and the conditions above
   recover the component form: `[dρ_a, dρ_b] = i ∑_c f^c_{a b} · dρ_c`.

@@ -20,7 +20,7 @@ symbols `[∂_s ψ^i]` contracted against duals of `V`, and its transformation l
 the Leibniz convolution of the base-point Taylor coefficients of the representation.
 
 Since the gauge transformations are jets, the representation must act on `V`-valued
-jets `JetRing ⊗[ℂ] V` — the value of `rep U` at a constant vector is spacetime
+jets `SpaceTimeAlgebra ⊗[ℂ] V` — the value of `rep U` at a constant vector is spacetime
 dependent, and the derivative symbols see its Taylor coefficients. This file provides
 the toolkit for `V`-valued jets:
 
@@ -84,7 +84,7 @@ variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
   vector into `V`-valued jets, act by `rep U`, differentiate `x` times, evaluate at
   the base point. The composite is complex-linear: the physicists'
   `∂_x (rep U)^i_j|₀` as a ℂ-linear map on the value space. -/
-noncomputable def repCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+noncomputable def repCoeff (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
     (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) : V →ₗ[ℂ] V :=
   jetEval ∘ₗ jetIteratedDeriv x ∘ₗ rep U ∘ₗ jetOfConstant
 
@@ -93,7 +93,7 @@ noncomputable def repCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
   `adjointDualCoeff` for a general representation of the jet gauge group; for `x = 0`
   it is the dual (contragredient) action of the value of `U`, and for `x ≠ 0` it sees
   the derivatives of the gauge transformation. -/
-noncomputable def repDualCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+noncomputable def repDualCoeff (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
     (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     Module.Dual ℂ V →ₗ[ℂ] Module.Dual ℂ V :=
   (repCoeff rep U x).dualMap
@@ -101,9 +101,10 @@ noncomputable def repDualCoeff (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)
 /-- For a fibrewise representation, evaluating the transform of a jet at the base point
   is the zeroth Taylor coefficient of the transform of its base-point value: the jet ring
   factor passes through the action and is then evaluated. -/
-lemma jetEval_rep_of_smul (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
-    (U : GJ) (z : JetRing ⊗[ℂ] V) :
+lemma jetEval_rep_of_smul (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), rep U
+        (χ • z) = χ • rep U z)
+    (U : GJ) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEval (rep U z) = repCoeff rep U 0 (jetEval z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp only [map_zero]
@@ -116,8 +117,9 @@ lemma jetEval_rep_of_smul (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
 
 /-- The zeroth Taylor coefficients of a fibrewise representation are multiplicative: they
   form a representation of the jet gauge group on the value space. -/
-lemma repCoeff_zero_mul (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+lemma repCoeff_zero_mul (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), rep U
+        (χ • z) = χ • rep U z)
     (U W : GJ) : repCoeff rep (U * W) 0 = repCoeff rep U 0 ∘ₗ repCoeff rep W 0 := by
   refine LinearMap.ext fun v => ?_
   have h := jetEval_rep_of_smul rep hlin U (rep W (jetOfConstant v))

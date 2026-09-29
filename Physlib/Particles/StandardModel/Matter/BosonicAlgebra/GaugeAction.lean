@@ -11,7 +11,7 @@ public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.Basic
 
 ## i. Overview
 
-Given a fibrewise action of the jet gauge group on the jets `JetRing ⊗[ℂ] V` of a bosonic
+Given a fibrewise action of the jet gauge group on the jets `SpaceTimeAlgebra ⊗[ℂ] V` of a bosonic
 matter field, the jet gauge group acts on the bosonic algebra by the symmetric-algebra
 functor applied to the induced action on the jet component space. On a component function
 `∂_s φ_α` the action is the all-orders Leibniz rule: each splitting of the derivative
@@ -55,9 +55,9 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 
 -/
 
-/-- **The jet gauge action on the bosonic algebra** of the matter field `M`: the symmetric-algebra functor
-  applied to the gauge action on the jet component space. The fibrewise action on the jets and its
-  fibrewise-linearity are fields of `M`. -/
+/-- **The jet gauge action on the bosonic algebra** of the matter field `M`: the symmetric-algebra
+  functor applied to the gauge action on the jet component space. The fibrewise action on the jets
+  and its fibrewise-linearity are fields of `M`. -/
 noncomputable def repJetGaugeGroupI :
     Representation ℂ GJ (BosonicAlgebra M) where
   toFun U :=

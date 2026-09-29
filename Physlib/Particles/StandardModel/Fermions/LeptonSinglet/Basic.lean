@@ -347,25 +347,28 @@ open TensorProduct in
 singlet: multiplication of the jet-ring factor by the hypercharge power series
 `(star u) ^ 6`. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonSinglet) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] LeptonSinglet) where
   toFun U := LinearMap.rTensor LeptonSinglet
-    (LinearMap.mulLeft ℂ ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6))
+    (LinearMap.mulLeft ℂ ((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6))
   map_one' := by
-    rw [show (star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 6
+    rw [show (star (((1 : JetGaugeGroupI).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6
         = 1 from by simp, LinearMap.mulLeft_one, LinearMap.rTensor_id]
     rfl
   map_mul' U₁ U₂ := by
-    rw [show (star (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)) ^ 6
-          = (star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6
-            * (star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6 from by
-        rw [show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)
-            = ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
+    rw [show (star (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6
+          = (star ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6
+            * (star ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6 from by
+        rw [show (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+            = ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) *
+                ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
             from rfl, star_mul', mul_pow, mul_comm],
       show LinearMap.mulLeft ℂ
-          ((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6
-            * (star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6)
-        = (LinearMap.mulLeft ℂ ((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 6)) ∘ₗ
-          (LinearMap.mulLeft ℂ ((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 6)) from
+          ((star ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6
+            * (star ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6)
+        = (LinearMap.mulLeft ℂ
+            ((star ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6)) ∘ₗ
+          (LinearMap.mulLeft ℂ
+              ((star ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6)) from
         LinearMap.ext fun z => mul_assoc _ _ z,
       LinearMap.rTensor_comp]
     rfl
@@ -373,16 +376,16 @@ noncomputable def repJetGaugeGroupI :
 open TensorProduct in
 /-- The jet gauge action on a pure tensor of the jet space of the charged-lepton
 singlet. -/
-lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (f : JetRing) (ψ : LeptonSinglet) :
+lemma repJetGaugeGroupI_tmul (U : JetGaugeGroupI) (f : SpaceTimeAlgebra) (ψ : LeptonSinglet) :
     repJetGaugeGroupI U (f ⊗ₜ[ℂ] ψ)
-      = ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6 * f) ⊗ₜ[ℂ] ψ :=
+      = ((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6 * f) ⊗ₜ[ℂ] ψ :=
   LinearMap.rTensor_tmul _ _ _ _
 
 open TensorProduct in
 /-- **The jet gauge action on the jets of the charged-lepton singlet is fibrewise**: it
 commutes with multiplication by scalar jets. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] LeptonSinglet) :
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] LeptonSinglet) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -400,10 +403,10 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
       TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
   ext f x
   obtain ⟨ψ⟩ := x
-  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
       = MvPowerSeries.C ((g.toU1.1 : ℂ)) := rfl
   simp only [TensorProduct.AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
-    LinearMap.restrictScalars_apply, repJetGaugeGroupI_tmul, hu, JetRing.star_C, ← map_pow,
+    LinearMap.restrictScalars_apply, repJetGaugeGroupI_tmul, hu, SpaceTimeAlgebra.star_C, ← map_pow,
     TensorProduct.map_tmul, LinearMap.id_apply, repGaugeGroupI_apply]
   rw [show (⟨(star (g.toU1.1 : ℂ) ^ 6) • ψ⟩ : LeptonSinglet)
       = (star (g.toU1.1 : ℂ) ^ 6) • (⟨ψ⟩ : LeptonSinglet) from rfl,

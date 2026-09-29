@@ -173,29 +173,30 @@ compute the kernel.
 
 -/
 
-/-- The `JetRing`-valued weak matrix of the jet gauge action on the lepton doublet: the
+/-- The `SpaceTimeAlgebra`-valued weak matrix of the jet gauge action on the lepton doublet: the
   matrix of jets by which a gauge jet acts on the datum. -/
-noncomputable def doubletMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) JetRing :=
+noncomputable def doubletMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra :=
   Model.leptonDoublet.rep.mat U
 
 open LocalGaugeData in
 /-- The weak matrix of a gauge jet is its `SU(2)` matrix carrying the `-3` hypercharge
   phase `(star u) ^ 3`. -/
 lemma doubletMatrix_eq (U : JetGaugeGroupI) :
-    doubletMatrix U = ((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) := by
+    doubletMatrix U = ((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 3) •
+      ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+          (Fin 2) SpaceTimeAlgebra) := by
   show MatterField.chargePow (-3) U.2.2 • U.2.1.1 = _
   congr 1
 
 /-- The constant term of the weak matrix of a constant gauge jet: the `SU(2)` matrix of
   the gauge transformation carrying its `-3` hypercharge phase. -/
 lemma doubletMatrix_ofConstant_map_constantCoeff (g : GaugeGroupI) :
-    (doubletMatrix (JetGaugeGroupI.ofConstant g)).map (constantCoeff : JetRing → ℂ)
+    (doubletMatrix (JetGaugeGroupI.ofConstant g)).map (constantCoeff : SpaceTimeAlgebra → ℂ)
       = (star g.toU1.1 ^ 3) • g.toSU2.1 := by
-  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
       = MvPowerSeries.C (g.toU1.1 : ℂ) := rfl
   have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
-        specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
+        specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) i j
       = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
   rw [doubletMatrix_eq]
   ext i j
@@ -204,12 +205,13 @@ lemma doubletMatrix_ofConstant_map_constantCoeff (g : GaugeGroupI) :
 /-- The weak matrix of a constant gauge jet is constant. -/
 lemma doubletMatrix_ofConstant (g : GaugeGroupI) :
     doubletMatrix (JetGaugeGroupI.ofConstant g)
-      = ((doubletMatrix (JetGaugeGroupI.ofConstant g)).map (constantCoeff : JetRing → ℂ)).map
-          (MvPowerSeries.C : ℂ → JetRing) := by
-  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+      = ((doubletMatrix (JetGaugeGroupI.ofConstant g)).map
+          (constantCoeff : SpaceTimeAlgebra → ℂ)).map
+          (MvPowerSeries.C : ℂ → SpaceTimeAlgebra) := by
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
       = MvPowerSeries.C (g.toU1.1 : ℂ) := rfl
   have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
-        specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
+        specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) i j
       = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
   rw [doubletMatrix_ofConstant_map_constantCoeff, doubletMatrix_eq]
   ext i j
@@ -362,7 +364,7 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
 
 The `(1, 2)_{-3}` representation extends to jets: the `SU(2)` power-series matrix of a
 jet of gauge transformations, scaled by the hypercharge power series `star u ^ 3`, acts
-`JetRing`-linearly on the weak factor. On jets of constant gauge transformations the
+`SpaceTimeAlgebra`-linearly on the weak factor. On jets of constant gauge transformations the
 action reduces to the global gauge action. Both are the general theory's, for the datum.
 
 -/
@@ -370,33 +372,34 @@ action reduces to the global gauge action. Both are the general theory's, for th
 /-- The `(1, 2)_{-3}` action of the jet gauge group on the jet space of the lepton
 doublet: the jet action the general theory derives from the datum. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonDoublet) :=
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) :=
   Model.leptonDoublet.toMatterField.repJet
 
 /- The hand-built definition, now derived from the datum:
 
 /-- Absorbs the jet ring into the weak index. -/
 noncomputable def jetValLinEquiv :
-    JetRing ⊗[ℂ] LeptonDoublet ≃ₗ[ℂ]
-      Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 2) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) valLinEquiv).trans <|
-    (TensorProduct.leftComm ℂ JetRing Fermion.LeftHandedWeyl
+    SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet ≃ₗ[ℂ]
+      Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 2) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) valLinEquiv).trans <|
+    (TensorProduct.leftComm ℂ SpaceTimeAlgebra Fermion.LeftHandedWeyl
         (EuclideanSpace ℂ (Fin 2))).trans <|
       TensorProduct.congr (LinearEquiv.refl ℂ Fermion.LeftHandedWeyl) <|
-        (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+        (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
             (WithLp.linearEquiv 2 ℂ (Fin 2 → ℂ))).trans <|
-          ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 2)).trans
-            (WithLp.linearEquiv 2 JetRing (Fin 2 → JetRing)).symm).restrictScalars ℂ
+          ((TensorProduct.piScalarRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra (Fin 2)).trans
+            (WithLp.linearEquiv 2 SpaceTimeAlgebra
+                (Fin 2 → SpaceTimeAlgebra)).symm).restrictScalars ℂ
 
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] LeptonDoublet) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) where
   toFun U :=
     jetValLinEquiv.symm.toLinearMap ∘ₗ
-      Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 2)) Fermion.LeftHandedWeyl
+      Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 2)) Fermion.LeftHandedWeyl
         ((Matrix.toLpLinAlgEquiv 2
-            (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 3) •
-              ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-                Matrix (Fin 2) (Fin 2) JetRing))).restrictScalars ℂ) ∘ₗ
+            (((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 3) •
+              ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+                Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra))).restrictScalars ℂ) ∘ₗ
       jetValLinEquiv.toLinearMap
   map_one' := …
   map_mul' U₁ U₂ := …
@@ -404,8 +407,8 @@ noncomputable def repJetGaugeGroupI :
 
 /-- **The jet gauge action on the jets of the lepton doublet is fibrewise**: it commutes
 with multiplication by scalar jets. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] LeptonDoublet) :
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z :=
   Model.leptonDoublet.toMatterField.repJet_smul U χ z
 

@@ -187,16 +187,16 @@ open MvPowerSeries
 
 /-- A single formal derivative commutes with the iterated one. -/
 private lemma pderiv_foldl (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3))
-    (f : JetRing) :
+    (f : SpaceTimeAlgebra) :
     pderiv μ (x.foldl (fun h ρ => pderiv ρ h) f)
       = x.foldl (fun h ρ => pderiv ρ h) (pderiv μ f) := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rfl
   | cons ν t ih =>
-    rw [Multiset.foldl_cons, Multiset.foldl_cons, ih, JetRing.pderiv_comm]
+    rw [Multiset.foldl_cons, Multiset.foldl_cons, ih, SpaceTimeAlgebra.pderiv_comm]
 
 /-- The iterated formal derivative is `ℂ`-homogeneous. -/
-private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing) :
+private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (z • f)
       = z • x.foldl (fun h ρ => pderiv ρ h) f := by
   induction x using Multiset.induction_on generalizing f with
@@ -206,9 +206,9 @@ private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : 
 /-- The jet-valued matrix of the infinitesimal `(3, 2)_{1}` action of a jet of gauge
   algebra elements: the jet analogue of `actionMatrix`. -/
 noncomputable def jetActionMatrix (a : JetGaugeAlgebra) :
-    Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) JetRing :=
-  Complex.I • (a.toSU3Matrix ⊗ₖ (1 : Matrix (Fin 2) (Fin 2) JetRing)
-    + (1 : Matrix (Fin 3) (Fin 3) JetRing) ⊗ₖ a.toSU2Matrix
+    Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) SpaceTimeAlgebra :=
+  Complex.I • (a.toSU3Matrix ⊗ₖ (1 : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra)
+    + (1 : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) ⊗ₖ a.toSU2Matrix
     + a.toU1Value • 1)
 
 /-- The base-point Taylor coefficients of the jet action matrix are the action matrices
@@ -223,7 +223,7 @@ lemma jetActionMatrix_map_cc_foldl (p : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaug
     Matrix.add_apply, Matrix.kroneckerMap_apply, Matrix.kroneckerMap_apply,
     Matrix.kroneckerMap_apply, Matrix.kroneckerMap_apply, Matrix.smul_apply,
     Matrix.smul_apply, foldl_pderiv_smul, constantCoeff_smul,
-    JetRing.foldl_pderiv_add, JetRing.foldl_pderiv_add, map_add, map_add]
+    SpaceTimeAlgebra.foldl_pderiv_add, SpaceTimeAlgebra.foldl_pderiv_add, map_add, map_add]
   congr 1
   congr 1
   · congr 1
@@ -231,24 +231,24 @@ lemma jetActionMatrix_map_cc_foldl (p : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaug
       · rw [h3, Matrix.one_apply_eq, Matrix.one_apply_eq, mul_one, mul_one,
           JetGaugeAlgebra.eval_iteratedDeriv_toSU3Matrix, Matrix.map_apply]
       · rw [Matrix.one_apply_ne h3, Matrix.one_apply_ne h3, mul_zero, mul_zero,
-          JetRing.foldl_pderiv_zero, map_zero]
+          SpaceTimeAlgebra.foldl_pderiv_zero, map_zero]
     · by_cases h2 : i.1 = j.1
       · rw [h2, Matrix.one_apply_eq, Matrix.one_apply_eq, one_mul, one_mul,
           JetGaugeAlgebra.eval_iteratedDeriv_toSU2Matrix, Matrix.map_apply]
       · rw [Matrix.one_apply_ne h2, Matrix.one_apply_ne h2, zero_mul, zero_mul,
-          JetRing.foldl_pderiv_zero, map_zero]
+          SpaceTimeAlgebra.foldl_pderiv_zero, map_zero]
   · by_cases hij : i = j
     · subst hij
       rw [Matrix.one_apply_eq, Matrix.one_apply_eq, smul_eq_mul, mul_one,
         smul_eq_mul, mul_one, JetGaugeAlgebra.eval_iteratedDeriv_toU1Value]
     · rw [Matrix.one_apply_ne hij, Matrix.one_apply_ne hij, smul_zero, smul_zero,
-        JetRing.foldl_pderiv_zero, map_zero]
+        SpaceTimeAlgebra.foldl_pderiv_zero, map_zero]
 
 lemma repJetGaugeGroupI_eq_jetGaugeMatrix (U : JetGaugeGroupI)
-    (z : JetRing ⊗[ℂ] QuarkDoublet) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     repJetGaugeGroupI U z
       = jetValLinEquiv.symm
-          (Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3 × Fin 2))
+          (Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))
             Fermion.LeftHandedWeyl
             ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U)).restrictScalars ℂ)
             (jetValLinEquiv z)) := rfl
@@ -256,8 +256,8 @@ lemma repJetGaugeGroupI_eq_jetGaugeMatrix (U : JetGaugeGroupI)
 /-- The entrywise formal derivative on the colour–weak coordinates, as a `ℂ`-linear
   map. -/
 private noncomputable def pderivColourWeak (μ : Fin 1 ⊕ Fin 3) :
-    EuclideanSpace JetRing (Fin 3 × Fin 2) →ₗ[ℂ]
-      EuclideanSpace JetRing (Fin 3 × Fin 2) where
+    EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) →ₗ[ℂ]
+      EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) where
   toFun v := WithLp.toLp 2 fun q => pderiv μ (v.ofLp q)
   map_add' v w := by
     refine WithLp.ofLp_injective 2 ?_
@@ -270,13 +270,13 @@ private noncomputable def pderivColourWeak (μ : Fin 1 ⊕ Fin 3) :
 
 /-- The entrywise iterated formal derivative on the colour–weak coordinates. -/
 private noncomputable def foldColourWeak (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    EuclideanSpace JetRing (Fin 3 × Fin 2) →ₗ[ℂ]
-      EuclideanSpace JetRing (Fin 3 × Fin 2) where
+    EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) →ₗ[ℂ]
+      EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) where
   toFun v := WithLp.toLp 2 fun q => x.foldl (fun h ρ => pderiv ρ h) (v.ofLp q)
   map_add' v w := by
     refine WithLp.ofLp_injective 2 ?_
     funext q
-    exact JetRing.foldl_pderiv_add x _ _
+    exact SpaceTimeAlgebra.foldl_pderiv_add x _ _
   map_smul' z v := by
     refine WithLp.ofLp_injective 2 ?_
     funext q
@@ -284,7 +284,7 @@ private noncomputable def foldColourWeak (x : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- The entrywise base-point evaluation on the colour–weak coordinates. -/
 private noncomputable def ccColourWeak :
-    EuclideanSpace JetRing (Fin 3 × Fin 2) →ₗ[ℂ] EuclideanSpace ℂ (Fin 3 × Fin 2) where
+    EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) →ₗ[ℂ] EuclideanSpace ℂ (Fin 3 × Fin 2) where
   toFun v := WithLp.toLp 2 fun q => constantCoeff (v.ofLp q)
   map_add' v w := by
     refine WithLp.ofLp_injective 2 ?_
@@ -308,7 +308,7 @@ private lemma pderivColourWeak_comp_foldColourWeak (μ : Fin 1 ⊕ Fin 3)
 /-- The identification of quark-doublet jets intertwines the formal derivative with the
   entrywise derivative on the colour–weak coordinates. -/
 private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
-    (z : JetRing ⊗[ℂ] QuarkDoublet) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     jetValLinEquiv (jetDeriv μ z)
       = (TensorProduct.map LinearMap.id (pderivColourWeak μ)) (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
@@ -361,7 +361,7 @@ private lemma jetValLinEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3)
 /-- The identification of quark-doublet jets intertwines the iterated formal derivative
   with the entrywise iterated derivative on the colour–weak coordinates. -/
 private lemma jetValLinEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3))
-    (z : JetRing ⊗[ℂ] QuarkDoublet) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     jetValLinEquiv (jetIteratedDeriv x z)
       = (TensorProduct.map LinearMap.id (foldColourWeak x)) (jetValLinEquiv z) := by
   induction x using Multiset.induction_on with
@@ -377,7 +377,7 @@ private lemma jetValLinEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3))
 
 /-- The base-point evaluation of a quark-doublet jet through the colour–weak
   coordinates. -/
-private lemma colourWeakValLinEquiv_jetEval (z : JetRing ⊗[ℂ] QuarkDoublet) :
+private lemma colourWeakValLinEquiv_jetEval (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     colourWeakValLinEquiv (jetEval z)
       = (TensorProduct.map LinearMap.id ccColourWeak) (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
@@ -432,12 +432,12 @@ set_option maxHeartbeats 1000000 in
 lemma jetGaugeMatrix_map_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     (jetGaugeMatrix U).map (fun f => pderiv μ f)
       = -(jetActionMatrix (maurerCartanForm U μ) * jetGaugeMatrix U) := by
-  have hleib : ∀ f g : JetRing,
+  have hleib : ∀ f g : SpaceTimeAlgebra,
       pderiv μ (f * g) = pderiv μ f * g + f * pderiv μ g := fun f g => by
     rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g]
-  have huu : ((U.2.2 : unitary JetRing) : JetRing)
-      * star ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
-    Unitary.mul_star_self_of_mem (U.2.2 : unitary JetRing).2
+  have huu : ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+      * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 :=
+    Unitary.mul_star_self_of_mem (U.2.2 : unitary SpaceTimeAlgebra).2
   have hU₃u : star U.1.1 * U.1.1 = 1 :=
     Matrix.mem_unitaryGroup_iff'.mp (Matrix.mem_specialUnitaryGroup_iff.mp U.1.2).1
   have hU₂u : star U.2.1.1 * U.2.1.1 = 1 :=
@@ -451,24 +451,24 @@ lemma jetGaugeMatrix_map_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     rw [maurerCartanForm_toSU2Matrix, Matrix.smul_mul, Matrix.mul_assoc, hU₂u,
       Matrix.mul_one]
   have hmap : (jetGaugeMatrix U).map (fun f => pderiv μ f)
-      = (pderiv μ ((U.2.2 : unitary JetRing) : JetRing)) •
-          (((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
-              Matrix (Fin 3) (Fin 3) JetRing) ⊗ₖ
-            ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-              Matrix (Fin 2) (Fin 2) JetRing))
-        + ((U.2.2 : unitary JetRing) : JetRing) •
-          ((((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
-              Matrix (Fin 3) (Fin 3) JetRing) ⊗ₖ
-            ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-              Matrix (Fin 2) (Fin 2) JetRing)).map fun f => pderiv μ f) := by
+      = (pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) •
+          (((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+              Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) ⊗ₖ
+            ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+              Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra))
+        + ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) •
+          ((((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+              Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) ⊗ₖ
+            ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+              Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra)).map fun f => pderiv μ f) := by
     refine Matrix.ext fun i j => ?_
     simp only [jetGaugeMatrix, Matrix.map_apply, Matrix.smul_apply, Matrix.add_apply,
       smul_eq_mul]
     exact hleib _ _
-  have hkron : ((((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
-          Matrix (Fin 3) (Fin 3) JetRing) ⊗ₖ
-        ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-          Matrix (Fin 2) (Fin 2) JetRing)).map fun f => pderiv μ f)
+  have hkron : ((((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+          Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) ⊗ₖ
+        ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+          Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra)).map fun f => pderiv μ f)
       = (U.1.1.map (pderiv μ)) ⊗ₖ U.2.1.1
         + U.1.1 ⊗ₖ (U.2.1.1.map (pderiv μ)) := by
     refine Matrix.ext fun i j => ?_
@@ -482,11 +482,11 @@ lemma jetGaugeMatrix_map_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     smul_assoc, ← smul_add, ← smul_add, smul_smul Complex.I Complex.I, Complex.I_mul_I,
     neg_one_smul, smul_neg, neg_neg]
   conv_rhs => rw [smul_add, smul_smul]
-  rw [show ((U.2.2 : unitary JetRing) : JetRing)
-        * (pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
-          * star ((U.2.2 : unitary JetRing) : JetRing))
-      = pderiv μ ((U.2.2 : unitary JetRing) : JetRing) from by
-    linear_combination pderiv μ ((U.2.2 : unitary JetRing) : JetRing) * huu]
+  rw [show ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+        * (pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+          * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra))
+      = pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) from by
+    linear_combination pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) * huu]
   exact add_comm _ _
 
 /-- **The equivariance identity** for the colour–weak matrix of the jet gauge action:
@@ -512,7 +512,7 @@ lemma jetGaugeMatrix_mul_jetActionMatrix (U : JetGaugeGroupI) (c : GaugeAlgebra)
     Matrix.mul_one, Matrix.mul_assoc, hU₂u, Matrix.mul_one]
 
 /-- The iterated formal derivative of a negation. -/
-private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (-f)
       = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
@@ -555,17 +555,17 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
       simp
     | tmul ψ cv =>
       rw [show jetValLinEquiv
-            ((1 : JetRing) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] cv ⊗ₜ[ℂ] wk⟩ : QuarkDoublet))
+            ((1 : SpaceTimeAlgebra) ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] cv ⊗ₜ[ℂ] wk⟩ : QuarkDoublet))
           = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun q =>
-              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : JetRing)) from rfl,
-        show (Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3 × Fin 2))
+              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : SpaceTimeAlgebra)) from rfl,
+        show (Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))
             Fermion.LeftHandedWeyl
             ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U)).restrictScalars ℂ))
             (ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun q =>
-              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : JetRing)))
+              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : SpaceTimeAlgebra)))
           = ψ ⊗ₜ[ℂ] ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U))
               (WithLp.toLp 2 fun q =>
-                colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : JetRing))) from rfl,
+                colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : SpaceTimeAlgebra))) from rfl,
         TensorProduct.map_tmul, TensorProduct.map_tmul, LinearMap.id_apply,
         LinearMap.id_apply,
         show colourWeakValLinEquiv (⟨ψ ⊗ₜ[ℂ] cv ⊗ₜ[ℂ] wk⟩ : QuarkDoublet)
@@ -586,15 +586,15 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
       show constantCoeff (x.foldl (fun h ρ => pderiv ρ h)
           (((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U))
             (WithLp.toLp 2 fun q =>
-              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : JetRing))).ofLp j))
+              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : SpaceTimeAlgebra))).ofLp j))
         = ((Matrix.toLpLinAlgEquiv 2 ((jetGaugeMatrix U).map fun f =>
             constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)))
             (WithLp.toLp 2 fun q => colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q)).ofLp j
       rw [show ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U))
             (WithLp.toLp 2 fun q =>
-              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : JetRing))).ofLp j
+              colourWeakEquiv (cv ⊗ₜ[ℂ] wk) q • (1 : SpaceTimeAlgebra))).ofLp j
           = ∑ k, jetGaugeMatrix U j k *
-              (colourWeakEquiv (cv ⊗ₜ[ℂ] wk) k • (1 : JetRing)) from by
+              (colourWeakEquiv (cv ⊗ₜ[ℂ] wk) k • (1 : SpaceTimeAlgebra)) from by
           simp [Matrix.mulVec_eq_sum, Finset.sum_apply, mul_comm],
         show ((Matrix.toLpLinAlgEquiv 2 ((jetGaugeMatrix U).map fun f =>
             constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)))
@@ -602,7 +602,7 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
           = ∑ k, constantCoeff (x.foldl (fun h ρ => pderiv ρ h)
               (jetGaugeMatrix U j k)) * colourWeakEquiv (cv ⊗ₜ[ℂ] wk) k from by
           simp [Matrix.mulVec_eq_sum, Finset.sum_apply, mul_comm],
-        JetRing.foldl_pderiv_sum, map_sum]
+        SpaceTimeAlgebra.foldl_pderiv_sum, map_sum]
       refine Finset.sum_congr rfl fun k _ => ?_
       rw [mul_smul_comm, mul_one, foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul,
         mul_comm]
@@ -626,13 +626,15 @@ lemma colourWeakEnd_one : colourWeakEnd 1 = LinearMap.id := by
   Taylor coefficient of the jet gauge action is the identity. -/
 lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
-  have h1 : (constantCoeff : JetRing →+* ℂ).mapMatrix
-      ((U.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
+  have h1 : (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix
+      ((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+          (Fin 3) SpaceTimeAlgebra)
         = 1 := Subtype.ext_iff.mp (congrArg Prod.fst hU)
-  have h2 : (constantCoeff : JetRing →+* ℂ).mapMatrix
-      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+  have h2 : (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix
+      ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+          (Fin 2) SpaceTimeAlgebra)
         = 1 := Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.1) hU)
-  have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
+  have hu : constantCoeff ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 :=
     Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
   have hM : ((jetGaugeMatrix U).map fun f =>
       constantCoeff ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ρ h) f))
@@ -680,7 +682,7 @@ theorem isInfinitesimalActionOf :
           Matrix.ext fun i j => by
             rw [Matrix.map_apply, Matrix.neg_apply, Matrix.neg_apply,
               Matrix.map_apply, foldl_pderiv_neg, map_neg],
-        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
+        SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [jetActionMatrix_map_cc_foldl]))
     rw [repCoeff_eq, hMcons, colourWeakEnd_neg, colourWeakEnd_multiset_sum,
@@ -691,13 +693,13 @@ theorem isInfinitesimalActionOf :
     rfl
   · intro U x c
     simp only [localGaugeData_adjointCoeff_apply]
-    have hCsmul : ∀ z w : ℂ, (z • (C w : JetRing)) = C (z * w) := fun z w => by
+    have hCsmul : ∀ z w : ℂ, (z • (C w : SpaceTimeAlgebra)) = C (z * w) := fun z w => by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply,
         Algebra.algebraMap_self_apply, ← map_mul]
     have hconst : jetActionMatrix (JetGaugeAlgebra.ofConstant c)
-        = (actionMatrix c).map (C : ℂ → JetRing) := by
+        = (actionMatrix c).map (C : ℂ → SpaceTimeAlgebra) := by
       have hone : ∀ {n : Type} [DecidableEq n] (a b : n),
-          (1 : Matrix n n JetRing) a b = C ((1 : Matrix n n ℂ) a b) := by
+          (1 : Matrix n n SpaceTimeAlgebra) a b = C ((1 : Matrix n n ℂ) a b) := by
         intro n _ a b
         by_cases h : a = b
         · subst h; rw [Matrix.one_apply_eq, Matrix.one_apply_eq, map_one]
@@ -711,13 +713,13 @@ theorem isInfinitesimalActionOf :
         JetGaugeAlgebra.ofConstant_toSU2Matrix, JetGaugeAlgebra.ofConstant_toU1Value,
         Matrix.map_apply, Matrix.map_apply, hone i.2 j.2, hone i.1 j.1, hone i j,
         ← map_mul, ← map_mul,
-        show (C c.toU1Value : JetRing)
+        show (C c.toU1Value : SpaceTimeAlgebra)
               • C ((1 : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) ℂ) i j)
             = C (c.toU1Value • (1 : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) ℂ) i j)
           from by rw [smul_eq_mul, smul_eq_mul, ← map_mul],
         ← map_add, ← map_add, hCsmul, smul_eq_mul, smul_eq_mul]
     have hcollapse : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)),
-        (((actionMatrix c).map (C : ℂ → JetRing)).map fun f =>
+        (((actionMatrix c).map (C : ℂ → SpaceTimeAlgebra)).map fun f =>
           constantCoeff (m.foldl (fun h ρ => pderiv ρ h) f))
         = if m = 0 then actionMatrix c else 0 := by
       intro m
@@ -725,7 +727,7 @@ theorem isInfinitesimalActionOf :
       · refine Matrix.ext fun i j => ?_
         simp [Matrix.map_apply, constantCoeff_C]
       · refine Matrix.ext fun i j => ?_
-        simp [Matrix.map_apply, JetRing.foldl_pderiv_C_of_ne_zero hm, hm]
+        simp [Matrix.map_apply, SpaceTimeAlgebra.foldl_pderiv_C_of_ne_zero hm, hm]
     have hMact : ((jetGaugeMatrix U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * actionMatrix c
         = (x.antidiagonal.map fun p =>
@@ -738,7 +740,7 @@ theorem isInfinitesimalActionOf :
           = ((jetGaugeMatrix U).map fun f =>
               constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f))
             * actionMatrix c := by
-        rw [hconst, JetRing.matrix_constantCoeff_foldl_pderiv_mul,
+        rw [hconst, SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((jetGaugeMatrix U).map fun f =>
@@ -747,7 +749,7 @@ theorem isInfinitesimalActionOf :
             (fun p _ hp => by rw [ite_eq_right hp, Matrix.mul_zero]),
           ite_eq_left rfl]
       rw [← h1, jetGaugeMatrix_mul_jetActionMatrix,
-        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
+        SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [jetActionMatrix_map_cc_foldl,
           show JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv p.1

@@ -23,18 +23,18 @@ The Higgs field is a bosonic matter field valued in `HiggsVec`, so its jet algeb
 bosonic algebra `BosonicAlgebra HiggsVec`: the symmetric algebra on the component
 functions `∂_s H_α` and `∂_s H̄_α`, commuting as bosons do.
 
-The file first equips the jets `JetRing ⊗[ℂ] HiggsVec` of the Higgs field with the action
+The file first equips the jets `SpaceTimeAlgebra ⊗[ℂ] HiggsVec` of the Higgs field with the action
 of the jet gauge group, following the same pattern as the fermion species (see
 `Physlib.Particles.StandardModel.Fermions.DownSinglet.Basic`): the `SU(2)` power-series matrix,
-scaled by the hypercharge power series `u ^ 3`, acts `JetRing`-linearly through the
-identification `JetRing ⊗[ℂ] HiggsVec ≃ EuclideanSpace JetRing (Fin 2)`. Everything the
-generic bosonic algebra provides — the total derivative, the Lorentz action (trivial: the
-Higgs is a Lorentz scalar), the jet gauge action, and the mass-weight scaling at the Higgs
-mass weight `2` — is then instantiated.
+scaled by the hypercharge power series `u ^ 3`, acts `SpaceTimeAlgebra`-linearly through the
+identification `SpaceTimeAlgebra ⊗[ℂ] HiggsVec ≃ EuclideanSpace SpaceTimeAlgebra (Fin 2)`.
+Everything the generic bosonic algebra provides — the total derivative, the Lorentz action (trivial:
+the Higgs is a Lorentz scalar), the jet gauge action, and the mass-weight scaling at the Higgs mass
+weight `2` — is then instantiated.
 
 ## ii. Key results
 
-- `HiggsVec.jetValLinEquiv` : the jets of the Higgs field as a `JetRing`-valued doublet.
+- `HiggsVec.jetValLinEquiv` : the jets of the Higgs field as a `SpaceTimeAlgebra`-valued doublet.
 - `HiggsVec.repJetGaugeGroupI` : the jet gauge action on the jets of the Higgs field.
 - `HiggsVec.repJetGaugeGroupI_smul` : the action is fibrewise.
 - `HiggsVec.repJetGaugeGroupI_ofConstant` : constant jets act by the global gauge action.
@@ -79,24 +79,24 @@ namespace HiggsVec
 -/
 
 /-- Absorbs the jet ring into the weak index: a jet of the Higgs field is the same thing
-as a `JetRing`-valued weak doublet,
+as a `SpaceTimeAlgebra`-valued weak doublet,
 
-  `JetRing ⊗[ℂ] HiggsVec ≃ EuclideanSpace JetRing (Fin 2)`.
+  `SpaceTimeAlgebra ⊗[ℂ] HiggsVec ≃ EuclideanSpace SpaceTimeAlgebra (Fin 2)`.
 
 -/
 noncomputable def jetValLinEquiv :
-    JetRing ⊗[ℂ] HiggsVec ≃ₗ[ℂ] EuclideanSpace JetRing (Fin 2) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+    SpaceTimeAlgebra ⊗[ℂ] HiggsVec ≃ₗ[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 2) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
       (WithLp.linearEquiv 2 ℂ (Fin 2 → ℂ))).trans <|
-    ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 2)).trans
-      (WithLp.linearEquiv 2 JetRing (Fin 2 → JetRing)).symm).restrictScalars ℂ
+    ((TensorProduct.piScalarRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra (Fin 2)).trans
+      (WithLp.linearEquiv 2 SpaceTimeAlgebra (Fin 2 → SpaceTimeAlgebra)).symm).restrictScalars ℂ
 
-lemma jetValLinEquiv_tmul (f : JetRing) (v : HiggsVec) :
+lemma jetValLinEquiv_tmul (f : SpaceTimeAlgebra) (v : HiggsVec) :
     jetValLinEquiv (f ⊗ₜ[ℂ] v) = WithLp.toLp 2 fun i => v.ofLp i • f := rfl
 
-/-- The identification of the jets of the Higgs field is `JetRing`-linear: multiplying a
+/-- The identification of the jets of the Higgs field is `SpaceTimeAlgebra`-linear: multiplying a
   jet by a scalar jet multiplies each of its weak components. -/
-lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] HiggsVec) :
+lemma jetValLinEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] HiggsVec) :
     jetValLinEquiv (χ • z) = χ • jetValLinEquiv z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -108,7 +108,8 @@ lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] HiggsVec) :
     show v.ofLp i • (χ * f) = χ * (v.ofLp i • f)
     rw [Algebra.mul_smul_comm]
 
-lemma jetValLinEquiv_symm_smul (χ : JetRing) (y : EuclideanSpace JetRing (Fin 2)) :
+lemma jetValLinEquiv_symm_smul (χ : SpaceTimeAlgebra)
+    (y : EuclideanSpace SpaceTimeAlgebra (Fin 2)) :
     jetValLinEquiv.symm (χ • y) = χ • jetValLinEquiv.symm y := by
   apply jetValLinEquiv.injective
   rw [LinearEquiv.apply_symm_apply, jetValLinEquiv_smul, LinearEquiv.apply_symm_apply]
@@ -122,9 +123,10 @@ lemma jetValLinEquiv_symm_smul (χ : JetRing) (y : EuclideanSpace JetRing (Fin 2
 /-- The matrix of jets through which a jet of gauge transformations acts on the Higgs
   doublet: the `SU(2)` power-series matrix scaled by the hypercharge power series
   `u ^ 3`. -/
-noncomputable def jetGaugeMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) JetRing :=
-  (((U.2.2 : unitary JetRing) : JetRing) ^ 3) •
-    ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+noncomputable def jetGaugeMatrix (U : JetGaugeGroupI) : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra :=
+  (((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) ^ 3) •
+    ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+        (Fin 2) SpaceTimeAlgebra)
 
 lemma jetGaugeMatrix_one : jetGaugeMatrix 1 = 1 := by
   simp [jetGaugeMatrix]
@@ -132,40 +134,45 @@ lemma jetGaugeMatrix_one : jetGaugeMatrix 1 = 1 := by
 lemma jetGaugeMatrix_mul (U₁ U₂ : JetGaugeGroupI) :
     jetGaugeMatrix (U₁ * U₂) = jetGaugeMatrix U₁ * jetGaugeMatrix U₂ := by
   rw [jetGaugeMatrix, jetGaugeMatrix, jetGaugeMatrix,
-    show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing) =
-      ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing) from rfl,
-    show (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-        Matrix (Fin 2) (Fin 2) JetRing) =
-      ((U₁.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) *
-        ((U₂.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+    show (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) =
+      ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) *
+          ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) from rfl,
+    show (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+        Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) =
+      ((U₁.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+          (Fin 2) SpaceTimeAlgebra) *
+        ((U₂.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+            (Fin 2) SpaceTimeAlgebra)
       from rfl,
     mul_pow, Matrix.smul_mul, Matrix.mul_smul, smul_smul]
 
 /-- The `2_{3}` action of the jet gauge group on the jets of the Higgs field. Through
 `jetValLinEquiv` the weak matrix of the gauge jet, carrying the `3` hypercharge phase
-`u ^ 3`, acts `JetRing`-linearly by matrix-vector multiplication. -/
+`u ^ 3`, acts `SpaceTimeAlgebra`-linearly by matrix-vector multiplication. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] HiggsVec) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] HiggsVec) where
   toFun U :=
     jetValLinEquiv.symm.toLinearMap ∘ₗ
       ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U)).restrictScalars ℂ :
-        EuclideanSpace JetRing (Fin 2) →ₗ[ℂ] EuclideanSpace JetRing (Fin 2)) ∘ₗ
+        EuclideanSpace SpaceTimeAlgebra (Fin 2) →ₗ[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 2)) ∘ₗ
       jetValLinEquiv.toLinearMap
   map_one' := by
-    have hres : (1 : Module.End JetRing (EuclideanSpace JetRing (Fin 2))).restrictScalars ℂ
+    have hres :
+        (1 : Module.End SpaceTimeAlgebra
+        (EuclideanSpace SpaceTimeAlgebra (Fin 2))).restrictScalars ℂ
         = 1 := rfl
     rw [jetGaugeMatrix_one, map_one, hres]
     ext z
     simp
   map_mul' U₁ U₂ := by
-    have hres : ∀ f g : Module.End JetRing (EuclideanSpace JetRing (Fin 2)),
+    have hres : ∀ f g : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 2)),
         (f * g).restrictScalars ℂ = f.restrictScalars ℂ * g.restrictScalars ℂ :=
       fun _ _ => rfl
     rw [jetGaugeMatrix_mul, map_mul, hres]
     ext z
     simp
 
-lemma repJetGaugeGroupI_apply (U : JetGaugeGroupI) (z : JetRing ⊗[ℂ] HiggsVec) :
+lemma repJetGaugeGroupI_apply (U : JetGaugeGroupI) (z : SpaceTimeAlgebra ⊗[ℂ] HiggsVec) :
     repJetGaugeGroupI U z =
       jetValLinEquiv.symm
         (Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U) (jetValLinEquiv z)) := rfl
@@ -180,8 +187,8 @@ lemma repJetGaugeGroupI_apply (U : JetGaugeGroupI) (z : JetRing ⊗[ℂ] HiggsVe
   with multiplication by scalar jets, acting on the values of the field over the identity
   on spacetime. This is the hypothesis under which the action lifts to the bosonic
   algebra. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] HiggsVec) :
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] HiggsVec) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
   rw [repJetGaugeGroupI_apply, repJetGaugeGroupI_apply, jetValLinEquiv_smul, map_smul,
     jetValLinEquiv_symm_smul]
@@ -199,10 +206,10 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
     repJetGaugeGroupI (JetGaugeGroupI.ofConstant g) =
       TensorProduct.map LinearMap.id (repGaugeGroupI g) := by
   ext f v
-  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+  have hu : (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
       = MvPowerSeries.C ((g.toU1.1 : ℂ)) := rfl
   have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).2.1 :
-        specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) i j
+        specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) i j
       = MvPowerSeries.C (g.toSU2.1 i j) := fun _ _ => rfl
   simp only [TensorProduct.AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
     LinearMap.restrictScalars_apply, repJetGaugeGroupI_apply, TensorProduct.map_tmul,
@@ -210,7 +217,7 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
   apply jetValLinEquiv.injective
   rw [LinearEquiv.apply_symm_apply, jetValLinEquiv_tmul, jetValLinEquiv_tmul]
   have halg : (Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix (JetGaugeGroupI.ofConstant g)) :
-      Module.End JetRing (EuclideanSpace JetRing (Fin 2)))
+      Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 2)))
       = Matrix.toLpLin 2 2 (jetGaugeMatrix (JetGaugeGroupI.ofConstant g)) := rfl
   rw [halg]
   refine WithLp.ofLp_injective 2 ?_
@@ -223,7 +230,7 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
   refine Finset.sum_congr rfl fun j _ => ?_
   rw [mul_smul_comm,
     show (MvPowerSeries.C (((GaugeGroupI.toU1 g : unitary ℂ) : ℂ) ^ 3
-          * (g.toSU2.1 i j)) : JetRing) * f
+          * (g.toSU2.1 i j)) : SpaceTimeAlgebra) * f
         = (((GaugeGroupI.toU1 g : unitary ℂ) : ℂ) ^ 3 * (g.toSU2.1 i j)) • f from by
       rw [Algebra.smul_def, MvPowerSeries.algebraMap_apply, Algebra.algebraMap_self_apply],
     smul_smul]

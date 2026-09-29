@@ -326,27 +326,29 @@ noncomputable def repGaugeGroup : (Q : GaugeGroupQuot) →
 -/
 
 /-- Absorbs the jet ring into the colour index: a jet of a down-type singlet is the
-same thing as a right-handed Weyl spinor tensored with a `JetRing`-valued colour
+same thing as a right-handed Weyl spinor tensored with a `SpaceTimeAlgebra`-valued colour
 vector,
 
-  `JetRing ⊗[ℂ] DownSinglet ≃ RightHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3)`.
+  `SpaceTimeAlgebra ⊗[ℂ] DownSinglet ≃
+    RightHandedWeyl ⊗[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 3)`.
 
 -/
 noncomputable def jetValLinEquiv :
-    JetRing ⊗[ℂ] DownSinglet ≃ₗ[ℂ]
-      Fermion.RightHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) valLinEquiv).trans <|
-    (TensorProduct.leftComm ℂ JetRing Fermion.RightHandedWeyl
+    SpaceTimeAlgebra ⊗[ℂ] DownSinglet ≃ₗ[ℂ]
+      Fermion.RightHandedWeyl ⊗[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 3) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) valLinEquiv).trans <|
+    (TensorProduct.leftComm ℂ SpaceTimeAlgebra Fermion.RightHandedWeyl
         (EuclideanSpace ℂ (Fin 3))).trans <|
       TensorProduct.congr (LinearEquiv.refl ℂ Fermion.RightHandedWeyl) <|
-        (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+        (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
             (WithLp.linearEquiv 2 ℂ (Fin 3 → ℂ))).trans <|
-          ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 3)).trans
-            (WithLp.linearEquiv 2 JetRing (Fin 3 → JetRing)).symm).restrictScalars ℂ
+          ((TensorProduct.piScalarRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra (Fin 3)).trans
+            (WithLp.linearEquiv 2 SpaceTimeAlgebra
+                (Fin 3 → SpaceTimeAlgebra)).symm).restrictScalars ℂ
 
 /-- The `(3, 1)_{-2}` action of the jet gauge group on the jet space of the down-type
 singlet. Through `jetValLinEquiv` the colour matrix of the gauge jet, carrying the
-`-2` hypercharge phase `(star u) ^ 2`, acts `JetRing`-linearly on the colour factor by
+`-2` hypercharge phase `(star u) ^ 2`, acts `SpaceTimeAlgebra`-linearly on the colour factor by
 matrix-vector multiplication, while the Weyl factor is untouched.
 
 Both monoid laws come from bundled algebra maps — `Matrix.toLpLinAlgEquiv` and
@@ -354,46 +356,52 @@ Both monoid laws come from bundled algebra maps — `Matrix.toLpLinAlgEquiv` and
 the colour-times-hypercharge matrix itself is checked. Note `Matrix.toLpLinAlgEquiv 2`
 is the same map as the `Matrix.toEuclideanLin` used by `repGaugeGroupI`, which is an
 abbreviation for `Matrix.toLpLin 2 2`, taken at the `CommRing` generality that
-`JetRing` needs. -/
+`SpaceTimeAlgebra` needs. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] DownSinglet) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] DownSinglet) where
   toFun U :=
     jetValLinEquiv.symm.toLinearMap ∘ₗ
-      Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3)) Fermion.RightHandedWeyl
+      Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3)) Fermion.RightHandedWeyl
         ((Matrix.toLpLinAlgEquiv 2
-            (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 2) •
-              ((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
-                Matrix (Fin 3) (Fin 3) JetRing))).restrictScalars ℂ) ∘ₗ
+            (((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+              ((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+                Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra))).restrictScalars ℂ) ∘ₗ
       jetValLinEquiv.toLinearMap
   map_one' := by
-    have hres : (1 : Module.End JetRing (EuclideanSpace JetRing (Fin 3))).restrictScalars ℂ
+    have hres :
+        (1 : Module.End SpaceTimeAlgebra
+        (EuclideanSpace SpaceTimeAlgebra (Fin 3))).restrictScalars ℂ
         = 1 := rfl
-    rw [show (((star (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing)) ^ 2) •
-          (((1 : JetGaugeGroupI).1 : specialUnitaryGroup (Fin 3) JetRing) :
-            Matrix (Fin 3) (Fin 3) JetRing)) = 1 from by simp,
+    rw [show (((star
+        (((1 : JetGaugeGroupI).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+          (((1 : JetGaugeGroupI).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+            Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)) = 1 from by simp,
       map_one, hres, map_one]
     ext d x
     simp [-valLinEquiv_apply]
   map_mul' U₁ U₂ := by
-    have hres : ∀ f g : Module.End JetRing (EuclideanSpace JetRing (Fin 3)),
+    have hres : ∀ f g : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3)),
         (f * g).restrictScalars ℂ = f.restrictScalars ℂ * g.restrictScalars ℂ :=
       fun _ _ => rfl
-    have hM : (((star (((U₁ * U₂).2.2 : unitary JetRing) : JetRing)) ^ 2) •
-          (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) JetRing) :
-            Matrix (Fin 3) (Fin 3) JetRing)) =
-        (((star ((U₁.2.2 : unitary JetRing) : JetRing)) ^ 2) •
-            ((U₁.1 : specialUnitaryGroup (Fin 3) JetRing) :
-              Matrix (Fin 3) (Fin 3) JetRing)) *
-          (((star ((U₂.2.2 : unitary JetRing) : JetRing)) ^ 2) •
-            ((U₂.1 : specialUnitaryGroup (Fin 3) JetRing) :
-              Matrix (Fin 3) (Fin 3) JetRing)) := by
-      rw [show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing) =
-            ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing)
+    have hM : (((star (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+          (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+            Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)) =
+        (((star ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+            ((U₁.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+              Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)) *
+          (((star ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+            ((U₂.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+              Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)) := by
+      rw [show (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) =
+            ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) *
+                ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
             from rfl,
-        show (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) JetRing) :
-              Matrix (Fin 3) (Fin 3) JetRing) =
-            ((U₁.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) *
-              ((U₂.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
+        show (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+              Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) =
+            ((U₁.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+                (Fin 3) SpaceTimeAlgebra) *
+              ((U₂.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+                  (Fin 3) SpaceTimeAlgebra)
             from rfl,
         star_mul', mul_pow, Matrix.smul_mul, Matrix.mul_smul, smul_smul]
     rw [hM, map_mul, hres, map_mul]
@@ -401,12 +409,13 @@ noncomputable def repJetGaugeGroupI :
     simp
 
 /-- The identification of the jets of the down-type singlet intertwines multiplication by
-a scalar jet with the `JetRing`-scalar action on the colour coordinates. -/
-lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] DownSinglet) :
+a scalar jet with the `SpaceTimeAlgebra`-scalar action on the colour coordinates. -/
+lemma jetValLinEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] DownSinglet) :
     jetValLinEquiv (χ • z)
-      = Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3))
+      = Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3))
           Fermion.RightHandedWeyl
-          ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ).restrictScalars ℂ)
+          ((LinearMap.lsmul SpaceTimeAlgebra
+              (EuclideanSpace SpaceTimeAlgebra (Fin 3)) χ).restrictScalars ℂ)
           (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -423,9 +432,10 @@ lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] DownSinglet) :
           = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • (χ * f)) from rfl,
         show jetValLinEquiv (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c⟩ : DownSinglet))
           = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f) from rfl,
-        show Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3))
+        show Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3))
             Fermion.RightHandedWeyl
-            ((LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ).restrictScalars ℂ)
+            ((LinearMap.lsmul SpaceTimeAlgebra
+                (EuclideanSpace SpaceTimeAlgebra (Fin 3)) χ).restrictScalars ℂ)
             (ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun i => c.ofLp i • f))
           = ψ ⊗ₜ[ℂ] (χ • WithLp.toLp 2 fun i => c.ofLp i • f) from rfl]
       congr 1
@@ -440,17 +450,17 @@ lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] DownSinglet) :
 /-- **The jet gauge action on the jets of the down-type singlet is fibrewise**: it
 commutes with multiplication by scalar jets, acting on the values of the field over the
 identity on spacetime. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] DownSinglet) :
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] DownSinglet) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
-  set S : Module.End JetRing (EuclideanSpace JetRing (Fin 3)) :=
-    LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3)) χ with hS
-  set M : Module.End JetRing (EuclideanSpace JetRing (Fin 3)) :=
+  set S : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3)) :=
+    LinearMap.lsmul SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3)) χ with hS
+  set M : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3)) :=
     (Matrix.toLpLinAlgEquiv 2
-      (((star ((U.2.2 : unitary JetRing) : JetRing)) ^ 2) •
-        ((U.1 : specialUnitaryGroup (Fin 3) JetRing) :
-          Matrix (Fin 3) (Fin 3) JetRing)) :
-      Module.End JetRing (EuclideanSpace JetRing (Fin 3))) with hM
+      (((star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 2) •
+        ((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+          Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)) :
+      Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3))) with hM
   have hMS : M * S = S * M := LinearMap.ext fun e => by
     simp only [Module.End.mul_apply, hS, LinearMap.lsmul_apply, map_smul]
   apply jetValLinEquiv.injective
@@ -480,17 +490,19 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
   | tmul psi c =>
       apply jetValLinEquiv.injective
       simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI, -TensorProduct.congr_symm]
-      have hu : star (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
+      have hu : star
+          (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
           = MvPowerSeries.C ((starRingEnd ℂ) (g.toU1.1 : ℂ)) := by
-        rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing)
-          = MvPowerSeries.C ((g.toU1.1 : ℂ)) from rfl, JetRing.star_C]
+        rw [show (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+          = MvPowerSeries.C ((g.toU1.1 : ℂ)) from rfl, SpaceTimeAlgebra.star_C]
         rfl
       have hM : ∀ i j, (((JetGaugeGroupI.ofConstant g).1 :
-            specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) i j
+            specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+                (Fin 3) SpaceTimeAlgebra) i j
           = MvPowerSeries.C (g.toSU3.1 i j) := fun _ _ => rfl
-      have halg : ∀ A : Matrix (Fin 3) (Fin 3) JetRing,
+      have halg : ∀ A : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra,
           (Matrix.toLpLinAlgEquiv 2 A :
-              Module.End JetRing (EuclideanSpace JetRing (Fin 3)))
+              Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3)))
             = Matrix.toLpLin 2 2 A := fun _ => rfl
       have hvec : ∀ i : Fin 3,
           (∑ x, MvPowerSeries.C ((g.toSU3.1) i x) * (MvPowerSeries.C (c.ofLp x) * d))

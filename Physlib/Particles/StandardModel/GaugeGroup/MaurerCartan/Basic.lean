@@ -105,7 +105,7 @@ lemma maurerCartanForm_cocycle (U V : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
       (maurerCartanForm U μ).toU1Value +
         U.2.2.1 * (maurerCartanForm V μ).toU1Value * star U.2.2.1 :=
     congrArg (fun p => p.2.2) key
-  rw [h22, mul_comm (U.2.2.1 : JetRing) ((maurerCartanForm V μ).toU1Value), mul_assoc,
+  rw [h22, mul_comm (U.2.2.1 : SpaceTimeAlgebra) ((maurerCartanForm V μ).toU1Value), mul_assoc,
     (Unitary.mem_iff.mp U.2.2.2).2, mul_one]
   rfl
 
@@ -138,24 +138,25 @@ lemma maurerCartanForm_eq_zero_iff_ofConstant (U : JetGaugeGroupI) :
     -- Step 1: all first derivatives of `U` vanish.
     have hderiv := deriv_zero_of_maurerCartanForm_zero U h
     -- Step 2: a jet with vanishing first derivatives is the constant jet of its value.
-    have hconst : ∀ f : JetRing, (∀ μ, pderiv μ f = 0) → f = C (constantCoeff f) := by
+    have hconst : ∀ f : SpaceTimeAlgebra, (∀ μ, pderiv μ f = 0) → f = C (constantCoeff f) := by
       intro f hf
       refine pderiv.ext (fun i => ?_) ?_
       · rw [hf i, pderiv_C]
       · rw [constantCoeff_C]
     refine ⟨U.eval, Prod.ext (Subtype.ext ?_) (Prod.ext (Subtype.ext ?_) (Subtype.ext ?_))⟩
-    · show U.1.1 = ((JetGaugeGroupI.ofConstant U.eval).1 : Matrix (Fin 3) (Fin 3) JetRing)
+    · show U.1.1 = ((JetGaugeGroupI.ofConstant U.eval).1 : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra)
       ext i j : 1
       exact hconst (U.1.1 i j) fun μ => by
         simpa [JetGaugeGroupI.deriv, Matrix.map_apply] using
-          congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) JetRing) i j) (hderiv μ)
-    · show U.2.1.1 = ((JetGaugeGroupI.ofConstant U.eval).2.1 : Matrix (Fin 2) (Fin 2) JetRing)
+          congrArg (fun p => (p.1 : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) i j) (hderiv μ)
+    · show U.2.1.1 =
+          ((JetGaugeGroupI.ofConstant U.eval).2.1 : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra)
       ext i j : 1
       exact hconst (U.2.1.1 i j) fun μ => by
         simpa [JetGaugeGroupI.deriv, Matrix.map_apply] using
-          congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) JetRing) i j) (hderiv μ)
-    · show U.2.2.1 = ((JetGaugeGroupI.ofConstant U.eval).2.2 : JetRing)
-      exact hconst U.2.2.1 fun μ => congrArg (fun p => (p.2.2 : JetRing)) (hderiv μ)
+          congrArg (fun p => (p.2.1 : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) i j) (hderiv μ)
+    · show U.2.2.1 = ((JetGaugeGroupI.ofConstant U.eval).2.2 : SpaceTimeAlgebra)
+      exact hconst U.2.2.1 fun μ => congrArg (fun p => (p.2.2 : SpaceTimeAlgebra)) (hderiv μ)
   · rintro ⟨c, rfl⟩
     exact maurerCartanForm_ofConstant c
 
@@ -182,17 +183,17 @@ lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) 
       ⁅maurerCartanForm U μ, maurerCartanForm U ν⁆ = 0 := by
   -- pulling the scalar `i` out of the entrywise formal derivative
   have hmap : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (ρ : Fin 1 ⊕ Fin 3) (c : ℂ)
-      (M : Matrix κ κ JetRing), (c • M).map (pderiv ρ) = c • M.map (pderiv ρ) :=
+      (M : Matrix κ κ SpaceTimeAlgebra), (c • M).map (pderiv ρ) = c • M.map (pderiv ρ) :=
     fun _ _ _ _ _ _ => Matrix.ext fun _ _ => Derivation.map_smul _ _ _
   -- the matrix-level structural identity, generic in the size of the factor
-  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (A : Matrix κ κ JetRing),
+  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (A : Matrix κ κ SpaceTimeAlgebra),
       A * star A = 1 →
       (A.map (pderiv ν) * star A).map (pderiv μ) -
         (A.map (pderiv μ) * star A).map (pderiv ν) =
       A.map (pderiv μ) * star A * (A.map (pderiv ν) * star A) -
         A.map (pderiv ν) * star A * (A.map (pderiv μ) * star A) := by
     intro κ _ _ A hU
-    have hleib : ∀ (ρ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ JetRing),
+    have hleib : ∀ (ρ : Fin 1 ⊕ Fin 3) (M N : Matrix κ κ SpaceTimeAlgebra),
         (M * N).map (pderiv ρ) = M.map (pderiv ρ) * N + M * N.map (pderiv ρ) := by
       intro ρ M N
       ext i j : 1
@@ -215,7 +216,7 @@ lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) 
             rw [mul_assoc, h1, mul_neg, ← mul_assoc]
     rw [hleib μ (A.map (pderiv ν)) (star A), hleib ν (A.map (pderiv μ)) (star A),
       show (A.map (pderiv ν)).map (pderiv μ) = (A.map (pderiv μ)).map (pderiv ν)
-        from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _, hq μ, hq ν]
+        from Matrix.ext fun _ _ => SpaceTimeAlgebra.pderiv_comm μ ν _, hq μ, hq ν]
     simp only [mul_neg, ← mul_assoc]
     abel
   -- the abelian `U(1)` identity: no commutator, pure symmetry of mixed partials
@@ -231,7 +232,7 @@ lemma maurerCartanForm_structure (U : JetGaugeGroupI) (μ ν : Fin 1 ⊕ Fin 3) 
       linear_combination star U.2.2.1 * h0 -
         pderiv ρ (star U.2.2.1) * ((mul_comm _ _).trans hu)
     simp only [Derivation.leibniz, smul_eq_mul]
-    rw [hstar μ, hstar ν, JetRing.pderiv_comm μ ν]
+    rw [hstar μ, hstar ν, SpaceTimeAlgebra.pderiv_comm μ ν]
     ring
   refine ext_of_matrix ?_ ?_ ?_ <;>
     simp only [add_toSU3Matrix, add_toSU2Matrix, add_toU1Value, sub_toSU3Matrix,
@@ -270,14 +271,14 @@ lemma JetGaugeAlgebra.deriv_ofConstant (μ : Fin 1 ⊕ Fin 3) (a : GaugeAlgebra)
 lemma deriv_adjointMap (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) (x : JetGaugeAlgebra) :
     deriv μ (adjointMap U x) =
       adjointMap U (deriv μ x) - ⁅maurerCartanForm U μ, adjointMap U x⁆ := by
-  have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ JetRing),
+  have hleib : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (M N : Matrix κ κ SpaceTimeAlgebra),
       (M * N).map (pderiv μ) = M.map (pderiv μ) * N + M * N.map (pderiv μ) := by
     intro κ _ _ M N
     ext i j : 1
     simp only [Matrix.map_apply, Matrix.mul_apply, Matrix.add_apply, map_sum,
       Derivation.leibniz, smul_eq_mul]
     exact (Finset.sum_congr rfl fun k _ => by ring).trans Finset.sum_add_distrib
-  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (V X : Matrix κ κ JetRing),
+  have key : ∀ (κ : Type) [Fintype κ] [DecidableEq κ] (V X : Matrix κ κ SpaceTimeAlgebra),
       V * star V = 1 →
       (V * X * star V).map (pderiv μ) =
         V * X.map (pderiv μ) * star V -

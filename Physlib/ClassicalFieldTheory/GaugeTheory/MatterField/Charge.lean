@@ -13,9 +13,9 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.Basic
 
 A field valued in a complex vector space `V` with integer charge `n` transforms under a
 `U(1)` gauge transformation `U = e^{iχ}` by `ψ ↦ U^n ψ`. On jets this is multiplication of the
-jet-ring factor of `JetRing ⊗[ℂ] V` by the unitary power series `U^n`; the action is
+jet-ring factor of `SpaceTimeAlgebra ⊗[ℂ] V` by the unitary power series `U^n`; the action is
 manifestly fibrewise. `MatterField.charged` packages a Lorentz representation, a charge and
-a mass weight into a matter field for the jet gauge group `unitary JetRing` of `U(1)`.
+a mass weight into a matter field for the jet gauge group `unitary SpaceTimeAlgebra` of `U(1)`.
 
 ## ii. Key results
 
@@ -47,13 +47,13 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V]
 -/
 
 /-- The unitary power series `U ^ n` of a `U(1)` jet, for an integer charge `n`. -/
-noncomputable def chargePow (n : ℤ) (U : unitary JetRing) : JetRing :=
-  ((Unitary.toUnits U ^ n : JetRingˣ) : JetRing)
+noncomputable def chargePow (n : ℤ) (U : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra :=
+  ((Unitary.toUnits U ^ n : SpaceTimeAlgebraˣ) : SpaceTimeAlgebra)
 
 lemma chargePow_one (n : ℤ) : chargePow n 1 = 1 := by
   simp [chargePow]
 
-lemma chargePow_mul (n : ℤ) (U W : unitary JetRing) :
+lemma chargePow_mul (n : ℤ) (U W : unitary SpaceTimeAlgebra) :
     chargePow n (U * W) = chargePow n U * chargePow n W := by
   simp [chargePow, mul_zpow]
 
@@ -66,7 +66,7 @@ lemma chargePow_mul (n : ℤ) (U W : unitary JetRing) :
 /-- **The charge-`n` action of `U(1)` jets on the jets of a `V`-valued field**:
   multiplication of the jet-ring factor by `U ^ n`. -/
 noncomputable def chargeRep (n : ℤ) (V : Type) [AddCommGroup V] [Module ℂ V] :
-    Representation ℂ (unitary JetRing) (JetRing ⊗[ℂ] V) where
+    Representation ℂ (unitary SpaceTimeAlgebra) (SpaceTimeAlgebra ⊗[ℂ] V) where
   toFun U := LinearMap.rTensor V (LinearMap.mulLeft ℂ (chargePow n U))
   map_one' := by
     rw [chargePow_one, LinearMap.mulLeft_one, LinearMap.rTensor_id]
@@ -79,12 +79,13 @@ noncomputable def chargeRep (n : ℤ) (V : Type) [AddCommGroup V] [Module ℂ V]
       LinearMap.rTensor_comp]
     rfl
 
-lemma chargeRep_tmul (n : ℤ) (U : unitary JetRing) (f : JetRing) (v : V) :
+lemma chargeRep_tmul (n : ℤ) (U : unitary SpaceTimeAlgebra) (f : SpaceTimeAlgebra) (v : V) :
     chargeRep n V U (f ⊗ₜ[ℂ] v) = (chargePow n U * f) ⊗ₜ[ℂ] v :=
   LinearMap.rTensor_tmul _ _ _ _
 
 /-- **The charge action is fibrewise**: it commutes with multiplication by scalar jets. -/
-lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma chargeRep_smul (n : ℤ) (U : unitary SpaceTimeAlgebra) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     chargeRep n V U (χ • z) = χ • chargeRep n V U z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -101,7 +102,7 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
 
 /-- **The charged matter field**: a field with values in `V`, Lorentz representation
   `repLorentz`, electric charge `n` and mass weight `w`, as a matter field for the jets of
-  `U(1)`, in any gauge context `jets` whose jet group is `unitary JetRing`.
+  `U(1)`, in any gauge context `jets` whose jet group is `unitary SpaceTimeAlgebra`.
 
   The infinitesimal action `act` of the gauge algebra is supplied, not constructed. For a
   charge-`n` field it is `c ↦ (i n φ(c)) • id` for the functional `φ` reading off the
@@ -111,7 +112,7 @@ lemma chargeRep_smul (n : ℤ) (U : unitary JetRing) (χ : JetRing) (z : JetRing
   on `jets` beyond its jet group, so it is supplied polymorphically. -/
 noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G₀ 𝔤 (unitary JetRing) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData G₀ 𝔤 (unitary SpaceTimeAlgebra) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
     (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
     MatterField jets where
@@ -126,7 +127,7 @@ noncomputable def charged {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
 @[simp]
 lemma charged_V {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G₀ 𝔤 (unitary JetRing) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
+    (jets : LocalGaugeData G₀ 𝔤 (unitary SpaceTimeAlgebra) 𝔤J) [Module.Free ℂ V] [Module.Finite ℂ V]
     (repLorentz : Representation ℂ SL(2,ℂ) V) (n : ℤ) (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
     (hact : jets.IsInfinitesimalActionOf act (chargeRep n V)) (w : ℕ) :
     (charged jets repLorentz n act hact w).V = V := rfl

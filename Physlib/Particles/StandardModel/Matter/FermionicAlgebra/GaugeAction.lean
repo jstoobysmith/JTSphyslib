@@ -11,7 +11,7 @@ public import Physlib.Particles.StandardModel.Matter.FermionicAlgebra.Basic
 
 ## i. Overview
 
-Given a fibrewise action of the jet gauge group on the jets `JetRing ⊗[ℂ] V` of a matter
+Given a fibrewise action of the jet gauge group on the jets `SpaceTimeAlgebra ⊗[ℂ] V` of a matter
 field, the jet gauge group acts on the fermionic algebra by the exterior-algebra functor
 applied to the induced action on the jet component space. On a component function `∂_s ψ_α`
 the action is the all-orders Leibniz rule: each splitting of the derivative multiset
@@ -54,9 +54,9 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 
 -/
 
-/-- **The jet gauge action on the fermionic algebra** of the matter field `M`: the exterior-algebra functor
-  applied to the gauge action on the jet component space. The fibrewise action on the jets and its
-  fibrewise-linearity are fields of `M`. -/
+/-- **The jet gauge action on the fermionic algebra** of the matter field `M`: the exterior-algebra
+  functor applied to the gauge action on the jet component space. The fibrewise action on the jets
+  and its fibrewise-linearity are fields of `M`. -/
 noncomputable def repJetGaugeGroupI :
     Representation ℂ GJ (FermionicAlgebra M) where
   toFun U :=

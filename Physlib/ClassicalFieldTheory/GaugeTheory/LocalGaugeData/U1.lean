@@ -57,7 +57,7 @@ open MvPowerSeries
 abbrev U1 : Type := ↥(unitary ℂ)
 
 /-- Jets of `U(1)` gauge transformations: unitary formal power series. -/
-abbrev JetU1 : Type := ↥(unitary JetRing)
+abbrev JetU1 : Type := ↥(unitary SpaceTimeAlgebra)
 
 /-- The Lie algebra `u(1)` over a `*`-ring: the self-adjoint elements, with vanishing
   bracket. -/
@@ -67,7 +67,7 @@ abbrev U1AlgebraOver (R : Type) [Ring R] [StarRing R] : Type := ↥(selfAdjoint 
 abbrev U1Algebra : Type := U1AlgebraOver ℂ
 
 /-- Jets of the Lie algebra `u(1)`: the self-adjoint formal power series. -/
-abbrev JetU1Algebra : Type := U1AlgebraOver JetRing
+abbrev JetU1Algebra : Type := U1AlgebraOver SpaceTimeAlgebra
 
 namespace U1AlgebraOver
 
@@ -105,78 +105,79 @@ noncomputable def eval : JetU1 →* U1 where
   toFun u := ⟨constantCoeff u.1, by
     obtain ⟨h1, h2⟩ := Unitary.mem_iff.mp u.2
     exact Unitary.mem_iff.mpr
-      ⟨by rw [← JetRing.constantCoeff_star, ← map_mul, h1, map_one],
-        by rw [← JetRing.constantCoeff_star, ← map_mul, h2, map_one]⟩⟩
+      ⟨by rw [← SpaceTimeAlgebra.constantCoeff_star, ← map_mul, h1, map_one],
+        by rw [← SpaceTimeAlgebra.constantCoeff_star, ← map_mul, h2, map_one]⟩⟩
   map_one' := Subtype.ext (map_one _)
   map_mul' u v := Subtype.ext (map_mul _ u.1 v.1)
 
 @[simp]
-lemma eval_val (u : JetU1) : (eval u : ℂ) = constantCoeff (u : JetRing) := rfl
+lemma eval_val (u : JetU1) : (eval u : ℂ) = constantCoeff (u : SpaceTimeAlgebra) := rfl
 
 /-- The jet of a constant `U(1)` gauge transformation. -/
 noncomputable def ofConstant : U1 →* JetU1 where
   toFun u := ⟨C u.1, by
     obtain ⟨h1, h2⟩ := Unitary.mem_iff.mp u.2
     exact Unitary.mem_iff.mpr
-      ⟨by rw [JetRing.star_C, ← map_mul, h1, map_one],
-        by rw [JetRing.star_C, ← map_mul, h2, map_one]⟩⟩
+      ⟨by rw [SpaceTimeAlgebra.star_C, ← map_mul, h1, map_one],
+        by rw [SpaceTimeAlgebra.star_C, ← map_mul, h2, map_one]⟩⟩
   map_one' := Subtype.ext (map_one _)
   map_mul' u v := Subtype.ext (map_mul _ u.1 v.1)
 
 @[simp]
-lemma ofConstant_val (u : U1) : (ofConstant u : JetRing) = C (u : ℂ) := rfl
+lemma ofConstant_val (u : U1) : (ofConstant u : SpaceTimeAlgebra) = C (u : ℂ) := rfl
 
 /-- The formal derivative of a `u(1)` jet. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra →ₗ[ℝ] JetU1Algebra where
   toFun a := ⟨pderiv μ a.1, by
     show star (pderiv μ a.1) = pderiv μ a.1
-    rw [← JetRing.pderiv_star, a.2]⟩
+    rw [← SpaceTimeAlgebra.pderiv_star, a.2]⟩
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
     show pderiv μ (r • a.1) = r • pderiv μ a.1
-    exact JetRing.pderiv_real_smul μ r _)
+    exact SpaceTimeAlgebra.pderiv_real_smul μ r _)
 
 @[simp]
-lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) : (deriv μ a : JetRing) = pderiv μ a :=
+lemma deriv_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) :
+    (deriv μ a : SpaceTimeAlgebra) = pderiv μ a :=
   rfl
 
 /-- Multiplication of a `u(1)` jet by the coordinate `x_μ`. -/
 noncomputable def coord (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra →ₗ[ℝ] JetU1Algebra where
-  toFun a := ⟨(X μ : JetRing) * a.1, by
-    show star ((X μ : JetRing) * a.1) = (X μ : JetRing) * a.1
-    rw [star_mul', JetRing.star_X, a.2]⟩
+  toFun a := ⟨(X μ : SpaceTimeAlgebra) * a.1, by
+    show star ((X μ : SpaceTimeAlgebra) * a.1) = (X μ : SpaceTimeAlgebra) * a.1
+    rw [star_mul', SpaceTimeAlgebra.star_X, a.2]⟩
   map_add' a b := Subtype.ext (mul_add _ _ _)
   map_smul' r a := Subtype.ext (mul_smul_comm _ _ _)
 
 @[simp]
 lemma coord_val (μ : Fin 1 ⊕ Fin 3) (a : JetU1Algebra) :
-    (coord μ a : JetRing) = (X μ : JetRing) * a := rfl
+    (coord μ a : SpaceTimeAlgebra) = (X μ : SpaceTimeAlgebra) * a := rfl
 
 /-- Evaluation of a `u(1)` jet at the base point. -/
 noncomputable def evalLie : JetU1Algebra →ₗ[ℝ] U1Algebra where
   toFun a := ⟨constantCoeff a.1, by
     show star (constantCoeff a.1) = constantCoeff a.1
-    rw [← JetRing.constantCoeff_star, a.2]⟩
+    rw [← SpaceTimeAlgebra.constantCoeff_star, a.2]⟩
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
     show constantCoeff (r • a.1) = r • constantCoeff a.1
-    exact JetRing.constantCoeff_real_smul r _)
+    exact SpaceTimeAlgebra.constantCoeff_real_smul r _)
 
 @[simp]
-lemma evalLie_val (a : JetU1Algebra) : (evalLie a : ℂ) = constantCoeff (a : JetRing) := rfl
+lemma evalLie_val (a : JetU1Algebra) : (evalLie a : ℂ) = constantCoeff (a : SpaceTimeAlgebra) := rfl
 
 /-- A constant as a `u(1)` jet. -/
 noncomputable def ofConstantLie : U1Algebra →ₗ[ℝ] JetU1Algebra where
   toFun a := ⟨C a.1, by
-    show star (C a.1 : JetRing) = C a.1
-    rw [JetRing.star_C, a.2]⟩
+    show star (C a.1 : SpaceTimeAlgebra) = C a.1
+    rw [SpaceTimeAlgebra.star_C, a.2]⟩
   map_add' a b := Subtype.ext (map_add _ _ _)
   map_smul' r a := Subtype.ext (by
-    show (C (r • a.1) : JetRing) = r • C a.1
-    exact JetRing.C_real_smul r _)
+    show (C (r • a.1) : SpaceTimeAlgebra) = r • C a.1
+    exact SpaceTimeAlgebra.C_real_smul r _)
 
 @[simp]
-lemma ofConstantLie_val (a : U1Algebra) : (ofConstantLie a : JetRing) = C (a : ℂ) := rfl
+lemma ofConstantLie_val (a : U1Algebra) : (ofConstantLie a : SpaceTimeAlgebra) = C (a : ℂ) := rfl
 
 /-!
 
@@ -186,23 +187,28 @@ lemma ofConstantLie_val (a : U1Algebra) : (ofConstantLie a : JetRing) = C (a : �
 
 /-- The Maurer–Cartan scalar `i (∂_μ u) u⁻¹` of a unitary jet is self-adjoint. -/
 lemma star_mcVal (u : JetU1) (μ : Fin 1 ⊕ Fin 3) :
-    star (Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)))
-      = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) := by
-  have hu : (u : JetRing) * star (u : JetRing) = 1 := Unitary.mul_star_self_of_mem u.2
-  have h0 : pderiv μ ((u : JetRing) * star (u : JetRing)) = 0 := by rw [hu, pderiv_one]
+    star (Complex.I • (pderiv μ (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)))
+      = Complex.I • (pderiv μ (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)) := by
+  have hu : (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra) = 1 :=
+      Unitary.mul_star_self_of_mem u.2
+  have h0 : pderiv μ ((u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)) = 0 := by
+    rw [hu, pderiv_one]
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul] at h0
-  rw [star_smul, star_mul', star_star, ← JetRing.pderiv_star, Complex.star_def, Complex.conj_I,
-    neg_smul, show pderiv μ (star (u : JetRing)) * (u : JetRing)
-      = -(pderiv μ (u : JetRing) * star (u : JetRing)) from by linear_combination h0,
+  rw [star_smul, star_mul', star_star, ← SpaceTimeAlgebra.pderiv_star, Complex.star_def,
+      Complex.conj_I,
+    neg_smul, show pderiv μ (star (u : SpaceTimeAlgebra)) * (u : SpaceTimeAlgebra)
+      = -(pderiv μ (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)) from by
+          linear_combination h0,
     smul_neg, neg_neg]
 
 /-- The Maurer–Cartan form `i (∂_μ u) u⁻¹` of a `U(1)` jet. -/
 noncomputable def mc (u : JetU1) (μ : Fin 1 ⊕ Fin 3) : JetU1Algebra :=
-  ⟨Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)), star_mcVal u μ⟩
+  ⟨Complex.I • (pderiv μ (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)), star_mcVal u μ⟩
 
 @[simp]
 lemma mc_val (u : JetU1) (μ : Fin 1 ⊕ Fin 3) :
-    (mc u μ : JetRing) = Complex.I • (pderiv μ (u : JetRing) * star (u : JetRing)) := rfl
+    (mc u μ : SpaceTimeAlgebra) = Complex.I •
+        (pderiv μ (u : SpaceTimeAlgebra) * star (u : SpaceTimeAlgebra)) := rfl
 
 
 end JetU1
@@ -221,7 +227,8 @@ open JetU1
 noncomputable def u1MatrixJets : MatrixJets (Fin 1) U1 U1Algebra JetU1 JetU1Algebra where
   toMat₀ := (Matrix.scalar (Fin 1) : ℂ →+* _).toMonoidHom.comp (unitary ℂ).subtype
   toMat₀_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
-  toMatJ := (Matrix.scalar (Fin 1) : JetRing →+* _).toMonoidHom.comp (unitary JetRing).subtype
+  toMatJ := (Matrix.scalar (Fin 1) : SpaceTimeAlgebra →+* _).toMonoidHom.comp
+      (unitary SpaceTimeAlgebra).subtype
   toMatJ_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
   toMatJ_mul_star u := by
     show Matrix.scalar (Fin 1) u.1 * star (Matrix.scalar (Fin 1) u.1) = 1
@@ -239,7 +246,7 @@ noncomputable def u1MatrixJets : MatrixJets (Fin 1) U1 U1Algebra JetU1 JetU1Alge
   lieJ := Matrix.scalarSelfAdjoint
   lieJ_injective _ _ h := Subtype.ext (Matrix.scalar_inj.mp h)
   lieJ_bracket a b := by
-    show Matrix.scalar (Fin 1) ((0 : JetU1Algebra) : JetRing) = Complex.I • _
+    show Matrix.scalar (Fin 1) ((0 : JetU1Algebra) : SpaceTimeAlgebra) = Complex.I • _
     rw [Matrix.scalarSelfAdjoint_apply, Matrix.scalarSelfAdjoint_apply,
       (Matrix.scalar_commute _ (fun _ => Commute.all _ _) _).eq, sub_self, smul_zero,
       ZeroMemClass.coe_zero, map_zero]
@@ -255,7 +262,8 @@ noncomputable def u1MatrixJets : MatrixJets (Fin 1) U1 U1Algebra JetU1 JetU1Alge
   lieJ_deriv μ a := (Matrix.map_scalar (pderiv μ) (map_zero _) a.1).symm
   coord := JetU1.coord
   lieJ_coord μ a := by
-    show Matrix.scalar (Fin 1) ((X μ : JetRing) * a.1) = (X μ : JetRing) • Matrix.scalar (Fin 1) a.1
+    show Matrix.scalar (Fin 1) ((X μ : SpaceTimeAlgebra) * a.1) = (X μ : SpaceTimeAlgebra) •
+        Matrix.scalar (Fin 1) a.1
     rw [← smul_eq_mul, Matrix.scalar_smul]
   adjoint := Representation.trivial ℝ JetU1 JetU1Algebra
   lieJ_adjoint u a := Matrix.scalar_eq_conj (Unitary.mul_star_self_of_mem u.2) a.1
@@ -283,12 +291,13 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra :=
 
 /-- The iterated derivative on `u(1)` jets is the iterated formal derivative. -/
 lemma u1_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetU1Algebra) :
-    (u1.iteratedDeriv s a : JetRing) = s.foldl (fun h ρ => pderiv ρ h) (a : JetRing) := by
+    (u1.iteratedDeriv s a : SpaceTimeAlgebra) = s.foldl (fun h ρ => pderiv ρ h)
+        (a : SpaceTimeAlgebra) := by
   induction s using Multiset.induction_on generalizing a with
   | empty => rw [iteratedDeriv_zero, LinearMap.id_apply, Multiset.foldl_zero]
   | cons μ t ih =>
     rw [iteratedDeriv_cons, LinearMap.comp_apply, u1_deriv, JetU1.deriv_val, ih,
-      Multiset.foldl_cons, JetRing.foldl_pderiv_pderiv]
+      Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
 
 /-- The local gauge data of `U(1)` is faithful. -/
 instance instFaithfulU1 : u1.Faithful := u1MatrixJets.faithful
@@ -297,10 +306,11 @@ instance instFaithfulU1 : u1.Faithful := u1MatrixJets.faithful
   the unitary Euler transport of a `1 × 1` matrix is a unitary jet. -/
 instance instFreeU1 : u1.Free :=
   u1MatrixJets.free
-    (fun c => ⟨⟨JetRing.taylorSeries fun s => ((c s : U1Algebra) : ℂ), by
-      rw [selfAdjoint.mem_iff, JetRing.star_taylorSeries]
+    (fun c => ⟨⟨SpaceTimeAlgebra.taylorSeries fun s => ((c s : U1Algebra) : ℂ), by
+      rw [selfAdjoint.mem_iff, SpaceTimeAlgebra.star_taylorSeries]
       exact congrArg _ (funext fun s => (c s).2)⟩, by
-      rw [Matrix.eq_scalar_fin_one (JetRing.taylorMatrix _), JetRing.taylorMatrix_apply]
+      rw [Matrix.eq_scalar_fin_one (SpaceTimeAlgebra.taylorMatrix _),
+          SpaceTimeAlgebra.taylorMatrix_apply]
       rfl⟩)
     (fun a => by
       show star (Matrix.scalar (Fin 1) a.1) = Matrix.scalar (Fin 1) a.1
@@ -324,11 +334,11 @@ noncomputable def u1Factor : U1Factor u1 where
     { toFun a := (a : ℂ)
       map_add' _ _ := rfl
       map_smul' _ _ := rfl }
-  φJ a := (a : JetRing)
+  φJ a := (a : SpaceTimeAlgebra)
   φJ_ofConstantLie _ := rfl
   φJ_cc_foldl p a := by
-    show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (a : JetRing))
-      = constantCoeff (u1.iteratedDeriv p a : JetRing)
+    show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (a : SpaceTimeAlgebra))
+      = constantCoeff (u1.iteratedDeriv p a : SpaceTimeAlgebra)
     rw [u1_iteratedDeriv_val]
   φJ_maurerCartan _ _ := rfl
   φJ_adjoint _ _ := rfl

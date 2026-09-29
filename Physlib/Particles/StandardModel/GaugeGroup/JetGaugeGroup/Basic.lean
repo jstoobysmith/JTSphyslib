@@ -53,7 +53,7 @@ The key observation is that Taylor expansions can be added and
 multiplied just like numbers: the coefficients of a product are
 given by the familiar sums of binomial coefficients times pairs
 of derivatives, which is just the Leibniz rule. This makes them a
-ring, which we call JetRing — it plays the same role that ℂ does
+ring, which we call SpaceTimeAlgebra — it plays the same role that ℂ does
 for ordinary numbers, only its elements record a value together
 with all of its derivatives.
 
@@ -63,7 +63,7 @@ Now, a group like SU(3), SU(2), or U(1) is defined by equations
  sense whenever the entries can be added, multiplied, and
  conjugated. In particular, they make sense for matrices whose
  entries are Taylor expansions. Writing down the Standard Model
- gauge group with entries in JetRing instead of ℂ gives
+ gauge group with entries in SpaceTimeAlgebra instead of ℂ gives
  JetGaugeGroupI, and unwinding the definitions shows this is
  precisely the group of Taylor expansions of gauge
  transformations: an element is a g(x) together with all its
@@ -84,7 +84,7 @@ The payoff is that the derivative bookkeeping disappears into th
 ## ii. Key results
 
 - `JetGaugeGroupI` : the jets of gauge transformations, the gauge group with coefficients
-  in `JetRing`.
+  in `SpaceTimeAlgebra`.
 - `JetGaugeGroupI.eval`, `JetGaugeGroupI.ofConstant` : evaluation at the base point and
   the constant jets, with `eval_ofConstant`.
 - `JetGaugeGroupI.deriv` : the entrywise formal derivative of a jet, with the Leibniz rule
@@ -104,14 +104,14 @@ The payoff is that the derivative bookkeeping disappears into th
 
 namespace StandardModel
 
-open Matrix MvPowerSeries JetRing
+open Matrix MvPowerSeries SpaceTimeAlgebra
 open scoped Nat
 
 /-!
 
 ## A. The jet gauge group
 
-The ring `JetRing` of formal power series in the spacetime coordinates, in which
+The ring `SpaceTimeAlgebra` of formal power series in the spacetime coordinates, in which
 jets of fields and of gauge transformations are valued, is defined in
 `Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra`, together with the algebra of derivative
 symbols `SpaceTimeDerivAlgebraℂ` and the action `SpaceTimeDerivAlgebraℂ.jetRingAction`
@@ -121,22 +121,23 @@ of the jet ring on it.
 
 /-- The group of formal infinite-order jets, at a spacetime point, of local gauge
   transformations of the Standard Model: the `R`-points of the gauge group for `R`
-  the ring `JetRing` of formal power series in the spacetime coordinates.
+  the ring `SpaceTimeAlgebra` of formal power series in the spacetime coordinates.
 
   Since gauge transformations multiply pointwise, jets multiply as power series and
-  the group structure is that of the matrix groups over `JetRing`. The unitarity and
+  the group structure is that of the matrix groups over `SpaceTimeAlgebra`. The unitarity and
   determinant constraints hold as power-series identities, i.e. at every jet order.
 
   Evaluation at the base point recovers `GaugeGroupI`; see `JetGaugeGroupI.eval`. -/
 abbrev JetGaugeGroupI : Type :=
-  specialUnitaryGroup (Fin 3) JetRing × specialUnitaryGroup (Fin 2) JetRing ×
-  unitary JetRing
+  specialUnitaryGroup (Fin 3) SpaceTimeAlgebra × specialUnitaryGroup (Fin 2) SpaceTimeAlgebra ×
+  unitary SpaceTimeAlgebra
 
 namespace JetGaugeGroupI
 
 
 /-- The underlying matrix value of an element of `JetGaugeGroupI`. -/
-def toVal (U : JetGaugeGroupI) : Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
+def toVal (U : JetGaugeGroupI) : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra × Matrix (Fin 2)
+    (Fin 2) SpaceTimeAlgebra × SpaceTimeAlgebra :=
   (U.1.1, U.2.1.1, U.2.2.1)
 
 /-!
@@ -151,31 +152,31 @@ parts, giving a group homomorphism `JetGaugeGroupI →* GaugeGroupI`.
 
 /-- Entrywise evaluation at the base point commutes with the conjugate transpose. -/
 lemma mapMatrix_constantCoeff_star {n : Type} [Fintype n] [DecidableEq n]
-    (A : Matrix n n JetRing) :
-    (constantCoeff : JetRing →+* ℂ).mapMatrix (star A) =
-      star ((constantCoeff : JetRing →+* ℂ).mapMatrix A) := by
+    (A : Matrix n n SpaceTimeAlgebra) :
+    (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix (star A) =
+      star ((constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix A) := by
   ext i j
   simp [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.star_apply]
 
 /-- Evaluation of a jet of a special-unitary gauge transformation at the base point:
   the entrywise constant coefficient. -/
 noncomputable def evalSU (n : Type) [Fintype n] [DecidableEq n] :
-    specialUnitaryGroup n JetRing →* specialUnitaryGroup n ℂ where
-  toFun U := ⟨(constantCoeff : JetRing →+* ℂ).mapMatrix U.1, by
+    specialUnitaryGroup n SpaceTimeAlgebra →* specialUnitaryGroup n ℂ where
+  toFun U := ⟨(constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix U.1, by
     obtain ⟨h1, h2⟩ := mem_specialUnitaryGroup_iff.mp U.2
     rw [mem_specialUnitaryGroup_iff]
     constructor
     · rw [mem_unitaryGroup_iff] at h1 ⊢
-      rw [show star ((constantCoeff : JetRing →+* ℂ).mapMatrix U.1) =
-          (constantCoeff : JetRing →+* ℂ).mapMatrix (star U.1) from
+      rw [show star ((constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix U.1) =
+          (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix (star U.1) from
           (mapMatrix_constantCoeff_star U.1).symm, ← map_mul, h1, map_one]
     · rw [← RingHom.map_det, h2, map_one]⟩
-  map_one' := Subtype.ext (map_one ((constantCoeff : JetRing →+* ℂ).mapMatrix))
-  map_mul' U V := Subtype.ext (map_mul ((constantCoeff : JetRing →+* ℂ).mapMatrix) U.1 V.1)
+  map_one' := Subtype.ext (map_one ((constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix))
+  map_mul' U V := Subtype.ext (map_mul ((constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix) U.1 V.1)
 
 /-- Evaluation of a jet of a `U(1)` gauge transformation at the base point: the
   constant coefficient. -/
-noncomputable def evalU1 : unitary JetRing →* unitary ℂ where
+noncomputable def evalU1 : unitary SpaceTimeAlgebra →* unitary ℂ where
   toFun u := ⟨constantCoeff u.1, by
     obtain ⟨h1, h2⟩ := Unitary.mem_iff.mp u.2
     exact Unitary.mem_iff.mpr
@@ -203,7 +204,8 @@ and give some properties of it related to the Maurer–Cartan form.
 /-- The derivative of an element of `JetGaugeGroupI` returning
   a product of matrices. -/
 noncomputable def deriv (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
-    Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
+    Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra × Matrix (Fin 2)
+        (Fin 2) SpaceTimeAlgebra × SpaceTimeAlgebra :=
   (U.1.1.map (pderiv μ), U.2.1.1.map (pderiv μ), pderiv μ U.2.2.1)
 
 
@@ -231,13 +233,13 @@ lemma deriv_mul (μ : Fin 1 ⊕ Fin 3) (U V : JetGaugeGroupI) :
 @[simp]
 lemma deriv_one (μ : Fin 1 ⊕ Fin 3) : deriv μ (1 : JetGaugeGroupI) = 0 := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show (1 : Matrix (Fin 3) (Fin 3) JetRing).map (pderiv μ) = 0
+  · show (1 : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra).map (pderiv μ) = 0
     ext i j : 1
     simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)]
-  · show (1 : Matrix (Fin 2) (Fin 2) JetRing).map (pderiv μ) = 0
+  · show (1 : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra).map (pderiv μ) = 0
     ext i j : 1
     simp [Matrix.map_apply, Matrix.one_apply, apply_ite (pderiv μ)]
-  · show pderiv μ (1 : JetRing) = 0
+  · show pderiv μ (1 : SpaceTimeAlgebra) = 0
     exact pderiv_one
 
 lemma star_deriv (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
@@ -246,17 +248,17 @@ lemma star_deriv (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
   · show star (U.1.1.map (pderiv μ)) = (star U.1.1).map (pderiv μ)
     ext i j : 1
     simp only [Matrix.star_apply, Matrix.map_apply]
-    exact (JetRing.pderiv_star μ (U.1.1 j i)).symm
+    exact (SpaceTimeAlgebra.pderiv_star μ (U.1.1 j i)).symm
   · show star (U.2.1.1.map (pderiv μ)) = (star U.2.1.1).map (pderiv μ)
     ext i j : 1
     simp only [Matrix.star_apply, Matrix.map_apply]
-    exact (JetRing.pderiv_star μ (U.2.1.1 j i)).symm
+    exact (SpaceTimeAlgebra.pderiv_star μ (U.2.1.1 j i)).symm
   · show star (pderiv μ U.2.2.1) = pderiv μ (star U.2.2.1)
-    exact (JetRing.pderiv_star μ U.2.2.1).symm
+    exact (SpaceTimeAlgebra.pderiv_star μ U.2.2.1).symm
 
 lemma deriv_mul_inv_toVal_SU3_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     (Complex.I • (deriv μ U * (U⁻¹).toVal)).1.trace = 0 := by
-  set A : Matrix (Fin 3) (Fin 3) JetRing := U.1.1 with hA
+  set A : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra := U.1.1 with hA
   have hU : A * star A = 1 := by
     have h := (mem_specialUnitaryGroup_iff.mp U.1.2).1
     rwa [mem_unitaryGroup_iff] at h
@@ -281,7 +283,7 @@ lemma deriv_mul_inv_toVal_SU3_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGrou
 
 lemma deriv_mul_inv_toVal_SU2_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1.trace = 0 := by
-  set A : Matrix (Fin 2) (Fin 2) JetRing := U.2.1.1 with hA
+  set A : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra := U.2.1.1 with hA
   have hU : A * star A = 1 := by
     have h := (mem_specialUnitaryGroup_iff.mp U.2.1.2).1
     rwa [mem_unitaryGroup_iff] at h
@@ -305,7 +307,7 @@ lemma deriv_mul_inv_toVal_SU2_traceless (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGrou
 lemma star_deriv_mul_inv_toVal_SU3 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     star ((Complex.I • (deriv μ U * (U⁻¹).toVal)).1) =
     (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 := by
-  set A : Matrix (Fin 3) (Fin 3) JetRing := U.1.1 with hA
+  set A : Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra := U.1.1 with hA
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
@@ -313,9 +315,9 @@ lemma star_deriv_mul_inv_toVal_SU3 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     congrArg (fun p => p.1) (eq_neg_of_add_eq_zero_right h.symm)
   have hstarmap : star (A.map (pderiv μ)) = (star A).map (pderiv μ) :=
     congrArg (fun p => p.1) (star_deriv μ U)
-  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
+  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `SpaceTimeAlgebra`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 =
-      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv μ) * star A) := by
+      (MvPowerSeries.C Complex.I : SpaceTimeAlgebra) • (A.map (pderiv μ) * star A) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).1 =
         Complex.I • (A.map (pderiv μ) * star A) from rfl]
     ext i j
@@ -323,13 +325,13 @@ lemma star_deriv_mul_inv_toVal_SU3 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
       MvPowerSeries.algebraMap_apply]
     simp
   -- the star flips `i` to `-i` and the differentiated unitarity flips the product back
-  rw [hCs, star_smul, star_mul, star_star, hstarmap, hq, JetRing.star_C,
+  rw [hCs, star_smul, star_mul, star_star, hstarmap, hq, SpaceTimeAlgebra.star_C,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_smul, smul_neg, neg_neg]
 
 lemma star_deriv_mul_inv_toVal_SU2 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     star ((Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1) =
     (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 := by
-  set A : Matrix (Fin 2) (Fin 2) JetRing := U.2.1.1 with hA
+  set A : Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra := U.2.1.1 with hA
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
@@ -337,9 +339,9 @@ lemma star_deriv_mul_inv_toVal_SU2 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     congrArg (fun p => p.2.1) (eq_neg_of_add_eq_zero_right h.symm)
   have hstarmap : star (A.map (pderiv μ)) = (star A).map (pderiv μ) :=
     congrArg (fun p => p.2.1) (star_deriv μ U)
-  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
+  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `SpaceTimeAlgebra`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 =
-      (MvPowerSeries.C Complex.I : JetRing) • (A.map (pderiv μ) * star A) := by
+      (MvPowerSeries.C Complex.I : SpaceTimeAlgebra) • (A.map (pderiv μ) * star A) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.1 =
         Complex.I • (A.map (pderiv μ) * star A) from rfl]
     ext i j
@@ -347,27 +349,28 @@ lemma star_deriv_mul_inv_toVal_SU2 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
       MvPowerSeries.algebraMap_apply]
     simp
   -- the star flips `i` to `-i` and the differentiated unitarity flips the product back
-  rw [hCs, star_smul, star_mul, star_star, hstarmap, hq, JetRing.star_C,
+  rw [hCs, star_smul, star_mul, star_star, hstarmap, hq, SpaceTimeAlgebra.star_C,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_smul, smul_neg, neg_neg]
 
 lemma star_deriv_mul_inv_toVal_U1 (μ : Fin 1 ⊕ Fin 3) (U : JetGaugeGroupI) :
     star ((Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2) =
     (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2 := by
-  set u : JetRing := U.2.2.1 with hu'
+  set u : SpaceTimeAlgebra := U.2.2.1 with hu'
   -- differentiate the unitarity relation `U U⁻¹ = 1` with the Leibniz rule `deriv_mul`
   have h := deriv_mul μ U U⁻¹
   rw [mul_inv_cancel, deriv_one] at h
   have hq : pderiv μ (star u) * u = -(pderiv μ u * star u) :=
     (mul_comm _ _).trans (congrArg (fun p => p.2.2) (eq_neg_of_add_eq_zero_right h.symm))
-  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `JetRing`
+  -- rewrite the `ℂ`-scalar `i` as the constant series `C i`, acting through `SpaceTimeAlgebra`
   have hCs : (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2 =
-      (MvPowerSeries.C Complex.I : JetRing) * (pderiv μ u * star u) := by
+      (MvPowerSeries.C Complex.I : SpaceTimeAlgebra) * (pderiv μ u * star u) := by
     rw [show (Complex.I • (deriv μ U * (U⁻¹).toVal)).2.2 =
         Complex.I • (pderiv μ u * star u) from rfl,
       Algebra.smul_def, MvPowerSeries.algebraMap_apply]
     simp
   -- the star flips `i` to `-i` and the differentiated unitarity flips the product back
-  rw [hCs, star_mul', JetRing.star_C, star_mul', star_star, ← JetRing.pderiv_star, hq,
+  rw [hCs, star_mul', SpaceTimeAlgebra.star_C, star_mul', star_star,
+      ← SpaceTimeAlgebra.pderiv_star, hq,
     show (star Complex.I) = -Complex.I by simp, map_neg, neg_mul, mul_neg, neg_neg]
 
 
@@ -383,28 +386,29 @@ the evaluation `eval`.
 
 /-- Entrywise inclusion of constants commutes with the conjugate transpose. -/
 lemma mapMatrix_C_star {n : Type} [Fintype n] [DecidableEq n] (A : Matrix n n ℂ) :
-    (C : ℂ →+* JetRing).mapMatrix (star A) = star ((C : ℂ →+* JetRing).mapMatrix A) := by
+    (C : ℂ →+* SpaceTimeAlgebra).mapMatrix (star A) = star
+        ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix A) := by
   ext i j
   simp [RingHom.mapMatrix_apply, Matrix.map_apply, Matrix.star_apply]
 
 /-- The jet of a constant special-unitary gauge transformation: the entrywise
   inclusion of constants. -/
 noncomputable def ofConstantSU (n : Type) [Fintype n] [DecidableEq n] :
-    specialUnitaryGroup n ℂ →* specialUnitaryGroup n JetRing where
-  toFun u := ⟨(C : ℂ →+* JetRing).mapMatrix u.1, by
+    specialUnitaryGroup n ℂ →* specialUnitaryGroup n SpaceTimeAlgebra where
+  toFun u := ⟨(C : ℂ →+* SpaceTimeAlgebra).mapMatrix u.1, by
     obtain ⟨h1, h2⟩ := mem_specialUnitaryGroup_iff.mp u.2
     rw [mem_specialUnitaryGroup_iff]
     constructor
     · rw [mem_unitaryGroup_iff] at h1 ⊢
-      rw [show star ((C : ℂ →+* JetRing).mapMatrix u.1) =
-          (C : ℂ →+* JetRing).mapMatrix (star u.1) from (mapMatrix_C_star u.1).symm,
+      rw [show star ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix u.1) =
+          (C : ℂ →+* SpaceTimeAlgebra).mapMatrix (star u.1) from (mapMatrix_C_star u.1).symm,
         ← map_mul, h1, map_one]
     · rw [← RingHom.map_det, h2, map_one]⟩
-  map_one' := Subtype.ext (map_one ((C : ℂ →+* JetRing).mapMatrix))
-  map_mul' u v := Subtype.ext (map_mul ((C : ℂ →+* JetRing).mapMatrix) u.1 v.1)
+  map_one' := Subtype.ext (map_one ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix))
+  map_mul' u v := Subtype.ext (map_mul ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix) u.1 v.1)
 
 /-- The jet of a constant `U(1)` gauge transformation: the inclusion of constants. -/
-noncomputable def ofConstantU1 : unitary ℂ →* unitary JetRing where
+noncomputable def ofConstantU1 : unitary ℂ →* unitary SpaceTimeAlgebra where
   toFun u := ⟨C u.1, by
     obtain ⟨h1, h2⟩ := Unitary.mem_iff.mp u.2
     exact Unitary.mem_iff.mpr
@@ -435,13 +439,13 @@ lemma eval_ofConstant (g : GaugeGroupI) : eval (ofConstant g) = g := by
 lemma deriv_ofConstant (μ : Fin 1 ⊕ Fin 3) (U₀ : GaugeGroupI) :
     deriv μ (JetGaugeGroupI.ofConstant U₀) = 0 := by
   refine Prod.ext ?_ (Prod.ext ?_ ?_)
-  · show ((C : ℂ →+* JetRing).mapMatrix U₀.1.1).map (pderiv μ) = 0
+  · show ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix U₀.1.1).map (pderiv μ) = 0
     ext i j : 1
     simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
-  · show ((C : ℂ →+* JetRing).mapMatrix U₀.2.1.1).map (pderiv μ) = 0
+  · show ((C : ℂ →+* SpaceTimeAlgebra).mapMatrix U₀.2.1.1).map (pderiv μ) = 0
     ext i j : 1
     simp [RingHom.mapMatrix_apply, Matrix.map_apply, pderiv_C]
-  · show pderiv μ (C U₀.2.2.1 : JetRing) = 0
+  · show pderiv μ (C U₀.2.2.1 : SpaceTimeAlgebra) = 0
     simp [pderiv_C]
 
 end JetGaugeGroupI

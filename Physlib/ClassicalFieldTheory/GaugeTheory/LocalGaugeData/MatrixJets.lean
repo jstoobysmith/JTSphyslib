@@ -7,8 +7,8 @@ module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Factor
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Truncation
-public import Physlib.Relativity.JetRing.Matrix
-public import Physlib.Relativity.JetRing.Taylor
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Taylor
 /-!
 # Matrix jet groups
 
@@ -73,7 +73,7 @@ structure MatrixJets (κ : Type) [Fintype κ] [DecidableEq κ] (G₀ : Type) [Gr
   toMat₀ : G₀ →* Matrix κ κ ℂ
   toMat₀_injective : Function.Injective toMat₀
   /-- The matrix of jets of a gauge jet. -/
-  toMatJ : GJ →* Matrix κ κ JetRing
+  toMatJ : GJ →* Matrix κ κ SpaceTimeAlgebra
   toMatJ_injective : Function.Injective toMatJ
   toMatJ_mul_star : ∀ U, toMatJ U * star (toMatJ U) = 1
   star_toMatJ_mul : ∀ U, star (toMatJ U) * toMatJ U = 1
@@ -82,27 +82,27 @@ structure MatrixJets (κ : Type) [Fintype κ] [DecidableEq κ] (G₀ : Type) [Gr
   lie₀_injective : Function.Injective lie₀
   lie₀_bracket : ∀ a b, lie₀ ⁅a, b⁆ = Complex.I • (lie₀ a * lie₀ b - lie₀ b * lie₀ a)
   /-- The matrix of jets of a Lie algebra jet. -/
-  lieJ : 𝔤J →ₗ[ℝ] Matrix κ κ JetRing
+  lieJ : 𝔤J →ₗ[ℝ] Matrix κ κ SpaceTimeAlgebra
   lieJ_injective : Function.Injective lieJ
   lieJ_bracket : ∀ a b, lieJ ⁅a, b⁆ = Complex.I • (lieJ a * lieJ b - lieJ b * lieJ a)
   /-- Evaluation of a gauge jet at the base point. -/
   eval : GJ →* G₀
-  toMat₀_eval : ∀ U, toMat₀ (eval U) = (constantCoeff : JetRing →+* ℂ).mapMatrix (toMatJ U)
+  toMat₀_eval : ∀ U, toMat₀ (eval U) = (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix (toMatJ U)
   /-- A constant gauge transformation as a jet. -/
   ofConstant : G₀ →* GJ
-  toMatJ_ofConstant : ∀ g, toMatJ (ofConstant g) = (C : ℂ →+* JetRing).mapMatrix (toMat₀ g)
+  toMatJ_ofConstant : ∀ g, toMatJ (ofConstant g) = (C : ℂ →+* SpaceTimeAlgebra).mapMatrix (toMat₀ g)
   /-- Evaluation of a Lie algebra jet at the base point. -/
   evalLie : 𝔤J →ₗ[ℝ] 𝔤
-  lie₀_evalLie : ∀ a, lie₀ (evalLie a) = (constantCoeff : JetRing →+* ℂ).mapMatrix (lieJ a)
+  lie₀_evalLie : ∀ a, lie₀ (evalLie a) = (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix (lieJ a)
   /-- A constant Lie algebra element as a jet. -/
   ofConstantLie : 𝔤 →ₗ[ℝ] 𝔤J
-  lieJ_ofConstantLie : ∀ a, lieJ (ofConstantLie a) = (C : ℂ →+* JetRing).mapMatrix (lie₀ a)
+  lieJ_ofConstantLie : ∀ a, lieJ (ofConstantLie a) = (C : ℂ →+* SpaceTimeAlgebra).mapMatrix (lie₀ a)
   /-- The formal derivative in the direction `μ`. -/
   deriv : (Fin 1 ⊕ Fin 3) → 𝔤J →ₗ[ℝ] 𝔤J
   lieJ_deriv : ∀ μ a, lieJ (deriv μ a) = (lieJ a).map (pderiv μ)
   /-- Multiplication of a jet by the spacetime coordinate `x_μ`. -/
   coord : (Fin 1 ⊕ Fin 3) → 𝔤J →ₗ[ℝ] 𝔤J
-  lieJ_coord : ∀ μ a, lieJ (coord μ a) = (X μ : JetRing) • lieJ a
+  lieJ_coord : ∀ μ a, lieJ (coord μ a) = (X μ : SpaceTimeAlgebra) • lieJ a
   /-- The adjoint action of the jet group on the jet Lie algebra. -/
   adjoint : Representation ℝ GJ 𝔤J
   lieJ_adjoint : ∀ U a, lieJ (adjoint U a) = toMatJ U * lieJ a * star (toMatJ U)
@@ -135,13 +135,13 @@ lemma eval_ofConstant (g : G₀) : M.eval (M.ofConstant g) = g := by
 lemma evalLie_lie (a b : 𝔤J) : M.evalLie ⁅a, b⁆ = ⁅M.evalLie a, M.evalLie b⁆ := by
   refine M.lie₀_injective ?_
   rw [M.lie₀_bracket, M.lie₀_evalLie, M.lie₀_evalLie, M.lie₀_evalLie, M.lieJ_bracket,
-    JetRing.mapMatrix_constantCoeff_smul, map_sub, map_mul, map_mul]
+    SpaceTimeAlgebra.mapMatrix_constantCoeff_smul, map_sub, map_mul, map_mul]
 
 lemma ofConstantLie_lie (a b : 𝔤) :
     M.ofConstantLie ⁅a, b⁆ = ⁅M.ofConstantLie a, M.ofConstantLie b⁆ := by
   refine M.lieJ_injective ?_
   rw [M.lieJ_bracket, M.lieJ_ofConstantLie, M.lieJ_ofConstantLie, M.lieJ_ofConstantLie,
-    M.lie₀_bracket, JetRing.mapMatrix_C_smul, map_sub, map_mul, map_mul]
+    M.lie₀_bracket, SpaceTimeAlgebra.mapMatrix_C_smul, map_sub, map_mul, map_mul]
 
 lemma evalLie_ofConstantLie (a : 𝔤) : M.evalLie (M.ofConstantLie a) = a := by
   refine M.lie₀_injective ?_
@@ -154,14 +154,15 @@ lemma deriv_comm (μ ν : Fin 1 ⊕ Fin 3) (a : 𝔤J) :
   refine M.lieJ_injective ?_
   rw [M.lieJ_deriv, M.lieJ_deriv, M.lieJ_deriv, M.lieJ_deriv]
   ext i j : 1
-  simp [Matrix.map_apply, JetRing.pderiv_comm μ ν]
+  simp [Matrix.map_apply, SpaceTimeAlgebra.pderiv_comm μ ν]
 
 lemma deriv_bracket (μ : Fin 1 ⊕ Fin 3) (x y : 𝔤J) :
     M.deriv μ ⁅x, y⁆ = ⁅M.deriv μ x, y⁆ + ⁅x, M.deriv μ y⁆ := by
   refine M.lieJ_injective ?_
   rw [map_add, M.lieJ_deriv, M.lieJ_bracket, M.lieJ_bracket, M.lieJ_bracket, M.lieJ_deriv,
-    M.lieJ_deriv, JetRing.map_pderiv_smul, JetRing.map_pderiv_sub, JetRing.matrix_map_pderiv_mul,
-    JetRing.matrix_map_pderiv_mul, ← smul_add]
+    M.lieJ_deriv, SpaceTimeAlgebra.map_pderiv_smul, SpaceTimeAlgebra.map_pderiv_sub,
+        SpaceTimeAlgebra.matrix_map_pderiv_mul,
+    SpaceTimeAlgebra.matrix_map_pderiv_mul, ← smul_add]
   congr 1
   abel
 
@@ -195,10 +196,11 @@ lemma evalLie_coord (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J) : M.evalLie (M.coord μ a
 lemma coord_lie (μ : Fin 1 ⊕ Fin 3) (a b : 𝔤J) : ⁅M.coord μ a, b⁆ = M.coord μ ⁅a, b⁆ := by
   refine M.lieJ_injective ?_
   rw [M.lieJ_bracket, M.lieJ_coord, M.lieJ_coord, M.lieJ_bracket]
-  simp only [Matrix.smul_mul, Matrix.mul_smul, smul_sub, smul_comm (X μ : JetRing) Complex.I]
+  simp only [Matrix.smul_mul, Matrix.mul_smul, smul_sub, smul_comm
+      (X μ : SpaceTimeAlgebra) Complex.I]
 
 /-- Conjugation by a unitary matrix respects products. -/
-lemma conj_mul_conj (U : GJ) (A B : Matrix κ κ JetRing) :
+lemma conj_mul_conj (U : GJ) (A B : Matrix κ κ SpaceTimeAlgebra) :
     (M.toMatJ U * A * star (M.toMatJ U)) * (M.toMatJ U * B * star (M.toMatJ U))
       = M.toMatJ U * (A * B) * star (M.toMatJ U) := by
   simp only [mul_assoc]
@@ -216,7 +218,7 @@ lemma evalLie_adjoint (U : GJ) (x : 𝔤J) :
     M.evalLie (M.adjoint U x) = M.adjointValue (M.eval U) (M.evalLie x) := by
   refine M.lie₀_injective ?_
   rw [M.lie₀_evalLie, M.lieJ_adjoint, M.lie₀_adjointValue, M.toMat₀_eval, M.lie₀_evalLie,
-    map_mul, map_mul, JetRing.mapMatrix_constantCoeff_star]
+    map_mul, map_mul, SpaceTimeAlgebra.mapMatrix_constantCoeff_star]
 
 lemma maurerCartan_ofConstant (g : G₀) (μ : Fin 1 ⊕ Fin 3) :
     M.maurerCartan (M.ofConstant g) μ = 0 := by
@@ -229,7 +231,7 @@ lemma maurerCartan_cocycle (U V : GJ) (μ : Fin 1 ⊕ Fin 3) :
     M.maurerCartan (U * V) μ = M.maurerCartan U μ + M.adjoint U (M.maurerCartan V μ) := by
   refine M.lieJ_injective ?_
   rw [map_add, M.lieJ_maurerCartan, M.lieJ_maurerCartan, M.lieJ_adjoint, M.lieJ_maurerCartan,
-    map_mul, JetRing.matrix_map_pderiv_mul, star_mul, add_mul, smul_add, mul_smul_comm,
+    map_mul, SpaceTimeAlgebra.matrix_map_pderiv_mul, star_mul, add_mul, smul_add, mul_smul_comm,
     smul_mul_assoc]
   congr 1
   · rw [mul_assoc, ← mul_assoc (M.toMatJ V), M.toMatJ_mul_star, one_mul]
@@ -245,17 +247,19 @@ lemma maurerCartan_structure (U : GJ) (μ ν : Fin 1 ⊕ Fin 3) :
         (A.map (pderiv μ) * star A).map (pderiv ν) =
       A.map (pderiv μ) * star A * (A.map (pderiv ν) * star A) -
         A.map (pderiv ν) * star A * (A.map (pderiv μ) * star A) := by
-    rw [JetRing.matrix_map_pderiv_mul, JetRing.matrix_map_pderiv_mul,
+    rw [SpaceTimeAlgebra.matrix_map_pderiv_mul, SpaceTimeAlgebra.matrix_map_pderiv_mul,
       show (A.map (pderiv ν)).map (pderiv μ) = (A.map (pderiv μ)).map (pderiv ν)
-        from Matrix.ext fun _ _ => JetRing.pderiv_comm μ ν _,
-      JetRing.map_pderiv_star_of_unitary μ hU hU', JetRing.map_pderiv_star_of_unitary ν hU hU']
+        from Matrix.ext fun _ _ => SpaceTimeAlgebra.pderiv_comm μ ν _,
+      SpaceTimeAlgebra.map_pderiv_star_of_unitary μ hU hU',
+          SpaceTimeAlgebra.map_pderiv_star_of_unitary ν hU hU']
     simp only [mul_neg, ← mul_assoc]
     abel
-  have hcancel : ∀ P Q : Matrix κ κ JetRing, (P - Q) + (-P - -Q) = 0 :=
+  have hcancel : ∀ P Q : Matrix κ κ SpaceTimeAlgebra, (P - Q) + (-P - -Q) = 0 :=
     fun P Q => by abel
   refine M.lieJ_injective ?_
   rw [map_add, map_sub, M.lieJ_deriv, M.lieJ_deriv, M.lieJ_bracket, M.lieJ_maurerCartan,
-    M.lieJ_maurerCartan, map_zero, JetRing.map_pderiv_smul, JetRing.map_pderiv_smul, ← smul_sub,
+    M.lieJ_maurerCartan, map_zero, SpaceTimeAlgebra.map_pderiv_smul,
+        SpaceTimeAlgebra.map_pderiv_smul, ← smul_sub,
     ← hA, key]
   simp only [smul_mul_smul_comm, Complex.I_mul_I, neg_one_smul, ← smul_add, hcancel, smul_zero]
 
@@ -265,11 +269,11 @@ lemma deriv_adjoint (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : 𝔤J) :
   set V := M.toMatJ U with hV
   have hVV : star V * V = 1 := M.star_toMatJ_mul U
   have hq : (star V).map (pderiv μ) = -(star V * V.map (pderiv μ) * star V) :=
-    JetRing.map_pderiv_star_of_unitary μ (M.toMatJ_mul_star U) hVV
+    SpaceTimeAlgebra.map_pderiv_star_of_unitary μ (M.toMatJ_mul_star U) hVV
   refine M.lieJ_injective ?_
   rw [map_sub, M.lieJ_deriv, M.lieJ_adjoint, M.lieJ_adjoint, M.lieJ_bracket,
-    M.lieJ_maurerCartan, M.lieJ_adjoint, M.lieJ_deriv, JetRing.matrix_map_pderiv_mul,
-    JetRing.matrix_map_pderiv_mul, hq]
+    M.lieJ_maurerCartan, M.lieJ_adjoint, M.lieJ_deriv, SpaceTimeAlgebra.matrix_map_pderiv_mul,
+    SpaceTimeAlgebra.matrix_map_pderiv_mul, hq]
   simp only [smul_mul_assoc, mul_smul_comm, ← smul_sub, smul_smul, Complex.I_mul_I,
     neg_one_smul, sub_neg_eq_add, add_mul, mul_neg, ← mul_assoc]
   rw [mul_assoc (V.map (pderiv μ)) (star V) V, hVV, mul_one]
@@ -346,7 +350,7 @@ lemma lieJ_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
       Matrix.map_map]
     ext i j : 1
     simp only [Matrix.map_apply, Function.comp_apply, Multiset.foldl_cons]
-    exact (JetRing.foldl_pderiv_pderiv t μ _).symm
+    exact (SpaceTimeAlgebra.foldl_pderiv_pderiv t μ _).symm
 
 /-- The base-point value of the iterated derivative, entrywise. -/
 lemma lie₀_evalLie_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
@@ -362,7 +366,7 @@ lemma lie₀_evalLie_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) 
 lemma faithful : M.toLocalGaugeData.Faithful where
   ext_of_evalLie_iteratedDeriv {x y} h := by
     refine M.lieJ_injective (Matrix.ext fun i j => ?_)
-    refine JetRing.ext_of_constantCoeff_foldl_pderiv fun s => ?_
+    refine SpaceTimeAlgebra.ext_of_constantCoeff_foldl_pderiv fun s => ?_
     have hs := congrArg M.lie₀ (h s)
     rw [M.lie₀_evalLie_iteratedDeriv, M.lie₀_evalLie_iteratedDeriv] at hs
     simpa only [Matrix.map_apply] using congrArg (fun A => A i j) hs
@@ -382,7 +386,7 @@ lemma faithful : M.toLocalGaugeData.Faithful where
     rw [toLocalGaugeData_ofConstant, toLocalGaugeData_eval, M.toMatJ_ofConstant, M.toMat₀_eval,
       RingHom.mapMatrix_apply, RingHom.mapMatrix_apply, Matrix.map_map]
     show M.toMatJ U i j = C (constantCoeff (M.toMatJ U i j))
-    exact JetRing.eq_C_of_pderiv_eq_zero fun μ => congrArg (fun A => A i j) (hd μ)
+    exact SpaceTimeAlgebra.eq_C_of_pderiv_eq_zero fun μ => congrArg (fun A => A i j) (hd μ)
 
 /-!
 
@@ -418,14 +422,15 @@ hold for matrices of jets.
   `∑_μ x_μ · i (∂_μ U) U†`. -/
 lemma lieJ_radial (U : GJ) :
     M.lieJ (M.toLocalGaugeData.radial U) =
-      ∑ μ, (X μ : JetRing) • (Complex.I • ((M.toMatJ U).map (pderiv μ) * star (M.toMatJ U))) := by
+      ∑ μ, (X μ : SpaceTimeAlgebra) •
+          (Complex.I • ((M.toMatJ U).map (pderiv μ) * star (M.toMatJ U))) := by
   simp only [radial, map_sum, toLocalGaugeData_coord, toLocalGaugeData_maurerCartan,
     M.lieJ_coord, M.lieJ_maurerCartan]
 
 /-- A gauge jet is pure exactly when its matrix is the identity at the base point. -/
 lemma mem_truncationKer_zero_iff (U : GJ) :
     U ∈ M.toLocalGaugeData.truncationKer 0 ↔
-      (constantCoeff : JetRing →+* ℂ).mapMatrix (M.toMatJ U) = 1 := by
+      (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix (M.toMatJ U) = 1 := by
   rw [LocalGaugeData.mem_truncationKer_zero_iff, toLocalGaugeData_eval, ← M.toMat₀_eval,
     ← map_one M.toMat₀]
   exact M.toMat₀_injective.eq_iff.symm
@@ -436,18 +441,19 @@ lemma mem_truncationKer_zero_iff (U : GJ) :
   algebra jet `P`, is a gauge jet. -/
 lemma free
     (hTaylor : ∀ c : Multiset (Fin 1 ⊕ Fin 3) → 𝔤,
-      ∃ Y, M.lieJ Y = JetRing.taylorMatrix fun s => M.lie₀ (c s))
+      ∃ Y, M.lieJ Y = SpaceTimeAlgebra.taylorMatrix fun s => M.lie₀ (c s))
     (hherm : ∀ a, star (M.lieJ a) = M.lieJ a)
-    (hlift : ∀ (ρ : 𝔤J) (V : Matrix κ κ JetRing),
-      (constantCoeff : JetRing →+* ℂ).mapMatrix V = 1 → V * star V = 1 →
-      ∑ μ, (X μ : JetRing) • V.map (pderiv μ) = ((-Complex.I) • M.lieJ ρ) * V →
+    (hlift : ∀ (ρ : 𝔤J) (V : Matrix κ κ SpaceTimeAlgebra),
+      (constantCoeff : SpaceTimeAlgebra →+* ℂ).mapMatrix V = 1 → V * star V = 1 →
+      ∑ μ, (X μ : SpaceTimeAlgebra) • V.map (pderiv μ) = ((-Complex.I) • M.lieJ ρ) * V →
       ∃ U, M.toMatJ U = V) :
     M.toLocalGaugeData.Free where
   toFaithful := M.faithful
   exists_evalLie_iteratedDeriv_eq c := by
     obtain ⟨Y, hY⟩ := hTaylor c
     refine ⟨Y, fun s => M.lie₀_injective ?_⟩
-    rw [M.lie₀_evalLie_iteratedDeriv, hY, JetRing.map_constantCoeff_foldl_pderiv_taylorMatrix]
+    rw [M.lie₀_evalLie_iteratedDeriv, hY,
+        SpaceTimeAlgebra.map_constantCoeff_foldl_pderiv_taylorMatrix]
   exists_radial_eq ρ hρ := by
     -- The matrix `R = −i P` of `P = lieJ ρ` is anti-hermitian and vanishes at the base point.
     have hR0 : ∀ i j, constantCoeff (((-Complex.I) • M.lieJ ρ) i j) = 0 := fun i j => by
@@ -460,12 +466,12 @@ lemma free
       rw [star_smul, hherm]
       simp
     -- Its Euler transport is unitary, hence a pure gauge jet with radial component `P`.
-    obtain ⟨V, hV0, hEV⟩ := JetRing.exists_matrix_eulerTransport _ hR0
-    have hVu := JetRing.eulerTransport_mul_star hRstar hR0 hV0 hEV
+    obtain ⟨V, hV0, hEV⟩ := SpaceTimeAlgebra.exists_matrix_eulerTransport _ hR0
+    have hVu := SpaceTimeAlgebra.eulerTransport_mul_star hRstar hR0 hV0 hEV
     obtain ⟨U, rfl⟩ := hlift ρ V hV0 hVu hEV
     refine ⟨⟨U, (M.mem_truncationKer_zero_iff U).2 hV0⟩, M.lieJ_injective ?_⟩
     rw [M.lieJ_radial]
-    exact JetRing.sum_X_smul_mcMatrix_of_eulerTransport hVu hEV
+    exact SpaceTimeAlgebra.sum_X_smul_mcMatrix_of_eulerTransport hVu hEV
 
 end MatrixJets
 

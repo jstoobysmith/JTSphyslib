@@ -50,24 +50,27 @@ namespace MatterField
 
 /-- **The derivative of a power of a unitary jet**: `∂_μ (u ^ n) = n · u ^ n · (u⁻¹ ∂_μ u)`,
   for every integer `n`. -/
-lemma pderiv_chargePow (n : ℤ) (w : unitary JetRing) (μ : Fin 1 ⊕ Fin 3) :
+lemma pderiv_chargePow (n : ℤ) (w : unitary SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) :
     pderiv μ (chargePow n w)
-      = (n : ℂ) • (chargePow n w * (star (w : JetRing) * pderiv μ (w : JetRing))) := by
-  have hws : (w : JetRing) * star (w : JetRing) = 1 := Unitary.mul_star_self_of_mem w.2
-  have hsw : star (w : JetRing) * (w : JetRing) = 1 := Unitary.star_mul_self_of_mem w.2
-  have hD : pderiv μ (star (w : JetRing))
-      = -(star (w : JetRing)) ^ 2 • pderiv μ (w : JetRing) :=
+      = (n : ℂ) •
+          (chargePow n w * (star (w : SpaceTimeAlgebra) * pderiv μ (w : SpaceTimeAlgebra))) := by
+  have hws : (w : SpaceTimeAlgebra) * star (w : SpaceTimeAlgebra) = 1 :=
+      Unitary.mul_star_self_of_mem w.2
+  have hsw : star (w : SpaceTimeAlgebra) * (w : SpaceTimeAlgebra) = 1 :=
+      Unitary.star_mul_self_of_mem w.2
+  have hD : pderiv μ (star (w : SpaceTimeAlgebra))
+      = -(star (w : SpaceTimeAlgebra)) ^ 2 • pderiv μ (w : SpaceTimeAlgebra) :=
     Derivation.leibniz_of_mul_eq_one _ hsw
   rcases n with k | k
-  · rw [show chargePow (Int.ofNat k) w = (w : JetRing) ^ k from by simp [chargePow],
+  · rw [show chargePow (Int.ofNat k) w = (w : SpaceTimeAlgebra) ^ k from by simp [chargePow],
       Derivation.leibniz_pow]
     rcases k with _ | k
     · simp
-    · rw [Nat.add_sub_cancel, pow_succ, mul_assoc, ← mul_assoc (w : JetRing) (star _) _, hws,
-        one_mul]
+    · rw [Nat.add_sub_cancel, pow_succ, mul_assoc,
+        ← mul_assoc (w : SpaceTimeAlgebra) (star _) _, hws, one_mul]
       simp only [Int.ofNat_eq_natCast, Int.cast_natCast, smul_eq_mul, nsmul_eq_mul,
         Algebra.smul_def, map_natCast]
-  · rw [show chargePow (Int.negSucc k) w = (star (w : JetRing)) ^ (k + 1) from by
+  · rw [show chargePow (Int.negSucc k) w = (star (w : SpaceTimeAlgebra)) ^ (k + 1) from by
         simp [chargePow, zpow_negSucc, ← Unitary.star_eq_inv],
       Derivation.leibniz_pow, hD, Nat.add_sub_cancel, Int.cast_negSucc]
     simp only [smul_eq_mul, nsmul_eq_mul, Algebra.smul_def, map_neg, map_natCast]
@@ -128,7 +131,7 @@ noncomputable def charge (n : ℤ) (R : MatrixRep jets ι) : MatrixRep jets ι w
           = ((r : ℂ) * (Complex.I * n * F.φ c)) • 1
         congr 1
         ring }
-  jetAct a := R.jetAct a + ((Complex.I * n) • F.φJ a) • (1 : Matrix ι ι JetRing)
+  jetAct a := R.jetAct a + ((Complex.I * n) • F.φJ a) • (1 : Matrix ι ι SpaceTimeAlgebra)
   jetAct_ofConstantLie c := by
     show R.jetAct _ + ((Complex.I * n) • F.φJ _) • 1
       = (R.act c + (Complex.I * n * F.φ c) • 1).map C
@@ -140,14 +143,14 @@ noncomputable def charge (n : ℤ) (R : MatrixRep jets ι) : MatrixRep jets ι w
   jetAct_map_cc_foldl p a := by
     show (R.jetAct a + ((Complex.I * n) • F.φJ a) • 1).map _
       = R.act _ + (Complex.I * n * F.φ _) • 1
-    rw [Matrix.map_add _ (fun x y => by rw [JetRing.foldl_pderiv_add, map_add]),
+    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.foldl_pderiv_add, map_add]),
       R.jetAct_map_cc_foldl, ← F.φJ_cc_foldl]
     congr 1
     refine Matrix.ext fun i j => ?_
     simp only [Matrix.map_apply, Matrix.smul_apply, Matrix.one_apply, smul_eq_mul]
     split_ifs
     · rw [mul_one, mul_one, MatrixRep.foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul]
-    · rw [mul_zero, mul_zero, JetRing.foldl_pderiv_zero, map_zero]
+    · rw [mul_zero, mul_zero, SpaceTimeAlgebra.foldl_pderiv_zero, map_zero]
   mat_map_pderiv U μ := by
     show (chargePow n (F.u U) • R.mat U).map _
       = -((R.jetAct _ + ((Complex.I * n) • F.φJ _) • 1) * (chargePow n (F.u U) • R.mat U))

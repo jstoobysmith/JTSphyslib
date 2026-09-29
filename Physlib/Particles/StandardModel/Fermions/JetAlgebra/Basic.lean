@@ -260,45 +260,45 @@ noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI FermionSpace :
 
 The jets of the total fermionic field split as the product of the jets of the species,
 generation by generation; a jet of gauge transformations acts on each factor through the
-species' own jet action. The identification is `JetRing`-linear, so the fibrewise
+species' own jet action. The identification is `SpaceTimeAlgebra`-linear, so the fibrewise
 linearity of the species actions is inherited by the product.
 
 -/
 
 open TensorProduct in
 /-- The jets of the total fermionic field as the product of the jets of the species and
-  generations. The identification is `JetRing`-linear. -/
+  generations. The identification is `SpaceTimeAlgebra`-linear. -/
 noncomputable def jetEquiv :
-    JetRing ⊗[ℂ] FermionSpace ≃ₗ[JetRing]
-      (Fin 3 → JetRing ⊗[ℂ] LeptonDoublet) ×
-        ((Fin 3 → JetRing ⊗[ℂ] LeptonSinglet) ×
-          ((Fin 3 → JetRing ⊗[ℂ] QuarkDoublet) ×
-            ((Fin 3 → JetRing ⊗[ℂ] UpSinglet) ×
-              (Fin 3 → JetRing ⊗[ℂ] DownSinglet)))) :=
-  (TensorProduct.prodRight ℂ JetRing JetRing _ _).trans <|
-    LinearEquiv.prodCongr (TensorProduct.piRight ℂ JetRing JetRing _) <|
-      (TensorProduct.prodRight ℂ JetRing JetRing _ _).trans <|
-        LinearEquiv.prodCongr (TensorProduct.piRight ℂ JetRing JetRing _) <|
-          (TensorProduct.prodRight ℂ JetRing JetRing _ _).trans <|
-            LinearEquiv.prodCongr (TensorProduct.piRight ℂ JetRing JetRing _) <|
-              (TensorProduct.prodRight ℂ JetRing JetRing _ _).trans <|
-                LinearEquiv.prodCongr (TensorProduct.piRight ℂ JetRing JetRing _)
-                  (TensorProduct.piRight ℂ JetRing JetRing _)
+    SpaceTimeAlgebra ⊗[ℂ] FermionSpace ≃ₗ[SpaceTimeAlgebra]
+      (Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) ×
+        ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonSinglet) ×
+          ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) ×
+            ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] UpSinglet) ×
+              (Fin 3 → SpaceTimeAlgebra ⊗[ℂ] DownSinglet)))) :=
+  (TensorProduct.prodRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _ _).trans <|
+    LinearEquiv.prodCongr (TensorProduct.piRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _) <|
+      (TensorProduct.prodRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _ _).trans <|
+        LinearEquiv.prodCongr (TensorProduct.piRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _) <|
+          (TensorProduct.prodRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _ _).trans <|
+            LinearEquiv.prodCongr (TensorProduct.piRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _) <|
+              (TensorProduct.prodRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _ _).trans <|
+                LinearEquiv.prodCongr (TensorProduct.piRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _)
+                  (TensorProduct.piRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra _)
 
 open TensorProduct in
 /-- The map through which a jet of gauge transformations acts on the jets of the total
   fermionic field: the species actions, factor by factor. -/
 noncomputable def jetActionMap (U : JetGaugeGroupI) :
-    ((Fin 3 → JetRing ⊗[ℂ] LeptonDoublet) ×
-      ((Fin 3 → JetRing ⊗[ℂ] LeptonSinglet) ×
-        ((Fin 3 → JetRing ⊗[ℂ] QuarkDoublet) ×
-          ((Fin 3 → JetRing ⊗[ℂ] UpSinglet) ×
-            (Fin 3 → JetRing ⊗[ℂ] DownSinglet))))) →ₗ[ℂ]
-    ((Fin 3 → JetRing ⊗[ℂ] LeptonDoublet) ×
-      ((Fin 3 → JetRing ⊗[ℂ] LeptonSinglet) ×
-        ((Fin 3 → JetRing ⊗[ℂ] QuarkDoublet) ×
-          ((Fin 3 → JetRing ⊗[ℂ] UpSinglet) ×
-            (Fin 3 → JetRing ⊗[ℂ] DownSinglet))))) :=
+    ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) ×
+      ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonSinglet) ×
+        ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) ×
+          ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] UpSinglet) ×
+            (Fin 3 → SpaceTimeAlgebra ⊗[ℂ] DownSinglet))))) →ₗ[ℂ]
+    ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonDoublet) ×
+      ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] LeptonSinglet) ×
+        ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) ×
+          ((Fin 3 → SpaceTimeAlgebra ⊗[ℂ] UpSinglet) ×
+            (Fin 3 → SpaceTimeAlgebra ⊗[ℂ] DownSinglet))))) :=
   LinearMap.prodMap (LinearMap.piMap fun _ => LeptonDoublet.repJetGaugeGroupI U)
     (LinearMap.prodMap (LinearMap.piMap fun _ => LeptonSinglet.repJetGaugeGroupI U)
       (LinearMap.prodMap (LinearMap.piMap fun _ => QuarkDoublet.repJetGaugeGroupI U)
@@ -342,7 +342,7 @@ set_option maxRecDepth 4000 in
 /-- **The jet gauge action on the jets of the total fermionic field**: the species
   actions, transported through the splitting of the jets. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] FermionSpace) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] FermionSpace) where
   toFun U := (jetEquiv.restrictScalars ℂ).symm.toLinearMap ∘ₗ jetActionMap U ∘ₗ
     (jetEquiv.restrictScalars ℂ).toLinearMap
   map_one' := by
@@ -365,9 +365,9 @@ open TensorProduct in
 set_option maxRecDepth 4000 in
 /-- **The jet gauge action on the jets of the total fermionic field is fibrewise**: it
   commutes with multiplication by scalar jets, because the splitting of the jets is
-  `JetRing`-linear and each species action is fibrewise. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] FermionSpace) :
+  `SpaceTimeAlgebra`-linear and each species action is fibrewise. -/
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
   have hact : ∀ w, jetActionMap U (χ • w) = χ • jetActionMap U w := by
     intro w
@@ -497,29 +497,50 @@ open scoped TensorProduct
   lepton-doublet algebra with the algebra of the remaining four species. -/
 noncomputable def exteriorProductLeptonDoublet :
     FermionJetAlgebra ≃ₐ[ℂ] (FermionicAlgebra.evenOdd (generations LeptonDoublet.matterField) ᵍ⊗[ℂ]
-      FermionicAlgebra.evenOdd ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl)) :=
+      FermionicAlgebra.evenOdd
+          ((generations LeptonSinglet.matterField).prod
+          ((generations QuarkDoublet.matterField).prod
+          ((generations UpSinglet.matterField).prod
+          (generations DownSinglet.matterField) rfl) rfl) rfl)) :=
   FermionicAlgebra.prodEquiv (generations LeptonDoublet.matterField)
-    ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl) rfl
+    ((generations LeptonSinglet.matterField).prod
+        ((generations QuarkDoublet.matterField).prod
+        ((generations UpSinglet.matterField).prod
+        (generations DownSinglet.matterField) rfl) rfl) rfl) rfl
 
 /-- The charged-lepton singlets split off the remaining three species. -/
 noncomputable def exteriorProductLeptonSinglet :
-    FermionicAlgebra ((generations LeptonSinglet.matterField).prod ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl) ≃ₐ[ℂ]
+    FermionicAlgebra
+        ((generations LeptonSinglet.matterField).prod
+        ((generations QuarkDoublet.matterField).prod
+        ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl)
+        rfl) rfl) ≃ₐ[ℂ]
       (FermionicAlgebra.evenOdd (generations LeptonSinglet.matterField) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl)) :=
+        FermionicAlgebra.evenOdd
+            ((generations QuarkDoublet.matterField).prod
+            ((generations UpSinglet.matterField).prod
+            (generations DownSinglet.matterField) rfl) rfl)) :=
   FermionicAlgebra.prodEquiv (generations LeptonSinglet.matterField)
-    ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) rfl
+    ((generations QuarkDoublet.matterField).prod
+        ((generations UpSinglet.matterField).prod
+        (generations DownSinglet.matterField) rfl) rfl) rfl
 
 /-- The quark doublets split off the two quark singlets. -/
 noncomputable def exteriorProductQuarkDoublet :
-    FermionicAlgebra ((generations QuarkDoublet.matterField).prod ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl) ≃ₐ[ℂ]
+    FermionicAlgebra
+        ((generations QuarkDoublet.matterField).prod
+        ((generations UpSinglet.matterField).prod
+        (generations DownSinglet.matterField) rfl) rfl) ≃ₐ[ℂ]
       (FermionicAlgebra.evenOdd (generations QuarkDoublet.matterField) ᵍ⊗[ℂ]
-        FermionicAlgebra.evenOdd ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl)) :=
+        FermionicAlgebra.evenOdd
+            ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl)) :=
   FermionicAlgebra.prodEquiv (generations QuarkDoublet.matterField)
     ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) rfl
 
 /-- The two quark singlets as an exterior product. -/
 noncomputable def exteriorProductUpSinglet :
-    FermionicAlgebra ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) ≃ₐ[ℂ]
+    FermionicAlgebra
+        ((generations UpSinglet.matterField).prod (generations DownSinglet.matterField) rfl) ≃ₐ[ℂ]
       (FermionicAlgebra.evenOdd (generations UpSinglet.matterField) ᵍ⊗[ℂ]
         FermionicAlgebra.evenOdd (generations DownSinglet.matterField)) :=
   FermionicAlgebra.prodEquiv (generations UpSinglet.matterField)

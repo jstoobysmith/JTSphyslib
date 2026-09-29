@@ -57,14 +57,14 @@ open GaugeAlgebraRealization
   of `TransformsInAdjoint` from the adjoint representation to an arbitrary one, and
   the form consumed by `AlgebraRealization`. -/
 def TransformsIn (repGauge : Representation ℂ GJ B)
-    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+    (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
     (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B) : Prop :=
   ∀ (U : GJ) (φ : Module.Dual ℂ V) (s : Multiset (Fin 1 ⊕ Fin 3)),
     repGauge U (F s φ) =
       (s.antidiagonal.map fun p => F p.2 (repDualCoeff rep U⁻¹ p.1 φ)).sum
 
 variable {repGauge : Representation ℂ GJ B}
-  {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
+  {rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)}
   {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B}
 
 /-- A matter gauge tensor transforms at the base point through the dual coefficient of the
@@ -97,8 +97,9 @@ lemma TransformsIn.repGauge_eq_of_eval_eq_one {𝔤 : Type} [LieRing 𝔤] [LieA
   representation. -/
 lemma repCoeff_zero_eq_ofConstant_eval {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
-    (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), rep U
+        (χ • z) = χ • rep U z)
     (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id) (U : GJ) :
     repCoeff rep U 0 = repCoeff rep (jets.ofConstant (jets.eval U)) 0 := by
   have hW : jets.eval (U * (jets.ofConstant (jets.eval U))⁻¹) = 1 := by
@@ -115,7 +116,8 @@ lemma repCoeff_zero_eq_ofConstant_eval {𝔤 : Type} [LieRing 𝔤] [LieAlgebra 
 lemma TransformsIn.repGauge_zero_eq_ofConstant_eval {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
     {G₀ : Type} [Group G₀] {𝔤J : Type} [LieRing 𝔤J] [LieAlgebra ℝ 𝔤J]
     {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} (hF : TransformsIn repGauge rep F)
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), rep U
+        (χ • z) = χ • rep U z)
     (hrep : ∀ {W : GJ}, jets.eval W = 1 → repCoeff rep W 0 = LinearMap.id) (U : GJ)
     (φ : Module.Dual ℂ V) :
     repGauge U (F 0 φ) = repGauge (jets.ofConstant (jets.eval U)) (F 0 φ) := by

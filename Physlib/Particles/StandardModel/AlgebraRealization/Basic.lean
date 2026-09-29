@@ -214,7 +214,7 @@ eigenvalue equation for the mass weights; the anticommutation shape is transport
 /-- A jet gauge transformation law transports along the defining map: the convolution is a
   multiset sum, and the map is additive and equivariant. -/
 private lemma map_family_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
     {G : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] JetAlgebra}
     (hG : LocalGaugeData.TransformsIn (B := JetAlgebra) JetAlgebra.repJetGaugeGroupI rep G) :
     LocalGaugeData.TransformsIn repJet rep fun s => h.toAlgHom.toLinearMap ∘ₗ G s := by

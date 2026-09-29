@@ -357,7 +357,7 @@ twelve matter towers, each an instance of `repGlobal_of_repJet` or of its conjug
 /-- The zeroth Taylor coefficient of a jet representation at a constant jet is the
   underlying action of the global gauge group. -/
 lemma repCoeff_zero_ofConstant {V : Type} [AddCommGroup V] [Module ℂ V]
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {g : GaugeGroupI}
     (hg : rep (JetGaugeGroupI.ofConstant g) = TensorProduct.map LinearMap.id (repG g)) :
     GaugeAlgebraRealization.repCoeff rep (JetGaugeGroupI.ofConstant g) 0 = repG g := by
@@ -370,7 +370,7 @@ lemma repCoeff_zero_ofConstant {V : Type} [AddCommGroup V] [Module ℂ V]
   equivariant for the global gauge group, in the contragredient of the global
   representation. -/
 lemma repGlobal_of_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {T : Module.Dual ℂ V →ₗ[ℂ] B}
     (hT : ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℂ V),
       repJet U (T φ) = T (GaugeAlgebraRealization.repDualCoeff rep U⁻¹ 0 φ))
@@ -386,7 +386,7 @@ lemma repGlobal_of_repJet {V : Type} [AddCommGroup V] [Module ℂ V]
 /-- The conjugate form of `repGlobal_of_repJet`: a tower transforming through the dual
   coefficient of the conjugate representation is equivariant in its conjugate contragredient. -/
 lemma repGlobal_of_repJet_conj {V : Type} [AddCommGroup V] [Module ℂ V]
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
     {repG : Representation ℂ GaugeGroupI V} {T : Module.Dual ℂ (ConjModule V) →ₗ[ℂ] B}
     (hT : ∀ (U : JetGaugeGroupI) (φ : Module.Dual ℂ (ConjModule V)), repJet U (T φ) =
       T (GaugeAlgebraRealization.repDualCoeff (JetComponentSpace.repConj rep) U⁻¹ 0 φ))

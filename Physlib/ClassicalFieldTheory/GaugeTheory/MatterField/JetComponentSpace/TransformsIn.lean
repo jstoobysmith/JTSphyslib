@@ -16,7 +16,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.MatterField.CovariantDeri
 derivative symbol transform by the all-orders Leibniz convolution of the base-point Taylor
 coefficients `GaugeAlgebraRealization.repDualCoeff` of the gauge jet. What the gauge action
 on the jet component space is *built* from is `symbolAction`, the action of the coefficient
-`jetCoeff rep U⁻¹ : JetRing ⊗ End V` through `SpaceTimeDerivAlgebraℂ.jetRingAction` on the
+`jetCoeff rep U⁻¹ : SpaceTimeAlgebra ⊗ End V` through `SpaceTimeDerivAlgebraℂ.jetRingAction` on the
 derivative label. This file identifies the two, for any group `G` acting fibrewise on the
 jets of the field.
 
@@ -76,13 +76,13 @@ variable {G : Type} [Group G]
 
 /-- The iterated formal derivative of a `V`-valued jet acts on the jet-ring factor of a
   pure tensor: the value factor carries no spacetime dependence. -/
-lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) (v : V) :
+lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) (v : V) :
     jetIteratedDeriv x (f ⊗ₜ[ℂ] v) = (x.foldl (fun h ρ => pderiv ρ h) f) ⊗ₜ[ℂ] v := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rw [jetIteratedDeriv_zero]; rfl
   | cons μ t ih =>
     rw [jetIteratedDeriv_cons, LinearMap.comp_apply, ih, jetDeriv_tmul,
-      Multiset.foldl_cons, JetRing.foldl_pderiv_pderiv]
+      Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
 
 namespace JetComponentSpace
 
@@ -95,15 +95,15 @@ namespace JetComponentSpace
 /-- The base-point Taylor coefficient at `x` derivatives of a jet of endomorphisms of `V`:
   differentiate `x` times and evaluate at the base point. It is the `V`-valued jet toolkit
   applied to the value space `Module.End ℂ V`, and it is what a coefficient in
-  `JetRing ⊗ End V` contributes to the derivative symbol `∂_x`. -/
+  `SpaceTimeAlgebra ⊗ End V` contributes to the derivative symbol `∂_x`. -/
 noncomputable def jetCoeffAt (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    JetRing ⊗[ℂ] Module.End ℂ V →ₗ[ℂ] Module.End ℂ V :=
+    SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V →ₗ[ℂ] Module.End ℂ V :=
   jetEval ∘ₗ jetIteratedDeriv x
 
 /-- On a pure coefficient `f ⊗ T` the Taylor coefficient is the base-point Taylor
   coefficient of `f` times `T`. -/
 @[simp]
-lemma jetCoeffAt_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) (T : Module.End ℂ V) :
+lemma jetCoeffAt_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) (T : Module.End ℂ V) :
     jetCoeffAt x (f ⊗ₜ[ℂ] T)
       = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) • T := by
   rw [jetCoeffAt, LinearMap.comp_apply, jetIteratedDeriv_tmul, jetEval_tmul]
@@ -111,10 +111,10 @@ lemma jetCoeffAt_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) (T : Module
 /-- The Taylor coefficient of a jet of endomorphisms, evaluated at a vector, is the Taylor
   coefficient of the `V`-valued jet obtained by feeding that vector to the coefficient. -/
 lemma jetCoeffAt_apply (x : Multiset (Fin 1 ⊕ Fin 3))
-    (c : JetRing ⊗[ℂ] Module.End ℂ V) (v : V) :
+    (c : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) (v : V) :
     jetCoeffAt x c v = jetEval (jetIteratedDeriv x (TensorProduct.lift
-      ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) c v)) := by
+      ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) c v)) := by
   induction c using TensorProduct.induction_on with
   | zero => simp
   | add c₁ c₂ h₁ h₂ =>
@@ -122,15 +122,15 @@ lemma jetCoeffAt_apply (x : Multiset (Fin 1 ⊕ Fin 3))
       map_add]
   | tmul f T =>
     rw [jetCoeffAt_tmul, LinearMap.smul_apply,
-      show TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (f ⊗ₜ[ℂ] T) v = f ⊗ₜ[ℂ] T v from rfl,
+      show TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (f ⊗ₜ[ℂ] T) v = f ⊗ₜ[ℂ] T v from rfl,
       jetIteratedDeriv_tmul, jetEval_tmul]
 
 /-- The Taylor coefficients of the gauge coefficient are the Taylor coefficients of the
   representation: `jetCoeff rep U` reproduces `rep U` on constant jets, and both sides of
   this identity read off the same derivative of that. -/
 lemma jetCoeffAt_jetCoeff [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) (U : G)
+    (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)) (U : G)
     (x : Multiset (Fin 1 ⊕ Fin 3)) :
     jetCoeffAt x (jetCoeff rep U) = GaugeAlgebraRealization.repCoeff rep U x := by
   refine LinearMap.ext fun v => ?_
@@ -183,7 +183,7 @@ private lemma sum_tmul_right (m : Multiset SpaceTimeDerivAlgebraℂ) (w : Module
   This is `SpaceTimeDerivAlgebraℂ.jetRingAction_basis_multiset` in the derivative label,
   together with the identification of the scalars it produces as `jetCoeffAt`; both sides
   are additive in the coefficient, so it suffices to check it on a pure tensor. -/
-lemma symbolAction_basis_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V)
+lemma symbolAction_basis_tmul (c : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     symbolAction c (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)
       = (s.antidiagonal.map fun p =>
@@ -220,8 +220,8 @@ lemma symbolAction_basis_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V)
   Nothing here is special to the unconjugated half of the component space: the conjugate
   half is this lemma at `repConj rep`. -/
 lemma repDual_basis_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
     (U : G) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     repDual rep hlin U (SpaceTimeDerivAlgebraℂ.basis s ⊗ₜ[ℂ] φ)

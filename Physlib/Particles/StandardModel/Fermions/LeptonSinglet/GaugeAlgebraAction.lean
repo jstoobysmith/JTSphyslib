@@ -103,15 +103,15 @@ The jet gauge action multiplies the jet-ring factor by the hypercharge power ser
 
 -/
 
-/-- The `JetRing`-valued hypercharge phase of the jet gauge action on the
+/-- The `SpaceTimeAlgebra`-valued hypercharge phase of the jet gauge action on the
   charged-lepton singlet: the `-6` hypercharge power series `(star u) ^ 6` of the
   gauge jet. -/
-noncomputable def jetPhase (U : JetGaugeGroupI) : JetRing :=
-  (star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6
+noncomputable def jetPhase (U : JetGaugeGroupI) : SpaceTimeAlgebra :=
+  (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6
 
 /-- The hypercharge phase, unfolded. -/
 lemma jetPhase_eq (U : JetGaugeGroupI) :
-    jetPhase U = (star ((U.2.2 : unitary JetRing) : JetRing)) ^ 6 := rfl
+    jetPhase U = (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 6 := rfl
 
 /-- The jet gauge action on the charged-lepton singlet is multiplication of the
   jet-ring factor by the hypercharge phase. -/
@@ -126,7 +126,7 @@ lemma repJetGaugeGroupI_eq_jetPhase (U : JetGaugeGroupI) :
 -/
 
 /-- The iterated formal derivative is `ℂ`-homogeneous. -/
-private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing) :
+private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (z • f)
       = z • x.foldl (fun h ρ => pderiv ρ h) f := by
   induction x using Multiset.induction_on generalizing f with
@@ -134,7 +134,7 @@ private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : 
   | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
 
 /-- The iterated formal derivative of a negation. -/
-private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (-f)
       = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
@@ -143,7 +143,7 @@ private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
 
 /-- The iterated formal derivative of a jet of charged-lepton singlets acts on the
   jet-ring factor of a pure tensor. -/
-private lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing)
+private lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra)
     (ψ : LeptonSinglet) :
     jetIteratedDeriv x (f ⊗ₜ[ℂ] ψ)
       = (x.foldl (fun h ρ => pderiv ρ h) f) ⊗ₜ[ℂ] ψ := by
@@ -151,7 +151,7 @@ private lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRin
   | empty => rw [jetIteratedDeriv_zero]; rfl
   | cons μ t ih =>
     rw [jetIteratedDeriv_cons, LinearMap.comp_apply, ih, jetDeriv_tmul,
-      Multiset.foldl_cons, JetRing.foldl_pderiv_pderiv]
+      Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
 
 /-- Scalar multiples of the identity compose through multiplication. -/
 private lemma smul_id_comp (a b : ℂ) :
@@ -191,10 +191,10 @@ lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
   Taylor coefficient of the jet gauge action is the identity. -/
 lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
-  have hu : constantCoeff ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
+  have hu : constantCoeff ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 :=
     Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
   rw [repCoeff_eq, Multiset.foldl_zero, jetPhase_eq, map_pow,
-    JetRing.constantCoeff_star, hu, star_one, one_pow, one_smul]
+    SpaceTimeAlgebra.constantCoeff_star, hu, star_one, one_pow, one_smul]
 
 
 /-!
@@ -210,39 +210,39 @@ lemma jetPhase_pderiv (U : JetGaugeGroupI) (μ : Fin 1 ⊕ Fin 3) :
     pderiv μ (jetPhase U)
       = -(((Complex.I * (-(6 : ℂ))) • (maurerCartanForm U μ).toU1Value)
           * jetPhase U) := by
-  have hleib : ∀ f g : JetRing,
+  have hleib : ∀ f g : SpaceTimeAlgebra,
       pderiv μ (f * g) = pderiv μ f * g + f * pderiv μ g := fun f g => by
     rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g]
-  have huu : ((U.2.2 : unitary JetRing) : JetRing)
-      * star ((U.2.2 : unitary JetRing) : JetRing) = 1 :=
-    Unitary.mul_star_self_of_mem (U.2.2 : unitary JetRing).2
-  have h0 : pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
-        * star ((U.2.2 : unitary JetRing) : JetRing)
-      + ((U.2.2 : unitary JetRing) : JetRing)
-        * pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing)) = 0 := by
+  have huu : ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+      * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 :=
+    Unitary.mul_star_self_of_mem (U.2.2 : unitary SpaceTimeAlgebra).2
+  have h0 : pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+        * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+      + ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+        * pderiv μ (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) = 0 := by
     have h := congrArg (pderiv μ) huu
     rw [hleib, Derivation.map_one_eq_zero] at h
     exact h
-  have hsu : pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing))
-      = -(pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
-          * (star ((U.2.2 : unitary JetRing) : JetRing)
-            * star ((U.2.2 : unitary JetRing) : JetRing))) := by
-    have h1 : star ((U.2.2 : unitary JetRing) : JetRing)
-        * (pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
-            * star ((U.2.2 : unitary JetRing) : JetRing)
-          + ((U.2.2 : unitary JetRing) : JetRing)
-            * pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing))) = 0 := by
+  have hsu : pderiv μ (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra))
+      = -(pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+          * (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+            * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra))) := by
+    have h1 : star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+        * (pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+            * star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+          + ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+            * pderiv μ (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra))) = 0 := by
       rw [h0, mul_zero]
     linear_combination h1
-      - pderiv μ (star ((U.2.2 : unitary JetRing) : JetRing)) * huu
-  have hiC : (algebraMap ℂ JetRing) Complex.I * (algebraMap ℂ JetRing) Complex.I
+      - pderiv μ (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) * huu
+  have hiC : (algebraMap ℂ SpaceTimeAlgebra) Complex.I * (algebraMap ℂ SpaceTimeAlgebra) Complex.I
       = -1 := by
     rw [← map_mul, Complex.I_mul_I, map_neg, map_one]
   rw [jetPhase_eq, maurerCartanForm_toU1Value, pderiv_pow,
     show (6 : ℕ) - 1 = 5 from rfl, Nat.cast_ofNat, hsu,
     Algebra.smul_def, Algebra.smul_def, map_mul, map_neg, map_ofNat]
-  linear_combination (-(6 * pderiv μ ((U.2.2 : unitary JetRing) : JetRing)
-    * (star ((U.2.2 : unitary JetRing) : JetRing)) ^ 7)) * hiC
+  linear_combination (-(6 * pderiv μ ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)
+    * (star ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra)) ^ 7)) * hiC
 
 /-!
 
@@ -272,7 +272,7 @@ theorem isInfinitesimalActionOf :
                 p.1 (maurerCartanForm U μ))).toU1Value)
               * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U))).sum) := by
       rw [Multiset.foldl_cons, jetPhase_pderiv, foldl_pderiv_neg, map_neg,
-        JetRing.constantCoeff_foldl_pderiv_mul]
+        SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by
           rw [foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul,
@@ -298,7 +298,7 @@ theorem isInfinitesimalActionOf :
             * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
           • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) = 0 := by
       intro p hp
-      rw [JetRing.foldl_pderiv_C_of_ne_zero hp, map_zero, mul_zero, mul_zero,
+      rw [SpaceTimeAlgebra.foldl_pderiv_C_of_ne_zero hp, map_zero, mul_zero, mul_zero,
         zero_mul, zero_smul]
     have hcollapse : (x.antidiagonal.map fun p =>
           (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
@@ -314,7 +314,7 @@ theorem isInfinitesimalActionOf :
               * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)) (fun p _ hp => hvan p hp),
         show ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ρ h)
-            (C c.toU1Value : JetRing)) = C c.toU1Value from rfl,
+            (C c.toU1Value : SpaceTimeAlgebra)) = C c.toU1Value from rfl,
         constantCoeff_C]
     rw [repCoeff_eq, gaugeAlgebraAction_apply, smul_id_comp,
       show constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U))

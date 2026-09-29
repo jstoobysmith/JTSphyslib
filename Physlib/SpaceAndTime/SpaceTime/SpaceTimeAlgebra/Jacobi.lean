@@ -5,7 +5,7 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.Relativity.JetRing.Matrix
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 public import Mathlib.LinearAlgebra.Matrix.Adjugate
 /-!
 # Jacobi's formula for matrices of jets
@@ -18,8 +18,8 @@ needed by the jets of any special unitary group: it is what makes the Maurer–C
 
 ## ii. Key results
 
-- `JetRing.pderiv_finset_prod` : the Leibniz rule for a finite product.
-- `JetRing.jacobi` : Jacobi's formula.
+- `SpaceTimeAlgebra.pderiv_finset_prod` : the Leibniz rule for a finite product.
+- `SpaceTimeAlgebra.jacobi` : Jacobi's formula.
 
 ## iii. Table of contents
 
@@ -30,7 +30,7 @@ needed by the jets of any special unitary group: it is what makes the Maurer–C
 
 @[expose] public section
 
-namespace JetRing
+namespace SpaceTimeAlgebra
 
 open MvPowerSeries
 
@@ -42,7 +42,7 @@ open MvPowerSeries
 
 /-- The Leibniz rule for a finite product. -/
 lemma pderiv_finset_prod {ι : Type*} [DecidableEq ι] (μ : Fin 1 ⊕ Fin 3) (s : Finset ι)
-    (f : ι → JetRing) :
+    (f : ι → SpaceTimeAlgebra) :
     pderiv μ (∏ i ∈ s, f i) = ∑ i ∈ s, (∏ j ∈ s.erase i, f j) * pderiv μ (f i) := by
   induction s using Finset.induction_on with
   | empty => simp
@@ -63,7 +63,7 @@ lemma pderiv_finset_prod {ι : Type*} [DecidableEq ι] (μ : Fin 1 ⊕ Fin 3) (s
 
 /-- **Jacobi's formula**: the derivative of a determinant is the trace of the derivative
   against the adjugate. -/
-lemma jacobi {κ : Type} [Fintype κ] [DecidableEq κ] (M : Matrix κ κ JetRing)
+lemma jacobi {κ : Type} [Fintype κ] [DecidableEq κ] (M : Matrix κ κ SpaceTimeAlgebra)
     (μ : Fin 1 ⊕ Fin 3) :
     pderiv μ M.det = (M.map (pderiv μ) * M.adjugate).trace := by
   have hcol : ∀ (σ : Equiv.Perm κ) (j : κ),
@@ -90,4 +90,4 @@ lemma jacobi {κ : Type} [Fintype κ] [DecidableEq κ] (M : Matrix κ κ JetRing
         rw [Finset.sum_comm]
         exact Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => mul_comm _ _
 
-end JetRing
+end SpaceTimeAlgebra

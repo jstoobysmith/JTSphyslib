@@ -88,7 +88,7 @@ variable (h : GaugeAlgebraRealization jets B repGauge repLorentz)
   derivative `covDerivAction` preserves `TransformsIn`. -/
 structure IsInfinitesimalActionOf (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
     (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V)
-    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)) : Prop where
+    (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)) : Prop where
   repCoeff_cons : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)),
     repCoeff rep U (μ ::ₘ x) =
       -((x.antidiagonal.map fun p =>
@@ -104,7 +104,7 @@ structure IsInfinitesimalActionOf (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J)
   derived Maurer–Cartan form — the analogue of `LocalGaugeData.adjointDualCoeff_cons`. -/
 lemma IsInfinitesimalActionOf.repDualCoeff_cons
     {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
-    {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)}
     (h : IsInfinitesimalActionOf jets act rep) (U : GJ) (μ : Fin 1 ⊕ Fin 3)
     (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℂ V) :
     repDualCoeff rep U (μ ::ₘ x) φ =
@@ -129,7 +129,7 @@ lemma IsInfinitesimalActionOf.repDualCoeff_cons
 
 section MatterCovariance
 
-variable {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
+variable {rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)}
 variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 variable [FiniteDimensional ℂ V]
 
@@ -373,55 +373,55 @@ lemma actionConj_apply (act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V) (c : 𝔤) :
   twist — `conj (g ⊗ u) ↦ star g ⊗ conj u`. This is the equivalence along which
   `JetComponentSpace.repConj` carries the conjugated representation. -/
 noncomputable def conjJetEquiv :
-    ConjModule (JetRing ⊗[ℂ] V) ≃ₗ[ℂ] JetRing ⊗[ℂ] ConjModule V :=
-  (ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-    (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V)))
+    ConjModule (SpaceTimeAlgebra ⊗[ℂ] V) ≃ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] ConjModule V :=
+  (ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+    (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V)))
 
-lemma conjJetEquiv_conjEquiv_tmul (g : JetRing) (u : V) :
-    conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (g ⊗ₜ[ℂ] u))
+lemma conjJetEquiv_conjEquiv_tmul (g : SpaceTimeAlgebra) (u : V) :
+    conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (g ⊗ₜ[ℂ] u))
       = star g ⊗ₜ[ℂ] conjEquiv (k := ℂ) (M := V) u := by
   rw [conjJetEquiv, LinearEquiv.trans_apply, ConjModule.tensorEquiv_symm_conjEquiv_tmul,
-    TensorProduct.congr_tmul, JetRing.starConjEquiv_apply, LinearEquiv.refl_apply,
+    TensorProduct.congr_tmul, SpaceTimeAlgebra.starConjEquiv_apply, LinearEquiv.refl_apply,
     LinearEquiv.symm_apply_apply]
 
 section ConjRep
 
-variable {rep : Representation ℂ GJ (JetRing ⊗[ℂ] V)}
+variable {rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)}
 variable {act : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V}
 
 /-- The conjugate representation acts through `conjJetEquiv` by the original maps. -/
-lemma repConj_conjJetEquiv (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (U : GJ) (w : JetRing ⊗[ℂ] V) :
+lemma repConj_conjJetEquiv (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (U : GJ) (w : SpaceTimeAlgebra ⊗[ℂ] V) :
     JetComponentSpace.repConj rep U
-        (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
-      = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U w)) := by
+        (conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) w))
+      = conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (rep U w)) := by
   show conjJetEquiv ((rep.conj U) (conjJetEquiv.symm
-      (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w)))) = _
+      (conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) w)))) = _
   rw [LinearEquiv.symm_apply_apply, Representation.conj_apply,
     LinearEquiv.symm_apply_apply]
 
 /-- The base-point Taylor coefficients of the conjugate representation are the
   conjugated coefficients: the derivative directions are real, so conjugation passes
   through `∂_x` and the base-point evaluation untouched. -/
-lemma repCoeff_repConj (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
+lemma repCoeff_repConj (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
     (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     repCoeff (JetComponentSpace.repConj rep) U x
       = ConjModule.endConj (repCoeff rep U x) := by
   have hE_tmul := conjJetEquiv_conjEquiv_tmul (V := V)
   -- conjugation intertwines the formal derivative
-  have hderiv1 : ∀ (μ : Fin 1 ⊕ Fin 3) (w : JetRing ⊗[ℂ] V),
-      jetDeriv μ (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
-        = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (jetDeriv μ w)) := by
+  have hderiv1 : ∀ (μ : Fin 1 ⊕ Fin 3) (w : SpaceTimeAlgebra ⊗[ℂ] V),
+      jetDeriv μ (conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) w))
+        = conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (jetDeriv μ w)) := by
     intro μ w
     induction w using TensorProduct.induction_on with
     | zero => simp
     | tmul g u =>
-        rw [hE_tmul, jetDeriv_tmul, jetDeriv_tmul, hE_tmul, JetRing.pderiv_star]
+        rw [hE_tmul, jetDeriv_tmul, jetDeriv_tmul, hE_tmul, SpaceTimeAlgebra.pderiv_star]
     | add a b ha hb =>
         rw [map_add, map_add, map_add, ha, hb, map_add, map_add, map_add]
-  have hderiv : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (w : JetRing ⊗[ℂ] V),
-      jetIteratedDeriv s (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
-        = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)
+  have hderiv : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (w : SpaceTimeAlgebra ⊗[ℂ] V),
+      jetIteratedDeriv s (conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) w))
+        = conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V)
             (jetIteratedDeriv s w)) := by
     intro s
     induction s using Multiset.induction_on with
@@ -431,18 +431,18 @@ lemma repCoeff_repConj (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
         rw [jetIteratedDeriv_cons, LinearMap.comp_apply, ih, hderiv1,
           jetIteratedDeriv_cons, LinearMap.comp_apply]
   -- conjugation intertwines the base-point evaluation
-  have heval : ∀ w : JetRing ⊗[ℂ] V,
-      jetEval (conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) w))
+  have heval : ∀ w : SpaceTimeAlgebra ⊗[ℂ] V,
+      jetEval (conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) w))
         = conjEquiv (k := ℂ) (M := V) (jetEval w) := by
     intro w
     induction w using TensorProduct.induction_on with
     | zero => simp
     | tmul g u =>
-        rw [hE_tmul, jetEval_tmul, jetEval_tmul, JetRing.constantCoeff_star,
+        rw [hE_tmul, jetEval_tmul, jetEval_tmul, SpaceTimeAlgebra.constantCoeff_star,
           map_smulₛₗ, starRingEnd_apply]
     | add a b ha hb => rw [map_add, map_add, map_add, ha, hb, map_add, map_add]
   refine LinearMap.ext fun v => ?_
-  have hv : jetOfConstant v = conjJetEquiv (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)
+  have hv : jetOfConstant v = conjJetEquiv (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V)
       (jetOfConstant ((conjEquiv (k := ℂ) (M := V)).symm v))) := by
     rw [jetOfConstant_apply, jetOfConstant_apply, hE_tmul, star_one,
       LinearEquiv.apply_symm_apply]

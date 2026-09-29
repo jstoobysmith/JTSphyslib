@@ -172,8 +172,9 @@ variable {V : Type} [AddCommGroup V] [Module ℂ V] [Module.Free ℂ V] [Module.
 
 /-- The transformation law of a family of symbols built from a linear map intertwining the
   jet gauge action with `JetComponentSpace.repDual`. -/
-private lemma transformsIn_of_repDual (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), rep U (χ • z) = χ • rep U z)
+private lemma transformsIn_of_repDual (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), rep U
+        (χ • z) = χ • rep U z)
     (Φ : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V →ₗ[ℂ] T.LocalFieldAlgebra)
     (hΦ : ∀ (U : GJ) (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V),
       T.repJet U (Φ x) = Φ (JetComponentSpace.repDual rep hlin U x)) :
@@ -304,7 +305,8 @@ lemma repLorentzGroup_conjFermionSymbolMap (i : T.FermionSpecies) (Λ : SL(2,ℂ
     (x : SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ (ConjModule (T.FermionValue i))) :
     T.repLorentzGroup Λ (T.conjFermionSymbolMap i x)
       = T.conjFermionSymbolMap i
-        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod (T.fermion i).repLorentz.conj.dual) Λ x) := by
+        ((SpaceTimeDerivAlgebraℂ.repLorentzGroup.tprod
+            (T.fermion i).repLorentz.conj.dual) Λ x) := by
   rw [conjFermionSymbolMap, LinearMap.comp_apply, LinearMap.comp_apply, repLorentzGroup_ιFermion]
   exact congrArg (T.ιFermion i)
     (Prod.ext ((JetComponentSpace.repLorentzGroup_fst _ _).trans (map_zero _))

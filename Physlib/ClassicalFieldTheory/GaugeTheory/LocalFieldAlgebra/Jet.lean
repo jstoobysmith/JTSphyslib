@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 
-public import Physlib.Relativity.JetRing.Basic
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Mathlib.LinearAlgebra.TensorProduct.Prod
@@ -18,7 +18,7 @@ public import Mathlib.LinearAlgebra.Dimension.Free
 
 ## i. Overview
 
-The jets of a field valued in a complex vector space `V` are `JetRing ⊗[ℂ] V`. This file
+The jets of a field valued in a complex vector space `V` are `SpaceTimeAlgebra ⊗[ℂ] V`. This file
 provides the basic toolkit for them, independent of any gauge group:
 
 * `jetOfConstant` — the inclusion of constants, `v ↦ 1 ⊗ v`;
@@ -43,20 +43,20 @@ TODO (date := 2026-09-11) "If we actually need anything in this file, it should
 -/
 
 /-- The inclusion of constants into `V`-valued jets: `v ↦ 1 ⊗ v`. -/
-noncomputable def jetOfConstant : V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
-  TensorProduct.mk ℂ JetRing V 1
+noncomputable def jetOfConstant : V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V :=
+  TensorProduct.mk ℂ SpaceTimeAlgebra V 1
 
 @[simp]
-lemma jetOfConstant_apply (v : V) : jetOfConstant v = (1 : JetRing) ⊗ₜ[ℂ] v := rfl
+lemma jetOfConstant_apply (v : V) : jetOfConstant v = (1 : SpaceTimeAlgebra) ⊗ₜ[ℂ] v := rfl
 
 /-- The formal derivative on `V`-valued jets in the direction `μ`, acting on the jet
   factor. -/
 noncomputable def jetDeriv (μ : Fin 1 ⊕ Fin 3) :
-    JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
+    SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V :=
   LinearMap.rTensor V (pderiv μ).toLinearMap
 
 @[simp]
-lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (f : JetRing) (v : V) :
+lemma jetDeriv_tmul (μ : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) (v : V) :
     jetDeriv μ (f ⊗ₜ[ℂ] v) = pderiv μ f ⊗ₜ[ℂ] v := rfl
 
 /-- Formal derivatives on `V`-valued jets commute, since the partial derivatives of
@@ -65,11 +65,11 @@ lemma jetDeriv_comm (μ ν : Fin 1 ⊕ Fin 3) :
     (jetDeriv (V := V) μ).comp (jetDeriv ν) = (jetDeriv ν).comp (jetDeriv μ) := by
   rw [jetDeriv, jetDeriv, ← LinearMap.rTensor_comp, ← LinearMap.rTensor_comp]
   exact congrArg (LinearMap.rTensor V)
-    (LinearMap.ext fun f => JetRing.pderiv_comm μ ν f)
+    (LinearMap.ext fun f => SpaceTimeAlgebra.pderiv_comm μ ν f)
 
 /-- Post-composition with `jetDeriv` is right-commutative, which is what allows
   iterated derivatives to be indexed by a `Multiset` of directions. -/
-instance : RightCommutative (fun (L : JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V)
+instance : RightCommutative (fun (L : SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V)
     (μ : Fin 1 ⊕ Fin 3) => L.comp (jetDeriv μ)) where
   right_comm L μ ν := by
     refine LinearMap.ext fun x => ?_
@@ -80,7 +80,7 @@ instance : RightCommutative (fun (L : JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗
 /-- The iterated formal derivative on `V`-valued jets, in the (unordered) directions
   given by the multiset `μs`. -/
 noncomputable def jetIteratedDeriv (μs : Multiset (Fin 1 ⊕ Fin 3)) :
-    JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
+    SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V :=
   μs.foldl (fun L μ => L.comp (jetDeriv μ)) LinearMap.id
 
 @[simp]
@@ -90,7 +90,8 @@ lemma jetIteratedDeriv_zero :
 
 lemma jetIteratedDeriv_cons (μ : Fin 1 ⊕ Fin 3) (μs : Multiset (Fin 1 ⊕ Fin 3)) :
     jetIteratedDeriv (V := V) (μ ::ₘ μs) = (jetDeriv μ).comp (jetIteratedDeriv μs) := by
-  have h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (L : JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V),
+  have h : ∀ (s : Multiset (Fin 1 ⊕ Fin 3))
+      (L : SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V),
       s.foldl (fun L μ => L.comp (jetDeriv μ)) L = L.comp (jetIteratedDeriv s) := by
     intro s
     induction s using Multiset.induction_on with
@@ -121,11 +122,11 @@ lemma jetIteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
 /-- Evaluation of a `V`-valued jet at the base point:
   `f ⊗ v ↦ (constant coefficient of f) • v`. This is a retraction of
   `jetOfConstant`. -/
-noncomputable def jetEval : JetRing ⊗[ℂ] V →ₗ[ℂ] V :=
-  TensorProduct.lift ((LinearMap.lsmul ℂ V).comp JetRing.constantCoeffₗ)
+noncomputable def jetEval : SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] V :=
+  TensorProduct.lift ((LinearMap.lsmul ℂ V).comp SpaceTimeAlgebra.constantCoeffₗ)
 
 @[simp]
-lemma jetEval_tmul (f : JetRing) (v : V) :
+lemma jetEval_tmul (f : SpaceTimeAlgebra) (v : V) :
     jetEval (f ⊗ₜ[ℂ] v) = constantCoeff f • v := rfl
 
 @[simp]
@@ -134,7 +135,7 @@ lemma jetEval_jetOfConstant (v : V) : jetEval (jetOfConstant v) = v := by
 
 /-- Evaluation at the base point is semilinear over the jet ring: a scalar jet acts through
   its constant coefficient. -/
-lemma jetEval_smul (f : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma jetEval_smul (f : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEval (f • z) = constantCoeff f • jetEval z := by
   induction z using TensorProduct.induction_on with
   | zero => rw [smul_zero, map_zero, smul_zero]
@@ -157,17 +158,17 @@ section Prod
 
 variable {W : Type} [AddCommGroup W] [Module ℂ W]
 
-/-- **The jets of a product are the product of the jets**: `JetRing ⊗ (V × W)` splits as
-  `(JetRing ⊗ V) × (JetRing ⊗ W)`, the jet-ring factor being shared. -/
+/-- **The jets of a product are the product of the jets**: `SpaceTimeAlgebra ⊗ (V × W)` splits as
+  `(SpaceTimeAlgebra ⊗ V) × (SpaceTimeAlgebra ⊗ W)`, the jet-ring factor being shared. -/
 noncomputable abbrev jetProdEquiv :
-    JetRing ⊗[ℂ] (V × W) ≃ₗ[ℂ] (JetRing ⊗[ℂ] V) × (JetRing ⊗[ℂ] W) :=
-  TensorProduct.prodRight ℂ ℂ JetRing V W
+    SpaceTimeAlgebra ⊗[ℂ] (V × W) ≃ₗ[ℂ] (SpaceTimeAlgebra ⊗[ℂ] V) × (SpaceTimeAlgebra ⊗[ℂ] W) :=
+  TensorProduct.prodRight ℂ ℂ SpaceTimeAlgebra V W
 
 @[simp]
 lemma jetProdEquiv_jetOfConstant (v : V) (w : W) :
     jetProdEquiv (jetOfConstant (v, w)) = (jetOfConstant v, jetOfConstant w) := rfl
 
-lemma jetProdEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (V × W)) :
+lemma jetProdEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] (V × W)) :
     jetProdEquiv (jetDeriv μ z) =
       (jetDeriv μ (jetProdEquiv z).1, jetDeriv μ (jetProdEquiv z).2) := by
   induction z using TensorProduct.induction_on with
@@ -177,7 +178,7 @@ lemma jetProdEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (V × W
       simp only [map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
 
 lemma jetProdEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
-    (z : JetRing ⊗[ℂ] (V × W)) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] (V × W)) :
     jetProdEquiv (jetIteratedDeriv s z) =
       (jetIteratedDeriv s (jetProdEquiv z).1, jetIteratedDeriv s (jetProdEquiv z).2) := by
   induction s using Multiset.induction_on generalizing z with
@@ -187,9 +188,9 @@ lemma jetProdEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
         jetIteratedDeriv_cons, jetIteratedDeriv_cons, LinearMap.comp_apply,
         LinearMap.comp_apply]
 
-/-- The identification is `JetRing`-linear: multiplication by a scalar jet acts on both
+/-- The identification is `SpaceTimeAlgebra`-linear: multiplication by a scalar jet acts on both
   components. -/
-lemma jetProdEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] (V × W)) :
+lemma jetProdEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] (V × W)) :
     jetProdEquiv (χ • z) = (χ • (jetProdEquiv z).1, χ • (jetProdEquiv z).2) := by
   induction z using TensorProduct.induction_on with
   | zero => simp [Prod.ext_iff]
@@ -197,13 +198,14 @@ lemma jetProdEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] (V × W)) :
   | add a b ha hb =>
       simp only [smul_add, map_add, ha, hb, Prod.fst_add, Prod.snd_add, Prod.mk_add_mk]
 
-lemma jetProdEquiv_symm_smul (χ : JetRing) (a : JetRing ⊗[ℂ] V) (b : JetRing ⊗[ℂ] W) :
+lemma jetProdEquiv_symm_smul (χ : SpaceTimeAlgebra) (a : SpaceTimeAlgebra ⊗[ℂ] V)
+    (b : SpaceTimeAlgebra ⊗[ℂ] W) :
     (jetProdEquiv (V := V) (W := W)).symm (χ • a, χ • b)
       = χ • (jetProdEquiv (V := V) (W := W)).symm (a, b) := by
   refine (jetProdEquiv (V := V) (W := W)).injective ?_
   rw [LinearEquiv.apply_symm_apply, jetProdEquiv_smul, LinearEquiv.apply_symm_apply]
 
-lemma jetEval_prod (z : JetRing ⊗[ℂ] (V × W)) :
+lemma jetEval_prod (z : SpaceTimeAlgebra ⊗[ℂ] (V × W)) :
     jetEval z = (jetEval (jetProdEquiv z).1, jetEval (jetProdEquiv z).2) := by
   induction z using TensorProduct.induction_on with
   | zero => simp [Prod.ext_iff]
@@ -232,16 +234,16 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι] (E : ι → Type)
   [∀ i, AddCommGroup (E i)] [∀ i, Module ℂ (E i)]
 
 /-- **The jets of a finite product are the product of the jets**:
-  `JetRing ⊗ (∀ i, E i)` splits as `∀ i, JetRing ⊗ E i`, the jet-ring factor being
+  `SpaceTimeAlgebra ⊗ (∀ i, E i)` splits as `∀ i, SpaceTimeAlgebra ⊗ E i`, the jet-ring factor being
   shared. -/
 noncomputable abbrev jetPiEquiv :
-    JetRing ⊗[ℂ] (∀ i, E i) ≃ₗ[ℂ] ∀ i, JetRing ⊗[ℂ] E i :=
-  TensorProduct.piRight ℂ ℂ JetRing E
+    SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i) ≃ₗ[ℂ] ∀ i, SpaceTimeAlgebra ⊗[ℂ] E i :=
+  TensorProduct.piRight ℂ ℂ SpaceTimeAlgebra E
 
 lemma jetPiEquiv_jetOfConstant (v : ∀ i, E i) :
     jetPiEquiv E (jetOfConstant v) = fun i => jetOfConstant (v i) := rfl
 
-lemma jetPiEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+lemma jetPiEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)) (i : ι) :
     jetPiEquiv E (jetDeriv μ z) i = jetDeriv μ (jetPiEquiv E z i) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -249,7 +251,7 @@ lemma jetPiEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] (∀ i, E
   | add a b ha hb => simp only [map_add, Pi.add_apply, ha, hb]
 
 lemma jetPiEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
-    (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)) (i : ι) :
     jetPiEquiv E (jetIteratedDeriv s z) i = jetIteratedDeriv s (jetPiEquiv E z i) := by
   induction s using Multiset.induction_on generalizing z with
   | empty => rw [jetIteratedDeriv_zero, jetIteratedDeriv_zero]; rfl
@@ -257,21 +259,21 @@ lemma jetPiEquiv_jetIteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
       rw [jetIteratedDeriv_cons, LinearMap.comp_apply, jetPiEquiv_jetDeriv, ih,
         jetIteratedDeriv_cons, LinearMap.comp_apply]
 
-/-- The identification is `JetRing`-linear: multiplication by a scalar jet acts on every
+/-- The identification is `SpaceTimeAlgebra`-linear: multiplication by a scalar jet acts on every
   component. -/
-lemma jetPiEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+lemma jetPiEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)) (i : ι) :
     jetPiEquiv E (χ • z) i = χ • (jetPiEquiv E z i) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | tmul f p => rw [TensorProduct.smul_tmul', smul_eq_mul]; rfl
   | add a b ha hb => simp only [smul_add, map_add, Pi.add_apply, ha, hb]
 
-lemma jetPiEquiv_symm_smul (χ : JetRing) (a : ∀ i, JetRing ⊗[ℂ] E i) :
+lemma jetPiEquiv_symm_smul (χ : SpaceTimeAlgebra) (a : ∀ i, SpaceTimeAlgebra ⊗[ℂ] E i) :
     (jetPiEquiv E).symm (fun i => χ • a i) = χ • (jetPiEquiv E).symm a := by
   refine (jetPiEquiv E).injective (funext fun i => ?_)
   rw [LinearEquiv.apply_symm_apply, jetPiEquiv_smul, LinearEquiv.apply_symm_apply]
 
-lemma jetEval_pi (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
+lemma jetEval_pi (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)) (i : ι) :
     jetEval z i = jetEval (jetPiEquiv E z i) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -283,8 +285,8 @@ lemma jetEval_pi (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
   that summand to the value factor, the jet-ring factor being untouched. This is the form
   in which the splitting meets the naturality statements, which are all phrased in terms of
   linear maps of value spaces. -/
-lemma jetPiEquiv_eq_lTensor_proj (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
-    jetPiEquiv E z i = LinearMap.lTensor JetRing (LinearMap.proj i) z := by
+lemma jetPiEquiv_eq_lTensor_proj (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)) (i : ι) :
+    jetPiEquiv E z i = LinearMap.lTensor SpaceTimeAlgebra (LinearMap.proj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | tmul f p => rfl
@@ -294,9 +296,9 @@ lemma jetPiEquiv_eq_lTensor_proj (z : JetRing ⊗[ℂ] (∀ i, E i)) (i : ι) :
   The splitting is an equivalence, so a jet of a `(∀ i, E i)`-valued field is determined by
   its summands. -/
 lemma jetPi_hom_ext {N : Type} [AddCommGroup N] [Module ℂ N]
-    {A B : N →ₗ[ℂ] JetRing ⊗[ℂ] (∀ i, E i)}
-    (h : ∀ i, (LinearMap.lTensor JetRing (LinearMap.proj i)).comp A
-      = (LinearMap.lTensor JetRing (LinearMap.proj i)).comp B) : A = B := by
+    {A B : N →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] (∀ i, E i)}
+    (h : ∀ i, (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.proj i)).comp A
+      = (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.proj i)).comp B) : A = B := by
   refine LinearMap.ext fun n => (jetPiEquiv E).injective (funext fun i => ?_)
   rw [jetPiEquiv_eq_lTensor_proj, jetPiEquiv_eq_lTensor_proj]
   exact LinearMap.congr_fun (h i) n

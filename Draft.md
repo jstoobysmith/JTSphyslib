@@ -64,14 +64,14 @@ Let `G₀` be `SU(2)`, so that `𝔤` is the traceless self-adjoint matrices.
 Because `SU(2)` is a matrix Lie group, a gauge transformation is a
 matrix of functions on spacetime, and its Taylor series at `x` is just
 the Taylor series of each of its four entries. The type of all
-such (formal) Taylor series is what we call `JetRing`.
+such (formal) Taylor series is what we call `SpaceTimeAlgebra`.
 Since a Taylor series of a product of functions is the
 product of their Taylor series, the traditional group law
 carries over unchanged: it is still matrix multiplication, only now
-with entries in `JetRing` rather than in `ℂ`. The same goes for the
+with entries in `SpaceTimeAlgebra` rather than in `ℂ`. The same goes for the
 equations `U† U = 1` and `det U = 1` which cut `SU(2)` out, and reading
-them over `JetRing` is what gives us `GJ`. Likewise `𝔤J` is the
-traceless self-adjoint matrices over `JetRing`.
+them over `SpaceTimeAlgebra` is what gives us `GJ`. Likewise `𝔤J` is the
+traceless self-adjoint matrices over `SpaceTimeAlgebra`.
 
 
 

@@ -121,10 +121,10 @@ theorem transformsIn_conjHiggsField :
   from the total fermionic symbols by pulling covectors back along a projection
   intertwining the two jet gauge actions transforms in the species' own representation. -/
 private lemma transformsIn_species {W : Type} [AddCommGroup W] [Module ℂ W]
-    (repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)) (p : FermionSpace →ₗ[ℂ] W)
-    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp
+    (repW : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] W)) (p : FermionSpace →ₗ[ℂ] W)
+    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor SpaceTimeAlgebra p).comp
         (FermionSpace.repJetGaugeGroupI U)
-      = (repW U).comp (LinearMap.lTensor JetRing p))
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra p))
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ W →ₗ[ℂ] JetAlgebra}
     (hF : ∀ s φ, F s φ = fermionSymbol s (Module.Dual.transpose p φ)) :
     LocalGaugeData.TransformsIn (B := JetAlgebra) repJetGaugeGroupI repW F := by
@@ -151,8 +151,8 @@ private lemma transformsIn_species {W : Type} [AddCommGroup W] [Module ℂ W]
   real directions in which the coefficients are taken. -/
 private lemma repDualCoeff_repConj_transpose {V W : Type} [AddCommGroup V] [Module ℂ V]
     [AddCommGroup W] [Module ℂ W]
-    {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-    {repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
+    {repV : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
+    {repW : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
     (hp : ∀ (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)),
       p.comp (GaugeAlgebraRealization.repCoeff repV U s)
         = (GaugeAlgebraRealization.repCoeff repW U s).comp p)
@@ -172,10 +172,10 @@ private lemma repDualCoeff_repConj_transpose {V W : Type} [AddCommGroup V] [Modu
 /-- The jet gauge transformation law of the conjugate symbols of a fermion species: the law
   of the species itself, read on the conjugate representations. -/
 private lemma transformsIn_conjSpecies {W : Type} [AddCommGroup W] [Module ℂ W]
-    (repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)) (p : FermionSpace →ₗ[ℂ] W)
-    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp
+    (repW : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] W)) (p : FermionSpace →ₗ[ℂ] W)
+    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor SpaceTimeAlgebra p).comp
         (FermionSpace.repJetGaugeGroupI U)
-      = (repW U).comp (LinearMap.lTensor JetRing p))
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra p))
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ (ConjModule W) →ₗ[ℂ] JetAlgebra}
     (hF : ∀ s φ, F s φ = conjFermionSymbol s
       (Module.Dual.transpose (ConjModule.map p) φ)) :
@@ -349,7 +349,8 @@ theorem isLorentzDerivTransforms_conjHiggsField :
     (∏ i, (((Lorentz.SL2C.toLorentzGroup Λ).1 (p i) (l i) : ℝ) : ℂ)) • z) ?_
   exact (congrArg (fun z : JetAlgebra =>
       Lorentz.iteratedD jetDeriv jetDeriv_comm (List.ofFn p) z)
-    ((repLorentzGroup_includeHiggs Λ (BosonicAlgebra.ofConjField (M := HiggsVec.matterField) φ)).trans
+    ((repLorentzGroup_includeHiggs Λ
+        (BosonicAlgebra.ofConjField (M := HiggsVec.matterField) φ)).trans
       (congrArg includeHiggs
         (BosonicAlgebra.repLorentzGroup_ofConjField (M := HiggsVec.matterField) Λ φ)))).trans
     (hstart (List.ofFn p) _)

@@ -118,22 +118,23 @@ variable (T)
   weight; the gauge action of a theory whose fermions carry different mass dimensions is
   perfectly well defined, only its packaging as one `MatterField` is not. -/
 noncomputable def repJetFermionModule :
-    Representation ℂ GJ (JetRing ⊗[ℂ] T.FermionModule) :=
+    Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] T.FermionModule) :=
   MatterField.repJetPi T.fermion
 
 variable {T}
 
 /-- The jet gauge action on the fermionic module is fibrewise, as each species is. -/
-lemma repJetFermionModule_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] T.FermionModule) :
+lemma repJetFermionModule_smul (U : GJ) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] T.FermionModule) :
     T.repJetFermionModule U (χ • z) = χ • T.repJetFermionModule U z :=
   MatterField.repJetPi_smul T.fermion U χ z
 
 /-- A fermionic species is a subrepresentation of the jet gauge action on the fermionic
   module: the projection onto its value space intertwines the two actions on the jets. -/
 lemma lTensor_projFermionValue_repJetFermionModule (i : T.FermionSpecies) (U : GJ) :
-    (LinearMap.lTensor JetRing (T.projFermionValue i)).comp (T.repJetFermionModule U)
+    (LinearMap.lTensor SpaceTimeAlgebra (T.projFermionValue i)).comp (T.repJetFermionModule U)
       = ((T.fermion i).repJet U).comp
-        (LinearMap.lTensor JetRing (T.projFermionValue i)) :=
+        (LinearMap.lTensor SpaceTimeAlgebra (T.projFermionValue i)) :=
   MatterField.lTensor_proj_repJetPi T.fermion i U
 
 /-- The jet gauge action of the fermionic matter field is that of the fermionic module. -/
@@ -163,7 +164,7 @@ lemma fermionMatterField_repAlgebra_apply (w : ℕ)
   with the family of the jets of the species. -/
 lemma fermionMatterField_repJet_apply (w : ℕ)
     (h : ∀ i, (T.fermion i).massWeight = w) (U : GJ)
-    (z : JetRing ⊗[ℂ] T.FermionModule) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] T.FermionModule) :
     (T.fermionMatterField w h).repJet U z =
       (jetPiEquiv T.FermionValue).symm
         (fun i => (T.fermion i).repJet U (jetPiEquiv T.FermionValue z i)) := rfl

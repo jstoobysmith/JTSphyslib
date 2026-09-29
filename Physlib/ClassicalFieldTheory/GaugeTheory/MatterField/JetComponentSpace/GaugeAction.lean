@@ -14,7 +14,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalFieldAlgebra.JetRep
 ## i. Overview
 
 For a matter field valued in `V` with an action of a group `GJ` on its jets
-`JetRing ⊗[ℂ] V`, this file constructs the induced action of `GJ` on the jet component
+`SpaceTimeAlgebra ⊗[ℂ] V`, this file constructs the induced action of `GJ` on the jet component
 space. Here `GJ` is any group — for the Standard Model it is the jet gauge group
 `JetGaugeGroupI`, but nothing here depends on that.
 
@@ -25,11 +25,12 @@ The construction needs two hypotheses on the jet action `rep`:
   This is what makes the induced action local (a finite Leibniz convolution) and what
   makes `rep` determined by its restriction to constant jets.
 * finite dimensionality of `V`, which makes that restriction a *matrix of power series*,
-  an element of `JetRing ⊗ End V`.
+  an element of `SpaceTimeAlgebra ⊗ End V`.
 
 ## ii. Key results
 
-- `JetComponentSpace.jetCoeff` : the coefficient of a fibrewise action, in `JetRing ⊗ End V`.
+- `JetComponentSpace.jetCoeff` : the coefficient of a fibrewise action, in `SpaceTimeAlgebra ⊗ End
+  V`.
 - `JetComponentSpace.coeff_mul_of_smul_comm` : the coefficient is multiplicative.
 - `JetComponentSpace.symbolAction`, `symbolAction_mul` : its action on symbols, an
   anti-homomorphism.
@@ -64,7 +65,7 @@ endomorphism and the pullback along a map of value spaces are the same construct
 `W = V` this is the action on `Module.End ℂ (SpaceTimeDerivAlgebraℂ ⊗ Module.Dual ℂ V)` that
 `repDual` uses. -/
 noncomputable def symbolAction :
-    (JetRing ⊗[ℂ] (V →ₗ[ℂ] W)) →ₗ[ℂ]
+    (SpaceTimeAlgebra ⊗[ℂ] (V →ₗ[ℂ] W)) →ₗ[ℂ]
       ((SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ W) →ₗ[ℂ]
         (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V)) :=
   TensorProduct.lift
@@ -91,7 +92,7 @@ noncomputable def symbolAction :
         rfl }
 
 @[simp]
-lemma symbolAction_tmul (g : JetRing) (T : V →ₗ[ℂ] W) :
+lemma symbolAction_tmul (g : SpaceTimeAlgebra) (T : V →ₗ[ℂ] W) :
     symbolAction (g ⊗ₜ[ℂ] T)
       = TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction g) (Module.Dual.transpose T) :=
   rfl
@@ -100,12 +101,12 @@ lemma symbolAction_tmul (g : JetRing) (T : V →ₗ[ℂ] W) :
 point.** On `1 ⊗ φ` — the symbol `ψ_φ` carrying no derivatives — only the constant term of
 the power-series coefficient survives, so the result is again undifferentiated and the
 target index is acted on by the transpose of the base-point value. -/
-lemma symbolAction_one_tmul (c : JetRing ⊗[ℂ] Module.End ℂ V) (φ : Module.Dual ℂ V) :
+lemma symbolAction_one_tmul (c : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) (φ : Module.Dual ℂ V) :
     symbolAction c ((1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ)
       = (1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ]
         Module.Dual.transpose (jetEval ∘ₗ TensorProduct.lift
-          ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-            (TensorProduct.mk ℂ JetRing V)) c) φ := by
+          ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+            (TensorProduct.mk ℂ SpaceTimeAlgebra V)) c) φ := by
   induction c using TensorProduct.induction_on with
   | zero => simp
   | add c₁ c₂ h₁ h₂ =>
@@ -126,8 +127,8 @@ Multiplicativity is bookkeeping: `coeff_mul_of_smul_comm` makes the coefficient
 multiplicative, `symbolAction_mul` makes its action an anti-homomorphism, and the inverse
 flips that back. -/
 noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z) :
     Representation ℂ GJ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V) where
   toFun U := symbolAction (jetCoeff rep U⁻¹)
@@ -135,7 +136,7 @@ noncomputable def repDual [Module.Free ℂ V] [Module.Finite ℂ V]
     have h1 : jetCoeff rep (1 : GJ)⁻¹ = 1 := by
       refine lift_injective fun v => ?_
       rw [jetCoeff_spec rep]
-      show rep (1 : GJ)⁻¹ ((1 : JetRing) ⊗ₜ[ℂ] v) = (1 : JetRing) ⊗ₜ[ℂ] v
+      show rep (1 : GJ)⁻¹ ((1 : SpaceTimeAlgebra) ⊗ₜ[ℂ] v) = (1 : SpaceTimeAlgebra) ⊗ₜ[ℂ] v
       rw [inv_one, map_one]
       rfl
     rw [h1, Algebra.TensorProduct.one_def, symbolAction_tmul,
@@ -157,15 +158,15 @@ the base point.** No derivative of the gauge jet contributes: the symbol `ψ_φ`
 by the contragredient of `rep U⁻¹` restricted to constant jets and evaluated at the base
 point. -/
 lemma repDual_one_tmul [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hlin : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    (rep : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hlin : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
     (U : GJ) (φ : Module.Dual ℂ V) :
     repDual rep hlin U ((1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ] φ)
       = (1 : SpaceTimeDerivAlgebraℂ) ⊗ₜ[ℂ]
         Module.Dual.transpose (jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant) φ := by
-  have h : jetEval ∘ₗ TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (jetCoeff rep U⁻¹)
+  have h : jetEval ∘ₗ TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (jetCoeff rep U⁻¹)
       = jetEval ∘ₗ (rep U⁻¹).comp jetOfConstant :=
     LinearMap.ext fun v => congrArg jetEval (jetCoeff_spec rep U⁻¹ v)
   rw [show repDual rep hlin U = symbolAction (jetCoeff rep U⁻¹) from rfl,
@@ -222,9 +223,9 @@ unconjugated half.
 /-- Pulling back and then acting is acting and then pulling back, on the symbols of a
 coefficient. Precomposing the symbol action of a coefficient of `W` with the pullback
 along `f` is the symbol action of the coefficient precomposed with `f`. -/
-lemma map_transpose_comp_symbolAction (f : V →ₗ[ℂ] W) (y : JetRing ⊗[ℂ] Module.End ℂ W) :
+lemma map_transpose_comp_symbolAction (f : V →ₗ[ℂ] W) (y : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ W) :
     (TensorProduct.map LinearMap.id (Module.Dual.transpose f)).comp (symbolAction y)
-      = symbolAction (LinearMap.lTensor JetRing (LinearMap.lcomp ℂ W f) y) := by
+      = symbolAction (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.lcomp ℂ W f) y) := by
   induction y using TensorProduct.induction_on with
   | zero => rw [map_zero, map_zero, map_zero, LinearMap.comp_zero]
   | add a b ha hb => rw [map_add, LinearMap.comp_add, ha, hb, map_add, map_add]
@@ -236,9 +237,9 @@ lemma map_transpose_comp_symbolAction (f : V →ₗ[ℂ] W) (y : JetRing ⊗[ℂ
 /-- The companion of `map_transpose_comp_symbolAction` on the other side: postcomposing
   the symbol action of a coefficient of `V` with the pullback along `f` is the symbol
   action of the coefficient postcomposed with `f`. -/
-lemma symbolAction_comp_map_transpose (f : V →ₗ[ℂ] W) (x : JetRing ⊗[ℂ] Module.End ℂ V) :
+lemma symbolAction_comp_map_transpose (f : V →ₗ[ℂ] W) (x : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) :
     (symbolAction x).comp (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
-      = symbolAction (LinearMap.lTensor JetRing (LinearMap.llcomp ℂ V V W f) x) := by
+      = symbolAction (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.llcomp ℂ V V W f) x) := by
   induction x using TensorProduct.induction_on with
   | zero => rw [map_zero, map_zero, map_zero, LinearMap.zero_comp]
   | add a b ha hb => rw [map_add, LinearMap.add_comp, ha, hb, map_add, map_add]
@@ -255,13 +256,15 @@ action; the group element is inverted on both sides alike, so no convention is d
 by it. -/
 lemma comap_comp_repDual [Module.Free ℂ V] [Module.Finite ℂ V]
     [Module.Free ℂ W] [Module.Finite ℂ W]
-    (repV : Representation ℂ GJ (JetRing ⊗[ℂ] V))
-    (hV : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), repV U (χ • z) = χ • repV U z)
-    (repW : Representation ℂ GJ (JetRing ⊗[ℂ] W))
-    (hW : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] W), repW U (χ • z) = χ • repW U z)
+    (repV : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V))
+    (hV : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), repV U
+        (χ • z) = χ • repV U z)
+    (repW : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] W))
+    (hW : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] W), repW U
+        (χ • z) = χ • repW U z)
     (f : V →ₗ[ℂ] W)
-    (hf : ∀ U : GJ, (LinearMap.lTensor JetRing f).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing f)) (U : GJ) :
+    (hf : ∀ U : GJ, (LinearMap.lTensor SpaceTimeAlgebra f).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra f)) (U : GJ) :
     (TensorProduct.map LinearMap.id (Module.Dual.transpose f)).comp (repDual repW hW U)
       = (repDual repV hV U).comp
         (TensorProduct.map LinearMap.id (Module.Dual.transpose f)) := by
@@ -281,8 +284,8 @@ of linear maps on the whole component space, not a statement about undifferentia
 symbols. The conjugate half is the unconjugated argument applied to `repConj M.repJet` and
 `repConj N.repJet`, whose intertwining is `JetComponentSpace.lTensor_comp_repConj`. -/
 lemma comap_comp_repJet {M N : MatterField jets} (f : M.V →ₗ[ℂ] N.V)
-    (hf : ∀ U : GJ, (LinearMap.lTensor JetRing f).comp (M.repJet U)
-      = (N.repJet U).comp (LinearMap.lTensor JetRing f)) (U : GJ) :
+    (hf : ∀ U : GJ, (LinearMap.lTensor SpaceTimeAlgebra f).comp (M.repJet U)
+      = (N.repJet U).comp (LinearMap.lTensor SpaceTimeAlgebra f)) (U : GJ) :
     (comap f).comp (repJet N U) = (repJet M U).comp (comap f) := by
   show (LinearMap.prodMap (TensorProduct.map LinearMap.id (Module.Dual.transpose f))
       (TensorProduct.map LinearMap.id

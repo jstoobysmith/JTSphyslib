@@ -134,13 +134,13 @@ noncomputable def repPi {W : ι → Type} [∀ i, AddCommGroup (W i)]
 
 /-- **The jet gauge action of an indexed direct sum**: the family of actions, read
   through the identification of the jets of `∀ i, (M i).V` with the family of jets. -/
-noncomputable def repJetPi : Representation ℂ GJ (JetRing ⊗[ℂ] (∀ i, (M i).V)) where
+noncomputable def repJetPi : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] (∀ i, (M i).V)) where
   toFun U := LinearEquiv.conjRingEquiv (jetPiEquiv fun i => (M i).V).symm
     (repPi (fun i => (M i).repJet) U)
   map_one' := by rw [map_one, map_one]
   map_mul' U W := by rw [map_mul, map_mul]
 
-lemma repJetPi_apply (U : GJ) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
+lemma repJetPi_apply (U : GJ) (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, (M i).V)) :
     repJetPi M U z = (jetPiEquiv fun i => (M i).V).symm
       (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) z i)) := rfl
 
@@ -148,7 +148,7 @@ lemma repJetPi_apply (U : GJ) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
   index, and each summand is fibrewise, so multiplication by a scalar jet passes through
   the splitting untouched. This is the field `repJet_smul` of `MatterField.pi`, stated
   separately so that it can be used without fixing a common mass weight. -/
-lemma repJetPi_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).V)) :
+lemma repJetPi_smul (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] (∀ i, (M i).V)) :
     repJetPi M U (χ • z) = χ • repJetPi M U z := by
   rw [repJetPi_apply, repJetPi_apply,
     show (fun i => (M i).repJet U (jetPiEquiv (fun i => (M i).V) (χ • z) i))
@@ -161,8 +161,8 @@ lemma repJetPi_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] (∀ i, (M i).
   summed action with that summand's own: the summed action is the family of the actions,
   and reading off a summand of the jets is the projection on the value factor. -/
 lemma lTensor_proj_repJetPi (i : ι) (U : GJ) :
-    (LinearMap.lTensor JetRing (LinearMap.proj i)).comp (repJetPi M U)
-      = ((M i).repJet U).comp (LinearMap.lTensor JetRing (LinearMap.proj i)) := by
+    (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.proj i)).comp (repJetPi M U)
+      = ((M i).repJet U).comp (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.proj i)) := by
   refine LinearMap.ext fun z => ?_
   rw [LinearMap.comp_apply, LinearMap.comp_apply, ← jetPiEquiv_eq_lTensor_proj,
     ← jetPiEquiv_eq_lTensor_proj, repJetPi_apply, LinearEquiv.apply_symm_apply]

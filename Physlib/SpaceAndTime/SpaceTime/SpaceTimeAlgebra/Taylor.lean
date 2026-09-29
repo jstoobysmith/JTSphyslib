@@ -5,7 +5,7 @@ Authors: Jinzheng Li
 -/
 module
 
-public import Physlib.Relativity.JetRing.Basic
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 public import Mathlib.LinearAlgebra.Matrix.Trace
 /-!
 # Taylor determinacy and completeness of jets
@@ -21,11 +21,11 @@ is the Taylor completeness half of `LocalGaugeData.Free`.
 
 ## ii. Key results
 
-- `JetRing.ext_of_constantCoeff_foldl_pderiv` : Taylor determinacy.
-- `JetRing.eq_C_of_pderiv_eq_zero` : a jet with vanishing derivatives is constant.
-- `JetRing.taylorSeries`, `JetRing.constantCoeff_foldl_pderiv_taylorSeries` : Taylor
-  completeness.
-- `JetRing.taylorMatrix` : Taylor completeness for matrices of jets.
+- `SpaceTimeAlgebra.ext_of_constantCoeff_foldl_pderiv` : Taylor determinacy.
+- `SpaceTimeAlgebra.eq_C_of_pderiv_eq_zero` : a jet with vanishing derivatives is constant.
+- `SpaceTimeAlgebra.taylorSeries`, `SpaceTimeAlgebra.constantCoeff_foldl_pderiv_taylorSeries` :
+  Taylor completeness.
+- `SpaceTimeAlgebra.taylorMatrix` : Taylor completeness for matrices of jets.
 
 ## iii. Table of contents
 
@@ -36,7 +36,7 @@ is the Taylor completeness half of `LocalGaugeData.Free`.
 
 @[expose] public section
 
-namespace JetRing
+namespace SpaceTimeAlgebra
 
 open MvPowerSeries
 
@@ -48,7 +48,7 @@ open MvPowerSeries
 
 /-- **Taylor determinacy**: two jets with the same base-point values of all iterated
   derivatives are equal. -/
-lemma ext_of_constantCoeff_foldl_pderiv {f g : JetRing}
+lemma ext_of_constantCoeff_foldl_pderiv {f g : SpaceTimeAlgebra}
     (h : ∀ s : Multiset (Fin 1 ⊕ Fin 3),
       constantCoeff (s.foldl (fun h ρ => pderiv ρ h) f)
         = constantCoeff (s.foldl (fun h ρ => pderiv ρ h) g)) : f = g := by
@@ -61,7 +61,7 @@ lemma ext_of_constantCoeff_foldl_pderiv {f g : JetRing}
     (Finset.prod_ne_zero_iff.mpr fun _ _ => Nat.factorial_ne_zero _)) hs
 
 /-- A jet all of whose first derivatives vanish is the constant jet of its value. -/
-lemma eq_C_of_pderiv_eq_zero {f : JetRing} (hf : ∀ μ, pderiv μ f = 0) :
+lemma eq_C_of_pderiv_eq_zero {f : SpaceTimeAlgebra} (hf : ∀ μ, pderiv μ f = 0) :
     f = C (constantCoeff f) :=
   pderiv.ext (fun i => by rw [hf i, pderiv_C]) (by rw [constantCoeff_C])
 
@@ -73,7 +73,7 @@ lemma eq_C_of_pderiv_eq_zero {f : JetRing} (hf : ∀ μ, pderiv μ f = 0) :
 
 /-- The power series with prescribed base-point Taylor data `f`: the coefficient at the
   monomial `m` is `f` at the multiset of `m`, divided by the factorials of `m`. -/
-noncomputable def taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) : JetRing :=
+noncomputable def taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) : SpaceTimeAlgebra :=
   fun m => ((∏ ν, Nat.factorial (m ν) : ℕ) : ℂ)⁻¹ * f (Finsupp.toMultiset m)
 
 lemma coeff_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) → ℂ) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
@@ -104,7 +104,7 @@ lemma constantCoeff_foldl_pderiv_taylorSeries (f : Multiset (Fin 1 ⊕ Fin 3) �
 
 /-- The matrix of jets with prescribed base-point Taylor data `M`, entrywise. -/
 noncomputable def taylorMatrix {κ : Type} (M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ) :
-    Matrix κ κ JetRing :=
+    Matrix κ κ SpaceTimeAlgebra :=
   Matrix.of fun i j => taylorSeries fun s => M s i j
 
 lemma taylorMatrix_apply {κ : Type} (M : Multiset (Fin 1 ⊕ Fin 3) → Matrix κ κ ℂ) (i j : κ) :
@@ -131,4 +131,4 @@ lemma map_constantCoeff_foldl_pderiv_taylorMatrix {κ : Type}
   ext i j
   rw [Matrix.map_apply, taylorMatrix_apply, constantCoeff_foldl_pderiv_taylorSeries]
 
-end JetRing
+end SpaceTimeAlgebra

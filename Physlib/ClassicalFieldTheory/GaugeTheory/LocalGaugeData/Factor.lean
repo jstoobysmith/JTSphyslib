@@ -6,7 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Basic
-public import Physlib.Relativity.JetRing.Basic
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
 /-!
 # The factors of a gauge group
 
@@ -73,18 +73,18 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
   adjoint action. -/
 structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   /-- The unitary jet of a gauge jet. -/
-  u : GJ →* unitary JetRing
+  u : GJ →* unitary SpaceTimeAlgebra
   /-- The `u(1)` component of a gauge algebra element. -/
   φ : 𝔤 →ₗ[ℝ] ℂ
   /-- The `u(1)` component of a jet of gauge algebra elements. -/
-  φJ : 𝔤J → JetRing
+  φJ : 𝔤J → SpaceTimeAlgebra
   φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = C (φ c)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
     constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (φJ a))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
   φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
-      = Complex.I • (pderiv μ (u U : JetRing) * star (u U : JetRing))
+      = Complex.I • (pderiv μ (u U : SpaceTimeAlgebra) * star (u U : SpaceTimeAlgebra))
   φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
     φJ (jets.adjoint U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
 
@@ -101,13 +101,13 @@ structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
 structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintype n] [DecidableEq n]
     where
   /-- The unitary matrix of jets of a gauge jet. -/
-  u : GJ →* Matrix n n JetRing
+  u : GJ →* Matrix n n SpaceTimeAlgebra
   u_unitary : ∀ U, star (u U) * u U = 1
   /-- The matrix component of a gauge algebra element. -/
   φ : 𝔤 →ₗ[ℝ] Matrix n n ℂ
   /-- The matrix component of a jet of gauge algebra elements. -/
-  φJ : 𝔤J → Matrix n n JetRing
-  φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = (φ c).map (C : ℂ → JetRing)
+  φJ : 𝔤J → Matrix n n SpaceTimeAlgebra
+  φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = (φ c).map (C : ℂ → SpaceTimeAlgebra)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
     ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
       = φ (jets.evalLie (jets.iteratedDeriv p a))

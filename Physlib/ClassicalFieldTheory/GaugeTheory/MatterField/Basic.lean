@@ -57,7 +57,7 @@ open Matrix MatrixGroups TensorProduct
 
 /-- **A matter field** of a gauge theory over the gauge context `jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J`:
   a finite-dimensional complex target space `V`, the Lorentz representation on `V`, a
-  fibrewise action of `GJ` on the jets `JetRing ⊗[ℂ] V` of the field, the infinitesimal
+  fibrewise action of `GJ` on the jets `SpaceTimeAlgebra ⊗[ℂ] V` of the field, the infinitesimal
   action of the gauge algebra generating it, and the mass weight of the field (in the units
   in which a derivative has weight `2`). -/
 structure MatterField {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ 𝔤]
@@ -72,11 +72,12 @@ structure MatterField {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [L
   /-- The representation of the Lorentz group on the target space. -/
   repLorentz : Representation ℂ SL(2,ℂ) V
   /-- The action of the jets of gauge transformations on the jets of the field. -/
-  repJet : Representation ℂ GJ (JetRing ⊗[ℂ] V)
+  repJet : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V)
   /-- The action of the gauge algebra. -/
   repAlgebra : 𝔤 →ₗ[ℝ] V →ₗ[ℂ] V
   /-- The gauge action is fibrewise: it commutes with multiplication by scalar jets. -/
-  repJet_smul : ∀ (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V), repJet U (χ • z) = χ • repJet U z
+  repJet_smul : ∀ (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V), repJet U (χ • z) =
+      χ • repJet U z
   /-- The action of the gauge algebra generates the action of the jets of gauge
     transformations: it is the infinitesimal action underlying `repJet`, the physicists'
     `i dρ(T^a)`. This is what makes the covariant derivative of the field transform

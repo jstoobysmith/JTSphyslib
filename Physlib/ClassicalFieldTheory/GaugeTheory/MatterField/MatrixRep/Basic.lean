@@ -25,7 +25,7 @@ representation as `LocalGaugeData.MatrixRep`, together with the two identities t
 
 The internal index is tensored with a Lorentz representation `S`: the target space of
 the field is `S ⊗ (ι → ℂ)`, and the jets of the field are identified with
-`S ⊗ (ι → JetRing)`, on which `mat U` acts by matrix–vector multiplication. The main
+`S ⊗ (ι → SpaceTimeAlgebra)`, on which `mat U` acts by matrix–vector multiplication. The main
 theorem, `MatrixRep.isInfinitesimalActionOf`, shows that this action of the gauge algebra
 is the infinitesimal action underlying the jet gauge action in the sense of
 `LocalGaugeData.IsInfinitesimalActionOf`, once and for all matrix representations; the
@@ -35,7 +35,8 @@ compilation `MatrixRep.matterField` then produces a `MatterField`.
 
 - `LocalGaugeData.MatrixRep` : a matrix representation of the jet gauge group with its
   infinitesimal action.
-- `MatrixRep.jetEquiv` : the identification `JetRing ⊗ (S ⊗ (ι → ℂ)) ≃ S ⊗ (ι → JetRing)`.
+- `MatrixRep.jetEquiv` : the identification `SpaceTimeAlgebra ⊗ (S ⊗ (ι → ℂ)) ≃ S ⊗ (ι →
+  SpaceTimeAlgebra)`.
 - `MatrixRep.repJet`, `MatrixRep.repJet_smul` : the fibrewise jet gauge action.
 - `MatrixRep.repCoeff_eq` : the base-point Taylor coefficients of the jet gauge action.
 - `MatrixRep.isInfinitesimalActionOf` : the gauge-algebra action is the infinitesimal
@@ -81,14 +82,14 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
 structure MatrixRep (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (ι : Type) [Fintype ι] [DecidableEq ι]
     where
   /-- The matrix of jets by which a jet of gauge transformations acts. -/
-  mat : GJ → Matrix ι ι JetRing
+  mat : GJ → Matrix ι ι SpaceTimeAlgebra
   mat_one : mat 1 = 1
   mat_mul : ∀ U V, mat (U * V) = mat U * mat V
   /-- The matrix by which an element of the gauge algebra acts. -/
   act : 𝔤 →ₗ[ℝ] Matrix ι ι ℂ
   /-- The matrix of jets by which a jet of gauge algebra elements acts. -/
-  jetAct : 𝔤J → Matrix ι ι JetRing
-  jetAct_ofConstantLie : ∀ c, jetAct (jets.ofConstantLie c) = (act c).map (C : ℂ → JetRing)
+  jetAct : 𝔤J → Matrix ι ι SpaceTimeAlgebra
+  jetAct_ofConstantLie : ∀ c, jetAct (jets.ofConstantLie c) = (act c).map (C : ℂ → SpaceTimeAlgebra)
   /-- The base-point Taylor coefficients of the jet action matrix are the action matrices
     of the base-point Taylor coefficients. -/
   jetAct_map_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
@@ -112,26 +113,27 @@ variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {ι : Type}
 
 ## B. The target space and its jets
 
-The target space of the field is `S ⊗ (ι → ℂ)` for a Lorentz representation `S`; its
-jets `JetRing ⊗ (S ⊗ (ι → ℂ))` are identified with `S ⊗ (ι → JetRing)` by absorbing the
+The target space of the field is `S ⊗ (ι → ℂ)` for a Lorentz representation `S`; its jets
+`SpaceTimeAlgebra ⊗ (S ⊗ (ι → ℂ))` are identified with `S ⊗ (ι → SpaceTimeAlgebra)` by absorbing the
 jet ring into the internal index.
 
 -/
 
-/-- The entrywise formal derivative on `ι → JetRing`, as a `ℂ`-linear map. -/
-noncomputable def pderivPi (μ : Fin 1 ⊕ Fin 3) : (ι → JetRing) →ₗ[ℂ] (ι → JetRing) where
+/-- The entrywise formal derivative on `ι → SpaceTimeAlgebra`, as a `ℂ`-linear map. -/
+noncomputable def pderivPi (μ : Fin 1 ⊕ Fin 3) : (ι → SpaceTimeAlgebra) →ₗ[ℂ]
+    (ι → SpaceTimeAlgebra) where
   toFun w i := pderiv μ (w i)
   map_add' _ _ := funext fun _ => map_add _ _ _
   map_smul' _ _ := funext fun _ => Derivation.map_smul _ _ _
 
-lemma pderivPi_apply (μ : Fin 1 ⊕ Fin 3) (w : ι → JetRing) (i : ι) :
+lemma pderivPi_apply (μ : Fin 1 ⊕ Fin 3) (w : ι → SpaceTimeAlgebra) (i : ι) :
     pderivPi μ w i = pderiv μ (w i) := rfl
 
-/-- The entrywise iterated formal derivative on `ι → JetRing`, as a `ℂ`-linear map. -/
+/-- The entrywise iterated formal derivative on `ι → SpaceTimeAlgebra`, as a `ℂ`-linear map. -/
 noncomputable def foldPi (x : Multiset (Fin 1 ⊕ Fin 3)) :
-    (ι → JetRing) →ₗ[ℂ] (ι → JetRing) where
+    (ι → SpaceTimeAlgebra) →ₗ[ℂ] (ι → SpaceTimeAlgebra) where
   toFun w i := x.foldl (fun h ρ => pderiv ρ h) (w i)
-  map_add' v w := funext fun i => JetRing.foldl_pderiv_add x _ _
+  map_add' v w := funext fun i => SpaceTimeAlgebra.foldl_pderiv_add x _ _
   map_smul' z v := funext fun i => by
     simp only [Pi.smul_apply, RingHom.id_apply]
     induction x using Multiset.induction_on generalizing v with
@@ -140,7 +142,7 @@ noncomputable def foldPi (x : Multiset (Fin 1 ⊕ Fin 3)) :
       rw [Multiset.foldl_cons, Multiset.foldl_cons, Derivation.map_smul]
       exact ih (fun i => pderiv ν (v i))
 
-lemma foldPi_apply (x : Multiset (Fin 1 ⊕ Fin 3)) (w : ι → JetRing) (i : ι) :
+lemma foldPi_apply (x : Multiset (Fin 1 ⊕ Fin 3)) (w : ι → SpaceTimeAlgebra) (i : ι) :
     foldPi x w i = x.foldl (fun h ρ => pderiv ρ h) (w i) := rfl
 
 lemma foldPi_zero : foldPi (ι := ι) 0 = LinearMap.id := LinearMap.ext fun _ => rfl
@@ -149,20 +151,20 @@ lemma pderivPi_comp_foldPi (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3
     pderivPi (ι := ι) μ ∘ₗ foldPi x = foldPi (μ ::ₘ x) := by
   refine LinearMap.ext fun w => funext fun i => ?_
   simp only [LinearMap.comp_apply, pderivPi_apply, foldPi_apply, Multiset.foldl_cons]
-  exact (JetRing.foldl_pderiv_pderiv x μ (w i)).symm
+  exact (SpaceTimeAlgebra.foldl_pderiv_pderiv x μ (w i)).symm
 
-/-- The entrywise base-point evaluation on `ι → JetRing`, as a `ℂ`-linear map. -/
-noncomputable def ccPi : (ι → JetRing) →ₗ[ℂ] (ι → ℂ) where
+/-- The entrywise base-point evaluation on `ι → SpaceTimeAlgebra`, as a `ℂ`-linear map. -/
+noncomputable def ccPi : (ι → SpaceTimeAlgebra) →ₗ[ℂ] (ι → ℂ) where
   toFun w i := constantCoeff (w i)
   map_add' v w := funext fun i => map_add _ _ _
   map_smul' z v := funext fun i => by
     simp only [Pi.smul_apply, RingHom.id_apply]
     exact constantCoeff_smul _ _
 
-lemma ccPi_apply (w : ι → JetRing) (i : ι) : ccPi w i = constantCoeff (w i) := rfl
+lemma ccPi_apply (w : ι → SpaceTimeAlgebra) (i : ι) : ccPi w i = constantCoeff (w i) := rfl
 
 /-- The iterated formal derivative is `ℂ`-homogeneous. -/
-lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing) :
+lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (z • f)
       = z • x.foldl (fun h ρ => pderiv ρ h) f := by
   induction x using Multiset.induction_on generalizing f with
@@ -170,7 +172,7 @@ lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : JetRing)
   | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
 
 /-- The iterated formal derivative of a negation. -/
-lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
     x.foldl (fun h ρ => pderiv ρ h) (-f)
       = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
   induction x using Multiset.induction_on generalizing f with
@@ -178,7 +180,7 @@ lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
   | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
 
 /-- A constant jet times a jet is the scalar multiple. -/
-lemma C_mul_eq_smul (z : ℂ) (f : JetRing) : (C z : JetRing) * f = z • f := by
+lemma C_mul_eq_smul (z : ℂ) (f : SpaceTimeAlgebra) : (C z : SpaceTimeAlgebra) * f = z • f := by
   rw [Algebra.smul_def]
   rfl
 
@@ -187,13 +189,13 @@ variable [Fintype ι] [DecidableEq ι]
 omit [DecidableEq ι] in
 /-- The base-point evaluation of the iterated derivative of a matrix–vector product with
   constant entries is the matrix–vector product of the base-point coefficients. -/
-lemma ccPi_foldPi_mulVec (x : Multiset (Fin 1 ⊕ Fin 3)) (A : Matrix ι ι JetRing)
+lemma ccPi_foldPi_mulVec (x : Multiset (Fin 1 ⊕ Fin 3)) (A : Matrix ι ι SpaceTimeAlgebra)
     (v : ι → ℂ) :
-    ccPi (foldPi x (A.mulVec fun k => (C (v k) : JetRing)))
+    ccPi (foldPi x (A.mulVec fun k => (C (v k) : SpaceTimeAlgebra)))
       = (A.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)).mulVec v := by
   funext j
   simp only [ccPi_apply, foldPi_apply, Matrix.mulVec, dotProduct, Matrix.map_apply]
-  rw [JetRing.foldl_pderiv_sum, map_sum]
+  rw [SpaceTimeAlgebra.foldl_pderiv_sum, map_sum]
   refine Finset.sum_congr rfl fun k _ => ?_
   rw [mul_comm, C_mul_eq_smul, foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul, mul_comm]
 
@@ -211,26 +213,26 @@ taking `V = S ⊗ (ι → ℂ)` itself) keeps the real-scalar structure on `V` t
 variable {S : Type} [AddCommGroup S] [Module ℂ S]
 variable {V : Type} [AddCommGroup V] [Module ℂ V]
 
-/-- The jets of a `V`-valued field as `S ⊗ (ι → JetRing)`, through the identification
+/-- The jets of a `V`-valued field as `S ⊗ (ι → SpaceTimeAlgebra)`, through the identification
   `e : V ≃ S ⊗ (ι → ℂ)`: the jet ring is absorbed into the internal index. -/
 noncomputable def jetEquiv (e : V ≃ₗ[ℂ] S ⊗[ℂ] (ι → ℂ)) :
-    JetRing ⊗[ℂ] V ≃ₗ[ℂ] S ⊗[ℂ] (ι → JetRing) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) e).trans <|
-    (TensorProduct.leftComm ℂ JetRing S (ι → ℂ)).trans <|
+    SpaceTimeAlgebra ⊗[ℂ] V ≃ₗ[ℂ] S ⊗[ℂ] (ι → SpaceTimeAlgebra) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) e).trans <|
+    (TensorProduct.leftComm ℂ SpaceTimeAlgebra S (ι → ℂ)).trans <|
       TensorProduct.congr (LinearEquiv.refl ℂ S)
-        ((TensorProduct.piScalarRight ℂ JetRing JetRing ι).restrictScalars ℂ)
+        ((TensorProduct.piScalarRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra ι).restrictScalars ℂ)
 
 variable (e : V ≃ₗ[ℂ] S ⊗[ℂ] (ι → ℂ))
 
-lemma jetEquiv_tmul (f : JetRing) (s : S) (v : ι → ℂ) :
+lemma jetEquiv_tmul (f : SpaceTimeAlgebra) (s : S) (v : ι → ℂ) :
     jetEquiv e (f ⊗ₜ[ℂ] e.symm (s ⊗ₜ[ℂ] v)) = s ⊗ₜ[ℂ] (fun i => v i • f) := by
   simp [jetEquiv, TensorProduct.piScalarRight_apply, TensorProduct.piScalarRightHom_tmul]
 
 omit [Fintype ι] [DecidableEq ι] in
 /-- Induction on the jets of a `V`-valued field through the identification `e`. -/
-lemma induction_on {P : JetRing ⊗[ℂ] V → Prop} (z : JetRing ⊗[ℂ] V)
+lemma induction_on {P : SpaceTimeAlgebra ⊗[ℂ] V → Prop} (z : SpaceTimeAlgebra ⊗[ℂ] V)
     (zero : P 0)
-    (tmul : ∀ (f : JetRing) (s : S) (v : ι → ℂ), P (f ⊗ₜ[ℂ] e.symm (s ⊗ₜ[ℂ] v)))
+    (tmul : ∀ (f : SpaceTimeAlgebra) (s : S) (v : ι → ℂ), P (f ⊗ₜ[ℂ] e.symm (s ⊗ₜ[ℂ] v)))
     (add : ∀ a b, P a → P b → P (a + b)) : P z := by
   induction z using TensorProduct.induction_on with
   | zero => exact zero
@@ -244,7 +246,7 @@ lemma induction_on {P : JetRing ⊗[ℂ] V → Prop} (z : JetRing ⊗[ℂ] V)
 
 /-- The identification of jets intertwines the formal derivative with the entrywise
   derivative. -/
-lemma jetEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] V) :
+lemma jetEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEquiv e (jetDeriv μ z) = LinearMap.lTensor S (pderivPi μ) (jetEquiv e z) := by
   induction z using induction_on e with
   | zero => simp
@@ -257,7 +259,7 @@ lemma jetEquiv_jetDeriv (μ : Fin 1 ⊕ Fin 3) (z : JetRing ⊗[ℂ] V) :
 
 /-- The identification of jets intertwines the iterated formal derivative with the
   entrywise iterated derivative. -/
-lemma jetEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3)) (z : JetRing ⊗[ℂ] V) :
+lemma jetEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3)) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEquiv e (jetIteratedDeriv x z) = LinearMap.lTensor S (foldPi x) (jetEquiv e z) := by
   induction x using Multiset.induction_on generalizing z with
   | empty => rw [jetIteratedDeriv_zero, LinearMap.id_apply, foldPi_zero, LinearMap.lTensor_id,
@@ -267,7 +269,7 @@ lemma jetEquiv_jetIteratedDeriv (x : Multiset (Fin 1 ⊕ Fin 3)) (z : JetRing �
       ← LinearMap.comp_apply, ← LinearMap.lTensor_comp, pderivPi_comp_foldPi]
 
 /-- The base-point evaluation of a jet through the identification. -/
-lemma jetEval_eq (z : JetRing ⊗[ℂ] V) :
+lemma jetEval_eq (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEval z = e.symm (LinearMap.lTensor S ccPi (jetEquiv e z)) := by
   induction z using induction_on e with
   | zero => simp
@@ -279,9 +281,10 @@ lemma jetEval_eq (z : JetRing ⊗[ℂ] V) :
       TensorProduct.tmul_smul, map_smul]
 
 /-- Multiplication by a scalar jet through the identification. -/
-lemma jetEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma jetEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     jetEquiv e (χ • z)
-      = LinearMap.lTensor S ((LinearMap.lsmul JetRing (ι → JetRing) χ).restrictScalars ℂ)
+      = LinearMap.lTensor S
+          ((LinearMap.lsmul SpaceTimeAlgebra (ι → SpaceTimeAlgebra) χ).restrictScalars ℂ)
           (jetEquiv e z) := by
   induction z using induction_on e with
   | zero => simp
@@ -346,50 +349,57 @@ lemma valEnd_mul (A B : Matrix ι ι ℂ) : valEnd e (A * B) = valEnd e A ∘ₗ
 lemma valEnd_one : valEnd e (1 : Matrix ι ι ℂ) = LinearMap.id := map_one (valEndAlgHom e)
 
 variable (S) in
-/-- The endomorphism of `S ⊗ (ι → JetRing)` defined by a matrix of jets on the internal
+/-- The endomorphism of `S ⊗ (ι → SpaceTimeAlgebra)` defined by a matrix of jets on the internal
   index. -/
-noncomputable def jetEnd (A : Matrix ι ι JetRing) :
-    S ⊗[ℂ] (ι → JetRing) →ₗ[ℂ] S ⊗[ℂ] (ι → JetRing) :=
-  Module.End.lTensorAlgHom ℂ (ι → JetRing) S
-    ((Matrix.toLinAlgEquiv' A : Module.End JetRing (ι → JetRing)).restrictScalars ℂ)
+noncomputable def jetEnd (A : Matrix ι ι SpaceTimeAlgebra) :
+    S ⊗[ℂ] (ι → SpaceTimeAlgebra) →ₗ[ℂ] S ⊗[ℂ] (ι → SpaceTimeAlgebra) :=
+  Module.End.lTensorAlgHom ℂ (ι → SpaceTimeAlgebra) S
+    ((Matrix.toLinAlgEquiv' A : Module.End SpaceTimeAlgebra
+        (ι → SpaceTimeAlgebra)).restrictScalars ℂ)
 
-lemma jetEnd_eq_lTensor (A : Matrix ι ι JetRing) :
+lemma jetEnd_eq_lTensor (A : Matrix ι ι SpaceTimeAlgebra) :
     jetEnd S A = LinearMap.lTensor S
-      ((Matrix.toLinAlgEquiv' A : Module.End JetRing (ι → JetRing)).restrictScalars ℂ) := rfl
+      ((Matrix.toLinAlgEquiv' A : Module.End SpaceTimeAlgebra
+          (ι → SpaceTimeAlgebra)).restrictScalars ℂ) := rfl
 
-lemma jetEnd_tmul (A : Matrix ι ι JetRing) (s : S) (w : ι → JetRing) :
+lemma jetEnd_tmul (A : Matrix ι ι SpaceTimeAlgebra) (s : S) (w : ι → SpaceTimeAlgebra) :
     jetEnd S A (s ⊗ₜ[ℂ] w) = s ⊗ₜ[ℂ] (A.mulVec w) := by
   rw [jetEnd_eq_lTensor, LinearMap.lTensor_tmul, LinearMap.restrictScalars_apply,
     Matrix.toLinAlgEquiv'_apply]
 
-lemma jetEnd_one : jetEnd S (1 : Matrix ι ι JetRing) = LinearMap.id := by
+lemma jetEnd_one : jetEnd S (1 : Matrix ι ι SpaceTimeAlgebra) = LinearMap.id := by
   rw [jetEnd, map_one,
-    show ((1 : Module.End JetRing (ι → JetRing)).restrictScalars ℂ) = 1 from rfl, map_one]
+    show ((1 : Module.End SpaceTimeAlgebra (ι → SpaceTimeAlgebra)).restrictScalars ℂ) =
+        1 from rfl, map_one]
   rfl
 
-lemma jetEnd_mul (A B : Matrix ι ι JetRing) : jetEnd S (A * B) = jetEnd S A ∘ₗ jetEnd S B := by
+lemma jetEnd_mul (A B : Matrix ι ι SpaceTimeAlgebra) : jetEnd S (A * B) =
+    jetEnd S A ∘ₗ jetEnd S B := by
   rw [jetEnd, jetEnd, jetEnd, map_mul,
     show ((Matrix.toLinAlgEquiv' A * Matrix.toLinAlgEquiv' B :
-        Module.End JetRing (ι → JetRing)).restrictScalars ℂ)
-      = (Matrix.toLinAlgEquiv' A : Module.End JetRing (ι → JetRing)).restrictScalars ℂ
-        * (Matrix.toLinAlgEquiv' B : Module.End JetRing (ι → JetRing)).restrictScalars ℂ from rfl,
+        Module.End SpaceTimeAlgebra (ι → SpaceTimeAlgebra)).restrictScalars ℂ)
+      = (Matrix.toLinAlgEquiv' A : Module.End SpaceTimeAlgebra
+          (ι → SpaceTimeAlgebra)).restrictScalars ℂ
+        * (Matrix.toLinAlgEquiv' B : Module.End SpaceTimeAlgebra
+            (ι → SpaceTimeAlgebra)).restrictScalars ℂ from rfl,
     map_mul]
   rfl
 
-/-- The endomorphism of the jets `JetRing ⊗ V` of the field defined by a matrix of jets
+/-- The endomorphism of the jets `SpaceTimeAlgebra ⊗ V` of the field defined by a matrix of jets
   on the internal index, through `jetEquiv`. -/
-noncomputable def matEnd (A : Matrix ι ι JetRing) : JetRing ⊗[ℂ] V →ₗ[ℂ] JetRing ⊗[ℂ] V :=
+noncomputable def matEnd
+    (A : Matrix ι ι SpaceTimeAlgebra) : SpaceTimeAlgebra ⊗[ℂ] V →ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] V :=
   (jetEquiv e).symm.toLinearMap ∘ₗ jetEnd S A ∘ₗ (jetEquiv e).toLinearMap
 
-lemma matEnd_apply (A : Matrix ι ι JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma matEnd_apply (A : Matrix ι ι SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     matEnd e A z = (jetEquiv e).symm (jetEnd S A (jetEquiv e z)) := rfl
 
-lemma matEnd_one : matEnd e (1 : Matrix ι ι JetRing) = LinearMap.id := by
+lemma matEnd_one : matEnd e (1 : Matrix ι ι SpaceTimeAlgebra) = LinearMap.id := by
   refine LinearMap.ext fun z => ?_
   rw [matEnd_apply, jetEnd_one, LinearMap.id_apply, LinearEquiv.symm_apply_apply,
     LinearMap.id_apply]
 
-lemma matEnd_mul (A B : Matrix ι ι JetRing) :
+lemma matEnd_mul (A B : Matrix ι ι SpaceTimeAlgebra) :
     matEnd e (A * B) = matEnd e A ∘ₗ matEnd e B := by
   refine LinearMap.ext fun z => ?_
   rw [LinearMap.comp_apply, matEnd_apply, matEnd_apply, matEnd_apply, jetEnd_mul,
@@ -397,7 +407,8 @@ lemma matEnd_mul (A B : Matrix ι ι JetRing) :
 
 /-- The matrix endomorphisms are fibrewise: they commute with multiplication by scalar
   jets. -/
-lemma matEnd_smul (A : Matrix ι ι JetRing) (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma matEnd_smul (A : Matrix ι ι SpaceTimeAlgebra) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     matEnd e A (χ • z) = χ • matEnd e A z := by
   apply (jetEquiv e).injective
   rw [matEnd_apply, LinearEquiv.apply_symm_apply, jetEquiv_smul, jetEquiv_smul, matEnd_apply,
@@ -419,7 +430,7 @@ variable (R : MatrixRep jets ι)
 /-- **The jet gauge action** of a matrix representation on the jets of a `V`-valued
   field: the matrix of jets acts on the internal index by matrix–vector multiplication,
   with the Lorentz factor untouched. -/
-noncomputable def repJet : Representation ℂ GJ (JetRing ⊗[ℂ] V) where
+noncomputable def repJet : Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] V) where
   toFun U := matEnd e (R.mat U)
   map_one' := by rw [R.mat_one, matEnd_one]; rfl
   map_mul' U V := by rw [R.mat_mul, matEnd_mul]; rfl
@@ -428,7 +439,7 @@ lemma repJet_apply (U : GJ) : R.repJet e U = matEnd e (R.mat U) := rfl
 
 /-- **The jet gauge action is fibrewise**: it commutes with multiplication by scalar
   jets. -/
-lemma repJet_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] V) :
+lemma repJet_smul (U : GJ) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V) :
     R.repJet e U (χ • z) = χ • R.repJet e U z := by
   rw [repJet_apply, matEnd_smul]
 
@@ -500,7 +511,7 @@ theorem isInfinitesimalActionOf :
             rw [Matrix.map_apply, Matrix.map_apply, Matrix.map_apply, Multiset.foldl_cons],
         R.mat_map_pderiv,
         Matrix.map_neg _ (fun f => by rw [foldl_pderiv_neg, map_neg]),
-        JetRing.matrix_constantCoeff_foldl_pderiv_mul]
+        SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [R.jetAct_map_cc_foldl]))
     rw [repCoeff_eq, hMcons, valEnd_neg, valEnd_multiset_sum, Multiset.map_map]
@@ -510,7 +521,7 @@ theorem isInfinitesimalActionOf :
     rfl
   · intro U x c
     have hcollapse : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)),
-        (((R.act c).map (C : ℂ → JetRing)).map fun f =>
+        (((R.act c).map (C : ℂ → SpaceTimeAlgebra)).map fun f =>
           constantCoeff (m.foldl (fun h ρ => pderiv ρ h) f))
         = if m = 0 then R.act c else 0 := by
       intro m
@@ -518,7 +529,7 @@ theorem isInfinitesimalActionOf :
       · refine Matrix.ext fun i j => ?_
         simp [Matrix.map_apply, constantCoeff_C]
       · refine Matrix.ext fun i j => ?_
-        simp [Matrix.map_apply, JetRing.foldl_pderiv_C_of_ne_zero hm, hm]
+        simp [Matrix.map_apply, SpaceTimeAlgebra.foldl_pderiv_C_of_ne_zero hm, hm]
     have hMact : ((R.mat U).map fun f =>
           constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c
         = (x.antidiagonal.map fun p =>
@@ -529,7 +540,7 @@ theorem isInfinitesimalActionOf :
             fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f))
           = ((R.mat U).map fun f =>
               constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c := by
-        rw [R.jetAct_ofConstantLie, JetRing.matrix_constantCoeff_foldl_pderiv_mul,
+        rw [R.jetAct_ofConstantLie, SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((R.mat U).map fun f =>
@@ -537,7 +548,7 @@ theorem isInfinitesimalActionOf :
                 (if p.2 = 0 then R.act c else 0))
             (fun p _ hp => by rw [ite_eq_right hp, Matrix.mul_zero]),
           ite_eq_left rfl]
-      rw [← h1, R.mat_mul_jetAct, JetRing.matrix_constantCoeff_foldl_pderiv_mul]
+      rw [← h1, R.mat_mul_jetAct, SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [R.jetAct_map_cc_foldl, jets.adjointCoeff_apply])
     rw [repCoeff_eq, repAlgebra_apply, ← valEnd_mul, hMact, valEnd_multiset_sum,
@@ -575,33 +586,35 @@ section Global
 /-- **The global gauge action** of a matrix representation of jets: a global gauge
   transformation acts by the constant term of the matrix of its constant jet. -/
 noncomputable def repGlobal : Representation ℂ G₀ V where
-  toFun g := valEnd e ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ))
+  toFun g := valEnd e ((R.mat (jets.ofConstant g)).map (constantCoeff : SpaceTimeAlgebra → ℂ))
   map_one' := by
     rw [map_one jets.ofConstant, R.mat_one,
-      ← RingHom.mapMatrix_apply (constantCoeff : JetRing →+* ℂ), map_one, valEnd_one]
+      ← RingHom.mapMatrix_apply (constantCoeff : SpaceTimeAlgebra →+* ℂ), map_one, valEnd_one]
     rfl
   map_mul' g h := by
     rw [map_mul jets.ofConstant, R.mat_mul,
-      ← RingHom.mapMatrix_apply (constantCoeff : JetRing →+* ℂ), map_mul,
+      ← RingHom.mapMatrix_apply (constantCoeff : SpaceTimeAlgebra →+* ℂ), map_mul,
       RingHom.mapMatrix_apply, RingHom.mapMatrix_apply, valEnd_mul]
     rfl
 
 lemma repGlobal_apply (g : G₀) :
-    R.repGlobal e g = valEnd e ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)) :=
+    R.repGlobal e g = valEnd e
+        ((R.mat (jets.ofConstant g)).map (constantCoeff : SpaceTimeAlgebra → ℂ)) :=
   rfl
 
 /-- The global action on a pure tensor: the constant term of the matrix acts on the
   internal index. -/
 lemma repGlobal_apply_symm_tmul (g : G₀) (s : S) (v : ι → ℂ) :
     R.repGlobal e g (e.symm (s ⊗ₜ[ℂ] v))
-      = e.symm (s ⊗ₜ[ℂ] ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)).mulVec v) :=
+      = e.symm (s ⊗ₜ[ℂ]
+          ((R.mat (jets.ofConstant g)).map (constantCoeff : SpaceTimeAlgebra → ℂ)).mulVec v) :=
   valEnd_apply_symm_tmul e _ s v
 
 omit [DecidableEq ι] in
 /-- A matrix of constant jets acts on a scalar jet times a constant vector through its
   constant matrix. -/
-lemma map_C_mulVec_smul (B : Matrix ι ι ℂ) (v : ι → ℂ) (χ : JetRing) :
-    (B.map (C : ℂ → JetRing)).mulVec (fun i => v i • χ) = fun i => (B.mulVec v) i • χ := by
+lemma map_C_mulVec_smul (B : Matrix ι ι ℂ) (v : ι → ℂ) (χ : SpaceTimeAlgebra) :
+    (B.map (C : ℂ → SpaceTimeAlgebra)).mulVec (fun i => v i • χ) = fun i => (B.mulVec v) i • χ := by
   funext i
   simp only [Matrix.mulVec, dotProduct, Matrix.map_apply, Finset.sum_smul, C_mul_eq_smul,
     smul_smul]
@@ -610,7 +623,8 @@ lemma map_C_mulVec_smul (B : Matrix ι ι ℂ) (v : ι → ℂ) (χ : JetRing) :
   the value factor, provided the matrices of constant jets are constant. -/
 lemma repJet_ofConstant
     (hconst : ∀ g, R.mat (jets.ofConstant g)
-      = ((R.mat (jets.ofConstant g)).map (constantCoeff : JetRing → ℂ)).map (C : ℂ → JetRing))
+      = ((R.mat (jets.ofConstant g)).map (constantCoeff : SpaceTimeAlgebra → ℂ)).map
+          (C : ℂ → SpaceTimeAlgebra))
     (g : G₀) :
     R.repJet e (jets.ofConstant g) = TensorProduct.map LinearMap.id (R.repGlobal e g) := by
   refine LinearMap.ext fun z => ?_
@@ -690,7 +704,8 @@ lemma matterField_gaugeLorentzCompatible : (R.matterField e ρ w).GaugeLorentzCo
   hypothesis is not a consequence of the axioms of `MatrixRep`, which fix the constant term
   of `mat` on pure jets only up to a scalar character. -/
 lemma matterField_pureJetsActTrivially
-    (hmat : ∀ {W : GJ}, jets.eval W = 1 → (R.mat W).map (constantCoeff : JetRing → ℂ) = 1) :
+    (hmat : ∀ {W : GJ}, jets.eval W = 1 → (R.mat W).map
+        (constantCoeff : SpaceTimeAlgebra → ℂ) = 1) :
     (R.matterField e ρ w).PureJetsActTrivially := by
   intro W hW
   show GaugeAlgebraRealization.repCoeff (R.repJet e) W 0 = LinearMap.id

@@ -17,14 +17,14 @@ public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 
 ## i. Overview
 
-A gauge transformation acts on the jets `JetRing ⊗[ℂ] V` of a `V`-valued field. What makes
+A gauge transformation acts on the jets `SpaceTimeAlgebra ⊗[ℂ] V` of a `V`-valued field. What makes
 that action local is that it is *fibrewise*: it commutes with multiplication by scalar
 jets, so it acts on the values of the field over the identity on spacetime. This file
 collects what follows from fibrewise-linearity alone, before any component space is built:
 
 * a fibrewise action is determined by its values on constant jets, and for
   finite-dimensional `V` that restriction is a matrix of power series, its *coefficient*
-  `jetCoeff` in `JetRing ⊗ End V`, which is multiplicative;
+  `jetCoeff` in `SpaceTimeAlgebra ⊗ End V`, which is multiplicative;
 * the conjugate action `repConj` on the jets of the conjugate field, again fibrewise;
 * the naturality of both in the value space: a linear map of value spaces intertwining two
   fibrewise actions intertwines their coefficients, and their conjugate actions.
@@ -36,7 +36,8 @@ live here, upstream of `MatterField`, because the infinitesimal-action theory th
 
 ## ii. Key results
 
-- `JetComponentSpace.jetCoeff` : the coefficient of a fibrewise action, in `JetRing ⊗ End V`.
+- `JetComponentSpace.jetCoeff` : the coefficient of a fibrewise action, in `SpaceTimeAlgebra ⊗ End
+  V`.
 - `JetComponentSpace.coeff_mul_of_smul_comm` : the coefficient is multiplicative.
 - `JetComponentSpace.repConj`, `repConj_smul_comm` : the action on the jets of the
   conjugate field.
@@ -62,27 +63,28 @@ action commutes with multiplication by scalar jets — the statement that it act
 values of the field, over the identity on spacetime — then its value on a general jet
 `f ⊗ₜ v` is the constant-jet value `rep U (1 ⊗ₜ v)` scaled by `f`. -/
 lemma rep_tmul_of_smul_comm
-    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    {rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)}
+    (hlin : ∀ (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
-    (U : G) (f : JetRing) (v : V) :
+    (U : G) (f : SpaceTimeAlgebra) (v : V) :
     rep U (f ⊗ₜ[ℂ] v) = f • rep U (jetOfConstant v) := by
   rw [← hlin U f (jetOfConstant v), jetOfConstant_apply,
-    show f • ((1 : JetRing) ⊗ₜ[ℂ] v) = f ⊗ₜ[ℂ] v from by
+    show f • ((1 : SpaceTimeAlgebra) ⊗ₜ[ℂ] v) = f ⊗ₜ[ℂ] v from by
       rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]]
 
 /-- **The canonical evaluation is a right module map.** Writing `ev` for the canonical
-`JetRing ⊗ End V → (V →ₗ JetRing ⊗ V)`, `g ⊗ T ↦ (v ↦ g ⊗ₜ T v)`, multiplying on the
-right by `b ⊗ T` applies `T` to the argument and scales the value by `b`. -/
-lemma lift_mul_tmul (x : JetRing ⊗[ℂ] Module.End ℂ V)
-    (b : JetRing) (T : Module.End ℂ V) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (x * (b ⊗ₜ[ℂ] T)) v
-      = b • TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) x (T v) := by
+`SpaceTimeAlgebra ⊗ End V → (V →ₗ SpaceTimeAlgebra ⊗ V)`, `g ⊗ T ↦ (v ↦ g ⊗ₜ T v)`, multiplying on
+the right by `b ⊗ T` applies `T` to the argument and scales the value by `b`. -/
+lemma lift_mul_tmul (x : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V)
+    (b : SpaceTimeAlgebra) (T : Module.End ℂ V) (v : V) :
+    TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (x * (b ⊗ₜ[ℂ] T)) v
+      = b • TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) x (T v) := by
   induction x using TensorProduct.induction_on with
   | zero =>
-      have h0 : (0 : JetRing ⊗[ℂ] Module.End ℂ V) * (b ⊗ₜ[ℂ] T) = 0 := by exact zero_mul (b ⊗ₜ[ℂ] T)
+      have h0 : (0 : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) * (b ⊗ₜ[ℂ] T) = 0 := by
+          exact zero_mul (b ⊗ₜ[ℂ] T)
       rw [h0]
       simp
   | tmul a S =>
@@ -95,30 +97,30 @@ lemma lift_mul_tmul (x : JetRing ⊗[ℂ] Module.End ℂ V)
       rw [hd, map_add, LinearMap.add_apply, hp, hq, map_add, LinearMap.add_apply,
         smul_add]
 
-/-- **A fibrewise action is the `JetRing`-linear extension of its coefficient.** If the
-element `x` of `JetRing ⊗ End V` records `rep U` on constant jets, then `rep U` agrees
+/-- **A fibrewise action is the `SpaceTimeAlgebra`-linear extension of its coefficient.** If the
+element `x` of `SpaceTimeAlgebra ⊗ End V` records `rep U` on constant jets, then `rep U` agrees
 with left multiplication by `x` on every coefficient `y`. -/
 lemma rep_lift_of_smul_comm
-    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    {rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)}
+    (hlin : ∀ (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
-    (U : G) (x : JetRing ⊗[ℂ] Module.End ℂ V)
-    (hx : ∀ v : V, TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-      (TensorProduct.mk ℂ JetRing V)) x v = rep U (jetOfConstant v))
-    (y : JetRing ⊗[ℂ] Module.End ℂ V) (v : V) :
-    rep U (TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) y v)
-      = TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (x * y) v := by
+    (U : G) (x : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V)
+    (hx : ∀ v : V, TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+      (TensorProduct.mk ℂ SpaceTimeAlgebra V)) x v = rep U (jetOfConstant v))
+    (y : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) (v : V) :
+    rep U (TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) y v)
+      = TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (x * y) v := by
   induction y using TensorProduct.induction_on with
   | zero =>
-      have h0 : x * (0 : JetRing ⊗[ℂ] Module.End ℂ V) = 0 := by exact mul_zero x
+      have h0 : x * (0 : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) = 0 := by exact mul_zero x
       rw [h0]
       simp
   | tmul b T =>
       rw [lift_mul_tmul x b T v,
-        show TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-          (TensorProduct.mk ℂ JetRing V)) (b ⊗ₜ[ℂ] T) v = b ⊗ₜ[ℂ] T v from rfl,
+        show TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+          (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (b ⊗ₜ[ℂ] T) v = b ⊗ₜ[ℂ] T v from rfl,
         rep_tmul_of_smul_comm hlin U b (T v), hx (T v)]
   | add p q hp hq =>
       have hd : x * (p + q) = x * p + x * q := by exact Distrib.left_distrib x p q
@@ -126,48 +128,48 @@ lemma rep_lift_of_smul_comm
         hp, hq]
 
 /-- **The coefficient of a fibrewise action is multiplicative.** Recording `rep` on
-constant jets as a family `c` in `JetRing ⊗ End V`, group multiplication becomes
+constant jets as a family `c` in `SpaceTimeAlgebra ⊗ End V`, group multiplication becomes
 multiplication in that algebra. This is the identity that makes the induced action on
 the symbols a representation, and it needs no basis. -/
 lemma coeff_mul_of_smul_comm
-    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    {rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)}
+    (hlin : ∀ (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
-    (c : G → JetRing ⊗[ℂ] Module.End ℂ V)
+    (c : G → SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V)
     (hc : ∀ (U : G) (v : V),
-      TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (c U) v = rep U (jetOfConstant v))
+      TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (c U) v = rep U (jetOfConstant v))
     (U W : G) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-        (TensorProduct.mk ℂ JetRing V)) (c U * c W) v
+    TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (c U * c W) v
       = rep (U * W) (jetOfConstant v) := by
   rw [← rep_lift_of_smul_comm hlin U (c U) (hc U) (c W) v, hc W v, map_mul,
     Module.End.mul_apply]
 
 /-- **The symbol action of a coefficient is an anti-homomorphism.** Let `Θ` send a
-coefficient `g ⊗ T` in `JetRing ⊗ End V` to the endomorphism `jetRingAction g ⊗ Tᵀ` of
+coefficient `g ⊗ T` in `SpaceTimeAlgebra ⊗ End V` to the endomorphism `jetRingAction g ⊗ Tᵀ` of
 the symbol space `SpaceTimeDerivAlgebraℂ ⊗ Dual V`. Then `Θ` reverses products: the jet-ring
-factor is multiplicative (`jetRingAction_mul`, and `JetRing` is commutative) while the
+factor is multiplicative (`jetRingAction_mul`, and `SpaceTimeAlgebra` is commutative) while the
 target factor is contravariant (`Module.Dual.transpose_comp`). Composed with `U ↦ U⁻¹`
 this is exactly what makes the induced action a representation, with no induction over
 the antidiagonal. -/
 lemma symbolAction_mul
-    (Θ : (JetRing ⊗[ℂ] Module.End ℂ V) →ₗ[ℂ]
+    (Θ : (SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) →ₗ[ℂ]
       Module.End ℂ (SpaceTimeDerivAlgebraℂ ⊗[ℂ] Module.Dual ℂ V))
-    (hΘ : ∀ (g : JetRing) (T : Module.End ℂ V),
+    (hΘ : ∀ (g : SpaceTimeAlgebra) (T : Module.End ℂ V),
       Θ (g ⊗ₜ[ℂ] T) = TensorProduct.map (SpaceTimeDerivAlgebraℂ.jetRingAction g)
         (Module.Dual.transpose T))
-    (x y : JetRing ⊗[ℂ] Module.End ℂ V) :
+    (x y : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) :
     Θ (x * y) = Θ y ∘ₗ Θ x := by
   induction x using TensorProduct.induction_on with
   | zero =>
-      have h0 : (0 : JetRing ⊗[ℂ] Module.End ℂ V) * y = 0 := by exact zero_mul y
+      have h0 : (0 : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) * y = 0 := by exact zero_mul y
       rw [h0, map_zero]
       simp
   | tmul a S =>
       induction y using TensorProduct.induction_on with
       | zero =>
-          have h0 : (a ⊗ₜ[ℂ] S) * (0 : JetRing ⊗[ℂ] Module.End ℂ V) = 0 := by
+          have h0 : (a ⊗ₜ[ℂ] S) * (0 : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) = 0 := by
             exact mul_zero (a ⊗ₜ[ℂ] S)
           rw [h0, map_zero]
           simp
@@ -183,19 +185,19 @@ lemma symbolAction_mul
       have hd : (p + q) * y = p * y + q * y := by exact Distrib.right_distrib p q y
       rw [hd, map_add, map_add, LinearMap.comp_add, hp, hq]
 
-/-- **The coefficient of a linear map, canonically.** For finite-dimensional `V` the
-canonical `JetRing ⊗ (V →ₗ W) → (V →ₗ JetRing ⊗ W)` is inverted by reassociating the
-contraction `Dual V ⊗ (JetRing ⊗ W) ≃ JetRing ⊗ (Dual V ⊗ W) ≃ JetRing ⊗ (V →ₗ W)`. This
-is the finite-rank input, obtained from `dualTensorHomEquiv` rather than from a basis. Only
-the source `V` has to be finite-dimensional; the target is arbitrary, which is what lets
+/-- **The coefficient of a linear map, canonically.** For finite-dimensional `V` the canonical
+`SpaceTimeAlgebra ⊗ (V →ₗ W) → (V →ₗ SpaceTimeAlgebra ⊗ W)` is inverted by reassociating the
+contraction `Dual V ⊗ (SpaceTimeAlgebra ⊗ W) ≃ SpaceTimeAlgebra ⊗ (Dual V ⊗ W) ≃ SpaceTimeAlgebra ⊗
+(V →ₗ W)`. This is the finite-rank input, obtained from `dualTensorHomEquiv` rather than from a
+basis. Only the source `V` has to be finite-dimensional; the target is arbitrary, which is what lets
 the naturality statements below compare two different value spaces. -/
 lemma lift_congr_leftComm [Module.Free ℂ V] [Module.Finite ℂ V]
-    (G : Module.Dual ℂ V ⊗[ℂ] (JetRing ⊗[ℂ] W)) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V W (JetRing ⊗[ℂ] W)).comp
-        (TensorProduct.mk ℂ JetRing W))
-        ((TensorProduct.congr (LinearEquiv.refl ℂ JetRing) (dualTensorHomEquiv ℂ V W))
-          (TensorProduct.leftComm ℂ (Module.Dual ℂ V) JetRing W G)) v
-      = dualTensorHom ℂ V (JetRing ⊗[ℂ] W) G v := by
+    (G : Module.Dual ℂ V ⊗[ℂ] (SpaceTimeAlgebra ⊗[ℂ] W)) (v : V) :
+    TensorProduct.lift ((LinearMap.llcomp ℂ V W (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra W))
+        ((TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) (dualTensorHomEquiv ℂ V W))
+          (TensorProduct.leftComm ℂ (Module.Dual ℂ V) SpaceTimeAlgebra W G)) v
+      = dualTensorHom ℂ V (SpaceTimeAlgebra ⊗[ℂ] W) G v := by
   induction G using TensorProduct.induction_on with
   | zero => simp
   | tmul phi z =>
@@ -221,20 +223,20 @@ this is the induced action on the jets of the *conjugate* field.
 It is `Representation.conj rep` — the same underlying maps, read on `ConjModule` — carried
 across the identification
 
-  `ConjModule (JetRing ⊗[ℂ] V) ≃ₗ[ℂ] JetRing ⊗[ℂ] ConjModule V`
+  `ConjModule (SpaceTimeAlgebra ⊗[ℂ] V) ≃ₗ[ℂ] SpaceTimeAlgebra ⊗[ℂ] ConjModule V`
 
 which is `ConjModule.tensorEquiv` (conjugation is monoidal) followed by
-`JetRing.starConjEquiv` on the jet-ring factor (the real structure of the jet ring). On
+`SpaceTimeAlgebra.starConjEquiv` on the jet-ring factor (the real structure of the jet ring). On
 pure tensors the composite is `f ⊗ₜ v ↦ star f ⊗ₜ v`, so `repConj` carries the conjugate
 gauge matrix — the physicists' `ψ̄ ↦ ψ̄ U†`.
 
 Being a representation is free: `LinearEquiv.conjRingEquiv` is a ring equivalence of
 endomorphism rings, hence multiplicative. -/
-noncomputable def repConj (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) :
-    Representation ℂ G (JetRing ⊗[ℂ] ConjModule V) where
+noncomputable def repConj (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)) :
+    Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] ConjModule V) where
   toFun U := LinearEquiv.conjRingEquiv
-    ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-      (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+    ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+      (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
     (rep.conj U)
   map_one' := by rw [map_one, map_one]
   map_mul' U W := by rw [map_mul, map_mul]
@@ -242,29 +244,29 @@ noncomputable def repConj (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) :
 
 /-- On pure tensors the conjugate jet action conjugates the jet factor: it is `rep`
 evaluated at `star f ⊗ₜ v`, read back through the same identification. -/
-lemma repConj_apply_tmul (rep : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (U : G) (f : JetRing) (v : V) :
+lemma repConj_apply_tmul (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V))
+    (U : G) (f : SpaceTimeAlgebra) (v : V) :
     repConj rep U (f ⊗ₜ[ℂ] conjEquiv (k := ℂ) (M := V) v)
-      = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-          (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-        (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U (star f ⊗ₜ[ℂ] v))) := rfl
+      = ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+          (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+        (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (rep U (star f ⊗ₜ[ℂ] v))) := rfl
 
 /-- **The identification conjugates the jet-ring action.** Carrying a `V`-valued jet over
 to the conjugate side turns multiplication by `star χ` into multiplication by `χ`: the
 `star` on the jet-ring factor is exactly what absorbs the conjugation. -/
-lemma tensorEquiv_congr_conjEquiv_smul (χ : JetRing) (y : JetRing ⊗[ℂ] V) :
-    ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-          (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (star χ • y))
-      = χ • ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-          (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y) := by
+lemma tensorEquiv_congr_conjEquiv_smul (χ : SpaceTimeAlgebra) (y : SpaceTimeAlgebra ⊗[ℂ] V) :
+    ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+          (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (star χ • y))
+      = χ • ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+          (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y) := by
   induction y using TensorProduct.induction_on with
   | zero => simp
   | tmul g w =>
       rw [TensorProduct.smul_tmul', smul_eq_mul]
       simp only [LinearEquiv.trans_apply, ConjModule.tensorEquiv_symm_conjEquiv_tmul,
-        TensorProduct.congr_tmul, LinearEquiv.refl_apply, JetRing.starConjEquiv_apply,
+        TensorProduct.congr_tmul, LinearEquiv.refl_apply, SpaceTimeAlgebra.starConjEquiv_apply,
         LinearEquiv.symm_apply_apply, TensorProduct.smul_tmul', smul_eq_mul]
       rw [star_mul', star_star, mul_comm]
   | add a b ha hb =>
@@ -274,21 +276,23 @@ lemma tensorEquiv_congr_conjEquiv_smul (χ : JetRing) (y : JetRing ⊗[ℂ] V) :
 a jet carried over to the conjugate side, `repConj rep U` is `rep U` applied on the
 original side and carried over again. Everything about `repConj` beyond its definition
 follows from this. -/
-lemma repConj_apply_conjEquiv (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) (U : G)
-    (y : JetRing ⊗[ℂ] V) :
-    repConj rep U (((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-        (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y))
-      = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-          (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-        (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) (rep U y)) := by
-  show ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-      (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-        ((rep.conj U) ((((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-      (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))).symm
-    (((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-      (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-        (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y)))) = _
+lemma repConj_apply_conjEquiv (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)) (U : G)
+    (y : SpaceTimeAlgebra ⊗[ℂ] V) :
+    repConj rep U (((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+        (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y))
+      = ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+          (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+        (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) (rep U y)) := by
+  show ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+      (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+        ((rep.conj U)
+            ((((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+      (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv
+          (LinearEquiv.refl ℂ (ConjModule V))))).symm
+    (((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+      (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+        (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y)))) = _
   rw [LinearEquiv.symm_apply_apply, Representation.conj_apply,
     LinearEquiv.symm_apply_apply]
 
@@ -296,18 +300,18 @@ lemma repConj_apply_conjEquiv (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) 
 what lets the coefficient machinery of `coeff_mul_of_smul_comm` be instantiated at
 `ConjModule V`, giving the conjugate half of the symbol action. -/
 lemma repConj_smul_comm
-    {rep : Representation ℂ G (JetRing ⊗[ℂ] V)}
-    (hlin : ∀ (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] V),
+    {rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)}
+    (hlin : ∀ (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] V),
       rep U (χ • z) = χ • rep U z)
-    (U : G) (χ : JetRing) (z : JetRing ⊗[ℂ] ConjModule V) :
+    (U : G) (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] ConjModule V) :
     repConj rep U (χ • z) = χ • repConj rep U z := by
-  obtain ⟨y, rfl⟩ : ∃ y : JetRing ⊗[ℂ] V,
-      z = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-          (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y) :=
-    ⟨(conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
-      (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ
+  obtain ⟨y, rfl⟩ : ∃ y : SpaceTimeAlgebra ⊗[ℂ] V,
+      z = ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+          (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y) :=
+    ⟨(conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
+      (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ
           (ConjModule V))))).symm z),
       by rw [LinearEquiv.apply_symm_apply, LinearEquiv.apply_symm_apply]⟩
   rw [← tensorEquiv_congr_conjEquiv_smul, repConj_apply_conjEquiv,
@@ -316,19 +320,20 @@ lemma repConj_smul_comm
 /-- The identification of the conjugate of the jets with the jets of the conjugate is
 natural in the value space. A linear map of value spaces acts on either side by the same
 underlying map, so carrying a jet over to the conjugate side commutes with it. -/
-lemma lTensor_conjEquiv_naturality (f : V →ₗ[ℂ] W) (y : JetRing ⊗[ℂ] V) :
-    (LinearMap.lTensor JetRing (ConjModule.map (k := ℂ) f))
-        (((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-          (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-          (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y))
-      = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := W)).symm.trans
-          (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule W))))
-        (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] W) ((LinearMap.lTensor JetRing f) y)) := by
+lemma lTensor_conjEquiv_naturality (f : V →ₗ[ℂ] W) (y : SpaceTimeAlgebra ⊗[ℂ] V) :
+    (LinearMap.lTensor SpaceTimeAlgebra (ConjModule.map (k := ℂ) f))
+        (((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+          (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+          (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y))
+      = ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := W)).symm.trans
+          (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule W))))
+        (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] W)
+            ((LinearMap.lTensor SpaceTimeAlgebra f) y)) := by
   induction y using TensorProduct.induction_on with
   | zero => simp
   | tmul g v =>
       simp only [LinearEquiv.trans_apply, ConjModule.tensorEquiv_symm_conjEquiv_tmul,
-        TensorProduct.congr_tmul, LinearEquiv.refl_apply, JetRing.starConjEquiv_apply,
+        TensorProduct.congr_tmul, LinearEquiv.refl_apply, SpaceTimeAlgebra.starConjEquiv_apply,
         LinearEquiv.symm_apply_apply, LinearMap.lTensor_tmul]
       rfl
   | add a b ha hb => simp only [map_add, ha, hb]
@@ -338,91 +343,91 @@ spaces intertwining two fibrewise jet actions intertwines the actions on the jet
 conjugate fields, through the induced map of conjugate modules. This is what supplies the
 conjugate half of the naturality of the gauge action on the jet component space, which
 does not follow from the unconjugated half. -/
-lemma lTensor_comp_repConj (repV : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (repW : Representation ℂ G (JetRing ⊗[ℂ] W)) (f : V →ₗ[ℂ] W)
-    (hf : ∀ U : G, (LinearMap.lTensor JetRing f).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing f)) (U : G) :
-    (LinearMap.lTensor JetRing (ConjModule.map (k := ℂ) f)).comp (repConj repV U)
-      = (repConj repW U).comp (LinearMap.lTensor JetRing (ConjModule.map (k := ℂ) f)) := by
+lemma lTensor_comp_repConj (repV : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V))
+    (repW : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] W)) (f : V →ₗ[ℂ] W)
+    (hf : ∀ U : G, (LinearMap.lTensor SpaceTimeAlgebra f).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra f)) (U : G) :
+    (LinearMap.lTensor SpaceTimeAlgebra (ConjModule.map (k := ℂ) f)).comp (repConj repV U)
+      = (repConj repW U).comp (LinearMap.lTensor SpaceTimeAlgebra (ConjModule.map (k := ℂ) f)) := by
   refine LinearMap.ext fun z => ?_
-  obtain ⟨y, rfl⟩ : ∃ y : JetRing ⊗[ℂ] V,
-      z = ((ConjModule.tensorEquiv (k := ℂ) (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
-          (conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V) y) :=
-    ⟨(conjEquiv (k := ℂ) (M := JetRing ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
-      (M := JetRing) (N := V)).symm.trans
-        (TensorProduct.congr JetRing.starConjEquiv (LinearEquiv.refl ℂ
+  obtain ⟨y, rfl⟩ : ∃ y : SpaceTimeAlgebra ⊗[ℂ] V,
+      z = ((ConjModule.tensorEquiv (k := ℂ) (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ (ConjModule V))))
+          (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V) y) :=
+    ⟨(conjEquiv (k := ℂ) (M := SpaceTimeAlgebra ⊗[ℂ] V)).symm ((((ConjModule.tensorEquiv (k := ℂ)
+      (M := SpaceTimeAlgebra) (N := V)).symm.trans
+        (TensorProduct.congr SpaceTimeAlgebra.starConjEquiv (LinearEquiv.refl ℂ
           (ConjModule V))))).symm z),
       by rw [LinearEquiv.apply_symm_apply, LinearEquiv.apply_symm_apply]⟩
   rw [LinearMap.comp_apply, LinearMap.comp_apply, repConj_apply_conjEquiv,
     lTensor_conjEquiv_naturality, lTensor_conjEquiv_naturality, repConj_apply_conjEquiv,
     ← LinearMap.comp_apply, hf U, LinearMap.comp_apply]
 
-/-- **The coefficient is determined by its action on constants.** For finite-dimensional
-`V` the canonical evaluation `JetRing ⊗ (V →ₗ W) → (V →ₗ JetRing ⊗ W)` is injective. -/
+/-- **The coefficient is determined by its action on constants.** For finite-dimensional `V` the
+canonical evaluation `SpaceTimeAlgebra ⊗ (V →ₗ W) → (V →ₗ SpaceTimeAlgebra ⊗ W)` is injective. -/
 lemma lift_injective [Module.Free ℂ V] [Module.Finite ℂ V]
-    {x y : JetRing ⊗[ℂ] (V →ₗ[ℂ] W)}
-    (h : ∀ v : V, TensorProduct.lift ((LinearMap.llcomp ℂ V W (JetRing ⊗[ℂ] W)).comp
-      (TensorProduct.mk ℂ JetRing W)) x v = TensorProduct.lift ((LinearMap.llcomp ℂ V W
-        (JetRing ⊗[ℂ] W)).comp
-      (TensorProduct.mk ℂ JetRing W)) y v) : x = y := by
-  obtain ⟨G, rfl⟩ := ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) JetRing W).trans
-      (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+    {x y : SpaceTimeAlgebra ⊗[ℂ] (V →ₗ[ℂ] W)}
+    (h : ∀ v : V, TensorProduct.lift ((LinearMap.llcomp ℂ V W (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+      (TensorProduct.mk ℂ SpaceTimeAlgebra W)) x v = TensorProduct.lift ((LinearMap.llcomp ℂ V W
+        (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+      (TensorProduct.mk ℂ SpaceTimeAlgebra W)) y v) : x = y := by
+  obtain ⟨G, rfl⟩ := ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) SpaceTimeAlgebra W).trans
+      (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
         (dualTensorHomEquiv ℂ V W))).surjective x
-  obtain ⟨G', rfl⟩ := ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) JetRing W).trans
-      (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+  obtain ⟨G', rfl⟩ := ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) SpaceTimeAlgebra W).trans
+      (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
         (dualTensorHomEquiv ℂ V W))).surjective y
-  refine congrArg _ ((dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] W)).injective
+  refine congrArg _ ((dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] W)).injective
     (LinearMap.ext fun v => ?_))
-  rw [show (dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] W)) G
-        = dualTensorHom ℂ V (JetRing ⊗[ℂ] W) G from rfl,
-    show (dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] W)) G'
-        = dualTensorHom ℂ V (JetRing ⊗[ℂ] W) G' from rfl,
+  rw [show (dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] W)) G
+        = dualTensorHom ℂ V (SpaceTimeAlgebra ⊗[ℂ] W) G from rfl,
+    show (dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] W)) G'
+        = dualTensorHom ℂ V (SpaceTimeAlgebra ⊗[ℂ] W) G' from rfl,
     ← lift_congr_leftComm, ← lift_congr_leftComm]
   exact h v
 
 /-- **The coefficient of a fibrewise gauge action.** For finite-dimensional `V`, the
-restriction of `rep U` to constant jets is an element of `JetRing ⊗ End V` — a matrix of
+restriction of `rep U` to constant jets is an element of `SpaceTimeAlgebra ⊗ End V` — a matrix of
 power series, obtained canonically from `dualTensorHomEquiv` rather than from a basis. -/
 noncomputable def jetCoeff [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) (U : G) :
-    JetRing ⊗[ℂ] Module.End ℂ V :=
-  ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) JetRing V).trans
-      (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) (dualTensorHomEquiv ℂ V V)))
-    ((dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] V)).symm ((rep U).comp jetOfConstant))
+    (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)) (U : G) :
+    SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V :=
+  ((TensorProduct.leftComm ℂ (Module.Dual ℂ V) SpaceTimeAlgebra V).trans
+      (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) (dualTensorHomEquiv ℂ V V)))
+    ((dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] V)).symm ((rep U).comp jetOfConstant))
 
 /-- The coefficient reproduces `rep U` on constant jets. -/
 lemma jetCoeff_spec [Module.Free ℂ V] [Module.Finite ℂ V]
-    (rep : Representation ℂ G (JetRing ⊗[ℂ] V)) (U : G) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-      (TensorProduct.mk ℂ JetRing V)) (jetCoeff rep U) v = rep U (jetOfConstant v) := by
+    (rep : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V)) (U : G) (v : V) :
+    TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+      (TensorProduct.mk ℂ SpaceTimeAlgebra V)) (jetCoeff rep U) v = rep U (jetOfConstant v) := by
   rw [jetCoeff, LinearEquiv.trans_apply, lift_congr_leftComm,
-    show dualTensorHom ℂ V (JetRing ⊗[ℂ] V)
-        ((dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] V)).symm ((rep U).comp jetOfConstant))
+    show dualTensorHom ℂ V (SpaceTimeAlgebra ⊗[ℂ] V)
+        ((dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] V)).symm ((rep U).comp jetOfConstant))
         = (rep U).comp jetOfConstant from
-      (dualTensorHomEquiv ℂ V (JetRing ⊗[ℂ] V)).apply_symm_apply _]
+      (dualTensorHomEquiv ℂ V (SpaceTimeAlgebra ⊗[ℂ] V)).apply_symm_apply _]
   rfl
 
 /-!
 
 ## Naturality of the coefficient in the value space
 
-A linear map `f : V →ₗ W` of value spaces intertwining two fibrewise jet actions relates
-their coefficients, but not as an equation between elements of two different modules: the
-comparison takes place in `JetRing ⊗ (V →ₗ W)`, into which `JetRing ⊗ End V` maps by
-postcomposition with `f` and `JetRing ⊗ End W` by precomposition. The two images agree,
-and that single identity is what carries the gauge action across a map of value spaces.
+A linear map `f : V →ₗ W` of value spaces intertwining two fibrewise jet actions relates their
+coefficients, but not as an equation between elements of two different modules: the comparison takes
+place in `SpaceTimeAlgebra ⊗ (V →ₗ W)`, into which `SpaceTimeAlgebra ⊗ End V` maps by
+postcomposition with `f` and `SpaceTimeAlgebra ⊗ End W` by precomposition. The two images agree, and
+that single identity is what carries the gauge action across a map of value spaces.
 
 -/
 
 /-- Postcomposing a coefficient with `f` evaluates as applying `f` to the value. -/
-lemma lift_lTensor_llcomp (f : V →ₗ[ℂ] W) (x : JetRing ⊗[ℂ] Module.End ℂ V) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V W (JetRing ⊗[ℂ] W)).comp
-        (TensorProduct.mk ℂ JetRing W))
-        (LinearMap.lTensor JetRing (LinearMap.llcomp ℂ V V W f) x) v
-      = LinearMap.lTensor JetRing f
-        (TensorProduct.lift ((LinearMap.llcomp ℂ V V (JetRing ⊗[ℂ] V)).comp
-          (TensorProduct.mk ℂ JetRing V)) x v) := by
+lemma lift_lTensor_llcomp (f : V →ₗ[ℂ] W) (x : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ V) (v : V) :
+    TensorProduct.lift ((LinearMap.llcomp ℂ V W (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra W))
+        (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.llcomp ℂ V V W f) x) v
+      = LinearMap.lTensor SpaceTimeAlgebra f
+        (TensorProduct.lift ((LinearMap.llcomp ℂ V V (SpaceTimeAlgebra ⊗[ℂ] V)).comp
+          (TensorProduct.mk ℂ SpaceTimeAlgebra V)) x v) := by
   induction x using TensorProduct.induction_on with
   | zero => simp
   | tmul g S => rfl
@@ -430,12 +435,12 @@ lemma lift_lTensor_llcomp (f : V →ₗ[ℂ] W) (x : JetRing ⊗[ℂ] Module.End
 
 /-- Precomposing a coefficient with `f` evaluates as evaluating at the image of the
   argument. -/
-lemma lift_lTensor_lcomp (f : V →ₗ[ℂ] W) (y : JetRing ⊗[ℂ] Module.End ℂ W) (v : V) :
-    TensorProduct.lift ((LinearMap.llcomp ℂ V W (JetRing ⊗[ℂ] W)).comp
-        (TensorProduct.mk ℂ JetRing W))
-        (LinearMap.lTensor JetRing (LinearMap.lcomp ℂ W f) y) v
-      = TensorProduct.lift ((LinearMap.llcomp ℂ W W (JetRing ⊗[ℂ] W)).comp
-        (TensorProduct.mk ℂ JetRing W)) y (f v) := by
+lemma lift_lTensor_lcomp (f : V →ₗ[ℂ] W) (y : SpaceTimeAlgebra ⊗[ℂ] Module.End ℂ W) (v : V) :
+    TensorProduct.lift ((LinearMap.llcomp ℂ V W (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra W))
+        (LinearMap.lTensor SpaceTimeAlgebra (LinearMap.lcomp ℂ W f) y) v
+      = TensorProduct.lift ((LinearMap.llcomp ℂ W W (SpaceTimeAlgebra ⊗[ℂ] W)).comp
+        (TensorProduct.mk ℂ SpaceTimeAlgebra W)) y (f v) := by
   induction y using TensorProduct.induction_on with
   | zero => simp
   | tmul g T => rfl
@@ -444,17 +449,17 @@ lemma lift_lTensor_lcomp (f : V →ₗ[ℂ] W) (y : JetRing ⊗[ℂ] Module.End 
 /-- The coefficient of a fibrewise action is natural in the value space. If `f` maps
 the values of one field to the values of another and intertwines their jet actions, then
 the coefficient of the first followed by `f` is `f` followed by the coefficient of the
-second, as elements of `JetRing ⊗ (V →ₗ W)`. Both value spaces have to be
+second, as elements of `SpaceTimeAlgebra ⊗ (V →ₗ W)`. Both value spaces have to be
 finite-dimensional, since both coefficients have to exist; no fibrewise-linearity is used
 here, the coefficient being defined for any action. -/
 lemma jetCoeff_naturality [Module.Free ℂ V] [Module.Finite ℂ V]
     [Module.Free ℂ W] [Module.Finite ℂ W]
-    (repV : Representation ℂ G (JetRing ⊗[ℂ] V))
-    (repW : Representation ℂ G (JetRing ⊗[ℂ] W)) (f : V →ₗ[ℂ] W)
-    (hf : ∀ U : G, (LinearMap.lTensor JetRing f).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing f)) (U : G) :
-    LinearMap.lTensor JetRing (LinearMap.llcomp ℂ V V W f) (jetCoeff repV U)
-      = LinearMap.lTensor JetRing (LinearMap.lcomp ℂ W f) (jetCoeff repW U) := by
+    (repV : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] V))
+    (repW : Representation ℂ G (SpaceTimeAlgebra ⊗[ℂ] W)) (f : V →ₗ[ℂ] W)
+    (hf : ∀ U : G, (LinearMap.lTensor SpaceTimeAlgebra f).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra f)) (U : G) :
+    LinearMap.lTensor SpaceTimeAlgebra (LinearMap.llcomp ℂ V V W f) (jetCoeff repV U)
+      = LinearMap.lTensor SpaceTimeAlgebra (LinearMap.lcomp ℂ W f) (jetCoeff repW U) := by
   refine lift_injective fun v => ?_
   rw [lift_lTensor_llcomp, lift_lTensor_lcomp, jetCoeff_spec, jetCoeff_spec,
     ← LinearMap.comp_apply, hf U]

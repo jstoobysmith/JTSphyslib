@@ -289,80 +289,90 @@ lemma colourWeakEquiv_tmul (c : EuclideanSpace ℂ (Fin 3)) (w : EuclideanSpace 
   simp [colourWeakEquiv, Function.uncurry, Algebra.algebraMap_eq_smul_one, mul_comm]
 
 /-- Absorbs the jet ring into the combined colour–weak index: a jet of a quark doublet is
-the same thing as a left-handed Weyl spinor tensored with a `JetRing`-valued
+the same thing as a left-handed Weyl spinor tensored with a `SpaceTimeAlgebra`-valued
 colour–weak vector,
 
-  `JetRing ⊗[ℂ] QuarkDoublet ≃ LeftHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3 × Fin 2)`.
+  `SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet ≃
+    LeftHandedWeyl ⊗[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)`.
 
 -/
 noncomputable def jetValLinEquiv :
-    JetRing ⊗[ℂ] QuarkDoublet ≃ₗ[ℂ]
-      Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace JetRing (Fin 3 × Fin 2) :=
-  (TensorProduct.congr (LinearEquiv.refl ℂ JetRing)
+    SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet ≃ₗ[ℂ]
+      Fermion.LeftHandedWeyl ⊗[ℂ] EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2) :=
+  (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra)
       (valLinEquiv.trans (TensorProduct.assoc ℂ Fermion.LeftHandedWeyl
         (EuclideanSpace ℂ (Fin 3)) (EuclideanSpace ℂ (Fin 2))))).trans <|
-    (TensorProduct.leftComm ℂ JetRing Fermion.LeftHandedWeyl
+    (TensorProduct.leftComm ℂ SpaceTimeAlgebra Fermion.LeftHandedWeyl
         (EuclideanSpace ℂ (Fin 3) ⊗[ℂ] EuclideanSpace ℂ (Fin 2))).trans <|
       TensorProduct.congr (LinearEquiv.refl ℂ Fermion.LeftHandedWeyl) <|
-        (TensorProduct.congr (LinearEquiv.refl ℂ JetRing) colourWeakEquiv).trans <|
-          ((TensorProduct.piScalarRight ℂ JetRing JetRing (Fin 3 × Fin 2)).trans
-            (WithLp.linearEquiv 2 JetRing (Fin 3 × Fin 2 → JetRing)).symm).restrictScalars ℂ
+        (TensorProduct.congr (LinearEquiv.refl ℂ SpaceTimeAlgebra) colourWeakEquiv).trans <|
+          ((TensorProduct.piScalarRight ℂ SpaceTimeAlgebra SpaceTimeAlgebra (Fin 3 × Fin 2)).trans
+            (WithLp.linearEquiv 2 SpaceTimeAlgebra
+                (Fin 3 × Fin 2 → SpaceTimeAlgebra)).symm).restrictScalars ℂ
 
 /-- The matrix of jets through which a jet of gauge transformations acts on the combined
 colour–weak index of the quark doublet: the Kronecker product of the `SU(3)` and `SU(2)`
 power-series matrices, scaled by the hypercharge power series `u`. -/
 noncomputable def jetGaugeMatrix (U : JetGaugeGroupI) :
-    Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) JetRing :=
-  ((U.2.2 : unitary JetRing) : JetRing) •
-    (((U.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) ⊗ₖ
-      ((U.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing))
+    Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) SpaceTimeAlgebra :=
+  ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) •
+    (((U.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+        (Fin 3) SpaceTimeAlgebra) ⊗ₖ
+      ((U.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+          (Fin 2) SpaceTimeAlgebra))
 
 lemma jetGaugeMatrix_one : jetGaugeMatrix 1 = 1 := by
   rw [jetGaugeMatrix,
-    show (((1 : JetGaugeGroupI).2.2 : unitary JetRing) : JetRing) = 1 from rfl,
-    show ((((1 : JetGaugeGroupI).1 : specialUnitaryGroup (Fin 3) JetRing)) :
-      Matrix (Fin 3) (Fin 3) JetRing) = 1 from rfl,
-    show ((((1 : JetGaugeGroupI).2.1 : specialUnitaryGroup (Fin 2) JetRing)) :
-      Matrix (Fin 2) (Fin 2) JetRing) = 1 from rfl,
+    show (((1 : JetGaugeGroupI).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 from rfl,
+    show ((((1 : JetGaugeGroupI).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra)) :
+      Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) = 1 from rfl,
+    show ((((1 : JetGaugeGroupI).2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra)) :
+      Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) = 1 from rfl,
     Matrix.one_kronecker_one, one_smul]
 
 lemma jetGaugeMatrix_mul (U₁ U₂ : JetGaugeGroupI) :
     jetGaugeMatrix (U₁ * U₂) = jetGaugeMatrix U₁ * jetGaugeMatrix U₂ := by
   rw [jetGaugeMatrix, jetGaugeMatrix, jetGaugeMatrix,
-    show (((U₁ * U₂).2.2 : unitary JetRing) : JetRing) =
-      ((U₁.2.2 : unitary JetRing) : JetRing) * ((U₂.2.2 : unitary JetRing) : JetRing) from rfl,
-    show (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) JetRing) :
-        Matrix (Fin 3) (Fin 3) JetRing) =
-      ((U₁.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing) *
-        ((U₂.1 : specialUnitaryGroup (Fin 3) JetRing) : Matrix (Fin 3) (Fin 3) JetRing)
+    show (((U₁ * U₂).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) =
+      ((U₁.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) *
+          ((U₂.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) from rfl,
+    show (((U₁ * U₂).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+        Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) =
+      ((U₁.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+          (Fin 3) SpaceTimeAlgebra) *
+        ((U₂.1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) : Matrix (Fin 3)
+            (Fin 3) SpaceTimeAlgebra)
       from rfl,
-    show (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-        Matrix (Fin 2) (Fin 2) JetRing) =
-      ((U₁.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing) *
-        ((U₂.2.1 : specialUnitaryGroup (Fin 2) JetRing) : Matrix (Fin 2) (Fin 2) JetRing)
+    show (((U₁ * U₂).2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+        Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) =
+      ((U₁.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+          (Fin 2) SpaceTimeAlgebra) *
+        ((U₂.2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) : Matrix (Fin 2)
+            (Fin 2) SpaceTimeAlgebra)
       from rfl,
     Matrix.mul_kronecker_mul, Matrix.smul_mul, Matrix.mul_smul, smul_smul]
 
 /-- The `(3, 2)_{1}` action of the jet gauge group on the jet space of the quark doublet.
 Through `jetValLinEquiv` the Kronecker matrix of the gauge jet, carrying the hypercharge
-phase `u`, acts `JetRing`-linearly on the combined colour–weak factor by matrix-vector
+phase `u`, acts `SpaceTimeAlgebra`-linearly on the combined colour–weak factor by matrix-vector
 multiplication, while the Weyl factor is untouched. -/
 noncomputable def repJetGaugeGroupI :
-    Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] QuarkDoublet) where
+    Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) where
   toFun U :=
     jetValLinEquiv.symm.toLinearMap ∘ₗ
-      Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3 × Fin 2))
+      Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))
         Fermion.LeftHandedWeyl
         ((Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U)).restrictScalars ℂ) ∘ₗ
       jetValLinEquiv.toLinearMap
   map_one' := by
-    have hres : (1 : Module.End JetRing
-        (EuclideanSpace JetRing (Fin 3 × Fin 2))).restrictScalars ℂ = 1 := rfl
+    have hres : (1 : Module.End SpaceTimeAlgebra
+        (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))).restrictScalars ℂ = 1 := rfl
     rw [jetGaugeMatrix_one, map_one, hres, map_one]
     ext d x
     simp [-valLinEquiv_apply]
   map_mul' U₁ U₂ := by
-    have hres : ∀ f g : Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)),
+    have hres : ∀ f g : Module.End SpaceTimeAlgebra
+        (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)),
         (f * g).restrictScalars ℂ = f.restrictScalars ℂ * g.restrictScalars ℂ :=
       fun _ _ => rfl
     rw [jetGaugeMatrix_mul, map_mul, hres, map_mul]
@@ -375,25 +385,25 @@ lemma jetGaugeMatrix_ofConstant (g : GaugeGroupI) (p q : Fin 3 × Fin 2) :
     jetGaugeMatrix (JetGaugeGroupI.ofConstant g) p q =
       MvPowerSeries.C ((g.toU1.1 : ℂ) * (g.toSU3.1 p.1 q.1 * g.toSU2.1 p.2 q.2)) := by
   rw [jetGaugeMatrix, Matrix.smul_apply,
-    show (((JetGaugeGroupI.ofConstant g).2.2 : unitary JetRing) : JetRing) =
+    show (((JetGaugeGroupI.ofConstant g).2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) =
       MvPowerSeries.C ((g.toU1.1 : ℂ)) from rfl]
   rw [Matrix.kroneckerMap_apply,
-    show (((JetGaugeGroupI.ofConstant g).1 : specialUnitaryGroup (Fin 3) JetRing) :
-        Matrix (Fin 3) (Fin 3) JetRing) p.1 q.1 =
+    show (((JetGaugeGroupI.ofConstant g).1 : specialUnitaryGroup (Fin 3) SpaceTimeAlgebra) :
+        Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra) p.1 q.1 =
       MvPowerSeries.C (g.toSU3.1 p.1 q.1) from rfl,
-    show (((JetGaugeGroupI.ofConstant g).2.1 : specialUnitaryGroup (Fin 2) JetRing) :
-        Matrix (Fin 2) (Fin 2) JetRing) p.2 q.2 =
+    show (((JetGaugeGroupI.ofConstant g).2.1 : specialUnitaryGroup (Fin 2) SpaceTimeAlgebra) :
+        Matrix (Fin 2) (Fin 2) SpaceTimeAlgebra) p.2 q.2 =
       MvPowerSeries.C (g.toSU2.1 p.2 q.2) from rfl,
     smul_eq_mul, ← map_mul, ← map_mul]
 
 /-- The identification of the jets of the quark doublet intertwines multiplication by a
-scalar jet with the `JetRing`-scalar action on the colour–weak coordinates. -/
-lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] QuarkDoublet) :
+scalar jet with the `SpaceTimeAlgebra`-scalar action on the colour–weak coordinates. -/
+lemma jetValLinEquiv_smul (χ : SpaceTimeAlgebra) (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     jetValLinEquiv (χ • z)
-      = Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3 × Fin 2))
+      = Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))
           Fermion.LeftHandedWeyl
-          ((LinearMap.lsmul JetRing
-            (EuclideanSpace JetRing (Fin 3 × Fin 2)) χ).restrictScalars ℂ)
+          ((LinearMap.lsmul SpaceTimeAlgebra
+            (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)) χ).restrictScalars ℂ)
           (jetValLinEquiv z) := by
   induction z using TensorProduct.induction_on with
   | zero => simp
@@ -419,10 +429,10 @@ lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] QuarkDoublet) :
           show jetValLinEquiv (f ⊗ₜ[ℂ] (⟨ψ ⊗ₜ[ℂ] c ⊗ₜ[ℂ] w⟩ : QuarkDoublet))
             = ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun q =>
                 colourWeakEquiv (c ⊗ₜ[ℂ] w) q • f) from rfl,
-          show Module.End.lTensorAlgHom ℂ (EuclideanSpace JetRing (Fin 3 × Fin 2))
+          show Module.End.lTensorAlgHom ℂ (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))
               Fermion.LeftHandedWeyl
-              ((LinearMap.lsmul JetRing
-                (EuclideanSpace JetRing (Fin 3 × Fin 2)) χ).restrictScalars ℂ)
+              ((LinearMap.lsmul SpaceTimeAlgebra
+                (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)) χ).restrictScalars ℂ)
               (ψ ⊗ₜ[ℂ] (WithLp.toLp 2 fun q => colourWeakEquiv (c ⊗ₜ[ℂ] w) q • f))
             = ψ ⊗ₜ[ℂ] (χ • WithLp.toLp 2 fun q =>
                 colourWeakEquiv (c ⊗ₜ[ℂ] w) q • f) from rfl]
@@ -444,14 +454,14 @@ lemma jetValLinEquiv_smul (χ : JetRing) (z : JetRing ⊗[ℂ] QuarkDoublet) :
 
 /-- **The jet gauge action on the jets of the quark doublet is fibrewise**: it commutes
 with multiplication by scalar jets. -/
-lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : JetRing)
-    (z : JetRing ⊗[ℂ] QuarkDoublet) :
+lemma repJetGaugeGroupI_smul (U : JetGaugeGroupI) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] QuarkDoublet) :
     repJetGaugeGroupI U (χ • z) = χ • repJetGaugeGroupI U z := by
-  set S : Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)) :=
-    LinearMap.lsmul JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)) χ with hS
-  set M : Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)) :=
+  set S : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)) :=
+    LinearMap.lsmul SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)) χ with hS
+  set M : Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)) :=
     (Matrix.toLpLinAlgEquiv 2 (jetGaugeMatrix U) :
-      Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2))) with hM
+      Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2))) with hM
   have hMS : M * S = S * M := LinearMap.ext fun e => by
     simp only [Module.End.mul_apply, hS, LinearMap.lsmul_apply, map_smul]
   apply jetValLinEquiv.injective
@@ -490,9 +500,9 @@ lemma repJetGaugeGroupI_ofConstant (g : GaugeGroupI) :
       | tmul psi c =>
           apply jetValLinEquiv.injective
           simp [repJetGaugeGroupI, jetValLinEquiv, repGaugeGroupI, -TensorProduct.congr_symm]
-          have halg : ∀ A : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) JetRing,
+          have halg : ∀ A : Matrix (Fin 3 × Fin 2) (Fin 3 × Fin 2) SpaceTimeAlgebra,
               (Matrix.toLpLinAlgEquiv 2 A :
-                  Module.End JetRing (EuclideanSpace JetRing (Fin 3 × Fin 2)))
+                  Module.End SpaceTimeAlgebra (EuclideanSpace SpaceTimeAlgebra (Fin 3 × Fin 2)))
                 = Matrix.toLpLin 2 2 A := fun _ => rfl
           rw [TensorProduct.liftAux_tmul]
           simp only [LinearMap.compl₂_apply, TensorProduct.mk_apply, LinearMap.smul_apply,

@@ -825,7 +825,7 @@ omit [FiniteDimensional ℂ V] in
 /-- A pure gauge jet acts trivially through the dual base-point coefficient of a
   representation whose zeroth Taylor coefficient is the identity on pure jets. -/
 lemma repDualCoeff_zero_of_mem_truncationKer_zero
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
     (hrep : ∀ {W : JetGaugeGroupI}, localGaugeData.eval W = 1 → repCoeff rep W 0 = LinearMap.id)
     (U : localGaugeData.truncationKer 0) (φ : Module.Dual ℂ V) :
     repDualCoeff rep U.1⁻¹ 0 φ = φ := by
@@ -1093,7 +1093,8 @@ and representation.
   jet alone, given the gauge law of the family and the infinitesimal action of its
   species. -/
 lemma repJet_covDerivIter {V : Type} [AddCommGroup V] [Module ℂ V] [FiniteDimensional ℂ V]
-    {rep : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)} {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
+    {rep : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
+        {act : GaugeAlgebra →ₗ[ℝ] V →ₗ[ℂ] V}
     {F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℂ V →ₗ[ℂ] B} (hF : TransformsIn repJet rep F)
     (hact : localGaugeData.IsInfinitesimalActionOf act rep) {n : ℕ}
     (l : Fin n → (Fin 1 ⊕ Fin 3)) (U : JetGaugeGroupI) (φ : Module.Dual ℂ V) :

@@ -19,7 +19,7 @@ public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
 public import Mathlib.RepresentationTheory.Basic
 public import Mathlib.RingTheory.TensorProduct.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Derivative
-public import Physlib.Relativity.JetRing.Matrix
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
 public import Physlib.Mathematics.Fin
@@ -36,7 +36,7 @@ public import Physlib.Mathematics.Fin
 
 -/
 
-/-- The ℂ-algebra of derivative symbols in spacetime . -/
+/-- The ℂ-algebra of derivative symbols in spacetime. -/
 abbrev SpaceTimeDerivAlgebraℂ := SymmetricAlgebra ℂ (Module.Dual ℂ Lorentz.CoℂModule)
 
 namespace SpaceTimeDerivAlgebraℂ
@@ -168,17 +168,17 @@ lemma _root_.MvPowerSeries.pderiv_comm {σ R : Type*} [CommSemiring R] (i j : σ
 /-- Differentiating a jet along a multiset of directions is well defined: the partial
   derivatives commute, so the fold over a multiset does not depend on the order. -/
 instance : RightCommutative
-    (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => MvPowerSeries.pderiv μ f) where
+    (fun (f : SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) => MvPowerSeries.pderiv μ f) where
   right_comm f μ ν := MvPowerSeries.pderiv_comm ν μ f
 
-/-- The evaluation map taking a function `f : JetRing` to `∂_μ f`. -/
-noncomputable def eval : SpaceTimeDerivAlgebraℂ →ₗ[ℂ] JetRing →ₗ[ℂ] ℂ :=
+/-- The evaluation map taking a function `f : SpaceTimeAlgebra` to `∂_μ f`. -/
+noncomputable def eval : SpaceTimeDerivAlgebraℂ →ₗ[ℂ] SpaceTimeAlgebra →ₗ[ℂ] ℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
     (∏ μ, (m μ)! : ℕ) • MvPowerSeries.coeff m
 
 
 @[simp]
-lemma eval_basis (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : JetRing) :
+lemma eval_basis (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : SpaceTimeAlgebra) :
     eval (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m) f =
       (∏ μ, (m μ)! : ℕ) • MvPowerSeries.coeff m f := by
   rw [eval, Module.Basis.constr_basis]
@@ -213,7 +213,7 @@ lemma eval_injective {p q : SpaceTimeDerivAlgebraℂ}
 
 /-- Adjointness: the shift of derivative symbols is the transpose of the formal
   partial derivative under the divided-power pairing. -/
-lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : SpaceTimeDerivAlgebraℂ) (f : JetRing) :
+lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : SpaceTimeDerivAlgebraℂ) (f : SpaceTimeAlgebra) :
     eval (deriv ν p) f = eval p (MvPowerSeries.pderiv ν f) := by
   have h : (eval.flip f) ∘ₗ deriv ν =
       eval.flip (MvPowerSeries.pderiv ν f) := by
@@ -238,7 +238,7 @@ lemma eval_deriv (ν : Fin 1 ⊕ Fin 3) (p : SpaceTimeDerivAlgebraℂ) (f : JetR
 
 /-- The pairing of the unit derivative symbol with a jet is its value at the base
   point: the empty derivative multiset reads off the constant term. -/
-lemma eval_one (f : JetRing) :
+lemma eval_one (f : SpaceTimeAlgebra) :
     eval (1 : SpaceTimeDerivAlgebraℂ) f = MvPowerSeries.constantCoeff f := by
   rw [show (1 : SpaceTimeDerivAlgebraℂ) = basis (0 : Multiset (Fin 1 ⊕ Fin 3)) from basis_nil.symm,
     basis_apply]
@@ -248,7 +248,8 @@ lemma eval_one (f : JetRing) :
   constant term of the iterated formal partial derivative `∂_s f`. This is the concrete
   description of the divided-power pairing that `eval_deriv` encodes one derivative at a
   time. -/
-lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3))
+    (f : SpaceTimeAlgebra) :
     eval (basis s) f =
       MvPowerSeries.constantCoeff (s.foldl (fun g μ => MvPowerSeries.pderiv μ g) f) := by
   induction s using Multiset.induction_on generalizing f with
@@ -269,21 +270,21 @@ lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) 
 
 /-- The action of `χ` on the derivatives, this takes `∂_μ ·` to `∂_μ (χ ·)`,
   expanded out explicitly. -/
-noncomputable def jetRingAction (χ : JetRing) :
+noncomputable def jetRingAction (χ : SpaceTimeAlgebra) :
     SpaceTimeDerivAlgebraℂ →ₗ[ℂ] SpaceTimeDerivAlgebraℂ :=
   Lorentz.complexCoBasis.dualBasis.symmetricAlgebra.constr ℂ fun m =>
     ∑ p ∈ Finset.antidiagonal m,
       ((∏ μ, (m μ).descFactorial (p.1 μ) : ℕ) : ℂ) • MvPowerSeries.coeff p.1 χ •
         Lorentz.complexCoBasis.dualBasis.symmetricAlgebra p.2
 
-lemma jetRingAction_basis (χ : JetRing) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+lemma jetRingAction_basis (χ : SpaceTimeAlgebra) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
     jetRingAction χ (Lorentz.complexCoBasis.dualBasis.symmetricAlgebra m) =
       ∑ p ∈ Finset.antidiagonal m,
         ((∏ μ, (m μ).descFactorial (p.1 μ) : ℕ) : ℂ) • MvPowerSeries.coeff p.1 χ •
           Lorentz.complexCoBasis.dualBasis.symmetricAlgebra p.2 := by
   rw [jetRingAction, Module.Basis.constr_basis]
 
-lemma eval_jetRingAction (χ f : JetRing) (p : SpaceTimeDerivAlgebraℂ) :
+lemma eval_jetRingAction (χ f : SpaceTimeAlgebra) (p : SpaceTimeDerivAlgebraℂ) :
     eval (jetRingAction χ p) f = eval p (χ * f) := by
   classical
   have h : (eval.flip f) ∘ₗ jetRingAction χ = eval.flip (χ * f) := by
@@ -318,16 +319,16 @@ lemma eval_jetRingAction (χ f : JetRing) (p : SpaceTimeDerivAlgebraℂ) :
 
   This is `jetRingAction_basis` with the `Nat.choose` bookkeeping traded for the
   divided-power pairing: both sides are compared through `eval`, where the identity is the
-  Leibniz rule `JetRing.constantCoeff_foldl_pderiv_mul` at the base point. It is the form
+  Leibniz rule `SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul` at the base point. It is the form
   in which the transformation law of a matter field is stated. -/
-lemma jetRingAction_basis_multiset (χ : JetRing) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+lemma jetRingAction_basis_multiset (χ : SpaceTimeAlgebra) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     jetRingAction χ (basis s) =
       (s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
             (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum := by
   refine eval_injective fun f => ?_
   rw [eval_jetRingAction, eval_basis_eq_constantCoeff_foldl_pderiv,
-    JetRing.constantCoeff_foldl_pderiv_mul,
+    SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul,
     show eval ((s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
           (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum) f
@@ -346,18 +347,19 @@ lemma jetRingAction_C (c : ℂ) :
     jetRingAction (MvPowerSeries.C c) = c • LinearMap.id := by
   refine LinearMap.ext fun p => eval_injective fun f => ?_
   rw [eval_jetRingAction,
-    show (MvPowerSeries.C c : JetRing) * f = c • f from
-      (algebraMap_smul JetRing c f).symm ▸ (Algebra.smul_def c f).symm]
+    show (MvPowerSeries.C c : SpaceTimeAlgebra) * f = c • f from
+      (algebraMap_smul SpaceTimeAlgebra c f).symm ▸ (Algebra.smul_def c f).symm]
   simp
 
 @[simp]
-lemma jetRingAction_one : jetRingAction (1 : JetRing) = LinearMap.id := by
-  rw [show (1 : JetRing) = MvPowerSeries.C 1 from (map_one _).symm, jetRingAction_C, one_smul]
+lemma jetRingAction_one : jetRingAction (1 : SpaceTimeAlgebra) = LinearMap.id := by
+  rw [show (1 : SpaceTimeAlgebra) = MvPowerSeries.C 1 from (map_one _).symm, jetRingAction_C,
+      one_smul]
 
 /-- The derivative action is multiplicative: it is the transpose of multiplication
   in the commutative jet ring. This makes `χ ↦ χ(∂)` a monoid homomorphism and
   hence yields representations of the jet gauge group on polynomial jet spaces. -/
-lemma jetRingAction_mul (χ ψ : JetRing) :
+lemma jetRingAction_mul (χ ψ : SpaceTimeAlgebra) :
     jetRingAction (χ * ψ) = jetRingAction χ ∘ₗ jetRingAction ψ := by
   refine LinearMap.ext fun p => eval_injective fun f => ?_
   simp only [LinearMap.coe_comp, Function.comp_apply]
@@ -366,13 +368,13 @@ lemma jetRingAction_mul (χ ψ : JetRing) :
 
 
 @[simp]
-lemma jetRingAction_zero : jetRingAction (0 : JetRing) = 0 := by
+lemma jetRingAction_zero : jetRingAction (0 : SpaceTimeAlgebra) = 0 := by
   simp only [jetRingAction, Fintype.prod_sum_type, Finset.univ_unique, Fin.default_eq_zero,
     Fin.isValue, Finset.prod_singleton, Nat.cast_mul, Nat.cast_prod, MvPowerSeries.coeff_zero,
     zero_smul, smul_zero, Finset.sum_const_zero, EmbeddingLike.map_eq_zero_iff]
   rfl
 
-lemma jetRingAction_add (χ ψ : JetRing) :
+lemma jetRingAction_add (χ ψ : SpaceTimeAlgebra) :
     jetRingAction (χ + ψ) = jetRingAction χ + jetRingAction ψ := by
   refine LinearMap.ext fun p => eval_injective fun f => ?_
   simp only [LinearMap.add_apply, map_add, eval_jetRingAction]
@@ -381,7 +383,7 @@ lemma jetRingAction_add (χ ψ : JetRing) :
 /-- The derivative action as a ring homomorphism from the jet ring to the
   endomorphisms of the algebra of derivative symbols: the module structure of the
   jet ring on its graded dual. -/
-noncomputable def jetRingActionHom : JetRing →+* Module.End ℂ SpaceTimeDerivAlgebraℂ where
+noncomputable def jetRingActionHom : SpaceTimeAlgebra →+* Module.End ℂ SpaceTimeDerivAlgebraℂ where
   toFun := jetRingAction
   map_one' := jetRingAction_one
   map_mul' χ ψ := jetRingAction_mul χ ψ
@@ -389,7 +391,7 @@ noncomputable def jetRingActionHom : JetRing →+* Module.End ℂ SpaceTimeDeriv
   map_add' := jetRingAction_add
 
 /-- The actions of two jets commute: the jet ring is commutative. -/
-lemma jetRingAction_comm (χ ψ : JetRing) (a : SpaceTimeDerivAlgebraℂ) :
+lemma jetRingAction_comm (χ ψ : SpaceTimeAlgebra) (a : SpaceTimeDerivAlgebraℂ) :
     jetRingAction χ (jetRingAction ψ a) = jetRingAction ψ (jetRingAction χ a) := by
   rw [← LinearMap.comp_apply, ← jetRingAction_mul, mul_comm, jetRingAction_mul,
     LinearMap.comp_apply]
@@ -397,7 +399,7 @@ lemma jetRingAction_comm (χ ψ : JetRing) (a : SpaceTimeDerivAlgebraℂ) :
 /-- The derivative action on the zeroth-order (field) symbol: it is scaled by the
   value of the jet at the base point. -/
 @[simp]
-lemma jetRingAction_apply_one (χ : JetRing) :
+lemma jetRingAction_apply_one (χ : SpaceTimeAlgebra) :
     jetRingAction χ (1 : SpaceTimeDerivAlgebraℂ) =
       MvPowerSeries.constantCoeff χ • 1 := by
   have h0 : Lorentz.complexCoBasis.dualBasis.symmetricAlgebra (0 : (Fin 1 ⊕ Fin 3) →₀ ℕ) =
@@ -414,7 +416,7 @@ lemma jetRingAction_apply_one (χ : JetRing) :
   rule: `∂_μ ↦ χ(0) ∂_μ + (∂_μχ)(0) 1`. The value of the jet multiplies the
   first-derivative symbol, and its first derivative feeds the zeroth-order
   symbol. -/
-lemma jetRingAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
+lemma jetRingAction_apply_ι (χ : SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) :
     jetRingAction χ (SymmetricAlgebra.ι ℂ (Module.Dual ℂ Lorentz.CoℂModule)
         (Lorentz.complexCoBasis.dualBasis μ)) =
       MvPowerSeries.constantCoeff χ •
@@ -454,7 +456,7 @@ lemma jetRingAction_apply_ι (χ : JetRing) (μ : Fin 1 ⊕ Fin 3) :
   `χ` after differentiating equals differentiating after acting, plus the action
   of the derivative `∂_ν χ`. This is the operator form of the Leibniz rule
   `∂_ν (χ f) = χ ∂_ν f + (∂_ν χ) f` under the divided-power pairing. -/
-lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : SpaceTimeDerivAlgebraℂ) :
+lemma jetRingAction_deriv (χ : SpaceTimeAlgebra) (ν : Fin 1 ⊕ Fin 3) (a : SpaceTimeDerivAlgebraℂ) :
     jetRingAction χ (deriv ν a) =
       deriv ν (jetRingAction χ a) + jetRingAction (MvPowerSeries.pderiv ν χ) a := by
   refine eval_injective fun f => ?_
@@ -467,18 +469,6 @@ lemma jetRingAction_deriv (χ : JetRing) (ν : Fin 1 ⊕ Fin 3) (a : SpaceTimeDe
 ### B.5. The action of the Lorentz group
 
 -/
-
-/-- The components of a dual representation on a dual basis: if `ρ g⁻¹` has
-  matrix `M` in the basis `b` (columns indexing the argument), then `ρ.dual g`
-  acts on the dual basis by the rows of `M`. -/
-lemma _root_.Representation.dual_apply_dualBasis {k G V ι : Type*} [CommRing k]
-    [Group G] [AddCommGroup V] [Module k V] [Fintype ι] [DecidableEq ι]
-    (ρ : Representation k G V) (b : Module.Basis ι k V) (g : G) (i : ι)
-    (M : Matrix ι ι k) (hM : ∀ j, ρ g⁻¹ (b j) = ∑ l, M l j • b l) :
-    ρ.dual g (b.dualBasis i) = ∑ j, M i j • b.dualBasis j := by
-  refine b.ext fun j => ?_
-  rw [Representation.dual_apply, Module.Dual.transpose_apply, LinearMap.comp_apply, hM]
-  simp [Finsupp.single_apply, Finset.sum_ite_eq, Finset.sum_ite_eq']
 
 open Matrix MatrixGroups
 
@@ -542,31 +532,6 @@ lemma repLorentzGroup_deriv (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (a : SpaceTi
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [mul_smul_comm, ← deriv_apply_eq_mul]
 
-/-- The components of the complex dual covector action on the dual basis: the
-  dual derivative slots transform contravariantly, by the columns of the
-  (complexified) Lorentz matrix. The complex analogue of
-  `Lorentz.CoVector.sl2Rep_dual_dualBasis`. -/
-lemma _root_.Lorentz.CoℂModule.SL2CRep_dual_dualBasis (Λ : SL(2,ℂ))
-    (μ : Fin 1 ⊕ Fin 3) :
-    Lorentz.CoℂModule.SL2CRep.dual Λ (Lorentz.complexCoBasis.dualBasis μ) =
-      ∑ j, (((Lorentz.SL2C.toLorentzGroup Λ).1 j μ : ℝ) : ℂ) •
-        Lorentz.complexCoBasis.dualBasis j := by
-  refine Representation.dual_apply_dualBasis _ _ _ _
-    (Matrix.of fun l j => (((Lorentz.SL2C.toLorentzGroup Λ).1 j l : ℝ) : ℂ))
-    (fun j => ?_)
-  have hexp : Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j) =
-      ∑ l, (LinearMap.toMatrix Lorentz.complexCoBasis Lorentz.complexCoBasis
-        (Lorentz.CoℂModule.SL2CRep Λ⁻¹)) l j • Lorentz.complexCoBasis l := by
-    conv_lhs => rw [← Lorentz.complexCoBasis.sum_repr
-      (Lorentz.CoℂModule.SL2CRep Λ⁻¹ (Lorentz.complexCoBasis j))]
-    refine Finset.sum_congr rfl fun l _ => ?_
-    rw [LinearMap.toMatrix_apply]
-  rw [hexp]
-  refine Finset.sum_congr rfl fun l _ => ?_
-  congr 1
-  rw [Lorentz.complexCoBasis_ρ_apply, map_inv, Matrix.transpose_apply,
-    ← LorentzGroup.toComplex_inv, Matrix.inv_inv_of_invertible]
-  rfl
 
 /-- The Lorentz action on the singleton derivative monomial: the derivative
   slot transforms by the columns of the Lorentz matrix. -/
@@ -705,17 +670,11 @@ end SpaceTimeDerivAlgebraℂ
 
 -/
 
+/-- The ℝ-algebra of derivative symbols in spacetime. -/
 abbrev SpaceTimeDerivAlgebraℝ := SymmetricAlgebra ℝ (Module.Dual ℝ Lorentz.CoVector)
 
 namespace SpaceTimeDerivAlgebraℝ
 open Matrix MatrixGroups
-
-/-- The representation of the Lorentz group on the real Lorentz-covector derivative
-  slots, obtained from the real Lorentz-vector representation through the covering
-  map `SL(2,ℂ) →* LorentzGroup 3`. -/
-noncomputable def _root_.Lorentz.CoVector.sl2Rep : Representation ℝ SL(2,ℂ) Lorentz.CoVector :=
-  MonoidHom.comp Lorentz.CoVector.rep Lorentz.SL2C.toLorentzGroup
-
 
 /-- The representation of the Lorentz group `SL(2,ℂ)` on the algebra of derivative
   symbols, extending the dual covector representation multiplicatively. -/
@@ -761,20 +720,6 @@ lemma repLorentzGroup_apply_mul (Λ : SL(2,ℂ))
 lemma repLorentzGroup_apply_one (Λ : SL(2,ℂ)) :
     SpaceTimeDerivAlgebraℝ.repLorentzGroup Λ 1 = 1 := by
   simp [SpaceTimeDerivAlgebraℝ.repLorentzGroup]
-
-/-- The components of the dual covector action on the dual basis: the dual
-  derivative slots transform contravariantly, by the columns of the Lorentz
-  matrix. -/
-lemma _root_.Lorentz.CoVector.sl2Rep_dual_dualBasis (Λ : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) :
-    Lorentz.CoVector.sl2Rep.dual Λ (Lorentz.CoVector.basis.dualBasis μ) =
-      ∑ j, (Lorentz.SL2C.toLorentzGroup Λ).1 j μ •
-        Lorentz.CoVector.basis.dualBasis j := by
-  refine Representation.dual_apply_dualBasis _ _ _ _
-    (Matrix.of fun l j => (Lorentz.SL2C.toLorentzGroup Λ).1 j l) (fun j => ?_)
-  rw [show Lorentz.CoVector.sl2Rep Λ⁻¹ =
-      Lorentz.CoVector.rep (Lorentz.SL2C.toLorentzGroup Λ⁻¹) from rfl,
-    Lorentz.CoVector.rep_apply_basis, ← LorentzGroup.coe_inv, map_inv, inv_inv]
-  rfl
 
 /-- The derivative-degree scaling on the real algebra of derivative symbols:
   the algebra map multiplying each generator by `t`. -/

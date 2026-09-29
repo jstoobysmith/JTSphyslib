@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.LocalGaugeData
-public import Physlib.Relativity.JetRing.Matrix
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
 /-!
 # Truncation of the jet gauge group
 
@@ -24,7 +24,7 @@ local-gauge-data package, `localGaugeData.truncationKer n`, defined in
 the Maurer–Cartan form of the jet alone. This file compares the two notions: a jet trivial to
 order `n` in that sense truncates to the identity, `truncation_eq_one_of_mem_truncationKer`.
 The argument is the Euler vanishing principle by degree on power series,
-`JetRing.coeff_eq_zero_of_pderiv_eq_mul`, applied to the radial relation
+`SpaceTimeAlgebra.coeff_eq_zero_of_pderiv_eq_mul`, applied to the radial relation
 `∂_ρ U = −i ω_ρ(U) U` between a jet and its Maurer–Cartan form.
 
 ## ii. Key results
@@ -48,7 +48,7 @@ namespace StandardModel
 
 namespace JetGaugeGroupI
 
-open JetGaugeAlgebra JetRing
+open JetGaugeAlgebra SpaceTimeAlgebra
 
 /-!
 
@@ -59,16 +59,19 @@ open JetGaugeAlgebra JetRing
 /-- The `n`-th truncation of a jet of a gauge transformation: componentwise, all Taylor
   coefficients of total degree greater than `n` are set to zero. -/
 noncomputable def truncation (n : ℕ) (U : JetGaugeGroupI) :
-    Matrix (Fin 3) (Fin 3) JetRing × Matrix (Fin 2) (Fin 2) JetRing × JetRing :=
-  (U.1.1.map (JetRing.truncation n), U.2.1.1.map (JetRing.truncation n),
-    JetRing.truncation n U.2.2.1)
+    Matrix (Fin 3) (Fin 3) SpaceTimeAlgebra × Matrix (Fin 2)
+        (Fin 2) SpaceTimeAlgebra × SpaceTimeAlgebra :=
+  (U.1.1.map (SpaceTimeAlgebra.truncation n), U.2.1.1.map (SpaceTimeAlgebra.truncation n),
+    SpaceTimeAlgebra.truncation n U.2.2.1)
 
 /-- Truncation of the identity jet is the identity value triple. -/
 @[simp]
 lemma truncation_one (n : ℕ) : truncation n (1 : JetGaugeGroupI) = 1 :=
-  Prod.ext (Matrix.map_one _ (JetRing.truncation_zero n) (JetRing.truncation_one n))
-    (Prod.ext (Matrix.map_one _ (JetRing.truncation_zero n) (JetRing.truncation_one n))
-      (JetRing.truncation_one n))
+  Prod.ext (Matrix.map_one _ (SpaceTimeAlgebra.truncation_zero n)
+      (SpaceTimeAlgebra.truncation_one n))
+    (Prod.ext (Matrix.map_one _ (SpaceTimeAlgebra.truncation_zero n)
+        (SpaceTimeAlgebra.truncation_one n))
+      (SpaceTimeAlgebra.truncation_one n))
 
 /-!
 
@@ -81,7 +84,7 @@ lemma truncation_one (n : ℕ) : truncation n (1 : JetGaugeGroupI) = 1 :=
   through a scalar `ψ` of the gauge algebra computing evaluated iterated derivatives: they
   vanish below degree `n`. -/
 lemma coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (ψ : GaugeAlgebra → ℂ)
-    (hψ : ψ 0 = 0) (f : JetGaugeAlgebra → JetRing)
+    (hψ : ψ 0 = 0) (f : JetGaugeAlgebra → SpaceTimeAlgebra)
     (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
       ψ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv s a)) =
         constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f a)))

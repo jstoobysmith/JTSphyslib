@@ -231,6 +231,7 @@ public import Physlib.Mathematics.OrthogonalMatrix
 public import Physlib.Mathematics.PiTensorProduct
 public import Physlib.Mathematics.PolynomialEval
 public import Physlib.Mathematics.RatComplexNum
+public import Physlib.Mathematics.RepresentationDual
 public import Physlib.Mathematics.RepresentationProdMap
 public import Physlib.Mathematics.Resolvent
 public import Physlib.Mathematics.SO3.Basic
@@ -620,10 +621,6 @@ public import Physlib.Relativity.Fermions.Weyl.RightHanded
 public import Physlib.Relativity.Fermions.Weyl.Two
 public import Physlib.Relativity.Fermions.Weyl.Unit
 public import Physlib.Relativity.IsLorentzDeriv
-public import Physlib.Relativity.JetRing.Basic
-public import Physlib.Relativity.JetRing.Jacobi
-public import Physlib.Relativity.JetRing.Matrix
-public import Physlib.Relativity.JetRing.Taylor
 public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Relativity.LorentzAlgebra.Basic
 public import Physlib.Relativity.LorentzAlgebra.Basis
@@ -766,6 +763,10 @@ public import Physlib.SpaceAndTime.SpaceTime.Basic
 public import Physlib.SpaceAndTime.SpaceTime.Boosts
 public import Physlib.SpaceAndTime.SpaceTime.Derivatives
 public import Physlib.SpaceAndTime.SpaceTime.LorentzAction
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Jacobi
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix
+public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Taylor
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Physlib.SpaceAndTime.SpaceTime.TimeSlice
 public import Physlib.SpaceAndTime.Time.Basic

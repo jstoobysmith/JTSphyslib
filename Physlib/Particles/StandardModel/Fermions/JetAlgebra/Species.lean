@@ -84,20 +84,20 @@ variable {V W : Type} [AddCommGroup V] [Module ℂ V] [AddCommGroup W] [Module �
 
 /-- Including a constant into value-space jets is natural in the value space. -/
 lemma lTensor_comp_jetOfConstant (p : V →ₗ[ℂ] W) :
-    (LinearMap.lTensor JetRing p).comp jetOfConstant = jetOfConstant.comp p :=
+    (LinearMap.lTensor SpaceTimeAlgebra p).comp jetOfConstant = jetOfConstant.comp p :=
   LinearMap.ext fun _ => rfl
 
 /-- The formal derivative on value-space jets is natural in the value space: it touches
   only the jet factor. -/
 lemma lTensor_comp_jetDeriv (p : V →ₗ[ℂ] W) (μ : Fin 1 ⊕ Fin 3) :
-    (LinearMap.lTensor JetRing p).comp (jetDeriv μ)
-      = (jetDeriv μ).comp (LinearMap.lTensor JetRing p) :=
+    (LinearMap.lTensor SpaceTimeAlgebra p).comp (jetDeriv μ)
+      = (jetDeriv μ).comp (LinearMap.lTensor SpaceTimeAlgebra p) :=
   TensorProduct.ext' fun _ _ => rfl
 
 /-- The iterated formal derivative on value-space jets is natural in the value space. -/
 lemma lTensor_comp_jetIteratedDeriv (p : V →ₗ[ℂ] W) (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    (LinearMap.lTensor JetRing p).comp (jetIteratedDeriv s)
-      = (jetIteratedDeriv s).comp (LinearMap.lTensor JetRing p) := by
+    (LinearMap.lTensor SpaceTimeAlgebra p).comp (jetIteratedDeriv s)
+      = (jetIteratedDeriv s).comp (LinearMap.lTensor SpaceTimeAlgebra p) := by
   induction s using Multiset.induction_on with
   | empty =>
     rw [jetIteratedDeriv_zero, LinearMap.comp_id, jetIteratedDeriv_zero,
@@ -108,7 +108,7 @@ lemma lTensor_comp_jetIteratedDeriv (p : V →ₗ[ℂ] W) (s : Multiset (Fin 1 �
 
 /-- Evaluation of a value-space jet at the base point is natural in the value space. -/
 lemma jetEval_comp_lTensor (p : V →ₗ[ℂ] W) :
-    (jetEval (V := W)).comp (LinearMap.lTensor JetRing p) = p.comp jetEval :=
+    (jetEval (V := W)).comp (LinearMap.lTensor SpaceTimeAlgebra p) = p.comp jetEval :=
   TensorProduct.ext' fun f v => by
     rw [LinearMap.comp_apply, LinearMap.lTensor_tmul, jetEval_tmul, LinearMap.comp_apply,
       jetEval_tmul, map_smul]
@@ -122,10 +122,10 @@ lemma jetEval_comp_lTensor (p : V →ₗ[ℂ] W) :
 /-- The base-point Taylor coefficients of two jet gauge actions are intertwined by any map
   of value spaces intertwining the actions themselves: `repCoeff` is built from
   `jetOfConstant`, `jetIteratedDeriv` and `jetEval`, and each of those is natural. -/
-lemma repCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-    {repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
-    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing p))
+lemma repCoeff_comp {repV : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
+    {repW : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
+    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor SpaceTimeAlgebra p).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra p))
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     p.comp (GaugeAlgebraRealization.repCoeff repV U s)
       = (GaugeAlgebraRealization.repCoeff repW U s).comp p := by
@@ -142,10 +142,10 @@ lemma repCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] 
 
 /-- The transposed form of `repCoeff_comp`: the dual coefficients, which act on the
   component-function index, are intertwined the other way round. -/
-lemma repDualCoeff_comp {repV : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] V)}
-    {repW : Representation ℂ JetGaugeGroupI (JetRing ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
-    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor JetRing p).comp (repV U)
-      = (repW U).comp (LinearMap.lTensor JetRing p))
+lemma repDualCoeff_comp {repV : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] V)}
+    {repW : Representation ℂ JetGaugeGroupI (SpaceTimeAlgebra ⊗[ℂ] W)} (p : V →ₗ[ℂ] W)
+    (hp : ∀ U : JetGaugeGroupI, (LinearMap.lTensor SpaceTimeAlgebra p).comp (repV U)
+      = (repW U).comp (LinearMap.lTensor SpaceTimeAlgebra p))
     (U : JetGaugeGroupI) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     (GaugeAlgebraRealization.repDualCoeff repV U s).comp (Module.Dual.transpose p)
       = (Module.Dual.transpose p).comp (GaugeAlgebraRealization.repDualCoeff repW U s) :=
@@ -171,8 +171,8 @@ species-and-generation slot, nothing but the projection applied to the value fac
 
 /-- The lepton-doublet slot of the splitting of the jets is the projection on the value
   factor. -/
-lemma jetEquiv_leptonDoublet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
-    (jetEquiv z).1 i = LinearMap.lTensor JetRing (leptonDoubletProj i) z := by
+lemma jetEquiv_leptonDoublet (i : Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
+    (jetEquiv z).1 i = LinearMap.lTensor SpaceTimeAlgebra (leptonDoubletProj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy => simp [hx, hy]
@@ -180,8 +180,8 @@ lemma jetEquiv_leptonDoublet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
 
 /-- The charged-lepton-singlet slot of the splitting of the jets is the projection on the value
   factor. -/
-lemma jetEquiv_leptonSinglet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
-    (jetEquiv z).2.1 i = LinearMap.lTensor JetRing (leptonSingletProj i) z := by
+lemma jetEquiv_leptonSinglet (i : Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
+    (jetEquiv z).2.1 i = LinearMap.lTensor SpaceTimeAlgebra (leptonSingletProj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy => simp [hx, hy]
@@ -189,8 +189,8 @@ lemma jetEquiv_leptonSinglet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
 
 /-- The quark-doublet slot of the splitting of the jets is the projection on the value
   factor. -/
-lemma jetEquiv_quarkDoublet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
-    (jetEquiv z).2.2.1 i = LinearMap.lTensor JetRing (quarkDoubletProj i) z := by
+lemma jetEquiv_quarkDoublet (i : Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
+    (jetEquiv z).2.2.1 i = LinearMap.lTensor SpaceTimeAlgebra (quarkDoubletProj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy => simp [hx, hy]
@@ -198,8 +198,8 @@ lemma jetEquiv_quarkDoublet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
 
 /-- The up-type-quark-singlet slot of the splitting of the jets is the projection on the value
   factor. -/
-lemma jetEquiv_upSinglet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
-    (jetEquiv z).2.2.2.1 i = LinearMap.lTensor JetRing (upSingletProj i) z := by
+lemma jetEquiv_upSinglet (i : Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
+    (jetEquiv z).2.2.2.1 i = LinearMap.lTensor SpaceTimeAlgebra (upSingletProj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy => simp [hx, hy]
@@ -207,8 +207,8 @@ lemma jetEquiv_upSinglet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
 
 /-- The down-type-quark-singlet slot of the splitting of the jets is the projection on the value
   factor. -/
-lemma jetEquiv_downSinglet (i : Fin 3) (z : JetRing ⊗[ℂ] FermionSpace) :
-    (jetEquiv z).2.2.2.2 i = LinearMap.lTensor JetRing (downSingletProj i) z := by
+lemma jetEquiv_downSinglet (i : Fin 3) (z : SpaceTimeAlgebra ⊗[ℂ] FermionSpace) :
+    (jetEquiv z).2.2.2.2 i = LinearMap.lTensor SpaceTimeAlgebra (downSingletProj i) z := by
   induction z using TensorProduct.induction_on with
   | zero => simp
   | add x y hx hy => simp [hx, hy]
@@ -227,9 +227,9 @@ own.
 /-- The lepton-doublet projection intertwines the total jet gauge action with the
   lepton doublet's own. -/
 lemma lTensor_leptonDoubletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (leptonDoubletProj i)).comp (repJetGaugeGroupI U)
+    (LinearMap.lTensor SpaceTimeAlgebra (leptonDoubletProj i)).comp (repJetGaugeGroupI U)
       = (LeptonDoublet.repJetGaugeGroupI U).comp
-        (LinearMap.lTensor JetRing (leptonDoubletProj i)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (leptonDoubletProj i)) := by
   refine LinearMap.ext fun z => ?_
   have hz : jetEquiv (repJetGaugeGroupI U z) = jetActionMap U (jetEquiv z) := by
     show (jetEquiv.restrictScalars ℂ) ((jetEquiv.restrictScalars ℂ).symm
@@ -244,9 +244,9 @@ lemma lTensor_leptonDoubletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroup
 /-- The charged-lepton-singlet projection intertwines the total jet gauge action with the
   charged-lepton singlet's own. -/
 lemma lTensor_leptonSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (leptonSingletProj i)).comp (repJetGaugeGroupI U)
+    (LinearMap.lTensor SpaceTimeAlgebra (leptonSingletProj i)).comp (repJetGaugeGroupI U)
       = (LeptonSinglet.repJetGaugeGroupI U).comp
-        (LinearMap.lTensor JetRing (leptonSingletProj i)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (leptonSingletProj i)) := by
   refine LinearMap.ext fun z => ?_
   have hz : jetEquiv (repJetGaugeGroupI U z) = jetActionMap U (jetEquiv z) := by
     show (jetEquiv.restrictScalars ℂ) ((jetEquiv.restrictScalars ℂ).symm
@@ -261,9 +261,9 @@ lemma lTensor_leptonSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroup
 /-- The quark-doublet projection intertwines the total jet gauge action with the
   quark doublet's own. -/
 lemma lTensor_quarkDoubletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (quarkDoubletProj i)).comp (repJetGaugeGroupI U)
+    (LinearMap.lTensor SpaceTimeAlgebra (quarkDoubletProj i)).comp (repJetGaugeGroupI U)
       = (QuarkDoublet.repJetGaugeGroupI U).comp
-        (LinearMap.lTensor JetRing (quarkDoubletProj i)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (quarkDoubletProj i)) := by
   refine LinearMap.ext fun z => ?_
   have hz : jetEquiv (repJetGaugeGroupI U z) = jetActionMap U (jetEquiv z) := by
     show (jetEquiv.restrictScalars ℂ) ((jetEquiv.restrictScalars ℂ).symm
@@ -278,9 +278,9 @@ lemma lTensor_quarkDoubletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI
 /-- The up-type-quark-singlet projection intertwines the total jet gauge action with the
   up-type quark singlet's own. -/
 lemma lTensor_upSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (upSingletProj i)).comp (repJetGaugeGroupI U)
+    (LinearMap.lTensor SpaceTimeAlgebra (upSingletProj i)).comp (repJetGaugeGroupI U)
       = (UpSinglet.repJetGaugeGroupI U).comp
-        (LinearMap.lTensor JetRing (upSingletProj i)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (upSingletProj i)) := by
   refine LinearMap.ext fun z => ?_
   have hz : jetEquiv (repJetGaugeGroupI U z) = jetActionMap U (jetEquiv z) := by
     show (jetEquiv.restrictScalars ℂ) ((jetEquiv.restrictScalars ℂ).symm
@@ -295,9 +295,9 @@ lemma lTensor_upSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
 /-- The down-type-quark-singlet projection intertwines the total jet gauge action with the
   down-type quark singlet's own. -/
 lemma lTensor_downSingletProj_repJetGaugeGroupI (i : Fin 3) (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (downSingletProj i)).comp (repJetGaugeGroupI U)
+    (LinearMap.lTensor SpaceTimeAlgebra (downSingletProj i)).comp (repJetGaugeGroupI U)
       = (DownSinglet.repJetGaugeGroupI U).comp
-        (LinearMap.lTensor JetRing (downSingletProj i)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (downSingletProj i)) := by
   refine LinearMap.ext fun z => ?_
   have hz : jetEquiv (repJetGaugeGroupI U z) = jetActionMap U (jetEquiv z) := by
     show (jetEquiv.restrictScalars ℂ) ((jetEquiv.restrictScalars ℂ).symm

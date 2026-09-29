@@ -146,9 +146,9 @@ module is determined by its species components, so the relabelling too is equiva
   the fermionic target space with that species' own. -/
 lemma lTensor_fermionProj_repJetGaugeGroupI (t : fieldData.FermionSpecies)
     (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing (fermionProj t)).comp (fermionMatterField.repJet U)
+    (LinearMap.lTensor SpaceTimeAlgebra (fermionProj t)).comp (fermionMatterField.repJet U)
       = ((fieldData.fermion t).repJet U).comp
-        (LinearMap.lTensor JetRing (fermionProj t)) := by
+        (LinearMap.lTensor SpaceTimeAlgebra (fermionProj t)) := by
   cases t with
   | leptonDoublet i => exact FermionSpace.lTensor_leptonDoubletProj_repJetGaugeGroupI i U
   | leptonSinglet i => exact FermionSpace.lTensor_leptonSingletProj_repJetGaugeGroupI i U
@@ -161,14 +161,15 @@ lemma lTensor_fermionProj_repJetGaugeGroupI (t : fieldData.FermionSpecies)
   species at a time, the two being compared through the splitting of the jets of a
   product. -/
 lemma lTensor_fermionSpaceEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap).comp
+    (LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap).comp
         (fermionMatterField.repJet U)
       = ((fieldData.fermionMatterField 3 fieldData_fermion_massWeight).repJet U).comp
-        (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap) := by
+        (LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap) := by
   refine jetPi_hom_ext (fun i => (fieldData.fermion i).V) fun i => ?_
-  have h1 : (LinearMap.lTensor JetRing (fieldData.projFermionField 3 fieldData_fermion_massWeight i)).comp
-      (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap)
-      = LinearMap.lTensor JetRing (fermionProj i) := by
+  have h1 : (LinearMap.lTensor SpaceTimeAlgebra
+      (fieldData.projFermionField 3 fieldData_fermion_massWeight i)).comp
+      (LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap)
+      = LinearMap.lTensor SpaceTimeAlgebra (fermionProj i) := by
     rw [← LinearMap.lTensor_comp]
     rfl
   refine LinearMap.ext fun x => ?_
@@ -176,18 +177,18 @@ lemma lTensor_fermionSpaceEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
   have e2 := LinearMap.congr_fun (lTensor_fermionProj_repJetGaugeGroupI i U) x
   have e3 := LinearMap.congr_fun
     (GaugeFieldData.lTensor_projFermionValue_repJetFermionModule i U)
-    (LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap x)
+    (LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap x)
   have e4 := LinearMap.congr_fun h1 x
   simp only [LinearMap.comp_apply] at e1 e2 e3 e4
   -- `show` puts the goal in applied form up to defeq, which `simp only` cannot reach here
-  show (LinearMap.lTensor JetRing
+  show (LinearMap.lTensor SpaceTimeAlgebra
         (fieldData.projFermionField 3 fieldData_fermion_massWeight i))
-      ((LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap)
+      ((LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap)
         (fermionMatterField.repJet U x))
-    = (LinearMap.lTensor JetRing
+    = (LinearMap.lTensor SpaceTimeAlgebra
         (fieldData.projFermionField 3 fieldData_fermion_massWeight i))
       (((fieldData.fermionMatterField 3 fieldData_fermion_massWeight).repJet U)
-        ((LinearMap.lTensor JetRing fermionSpaceEquiv.toLinearMap) x))
+        ((LinearMap.lTensor SpaceTimeAlgebra fermionSpaceEquiv.toLinearMap) x))
   exact e1.trans (e2.trans ((congrArg _ e4).symm.trans e3.symm))
 
 /-- The relabelling of the Higgs is equivariant for the jet gauge action. There is one
@@ -195,32 +196,33 @@ lemma lTensor_fermionSpaceEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
   action itself; the content is that the single bosonic species of the datum carries
   exactly the Higgs representation. -/
 lemma lTensor_higgsModuleEquiv_repJetGaugeGroupI (U : JetGaugeGroupI) :
-    (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap).comp
+    (LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap).comp
         (HiggsVec.matterField.repJet U)
       = ((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U).comp
-        (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) := by
+        (LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap) := by
   refine jetPi_hom_ext (fun j => (fieldData.boson j).V) fun j => LinearMap.ext fun z => ?_
-  have h1 : ∀ w : JetRing ⊗[ℂ] HiggsVec.matterField.V,
-      LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
-        (LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap w) = w := fun w => by
+  have h1 : ∀ w : SpaceTimeAlgebra ⊗[ℂ] HiggsVec.matterField.V,
+      LinearMap.lTensor SpaceTimeAlgebra (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+        (LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap w) = w := fun w => by
     induction w using TensorProduct.induction_on with
     | zero => rw [map_zero, map_zero]; rfl
     | tmul f v => rfl
     | add a b ha hb => rw [map_add, map_add, ha, hb]; rfl
   -- `show` puts the goal in applied form up to defeq, which `simp only` cannot reach here
-  show LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
-      ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap)
+  show LinearMap.lTensor SpaceTimeAlgebra (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+      ((LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap)
         (HiggsVec.matterField.repJet U z))
-    = LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+    = LinearMap.lTensor SpaceTimeAlgebra (fieldData.projBosonField 2 fieldData_boson_massWeight j)
       (((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U)
-        ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z))
-  have e3 : LinearMap.lTensor JetRing
+        ((LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap) z))
+  have e3 : LinearMap.lTensor SpaceTimeAlgebra
         (fieldData.projBosonField 2 fieldData_boson_massWeight j)
         (((fieldData.bosonMatterField 2 fieldData_boson_massWeight).repJet U)
-          ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z))
+          ((LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap) z))
       = ((fieldData.boson j).repJet U)
-        (LinearMap.lTensor JetRing (fieldData.projBosonField 2 fieldData_boson_massWeight j)
-          ((LinearMap.lTensor JetRing higgsModuleEquiv.toLinearMap) z)) :=
+        (LinearMap.lTensor SpaceTimeAlgebra
+            (fieldData.projBosonField 2 fieldData_boson_massWeight j)
+          ((LinearMap.lTensor SpaceTimeAlgebra higgsModuleEquiv.toLinearMap) z)) :=
     LinearMap.congr_fun (GaugeFieldData.lTensor_projBosonValue_repJetBosonModule j U) _
   rw [h1, e3, h1]
   -- the one bosonic species is the Higgs, so the two actions are the same

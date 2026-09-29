@@ -120,22 +120,23 @@ variable (T)
   module, acting species by species, and typed on `T.BosonModule` itself so that it can
   be spoken of without fixing a common mass weight. -/
 noncomputable def repJetBosonModule :
-    Representation ℂ GJ (JetRing ⊗[ℂ] T.BosonModule) :=
+    Representation ℂ GJ (SpaceTimeAlgebra ⊗[ℂ] T.BosonModule) :=
   MatterField.repJetPi T.boson
 
 variable {T}
 
 /-- The jet gauge action on the bosonic module is fibrewise, as each species is. -/
-lemma repJetBosonModule_smul (U : GJ) (χ : JetRing) (z : JetRing ⊗[ℂ] T.BosonModule) :
+lemma repJetBosonModule_smul (U : GJ) (χ : SpaceTimeAlgebra)
+    (z : SpaceTimeAlgebra ⊗[ℂ] T.BosonModule) :
     T.repJetBosonModule U (χ • z) = χ • T.repJetBosonModule U z :=
   MatterField.repJetPi_smul T.boson U χ z
 
 /-- A bosonic species is a subrepresentation of the jet gauge action on the bosonic
   module: the projection onto its value space intertwines the two actions on the jets. -/
 lemma lTensor_projBosonValue_repJetBosonModule (j : T.BosonSpecies) (U : GJ) :
-    (LinearMap.lTensor JetRing (T.projBosonValue j)).comp (T.repJetBosonModule U)
+    (LinearMap.lTensor SpaceTimeAlgebra (T.projBosonValue j)).comp (T.repJetBosonModule U)
       = ((T.boson j).repJet U).comp
-        (LinearMap.lTensor JetRing (T.projBosonValue j)) :=
+        (LinearMap.lTensor SpaceTimeAlgebra (T.projBosonValue j)) :=
   MatterField.lTensor_proj_repJetPi T.boson j U
 
 /-- The jet gauge action of the bosonic matter field is that of the bosonic module. -/
@@ -165,7 +166,7 @@ lemma bosonMatterField_repAlgebra_apply (w : ℕ)
   with the family of the jets of the species. -/
 lemma bosonMatterField_repJet_apply (w : ℕ)
     (h : ∀ i, (T.boson i).massWeight = w) (U : GJ)
-    (z : JetRing ⊗[ℂ] T.BosonModule) :
+    (z : SpaceTimeAlgebra ⊗[ℂ] T.BosonModule) :
     (T.bosonMatterField w h).repJet U z =
       (jetPiEquiv T.BosonValue).symm
         (fun i => (T.boson i).repJet U (jetPiEquiv T.BosonValue z i)) := rfl

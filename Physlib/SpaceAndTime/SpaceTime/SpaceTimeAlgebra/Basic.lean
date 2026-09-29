@@ -17,13 +17,13 @@ public import Physlib.Mathematics.ConjModule
 /-!
 # The jet ring
 
-The ring `JetRing` of formal power series in the four spacetime coordinates, in
+The ring `SpaceTimeAlgebra` of formal power series in the four spacetime coordinates, in
 which jets of fields and of gauge transformations at a spacetime point are valued.
 
-This file contains the definition of `JetRing`, its star structure, first-order
+This file contains the definition of `SpaceTimeAlgebra`, its star structure, first-order
 coefficient identities, the formal partial derivative, and the truncation of jets.
-Results about matrices over `JetRing` are in
-`Physlib.Relativity.JetRing.Matrix`.
+Results about matrices over `SpaceTimeAlgebra` are in
+`Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix`.
 -/
 
 @[expose] public section
@@ -37,7 +37,10 @@ Results about matrices over `JetRing` are in
   coefficients. Jets of fields and of gauge transformations at a spacetime point are
   valued in this ring. The star operation is coefficientwise complex conjugation, so
   the spacetime coordinates themselves are self-adjoint. -/
-abbrev JetRing : Type := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ
+abbrev SpaceTimeAlgebra : Type := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ
+
+namespace SpaceTimeAlgebra
+
 
 /-!
 
@@ -48,22 +51,20 @@ the formal variables. In particular the spacetime coordinates are self-adjoint.
 
 -/
 
-namespace JetRing
-
 open MvPowerSeries
 
-instance : Star JetRing where
+instance : Star SpaceTimeAlgebra where
   star f := fun n => star (f n)
 
 @[simp]
-lemma coeff_star (n : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : JetRing) :
+lemma coeff_star (n : (Fin 1 ⊕ Fin 3) →₀ ℕ) (f : SpaceTimeAlgebra) :
     coeff n (star f) = star (coeff n f) := rfl
 
-instance : StarRing JetRing where
+instance : StarRing SpaceTimeAlgebra where
   star_involutive f := funext fun n => star_star (f n)
   star_add f g := funext fun n => star_add (f n) (g n)
   star_mul f g := by
-    have h : ∀ a b : JetRing, star (a * b) = star a * star b := by
+    have h : ∀ a b : SpaceTimeAlgebra, star (a * b) = star a * star b := by
       intro a b
       ext n
       classical
@@ -72,20 +73,20 @@ instance : StarRing JetRing where
     rw [h, mul_comm]
 
 /-- Real scalars commute with the coefficientwise conjugation. -/
-instance : StarModule ℝ JetRing where
+instance : StarModule ℝ SpaceTimeAlgebra where
   star_smul r f := funext fun n => star_smul r (f n)
 
 /-- Complex scalars conjugate under the coefficientwise conjugation. -/
-instance : StarModule ℂ JetRing where
+instance : StarModule ℂ SpaceTimeAlgebra where
   star_smul c f := funext fun n => star_smul c (f n)
 
 @[simp]
-lemma constantCoeff_star (f : JetRing) :
+lemma constantCoeff_star (f : SpaceTimeAlgebra) :
     constantCoeff (star f) = star (constantCoeff f) := rfl
 
 @[simp]
 lemma star_C (a : ℂ) :
-    star (C a : JetRing) = C (star a) := by
+    star (C a : SpaceTimeAlgebra) = C (star a) := by
   ext n
   classical
   rw [coeff_star, coeff_C, coeff_C]
@@ -97,23 +98,23 @@ honestly `ℂ`-linear, not merely semilinear, because the conjugate-linearity of
 cancels against the twisted scalar action of `ConjModule`.
 
 This is what identifies the jets of a conjugate field with the conjugates of the jets:
-`ConjModule (JetRing ⊗[ℂ] V)` and `JetRing ⊗[ℂ] ConjModule V` differ exactly by this
-equivalence on the jet-ring factor. -/
-noncomputable def starConjEquiv : ConjModule JetRing ≃ₗ[ℂ] JetRing :=
-  (conjEquiv (k := ℂ) (M := JetRing)).symm.trans (starLinearEquiv ℂ)
+`ConjModule (SpaceTimeAlgebra ⊗[ℂ] V)` and `SpaceTimeAlgebra ⊗[ℂ] ConjModule V` differ
+exactly by this equivalence on the jet-ring factor. -/
+noncomputable def starConjEquiv : ConjModule SpaceTimeAlgebra ≃ₗ[ℂ] SpaceTimeAlgebra :=
+  (conjEquiv (k := ℂ) (M := SpaceTimeAlgebra)).symm.trans (starLinearEquiv ℂ)
 
 @[simp]
-lemma starConjEquiv_apply (f : ConjModule JetRing) :
-    starConjEquiv f = star ((conjEquiv (k := ℂ) (M := JetRing)).symm f) := rfl
+lemma starConjEquiv_apply (f : ConjModule SpaceTimeAlgebra) :
+    starConjEquiv f = star ((conjEquiv (k := ℂ) (M := SpaceTimeAlgebra)).symm f) := rfl
 
 @[simp]
-lemma starConjEquiv_symm_apply (f : JetRing) :
-    starConjEquiv.symm f = conjEquiv (k := ℂ) (M := JetRing) (star f) := rfl
+lemma starConjEquiv_symm_apply (f : SpaceTimeAlgebra) :
+    starConjEquiv.symm f = conjEquiv (k := ℂ) (M := SpaceTimeAlgebra) (star f) := rfl
 
 /-- The first-order Leibniz rule: the degree-one Taylor coefficient, in the
   direction `μ`, of a product of jets. This is the coefficient-level statement
   that the first jet of a product is given by the product rule. -/
-lemma coeff_single_one_mul (μ : Fin 1 ⊕ Fin 3) (f g : JetRing) :
+lemma coeff_single_one_mul (μ : Fin 1 ⊕ Fin 3) (f g : SpaceTimeAlgebra) :
     coeff (Finsupp.single μ 1) (f * g) =
       coeff (Finsupp.single μ 1) f * constantCoeff g +
         constantCoeff f * coeff (Finsupp.single μ 1) g := by
@@ -127,13 +128,13 @@ lemma coeff_single_one_mul (μ : Fin 1 ⊕ Fin 3) (f g : JetRing) :
   ring
 
 /-- The constant-coefficient evaluation of a jet, as a `ℂ`-linear map. -/
-noncomputable def constantCoeffₗ : JetRing →ₗ[ℂ] ℂ where
+noncomputable def constantCoeffₗ : SpaceTimeAlgebra →ₗ[ℂ] ℂ where
   toFun := constantCoeff
   map_add' f g := by simp
   map_smul' c f := by simp [smul_eq_C_mul]
 
 @[simp]
-lemma constantCoeffₗ_apply (f : JetRing) : constantCoeffₗ f = constantCoeff f := rfl
+lemma constantCoeffₗ_apply (f : SpaceTimeAlgebra) : constantCoeffₗ f = constantCoeff f := rfl
 
 /-!
 
@@ -142,7 +143,7 @@ lemma constantCoeffₗ_apply (f : JetRing) : constantCoeffₗ f = constantCoeff 
 -/
 
 /-- The formal partial derivative commutes with the coefficientwise star. -/
-lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
+lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
     pderiv ν (star f) = star (pderiv ν f) := by
   ext s
   rw [coeff_pderiv, coeff_star, coeff_star, coeff_pderiv, star_mul']
@@ -150,7 +151,7 @@ lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
   simp
 
 /-- Formal partial derivatives commute. -/
-lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
+lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
     pderiv μ (pderiv ν f) = pderiv ν (pderiv μ f) := by
   classical
   ext s
@@ -166,19 +167,20 @@ lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : JetRing) :
     ring
 
 /-- Application of `pderiv` is right-commutative, since formal partial derivatives
-  commute (`JetRing.pderiv_comm`). This allows iterating them over a `Multiset` of
+  commute (`SpaceTimeAlgebra.pderiv_comm`). This allows iterating them over a `Multiset` of
   directions. -/
-instance : RightCommutative (fun (f : JetRing) (μ : Fin 1 ⊕ Fin 3) => pderiv μ f) where
-  right_comm f μ ν := JetRing.pderiv_comm ν μ f
+instance : RightCommutative (fun (f : SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) => pderiv μ f) where
+  right_comm f μ ν := SpaceTimeAlgebra.pderiv_comm ν μ f
 
 /-- Iterated formal derivatives over a multiset commute with a single derivative. -/
-lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3) (f : JetRing) :
+lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+    (f : SpaceTimeAlgebra) :
     s.foldl (fun f ρ => pderiv ρ f) (pderiv μ f) =
       pderiv μ (s.foldl (fun f ρ => pderiv ρ f) f) := by
   induction s using Multiset.induction_on generalizing f with
   | empty => simp
   | cons a t ih =>
-      rw [Multiset.foldl_cons, Multiset.foldl_cons, JetRing.pderiv_comm, ih]
+      rw [Multiset.foldl_cons, Multiset.foldl_cons, SpaceTimeAlgebra.pderiv_comm, ih]
 
 /-!
 
@@ -187,7 +189,7 @@ lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3
 -/
 
 /-- The iterated formal derivative is additive. -/
-lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
+lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
     s.foldl (fun h ρ => pderiv ρ h) (f + g)
       = s.foldl (fun h ρ => pderiv ρ h) f + s.foldl (fun h ρ => pderiv ρ h) g := by
   induction s using Multiset.induction_on generalizing f g with
@@ -198,14 +200,14 @@ lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
 /-- The iterated formal derivative of the zero jet vanishes. -/
 @[simp]
 lemma foldl_pderiv_zero (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    s.foldl (fun h ρ => pderiv ρ h) (0 : JetRing) = 0 := by
+    s.foldl (fun h ρ => pderiv ρ h) (0 : SpaceTimeAlgebra) = 0 := by
   induction s using Multiset.induction_on with
   | empty => rfl
   | cons μ t ih => rw [Multiset.foldl_cons, map_zero, ih]
 
 /-- The iterated formal derivative of a finite sum. -/
 lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset κ)
-    (f : κ → JetRing) :
+    (f : κ → SpaceTimeAlgebra) :
     s.foldl (fun h ρ => pderiv ρ h) (∑ k ∈ t, f k)
       = ∑ k ∈ t, s.foldl (fun h ρ => pderiv ρ h) (f k) := by
   classical
@@ -217,7 +219,7 @@ lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset
 /-- The all-orders Leibniz rule for the iterated formal derivative on the jet ring:
   the derivative of a product distributes over the antidiagonal of the multiset of
   directions. -/
-lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
+lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
     s.foldl (fun h ρ => pderiv ρ h) (f * g)
       = (s.antidiagonal.map fun p =>
           p.1.foldl (fun h ρ => pderiv ρ h) f *
@@ -249,7 +251,7 @@ lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
 
 /-- The base-point Taylor coefficient of a product: the convolution of the base-point
   Taylor coefficients. -/
-lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : JetRing) :
+lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
     constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f * g))
       = (s.antidiagonal.map fun p =>
           constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f) *
@@ -260,7 +262,7 @@ lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : Jet
 /-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
   directions. -/
 lemma foldl_pderiv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) (c : ℂ) :
-    s.foldl (fun h ρ => pderiv ρ h) (C c : JetRing) = 0 := by
+    s.foldl (fun h ρ => pderiv ρ h) (C c : SpaceTimeAlgebra) = 0 := by
   obtain ⟨μ, hμ⟩ := Multiset.exists_mem_of_ne_zero hs
   obtain ⟨t, rfl⟩ := Multiset.exists_cons_of_mem hμ
   rw [Multiset.foldl_cons, pderiv_C, foldl_pderiv_zero]
@@ -272,20 +274,20 @@ lemma foldl_pderiv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) 
 -/
 /-- The `n`-th truncation of a jet: the Taylor coefficients of total degree
   greater than `n` are set to zero. -/
-noncomputable def truncation (n : ℕ) (f : JetRing) : JetRing :=
+noncomputable def truncation (n : ℕ) (f : SpaceTimeAlgebra) : SpaceTimeAlgebra :=
   fun m => if Finsupp.degree m ≤ n then f m else 0
 
 @[simp]
 lemma coeff_truncation_of_le {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
-    (h : Finsupp.degree m ≤ n) (f : JetRing) :
+    (h : Finsupp.degree m ≤ n) (f : SpaceTimeAlgebra) :
     coeff m (truncation n f) = coeff m f := ite_eq_left h
 
 @[simp]
 lemma coeff_truncation_of_gt {n : ℕ} {m : (Fin 1 ⊕ Fin 3) →₀ ℕ}
-    (h : n < Finsupp.degree m) (f : JetRing) :
+    (h : n < Finsupp.degree m) (f : SpaceTimeAlgebra) :
     coeff m (truncation n f) = 0 := ite_eq_right (not_le.mpr h)
 
-lemma truncation_add (n : ℕ) (f g : JetRing) :
+lemma truncation_add (n : ℕ) (f g : SpaceTimeAlgebra) :
     truncation n (f + g) = truncation n f + truncation n g := by
   ext m
   by_cases hm : Finsupp.degree m ≤ n
@@ -295,7 +297,7 @@ lemma truncation_add (n : ℕ) (f g : JetRing) :
       coeff_truncation_of_gt (not_le.mp hm), coeff_truncation_of_gt (not_le.mp hm), add_zero]
 
 @[simp]
-lemma truncation_zero (n : ℕ) : truncation n (0 : JetRing) = 0 := by
+lemma truncation_zero (n : ℕ) : truncation n (0 : SpaceTimeAlgebra) = 0 := by
   ext m
   by_cases hm : Finsupp.degree m ≤ n
   · rw [coeff_truncation_of_le hm]
@@ -304,7 +306,7 @@ lemma truncation_zero (n : ℕ) : truncation n (0 : JetRing) = 0 := by
 /-- Truncation fixes the identity: a constant series has its only nonzero Taylor
   coefficient in degree zero, which every truncation keeps. -/
 @[simp]
-lemma truncation_one (n : ℕ) : truncation n (1 : JetRing) = 1 := by
+lemma truncation_one (n : ℕ) : truncation n (1 : SpaceTimeAlgebra) = 1 := by
   ext m
   by_cases hm : Finsupp.degree m ≤ n
   · rw [coeff_truncation_of_le hm]
@@ -313,17 +315,17 @@ lemma truncation_one (n : ℕ) : truncation n (1 : JetRing) = 1 := by
 
 /-- A power series with value `1` and no coefficients in nonzero degree up to `n`
   truncates to `1`. -/
-lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f = 1)
+lemma truncation_eq_one_of_coeff {n : ℕ} {f : SpaceTimeAlgebra} (h0 : constantCoeff f = 1)
     (hf : ∀ p : (Fin 1 ⊕ Fin 3) →₀ ℕ, p ≠ 0 → Finsupp.degree p ≤ n → coeff p f = 0) :
-    JetRing.truncation n f = JetRing.truncation n (1 : JetRing) := by
+    SpaceTimeAlgebra.truncation n f = SpaceTimeAlgebra.truncation n (1 : SpaceTimeAlgebra) := by
   ext m
   by_cases hm : Finsupp.degree m ≤ n
-  · rw [JetRing.coeff_truncation_of_le hm, JetRing.coeff_truncation_of_le hm]
+  · rw [SpaceTimeAlgebra.coeff_truncation_of_le hm, SpaceTimeAlgebra.coeff_truncation_of_le hm]
     rcases eq_or_ne m 0 with rfl | hm0
     · simpa [coeff_zero_eq_constantCoeff] using h0
     · rw [hf m hm0 hm, coeff_one, ite_eq_right hm0]
-  · rw [JetRing.coeff_truncation_of_gt (not_le.mp hm),
-      JetRing.coeff_truncation_of_gt (not_le.mp hm)]
+  · rw [SpaceTimeAlgebra.coeff_truncation_of_gt (not_le.mp hm),
+      SpaceTimeAlgebra.coeff_truncation_of_gt (not_le.mp hm)]
 
 /-!
 
@@ -332,29 +334,29 @@ lemma truncation_eq_one_of_coeff {n : ℕ} {f : JetRing} (h0 : constantCoeff f =
 -/
 
 /-- The formal coordinates of the jet ring are self-adjoint. -/
-lemma star_X (ρ : Fin 1 ⊕ Fin 3) : star (X ρ : JetRing) = X ρ := by
+lemma star_X (ρ : Fin 1 ⊕ Fin 3) : star (X ρ : SpaceTimeAlgebra) = X ρ := by
   ext m
-  rw [JetRing.coeff_star, show (X ρ : JetRing) = monomial (Finsupp.single ρ 1) 1 from rfl,
-    coeff_monomial]
+  rw [SpaceTimeAlgebra.coeff_star,
+    show (X ρ : SpaceTimeAlgebra) = monomial (Finsupp.single ρ 1) 1 from rfl, coeff_monomial]
   split_ifs <;> simp
 
 /-- The Taylor coefficients of a jet multiplied by a formal coordinate: the
   coefficient shifts down by one in that direction. -/
-lemma coeff_X_smul (ρ : Fin 1 ⊕ Fin 3) (f : JetRing) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    coeff p ((X ρ : JetRing) • f) =
+lemma coeff_X_smul (ρ : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    coeff p ((X ρ : SpaceTimeAlgebra) • f) =
       if Finsupp.single ρ 1 ≤ p then coeff (p - Finsupp.single ρ 1) f else 0 := by
-  rw [smul_eq_mul, show (X ρ : JetRing) = monomial (Finsupp.single ρ 1) 1 from rfl,
+  rw [smul_eq_mul, show (X ρ : SpaceTimeAlgebra) = monomial (Finsupp.single ρ 1) 1 from rfl,
     coeff_monomial_mul]
   split_ifs <;> simp
 
 /-- The Euler (radial) operator acts on Taylor coefficients as multiplication by the
   total degree. -/
-lemma coeff_sum_X_smul_pderiv (f : JetRing) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
-    coeff p (∑ ρ, (X ρ : JetRing) • pderiv ρ f) =
+lemma coeff_sum_X_smul_pderiv (f : SpaceTimeAlgebra) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    coeff p (∑ ρ, (X ρ : SpaceTimeAlgebra) • pderiv ρ f) =
       ((Finsupp.degree p : ℕ) : ℂ) * coeff p f := by
   classical
   rw [map_sum]
-  have ht : ∀ ρ, coeff p ((X ρ : JetRing) • pderiv ρ f) = (p ρ : ℂ) * coeff p f := by
+  have ht : ∀ ρ, coeff p ((X ρ : SpaceTimeAlgebra) • pderiv ρ f) = (p ρ : ℂ) * coeff p f := by
     intro ρ
     rw [coeff_X_smul]
     by_cases h : Finsupp.single ρ 1 ≤ p
@@ -373,8 +375,8 @@ lemma coeff_sum_X_smul_pderiv (f : JetRing) (p : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
 
 /-- The scalar vanishing principle for the Euler operator: a jet vanishing at the base
   point that is killed by the Euler operator is zero. -/
-lemma eq_zero_of_sum_X_smul_pderiv_eq_zero {f : JetRing} (h0 : constantCoeff f = 0)
-    (hf : ∑ ρ, (X ρ : JetRing) • pderiv ρ f = 0) : f = 0 := by
+lemma eq_zero_of_sum_X_smul_pderiv_eq_zero {f : SpaceTimeAlgebra} (h0 : constantCoeff f = 0)
+    (hf : ∑ ρ, (X ρ : SpaceTimeAlgebra) • pderiv ρ f = 0) : f = 0 := by
   ext p
   rcases eq_or_ne p 0 with rfl | hp
   · simpa [coeff_zero_eq_constantCoeff] using h0
@@ -395,8 +397,8 @@ derivatives below degree `n` controls the coefficients up to degree `n`.
 
 /-- A product with a factor whose coefficients vanish below degree `n` has coefficients
   vanishing below degree `n`. -/
-lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : JetRing}
-    (hw : ∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q w = 0) (v : JetRing)
+lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : SpaceTimeAlgebra}
+    (hw : ∀ q : (Fin 1 ⊕ Fin 3) →₀ ℕ, Finsupp.degree q < n → coeff q w = 0) (v : SpaceTimeAlgebra)
     {q : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hq : Finsupp.degree q < n) : coeff q (w * v) = 0 := by
   rw [coeff_mul]
   refine Finset.sum_eq_zero fun p hp => ?_
@@ -410,15 +412,15 @@ lemma coeff_mul_eq_zero_of_lt {n : ℕ} {w : JetRing}
   coefficients vanishing below degree `n` has vanishing coefficients in every nonzero degree
   up to `n`, since `∑_ρ x_ρ ∂_ρ f` has the coefficient of `f` at `p` scaled by the degree
   of `p`. -/
-lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
+lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : SpaceTimeAlgebra}
     (hf : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
       coeff q (pderiv ρ f) = 0)
     {p : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hp : p ≠ 0) (hpn : Finsupp.degree p ≤ n) : coeff p f = 0 := by
-  have h1 := JetRing.coeff_sum_X_smul_pderiv f p
-  have h2 : coeff p (∑ ρ, (X ρ : JetRing) • pderiv ρ f) = 0 := by
+  have h1 := SpaceTimeAlgebra.coeff_sum_X_smul_pderiv f p
+  have h2 : coeff p (∑ ρ, (X ρ : SpaceTimeAlgebra) • pderiv ρ f) = 0 := by
     rw [map_sum]
     refine Finset.sum_eq_zero fun ρ _ => ?_
-    rw [JetRing.coeff_X_smul]
+    rw [SpaceTimeAlgebra.coeff_X_smul]
     split_ifs with hle
     · refine hf ρ _ ?_
       have hd := congrArg Finsupp.degree (tsub_add_cancel_of_le hle)
@@ -432,7 +434,8 @@ lemma coeff_eq_zero_of_coeff_pderiv_eq_zero {n : ℕ} {f : JetRing}
 
 /-- A power series satisfying a radial relation `∂_ρ f = x_ρ f`, with the `x_ρ` vanishing
   below degree `n`, has no coefficients in nonzero degree up to `n`. -/
-lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin 3) → JetRing}
+lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : SpaceTimeAlgebra}
+    {x : (Fin 1 ⊕ Fin 3) → SpaceTimeAlgebra}
     (hd : ∀ ρ, pderiv ρ f = x ρ * f)
     (hx : ∀ (ρ : Fin 1 ⊕ Fin 3) (q : (Fin 1 ⊕ Fin 3) →₀ ℕ), Finsupp.degree q < n →
       coeff q (x ρ) = 0)
@@ -448,7 +451,7 @@ lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : JetRing} {x : (Fin 1 ⊕ Fin
 
 /-- The base-point value of an iterated formal derivative is the corresponding Taylor
   coefficient with the factorial normalization. -/
-lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : JetRing) :
+lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
     constantCoeff (s.foldl (fun f ρ => pderiv ρ f) f) =
       ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) * coeff s.toFinsupp f := by
   induction s using Multiset.induction_on generalizing f with
@@ -487,17 +490,17 @@ lemma degree_toFinsupp_eq_card (r : Multiset (Fin 1 ⊕ Fin 3)) :
 
 /-- Constants commute with real scalars. -/
 lemma C_real_smul (r : ℝ) (x : ℂ) :
-    (MvPowerSeries.C (r • x) : JetRing) = r • MvPowerSeries.C x := by
+    (MvPowerSeries.C (r • x) : SpaceTimeAlgebra) = r • MvPowerSeries.C x := by
   rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply]
 
 /-- The constant coefficient commutes with real scalars. -/
-lemma constantCoeff_real_smul (r : ℝ) (f : JetRing) :
+lemma constantCoeff_real_smul (r : ℝ) (f : SpaceTimeAlgebra) :
     MvPowerSeries.constantCoeff (r • f) = r • MvPowerSeries.constantCoeff f := by
   rw [← algebraMap_smul ℂ r, MvPowerSeries.constantCoeff_smul, algebraMap_smul]
 
 /-- The formal derivatives commute with real scalars. -/
-lemma pderiv_real_smul (μ : Fin 1 ⊕ Fin 3) (r : ℝ) (f : JetRing) :
+lemma pderiv_real_smul (μ : Fin 1 ⊕ Fin 3) (r : ℝ) (f : SpaceTimeAlgebra) :
     MvPowerSeries.pderiv μ (r • f) = r • MvPowerSeries.pderiv μ f := by
   rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
 
-end JetRing
+end SpaceTimeAlgebra
