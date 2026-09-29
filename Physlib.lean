@@ -637,6 +637,7 @@ public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzEquivariant
 public import Physlib.Relativity.LorentzGroup.Invariants.RankFour
 public import Physlib.Relativity.LorentzGroup.Invariants.RankOne
 public import Physlib.Relativity.LorentzGroup.Invariants.RankThree

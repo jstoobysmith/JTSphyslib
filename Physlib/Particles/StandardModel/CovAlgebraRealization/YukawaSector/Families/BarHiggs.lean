@@ -48,7 +48,7 @@ minus these while by `mul_mul_piece_swap` their blocks are the same submodules.
 
 namespace StandardModel
 
-open TensorProduct Matrix MatrixGroups Lorentz Pointwise ComplexConjugate
+open TensorProduct Matrix MatrixGroups Lorentz Pointwise ComplexConjugate complexLorentzTensor
 
 namespace CovAlgebraRealization
 
@@ -111,16 +111,16 @@ lemma isSU2FundamentalAntiFundamental_barDownBlock (f f' : Fin 3) (sbd : Fin 2) 
 lemma isBiDualLeftWeyl_barDownBlock (f f' : Fin 3) (i : Fin 2) (cbd cQ : Fin 3)
     (wQ : Fin 2) :
     IsBiDualLeftWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barDownBlock f f' i l.1 cbd l.2 cQ wQ) where
-  repLorentz_T Λ l := by
+      (ofPairComponents fun a b => h.barDownBlock f f' i a cbd b cQ wQ) :=
+  isLorentzEquivariant_ofPairComponents _ fun Λ a b => by
+    rw [toMatrix_rep_downL]
     simp only [barDownBlock]
     rw [h.repLorentz_mul_fixed_left Λ
       (X := fun a => h.isFermionSector.bardComponent f ![] (a, cbd))
       (Y := fun a => h.isFermionSector.QComponent f' ![] (a, cQ, wQ))
       (h.repLorentz_barHiggs_zero Λ ![] i)
-      (h.isFermionSector.repLorentz_bardComponent Λ f ![] (l.1, cbd))
-      (h.isFermionSector.repLorentz_QComponent Λ f' ![] (l.2, cQ, wQ))]
-    rw [Fintype.sum_prod_type]
+      (h.isFermionSector.repLorentz_bardComponent Λ f ![] (a, cbd))
+      (h.isFermionSector.repLorentz_QComponent Λ f' ![] (b, cQ, wQ))]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
       simp [Matrix.transpose_apply, SL2C.inverse_coe]
 
@@ -175,16 +175,15 @@ lemma barDownBlockIsospin_eq (f f' : Fin 3) (sbd sQ : Fin 2) :
 /-- The doubly contracted conjugate down-type block carries two dual left-handed Weyl
   indices. -/
 lemma isBiDualLeftWeyl_barDownBlockIsospin (f f' : Fin 3) :
-    IsBiDualLeftWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barDownBlockIsospin f f' l.1 l.2) := by
-  simp only [h.barDownBlockIsospin_eq]
-  exact IsBiDualLeftWeyl.sum fun p =>
-    h.isBiDualLeftWeyl_barDownBlock f f' p.1 p.2 p.2 p.1
+    IsBiDualLeftWeyl B repLorentz (ofPairComponents (h.barDownBlockIsospin f f')) := by
+  rw [show h.barDownBlockIsospin f f' = _ from funext₂ (h.barDownBlockIsospin_eq f f'),
+    ofPairComponents_sum]
+  exact IsLorentzEquivariant.sum _ fun p _ => h.isBiDualLeftWeyl_barDownBlock f f' p.1 p.2 p.2 p.1
 
-/-- The conjugate down-type Yukawa term of the family pair `(f, f')`. -/
+/-- The conjugate down-type Yukawa term of the family pair `(f, f')`. It is the image of the metric
+  `εL'` under the map with the contracted block as its components. -/
 noncomputable def barDownYukawa (f f' : Fin 3) : B :=
-  IsBiLeftWeyl.epsilonContraction
-    (T := fun l : Fin 2 × Fin 2 => h.barDownBlockIsospin f f' l.1 l.2)
+  ofPairComponents (k := .downL) (h.barDownBlockIsospin f f') εL'
 
 /-!
 
@@ -229,15 +228,15 @@ lemma repGauge_u1_barDownBlockIsospin (t : unitary ℂ) (f f' : Fin 3) (sbd sQ :
 lemma repGauge_barDownYukawa (f f' : Fin 3) (g : GaugeGroupI) :
     repGauge g (h.barDownYukawa f f') = h.barDownYukawa f f' := by
   refine forall_repGauge_eq_self (fun U => ?_) (fun V => ?_) (fun t => ?_) g <;>
-    rw [barDownYukawa, IsBiLeftWeyl.epsilonContraction_eq, map_sub]
-  · rw [h.repGauge_su3_barDownBlockIsospin, h.repGauge_su3_barDownBlockIsospin]
-  · rw [h.repGauge_su2_barDownBlockIsospin, h.repGauge_su2_barDownBlockIsospin]
-  · rw [h.repGauge_u1_barDownBlockIsospin, h.repGauge_u1_barDownBlockIsospin]
+    rw [barDownYukawa, map_ofPairComponents]
+  · simp only [h.repGauge_su3_barDownBlockIsospin]
+  · simp only [h.repGauge_su2_barDownBlockIsospin]
+  · simp only [h.repGauge_u1_barDownBlockIsospin]
 
 /-- The conjugate down-type Yukawa term is Lorentz invariant. -/
 lemma repLorentz_barDownYukawa (f f' : Fin 3) (Λ : SL(2,ℂ)) :
     repLorentz Λ (h.barDownYukawa f f') = h.barDownYukawa f f' :=
-  (h.isBiDualLeftWeyl_barDownBlockIsospin f f').repLorentz_epsilonContraction Λ
+  (h.isBiDualLeftWeyl_barDownBlockIsospin f f').repLorentz_map_metricTensor Λ
 
 /-- Every component of the conjugate down-type block sits at mass weight eight in the
   Yukawa sector. -/
@@ -254,10 +253,10 @@ lemma barDownBlock_mem_sectorMassWeight (f f' : Fin 3) (i sbd : Fin 2) (cbd : Fi
 lemma barDownYukawa_mem_sectorMassWeight (f f' : Fin 3) :
     h.barDownYukawa f f'
       ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 := by
-  rw [barDownYukawa, IsBiLeftWeyl.epsilonContraction_eq]
-  refine Submodule.sub_mem _ ?_ ?_ <;>
-    exact h.barDownBlockIsospin_eq _ _ _ _ ▸
-      sum_mem fun p _ => h.barDownBlock_mem_sectorMassWeight _ _ _ _ _ _ _ _
+  rw [barDownYukawa]
+  refine ofPairComponents_mem (k := .downL) _ (fun a b => ?_) _
+  exact h.barDownBlockIsospin_eq _ _ _ _ ▸
+    sum_mem fun p _ => h.barDownBlock_mem_sectorMassWeight _ _ _ _ _ _ _ _
 
 /-!
 
@@ -312,16 +311,16 @@ lemma isSU2BiFundamental_barUpBlock (f f' : Fin 3) (su : Fin 2) (cu : Fin 3)
 lemma isBiDualRightWeyl_barUpBlock (f f' : Fin 3) (i : Fin 2) (cu cbQ : Fin 3)
     (wbQ : Fin 2) :
     IsBiDualRightWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barUpBlock f f' i l.1 cu l.2 cbQ wbQ) where
-  repLorentz_T Λ l := by
+      (ofPairComponents fun a b => h.barUpBlock f f' i a cu b cbQ wbQ) :=
+  isLorentzEquivariant_ofPairComponents _ fun Λ a b => by
+    rw [toMatrix_rep_downR]
     simp only [barUpBlock]
     rw [h.repLorentz_mul_fixed_left Λ
       (X := fun a => h.isFermionSector.uComponent f ![] (a, cu))
       (Y := fun a => h.isFermionSector.barQComponent f' ![] (a, cbQ, wbQ))
       (h.repLorentz_barHiggs_zero Λ ![] i)
-      (h.isFermionSector.repLorentz_uComponent Λ f ![] (l.1, cu))
-      (h.isFermionSector.repLorentz_barQComponent Λ f' ![] (l.2, cbQ, wbQ))]
-    rw [Fintype.sum_prod_type]
+      (h.isFermionSector.repLorentz_uComponent Λ f ![] (a, cu))
+      (h.isFermionSector.repLorentz_barQComponent Λ f' ![] (b, cbQ, wbQ))]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
       simp [Matrix.conjTranspose_apply, SL2C.inverse_coe]
 
@@ -374,17 +373,16 @@ lemma barUpBlockIsospin_eq (f f' : Fin 3) (su sbQ : Fin 2) :
 /-- The doubly contracted conjugate up-type block carries two dual right-handed Weyl
   indices. -/
 lemma isBiDualRightWeyl_barUpBlockIsospin (f f' : Fin 3) :
-    IsBiDualRightWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barUpBlockIsospin f f' l.1 l.2) := by
-  simp only [h.barUpBlockIsospin_eq]
-  exact IsBiDualRightWeyl.sub
-    (IsBiDualRightWeyl.sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1)
-    (IsBiDualRightWeyl.sum fun a => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
+    IsBiDualRightWeyl B repLorentz (ofPairComponents (h.barUpBlockIsospin f f')) := by
+  rw [show h.barUpBlockIsospin f f' = _ from funext₂ (h.barUpBlockIsospin_eq f f'),
+    ofPairComponents_sub, ofPairComponents_sum, ofPairComponents_sum]
+  exact (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 0 a a 1).sub
+    (IsLorentzEquivariant.sum _ fun a _ => h.isBiDualRightWeyl_barUpBlock f f' 1 a a 0)
 
-/-- The conjugate up-type Yukawa term of the family pair `(f, f')`. -/
+/-- The conjugate up-type Yukawa term of the family pair `(f, f')`. It is the image of the metric
+  `εR'` under the map with the contracted block as its components. -/
 noncomputable def barUpYukawa (f f' : Fin 3) : B :=
-  IsBiLeftWeyl.epsilonContraction
-    (T := fun l : Fin 2 × Fin 2 => h.barUpBlockIsospin f f' l.1 l.2)
+  ofPairComponents (k := .downR) (h.barUpBlockIsospin f f') εR'
 
 /-!
 
@@ -429,15 +427,15 @@ lemma repGauge_u1_barUpBlockIsospin (t : unitary ℂ) (f f' : Fin 3) (su sbQ : F
 lemma repGauge_barUpYukawa (f f' : Fin 3) (g : GaugeGroupI) :
     repGauge g (h.barUpYukawa f f') = h.barUpYukawa f f' := by
   refine forall_repGauge_eq_self (fun U => ?_) (fun V => ?_) (fun t => ?_) g <;>
-    rw [barUpYukawa, IsBiLeftWeyl.epsilonContraction_eq, map_sub]
-  · rw [h.repGauge_su3_barUpBlockIsospin, h.repGauge_su3_barUpBlockIsospin]
-  · rw [h.repGauge_su2_barUpBlockIsospin, h.repGauge_su2_barUpBlockIsospin]
-  · rw [h.repGauge_u1_barUpBlockIsospin, h.repGauge_u1_barUpBlockIsospin]
+    rw [barUpYukawa, map_ofPairComponents]
+  · simp only [h.repGauge_su3_barUpBlockIsospin]
+  · simp only [h.repGauge_su2_barUpBlockIsospin]
+  · simp only [h.repGauge_u1_barUpBlockIsospin]
 
 /-- The conjugate up-type Yukawa term is Lorentz invariant. -/
 lemma repLorentz_barUpYukawa (f f' : Fin 3) (Λ : SL(2,ℂ)) :
     repLorentz Λ (h.barUpYukawa f f') = h.barUpYukawa f f' :=
-  (h.isBiDualRightWeyl_barUpBlockIsospin f f').repLorentz_epsilonContraction Λ
+  (h.isBiDualRightWeyl_barUpBlockIsospin f f').repLorentz_map_metricTensor Λ
 
 /-- Every component of the conjugate up-type block sits at mass weight eight in the Yukawa
   sector. -/
@@ -461,8 +459,8 @@ lemma barUpYukawa_mem_sectorMassWeight (f f' : Fin 3) :
     exact Submodule.sub_mem _
       (sum_mem fun a _ => h.barUpBlock_mem_sectorMassWeight _ _ _ _ _ _ _ _)
       (sum_mem fun a _ => h.barUpBlock_mem_sectorMassWeight _ _ _ _ _ _ _ _)
-  rw [barUpYukawa, IsBiLeftWeyl.epsilonContraction_eq]
-  exact Submodule.sub_mem _ (hiso _ _) (hiso _ _)
+  rw [barUpYukawa]
+  exact ofPairComponents_mem (k := .downR) _ hiso _
 
 /-!
 
@@ -506,16 +504,16 @@ lemma isSU2FundamentalAntiFundamental_barLeptonBlock (f f' : Fin 3) (sL sbe : Fi
 /-- The two spinor indices of the conjugate lepton block are both dual left-handed. -/
 lemma isBiDualLeftWeyl_barLeptonBlock (f f' : Fin 3) (i wL : Fin 2) :
     IsBiDualLeftWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barLeptonBlock f f' i l.1 wL l.2) where
-  repLorentz_T Λ l := by
+      (ofPairComponents fun a b => h.barLeptonBlock f f' i a wL b) :=
+  isLorentzEquivariant_ofPairComponents _ fun Λ a b => by
+    rw [toMatrix_rep_downL]
     simp only [barLeptonBlock]
     rw [h.repLorentz_mul_fixed_left Λ
       (X := fun a => h.isFermionSector.LComponent f ![] (a, wL))
       (Y := fun a => h.isFermionSector.bareComponent f' ![] a)
       (h.repLorentz_barHiggs_zero Λ ![] i)
-      (h.isFermionSector.repLorentz_LComponent Λ f ![] (l.1, wL))
-      (h.isFermionSector.repLorentz_bareComponent Λ f' ![] l.2)]
-    rw [Fintype.sum_prod_type]
+      (h.isFermionSector.repLorentz_LComponent Λ f ![] (a, wL))
+      (h.isFermionSector.repLorentz_bareComponent Λ f' ![] b)]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => by
       simp [Matrix.transpose_apply, SL2C.inverse_coe]
 
@@ -547,15 +545,15 @@ lemma barLeptonBlockIsospin_eq (f f' : Fin 3) (sL sbe : Fin 2) :
 
 /-- The contracted conjugate lepton block carries two dual left-handed Weyl indices. -/
 lemma isBiDualLeftWeyl_barLeptonBlockIsospin (f f' : Fin 3) :
-    IsBiDualLeftWeyl B repLorentz
-      (fun l : Fin 2 × Fin 2 => h.barLeptonBlockIsospin f f' l.1 l.2) := by
-  simp only [h.barLeptonBlockIsospin_eq]
-  exact IsBiDualLeftWeyl.sum fun w => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
+    IsBiDualLeftWeyl B repLorentz (ofPairComponents (h.barLeptonBlockIsospin f f')) := by
+  rw [show h.barLeptonBlockIsospin f f' = _ from funext₂ (h.barLeptonBlockIsospin_eq f f'),
+    ofPairComponents_sum]
+  exact IsLorentzEquivariant.sum _ fun w _ => h.isBiDualLeftWeyl_barLeptonBlock f f' w w
 
-/-- The conjugate charged-lepton Yukawa term of the family pair `(f, f')`. -/
+/-- The conjugate charged-lepton Yukawa term of the family pair `(f, f')`. It is the image of the
+  metric `εL'` under the map with the contracted block as its components. -/
 noncomputable def barLeptonYukawa (f f' : Fin 3) : B :=
-  IsBiLeftWeyl.epsilonContraction
-    (T := fun l : Fin 2 × Fin 2 => h.barLeptonBlockIsospin f f' l.1 l.2)
+  ofPairComponents (k := .downL) (h.barLeptonBlockIsospin f f') εL'
 
 /-!
 
@@ -590,15 +588,15 @@ lemma repGauge_u1_barLeptonBlockIsospin (t : unitary ℂ) (f f' : Fin 3) (sL sbe
 lemma repGauge_barLeptonYukawa (f f' : Fin 3) (g : GaugeGroupI) :
     repGauge g (h.barLeptonYukawa f f') = h.barLeptonYukawa f f' := by
   refine forall_repGauge_eq_self (fun U => ?_) (fun V => ?_) (fun t => ?_) g <;>
-    rw [barLeptonYukawa, IsBiLeftWeyl.epsilonContraction_eq, map_sub]
-  · rw [h.repGauge_su3_barLeptonBlockIsospin, h.repGauge_su3_barLeptonBlockIsospin]
-  · rw [h.repGauge_su2_barLeptonBlockIsospin, h.repGauge_su2_barLeptonBlockIsospin]
-  · rw [h.repGauge_u1_barLeptonBlockIsospin, h.repGauge_u1_barLeptonBlockIsospin]
+    rw [barLeptonYukawa, map_ofPairComponents]
+  · simp only [h.repGauge_su3_barLeptonBlockIsospin]
+  · simp only [h.repGauge_su2_barLeptonBlockIsospin]
+  · simp only [h.repGauge_u1_barLeptonBlockIsospin]
 
 /-- The conjugate charged-lepton Yukawa term is Lorentz invariant. -/
 lemma repLorentz_barLeptonYukawa (f f' : Fin 3) (Λ : SL(2,ℂ)) :
     repLorentz Λ (h.barLeptonYukawa f f') = h.barLeptonYukawa f f' :=
-  (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f').repLorentz_epsilonContraction Λ
+  (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f').repLorentz_map_metricTensor Λ
 
 /-- Every component of the conjugate lepton block sits at mass weight eight in the Yukawa
   sector. -/
@@ -615,10 +613,10 @@ lemma barLeptonBlock_mem_sectorMassWeight (f f' : Fin 3) (i sL wL sbe : Fin 2) :
 lemma barLeptonYukawa_mem_sectorMassWeight (f f' : Fin 3) :
     h.barLeptonYukawa f f'
       ∈ h.sectorMassWeight {GeneratorClass.higgs, GeneratorClass.fermion} 8 := by
-  rw [barLeptonYukawa, IsBiLeftWeyl.epsilonContraction_eq]
-  refine Submodule.sub_mem _ ?_ ?_ <;>
-    exact h.barLeptonBlockIsospin_eq _ _ _ _ ▸
-      sum_mem fun w _ => h.barLeptonBlock_mem_sectorMassWeight _ _ _ _ _ _
+  rw [barLeptonYukawa]
+  refine ofPairComponents_mem (k := .downL) _ (fun a b => ?_) _
+  exact h.barLeptonBlockIsospin_eq _ _ _ _ ▸
+    sum_mem fun w _ => h.barLeptonBlock_mem_sectorMassWeight _ _ _ _ _ _
 
 /-!
 

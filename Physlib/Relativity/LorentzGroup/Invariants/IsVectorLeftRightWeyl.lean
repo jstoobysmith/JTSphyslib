@@ -5,159 +5,157 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
+public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.RankTwo
-public import Physlib.Relativity.PauliMatrices.AsTensor
+public import Physlib.Relativity.PauliMatrices.ToTensor
+public import Physlib.Relativity.LorentzGroup.Invariants.LorentzEquivariant
 /-!
 # Lorentz invariants of a four-vector index and a left-right Weyl pair
 
-Every Lorentz invariant in the span of the components of a family `T^{μ α α'}` carrying one
-four-vector index and one opposite-chirality Weyl pair is a multiple of the contraction
-against the Pauli matrices
-
-`pauliContraction = σ_μ^{α α'} T^{μ}{}_{α α'}`,
-
-the shape of the fermion kinetic term `ψ̄_{α'} σ̄^{μ α' α} ∂_μ ψ_α`. The theorem is
-`exists_smul_pauliContraction_of_invariant`, and `repLorentz_pauliContraction` checks that
-the contraction is invariant.
+A family `T^{μ α α'}` carrying one four-vector index and one opposite-chirality Weyl pair is an
+equivariant linear map `f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B`, `IsVectorLeftRightWeyl` (A). Every
+Lorentz invariant in the range of `f` is a multiple of `f σ^^^`, the image of the Pauli
+matrices as a tensor, the shape of the fermion kinetic term `ψ̄_{α'} σ̄^{μ α' α} ∂_μ ψ_α`. That is
+`IsVectorLeftRightWeyl.exists_smul_map_pauliMatrix_add_of_invariant`, stated modulo a
+Lorentz-stable submodule `S`, and packaged as `IsVectorLeftRightWeyl.invariantReductionToSpan`
+(D).
 
 An opposite-chirality Weyl pair carries the `(1/2, 1/2)` representation, which is the
-four-vector representation, so the three indices are two four-vector indices, and two of
-those admit only the metric trace. The proof makes that literal: contracting the Weyl pair
-against the covariant Pauli matrices `PauliMatrix.pauliLower`, which intertwine the two index
-laws (`SL2C.sum_pauliLower_mul_sl2c`), turns `T` into a rank-two Lorentz family, invertibly
-by Fierz completeness and hence with the same span (B); `RankTwo` supplies the classification,
-its metric contraction being the Pauli contraction of `T` (C). Section D gives the model
-family, whose Pauli contraction is `PauliMatrix.asTensor`.
+four-vector representation, so the three indices are two four-vector indices, and two of those
+admit only the metric trace. The proof makes that literal. The components
+`f (e_μ ⊗ e_α ⊗ e_α')` of `f` move as `T^{μ α α'}` (B); contracting their Weyl pair against the
+covariant Pauli matrices `PauliMatrix.pauliLower`, which intertwine the two index laws
+(`SL2C.sum_pauliLower_mul_sl2c`), gives a rank-two Lorentz family `vectorPair f`, whose span is
+the range of `f` by Fierz completeness and whose metric contraction is `f σ^^^` (C); `RankTwo`
+supplies the classification (D). A family of components is turned back into a map by
+`ofVectorComponents` (E).
 
 The Standard Model's fermion symbols are `Module.Dual`-valued, so their spinor indices carry
-the dual laws `(g⁻¹)ᵀ` and `(g⁻¹)ᴴ` (E). As in `IsBiLeftWeyl`, re-indexing the two spinor
-slots by the symplectic form `ε` converts them into the fundamental laws for the same
+the dual laws `(g⁻¹)ᵀ` and `(g⁻¹)ᴴ` (F). Re-indexing the two spinor slots by the symplectic
+form `ε`, `epsReindex`, converts them into the fundamental laws for the same
 representation; no conjugation twist is needed, the mixed law already carrying one conjugate
-factor and `ε` having real entries, and the vector slot keeps the plain Lorentz law. The
-re-index does move the contraction, sending the Pauli matrices to their transposes `pauliBar`,
-so the invariant in the dual conclusions is `pauliBarContraction`, with scalar `+1` (F, G).
-A dual pair with no vector index has no invariant at all (G).
+factor and `ε` having real entries, and the vector slot keeps the plain Lorentz law. The image of
+`σ^^^` under the map with the re-indexed components is the contraction `pauliBarContraction`
+against the transposed Pauli matrices, with scalar `+1` (G, H). A dual pair with no vector index
+has no invariant at all (H).
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C
+open TensorProduct Matrix MatrixGroups SL2C complexLorentzTensor
 
 /-!
 
-## A. Vector-Weyl families and the Pauli contraction
-
-`IsVectorLeftRightWeyl B repLorentz T` says the group moves the vector index of `T^{μ α α'}`
-by the Lorentz matrix, the left Weyl index by the matrix of `g` and the right one by its
-complex conjugate.
+## A. Vector-Weyl families as equivariant maps
 
 -/
 
-/-- A family `T` indexed by a four-vector index and a left- and a right-handed Weyl index,
-  moved by `repLorentz` as `T^{μ α α'}`: the vector index by the Lorentz matrix, the left
-  index by the matrix of `g` and the right index by its complex conjugate, the summed index
-  first in each factor. -/
-structure IsVectorLeftRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
-    (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) : Prop where
-  repLorentz_T : ∀ (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2),
-    repLorentz g (T (μ, l)) = ∑ (ν : Fin 1 ⊕ Fin 3), ∑ (a : Fin 2 × Fin 2),
-      ((((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ)
-        * (g.1 a.1 l.1 * star (g.1 a.2 l.2))) • T (ν, a)
+/-- A family with a four-vector index and a left- and a right-handed Weyl index `T^{μ α α'}`:
+  an equivariant linear map out of `ℂT[.up, .upL, .upR]`. -/
+abbrev IsVectorLeftRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
+    (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) : Prop :=
+  IsLorentzEquivariant ![.up, .upL, .upR] B repLorentz f
 
 namespace IsVectorLeftRightWeyl
 
+open PauliMatrix
+
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
-  {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B}
-  (hT : IsVectorLeftRightWeyl B repLorentz T)
+  {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B}
+  (hf : IsVectorLeftRightWeyl B repLorentz f)
 
-include hT in
-/-- The index law as one matrix on the product index. -/
-lemma repLorentz_T' (g : SL(2,ℂ)) (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
-    repLorentz g (T d) = ∑ e : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
+/-!
+
+## B. The components of an equivariant map
+
+The components `f (e_μ ⊗ e_α ⊗ e_α')` of an equivariant map are moved by the Lorentz matrix on
+the vector index, by the matrix of `g` on the left Weyl index and by its complex conjugate on
+the right one.
+
+-/
+
+include hf in
+/-- The components of an equivariant map are moved as `T^{μ α α'}`, the summed index first in
+  each factor. -/
+lemma repLorentz_map_indexBasis (g : SL(2,ℂ)) (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
+    repLorentz g (f (indexBasis d)) = ∑ e : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       ((((SL2C.toLorentzGroup g).1 e.1 d.1 : ℝ) : ℂ)
-        * (g.1 e.2.1 d.2.1 * star (g.1 e.2.2 d.2.2))) • T e := by
-  rw [show d = (d.1, d.2) from rfl, hT.repLorentz_T, Fintype.sum_prod_type]
+        * (g.1 e.2.1 d.2.1 * star (g.1 e.2.2 d.2.2))) • f (indexBasis e) := by
+  rw [indexBasis_apply, ← hf.equivariant, smul_basis_eq_sum, map_sum,
+    ← indexEquiv.symm.sum_comp]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  rw [map_smul, Fin.prod_univ_three, mul_assoc, indexBasis_apply]
+  exact congrArg (· • _) (congrArg₂ (· * ·) (toMatrix_rep_up_apply g e.1 d.1)
+    (congrArg₂ (· * ·) (congrFun (congrFun (toMatrix_rep_upL g) e.2.1) d.2.1)
+      (congrFun (congrFun (toMatrix_rep_upR g) e.2.2) d.2.2)))
 
-include hT in
+include hf in
 /-- Moving a contraction of the Weyl pair at vector index `μ`: the vector index moves by the
   Lorentz matrix and the coefficient function by `IsLeftRightWeyl.act g`. -/
 lemma repLorentz_sum_smul (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (c : Fin 2 × Fin 2 → ℂ) :
-    repLorentz g (∑ a : Fin 2 × Fin 2, c a • T (μ, a))
+    repLorentz g (∑ a : Fin 2 × Fin 2, c a • f (indexBasis (μ, a)))
       = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ)
-        • ∑ q : Fin 2 × Fin 2, IsLeftRightWeyl.act g c q • T (ν, q) := by
-  rw [(repLorentz g).map_sum_smul_of_forall_eq (fun a => T (μ, a)) T
+        • ∑ q : Fin 2 × Fin 2, IsLeftRightWeyl.act g c q • f (indexBasis (ν, q)) := by
+  rw [(repLorentz g).map_sum_smul_of_forall_eq (fun a => f (indexBasis (μ, a)))
+    (fun e => f (indexBasis e))
     (fun e a => (((SL2C.toLorentzGroup g).1 e.1 μ : ℝ) : ℂ)
-      * (g.1 e.2.1 a.1 * star (g.1 e.2.2 a.2))) (fun a => hT.repLorentz_T' g (μ, a)) c,
-    Fintype.sum_prod_type]
+      * (g.1 e.2.1 a.1 * star (g.1 e.2.2 a.2)))
+    (fun a => hf.repLorentz_map_indexBasis g (μ, a)) c, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [Finset.smul_sum]
   refine Finset.sum_congr rfl fun q _ => ?_
   rw [smul_smul, IsLeftRightWeyl.act, Finset.mul_sum]
-  exact congrArg (· • T (ν, q)) (Finset.sum_congr rfl fun p _ => by ring)
-
-/-- The Pauli contraction `∑ μ, ∑ a, σ^μ_{a₁ a₂} • T (μ, a)` against the Pauli matrices
-  `PauliMatrix.pauliMatrix`: the kinetic-term contraction of a four-vector index against a
-  pair of opposite-chirality Weyl indices. -/
-noncomputable def pauliContraction : B :=
-  ∑ μ : Fin 1 ⊕ Fin 3, ∑ a : Fin 2 × Fin 2,
-    PauliMatrix.pauliMatrix μ a.1 a.2 • T (μ, a)
+  exact congrArg (· • f (indexBasis (ν, q))) (Finset.sum_congr rfl fun p _ => by ring)
 
 /-!
 
-## B. The reduction to a pair of four-vector indices
+## C. The reduction to a pair of four-vector indices
 
-Contracting the Weyl pair against the covariant Pauli matrices turns `T` into a family
-`vectorPair` of two four-vector indices, which is a rank-two Lorentz family. By Fierz
-completeness the contraction is invertible, so the two families have the same span.
+Contracting the Weyl pair of the components against the covariant Pauli matrices gives a
+family `vectorPair f` of two four-vector indices, which is a rank-two Lorentz family. By Fierz
+completeness the contraction is invertible, so its span is the range of `f`, and its metric
+contraction is `f σ^^^`.
 
 -/
 
-/-- The family of two four-vector indices obtained by contracting the Weyl pair of `T`
-  against the covariant Pauli matrices. -/
-noncomputable def vectorPair : (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
-  fun d => ∑ a : Fin 2 × Fin 2, PauliMatrix.pauliLower (d 1) a.1 a.2 • T (d 0, a)
+/-- The family of two four-vector indices obtained by contracting the Weyl pair of the
+  components of `f` against the covariant Pauli matrices. -/
+noncomputable def vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
+    (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
+  fun d => ∑ a : Fin 2 × Fin 2, PauliMatrix.pauliLower (d 1) a.1 a.2 • f (indexBasis (d 0, a))
 
-include hT in
+include hf in
 /-- The reduced family is a rank-two Lorentz family: the intertwining identity
   `SL2C.sum_pauliLower_mul_sl2c` carries the Weyl pair into a second vector index. -/
-lemma isLorentzCovariant_vectorPair :
-    IsLorentzCovariant 2 B repLorentz (vectorPair (T := T)) where
+lemma isLorentzCovariant_vectorPair : IsLorentzCovariant 2 B repLorentz (vectorPair f) where
   repLorentz_T g l := by
-    rw [vectorPair, hT.repLorentz_sum_smul, sum_pi_fin_two]
+    rw [vectorPair, hf.repLorentz_sum_smul, sum_pi_fin_two]
     refine Finset.sum_congr rfl fun ν _ => ?_
     simp only [IsLeftRightWeyl.act, sum_pauliLower_mul_sl2c]
     rw [Fintype.sum_sum_mul_smul
       (fun (q : Fin 2 × Fin 2) (ρ : Fin 1 ⊕ Fin 3) => PauliMatrix.pauliLower ρ q.1 q.2)
-      (fun ρ => (((SL2C.toLorentzGroup g).1 ρ (l 1) : ℝ) : ℂ)) (fun q => T (ν, q)),
-      Finset.smul_sum]
+      (fun ρ => (((SL2C.toLorentzGroup g).1 ρ (l 1) : ℝ) : ℂ))
+      (fun q => f (indexBasis (ν, q))), Finset.smul_sum]
     refine Finset.sum_congr rfl fun ρ _ => ?_
     simp only [vectorPair, smul_smul, Fin.prod_univ_two, Matrix.cons_val_zero,
       Matrix.cons_val_one]
 
-omit hT in
-/-- Every component of the reduced family lies in the span of the components of `T`. -/
-lemma vectorPair_mem_span_range (d : Fin 2 → Fin 1 ⊕ Fin 3) :
-    vectorPair (T := T) d ∈ Submodule.span ℂ (Set.range T) :=
-  sum_mem fun a _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨(d 0, a), rfl⟩)
-
-omit hT in
-/-- The reduction is invertible: by the Fierz completeness relation each component of
-  `T` is recovered from the reduced family. -/
-lemma eq_sum_vectorPair (μ : Fin 1 ⊕ Fin 3) (b : Fin 2 × Fin 2) :
-    T (μ, b) = ∑ ρ : Fin 1 ⊕ Fin 3,
-      ((2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1) • vectorPair (T := T) ![μ, ρ] := by
-  calc T (μ, b) = ∑ a : Fin 2 × Fin 2,
-        ((if a.1 = b.1 then (1 : ℂ) else 0) * (if a.2 = b.2 then 1 else 0)) • T (μ, a) := by
+/-- The reduction is invertible: by the Fierz completeness relation each component of `f` is
+  recovered from the reduced family. -/
+lemma map_indexBasis_eq_sum_vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B)
+    (μ : Fin 1 ⊕ Fin 3) (b : Fin 2 × Fin 2) :
+    f (indexBasis (μ, b)) = ∑ ρ : Fin 1 ⊕ Fin 3,
+      ((2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1) • vectorPair f ![μ, ρ] := by
+  calc f (indexBasis (μ, b)) = ∑ a : Fin 2 × Fin 2,
+        ((if a.1 = b.1 then (1 : ℂ) else 0) * (if a.2 = b.2 then 1 else 0))
+          • f (indexBasis (μ, a)) := by
         rw [Fintype.sum_prod_type]
         simp [ite_smul, Finset.sum_ite_eq']
     _ = ∑ a : Fin 2 × Fin 2, (∑ ρ : Fin 1 ⊕ Fin 3,
           (2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1 * PauliMatrix.pauliLower ρ a.1 a.2)
-            • T (μ, a) := by
+            • f (indexBasis (μ, a)) := by
         refine Finset.sum_congr rfl fun a _ => ?_
         congr 1
         rw [show (∑ ρ : Fin 1 ⊕ Fin 3,
@@ -174,30 +172,26 @@ lemma eq_sum_vectorPair (μ : Fin 1 ⊕ Fin 3) (b : Fin 2 × Fin 2) :
         rw [Finset.sum_comm]
         exact Finset.sum_congr rfl fun a _ => Finset.sum_smul
 
-omit hT in
-/-- Every component of `T` lies in the span of the components of the reduced family. -/
-lemma mem_span_range_vectorPair (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
-    T d ∈ Submodule.span ℂ (Set.range (vectorPair (T := T))) := by
-  rw [show T d = T (d.1, d.2) from rfl, eq_sum_vectorPair (T := T) d.1 d.2]
+/-- The reduction does not change the span: the reduced family spans the range of `f`. -/
+lemma span_range_vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
+    Submodule.span ℂ (Set.range (vectorPair f)) = LinearMap.range f := by
+  refine le_antisymm (Submodule.span_le.2 <| Set.range_subset_iff.2 fun d =>
+    sum_mem fun a _ => Submodule.smul_mem _ _ (LinearMap.mem_range_self f _)) ?_
+  rw [← Submodule.map_top, ← indexBasis.span_eq, Submodule.map_span, Submodule.span_le]
+  rintro _ ⟨_, ⟨⟨μ, b⟩, rfl⟩, rfl⟩
+  rw [map_indexBasis_eq_sum_vectorPair]
   exact sum_mem fun ρ _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
 
-omit hT in
-/-- The reduction does not change the span of the components. -/
-lemma span_range_vectorPair :
-    Submodule.span ℂ (Set.range (vectorPair (T := T))) = Submodule.span ℂ (Set.range T) :=
-  Submodule.span_eq_span (Set.range_subset_iff.2 vectorPair_mem_span_range)
-    (Set.range_subset_iff.2 mem_span_range_vectorPair)
-
-omit hT in
-/-- The metric contraction of the reduced family is exactly the Pauli contraction of `T`: the
+/-- The metric contraction of the reduced family is the image `f σ^^^` of the Pauli tensor: the
   two lowerings of the vector index cancel, so no sign and no scalar appear. -/
-lemma metricContraction_vectorPair :
-    RankTwo.metricContraction (T := vectorPair (T := T)) = pauliContraction (T := T) := by
-  rw [RankTwo.metricContraction, sum_pi_fin_two, pauliContraction]
+lemma metricContraction_vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
+    RankTwo.metricContraction (T := vectorPair f) = f σ^^^ := by
+  rw [RankTwo.metricContraction, sum_pi_fin_two, toTensor_eq_sum_indexBasis, map_sum,
+    Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun ν _ => ?_
   rw [Finset.sum_eq_single ν (fun ρ _ hρ => ?_) (fun hν => absurd (Finset.mem_univ ν) hν)]
   · simp only [vectorPair, Matrix.cons_val_zero, Matrix.cons_val_one, Finset.smul_sum,
-      smul_smul]
+      smul_smul, map_smul]
     refine Finset.sum_congr rfl fun a _ => ?_
     congr 1
     rw [PauliMatrix.pauliLower_eq_smul, Matrix.smul_apply, smul_eq_mul, ← mul_assoc]
@@ -209,112 +203,156 @@ lemma metricContraction_vectorPair :
 
 /-!
 
-## C. The classification of the Lorentz invariants
+## D. The classification of the Lorentz invariants
 
-`RankTwo` classifies the invariants of `vectorPair`, and its metric contraction is the Pauli
-contraction of `T`, so every invariant of the span is a multiple of `pauliContraction`.
+`RankTwo` classifies the invariants of `vectorPair f`, whose span is the range of `f` and whose
+metric contraction is `f σ^^^`.
 
 -/
 
-include hT in
-/-- The Pauli contraction is a Lorentz invariant: `RankTwo.repLorentz_metricContraction` read
-  through the reduction. -/
-lemma repLorentz_pauliContraction (g : SL(2,ℂ)) :
-    repLorentz g (pauliContraction (T := T)) = pauliContraction (T := T) := by
-  rw [← metricContraction_vectorPair]
-  exact RankTwo.repLorentz_metricContraction hT.isLorentzCovariant_vectorPair g
+include hf in
+/-- The image `f σ^^^` of the Pauli tensor is Lorentz invariant. -/
+lemma repLorentz_map_pauliMatrix (g : SL(2,ℂ)) : repLorentz g (f σ^^^) = f σ^^^ :=
+  hf.repLorentz_map_of_invariant toTensor_smul_eq_self g
 
-include hT in
-/-- Every Lorentz invariant in the span of the components is a multiple of `pauliContraction`. -/
-theorem exists_smul_pauliContraction_of_invariant {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, x = a • pauliContraction (T := T) := by
-  obtain ⟨a, ha⟩ := RankTwo.exists_smul_metricContraction_of_invariant
-    hT.isLorentzCovariant_vectorPair (by rwa [span_range_vectorPair]) hinv
-  exact ⟨a, by rwa [metricContraction_vectorPair] at ha⟩
-
-include hT in
-/-- The same modulo a Lorentz-stable subspace `S`: a multiple of `pauliContraction` plus an
-  error in `S`. -/
-lemma exists_smul_pauliContraction_of_invariant_subset {x : B} (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, ∃ y ∈ S, x = a • pauliContraction (T := T) + y := by
+include hf in
+/-- Every Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is a
+  multiple of the image `f σ^^^` of the Pauli tensor plus an element of `S`: the shape of the
+  fermion kinetic term. -/
+lemma exists_smul_map_pauliMatrix_add_of_invariant (S : Submodule ℂ B)
+    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
+    (hx : x ∈ LinearMap.range f ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, ∃ y ∈ S, x = a • f σ^^^ + y := by
   obtain ⟨a, y, hy, ha⟩ := RankTwo.exists_smul_metricContraction_of_invariant_subset
-    hT.isLorentzCovariant_vectorPair S hS (by rwa [span_range_vectorPair]) hinv
+    hf.isLorentzCovariant_vectorPair S hS (by rwa [span_range_vectorPair]) hinv
   exact ⟨a, y, hy, by rwa [metricContraction_vectorPair] at ha⟩
+
+include hf in
+/-- The Lorentz invariants of the range of `f` reduce to the span of the image `f σ^^^` of the
+  Pauli tensor. -/
+noncomputable def invariantReductionToSpan :
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) where
+  spanningVector := f σ^^^
+  stable := hf.isStableUnder_range
+  spanningVector_fixed := hf.repLorentz_map_pauliMatrix
+  reduce S hS _ hx hinv := hf.exists_smul_map_pauliMatrix_add_of_invariant S hS hx hinv
 
 end IsVectorLeftRightWeyl
 
 /-!
 
-## D. The Pauli tensor as the model example
+## E. Maps from components
 
-The tensor product of the complex four-vector representation with the two Weyl
-representations carries this law on products of basis vectors, and the Pauli contraction of
-that family is `PauliMatrix.asTensor`, which by section C spans its invariants.
+A family `T (μ, α, α')` of vectors is the linear map `ofVectorComponents T` sending
+`e_μ ⊗ e_α ⊗ e_α'` to `T (μ, α, α')`, and it is equivariant when the vectors are moved as the
+basis tensors are.
 
 -/
 
-open Fermion in
-/-- The tensor product of the four-vector and the two Weyl representations carries this index
-  law on products of basis vectors. -/
-lemma isVectorLeftRightWeyl_pauli :
-    IsVectorLeftRightWeyl (ContrℂModule ⊗[ℂ] (LeftHandedWeyl ⊗[ℂ] RightHandedWeyl))
-      (ContrℂModule.SL2CRep.tprod (LeftHandedWeyl.rep.tprod RightHandedWeyl.rep))
-      (fun d => complexContrBasis d.1 ⊗ₜ[ℂ]
-        (LeftHandedWeyl.basis d.2.1 ⊗ₜ[ℂ] RightHandedWeyl.basis d.2.2)) where
-  repLorentz_T g μ l := by
-    have hC : (ContrℂModule.SL2CRep g) (complexContrBasis μ)
-        = ∑ ν, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ) • complexContrBasis ν := by
-      rw [SL2CRep_ρ_basis]
-      exact Finset.sum_congr rfl fun ν _ => (algebraMap_smul ℂ _ _).symm
-    have hR : (RightHandedWeyl.rep g) (RightHandedWeyl.basis l.2)
-        = ∑ y, star (g.1 y l.2) • RightHandedWeyl.basis y := by
-      rw [RightHandedWeyl.rep_apply_basis]
-      exact Finset.sum_congr rfl fun y _ => by rw [Matrix.map_apply]
-    have hinner : (∑ x, g.1 x l.1 • LeftHandedWeyl.basis x) ⊗ₜ[ℂ]
-          (∑ y, star (g.1 y l.2) • RightHandedWeyl.basis y)
-        = ∑ a : Fin 2 × Fin 2, (g.1 a.1 l.1 * star (g.1 a.2 l.2))
-            • (LeftHandedWeyl.basis a.1 ⊗ₜ[ℂ] RightHandedWeyl.basis a.2) := by
-      rw [TensorProduct.sum_tmul, Fintype.sum_prod_type]
-      refine Finset.sum_congr rfl fun x _ => ?_
-      rw [TensorProduct.tmul_sum]
-      exact Finset.sum_congr rfl fun y _ => by
-        rw [← TensorProduct.smul_tmul', TensorProduct.tmul_smul, smul_smul]
-    rw [Representation.tprod_apply, TensorProduct.map_tmul, Representation.tprod_apply,
-      TensorProduct.map_tmul, hC, hR, LeftHandedWeyl.rep_apply_basis, hinner,
-      TensorProduct.sum_tmul]
-    refine Finset.sum_congr rfl fun ν _ => ?_
-    rw [TensorProduct.tmul_sum]
-    exact Finset.sum_congr rfl fun a _ => by
-      rw [TensorProduct.tmul_smul, ← TensorProduct.smul_tmul', smul_smul]
-      module
+section VectorComponents
 
-open PauliMatrix Fermion in
-/-- The Pauli contraction of the model family is `PauliMatrix.asTensor`. -/
-lemma pauliContraction_pauli :
-    IsVectorLeftRightWeyl.pauliContraction
-        (T := fun d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 => complexContrBasis d.1 ⊗ₜ[ℂ]
-          (LeftHandedWeyl.basis d.2.1 ⊗ₜ[ℂ] RightHandedWeyl.basis d.2.2))
-      = PauliMatrix.asTensor := by
-  rw [IsVectorLeftRightWeyl.pauliContraction, asTensor_expand]
-  simp only [Fintype.sum_sum_type, Finset.univ_unique, Fin.default_eq_zero,
-    Finset.sum_singleton, Fin.sum_univ_three, Fintype.sum_prod_type, Fin.sum_univ_two,
-    pauliMatrix, Matrix.one_fin_two, Matrix.cons_val_zero, Matrix.cons_val_one,
-    Matrix.of_apply, Matrix.cons_val', Matrix.empty_val', Matrix.cons_val_fin_one]
-  module
+open PauliMatrix TensorSpecies
+
+variable {B : Type*} [AddCommGroup B] [Module ℂ B]
+
+/-- The linear map out of `ℂT[.up, .upL, .upR]` sending `e_μ ⊗ e_α ⊗ e_α'` to
+  `T (μ, α, α')`. -/
+noncomputable def ofVectorComponents (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) :
+    ℂT[.up, .upL, .upR] →ₗ[ℂ] B :=
+  indexBasis.constr ℂ T
+
+@[simp]
+lemma ofVectorComponents_indexBasis (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B)
+    (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) : ofVectorComponents T (indexBasis d) = T d :=
+  indexBasis.constr_basis ℂ T d
+
+/-- The range of `ofVectorComponents T` is the span of the vectors `T d`. -/
+lemma range_ofVectorComponents (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) :
+    LinearMap.range (ofVectorComponents T) = Submodule.span ℂ (Set.range T) :=
+  indexBasis.constr_range ℂ
+
+/-- `ofVectorComponents T` is equivariant when `T (μ, α, α')` is moved as `T^{μ α α'}`: the
+  vector index by the Lorentz matrix, the left index by the matrix of `g` and the right index by
+  its complex conjugate, the summed index first in each factor. -/
+lemma isVectorLeftRightWeyl_ofVectorComponents {repLorentz : Representation ℂ SL(2,ℂ) B}
+    (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B)
+    (hT : ∀ (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (l : Fin 2 × Fin 2),
+      repLorentz g (T (μ, l)) = ∑ (ν : Fin 1 ⊕ Fin 3), ∑ (a : Fin 2 × Fin 2),
+        ((((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ)
+          * (g.1 a.1 l.1 * star (g.1 a.2 l.2))) • T (ν, a)) :
+    IsVectorLeftRightWeyl B repLorentz (ofVectorComponents T) := by
+  have h : ofVectorComponents T
+      = (Tensor.basis ![Color.up, Color.upL, Color.upR]).constr ℂ fun φ => T (indexEquiv φ) :=
+    (Tensor.basis (S := complexLorentzTensor) _).ext fun φ => by
+      rw [Module.Basis.constr_basis, ← indexEquiv.symm_apply_apply φ, ← indexBasis_apply,
+        ofVectorComponents_indexBasis, Equiv.apply_symm_apply]
+  rw [h]
+  refine isLorentzEquivariant_constr _ fun g φ => ?_
+  obtain ⟨⟨μ, l⟩, rfl⟩ := indexEquiv.symm.surjective φ
+  rw [Equiv.apply_symm_apply, hT, ← indexEquiv.symm.sum_comp, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun ν _ => Finset.sum_congr rfl fun a _ => ?_
+  rw [Equiv.apply_symm_apply, Fin.prod_univ_three, mul_assoc]
+  exact congrArg (· • _) (congrArg₂ (· * ·) (toMatrix_rep_up_apply g ν μ)
+    (congrArg₂ (· * ·) (congrFun (congrFun (toMatrix_rep_upL g) a.1) l.1)
+      (congrFun (congrFun (toMatrix_rep_upR g) a.2) l.2))).symm
+
+end VectorComponents
 
 /-!
 
-## E. Dual Weyl indices and the `ε` re-index
+## F. Dual Weyl indices and the `ε` re-index
 
 A `Module.Dual`-valued symbol carries the dual law on its spinor indices: `IsDualLeftRightWeyl`
 for a Weyl pair alone, `IsVectorDualLeftRightWeyl` with a vector index alongside. The
 symplectic identities of `Fermions.Weyl.Metric` convert those laws into the fundamental ones.
 
 -/
+
+/-- The `ε` re-index of a family indexed by two Weyl indices: both index slots are
+  transported through the symplectic form. -/
+noncomputable def epsReindex {B : Type*} [AddCommMonoid B] [Module ℂ B]
+    (T : Fin 2 × Fin 2 → B) : Fin 2 × Fin 2 → B :=
+  fun l => ∑ k : Fin 2 × Fin 2, (epsilon.1 l.1 k.1 * epsilon.1 l.2 k.2) • T k
+
+section Reindex
+
+variable {B : Type*} [AddCommGroup B] [Module ℂ B] (T : Fin 2 × Fin 2 → B)
+
+/-- The re-index written out on the diagonal component `(0, 0)`. -/
+lemma epsReindex_zero_zero : epsReindex T (0, 0) = T (1, 1) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the mixed component `(0, 1)`. -/
+lemma epsReindex_zero_one : epsReindex T (0, 1) = - T (1, 0) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the mixed component `(1, 0)`. -/
+lemma epsReindex_one_zero : epsReindex T (1, 0) = - T (0, 1) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The re-index written out on the diagonal component `(1, 1)`. -/
+lemma epsReindex_one_one : epsReindex T (1, 1) = T (0, 0) := by
+  simp [epsReindex, Fintype.sum_prod_type, Fin.sum_univ_two, SL2C.epsilon_coe]
+
+/-- The `ε` re-index is an involution, because `ε² = -1` on each index slot. -/
+lemma epsReindex_epsReindex : epsReindex (epsReindex T) = T := by
+  funext l
+  obtain ⟨l₁, l₂⟩ := l
+  fin_cases l₁ <;> fin_cases l₂ <;>
+    simp [epsReindex_zero_zero, epsReindex_zero_one, epsReindex_one_zero,
+      epsReindex_one_one]
+
+/-- The re-index does not change the span of the components. -/
+lemma span_range_epsReindex :
+    Submodule.span ℂ (Set.range (epsReindex T)) = Submodule.span ℂ (Set.range T) := by
+  refine Submodule.span_eq_span
+    (Set.range_subset_iff.2 fun d => (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩)
+    (Set.range_subset_iff.2 fun d => ?_)
+  have h : T d = epsReindex (epsReindex T) d := by rw [epsReindex_epsReindex]
+  rw [h]
+  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
+
+end Reindex
 
 /-- A family `T` indexed by a dual left- and a dual right-handed Weyl index, moved as
   `T_{α α'}`: the undotted index by the inverse transpose `(g⁻¹)ᵀ`, the dotted one by the
@@ -393,7 +431,7 @@ lemma IsDualLeftRightWeyl.isLeftRightWeyl_epsReindex {B : Type*} [AddCommGroup B
 
 /-!
 
-## F. The `ε` re-index of a vector-Weyl family
+## G. The `ε` re-index of a vector-Weyl family
 
 Re-indexing both spinor slots by `ε` sends a family with the dual law to one with the
 fundamental law, without touching the representation, and does not change the span. It
@@ -470,12 +508,12 @@ lemma repLorentz_T' (hT : IsVectorDualLeftRightWeyl B repLorentz T) (g : SL(2,�
   rw [show d = (d.1, d.2) from rfl, hT.repLorentz_T, Fintype.sum_prod_type]
 
 /-- The `ε` re-index turns the mixed dual law into the mixed fundamental law for the same
-  representation, the vector slot untouched: `sum_mixedEpsilon_mul_inv` is the only
-  mathematical step. -/
+  representation, the vector slot untouched, so the map with the re-indexed components is
+  equivariant: `sum_mixedEpsilon_mul_inv` is the only mathematical step. -/
 lemma isVectorLeftRightWeyl_vectorEpsReindex
     (hT : IsVectorDualLeftRightWeyl B repLorentz T) :
-    IsVectorLeftRightWeyl B repLorentz (vectorEpsReindex T) where
-  repLorentz_T g μ l := by
+    IsVectorLeftRightWeyl B repLorentz (ofVectorComponents (vectorEpsReindex T)) :=
+  isVectorLeftRightWeyl_ofVectorComponents _ fun g μ l => by
     have h := (repLorentz g).map_sum_smul_of_forall_eq (fun k => T (μ, k)) T
       (fun e k => (((SL2C.toLorentzGroup g).1 e.1 μ : ℝ) : ℂ)
         * ((g.1⁻¹)ᵀ e.2.1 k.1 * (g.1⁻¹)ᴴ e.2.2 k.2)) (fun k => hT.repLorentz_T' g (μ, k))
@@ -499,14 +537,15 @@ lemma isVectorLeftRightWeyl_vectorEpsReindex
     simp only [← mul_smul]
     rfl
 
-/-- The re-index carries the Pauli contraction of the re-indexed family to the
-  `pauliBar` contraction of the original, with no sign or scalar. -/
-lemma pauliContraction_vectorEpsReindex :
-    IsVectorLeftRightWeyl.pauliContraction (T := vectorEpsReindex T)
-      = pauliBarContraction (T := T) := by
-  rw [IsVectorLeftRightWeyl.pauliContraction, pauliBarContraction]
+open PauliMatrix in
+/-- The image of the Pauli tensor under the map with the re-indexed components is the
+  `pauliBar` contraction of the original family, with no sign or scalar. -/
+lemma ofVectorComponents_vectorEpsReindex_pauliMatrix :
+    ofVectorComponents (vectorEpsReindex T) σ^^^ = pauliBarContraction (T := T) := by
+  rw [toTensor_eq_sum_indexBasis, map_sum, Fintype.sum_prod_type, pauliBarContraction]
   refine Finset.sum_congr rfl fun μ _ => ?_
-  simp only [vectorEpsReindex, Finset.smul_sum, smul_smul]
+  simp only [map_smul, ofVectorComponents_indexBasis, vectorEpsReindex, Finset.smul_sum,
+    smul_smul]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun k _ => ?_
   rw [← Finset.sum_smul, ← sum_pauliMatrix_mul_epsilon μ k.1 k.2]
@@ -515,9 +554,9 @@ end IsVectorDualLeftRightWeyl
 
 /-!
 
-## G. The classification of the invariants of the dual families
+## H. The classification of the invariants of the dual families
 
-Transporting sections C and F along the re-index: a dual Weyl pair with no vector index has
+Transporting section D along the re-index of section G: a dual Weyl pair with no vector index has
 no invariant, and with a vector index every invariant is a multiple of the `pauliBar`
 contraction.
 
@@ -554,32 +593,35 @@ variable {T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B}
 lemma repLorentz_pauliBarContraction (hT : IsVectorDualLeftRightWeyl B repLorentz T)
     (g : SL(2,ℂ)) :
     repLorentz g (pauliBarContraction (T := T)) = pauliBarContraction (T := T) := by
-  have h := hT.isVectorLeftRightWeyl_vectorEpsReindex.repLorentz_pauliContraction g
-  rwa [pauliContraction_vectorEpsReindex] at h
+  have h := hT.isVectorLeftRightWeyl_vectorEpsReindex.repLorentz_map_pauliMatrix g
+  rwa [ofVectorComponents_vectorEpsReindex_pauliMatrix] at h
 
-/-- For the mixed dual law, every Lorentz invariant of the span is a multiple of the
-  `pauliBar` contraction. This is the kinetic term of a Weyl fermion. -/
-theorem exists_smul_pauliBarContraction_of_invariant
-    (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B}
-    (hx : x ∈ Submodule.span ℂ (Set.range T))
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, x = a • pauliBarContraction (T := T) := by
-  obtain ⟨a, ha⟩ :=
-    hT.isVectorLeftRightWeyl_vectorEpsReindex.exists_smul_pauliContraction_of_invariant
-      (by rwa [span_range_vectorEpsReindex]) hinv
-  exact ⟨a, by rwa [pauliContraction_vectorEpsReindex] at ha⟩
-
-/-- The same modulo a Lorentz-stable submodule `S`. -/
-theorem exists_smul_pauliBarContraction_of_invariant_subset
+/-- For the mixed dual law, every Lorentz invariant of `span (range T) ⊔ S`, for `S` a
+  Lorentz-stable submodule, is a multiple of the `pauliBar` contraction plus an element of
+  `S`. -/
+lemma exists_smul_pauliBarContraction_of_invariant_subset
     (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B} (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
     (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • pauliBarContraction (T := T) + y := by
   obtain ⟨a, y, hy, ha⟩ :=
-    hT.isVectorLeftRightWeyl_vectorEpsReindex.exists_smul_pauliContraction_of_invariant_subset
-      S hS (by rwa [span_range_vectorEpsReindex]) hinv
-  exact ⟨a, y, hy, by rwa [pauliContraction_vectorEpsReindex] at ha⟩
+    hT.isVectorLeftRightWeyl_vectorEpsReindex.exists_smul_map_pauliMatrix_add_of_invariant S hS
+      (by rwa [range_ofVectorComponents, span_range_vectorEpsReindex]) hinv
+  exact ⟨a, y, hy, by rwa [ofVectorComponents_vectorEpsReindex_pauliMatrix] at ha⟩
+
+/-- For the mixed dual law, every Lorentz invariant of the span is a multiple of the
+  `pauliBar` contraction. This is the kinetic term of a Weyl fermion. -/
+lemma exists_smul_pauliBarContraction_of_invariant
+    (hT : IsVectorDualLeftRightWeyl B repLorentz T) {x : B}
+    (hx : x ∈ Submodule.span ℂ (Set.range T))
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, x = a • pauliBarContraction (T := T) := by
+  obtain ⟨a, y, hy, ha⟩ := hT.exists_smul_pauliBarContraction_of_invariant_subset ⊥
+    (fun _ _ hy => by rw [Submodule.mem_bot] at hy ⊢; rw [hy, map_zero])
+    (by rwa [sup_bot_eq]) hinv
+  rw [Submodule.mem_bot] at hy
+  exact ⟨a, by rw [ha, hy, add_zero]⟩
 
 /-- For the mixed dual law, the Lorentz invariants of the component span reduce to the span
   of the `pauliBar` contraction. -/
