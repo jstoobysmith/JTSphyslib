@@ -143,6 +143,11 @@ srcDir = "scripts/MetaPrograms"
 supportInterpreter = true
 
 [[lean_exe]]
+name = "auxillary_script_test"
+root = "«auxillary-script-test»"
+srcDir = "scripts"
+
+[[lean_exe]]
 name = "find_TODOs"
 srcDir = "scripts"
 
