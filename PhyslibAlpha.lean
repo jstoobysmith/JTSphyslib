@@ -281,8 +281,7 @@ public import PhyslibAlpha.ProbabilisticTheory.WStarAlgebra.TracePairingSurjecti
 public import PhyslibAlpha.ProbabilisticTheory.Weight.Basic
 public import PhyslibAlpha.ProbabilisticTheory.Weight.Continuous
 public import PhyslibAlpha.ProbabilisticTheory.Weight.Extension
-public import PhyslibAlpha.QuantumMechanics.HarmonicOscillator.Basic
-public import PhyslibAlpha.QuantumMechanics.HarmonicOscillator.LadderOperators
+public import PhyslibAlpha.QuantumMechanics.HarmonicOscillator.LadderSystem
 public import PhyslibAlpha.QuantumMechanics.HarmonicOscillator.Vacuum
 public import PhyslibAlpha.QuantumMechanics.QuantumHarmonicOscillator
 public import PhyslibAlpha.QuantumMechanics.StinespringDilation
