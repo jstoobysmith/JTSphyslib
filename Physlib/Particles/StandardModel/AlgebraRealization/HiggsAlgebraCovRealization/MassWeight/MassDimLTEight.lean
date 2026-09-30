@@ -95,22 +95,22 @@ include h in
   tower, read as a family indexed by its derivative slot, is a Lorentz vector. -/
 lemma isLorentzCovariant_rankOne_dotGaugeHiggs_left :
     IsLorentzCovariant 1 B repLorentz
-      (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [sum_cov_zero, Fin.prod_univ_zero, mul_one]
+      (ofComponents fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [sum_cov_zero, Fin.prod_univ_zero, mul_one]
 
 include h in
 /-- The isospin contraction of an underived Higgs tower against a once-derived conjugate
   tower is a Lorentz vector in the same way. -/
 lemma isLorentzCovariant_rankOne_dotGaugeHiggs_right :
     IsLorentzCovariant 1 B repLorentz
-      (fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [Fin.prod_univ_zero, one_mul]
+      (ofComponents fun d : Fin 1 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [Fin.prod_univ_zero, one_mul]
 
 /-- The span of the isospin contractions with one derivative on the Higgs tower is the
   span of the components of the corresponding Lorentz vector. -/
@@ -199,11 +199,10 @@ include h in
   spanned by a Lorentz vector, and a single covector index carries no invariant. -/
 lemma reducesInvariantsTo_dotSpan_one_zero_sup_zero_one :
     ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (h.dotSpan 1 0 ⊔ h.dotSpan 0 1) ⊥ := by
-  rw [h.dotSpan_one_zero_eq, h.dotSpan_zero_one_eq]
+  rw [h.dotSpan_one_zero_eq, h.dotSpan_zero_one_eq, ← range_ofComponents, ← range_ofComponents]
   exact (RankOne.reducesInvariantsTo_bot h.isLorentzCovariant_rankOne_dotGaugeHiggs_left).sup
     (RankOne.reducesInvariantsTo_bot h.isLorentzCovariant_rankOne_dotGaugeHiggs_right)
-    (fun g _ hy => h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.repLorentz_mem_span_range g hy)
-    isStableUnder_bot
+    h.isLorentzCovariant_rankOne_dotGaugeHiggs_right.isStableUnder_range isStableUnder_bot
 
 /-!
 

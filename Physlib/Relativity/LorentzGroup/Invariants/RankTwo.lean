@@ -6,83 +6,92 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
-public import Physlib.Mathematics.InvariantReduction
 public meta import Mathlib.Data.Fintype.Sum
 public meta import Mathlib.Data.Fintype.Pi
 /-!
 # Lorentz invariants among two four-vector indices
 
-A rank-two tensor `T^{μν}` has `16` components, and the metric trace
+## i. Overview
 
-`metricContraction = η_{μν} T^{μν}`
+A rank-two tensor `T^{μν}` has a single Lorentz invariant up to scale, its contraction with the
+metric: nothing else ties two indices, the Levi-Civita symbol needing four. For an equivariant
+map `f : ℂT(fun _ : Fin 2 => .up) →ₗ[ℂ] B`, `IsLorentzCovariant 2`, every Lorentz invariant in the
+range of `f` is a multiple of `f metric`, the image of the metric `η` (A), and modulo a
+Lorentz-stable submodule `S` the invariants of `LinearMap.range f ⊔ S` reduce to the line through
+it (C). For a given `f` the image may be zero.
 
-is fixed by every rotation and boost. Every Lorentz invariant in the span of the components is
-a multiple of it: nothing else ties two indices, the Levi-Civita symbol needing four. That is
-`exists_smul_metricContraction_of_invariant`, and
-`exists_smul_metricContraction_of_invariant_subset` is the same statement modulo a
-Lorentz-stable subspace `S`; `reducesInvariantsTo_span_metricContraction`, the form the
-Standard Model files use, reads it as a reduction. The metric contraction is
-the only invariant up to scale; for a given `T` it may be zero.
+The invariants of the range of `f` are the images of invariant tensors, so it is enough that an
+invariant coefficient tensor `c` (`Invariants.Basic`) is a multiple of the Minkowski metric, and
+three kinds of transformation pin `c` down (B). The half turn about each axis has a diagonal
+Lorentz matrix with entries `±1`, and for `μ ≠ ν` one of the three negates `c_{μν}`, so the
+off-diagonal coefficients vanish. The cyclic rotation `x → y → z → x` permutes the spatial
+directions, so `c_xx = c_yy = c_zz`. The boost along `z` scales the light-cone component of `c`
+along `D₀ - D_z` in both slots by `t⁴`, so that component vanishes, and with the off-diagonal
+coefficients gone it is `c_tt + c_zz`. So `c` is `c_tt` times the Minkowski metric.
 
-The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by two directions, and `IsLorentzCovariant 2` says the
-group moves them with one factor of the Lorentz matrix per slot. `Submodule.span ℂ (Set.range T)`
-is the set of their combinations.
+## ii. Key results
 
-An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
-matrices themselves fix (from `Invariants.Basic`), and three kinds of transformation pin `c`
-down (B). The half turn about each axis has a diagonal Lorentz matrix with entries `±1`, and
-for `μ ≠ ν` one of the three negates `c_{μν}`, so the off-diagonal coefficients vanish. The
-cyclic rotation `x → y → z → x` permutes the spatial directions, so `c_xx = c_yy = c_zz`. The
-boost along `z` scales the light-cone component of `c` along `D₀ - D_z` in both slots by `t⁴`,
-so that component vanishes, and with the off-diagonal coefficients gone it is `c_tt + c_zz`.
-So `c` is `c_tt` times the Minkowski metric. Invariance under the whole group implies
-invariance under these elements; nothing is claimed about the group they generate. Section C
-divides out `S`.
+- `Lorentz.RankTwo.metric` : the metric `η` with the colours of `IsLorentzCovariant 2`.
+- `Lorentz.RankTwo.exists_smul_map_metric_of_invariant` : an invariant in the range of `f` is a
+  multiple of `f metric`.
+- `Lorentz.RankTwo.reducesInvariantsTo_span_metric` : the same modulo a stable submodule.
+
+## iii. Table of contents
+
+- A. The metric
+- B. The classification of the invariant coefficient tensors
+- C. The invariants of an equivariant map
+
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C Invariants
+open TensorProduct Matrix MatrixGroups SL2C Invariants TensorSpecies Tensor complexLorentzTensor
 
 namespace RankTwo
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin 2 → (Fin 1 ⊕ Fin 3)) → B}
 
 /-!
 
-## A. The metric contraction
+## A. The metric
 
 -/
 
-/-- The metric contraction `g^{μν} T_{μν}`, the only invariant contraction of two
-  four-vector indices. -/
-noncomputable def metricContraction : B :=
-  ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • T d
+/-- The metric `η` on two contravariant indices, with its colours relabelled from
+  `![.up, .up]` to `fun _ => .up`. -/
+noncomputable def metric : ℂT(fun _ : Fin 2 => Color.up) :=
+  permT id (show IsReindexing ![Color.up, Color.up] (fun _ : Fin 2 => Color.up) id from
+    ⟨Function.bijective_id, fun i => by fin_cases i <;> rfl⟩) η
 
-/-- The Minkowski metric, as a coefficient tensor on two slots, is fixed by every Lorentz
-  matrix: `Λ η Λᵀ = η`, which is `LorentzGroup.sum_minkowskiMatrixZ_mul`. -/
-lemma isInvariantCoeff_minkowskiMatrixZ :
-    IsInvariantCoeff fun d : Fin 2 → Fin 1 ⊕ Fin 3 => ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) := by
-  intro g
-  funext a
-  simp only [act]
-  rw [← (piFinTwoEquiv fun _ => Fin 1 ⊕ Fin 3).symm.sum_comp, Fintype.sum_prod_type]
-  simp only [piFinTwoEquiv_symm_apply, Fin.prod_univ_two]
-  exact LorentzGroup.sum_minkowskiMatrixZ_mul (SL2C.toLorentzGroup g) (a 0) (a 1)
+/-- The metric is Lorentz invariant. -/
+lemma metric_invariant (g : SL(2,ℂ)) : g • metric = metric := by
+  rw [metric, ← permT_equivariant, actionT_contrMetric]
 
-/-- The metric contraction of a rank-two family is a Lorentz invariant. -/
-lemma repLorentz_metricContraction (hT : IsLorentzCovariant 2 B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (metricContraction (T := T)) = metricContraction (T := T) :=
-  hT.isInvariant_sum_smul isInvariantCoeff_minkowskiMatrixZ g
+/-- The coefficient tensor of the metric is the Minkowski metric. -/
+lemma coeffEquiv_symm_minkowskiMatrixZ :
+    (coeffEquiv 2).symm (fun d => ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)) = metric := by
+  rw [metric, contrMetric_eq_basis]
+  simp only [map_sub, permT_basis]
+  rw [coeffEquiv_symm_apply, sum_pi_fin_two]
+  simp [Fintype.sum_sum_type, Fin.sum_univ_three, minkowskiMatrixZ, sub_eq_add_neg]
+  rw [← add_assoc, ← add_assoc]
+  refine congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg₂ (· + ·) ?_ (congrArg Neg.neg ?_))
+    (congrArg Neg.neg ?_)) (congrArg Neg.neg ?_) <;>
+    exact congrArg _ (funext fun i => by fin_cases i <;> rfl)
+
+/-- `ofComponents T` sends the metric to the contraction `η_{μν} T^{μν}`. -/
+lemma ofComponents_metric (T : (Fin 2 → Fin 1 ⊕ Fin 3) → B) :
+    ofComponents T metric
+      = ∑ d : Fin 2 → Fin 1 ⊕ Fin 3, ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ) • T d := by
+  rw [← coeffEquiv_symm_minkowskiMatrixZ, ofComponents_coeffEquiv_symm]
 
 /-!
 
-## B. The classification of the Lorentz invariants
+## B. The classification of the invariant coefficient tensors
 
 The half turns kill the off-diagonal coefficients, the cyclic rotation equates the three
 spatial diagonal ones, and the boost along `z` relates the spatial diagonal to the time
@@ -148,57 +157,47 @@ lemma eq_smul_minkowskiMatrixZ {c : (Fin 2 → Fin 1 ⊕ Fin 3) → ℂ} (hc : I
   · rw [eq_zero_of_ne hc hd]
     simp [minkowskiMatrixZ, Matrix.diagonal_apply_ne _ hd]
 
-/-- Every Lorentz invariant in the span of the components is a multiple of the metric
-  contraction. -/
-theorem exists_smul_metricContraction_of_invariant (hT : IsLorentzCovariant 2 B repLorentz T)
-    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, x = a • metricContraction (T := T) := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
-  refine ⟨c ![Sum.inl 0, Sum.inl 0], ?_⟩
-  rw [metricContraction, Finset.smul_sum]
-  exact Finset.sum_congr rfl fun d _ => by rw [smul_smul, ← eq_smul_minkowskiMatrixZ hc d]
-
 /-!
 
-## C. The classification modulo a Lorentz-stable submodule
-
-A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`, that is `B` with
-`S` declared zero: the classes of the components again form a rank-two family, so
-section B applies there and lifts back with an error term in `S`.
+## C. The invariants of an equivariant map
 
 -/
 
-/-- The quotient map carries the metric contraction to the metric contraction of the
-  images. -/
-lemma mkQ_metricContraction (S : Submodule ℂ B) :
-    S.mkQ (metricContraction (T := T))
-      = metricContraction (T := fun l => S.mkQ (T l)) := by
-  rw [metricContraction, metricContraction, map_sum]
-  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+variable {f : ℂT(fun _ : Fin 2 => Color.up) →ₗ[ℂ] B}
 
-/-- The same modulo a Lorentz-stable subspace `S`: a multiple of the metric contraction plus an
-  error in `S`. -/
-lemma exists_smul_metricContraction_of_invariant_subset
-    (hT : IsLorentzCovariant 2 B repLorentz T) {x : B} (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, ∃ y ∈ S, x = a • metricContraction (T := T) + y := by
-  obtain ⟨a, y, hy, rfl, -⟩ := IsStableUnder.exists_smul_add_of_quotient
-    (σ := fun g : SL(2,ℂ) => repLorentz g) hS (repLorentz_metricContraction hT)
-    (fun z hz hzinv => by
-      rw [mkQ_metricContraction]
-      exact exists_smul_metricContraction_of_invariant (hT.quotient S hS)
-        ((Submodule.map_span_range S.mkQ T).le hz) hzinv) hx hinv
+/-- The invariants of the range of `f` reduce to the line through the image `f metric` of the
+  metric: a Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is
+  a multiple of `f metric` plus an element of `S`. -/
+lemma reducesInvariantsTo_span_metric (hf : IsLorentzCovariant 2 B repLorentz f) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f)
+      (ℂ ∙ f metric) := by
+  have h := hf.reducesInvariantsTo_span (fun _ : Unit =>
+    fun d : Fin 2 → Fin 1 ⊕ Fin 3 => ((minkowskiMatrixZ (d 0) (d 1) : ℤ) : ℂ)) fun c hc => by
+      rw [Set.range_const, Submodule.mem_span_singleton]
+      exact ⟨c ![Sum.inl 0, Sum.inl 0], funext fun d => (eq_smul_minkowskiMatrixZ hc d).symm⟩
+  rwa [Set.range_const, coeffEquiv_symm_minkowskiMatrixZ] at h
+
+/-- Every Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is a
+  multiple of the image `f metric` of the metric plus an element of `S`. -/
+lemma exists_smul_map_metric_add_of_invariant (hf : IsLorentzCovariant 2 B repLorentz f)
+    (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
+    (hx : x ∈ LinearMap.range f ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, ∃ y ∈ S, x = a • f metric + y := by
+  obtain ⟨z, hz, y, hy, rfl⟩ := Submodule.mem_sup.1
+    (reducesInvariantsTo_span_metric hf S hS x hx hinv)
+  obtain ⟨a, rfl⟩ := Submodule.mem_span_singleton.1 hz
   exact ⟨a, y, hy, rfl⟩
 
-/-- The span of the components reduces to the line through the metric contraction:
-  `exists_smul_metricContraction_of_invariant_subset` read as a reduction for the Lorentz
-  group. -/
-lemma reducesInvariantsTo_span_metricContraction (hT : IsLorentzCovariant 2 B repLorentz T) :
-    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
-      (ℂ ∙ metricContraction (T := T)) := fun S hS x hx hinv => by
-  obtain ⟨a, y, hy, rfl⟩ := exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
-  exact Submodule.add_mem_sup (Submodule.smul_mem _ a (Submodule.mem_span_singleton_self _)) hy
+/-- Every Lorentz invariant in the range of `f` is a multiple of the image `f metric` of the
+  metric. -/
+lemma exists_smul_map_metric_of_invariant (hf : IsLorentzCovariant 2 B repLorentz f) {x : B}
+    (hx : x ∈ LinearMap.range f) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
+    ∃ a : ℂ, x = a • f metric := by
+  obtain ⟨a, y, hy, rfl⟩ := exists_smul_map_metric_add_of_invariant hf ⊥
+    (fun _ _ hy => by rw [(Submodule.mem_bot ℂ).1 hy, map_zero]; exact Submodule.zero_mem _)
+    (Submodule.mem_sup_left hx) hinv
+  rw [(Submodule.mem_bot ℂ).1 hy, add_zero]
+  exact ⟨a, rfl⟩
 
 end RankTwo
 

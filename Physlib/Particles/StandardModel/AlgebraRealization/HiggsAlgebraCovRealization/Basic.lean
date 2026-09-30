@@ -13,7 +13,6 @@ public import Physlib.Relativity.LightConeDeriv
 public import Physlib.Relativity.SL2C.AxisRotations
 public import Physlib.Particles.StandardModel.GaugeGroup.JetGaugeGroup.Basic
 public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.SU2PermDecomposition
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.JetDeriv
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.LorentzAction
 public import Physlib.Particles.StandardModel.Matter.BosonicAlgebra.GaugeAction

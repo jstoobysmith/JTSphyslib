@@ -94,35 +94,35 @@ include h in
   slots. -/
 lemma isLorentzCovariant_rankTwo_dotGaugeHiggs_left :
     IsLorentzCovariant 2 B repLorentz
-      (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [sum_cov_zero, Fin.prod_univ_zero, mul_one]
+      (ofComponents fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_dotGaugeHiggs g l (![] : Fin 0 → Fin 1 ⊕ Fin 3)]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [sum_cov_zero, Fin.prod_univ_zero, mul_one]
 
 include h in
 /-- Both derivatives on the conjugate tower: a bi-Lorentz tensor in the same way. -/
 lemma isLorentzCovariant_rankTwo_dotGaugeHiggs_right :
     IsLorentzCovariant 2 B repLorentz
-      (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [Fin.prod_univ_zero, one_mul]
+      (ofComponents fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_dotGaugeHiggs g (![] : Fin 0 → Fin 1 ⊕ Fin 3) l, sum_cov_zero]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [Fin.prod_univ_zero, one_mul]
 
 include h in
 /-- One derivative on each tower: the family whose metric contraction is the kinetic
   term. -/
 lemma isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed :
     IsLorentzCovariant 2 B repLorentz
-      (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_dotGaugeHiggs g ![l 0] ![l 1], sum_cov_one, sum_pi_fin_two]
-    refine Finset.sum_congr rfl fun x _ => ?_
-    rw [sum_cov_one]
-    refine Finset.sum_congr rfl fun y _ => ?_
-    simp only [Fin.prod_univ_one, Fin.prod_univ_two, Matrix.cons_val_zero,
-      Matrix.cons_val_one]
+      (ofComponents fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1]) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_dotGaugeHiggs g ![l 0] ![l 1], sum_cov_one, sum_pi_fin_two]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [sum_cov_one]
+  refine Finset.sum_congr rfl fun y _ => ?_
+  simp only [Fin.prod_univ_one, Fin.prod_univ_two, Matrix.cons_val_zero,
+    Matrix.cons_val_one]
 
 /-- The span of the isospin contractions with both derivatives on the Higgs tower is the
   span of the components of the corresponding bi-Lorentz tensor. -/
@@ -162,19 +162,18 @@ lemma dotSpan_one_one_eq :
 Two covector indices admit one invariant contraction, the metric trace, and the metric is
 carried to itself by a Lorentz matrix — that is the defining property of the Lorentz group,
 recorded as `LorentzGroup.sum_minkowskiMatrixZ_mul` — so the trace of a bi-Lorentz family is a
-Lorentz invariant, `RankTwo.repLorentz_metricContraction`.  It is a gauge invariant too whenever
+Lorentz invariant, `RankTwo.metric_invariant`.  It is a gauge invariant too whenever
 the components are, and the components here are isospin contractions, which the gauge group
 fixes.
 
 -/
 
 /-- The metric trace of a family of gauge invariants is a gauge invariant. -/
-lemma rep_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+lemma rep_ofComponents_metric {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hTG : ∀ (g : GaugeGroupI) (d : Fin 2 → Fin 1 ⊕ Fin 3), rep g (T d) = T d)
     (g : GaugeGroupI) :
-    rep g (RankTwo.metricContraction (T := T))
-      = RankTwo.metricContraction (T := T) := by
-  rw [RankTwo.metricContraction, map_sum]
+    rep g (ofComponents T RankTwo.metric) = ofComponents T RankTwo.metric := by
+  rw [RankTwo.ofComponents_metric, map_sum]
   exact Finset.sum_congr rfl fun d _ => by rw [map_smul, hTG g d]
 
 /-!
@@ -184,7 +183,7 @@ lemma rep_metricContraction {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
 The gauge classification reduces mass weight eight to the three spans of twice-derived
 isospin contractions and the line through the square of the underived one.  Each of the
 three spans is spanned by a bi-Lorentz tensor and reduces, for the Lorentz group, to the
-line through its metric trace (`RankTwo.reducesInvariantsTo_span_metricContraction`); the
+line through its metric trace (`RankTwo.reducesInvariantsTo_span_metric`); the
 line through the square is fixed and reduces to itself.  What is left is a combination of
 the three metric traces and the square: the two box terms, the kinetic term and the quartic
 potential.
@@ -197,12 +196,10 @@ potential.
 noncomputable def lorentzContractionEightSpan
     (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly) :
     Submodule ℂ B :=
-  ℂ ∙ RankTwo.metricContraction
-      (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![])
-    ⊔ (ℂ ∙ RankTwo.metricContraction
-        (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d)
-      ⊔ (ℂ ∙ RankTwo.metricContraction
-          (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1])
+  ℂ ∙ ofComponents (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs d ![]) RankTwo.metric
+    ⊔ (ℂ ∙ ofComponents (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![] d) RankTwo.metric
+      ⊔ (ℂ ∙ ofComponents (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => h.dotGaugeHiggs ![d 0] ![d 1])
+          RankTwo.metric
         ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])))
 
 include h in
@@ -234,10 +231,10 @@ mass weight four.
 include h in
 /-- The metric trace of a family of elements of mass weight eight has mass weight
   eight. -/
-lemma metricContraction_mem_massWeightSubmodule {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+lemma ofComponents_metric_mem_massWeightSubmodule {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hT : ∀ d, T d ∈ h.massWeightSubmodule 8) :
-    RankTwo.metricContraction (T := T) ∈ h.massWeightSubmodule 8 := by
-  rw [RankTwo.metricContraction]
+    ofComponents T RankTwo.metric ∈ h.massWeightSubmodule 8 := by
+  rw [RankTwo.ofComponents_metric]
   exact Submodule.sum_mem _ fun d _ => Submodule.smul_mem _ _ (hT d)
 
 include h in
@@ -247,11 +244,11 @@ lemma lorentzContractionEightSpan_le_massWeightSubmodule :
   rw [lorentzContractionEightSpan]
   refine sup_le ?_ (sup_le ?_ (sup_le ?_ ?_)) <;>
     rw [Submodule.span_singleton_le_iff_mem]
-  · exact h.metricContraction_mem_massWeightSubmodule fun d =>
+  · exact h.ofComponents_metric_mem_massWeightSubmodule fun d =>
       h.dotGaugeHiggs_mem_massWeightSubmodule d ![]
-  · exact h.metricContraction_mem_massWeightSubmodule fun d =>
+  · exact h.ofComponents_metric_mem_massWeightSubmodule fun d =>
       h.dotGaugeHiggs_mem_massWeightSubmodule ![] d
-  · exact h.metricContraction_mem_massWeightSubmodule fun d =>
+  · exact h.ofComponents_metric_mem_massWeightSubmodule fun d =>
       h.dotGaugeHiggs_mem_massWeightSubmodule ![d 0] ![d 1]
   · exact h.massWeightSubmodule_mul_le 4 4 (Submodule.mul_mem_mul
       (h.dotGaugeHiggs_mem_massWeightSubmodule ![] ![])
@@ -266,9 +263,9 @@ lemma rep_of_mem_lorentzContractionEightSpan (g : GaugeGroupI) {y : B}
     refine sup_le ?_ (sup_le ?_ (sup_le ?_ ?_)) <;>
       rw [Submodule.span_singleton_le_iff_mem] <;>
       simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
-    · exact rep_metricContraction (fun k d => h.rep_dotGaugeHiggs_invariant k d ![]) g
-    · exact rep_metricContraction (fun k d => h.rep_dotGaugeHiggs_invariant k ![] d) g
-    · exact rep_metricContraction
+    · exact rep_ofComponents_metric (fun k d => h.rep_dotGaugeHiggs_invariant k d ![]) g
+    · exact rep_ofComponents_metric (fun k d => h.rep_dotGaugeHiggs_invariant k ![] d) g
+    · exact rep_ofComponents_metric
         (fun k d => h.rep_dotGaugeHiggs_invariant k ![d 0] ![d 1]) g
     · exact h.invariant_dotGaugeHiggs_sq.2 g
   have hy' := key hy
@@ -285,9 +282,12 @@ lemma repLorentz_of_mem_lorentzContractionEightSpan (g : SL(2,ℂ)) {y : B}
     refine sup_le ?_ (sup_le ?_ (sup_le ?_ ?_)) <;>
       rw [Submodule.span_singleton_le_iff_mem] <;>
       simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
-    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left g
-    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right g
-    · exact RankTwo.repLorentz_metricContraction h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed g
+    · exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left.rep_map_of_invariant
+        RankTwo.metric_invariant g
+    · exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right.rep_map_of_invariant
+        RankTwo.metric_invariant g
+    · exact h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed.rep_map_of_invariant
+        RankTwo.metric_invariant g
     · exact h.invariant_dotGaugeHiggs_sq.1 g
   have hy' := key hy
   simp only [LinearMap.mem_ker, LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero] at hy'
@@ -324,9 +324,6 @@ lemma reducesInvariantsTo_lorentzContractionEightSpan :
       h.lorentzContractionEightSpan := by
   have hW : IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) h.lorentzContractionEightSpan :=
     fun g _ hy => by rw [h.repLorentz_of_mem_lorentzContractionEightSpan g hy]; exact hy
-  have hst : ∀ {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 2 B repLorentz T →
-      IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) :=
-    fun hT g _ hy => hT.repLorentz_mem_span_range g hy
   have hQ := (isFixedBy_span_singleton (σ := fun g : SL(2,ℂ) => repLorentz g)
     fun g => h.invariant_dotGaugeHiggs_sq.1 g).isStableUnder
   -- the Lorentz stage: each bi-Lorentz span to the line through its metric trace
@@ -334,17 +331,18 @@ lemma reducesInvariantsTo_lorentzContractionEightSpan :
       (h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
         ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![]))
       h.lorentzContractionEightSpan := by
-    rw [h.dotSpan_two_zero_eq, h.dotSpan_zero_two_eq, h.dotSpan_one_one_eq]
-    refine ((((RankTwo.reducesInvariantsTo_span_metricContraction
+    rw [h.dotSpan_two_zero_eq, h.dotSpan_zero_two_eq, h.dotSpan_one_one_eq,
+      ← range_ofComponents, ← range_ofComponents, ← range_ofComponents]
+    refine ((((RankTwo.reducesInvariantsTo_span_metric
       h.isLorentzCovariant_rankTwo_dotGaugeHiggs_left).mono_right le_sup_left).sup
-      ((RankTwo.reducesInvariantsTo_span_metricContraction
+      ((RankTwo.reducesInvariantsTo_span_metric
         h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right).mono_right
           (le_sup_of_le_right le_sup_left))
-      (hst h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right) hW).sup
-      ((RankTwo.reducesInvariantsTo_span_metricContraction
+      h.isLorentzCovariant_rankTwo_dotGaugeHiggs_right.isStableUnder_range hW).sup
+      ((RankTwo.reducesInvariantsTo_span_metric
         h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed).mono_right
           (le_sup_of_le_right (le_sup_of_le_right le_sup_left)))
-      (hst h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed) hW).sup
+      h.isLorentzCovariant_rankTwo_dotGaugeHiggs_mixed.isStableUnder_range hW).sup
       (reducesInvariantsTo_of_le (le_sup_of_le_right (le_sup_of_le_right le_sup_right))) hQ hW
   exact (ReducesInvariantsTo.ofGauge h.reducesInvariantsTo_massWeightSubmodule_eight).trans
     (ReducesInvariantsTo.ofLorentz hlorentz)

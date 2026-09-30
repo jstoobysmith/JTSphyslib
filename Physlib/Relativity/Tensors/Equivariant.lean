@@ -24,7 +24,9 @@ classification of the invariants in the range of `f` is thereby reduced to that 
 tensors of `S.Tensor c`, `IsEquivariant.invariantReductionToSpan`.
 
 A map is specified by its values on the basis tensors with `Basis.constr`, and
-`isEquivariant_constr` turns a transformation law of those values into equivariance (D).
+`isEquivariant_constr` turns a transformation law of those values into equivariance (D). With
+the component indices relabelled by `e`, the map of a family `T` is `familyMap e T`, and it is
+equivariant exactly when `T` obeys that law, `isEquivariant_familyMap_iff`.
 
 ## ii. Key results
 
@@ -33,7 +35,11 @@ A map is specified by its values on the basis tensors with `Basis.constr`, and
 - `TensorSpecies.IsAdjointClosed` : the colors are closed under conjugate transposition.
 - `TensorSpecies.IsEquivariant.exists_invariant_add_of_mem_sup` : invariants of the range come from
   invariant tensors.
+- `TensorSpecies.IsEquivariant.reducesInvariantsTo_map` : the reduction to the image of a
+  submodule containing the invariant tensors.
 - `TensorSpecies.IsEquivariant.invariantReductionToSpan` : the reduction to one invariant tensor.
+- `TensorSpecies.isEquivariant_familyMap_iff` : the map of a family is equivariant exactly when
+  the family obeys the transformation law of the components.
 
 ## iii. Table of contents
 
@@ -136,6 +142,14 @@ lemma sum {ι : Type*} (s : Finset ι) {F : ι → S.Tensor c →ₗ[k] B}
     exact Finset.sum_congr rfl fun i hi => (hF i hi).equivariant g t
 
 include hf in
+/-- Composing with a linear map that intertwines `ρ` with `ρ'` keeps a map equivariant. -/
+lemma comp {B' : Type*} [AddCommGroup B'] [Module k B'] {ρ' : Representation k G B'}
+    (σ : B →ₗ[k] B') (hσ : ∀ (g : G) (y : B), σ (ρ g y) = ρ' g (σ y)) :
+    S.IsEquivariant c ρ' (σ ∘ₗ f) where
+  equivariant g t := by
+    rw [LinearMap.comp_apply, LinearMap.comp_apply, hf.equivariant, hσ]
+
+include hf in
 /-- A difference of equivariant maps is equivariant. -/
 lemma sub {f' : S.Tensor c →ₗ[k] B} (hf' : S.IsEquivariant c ρ f') :
     S.IsEquivariant c ρ (f - f') where
@@ -230,6 +244,33 @@ lemma exists_invariant_add_of_mem_sup (hc : S.IsAdjointClosed c) (W : Submodule 
   exact ⟨t, ht, x - f t, (Submodule.Quotient.eq W).1 hft.symm, by abel⟩
 
 include hf in
+/-- When every invariant tensor of `S.Tensor c` lies in `I`, the invariants of the range of `f`
+  reduce to the image of `I`. -/
+lemma reducesInvariantsTo_map (hc : S.IsAdjointClosed c) (I : Submodule ℂ (S.Tensor c))
+    (hI : ∀ t : S.Tensor c, (∀ g : G, g • t = t) → t ∈ I) :
+    ReducesInvariantsTo (fun g : G => ρ g) (LinearMap.range f) (I.map f) := by
+  intro W hW x hx hinv
+  obtain ⟨t, ht, y, hy, rfl⟩ := hf.exists_invariant_add_of_mem_sup hc W hW hx hinv
+  exact Submodule.add_mem_sup (Submodule.mem_map_of_mem (hI t ht)) hy
+
+include hf in
+/-- When the only invariant tensor of `S.Tensor c` is zero, the range of `f` reduces to `⊥`. -/
+lemma reducesInvariantsTo_bot (hc : S.IsAdjointClosed c)
+    (hI : ∀ t : S.Tensor c, (∀ g : G, g • t = t) → t = 0) :
+    ReducesInvariantsTo (fun g : G => ρ g) (LinearMap.range f) ⊥ := by
+  have h := hf.reducesInvariantsTo_map hc ⊥ fun t ht => (Submodule.mem_bot ℂ).2 (hI t ht)
+  rwa [Submodule.map_bot] at h
+
+include hf in
+/-- When the only invariant tensor of `S.Tensor c` is zero, so is every invariant in the range
+  of `f`. -/
+lemma eq_zero_of_invariant (hc : S.IsAdjointClosed c)
+    (hI : ∀ t : S.Tensor c, (∀ g : G, g • t = t) → t = 0) {x : B}
+    (hx : x ∈ LinearMap.range f) (hinv : ∀ g : G, ρ g x = x) : x = 0 := by
+  obtain ⟨t, ht, rfl⟩ := hf.exists_invariant_eq_of_mem_range hc hx hinv
+  rw [hI t ht, map_zero]
+
+include hf in
 /-- When the invariant tensors of `S.Tensor c` are the multiples of one tensor `t₀`, the
   invariants of the range of `f` reduce to the span of `f t₀`. -/
 noncomputable def invariantReductionToSpan (hc : S.IsAdjointClosed c) (t₀ : S.Tensor c)
@@ -243,6 +284,21 @@ noncomputable def invariantReductionToSpan (hc : S.IsAdjointClosed c) (t₀ : S.
     obtain ⟨t, ht, y, hy, rfl⟩ := hf.exists_invariant_add_of_mem_sup hc W hW hx hinv
     obtain ⟨a, rfl⟩ := hclass t ht
     exact ⟨a, y, hy, by rw [map_smul]⟩
+
+include hf in
+/-- The reduction of `invariantReductionToSpan`, stated for a submodule `V` equal to the range of
+  `f` and with the spanning vector given by any expression `v` for `f t₀`. -/
+noncomputable def invariantReductionToSpanOfEq (hc : S.IsAdjointClosed c) (t₀ : S.Tensor c)
+    (ht₀ : ∀ g : G, g • t₀ = t₀)
+    (hclass : ∀ t : S.Tensor c, (∀ g : G, g • t = t) → ∃ a : ℂ, t = a • t₀)
+    {V : Submodule ℂ B} (hV : LinearMap.range f = V) (v : B) (hv : f t₀ = v) :
+    InvariantReductionToSpan (fun g : G => ρ g) V where
+  spanningVector := v
+  stable := hV ▸ hf.isStableUnder_range
+  spanningVector_fixed := hv ▸ hf.rep_map_of_invariant ht₀
+  reduce W hW x hx hinv := by
+    subst hV hv
+    exact (hf.invariantReductionToSpan hc t₀ ht₀ hclass).reduce W hW x hx hinv
 
 end IsEquivariant
 
@@ -277,6 +333,79 @@ lemma isEquivariant_constr {n : ℕ} {c : Fin n → C} {B : Type*} [AddCommGroup
       rw [actionT_eq] at h1
       simp only [LinearMap.comp_apply, h1, map_sum, map_smul, Module.Basis.constr_basis, hT]
     exact LinearMap.congr_fun h t
+
+variable {n : ℕ} {c : Fin n → C} {ι : Type*} {B : Type*} [AddCommGroup B] [Module k B]
+
+/-- The linear map out of `S.Tensor c` sending the basis tensor with components `e.symm l` to
+  `T l`, for a relabelling `e` of the component indices by `ι`. -/
+noncomputable def familyMap (e : ComponentIdx (S := S) c ≃ ι) (T : ι → B) :
+    S.Tensor c →ₗ[k] B :=
+  (Tensor.basis c).constr k (T ∘ e)
+
+@[simp]
+lemma familyMap_basis (e : ComponentIdx (S := S) c ≃ ι) (T : ι → B) (l : ι) :
+    familyMap e T (Tensor.basis c (e.symm l)) = T l := by
+  simp [familyMap]
+
+/-- The range of `familyMap e T` is the span of the vectors `T l`. -/
+lemma range_familyMap (e : ComponentIdx (S := S) c ≃ ι) (T : ι → B) :
+    LinearMap.range (familyMap e T) = Submodule.span k (Set.range T) := by
+  rw [familyMap, Module.Basis.constr_range]
+  exact congrArg _ (e.surjective.range_comp T)
+
+/-- The image of `familyMap e T` lies in the span of the vectors `T l`. -/
+lemma familyMap_mem_span (e : ComponentIdx (S := S) c ≃ ι) (T : ι → B) (t : S.Tensor c) :
+    familyMap e T t ∈ Submodule.span k (Set.range T) := by
+  rw [← range_familyMap e]
+  exact LinearMap.mem_range_self _ t
+
+/-- `familyMap` of a sum of families is the sum of the maps. -/
+lemma familyMap_sum (e : ComponentIdx (S := S) c ≃ ι) {α : Type*} (s : Finset α)
+    (T : α → ι → B) :
+    familyMap e (fun l => ∑ i ∈ s, T i l) = ∑ i ∈ s, familyMap e (T i) :=
+  (Tensor.basis c).ext fun φ => by simp [familyMap, LinearMap.sum_apply]
+
+/-- `familyMap` of a difference of families is the difference of the maps. -/
+lemma familyMap_sub (e : ComponentIdx (S := S) c ≃ ι) (T T' : ι → B) :
+    familyMap e (fun l => T l - T' l) = familyMap e T - familyMap e T' :=
+  (Tensor.basis c).ext fun φ => by simp [familyMap]
+
+/-- A linear map applied after `familyMap e T` is `familyMap` of its values on the
+  components. -/
+lemma comp_familyMap (e : ComponentIdx (S := S) c ≃ ι) {B' : Type*} [AddCommGroup B']
+    [Module k B'] (σ : B →ₗ[k] B') (T : ι → B) :
+    σ ∘ₗ familyMap e T = familyMap e fun l => σ (T l) :=
+  (Tensor.basis c).ext fun φ => by simp [familyMap]
+
+/-- A linear map moving a family as `g` moves the basis tensors intertwines the map of the family
+  with the action of `g`. -/
+lemma familyMap_smul_of_law (e : ComponentIdx (S := S) c ≃ ι) [Fintype ι] (T : ι → B)
+    {σ : B →ₗ[k] B} (g : G)
+    (hσ : ∀ l : ι, σ (T l) = ∑ a, (∏ i, LinearMap.toMatrix (b (c i)) (b (c i)) (rep (c i) g)
+      (e.symm a i) (e.symm l i)) • T a) (t : S.Tensor c) :
+    σ (familyMap e T t) = familyMap e T (g • t) := by
+  have h : σ ∘ₗ familyMap e T = familyMap e T ∘ₗ PiTensorProduct.map (fun i => rep (c i) g) := by
+    refine (Tensor.basis (S := S) c).ext fun φ => ?_
+    obtain ⟨l, rfl⟩ := e.symm.surjective φ
+    have h1 := smul_basis_eq_sum (S := S) c g (e.symm l)
+    rw [actionT_eq] at h1
+    simp only [LinearMap.comp_apply, h1, map_sum, map_smul, familyMap_basis, hσ,
+      ← e.symm.sum_comp]
+  exact (LinearMap.congr_fun h t).trans (by rw [actionT_eq]; rfl)
+
+/-- The map of a family is equivariant exactly when the family is moved as the basis tensors
+  are: one matrix entry of `g` per index, the summed index first in each factor. -/
+lemma isEquivariant_familyMap_iff (e : ComponentIdx (S := S) c ≃ ι) [Fintype ι]
+    {ρ : Representation k G B} (T : ι → B) :
+    S.IsEquivariant c ρ (familyMap e T) ↔ ∀ (g : G) (l : ι), ρ g (T l)
+      = ∑ a, (∏ i, LinearMap.toMatrix (b (c i)) (b (c i)) (rep (c i) g)
+        (e.symm a i) (e.symm l i)) • T a := by
+  constructor
+  · intro hf g l
+    have h := hf.equivariant g (Tensor.basis c (e.symm l))
+    rw [smul_basis_eq_sum, ← e.symm.sum_comp, map_sum] at h
+    simpa [familyMap] using h.symm
+  · exact fun hT => ⟨fun g t => (familyMap_smul_of_law e T g (hT g) t).symm⟩
 
 end Constr
 

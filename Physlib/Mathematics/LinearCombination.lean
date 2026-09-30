@@ -86,14 +86,6 @@ lemma LinearMap.map_sum_smul_eq_sum_mulVec_smul (φ : B →ₗ[R] B') (T : ι �
   refine Finset.sum_congr rfl fun a _ => ?_
   simp only [mulVec, dotProduct, mul_comm]
 
-open Matrix in
-/-- A linear map moving a family by `M` fixes the combination with coefficients fixed by
-  `M`. -/
-lemma LinearMap.map_sum_smul_eq_self_of_mulVec_eq (φ : B →ₗ[R] B) (T : ι → B)
-    (M : Matrix ι ι R) (hT : ∀ l, φ (T l) = ∑ a, M a l • T a) {c : ι → R} (hc : M *ᵥ c = c) :
-    φ (∑ i, c i • T i) = ∑ i, c i • T i := by
-  rw [φ.map_sum_smul_eq_sum_mulVec_smul T T M hT c, hc]
-
 /-!
 
 ## C. Fixed vectors of the span

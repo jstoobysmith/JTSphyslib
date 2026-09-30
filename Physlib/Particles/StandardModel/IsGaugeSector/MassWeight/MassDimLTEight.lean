@@ -150,35 +150,35 @@ include h in
   indices, is a bi-Lorentz tensor. -/
 lemma isLorentzCovariant_F_underived (φ : Module.Dual ℝ GaugeAlgebra) :
     IsLorentzCovariant 2 B repLorentz
-      (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_F g 0 ![] (l 0) (l 1) φ,
-      Finset.sum_eq_single (![] : Fin 0 → Fin 1 ⊕ Fin 3)
-        (fun b _ hb => absurd (Subsingleton.elim b ![]) hb)
-        (fun hb => absurd (Finset.mem_univ _) hb),
-      Fin.prod_univ_zero, one_smul, sum_pi_fin_two]
-    refine Finset.sum_congr rfl fun x _ => ?_
-    rw [Finset.smul_sum]
-    refine Finset.sum_congr rfl fun y _ => ?_
-    rw [smul_smul]
-    simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
+      (ofComponents fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_F g 0 ![] (l 0) (l 1) φ,
+    Finset.sum_eq_single (![] : Fin 0 → Fin 1 ⊕ Fin 3)
+      (fun b _ hb => absurd (Subsingleton.elim b ![]) hb)
+      (fun hb => absurd (Finset.mem_univ _) hb),
+    Fin.prod_univ_zero, one_smul, sum_pi_fin_two]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [Finset.smul_sum]
+  refine Finset.sum_congr rfl fun y _ => ?_
+  rw [smul_smul]
+  simp only [Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one]
 
 include h in
 /-- A once-derived field-strength symbol, viewed as a family indexed by its derivative
   slot and its two covector indices, is a triple Lorentz tensor. -/
 lemma isLorentzCovariant_F_deriv_one (φ : Module.Dual ℝ GaugeAlgebra) :
     IsLorentzCovariant 3 B repLorentz
-      (fun d : Fin 3 → Fin 1 ⊕ Fin 3 => F ![d 0] (d 1) (d 2) φ) where
-  repLorentz_T g l := by
-    rw [h.repLorentz_F g 1 ![l 0] (l 1) (l 2) φ, sum_cov_one, sum_cov_three]
-    refine Finset.sum_congr rfl fun x _ => ?_
-    rw [Finset.smul_sum]
-    refine Finset.sum_congr rfl fun y _ => ?_
-    rw [smul_smul, Finset.smul_sum]
-    refine Finset.sum_congr rfl fun z _ => ?_
-    rw [smul_smul]
-    simp only [Fin.prod_univ_one, Fin.prod_univ_three, Matrix.cons_val_zero,
-      Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+      (ofComponents fun d : Fin 3 → Fin 1 ⊕ Fin 3 => F ![d 0] (d 1) (d 2) φ) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [h.repLorentz_F g 1 ![l 0] (l 1) (l 2) φ, sum_cov_one, sum_cov_three]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [Finset.smul_sum]
+  refine Finset.sum_congr rfl fun y _ => ?_
+  rw [smul_smul, Finset.smul_sum]
+  refine Finset.sum_congr rfl fun z _ => ?_
+  rw [smul_smul]
+  simp only [Fin.prod_univ_one, Fin.prod_univ_three, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
 
 /-!
 
@@ -193,10 +193,10 @@ hence zero, and the trace vanishes with them.
 
 /-- The metric trace of a bi-Lorentz family antisymmetric in its two indices vanishes:
   the metric is diagonal, and the diagonal components of such a family are zero. -/
-lemma metricContraction_eq_zero_of_antisymm {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
+lemma ofComponents_metric_eq_zero_of_antisymm {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
     (hswap : ∀ x y : Fin 1 ⊕ Fin 3, T ![y, x] = - T ![x, y]) :
-    RankTwo.metricContraction (T := T) = 0 := by
-  rw [RankTwo.metricContraction]
+    ofComponents T RankTwo.metric = 0 := by
+  rw [RankTwo.ofComponents_metric]
   refine Finset.sum_eq_zero fun d _ => ?_
   rcases eq_or_ne (d 0) (d 1) with heq | hne
   · have hs := hswap (d 0) (d 1)
@@ -225,33 +225,22 @@ join of them.
 
 -/
 
-/-- A Lorentz invariant of the span of a bi-Lorentz family with vanishing metric trace,
-  together with a Lorentz-stable submodule, already lies in that submodule. -/
-lemma mem_of_lorentz_invariant_rankTwo_span_sup {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 2 B repLorentz T)
-    (hzero : RankTwo.metricContraction (T := T) = 0) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  obtain ⟨a, y, hy, hxy⟩ :=
-    RankTwo.exists_smul_metricContraction_of_invariant_subset hT S hS hx hinv
-  rwa [hxy, hzero, smul_zero, zero_add]
-
 /-- A finite join of the spans of bi-Lorentz families with vanishing metric traces carries
   no Lorentz invariant modulo a Lorentz-stable submodule: a Lorentz invariant of the join
   together with `S` lies in `S`. Each span reduces to the line through its metric
   contraction, which is zero, and `ReducesInvariantsTo.biSup` combines the reductions. -/
 lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
-    (hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
+    (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (ofComponents (T i)))
+    (hzero : ∀ i, ofComponents (T i) RankTwo.metric = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι) {x : B}
     (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
+  simp_rw [← range_ofComponents] at hx
   simpa using ReducesInvariantsTo.biSup
-    (fun i => (RankTwo.reducesInvariantsTo_span_metricContraction (hT i)).mono_right
+    (fun i => (RankTwo.reducesInvariantsTo_span_metric (hT i)).mono_right
       (Submodule.span_singleton_eq_bot.2 (hzero i)).le)
-    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot s S hS x hx hinv
+    (fun i => (hT i).isStableUnder_range) isStableUnder_bot s S hS x hx hinv
 
 /-- A finite join of the spans of triple Lorentz families carries no Lorentz invariant
   modulo a Lorentz-stable submodule: three covector indices carry no invariant contraction
@@ -259,12 +248,13 @@ lemma mem_of_lorentz_invariant_biSup_rankTwo_span {ι : Type} [DecidableEq ι]
   reductions. -/
 lemma mem_of_lorentz_invariant_biSup_rankThree_span {ι : Type} [DecidableEq ι]
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
+    (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (ofComponents (T i)))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
+  simp_rw [← range_ofComponents] at hx
   simpa using ReducesInvariantsTo.biSup (fun i => RankThree.reducesInvariantsTo_bot (hT i))
-    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot s S hS x hx hinv
+    (fun i => (hT i).isStableUnder_range) isStableUnder_bot s S hS x hx hinv
 
 /-- A join over a finite index type is the join over its universal finite set. -/
 lemma iSup_eq_biSup_univ {ι : Type} [Fintype ι] (f : ι → Submodule ℂ B) :
@@ -285,10 +275,9 @@ holds at the colour and isospin directions just as at the hypercharge one.
 include h in
 /-- The metric trace of the underived field-strength symbols at a fixed direction of the
   gauge algebra vanishes, the symbol being antisymmetric in its two covector indices. -/
-lemma metricContraction_F_underived_eq_zero (φ : Module.Dual ℝ GaugeAlgebra) :
-    RankTwo.metricContraction
-      (T := fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) = 0 :=
-  metricContraction_eq_zero_of_antisymm fun x y => by
+lemma ofComponents_F_underived_metric_eq_zero (φ : Module.Dual ℝ GaugeAlgebra) :
+    ofComponents (fun d : Fin 2 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ) RankTwo.metric = 0 :=
+  ofComponents_metric_eq_zero_of_antisymm fun x y => by
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact h.F_antisymm ![] x y φ
 
@@ -324,7 +313,7 @@ theorem mem_of_lorentz_invariant_massWeightSubmodule_four_sup (S : Submodule ℂ
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   refine mem_of_lorentz_invariant_biSup_rankTwo_span
     (fun c => h.isLorentzCovariant_F_underived (GaugeAlgebra.stdBasis.coord c))
-    (fun c => h.metricContraction_F_underived_eq_zero _) S hSL Finset.univ ?_ hinv
+    (fun c => h.ofComponents_F_underived_metric_eq_zero _) S hSL Finset.univ ?_ hinv
   rw [h.massWeightSubmodule_four_eq] at hx
   refine sup_le_sup_right ?_ S hx
   rw [← iSup_eq_biSup_univ]

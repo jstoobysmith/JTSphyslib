@@ -6,9 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.MassDimLTEight
-public import Physlib.Particles.StandardModel.InvariantReduction
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FundamentalAntiFundamental
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2FundamentalAntiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 /-!
 # The kinetic terms of the fermion sector
 
@@ -562,8 +560,8 @@ lemma isSU3FundamentalAntiFundamental_mul
       repGauge ((U, 1, 1) : GaugeGroupI) (A c) = ∑ a, U.1 a c • A a)
     (hC : ∀ (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 3),
       repGauge ((U, 1, 1) : GaugeGroupI) (C c) = ∑ a, conj (U.1 a c) • C a) :
-    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 0) * C (l 1)) where
-  repGauge_T U l := by
+    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 0) * C (l 1)) :=
+  IsSU3FundamentalAntiFundamental.of_law fun U l => by
     rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ =>
@@ -578,8 +576,8 @@ lemma isSU3FundamentalAntiFundamental_mul_swap
       repGauge ((U, 1, 1) : GaugeGroupI) (A c) = ∑ a, conj (U.1 a c) • A a)
     (hC : ∀ (U : specialUnitaryGroup (Fin 3) ℂ) (c : Fin 3),
       repGauge ((U, 1, 1) : GaugeGroupI) (C c) = ∑ a, U.1 a c • C a) :
-    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 1) * C (l 0)) where
-  repGauge_T U l := by
+    IsSU3FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 3 => A (l 1) * C (l 0)) :=
+  IsSU3FundamentalAntiFundamental.of_law fun U l => by
     rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two, Finset.sum_comm]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
@@ -595,8 +593,8 @@ lemma isSU2FundamentalAntiFundamental_mul
       repGauge ((1, V, 1) : GaugeGroupI) (A w) = ∑ a, V.1 a w • A a)
     (hC : ∀ (V : specialUnitaryGroup (Fin 2) ℂ) (w : Fin 2),
       repGauge ((1, V, 1) : GaugeGroupI) (C w) = ∑ a, conj (V.1 a w) • C a) :
-    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 0) * C (l 1)) where
-  repGauge_T V l := by
+    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 0) * C (l 1)) :=
+  IsSU2FundamentalAntiFundamental.of_law fun V l => by
     rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ =>
@@ -611,8 +609,8 @@ lemma isSU2FundamentalAntiFundamental_mul_swap
       repGauge ((1, V, 1) : GaugeGroupI) (A w) = ∑ a, conj (V.1 a w) • A a)
     (hC : ∀ (V : specialUnitaryGroup (Fin 2) ℂ) (w : Fin 2),
       repGauge ((1, V, 1) : GaugeGroupI) (C w) = ∑ a, V.1 a w • C a) :
-    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 1) * C (l 0)) where
-  repGauge_T V l := by
+    IsSU2FundamentalAntiFundamental B repGauge (fun l : Fin 2 → Fin 2 => A (l 1) * C (l 0)) :=
+  IsSU2FundamentalAntiFundamental.of_law fun V l => by
     rw [hmul, hA, hC, Finset.sum_mul_sum, Family.sum_pi_two, Finset.sum_comm]
     simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
     refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
@@ -646,21 +644,10 @@ lemma repGauge_mul_smul_fixed
   contractions are Lorentz spectators. -/
 lemma isVectorDualLeftRightWeyl_sum {ι : Type} [Fintype ι]
     {T : ι → (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B}
-    (hT : ∀ i, IsVectorDualLeftRightWeyl B repLorentz (T i)) :
-    IsVectorDualLeftRightWeyl B repLorentz (fun p => ∑ i, T i p) where
-  repLorentz_T Λ μ l := by
-    rw [map_sum, Finset.sum_congr rfl fun i (_ : i ∈ Finset.univ) =>
-      (hT i).repLorentz_T Λ μ l, Finset.sum_comm]
-    refine Finset.sum_congr rfl fun ν _ => ?_
-    rw [Finset.sum_comm]
-    exact Finset.sum_congr rfl fun a _ => Finset.smul_sum.symm
-
-/-- The conjugate Pauli contraction lies in the span of the components it contracts. -/
-lemma pauliBarContraction_mem_span (T : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 → B) :
-    IsVectorDualLeftRightWeyl.pauliBarContraction (T := T) ∈ Submodule.span ℂ (Set.range T) := by
-  rw [IsVectorDualLeftRightWeyl.pauliBarContraction]
-  exact Submodule.sum_mem _ fun μ _ => Submodule.sum_mem _ fun a _ =>
-    Submodule.smul_mem _ _ (Submodule.subset_span ⟨(μ, a), rfl⟩)
+    (hT : ∀ i, IsVectorDualLeftRightWeyl B repLorentz (ofDualVectorComponents (T i))) :
+    IsVectorDualLeftRightWeyl B repLorentz (ofDualVectorComponents fun p => ∑ i, T i p) := by
+  rw [ofDualVectorComponents_sum]
+  exact TensorSpecies.IsEquivariant.sum _ fun i _ => hT i
 
 /-- A unitary scalar times its conjugate is one, in the order the hypercharge cancellation
   of a species against its conjugate needs. -/

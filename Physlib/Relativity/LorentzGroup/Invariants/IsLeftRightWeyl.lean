@@ -5,181 +5,142 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
-public import Physlib.Mathematics.InvariantReduction
+public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
 /-!
 # Lorentz invariants of a left-handed and a right-handed Weyl index
 
-A bispinor `T^{α α'}`, carrying one left-handed and one right-handed Weyl index, has no
-Lorentz invariant in the span of its four components but `0`: the pair carries the
-`(1/2, 1/2)` representation, a single four-vector index, which has nothing to contract with.
-That is `eq_zero_of_invariant`, and `mem_of_invariant_of_mem_sup` is the same statement modulo
-a Lorentz-stable subspace `S`, the form the Standard Model files use.
+## i. Overview
 
-The components are vectors `T a` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, and `IsLeftRightWeyl` says the group moves the left index by the
-matrix of `g` and the right index by its complex conjugate (A). An invariant of
-`Submodule.span ℂ (Set.range T)` is `∑_a c_a • T a` for a coefficient function `c` fixed by the
-action `act` (A, from `Invariants.Basic`), and two elements of `SL(2,ℂ)` already force such a `c`
-to vanish
-(B). Both are diagonal, and a diagonal `g = diag (λ₀, λ₁)` multiplies `c (a₁, a₂)` by
-`λ_{a₁} * conj λ_{a₂}`. The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t²` and
-`c (1, 1)` by `t⁻²`, so these vanish, and the half turn `diag (-i, i)` about `z` multiplies
-`c (0, 1)` and `c (1, 0)` by `-i * conj i = -1`, so these vanish too. Invariance under the whole
-group implies invariance under these two elements; nothing is claimed about the group they
-generate. Section C divides out `S`.
+A bispinor `T^{α α'}`, carrying one left-handed and one right-handed Weyl index, has no Lorentz
+invariant but `0`: the pair carries the `(1/2, 1/2)` representation, a single four-vector index,
+which has nothing to contract with. The same holds for the dual pair `T_{α α'}`. The families are
+equivariant linear maps out of `ℂT[.upL, .upR]` and `ℂT[.downL, .downR]`, `IsLeftRightWeyl` and
+`IsDualLeftRightWeyl` (A).
 
-The dual law, `(g⁻¹)ᵀ` on the undotted and `(g⁻¹)ᴴ` on the dotted slot, is
-`IsDualLeftRightWeyl` in `IsVectorLeftRightWeyl`, which transports this classification to it.
+By `TensorSpecies.IsEquivariant.reducesInvariantsTo_bot` it is enough that the only invariant
+tensor is zero (B). Two diagonal elements of `SL(2,ℂ)` already force this. A diagonal
+`g = diag (λ₀, λ₁)` multiplies the component `(a₁, a₂)` of a tensor of `ℂT[.upL, .upR]` by
+`λ_{a₁} * conj λ_{a₂}`, and that of a tensor of `ℂT[.downL, .downR]` by the inverse of this. The
+boost `diag (2, 2⁻¹)` along `z` scales `(0, 0)` by `4` and `(1, 1)` by `4⁻¹`, so these vanish,
+and the half turn `diag (-i, i)` about `z` multiplies `(0, 1)` and `(1, 0)` by `-1`, so these
+vanish too (C).
+
+## ii. Key results
+
+- `Lorentz.eq_zero_of_invariant_leftRight` : an invariant tensor with a left- and a
+  right-handed Weyl index is zero.
+- `Lorentz.IsLeftRightWeyl.reducesInvariantsTo_bot` : the invariants of the range of a
+  left-right family reduce to `⊥`.
+- `Lorentz.IsDualLeftRightWeyl.reducesInvariantsTo_bot` : the same for the dual indices.
+
+## iii. Table of contents
+
+- A. Left-right families as equivariant maps
+- B. The invariant tensors vanish
+- C. The classification of the invariants
+
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C Invariants
+open Matrix MatrixGroups SL2C Invariants TensorSpecies Tensor complexLorentzTensor
 
 /-!
 
-## A. Left-right bispinors and their coefficient functions
+## A. Left-right families as equivariant maps
 
 -/
 
-/-- A family `T` indexed by one left-handed and one right-handed Weyl index, moved by
-  `repLorentz` as a bispinor `T^{α α'}`: the left index by the matrix of `g` and the right
-  index by its complex conjugate, the summed index first in each factor. -/
-structure IsLeftRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
-    (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (T : Fin 2 × Fin 2 → B) : Prop where
-  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
-    repLorentz g (T l) = ∑ (a : Fin 2 × Fin 2),
-      (g.1 a.1 l.1 * star (g.1 a.2 l.2)) • T a
+/-- A family with a left- and a right-handed Weyl index `T^{α α'}`: an equivariant linear map
+  out of `ℂT[.upL, .upR]`. -/
+abbrev IsLeftRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
+    (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.upL, .upR] →ₗ[ℂ] B) : Prop :=
+  complexLorentzTensor.IsEquivariant ![.upL, .upR] repLorentz f
 
-namespace IsLeftRightWeyl
-
-variable {B : Type*} [AddCommGroup B] [Module ℂ B]
-  {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : Fin 2 × Fin 2 → B}
-  (hT : IsLeftRightWeyl B repLorentz T)
-
-/-- The action of `g : SL(2,ℂ)` on coefficient functions,
-  `act g c a = ∑ d, c d * (g a.1 d.1 * star (g a.2 d.2))`: the component matrix applied to `c`,
-  with the free index first in each factor and the summed one second. -/
-def act (g : SL(2,ℂ)) (c : Fin 2 × Fin 2 → ℂ) (a : Fin 2 × Fin 2) : ℂ :=
-  ∑ d : Fin 2 × Fin 2, c d * (g.1 a.1 d.1 * star (g.1 a.2 d.2))
-
-/-- A coefficient function fixed by every `g : SL(2,ℂ)`. -/
-def IsInvariantCoeff (c : Fin 2 × Fin 2 → ℂ) : Prop := ∀ g : SL(2,ℂ), act g c = c
-
-include hT in
-/-- An invariant of the span is the contraction of an invariant coefficient function: the
-  adjoint of the action of `g` is the action of `g†`. -/
-lemma exists_isInvariantCoeff_of_mem_span_range {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : Fin 2 × Fin 2 → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
-  obtain ⟨c, hc, hx'⟩ := Invariants.exists_invariantCoeff_matrix T (fun g => repLorentz g)
-    (fun g a d => g.1 a.1 d.1 * star (g.1 a.2 d.2)) hT.repLorentz_T
-    (fun g => ⟨Invariants.dagger g, fun a d => by
-      simp [Invariants.dagger, Matrix.conjTranspose_apply, mul_comm]⟩)
-    hx hinv
-  exact ⟨c, hc, hx'⟩
+/-- A family with a dual left- and a dual right-handed Weyl index `T_{α α'}`: an equivariant
+  linear map out of `ℂT[.downL, .downR]`. -/
+abbrev IsDualLeftRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
+    (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.downL, .downR] →ₗ[ℂ] B) : Prop :=
+  complexLorentzTensor.IsEquivariant ![.downL, .downR] repLorentz f
 
 /-!
 
-## B. The boost and the half turn along `z` force the coefficients to vanish
-
-Both elements used are diagonal, so `act` rescales each coefficient: `diag (λ₀, λ₁)` multiplies
-`c (a₁, a₂)` by `λ_{a₁} * conj λ_{a₂}`, the right index taking the complex conjugate. The boost
-along `z` at `t = 2` kills the two diagonal coefficients, and the half turn about `z` kills the
-two mixed ones.
+## B. The invariant tensors vanish
 
 -/
 
-/-- The boost `diag (t, t⁻¹)` along `z` scales `c (0, 0)` by `t * conj t = t²` and `c (1, 1)`
-  by `t⁻²`; at `t = 2` invariance forces both to vanish. -/
-lemma IsInvariantCoeff.apply_self_eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
-    (k : Fin 2) : c (k, k) = 0 := by
-  have h := hc (SL2C.boostAxis 2 2 two_ne_zero)
-  revert k
-  refine Fin.forall_fin_two.2 ⟨?_, ?_⟩
-  · have h00 := congrFun h (0, 0)
-    simp [act, Fintype.sum_prod_type, Fin.sum_univ_two, map_ofNat] at h00
-    linear_combination h00 / 3
-  · have h11 := congrFun h (1, 1)
-    simp [act, Fintype.sum_prod_type, Fin.sum_univ_two, map_ofNat] at h11
-    linear_combination -(4 / 3 : ℂ) * h11
-
-/-- The half turn `diag (-i, i)` about `z` multiplies `c (0, 1)` by `-i * conj i = -1` and
-  `c (1, 0)` by `i * conj (-i) = -1`, so invariance forces both mixed coefficients to vanish. -/
-lemma IsInvariantCoeff.apply_eq_zero_of_ne {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c)
-    {a : Fin 2 × Fin 2} (ha : a.1 ≠ a.2) : c a = 0 := by
-  have h := hc (SL2C.halfTurn 2)
-  have h01 := congrFun h (0, 1)
-  have h10 := congrFun h (1, 0)
-  simp [act, Fintype.sum_prod_type, Fin.sum_univ_two] at h01 h10
-  obtain ⟨a₁, a₂⟩ := a
-  fin_cases a₁ <;> fin_cases a₂
-  · exact absurd rfl ha
-  · show c (0, 1) = 0
-    linear_combination -h01 / 2
-  · show c (1, 0) = 0
-    linear_combination -h10 / 2
-  · exact absurd rfl ha
-
-/-- An invariant coefficient function is zero: the boost kills its diagonal and the half turn
-  its mixed coefficients. -/
-lemma IsInvariantCoeff.eq_zero {c : Fin 2 × Fin 2 → ℂ} (hc : IsInvariantCoeff c) : c = 0 := by
-  funext a
-  by_cases ha : a.1 = a.2
-  · obtain ⟨a₁, a₂⟩ := a
-    simp only at ha
-    subst ha
-    exact hc.apply_self_eq_zero a₁
-  · exact hc.apply_eq_zero_of_ne ha
-
-include hT in
-/-- Every Lorentz invariant in the span of the components is zero: the pair of indices carries
-  the four-vector representation, which has no invariant contraction. -/
-theorem eq_zero_of_invariant {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
-  simp [hc.eq_zero]
+/-- An invariant tensor with a left- and a right-handed Weyl index, or with their duals, is
+  zero. The inverse boost along `z` scales the two diagonal components by `4⁻¹` and `4`, and the
+  inverse half turn about `z` negates the two mixed ones; for the dual colours the inverse
+  cancels against the inverse in the matrix of the colour. -/
+lemma eq_zero_of_invariant_leftRight {k k' : complexLorentzTensor.Color}
+    (hk : (k = .upL ∧ k' = .upR) ∨ (k = .downL ∧ k' = .downR)) {t : ℂT[k, k']}
+    (ht : ∀ g : SL(2,ℂ), g • t = t) : t = 0 := by
+  have hinv : ∀ g : SL(2,ℂ), (g⁻¹).1⁻¹ = g.1 := fun g => by rw [SL2C.inverse_coe, inv_inv]
+  rcases hk with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  all_goals
+    have h := fun (g : SL(2,ℂ)) (x y : Fin 2) => congrArg (fun s : type_of% t =>
+      (Tensor.basis (S := complexLorentzTensor) _).repr s
+        ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![_, _] j))).symm (x, y))) (ht g)
+    have h1 := h (SL2C.boostAxis 2 2 two_ne_zero)⁻¹ 0 0
+    have h2 := h (SL2C.boostAxis 2 2 two_ne_zero)⁻¹ 1 1
+    have h3 := h (SL2C.halfTurn 2)⁻¹ 0 1
+    have h4 := h (SL2C.halfTurn 2)⁻¹ 1 0
+    rw [basis_repr_smul_pair] at h1 h2 h3 h4
+    first
+      | rw [toMatrix_rep_upL, toMatrix_rep_upR] at h1 h2 h3 h4
+      | rw [toMatrix_rep_downL, toMatrix_rep_downR] at h1 h2 h3 h4
+    try simp only [hinv] at h1 h2 h3 h4
+    simp [Fin.sum_univ_two, Matrix.adjugate_fin_two, map_ofNat] at h1 h2 h3 h4
+    apply (Tensor.basis (S := complexLorentzTensor) _).repr.injective
+    ext φ
+    obtain ⟨⟨a, b⟩, rfl⟩ :=
+      (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![_, _] j))).symm.surjective φ
+    revert a b
+    change ∀ a b : Fin 2, _
+    simp only [Fin.forall_fin_two, map_zero, Finsupp.coe_zero, Pi.zero_apply]
+    exact ⟨⟨(mul_left_eq_self₀.1 h1).resolve_left (by norm_num),
+      CharZero.neg_eq_self_iff.1 h3⟩, CharZero.neg_eq_self_iff.1 h4,
+      (mul_left_eq_self₀.1 h2).resolve_left (by norm_num)⟩
 
 /-!
 
-## C. The classification modulo a Lorentz-stable submodule
-
-A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`: the classes of the
-components again form a bispinor, so the classification applies there and lifts back with an
-error term in `S`.
+## C. The classification of the invariants
 
 -/
 
-include hT in
-/-- The images of the components in the quotient by a Lorentz-stable submodule again
-  form a left-right bispinor. -/
-lemma isLeftRightWeyl_quotient (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsLeftRightWeyl (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
-      (fun l => S.mkQ (T l)) where
-  repLorentz_T g l := by
-    rw [quotient_apply_mkQ, hT.repLorentz_T g l, map_sum]
-    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
+variable {B : Type*} [AddCommGroup B] [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
 
-include hT in
-/-- A Lorentz invariant of `Submodule.span ℂ (Set.range T) ⊔ S`, for a Lorentz-stable
-  subspace `S`, already lies in `S`. -/
-lemma mem_of_invariant_of_mem_sup {x : B} (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have h := IsStableUnder.mem_sup_of_quotient (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥) hS
-    (fun y hy hyinv => by
-      rw [Submodule.map_bot, Submodule.mem_bot]
-      exact (hT.isLeftRightWeyl_quotient S hS).eq_zero_of_invariant
-        ((Submodule.map_span_range S.mkQ T).le hy) hyinv) hx hinv
-  rwa [bot_sup_eq] at h
+/-- The invariants of the range of a left-right family reduce to `⊥`: a Lorentz invariant of
+  `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, lies in `S`. -/
+lemma IsLeftRightWeyl.reducesInvariantsTo_bot {f : ℂT[.upL, .upR] →ₗ[ℂ] B}
+    (hf : IsLeftRightWeyl B repLorentz f) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) ⊥ :=
+  TensorSpecies.IsEquivariant.reducesInvariantsTo_bot hf (complexLorentzTensor.isAdjointClosed _)
+    fun _ ht => eq_zero_of_invariant_leftRight (Or.inl ⟨rfl, rfl⟩) ht
 
-end IsLeftRightWeyl
+/-- Every Lorentz invariant in the range of a left-right family is zero. -/
+lemma IsLeftRightWeyl.eq_zero_of_invariant {f : ℂT[.upL, .upR] →ₗ[ℂ] B}
+    (hf : IsLeftRightWeyl B repLorentz f) {x : B} (hx : x ∈ LinearMap.range f)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 :=
+  TensorSpecies.IsEquivariant.eq_zero_of_invariant hf (complexLorentzTensor.isAdjointClosed _)
+    (fun _ ht => eq_zero_of_invariant_leftRight (Or.inl ⟨rfl, rfl⟩) ht) hx hinv
+
+/-- The invariants of the range of a dual left-right family reduce to `⊥`: a Lorentz invariant
+  of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, lies in `S`. -/
+lemma IsDualLeftRightWeyl.reducesInvariantsTo_bot {f : ℂT[.downL, .downR] →ₗ[ℂ] B}
+    (hf : IsDualLeftRightWeyl B repLorentz f) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) ⊥ :=
+  TensorSpecies.IsEquivariant.reducesInvariantsTo_bot hf (complexLorentzTensor.isAdjointClosed _)
+    fun _ ht => eq_zero_of_invariant_leftRight (Or.inr ⟨rfl, rfl⟩) ht
+
+/-- Every Lorentz invariant in the range of a dual left-right family is zero. -/
+lemma IsDualLeftRightWeyl.eq_zero_of_invariant {f : ℂT[.downL, .downR] →ₗ[ℂ] B}
+    (hf : IsDualLeftRightWeyl B repLorentz f) {x : B} (hx : x ∈ LinearMap.range f)
+    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 :=
+  TensorSpecies.IsEquivariant.eq_zero_of_invariant hf (complexLorentzTensor.isAdjointClosed _)
+    (fun _ ht => eq_zero_of_invariant_leftRight (Or.inr ⟨rfl, rfl⟩) ht) hx hinv
 
 end Lorentz

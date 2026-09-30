@@ -54,7 +54,7 @@ never appear.
 
 namespace Lorentz
 
-open Matrix MatrixGroups
+open Matrix MatrixGroups complexLorentzTensor
 
 variable {B : Type*} [Ring B] [Algebra ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
 
@@ -74,43 +74,41 @@ rank-two family against a Lorentz vector is a rank-three family.
   same rank: the element rides through the transformation law untouched. -/
 lemma IsLorentzCovariant.mul_fixed {n : ℕ}
     (hmul : ∀ (Λ : SL(2,ℂ)) (x y : B), repLorentz Λ (x * y) = repLorentz Λ x * repLorentz Λ y)
-    {T : (Fin n → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzCovariant n B repLorentz T) {y : B}
-    (hy : ∀ g : SL(2,ℂ), repLorentz g y = y) :
-    IsLorentzCovariant n B repLorentz fun d => T d * y where
-  repLorentz_T g l := by
-    rw [hmul, hT.repLorentz_T g l, hy g, Finset.sum_mul]
-    exact Finset.sum_congr rfl fun a _ => smul_mul_assoc _ _ _
+    {T : (Fin n → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzCovariant n B repLorentz (ofComponents T))
+    {y : B} (hy : ∀ g : SL(2,ℂ), repLorentz g y = y) :
+    IsLorentzCovariant n B repLorentz (ofComponents fun d => T d * y) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [hmul, (isLorentzCovariant_ofComponents_iff T).1 hT g l, hy g, Finset.sum_mul]
+  exact Finset.sum_congr rfl fun a _ => smul_mul_assoc _ _ _
 
-/-- The metric trace of a family multiplied on the right by a fixed element is the metric
-  trace of the family, multiplied by that element. -/
-lemma RankTwo.metricContraction_mul (T : (Fin 2 → Fin 1 ⊕ Fin 3) → B) (y : B) :
-    RankTwo.metricContraction (T := fun d => T d * y)
-      = RankTwo.metricContraction (T := T) * y := by
-  rw [RankTwo.metricContraction, RankTwo.metricContraction, Finset.sum_mul]
-  exact Finset.sum_congr rfl fun d _ => (smul_mul_assoc _ _ _).symm
+/-- The map of a family multiplied on the right by an element is the map of the family,
+  multiplied by that element. -/
+lemma ofComponents_mul_right {n : ℕ} (T : (Fin n → Fin 1 ⊕ Fin 3) → B) (y : B)
+    (t : ℂT(fun _ : Fin n => Color.up)) :
+    ofComponents (fun d => T d * y) t = ofComponents T t * y :=
+  (LinearMap.congr_fun (comp_ofComponents (LinearMap.mulRight ℂ y) T) t).symm
 
 /-- A rank-two family against a Lorentz vector is a rank-three family: the two covector
   indices of the first factor and the single index of the second make three. -/
 lemma IsLorentzCovariant.mul_vector
     (hmul : ∀ (Λ : SL(2,ℂ)) (x y : B), repLorentz Λ (x * y) = repLorentz Λ x * repLorentz Λ y)
-    {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzCovariant 2 B repLorentz T)
+    {T : (Fin 2 → Fin 1 ⊕ Fin 3) → B} (hT : IsLorentzCovariant 2 B repLorentz (ofComponents T))
     {U : (Fin 1 ⊕ Fin 3) → B}
     (hU : ∀ (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3), repLorentz g (U μ)
       = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ) • U ν) :
     IsLorentzCovariant 3 B repLorentz
-      fun d : Fin 3 → Fin 1 ⊕ Fin 3 => T ![d 0, d 1] * U (d 2) where
-  repLorentz_T g l := by
-    rw [hmul, hT.repLorentz_T g ![l 0, l 1], hU g (l 2),
-      sum_pi_fin_two, StandardModel.IsGaugeSector.sum_cov_three,
-      Finset.sum_mul]
-    refine Finset.sum_congr rfl fun x _ => ?_
-    rw [Finset.sum_mul]
-    refine Finset.sum_congr rfl fun y _ => ?_
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun z _ => ?_
-    rw [smul_mul_assoc, mul_smul_comm, smul_smul]
-    congr 1
-    all_goals simp [Fin.prod_univ_two, Fin.prod_univ_three, mul_assoc]
+      (ofComponents fun d : Fin 3 → Fin 1 ⊕ Fin 3 => T ![d 0, d 1] * U (d 2)) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [hmul, (isLorentzCovariant_ofComponents_iff T).1 hT g ![l 0, l 1], hU g (l 2),
+    sum_pi_fin_two, StandardModel.IsGaugeSector.sum_cov_three, Finset.sum_mul]
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [Finset.sum_mul]
+  refine Finset.sum_congr rfl fun y _ => ?_
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun z _ => ?_
+  rw [smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1
+  all_goals simp [Fin.prod_univ_two, Fin.prod_univ_three, mul_assoc]
 
 end Lorentz
 
@@ -142,15 +140,16 @@ stability and the inertness of products and joins that section E consumes.
   reductions combine over every finite set of indices, and so over the whole join. -/
 lemma mem_of_lorentz_invariant_iSup_rankTwo_span {ι : Type}
     {T : ι → (Fin 2 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i))
-    (hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0) (S : Submodule ℂ B)
+    (hT : ∀ i, IsLorentzCovariant 2 B repLorentz (ofComponents (T i)))
+    (hzero : ∀ i, ofComponents (T i) RankTwo.metric = 0) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
+  simp_rw [← range_ofComponents] at hx
   simpa using ReducesInvariantsTo.iSup
-    (fun i => (RankTwo.reducesInvariantsTo_span_metricContraction (hT i)).mono_right
+    (fun i => (RankTwo.reducesInvariantsTo_span_metric (hT i)).mono_right
       (Submodule.span_singleton_eq_bot.2 (hzero i)).le)
-    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot S hS x hx hinv
+    (fun i => (hT i).isStableUnder_range) isStableUnder_bot S hS x hx hinv
 
 /-- A Lorentz invariant of a join, over an arbitrary index type, of the spans of triple
   Lorentz families lies in the stable submodule it is taken modulo: three covector indices
@@ -158,12 +157,13 @@ lemma mem_of_lorentz_invariant_iSup_rankTwo_span {ι : Type}
   combine over every finite set of indices, and so over the whole join. -/
 lemma mem_of_lorentz_invariant_iSup_rankThree_span {ι : Type}
     {T : ι → (Fin 3 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i))
+    (hT : ∀ i, IsLorentzCovariant 3 B repLorentz (ofComponents (T i)))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ (⨆ i, Submodule.span ℂ (Set.range (T i))) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
+  simp_rw [← range_ofComponents] at hx
   simpa using ReducesInvariantsTo.iSup (fun i => RankThree.reducesInvariantsTo_bot (hT i))
-    (fun i g _ hy => (hT i).repLorentz_mem_span_range g hy) isStableUnder_bot S hS x hx hinv
+    (fun i => (hT i).isStableUnder_range) isStableUnder_bot S hS x hx hinv
 
 /-- A product of two pointwise Lorentz-inert submodules is pointwise Lorentz inert. -/
 lemma repLorentz_eq_self_of_mem_mul
@@ -276,12 +276,12 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_fixed_sup (C : Submodul
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   let T : Module.Dual ℝ GaugeAlgebra × C → (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
     fun i l => h.covF ![] (l 0) (l 1) i.1 * (i.2 : B)
-  have hT : ∀ i, IsLorentzCovariant 2 B repLorentz (T i) :=
+  have hT : ∀ i, IsLorentzCovariant 2 B repLorentz (ofComponents (T i)) :=
     fun i => (h.isGaugeSector.isLorentzCovariant_F_underived i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
-  have hzero : ∀ i, RankTwo.metricContraction (T := T i) = 0 := by
+  have hzero : ∀ i, ofComponents (T i) RankTwo.metric = 0 := by
     intro i
-    refine IsGaugeSector.metricContraction_eq_zero_of_antisymm fun a b => ?_
+    refine IsGaugeSector.ofComponents_metric_eq_zero_of_antisymm fun a b => ?_
     simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one]
     rw [h.isGaugeSector.F_antisymm ![] a b i.1, neg_mul]
   refine mem_of_lorentz_invariant_iSup_rankTwo_span hT hzero S hSL ?_ hinv
@@ -308,7 +308,7 @@ theorem mem_of_lorentz_invariant_derivSubmodule_one_mul_fixed_sup (C : Submodule
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
   let T : Module.Dual ℝ GaugeAlgebra × C → (Fin 3 → Fin 1 ⊕ Fin 3) → B :=
     fun i l => h.covF ![l 0] (l 1) (l 2) i.1 * (i.2 : B)
-  have hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i) :=
+  have hT : ∀ i, IsLorentzCovariant 3 B repLorentz (ofComponents (T i)) :=
     fun i => (h.isGaugeSector.isLorentzCovariant_F_deriv_one i.1).mul_fixed h.repLorentz_mul
       fun g => hC g (i.2 : B) i.2.2
   refine mem_of_lorentz_invariant_iSup_rankThree_span hT S hSL ?_ hinv
@@ -349,9 +349,11 @@ theorem mem_of_lorentz_invariant_derivSubmodule_zero_mul_higgs_one_sup (S : Subm
       (Fin 3 → Fin 1 ⊕ Fin 3) → B :=
     fun i l => h.covF ![] (l 0) (l 1) i.1 *
       Sum.elim (fun φ => h.covH ![l 2] φ) (fun ψ => h.covBarH ![l 2] ψ) i.2
-  have hT : ∀ i, IsLorentzCovariant 3 B repLorentz (T i) :=
-    fun i => (h.isGaugeSector.isLorentzCovariant_F_underived i.1).mul_vector
+  have hT : ∀ i, IsLorentzCovariant 3 B repLorentz (ofComponents (T i)) := fun i => by
+    have h1 := (h.isGaugeSector.isLorentzCovariant_F_underived i.1).mul_vector
       h.repLorentz_mul (hU i.2)
+    convert h1 using 3
+    simp only [T, Matrix.cons_val_zero, Matrix.cons_val_one]
   refine mem_of_lorentz_invariant_iSup_rankThree_span hT S hSL ?_ hinv
   refine sup_le_sup_right ?_ S hx
   refine Submodule.mul_le.mpr fun a ha b hb => ?_

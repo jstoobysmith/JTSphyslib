@@ -7,11 +7,8 @@ module
 
 public import Physlib.Particles.StandardModel.IsGaugeSector.MassWeight.GaugeWeightDecomposition
 public import Physlib.Particles.StandardModel.InvariantReduction
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3BiAdjoint
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAdjoint
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Adjoint
 public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsU1BiAdjoint
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3Adjoint
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2Adjoint
 public import Physlib.Relativity.LorentzGroup.Invariants.RankFour
 public import Mathlib.RepresentationTheory.Invariants
 /-!
@@ -242,13 +239,13 @@ lemma repGauge_su3_wField (U : specialUnitaryGroup (Fin 3) ℂ) {n : ℕ}
   of one `su(3)` adjoint index. -/
 lemma isSU3Adjoint_gluonField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
     IsSU3Adjoint B repGauge (h.gluonField l μ ν) :=
-  ⟨fun U c => h.repGauge_gluonField (U, 1, 1) l μ ν c⟩
+  IsSU3Adjoint.of_law fun U c => h.repGauge_gluonField (U, 1, 1) l μ ν c
 
 /-- The `W`-boson field strengths at fixed derivative slots and covector indices form a
   family of one `su(2)` adjoint index. -/
 lemma isSU2Adjoint_wField {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (μ ν : Fin 1 ⊕ Fin 3) :
     IsSU2Adjoint B repGauge (h.wField l μ ν) :=
-  ⟨fun U c => h.repGauge_wField (1, U, 1) l μ ν c⟩
+  IsSU2Adjoint.of_law fun U c => h.repGauge_wField (1, U, 1) l μ ν c
 
 /-!
 
@@ -299,7 +296,7 @@ lemma isSU3BiAdjointMat_gluonPair (p : EightIdx) (g : GaugeGroupI) :
 
 /-- A gluon pair is a bi-adjoint `su(3)` tensor. -/
 lemma isSU3BiAdjoint_gluonPair (p : EightIdx) : IsSU3BiAdjoint B repGauge (h.gluonPair p) :=
-  ⟨fun U => h.isSU3BiAdjointMat_gluonPair p (U, 1, 1)⟩
+  IsSU3BiAdjoint.of_law fun U => h.isSU3BiAdjointMat_gluonPair p (U, 1, 1)
 
 /-- A gauge transformation moves a `W`-boson pair as the `SU(2)` factor of that gauge group
   element moves a tensor with two `su(2)` adjoint indices. -/
@@ -310,7 +307,7 @@ lemma isSU2BiAdjointMat_wPair (p : EightIdx) (g : GaugeGroupI) :
 
 /-- A `W`-boson pair is a bi-adjoint `su(2)` tensor. -/
 lemma isSU2BiAdjoint_wPair (p : EightIdx) : IsSU2BiAdjoint B repGauge (h.wPair p) :=
-  ⟨fun U => h.isSU2BiAdjointMat_wPair p (1, U, 1)⟩
+  IsSU2BiAdjoint.of_law fun U => h.isSU2BiAdjointMat_wPair p (1, U, 1)
 
 /-- A gauge transformation fixes a hypercharge pair, which is the `u(1)` bi-adjoint law. -/
 lemma isU1BiAdjointMat_hyperchargePair (p : EightIdx) (g : GaugeGroupI) :
@@ -581,10 +578,10 @@ noncomputable def colourFamily : ColourIdx → Fin 8 → B
   index and fixes the neutral factor. -/
 lemma isSU3Adjoint_colourFamily : ∀ i : ColourIdx, IsSU3Adjoint B repGauge (h.colourFamily i)
   | Sum.inl p => h.isSU3Adjoint_gluonField p.1 p.2.1 p.2.2
-  | Sum.inr (Sum.inl q) => ⟨fun U => map_mul_fixed_eq_sum (hrepGauge_mul _)
-      (h.repGauge_gluonField (U, 1, 1) ![] q.1 q.2.1) (h.repGauge_su3_neutralVec U _ _ _)⟩
-  | Sum.inr (Sum.inr q) => ⟨fun U => map_fixed_mul_eq_sum (hrepGauge_mul _)
-      (h.repGauge_gluonField (U, 1, 1) ![] q.1 q.2.1) (h.repGauge_su3_neutralVec U _ _ _)⟩
+  | Sum.inr (Sum.inl q) => IsSU3Adjoint.of_law fun U => map_mul_fixed_eq_sum (hrepGauge_mul _)
+      (h.repGauge_gluonField (U, 1, 1) ![] q.1 q.2.1) (h.repGauge_su3_neutralVec U _ _ _)
+  | Sum.inr (Sum.inr q) => IsSU3Adjoint.of_law fun U => map_fixed_mul_eq_sum (hrepGauge_mul _)
+      (h.repGauge_gluonField (U, 1, 1) ![] q.1 q.2.1) (h.repGauge_su3_neutralVec U _ _ _)
 
 /-- The index of a family carrying one unpaired `su(2)` adjoint index at mass weight
   eight: a twice-derived `W`-boson tower, or an underived `W`-boson field strength against
@@ -601,10 +598,10 @@ noncomputable def isospinFamily : IsospinIdx → Fin 3 → B
   `W`-boson index and fixes hypercharge. -/
 lemma isSU2Adjoint_isospinFamily : ∀ i : IsospinIdx, IsSU2Adjoint B repGauge (h.isospinFamily i)
   | Sum.inl p => h.isSU2Adjoint_wField p.1 p.2.1 p.2.2
-  | Sum.inr (Sum.inl q) => ⟨fun U => map_mul_fixed_eq_sum (hrepGauge_mul _)
-      (h.repGauge_wField (1, U, 1) ![] (q 0) (q 1)) (h.repGauge_hyperchargeField _ _ _ _)⟩
-  | Sum.inr (Sum.inr q) => ⟨fun U => map_fixed_mul_eq_sum (hrepGauge_mul _)
-      (h.repGauge_wField (1, U, 1) ![] (q 0) (q 1)) (h.repGauge_hyperchargeField _ _ _ _)⟩
+  | Sum.inr (Sum.inl q) => IsSU2Adjoint.of_law fun U => map_mul_fixed_eq_sum (hrepGauge_mul _)
+      (h.repGauge_wField (1, U, 1) ![] (q 0) (q 1)) (h.repGauge_hyperchargeField _ _ _ _)
+  | Sum.inr (Sum.inr q) => IsSU2Adjoint.of_law fun U => map_fixed_mul_eq_sum (hrepGauge_mul _)
+      (h.repGauge_wField (1, U, 1) ![] (q 0) (q 1)) (h.repGauge_hyperchargeField _ _ _ _)
 
 /-- The isospin families are fixed by the colour factor, every one of their factors
   being. -/
@@ -792,16 +789,16 @@ lemma reducesInvariantsTo_unpaired :
   have hcolour : ReducesInvariantsTo
       (fun U : specialUnitaryGroup (Fin 3) ℂ => repGauge (U, 1, 1))
       (h.unpairedColourSpan ⊔ h.unpairedIsospinSpan) h.unpairedIsospinSpan :=
-    ((ReducesInvariantsTo.iSup (fun i => IsSU3Adjoint.reducesInvariantsTo_bot _
-        (h.isSU3Adjoint_colourFamily i).repGauge_T)
-      (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU3Adjoint_colourFamily i).repGauge_T U))
+    ((ReducesInvariantsTo.iSup
+        (fun i => IsSU3Adjoint.reducesInvariantsTo_bot (h.isSU3Adjoint_colourFamily i))
+      (fun i => IsSU3Adjoint.isStableUnder_span (h.isSU3Adjoint_colourFamily i))
       isStableUnder_bot).mono_right bot_le).sup (reducesInvariantsTo_of_le le_rfl)
       hfix.isStableUnder hfix.isStableUnder
   have hisospin : ReducesInvariantsTo
       (fun U : specialUnitaryGroup (Fin 2) ℂ => repGauge (1, U, 1)) h.unpairedIsospinSpan ⊥ :=
-    ReducesInvariantsTo.iSup (fun i => IsSU2Adjoint.reducesInvariantsTo_bot _
-        (h.isSU2Adjoint_isospinFamily i).repGauge_T)
-      (fun i U => span_stable_of_map_eq_sum _ _ ((h.isSU2Adjoint_isospinFamily i).repGauge_T U))
+    ReducesInvariantsTo.iSup
+        (fun i => IsSU2Adjoint.reducesInvariantsTo_bot (h.isSU2Adjoint_isospinFamily i))
+      (fun i => IsSU2Adjoint.isStableUnder_span (h.isSU2Adjoint_isospinFamily i))
       isStableUnder_bot
   exact (hcolour.comp (σ := fun g : GaugeGroupI => repGauge g) (fun U => (U, 1, 1))).trans
     (hisospin.comp (σ := fun g : GaugeGroupI => repGauge g) (fun U => (1, U, 1)))
@@ -891,8 +888,8 @@ lemma reducesInvariantsTo_gluonPairSpan :
     ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) h.gluonPairSpan h.gluonTraceSpan := by
   classical
   exact ReducesInvariantsTo.iSup
-    (fun p => ((IsSU3BiAdjoint.reducesInvariantsTo_span_traceContraction _
-      (h.isSU3BiAdjoint_gluonPair p).repGauge_T).comp (σ := fun g : GaugeGroupI => repGauge g)
+    (fun p => ((IsSU3BiAdjoint.reducesInvariantsTo_span_traceContraction
+      (h.isSU3BiAdjoint_gluonPair p)).comp (σ := fun g : GaugeGroupI => repGauge g)
         (fun U => (U, 1, 1))).mono_right (le_iSup (fun p => ℂ ∙ h.gluonTrace p) p))
     (fun p g => span_stable_of_map_eq_sum (h.gluonPair p) _ (h.isSU3BiAdjointMat_gluonPair p g))
     (isFixedBy_iSup fun p => isFixedBy_span_singleton (h.repGauge_gluonTrace · p)).isStableUnder
@@ -903,8 +900,8 @@ lemma reducesInvariantsTo_wPairSpan :
     ReducesInvariantsTo (fun g : GaugeGroupI => repGauge g) h.wPairSpan h.wTraceSpan := by
   classical
   exact ReducesInvariantsTo.iSup
-    (fun p => ((IsSU2BiAdjoint.reducesInvariantsTo_span_traceContraction _
-      (h.isSU2BiAdjoint_wPair p).repGauge_T).comp (σ := fun g : GaugeGroupI => repGauge g)
+    (fun p => ((IsSU2BiAdjoint.reducesInvariantsTo_span_traceContraction
+      (h.isSU2BiAdjoint_wPair p)).comp (σ := fun g : GaugeGroupI => repGauge g)
         (fun U => (1, U, 1))).mono_right (le_iSup (fun p => ℂ ∙ h.wTrace p) p))
     (fun p g => span_stable_of_map_eq_sum (h.wPair p) _ (h.isSU2BiAdjointMat_wPair p g))
     (isFixedBy_iSup fun p => isFixedBy_span_singleton (h.repGauge_wTrace · p)).isStableUnder
@@ -947,7 +944,7 @@ through the product. The three trace contractions are sums of such products over
 index, and a finite sum of quadruple Lorentz tensors is one again. So is the twice-derived
 hypercharge field strength, whose two derivative slots and two covector indices are four
 four-vector indices as well. The four spans of section G are exactly the spans of these
-four families, and `RankFour.reducesInvariantsTo_span_contraction` reduces each, for the
+four families, and `RankFour.reducesInvariantsTo_span_contractionTensor` reduces each, for the
 Lorentz group, to the span of its four contractions.
 
 What is left is spanned by the four Lorentz contractions of each family, the outer, inner
@@ -995,22 +992,21 @@ include h in
 /-- A product of two underived field-strength symbols, viewed as a family indexed by the
   four covector indices it carries, is a quadruple Lorentz tensor. -/
 lemma isLorentzCovariant_F_mul (φ ψ : Module.Dual ℝ GaugeAlgebra) :
-    IsLorentzCovariant 4 B repLorentz
-      (fun d : Fin 4 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ * F ![] (d 2) (d 3) ψ) where
-  repLorentz_T g l := by
-    rw [hrepLorentz_mul, h.repLorentz_F_underived g (l 0) (l 1) φ,
-      h.repLorentz_F_underived g (l 2) (l 3) ψ, sum_mul_sum_eq_sum_pi_four]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    simp only [Fin.prod_univ_four, mul_assoc]
+    IsLorentzCovariant 4 B repLorentz (ofComponents
+      fun d : Fin 4 → Fin 1 ⊕ Fin 3 => F ![] (d 0) (d 1) φ * F ![] (d 2) (d 3) ψ) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  rw [hrepLorentz_mul, h.repLorentz_F_underived g (l 0) (l 1) φ,
+    h.repLorentz_F_underived g (l 2) (l 3) ψ, sum_mul_sum_eq_sum_pi_four]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  simp only [Fin.prod_univ_four, mul_assoc]
 
 /-- A finite sum of quadruple Lorentz tensors is a quadruple Lorentz tensor: the
   transformation law is linear in the family. -/
 lemma isLorentzCovariant_sum {ι : Type} [Fintype ι] {T : ι → (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : ∀ i, IsLorentzCovariant 4 B repLorentz (T i)) :
-    IsLorentzCovariant 4 B repLorentz (fun d => ∑ i, T i d) where
-  repLorentz_T g l := by
-    simp only [map_sum, fun i => (hT i).repLorentz_T g l, Finset.smul_sum]
-    exact Finset.sum_comm
+    (hT : ∀ i, IsLorentzCovariant 4 B repLorentz (ofComponents (T i))) :
+    IsLorentzCovariant 4 B repLorentz (ofComponents fun d => ∑ i, T i d) := by
+  rw [ofComponents_sum]
+  exact TensorSpecies.IsEquivariant.sum _ fun i _ => hT i
 
 include h in
 /-- A family of four four-vector indices whose members are sums of products of two
@@ -1018,25 +1014,26 @@ include h in
 lemma isLorentzCovariant_of_eq_sum {ι : Type} [Fintype ι] {T : EightIdx → B}
     (φ : ι → Module.Dual ℝ GaugeAlgebra)
     (hT : ∀ d, T d = ∑ i, F ![] (d 0) (d 1) (φ i) * F ![] (d 2) (d 3) (φ i)) :
-    IsLorentzCovariant 4 B repLorentz T := by
+    IsLorentzCovariant 4 B repLorentz (ofComponents T) := by
   rw [show T = fun d => ∑ i, F ![] (d 0) (d 1) (φ i) * F ![] (d 2) (d 3) (φ i) from funext hT]
   exact isLorentzCovariant_sum fun _ => h.isLorentzCovariant_F_mul _ _
 
 /-- The gluon trace contractions, read as a family of four four-vector indices, form a
   quadruple Lorentz tensor: a sum over the colour index of products of two underived
   field-strength symbols. -/
-lemma isLorentzCovariant_gluonTrace : IsLorentzCovariant 4 B repLorentz h.gluonTrace :=
+lemma isLorentzCovariant_gluonTrace :
+    IsLorentzCovariant 4 B repLorentz (ofComponents h.gluonTrace) :=
   h.isLorentzCovariant_of_eq_sum (fun a : Fin 8 => GaugeAlgebra.stdBasis.coord (Sum.inl a))
     h.gluonTrace_eq
 
 /-- The `W`-boson trace contractions form a quadruple Lorentz tensor. -/
-lemma isLorentzCovariant_wTrace : IsLorentzCovariant 4 B repLorentz h.wTrace :=
+lemma isLorentzCovariant_wTrace : IsLorentzCovariant 4 B repLorentz (ofComponents h.wTrace) :=
   h.isLorentzCovariant_of_eq_sum
     (fun i : Fin 3 => GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inl i))) h.wTrace_eq
 
 /-- The hypercharge trace contractions form a quadruple Lorentz tensor. -/
 lemma isLorentzCovariant_hyperchargeTrace :
-    IsLorentzCovariant 4 B repLorentz h.hyperchargeTrace := by
+    IsLorentzCovariant 4 B repLorentz (ofComponents h.hyperchargeTrace) := by
   rw [show h.hyperchargeTrace = fun d =>
       F ![] (d 0) (d 1) (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inr 0)))
         * F ![] (d 2) (d 3) (GaugeAlgebra.stdBasis.coord (Sum.inr (Sum.inr 0))) from
@@ -1047,18 +1044,18 @@ lemma isLorentzCovariant_hyperchargeTrace :
   indices, form a quadruple Lorentz tensor: the two derivative slots and the two covector
   indices all rotate. This is the second shape of mass weight eight. -/
 lemma isLorentzCovariant_hyperchargeDeriv :
-    IsLorentzCovariant 4 B repLorentz h.hyperchargeDeriv where
-  repLorentz_T g l := by
-    simp only [hyperchargeDeriv, hyperchargeField]
-    rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_fin_two, RankFour.sum_pi_four]
-    simp only [Finset.smul_sum, smul_smul, Fin.prod_univ_two, Fin.prod_univ_four, mul_assoc,
-      Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
-      Matrix.tail_cons, Matrix.cons_val_three]
+    IsLorentzCovariant 4 B repLorentz (ofComponents h.hyperchargeDeriv) := by
+  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
+  simp only [hyperchargeDeriv, hyperchargeField]
+  rw [h.repLorentz_F g 2 ![l 0, l 1] (l 2) (l 3), sum_pi_fin_two, RankFour.sum_pi_four]
+  simp only [Finset.smul_sum, smul_smul, Fin.prod_univ_two, Fin.prod_univ_four, mul_assoc,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
+    Matrix.tail_cons, Matrix.cons_val_three]
 
-/-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the outer,
-  inner and split metric contractions and the Levi-Civita contraction. -/
+/-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the images of
+  the three metric pairings and of the Levi-Civita symbol. -/
 noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Submodule ℂ B :=
-  Submodule.span ℂ (Set.range (RankFour.contraction T))
+  Submodule.span ℂ (Set.range fun i => ofComponents T (RankFour.contractionTensor i))
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family lies in the
   span of its components: each contraction is a combination of components with constant
@@ -1066,16 +1063,17 @@ noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : 
 lemma quadContractionSpan_le_span {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B} :
     quadContractionSpan T ≤ Submodule.span ℂ (Set.range T) :=
   Submodule.span_le.2 <| Set.range_subset_iff.2 fun i => by
-    rw [RankFour.contraction_eq]
-    exact (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
+    rw [SetLike.mem_coe, ← range_ofComponents]
+    exact LinearMap.mem_range_self _ _
 
 /-- The span of the four Lorentz contractions of a quadruple Lorentz family is a space of
   Lorentz invariants, the four contractions being invariant by `RankFour`. -/
 lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
-    (hT : IsLorentzCovariant 4 B repLorentz T) :
+    (hT : IsLorentzCovariant 4 B repLorentz (ofComponents T)) :
     quadContractionSpan T ≤ repLorentz.invariants :=
   Submodule.span_le.2 <| Set.range_subset_iff.2 fun i =>
-    (Representation.mem_invariants _ _).2 (RankFour.repLorentz_contraction hT i)
+    (Representation.mem_invariants _ _).2
+      (hT.rep_map_of_invariant (RankFour.contractionTensor_invariant i))
 
 /-- The span of the four Lorentz contractions of each of the three underived
   trace-contraction families and of the twice-derived hypercharge family: the gauge and
@@ -1166,14 +1164,20 @@ lemma reducesInvariantsTo_lorentzContractionEightSpan :
       rw [(Representation.mem_invariants _ _).1
         (h.lorentzContractionEightSpan_le_lorentzInvariants hy) g]
       exact hy
-  have hst : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 4 B repLorentz T →
+  have hst : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B},
+      IsLorentzCovariant 4 B repLorentz (ofComponents T) →
       IsStableUnder (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) :=
-    fun hT g _ hy => hT.repLorentz_mem_span_range g hy
-  have hred : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}, IsLorentzCovariant 4 B repLorentz T →
+    fun hT => by
+      rw [← range_ofComponents]
+      exact hT.isStableUnder_range
+  have hred : ∀ {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B},
+      IsLorentzCovariant 4 B repLorentz (ofComponents T) →
       quadContractionSpan T ≤ h.lorentzContractionEightSpan →
       ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
         h.lorentzContractionEightSpan :=
-    fun hT hle => (RankFour.reducesInvariantsTo_span_contraction hT).mono_right hle
+    fun hT hle => by
+      rw [← range_ofComponents]
+      exact (RankFour.reducesInvariantsTo_span_contractionTensor hT).mono_right hle
   -- the Lorentz stage, on the four spans the gauge stage leaves
   have hlorentz : ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g)
       (h.traceContractionEightSpan ⊔ h.hyperchargeDerivSpan) h.lorentzContractionEightSpan := by

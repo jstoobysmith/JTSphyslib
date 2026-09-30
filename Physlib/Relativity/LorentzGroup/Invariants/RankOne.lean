@@ -6,40 +6,33 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
-public import Physlib.Mathematics.InvariantReduction
 /-!
 # Lorentz invariants of a single four-vector index
 
-A four-vector `T^{μ}` has no Lorentz invariant built from its four components but `0`. There is
-nothing to contract it with: the metric takes two indices and the Levi-Civita symbol four. That
-is `eq_zero_of_invariant`, and `mem_of_invariant_of_mem_sup` is the same statement modulo a
-Lorentz-stable subspace `S`; `reducesInvariantsTo_bot`, the form the Standard Model files use,
-reads it as a reduction.
+A four-vector `T^{μ}` has no Lorentz invariant but `0`. There is nothing to contract it with:
+the metric takes two indices and the Levi-Civita symbol four. For an equivariant map
+`f : ℂT(fun _ : Fin 1 => .up) →ₗ[ℂ] B`, `IsLorentzCovariant 1`, that is `eq_zero_of_invariant`,
+and `reducesInvariantsTo_bot`, the form the Standard Model files use, is the same statement
+modulo a Lorentz-stable submodule `S`.
 
-The components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, indexed by one direction `d`, and `IsLorentzCovariant 1` says the
-group moves them by the Lorentz matrix. `Submodule.span ℂ (Set.range T)` is the set of their
-combinations.
-
-An invariant of the span is `∑_d c_d • T d` for a coefficient tensor `c` that the Lorentz
-matrices themselves fix (`Invariants.Basic`). Along a spatial axis the four light-cone
-directions carry boost weights `2`, `-2`, `0`, `0`, and an invariant `c` has no light-cone
-component of nonzero weight, which with one index says `c_d = 0` unless `d` is one of the two
-directions transverse to time and to that axis (A). No direction is transverse to all three
-axes, so running the three axes in turn leaves `c = 0` (B). Section C divides out `S`.
+The invariants of the range of `f` are the images of invariant tensors, so it is enough that an
+invariant coefficient tensor `c` (`Invariants.Basic`) vanishes. Along a spatial axis the four
+light-cone directions carry boost weights `2`, `-2`, `0`, `0`, and an invariant `c` has no
+light-cone component of nonzero weight, which with one index says `c_d = 0` unless `d` is one of
+the two directions transverse to time and to that axis (A). No direction is transverse to all three
+axes, so running the three axes in turn leaves `c = 0` (B). Section C applies this to `f`.
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open TensorProduct Matrix MatrixGroups SL2C Invariants
+open TensorProduct Matrix MatrixGroups SL2C Invariants complexLorentzTensor
 
 namespace RankOne
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin 1 → (Fin 1 ⊕ Fin 3)) → B}
 
 /-!
 
@@ -109,42 +102,28 @@ lemma eq_zero_of_isInvariantCoeff {c : (Fin 1 → Fin 1 ⊕ Fin 3) → ℂ}
     · exact eq_zero_of_not_transverse hc 1 h1
   · exact eq_zero_of_not_transverse hc 0 h0
 
-/-- Every Lorentz invariant in the span of the components is zero: one index carries no
-  invariant contraction. -/
-theorem eq_zero_of_invariant (hT : IsLorentzCovariant 1 B repLorentz T) {x : B}
-    (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    x = 0 := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
-  simp [eq_zero_of_isInvariantCoeff hc]
-
 /-!
 
-## C. The classification modulo a Lorentz-stable submodule
+## C. The invariants of an equivariant map
 
-A stable subspace `S` is divided out by passing to the quotient `B ⧸ S`, that is `B` with
-`S` declared zero: the classes of the components again form a single Lorentz tensor, so
-section B applies there and an invariant of `Submodule.span ℂ (Set.range T) ⊔ S` lies in `S`.
+The invariants of the range of an equivariant map come from invariant tensors, whose coefficient
+tensors are invariant, so section B leaves none of them.
 
 -/
 
-/-- A Lorentz invariant of `Submodule.span ℂ (Set.range T) ⊔ S`, for a Lorentz-stable
-  subspace `S`, already lies in `S`. -/
-lemma mem_of_invariant_of_mem_sup (hT : IsLorentzCovariant 1 B repLorentz T) {x : B}
-    (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S)
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  have h := IsStableUnder.mem_sup_of_quotient (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥) hS
-    (fun y hy hyinv => by
-      rw [Submodule.map_bot, Submodule.mem_bot]
-      exact eq_zero_of_invariant (hT.quotient S hS)
-        ((Submodule.map_span_range S.mkQ T).le hy) hyinv) hx hinv
-  rwa [bot_sup_eq] at h
+variable {f : ℂT(fun _ : Fin 1 => Color.up) →ₗ[ℂ] B}
 
-/-- The span of the components reduces to `⊥`: `mem_of_invariant_of_mem_sup` read as a
-  reduction for the Lorentz group. -/
-lemma reducesInvariantsTo_bot (hT : IsLorentzCovariant 1 B repLorentz T) :
-    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T)) ⊥ :=
-  fun S hS _ hx hinv => Submodule.mem_sup_right (mem_of_invariant_of_mem_sup hT S hS hx hinv)
+/-- Every Lorentz invariant in the range of `f` is zero: one index carry no invariant
+  contraction. -/
+lemma eq_zero_of_invariant (hf : IsLorentzCovariant 1 B repLorentz f) {x : B}
+    (hx : x ∈ LinearMap.range f) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 :=
+  hf.eq_zero_of_isInvariantCoeff (fun _ hc => eq_zero_of_isInvariantCoeff hc) hx hinv
+
+/-- The range of `f` reduces to `⊥`: a Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a
+  Lorentz-stable submodule, lies in `S`. -/
+lemma reducesInvariantsTo_bot (hf : IsLorentzCovariant 1 B repLorentz f) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) ⊥ :=
+  hf.reducesInvariantsTo_bot_of_isInvariantCoeff fun _ hc => eq_zero_of_isInvariantCoeff hc
 
 end RankOne
 

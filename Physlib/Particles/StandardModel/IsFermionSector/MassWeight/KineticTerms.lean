@@ -92,8 +92,9 @@ lemma isSU3FundamentalAntiFundamental_dbardBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.dbardBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_d U f ![] l.2 c)
-    (fun U c => h.repGauge_su3_bard U f' ![q] l.1 c)
+  (isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul
+    (fun U c => h.repGauge_su3_d U f ![] l.2 c)
+    (fun U c => h.repGauge_su3_bard U f' ![q] l.1 c) :)
 
 /-- An isospin transformation fixes the `d ∂ bard` block, neither symbol carrying
   isospin. -/
@@ -147,22 +148,25 @@ noncomputable def dbardIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_dbard (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.dbardIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.dbardIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.dbardBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul_swap
-      hrepLorentz_mul (h.isDualRightWeyl_rightComp (.d f a))
-      (h.isVectorDualLeftWeyl_leftComp (.bard f' a))
+  refine isVectorDualLeftRightWeyl_sum fun a : Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul_swap hrepLorentz_mul
+    (h.isDualRightWeyl_rightComp (.d f a)) (h.isVectorDualLeftWeyl_leftComp (.bard f' a)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `d ∂ bard` block. -/
 noncomputable def dbardLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.dbardIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_dbard f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_dbard f f')
 
 /-- The `d ∂ bard` block as a kinetic block. -/
 noncomputable def dbardKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -172,7 +176,7 @@ noncomputable def dbardKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.dbardIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.dbardLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_dbardBlk t f f' q l c c' w w'
 
 /-- The components of the block `bard ∂ d`: an underived conjugate down-singlet symbol against a
@@ -187,8 +191,8 @@ lemma isSU3FundamentalAntiFundamental_barddBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.barddBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_bard U f ![] l.1 c)
-    (fun U c => h.repGauge_su3_d U f' ![q] l.2 c)
+  (isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_bard U f ![] l.1 c)
+    (fun U c => h.repGauge_su3_d U f' ![q] l.2 c) :)
 
 /-- An isospin transformation fixes the `bard ∂ d` block, neither symbol carrying
   isospin. -/
@@ -242,22 +246,26 @@ noncomputable def barddIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_bardd (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barddIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.barddIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.barddBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul
-      hrepLorentz_mul (h.isDualLeftWeyl_leftComp (.bard f a))
-      (h.isVectorDualRightWeyl_rightComp (.d f' a))
+  refine isVectorDualLeftRightWeyl_sum fun a : Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul hrepLorentz_mul
+    (h.isDualLeftWeyl_leftComp (.bard f a))
+    (h.isVectorDualRightWeyl_rightComp (.d f' a)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `bard ∂ d` block. -/
 noncomputable def barddLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barddIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_bardd f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_bardd f f')
 
 /-- The `bard ∂ d` block as a kinetic block. -/
 noncomputable def barddKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -267,7 +275,7 @@ noncomputable def barddKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.barddIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.barddLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_barddBlk t f f' q l c c' w w'
 
 /-- The components of the block `u ∂ baru`: an underived up-singlet symbol against a
@@ -282,8 +290,9 @@ lemma isSU3FundamentalAntiFundamental_ubaruBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.ubaruBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun U c => h.repGauge_su3_u U f ![] l.2 c)
-    (fun U c => h.repGauge_su3_baru U f' ![q] l.1 c)
+  (isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul
+    (fun U c => h.repGauge_su3_u U f ![] l.2 c)
+    (fun U c => h.repGauge_su3_baru U f' ![q] l.1 c) :)
 
 /-- An isospin transformation fixes the `u ∂ baru` block, neither symbol carrying
   isospin. -/
@@ -337,22 +346,26 @@ noncomputable def ubaruIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_ubaru (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.ubaruIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.ubaruIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.ubaruBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul_swap
-      hrepLorentz_mul (h.isDualRightWeyl_rightComp (.u f a))
-      (h.isVectorDualLeftWeyl_leftComp (.baru f' a))
+  refine isVectorDualLeftRightWeyl_sum fun a : Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul_swap hrepLorentz_mul
+    (h.isDualRightWeyl_rightComp (.u f a))
+    (h.isVectorDualLeftWeyl_leftComp (.baru f' a)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `u ∂ baru` block. -/
 noncomputable def ubaruLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.ubaruIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_ubaru f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_ubaru f f')
 
 /-- The `u ∂ baru` block as a kinetic block. -/
 noncomputable def ubaruKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -362,7 +375,7 @@ noncomputable def ubaruKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.ubaruIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.ubaruLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_ubaruBlk t f f' q l c c' w w'
 
 /-- The components of the block `baru ∂ u`: an underived conjugate up-singlet symbol against a
@@ -377,8 +390,8 @@ lemma isSU3FundamentalAntiFundamental_baruuBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.baruuBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_baru U f ![] l.1 c)
-    (fun U c => h.repGauge_su3_u U f' ![q] l.2 c)
+  (isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_baru U f ![] l.1 c)
+    (fun U c => h.repGauge_su3_u U f' ![q] l.2 c) :)
 
 /-- An isospin transformation fixes the `baru ∂ u` block, neither symbol carrying
   isospin. -/
@@ -432,22 +445,26 @@ noncomputable def baruuIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_baruu (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.baruuIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.baruuIsospinStep f f' p.1 p.2).spanningVector
         = ∑ a : Fin 3, h.baruuBlk f f' p.1 p.2 a a 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun a : Fin 3 => isVectorDualLeftRightWeyl_mul
-      hrepLorentz_mul (h.isDualLeftWeyl_leftComp (.baru f a))
-      (h.isVectorDualRightWeyl_rightComp (.u f' a))
+  refine isVectorDualLeftRightWeyl_sum fun a : Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul hrepLorentz_mul
+    (h.isDualLeftWeyl_leftComp (.baru f a))
+    (h.isVectorDualRightWeyl_rightComp (.u f' a)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `baru ∂ u` block. -/
 noncomputable def baruuLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.baruuIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_baruu f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_baruu f f')
 
 /-- The `baru ∂ u` block as a kinetic block. -/
 noncomputable def baruuKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -457,7 +474,7 @@ noncomputable def baruuKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.baruuIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.baruuLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_baruuBlk t f f' q l c c' w w'
 
 /-!
@@ -481,9 +498,9 @@ lemma isSU3FundamentalAntiFundamental_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.QbarQBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul
+  (isSU3FundamentalAntiFundamental_mul_swap hrepGauge_mul
     (fun U c => h.repGauge_su3_Q U f ![] l.1 c w')
-    (fun U c => h.repGauge_su3_barQ U f' ![q] l.2 c w)
+    (fun U c => h.repGauge_su3_barQ U f' ![q] l.2 c w) :)
 
 /-- The two isospin indices of the `Q ∂ barQ` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
@@ -491,9 +508,9 @@ lemma isSU2FundamentalAntiFundamental_QbarQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (c c' : Fin 3) :
     IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.QbarQBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul
+  (isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul
     (fun V w => h.repGauge_su2_Q V f ![] l.1 c' w)
-    (fun V w => h.repGauge_su2_barQ V f' ![q] l.2 c w)
+    (fun V w => h.repGauge_su2_barQ V f' ![q] l.2 c w) :)
 
 /-- A hypercharge transformation fixes the `Q ∂ barQ` block, the hypercharges of a
   species and its conjugate cancelling. -/
@@ -537,7 +554,7 @@ noncomputable def QbarQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_QbarQ (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.QbarQIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.QbarQIsospinStep f f' p.1 p.2).spanningVector
@@ -547,16 +564,20 @@ lemma isVectorDualLeftRightWeyl_QbarQ (f f' : Fin 3) :
         + ∑ a : Fin 3, h.QbarQBlk f f' p.1 p.2 a a 1 1 = _
     rw [Fintype.sum_prod_type, Fin.sum_univ_two]
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun i : Fin 2 × Fin 3 => isVectorDualLeftRightWeyl_mul
-      hrepLorentz_mul (h.isDualLeftWeyl_leftComp (.Q f i.2 i.1))
-      (h.isVectorDualRightWeyl_rightComp (.barQ f' i.2 i.1))
+  refine isVectorDualLeftRightWeyl_sum fun i : Fin 2 × Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul hrepLorentz_mul
+    (h.isDualLeftWeyl_leftComp (.Q f i.2 i.1))
+    (h.isVectorDualRightWeyl_rightComp (.barQ f' i.2 i.1)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `Q ∂ barQ` block. -/
 noncomputable def QbarQLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.QbarQIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_QbarQ f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_QbarQ f f')
 
 /-- The `Q ∂ barQ` block as a kinetic block. -/
 noncomputable def QbarQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -566,7 +587,7 @@ noncomputable def QbarQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.QbarQIsospinStep f f'
   isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.QbarQLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_QbarQBlk t f f' q l c c' w w'
 
 /-- The components of the block `barQ ∂ Q`: an underived conjugate quark-doublet symbol against a
@@ -581,8 +602,9 @@ lemma isSU3FundamentalAntiFundamental_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (w w' : Fin 2) :
     IsSU3FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 3 => h.barQQBlk f f' q l (n 0) (n 1) w w') :=
-  isSU3FundamentalAntiFundamental_mul hrepGauge_mul (fun U c => h.repGauge_su3_barQ U f ![] l.2 c w)
-    (fun U c => h.repGauge_su3_Q U f' ![q] l.1 c w')
+  (isSU3FundamentalAntiFundamental_mul hrepGauge_mul
+    (fun U c => h.repGauge_su3_barQ U f ![] l.2 c w)
+    (fun U c => h.repGauge_su3_Q U f' ![q] l.1 c w') :)
 
 /-- The two isospin indices of the `barQ ∂ Q` block are one fundamental and one
   anti-fundamental, the barred symbol supplying the fundamental one. -/
@@ -590,8 +612,9 @@ lemma isSU2FundamentalAntiFundamental_barQQBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (c c' : Fin 3) :
     IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.barQQBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FundamentalAntiFundamental_mul hrepGauge_mul (fun V w => h.repGauge_su2_barQ V f ![] l.2 c w)
-    (fun V w => h.repGauge_su2_Q V f' ![q] l.1 c' w)
+  (isSU2FundamentalAntiFundamental_mul hrepGauge_mul
+    (fun V w => h.repGauge_su2_barQ V f ![] l.2 c w)
+    (fun V w => h.repGauge_su2_Q V f' ![q] l.1 c' w) :)
 
 /-- A hypercharge transformation fixes the `barQ ∂ Q` block, the hypercharges of a
   species and its conjugate cancelling. -/
@@ -635,7 +658,7 @@ noncomputable def barQQIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_barQQ (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barQQIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.barQQIsospinStep f f' p.1 p.2).spanningVector
@@ -645,16 +668,20 @@ lemma isVectorDualLeftRightWeyl_barQQ (f f' : Fin 3) :
         + ∑ a : Fin 3, h.barQQBlk f f' p.1 p.2 a a 1 1 = _
     rw [Fintype.sum_prod_type, Fin.sum_univ_two]
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun i : Fin 2 × Fin 3 => isVectorDualLeftRightWeyl_mul_swap
-      hrepLorentz_mul (h.isDualRightWeyl_rightComp (.barQ f i.2 i.1))
-      (h.isVectorDualLeftWeyl_leftComp (.Q f' i.2 i.1))
+  refine isVectorDualLeftRightWeyl_sum fun i : Fin 2 × Fin 3 => ?_
+  convert isVectorDualLeftRightWeyl_mul_swap hrepLorentz_mul
+    (h.isDualRightWeyl_rightComp (.barQ f i.2 i.1))
+    (h.isVectorDualLeftWeyl_leftComp (.Q f' i.2 i.1)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `barQ ∂ Q` block. -/
 noncomputable def barQQLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barQQIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_barQQ f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_barQQ f f')
 
 /-- The `barQ ∂ Q` block as a kinetic block. -/
 noncomputable def barQQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -664,7 +691,7 @@ noncomputable def barQQKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.barQQIsospinStep f f'
   isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.barQQLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_barQQBlk t f f' q l c c' w w'
 
 /-!
@@ -697,8 +724,9 @@ lemma isSU2FundamentalAntiFundamental_LbarLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (c c' : Fin 3) :
     IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.LbarLBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul (fun V w => h.repGauge_su2_L V f ![] l.1 w)
-    (fun V w => h.repGauge_su2_barL V f' ![q] l.2 w)
+  (isSU2FundamentalAntiFundamental_mul_swap hrepGauge_mul
+    (fun V w => h.repGauge_su2_L V f ![] l.1 w)
+    (fun V w => h.repGauge_su2_barL V f' ![q] l.2 w) :)
 
 /-- A hypercharge transformation fixes the `L ∂ barL` block, the hypercharges of a
   species and its conjugate cancelling. -/
@@ -741,7 +769,7 @@ noncomputable def LbarLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_LbarL (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.LbarLIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.LbarLIsospinStep f f' p.1 p.2).spanningVector
@@ -750,16 +778,20 @@ lemma isVectorDualLeftRightWeyl_LbarL (f f' : Fin 3) :
     show h.LbarLBlk f f' p.1 p.2 0 0 0 0 + h.LbarLBlk f f' p.1 p.2 0 0 1 1 = _
     rw [Fin.sum_univ_two]
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun i : Fin 2 => isVectorDualLeftRightWeyl_mul
-      hrepLorentz_mul (h.isDualLeftWeyl_leftComp (.L f i))
-      (h.isVectorDualRightWeyl_rightComp (.barL f' i))
+  refine isVectorDualLeftRightWeyl_sum fun i : Fin 2 => ?_
+  convert isVectorDualLeftRightWeyl_mul hrepLorentz_mul
+    (h.isDualLeftWeyl_leftComp (.L f i))
+    (h.isVectorDualRightWeyl_rightComp (.barL f' i)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `L ∂ barL` block. -/
 noncomputable def LbarLLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.LbarLIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_LbarL f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_LbarL f f')
 
 /-- The `L ∂ barL` block as a kinetic block. -/
 noncomputable def LbarLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -769,7 +801,7 @@ noncomputable def LbarLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.LbarLIsospinStep f f'
   isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.LbarLLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_LbarLBlk t f f' q l c c' w w'
 
 /-- The components of the block `barL ∂ L`: an underived conjugate lepton-doublet symbol against a
@@ -793,8 +825,8 @@ lemma isSU2FundamentalAntiFundamental_barLLBlk (f f' : Fin 3) (q : Fin 1 ⊕ Fin
     (l : Fin 2 × Fin 2) (c c' : Fin 3) :
     IsSU2FundamentalAntiFundamental B repGauge
       (fun n : Fin 2 → Fin 2 => h.barLLBlk f f' q l c c' (n 0) (n 1)) :=
-  isSU2FundamentalAntiFundamental_mul hrepGauge_mul (fun V w => h.repGauge_su2_barL V f ![] l.2 w)
-    (fun V w => h.repGauge_su2_L V f' ![q] l.1 w)
+  (isSU2FundamentalAntiFundamental_mul hrepGauge_mul (fun V w => h.repGauge_su2_barL V f ![] l.2 w)
+    (fun V w => h.repGauge_su2_L V f' ![q] l.1 w) :)
 
 /-- A hypercharge transformation fixes the `barL ∂ L` block, the hypercharges of a
   species and its conjugate cancelling. -/
@@ -837,7 +869,7 @@ noncomputable def barLLIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_barLL (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barLLIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.barLLIsospinStep f f' p.1 p.2).spanningVector
@@ -846,16 +878,20 @@ lemma isVectorDualLeftRightWeyl_barLL (f f' : Fin 3) :
     show h.barLLBlk f f' p.1 p.2 0 0 0 0 + h.barLLBlk f f' p.1 p.2 0 0 1 1 = _
     rw [Fin.sum_univ_two]
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_sum fun i : Fin 2 => isVectorDualLeftRightWeyl_mul_swap
-      hrepLorentz_mul (h.isDualRightWeyl_rightComp (.barL f i))
-      (h.isVectorDualLeftWeyl_leftComp (.L f' i))
+  refine isVectorDualLeftRightWeyl_sum fun i : Fin 2 => ?_
+  convert isVectorDualLeftRightWeyl_mul_swap hrepLorentz_mul
+    (h.isDualRightWeyl_rightComp (.barL f i))
+    (h.isVectorDualLeftWeyl_leftComp (.L f' i)) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `barL ∂ L` block. -/
 noncomputable def barLLLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.barLLIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_barLL f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_barLL f f')
 
 /-- The `barL ∂ L` block as a kinetic block. -/
 noncomputable def barLLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -865,7 +901,7 @@ noncomputable def barLLKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.barLLIsospinStep f f'
   isospinStep_mem _ _ := IsSU2FundamentalAntiFundamental.deltaContraction_mem_span _
   lorentzStep := h.barLLLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_barLLBlk t f f' q l c c' w w'
 
 /-!
@@ -944,22 +980,25 @@ noncomputable def ebareIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_ebare (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.ebareIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.ebareIsospinStep f f' p.1 p.2).spanningVector
         = h.ebareBlk f f' p.1 p.2 0 0 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_mul_swap
-      hrepLorentz_mul (h.isDualRightWeyl_rightComp (.e f))
-      (h.isVectorDualLeftWeyl_leftComp (.bare f'))
+  convert isVectorDualLeftRightWeyl_mul_swap hrepLorentz_mul
+    (h.isDualRightWeyl_rightComp (.e f))
+    (h.isVectorDualLeftWeyl_leftComp (.bare f')) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `e ∂ bare` block. -/
 noncomputable def ebareLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.ebareIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_ebare f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_ebare f f')
 
 /-- The `e ∂ bare` block as a kinetic block. -/
 noncomputable def ebareKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -969,7 +1008,7 @@ noncomputable def ebareKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.ebareIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.ebareLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_ebareBlk t f f' q l c c' w w'
 
 /-- The components of the block `bare ∂ e`: an underived conjugate lepton-singlet symbol against a
@@ -1039,22 +1078,25 @@ noncomputable def bareeIsospinStep (f f' : Fin 3) (q : Fin 1 ⊕ Fin 3)
   dual opposite-chirality Weyl indices. -/
 lemma isVectorDualLeftRightWeyl_baree (f f' : Fin 3) :
     IsVectorDualLeftRightWeyl B repLorentz
-      (fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
+      (ofDualVectorComponents fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.bareeIsospinStep f f' p.1 p.2).spanningVector) := by
   have hsum : ∀ p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
       (h.bareeIsospinStep f f' p.1 p.2).spanningVector
         = h.bareeBlk f f' p.1 p.2 0 0 0 0 := fun _ => rfl
   simp only [hsum]
-  exact isVectorDualLeftRightWeyl_mul
-      hrepLorentz_mul (h.isDualLeftWeyl_leftComp (.bare f))
-      (h.isVectorDualRightWeyl_rightComp (.e f'))
+  convert isVectorDualLeftRightWeyl_mul hrepLorentz_mul
+    (h.isDualLeftWeyl_leftComp (.bare f))
+    (h.isVectorDualRightWeyl_rightComp (.e f')) using 2
+  funext p
+  rfl
 
 /-- The Lorentz stage of the `bare ∂ e` block. -/
 noncomputable def bareeLorentzStep (f f' : Fin 3) :
     InvariantReductionToSpan (fun Λ : SL(2,ℂ) => repLorentz Λ)
       (Submodule.span ℂ (Set.range fun p : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2 =>
         (h.bareeIsospinStep f f' p.1 p.2).spanningVector)) :=
-  IsVectorDualLeftRightWeyl.invariantReductionToSpan (h.isVectorDualLeftRightWeyl_baree f f')
+  IsVectorDualLeftRightWeyl.invariantReductionToComponentSpan
+    (h.isVectorDualLeftRightWeyl_baree f f')
 
 /-- The `bare ∂ e` block as a kinetic block. -/
 noncomputable def bareeKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLorentz where
@@ -1064,7 +1106,7 @@ noncomputable def bareeKineticBlock (f f' : Fin 3) : KineticBlock repGauge repLo
   isospinStep := h.bareeIsospinStep f f'
   isospinStep_mem _ _ := Submodule.subset_span ⟨![0, 0], rfl⟩
   lorentzStep := h.bareeLorentzStep f f'
-  lorentzStep_mem := pauliBarContraction_mem_span _
+  lorentzStep_mem := ofDualVectorComponents_mem_span _ _
   hyper t q l c c' w w' := h.repGauge_u1_bareeBlk t f f' q l c c' w w'
 
 end IsFermionSector

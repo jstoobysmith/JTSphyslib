@@ -7,86 +7,91 @@ module
 
 public import Physlib.Relativity.LorentzGroup.Invariants.LightCone
 public import Physlib.Relativity.LorentzGroup.Invariants.LorentzCovariance
-public import Physlib.Mathematics.InvariantReduction
 public import Physlib.Mathematics.LeviCivita.Basic
-public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 /-!
 # Lorentz invariants of a rank-four tensor
 
-A rank-four tensor `T^{μνρσ}` has `4 ^ 4 = 256` components. Four combinations of them are fixed
-by every rotation and boost, the Lorentz transformations coming from `SL(2,ℂ)`:
+## i. Overview
 
-* `outerContraction = η_{μν} η_{ρσ} T^{μνρσ}`,
-* `innerContraction = η_{μρ} η_{νσ} T^{μνρσ}`,
-* `splitContraction = η_{μσ} η_{νρ} T^{μνρσ}`,
-* `epsilonContraction = ε_{μνρσ} T^{μνρσ}`.
+A rank-four tensor `T^{μνρσ}` has `4 ^ 4 = 256` components, and four invariant tensors can be
+contracted with it:
 
-There are no others. The fourth is a pseudoscalar, so it would drop out if reflections were
-allowed; independence is not proved, and for a given `T` the four may be dependent or zero. The
-components are vectors `T d` of a complex vector space `B` carrying a representation
-`repLorentz` of `SL(2,ℂ)`, and `IsLorentzCovariant 4 B repLorentz T` says the group moves
-them with one factor of the Lorentz matrix per slot (A). A vector of `B` is invariant when every
-`repLorentz g` fixes it, and `Submodule.span ℂ (Set.range T)` is the set of contractions
-`∑_d c_d • T d`. The theorem `mem_span_sup_invariant_iff` (H) allows a Lorentz-stable subspace
-`S` beside the span, where the files using it park their other tensors: a vector of
-`Submodule.span ℂ (Set.range T) ⊔ S`, the sums `u + y`, is invariant exactly when it is a
-combination of the four contractions plus an invariant `y` of `S`. For `S = ⊥` that is
-`exists_smul_contraction_of_invariant`, and `reducesInvariantsTo_span_contraction` reads the
-left-to-right direction as a reduction to the span of the four contractions.
+* `η_{μν} η_{ρσ}`, `η_{μρ} η_{νσ}` and `η_{μσ} η_{νρ}`, the three pairings of the metric,
+* `ε_{μνρσ}`, the Levi-Civita symbol.
 
-The four coefficient tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant
-of the span is the contraction of an invariant one, by projecting off the tensors that contract
-to `0` (C); and such a tensor is a combination of the four, two rotations cutting `256`
-coefficients to `22` (D), a boost keeping only what it does not rescale (E), and the `22 × 22`
-integer equation left being solved by one checked matrix identity (F, G).
+These are the tensors `contractionTensor i`. There are no others: for an equivariant map
+`f : ℂT(fun _ : Fin 4 => .up) →ₗ[ℂ] B`, `IsLorentzCovariant 4`, a vector of `LinearMap.range f ⊔ S`,
+for `S` a Lorentz-stable submodule, is invariant exactly when it is a combination of the four
+images `f (contractionTensor i)` plus an invariant of `S`, `mem_range_sup_invariant_iff` (H), and
+`reducesInvariantsTo_span_contractionTensor` reads the left-to-right direction as a reduction.
+The fourth tensor is a pseudoscalar, so it would drop out if reflections were allowed;
+independence is not proved, and for a given `f` the four images may be dependent or zero.
+
+The four tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant of the range of
+`f` is the image of an invariant tensor, whose coefficient tensor is invariant (C); and such a
+coefficient tensor is a combination of the four, two rotations cutting `256` coefficients to `22`
+(D), a boost keeping only what it does not rescale (E), and the `22 × 22` integer equation left
+being solved by one checked matrix identity (F, G).
+
+## ii. Key results
+
+- `Lorentz.RankFour.contractionTensor` : the four invariant tensors.
+- `Lorentz.RankFour.exists_eq_sum` : an invariant coefficient tensor is a combination of them.
+- `Lorentz.RankFour.mem_range_sup_invariant_iff` : the classification of the invariants.
+- `Lorentz.RankFour.reducesInvariantsTo_span_contractionTensor` : the same as a reduction.
+
+## iii. Table of contents
+
+- A. Coefficient tensors
+- B. The four invariant tensors
+- C. Invariants of the range come from invariant coefficient tensors
+- D. The rotations by `π` about the axes and the rotation `x → y → z → x`
+- E. The boost along an axis
+- F. The `22` orbit coordinates and the orbit matrix
+- G. The certificate
+- H. The classification of the invariants of an equivariant map
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open Matrix MatrixGroups SL2C Invariants
+open Matrix MatrixGroups SL2C Invariants complexLorentzTensor
 
 /-!
 
-## A. Rank-four families, their span, and coefficient tensors
+## A. Coefficient tensors
 
 A direction is an element of `Fin 1 ⊕ Fin 3`, time or one of the three axes; an index vector
-`d : Fin 4 → Fin 1 ⊕ Fin 3` puts one in each slot, so `T d` is `T^{μνρσ}` at `(μ, ν, ρ, σ) = d`.
-The predicate is `IsLorentzCovariant 4` from `Invariants.LorentzCovariance`, and the span is
-Mathlib's `Submodule.span ℂ (Set.range T)`. The law is
+`d : Fin 4 → Fin 1 ⊕ Fin 3` puts one in each slot, and a coefficient tensor `c` assigns a
+number to each. The components of a tensor, relabelled this way, are its coefficient tensor,
+`coeffEquiv 4`, on which `g` acts by
 
-`repLorentz g (T l) = ∑_a Λ_{a₀ l₀} Λ_{a₁ l₁} Λ_{a₂ l₂} Λ_{a₃ l₃} • T a`,
+`(act Λ c) a = ∑_d c_d Λ_{a₀ d₀} ⋯ Λ_{a₃ d₃}`,
 
-with `l` free and `a` summed, and transforming a contraction moves its coefficient tensor by
-`(act Λ c) a = ∑_d c_d Λ_{a₀ d₀} ⋯ Λ_{a₃ d₃}`, now with `a` free and `d` summed
-(`repLorentz_sum_smul`): the same `Λ`, never its inverse, but transposed index slots, which is
-what makes `act Λᵀ` the adjoint of `act Λ` in C. Two invariance conditions are therefore in
-play, kept apart by name: `x : B` is Lorentz invariant when `repLorentz g x = x`, and `c` is
-`IsInvariantCoeff` when `act Λ c = c`. Everything in this paragraph, and section C below, is
-stated for any number of slots in `Invariants.Basic` and used here at four.
+with `a` free and `d` summed (`coeffEquiv_smul`), and a tensor is invariant exactly when its
+coefficient tensor is `IsInvariantCoeff` (`invariant_iff_isInvariantCoeff`). Everything in this
+paragraph is stated for any number of slots in `Invariants.Basic` and
+`Invariants.LorentzCovariance` and used here at four.
 -/
 
 namespace RankFour
 
 variable {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin 4 → (Fin 1 ⊕ Fin 3)) → B}
 
 /-!
 
-## B. The four contractions
+## B. The four invariant tensors
 
-## B.1. The metric, the Levi-Civita symbol and the contractions
+## B.1. The metric, the Levi-Civita symbol and the invariant tensors
 
-Neither the metric nor the Levi-Civita symbol is defined here. The metric is
-`minkowskiMatrixZ`, the integer form of `minkowskiMatrix`, and the symbol is
-`leviCivitaSymbol`, read on an index vector through `finSumFinEquiv`. Both are integer
-valued because sections F and G evaluate them in the kernel, which cannot compute with real
-numbers. The metric pairings use the slots `(0,1)(2,3)`,
-`(0,2)(1,3)` and `(0,3)(1,2)` for `outerContraction`, `innerContraction` and
-`splitContraction`; `contractionCoeff` holds the four coefficient tensors and `contraction T`
-the four contractions in that order.
+The metric is `minkowskiMatrixZ`, the integer form of `minkowskiMatrix`, and the symbol is
+`leviCivitaSymbol`, read on an index vector through `finSumFinEquiv`. Both are integer valued
+because sections F and G evaluate them in the kernel, which cannot compute with real numbers.
+The metric pairings use the slots `(0,1)(2,3)`, `(0,2)(1,3)` and `(0,3)(1,2)`;
+`contractionCoeff` holds the four coefficient tensors and `contractionTensor` the four tensors
+with those coefficients, in that order.
 -/
 
 /-- The four coefficient tensors: the three metric pairings, then the Levi-Civita symbol. -/
@@ -96,67 +101,16 @@ def contractionCoeff : Fin 4 → (Fin 4 → Fin 1 ⊕ Fin 3) → ℤ :=
     fun d => minkowskiMatrixZ (d 0) (d 3) * minkowskiMatrixZ (d 1) (d 2),
     fun d => leviCivitaSymbol fun μ => d (finSumFinEquiv μ)]
 
-/-- The contraction `η_{μν} η_{ρσ} T^{μνρσ}`, pairing slots `(0,1)` and `(2,3)`. -/
-noncomputable def outerContraction (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : B :=
-  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
-    ((minkowskiMatrixZ (d 0) (d 1) * minkowskiMatrixZ (d 2) (d 3) : ℤ) : ℂ) • T d
+/-- The four invariant tensors with four contravariant indices: `η_{μν} η_{ρσ}`,
+  `η_{μρ} η_{νσ}`, `η_{μσ} η_{νρ}` and `ε_{μνρσ}`. -/
+noncomputable def contractionTensor (i : Fin 4) : ℂT(fun _ : Fin 4 => Color.up) :=
+  (coeffEquiv 4).symm fun d => ((contractionCoeff i d : ℤ) : ℂ)
 
-/-- The contraction `η_{μρ} η_{νσ} T^{μνρσ}`, pairing slots `(0,2)` and `(1,3)`. -/
-noncomputable def innerContraction (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : B :=
-  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
-    ((minkowskiMatrixZ (d 0) (d 2) * minkowskiMatrixZ (d 1) (d 3) : ℤ) : ℂ) • T d
-
-/-- The contraction `η_{μσ} η_{νρ} T^{μνρσ}`, pairing slots `(0,3)` and `(1,2)`. -/
-noncomputable def splitContraction (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : B :=
-  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
-    ((minkowskiMatrixZ (d 0) (d 3) * minkowskiMatrixZ (d 1) (d 2) : ℤ) : ℂ) • T d
-
-/-- The contraction `ε_{μνρσ} T^{μνρσ}` with the Levi-Civita symbol. -/
-noncomputable def epsilonContraction (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : B :=
-  ∑ d : Fin 4 → Fin 1 ⊕ Fin 3,
-    ((leviCivitaSymbol fun μ => d (finSumFinEquiv μ) : ℤ) : ℂ) • T d
-
-/-- The four contractions in order, from the outer one to the Levi-Civita one. -/
-noncomputable def contraction (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Fin 4 → B :=
-  ![outerContraction T, innerContraction T, splitContraction T, epsilonContraction T]
-
-/-- Each contraction is the contraction with its coefficient tensor. -/
-lemma contraction_eq (i : Fin 4) :
-    contraction T i = ∑ d, ((contractionCoeff i d : ℤ) : ℂ) • T d := by
-  fin_cases i <;> rfl
-
-/-- A combination of the four contractions, written out. -/
-lemma sum_smul_contraction (a : Fin 4 → ℂ) :
-    ∑ i, a i • contraction T i
-      = a 0 • outerContraction T + a 1 • innerContraction T + a 2 • splitContraction T
-        + a 3 • epsilonContraction T := by
-  rw [Fin.sum_univ_four]
-  rfl
-
-/-- The outer contraction lies in the span of the components. -/
-lemma outerContraction_mem_span : outerContraction T ∈ Submodule.span ℂ (Set.range T) :=
-  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
-
-/-- The inner contraction lies in the span of the components. -/
-lemma innerContraction_mem_span : innerContraction T ∈ Submodule.span ℂ (Set.range T) :=
-  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
-
-/-- The split contraction lies in the span of the components. -/
-lemma splitContraction_mem_span : splitContraction T ∈ Submodule.span ℂ (Set.range T) :=
-  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
-
-/-- The Levi-Civita contraction lies in the span of the components. -/
-lemma epsilonContraction_mem_span : epsilonContraction T ∈ Submodule.span ℂ (Set.range T) :=
-  (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨_, rfl⟩
-
-/-- A combination of the four contractions lies in the span of the components. -/
-lemma smul_contraction_mem_span (a₁ a₂ a₃ a₄ : ℂ) :
-    a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-      + a₄ • epsilonContraction T ∈ Submodule.span ℂ (Set.range T) :=
-  add_mem (add_mem (add_mem (Submodule.smul_mem _ _ (outerContraction_mem_span (T := T)))
-    (Submodule.smul_mem _ _ (innerContraction_mem_span (T := T))))
-    (Submodule.smul_mem _ _ (splitContraction_mem_span (T := T))))
-    (Submodule.smul_mem _ _ (epsilonContraction_mem_span (T := T)))
+/-- `ofComponents T` sends each invariant tensor to the contraction of `T` with its
+  coefficients. -/
+lemma ofComponents_contractionTensor (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) (i : Fin 4) :
+    ofComponents T (contractionTensor i) = ∑ d, ((contractionCoeff i d : ℤ) : ℂ) • T d :=
+  ofComponents_coeffEquiv_symm T _
 
 /-!
 
@@ -259,61 +213,25 @@ lemma isInvariantCoeff_contractionCoeff (i : Fin 4) :
 
 /-!
 
-## B.3. The four contractions are Lorentz invariant
+## B.3. The four tensors are Lorentz invariant
 
-Contracting with an invariant coefficient tensor gives an invariant vector, so each contraction
-is invariant, as is any combination: with `smul_contraction_mem_span`, the easy direction.
 -/
 
-/-- Each of the four contractions is Lorentz invariant, its coefficient tensor being invariant. -/
-lemma repLorentz_contraction (hT : IsLorentzCovariant 4 B repLorentz T) (i : Fin 4)
-    (g : SL(2,ℂ)) : repLorentz g (contraction T i) = contraction T i := by
-  rw [contraction_eq, hT.isInvariant_sum_smul (isInvariantCoeff_contractionCoeff i)]
-
-/-- The outer contraction is Lorentz invariant. -/
-lemma repLorentz_outerContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (outerContraction T) = outerContraction T :=
-  repLorentz_contraction hT 0 g
-
-/-- The inner contraction is Lorentz invariant. -/
-lemma repLorentz_innerContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (innerContraction T) = innerContraction T :=
-  repLorentz_contraction hT 1 g
-
-/-- The split contraction is Lorentz invariant. -/
-lemma repLorentz_splitContraction (hT : IsLorentzCovariant 4 B repLorentz T) (g : SL(2,ℂ)) :
-    repLorentz g (splitContraction T) = splitContraction T :=
-  repLorentz_contraction hT 2 g
-
-/-- The Levi-Civita contraction is Lorentz invariant. -/
-lemma repLorentz_epsilonContraction (hT : IsLorentzCovariant 4 B repLorentz T)
-    (g : SL(2,ℂ)) : repLorentz g (epsilonContraction T) = epsilonContraction T :=
-  repLorentz_contraction hT 3 g
-
-/-- A combination of the four contractions is Lorentz invariant. -/
-lemma repLorentz_smul_contraction (hT : IsLorentzCovariant 4 B repLorentz T)
-    (a₁ a₂ a₃ a₄ : ℂ) (g : SL(2,ℂ)) :
-    repLorentz g (a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-        + a₄ • epsilonContraction T)
-      = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-        + a₄ • epsilonContraction T := by
-  simp only [map_add, map_smul, repLorentz_outerContraction hT, repLorentz_innerContraction hT,
-    repLorentz_splitContraction hT, repLorentz_epsilonContraction hT]
+/-- Each of the four tensors is Lorentz invariant, its coefficient tensor being invariant. -/
+lemma contractionTensor_invariant (i : Fin 4) (g : SL(2,ℂ)) :
+    g • contractionTensor i = contractionTensor i := by
+  refine (invariant_iff_isInvariantCoeff _).2 ?_ g
+  rw [contractionTensor, LinearEquiv.apply_symm_apply]
+  exact isInvariantCoeff_contractionCoeff i
 
 /-!
 
-## C. An invariant of the span is the contraction of an invariant tensor
+## C. Invariants of the range come from invariant coefficient tensors
 
-The components may satisfy linear relations, so the `c` with `x = ∑ c_d • T d` is not
-determined by `x` and need not be invariant. Replacing `c` by its part orthogonal to the
-coefficient tensors that contract to `0` repairs that without changing the vector; the argument
-is the same for any number of slots and is carried out in `Invariants.Basic`, reached here
-through `IsLorentzCovariant.exists_isInvariantCoeff_of_mem_span_range`.
-
-The inner product it uses is the standard one on the `ℂ^{256}` of coefficient tensors, positive
-definite and unrelated to `η`; `B` carries none, and the coefficient action is not unitary. All
-that is needed is that the adjoint of `act Λ` is `act Λᵀ`, which is again the action of a
-Lorentz matrix coming from `SL(2,ℂ)`, that of `g†`.
+An invariant of the range of `f` is the image of an invariant tensor
+(`TensorSpecies.IsEquivariant.exists_invariant_add_of_mem_sup`): the adjoint of the action of
+`g` on the coefficients is the action of `g†`. The coefficient tensor of an invariant tensor is
+invariant, so what remains is to classify the invariant coefficient tensors, sections D to G.
 -/
 
 /-!
@@ -703,83 +621,51 @@ lemma exists_eq_sum {c : (Fin 4 → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantC
 
 /-!
 
-## H. The classification, and the classification modulo a stable submodule
+## H. The classification of the invariants of an equivariant map
 
-C to G give `exists_smul_contraction_of_invariant`, the case `S = ⊥` of the theorem. For
-general `S`, right to left is immediate and does not use `hS`. Left to right passes to the
-quotient `B ⧸ S`: the classes of the components again form a rank-four family
-(`IsLorentzCovariant.quotient`), the classification applies there, and
-`IsStableUnder.exists_add_of_quotient` lifts it back. The four contractions are invariant, so
-the remainder in `S` is invariant.
+C to G reduce the invariants of `LinearMap.range f ⊔ S` to the span of the four images
+`f (contractionTensor i)`; conversely those images are invariant, so a combination of them plus
+an invariant of `S` is an invariant of `LinearMap.range f ⊔ S`.
 -/
 
-/-- Every Lorentz invariant of the span is a combination of the four contractions. -/
-theorem exists_smul_contraction_of_invariant (hT : IsLorentzCovariant 4 B repLorentz T)
-    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a₁ a₂ a₃ a₄ : ℂ,
-      x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-        + a₄ • epsilonContraction T := by
-  obtain ⟨c, hc, rfl⟩ := hT.exists_isInvariantCoeff_of_mem_span_range hx hinv
-  obtain ⟨a, rfl⟩ := exists_eq_sum hc
-  refine ⟨a 0, a 1, a 2, a 3, ?_⟩
-  rw [← sum_smul_contraction]
-  simp only [contraction_eq, Finset.smul_sum, Finset.sum_smul, smul_smul]
-  exact Finset.sum_comm
+variable {f : ℂT(fun _ : Fin 4 => Color.up) →ₗ[ℂ] B}
 
-/-- The quotient map carries each contraction to the same contraction of the images. -/
-lemma mkQ_contraction (S : Submodule ℂ B) (i : Fin 4) :
-    S.mkQ (contraction T i) = contraction (fun l => S.mkQ (T l)) i := by
-  rw [contraction_eq, contraction_eq, map_sum]
-  exact Finset.sum_congr rfl fun d _ => map_smul _ _ _
+/-- The invariants of the range of `f` reduce to the span of the images of the four invariant
+  tensors. -/
+lemma reducesInvariantsTo_span_contractionTensor (hf : IsLorentzCovariant 4 B repLorentz f) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f)
+      (Submodule.span ℂ (Set.range fun i => f (contractionTensor i))) :=
+  hf.reducesInvariantsTo_span (fun i d => ((contractionCoeff i d : ℤ) : ℂ)) fun c hc => by
+    obtain ⟨a, rfl⟩ := exists_eq_sum hc
+    refine (Submodule.mem_span_range_iff_exists_fun ℂ).2 ⟨a, funext fun d => ?_⟩
+    simp [Finset.sum_apply]
 
-/-- Left to right in `mem_span_sup_invariant_iff`, proved in the quotient by `S`. -/
-lemma exists_smul_contraction_of_invariant_subset
-    (hT : IsLorentzCovariant 4 B repLorentz T) {x : B} (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S)
-    (hx : x ∈ Submodule.span ℂ (Set.range T) ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
-      x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-        + a₄ • epsilonContraction T + y
-      ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
-  obtain ⟨w, hw, y, hy, rfl, hyinv⟩ := IsStableUnder.exists_add_of_quotient
-    (σ := fun g : SL(2,ℂ) => repLorentz g) hS
-    (isFixedBy_span_range fun i g => repLorentz_contraction hT i g)
-    (fun z hz hzinv => by
-      obtain ⟨a₁, a₂, a₃, a₄, hz'⟩ := exists_smul_contraction_of_invariant (hT.quotient S hS)
-        ((Submodule.map_span_range S.mkQ T).le hz) hzinv
-      rw [hz', Submodule.map_span_range]
-      simp only [mkQ_contraction]
-      exact (Submodule.mem_span_range_iff_exists_fun ℂ).2
-        ⟨![a₁, a₂, a₃, a₄], by simp [sum_smul_contraction]⟩)
-    hx hinv
-  obtain ⟨a, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hw
-  exact ⟨a 0, a 1, a 2, a 3, y, hy, by rw [sum_smul_contraction], hyinv⟩
-
-/-- A vector of `Submodule.span ℂ (Set.range T) ⊔ S`, the sums `u + y` with `u` in the span and
-  `y` in the Lorentz-stable subspace `S`, is invariant exactly when it is a combination of the four
-  contractions plus an invariant `y` of `S`. `hS` is used only left to right. -/
-theorem mem_span_sup_invariant_iff (hT : IsLorentzCovariant 4 B repLorentz T) (x : B)
+/-- A vector of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is invariant exactly
+  when it is a combination of the images of the four invariant tensors plus an invariant of
+  `S`. `hS` is used only left to right. -/
+lemma mem_range_sup_invariant_iff (hf : IsLorentzCovariant 4 B repLorentz f) (x : B)
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    (x ∈ Submodule.span ℂ (Set.range T) ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
-      ↔ ∃ a₁ a₂ a₃ a₄ : ℂ, ∃ y ∈ S,
-        x = a₁ • outerContraction T + a₂ • innerContraction T + a₃ • splitContraction T
-          + a₄ • epsilonContraction T + y
+    (x ∈ LinearMap.range f ⊔ S ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ a : Fin 4 → ℂ, ∃ y ∈ S, x = ∑ i, a i • f (contractionTensor i) + y
         ∧ ∀ g : SL(2,ℂ), repLorentz g y = y := by
-  refine ⟨fun h => exists_smul_contraction_of_invariant_subset hT S hS h.1 h.2, ?_⟩
-  rintro ⟨a₁, a₂, a₃, a₄, y, hyS, rfl, hyinv⟩
-  refine ⟨add_mem (Submodule.mem_sup_left (smul_contraction_mem_span (T := T) a₁ a₂ a₃ a₄))
-    (Submodule.mem_sup_right hyS), fun g => ?_⟩
-  rw [map_add, repLorentz_smul_contraction hT a₁ a₂ a₃ a₄ g, hyinv g]
-
-/-- The span of the components reduces to the span of the four contractions:
-  `exists_smul_contraction_of_invariant_subset` read as a reduction for the Lorentz group. -/
-lemma reducesInvariantsTo_span_contraction (hT : IsLorentzCovariant 4 B repLorentz T) :
-    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (Submodule.span ℂ (Set.range T))
-      (Submodule.span ℂ (Set.range (contraction T))) := fun S hS x hx hinv => by
-  obtain ⟨a₁, a₂, a₃, a₄, y, hy, rfl, -⟩ :=
-    exists_smul_contraction_of_invariant_subset hT S hS hx hinv
-  exact Submodule.add_mem_sup ((Submodule.mem_span_range_iff_exists_fun ℂ).2
-    ⟨![a₁, a₂, a₃, a₄], sum_smul_contraction _⟩) hy
+  have hfix : ∀ (a : Fin 4 → ℂ) (g : SL(2,ℂ)),
+      repLorentz g (∑ i, a i • f (contractionTensor i)) = ∑ i, a i • f (contractionTensor i) :=
+    fun a g => by
+      simp only [map_sum, map_smul, hf.rep_map_of_invariant (contractionTensor_invariant _)]
+  constructor
+  · rintro ⟨hx, hinv⟩
+    obtain ⟨w, hw, y, hy, rfl⟩ := Submodule.mem_sup.1
+      (reducesInvariantsTo_span_contractionTensor hf S hS x hx hinv)
+    obtain ⟨a, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hw
+    refine ⟨a, y, hy, rfl, fun g => ?_⟩
+    have h := hinv g
+    rw [map_add, hfix] at h
+    exact add_left_cancel h
+  · rintro ⟨a, y, hyS, rfl, hyinv⟩
+    refine ⟨add_mem (Submodule.mem_sup_left (sum_mem fun i _ =>
+      Submodule.smul_mem _ _ (LinearMap.mem_range_self f _))) (Submodule.mem_sup_right hyS),
+      fun g => ?_⟩
+    rw [map_add, hfix, hyinv g]
 
 end RankFour
 

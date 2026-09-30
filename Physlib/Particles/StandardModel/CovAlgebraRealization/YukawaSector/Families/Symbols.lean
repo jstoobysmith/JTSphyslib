@@ -7,10 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Basic
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
-public import Physlib.Particles.StandardModel.GaugeGroup.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU3FundamentalAntiFundamental
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2FundamentalAntiFundamental
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2BiAntiFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
 public import Physlib.Relativity.LorentzGroup.Invariants.IsBiLeftWeyl
 public import Physlib.Particles.StandardModel.InvariantReduction
 /-!

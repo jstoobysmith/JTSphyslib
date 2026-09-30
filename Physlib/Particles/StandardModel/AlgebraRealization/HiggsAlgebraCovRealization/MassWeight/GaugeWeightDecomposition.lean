@@ -7,8 +7,8 @@ module
 
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.MassWeight.Basic
 public import Physlib.Particles.StandardModel.AlgebraRealization.HiggsAlgebraCovRealization.DerivSubmodule.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2FundamentalAntiFundamental
-public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.IsSU2QuadFundamental
+public import Physlib.Particles.StandardModel.GaugeGroup.Invariants.Basic
+public import Physlib.Particles.StandardModel.GaugeGroup.SU2Conjugation
 /-!
 # The gauge weight decomposition of the Higgs mass-weight submodules
 
@@ -562,8 +562,8 @@ noncomputable def isoFamily (h : HiggsAlgebraCovRealization B rep repLorentz mas
 include h in
 /-- The isospin family carries one fundamental and one anti-fundamental isospin index. -/
 lemma isSU2FundamentalAntiFundamental_isoFamily {n m : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3))
-    (d' : Fin m → (Fin 1 ⊕ Fin 3)) : IsSU2FundamentalAntiFundamental B rep (h.isoFamily d d') where
-  repGauge_T V l := by
+    (d' : Fin m → (Fin 1 ⊕ Fin 3)) : IsSU2FundamentalAntiFundamental B rep (h.isoFamily d d') :=
+  IsSU2FundamentalAntiFundamental.of_law fun V l => by
     rw [isoFamily, h.rep_mul_pair (1, V, 1) (h.rep_su2_barHiggs V d' (l 0))
       (h.rep_su2_higgs V d (l 1)), Family.sum_pi_two]
     simp only [isoFamily, Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -664,8 +664,8 @@ noncomputable def quadFamily (h : HiggsAlgebraCovRealization B rep repLorentz ma
 
 include h in
 /-- The quartic family carries four fundamental isospin indices. -/
-lemma isSU2QuadFundamental_quadFamily : IsSU2QuadFundamental B rep h.quadFamily where
-  repGauge_T V l := by
+lemma isSU2QuadFundamental_quadFamily : IsSU2QuadFundamental B rep h.quadFamily :=
+  IsSU2QuadFundamental.of_law fun V l => by
     simp only [quadFamily]
     rw [h.rep_mul, h.rep_mul, h.rep_mul, h.rep_su2_barHiggs V ![] (l 0),
       h.rep_su2_tildeHiggs V (l 1), h.rep_su2_barHiggs V ![] (l 2),
@@ -824,8 +824,8 @@ lemma reducesInvariantsTo_isoSpan (n m : ℕ) :
   rw [isoSpan]
   refine ReducesInvariantsTo.iSup (fun d => ReducesInvariantsTo.iSup (fun d' => ?_) (hV d) hW)
     (fun d => isStableUnder_iSup (hV d)) hW
-  refine ((IsSU2FundamentalAntiFundamental.reducesInvariantsTo_span_deltaContraction _
-    (h.isSU2FundamentalAntiFundamental_isoFamily d d').repGauge_T).comp
+  refine ((IsSU2FundamentalAntiFundamental.reducesInvariantsTo_span_deltaContraction
+    (h.isSU2FundamentalAntiFundamental_isoFamily d d')).comp
       (σ := fun g : GaugeGroupI => rep g) (fun V => (1, V, 1))).mono_right ?_
   rw [h.deltaContraction_isoFamily]
   exact le_iSup₂_of_le d d' le_rfl
@@ -898,8 +898,8 @@ lemma reducesInvariantsTo_massWeightSubmodule_eight :
   have hW := ((((h.isFixedBy_dotSpan 2 0).sup (h.isFixedBy_dotSpan 0 2)).sup
     (h.isFixedBy_dotSpan 1 1)).sup (isFixedBy_span_singleton hq)).isStableUnder
   -- the quartic span reduces to its two epsilon contractions, `(H† H)²` and `0`
-  have hquad := ((IsSU2QuadFundamental.reducesInvariantsTo_span_epsilonContractions _
-    h.isSU2QuadFundamental_quadFamily.repGauge_T).comp (σ := fun g : GaugeGroupI => rep g)
+  have hquad := ((IsSU2QuadFundamental.reducesInvariantsTo_span_epsilonContractions
+    h.isSU2QuadFundamental_quadFamily).comp (σ := fun g : GaugeGroupI => rep g)
       (fun V => (1, V, 1))).mono_right (W := h.dotSpan 2 0 ⊔ h.dotSpan 0 2 ⊔ h.dotSpan 1 1
         ⊔ ℂ ∙ (h.dotGaugeHiggs ![] ![] * h.dotGaugeHiggs ![] ![])) (by
       rw [epsilonContraction₁₂_quadFamily, epsilonContraction₁₃_quadFamily, Submodule.span_le,

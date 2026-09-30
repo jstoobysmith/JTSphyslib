@@ -7,7 +7,6 @@ module
 
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.Families.BarHiggs
 public import Physlib.Particles.StandardModel.CovAlgebraRealization.YukawaSector.GaugeWeightDecomposition
-public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
 # The Yukawa sector at mass weight eight
 
@@ -499,7 +498,7 @@ lemma reducesInvariantsTo_downYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_downBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downR) (h.downBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downR) (k' := .downR) (h.downBlockIsospin f f')).ge))
 
 include h in
 /-- The up-type block reduces to the up-type Yukawa term. Isospin is contracted by the
@@ -542,7 +541,7 @@ lemma reducesInvariantsTo_upYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_upBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downL) (h.upBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downL) (k' := .downL) (h.upBlockIsospin f f')).ge))
 
 include h in
 /-- The charged-lepton block reduces to the charged-lepton Yukawa term. Its colour stage is
@@ -584,7 +583,7 @@ lemma reducesInvariantsTo_leptonYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_leptonBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downR) (h.leptonBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downR) (k' := .downR) (h.leptonBlockIsospin f f')).ge))
 
 include h in
 /-- The conjugate down-type block reduces to the conjugate down-type Yukawa term. -/
@@ -626,7 +625,7 @@ lemma reducesInvariantsTo_barDownYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_barDownBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downL) (h.barDownBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downL) (k' := .downL) (h.barDownBlockIsospin f f')).ge))
 
 include h in
 /-- The conjugate up-type block reduces to the conjugate up-type Yukawa term. -/
@@ -668,7 +667,7 @@ lemma reducesInvariantsTo_barUpYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualRightWeyl.invariantReductionToSpan
       (h.isBiDualRightWeyl_barUpBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downR) (h.barUpBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downR) (k' := .downR) (h.barUpBlockIsospin f f')).ge))
 
 include h in
 /-- The conjugate charged-lepton block reduces to the conjugate charged-lepton Yukawa term,
@@ -710,7 +709,7 @@ lemma reducesInvariantsTo_barLeptonYukawa (f f' : Fin 3) :
   exact (hcolour.trans hisospin).trans (ReducesInvariantsTo.ofLorentz
     ((IsBiDualLeftWeyl.invariantReductionToSpan
       (h.isBiDualLeftWeyl_barLeptonBlockIsospin f f')).reducesInvariantsTo.mono_left
-        (range_ofPairComponents (k := .downL) (h.barLeptonBlockIsospin f f')).ge))
+        (range_ofPairComponents (k := .downL) (k' := .downL) (h.barLeptonBlockIsospin f f')).ge))
 
 /-!
 

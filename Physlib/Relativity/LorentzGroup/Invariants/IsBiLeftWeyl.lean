@@ -5,16 +5,16 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.LorentzEquivariant
+public import Physlib.Relativity.LorentzGroup.Invariants.AdjointClosed
 /-!
 # Lorentz invariants of two Weyl indices of the same kind
 
 Let `k` be one of the four Weyl colours and `f : ℂT[k, k] →ₗ[ℂ] B` a Lorentz-equivariant linear
 map. Every Lorentz invariant in the range of `f` is a multiple of `f (metricTensor k)`, the
 image of the `ε` metric of that colour, the shape of a Majorana or Dirac mass term. That is
-`IsLorentzEquivariant.exists_smul_map_metricTensor_add_of_invariant`, stated modulo a
+`exists_smul_map_metricTensor_add_of_invariant`, stated modulo a
 Lorentz-stable submodule `S`, and packaged for the reductions of the Standard Model as
-`IsLorentzEquivariant.invariantReductionToMetricTensor`. The families with two left-handed,
+`invariantReductionToMetricTensor`. The families with two left-handed,
 two right-handed, two dual left-handed and two dual right-handed indices are `IsBiLeftWeyl`,
 `IsBiRightWeyl`, `IsBiDualLeftWeyl` and `IsBiDualRightWeyl` (A).
 
@@ -45,25 +45,25 @@ open Matrix MatrixGroups SL2C Invariants TensorSpecies Tensor complexLorentzTens
   `ℂT[.upL, .upL]`. -/
 abbrev IsBiLeftWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.upL, .upL] →ₗ[ℂ] B) : Prop :=
-  IsLorentzEquivariant ![.upL, .upL] B repLorentz f
+  complexLorentzTensor.IsEquivariant ![.upL, .upL] repLorentz f
 
 /-- A family with two right-handed Weyl indices `T^{α̇₁ α̇₂}`: an equivariant linear map out of
   `ℂT[.upR, .upR]`. -/
 abbrev IsBiRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.upR, .upR] →ₗ[ℂ] B) : Prop :=
-  IsLorentzEquivariant ![.upR, .upR] B repLorentz f
+  complexLorentzTensor.IsEquivariant ![.upR, .upR] repLorentz f
 
 /-- A family with two dual left-handed Weyl indices `T_{α₁ α₂}`: an equivariant linear map out
   of `ℂT[.downL, .downL]`. -/
 abbrev IsBiDualLeftWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.downL, .downL] →ₗ[ℂ] B) : Prop :=
-  IsLorentzEquivariant ![.downL, .downL] B repLorentz f
+  complexLorentzTensor.IsEquivariant ![.downL, .downL] repLorentz f
 
 /-- A family with two dual right-handed Weyl indices `T_{α̇₁ α̇₂}`: an equivariant linear map
   out of `ℂT[.downR, .downR]`. -/
 abbrev IsBiDualRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B) (f : ℂT[.downR, .downR] →ₗ[ℂ] B) : Prop :=
-  IsLorentzEquivariant ![.downR, .downR] B repLorentz f
+  complexLorentzTensor.IsEquivariant ![.downR, .downR] repLorentz f
 
 /-!
 
@@ -73,20 +73,22 @@ abbrev IsBiDualRightWeyl (B : Type*) [AddCommMonoid B] [Module ℂ B]
 
 section InvariantTensors
 
-variable {k : complexLorentzTensor.Color}
+variable {k k' : complexLorentzTensor.Color}
 
-/-- The components of `g • t` for a tensor with two indices of the same colour: the matrix of
-  `g` in that colour acts on each index. -/
-lemma basis_repr_smul_pair (g : SL(2,ℂ)) (t : ℂT[k, k]) (a b : Fin (repDim k)) :
-    (Tensor.basis ![k, k]).repr (g • t)
-        ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).symm (a, b))
+/-- The components of `g • t` for a tensor with two indices: the matrix of `g` in the colour of
+  each index acts on that index. -/
+lemma basis_repr_smul_pair (g : SL(2,ℂ)) (t : ℂT[k, k']) (a : Fin (repDim k))
+    (b : Fin (repDim k')) :
+    (Tensor.basis ![k, k']).repr (g • t)
+        ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k'] j))).symm (a, b))
       = ∑ x, ∑ y, LinearMap.toMatrix (complexLorentzTensor.basis k)
           (complexLorentzTensor.basis k) (complexLorentzTensor.rep k g) a x *
-        LinearMap.toMatrix (complexLorentzTensor.basis k) (complexLorentzTensor.basis k)
-          (complexLorentzTensor.rep k g) b y *
-        (Tensor.basis ![k, k]).repr t
-          ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).symm (x, y)) := by
-  rw [basis_repr_smul, ← (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).symm.sum_comp,
+        LinearMap.toMatrix (complexLorentzTensor.basis k') (complexLorentzTensor.basis k')
+          (complexLorentzTensor.rep k' g) b y *
+        (Tensor.basis ![k, k']).repr t
+          ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k'] j))).symm (x, y)) := by
+  rw [basis_repr_smul,
+    ← (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k'] j))).symm.sum_comp,
     Fintype.sum_prod_type]
   simp only [Fin.prod_univ_two]
   rfl
@@ -176,26 +178,18 @@ end InvariantTensors
 
 -/
 
-namespace IsLorentzEquivariant
+section Reduction
 
 variable {k : complexLorentzTensor.Color} {B : Type*} [AddCommGroup B] [Module ℂ B]
   {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[k, k] →ₗ[ℂ] B}
-
-/-- The image `f (metricTensor k)` of the metric under an equivariant map is Lorentz
-  invariant. -/
-lemma repLorentz_map_metricTensor (hf : IsLorentzEquivariant ![k, k] B repLorentz f)
-    (g : SL(2,ℂ)) : repLorentz g (f (metricTensor k)) = f (metricTensor k) :=
-  hf.rep_map_of_invariant (fun g => metricTensor_invariant g) g
 
 /-- For a Weyl colour `k` and an equivariant map `f` out of `ℂT[k, k]`, the Lorentz invariants
   of the range of `f` reduce to the span of the image `f (metricTensor k)` of the metric. -/
 noncomputable def invariantReductionToMetricTensor
     (hk : k = .upL ∨ k = .downL ∨ k = .upR ∨ k = .downR)
-    (hf : IsLorentzEquivariant ![k, k] B repLorentz f) :
+    (hf : complexLorentzTensor.IsEquivariant ![k, k] repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  hf.invariantReductionToSpan
-    (isAdjointClosed_of_isDaggerCompatible fun i => by
-      fin_cases i <;> exact isDaggerCompatible_of_weyl hk)
+  hf.invariantReductionToSpan (complexLorentzTensor.isAdjointClosed _)
     (metricTensor k) (fun g => metricTensor_invariant g)
     (exists_eq_smul_metricTensor_of_invariant hk)
 
@@ -204,13 +198,13 @@ noncomputable def invariantReductionToMetricTensor
   `f (metricTensor k)` of the metric plus an element of `S`. -/
 lemma exists_smul_map_metricTensor_add_of_invariant
     (hk : k = .upL ∨ k = .downL ∨ k = .upR ∨ k = .downR)
-    (hf : IsLorentzEquivariant ![k, k] B repLorentz f) (S : Submodule ℂ B)
+    (hf : complexLorentzTensor.IsEquivariant ![k, k] repLorentz f) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ LinearMap.range f ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
     ∃ a : ℂ, ∃ y ∈ S, x = a • f (metricTensor k) + y :=
   (invariantReductionToMetricTensor hk hf).reduce S hS x hx hinv
 
-end IsLorentzEquivariant
+end Reduction
 
 /-- The Lorentz invariants of the range of a family with two left-handed Weyl indices reduce to
   the span of the image of `εL`. -/
@@ -218,7 +212,7 @@ noncomputable def IsBiLeftWeyl.invariantReductionToSpan {B : Type*} [AddCommGrou
     [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[.upL, .upL] →ₗ[ℂ] B}
     (hf : IsBiLeftWeyl B repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  IsLorentzEquivariant.invariantReductionToMetricTensor (Or.inl rfl) hf
+  invariantReductionToMetricTensor (Or.inl rfl) hf
 
 /-- The Lorentz invariants of the range of a family with two right-handed Weyl indices reduce to
   the span of the image of `εR`. -/
@@ -226,7 +220,7 @@ noncomputable def IsBiRightWeyl.invariantReductionToSpan {B : Type*} [AddCommGro
     [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[.upR, .upR] →ₗ[ℂ] B}
     (hf : IsBiRightWeyl B repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  IsLorentzEquivariant.invariantReductionToMetricTensor (Or.inr (Or.inr (Or.inl rfl))) hf
+  invariantReductionToMetricTensor (Or.inr (Or.inr (Or.inl rfl))) hf
 
 /-- The Lorentz invariants of the range of a family with two dual left-handed Weyl indices
   reduce to the span of the image of `εL'`. -/
@@ -234,7 +228,7 @@ noncomputable def IsBiDualLeftWeyl.invariantReductionToSpan {B : Type*} [AddComm
     [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[.downL, .downL] →ₗ[ℂ] B}
     (hf : IsBiDualLeftWeyl B repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  IsLorentzEquivariant.invariantReductionToMetricTensor (Or.inr (Or.inl rfl)) hf
+  invariantReductionToMetricTensor (Or.inr (Or.inl rfl)) hf
 
 /-- The Lorentz invariants of the range of a family with two dual right-handed Weyl indices
   reduce to the span of the image of `εR'`. -/
@@ -242,13 +236,13 @@ noncomputable def IsBiDualRightWeyl.invariantReductionToSpan {B : Type*} [AddCom
     [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT[.downR, .downR] →ₗ[ℂ] B}
     (hf : IsBiDualRightWeyl B repLorentz f) :
     InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
-  IsLorentzEquivariant.invariantReductionToMetricTensor (Or.inr (Or.inr (Or.inr rfl))) hf
+  invariantReductionToMetricTensor (Or.inr (Or.inr (Or.inr rfl))) hf
 
 /-!
 
 ## D. Maps from components
 
-A family of vectors `T a b` indexed by two basis indices of the same colour is the linear map
+A family of vectors `T a b` indexed by two basis indices is the linear map
 `ofPairComponents T` sending `e_a ⊗ e_b` to `T a b`, and it is equivariant when the vectors are
 moved as the basis tensors are.
 
@@ -256,25 +250,25 @@ moved as the basis tensors are.
 
 section PairComponents
 
-variable {k : complexLorentzTensor.Color} {B : Type*} [AddCommGroup B] [Module ℂ B]
+variable {k k' : complexLorentzTensor.Color} {B : Type*} [AddCommGroup B] [Module ℂ B]
 
-/-- The linear map out of `ℂT[k, k]` sending the basis tensor `e_a ⊗ e_b` to `T a b`. -/
-noncomputable def ofPairComponents (T : Fin (repDim k) → Fin (repDim k) → B) :
-    ℂT[k, k] →ₗ[ℂ] B :=
-  (Tensor.basis ![k, k]).constr ℂ fun φ => T (φ 0) (φ 1)
+/-- The linear map out of `ℂT[k, k']` sending the basis tensor `e_a ⊗ e_b` to `T a b`. -/
+noncomputable def ofPairComponents (T : Fin (repDim k) → Fin (repDim k') → B) :
+    ℂT[k, k'] →ₗ[ℂ] B :=
+  (Tensor.basis ![k, k']).constr ℂ fun φ => T (φ 0) (φ 1)
 
 /-- The range of `ofPairComponents T` is the span of the vectors `T a b`. -/
-lemma range_ofPairComponents (T : Fin (repDim k) → Fin (repDim k) → B) :
+lemma range_ofPairComponents (T : Fin (repDim k) → Fin (repDim k') → B) :
     LinearMap.range (ofPairComponents T)
-      = Submodule.span ℂ (Set.range fun m : Fin (repDim k) × Fin (repDim k) => T m.1 m.2) := by
+      = Submodule.span ℂ (Set.range fun m : Fin (repDim k) × Fin (repDim k') => T m.1 m.2) := by
   rw [ofPairComponents, Module.Basis.constr_range]
-  exact congrArg _ ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).surjective.range_comp
+  exact congrArg _ ((piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k'] j))).surjective.range_comp
     fun m => T m.1 m.2)
 
 /-- The image of `ofPairComponents T` lies in every submodule containing the vectors
   `T a b`. -/
-lemma ofPairComponents_mem (T : Fin (repDim k) → Fin (repDim k) → B) {M : Submodule ℂ B}
-    (hT : ∀ a b, T a b ∈ M) (t : ℂT[k, k]) : ofPairComponents T t ∈ M := by
+lemma ofPairComponents_mem (T : Fin (repDim k) → Fin (repDim k') → B) {M : Submodule ℂ B}
+    (hT : ∀ a b, T a b ∈ M) (t : ℂT[k, k']) : ofPairComponents T t ∈ M := by
   have h : LinearMap.range (ofPairComponents T) ≤ M := by
     rw [range_ofPairComponents, Submodule.span_le]
     rintro _ ⟨m, rfl⟩
@@ -284,36 +278,36 @@ lemma ofPairComponents_mem (T : Fin (repDim k) → Fin (repDim k) → B) {M : Su
 /-- A linear map applied after `ofPairComponents T` is `ofPairComponents` of its values on the
   components. -/
 lemma map_ofPairComponents {B' : Type*} [AddCommGroup B'] [Module ℂ B'] (σ : B →ₗ[ℂ] B')
-    (T : Fin (repDim k) → Fin (repDim k) → B) (t : ℂT[k, k]) :
+    (T : Fin (repDim k) → Fin (repDim k') → B) (t : ℂT[k, k']) :
     σ (ofPairComponents T t) = ofPairComponents (fun a b => σ (T a b)) t :=
   LinearMap.congr_fun (show σ ∘ₗ ofPairComponents T = ofPairComponents (fun a b => σ (T a b)) from
-    (Tensor.basis (S := complexLorentzTensor) ![k, k]).ext fun φ => by
+    (Tensor.basis (S := complexLorentzTensor) ![k, k']).ext fun φ => by
       simp [ofPairComponents]) t
 
 /-- `ofPairComponents` of a sum of families is the sum of the maps. -/
 lemma ofPairComponents_sum {ι : Type*} (s : Finset ι)
-    (T : ι → Fin (repDim k) → Fin (repDim k) → B) :
+    (T : ι → Fin (repDim k) → Fin (repDim k') → B) :
     ofPairComponents (fun a b => ∑ i ∈ s, T i a b) = ∑ i ∈ s, ofPairComponents (T i) :=
-  (Tensor.basis (S := complexLorentzTensor) ![k, k]).ext fun φ => by
+  (Tensor.basis (S := complexLorentzTensor) ![k, k']).ext fun φ => by
     simp [ofPairComponents, LinearMap.sum_apply]
 
 /-- `ofPairComponents` of a difference of families is the difference of the maps. -/
-lemma ofPairComponents_sub (T T' : Fin (repDim k) → Fin (repDim k) → B) :
+lemma ofPairComponents_sub (T T' : Fin (repDim k) → Fin (repDim k') → B) :
     ofPairComponents (fun a b => T a b - T' a b) = ofPairComponents T - ofPairComponents T' :=
-  (Tensor.basis (S := complexLorentzTensor) ![k, k]).ext fun φ => by simp [ofPairComponents]
+  (Tensor.basis (S := complexLorentzTensor) ![k, k']).ext fun φ => by simp [ofPairComponents]
 
 /-- `ofPairComponents T` is equivariant when each index of `T a b` is moved by the matrix of `g`
-  in the colour `k`, the summed index first in each factor. -/
-lemma isLorentzEquivariant_ofPairComponents {repLorentz : Representation ℂ SL(2,ℂ) B}
-    (T : Fin (repDim k) → Fin (repDim k) → B)
+  in its colour, the summed index first in each factor. -/
+lemma isEquivariant_ofPairComponents {repLorentz : Representation ℂ SL(2,ℂ) B}
+    (T : Fin (repDim k) → Fin (repDim k') → B)
     (hT : ∀ (g : SL(2,ℂ)) a b, repLorentz g (T a b)
       = ∑ x, ∑ y, (LinearMap.toMatrix (complexLorentzTensor.basis k)
           (complexLorentzTensor.basis k) (complexLorentzTensor.rep k g) x a *
-        LinearMap.toMatrix (complexLorentzTensor.basis k) (complexLorentzTensor.basis k)
-          (complexLorentzTensor.rep k g) y b) • T x y) :
-    IsLorentzEquivariant ![k, k] B repLorentz (ofPairComponents T) :=
+        LinearMap.toMatrix (complexLorentzTensor.basis k') (complexLorentzTensor.basis k')
+          (complexLorentzTensor.rep k' g) y b) • T x y) :
+    complexLorentzTensor.IsEquivariant ![k, k'] repLorentz (ofPairComponents T) :=
   isEquivariant_constr _ fun g φ => (hT g (φ 0) (φ 1)).trans <| by
-    rw [← (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k] j))).symm.sum_comp,
+    rw [← (piFinTwoEquiv fun j : Fin 2 => Fin (repDim (![k, k'] j))).symm.sum_comp,
       Fintype.sum_prod_type]
     simp only [Fin.prod_univ_two]
     rfl

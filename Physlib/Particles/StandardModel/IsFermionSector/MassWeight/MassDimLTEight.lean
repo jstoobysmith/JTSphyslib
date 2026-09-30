@@ -7,6 +7,7 @@ module
 
 public import Physlib.Particles.StandardModel.IsFermionSector.Components
 public import Physlib.Particles.StandardModel.IsFermionSector.MassWeight.GaugeWeightDecomposition
+public import Physlib.Relativity.LorentzGroup.Invariants.IsLeftRightWeyl
 public import Physlib.Relativity.LorentzGroup.Invariants.IsVectorLeftRightWeyl
 public import Physlib.Particles.StandardModel.InvariantReduction
 /-!
@@ -125,10 +126,12 @@ include hrepLorentz_mul
 /-- An undotted family times a dotted one is a dual left-right Weyl family. -/
 lemma isDualLeftRightWeyl_mul {X Y : Fin 2 → B} (hX : IsDualLeftWeyl repLorentz X)
     (hY : IsDualRightWeyl repLorentz Y) :
-    IsDualLeftRightWeyl B repLorentz (fun l => X l.1 * Y l.2) where
-  repLorentz_T g l := by
-    rw [hrepLorentz_mul, hX g l.1, hY g l.2, Finset.sum_mul_sum, Fintype.sum_prod_type]
-    refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+    IsDualLeftRightWeyl B repLorentz
+      (ofPairComponents (k := .downL) (k' := .downR) fun a b => X a * Y b) :=
+  isEquivariant_ofPairComponents _ fun g a b => by
+    rw [toMatrix_rep_downL, toMatrix_rep_downR, hrepLorentz_mul, hX g a, hY g b,
+      Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
     rw [smul_mul_smul_comm]
     congr 1
     rw [Matrix.transpose_apply, Matrix.conjTranspose_apply, ← SL2C.inverse_coe]
@@ -137,11 +140,12 @@ lemma isDualLeftRightWeyl_mul {X Y : Fin 2 → B} (hX : IsDualLeftWeyl repLorent
   spinor slots exchanged. -/
 lemma isDualLeftRightWeyl_mul_swap {X Y : Fin 2 → B} (hX : IsDualRightWeyl repLorentz X)
     (hY : IsDualLeftWeyl repLorentz Y) :
-    IsDualLeftRightWeyl B repLorentz (fun l => X l.2 * Y l.1) where
-  repLorentz_T g l := by
-    rw [hrepLorentz_mul, hX g l.2, hY g l.1, Finset.sum_mul_sum, Fintype.sum_prod_type,
-      Finset.sum_comm]
-    refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+    IsDualLeftRightWeyl B repLorentz
+      (ofPairComponents (k := .downL) (k' := .downR) fun a b => X b * Y a) :=
+  isEquivariant_ofPairComponents _ fun g a b => by
+    rw [toMatrix_rep_downL, toMatrix_rep_downR, hrepLorentz_mul, hX g b, hY g a,
+      Finset.sum_mul_sum, Finset.sum_comm]
+    refine Finset.sum_congr rfl fun x _ => Finset.sum_congr rfl fun y _ => ?_
     rw [smul_mul_smul_comm]
     congr 1
     rw [Matrix.transpose_apply, Matrix.conjTranspose_apply, ← SL2C.inverse_coe]
@@ -151,8 +155,9 @@ lemma isDualLeftRightWeyl_mul_swap {X Y : Fin 2 → B} (hX : IsDualRightWeyl rep
   family: the derivative supplies the four-vector index. -/
 lemma isVectorDualLeftRightWeyl_mul {X : Fin 2 → B} {Y : (Fin 1 ⊕ Fin 3) → Fin 2 → B}
     (hX : IsDualLeftWeyl repLorentz X) (hY : IsVectorDualRightWeyl repLorentz Y) :
-    IsVectorDualLeftRightWeyl B repLorentz (fun p => X p.2.1 * Y p.1 p.2.2) where
-  repLorentz_T g μ l := by
+    IsVectorDualLeftRightWeyl B repLorentz
+      (ofDualVectorComponents fun p => X p.2.1 * Y p.1 p.2.2) :=
+  isVectorDualLeftRightWeyl_ofDualVectorComponents _ fun g μ l => by
     rw [hrepLorentz_mul, hX g l.1, hY g μ l.2, Finset.sum_mul_sum, Finset.sum_comm]
     refine Finset.sum_congr rfl fun ν _ => ?_
     rw [Fintype.sum_prod_type]
@@ -168,8 +173,9 @@ lemma isVectorDualLeftRightWeyl_mul {X : Fin 2 → B} {Y : (Fin 1 ⊕ Fin 3) →
   family, the two spinor slots exchanged. -/
 lemma isVectorDualLeftRightWeyl_mul_swap {X : Fin 2 → B} {Y : (Fin 1 ⊕ Fin 3) → Fin 2 → B}
     (hX : IsDualRightWeyl repLorentz X) (hY : IsVectorDualLeftWeyl repLorentz Y) :
-    IsVectorDualLeftRightWeyl B repLorentz (fun p => X p.2.2 * Y p.1 p.2.1) where
-  repLorentz_T g μ l := by
+    IsVectorDualLeftRightWeyl B repLorentz
+      (ofDualVectorComponents fun p => X p.2.2 * Y p.1 p.2.1) :=
+  isVectorDualLeftRightWeyl_ofDualVectorComponents _ fun g μ l => by
     rw [hrepLorentz_mul, hX g l.2, hY g μ l.1, Finset.sum_mul_sum, Finset.sum_comm]
     refine Finset.sum_congr rfl fun ν _ => ?_
     rw [Fintype.sum_prod_type, Finset.sum_comm]
@@ -199,38 +205,29 @@ section Peeling
 
 variable {B : Type} [AddCommGroup B] [Module ℂ B] {repLorentz : Representation ℂ SL(2,ℂ) B}
 
-/-- The span of the components of a dual left-right Weyl family is stable under the
-  Lorentz group: each component transforms into a combination of components. -/
-lemma isDualLeftRightWeyl_span_stable {T : Fin 2 × Fin 2 → B}
-    (hT : IsDualLeftRightWeyl B repLorentz T) (g : SL(2,ℂ)) {y : B}
-    (hy : y ∈ ⨆ l, ℂ ∙ T l) : repLorentz g y ∈ ⨆ l, ℂ ∙ T l := by
-  have key : (⨆ l, ℂ ∙ T l) ≤ Submodule.comap (repLorentz g) (⨆ l, ℂ ∙ T l) := by
-    refine iSup_le fun l => ?_
-    rw [Submodule.span_singleton_le_iff_mem, Submodule.mem_comap, hT.repLorentz_T]
-    exact Submodule.sum_mem _ fun a _ => Submodule.smul_mem _ _
-      (Submodule.mem_iSup_of_mem a (Submodule.mem_span_singleton_self _))
-  exact key hy
-
 /-- A finite join of the spans of dual left-right Weyl families carries no Lorentz
   invariant modulo a Lorentz-stable submodule: such a family has no invariant, so each span
   reduces to `⊥`, and `ReducesInvariantsTo.biSup` combines the reductions. A Lorentz
   invariant of the join together with `S` lies in `S`. -/
 lemma mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span {ι : Type} [DecidableEq ι]
-    {T : ι → Fin 2 × Fin 2 → B} (hT : ∀ i, IsDualLeftRightWeyl B repLorentz (T i))
+    {T : ι → Fin 2 × Fin 2 → B} (hT : ∀ i, IsDualLeftRightWeyl B repLorentz
+      (ofPairComponents (k := .downL) (k' := .downR) fun a b => T i (a, b)))
     (S : Submodule ℂ B) (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (s : Finset ι)
     {x : B} (hx : x ∈ (⨆ i ∈ s, ⨆ l, ℂ ∙ T i l) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
-  simpa using ReducesInvariantsTo.biSup (σ := fun g : SL(2,ℂ) => repLorentz g) (W := ⊥)
-    (fun i S hS _ hx hinv => Submodule.mem_sup_right ((hT i).mem_of_invariant_of_mem_sup S hS
-      (by rwa [Submodule.span_range_eq_iSup]) hinv))
-    (fun i g _ hy => isDualLeftRightWeyl_span_stable (hT i) g hy)
-    isStableUnder_bot s S hS x hx hinv
+  have hr : ∀ i, (⨆ l, ℂ ∙ T i l)
+      = LinearMap.range (ofPairComponents (k := .downL) (k' := .downR) fun a b => T i (a, b)) :=
+    fun i => by rw [range_ofPairComponents, Submodule.span_range_eq_iSup]
+  simp_rw [hr] at hx
+  simpa using ReducesInvariantsTo.biSup (fun i => (hT i).reducesInvariantsTo_bot)
+    (fun i => (hT i).isStableUnder_range) isStableUnder_bot s S hS x hx hinv
 
 /-- The version of `mem_of_lorentz_invariant_biSup_dualLeftRightWeyl_span` joining over a
   whole finite index type. -/
 lemma mem_of_lorentz_invariant_iSup_dualLeftRightWeyl_span {ι : Type} [Fintype ι]
     [DecidableEq ι] {T : ι → Fin 2 × Fin 2 → B}
-    (hT : ∀ i, IsDualLeftRightWeyl B repLorentz (T i)) (S : Submodule ℂ B)
+    (hT : ∀ i, IsDualLeftRightWeyl B repLorentz
+      (ofPairComponents (k := .downL) (k' := .downR) fun a b => T i (a, b))) (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ (⨆ i, ⨆ l, ℂ ∙ T i l) ⊔ S)
     (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x ∈ S := by
@@ -544,7 +541,8 @@ include h in
   index. -/
 lemma isDualLeftRightWeyl_sixFamily
     (i : (LeftIdx × RightIdx) ⊕ (RightIdx × LeftIdx)) :
-    IsDualLeftRightWeyl B repLorentz (h.sixFamily i) := by
+    IsDualLeftRightWeyl B repLorentz
+      (ofPairComponents (k := .downL) (k' := .downR) fun a b => h.sixFamily i (a, b)) := by
   cases i with
   | inl p =>
     exact isDualLeftRightWeyl_mul hrepLorentz_mul (h.isDualLeftWeyl_leftComp p.1)

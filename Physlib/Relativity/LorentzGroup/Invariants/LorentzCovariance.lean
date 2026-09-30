@@ -5,53 +5,71 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Relativity.LorentzGroup.Invariants.Basic
+public import Physlib.Relativity.LorentzGroup.Invariants.AdjointClosed
 /-!
-# Lorentz covariance of component families
+# Equivariant maps out of tensors with four-vector indices
 
-A family `T` of vectors of a complex module `B`, indexed by `n` spacetime directions and moved
-by a representation of `SL(2,ℂ)` with one factor of the Lorentz matrix per index, is what the
-rank-specific files of this folder classify the invariants of. This file holds the predicate
-saying so, at an arbitrary number of indices, together with the part of its interface that does
-not depend on that number, and the bookkeeping `sum_pi_fin_two` that writes a sum over pairs of
-indices as a double sum.
+## i. Overview
 
-The transformation law is
+A family of vectors of a complex module `B`, indexed by `n` spacetime directions and moved by a
+representation `repLorentz` of `SL(2,ℂ)` with one factor of the Lorentz matrix per index, is
+packaged as a linear map `f` out of the complex Lorentz tensors with `n` contravariant indices,
+and `IsLorentzCovariant n B repLorentz f` says that `f` is equivariant (A). The rank-specific
+files of this folder classify the Lorentz invariants in the range of such a map.
+
+The components of a tensor, relabelled by `Fin 1 ⊕ Fin 3` in each slot, are a coefficient tensor,
+`coeffEquiv` (B), on which `SL(2,ℂ)` acts by `Invariants.act`. An invariant tensor therefore has
+an invariant coefficient tensor, `Invariants.IsInvariantCoeff`, and a classification of the
+invariant coefficient tensors is a classification of the invariants in the range of `f` (C).
+
+A family `T` of vectors indexed by `n` directions is the map `ofComponents T`, sending each basis
+tensor to the matching vector, and it is equivariant exactly when the vectors obey the
+transformation law of the components of a tensor (D),
 
 `repLorentz g (T l) = ∑_a (∏ i, Λ(g)_{a i, l i}) • T a`,
 
 with `l` free and `a` summed, and the summed index first in each factor of the Lorentz matrix
-`Λ(g)` of `g`. That is how the basis vectors of a tensor power of the vector representation
-move, and `Invariants.act` is the matching action on coefficients.
+`Λ(g)` of `g`.
 
-Nothing here assumes the components independent or `B` finite dimensional: the span of the
-components, Mathlib's `Submodule.span ℂ (Set.range T)`, is taken as it is, and a vector of it is
-written as a combination in a way that need not be unique. The rank-zero
-case is admitted and says that every component is invariant.
+## ii. Key results
+
+- `Lorentz.IsLorentzCovariant` : equivariant maps out of tensors with `n` four-vector indices.
+- `Lorentz.coeffEquiv` : the components of such a tensor, as a coefficient tensor.
+- `Lorentz.invariant_iff_isInvariantCoeff` : a tensor is invariant exactly when its coefficient
+  tensor is.
+- `Lorentz.IsLorentzCovariant.reducesInvariantsTo_span` : a spanning set of the invariant
+  coefficient tensors gives a reduction of the invariants of the range.
+- `Lorentz.isLorentzCovariant_ofComponents_iff` : the map of a family is equivariant exactly when
+  the family obeys the transformation law.
+
+## iii. Table of contents
+
+- A. Equivariant maps
+- B. Coefficient tensors
+- C. The reduction to invariant coefficient tensors
+- D. Maps from components
+
 -/
 
 @[expose] public section
 
 namespace Lorentz
 
-open Matrix MatrixGroups SL2C Invariants
+open Matrix MatrixGroups SL2C Invariants TensorSpecies Tensor complexLorentzTensor
 
 /-!
 
-## A. Families transforming with one Lorentz matrix per index
+## A. Equivariant maps
 
 -/
 
-/-- A family `T` of vectors of `B`, one per index vector `l : Fin n → Fin 1 ⊕ Fin 3`, which
-  `repLorentz` moves the way the components of a rank-`n` tensor `T^{μ₁ ⋯ μₙ}` transform: one
-  factor of the Lorentz matrix per slot, the moved index second in each factor and the summed
-  one first. -/
-structure IsLorentzCovariant (n : ℕ) (B : Type*) [AddCommMonoid B] [Module ℂ B]
+/-- A family with `n` four-vector indices `T^{μ₁ ⋯ μₙ}` in a representation `repLorentz` of
+  `SL(2,ℂ)`: an equivariant linear map out of the complex Lorentz tensors with `n` contravariant
+  indices. -/
+abbrev IsLorentzCovariant (n : ℕ) (B : Type*) [AddCommMonoid B] [Module ℂ B]
     (repLorentz : Representation ℂ SL(2,ℂ) B)
-    (T : (Fin n → (Fin 1 ⊕ Fin 3)) → B) : Prop where
-  repLorentz_T : ∀ (g : SL(2,ℂ)) l,
-    repLorentz g (T l) = ∑ (a : Fin n → Fin 1 ⊕ Fin 3),
-    (∏ (i : Fin n), (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a
+    (f : ℂT(fun _ : Fin n => Color.up) →ₗ[ℂ] B) : Prop :=
+  complexLorentzTensor.IsEquivariant (fun _ => .up) repLorentz f
 
 /-- A sum over families of two four-vector indices is a double sum. -/
 lemma sum_pi_fin_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin 3) → M) :
@@ -65,82 +83,176 @@ lemma sum_pi_fin_two {M : Type*} [AddCommMonoid M] (f : (Fin 2 → Fin 1 ⊕ Fin
         fin_cases i <;> simp,
     Fintype.sum_prod_type]
 
+/-!
+
+## B. Coefficient tensors
+
+-/
+
+section Coefficients
+
+variable {n : ℕ}
+
+/-- The component indices of a tensor with `n` contravariant indices, relabelled by
+  `Fin 1 ⊕ Fin 3` in each slot. -/
+def vectorIdx (n : ℕ) :
+    ComponentIdx (S := complexLorentzTensor) (fun _ : Fin n => Color.up)
+      ≃ (Fin n → Fin 1 ⊕ Fin 3) :=
+  Equiv.piCongrRight fun _ => (finSumFinEquiv (m := 1) (n := 3)).symm
+
+lemma vectorIdx_symm_apply (d : Fin n → Fin 1 ⊕ Fin 3) (i : Fin n) :
+    (vectorIdx n).symm d i = finSumFinEquiv (m := 1) (n := 3) (d i) := rfl
+
+/-- The components of a tensor with `n` contravariant indices, as a coefficient tensor. -/
+noncomputable def coeffEquiv (n : ℕ) :
+    ℂT(fun _ : Fin n => Color.up) ≃ₗ[ℂ] ((Fin n → Fin 1 ⊕ Fin 3) → ℂ) :=
+  (Tensor.basis _).equivFun.trans (LinearEquiv.funCongrLeft ℂ ℂ (vectorIdx n).symm)
+
+lemma coeffEquiv_apply (t : ℂT(fun _ : Fin n => Color.up)) (d : Fin n → Fin 1 ⊕ Fin 3) :
+    coeffEquiv n t d = (Tensor.basis _).repr t ((vectorIdx n).symm d) := rfl
+
+/-- The tensor with coefficient tensor `c` is the combination of the basis tensors with those
+  coefficients. -/
+lemma coeffEquiv_symm_apply (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
+    (coeffEquiv n).symm c = ∑ d, c d • Tensor.basis _ ((vectorIdx n).symm d) := by
+  refine (coeffEquiv n).injective (funext fun d => ?_)
+  rw [LinearEquiv.apply_symm_apply, coeffEquiv_apply, map_sum, Finset.sum_apply']
+  simp only [map_smul, Module.Basis.repr_self, Finsupp.smul_apply, Finsupp.single_apply,
+    EmbeddingLike.apply_eq_iff_eq, smul_eq_mul, mul_ite, mul_one, mul_zero,
+    Finset.sum_ite_eq', Finset.mem_univ, ite_true]
+
+/-- The action of `g` on tensors is the action `act` of its Lorentz matrix on coefficient
+  tensors. -/
+lemma coeffEquiv_smul (g : SL(2,ℂ)) (t : ℂT(fun _ : Fin n => Color.up)) :
+    coeffEquiv n (g • t) = act (SL2C.toLorentzGroup g).1 (coeffEquiv n t) := by
+  funext a
+  rw [coeffEquiv_apply, basis_repr_smul, act, ← (vectorIdx n).symm.sum_comp]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  rw [mul_comm, coeffEquiv_apply]
+  congr 1
+  refine Finset.prod_congr rfl fun i _ => ?_
+  rw [vectorIdx_symm_apply, vectorIdx_symm_apply]
+  exact toMatrix_rep_up_apply g (a i) (d i)
+
+/-- A tensor is invariant exactly when its coefficient tensor is an invariant coefficient
+  tensor. -/
+lemma invariant_iff_isInvariantCoeff (t : ℂT(fun _ : Fin n => Color.up)) :
+    (∀ g : SL(2,ℂ), g • t = t) ↔ IsInvariantCoeff (coeffEquiv n t) := by
+  refine forall_congr' fun g => ?_
+  rw [← coeffEquiv_smul, (coeffEquiv n).injective.eq_iff]
+
+end Coefficients
+
+/-!
+
+## C. The reduction to invariant coefficient tensors
+
+-/
+
 namespace IsLorentzCovariant
 
-section Monoid
-
-variable {n : ℕ} {B : Type*} [AddCommMonoid B] [Module ℂ B]
-  {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin n → (Fin 1 ⊕ Fin 3)) → B}
-
-/-- The image of the family under a linear map intertwining the two representations is again
-  such a family. The map is not assumed injective or surjective. -/
-lemma map {B' : Type*} [AddCommMonoid B'] [Module ℂ B'] {rep' : Representation ℂ SL(2,ℂ) B'}
-    (hT : IsLorentzCovariant n B repLorentz T) (f : B →ₗ[ℂ] B')
-    (hf : ∀ (g : SL(2,ℂ)) (y : B), f (repLorentz g y) = rep' g (f y)) :
-    IsLorentzCovariant n B' rep' fun l => f (T l) where
-  repLorentz_T g l := by
-    rw [← hf, hT.repLorentz_T g l, map_sum]
-    exact Finset.sum_congr rfl fun a _ => map_smul _ _ _
-
-/-- The span of the components is Lorentz stable: each component goes to a combination of the
-  components. -/
-lemma repLorentz_mem_span_range (hT : IsLorentzCovariant n B repLorentz T) (g : SL(2,ℂ))
-    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) :
-    repLorentz g x ∈ Submodule.span ℂ (Set.range T) := by
-  obtain ⟨c, rfl⟩ := (Submodule.mem_span_range_iff_exists_fun ℂ).1 hx
-  exact (Submodule.mem_span_range_iff_exists_fun ℂ).2
-    ⟨_, (repLorentz_sum_smul hT.repLorentz_T g c).symm⟩
-
-end Monoid
-
-section Group
-
 variable {n : ℕ} {B : Type*} [AddCommGroup B] [Module ℂ B]
-  {repLorentz : Representation ℂ SL(2,ℂ) B}
-  {T : (Fin n → (Fin 1 ⊕ Fin 3)) → B}
+  {repLorentz : Representation ℂ SL(2,ℂ) B} {f : ℂT(fun _ : Fin n => Color.up) →ₗ[ℂ] B}
 
-/-- The classes of the components in the quotient by a Lorentz-stable submodule again form a
-  Lorentz tensor family of the same rank, for Mathlib's quotient representation. -/
-lemma quotient (hT : IsLorentzCovariant n B repLorentz T) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) :
-    IsLorentzCovariant n (B ⧸ S) (repLorentz.quotient S fun g y hy => hS g y hy)
-      fun l => S.mkQ (T l) :=
-  hT.map S.mkQ fun _ _ => rfl
+/-- When the invariant coefficient tensors lie in the span of the coefficient tensors `K j`, the
+  invariants of the range of `f` reduce to the span of the images of the tensors with those
+  coefficients. -/
+lemma reducesInvariantsTo_span (hf : IsLorentzCovariant n B repLorentz f) {ι : Type*}
+    (K : ι → (Fin n → Fin 1 ⊕ Fin 3) → ℂ)
+    (hK : ∀ c, IsInvariantCoeff c → c ∈ Submodule.span ℂ (Set.range K)) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f)
+      (Submodule.span ℂ (Set.range fun j => f ((coeffEquiv n).symm (K j)))) := by
+  have h := hf.reducesInvariantsTo_map (complexLorentzTensor.isAdjointClosed _)
+    ((Submodule.span ℂ (Set.range K)).map (coeffEquiv n).symm.toLinearMap) fun t ht => by
+      rw [← (coeffEquiv n).symm_apply_apply t]
+      exact Submodule.mem_map_of_mem (hK _ ((invariant_iff_isInvariantCoeff t).1 ht))
+  rwa [Submodule.map_span, Submodule.map_span, ← Set.range_comp, ← Set.range_comp] at h
 
-/-- A Lorentz invariant lying in the span of the components is the contraction of a coefficient
-  tensor that the Lorentz matrices themselves fix. -/
-lemma exists_isInvariantCoeff_of_mem_span_range
-    (hT : IsLorentzCovariant n B repLorentz T) {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T))
-    (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d :=
-  Invariants.exists_isInvariantCoeff_of_mem_span hT.repLorentz_T hx hinv
+/-- When the only invariant coefficient tensor is zero, the range of `f` reduces to `⊥`. -/
+lemma reducesInvariantsTo_bot_of_isInvariantCoeff (hf : IsLorentzCovariant n B repLorentz f)
+    (hK : ∀ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c → c = 0) :
+    ReducesInvariantsTo (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) ⊥ :=
+  hf.reducesInvariantsTo_bot (complexLorentzTensor.isAdjointClosed _) fun t ht =>
+    (coeffEquiv n).injective (by rw [hK _ ((invariant_iff_isInvariantCoeff t).1 ht), map_zero])
 
-/-- Contracting the components with an invariant coefficient tensor gives a Lorentz
-  invariant. -/
-lemma isInvariant_sum_smul (hT : IsLorentzCovariant n B repLorentz T)
-    {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
-    repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d :=
-  repLorentz_sum_smul_of_isInvariantCoeff hT.repLorentz_T hc g
-
-end Group
+/-- When the only invariant coefficient tensor is zero, so is every Lorentz invariant in the
+  range of `f`. -/
+lemma eq_zero_of_isInvariantCoeff (hf : IsLorentzCovariant n B repLorentz f)
+    (hK : ∀ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c → c = 0) {x : B}
+    (hx : x ∈ LinearMap.range f) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) : x = 0 :=
+  hf.eq_zero_of_invariant (complexLorentzTensor.isAdjointClosed _) (fun t ht =>
+    (coeffEquiv n).injective (by rw [hK _ ((invariant_iff_isInvariantCoeff t).1 ht), map_zero]))
+    hx hinv
 
 end IsLorentzCovariant
 
 /-!
 
-## B. The quotient representation on classes
-
-Dividing out a Lorentz-stable submodule `S` uses Mathlib's `Representation.quotient`. The
-stability hypothesis is kept in the membership form the rest of the library uses, and converted
-where Mathlib asks for the `comap` form.
+## D. Maps from components
 
 -/
 
-/-- The quotient representation on `B ⧸ S` moves the class of `y` by moving `y`. -/
-lemma quotient_apply_mkQ {B : Type*} [AddCommGroup B] [Module ℂ B]
-    (repLorentz : Representation ℂ SL(2,ℂ) B) (S : Submodule ℂ B)
-    (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (g : SL(2,ℂ)) (y : B) :
-    repLorentz.quotient S (fun g y hy => hS g y hy) g (S.mkQ y) = S.mkQ (repLorentz g y) := rfl
+section Components
+
+variable {n : ℕ} {B : Type*} [AddCommGroup B] [Module ℂ B]
+
+/-- The linear map out of the tensors with `n` contravariant indices sending the basis tensor
+  with components `d` to `T d`. -/
+noncomputable def ofComponents (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    ℂT(fun _ : Fin n => Color.up) →ₗ[ℂ] B :=
+  (Tensor.basis _).constr ℂ fun φ => T (vectorIdx n φ)
+
+/-- `ofComponents T` contracts the coefficient tensor of its argument with `T`. -/
+lemma ofComponents_coeffEquiv_symm (T : (Fin n → Fin 1 ⊕ Fin 3) → B)
+    (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
+    ofComponents T ((coeffEquiv n).symm c) = ∑ d, c d • T d := by
+  rw [coeffEquiv_symm_apply, map_sum]
+  simp [ofComponents]
+
+/-- The range of `ofComponents T` is the span of the vectors `T d`. -/
+lemma range_ofComponents (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    LinearMap.range (ofComponents T) = Submodule.span ℂ (Set.range T) := by
+  rw [ofComponents, Module.Basis.constr_range]
+  exact congrArg _ ((vectorIdx n).surjective.range_comp T)
+
+/-- `ofComponents` of a sum of families is the sum of the maps. -/
+lemma ofComponents_sum {ι : Type*} (s : Finset ι) (T : ι → (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    ofComponents (fun d => ∑ i ∈ s, T i d) = ∑ i ∈ s, ofComponents (T i) :=
+  (Tensor.basis _).ext fun φ => by simp [ofComponents, LinearMap.sum_apply]
+
+/-- A linear map applied after `ofComponents T` is `ofComponents` of its values on the
+  components. -/
+lemma comp_ofComponents {B' : Type*} [AddCommGroup B'] [Module ℂ B'] (σ : B →ₗ[ℂ] B')
+    (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    σ ∘ₗ ofComponents T = ofComponents fun d => σ (T d) :=
+  (Tensor.basis _).ext fun φ => by simp [ofComponents]
+
+/-- The map of a family is equivariant exactly when the family obeys the transformation law of
+  the components of a tensor with `n` four-vector indices. -/
+lemma isLorentzCovariant_ofComponents_iff {repLorentz : Representation ℂ SL(2,ℂ) B}
+    (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    IsLorentzCovariant n B repLorentz (ofComponents T) ↔
+      ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
+        (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a := by
+  have hmat (g : SL(2,ℂ)) (a l : Fin n → Fin 1 ⊕ Fin 3) :
+      ∏ i, LinearMap.toMatrix (complexLorentzTensor.basis Color.up)
+        (complexLorentzTensor.basis Color.up) (complexLorentzTensor.rep Color.up g)
+        ((vectorIdx n).symm a i) ((vectorIdx n).symm l i)
+      = ∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ) :=
+    Finset.prod_congr rfl fun i _ => by
+      rw [vectorIdx_symm_apply, vectorIdx_symm_apply]
+      exact toMatrix_rep_up_apply g (a i) (l i)
+  constructor
+  · intro hf g l
+    have h := hf.equivariant g (Tensor.basis _ ((vectorIdx n).symm l))
+    rw [smul_basis_eq_sum, ← (vectorIdx n).symm.sum_comp, map_sum] at h
+    simpa [ofComponents, hmat] using h.symm
+  · intro hT
+    refine isEquivariant_constr _ fun g φ => ?_
+    obtain ⟨l, rfl⟩ := (vectorIdx n).symm.surjective φ
+    rw [Equiv.apply_symm_apply, hT, ← (vectorIdx n).symm.sum_comp]
+    simp only [Equiv.apply_symm_apply, hmat]
+
+end Components
 
 end Lorentz

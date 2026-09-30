@@ -6,42 +6,43 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.LightConeDeriv
-public import Physlib.Mathematics.LinearCombination
 /-!
-# Invariants of the span of a family of components
+# Invariant coefficient tensors on spacetime indices
 
-Every file in this folder asks the same question of a different index pattern. A family `T` of
-vectors of a complex vector space `B`, indexed by a finite set `ι` and moved by a
-representation of `SL(2,ℂ)`, spans a subspace of `B`; which of its vectors does the group
-leave alone? The answer has three steps that do not depend on the pattern.
+## i. Overview
 
-The first, general linear algebra, turns the question into a finite one. A vector of the span
-is a contraction `∑ i, c i • T i` for a coefficient function `c : ι → ℂ`, and the group moves
-such a vector by moving `c`. The components may satisfy linear relations, so `c` is not
-determined by the vector and need not be invariant, but the coefficients contracting to `0` form
-a subspace `K` which the group preserves, and so does its orthogonal complement whenever the
-coefficient action is closed under taking adjoints. Replacing `c` by its part in `Kᗮ` keeps the
-vector and makes `c` invariant: `Fintype.exists_invariant_coeff_of_adjoint_mem`, in
-`Physlib.Mathematics.LinearCombination`. What is left is a question about `ι`-indexed tuples of
-complex numbers. This file holds the other two steps.
+The invariants in the range of an equivariant map out of the complex Lorentz tensors with `n`
+contravariant indices are the images of invariant tensors, and the components of a tensor,
+relabelled by `Fin 1 ⊕ Fin 3` in each slot, are a coefficient tensor on which `SL(2,ℂ)` acts by
+`act` (`Invariants.LorentzCovariance`). This file holds the machinery the rank-specific files use
+to classify the invariant coefficient tensors, `IsInvariantCoeff`.
 
-The second reads that condition off the transformation law. Every family here is moved by a
-matrix, `repLorentz g (T l) = ∑_a M_g(a, l) • T a`, so the coefficients move by `actMat M_g`,
-whose adjoint is the action of the conjugate transpose of `M_g`. The hypothesis to check is
-therefore that these matrices are closed under conjugate transposition, and in every case it
-is `g†` that supplies the adjoint of `g`: `exists_invariantCoeff_matrix`.
+A matrix `M` acts on coefficient functions by `actMat M`, and a covector that the transposed
+matrix reproduces up to a scalar reads off a component that `actMat M` scales by that scalar, so
+an invariant coefficient function has no such component unless the scalar is `1` (A). Writing
+each slot of a coefficient tensor in the light-cone basis of an axis splits it into pieces that
+a boost scales by powers of its parameter, and an invariant keeps only the piece of weight zero:
+`IsInvariantCoeff.lightConeComponent_eq_zero` (B). Section C records what the half turns about the
+axes and the cyclic rotation of the axes force on an invariant coefficient tensor, for any number
+of slots.
 
-The third is for the patterns whose indices are spacetime directions, `ι = Fin n → Fin 1 ⊕
-Fin 3`. There `M_g` is a product of Lorentz-matrix entries, one per slot, whose conjugate
-transpose is the same product for the transposed matrix, which is again a Lorentz matrix coming
-from `SL(2,ℂ)`, so `exists_isInvariantCoeff_of_mem_span` applies. Writing each slot of a
-coefficient tensor in the light-cone basis of an axis splits it into pieces that a boost
-scales by powers of its parameter, and an invariant keeps only the piece of weight zero:
-`IsInvariantCoeff.lightConeComponent_eq_zero`. Section C records what the half turns about the
-axes and the cyclic rotation of the axes force on an invariant coefficient tensor, for any
-number of slots. The Weyl patterns need only the second step: there a boost and a half turn
-act diagonally or antidiagonally on the coefficients, and the rank-specific files read the
-constraints off directly.
+The conjugate transpose `dagger g` of an element of `SL(2,ℂ)`, whose Lorentz matrix is the
+transpose of that of `g`, also lives here; it makes the colours of complex Lorentz tensors closed
+under adjoints (`Invariants.AdjointClosed`).
+
+## ii. Key results
+
+- `Lorentz.Invariants.IsInvariantCoeff` : invariant coefficient tensors.
+- `Lorentz.Invariants.IsInvariantCoeff.lightConeComponent_eq_zero` : the boost kills the
+  light-cone components of nonzero weight.
+- `Lorentz.Invariants.dagger` : the conjugate transpose in `SL(2,ℂ)`.
+
+## iii. Table of contents
+
+- A. Coefficient functions moved by a matrix
+- B. Coefficient tensors on spacetime indices
+- C. The half turns and the cyclic rotation
+
 -/
 
 @[expose] public section
@@ -52,68 +53,24 @@ open Matrix MatrixGroups SL2C
 
 namespace Invariants
 
-variable {B : Type*} [AddCommGroup B] [Module ℂ B]
-
 /-!
 
 ## A. Coefficient functions moved by a matrix
 
-Every family in this folder is moved by a matrix: `repLorentz g (T l) = ∑_a M_g(a, l) • T a`,
-with `M_g` built from the Lorentz matrix of `g`, from `g` itself on Weyl indices, or from both.
-The coefficients then move by `actMat M_g`, whose adjoint is the action of the conjugate
-transpose of `M_g`. So the adjoint hypothesis of `Fintype.exists_invariant_coeff_of_adjoint_mem`
-reads: for every `g` some `g'` has `M_{g'}` the conjugate transpose of `M_g`. In every case below
-`g'` is `g†`.
-
-The weight argument is also generic: a covector that the transposed matrix reproduces up to a
-scalar reads off a component that `actMat M_g` scales by that scalar, so an invariant
-coefficient function has no such component unless the scalar is `1`.
+A matrix `M` acts on coefficient functions by `actMat M`. The weight argument is generic: a
+covector that the transposed matrix reproduces up to a scalar reads off a component that
+`actMat M` scales by that scalar, so an invariant coefficient function has no such component
+unless the scalar is `1`.
 
 -/
 
 section Mat
 
-variable {ι : Type} [Fintype ι] {G : Type*}
+variable {ι : Type} [Fintype ι]
 
 /-- The action on coefficient functions of a matrix moving the components:
   `(actMat M c) a = ∑_d c_d M_{a d}`, with `a` free and `d` summed. -/
 def actMat (M : ι → ι → ℂ) (c : ι → ℂ) (a : ι) : ℂ := ∑ d, c d * M a d
-
-/-- That action, as a linear map. -/
-noncomputable def actMatₗ (M : ι → ι → ℂ) : (ι → ℂ) →ₗ[ℂ] (ι → ℂ) where
-  toFun := actMat M
-  map_add' c c' := by
-    funext a
-    simp only [actMat, Pi.add_apply, add_mul, Finset.sum_add_distrib]
-  map_smul' z c := by
-    funext a
-    simp only [actMat, Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum, mul_assoc]
-
-open scoped InnerProductSpace in
-/-- Across the standard inner product the action of `M` becomes that of its conjugate
-  transpose. The action is not unitary, and need not be. -/
-lemma inner_actMat (M N : ι → ι → ℂ) (hN : ∀ a d, N a d = star (M d a))
-    (u v : EuclideanSpace ℂ ι) :
-    ⟪u, WithLp.toLp 2 (actMat M v.ofLp)⟫_ℂ = ⟪WithLp.toLp 2 (actMat N u.ofLp), v⟫_ℂ := by
-  simp only [PiLp.inner_apply, RCLike.inner_apply, actMat, hN, map_sum, map_mul, Complex.conj_conj,
-    Complex.star_def, Finset.mul_sum, Finset.sum_mul]
-  rw [Finset.sum_comm]
-  exact Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun d _ => by ring
-
-/-- An invariant of the span is the contraction of a coefficient function that every `M g`
-  fixes, provided the matrices are closed under conjugate transposition. -/
-lemma exists_invariantCoeff_matrix (T : ι → B) (φ : G → B →ₗ[ℂ] B) (M : G → ι → ι → ℂ)
-    (hT : ∀ (g : G) l, φ g (T l) = ∑ a, M g a l • T a)
-    (hM : ∀ g : G, ∃ g' : G, ∀ a d, M g' a d = star (M g d a))
-    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g, φ g x = x) :
-    ∃ c : ι → ℂ, (∀ g, actMat (M g) c = c) ∧ x = ∑ i, c i • T i := by
-  obtain ⟨c, hc, hinvc⟩ := Fintype.exists_invariant_coeff_of_adjoint_mem T φ
-    (fun g => actMatₗ (M g))
-    (fun g c => (φ g).map_sum_smul_of_forall_eq T T (M g) (hT g) c)
-    (fun g => by
-      obtain ⟨g', hg'⟩ := hM g
-      exact ⟨g', fun u v => inner_actMat (M g) (M g') hg' u v⟩) hx hinv
-  exact ⟨c, hinvc, hc⟩
 
 /-- A covector `P` that the transposed matrix reproduces up to a scalar `k` reads off a
   component of the coefficients that `actMat M` scales by `k`. -/
@@ -177,46 +134,6 @@ lemma act_eq_actMat (Λ : Matrix (Fin 1 ⊕ Fin 3) (Fin 1 ⊕ Fin 3) ℝ)
 def IsInvariantCoeff (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) : Prop :=
   ∀ g : SL(2,ℂ), act (SL2C.toLorentzGroup g).1 c = c
 
-section Monoid
-
-variable {B : Type*} [AddCommMonoid B] [Module ℂ B]
-
-/-- Transforming a contraction is the same as contracting the transformed coefficient tensor. -/
-lemma repLorentz_sum_smul {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
-    {repLorentz : Representation ℂ SL(2,ℂ) B}
-    (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
-      (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
-    (g : SL(2,ℂ)) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
-    repLorentz g (∑ d, c d • T d) = ∑ a, act (SL2C.toLorentzGroup g).1 c a • T a :=
-  (repLorentz g).map_sum_smul_of_forall_eq T T _ (hT g) c
-
-/-- Contracting the components with an invariant coefficient tensor gives a vector fixed by
-  the representation. -/
-lemma repLorentz_sum_smul_of_isInvariantCoeff {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
-    {repLorentz : Representation ℂ SL(2,ℂ) B}
-    (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
-      (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
-    {c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ} (hc : IsInvariantCoeff c) (g : SL(2,ℂ)) :
-    repLorentz g (∑ d, c d • T d) = ∑ d, c d • T d := by
-  rw [repLorentz_sum_smul hT, hc g]
-
-end Monoid
-
-/-- An invariant of the span is the contraction of an invariant coefficient tensor: the
-  adjoint of `act Λ` is the action of `Λᵀ`, which is the Lorentz matrix of `g†`. -/
-lemma exists_isInvariantCoeff_of_mem_span {T : (Fin n → Fin 1 ⊕ Fin 3) → B}
-    {repLorentz : Representation ℂ SL(2,ℂ) B}
-    (hT : ∀ (g : SL(2,ℂ)) l, repLorentz g (T l) = ∑ a : Fin n → Fin 1 ⊕ Fin 3,
-      (∏ i, (((SL2C.toLorentzGroup g).1 (a i) (l i) : ℝ) : ℂ)) • T a)
-    {x : B} (hx : x ∈ Submodule.span ℂ (Set.range T)) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ, IsInvariantCoeff c ∧ x = ∑ d, c d • T d := by
-  obtain ⟨c, hc, hx'⟩ := exists_invariantCoeff_matrix T (fun g => repLorentz g)
-    (fun g a d => ∏ i, (((SL2C.toLorentzGroup g).1 (a i) (d i) : ℝ) : ℂ)) hT
-    (fun g => ⟨dagger g, fun a d => by
-      rw [toLorentzGroup_dagger]
-      simp [Matrix.transpose_apply]⟩) hx hinv
-  exact ⟨c, fun g => (act_eq_actMat _ c).trans (hc g), hx'⟩
-
 /-- A light-cone component of a coefficient tensor along axis `i`: the multi-index `κ` picks
   one light-cone direction per slot and `c` is contracted against that choice. -/
 def lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) (κ : Fin n → Fin 4) : ℂ :=
@@ -267,7 +184,7 @@ lemma eq_sum_lightConeComponent (i : Fin 3) (c : (Fin n → Fin 1 ⊕ Fin 3) →
 
 /-!
 
-## C. The half turns and the cyclic rotation on coefficient tensors
+## C. The half turns and the cyclic rotation
 
 The half turn `SL2C.halfTurn k` has a diagonal Lorentz matrix with the signs `halfTurnSign k`,
 so it multiplies the coefficient at `d` by the product of the signs of the slots of `d`. That
