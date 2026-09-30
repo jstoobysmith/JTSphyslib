@@ -33,6 +33,8 @@ form it carries the Lorentz cone. Only the algebraic structure is built here.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 namespace JordanAlgebra
 
 variable (R V : Type*) [CommRing R] [AddCommGroup V] [Module R V]
@@ -150,3 +152,5 @@ lemma mul_self_sub_two_smul_snd_mul_add_determinant_smul_one
 end SpinFactor
 
 end JordanAlgebra
+
+end ProbabilisticTheory

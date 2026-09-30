@@ -39,6 +39,8 @@ distance to the set of pure states.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 open ArchimedeanOrderUnitSpace
 
 variable {E : Type*} [ArchimedeanOrderUnitSpace E]
@@ -161,3 +163,5 @@ lemma lipschitzWith_distToPure : LipschitzWith 1 (distToPure (E := E)) :=
   Metric.lipschitz_infDist_pt {φ : 𝓢[ℝ, E] | IsPure φ}
 
 end UnitalPositiveLinearMap
+
+end ProbabilisticTheory

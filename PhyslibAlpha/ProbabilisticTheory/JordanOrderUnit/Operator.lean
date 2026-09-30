@@ -35,6 +35,8 @@ The Jordan identity says that `L_a` and `L_{a²}` commute.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 namespace JordanAlgebra
 
 variable {E : Type*} [NonAssocCommRing E]
@@ -426,3 +428,5 @@ lemma innerDerivation_swap (a b : E) : innerDerivation a b = -innerDerivation b 
 end Linear
 
 end JordanAlgebra
+
+end ProbabilisticTheory

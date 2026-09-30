@@ -29,6 +29,8 @@ positive.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 section Conjugate
 
 variable {A : Type*} [NonUnitalSemiring A] [PartialOrder A] [StarRing A] [StarOrderedRing A]
@@ -37,7 +39,7 @@ variable {A : Type*} [NonUnitalSemiring A] [PartialOrder A] [StarRing A] [StarOr
 
 /-- Conjugation `x ↦ c * x * star x`, as a positive linear map. -/
 @[simps!]
-def PositiveLinearMap.conjugateₚ (c : A) : A →ₚ[R] A where
+def _root_.PositiveLinearMap.conjugateₚ (c : A) : A →ₚ[R] A where
   toLinearMap := LinearMap.mulLeftRight R (c, star c)
   monotone' _ _ h := star_right_conjugate_le_conjugate h c
 
@@ -45,7 +47,10 @@ end Conjugate
 
 open ComplexOrder
 
+end ProbabilisticTheory
+
 section Complex
+open ProbabilisticTheory ComplexOrder
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
 

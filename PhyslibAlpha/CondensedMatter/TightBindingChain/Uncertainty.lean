@@ -32,6 +32,7 @@ bracket `⁅H, X⁆ = -(i/2) (H X - X H)`, which only sees hopping: its matrix e
 @[expose] public section
 
 open scoped ComplexOrder InnerProductSpace selfAdjoint
+open ProbabilisticTheory
 open ContinuousLinearMap UnitalPositiveLinearMap
 
 namespace CondensedMatter

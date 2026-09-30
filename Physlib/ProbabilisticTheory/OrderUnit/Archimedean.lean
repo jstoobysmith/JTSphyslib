@@ -48,6 +48,8 @@ afterwards, to upgrade this from a seminorm to a genuine norm.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 /-!
 
 ## A. Archimedean order units
@@ -306,3 +308,5 @@ scoped instance closedIciTopology : ClosedIciTopology E where
     exact isClosed_Ici_zero.preimage (continuous_sub_right a)
 
 end ArchimedeanOrderUnitSpace
+
+end ProbabilisticTheory

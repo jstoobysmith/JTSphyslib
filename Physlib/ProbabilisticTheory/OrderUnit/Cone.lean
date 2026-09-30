@@ -37,6 +37,8 @@ These elements form a cone: they are closed under addition and scaling by nonneg
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 open scoped NNReal
 
 /-!
@@ -99,3 +101,5 @@ lemma coe_one : ((1 : PosCone E) : E) = (1 : E) := rfl
 end OrderUnitSpace
 
 end PosCone
+
+end ProbabilisticTheory

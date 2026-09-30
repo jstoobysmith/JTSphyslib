@@ -36,6 +36,8 @@ derivative of the heat kernel by `C^(n + 1) √(n!)`.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 namespace QuantumMechanics
 
 noncomputable section
@@ -421,3 +423,5 @@ lemma gaussianKernel_iteratedDeriv_L1_bound {ε : ℝ} (hε : 0 < ε) :
 end
 
 end QuantumMechanics
+
+end ProbabilisticTheory

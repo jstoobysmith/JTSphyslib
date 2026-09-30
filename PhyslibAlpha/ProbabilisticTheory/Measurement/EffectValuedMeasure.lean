@@ -43,6 +43,8 @@ adding up to `1`, one for each outcome.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 open Function
 
 variable {Ω E : Type*} [MeasurableSpace Ω] [OrderUnitSpace E]
@@ -271,3 +273,5 @@ lemma coe_mapOutcome_apply (N : EffectValuedMeasure Ω' E) (f : Ω' → Ω) (hf 
   rfl
 
 end EffectValuedMeasure
+
+end ProbabilisticTheory

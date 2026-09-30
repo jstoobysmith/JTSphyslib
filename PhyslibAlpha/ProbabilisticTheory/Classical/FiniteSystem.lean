@@ -41,6 +41,8 @@ system classical. The classical bit is `ι = Fin 2`.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 /-!
 
 ## A. The order-unit space
@@ -178,3 +180,5 @@ end FiniteClassicalSystem
 lemma Effect.isSharp_iff_eq_zero_or_eq_one {e : Effect ℝ} :
     Effect.IsSharp e ↔ (e : ℝ) = 0 ∨ (e : ℝ) = 1 := by
   simp [Effect.IsSharp, Set.extremePoints_Icc zero_le_one]
+
+end ProbabilisticTheory

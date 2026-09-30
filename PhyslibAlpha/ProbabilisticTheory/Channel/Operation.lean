@@ -37,6 +37,8 @@ to `1` is an instrument.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 variable {E : Type*} [OrderUnitSpace E]
 
 /-! ## A. Operations -/
@@ -164,3 +166,5 @@ def outcomeEffect (op : Operation E) : Effect E :=
 lemma coe_outcomeEffect (op : Operation E) : (outcomeEffect op : E) = op 1 := rfl
 
 end Operation
+
+end ProbabilisticTheory

@@ -24,6 +24,8 @@ A continuous function of an observable with values in `[0, 1]` is an effect.
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 namespace NormedJordanAlgebra
 
 variable {E : Type*}
@@ -52,3 +54,5 @@ lemma coe_jordanCfcEffect [Nontrivial E] (a : E)
 end
 
 end NormedJordanAlgebra
+
+end ProbabilisticTheory

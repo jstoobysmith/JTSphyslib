@@ -47,6 +47,8 @@ Two equally likely states are easier to tell apart exactly when they sit farther
 
 @[expose] public section
 
+namespace ProbabilisticTheory
+
 namespace UnitalPositiveLinearMap
 
 section OrderUnitSpace
@@ -183,3 +185,5 @@ lemma optimalSuccessProb_half_half_eq (ω₀ ω₁ : 𝓢[ℝ, E]) :
 end Archimedean
 
 end UnitalPositiveLinearMap
+
+end ProbabilisticTheory
