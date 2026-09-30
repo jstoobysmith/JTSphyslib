@@ -20,8 +20,10 @@ matrices supported on the plane is computed in `SU(2)`.
 
 Three elements of `SU(2)` do all the work: a diagonal phase `diag (u, ū)`, the rotation by a
 quarter turn, and the rotation by an eighth of a turn. Embedded in every plane, they force a
-matrix commuting with all of `SU(N)` to be scalar (C), and a linear endomorphism of the traceless
-matrices commuting with the adjoint action to be scalar (D). These are the two facts behind the
+matrix commuting with all of `SU(N)` to be scalar (C), and a linear endomorphism of the
+complexified Lie algebra `ℂ ⊗[ℝ] su(N)` commuting with the adjoint action to be scalar (D); the
+latter is computed on the matrices `adjMat A`, which identify the complexified Lie algebra with the
+traceless complex matrices. These are the two facts behind the
 classification of the invariant tensors of `SU(N)` with a fundamental and an anti-fundamental
 index, and with one or two adjoint indices.
 
@@ -29,15 +31,15 @@ index, and with one or two adjoint indices.
 
 - `SU.planeEmbed` : `SU(2)` acting on the plane of two coordinates, as a subgroup of `SU(N)`.
 - `SU.eq_smul_one_of_commute` : a matrix commuting with `SU(N)` is scalar.
-- `suTensor.eq_smul_id_of_commute_adjRep` : an endomorphism of the traceless matrices commuting
-  with the adjoint action is scalar.
+- `suTensor.eq_smul_id_of_commute_adjRep` : an endomorphism of the complexified Lie algebra
+  commuting with the adjoint action is scalar.
 
 ## iii. Table of contents
 
 - A. The plane matrices
 - B. The plane embedding of `SU(2)`
 - C. Matrices commuting with `SU(N)`
-- D. Endomorphisms of the adjoint module commuting with `SU(N)`
+- D. Endomorphisms of the complexified Lie algebra commuting with `SU(N)`
 
 -/
 
@@ -293,45 +295,47 @@ end SU
 
 /-!
 
-## D. Endomorphisms of the adjoint module commuting with `SU(N)`
+## D. Endomorphisms of the complexified Lie algebra commuting with `SU(N)`
 
 -/
 
 namespace suTensor
 
-open SU
+open SU TensorProduct
 
 variable {N : ℕ}
 
-/-- The matrix unit at `(x, y)` off the diagonal, as a traceless matrix, and zero on the
-  diagonal. -/
-noncomputable def offDiag (x y : Fin N) : AdjointModule N :=
-  ⟨if x = y then 0 else single x y 1, by
-    split_ifs with h
-    · exact Submodule.zero_mem _
-    · rw [LinearMap.mem_ker, traceLinearMap_apply, trace_single_eq_of_ne _ _ _ h]⟩
+/-- The matrix unit at `(x, y)` off the diagonal, as an element of the complexified Lie algebra,
+  and zero on the diagonal. -/
+noncomputable def offDiag (x y : Fin N) : SUAlgebraComplexified N :=
+  ofTraceless (if x = y then 0 else single x y 1)
 
-/-- The difference of the diagonal matrix units at `x` and at `y`, a traceless matrix. -/
-noncomputable def diagDiff (x y : Fin N) : AdjointModule N :=
-  ⟨single x x 1 - single y y 1, by
-    rw [LinearMap.mem_ker, traceLinearMap_apply, trace_sub, trace_single_eq_same,
-      trace_single_eq_same, sub_self]⟩
+/-- The difference of the diagonal matrix units at `x` and at `y`, as an element of the
+  complexified Lie algebra. -/
+noncomputable def diagDiff (x y : Fin N) : SUAlgebraComplexified N :=
+  ofTraceless (single x x 1 - single y y 1)
 
-lemma offDiag_val_of_ne {x y : Fin N} (h : x ≠ y) : (offDiag x y).1 = single x y 1 := by
-  simp [offDiag, h]
+lemma adjMat_offDiag (x y : Fin N) :
+    adjMat N (offDiag x y) = if x = y then 0 else single x y 1 := by
+  refine adjMat_ofTraceless ?_
+  split_ifs with h
+  · exact trace_zero _ _
+  · exact trace_single_eq_of_ne _ _ _ h
 
-@[simp]
-lemma offDiag_self (x : Fin N) : offDiag x x = 0 := by
-  ext1
-  simp [offDiag]
+lemma adjMat_offDiag_of_ne {x y : Fin N} (h : x ≠ y) : adjMat N (offDiag x y) = single x y 1 := by
+  simp [adjMat_offDiag, h]
 
 @[simp]
-lemma diagDiff_val (x y : Fin N) : (diagDiff x y).1 = single x x 1 - single y y 1 := rfl
+lemma offDiag_self (x : Fin N) : offDiag x x = 0 :=
+  adjMat_injective (by simp [adjMat_offDiag])
 
 @[simp]
-lemma diagDiff_self (x : Fin N) : diagDiff x x = 0 := by
-  ext1
-  simp
+lemma adjMat_diagDiff (x y : Fin N) : adjMat N (diagDiff x y) = single x x 1 - single y y 1 :=
+  adjMat_ofTraceless (by rw [trace_sub, trace_single_eq_same, trace_single_eq_same, sub_self])
+
+@[simp]
+lemma diagDiff_self (x : Fin N) : diagDiff x x = 0 :=
+  adjMat_injective (by simp)
 
 /-- The inclusion of the plane carries the matrix units of the plane to those of the
   coordinates. -/
@@ -355,12 +359,12 @@ lemma planeInclusion_single (p q : Fin N) (i j : Fin 2) :
 
 /-- The adjoint action of an element of `SU(2)` embedded in a plane on a matrix supported on the
   plane. -/
-lemma adjRep_planeEmbed_val {p q : Fin N} (hpq : p ≠ q) (U : SU 2) (A : AdjointModule N)
-    (M : Matrix (Fin 2) (Fin 2) ℂ)
-    (hA : A.1 = planeInclusion p q * M * (planeInclusion p q)ᵀ) :
-    (adjRep N (planeEmbed p q hpq U) A).1
+lemma adjMat_adjRep_planeEmbed {p q : Fin N} (hpq : p ≠ q) (U : SU 2)
+    (A : SUAlgebraComplexified N) (M : Matrix (Fin 2) (Fin 2) ℂ)
+    (hA : adjMat N A = planeInclusion p q * M * (planeInclusion p q)ᵀ) :
+    adjMat N (adjRep N (planeEmbed p q hpq U) A)
       = planeInclusion p q * (U.1 * M * U.1ᴴ) * (planeInclusion p q)ᵀ := by
-  rw [adjRep_apply_val, val_inv, hA, planeEmbed_val, star_eq_conjTranspose,
+  rw [adjMat_adjRep, val_inv, hA, planeEmbed_val, star_eq_conjTranspose,
     planeMatrix_conj hpq]
 
 /-- The phase `(1 + i) / √2`, a square root of `i` of modulus one. -/
@@ -405,21 +409,21 @@ lemma star_sqrtI_ne_I : star sqrtI ≠ Complex.I := fun h => by
 
 /-- The adjoint action of a diagonal matrix of `SU(N)` scales the entry at `(x, y)` by
   `d x * star (d y)`. -/
-lemma adjRep_val_apply_of_diagonal {g : SU N} {d : Fin N → ℂ} (hg : g.1 = diagonal d)
-    (A : AdjointModule N) (x y : Fin N) :
-    (adjRep N g A).1 x y = d x * A.1 x y * star (d y) := by
-  rw [adjRep_apply_val, val_inv, hg, star_eq_conjTranspose, diagonal_conjTranspose,
+lemma adjMat_adjRep_apply_of_diagonal {g : SU N} {d : Fin N → ℂ} (hg : g.1 = diagonal d)
+    (A : SUAlgebraComplexified N) (x y : Fin N) :
+    adjMat N (adjRep N g A) x y = d x * adjMat N A x y * star (d y) := by
+  rw [adjMat_adjRep, val_inv, hg, star_eq_conjTranspose, diagonal_conjTranspose,
     Matrix.mul_diagonal, Matrix.diagonal_mul]
   rfl
 
-variable {L : AdjointModule N →ₗ[ℂ] AdjointModule N}
+variable {L : SUAlgebraComplexified N →ₗ[ℂ] SUAlgebraComplexified N}
 
 /-- For `p ≠ q`, an endomorphism commuting with the adjoint action sends the matrix unit at
   `(p, q)` to a multiple of itself. The phase `diag (ω, ω̄)` in the plane of `p` and `q`, with
   `ω² = i`, multiplies that matrix unit by `i` and no other entry by `i`. -/
-lemma map_offDiag_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma map_offDiag_eq_smul (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) {p q : Fin N} (hpq : p ≠ q) :
-    L (offDiag p q) = (L (offDiag p q)).1 p q • offDiag p q := by
+    L (offDiag p q) = adjMat N (L (offDiag p q)) p q • offDiag p q := by
   set d : Fin N → ℂ := fun x => if x = p then sqrtI else if x = q then star sqrtI else 1
   set g := planeEmbed p q hpq (diagPhase sqrtI sqrtI_mul_star)
   have hg : g.1 = diagonal d := by
@@ -439,18 +443,18 @@ lemma map_offDiag_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
   have hY : adjRep N g (L (offDiag p q)) = Complex.I • L (offDiag p q) := by
     rw [← hL, ← map_smul]
     congr 1
-    ext x y
-    rw [adjRep_val_apply_of_diagonal hg, Submodule.coe_smul, Matrix.smul_apply,
-      offDiag_val_of_ne hpq, single_apply, smul_eq_mul]
+    refine adjMat_injective (Matrix.ext fun x y => ?_)
+    rw [adjMat_adjRep_apply_of_diagonal hg, map_smul, Matrix.smul_apply,
+      adjMat_offDiag_of_ne hpq, single_apply, smul_eq_mul]
     split_ifs with h
     · obtain ⟨rfl, rfl⟩ := h
       rw [mul_one, mul_one]
       exact (hmul _ _).2 ⟨rfl, rfl⟩
     · simp
-  ext x y
-  rw [Submodule.coe_smul, Matrix.smul_apply, offDiag_val_of_ne hpq, single_apply, smul_eq_mul]
-  have hxy := congrArg (fun A : AdjointModule N => A.1 x y) hY
-  simp only [adjRep_val_apply_of_diagonal hg, Submodule.coe_smul, Matrix.smul_apply,
+  refine adjMat_injective (Matrix.ext fun x y => ?_)
+  rw [map_smul, Matrix.smul_apply, adjMat_offDiag_of_ne hpq, single_apply, smul_eq_mul]
+  have hxy := congrArg (fun A => adjMat N A x y) hY
+  simp only [adjMat_adjRep_apply_of_diagonal hg, map_smul, Matrix.smul_apply,
     smul_eq_mul] at hxy
   split_ifs with h
   · obtain ⟨rfl, rfl⟩ := h
@@ -458,7 +462,7 @@ lemma map_offDiag_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
   · have hne : d x * star (d y) ≠ Complex.I := fun he =>
       h ⟨((hmul x y).1 he).1.symm, ((hmul x y).1 he).2.symm⟩
     rw [mul_zero]
-    have h' : (d x * star (d y) - Complex.I) * (L (offDiag p q)).1 x y = 0 := by
+    have h' : (d x * star (d y) - Complex.I) * adjMat N (L (offDiag p q)) x y = 0 := by
       linear_combination hxy
     exact (mul_eq_zero.1 h').resolve_left (sub_ne_zero.2 hne)
 
@@ -466,27 +470,27 @@ lemma map_offDiag_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
   one at `(q, p)`. -/
 lemma adjRep_quarterTurn_offDiag {p q : Fin N} (hpq : p ≠ q) :
     adjRep N (planeEmbed p q hpq (rotation 0 1 (by norm_num))) (offDiag p q) = -offDiag q p := by
-  ext1
-  rw [adjRep_planeEmbed_val hpq _ _ (single 0 1 1)
-    (by rw [offDiag_val_of_ne hpq, planeInclusion_single]; rfl)]
+  refine adjMat_injective ?_
+  rw [adjMat_adjRep_planeEmbed hpq _ _ (single 0 1 1)
+    (by rw [adjMat_offDiag_of_ne hpq, planeInclusion_single]; rfl)]
   rw [show (rotation 0 1 (by norm_num)).1 * single 0 1 1 * (rotation 0 1 (by norm_num)).1ᴴ
       = -single 1 0 (1 : ℂ) by
     ext i j
     fin_cases i <;> fin_cases j <;>
       simp [Matrix.mul_apply, Fin.sum_univ_two, single_apply, Matrix.vecMul, dotProduct]]
-  rw [Matrix.mul_neg, Matrix.neg_mul, planeInclusion_single, Submodule.coe_neg,
-    offDiag_val_of_ne (Ne.symm hpq)]
+  rw [Matrix.mul_neg, Matrix.neg_mul, planeInclusion_single, map_neg,
+    adjMat_offDiag_of_ne (Ne.symm hpq)]
   rfl
 
 /-- The coefficients of the matrix units at `(p, q)` and at `(q, p)` agree. -/
-lemma coeff_offDiag_swap (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma coeff_offDiag_swap (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) {p q : Fin N} (hpq : p ≠ q) :
-    (L (offDiag q p)).1 q p = (L (offDiag p q)).1 p q := by
+    adjMat N (L (offDiag q p)) q p = adjMat N (L (offDiag p q)) p q := by
   have h := hL (planeEmbed p q hpq (rotation 0 1 (by norm_num))) (offDiag p q)
   rw [adjRep_quarterTurn_offDiag, map_neg, map_offDiag_eq_smul hL (Ne.symm hpq),
     map_offDiag_eq_smul hL hpq, map_smul, adjRep_quarterTurn_offDiag] at h
-  have h' := congrArg (fun A : AdjointModule N => A.1 q p) h
-  simpa [offDiag_val_of_ne (Ne.symm hpq)] using h'
+  have h' := congrArg (fun A => adjMat N A q p) h
+  simpa [adjMat_offDiag_of_ne (Ne.symm hpq)] using h'
 
 /-- The cosine of an eighth of a turn, `1 / √2`. -/
 noncomputable def invSqrtTwo : ℝ := (Real.sqrt 2)⁻¹
@@ -505,9 +509,9 @@ lemma invSqrtTwo_mul_self : (invSqrtTwo : ℂ) * invSqrtTwo = 1 / 2 := by
 lemma adjRep_eighthTurn_offDiag {p q : Fin N} (hpq : p ≠ q) :
     adjRep N (planeEmbed p q hpq (rotation invSqrtTwo invSqrtTwo invSqrtTwo_sq_add))
       (offDiag p q + offDiag q p) = -diagDiff p q := by
-  ext1
-  rw [adjRep_planeEmbed_val hpq _ _ (single 0 1 1 + single 1 0 1)
-    (by rw [Submodule.coe_add, offDiag_val_of_ne hpq, offDiag_val_of_ne (Ne.symm hpq),
+  refine adjMat_injective ?_
+  rw [adjMat_adjRep_planeEmbed hpq _ _ (single 0 1 1 + single 1 0 1)
+    (by rw [map_add, adjMat_offDiag_of_ne hpq, adjMat_offDiag_of_ne (Ne.symm hpq),
       Matrix.mul_add, Matrix.add_mul, planeInclusion_single, planeInclusion_single]; rfl)]
   rw [show (rotation invSqrtTwo invSqrtTwo invSqrtTwo_sq_add).1 * (single 0 1 1 + single 1 0 1)
       * (rotation invSqrtTwo invSqrtTwo invSqrtTwo_sq_add).1ᴴ
@@ -519,14 +523,14 @@ lemma adjRep_eighthTurn_offDiag {p q : Fin N} (hpq : p ≠ q) :
         | linear_combination (2 : ℂ) * invSqrtTwo_mul_self
         | linear_combination (-2 : ℂ) * invSqrtTwo_mul_self]
   rw [Matrix.mul_neg, Matrix.neg_mul, Matrix.mul_sub, Matrix.sub_mul, planeInclusion_single,
-    planeInclusion_single, Submodule.coe_neg, diagDiff_val]
+    planeInclusion_single, map_neg, adjMat_diagDiff]
   rfl
 
 /-- For `p ≠ q`, an endomorphism commuting with the adjoint action scales the difference of the
   diagonal matrix units at `p` and at `q` by the coefficient of the matrix unit at `(p, q)`. -/
-lemma map_diagDiff_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma map_diagDiff_eq_smul (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) {p q : Fin N} (hpq : p ≠ q) :
-    L (diagDiff p q) = (L (offDiag p q)).1 p q • diagDiff p q := by
+    L (diagDiff p q) = adjMat N (L (offDiag p q)) p q • diagDiff p q := by
   have h := hL (planeEmbed p q hpq (rotation invSqrtTwo invSqrtTwo invSqrtTwo_sq_add))
     (offDiag p q + offDiag q p)
   rw [adjRep_eighthTurn_offDiag, map_neg, map_add, map_offDiag_eq_smul hL (Ne.symm hpq),
@@ -537,32 +541,32 @@ lemma map_diagDiff_eq_smul (hL : ∀ (g : SU N) (A : AdjointModule N),
 /-- For distinct `p`, `q` and `r`, the coefficients of the matrix units at `(p, q)` and at
   `(p, r)` agree: the difference of the diagonal units at `p` and `r` is the sum of those at `p`
   and `q` and at `q` and `r`. -/
-lemma coeff_offDiag_eq (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma coeff_offDiag_eq (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) {p q r : Fin N} (hpq : p ≠ q) (hpr : p ≠ r)
-    (hqr : q ≠ r) : (L (offDiag p r)).1 p r = (L (offDiag p q)).1 p q := by
-  have hsum : diagDiff p r = diagDiff p q + diagDiff q r := by
-    ext1
-    simp
+    (hqr : q ≠ r) : adjMat N (L (offDiag p r)) p r = adjMat N (L (offDiag p q)) p q := by
+  have hsum : diagDiff p r = diagDiff p q + diagDiff q r :=
+    adjMat_injective (by simp)
   have h := congrArg L hsum
   rw [map_add, map_diagDiff_eq_smul hL hpr, map_diagDiff_eq_smul hL hpq,
     map_diagDiff_eq_smul hL hqr] at h
-  have h' := congrArg (fun A : AdjointModule N => A.1 p p) h
+  have h' := congrArg (fun A => adjMat N A p p) h
   simpa [single_apply, hpq, hpr, Ne.symm hpq, Ne.symm hpr] using h'
 
 /-- All the matrix units off the diagonal have the same coefficient under an endomorphism
   commuting with the adjoint action. -/
-lemma exists_coeff_offDiag_eq (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma exists_coeff_offDiag_eq (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) :
-    ∃ μ : ℂ, ∀ x y : Fin N, x ≠ y → (L (offDiag x y)).1 x y = μ := by
+    ∃ μ : ℂ, ∀ x y : Fin N, x ≠ y → adjMat N (L (offDiag x y)) x y = μ := by
   by_cases hN : 2 ≤ N
   · set a : Fin N := ⟨0, by omega⟩
     set b : Fin N := ⟨1, by omega⟩
     have hab : a ≠ b := by simp [a, b, Fin.ext_iff]
-    have ha : ∀ y, a ≠ y → (L (offDiag a y)).1 a y = (L (offDiag a b)).1 a b := fun y hy => by
-      by_cases hyb : y = b
-      · rw [hyb]
-      · exact coeff_offDiag_eq hL hab hy (Ne.symm hyb)
-    refine ⟨(L (offDiag a b)).1 a b, fun x y hxy => ?_⟩
+    have ha : ∀ y, a ≠ y → adjMat N (L (offDiag a y)) a y = adjMat N (L (offDiag a b)) a b :=
+      fun y hy => by
+        by_cases hyb : y = b
+        · rw [hyb]
+        · exact coeff_offDiag_eq hL hab hy (Ne.symm hyb)
+    refine ⟨adjMat N (L (offDiag a b)) a b, fun x y hxy => ?_⟩
     by_cases hxa : x = a
     · subst hxa
       exact ha y hxy
@@ -576,33 +580,34 @@ lemma exists_coeff_offDiag_eq (hL : ∀ (g : SU N) (A : AdjointModule N),
     ext
     omega
 
-/-- A traceless matrix is the combination of its entries off the diagonal against the matrix
+/-- An element of the complexified Lie algebra is the combination of the entries of its matrix off
+  the diagonal against the matrix
   units, and of its diagonal entries against the differences of the diagonal matrix units at a
   fixed coordinate. -/
-lemma eq_sum_offDiag_add_sum_diagDiff (A : AdjointModule N) (x₀ : Fin N) :
-    A = ∑ x, ∑ y, A.1 x y • offDiag x y + ∑ x, A.1 x x • diagDiff x x₀ := by
-  have htr : ∑ x, A.1 x x = 0 := A.2
-  ext i j
-  have hoff : ∀ x y, (offDiag x y).1 i j = if x = i ∧ y = j ∧ i ≠ j then 1 else 0 := by
+lemma eq_sum_offDiag_add_sum_diagDiff (A : SUAlgebraComplexified N) (x₀ : Fin N) :
+    A = ∑ x, ∑ y, adjMat N A x y • offDiag x y + ∑ x, adjMat N A x x • diagDiff x x₀ := by
+  have htr : ∑ x, adjMat N A x x = 0 := trace_adjMat A
+  refine adjMat_injective (Matrix.ext fun i j => ?_)
+  have hoff : ∀ x y, adjMat N (offDiag x y) i j = if x = i ∧ y = j ∧ i ≠ j then 1 else 0 := by
     intro x y
     by_cases hxy : x = y
     · subst hxy
-      simp only [offDiag, ite_true, Matrix.zero_apply]
+      simp only [adjMat_offDiag, ite_true, Matrix.zero_apply]
       split_ifs with h
       · exact absurd (h.1.symm.trans h.2.1) h.2.2
       · rfl
-    · rw [offDiag_val_of_ne hxy, single_apply]
+    · rw [adjMat_offDiag_of_ne hxy, single_apply]
       by_cases h : x = i ∧ y = j
       · obtain ⟨rfl, rfl⟩ := h
         simp [hxy]
       · rw [ite_eq_right_iff.mpr fun h' => absurd h' h,
           ite_eq_right_iff.mpr fun h' => absurd ⟨h'.1, h'.2.1⟩ h]
-  simp only [Submodule.coe_add, Submodule.coe_sum, Submodule.coe_smul, Matrix.add_apply,
-    Matrix.sum_apply, Matrix.smul_apply, smul_eq_mul, diagDiff_val, Matrix.sub_apply, hoff,
+  simp only [map_add, map_sum, map_smul, Matrix.add_apply,
+    Matrix.sum_apply, Matrix.smul_apply, smul_eq_mul, adjMat_diagDiff, Matrix.sub_apply, hoff,
     single_apply, mul_sub, mul_ite, mul_one, mul_zero, Finset.sum_sub_distrib]
   by_cases hij : i = j
   · subst hij
-    have hx₀ : (∑ x, if x₀ = i then A.1 x x else 0) = 0 := by
+    have hx₀ : (∑ x, if x₀ = i then adjMat N A x x else 0) = 0 := by
       split_ifs <;> simp [htr]
     simp only [ne_eq, not_true_eq_false, and_false, ite_false, Finset.sum_const_zero, and_self,
       Finset.sum_ite_eq', Finset.mem_univ, ite_true, hx₀, sub_zero, zero_add]
@@ -612,15 +617,16 @@ lemma eq_sum_offDiag_add_sum_diagDiff (A : AdjointModule N) (x₀ : Fin N) :
       Finset.sum_eq_single j (fun y _ hy => by simp [hy]) (by simp)]
     simp [hij]
 
-/-- An endomorphism of the traceless matrices commuting with the adjoint action of every
+/-- An endomorphism of the complexified Lie algebra commuting with the adjoint action of every
   element of `SU(N)` is scalar: a form of Schur's lemma for the adjoint representation. -/
-lemma eq_smul_id_of_commute_adjRep (hL : ∀ (g : SU N) (A : AdjointModule N),
+lemma eq_smul_id_of_commute_adjRep (hL : ∀ (g : SU N) (A : SUAlgebraComplexified N),
       L (adjRep N g A) = adjRep N g (L A)) :
     ∃ z : ℂ, L = z • LinearMap.id := by
   obtain ⟨μ, hμ⟩ := exists_coeff_offDiag_eq hL
   refine ⟨μ, LinearMap.ext fun A => ?_⟩
   rcases Nat.eq_zero_or_pos N with rfl | hN
-  · have : Subsingleton (AdjointModule 0) := ⟨fun A B => Subtype.ext (Subsingleton.elim _ _)⟩
+  · have : Subsingleton (SUAlgebraComplexified 0) :=
+      ⟨fun A B => adjMat_injective (Subsingleton.elim _ _)⟩
     exact Subsingleton.elim _ _
   have hoff : ∀ x y, L (offDiag x y) = μ • offDiag x y := fun x y => by
     by_cases hxy : x = y

@@ -120,14 +120,14 @@ lemma ofReal_half_re_trace {z : ℂ} (hz : star (z / 2) = z / 2) :
 lemma su3AdjointMatrix_eq_adjMatrix (U : SU 3) (a b : Fin 8) :
     ((su3AdjointMatrix U a b : ℝ) : ℂ) = adjMatrix U (su3Label a) (su3Label b) := by
   have hreal := star_adjMatrix_apply U (su3Label a) (su3Label b)
-  simp only [adjMatrix, toMatrix_adjRep_apply, val_inv, ← gellMannMatrix_eq_matrix] at hreal ⊢
+  simp only [adjMatrix_apply, val_inv, ← gellMannMatrix_eq_matrix] at hreal ⊢
   rw [su3AdjointMatrix_apply, ofReal_half_re_trace hreal]
 
 /-- The adjoint matrix of `SU(2)` is the matrix of the adjoint action in the Pauli basis. -/
 lemma su2AdjointMatrix_eq_adjMatrix (U : SU 2) (i j : Fin 3) :
     ((su2AdjointMatrix U i j : ℝ) : ℂ) = adjMatrix U (su2Label i) (su2Label j) := by
   have hreal := star_adjMatrix_apply U (su2Label i) (su2Label j)
-  simp only [adjMatrix, toMatrix_adjRep_apply, val_inv, ← pauliMatrix_inr_eq_matrix] at hreal ⊢
+  simp only [adjMatrix_apply, val_inv, ← pauliMatrix_inr_eq_matrix] at hreal ⊢
   rw [su2AdjointMatrix_apply, ofReal_half_re_trace hreal]
 
 /-!

@@ -5,8 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
-public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.GellMann
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Adjoint
 public import Physlib.Relativity.Tensors.Equivariant
 public import Mathlib.LinearAlgebra.Matrix.PosDef
 public import Mathlib.RingTheory.Flat.Basic
@@ -19,15 +18,16 @@ The complex tensors of `SU(N)` carry three kinds of index, in analogy with the c
 tensors `complexLorentzTensor`: a fundamental index, an anti-fundamental index and an adjoint
 index. `suTensor N` is the tensor species with these three colors. The fundamental color is
 `Fin N → ℂ` moved by `g`, the anti-fundamental color is `Fin N → ℂ` moved by `(g⁻¹)ᵀ` (for a unitary
-`g` the complex conjugate), and the adjoint color is the traceless complex matrices, moved by
-conjugation `A ↦ g A g⁻¹`: the complexification of the Lie algebra `su(N)`, with the generalized
-Gell-Mann matrices as basis. The type of tensors with colors `c₁, …, cₙ` is written
-`SuT[N, c₁, …, cₙ]`.
+`g` the complex conjugate), and the adjoint color is the complexification
+`SUAlgebraComplexified N = ℂ ⊗[ℝ] su(N)` of the Lie algebra `SUAlgebra N` of traceless hermitian
+matrices, moved by the adjoint representation `adjRep` with the generalized Gell-Mann matrices as
+basis, as set up in `LocalGaugeData.SU.Adjoint`. The type of tensors with colors `c₁, …, cₙ` is
+written `SuT[N, c₁, …, cₙ]`.
 
 The fundamental and anti-fundamental colors are dual to each other and contract by the dot
 product, with unit `∑ eᵢ ⊗ eᵢ`. The adjoint color is dual to itself and contracts by the trace
-form `tr (A B)`, with unit `∑ λ_a ⊗ λᵃ` for the Gell-Mann matrices `λ_a` and their trace-dual
-basis `λᵃ = λ_a / 2`. In these bases the matrix of `g⁻¹` on each color is the conjugate transpose
+form `tr (A B)` (`adjContr`), with unit `∑ λ_a ⊗ λᵃ` for the Gell-Mann matrices `λ_a` and their
+trace-dual basis `λᵃ = λ_a / 2`. In these bases the matrix of `g⁻¹` on each color is the conjugate transpose
 of that of `g`, so the colors are closed under adjoints (F) and the general results on equivariant
 maps out of the tensors of a species apply. The
 species has no metric (`TensorSpecies.WithMetric`): for `N ≥ 3` the fundamental of `SU(N)` is not
@@ -36,8 +36,8 @@ self-dual, so there is no invariant in `ℂᴺ ⊗ ℂᴺ` to raise and lower it
 ## ii. Key results
 
 - `suTensor.Color` : the fundamental, anti-fundamental and adjoint colors.
-- `suTensor.fundRep`, `suTensor.antiFundRep`, `suTensor.adjRep` : the three representations.
-- `suTensor.traceForm_nondegenerate` : the trace form is nondegenerate on traceless matrices.
+- `suTensor.fundRep`, `suTensor.antiFundRep` : the fundamental and anti-fundamental
+  representations.
 - `suTensor` : the complex tensor species of `SU(N)`, with the notation `SuT[N, c₁, …, cₙ]`.
 - `suTensor.isAdjointClosed` : the colors are closed under adjoints, so the general results on
   equivariant maps (`TensorSpecies.IsEquivariant`) apply.
@@ -77,17 +77,13 @@ inductive Color
 
 variable (N : ℕ)
 
-/-- The carrier of the adjoint color: traceless complex `N × N` matrices, the complexification
-  of `su(N)`. -/
-abbrev AdjointModule : Type := ↥(LinearMap.ker (Matrix.traceLinearMap (Fin N) ℂ ℂ))
-
 /-- The carriers of the three colors. -/
 abbrev modules : Color → Type
   | .fund => Fin N → ℂ
   | .antiFund => Fin N → ℂ
-  | .adj => AdjointModule N
+  | .adj => SUAlgebraComplexified N
 
-instance modulesAddCommGroup : ∀ c, AddCommGroup (modules N c)
+noncomputable instance modulesAddCommGroup : ∀ c, AddCommGroup (modules N c)
   | .fund => inferInstance
   | .antiFund => inferInstance
   | .adj => inferInstance
@@ -119,21 +115,13 @@ instance basisIdxDecidableEq : ∀ c, DecidableEq (basisIdx N c)
 noncomputable abbrev basis : (c : Color) → Basis (basisIdx N c) ℂ (modules N c)
   | .fund => Pi.basisFun ℂ (Fin N)
   | .antiFund => Pi.basisFun ℂ (Fin N)
-  | .adj => GellMann.basis
+  | .adj => adjBasis N
 
 /-!
 
 ## B. The representations
 
 -/
-
-variable {N}
-
-lemma val_inv_mul_val (g : SU N) : (g⁻¹).1 * g.1 = 1 := by
-  rw [← Submonoid.coe_mul, inv_mul_cancel]
-  rfl
-
-variable (N)
 
 /-- The fundamental representation, `v ↦ g v`. -/
 noncomputable def fundRep : Representation ℂ (SU N) (Fin N → ℂ) where
@@ -155,22 +143,6 @@ noncomputable def antiFundRep : Representation ℂ (SU N) (Fin N → ℂ) where
   map_mul' g h := by
     rw [_root_.mul_inv_rev, Submonoid.coe_mul, transpose_mul, Matrix.mulVecLin_mul]
     rfl
-
-/-- The adjoint representation on traceless matrices, `A ↦ g A g⁻¹`. -/
-noncomputable def adjRep : Representation ℂ (SU N) (AdjointModule N) where
-  toFun g :=
-    { toFun A := ⟨g.1 * A.1 * (g⁻¹).1, by
-        rw [LinearMap.mem_ker, Matrix.traceLinearMap_apply, Matrix.trace_mul_cycle,
-          val_inv_mul_val, one_mul]
-        exact A.2⟩
-      map_add' A B := Subtype.ext (by simp [mul_add, add_mul])
-      map_smul' a A := Subtype.ext (by simp) }
-  map_one' := LinearMap.ext fun A => Subtype.ext (by simp)
-  map_mul' g h := LinearMap.ext fun A => Subtype.ext (by simp [mul_assoc])
-
-@[simp]
-lemma adjRep_apply_val (g : SU N) (A : AdjointModule N) :
-    (adjRep N g A).1 = g.1 * A.1 * (g⁻¹).1 := rfl
 
 /-- The representations of the three colors. -/
 noncomputable abbrev rep : (c : Color) → Representation ℂ (SU N) (modules N c)
@@ -202,53 +174,6 @@ noncomputable def antiFundContr : ((antiFundRep N).tprod (fundRep N)).Intertwini
     change ((g⁻¹).1ᵀ *ᵥ w) ⬝ᵥ (g.1 *ᵥ v) = w ⬝ᵥ v
     rw [dotProduct_comm, dotProduct_mulVec, vecMul_transpose, mulVec_mulVec, val_inv_mul_val,
       one_mulVec, dotProduct_comm]
-
-/-- The trace form `A ⊗ B ↦ tr (A B)` on traceless matrices. -/
-noncomputable def traceForm : LinearMap.BilinForm ℂ (AdjointModule N) :=
-  LinearMap.mk₂ ℂ (fun A B => (A.1 * B.1).trace)
-    (fun A A' B => by simp [add_mul, trace_add])
-    (fun a A B => by simp)
-    (fun A B B' => by simp [mul_add, trace_add])
-    (fun a A B => by simp)
-
-@[simp]
-lemma traceForm_apply (A B : AdjointModule N) : traceForm N A B = (A.1 * B.1).trace := rfl
-
-/-- The trace form is symmetric. -/
-lemma traceForm_isSymm : (traceForm N).IsSymm :=
-  ⟨fun A B => by rw [traceForm_apply, traceForm_apply, trace_mul_comm]⟩
-
-open scoped ComplexOrder in
-/-- A traceless matrix orthogonal to every traceless matrix under the trace form vanishes:
-  pairing `A` with its conjugate transpose, again traceless, gives `tr (A Aᴴ) = ∑ |A_ij|²`. -/
-lemma traceForm_separatingLeft (A : AdjointModule N) (hA : ∀ B, traceForm N A B = 0) :
-    A = 0 := by
-  have hAH : A.1ᴴ ∈ LinearMap.ker (Matrix.traceLinearMap (Fin N) ℂ ℂ) := by
-    rw [LinearMap.mem_ker, Matrix.traceLinearMap_apply, trace_conjTranspose]
-    have h := A.2
-    rw [LinearMap.mem_ker, Matrix.traceLinearMap_apply] at h
-    rw [h, star_zero]
-  have h := hA ⟨A.1ᴴ, hAH⟩
-  rw [traceForm_apply, trace_mul_conjTranspose_self_eq_zero_iff] at h
-  exact Subtype.ext h
-
-/-- The trace form is nondegenerate on traceless matrices. -/
-lemma traceForm_nondegenerate : (traceForm N).Nondegenerate :=
-  ⟨traceForm_separatingLeft N, fun B hB => traceForm_separatingLeft N B fun A => by
-    rw [(traceForm_isSymm N).eq]
-    exact hB A⟩
-
-/-- The contraction of two adjoint indices, the trace form `A ⊗ B ↦ tr (A B)`. -/
-noncomputable def adjContr : ((adjRep N).tprod (adjRep N)).IntertwiningMap
-    (Representation.trivial ℂ (SU N) ℂ) where
-  toLinearMap := TensorProduct.lift (traceForm N)
-  isIntertwining' g := TensorProduct.ext' fun A B => by
-    change ((g.1 * A.1 * (g⁻¹).1) * (g.1 * B.1 * (g⁻¹).1)).trace = (A.1 * B.1).trace
-    rw [show g.1 * A.1 * (g⁻¹).1 * (g.1 * B.1 * (g⁻¹).1)
-        = g.1 * (A.1 * B.1) * (g⁻¹).1 by
-      simp only [Matrix.mul_assoc]
-      rw [← Matrix.mul_assoc (g⁻¹).1, val_inv_mul_val, Matrix.one_mul]]
-    rw [Matrix.trace_mul_cycle, val_inv_mul_val, one_mul]
 
 /-!
 
@@ -374,26 +299,16 @@ noncomputable def antiFundUnit : (Representation.trivial ℂ (SU N) ℂ).Intertw
   unitOf (map_eq_self_of_coevalMap_eq_id (antiFundContr N) (dotProduct_flip_injective N)
     (coevalMap_pairUnitVal N (antiFundContr N) rfl))
 
-/-- The trace form separates traceless matrices. -/
-lemma adjContr_flip_injective :
-    Function.Injective (TensorProduct.curry (adjContr N).toLinearMap).flip := fun w w' h => by
-  refine sub_eq_zero.1 ((traceForm_nondegenerate N).2 _ fun x => ?_)
-  have hx := LinearMap.congr_fun h x
-  simp only [LinearMap.flip_apply, TensorProduct.curry_apply] at hx
-  rw [map_sub, sub_eq_zero]
-  exact hx
-
 /-- The element `∑ b_a ⊗ bᵃ` of `su(N)_ℂ ⊗ su(N)_ℂ`, for the Gell-Mann basis `b` and its dual basis
   `bᵃ` under the trace form: the unit of the adjoint color. -/
-noncomputable def adjUnitVal : AdjointModule N ⊗[ℂ] AdjointModule N :=
-  ∑ a, (GellMann.basis (N := N)) a ⊗ₜ
-    (traceForm N).dualBasis (traceForm_nondegenerate N) ((GellMann.basis (N := N))) a
+noncomputable def adjUnitVal : (SUAlgebraComplexified N) ⊗[ℂ] (SUAlgebraComplexified N) :=
+  ∑ a, adjBasis N a ⊗ₜ (traceForm N).dualBasis (traceForm_nondegenerate N) (adjBasis N) a
 
 lemma coevalMap_adjUnitVal : coevalMap (adjContr N) (adjUnitVal N) = LinearMap.id := by
   refine LinearMap.ext fun x => ?_
   rw [LinearMap.id_apply]
   conv_rhs => rw [← ((traceForm N).dualBasis (traceForm_nondegenerate N)
-    ((GellMann.basis (N := N)))).sum_repr x]
+    (adjBasis N)).sum_repr x]
   rw [adjUnitVal, map_sum, LinearMap.sum_apply]
   refine Finset.sum_congr rfl fun a _ => ?_
   rw [coevalMap_tmul, LinearMap.BilinForm.dualBasis_repr_apply]
@@ -403,11 +318,11 @@ lemma coevalMap_comm_adjUnitVal :
     coevalMap (adjContr N) (TensorProduct.comm ℂ _ _ (adjUnitVal N)) = LinearMap.id := by
   refine LinearMap.ext fun x => ?_
   have hb := LinearMap.BilinForm.dualBasis_dualBasis (traceForm_nondegenerate N)
-    (traceForm_isSymm N) ((GellMann.basis (N := N)))
+    (traceForm_isSymm N) (adjBasis N)
   rw [LinearMap.id_apply]
   conv_rhs => rw [← ((traceForm N).dualBasis (traceForm_nondegenerate N)
     ((traceForm N).dualBasis (traceForm_nondegenerate N)
-      ((GellMann.basis (N := N))))).sum_repr x]
+      (adjBasis N))).sum_repr x]
   simp_rw [LinearMap.BilinForm.dualBasis_repr_apply]
   rw [hb, adjUnitVal, map_sum, map_sum, LinearMap.sum_apply]
   refine Finset.sum_congr rfl fun a _ => ?_
@@ -456,7 +371,7 @@ noncomputable def suTensor (N : ℕ) : TensorSpecies ℂ suTensor.Color (SU N)
   contr_tmul_symm
     | .fund, x, y => dotProduct_comm x y
     | .antiFund, x, y => dotProduct_comm x y
-    | .adj, x, y => trace_mul_comm x.1 y.1
+    | .adj, x, y => trace_mul_comm (adjMat N x) (adjMat N y)
   -- Each unit is fixed by swapping its factors, and the cast along `τ (τ c) = c` is the identity.
   unit_symm c := by
     cases c <;>
@@ -511,12 +426,6 @@ namespace suTensor
 
 variable {N}
 
-lemma val_inv (g : SU N) : (g⁻¹).1 = star g.1 := by
-  have h : g.1 * star g.1 = 1 :=
-    mem_unitaryGroup_iff.mp (mem_specialUnitaryGroup_iff.mp g.2).1
-  calc (g⁻¹).1 = (g⁻¹).1 * (g.1 * star g.1) := by rw [h, Matrix.mul_one]
-    _ = star g.1 := by rw [← Matrix.mul_assoc, val_inv_mul_val, Matrix.one_mul]
-
 lemma toMatrix_fundRep (g : SU N) :
     LinearMap.toMatrix (Pi.basisFun ℂ (Fin N)) (Pi.basisFun ℂ (Fin N)) (fundRep N g) = g.1 := by
   rw [LinearMap.toMatrix_eq_toMatrix', ← LinearMap.toMatrix'_toLin' g.1, Matrix.toLin'_apply']
@@ -528,14 +437,6 @@ lemma toMatrix_antiFundRep (g : SU N) :
   rw [LinearMap.toMatrix_eq_toMatrix', ← LinearMap.toMatrix'_toLin' (g⁻¹).1ᵀ,
     Matrix.toLin'_apply']
   rfl
-
-/-- The matrix entries of the adjoint representation in the Gell-Mann basis,
-  `tr (λ_a g λ_b g⁻¹) / 2`. -/
-lemma toMatrix_adjRep_apply (g : SU N) (a b : GellMann.Index N) :
-    LinearMap.toMatrix GellMann.basis GellMann.basis (adjRep N g) a b
-      = (GellMann.matrix a * (g.1 * GellMann.matrix b * (g⁻¹).1)).trace / 2 := by
-  rw [LinearMap.toMatrix_apply, GellMann.basis_repr_apply, adjRep_apply_val,
-    GellMann.basis_apply_val]
 
 variable (N) in
 /-- On every color, the matrix of `g⁻¹` is the conjugate transpose of the matrix of `g`. -/
@@ -551,14 +452,9 @@ lemma toMatrix_rep_inv (k : Color) (g : SU N) :
     rw [toMatrix_antiFundRep, toMatrix_antiFundRep, inv_inv, val_inv]
     ext i j
     simp
-  · change LinearMap.toMatrix _ _ (adjRep N g⁻¹) = (LinearMap.toMatrix _ _ (adjRep N g))ᴴ
+  · change adjMatrix g⁻¹ = (adjMatrix g)ᴴ
     ext a b
-    rw [conjTranspose_apply, toMatrix_adjRep_apply, toMatrix_adjRep_apply, inv_inv, star_div₀,
-      ← trace_conjTranspose]
-    simp only [conjTranspose_mul, GellMann.conjTranspose_matrix, val_inv, star_eq_conjTranspose,
-      conjTranspose_conjTranspose, Matrix.mul_assoc]
-    rw [show star (2 : ℂ) = 2 by simp, trace_mul_comm g.1]
-    simp only [Matrix.mul_assoc]
+    rw [adjMatrix_inv, transpose_apply, conjTranspose_apply, star_adjMatrix_apply]
 
 variable (N) in
 /-- Every list of colors of the `SU(N)` tensors is closed under adjoints, with `g' = g⁻¹`. -/

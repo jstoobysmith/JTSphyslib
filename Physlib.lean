@@ -50,6 +50,7 @@ public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MaurerCartan
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.OfFactors
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.Prod
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Adjoint
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Basic
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.GellMann

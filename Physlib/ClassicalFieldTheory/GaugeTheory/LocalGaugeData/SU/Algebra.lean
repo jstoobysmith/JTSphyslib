@@ -24,16 +24,22 @@ theory of jets needs are `R = ℂ` (the Lie algebra itself) and `R` the ring of 
 series in the spacetime coordinates (its jets). `SUAlgebraOver R n` is this Lie algebra,
 together with the conjugation action `a ↦ U a U†` of the unitary group of `R`.
 
+Over `R = ℂ` the Lie algebra is real, since `i` times a hermitian matrix is anti-hermitian. Its
+complexification `ℂ ⊗[ℝ] su(n)` is `SUAlgebraComplexified n`, the complex vector space on which
+the adjoint representation of `SU(n)` acts in the complex tensors of `SU(n)`.
+
 ## ii. Key results
 
 - `SUAlgebraOver` : the traceless hermitian matrices as a real Lie algebra.
 - `SUAlgebraOver.conj` : the conjugation representation of the unitary group.
+- `SUAlgebraComplexified` : the complexification of `su(n)`.
 
 ## iii. Table of contents
 
 - A. Traceless hermitian matrices
 - B. The conjugation representation
 - C. The bracket
+- D. The complexification
 
 -/
 
@@ -149,3 +155,13 @@ noncomputable instance : LieAlgebra ℝ (SUAlgebraOver R n) where
     congr 1 <;> exact Finset.sum_congr rfl fun k _ => by ring)
 
 end SUAlgebraOver
+
+/-!
+
+## D. The complexification
+
+-/
+
+open TensorProduct in
+/-- **The complexified Lie algebra `su(n)_ℂ = ℂ ⊗[ℝ] su(n)`**, a complex vector space. -/
+abbrev SUAlgebraComplexified (n : ℕ) : Type := ℂ ⊗[ℝ] SUAlgebraOver ℂ n

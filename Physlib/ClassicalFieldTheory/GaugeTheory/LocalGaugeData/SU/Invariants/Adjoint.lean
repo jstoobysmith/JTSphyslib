@@ -12,14 +12,14 @@ public import Physlib.Relativity.Tensors.UnitTensor
 
 ## i. Overview
 
-A tensor with one adjoint index is a traceless matrix `A`, moved by `g` to `g A g⁻¹`. An invariant
-one commutes with every element of `SU(N)`, so it is scalar (`SU.eq_smul_one_of_commute`), and
-being traceless it is zero (A).
+A tensor with one adjoint index is an element `A` of the complexified Lie algebra `ℂ ⊗[ℝ] su(N)`,
+moved by `g` to `g A g⁻¹`. The matrix of an invariant one commutes with every element of `SU(N)`, so
+it is scalar (`SU.eq_smul_one_of_commute`), and being traceless it is zero (A).
 
 A tensor with two adjoint indices has a matrix of components `C` in the Gell-Mann basis, moved by
 `g` to `M C Mᵀ`, where `M` is the matrix of the adjoint action of `g`. That matrix is real and
 `Mᵀ` is the matrix of `g⁻¹`, so the components of an invariant tensor are the matrix of an
-endomorphism of the traceless matrices commuting with the adjoint action. By
+endomorphism of the complexified Lie algebra commuting with the adjoint action. By
 `suTensor.eq_smul_id_of_commute_adjRep` that endomorphism is scalar, and the invariant tensors are
 the multiples of the unit tensor of the adjoint color, `∑ λ_a ⊗ λ_a / 2` (B).
 
@@ -49,7 +49,7 @@ the unit tensor is the trace contraction `∑ a, T ![a, a]` (D).
 
 namespace suTensor
 
-open Matrix MatrixGroups TensorSpecies Tensor SU
+open Matrix MatrixGroups TensorSpecies Tensor SU TensorProduct
 
 variable {N : ℕ}
 
@@ -59,21 +59,21 @@ variable {N : ℕ}
 
 -/
 
-/-- An invariant traceless matrix is zero: it commutes with every element of `SU(N)`, so it is a
-  scalar, and its trace vanishes. -/
-lemma eq_zero_of_adjRep_eq_self {A : AdjointModule N} (hA : ∀ g : SU N, adjRep N g A = A) :
+/-- An invariant element of the complexified Lie algebra is zero: its matrix commutes with every
+  element of `SU(N)`, so it is a scalar, and its trace vanishes. -/
+lemma eq_zero_of_adjRep_eq_self {A : SUAlgebraComplexified N} (hA : ∀ g : SU N, adjRep N g A = A) :
     A = 0 := by
-  obtain ⟨z, hz⟩ := eq_smul_one_of_commute (C := A.1) fun g => by
-    have h := congrArg Subtype.val (hA g)
-    rw [adjRep_apply_val] at h
+  obtain ⟨z, hz⟩ := eq_smul_one_of_commute (C := adjMat N A) fun g => by
+    have h := congrArg (adjMat N) (hA g)
+    rw [adjMat_adjRep] at h
     conv_rhs => rw [← h]
     simp only [Matrix.mul_assoc, val_inv_mul_val, Matrix.mul_one]
-  have htr : (A.1).trace = 0 := A.2
+  have htr := trace_adjMat A
   rw [hz, trace_smul, trace_one, smul_eq_mul, mul_eq_zero, Fintype.card_fin] at htr
-  ext1
+  refine adjMat_injective ?_
+  rw [map_zero]
   rcases htr with rfl | hN
   · rw [hz, zero_smul]
-    rfl
   · have : IsEmpty (Fin N) := by
       rw [Fin.isEmpty_iff]
       exact_mod_cast hN
@@ -92,28 +92,6 @@ lemma eq_zero_of_invariant_adj (t : SuT[N, .adj]) (ht : ∀ g : SU N, g • t = 
 ## B. Two adjoint indices
 
 -/
-
-/-- The matrix of the adjoint action of `g` in the Gell-Mann basis. -/
-noncomputable abbrev adjMatrix (g : SU N) : Matrix (GellMann.Index N) (GellMann.Index N) ℂ :=
-  LinearMap.toMatrix GellMann.basis GellMann.basis (adjRep N g)
-
-/-- The matrix of the adjoint action is real, the Gell-Mann matrices being hermitian. -/
-lemma star_adjMatrix_apply (g : SU N) (a b : GellMann.Index N) :
-    star (adjMatrix g a b) = adjMatrix g a b := by
-  simp only [adjMatrix]
-  rw [toMatrix_adjRep_apply, star_div₀, ← trace_conjTranspose]
-  simp only [conjTranspose_mul, GellMann.conjTranspose_matrix, val_inv, star_eq_conjTranspose,
-    conjTranspose_conjTranspose, Matrix.mul_assoc]
-  rw [show star (2 : ℂ) = 2 by simp, trace_mul_comm g.1]
-  simp only [Matrix.mul_assoc]
-  rw [← Matrix.mul_assoc (GellMann.matrix b), trace_mul_comm]
-  simp only [Matrix.mul_assoc]
-
-/-- The matrix of the adjoint action of `g⁻¹` is the transpose of that of `g`. -/
-lemma adjMatrix_inv (g : SU N) : adjMatrix g⁻¹ = (adjMatrix g)ᵀ := by
-  rw [adjMatrix, toMatrix_rep_inv N .adj g]
-  ext a b
-  exact star_adjMatrix_apply g b a
 
 /-- The component indices of a tensor with two adjoint indices, as the pair of their Gell-Mann
   labels. -/
@@ -154,24 +132,19 @@ lemma basis_repr_adjUnitTensor (n : Fin 2 → GellMann.Index N) :
     (Tensor.basis _).repr (adjUnitTensor N) (adjPairIdx.symm n)
       = if n 0 = n 1 then 1 / 2 else 0 := by
   refine (unitTensor_basis_repr (S := suTensor N) .adj (adjPairIdx.symm n)).trans ?_
-  change (Module.Basis.tensorProduct GellMann.basis GellMann.basis).repr
+  change (Module.Basis.tensorProduct (adjBasis N) (adjBasis N)).repr
     ((1 : ℂ) • adjUnitVal N) (n 0, n 1) = _
   simp only [one_smul, adjUnitVal, map_sum, Module.Basis.tensorProduct_repr_tmul_apply,
-    Finsupp.coe_finsetSum, Finset.sum_apply, Module.Basis.repr_self, GellMann.basis_repr_apply]
+    Finsupp.coe_finsetSum, Finset.sum_apply, Module.Basis.repr_self]
   rw [Finset.sum_eq_single (n 0) (fun x _ hx => by simp [hx]) (by simp),
     Finsupp.single_eq_same, smul_eq_mul, mul_one]
   have h := LinearMap.BilinForm.apply_dualBasis_right (traceForm_nondegenerate N)
-    (traceForm_isSymm N) GellMann.basis (n 1) (n 0)
-  rw [traceForm_apply, GellMann.basis_apply_val] at h
-  rw [h]
+    (traceForm_isSymm N) (adjBasis N) (n 1) (n 0)
+  rw [traceForm_apply, adjMat_adjBasis] at h
+  rw [adjBasis_repr_apply, h]
   by_cases h01 : n 0 = n 1
   · simp [h01]
   · simp [h01, Ne.symm h01]
-
-/-- The matrix of the adjoint action of `g⁻¹` times that of `g` is the identity. -/
-lemma adjMatrix_inv_mul (g : SU N) : adjMatrix g⁻¹ * adjMatrix g = 1 := by
-  rw [adjMatrix, adjMatrix, ← LinearMap.toMatrix_mul, ← map_mul, inv_mul_cancel, map_one,
-    LinearMap.toMatrix_one]
 
 /-- An invariant tensor with two adjoint indices is a multiple of the unit tensor of the adjoint
   color. Its matrix of components commutes with the matrices of the adjoint action, so it is the
@@ -192,16 +165,16 @@ lemma exists_eq_smul_adjUnitTensor_of_invariant (t : SuT[N, .adj, .adj])
   have hcomm : ∀ g : SU N, C * adjMatrix g = adjMatrix g * C := fun g => by
     conv_lhs => rw [← hconj g, ← adjMatrix_inv]
     rw [Matrix.mul_assoc, adjMatrix_inv_mul, Matrix.mul_one]
-  set L := Matrix.toLin GellMann.basis GellMann.basis C
+  set L := Matrix.toLin (adjBasis N) (adjBasis N) C
   obtain ⟨μ, hμ⟩ := eq_smul_id_of_commute_adjRep (L := L) fun g A => by
     rw [← LinearMap.comp_apply, ← LinearMap.comp_apply (adjRep N g)]
     congr 1
-    apply (LinearMap.toMatrix GellMann.basis GellMann.basis).injective
-    rw [LinearMap.toMatrix_comp _ GellMann.basis, LinearMap.toMatrix_comp _ GellMann.basis,
+    apply (LinearMap.toMatrix (adjBasis N) (adjBasis N)).injective
+    rw [LinearMap.toMatrix_comp _ (adjBasis N), LinearMap.toMatrix_comp _ (adjBasis N),
       LinearMap.toMatrix_toLin]
     exact hcomm g
   have hC : C = μ • 1 := by
-    have hLC : LinearMap.toMatrix GellMann.basis GellMann.basis L = C :=
+    have hLC : LinearMap.toMatrix (adjBasis N) (adjBasis N) L = C :=
       LinearMap.toMatrix_toLin _ _ C
     rw [← hLC, hμ, map_smul, LinearMap.toMatrix_id]
   refine ⟨2 * μ, (Tensor.basis _).repr.injective (Finsupp.ext fun φ => ?_)⟩

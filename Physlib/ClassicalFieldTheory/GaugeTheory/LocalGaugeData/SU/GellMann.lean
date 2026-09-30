@@ -5,9 +5,8 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Mathlib.LinearAlgebra.Matrix.Trace
-public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.SU.Algebra
 /-!
 # The generalized Gell-Mann matrices
 
@@ -24,7 +23,9 @@ the Gell-Mann matrices (`N = 3`). There are `N² - 1` of them, of three kinds:
 They are hermitian and traceless, and orthogonal under the trace form, `tr (λ_a λ_b) = 2 δ_ab`.
 Orthogonality makes them linearly independent, and there are as many as the dimension of the
 traceless matrices, so they form a basis, `GellMann.basis`, whose coordinates are read off by the
-trace form, `GellMann.basis_repr_apply`.
+trace form, `GellMann.basis_repr_apply`. Being hermitian they lie in the real Lie algebra `su(N)`
+of traceless hermitian matrices, and there they form a real basis, `GellMann.realBasis`: the
+coordinates `tr (λ_a H) / 2` of a traceless hermitian matrix `H` are real (E).
 
 ## ii. Key results
 
@@ -32,6 +33,7 @@ trace form, `GellMann.basis_repr_apply`.
 - `GellMann.matrix` : the generalized Gell-Mann matrices.
 - `GellMann.trace_matrix_mul_matrix` : `tr (λ_a λ_b) = 2 δ_ab`.
 - `GellMann.basis` : the basis of the traceless matrices they form.
+- `GellMann.realBasis` : the basis of the real Lie algebra `su(N)` they form.
 
 ## iii. Table of contents
 
@@ -39,6 +41,7 @@ trace form, `GellMann.basis_repr_apply`.
 - B. The diagonal profiles
 - C. Orthogonality
 - D. The basis
+- E. The real basis of `su(N)`
 
 -/
 
@@ -422,5 +425,57 @@ lemma basis_repr_apply (x : ↥(LinearMap.ker (Matrix.traceLinearMap (Fin N) ℂ
     Matrix.mul_smul, trace_sum, trace_smul, trace_matrix_mul_matrix, smul_eq_mul, mul_ite,
     mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
   ring
+
+/-!
+
+## E. The real basis of `su(N)`
+
+-/
+
+/-- The generalized Gell-Mann matrices as elements of the real Lie algebra `su(N)`. -/
+noncomputable def hermitian (a : Index N) : SUAlgebraOver ℂ N :=
+  SUAlgebraOver.ofMatrix (matrix a) (conjTranspose_matrix a) (trace_matrix a)
+
+/-- The generalized Gell-Mann matrices are linearly independent over the reals. -/
+lemma linearIndependent_hermitian : LinearIndependent ℝ (hermitian (N := N)) := by
+  rw [Fintype.linearIndependent_iff]
+  intro g hg a
+  have h := congrArg (fun x : SUAlgebraOver ℂ N => (matrix a * x.1).trace) hg
+  simp only [Submodule.coe_sum, Submodule.coe_smul, hermitian, SUAlgebraOver.ofMatrix_val,
+    Matrix.mul_sum, Matrix.mul_smul, trace_sum, trace_smul, trace_matrix_mul_matrix, smul_ite,
+    smul_zero, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte, ZeroMemClass.coe_zero,
+    Matrix.mul_zero, trace_zero] at h
+  simpa [Complex.real_smul] using h
+
+/-- The trace pairing of two hermitian matrices is real. -/
+lemma trace_mul_ofReal_re {A H : Matrix (Fin N) (Fin N) ℂ} (hA : Aᴴ = A) (hH : Hᴴ = H) :
+    (((A * H).trace.re : ℝ) : ℂ) = (A * H).trace := by
+  refine Complex.conj_eq_iff_re.1 ?_
+  change star (A * H).trace = _
+  rw [← trace_conjTranspose, conjTranspose_mul, hA, hH, trace_mul_comm]
+
+/-- A traceless hermitian matrix is the real combination `∑ (tr (λ_a H) / 2) λ_a` of the
+  generalized Gell-Mann matrices. -/
+lemma eq_sum_re_trace_smul_hermitian (H : SUAlgebraOver ℂ N) :
+    ∑ a, ((matrix a * H.1).trace.re / 2) • hermitian a = H := by
+  refine SUAlgebraOver.ext ?_
+  have hH : H.1 ∈ LinearMap.ker (Matrix.traceLinearMap (Fin N) ℂ ℂ) := H.trace_val
+  have h := congrArg Subtype.val (basis.sum_repr ⟨H.1, hH⟩)
+  simp only [Submodule.coe_sum, Submodule.coe_smul, basis_apply_val, basis_repr_apply] at h
+  simp only [Submodule.coe_sum, Submodule.coe_smul, hermitian, SUAlgebraOver.ofMatrix_val]
+  conv_rhs => rw [← h]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [← Complex.coe_smul, Complex.ofReal_div, trace_mul_ofReal_re (conjTranspose_matrix a)
+    H.star_val]
+  rfl
+
+/-- **The generalized Gell-Mann basis** of the real Lie algebra `su(N)`. -/
+noncomputable def realBasis : Basis (Index N) ℝ (SUAlgebraOver ℂ N) :=
+  Basis.mk linearIndependent_hermitian fun H _ =>
+    (Submodule.mem_span_range_iff_exists_fun ℝ).2 ⟨_, eq_sum_re_trace_smul_hermitian H⟩
+
+@[simp]
+lemma realBasis_apply_val (a : Index N) : (realBasis a).1 = matrix a := by
+  simp [realBasis, hermitian]
 
 end GellMann
