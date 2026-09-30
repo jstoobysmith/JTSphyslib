@@ -7,8 +7,8 @@ Authors: Joseph Tooby-Smith
 
 # Testing the auxiliary scripts
 
-This file runs and checks the auxiliary scripts which are run occasionally (e.g. on a version
-bump), but are not part of the usual linters:
+This file runs and checks the auxiliary scripts, which generate the website data and are otherwise
+only run occasionally (e.g. on a version bump):
 
 - `lake exe make_tag`
 - `lake exe TODO_to_yml mkFile`
