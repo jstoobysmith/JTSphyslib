@@ -212,7 +212,7 @@ lemma quadRepPolar_apply (a b x : E) :
 lemma quadRepPolar_comm (a b : E) : quadRepPolar a b = quadRepPolar b a := by
   ext x
   rw [quadRepPolar_apply, quadRepPolar_apply, mul_comm b a]
-  abel
+  abel_nf
 
 /-- The polarization is additive in its first outer variable. -/
 lemma quadRepPolar_add_left (a b c : E) :

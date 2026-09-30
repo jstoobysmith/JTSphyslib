@@ -101,11 +101,11 @@ lemma mul_comm (hB : B.IsSymm) (z w : SpinFactor R V B) : z * w = w * z := by
 
 instance : IsScalarTower R (SpinFactor R V B) (SpinFactor R V B) where
   smul_assoc r z w := by
-    ext <;> simp [smul_add, smul_smul, smul_eq_mul] <;> ring
+    ext <;> simp [smul_add, smul_smul, smul_eq_mul] <;> ring_nf
 
 instance : SMulCommClass R (SpinFactor R V B) (SpinFactor R V B) where
   smul_comm r z w := by
-    ext <;> simp [smul_add, smul_smul, smul_eq_mul] <;> ring
+    ext <;> simp [smul_add, smul_smul, smul_eq_mul] <;> ring_nf
 
 /-- A symmetric form gives the commutative Jordan algebra structure on the spin factor. -/
 @[instance_reducible]

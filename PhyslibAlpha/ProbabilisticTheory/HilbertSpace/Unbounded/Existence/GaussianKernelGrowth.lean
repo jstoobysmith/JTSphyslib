@@ -198,7 +198,7 @@ lemma hermite_gaussian_sq_integral (n : ℕ) :
       have hb : Real.pi / (1 / 2 : ℝ) = 2 * Real.pi := by ring
       rw [hb] at h
       convert h using 2
-      ring
+      ring_nf
   | succ n ih =>
       rw [hermite_gaussian_sq_integral_succ n, ih]
       push_cast [Nat.factorial_succ]
