@@ -67,7 +67,16 @@ jobs:
         with:
           repository: ${{ env.REPOSITORY }}
           fetch-depth: 0
-          ref: ${{ env.FROM_REF != '' && env.FROM_REF || env.TO_REF }}
+
+      # `actions/checkout` rejects abbreviated SHAs as `ref`; the full history is fetched, so
+      # resolve the ref locally (a branch name as `origin/<ref>`, anything else as given).
+      - name: Check out ${{ env.FROM_REF != '' && env.FROM_REF || env.TO_REF }}
+        run: |
+          $ref = "${{ env.FROM_REF != '' && env.FROM_REF || env.TO_REF }}"
+          git rev-parse --verify --quiet "origin/$ref^{commit}" | Out-Null
+          if ($LASTEXITCODE -eq 0) { $ref = "origin/$ref" }
+          git checkout --force --detach $ref
+          git log -1 --oneline; Get-Content lean-toolchain
 
       - name: Install elan
         run: |
@@ -104,8 +113,10 @@ jobs:
       - name: Move to ${{ env.TO_REF }} (keeping .lake)
         if: ${{ env.FROM_REF != '' }}
         run: |
-          git fetch origin "${{ env.TO_REF }}"
-          git checkout --force FETCH_HEAD
+          $ref = "${{ env.TO_REF }}"
+          git rev-parse --verify --quiet "origin/$ref^{commit}" | Out-Null
+          if ($LASTEXITCODE -eq 0) { $ref = "origin/$ref" }
+          git checkout --force --detach $ref
           git log -1 --oneline; Get-Content lean-toolchain
 
       - name: New state -- the thing under test
