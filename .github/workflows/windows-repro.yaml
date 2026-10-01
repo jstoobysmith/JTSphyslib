@@ -123,8 +123,18 @@ jobs:
         id: test
         run: |
           $ErrorActionPreference = 'Continue'
-          & { ${{ env.STEPS_NEW }} } *>&1 | Tee-Object -FilePath repro.log
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          # Run each command separately so a failure early on (e.g. `get_cache` not building)
+          # is not masked by a later command succeeding.
+          $failed = @()
+          . {
+            foreach ($cmd in $env:STEPS_NEW -split ';') {
+              $cmd = $cmd.Trim(); if (-not $cmd) { continue }
+              "> $cmd"
+              Invoke-Expression $cmd
+              if ($LASTEXITCODE) { $failed += "$cmd (exit $LASTEXITCODE)" }
+            }
+          } *>&1 | Tee-Object -FilePath repro.log
+          if ($failed) { "FAILED:"; $failed; exit 1 }
 
       - name: Diagnostics
         if: always()
