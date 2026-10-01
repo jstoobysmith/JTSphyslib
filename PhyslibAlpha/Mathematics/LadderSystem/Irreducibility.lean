@@ -10,6 +10,10 @@ public import PhyslibAlpha.Mathematics.LadderSystem.OccupationBasis
 
 # Irreducibility of the excitation-number sector
 
+## 0. One line summary
+
+The excitation-number sector `vacuumSpan L Ω n` of a ladder system is `gl(d)`-irreducible.
+
 ## i. Overview
 
 `LadderSystem.vacuumSpan L Ω n` is `gl(d)`-irreducible: the only submodules of `vacuumSpan L Ω n`

@@ -11,6 +11,10 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation.Regularity
 /-!
 # First variation criteria
 
+## 0. One line summary
+
+Assembles the first-variation formula into Euler-Lagrange criteria for critical fields.
+
 ## i. Overview
 
 This module assembles the analytic ingredients of the local first-variation proof into the
@@ -25,7 +29,7 @@ facade.
 ## iii. Table of contents
 
 - A. First-variation assembly
-- B. Final Euler-Lagrange criterion
+- B. Intermediate Euler-Lagrange criteria
 
 ## iv. References
 

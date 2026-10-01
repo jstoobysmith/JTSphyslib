@@ -12,6 +12,10 @@ public import PhyslibAlpha.Mathematics.Order.PositiveDual.UpperEnvelope
 /-!
 # Refinement of ensembles
 
+## 0. One line summary
+
+Refinement of ensembles, its consequences for pure states, and refinement on a simplex.
+
 ## i. Overview
 
 An ensemble is a recipe for preparing a state: choose one of finitely many states with given
@@ -46,6 +50,10 @@ and down and of spin left and right, and these two ensembles have no common refi
 - B. Refinement separates pure states
 - C. Upper envelopes on refining ensembles
 - D. Ensembles refine on a simplex
+
+## iv. References
+
+* None.
 
 -/
 

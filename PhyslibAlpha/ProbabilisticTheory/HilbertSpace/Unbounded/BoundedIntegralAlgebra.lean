@@ -12,6 +12,10 @@ public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 # The bounded functional calculus of a spectral measure
 
+## 0. One line summary
+
+The bounded integral against a spectral measure is a unital ⋆-homomorphism.
+
 ## i. Overview
 
 The integral of a bounded measurable function against a weak spectral measure does not depend on the
@@ -31,6 +35,10 @@ bounded integrals.
 - A. Independence from the approximating sequence
 - B. The algebra of the integral
 - C. Extensionality by the integral
+
+## iv. References
+
+* None.
 
 -/
 

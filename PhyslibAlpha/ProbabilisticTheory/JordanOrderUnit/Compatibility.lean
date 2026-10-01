@@ -11,6 +11,10 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Operator
 
 # Compatible observables
 
+## 0. One line summary
+
+Jordan compatibility of observables: their Jordan multiplication operators commute.
+
 ## i. Overview
 
 Two observables of a Jordan algebra are compatible when their multiplication operators commute, `L_a
@@ -22,10 +26,16 @@ observables of a C⋆-algebra are compatible.
 - `JordanAlgebra.IsJordanCompatible` : compatible observables.
 - `JordanAlgebra.isJordanCompatible_comm` : compatibility is symmetric.
 - `JordanAlgebra.isJordanCompatible_one_left` : the unit is compatible with everything.
+- `JordanAlgebra.isJordanCompatible_self` : every observable is compatible with itself.
+- `JordanAlgebra.isJordanCompatible_one_right` : everything is compatible with the unit.
 
 ## iii. Table of contents
 
 - A. The compatibility predicate
+
+## iv. References
+
+* None.
 
 -/
 

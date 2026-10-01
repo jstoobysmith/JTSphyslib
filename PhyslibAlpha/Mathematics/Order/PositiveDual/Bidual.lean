@@ -14,6 +14,10 @@ public import Mathlib.Algebra.Module.Pi
 /-!
 # The bidual
 
+## 0. One line summary
+
+The bidual of an ordered vector space via positive functionals, and its monotone completeness.
+
 ## i. Overview
 
 An element of an ordered real vector space `E` assigns to every positive functional its value,
@@ -39,6 +43,10 @@ bound, their pointwise supremum.
 - B. Order
 - C. Elements and positive functionals
 - D. Monotone completeness
+
+## iv. References
+
+* None.
 
 -/
 

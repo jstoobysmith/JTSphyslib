@@ -12,6 +12,10 @@ public import PhyslibAlpha.ProbabilisticTheory.WStarAlgebra.BoundedSesquilinearF
 
 # The trace pairing is surjective
 
+## 0. One line summary
+
+Every continuous functional on the trace-class operators is a trace pairing `Tr (A ·)`.
+
 ## i. Overview
 
 A continuous functional on the trace-class operators defines a bounded sesquilinear form by
@@ -30,6 +34,10 @@ continuous functional is a trace pairing.
 ## iii. Table of contents
 
 - A. Hilbert–Schmidt finite truncations
+
+## iv. References
+
+* None.
 
 -/
 

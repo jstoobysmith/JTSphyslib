@@ -15,6 +15,10 @@ public import Mathlib.MeasureTheory.VectorMeasure.WithDensityVec
 
 # The spectral measure of the Cayley transform
 
+## 0. One line summary
+
+The spectral measure of the Cayley transform, pulled back to a spectral measure on ℝ.
+
 ## i. Overview
 
 The Cayley transform `U` of a self-adjoint operator `T` is a unitary. The continuous functional
@@ -33,6 +37,10 @@ measure on `ℝ`, the candidate spectral measure of `T`.
 
 - A. Spectral data from the functional calculus
   - A.1. A bounded extension of the Cayley difference multiplier
+
+## iv. References
+
+* None.
 
 -/
 

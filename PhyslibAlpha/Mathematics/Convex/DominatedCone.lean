@@ -11,6 +11,10 @@ public import Mathlib.Basic.Real.Pointwise
 /-!
 # Separation from dominated cones
 
+## 0. One line summary
+
+Hahn–Banach separation of vectors from a convex cone dominated by a vector.
+
 ## i. Overview
 
 A convex cone `C` in a real vector space is dominated by `u ∈ C` when every vector plus some
@@ -30,6 +34,10 @@ No topology is involved.
 
 - A. Dominated cones and their gauge
 - B. Separation
+
+## iv. References
+
+* None.
 
 -/
 

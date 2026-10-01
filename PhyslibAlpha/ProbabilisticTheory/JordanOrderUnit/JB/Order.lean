@@ -11,6 +11,10 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.GeneratedByOne
 
 # The positive cone of a JB-algebra
 
+## 0. One line summary
+
+In an ordered JB-algebra the nonnegative observables are exactly the squares.
+
 ## i. Overview
 
 In an ordered JB-algebra the nonnegative observables are exactly the squares: every nonnegative
@@ -19,6 +23,14 @@ observable is a square in its closed one-generator subalgebra.
 ## ii. Key results
 
 - `JBAlgebra.nonneg_iff_exists_mul_self` : the nonnegative observables are the squares.
+
+## iii. Table of contents
+
+- A. Nonnegative observables are squares
+
+## iv. References
+
+* None.
 
 -/
 
@@ -29,6 +41,8 @@ namespace ProbabilisticTheory
 namespace JBAlgebra
 
 variable {E : Type*} [IsJBOrderUnit E] [Nontrivial E]
+
+/-! ## A. Nonnegative observables are squares -/
 
 /-- **The nonnegative observables of an ordered JB-algebra are the squares.** -/
 lemma nonneg_iff_exists_mul_self (a : E) :

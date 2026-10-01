@@ -14,6 +14,10 @@ public import Mathlib.Analysis.InnerProductSpace.l2Space
 
 # Criteria for essential self-adjointness
 
+## 0. One line summary
+
+Criteria for essential self-adjointness: trivial deficiency spaces, eigenbases.
+
 ## i. Overview
 
 A densely defined symmetric operator is essentially self-adjoint when both deficiency spaces are
@@ -31,6 +35,11 @@ eigenvectors with real eigenvalues is essentially self-adjoint.
 
 - A. Von Neumann's defect criterion
 - B. Essential self-adjointness from a Hilbert basis of eigenvectors
+
+## iv. References
+
+* Reed–Simon, *Methods of Modern Mathematical Physics I: Functional Analysis*,
+  Theorem VIII.3.
 
 -/
 

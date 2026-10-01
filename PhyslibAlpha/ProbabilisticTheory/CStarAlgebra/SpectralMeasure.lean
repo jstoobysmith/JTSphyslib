@@ -17,6 +17,10 @@ public import Mathlib.Topology.Algebra.Indicator
 
 # The distribution of an observable
 
+## 0. One line summary
+
+The outcome distribution of an observable in a state, and the measurement of an isolated eigenvalue.
+
 ## i. Overview
 
 A state `ω` and an observable `a` determine a probability measure `μ_{ω,a}` on `ℝ`, the distribution
@@ -36,6 +40,10 @@ take the value `x`?", whose probability of `true` is `μ_{ω,a}({x})`.
 ## iii. Table of contents
 
 - A. Measuring an isolated eigenvalue
+
+## iv. References
+
+* None.
 
 -/
 

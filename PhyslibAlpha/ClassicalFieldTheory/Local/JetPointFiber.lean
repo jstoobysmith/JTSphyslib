@@ -9,6 +9,10 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.JetPoint
 /-!
 # Fiber directions on jet points
 
+## 0. One line summary
+
+Affine fiber-direction structure on coordinate-level jet points.
+
 ## i. Overview
 
 This module adds the affine fiber-direction structure on coordinate-level jet points.

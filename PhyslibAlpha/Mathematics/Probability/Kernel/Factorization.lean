@@ -11,6 +11,10 @@ public import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
 /-!
 # Factorization of Markov kernels
 
+## 0. One line summary
+
+Factoring kernels through Markov kernels, almost everywhere variants, and common refinements.
+
 ## i. Overview
 
 A kernel `K : α → β` factors through a kernel `L : α → γ` when `K = κ ∘ₖ L` for some Markov kernel
@@ -37,6 +41,10 @@ factor through a third one.
 - D. Mutual factorization almost everywhere
 - E. Kernels equal almost everywhere
 - F. Common refinements
+
+## iv. References
+
+* None.
 
 -/
 

@@ -9,6 +9,10 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.TotalDivergence
 /-!
 # Lagrangian equivalence up to total divergences
 
+## 0. One line summary
+
+Lagrangians differing by a total divergence have the same Euler-Lagrange equations.
+
 ## i. Overview
 
 This module adds the local coordinate API for lagrangians that differ by a total divergence.

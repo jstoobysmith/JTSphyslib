@@ -12,6 +12,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BoundedIntegral
 
 # Channels and integrals
 
+## 0. One line summary
+
+Normal channels commute with integration against effect-valued measures.
+
 ## i. Overview
 
 A normal channel maps an effect-valued measure to an effect-valued measure, and it commutes with
@@ -22,6 +26,15 @@ integration of bounded functions.
 - `EffectValuedMeasure.map_simpleIntegral` : for simple functions.
 - `EffectValuedMeasure.map_integral` : for bounded measurable functions.
 
+## iii. Table of contents
+
+- A. Simple integrals
+- B. Bounded integrals
+
+## iv. References
+
+* None.
+
 -/
 
 @[expose] public section
@@ -29,6 +42,8 @@ integration of bounded functions.
 namespace ProbabilisticTheory
 
 namespace EffectValuedMeasure
+
+/-! ## A. Simple integrals -/
 
 section SimpleNaturality
 
@@ -41,6 +56,8 @@ lemma map_simpleIntegral (μ : EffectValuedMeasure Ω E) (φ : Channel E F) (hφ
   simp only [simpleIntegral, map_sum, map_smul, coe_map_apply]
 
 end SimpleNaturality
+
+/-! ## B. Bounded integrals -/
 
 section BoundedNaturality
 

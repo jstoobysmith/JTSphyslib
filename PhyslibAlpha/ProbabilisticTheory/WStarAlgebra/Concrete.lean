@@ -12,6 +12,10 @@ public import PhyslibAlpha.ProbabilisticTheory.WStarAlgebra.RankOnePairing
 
 # The bounded operators as a W⋆-algebra
 
+## 0. One line summary
+
+The bounded operators on a Hilbert space form a W⋆-algebra with the trace class as predual.
+
 ## i. Overview
 
 The trace pairing `A ↦ (ρ ↦ Tr (A ρ))` is an isometric isomorphism from the bounded operators on a
@@ -27,6 +31,10 @@ with predual the trace-class operators.
 ## iii. Table of contents
 
 - A. The `WStarAlgebraStructure (H →L[ℂ] H)` instance
+
+## iv. References
+
+* None.
 
 -/
 

@@ -14,6 +14,10 @@ public import Mathlib.Topology.ContinuousMap.Ordered
 /-!
 # Positive functionals are integrals
 
+## 0. One line summary
+
+A positive functional given on part of `C(X, ℝ)` is integration against a probability measure.
+
 ## i. Overview
 
 On a compact space `X`, a positive linear functional on continuous functions is integration against
@@ -36,6 +40,10 @@ first extends `φ` positively to all continuous functions.
 
 - A. Scaling continuous functions preserves their order
 - B. Positive functionals are integrals
+
+## iv. References
+
+* None.
 
 -/
 

@@ -10,6 +10,10 @@ public import Mathlib.Analysis.Convex.Cone.Extension
 /-!
 # Linear minorants of sublinear functionals
 
+## 0. One line summary
+
+A sublinear functional has a linear minorant attaining it at any given point (Hahn–Banach).
+
 ## i. Overview
 
 A sublinear functional is the largest of the linear functionals below it. At every point the
@@ -23,6 +27,10 @@ Hahn–Banach theorem gives a linear functional below it that agrees with it the
 ## iii. Table of contents
 
 - A. Linear minorants
+
+## iv. References
+
+* None.
 
 -/
 

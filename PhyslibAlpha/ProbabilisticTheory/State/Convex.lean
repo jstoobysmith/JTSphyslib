@@ -13,6 +13,10 @@ public import Mathlib.Topology.UnitInterval
 /-!
 # Convex state spaces
 
+## 0. One line summary
+
+Mixing states, convexity of the state space, and pure and mixed states.
+
 ## i. Overview
 
 States mix: a probabilistic combination of two states is again a state, and the state space
@@ -32,6 +36,10 @@ two others, an extreme point of that convex set. A mixed state is one that is a 
 - A. Mixing states
 - B. The state space
 - C. Pure and mixed states
+
+## iv. References
+
+* None.
 
 -/
 

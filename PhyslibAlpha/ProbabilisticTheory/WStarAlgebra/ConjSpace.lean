@@ -11,6 +11,10 @@ public import Mathlib.Analysis.Complex.Basic
 
 # The complex conjugate of a normed space
 
+## 0. One line summary
+
+The complex conjugate `ConjSpace X` of a complex normed space, with twisted scalar action.
+
 ## i. Overview
 
 `ConjSpace X` is `X` with scalar multiplication twisted by complex conjugation: `c • x` in
@@ -23,6 +27,16 @@ public import Mathlib.Analysis.Complex.Basic
 - `ConjSpace.toConj`, `ConjSpace.ofConj` : the identity maps between `X` and `ConjSpace X`.
 - `ConjSpace.instNormedSpace` : the conjugate normed space structure.
 
+## iii. Table of contents
+
+- A. The conjugate space and the identity maps
+- B. The additive and normed group structure
+- C. The conjugate scalar action
+
+## iv. References
+
+* None.
+
 -/
 
 @[expose] public section
@@ -32,6 +46,12 @@ noncomputable section
 namespace ProbabilisticTheory
 
 open scoped ComplexConjugate
+
+/-!
+
+## A. The conjugate space and the identity maps
+
+-/
 
 /-- The complex conjugate of `X`: the same type, with `c • x = conj c • x`. -/
 def ConjSpace (X : Type*) : Type _ := X
@@ -51,6 +71,12 @@ def ofConj (x : ConjSpace X) : X := x
 @[simp] lemma ofConj_toConj (x : X) : ofConj (toConj x) = x := rfl
 @[simp] lemma toConj_ofConj (x : ConjSpace X) : toConj (ofConj x) = x := rfl
 
+/-!
+
+## B. The additive and normed group structure
+
+-/
+
 instance instAddCommGroup [AddCommGroup X] : AddCommGroup (ConjSpace X) := ‹AddCommGroup X›
 
 @[simp] lemma ofConj_add [AddCommGroup X] (x y : ConjSpace X) :
@@ -69,6 +95,12 @@ instance instNormedAddCommGroup [NormedAddCommGroup X] :
 @[simp] lemma norm_ofConj [NormedAddCommGroup X] (x : ConjSpace X) : ‖ofConj x‖ = ‖x‖ := rfl
 
 @[simp] lemma norm_toConj [NormedAddCommGroup X] (x : X) : ‖toConj x‖ = ‖x‖ := rfl
+
+/-!
+
+## C. The conjugate scalar action
+
+-/
 
 variable [NormedAddCommGroup X] [NormedSpace ℂ X]
 

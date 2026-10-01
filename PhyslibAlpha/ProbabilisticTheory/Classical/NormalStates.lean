@@ -13,6 +13,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BornRule
 /-!
 # States of a classical system
 
+## 0. One line summary
+
+The normal states of a classical system are exactly the probability measures on its outcomes.
+
 ## i. Overview
 
 Each outcome `x` gives the deterministic state `f ↦ f x`, which predicts every observable with
@@ -38,6 +42,10 @@ probability measures on its outcomes.
 - C. From measures to states
 - D. From states to measures
 - E. The correspondence
+
+## iv. References
+
+* None.
 
 -/
 

@@ -9,6 +9,10 @@ public import Physlib.ClassicalFieldTheory.Local.Variation
 /-!
 # Alpha extensions for admissible local variations
 
+## 0. One line summary
+
+Euclidean components of admissible variations are test functions.
+
 ## i. Overview
 
 This module adds the Euclidean component API needed by the coordinate-readout CFT stack in
@@ -19,7 +23,16 @@ only adds helper lemmas used by the Alpha development.
 
 ## ii. Key results
 
-- `ClassicalFieldTheory.Local.AdmissibleVariation.coord_euclidean`
+- `ClassicalFieldTheory.Local.AdmissibleVariation.coord_euclidean` : a Euclidean component of an
+  admissible variation is again a test function.
+
+## iii. Table of contents
+
+- A. Euclidean components of admissible variations
+
+## iv. References
+
+* None.
 
 -/
 
@@ -29,6 +42,12 @@ open Physlib
 
 namespace ClassicalFieldTheory
 namespace Local
+
+/-!
+
+## A. Euclidean components of admissible variations
+
+-/
 
 namespace AdmissibleVariation
 

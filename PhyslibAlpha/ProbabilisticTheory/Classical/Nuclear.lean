@@ -13,6 +13,10 @@ public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 /-!
 # Classical systems are nuclear
 
+## 0. One line summary
+
+Namioka–Phelps: a system is classical exactly when it is nuclear.
+
 ## i. Overview
 
 A classical system composes uniquely with every other system: every composite observable in the

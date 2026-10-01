@@ -12,6 +12,10 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.Order
 
 # Special JB-algebras
 
+## 0. One line summary
+
+Special JB-algebras: those embedding as closed Jordan subalgebras of a C⋆-algebra.
+
 ## i. Overview
 
 A JB-algebra is special when it embeds as a closed Jordan subalgebra of the self-adjoint part of a
@@ -23,6 +27,18 @@ of a C⋆-algebra is special.
 - `JBAlgebra.IsSpecialWitness` : an embedding into the self-adjoint part of a C⋆-algebra.
 - `JBAlgebra.IsSpecial` : a special JB-algebra.
 - `JB.isSpecial_selfAdjoint` : the self-adjoint part of a C⋆-algebra is special.
+- `JBAlgebra.IsSpecialWitness.map_nonneg`, `JBAlgebra.IsSpecialWitness.monotone` : such an
+  embedding preserves positivity and order.
+
+## iii. Table of contents
+
+- A. Special JB-algebras
+- B. Order properties of special embeddings
+- C. The self-adjoint part of a C⋆-algebra
+
+## iv. References
+
+* None.
 
 -/
 
@@ -31,6 +47,12 @@ of a C⋆-algebra is special.
 namespace ProbabilisticTheory
 
 open scoped JB selfAdjoint
+
+/-!
+
+## A. Special JB-algebras
+
+-/
 
 /-- A witness that `E` is special: an isometric unital Jordan embedding into the self-adjoint part
 of a Cstar algebra whose range is norm closed. -/
@@ -51,6 +73,12 @@ def JBAlgebra.IsSpecial (E : Type u) [NormedJordanAlgebra E]
     [JBAlgebra E] : Prop :=
   ∃ (A : Type u) (_ : CStarAlgebra A) (_ : PartialOrder A) (_ : StarOrderedRing A),
     Nonempty (JBAlgebra.IsSpecialWitness E A)
+
+/-!
+
+## B. Order properties of special embeddings
+
+-/
 
 namespace JBAlgebra.IsSpecialWitness
 
@@ -75,6 +103,12 @@ lemma monotone (j : JBAlgebra.IsSpecialWitness E A) : Monotone j.toLinearIsometr
   exact j.map_nonneg (sub_nonneg.mpr hxy)
 
 end JBAlgebra.IsSpecialWitness
+
+/-!
+
+## C. The self-adjoint part of a C⋆-algebra
+
+-/
 
 namespace JB
 

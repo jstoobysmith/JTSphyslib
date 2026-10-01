@@ -13,6 +13,10 @@ public import Mathlib.Tactic.LinearCombination
 
 # The fundamental formula
 
+## 0. One line summary
+
+The fundamental formula `U_{U_a b} = U_a U_b U_a`, proved from the Jordan identity alone.
+
 ## i. Overview
 
 The quadratic representation satisfies the fundamental formula `U_{U_a b} = U_a U_b U_a`. The proof
@@ -29,6 +33,10 @@ uses only the Jordan identity, through the inner derivations `[L_a, L_b]` and th
 - B. Polarizing the cubic commutation law: the triple commutator identity
 - C. Normalizing the multiplication operator of a quadratic image
 - D. The inner derivation and the Jordan-triple-system fundamental identity
+
+## iv. References
+
+* None.
 
 -/
 

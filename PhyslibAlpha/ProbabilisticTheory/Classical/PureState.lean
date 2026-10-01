@@ -15,6 +15,10 @@ public import Mathlib.Topology.ContinuousMap.Ordered
 /-!
 # Pure states
 
+## 0. One line summary
+
+Pure states, the functionals below them, and the space of pure states.
+
 ## i. Overview
 
 A pure state is a state of maximal knowledge. It cannot be prepared by mixing two different states.
@@ -44,6 +48,10 @@ every pure state is nonnegative.
 
 - A. Functionals below a pure state
 - B. The space of pure states
+
+## iv. References
+
+* None.
 
 -/
 

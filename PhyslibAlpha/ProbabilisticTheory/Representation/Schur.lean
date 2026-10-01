@@ -12,6 +12,10 @@ public import Mathlib.Algebra.DirectSum.Module
 
 # Schur's lemma for covariant channels
 
+## 0. One line summary
+
+Schur's lemma as a hypothesis: equivariant maps and covariant channels are scalar on blocks.
+
 ## i. Overview
 
 If the observables split into invariant blocks `E = ⨁ᵢ Wᵢ` on each of which every equivariant map
@@ -34,6 +38,10 @@ The Schur property of a block is therefore a hypothesis, `IsSchurBlock`.
 - A. The Schur hypothesis on a single block
 - B. The multiplicity-free classification theorem
 - C. Covariant channels
+
+## iv. References
+
+* None.
 
 -/
 

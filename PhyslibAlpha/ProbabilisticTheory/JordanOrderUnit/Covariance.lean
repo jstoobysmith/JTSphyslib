@@ -11,6 +11,10 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Observable
 
 # Covariance
 
+## 0. One line summary
+
+Covariance of observables in a Jordan order-unit space, and positivity of covariance matrices.
+
 ## i. Overview
 
 The Jordan product gives second moments `ω(a ∘ b)` of a state, and so the covariance `Cov_ω(a, b) =
@@ -30,6 +34,10 @@ is positive semidefinite, which gives a Cauchy–Schwarz inequality for covarian
 
 - A. Covariance
 - B. Positivity of the covariance matrix
+
+## iv. References
+
+* None.
 
 -/
 

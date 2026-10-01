@@ -12,6 +12,10 @@ public import Mathlib.Algebra.Order.BigOperators.Group.Finset
 /-!
 # Normal channels
 
+## 0. One line summary
+
+Normal positive maps and channels: those preserving suprema of increasing sequences.
+
 ## i. Overview
 
 A channel is normal when it preserves least upper bounds of increasing sequences. Every channel
@@ -27,6 +31,10 @@ preserves finite sums; a normal channel also preserves countable sums of positiv
 
 - A. Normal positive maps
 - B. Normal channels
+
+## iv. References
+
+* None.
 
 -/
 

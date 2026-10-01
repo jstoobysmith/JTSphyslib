@@ -11,6 +11,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.EffectValuedMeasure
 /-!
 # Pushing an effect-valued measure forward along a channel
 
+## 0. One line summary
+
+Pushing an effect-valued measure forward along a normal channel.
+
 ## i. Overview
 
 A channel sends effects to effects. Applying a normal channel `φ : Channel E F` to every effect of
@@ -24,6 +28,10 @@ an effect-valued measure `μ` on `E` therefore gives one, `μ.map φ`, on `F`, w
 
 - A. Channels send effects to effects
 - B. Pushing an effect-valued measure forward
+
+## iv. References
+
+* None.
 
 -/
 

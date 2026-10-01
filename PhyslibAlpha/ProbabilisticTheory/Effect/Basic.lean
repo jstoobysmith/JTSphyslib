@@ -11,6 +11,10 @@ public import Physlib.ProbabilisticTheory.OrderUnit.Cone
 /-!
 # Effects
 
+## 0. One line summary
+
+Effects: the order interval `[0, 1]` of an ordered space, modelling yes/no measurement outcomes.
+
 ## i. Overview
 
 An effect models a yes/no measurement outcome, ranging continuously between the impossible

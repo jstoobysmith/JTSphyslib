@@ -13,6 +13,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BoundedScalarization
 /-!
 # Projection resolutions in JBW-algebras
 
+## 0. One line summary
+
+Normal states turn projection resolutions into probability laws and separate them.
+
 ## i. Overview
 
 A projection resolution is defined at the Jordan order-unit level. In a JBW-algebra two further
@@ -32,6 +36,10 @@ separate projection resolutions, so a projection resolution is determined by its
 
 - A. Probability laws
 - B. Separation by normal states
+
+## iv. References
+
+* None.
 
 -/
 

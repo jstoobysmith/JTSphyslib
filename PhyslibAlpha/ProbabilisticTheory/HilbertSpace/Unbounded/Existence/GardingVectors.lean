@@ -15,6 +15,10 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 
 # Gårding vectors
 
+## 0. One line summary
+
+Gårding vectors: heat-kernel smoothings along a unitary group, dense in the domain.
+
 ## i. Overview
 
 Smoothing a vector `ψ` along the orbit of a unitary group against the heat kernel `gₑ(t) = (π
@@ -33,6 +37,10 @@ by smoothing against the derivative of the kernel.
 ## iii. Table of contents
 
 - A. The generator on Gårding vectors
+
+## iv. References
+
+* None.
 
 -/
 

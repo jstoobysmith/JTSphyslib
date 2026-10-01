@@ -13,6 +13,10 @@ public import Mathlib.Algebra.Star.Unitary
 
 # The spectral measure of a bounded normal operator
 
+## 0. One line summary
+
+The projection-valued spectral measure `E` of a bounded normal operator `U`, built from its CFC.
+
 ## i. Overview
 
 The sesquilinear form of the indicator of a Borel set `S` is represented by an operator `E(S)`.
@@ -23,7 +27,13 @@ the identity is `U`.
 ## ii. Key results
 
 - `cfcSpectralOperator` : the operator `E(S)`.
+- `cfcSpectralOperator_isSelfAdjoint` : each `E(S)` is self-adjoint.
+- `cfcSpectralOperator_isStarProjection` : each `E(S)` is an orthogonal projection.
+- `cfcSpectralVectorMeasure` : `E` as a vector measure in the weak operator topology.
 - `cfcSpectralMeasure` : the spectral measure of a bounded normal operator.
+- `cfcSpectralMeasure_reconstruction` : integrating a real continuous `f` against `E` gives `f(U)`.
+- `cfcSpectralMeasure_commute_of_commute_unitary` : `E` commutes with unitaries commuting with
+  `U` and `U⋆`.
 
 ## iii. Table of contents
 
@@ -32,6 +42,10 @@ the identity is `U`.
 - C. The spectral operators are projections
 - D. The spectral measure
 - E. Commutation with the commutant
+
+## iv. References
+
+* None.
 
 -/
 

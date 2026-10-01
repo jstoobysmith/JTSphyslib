@@ -12,6 +12,10 @@ public import Mathlib.Basic.Real.Pointwise
 /-!
 # Approximate interpolation
 
+## 0. One line summary
+
+Approximate interpolation between finite families when the positive functionals form a lattice.
+
 ## i. Overview
 
 Given finitely many lower elements `a i` below finitely many upper elements `b j` of an ordered
@@ -35,6 +39,10 @@ not positive.
 - A. Refinement tables
 - B. The interpolation gauge
 - C. Approximate interpolants
+
+## iv. References
+
+* None.
 
 -/
 

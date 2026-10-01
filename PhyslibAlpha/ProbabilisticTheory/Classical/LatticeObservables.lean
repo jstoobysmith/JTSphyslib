@@ -13,6 +13,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Classical.FiniteSystem
 /-!
 # Lattice-ordered observables
 
+## 0. One line summary
+
+When observables form a lattice, the state space is a Bauer simplex.
+
 ## i. Overview
 
 When observables form a lattice, a state is pure exactly when it gives the minimum

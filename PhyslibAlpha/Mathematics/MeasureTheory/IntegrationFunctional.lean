@@ -12,6 +12,10 @@ public import Mathlib.Topology.ContinuousMap.Compact
 /-!
 # Integration as a continuous functional
 
+## 0. One line summary
+
+Integration against a finite measure as a continuous linear functional on `C(X, ℝ)`.
+
 ## i. Overview
 
 On a compact space, integrating continuous functions against a finite measure is linear and
@@ -24,6 +28,10 @@ continuous in the supremum norm.
 ## iii. Table of contents
 
 - A. Integration as a continuous functional
+
+## iv. References
+
+* None.
 
 -/
 

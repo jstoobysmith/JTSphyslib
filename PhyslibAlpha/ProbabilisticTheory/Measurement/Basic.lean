@@ -11,6 +11,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.Pushforward
 /-!
 # Measurements
 
+## 0. One line summary
+
+Measurements as normal channels from the classical outcome system, and their Born laws.
+
 ## i. Overview
 
 A measurement with outcomes in `Ω` turns the system into a classical record: its outcome. So a
@@ -40,6 +44,10 @@ the Born law. Measuring the outcome of a classical system itself is the identity
 - A. Measurements
 - B. The Born law
 - C. Measuring after a channel
+
+## iv. References
+
+* None.
 
 -/
 

@@ -15,6 +15,10 @@ public import Mathlib.MeasureTheory.MeasurableSpace.Basic
 
 # Covariant measurements and channels
 
+## 0. One line summary
+
+Symmetries acting on effects, measurable actions on outcomes, covariant measures and channels.
+
 ## i. Overview
 
 A measurement is covariant under a symmetry group when transforming the outcome transforms the
@@ -31,6 +35,10 @@ bijections, and a channel is covariant when it intertwines two symmetry actions.
 ## iii. Table of contents
 
 - A. Covariant channels: the general intertwiner picture
+
+## iv. References
+
+* None.
 
 -/
 

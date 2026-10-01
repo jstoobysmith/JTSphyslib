@@ -12,6 +12,10 @@ public import Physlib.QuantumMechanics.Operators.SpectralTheory.Symmetric
 
 # Scaling self-adjoint operators
 
+## 0. One line summary
+
+Real scaling preserves self-adjointness and scales the essential spectrum.
+
 ## i. Overview
 
 For a self-adjoint operator `A` and a real `c ≠ 0`, `c • A` is self-adjoint and its essential

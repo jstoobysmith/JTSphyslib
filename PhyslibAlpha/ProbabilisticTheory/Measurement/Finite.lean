@@ -10,6 +10,10 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.Basic
 /-!
 # Measurements with finitely many outcomes
 
+## 0. One line summary
+
+Measurements with finitely many outcomes are the families of effects summing to `1`.
+
 ## i. Overview
 
 On a finite discrete outcome space, every observable of the outcome is a combination of the
@@ -34,6 +38,10 @@ system is Archimedean.
 - A. Observables of a finite classical system
 - B. Normality is automatic
 - C. Measurements from their outcome effects
+
+## iv. References
+
+* None.
 
 -/
 

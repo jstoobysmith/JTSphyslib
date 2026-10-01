@@ -15,6 +15,10 @@ public import Mathlib.Tactic.Ring
 /-!
 # Elementary real bounds
 
+## 0. One line summary
+
+Elementary real estimates: suprema of sums, bounds up to `1 / (n + 1)`, and weighted averages.
+
 ## i. Overview
 
 Three elementary estimates for real numbers: suprema of sums over a codirected family, inequalities
@@ -31,6 +35,10 @@ up to `1 / (n + 1)` for every `n`, and averages that put almost all weight on on
 
 - A. Suprema
 - B. Averages
+
+## iv. References
+
+* None.
 
 -/
 

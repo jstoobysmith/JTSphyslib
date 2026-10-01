@@ -10,6 +10,10 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 /-!
 # First variation density formulas
 
+## 0. One line summary
+
+Differentiation of the varied action density, pointwise and under the integral sign.
+
 ## i. Overview
 
 This module contains the pointwise and integral first-variation formulas before integration by

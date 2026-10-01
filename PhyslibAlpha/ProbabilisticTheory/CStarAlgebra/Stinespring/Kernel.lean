@@ -16,6 +16,10 @@ public import Mathlib.Analysis.CStarAlgebra.SpecialFunctions.PosPart
 
 # Completely positive maps as positive kernels
 
+## 0. One line summary
+
+Completely positive maps give positive operator-valued kernels; Stinespring witnesses.
+
 ## i. Overview
 
 A completely positive map `J` into the bounded operators on `H` is a positive operator-valued
@@ -35,6 +39,10 @@ operator `V : H → K` with `J a = V⋆ π(a) V`.
 - A. `blockMatrixMap`: the finite block-operator representation
 - B. The CP-map positivity kernel
 - C. Stinespring witnesses
+
+## iv. References
+
+* None.
 
 -/
 

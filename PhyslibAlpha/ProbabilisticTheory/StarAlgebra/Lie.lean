@@ -14,6 +14,10 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.Jordan
 
 # The Lie bracket of observables
 
+## 0. One line summary
+
+The Lie bracket -(i / 2)(a b - b a) makes the observables a real Lie algebra.
+
 ## i. Overview
 
 The commutator of two self-adjoint elements is skew-adjoint, so `⁅a, b⁆ = -(i / 2)(a b - b a)` is
@@ -35,6 +39,10 @@ i ⁅a, b⁆`, and it makes the observables a real Lie algebra. The bracket is a
 - C. Lie ring
 - D. Real Lie algebra
 - E. Elementary identities
+
+## iv. References
+
+* None.
 
 -/
 

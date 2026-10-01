@@ -16,6 +16,10 @@ public import Mathlib.Topology.UnitInterval
 /-!
 # Simplices
 
+## 0. One line summary
+
+Simplices as convex hulls of affinely independent points, and the standard simplex.
+
 ## i. Overview
 
 A simplex is the convex hull of finitely many affinely independent points, its extreme points. Every
@@ -39,6 +43,10 @@ points are the standard basis vectors. Being a simplex is invariant under affine
 - A. Simplices
 - B. The standard simplex
 - C. Affine equivalences
+
+## iv. References
+
+* None.
 
 -/
 

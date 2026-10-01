@@ -19,6 +19,10 @@ public import Mathlib.Analysis.Normed.Group.Uniform
 
 # Integrating bounded functions against an effect-valued measure
 
+## 0. One line summary
+
+The integral of bounded measurable functions against an effect-valued measure.
+
 ## i. Overview
 
 If the observables are complete for the order-unit norm, the integral of simple functions extends to
@@ -45,6 +49,10 @@ on simple functions.
 - B. Linear operations on simple values
 - C. Comparing the simple integrals of two approximations
 - D. The integral, via completeness
+
+## iv. References
+
+* None.
 
 -/
 

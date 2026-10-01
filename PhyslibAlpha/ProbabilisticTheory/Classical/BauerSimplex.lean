@@ -11,6 +11,10 @@ public import PhyslibAlpha.Mathematics.MeasureTheory.PositiveFunctionalIntegral
 /-!
 # Bauer simplices
 
+## 0. One line summary
+
+The state space is a Bauer simplex exactly when ensembles refine and pure states are closed.
+
 ## i. Overview
 
 A Bauer simplex is a classical state space whose pure states form a closed set. The pure states
