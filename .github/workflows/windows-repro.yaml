@@ -1,0 +1,141 @@
+# Reproduce Windows-only setup problems (e.g. `lake exe get_cache` after a toolchain bump)
+# on a real Windows machine, without needing one locally.
+#
+# Run it from the Actions tab ("Windows repro" -> "Run workflow"), or from a terminal:
+#   gh workflow run windows-repro.yaml -f from_ref=f0264060 -f to_ref=master -f hide_c_compiler=true
+# `workflow_dispatch` only works once this file is on the default branch. From a fork whose
+# default branch lacks it, push this file to a branch called `windows-repro` instead: every push
+# to that branch runs the job with the defaults below, and `gh run watch` follows it.
+#
+# What it does:
+#   1. Checks out `from_ref` of `repository` (the "old" state a user already has) and runs
+#      `setup_old`.
+#   2. Checks out `to_ref` (the "new" state, e.g. after a bump) *in the same folder*,
+#      keeping `.lake`, exactly like `git pull` would for a user.
+#   3. Runs `steps_new` -- the commands a user would type (or a proposed fix).
+#   4. Prints diagnostics (read-only flags, hard links, C compiler) and uploads the logs.
+
+name: Windows repro
+
+on:
+  push:
+    branches: [windows-repro]
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Repository to check out the refs from"
+        default: "leanprover-community/physlib"
+      from_ref:
+        description: "Old commit the 'user' starts on (blank = skip, start fresh on to_ref)"
+        default: "f0264060"   # bump to v4.34.0, after #1582 enabled the artifact cache
+      to_ref:
+        description: "New commit to move to (e.g. master or a PR branch)"
+        default: "master"
+      setup_old:
+        description: "PowerShell run on from_ref (';'-separated)"
+        default: "lake exe cache get; lake build Physlib.Meta.TODO.Basic"
+      steps_new:
+        description: "PowerShell run on to_ref (';'-separated) -- the thing being tested"
+        default: "lake exe get_cache; lake build Physlib.Meta.TODO.Basic"
+      hide_c_compiler:
+        description: "Remove cc/gcc from PATH, like a typical Windows machine"
+        type: boolean
+        default: true
+      debug_ssh:
+        description: "On failure, open an SSH session into the runner (tmate) for poking around"
+        type: boolean
+        default: false
+
+# A push has no inputs, so it falls back to the same defaults as `workflow_dispatch`.
+env:
+  REPOSITORY: ${{ inputs.repository || 'leanprover-community/physlib' }}
+  FROM_REF: ${{ github.event_name == 'push' && 'f0264060' || inputs.from_ref }}
+  TO_REF: ${{ inputs.to_ref || 'master' }}
+  SETUP_OLD: ${{ inputs.setup_old || 'lake exe cache get; lake build Physlib.Meta.TODO.Basic' }}
+  STEPS_NEW: ${{ inputs.steps_new || 'lake exe get_cache; lake build Physlib.Meta.TODO.Basic' }}
+  HIDE_C_COMPILER: ${{ github.event_name == 'push' || inputs.hide_c_compiler }}
+
+jobs:
+  repro:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPOSITORY }}
+          fetch-depth: 0
+          ref: ${{ env.FROM_REF != '' && env.FROM_REF || env.TO_REF }}
+
+      - name: Install elan
+        run: |
+          curl -sSfLO https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1
+          ./elan-init.ps1 -NoPrompt 1 -DefaultToolchain none
+          "$env:USERPROFILE\.elan\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      # GitHub's Windows image ships MinGW/Strawberry gcc; most users' machines have none.
+      - name: Hide the C compiler
+        if: ${{ env.HIDE_C_COMPILER == 'true' }}
+        run: |
+          $keep = $env:PATH -split ';' | Where-Object {
+            $_ -and (($_ -match '\.elan') -or -not (
+              (Test-Path -LiteralPath (Join-Path $_ 'cc.exe')) -or
+              (Test-Path -LiteralPath (Join-Path $_ 'gcc.exe'))))
+          }
+          "PATH=$($keep -join ';')" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Toolchain / compiler info
+        run: |
+          lean --version; lake --version
+          foreach ($c in 'cc','gcc','clang') {
+            $p = (Get-Command $c -ErrorAction SilentlyContinue).Source
+            "$c -> $(if ($p) { $p } else { 'NOT FOUND' })"
+          }
+
+      - name: Old state (${{ env.FROM_REF }})
+        if: ${{ env.FROM_REF != '' }}
+        run: |
+          ${{ env.SETUP_OLD }}
+          if ($LASTEXITCODE) { Write-Warning "setup_old exited with $LASTEXITCODE (continuing)" }
+        continue-on-error: true
+
+      - name: Move to ${{ env.TO_REF }} (keeping .lake)
+        if: ${{ env.FROM_REF != '' }}
+        run: |
+          git fetch origin "${{ env.TO_REF }}"
+          git checkout --force FETCH_HEAD
+          git log -1 --oneline; Get-Content lean-toolchain
+
+      - name: New state -- the thing under test
+        id: test
+        run: |
+          $ErrorActionPreference = 'Continue'
+          & { ${{ env.STEPS_NEW }} } *>&1 | Tee-Object -FilePath repro.log
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Diagnostics
+        if: always()
+        run: |
+          "== os error 5 / cc failures in log =="
+          if (Test-Path repro.log) { Select-String -Path repro.log -Pattern 'os error 5','failed to execute','Access is denied' | Select-Object -First 20 }
+          "== sample of Mathlib .olean files: read-only flag and hard links =="
+          Get-ChildItem .lake/packages/mathlib/.lake/build/lib/lean -Recurse -Filter *.olean -ErrorAction SilentlyContinue |
+            Select-Object -First 5 | ForEach-Object {
+              "$($_.FullName)  ReadOnly=$($_.IsReadOnly)"
+              fsutil hardlink list $_.FullName
+            }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repro-log
+          path: repro.log
+          if-no-files-found: ignore
+
+      - name: SSH into the runner
+        if: ${{ failure() && inputs.debug_ssh }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
