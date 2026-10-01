@@ -19,6 +19,9 @@ Headings are only read from module documentation (`/-! … -/` blocks), outside 
 so `#check` commands and headings in declaration docstrings are ignored.
 Errors are reported grouped by the kind of error, each with a file and line number.
 
+This linter is run in CI and must pass. Files listed in
+`scripts/MetaPrograms/module_doc_no_lint.txt` are not checked.
+
 -/
 
 open Lean System Meta
@@ -356,8 +359,8 @@ def main (_ : List String) : IO UInt32 := do
       let es := errors.filter (·.kind == kind)
       unless es.isEmpty do
         IO.println s!"  {es.size}\t{kind.name}"
-    IO.println s!"{errors.size} problems in {fileCount errors} files."
-    throw <| IO.userError s!"Errors found."
-  else
-    IO.println "\x1b[32mNo documentation style issues found.\x1b[0m"
+    IO.println s!"\x1b[1;31merror:\x1b[0m {errors.size} module documentation problems in \
+      {fileCount errors} files."
+    return 1
+  IO.println "\x1b[32mNo documentation style issues found.\x1b[0m"
   return 0
