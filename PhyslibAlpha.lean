@@ -35,6 +35,12 @@ public import PhyslibAlpha.ClassicalMechanics.NortonDome.Solution
 public import PhyslibAlpha.ClassicalMechanics.NortonDome.Sqrt
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.OpenBoundary
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Uncertainty
+public import PhyslibAlpha.Electromagnetism.Current.InfiniteThickWire.Basic
+public import PhyslibAlpha.Electromagnetism.Current.InfiniteThickWire.ThinWireLimit
+public import PhyslibAlpha.Electromagnetism.Current.InfiniteThickWire.WeakExtrema
+public import PhyslibAlpha.Electromagnetism.Dynamics.FirstVariation
+public import PhyslibAlpha.Electromagnetism.Dynamics.IsWeakExtrema
+public import PhyslibAlpha.Electromagnetism.Dynamics.WeakExtremaLift
 public import PhyslibAlpha.Mathematics.Analysis.Normed.HolderDual
 public import PhyslibAlpha.Mathematics.Analysis.RealBounds
 public import PhyslibAlpha.Mathematics.Convex.Choquet.BoundaryRepresentation
@@ -43,6 +49,7 @@ public import PhyslibAlpha.Mathematics.Convex.Choquet.Mixture
 public import PhyslibAlpha.Mathematics.Convex.Choquet.RepresentingMeasure
 public import PhyslibAlpha.Mathematics.Convex.DominatedCone
 public import PhyslibAlpha.Mathematics.Convex.LpBall
+public import PhyslibAlpha.Mathematics.Distribution.OfFunction
 public import PhyslibAlpha.Mathematics.Geometry.Simplex
 public import PhyslibAlpha.Mathematics.LadderSystem.Basic
 public import PhyslibAlpha.Mathematics.LadderSystem.Irreducibility
@@ -287,6 +294,9 @@ public import PhyslibAlpha.QuantumMechanics.HilbertSpaces.FiniteTarget.Operators
 public import PhyslibAlpha.QuantumMechanics.QuantumHarmonicOscillator
 public import PhyslibAlpha.QuantumMechanics.StinespringDilation
 public import PhyslibAlpha.Relativity.General.Schwarzschild.IncompressibleSphere
+public import PhyslibAlpha.SpaceAndTime.Space.Derivatives.Locality
+public import PhyslibAlpha.SpaceAndTime.Space.Integrals.Slice
+public import PhyslibAlpha.SpaceAndTime.Space.RadialIntegrationByParts
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.HalfPlane
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Line
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Ring
@@ -294,3 +304,4 @@ public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidCylinder
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SolidSphere
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalCylinder
 public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.SphericalShell
+public import PhyslibAlpha.SpaceAndTime.SpaceTime.Lift
