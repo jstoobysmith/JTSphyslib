@@ -12,8 +12,6 @@ public import Physlib.ProbabilisticTheory.OrderUnit.Archimedean
 /-!
 # The metric space of effects
 
-## 0. One line summary
-
 The order-unit metric on effects and their identification with the order-unit-norm ball.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.WeightEquivalence
 
 # Tracial states and weights
 
-## 0. One line summary
-
 Tracial weights, tracial states and tracial complex-linear functionals.
 
 ## i. Overview

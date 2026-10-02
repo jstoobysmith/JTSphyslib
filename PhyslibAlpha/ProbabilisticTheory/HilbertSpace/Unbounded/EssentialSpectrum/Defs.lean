@@ -12,8 +12,6 @@ public import Mathlib.Analysis.InnerProductSpace.Basic
 
 # The essential spectrum
 
-## 0. One line summary
-
 The essential spectrum of a self-adjoint operator, defined by singular sequences.
 
 ## i. Overview

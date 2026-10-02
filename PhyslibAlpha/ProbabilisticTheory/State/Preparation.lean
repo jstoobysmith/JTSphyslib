@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.Set
 /-!
 # Preparation procedures
 
-## 0. One line summary
-
 Preparation procedures: random preparations of states, their prepared states and outcome laws.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import Mathlib.Analysis.Matrix.Order
 /-!
 # Stinespring dilation
 
-## 0. One line summary
-
 Kraus maps, the Stinespring isometry and unitary dilation, and completion of Kraus families.
 
 ## i. Overview

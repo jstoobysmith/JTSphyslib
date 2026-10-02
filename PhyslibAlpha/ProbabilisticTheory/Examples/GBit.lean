@@ -15,8 +15,6 @@ public import Mathlib.LinearAlgebra.Dual.Lemmas
 /-!
 # The generalized bit
 
-## 0. One line summary
-
 The generalized bit: the sup-norm cone over `ℝ³`, with an octahedral, non-simplex state space.
 
 ## i. Overview

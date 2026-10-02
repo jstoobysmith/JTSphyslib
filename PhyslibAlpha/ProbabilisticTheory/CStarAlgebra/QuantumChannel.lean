@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.OrderUnit
 
 # Quantum channels
 
-## 0. One line summary
-
 Quantum channels as unital completely positive maps, and the channels they induce on observables.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.GeneralId
 
 # Products of Hilbert–Schmidt operators
 
-## 0. One line summary
-
 Products of Hilbert–Schmidt operators are trace class; trace class is a ⋆-closed ideal.
 
 ## i. Overview

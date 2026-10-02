@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.AnalyticVe
 
 # Gårding vectors are analytic
 
-## 0. One line summary
-
 Gårding vectors are analytic vectors of the candidate generator.
 
 ## i. Overview

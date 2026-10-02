@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.WStarAlgebra.TracePairingSurjecti
 
 # Rank-one operators in the trace pairing
 
-## 0. One line summary
-
 The trace pairing of a rank-one operator `|x⟩⟨y|` with a trace-class `T` is `⟪y, T x⟫`.
 
 ## i. Overview

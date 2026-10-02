@@ -11,8 +11,6 @@ public import PhyslibAlpha.Mathematics.Geometry.Simplex
 /-!
 # Finite classical systems
 
-## 0. One line summary
-
 A finite-dimensional system is classical exactly when its state space is a geometric simplex.
 
 ## i. Overview

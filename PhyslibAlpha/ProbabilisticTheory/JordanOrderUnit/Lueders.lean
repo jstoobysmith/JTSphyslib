@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Operation
 
 # Lüders operations
 
-## 0. One line summary
-
 Lüders operations `x ↦ U_{√e} x` of effects and the states conditioned on effects.
 
 ## i. Overview

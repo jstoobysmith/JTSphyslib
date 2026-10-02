@@ -15,8 +15,6 @@ public import Mathlib.Algebra.Module.Torsion.Free
 
 # Projections are sharp
 
-## 0. One line summary
-
 An idempotent effect of a C⋆-algebra is not a proper mixture of two different effects.
 
 ## i. Overview

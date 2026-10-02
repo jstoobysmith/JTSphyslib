@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Basic
 
 # Powers, multiplication operators and the quadratic representation
 
-## 0. One line summary
-
 Jordan powers, multiplication operators `L_a` and the quadratic representation `U_a`.
 
 ## i. Overview

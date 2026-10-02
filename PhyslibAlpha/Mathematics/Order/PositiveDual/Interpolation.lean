@@ -12,8 +12,6 @@ public import Mathlib.Basic.Real.Pointwise
 /-!
 # Approximate interpolation
 
-## 0. One line summary
-
 Approximate interpolation between finite families when the positive functionals form a lattice.
 
 ## i. Overview

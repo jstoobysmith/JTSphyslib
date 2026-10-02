@@ -15,8 +15,6 @@ public import Mathlib.Analysis.Normed.Group.Completeness
 
 # The trace-class Banach space
 
-## 0. One line summary
-
 Trace-class operators form a Banach space under the trace norm.
 
 ## i. Overview

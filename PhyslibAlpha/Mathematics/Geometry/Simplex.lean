@@ -16,8 +16,6 @@ public import Mathlib.Topology.UnitInterval
 /-!
 # Simplices
 
-## 0. One line summary
-
 Simplices as convex hulls of affinely independent points, and the standard simplex.
 
 ## i. Overview

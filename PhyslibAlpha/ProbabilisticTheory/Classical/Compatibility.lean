@@ -16,8 +16,6 @@ public import Mathlib.Analysis.Normed.Module.FiniteDimension
 /-!
 # Classical theories are those without incompatibility
 
-## 0. One line summary
-
 Kuramochi's theorem: a system is classical exactly when all yes/no measurements are compatible.
 
 ## i. Overview

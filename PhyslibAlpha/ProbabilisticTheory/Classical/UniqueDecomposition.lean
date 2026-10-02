@@ -13,8 +13,6 @@ public import Mathlib.MeasureTheory.Integral.RieszMarkovKakutani.Real
 /-!
 # Uniqueness of pure decompositions
 
-## 0. One line summary
-
 Choquet–Meyer uniqueness: when ensembles refine, pure decompositions are unique.
 
 ## i. Overview

@@ -16,8 +16,6 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
 # Stinespring's dilation theorem
 
-## 0. One line summary
-
 Stinespring's theorem: every completely positive map has the form J a = V⋆ π(a) V.
 
 ## i. Overview

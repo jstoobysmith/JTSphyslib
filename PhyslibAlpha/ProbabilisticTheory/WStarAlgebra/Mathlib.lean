@@ -13,8 +13,6 @@ public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 
 # W⋆-algebra structures are W⋆-algebras
 
-## 0. One line summary
-
 A W⋆-algebra structure with a chosen predual gives a W⋆-algebra in Mathlib's sense.
 
 ## i. Overview

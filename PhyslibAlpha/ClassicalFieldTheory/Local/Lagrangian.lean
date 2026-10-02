@@ -10,8 +10,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.TotalDerivative
 /-!
 # Local Lagrangians
 
-## 0. One line summary
-
 Local finite-order Lagrangians on jet points, their regularity, and evaluation along fields.
 
 ## i. Overview

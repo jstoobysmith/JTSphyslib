@@ -10,8 +10,6 @@ public import Mathlib.MeasureTheory.Measure.Regular
 /-!
 # Regular measures
 
-## 0. One line summary
-
 Inner regularity and regularity pass to smaller measures, continuous images and subsets.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 
 # Positive quadratic representations
 
-## 0. One line summary
-
 Quadratically positive Jordan order-unit spaces, where each `U_a` is a positive linear map.
 
 ## i. Overview

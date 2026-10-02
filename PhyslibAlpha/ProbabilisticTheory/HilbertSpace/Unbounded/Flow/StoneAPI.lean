@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Flow.Stone
 
 # The generator of the unitary group
 
-## 0. One line summary
-
 The domain of T is the set of vectors with differentiable orbit under exp(i t T).
 
 ## i. Overview

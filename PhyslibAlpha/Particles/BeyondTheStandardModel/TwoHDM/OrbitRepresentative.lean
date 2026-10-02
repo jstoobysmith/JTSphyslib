@@ -9,8 +9,6 @@ public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 /-!
 # A polynomial family of orbit representatives for the two Higgs doublet model
 
-## 0. One line summary
-
 Every 2HDM gauge orbit meets a four-parameter family whose Gram vector is polynomial.
 
 ## i. Overview

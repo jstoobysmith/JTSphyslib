@@ -14,8 +14,6 @@ public import Mathlib.Analysis.InnerProductSpace.Trace
 
 # Uncertainty in density-operator states
 
-## 0. One line summary
-
 Expectation, covariance, variance and Robertson–Schrödinger for density-operator states.
 
 ## i. Overview

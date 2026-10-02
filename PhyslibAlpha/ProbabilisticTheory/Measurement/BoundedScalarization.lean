@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BoundedIntegral
 
 # Channels and integrals
 
-## 0. One line summary
-
 Normal channels commute with integration against effect-valued measures.
 
 ## i. Overview

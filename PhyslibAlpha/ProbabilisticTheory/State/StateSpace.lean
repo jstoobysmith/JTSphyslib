@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 /-!
 # The state space
 
-## 0. One line summary
-
 The weak-star state space: compact, convex, with the pure states as its extreme points.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Operator
 
 # Compatible observables
 
-## 0. One line summary
-
 Jordan compatibility of observables: their Jordan multiplication operators commute.
 
 ## i. Overview

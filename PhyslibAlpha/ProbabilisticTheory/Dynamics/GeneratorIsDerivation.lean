@@ -16,8 +16,6 @@ public import Mathlib.Analysis.Normed.Operator.BoundedLinearMaps
 
 # Generators of automorphism groups are derivations
 
-## 0. One line summary
-
 The generator of a one-parameter family of automorphisms is a derivation.
 
 ## i. Overview

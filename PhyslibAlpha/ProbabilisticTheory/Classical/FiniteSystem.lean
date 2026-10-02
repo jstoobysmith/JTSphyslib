@@ -14,8 +14,6 @@ public import Mathlib.Topology.UnitInterval
 /-!
 # Finite classical systems
 
-## 0. One line summary
-
 The classical system with finitely many outcomes: states are probability vectors.
 
 ## i. Overview

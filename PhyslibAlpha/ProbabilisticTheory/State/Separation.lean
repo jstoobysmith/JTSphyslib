@@ -14,8 +14,6 @@ public import Mathlib.Analysis.LocallyConvex.WithSeminorms
 /-!
 # Separation by states
 
-## 0. One line summary
-
 Via Hahn–Banach, states separate points and determine the positive cone and order-unit norm.
 
 ## i. Overview

@@ -17,8 +17,6 @@ public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
 # Differentiating the exponential multiplier
 
-## 0. One line summary
-
 Difference quotients of `exp(i t T) x` converge to `i T x` for `x` of finite second moment.
 
 ## i. Overview

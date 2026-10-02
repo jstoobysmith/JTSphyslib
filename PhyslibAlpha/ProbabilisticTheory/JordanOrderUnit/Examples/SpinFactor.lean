@@ -12,8 +12,6 @@ public import Mathlib.LinearAlgebra.QuadraticForm.Basic
 
 # Spin factors
 
-## 0. One line summary
-
 Spin factors `V × R` of a symmetric bilinear form, the basic non-associative Jordan algebras.
 
 ## i. Overview

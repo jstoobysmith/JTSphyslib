@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Operator
 
 # The Jordan triple product
 
-## 0. One line summary
-
 The Jordan triple product `{a, b, c}`: symmetry, linearity and the diagonal `{a, b, a} = U_a b`.
 
 ## i. Overview

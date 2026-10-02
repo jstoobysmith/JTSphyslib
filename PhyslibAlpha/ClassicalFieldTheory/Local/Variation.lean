@@ -9,8 +9,6 @@ public import Physlib.ClassicalFieldTheory.Local.Variation
 /-!
 # Alpha extensions for admissible local variations
 
-## 0. One line summary
-
 Euclidean components of admissible variations are test functions.
 
 ## i. Overview

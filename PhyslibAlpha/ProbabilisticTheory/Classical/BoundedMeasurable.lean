@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.EffectValuedMeasure
 /-!
 # Observables of a sample space
 
-## 0. One line summary
-
 Bounded measurable functions on a sample space as a classical order-unit lattice.
 
 ## i. Overview

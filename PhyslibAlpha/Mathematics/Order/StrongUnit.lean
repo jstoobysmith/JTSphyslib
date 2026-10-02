@@ -15,8 +15,6 @@ public import Mathlib.Basic.Real.Basic
 /-!
 # Strong units
 
-## 0. One line summary
-
 Strong units and order units of ordered abelian groups, and the directed order they induce.
 
 ## i. Overview

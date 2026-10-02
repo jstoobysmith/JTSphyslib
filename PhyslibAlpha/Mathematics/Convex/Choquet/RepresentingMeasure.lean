@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Measure.Prokhorov
 /-!
 # Representing measures and the Choquet order
 
-## 0. One line summary
-
 Representing measures of points of a convex set, the Choquet order, and maximal measures.
 
 ## i. Overview

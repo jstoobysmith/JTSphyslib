@@ -11,8 +11,6 @@ public import Mathlib.Tactic.Ring
 /-!
 # Charge balancing for polynomials
 
-## 0. One line summary
-
 A polynomial invariant under a phase rotation of charged variables has only charge-balanced terms.
 
 ## i. Overview

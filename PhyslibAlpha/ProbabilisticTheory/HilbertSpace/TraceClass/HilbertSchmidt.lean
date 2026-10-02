@@ -12,8 +12,6 @@ public import Mathlib.Analysis.MeanInequalities
 
 # Hilbert–Schmidt operators
 
-## 0. One line summary
-
 Hilbert–Schmidt operators: a ⋆-closed two-sided ideal whose products have summable diagonals.
 
 ## i. Overview

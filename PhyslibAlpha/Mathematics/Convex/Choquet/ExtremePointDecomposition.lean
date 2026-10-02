@@ -12,8 +12,6 @@ public import PhyslibAlpha.Mathematics.MeasureTheory.IntegrationFunctional
 /-!
 # Every point is a mixture of extreme points
 
-## 0. One line summary
-
 Choquet's theorem: each point of a metrizable compact convex set is a mixture of extreme points.
 
 ## i. Overview

@@ -15,8 +15,6 @@ public import Mathlib.Analysis.Polynomial.Factorization
 
 # The spectrum of an observable in a JB-algebra
 
-## 0. One line summary
-
 The spectrum of a JB-algebra observable: compact, nonempty, with polynomial spectral mapping.
 
 ## i. Overview

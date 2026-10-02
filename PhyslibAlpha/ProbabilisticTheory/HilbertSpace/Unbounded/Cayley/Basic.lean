@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Constructions.BorelSpace.Complex
 
 # The Cayley transform
 
-## 0. One line summary
-
 The Cayley transform of a self-adjoint operator is a unitary.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Integral.Prod
 
 # Solid cylinder surface in `Space 3`
 
-## 0. One line summary
-
 The solid unit cylinder in `Space 3` with its measure, distribution and positive volume.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.Set
 /-!
 # Classical systems: unique decomposition into pure states
 
-## 0. One line summary
-
 Pure decompositions, simplex and Bauer simplex state spaces, and measures as functionals.
 
 ## i. Overview

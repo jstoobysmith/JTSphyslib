@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation
 /-!
 # Local Euler-Lagrange equations
 
-## 0. One line summary
-
 A named predicate for the local Euler-Lagrange equations and the criticality criteria using it.
 
 ## i. Overview

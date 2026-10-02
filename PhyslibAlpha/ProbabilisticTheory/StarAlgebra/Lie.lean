@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.Jordan
 
 # The Lie bracket of observables
 
-## 0. One line summary
-
 The Lie bracket -(i / 2)(a b - b a) makes the observables a real Lie algebra.
 
 ## i. Overview

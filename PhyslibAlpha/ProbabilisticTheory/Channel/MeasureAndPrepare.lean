@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Basic
 
 # Measure-and-prepare channels
 
-## 0. One line summary
-
 Measure-and-prepare channels: channels that factor through a finite classical system.
 
 ## i. Overview

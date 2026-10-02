@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.OrderUnit
 
 # The self-adjoint part of a C⋆-algebra is a JB-algebra
 
-## 0. One line summary
-
 The self-adjoint elements of a unital C⋆-algebra form a JB-algebra under `½ (a b + b a)`.
 
 ## i. Overview

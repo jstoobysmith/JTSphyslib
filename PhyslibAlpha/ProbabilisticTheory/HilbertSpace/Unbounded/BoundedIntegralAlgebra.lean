@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 # The bounded functional calculus of a spectral measure
 
-## 0. One line summary
-
 The bounded integral against a spectral measure is a unital ⋆-homomorphism.
 
 ## i. Overview

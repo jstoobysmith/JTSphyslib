@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Quadratic.Fundame
 
 # Peirce decomposition
 
-## 0. One line summary
-
 The Peirce decomposition for a Jordan projection `p`; `U_p` projects onto the `1`-component.
 
 ## i. Overview

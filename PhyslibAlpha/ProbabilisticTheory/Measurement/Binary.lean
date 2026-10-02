@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.MeasurableSpace.Instances
 /-!
 # Binary measurements
 
-## 0. One line summary
-
 The yes/no measurement defined by an effect of an Archimedean system.
 
 ## i. Overview

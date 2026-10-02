@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation.Criterion
 /-!
 # First variation and the Euler-Lagrange criterion
 
-## 0. One line summary
-
 Public entry point: a field is critical iff its local Euler-Lagrange operator vanishes.
 
 ## i. Overview

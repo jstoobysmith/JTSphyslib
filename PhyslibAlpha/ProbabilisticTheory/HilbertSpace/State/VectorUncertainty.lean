@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.State.Vector
 
 # Uncertainty in vector states
 
-## 0. One line summary
-
 Variance and uncertainty defect in a vector state via fluctuation vectors `a ψ - ⟨a⟩ ψ`.
 
 ## i. Overview

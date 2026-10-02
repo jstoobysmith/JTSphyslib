@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Stone
 
 # The unitary group of a self-adjoint operator
 
-## 0. One line summary
-
 The unitary group exp(i t T) of a self-adjoint operator and its differentiable orbits.
 
 ## i. Overview

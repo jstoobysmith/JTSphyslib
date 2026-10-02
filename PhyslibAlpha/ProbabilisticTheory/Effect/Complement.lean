@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Effect.Convex
 /-!
 # Complementary effects
 
-## 0. One line summary
-
 The complement `1 - e` of an effect, its antitonicity and compatibility with mixtures.
 
 ## i. Overview

@@ -21,8 +21,6 @@ public import Mathlib.Order.Filter.AtTopBot.Ring
 
 # Analytic vectors
 
-## 0. One line summary
-
 Analytic and entire vectors, their exponential series and an essential self-adjointness test.
 
 ## i. Overview

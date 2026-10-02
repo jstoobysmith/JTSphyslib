@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Power.GeneratedBy
 
 # `J[a]` is a commutative associative algebra
 
-## 0. One line summary
-
 The span `J[a]` of the powers of `a` is a commutative associative unital real algebra.
 
 ## i. Overview

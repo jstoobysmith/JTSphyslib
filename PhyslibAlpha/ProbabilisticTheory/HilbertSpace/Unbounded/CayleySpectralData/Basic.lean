@@ -15,8 +15,6 @@ public import Mathlib.MeasureTheory.VectorMeasure.WithDensityVec
 
 # The spectral measure of the Cayley transform
 
-## 0. One line summary
-
 The spectral measure of the Cayley transform, pulled back to a spectral measure on ℝ.
 
 ## i. Overview

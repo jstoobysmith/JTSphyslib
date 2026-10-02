@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.QuantumChannel
 /-!
 # Matrices over a C⋆-algebra as a composite system
 
-## 0. One line summary
-
 Matrices over a C⋆-algebra as composite observables with an n-level ancilla, and positivity.
 
 ## i. Overview

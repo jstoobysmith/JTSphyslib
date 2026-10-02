@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.Pushforward
 /-!
 # Measurements
 
-## 0. One line summary
-
 Measurements as normal channels from the classical outcome system, and their Born laws.
 
 ## i. Overview

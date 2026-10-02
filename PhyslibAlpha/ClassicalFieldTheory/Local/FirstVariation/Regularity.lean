@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation.Support
 /-!
 # First variation regularity
 
-## 0. One line summary
-
 Continuity of the Euler-Lagrange operator and smooth regularity from coordinate regularity.
 
 ## i. Overview

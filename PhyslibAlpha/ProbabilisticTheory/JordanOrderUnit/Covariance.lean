@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Observable
 
 # Covariance
 
-## 0. One line summary
-
 Covariance of observables in a Jordan order-unit space, and positivity of covariance matrices.
 
 ## i. Overview

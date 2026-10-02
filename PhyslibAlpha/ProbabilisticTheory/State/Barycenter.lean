@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 /-!
 # Barycenters of random states
 
-## 0. One line summary
-
 The barycenter of a probability measure on states: the state a random preparation produces.
 
 ## i. Overview

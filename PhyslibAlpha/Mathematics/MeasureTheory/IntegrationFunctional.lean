@@ -12,8 +12,6 @@ public import Mathlib.Topology.ContinuousMap.Compact
 /-!
 # Integration as a continuous functional
 
-## 0. One line summary
-
 Integration against a finite measure as a continuous linear functional on `C(X, ℝ)`.
 
 ## i. Overview

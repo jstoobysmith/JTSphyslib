@@ -14,8 +14,6 @@ public import Mathlib.Algebra.Ring.IsFormallyReal
 
 # Normed Jordan algebras and JB-algebras
 
-## 0. One line summary
-
 Normed Jordan algebras, JB-algebras and ordered JB-algebras, with their basic properties.
 
 ## i. Overview

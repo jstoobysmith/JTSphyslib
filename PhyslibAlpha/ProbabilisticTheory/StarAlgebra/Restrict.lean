@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.SelfAdjoint
 
 # Restricting positive maps
 
-## 0. One line summary
-
 Restricting positive linear maps to submodules and to the self-adjoint elements.
 
 ## i. Overview

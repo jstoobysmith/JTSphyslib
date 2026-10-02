@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Ring.IsFormallyReal
 
 # Trace and determinant of finite-rank Jordan algebras
 
-## 0. One line summary
-
 Traces on formally real Jordan algebras, their density observables and expectations.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import PhyslibAlpha.Particles.BeyondTheStandardModel.TwoHDM.OrbitRepresen
 /-!
 # The gauge slice and the hypercharges of the doublet components
 
-## 0. One line summary
-
 The upper-triangular slice of 2HDM configurations and the gauge-torus phases acting on it.
 
 ## i. Overview

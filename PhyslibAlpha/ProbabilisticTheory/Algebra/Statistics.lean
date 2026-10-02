@@ -12,8 +12,6 @@ public import Mathlib.LinearAlgebra.BilinearForm.Properties
 
 # Statistics of a linear functional on a bilinear algebra
 
-## 0. One line summary
-
 Second moments, covariance, variance and centering for a linear functional on a bilinear algebra.
 
 ## i. Overview

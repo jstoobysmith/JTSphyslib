@@ -14,8 +14,6 @@ public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 
 # Operations
 
-## 0. One line summary
-
 Operations: positive maps with op 1 ≤ 1, their outcome effects and conditioned states.
 
 ## i. Overview

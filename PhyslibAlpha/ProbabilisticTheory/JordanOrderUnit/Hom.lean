@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Module.LinearMap.Basic
 
 # Jordan homomorphisms
 
-## 0. One line summary
-
 Jordan homomorphisms: unital real-linear maps between Jordan algebras preserving the product.
 
 ## i. Overview

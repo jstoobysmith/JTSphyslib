@@ -11,8 +11,6 @@ public import Mathlib.Analysis.SpecialFunctions.Sqrt
 
 # Calculus of the real square root near zero
 
-## 0. One line summary
-
 The derivative of `√y ^ 3` everywhere, and the failure of the Lipschitz property of `√` at 0.
 
 ## i. Overview

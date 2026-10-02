@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Lie.Basic
 
 # Jordan derivations
 
-## 0. One line summary
-
 Jordan derivations, their commutator Lie algebra and the inner derivations `[L_a, L_b]`.
 
 ## i. Overview

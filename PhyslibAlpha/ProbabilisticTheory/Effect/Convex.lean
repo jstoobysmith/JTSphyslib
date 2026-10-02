@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Effect.Basic
 /-!
 # Convexity and mixtures of effects
 
-## 0. One line summary
-
 The effect interval is convex, so effects can be mixed with a given probability.
 
 ## i. Overview

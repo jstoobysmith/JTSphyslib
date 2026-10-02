@@ -15,8 +15,6 @@ public import Mathlib.Probability.Kernel.CompProdEqIff
 /-!
 # Purity is the absence of side information
 
-## 0. One line summary
-
 A normal state is pure exactly when no preparation of it carries side information.
 
 ## i. Overview

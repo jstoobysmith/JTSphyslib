@@ -14,8 +14,6 @@ public import Mathlib.Analysis.Normed.Operator.Extend
 
 # Continuous functional calculus in JB-algebras
 
-## 0. One line summary
-
 The isometric continuous functional calculus of an observable in a JB-algebra.
 
 ## i. Overview

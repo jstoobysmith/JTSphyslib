@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.State.VectorUncertai
 
 # Energy–position uncertainty in the open tight binding chain
 
-## 0. One line summary
-
 The Robertson–Schrödinger energy–position uncertainty relation of the open tight binding chain.
 
 ## i. Overview

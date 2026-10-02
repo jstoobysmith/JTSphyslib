@@ -14,8 +14,6 @@ public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 /-!
 # Lattice-ordered observables
 
-## 0. One line summary
-
 Order-unit lattices: Archimedean order-unit spaces whose order is a lattice.
 
 ## i. Overview

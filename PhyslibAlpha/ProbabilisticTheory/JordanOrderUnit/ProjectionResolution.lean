@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.Basic
 
 # Projection resolutions
 
-## 0. One line summary
-
 Projection resolutions: projection-valued effect measures and their bounded Borel calculus.
 
 ## i. Overview

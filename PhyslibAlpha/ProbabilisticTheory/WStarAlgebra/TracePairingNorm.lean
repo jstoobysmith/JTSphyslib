@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.RankOne
 
 # The trace pairing is isometric
 
-## 0. One line summary
-
 The trace pairing of bounded operators against trace-class operators is an isometry.
 
 ## i. Overview

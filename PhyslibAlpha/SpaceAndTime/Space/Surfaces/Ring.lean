@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.Integral.BoundedContinuousFunction
 
 # Ring surface in `Space 3`
 
-## 0. One line summary
-
 The unit ring in `Space 3` with its measure and the distribution of integration around it.
 
 ## i. Overview

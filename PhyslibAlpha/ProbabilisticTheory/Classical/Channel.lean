@@ -13,8 +13,6 @@ public import Mathlib.Probability.Kernel.Composition.MeasureComp
 /-!
 # Classical channels
 
-## 0. One line summary
-
 Normal channels between classical systems of observables are exactly Markov kernels.
 
 ## i. Overview

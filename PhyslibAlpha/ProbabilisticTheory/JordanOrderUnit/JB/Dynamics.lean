@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Dynamics.GeneratorIsDerivation
 
 # Generators of JB automorphism groups
 
-## 0. One line summary
-
 The Jordan product is bounded, and generators of Jordan automorphism families are derivations.
 
 ## i. Overview

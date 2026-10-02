@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.VectorMeasure.SetIntegral
 
 # Spectral measures taking values `0` and `1`
 
-## 0. One line summary
-
 A `{0, 1}`-valued spectral measure on `ℝ` with bounded support is a point mass.
 
 ## i. Overview

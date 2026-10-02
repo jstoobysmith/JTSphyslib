@@ -16,8 +16,6 @@ public import Mathlib.Analysis.Calculus.Deriv.Prod
 
 # The mass cocycle of the Galilean group (Souriau)
 
-## 0. One line summary
-
 Souriau's mass cocycle of the Galilean group is a cocycle but not a coboundary.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.WStarAlgebra.BoundedSesquilinearF
 
 # The trace pairing is surjective
 
-## 0. One line summary
-
 Every continuous functional on the trace-class operators is a trace pairing `Tr (A ·)`.
 
 ## i. Overview

@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Weight.Basic
 /-!
 # Extending finite weights
 
-## 0. One line summary
-
 A finite weight extends uniquely to a positive linear functional on the order unit space.
 
 ## i. Overview

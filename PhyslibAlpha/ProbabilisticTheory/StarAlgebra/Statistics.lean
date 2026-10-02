@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.Jordan
 
 # Expectation, variance and covariance
 
-## 0. One line summary
-
 Expectation values, centered observables, covariance and variance of observables in a state.
 
 ## i. Overview

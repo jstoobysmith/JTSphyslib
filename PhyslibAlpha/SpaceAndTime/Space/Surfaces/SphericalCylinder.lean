@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Integral.Prod
 
 # Spherical cylinder surface in `Space 3`
 
-## 0. One line summary
-
 The unit spherical cylinder in `Space 3` with its measure and distribution.
 
 ## i. Overview

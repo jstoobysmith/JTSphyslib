@@ -12,8 +12,6 @@ public import Mathlib.Analysis.Normed.Operator.LinearIsometry
 /-!
 # The canonical normed copy of an order-unit space
 
-## 0. One line summary
-
 The type synonym `WithOrderUnitNorm E` with the canonical order-unit norm; channels contract.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import Physlib.Meta.Linters.Sorry
 
 # Peano's existence theorem (statements)
 
-## 0. One line summary
-
 Statements of Peano's existence theorem for ODEs, pending its proof in Mathlib.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Quadratic.Order
 
 # Conditioning a state on a projection
 
-## 0. One line summary
-
 Conditioning a state on a Jordan projection `p`: the state `x ↦ ω(U_p x) / ω(p)`.
 
 ## i. Overview

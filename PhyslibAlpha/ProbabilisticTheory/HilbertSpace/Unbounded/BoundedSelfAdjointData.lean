@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.CayleySpec
 
 # Spectral measures of bounded self-adjoint operators
 
-## 0. One line summary
-
 The real spectral measure of a bounded self-adjoint operator.
 
 ## i. Overview

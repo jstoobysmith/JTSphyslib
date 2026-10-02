@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.GeneratedByOne
 
 # Uniqueness of the positive square root
 
-## 0. One line summary
-
 A nonnegative square root of an observable equals its functional-calculus square root.
 
 ## i. Overview

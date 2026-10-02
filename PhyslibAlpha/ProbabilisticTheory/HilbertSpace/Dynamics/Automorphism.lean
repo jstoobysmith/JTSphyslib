@@ -16,8 +16,6 @@ public import Mathlib.Algebra.Lie.OfAssociative
 
 # Automorphisms of the bounded operators
 
-## 0. One line summary
-
 ⋆-automorphisms of bounded operators are unitary conjugations; conjugation flows are unique.
 
 ## i. Overview

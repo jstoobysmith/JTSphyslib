@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Basic
 
 # Weight pushforward along a channel
 
-## 0. One line summary
-
 Pushing weights and states forward along a channel, functorially in the channel.
 
 ## i. Overview

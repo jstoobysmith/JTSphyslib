@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.OrderUnit.PositiveDual
 
 # Monotone-complete ordered spaces
 
-## 0. One line summary
-
 Monotone-complete orders and chosen suprema of bounded directed sets and increasing sequences.
 
 ## i. Overview

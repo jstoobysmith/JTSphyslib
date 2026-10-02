@@ -12,8 +12,6 @@ public import Physlib.ProbabilisticTheory.OrderUnit.Archimedean
 
 # Jordan order-unit spaces
 
-## 0. One line summary
-
 Jordan order-unit spaces: order-unit spaces that are Jordan algebras with nonnegative squares.
 
 ## i. Overview

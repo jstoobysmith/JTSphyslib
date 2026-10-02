@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Cayley.Bas
 
 # Spectral measures and the Cayley transform
 
-## 0. One line summary
-
 Spectral measures on ℝ correspond to Cayley-supported spectral measures on ℂ.
 
 ## i. Overview

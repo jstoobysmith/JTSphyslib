@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Star.Unitary
 
 # Unitary conjugation as a symmetry
 
-## 0. One line summary
-
 Conjugation by a unitary as a channel and a symmetry, and symmetry actions of representations.
 
 ## i. Overview

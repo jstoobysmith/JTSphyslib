@@ -13,8 +13,6 @@ public import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
 
 # Finite weights are continuous
 
-## 0. One line summary
-
 Positive functionals are order-unit-norm bounded, so finite weights are continuous functionals.
 
 ## i. Overview

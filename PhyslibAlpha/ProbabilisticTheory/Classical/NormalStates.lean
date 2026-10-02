@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BornRule
 /-!
 # States of a classical system
 
-## 0. One line summary
-
 The normal states of a classical system are exactly the probability measures on its outcomes.
 
 ## i. Overview

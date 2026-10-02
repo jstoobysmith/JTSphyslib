@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 
 # Solid sphere surfaces in `Space d`
 
-## 0. One line summary
-
 The closed unit ball in `Space d` with its measure, distribution and positive volume.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.AnalyticVe
 
 # Nelson's analytic-vector theorem
 
-## 0. One line summary
-
 Nelson's theorem: a symmetric operator with dense analytic vectors is essentially self-adjoint.
 
 ## i. Overview

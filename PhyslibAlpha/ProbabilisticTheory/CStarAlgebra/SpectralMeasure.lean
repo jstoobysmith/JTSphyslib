@@ -17,8 +17,6 @@ public import Mathlib.Topology.Algebra.Indicator
 
 # The distribution of an observable
 
-## 0. One line summary
-
 The outcome distribution of an observable in a state, and the measurement of an isolated eigenvalue.
 
 ## i. Overview

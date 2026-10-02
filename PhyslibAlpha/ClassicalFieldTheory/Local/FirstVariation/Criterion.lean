@@ -11,8 +11,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation.Regularity
 /-!
 # First variation criteria
 
-## 0. One line summary
-
 Assembles the first-variation formula into Euler-Lagrange criteria for critical fields.
 
 ## i. Overview

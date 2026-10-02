@@ -14,8 +14,6 @@ public import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 /-!
 # Extreme points of `ℓq` balls
 
-## 0. One line summary
-
 The extreme points of the `ℓq` ball are its unit sphere, those of the `ℓ1` ball its vertices.
 
 ## i. Overview

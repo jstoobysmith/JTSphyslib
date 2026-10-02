@@ -13,8 +13,6 @@ public import Mathlib.Analysis.Normed.Module.WeakDual
 
 # W⋆-algebras and normal states
 
-## 0. One line summary
-
 W⋆-algebras with a chosen predual, their weak-⋆ topology, and normal states.
 
 ## i. Overview

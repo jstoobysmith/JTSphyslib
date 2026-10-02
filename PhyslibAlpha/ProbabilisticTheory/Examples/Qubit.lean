@@ -16,8 +16,6 @@ public import Mathlib.Analysis.InnerProductSpace.PiL2
 /-!
 # The qubit, in Bloch-vector coordinates
 
-## 0. One line summary
-
 The qubit as the Euclidean norm cone over `ℝ³`: its states form the Bloch ball, not a simplex.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.GNS
 
 # Uncertainty relations
 
-## 0. One line summary
-
 Cauchy–Schwarz for states and the Robertson and Robertson–Schrödinger uncertainty relations.
 
 ## i. Overview

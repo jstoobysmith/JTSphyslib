@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 
 # Spherical surfaces on Space
 
-## 0. One line summary
-
 The unit sphere in `Space d` with its measure and the distribution of integration over it.
 
 ## i. Overview

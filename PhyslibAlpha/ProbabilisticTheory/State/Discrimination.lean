@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Order.Group.CompleteLattice
 /-!
 # State discrimination
 
-## 0. One line summary
-
 Two-state discrimination by a single effect and the Helstrom bound on the success probability.
 
 ## i. Overview

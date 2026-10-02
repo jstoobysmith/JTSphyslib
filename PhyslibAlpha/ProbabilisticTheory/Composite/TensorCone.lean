@@ -14,8 +14,6 @@ public import Mathlib.LinearAlgebra.TensorProduct.Associator
 /-!
 # Composite systems
 
-## 0. One line summary
-
 Composite systems: the minimal and maximal tensor cones, composites, and nuclear systems.
 
 ## i. Overview

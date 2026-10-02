@@ -13,8 +13,6 @@ public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 
 # Polar decomposition of bounded operators
 
-## 0. One line summary
-
 Polar decomposition `T = U |T|` of a bounded operator with a partial-isometry factor `U`.
 
 ## i. Overview

@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.JetPointFiber
 /-!
 # Regularity and support for jet-coordinate maps
 
-## 0. One line summary
-
 Smoothness of jet-coordinate maps of smooth fields and their vanishing outside the support.
 
 ## i. Overview

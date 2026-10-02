@@ -10,8 +10,6 @@ public import PhyslibAlpha.SpaceAndTime.Space.Surfaces.Line
 
 # Half-plane surface in `Space 3`
 
-## 0. One line summary
-
 The half-plane in `Space 3` with its measure, distribution and vanishing ambient volume.
 
 ## i. Overview

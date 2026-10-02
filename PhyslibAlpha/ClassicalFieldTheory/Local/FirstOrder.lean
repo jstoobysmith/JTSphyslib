@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.FirstVariation
 /-!
 # First-order local field theory
 
-## 0. One line summary
-
 Aliases and projections specializing the local field theory API to first-order jets.
 
 ## i. Overview

@@ -14,8 +14,6 @@ public import Mathlib.Topology.ContinuousMap.Ordered
 /-!
 # Positive functionals are integrals
 
-## 0. One line summary
-
 A positive functional given on part of `C(X, ℝ)` is integration against a probability measure.
 
 ## i. Overview

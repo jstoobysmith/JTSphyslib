@@ -15,8 +15,6 @@ public import Mathlib.MeasureTheory.MeasurableSpace.Basic
 
 # Covariant measurements and channels
 
-## 0. One line summary
-
 Symmetries acting on effects, measurable actions on outcomes, covariant measures and channels.
 
 ## i. Overview

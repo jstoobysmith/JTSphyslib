@@ -12,8 +12,6 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Pos
 
 # Operators on the Hilbert space of a finite target system
 
-## 0. One line summary
-
 Real scalar tower and self-adjoint decomposition instances for operators on `𝓗[d]`.
 
 ## i. Overview

@@ -16,8 +16,6 @@ public import Mathlib.Tactic.Linarith
 /-!
 # Positive functionals
 
-## 0. One line summary
-
 Positive functionals on an ordered vector space, their order, and extension from the cone.
 
 ## i. Overview

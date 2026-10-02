@@ -14,8 +14,6 @@ public import Mathlib.Algebra.Module.Pi
 /-!
 # The bidual
 
-## 0. One line summary
-
 The bidual of an ordered vector space via positive functionals, and its monotone completeness.
 
 ## i. Overview

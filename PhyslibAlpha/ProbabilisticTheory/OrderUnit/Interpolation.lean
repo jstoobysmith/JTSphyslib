@@ -13,8 +13,6 @@ public import Mathlib.Analysis.SpecificLimits.Basic
 /-!
 # Interpolation of complete observables
 
-## 0. One line summary
-
 Exact interpolants and the Riesz decomposition for complete observables with a lattice dual cone.
 
 ## i. Overview

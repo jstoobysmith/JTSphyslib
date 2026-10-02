@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.HilbertSc
 
 # Basis independence of the trace
 
-## 0. One line summary
-
 The trace of every trace-class operator is an absolutely summable, basis-independent sum.
 
 ## i. Overview

@@ -15,8 +15,6 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 
 # Gårding vectors
 
-## 0. One line summary
-
 Gårding vectors: heat-kernel smoothings along a unitary group, dense in the domain.
 
 ## i. Overview

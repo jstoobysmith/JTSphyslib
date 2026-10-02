@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Flow.Stone
 
 # The unitary group preserves the domain of its generator
 
-## 0. One line summary
-
 The unitary group exp(i t T) preserves the domain of T and commutes with T.
 
 ## i. Overview

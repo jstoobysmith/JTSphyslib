@@ -11,8 +11,6 @@ public import Mathlib.Algebra.MvPolynomial.Degrees
 /-!
 # Swapping the two Higgs doublets
 
-## 0. One line summary
-
 The doublet swap Φ1 ↔ Φ2 commutes with gauge action, preserving invariance and mass dimension.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Mathlib.RingTheory.PowerSeries.Binomial
 
 # Positive elements of `C(a)`
 
-## 0. One line summary
-
 Nonnegative elements of `C(a)` are squares, and positive units form the cone's interior.
 
 ## i. Overview

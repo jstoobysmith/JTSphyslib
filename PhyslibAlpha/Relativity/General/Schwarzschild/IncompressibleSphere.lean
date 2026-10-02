@@ -14,8 +14,6 @@ public import Mathlib.Analysis.Calculus.Deriv.Pow
 
 # Schwarzschild's incompressible fluid sphere and its junction with the exterior solution
 
-## 0. One line summary
-
 Junction of Schwarzschild's incompressible fluid sphere with the exterior Schwarzschild metric.
 
 ## i. Overview

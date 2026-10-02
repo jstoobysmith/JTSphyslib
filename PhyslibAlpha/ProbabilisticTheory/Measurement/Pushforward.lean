@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.EffectValuedMeasure
 /-!
 # Pushing an effect-valued measure forward along a channel
 
-## 0. One line summary
-
 Pushing an effect-valued measure forward along a normal channel.
 
 ## i. Overview

@@ -14,8 +14,6 @@ public import Mathlib.Basic.Real.Basic
 
 # Symmetries
 
-## 0. One line summary
-
 Symmetries as channels with channel inverses, their group, action on states, and dynamics.
 
 ## i. Overview

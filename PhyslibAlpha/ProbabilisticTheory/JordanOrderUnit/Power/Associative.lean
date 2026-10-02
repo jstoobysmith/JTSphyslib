@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Operator
 
 # Power-associativity
 
-## 0. One line summary
-
 Jordan algebras are power-associative: `aᵐ ∘ aⁿ = aᵐ⁺ⁿ`.
 
 ## i. Overview

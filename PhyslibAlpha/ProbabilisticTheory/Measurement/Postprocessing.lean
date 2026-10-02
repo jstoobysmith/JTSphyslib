@@ -11,8 +11,6 @@ public import PhyslibAlpha.Mathematics.Probability.Kernel.Factorization
 /-!
 # Post-processing of measurements
 
-## 0. One line summary
-
 Post-processing of measurements through Markov kernels, the information preorder, and Born laws.
 
 ## i. Overview

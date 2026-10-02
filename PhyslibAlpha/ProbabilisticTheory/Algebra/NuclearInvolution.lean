@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Star.Basic
 
 # Nuclear involutions
 
-## 0. One line summary
-
 Nuclear elements and nuclear involutions of alternative algebras, and their associators.
 
 ## i. Overview

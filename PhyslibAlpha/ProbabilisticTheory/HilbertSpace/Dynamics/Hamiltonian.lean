@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Dynamics.Automorphis
 
 # Hamiltonian dynamics
 
-## 0. One line summary
-
 The unitary evolution and Heisenberg flow of a bounded Hamiltonian, and their uniqueness.
 
 ## i. Overview

@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Flow.Stone
 
 # Stone's theorem: reconstruction of the group
 
-## 0. One line summary
-
 Stone's theorem, reconstruction: a unitary group is exp(i t T) for its generator.
 
 ## i. Overview

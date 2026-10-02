@@ -12,8 +12,6 @@ public import Mathlib.MeasureTheory.Measure.Complex
 
 # Scalar and diagonal measures of a spectral measure
 
-## 0. One line summary
-
 The scalar and diagonal measures obtained by pairing a spectral measure with vectors.
 
 ## i. Overview

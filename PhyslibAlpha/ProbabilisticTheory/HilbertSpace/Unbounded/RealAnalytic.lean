@@ -14,8 +14,6 @@ public import Mathlib.Analysis.InnerProductSpace.l2Space
 
 # Criteria for essential self-adjointness
 
-## 0. One line summary
-
 Criteria for essential self-adjointness: trivial deficiency spaces, eigenbases.
 
 ## i. Overview

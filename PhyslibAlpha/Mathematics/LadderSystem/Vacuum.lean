@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Lie.Submodule
 
 # Vacuum states and creation-operator words
 
-## 0. One line summary
-
 Vacuum states of a ladder system, creation-operator words, and the `n`-particle sector.
 
 ## i. Overview

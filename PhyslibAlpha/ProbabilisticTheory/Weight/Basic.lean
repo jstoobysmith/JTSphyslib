@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.OrderUnit.PositiveDual
 /-!
 # Weights
 
-## 0. One line summary
-
 Weights: additive, possibly infinite maps on the positive cone; states are finite normalized ones.
 
 ## i. Overview

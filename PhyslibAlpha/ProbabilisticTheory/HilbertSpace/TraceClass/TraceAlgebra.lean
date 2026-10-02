@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.Banach
 
 # Linearity and cyclicity of the trace
 
-## 0. One line summary
-
 The trace is linear on trace-class operators and cyclic against bounded operators.
 
 ## i. Overview

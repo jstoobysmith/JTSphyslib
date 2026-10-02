@@ -11,8 +11,6 @@ public import PhyslibAlpha.Mathematics.Sublinear
 /-!
 # Upper envelopes
 
-## 0. One line summary
-
 Splittings of a positive functional attain the upper envelope of a finite family.
 
 ## i. Overview

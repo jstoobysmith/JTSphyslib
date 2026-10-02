@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Order.BigOperators.Group.Finset
 /-!
 # Normal channels
 
-## 0. One line summary
-
 Normal positive maps and channels: those preserving suprema of increasing sequences.
 
 ## i. Overview

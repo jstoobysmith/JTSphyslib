@@ -14,8 +14,6 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpo
 
 # Positive and negative parts of observables
 
-## 0. One line summary
-
 Every observable of a C⋆-algebra splits uniquely into orthogonal positive and negative parts.
 
 ## i. Overview

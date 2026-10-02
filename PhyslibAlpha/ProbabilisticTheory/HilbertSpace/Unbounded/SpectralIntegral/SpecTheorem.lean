@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.SpectralIn
 
 # The integral of the identity is self-adjoint
 
-## 0. One line summary
-
 The integral of the identity against a spectral measure on `ℝ` is self-adjoint.
 
 ## i. Overview

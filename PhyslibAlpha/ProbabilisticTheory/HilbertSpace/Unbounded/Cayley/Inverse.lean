@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Cayley.Bas
 
 # The inverse Cayley transform
 
-## 0. One line summary
-
 The inverse Cayley transform of a unitary without eigenvalue 1 is self-adjoint.
 
 ## i. Overview

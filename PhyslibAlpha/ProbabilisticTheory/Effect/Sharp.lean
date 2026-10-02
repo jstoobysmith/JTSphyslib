@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Effect.Complement
 /-!
 # Sharp effects
 
-## 0. One line summary
-
 Sharp effects: extreme points of the effect interval, preserved by taking complements.
 
 ## i. Overview

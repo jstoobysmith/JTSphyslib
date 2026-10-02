@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.CStarAlgebra.Basi
 
 # Continuous functional calculus of self-adjoint elements
 
-## 0. One line summary
-
 The continuous functional calculus of a self-adjoint C⋆-algebra element, valued in observables.
 
 ## i. Overview

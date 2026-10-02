@@ -10,8 +10,6 @@ public import Physlib.SpaceAndTime.Space.Derivatives.Iterated
 /-!
 # Coordinate-level jet points
 
-## 0. One line summary
-
 Coordinate-level jet points of fields on `Space d` and the jets of a field at a point.
 
 ## i. Overview

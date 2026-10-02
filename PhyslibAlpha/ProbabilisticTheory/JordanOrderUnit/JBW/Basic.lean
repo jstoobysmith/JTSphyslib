@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.NormalEquivalence
 
 # JBW-algebras
 
-## 0. One line summary
-
 JBW-algebras: monotone-complete JB-algebras whose normal states separate points.
 
 ## i. Overview

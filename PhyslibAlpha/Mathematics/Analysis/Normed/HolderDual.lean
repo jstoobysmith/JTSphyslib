@@ -16,8 +16,6 @@ public import Mathlib.Tactic.Positivity.Finset
 /-!
 # Hölder duality in finite dimensions
 
-## 0. One line summary
-
 The dual norm of an `ℓp` coordinate norm is the `ℓq` norm of the values on the basis.
 
 ## i. Overview

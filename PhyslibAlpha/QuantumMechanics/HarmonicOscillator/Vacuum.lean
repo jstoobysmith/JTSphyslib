@@ -11,8 +11,6 @@ public import Physlib.Mathematics.InnerProductSpace.Gaussian
 
 # A vacuum state for the harmonic oscillator
 
-## 0. One line summary
-
 An explicit Gaussian vacuum for the d-dimensional harmonic oscillator ladder system.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Mathlib.Tactic.Module
 /-!
 # Mixtures in a convex set
 
-## 0. One line summary
-
 Mixtures of points in a convex set, convex functions, and extreme points as non-midpoints.
 
 ## i. Overview

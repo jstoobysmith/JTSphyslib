@@ -16,8 +16,6 @@ public import Mathlib.Analysis.CStarAlgebra.SpecialFunctions.PosPart
 
 # Completely positive maps as positive kernels
 
-## 0. One line summary
-
 Completely positive maps give positive operator-valued kernels; Stinespring witnesses.
 
 ## i. Overview

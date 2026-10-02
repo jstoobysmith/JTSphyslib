@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Basic
 
 # Self-adjoint elements
 
-## 0. One line summary
-
 Relating the predicate, subgroup and submodule descriptions of self-adjoint elements.
 
 ## i. Overview

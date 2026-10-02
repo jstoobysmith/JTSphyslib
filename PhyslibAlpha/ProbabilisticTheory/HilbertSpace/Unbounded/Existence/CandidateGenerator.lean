@@ -17,8 +17,6 @@ public import Physlib.QuantumMechanics.Operators.SpectralTheory.Symmetric
 
 # The candidate generator of a unitary group
 
-## 0. One line summary
-
 The candidate generator of a strongly continuous unitary group, and its symmetry.
 
 ## i. Overview

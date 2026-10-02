@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.Order
 
 # Special JB-algebras
 
-## 0. One line summary
-
 Special JB-algebras: those embedding as closed Jordan subalgebras of a C⋆-algebra.
 
 ## i. Overview

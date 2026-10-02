@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.Traciality
 
 # The trace as a positive map
 
-## 0. One line summary
-
 The trace on bounded operators as a positive tracial functional, and the functional `Tr (x ρ)`.
 
 ## i. Overview

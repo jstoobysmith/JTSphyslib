@@ -15,8 +15,6 @@ public import Mathlib.Topology.ContinuousMap.Ordered
 /-!
 # Pure states
 
-## 0. One line summary
-
 Pure states, the functionals below them, and the space of pure states.
 
 ## i. Overview

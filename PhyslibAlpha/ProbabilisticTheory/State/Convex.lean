@@ -13,8 +13,6 @@ public import Mathlib.Topology.UnitInterval
 /-!
 # Convex state spaces
 
-## 0. One line summary
-
 Mixing states, convexity of the state space, and pure and mixed states.
 
 ## i. Overview

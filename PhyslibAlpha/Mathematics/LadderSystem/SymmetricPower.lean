@@ -11,8 +11,6 @@ public import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 
 # The excitation sector is the symmetric power
 
-## 0. One line summary
-
 The excitation-number sector `vacuumSpan L Ω n` is linearly isomorphic to `Sym^n(K^d)`.
 
 ## i. Overview

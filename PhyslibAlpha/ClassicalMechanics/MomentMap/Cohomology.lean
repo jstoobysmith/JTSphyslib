@@ -11,8 +11,6 @@ public import Mathlib.RepresentationTheory.Homological.GroupCohomology.LowDegree
 
 # The cohomology class of the affine symplectic group
 
-## 0. One line summary
-
 The moment cocycle of the affine symplectic group has a non-zero cohomology class.
 
 ## i. Overview

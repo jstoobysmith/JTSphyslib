@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Quadratic.Fundame
 
 # Composing quadratic operations
 
-## 0. One line summary
-
 The fundamental formula as an identity between the positive linear maps `U_a`.
 
 ## i. Overview

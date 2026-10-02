@@ -10,8 +10,6 @@ public import Physlib.Mathematics.VariationalCalculus.Basic
 /-!
 # First variation core objects
 
-## 0. One line summary
-
 The linearized first-variation density and its Euler-Lagrange pairing.
 
 ## i. Overview

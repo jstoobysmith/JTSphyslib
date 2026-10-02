@@ -16,8 +16,6 @@ public import Mathlib.Algebra.Star.StarAlgHom
 
 # ⋆-automorphisms and reversible dynamics
 
-## 0. One line summary
-
 ⋆-automorphisms as channels on observables, and one-parameter groups of them as reversible dynamics.
 
 ## i. Overview

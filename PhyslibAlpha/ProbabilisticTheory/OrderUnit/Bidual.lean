@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.OrderUnit.Lattice
 /-!
 # The bidual of a system
 
-## 0. One line summary
-
 The bidual of a system is an Archimedean order-unit space, and a lattice for classical systems.
 
 ## i. Overview

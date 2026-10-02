@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Existence.
 
 # The unitary group preserves the domain of its generator
 
-## 0. One line summary
-
 A unitary group preserves the domain of its candidate generator and commutes with it.
 
 ## i. Overview

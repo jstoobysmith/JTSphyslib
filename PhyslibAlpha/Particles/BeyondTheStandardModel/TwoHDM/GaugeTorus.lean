@@ -9,8 +9,6 @@ public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.GramMatrix
 /-!
 # The gauge torus acting on Higgs vectors
 
-## 0. One line summary
-
 The SU(2) Cartan element diag(a, ā), which with ofU1Subgroup realises the gauge torus.
 
 ## i. Overview

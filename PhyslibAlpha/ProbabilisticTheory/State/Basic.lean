@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Basic
 /-!
 # States
 
-## 0. One line summary
-
 Notation `𝓢[𝕜, A]` for states, the normalized positive linear functionals.
 
 ## i. Overview

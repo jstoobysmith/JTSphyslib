@@ -13,8 +13,6 @@ public import Mathlib.Tactic.LinearCombination
 
 # Alternative algebras
 
-## 0. One line summary
-
 Alternative algebras, the associator, the flexible law, and the left Moufang identity.
 
 ## i. Overview

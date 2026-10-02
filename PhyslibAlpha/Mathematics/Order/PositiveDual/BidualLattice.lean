@@ -11,8 +11,6 @@ public import PhyslibAlpha.Mathematics.Order.PositiveDual.Interpolation
 /-!
 # The bidual as a lattice
 
-## 0. One line summary
-
 Least upper bounds in the bidual by the Riesz–Kantorovich formula; the bidual is a lattice.
 
 ## i. Overview

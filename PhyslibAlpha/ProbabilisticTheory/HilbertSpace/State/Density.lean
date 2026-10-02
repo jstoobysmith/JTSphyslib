@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.Basic
 
 # Density operators
 
-## 0. One line summary
-
 A positive trace-one operator on a Hilbert space defines the state `x ↦ Tr (x ρ)`.
 
 ## i. Overview

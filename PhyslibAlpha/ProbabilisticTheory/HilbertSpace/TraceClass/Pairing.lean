@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.Banach
 
 # The trace pairing
 
-## 0. One line summary
-
 The trace pairing `T ↦ Tr (A T)` as a bounded functional on trace-class operators.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Channel.Operation
 
 # Instruments
 
-## 0. One line summary
-
 Finite-outcome instruments, their induced measurements and post-measurement states.
 
 ## i. Overview

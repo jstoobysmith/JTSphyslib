@@ -13,8 +13,6 @@ public import Mathlib.MeasureTheory.VectorMeasure.Operations
 
 # Weak-operator spectral measures
 
-## 0. One line summary
-
 Projection-valued measures that are countably additive in the weak operator topology.
 
 ## i. Overview

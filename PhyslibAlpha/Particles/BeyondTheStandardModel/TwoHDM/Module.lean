@@ -10,8 +10,6 @@ public import Physlib.Particles.BeyondTheStandardModel.TwoHDM.Basic
 
 # The Module structure on the two Higgs doublet model
 
-## 0. One line summary
-
 The complex vector space (module) structure on two Higgs doublet configurations.
 
 ## i. Overview

@@ -10,8 +10,6 @@ public import PhyslibAlpha.CondensedMatter.TightBindingChain.OpenBoundary
 
 # The current operator of the open tight binding chain
 
-## 0. One line summary
-
 The current operator `J = i (H X - X H)` of the open tight binding chain and its matrix elements.
 
 ## i. Overview

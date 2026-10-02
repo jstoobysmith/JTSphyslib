@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.Barycenter
 /-!
 # Classical systems with separable observables
 
-## 0. One line summary
-
 Choquet–Meyer: with separable observables, classical exactly when ensembles refine.
 
 ## i. Overview

@@ -17,8 +17,6 @@ public import Mathlib.MeasureTheory.Function.L2Space
 
 # Growth of the derivatives of the heat kernel
 
-## 0. One line summary
-
 Hermite polynomial bounds on the L¹ norms of the heat kernel's derivatives.
 
 ## i. Overview

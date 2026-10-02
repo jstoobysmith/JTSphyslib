@@ -19,8 +19,6 @@ public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Idempotent
 
 # Trace-class operators
 
-## 0. One line summary
-
 Defines trace-class operators, their trace norm and trace, and shows basis independence.
 
 ## i. Overview

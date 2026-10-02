@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.Basic
 
 # States and finite normalized weights
 
-## 0. One line summary
-
 Finite normalized weights on an order unit space correspond bijectively to states.
 
 ## i. Overview

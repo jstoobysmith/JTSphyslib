@@ -18,8 +18,6 @@ public import Mathlib.MeasureTheory.Integral.SetToL1.SimpleFunc
 
 # Integrating bounded functions against a spectral measure
 
-## 0. One line summary
-
 The integral of a bounded measurable function against a weak spectral measure.
 
 ## i. Overview

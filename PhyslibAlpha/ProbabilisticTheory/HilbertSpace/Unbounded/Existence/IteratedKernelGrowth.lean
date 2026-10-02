@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Existence.
 
 # Pointwise bounds on the derivatives of the heat kernel
 
-## 0. One line summary
-
 Pointwise domination of the shifted derivatives of the heat kernel.
 
 ## i. Overview

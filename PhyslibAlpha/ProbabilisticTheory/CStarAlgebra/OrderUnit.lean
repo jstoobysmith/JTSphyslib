@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Star.SelfAdjoint
 
 # The observables of a C⋆-algebra
 
-## 0. One line summary
-
 The self-adjoint part of a unital C⋆-algebra is an Archimedean order-unit space.
 
 ## i. Overview

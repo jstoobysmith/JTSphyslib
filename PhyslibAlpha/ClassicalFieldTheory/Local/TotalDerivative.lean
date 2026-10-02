@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.JetPoint
 /-!
 # Total derivatives on local jet-dependent functions
 
-## 0. One line summary
-
 Total derivatives of jet-dependent functions, defined via evaluation along fields.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.MeasurableSpace.CountablyGenerated
 /-!
 # Factorization of Markov kernels
 
-## 0. One line summary
-
 Factoring kernels through Markov kernels, almost everywhere variants, and common refinements.
 
 ## i. Overview

@@ -12,8 +12,6 @@ public import Mathlib.Logic.Function.Basic
 
 # One-parameter groups
 
-## 0. One line summary
-
 Defines one-parameter groups `α : ℝ → E → E` satisfying `α 0 = id` and the group law.
 
 ## i. Overview

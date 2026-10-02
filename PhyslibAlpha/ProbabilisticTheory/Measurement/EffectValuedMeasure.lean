@@ -12,8 +12,6 @@ public import Mathlib.Algebra.Order.BigOperators.Group.Finset
 /-!
 # Effect-valued measures
 
-## 0. One line summary
-
 Effect-valued measures: countably additive assignments of effects to events.
 
 ## i. Overview

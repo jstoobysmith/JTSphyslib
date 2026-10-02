@@ -8,8 +8,6 @@ public import Physlib.Meta.TODO.Basic
 /-!
 # PhyslibAlpha
 
-## 0. One line summary
-
 The entry point of PhyslibAlpha, an extension of Physlib with a lighter review process.
 
 ## i. Overview

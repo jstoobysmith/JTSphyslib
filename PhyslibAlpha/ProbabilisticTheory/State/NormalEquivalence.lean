@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.WeightEquivalence
 
 # Normal states give normal weights
 
-## 0. One line summary
-
 The weight of a normal state is a normal weight.
 
 ## i. Overview

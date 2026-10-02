@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.EffectValuedMeasure
 
 # Integrating simple functions against an effect-valued measure
 
-## 0. One line summary
-
 The integral of simple functions against an effect-valued measure, linear and positive.
 
 ## i. Overview

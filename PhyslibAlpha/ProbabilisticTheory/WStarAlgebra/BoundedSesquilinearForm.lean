@@ -11,8 +11,6 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 # Bounded sesquilinear forms
 
-## 0. One line summary
-
 A bounded sesquilinear form on a Hilbert space is represented by a bounded operator.
 
 ## i. Overview

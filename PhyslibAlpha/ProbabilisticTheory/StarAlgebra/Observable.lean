@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.State.Basic
 
 # Observables
 
-## 0. One line summary
-
 Observables as self-adjoint elements, and the real state on observables of a complex state.
 
 ## i. Overview

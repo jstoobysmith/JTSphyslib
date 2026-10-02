@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Group.Action.Prod
 
 # Covariance of measurements under an action on the outcomes
 
-## 0. One line summary
-
 Covariance of measurements under a group action on outcomes, and its preservation.
 
 ## i. Overview

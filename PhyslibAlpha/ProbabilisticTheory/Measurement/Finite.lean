@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.Basic
 /-!
 # Measurements with finitely many outcomes
 
-## 0. One line summary
-
 Measurements with finitely many outcomes are the families of effects summing to `1`.
 
 ## i. Overview

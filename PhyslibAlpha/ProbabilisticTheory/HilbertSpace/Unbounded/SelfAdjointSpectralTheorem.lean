@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.WeakIntegr
 
 # The spectral theorem, stated
 
-## 0. One line summary
-
 Essential self-adjointness and spectral resolutions of self-adjoint operators, with their domains.
 
 ## i. Overview

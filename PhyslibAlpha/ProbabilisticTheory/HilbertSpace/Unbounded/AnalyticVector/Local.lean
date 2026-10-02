@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.AnalyticVe
 
 # Local and global analytic orbits
 
-## 0. One line summary
-
 Local analytic orbits agree on overlaps and glue into a global orbit orthogonal to deficiencies.
 
 ## i. Overview

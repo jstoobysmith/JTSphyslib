@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Classical.Nuclear
 /-!
 # Complete positivity of classical channels
 
-## 0. One line summary
-
 Channels into or out of a classical (nuclear) system are completely positive.
 
 ## i. Overview

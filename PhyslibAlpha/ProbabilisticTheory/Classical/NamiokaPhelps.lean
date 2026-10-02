@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Classical.Compatibility
 /-!
 # Classical theories compose uniquely with the square
 
-## 0. One line summary
-
 Namioka–Phelps square test: classical exactly when composition with the square is unique.
 
 ## i. Overview

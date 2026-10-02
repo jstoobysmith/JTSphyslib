@@ -14,8 +14,6 @@ public import Mathlib.Topology.Order.MonotoneConvergence
 /-!
 # The Born rule for effect-valued measures
 
-## 0. One line summary
-
 An effect-valued measure sends each normal state to a probability law on its outcomes.
 
 ## i. Overview

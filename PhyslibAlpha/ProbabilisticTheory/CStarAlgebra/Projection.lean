@@ -12,8 +12,6 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Project
 
 # Projections
 
-## 0. One line summary
-
 Projections of a C⋆-algebra: sharp idempotent effects with complements and spectrum in {0, 1}.
 
 ## i. Overview

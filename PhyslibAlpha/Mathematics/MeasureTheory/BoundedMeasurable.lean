@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Order.Module.Defs
 /-!
 # Bounded measurable functions
 
-## 0. One line summary
-
 The vector lattice of bounded measurable functions, staircase approximation and integrability.
 
 ## i. Overview

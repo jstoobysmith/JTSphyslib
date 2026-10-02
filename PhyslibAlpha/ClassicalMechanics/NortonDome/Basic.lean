@@ -12,8 +12,6 @@ public import PhyslibAlpha.ClassicalMechanics.NortonDome.Sqrt
 
 # The Norton dome
 
-## 0. One line summary
-
 The Norton dome: energies, force, equation of motion, and the non-Lipschitz force at the apex.
 
 ## i. Overview

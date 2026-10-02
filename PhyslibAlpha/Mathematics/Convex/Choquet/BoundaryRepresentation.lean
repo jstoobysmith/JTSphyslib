@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 /-!
 # Representations by measures on a boundary
 
-## 0. One line summary
-
 Boundary representations of points by regular probability measures, and simplices.
 
 ## i. Overview

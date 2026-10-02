@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.BoundedInt
 
 # The unitary group of a spectral measure
 
-## 0. One line summary
-
 The strongly continuous unitary group `t ↦ exp(i t T)` obtained from a spectral measure on `ℝ`.
 
 ## i. Overview

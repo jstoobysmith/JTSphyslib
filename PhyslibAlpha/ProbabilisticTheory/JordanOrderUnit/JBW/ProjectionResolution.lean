@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.BoundedScalarization
 /-!
 # Projection resolutions in JBW-algebras
 
-## 0. One line summary
-
 Normal states turn projection resolutions into probability laws and separate them.
 
 ## i. Overview

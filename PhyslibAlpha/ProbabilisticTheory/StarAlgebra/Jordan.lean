@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.StarAlgebra.Observable
 
 # The Jordan product of observables
 
-## 0. One line summary
-
 The Jordan product ½ (a b + b a) makes the self-adjoint elements a commutative Jordan ring.
 
 ## i. Overview

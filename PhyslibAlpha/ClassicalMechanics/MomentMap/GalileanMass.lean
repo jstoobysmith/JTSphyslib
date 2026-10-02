@@ -13,8 +13,6 @@ public import Mathlib.Analysis.Calculus.Deriv.Pow
 
 # The mass as a cohomology class of the Galilean Lie algebra (Souriau)
 
-## 0. One line summary
-
 The total mass as a non-trivial cohomology class of the Galilean Lie algebra (Souriau).
 
 ## i. Overview

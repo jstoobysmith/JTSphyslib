@@ -15,8 +15,6 @@ public import Mathlib.Tactic.Ring
 /-!
 # Elementary real bounds
 
-## 0. One line summary
-
 Elementary real estimates: suprema of sums, bounds up to `1 / (n + 1)`, and weighted averages.
 
 ## i. Overview

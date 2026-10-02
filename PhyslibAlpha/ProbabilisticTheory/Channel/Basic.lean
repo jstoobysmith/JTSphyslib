@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.OrderUnit.PositiveDual
 /-!
 # Channels
 
-## 0. One line summary
-
 Channels as unital positive linear maps between order-unit spaces, and their composition.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Mathlib.Tactic.Abel
 
 # Derivations
 
-## 0. One line summary
-
 Derivations of a bilinear multiplication and their closure under linear operations.
 
 ## i. Overview

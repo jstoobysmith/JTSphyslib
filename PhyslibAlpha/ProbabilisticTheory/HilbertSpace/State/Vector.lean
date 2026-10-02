@@ -13,8 +13,6 @@ public import Mathlib.Analysis.InnerProductSpace.StarOrder
 
 # Vector states
 
-## 0. One line summary
-
 A unit vector `ψ` defines the vector state `x ↦ ⟪ψ, x ψ⟫` on the bounded operators.
 
 ## i. Overview

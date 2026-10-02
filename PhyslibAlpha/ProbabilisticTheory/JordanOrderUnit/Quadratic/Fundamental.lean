@@ -13,8 +13,6 @@ public import Mathlib.Tactic.LinearCombination
 
 # The fundamental formula
 
-## 0. One line summary
-
 The fundamental formula `U_{U_a b} = U_a U_b U_a`, proved from the Jordan identity alone.
 
 ## i. Overview

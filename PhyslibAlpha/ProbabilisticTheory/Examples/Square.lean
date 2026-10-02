@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Composite.TensorCone
 /-!
 # The square
 
-## 0. One line summary
-
 The square state space: its observables, its four facets and vertex values of composites.
 
 ## i. Overview

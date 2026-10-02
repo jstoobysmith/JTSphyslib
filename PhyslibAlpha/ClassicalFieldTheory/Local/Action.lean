@@ -10,8 +10,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.Variation
 /-!
 # Local action functionals
 
-## 0. One line summary
-
 The local action of a field, its value under admissible variations, and critical fields.
 
 ## i. Overview

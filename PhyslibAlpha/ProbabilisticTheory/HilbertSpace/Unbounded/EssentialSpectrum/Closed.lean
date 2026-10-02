@@ -14,8 +14,6 @@ public import Mathlib.Analysis.SpecificLimits.Basic
 
 # The essential spectrum is closed
 
-## 0. One line summary
-
 The essential spectrum of a self-adjoint operator is closed.
 
 ## i. Overview

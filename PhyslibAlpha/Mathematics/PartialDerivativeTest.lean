@@ -16,8 +16,6 @@ public import Mathlib.Analysis.InnerProductSpace.PiL2
 /-!
 # The Second Partial Derivatives Test
 
-## 0. One line summary
-
 A positive definite Hessian at a critical point of an analytic function gives a local minimum.
 
 ## i. Overview

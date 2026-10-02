@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.GeneralId
 
 # Rank-one positive operators
 
-## 0. One line summary
-
 The rank-one operator `|x⟩⟨x|` is trace class with trace and trace norm `‖x‖²`.
 
 ## i. Overview

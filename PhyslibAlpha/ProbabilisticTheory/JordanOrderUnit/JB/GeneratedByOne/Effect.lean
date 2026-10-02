@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Effect.Sharp
 
 # Effects from the functional calculus
 
-## 0. One line summary
-
 A continuous `[0, 1]`-valued function of an observable in a JB-algebra is an effect.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Physlib.SpaceAndTime.Time.Derivatives
 
 # Conservative Newtonian systems and determinism
 
-## 0. One line summary
-
 Conservative Newtonian systems: a locally Lipschitz force gives determinism.
 
 ## i. Overview

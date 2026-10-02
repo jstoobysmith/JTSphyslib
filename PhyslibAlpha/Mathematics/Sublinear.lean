@@ -10,8 +10,6 @@ public import Mathlib.Analysis.Convex.Cone.Extension
 /-!
 # Linear minorants of sublinear functionals
 
-## 0. One line summary
-
 A sublinear functional has a linear minorant attaining it at any given point (Hahn–Banach).
 
 ## i. Overview

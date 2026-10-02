@@ -12,8 +12,6 @@ public import Mathlib.Basic.Real.Pointwise
 /-!
 # Positive majorants
 
-## 0. One line summary
-
 A positive functional of weight at most m at u that dominates P - N, via Hahn–Banach.
 
 ## i. Overview

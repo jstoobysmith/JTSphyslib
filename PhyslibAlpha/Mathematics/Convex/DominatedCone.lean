@@ -11,8 +11,6 @@ public import Mathlib.Basic.Real.Pointwise
 /-!
 # Separation from dominated cones
 
-## 0. One line summary
-
 Hahn–Banach separation of vectors from a convex cone dominated by a vector.
 
 ## i. Overview

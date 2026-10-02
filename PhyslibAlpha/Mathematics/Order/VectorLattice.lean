@@ -16,8 +16,6 @@ public import Mathlib.Tactic.GCongr
 /-!
 # Vector lattices
 
-## 0. One line summary
-
 Elementary arithmetic of infima in real vector lattices: Riesz decomposition and disjointness.
 
 ## i. Overview

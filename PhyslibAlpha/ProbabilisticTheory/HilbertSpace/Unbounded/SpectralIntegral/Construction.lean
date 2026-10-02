@@ -14,8 +14,6 @@ public import Mathlib.MeasureTheory.VectorMeasure.SetIntegral
 
 # Integrating unbounded functions against a spectral measure
 
-## 0. One line summary
-
 The maximal spectral integral `∫ f dμ` of an unbounded function, built from bounded truncations.
 
 ## i. Overview

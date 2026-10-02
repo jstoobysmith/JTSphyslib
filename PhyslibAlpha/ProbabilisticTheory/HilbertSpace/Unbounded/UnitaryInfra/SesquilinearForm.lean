@@ -20,8 +20,6 @@ public import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 
 # The spectral forms of a bounded normal operator
 
-## 0. One line summary
-
 Complex measures `⟪y, E(·) x⟫` of a bounded normal operator and their sesquilinear forms.
 
 ## i. Overview

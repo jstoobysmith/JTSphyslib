@@ -11,8 +11,6 @@ public import Mathlib.Analysis.Complex.Basic
 
 # The complex conjugate of a normed space
 
-## 0. One line summary
-
 The complex conjugate `ConjSpace X` of a complex normed space, with twisted scalar action.
 
 ## i. Overview

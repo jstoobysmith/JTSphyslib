@@ -11,8 +11,6 @@ public import Mathlib.RingTheory.MvPolynomial.Tower
 /-!
 # The effective potential of the two Higgs doublet model
 
-## 0. One line summary
-
 Effective potentials of the 2HDM, their gauge invariance, and their maximum mass dimension.
 
 ## i. Overview

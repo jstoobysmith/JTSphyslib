@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.SpectralMeasure
 
 # Spectral formulas for Jordan moments
 
-## 0. One line summary
-
 Jordan moments and the variance of an observable as integrals against its spectral measure.
 
 ## i. Overview

@@ -14,8 +14,6 @@ public import Mathlib.Topology.Sequences
 
 # Compact operators and weakly null sequences
 
-## 0. One line summary
-
 Orthonormal sequences are weakly null, and compact operators make them norm-null.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.Conditioning
 
 # Jordan positivity in a C⋆-algebra
 
-## 0. One line summary
-
 In a C⋆-algebra, nonnegative observables are Jordan squares and `a₊ ∘ a₋ = 0`.
 
 ## i. Overview

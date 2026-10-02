@@ -12,8 +12,6 @@ public import PhyslibAlpha.Mathematics.Order.PositiveDual.UpperEnvelope
 /-!
 # Refinement of ensembles
 
-## 0. One line summary
-
 Refinement of ensembles, its consequences for pure states, and refinement on a simplex.
 
 ## i. Overview

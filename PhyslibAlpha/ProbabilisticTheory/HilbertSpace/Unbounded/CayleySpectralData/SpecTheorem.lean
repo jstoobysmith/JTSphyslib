@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.SelfAdjoin
 
 # The spectral theorem for unbounded self-adjoint operators
 
-## 0. One line summary
-
 The spectral theorem for unbounded self-adjoint operators via the Cayley transform.
 
 ## i. Overview

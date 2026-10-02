@@ -12,8 +12,6 @@ public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 
 # The GNS construction
 
-## 0. One line summary
-
 Every state on a C⋆-algebra is the vector state of a cyclic unit vector in its GNS representation.
 
 ## i. Overview

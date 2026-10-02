@@ -16,8 +16,6 @@ public import PhyslibAlpha.Mathematics.PartialDerivativeTest
 /-!
 # Coupled spring potential
 
-## 0. One line summary
-
 The coupled spring potential x₀² + x₀x₁ + x₁² has a local minimum at the origin.
 
 ## i. Overview

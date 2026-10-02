@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.AnalyticVe
 
 # Stone's theorem: existence of the generator
 
-## 0. One line summary
-
 Stone's theorem, existence: the candidate generator is essentially self-adjoint.
 
 ## i. Overview

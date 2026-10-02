@@ -14,8 +14,6 @@ public import Mathlib.MeasureTheory.Group.Integral
 
 # Gårding vectors of smooth kernels
 
-## 0. One line summary
-
 Gårding vectors of a general kernel and the differentiability of their orbits.
 
 ## i. Overview

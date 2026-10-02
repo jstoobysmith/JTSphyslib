@@ -10,8 +10,6 @@ public import PhyslibAlpha.ProbabilisticTheory.OrderUnit.Lattice
 /-!
 # Classical systems
 
-## 0. One line summary
-
 Classical systems: those whose positive functionals have least upper bounds.
 
 ## i. Overview

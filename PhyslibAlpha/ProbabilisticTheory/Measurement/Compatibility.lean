@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Measurement.Postprocessing
 /-!
 # Compatibility of measurements
 
-## 0. One line summary
-
 Compatible and jointly measurable measurements, with an order criterion for binary ones.
 
 ## i. Overview

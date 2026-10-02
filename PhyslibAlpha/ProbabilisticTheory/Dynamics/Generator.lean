@@ -12,8 +12,6 @@ public import Mathlib.Analysis.Calculus.Deriv.Basic
 
 # Generators of one-parameter groups
 
-## 0. One line summary
-
 The generator of a one-parameter family on a normed space, and its uniqueness.
 
 ## i. Overview

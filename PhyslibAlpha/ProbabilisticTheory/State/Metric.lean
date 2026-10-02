@@ -12,8 +12,6 @@ public import Mathlib.Topology.MetricSpace.HausdorffDistance
 /-!
 # The metric space of states
 
-## 0. One line summary
-
 States are bounded by the order-unit norm, giving a metric on states and a distance to purity.
 
 ## i. Overview

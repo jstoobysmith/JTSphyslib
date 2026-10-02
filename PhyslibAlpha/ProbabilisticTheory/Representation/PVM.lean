@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.CStarAlgebra.SharpEffect
 
 # POVMs and PVMs
 
-## 0. One line summary
-
 POVMs as effect-valued measures, and PVMs as POVMs whose values are sharp effects.
 
 ## i. Overview

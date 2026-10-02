@@ -10,8 +10,6 @@ public import Mathlib.Analysis.Normed.Lp.lpSpace
 /-!
 # Quantum harmonic oscillator
 
-## 0. One line summary
-
 Ladder operators, commutation relation and coherent states of the quantum harmonic oscillator.
 
 ## i. Overview

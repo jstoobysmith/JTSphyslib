@@ -11,8 +11,6 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 
 # Line surfaces in `Space d`
 
-## 0. One line summary
-
 The coordinate line in `Space d` with its measure, distribution and vanishing ambient volume.
 
 ## i. Overview

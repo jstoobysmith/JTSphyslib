@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.TraceClass.GeneralPr
 
 # Trace-norm estimates
 
-## 0. One line summary
-
 The duality bound for the trace norm, its subadditivity and the two-sided ideal estimate.
 
 ## i. Overview

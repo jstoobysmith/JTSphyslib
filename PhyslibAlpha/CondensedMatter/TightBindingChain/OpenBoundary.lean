@@ -10,8 +10,6 @@ public import Physlib.CondensedMatter.TightBindingChain.Basic
 
 # The tight binding chain with open boundary conditions
 
-## 0. One line summary
-
 The position operator and the Hamiltonian of the tight binding chain with open boundaries.
 
 ## i. Overview

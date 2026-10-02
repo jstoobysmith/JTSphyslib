@@ -13,8 +13,6 @@ public import Mathlib.MeasureTheory.VectorMeasure.SetIntegral
 
 # The vector-measure integral against a scalar matrix coefficient
 
-## 0. One line summary
-
 Weak integrals `∫ f d⟪y, μS(·) x⟫` of possibly unbounded functions against a spectral measure.
 
 ## i. Overview

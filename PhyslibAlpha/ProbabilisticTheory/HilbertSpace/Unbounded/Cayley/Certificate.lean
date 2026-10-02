@@ -12,8 +12,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.Cayley.Mea
 
 # Spectral data of bounded normal and unitary operators
 
-## 0. One line summary
-
 Spectral measures reconstructing bounded normal and unitary operators.
 
 ## i. Overview

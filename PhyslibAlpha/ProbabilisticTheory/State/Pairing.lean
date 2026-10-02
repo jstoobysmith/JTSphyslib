@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Effect.Convex
 /-!
 # The state–effect pairing
 
-## 0. One line summary
-
 The state–effect pairing is affine, takes values in [0, 1], and separates states and effects.
 
 ## i. Overview

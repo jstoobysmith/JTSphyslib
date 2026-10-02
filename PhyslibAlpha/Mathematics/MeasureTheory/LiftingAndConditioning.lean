@@ -14,8 +14,6 @@ public import Mathlib.MeasureTheory.Measure.Prokhorov
 /-!
 # Lifting, averaging and conditioning probability measures
 
-## 0. One line summary
-
 Lifting, averaging, conditioning and replacing parts of probability measures.
 
 ## i. Overview

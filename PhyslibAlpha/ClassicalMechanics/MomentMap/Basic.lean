@@ -20,8 +20,6 @@ public import Mathlib.Analysis.Calculus.MeanValue
 
 # Souriau's moment map on a symplectic vector space
 
-## 0. One line summary
-
 Souriau's moment map, cocycle and Noether theorem for affine actions on a symplectic space.
 
 ## i. Overview

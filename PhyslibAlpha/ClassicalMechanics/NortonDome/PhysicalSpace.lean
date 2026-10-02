@@ -11,8 +11,6 @@ public import Physlib.SpaceAndTime.Space.Module
 
 # The Norton dome in physical space
 
-## 0. One line summary
-
 The Norton dome chart dynamics as a point mass constrained to the dome surface.
 
 ## i. Overview

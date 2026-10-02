@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.Unbounded.ScalarMeas
 
 # Transporting spectral measures along unitaries
 
-## 0. One line summary
-
 Conjugating operators and spectral measures by a unitary.
 
 ## i. Overview

@@ -13,8 +13,6 @@ public import Mathlib.Algebra.Star.Unitary
 
 # The spectral measure of a bounded normal operator
 
-## 0. One line summary
-
 The projection-valued spectral measure `E` of a bounded normal operator `U`, built from its CFC.
 
 ## i. Overview

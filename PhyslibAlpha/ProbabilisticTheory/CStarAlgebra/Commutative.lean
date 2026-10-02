@@ -12,8 +12,6 @@ public import Mathlib.Analysis.CStarAlgebra.GelfandDuality
 /-!
 # Commutative C⋆-algebras are classical
 
-## 0. One line summary
-
 The observables of a commutative C⋆-algebra form a classical system, via its characters.
 
 ## i. Overview

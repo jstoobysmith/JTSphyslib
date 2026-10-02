@@ -12,8 +12,6 @@ public import Mathlib.Algebra.DirectSum.Module
 
 # Schur's lemma for covariant channels
 
-## 0. One line summary
-
 Schur's lemma as a hypothesis: equivariant maps and covariant channels are scalar on blocks.
 
 ## i. Overview

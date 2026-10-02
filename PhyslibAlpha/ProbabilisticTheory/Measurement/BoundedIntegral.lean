@@ -19,8 +19,6 @@ public import Mathlib.Analysis.Normed.Group.Uniform
 
 # Integrating bounded functions against an effect-valued measure
 
-## 0. One line summary
-
 The integral of bounded measurable functions against an effect-valued measure.
 
 ## i. Overview

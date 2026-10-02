@@ -9,8 +9,6 @@ public import PhyslibAlpha.ClassicalFieldTheory.Local.Action
 /-!
 # Local Euler-Lagrange operators
 
-## 0. One line summary
-
 The local Euler-Lagrange operator of a local Lagrangian, built componentwise.
 
 ## i. Overview

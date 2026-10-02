@@ -18,8 +18,6 @@ public import Mathlib.Analysis.Real.Pi.Irrational
 /-!
 # The two Higgs doublet potential as a polynomial in the gauge invariants
 
-## 0. One line summary
-
 Every gauge-invariant polynomial 2HDM potential is a polynomial in the four Gram bilinears.
 
 ## i. Overview

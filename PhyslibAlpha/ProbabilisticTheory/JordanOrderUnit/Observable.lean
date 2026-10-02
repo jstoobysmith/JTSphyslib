@@ -14,8 +14,6 @@ public import PhyslibAlpha.ProbabilisticTheory.Algebra.Statistics
 
 # Moments, variance and Jordan projections
 
-## 0. One line summary
-
 Moments and variance of observables, and Jordan projections as effects and compressions.
 
 ## i. Overview

@@ -11,8 +11,6 @@ public import PhyslibAlpha.ProbabilisticTheory.JordanOrderUnit.JB.GeneratedByOne
 
 # The positive cone of a JB-algebra
 
-## 0. One line summary
-
 In an ordered JB-algebra the nonnegative observables are exactly the squares.
 
 ## i. Overview
