@@ -143,14 +143,15 @@ noncomputable def charge (n : ℤ) (R : MatrixRep jets ι) : MatrixRep jets ι w
   jetAct_map_cc_foldl p a := by
     show (R.jetAct a + ((Complex.I * n) • F.φJ a) • 1).map _
       = R.act _ + (Complex.I * n * F.φ _) • 1
-    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.foldl_pderiv_add, map_add]),
+    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.iteratedPDeriv_add, map_add]),
       R.jetAct_map_cc_foldl, ← F.φJ_cc_foldl]
     congr 1
     refine Matrix.ext fun i j => ?_
     simp only [Matrix.map_apply, Matrix.smul_apply, Matrix.one_apply, smul_eq_mul]
     split_ifs
-    · rw [mul_one, mul_one, MatrixRep.foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul]
-    · rw [mul_zero, mul_zero, SpaceTimeAlgebra.foldl_pderiv_zero, map_zero]
+    · rw [mul_one, mul_one, SpaceTimeAlgebra.iteratedPDeriv_smul,
+        constantCoeff_smul, smul_eq_mul]
+    · rw [mul_zero, mul_zero, SpaceTimeAlgebra.iteratedPDeriv_zero_apply, map_zero]
   mat_map_pderiv U μ := by
     show (chargePow n (F.u U) • R.mat U).map _
       = -((R.jetAct _ + ((Complex.I * n) • F.φJ _) • 1) * (chargePow n (F.u U) • R.mat U))
@@ -204,7 +205,7 @@ noncomputable def fund : MatrixRep jets n where
   jetAct_map_cc_foldl p a := by
     show (Complex.I • F.φJ a).map _ = Complex.I • F.φ _
     rw [Matrix.map_smul _ Complex.I (fun f => by
-      rw [MatrixRep.foldl_pderiv_smul, constantCoeff_smul]), F.φJ_cc_foldl]
+      rw [SpaceTimeAlgebra.iteratedPDeriv_smul, constantCoeff_smul]), F.φJ_cc_foldl]
   mat_map_pderiv U μ := by
     show (F.u U).map _ = -(Complex.I • F.φJ _ * F.u U)
     rw [F.φJ_maurerCartan, smul_smul, Complex.I_mul_I, neg_one_smul, Matrix.neg_mul, neg_neg,

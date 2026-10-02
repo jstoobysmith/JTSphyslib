@@ -194,7 +194,7 @@ lemma invariantsLE_inf_eq_iff (w : ℕ) (A Q : Submodule ℂ T.LocalFieldAlgebra
   For a scalar in a unitary representation it is the mass term. -/
 noncomputable def bosonNormSq (j : T.BosonSpecies) {ι : Type} [Fintype ι] [DecidableEq ι]
     (b : Module.Basis ι ℂ (T.BosonValue j)) : T.LocalFieldAlgebra :=
-  ∑ i, T.conjBosonSymbol j 0 (b.conj.dualBasis i) * T.bosonSymbol j 0 (b.dualBasis i)
+  ∑ i, T.conjBosonSymbol j 0 ((Basis.conj b).dualBasis i) * T.bosonSymbol j 0 (b.dualBasis i)
 
 /-!
 

@@ -11,7 +11,7 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
-public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.Modules.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.RingTheory.MvPowerSeries.Derivative

@@ -113,7 +113,7 @@ lemma evalPotential_fieldStrength_zero_apply (A : ElectromagneticPotential 3)
 theorem evalPotential_fieldStrength_zero (A : ElectromagneticPotential 3)
     (hA : Differentiable ℝ A) (μ ν : Fin 1 ⊕ Fin 3) (x : SpaceTime 3) :
     evalPotential A (fieldStrength 0 μ ν) x =
-      η μ μ * η ν ν * toField {A.toFieldStrength x | [μ] [ν]}ᵀ := by
+      η μ μ * η ν ν * toScalar {A.toFieldStrength x | [μ] [ν]}ᵀ := by
   rw [evalPotential_fieldStrength_zero_apply A hA μ ν x,
     ElectromagneticPotential.toFieldStrength_eval_apply_eq_single A x μ ν]
   rcases mul_self_eq_one_iff.mp (minkowskiMatrix.η_apply_mul_η_apply_diag μ) with h1 | h1 <;>
@@ -343,7 +343,7 @@ theorem isExtrema_iff_evalPotential_maxwellOperator (𝓕 : FreeSpace)
   rw [ElectromagneticPotential.isExtrema_iff_toFieldStrength_eval A hA J hJ]
   refine forall_congr' fun x => forall_congr' fun ν => Iff.of_eq ?_
   refine congrArg (· = 𝓕.μ₀ * J x ν) ?_
-  have hFmat : ∀ μ' : Fin 1 ⊕ Fin 3, (fun y => toField {A.toFieldStrength y | [μ'] [ν]}ᵀ) =
+  have hFmat : ∀ μ' : Fin 1 ⊕ Fin 3, (fun y => toScalar {A.toFieldStrength y | [μ'] [ν]}ᵀ) =
       fun y => (η μ' μ' * η ν ν) * evalPotential A (fieldStrength 0 μ' ν) y := by
     intro μ'
     funext y
@@ -353,10 +353,10 @@ theorem isExtrema_iff_evalPotential_maxwellOperator (𝓕 : FreeSpace)
       rcases mul_self_eq_one_iff.mp (minkowskiMatrix.η_apply_mul_η_apply_diag ν) with
         h2' | h2' <;>
       rw [h1, h2'] <;> ring
-  calc ∑ μ, ∂_ μ (fun y => toField {A.toFieldStrength y | [μ] [ν]}ᵀ) x
+  calc ∑ μ, ∂_ μ (fun y => toScalar {A.toFieldStrength y | [μ] [ν]}ᵀ) x
       = ∑ μ, (η μ μ * η ν ν) * ∂_ μ (evalPotential A (fieldStrength 0 μ ν)) x := by
         refine Finset.sum_congr rfl fun μ _ => ?_
-        rw [show (fun y => toField {A.toFieldStrength y | [μ] [ν]}ᵀ) =
+        rw [show (fun y => toScalar {A.toFieldStrength y | [μ] [ν]}ᵀ) =
             fun y => (η μ μ * η ν ν) * evalPotential A (fieldStrength 0 μ ν) y from
           hFmat μ, deriv_const_mul_apply _ _ (hdiffF μ ν)]
     _ = evalPotential A (maxwellOperator ν) x := by

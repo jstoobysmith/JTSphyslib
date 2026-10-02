@@ -87,16 +87,18 @@ lemma coeff_maurerCartanForm_eq_zero_of_mem_truncationKer (ψ : GaugeAlgebra →
     (hψ : ψ 0 = 0) (f : JetGaugeAlgebra → SpaceTimeAlgebra)
     (hf : ∀ (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra),
       ψ (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv s a)) =
-        constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f a)))
+        constantCoeff (SpaceTimeAlgebra.iteratedPDeriv s (f a)))
     {U : JetGaugeGroupI} {n : ℕ} (hU : U ∈ localGaugeData.truncationKer n) (ρ : Fin 1 ⊕ Fin 3)
     {m : (Fin 1 ⊕ Fin 3) →₀ ℕ} (hm : Finsupp.degree m < n) :
     coeff m (f (maurerCartanForm U ρ)) = 0 := by
   have h0 := hU.2 (Finsupp.toMultiset m) ρ (by
-    rw [← degree_toFinsupp_eq_card, Finsupp.toMultiset_toFinsupp]; exact hm)
+    rw [Finsupp.card_toMultiset]
+    change (m.sum fun _ n => n) < n
+    exact hm)
   have h1 := congrArg ψ h0
   simp only [localGaugeData_evalLie, localGaugeData_iteratedDeriv, localGaugeData_maurerCartan,
     hψ] at h1
-  rw [hf, constantCoeff_foldl_pderiv, Finsupp.toMultiset_toFinsupp] at h1
+  rw [hf, constantCoeff_iteratedPDeriv, Finsupp.toMultiset_toFinsupp] at h1
   exact (mul_eq_zero.mp h1).resolve_left (Nat.cast_ne_zero.mpr
     (Finset.prod_ne_zero_iff.mpr fun ν _ => Nat.factorial_ne_zero _))
 

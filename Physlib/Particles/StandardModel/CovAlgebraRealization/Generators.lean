@@ -338,18 +338,18 @@ set_option linter.unusedVariables false in
 noncomputable def generatorVal
     (h : CovAlgebraRealization B repGauge repLorentz massWeightPoly) : Generators → B
   | .H _ l j => h.covH l (HiggsVec.orthonormBasis.toBasis.coord j)
-  | .barH _ l j => h.covBarH l (HiggsVec.orthonormBasis.toBasis.conj.coord j)
+  | .barH _ l j => h.covBarH l ((Basis.conj HiggsVec.orthonormBasis.toBasis).coord j)
   | .F _ l μ ν j => h.covF l μ ν (GaugeAlgebra.stdBasis.coord j)
   | .d i _ l j => h.covD i l (DownSinglet.basis.coord j)
-  | .bard i _ l j => h.covBarD i l (DownSinglet.basis.conj.coord j)
+  | .bard i _ l j => h.covBarD i l ((Basis.conj DownSinglet.basis).coord j)
   | .u i _ l j => h.covU i l (UpSinglet.basis.coord j)
-  | .baru i _ l j => h.covBarU i l (UpSinglet.basis.conj.coord j)
+  | .baru i _ l j => h.covBarU i l ((Basis.conj UpSinglet.basis).coord j)
   | .Q i _ l j => h.covQ i l (QuarkDoublet.basis.coord j)
-  | .barQ i _ l j => h.covBarQ i l (QuarkDoublet.basis.conj.coord j)
+  | .barQ i _ l j => h.covBarQ i l ((Basis.conj QuarkDoublet.basis).coord j)
   | .L i _ l j => h.covL i l (LeptonDoublet.basis.coord j)
-  | .barL i _ l j => h.covBarL i l (LeptonDoublet.basis.conj.coord j)
+  | .barL i _ l j => h.covBarL i l ((Basis.conj LeptonDoublet.basis).coord j)
   | .e i _ l j => h.covE i l (LeptonSinglet.basis.coord j)
-  | .bare i _ l j => h.covBarE i l (LeptonSinglet.basis.conj.coord j)
+  | .bare i _ l j => h.covBarE i l ((Basis.conj LeptonSinglet.basis).coord j)
 
 /-- Every covariant generator is a `massWeightPoly`-eigenvector of its weight. -/
 lemma massWeightPoly_generatorVal (g : Generators) :
@@ -444,7 +444,7 @@ lemma fieldAlgebra_le_adjoin_range :
     exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
       (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.H n l j))) _
-  · rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
+  · rw [← (Basis.conj HiggsVec.orthonormBasis.toBasis).sum_dual_apply_smul_coord φ]
     simp only [map_sum, map_smul]
     exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
       (Algebra.subset_adjoin
@@ -456,7 +456,7 @@ lemma fieldAlgebra_le_adjoin_range :
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.d i n l j))) _
-    · rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+    · rw [← (Basis.conj DownSinglet.basis).sum_dual_apply_smul_coord φ]
       simp only [map_sum, map_smul]
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
@@ -466,7 +466,7 @@ lemma fieldAlgebra_le_adjoin_range :
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.u i n l j))) _
-    · rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+    · rw [← (Basis.conj UpSinglet.basis).sum_dual_apply_smul_coord φ]
       simp only [map_sum, map_smul]
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
@@ -476,7 +476,7 @@ lemma fieldAlgebra_le_adjoin_range :
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.Q i n l j))) _
-    · rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+    · rw [← (Basis.conj QuarkDoublet.basis).sum_dual_apply_smul_coord φ]
       simp only [map_sum, map_smul]
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
@@ -486,7 +486,7 @@ lemma fieldAlgebra_le_adjoin_range :
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.L i n l j))) _
-    · rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+    · rw [← (Basis.conj LeptonDoublet.basis).sum_dual_apply_smul_coord φ]
       simp only [map_sum, map_smul]
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
@@ -496,7 +496,7 @@ lemma fieldAlgebra_le_adjoin_range :
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin
           (Set.mem_range_self (f := h.generatorVal) (Generators.e i n l j))) _
-    · rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+    · rw [← (Basis.conj LeptonSinglet.basis).sum_dual_apply_smul_coord φ]
       simp only [map_sum, map_smul]
       exact Subalgebra.sum_mem _ fun j _ => Subalgebra.smul_mem _
         (Algebra.subset_adjoin

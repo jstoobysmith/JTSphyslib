@@ -10,7 +10,7 @@ public import Physlib.Particles.StandardModel.Fermions.UpSinglet.Basic
 public import Physlib.Particles.StandardModel.Fermions.QuarkDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonDoublet.Basic
 public import Physlib.Particles.StandardModel.Fermions.LeptonSinglet.Basic
-public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.Modules.ConjModule
 public import Physlib.Relativity.IsLorentzDeriv
 public import Mathlib.Algebra.Polynomial.AlgebraMap
 /-!

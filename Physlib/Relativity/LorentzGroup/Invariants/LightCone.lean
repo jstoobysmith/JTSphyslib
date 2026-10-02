@@ -5,7 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Mathematics.Fin
+public import Physlib.Mathematics.ForMathlib.Fin
 public import Physlib.Relativity.LorentzGroup.Invariants.Basic
 /-!
 # The light-cone basis of a boost axis over the integers

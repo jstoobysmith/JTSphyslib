@@ -6,7 +6,7 @@ Authors: Nathaneal Sajan
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.GaugeBoson.Realization.Symmetrized
-public import Physlib.Mathematics.Fin
+public import Physlib.Mathematics.ForMathlib.Fin
 public import Mathlib.RingTheory.Flat.Basic
 /-!
 # The field strength in the local gauge field algebra

@@ -6,7 +6,7 @@ Authors: Jinzheng Li
 module
 
 public import Physlib.ClassicalFieldTheory.GaugeTheory.LocalGaugeData.MatrixJets
-public import Physlib.Mathematics.DataStructures.Matrix.Scalar
+public import Physlib.Mathematics.ForMathlib.DataStructures.Matrix.Scalar
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import Mathlib.Tactic.LinearCombination
 /-!
@@ -292,13 +292,14 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra :=
 
 /-- The iterated derivative on `u(1)` jets is the iterated formal derivative. -/
 lemma u1_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetU1Algebra) :
-    (u1.iteratedDeriv s a : SpaceTimeAlgebra) = s.foldl (fun h ρ => pderiv ρ h)
-        (a : SpaceTimeAlgebra) := by
+    (u1.iteratedDeriv s a : SpaceTimeAlgebra) =
+      SpaceTimeAlgebra.iteratedPDeriv s (a : SpaceTimeAlgebra) := by
   induction s using Multiset.induction_on generalizing a with
-  | empty => rw [iteratedDeriv_zero, LinearMap.id_apply, Multiset.foldl_zero]
+  | empty => rw [iteratedDeriv_zero, LinearMap.id_apply, SpaceTimeAlgebra.iteratedPDeriv_zero]
   | cons μ t ih =>
     rw [iteratedDeriv_cons, LinearMap.comp_apply, u1_deriv, JetU1.deriv_val, ih,
-      Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
+      SpaceTimeAlgebra.iteratedPDeriv_cons]
+    exact (SpaceTimeAlgebra.iteratedPDeriv_pderiv t μ _).symm
 
 /-- The local gauge data of `U(1)` is faithful. -/
 instance instFaithfulU1 : u1.Faithful := u1MatrixJets.faithful
@@ -307,8 +308,8 @@ instance instFaithfulU1 : u1.Faithful := u1MatrixJets.faithful
   the unitary Euler transport of a `1 × 1` matrix is a unitary jet. -/
 instance instFreeU1 : u1.Free :=
   u1MatrixJets.free
-    (fun c => ⟨⟨SpaceTimeAlgebra.taylorSeries fun s => ((c s : U1Algebra) : ℂ), by
-      rw [selfAdjoint.mem_iff, SpaceTimeAlgebra.star_taylorSeries]
+    (fun c => ⟨⟨SpaceTimeAlgebra.ofDerivValues fun s => ((c s : U1Algebra) : ℂ), by
+      rw [selfAdjoint.mem_iff, SpaceTimeAlgebra.star_ofDerivValues]
       exact congrArg _ (funext fun s => (c s).2)⟩, by
       rw [Matrix.eq_scalar_fin_one (SpaceTimeAlgebra.taylorMatrix _),
           SpaceTimeAlgebra.taylorMatrix_apply]
@@ -338,7 +339,7 @@ noncomputable def u1Factor : U1Factor u1 where
   φJ a := (a : SpaceTimeAlgebra)
   φJ_ofConstantLie _ := rfl
   φJ_cc_foldl p a := by
-    show constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (a : SpaceTimeAlgebra))
+    show constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p (a : SpaceTimeAlgebra))
       = constantCoeff (u1.iteratedDeriv p a : SpaceTimeAlgebra)
     rw [u1_iteratedDeriv_val]
   φJ_maurerCartan _ _ := rfl

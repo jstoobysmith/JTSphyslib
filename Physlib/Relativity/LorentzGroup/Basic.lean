@@ -7,11 +7,11 @@ module
 
 public import Physlib.Relativity.MinkowskiMatrix
 public import Physlib.Meta.TODO.Basic
-public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Topology.Instances.Matrix
 public import Mathlib.Topology.Algebra.Group.Units
-public import Mathlib.Topology.Maps.Basic
 public import Mathlib.Topology.Algebra.Group.ClosedSubgroup
+public import Mathlib.Basic.Complex.Basic
+public import Mathlib.Topology.Algebra.Ring.Real
 /-!
 # The Lorentz Group
 
@@ -488,9 +488,8 @@ lemma sum_minkowskiMatrixZ_mul (Λ : LorentzGroup d) (a b : Fin 1 ⊕ Fin d) :
     refine Finset.sum_congr rfl fun y _ => ?_
     rw [Finset.sum_mul]
     exact Finset.sum_congr rfl fun x _ => by rw [minkowskiMatrixZ.cast_apply]; ring
-  have hC := congrArg (fun r : ℝ => (r : ℂ)) hR
-  push_cast at hC ⊢
-  exact hC
+  simpa only [map_sum, map_mul, Complex.ofRealHom_eq_coe, Complex.ofReal_intCast] using
+    congrArg Complex.ofRealHom hR
 
 lemma toComplex_mulVec_ofReal (v : Fin 1 ⊕ Fin d → ℝ) (Λ : LorentzGroup d) :
     toComplex Λ *ᵥ (ofRealHom ∘ v) = ofRealHom ∘ (Λ *ᵥ v) := by

@@ -150,7 +150,7 @@ noncomputable def kron (R₁ : MatrixRep jets ι₁) (R₂ : MatrixRep jets ι�
       kronecker_one_map _ (map_zero C), one_kronecker_map _ (map_zero C)]
   jetAct_map_cc_foldl p a := by
     show (R₁.jetAct a ⊗ₖ 1 + 1 ⊗ₖ R₂.jetAct a).map _ = R₁.act _ ⊗ₖ 1 + 1 ⊗ₖ R₂.act _
-    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.foldl_pderiv_add, map_add]),
+    rw [Matrix.map_add _ (fun x y => by rw [SpaceTimeAlgebra.iteratedPDeriv_add, map_add]),
       kronecker_one_map _ (by simp), one_kronecker_map _ (by simp),
       R₁.jetAct_map_cc_foldl, R₂.jetAct_map_cc_foldl]
   mat_map_pderiv U μ := by

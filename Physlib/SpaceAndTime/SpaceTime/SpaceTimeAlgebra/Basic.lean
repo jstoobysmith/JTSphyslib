@@ -1,43 +1,273 @@
 /-
 Copyright (c) 2026 Joseph Tooby-Smith. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Joseph Tooby-Smith
+Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
+public import Mathlib.Basic.Complex.Basic
+public import Physlib.Mathematics.Modules.ConjModule
+public import Mathlib.Algebra.Star.Module
+public import Mathlib.LinearAlgebra.Complex.Module
+public import Mathlib.RepresentationTheory.Basic
+public import Mathlib.LinearAlgebra.TensorProduct.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Derivative
-public import Physlib.Mathematics.ConjModule
 /-!
-# The jet ring
 
-The ring `SpaceTimeAlgebra` of formal power series in the four spacetime coordinates, in
-which jets of fields and of gauge transformations at a spacetime point are valued.
+# The spacetime algebra
 
-This file contains the definition of `SpaceTimeAlgebra`, its star structure, first-order
-coefficient identities, the formal partial derivative, and the truncation of jets.
-Results about matrices over `SpaceTimeAlgebra` are in
-`Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Matrix`.
+## i. Overview
+
+The spacetime algebra `SpaceTimeAlgebra` is the ring of formal power series with complex
+coefficients in four variables, one for each spacetime direction. The value at the base point of
+an iterated partial derivative of a series is the corresponding coefficient multiplied by a
+factorial. Consequently, a series is determined by these derivative values, and every family of
+values arises from exactly one series.
+
+## ii. Key results
+
+- `SpaceTimeAlgebra` : formal power series in the spacetime directions.
+- `SpaceTimeAlgebra.iteratedPDeriv` : iterated formal partial derivatives.
+- `SpaceTimeAlgebra.constantCoeff_iteratedPDeriv` : derivative values are `s!` times coefficients.
+- `SpaceTimeAlgebra.ext_of_constantCoeff_iteratedPDeriv` : derivative values determine a series.
+- `SpaceTimeAlgebra.ofDerivValues` : the series with given derivative values.
+- `SpaceTimeAlgebra.ofDerivValues_constantCoeff_iteratedPDeriv` : Taylor's formula.
+- `SpaceTimeAlgebra.derivValuesEquiv` : series and derivative values are linearly equivalent.
+
+## iii. Table of contents
+
+- A. The spacetime algebra
+- B. Iterated formal partial derivatives
+  - B.1. Commutation of formal partial derivatives
+  - B.2. Base-point values of iterated derivatives
+- C. Series with equal derivative values
+- D. Series from derivative values
+  - D.1. Series with prescribed derivative values
+  - D.2. The linear equivalence
+
+## iv. References
+
+* P. Haukkanen, Formal power series in several variables, Notes on Number Theory and Discrete
+  Mathematics 25 (2019) 44–57, Section 4, Definitions 4.1–4.2 and Theorem 4.1, p. 48.
+  https://doi.org/10.7546/nntdm.2019.25.4.44-57 [ref: haukkanen_2019_formal_power_series]
+* I. Kolář, P. W. Michor and J. Slovák, Natural Operations in Differential Geometry,
+  Sections 12.5–12.6 and 12.18, for the interpretation of Taylor series as coordinate
+  expressions of jets. https://www.mat.univie.ac.at/~michor/kmsbookh.pdf
+  [ref: kolar_michor_slovak_1993]
 -/
 
 @[expose] public section
+
 /-!
 
-## A. The Jet ring
+## A. The spacetime algebra
+
+The four spacetime directions are indexed by `Fin 1 ⊕ Fin 3`, with `Sum.inl 0` the time direction
+and `Sum.inr i` the three space directions. The spacetime algebra has one variable `x^μ` for each
+direction `μ`.
+
+These power series are formal, meaning that a series is an arbitrary family of complex
+coefficients, one for each monomial, and no convergence condition is imposed.
+
+The formal variables represent coordinate displacements from a fixed, implicit spacetime point, the
+base point. The constant coefficient represents the field value at that point. In differential
+geometry, the data of all derivatives of a smooth map at a point is called its infinite-order jet
+at that point (a mathematical notion, unrelated to jets in collider physics). In fixed coordinates,
+the infinite-order jet of a smooth complex-valued field at the base point is recorded by the
+series of its Taylor coefficients, which is an element of the spacetime algebra.
 
 -/
 
-/-- The ring of formal power series in the four spacetime coordinates, with complex
-  coefficients. Jets of fields and of gauge transformations at a spacetime point are
-  valued in this ring. The star operation is coefficientwise complex conjugation, so
-  the spacetime coordinates themselves are self-adjoint. -/
+/-- Formal power series in the four spacetime directions, with complex coefficients. -/
 abbrev SpaceTimeAlgebra : Type := MvPowerSeries (Fin 1 ⊕ Fin 3) ℂ
 
 namespace SpaceTimeAlgebra
 
+open MvPowerSeries
 
 /-!
 
-### A.1. The star structure on the jet ring
+## B. Iterated formal partial derivatives
+
+### B.1. Commutation of formal partial derivatives
+
+`pderiv μ` differentiates a series term by term with the power rule in `x^μ`, treating the other
+variables as constants. Formal partial derivatives in different directions commute, so an iterated
+derivative depends only on how many times each direction occurs. We therefore index iterated
+derivatives by a multiset `s` of directions (an unordered list in which repetition is allowed) and
+write `∂^s f` for `iteratedPDeriv s f`. For example, the multiset containing `μ` twice and `ν` once
+gives `∂_μ ∂_μ ∂_ν f`.
+
+-/
+
+/-- Formal partial derivatives commute. -/
+lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
+    pderiv μ (pderiv ν f) = pderiv ν (pderiv μ f) := by
+  classical
+  ext m
+  rcases eq_or_ne μ ν with rfl | h
+  · rfl
+  · simp only [coeff_pderiv, Finsupp.add_apply, Finsupp.single_eq_of_ne h,
+      Finsupp.single_eq_of_ne h.symm, add_zero, add_right_comm m]
+    ring
+
+/-- Formal partial differentiation can be iterated over a multiset of directions. -/
+instance : RightCommutative (fun (f : SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) => pderiv μ f) where
+  right_comm f μ ν := pderiv_comm ν μ f
+
+/-- The iterated formal partial derivative `∂^s f`, differentiating once along each element of
+  `s`. -/
+noncomputable def iteratedPDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
+    SpaceTimeAlgebra :=
+  s.foldl (fun f μ => pderiv μ f) f
+
+@[simp]
+lemma iteratedPDeriv_zero (f : SpaceTimeAlgebra) : iteratedPDeriv 0 f = f := rfl
+
+@[simp]
+lemma iteratedPDeriv_cons (μ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3))
+    (f : SpaceTimeAlgebra) :
+    iteratedPDeriv (μ ::ₘ s) f = iteratedPDeriv s (pderiv μ f) :=
+  Multiset.foldl_cons _ _ _ _
+
+@[simp]
+lemma iteratedPDeriv_singleton (μ : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
+    iteratedPDeriv {μ} f = pderiv μ f := rfl
+
+/-!
+
+### B.2. Base-point values of iterated derivatives
+
+For a power series in one variable, the `n`-th derivative at `0` is `n!` times the coefficient of
+`xⁿ`. This section proves the analogue in several variables, on which the rest of the file is
+built. We write `(∂^s f)(0)` for the constant coefficient of `∂^s f`, which is its value at the base
+point where every `x^μ` is zero, and call the family `s ↦ (∂^s f)(0)` the base-point derivative
+values of `f`. A multiset `s` determines the monomial `x^s`, containing each `x^μ` as often as `μ`
+occurs in `s`, and the number `s!`, the product of the factorials of these multiplicities. Applying
+`∂^s` turns `x^s` into the constant `s!`, while every other monomial ends up either zero or without
+a constant term, so `(∂^s f)(0)` is `s!` times the coefficient of `x^s` in `f`.
+
+-/
+
+/-- The base-point value of `∂^s f` is `s!` times the coefficient of `x^s` in `f`. -/
+lemma constantCoeff_iteratedPDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
+    constantCoeff (iteratedPDeriv s f) =
+      ((∏ ν, (s.count ν).factorial : ℕ) : ℂ) * coeff (Multiset.toFinsupp s) f := by
+  classical
+  induction s using Multiset.induction_on generalizing f with
+  | empty => simp [coeff_zero_eq_constantCoeff]
+  | cons μ s ih =>
+    have hfac : ∏ ν, ((μ ::ₘ s).count ν).factorial =
+        (s.count μ + 1) * ∏ ν, (s.count ν).factorial := by
+      rw [Fintype.prod_eq_mul_prod_compl μ, Fintype.prod_eq_mul_prod_compl μ,
+        Multiset.count_cons_self, Nat.factorial_succ, mul_assoc]
+      exact congrArg _ (congrArg _ (Finset.prod_congr rfl fun ν hν => by
+        rw [Multiset.count_cons_of_ne (by simpa using hν)]))
+    rw [iteratedPDeriv_cons, ih, coeff_pderiv, hfac, ← Multiset.singleton_add,
+      Multiset.toFinsupp_add, Multiset.toFinsupp_singleton, add_comm (Finsupp.single μ 1),
+      Multiset.toFinsupp_apply]
+    push_cast
+    ring
+
+/-!
+
+## C. Series with equal derivative values
+
+Since `s!` is nonzero, the coefficient of `x^s` in `f` is `(∂^s f)(0)` divided by `s!`. Two series
+with the same base-point derivative values therefore have the same coefficients, and so are
+equal. Similarly, a series whose first derivatives all vanish is the constant series given by its
+base-point value.
+
+-/
+
+/-- Series whose iterated derivatives have the same base-point values are equal. -/
+lemma ext_of_constantCoeff_iteratedPDeriv {f g : SpaceTimeAlgebra}
+    (h : ∀ s, constantCoeff (iteratedPDeriv s f) = constantCoeff (iteratedPDeriv s g)) :
+    f = g := by
+  classical
+  ext m
+  have hm := h (Finsupp.toMultiset m)
+  rw [constantCoeff_iteratedPDeriv, constantCoeff_iteratedPDeriv,
+    Finsupp.toMultiset_toFinsupp] at hm
+  exact mul_left_cancel₀ (Nat.cast_ne_zero.mpr
+    (Finset.prod_ne_zero_iff.mpr fun _ _ => Nat.factorial_ne_zero _)) hm
+
+/-- A series with vanishing first derivatives is constant. -/
+lemma eq_C_of_pderiv_eq_zero {f : SpaceTimeAlgebra} (hf : ∀ μ, pderiv μ f = 0) :
+    f = C (constantCoeff f) :=
+  pderiv.ext (fun μ => by rw [hf μ, pderiv_C]) (by rw [constantCoeff_C])
+
+/-!
+
+## D. Series from derivative values
+
+### D.1. Series with prescribed derivative values
+
+A family `F` of complex numbers indexed by multisets defines the series `ofDerivValues F`, whose
+coefficient of `x^s` is `F s` divided by `s!`. By B.2, its base-point derivative values are the
+values of `F`. Applied to the base-point derivative values of a series `f`, this construction
+returns `f`, which is Taylor's formula `f = Σ_s (∂^s f)(0) / s! · x^s` (Haukkanen, Theorem 4.1).
+
+-/
+
+/-- The series whose base-point derivative values are `F`. -/
+noncomputable def ofDerivValues (F : Multiset (Fin 1 ⊕ Fin 3) → ℂ) : SpaceTimeAlgebra :=
+  fun m => ((∏ ν, (m ν).factorial : ℕ) : ℂ)⁻¹ * F (Finsupp.toMultiset m)
+
+lemma coeff_ofDerivValues (F : Multiset (Fin 1 ⊕ Fin 3) → ℂ) (m : (Fin 1 ⊕ Fin 3) →₀ ℕ) :
+    coeff m (ofDerivValues F) =
+      ((∏ ν, (m ν).factorial : ℕ) : ℂ)⁻¹ * F (Finsupp.toMultiset m) :=
+  rfl
+
+/-- The base-point derivative values of `ofDerivValues F` are `F`. -/
+lemma constantCoeff_iteratedPDeriv_ofDerivValues (F : Multiset (Fin 1 ⊕ Fin 3) → ℂ)
+    (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    constantCoeff (iteratedPDeriv s (ofDerivValues F)) = F s := by
+  have hs : ((∏ ν, (s.count ν).factorial : ℕ) : ℂ) ≠ 0 :=
+    Nat.cast_ne_zero.mpr (Finset.prod_ne_zero_iff.mpr fun _ _ => Nat.factorial_ne_zero _)
+  simp only [constantCoeff_iteratedPDeriv, coeff_ofDerivValues, Multiset.toFinsupp_apply,
+    Multiset.toFinsupp_toMultiset, ← mul_assoc, mul_inv_cancel₀ hs, one_mul]
+
+/-- A series is recovered from its base-point derivative values by `ofDerivValues`. -/
+lemma ofDerivValues_constantCoeff_iteratedPDeriv (f : SpaceTimeAlgebra) :
+    ofDerivValues (fun s => constantCoeff (iteratedPDeriv s f)) = f :=
+  ext_of_constantCoeff_iteratedPDeriv fun s => constantCoeff_iteratedPDeriv_ofDerivValues _ s
+
+/-!
+
+### D.2. The linear equivalence
+
+The two constructions are mutually inverse and `ℂ`-linear, so together they form the linear
+equivalence `derivValuesEquiv` between the spacetime algebra and `Multiset (Fin 1 ⊕ Fin 3) → ℂ`.
+
+-/
+
+/-- The linear equivalence between series and their base-point derivative values. -/
+noncomputable def derivValuesEquiv : SpaceTimeAlgebra ≃ₗ[ℂ] (Multiset (Fin 1 ⊕ Fin 3) → ℂ) :=
+  LinearEquiv.symm
+    { toFun := ofDerivValues
+      map_add' F G := by ext m; simp [coeff_ofDerivValues, mul_add]
+      map_smul' c F := by ext m; simp [coeff_ofDerivValues, mul_left_comm]
+      invFun f s := constantCoeff (iteratedPDeriv s f)
+      left_inv F := funext (constantCoeff_iteratedPDeriv_ofDerivValues F)
+      right_inv := ofDerivValues_constantCoeff_iteratedPDeriv }
+
+@[simp]
+lemma derivValuesEquiv_apply (f : SpaceTimeAlgebra) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    derivValuesEquiv f s = constantCoeff (iteratedPDeriv s f) := rfl
+
+@[simp]
+lemma derivValuesEquiv_symm_apply (F : Multiset (Fin 1 ⊕ Fin 3) → ℂ) :
+    derivValuesEquiv.symm F = ofDerivValues F := rfl
+
+
+/-!
+
+## Branch applications: star, Leibniz, and truncation
+
+-/
+
+/-!### A.1. The star structure on the jet ring
 
 The star operation on the jet ring is coefficientwise complex conjugation, fixing
 the formal variables. In particular the spacetime coordinates are self-adjoint.
@@ -104,6 +334,7 @@ lemma starConjEquiv_apply (f : ConjModule SpaceTimeAlgebra) :
 lemma starConjEquiv_symm_apply (f : SpaceTimeAlgebra) :
     starConjEquiv.symm f = conjEquiv (k := ℂ) (M := SpaceTimeAlgebra) (star f) := rfl
 
+
 /-- The first-order Leibniz rule: the degree-one Taylor coefficient, in the
   direction `μ`, of a product of jets. This is the coefficient-level statement
   that the first jet of a product is given by the product rule. -/
@@ -143,122 +374,104 @@ lemma pderiv_star (ν : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
   congr 1
   simp
 
-/-- Formal partial derivatives commute. -/
-lemma pderiv_comm (μ ν : Fin 1 ⊕ Fin 3) (f : SpaceTimeAlgebra) :
-    pderiv μ (pderiv ν f) = pderiv ν (pderiv μ f) := by
-  classical
-  ext s
-  rw [coeff_pderiv, coeff_pderiv, coeff_pderiv, coeff_pderiv,
-    show s + Finsupp.single μ 1 + Finsupp.single ν 1 =
-      s + Finsupp.single ν 1 + Finsupp.single μ 1 from by
-      rw [add_assoc, add_assoc, add_comm (Finsupp.single μ 1)]]
-  rcases eq_or_ne μ ν with rfl | h
-  · rfl
-  · rw [Finsupp.add_apply, Finsupp.add_apply, Finsupp.single_eq_of_ne h.symm,
-      Finsupp.single_eq_of_ne h]
-    push_cast
-    ring
-
-/-- Application of `pderiv` is right-commutative, since formal partial derivatives
-  commute (`SpaceTimeAlgebra.pderiv_comm`). This allows iterating them over a `Multiset` of
-  directions. -/
-instance : RightCommutative (fun (f : SpaceTimeAlgebra) (μ : Fin 1 ⊕ Fin 3) => pderiv μ f) where
-  right_comm f μ ν := SpaceTimeAlgebra.pderiv_comm ν μ f
-
-/-- Iterated formal derivatives over a multiset commute with a single derivative. -/
-lemma foldl_pderiv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
+/-- Iterated formal derivatives commute with a single formal partial derivative. -/
+lemma iteratedPDeriv_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1 ⊕ Fin 3)
     (f : SpaceTimeAlgebra) :
-    s.foldl (fun f ρ => pderiv ρ f) (pderiv μ f) =
-      pderiv μ (s.foldl (fun f ρ => pderiv ρ f) f) := by
+    iteratedPDeriv s (pderiv μ f) = pderiv μ (iteratedPDeriv s f) := by
   induction s using Multiset.induction_on generalizing f with
   | empty => simp
-  | cons a t ih =>
-      rw [Multiset.foldl_cons, Multiset.foldl_cons, SpaceTimeAlgebra.pderiv_comm, ih]
+  | cons ν s ih =>
+      rw [iteratedPDeriv_cons, iteratedPDeriv_cons, pderiv_comm, ih]
 
-/-!
-
-### The all-orders Leibniz rule for iterated derivatives
-
--/
 
 /-- The iterated formal derivative is additive. -/
-lemma foldl_pderiv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
-    s.foldl (fun h ρ => pderiv ρ h) (f + g)
-      = s.foldl (fun h ρ => pderiv ρ h) f + s.foldl (fun h ρ => pderiv ρ h) g := by
+lemma iteratedPDeriv_add (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
+    iteratedPDeriv s (f + g) = iteratedPDeriv s f + iteratedPDeriv s g := by
   induction s using Multiset.induction_on generalizing f g with
   | empty => rfl
-  | cons μ t ih => rw [Multiset.foldl_cons, Multiset.foldl_cons, Multiset.foldl_cons,
+  | cons μ t ih => rw [iteratedPDeriv_cons, iteratedPDeriv_cons, iteratedPDeriv_cons,
       map_add, ih]
+
+/-- Iterated formal derivatives preserve complex scalar multiplication. -/
+lemma iteratedPDeriv_smul (s : Multiset (Fin 1 ⊕ Fin 3)) (c : ℂ)
+    (f : SpaceTimeAlgebra) :
+    iteratedPDeriv s (c • f) = c • iteratedPDeriv s f := by
+  induction s using Multiset.induction_on generalizing f with
+  | empty => rfl
+  | cons μ s ih => rw [iteratedPDeriv_cons, iteratedPDeriv_cons, Derivation.map_smul, ih]
+
+/-- Iterated formal derivatives commute with negation. -/
+lemma iteratedPDeriv_neg (s : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
+    iteratedPDeriv s (-f) = -iteratedPDeriv s f := by
+  induction s using Multiset.induction_on generalizing f with
+  | empty => rfl
+  | cons μ s ih => rw [iteratedPDeriv_cons, iteratedPDeriv_cons, map_neg, ih]
 
 /-- The iterated formal derivative of the zero jet vanishes. -/
 @[simp]
-lemma foldl_pderiv_zero (s : Multiset (Fin 1 ⊕ Fin 3)) :
-    s.foldl (fun h ρ => pderiv ρ h) (0 : SpaceTimeAlgebra) = 0 := by
+lemma iteratedPDeriv_zero_apply (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    iteratedPDeriv s (0 : SpaceTimeAlgebra) = 0 := by
   induction s using Multiset.induction_on with
   | empty => rfl
-  | cons μ t ih => rw [Multiset.foldl_cons, map_zero, ih]
+  | cons μ t ih => rw [iteratedPDeriv_cons, map_zero, ih]
 
 /-- The iterated formal derivative of a finite sum. -/
-lemma foldl_pderiv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset κ)
+lemma iteratedPDeriv_sum {κ : Type*} (s : Multiset (Fin 1 ⊕ Fin 3)) (t : Finset κ)
     (f : κ → SpaceTimeAlgebra) :
-    s.foldl (fun h ρ => pderiv ρ h) (∑ k ∈ t, f k)
-      = ∑ k ∈ t, s.foldl (fun h ρ => pderiv ρ h) (f k) := by
+    iteratedPDeriv s (∑ k ∈ t, f k)
+      = ∑ k ∈ t, iteratedPDeriv s (f k) := by
   classical
   induction t using Finset.induction_on with
   | empty => simp
-  | insert a t ha ih => rw [Finset.sum_insert ha, foldl_pderiv_add, ih,
+  | insert a t ha ih => rw [Finset.sum_insert ha, iteratedPDeriv_add, ih,
       Finset.sum_insert ha]
 
 /-- The all-orders Leibniz rule for the iterated formal derivative on the jet ring:
   the derivative of a product distributes over the antidiagonal of the multiset of
   directions. -/
-lemma foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
-    s.foldl (fun h ρ => pderiv ρ h) (f * g)
+lemma iteratedPDeriv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
+    iteratedPDeriv s (f * g)
       = (s.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ρ h) g).sum := by
+          iteratedPDeriv p.1 f * iteratedPDeriv p.2 g).sum := by
   induction s using Multiset.induction_on generalizing f g with
   | empty => simp [Multiset.antidiagonal_zero]
   | cons μ t ih =>
-    rw [Multiset.foldl_cons,
+    rw [iteratedPDeriv_cons,
       show pderiv μ (f * g) = pderiv μ f * g + f * pderiv μ g from by
         rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, add_comm, mul_comm g],
-      foldl_pderiv_add, ih, ih,
+      iteratedPDeriv_add, ih, ih,
       Multiset.map_congr rfl (fun p hp => by
-        rw [show p.1.foldl (fun h ρ => pderiv ρ h) (pderiv μ f)
-            = (μ ::ₘ p.1).foldl (fun h ρ => pderiv ρ h) f from
-          (Multiset.foldl_cons _ _ _ _).symm]),
+        rw [show iteratedPDeriv p.1 (pderiv μ f)
+            = iteratedPDeriv (μ ::ₘ p.1) f from
+          (iteratedPDeriv_cons _ _ _).symm]),
       show (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ρ h) f *
-            p.2.foldl (fun h ρ => pderiv ρ h) (pderiv μ g)).sum
+          iteratedPDeriv p.1 f * iteratedPDeriv p.2 (pderiv μ g)).sum
         = (t.antidiagonal.map fun p =>
-          p.1.foldl (fun h ρ => pderiv ρ h) f *
-            (μ ::ₘ p.2).foldl (fun h ρ => pderiv ρ h) g).sum from
+          iteratedPDeriv p.1 f * iteratedPDeriv (μ ::ₘ p.2) g).sum from
         congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
-          rw [show (μ ::ₘ p.2).foldl (fun h ρ => pderiv ρ h) g
-            = p.2.foldl (fun h ρ => pderiv ρ h) (pderiv μ g) from
-            Multiset.foldl_cons _ _ _ _])]
+          rw [show iteratedPDeriv (μ ::ₘ p.2) g
+            = iteratedPDeriv p.2 (pderiv μ g) from iteratedPDeriv_cons _ _ _])]
     simp only [Multiset.antidiagonal_cons, Multiset.map_add, Multiset.sum_add,
       Multiset.map_map, Function.comp_apply, Prod.map_fst, Prod.map_snd, id_eq]
     exact add_comm _ _
 
 /-- The base-point Taylor coefficient of a product: the convolution of the base-point
   Taylor coefficients. -/
-lemma constantCoeff_foldl_pderiv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
-    constantCoeff (s.foldl (fun h ρ => pderiv ρ h) (f * g))
+lemma constantCoeff_iteratedPDeriv_mul (s : Multiset (Fin 1 ⊕ Fin 3)) (f g : SpaceTimeAlgebra) :
+    constantCoeff (iteratedPDeriv s (f * g))
       = (s.antidiagonal.map fun p =>
-          constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f) *
-            constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) g)).sum := by
-  rw [foldl_pderiv_mul, map_multiset_sum, Multiset.map_map]
+          constantCoeff (iteratedPDeriv p.1 f) *
+            constantCoeff (iteratedPDeriv p.2 g)).sum := by
+  rw [iteratedPDeriv_mul, map_multiset_sum, Multiset.map_map]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => map_mul _ _ _)
 
 /-- The iterated derivative of a constant jet vanishes for a nonempty multiset of
   directions. -/
-lemma foldl_pderiv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) (c : ℂ) :
-    s.foldl (fun h ρ => pderiv ρ h) (C c : SpaceTimeAlgebra) = 0 := by
+lemma iteratedPDeriv_C_of_ne_zero {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s ≠ 0) (c : ℂ) :
+    iteratedPDeriv s (C c : SpaceTimeAlgebra) = 0 := by
   obtain ⟨μ, hμ⟩ := Multiset.exists_mem_of_ne_zero hs
   obtain ⟨t, rfl⟩ := Multiset.exists_cons_of_mem hμ
-  rw [Multiset.foldl_cons, pderiv_C, foldl_pderiv_zero]
+  rw [iteratedPDeriv_cons, pderiv_C, iteratedPDeriv_zero_apply]
 
 /-!
 
@@ -436,52 +649,6 @@ lemma coeff_eq_zero_of_pderiv_eq_mul {n : ℕ} {f : SpaceTimeAlgebra}
   coeff_eq_zero_of_coeff_pderiv_eq_zero
     (fun ρ q hq => by rw [hd ρ]; exact coeff_mul_eq_zero_of_lt (hx ρ) f hq) hp hpn
 
-/-!
-
-## Multiset derivative bookkeeping
-
--/
-
-/-- The base-point value of an iterated formal derivative is the corresponding Taylor
-  coefficient with the factorial normalization. -/
-lemma constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
-    constantCoeff (s.foldl (fun f ρ => pderiv ρ f) f) =
-      ((∏ ν, Nat.factorial (s.count ν) : ℕ) : ℂ) * coeff s.toFinsupp f := by
-  induction s using Multiset.induction_on generalizing f with
-  | empty => simp [coeff_zero_eq_constantCoeff]
-  | cons a t ih =>
-      rw [Multiset.foldl_cons, ih, coeff_pderiv]
-      have hfin : (a ::ₘ t).toFinsupp = t.toFinsupp + Finsupp.single a 1 := by
-        rw [show (a ::ₘ t : Multiset (Fin 1 ⊕ Fin 3)) = {a} + t from
-          (Multiset.singleton_add a t).symm, map_add, Multiset.toFinsupp_singleton, add_comm]
-      have hfac : (∏ ν, Nat.factorial ((a ::ₘ t).count ν) : ℕ) =
-          (t.count a + 1) * ∏ ν, Nat.factorial (t.count ν) := by
-        rw [show (∏ ν, Nat.factorial ((a ::ₘ t).count ν) : ℕ) =
-            ∏ ν, ((if ν = a then t.count a + 1 else 1) * Nat.factorial (t.count ν)) from
-          Finset.prod_congr rfl fun ν _ => by
-            rcases eq_or_ne ν a with rfl | h
-            · rw [Multiset.count_cons_self, Nat.factorial_succ, ite_eq_left rfl]
-            · rw [Multiset.count_cons_of_ne h, ite_eq_right h, one_mul],
-          Finset.prod_mul_distrib, Finset.prod_ite_eq' Finset.univ a]
-        simp
-      rw [hfin, hfac, Multiset.toFinsupp_apply]
-      push_cast
-      ring
-
-lemma degree_toFinsupp_eq_card (r : Multiset (Fin 1 ⊕ Fin 3)) :
-    Finsupp.degree (Multiset.toFinsupp r) = Multiset.card r := by
-  rw [Finsupp.degree_eq_sum, Finset.sum_congr rfl fun ν _ => Multiset.toFinsupp_apply r ν,
-    ← Finset.sum_subset (Finset.subset_univ r.toFinset) (fun x _ hx =>
-      Multiset.count_eq_zero.mpr fun hmem => hx (Multiset.mem_toFinset.mpr hmem)),
-    Multiset.toFinset_sum_count_eq]
-
-/-!
-
-## Real scalars
-
--/
-
-/-- Constants commute with real scalars. -/
 lemma C_real_smul (r : ℝ) (x : ℂ) :
     (MvPowerSeries.C (r • x) : SpaceTimeAlgebra) = r • MvPowerSeries.C x := by
   rw [Algebra.smul_def, Algebra.smul_def, map_mul, MvPowerSeries.algebraMap_apply]
@@ -495,5 +662,6 @@ lemma constantCoeff_real_smul (r : ℝ) (f : SpaceTimeAlgebra) :
 lemma pderiv_real_smul (μ : Fin 1 ⊕ Fin 3) (r : ℝ) (f : SpaceTimeAlgebra) :
     MvPowerSeries.pderiv μ (r • f) = r • MvPowerSeries.pderiv μ f := by
   rw [← algebraMap_smul ℂ r, Derivation.map_smul, algebraMap_smul]
+
 
 end SpaceTimeAlgebra

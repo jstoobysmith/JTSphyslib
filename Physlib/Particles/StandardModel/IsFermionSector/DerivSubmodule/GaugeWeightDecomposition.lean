@@ -99,8 +99,8 @@ include h in
 /-- The gauge torus acts diagonally on the `bard` symbol components. -/
 lemma repGauge_gaugeTorusGen_bard (i : Fin 4) (f : Fin 3) {n : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3) :
-    repGauge (gaugeTorusGen i) (bard f l ((DownSinglet.basis.conj).coord j))
-      = ((expI : ℂ) ^ GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i) • bard f l ((DownSinglet.basis.conj).coord j) := by
+    repGauge (gaugeTorusGen i) (bard f l (((Basis.conj DownSinglet.basis)).coord j))
+      = ((expI : ℂ) ^ GaugeWeight.coord (DownSinglet.valueGaugeWeight j) i) • bard f l (((Basis.conj DownSinglet.basis)).coord j) := by
   rw [h.repGauge_bard, DownSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord, map_smul]
 
 include h in
@@ -115,8 +115,8 @@ include h in
 /-- The gauge torus acts diagonally on the `baru` symbol components. -/
 lemma repGauge_gaugeTorusGen_baru (i : Fin 4) (f : Fin 3) {n : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3) :
-    repGauge (gaugeTorusGen i) (baru f l ((UpSinglet.basis.conj).coord j))
-      = ((expI : ℂ) ^ GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i) • baru f l ((UpSinglet.basis.conj).coord j) := by
+    repGauge (gaugeTorusGen i) (baru f l (((Basis.conj UpSinglet.basis)).coord j))
+      = ((expI : ℂ) ^ GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i) • baru f l (((Basis.conj UpSinglet.basis)).coord j) := by
   rw [h.repGauge_baru, UpSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord, map_smul]
 
 include h in
@@ -131,8 +131,8 @@ include h in
 /-- The gauge torus acts diagonally on the `barQ` symbol components. -/
 lemma repGauge_gaugeTorusGen_barQ (i : Fin 4) (f : Fin 3) {n : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3 × Fin 2) :
-    repGauge (gaugeTorusGen i) (barQ f l ((QuarkDoublet.basis.conj).coord j))
-      = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) • barQ f l ((QuarkDoublet.basis.conj).coord j) := by
+    repGauge (gaugeTorusGen i) (barQ f l (((Basis.conj QuarkDoublet.basis)).coord j))
+      = ((expI : ℂ) ^ GaugeWeight.coord (QuarkDoublet.valueGaugeWeight j) i) • barQ f l (((Basis.conj QuarkDoublet.basis)).coord j) := by
   rw [h.repGauge_barQ, QuarkDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord, map_smul]
 
 include h in
@@ -147,8 +147,8 @@ include h in
 /-- The gauge torus acts diagonally on the `barL` symbol components. -/
 lemma repGauge_gaugeTorusGen_barL (i : Fin 4) (f : Fin 3) {n : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 2) :
-    repGauge (gaugeTorusGen i) (barL f l ((LeptonDoublet.basis.conj).coord j))
-      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonDoublet.valueGaugeWeight j) i) • barL f l ((LeptonDoublet.basis.conj).coord j) := by
+    repGauge (gaugeTorusGen i) (barL f l (((Basis.conj LeptonDoublet.basis)).coord j))
+      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonDoublet.valueGaugeWeight j) i) • barL f l (((Basis.conj LeptonDoublet.basis)).coord j) := by
   rw [h.repGauge_barL, LeptonDoublet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord, map_smul]
 
 include h in
@@ -163,8 +163,8 @@ include h in
 /-- The gauge torus acts diagonally on the `bare` symbol components. -/
 lemma repGauge_gaugeTorusGen_bare (i : Fin 4) (f : Fin 3) {n : ℕ}
     (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2) :
-    repGauge (gaugeTorusGen i) (bare f l ((LeptonSinglet.basis.conj).coord j))
-      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j) i) • bare f l ((LeptonSinglet.basis.conj).coord j) := by
+    repGauge (gaugeTorusGen i) (bare f l (((Basis.conj LeptonSinglet.basis)).coord j))
+      = ((expI : ℂ) ^ GaugeWeight.coord (LeptonSinglet.valueGaugeWeight j) i) • bare f l (((Basis.conj LeptonSinglet.basis)).coord j) := by
   rw [h.repGauge_bare, LeptonSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord, map_smul]
 
 /-- The gauge weight decomposition of the range of the `d` symbols. -/
@@ -187,7 +187,7 @@ noncomputable def rangeGaugeWeight_bard (f : Fin 3) {n : ℕ}
     (GaugeWeightDecomposition.iSup hrepGauge_mul fun j : Fin 2 × Fin 3 =>
       GaugeWeightDecomposition.spanSingleton hrepGauge_mul _ (DownSinglet.valueGaugeWeight j)
         (fun i => h.repGauge_gaugeTorusGen_bard i f l j))
-    _ (range_eq_iSup_span (DownSinglet.basis.conj) (bard f l))
+    _ (range_eq_iSup_span ((Basis.conj DownSinglet.basis)) (bard f l))
 
 /-- The gauge weight decomposition of the range of the `u` symbols. -/
 @[implicit_reducible]
@@ -209,7 +209,7 @@ noncomputable def rangeGaugeWeight_baru (f : Fin 3) {n : ℕ}
     (GaugeWeightDecomposition.iSup hrepGauge_mul fun j : Fin 2 × Fin 3 =>
       GaugeWeightDecomposition.spanSingleton hrepGauge_mul _ (UpSinglet.valueGaugeWeight j)
         (fun i => h.repGauge_gaugeTorusGen_baru i f l j))
-    _ (range_eq_iSup_span (UpSinglet.basis.conj) (baru f l))
+    _ (range_eq_iSup_span ((Basis.conj UpSinglet.basis)) (baru f l))
 
 /-- The gauge weight decomposition of the range of the `Q` symbols. -/
 @[implicit_reducible]
@@ -231,7 +231,7 @@ noncomputable def rangeGaugeWeight_barQ (f : Fin 3) {n : ℕ}
     (GaugeWeightDecomposition.iSup hrepGauge_mul fun j : Fin 2 × Fin 3 × Fin 2 =>
       GaugeWeightDecomposition.spanSingleton hrepGauge_mul _ (QuarkDoublet.valueGaugeWeight j)
         (fun i => h.repGauge_gaugeTorusGen_barQ i f l j))
-    _ (range_eq_iSup_span (QuarkDoublet.basis.conj) (barQ f l))
+    _ (range_eq_iSup_span ((Basis.conj QuarkDoublet.basis)) (barQ f l))
 
 /-- The gauge weight decomposition of the range of the `L` symbols. -/
 @[implicit_reducible]
@@ -253,7 +253,7 @@ noncomputable def rangeGaugeWeight_barL (f : Fin 3) {n : ℕ}
     (GaugeWeightDecomposition.iSup hrepGauge_mul fun j : Fin 2 × Fin 2 =>
       GaugeWeightDecomposition.spanSingleton hrepGauge_mul _ (LeptonDoublet.valueGaugeWeight j)
         (fun i => h.repGauge_gaugeTorusGen_barL i f l j))
-    _ (range_eq_iSup_span (LeptonDoublet.basis.conj) (barL f l))
+    _ (range_eq_iSup_span ((Basis.conj LeptonDoublet.basis)) (barL f l))
 
 /-- The gauge weight decomposition of the range of the `e` symbols. -/
 @[implicit_reducible]
@@ -275,7 +275,7 @@ noncomputable def rangeGaugeWeight_bare (f : Fin 3) {n : ℕ}
     (GaugeWeightDecomposition.iSup hrepGauge_mul fun j : Fin 2 =>
       GaugeWeightDecomposition.spanSingleton hrepGauge_mul _ (LeptonSinglet.valueGaugeWeight j)
         (fun i => h.repGauge_gaugeTorusGen_bare i f l j))
-    _ (range_eq_iSup_span (LeptonSinglet.basis.conj) (bare f l))
+    _ (range_eq_iSup_span ((Basis.conj LeptonSinglet.basis)) (bare f l))
 
 /-- **The gauge weight decomposition of the fermion derivative submodules**, for any
   number of covariant derivatives: the join, over families, derivative slots and the

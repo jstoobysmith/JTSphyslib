@@ -470,17 +470,17 @@ lemma repLorentzGroup_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
 /-- The Lorentz action on the conjugate up-singlet basis: the coefficients are the
   conjugates of those of the up-singlet action, that is, the matrix itself. -/
 lemma repLorentzGroup_conj_apply_basis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
-    repLorentzGroup.conj Λ (basis.conj j) = ∑ β, Λ.1 β j.1 • basis.conj (β, j.2) := by
-  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repLorentzGroup.conj Λ ((Basis.conj basis) j) = ∑ β, Λ.1 β j.1 • (Basis.conj basis) (β, j.2) := by
+  rw [Representation.conj_apply, Basis.conj_apply, LinearEquiv.symm_apply_apply,
     repLorentzGroup_apply_basis, map_sum]
   refine Finset.sum_congr rfl fun β _ => ?_
-  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, star_star, Module.Basis.conj_apply]
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, star_star, Basis.conj_apply]
 
 /-- The conjugate up-singlet coordinate functionals transform by the inverse matrix. -/
 lemma repLorentzGroup_conj_dual_dualBasis (Λ : SL(2,ℂ)) (j : Fin 2 × Fin 3) :
-    repLorentzGroup.conj.dual Λ (basis.conj.dualBasis j) =
-      ∑ β, (Λ⁻¹).1 j.1 β • basis.conj.dualBasis (β, j.2) := by
-  have key := Representation.dual_apply_dualBasis repLorentzGroup.conj basis.conj Λ j
+    repLorentzGroup.conj.dual Λ ((Basis.conj basis).dualBasis j) =
+      ∑ β, (Λ⁻¹).1 j.1 β • (Basis.conj basis).dualBasis (β, j.2) := by
+  have key := Representation.dual_apply_dualBasis repLorentzGroup.conj (Basis.conj basis) Λ j
     (Matrix.of fun p q => if p.2 = q.2 then ((Λ⁻¹).1 p.1 q.1) else 0)
     (fun q => by
       rw [repLorentzGroup_conj_apply_basis]
@@ -501,7 +501,7 @@ lemma repLorentzGroup_neg_one : repLorentzGroup (-1) = -LinearMap.id := by
 /-- The centre acts on the conjugate up-singlet space by `-1` as well: conjugation does not
   move a real sign. -/
 lemma repLorentzGroup_conj_neg_one : repLorentzGroup.conj (-1) = -LinearMap.id := by
-  apply basis.conj.ext
+  apply (Basis.conj basis).ext
   intro j
   obtain ⟨a, c⟩ := j
   rw [repLorentzGroup_conj_apply_basis]
@@ -534,20 +534,20 @@ lemma repGaugeGroupI_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
 /-- The gauge action on the conjugate up-singlet basis: the coefficients of the
   up-singlet action, conjugated. -/
 lemma repGaugeGroupI_conj_apply_basis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
-    repGaugeGroupI.conj g (basis.conj j) =
-      ∑ c, star (g.toU1.1 ^ 4 * g.toSU3.1 c j.2) • basis.conj (j.1, c) := by
-  rw [Representation.conj_apply, Module.Basis.conj_apply, LinearEquiv.symm_apply_apply,
+    repGaugeGroupI.conj g ((Basis.conj basis) j) =
+      ∑ c, star (g.toU1.1 ^ 4 * g.toSU3.1 c j.2) • (Basis.conj basis) (j.1, c) := by
+  rw [Representation.conj_apply, Basis.conj_apply, LinearEquiv.symm_apply_apply,
     repGaugeGroupI_apply_basis, map_sum]
   refine Finset.sum_congr rfl fun c _ => ?_
-  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Module.Basis.conj_apply]
+  rw [LinearEquiv.map_smulₛₗ, starRingEnd_apply, Basis.conj_apply]
 
 /-- The conjugate up-singlet coordinate functionals carry the conjugate of the
   contragredient gauge action. -/
 lemma repGaugeGroupI_conj_dual_dualBasis (g : GaugeGroupI) (j : Fin 2 × Fin 3) :
-    repGaugeGroupI.conj.dual g (basis.conj.dualBasis j) =
+    repGaugeGroupI.conj.dual g ((Basis.conj basis).dualBasis j) =
       ∑ c, star ((g⁻¹).toU1.1 ^ 4 * (g⁻¹).toSU3.1 j.2 c) •
-        basis.conj.dualBasis (j.1, c) := by
-  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj basis.conj g j
+        (Basis.conj basis).dualBasis (j.1, c) := by
+  have key := Representation.dual_apply_dualBasis repGaugeGroupI.conj (Basis.conj basis) g j
     (Matrix.of fun p q =>
       if p.1 = q.1 then star ((g⁻¹).toU1.1 ^ 4 * (g⁻¹).toSU3.1 p.2 q.2) else 0)
     (fun q => by
@@ -607,10 +607,10 @@ lemma UpSinglet.repGaugeGroupI_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 �
   of the conjugate of `UpSinglet`: the two negations cancel and the weights are those of
   the value space. -/
 lemma UpSinglet.repGaugeGroupI_conj_dual_gaugeTorusGen_coord (i : Fin 4) (j : Fin 2 × Fin 3) :
-    UpSinglet.repGaugeGroupI.conj.dual (gaugeTorusGen i) ((UpSinglet.basis.conj).coord j)
+    UpSinglet.repGaugeGroupI.conj.dual (gaugeTorusGen i) (((Basis.conj UpSinglet.basis)).coord j)
       = ((expI : ℂ) ^ GaugeWeight.coord (UpSinglet.valueGaugeWeight j) i) •
-        (UpSinglet.basis.conj).coord j := by
-  have hd := dual_gaugeTorusGen_coord UpSinglet.repGaugeGroupI.conj (UpSinglet.basis.conj)
+        ((Basis.conj UpSinglet.basis)).coord j := by
+  have hd := dual_gaugeTorusGen_coord UpSinglet.repGaugeGroupI.conj ((Basis.conj UpSinglet.basis))
     (gaugeTorusGen i) (fun j' => -(GaugeWeight.coord (UpSinglet.valueGaugeWeight j') i))
     (fun j' => conj_gaugeTorusGen_basis _ _ _ _
       (fun j'' => UpSinglet.repGaugeGroupI_gaugeTorusGen_basis i j'') j') j

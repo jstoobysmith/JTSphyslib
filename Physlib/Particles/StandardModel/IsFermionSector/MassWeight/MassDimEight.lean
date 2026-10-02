@@ -172,10 +172,10 @@ lemma dbardPairSubmodule_le_blockSpan (f f' : Fin 3) :
   refine Submodule.mul_le_of_le_span_range
     (a := fun k => d f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
-      bard f' ![k.1] (DownSinglet.basis.conj.dualBasis k.2))
+      bard f' ![k.1] ((Basis.conj DownSinglet.basis).dualBasis k.2))
     (le_of_eq (LinearMap.range_eq_span_range_basis DownSinglet.basis.dualBasis _))
     (iSup_le fun μ => ?_) ?_
-  · rw [LinearMap.range_eq_span_range_basis DownSinglet.basis.conj.dualBasis (bard f' ![μ])]
+  · rw [LinearMap.range_eq_span_range_basis (Basis.conj DownSinglet.basis).dualBasis (bard f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (0, 0))
@@ -216,10 +216,10 @@ lemma barddPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barddPairSubmodule f f' ≤ (h.barddKineticBlock f f').blockSpan := by
   rw [barddPairSubmodule, KineticBlock.blockSpan]
   refine Submodule.mul_le_of_le_span_range
-    (a := fun k => bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (DownSinglet.basis.conj.dualBasis k))
+    (a := fun k => bard f (![] : Fin 0 → Fin 1 ⊕ Fin 3) ((Basis.conj DownSinglet.basis).dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       d f' ![k.1] (DownSinglet.basis.dualBasis k.2))
-    (le_of_eq (LinearMap.range_eq_span_range_basis DownSinglet.basis.conj.dualBasis _))
+    (le_of_eq (LinearMap.range_eq_span_range_basis (Basis.conj DownSinglet.basis).dualBasis _))
     (iSup_le fun μ => ?_) ?_
   · rw [LinearMap.range_eq_span_range_basis DownSinglet.basis.dualBasis (d f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
@@ -264,10 +264,10 @@ lemma ubaruPairSubmodule_le_blockSpan (f f' : Fin 3) :
   refine Submodule.mul_le_of_le_span_range
     (a := fun k => u f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
-      baru f' ![k.1] (UpSinglet.basis.conj.dualBasis k.2))
+      baru f' ![k.1] ((Basis.conj UpSinglet.basis).dualBasis k.2))
     (le_of_eq (LinearMap.range_eq_span_range_basis UpSinglet.basis.dualBasis _))
     (iSup_le fun μ => ?_) ?_
-  · rw [LinearMap.range_eq_span_range_basis UpSinglet.basis.conj.dualBasis (baru f' ![μ])]
+  · rw [LinearMap.range_eq_span_range_basis (Basis.conj UpSinglet.basis).dualBasis (baru f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2.1, i.1), (0, 0))
@@ -308,10 +308,10 @@ lemma baruuPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.baruuPairSubmodule f f' ≤ (h.baruuKineticBlock f f').blockSpan := by
   rw [baruuPairSubmodule, KineticBlock.blockSpan]
   refine Submodule.mul_le_of_le_span_range
-    (a := fun k => baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (UpSinglet.basis.conj.dualBasis k))
+    (a := fun k => baru f (![] : Fin 0 → Fin 1 ⊕ Fin 3) ((Basis.conj UpSinglet.basis).dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3) =>
       u f' ![k.1] (UpSinglet.basis.dualBasis k.2))
-    (le_of_eq (LinearMap.range_eq_span_range_basis UpSinglet.basis.conj.dualBasis _))
+    (le_of_eq (LinearMap.range_eq_span_range_basis (Basis.conj UpSinglet.basis).dualBasis _))
     (iSup_le fun μ => ?_) ?_
   · rw [LinearMap.range_eq_span_range_basis UpSinglet.basis.dualBasis (u f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
@@ -356,10 +356,10 @@ lemma QbarQPairSubmodule_le_blockSpan (f f' : Fin 3) :
   refine Submodule.mul_le_of_le_span_range
     (a := fun k => Q f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
-      barQ f' ![k.1] (QuarkDoublet.basis.conj.dualBasis k.2))
+      barQ f' ![k.1] ((Basis.conj QuarkDoublet.basis).dualBasis k.2))
     (le_of_eq (LinearMap.range_eq_span_range_basis QuarkDoublet.basis.dualBasis _))
     (iSup_le fun μ => ?_) ?_
-  · rw [LinearMap.range_eq_span_range_basis QuarkDoublet.basis.conj.dualBasis (barQ f' ![μ])]
+  · rw [LinearMap.range_eq_span_range_basis (Basis.conj QuarkDoublet.basis).dualBasis (barQ f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (j.2.2.2, i.2.2))
@@ -400,10 +400,10 @@ lemma barQQPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barQQPairSubmodule f f' ≤ (h.barQQKineticBlock f f').blockSpan := by
   rw [barQQPairSubmodule, KineticBlock.blockSpan]
   refine Submodule.mul_le_of_le_span_range
-    (a := fun k => barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (QuarkDoublet.basis.conj.dualBasis k))
+    (a := fun k => barQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3) ((Basis.conj QuarkDoublet.basis).dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 3 × Fin 2) =>
       Q f' ![k.1] (QuarkDoublet.basis.dualBasis k.2))
-    (le_of_eq (LinearMap.range_eq_span_range_basis QuarkDoublet.basis.conj.dualBasis _))
+    (le_of_eq (LinearMap.range_eq_span_range_basis (Basis.conj QuarkDoublet.basis).dualBasis _))
     (iSup_le fun μ => ?_) ?_
   · rw [LinearMap.range_eq_span_range_basis QuarkDoublet.basis.dualBasis (Q f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
@@ -448,10 +448,10 @@ lemma LbarLPairSubmodule_le_blockSpan (f f' : Fin 3) :
   refine Submodule.mul_le_of_le_span_range
     (a := fun k => L f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
-      barL f' ![k.1] (LeptonDoublet.basis.conj.dualBasis k.2))
+      barL f' ![k.1] ((Basis.conj LeptonDoublet.basis).dualBasis k.2))
     (le_of_eq (LinearMap.range_eq_span_range_basis LeptonDoublet.basis.dualBasis _))
     (iSup_le fun μ => ?_) ?_
-  · rw [LinearMap.range_eq_span_range_basis LeptonDoublet.basis.conj.dualBasis (barL f' ![μ])]
+  · rw [LinearMap.range_eq_span_range_basis (Basis.conj LeptonDoublet.basis).dualBasis (barL f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (i.1, j.2.1), (j.2.2, i.2))
@@ -492,10 +492,10 @@ lemma barLLPairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.barLLPairSubmodule f f' ≤ (h.barLLKineticBlock f f').blockSpan := by
   rw [barLLPairSubmodule, KineticBlock.blockSpan]
   refine Submodule.mul_le_of_le_span_range
-    (a := fun k => barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonDoublet.basis.conj.dualBasis k))
+    (a := fun k => barL f (![] : Fin 0 → Fin 1 ⊕ Fin 3) ((Basis.conj LeptonDoublet.basis).dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2 × Fin 2) =>
       L f' ![k.1] (LeptonDoublet.basis.dualBasis k.2))
-    (le_of_eq (LinearMap.range_eq_span_range_basis LeptonDoublet.basis.conj.dualBasis _))
+    (le_of_eq (LinearMap.range_eq_span_range_basis (Basis.conj LeptonDoublet.basis).dualBasis _))
     (iSup_le fun μ => ?_) ?_
   · rw [LinearMap.range_eq_span_range_basis LeptonDoublet.basis.dualBasis (L f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
@@ -540,10 +540,10 @@ lemma ebarePairSubmodule_le_blockSpan (f f' : Fin 3) :
   refine Submodule.mul_le_of_le_span_range
     (a := fun k => e f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
-      bare f' ![k.1] (LeptonSinglet.basis.conj.dualBasis k.2))
+      bare f' ![k.1] ((Basis.conj LeptonSinglet.basis).dualBasis k.2))
     (le_of_eq (LinearMap.range_eq_span_range_basis LeptonSinglet.basis.dualBasis _))
     (iSup_le fun μ => ?_) ?_
-  · rw [LinearMap.range_eq_span_range_basis LeptonSinglet.basis.conj.dualBasis (bare f' ![μ])]
+  · rw [LinearMap.range_eq_span_range_basis (Basis.conj LeptonSinglet.basis).dualBasis (bare f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)
   · intro i j
     exact Submodule.mem_iSup_of_mem (j.1, (j.2, i), (0, 0))
@@ -584,10 +584,10 @@ lemma bareePairSubmodule_le_blockSpan (f f' : Fin 3) :
     h.bareePairSubmodule f f' ≤ (h.bareeKineticBlock f f').blockSpan := by
   rw [bareePairSubmodule, KineticBlock.blockSpan]
   refine Submodule.mul_le_of_le_span_range
-    (a := fun k => bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3) (LeptonSinglet.basis.conj.dualBasis k))
+    (a := fun k => bare f (![] : Fin 0 → Fin 1 ⊕ Fin 3) ((Basis.conj LeptonSinglet.basis).dualBasis k))
     (b := fun k : (Fin 1 ⊕ Fin 3) × (Fin 2) =>
       e f' ![k.1] (LeptonSinglet.basis.dualBasis k.2))
-    (le_of_eq (LinearMap.range_eq_span_range_basis LeptonSinglet.basis.conj.dualBasis _))
+    (le_of_eq (LinearMap.range_eq_span_range_basis (Basis.conj LeptonSinglet.basis).dualBasis _))
     (iSup_le fun μ => ?_) ?_
   · rw [LinearMap.range_eq_span_range_basis LeptonSinglet.basis.dualBasis (e f' ![μ])]
     exact Submodule.span_mono (Set.range_subset_iff.2 fun k => ⟨(μ, k), rfl⟩)

@@ -94,7 +94,7 @@ structure MatrixRep (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (ι : Type) [Fint
   /-- The base-point Taylor coefficients of the jet action matrix are the action matrices
     of the base-point Taylor coefficients. -/
   jetAct_map_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    ((jetAct a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
+    ((jetAct a).map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p f))
       = act (jets.evalLie (jets.iteratedDeriv p a))
   /-- The derivative identity: the formal derivative of the matrix of a gauge jet is minus
     the jet action of its Maurer–Cartan form times the matrix. -/
@@ -133,26 +133,23 @@ lemma pderivPi_apply (μ : Fin 1 ⊕ Fin 3) (w : ι → SpaceTimeAlgebra) (i : �
 /-- The entrywise iterated formal derivative on `ι → SpaceTimeAlgebra`, as a `ℂ`-linear map. -/
 noncomputable def foldPi (x : Multiset (Fin 1 ⊕ Fin 3)) :
     (ι → SpaceTimeAlgebra) →ₗ[ℂ] (ι → SpaceTimeAlgebra) where
-  toFun w i := x.foldl (fun h ρ => pderiv ρ h) (w i)
-  map_add' v w := funext fun i => SpaceTimeAlgebra.foldl_pderiv_add x _ _
+  toFun w i := SpaceTimeAlgebra.iteratedPDeriv x (w i)
+  map_add' v w := funext fun i => SpaceTimeAlgebra.iteratedPDeriv_add x _ _
   map_smul' z v := funext fun i => by
     simp only [Pi.smul_apply, RingHom.id_apply]
-    induction x using Multiset.induction_on generalizing v with
-    | empty => rfl
-    | cons ν t ih =>
-      rw [Multiset.foldl_cons, Multiset.foldl_cons, Derivation.map_smul]
-      exact ih (fun i => pderiv ν (v i))
+    exact SpaceTimeAlgebra.iteratedPDeriv_smul x z (v i)
 
 lemma foldPi_apply (x : Multiset (Fin 1 ⊕ Fin 3)) (w : ι → SpaceTimeAlgebra) (i : ι) :
-    foldPi x w i = x.foldl (fun h ρ => pderiv ρ h) (w i) := rfl
+    foldPi x w i = SpaceTimeAlgebra.iteratedPDeriv x (w i) := rfl
 
 lemma foldPi_zero : foldPi (ι := ι) 0 = LinearMap.id := LinearMap.ext fun _ => rfl
 
 lemma pderivPi_comp_foldPi (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     pderivPi (ι := ι) μ ∘ₗ foldPi x = foldPi (μ ::ₘ x) := by
   refine LinearMap.ext fun w => funext fun i => ?_
-  simp only [LinearMap.comp_apply, pderivPi_apply, foldPi_apply, Multiset.foldl_cons]
-  exact (SpaceTimeAlgebra.foldl_pderiv_pderiv x μ (w i)).symm
+  simp only [LinearMap.comp_apply, pderivPi_apply, foldPi_apply,
+    SpaceTimeAlgebra.iteratedPDeriv_cons]
+  exact (SpaceTimeAlgebra.iteratedPDeriv_pderiv x μ (w i)).symm
 
 /-- The entrywise base-point evaluation on `ι → SpaceTimeAlgebra`, as a `ℂ`-linear map. -/
 noncomputable def ccPi : (ι → SpaceTimeAlgebra) →ₗ[ℂ] (ι → ℂ) where
@@ -163,22 +160,6 @@ noncomputable def ccPi : (ι → SpaceTimeAlgebra) →ₗ[ℂ] (ι → ℂ) wher
     exact constantCoeff_smul _ _
 
 lemma ccPi_apply (w : ι → SpaceTimeAlgebra) (i : ι) : ccPi w i = constantCoeff (w i) := rfl
-
-/-- The iterated formal derivative is `ℂ`-homogeneous. -/
-lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : SpaceTimeAlgebra) :
-    x.foldl (fun h ρ => pderiv ρ h) (z • f)
-      = z • x.foldl (fun h ρ => pderiv ρ h) f := by
-  induction x using Multiset.induction_on generalizing f with
-  | empty => rfl
-  | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
-
-/-- The iterated formal derivative of a negation. -/
-lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
-    x.foldl (fun h ρ => pderiv ρ h) (-f)
-      = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
-  induction x using Multiset.induction_on generalizing f with
-  | empty => rfl
-  | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
 
 /-- A constant jet times a jet is the scalar multiple. -/
 lemma C_mul_eq_smul (z : ℂ) (f : SpaceTimeAlgebra) : (C z : SpaceTimeAlgebra) * f = z • f := by
@@ -193,12 +174,13 @@ omit [DecidableEq ι] in
 lemma ccPi_foldPi_mulVec (x : Multiset (Fin 1 ⊕ Fin 3)) (A : Matrix ι ι SpaceTimeAlgebra)
     (v : ι → ℂ) :
     ccPi (foldPi x (A.mulVec fun k => (C (v k) : SpaceTimeAlgebra)))
-      = (A.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)).mulVec v := by
+      = (A.map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f)).mulVec v := by
   funext j
   simp only [ccPi_apply, foldPi_apply, Matrix.mulVec, dotProduct, Matrix.map_apply]
-  rw [SpaceTimeAlgebra.foldl_pderiv_sum, map_sum]
+  rw [SpaceTimeAlgebra.iteratedPDeriv_sum, map_sum]
   refine Finset.sum_congr rfl fun k _ => ?_
-  rw [mul_comm, C_mul_eq_smul, foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul, mul_comm]
+  rw [mul_comm, C_mul_eq_smul, SpaceTimeAlgebra.iteratedPDeriv_smul,
+    constantCoeff_smul, smul_eq_mul, mul_comm]
 
 /-!
 
@@ -469,7 +451,7 @@ lemma repAlgebra_apply (c : 𝔤) : R.repAlgebra e c = valEnd e (R.act c) := rfl
 lemma repCoeff_eq (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff (R.repJet e) U x
       = valEnd e ((R.mat U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) := by
+          constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f)) := by
   refine LinearMap.ext fun d => ?_
   obtain ⟨t, rfl⟩ : ∃ t, d = e.symm t := ⟨e d, (e.symm_apply_apply d).symm⟩
   induction t using TensorProduct.induction_on with
@@ -499,20 +481,22 @@ theorem isInfinitesimalActionOf :
   constructor
   · intro U μ x
     have hMcons : ((R.mat U).map fun f =>
-        constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) f))
+        constantCoeff (SpaceTimeAlgebra.iteratedPDeriv (μ ::ₘ x) f))
         = -((x.antidiagonal.map fun p =>
             R.act (jets.evalLie (jets.iteratedDeriv p.1 (jets.maurerCartan U μ)))
             * ((R.mat U).map fun f =>
-                constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) f))).sum) := by
+                constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 f))).sum) := by
       rw [show ((R.mat U).map fun f =>
-            constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) f))
+            constantCoeff (SpaceTimeAlgebra.iteratedPDeriv (μ ::ₘ x) f))
           = (((R.mat U).map fun f => pderiv μ f).map fun f =>
-              constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) from
+              constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f)) from
           Matrix.ext fun i j => by
-            rw [Matrix.map_apply, Matrix.map_apply, Matrix.map_apply, Multiset.foldl_cons],
+            rw [Matrix.map_apply, Matrix.map_apply, Matrix.map_apply,
+              SpaceTimeAlgebra.iteratedPDeriv_cons],
         R.mat_map_pderiv,
-        Matrix.map_neg _ (fun f => by rw [foldl_pderiv_neg, map_neg]),
-        SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
+        Matrix.map_neg _ (fun f => by
+          rw [SpaceTimeAlgebra.iteratedPDeriv_neg, map_neg]),
+        SpaceTimeAlgebra.matrix_constantCoeff_iteratedPDeriv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by rw [R.jetAct_map_cc_foldl]))
     rw [repCoeff_eq, hMcons, valEnd_neg, valEnd_multiset_sum, Multiset.map_map]
@@ -523,33 +507,33 @@ theorem isInfinitesimalActionOf :
   · intro U x c
     have hcollapse : ∀ (m : Multiset (Fin 1 ⊕ Fin 3)),
         (((R.act c).map (C : ℂ → SpaceTimeAlgebra)).map fun f =>
-          constantCoeff (m.foldl (fun h ρ => pderiv ρ h) f))
+          constantCoeff (SpaceTimeAlgebra.iteratedPDeriv m f))
         = if m = 0 then R.act c else 0 := by
       intro m
       rcases eq_or_ne m 0 with rfl | hm
       · refine Matrix.ext fun i j => ?_
         simp [Matrix.map_apply, constantCoeff_C]
       · refine Matrix.ext fun i j => ?_
-        simp [Matrix.map_apply, SpaceTimeAlgebra.foldl_pderiv_C_of_ne_zero hm, hm]
+        simp [Matrix.map_apply, SpaceTimeAlgebra.iteratedPDeriv_C_of_ne_zero hm, hm]
     have hMact : ((R.mat U).map fun f =>
-          constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c
+          constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f)) * R.act c
         = (x.antidiagonal.map fun p =>
             R.act (jets.adjointCoeff U p.1 c)
             * ((R.mat U).map fun f =>
-                constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) f))).sum := by
+                constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 f))).sum := by
       have h1 : ((R.mat U * R.jetAct (jets.ofConstantLie c)).map
-            fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f))
+            fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f))
           = ((R.mat U).map fun f =>
-              constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f)) * R.act c := by
-        rw [R.jetAct_ofConstantLie, SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul,
+              constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f)) * R.act c := by
+        rw [R.jetAct_ofConstantLie, SpaceTimeAlgebra.matrix_constantCoeff_iteratedPDeriv_mul,
           Multiset.map_congr rfl (fun p hp => by rw [hcollapse p.2]),
           Multiset.sum_antidiagonal_eq_of_snd_ne_zero x
             (fun p => ((R.mat U).map fun f =>
-              constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f)) *
+              constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.1 f)) *
                 (if p.2 = 0 then R.act c else 0))
             (fun p _ hp => by rw [ite_eq_right hp, Matrix.mul_zero]),
           ite_eq_left rfl]
-      rw [← h1, R.mat_mul_jetAct, SpaceTimeAlgebra.matrix_constantCoeff_foldl_pderiv_mul]
+      rw [← h1, R.mat_mul_jetAct, SpaceTimeAlgebra.matrix_constantCoeff_iteratedPDeriv_mul]
       exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
         rw [R.jetAct_map_cc_foldl, jets.adjointCoeff_apply])
     rw [repCoeff_eq, repAlgebra_apply, ← valEnd_mul, hMact, valEnd_multiset_sum,
@@ -711,7 +695,7 @@ lemma matterField_pureJetsActTrivially
   intro W hW
   show GaugeAlgebraRealization.repCoeff (R.repJet e) W 0 = LinearMap.id
   rw [repCoeff_eq]
-  simp only [Multiset.foldl_zero]
+  simp only [SpaceTimeAlgebra.iteratedPDeriv_zero]
   rw [hmat hW, valEnd_one]
 
 end MatrixRep

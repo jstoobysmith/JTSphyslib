@@ -181,7 +181,7 @@ lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : 𝔤J) :
     ext i j
     simp only [Matrix.map_apply, Matrix.smul_apply, Matrix.add_apply, smul_eq_mul,
       Derivation.leibniz, pderiv_X_self]
-    ring
+    ring_nf
   · rw [ite_eq_right h, add_zero, M.lieJ_deriv, M.lieJ_coord, M.lieJ_coord, M.lieJ_deriv]
     ext i j
     simp only [Matrix.map_apply, Matrix.smul_apply, smul_eq_mul, Derivation.leibniz,
@@ -339,7 +339,7 @@ noncomputable def toLocalGaugeData : LocalGaugeData G₀ 𝔤 GJ 𝔤J where
 /-- The iterated derivative is the entrywise iterated formal derivative. -/
 lemma lieJ_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
     M.lieJ (M.toLocalGaugeData.iteratedDeriv s a)
-      = (M.lieJ a).map fun f => s.foldl (fun h ρ => pderiv ρ h) f := by
+      = (M.lieJ a).map fun f => SpaceTimeAlgebra.iteratedPDeriv s f := by
   induction s using Multiset.induction_on generalizing a with
   | empty =>
     rw [iteratedDeriv_zero, LinearMap.id_apply]
@@ -349,13 +349,13 @@ lemma lieJ_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
     rw [iteratedDeriv_cons, LinearMap.comp_apply, toLocalGaugeData_deriv, M.lieJ_deriv, ih,
       Matrix.map_map]
     ext i j : 1
-    simp only [Matrix.map_apply, Function.comp_apply, Multiset.foldl_cons]
-    exact (SpaceTimeAlgebra.foldl_pderiv_pderiv t μ _).symm
+    simp only [Matrix.map_apply, Function.comp_apply, SpaceTimeAlgebra.iteratedPDeriv_cons]
+    exact (SpaceTimeAlgebra.iteratedPDeriv_pderiv t μ _).symm
 
 /-- The base-point value of the iterated derivative, entrywise. -/
 lemma lie₀_evalLie_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) :
     M.lie₀ (M.toLocalGaugeData.evalLie (M.toLocalGaugeData.iteratedDeriv s a))
-      = (M.lieJ a).map fun f => constantCoeff (s.foldl (fun h ρ => pderiv ρ h) f) := by
+      = (M.lieJ a).map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv s f) := by
   rw [toLocalGaugeData_evalLie_apply, M.lie₀_evalLie, M.lieJ_iteratedDeriv,
     RingHom.mapMatrix_apply, Matrix.map_map]
   rfl
@@ -366,7 +366,7 @@ lemma lie₀_evalLie_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J) 
 lemma faithful : M.toLocalGaugeData.Faithful where
   ext_of_evalLie_iteratedDeriv {x y} h := by
     refine M.lieJ_injective (Matrix.ext fun i j => ?_)
-    refine SpaceTimeAlgebra.ext_of_constantCoeff_foldl_pderiv fun s => ?_
+    refine SpaceTimeAlgebra.ext_of_constantCoeff_iteratedPDeriv fun s => ?_
     have hs := congrArg M.lie₀ (h s)
     rw [M.lie₀_evalLie_iteratedDeriv, M.lie₀_evalLie_iteratedDeriv] at hs
     simpa only [Matrix.map_apply] using congrArg (fun A => A i j) hs
@@ -453,7 +453,7 @@ lemma free
     obtain ⟨Y, hY⟩ := hTaylor c
     refine ⟨Y, fun s => M.lie₀_injective ?_⟩
     rw [M.lie₀_evalLie_iteratedDeriv, hY,
-        SpaceTimeAlgebra.map_constantCoeff_foldl_pderiv_taylorMatrix]
+        SpaceTimeAlgebra.map_constantCoeff_iteratedPDeriv_taylorMatrix]
   exists_radial_eq ρ hρ := by
     -- The matrix `R = −i P` of `P = lieJ ρ` is anti-hermitian and vanishes at the base point.
     have hR0 : ∀ i j, constantCoeff (((-Complex.I) • M.lieJ ρ) i j) = 0 := fun i j => by

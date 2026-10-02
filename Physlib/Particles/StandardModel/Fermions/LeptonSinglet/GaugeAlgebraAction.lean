@@ -125,33 +125,17 @@ lemma repJetGaugeGroupI_eq_jetPhase (U : JetGaugeGroupI) :
 
 -/
 
-/-- The iterated formal derivative is `ℂ`-homogeneous. -/
-private lemma foldl_pderiv_smul (x : Multiset (Fin 1 ⊕ Fin 3)) (z : ℂ) (f : SpaceTimeAlgebra) :
-    x.foldl (fun h ρ => pderiv ρ h) (z • f)
-      = z • x.foldl (fun h ρ => pderiv ρ h) f := by
-  induction x using Multiset.induction_on generalizing f with
-  | empty => rfl
-  | cons ν t ih => rw [Multiset.foldl_cons, Derivation.map_smul, ih, Multiset.foldl_cons]
-
-/-- The iterated formal derivative of a negation. -/
-private lemma foldl_pderiv_neg (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra) :
-    x.foldl (fun h ρ => pderiv ρ h) (-f)
-      = -(x.foldl (fun h ρ => pderiv ρ h) f) := by
-  induction x using Multiset.induction_on generalizing f with
-  | empty => rfl
-  | cons ν t ih => rw [Multiset.foldl_cons, map_neg, ih, Multiset.foldl_cons]
-
 /-- The iterated formal derivative of a jet of charged-lepton singlets acts on the
   jet-ring factor of a pure tensor. -/
 private lemma jetIteratedDeriv_tmul (x : Multiset (Fin 1 ⊕ Fin 3)) (f : SpaceTimeAlgebra)
     (ψ : LeptonSinglet) :
     jetIteratedDeriv x (f ⊗ₜ[ℂ] ψ)
-      = (x.foldl (fun h ρ => pderiv ρ h) f) ⊗ₜ[ℂ] ψ := by
+      = SpaceTimeAlgebra.iteratedPDeriv x f ⊗ₜ[ℂ] ψ := by
   induction x using Multiset.induction_on generalizing f with
   | empty => rw [jetIteratedDeriv_zero]; rfl
   | cons μ t ih =>
     rw [jetIteratedDeriv_cons, LinearMap.comp_apply, ih, jetDeriv_tmul,
-      Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
+      SpaceTimeAlgebra.iteratedPDeriv_cons, SpaceTimeAlgebra.iteratedPDeriv_pderiv]
 
 /-- Scalar multiples of the identity compose through multiplication. -/
 private lemma smul_id_comp (a b : ℂ) :
@@ -177,7 +161,7 @@ private lemma sum_map_smul_id {α : Type*} (m : Multiset α) (z : α → ℂ) :
   coefficients of the hypercharge phase. -/
 lemma repCoeff_eq (U : JetGaugeGroupI) (x : Multiset (Fin 1 ⊕ Fin 3)) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x
-      = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U))
+      = constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x (jetPhase U))
         • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
   refine LinearMap.ext fun l => ?_
   rw [show GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U x l
@@ -193,7 +177,7 @@ lemma repCoeff_zero_of_eval_eq_one {U : JetGaugeGroupI} (hU : U.eval = 1) :
     GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U 0 = LinearMap.id := by
   have hu : constantCoeff ((U.2.2 : unitary SpaceTimeAlgebra) : SpaceTimeAlgebra) = 1 :=
     Subtype.ext_iff.mp (congrArg (fun p : GaugeGroupI => p.2.2) hU)
-  rw [repCoeff_eq, Multiset.foldl_zero, jetPhase_eq, map_pow,
+  rw [repCoeff_eq, SpaceTimeAlgebra.iteratedPDeriv_zero, jetPhase_eq, map_pow,
     SpaceTimeAlgebra.constantCoeff_star, hu, star_one, one_pow, one_smul]
 
 
@@ -266,16 +250,17 @@ theorem isInfinitesimalActionOf :
   · intro U μ x
     simp only [localGaugeData_evalLie,
       localGaugeData_iteratedDeriv, localGaugeData_maurerCartan]
-    have hMcons : constantCoeff ((μ ::ₘ x).foldl (fun h ρ => pderiv ρ h) (jetPhase U))
+    have hMcons : constantCoeff (SpaceTimeAlgebra.iteratedPDeriv (μ ::ₘ x) (jetPhase U))
         = -((x.antidiagonal.map fun p =>
             Complex.I * (-(6 : ℂ) * (JetGaugeAlgebra.eval (JetGaugeAlgebra.iteratedDeriv
                 p.1 (maurerCartanForm U μ))).toU1Value)
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U))).sum) := by
-      rw [Multiset.foldl_cons, jetPhase_pderiv, foldl_pderiv_neg, map_neg,
-        SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul]
+              * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 (jetPhase U))).sum) := by
+      rw [SpaceTimeAlgebra.iteratedPDeriv_cons, jetPhase_pderiv,
+        SpaceTimeAlgebra.iteratedPDeriv_neg, map_neg,
+        SpaceTimeAlgebra.constantCoeff_iteratedPDeriv_mul]
       exact congrArg Neg.neg (congrArg Multiset.sum (Multiset.map_congr rfl
         fun p hp => by
-          rw [foldl_pderiv_smul, constantCoeff_smul, smul_eq_mul,
+          rw [SpaceTimeAlgebra.iteratedPDeriv_smul, constantCoeff_smul, smul_eq_mul,
             JetGaugeAlgebra.eval_iteratedDeriv_toU1Value]
           ring))
     rw [repCoeff_eq, hMcons, neg_smul, ← sum_map_smul_id]
@@ -286,41 +271,40 @@ theorem isInfinitesimalActionOf :
     have hterm : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3),
         gaugeAlgebraAction (localGaugeData.adjointCoeff U p.1 c)
             ∘ₗ GaugeAlgebraRealization.repCoeff repJetGaugeGroupI U p.2
-          = (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
-                (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
+          = (Complex.I * (-(6 : ℂ) * constantCoeff
+                (SpaceTimeAlgebra.iteratedPDeriv p.1 (C c.toU1Value)))
+              * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := fun p => by
       rw [gaugeAlgebraAction_apply, repCoeff_eq, smul_id_comp,
         localGaugeData_adjointCoeff_toU1Value]
     have hvan : ∀ p : Multiset (Fin 1 ⊕ Fin 3) × Multiset (Fin 1 ⊕ Fin 3), p.1 ≠ 0 →
-        (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
-              (C c.toU1Value)))
-            * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
+        (Complex.I * (-(6 : ℂ) * constantCoeff
+              (SpaceTimeAlgebra.iteratedPDeriv p.1 (C c.toU1Value)))
+            * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 (jetPhase U)))
           • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) = 0 := by
       intro p hp
-      rw [SpaceTimeAlgebra.foldl_pderiv_C_of_ne_zero hp, map_zero, mul_zero, mul_zero,
+      rw [SpaceTimeAlgebra.iteratedPDeriv_C_of_ne_zero hp, map_zero, mul_zero, mul_zero,
         zero_mul, zero_smul]
     have hcollapse : (x.antidiagonal.map fun p =>
-          (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h)
-                (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
+          (Complex.I * (-(6 : ℂ) * constantCoeff
+                (SpaceTimeAlgebra.iteratedPDeriv p.1 (C c.toU1Value)))
+              * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)).sum
         = (Complex.I * (-(6 : ℂ) * c.toU1Value)
-            * constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
+            * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x (jetPhase U)))
           • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet) := by
       rw [Multiset.sum_antidiagonal_eq_of_fst_ne_zero x
-          (fun p => (Complex.I * (-(6 : ℂ) * constantCoeff (p.1.foldl
-                (fun h ρ => pderiv ρ h) (C c.toU1Value)))
-              * constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) (jetPhase U)))
+          (fun p => (Complex.I * (-(6 : ℂ) * constantCoeff
+                (SpaceTimeAlgebra.iteratedPDeriv p.1 (C c.toU1Value)))
+              * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p.2 (jetPhase U)))
             • (LinearMap.id : LeptonSinglet →ₗ[ℂ] LeptonSinglet)) (fun p _ hp => hvan p hp),
-        show ((0 : Multiset (Fin 1 ⊕ Fin 3)).foldl (fun h ρ => pderiv ρ h)
-            (C c.toU1Value : SpaceTimeAlgebra)) = C c.toU1Value from rfl,
+        SpaceTimeAlgebra.iteratedPDeriv_zero,
         constantCoeff_C]
     rw [repCoeff_eq, gaugeAlgebraAction_apply, smul_id_comp,
-      show constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U))
+      show constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x (jetPhase U))
           * (Complex.I * (-(6 : ℂ) * c.toU1Value))
         = Complex.I * (-(6 : ℂ) * c.toU1Value)
-          * constantCoeff (x.foldl (fun h ρ => pderiv ρ h) (jetPhase U)) from
+          * constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x (jetPhase U)) from
         mul_comm _ _,
       ← hcollapse]
     exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => (hterm p).symm)

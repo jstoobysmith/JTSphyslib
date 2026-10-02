@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Particles.StandardModel.GaugeGroup.Basic
-public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.Modules.ConjModule
 public import Physlib.Mathematics.InvariantReduction
 public import Mathlib.LinearAlgebra.Eigenspace.Basic
 public import Mathlib.Analysis.Real.Pi.Irrational
@@ -372,9 +372,9 @@ omit [Fintype ι] [DecidableEq ι] in
 lemma conj_gaugeTorusGen_basis (ρ : Representation ℂ GaugeGroupI V)
     (b : Module.Basis ι ℂ V) (g : GaugeGroupI) (w : ι → ℤ)
     (hb : ∀ j, ρ g (b j) = ((expI : ℂ) ^ w j) • b j) (j : ι) :
-    ρ.conj g (Module.Basis.conj b j)
-      = ((expI : ℂ) ^ (-(w j))) • Module.Basis.conj b j := by
-  simp only [Module.Basis.conj_apply, Representation.conj_apply,
+    ρ.conj g (Basis.conj b j)
+      = ((expI : ℂ) ^ (-(w j))) • Basis.conj b j := by
+  simp only [Basis.conj_apply, Representation.conj_apply,
     LinearEquiv.symm_apply_apply, hb j, map_smulₛₗ, starRingEnd_expI_zpow]
 
 end TorusBases

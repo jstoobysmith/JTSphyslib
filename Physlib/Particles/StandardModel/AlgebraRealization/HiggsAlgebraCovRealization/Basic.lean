@@ -378,7 +378,7 @@ noncomputable def higgs (h : HiggsAlgebraCovRealization B rep repLorentz massWei
 /-- The component `∇_d H̄^i` in the algebra. -/
 noncomputable def barHiggs (h : HiggsAlgebraCovRealization B rep repLorentz massWeightPoly)
     {n : ℕ} (d : Fin n → (Fin 1 ⊕ Fin 3)) (i : Fin 2) : B :=
-  h.covBarH n d (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
+  h.covBarH n d ((Basis.conj HiggsVec.orthonormBasis.toBasis).dualBasis i)
 
 /-!
 
@@ -409,10 +409,10 @@ lemma rep_barHiggsComponent (g : GaugeGroupI) {n : ℕ} (d : Fin n → (Fin 1 �
     rep g (h.barHiggs d i) =
       ∑ j, (starRingEnd ℂ (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j)) • h.barHiggs d j := by
   have key : HiggsVec.repGaugeGroupI.conj.dual g
-        (HiggsVec.orthonormBasis.toBasis.conj.dualBasis i)
+        ((Basis.conj HiggsVec.orthonormBasis.toBasis).dualBasis i)
       = ∑ j, (starRingEnd ℂ (((g⁻¹).toU1 : ℂ) ^ 3 * (g⁻¹).toSU2.1 i j)) •
-          HiggsVec.orthonormBasis.toBasis.conj.dualBasis j := by
-    refine HiggsVec.orthonormBasis.toBasis.conj.ext fun k => ?_
+          (Basis.conj HiggsVec.orthonormBasis.toBasis).dualBasis j := by
+    refine (Basis.conj HiggsVec.orthonormBasis.toBasis).ext fun k => ?_
     rw [LinearMap.sum_apply]
     simp only [LinearMap.smul_apply, smul_eq_mul, Module.Basis.dualBasis_apply_self,
       mul_ite, mul_one, mul_zero, Finset.sum_ite_eq]
@@ -455,7 +455,7 @@ lemma barHiggsSubmodule_eq_iSup_span (n : ℕ) :
       = ⨆ (d : Fin n → (Fin 1 ⊕ Fin 3)) (j : Fin 2), ℂ ∙ h.barHiggs d j := by
   rw [barHiggsSubmodule]
   refine iSup_congr fun d => ?_
-  rw [LinearMap.range_eq_map, ← HiggsVec.orthonormBasis.toBasis.conj.dualBasis.span_eq,
+  rw [LinearMap.range_eq_map, ← (Basis.conj HiggsVec.orthonormBasis.toBasis).dualBasis.span_eq,
     Submodule.map_span, ← Set.range_comp, Submodule.span_range_eq_iSup]
   rfl
 

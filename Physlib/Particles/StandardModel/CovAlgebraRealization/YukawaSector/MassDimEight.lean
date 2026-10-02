@@ -94,7 +94,7 @@ lemma barHiggsSubmodule_zero_le :
       ≤ Submodule.span ℂ (Set.range (h.isHiggsSector.barHiggs ![])) := by
   refine iSup_le fun l => ?_
   rw [show l = (![] : Fin 0 → Fin 1 ⊕ Fin 3) from Subsingleton.elim _ _,
-    LinearMap.range_eq_span_range_basis HiggsVec.orthonormBasis.toBasis.conj.dualBasis
+    LinearMap.range_eq_span_range_basis (Basis.conj HiggsVec.orthonormBasis.toBasis).dualBasis
       (h.isHiggsSector.covBarH 0 ![])]
   exact le_rfl
 
@@ -108,7 +108,7 @@ lemma range_d_eq (f : Fin 3) :
 lemma range_bard_eq (f : Fin 3) :
     LinearMap.range (h.covBarD f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = Submodule.span ℂ (Set.range (h.isFermionSector.bardComponent f ![])) :=
-  LinearMap.range_eq_span_range_basis DownSinglet.basis.conj.dualBasis (h.covBarD f ![])
+  LinearMap.range_eq_span_range_basis (Basis.conj DownSinglet.basis).dualBasis (h.covBarD f ![])
 
 /-- The range of the up-singlet symbol map is the span of its components. -/
 lemma range_u_eq (f : Fin 3) :
@@ -120,7 +120,7 @@ lemma range_u_eq (f : Fin 3) :
 lemma range_baru_eq (f : Fin 3) :
     LinearMap.range (h.covBarU f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = Submodule.span ℂ (Set.range (h.isFermionSector.baruComponent f ![])) :=
-  LinearMap.range_eq_span_range_basis UpSinglet.basis.conj.dualBasis (h.covBarU f ![])
+  LinearMap.range_eq_span_range_basis (Basis.conj UpSinglet.basis).dualBasis (h.covBarU f ![])
 
 /-- The range of the quark-doublet symbol map is the span of its components. -/
 lemma range_Q_eq (f : Fin 3) :
@@ -132,7 +132,7 @@ lemma range_Q_eq (f : Fin 3) :
 lemma range_barQ_eq (f : Fin 3) :
     LinearMap.range (h.covBarQ f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = Submodule.span ℂ (Set.range (h.isFermionSector.barQComponent f ![])) :=
-  LinearMap.range_eq_span_range_basis QuarkDoublet.basis.conj.dualBasis (h.covBarQ f ![])
+  LinearMap.range_eq_span_range_basis (Basis.conj QuarkDoublet.basis).dualBasis (h.covBarQ f ![])
 
 /-- The range of the lepton-doublet symbol map is the span of its components. -/
 lemma range_L_eq (f : Fin 3) :
@@ -144,7 +144,7 @@ lemma range_L_eq (f : Fin 3) :
 lemma range_barL_eq (f : Fin 3) :
     LinearMap.range (h.covBarL f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = Submodule.span ℂ (Set.range (h.isFermionSector.barLComponent f ![])) :=
-  LinearMap.range_eq_span_range_basis LeptonDoublet.basis.conj.dualBasis (h.covBarL f ![])
+  LinearMap.range_eq_span_range_basis (Basis.conj LeptonDoublet.basis).dualBasis (h.covBarL f ![])
 
 /-- The range of the lepton-singlet symbol map is the span of its components. -/
 lemma range_e_eq (f : Fin 3) :
@@ -156,7 +156,7 @@ lemma range_e_eq (f : Fin 3) :
 lemma range_bare_eq (f : Fin 3) :
     LinearMap.range (h.covBarE f (![] : Fin 0 → Fin 1 ⊕ Fin 3))
       = Submodule.span ℂ (Set.range (h.isFermionSector.bareComponent f ![])) :=
-  LinearMap.range_eq_span_range_basis LeptonSinglet.basis.conj.dualBasis (h.covBarE f ![])
+  LinearMap.range_eq_span_range_basis (Basis.conj LeptonSinglet.basis).dualBasis (h.covBarE f ![])
 
 /-!
 

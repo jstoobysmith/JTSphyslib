@@ -6,7 +6,6 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.RealTensor.Metrics.Pre
-public import Physlib.Relativity.Tensors.Contraction.Basis
 public import Physlib.Relativity.Tensors.Elab
 /-!
 
@@ -21,13 +20,12 @@ which are used to define `realLorentzTensor`.
 
 open Matrix
 open MatrixGroups
-open Complex
 open TensorProduct
 
 namespace realLorentzTensor
 
 set_option backward.isDefEq.respectTransparency false in
-/-- The colors associated with complex representations of SL(2, ℂ) of interest to physics. -/
+/-- The colors associated with real representations of O(1, 3) of interest to physics. -/
 inductive Color
   /-- The color associated with contravariant Lorentz vectors. -/
   | up : Color
@@ -35,7 +33,7 @@ inductive Color
   | down : Color
 deriving Fintype
 
-/-- Color for complex Lorentz tensors is decidable. -/
+/-- Color for real Lorentz tensors is decidable. -/
 instance : DecidableEq Color := fun x y =>
   match x, y with
   | Color.up, Color.up => isTrue rfl
@@ -65,7 +63,7 @@ TODO "Replace Lorentz.ContrMod and Lorentz.CoMod in the definition of realLorent
 
 noncomputable section
 open realLorentzTensor in
-/-- The tensor structure for complex Lorentz tensors. -/
+/-- The tensor structure for real Lorentz tensors. -/
 def realLorentzTensor (d : ℕ := 3) : TensorSpecies
     ℝ realLorentzTensor.Color (LorentzGroup d)
     (fun | Color.up => Lorentz.ContrMod d | Color.down => Lorentz.CoMod d)
@@ -223,13 +221,13 @@ lemma contrT_eq_sum_evalT {n} {d} (c : Fin (n + 1 + 1) → Color) (i j : Fin (n 
   · simp [Finset.smul_sum, h]
   · simp [h1, h2, Finset.sum_add_distrib]
 
-lemma contrT_toField {d} (c : Fin 2 → Color)
+lemma contrT_toScalar {d} (c : Fin 2 → Color)
     (h : 0 ≠ 1 ∧ (realLorentzTensor d).τ (c 0) = c 1) (t : ℝT(d, c)) :
-    (contrT 0 0 1 h t).toField = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toField := by
+    (contrT 0 0 1 h t).toScalar = ∑ (μ : Fin 1 ⊕ Fin d), {t | [μ] [μ]}ᵀ.toScalar := by
   rw [contrT_eq_sum_evalT, map_sum]
   congr
   ext μ
-  simp only [toField_permT]
+  simp only [toScalar_permT]
   rfl
 
 open ComponentIdx in

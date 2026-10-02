@@ -103,7 +103,7 @@ set_option linter.unusedVariables false in
 noncomputable def bardComponent (h : IsFermionSector B repGauge hrepGauge_mul repLorentz
       hrepLorentz_mul d bard u baru Q barQ L barL e bare massWeightPoly)
     (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3) : B :=
-  bard i l (DownSinglet.basis.conj.dualBasis j)
+  bard i l ((Basis.conj DownSinglet.basis).dualBasis j)
 
 set_option linter.unusedVariables false in
 /-- The component `∇_l u_i` of the up-singlet symbol against the basis vector `j` of
@@ -119,7 +119,7 @@ set_option linter.unusedVariables false in
 noncomputable def baruComponent (h : IsFermionSector B repGauge hrepGauge_mul repLorentz
       hrepLorentz_mul d bard u baru Q barQ L barL e bare massWeightPoly)
     (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3) : B :=
-  baru i l (UpSinglet.basis.conj.dualBasis j)
+  baru i l ((Basis.conj UpSinglet.basis).dualBasis j)
 
 set_option linter.unusedVariables false in
 /-- The component `∇_l Q_i` of the quark-doublet symbol against the basis vector `j` of
@@ -135,7 +135,7 @@ set_option linter.unusedVariables false in
 noncomputable def barQComponent (h : IsFermionSector B repGauge hrepGauge_mul repLorentz
       hrepLorentz_mul d bard u baru Q barQ L barL e bare massWeightPoly)
     (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 3 × Fin 2) : B :=
-  barQ i l (QuarkDoublet.basis.conj.dualBasis j)
+  barQ i l ((Basis.conj QuarkDoublet.basis).dualBasis j)
 
 set_option linter.unusedVariables false in
 /-- The component `∇_l L_i` of the lepton-doublet symbol against the basis vector `j` of
@@ -151,7 +151,7 @@ set_option linter.unusedVariables false in
 noncomputable def barLComponent (h : IsFermionSector B repGauge hrepGauge_mul repLorentz
       hrepLorentz_mul d bard u baru Q barQ L barL e bare massWeightPoly)
     (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2 × Fin 2) : B :=
-  barL i l (LeptonDoublet.basis.conj.dualBasis j)
+  barL i l ((Basis.conj LeptonDoublet.basis).dualBasis j)
 
 set_option linter.unusedVariables false in
 /-- The component `∇_l e_i` of the lepton-singlet symbol against the basis vector `j` of
@@ -167,7 +167,7 @@ set_option linter.unusedVariables false in
 noncomputable def bareComponent (h : IsFermionSector B repGauge hrepGauge_mul repLorentz
       hrepLorentz_mul d bard u baru Q barQ L barL e bare massWeightPoly)
     (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) (j : Fin 2) : B :=
-  bare i l (LeptonSinglet.basis.conj.dualBasis j)
+  bare i l ((Basis.conj LeptonSinglet.basis).dualBasis j)
 
 /-!
 
@@ -321,7 +321,7 @@ lemma repLorentz_bardComponent (Λ : SL(2,ℂ)) (i : Fin 3) (l : Fin 0 → Fin 1
     (j : Fin 2 × Fin 3) :
     repLorentz Λ (h.bardComponent i l j) =
       ∑ β, (Λ⁻¹).1 j.1 β • h.bardComponent i l (β, j.2) := by
-  rw [bardComponent, h.repLorentz_bard i Λ 0 l (DownSinglet.basis.conj.dualBasis j),
+  rw [bardComponent, h.repLorentz_bard i Λ 0 l ((Basis.conj DownSinglet.basis).dualBasis j),
     univ_derivIndex_zero l, Finset.sum_singleton]
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_smul]
   rw [DownSinglet.repLorentzGroup_conj_dual_dualBasis, map_sum]
@@ -345,7 +345,7 @@ lemma repLorentz_baruComponent (Λ : SL(2,ℂ)) (i : Fin 3) (l : Fin 0 → Fin 1
     (j : Fin 2 × Fin 3) :
     repLorentz Λ (h.baruComponent i l j) =
       ∑ β, (Λ⁻¹).1 j.1 β • h.baruComponent i l (β, j.2) := by
-  rw [baruComponent, h.repLorentz_baru i Λ 0 l (UpSinglet.basis.conj.dualBasis j),
+  rw [baruComponent, h.repLorentz_baru i Λ 0 l ((Basis.conj UpSinglet.basis).dualBasis j),
     univ_derivIndex_zero l, Finset.sum_singleton]
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_smul]
   rw [UpSinglet.repLorentzGroup_conj_dual_dualBasis, map_sum]
@@ -369,7 +369,7 @@ lemma repLorentz_barQComponent (Λ : SL(2,ℂ)) (i : Fin 3) (l : Fin 0 → Fin 1
     (j : Fin 2 × Fin 3 × Fin 2) :
     repLorentz Λ (h.barQComponent i l j) =
       ∑ β, star ((Λ⁻¹).1 j.1 β) • h.barQComponent i l (β, j.2.1, j.2.2) := by
-  rw [barQComponent, h.repLorentz_barQ i Λ 0 l (QuarkDoublet.basis.conj.dualBasis j),
+  rw [barQComponent, h.repLorentz_barQ i Λ 0 l ((Basis.conj QuarkDoublet.basis).dualBasis j),
     univ_derivIndex_zero l, Finset.sum_singleton]
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_smul]
   rw [QuarkDoublet.repLorentzGroup_conj_dual_dualBasis, map_sum]
@@ -393,7 +393,7 @@ lemma repLorentz_barLComponent (Λ : SL(2,ℂ)) (i : Fin 3) (l : Fin 0 → Fin 1
     (j : Fin 2 × Fin 2) :
     repLorentz Λ (h.barLComponent i l j) =
       ∑ β, star ((Λ⁻¹).1 j.1 β) • h.barLComponent i l (β, j.2) := by
-  rw [barLComponent, h.repLorentz_barL i Λ 0 l (LeptonDoublet.basis.conj.dualBasis j),
+  rw [barLComponent, h.repLorentz_barL i Λ 0 l ((Basis.conj LeptonDoublet.basis).dualBasis j),
     univ_derivIndex_zero l, Finset.sum_singleton]
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_smul]
   rw [LeptonDoublet.repLorentzGroup_conj_dual_dualBasis, map_sum]
@@ -417,7 +417,7 @@ lemma repLorentz_bareComponent (Λ : SL(2,ℂ)) (i : Fin 3) (l : Fin 0 → Fin 1
     (j : Fin 2) :
     repLorentz Λ (h.bareComponent i l j) =
       ∑ β, (Λ⁻¹).1 j β • h.bareComponent i l β := by
-  rw [bareComponent, h.repLorentz_bare i Λ 0 l (LeptonSinglet.basis.conj.dualBasis j),
+  rw [bareComponent, h.repLorentz_bare i Λ 0 l ((Basis.conj LeptonSinglet.basis).dualBasis j),
     univ_derivIndex_zero l, Finset.sum_singleton]
   simp only [Finset.univ_eq_empty, Finset.prod_empty, one_smul]
   rw [LeptonSinglet.repLorentzGroup_conj_dual_dualBasis, map_sum]

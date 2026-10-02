@@ -213,7 +213,7 @@ lemma H_mem_massWeightSubmodule {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 lemma barH_mem_massWeightSubmodule {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     h.covBarH l φ ∈ h.massWeightSubmodule (2 * (1 + n)) := by
-  rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj HiggsVec.orthonormBasis.toBasis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
@@ -256,7 +256,7 @@ lemma d_supercommute_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} {l : Fin n �
 /-- Any `bard` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma bard_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) : h.covBarD i l φ ∈ h.massWeightSubmodule (3 + 2 * n) := by
-  rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj DownSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
@@ -274,7 +274,7 @@ lemma u_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ F
 /-- Any `baru` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma baru_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) : h.covBarU i l φ ∈ h.massWeightSubmodule (3 + 2 * n) := by
-  rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj UpSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
@@ -292,7 +292,7 @@ lemma Q_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ F
 /-- Any `barQ` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma barQ_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) : h.covBarQ i l φ ∈ h.massWeightSubmodule (3 + 2 * n) := by
-  rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj QuarkDoublet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
@@ -310,7 +310,7 @@ lemma L_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ F
 /-- Any `barL` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma barL_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) : h.covBarL i l φ ∈ h.massWeightSubmodule (3 + 2 * n) := by
-  rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj LeptonDoublet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule
@@ -328,7 +328,7 @@ lemma e_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ F
 /-- Any `bare` tower symbol lies in the mass-weight submodule of its weight. -/
 lemma bare_mem_massWeightSubmodule (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) : h.covBarE i l φ ∈ h.massWeightSubmodule (3 + 2 * n) := by
-  rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj LeptonSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ ?_
   simpa [generatorVal] using h.list_prod_mem_massWeightSubmodule

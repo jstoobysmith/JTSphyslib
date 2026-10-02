@@ -80,7 +80,7 @@ structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
   φJ : 𝔤J → SpaceTimeAlgebra
   φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = C (φ c)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    constantCoeff (p.foldl (fun h ρ => pderiv ρ h) (φJ a))
+    constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p (φJ a))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
   φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)
@@ -109,7 +109,7 @@ structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintyp
   φJ : 𝔤J → Matrix n n SpaceTimeAlgebra
   φJ_ofConstantLie : ∀ c, φJ (jets.ofConstantLie c) = (φ c).map (C : ℂ → SpaceTimeAlgebra)
   φJ_cc_foldl : ∀ (p : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤J),
-    ((φJ a).map fun f => constantCoeff (p.foldl (fun h ρ => pderiv ρ h) f))
+    ((φJ a).map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv p f))
       = φ (jets.evalLie (jets.iteratedDeriv p a))
   φJ_maurerCartan : ∀ (U : GJ) (μ : Fin 1 ⊕ Fin 3),
     φJ (jets.maurerCartan U μ)

@@ -159,7 +159,7 @@ lemma H_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 lemma barH_mem_sector {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule HiggsVec)) :
     h.covBarH l φ ∈ h.sector {GeneratorClass.higgs} := by
-  rw [← HiggsVec.orthonormBasis.toBasis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj HiggsVec.orthonormBasis.toBasis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using
@@ -188,7 +188,7 @@ lemma d_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any `bard` tower symbol lies in the fermion sector. -/
 lemma bard_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule DownSinglet)) : h.covBarD i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← DownSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj DownSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using
@@ -206,7 +206,7 @@ lemma u_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any `baru` tower symbol lies in the fermion sector. -/
 lemma baru_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule UpSinglet)) : h.covBarU i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← UpSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj UpSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using
@@ -224,7 +224,7 @@ lemma Q_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any `barQ` tower symbol lies in the fermion sector. -/
 lemma barQ_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule QuarkDoublet)) : h.covBarQ i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← QuarkDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj QuarkDoublet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using
@@ -242,7 +242,7 @@ lemma L_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any `barL` tower symbol lies in the fermion sector. -/
 lemma barL_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonDoublet)) : h.covBarL i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonDoublet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj LeptonDoublet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using
@@ -260,7 +260,7 @@ lemma e_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- Any `bare` tower symbol lies in the fermion sector. -/
 lemma bare_mem_sector (i : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℂ (ConjModule LeptonSinglet)) : h.covBarE i l φ ∈ h.sector {GeneratorClass.fermion} := by
-  rw [← LeptonSinglet.basis.conj.sum_dual_apply_smul_coord φ]
+  rw [← (Basis.conj LeptonSinglet.basis).sum_dual_apply_smul_coord φ]
   simp only [map_sum, map_smul]
   refine sum_mem fun j _ => SMulMemClass.smul_mem _ ?_
   simpa [generatorVal, wordClasses, Generators.kind] using

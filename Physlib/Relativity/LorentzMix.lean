@@ -7,7 +7,7 @@ module
 
 public import Physlib.Relativity.IsLorentzDeriv
 public import Physlib.Relativity.SL2C.Basic
-public import Physlib.Mathematics.Fin
+public import Physlib.Mathematics.ForMathlib.Fin
 public import Physlib.Mathematics.MultisetAntidiagonal
 /-!
 # The Lorentz mixing of derivative slots

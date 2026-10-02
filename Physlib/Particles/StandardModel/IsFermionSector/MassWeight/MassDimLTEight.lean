@@ -375,7 +375,7 @@ lemma dualBasis_apply {ι M : Type} [AddCommGroup M] [Module ℂ M] [Fintype ι]
 /-- The range of the `bard` symbols lies in the undotted span. -/
 lemma range_bard_le_leftSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
     LinearMap.range (bard f l) ≤ h.leftSpan l := by
-  rw [range_eq_iSup_span (DownSinglet.basis.conj) (bard f l)]
+  rw [range_eq_iSup_span ((Basis.conj DownSinglet.basis)) (bard f l)]
   refine iSup_le fun j => ?_
   rw [Submodule.span_singleton_le_iff_mem, ← dualBasis_apply]
   exact Submodule.mem_iSup_of_mem (.bard f j.2)
@@ -384,7 +384,7 @@ lemma range_bard_le_leftSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 
 /-- The range of the `baru` symbols lies in the undotted span. -/
 lemma range_baru_le_leftSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
     LinearMap.range (baru f l) ≤ h.leftSpan l := by
-  rw [range_eq_iSup_span (UpSinglet.basis.conj) (baru f l)]
+  rw [range_eq_iSup_span ((Basis.conj UpSinglet.basis)) (baru f l)]
   refine iSup_le fun j => ?_
   rw [Submodule.span_singleton_le_iff_mem, ← dualBasis_apply]
   exact Submodule.mem_iSup_of_mem (.baru f j.2)
@@ -411,7 +411,7 @@ lemma range_L_le_leftSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) 
 /-- The range of the `bare` symbols lies in the undotted span. -/
 lemma range_bare_le_leftSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
     LinearMap.range (bare f l) ≤ h.leftSpan l := by
-  rw [range_eq_iSup_span (LeptonSinglet.basis.conj) (bare f l)]
+  rw [range_eq_iSup_span ((Basis.conj LeptonSinglet.basis)) (bare f l)]
   refine iSup_le fun j => ?_
   rw [Submodule.span_singleton_le_iff_mem, ← dualBasis_apply]
   exact Submodule.mem_iSup_of_mem (.bare f)
@@ -438,7 +438,7 @@ lemma range_u_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3)
 /-- The range of the `barQ` symbols lies in the dotted span. -/
 lemma range_barQ_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
     LinearMap.range (barQ f l) ≤ h.rightSpan l := by
-  rw [range_eq_iSup_span (QuarkDoublet.basis.conj) (barQ f l)]
+  rw [range_eq_iSup_span ((Basis.conj QuarkDoublet.basis)) (barQ f l)]
   refine iSup_le fun j => ?_
   rw [Submodule.span_singleton_le_iff_mem, ← dualBasis_apply]
   exact Submodule.mem_iSup_of_mem (.barQ f j.2.1 j.2.2)
@@ -447,7 +447,7 @@ lemma range_barQ_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin
 /-- The range of the `barL` symbols lies in the dotted span. -/
 lemma range_barL_le_rightSpan (f : Fin 3) {n : ℕ} (l : Fin n → Fin 1 ⊕ Fin 3) :
     LinearMap.range (barL f l) ≤ h.rightSpan l := by
-  rw [range_eq_iSup_span (LeptonDoublet.basis.conj) (barL f l)]
+  rw [range_eq_iSup_span ((Basis.conj LeptonDoublet.basis)) (barL f l)]
   refine iSup_le fun j => ?_
   rw [Submodule.span_singleton_le_iff_mem, ← dualBasis_apply]
   exact Submodule.mem_iSup_of_mem (.barL f j.2)

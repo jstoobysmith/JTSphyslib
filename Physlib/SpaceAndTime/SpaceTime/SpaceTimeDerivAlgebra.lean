@@ -6,7 +6,7 @@ Authors: Joseph Tooby-Smith
 module
 
 public import Mathlib.LinearAlgebra.SymmetricAlgebra.Basis
-public import Physlib.Mathematics.Fin
+public import Physlib.Mathematics.ForMathlib.Fin
 public import Physlib.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import Physlib.Relativity.Tensors.RealTensor.CoVector.Representation
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeAlgebra.Basic
@@ -235,16 +235,16 @@ lemma eval_one (f : SpaceTimeAlgebra) :
   constant term of the iterated formal partial derivative `∂_s f`. This is the concrete
   description of the divided-power pairing that `eval_deriv` encodes one derivative at a
   time. -/
-lemma eval_basis_eq_constantCoeff_foldl_pderiv (s : Multiset (Fin 1 ⊕ Fin 3))
+lemma eval_basis_eq_constantCoeff_iteratedPDeriv (s : Multiset (Fin 1 ⊕ Fin 3))
     (f : SpaceTimeAlgebra) :
     eval (basis s) f =
-      MvPowerSeries.constantCoeff (s.foldl (fun g μ => MvPowerSeries.pderiv μ g) f) := by
+      MvPowerSeries.constantCoeff (SpaceTimeAlgebra.iteratedPDeriv s f) := by
   induction s using Multiset.induction_on generalizing f with
   | empty =>
-    rw [Multiset.foldl_zero, show (0 : Multiset (Fin 1 ⊕ Fin 3)) = {} from rfl, basis_nil,
+    rw [SpaceTimeAlgebra.iteratedPDeriv_zero, show (0 : Multiset (Fin 1 ⊕ Fin 3)) = {} from rfl, basis_nil,
       eval_one]
   | cons μ t ih =>
-    rw [Multiset.foldl_cons, ← ih,
+    rw [SpaceTimeAlgebra.iteratedPDeriv_cons, ← ih,
       show basis (μ ::ₘ t) = deriv μ (basis t) by
         rw [deriv_basis_multiset, ← Multiset.singleton_add, add_comm],
       eval_deriv]
@@ -306,26 +306,26 @@ lemma eval_jetRingAction (χ f : SpaceTimeAlgebra) (p : SpaceTimeDerivAlgebraℂ
 
   This is `jetRingAction_basis` with the `Nat.choose` bookkeeping traded for the
   divided-power pairing: both sides are compared through `eval`, where the identity is the
-  Leibniz rule `SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul` at the base point. It is the form
+  Leibniz rule `SpaceTimeAlgebra.constantCoeff_iteratedPDeriv_mul` at the base point. It is the form
   in which the transformation law of a matter field is stated. -/
 lemma jetRingAction_basis_multiset (χ : SpaceTimeAlgebra) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     jetRingAction χ (basis s) =
       (s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-            (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum := by
+            (SpaceTimeAlgebra.iteratedPDeriv p.1 χ) • basis p.2).sum := by
   refine eval_injective fun f => ?_
-  rw [eval_jetRingAction, eval_basis_eq_constantCoeff_foldl_pderiv,
-    SpaceTimeAlgebra.constantCoeff_foldl_pderiv_mul,
+  rw [eval_jetRingAction, eval_basis_eq_constantCoeff_iteratedPDeriv,
+    SpaceTimeAlgebra.constantCoeff_iteratedPDeriv_mul,
     show eval ((s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum) f
+          (SpaceTimeAlgebra.iteratedPDeriv p.1 χ) • basis p.2).sum) f
       = (eval.flip f) ((s.antidiagonal.map fun p =>
         MvPowerSeries.constantCoeff
-          (p.1.foldl (fun h ρ => MvPowerSeries.pderiv ρ h) χ) • basis p.2).sum) from rfl,
+          (SpaceTimeAlgebra.iteratedPDeriv p.1 χ) • basis p.2).sum) from rfl,
     map_multiset_sum, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p _ => ?_)
   rw [Function.comp_apply, map_smul, LinearMap.flip_apply, smul_eq_mul,
-    eval_basis_eq_constantCoeff_foldl_pderiv]
+    eval_basis_eq_constantCoeff_iteratedPDeriv]
 
 /-- Constant jets act on the derivative symbols by their value: `C c` has no
   derivative coordinates. -/

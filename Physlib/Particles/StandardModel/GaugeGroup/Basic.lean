@@ -7,6 +7,7 @@ module
 
 public import Physlib.SpaceAndTime.SpaceTime.Basic
 public import Physlib.Meta.Linters.Sorry
+public import Physlib.Meta.Informal.Basic
 public import Mathlib.RingTheory.RootsOfUnity.Complex
 /-!
 # The Standard Model

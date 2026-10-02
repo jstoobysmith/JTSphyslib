@@ -5,6 +5,9 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.Basic.Complex.Basic
+public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 public import Physlib.Relativity.SL2C.Basic
 /-!
 # Coordinate-axis rotations in `SL(2,ℂ)`

@@ -357,15 +357,15 @@ lemma matrix_multiset_sum_apply {κ α : Type*} [AddCommMonoid α]
 /-- The matrix Leibniz rule at the base point: the base-point Taylor coefficients of a
   product of matrices of jets are the antidiagonal convolution of the base-point
   coefficients of the factors. -/
-lemma matrix_constantCoeff_foldl_pderiv_mul {κ : Type} [Fintype κ] [DecidableEq κ]
+lemma matrix_constantCoeff_iteratedPDeriv_mul {κ : Type} [Fintype κ] [DecidableEq κ]
     (s : Multiset (Fin 1 ⊕ Fin 3)) (M N : Matrix κ κ SpaceTimeAlgebra) :
-    ((M * N).map fun f => constantCoeff (s.foldl (fun h ρ => pderiv ρ h) f))
+    ((M * N).map fun f => constantCoeff (iteratedPDeriv s f))
       = (s.antidiagonal.map fun p =>
-          (M.map fun f => constantCoeff (p.1.foldl (fun h ρ => pderiv ρ h) f)) *
-            (N.map fun f => constantCoeff (p.2.foldl (fun h ρ => pderiv ρ h) f))).sum := by
+          (M.map fun f => constantCoeff (iteratedPDeriv p.1 f)) *
+            (N.map fun f => constantCoeff (iteratedPDeriv p.2 f))).sum := by
   ext i j
-  rw [Matrix.map_apply, Matrix.mul_apply, foldl_pderiv_sum, map_sum]
-  simp only [constantCoeff_foldl_pderiv_mul]
+  rw [Matrix.map_apply, Matrix.mul_apply, iteratedPDeriv_sum, map_sum]
+  simp only [constantCoeff_iteratedPDeriv_mul]
   rw [← Multiset.sum_map_finsetSum, matrix_multiset_sum_apply, Multiset.map_map]
   refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
   rw [Function.comp_apply, Matrix.mul_apply]

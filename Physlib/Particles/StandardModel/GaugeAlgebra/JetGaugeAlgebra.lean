@@ -12,7 +12,7 @@ public import Physlib.Relativity.Tensors.ComplexTensor.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Basic
 public import Physlib.Relativity.Tensors.RealTensor.Vector.Representation
 public import Physlib.Relativity.SL2C.Basic
-public import Physlib.Mathematics.ConjModule
+public import Physlib.Mathematics.Modules.ConjModule
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basis
 public import Physlib.SpaceAndTime.SpaceTime.SpaceTimeDerivAlgebra
 public import Mathlib.RingTheory.MvPowerSeries.Derivative
@@ -369,11 +369,11 @@ lemma deriv_coord (μ ν : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) :
     · ext i j
       simp only [deriv_toSU3Matrix, coord_toSU3Matrix, add_toSU3Matrix, Matrix.map_apply,
         Matrix.smul_apply, Matrix.add_apply, smul_eq_mul, Derivation.leibniz, pderiv_X_self]
-      ring
+      ring_nf
     · ext i j
       simp only [deriv_toSU2Matrix, coord_toSU2Matrix, add_toSU2Matrix, Matrix.map_apply,
         Matrix.smul_apply, Matrix.add_apply, smul_eq_mul, Derivation.leibniz, pderiv_X_self]
-      ring
+      ring_nf
     · simp only [deriv_toU1Value, coord_toU1Value, add_toU1Value, smul_eq_mul,
         Derivation.leibniz, pderiv_X_self]
       ring
@@ -492,33 +492,33 @@ lemma iteratedDeriv_singleton (μ : Fin 1 ⊕ Fin 3) :
 
 lemma iteratedDeriv_toSU3Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (iteratedDeriv s a).toSU3Matrix =
-      a.toSU3Matrix.map fun f => s.foldl (fun f ρ => pderiv ρ f) f := by
+      a.toSU3Matrix.map fun f => SpaceTimeAlgebra.iteratedPDeriv s f := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
       rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toSU3Matrix, ih]
       ext i j : 1
-      simp only [Matrix.map_apply, Multiset.foldl_cons]
-      exact (SpaceTimeAlgebra.foldl_pderiv_pderiv t μ _).symm
+      simp only [Matrix.map_apply, SpaceTimeAlgebra.iteratedPDeriv_cons]
+      exact (SpaceTimeAlgebra.iteratedPDeriv_pderiv t μ _).symm
 
 lemma iteratedDeriv_toSU2Matrix (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (iteratedDeriv s a).toSU2Matrix =
-      a.toSU2Matrix.map fun f => s.foldl (fun f ρ => pderiv ρ f) f := by
+      a.toSU2Matrix.map fun f => SpaceTimeAlgebra.iteratedPDeriv s f := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
       rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toSU2Matrix, ih]
       ext i j : 1
-      simp only [Matrix.map_apply, Multiset.foldl_cons]
-      exact (SpaceTimeAlgebra.foldl_pderiv_pderiv t μ _).symm
+      simp only [Matrix.map_apply, SpaceTimeAlgebra.iteratedPDeriv_cons]
+      exact (SpaceTimeAlgebra.iteratedPDeriv_pderiv t μ _).symm
 
 lemma iteratedDeriv_toU1Value (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
-    (iteratedDeriv s a).toU1Value = s.foldl (fun f ρ => pderiv ρ f) a.toU1Value := by
+    (iteratedDeriv s a).toU1Value = SpaceTimeAlgebra.iteratedPDeriv s a.toU1Value := by
   induction s using Multiset.induction_on with
   | empty => simp [iteratedDeriv_zero]
   | cons μ t ih =>
       rw [iteratedDeriv_cons, LinearMap.comp_apply, deriv_toU1Value, ih,
-        Multiset.foldl_cons, SpaceTimeAlgebra.foldl_pderiv_pderiv]
+        SpaceTimeAlgebra.iteratedPDeriv_cons, SpaceTimeAlgebra.iteratedPDeriv_pderiv]
 
 
 /-!
@@ -690,21 +690,21 @@ lemma eval_coord (μ : Fin 1 ⊕ Fin 3) (a : JetGaugeAlgebra) : eval (coord μ a
 /-- The `su(3)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toSU3Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toSU3Matrix
-      = a.toSU3Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) := by
+      = a.toSU3Matrix.map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f) := by
   ext i j
   rw [eval_toSU3Matrix_apply, iteratedDeriv_toSU3Matrix, Matrix.map_apply, Matrix.map_apply]
 
 /-- The `su(2)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toSU2Matrix (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toSU2Matrix
-      = a.toSU2Matrix.map fun f => constantCoeff (x.foldl (fun h ρ => pderiv ρ h) f) := by
+      = a.toSU2Matrix.map fun f => constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x f) := by
   ext i j
   rw [eval_toSU2Matrix_apply, iteratedDeriv_toSU2Matrix, Matrix.map_apply, Matrix.map_apply]
 
 /-- The `u(1)` component of the base-point Taylor coefficients. -/
 lemma eval_iteratedDeriv_toU1Value (x : Multiset (Fin 1 ⊕ Fin 3)) (a : JetGaugeAlgebra) :
     (eval (iteratedDeriv x a)).toU1Value
-      = constantCoeff (x.foldl (fun h ρ => pderiv ρ h) a.toU1Value) := by
+      = constantCoeff (SpaceTimeAlgebra.iteratedPDeriv x a.toU1Value) := by
   rw [eval_toU1Value_eq, iteratedDeriv_toU1Value]
 
 
