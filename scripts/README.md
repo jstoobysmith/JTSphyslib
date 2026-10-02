@@ -42,8 +42,7 @@ This linter may need running a number of times.
   documentation (the `/-! … -/` blocks) of every file in `Physlib`, `QuantumInfo` and
   `PhyslibAlpha` is laid out according to a set standard. It reads the source files directly,
   so it does not need the project to be built. The headings of a file must be:
-  - a title `# …`;
-  - optionally `## 0. One line summary`, followed by a single line of text summarizing the file;
+  - a title `# …`, usually followed by a one-line summary of the file;
   - `## i. Overview`, `## ii. Key results`, `## iii. Table of contents` and `## iv. References`,
     in that order;
   - sections and subsections tagged as `## A.`, `### A.1.`, `#### A.1.2.` etc., listed in the

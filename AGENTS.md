@@ -18,7 +18,7 @@
 - Make sure that hypotheses are distributed compactly and neatly over new lines, only include new lines when genuinely needed.
 - Do not add lemmas that are trivial rewrites of existing Mathlib or Physlib results, unless they add genuine physics context.
 - Place results in the appropriate existing file; do not create new files without good reason. For example, if you need to prove a general result about derivatives on space in order to prove something in classical mechanics, that result should go in `Space.Derivatives.Basic`, not the classical mechanics file.
-- Module documentation (`/-! … -/`) must have the headings: a title `# ...`; optionally `## 0. One line summary` followed by a single line of text; `## i. Overview`; `## ii. Key results`; `## iii. Table of contents`; `## iv. References`; then sections numbered `## A. ...`, `### A.1. ...`, `#### A.1.2. ...`, listed in the table of contents. No heading may end in a full stop. See [Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean](Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean) for an example.
+- Module documentation (`/-! … -/`) must have the headings: a title `# ...`, followed by a one-line summary of the file; `## i. Overview`; `## ii. Key results`; `## iii. Table of contents`; `## iv. References`; then sections numbered `## A. ...`, `### A.1. ...`, `#### A.1.2. ...`, listed in the table of contents. No heading may end in a full stop. See [Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean](Physlib/ClassicalMechanics/HarmonicOscillator/Basic.lean) for an example.
 - Every definition must have a docstring.
 - Important lemmas should have a docstring.
 

@@ -100,7 +100,6 @@ inductive ErrorKind where
   | noModuleDoc
   | titleHead
   | extraTitle
-  | oneLineSummary
   | overviewHead
   | keyResultsHead
   | tableOfContentsHead
@@ -115,7 +114,7 @@ deriving DecidableEq
 
 /-- All kinds of errors, in the order they are reported. -/
 def ErrorKind.all : List ErrorKind :=
-  [.noModuleDoc, .titleHead, .extraTitle, .oneLineSummary, .overviewHead, .keyResultsHead, .tableOfContentsHead,
+  [.noModuleDoc, .titleHead, .extraTitle, .overviewHead, .keyResultsHead, .tableOfContentsHead,
     .referencesHead, .sectionOrder, .noSections, .sectionTag, .duplicateTag, .headingFullStop,
     .tableOfContentsCorrect]
 
@@ -123,7 +122,6 @@ def ErrorKind.name : ErrorKind → String
   | .noModuleDoc => "No module documentation headings"
   | .titleHead => "Missing or malformed title"
   | .extraTitle => "Extra title headings"
-  | .oneLineSummary => "Malformed one line summary"
   | .overviewHead => "Missing or malformed overview section"
   | .keyResultsHead => "Missing or malformed key results section"
   | .tableOfContentsHead => "Missing or malformed table of contents section"
@@ -139,12 +137,11 @@ def ErrorKind.hint : ErrorKind → String
   | .noModuleDoc => "Add module documentation `/-! … -/` with the standard headings."
   | .titleHead => "Add a title heading starting with '# ' for the whole module, as the first heading."
   | .extraTitle => "Only the module title should use '# '; use '## A.', '### A.1.' etc. for sections."
-  | .oneLineSummary => "The optional '## 0. One line summary' section goes directly after the title and contains a single line of text."
   | .overviewHead => "Add an overview section '## i. Overview' after the title heading."
   | .keyResultsHead => "Add a key results section '## ii. Key results' after the overview section."
   | .tableOfContentsHead => "Add a table of contents section '## iii. Table of contents' after the key results section. This can be filled in later."
   | .referencesHead => "Add a references section '## iv. References' after the table of contents section."
-  | .sectionOrder => "The headings should start: title, optionally '## 0. One line summary', then '## i. Overview', '## ii. Key results', '## iii. Table of contents', '## iv. References'."
+  | .sectionOrder => "The headings should start: title, '## i. Overview', '## ii. Key results', '## iii. Table of contents', '## iv. References'."
   | .noSections => "Add other headings for sections and subsections using e.g. '## A.', '### A.1.', '#### A.1.2' etc."
   | .sectionTag => "Section tags end in a dot and have one dot fewer than the heading has '#'s, e.g. '## A.', '### A.1.', '#### A.1.2.'."
   | .duplicateTag => "Each section tag should be used only once."
@@ -170,21 +167,18 @@ structure StandardSection where
   expected : String
   /-- The heading with numbering, case and a trailing dot ignored, used to find near misses. -/
   key : String
-  /-- Whether the section may be left out. -/
-  optional : Bool := false
 
 def standardSections : List StandardSection :=
-  [⟨.oneLineSummary, "## 0. One line summary", "one line summary", true⟩,
-   ⟨.overviewHead, "## i. Overview", "overview", false⟩,
-   ⟨.keyResultsHead, "## ii. Key results", "key results", false⟩,
-   ⟨.tableOfContentsHead, "## iii. Table of contents", "table of contents", false⟩,
-   ⟨.referencesHead, "## iv. References", "references", false⟩]
+  [⟨.overviewHead, "## i. Overview", "overview"⟩,
+   ⟨.keyResultsHead, "## ii. Key results", "key results"⟩,
+   ⟨.tableOfContentsHead, "## iii. Table of contents", "table of contents"⟩,
+   ⟨.referencesHead, "## iv. References", "references"⟩]
 
 /-- The text of a heading with a leading roman numeral, case and a trailing dot ignored. -/
 def Heading.key (h : Heading) : String :=
   let ws := (h.text.splitOn " ").filter (· ≠ "")
   let ws := match ws with
-    | w :: rest => if ["0.", "i.", "ii.", "iii.", "iv."].contains w.toLower then rest else ws
+    | w :: rest => if ["i.", "ii.", "iii.", "iv."].contains w.toLower then rest else ws
     | [] => []
   let s := (" ".intercalate ws).toLower
   if s.endsWith "." then String.ofList s.toList.dropLast else s
@@ -239,8 +233,7 @@ def checkHeadings (f : FilePath) : IO (Array DocLintError) := do
           s!"Heading '{headings[i]!.raw}' should be exactly '{s.expected}'"
         standardIdx := standardIdx.push (some i)
       | none =>
-        unless s.optional do
-          errs := errs.push <| err s.kind titleLine s!"Missing '{s.expected}'"
+        errs := errs.push <| err s.kind titleLine s!"Missing '{s.expected}'"
         standardIdx := standardIdx.push none
   let mut prev : Option Nat := if hasTitle then some 0 else none
   for oi in standardIdx do
@@ -259,13 +252,6 @@ def checkHeadings (f : FilePath) : IO (Array DocLintError) := do
     let stop := (headings[k + 1]?.map (·.line)).getD (lines.size + 1)
     (docLines.filter fun (n, c) ↦ start < n && n < stop && !(strip c).isEmpty).map
       fun (n, c) ↦ (n, rstrip c)
-
-  /- One line summary: a single line of text. -/
-  if let some k := standardHeading .oneLineSummary then
-    let text := body k
-    if text.size ≠ 1 then
-      errs := errs.push <| err .oneLineSummary headings[k]!.line
-        s!"The one line summary has {text.size} lines of text; it should have exactly one"
 
   /- Section headings: everything other than the title and the standard sections. -/
   let claimed := standardIdx.filterMap id
