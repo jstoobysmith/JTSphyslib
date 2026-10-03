@@ -148,6 +148,12 @@ lemma contr_metric [S.WithMetric] (c : C) :
       TensorProduct.assoc k (V c) (V c) (V (S.τ c) ⊗[k] V (S.τ c)) <|
       (S.metric c 1) ⊗ₜ[k] (S.metric (S.τ c) 1)) = S.unit c (1 : k) :=
   WithMetric.contr_metric c
+omit [(c : C) → Fintype (basisIdx c)] [(c : C) → DecidableEq (basisIdx c)] in
+/-- `map_basis_eq` with the cast spelled `Equiv.cast`, the form `contr_tmul_symm` applies to its
+  first vector. -/
+lemma equivCast_basis {c c1 : C} (h : c = c1) (i : basisIdx c) :
+    Equiv.cast (congrArg V h) (basis c i) = basis c1 (basisIdxCongr h i) :=
+  map_basis_eq h i
 
 set_option linter.unusedVariables false in
 /-- The number of indices `n` from a tensor. -/
