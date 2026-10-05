@@ -66,6 +66,11 @@ srcDir = "scripts/MetaPrograms"
 supportInterpreter = true
 
 [[lean_exe]]
+name = "theorem_lint"
+srcDir = "scripts/MetaPrograms"
+supportInterpreter = true
+
+[[lean_exe]]
 name = "runPhyslibLinters"
 srcDir = "scripts/MetaPrograms"
 supportInterpreter = true

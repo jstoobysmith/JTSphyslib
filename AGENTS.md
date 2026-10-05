@@ -8,7 +8,11 @@
 
 ## Content
 
-- Use `lemma`, not `theorem`, unless the result is well known in the physics literature.
+- Use `lemma`, not `theorem`, unless the result is well known in the physics literature. Every
+  `theorem` must have a docstring, and its fully qualified name must be listed in the
+  `Theorems.txt` of its library: [Physlib/Theorems.txt](Physlib/Theorems.txt),
+  [QuantumInfo/Theorems.txt](QuantumInfo/Theorems.txt) or
+  [PhyslibAlpha/Theorems.txt](PhyslibAlpha/Theorems.txt).
 - Never use the `axiom` declaration.
 - Never use `sorry`.
 - Never use structure fields of type `True`, or theorems returning `True`.
@@ -55,6 +59,9 @@ When a long proof cannot be split, make sure it contains comments.
 - New physics terms that trip the spell-checker go in `scripts/MetaPrograms/spellingWords.txt`.
 - Check that `lake build` works (run `lake exe cache get` first).
 - Check that `lake exe lint_all` passes.
+- Check that `lake exe theorem_lint` passes (needs `Physlib`, `QuantumInfo` and `PhyslibAlpha`
+  built): a declaration is a `theorem` exactly when it is listed in the `Theorems.txt` of its
+  library, and every `theorem` has a docstring.
 - Check that `lake exe forMathlib_lint` passes: files in `Physlib/Mathematics/ForMathlib/` may only
   import from within that directory, and each must be used outside it.
 - Check `./scripts/lint-style.sh`, but **commit your changes first**; this linter reads committed state.
