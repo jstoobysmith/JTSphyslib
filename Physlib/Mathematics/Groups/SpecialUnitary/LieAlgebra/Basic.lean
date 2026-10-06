@@ -5,13 +5,11 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
-public import Mathlib.Algebra.Lie.Basic
 public import Mathlib.Algebra.Lie.BaseChange
-public import Mathlib.Algebra.Star.SelfAdjoint
-public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Mathlib.LinearAlgebra.Complex.Module
+public import Mathlib.LinearAlgebra.Matrix.FiniteDimensional
 public import Mathlib.LinearAlgebra.UnitaryGroup
 public import Mathlib.RepresentationTheory.Basic
-public import Mathlib.LinearAlgebra.Complex.Module
 /-!
 
 # The Lie algebra `su(n)` in the hermitian presentation
@@ -40,6 +38,8 @@ and imaginary parts `ℜ M` and `ℑ M` being traceless hermitian.
 - `SULieAlgebra.toMatrixℂ_lie` : the matrix of a bracket is `i` times the commutator.
 - `SULieAlgebra.toMatrixℂ_injective`, `SULieAlgebra.range_toMatrixℂ` : the complexification is
   the traceless complex matrices.
+- `SULieAlgebra.finrank_eq`, `SULieAlgebra.finrank_complexification` : `su(n)` and its
+  complexification have dimension `n² - 1`.
 
 ## iii. Table of contents
 
@@ -51,6 +51,8 @@ and imaginary parts `ℜ M` and `ℑ M` being traceless hermitian.
   - E.1. The underlying matrix of the complexification
   - E.2. The element with a given traceless matrix
   - E.3. The injectivity and surjectivity of the matrix map
+  - E.4. Commuting with all elements of `su(n)`
+- F. The dimension
 
 ## iv. References
 
@@ -341,5 +343,29 @@ lemma commute_of_forall_commute_val {M : Matrix (Fin n) (Fin n) ℂ}
       div_mul_cancel₀ _ (by exact_mod_cast hn.ne'), sub_self]
   have h1 := toMatrixℂ_ofTracelessℂ _ hN ▸ hA (ofTracelessℂ _ hN)
   simpa using h1.add_right ((Commute.one_right M).smul_right (N.trace / n))
+
+/-!
+
+## F. The dimension
+
+-/
+
+/-- The complexification `ℂ ⊗[ℝ] su(n)` has complex dimension `n² - 1`: it is the traceless
+  matrices, and the trace is onto. -/
+lemma finrank_complexification : Module.finrank ℂ (Complexification n) = n ^ 2 - 1 := by
+  rw [← LinearMap.finrank_range_of_inj toMatrixℂ_injective, range_toMatrixℂ]
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · exact Module.finrank_zero_of_subsingleton
+  have hsurj : LinearMap.range (Matrix.traceLinearMap (Fin n) ℂ ℂ) = ⊤ :=
+    LinearMap.range_eq_top.2 fun c => ⟨single ⟨0, hn⟩ ⟨0, hn⟩ c, by simp⟩
+  have h := LinearMap.finrank_range_add_finrank_ker (Matrix.traceLinearMap (Fin n) ℂ ℂ)
+  rw [hsurj, finrank_top, Module.finrank_matrix, Fintype.card_fin, Module.finrank_self] at h
+  rw [sq]
+  omega
+
+/-- `su(n)` has real dimension `n² - 1`, the dimension of its complexification. -/
+lemma finrank_eq : Module.finrank ℝ (SULieAlgebra n ℂ) = n ^ 2 - 1 := by
+  rw [← Module.finrank_baseChange (R := ℂ)]
+  exact finrank_complexification
 
 end SULieAlgebra

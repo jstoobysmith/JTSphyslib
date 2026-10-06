@@ -5,17 +5,17 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
-public import Physlib.Mathematics.Groups.SpecialUnitary.LieAlgebra.Basic
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.LinearAlgebra.BilinearForm.TensorProduct
 public import Mathlib.LinearAlgebra.Matrix.PosDef
 public import Mathlib.RepresentationTheory.Intertwining
-public import Physlib.Meta.Linters.Sorry
+public import Physlib.Mathematics.Groups.SpecialUnitary.LieAlgebra.Basic
 /-!
 
 # The adjoint representation of `SU(n)`
 
 The adjoint representation of `SU(n)` and its complexification, defined as `x ↦ g x g†`.
+
 ## i. Overview
 
 We define the adjont representation of `SU(n)` on its Lie algebra `su(n)` and its complexification.
@@ -34,20 +34,12 @@ under the bracket and nondegenerate (B.2).
 ## ii. Key results
 
 - `SULieAlgebra.adjoint` : the adjoint representation on `su(n)`.
-- `SULieAlgebra.adjoint_lie` : the adjoint representation preserves the bracket.
-- `SULieAlgebra.adjoint_eq_one_iff` : the kernel of the adjoint representation is the centre.
 - `SULieAlgebra.adjointℂ` : the adjoint representation on the complexification.
-- `SULieAlgebra.adjointℂ_lie` : the complex adjoint representation preserves the bracket.
-- `SULieAlgebra.adjointℂ_eq_one_iff` : the kernel of the complex adjoint representation is the
-  centre.
+- `SULieAlgebra.adjoint_eq_iff` : the adjoint representation is faithful modulo the centre.
 - `SULieAlgebra.adjointContr` : the contraction of two real adjoint indices.
-- `SULieAlgebra.adjointContr_lie` : the real contraction is invariant under the bracket.
-- `SULieAlgebra.adjointContr_self_pos` : the real contraction is positive definite.
 - `SULieAlgebra.adjointℂContr` : the contraction of two complex adjoint indices.
-- `SULieAlgebra.toMatrixℂ_adjointℂ` : on matrices the adjoint action is conjugation.
-- `SULieAlgebra.adjointℂContr_tmul` : the contraction is the trace form on matrices.
-- `SULieAlgebra.adjointℂContr_lie` : the complex contraction is invariant under the bracket.
-- `SULieAlgebra.adjointℂContr_flip_injective` : the complex contraction is nondegenerate.
+- `SULieAlgebra.adjointContr_self_pos` : the real contraction is positive definite.
+- `SULieAlgebra.adjointℂContr_nondegenerate` : the complex contraction is nondegenerate.
 
 ## iii. Table of contents
 
@@ -124,6 +116,23 @@ lemma adjoint_eq_one_iff {n : ℕ} (g : specialUnitaryGroup (Fin n) ℂ) :
       rw [hc, Matrix.smul_mul, Matrix.mul_smul, Matrix.one_mul, Matrix.mul_one]
     rw [adjoint_val, Module.End.one_apply, hcomm, Matrix.mul_assoc, hg.2, Matrix.mul_one]
 
+/-- Two elements of `SU(n)` have the same adjoint action exactly when they differ by a scalar:
+  the adjoint representation is faithful on `SU(n)` modulo its centre. -/
+lemma adjoint_eq_iff {n : ℕ} (g h : specialUnitaryGroup (Fin n) ℂ) :
+    adjoint g = adjoint h ↔ ∃ c : ℂ, g.1 = c • h.1 := by
+  have hh := (mem_specialUnitaryGroup_iff.mp h.2).1
+  have hval : (g * h⁻¹).1 = g.1 * star h.1 := rfl
+  have key : adjoint g = adjoint h ↔ adjoint (g * h⁻¹) = 1 := by
+    constructor
+    · intro hgh
+      rw [map_mul, hgh, ← map_mul, mul_inv_cancel, map_one]
+    · intro h1
+      rw [← one_mul (adjoint h), ← h1, ← map_mul, inv_mul_cancel_right]
+  rw [key, adjoint_eq_one_iff, hval]
+  refine exists_congr fun c => ⟨fun hc => ?_, fun hc => ?_⟩
+  · rw [← Matrix.mul_one g.1, ← hh.1, ← Matrix.mul_assoc, hc, Matrix.smul_mul, Matrix.one_mul]
+  · rw [hc, Matrix.smul_mul, hh.2]
+
 /-!
 
 ### A.2. The complex adjoint representation
@@ -170,6 +179,17 @@ lemma adjointℂ_eq_one_iff {n : ℕ} (g : specialUnitaryGroup (Fin n) ℂ) :
   · change Module.End.baseChangeHom ℝ ℂ _ (adjoint g) = 1
     rw [h, map_one]
 
+/-- Two elements of `SU(n)` have the same complex adjoint action exactly when they differ by a
+  scalar, as for the real adjoint representation. -/
+lemma adjointℂ_eq_iff {n : ℕ} (g h : specialUnitaryGroup (Fin n) ℂ) :
+    adjointℂ g = adjointℂ h ↔ ∃ c : ℂ, g.1 = c • h.1 := by
+  rw [← adjoint_eq_iff]
+  refine ⟨fun hgh => LinearMap.ext fun x => Subtype.ext ?_, fun hgh => ?_⟩
+  · have hx := congrArg toMatrixℂ (LinearMap.congr_fun hgh (1 ⊗ₜ x))
+    rwa [adjointℂ_tmul, adjointℂ_tmul, toMatrixℂ_tmul, toMatrixℂ_tmul, one_smul, one_smul] at hx
+  · change Module.End.baseChangeHom ℝ ℂ _ (adjoint g) = Module.End.baseChangeHom ℝ ℂ _ (adjoint h)
+    rw [hgh]
+
 /-- The adjoint representation conjugates the matrix, `M ↦ g M g†`. -/
 @[simp]
 lemma toMatrixℂ_adjointℂ {n} (g : specialUnitaryGroup (Fin n) ℂ) (A : Complexification n) :
@@ -179,6 +199,15 @@ lemma toMatrixℂ_adjointℂ {n} (g : specialUnitaryGroup (Fin n) ℂ) (A : Comp
     rw [adjointℂ_tmul, toMatrixℂ_tmul, toMatrixℂ_tmul, adjoint_val, Matrix.mul_smul,
       Matrix.smul_mul]
   | add A B hA hB => rw [map_add, map_add, hA, hB, map_add, Matrix.mul_add, Matrix.add_mul]
+
+/-- The adjoint action of a diagonal element of `SU(n)` scales the entry at `(x, y)` of the
+  matrix by `d x * star (d y)`. -/
+lemma toMatrixℂ_adjointℂ_apply_of_diagonal {n} {g : specialUnitaryGroup (Fin n) ℂ}
+    {d : Fin n → ℂ} (hg : g.1 = diagonal d) (A : Complexification n) (x y : Fin n) :
+    toMatrixℂ (adjointℂ g A) x y = d x * star (d y) * toMatrixℂ A x y := by
+  rw [toMatrixℂ_adjointℂ, hg, star_eq_conjTranspose, diagonal_conjTranspose, mul_diagonal,
+    diagonal_mul, Pi.star_apply]
+  ring
 
 lemma toMatrixℂ_adjointℂ_trace {n} (g : specialUnitaryGroup (Fin n) ℂ) (A : Complexification n) :
     (toMatrixℂ (adjointℂ g A)).trace = (toMatrixℂ A).trace := by
@@ -280,6 +309,16 @@ lemma adjointContr_flip_injective {n : ℕ} :
   rw [tmul_sub, map_sub, sub_eq_zero]
   exact hx
 
+/-- The real contraction, as a bilinear form, is symmetric. -/
+lemma adjointContr_isSymm {n : ℕ} :
+    LinearMap.BilinForm.IsSymm (TensorProduct.curry (adjointContr (n := n)).toLinearMap) :=
+  ⟨fun x y => adjointContr_symm x y⟩
+
+/-- The real contraction, as a bilinear form, is nondegenerate. -/
+lemma adjointContr_nondegenerate {n : ℕ} :
+    (TensorProduct.curry (adjointContr (n := n)).toLinearMap).Nondegenerate :=
+  ⟨fun x hx => adjointContr_separating_left x hx, fun y hy => adjointContr_separating_right y hy⟩
+
 /-!
 
 ### B.2. The complex case
@@ -305,6 +344,14 @@ noncomputable def adjointℂContr {n : ℕ} : ((adjointℂ (n := n)).tprod adjoi
       | add B B' hB hB' => rw [map_add, tmul_add, map_add, hB, hB', tmul_add, map_add]
     | add A A' hA hA' => rw [map_add, add_tmul, map_add, hA, hA', add_tmul, map_add]
 
+/-- The adjoint representation preserves the complex contraction. -/
+lemma adjointℂContr_adjointℂ {n : ℕ} (g : specialUnitaryGroup (Fin n) ℂ)
+    (A B : Complexification n) :
+    adjointℂContr (adjointℂ g A ⊗ₜ adjointℂ g B) = adjointℂContr (A ⊗ₜ B) := by
+  have h := Representation.IntertwiningMap.isIntertwining _ _ (adjointℂContr (n := n)) g (A ⊗ₜ B)
+  simpa only [Representation.tprod_apply, TensorProduct.map_tmul, Representation.trivial_apply]
+    using h
+
 /-- The contraction is the trace form, `A ⊗ B ↦ tr (A B)`. -/
 lemma adjointℂContr_tmul (A B : Complexification n) :
     adjointℂContr (A ⊗ₜ B) = (toMatrixℂ A * toMatrixℂ B).trace := by
@@ -320,6 +367,13 @@ lemma adjointℂContr_tmul (A B : Complexification n) :
       ring
     | add B B' hB hB' => rw [tmul_add, map_add, hB, hB', map_add, Matrix.mul_add, trace_add]
   | add A A' hA hA' => rw [add_tmul, map_add, hA, hA', map_add, Matrix.add_mul, trace_add]
+
+/-- On the real elements `1 ⊗ x` of the complexification the complex contraction is the real
+  contraction, so the two agree on real gauge fields. -/
+lemma adjointℂContr_one_tmul {n : ℕ} (x y : SULieAlgebra n ℂ) :
+    adjointℂContr ((1 ⊗ₜ x) ⊗ₜ (1 ⊗ₜ y)) = adjointContr (x ⊗ₜ y) := by
+  rw [adjointℂContr_tmul, toMatrixℂ_tmul, toMatrixℂ_tmul, one_smul, one_smul,
+    ofReal_adjointContr_tmul]
 
 lemma adjointℂContr_symm {n} (A B : Complexification n) :
     adjointℂContr (A ⊗ₜ B) = adjointℂContr (B ⊗ₜ A) := by
@@ -353,5 +407,16 @@ lemma adjointℂContr_flip_injective :
   simp only [LinearMap.flip_apply, TensorProduct.curry_apply] at hA
   rw [tmul_sub, map_sub, sub_eq_zero]
   exact hA
+
+/-- The complex contraction, as a bilinear form, is symmetric. -/
+lemma adjointℂContr_isSymm {n : ℕ} :
+    LinearMap.BilinForm.IsSymm (TensorProduct.curry (adjointℂContr (n := n)).toLinearMap) :=
+  ⟨fun A B => adjointℂContr_symm A B⟩
+
+/-- The complex contraction, as a bilinear form, is nondegenerate. -/
+lemma adjointℂContr_nondegenerate {n : ℕ} :
+    (TensorProduct.curry (adjointℂContr (n := n)).toLinearMap).Nondegenerate :=
+  ⟨fun A hA => adjointℂContr_separating_left A hA,
+    fun B hB => adjointℂContr_separating_right B hB⟩
 
 end SULieAlgebra
