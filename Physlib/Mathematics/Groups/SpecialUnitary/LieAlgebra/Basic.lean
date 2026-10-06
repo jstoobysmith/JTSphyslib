@@ -37,6 +37,7 @@ and imaginary parts `ℜ M` and `ℑ M` being traceless hermitian.
 - `SULieAlgebra.conj_lie` : conjugation by a unitary matrix preserves the bracket.
 - `SULieAlgebra.Complexification n` : the complexification `ℂ ⊗[ℝ] su(n)`.
 - `SULieAlgebra.toMatrixℂ` : the underlying matrix of an element of the complexification.
+- `SULieAlgebra.toMatrixℂ_lie` : the matrix of a bracket is `i` times the commutator.
 - `SULieAlgebra.toMatrixℂ_injective`, `SULieAlgebra.range_toMatrixℂ` : the complexification is
   the traceless complex matrices.
 
@@ -226,6 +227,27 @@ lemma trace_toMatrixℂ (A : Complexification n) : (toMatrixℂ A).trace = 0 := 
   | tmul z x => rw [toMatrixℂ_tmul, Matrix.trace_smul, x.trace_val_eq_zero, smul_zero]
   | add A B hA hB => rw [map_add, Matrix.trace_add, hA, hB, add_zero]
 
+/-- The matrix of a bracket is `i` times the commutator of the matrices, `[A, B] ↦ i (A B - B A)`,
+  as in `su(n)` itself. -/
+lemma toMatrixℂ_lie (A B : Complexification n) :
+    toMatrixℂ ⁅A, B⁆ = Complex.I • (toMatrixℂ A * toMatrixℂ B - toMatrixℂ B * toMatrixℂ A) := by
+  induction A using TensorProduct.inductionOn with
+  | tmul z x =>
+    induction B using TensorProduct.inductionOn with
+    | tmul w y =>
+      rw [LieAlgebra.ExtendScalars.bracket_tmul, toMatrixℂ_tmul, toMatrixℂ_tmul, toMatrixℂ_tmul,
+        val_bracket]
+      simp only [Matrix.smul_mul, Matrix.mul_smul]
+      module
+    | add B B' hB hB' =>
+      rw [lie_add (L := Complexification n), map_add, hB, hB', map_add, Matrix.mul_add,
+        Matrix.add_mul]
+      module
+  | add A A' hA hA' =>
+    rw [add_lie (L := Complexification n), map_add, hA, hA', map_add, Matrix.mul_add,
+      Matrix.add_mul]
+    module
+
 /-!
 
 ### E.2. The element with a given traceless matrix
@@ -297,5 +319,21 @@ lemma range_toMatrixℂ :
   rw [LinearMap.mem_range, LinearMap.mem_ker, Matrix.traceLinearMap_apply]
   exact ⟨fun ⟨A, hA⟩ => hA ▸ trace_toMatrixℂ A,
     fun hM => ⟨ofTracelessℂ M hM, toMatrixℂ_ofTracelessℂ M hM⟩⟩
+
+/-- A matrix commuting with every element of `su(n)` commutes with every matrix: it commutes with
+  the traceless matrices, which `su(n)` spans over `ℂ`, and with the identity. -/
+lemma commute_of_forall_commute_val {M : Matrix (Fin n) (Fin n) ℂ}
+    (h : ∀ x : SULieAlgebra n ℂ, Commute M x.1) (N : Matrix (Fin n) (Fin n) ℂ) : Commute M N := by
+  have hA (A : Complexification n) : Commute M (toMatrixℂ A) := by
+    induction A using TensorProduct.inductionOn with
+    | tmul z x => exact toMatrixℂ_tmul z x ▸ (h x).smul_right z
+    | add A B hA hB => exact map_add toMatrixℂ A B ▸ hA.add_right hB
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · exact Subsingleton.elim (M * N) (N * M)
+  have hN : (N - (N.trace / n) • (1 : Matrix (Fin n) (Fin n) ℂ)).trace = 0 := by
+    rw [Matrix.trace_sub, Matrix.trace_smul, Matrix.trace_one, Fintype.card_fin, smul_eq_mul,
+      div_mul_cancel₀ _ (by exact_mod_cast hn.ne'), sub_self]
+  have h1 := toMatrixℂ_ofTracelessℂ _ hN ▸ hA (ofTracelessℂ _ hN)
+  simpa using h1.add_right ((Commute.one_right M).smul_right (N.trace / n))
 
 end SULieAlgebra
