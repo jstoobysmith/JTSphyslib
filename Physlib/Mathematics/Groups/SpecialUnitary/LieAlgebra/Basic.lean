@@ -320,6 +320,12 @@ lemma range_toMatrixℂ :
   exact ⟨fun ⟨A, hA⟩ => hA ▸ trace_toMatrixℂ A,
     fun hM => ⟨ofTracelessℂ M hM, toMatrixℂ_ofTracelessℂ M hM⟩⟩
 
+/-!
+
+### E.4. Commuting with all elements of `su(n)`
+
+-/
+
 /-- A matrix commuting with every element of `su(n)` commutes with every matrix: it commutes with
   the traceless matrices, which `su(n)` spans over `ℂ`, and with the identity. -/
 lemma commute_of_forall_commute_val {M : Matrix (Fin n) (Fin n) ℂ}
