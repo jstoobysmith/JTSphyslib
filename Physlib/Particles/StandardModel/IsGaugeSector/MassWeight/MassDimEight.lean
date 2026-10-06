@@ -32,7 +32,9 @@ gauge-stable submodule: such an invariant is a combination of the three underive
 contractions and the twice-derived hypercharge field strengths. Both shapes carry four
 covector indices and no others, so both are quadruple Lorentz tensors, and the Lorentz
 classification cuts the combinations down further, to the four Lorentz contractions of
-each of the four families.
+each of the four families. All four families are antisymmetric in their last two slots, by
+`F_antisymm`, and that leaves two contractions of each, eight spanning generators in all
+(`lorentzContractionEightSpan_eq`).
 
 - A. Spans and stability
 - B. The gauge transformation of the gauge-factor field strengths
@@ -52,7 +54,8 @@ the right mass weight, and the Lorentz one because it sits inside the gauge span
 spanned by contractions that `RankFour` shows to be Lorentz invariant. Section J composes
 the two reductions and puts the two directions together as the equivalences
 `mem_massWeightSubmodule_eight_sup_and_invariant_iff` and
-`mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`.
+`mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff`, the second also with the
+eight generators, `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_reduced`.
 
 -/
 
@@ -947,14 +950,36 @@ four-vector indices as well. The four spans of section G are exactly the spans o
 four families, and `RankFour.reducesInvariantsTo_span_contractionTensor` reduces each, for the
 Lorentz group, to the span of its four contractions.
 
-What is left is spanned by the four Lorentz contractions of each family, the outer, inner
-and split metric contractions and the Levi-Civita contraction: sixteen spanning vectors,
-twelve quadratic in the underived field strengths and four linear in the twice-derived
-hypercharge field strength. This is a spanning statement; no generator is shown to be
-nonzero and none is removed as redundant. `IsGaugeSector` does assert antisymmetry of `F`
-in its two covector indices (`F_antisymm`, used below mass weight eight), which is expected
-to make the outer metric contraction of each `F·F` family vanish and the inner and split
-ones agree up to sign; that reduction of the generators is not carried out here.
+What is left is spanned by the four Lorentz contractions of each family,
+`ofComponents T (RankFour.contractionTensor i)`: the metric contractions of the slot pairs
+`(0,1)(2,3)`, `(0,2)(1,3)` and `(0,3)(1,2)` and the Levi-Civita contraction. These are
+sixteen spanning vectors, `lorentzContractionEightSpan`, which is the output of the
+classification.
+
+Half of them are redundant. In each of the four families the last two slots are the two
+covector indices of one field strength: of the second factor for the three trace families,
+and of the only factor, after the two derivative slots, for the twice-derived hypercharge
+field strength. So `F_antisymm` makes each family antisymmetric under exchanging slots `2` and
+`3` (`gluonTrace_comp_swap_two_three` and its three companions), and
+`RankFour.span_range_contractionTensor_of_antisymm` then removes two contractions of each.
+The `(0,1)(2,3)` contraction vanishes, and the `(0,3)(1,2)` one is minus the `(0,2)(1,3)`
+one (`quadContractionSpan_eq_of_antisymm`). Eight spanning vectors remain
+(`lorentzContractionEightSpan_eq`):
+
+* six underived ones, quadratic in the field strengths. For each of the gluon, `W`-boson and
+  hypercharge trace families these are the `(0,2)(1,3)` metric contraction, of the kinetic
+  shape `η^{μρ} η^{νσ} F_{μν} F_{ρσ}`, and the Levi-Civita contraction, of the theta shape
+  `ε^{μνρσ} F_{μν} F_{ρσ}`, the gauge index summed in both;
+* two linear in the twice-derived hypercharge field strength: `η^{μρ} η^{νσ} ∇_μ ∇_ν B_{ρσ}`
+  and `ε^{μνρσ} ∇_μ ∇_ν B_{ρσ}`.
+
+Each is the plain component sum of `RankFour.ofComponents_contractionTensor`, repeated
+indices summed, against the integer metric `diag(1,-1,-1,-1)` or the symbol taking the value
+`1` at `(t, x, y, z)`, with no further normalisation; the shapes are not claimed to carry the
+conventional factors of an action. The last two are kept because nothing in `IsGaugeSector`
+relates the two derivative slots: no symmetry of the derivatives, no Bianchi identity, no
+equation of motion and no quotient by total derivatives. The eight form a spanning family,
+not a basis: none is shown to be nonzero, and no independence among them is claimed.
 
 -/
 
@@ -1052,6 +1077,31 @@ lemma isLorentzCovariant_hyperchargeDeriv :
     Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
     Matrix.tail_cons, Matrix.cons_val_three]
 
+/-- The gluon trace contractions are antisymmetric in the last two covector indices, by
+  `F_antisymm` in the second factor. -/
+lemma gluonTrace_comp_swap_two_three (d : EightIdx) :
+    h.gluonTrace (d ∘ Equiv.swap 2 3) = -h.gluonTrace d := by
+  simp [gluonTrace_eq, gluonField, Equiv.swap_apply_def, h.F_antisymm ![] (d 2) (d 3)]
+
+/-- The `W`-boson trace contractions are antisymmetric in the last two covector indices. -/
+lemma wTrace_comp_swap_two_three (d : EightIdx) :
+    h.wTrace (d ∘ Equiv.swap 2 3) = -h.wTrace d := by
+  simp [wTrace_eq, wField, Equiv.swap_apply_def, h.F_antisymm ![] (d 2) (d 3)]
+
+/-- The hypercharge trace contractions are antisymmetric in the last two covector indices. -/
+lemma hyperchargeTrace_comp_swap_two_three (d : EightIdx) :
+    h.hyperchargeTrace (d ∘ Equiv.swap 2 3) = -h.hyperchargeTrace d := by
+  simp [hyperchargeTrace_eq, hyperchargeField, Equiv.swap_apply_def,
+    h.F_antisymm ![] (d 2) (d 3)]
+
+/-- The twice-derived hypercharge field strengths are antisymmetric in their two covector
+  indices, the last two slots, by `F_antisymm` at two covariant derivatives. Nothing is
+  assumed about the two derivative slots. -/
+lemma hyperchargeDeriv_comp_swap_two_three (d : EightIdx) :
+    h.hyperchargeDeriv (d ∘ Equiv.swap 2 3) = -h.hyperchargeDeriv d := by
+  simp [hyperchargeDeriv, hyperchargeField, Equiv.swap_apply_def,
+    h.F_antisymm ![d 0, d 1] (d 2) (d 3)]
+
 /-- The span of the four Lorentz contractions of a quadruple Lorentz tensor: the images of
   the three metric pairings and of the Levi-Civita symbol. -/
 noncomputable def quadContractionSpan (T : (Fin 4 → Fin 1 ⊕ Fin 3) → B) : Submodule ℂ B :=
@@ -1074,6 +1124,16 @@ lemma quadContractionSpan_le_lorentzInvariants {T : (Fin 4 → Fin 1 ⊕ Fin 3) 
   Submodule.span_le.2 <| Set.range_subset_iff.2 fun i =>
     (Representation.mem_invariants _ _).2
       (hT.rep_map_of_invariant (RankFour.contractionTensor_invariant i))
+
+/-- For a quadruple family antisymmetric in its last two slots the four Lorentz contractions
+  reduce to two, the `(0,2)(1,3)` metric contraction and the Levi-Civita one: the
+  `(0,1)(2,3)` metric contraction vanishes and the `(0,3)(1,2)` one is minus the
+  `(0,2)(1,3)` one. -/
+lemma quadContractionSpan_eq_of_antisymm {T : (Fin 4 → Fin 1 ⊕ Fin 3) → B}
+    (hT : ∀ d, T (d ∘ Equiv.swap 2 3) = -T d) :
+    quadContractionSpan T = Submodule.span ℂ {ofComponents T (RankFour.contractionTensor 1),
+      ofComponents T (RankFour.contractionTensor 3)} :=
+  RankFour.span_range_contractionTensor_of_antisymm (ofComponents_comp_permT_eq_neg _ _ hT)
 
 /-- The span of the four Lorentz contractions of each of the three underived
   trace-contraction families and of the twice-derived hypercharge family: the gauge and
@@ -1105,6 +1165,27 @@ lemma lorentzContractionEightSpan_le_invariants :
     h.lorentzContractionEightSpan ≤ repGauge.invariants :=
   h.lorentzContractionEightSpan_le_traceContractionEightSpan_sup.trans
     (h.traceContractionEightSpan_sup_hyperchargeDerivSpan_le.trans inf_le_right)
+
+open RankFour in
+/-- The Lorentz contraction span is spanned by eight of its sixteen generators: for each
+  family the `(0,2)(1,3)` metric contraction and the Levi-Civita contraction. All four families
+  are antisymmetric in their last two slots by `F_antisymm`, which removes the other two
+  contractions of each. -/
+lemma lorentzContractionEightSpan_eq :
+    h.lorentzContractionEightSpan
+      = Submodule.span ℂ {ofComponents h.gluonTrace (contractionTensor 1),
+          ofComponents h.gluonTrace (contractionTensor 3)}
+        ⊔ (Submodule.span ℂ {ofComponents h.wTrace (contractionTensor 1),
+            ofComponents h.wTrace (contractionTensor 3)}
+          ⊔ (Submodule.span ℂ {ofComponents h.hyperchargeTrace (contractionTensor 1),
+              ofComponents h.hyperchargeTrace (contractionTensor 3)}
+            ⊔ Submodule.span ℂ {ofComponents h.hyperchargeDeriv (contractionTensor 1),
+              ofComponents h.hyperchargeDeriv (contractionTensor 3)})) := by
+  rw [lorentzContractionEightSpan,
+    quadContractionSpan_eq_of_antisymm h.gluonTrace_comp_swap_two_three,
+    quadContractionSpan_eq_of_antisymm h.wTrace_comp_swap_two_three,
+    quadContractionSpan_eq_of_antisymm h.hyperchargeTrace_comp_swap_two_three,
+    quadContractionSpan_eq_of_antisymm h.hyperchargeDeriv_comp_swap_two_three]
 
 /-!
 
@@ -1155,7 +1236,8 @@ converse, sections G and I, turns each reduction into an equivalence through
   together, to the four Lorentz contractions of each of the four families. The gauge group
   leaves the trace contractions and the twice-derived hypercharge field strengths; each of
   the four spans is spanned by a quadruple Lorentz tensor and reduces, for the Lorentz
-  group, to the span of its four contractions. -/
+  group, to the span of its four contractions. Two of the four suffice for each family, by
+  `lorentzContractionEightSpan_eq`. -/
 lemma reducesInvariantsTo_lorentzContractionEightSpan :
     ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz) (h.massWeightSubmodule 8)
       h.lorentzContractionEightSpan := by
@@ -1218,7 +1300,8 @@ theorem mem_massWeightSubmodule_eight_sup_and_invariant_iff (S : Submodule ℂ B
 /-- The gauge and Lorentz classification of mass weight eight as an equivalence: an
   element of `massWeightSubmodule 8 ⊔ S` is fixed by both groups exactly when it is a
   combination of the four Lorentz contractions of the four families of section H up to a
-  remainder in `S` fixed by both groups. -/
+  remainder in `S` fixed by both groups. The version with two contractions of each family is
+  `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_reduced`. -/
 theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
     (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
     (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
@@ -1231,6 +1314,31 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff
     h.reducesInvariantsTo_lorentzContractionEightSpan
     h.lorentzContractionEightSpan_le_massWeightSubmodule h.isFixedBy_lorentzContractionEightSpan
     hS hSL x
+
+open RankFour in
+/-- The same equivalence with the eight generators of `lorentzContractionEightSpan_eq`: for
+  each of the three underived trace families its `(0,2)(1,3)` metric contraction, of the shape
+  `η^{μρ} η^{νσ} F_{μν} F_{ρσ}`, and its Levi-Civita contraction, of the shape
+  `ε^{μνρσ} F_{μν} F_{ρσ}`, and for the twice-derived hypercharge field strengths
+  `η^{μρ} η^{νσ} ∇_μ ∇_ν B_{ρσ}` and `ε^{μνρσ} ∇_μ ∇_ν B_{ρσ}`. The eight span; they are not
+  shown to be independent or nonzero. -/
+theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_reduced
+    (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
+    (x ∈ h.massWeightSubmodule 8 ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
+        ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
+          ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
+          ∧ x - y ∈ Submodule.span ℂ {ofComponents h.gluonTrace (contractionTensor 1),
+              ofComponents h.gluonTrace (contractionTensor 3)}
+            ⊔ (Submodule.span ℂ {ofComponents h.wTrace (contractionTensor 1),
+                ofComponents h.wTrace (contractionTensor 3)}
+              ⊔ (Submodule.span ℂ {ofComponents h.hyperchargeTrace (contractionTensor 1),
+                  ofComponents h.hyperchargeTrace (contractionTensor 3)}
+                ⊔ Submodule.span ℂ {ofComponents h.hyperchargeDeriv (contractionTensor 1),
+                  ofComponents h.hyperchargeDeriv (contractionTensor 3)})) := by
+  rw [← h.lorentzContractionEightSpan_eq]
+  exact h.mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff S hS hSL x
 
 end IsGaugeSector
 

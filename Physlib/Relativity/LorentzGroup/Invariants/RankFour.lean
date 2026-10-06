@@ -26,6 +26,8 @@ images `f (contractionTensor i)` plus an invariant of `S`, `mem_range_sup_invari
 `reducesInvariantsTo_span_contractionTensor` reads the left-to-right direction as a reduction.
 The fourth tensor is a pseudoscalar, so it would drop out if reflections were allowed;
 independence is not proved, and for a given `f` the four images may be dependent or zero.
+When `f` is antisymmetric under exchanging its last two slots, two images already span: that
+of `η_{μρ} η_{νσ}` and that of `ε_{μνρσ}` (B.4).
 
 The four tensors are invariant, by `Λ η Λᵀ = η` and `det Λ = 1` (B); an invariant of the range of
 `f` is the image of an invariant tensor, whose coefficient tensor is invariant (C); and such a
@@ -39,6 +41,8 @@ being solved by one checked matrix identity (F, G).
 - `Lorentz.RankFour.exists_eq_sum` : an invariant coefficient tensor is a combination of them.
 - `Lorentz.RankFour.mem_range_sup_invariant_iff` : the classification of the invariants.
 - `Lorentz.RankFour.reducesInvariantsTo_span_contractionTensor` : the same as a reduction.
+- `Lorentz.RankFour.span_range_contractionTensor_of_antisymm` : for a map antisymmetric in its
+  last two slots, two of the four images span.
 
 ## iii. Table of contents
 
@@ -223,6 +227,84 @@ lemma contractionTensor_invariant (i : Fin 4) (g : SL(2,ℂ)) :
   refine (invariant_iff_isInvariantCoeff _).2 ?_ g
   rw [contractionTensor, LinearEquiv.apply_symm_apply]
   exact isInvariantCoeff_contractionCoeff i
+
+/-!
+
+## B.4. Exchanging the last two slots
+
+Exchanging the slots `2` and `3`, `permT (Equiv.swap 2 3)`, fixes `η_{μν} η_{ρσ}`, the metric
+being symmetric, and exchanges `η_{μρ} η_{νσ}` with `η_{μσ} η_{νρ}`. So a linear map `f` out of
+the tensors with `f ∘ₗ permT (Equiv.swap 2 3) = -f` sends the first tensor to zero and the
+third to minus the second, and the four images span what the second and the Levi-Civita image
+span. Neither equivariance of `f` nor any structure on `B` beyond a complex module is used; the
+two remaining images may still be dependent or zero.
+-/
+
+section SwapTwoThree
+
+open TensorSpecies
+
+/-- Exchanging the last two of four contravariant slots is a reindexing. -/
+lemma isReindexing_swap_two_three :
+    Tensor.IsReindexing (fun _ : Fin 4 => Color.up) (fun _ => Color.up)
+      ⇑(Equiv.swap (2 : Fin 4) 3) :=
+  ⟨(Equiv.swap 2 3).bijective, fun _ => rfl⟩
+
+/-- `η_{μν} η_{ρσ}` is unchanged by exchanging its last two slots. -/
+lemma permT_swap_two_three_contractionTensor_zero :
+    Tensor.permT _ isReindexing_swap_two_three (contractionTensor 0) = contractionTensor 0 := by
+  rw [contractionTensor, permT_coeffEquiv_symm, Equiv.symm_swap]
+  refine congrArg _ (funext fun d => ?_)
+  simp [contractionCoeff, Equiv.swap_apply_def, minkowskiMatrixZ.comm (d 3) (d 2)]
+
+/-- Exchanging the last two slots of `η_{μρ} η_{νσ}` gives `η_{μσ} η_{νρ}`. -/
+lemma permT_swap_two_three_contractionTensor_one :
+    Tensor.permT _ isReindexing_swap_two_three (contractionTensor 1) = contractionTensor 2 := by
+  rw [contractionTensor, contractionTensor, permT_coeffEquiv_symm, Equiv.symm_swap]
+  refine congrArg _ (funext fun d => ?_)
+  simp [contractionCoeff, Equiv.swap_apply_def]
+
+variable {f : ℂT(fun _ : Fin 4 => Color.up) →ₗ[ℂ] B}
+
+/-- A map antisymmetric in the last two slots sends `η_{μν} η_{ρσ}` to zero. -/
+lemma apply_contractionTensor_zero_of_antisymm
+    (hf : f ∘ₗ Tensor.permT _ isReindexing_swap_two_three = -f) :
+    f (contractionTensor 0) = 0 := by
+  have h := LinearMap.congr_fun hf (contractionTensor 0)
+  rw [LinearMap.comp_apply, permT_swap_two_three_contractionTensor_zero,
+    LinearMap.neg_apply] at h
+  have h2 : (2 : ℂ) • f (contractionTensor 0) = 0 := by
+    rw [two_smul]
+    exact add_eq_zero_iff_eq_neg.2 h
+  exact (smul_eq_zero.1 h2).resolve_left two_ne_zero
+
+/-- A map antisymmetric in the last two slots sends `η_{μσ} η_{νρ}` to minus the image of
+  `η_{μρ} η_{νσ}`. -/
+lemma apply_contractionTensor_two_of_antisymm
+    (hf : f ∘ₗ Tensor.permT _ isReindexing_swap_two_three = -f) :
+    f (contractionTensor 2) = -f (contractionTensor 1) := by
+  have h := LinearMap.congr_fun hf (contractionTensor 1)
+  rwa [LinearMap.comp_apply, permT_swap_two_three_contractionTensor_one,
+    LinearMap.neg_apply] at h
+
+/-- For a map antisymmetric in the last two slots, the images of the four invariant tensors
+  span the same as the images of `η_{μρ} η_{νσ}` and `ε_{μνρσ}`. -/
+lemma span_range_contractionTensor_of_antisymm
+    (hf : f ∘ₗ Tensor.permT _ isReindexing_swap_two_three = -f) :
+    Submodule.span ℂ (Set.range fun i => f (contractionTensor i))
+      = Submodule.span ℂ {f (contractionTensor 1), f (contractionTensor 3)} := by
+  refine le_antisymm (Submodule.span_le.2 <| Set.range_subset_iff.2 fun i => ?_)
+    (Submodule.span_mono <| Set.insert_subset_iff.2
+      ⟨⟨1, rfl⟩, Set.singleton_subset_iff.2 ⟨3, rfl⟩⟩)
+  fin_cases i
+  · simp [apply_contractionTensor_zero_of_antisymm hf]
+  · exact Submodule.subset_span (Set.mem_insert _ _)
+  · simp only [Fin.reduceFinMk, Fin.isValue, SetLike.mem_coe]
+    rw [apply_contractionTensor_two_of_antisymm hf]
+    exact neg_mem (Submodule.subset_span (Set.mem_insert _ _))
+  · exact Submodule.subset_span (Set.mem_insert_of_mem _ rfl)
+
+end SwapTwoThree
 
 /-!
 

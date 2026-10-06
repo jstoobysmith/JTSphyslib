@@ -24,11 +24,13 @@ This file joins the eight.
 
 At mass dimension four the gauge- and Lorentz-invariant content is spanned by the four
 Lorentz contractions of each of the three `F·F` trace families and of the twice-derived
-hypercharge field strength, which include the gauge kinetic and theta terms of the three
-gauge groups; the Higgs kinetic term with its quartic potential and its two box terms; the
-kinetic terms of the ten fermion species over the nine family pairs; and the six Yukawa
-couplings over the nine family pairs. Below mass dimension four there is a single term, the
-Higgs mass term `H† H` at mass weight four; below that, nothing.
+hypercharge field strength. The antisymmetry of the field strength cuts these to two of each
+(`IsGaugeSector.lorentzContractionEightSpan_eq`): the kinetic-shape and theta-shape
+contractions of the three gauge groups, and two contractions of the twice-derived hypercharge
+field strength. Beside them stand the Higgs kinetic term with its quartic potential and its
+two box terms; the kinetic terms of the ten fermion species over the nine family pairs; and
+the six Yukawa couplings over the nine family pairs. Below mass dimension four there is a
+single term, the Higgs mass term `H† H` at mass weight four; below that, nothing.
 
 The statement is about formal expressions, the elements of the field algebra with complex
 coefficients. It is a spanning statement: the listed generators are not shown to be
@@ -93,10 +95,12 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 
 /-- The gauge- and Lorentz-invariant content of the Standard Model at mass weight `w`:
   the join of the surviving spans of the eight sectors. At weight eight it is the gauge
-  sector's four Lorentz contractions of each of its four families, among them the kinetic
-  and theta terms of the three gauge groups, together with the Higgs sector's two box
-  terms, kinetic term and quartic potential, the fermion sector's ten kinetic terms over the
-  nine family pairs, and the six Yukawa couplings over the nine family pairs. Below weight
+  sector's four Lorentz contractions of each of its four families, two of which already span
+  for each family (`IsGaugeSector.lorentzContractionEightSpan_eq`): the kinetic-shape and
+  theta-shape contractions of the three gauge groups and two contractions of the
+  twice-derived hypercharge field strength. Together with these come the Higgs sector's two
+  box terms, kinetic term and quartic potential, the fermion sector's ten kinetic terms over
+  the nine family pairs, and the six Yukawa couplings over the nine family pairs. Below weight
   eight only the Higgs sector survives, and only at weight four, where it contributes the
   Higgs mass term. -/
 noncomputable def standardModelSpan (w : ℕ) : Submodule ℂ B :=
@@ -215,7 +219,7 @@ lemma reducesInvariantsTo_sectorMassWeight_empty {w : ℕ} (hw : w ≠ 0) :
   exact reducesInvariantsTo_of_le bot_le
 
 /-- The gauge sector reduces to the span: at weight eight to the four Lorentz contractions of
-  its four families, below it to nothing at all. -/
+  its four families, two of each spanning, below it to nothing at all. -/
 lemma reducesInvariantsTo_sectorMassWeight_gauge {w : ℕ} (hw0 : 0 < w) (hw : w ≤ 8) :
     ReducesInvariantsTo (gaugeLorentzMaps repGauge repLorentz)
       (h.sectorMassWeight {GeneratorClass.gauge} w) (h.standardModelSpan w) := by
@@ -422,8 +426,10 @@ theorem mem_massWeightSubmodule_sup_and_gauge_lorentz_invariant_iff_mem (w : ℕ
   `massWeightSubmodule 8 ⊔ S`, for `S` a submodule stable under both groups, is fixed by
   the gauge group and the Lorentz group exactly when it is a combination of
   the four Lorentz contractions of the three `F·F` trace families and of the twice-derived
-  hypercharge field strength, among them the gauge kinetic and theta terms
-  (`IsGaugeSector.lorentzContractionEightSpan`),
+  hypercharge field strength (`IsGaugeSector.lorentzContractionEightSpan`), two of each
+  spanning by `IsGaugeSector.lorentzContractionEightSpan_eq`: the kinetic-shape and
+  theta-shape contractions of the three gauge groups and two contractions of the
+  twice-derived hypercharge field strength,
   the Higgs kinetic term, its quartic potential and its two box terms
   (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`),
   the kinetic terms of the ten fermion species over the nine family pairs

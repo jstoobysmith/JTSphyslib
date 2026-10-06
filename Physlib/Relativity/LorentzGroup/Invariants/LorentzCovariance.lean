@@ -29,7 +29,8 @@ transformation law of the components of a tensor (D),
 `repLorentz g (T l) = ∑_a (∏ i, Λ(g)_{a i, l i}) • T a`,
 
 with `l` free and `a` summed, and the summed index first in each factor of the Lorentz matrix
-`Λ(g)` of `g`.
+`Λ(g)` of `g`. Permuting the slots by `permT σ` reads the coefficient tensor and the family at
+permuted index vectors (`permT_coeffEquiv_symm`, `ofComponents_comp_permT`).
 
 ## ii. Key results
 
@@ -120,6 +121,23 @@ lemma coeffEquiv_symm_apply (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
   simp only [map_smul, Module.Basis.repr_self, Finsupp.smul_apply, Finsupp.single_apply,
     EmbeddingLike.apply_eq_iff_eq, smul_eq_mul, mul_ite, mul_one, mul_zero,
     Finset.sum_ite_eq', Finset.mem_univ, ite_true]
+
+/-- Permuting the slots of a tensor by `σ` permutes its coefficient tensor: slot `i` of
+  `permT σ h t` holds slot `σ i` of `t`, so the new coefficient at `d` is the old one at
+  `d ∘ σ.symm`. -/
+lemma permT_coeffEquiv_symm (σ : Equiv.Perm (Fin n))
+    (h : IsReindexing (fun _ : Fin n => Color.up) (fun _ => Color.up) σ)
+    (c : (Fin n → Fin 1 ⊕ Fin 3) → ℂ) :
+    permT σ h ((coeffEquiv n).symm c) = (coeffEquiv n).symm fun d => c (d ∘ σ.symm) := by
+  rw [coeffEquiv_symm_apply, coeffEquiv_symm_apply, map_sum]
+  simp only [map_smul, permT_basis]
+  rw [← (Equiv.arrowCongr σ (Equiv.refl (Fin 1 ⊕ Fin 3))).sum_comp]
+  refine Finset.sum_congr rfl fun d _ => ?_
+  have he : Equiv.arrowCongr σ (Equiv.refl (Fin 1 ⊕ Fin 3)) d = d ∘ σ.symm := rfl
+  rw [he]
+  congr 2
+  funext i
+  simp [vectorIdx_symm_apply]
 
 /-- The action of `g` on tensors is the action `act` of its Lorentz matrix on coefficient
   tensors. -/
@@ -226,6 +244,26 @@ lemma comp_ofComponents {B' : Type*} [AddCommGroup B'] [Module ℂ B'] (σ : B �
     (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
     σ ∘ₗ ofComponents T = ofComponents fun d => σ (T d) :=
   (Tensor.basis _).ext fun φ => by simp [ofComponents]
+
+/-- Precomposing `ofComponents T` with the slot permutation `permT σ` reads the family at the
+  permuted index vectors `d ∘ σ`. -/
+lemma ofComponents_comp_permT (σ : Fin n → Fin n)
+    (h : IsReindexing (fun _ : Fin n => Color.up) (fun _ => Color.up) σ)
+    (T : (Fin n → Fin 1 ⊕ Fin 3) → B) :
+    ofComponents T ∘ₗ permT σ h = ofComponents fun d => T (d ∘ σ) :=
+  (Tensor.basis _).ext fun φ => by
+    rw [LinearMap.comp_apply, permT_basis]
+    simp only [ofComponents, Module.Basis.constr_basis]
+    rfl
+
+/-- A family antisymmetric under reading its index vectors through `σ` gives a map
+  antisymmetric under `permT σ`. -/
+lemma ofComponents_comp_permT_eq_neg (σ : Fin n → Fin n)
+    (h : IsReindexing (fun _ : Fin n => Color.up) (fun _ => Color.up) σ)
+    {T : (Fin n → Fin 1 ⊕ Fin 3) → B} (hT : ∀ d, T (d ∘ σ) = -T d) :
+    ofComponents T ∘ₗ permT σ h = -ofComponents T := by
+  rw [ofComponents_comp_permT]
+  exact (Tensor.basis _).ext fun φ => by simp [ofComponents, hT]
 
 /-- The map of a family is equivariant exactly when the family obeys the transformation law of
   the components of a tensor with `n` four-vector indices. -/
