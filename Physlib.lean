@@ -459,6 +459,7 @@ public import Physlib.Relativity.Tensors.Contraction.SuccSuccAbove
 public import Physlib.Relativity.Tensors.Contraction.UnitTensorContraction
 public import Physlib.Relativity.Tensors.Dual
 public import Physlib.Relativity.Tensors.Elab
+public import Physlib.Relativity.Tensors.Equivariant
 public import Physlib.Relativity.Tensors.Evaluation
 public import Physlib.Relativity.Tensors.LeviCivita.Basic
 public import Physlib.Relativity.Tensors.LeviCivita.Complex
