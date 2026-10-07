@@ -1048,7 +1048,7 @@ private lemma phiK_weightedSum_operatorPowerMean_eq
     phiK_operatorPowerMean_eq_liebTraceMap (ℋ := ℋ) (s := s) K A₂ B₂ hA₂ hB₂]
 
 -- The `HSOp`-valued `operatorPowerMean` terms are large enough that the skeleton itself is expensive.
-theorem liebTrace_jointlyConcaveOn_pdSet
+lemma liebTrace_jointlyConcaveOn_pdSet
     {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) (K : L ℋ) :
     JointlyConcaveOn (pdSet (ℋ := ℋ)) (pdSet (ℋ := ℋ))
       (liebTraceMap (ℋ := ℋ) s K) := by

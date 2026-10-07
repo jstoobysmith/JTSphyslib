@@ -90,6 +90,7 @@ lemma eulerLagrange_zero_of_isCritical (L : Lagrangian d m k)
     have hzero : firstVariationValue L f η = 0 := HasDerivAt.unique hfirstη hcritη
     simpa [firstVariationValue, η] using hzero
 
+/-- A criterion for a field to be critical in terms of the Euler-Lagrange operator. -/
 theorem isCritical_iff_eulerLagrange_zero (L : Lagrangian d m k)
     (f : Space d → EuclideanSpace ℝ (Fin m))
     (hfirst : HasFirstVariationFormula L f)
@@ -153,7 +154,7 @@ private lemma hasFirstVariationFormula_of_contDiff_underIntegral_and_termwise
 
 /-- The local Euler-Lagrange criterion obtained from the packaged analytic ingredients of the
 first-variation formula. This is the current formalized form of Theorem 5.2. -/
-private theorem isCritical_iff_eulerLagrange_zero_of_underIntegral_linearized_and_parts
+private lemma isCritical_iff_eulerLagrange_zero_of_underIntegral_linearized_and_parts
     (L : Lagrangian d m k) (f : Space d → EuclideanSpace ℝ (Fin m))
     (hint : HasActionVariationDerivativeUnderIntegral L f)
     (hpoint : HasPointwiseLinearizedDensityFormula L f)
@@ -167,7 +168,7 @@ private theorem isCritical_iff_eulerLagrange_zero_of_underIntegral_linearized_an
 
 /-- Variant of the local Euler-Lagrange criterion where the integration-by-parts input is reduced
 to a termwise hypothesis. -/
-private theorem isCritical_iff_eulerLagrange_zero_of_underIntegral_linearized_and_termwise
+private lemma isCritical_iff_eulerLagrange_zero_of_underIntegral_linearized_and_termwise
     (L : Lagrangian d m k) (f : Space d → EuclideanSpace ℝ (Fin m))
     (hint : HasActionVariationDerivativeUnderIntegral L f)
     (hpoint : HasPointwiseLinearizedDensityFormula L f)

@@ -565,7 +565,7 @@ lemma of_kraus_CP (K : κ → Matrix B A 𝕜) : (of_kraus K K).IsCompletelyPosi
   exact h_sum_congruence.symm ▸ IsCompletelyPositive.finset_sum h_congruence_CP
 
 set_option backward.isDefEq.respectTransparency false in
-theorem exists_kraus_of_choi_PSD
+lemma exists_kraus_of_choi_PSD
     (C : Matrix (B × A) (B × A) 𝕜) (hC : C.PosSemidef) :
     ∃ (K : (B × A) → Matrix B A 𝕜), C = (MatrixMap.of_kraus K K).choi_matrix := by
   classical
@@ -758,7 +758,7 @@ lemma is_CP_implies_choi_PSD {A B R : Type*} [Fintype A] [Fintype B] [DecidableE
   rw [choi_eq_kron_id_apply_choi_id]
   exact MatrixMap.IsCompletelyPositive.of_Fintype hCP A choi_id_is_PSD
 
-theorem IsCompletelyPositive.exists_kraus (Φ : MatrixMap A B R) (hCP : Φ.IsCompletelyPositive) :
+lemma IsCompletelyPositive.exists_kraus (Φ : MatrixMap A B R) (hCP : Φ.IsCompletelyPositive) :
     ∃ (M : (B × A) → Matrix B A R), Φ = of_kraus M M := by
   rw [choi_PSD_iff_CP_map] at hCP
   convert exists_kraus_of_choi_PSD Φ.choi_matrix hCP using 1;
@@ -768,7 +768,7 @@ theorem IsCompletelyPositive.exists_kraus (Φ : MatrixMap A B R) (hCP : Φ.IsCom
 
 open scoped MatrixOrder in
 /-- Kadison-Schwarz for completely positive subunital matrix maps. -/
-theorem cp_subunital_kadison_schwarz {M : MatrixMap A B ℂ} [DecidableEq B]
+lemma cp_subunital_kadison_schwarz {M : MatrixMap A B ℂ} [DecidableEq B]
     (hM : M.IsCompletelyPositive) (hM1 : M 1 ≤ (1 : Matrix B B ℂ))
     (X : Matrix A A ℂ) :
     (M X)ᴴ * M X ≤ M (Xᴴ * X) := by
