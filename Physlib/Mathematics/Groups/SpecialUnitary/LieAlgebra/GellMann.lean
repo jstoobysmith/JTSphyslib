@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
 public import Mathlib.LinearAlgebra.Matrix.IsDiag
+public import Mathlib.RingTheory.TensorProduct.Free
 public import Physlib.Relativity.PauliMatrices.Basic
 public import Physlib.Mathematics.Groups.SpecialUnitary.LieAlgebra.Adjoint
 /-!
