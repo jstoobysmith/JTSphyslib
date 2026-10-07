@@ -14,7 +14,7 @@ public import Physlib.Mathematics.Groups.SpecialUnitary.LieAlgebra.Adjoint
 
 # The generalized Gell-Mann matrices
 
-The generalized Gell-Mann matrices, aswell as the specific results in the n = 3 case.
+The generalized Gell-Mann matrices, as well as the specific results in the n = 3 case.
 
 ## i. Overview
 
@@ -272,7 +272,6 @@ lemma gellMannMatrices_diag_val_eq {n : ℕ} (l : Fin (n - 1)) :
 
 -/
 
-@[simp]
 lemma adjointContr_gellMannMatrices_symm_antisymm_eq_zero {n : ℕ} (p q : Fin n) (h : p < q)
     (p' q' : Fin n) (h' : p' < q') :
     adjointContr (gellMannMatrices (.symm p q h) ⊗ₜ gellMannMatrices (.antisymm p' q' h')) = 0 := by
@@ -281,14 +280,12 @@ lemma adjointContr_gellMannMatrices_symm_antisymm_eq_zero {n : ℕ} (p q : Fin n
     smul_eq_mul]
   split_ifs <;> norm_num
 
-@[simp]
 lemma adjointContr_gellMannMatrices_symm_diag_eq_zero {n : ℕ} (p q : Fin n) (h : p < q)
     (l : Fin (n - 1)) :
     adjointContr (gellMannMatrices (.symm p q h) ⊗ₜ gellMannMatrices (.diag l)) = 0 := by
   rw [adjointContr_tmul, gellMannMatrices_symm_val_eq, gellMannMatrices_diag_val_eq]
   simp [Matrix.add_mul, trace_add, trace_single_mul, h.ne, h.ne']
 
-@[simp]
 lemma adjointContr_gellMannMatrices_antisymm_symm_eq_zero {n : ℕ} (p q : Fin n) (h : p < q)
     (p' q' : Fin n) (h' : p' < q') :
     adjointContr (gellMannMatrices (.antisymm p q h) ⊗ₜ gellMannMatrices (.symm p' q' h')) = 0 := by
@@ -297,21 +294,18 @@ lemma adjointContr_gellMannMatrices_antisymm_symm_eq_zero {n : ℕ} (p q : Fin n
     smul_eq_mul]
   split_ifs <;> norm_num
 
-@[simp]
 lemma adjointContr_gellMannMatrices_antisymm_diag_eq_zero {n : ℕ} (p q : Fin n) (h : p < q)
     (l : Fin (n - 1)) :
     adjointContr (gellMannMatrices (.antisymm p q h) ⊗ₜ gellMannMatrices (.diag l)) = 0 := by
   rw [adjointContr_tmul, gellMannMatrices_antisymm_val_eq, gellMannMatrices_diag_val_eq]
   simp [Matrix.add_mul, trace_add, trace_single_mul, h.ne, h.ne']
 
-@[simp]
 lemma adjointContr_gellMannMatrices_diag_symm_eq_zero {n : ℕ} (l : Fin (n - 1)) (p q : Fin n)
     (h : p < q) :
     adjointContr (gellMannMatrices (.diag l) ⊗ₜ gellMannMatrices (.symm p q h)) = 0 := by
   rw [adjointContr_tmul, gellMannMatrices_diag_val_eq, gellMannMatrices_symm_val_eq]
   simp [Matrix.mul_add, trace_add, trace_mul_single, h.ne, h.ne']
 
-@[simp]
 lemma adjointContr_gellMannMatrices_diag_antisymm_eq_zero {n : ℕ} (l : Fin (n - 1)) (p q : Fin n)
     (h : p < q) :
     adjointContr (gellMannMatrices (.diag l) ⊗ₜ gellMannMatrices (.antisymm p q h)) = 0 := by
