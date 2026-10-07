@@ -40,7 +40,7 @@ In addition to those here:
 https://leanprover-community.github.io/contribute/style.html
 
 - Use of `lemma` instead of `theorem` except for the most important results. These are listed
-  in the `Theorems.txt` of each library (`Physlib`, `QuantumInfo`, `PhyslibAlpha`), which
+  in `scripts/lint/exemptions/Theorems.txt`, under a section for each library, which
   `lake exe theorem_lint` checks against the `theorem` keyword;
   it also checks that every `theorem` has a docstring.
 
