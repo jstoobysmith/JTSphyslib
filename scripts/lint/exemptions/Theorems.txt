@@ -1,3 +1,9 @@
+-- WARNING: only add a result to this file if it is a significant result in physics, usually one
+-- known by name, such as Gauss's law, Noether's theorem or the Bell inequality. Every other
+-- result must be written with `lemma`, not `theorem`. Each result listed here must be written with
+-- `theorem` and have a doc-string, and must be listed under the section of its library, by its
+-- fully qualified name. `lake exe theorem_lint` checks this.
+
 [Physlib]
 ClassicalMechanics.euler_lagrange_varGradient
 ClassicalMechanics.FreeParticle.linearMomentum_conserved

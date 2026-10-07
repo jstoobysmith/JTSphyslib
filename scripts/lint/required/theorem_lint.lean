@@ -8,6 +8,10 @@ import Lean
 
 # Theorem linter
 
+A linter checking that `theorem` is used exactly for the results listed in the theorems file.
+
+## i. Overview
+
 Each of the libraries `Physlib`, `QuantumInfo` and `PhyslibAlpha` reserves the `theorem` keyword
 for its conceptually important results; every other result is a `lemma`. The fully qualified
 names of the important results of all three libraries are listed, one per line, in
@@ -31,6 +35,32 @@ which share its declaration range but not its name.
 Run from the root of the repository with `lake exe theorem_lint`, after building the three
 libraries. `lake exe theorem_lint Physlib` lints only `Physlib` (and similarly for the others).
 
+## ii. Key results
+
+- `TheoremLint.parseNames` reads the names listed in `scripts/lint/exemptions/Theorems.txt`.
+- `TheoremLint.headTokens` reads the keyword and identifier of a declaration with Lean's parser.
+- `TheoremLint.lint` gives the errors of the linter for one library.
+- `TheoremLint.ErrorKind.message` gives the message of each kind of error.
+- `main` runs the linter on the libraries given as arguments, or on all three.
+
+## iii. Table of contents
+
+- A. The theorems file
+- B. The errors
+- C. Parsing the theorems file
+- D. The keyword of a theorem
+- E. The linter
+- F. Tests
+  - F.1. The error messages
+  - F.2. Parsing the theorems file
+  - F.3. Matching declaration identifiers
+  - F.4. Reading the keyword of a declaration
+- G. The executable
+
+## iv. References
+
+* None
+
 -/
 
 open Lean Parser
@@ -42,7 +72,8 @@ namespace TheoremLint
 ## A. The theorems file
 
 The theorems file is split into sections, one for each library `L`, each starting with a line
-`[L]`. Each section lists one fully qualified name per line. Blank lines are ignored.
+`[L]`. Each section lists one fully qualified name per line. Blank lines, and comments, which
+are lines starting with `--`, are ignored.
 
 -/
 
@@ -133,7 +164,7 @@ def parseNames (lines : Array String) : Except LintError (Array (Name × Name ×
   let mut names := #[]
   for line in lines, lineNo in [1:lines.size + 1] do
     let text := line.trimAscii.toString
-    if text.isEmpty then continue
+    if text.isEmpty || text.startsWith "--" then continue
     if text.startsWith "[" then
       let some lib := libraries.find? (text == s!"[{·}]")
         | throw <| theoremsFileError lineNo (.unknownSection text)
@@ -329,6 +360,10 @@ def printParse (lines : Array String) : IO Unit :=
 #guard_msgs in
 #eval printParse #[]
 
+/-- info: #[(`Physlib, `A.b, 4)] -/
+#guard_msgs in
+#eval printParse #["-- A comment before the first section.", "[Physlib]", "  -- A comment.", "A.b"]
+
 /-- info: scripts/lint/exemptions/Theorems.txt:1:0: error: `A.b` is listed before the first
   section. -/
 #guard_msgs (whitespace := lax) in
@@ -404,6 +439,12 @@ def headTokensOf (source : String) : CoreM (Option (String × Name)) := do
 #eval headTokensOf "noncomputable def bar : Nat := 0"
 
 end TheoremLint
+
+/-!
+
+## G. The executable
+
+-/
 
 open TheoremLint in
 unsafe def main (args : List String) : IO UInt32 := do
