@@ -688,8 +688,6 @@ lemma end_eq_smul_of_toMatrixℂ_eq_single_sub_single {n : ℕ}
   by_cases hpq : p = q
   · subst hpq
     rw [show A = 0 from toMatrixℂ_injective (by rw [hA, sub_self, map_zero]), map_zero, smul_zero]
-  -- the Hadamard matrix `U` in the `(p, q)` plane is hermitian with `U * U = 1`, and conjugates
-  -- `E_pp - E_qq` to `E_pq + E_qp`, which has zero diagonal
   set s : ℂ := (((√2)⁻¹ : ℝ) : ℂ)
   have hs : s ^ 2 = 1 / 2 := by
     rw [← Complex.ofReal_pow, inv_pow, Real.sq_sqrt zero_le_two]
