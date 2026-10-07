@@ -40,7 +40,7 @@ libraries. `lake exe theorem_lint Physlib` lints only `Physlib` (and similarly f
 - `TheoremLint.parseNames` reads the names listed in `scripts/lint/exemptions/Theorems.txt`.
 - `TheoremLint.headTokens` reads the keyword and identifier of a declaration with Lean's parser.
 - `TheoremLint.lint` gives the errors of the linter for one library.
-- `TheoremLint.ErrorKind.message` gives the message of each kind of error.
+- `TheoremLint.report` groups the errors by kind, with how to fix each kind.
 - `main` runs the linter on the libraries given as arguments, or on all three.
 
 ## iii. Table of contents
@@ -51,7 +51,7 @@ libraries. `lake exe theorem_lint Physlib` lints only `Physlib` (and similarly f
 - D. The keyword of a theorem
 - E. The linter
 - F. Tests
-  - F.1. The error messages
+  - F.1. The reports of the errors
   - F.2. Parsing the theorems file
   - F.3. Matching declaration identifiers
   - F.4. Reading the keyword of a declaration
@@ -112,23 +112,58 @@ inductive ErrorKind where
   /-- A listed name which is a declaration of the library, but not a theorem. -/
   | notATheorem (name : Name)
 
-/-- The message of an error of kind `kind`. -/
-def ErrorKind.message : ErrorKind → String
-  | .unknownSection text => s!"`{text}` is not the section of a library, expected one of \
+/-- The place of the kind of `kind` in the order in which the errors are reported. -/
+def ErrorKind.rank : ErrorKind → Nat
+  | .unknownSection .. => 0
+  | .beforeFirstSection .. => 1
+  | .notAName .. => 2
+  | .duplicate .. => 3
+  | .noDocString .. => 4
+  | .notListed .. => 5
+  | .writtenWithLemma .. => 6
+  | .notADeclaration .. => 7
+  | .wrongLibrary .. => 8
+  | .notATheorem .. => 9
+
+/-- The heading of the errors of the kind of `kind`. -/
+def ErrorKind.title : ErrorKind → String
+  | .unknownSection .. => "Unknown sections"
+  | .beforeFirstSection .. => "Names listed before the first section"
+  | .notAName .. => "Lines which are not Lean names"
+  | .duplicate .. => "Names listed twice"
+  | .noDocString .. => "Theorems without a doc-string"
+  | .notListed .. => s!"Theorems not listed in {theoremsFile}"
+  | .writtenWithLemma .. => "Listed results written with `lemma`"
+  | .notADeclaration .. => "Listed names which are not declarations"
+  | .wrongLibrary .. => "Names listed under the wrong library"
+  | .notATheorem .. => "Listed names which are not theorems"
+
+/-- How to fix the errors of the kind of `kind`. -/
+def ErrorKind.hint : ErrorKind → String
+  | .unknownSection .. => s!"The sections are \
       {", ".intercalate (libraries.map (s!"`[{·}]`")).toList}."
-  | .beforeFirstSection text => s!"`{text}` is listed before the first section."
-  | .notAName text => s!"`{text}` is not a Lean name."
-  | .duplicate name firstLine => s!"`{name}` is already listed on line {firstLine}."
-  | .noDocString name => s!"`{name}` is written with `theorem` but has no doc-string."
-  | .notListed library name => s!"`{name}` is written with `theorem` but is not listed in the \
-      section `[{library}]` of {theoremsFile}. Use `lemma`, or list it if it is a conceptually \
-      important result."
-  | .writtenWithLemma name file pos => s!"`{name}` is listed but is written with `lemma` at \
-      {file}:{pos.line}:{pos.column}. Use `theorem`."
-  | .notADeclaration name => s!"`{name}` is not a declaration. Give the fully qualified name."
-  | .wrongLibrary library name module => s!"`{name}` is declared in `{module}`, which is not \
-      part of {library}."
-  | .notATheorem name => s!"`{name}` is not declared with `theorem`."
+  | .beforeFirstSection .. => "List each name under the section `[L]` of its library `L`."
+  | .notAName .. => "Each line is a section `[L]`, a fully qualified name, or a comment starting \
+      with `--`."
+  | .duplicate .. => "Remove the repeated entries."
+  | .noDocString .. => "Add a doc-string `/-- … -/` to each of these theorems."
+  | .notListed .. => "Use `lemma`. Only list a result, under the section of its library, if it \
+      is a significant result in physics, usually known by name."
+  | .writtenWithLemma .. => "Use `theorem`, or remove the name from the theorems file."
+  | .notADeclaration .. => "Give the fully qualified name of each result."
+  | .wrongLibrary .. => "Move each name to the section of the library declaring it."
+  | .notATheorem .. => "Only results written with `theorem` can be listed."
+
+/-- The details of the error `kind`, shown after its location. -/
+def ErrorKind.detail : ErrorKind → String
+  | .unknownSection text | .beforeFirstSection text | .notAName text => text
+  | .duplicate name firstLine => s!"{name}, first listed on line {firstLine}"
+  | .noDocString name | .notListed _ name | .notADeclaration name | .notATheorem name =>
+    name.toString
+  | .writtenWithLemma name file pos =>
+    s!"{name}, written with `lemma` at {file}:{pos.line}:{pos.column}"
+  | .wrongLibrary library name module =>
+    s!"{name}, listed under `[{library}]` but declared in {module}"
 
 /-- An error of the linter, located in a source file. -/
 structure LintError where
@@ -139,17 +174,34 @@ structure LintError where
   /-- The kind of the error. -/
   kind : ErrorKind
 
-instance : ToString LintError where
-  toString e := s!"{e.file}:{e.pos.line}:{e.pos.column}: error: {e.kind.message}"
-
 /-- An error of kind `kind` located at the line `line` of the theorems file. -/
 def theoremsFileError (line : Nat) (kind : ErrorKind) : LintError :=
   ⟨theoremsFile, ⟨line, 0⟩, kind⟩
 
-/-- The order of errors: by file, then by position. -/
+/-- The order of errors: by kind, then by file, then by position. -/
 def LintError.lt (e f : LintError) : Bool :=
-  e.file.toString < f.file.toString || e.file == f.file &&
-    (e.pos.line < f.pos.line || e.pos.line == f.pos.line && e.pos.column < f.pos.column)
+  e.kind.rank < f.kind.rank || e.kind.rank == f.kind.rank &&
+    (e.file.toString < f.file.toString || e.file == f.file &&
+      (e.pos.line < f.pos.line || e.pos.line == f.pos.line && e.pos.column < f.pos.column))
+
+/-- The report of `errors`, grouped by kind. Each group has a heading with its number of errors,
+how to fix them, and the location and details of each error. With `colour`, the headings and
+hints are coloured for a terminal. -/
+def report (errors : Array LintError) (colour : Bool := true) : String := Id.run do
+  let paint (code text : String) := if colour then s!"\x1b[{code}m{text}\x1b[0m" else text
+  let errors := errors.qsort LintError.lt
+  let mut lines := #[]
+  -- The rank of the kind of the previous error, to start a new group when it changes.
+  let mut previous : Option Nat := none
+  for e in errors do
+    if previous != some e.kind.rank then
+      unless previous.isNone do lines := lines.push ""
+      let count := (errors.filter (·.kind.rank == e.kind.rank)).size
+      lines := lines.push (paint "1;31" s!"{e.kind.title} ({count})")
+      lines := lines.push (paint "33" s!"  {e.kind.hint}")
+      previous := some e.kind.rank
+    lines := lines.push s!"  {e.file}:{e.pos.line}:{e.pos.column}  {e.kind.detail}"
+  return "\n".intercalate lines.toList
 
 /-!
 
@@ -280,7 +332,7 @@ def lint (library : Name) (names : Array (Name × Nat)) : CoreM (Array LintError
         let module := env.header.moduleNames[idx]!
         if library.isPrefixOf module then .notATheorem name else .wrongLibrary library name module
     errors := errors.push <| theoremsFileError line kind
-  return errors.qsort LintError.lt
+  return errors
 
 /-!
 
@@ -292,57 +344,108 @@ them fails. The environment here only imports `Lean`, so `lemma` is not a keywor
 
 -/
 
-/-! ### F.1. The error messages -/
+/-! ### F.1. The reports of the errors -/
 
-/-- info: scripts/lint/exemptions/Theorems.txt:1:0: error: `[Mathlib]` is not the section of a
-  library, expected one of `[Physlib]`, `[QuantumInfo]`, `[PhyslibAlpha]`. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 1 (.unknownSection "[Mathlib]"))
-
-/-- info: scripts/lint/exemptions/Theorems.txt:1:0: error: `A.b` is listed before the first
-  section. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 1 (.beforeFirstSection "A.b"))
-
-/-- info: scripts/lint/exemptions/Theorems.txt:2:0: error: `A b` is not a Lean name. -/
+/--
+info: Unknown sections (1)
+  The sections are `[Physlib]`, `[QuantumInfo]`, `[PhyslibAlpha]`.
+  scripts/lint/exemptions/Theorems.txt:1:0  [Mathlib]
+-/
 #guard_msgs in
-#eval IO.println (theoremsFileError 2 (.notAName "A b"))
+#eval IO.println (report #[theoremsFileError 1 (.unknownSection "[Mathlib]")] false)
 
-/-- info: scripts/lint/exemptions/Theorems.txt:5:0: error: `Foo.bar` is already listed on line
-  3. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 5 (.duplicate `Foo.bar 3))
+/--
+info: Names listed before the first section (1)
+  List each name under the section `[L]` of its library `L`.
+  scripts/lint/exemptions/Theorems.txt:1:0  A.b
+-/
+#guard_msgs in
+#eval IO.println (report #[theoremsFileError 1 (.beforeFirstSection "A.b")] false)
 
-/-- info: Physlib/Foo.lean:12:0: error: `Foo.bar` is written with `theorem` but has no
-  doc-string. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (⟨"Physlib/Foo.lean", ⟨12, 0⟩, .noDocString `Foo.bar⟩ : LintError)
+/--
+info: Lines which are not Lean names (1)
+  Each line is a section `[L]`, a fully qualified name, or a comment starting with `--`.
+  scripts/lint/exemptions/Theorems.txt:2:0  A b
+-/
+#guard_msgs in
+#eval IO.println (report #[theoremsFileError 2 (.notAName "A b")] false)
 
-/-- info: Physlib/Foo.lean:12:0: error: `Foo.bar` is written with `theorem` but is not listed in
-  the section `[Physlib]` of scripts/lint/exemptions/Theorems.txt. Use `lemma`, or list it if it
-  is a conceptually important result. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (⟨"Physlib/Foo.lean", ⟨12, 0⟩, .notListed `Physlib `Foo.bar⟩ : LintError)
+/--
+info: Names listed twice (1)
+  Remove the repeated entries.
+  scripts/lint/exemptions/Theorems.txt:5:0  Foo.bar, first listed on line 3
+-/
+#guard_msgs in
+#eval IO.println (report #[theoremsFileError 5 (.duplicate `Foo.bar 3)] false)
 
-/-- info: scripts/lint/exemptions/Theorems.txt:3:0: error: `Foo.bar` is listed but is written
-  with `lemma` at Physlib/Foo.lean:12:0. Use `theorem`. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 3 (.writtenWithLemma `Foo.bar "Physlib/Foo.lean" ⟨12, 0⟩))
+/--
+info: Theorems without a doc-string (1)
+  Add a doc-string `/-- … -/` to each of these theorems.
+  Physlib/Foo.lean:12:0  Foo.bar
+-/
+#guard_msgs in
+#eval IO.println (report #[⟨"Physlib/Foo.lean", ⟨12, 0⟩, .noDocString `Foo.bar⟩] false)
 
-/-- info: scripts/lint/exemptions/Theorems.txt:3:0: error: `Foo.baz` is not a declaration. Give
-  the fully qualified name. -/
+/--
+info: Theorems not listed in scripts/lint/exemptions/Theorems.txt (1)
+  Use `lemma`. Only list a result, under the section of its library, if it is a significant
+    result in physics, usually known by name.
+  Physlib/Foo.lean:12:0  Foo.bar
+-/
 #guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 3 (.notADeclaration `Foo.baz))
+#eval IO.println (report #[⟨"Physlib/Foo.lean", ⟨12, 0⟩, .notListed `Physlib `Foo.bar⟩] false)
 
-/-- info: scripts/lint/exemptions/Theorems.txt:3:0: error: `Foo.bar` is declared in
-  `PhyslibAlpha.Foo`, which is not part of Physlib. -/
-#guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 3 (.wrongLibrary `Physlib `Foo.bar `PhyslibAlpha.Foo))
+/--
+info: Listed results written with `lemma` (1)
+  Use `theorem`, or remove the name from the theorems file.
+  scripts/lint/exemptions/Theorems.txt:3:0  Foo.bar, written with `lemma` at Physlib/Foo.lean:12:0
+-/
+#guard_msgs in
+#eval IO.println
+  (report #[theoremsFileError 3 (.writtenWithLemma `Foo.bar "Physlib/Foo.lean" ⟨12, 0⟩)] false)
 
-/-- info: scripts/lint/exemptions/Theorems.txt:3:0: error: `Foo.bar` is not declared with
-  `theorem`. -/
+/--
+info: Listed names which are not declarations (1)
+  Give the fully qualified name of each result.
+  scripts/lint/exemptions/Theorems.txt:3:0  Foo.baz
+-/
+#guard_msgs in
+#eval IO.println (report #[theoremsFileError 3 (.notADeclaration `Foo.baz)] false)
+
+/--
+info: Names listed under the wrong library (1)
+  Move each name to the section of the library declaring it.
+  scripts/lint/exemptions/Theorems.txt:3:0  Foo.bar, listed under `[Physlib]` but declared in
+    PhyslibAlpha.Foo
+-/
 #guard_msgs (whitespace := lax) in
-#eval IO.println (theoremsFileError 3 (.notATheorem `Foo.bar))
+#eval IO.println
+  (report #[theoremsFileError 3 (.wrongLibrary `Physlib `Foo.bar `PhyslibAlpha.Foo)] false)
+
+/--
+info: Listed names which are not theorems (1)
+  Only results written with `theorem` can be listed.
+  scripts/lint/exemptions/Theorems.txt:3:0  Foo.bar
+-/
+#guard_msgs in
+#eval IO.println (report #[theoremsFileError 3 (.notATheorem `Foo.bar)] false)
+
+-- Errors are grouped by kind, whatever their library, and sorted by location within each group.
+/--
+info: Theorems without a doc-string (3)
+  Add a doc-string `/-- … -/` to each of these theorems.
+  Physlib/A.lean:3:2  A.b
+  Physlib/B.lean:7:0  B.c
+  QuantumInfo/C.lean:1:0  C.d
+
+Listed names which are not theorems (1)
+  Only results written with `theorem` can be listed.
+  scripts/lint/exemptions/Theorems.txt:4:0  D.e
+-/
+#guard_msgs in
+#eval IO.println (report #[⟨"QuantumInfo/C.lean", ⟨1, 0⟩, .noDocString `C.d⟩,
+  ⟨"Physlib/B.lean", ⟨7, 0⟩, .noDocString `B.c⟩, theoremsFileError 4 (.notATheorem `D.e),
+  ⟨"Physlib/A.lean", ⟨3, 2⟩, .noDocString `A.b⟩] false)
 
 /-! ### F.2. Parsing the theorems file -/
 
@@ -350,7 +453,7 @@ them fails. The environment here only imports `Lean`, so `lemma` is not a keywor
 def printParse (lines : Array String) : IO Unit :=
   match parseNames lines with
   | .ok names => IO.println (repr names)
-  | .error e => IO.println e
+  | .error e => IO.println (report #[e] false)
 
 /-- info: #[(`Physlib, `A.b, 2), (`Physlib, `C.d, 4), (`PhyslibAlpha, `Ud_orthonormal₁, 6)] -/
 #guard_msgs in
@@ -364,17 +467,27 @@ def printParse (lines : Array String) : IO Unit :=
 #guard_msgs in
 #eval printParse #["-- A comment before the first section.", "[Physlib]", "  -- A comment.", "A.b"]
 
-/-- info: scripts/lint/exemptions/Theorems.txt:1:0: error: `A.b` is listed before the first
-  section. -/
-#guard_msgs (whitespace := lax) in
+/--
+info: Names listed before the first section (1)
+  List each name under the section `[L]` of its library `L`.
+  scripts/lint/exemptions/Theorems.txt:1:0  A.b
+-/
+#guard_msgs in
 #eval printParse #["A.b", "[Physlib]"]
 
-/-- info: scripts/lint/exemptions/Theorems.txt:1:0: error: `[Mathlib]` is not the section of a
-  library, expected one of `[Physlib]`, `[QuantumInfo]`, `[PhyslibAlpha]`. -/
-#guard_msgs (whitespace := lax) in
+/--
+info: Unknown sections (1)
+  The sections are `[Physlib]`, `[QuantumInfo]`, `[PhyslibAlpha]`.
+  scripts/lint/exemptions/Theorems.txt:1:0  [Mathlib]
+-/
+#guard_msgs in
 #eval printParse #["[Mathlib]", "A.b"]
 
-/-- info: scripts/lint/exemptions/Theorems.txt:2:0: error: `A b` is not a Lean name. -/
+/--
+info: Lines which are not Lean names (1)
+  Each line is a section `[L]`, a fully qualified name, or a comment starting with `--`.
+  scripts/lint/exemptions/Theorems.txt:2:0  A b
+-/
 #guard_msgs in
 #eval printParse #["[Physlib]", "A b"]
 
@@ -459,19 +572,20 @@ unsafe def main (args : List String) : IO UInt32 := do
   let ctx : Core.Context := { fileName := "", options := {}, fileMap := default }
   let listed ← match parseNames (← IO.FS.lines theoremsFile) with
     | .ok listed => pure listed
-    | .error msg => IO.eprintln msg; return 1
-  let mut failed := false
+    | .error e => IO.eprintln (report #[e]); return 1
+  let linted := ", ".intercalate (toLint.map toString).toList
+  println! "Linting {linted} against {theoremsFile}.\n"
+  -- The errors of all the libraries, reported together so that each kind of error is listed once.
+  let mut errors := #[]
   for library in toLint do
-    println! "Checking that `theorem` is used exactly for the results listed in the section \
-      `[{library}]` of {theoremsFile}, with doc-strings."
     let names := listed.filterMap fun (lib, name, line) =>
       if lib == library then some (name, line) else none
-    let (errors, _) ← (lint library names).toIO ctx { env }
-    for error in errors do
-      println! error
-    if errors.isEmpty then
-      println! "\x1b[32mThe theorems of {library} agree with {theoremsFile}.\x1b[0m"
-    else
-      println! "\x1b[31m{errors.size} errors found in {library}.\x1b[0m"
-      failed := true
-  return if failed then 1 else 0
+    let (libraryErrors, _) ← (lint library names).toIO ctx { env }
+    errors := errors ++ libraryErrors
+  if errors.isEmpty then
+    println! "\x1b[32mThe theorems of {linted} agree with {theoremsFile}.\x1b[0m"
+    return 0
+  println! report errors
+  let noun := if errors.size == 1 then "error" else "errors"
+  println! "\n\x1b[1;31m{errors.size} {noun} found.\x1b[0m"
+  return 1
