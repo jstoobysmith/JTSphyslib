@@ -216,7 +216,6 @@ lemma conjT_apply {n : ℕ} {c : Fin n → C} (t : S.Tensor c) :
       = star (componentMap c t (S.componentReindex c b)) := by
   simp [conjT_apply, componentMap_ofComponents]
 
-
 lemma conjT_basis {n : ℕ} {c : Fin n → C} (i : ComponentIdx (S := S.toTensorSpecies) c) :
     S.conjT (basis c i) = basis (fun i => S.bar (c i)) ((S.componentReindex c).symm i) := by
   apply componentMap_ext
@@ -241,7 +240,6 @@ lemma conjT_pure {n : ℕ} {c : Fin n → C} (p : Tensor.Pure S.toTensorSpecies 
   funext x
   rw [S.conjEquiv_basis_repr]
   rfl
-
 
 /-- Componentwise criterion for `conjT t = permT σ h t'`. The conjugate of `t` equals the
 recolouring `permT σ h t'` exactly when, at every component, the `star`-conjugated reindexed
@@ -369,7 +367,6 @@ lemma conjT_contrT {n : ℕ} {c : Fin (n + 1 + 1) → C} (i j : Fin (n + 1 + 1))
   congr 2
   exact congrArg (b (S.τ (S.bar (c i)))) (basisIdxCongr_heq_arg _ _
     (HEq.symm ((cast_heq _ _).trans ((cast_heq _ _).trans (cast_heq _ _)))))
-
 
 /-!
 

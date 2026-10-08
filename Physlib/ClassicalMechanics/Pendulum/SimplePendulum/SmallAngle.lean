@@ -571,7 +571,6 @@ lemma norm_equationOfMotion_residual_le (θ : Time → EuclideanSpace ℝ (Fin 1
   rw [(S.linearizedEquationOfMotion_iff_newton θ).mp h t, ← neg_sub, norm_neg]
   exact S.norm_torque_sub_toHarmonicOscillator_force_le (θ t)
 
-
 /-- The variational form of the residual: a smooth motion of the linearized dynamics is a
   near-critical point of the pendulum's own action — along it the variational gradient of the
   pendulum's action is cubically small in the angle. -/

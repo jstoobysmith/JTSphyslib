@@ -12,7 +12,6 @@ public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 
 # Right handed Weyl fermions
 
-
 In this file we define Right handed Weyl fermions.
 These sit in the conjugate representation of `SL(2,ℂ)`,
 and we consider them to have up indices `ψ^{\dot α}` with `α = 1,2`.
@@ -155,7 +154,6 @@ lemma rep_toMatrix (M : SL(2,ℂ)) : (LinearMap.toMatrix basis basis) (rep M) = 
 lemma rep_apply_basis_repr (M : SL(2,ℂ)) (i j : Fin 2) :
     basis.repr (rep M (basis i)) j = star (M.1 j i) := by
   fin_cases j <;> simp [rep_apply_basis]
-
 
 end RightHandedWeyl
 

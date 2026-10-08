@@ -38,7 +38,6 @@ preserves finite sums; a normal channel also preserves countable sums of positiv
 
 @[expose] public section
 
-
 namespace PositiveLinearMap
 open ProbabilisticTheory
 variable {E F G : Type*} [OrderUnitSpace E] [OrderUnitSpace F] [OrderUnitSpace G]

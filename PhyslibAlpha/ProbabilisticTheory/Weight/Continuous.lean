@@ -38,7 +38,6 @@ is a continuous linear functional on the observables with the order-unit norm.
 
 @[expose] public section
 
-
 namespace PositiveLinearMap
 open ProbabilisticTheory
 open ArchimedeanOrderUnitSpace

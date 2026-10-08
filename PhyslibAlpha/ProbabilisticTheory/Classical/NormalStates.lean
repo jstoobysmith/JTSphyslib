@@ -220,4 +220,3 @@ noncomputable def normalStateEquiv :
   right_inv μ := toMeasure_ofMeasure μ
 
 end BoundedMeasurable
-

@@ -444,8 +444,6 @@ lemma vectorLikeEven_in_span (S : (PureU1 (2 * n.succ)).LinSols)
     rw [h]
     rfl
 
-
-
 end Unshifted
 
 /-!
@@ -710,7 +708,6 @@ lemma swap_as_add {S S' : (PureU1 (2 * n.succ)).LinSols} (j : Fin n)
       ACCSystemCharges.chargesAddCommMonoid_add, ACCSystemCharges.chargesModule_smul]
       rw [basis_on_other hi hi2]
       aesop
-
 
 end Shifted
 

@@ -104,7 +104,6 @@ end BoundedMeasurable
 
 namespace ProbabilisticTheory
 
-
 /-! ## B. Covariant measurements -/
 
 namespace Measurement

@@ -13,7 +13,6 @@ public import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 
 # Dual right handed Weyl fermions
 
-
 In this file we define dual right handed Weyl fermions.
 These sit in the dual-conjugate representation of `SL(2,ℂ)`,
 and we consider them to have down indices `ψ_\dot α}` with `α = 1,2`.
@@ -87,11 +86,9 @@ lemma toFin2ℂ_eq_val (ψ : DualRightHandedWeyl) : ψ.toFin2ℂ = ψ.val := rfl
 
 -/
 
-
 /-- The standard basis on dual-right-handed Weyl fermions. -/
 def basis : Basis (Fin 2) ℂ DualRightHandedWeyl := Basis.ofEquivFun
   (AddEquiv.linearEquiv ℂ DualRightHandedWeyl.toFin2ℂAddEquiv)
-
 
 lemma basis_apply (i j : Fin 2) : (basis i).1 j = if j = i then 1 else 0 := by
   simp only [basis, AddEquiv.linearEquiv, AddEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe,
@@ -113,7 +110,6 @@ lemma basis_val (i : Fin 2) : (basis i).val = Pi.single i 1 := by
 ## Representation
 
 -/
-
 
 /-- The vector space ℂ^2 carrying the representation of SL(2,C) given by
     M → (M⁻¹)^†.

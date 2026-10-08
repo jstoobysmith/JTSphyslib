@@ -115,4 +115,3 @@ lemma norm_bargmannInvariantThree_le_one (ψ₁ ψ₂ ψ₃ : Ket d) :
     _ ≤ 1 * 1 * 1 := by
         gcongr <;> exact Braket.norm_dot_le_one _ _
     _ = 1 := by ring
-

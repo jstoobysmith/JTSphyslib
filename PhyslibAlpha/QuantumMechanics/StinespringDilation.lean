@@ -256,8 +256,6 @@ lemma stinespringCard {R : Type*} [RCLike R]
     hK).toSubtypeRange.exists_orthonormalBasis_extension.choose.card :=
   basisCard <| stinespringOrtho hK
 
-
-
 open Finset in
 /-- We need the 1 matrix, which we don't seem to have for an arbitrary
 `[Fintype m]`.
@@ -331,7 +329,6 @@ lemma Fin.predAboveOfNe_injective (n : ℕ) (k x y : Fin n)
   · simp only [mk.injEq] at heq
     omega
 
-
 /-- The way this is written, `Fin r` and `Fin (r-1)` both occur
 so it is tricky to go to a general `Fintype`.
 -/
@@ -400,8 +397,6 @@ lemma onbPart_norm {R : Type*} [RCLike R] {m r : ℕ} {K : Fin r → Matrix (Fin
       fun j => WithLp.toLp 2 fun i ↦ stinespringOp K i j
   (exists_orthonormalBasis R theRangeᗮ).choose_spec.choose.orthonormal.1 _
 
-
-
 /-!
 
 ## D. The unitary dilation
@@ -418,7 +413,6 @@ def Ud {R : Type*} [RCLike R] {m r : ℕ}
   · exact stinespringOp K x y.1
   · exact onbPart hK y hy x
 
-
 /-- This generalization of Stinespring dilation has the right
 "shape" but otherwise nothing specific to it. -/
 def generalDilation {R : Type*}
@@ -429,14 +423,11 @@ def generalDilation {R : Type*}
     Matrix (m × r) (m × r) R := fun x y =>
   ite (y.2 = z) (S x y.1) (M x y)
 
-
 /-- A general, not necessarily unitary, dilation. -/
 def dilation {R : Type*} [Ring R]
     {m r : Type*} [Fintype r] [DecidableEq r]
     (K : r → Matrix m m R) (z : r) (M : Matrix (m × r) (m × r) R) :
     Matrix (m × r) (m × r) R := generalDilation z (stinespringOp K) (M)
-
-
 
 /-- One version of orthonormality of `stinespringOp`. -/
 theorem Ud_orthonormal₁ {R : Type*} [RCLike R] {m r : ℕ} {K : Fin r → Matrix (Fin m) (Fin m) R}
@@ -483,7 +474,6 @@ theorem Ud_orthonormal₁ {R : Type*} [RCLike R] {m r : ℕ} {K : Fin r → Matr
       generalize (WithLp.toLp 2 fun i ↦ stinespringOp K i j.1) = β at *
       exact inner_eq_zero_symm.mp (h₁ β h₀')
     · exact onbPart_inner hK g₀ g₂ h
-
 
 /-- The Stinespring dilation columns form an orthonormal basis. -/
 theorem Ud_orthonormal₂ {R : Type*} [RCLike R]
@@ -555,7 +545,6 @@ lemma Ud_unitaryT {R : Type*} [RCLike R]
   constructor
   · exact (mul_eq_one_comm_of_card_eq _ _ _ rfl).mp H₀
   · exact H₀
-
 
 /-- The unitary dilation `Ud` is in fact unitary. -/
 lemma Ud_unitary {R : Type*} [RCLike R]
@@ -677,7 +666,6 @@ def stinespringGeneralFormE {R : Type*} [RCLike R]
     let U := dilation K z M
     fun ρ => tr₂ (U * (ρ ⊗ₖ e) * Uᴴ)
 
-
 /-- When we plug in `M = Ud hK`
 into the general `stinespringGeneralForm`,
 then we do get
@@ -708,7 +696,6 @@ theorem unitaryForm_of_general_e {R : Type*} [RCLike R] {m r : ℕ}
   simp only [stinespringGeneralFormE, stinespringUnitaryFormE]
   rw [h]
 
-
 /--
 Note we don't need any special properties of M,
 and we don't need K to be CPTP.
@@ -734,7 +721,6 @@ lemma stinespringGeneralForm_works {R : Type*} [RCLike R] {m r : ℕ}
         split_ifs <;> rfl
       simp_rw [hite]
       simp [Finset.sum_ite_eq']
-
 
 /--
 Notice that unitarity is a side property, it is not why
@@ -831,7 +817,6 @@ lemma krausCompletion_isometry_of_TNI {R : Type*} [RCLike R] {m r : ℕ}
   rw [key, hWW]
   abel
 
-
 /-!
 
 ## G. Partial traces and unitary dilations
@@ -845,7 +830,6 @@ def unital {R : Type*} [RCLike R] {m r : ℕ}
 /-- A subunital operator. -/
 def subunital {R : Type*} [RCLike R] {m r : ℕ}
     (K : Fin r → Matrix (Fin m) (Fin m) R) := ∑ i, K i * star (K i) ≤ 1
-
 
 /-- The identity `Tr_B (A ⨂ B) = Tr(B) · A` -/
 lemma partialTrace_tensor {R : Type*} [RCLike R] {m n : ℕ}
@@ -880,7 +864,6 @@ lemma trace_tr₂ {R : Type*} [RCLike R] {m n : ℕ}
     (ρ : Matrix (Fin m × Fin n) (Fin m × Fin n) R) :
     trace ρ = trace (tr₂ ρ) := Fintype.sum_prod_type fun x ↦ ρ x x
 
-
 /-!
 
 ## H. Completing quantum operations to channels
@@ -900,7 +883,6 @@ def krausCompletionChannelMap {R : Type*} [RCLike R] {q r : ℕ}
     ext x y
     rw [mul_apply, Fintype.sum_prod_type, Finset.sum_comm, Matrix.sum_apply]
     congr
-
 
 /-- The "not orthogonal" CPTP completion of a CPTNI map. -/
 lemma CPTP_of_CPTNI {R : Type*} [RCLike R]

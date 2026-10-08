@@ -238,7 +238,6 @@ lemma Pure.prodP_equivariant {n1 n2} {c : Fin n1 → C} {c1 : Fin n2 → C}
 
 -/
 
-
 lemma Pure.prodP_zero_right {n} {c : Fin n → C}
     {c1 : Fin 0 → C} (p : Pure S c) (p0 : Pure S c1) :
     prodP p p0 = permP id IsReindexing.append_zero_right p := by

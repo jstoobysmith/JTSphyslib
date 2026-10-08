@@ -1176,4 +1176,3 @@ lemma inner_deficiency_eq_zero_neg
 end GlobalAnalyticOrbit
 
 end LinearPMap
-

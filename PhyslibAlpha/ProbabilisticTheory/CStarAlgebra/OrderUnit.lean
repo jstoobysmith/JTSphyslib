@@ -98,4 +98,3 @@ noncomputable instance instIsArchimedeanOrderUnit : ArchimedeanOrderUnitSpace (s
     rwa [hcast] at hle'
 
 end selfAdjoint
-

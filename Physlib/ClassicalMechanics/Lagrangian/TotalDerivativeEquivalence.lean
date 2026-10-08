@@ -233,7 +233,6 @@ lemma totalTimeDerivative_contDiff {δL : Time → X → X → ℝ} (h : IsTotal
   is fixed by the boundary conditions.
 -/
 
-
  /--
 Total time derivative has a variational derivative, which is zero
  -/
@@ -281,7 +280,6 @@ lemma totalTimeDerivative_hasVarGradientAt_equivalence [CompleteSpace X] (L δL 
   apply HasVarGradientAt.add
   · exact hgrad
   · exact totalTimeDerivative_hasZeroVarGradient hδL q hq
-
 
 /-
 Reformulation of the previous result:

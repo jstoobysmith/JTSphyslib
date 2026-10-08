@@ -105,7 +105,6 @@ instance sphericalShellMeasure_hasTemperateGrowth (d : ℕ) :
 def sphericalShellDist (d : ℕ) : (Space d) →d[ℝ] ℝ  :=
   SchwartzMap.integralCLM ℝ (sphericalShellMeasure d)
 
-
 lemma sphericalShellDist_apply_eq_integral_sphericalShellMeasure (d : ℕ) (f : 𝓢(Space d, ℝ)) :
     sphericalShellDist d f = ∫ x, f x ∂sphericalShellMeasure d := by
   rw [sphericalShellDist, SchwartzMap.integralCLM_apply]

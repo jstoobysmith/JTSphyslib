@@ -73,7 +73,6 @@ syntax ident : indexExpr
 /-- An index can be a num, which will be used to evaluate the tensor. -/
 syntax num : indexExpr
 
-
 /-- Notation to describe the evaluation of a tensor index. The term inside the brackets is
   the value of the index, which can be an identifier `[μ]` or an arbitrary term such as
   `[Sum.inl 0]`. -/
@@ -154,8 +153,6 @@ def indexToDual (stx : Syntax) : Bool :=
 
 -/
 
-
-
 /-- Adjusts a list `List ℕ` by subtracting from each natural number the number
   of elements before it in the list which are less than itself. This is used
   to form a list of pairs which can be used for evaluating indices. -/
@@ -165,7 +162,6 @@ def evalAdjustPos (l : List ℕ) : List ℕ :=
       let e := prev.countP (fun y => y < x)
       (x :: prev, x - e)) l.reverse []
   l'.2.reverse
-
 
 /-- Returns the positions of indices which are "jiggled", i.e., of the form `τ(μ)`,
   these are the indices which are to be raised or lowered. -/
@@ -181,7 +177,6 @@ def getJigglePos (ind : List (TSyntax `indexExpr)) : TermElabM (List ℕ) := do
   let inds : List (TSyntax `indexExpr) := [← `(indexExpr| α), ← `(indexExpr| β),
     ← `(indexExpr| 2), ← `(indexExpr| τ(β)), ← `(indexExpr| τ(γ)), ← `(indexExpr| γ)]
   logInfo m!"{← getJigglePos inds}"
-
 
 /-- For list of `indexExpr` e.g. `[α, 3, β, 2, γ]`, `getEvalPos`
   returns a list of pairs `ℕ × ℕ` related to indices which are numbers.
@@ -249,7 +244,6 @@ def withoutContrEval (ind : List (TSyntax `indexExpr)) : TermElabM (List (TSynta
   let inds : List (TSyntax `indexExpr) := [← `(indexExpr| α), ← `(indexExpr| β),
     ← `(indexExpr| 2), ← `(indexExpr| β), ← `(indexExpr| τ(γ)), ← `(indexExpr| γ)]
   logInfo m!"{← withoutContrEval inds}"
-
 
 /-- Takes a list and puts consecutive elements into pairs.
   e.g. [0, 1, 2, 3] becomes [(0, 1), (2, 3)]. -/

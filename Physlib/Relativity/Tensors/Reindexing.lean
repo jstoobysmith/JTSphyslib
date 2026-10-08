@@ -91,11 +91,9 @@ lemma injective {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
 lemma surjective {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     {σ : Fin m → Fin n} (h : IsReindexing c c1 σ) : Function.Surjective σ := h.1.2
 
-
 lemma auto {n m : ℕ} {c : Fin n → C} {c1 : Fin m → C}
     {σ : Fin m → Fin n} (h : IsReindexing c c1 σ := by {simp [IsReindexing]; try decide}) :
     IsReindexing c c1 σ := h
-
 
 @[simp]
 lemma on_id {n : ℕ} {c c1 : Fin n → C} :
@@ -526,7 +524,6 @@ lemma succAbove_succAbove_comm {n : ℕ} {c : Fin (n + 1 + 1) → C}
   simp only [id_eq, Function.comp_apply]
   congr 1
   exact Fin.succAbove_succAbove_succAbove_predAbove k1 k2 m
-
 
 /-- Splitting a list of colours `c : Fin (n + 1) → C` into its first `n` entries and its
   last entry recovers `c`: the identity permutation matches

@@ -55,7 +55,6 @@ systems, and for maps out of commutative C⋆-algebras it follows from classical
 
 @[expose] public section
 
-
 namespace CStarMatrix
 open ProbabilisticTheory
 open TensorProduct

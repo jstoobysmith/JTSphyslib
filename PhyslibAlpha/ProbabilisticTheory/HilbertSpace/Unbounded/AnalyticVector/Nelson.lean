@@ -575,4 +575,3 @@ lemma IsSymmetric.isEssentiallySelfAdjoint_of_denseAnalyticVectors
     hdense hOrbit
 
 end LinearPMap
-

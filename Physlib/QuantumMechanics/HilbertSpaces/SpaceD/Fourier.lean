@@ -55,7 +55,6 @@ variable {d : ℕ}
 noncomputable def fourierUnitary (d : ℕ) :
     SpaceDHilbertSpace d ≃ₗᵢ[ℂ] SpaceDHilbertSpace d := Lp.fourierTransformₗᵢ (Space d) ℂ
 
-
 /-- `fourierUnitary d` acts as the L² Fourier transform `𝓕`. -/
 @[simp]
 lemma fourierUnitary_apply (ψ : SpaceDHilbertSpace d) : fourierUnitary d ψ = 𝓕 ψ := rfl

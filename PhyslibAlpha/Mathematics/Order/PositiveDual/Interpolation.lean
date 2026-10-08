@@ -83,7 +83,6 @@ end HasLatticeDualCone
 
 /-! ## B. The interpolation gauge -/
 
-
 namespace Interpolation
 
 include hu
@@ -211,7 +210,6 @@ namespace Interpolation
 
 variable [Nontrivial E] {n m : ℕ} [NeZero n] [NeZero m]
   {Λ : (Fin n → E) × (Fin m → E) →ₗ[ℝ] ℝ} (hΛ : ∀ v, Λ v ≤ gauge u v)
-
 
 omit hu [Nontrivial E] [NeZero n] [NeZero m] in
 /-- The part of a linear functional acting on the `i`-th lower observable. -/

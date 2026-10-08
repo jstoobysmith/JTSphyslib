@@ -476,7 +476,6 @@ instance : SMulCommClass k G (S.Tensor c) where
 -- `SMulCommClass.symm` is not registered as an instance, as it would cause a loop
 instance : SMulCommClass G k (S.Tensor c) := SMulCommClass.symm _ _ _
 
-
 /-!
 
 ## Permutations

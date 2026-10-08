@@ -92,4 +92,3 @@ noncomputable instance instOrderUnitLattice [Fact (HasLatticeDualCone E)] :
     OrderUnitLattice (Bidual E) where
 
 end Bidual
-

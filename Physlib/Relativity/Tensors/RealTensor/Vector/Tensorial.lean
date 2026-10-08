@@ -18,7 +18,6 @@ prove properties related to the Lorentz group action and the basis.
 
 @[expose] public section
 
-
 open Module
 open Matrix
 open MatrixGroups

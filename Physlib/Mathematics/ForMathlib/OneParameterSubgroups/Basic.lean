@@ -90,7 +90,6 @@ lemma exists_isUnit_intervalIntegral [Nontrivial E] (U : AddChar ℝ E) (hU : Co
     _ < d * ‖(1 : E)‖⁻¹ := by nlinarith [inv_pos.mpr hone]
     _ = ‖q.inv‖⁻¹ := by simp [q, norm_smul, mul_comm, abs_of_pos hd]
 
-
 /-- Translating a one-parameter subgroup translates its interval integral. -/
 lemma mul_intervalIntegral_eq_sub (U : AddChar ℝ E) (hU : Continuous U) (s t : ℝ) :
     U s * ∫ x in (0 : ℝ)..t, U x =

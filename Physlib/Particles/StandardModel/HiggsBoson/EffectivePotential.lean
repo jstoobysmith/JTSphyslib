@@ -29,7 +29,6 @@ namespace HiggsField
 
 open SpaceTime
 
-
 /-- A general potential of the Higgs field. -/
 abbrev EffectivePotential : Type := HiggsVec → ℝ
 

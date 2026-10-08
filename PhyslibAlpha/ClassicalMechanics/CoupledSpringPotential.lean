@@ -51,7 +51,6 @@ that its second derivative quadratic map is positive definite there.
 
 @[expose] public section
 
-
 /-!
 
 ## A. The coupled spring potential

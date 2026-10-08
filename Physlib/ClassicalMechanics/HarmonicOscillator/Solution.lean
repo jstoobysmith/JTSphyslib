@@ -198,7 +198,6 @@ are given later in section D.1, after the trajectory machinery has been defined.
 
 end InitialConditionsAtTime
 
-
 /-!
 
 #### A.2.2. Initial conditions from two positions at different times
@@ -236,7 +235,6 @@ correctness proofs, under this nondegeneracy condition, are given later in secti
   t₂ : Time
   /-- The position at time `t₂`. -/
   xT₂ : EuclideanSpace ℝ (Fin 1)
-
 
 namespace InitialConditionsFromTwoPositions
 
@@ -865,7 +863,6 @@ lemma toInitialConditions_fromInitialConditions (S : HarmonicOscillator)
     ext i; fin_cases i; simp
 
 end AmplitudePhase
-
 
 namespace InitialConditions
 

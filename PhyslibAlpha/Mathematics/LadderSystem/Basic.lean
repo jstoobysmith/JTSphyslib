@@ -141,7 +141,6 @@ theorem LinearMap.lie_apply_eq_of_lie_span_eq {s : Set L} (hs : Submodule.span K
     exact hx
   exact DFunLike.congr_fun step2 y
 
-
 /-- A system of `d` independent ladder pairs on a `K`-vector space `V`: annihilation operators
 `a i` and creation operators `ac i` (`i : Fin d`), satisfying the canonical commutation relations.
 A physical system exhibits its own concrete operators as one instance of this (e.g.

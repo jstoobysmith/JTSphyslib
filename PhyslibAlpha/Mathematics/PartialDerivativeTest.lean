@@ -73,7 +73,6 @@ lemma Function.update₁ {α : Type*} {a b c : α} : Function.update ![a,b] 1 c 
 
 open Nat ContinuousMultilinearMap Finset Function
 
-
 /-!
 
 ## B. Quadratic maps from the second derivative
@@ -106,7 +105,6 @@ noncomputable def hessianBilinearCompanion {V : Type*} [NormedAddCommGroup V]
         simp_rw [← mul_add]
         simp)
 
-
 /-- The second iterated Frechét derivative as a quadratic map. -/
 noncomputable def iteratedFDerivQuadraticMap {V : Type*} [NormedAddCommGroup V]
     [NormedSpace ℝ V] (f : V → ℝ) (x₀ : V) : QuadraticMap ℝ V ℝ := {
@@ -128,7 +126,6 @@ noncomputable def iteratedFDerivQuadraticMap {V : Type*} [NormedAddCommGroup V]
     simp only [update₀, update₁, MultilinearMap.toFun_eq_coe, coe_coe, smul_eq_mul]
         at hsm₀ hsm₁ hsm
     rw [smul_eq_mul, mul_assoc, ← hsm₀, hsm₁]}
-
 
 /-- A continuous multilinear map is bilinear. -/
 noncomputable def continuousBilinearMapOfContinuousMultilinearMap
@@ -153,7 +150,6 @@ def QuadraticMap.toMultilinearMap {V : Type*} [AddCommGroup V] [Module ℝ V]
   toFun := fun v => Q.polarBilin (v 0) (v 1)
   map_update_add' := by simp
   map_update_smul' := by simp}
-
 
 /-- . -/
 noncomputable def QuadraticMap.toMultilinearMapHalfPolarBilin
@@ -212,7 +208,6 @@ theorem QuadraticMap.toMultilinearMap_continuous {V : Type*}
   convert hB_cont.comp ( show Continuous fun v : Fin 2 → V => v 0 from continuous_apply 0 ) |>
     Continuous.clm_apply <|
       show Continuous fun v : Fin 2 → V => v 1 from continuous_apply 1 using 1; aesop
-
 
 /-- . -/
 theorem QuadraticMap.toMultilinearMapHalfPolarBilin_continuous {V : Type*}
@@ -319,7 +314,6 @@ theorem QuadraticMap.toContinuousMultilinearMap_applyHalf {V : Type*} [NormedAdd
     Q.toContinuousMultilinearMapHalfPolarBilin ![x, y] = (1/2) * Q.polarBilin x y := by
   rfl
 
-
 /-!
 
 ## C. Coercivity of positive definite forms
@@ -398,7 +392,6 @@ lemma coercive_of_posdefHalf {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ
         refine Real.norm_of_nonneg ?_
         simp)
 
-
 /--
 The polar bilinear form of the second-derivative quadratic map is the symmetrized
 Hessian.
@@ -427,7 +420,6 @@ lemma iteratedFDeriv_two_swap {V : Type*} [NormedAddCommGroup V] [NormedSpace �
   · convert congr_arg ( fun g => g ![y, x] ) h.symm using 1;
     simp only [domDomCongr_apply, Fin.revPerm_apply]
     exact congr_arg _ (by ext i; fin_cases i <;> rfl)
-
 
 /-- Positive definiteness implies coercivity.
   The proof uses the general fact `coercive_of_posdefHalf`
@@ -533,7 +525,6 @@ theorem le_of_littleO {V : Type*}
   have := le_of_max_le_right (hx₀ ▸ h₁)
   linarith
 
-
 /-- Second partial derivative test, "little oh" form. -/
 theorem isLocalMin_of_posDef_of_littleo {V : Type*} [NormedAddCommGroup V]
     [InnerProductSpace ℝ V] [FiniteDimensional ℝ V] {f : V → ℝ} {x₀ : V}
@@ -556,7 +547,6 @@ theorem isLocalMin_of_posDef_of_littleo {V : Type*} [NormedAddCommGroup V]
   simp only [norm_pow, norm_norm]
   rw [← pow_two] at hx
   exact le_of_littleO hx <| sub_eq_zero.mp hx₀.symm
-
 
 /-- Having a power series implies quadratic approximation. -/
 lemma littleO_of_powerseries {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]

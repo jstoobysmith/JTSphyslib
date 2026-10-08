@@ -58,7 +58,6 @@ observable from the minimal cone.
 
 @[expose] public section
 
-
 namespace Bidual
 open ProbabilisticTheory
 open OrderUnitLattice VectorLattice

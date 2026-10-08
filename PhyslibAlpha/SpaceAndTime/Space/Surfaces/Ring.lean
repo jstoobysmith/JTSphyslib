@@ -77,7 +77,6 @@ lemma ring_continuous : Continuous ring := by
 lemma ring_measurableEmbedding : MeasurableEmbedding ring :=
   Continuous.measurableEmbedding ring_continuous ring_injective
 
-
 /-!
 
 ## B. The measure associated with the ring
@@ -142,7 +141,6 @@ lemma ringMeasure_univ : ringMeasure Set.univ = ENNReal.ofReal ((2 : ℝ) * π) 
     volume_metricBall_two, Nat.ofNat_nonneg, ENNReal.ofReal_mul, ENNReal.ofReal_ofNat]
   · fun_prop
   · exact MeasurableSet.univ
-
 
 /-!
 

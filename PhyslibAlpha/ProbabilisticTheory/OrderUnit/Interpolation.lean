@@ -187,7 +187,6 @@ end HasLatticeDualCone
 
 namespace ProbabilisticTheory
 
-
 open scoped ArchimedeanOrderUnitSpace in
 /-- On a complete Archimedean order-unit space whose positive functionals form a lattice,
 observables have the Riesz decomposition. -/

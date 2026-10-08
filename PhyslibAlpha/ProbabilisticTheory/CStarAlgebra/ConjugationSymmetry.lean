@@ -45,7 +45,6 @@ representation of a group `G` gives a symmetry action of `G`.
 
 @[expose] public section
 
-
 namespace unitary
 open ProbabilisticTheory
 variable {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]

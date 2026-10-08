@@ -163,5 +163,4 @@ lemma twoState_helmholtzFreeEnergy_eq_T_neq_zero (E₀ E₁ : ℝ) (T : Temperat
   rw [twoState_helmholtzFreeEnergy_eq]
   field_simp
 
-
 end CanonicalEnsemble

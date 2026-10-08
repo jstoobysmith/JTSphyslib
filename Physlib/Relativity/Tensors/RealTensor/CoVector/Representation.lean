@@ -20,7 +20,6 @@ by its tensor structure.
 
 @[expose] public section
 
-
 open Module Matrix MatrixGroups Complex TensorProduct
 
 noncomputable section

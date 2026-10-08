@@ -249,7 +249,6 @@ lemma probabilityOf_eq_poisson_C (n : ℕ) (α : ℂ) :
       · exact pow_nonneg (NNReal.coe_nonneg _) n
     · simp
 
-
 /-- The only eigenvectors of `a` are the coherent states. -/
 lemma coherentState_only_eigenvector (α : ℂ) (v : ℕ → ℂ) :
     a v = α • v ↔
@@ -428,7 +427,6 @@ lemma commutationRelation : ⁅aLin, a_dagLin⁆ = 1 := by
   rw [← commutation_relation]
   simp
 
-
 /-!
 
 ## F. Coherent states in ℓ²
@@ -443,8 +441,6 @@ example : coherentState 0 = fun n => ite (n = 0) 1 0 := by
   · subst n;simp
   · rw [zero_pow g₀]
     simp
-
-
 
 /-- The coherent state belongs to `ℓ²(ℂ)`. -/
 def coherentState_ℓ2 (α : ℂ) : lp (fun _ : ℕ => ℂ) 2 := {

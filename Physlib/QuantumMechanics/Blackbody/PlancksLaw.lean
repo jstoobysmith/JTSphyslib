@@ -47,7 +47,6 @@ where `h` is Planck's constant, `c` the speed of light, and `k_B` the Boltzmann 
 
 @[expose] public section
 
-
 namespace Blackbody
 
 /-!

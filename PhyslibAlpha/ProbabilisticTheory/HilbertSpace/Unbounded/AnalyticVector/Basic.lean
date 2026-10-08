@@ -1359,4 +1359,3 @@ structure LocalAnalyticOrbit (T : H →ₗ.[ℂ] H) (x : H) where
   norm_eq : ∀ (s : ℝ) (_hs : |s| < radius), ‖toFun s‖ = ‖x‖
 
 end LinearPMap
-

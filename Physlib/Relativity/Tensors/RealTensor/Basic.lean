@@ -100,7 +100,6 @@ def realLorentzTensor (d : ℕ := 3) : TensorSpecies
     | Color.up => Lorentz.preCoContrUnit_symm
     | Color.down => Lorentz.preContrCoUnit_symm
 
-
 open realLorentzTensor in
 /-- The real Lorentz tensors as a conjugation species: over `ℝ` conjugation is trivial, so every
   colour is its own conjugate. -/

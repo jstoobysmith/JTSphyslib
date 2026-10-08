@@ -401,7 +401,6 @@ lemma repGaugeGroupI_phase_snd (φ : HiggsVec) :
     ext i
     fin_cases i <;> simp [ofU1Subgroup_repGaugeGroupI_apply]
 
-
 /-!
 
 ### A.9 To real scalars

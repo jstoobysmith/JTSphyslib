@@ -163,4 +163,3 @@ lemma probabilityLaw_outcome (ω : 𝓢[ℝ, BoundedMeasurable Ω]) (hω : ω.Is
   simp only [Measurement.probabilityLaw, outcome, comp_id]
 
 end BoundedMeasurable
-
