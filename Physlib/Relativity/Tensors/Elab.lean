@@ -673,7 +673,7 @@ variable {V3 : Fin 3 → Type} [∀ c, AddCommGroup (V3 c)] [∀ c, Module k (V3
 #guard_msgs in
 #check ({v3 | α β γ + v3' | β γ α}ᵀ)
 
-variable {k : Type} [RCLike k] {C : Type} [DecidableEq C]  {G : Type} [Group G]
+variable {k : Type} [RCLike k] {C : Type} [DecidableEq C] {G : Type} [Group G]
     {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
     {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
     {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Module.Basis (basisIdx c) k (V c)}

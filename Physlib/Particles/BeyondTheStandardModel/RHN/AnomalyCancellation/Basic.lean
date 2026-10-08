@@ -33,9 +33,9 @@ namespace SMνCharges
 variable {n : ℕ}
 
 set_option backward.isDefEq.respectTransparency false in
-lemma sum_one  [AddCommMonoid M] (f : Fin (SMνSpecies 1).numberCharges → M) :
+lemma sum_one [AddCommMonoid M] (f : Fin (SMνSpecies 1).numberCharges → M) :
     ∑ i, f i = f ⟨0, by simp⟩ := by
-  change  ∑ (i : Fin 1), f i = _
+  change ∑ (i : Fin 1), f i = _
   simp only [Finset.univ_unique, Fin.default_eq_zero, Fin.isValue, Finset.sum_singleton]
   rfl
 

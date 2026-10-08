@@ -127,7 +127,7 @@ lemma apply_eq_sum_termOfMassDim {V : EffectivePotential} {n : ℕ} (h : HasMaxM
     V φ = ∑ m ∈ Finset.range (n + 1), termOfMassDim V h m φ := by
   rw [apply_eq_polynomial h, ← MvPolynomial.sum_homogeneousComponent (polynomial V h)]
   simp only [map_sum]
-  change  ∑ x ∈ Finset.range ((V.polynomial h).totalDegree + 1), termOfMassDim V h x φ = _
+  change ∑ x ∈ Finset.range ((V.polynomial h).totalDegree + 1), termOfMassDim V h x φ = _
   symm
   refine Finset.eventually_constant_sum ?_ ?_
   · intro m hm
@@ -145,7 +145,7 @@ lemma termOfMassDim_isInvariant {V : EffectivePotential} {n : ℕ} (h : HasMaxMa
     (m : ℕ) (hV : IsInvariant V) : IsInvariant (termOfMassDim V h m) := by
   intro g φ
   have hV (t : ℝ) := hV g (t • φ)
-  have h1 (t : ℝ) : ∑  m ∈ Finset.range (n + 1),
+  have h1 (t : ℝ) : ∑ m ∈ Finset.range (n + 1),
       t ^ m * (termOfMassDim V h m (HiggsVec.repGaugeGroupI g φ) -
       termOfMassDim V h m φ) = 0 := by
     simp [mul_sub, ← apply_smul_eq_sum_termOfMassDim]
@@ -177,7 +177,7 @@ lemma termOfMassDim_eq_mul_norm {V : EffectivePotential} {n : ℕ}
   ring
 
 lemma termOfMassDim_zero_of_odd {V : EffectivePotential} {n : ℕ} (h : HasMaxMassDimLE V n) (m : ℕ)
-    (hV : IsInvariant V) (φ : HiggsVec) (hodd : Odd m)  :
+    (hV : IsInvariant V) (φ : HiggsVec) (hodd : Odd m) :
     termOfMassDim V h m φ = 0 := by
   have h1 : termOfMassDim V h m φ = termOfMassDim V h m ((-1 : ℝ) • φ) :=
     (termOfMassDim_isInvariant h m hV).eq_of_norm_eq (by simp)

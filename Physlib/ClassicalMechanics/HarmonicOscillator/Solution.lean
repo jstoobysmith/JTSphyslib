@@ -1100,7 +1100,7 @@ a multiple of its period
 -/
 lemma return_time (IC : InitialConditions) (non_trivial : IC.x₀ ≠ 0 ∨ IC.v₀ ≠ 0)
     (t : Time) (ht : IC.trajectory S t = IC.x₀ ∧ ∂ₜ (IC.trajectory S) t = IC.v₀) :
-    ∃ n : ℤ,  (n : ℝ) * (T S) = t := by
+    ∃ n : ℤ, (n : ℝ) * (T S) = t := by
   have htx := ht.left
   have htv := ht.right
   rw [InitialConditions.trajectory_eq] at htx
@@ -1108,11 +1108,11 @@ lemma return_time (IC : InitialConditions) (non_trivial : IC.x₀ ≠ 0 ∨ IC.v
   simp at htx
   simp at htv
   set c := cos (S.ω * t)
-  set s :=  sin (S.ω * t)
+  set s := sin (S.ω * t)
   set xx := inner ℝ IC.x₀ IC.x₀
   set vv := inner ℝ IC.v₀ IC.v₀
   set xv := inner ℝ IC.x₀ IC.v₀
-  set det := vv + xx *  S.ω^2
+  set det := vv + xx * S.ω^2
   have hxx0 : 0 ≤ xx := real_inner_self_nonneg
   have hvv0 : 0 ≤ vv := real_inner_self_nonneg
   have hω2 : 0 < S.ω ^ 2 := pow_pos S.ω_pos 2
@@ -1130,7 +1130,7 @@ lemma return_time (IC : InitialConditions) (non_trivial : IC.x₀ ≠ 0 ∨ IC.v
     simpa only [inner_add_left, inner_neg_left, real_inner_smul_left, neg_mul, mul_assoc] using h
   have hcos : 1 = cos (S.ω * t) := by
     calc
-    1 =  det / det := by simp only [ne_eq, det_ne_zero, not_false_eq_true, div_self]
+    1 = det / det := by simp only [ne_eq, det_ne_zero, not_false_eq_true, div_self]
     _ = (vv + xx * S.ω^2 ) / det := by rfl
     _ = c * ((vv + xx * S.ω^2) / det) + s * xv *S.ω* (S.ω/S.ω-1 ) / det := by
       nth_rewrite 1 [← hvv, ← hxx]

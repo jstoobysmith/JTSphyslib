@@ -162,10 +162,10 @@ their dual `Module.Dual ℂ (ι → ℂ)` on the chiral side, and the conjugate 
 each (where `i` acts as `−i`) on the anti side. Variance is the vector/dual axis, holomorphy the
 conjugate-module axis; both are genuine carrier data, not labels tracked separately. -/
 abbrev chiralModule : ChiralColor → Type
-  | .chiralUp   => ι → ℂ
+  | .chiralUp => ι → ℂ
   | .chiralDown => Module.Dual ℂ (ι → ℂ)
-  | .antiUp     => ConjModule (ι → ℂ)
-  | .antiDown   => ConjModule (Module.Dual ℂ (ι → ℂ))
+  | .antiUp => ConjModule (ι → ℂ)
+  | .antiDown => ConjModule (Module.Dual ℂ (ι → ℂ))
 
 instance instAddCommGroupChiralModule : ∀ c, AddCommGroup (chiralModule (ι := ι) c)
   | .chiralUp | .chiralDown | .antiUp | .antiDown => inferInstance
@@ -186,10 +186,10 @@ def piBasis : Basis ι ℂ (ι → ℂ) := Pi.basisFun ℂ ι
 its dual `piBasis.dualBasis` on the holomorphic covectors, and the `Basis.conj` of each on the
 anti-holomorphic side (coordinates `star`-ed). -/
 noncomputable def chiralBasis : (c : ChiralColor) → Basis ι ℂ (chiralModule (ι := ι) c)
-  | .chiralUp   => piBasis
+  | .chiralUp => piBasis
   | .chiralDown => piBasis.dualBasis
-  | .antiUp     => Basis.conj piBasis
-  | .antiDown   => Basis.conj piBasis.dualBasis
+  | .antiUp => Basis.conj piBasis
+  | .antiDown => Basis.conj piBasis.dualBasis
 
 /-!
 ## D. The δ structure on based finite modules

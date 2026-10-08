@@ -149,7 +149,7 @@ lemma ringMeasure_univ : ringMeasure Set.univ = ENNReal.ofReal ((2 : ℝ) * π) 
 -/
 
 /-- The distribution on `Space 3` corresponding to integration around a ring. -/
-def ringDist : (Space 3) →d[ℝ] ℝ  :=
+def ringDist : (Space 3) →d[ℝ] ℝ :=
   SchwartzMap.integralCLM ℝ ringMeasure
 
 lemma ringDist_apply_eq_integral_ringMeasure (f : 𝓢(Space 3, ℝ)) :

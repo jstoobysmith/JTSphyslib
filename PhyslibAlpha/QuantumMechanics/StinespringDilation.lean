@@ -241,7 +241,7 @@ lemma basisCard {R : Type*} [RCLike R] {n m : Type*} [Fintype n] {s : Matrix n m
     (ho : Orthonormal R fun j ↦ WithLp.toLp 2 fun i ↦ s i j) :
     Fintype.card n =
     ho.toSubtypeRange.exists_orthonormalBasis_extension.choose.card :=
-  Fintype.card_coe _ ▸ (Nat.cast_inj.mp  <|
+  Fintype.card_coe _ ▸ (Nat.cast_inj.mp <|
     (rank_eq_card_basis <| PiLp.basisFun _ _ _).symm.trans <|
      rank_eq_card_basis
     ho.toSubtypeRange.exists_orthonormalBasis_extension.choose_spec.choose.toBasis)
@@ -466,7 +466,7 @@ theorem Ud_orthonormal₁ {R : Type*} [RCLike R] {m r : ℕ} {K : Fin r → Matr
           generalize stinespringOp K = α
           apply Submodule.mem_span_of_mem
           simp
-      have h₁ :  (WithLp.toLp 2 fun t ↦ onbPart hK i g₀ t) ∈ theRangeᗮ := by
+      have h₁ : (WithLp.toLp 2 fun t ↦ onbPart hK i g₀ t) ∈ theRangeᗮ := by
           unfold theRange
           simp [onbPart]
       have := h₁ _ h₀'
@@ -553,7 +553,7 @@ lemma Ud_unitary {R : Type*} [RCLike R]
     (Ud hK z) ∈ unitary _ := by
      have := Ud_unitaryT hK z
      generalize Ud hK z = U at *
-     have :  star U * U = 1 := by
+     have : star U * U = 1 := by
        have := this.2
        have : (Uᵀ * star Uᵀ)ᵀ = 1ᵀ := transpose_inj.mpr this
        simp only [transpose_mul, transpose_transpose, transpose_one] at this
@@ -583,8 +583,8 @@ lemma tr₂_e₀Xe₀ {R : Type*} [RCLike R]
   unfold tr₂ kroneckerMap
   simp only [of_apply]
   ext i j
-  have :  ∑ x, ρ i j * e x x
-    = ρ i j * ∑ x,  e x x := by  rw [Finset.mul_sum]
+  have : ∑ x, ρ i j * e x x
+    = ρ i j * ∑ x, e x x := by rw [Finset.mul_sum]
   rw [this]
   unfold trace at htr
   simp only [diag_apply] at htr
@@ -834,7 +834,7 @@ def subunital {R : Type*} [RCLike R] {m r : ℕ}
 /-- The identity `Tr_B (A ⨂ B) = Tr(B) · A` -/
 lemma partialTrace_tensor {R : Type*} [RCLike R] {m n : ℕ}
     (A : Matrix (Fin m) (Fin m) R) (B : Matrix (Fin n) (Fin n) R) :
-    tr₂ (A ⊗ₖ B) = (trace B) • A  := by
+    tr₂ (A ⊗ₖ B) = (trace B) • A := by
   unfold tr₂ trace kroneckerMap
   simp only [of_apply, diag_apply]
   ext i j

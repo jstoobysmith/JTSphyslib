@@ -85,7 +85,7 @@ open Matrix MatrixGroups
 open Representation in
 /-- The representation of the Lorentz group on the space of up-type quark fields. -/
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) UpSinglet where
-  toFun Λ :=  valLinEquiv.symm ∘ₗ
+  toFun Λ := valLinEquiv.symm ∘ₗ
       (TensorProduct.map (Fermion.RightHandedWeyl.rep Λ)
         (trivial ℂ (SL(2,ℂ)) (EuclideanSpace ℂ (Fin 3)) Λ))
       ∘ₗ valLinEquiv
@@ -127,7 +127,7 @@ open Fermion in
   sum over the columns of the `SU(3)` matrix. -/
 lemma repGaugeGroupI_tmul_basis_eq_sum (g : GaugeGroupI) (k : Fin 2) (i : Fin 3) :
     repGaugeGroupI g ⟨RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i⟩ =
-      ∑ i' : Fin 3, (g.toU1.1 ^ 4  * g.toSU3.1 i' i)
+      ∑ i' : Fin 3, (g.toU1.1 ^ 4 * g.toSU3.1 i' i)
       • (⟨RightHandedWeyl.basis k ⊗ₜ[ℂ] EuclideanSpace.basisFun (Fin 3) ℂ i'⟩ : UpSinglet) := by
   apply valLinEquiv.injective
   apply (((RightHandedWeyl.basis).tensorProduct
@@ -165,7 +165,7 @@ lemma repGaugeGroupI_eq_iff_mul_eq {g1 g2 : GaugeGroupI} :
     simp [valLinEquiv_symm_apply, h1, h2, b, h]
 
 lemma mem_repGaugeGroupI_ker_iff_eq {g : GaugeGroupI} :
-    g ∈ repGaugeGroupI.ker ↔ ∃ a : ℂ, g.toSU3.1 = a • 1 ∧  a * g.toU1.1 ^ 4 = 1 := by
+    g ∈ repGaugeGroupI.ker ↔ ∃ a : ℂ, g.toSU3.1 = a • 1 ∧ a * g.toU1.1 ^ 4 = 1 := by
   rw [MonoidHom.mem_ker, ← MonoidHom.map_one repGaugeGroupI, repGaugeGroupI_eq_iff_mul_eq]
   constructor; swap
   · rintro ⟨a, h1, h2⟩ i i'
@@ -187,7 +187,7 @@ lemma gaugeGroup_subgroup_ℤ₆_le_ker_repGaugeGroupI :
   simp only [GaugeGroupQuot.subgroup, gaugeGroupℤ₆SubGroup, SetLike.le_def, MonoidHom.mem_range,
     gaugeGroupℤ₆Hom_apply, Subtype.exists, mem_repGaugeGroupI_ker_iff_eq, forall_exists_index]
   rintro g x hx ⟨rfl⟩
-  use  (x ^ 2)
+  use (x ^ 2)
   simp only [gaugeGroupℤ₆OfRoot_toSU3, gaugeGroupℤ₆SU3OfRoot_eq_mul_id, gaugeGroupℤ₆OfRoot_toU1,
     gaugeGroupℤ₆UnitaryOfRoot_coe, true_and]
   field_simp

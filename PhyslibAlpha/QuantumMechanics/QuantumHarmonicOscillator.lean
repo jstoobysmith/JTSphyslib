@@ -113,7 +113,7 @@ lemma a_dag_eq (i j : ℕ) : a_dag (ε i 1) j = star (a (ε j 1) i) := by
 /-- Verify that a |n + 1⟩ = √(n + 1) |n ⟩ -/
 lemma verify_a (n : ℕ) :
     a (ε (n + 1) 1) =
-       ε n (√(n + 1))  := by
+       ε n (√(n + 1)) := by
   unfold a ε
   ext i
   simp only [Nat.add_right_cancel_iff, mul_ite, mul_one, mul_zero]
@@ -123,7 +123,7 @@ lemma verify_a (n : ℕ) :
 
 /-- Verify that a† ∣n⟩ = √(n+1) ∣n+1⟩. -/
 lemma verify_a_dag (n : ℕ) :
-    a_dag (ε n 1) = ε (n + 1) (√(n + 1))  := by
+    a_dag (ε n 1) = ε (n + 1) (√(n + 1)) := by
   unfold a_dag ε
   ext i
   split_ifs with _ _ _ h
@@ -133,7 +133,7 @@ lemma verify_a_dag (n : ℕ) :
   · simp
 
 lemma verify_a_dag_a (n : ℕ) (x : ℕ → ℂ) :
-    a_dag (a x) n = n * x n  := by
+    a_dag (a x) n = n * x n := by
   unfold a_dag a
   split_ifs with g
   · rw [g];simp
@@ -148,7 +148,7 @@ lemma verify_a_dag_a (n : ℕ) (x : ℕ → ℂ) :
     simp
 
 lemma verify_a_a_dag (n : ℕ) (x : ℕ → ℂ) :
-    a (a_dag x) n = (n + 1) * x n  := by
+    a (a_dag x) n = (n + 1) * x n := by
   unfold a_dag a
   simp only [Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.cast_add, Nat.cast_one,
     add_tsub_cancel_right]

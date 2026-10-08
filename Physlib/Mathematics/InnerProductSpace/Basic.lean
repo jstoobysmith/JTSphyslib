@@ -209,7 +209,7 @@ def fromL2 : WithLp 2 E →L[𝕜] E where
         have h := Real.sqrt_le_sqrt (h ((WithLp.equiv 2 E) x)).1
         simp [smul_eq_mul] at h
         apply (le_inv_mul_iff₀' hc).2
-        apply le_of_eq_of_le (b :=  √c * ‖x.ofLp‖ )
+        apply le_of_eq_of_le (b := √c * ‖x.ofLp‖ )
         · simp [WithLp.equiv_apply]
           ring
         · apply h.trans

@@ -351,21 +351,21 @@ lemma coercive_of_posdefHalf {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ
   use F.toContinuousMultilinearMapHalfPolarBilin ![m, m]
   rw [continuousBilinearMapOfContinuousMultilinearMap]
   constructor
-  ·   unfold QuadraticMap.toContinuousMultilinearMapHalfPolarBilin
-        QuadraticMap.toMultilinearMapHalfPolarBilin
-      change 0 < (fun v ↦ (1/2) * (F (v 0 + v 1) - F (v 0) - F (v 1))) ![m,m]
-      have (x y : V) : F (x + y) = F x + F y + F.polarBilin x y := QuadraticMap.map_add (⇑F) x y
-      simp only [succ_eq_add_one, reduceAdd, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one,
-        Matrix.cons_val_fin_one, gt_iff_lt]
-      rw [this]
-      ring_nf
-      suffices 0 < (F.polarBilin m) m by linarith
-      simp only [QuadraticMap.polarBilin, LinearMap.mk₂_apply, QuadraticMap.polar_self,
-        nsmul_eq_mul, cast_ofNat, ofNat_pos, mul_pos_iff_of_pos_left]
-      apply hf'
-      intro hc
-      subst hc
-      simp at hm
+  · unfold QuadraticMap.toContinuousMultilinearMapHalfPolarBilin
+      QuadraticMap.toMultilinearMapHalfPolarBilin
+    change 0 < (fun v ↦ (1/2) * (F (v 0 + v 1) - F (v 0) - F (v 1))) ![m,m]
+    have (x y : V) : F (x + y) = F x + F y + F.polarBilin x y := QuadraticMap.map_add (⇑F) x y
+    simp only [succ_eq_add_one, reduceAdd, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one, gt_iff_lt]
+    rw [this]
+    ring_nf
+    suffices 0 < (F.polarBilin m) m by linarith
+    simp only [QuadraticMap.polarBilin, LinearMap.mk₂_apply, QuadraticMap.polar_self,
+      nsmul_eq_mul, cast_ofNat, ofNat_pos, mul_pos_iff_of_pos_left]
+    apply hf'
+    intro hc
+    subst hc
+    simp at hm
   · intro u
     by_cases hu : u = 0
     · subst hu

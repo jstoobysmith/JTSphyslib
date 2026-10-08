@@ -270,7 +270,7 @@ lemma append_swap {n n2 : ℕ} {c : Fin n → C} {c2 : Fin n2 → C} :
   · refine Fin.addCases (fun a => ?_) (fun a => ?_) i <;>
       simp [Fin.append_left, Fin.append_right]
 
-lemma append_assoc_right   {n1 n2 n3 : ℕ} {c : Fin n1 → C} {c2 : Fin n2 → C} {c3 : Fin n3 → C} :
+lemma append_assoc_right {n1 n2 n3 : ℕ} {c : Fin n1 → C} {c2 : Fin n2 → C} {c3 : Fin n3 → C} :
     IsReindexing (Fin.append c (Fin.append c2 c3)) (Fin.append (Fin.append c c2) c3)
       (Fin.cast (by grind)) :=
   ⟨(finCongr (by grind)).bijective, fun i => (congrFun (Fin.append_assoc c c2 c3) i).symm⟩
@@ -369,7 +369,7 @@ lemma succAbove_of_neq_zero {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : Fin (n1 +
     {σ : Fin (n1 + 1) → Fin (n + 1)} (i : Fin (n1 + 1))
     (h : IsReindexing c c1 σ) (hi : σ i ≠ 0) :
     IsReindexing (c ∘ (σ i).succAbove) (c1 ∘ i.succAbove)
-      ((Fin.pred (σ i) hi).predAbove  ∘ σ ∘ i.succAbove) := by
+      ((Fin.pred (σ i) hi).predAbove ∘ σ ∘ i.succAbove) := by
   have hpr : σ i = ((σ i).pred hi).succ := (Fin.succ_pred _ _).symm
   have hne : ∀ x, σ (i.succAbove x) ≠ σ i := fun x heq =>
     Fin.succAbove_ne i x (h.injective heq)
@@ -409,7 +409,7 @@ lemma succAbove {n n1 : ℕ} {c : Fin (n + 1) → C} {c1 : Fin (n1 + 1) → C}
     (h : IsReindexing c c1 σ) :
     IsReindexing (c ∘ (σ i).succAbove) (c1 ∘ i.succAbove)
       (if hi : σ i = 0 then fun j => (σ (i.succAbove j)).pred (by simp [← hi, h.injective.eq_iff])
-      else (Fin.pred (σ i) hi).predAbove  ∘ σ ∘ i.succAbove) := by
+      else (Fin.pred (σ i) hi).predAbove ∘ σ ∘ i.succAbove) := by
   by_cases hi : σ i = 0
   · simpa [hi] using IsReindexing.succAbove_of_eq_zero i h hi
   · simpa [hi] using IsReindexing.succAbove_of_neq_zero i h hi
@@ -440,7 +440,7 @@ lemma succSuccAbove {n n1 : ℕ} {c : Fin (n + 1 + 1) → C}
     {c1 : Fin (n1 + 1 + 1) → C}
     (i j : Fin (n1 + 1 + 1)) (hij : i ≠ j)
     {σ : Fin (n1 + 1 + 1) → Fin (n + 1 + 1)} (hσ : IsReindexing c c1 σ) :
-    IsReindexing (c ∘  (σ i).succSuccAbove (σ j))
+    IsReindexing (c ∘ (σ i).succSuccAbove (σ j))
       (c1 ∘ i.succSuccAbove j) (i.funPredPredAbove j hij σ hσ.1) := by
   apply And.intro
   · exact Fin.funPredPredAbove_bijective i j hij σ hσ.left

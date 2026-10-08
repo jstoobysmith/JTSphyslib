@@ -89,13 +89,13 @@ def IsTotalTimeDerivative
     δL(t, q, dₜ q) = fderiv ℝ F (t, q) (1, dₜ q)
 -/
 lemma isTotalTimeDerivative_explicit {δL : Time → X → X → ℝ} :
-    IsTotalTimeDerivative δL ↔  (∃ (F : Time → X → ℝ) (_ : ContDiff ℝ ∞ ↿F),
+    IsTotalTimeDerivative δL ↔ (∃ (F : Time → X → ℝ) (_ : ContDiff ℝ ∞ ↿F),
     ∀ t q v, δL t q v = fderiv ℝ ↿F (t, q) ((1 : Time), v)) := by
   -- Preliminary construction: properties of the function t => (t, q t)
   let tq := fun (q : Time → X) t => (t, q t)
   have h_tq_contDiff : ∀ (q : Time → X), ContDiff ℝ ∞ q -> ContDiff ℝ ∞ (tq q) := by
     fun_prop
-  have h_tq_der :  ∀ (q : Time → X) t, ContDiff ℝ ∞ q -> ∂ₜ (tq q) t = (1, ∂ₜ q t) := by
+  have h_tq_der : ∀ (q : Time → X) t, ContDiff ℝ ∞ q -> ∂ₜ (tq q) t = (1, ∂ₜ q t) := by
     intro q t h_ContDiff_q
     ext
     change (∂ₜ (tq q) t).1.val = (1 : Time).val
@@ -126,10 +126,10 @@ lemma isTotalTimeDerivative_explicit {δL : Time → X → X → ℝ} :
             exact h_tq_contDiff q h_ContDiff_q
           · by_contra
             rcases this
-  have h_F_tq_der : ∀ (q : Time → X) (F : Time → X → ℝ) t, (ContDiff ℝ ∞ ↿F) → (ContDiff ℝ ∞ q)  →
+  have h_F_tq_der : ∀ (q : Time → X) (F : Time → X → ℝ) t, (ContDiff ℝ ∞ ↿F) → (ContDiff ℝ ∞ q) →
       ∂ₜ (fun t' => ↿F (t', q t')) t = fderiv ℝ ↿F (t, q t) ((1 : Time), ∂ₜ q t) := by
     intro q F t hF hq
-    change  fderiv ℝ ((↿F) ∘ (tq q)) t 1 = fderiv ℝ ↿F (t, q t) ((1 : Time), ∂ₜ q t)
+    change fderiv ℝ ((↿F) ∘ (tq q)) t 1 = fderiv ℝ ↿F (t, q t) ((1 : Time), ∂ₜ q t)
     rw [fderiv_comp]
     · simp only [ContinuousLinearMap.comp_apply]
       rw [← Time.deriv_eq,h_tq_der]
@@ -188,14 +188,14 @@ lemma isTotalTimeDerivative_explicit {δL : Time → X → X → ℝ} :
 /--
 Elementary fact: if δL is a time derivative, then so is -δL.
 -/
-lemma isTotalTimeDerivative_neg {δL : Time → X → X → ℝ} (h :  IsTotalTimeDerivative δL) :
+lemma isTotalTimeDerivative_neg {δL : Time → X → X → ℝ} (h : IsTotalTimeDerivative δL) :
     IsTotalTimeDerivative (- δL) := by
     rcases h with ⟨F, h_ContDiff, hF⟩
     set F_neg := (fun t q => - F t q)
     use F_neg
     have h_neg_F_ContDiff : ContDiff ℝ ∞ ↿F_neg := by
       fun_prop
-    use  h_neg_F_ContDiff
+    use h_neg_F_ContDiff
     intro t q hq
     simp only [Pi.neg_apply]
     rw [hF t q hq]
@@ -270,8 +270,8 @@ grad, then so does L'.
  -/
 lemma totalTimeDerivative_hasVarGradientAt_equivalence [CompleteSpace X] (L δL : Time → X → X → ℝ)
     (hδL : IsTotalTimeDerivative δL)
-    (q : Time → X)    (hq : ContDiff ℝ ∞ q) (grad : Time → X)
-    (hgrad :  HasVarGradientAt (fun q' t => L t (q' t) (fderiv ℝ  q' t 1)) grad q) :
+    (q : Time → X) (hq : ContDiff ℝ ∞ q) (grad : Time → X)
+    (hgrad : HasVarGradientAt (fun q' t => L t (q' t) (fderiv ℝ q' t 1)) grad q) :
     HasVarGradientAt (fun q' t => (L + δL) t (q' t) (fderiv ℝ q' t 1)) grad q := by
   have h_add_zero : grad = grad + (fun _ => 0) := by
     funext t
@@ -300,7 +300,7 @@ lemma totalTimeDerivative_varGradient_equivalenvce [CompleteSpace X] (L L' : Tim
     · exact htot
     · exact hq
     · rcases hL with ⟨grad, hgrad⟩
-      rw [ HasVarGradientAt.varGradient (fun q' t => L t (q' t) (fderiv ℝ  q' t 1)) grad q hgrad]
+      rw [ HasVarGradientAt.varGradient (fun q' t => L t (q' t) (fderiv ℝ q' t 1)) grad q hgrad]
       exact hgrad
   · by_cases hL' : ∃ grad, HasVarGradientAt (fun q' t => L' t (q' t) (fderiv ℝ q' t 1)) grad q
     · apply Eq.symm
@@ -312,7 +312,7 @@ lemma totalTimeDerivative_varGradient_equivalenvce [CompleteSpace X] (L L' : Tim
         exact htot
       · exact hq
       · rcases hL' with ⟨grad, hgrad⟩
-        rw [HasVarGradientAt.varGradient (fun q' t => L' t (q' t) (fderiv ℝ  q' t 1)) grad q hgrad]
+        rw [HasVarGradientAt.varGradient (fun q' t => L' t (q' t) (fderiv ℝ q' t 1)) grad q hgrad]
         exact hgrad
     · unfold varGradient
       simp only [hL, hL', ↓reduceDIte]
@@ -325,12 +325,12 @@ lemma totalTimeDerivative_eulerLagrange_equivalenvce [CompleteSpace X] (L L' : T
     (htot : IsTotalTimeDerivative (L' - L)) (hContDiff : (ContDiff ℝ ∞ ↿L) ∨ (ContDiff ℝ ∞ ↿L'))
     (q : Time → X) (hq : ContDiff ℝ ∞ q) : eulerLagrangeOp L q = eulerLagrangeOp L' q := by
   rcases (isTotalTimeDerivative_explicit.mp htot) with ⟨F, hFContDiff, hEq⟩
-  have hContDiff_both :  (ContDiff ℝ ∞ ↿L) ∧ (ContDiff ℝ ∞ ↿L') := by
+  have hContDiff_both : (ContDiff ℝ ∞ ↿L) ∧ (ContDiff ℝ ∞ ↿L') := by
     cases hContDiff with
       | inl hL =>
         constructor
         · exact hL
-        · have h_triv : ↿L' =  ↿L + ↿(L' - L) := by
+        · have h_triv : ↿L' = ↿L + ↿(L' - L) := by
             funext tqv
             rcases tqv with ⟨t, q', v⟩
             rw [Pi.add_apply]
@@ -341,7 +341,7 @@ lemma totalTimeDerivative_eulerLagrange_equivalenvce [CompleteSpace X] (L L' : T
           exact hL.add h_δL_contDiff
       | inr hL' =>
         constructor
-        · have h_triv : ↿L =  ↿L' + ↿(-(L' - L)) := by
+        · have h_triv : ↿L = ↿L' + ↿(-(L' - L)) := by
             funext tqv
             rcases tqv with ⟨t, q', v⟩
             rw [Pi.add_apply]
@@ -378,7 +378,7 @@ When δL depends only on velocity (the free particle case), the condition simpli
 
     WLOG, we assume `δL 0 = 0` since constants are total derivatives (c = d/dt(c·t))
     and can be absorbed without affecting the equations of motion. -/
-lemma isTotalTimeDerivativeVelocity  [CompleteSpace X]
+lemma isTotalTimeDerivativeVelocity [CompleteSpace X]
     (δL : X → ℝ)
     (hδL0 : δL 0 = 0)
     (h : IsTotalTimeDerivative (fun _ _ v => δL v)) :
@@ -387,7 +387,7 @@ lemma isTotalTimeDerivativeVelocity  [CompleteSpace X]
   rcases (isTotalTimeDerivative_explicit.mp h) with ⟨F, hFdiff, hEq⟩
 
   -- Derivative of F at (0,0)
-  let dF : (Time  × X) →L[ℝ] ℝ :=
+  let dF : (Time × X) →L[ℝ] ℝ :=
     fderiv ℝ ↿F ((0 : Time), (0 : X))
 
   -- The "time-direction" derivative must vanish because δL 0 = 0.
@@ -419,7 +419,7 @@ lemma isTotalTimeDerivativeVelocity  [CompleteSpace X]
       simpa [dF] using hv
     calc
       δL v = dF ((1 : Time), v) := hv'
-     _ = dF (((0  : Time), v) + ((1 : Time), (0 : X))) := by simp only [Prod.mk_add_mk, zero_add,
+     _ = dF (((0 : Time), v) + ((1 : Time), (0 : X))) := by simp only [Prod.mk_add_mk, zero_add,
         add_zero]
       _ = dF ((0 : Time), v) + dF ((1 : Time), (0 : X)) := by
         simpa using

@@ -156,7 +156,7 @@ TODO "Add lemmas related to the interaction of evalT and permT, prodT and contrT
 /-- Commuting evaluation with permutations.-/
 lemma evalT_permT {n m : ℕ} {c : Fin (n + 1) → C} {c' : Fin (m + 1) → C}
     {σ : Fin (n + 1) → Fin (m + 1)}
-    (h : IsReindexing c' c  σ) (i : Fin (n + 1)) (x : basisIdx (c i)) (t : Tensor S c') :
+    (h : IsReindexing c' c σ) (i : Fin (n + 1)) (x : basisIdx (c i)) (t : Tensor S c') :
     evalT i x (permT _ h t) = permT _ (h.succAbove i)
       (evalT (σ i) (basisIdxCongr (by simp [h.2]) x) t) := by
   induction' t using Tensor.induction_on_basis with b a t h t1 t2 h1 h2
@@ -383,7 +383,7 @@ set_option backward.isDefEq.respectTransparency false in
   evaluation of a one-index basis tensor is the Kronecker delta. -/
 lemma evalT_basis_single {c : C} (b : basisIdx c) (x : basisIdx (![c] 0)) :
     (evalT 0 x (basis (S := S) ![c] (ComponentIdx.single.symm b))).toScalar =
-    if basisIdxCongr (by simp) b =  x then 1 else 0 := by
+    if basisIdxCongr (by simp) b = x then 1 else 0 := by
   rw [evalT_basis]
   simp only [ComponentIdx.single_symm_apply]
   split_ifs
@@ -412,7 +412,7 @@ lemma eq_sum_evalT_of_single_tensor_basis {c : C} (t : Tensor S ![c]) :
   permuted back into the last slot. -/
 lemma eq_sum_evalT {n : ℕ} {c : Fin (n + 1) → C} (t : Tensor S c) :
     t = ∑ i, permT id (IsReindexing.append_succ_last c) (prodT (evalT (Fin.last n) i t)
-      (basis ![c (Fin.last n)] (ComponentIdx.single.symm i)))   := by
+      (basis ![c (Fin.last n)] (ComponentIdx.single.symm i))) := by
   induction' t using Tensor.induction_on_basis with b a t h t1 t2 h1 h2
   · conv_rhs => enter [2, i]; rw [evalT_basis]
     generalize_proofs h1 h2 h3
@@ -446,7 +446,7 @@ lemma eq_sum_evalT {n : ℕ} {c : Fin (n + 1) → C} (t : Tensor S c) :
   This is the first-index analogue of `eq_sum_evalT`. -/
 lemma eq_sum_evalT_zero {n : ℕ} {c : Fin (n + 1) → C} (t : Tensor S c) :
     t = ∑ i, permT _ (IsReindexing.append_of_first c)
-    (prodT (basis ![c 0] (ComponentIdx.single.symm i)) (evalT 0 i t))  := by
+    (prodT (basis ![c 0] (ComponentIdx.single.symm i)) (evalT 0 i t)) := by
   induction' t using Tensor.induction_on_basis with b a t h t1 t2 h1 h2
   · conv_rhs => enter [2, i]; rw [evalT_basis]
     generalize_proofs h1 h2 h3

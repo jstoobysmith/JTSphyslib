@@ -197,7 +197,7 @@ def conjT {n : ℕ} {c : Fin n → C} : S.Tensor c →ₛₗ[starRingEnd k]
   map_add' t₁ t₂ := by
     apply componentMap_ext
     intro b
-    simp  [map_add, Pi.add_apply, star_add]
+    simp [map_add, Pi.add_apply, star_add]
   map_smul' r t := by
     apply componentMap_ext
     intro b

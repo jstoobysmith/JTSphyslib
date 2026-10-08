@@ -102,7 +102,7 @@ lemma DualLeftHandedWeyl.dual_hom_apply (ψ : DualLeftHandedWeyl) :
   `dualLeftHanded` defined by multiplying an element of
   `leftHanded` by the matrix `εᵃ⁰ᵃ¹ = !![0, 1; -1, 0]]`. -/
 def LeftHandedWeyl.dualEquiv : LeftHandedWeyl.rep.Equiv DualLeftHandedWeyl.rep := by
-  refine Representation.Equiv.mk'  LeftHandedWeyl.dual DualLeftHandedWeyl.dual ?_ ?_
+  refine Representation.Equiv.mk' LeftHandedWeyl.dual DualLeftHandedWeyl.dual ?_ ?_
   · intro x
     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom,
       Representation.IntertwiningMap.coe_toLinearMap]

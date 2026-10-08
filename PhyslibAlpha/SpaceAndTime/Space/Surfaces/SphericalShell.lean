@@ -102,7 +102,7 @@ instance sphericalShellMeasure_hasTemperateGrowth (d : ℕ) :
   One can roughly think of this distribution as the distribution which
   takes test functions `f (r)` to `∫ d³r f(r) ρ(r)` where `ρ(r)` is the
   mass, charge or current etc. distribution. -/
-def sphericalShellDist (d : ℕ) : (Space d) →d[ℝ] ℝ  :=
+def sphericalShellDist (d : ℕ) : (Space d) →d[ℝ] ℝ :=
   SchwartzMap.integralCLM ℝ (sphericalShellMeasure d)
 
 lemma sphericalShellDist_apply_eq_integral_sphericalShellMeasure (d : ℕ) (f : 𝓢(Space d, ℝ)) :

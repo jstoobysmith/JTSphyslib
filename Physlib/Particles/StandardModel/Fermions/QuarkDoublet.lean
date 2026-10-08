@@ -91,7 +91,7 @@ open Matrix MatrixGroups
 open Representation in
 /-- The representation of the Lorentz group on the space of quark fields. -/
 noncomputable def repLorentzGroup : Representation ℂ (SL(2,ℂ)) QuarkDoublet where
-  toFun Λ :=  valLinEquiv.symm ∘ₗ
+  toFun Λ := valLinEquiv.symm ∘ₗ
       TensorProduct.map
       (TensorProduct.map (Fermion.LeftHandedWeyl.rep Λ)
         (trivial ℂ (SL(2,ℂ)) (EuclideanSpace ℂ (Fin 3)) Λ))
@@ -117,7 +117,7 @@ noncomputable def repGaugeGroupI : Representation ℂ GaugeGroupI QuarkDoublet w
         (TensorProduct.map
         (LinearMap.id (M := Fermion.LeftHandedWeyl)) -- action on the Lorentz indices
         g.toSU3.1.toEuclideanLin) -- SU(3) action
-        g.toSU2.1.toEuclideanLin  -- SU(2) action
+        g.toSU2.1.toEuclideanLin -- SU(2) action
       ∘ₗ LinearMap.lsmul ℂ _ (g.toU1 : ℂ) -- U(1) action
       ∘ₗ valLinEquiv
   map_one' := by
@@ -193,7 +193,7 @@ lemma mem_repGaugeGroupI_ker_iff_eq {g : GaugeGroupI} :
   constructor; swap
   · rintro ⟨a, b, h1, h2, h3⟩ i i' j j'
     simp only [h2, Matrix.smul_apply, smul_eq_mul, h1, map_one, OneMemClass.coe_one, one_mul]
-    linear_combination h3 * (1 : Matrix _ _ ℂ) i' i * (1 : Matrix  _ _ ℂ) j' j
+    linear_combination h3 * (1 : Matrix _ _ ℂ) i' i * (1 : Matrix _ _ ℂ) j' j
   · intro h
     use g.toSU2.1 0 0, g.toSU3.1 0 0
     simp only [map_one, OneMemClass.coe_one, one_mul, Fin.forall_fin_succ, Fin.isValue,

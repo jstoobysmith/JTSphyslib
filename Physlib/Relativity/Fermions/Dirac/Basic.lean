@@ -164,7 +164,7 @@ lemma rep_apply_mk (g : SL(2,ℂ)) (ψ : LeftHandedWeyl) (χ : DualRightHandedWe
 
 /-- The equivalence between the representation on `Dirac` and the representation
   on `LeftHandedWeyl × DualRightHandedWeyl`. -/
-def decomposeRepEquiv : rep.Equiv ((LeftHandedWeyl.rep).prod (DualRightHandedWeyl.rep))  where
+def decomposeRepEquiv : rep.Equiv ((LeftHandedWeyl.rep).prod (DualRightHandedWeyl.rep)) where
   toLinearEquiv := decomposeLinEquiv
   isIntertwining' g := by
     ext1 x

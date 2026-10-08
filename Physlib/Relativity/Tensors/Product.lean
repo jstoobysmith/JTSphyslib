@@ -279,7 +279,7 @@ lemma Pure.prodP_permP_left {n n'} {c : Fin n → C} {c' : Fin n' → C}
       simp
     simp [permP, ← congr_right _ _ _ h0]
   · have h0 : (i.natAdd n').append (Fin.castAdd n2 ∘ σ) (Fin.natAdd n) = i.natAdd n := by simp
-    simp [permP,  ← congr_right _ _ _ h0]
+    simp [permP, ← congr_right _ _ _ h0]
 
 /-!
 
@@ -296,7 +296,7 @@ lemma Pure.prodP_permP_right {n n'} {c : Fin n → C} {c' : Fin n' → C}
   · have h0 : (i.castAdd n').append (Fin.castAdd n) (Fin.natAdd n2 ∘ σ) = i.castAdd n := by simp
     simp [permP, ← congr_right _ _ _ h0]
   · have h0 : (i.natAdd n2).append (Fin.castAdd n) (Fin.natAdd n2 ∘ σ) = (σ i).natAdd n2 := by simp
-    simp [permP,  ← congr_right _ _ _ h0]
+    simp [permP, ← congr_right _ _ _ h0]
 
 /-!
 

@@ -132,8 +132,8 @@ lemma twoState_entropy_eq_T_neq_zero (E₀ E₁ : ℝ) (T : Temperature) (_ : T 
 /-- A simplification of the `helmholtzFreeEnergy` of the two-state canonical ensemble. -/
 lemma twoState_helmholtzFreeEnergy_eq (E₀ E₁ : ℝ) (T : Temperature) :
     (twoState E₀ E₁).helmholtzFreeEnergy T =
-      (β T  * (E₀ + E₁) / 2 - Real.log
-          (2 * Real.cosh (β T * (E₁ - E₀) / 2))) / β T  := by
+      (β T * (E₀ + E₁) / 2 - Real.log
+          (2 * Real.cosh (β T * (E₁ - E₀) / 2))) / β T := by
   set x := β T * (E₁ - E₀) / 2
   set C := β T * (E₀ + E₁) / 2
   have hE0 : -β T * E₀ = x +(- C) := by
@@ -157,7 +157,7 @@ lemma twoState_helmholtzFreeEnergy_eq (E₀ E₁ : ℝ) (T : Temperature) :
 /-- An instance of `twoState_helmholtzFreeEnergy_eq` assuming T ≠ 0 -/
 lemma twoState_helmholtzFreeEnergy_eq_T_neq_zero (E₀ E₁ : ℝ) (T : Temperature) (Th : T ≠ 0) :
     (twoState E₀ E₁).helmholtzFreeEnergy T =
-      (E₀ + E₁) / 2 - Real.log (2 * Real.cosh (β T * (E₁ - E₀) / 2)) / β T  := by
+      (E₀ + E₁) / 2 - Real.log (2 * Real.cosh (β T * (E₁ - E₀) / 2)) / β T := by
   have hTval : T.val ≠ 0 := fun h => Th (Temperature.ext h)
   have hβne : (β T : ℝ) ≠ 0 := (Temperature.beta_pos T (pos_iff_ne_zero.mpr hTval)).ne'
   rw [twoState_helmholtzFreeEnergy_eq]
