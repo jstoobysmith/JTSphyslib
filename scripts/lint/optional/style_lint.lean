@@ -26,6 +26,10 @@ Some of the linters here can be replaced by regex.
 -/
 open Lean System Meta
 
+/-- The column (counted in characters) at which the last occurrence of `s` in `l` ends. -/
+def lastOccurrenceEnd (l s : String) : ℕ :=
+  l.length - ((l.splitOn s).getLast?.getD "").length
+
 /-- Given a list of lines, outputs an error message and a line number. -/
 def PhyslibTextLinter : Type := Array String → Array (String × ℕ × ℕ)
 
@@ -44,11 +48,7 @@ def doubleSpaceLinter : PhyslibTextLinter := fun lines ↦ Id.run do
   let enumLines := (lines.toList.zipIdx 1)
   let errors := enumLines.filterMap (fun (l, lno) ↦
     if String.contains l.trimAsciiStart.copy "  " then
-      let k := (Substring.Raw.findAllSubstr l "  ").toList.getLast?
-      let col := match k with
-        | none => 1
-        | some k => String.Pos.Raw.offsetOfPos l k.stopPos
-      some (s!" Non-initial double space in line.", lno, col)
+      some (s!" Non-initial double space in line.", lno, lastOccurrenceEnd l "  ")
     else none)
   errors.toArray
 
@@ -65,11 +65,7 @@ def substringLinter (s : String) : PhyslibTextLinter := fun lines ↦ Id.run do
   let enumLines := (lines.toList.zipIdx 1)
   let errors := enumLines.filterMap (fun (l, lno) ↦
     if String.contains l s then
-      let k := (Substring.Raw.findAllSubstr l s).toList.getLast?
-      let col := match k with
-        | none => 1
-        | some k => String.Pos.Raw.offsetOfPos l k.stopPos
-      some (s!" Found instance of substring `{s}`.", lno, col)
+      some (s!" Found instance of substring `{s}`.", lno, lastOccurrenceEnd l s)
     else none)
   errors.toArray
 
@@ -142,7 +138,8 @@ def linterExemptions : IO (Array String) := do
 
 def main (_ : List String) : IO UInt32 := do
   initSearchPath (← findSysroot)
-  let filePaths := (← importedFilePaths `Physlib) ++ (← importedFilePaths `QuantumInfo)
+  let filePaths := (← importedFilePaths `Physlib) ++ (← importedFilePaths `QuantumInfo) ++
+    (← importedFilePaths `PhyslibAlpha)
   let exemptions ← linterExemptions
   let filePaths := filePaths.filter (fun p ↦ !exemptions.contains p.toString)
   let errors := (← filePaths.mapM physlibLintFile).flatten
