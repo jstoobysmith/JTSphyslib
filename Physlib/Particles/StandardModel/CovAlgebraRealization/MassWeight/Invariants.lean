@@ -25,12 +25,13 @@ This file joins the eight.
 At mass dimension four the gauge- and Lorentz-invariant content is spanned by the four
 Lorentz contractions of each of the three `F·F` trace families and of the twice-derived
 hypercharge field strength. The antisymmetry of the field strength cuts these to two of each
-(`IsGaugeSector.lorentzContractionEightSpan_eq`): the kinetic-shape and theta-shape
-contractions of the three gauge groups, and two contractions of the twice-derived hypercharge
-field strength. Beside them stand the Higgs kinetic term with its quartic potential and its
-two box terms; the kinetic terms of the ten fermion species over the nine family pairs; and
-the six Yukawa couplings over the nine family pairs. Below mass dimension four there is a
-single term, the Higgs mass term `H† H` at mass weight four; below that, nothing.
+(`IsGaugeSector.lorentzContractionEightSpan_eq`), and the two of the twice-derived hypercharge
+field strength vanish, its covariant derivatives being ordinary ones (A.1). What is left is the
+kinetic-shape and theta-shape contractions of the three gauge groups. Beside them stand the
+Higgs kinetic term with its quartic potential and its two box terms; the kinetic terms of the
+ten fermion species over the nine family pairs; and the six Yukawa couplings over the nine
+family pairs. Below mass dimension four there is a single term, the Higgs mass term `H† H` at
+mass weight four; below that, nothing.
 
 The statement is about formal expressions, the elements of the field algebra with complex
 coefficients. It is a spanning statement: the listed generators are not shown to be
@@ -61,6 +62,7 @@ sections E and F read off the equivalence, through
 dimension four.
 
 - A. The span of the Standard Model Lagrangian
+  - A.1. The twice-derived hypercharge contractions vanish
 - B. The span is made of invariants of the right weight
 - C. Each sector reduces to the span
 - D. Joining the eight sectors
@@ -96,13 +98,14 @@ variable {B : Type} [Ring B] [Algebra ℂ B]
 /-- The gauge- and Lorentz-invariant content of the Standard Model at mass weight `w`:
   the join of the surviving spans of the eight sectors. At weight eight it is the gauge
   sector's four Lorentz contractions of each of its four families, two of which already span
-  for each family (`IsGaugeSector.lorentzContractionEightSpan_eq`): the kinetic-shape and
-  theta-shape contractions of the three gauge groups and two contractions of the
-  twice-derived hypercharge field strength. Together with these come the Higgs sector's two
-  box terms, kinetic term and quartic potential, the fermion sector's ten kinetic terms over
-  the nine family pairs, and the six Yukawa couplings over the nine family pairs. Below weight
-  eight only the Higgs sector survives, and only at weight four, where it contributes the
-  Higgs mass term. -/
+  for each family (`IsGaugeSector.lorentzContractionEightSpan_eq`), and the two of the
+  twice-derived hypercharge field strength vanish, leaving the two contractions of each of the
+  three trace families (`isGaugeSector_lorentzContractionEightSpan_eq_traceFamilies`): the
+  kinetic-shape and theta-shape contractions of the three gauge groups. Together with these come the
+  Higgs sector's two box terms, kinetic term and quartic potential, the fermion sector's ten
+  kinetic terms over the nine family pairs, and the six Yukawa couplings over the nine family
+  pairs. Below weight eight only the Higgs sector survives, and only at weight four, where it
+  contributes the Higgs mass term. -/
 noncomputable def standardModelSpan (w : ℕ) : Submodule ℂ B :=
   if w = 8 then
     h.isGaugeSector.lorentzContractionEightSpan
@@ -130,6 +133,76 @@ lemma standardModelSpan_eq_bot {w : ℕ} (hw : w ≠ 8) (hw4 : w ≠ 4) :
     h.standardModelSpan w = ⊥ := by
   rw [standardModelSpan, ite_eq_right hw, HiggsAlgebraCovRealization.lorentzContractionLTEightSpan,
     ite_eq_right hw4]
+
+/-!
+
+### A.1. The twice-derived hypercharge contractions vanish
+
+The hypercharge coordinate kills brackets, so the covariant derivatives of the hypercharge
+field strength are ordinary derivatives, which commute (`covF_comp_perm_of_map_lie` with
+`GaugeAlgebra.stdBasis_coord_inr_inr_lie`). The twice-derived hypercharge family is therefore
+symmetric in its two derivative slots as well as antisymmetric in its two field-strength slots,
+and `RankFour` sends both of its remaining contractions to zero. So six generators span the
+gauge contribution: for each of the gluon, `W` and hypercharge trace families, the `(0,2)(1,3)`
+metric contraction `η^{μρ} η^{νσ} F_{μν} F_{ρσ}` and the Levi-Civita contraction
+`ε^{μνρσ} F_{μν} F_{ρσ}`, gauge index summed, as the plain component sums of `RankFour` with no
+further normalisation. These are identities of local expressions; no integration by parts,
+total-derivative quotient or equation of motion is involved.
+
+The derivative symmetry is not a law of `IsGaugeSector`, which relates no derivative slots. It
+holds here because `B` receives the covariant jet algebra, and it covers every ordinary
+realization through `AlgebraRealization.toCovAlgebraRealization`. Nothing is said about the
+gluon and `W` components, whose covariant derivatives do not commute.
+
+-/
+
+/-- The twice-derived hypercharge field strengths are symmetric in their two derivative
+  slots. -/
+lemma hyperchargeDeriv_comp_swap_zero_one (d : IsGaugeSector.EightIdx) :
+    h.isGaugeSector.hyperchargeDeriv (d ∘ Equiv.swap 0 1) = h.isGaugeSector.hyperchargeDeriv d := by
+  have hl : (![d 1, d 0] : Fin 2 → Fin 1 ⊕ Fin 3) = ![d 0, d 1] ∘ Equiv.swap 0 1 := by
+    funext i
+    fin_cases i <;> rfl
+  have h2 : Equiv.swap (0 : Fin 4) 1 2 = 2 := by decide
+  have h3 : Equiv.swap (0 : Fin 4) 1 3 = 3 := by decide
+  simp only [IsGaugeSector.hyperchargeDeriv, IsGaugeSector.hyperchargeField, Function.comp_apply,
+    Equiv.swap_apply_left, Equiv.swap_apply_right, h2, h3]
+  rw [hl]
+  exact h.covF_comp_perm_of_map_lie (GaugeAlgebra.stdBasis_coord_inr_inr_lie 0) _ _ _ _
+
+/-- `η^{μρ} η^{νσ} ∇_μ ∇_ν B_{ρσ} = 0`: a symmetric pair of derivatives contracted against the
+  antisymmetric pair of field-strength indices. -/
+lemma hyperchargeDeriv_contractionTensor_one :
+    ofComponents h.isGaugeSector.hyperchargeDeriv (RankFour.contractionTensor 1) = 0 :=
+  RankFour.apply_contractionTensor_one_of_symm_of_antisymm
+    (ofComponents_comp_permT_eq_self _ _ h.hyperchargeDeriv_comp_swap_zero_one)
+    (ofComponents_comp_permT_eq_neg _ _ h.isGaugeSector.hyperchargeDeriv_comp_swap_two_three)
+
+/-- `ε^{μνρσ} ∇_μ ∇_ν B_{ρσ} = 0`: a symmetric pair of derivatives contracted against the
+  antisymmetric symbol. -/
+lemma hyperchargeDeriv_contractionTensor_three :
+    ofComponents h.isGaugeSector.hyperchargeDeriv (RankFour.contractionTensor 3) = 0 :=
+  RankFour.apply_contractionTensor_three_of_symm
+    (ofComponents_comp_permT_eq_self _ _ h.hyperchargeDeriv_comp_swap_zero_one)
+
+open RankFour in
+/-- The gauge contribution at mass weight eight is spanned by the Lorentz contractions of the
+  three trace families alone: for each of `gluonTrace`, `wTrace` and `hyperchargeTrace`, the
+  `(0,2)(1,3)` metric contraction `η^{μρ} η^{νσ} F_{μν} F_{ρσ}` and the Levi-Civita contraction
+  `ε^{μνρσ} F_{μν} F_{ρσ}`, as plain component sums. The two twice-derived hypercharge
+  generators of `IsGaugeSector.lorentzContractionEightSpan_eq` vanish. The six span; they are
+  not shown to be independent or nonzero. -/
+lemma isGaugeSector_lorentzContractionEightSpan_eq_traceFamilies :
+    h.isGaugeSector.lorentzContractionEightSpan
+      = Submodule.span ℂ {ofComponents h.isGaugeSector.gluonTrace (contractionTensor 1),
+          ofComponents h.isGaugeSector.gluonTrace (contractionTensor 3)}
+        ⊔ (Submodule.span ℂ {ofComponents h.isGaugeSector.wTrace (contractionTensor 1),
+            ofComponents h.isGaugeSector.wTrace (contractionTensor 3)}
+          ⊔ Submodule.span ℂ {ofComponents h.isGaugeSector.hyperchargeTrace (contractionTensor 1),
+            ofComponents h.isGaugeSector.hyperchargeTrace (contractionTensor 3)}) := by
+  rw [h.isGaugeSector.lorentzContractionEightSpan_eq, h.hyperchargeDeriv_contractionTensor_one,
+    h.hyperchargeDeriv_contractionTensor_three]
+  simp
 
 /-!
 
@@ -429,7 +502,8 @@ theorem mem_massWeightSubmodule_sup_and_gauge_lorentz_invariant_iff_mem (w : ℕ
   hypercharge field strength (`IsGaugeSector.lorentzContractionEightSpan`), two of each
   spanning by `IsGaugeSector.lorentzContractionEightSpan_eq`: the kinetic-shape and
   theta-shape contractions of the three gauge groups and two contractions of the
-  twice-derived hypercharge field strength,
+  twice-derived hypercharge field strength, which vanish
+  (`mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian_traceFamilies`),
   the Higgs kinetic term, its quartic potential and its two box terms
   (`HiggsAlgebraCovRealization.lorentzContractionEightSpan`),
   the kinetic terms of the ten fermion species over the nine family pairs
@@ -450,6 +524,34 @@ theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_lagran
   rw [← h.standardModelSpan_eight]
   exact h.mem_massWeightSubmodule_sup_and_gauge_lorentz_invariant_iff 8 (by norm_num)
     le_rfl S hS hSL x
+
+open RankFour in
+/-- The invariant content of the Standard Model at mass dimension four with the gauge
+  contribution written through the Lorentz contractions of the three trace families alone:
+  the `(0,2)(1,3)` metric contraction and the Levi-Civita contraction of each of `gluonTrace`,
+  `wTrace` and `hyperchargeTrace` (`isGaugeSector_lorentzContractionEightSpan_eq_traceFamilies`).
+  The Higgs, fermion and Yukawa contributions are as in
+  `mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian`. The
+  generators span; they are not shown to be independent or nonzero. -/
+theorem mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian_traceFamilies
+    (S : Submodule ℂ B) (hS : ∀ g : GaugeGroupI, ∀ y ∈ S, repGauge g y ∈ S)
+    (hSL : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) (x : B) :
+    (x ∈ h.massWeightSubmodule 8 ⊔ S ∧ (∀ g : GaugeGroupI, repGauge g x = x)
+        ∧ ∀ g : SL(2,ℂ), repLorentz g x = x)
+      ↔ ∃ y ∈ S, (∀ g : GaugeGroupI, repGauge g y = y)
+          ∧ (∀ g : SL(2,ℂ), repLorentz g y = y)
+          ∧ x - y ∈ (Submodule.span ℂ
+                {ofComponents h.isGaugeSector.gluonTrace (contractionTensor 1),
+                  ofComponents h.isGaugeSector.gluonTrace (contractionTensor 3)}
+              ⊔ (Submodule.span ℂ {ofComponents h.isGaugeSector.wTrace (contractionTensor 1),
+                  ofComponents h.isGaugeSector.wTrace (contractionTensor 3)}
+                ⊔ Submodule.span ℂ
+                  {ofComponents h.isGaugeSector.hyperchargeTrace (contractionTensor 1),
+                    ofComponents h.isGaugeSector.hyperchargeTrace (contractionTensor 3)}))
+                ⊔ h.isHiggsSector.lorentzContractionEightSpan
+              ⊔ (h.isFermionSector.kineticSpan ⊔ h.yukawaSpan) := by
+  rw [← h.isGaugeSector_lorentzContractionEightSpan_eq_traceFamilies]
+  exact h.mem_massWeightSubmodule_eight_sup_and_gauge_lorentz_invariant_iff_lagrangian S hS hSL x
 
 /-- Below mass dimension two there is nothing at all, and at mass dimension two only the
   Higgs mass term: at every weight from one to seven other than four an element of

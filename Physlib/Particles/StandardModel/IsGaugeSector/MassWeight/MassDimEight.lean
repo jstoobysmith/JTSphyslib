@@ -978,8 +978,11 @@ indices summed, against the integer metric `diag(1,-1,-1,-1)` or the symbol taki
 `1` at `(t, x, y, z)`, with no further normalisation; the shapes are not claimed to carry the
 conventional factors of an action. The last two are kept because nothing in `IsGaugeSector`
 relates the two derivative slots: no symmetry of the derivatives, no Bianchi identity, no
-equation of motion and no quotient by total derivatives. The eight form a spanning family,
-not a basis: none is shown to be nonzero, and no independence among them is claimed.
+equation of motion and no quotient by total derivatives. In a covariant realization the
+hypercharge derivatives do commute and the last two vanish
+(`CovAlgebraRealization.isGaugeSector_lorentzContractionEightSpan_eq_traceFamilies`). The eight
+form a spanning family, not a basis: none is shown to be nonzero, and no independence among them
+is claimed.
 
 -/
 

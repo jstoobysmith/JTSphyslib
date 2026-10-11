@@ -265,6 +265,15 @@ lemma ofComponents_comp_permT_eq_neg (σ : Fin n → Fin n)
   rw [ofComponents_comp_permT]
   exact (Tensor.basis _).ext fun φ => by simp [ofComponents, hT]
 
+/-- A family symmetric under reading its index vectors through `σ` gives a map invariant under
+  `permT σ`. -/
+lemma ofComponents_comp_permT_eq_self (σ : Fin n → Fin n)
+    (h : IsReindexing (fun _ : Fin n => Color.up) (fun _ => Color.up) σ)
+    {T : (Fin n → Fin 1 ⊕ Fin 3) → B} (hT : ∀ d, T (d ∘ σ) = T d) :
+    ofComponents T ∘ₗ permT σ h = ofComponents T := by
+  rw [ofComponents_comp_permT]
+  exact congrArg ofComponents (funext hT)
+
 /-- The map of a family is equivariant exactly when the family obeys the transformation law of
   the components of a tensor with `n` four-vector indices. -/
 lemma isLorentzCovariant_ofComponents_iff {repLorentz : Representation ℂ SL(2,ℂ) B}

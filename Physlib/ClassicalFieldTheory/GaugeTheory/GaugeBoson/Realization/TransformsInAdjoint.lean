@@ -102,6 +102,16 @@ lemma covDerivAdjoint_apply
     (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) (φ : Module.Dual ℝ 𝔤) :
     covDerivAdjoint A F ρ s φ = F (ρ ::ₘ s) φ + bracketFamConv A ρ F s φ := rfl
 
+/-- At a dual vector vanishing on every bracket the derived bracket term drops out and the
+  covariant derivative is the ordinary one, `(∇_ρ F)^φ = ∂_ρ F^φ`. -/
+lemma covDerivAdjoint_apply_of_map_lie {φ : Module.Dual ℝ 𝔤}
+    (hφ : ∀ x y : 𝔤, φ ⁅x, y⁆ = 0)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (ρ : Fin 1 ⊕ Fin 3) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    covDerivAdjoint A F ρ s φ = F (ρ ::ₘ s) φ := by
+  simp [bracketFamConv, Multiset.sum_linearMap_apply, bracketFam_apply_eq_zero_of_map_lie hφ]
+
 /-- The derived bracket family is natural in the algebra. -/
 lemma bracketFamConv_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']
     [IsScalarTower ℝ B' B'] (Φ : B →ₗ[ℝ] B') (hΦ : ∀ b₁ b₂, Φ (b₁ * b₂) = Φ b₁ * Φ b₂)

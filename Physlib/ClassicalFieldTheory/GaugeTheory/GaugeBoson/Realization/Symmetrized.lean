@@ -209,6 +209,32 @@ lemma iteratedCovDerivAdjoint_fieldStrength_map {B' : Type} [Ring B'] [Module �
       from funext fun p => (fieldStrength_map Φ hΦ A μ ν p).symm] at key
   exact LinearMap.congr_fun key φ
 
+/-- At a dual vector vanishing on every bracket, such as the coordinate of an abelian factor,
+  the iterated covariant derivative is the ordinary derivative along the multiset of its
+  directions: no bracket correction survives at any order. -/
+lemma iteratedCovDerivAdjoint_apply_of_map_lie {φ : Module.Dual ℝ 𝔤}
+    (hφ : ∀ x y : 𝔤, φ ⁅x, y⁆ = 0)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (l : List (Fin 1 ⊕ Fin 3)) (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    iteratedCovDerivAdjoint A l F s φ = F (↑l + s) φ := by
+  induction l generalizing s with
+  | nil => simp [iteratedCovDerivAdjoint]
+  | cons ρ l ih =>
+    rw [iteratedCovDerivAdjoint, covDerivAdjoint_apply_of_map_lie hφ, ih, Multiset.add_cons,
+      ← Multiset.cons_coe, Multiset.cons_add]
+
+/-- Hence at such a dual vector the covariant derivatives commute: the iterated covariant
+  derivative depends only on the multiset of its directions. -/
+lemma iteratedCovDerivAdjoint_apply_perm_of_map_lie {φ : Module.Dual ℝ 𝔤}
+    (hφ : ∀ x y : 𝔤, φ ⁅x, y⁆ = 0)
+    (A : Multiset (Fin 1 ⊕ Fin 3) → (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    (F : Multiset (Fin 1 ⊕ Fin 3) → Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
+    {l l' : List (Fin 1 ⊕ Fin 3)} (hl : l.Perm l') (s : Multiset (Fin 1 ⊕ Fin 3)) :
+    iteratedCovDerivAdjoint A l F s φ = iteratedCovDerivAdjoint A l' F s φ := by
+  rw [iteratedCovDerivAdjoint_apply_of_map_lie hφ, iteratedCovDerivAdjoint_apply_of_map_lie hφ,
+    Multiset.coe_eq_coe.2 hl]
+
 variable (A) in
 /-- The derivative symbols `∂_p A_μ^φ` with at most `n` derivatives. -/
 abbrev symbolsLE (n : ℕ) : Set B :=

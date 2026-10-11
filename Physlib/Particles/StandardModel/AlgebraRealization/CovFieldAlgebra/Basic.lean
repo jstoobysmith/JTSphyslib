@@ -85,6 +85,17 @@ lemma covF_swap (h : AlgebraRealization B repJet repLorentz massWeightPoly) {n :
     h.covF l ν μ φ = - h.covF l μ ν φ :=
   h.covDerivFieldStrength_swap (List.ofFn l) μ ν φ
 
+/-- At a dual vector vanishing on every bracket, such as the hypercharge coordinate, the
+  field-strength tower is symmetric in its derivative slots, at every order: there the
+  covariant derivatives are the ordinary ones, which commute. The components along the
+  non-abelian factors have no such symmetry. -/
+lemma covF_comp_perm_of_map_lie (h : AlgebraRealization B repJet repLorentz massWeightPoly)
+    {φ : Module.Dual ℝ GaugeAlgebra} (hφ : ∀ x y : GaugeAlgebra, φ ⁅x, y⁆ = 0) {n : ℕ}
+    (σ : Equiv.Perm (Fin n)) (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    h.covF (l ∘ σ) μ ν φ = h.covF l μ ν φ :=
+  GaugeAlgebraRealization.iteratedCovDerivAdjoint_apply_perm_of_map_lie hφ _ _
+    (σ.ofFn_comp_perm l) 0
+
 /-- The covariant generators of the Standard Model: the field-strength tower, the Higgs
   towers and their conjugates, and the ten fermion towers and their conjugates. -/
 def covGenerators (h : AlgebraRealization B repJet repLorentz massWeightPoly) : Set B :=

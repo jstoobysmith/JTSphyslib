@@ -351,6 +351,17 @@ theorem isGaugeSector : IsGaugeSector B repGauge k.repGauge_mul repLorentz k.rep
   F_antisymm := fun {_n} l μ ν φ =>
     k.map_neg_eq (CovJetAlgebra.isGaugeSector.F_antisymm l μ ν φ)
 
+/-- At a dual vector vanishing on every bracket, such as the hypercharge coordinate, the
+  field-strength tower is symmetric in its derivative slots, at every order: the law of the
+  covariant jet algebra, where those covariant derivatives are ordinary ones, pushed along the
+  defining map. It is not a law of `IsGaugeSector`, and the components along the non-abelian
+  factors have no such symmetry. -/
+lemma covF_comp_perm_of_map_lie {φ : Module.Dual ℝ GaugeAlgebra}
+    (hφ : ∀ x y : GaugeAlgebra, φ ⁅x, y⁆ = 0) {n : ℕ} (σ : Equiv.Perm (Fin n))
+    (l : Fin n → (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3) :
+    k.covF (l ∘ σ) μ ν φ = k.covF l μ ν φ :=
+  congrArg k.toAlgHom (Subtype.ext (AlgebraRealization.id.covF_comp_perm_of_map_lie hφ σ l μ ν))
+
 /-- The fermion sector of a covariant Standard Model. -/
 theorem isFermionSector : IsFermionSector B repGauge k.repGauge_mul repLorentz k.repLorentz_mul
     (fun {_n} i l => k.covD i l) (fun {_n} i l => k.covBarD i l)

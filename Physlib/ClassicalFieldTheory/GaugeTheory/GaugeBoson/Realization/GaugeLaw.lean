@@ -483,6 +483,14 @@ lemma bracketFam_apply_eq_sum (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B)
   simp [tensorBracket_tmul, dualPairEquiv_tmul]
   rw [Finset.sum_comm]
 
+/-- A dual vector vanishing on every bracket of the gauge algebra, such as the coordinate of an
+  abelian factor, vanishes on the bracket of any two families: every structure constant
+  `φ⁅e_j, e_k⁆` it sees is zero. -/
+lemma bracketFam_apply_eq_zero_of_map_lie {φ : Module.Dual ℝ 𝔤}
+    (hφ : ∀ x y : 𝔤, φ ⁅x, y⁆ = 0) (f g : Module.Dual ℝ 𝔤 →ₗ[ℝ] B) :
+    bracketFam f g φ = 0 := by
+  simp [bracketFam_apply_eq_sum, hφ]
+
 /-- The bracket of families is natural in the algebra: a multiplicative linear map carries
   the bracket of two families to the bracket of their images. -/
 lemma bracketFam_map {B' : Type} [Ring B'] [Module ℝ B'] [SMulCommClass ℝ B' B']

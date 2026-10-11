@@ -586,6 +586,14 @@ lemma stdBasis_inr_inr_toU1Value (i : Fin 1) :
   simp only [stdBasis, toU1Value, Basis.prod_apply_inr_snd, u1Basis_apply,
     selfAdjoint.val_one]
 
+/-- The hypercharge coordinate vanishes on every bracket: the `u(1)` factor is abelian, so a
+  bracket has no `u(1)` component. -/
+lemma stdBasis_coord_inr_inr_lie (i : Fin 1) (x y : GaugeAlgebra) :
+    stdBasis.coord (Sum.inr (Sum.inr i)) ⁅x, y⁆ = 0 := by
+  have h : (⁅x, y⁆ : GaugeAlgebra).2.2 = 0 := Subtype.ext (bracket_toU1Value x y)
+  rw [Basis.coord_apply, stdBasis, Basis.prod_repr_inr, Basis.prod_repr_inr, h,
+    LinearEquiv.map_zero, Finsupp.coe_zero, Pi.zero_apply]
+
 /-!
 
 ## G. The adjoint action in the standard basis
