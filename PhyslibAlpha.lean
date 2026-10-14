@@ -70,12 +70,14 @@ public import PhyslibAlpha.CondensedMatter.QuasiLocal.Local
 public import PhyslibAlpha.CondensedMatter.QuasiLocal.Symmetry
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Cube.Basic
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Cube.MandelstamTamm
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.Cube.VolumetricQuantum
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.Basic
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.Eigenstates
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.MandelstamTamm
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.SpeedLimit
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.TimeReversal
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Basic
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.FluctuationAngle
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.LongChainLimit
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.LongChainMonotonicity
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.MandelstamTamm
@@ -84,6 +86,8 @@ public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Unc
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Variances
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Open.Basic
 public import PhyslibAlpha.CondensedMatter.TightBindingChain.Open.Uncertainty
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.VelocityBand.Basic
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.VelocityBand.Width
 public import PhyslibAlpha.Electromagnetism.BoxChargeConservation
 public import PhyslibAlpha.Electromagnetism.TemperedDistributional.WireJunction
 public import PhyslibAlpha.Mathematics.Analysis.Normed.HolderDual
