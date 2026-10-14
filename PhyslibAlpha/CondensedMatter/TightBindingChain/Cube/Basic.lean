@@ -5,7 +5,7 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.ElementalUncertainty
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.UncertaintyRatio
 public import PhyslibAlpha.QuantumMechanics.HilbertSpaces.FiniteTarget.ProductState
 /-!
 

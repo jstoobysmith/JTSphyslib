@@ -5,8 +5,8 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.MandelstamTamm
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.Current.MandelstamTamm
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Basic
 /-!
 
 # The speed limit of the open tight binding chain

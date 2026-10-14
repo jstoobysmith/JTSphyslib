@@ -5,7 +5,7 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.Saturation
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Saturation
 /-!
 
 # The elemental uncertainty of the open tight binding chain

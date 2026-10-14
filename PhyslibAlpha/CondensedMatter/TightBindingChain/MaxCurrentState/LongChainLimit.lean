@@ -5,7 +5,7 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentVariances
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Variances
 public import Mathlib.Analysis.Real.Pi.Bounds
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Sinc
 /-!

@@ -5,7 +5,7 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.LongChainLimit
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.LongChainLimit
 public import Mathlib.Analysis.Real.Pi.Bounds
 /-!
 

@@ -5,7 +5,7 @@ Authors: Eduardo Nava-Hernandez
 -/
 module
 
-public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState
+public import PhyslibAlpha.CondensedMatter.TightBindingChain.MaxCurrentState.Basic
 /-!
 
 # Saturation of the uncertainty relation in the maximal current state
