@@ -397,7 +397,6 @@ public import PhyslibAlpha.Particles.StandardModel.Realization.HiggsCov.MassWeig
 public import PhyslibAlpha.Particles.StandardModel.Realization.HiggsCov.MassWeight.MassDimLTEight
 public import PhyslibAlpha.Particles.StandardModel.Realization.MassWeight.Basic
 public import PhyslibAlpha.Particles.StandardModel.Realization.MassWeight.Filtration
-public import PhyslibAlpha.Particles.StandardModel.Solution
 public import PhyslibAlpha.ProbabilisticTheory.Algebra.Alternative
 public import PhyslibAlpha.ProbabilisticTheory.Algebra.Derivation
 public import PhyslibAlpha.ProbabilisticTheory.Algebra.NuclearInvolution
