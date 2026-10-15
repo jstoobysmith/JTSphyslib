@@ -20,45 +20,23 @@ covariant-derivative theory. Everything the general theory needs is therefore st
 
 ## Requirements
 
-A gauge group is available: the concrete Standard Model group SU(3) × SU(2) × U(1), with its
-projections and its central discrete subgroup. [1]
+The library currently covers two pieces of gauge theory. For the Standard Model, it defines the
+concrete gauge group SU(3) × SU(2) × U(1), its projections and its central discrete subgroup. [1]
+For the abelian case, the electromagnetic potential serves as a spacetime-valued Lorentz-vector
+gauge field, and its field strength is built from that potential. [2][3] Shifting the potential
+by the gradient of a scalar defines a gauge transformation, with the pure-gauge potential given
+by shifting zero. [4] These transformations leave the field strength invariant; in particular,
+pure-gauge configurations have vanishing curvature, a result that depends on the metric
+contraction used to define the field strength. [5][6] The transformations compose, with the
+trivial shift as identity and successive shifts adding, and they are compatible with the Lorentz
+group action. [7][8]
 
-The gauge field in the abelian case is the electromagnetic potential, a spacetime-valued
-Lorentz vector. [2]
-
-The curvature of the abelian gauge field, its field strength, is built from the potential. [3]
-
-A gauge transformation of the abelian potential shifts it by the gradient of a scalar, and the
-pure-gauge potential is the shift of zero. [4]
-
-The field strength is invariant under abelian gauge transformations. [5]
-
-Pure-gauge configurations have vanishing curvature, while the bare gradient does not — which is
-why the metric contraction is needed. [6]
-
-Gauge transformations compose: the trivial shift acts as the identity, and successive shifts
-add. [7]
-
-Gauge transformations are compatible with the action of the Lorentz group. [8]
-
-An arbitrary Lie group will serve as the structure group, in place of the Standard Model
-group. [planned]
-
-A gauge field for a general, non-abelian structure group will be defined, valued in the Lie
-algebra of that group. [planned]
-
-The gauge-covariant derivative acting on matter fields will be defined, with its
-transformation law. [planned]
-
-The non-abelian field strength, the Yang–Mills curvature, will be defined, with its covariant
-transformation. [planned]
-
-The Yang–Mills action and the field equations it gives rise to will be defined. [planned]
-
-Parallel transport, Wilson lines and loops, and the holonomy of a connection will be
-defined. [planned]
-
-Gauge fields will be formulated as connections on a principal bundle. [planned]
+The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the
+structure group and define a gauge field valued in its Lie algebra. [planned] It will also define
+the gauge-covariant derivative on matter fields and its transformation law, along with the
+Yang–Mills curvature and its covariant transformation. [planned] The Yang–Mills action and its
+field equations, parallel transport and holonomy, and a formulation of gauge fields as
+connections on principal bundles are also planned. [planned]
 
 ## Further reading
 
