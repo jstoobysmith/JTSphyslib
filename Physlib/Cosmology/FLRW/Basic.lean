@@ -6,7 +6,7 @@ Authors: Luis Gabriel C. Bariuan, Joseph Tooby-Smith
 module
 
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.DerivHyp
-public import Physlib.Meta.Linters.Sorry
+public import Physlib.Meta.Informal.Basic
 public import Physlib.Meta.TODO.Basic
 public import Physlib.SpaceAndTime.Time.Derivatives
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
@@ -96,9 +96,12 @@ end SpatialGeometry
 
 Semiformal implementation note: It is possible that we should restrict
 `a(t)` to be smooth or at least twice differentiable.
+
+Formal type: Type
 -/
-@[sorryful]
-def FLRW : Type := sorry
+informal_definition FLRW where
+  deps := [``SpatialGeometry]
+  tag := "COS-FLRW"
 
 TODO "Replace the placeholder `FLRW` type with a concrete structure bundling a positive
   scale factor `a : Time → ℝ` (smooth, or at least twice differentiable) together with an
