@@ -35,7 +35,7 @@ This is a matrix Lie algebra, so the bracket is given by the commutator of matri
 
 Note here that `JetGaugeAlgebra` is a module over `ℝ` not `ℂ` or `SpaceTimeAlgebra`.
 
-On this Lie algebra define a prefered basis, `basis`, indexed by
+On this Lie algebra define a preferred basis, `basis`, indexed by
 `basisIndex × Multiset (Fin 1 ⊕ Fin 3)`.
 Here `basisIndex` is the sum `Fin 8 ⊕ Fin 3 ⊕ Fin 1`. The first factor
 corresponds to the Gell-Mann matrices which form a basis of `su(3)`,
@@ -43,7 +43,7 @@ the second factor corresponds to the Pauli matrices which form a basis of `su(2)
 and the third factor corresponds to the identity matrix which forms a basis of `u(1)`.
 
 We let `structuralConstant` (typically called `f`) be the structure constants of the Lie algebra
-with respect to this prefered basis, so that
+with respect to this preferred basis, so that
 ```
   [basis i, basis j] = i * ∑ k, structuralConstant i j k • basis k
 ```

@@ -198,16 +198,16 @@ off from its entries; they coincide with the trace pairings
 -/
 
 /-- The entries of a hermitian matrix are conjugate-symmetric. -/
-lemma entry_symm_of_star_eq {n : ℕ} {M : Matrix (Fin n) (Fin n) ℂ} (hsa : star M = M)
+lemma entry_symm_of_star_eq {n : ℕ} {M : Matrix (Fin n) (Fin n) ℂ} (hself : star M = M)
     (i j : Fin n) : M j i = (starRingEnd ℂ) (M i j) := by
-  conv_lhs => rw [← hsa]
+  conv_lhs => rw [← hself]
   rw [Matrix.star_apply]
   rfl
 
 /-- The diagonal entries of a hermitian matrix are real. -/
-lemma diag_re_of_star_eq {n : ℕ} {M : Matrix (Fin n) (Fin n) ℂ} (hsa : star M = M)
+lemma diag_re_of_star_eq {n : ℕ} {M : Matrix (Fin n) (Fin n) ℂ} (hself : star M = M)
     (i : Fin n) : M i i = ((M i i).re : ℂ) :=
-  (Complex.conj_eq_iff_re.mp (entry_symm_of_star_eq hsa i i).symm).symm
+  (Complex.conj_eq_iff_re.mp (entry_symm_of_star_eq hself i i).symm).symm
 
 /-- The coordinates of a matrix in the Gell-Mann basis, read off from its entries. -/
 def gellMannCoeff (M : Matrix (Fin 3) (Fin 3) ℂ) : Fin 8 → ℝ
@@ -230,10 +230,10 @@ def pauliCoeff (M : Matrix (Fin 2) (Fin 2) ℂ) : Fin 3 → ℝ
 /-- A traceless hermitian `3 × 3` matrix is the combination of the Gell-Mann matrices
   with its `gellMannCoeff` coordinates. -/
 lemma eq_sum_gellMannCoeff_smul {M : Matrix (Fin 3) (Fin 3) ℂ}
-    (hsa : star M = M) (htr : M.trace = 0) :
+    (hself : star M = M) (htr : M.trace = 0) :
     M = ∑ k, gellMannCoeff M k • gellMannMatrix k := by
-  have hherm := entry_symm_of_star_eq hsa
-  have hdiag := diag_re_of_star_eq hsa
+  have hherm := entry_symm_of_star_eq hself
+  have hdiag := diag_re_of_star_eq hself
   have htr3 : M 2 2 = -(M 0 0 + M 1 1) := by
     rw [Matrix.trace_fin_three] at htr
     linear_combination htr
@@ -297,10 +297,10 @@ lemma eq_sum_gellMannCoeff_smul {M : Matrix (Fin 3) (Fin 3) ℂ}
 /-- A traceless hermitian `2 × 2` matrix is the combination of the Pauli matrices
   `σ1`, `σ2`, `σ3` with its `pauliCoeff` coordinates. -/
 lemma eq_sum_pauliCoeff_smul {M : Matrix (Fin 2) (Fin 2) ℂ}
-    (hsa : star M = M) (htr : M.trace = 0) :
+    (hself : star M = M) (htr : M.trace = 0) :
     M = ∑ i, pauliCoeff M i • pauliMatrix (Sum.inr i) := by
-  have hherm := entry_symm_of_star_eq hsa
-  have hdiag := diag_re_of_star_eq hsa
+  have hherm := entry_symm_of_star_eq hself
+  have hdiag := diag_re_of_star_eq hself
   have htr2 : M 1 1 = -M 0 0 := by
     rw [Matrix.trace_fin_two] at htr
     linear_combination htr
@@ -325,10 +325,10 @@ lemma eq_sum_pauliCoeff_smul {M : Matrix (Fin 2) (Fin 2) ℂ}
 /-- The Gell-Mann coordinates of a traceless hermitian matrix are its trace pairings
   with the Gell-Mann matrices. -/
 lemma gellMannCoeff_eq_trace {M : Matrix (Fin 3) (Fin 3) ℂ}
-    (hsa : star M = M) (htr : M.trace = 0) (k : Fin 8) :
+    (hself : star M = M) (htr : M.trace = 0) (k : Fin 8) :
     gellMannCoeff M k = 2⁻¹ * (Matrix.trace (gellMannMatrix k * M)).re := by
-  have hherm := entry_symm_of_star_eq hsa
-  have hdiag := diag_re_of_star_eq hsa
+  have hherm := entry_symm_of_star_eq hself
+  have hdiag := diag_re_of_star_eq hself
   have htr3 : M 2 2 = -(M 0 0 + M 1 1) := by
     rw [Matrix.trace_fin_three] at htr
     linear_combination htr
@@ -398,9 +398,9 @@ lemma gellMannCoeff_eq_trace {M : Matrix (Fin 3) (Fin 3) ℂ}
 /-- The Pauli coordinates of a traceless hermitian matrix are its trace pairings with
   the Pauli matrices `σ1`, `σ2`, `σ3`. -/
 lemma pauliCoeff_eq_trace {M : Matrix (Fin 2) (Fin 2) ℂ}
-    (hsa : star M = M) (htr : M.trace = 0) (i : Fin 3) :
+    (hself : star M = M) (htr : M.trace = 0) (i : Fin 3) :
     pauliCoeff M i = 2⁻¹ * (Matrix.trace (pauliMatrix (Sum.inr i) * M)).re := by
-  have hherm := entry_symm_of_star_eq hsa
+  have hherm := entry_symm_of_star_eq hself
   have htr2 : M 1 1 = -M 0 0 := by
     rw [Matrix.trace_fin_two] at htr
     linear_combination htr
