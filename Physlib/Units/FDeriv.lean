@@ -34,20 +34,9 @@ variable {M1 M2 : Type} [NormedAddCommGroup M1] [NormedSpace ℝ M1]
     [SMulCommClass ℝ ℝ M2] [ContinuousConstSMul ℝ M2]
     [HasDim M2]
 
-lemma fderiv_apply_scaleUnit (u1 u2 : LTMCTUnitChoices) (x dm : M1)
-    (f : M1 → M2) (hf : IsDimensionallyCorrect f) (f_diff : Differentiable ℝ f) :
-    fderiv ℝ f (scaleUnit u2 u1 x) dm =
-    u2.dimScale u1 (dim M2) • u1.dimScale u2 (dim M1) • fderiv ℝ f x dm := by
-  conv_lhs => rw [← hf u2 u1]
-  change (fderiv ℝ ((u2.dimScale u1 (dim M2)).1 • fun mx => f
-      ((u1.dimScale u2 (dim M1)).1 • mx)) ((u2.dimScale u1 (dim M1)).1 • x)) dm = _
-  rw [fderiv_const_smul (by fun_prop), fderiv_comp_smul]
-  simp [smul_smul]
-  rfl
-
 open ContinuousLinearUnitDependent in
 /-- If a function is dimensionally valid then so is it's derivative. -/
-lemma fderiv_isDimensionallyCorrect (f : M1 → M2) (hf : IsDimensionallyCorrect f)
+lemma isDimensionallyCorrect_fderiv (f : M1 → M2) (hf : IsDimensionallyCorrect f)
     (f_diff : Differentiable ℝ f) :
     IsDimensionallyCorrect (fderiv ℝ f) := by
   simp only [isDimensionallyCorrect_fun_iff]
@@ -63,7 +52,7 @@ lemma fderiv_isDimensionallyCorrect (f : M1 → M2) (hf : IsDimensionallyCorrect
 
   This result also shows that dimensional correctness does depend on what
   quantities are considered dimensionful. -/
-lemma fderiv_dimension_const_direction (dm : M1) (f : M1 → M2) (hf : IsDimensionallyCorrect f)
+lemma fderiv_dimension_const_direction (dx : M1) (f : M1 → M2) (hf : IsDimensionallyCorrect f)
     (f_diff : Differentiable ℝ f) :
     IsDimensionallyCorrect (fun x (v : WithDim (dim M2 * (dim M1)⁻¹) M2) =>
       fderiv ℝ f x dm = v.1) := by
