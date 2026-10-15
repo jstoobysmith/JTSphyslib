@@ -1,3 +1,7 @@
+<!-- physlib-pr-summary -->
+<!-- The marker above is how the `PRMessage` workflow finds this comment again, so
+that a push to the PR updates it instead of leaving a second one. Keep it first. -->
+
 Thank you for this pull-request (PR). If this is your first PR, welcome to the community!
 
 <details>

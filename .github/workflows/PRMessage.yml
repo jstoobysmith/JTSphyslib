@@ -6,6 +6,11 @@ name: PR Comment
 # - "Summary of your PR for reviewers", made by `lake exe pr_summary`, which substitutes the
 #   `<!-- PR_SUMMARY -->` marker of that file.
 #
+# Every push to the pull-request remakes the comment, so that the summary is of the commits which
+# are now there. The comment left by the previous run is updated in place rather than replaced by
+# a second one: it is found by the `<!-- physlib-pr-summary -->` marker which is the first line of
+# `.github/PRMessage.md`.
+#
 # `pr_summary` is built from `master`, and only reads the diff of the branch of the pull-request,
 # so no code of the pull-request is run.
 #
@@ -20,7 +25,9 @@ on:
         required: true
         type: string
   pull_request_target:
-    types: [opened]
+    # `synchronize` is a push to the branch of the pull-request, which is what makes the summary
+    # of the previous run out of date.
+    types: [opened, synchronize]
   push:
     paths:
       - scripts/github/pr_summary.lean
@@ -29,6 +36,16 @@ on:
     paths:
       - scripts/github/pr_summary.lean
       - .github/workflows/PRMessage.yml
+
+# A push which lands while the summary of the previous one is still being made cancels it, so
+# that the comment ends up holding the summary of the last commit and not of an earlier one.
+# The event is part of the group because a pull-request which changes the script triggers both
+# `pull_request` and `pull_request_target`, and those two runs must not cancel each other.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{
+    github.event.pull_request.number || inputs.pr || github.ref }}
+  cancel-in-progress: true
 
 # Limit permissions for GITHUB_TOKEN for the entire workflow
 permissions:
@@ -130,6 +147,9 @@ jobs:
             printf '*The summary of this PR could not be made; see the logs of this workflow.*\n' \
               > "${summary}"
           fi
+          # The comment is remade on every push, so say which commit this summary is of.
+          printf '\n*Summary of commit `%s`, remade whenever a commit is pushed.*\n' \
+            "${HEAD:0:7}" >> "${summary}"
           cat "${summary}"
 
       - name: Assemble the comment
@@ -142,10 +162,33 @@ jobs:
             { print }' tools/.github/PRMessage.md > "${RUNNER_TEMP}/comment.md"
           cat "${RUNNER_TEMP}/comment.md"
 
-      - name: Comment a pull_request
+      - name: Comment a pull_request, or update the comment of the previous run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}
+          # The first line of `.github/PRMessage.md`, and so of the comment this workflow leaves.
+          MARKER: <!-- physlib-pr-summary -->
         run: |
-          gh pr comment "${PR}" --repo "${GITHUB_REPOSITORY}" \
-            --body-file "${RUNNER_TEMP}/comment.md"
+          # The comments are fetched in a step of their own, so that `set -e` stops here if the
+          # API call fails: an empty answer would otherwise read as "no comment yet" and leave a
+          # second one.
+          comments="${RUNNER_TEMP}/comments.json"
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" > "${comments}"
+          # Only a comment of the Actions bot is updated, so a comment which somebody else
+          # happened to open with the marker is left alone. The oldest match wins, so that a
+          # comment which was somehow left twice does not leave the two taking turns.
+          id=$(jq -r --arg marker "${MARKER}" \
+            '.[] | select(.user.login == "github-actions[bot]")
+                 | select(.body | startswith($marker)) | .id' "${comments}" | head -1)
+          if [ -n "${id}" ]
+          then
+            printf 'Updating comment %s.\n' "${id}"
+            jq -Rs '{body: .}' "${RUNNER_TEMP}/comment.md" > "${RUNNER_TEMP}/comment.json"
+            gh api --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${id}" \
+              --input "${RUNNER_TEMP}/comment.json"
+          else
+            printf 'No comment of this workflow to update; leaving a new one.\n'
+            gh pr comment "${PR}" --repo "${GITHUB_REPOSITORY}" \
+              --body-file "${RUNNER_TEMP}/comment.md"
+          fi

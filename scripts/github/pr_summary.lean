@@ -16,6 +16,8 @@ it adds, removes, moves or restates.
 `lake exe pr_summary` prints, as Markdown, a summary of the changes a pull-request makes. It is
 meant to be read by a reviewer before they look at the diff, and is posted as part of the comment
 the [`PRMessage`](../../.github/workflows/PRMessage.yml) workflow leaves on a new pull-request.
+That workflow runs again on every push to the pull-request and updates its comment in place, so
+the summary is always of the commits which are there now.
 
 The summary has two parts:
 

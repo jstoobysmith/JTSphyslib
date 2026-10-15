@@ -102,10 +102,13 @@ This linter may need running a number of times.
 - `lake exe pr_summary` : Summarises a pull request for its reviewers, as Markdown: the files it
   adds, removes, renames or modifies, with the number of lines added to and removed from each, and
   the declarations it adds, removes, moves between files or restates. The
-  [`PRMessage`](../.github/workflows/PRMessage.yml) workflow runs it on every new PR and posts the
-  result, under *Summary of your PR for reviewers*, in the comment it leaves; the rest of that
-  comment is [`.github/PRMessage.md`](../.github/PRMessage.md), whose `<!-- PR_SUMMARY -->` marker
-  the summary replaces.
+  [`PRMessage`](../.github/workflows/PRMessage.yml) workflow runs it on every new PR, and again on
+  every push to one, and posts the result, under *Summary of your PR for reviewers*, in the
+  comment it leaves; the rest of that comment is
+  [`.github/PRMessage.md`](../.github/PRMessage.md), whose `<!-- PR_SUMMARY -->` marker the
+  summary replaces. A push updates that comment in place rather than leaving a second one: the
+  workflow finds it again by the `<!-- physlib-pr-summary -->` marker which is its first line, so
+  that marker must stay first.
 
   Each file and each declaration is a link into `leanprover-community/physlib`, at the line it
   is on, in whichever of the two revisions it belongs to, so a reviewer can jump from the table
