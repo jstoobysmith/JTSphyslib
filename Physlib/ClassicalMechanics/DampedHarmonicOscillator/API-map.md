@@ -1,72 +1,41 @@
 # Damped harmonic oscillator
 
-A damped harmonic oscillator is a mass under a restoring force proportional to its displacement
-and a damping force proportional to its velocity, so that m ẍ + γ ẋ + k x = 0. Its data is that
-of the undamped oscillator — a positive mass and spring constant, with the natural frequency
-and energy that come with them — together with a nonnegative damping coefficient. Position and
-velocity live in the one-dimensional Euclidean space, and a trajectory is a map from time into
-it.
+## Abstract (Alpha)
 
-The basic module gives the equation of motion, the force and its equivalence with Newton's
-second law, and the rate at which mechanical energy is dissipated along a solution. The sign of
-the discriminant γ² − 4 m k selects one of three regimes — underdamped, critically damped,
-overdamped — each with its own decay rate and angular frequency; with no damping at all the
-system is the undamped oscillator again. The Caldirola–Kanai Lagrangian, the undamped
-Lagrangian scaled by a growing exponential, has a variational gradient that vanishes exactly on
-solutions of the equation of motion.
+A damped harmonic oscillator is a mass under a restoring force proportional to its displacement and
+a damping force proportional to its velocity, so that m ẍ + γ ẋ + k x = 0. Its data is that of the
+undamped oscillator — a positive mass and spring constant — together with a nonnegative damping
+coefficient, and position and velocity live in one-dimensional Euclidean space, with a trajectory a
+map from time into it. The sign of the discriminant γ² − 4 m k splits the motion into underdamped,
+critically damped and overdamped regimes, each solved in closed form, and the Caldirola–Kanai
+Lagrangian gives the dissipative dynamics a variational description.
 
-The solution module fixes the initial conditions and gives the closed-form trajectory for each
-regime — trigonometric, polynomial or hyperbolic, each multiplied by an exponential decay — and
-proves that it solves the equation of motion.
+## Content (Alpha)
 
-## Built on
+A damped harmonic oscillator {1}{2} is specified by its mass, its spring constant and its damping
+coefficient. [1] Its equation of motion, for a trajectory from time {3} into one-dimensional
+Euclidean space, is m ẍ + γ ẋ + k x = 0. [2] The force on the mass is −k x − γ ẋ, and the equation
+of motion is Newton's second law for that force. [3] With no damping the system is the undamped
+harmonic oscillator, and the two equations of motion agree. [6]
 
-- Harmonic oscillator — `Physlib/ClassicalMechanics/HarmonicOscillator`
-- Time — `Physlib/SpaceAndTime/Time`
+The kinetic energy is ½ m ‖ẋ‖², that of the underlying undamped oscillator. [10] The potential
+energy is ½ k ‖x‖². [11] Along a solution the mechanical energy dissipates at the rate −γ ‖ẋ‖², and
+strictly decreases whenever the velocity is nonzero and the damping is positive. [4]
 
-## Requirements
+The discriminant γ² − 4 m k classifies the motion: it is underdamped when the discriminant is
+negative, critically damped when it vanishes, and overdamped when it is positive, and each regime
+has a decay rate γ/(2m) and an angular frequency. [5] The initial conditions of the oscillator are
+an initial position and an initial velocity. [7] The trajectory with those initial conditions has a
+closed form appropriate to the damping regime — trigonometric, polynomial or hyperbolic, each
+multiplied by an exponential decay. [8] That trajectory satisfies the equation of motion. [9] It is
+the unique solution of the equation of motion with the given initial conditions. [14]
 
-The key data structure is defined: the mass, the spring constant and the damping coefficient of
-a damped harmonic oscillator. [1]
+The Caldirola–Kanai Lagrangian is the undamped Lagrangian multiplied by the growing exponential
+exp(γ t / m). [12] Its variational gradient reduces to the Euler–Lagrange equations, and vanishes
+exactly on solutions of the equation of motion. [13] This Lagrangian goes back to Caldirola {4} and
+Kanai {5}.
 
-The equation of motion m ẍ + γ ẋ + k x = 0 is defined. [2]
-
-The force is defined, and the equation of motion is equivalent to Newton's second law. [3]
-
-Along a solution the mechanical energy dissipates at the rate −γ ‖ẋ‖², and strictly decreases
-whenever the velocity is nonzero and the damping is positive. [4]
-
-The underdamped, critically damped and overdamped regimes are classified by the discriminant
-γ² − 4 m k, and the decay rate and the angular frequency of each regime are defined. [5]
-
-With no damping the system reduces to the undamped harmonic oscillator, the two equations of
-motion agreeing. [6]
-
-The initial conditions of a damped harmonic oscillator are defined. [7]
-
-The trajectory is defined, in the closed form appropriate to the damping regime. [8]
-
-That trajectory satisfies the equation of motion. [9]
-
-The kinetic energy is defined. [10]
-
-The potential energy is defined. [11]
-
-The Lagrangian is defined. [12]
-
-The variational gradient of the Lagrangian simplifies to the Euler–Lagrange equations. [13]
-
-The trajectory is the unique solution of the equation of motion with the given initial
-conditions. [14]
-
-## Further reading
-
-- Landau & Lifshitz, Mechanics, page 76, section 25.
-- Goldstein, Classical Mechanics, Chapter 2.
-- Caldirola, Nuovo Cimento 18 (1941) 393.
-- Kanai, Progress of Theoretical Physics 3 (1948) 440.
-
-## Lean declarations
+## Lean References
 
 1. Physlib/ClassicalMechanics/DampedHarmonicOscillator/Basic.lean — `DampedHarmonicOscillator`
 2. Physlib/ClassicalMechanics/DampedHarmonicOscillator/Basic.lean — `EquationOfMotion`
@@ -88,3 +57,11 @@ conditions. [14]
    `gradLagrangian_eq_force`, `equationOfMotion_iff_gradLagrangian_zero`
 14. Physlib/ClassicalMechanics/DampedHarmonicOscillator/Solution.lean — `equationOfMotion_unique`,
    `trajectories_unique`
+
+## References
+
+1. Landau & Lifshitz, *Mechanics*, page 76, Section 25.
+2. Goldstein, *Classical Mechanics*, Chapter 2.
+3. Time API map — Physlib/SpaceAndTime/Time/API-map.md
+4. Caldirola, *Nuovo Cimento* 18 (1941) 393.
+5. Kanai, *Progress of Theoretical Physics* 3 (1948) 440.

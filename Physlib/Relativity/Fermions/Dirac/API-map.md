@@ -1,93 +1,72 @@
 # Dirac Fermions
 
-A Dirac fermion is the four-component spinor built from a left-handed Weyl fermion together
-with a dual right-handed one. It is a complex vector space with a four-element chiral basis,
-carrying the representation of SL(2, ℂ) induced from its two Weyl factors.
+## Abstract (Alpha)
 
-The gamma endomorphisms are defined directly in the chiral basis, and satisfy the Clifford
-relations for the Minkowski signature (+,−,−,−). Their chirality operator gives complementary
-left and right chiral projectors. A change of coordinates derives the concrete gamma matrices
-of the Dirac representation from those endomorphisms; they generate the Dirac algebra and
-realize it as a quotient of the Clifford algebra of the Minkowski quadratic form.
+A Dirac fermion is the four-component spinor built from a left-handed Weyl fermion together with a
+dual right-handed one: it is a complex vector space with a four-element chiral basis, carrying the
+representation of SL(2, ℂ) induced from its two Weyl factors, and so of the Lorentz group through
+its double cover. The gamma endomorphisms act in the chiral basis and satisfy the Clifford relations
+for the Minkowski signature (+,−,−,−); their chirality operator gives complementary left and right
+chiral projectors, and a change of coordinates turns them into the concrete gamma matrices of the
+Dirac representation, which generate the Dirac algebra and realize it as a quotient of the Clifford
+algebra of the Minkowski quadratic form. This is the setting for the Dirac equation, the Dirac
+bilinears and the fermionic terms of the Standard Model Lagrangian.
 
-Completing this API is what will allow the Dirac equation, the Dirac bilinears, and the
-fermionic terms of the Standard Model Lagrangian to be stated.
+## Content (Alpha)
 
-## Built on
+### Dirac spinors
 
-- Weyl Fermions — `Physlib/Relativity/Fermions/Weyl`
-- Lorentz Group — `Physlib/Relativity/LorentzGroup`
+A Dirac fermion is a pair consisting of a left-handed Weyl fermion and a dual right-handed Weyl
+fermion {1}. [1] Dirac fermions form a complex vector space, with addition and scalar
+multiplication acting on the two Weyl components. [2] Decomposing a Dirac fermion into its Weyl
+components is a complex linear equivalence. [3] The space has a four-element chiral basis, whose
+elements are the basis elements of the two Weyl components. [4] SL(2, ℂ), the double cover of the
+Lorentz group {2}, acts on Dirac fermions componentwise on the two Weyl factors. [5] This
+representation is equivalent to the product of the representations on the Weyl components. [6]
+The two-component treatment of Dirac fermions follows Dreiner, Haber and Martin {3}.
 
-## Requirements
-
-The key data structure is defined: a Dirac fermion, a left-handed Weyl fermion together with a
-dual right-handed one. [1]
-
-A Dirac fermion is a complex vector space, inheriting the structure of its two Weyl
-components. [2]
-
-Decomposing a Dirac fermion into its Weyl components is a complex linear equivalence. [3]
-
-The four-element chiral basis is defined, and its elements are identified with the Weyl basis
-elements. [4]
-
-Dirac fermions carry a representation of SL(2, ℂ), acting componentwise on the two Weyl
-factors. [5]
-
-That representation is equivalent to the product of the representations on the Weyl
-components. [6]
-
-The gamma matrices of the Dirac representation are derived from the gamma endomorphisms,
-together with the chirality matrix and the set they form. [7]
-
-Those gamma matrices satisfy the Clifford anticommutator against the Minkowski metric, in the
-signature (+,−,−,−). [8]
-
-The Dirac slash of a Lorentz vector is defined in the Dirac representation, contracting the
-lowered vector coordinates with the gamma matrices; it is real linear, and extends to products
-of slash factors. [9]
-
-The Dirac algebra, generated over the reals by the Dirac representations of the gamma
-endomorphisms, is defined, and contains each generator. [10]
-
-The Minkowski quadratic form is defined, and the induced algebra map from its Clifford algebra
-onto the Dirac algebra is surjective. [11]
-
-That map will be shown to be an isomorphism. It is blocked on injectivity, which needs
-dimension theory, and is recorded as a TODO in the source. [planned]
+### Gamma endomorphisms and chirality
 
 Clifford multiplication is a real linear map from Lorentz vectors to complex linear
-endomorphisms of the Dirac fermions, using the chiral basis and the library's Pauli-matrix
-conventions; the upper-index gamma components are derived from it on the Lorentz basis. [12]
+endomorphisms of the Dirac fermions, written in the chiral basis with the library's Pauli-matrix
+conventions; on the Lorentz basis it gives the upper-index gamma components γ^μ. [12] For any two
+Lorentz vectors v and w, the anticommutator of their Clifford products is 2⟨v, w⟩ times the
+identity, where ⟨v, w⟩ is the Minkowski product; the component relations
+{γ^μ, γ^ν} = 2η^{μν}, the squares of the γ^μ and the anticommutation of distinct γ^μ follow, in
+the signature (+,−,−,−). [13]
 
-Clifford multiplication satisfies the anticommutator for arbitrary Lorentz vectors and their
-Minkowski product, from which the component relations, the squares and the anticommutation for
-distinct indices follow in the signature (+,−,−,−). [13]
+The chirality endomorphism γ⁵ has chiral matrix diag(−1,−1,1,1), squares to the identity, and
+anticommutes with every gamma endomorphism. [14] The left and right chiral projectors
+(1 − γ⁵)/2 and (1 + γ⁵)/2 have the corresponding diagonal matrices, are idempotent and mutually
+orthogonal, and sum to the identity. [15] The chiral projectors are Lorentz equivariant.
+[planned]
 
-The chirality endomorphism is defined, has chiral matrix diag(−1,−1,1,1), squares to the
-identity, and anticommutes with every gamma endomorphism. [14]
+### The Dirac representation
 
-The left and right chiral projectors have the corresponding diagonal matrices, are idempotent
-and orthogonal, and sum to the identity. [15]
+An algebra equivalence converts endomorphisms of the Dirac fermions into 4 × 4 matrices in the
+Dirac representation, with an explicit change-of-coordinates formula from the chiral basis. [16]
+Under it the gamma endomorphisms become the gamma matrices γ⁰, γ¹, γ², γ³ of the Dirac
+representation, alongside the chirality matrix γ⁵ and the set the gamma matrices form. [7] These
+matrices satisfy the Clifford anticommutator against the Minkowski metric in the signature
+(+,−,−,−). [8]
 
-The chiral projectors will be shown to be Lorentz equivariant. [planned]
+The Dirac slash k̸ of a Lorentz vector k is its Clifford multiplication in the Dirac
+representation, contracting the lowered coordinates of k with the gamma matrices. [9] It is real
+linear in k, and extends to ordered products of slash factors. [9]
 
-An algebra equivalence converts Dirac endomorphisms into the Dirac representation, with an
-explicit change-of-coordinates formula from the chiral basis. [16]
+The Dirac algebra is the real subalgebra generated by the Dirac representations of the gamma
+endomorphisms, and it contains each generator. [10] The Minkowski quadratic form induces an
+algebra map from its Clifford algebra onto the Dirac algebra, and this map is surjective. [11]
+The map is an isomorphism, its injectivity resting on dimension theory. [planned]
 
-The Dirac adjoint of a Dirac fermion will be defined. [planned]
+### Bilinears and field equations
 
-The Dirac bilinears will be defined, with their behaviour under the action of SL(2, ℂ). [planned]
+A Dirac fermion ψ has a Dirac adjoint ψ̄. [planned] The Dirac bilinears ψ̄Γψ have definite
+transformation behaviour under SL(2, ℂ). [planned] A spinor field on spacetime is subject to the
+Dirac equation. [planned] A Dirac fermion has a charge conjugate, and the Majorana condition
+identifies a fermion with its charge conjugate. [planned]
 
-The Dirac equation will be stated for a spinor field on spacetime. [planned]
-
-The charge conjugate of a Dirac fermion, and the Majorana condition, will be defined. [planned]
-
-## Further reading
-
-- Dreiner, Haber and Martin, Two-component spinor techniques and Feynman rules for quantum field theory and supersymmetry, Phys. Rept. 494 (2010) 1-196. https://arxiv.org/abs/0812.1594 (Dirac fermions are treated on page 197 of the arXiv version)
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Relativity/Fermions/Dirac/Basic.lean — `Dirac`
 2. Physlib/Relativity/Fermions/Dirac/Basic.lean — `AddCommGroup Dirac`, `Module ℂ Dirac`,
@@ -124,3 +103,11 @@ The charge conjugate of a Dirac fermion, and the Majorana condition, will be def
    `rightChiralProjector_mul_leftChiralProjector`,
    `leftChiralProjector_add_rightChiralProjector`
 16. Physlib/Relativity/Fermions/Dirac/Basic.lean — `endEquivMatrix`, `endEquivMatrix_apply`
+
+## References
+
+1. Weyl Fermions API map — Physlib/Relativity/Fermions/Weyl/API-map.md
+2. Lorentz Group API map — Physlib/Relativity/LorentzGroup/API-map.md
+3. H. K. Dreiner, H. E. Haber and S. P. Martin, *Two-component spinor techniques and Feynman rules
+   for quantum field theory and supersymmetry*, Phys. Rept. 494 (2010) 1–196, arXiv:0812.1594,
+   https://arxiv.org/abs/0812.1594 (Dirac fermions are treated on page 197 of the arXiv version).

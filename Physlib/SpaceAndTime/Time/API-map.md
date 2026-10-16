@@ -1,70 +1,57 @@
 # Time
 
+## Abstract (Alpha)
+
 An instant of time is modelled by a single real number, read against an arbitrary but fixed
-choice of unit and orientation. Nothing in the API fixes that choice, so a statement about time
-has to hold whichever unit and whichever direction of time is picked.
+choice of unit and orientation, so that a statement about time has to hold whichever unit and
+whichever direction of time is picked. Instants form an affine space over the reals with no
+distinguished present moment; choosing the implicit origin turns it into the one-dimensional real
+inner-product space that non-relativistic physics usually works with, carrying the norm, the inner
+product, the order and the volume measure. On top of this sit the derivative of a function of
+time, for targets that are normed spaces and for targets that are manifolds, time as a bare
+oriented manifold, and the choices of time unit, from seconds up to weeks.
 
-Instants form an affine space over the reals: any two of them determine an elapsed time, and
-none of them is canonically zero — there is no distinguished present moment. Choosing the
-implicit origin, the instant whose real number is zero, turns that affine space into the
-one-dimensional real inner-product space that non-relativistic physics usually works with, and
-that is where the norm, the inner product, the order and the volume measure live.
+## Content (Alpha)
 
-On top of this sit the derivative of a function of time, for targets that are normed spaces and
-for targets that are manifolds; time as a bare oriented manifold, carrying no further structure;
-and the type of choices of time unit, from seconds up to weeks.
+### Instants and their structure
 
-## Built on
+An instant of time is a single real number, for an arbitrary but fixed choice of unit and
+orientation. [1] Instants form an affine space over the reals: a real number translates an
+instant to another instant, and any two instants differ by a real elapsed time. [2] No instant is
+canonically zero.
 
-- Space — `Physlib/SpaceAndTime/Space`
-- Lorentz vectors — `Physlib/Relativity/Tensors/RealTensor/Vector`
+Given the implicit origin, the instant whose real number is zero, time is a real vector space of
+dimension one. It has an orthonormal basis and continuous linear and isometric equivalences to the
+reals. [3] Instants are ordered, so that one instant comes no later than another. [4] Time carries
+a norm, and an inner product making it a one-dimensional real inner-product space. [5] It is a
+Borel measurable space whose volume measure is the Haar measure of the basis, and the
+identification with the reals preserves that measure. [6] Time carries an action of the
+translation group. [planned]
 
-## Requirements
+Time with no structure beyond its orientation is a manifold in its own right, with its topology,
+its charted-space and manifold structures, and a diffeomorphism to the reals. [10]
 
-The key data structure is defined: an instant of time, given by a single real number, for an
-arbitrary but fixed choice of unit and orientation. [1]
+### Derivatives in time
 
-Instants carry an affine structure over the reals: a real number translates an instant to
-another instant, and any two instants differ by a real elapsed time. [2]
+A function from time into a normed space has a time derivative. The derivative is compatible with
+scalar multiplication and with quotients, kills constants, and preserves smoothness. Differentiating
+a function valued in Euclidean space, or in Lorentz vectors {1}, agrees with differentiating its
+components one at a time. [7] The time derivative of a product of square-matrix-valued functions
+obeys the product rule, and the time derivative commutes with the transpose. [9]
 
-Given the implicit origin, time is a real vector space of dimension one, with an orthonormal
-basis and continuous linear and isometric equivalences to the reals. [3]
+A function from time into a manifold has a time derivative too, and for a target that is both a
+normed space and a manifold the two derivatives agree. [8]
 
-Instants are ordered, so that one instant can be said to come no later than another. [4]
+Distributions from time into a normed space are differentiable. [planned] Distributions from time
+into a manifold are differentiable. [planned]
 
-Time carries a norm, and an inner product making it a one-dimensional real inner-product
-space. [5]
+### Units of time
 
-Time carries a measure-theoretic structure: it is a Borel measurable space whose volume measure
-is the Haar measure of the basis, and the identification with the reals preserves that
-measure. [6]
+A choice of time unit is a positive real number. Two units have a ratio, and a unit rescales an
+elapsed time. The concrete units run from seconds up to weeks, with the relations between them,
+such as the number of seconds in an hour. [11]
 
-A function from time into a normed space can be differentiated with respect to time. The
-derivative is compatible with scalar multiplication and with quotients, kills constants,
-preserves smoothness, and agrees with differentiating Euclidean and Lorentz-vector components
-one at a time. [7]
-
-A function from time into a manifold can be differentiated too, and for a target that is both,
-the manifold derivative agrees with the one above. [8]
-
-The derivative of a square-matrix-valued function of time obeys the product rule and commutes
-with the transpose. [9]
-
-Time with no structure beyond its orientation is available as a manifold in its own right, with
-its topology, its charted-space and manifold structures, and its diffeomorphism to the
-reals. [10]
-
-A choice of time unit is a positive real number. Two units have a ratio, a unit rescales an
-elapsed time, and the concrete units from seconds up to weeks are defined together with the
-relations between them. [11]
-
-Time will carry an action of the translation group. [planned]
-
-Distributions from time into a normed space will be differentiable. [planned]
-
-Distributions from time into a manifold will be differentiable. [planned]
-
-## Lean declarations
+## Lean References
 
 1. Physlib/SpaceAndTime/Time/Basic.lean — `Time`
 2. Physlib/SpaceAndTime/Time/Basic.lean — `VAdd ℝ Time`, `VSub ℝ Time`, `AddTorsor ℝ Time`,
@@ -86,3 +73,7 @@ Distributions from time into a manifold will be differentiable. [planned]
    `IsManifold 𝓘(ℝ, ℝ) ω TimeMan`, `valDiffeomorphism`
 11. Physlib/SpaceAndTime/Time/TimeUnit.lean — `TimeUnit`, `HDiv TimeUnit TimeUnit ℝ≥0`, `scale`,
    `seconds`, `hours_div_seconds`
+
+## References
+
+1. Lorentz tensors API map — Physlib/Relativity/Tensors/API-map.md

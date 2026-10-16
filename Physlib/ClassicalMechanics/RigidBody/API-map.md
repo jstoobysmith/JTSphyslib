@@ -1,62 +1,44 @@
 # Rigid body
 
-A rigid body in d dimensions is specified by its mass distribution, which is what a body
-contributes to any integral over it: a linear functional on the smooth functions on space. From
-that single piece of data the API derives the total mass, the centre of mass and the inertia
-tensor, and shows the inertia tensor to be symmetric. The inertia tensor is also available
-about an arbitrary point, where the parallel-axis theorem relates it to the one about the
-centre of mass. The solid sphere is worked out as a concrete example.
+## Abstract (Alpha)
 
-A rigid body in motion additionally records the trajectory of its centre of mass and its
-orientation at each time. From these the API builds the velocity and linear momentum of the
-centre of mass, the rigid displacement and the mass distribution it carries the body to, and
-the angular velocity — in any dimension as a skew-symmetric tensor, and in three dimensions as
-the dual vector obtained from it by the hat map. The total kinetic energy of the motion splits
-into a translational part and a rotational part about the centre of mass, which is the König
-decomposition.
+A rigid body in d-dimensional space is specified by its mass distribution, which is what a body
+contributes to any integral over it: a linear functional on the smooth functions on space. From that
+single piece of data come the total mass, the centre of mass and the inertia tensor, both about the
+origin and about an arbitrary point, with the solid sphere as a worked example. A rigid body in
+motion additionally carries the trajectory of its centre of mass and its orientation at each time,
+from which come the velocity of the centre of mass, the angular velocity — in any dimension as a
+skew-symmetric tensor, and in three dimensions as the dual vector obtained by the hat map — and the
+kinetic energy, which splits into a translational part and a rotational part about the centre of
+mass (the König decomposition).
 
-## Built on
+## Content (Alpha)
 
-- Space — `Physlib/SpaceAndTime/Space`
+### Mass distribution and inertia
 
-## Requirements
+A rigid body {1} is specified by its mass distribution, a linear functional on the smooth functions
+on space {2}. [1] That functional is continuous. [planned] The total mass of a rigid body is its
+mass distribution applied to the constant function one. [2] The centre of mass is the mass-weighted
+average of the coordinate functions. [3] The inertia tensor of a rigid body, I_ij = ∫ (δ_ij |x|² −
+x_i x_j) dm, is built from the second moments of its mass distribution about the origin. [4] It is
+symmetric. [5] The inertia tensor about an arbitrary point takes its moments about that point, and
+the parallel-axis theorem expresses it as the inertia tensor about the centre of mass plus that of a
+point mass at the centre of mass. [6]
 
-The key data structure is defined: a rigid body, specified by its mass distribution. [1]
+The solid sphere of mass m and radius R > 0, with uniform density on the closed ball about the
+origin, is a rigid body whose total mass is m and whose centre of mass is the origin. [7] In three
+dimensions its inertia tensor about its centre is (2/5) m R² times the identity. [11][planned]
 
-The total mass of a rigid body can be calculated. [2]
+### Motion
 
-The centre of mass of a rigid body can be calculated. [3]
+The angular velocity of a rotating rigid body is the skew-symmetric tensor Ω = Ṙ Rᵀ built from its
+orientation R, and in three dimensions it is the vector dual to that tensor under the hat map. [8]
+The velocity of the centre of mass is the time derivative of the centre-of-mass trajectory. [9] The
+rotational kinetic energy at angular velocity ω is ½ ω · (I ω), and the total kinetic energy of a
+moving body is half the mass integral of the squared speed of its points. [10] The orientation of a
+rigid body is described by Euler angles. [planned]
 
-The inertia tensor of a rigid body can be calculated. [4]
-
-The inertia tensor of a rigid body is symmetric. [5]
-
-The inertia tensor about an arbitrary point can be calculated, and the parallel-axis theorem
-relates it to the inertia tensor about the centre of mass. [6]
-
-The solid sphere is worked out as an example, with its total mass and centre of mass
-computed. [7]
-
-The inertia tensor of a solid sphere will be shown to be two fifths of its mass times the
-square of its radius, times the identity. The statement stands in the source, but its proof is
-still open. [11][planned]
-
-The angular velocity of a rotating rigid body is defined. [8]
-
-The velocity of the centre of mass of a rigid body is defined. [9]
-
-The kinetic energy of a rigid body is defined. [10]
-
-Euler angles will be defined for a rigid body. [planned]
-
-The mass distribution will be recorded as a continuous linear functional on the smooth
-functions, rather than a plain linear one. [planned]
-
-## Further reading
-
-- Landau and Lifshitz, Mechanics, Section 32 (page 100)
-
-## Lean declarations
+## Lean References
 
 1. Physlib/ClassicalMechanics/RigidBody/Basic.lean — `RigidBody`
 2. Physlib/ClassicalMechanics/RigidBody/Basic.lean — `RigidBody.mass`
@@ -73,3 +55,8 @@ functions, rather than a plain linear one. [planned]
 10. Physlib/ClassicalMechanics/RigidBody/KineticEnergy.lean — `RigidBody.rotationalKineticEnergy`,
    `RigidBodyMotion.kineticEnergy`
 11. Physlib/ClassicalMechanics/RigidBody/SolidSphere.lean — `solidSphere_inertiaTensor`
+
+## References
+
+1. Landau and Lifshitz, *Mechanics*, Section 32 (page 100).
+2. Space API map — Physlib/SpaceAndTime/Space/API-map.md

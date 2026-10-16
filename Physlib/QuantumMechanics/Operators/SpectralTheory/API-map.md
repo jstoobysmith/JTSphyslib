@@ -1,89 +1,68 @@
 # Spectral theory of unbounded operators
 
-The measured values of an observable are the points of the spectrum of the operator representing
-it, so the spectral theory of an unbounded operator is what connects the formalism to an
-experiment. This API develops that theory for partially defined operators on a complex Hilbert
-space: the resolvent and the resolvent set, the spectrum with its point, residual and continuous
-parts, the regularity domain with the deficiency subspace and the defect number, and the
-numerical range.
+## Abstract (Alpha)
 
-Two results carry the physical content. For a symmetric operator the numerical range is real, so
-every point off the real axis is a point of regularity, and the defect numbers at i and -i
-decide essential self-adjointness. For a self-adjoint operator the resolvent set and the
-regularity domain coincide, the spectrum lies in the real axis and the residual spectrum is
-empty, which is the statement that a measurement returns a real number.
+The measured values of an observable are the points of the spectrum of the operator representing it,
+so the spectral theory of an unbounded operator is what connects the formalism to experiment. For
+partially defined operators on a complex Hilbert space it comprises the resolvent and the resolvent
+set, the spectrum with its point, residual and continuous parts, the regularity domain with the
+deficiency subspace and the defect number, the numerical range, and spectral measures. Two results
+carry the physical content: for a symmetric operator every point off the real axis is a point of
+regularity, and the defect numbers at i and -i decide essential self-adjointness; for a self-adjoint
+operator the spectrum is real and the residual spectrum empty, so a measurement returns a real
+number. The algebraic theory of the operators themselves lives in the operator algebra.
 
-Spectral measures are defined here as projection-valued measures. The spectral theorem that
-attaches one to each self-adjoint operator, and the functional calculus and time evolution that
-follow from it, are open: nothing yet connects a spectral measure to a self-adjoint
-operator. The algebraic theory of the operators themselves, and the standard observables of
-non-relativistic quantum mechanics, are in the operator algebra API.
+## Content (Alpha)
 
-## Built on
+### Resolvent and spectrum
 
-- Operator algebra — `Physlib/QuantumMechanics/Operators`
-- Partially defined linear maps — `Physlib/Mathematics/ForMathlib/LinearPMap.lean`
-- Inner product spaces — `Physlib/Mathematics/InnerProductSpace`
+A complex number z lies in the resolvent set of an operator T {1} when T - z has a bounded inverse,
+the resolvent; the resolvent set is open, and for a closed operator it is exactly the set of z for
+which T - z is a bijection from the domain onto the space. [1] The spectrum is the complement of the
+resolvent set; it is closed, and splits into the point, residual and continuous spectra. [2]
+Resolvents satisfy the two resolvent identities, relating resolvents at two points and of two
+operators. [3] The treatment follows the standard references of Hall {2}, Reed and Simon {3}, and
+Schmüdgen {4}.
 
-## Requirements
+### Regularity domain and numerical range
 
-The resolvent and the resolvent set are defined, the resolvent set is open, and it is
-characterized for a closed operator. [1]
+A point z is a point of regularity when T - z is bounded below. The regularity domain is open, the
+deficiency subspace at z is the orthogonal complement of the range of T - z, and its dimension is
+the defect number; for a closable operator it is constant on each connected component of the
+regularity domain. [4] The numerical range is the set of values of the pairing of a unit vector with
+its image; it is convex by the Toeplitz-Hausdorff theorem, and the exterior of its closure consists
+of points of regularity. [5]
 
-The spectrum is defined with its point, residual and continuous parts, and is closed. [2]
+### Symmetric operators
 
-The two resolvent identities are proved. [3]
+The numerical range of a symmetric operator is real, and so is described by its projection to the
+real axis. [6] Every point off the real axis is therefore a point of regularity, and the regularity
+domain is connected when the operator is bounded above or below. [7] A symmetric operator whose
+defect numbers at i and -i both vanish is essentially self-adjoint. [8] The eigenvalues of a
+symmetric operator are real. [9]
 
-The regularity domain, the deficiency subspace and the defect number are defined, the regularity
-domain is open, and the defect number is constant on its connected components. [4]
+### Self-adjoint operators
 
-The numerical range is defined, is convex by the Toeplitz-Hausdorff theorem, and the exterior of
-its closure consists of points of regularity. [5]
+For a self-adjoint operator the resolvent set and the regularity domain coincide, and every complex
+number with non-zero imaginary part lies in the resolvent set, with T - z onto. [10] The spectrum of
+a self-adjoint operator lies in the real axis and its residual spectrum is empty. [11] Conjugation
+by a unitary preserves self-adjointness, so an observable keeps its status under a change of
+representation. [12]
 
-The numerical range of a symmetric operator is real, and its projection to the real axis is
-available. [6]
+### Spectral measures and the spectral theorem
 
-For a symmetric operator every point off the real axis is a point of regularity, and the
-regularity domain is connected when the operator is bounded above or below. [7]
+A spectral measure is a vector measure valued in the bounded operators whose values are star
+projections and which sends the whole outcome space to the identity. [13] The projections of two
+measurable sets compose to the projection of their intersection, disjoint sets give orthogonal
+projections, and all of them commute. [14]
 
-A symmetric operator whose defect numbers at i and -i both vanish is essentially self-adjoint.
-[8]
+Every self-adjoint operator is the integral of the identity against a spectral measure supported on
+its spectrum; equivalently, it is unitarily equivalent to multiplication by a real function on an L²
+space. [planned] The spectral theorem yields a functional calculus, and Stone's theorem gives the
+unitary time evolution generated by a self-adjoint Hamiltonian. [planned] The spectrum of a
+multiplication operator is the essential range of its multiplier. [planned]
 
-The eigenvalues of a symmetric operator are real. [9]
-
-For a self-adjoint operator the resolvent set and the regularity domain coincide, and every
-complex number with non-zero imaginary part lies in the resolvent set with T - z onto. [10]
-
-The spectrum of a self-adjoint operator lies in the real axis and its residual spectrum is
-empty. [11]
-
-Conjugation by a unitary preserves self-adjointness, so an observable keeps its status under a
-change of representation. [12]
-
-A spectral measure is defined as a vector measure valued in the bounded operators whose values
-are star projections and which sends the whole outcome space to the identity. [13]
-
-The projections of two measurable sets compose to the projection of their intersection, disjoint
-sets give orthogonal projections, and all of them commute. [14]
-
-The spectral theorem will be proved: every self-adjoint operator is the integral of the
-identity against a spectral measure supported on its spectrum, equivalently it is unitarily
-equivalent to multiplication by a real function on an L² space. [planned]
-
-The functional calculus that follows from the spectral theorem will be developed, together with
-Stone's theorem, which gives the unitary time evolution generated by a self-adjoint
-Hamiltonian. [planned]
-
-The spectrum of a multiplication operator will be described as the essential range of its
-multiplier; this is recorded as a TODO in the multiplication module. [planned]
-
-## Further reading
-
-- B. C. Hall, Quantum Theory for Mathematicians, Springer (2013), Chapters 9 and 10 (unbounded self-adjoint operators, the spectral theorem)
-- M. Reed and B. Simon, Methods of Modern Mathematical Physics I. Functional Analysis, Academic Press (1980), Chapters VII and VIII (the spectral theorem, unbounded operators)
-- K. Schmüdgen, Unbounded Self-Adjoint Operators on Hilbert Space, Springer (2012), Chapters 1 to 3 (closed, symmetric and self-adjoint operators, defect numbers, the spectrum)
-
-## Lean declarations
+## Lean References
 
 1. Physlib/QuantumMechanics/Operators/SpectralTheory/Basic.lean — `resolvent`, `notation 𝑅`,
    `resolventSet`, `notation ρ`, `resolventSet_isOpen`, `resolventSet_eq_empty`,
@@ -118,3 +97,13 @@ multiplier; this is recorded as a TODO in the multiplication module. [planned]
    `isStarProjection`, `univ`
 14. Physlib/QuantumMechanics/Operators/SpectralTheory/SpectralMeasure.lean — `comp_self`,
    `comp_of_disjoint`, `comp_eq_of_inter`, `commute`
+
+## References
+
+1. Operator algebra API map — Physlib/QuantumMechanics/Operators/API-map.md
+2. B. C. Hall, *Quantum Theory for Mathematicians*, Springer (2013), Chapters 9 and 10 (unbounded
+   self-adjoint operators, the spectral theorem).
+3. M. Reed and B. Simon, *Methods of Modern Mathematical Physics I. Functional Analysis*, Academic
+   Press (1980), Chapters VII and VIII (the spectral theorem, unbounded operators).
+4. K. Schmüdgen, *Unbounded Self-Adjoint Operators on Hilbert Space*, Springer (2012), Chapters 1
+   to 3 (closed, symmetric and self-adjoint operators, defect numbers, the spectrum).

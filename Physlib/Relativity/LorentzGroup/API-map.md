@@ -1,54 +1,43 @@
 # Lorentz Group
 
-The Lorentz group is the group of matrices preserving the Minkowski metric, those satisfying
-Λ * dual Λ = 1. It is the symmetry group of Minkowski spacetime, and it is used throughout the
-library: Lorentz tensors, fermions and the electromagnetic potential are all defined by how
-they transform under it.
+## Abstract (Alpha)
 
-The API gives the group itself, its realization as a closed subgroup of the general linear
-group, the inclusions of boosts and of rotations, several equivalent conditions for membership,
-and the distinguished subsets — the proper transformations, the orthochronous ones, and the
-restricted Lorentz group where both conditions hold.
+The Lorentz group is the group of real matrices Λ preserving the Minkowski metric η, those
+satisfying Λ * dual Λ = 1 where dual Λ = η Λᵀ η. It is the symmetry group of Minkowski spacetime,
+and is used throughout the library: Lorentz tensors, Weyl and Dirac fermions, and the
+electromagnetic potential are all characterized by how they transform under it. The group sits as a
+closed subgroup of the general linear group, contains the boosts and the rotations, admits several
+equivalent membership conditions, and has distinguished subsets: the proper transformations, the
+orthochronous ones, and the restricted Lorentz group where both conditions hold.
 
-## Built on
+## Content (Alpha)
 
-- Minkowski matrix — `Physlib/Relativity/MinkowskiMatrix.lean`
+### The group
 
-## Requirements
+A Lorentz transformation is a matrix Λ satisfying Λ * dual Λ = 1, where the dual is taken with
+respect to the Minkowski matrix. [1] The Lorentz transformations form a group under matrix
+multiplication. [2] Equivalently, Λ is Lorentz exactly when dual Λ * Λ = 1, when its transpose
+is Lorentz, when −Λ is Lorentz, or when Λᵀ η Λ = η. [6] The Lorentz group embeds as a closed
+subgroup of the general linear group, by a closed embedding. [3] It is a Lie group, by Cartan's
+closed subgroup theorem. [planned] It is the symmetry group of Minkowski spacetime {1}, and Lorentz
+tensors {2}, Weyl fermions {3} and Dirac fermions {4} are characterized by how they transform under
+it. A standard introduction is Jaffe {5}.
 
-The key data structure is defined: the Lorentz group, the matrices satisfying
-Λ * dual Λ = 1. [1]
+### Boosts and rotations
 
-Those matrices form a group. [2]
-
-The Lorentz group is a closed subgroup of the general linear group, by a closed
-embedding. [3]
-
-The Lorentz group will be a Lie group. This is blocked on Cartan's closed subgroup theorem,
-which Mathlib does not yet have. [planned]
-
-The boosts include into the Lorentz group. [4]
-
-The rotations include into the Lorentz group. [5]
-
-Several equivalent conditions for a matrix to be a Lorentz transformation are given. [6]
-
-The proper Lorentz transformations are defined. [7]
-
-The orthochronous Lorentz transformations are defined. [8]
-
-The restricted Lorentz group is defined. [9]
-
-The topological properties of the orthochronous Lorentz group will be proved. [planned]
-
-Every member of the restricted Lorentz group will be shown to be a boost composed with a
+Every boost is a Lorentz transformation. [4] Every rotation of space is a Lorentz
+transformation. [5] Every member of the restricted Lorentz group is a boost composed with a
 rotation. [planned]
 
-## Further reading
+### Proper, orthochronous and restricted transformations
 
-- Lorentz Transformations, Rotations, and Boosts, Jaffe. https://cdn.ku.edu.tr/cdn/files/amostafazadeh/phys517_518/phys517_2016f/Handouts/A_Jaffi_Lorentz_Group.pdf
+A Lorentz transformation is proper when its determinant is 1. [7] It is orthochronous when it
+preserves the direction of time, its time-time component being non-negative. [8] The restricted
+Lorentz group consists of the transformations that are both proper and orthochronous. [9] The
+orthochronous Lorentz transformations are characterized topologically within the Lorentz group.
+[planned]
 
-## Lean declarations
+## Lean References
 
 1. Physlib/Relativity/LorentzGroup/Basic.lean — `LorentzGroup`
 2. Physlib/Relativity/LorentzGroup/Basic.lean — `lorentzGroupIsGroup`
@@ -62,3 +51,12 @@ rotation. [planned]
 7. Physlib/Relativity/LorentzGroup/Proper.lean — `IsProper`
 8. Physlib/Relativity/LorentzGroup/Orthochronous/Basic.lean — `IsOrthochronous`
 9. Physlib/Relativity/LorentzGroup/Restricted/Basic.lean — `restricted`
+
+## References
+
+1. SpaceTime API map — Physlib/SpaceAndTime/SpaceTime/API-map.md
+2. Tensors API map — Physlib/Relativity/Tensors/API-map.md
+3. Weyl Fermions API map — Physlib/Relativity/Fermions/Weyl/API-map.md
+4. Dirac Fermions API map — Physlib/Relativity/Fermions/Dirac/API-map.md
+5. A. Jaffe, *Lorentz Transformations, Rotations, and Boosts*,
+   https://cdn.ku.edu.tr/cdn/files/amostafazadeh/phys517_518/phys517_2016f/Handouts/A_Jaffi_Lorentz_Group.pdf

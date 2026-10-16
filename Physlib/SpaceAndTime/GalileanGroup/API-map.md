@@ -1,43 +1,33 @@
 # Galilean group
 
+## Abstract (Alpha)
+
 The Galilean group is the group of transformations relating the descriptions two observers give
 of non-relativistic space and time. An element records a spatial rotation, a boost velocity, a
 translation of space and a translation of time, in any spatial dimension; it acts on a pair of
-an instant and a point by rotating and boosting first, then translating.
+an instant and a point by rotating and boosting first, then translating, and it contains the
+Euclidean group, the orthogonal group, the rotations, the space translations and the time
+translations as subgroups.
 
-The API gives that data structure, its group structure, its action, and the inclusions of the
-subgroups it is assembled from: the Euclidean group, the orthogonal group, the rotations, the
-space translations and the time translations.
+## Content (Alpha)
 
-## Built on
+A Galilean transformation consists of four pieces of data: a rotation, a boost velocity, a
+translation of space {1} and a translation of time {2}. [1]
+The spatial dimension is arbitrary; nothing is special to three dimensions. [6]
 
-- Space — `Physlib/SpaceAndTime/Space`
-- Time — `Physlib/SpaceAndTime/Time`
-- Euclidean group — `Physlib/SpaceAndTime/Space/EuclideanGroup`
+Galilean transformations form a group, with the identity, the composite and the inverse computed
+explicitly from the four pieces. [2] This group is a Lie group. [planned]
 
-## Requirements
+The Galilean group acts on time and space together: an element sends a pair of an instant and a
+point to the pair obtained by rotating and boosting the point, then translating both. [7]
 
-The key data structure is defined: a rotation, a boost velocity, a space translation and a time
-translation taken together. [1]
+The Galilean group is assembled from familiar subgroups, each of which includes into it. The
+rotations include into the Galilean group, as do the elements of the full orthogonal group. [3]
+The space translations include into the Galilean group. [4] The time translations include into
+the Galilean group. [5] More generally, the Euclidean group of space, the transformations
+combining a rotation and a translation of space, includes into the Galilean group. [8]
 
-Those transformations form a group, with the composite and the inverse computed componentwise
-from the four pieces. [2]
-
-That group will carry the structure of a Lie group. [planned]
-
-The rotations include into the Galilean group. [3]
-
-The space translations include into the Galilean group. [4]
-
-The time translations include into the Galilean group. [5]
-
-Everything is stated for an arbitrary spatial dimension, not only for three. [6]
-
-The Galilean group acts on time and space together. [7]
-
-The Euclidean group includes into the Galilean group. [8]
-
-## Lean declarations
+## Lean References
 
 1. Physlib/SpaceAndTime/GalileanGroup/Basic.lean — `GalileanGroup`, `rotation`, `velocity`,
    `spaceTranslation`, `timeTranslation`
@@ -57,3 +47,8 @@ The Euclidean group includes into the Galilean group. [8]
    `MulAction (GalileanGroup d) (Time × Space d)`, `smul_fst`, `smul_snd`, `smul_mk`
 8. Physlib/SpaceAndTime/GalileanGroup/Basic.lean — `euclidean.incl : EuclideanGroup d →* GalileanGroup d`,
    `ofEuclidean`
+
+## References
+
+1. Space API map — Physlib/SpaceAndTime/Space/API-map.md
+2. Time API map — Physlib/SpaceAndTime/Time/API-map.md

@@ -1,77 +1,64 @@
 # Space
 
+## Abstract (Alpha)
+
 A point of space is modelled by its d real coordinates, read against an arbitrary but fixed
-choice of length unit and origin. The default dimension is three, but nothing is special to it;
-the space is flat and Euclidean throughout.
-
-Around that bare structure the API builds the structures physics needs on space: a metric and a
-torsor over the Euclidean space of the same dimension, a vector space once the origin is fixed,
-a norm and an inner product, and a smooth manifold. The surrounding definitions and lemmas
-cover a basis and coordinates, length units, the cross product in three dimensions, the
+choice of length unit and origin; the default dimension is three, but nothing is special to it,
+and the space is flat and Euclidean throughout. Around that bare structure sit the structures
+physics needs on space: a metric and a torsor over the Euclidean space of the same dimension, a
+vector space once the origin is fixed, a norm and an inner product, and a smooth manifold,
+together with a basis and coordinates, length units, the cross product in three dimensions, the
 relation between spaces of different dimension, and the actions of translations and rotations.
+Space is also the home of differentiation in a spatial direction, for functions and for
+distributions, of gradient, divergence and curl, and of the distributions made from functions
+that are bounded in the appropriate sense.
 
-Space is also where the API keeps differentiation in a spatial direction, both for functions
-and for distributions, along with gradient, divergence and curl, and the means of making a
-distribution out of a function that is bounded in the appropriate sense.
+## Content (Alpha)
 
-## Built on
+### Points of space and their structure
 
-- Distribution — `Physlib/Mathematics/TemperedDistribution`
-- Time — `Physlib/SpaceAndTime/Time`
-- Lorentz vectors — `Physlib/Relativity/Tensors/RealTensor/Vector`
+A point of space is given by its d real coordinates. [1] Space is a type of its own, distinct
+from the Euclidean space of the same dimension although closely related to it, a choice discussed
+on the Lean Zulip {1}.
+Subtracting two points of space gives a vector of Euclidean space. [8] Space is a normed torsor
+over Euclidean space of the same dimension. [9]
 
-## Requirements
+Space has a choice of origin, the zero of its vector space structure, and a standard
+affine-isometry chart onto Euclidean space of the same dimension. [5] Once the origin is taken as
+its zero, space is a real vector space. [2] It carries a norm, an inner product and a metric,
+making it a finite-dimensional real inner-product space and a metric space. [3][4] It has basis
+vectors, one for each coordinate direction, forming an orthonormal basis. [7]
 
-The key data structure is defined: a point of space, given by its d real coordinates. [1]
+Space is a smooth manifold, charted over Euclidean space of the same dimension through a
+homeomorphism with it. [6]
 
-Space is a real vector space, once the origin is taken as its zero. [2]
+### Dimensions, units and the cross product
 
-Space carries a norm, an inner product and a metric, making it a finite-dimensional real
-inner-product space and a metric space. [3][4]
+Spaces of different dimensions are related: one dimension of space splits off as a real factor,
+and one-dimensional space is isometrically the reals. [14][15] A choice of length unit rescales
+lengths, and concrete units such as the metre are available. [16]
 
-Space has a choice of origin, namely the zero of the vector space, and the standard
-affine-isometry chart onto Euclidean space of the same dimension. [5]
+Three-dimensional Euclidean space carries the cross product. Taking the cross product with a fixed
+vector commutes with the time derivative, and the cross product of a vector with another is
+orthogonal to it. [17]
 
-Space is a smooth manifold: it is charted over Euclidean space of the same dimension, and
-diffeomorphic to it. [6]
+### Translations and rotations
 
-Space has basis vectors, one for each coordinate direction. [7]
+Points of space can be translated, and so can distributions on space. [10][11] The group of
+rotations acts on space, and that action agrees with multiplying coordinates by the rotation
+matrix. [12][13]
 
-Subtracting two points of space gives a vector of Euclidean space. [8]
-
-Space is a normed torsor over Euclidean space of the same dimension. [9]
-
-Points of space can be translated, and so can distributions on space. [10][11]
-
-The group of rotations acts on space, and that action agrees with multiplying coordinates by
-the rotation matrix. [12][13]
-
-Spaces of different dimensions are related: one dimension can be split off as a real factor,
-and the one-dimensional space is isometrically the reals. [14][15]
-
-A choice of length unit is available, with rescaling and concrete units. [16]
-
-Three-dimensional Euclidean space carries the cross product, with the properties relating it to
-time derivatives and to inner products. [17]
+### Derivatives and distributions
 
 A function from space into a normed space can be differentiated along a coordinate
-direction. [18]
-
-A function from space into a manifold will be differentiable. [planned]
+direction. [18] A function from space into a manifold is differentiable. [planned]
 
 A function bounded in the appropriate sense determines a distribution on space; the constant
-function and the constant slice are such distributions. [19][20][21][22]
+function and the constant slice are such distributions. [19][20][21][22] A distribution on space
+valued in a normed space can be differentiated, giving also its gradient, its divergence and its
+curl. [23][24][25][26] A distribution from space into a manifold is differentiable. [planned]
 
-A distribution on space valued in a normed space can be differentiated, giving also its
-gradient, its divergence and its curl. [23][24][25][26]
-
-A distribution from space into a manifold will be differentiable. [planned]
-
-## Further reading
-
-- Lean Zulip, #Physlib > Space vs EuclideanSpace: https://leanprover.zulipchat.com/#narrow/channel/479953-PhysLean/topic/Space.20vs.20EuclideanSpace/with/575938877
-
-## Lean declarations
+## Lean References
 
 1. Physlib/SpaceAndTime/Space/Basic.lean — `Space`
 2. Physlib/SpaceAndTime/Space/Module.lean — `AddCommGroup (Space d)`, `Module ℝ (Space d)`
@@ -102,3 +89,8 @@ A distribution from space into a manifold will be differentiable. [planned]
 24. Physlib/SpaceAndTime/Space/Derivatives/Grad.lean — `distGrad`
 25. Physlib/SpaceAndTime/Space/Derivatives/Div.lean — `distDiv`
 26. Physlib/SpaceAndTime/Space/Derivatives/Curl.lean — `distCurl`
+
+## References
+
+1. Lean Zulip, #PhysLean > Space vs EuclideanSpace,
+   https://leanprover.zulipchat.com/#narrow/channel/479953-PhysLean/topic/Space.20vs.20EuclideanSpace/with/575938877

@@ -1,81 +1,56 @@
 # Temperature
 
-Temperature here is measured from absolute zero and is taken to be nonnegative: no scale used
-here places a state below absolute zero, which excludes the negative absolute temperatures a
-system with a bounded energy spectrum can carry. A choice of scale is a choice of how large one
-degree is, and nothing more, so two such choices differ by a positive ratio, and kelvin is the
-scale from which the others here are obtained by rescaling.
+## Abstract (Alpha)
 
-In statistical mechanics the quantity that actually appears is not the temperature itself but
-its reciprocal, weighted by the Boltzmann constant: the inverse temperature that multiplies an
-energy in a Boltzmann factor. On positive temperatures the correspondence is a bijection onto
-the positive inverse temperatures and reverses order, so a hot system is one with a small
-inverse temperature; the boundary value zero is paired with itself, which is a convention of
-the underlying nonnegative reals rather than a physical statement. The limit of large inverse
-temperature is the one recorded here: sending the inverse temperature to infinity drives the
-temperature to absolute zero, the regime in which a system settles into its lowest energy
-states.
+Temperature is measured from absolute zero and is nonnegative, which excludes the negative absolute
+temperatures a system with a bounded energy spectrum can carry. A choice of scale is a choice of how
+large one degree is, and nothing more, so two such choices differ by a positive ratio, and kelvin is
+the scale from which the others are obtained by rescaling. In statistical mechanics the quantity
+that actually appears is the inverse temperature, the reciprocal of the temperature weighted by the
+Boltzmann constant, which multiplies an energy in a Boltzmann factor; on positive temperatures the
+correspondence is an order-reversing bijection onto the positive inverse temperatures, so a hot
+system is one with a small inverse temperature, and sending the inverse temperature to infinity
+drives the temperature to absolute zero. Thermodynamic quantities are differentiated with respect to
+one or the other of these variables, so the change of variable between them is smooth at positive
+temperature, and a derivative in one variable determines the derivative in the other.
 
-Thermodynamic quantities are differentiated with respect to one or the other of these
-variables, so the change of variable between them is smooth at positive temperature, and a
-derivative in one variable determines the derivative in the other.
+## Content (Alpha)
 
-## Built on
+### Absolute temperature and inverse temperature
 
-- Boltzmann constant — `Physlib/StatisticalMechanics/BoltzmannConstant.lean`
-
-## Requirements
-
-The key data structure is defined: an absolute temperature, in an arbitrary scale that puts
-absolute zero at zero, with its coercions, its topology, its zero and its extensionality. [1]
-
-A temperature has an inverse temperature, defined through the Boltzmann constant, and a
-temperature can be recovered from one. [2]
-
-Passing to the inverse temperature and back is the identity, in both directions. [3]
-
-A strictly positive temperature has a strictly positive inverse temperature. [4]
+An absolute temperature is a nonnegative real in an arbitrary scale that puts absolute zero at zero;
+it coerces to the nonnegative reals and to the reals, carries a topology and a zero, and is
+determined by its value. [1] This excludes the negative absolute temperatures that a system with a
+bounded energy spectrum can carry {1}. A temperature is built from a nonnegative real, or from a
+real together with a proof that it is nonnegative. [7] The temperature enters the Gibbs distribution
+through its inverse {2}. A temperature has an inverse temperature, formed with the Boltzmann
+constant [14], and a temperature is recovered from an inverse temperature. [2] Passing to the inverse
+temperature and back is the identity, in both directions. [3] A strictly positive temperature has a
+strictly positive inverse temperature. [4] The boundary value zero is paired with itself, which is a
+convention of the underlying nonnegative reals rather than a physical statement.
 
 The temperature is a continuous function of the inverse temperature at positive inverse
-temperature, and its real coordinate is differentiable on the positive reals. [5]
+temperature, and its real coordinate is differentiable on the positive reals. [5] In the limit
+of large inverse temperature the temperature is eventually positive and converges to absolute
+zero from above, the regime in which a system settles into its lowest energy states. [6] At
+positive temperature the inverse temperature has a derivative with respect to the temperature,
+and the chain rule converts a derivative in one variable into a derivative in the other. [8]
 
-In the limit of large inverse temperature the temperature is eventually positive and converges
-to absolute zero from above. [6]
+### Temperature scales
 
-A temperature can be built from a nonnegative real, or from a real together with a proof that
-it is nonnegative, with the equations defining both. [7]
+A temperature unit is a choice of scale, carrying a positive scale factor. [9][10] Two
+temperature units have a ratio, a nonnegative real, which is positive and behaves reflexively,
+symmetrically and multiplicatively along a chain of units. [11] A temperature unit rescales by a
+positive real, with the ratios this induces and its composition law. [12] Kelvin is the reference
+temperature unit, and the other units, among them the nanokelvin, microkelvin, millikelvin and
+the absolute Fahrenheit-sized degree, are obtained from it by rescaling. [13]
 
-The derivative of the inverse temperature with respect to the temperature is available at
-positive temperature, with the chain rule that converts a derivative in one variable into a
-derivative in the other. [8]
+The temperature manifold is diffeomorphic to the nonnegative reals, and a temperature unit is a
+translationally invariant metric on it. [planned] A temperature value converts between two
+temperature units. [planned] Degrees Celsius and degrees Fahrenheit, as ordinarily used, are
+scales whose zero is offset from absolute zero, and they convert to absolute scales. [planned]
 
-The second key data structure is defined: a choice of temperature scale, carrying a positive
-scale factor. [9][10]
-
-Two temperature units have a ratio, a nonnegative real, which is positive and behaves
-reflexively, symmetrically and multiplicatively along a chain of units. [11]
-
-A temperature unit can be rescaled by a positive real, with the ratios this induces and its
-composition law. [12]
-
-Kelvin is the reference temperature unit, and the other units here are obtained from it by
-rescaling. [13]
-
-The temperature manifold, diffeomorphic to the nonnegative reals and of which a temperature
-unit is a translationally invariant metric, will be defined. [planned]
-
-A temperature value will be convertible between two temperature units. [planned]
-
-Scales whose zero is offset from absolute zero — degrees Celsius and degrees Fahrenheit as
-ordinarily used, as against the absolute Fahrenheit-sized degree already present — will be
-defined, together with their conversion to absolute scales. [planned]
-
-## Further reading
-
-- L. D. Landau & E. M. Lifshitz, Statistical Physics, Part 1 (§9 temperature, §31 the Gibbs distribution).
-- N. F. Ramsey, Thermodynamics and statistical mechanics at negative absolute temperatures, Physical Review 103 (1956), 20-28.
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Thermodynamics/Temperature/Basic.lean — `Temperature`, `val`, `toReal`, `ext`,
    `Coe Temperature ℝ≥0`, `Coe Temperature ℝ`, `TopologicalSpace Temperature`,
@@ -106,3 +81,11 @@ defined, together with their conversion to absolute scales. [planned]
    `PositiveRealUnitCore.scale_scale`
 13. Physlib/Thermodynamics/Temperature/TemperatureUnits.lean — `kelvin`, `nanokelvin`,
    `microkelvin`, `millikelvin`, `absoluteFahrenheit`
+14. Physlib/StatisticalMechanics/BoltzmannConstant.lean — `kB`, `kB_pos`
+
+## References
+
+1. N. F. Ramsey, Thermodynamics and statistical mechanics at negative absolute temperatures,
+   *Physical Review* 103 (1956), 20-28.
+2. L. D. Landau and E. M. Lifshitz, *Statistical Physics, Part 1*, §9 (temperature) and §31 (the
+   Gibbs distribution).

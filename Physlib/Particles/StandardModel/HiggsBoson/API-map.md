@@ -1,89 +1,73 @@
 # Higgs Field
 
-A Higgs field is a smooth section of the Higgs bundle over spacetime. The bundle is for now the
-trivial one, whose fibre is the two-dimensional complex vector space of pointwise Higgs values.
+## Abstract (Alpha)
 
-On those pointwise values the API gives an orthonormal basis, real scalar coordinates, the
-representation of the global Standard Model gauge group with its invariance properties, and the
-characterization of gauge orbits by the norm. On fields it gives the constant fields, the
-smoothness of the components, the pointwise inner product and norm squared, the Standard Model
-Higgs potential with its minimization theory, and the invariant effective potentials on
-pointwise values. The two Higgs doublet model builds on this API.
+A Higgs field is a smooth section of the Higgs bundle over spacetime, on which the global Standard
+Model gauge group acts; for now the bundle is the trivial one, whose fibre is the two-dimensional
+complex vector space of pointwise Higgs values. The pointwise values carry an orthonormal basis,
+real scalar coordinates, and a gauge representation whose orbits are classified by the norm, while
+fields carry constant fields, smooth components, a pointwise inner product and norm squared, the
+Standard Model Higgs potential with its minimization theory, and invariant effective potentials on
+pointwise values; the two Higgs doublet model builds on this area.
 
-## Built on
+## Content (Alpha)
 
-- SpaceTime — `Physlib/SpaceAndTime/SpaceTime`
-- Standard Model gauge group — `Physlib/Particles/StandardModel`
+### Pointwise Higgs values
 
-## Requirements
+The pointwise Higgs values form a two-dimensional complex vector space, continuously and linearly
+identified with pairs of complex numbers. [1] They carry an orthonormal basis, and a real mass
+scale determines a Higgs vector with the expected norm. [2] They correspond to four real scalar
+coordinates. [3]
 
-The pointwise Higgs values are defined, as a two-dimensional complex vector space, with their
-continuous linear identification with pairs of complex numbers. [1]
+The global Standard Model gauge group {1} acts on them through a representation, given explicitly as
+a U(1) phase times an SU(2) matrix and compatible with the group law. [4] That representation
+preserves inner products and norms. [5] Two Higgs vectors lie in the same gauge orbit exactly when
+they have the same norm, and a gauge transformation can remove the phase of the second
+component. [6] A nonzero Higgs vector breaks the gauge group to a subgroup SU(3) × U(1), and the
+subgroup fixing every Higgs vector is SU(3) × ℤ₆. [7][planned] Pairs of Higgs vectors, with this
+gauge action, are the configurations of the two Higgs doublet model {2}.
 
-They carry an orthonormal basis, and a vector can be built from a real mass scale with the
-expected norm. [2]
+### The Higgs bundle and Higgs fields
 
-They are related to four real scalar coordinates. [3]
+The Higgs bundle over spacetime {3} is a smooth vector bundle, currently the trivial bundle with
+fibre the pointwise Higgs values. [8] It is the bundle associated to the gauge group, rather than
+the trivial one. [planned]
 
-The global Standard Model gauge group is represented on them, with the explicit form of the
-representation and the lemmas governing the group law. [4]
+Higgs fields are smooth sections of the Higgs bundle; each has an underlying map to pointwise
+Higgs values, and every Higgs vector gives a constant field. [9] The components of a Higgs field
+are smooth, real and imaginary parts alike. [10] The pointwise inner product of two Higgs fields
+has an explicit expansion, is conjugate symmetric and additive, and is smooth. [11] The pointwise
+norm squared of a Higgs field is the real part of its inner product with itself, is nonnegative,
+and is smooth. [12]
 
-That representation preserves inner products and norms. [5]
+Gauge transformations act on Higgs fields pointwise; two Higgs fields lie in the same orbit
+exactly when their pointwise norms squared agree, and every smooth nonnegative function on
+spacetime is the norm squared of some Higgs field. [13][planned] The pointwise inner product, the
+norm squared and the potential are invariant under the global gauge action. [planned]
 
-Gauge orbits of pointwise Higgs values are characterized by the norm, and the gauge action can
-remove the phase of the second component. [6]
+### The Higgs potential
 
-The stability groups of Higgs vectors will be identified. Informal statements of both results
-stand in the source. [7][planned]
+The Standard Model Higgs potential {4} has a mass parameter and a quartic coupling, and evaluates
+smoothly on a Higgs field; negating both parameters negates the potential, and the potential
+vanishes on the zero field. [14] Completing the square writes it as a quadratic in the norm squared,
+whose discriminant is nonnegative and vanishes exactly in a characterized case. [15]
 
-The Higgs bundle over spacetime is defined, as a smooth vector bundle. [8]
+A bounded-below potential has nonnegative quartic coupling, and a positive quartic coupling makes
+it bounded below. [16] The values it attains, its bounds when the discriminant vanishes, and its
+minimum for positive and maximum for negative quartic coupling are all determined
+explicitly. [16]
 
-The Higgs bundle will be upgraded from the trivial bundle to an associated-bundle
-construction. [planned]
+### Effective potentials
 
-Higgs fields are defined as smooth sections of that bundle, with the constant fields and the
-underlying map to pointwise Higgs values. [9]
+An effective potential is a function on pointwise Higgs values; when it is gauge invariant it is
+constant on gauge orbits and so factors through the norm. [17] An effective potential of bounded
+mass dimension is polynomial, splits into homogeneous terms of each mass dimension whose odd terms
+vanish when it is invariant, and is then a sum of powers of the norm. [18] Effective potentials
+determine potentials on Higgs fields, so that field-level statements follow from pointwise
+invariant ones. [planned] Higgs fields have covariant derivatives and kinetic terms, built from a
+gauge connection over spacetime. [planned]
 
-The components of a Higgs field are smooth, real and imaginary parts alike. [10]
-
-The pointwise inner product of two Higgs fields is defined, with its expansion, its conjugation
-symmetry, its additivity and its smoothness. [11]
-
-The pointwise norm squared of a Higgs field is defined, with its relation to the inner product,
-its nonnegativity and its smoothness. [12]
-
-The global gauge action on Higgs fields will be defined, and the pointwise inner product, the
-norm squared and the potential shown invariant under it. Informal statements stand in the
-source. [13][planned]
-
-The Standard Model Higgs potential is defined, carrying its mass and coupling parameters,
-evaluated smoothly on a Higgs field, with the lemmas for negation and for the zero field. [14]
-
-The algebraic theory of the potential is developed: completing the square, the quadratic form
-in the norm squared, and the discriminant with its sign and its vanishing characterized. [15]
-
-Boundedness of the potential is defined and its extremal theory proved: the values attained,
-the bounds at vanishing discriminant, and the minimum and maximum for positive and for
-negative quartic coupling. [16]
-
-Effective potentials on pointwise Higgs values are defined, with their gauge invariance and the
-proof that an invariant one factors through the norm. [17]
-
-An effective potential of bounded mass dimension expands polynomially, with its homogeneous
-terms, the vanishing of the odd ones for an invariant potential, and the expansion in powers of
-the norm. [18]
-
-Effective potentials will be connected to potentials on Higgs fields, so that field-level
-statements follow from pointwise invariant ones. [planned]
-
-Covariant derivatives and kinetic terms for Higgs fields will be defined. This waits on a
-gauge-connection API, and on the spacetime API above. [planned]
-
-## Further reading
-
-- Peskin and Schroeder, An Introduction to Quantum Field Theory, Ch. 20 (gauge theories with spontaneous symmetry breaking)
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Particles/StandardModel/HiggsBoson/Basic.lean — `HiggsVec`, `toFin2ℂ`,
    `smooth_toFin2ℂ`
@@ -129,3 +113,11 @@ gauge-connection API, and on the spacetime API above. [planned]
 18. Physlib/Particles/StandardModel/HiggsBoson/EffectivePotential.lean — `HasMaxMassDimLE`,
    `polynomial`, `apply_eq_polynomial`, `termOfMassDim`, `termOfMassDim_homogeneity`,
    `termOfMassDim_zero_of_odd`, `apply_eq_sum_norm_pow`
+
+## References
+
+1. Standard Model gauge group API map — Physlib/Particles/StandardModel/API-map.md
+2. Two Higgs Doublet Model API map — Physlib/Particles/BeyondTheStandardModel/TwoHDM/API-map.md
+3. Spacetime API map — Physlib/SpaceAndTime/SpaceTime/API-map.md
+4. M. E. Peskin and D. V. Schroeder, *An Introduction to Quantum Field Theory*, Westview Press
+   (1995), Ch. 20, on gauge theories with spontaneous symmetry breaking.

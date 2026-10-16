@@ -1,48 +1,44 @@
 # Gauge theory
 
-A general gauge-theory API would be built around a structure group, a gauge field valued in its
-Lie algebra, the curvature of that field, the gauge-covariant derivative acting on matter
-fields, and the gauge transformations under which the curvature transforms covariantly and the
-action is invariant.
+## Abstract (Alpha)
 
-This is a tracking map for issue #859. The library has no general, non-abelian gauge-theory
-framework. What it has are two disjoint concrete pieces. The first is the abelian case,
-realized as gauge transformations of the electromagnetic potential together with the gauge
-invariance of the field strength. The second is the Standard Model gauge group as a group
-object with its central discrete subgroup, carrying no connection, curvature or
-covariant-derivative theory. Everything the general theory needs is therefore still planned.
+A gauge theory is built around a structure group, a gauge field valued in its Lie algebra, the
+curvature of that field, the gauge-covariant derivative acting on matter fields, and the gauge
+transformations under which the curvature transforms covariantly and the action is invariant. Two
+concrete pieces of this picture are in place: the abelian theory, realized through the
+electromagnetic potential and the gauge invariance of its field strength, and the Standard Model
+gauge group as a group with its central discrete subgroup; the general non-abelian theory, with its
+connections, curvature and covariant derivatives, extends both.
 
-## Built on
+## Content (Alpha)
 
-- Electromagnetic potential — `Physlib/Electromagnetism/Kinematics/EMPotential.lean`
-- Field strength — `Physlib/Electromagnetism/Kinematics/FieldStrength.lean`
-- Standard Model gauge group — `Physlib/Particles/StandardModel/Basic.lean`
+### The abelian theory
 
-## Requirements
+In electromagnetism the gauge field is the electromagnetic potential {1}, a Lorentz-vector-valued
+field on spacetime, and its field strength is built from that potential. [2][3] A gauge
+transformation shifts the potential by the gradient of a scalar {2}, and the pure-gauge potential is
+the shift of zero. [4] Gauge transformations leave the field strength invariant. [5] In particular a
+pure-gauge potential has vanishing field strength, and this relies on raising the index of the
+gradient with the Minkowski metric: the bare gradient of a scalar can have nonzero field
+strength. [6] Gauge transformations compose: the trivial shift is the identity and successive shifts
+add. [7] They commute with the action of the Lorentz group. [8]
 
-The Standard Model gauge group is SU(3) × SU(2) × U(1), with its projections and central
-discrete subgroup. [1] In the abelian theory, the electromagnetic potential is a
-spacetime-valued Lorentz-vector gauge field, and its field strength is built from that
-potential. [2][3] A gauge transformation shifts the potential by the gradient of a scalar; the
-pure-gauge potential is obtained by shifting zero. [4] These transformations leave the field
-strength invariant; in particular, pure-gauge configurations have vanishing curvature, a
-result that depends on the metric contraction used to define the field strength. [5][6] Gauge
-transformations compose: the trivial shift acts as identity and successive shifts add. [7] They
-are compatible with the Lorentz-group action. [8]
+### The Standard Model gauge group
 
-The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the
-structure group and define a gauge field valued in its Lie algebra. [planned] It will also define
-the gauge-covariant derivative on matter fields and its transformation law, along with the
-Yang–Mills curvature and its covariant transformation. [planned] The Yang–Mills action and its
-field equations, parallel transport and holonomy, and a formulation of gauge fields as
-connections on principal bundles are also planned. [planned]
+The Standard Model gauge group {3} is SU(3) × SU(2) × U(1), with its projections onto the three
+factors and a central discrete subgroup of sixth roots of unity. [1]
 
-## Further reading
+### The non-abelian theory
 
-- https://en.wikipedia.org/wiki/Mathematical_descriptions_of_the_electromagnetic_field#Gauge_freedom
-- https://en.wikipedia.org/wiki/Gauge_theory
+A general gauge theory {4} admits an arbitrary Lie group as its structure group. [planned] Its gauge
+field takes values in the Lie algebra of that group. [planned] Matter fields carry a gauge-covariant
+derivative with a definite transformation law. [planned] The gauge field has a Yang–Mills
+curvature. [planned] That curvature transforms covariantly under gauge transformations. [planned]
+The Yang–Mills action yields the Yang–Mills field equations. [planned] A gauge field determines
+parallel transport along paths and holonomy around loops. [planned] Gauge fields are connections on
+principal bundles. [planned] Progress on this API is tracked in a GitHub issue {5}.
 
-## Lean declarations
+## Lean References
 
 1. Physlib/Particles/StandardModel/Basic.lean — `GaugeGroupI`, `GaugeGroupI.toSU3`,
    `GaugeGroupI.toSU2`, `GaugeGroupI.toU1`, `gaugeGroupℤ₆SubGroup`
@@ -58,3 +54,12 @@ connections on principal bundles are also planned. [planned]
    `gaugeTransform_gaugeTransform`, `ofGradient_add`, `ofGradient_zero`
 8. Physlib/Electromagnetism/Kinematics/GaugeTransformation.lean — `ofGradient_equivariant`,
    `gaugeTransform_equivariant`
+
+## References
+
+1. Electromagnetic Potential API map — Physlib/Electromagnetism/Kinematics/API-map.md
+2. Wikipedia, Mathematical descriptions of the electromagnetic field, Gauge freedom,
+   https://en.wikipedia.org/wiki/Mathematical_descriptions_of_the_electromagnetic_field#Gauge_freedom
+3. Standard Model gauge group API map — Physlib/Particles/StandardModel/API-map.md
+4. Wikipedia, Gauge theory, https://en.wikipedia.org/wiki/Gauge_theory
+5. Physlib GitHub issue #859, https://github.com/leanprover-community/physlib/issues/859

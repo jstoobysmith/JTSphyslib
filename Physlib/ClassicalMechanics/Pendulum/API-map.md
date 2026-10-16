@@ -1,45 +1,28 @@
 # Configuration space for pendulum
 
-A pendulum is a mass swinging under gravity on a string or a rod. Its configuration is fixed by
-the angles it makes and, when the support can move, by the position of the support, so its
-configuration space is naturally a product of circles and lines. This API covers the pendulum
-problems of Landau and Lifshitz, Mechanics, 3rd ed., Chapter 1, Section 5.
+## Abstract (Alpha)
 
-The sliding pendulum has a configuration space in the generalized coordinates of the support
-position and the string angle. The simple pendulum's configuration space — an angle taken
-modulo a full turn — carries the manifold structure and the map into space, and has an API map
-of its own under the simple pendulum directory, where its Lagrangian and equation of motion on
-the Euclidean lift are also recorded. What is recorded here is the trajectory built on the
-configuration space, and the identification of the lifted Lagrangian with that of the bob in
-physical space. The coplanar double pendulum's configuration space is declared but not yet
-defined, and the remaining pivot-motion problems carry documentation only.
+A pendulum is a mass swinging under gravity on a string or a rod. Its configuration is fixed by the
+angles it makes and, when the support can move, by the position of the support, so its configuration
+space is naturally a product of circles and lines in the sense of the general configuration space of
+a mechanical system. This map covers two pendulum problems: the sliding pendulum, whose
+configuration is the support position together with the string angle, and the simple pendulum,
+whose configuration is a single angle taken modulo a full turn and whose dynamics are recorded in
+full separately.
 
-## Built on
+## Content (Alpha)
 
-- Classical mechanics Lagrangian — `Physlib/ClassicalMechanics/Lagrangian`
-- Space — `Physlib/SpaceAndTime/Space`
+The configuration space {1} of the sliding pendulum {2} is given by two generalized coordinates: the
+horizontal position of the support and the angle the string makes with the vertical. [1]
 
-## Requirements
+The configuration space of the simple pendulum {3} is a manifold. [2] It maps into physical space
+{4}, giving the position of the bob there. [3] A trajectory of the simple pendulum is a curve in its
+configuration space, and every lift of the angle to the real line describes one. [4] The Lagrangian
+of the simple pendulum is a function of the lifted angle and angular velocity, and along a
+differentiable lift it agrees with the constrained Lagrangian of the bob moving in physical space.
+[5][6]
 
-The key data structure is defined: the configuration space of the pendulum, taken here in the
-generalized coordinates of the support position and the string angle of the sliding
-pendulum. [1]
-
-The configuration space of the simple pendulum is a manifold. [2]
-
-The configuration space of the simple pendulum maps into space, giving the position of the bob
-there. [3]
-
-A trajectory of the pendulum is a curve in the configuration space. [4]
-
-The Lagrangian is defined on that configuration space, and agrees with the Lagrangian of the
-bob moving in physical space. [5][6]
-
-## Further reading
-
-- Landau & Lifshitz, Mechanics, 3rd Edition, Chapter 1 (The Equations of motion), Section 5 (The Lagrangian for a system of particles).
-
-## Lean declarations
+## Lean References
 
 1. Physlib/ClassicalMechanics/Pendulum/SlidingPendulum.lean — `ConfigurationSpace`
 2. Physlib/ClassicalMechanics/Pendulum/SimplePendulum/Geometric/Basic.lean — `SimplePendulum.ConfigurationSpace.instIsManifold`
@@ -48,3 +31,11 @@ bob moving in physical space. [5][6]
    `SimplePendulum.Trajectory.ofLift`
 5. Physlib/ClassicalMechanics/Pendulum/SimplePendulum/Basic.lean — `SimplePendulum.lagrangian`
 6. Physlib/ClassicalMechanics/Pendulum/SimplePendulum/Geometric/PhysicalSpace.lean — `SimplePendulum.lagrangian_eq_space`
+
+## References
+
+1. Configuration Space API map — Physlib/ClassicalMechanics/Lagrangian/API-map.md
+2. Landau & Lifshitz, *Mechanics*, 3rd Edition, Chapter 1 (The Equations of motion), Section 5 (The
+   Lagrangian for a system of particles).
+3. Simple pendulum API map — Physlib/ClassicalMechanics/Pendulum/SimplePendulum/API-map.md
+4. Space API map — Physlib/SpaceAndTime/Space/API-map.md

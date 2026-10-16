@@ -1,140 +1,173 @@
 # Tensors
 
-A tensor species packages everything needed to define a type of tensor with index notation: a
-symmetry group, a type of index colors, a representation and a basis for each color, an
-involution naming the dual color an index may contract with, and the contraction, unit and
-metric data for each dual pair. Given a species and a list of colors, there is the type of
-tensors with those indices, realized as a tensor product over the index set; the type of pure
-tensors; and the type of component labels.
+## Abstract (Alpha)
 
-On that base the API builds the operations of ordinary index notation: permutation and
-reindexing of indices, tensor products, contraction of a dual pair both within one tensor and
-across two, evaluation of an index at a fixed component, raising and lowering against the
-metric, and conjugation. An elaborator turns pen-and-paper index expressions into those
-operations, and a further class carries index notation over to any type linearly equivalent to
-a tensor.
+A tensor species packages everything needed to work with a type of tensor in index notation — a
+symmetry group, index colors with a representation and a basis for each, a dual-color involution,
+and contraction, unit and metric data — and for each list of colors there are the tensors with those
+indices, the pure tensors and the component labels. On this base rest the operations of ordinary
+index notation: permutation and reindexing, tensor products, contraction within one tensor and
+across two, evaluation of an index, raising and lowering against the metric, and conjugation, with
+an elaborator turning pen-and-paper index expressions into these operations. Two species are built:
+the real Lorentz tensors over the Lorentz group, supporting Lorentz vectors and covectors, the
+Minkowski product, causal character, velocities and the rank-four Levi-Civita tensor; and the
+complex Lorentz tensors over SL(2, ℂ), which add the Weyl fermion colors. A canonical equivariant
+semilinear map takes the first species into the second.
 
-Two species are constructed. The real Lorentz tensors have an upper and a lower color over the
-Lorentz group, and support Lorentz vectors and covectors, the Minkowski product, causal
-character, velocities, and the rank-four Levi-Civita tensor. The complex Lorentz tensors have
-the two Weyl colors and their duals alongside the Lorentz vector colors, over SL(2, ℂ). A
-canonical equivariant semilinear map takes the first species into the second, commuting with
-permutation, tensor products, contraction of a dual pair and evaluation of an index.
+## Content (Alpha)
 
-## Built on
+### Tensor species
 
-- Lorentz Group — `Physlib/Relativity/LorentzGroup`
-- Weyl Fermions — `Physlib/Relativity/Fermions/Weyl`
+A tensor species consists of a symmetry group, a type of index colors, a representation and a
+basis for each color, an involution sending each color to the dual color it may contract with,
+and contraction and unit data satisfying coherence conditions. [1] A species may carry a metric:
+an invariant tensor for each color whose contraction against the metric of the dual color is the
+unit, this condition forming a class of its own. [2] The conditions defining a species also relate
+the metrics to the basis vectors. [planned]
 
-## Requirements
+### Tensors and their components
 
-The key data structure is defined: a tensor species, given by a group, a type of index colors,
-a representation and a basis for each color, the dual-color involution, and the contraction and
-unit data satisfying the coherence conditions. [1]
+Given a species and a list of colors, the tensors with those indices form the tensor product of
+the color representations over the index set, and the pure tensors are the choices of one vector
+for each index. [3] A component label assigns a basis index to each tensor index. [4] A
+component label of a single index is a basis index of its color, a label of a concatenated index
+list is a pair of labels, and a label drops a contracted pair of indices. [5][6][7] A tensor
+corresponds to its components in the component basis, and the tensors with no indices are the
+scalars. [3]
 
-A species may carry a metric: an invariant tensor for each color whose contraction against the
-metric of the dual color is the unit. That condition is a class of its own. [2]
+### Group action and reindexing
 
-The tensors with a given list of index colors are defined, along with the pure tensors, the
-component labels, the passage between a tensor and its components, the component basis, and the
-identification of the rank-zero tensors with the scalars. [3][4][5][6][7]
+The symmetry group acts on pure tensors and on tensors. [8] Indices permute along a
+color-preserving map, equivariantly, functorially and injectively. [8] The maps that count as
+reindexings are characterized and are closed under inverse and composition; they include the
+index maps used by products, evaluation and contraction. [9]
 
-The symmetry group acts on pure tensors and on tensors, indices permute along a color-preserving
-map, and the maps that count as reindexings are characterized and shown closed under inverse
-and composition, including the index maps used by products, evaluation and
-contraction. [8][9]
+### Products
 
-The tensor product of pure tensors and of tensors is defined, with its components in the basis,
-its equivariance, and its behaviour under swapping the factors, permuting either factor, and
-rebracketing. [10]
+The tensor product of two pure tensors, or of two tensors, concatenates their index lists. [10]
+It has explicit components in the basis, is equivariant, and is compatible with swapping the
+factors, permuting either factor, and rebracketing. [10]
 
-A pair of indices of dual color contracts, on pure tensors and on tensors, with its
-equivariance, its components in the basis, and its interaction with permutations and products;
-one tensor also contracts against another at an addressed slot, in both the result-to-end and
-the result-to-slot conventions. [11][12][13][14][15][16][17][18]
+### Contraction
 
-The unit tensor and the metric tensor of a color are defined, invariant under the group action;
-a metric contracted against the metric of the dual color collapses, the unit tensor is an
-identity for slot contraction, and raising and lowering a named index is a linear
-equivalence. [19][20][21][22]
+A pair of indices of dual color contracts, on pure tensors and on tensors, deleting the pair from
+the index list. [11][12][13] Contraction is equivariant, commutes with permutations, is symmetric
+in the contracted pair, and contractions of two different pairs commute. [13] Its components in
+the basis are sums over the contracted label. [14] Contracting inside one factor of a product
+agrees with contracting the product. [15]
 
-One index of a tensor evaluates at a fixed basis label, with its components in the basis and
-its commutation with permutations, other evaluations, contractions and products; and a tensor
-is reconstructed as the sum over basis labels of the evaluations of its last index, each
-tensored with the matching rank-one basis tensor and permuted back into the last slot. [23]
+One tensor also contracts against another at an addressed slot, either with the result placed at
+the end [16] or with the result placed at the slot. [17] For real Lorentz tensors the
+result-to-end contraction has explicit components in the standard basis. [18]
 
-Tensors can be constructed explicitly: from vectors, from elements of a tensor product of two
-or three carriers, from invariant maps, and from integer or rational components in the standard
-basis. [24][25][26]
+### Units, metrics, raising and lowering
 
-An elaborator turns pen-and-paper index expressions into tensor operations, and a class carries
-index notation to any type linearly equivalent to a tensor, with the induced group action,
-basis and products. [27][28]
+The unit tensor of a color is invariant under the group action, has explicit components, and is
+the permuted unit tensor of the dual color. [19] The metric tensor of a color is invariant, and
+contracting it against the metric tensor of the dual color gives the unit. [20] The unit tensor
+is an identity for contraction at a slot, so raising and then lowering an index is a round
+trip. [21] Raising or lowering a named index, by contraction with the metric, is an equivariant
+linear equivalence. [22]
 
-A species may carry a conjugation: a second involution on colors, the conjugation of a tensor,
-its involutivity and its commutation with contraction, together with the componentwise
-criterion used to state reality and the Hermitian condition on a metric slot. [29]
+### Evaluation
 
-The species of real Lorentz tensors is constructed, with an upper and a lower color, from the
-contravariant and covariant modules, their representations of the Lorentz group, their bases,
-and the contraction, metric and unit maps. Its metric tensors are computed in the standard
-basis, and the pairwise tensor products of the two modules are identified with square
-matrices. [30][31][32][33][34][35][36][37][38]
+One index of a tensor evaluates at a fixed basis label, on pure tensors and on tensors. [23]
+Evaluation has explicit components in the basis, and commutes with permutations, with other
+evaluations, with contractions and with products in their right factor. [23] A tensor is the sum
+over basis labels of the evaluations of its last index, each tensored with the matching rank-one
+basis tensor and permuted back into the last slot. [23] Evaluation also commutes with a product
+in its left factor and with contraction in the opposite order, and two evaluations of the same
+tensor commute. [planned]
 
-Lorentz vectors and covectors are functions on one time and d space indices, with their module,
-norm and inner-product structures, their charted-space structures, their standard bases, their
-representations of the Lorentz group, their tensorial instances and the invariant contraction
-between them, together with the coordinate maps, the time and spatial parts of a vector, and
-the model with corners under which vectors are treated as a
-manifold. [39][40][41][42][43][44][45]
+### Constructing tensors
 
-The Minkowski product of two Lorentz vectors is defined, with its symmetry, invariance and
-nondegeneracy, the adjoint of a linear map and the characterization of the maps preserving the
-product, and the causal structure it determines: causal character and its invariance, the light
-cones and causal relations, the norm characterizations of timelike and lightlike vectors, and
-the Lorentz velocities. [46][47][48][49][50]
+Tensors arise from single vectors, from elements of a tensor product of two or three carriers,
+and from invariant maps. [24] They also arise from integer components in the standard
+basis. [25] Complex Lorentz tensors arise from Gaussian-integer components, compatibly with
+products, contractions and permutations. [26]
 
-The rank-four Levi-Civita tensor is defined as a real Lorentz tensor in three spatial
-dimensions, with its components in the standard basis as a Levi-Civita symbol, its antisymmetry
-under each adjacent transposition of indices, and the epsilon-epsilon contraction identities at
-the level of the Euclidean symbol — summed over all four index slots, over the last three, and
-over the last two. [51][52]
+### Index notation
 
-The species of complex Lorentz tensors is constructed, with the left- and right-handed Weyl
-colors, their duals and the two Lorentz vector colors over SL(2, ℂ), together with the metric
-and unit tensors of each color in several equivalent forms, and the identification of pairwise
-products of complex Lorentz vectors with matrices. [53][54][55][56][57][58][59][60][61]
+An elaborator turns pen-and-paper index expressions into tensor operations. [27] The design follows
+Tooby-Smith {1}. A class carries index notation to any type linearly equivalent to a tensor, with
+the induced group action, basis and products. [28]
 
-A canonical injective semilinear map takes real Lorentz tensors to complex ones, equivariantly
-for the complexified Lorentz group and commuting with permutations, products, contractions and
-evaluations of indices. [62]
+### Conjugation
 
-Both Lorentz species will be extended to conjugation species, so that reality and Hermiticity
-conditions can be stated for real and complex Lorentz tensors. [planned]
+A species may carry a conjugation: a second involution on colors together with a conjugation of
+tensors, which is involutive and commutes with contraction. [29] A componentwise criterion for a
+tensor to equal a permutation of its conjugate expresses reality, and gives the Hermitian
+condition on a metric slot. [29] Both Lorentz species carry conjugations, so that reality and
+Hermiticity conditions apply to real and complex Lorentz tensors. [planned]
 
-The metrics and units of the real Lorentz species will be defined as intertwining maps of the
-vector and covector representations, replacing the preliminary constructions and the auxiliary
-modules used at present. [planned]
+### Real Lorentz tensors
 
-Three further commutations will be proved: of evaluation with a product in its left factor, of
-evaluation with contraction in the order opposite to the one already available, and of two
-evaluations of the same tensor. [planned]
+The real Lorentz tensors form a species over the Lorentz group {2} with an upper and a lower color,
+each dual to the other; in it, contraction is a sum of evaluations. [30] Its colors are carried by
+the contravariant and covariant modules, with their representations of the Lorentz group and their
+standard bases. [31][32] The two modules contract invariantly against each other. [33] The species
+has metric maps [34] and unit maps. [35] Its metric tensors have the Minkowski matrix as components
+in the standard basis, and raising or lowering an index multiplies components by the Minkowski
+matrix. [36] Its unit tensor has explicit components. [37] Pairwise tensor products of the two
+modules are square matrices. [38] The metrics and units of this species are intertwining maps of the
+vector and covector representations, with no preliminary constructions or auxiliary modules.
+[planned]
 
-The epsilon-epsilon identities hold at the level of tensors: contracting the Levi-Civita tensor
-with itself over all four index pairs gives −24, and over the first three gives −6 times the
-unit tensor of the lower color. [63][64][37]
+### Lorentz vectors and covectors
 
-A Euclidean Levi-Civita tensor will be added to carry the epsilon-epsilon contraction
-identities, which at present are stated for the Euclidean symbol alone. [planned]
+A Lorentz vector is a function on one time index and d space indices. [39] Lorentz vectors carry
+module, norm and inner-product structures, a charted-space structure, a standard basis and
+coordinate maps, a time component and a spatial part, and a model with corners under which they
+form a manifold. [39] The Lorentz group acts on them by matrix-vector multiplication. [40] They
+are tensorial, the induced action on the standard basis being the matrix action. [41] Lorentz
+covectors carry the same structures [42], the same kind of representation [43], and a tensorial
+instance. [44] Vectors and covectors contract invariantly against each other. [45]
 
-The conditions defining a tensor species will be extended with a relationship between the
-metrics and the basis vectors. [planned]
+### Minkowski product and causality
 
-## Further reading
+The Minkowski product of two Lorentz vectors is symmetric, Lorentz invariant and
+nondegenerate. [46] Linear maps have adjoints with respect to it, and a linear map preserves it
+exactly when its matrix lies in the Lorentz group. [46]
 
-- Formalization of physics index notation in Lean 4, Tooby-Smith. arXiv:2411.07667, https://arxiv.org/abs/2411.07667
+Each vector has a causal character — timelike, lightlike or spacelike — that is invariant under
+Lorentz transformations, and the product determines light cones, causal precedence and causal
+diamonds. [47] A vector is spacelike exactly when its Minkowski norm squared is negative. [47] It
+is timelike exactly when that norm squared is positive, and then its time component dominates its
+spatial part. [48] It is lightlike exactly when that norm squared vanishes, and causal precedence
+is reflexive. [49] A Lorentz velocity is a future-directed vector of unit Minkowski norm; its time
+component is positive and dominates its spatial part, and the velocities form a path-connected
+set. [50]
 
-## Lean declarations
+### Levi-Civita tensor
+
+The rank-four Levi-Civita tensor is a real Lorentz tensor in three spatial dimensions whose
+components in the standard basis are the Levi-Civita symbol, and it is antisymmetric under each
+adjacent transposition of indices. [51] The Euclidean Levi-Civita symbol satisfies the
+epsilon-epsilon contraction identities summed over all four index slots, over the last three,
+and over the last two. [52] At the level of tensors, contracting the Levi-Civita tensor with
+itself over all four index pairs gives −24, and over the first three gives −6 times the unit
+tensor of the lower color. [63][64][37] A Euclidean Levi-Civita tensor carries the
+epsilon-epsilon contraction identities as identities between tensors. [planned]
+
+### Complex Lorentz tensors
+
+The complex Lorentz tensors form a species over SL(2, ℂ) with the left- and right-handed Weyl colors
+{3}, their duals, and the two Lorentz vector colors. [53] The vector colors are carried by complex
+contravariant and covariant modules with their representations of SL(2, ℂ), which contract
+invariantly against each other. [54][55] The metric tensors [56] and unit tensors [57] of each color
+have several equivalent forms, including Gaussian-integer components, and the units are symmetric.
+[58] Pairwise products of complex Lorentz vectors are square matrices. [59] The full contraction of
+an antisymmetric tensor with a symmetric one equals its own negative. [60] The complex Levi-Civita
+tensor has Gaussian-integer components. [61]
+
+### From real to complex tensors
+
+A canonical injective semilinear map takes real Lorentz tensors to complex ones, sending colors
+and component labels to their complex counterparts. [62] It is equivariant for the complexified
+Lorentz group and commutes with permutations, products, contractions and evaluations of
+indices. [62]
+
+## Lean References
 
 1. Physlib/Relativity/Tensors/TensorSpecies/Basic.lean — `TensorSpecies`, `basisIdxCongr`,
    `τ_τ_apply`, `basis_congr`, `numIndices`
@@ -297,3 +330,10 @@ metrics and the basis vectors. [planned]
    `leviCivita_contract_self`, `leviCivita_contract_three`
 64. Physlib/Relativity/Tensors/RealTensor/Metrics/Basic.lean — `toDualMapAtIndex_basis_repr_apply`,
    `toDualMapAtIndex_basis_repr_apply_eq_mul`
+
+## References
+
+1. J. Tooby-Smith, *Formalization of physics index notation in Lean 4*, arXiv:2411.07667,
+   https://arxiv.org/abs/2411.07667
+2. Lorentz Group API map — Physlib/Relativity/LorentzGroup/API-map.md
+3. Weyl Fermions API map — Physlib/Relativity/Fermions/Weyl/API-map.md

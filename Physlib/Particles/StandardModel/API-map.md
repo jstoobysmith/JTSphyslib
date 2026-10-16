@@ -1,69 +1,49 @@
 # Standard Model gauge group
 
-The gauge group of the Standard Model is SU(3) × SU(2) × U(1), but only up to a quotient: a
-finite central subgroup may be divided out, and which one is not settled by the physics known
-so far. Both key data structures are therefore here — the full group, and the group obtained
-for a given choice of quotient, by the sixth, second or third roots of unity, or by nothing at
-all.
+## Abstract (Alpha)
 
-The API supplies the projections onto the three factors, the star structure, the embeddings of
-the roots of unity as central subgroups, the quotient groups with their common quotient map,
-and the characterization of that map's kernel. A separate file gives the U(1) and fundamental
-SU(2) actions on the two-dimensional complex space the Higgs sector uses. The Higgs field API
-builds on this group.
+The gauge group of the Standard Model is SU(3) × SU(2) × U(1), but only up to a quotient: a finite
+central subgroup may be divided out, and which one is not settled by the physics known so far. This
+area therefore treats both the full group and the group obtained for a given choice of quotient, by
+the sixth, second or third roots of unity, or by nothing at all, together with the projections onto
+the three factors, the star structure, the roots of unity as central subgroups, the common quotient
+map and its kernel, and the U(1) and fundamental SU(2) actions on the two-dimensional complex space
+of the Higgs sector; the Higgs field builds on this group.
 
-## Requirements
+## Content (Alpha)
 
-The key data structure is defined: the full gauge group, with its projections onto the three
-factors and extensionality in them. [1]
+### The full gauge group
 
-The star operation on the gauge group is defined, and commutes with the three
-projections. [2]
+The full gauge group is SU(3) × SU(2) × U(1); it projects onto each of its three factors, and an
+element is determined by its three projections. [1] Its star operation commutes with the three
+projections. [2] A unitary scalar gives a gauge-group element acting on all three factors at
+once, whose projections are known explicitly. [3] The gauge groups are Lie groups. [11][planned]
+The gauge bundle over spacetime and its global sections, the gauge transformations, are built
+from the full gauge group. [12][planned]
 
-A unitary scalar embeds as a gauge-group element acting on all three factors, with its
-projections identified. [3]
+### Central subgroups and quotients
 
-The sixth roots of unity embed as a central subgroup, constructed on each factor, with
-membership characterized and normality recorded. [4]
+The sixth roots of unity embed in the gauge group as a central subgroup, built factor by factor;
+membership in it has an explicit description, and it is normal. [4] The quotient of the gauge
+group by that subgroup is a group, with its projection from the full group. [5] The second roots
+of unity form a central subgroup contained in the sixth-roots subgroup, with its own
+quotient. [6] So do the third roots of unity. [7] The center of the full gauge group is
+characterized exactly, and not merely shown to contain these subgroups. [planned]
 
-The quotient of the gauge group by that subgroup is a group, with its projection. [5]
+The choice of quotient, which the physics known so far does not settle {1}, is itself a parameter,
+ranging over the sixth, second and third roots of unity and the trivial quotient; for each choice
+there is a gauge group and a central subgroup, normal and contained in the sixth-roots subgroup. [8]
+A single quotient map out of the full gauge group serves every choice: it is computed on each
+central embedding, and its kernel is exactly the chosen subgroup. [9]
 
-The subgroup of second roots of unity and its quotient are defined, with the inclusion into the
-sixth-roots subgroup. [6]
+### Higgs-sector representations and beyond
 
-The subgroup of third roots of unity and its quotient are defined, with the inclusion into the
-sixth-roots subgroup. [7]
+On the two-dimensional complex space of the Higgs sector {2}, U(1) acts by a representation and
+SU(2) by its fundamental action, and the two commute. [10] Electroweak symmetry breaking by the
+Higgs field leaves an unbroken gauge group. [planned] The fermionic content of the Standard Model,
+together with its representations of the gauge group, forms a single structure. [planned]
 
-The second key data structure takes the quotient as a parameter: the type of quotient choices
-is defined, and the gauge group, its central subgroup, the normality of that subgroup and its
-inclusion into the sixth-roots subgroup are given uniformly in the choice. [8]
-
-The quotient map out of the full gauge group is defined uniformly in that choice, computed on
-each central embedding, with its kernel characterized. [9]
-
-The U(1) representation and the fundamental SU(2) action on the two-dimensional complex space
-of the Higgs sector are defined, and they commute. [10]
-
-The gauge groups will carry a Lie group structure. Informal statements of both stand in the
-source. [11][planned]
-
-The center of the full gauge group will be characterized exactly; at present the central
-subgroups are only shown to lie inside it. [planned]
-
-The gauge bundle and the gauge transformations over spacetime will be defined. Informal
-statements of both stand in the source. [12][planned]
-
-The unbroken gauge group after electroweak symmetry breaking will be defined, using the Higgs
-field. [planned]
-
-The fermionic content of the Standard Model and its representations will be captured in a
-structure. [planned]
-
-## Further reading
-
-- D. Tong, Line Operators in the Standard Model, JHEP 07 (2017) 104. https://arxiv.org/abs/1705.01853
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Particles/StandardModel/Basic.lean — `GaugeGroupI`, `toSU3`, `toSU2`, `toU1`, `ext`
 2. Physlib/Particles/StandardModel/Basic.lean — `star_eq`, `star_toSU3`, `star_toSU2`,
@@ -96,3 +76,9 @@ structure. [planned]
    `fundamentalSU2`, `repU1_fundamentalSU2_commute`
 11. Physlib/Particles/StandardModel/Basic.lean — `gaugeGroupI_lie`, `gaugeGroup_lie`
 12. Physlib/Particles/StandardModel/Basic.lean — `gaugeBundleI`, `gaugeTransformI`
+
+## References
+
+1. D. Tong, *Line Operators in the Standard Model*, JHEP 07 (2017) 104, arXiv:1705.01853,
+   https://arxiv.org/abs/1705.01853
+2. Higgs field API map — Physlib/Particles/StandardModel/HiggsBoson/API-map.md

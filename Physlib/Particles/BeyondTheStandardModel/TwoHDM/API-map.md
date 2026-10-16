@@ -1,67 +1,50 @@
 # Two Higgs Doublet Model
 
-The two Higgs doublet model extends the Standard Model with a second Higgs doublet, so a
-configuration is a pair of Higgs vectors. That pair is the key data structure here.
+## Abstract (Alpha)
 
-The API gives the action of the gauge group on such a configuration, and the invariants that
-pin down its gauge orbit: the Gram matrix of the pair and, equivalently, the Gram vector of its
-components in the Pauli basis. Both are shown to characterize orbits and to be surjective onto
-the matrices or vectors satisfying the obvious constraints. On top of those sit the potential
-of the model, its invariance under the gauge group, its expression in terms of the Gram vector,
-and its stability theory — including an explicit counterexample to a step in one of the
-references.
+The two Higgs doublet model extends the Standard Model with a second Higgs doublet, so that a
+configuration is a pair of Higgs vectors. The global gauge group acts on such pairs, and their gauge
+orbits are pinned down by the Gram matrix of the pair or, equivalently, by the Gram vector of its
+components in the Pauli basis; both invariants characterize orbits and are surjective onto the
+matrices or vectors satisfying the obvious constraints. On top of these sit the potential of the
+model, its gauge invariance, its expression in terms of the Gram vector, and its stability theory,
+including an explicit counterexample to a step in one of the references.
 
-## Built on
+## Content (Alpha)
 
-- Higgs Field — `Physlib/Particles/StandardModel/HiggsBoson`
-- Pauli matrices — `Physlib/Relativity/PauliMatrices`
+### Configurations and the gauge action
 
-## Requirements
+A configuration of the two Higgs doublet model is a pair of Higgs vectors {1}. [1] The global gauge
+group of the Standard Model acts on such a pair. [2] Configurations form a real vector
+space. [planned] A group of order two acts by swapping the two Higgs vectors. [planned]
 
-The key data structure is defined: a configuration of the model, a pair of Higgs vectors. [1]
+### Gram matrix and Gram vector
 
-The global gauge group acts on such a pair. [2]
+The Gram matrix of a configuration is self-adjoint, with nonnegative determinant and
+trace. [3] Two configurations lie in the same gauge orbit exactly when they have the same Gram
+matrix. [4] Conversely, every self-adjoint matrix with nonnegative determinant and trace is the
+Gram matrix of some configuration. [5] Expanding the Gram matrix in the basis of Pauli matrices
+gives the Gram vector, which likewise characterizes gauge orbits and is surjective onto the
+vectors satisfying the corresponding constraints. [6]
 
-A configuration will be a real vector space. [planned]
+### The potential and its stability
 
-A group of order two will act by swapping the two Higgs vectors. [planned]
+The potential is parameterized following the convention of {2}; these parameters are related to the
+reparameterization adapted to the Gram vector used in {3}. [7] The potential of the two Higgs
+doublets is the sum of a mass term and a quartic term. [8] The potential, and each of its two terms,
+is invariant under the global gauge group. [9] Each of them is a function of the Gram vector
+alone. [10]
 
-The Gram matrix of a configuration is defined, is self-adjoint, and has nonnegative determinant
-and trace. [3]
+The potential is stable when it is bounded below. Stability is characterized through the reduced
+mass and quartic terms, functions on the unit ball of normalized Gram-vector directions: the reduced
+quartic term is nonnegative there and, wherever the reduced mass term is negative, its square is
+bounded by a fixed multiple of the reduced quartic term. [11] Strong stability, the positivity of
+the reduced quartic term, implies stability. [12] The stability arguments follow, in part, those of
+{3}, but one of its steps is false: there is an unstable potential whose reduced quartic term is
+nonnegative, and whose reduced mass term is nonnegative wherever the reduced quartic term
+vanishes. [13]
 
-Two configurations lie in the same gauge orbit exactly when they have the same Gram
-matrix. [4]
-
-The Gram matrix is surjective: every self-adjoint matrix with nonnegative determinant and trace
-is the Gram matrix of some configuration. [5]
-
-The Gram vector, the components of the Gram matrix in the Pauli basis, is defined, with its own
-gauge-orbit characterization and surjectivity. [6]
-
-The parameters of the potential are defined, together with their reparameterization adapted to
-the Gram vector. [7]
-
-The potential of the two Higgs doublets is defined, built from its mass and quartic terms. [8]
-
-The potential, and each of its two terms, is invariant under the global gauge group. [9]
-
-The potential and its terms are expressed in terms of the Gram vector. [10]
-
-Stability of the potential — that it is bounded below — is defined, and characterized in terms
-of the Gram vector. [11]
-
-Strong stability, the positivity of the reduced quartic term, implies stability. [12]
-
-A step in one of the references is refuted by an explicit counterexample: an unstable potential
-whose reduced quartic term is nonnegative, and whose reduced mass term is nonnegative wherever
-the reduced quartic term vanishes. [13]
-
-## Further reading
-
-- https://arxiv.org/abs/hep-ph/0605184
-- https://arxiv.org/abs/1605.03237
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Particles/BeyondTheStandardModel/TwoHDM/Basic.lean — `TwoHiggsDoublet`
 2. Physlib/Particles/BeyondTheStandardModel/TwoHDM/Basic.lean — `SMul GaugeGroupI TwoHiggsDoublet`,
@@ -86,3 +69,9 @@ the reduced quartic term vanishes. [13]
 13. Physlib/Particles/BeyondTheStandardModel/TwoHDM/Potential.lean — `stabilityCounterExample`,
    `stabilityCounterExample_not_potentialIsStable`,
    `forall_reduced_exists_not_potentialIsStable`
+
+## References
+
+1. Higgs field API map — Physlib/Particles/StandardModel/HiggsBoson/API-map.md
+2. arXiv:1605.03237, https://arxiv.org/abs/1605.03237
+3. arXiv:hep-ph/0605184, https://arxiv.org/abs/hep-ph/0605184

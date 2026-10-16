@@ -1,92 +1,61 @@
 # Simple pendulum
 
-A simple pendulum is a bob on a rigid massless rod of length ℓ, pinned at a pivot and swinging
-in a vertical plane under gravity g. Its configuration is the angle of the rod from the
-downward vertical, taken modulo a full turn, so the configuration space is a circle, and the
-bob sits at (ℓ sin θ, −ℓ cos θ) in the plane. The motion obeys θ̈ + (g/ℓ) sin θ = 0.
+## Abstract (Alpha)
 
-For small amplitudes the pendulum is a harmonic oscillator of period 2π√(ℓ/g). For librations —
-amplitudes below the inverted position — the period grows with the amplitude, and is given by a
-complete elliptic integral, 4√(ℓ/g) K(sin²(θ₀/2)).
+A simple pendulum is a bob on a rigid massless rod of length ℓ, pinned at a pivot and swinging in a
+vertical plane under gravity g. Its configuration is the angle of the rod from the downward
+vertical, taken modulo a full turn, so the configuration space is a circle and the bob sits at (ℓ
+sin θ, −ℓ cos θ) in the plane. The motion obeys θ̈ + (g/ℓ) sin θ = 0, which admits Newtonian,
+Lagrangian and Hamiltonian formulations, conserves energy, and has a unique solution for given
+initial angle and angular velocity. For small amplitudes the pendulum is a harmonic oscillator of
+period 2π√(ℓ/g); for librations — amplitudes below the inverted position — the period grows with the
+amplitude and is given by the complete elliptic integral 4√(ℓ/g) K(sin²(θ₀/2)).
 
-This API records the configuration space with its manifold structure and its embedding into
-physical space, the lifted Lagrangian and equation of motion, and the equivalence of that
-equation with the vanishing of the variational gradient of the action. Energy is conserved, the
-Hamiltonian formulation is available, and the Newtonian, scalar, Hamiltonian and variational
-formulations are shown to agree. Also here: the equilibria, with the separatrix energy and the
-energy bounds on either side of it; the invariance of the lifted dynamics under shifting the
-angle by whole turns; the uniqueness of the solution with given initial angle and angular
-velocity, with its time-reversal symmetry; and, for any initial data, a curve with that data
-solving the equation of motion near the initial instant.
+## Content (Alpha)
 
-The small-angle limit is treated in full — the linearized dynamics as a harmonic oscillator,
-the period 2π√(ℓ/g), and a cubic bound on the linearization error — as is the
-amplitude-dependent period formula, with its small-angle limit and its monotonicity and bounds
-in the amplitude. Identifying that formula with the return time of the nonlinear motion remains
-open.
+### Configuration space
 
-## Built on
+The configuration space of the simple pendulum, one of the pendulum configuration spaces {1}, is the
+angle of the rod from the downward vertical modulo a full turn, homeomorphic to the circle. [1] That
+configuration space is a manifold. [2] The angular lift from the real line to the configuration
+space is periodic with period 2π, and two angles give the same configuration exactly when they
+differ by a whole number of turns. [3] The configuration space maps into physical space {2}, sending
+an angle θ to the position (ℓ sin θ, −ℓ cos θ) of the bob, which lies at distance ℓ from the pivot.
+[4] A trajectory is a curve in the configuration space. [planned]
 
-- Space — `Physlib/SpaceAndTime/Space`
-- Configuration space for pendulum — `Physlib/ClassicalMechanics/Pendulum`
+### Dynamics
 
-## Requirements
+The Lagrangian of the simple pendulum is the kinetic energy ½ m ℓ² θ̇² minus the gravitational
+potential energy {3}. Its equation of motion m ℓ² θ̈ = −m g ℓ sin θ equates the rate of change of
+angular momentum with the gravitational torque, and is equivalent to the scalar form θ̈ + (g/ℓ) sin
+θ = 0. [5] The equation of motion holds exactly when the variational gradient of the action
+vanishes, and energy is conserved along solutions. [6] The Hamiltonian formulation {4} is
+equivalent: the Newtonian, scalar, Hamiltonian and variational formulations agree. [7]
 
-The key data structure is defined: the configuration space of the simple pendulum, the angle of
-the rod from the downward vertical modulo a full turn. [1]
+The hanging and the inverted positions are equilibria and solve the equation of motion. The
+separatrix energy 2 m g ℓ divides the motions: below it the pendulum never reaches the inverted
+position, and above it the angular velocity never vanishes. [8] Shifting the angle by a whole number
+of turns leaves the lifted dynamics unchanged. [9] The solution with a given initial angle and
+angular velocity is unique, the solutions are symmetric under time reversal, and a pendulum released
+from rest swings symmetrically in time. [10] For any initial angle and angular velocity there is a
+curve with that initial data which satisfies the equation of motion within ε of the initial instant.
+[11]
 
-That configuration space is a manifold. [2]
+### Small oscillations and the period
 
-The angular lift from the real line to the configuration space is available, periodic with
-period 2π. [3]
+In the small-angle limit {5} the pendulum is a harmonic oscillator of mass m ℓ² and spring constant
+m g ℓ: the linearized equation of motion is the oscillator's, its motions exist and are unique, and
+the period is 2π√(ℓ/g). [12] The full and the linearized dynamics are related by the cubic bound
+m g ℓ |θ|³/6 on the error in the torque, and the difference of the variational gradients of the two
+actions is the difference of the torque and the linearized force. [13]
 
-The configuration space maps into space, giving the position of the bob there, subject to the
-rod-length constraint. [4]
+The period of a libration of amplitude θ₀ is 4√(ℓ/g) K(sin²(θ₀/2)) {6}. This formula equals
+2π√(ℓ/g) at zero amplitude, tends to the small-angle period as the amplitude goes to zero, increases
+with the amplitude on [0, π), and is bounded below by the small-angle period and above by the
+small-angle period divided by cos(θ₀/2). [14] It is the period of the solution released from rest
+at amplitude θ₀, for amplitudes strictly between zero and the inverted position. [planned]
 
-A trajectory will be defined on the configuration space. [planned]
-
-The Lagrangian of the simple pendulum and its equation of motion are defined. [5]
-
-The equation of motion holds exactly when the variational gradient of the action vanishes, and
-energy is conserved along solutions. [6]
-
-The Hamiltonian formulation is available, and the Newtonian, scalar, Hamiltonian and
-variational formulations agree. [7]
-
-The equilibria are solutions, and come with the separatrix energy and the energy bounds below
-and above it. [8]
-
-Shifting the angle by a whole number of turns leaves the lifted dynamics unchanged. [9]
-
-The solution with a given initial angle and angular velocity is unique, and the solutions are
-symmetric under time reversal. [10]
-
-For any initial angle and angular velocity there is a curve with that initial data which
-satisfies the equation of motion within ε of the initial instant. [11]
-
-In the small-angle limit the pendulum is a harmonic oscillator of mass m ℓ² and spring constant
-m g ℓ: the linearized equation of motion is the oscillator's, its motions exist and are unique,
-and the period is 2π√(ℓ/g). [12]
-
-The full and the linearized dynamics are related by the cubic bound m g ℓ |θ|³/6 on the error
-in the torque, and the difference of the variational gradients of the two actions is the
-difference of torque and linearized force. [13]
-
-The period of a libration of amplitude θ₀ is 4√(ℓ/g) K(sin²(θ₀/2)), which equals 2π√(ℓ/g) at
-zero amplitude; its small-angle limit, its monotonicity and its bounds in the amplitude are
-recorded. [14]
-
-That formula will be shown to be the period of the solution released from rest at amplitude θ₀,
-for amplitudes strictly between zero and the inverted position. [planned]
-
-## Further reading
-
-- Landau & Lifshitz, Mechanics, 3rd Edition, Chapter 1 (The Equations of motion), Section 5 (The Lagrangian for a system of particles).
-- Landau & Lifshitz, Mechanics, 3rd Edition, Chapter 3 (Integration of the equations of motion), Section 11 (Motion in one dimension), Problem 1 (the period of the pendulum as a complete elliptic integral).
-- Landau & Lifshitz, Mechanics, 3rd Edition, Chapter 5 (Small oscillations), Section 21 (Free oscillations in one dimension).
-- Landau & Lifshitz, Mechanics, 3rd Edition, Chapter 7 (The canonical equations), Section 40 (Hamilton's equations).
-
-## Lean declarations
+## Lean References
 
 1. Physlib/ClassicalMechanics/Pendulum/SimplePendulum/Geometric/Basic.lean — `SimplePendulum.ConfigurationSpace`,
    `SimplePendulum.ConfigurationSpace.circleHomeomorph`
@@ -130,3 +99,16 @@ for amplitudes strictly between zero and the inverted position. [planned]
    `SimplePendulum.strictMonoOn_periodFormula`,
    `SimplePendulum.smallAnglePeriod_le_periodFormula`, `SimplePendulum.periodFormula_pos`,
    `SimplePendulum.periodFormula_le`, `SimplePendulum.periodFormula_le'`
+
+## References
+
+1. Configuration space for pendulum API map — Physlib/ClassicalMechanics/Pendulum/API-map.md
+2. Space API map — Physlib/SpaceAndTime/Space/API-map.md
+3. Landau & Lifshitz, *Mechanics*, 3rd Edition, Chapter 1 (The Equations of motion), Section 5 (The
+   Lagrangian for a system of particles).
+4. Landau & Lifshitz, *Mechanics*, 3rd Edition, Chapter 7 (The canonical equations), Section 40
+   (Hamilton's equations).
+5. Landau & Lifshitz, *Mechanics*, 3rd Edition, Chapter 5 (Small oscillations), Section 21 (Free
+   oscillations in one dimension).
+6. Landau & Lifshitz, *Mechanics*, 3rd Edition, Chapter 3 (Integration of the equations of motion),
+   Section 11 (Motion in one dimension), Problem 1.

@@ -1,76 +1,59 @@
 # Weyl Fermions
 
-Weyl fermions are the two-component spinors carrying the fundamental representations of SL(2,
-ℂ), the double cover of the restricted Lorentz group. The API is built around four types: the
-left-handed and right-handed Weyl spinors, and their duals. Each is a complex vector space with
-a two-element basis and a representation of SL(2, ℂ) on it.
+## Abstract (Alpha)
 
-On top of those sit the invariant contractions pairing a type with its dual, the epsilon
-metrics that raise and lower spinor indices, the units realizing the duality, and the
-identification of pairwise tensor products with 2 × 2 matrices. This API underlies the Dirac
-fermion API and the fermionic sector of the Standard Model.
+Weyl fermions are the two-component spinors carrying the fundamental representations of SL(2, ℂ),
+the double cover of the restricted Lorentz group. There are four of them — the left-handed and
+right-handed Weyl spinors and their duals — each a complex vector space with a two-element basis and
+a representation of SL(2, ℂ); on top of these sit the invariant contractions pairing each type with
+its dual, the epsilon metrics that raise and lower spinor indices, the units realizing the duality,
+and the identification of pairwise tensor products with 2 × 2 matrices. They underlie the Dirac
+fermions and the fermionic sector of the Standard Model.
 
-## Built on
+## Content (Alpha)
 
-- Lorentz Group — `Physlib/Relativity/LorentzGroup`
+### The four spinor spaces
 
-## Requirements
+A left-handed Weyl spinor ψ_α is an element of a two-dimensional complex vector space. [1] A
+right-handed Weyl spinor ψ^{α̇} is likewise an element of a two-dimensional complex vector space.
+[2] Each has a dual, ψ^α and ψ_{α̇}, again a complex vector space. [3][4] Each of the four spaces
+has a two-element basis, and every spinor expands in it. [5][6][7][8] Each carries a representation
+of SL(2, ℂ), the double cover of the restricted Lorentz group {1}, whose matrix in that basis is the
+defining matrix, its conjugate, its inverse transpose or its inverse conjugate transpose as
+appropriate. [9][10][11][12] Weyl fermions are the building blocks of Dirac fermions {2}, and the
+two-component formalism follows Dreiner, Haber and Martin {3}.
 
-The first key data structure is defined: the left-handed Weyl spinors, with their complex
-vector space structure. [1]
+### Contractions, metrics and units
 
-The second key data structure is defined: the right-handed Weyl spinors, with their complex
-vector space structure. [2]
+Each Weyl type pairs invariantly with its dual, giving bilinear maps that are also intertwining
+maps of representations. [13] On basis elements these contractions are Kronecker deltas, and
+each is symmetric under exchanging its two factors. [14]
 
-The duals of both are defined, with their complex vector space structures. [3][4]
+The epsilon metrics ε_{αβ}, ε^{αβ}, ε_{α̇β̇} and ε^{α̇β̇} are invariant tensors, intertwining
+maps out of the trivial representation, with explicit expansions in the basis. [15] Their
+invariance rests on the raw epsilon matrix ε intertwining M ∈ SL(2, ℂ) with its inverse transpose,
+Mε = ε(M⁻¹)ᵀ, and the complex conjugate of M with its inverse conjugate transpose. [16]
+Contracting a metric with the metric of the dual type over one index gives the unit,
+ε_{αβ}ε^{βγ} = δ_α^γ, and likewise for the other types. [17]
 
-Each of the four types carries a two-element basis, and every element expands in
-it. [5][6][7][8]
+The units δ_α^β and δ^{α̇}_{β̇} realize the duality between each type and its dual, and
+contracting a unit with a spinor returns that spinor. [18] Each unit is symmetric under exchange
+of its two factors. [19]
 
-Each carries a representation of SL(2, ℂ), with its matrix in that basis
-identified. [9][10][11][12]
+### Duality and matrices
 
-The invariant pairings between a Weyl type and its dual are defined, as bilinear maps and as
-intertwining maps of representations. [13]
+The dual of the left-handed representation is the representation on the dual left-handed
+spinors. [20] The dual of the right-handed representation is the representation on the dual
+right-handed spinors, equivariantly for SL(2, ℂ). [22][planned] Pairwise tensor products of the
+Weyl types are 2 × 2 complex matrices, equivariantly for the action of SL(2, ℂ). [21] The
+right-handed representation is the complex conjugate of the left-handed one. [planned]
 
-Those contractions are computed on basis elements, and their symmetry under exchange is
-recorded. [14]
+### Field equations
 
-The epsilon metrics on each type are defined as intertwining maps out of the trivial
-representation, and expanded in the basis. [15]
+A massless spinor field obeys the Weyl equation. [planned] The Majorana condition relates a
+left-handed Weyl fermion to a right-handed one. [planned]
 
-The interaction of the raw metric with SL(2, ℂ) is recorded, both directly and under the star
-operation. [16]
-
-Contracting a metric against the corresponding contraction is computed. [17]
-
-The units realizing the duality between each type and its dual are defined, and contracting one
-with a spinor returns that spinor. [18]
-
-Each unit is symmetric under exchange of its two factors. [19]
-
-The dual of the left-handed representation is identified with the representation on the dual
-left-handed spinors. [20]
-
-Pairwise tensor products of the Weyl types are identified with 2 × 2 complex matrices,
-equivariantly for the action of SL(2, ℂ). [21]
-
-The same equivalence will be given for the right-handed spinors and their dual, together with
-its equivariance. Both are present only as informal statements. [22][planned]
-
-The right-handed representation will be identified with the complex conjugate of the
-left-handed one. [planned]
-
-The Weyl equation will be stated for a massless spinor field. [planned]
-
-The Majorana condition, relating a left-handed Weyl fermion to a right-handed one, will be
-stated. [planned]
-
-## Further reading
-
-- Dreiner, Haber and Martin, Two-component spinor techniques and Feynman rules for quantum field theory and supersymmetry, Phys. Rept. 494 (2010) 1-196. https://arxiv.org/abs/0812.1594
-
-## Lean declarations
+## Lean References
 
 1. Physlib/Relativity/Fermions/Weyl/LeftHanded.lean — `LeftHandedWeyl`,
    `AddCommMonoid LeftHandedWeyl`, `AddCommGroup LeftHandedWeyl`, `Module ℂ LeftHandedWeyl`,
@@ -131,3 +114,11 @@ stated. [planned]
    `dualRightRightToMatrix_ρ`, `dualLeftDualRightToMatrix_ρ`, `leftRightToMatrix_ρ`
 22. Physlib/Relativity/Fermions/Weyl/Duals.lean — `RightHandedWeyl.dualEquiv`,
    `RightHandedWeyl.dualEquiv_equivariant`
+
+## References
+
+1. Lorentz Group API map — Physlib/Relativity/LorentzGroup/API-map.md
+2. Dirac Fermions API map — Physlib/Relativity/Fermions/Dirac/API-map.md
+3. H. K. Dreiner, H. E. Haber and S. P. Martin, *Two-component spinor techniques and Feynman rules
+   for quantum field theory and supersymmetry*, Phys. Rept. 494 (2010) 1–196, arXiv:0812.1594,
+   https://arxiv.org/abs/0812.1594.
