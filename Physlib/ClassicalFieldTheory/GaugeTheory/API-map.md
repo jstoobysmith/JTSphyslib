@@ -20,16 +20,15 @@ covariant-derivative theory. Everything the general theory needs is therefore st
 
 ## Requirements
 
-The library currently covers two pieces of gauge theory. For the Standard Model, it defines the
-concrete gauge group SU(3) × SU(2) × U(1), its projections and its central discrete subgroup. [1]
-For the abelian case, the electromagnetic potential serves as a spacetime-valued Lorentz-vector
-gauge field, and its field strength is built from that potential. [2][3] Shifting the potential
-by the gradient of a scalar defines a gauge transformation, with the pure-gauge potential given
-by shifting zero. [4] These transformations leave the field strength invariant; in particular,
-pure-gauge configurations have vanishing curvature, a result that depends on the metric
-contraction used to define the field strength. [5][6] The transformations compose, with the
-trivial shift as identity and successive shifts adding, and they are compatible with the Lorentz
-group action. [7][8]
+The Standard Model gauge group is SU(3) × SU(2) × U(1), with its projections and central
+discrete subgroup. [1] In the abelian theory, the electromagnetic potential is a
+spacetime-valued Lorentz-vector gauge field, and its field strength is built from that
+potential. [2][3] A gauge transformation shifts the potential by the gradient of a scalar; the
+pure-gauge potential is obtained by shifting zero. [4] These transformations leave the field
+strength invariant; in particular, pure-gauge configurations have vanishing curvature, a
+result that depends on the metric contraction used to define the field strength. [5][6] Gauge
+transformations compose: the trivial shift acts as identity and successive shifts add. [7] They
+are compatible with the Lorentz-group action. [8]
 
 The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the
 structure group and define a gauge field valued in its Lie algebra. [planned] It will also define
