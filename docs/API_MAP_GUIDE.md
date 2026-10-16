@@ -1,23 +1,52 @@
 # Writing good API maps
 
-An `API-map.md` file records what an API is meant to contain, what has been
-built, and where each piece lives in the Lean source. It is the human-readable
-contract for an API directory: a reader can see the intended scope, tell done
-work from planned work, and jump straight to the declarations that realize
-each requirement.
+## What is an API map
 
-A map is a prose document. The body explains the API in words, as you would
+In Physlib an API map is a human-readable document which discusses the physics
+in a given area, and links to the corresponding Lean declarations.
+
+It can be thought of as a `Roadmap`, a `Blueprint`, or as a `Wiki`.
+
+## The file format of an API map
+
+An API map is a `.md` file. This allows it to easily be viewed and edited both in VSCode, and on GitHub.
+
+## Structure
+
+The API map should have the following structure:
+- **Title**: A single `# ` heading with the API's name.
+- **Abstract**: A single section titled with either `## Abstract` or `## Abstract (Alpha)`.
+
+  The distinction between `## Abstract` and `## Abstract (Alpha)` is that the latter is used for API maps which have not gone under the stringent review process. Similar to the distinction between Physlib and PhyslibAlpha.
+
+  The abstract should be a single paragraph.
+- **Content**: A section titled `## Content`. This is a discussion of the concepts in a given area, with references to the corresponding Lean declarations.
+- **Content (Alpha)**: A section titled `## Content (Alpha)`. Same as `## Content`, but for API maps which have not gone under the stringent review process. It should extend what is in `## Content`.
+
+  An API map can have both `## Content` and `## Content (Alpha)` sections, or just one.
+- **Lean References**: A section titled `## Lean References` linking concepts discussed in the content sections to their corresponding Lean declarations.
+
+## Lean citations
+
+The *Content* explains the API in words, as you would
 explain it to a colleague who does not yet know the Lean names; the Lean
 declarations are collected at the end, and the prose points at them with
 numbered citations — `[1]`, `[2]` — in the manner of a paper's bibliography.
-A requirement with no citation yet is marked `[planned]`.
+Any part of *Content* which has not yet been formalized in Lean is marked `[planned]`.
 
-The format used to be a YAML file, `API-map.yaml`, in which each requirement
-was a `description`/`done`/`location` triple. Nothing about that is lost: the
-paragraph is the description, a citation means done, and the reference entry
-is the location. What is gained is that the file now reads as a document
-rather than as a data structure, and that the Lean names live in one place
-instead of being scattered through the text.
+## Content first style
+
+A content first style should be taken. For example:
+```
+A general gauge theory admits an arbitrary Lie group as its structure group. [planned] Its
+gauge field takes values in the Lie algebra of that group. [planned] Matter fields carry a
+gauge-covariant derivative with a defined transformation law. [planned] The non-abelian field.
+```
+
+Not the following (which is a RoadMap style)
+```
+The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the structure group and define a gauge field valued in its Lie algebra. [planned] It will also define the gauge-covariant derivative on matter fields and its transformation law, along with the Yang–Mills curvature and its covariant transformation. [planned] The Yang–Mills action and its field equations, parallel transport and holonomy, and a formulation of gauge fields as connections on principal bundles are also planned. [planned]
+```
 
 ## When to write one
 
@@ -38,98 +67,9 @@ One `API-map.md` sits in the top directory of the API it describes:
 The map's own path is the API's directory; the reference entries at the end
 then point at the specific `.lean` files under (or near) it.
 
-## The shape of a map
-
-    # Time
-
-    An instant of time is modelled by a single real number, together with an
-    arbitrary but fixed choice of unit and orientation.
-
-    Instants form an affine space over the reals: any two of them determine an
-    elapsed time, and none is canonically zero.
-
-    ## Built on
-
-    - Space — `Physlib/SpaceAndTime/Space`
-
-    ## Requirements
-
-    The key data structure is defined: a structure with a single real field,
-    representing an instant of time. [1]
-
-    Instants carry an affine structure over the reals, with real-valued
-    translations and real-valued elapsed times between them. [2]
-
-    Time will carry an action of the translation group. [planned]
-
-    ## Further reading
-
-    - Lean Zulip, #Physlib > Space vs EuclideanSpace: https://...
-
-    ## Lean declarations
-
-    1. Physlib/SpaceAndTime/Time/Basic.lean — `Time`
-    2. Physlib/SpaceAndTime/Time/Basic.lean — `VAdd ℝ Time`, `VSub ℝ Time`,
-       `AddTorsor ℝ Time`, `vadd_val`, `vsub_eq_val`
-
-The pieces, in order:
-
-- **The title** is a single `# ` heading on the first line: the API's name,
-  e.g. `# Time`, `# Lorentz group`.
-- **The overview** is the prose between the title and the first section: one
-  or more paragraphs describing what the API is for and how it hangs
-  together. This is the part a reader meeting the API for the first time
-  reads, so write it for them.
-- **`## Built on`** lists the APIs this one depends on, one per line, as
-  `- Name — `path``. Omit the section if there are none.
-- **`## Requirements`** is the body: one paragraph per requirement (see
-  below). Required.
-- **`## Further reading`** lists external references — papers, books, Zulip
-  threads — one per line. Omit the section if there are none.
-- **`## Lean declarations`** is the numbered reference list, and must come
-  last. Required; write `*None yet.*` if the API is all roadmap so far.
-
-No other `##` sections are allowed, and the sections come in this order.
-
-## Writing a requirement
-
-A requirement is one paragraph of prose, closed by its citations:
-
-    Instants carry an affine structure over the reals, with real-valued
-    translations of instants and real-valued elapsed times between them. [2]
-
-Rules:
-
-- **One paragraph, one requirement.** Paragraphs are separated by a blank
-  line. Keep a requirement to a sentence or two; if it needs three, it is
-  probably two requirements.
-- **Every paragraph ends in citations or `[planned]`.** A paragraph with
-  citations alone is done work; `[planned]` is scope that is still open, and
-  is the only correct way to record it. Do not cite a file that does not yet
-  contain the result.
-- **A planned requirement may still cite**, with `[planned]` last, when
-  something partial already stands in for it — most often an informal
-  statement awaiting formalization. It still counts as planned: the marker,
-  not the citation, is what says whether a requirement is done.
-- **Write done work in the present tense** ("Instants carry an affine
-  structure...") and planned work in the future ("Time will carry an action of
-  the translation group.").
-- **Keep Lean names out of the prose.** Say "the time derivative of a function
-  of time", not "`Time.deriv`"; the citation says which declaration that is.
-  Mathematical notation that is ordinary prose (ℝ, `d`-dimensional) is fine.
-  The linter counts backticked names in requirement prose and reports the
-  total; it does not fail on them, because the occasional name really is the
-  clearest wording — but a map with many of them has not been written as
-  prose.
-- **Cite several references when a requirement spans several files**, by
-  writing the citations one after another: `[3][4]`. Each reference entry
-  covers exactly one file.
-- Do not write "The API contains...". Everything in the file is what the API
-  contains; say what the thing *is* instead.
-
 ## Writing a reference entry
 
-Each entry of `## Lean declarations` is one file and the declarations in it
+Each entry of `## Lean References` is one file and the declarations in it
 that the citing requirement is about:
 
     7. Physlib/SpaceAndTime/Time/Derivatives.lean — `Time.deriv`, `notation ∂ₜ`,
@@ -162,8 +102,7 @@ Rules:
 ## Run the linter before opening a PR
 
 The linter checks the document's shape (the title, the overview, the required
-sections and their order), that every requirement closes with citations or
-`[planned]`, that citations and entries correspond, and, for every entry, that
+sections and their order), that citations and entries correspond, and, for every entry, that
 the file exists and each declaration and notation named is present in it. It
 needs no third-party packages.
 
