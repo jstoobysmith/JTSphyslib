@@ -157,9 +157,9 @@ lemma adjointCoeff_conj_of_mem_truncationKer (g : GJ) {n : ℕ} {U : GJ}
   base-point Taylor data of the jet Lie algebra. -/
 lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : GJ) {n : ℕ} {U : GJ}
     (hU : U ∈ jets.truncationKer n) {s : Multiset (Fin 1 ⊕ Fin 3)} (hs : s.card ≤ n)
-    (Y : 𝔤J) : jets.evalLie (jets.iteratedDeriv s (jets.adjoint (g * U * g⁻¹) Y)) =
+    (Y : 𝔤J) : jets.evalLie (jets.iteratedDeriv s (jets.adjointJ (g * U * g⁻¹) Y)) =
       jets.evalLie (jets.iteratedDeriv s Y) := by
-  rw [evalLie_iteratedDeriv_adjoint, Multiset.sum_antidiagonal_eq_of_fst_ne_zero s _
+  rw [evalLie_iteratedDeriv_adjointJ, Multiset.sum_antidiagonal_eq_of_fst_ne_zero s _
     fun p hp hp1 => ?_]
   · rw [jets.adjointCoeff_conj_of_mem_truncationKer g hU (by simp), adjointCoeff_one,
       ite_eq_left rfl, LinearMap.id_apply]
@@ -177,10 +177,10 @@ lemma evalLie_iteratedDeriv_adjoint_conj_of_mem_truncationKer (g : GJ) {n : ℕ}
   contributes its own form and its transport by the conjugate. -/
 lemma maurerCartan_conj (g U : GJ) (μ : Fin 1 ⊕ Fin 3) :
     jets.maurerCartan (g * U * g⁻¹) μ =
-      jets.maurerCartan g μ + jets.adjoint g (jets.maurerCartan U μ)
-        - jets.adjoint (g * U * g⁻¹) (jets.maurerCartan g μ) := by
+      jets.maurerCartan g μ + jets.adjointJ g (jets.maurerCartan U μ)
+        - jets.adjointJ (g * U * g⁻¹) (jets.maurerCartan g μ) := by
   rw [jets.maurerCartan_cocycle (g * U) g⁻¹, jets.maurerCartan_cocycle g U, maurerCartan_inv,
-    map_neg, map_mul jets.adjoint (g * U) g⁻¹, Module.End.mul_apply, sub_eq_add_neg]
+    map_neg, map_mul jets.adjointJ (g * U) g⁻¹, Module.End.mul_apply, sub_eq_add_neg]
 
 /-- The truncation kernels are normal subgroups: conjugating a jet trivial to order `n`
   gives a jet trivial to order `n`. -/
@@ -333,7 +333,7 @@ to each summand.
 
 /-- The radial component `∑_μ x_μ ω_μ(U)` of the Maurer–Cartan form of a jet. -/
 noncomputable def radial (U : GJ) : 𝔤J :=
-  ∑ μ, jets.coord μ (jets.maurerCartan U μ)
+  ∑ μ, jets.mulCoord μ (jets.maurerCartan U μ)
 
 /-- The symmetrized Maurer–Cartan data are the Taylor data of the radial component:
   `sym(ω(U))_r|₀ = (1/|r|) (∂_r ρ(U))|₀`. -/
@@ -344,7 +344,7 @@ lemma symmetrizedMaurerCartanCoeff_eq_evalLie_iteratedDeriv_radial (U : jets.tru
   classical
   rw [symmetrizedMaurerCartanCoeff_apply, symmetrizedMaurerCartanForm, map_smul,
     map_multiset_sum, Multiset.map_map, radial, map_sum, map_sum,
-    Finset.sum_congr rfl fun μ _ => jets.evalLie_iteratedDeriv_coord μ r.1 _,
+    Finset.sum_congr rfl fun μ _ => jets.evalLie_iteratedDeriv_mulCoord μ r.1 _,
     Finset.sum_multiset_map_count,
     Finset.sum_subset (Finset.subset_univ r.1.toFinset) fun μ _ hμ => by
       rw [Multiset.count_eq_zero.mpr fun h => hμ (Multiset.mem_toFinset.mpr h), zero_smul]]

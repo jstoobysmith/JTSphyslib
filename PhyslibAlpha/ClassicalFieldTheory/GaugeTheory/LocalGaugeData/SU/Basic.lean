@@ -329,9 +329,10 @@ variable {n : ℕ}
 @[simp] lemma su_ofConstant : (su n).ofConstant = JetSU.ofConstant := rfl
 @[simp] lemma su_evalLie_apply (a : JetSUAlgebra n) : (su n).evalLie a = JetSUAlgebra.evalLie a :=
   rfl
-@[simp] lemma su_ofConstantLie : (su n).ofConstantLie = JetSUAlgebra.ofConstantLie := rfl
+@[simp] lemma su_ofConstantLie :
+    ((su n).ofConstantLie : SUAlgebra n →ₗ[ℝ] JetSUAlgebra n) = JetSUAlgebra.ofConstantLie := rfl
 @[simp] lemma su_deriv (μ : Fin 1 ⊕ Fin 3) : (su n).deriv μ = JetSUAlgebra.deriv μ := rfl
-@[simp] lemma su_adjoint : (su n).adjoint = JetSUAlgebra.adjoint := rfl
+@[simp] lemma su_adjointJ : (su n).adjointJ = JetSUAlgebra.adjoint := rfl
 @[simp] lemma su_maurerCartan : (su n).maurerCartan = JetSUAlgebra.mc := rfl
 
 /-- The canonical `SU(n)` factor of the local gauge data of `SU(n)`. -/

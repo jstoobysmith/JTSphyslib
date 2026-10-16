@@ -25,7 +25,7 @@ substitution homomorphism determined by this affine action on the generators.
 
 The linear part is built from the adjoint Taylor coefficients `LocalGaugeData.adjointCoeff` of
 the package, whose multiplicativity up to convolution is the Taylor–Leibniz theorem
-`LocalGaugeData.evalLie_iteratedDeriv_adjoint`; it makes the transport multiplicative and
+`LocalGaugeData.evalLie_iteratedDeriv_adjointJ`; it makes the transport multiplicative and
 gives the cocycle identity for the Maurer–Cartan shift.
 
 ## ii. Key results
@@ -345,12 +345,12 @@ lemma mcBosonCoeff_mul (U V : GJ) (s : Multiset (Fin 1 ⊕ Fin 3)) :
     rw [hE]
     refine Finset.sum_congr rfl fun μ _ => ?_
     rw [show jets.maurerCartan (U * V) μ
-        = jets.maurerCartan U μ + jets.adjoint U (jets.maurerCartan V μ) from
+        = jets.maurerCartan U μ + jets.adjointJ U (jets.maurerCartan V μ) from
         jets.maurerCartan_cocycle U V μ,
       map_add, map_add,
-      show jets.adjoint U (jets.maurerCartan V μ)
-        = jets.adjoint U (jets.maurerCartan V μ) from rfl,
-      jets.evalLie_iteratedDeriv_adjoint, TensorProduct.tmul_add,
+      show jets.adjointJ U (jets.maurerCartan V μ)
+        = jets.adjointJ U (jets.maurerCartan V μ) from rfl,
+      jets.evalLie_iteratedDeriv_adjointJ, TensorProduct.tmul_add,
       Multiset.tmul_sum, Multiset.map_map]
     exact congrArg (fun z => _ + z)
       (congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => rfl))

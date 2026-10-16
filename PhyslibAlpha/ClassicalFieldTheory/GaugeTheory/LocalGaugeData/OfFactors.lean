@@ -272,25 +272,24 @@ noncomputable def trivial : LocalGaugeData Unit Unit Unit Unit where
   eval_ofConstant _ := rfl
   evalLie := 0
   ofConstantLie := 0
-  ofConstantLie_lie _ _ := rfl
   evalLie_ofConstantLie _ := rfl
   deriv _ := 0
   deriv_comm _ _ _ := rfl
   deriv_bracket _ _ _ := rfl
   deriv_ofConstantLie _ _ := rfl
-  coord _ := 0
-  deriv_coord _ _ _ := rfl
-  evalLie_coord _ _ := rfl
-  coord_lie _ _ _ := rfl
+  mulCoord _ := 0
+  deriv_mulCoord _ _ _ := rfl
+  evalLie_mulCoord _ _ := rfl
+  mulCoord_bracket _ _ _ := rfl
+  adjointJ := 1
+  adjointJ_bracket _ _ _ := rfl
   adjoint := 1
-  adjoint_lie _ _ _ := rfl
-  adjointValue := 1
-  evalLie_adjoint _ _ := rfl
+  evalLie_adjointJ _ _ := rfl
   maurerCartan _ _ := ()
   maurerCartan_ofConstant _ _ := rfl
   maurerCartan_cocycle _ _ _ := rfl
   maurerCartan_structure _ _ _ := rfl
-  deriv_adjoint _ _ _ := rfl
+  deriv_adjointJ _ _ _ := rfl
 
 instance instFaithfulTrivial : trivial.Faithful where
   ext_of_evalLie_iteratedDeriv _ := rfl

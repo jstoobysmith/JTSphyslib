@@ -430,7 +430,7 @@ lemma symbol_mem_symFieldAdjoin_sup (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1
     A s μ φ ∈ Algebra.adjoin ℂ (symSymbolsLE A (s.card + 1) ∪ towerLT A s.card) ⊔
       Algebra.adjoin ℂ (symbolsLE A (s.card - 1)) := by
   rw [sub_eq_iff_eq_add.mp (deriv_sub_symmetrizedDeriv_eq_sum s A φ μ)]
-  refine add_mem ?_ (SetLike.le_def.mp le_sup_left
+  refine add_mem ?_ (IsConcreteLE.le_iff.mp le_sup_left
     (Algebra.subset_adjoin (Or.inl ⟨μ ::ₘ s, φ, Multiset.cons_ne_zero, by simp, rfl⟩)))
   -- the antisymmetric remainder: field strength plus lower-order terms
   rw [← algebraMap_smul ℂ ((1 : ℝ)/(s.card + 1 : ℝ))]
@@ -452,7 +452,7 @@ lemma symbol_mem_symFieldAdjoin_sup (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1
     simp only [LinearMap.sub_apply] at h
     rw [← h, hνs, hμs]
   rw [hpair]
-  refine sub_mem ?_ (SetLike.le_def.mp le_sup_right
+  refine sub_mem ?_ (IsConcreteLE.le_iff.mp le_sup_right
     (adjoin_symbols_mono (by omega) (commutatorFam_mem A (s - {ν}) ν μ φ)))
   -- the field-strength part, through the covariant tower
   set l := (s - {ν}).toList with hl'
@@ -462,9 +462,9 @@ lemma symbol_mem_symFieldAdjoin_sup (s : Multiset (Fin 1 ⊕ Fin 3)) (μ : Fin 1
       iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
         (iteratedCovDerivAdjoint A l (fieldStrength A ν μ) 0 φ -
           fieldStrength A ν μ (Multiset.ofList l + 0) φ) from by rw [add_zero, hl]; abel]
-  refine sub_mem (SetLike.le_def.mp le_sup_left
+  refine sub_mem (IsConcreteLE.le_iff.mp le_sup_left
     (Algebra.subset_adjoin (Or.inr ⟨l, ν, μ, φ, by omega, rfl⟩))) ?_
-  exact SetLike.le_def.mp le_sup_right (adjoin_symbols_mono (by simp; omega)
+  exact IsConcreteLE.le_iff.mp le_sup_right (adjoin_symbols_mono (by simp; omega)
     (iteratedCovDerivAdjoint_sub_mem l ν μ 0 φ))
 
 /-- The generation theorem, by strong induction on the order: the derivative symbols of
@@ -1195,13 +1195,13 @@ lemma mem_sup_adjoin_range_topCoord {z : B}
   refine Algebra.adjoin_le ?_ hz
   rintro b (⟨r, φ, hr0, hrm1, rfl⟩ | hb)
   · by_cases hcm : r.card ≤ m
-    · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, hcm, rfl⟩))
+    · exact Algebra.mem_sup_left (Algebra.subset_adjoin (Or.inl ⟨r, φ, hr0, hcm, rfl⟩))
     · rw [symmetrizedDeriv_eq_sum_coord bv r φ]
       refine Subalgebra.sum_mem _ fun j _ => ?_
       rw [← algebraMap_smul ℂ (φ (bv j))]
-      exact Subalgebra.smul_mem _ (SetLike.le_def.mp le_sup_right (Algebra.subset_adjoin
+      exact Subalgebra.smul_mem _ (Algebra.mem_sup_right (Algebra.subset_adjoin
         (Set.mem_range_self (f := topCoord h.A m bv) (⟨r, by omega⟩, j)))) _
-  · exact SetLike.le_def.mp le_sup_left (Algebra.subset_adjoin (Or.inr hb))
+  · exact Algebra.mem_sup_left (Algebra.subset_adjoin (Or.inr hb))
 
 omit [Module.Finite ℝ 𝔤] in
 /-- The pure jet realizing the shift family `t` translates each top-order coordinate by

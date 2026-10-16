@@ -209,7 +209,7 @@ lemma ext_towers {k₁ k₂ : Realization T hGL B repGauge repLorentz}
 lemma gauge_fieldStrength (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repGauge g (k.fieldStrength l μ ν φ)
-      = k.fieldStrength l μ ν ((jets.adjointValue g⁻¹).dualMap φ) := by
+      = k.fieldStrength l μ ν ((jets.adjoint g⁻¹).dualMap φ) := by
   have key : repGauge g (k.fieldStrength l μ ν φ)
       = k.toAlgHom.toLinearMap (repValue T g (covFieldStrength T l μ ν φ)) :=
     (k.map_repValue g _).symm

@@ -110,7 +110,7 @@ structure MatrixRep (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (ι : Type) [Fint
     action with its adjoint transform. -/
   mat_mul_jetAct : ∀ (U : GJ) (c : 𝔤),
     mat U * jetAct (jets.ofConstantLie c)
-      = jetAct (jets.adjoint U (jets.ofConstantLie c)) * mat U
+      = jetAct (jets.adjointJ U (jets.ofConstantLie c)) * mat U
 
 namespace MatrixRep
 
@@ -558,7 +558,7 @@ lemma isInfinitesimalActionOf :
   Lorentz factor `S`, transported through `e`. -/
 noncomputable def repLorentz (ρ : Representation ℂ SL(2,ℂ) S) :
     Representation ℂ SL(2,ℂ) V :=
-  (MonoidHomClass.toMonoidHom (e.symm.conjAlgEquiv (R := ℂ))).comp
+  (MonoidHom.ofClass (e.symm.conjAlgEquiv (R := ℂ))).comp
     (ρ.tprod (Representation.trivial ℂ SL(2,ℂ) (ι → ℂ)))
 
 /-!

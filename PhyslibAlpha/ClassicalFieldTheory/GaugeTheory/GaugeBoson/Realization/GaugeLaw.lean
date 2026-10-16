@@ -331,7 +331,7 @@ lemma repGauge_commutator
   set Φ : B →ₗ[ℝ] B := (repGauge U).restrictScalars ℝ with hΦdef
   set T₀ : 𝔤 →ₗ[ℝ] 𝔤 :=
     (jets.evalLie).toLinearMap ∘ₗ jets.iteratedDeriv 0 ∘ₗ
-      jets.adjoint U⁻¹ ∘ₗ jets.ofConstantLie with hT₀def
+      jets.adjointJ U⁻¹ ∘ₗ jets.ofConstantLie with hT₀def
   set cμ : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ μ) with hcμ
   set cν : 𝔤 := jets.evalLie (jets.maurerCartan U⁻¹ ν) with hcν
   set s : B ⊗[ℝ] 𝔤 := dualPairEquiv.symm (h.A 0 μ) with hs
@@ -340,8 +340,8 @@ lemma repGauge_commutator
   -- the base-point adjoint transport is a Lie algebra morphism
   have hT₀lie : ∀ a b : 𝔤, T₀ ⁅a, b⁆ = ⁅T₀ a, T₀ b⁆ := by
     intro a b
-    simp [hT₀def, jets.ofConstantLie_lie,
-      jets.adjoint_lie,
+    simp [hT₀def, jets.ofConstantLie.map_lie,
+      jets.adjointJ_bracket,
       LieHom.map_lie]
   -- the transformed component families in tensor form
   have hfam : ∀ (ρ : Fin 1 ⊕ Fin 3),

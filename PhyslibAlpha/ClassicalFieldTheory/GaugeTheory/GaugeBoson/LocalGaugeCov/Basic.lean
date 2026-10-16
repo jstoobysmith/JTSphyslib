@@ -299,7 +299,7 @@ lemma repJet_eq_repValue_eval (U : GJ) (x : LocalGaugeCovFieldAlgebra 𝔤) :
   adjoint action of the inverse. -/
 lemma repValue_covF (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    repValue jets g (covF 𝔤 l μ ν φ) = covF 𝔤 l μ ν ((jets.adjointValue g⁻¹).dualMap φ) := by
+    repValue jets g (covF 𝔤 l μ ν φ) = covF 𝔤 l μ ν ((jets.adjoint g⁻¹).dualMap φ) := by
   refine Subtype.ext ?_
   rw [coe_repValue, coe_covF, coe_covF, repJet_covDerivFieldStrength_eval, map_inv jets.eval,
     jets.eval_ofConstant]
@@ -308,7 +308,7 @@ lemma repValue_covF (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ F
 lemma repJet_covF (U : GJ) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repJet jets U (covF 𝔤 l μ ν φ)
-      = covF 𝔤 l μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) := by
+      = covF 𝔤 l μ ν ((jets.adjoint (jets.eval U⁻¹)).dualMap φ) := by
   rw [repJet_eq_repValue_eval, repValue_covF, map_inv jets.eval]
 
 /-- The Lorentz law of the generators: every covariant slot and both covector indices mix

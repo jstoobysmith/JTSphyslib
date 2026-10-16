@@ -90,7 +90,7 @@ structure U1Factor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) where
     φJ (jets.maurerCartan U μ)
       = Complex.I • (pderiv μ (u U : SpaceTimeAlgebra) * star (u U : SpaceTimeAlgebra))
   φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
-    φJ (jets.adjoint U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
+    φJ (jets.adjointJ U (jets.ofConstantLie c)) = φJ (jets.ofConstantLie c)
 
 /-!
 
@@ -119,7 +119,7 @@ structure SUFactor (jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J) (n : Type) [Fintyp
     φJ (jets.maurerCartan U μ)
       = Complex.I • (((u U).map fun f => pderiv μ f) * star (u U))
   φJ_adjoint : ∀ (U : GJ) (c : 𝔤),
-    φJ (jets.adjoint U (jets.ofConstantLie c)) = u U * φJ (jets.ofConstantLie c) * star (u U)
+    φJ (jets.adjointJ U (jets.ofConstantLie c)) = u U * φJ (jets.ofConstantLie c) * star (u U)
 
 /-!
 
@@ -151,28 +151,32 @@ variable {jets : LocalGaugeData G₀ 𝔤 GJ 𝔤J} {jets' : LocalGaugeData G₀
 
 /-- A `U(1)` factor pulled back along a morphism. -/
 noncomputable def U1Factor.comap (F : U1Factor jets') (h : Hom jets jets') : U1Factor jets where
-  u := F.u.comp h.grp
-  φ := F.φ.comp h.lie
+  u := F.u.comp h.groupJ
+  φ := F.φ.comp h.lie.toLinearMap
   φJ a := F.φJ (h.lieJ a)
-  φJ_ofConstantLie c := by rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply]
+  φJ_ofConstantLie c := by
+    rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply, LieHom.coe_toLinearMap]
   φJ_cc_foldl p a := by
-    rw [F.φJ_cc_foldl, LinearMap.comp_apply, ← h.evalLie_lieJ, h.lieJ_iteratedDeriv]
+    rw [F.φJ_cc_foldl, LinearMap.comp_apply, LieHom.coe_toLinearMap, ← h.evalLie_lieJ,
+      h.lieJ_iteratedDeriv]
   φJ_maurerCartan U μ := by rw [h.lieJ_maurerCartan, F.φJ_maurerCartan, MonoidHom.comp_apply]
-  φJ_adjoint U c := by rw [h.lieJ_adjoint, h.lieJ_ofConstantLie, F.φJ_adjoint]
+  φJ_adjoint U c := by rw [h.lieJ_adjointJ, h.lieJ_ofConstantLie, F.φJ_adjoint]
 
 /-- An `SU(n)` factor pulled back along a morphism. -/
 noncomputable def SUFactor.comap {n : Type} [Fintype n] [DecidableEq n] (F : SUFactor jets' n)
     (h : Hom jets jets') : SUFactor jets n where
-  u := F.u.comp h.grp
-  u_unitary U := F.u_unitary (h.grp U)
-  φ := F.φ.comp h.lie
+  u := F.u.comp h.groupJ
+  u_unitary U := F.u_unitary (h.groupJ U)
+  φ := F.φ.comp h.lie.toLinearMap
   φJ a := F.φJ (h.lieJ a)
-  φJ_ofConstantLie c := by rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply]
+  φJ_ofConstantLie c := by
+    rw [h.lieJ_ofConstantLie, F.φJ_ofConstantLie, LinearMap.comp_apply, LieHom.coe_toLinearMap]
   φJ_cc_foldl p a := by
-    rw [F.φJ_cc_foldl, LinearMap.comp_apply, ← h.evalLie_lieJ, h.lieJ_iteratedDeriv]
+    rw [F.φJ_cc_foldl, LinearMap.comp_apply, LieHom.coe_toLinearMap, ← h.evalLie_lieJ,
+      h.lieJ_iteratedDeriv]
   φJ_maurerCartan U μ := by rw [h.lieJ_maurerCartan, F.φJ_maurerCartan, MonoidHom.comp_apply]
   φJ_adjoint U c := by
-    rw [h.lieJ_adjoint, h.lieJ_ofConstantLie, F.φJ_adjoint, MonoidHom.comp_apply]
+    rw [h.lieJ_adjointJ, h.lieJ_ofConstantLie, F.φJ_adjoint, MonoidHom.comp_apply]
 
 /-- A factor pulled back along a morphism. -/
 noncomputable abbrev Factor.comap (h : Hom jets jets') : Factor jets' → Factor jets

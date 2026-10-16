@@ -19,7 +19,7 @@ differentiating `x` times and evaluating at the base point, is the physicists'
 algebra, and its transpose `adjointDualCoeff U x` on the dual index carried by the field
 symbols. This file develops these coefficients for any package `jets`.
 
-The central result is the Taylor–Leibniz theorem `evalLie_iteratedDeriv_adjoint`: the
+The central result is the Taylor–Leibniz theorem `evalLie_iteratedDeriv_adjointJ`: the
 base-point Taylor coefficients of `Ad_U Y` for an arbitrary jet `Y` are the antidiagonal
 convolution of the coefficients of `Ad_U` with those of `Y`. For a matrix group it is the
 Leibniz rule for products of matrices of power series; here it is derived from the Leibniz
@@ -35,7 +35,7 @@ coefficient through the Maurer–Cartan form.
 - `LocalGaugeData.adjointCoeff_cons` : one more derivative of a coefficient is minus the
   antidiagonal convolution of `ad` of the derived Maurer–Cartan form against lower
   coefficients.
-- `LocalGaugeData.evalLie_iteratedDeriv_adjoint` : the Taylor–Leibniz theorem.
+- `LocalGaugeData.evalLie_iteratedDeriv_adjointJ` : the Taylor–Leibniz theorem.
 - `LocalGaugeData.adjointCoeff_mul` : the coefficients of a product are the convolution
   of the coefficients of the factors.
 - `LocalGaugeData.adjointDualCoeff` : the transposed coefficients, with
@@ -73,17 +73,17 @@ variable {G₀ : Type} [Group G₀] {𝔤 : Type} [LieRing 𝔤] [LieAlgebra ℝ
   point. For `x = 0` this is the adjoint action of the value of `U`; for `x ≠ 0` it sees
   the derivatives of the gauge transformation. -/
 noncomputable def adjointCoeff (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) : 𝔤 →ₗ[ℝ] 𝔤 :=
-  jets.evalLie.toLinearMap ∘ₗ jets.iteratedDeriv x ∘ₗ jets.adjoint U ∘ₗ jets.ofConstantLie
+  jets.evalLie.toLinearMap ∘ₗ jets.iteratedDeriv x ∘ₗ jets.adjointJ U ∘ₗ jets.ofConstantLie
 
 lemma adjointCoeff_apply (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (a : 𝔤) :
     jets.adjointCoeff U x a =
-      jets.evalLie (jets.iteratedDeriv x (jets.adjoint U (jets.ofConstantLie a))) := rfl
+      jets.evalLie (jets.iteratedDeriv x (jets.adjointJ U (jets.ofConstantLie a))) := rfl
 
 /-- The zeroth coefficient is the adjoint action of the value of the jet. -/
 @[simp]
-lemma adjointCoeff_zero (U : GJ) : jets.adjointCoeff U 0 = jets.adjointValue (jets.eval U) := by
+lemma adjointCoeff_zero (U : GJ) : jets.adjointCoeff U 0 = jets.adjoint (jets.eval U) := by
   refine LinearMap.ext fun a => ?_
-  rw [adjointCoeff_apply, iteratedDeriv_zero, LinearMap.id_apply, evalLie_adjoint_ofConstantLie]
+  rw [adjointCoeff_apply, iteratedDeriv_zero, LinearMap.id_apply, evalLie_adjointJ_ofConstantLie]
 
 /-- A jet with trivial value has trivial zeroth coefficient. -/
 lemma adjointCoeff_zero_of_eval_eq_one {U : GJ} (hU : jets.eval U = 1) :
@@ -107,7 +107,7 @@ lemma adjointCoeff_lie (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤) :
     jets.adjointCoeff U x ⁅a, b⁆ =
       (x.antidiagonal.map fun p => ⁅jets.adjointCoeff U p.1 a, jets.adjointCoeff U p.2 b⁆).sum := by
   simp only [adjointCoeff_apply]
-  rw [jets.ofConstantLie_lie, jets.adjoint_lie, iteratedDeriv_bracket, map_multiset_sum,
+  rw [jets.ofConstantLie.map_lie, jets.adjointJ_bracket, iteratedDeriv_bracket, map_multiset_sum,
     Multiset.map_map]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
     rw [Function.comp_apply, LieHom.map_lie])
@@ -122,9 +122,9 @@ lemma adjointCoeff_lie (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (a b : 𝔤) :
   Maurer–Cartan form: the Leibniz rule `deriv_adjoint` with the constant's derivative
   killed. -/
 lemma deriv_adjoint_ofConstantLie (U : GJ) (μ : Fin 1 ⊕ Fin 3) (a : 𝔤) :
-    jets.deriv μ (jets.adjoint U (jets.ofConstantLie a)) =
-      -⁅jets.maurerCartan U μ, jets.adjoint U (jets.ofConstantLie a)⁆ := by
-  rw [jets.deriv_adjoint, jets.deriv_ofConstantLie, map_zero, zero_sub]
+    jets.deriv μ (jets.adjointJ U (jets.ofConstantLie a)) =
+      -⁅jets.maurerCartan U μ, jets.adjointJ U (jets.ofConstantLie a)⁆ := by
+  rw [jets.deriv_adjointJ, jets.deriv_ofConstantLie, map_zero, zero_sub]
 
 /-- One more derivative of a coefficient: differentiating the adjoint once produces minus
   `ad` of the Maurer–Cartan form, and the remaining derivatives distribute over the bracket
@@ -156,19 +156,19 @@ lemma adjointCoeff_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3) (x : Multiset (Fin 1 ⊕
   agree by coassociativity of the antidiagonal. -/
 lemma evalLie_iteratedDeriv_adjoint_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3)
     (s : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J)
-    (ih : ∀ t ≤ s, ∀ Z : 𝔤J, jets.evalLie (jets.iteratedDeriv t (jets.adjoint U Z)) =
+    (ih : ∀ t ≤ s, ∀ Z : 𝔤J, jets.evalLie (jets.iteratedDeriv t (jets.adjointJ U Z)) =
       (t.antidiagonal.map fun p =>
         jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv p.2 Z))).sum) :
-    jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.adjoint U Y)) =
+    jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.adjointJ U Y)) =
       ((μ ::ₘ s).antidiagonal.map fun p =>
         jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv p.2 Y))).sum := by
-  have hL : jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.adjoint U Y)) =
+  have hL : jets.evalLie (jets.iteratedDeriv (μ ::ₘ s) (jets.adjointJ U Y)) =
       (s.antidiagonal.map fun p =>
         jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv (μ ::ₘ p.2) Y))).sum
       - (s.antidiagonal.map fun p => (p.2.antidiagonal.map fun q =>
           ⁅jets.evalLie (jets.iteratedDeriv p.1 (jets.maurerCartan U μ)),
             jets.adjointCoeff U q.1 (jets.evalLie (jets.iteratedDeriv q.2 Y))⁆).sum).sum := by
-    rw [iteratedDeriv_cons_eq_comp_deriv, LinearMap.comp_apply, jets.deriv_adjoint, map_sub,
+    rw [iteratedDeriv_cons_eq_comp_deriv, LinearMap.comp_apply, jets.deriv_adjointJ, map_sub,
       map_sub, ih s le_rfl, iteratedDeriv_bracket, map_multiset_sum, Multiset.map_map]
     congr 1
     · refine congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => ?_)
@@ -204,12 +204,12 @@ lemma evalLie_iteratedDeriv_adjoint_cons (U : GJ) (μ : Fin 1 ⊕ Fin 3)
   `Ad_U` with those of `Y`. For a matrix group this is the Leibniz rule for products of
   matrices of power series; here it follows from the single-derivative Leibniz rule
   `deriv_adjoint` by strong induction on the number of derivatives. -/
-lemma evalLie_iteratedDeriv_adjoint (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J) :
-    jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y)) =
+lemma evalLie_iteratedDeriv_adjointJ (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y : 𝔤J) :
+    jets.evalLie (jets.iteratedDeriv x (jets.adjointJ U Y)) =
       (x.antidiagonal.map fun p =>
         jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv p.2 Y))).sum := by
   suffices h : ∀ (n : ℕ) (x : Multiset (Fin 1 ⊕ Fin 3)), x.card = n → ∀ Y : 𝔤J,
-      jets.evalLie (jets.iteratedDeriv x (jets.adjoint U Y)) =
+      jets.evalLie (jets.iteratedDeriv x (jets.adjointJ U Y)) =
         (x.antidiagonal.map fun p =>
           jets.adjointCoeff U p.1 (jets.evalLie (jets.iteratedDeriv p.2 Y))).sum from
     h x.card x rfl Y
@@ -218,7 +218,7 @@ lemma evalLie_iteratedDeriv_adjoint (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y
   | _ n ih =>
     intro x hx Y
     rcases eq_or_ne x 0 with rfl | hx0
-    · simp [Multiset.antidiagonal_zero, jets.evalLie_adjoint]
+    · simp [Multiset.antidiagonal_zero, jets.evalLie_adjointJ]
     · obtain ⟨μ, hμ⟩ := Multiset.card_pos_iff_exists_mem.mp (Multiset.card_pos.mpr hx0)
       rw [← Multiset.cons_erase hμ]
       refine jets.evalLie_iteratedDeriv_adjoint_cons U μ (x.erase μ) Y fun t ht Z => ?_
@@ -231,8 +231,8 @@ lemma evalLie_iteratedDeriv_adjoint (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (Y
   `Y` do. -/
 lemma evalLie_iteratedDeriv_adjoint_eq_zero (U : GJ) {Y : 𝔤J} {s : Multiset (Fin 1 ⊕ Fin 3)}
     (h : ∀ q ≤ s, jets.evalLie (jets.iteratedDeriv q Y) = 0) :
-    jets.evalLie (jets.iteratedDeriv s (jets.adjoint U Y)) = 0 := by
-  rw [evalLie_iteratedDeriv_adjoint]
+    jets.evalLie (jets.iteratedDeriv s (jets.adjointJ U Y)) = 0 := by
+  rw [evalLie_iteratedDeriv_adjointJ]
   refine Multiset.sum_eq_zero fun z hz => ?_
   obtain ⟨p, hp, rfl⟩ := Multiset.mem_map.mp hz
   rw [h p.2 (Multiset.snd_le_of_mem_antidiagonal hp), map_zero]
@@ -244,7 +244,7 @@ lemma adjointCoeff_mul (U V : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) :
       (x.antidiagonal.map fun p => jets.adjointCoeff U p.1 ∘ₗ jets.adjointCoeff V p.2).sum := by
   refine LinearMap.ext fun a => ?_
   rw [Multiset.sum_linearMap_apply, Multiset.map_map, adjointCoeff_apply, map_mul,
-    Module.End.mul_apply, evalLie_iteratedDeriv_adjoint]
+    Module.End.mul_apply, evalLie_iteratedDeriv_adjointJ]
   exact congrArg Multiset.sum (Multiset.map_congr rfl fun p hp => by
     rw [Function.comp_apply, LinearMap.comp_apply]
     rfl)
@@ -267,7 +267,7 @@ lemma adjointDualCoeff_apply (U : GJ) (x : Multiset (Fin 1 ⊕ Fin 3)) (φ : Mod
 /-- The zeroth dual coefficient is the dual of the adjoint action of the value of the
   jet. -/
 lemma adjointDualCoeff_zero (U : GJ) :
-    jets.adjointDualCoeff U 0 = (jets.adjointValue (jets.eval U)).dualMap := by
+    jets.adjointDualCoeff U 0 = (jets.adjoint (jets.eval U)).dualMap := by
   rw [adjointDualCoeff, adjointCoeff_zero]
 
 /-- A jet with trivial value has trivial zeroth dual coefficient. -/

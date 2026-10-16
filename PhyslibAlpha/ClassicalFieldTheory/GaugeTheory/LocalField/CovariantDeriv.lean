@@ -269,7 +269,7 @@ lemma repJet_covDerivConjBoson (j : T.BosonSpecies) {n : ℕ} (l : Fin n → (Fi
 lemma repJet_covDerivFieldStrength (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     T.repJet U (T.covDerivFieldStrength l μ ν φ)
-      = T.covDerivFieldStrength l μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) := by
+      = T.covDerivFieldStrength l μ ν ((jets.adjoint (jets.eval U⁻¹)).dualMap φ) := by
   rw [covDerivFieldStrength_apply, repJet_apply, repJetAlgHom_includeConnection_one_tmul,
     LocalGaugeFieldAlgebra.repJet_covDerivFieldStrength_eval]
   rfl

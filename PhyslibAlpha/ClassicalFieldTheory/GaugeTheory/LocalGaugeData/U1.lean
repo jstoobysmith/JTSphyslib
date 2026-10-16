@@ -292,7 +292,7 @@ noncomputable def u1 : LocalGaugeData U1 U1Algebra JetU1 JetU1Algebra :=
 @[simp] lemma u1_ofConstantLie : u1.ofConstantLie = JetU1.ofConstantLie := rfl
 @[simp] lemma u1_deriv (μ : Fin 1 ⊕ Fin 3) : u1.deriv μ = JetU1.deriv μ := rfl
 @[simp] lemma u1_maurerCartan : u1.maurerCartan = JetU1.mc := rfl
-@[simp] lemma u1_adjoint (u : JetU1) (a : JetU1Algebra) : u1.adjoint u a = a := rfl
+@[simp] lemma u1_adjointJ (u : JetU1) (a : JetU1Algebra) : u1.adjointJ u a = a := rfl
 
 /-- The iterated derivative on `u(1)` jets is the iterated formal derivative. -/
 lemma u1_iteratedDeriv_val (s : Multiset (Fin 1 ⊕ Fin 3)) (a : JetU1Algebra) :

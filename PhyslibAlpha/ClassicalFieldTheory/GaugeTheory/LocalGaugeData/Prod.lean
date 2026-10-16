@@ -63,7 +63,6 @@ noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂
   eval_ofConstant g := Prod.ext (j₁.eval_ofConstant g.1) (j₂.eval_ofConstant g.2)
   evalLie := j₁.evalLie.prodMap j₂.evalLie
   ofConstantLie := j₁.ofConstantLie.prodMap j₂.ofConstantLie
-  ofConstantLie_lie a b := Prod.ext (j₁.ofConstantLie_lie a.1 b.1) (j₂.ofConstantLie_lie a.2 b.2)
   evalLie_ofConstantLie a :=
     Prod.ext (j₁.evalLie_ofConstantLie a.1) (j₂.evalLie_ofConstantLie a.2)
   deriv μ := (j₁.deriv μ).prodMap (j₂.deriv μ)
@@ -71,15 +70,17 @@ noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂
   deriv_bracket μ x y := Prod.ext (j₁.deriv_bracket μ x.1 y.1) (j₂.deriv_bracket μ x.2 y.2)
   deriv_ofConstantLie μ a :=
     Prod.ext (j₁.deriv_ofConstantLie μ a.1) (j₂.deriv_ofConstantLie μ a.2)
-  coord μ := (j₁.coord μ).prodMap (j₂.coord μ)
-  deriv_coord μ ν a := by
-    ext <;> split_ifs <;> simp [j₁.deriv_coord, j₂.deriv_coord, *]
-  evalLie_coord μ a := Prod.ext (j₁.evalLie_coord μ a.1) (j₂.evalLie_coord μ a.2)
-  coord_lie μ a b := Prod.ext (j₁.coord_lie μ a.1 b.1) (j₂.coord_lie μ a.2 b.2)
+  mulCoord μ := (j₁.mulCoord μ).prodMap (j₂.mulCoord μ)
+  deriv_mulCoord μ ν a := by
+    ext <;> split_ifs <;> simp [j₁.deriv_mulCoord, j₂.deriv_mulCoord, *]
+  evalLie_mulCoord μ a := Prod.ext (j₁.evalLie_mulCoord μ a.1) (j₂.evalLie_mulCoord μ a.2)
+  mulCoord_bracket μ a b :=
+    Prod.ext (j₁.mulCoord_bracket μ a.1 b.1) (j₂.mulCoord_bracket μ a.2 b.2)
+  adjointJ := Representation.prodMap j₁.adjointJ j₂.adjointJ
+  adjointJ_bracket U x y :=
+    Prod.ext (j₁.adjointJ_bracket U.1 x.1 y.1) (j₂.adjointJ_bracket U.2 x.2 y.2)
   adjoint := Representation.prodMap j₁.adjoint j₂.adjoint
-  adjoint_lie U x y := Prod.ext (j₁.adjoint_lie U.1 x.1 y.1) (j₂.adjoint_lie U.2 x.2 y.2)
-  adjointValue := Representation.prodMap j₁.adjointValue j₂.adjointValue
-  evalLie_adjoint U x := Prod.ext (j₁.evalLie_adjoint U.1 x.1) (j₂.evalLie_adjoint U.2 x.2)
+  evalLie_adjointJ U x := Prod.ext (j₁.evalLie_adjointJ U.1 x.1) (j₂.evalLie_adjointJ U.2 x.2)
   maurerCartan U μ := (j₁.maurerCartan U.1 μ, j₂.maurerCartan U.2 μ)
   maurerCartan_ofConstant g μ :=
     Prod.ext (j₁.maurerCartan_ofConstant g.1 μ) (j₂.maurerCartan_ofConstant g.2 μ)
@@ -87,7 +88,7 @@ noncomputable def prod : LocalGaugeData (G₀₁ × G₀₂) (𝔤₁ × 𝔤₂
     Prod.ext (j₁.maurerCartan_cocycle U.1 V.1 μ) (j₂.maurerCartan_cocycle U.2 V.2 μ)
   maurerCartan_structure U μ ν :=
     Prod.ext (j₁.maurerCartan_structure U.1 μ ν) (j₂.maurerCartan_structure U.2 μ ν)
-  deriv_adjoint U μ x := Prod.ext (j₁.deriv_adjoint U.1 μ x.1) (j₂.deriv_adjoint U.2 μ x.2)
+  deriv_adjointJ U μ x := Prod.ext (j₁.deriv_adjointJ U.1 μ x.1) (j₂.deriv_adjointJ U.2 μ x.2)
 
 @[simp]
 lemma prod_eval (U : G₁ × G₂) : (j₁.prod j₂).eval U = (j₁.eval U.1, j₂.eval U.2) := rfl
@@ -109,8 +110,8 @@ lemma prod_deriv (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J₁ × 𝔤J₂) :
     (j₁.prod j₂).deriv μ a = (j₁.deriv μ a.1, j₂.deriv μ a.2) := rfl
 
 @[simp]
-lemma prod_adjoint (U : G₁ × G₂) (a : 𝔤J₁ × 𝔤J₂) :
-    (j₁.prod j₂).adjoint U a = (j₁.adjoint U.1 a.1, j₂.adjoint U.2 a.2) := rfl
+lemma prod_adjointJ (U : G₁ × G₂) (a : 𝔤J₁ × 𝔤J₂) :
+    (j₁.prod j₂).adjointJ U a = (j₁.adjointJ U.1 a.1, j₂.adjointJ U.2 a.2) := rfl
 
 @[simp]
 lemma prod_maurerCartan (U : G₁ × G₂) (μ : Fin 1 ⊕ Fin 3) :
@@ -138,24 +139,32 @@ variable {j₁ j₂}
 
 /-- The first projection, as a morphism of local gauge data. -/
 noncomputable def Hom.fst : Hom (j₁.prod j₂) j₁ where
-  grp := MonoidHom.fst G₁ G₂
-  lie := LinearMap.fst ℝ 𝔤₁ 𝔤₂
-  lieJ := LinearMap.fst ℝ 𝔤J₁ 𝔤J₂
+  group := MonoidHom.fst G₀₁ G₀₂
+  groupJ := MonoidHom.fst G₁ G₂
+  eval_groupJ _ := rfl
+  groupJ_ofConstant _ := rfl
+  lie := LieHom.fst ℝ 𝔤₁ 𝔤₂
+  lieJ := LieHom.fst ℝ 𝔤J₁ 𝔤J₂
   lieJ_ofConstantLie _ := rfl
   evalLie_lieJ _ := rfl
   lieJ_deriv _ _ := rfl
-  lieJ_adjoint _ _ := rfl
+  lieJ_mulCoord _ _ := rfl
+  lieJ_adjointJ _ _ := rfl
   lieJ_maurerCartan _ _ := rfl
 
 /-- The second projection, as a morphism of local gauge data. -/
 noncomputable def Hom.snd : Hom (j₁.prod j₂) j₂ where
-  grp := MonoidHom.snd G₁ G₂
-  lie := LinearMap.snd ℝ 𝔤₁ 𝔤₂
-  lieJ := LinearMap.snd ℝ 𝔤J₁ 𝔤J₂
+  group := MonoidHom.snd G₀₁ G₀₂
+  groupJ := MonoidHom.snd G₁ G₂
+  eval_groupJ _ := rfl
+  groupJ_ofConstant _ := rfl
+  lie := LieHom.snd ℝ 𝔤₁ 𝔤₂
+  lieJ := LieHom.snd ℝ 𝔤J₁ 𝔤J₂
   lieJ_ofConstantLie _ := rfl
   evalLie_lieJ _ := rfl
   lieJ_deriv _ _ := rfl
-  lieJ_adjoint _ _ := rfl
+  lieJ_mulCoord _ _ := rfl
+  lieJ_adjointJ _ _ := rfl
   lieJ_maurerCartan _ _ := rfl
 
 /-!
@@ -187,8 +196,8 @@ instance instFaithfulProd [j₁.Faithful] [j₂.Faithful] : (j₁.prod j₂).Fai
 -/
 
 @[simp]
-lemma prod_coord (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J₁ × 𝔤J₂) :
-    (j₁.prod j₂).coord μ a = (j₁.coord μ a.1, j₂.coord μ a.2) := rfl
+lemma prod_mulCoord (μ : Fin 1 ⊕ Fin 3) (a : 𝔤J₁ × 𝔤J₂) :
+    (j₁.prod j₂).mulCoord μ a = (j₁.mulCoord μ a.1, j₂.mulCoord μ a.2) := rfl
 
 /-- The radial component of the Maurer–Cartan form of a product jet is the pair of the
   radial components of its factors. -/

@@ -478,7 +478,7 @@ lemma repJet_eq_repValue_eval (hP : T.PureJetsActTrivially) (U : GJ)
 lemma repValue_covFieldStrength (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repValue T g (covFieldStrength T l μ ν φ)
-      = covFieldStrength T l μ ν ((jets.adjointValue g⁻¹).dualMap φ) := by
+      = covFieldStrength T l μ ν ((jets.adjoint g⁻¹).dualMap φ) := by
   refine Subtype.ext ?_
   rw [coe_repValue, coe_covFieldStrength, coe_covFieldStrength, repJet_covDerivFieldStrength,
     map_inv jets.eval, jets.eval_ofConstant]
@@ -487,7 +487,7 @@ lemma repValue_covFieldStrength (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν :
 lemma repJet_covFieldStrength (U : GJ) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
     repJet T U (covFieldStrength T l μ ν φ)
-      = covFieldStrength T l μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) :=
+      = covFieldStrength T l μ ν ((jets.adjoint (jets.eval U⁻¹)).dualMap φ) :=
   Subtype.ext (repJet_covDerivFieldStrength U l μ ν φ)
 
 /-- A jet acts on the covariant tower of a fermionic species through the zeroth dual Taylor

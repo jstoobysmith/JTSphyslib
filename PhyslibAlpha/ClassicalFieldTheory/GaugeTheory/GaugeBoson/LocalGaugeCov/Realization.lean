@@ -147,7 +147,7 @@ lemma ext_F {k₁ k₂ : Realization jets B repGauge repLorentz}
   adjoint action of the inverse. -/
 lemma gauge_F (g : G₀) (l : List (Fin 1 ⊕ Fin 3)) (μ ν : Fin 1 ⊕ Fin 3)
     (φ : Module.Dual ℝ 𝔤) :
-    repGauge g (k.F l μ ν φ) = k.F l μ ν ((jets.adjointValue g⁻¹).dualMap φ) := by
+    repGauge g (k.F l μ ν φ) = k.F l μ ν ((jets.adjoint g⁻¹).dualMap φ) := by
   rw [F_apply, ← k.map_repValue, repValue_covF]
   rfl
 

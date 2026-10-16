@@ -297,26 +297,25 @@ noncomputable def toLocalGaugeData : LocalGaugeData G₀ 𝔤 GJ 𝔤J where
   ofConstant := M.ofConstant
   eval_ofConstant := M.eval_ofConstant
   evalLie := M.evalLieHom
-  ofConstantLie := M.ofConstantLie
-  ofConstantLie_lie := M.ofConstantLie_lie
+  ofConstantLie := { M.ofConstantLie with map_lie' := M.ofConstantLie_lie _ _ }
   evalLie_ofConstantLie := M.evalLie_ofConstantLie
   deriv := M.deriv
   deriv_comm := M.deriv_comm
   deriv_bracket := M.deriv_bracket
   deriv_ofConstantLie := M.deriv_ofConstantLie
-  coord := M.coord
-  deriv_coord := M.deriv_coord
-  evalLie_coord := M.evalLie_coord
-  coord_lie := M.coord_lie
-  adjoint := M.adjoint
-  adjoint_lie := M.adjoint_lie
-  adjointValue := M.adjointValue
-  evalLie_adjoint := M.evalLie_adjoint
+  mulCoord := M.coord
+  deriv_mulCoord := M.deriv_coord
+  evalLie_mulCoord := M.evalLie_coord
+  mulCoord_bracket := M.coord_lie
+  adjointJ := M.adjoint
+  adjointJ_bracket := M.adjoint_lie
+  adjoint := M.adjointValue
+  evalLie_adjointJ := M.evalLie_adjoint
   maurerCartan := M.maurerCartan
   maurerCartan_ofConstant := M.maurerCartan_ofConstant
   maurerCartan_cocycle := M.maurerCartan_cocycle
   maurerCartan_structure := M.maurerCartan_structure
-  deriv_adjoint := M.deriv_adjoint
+  deriv_adjointJ := M.deriv_adjoint
 
 @[simp] lemma toLocalGaugeData_eval : M.toLocalGaugeData.eval = M.eval := rfl
 @[simp] lemma toLocalGaugeData_ofConstant : M.toLocalGaugeData.ofConstant = M.ofConstant := rfl
@@ -326,11 +325,11 @@ noncomputable def toLocalGaugeData : LocalGaugeData G₀ 𝔤 GJ 𝔤J where
     M.toLocalGaugeData.ofConstantLie = M.ofConstantLie := rfl
 @[simp] lemma toLocalGaugeData_deriv (μ : Fin 1 ⊕ Fin 3) :
     M.toLocalGaugeData.deriv μ = M.deriv μ := rfl
-@[simp] lemma toLocalGaugeData_coord (μ : Fin 1 ⊕ Fin 3) :
-    M.toLocalGaugeData.coord μ = M.coord μ := rfl
-@[simp] lemma toLocalGaugeData_adjoint : M.toLocalGaugeData.adjoint = M.adjoint := rfl
-@[simp] lemma toLocalGaugeData_adjointValue :
-    M.toLocalGaugeData.adjointValue = M.adjointValue := rfl
+@[simp] lemma toLocalGaugeData_mulCoord (μ : Fin 1 ⊕ Fin 3) :
+    M.toLocalGaugeData.mulCoord μ = M.coord μ := rfl
+@[simp] lemma toLocalGaugeData_adjointJ : M.toLocalGaugeData.adjointJ = M.adjoint := rfl
+@[simp] lemma toLocalGaugeData_adjoint :
+    M.toLocalGaugeData.adjoint = M.adjointValue := rfl
 @[simp] lemma toLocalGaugeData_maurerCartan :
     M.toLocalGaugeData.maurerCartan = M.maurerCartan := rfl
 
@@ -428,7 +427,7 @@ lemma lieJ_radial (U : GJ) :
     M.lieJ (M.toLocalGaugeData.radial U) =
       ∑ μ, (X μ : SpaceTimeAlgebra) •
           (Complex.I • ((M.toMatJ U).map (pderiv μ) * star (M.toMatJ U))) := by
-  simp only [radial, map_sum, toLocalGaugeData_coord, toLocalGaugeData_maurerCartan,
+  simp only [radial, map_sum, toLocalGaugeData_mulCoord, toLocalGaugeData_maurerCartan,
     M.lieJ_coord, M.lieJ_maurerCartan]
 
 /-- A gauge jet is pure exactly when its matrix is the identity at the base point. -/

@@ -100,26 +100,26 @@ noncomputable def localGaugeData :
   ofConstant := JetGaugeGroupI.ofConstant
   eval_ofConstant := JetGaugeGroupI.eval_ofConstant
   evalLie := JetGaugeAlgebra.eval
-  ofConstantLie := JetGaugeAlgebra.ofConstant
-  ofConstantLie_lie := JetGaugeAlgebra.ofConstant_lie
+  ofConstantLie :=
+    { JetGaugeAlgebra.ofConstant with map_lie' := JetGaugeAlgebra.ofConstant_lie _ _ }
   evalLie_ofConstantLie := JetGaugeAlgebra.eval_ofConstant
   deriv := JetGaugeAlgebra.deriv
   deriv_comm := JetGaugeAlgebra.deriv_comm
   deriv_bracket := JetGaugeAlgebra.deriv_bracket
   deriv_ofConstantLie := JetGaugeAlgebra.deriv_ofConstant
-  coord := JetGaugeAlgebra.coord
-  deriv_coord := JetGaugeAlgebra.deriv_coord
-  evalLie_coord := JetGaugeAlgebra.eval_coord
-  coord_lie := JetGaugeAlgebra.coord_lie
-  adjoint := JetGaugeAlgebra.adjoint
-  adjoint_lie := JetGaugeAlgebra.adjointMap_lie
-  adjointValue := GaugeAlgebra.adjoint
-  evalLie_adjoint := JetGaugeAlgebra.eval_adjointMap
+  mulCoord := JetGaugeAlgebra.coord
+  deriv_mulCoord := JetGaugeAlgebra.deriv_coord
+  evalLie_mulCoord := JetGaugeAlgebra.eval_coord
+  mulCoord_bracket := JetGaugeAlgebra.coord_lie
+  adjointJ := JetGaugeAlgebra.adjoint
+  adjointJ_bracket := JetGaugeAlgebra.adjointMap_lie
+  adjoint := GaugeAlgebra.adjoint
+  evalLie_adjointJ := JetGaugeAlgebra.eval_adjointMap
   maurerCartan := maurerCartanForm
   maurerCartan_ofConstant := fun g μ => congrFun (maurerCartanForm_ofConstant g) μ
   maurerCartan_cocycle := maurerCartanForm_cocycle
   maurerCartan_structure := maurerCartanForm_structure
-  deriv_adjoint := deriv_adjointMap
+  deriv_adjointJ := deriv_adjointMap
 -/
 
 /-!
@@ -145,7 +145,7 @@ lemma localGaugeData_ofConstantLie :
     localGaugeData.ofConstantLie = JetGaugeAlgebra.ofConstant := rfl
 
 @[simp]
-lemma localGaugeData_adjointValue : localGaugeData.adjointValue = GaugeAlgebra.adjoint := rfl
+lemma localGaugeData_adjoint : localGaugeData.adjoint = GaugeAlgebra.adjoint := rfl
 
 @[simp]
 lemma localGaugeData_deriv (μ : Fin 1 ⊕ Fin 3) :
@@ -158,11 +158,11 @@ lemma localGaugeData_iteratedDeriv (s : Multiset (Fin 1 ⊕ Fin 3)) :
     localGaugeData.iteratedDeriv s = JetGaugeAlgebra.iteratedDeriv s := rfl
 
 @[simp]
-lemma localGaugeData_coord (μ : Fin 1 ⊕ Fin 3) :
-    localGaugeData.coord μ = JetGaugeAlgebra.coord μ := rfl
+lemma localGaugeData_mulCoord (μ : Fin 1 ⊕ Fin 3) :
+    localGaugeData.mulCoord μ = JetGaugeAlgebra.coord μ := rfl
 
 @[simp]
-lemma localGaugeData_adjoint : localGaugeData.adjoint = JetGaugeAlgebra.adjoint := rfl
+lemma localGaugeData_adjointJ : localGaugeData.adjointJ = JetGaugeAlgebra.adjoint := rfl
 
 @[simp]
 lemma localGaugeData_maurerCartan : localGaugeData.maurerCartan = maurerCartanForm := rfl

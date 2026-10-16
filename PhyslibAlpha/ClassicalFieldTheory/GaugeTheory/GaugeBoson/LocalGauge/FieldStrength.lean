@@ -345,13 +345,13 @@ lemma repJet_covDerivFieldStrength (U : GJ) (l : List (Fin 1 ⊕ Fin 3))
 lemma repJet_covDerivFieldStrength_eval (U : GJ) (l : List (Fin 1 ⊕ Fin 3))
     (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repJet jets U (covDerivFieldStrength 𝔤 l μ ν φ)
-      = covDerivFieldStrength 𝔤 l μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) := by
+      = covDerivFieldStrength 𝔤 l μ ν ((jets.adjoint (jets.eval U⁻¹)).dualMap φ) := by
   rw [repJet_covDerivFieldStrength, jets.adjointDualCoeff_zero]
 
 /-- The field strength transforms in the adjoint. -/
 lemma repJet_fieldStrength (U : GJ) (μ ν : Fin 1 ⊕ Fin 3) (φ : Module.Dual ℝ 𝔤) :
     repJet jets U (fieldStrength 𝔤 μ ν φ)
-      = fieldStrength 𝔤 μ ν ((jets.adjointValue (jets.eval U⁻¹)).dualMap φ) :=
+      = fieldStrength 𝔤 μ ν ((jets.adjoint (jets.eval U⁻¹)).dualMap φ) :=
   repJet_covDerivFieldStrength_eval U [] μ ν φ
 
 /-!

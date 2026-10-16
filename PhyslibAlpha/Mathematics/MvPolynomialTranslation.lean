@@ -126,7 +126,7 @@ lemma mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq (π : I → I)
     by_cases hi : π i = i
     · rw [ite_eq_left hi, aeval_X, ite_eq_left hi]
     · rw [ite_eq_right hi, map_add, aeval_X, aeval_X, ite_eq_right hi, ite_eq_left (hπ i)]
-      ring
+      exact sub_add_cancel _ _
   have hcomp : ∀ p : MvPolynomial I R,
       aeval (fun i => if π i = i then (X i : MvPolynomial I R) else X i - X (π i))
         (aeval (fun i => if π i = i then (X i : MvPolynomial I R)
@@ -158,8 +158,8 @@ lemma mem_adjoin_range_X_sub_X_of_forall_aeval_add_eq (π : I → I)
       · rw [ite_eq_right hi]
         simp only [map_add, aeval_X, aeval_C, algebraMap_eq]
         rw [ite_eq_right hi, ite_eq_right (show ¬i = j from fun h => hi (by rw [h, hj])),
-          if_congr (show (π i = j) ↔ (π i = π j) from by rw [hj]) rfl rfl, C_0]
-        ring
+          if_congr (show (π i = j) ↔ (π i = π j) from by rw [hj]) rfl rfl, C_0, add_zero,
+          add_assoc]
     have h1 := DFunLike.congr_fun hkey P
     simp only [AlgHom.comp_apply] at h1
     rw [hP j r] at h1
