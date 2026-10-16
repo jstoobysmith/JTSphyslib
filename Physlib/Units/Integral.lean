@@ -64,6 +64,17 @@ lemma scaleUnit_measure (u1 u2 : LTMCTUnitChoices) (μ : MeasureTheory.Measure M
   `∫ x, f x ∂μ `
   has the correct dimension, namely `CarriesDimension.d G`.
 
+lemma fderiv_apply_scaleUnit (u1 u2 : LTMCTUnitChoices) (x dm : M1)
+    (f : M1 → M2) (hf : IsDimensionallyCorrect f) (f_diff : Differentiable ℝ f) :
+    fderiv ℝ f (scaleUnit u2 u1 x) dm =
+    u2.dimScale u1 (dim M2) • u1.dimScale u2 (dim M1) • fderiv ℝ f x dm := by
+  conv_lhs => rw [← hf u2 u1]
+  change (fderiv ℝ ((u2.dimScale u1 (dim M2)).1 • fun mx => f
+      ((u1.dimScale u2 (dim M1)).1 • mx)) ((u2.dimScale u1 (dim M1)).1 • x)) dm = _
+  rw [fderiv_const_smul (by fun_prop), fderiv_comp_smul]
+  simp [smul_smul]
+  rfl
+
   In other words, the function:
 ```
 fun (μ : DimSet (MeasureTheory.Measure M) d)

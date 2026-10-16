@@ -91,6 +91,11 @@ def bitDim : Dimension Info := Dimension.ofFunction fun | .bit => 1 | .symbol =>
 /-- The `symbol` base dimension. -/
 def symbolDim : Dimension Info := Dimension.ofFunction fun | .bit => 0 | .symbol => 1
 
+/-- The two base dimensions differ. -/
+theorem bitDim_ne_symbolDim : bitDim ≠ symbolDim := by
+  intro h
+  exact absurd h (by decide)
+
 /-- Cancellation works identically over the non-standard basis. -/
 example : (bitDim / symbolDim) * symbolDim = bitDim := by ext; simp
 
