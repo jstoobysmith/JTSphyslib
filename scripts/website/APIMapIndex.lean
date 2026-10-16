@@ -13,21 +13,24 @@ the pattern of `scripts/website/TODO_to_yml.lean`, which builds
 standard output, and passing `mkFile` writes the file.
 
 The output carries, for each map in sorted path order: the map path, its
-module context, a GitHub link, and the map's title, overview, parent APIs,
-further reading, requirements and Lean declarations, together with per-map and
-total completion counts.
+module context, a GitHub link, and the map's title, abstract, claims, Lean
+references and literature references, together with per-map and total
+completion counts.
 
 An API map is a prose document, described in `docs/API_MAP_GUIDE.md`: a title,
-an overview, `## Built on`, `## Requirements` (one paragraph per requirement,
-each closing with `[n]` citations or `[planned]`), `## Further reading`, and
-`## Lean declarations` (a numbered list of `file — names` entries). The parser
-below reads exactly that shape; lines outside it are ignored rather than
-raising errors. Each requirement's `location` is reconstructed from the
-entries it cites, so the data file keeps the `file (names)` form the website
-already renders.
+a single-paragraph `## Abstract` (or `## Abstract (Alpha)`), `## Content` and/or
+`## Content (Alpha)`, `## Lean References` (a numbered list of
+`file — names` entries) and `## References` (a numbered list of literature and
+other API maps). The content prose points at the Lean references with `[n]`
+citations, marks what is not yet formalized with `[planned]`, and points at the
+literature with `{n}` citations, which do not affect the claims. Each run of
+citations closes a claim: the prose since the previous run. The parser below
+reads exactly that shape; lines outside it are ignored rather than raising
+errors. Each claim's `location` is reconstructed from the entries it cites, so
+the data file keeps the `file (names)` form the website already renders.
 -/
 
-/-- One entry of the `## Lean declarations` list: the number it is cited by,
+/-- One entry of the `## Lean References` list: the number it is cited by,
 the Lean file, and the declarations claimed to be in it. -/
 structure APIMapReference where
   index : Nat
@@ -35,22 +38,24 @@ structure APIMapReference where
   declarations : List String
 deriving Inhabited
 
-/-- One requirement paragraph. `citations` are the reference numbers closing
-the paragraph; a planned requirement has none. -/
+/-- One claim of the content: the prose closed by a run of citations.
+`citations` are the reference numbers in that run, and `alpha` records whether
+the claim sits in `## Content (Alpha)`. -/
 structure APIMapRequirement where
   description : String := ""
   done : Bool := false
   citations : List Nat := []
+  alpha : Bool := false
 
 /-- The contents of one `API-map.md` file. -/
 structure APIMapData where
   path : System.FilePath
   title : String := ""
   overview : String := ""
-  parentAPIs : List String := []
-  references : List String := []
+  alpha : Bool := false
   requirements : List APIMapRequirement := []
   declarations : List APIMapReference := []
+  references : List String := []
 
 def APIMapData.doneCount (map : APIMapData) : Nat :=
   (map.requirements.filter (fun requirement => requirement.done)).length
@@ -98,42 +103,76 @@ partial def backtickedSpans (value : String) : List String :=
   | some (span, rest) => trim span :: backtickedSpans rest
   | none => []
 
-/-- Peels the `[n]` citations and the `[planned]` marker off the end of a
-paragraph, innermost last. -/
-partial def peelCitations (text : String) (acc : List Nat) (planned : Bool) :
-    String × List Nat × Bool :=
-  let trimmed := trim text
-  if trimmed.endsWith "]" then
-    let parts : List String := (trimmed.dropEnd 1).toString.splitOn "["
-    if parts.length ≤ 1 then (trimmed, acc, planned)
-    else
-      match parts.getLast? with
-      | none => (trimmed, acc, planned)
-      | some inner =>
-        let head := String.intercalate "[" parts.dropLast
-        if inner == "planned" then peelCitations head acc true
-        else
-          let numbers := (inner.splitOn ",").filterMap (fun part => (trim part).toNat?)
-          if numbers.isEmpty then (trimmed, acc, planned)
-          else peelCitations head (numbers ++ acc) planned
-  else (trimmed, acc, planned)
+/-- A piece of content prose: plain text, or one citation `[n, m]` or
+`[planned]`. -/
+inductive ProseToken
+  | text (value : String)
+  | cite (numbers : List Nat) (planned : Bool)
 
-/-- Reads the closing citations of a requirement paragraph: the prose with
-them removed, the numbers cited, and whether it is marked `[planned]`. A
-planned requirement may still cite the informal declarations standing in for
-it, so being cited and being done are not the same thing. -/
-def splitCitations (paragraph : String) : String × List Nat × Bool :=
-  peelCitations paragraph [] false
+/-- Reads the inside of a pair of square brackets as a citation, if it is one. -/
+def citationOf (inner : String) : Option ProseToken :=
+  if inner == "planned" then some (.cite [] true)
+  else
+    let parts := (inner.splitOn ",").map trim
+    let numbers := parts.filterMap String.toNat?
+    if numbers.length == parts.length then some (.cite numbers false) else none
 
-/-- Reads a `## Built on` entry, `- Name — path`, as the `Name (path)` form
-used by the data file. -/
-def parentEntry (line : String) : String :=
-  let body := trim ((trim line).dropPrefix "- ").toString
-  match body.splitOn " — " with
-  | [name, path] => trim name ++ " (" ++ (backtickedSpans path).headD (trim path) ++ ")"
-  | _ => (backtickedSpans body).headD body
+/-- Splits a paragraph into text and citations. Square brackets that are not
+citations, such as the text of a markdown link, stay in the text. -/
+def tokenize (paragraph : String) : List ProseToken :=
+  match paragraph.splitOn "[" with
+  | [] => []
+  | first :: rest =>
+    .text first :: rest.flatMap (fun part =>
+      match part.splitOn "]" with
+      | inner :: after@(_ :: _) =>
+        match citationOf inner with
+        | some cite => [cite, .text (String.intercalate "]" after)]
+        | none => [.text ("[" ++ part)]
+      | _ => [.text ("[" ++ part)])
 
-/-- Reads a `## Lean declarations` entry, `n. File.lean — `a`, `b``. -/
+/-- Removes the literature citations `{n}` from a paragraph. -/
+def removeLiterature (paragraph : String) : String :=
+  match paragraph.splitOn "{" with
+  | [] => ""
+  | first :: rest =>
+    first ++ String.join (rest.map (fun part =>
+      match part.splitOn "}" with
+      | inner :: after@(_ :: _) =>
+        if (trim inner).toNat?.isSome then String.intercalate "}" after else "{" ++ part
+      | _ => "{" ++ part))
+
+/-- Removes the literature citations `{n}` from a paragraph, together with the
+space a citation leaves before a following full stop or comma. -/
+def stripLiterature (paragraph : String) : String :=
+  ((removeLiterature paragraph).replace " ." ".").replace " ," ","
+
+/-- The claims of a content paragraph. Each run of adjacent citations closes a
+claim, whose description is the prose since the previous run; a run is done
+unless it contains `[planned]`. Prose after the last run cites nothing and is
+not a claim. -/
+def claimsOf (alpha : Bool) (paragraph : String) : List APIMapRequirement := Id.run do
+  let close (prose : String) (numbers : List Nat) (planned : Bool) : APIMapRequirement :=
+    { description := trim prose, done := !planned, citations := numbers, alpha := alpha }
+  let mut claims : List APIMapRequirement := []
+  let mut prose := ""
+  let mut run : Option (List Nat × Bool) := none
+  for token in tokenize (stripLiterature paragraph) do
+    match token, run with
+    | .text value, some (numbers, planned) =>
+      if trim value != "" then
+        claims := claims ++ [close prose numbers planned]
+        prose := value
+        run := none
+    | .text value, none => prose := prose ++ value
+    | .cite numbers planned, some (earlier, wasPlanned) =>
+      run := some (earlier ++ numbers, wasPlanned || planned)
+    | .cite numbers planned, none => run := some (numbers, planned)
+  if let some (numbers, planned) := run then
+    claims := claims ++ [close prose numbers planned]
+  return claims
+
+/-- Reads a `## Lean References` entry, `n. File.lean — `a`, `b``. -/
 def declarationEntry (line : String) : Option APIMapReference := do
   let trimmed := trim line
   let (number, rest) ← match trimmed.splitOn ". " with
@@ -152,20 +191,21 @@ def declarationEntry (line : String) : Option APIMapReference := do
 
 /-- The section a line belongs to. -/
 inductive Section
-  | overview
-  | builtOn
-  | requirements
-  | furtherReading
-  | declarations
+  | preamble
+  | abstract
+  | content (alpha : Bool)
+  | references
+  | literature
   | unknown
 deriving BEq
 
 def sectionOf (heading : String) : Section :=
   match heading with
-  | "Built on" => .builtOn
-  | "Requirements" => .requirements
-  | "Further reading" => .furtherReading
-  | "Lean declarations" => .declarations
+  | "Abstract" | "Abstract (Alpha)" => .abstract
+  | "Content" => .content false
+  | "Content (Alpha)" => .content true
+  | "Lean References" => .references
+  | "References" => .literature
   | _ => .unknown
 
 /-- Reads one `API-map.md`. The parser is line-based and graceful: fields it
@@ -173,61 +213,58 @@ cannot read are left at their defaults instead of raising errors. -/
 def parseAPIMap (path : System.FilePath) : IO APIMapData := do
   let lines := (← IO.FS.readFile path).splitOn "\n"
   let mut map : APIMapData := { path }
-  let mut current := Section.overview
+  let mut current := Section.preamble
   let mut paragraph : List String := []
-  let mut overviewParagraphs : List String := []
-  let mut requirementParagraphs : List String := []
-  /- Closes the paragraph under construction, if any. -/
-  let closeParagraph (paragraph : List String) : Option String :=
-    if paragraph.isEmpty then none
-    else some (String.intercalate " " paragraph.reverse)
-  for line in lines do
+  let mut abstractParagraphs : List String := []
+  let mut contentParagraphs : List (Bool × String) := []
+  for line in lines ++ [""] do
     let trimmed := trim line
+    /- A blank line, a heading, or the end of the file closes the paragraph
+    under construction. -/
+    if trimmed == "" || trimmed.startsWith "#" then
+      if !paragraph.isEmpty then
+        let text := String.intercalate " " paragraph.reverse
+        match current with
+        | .abstract => abstractParagraphs := abstractParagraphs ++ [text]
+        | .content alpha => contentParagraphs := contentParagraphs ++ [(alpha, text)]
+        | _ => pure ()
+      paragraph := []
     if trimmed.startsWith "# " && map.title == "" then
       map := { map with title := trim (trimmed.drop 2).toString }
-      continue
-    if trimmed.startsWith "## " then
-      if let some text := closeParagraph paragraph then
-        if current == .overview then overviewParagraphs := text :: overviewParagraphs
-        else if current == .requirements then requirementParagraphs := text :: requirementParagraphs
-      paragraph := []
-      current := sectionOf (trim (trimmed.drop 3).toString)
-      continue
-    if trimmed == "" then
-      if let some text := closeParagraph paragraph then
-        if current == .overview then overviewParagraphs := text :: overviewParagraphs
-        else if current == .requirements then requirementParagraphs := text :: requirementParagraphs
-      paragraph := []
-      continue
-    match current with
-    | .overview | .requirements => paragraph := trimmed :: paragraph
-    | .builtOn =>
-      if trimmed.startsWith "- " then
-        map := { map with parentAPIs := map.parentAPIs ++ [parentEntry trimmed] }
-    | .furtherReading =>
-      if trimmed.startsWith "- " then
-        map := { map with references := map.references ++
-          [trim ((trimmed.dropPrefix "- ").toString)] }
-    | .declarations =>
-      /- A long entry may be wrapped over several lines; a line that does not
-      open a new numbered entry continues the previous one. -/
-      match declarationEntry trimmed, map.declarations.reverse with
-      | some reference, _ =>
-        map := { map with declarations := map.declarations ++ [reference] }
-      | none, last :: earlier =>
-        let continued := { last with
-          declarations := last.declarations ++ backtickedSpans trimmed }
-        map := { map with declarations := earlier.reverse ++ [continued] }
-      | none, [] => pure ()
-    | .unknown => pure ()
-  if let some text := closeParagraph paragraph then
-    if current == .overview then overviewParagraphs := text :: overviewParagraphs
-    else if current == .requirements then requirementParagraphs := text :: requirementParagraphs
-  map := { map with overview := String.intercalate "\n\n" overviewParagraphs.reverse }
-  for text in requirementParagraphs.reverse do
-    let (description, citations, planned) := splitCitations text
-    map := { map with requirements := map.requirements ++
-      [{ description := description, done := !planned, citations := citations }] }
+    else if trimmed.startsWith "## " then
+      let heading := trim (trimmed.drop 3).toString
+      current := sectionOf heading
+      if heading == "Abstract (Alpha)" then map := { map with alpha := true }
+    else if trimmed == "" || trimmed.startsWith "#" then
+      pure ()
+    else
+      match current with
+      | .abstract | .content _ => paragraph := trimmed :: paragraph
+      | .references =>
+        /- A long entry may be wrapped over several lines; a line that does not
+        open a new numbered entry continues the previous one. -/
+        match declarationEntry trimmed, map.declarations.reverse with
+        | some reference, _ =>
+          map := { map with declarations := map.declarations ++ [reference] }
+        | none, last :: earlier =>
+          let continued := { last with
+            declarations := last.declarations ++ backtickedSpans trimmed }
+          map := { map with declarations := earlier.reverse ++ [continued] }
+        | none, [] => pure ()
+      | .literature =>
+        /- As for the Lean references, a line that does not open a new numbered
+        entry continues the previous one. -/
+        match trimmed.splitOn ". ", map.references.reverse with
+        | number :: rest, _ =>
+          if (trim number).toNat?.isSome then
+            map := { map with references := map.references ++ [String.intercalate ". " rest] }
+          else if let last :: earlier := map.references.reverse then
+            map := { map with references := earlier.reverse ++ [last ++ " " ++ trimmed] }
+        | [], _ => pure ()
+      | .preamble | .unknown => pure ()
+  map := { map with
+    overview := String.intercalate "\n\n" abstractParagraphs
+    requirements := contentParagraphs.flatMap (fun (alpha, text) => claimsOf alpha text) }
   return map
 
 partial def findAPIMaps (directory : System.FilePath) : IO (List System.FilePath) := do
@@ -273,7 +310,8 @@ def APIMapData.requirementYAML (map : APIMapData) (requirement : APIMapRequireme
   yamlScalarOrBlock "- description" "      " requirement.description ++ "\n" ++
   s!"        done: {requirement.done}\n" ++
   s!"        location: {yamlQuote (map.locationOf requirement)}\n" ++
-  s!"        citations: [{String.intercalate ", " (requirement.citations.map toString)}]"
+  s!"        citations: [{String.intercalate ", " (requirement.citations.map toString)}]\n" ++
+  s!"        alpha: {requirement.alpha}"
 
 def APIMapData.toYAML (map : APIMapData) : String :=
   let requirementsPart :=
@@ -288,11 +326,11 @@ def APIMapData.toYAML (map : APIMapData) : String :=
   s!"    module: {yamlQuote map.moduleContext}\n" ++
   s!"    githubLink: {yamlQuote map.githubLink}\n" ++
   s!"    title: {yamlQuote map.title}\n" ++
+  s!"    alpha: {map.alpha}\n" ++
+  yamlStringList "references" "    " map.references ++ "\n" ++
   s!"    done: {map.doneCount}\n" ++
   s!"    total: {map.totalCount}\n" ++
   yamlScalarOrBlock "overview" "    " map.overview ++ "\n" ++
-  yamlStringList "parentAPIs" "    " map.parentAPIs ++ "\n" ++
-  yamlStringList "references" "    " map.references ++ "\n" ++
   requirementsPart ++ "\n" ++
   declarationsPart
 
