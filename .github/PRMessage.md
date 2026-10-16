@@ -5,7 +5,7 @@ that a push to the PR updates it instead of leaving a second one. Keep it first.
 Thank you for this pull-request (PR). If this is your first PR, welcome to the community!
 
 <details>
-<summary><h2>Information about what will happen to your PR</h2></summary>
+<summary><h2>For the author: Please read</h2></summary>
 
 Below is what will happen next. Please read carefully if you are not familiar with the process. You may open other PRs while this one is being reviewed, and can stack PRs on top of each other, so don't let these steps slow you down.
 
@@ -22,7 +22,7 @@ If you have any problems or questions, please reach out to the community on the 
 </details>
 
 <details>
-<summary><h2>Summary of your PR for reviewers</h2></summary>
+<summary><h2>For reviewers: Summary of your PR</h2></summary>
 
 <!-- PR_SUMMARY -->
 
