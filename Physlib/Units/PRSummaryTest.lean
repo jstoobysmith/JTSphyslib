@@ -15,3 +15,6 @@ module
 def prSummaryTestDef : Nat := 3
 
 lemma prSummaryTestDef_eq : prSummaryTestDef = 3 := rfl
+
+/-- A second test definition. -/
+def prSummaryTestDef2 : Nat := 4
