@@ -25,6 +25,7 @@ The API map should have the following structure:
 
   An API map can have both `## Content` and `## Content (Alpha)` sections, or just one.
 - **Lean References**: A section titled `## Lean References` linking concepts discussed in the content sections to their corresponding Lean declarations.
+- **References**: A section titled `## References` linking to external sources, such as papers, textbooks, or websites, that provide additional context or background for the concepts discussed in the API map.
 
 ## Lean citations
 
@@ -33,6 +34,10 @@ explain it to a colleague who does not yet know the Lean names; the Lean
 declarations are collected at the end, and the prose points at them with
 numbered citations — `[1]`, `[2]` — in the manner of a paper's bibliography.
 Any part of *Content* which has not yet been formalized in Lean is marked `[planned]`.
+
+## Literature citations
+
+Literature citations should be cited using curly brackets e.g. `{1}`. This helps distinguish them from Lean citations, which use square brackets.
 
 ## Content first style
 
@@ -101,32 +106,12 @@ Rules:
 
 ## Run the linter before opening a PR
 
-The linter checks the document's shape (the title, the overview, the required
-sections and their order), that citations and entries correspond, and, for every entry, that
-the file exists and each declaration and notation named is present in it. It
-needs no third-party packages.
-
-Run it from the repository root, exactly as CI does:
-
-    python scripts/lint/required/api_map_linter.py --repo .
-    python scripts/lint/required/api_map_linter.py --repo . --verbose
-
-A clean run reports every file as `ok` and no `MISSING_FILE` or `MISSING_NAME`
-in the summary. `need_Lean_env` counts instance-type claims grep cannot verify,
-and `lean_names_in_prose` counts requirement paragraphs still carrying
-backticked names; neither is a failure. The linter exits non-zero on any real
-failure (a malformed document, a missing section, an uncited or dangling
-reference, a missing file, or a named declaration that is not in the file it
-points to). Run it until green before opening a PR.
+The linter checks the following things:
+- The correct `# ` and `## ` headings are used.
+- Each Lean citation in the text has a corresponding reference.
+- Each entry in the references section corresponds to at least one citation in the text.
+- Every Lean declaration referenced exists in the corresponding file.
 
 ## The generated site index
 
-`lake exe api_map_index` gathers every `API-map.md` into a single YAML data
-file, `docs/_data/APIMap.yml`, in the same way `TODO_to_yml` builds
-`docs/_data/TODO.yml` for the website's TODO list. The file records each map's
-path, module context, title, overview, parents, further reading, requirements
-and Lean declarations, with per-map and total completion counts, and the
-website repository renders it. Each requirement also keeps a `location` field,
-rebuilt from the entries it cites, so consumers that want the plain
-`file (names)` form still have it. A plain run prints the YAML to standard
-output; passing `mkFile` writes the file.
+`lake exe api_map_index` greates a single YAML data file, `docs/_data/APIMap.yml`, from all `API-map.md` files in the repository. It lists the contents of each API map in a structured format.
