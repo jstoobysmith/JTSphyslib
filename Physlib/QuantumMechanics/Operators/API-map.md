@@ -34,7 +34,7 @@ operator is again unbounded, and its second adjoint is its closure. [5] A symmet
 operator for which T + i and T - i both have the whole space as range is self-adjoint. [6]
 Conjugation by a unitary preserves formal adjoints, dense domains and surjectivity of T - z. [7] The
 standard examples separating the classes of symmetric, essentially self-adjoint and self-adjoint
-operators make the distinction between symmetry and self-adjointness visible. [planned] These
+operators make the distinction between symmetry and self-adjointness visible. [TODO] These
 definitions follow the standard treatments of unbounded operators by Hall {1}, Reed and Simon {2},
 and Schmüdgen {3}. The spectrum, the resolvent, the numerical range and spectral measures of these
 operators belong to spectral theory {4}.
@@ -61,7 +61,7 @@ under an explicit condition, and the regularized operators converge to the unreg
 Each component of the momentum operator is -iℏ∂ᵢ, first on Schwartz maps and then as a partially
 defined operator, which is densely defined, symmetric and unbounded on the Schwartz submodule; the
 momentum squared acts on the same domain. [14] On the Sobolev space H¹ the momentum operator is
-self-adjoint, and not merely symmetric, and likewise the momentum squared on H². [planned]
+self-adjoint, and not merely symmetric, and likewise the momentum squared on H². [TODO]
 
 ### Commutation relations
 
@@ -92,7 +92,7 @@ invariant dense Schwartz domain, where [Lz, L±] = ±ℏ L± and [L², L±] = 0.
 
 Angular momentum extends from its Schwartz domain to self-adjoint operators on the Hilbert space,
 whose spectra consist of the eigenvalues ℏ² l (l + 1) of the scalar and ℏ m of a chosen component,
-with the spherical harmonics as the corresponding eigenfunctions. [planned]
+with the spherical harmonics as the corresponding eigenfunctions. [TODO]
 
 ### Statistics of observables
 
@@ -108,7 +108,7 @@ The product of the standard deviations of two observables is at least half the s
 expected commutator, in both the Robertson and the Robertson-Schrödinger forms, stated for both a
 centered and a raw commutator identity. [29] In particular position and momentum obey the Heisenberg
 uncertainty relation: in any unit state of a common domain the product of their standard deviations
-is at least ℏ/2. [planned]
+is at least ℏ/2. [TODO]
 
 These are the textbook notions of Sakurai and Napolitano {7}, Griffiths and Schroeter {8}, and
 Hall {1}. The uncertainty bounds go back to Robertson {9} and Schrödinger {10}.

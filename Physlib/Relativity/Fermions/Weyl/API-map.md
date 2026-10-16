@@ -44,14 +44,14 @@ of its two factors. [19]
 
 The dual of the left-handed representation is the representation on the dual left-handed
 spinors. [20] The dual of the right-handed representation is the representation on the dual
-right-handed spinors, equivariantly for SL(2, ℂ). [22][planned] Pairwise tensor products of the
+right-handed spinors, equivariantly for SL(2, ℂ). [22][TODO] Pairwise tensor products of the
 Weyl types are 2 × 2 complex matrices, equivariantly for the action of SL(2, ℂ). [21] The
-right-handed representation is the complex conjugate of the left-handed one. [planned]
+right-handed representation is the complex conjugate of the left-handed one. [TODO]
 
 ### Field equations
 
-A massless spinor field obeys the Weyl equation. [planned] The Majorana condition relates a
-left-handed Weyl fermion to a right-handed one. [planned]
+A massless spinor field obeys the Weyl equation. [TODO] The Majorana condition relates a
+left-handed Weyl fermion to a right-handed one. [TODO]
 
 ## Lean References
 

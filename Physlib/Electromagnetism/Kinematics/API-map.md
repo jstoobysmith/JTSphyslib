@@ -23,7 +23,7 @@ vectors, and it arises from distributional scalar and vector potentials. [2]
 A potential arises from a scalar potential, from a vector potential, and from a pair of
 non-relativistic potentials {3}, each with a static variant, and the potential of a pair is the sum
 of the potentials of its two members. [3] A connection on a U(1)-gauge bundle determines a
-potential. [planned]
+potential. [TODO]
 
 ### Fields and Lagrangian
 

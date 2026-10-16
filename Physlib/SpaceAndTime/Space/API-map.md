@@ -51,12 +51,12 @@ matrix. [12][13]
 ### Derivatives and distributions
 
 A function from space into a normed space can be differentiated along a coordinate
-direction. [18] A function from space into a manifold is differentiable. [planned]
+direction. [18] A function from space into a manifold is differentiable. [TODO]
 
 A function bounded in the appropriate sense determines a distribution on space; the constant
 function and the constant slice are such distributions. [19][20][21][22] A distribution on space
 valued in a normed space can be differentiated, giving also its gradient, its divergence and its
-curl. [23][24][25][26] A distribution from space into a manifold is differentiable. [planned]
+curl. [23][24][25][26] A distribution from space into a manifold is differentiable. [TODO]
 
 ## Lean References
 

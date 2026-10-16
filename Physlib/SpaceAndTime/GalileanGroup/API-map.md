@@ -16,7 +16,7 @@ translation of space {1} and a translation of time {2}. [1]
 The spatial dimension is arbitrary; nothing is special to three dimensions. [6]
 
 Galilean transformations form a group, with the identity, the composite and the inverse computed
-explicitly from the four pieces. [2] This group is a Lie group. [planned]
+explicitly from the four pieces. [2] This group is a Lie group. [TODO]
 
 The Galilean group acts on time and space together: an element sends a pair of an instant and a
 point to the pair obtained by rotating and boosting the point, then translating both. [7]

@@ -23,7 +23,7 @@ basis for each color, an involution sending each color to the dual color it may 
 and contraction and unit data satisfying coherence conditions. [1] A species may carry a metric:
 an invariant tensor for each color whose contraction against the metric of the dual color is the
 unit, this condition forming a class of its own. [2] The conditions defining a species also relate
-the metrics to the basis vectors. [planned]
+the metrics to the basis vectors. [TODO]
 
 ### Tensors and their components
 
@@ -77,7 +77,7 @@ evaluations, with contractions and with products in their right factor. [23] A t
 over basis labels of the evaluations of its last index, each tensored with the matching rank-one
 basis tensor and permuted back into the last slot. [23] Evaluation also commutes with a product
 in its left factor and with contraction in the opposite order, and two evaluations of the same
-tensor commute. [planned]
+tensor commute. [TODO]
 
 ### Constructing tensors
 
@@ -98,7 +98,7 @@ A species may carry a conjugation: a second involution on colors together with a
 tensors, which is involutive and commutes with contraction. [29] A componentwise criterion for a
 tensor to equal a permutation of its conjugate expresses reality, and gives the Hermitian
 condition on a metric slot. [29] Both Lorentz species carry conjugations, so that reality and
-Hermiticity conditions apply to real and complex Lorentz tensors. [planned]
+Hermiticity conditions apply to real and complex Lorentz tensors. [TODO]
 
 ### Real Lorentz tensors
 
@@ -111,7 +111,7 @@ in the standard basis, and raising or lowering an index multiplies components by
 matrix. [36] Its unit tensor has explicit components. [37] Pairwise tensor products of the two
 modules are square matrices. [38] The metrics and units of this species are intertwining maps of the
 vector and covector representations, with no preliminary constructions or auxiliary modules.
-[planned]
+[TODO]
 
 ### Lorentz vectors and covectors
 
@@ -147,7 +147,7 @@ epsilon-epsilon contraction identities summed over all four index slots, over th
 and over the last two. [52] At the level of tensors, contracting the Levi-Civita tensor with
 itself over all four index pairs gives −24, and over the first three gives −6 times the unit
 tensor of the lower color. [63][64][37] A Euclidean Levi-Civita tensor carries the
-epsilon-epsilon contraction identities as identities between tensors. [planned]
+epsilon-epsilon contraction identities as identities between tensors. [TODO]
 
 ### Complex Lorentz tensors
 

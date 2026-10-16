@@ -37,7 +37,7 @@ A function from space-time into a normed space can be differentiated along a coo
 derivatives assemble into a tensor. [4] A function from space-time into a manifold can be
 differentiated along a coordinate too, giving a tangent vector at its value. [5] A distribution
 on space-time valued in a normed space can be differentiated. [6] A distribution from space-time
-into a manifold is differentiable. [planned]
+into a manifold is differentiable. [TODO]
 
 ## Lean References
 

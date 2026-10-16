@@ -21,7 +21,7 @@ configuration space is a manifold. [2] The angular lift from the real line to th
 space is periodic with period 2π, and two angles give the same configuration exactly when they
 differ by a whole number of turns. [3] The configuration space maps into physical space {2}, sending
 an angle θ to the position (ℓ sin θ, −ℓ cos θ) of the bob, which lies at distance ℓ from the pivot.
-[4] A trajectory is a curve in the configuration space. [planned]
+[4] A trajectory is a curve in the configuration space. [TODO]
 
 ### Dynamics
 
@@ -53,7 +53,7 @@ The period of a libration of amplitude θ₀ is 4√(ℓ/g) K(sin²(θ₀/2)) {6
 2π√(ℓ/g) at zero amplitude, tends to the small-angle period as the amplitude goes to zero, increases
 with the amplitude on [0, π), and is bounded below by the small-angle period and above by the
 small-angle period divided by cos(θ₀/2). [14] It is the period of the solution released from rest
-at amplitude θ₀, for amplitudes strictly between zero and the inverted position. [planned]
+at amplitude θ₀, for amplitudes strictly between zero and the inverted position. [TODO]
 
 ## Lean References
 

@@ -17,7 +17,7 @@ mass (the König decomposition).
 ### Mass distribution and inertia
 
 A rigid body {1} is specified by its mass distribution, a linear functional on the smooth functions
-on space {2}. [1] That functional is continuous. [planned] The total mass of a rigid body is its
+on space {2}. [1] That functional is continuous. [TODO] The total mass of a rigid body is its
 mass distribution applied to the constant function one. [2] The centre of mass is the mass-weighted
 average of the coordinate functions. [3] The inertia tensor of a rigid body, I_ij = ∫ (δ_ij |x|² −
 x_i x_j) dm, is built from the second moments of its mass distribution about the origin. [4] It is
@@ -27,7 +27,7 @@ point mass at the centre of mass. [6]
 
 The solid sphere of mass m and radius R > 0, with uniform density on the closed ball about the
 origin, is a rigid body whose total mass is m and whose centre of mass is the origin. [7] In three
-dimensions its inertia tensor about its centre is (2/5) m R² times the identity. [11][planned]
+dimensions its inertia tensor about its centre is (2/5) m R² times the identity. [11][TODO]
 
 ### Motion
 
@@ -36,7 +36,7 @@ orientation R, and in three dimensions it is the vector dual to that tensor unde
 The velocity of the centre of mass is the time derivative of the centre-of-mass trajectory. [9] The
 rotational kinetic energy at angular velocity ω is ½ ω · (I ω), and the total kinetic energy of a
 moving body is half the mass integral of the squared speed of its points. [10] The orientation of a
-rigid body is described by Euler angles. [planned]
+rigid body is described by Euler angles. [TODO]
 
 ## Lean References
 

@@ -19,47 +19,47 @@ but no metric.
 
 The cobordism category in dimension d has closed oriented (d−1)-manifolds as objects and
 oriented cobordisms, taken up to boundary-preserving diffeomorphism, as morphisms, composed by
-gluing along a common boundary. [planned] Disjoint union makes it symmetric monoidal, with the
-empty (d−1)-manifold as unit. [planned] A topological field theory in dimension d is a symmetric
-monoidal functor from this category to the modules over a fixed commutative ring. [planned]
+gluing along a common boundary. [TODO] Disjoint union makes it symmetric monoidal, with the
+empty (d−1)-manifold as unit. [TODO] A topological field theory in dimension d is a symmetric
+monoidal functor from this category to the modules over a fixed commutative ring. [TODO]
 This is the axiomatization of Atiyah {1}, modelled on Segal's definition of conformal field
 theory {2}.
 
 ### State spaces and partition functions
 
 A closed oriented (d−1)-manifold has a state space, which is finitely generated, and finite
-dimensional when the ground ring is a field. [planned] The state space of a disjoint union is
+dimensional when the ground ring is a field. [TODO] The state space of a disjoint union is
 the tensor product of the state spaces, and the empty manifold has the ground ring as its state
-space. [planned] The map of a cobordism cut along a closed (d−1)-manifold is the composite of
-the maps of the two pieces. [planned] A closed oriented d-manifold has a partition function, an
-element of the ground ring invariant under orientation-preserving diffeomorphism. [planned]
+space. [TODO] The map of a cobordism cut along a closed (d−1)-manifold is the composite of
+the maps of the two pieces. [TODO] A closed oriented d-manifold has a partition function, an
+element of the ground ring invariant under orientation-preserving diffeomorphism. [TODO]
 
 Reversing orientation dualizes: the state space of the reversed manifold is dual to the
-original, and the pairing between them coming from the cylinder is nondegenerate. [planned] A
+original, and the pairing between them coming from the cylinder is nondegenerate. [TODO] A
 cylinder induces the identity on the state space, so a topological theory has no time evolution
-on a fixed spatial slice. [planned] The partition function of the product of a closed
-(d−1)-manifold with a circle is the rank of the state space of that manifold. [planned]
+on a fixed spatial slice. [TODO] The partition function of the product of a closed
+(d−1)-manifold with a circle is the rank of the state space of that manifold. [TODO]
 
 ### Classification in low dimension
 
 In dimension two, topological field theories valued in vector spaces over a field are
-equivalent to commutative Frobenius algebras {3}. [planned] In dimension one, topological field
-theories are equivalent to finitely generated projective modules. [planned] Topological quantum
+equivalent to commutative Frobenius algebras {3}. [TODO] In dimension one, topological field
+theories are equivalent to finitely generated projective modules. [TODO] Topological quantum
 mechanics is the one-dimensional case on the time manifold {4}, whose world-volume carries an
-orientation but no metric (see issue #877 {5}). [planned] The general classification programme
+orientation but no metric (see issue #877 {5}). [TODO] The general classification programme
 is that of Lurie {6}.
 
 ### Topological gauge theories
 
 The Chern–Simons action of a connection on a principal bundle over a closed oriented
 three-manifold is independent of any metric, gauge invariant up to a shift by an integer
-multiple of the level, and has the flat connections as its critical points. [planned] The BF
+multiple of the level, and has the flat connections as its critical points. [TODO] The BF
 action in general dimension is independent of any metric, and its field equations say that the
-connection is flat and the second field is covariantly constant. [planned] Wilson-loop
+connection is flat and the second field is covariantly constant. [TODO] Wilson-loop
 observables of a topological gauge theory are gauge invariant, and their expectation values give
-link invariants. [planned] These are the ideas of Witten {7}. The Dijkgraaf–Witten
+link invariants. [TODO] These are the ideas of Witten {7}. The Dijkgraaf–Witten
 theory of a finite gauge group has as partition function the count of principal bundles over
-the manifold weighted by a group cocycle. [planned]
+the manifold weighted by a group cocycle. [TODO]
 
 ## Lean References
 

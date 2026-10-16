@@ -22,7 +22,7 @@ a single-paragraph `## Abstract` (or `## Abstract (Alpha)`), `## Content` and/or
 `## Content (Alpha)`, `## Lean References` (a numbered list of
 `file — names` entries) and `## References` (a numbered list of literature and
 other API maps). The content prose points at the Lean references with `[n]`
-citations, marks what is not yet formalized with `[planned]`, and points at the
+citations, marks what is not yet formalized with `[TODO]`, and points at the
 literature with `{n}` citations, which do not affect the claims. Each run of
 citations closes a claim: the prose since the previous run. The parser below
 reads exactly that shape; lines outside it are ignored rather than raising
@@ -104,14 +104,14 @@ partial def backtickedSpans (value : String) : List String :=
   | none => []
 
 /-- A piece of content prose: plain text, or one citation `[n, m]` or
-`[planned]`. -/
+`[TODO]`. -/
 inductive ProseToken
   | text (value : String)
-  | cite (numbers : List Nat) (planned : Bool)
+  | cite (numbers : List Nat) (todo : Bool)
 
 /-- Reads the inside of a pair of square brackets as a citation, if it is one. -/
 def citationOf (inner : String) : Option ProseToken :=
-  if inner == "planned" then some (.cite [] true)
+  if inner == "TODO" then some (.cite [] true)
   else
     let parts := (inner.splitOn ",").map trim
     let numbers := parts.filterMap String.toNat?
@@ -149,27 +149,27 @@ def stripLiterature (paragraph : String) : String :=
 
 /-- The claims of a content paragraph. Each run of adjacent citations closes a
 claim, whose description is the prose since the previous run; a run is done
-unless it contains `[planned]`. Prose after the last run cites nothing and is
+unless it contains `[TODO]`. Prose after the last run cites nothing and is
 not a claim. -/
 def claimsOf (alpha : Bool) (paragraph : String) : List APIMapRequirement := Id.run do
-  let close (prose : String) (numbers : List Nat) (planned : Bool) : APIMapRequirement :=
-    { description := trim prose, done := !planned, citations := numbers, alpha := alpha }
+  let close (prose : String) (numbers : List Nat) (todo : Bool) : APIMapRequirement :=
+    { description := trim prose, done := !todo, citations := numbers, alpha := alpha }
   let mut claims : List APIMapRequirement := []
   let mut prose := ""
   let mut run : Option (List Nat × Bool) := none
   for token in tokenize (stripLiterature paragraph) do
     match token, run with
-    | .text value, some (numbers, planned) =>
+    | .text value, some (numbers, todo) =>
       if trim value != "" then
-        claims := claims ++ [close prose numbers planned]
+        claims := claims ++ [close prose numbers todo]
         prose := value
         run := none
     | .text value, none => prose := prose ++ value
-    | .cite numbers planned, some (earlier, wasPlanned) =>
-      run := some (earlier ++ numbers, wasPlanned || planned)
-    | .cite numbers planned, none => run := some (numbers, planned)
-  if let some (numbers, planned) := run then
-    claims := claims ++ [close prose numbers planned]
+    | .cite numbers todo, some (earlier, wasTodo) =>
+      run := some (earlier ++ numbers, wasTodo || todo)
+    | .cite numbers todo, none => run := some (numbers, todo)
+  if let some (numbers, todo) := run then
+    claims := claims ++ [close prose numbers todo]
   return claims
 
 /-- Reads a `## Lean References` entry, `n. File.lean — `a`, `b``. -/

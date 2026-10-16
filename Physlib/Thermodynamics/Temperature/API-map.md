@@ -46,9 +46,9 @@ temperature unit, and the other units, among them the nanokelvin, microkelvin, m
 the absolute Fahrenheit-sized degree, are obtained from it by rescaling. [13]
 
 The temperature manifold is diffeomorphic to the nonnegative reals, and a temperature unit is a
-translationally invariant metric on it. [planned] A temperature value converts between two
-temperature units. [planned] Degrees Celsius and degrees Fahrenheit, as ordinarily used, are
-scales whose zero is offset from absolute zero, and they convert to absolute scales. [planned]
+translationally invariant metric on it. [TODO] A temperature value converts between two
+temperature units. [TODO] Degrees Celsius and degrees Fahrenheit, as ordinarily used, are
+scales whose zero is offset from absolute zero, and they convert to absolute scales. [TODO]
 
 ## Lean References
 

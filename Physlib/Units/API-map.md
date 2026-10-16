@@ -58,7 +58,7 @@ identity. [15]
 
 A unit choice fixes one unit for each of the five LTMCT base quantities, with the SI choice of
 metre, second, kilogram, coulomb and kelvin. [16] The SI unit choice over the five LTMCT base
-quantities is computable, its base units being given without axioms. [planned] A second unit
+quantities is computable, its base units being given without axioms. [TODO] A second unit
 choice rescales each SI base unit by a distinct prime, which serves to refute dimensional
 correctness. [17]
 
@@ -130,7 +130,7 @@ existing additive operations or the action of the nonnegative reals. [68] They a
 normed space, and explicit coordinate equivalences transport functions and their Fréchet
 derivatives. [69] The tagged type inherits further structure from its underlying type:
 multiplicative and other non-additive algebraic structure, the rest of the order structure, and
-topological structure. [planned]
+topological structure. [TODO]
 
 ### Named quantities
 
@@ -146,7 +146,7 @@ pascal, millimetre of mercury, bar, standard atmosphere, torr and pound per squa
 Momentum has dimension mass times length over time and takes values in d spatial components:
 it is the three-momentum rather than the four-momentum. [58] The mass of a particle is a named
 dimension-carrying quantity in the manner of momentum, and so is its velocity in d spatial
-dimensions. [planned]
+dimensions. [TODO]
 
 ### Calculus and dimensional correctness
 

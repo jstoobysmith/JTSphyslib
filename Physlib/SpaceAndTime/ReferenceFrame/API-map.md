@@ -21,7 +21,7 @@ of space {1} at each time. [1] Its time origin converts a real time coordinate i
 time {2}. [14] A frame can be built from the trajectories of a collection of reference points,
 provided those points form an affine basis at every time: one point serves as the origin, and the
 displacements from it to the others serve as the basis. [2] The origin and basis of a frame built in
-this way are exactly those points and displacements. [planned]
+this way are exactly those points and displacements. [TODO]
 
 A frame may induce the same inner product on coordinates at every time, in which case it
 conserves its coordinate metric. [3] A frame may also have orthonormal axes at every time; such a
@@ -33,13 +33,13 @@ A frame is inertial when its origin moves with constant velocity and its axes ar
 every time, both measured against the affine structure that space itself supplies. [5] This is a
 restriction on the observer rather than on whatever is being observed. An inertial frame's origin
 has a definite constant velocity. [6] Over any elapsed time the origin is displaced by that
-elapsed time multiplied by this velocity. [planned] An inertial frame conserves its coordinate
+elapsed time multiplied by this velocity. [TODO] An inertial frame conserves its coordinate
 metric, and typeclass inference knows this. [7]
 
 The relative motion of two inertial frames is the boost, rotation and translation carrying one to
-the other, and it induces a transformation law on measured components. [planned] A frame whose
+the other, and it induces a transformation law on measured components. [TODO] A frame whose
 axes are constant and whose origin moves with constant velocity relative to an inertial frame is
-itself inertial. [planned]
+itself inertial. [TODO]
 
 ### Measured vector quantities
 
@@ -61,7 +61,7 @@ formulas: the sum of the squared components gives the squared length, and the su
 componentwise products gives the inner product. [13]
 
 The derivative of a trajectory expressed in a frame gives the velocity and acceleration that frame
-measures, as the time derivative of the coordinate components. [planned]
+measures, as the time derivative of the coordinate components. [TODO]
 
 ## Lean References
 

@@ -17,9 +17,9 @@ of the Higgs sector; the Higgs field builds on this group.
 The full gauge group is SU(3) × SU(2) × U(1); it projects onto each of its three factors, and an
 element is determined by its three projections. [1] Its star operation commutes with the three
 projections. [2] A unitary scalar gives a gauge-group element acting on all three factors at
-once, whose projections are known explicitly. [3] The gauge groups are Lie groups. [11][planned]
+once, whose projections are known explicitly. [3] The gauge groups are Lie groups. [11][TODO]
 The gauge bundle over spacetime and its global sections, the gauge transformations, are built
-from the full gauge group. [12][planned]
+from the full gauge group. [12][TODO]
 
 ### Central subgroups and quotients
 
@@ -28,7 +28,7 @@ membership in it has an explicit description, and it is normal. [4] The quotient
 group by that subgroup is a group, with its projection from the full group. [5] The second roots
 of unity form a central subgroup contained in the sixth-roots subgroup, with its own
 quotient. [6] So do the third roots of unity. [7] The center of the full gauge group is
-characterized exactly, and not merely shown to contain these subgroups. [planned]
+characterized exactly, and not merely shown to contain these subgroups. [TODO]
 
 The choice of quotient, which the physics known so far does not settle {1}, is itself a parameter,
 ranging over the sixth, second and third roots of unity and the trivial quotient; for each choice
@@ -40,8 +40,8 @@ central embedding, and its kernel is exactly the chosen subgroup. [9]
 
 On the two-dimensional complex space of the Higgs sector {2}, U(1) acts by a representation and
 SU(2) by its fundamental action, and the two commute. [10] Electroweak symmetry breaking by the
-Higgs field leaves an unbroken gauge group. [planned] The fermionic content of the Standard Model,
-together with its representations of the gauge group, forms a single structure. [planned]
+Higgs field leaves an unbroken gauge group. [TODO] The fermionic content of the Standard Model,
+together with its representations of the gauge group, forms a single structure. [TODO]
 
 ## Lean References
 

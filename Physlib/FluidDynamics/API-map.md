@@ -13,8 +13,8 @@ enters through the stress laws.
 
 A fluid {1} is the spatial distribution of its velocity, density and pressure, as fields over space
 {2} and time {3}; a fluid flow carries the density and the velocity, while the pressure enters
-separately through the stress laws. [1][planned] The flow out of a volume is the flux of fluid
-through the boundary of a spatial region. [planned]
+separately through the stress laws. [1][TODO] The flow out of a volume is the flux of fluid
+through the boundary of a spatial region. [TODO]
 
 The mass flux density is the momentum density ρ u, the product of the density and the velocity,
 whose divergence enters the continuity equation; the convective momentum flux is ρ u ⊗ u. [2] The
@@ -28,8 +28,8 @@ with the conservative and convective forms equivalent for differentiable fields.
 equation states that the Bernoulli function ½ |u|² + h + Φ, with h the specific enthalpy and Φ the
 potential of the body force, is spatially constant, locally that its spatial gradient vanishes. [6]
 
-The entropy flux density is ρ s u, with s the specific entropy. [planned] The energy flux of a fluid
-is ρ u (½ |u|² + h). [planned]
+The entropy flux density is ρ s u, with s the specific entropy. [TODO] The energy flux of a fluid
+is ρ u (½ |u|² + h). [TODO]
 
 ## Lean References
 

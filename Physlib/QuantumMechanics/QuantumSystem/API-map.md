@@ -16,14 +16,14 @@ a unique quantum system, the zero system. [2] Two systems are unitarily equivale
 unitary map between their Hilbert spaces carries one Hamiltonian to the other by conjugation, and
 unitary equivalence is an equivalence relation on quantum systems. [3] Two quantum systems add,
 giving the system on the product of their Hilbert spaces whose Hamiltonian is, schematically, the
-sum of theirs. [planned]
+sum of theirs. [TODO]
 
 The dynamics of a quantum system is governed by its Hamiltonian. The Schrödinger equation is an
 equation for a wavefunction depending on time and valued in the domain of the Hamiltonian.
-[planned] The time evolution operator is a bounded operator on the Hilbert space for each time.
-[planned] The Hamiltonian has energy eigenspaces, eigenvectors and eigenvalues [planned], and a
-system may admit an energy eigenbasis. [planned] Conjugation with the time evolution operator
-moves an operator into and out of the Heisenberg picture. [planned]
+[TODO] The time evolution operator is a bounded operator on the Hilbert space for each time.
+[TODO] The Hamiltonian has energy eigenspaces, eigenvectors and eigenvalues [TODO], and a
+system may admit an energy eigenbasis. [TODO] Conjugation with the time evolution operator
+moves an operator into and out of the Heisenberg picture. [TODO]
 
 ## Lean References
 

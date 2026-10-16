@@ -16,7 +16,7 @@ including an explicit counterexample to a step in one of the references.
 
 A configuration of the two Higgs doublet model is a pair of Higgs vectors {1}. [1] The global gauge
 group of the Standard Model acts on such a pair. [2] Configurations form a real vector
-space. [planned] A group of order two acts by swapping the two Higgs vectors. [planned]
+space. [TODO] A group of order two acts by swapping the two Higgs vectors. [TODO]
 
 ### Gram matrix and Gram vector
 

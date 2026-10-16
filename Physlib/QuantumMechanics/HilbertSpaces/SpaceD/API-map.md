@@ -17,22 +17,22 @@ strongly measurable and square-integrable. [2]
 
 Several subspaces carry the extra regularity that differential operators need. The complex
 Schwartz maps on space form a subspace, and a map passes in either direction between a Schwartz
-map and the class it represents. [3] The Sobolev spaces are subspaces too. [planned] The Fourier
+map and the class it represents. [3] The Sobolev spaces are subspaces too. [TODO] The Fourier
 transform is a unitary map from the Hilbert space to itself. [4]
 
 Restricting attention to a region of space gives further structure. The functions supported in a
 given subset of space form a Hilbert space of their own, with an inclusion into the full space
 and a projection onto it. [5] The elements satisfying homogeneous Dirichlet boundary conditions
 on a subset of space form a subspace. [6] So do the elements satisfying homogeneous Neumann
-boundary conditions [planned], and those satisfying homogeneous mixed boundary conditions.
-[planned]
+boundary conditions [TODO], and those satisfying homogeneous mixed boundary conditions.
+[TODO]
 
 Operators on these spaces come in two families. Any complex function of position gives a
 multiplication operator with maximal domain [7], and the position operators are such
 multiplication operators. [8] Any complex function of the wavenumber gives a derivative operator
-with maximal domain [planned], and the momentum and momentum-squared operators are such
-derivative operators. [planned] The angular momentum and angular momentum-squared operators act
-on the Hilbert space [planned], as does the reflection through a general hyperplane. [planned]
+with maximal domain [TODO], and the momentum and momentum-squared operators are such
+derivative operators. [TODO] The angular momentum and angular momentum-squared operators act
+on the Hilbert space [TODO], as does the reflection through a general hyperplane. [TODO]
 The general theory of these operators lives in the operator algebra {2}.
 
 ## Lean References

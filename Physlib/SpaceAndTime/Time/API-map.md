@@ -26,7 +26,7 @@ reals. [3] Instants are ordered, so that one instant comes no later than another
 a norm, and an inner product making it a one-dimensional real inner-product space. [5] It is a
 Borel measurable space whose volume measure is the Haar measure of the basis, and the
 identification with the reals preserves that measure. [6] Time carries an action of the
-translation group. [planned]
+translation group. [TODO]
 
 Time with no structure beyond its orientation is a manifold in its own right, with its topology,
 its charted-space and manifold structures, and a diffeomorphism to the reals. [10]
@@ -42,8 +42,8 @@ obeys the product rule, and the time derivative commutes with the transpose. [9]
 A function from time into a manifold has a time derivative too, and for a target that is both a
 normed space and a manifold the two derivatives agree. [8]
 
-Distributions from time into a normed space are differentiable. [planned] Distributions from time
-into a manifold are differentiable. [planned]
+Distributions from time into a normed space are differentiable. [TODO] Distributions from time
+into a manifold are differentiable. [TODO]
 
 ### Units of time
 

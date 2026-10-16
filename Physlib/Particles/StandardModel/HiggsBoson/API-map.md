@@ -24,14 +24,14 @@ a U(1) phase times an SU(2) matrix and compatible with the group law. [4] That r
 preserves inner products and norms. [5] Two Higgs vectors lie in the same gauge orbit exactly when
 they have the same norm, and a gauge transformation can remove the phase of the second
 component. [6] A nonzero Higgs vector breaks the gauge group to a subgroup SU(3) × U(1), and the
-subgroup fixing every Higgs vector is SU(3) × ℤ₆. [7][planned] Pairs of Higgs vectors, with this
+subgroup fixing every Higgs vector is SU(3) × ℤ₆. [7][TODO] Pairs of Higgs vectors, with this
 gauge action, are the configurations of the two Higgs doublet model {2}.
 
 ### The Higgs bundle and Higgs fields
 
 The Higgs bundle over spacetime {3} is a smooth vector bundle, currently the trivial bundle with
 fibre the pointwise Higgs values. [8] It is the bundle associated to the gauge group, rather than
-the trivial one. [planned]
+the trivial one. [TODO]
 
 Higgs fields are smooth sections of the Higgs bundle; each has an underlying map to pointwise
 Higgs values, and every Higgs vector gives a constant field. [9] The components of a Higgs field
@@ -42,8 +42,8 @@ and is smooth. [12]
 
 Gauge transformations act on Higgs fields pointwise; two Higgs fields lie in the same orbit
 exactly when their pointwise norms squared agree, and every smooth nonnegative function on
-spacetime is the norm squared of some Higgs field. [13][planned] The pointwise inner product, the
-norm squared and the potential are invariant under the global gauge action. [planned]
+spacetime is the norm squared of some Higgs field. [13][TODO] The pointwise inner product, the
+norm squared and the potential are invariant under the global gauge action. [TODO]
 
 ### The Higgs potential
 
@@ -64,8 +64,8 @@ constant on gauge orbits and so factors through the norm. [17] An effective pote
 mass dimension is polynomial, splits into homogeneous terms of each mass dimension whose odd terms
 vanish when it is invariant, and is then a sum of powers of the norm. [18] Effective potentials
 determine potentials on Higgs fields, so that field-level statements follow from pointwise
-invariant ones. [planned] Higgs fields have covariant derivatives and kinetic terms, built from a
-gauge connection over spacetime. [planned]
+invariant ones. [TODO] Higgs fields have covariant derivatives and kinetic terms, built from a
+gauge connection over spacetime. [TODO]
 
 ## Lean References
 

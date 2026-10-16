@@ -40,7 +40,7 @@ The *Content* explains the API in words, as you would
 explain it to a colleague who does not yet know the Lean names; the Lean
 declarations are collected at the end, and the prose points at them with
 numbered citations — `[1]`, `[2]` — in the manner of a paper's bibliography.
-Any part of *Content* which has not yet been formalized in Lean is marked `[planned]`.
+Any part of *Content* which has not yet been formalized in Lean is marked `[TODO]`.
 
 Each citation must come in its own square bracket e.g. `[1][2]` not `[1,2]`.
 The abstract must not contain any citations, whether Lean or literature.
@@ -57,14 +57,14 @@ Each citation must come in its own curly bracket e.g. `{1}{2}` not `{1,2}`.
 
 A content first style should be taken. For example:
 ```
-A general gauge theory admits an arbitrary Lie group as its structure group. [planned] Its
-gauge field takes values in the Lie algebra of that group. [planned] Matter fields carry a
-gauge-covariant derivative with a defined transformation law. [planned] The non-abelian field.
+A general gauge theory admits an arbitrary Lie group as its structure group. [TODO] Its
+gauge field takes values in the Lie algebra of that group. [TODO] Matter fields carry a
+gauge-covariant derivative with a defined transformation law. [TODO] The non-abelian field.
 ```
 
 Not the following (which is a RoadMap style)
 ```
-The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the structure group and define a gauge field valued in its Lie algebra. [planned] It will also define the gauge-covariant derivative on matter fields and its transformation law, along with the Yang–Mills curvature and its covariant transformation. [planned] The Yang–Mills action and its field equations, parallel transport and holonomy, and a formulation of gauge fields as connections on principal bundles are also planned. [planned]
+The general non-abelian theory remains planned. It will allow an arbitrary Lie group as the structure group and define a gauge field valued in its Lie algebra. [TODO] It will also define the gauge-covariant derivative on matter fields and its transformation law, along with the Yang–Mills curvature and its covariant transformation. [TODO] The Yang–Mills action and its field equations, parallel transport and holonomy, and a formulation of gauge fields as connections on principal bundles are also planned. [TODO]
 ```
 
 ## When to write one
@@ -73,7 +73,7 @@ Write an `API-map.md` for any API that groups a coherent body of definitions
 and results, for example `Time`, `Space`, the Lorentz group, or the quantum
 operators. If a directory holds an API worth documenting as a unit, it gets a
 map. Requirements that are planned but not yet formalized still belong in the
-map, marked `[planned]`, so the map doubles as the API's roadmap.
+map, marked `[TODO]`, so the map doubles as the API's roadmap.
 
 ## File location
 

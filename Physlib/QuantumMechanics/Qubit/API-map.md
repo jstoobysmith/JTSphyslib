@@ -35,7 +35,7 @@ Pauli gate has an explicit effect. [5]
 
 The rotation gates about the three coordinate axes, together with a phase, decompose an arbitrary
 single-qubit unitary, and conjugation by a single-qubit unitary is a rotation of the Bloch sphere.
-[planned]
+[TODO]
 
 ### The Bloch sphere and geometric phase
 
@@ -48,31 +48,31 @@ the geometric phase of Pancharatnam {2} and Berry {3}.
 
 The Bloch vector of a state of a qubit is the triple of expectation values of the Pauli gates, and
 it is a bijection from states onto the closed unit ball of three-dimensional Euclidean space.
-[planned] It restricts to a bijection from pure states up to a global phase onto the Bloch sphere,
+[TODO] It restricts to a bijection from pure states up to a global phase onto the Bloch sphere,
 so that the angular parameterization presents the pure state with the given polar and azimuthal
-angles. [planned] Every state of a qubit is one half of the identity plus a real combination of the
+angles. [TODO] Every state of a qubit is one half of the identity plus a real combination of the
 Pauli gates, and the identity together with the three Pauli gates is a basis of the self-adjoint two
-by two complex matrices. [planned]
+by two complex matrices. [TODO]
 
 ### Measurement and distinguishability
 
 Measuring a qubit in the computational basis gives the two outcomes with probabilities, by the Born
-rule, equal to the squared norms of the components of the state. [planned] The fidelity of two
-states of a qubit has a closed form in terms of their traces and determinants. [planned]
+rule, equal to the squared norms of the components of the state. [TODO] The fidelity of two
+states of a qubit has a closed form in terms of their traces and determinants. [TODO]
 
 ### Pairs and registers of qubits
 
 The Bell basis of the states of a pair of qubits is orthonormal, and the standard gates have an
-explicit action on it. [planned] The singlet and triplet states of a pair of qubits split their
-state space into an antisymmetric line and a symmetric plane. [planned] The positive partial
+explicit action on it. [TODO] The singlet and triplet states of a pair of qubits split their
+state space into an antisymmetric line and a symmetric plane. [TODO] The positive partial
 transpose test is complete for a pair of qubits: such a state is separable exactly when its partial
-transpose is positive semidefinite. [planned]
+transpose is positive semidefinite. [TODO]
 
 The state space of a register of several qubits is an iterated product, and a single-qubit gate
-extends to a gate acting on one component of a register. [planned] The Hadamard gate, one phase gate
+extends to a gate acting on one component of a register. [TODO] The Hadamard gate, one phase gate
 and the controlled-NOT gate generate a dense subgroup of the special unitary group of a register, so
-that they are universal for quantum computation. [planned] Kets on a qubit are the unit vectors of
-the finite dimensional Hilbert space of a two-element type. [planned]
+that they are universal for quantum computation. [TODO] Kets on a qubit are the unit vectors of
+the finite dimensional Hilbert space of a two-element type. [TODO]
 
 ## Lean References
 

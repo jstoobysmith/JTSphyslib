@@ -19,7 +19,7 @@ respect to the Minkowski matrix. [1] The Lorentz transformations form a group un
 multiplication. [2] Equivalently, Λ is Lorentz exactly when dual Λ * Λ = 1, when its transpose
 is Lorentz, when −Λ is Lorentz, or when Λᵀ η Λ = η. [6] The Lorentz group embeds as a closed
 subgroup of the general linear group, by a closed embedding. [3] It is a Lie group, by Cartan's
-closed subgroup theorem. [planned] It is the symmetry group of Minkowski spacetime {1}, and Lorentz
+closed subgroup theorem. [TODO] It is the symmetry group of Minkowski spacetime {1}, and Lorentz
 tensors {2}, Weyl fermions {3} and Dirac fermions {4} are characterized by how they transform under
 it. A standard introduction is Jaffe {5}.
 
@@ -27,7 +27,7 @@ it. A standard introduction is Jaffe {5}.
 
 Every boost is a Lorentz transformation. [4] Every rotation of space is a Lorentz
 transformation. [5] Every member of the restricted Lorentz group is a boost composed with a
-rotation. [planned]
+rotation. [TODO]
 
 ### Proper, orthochronous and restricted transformations
 
@@ -35,7 +35,7 @@ A Lorentz transformation is proper when its determinant is 1. [7] It is orthochr
 preserves the direction of time, its time-time component being non-negative. [8] The restricted
 Lorentz group consists of the transformations that are both proper and orthochronous. [9] The
 orthochronous Lorentz transformations are characterized topologically within the Lorentz group.
-[planned]
+[TODO]
 
 ## Lean References
 

@@ -14,11 +14,11 @@ Two Hilbert spaces have a complete tensor product, the completion of their algeb
 product. [1] It is commutative, by a linear isometry equivalence exchanging the factors [2], and
 associative, by a linear isometry equivalence rebracketing three factors. [3] Whenever either
 factor is finite-dimensional, the complete tensor product is isometrically equivalent to the
-algebraic one. [planned]
+algebraic one. [TODO]
 
 The construction extends beyond pairs. An indexed family of Hilbert spaces has a complete tensor
-product [planned], and a single Hilbert space has complete tensor powers. [planned] A seed Hilbert
-space has a Fock space built from its tensor powers. [planned]
+product [TODO], and a single Hilbert space has complete tensor powers. [TODO] A seed Hilbert
+space has a Fock space built from its tensor powers. [TODO]
 
 ## Lean References
 

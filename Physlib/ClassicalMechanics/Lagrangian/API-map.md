@@ -13,9 +13,9 @@ picture, whose positions ultimately live in physical space.
 ## Content (Alpha)
 
 A configuration manifold {1} abstracts over the choice of mechanical system, and is shared across
-the Lagrangian formulation. [planned] Generalized coordinates and the velocity phase space live over
+the Lagrangian formulation. [TODO] Generalized coordinates and the velocity phase space live over
 that shared configuration space, and a Lagrangian is a function on them, which is the input to the
-Euler–Lagrange equations {2}. [planned] Particular systems, such as the geometric harmonic
+Euler–Lagrange equations {2}. [TODO] Particular systems, such as the geometric harmonic
 oscillator {3} and the pendulum {4}, have configuration spaces of their own, whose positions
 ultimately live in physical space {5}.
 

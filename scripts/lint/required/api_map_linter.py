@@ -4,7 +4,7 @@
 An `API-map.md` is a prose document, described in `docs/API_MAP_GUIDE.md`: a
 title; a single-paragraph `## Abstract` (or `## Abstract (Alpha)`) with no
 citations; a `## Content` and/or a `## Content (Alpha)` section discussing the
-physics, with Lean citations `[n]`, `[planned]` markers and literature
+physics, with Lean citations `[n]`, `[TODO]` markers and literature
 citations `{n}` in the prose; a numbered `## Lean References` list of the Lean
 declarations the prose cites; and, optionally and directly after it, a numbered
 `## References` list of the literature and other API maps the prose cites.
@@ -31,10 +31,10 @@ SUBHEADING = re.compile(r"^#{3,}\s")
 FENCE = re.compile(r"^\s*(```|~~~)")
 REFERENCE_ENTRY = re.compile(r"^(\d+)\.\s+(\S+\.lean)\s*(?:[—-]\s*(.*))?$")
 LITERATURE_ENTRY = re.compile(r"^(\d+)\.\s+(\S.*)$")
-CITATION = re.compile(r"\[(\d+|planned)\]")
+CITATION = re.compile(r"\[(\d+|TODO)\]")
 LITERATURE_CITATION = re.compile(r"\{(\d+)\}")
 # A run of adjacent citations; literature citations may sit inside the run.
-CITATION_RUN = re.compile(r"(?:(?:\[(?:\d+|planned)\]|\{\d+\})\s*)+")
+CITATION_RUN = re.compile(r"(?:(?:\[(?:\d+|TODO)\]|\{\d+\})\s*)+")
 GROUPED_CITATION = re.compile(r"\[\d+\s*,[\d\s,]*\]|\{\d+\s*,[\d\s,]*\}")
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\([^)]*\)")
 RAW_LINK = re.compile(r"https?://|www\.")
@@ -54,7 +54,7 @@ SECTION_ORDER = {
 }
 NO_DECLARATIONS = "*None yet.*"
 
-COUNT_KEYS = ["claims", "done", "planned", "checked", "names_ok", "missing_file",
+COUNT_KEYS = ["claims", "done", "todo", "checked", "names_ok", "missing_file",
               "missing_name", "need_lean", "lean_in_prose"]
 
 
@@ -98,13 +98,13 @@ def paragraphs(lines):
 
 def citation_runs(paragraph):
     """Each run of adjacent Lean citations in a paragraph, as (numbers,
-    planned). A run made only of literature citations is not a claim."""
+    todo). A run made only of literature citations is not a claim."""
     runs = []
     for run in CITATION_RUN.finditer(paragraph):
         groups = CITATION.findall(run.group(0))
         if groups:
-            numbers = [int(group) for group in groups if group != "planned"]
-            runs.append((numbers, "planned" in groups))
+            numbers = [int(group) for group in groups if group != "TODO"]
+            runs.append((numbers, "TODO" in groups))
     return runs
 
 
@@ -235,6 +235,9 @@ def check_structure(titles, preamble, sections):
                     problems.append(
                         f"LINK: `## {name}` contains a raw link; "
                         "cite it as `{n}` from `## References`")
+                if "[planned]" in paragraph:
+                    problems.append(
+                        f"CITATION: `[planned]` in `## {name}`; the marker is now `[TODO]`")
                 for grouped in GROUPED_CITATION.findall(paragraph):
                     problems.append(
                         f"CITATION: {grouped!r} in `## {name}`; give each citation its own "
@@ -269,9 +272,9 @@ def lint_map(path, repository):
     for name in ABSTRACT_SECTIONS + CONTENT_SECTIONS:
         for index, paragraph in enumerate(paragraphs(body.get(name, []))):
             where = f"{name}, paragraph {index + 1}"
-            for numbers, planned in citation_runs(paragraph):
+            for numbers, todo in citation_runs(paragraph):
                 counts["claims"] += 1
-                counts["planned" if planned else "done"] += 1
+                counts["todo" if todo else "done"] += 1
                 for number in numbers:
                     if number not in by_number:
                         errors.append(f"[{where}] DANGLING CITATION: [{number}]")
@@ -333,7 +336,7 @@ def main():
         failed = failed or bool(errors)
         print(
             f"[{'FAIL' if errors else 'ok'}] {path.relative_to(args.repo)} "
-            f"({counts['done']} done, {counts['planned']} planned, "
+            f"({counts['done']} done, {counts['todo']} TODO, "
             f"{counts['names_ok']} names ok, {counts['need_lean']} need-Lean)"
         )
         for problem in errors + (notes if args.verbose else []):
@@ -344,7 +347,7 @@ def main():
     print("\n=== SUMMARY ===")
     print(
         f"files={len(maps)} claims={total['claims']} done={total['done']} "
-        f"planned={total['planned']} files_checked={total['checked']} "
+        f"todo={total['todo']} files_checked={total['checked']} "
         f"names_ok={total['names_ok']} MISSING_FILE={total['missing_file']} "
         f"MISSING_NAME={total['missing_name']} need_Lean_env={total['need_lean']} "
         f"lean_names_in_prose={total['lean_in_prose']}"

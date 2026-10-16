@@ -49,8 +49,8 @@ theorem holds outright. [12] These identities are developed in Tong's lectures {
 
 For systems with finitely many discrete microstates the integral definitions reduce to finite
 sums. [13] The two-state ensemble has closed forms for its partition function, its state
-probabilities and its mean energy. [14] Its thermodynamic entropy has a closed form. [planned]
-Its Helmholtz free energy has a closed form. [planned]
+probabilities and its mean energy. [14] Its thermodynamic entropy has a closed form. [TODO]
+Its Helmholtz free energy has a closed form. [TODO]
 
 ## Lean References
 

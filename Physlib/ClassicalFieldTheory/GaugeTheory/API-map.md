@@ -30,13 +30,13 @@ factors and a central discrete subgroup of sixth roots of unity. [1]
 
 ### The non-abelian theory
 
-A general gauge theory {4} admits an arbitrary Lie group as its structure group. [planned] Its gauge
-field takes values in the Lie algebra of that group. [planned] Matter fields carry a gauge-covariant
-derivative with a definite transformation law. [planned] The gauge field has a Yang–Mills
-curvature. [planned] That curvature transforms covariantly under gauge transformations. [planned]
-The Yang–Mills action yields the Yang–Mills field equations. [planned] A gauge field determines
-parallel transport along paths and holonomy around loops. [planned] Gauge fields are connections on
-principal bundles. [planned] Progress on this API is tracked in a GitHub issue {5}.
+A general gauge theory {4} admits an arbitrary Lie group as its structure group. [TODO] Its gauge
+field takes values in the Lie algebra of that group. [TODO] Matter fields carry a gauge-covariant
+derivative with a definite transformation law. [TODO] The gauge field has a Yang–Mills
+curvature. [TODO] That curvature transforms covariantly under gauge transformations. [TODO]
+The Yang–Mills action yields the Yang–Mills field equations. [TODO] A gauge field determines
+parallel transport along paths and holonomy around loops. [TODO] Gauge fields are connections on
+principal bundles. [TODO] Progress on this API is tracked in a GitHub issue {5}.
 
 ## Lean References
 
