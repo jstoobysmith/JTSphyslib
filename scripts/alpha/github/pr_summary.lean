@@ -13,7 +13,7 @@ A script which prints, as Markdown, what a pull-request changes: its files and i
 ## i. Overview
 
 `lake exe pr_summary <base> <head>` prints a summary of the changes `head` makes to `base`, for
-a reviewer to read before the diff. The [`PRMessage`](../../.github/workflows/PRMessage.yml)
+a reviewer to read before the diff. The [`PRMessage`](../../../.github/workflows/PRMessage.yml)
 workflow runs it and posts the result in the comment it leaves on every pull-request, updating
 that comment on every push.
 
@@ -737,7 +737,7 @@ def caveat : String :=
   "The declarations are found by reading the diff as text, without regard for namespaces, so a \
   declaration whose keyword and name are on different lines is missed, and two declarations of \
   the same name in different namespaces are listed as one. A change to a proof, or to the body \
-  of a definition, does not appear. See `scripts/github/pr_summary.lean`."
+  of a definition, does not appear. See `scripts/alpha/github/pr_summary.lean`."
 
 /-- The call-out, if any, then the block in a `diff` fence, then the caveat. -/
 def render (src : Source) (files : Array FileChange) (decls : Array DeclDiff) : String :=
@@ -1228,7 +1228,7 @@ Found differences:
 The declarations are found by reading the diff as text, without regard for namespaces, so a
 declaration whose keyword and name are on different lines is missed, and two declarations of
 the same name in different namespaces are listed as one. A change to a proof, or to the body
-of a definition, does not appear. See `scripts/github/pr_summary.lean`.
+of a definition, does not appear. See `scripts/alpha/github/pr_summary.lean`.
 -/
 #guard_msgs (whitespace := lax) in
 #eval IO.println (shortLinks (summarise testSource
