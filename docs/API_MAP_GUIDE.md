@@ -24,8 +24,15 @@ The API map should have the following structure:
 - **Content (Alpha)**: A section titled `## Content (Alpha)`. Same as `## Content`, but for API maps which have not gone under the stringent review process. It should extend what is in `## Content`.
 
   An API map can have both `## Content` and `## Content (Alpha)` sections, or just one.
+
+  Both `## Content` and `## Content (Alpha)` sections can cite Physlib or PhyslibAlpha, the
+  `Alpha` here refers to the less strictly reviewed version of the content, not the content.
+
 - **Lean References**: A section titled `## Lean References` linking concepts discussed in the content sections to their corresponding Lean declarations.
-- **References**: A section titled `## References` linking to external sources, such as papers, textbooks, or websites, that provide additional context or background for the concepts discussed in the API map.
+- **References**: A section titled `## References` linking to external sources, such as papers, textbooks, or websites, that provide additional context or background for the concepts discussed in the API map. This must come directly after **Lean References**.
+
+Some notes:
+- You can have a `## Abstract (Alpha)` with a `## Content` section, although this is advised against.
 
 ## Lean citations
 
@@ -35,9 +42,16 @@ declarations are collected at the end, and the prose points at them with
 numbered citations — `[1]`, `[2]` — in the manner of a paper's bibliography.
 Any part of *Content* which has not yet been formalized in Lean is marked `[planned]`.
 
+Each citation must come in its own square bracket e.g. `[1][2]` not `[1,2]`.
+The abstract must not contain any citations, whether Lean or literature.
+
 ## Literature citations
 
-Literature citations should be cited using curly brackets e.g. `{1}`. This helps distinguish them from Lean citations, which use square brackets.
+Literature citations should be cited using curly brackets e.g. `{1}`. This helps distinguish them from Lean citations, which use square brackets. This should include links to other API maps.
+
+No raw link should be included in an API map; all references should be properly cited in the `## References` section using the curly bracket notation. No `[markdown](links)` should appear directly in the content or abstract. This is because these are not easy to parse when looking at raw markdown files.
+
+Each citation must come in its own curly bracket e.g. `{1}{2}` not `{1,2}`.
 
 ## Content first style
 
