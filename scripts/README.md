@@ -127,6 +127,6 @@ This linter may need running a number of times.
   `lake exe pr_summary > summary.md` writes just the summary. The declarations are found by
   reading `git diff --unified=0` as text, in the spirit of the `declarations_diff.sh` script of
   [`mathlib-ci`](https://github.com/leanprover-community/mathlib-ci), so no build is needed; the
-  module documentation of `scripts/github/pr_summary.lean` lists what that misses, and gives
+  module documentation of `scripts/alpha/github/pr_summary.lean` lists what that misses, and gives
   examples to run on recent PRs. Its tests are `#guard_msgs` commands in its source, so
   `lake build pr_summary` runs them.

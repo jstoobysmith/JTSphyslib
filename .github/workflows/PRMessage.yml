@@ -30,11 +30,11 @@ on:
     types: [opened, synchronize]
   push:
     paths:
-      - scripts/github/pr_summary.lean
+      - scripts/alpha/github/pr_summary.lean
       - .github/workflows/PRMessage.yml
   pull_request:
     paths:
-      - scripts/github/pr_summary.lean
+      - scripts/alpha/github/pr_summary.lean
       - .github/workflows/PRMessage.yml
 
 # A push which lands while the summary of the previous one is still being made cancels it, so

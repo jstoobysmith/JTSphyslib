@@ -39,7 +39,7 @@ srcDir = "scripts/github"
 
 [[lean_exe]]
 name = "pr_summary"
-srcDir = "scripts/github"
+srcDir = "scripts/alpha/github"
 
 [[lean_exe]]
 name = "windows_test"
