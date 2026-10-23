@@ -5,6 +5,7 @@ Authors: Joseph Tooby-Smith
 -/
 module
 
+public import Mathlib.LinearAlgebra.PerfectPairing.Basic
 public import Physlib.Relativity.Fermions.Weyl.LeftHanded
 public import Physlib.Relativity.Fermions.Weyl.RightHanded
 public import Physlib.Relativity.Fermions.Weyl.DualLeftHanded
@@ -43,7 +44,8 @@ dual-right-handed fermion `φ_{dot a}`, acted on by `(M⁻¹)^†`.
     - A.2.1. Basic properties
   - A.3. Symmetry
   - A.4. Nondegeneracy
-  - A.5. Uniqueness up to scale
+  - A.5. Perfect pairing
+  - A.6. Uniqueness up to scale
 - B. Contractions of right-handed Weyl fermions
   - B.1. The contraction `ψ^{dot a} φ_{dot a}`
     - B.1.1. Basic properties
@@ -51,7 +53,8 @@ dual-right-handed fermion `φ_{dot a}`, acted on by `(M⁻¹)^†`.
     - B.2.1. Basic properties
   - B.3. Symmetry
   - B.4. Nondegeneracy
-  - B.5. Uniqueness up to scale
+  - B.5. Perfect pairing
+  - B.6. Uniqueness up to scale
 
 ## iv. References
 
@@ -239,11 +242,35 @@ lemma eq_zero_of_dualLeftContraction_tmul_eq_zero (φ : DualLeftHandedWeyl)
 
 /-!
 
-### A.5. Uniqueness up to scale
+### A.5. Perfect pairing
 
-Write an invariant pairing `B` as `B (ψ ⊗ φ) = leftDualContraction (T ψ ⊗ φ)`, where `T ψ` has
-components `B (ψ ⊗ e_j)`. Invariance of `B` and of the contraction makes `T` commute with `rep`,
-so by Schur's lemma `T` is a multiple of the identity.
+-/
+
+/-- The pairing `(ψ, φ) ↦ ψ^a φ_a` is perfect. It identifies dual-left-handed Weyl fermions with
+  the dual of left-handed Weyl fermions, and vice versa. -/
+instance leftDualBi_isPerfPair : leftDualBi.IsPerfPair :=
+  .of_injective
+    ((injective_iff_map_eq_zero _).2 fun ψ h =>
+      eq_zero_of_leftDualContraction_tmul_eq_zero ψ fun φ => LinearMap.congr_fun h φ)
+    ((injective_iff_map_eq_zero _).2 fun φ h =>
+      eq_zero_of_dualLeftContraction_tmul_eq_zero φ fun ψ => by
+        rw [dualLeftContraction_tmul_symm]
+        exact LinearMap.congr_fun h ψ)
+
+/-- The pairing `(φ, ψ) ↦ φ_a ψ^a` is perfect. It identifies left-handed Weyl fermions with the
+  dual of dual-left-handed Weyl fermions, and vice versa. -/
+instance dualLeftBi_isPerfPair : dualLeftBi.IsPerfPair :=
+  .of_injective
+    ((injective_iff_map_eq_zero _).2 fun φ h =>
+      eq_zero_of_dualLeftContraction_tmul_eq_zero φ fun ψ => LinearMap.congr_fun h ψ)
+    ((injective_iff_map_eq_zero _).2 fun ψ h =>
+      eq_zero_of_leftDualContraction_tmul_eq_zero ψ fun φ => by
+        rw [leftDualContraction_tmul_symm]
+        exact LinearMap.congr_fun h φ)
+
+/-!
+
+### A.6. Uniqueness up to scale
 
 -/
 
@@ -257,15 +284,11 @@ lemma eq_smul_leftDualContraction
       (Representation.trivial ℂ SL(2,ℂ) ℂ)) (M : SL(2,ℂ)) (ψ φ) :
       C (LeftHandedWeyl.rep M ψ ⊗ₜ DualLeftHandedWeyl.rep M φ) = C (ψ ⊗ₜ φ) := by
     simpa using Representation.IntertwiningMap.isIntertwining _ _ C M (ψ ⊗ₜ φ)
-  -- `T ψ` has components `B (ψ ⊗ eⱼ)`.
   obtain ⟨T, hT⟩ : ∃ T : Module.End ℂ LeftHandedWeyl,
-      ∀ ψ φ, B (ψ ⊗ₜ φ) = leftDualContraction (T ψ ⊗ₜ φ) := by
-    refine ⟨LeftHandedWeyl.toFin2ℂEquiv.symm.toLinearMap ∘ₗ
-      LinearMap.pi fun j => (curry B.toLinearMap).flip (DualLeftHandedWeyl.basis j),
-      fun ψ φ => LinearMap.congr_fun
-        (?_ : curry B.toLinearMap ψ = curry leftDualContraction.toLinearMap _) φ⟩
-    refine DualLeftHandedWeyl.basis.ext fun j => ?_
-    simp [leftDualContraction_tmul_basis]
+      ∀ ψ φ, B (ψ ⊗ₜ φ) = leftDualContraction (T ψ ⊗ₜ φ) :=
+    ⟨leftDualBi.toPerfPair.symm.toLinearMap ∘ₗ curry B.toLinearMap, fun ψ φ =>
+      (LinearMap.congr_fun
+        (leftDualBi.apply_symm_toPerfPair_self (curry B.toLinearMap ψ)) φ).symm⟩
   obtain ⟨μ, hμ⟩ := LeftHandedWeyl.end_eq_smul_id_of_commute_rep (T := T) fun M =>
     LinearMap.ext fun ψ => sub_eq_zero.1 <|
       eq_zero_of_leftDualContraction_tmul_eq_zero _ fun φ => by
@@ -484,9 +507,37 @@ lemma eq_zero_of_dualRightContraction_tmul_eq_zero (φ : DualRightHandedWeyl)
 
 /-!
 
-### B.5. Uniqueness up to scale
+### B.5. Perfect pairing
 
-The argument is that of A.5.
+-/
+
+/-- The pairing `(ψ, φ) ↦ ψ^{dot a} φ_{dot a}` is perfect. It identifies dual-right-handed Weyl
+  fermions with the dual of right-handed Weyl fermions, and vice versa. -/
+instance rightDualBi_isPerfPair : rightDualBi.IsPerfPair :=
+  .of_injective
+    ((injective_iff_map_eq_zero _).2 fun ψ h =>
+      eq_zero_of_rightDualContraction_tmul_eq_zero ψ fun φ => LinearMap.congr_fun h φ)
+    ((injective_iff_map_eq_zero _).2 fun φ h =>
+      eq_zero_of_dualRightContraction_tmul_eq_zero φ fun ψ => by
+        rw [dualRightContraction_tmul_symm]
+        exact LinearMap.congr_fun h ψ)
+
+/-- The pairing `(φ, ψ) ↦ φ_{dot a} ψ^{dot a}` is perfect. It identifies right-handed Weyl
+  fermions with the dual of dual-right-handed Weyl fermions, and vice versa. -/
+instance dualRightBi_isPerfPair : dualRightBi.IsPerfPair :=
+  .of_injective
+    ((injective_iff_map_eq_zero _).2 fun φ h =>
+      eq_zero_of_dualRightContraction_tmul_eq_zero φ fun ψ => LinearMap.congr_fun h ψ)
+    ((injective_iff_map_eq_zero _).2 fun ψ h =>
+      eq_zero_of_rightDualContraction_tmul_eq_zero ψ fun φ => by
+        rw [rightDualContraction_tmul_symm]
+        exact LinearMap.congr_fun h φ)
+
+/-!
+
+### B.6. Uniqueness up to scale
+
+The argument is that of A.6.
 
 -/
 
@@ -501,13 +552,10 @@ lemma eq_smul_rightDualContraction
       C (RightHandedWeyl.rep M ψ ⊗ₜ DualRightHandedWeyl.rep M φ) = C (ψ ⊗ₜ φ) := by
     simpa using Representation.IntertwiningMap.isIntertwining _ _ C M (ψ ⊗ₜ φ)
   obtain ⟨T, hT⟩ : ∃ T : Module.End ℂ RightHandedWeyl,
-      ∀ ψ φ, B (ψ ⊗ₜ φ) = rightDualContraction (T ψ ⊗ₜ φ) := by
-    refine ⟨RightHandedWeyl.toFin2ℂEquiv.symm.toLinearMap ∘ₗ
-      LinearMap.pi fun j => (curry B.toLinearMap).flip (DualRightHandedWeyl.basis j),
-      fun ψ φ => LinearMap.congr_fun
-        (?_ : curry B.toLinearMap ψ = curry rightDualContraction.toLinearMap _) φ⟩
-    refine DualRightHandedWeyl.basis.ext fun j => ?_
-    simp [rightDualContraction_tmul_basis]
+      ∀ ψ φ, B (ψ ⊗ₜ φ) = rightDualContraction (T ψ ⊗ₜ φ) :=
+    ⟨rightDualBi.toPerfPair.symm.toLinearMap ∘ₗ curry B.toLinearMap, fun ψ φ =>
+      (LinearMap.congr_fun
+        (rightDualBi.apply_symm_toPerfPair_self (curry B.toLinearMap ψ)) φ).symm⟩
   obtain ⟨μ, hμ⟩ := RightHandedWeyl.end_eq_smul_id_of_commute_rep (T := T) fun M =>
     LinearMap.ext fun ψ => sub_eq_zero.1 <|
       eq_zero_of_rightDualContraction_tmul_eq_zero _ fun φ => by
