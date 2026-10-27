@@ -77,6 +77,9 @@ instance : FunLike (LagrangianSystem I M) (Time × TangentBundle I M) ℝ where
 
 TODO "Define the instance of a module on `LagrangianSystem I M`."
 
+TODO "Add a constructor for `LagrangianSystem I M` from a point particle configuration space and
+  a potential."
+
 /-!
 
 ### A.2. The coordinate form
