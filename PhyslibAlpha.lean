@@ -229,6 +229,7 @@ public import PhyslibAlpha.Mathematics.PolynomialEval
 public import PhyslibAlpha.Mathematics.Probability.Kernel.Factorization
 public import PhyslibAlpha.Mathematics.RepresentationDual
 public import PhyslibAlpha.Mathematics.RepresentationProdMap
+public import PhyslibAlpha.Mathematics.RepresentationTheory.Invariants
 public import PhyslibAlpha.Mathematics.RepresentationTheory.Sl2.Basic
 public import PhyslibAlpha.Mathematics.RepresentationTheory.Sl2.BivariateBasis
 public import PhyslibAlpha.Mathematics.RepresentationTheory.Sl2.Classification
@@ -686,6 +687,7 @@ public import PhyslibAlpha.QuantumMechanics.StinespringDilation
 public import PhyslibAlpha.Relativity.Fermions.Dirac.MinimalDimension
 public import PhyslibAlpha.Relativity.Fermions.Weyl.BoostWeight
 public import PhyslibAlpha.Relativity.Fermions.Weyl.Metric
+public import PhyslibAlpha.Relativity.Fermions.Weyl.Unit
 public import PhyslibAlpha.Relativity.General.Schwarzschild.IncompressibleSphere
 public import PhyslibAlpha.Relativity.IsLorentzDeriv
 public import PhyslibAlpha.Relativity.LightConeDeriv
@@ -707,10 +709,13 @@ public import PhyslibAlpha.Relativity.LorentzGroup.Invariants.RankTwo
 public import PhyslibAlpha.Relativity.LorentzMix
 public import PhyslibAlpha.Relativity.MinkowskiMatrix
 public import PhyslibAlpha.Relativity.PauliMatrices.Anticommuting
+public import PhyslibAlpha.Relativity.PauliMatrices.AsTensor
 public import PhyslibAlpha.Relativity.PauliMatrices.SelfAdjoint
 public import PhyslibAlpha.Relativity.PauliMatrices.ToTensor
 public import PhyslibAlpha.Relativity.SL2C.AxisRotations
 public import PhyslibAlpha.Relativity.SL2C.Basic
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Metrics.Pre
+public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Units.Pre
 public import PhyslibAlpha.Relativity.Tensors.ComplexTensor.Vector.Pre.Basic
 public import PhyslibAlpha.Relativity.Tensors.Equivariant
 public import PhyslibAlpha.Relativity.Tensors.RealTensor.CoVector.Representation

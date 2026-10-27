@@ -6,6 +6,8 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 module
 
 public import Physlib.Relativity.Tensors.Basic
+public import Physlib.Relativity.Tensors.Constructors
+public import PhyslibAlpha.Mathematics.RepresentationTheory.Invariants
 public import PhyslibAlpha.Mathematics.InvariantReduction
 /-!
 # Equivariant maps out of the tensors of a species
@@ -28,6 +30,12 @@ A map is specified by its values on the basis tensors with `Basis.constr`, and
 the component indices relabelled by `e`, the map of a family `T` is `familyMap e T`, and it is
 equivariant exactly when `T` obeys that law, `isEquivariant_familyMap_iff`.
 
+A tensor with two indices is `fromPairT` of exactly one element of the tensor product of the two
+representations, and `fromPairT` is equivariant, so the invariant tensors with two indices are the
+images of the invariants of that tensor product; likewise for three indices and `fromTripleT` (E).
+A classification of the invariants of a tensor product of representations is thereby one of the
+invariant tensors.
+
 ## ii. Key results
 
 - `TensorSpecies.IsEquivariant` : equivariant linear maps out of `S.Tensor c`.
@@ -40,6 +48,11 @@ equivariant exactly when `T` obeys that law, `isEquivariant_familyMap_iff`.
 - `TensorSpecies.IsEquivariant.invariantReductionToSpan` : the reduction to one invariant tensor.
 - `TensorSpecies.isEquivariant_familyMap_iff` : the map of a family is equivariant exactly when
   the family obeys the transformation law of the components.
+- `TensorSpecies.Tensor.exists_fromPairT_of_invariant`,
+  `TensorSpecies.Tensor.exists_fromTripleT_of_invariant` : invariant tensors with two or three
+  indices are the images of invariants of the tensor product of the representations.
+- `TensorSpecies.Tensor.exists_eq_smul_fromPairT_of_invariant` : a line of invariants of the
+  tensor product gives the invariant tensors.
 
 ## iii. Table of contents
 
@@ -47,6 +60,7 @@ equivariant exactly when `T` obeys that law, `isEquivariant_familyMap_iff`.
 - B. Colors closed under adjoints
 - C. Invariants in the range come from invariant tensors
 - D. Building equivariant maps
+- E. Invariant tensors with two and three indices
 
 ## iv. References
 
@@ -412,5 +426,113 @@ lemma isEquivariant_familyMap_iff (e : ComponentIdx (S := S) c ≃ ι) [Fintype 
   · exact fun hT => ⟨fun g t => (familyMap_smul_of_law e T g (hT g) t).symm⟩
 
 end Constr
+
+/-!
+
+## E. Invariant tensors with two and three indices
+
+-/
+
+namespace Tensor
+
+open TensorProduct
+
+variable {k : Type} [CommRing k] {C G : Type} [Group G]
+  {V : C → Type} [∀ c, AddCommGroup (V c)] [∀ c, Module k (V c)]
+  {basisIdx : C → Type} [∀ c, Fintype (basisIdx c)] [∀ c, DecidableEq (basisIdx c)]
+  {rep : (c : C) → Representation k G (V c)} {b : (c : C) → Basis (basisIdx c) k (V c)}
+  {S : TensorSpecies k C G V basisIdx rep b}
+
+/-- A tensor with two indices determines the element of `V c1 ⊗ V c2` it comes from. -/
+lemma fromPairT_injective {c1 c2 : C} :
+    Function.Injective (fromPairT (S := S) (c1 := c1) (c2 := c2)) := by
+  intro x y h
+  apply (Basis.tensorProduct (b c1) (b c2)).repr.injective
+  ext ⟨i, j⟩
+  have h' := congrArg (fun t => (Tensor.basis ![c1, c2]).repr t (fun | 0 => i | 1 => j)) h
+  simpa only [fromPairT_basis_repr] using h'
+
+/-- Every tensor with two indices comes from `V c1 ⊗ V c2`: the basis tensors do. -/
+lemma fromPairT_surjective {c1 c2 : C} :
+    Function.Surjective (fromPairT (S := S) (c1 := c1) (c2 := c2)) := by
+  rw [← LinearMap.range_eq_top, eq_top_iff, ← (Tensor.basis (S := S) ![c1, c2]).span_eq,
+    Submodule.span_le]
+  rintro _ ⟨φ, rfl⟩
+  refine ⟨_, (fromPairT_apply_basis_repr (S := S) (c := c1) (c1 := c2) (φ 0) (φ 1)).trans
+    (congrArg _ ?_)⟩
+  funext j
+  fin_cases j <;> rfl
+
+/-- An invariant tensor with two indices is `fromPairT` of an invariant of the tensor product of
+  the two representations. -/
+lemma exists_fromPairT_of_invariant {c1 c2 : C} {t : S.Tensor ![c1, c2]}
+    (ht : ∀ g : G, g • t = t) :
+    ∃ x ∈ ((rep c1).tprod (rep c2)).invariants, fromPairT x = t := by
+  obtain ⟨x, rfl⟩ := fromPairT_surjective t
+  refine ⟨x, fun g => fromPairT_injective (S := S) ?_, rfl⟩
+  change fromPairT (TensorProduct.map (rep c1 g) (rep c2 g) x) = _
+  rw [← actionT_fromPairT, ht]
+
+/-- When the invariants of `V c1 ⊗ V c2` are the line through `v`, the invariant tensors with two
+  indices are the multiples of `fromPairT v`. -/
+lemma exists_eq_smul_fromPairT_of_invariant {c1 c2 : C} {v : V c1 ⊗[k] V c2}
+    (hv : ((rep c1).tprod (rep c2)).invariants = Submodule.span k {v}) {t : S.Tensor ![c1, c2]}
+    (ht : ∀ g : G, g • t = t) : ∃ a : k, t = a • fromPairT v := by
+  obtain ⟨x, hx, rfl⟩ := exists_fromPairT_of_invariant ht
+  rw [hv, Submodule.mem_span_singleton] at hx
+  obtain ⟨a, rfl⟩ := hx
+  exact ⟨a, map_smul _ _ _⟩
+
+/-- When `V c1 ⊗ V c2` has no invariants but zero, neither do the tensors with two indices. -/
+lemma eq_zero_of_invariant_of_invariants_eq_bot {c1 c2 : C}
+    (hv : ((rep c1).tprod (rep c2)).invariants = ⊥) {t : S.Tensor ![c1, c2]}
+    (ht : ∀ g : G, g • t = t) : t = 0 := by
+  obtain ⟨x, hx, rfl⟩ := exists_fromPairT_of_invariant ht
+  rw [hv, Submodule.mem_bot] at hx
+  rw [hx, map_zero]
+
+/-- A tensor with three indices determines the element of `V c1 ⊗ (V c2 ⊗ V c3)` it comes
+  from. -/
+lemma fromTripleT_injective {c1 c2 c3 : C} :
+    Function.Injective (fromTripleT (S := S) (c1 := c1) (c2 := c2) (c3 := c3)) := by
+  intro x y h
+  apply (Basis.tensorProduct (b c1) (Basis.tensorProduct (b c2) (b c3))).repr.injective
+  ext ⟨i, j, l⟩
+  have h' := congrArg
+    (fun t => (Tensor.basis ![c1, c2, c3]).repr t (fun | 0 => i | 1 => j | 2 => l)) h
+  simpa only [fromTripleT_basis_repr] using h'
+
+/-- Every tensor with three indices comes from `V c1 ⊗ (V c2 ⊗ V c3)`: the basis tensors do. -/
+lemma fromTripleT_surjective {c1 c2 c3 : C} :
+    Function.Surjective (fromTripleT (S := S) (c1 := c1) (c2 := c2) (c3 := c3)) := by
+  rw [← LinearMap.range_eq_top, eq_top_iff, ← (Tensor.basis (S := S) ![c1, c2, c3]).span_eq,
+    Submodule.span_le]
+  rintro _ ⟨φ, rfl⟩
+  refine ⟨_, (fromTripleT_apply_basis (S := S) (c := c1) (c1 := c2) (c2 := c3) (φ 0) (φ 1)
+    (φ 2)).trans (congrArg _ ?_)⟩
+  funext j
+  fin_cases j <;> rfl
+
+/-- An invariant tensor with three indices is `fromTripleT` of an invariant of the tensor
+  product of the three representations. -/
+lemma exists_fromTripleT_of_invariant {c1 c2 c3 : C} {t : S.Tensor ![c1, c2, c3]}
+    (ht : ∀ g : G, g • t = t) :
+    ∃ x ∈ ((rep c1).tprod ((rep c2).tprod (rep c3))).invariants, fromTripleT x = t := by
+  obtain ⟨x, rfl⟩ := fromTripleT_surjective t
+  refine ⟨x, fun g => fromTripleT_injective (S := S) ?_, rfl⟩
+  change fromTripleT (TensorProduct.map (rep c1 g) (TensorProduct.map (rep c2 g) (rep c3 g)) x) = _
+  rw [← actionT_fromTripleT, ht]
+
+/-- When the invariants of `V c1 ⊗ (V c2 ⊗ V c3)` are the line through `v`, the invariant tensors
+  with three indices are the multiples of `fromTripleT v`. -/
+lemma exists_eq_smul_fromTripleT_of_invariant {c1 c2 c3 : C} {v : V c1 ⊗[k] (V c2 ⊗[k] V c3)}
+    (hv : ((rep c1).tprod ((rep c2).tprod (rep c3))).invariants = Submodule.span k {v})
+    {t : S.Tensor ![c1, c2, c3]} (ht : ∀ g : G, g • t = t) : ∃ a : k, t = a • fromTripleT v := by
+  obtain ⟨x, hx, rfl⟩ := exists_fromTripleT_of_invariant ht
+  rw [hv, Submodule.mem_span_singleton] at hx
+  obtain ⟨a, rfl⟩ := hx
+  exact ⟨a, map_smul _ _ _⟩
+
+end Tensor
 
 end TensorSpecies

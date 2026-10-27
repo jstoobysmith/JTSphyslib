@@ -221,7 +221,7 @@ noncomputable def force (S : DampedHarmonicOscillator)
     EuclideanSpace ℝ (Fin 1) := - S.k • xₜ t - S.γ • ∂ₜ xₜ t
 
 /-!
-
+Test PR
 ### C.2. Equation of motion if and only if Newton's second law
 
 We show that the equation of motion is equivalent to Newton's second law.

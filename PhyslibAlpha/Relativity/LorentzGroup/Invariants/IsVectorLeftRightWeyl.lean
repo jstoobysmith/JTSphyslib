@@ -5,7 +5,8 @@ Authors: Jinzheng Li, Nathaneal Sajan, Joseph Tooby-Smith
 -/
 module
 
-public import PhyslibAlpha.Relativity.LorentzGroup.Invariants.RankTwo
+public import PhyslibAlpha.Relativity.LorentzGroup.Invariants.AdjointClosed
+public import PhyslibAlpha.Relativity.PauliMatrices.AsTensor
 public import PhyslibAlpha.Relativity.PauliMatrices.ToTensor
 /-!
 # Lorentz invariants of a four-vector index and a left-right Weyl pair
@@ -18,27 +19,27 @@ Lorentz invariant in the range of `f` is a multiple of `f σ^^^`, the image of t
 matrices as a tensor, the shape of the fermion kinetic term `ψ̄_{α'} σ̄^{μ α' α} ∂_μ ψ_α`. That is
 `IsVectorLeftRightWeyl.exists_smul_map_pauliMatrix_add_of_invariant`, stated modulo a
 Lorentz-stable submodule `S`, and packaged as `IsVectorLeftRightWeyl.invariantReductionToSpan`
-(D).
+(C).
 
-An opposite-chirality Weyl pair carries the `(1/2, 1/2)` representation, which is the
-four-vector representation, so the three indices are two four-vector indices, and two of those
-admit only the metric. The proof makes that literal. The components `f (e_μ ⊗ e_α ⊗ e_α')` of `f`
-move as `T^{μ α α'}` (B); contracting their Weyl pair against the covariant Pauli matrices
-`PauliMatrix.pauliLower`, which intertwine the two index laws (`SL2C.sum_pauliLower_mul_sl2c`),
-gives a family `vectorPair f` of two four-vector indices, whose map is equivariant, whose range
-is the range of `f` by Fierz completeness, and which sends the metric to `f σ^^^` (C); `RankTwo`
-supplies the classification (D). A family of components is turned back into a map by
-`ofVectorComponents` (E).
+It is enough that the invariant tensors of `ℂT[.up, .upL, .upR]` are the multiples of `σ^^^`
+(B). Such a tensor is `fromTripleT` of an element of
+`ContrℂModule ⊗ (LeftHandedWeyl ⊗ RightHandedWeyl)`, and the invariants of that tensor product are
+the line through the Pauli tensor, `PauliMatrix.invariants_tprod_eq_span_asTensor`. The
+classification of the invariants of a family follows by
+`TensorSpecies.IsEquivariant.invariantReductionToSpan` (C). A family of components is turned back
+into a map by `ofVectorComponents` (D).
 
 The Standard Model's fermion symbols are `Module.Dual`-valued, so their spinor indices are dual
 Weyl indices: an equivariant map out of `ℂT[.up, .downR, .downL]`, `IsVectorDualLeftRightWeyl`.
 Dualising both Weyl indices, `dualWeylMap`, is an equivariant surjection from
 `ℂT[.up, .upL, .upR]` carrying `σ^^^` to `σ^__`, so every invariant in the range of such a map is
-a multiple of `f σ^__` (F). A family of dual components is turned into a map by
-`ofDualVectorComponents` (G).
+a multiple of `f σ^__` (E). A family of dual components is turned into a map by
+`ofDualVectorComponents` (F).
 
 ## ii. Key results
 
+- `Lorentz.IsVectorLeftRightWeyl.exists_eq_smul_pauliMatrix_of_invariant` : the invariant
+  tensors are the multiples of `σ^^^`.
 - `Lorentz.IsVectorLeftRightWeyl.invariantReductionToSpan` : the invariants reduce to `f σ^^^`.
 - `Lorentz.dualWeylMap` : the dualisation of the Weyl indices.
 - `Lorentz.IsVectorDualLeftRightWeyl.invariantReductionToSpan` : the invariants reduce to
@@ -47,12 +48,11 @@ a multiple of `f σ^__` (F). A family of dual components is turned into a map by
 ## iii. Table of contents
 
 - A. Vector-Weyl families as equivariant maps
-- B. The components of an equivariant map
-- C. The reduction to a pair of four-vector indices
-- D. The classification of the Lorentz invariants
-- E. Maps from components
-- F. Dual Weyl indices
-- G. Maps from dual components
+- B. The invariant tensors
+- C. The classification of the Lorentz invariants
+- D. Maps from components
+- E. Dual Weyl indices
+- F. Maps from dual components
 
 ## iv. References
 
@@ -88,148 +88,27 @@ variable {B : Type*} [AddCommGroup B] [Module ℂ B]
 
 /-!
 
-## B. The components of an equivariant map
+## B. The invariant tensors
 
-The components `f (e_μ ⊗ e_α ⊗ e_α')` of an equivariant map are moved by the Lorentz matrix on
-the vector index, by the matrix of `g` on the left Weyl index and by its complex conjugate on
-the right one.
-
--/
-
-include hf in
-/-- The components of an equivariant map are moved as `T^{μ α α'}`, the summed index first in
-  each factor. -/
-lemma repLorentz_map_indexBasis (g : SL(2,ℂ)) (d : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2) :
-    repLorentz g (f (indexBasis d)) = ∑ e : (Fin 1 ⊕ Fin 3) × Fin 2 × Fin 2,
-      ((((SL2C.toLorentzGroup g).1 e.1 d.1 : ℝ) : ℂ)
-        * (g.1 e.2.1 d.2.1 * star (g.1 e.2.2 d.2.2))) • f (indexBasis e) := by
-  rw [indexBasis_apply, ← hf.equivariant, TensorSpecies.smul_basis_eq_sum, map_sum,
-    ← indexEquiv.symm.sum_comp]
-  refine Finset.sum_congr rfl fun e _ => ?_
-  rw [map_smul, Fin.prod_univ_three, mul_assoc, indexBasis_apply]
-  exact congrArg (· • _) (congrArg₂ (· * ·) (toMatrix_rep_up_apply g e.1 d.1)
-    (congrArg₂ (· * ·) (congrFun (congrFun (toMatrix_rep_upL g) e.2.1) d.2.1)
-      (congrFun (congrFun (toMatrix_rep_upR g) e.2.2) d.2.2)))
-
-include hf in
-/-- Moving a contraction of the Weyl pair at vector index `μ`: the vector index moves by the
-  Lorentz matrix and the coefficients of the Weyl pair by the matrix of `g` and its complex
-  conjugate. -/
-lemma repLorentz_sum_smul (g : SL(2,ℂ)) (μ : Fin 1 ⊕ Fin 3) (c : Fin 2 × Fin 2 → ℂ) :
-    repLorentz g (∑ a : Fin 2 × Fin 2, c a • f (indexBasis (μ, a)))
-      = ∑ ν : Fin 1 ⊕ Fin 3, (((SL2C.toLorentzGroup g).1 ν μ : ℝ) : ℂ)
-        • ∑ q : Fin 2 × Fin 2, (∑ d : Fin 2 × Fin 2, c d * (g.1 q.1 d.1 * star (g.1 q.2 d.2)))
-          • f (indexBasis (ν, q)) := by
-  rw [(repLorentz g).map_sum_smul_of_forall_eq (fun a => f (indexBasis (μ, a)))
-    (fun e => f (indexBasis e))
-    (fun e a => (((SL2C.toLorentzGroup g).1 e.1 μ : ℝ) : ℂ)
-      * (g.1 e.2.1 a.1 * star (g.1 e.2.2 a.2)))
-    (fun a => hf.repLorentz_map_indexBasis g (μ, a)) c, Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl fun ν _ => ?_
-  rw [Finset.smul_sum]
-  refine Finset.sum_congr rfl fun q _ => ?_
-  rw [smul_smul, Finset.mul_sum]
-  exact congrArg (· • f (indexBasis (ν, q))) (Finset.sum_congr rfl fun p _ => by ring)
-
-/-!
-
-## C. The reduction to a pair of four-vector indices
-
-Contracting the Weyl pair of the components against the covariant Pauli matrices gives a
-family `vectorPair f` of two four-vector indices, whose map `ofComponents (vectorPair f)` is a
-rank-two Lorentz family. By Fierz completeness the contraction is invertible, so its span is the
-range of `f`, and the image of the metric under its map is `f σ^^^`.
+A tensor of `ℂT[.up, .upL, .upR]` is `fromTripleT` of an element of
+`ContrℂModule ⊗ (LeftHandedWeyl ⊗ RightHandedWeyl)`, whose invariants are the line through the
+Pauli tensor `PauliMatrix.asTensor`, and `fromTripleT` of that is `σ^^^`.
 
 -/
 
-/-- The family of two four-vector indices obtained by contracting the Weyl pair of the
-  components of `f` against the covariant Pauli matrices. -/
-noncomputable def vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
-    (Fin 2 → Fin 1 ⊕ Fin 3) → B :=
-  fun d => ∑ a : Fin 2 × Fin 2, PauliMatrix.pauliLower (d 1) a.1 a.2 • f (indexBasis (d 0, a))
-
-include hf in
-/-- The reduced family is a rank-two Lorentz family: the intertwining identity
-  `SL2C.sum_pauliLower_mul_sl2c` carries the Weyl pair into a second vector index. -/
-lemma isLorentzCovariant_vectorPair :
-    IsLorentzCovariant 2 B repLorentz (ofComponents (vectorPair f)) := by
-  refine (isLorentzCovariant_ofComponents_iff _).2 fun g l => ?_
-  rw [vectorPair, hf.repLorentz_sum_smul, sum_pi_fin_two]
-  refine Finset.sum_congr rfl fun ν _ => ?_
-  simp only [sum_pauliLower_mul_sl2c]
-  rw [Fintype.sum_sum_mul_smul
-    (fun (q : Fin 2 × Fin 2) (ρ : Fin 1 ⊕ Fin 3) => PauliMatrix.pauliLower ρ q.1 q.2)
-    (fun ρ => (((SL2C.toLorentzGroup g).1 ρ (l 1) : ℝ) : ℂ))
-    (fun q => f (indexBasis (ν, q))), Finset.smul_sum]
-  refine Finset.sum_congr rfl fun ρ _ => ?_
-  simp only [vectorPair, smul_smul, Fin.prod_univ_two, Matrix.cons_val_zero,
-    Matrix.cons_val_one]
-
-/-- The reduction is invertible: by the Fierz completeness relation each component of `f` is
-  recovered from the reduced family. -/
-lemma map_indexBasis_eq_sum_vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B)
-    (μ : Fin 1 ⊕ Fin 3) (b : Fin 2 × Fin 2) :
-    f (indexBasis (μ, b)) = ∑ ρ : Fin 1 ⊕ Fin 3,
-      ((2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1) • vectorPair f ![μ, ρ] := by
-  calc f (indexBasis (μ, b)) = ∑ a : Fin 2 × Fin 2,
-        ((if a.1 = b.1 then (1 : ℂ) else 0) * (if a.2 = b.2 then 1 else 0))
-          • f (indexBasis (μ, a)) := by
-        rw [Fintype.sum_prod_type]
-        simp [ite_smul, Finset.sum_ite_eq']
-    _ = ∑ a : Fin 2 × Fin 2, (∑ ρ : Fin 1 ⊕ Fin 3,
-          (2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1 * PauliMatrix.pauliLower ρ a.1 a.2)
-            • f (indexBasis (μ, a)) := by
-        refine Finset.sum_congr rfl fun a _ => ?_
-        congr 1
-        rw [show (∑ ρ : Fin 1 ⊕ Fin 3,
-              (2 : ℂ)⁻¹ * PauliMatrix.pauliLower ρ b.2 b.1 * PauliMatrix.pauliLower ρ a.1 a.2)
-            = (2 : ℂ)⁻¹ * ∑ ρ : Fin 1 ⊕ Fin 3,
-              PauliMatrix.pauliLower ρ b.2 b.1 * PauliMatrix.pauliLower ρ a.1 a.2 from by
-          rw [Finset.mul_sum]
-          exact Finset.sum_congr rfl fun ρ _ => (mul_assoc _ _ _),
-          PauliMatrix.sum_pauliLower_mul_pauliLower a.1 a.2 b.1 b.2]
-        field_simp
-    _ = _ := by
-        simp only [vectorPair, Matrix.cons_val_zero, Matrix.cons_val_one,
-          Finset.smul_sum, smul_smul]
-        rw [Finset.sum_comm]
-        exact Finset.sum_congr rfl fun a _ => Finset.sum_smul
-
-/-- The reduction does not change the span: the reduced family spans the range of `f`. -/
-lemma span_range_vectorPair (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
-    Submodule.span ℂ (Set.range (vectorPair f)) = LinearMap.range f := by
-  refine le_antisymm (Submodule.span_le.2 <| Set.range_subset_iff.2 fun d =>
-    sum_mem fun a _ => Submodule.smul_mem _ _ (LinearMap.mem_range_self f _)) ?_
-  rw [← Submodule.map_top, ← indexBasis.span_eq, Submodule.map_span, Submodule.span_le]
-  rintro _ ⟨_, ⟨⟨μ, b⟩, rfl⟩, rfl⟩
-  rw [map_indexBasis_eq_sum_vectorPair]
-  exact sum_mem fun ρ _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
-
-/-- The image of the metric under the map of the reduced family is the image `f σ^^^` of the
-  Pauli tensor: the two lowerings of the vector index cancel, so no sign and no scalar appear. -/
-lemma ofComponents_vectorPair_metric (f : ℂT[.up, .upL, .upR] →ₗ[ℂ] B) :
-    ofComponents (vectorPair f) RankTwo.metric = f σ^^^ := by
-  rw [RankTwo.ofComponents_metric, sum_pi_fin_two, toTensor_eq_sum_indexBasis, map_sum,
-    Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl fun ν _ => ?_
-  rw [Finset.sum_eq_single ν (fun ρ _ hρ => ?_) (fun hν => absurd (Finset.mem_univ ν) hν)]
-  · simp only [vectorPair, Matrix.cons_val_zero, Matrix.cons_val_one, Finset.smul_sum,
-      smul_smul, map_smul]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    congr 1
-    rw [PauliMatrix.pauliLower_eq_smul, Matrix.smul_apply, smul_eq_mul, ← mul_assoc]
-    rcases ν with ν | ν <;> fin_cases ν <;> norm_num [minkowskiMatrixZ]
-  · rw [show minkowskiMatrixZ (![ν, ρ] 0) (![ν, ρ] 1) = 0 from by
-      simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
-      simp [minkowskiMatrixZ, Ne.symm hρ]]
-    simp
+/-- The invariant tensors with a four-vector index and a left-right Weyl pair are the multiples
+  of the Pauli tensor. -/
+lemma exists_eq_smul_pauliMatrix_of_invariant (t : ℂT[.up, .upL, .upR])
+    (ht : ∀ g : SL(2,ℂ), g • t = t) : ∃ a : ℂ, t = a • σ^^^ := by
+  obtain ⟨a, ha⟩ := TensorSpecies.Tensor.exists_eq_smul_fromTripleT_of_invariant
+    (S := complexLorentzTensor) (c1 := .up) (c2 := .upL) (c3 := .upR)
+    PauliMatrix.invariants_tprod_eq_span_asTensor ht
+  refine ⟨a, ha.trans ?_⟩
+  rw [toTensor_eq_asConsTensor, TensorSpecies.Tensor.fromConstTriple, asConsTensor_apply_one]
 
 /-!
 
-## D. The classification of the Lorentz invariants
-
-`RankTwo` classifies the invariants of the range of `ofComponents (vectorPair f)`, which is the
-range of `f`, and the image of the metric under it is `f σ^^^`.
+## C. The classification of the Lorentz invariants
 
 -/
 
@@ -239,33 +118,28 @@ lemma repLorentz_map_pauliMatrix (g : SL(2,ℂ)) : repLorentz g (f σ^^^) = f σ
   hf.rep_map_of_invariant toTensor_smul_eq_self g
 
 include hf in
+/-- The Lorentz invariants of the range of `f` reduce to the span of the image `f σ^^^` of the
+  Pauli tensor. -/
+noncomputable def invariantReductionToSpan :
+    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) :=
+  TensorSpecies.IsEquivariant.invariantReductionToSpan hf (complexLorentzTensor.isAdjointClosed _)
+    σ^^^ toTensor_smul_eq_self exists_eq_smul_pauliMatrix_of_invariant
+
+include hf in
 /-- Every Lorentz invariant of `LinearMap.range f ⊔ S`, for `S` a Lorentz-stable submodule, is a
   multiple of the image `f σ^^^` of the Pauli tensor plus an element of `S`: the shape of the
   fermion kinetic term. -/
 lemma exists_smul_map_pauliMatrix_add_of_invariant (S : Submodule ℂ B)
     (hS : ∀ g : SL(2,ℂ), ∀ y ∈ S, repLorentz g y ∈ S) {x : B}
     (hx : x ∈ LinearMap.range f ⊔ S) (hinv : ∀ g : SL(2,ℂ), repLorentz g x = x) :
-    ∃ a : ℂ, ∃ y ∈ S, x = a • f σ^^^ + y := by
-  obtain ⟨a, y, hy, ha⟩ := RankTwo.exists_smul_map_metric_add_of_invariant
-    hf.isLorentzCovariant_vectorPair S hS
-    (by rwa [range_ofComponents, span_range_vectorPair]) hinv
-  exact ⟨a, y, hy, by rwa [ofComponents_vectorPair_metric] at ha⟩
-
-include hf in
-/-- The Lorentz invariants of the range of `f` reduce to the span of the image `f σ^^^` of the
-  Pauli tensor. -/
-noncomputable def invariantReductionToSpan :
-    InvariantReductionToSpan (fun g : SL(2,ℂ) => repLorentz g) (LinearMap.range f) where
-  spanningVector := f σ^^^
-  stable := hf.isStableUnder_range
-  spanningVector_fixed := hf.repLorentz_map_pauliMatrix
-  reduce S hS _ hx hinv := hf.exists_smul_map_pauliMatrix_add_of_invariant S hS hx hinv
+    ∃ a : ℂ, ∃ y ∈ S, x = a • f σ^^^ + y :=
+  hf.invariantReductionToSpan.reduce S hS x hx hinv
 
 end IsVectorLeftRightWeyl
 
 /-!
 
-## E. Maps from components
+## D. Maps from components
 
 A family `T (μ, α, α')` of vectors is the linear map `ofVectorComponents T` sending
 `e_μ ⊗ e_α ⊗ e_α'` to `T (μ, α, α')`, and it is equivariant when the vectors are moved as the
@@ -324,13 +198,13 @@ end VectorComponents
 
 /-!
 
-## F. Dual Weyl indices
+## E. Dual Weyl indices
 
 A family `T^μ{}_{α' α}` with a four-vector index and a dual right- and a dual left-handed Weyl
 index is an equivariant map out of `ℂT[.up, .downR, .downL]`, `IsVectorDualLeftRightWeyl`.
 Dualising both Weyl indices, `dualWeylMap`, is an equivariant surjection out of
 `ℂT[.up, .upL, .upR]` which carries `σ^^^` to `σ^__`, so composing with it turns such a family
-into an `IsVectorLeftRightWeyl` family with the same range, and section D applies.
+into an `IsVectorLeftRightWeyl` family with the same range, and section C applies.
 
 -/
 
@@ -419,7 +293,7 @@ end IsVectorDualLeftRightWeyl
 
 /-!
 
-## G. Maps from dual components
+## F. Maps from dual components
 
 A family `T (μ, α, α')` of vectors, indexed by a four-vector index, a dual left-handed and a
 dual right-handed Weyl index, is the linear map `ofDualVectorComponents T` sending
